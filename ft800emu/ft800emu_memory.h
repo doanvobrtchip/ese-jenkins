@@ -16,6 +16,7 @@
 // #include <...>
 
 // System includes
+#include "wiring.h" // typedefs etc...
 
 // Project includes
 
@@ -35,11 +36,15 @@ public:
 	static void begin();
 	static void end();
 
+	static uint8_t *getRam();
+
 private:
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
 	
 }; /* class MemoryClass */
+
+extern MemoryClass Memory;
 
 } /* namespace FT800EMU */
 

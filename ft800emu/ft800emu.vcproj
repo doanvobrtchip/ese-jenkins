@@ -107,7 +107,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../arduino"
+				AdditionalIncludeDirectories="../arduino;../reference"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -264,6 +264,14 @@
 			</File>
 			<File
 				RelativePath=".\ft800emu_system_windows.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="reference"
+			>
+			<File
+				RelativePath="..\reference\vc.h"
 				>
 			</File>
 		</Filter>

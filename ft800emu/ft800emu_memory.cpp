@@ -22,6 +22,11 @@
 
 namespace FT800EMU {
 
+MemoryClass Memory;
+
+// RAM
+static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
+
 void MemoryClass::begin()
 {
 	
@@ -30,6 +35,11 @@ void MemoryClass::begin()
 void MemoryClass::end()
 {
 	
+}
+
+uint8_t *MemoryClass::getRam()
+{
+	return s_Ram;
 }
 
 } /* namespace FT800EMU */
