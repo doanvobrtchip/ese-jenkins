@@ -39,6 +39,12 @@ public:
 	static uint8_t *getRam();
 	static const uint8_t *getRom();
 
+	static void mcuWrite(size_t address, uint8_t data);
+	static uint8_t mcuRead(size_t address);
+
+	/// Return true if the registers were touched since the last call
+	static bool untouchResolutionRegisters();
+
 private:
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);

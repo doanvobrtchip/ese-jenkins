@@ -49,6 +49,8 @@ namespace {
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
 
+	uint64_t s_Clock = 48 * 000 * 000; // 48 MHz
+
 	int masterThread(void * = NULL)
 	{
 		System.makeMainThread();

@@ -13,11 +13,14 @@
 
 // #include <...>
 #include "ft800emu_memory.h"
+#include "ft800emu_system_windows.h"
 
 // System includes
 #include <stdio.h>
+#include <WinBase.h>
 
 // Project includes
+#include "vc.h"
 
 // using namespace ...;
 
@@ -31,6 +34,8 @@ MemoryClass Memory;
 // RAM
 static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
 static uint8_t s_Rom[D_FT800EMU_ROM_SIZE];
+
+static LONG s_TouchedResolutionRegisters = 0;
 
 void MemoryClass::begin()
 {
@@ -54,6 +59,38 @@ void MemoryClass::end()
 uint8_t *MemoryClass::getRam()
 {
 	return s_Ram;
+}
+
+void MemoryClass::mcuWrite(size_t address, uint8_t data)
+{
+	switch (address & 0xFFFFFFFC)
+	{
+	case REG_PCLK:
+	case REG_PCLK_POL:
+	case REG_HCYCLE:
+	case REG_HOFFSET:
+	case REG_HSIZE:
+	case REG_HSYNC0:
+	case REG_HSYNC1:
+	case REG_VCYCLE:
+	case REG_VOFFSET:
+	case REG_VSIZE:
+	case REG_VSYNC0:
+	case REG_VSYNC1:
+		s_TouchedResolutionRegisters = 1;
+		break;
+	}
+	s_Ram[address] = data;
+}
+
+uint8_t MemoryClass::mcuRead(size_t address)
+{
+	return s_Ram[address];
+}
+
+bool MemoryClass::untouchResolutionRegisters()
+{
+	return InterlockedExchange(&s_TouchedResolutionRegisters, 0);
 }
 
 } /* namespace FT800EMU */

@@ -42,9 +42,10 @@ public:
 
 	// uint8_t transfer(uint8_t data); // TODO SPI r/w data protocol...
 
-	static void emuSetAddress(size_t address);
-	static void emuWriteByte(uint8_t data);
-	static uint8_t emuReadByte();
+	// temporary interface
+	static void mcuSetAddress(size_t address);
+	static void mcuWriteByte(uint8_t data);
+	static uint8_t mcuReadByte();
 
 private:
 	SPIClass(const SPIClass &);
