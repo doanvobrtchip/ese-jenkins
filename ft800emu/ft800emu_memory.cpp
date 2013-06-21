@@ -24,8 +24,8 @@
 
 // using namespace ...;
 
-#define D_FT800EMU_ROM_FILE "../reference/ROM"
-#define D_FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
+#define FT800EMU_ROM_FILE "../reference/ROM"
+#define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
 
 namespace FT800EMU {
 
@@ -33,19 +33,19 @@ MemoryClass Memory;
 
 // RAM
 static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
-static uint8_t s_Rom[D_FT800EMU_ROM_SIZE];
+static uint8_t s_Rom[FT800EMU_ROM_SIZE];
 
 static LONG s_TouchedResolutionRegisters = 0;
 
 void MemoryClass::begin()
 {
 	FILE *f;
-	f = fopen(D_FT800EMU_ROM_FILE, "rb");
+	f = fopen(FT800EMU_ROM_FILE, "rb");
 	if (!f) printf("Failed to open ROM file\n");
 	else
 	{
-		size_t s = fread(s_Rom, 1, D_FT800EMU_ROM_SIZE, f);
-		if (s != D_FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
+		size_t s = fread(s_Rom, 1, FT800EMU_ROM_SIZE, f);
+		if (s != FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
 		else printf("Loaded ROM file\n");
 		if (fclose(f)) printf("Error closing ROM file\n");
 	}
