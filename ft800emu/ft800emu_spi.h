@@ -16,9 +16,10 @@
 // #include <...>
 
 // System includes
-#include "ft800emu_inttypes.h"
+#include <stdlib.h>
 
 // Project includes
+#include "ft800emu_inttypes.h"
 
 namespace FT800EMU {
 
@@ -41,11 +42,9 @@ public:
 
 	// uint8_t transfer(uint8_t data); // TODO SPI r/w data protocol...
 
-	static void writeAddress(unsigned int address);
-	static void writeByte(uint8_t data);
-
-	static void readAddress(unsigned int address);
-	static uint8_t readByte();
+	static void emuSetAddress(size_t address);
+	static void emuWriteByte(uint8_t data);
+	static uint8_t emuReadByte();
 
 private:
 	SPIClass(const SPIClass &);

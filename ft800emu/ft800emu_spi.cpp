@@ -26,45 +26,46 @@ namespace FT800EMU {
 SPIClass SPI;
 
 static bool s_CSLow = false;
+static uint8_t *s_Ram = NULL;
+static uint8_t *s_RamCursor = NULL;
 
 void SPIClass::begin()
 {
-	
+	s_Ram = Memory.getRam();
 }
 
 void SPIClass::end()
 {
-	
+	s_Ram = NULL;
 }
 
 void SPIClass::csLow(bool low)
 {
 	s_CSLow = low;
+	s_RamCursor = NULL;
 }
 
 void SPIClass::csHigh(bool high)
 {
-	s_CSLow = !high;
+	csLow(!high);
 }
 
-void SPIClass::writeAddress(unsigned int address)
+void SPIClass::emuSetAddress(size_t address)
 {
-	
+	s_RamCursor = &s_Ram[address];
 }
 
-void SPIClass::writeByte(uint8_t data)
+void SPIClass::emuWriteByte(uint8_t data)
 {
-	
+	*s_RamCursor = data;
+	++s_RamCursor;
 }
 
-void SPIClass::readAddress(unsigned int address)
+uint8_t SPIClass::emuReadByte()
 {
-	
-}
-
-uint8_t SPIClass::readByte()
-{
-	
+	uint8_t result = *s_RamCursor;
+	++s_RamCursor;
+	return result;
 }
 
 } /* namespace FT800EMU */
