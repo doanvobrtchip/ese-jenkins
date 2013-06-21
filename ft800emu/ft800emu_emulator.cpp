@@ -64,6 +64,7 @@ namespace {
 		double targetSeconds = System.getSeconds();
 
 		// ... TODO ...
+		// Todo calculate the resolution and refresh and create the display buffer
 
 		System.revertThreadCategory(taskHandle);
 		return 0;
