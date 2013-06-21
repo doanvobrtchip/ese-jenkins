@@ -219,6 +219,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_memory.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_memory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_spi.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_spi.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_system.cpp"
 				>
 			</File>
