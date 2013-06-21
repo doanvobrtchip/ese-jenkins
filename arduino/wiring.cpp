@@ -30,7 +30,7 @@
 
 // Project includes
 #include "ft800emu_system.h"
-#include "ft800emu_ft800_spi.h"
+#include "ft800emu_spi.h"
 
 // using namespace ...;
 
@@ -114,7 +114,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	switch (pin)
 	{
 	case FT800EMU_FT800_SS_PIN:
-		//FT800EMU::FT800SPI.slaveSelectChanged(val); // TODO
+		FT800EMU::SPI.csHigh(val);
 		break;
 	case FT800EMU_ARDUINO_INTERRUPT_PIN_0:
 		ft800emuHandleInterrupt(0, val, prev);
