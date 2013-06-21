@@ -25,12 +25,16 @@
 
 // Project includes
 #include "WProgram.h"
-// #include "vc.h"
 #include "ft800emu_system.h"
 #include "ft800emu_keyboard.h"
 #include "ft800emu_graphics_driver.h"
 #include "ft800emu_audio_driver.h"
-#include "ft800emu_ft800_spi.h"
+
+// #include "vc.h"
+
+#include "ft800emu_spi.h"
+#include "ft800emu_memory.h"
+
 #include "omp.h"
 
 // using namespace ...;
@@ -109,7 +113,8 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	s_Flags = flags;
 
 	System.begin();
-	FT800SPI.begin();
+	Memory.begin();
+	SPI.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
 	if (flags & EmulatorEnableKeyboard) Keyboard.begin();
@@ -157,7 +162,8 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	if (flags & EmulatorEnableKeyboard) Keyboard.end();
 	if (flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
-	FT800SPI.end();
+	SPI.end();
+	Memory.end();
 	System.end();
 }
 

@@ -187,14 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ft800emu_ft800_spi.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ft800emu_ft800_spi.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ft800emu_graphics_driver.h"
 				>
 			</File>
@@ -204,6 +196,10 @@
 			</File>
 			<File
 				RelativePath=".\ft800emu_graphics_driver_sdl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_inttypes.h"
 				>
 			</File>
 			<File

@@ -16,7 +16,7 @@
 // #include <...>
 
 // System includes
-#include "wiring.h" // typedefs etc...
+#include "ft800emu_inttypes.h"
 
 // Project includes
 
@@ -37,6 +37,7 @@ public:
 	static void end();
 
 	static uint8_t *getRam();
+	static const uint8_t *getRom();
 
 private:
 	MemoryClass(const MemoryClass &);

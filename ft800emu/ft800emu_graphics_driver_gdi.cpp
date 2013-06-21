@@ -20,7 +20,7 @@
 // System includes
 #include "ft800emu_system_windows.h"
 #include "ft800emu_system.h"
-#include "ft800emu_ft800_spi.h"
+// #include "ft800emu_ft800_spi.h"
 
 // Project includes
 
@@ -224,7 +224,7 @@ void GraphicsDriverClass::renderBuffer()
 	GetClientRect(s_HWnd, &r);
 #if FT800EMU_WINDOW_KEEPRATIO
 	{
-		argb1555 bgC16 = ((argb1555 *)(void *)(&FT800SPI.getRam()[0x280e]))[0];
+		argb1555 bgC16 = 0; // TODO ((argb1555 *)(void *)(&FT800SPI.getRam()[0x280e]))[0];
 		COLORREF bgC32 = RGB((((bgC16) & 0x1F) * 255 / 31),
 			(((bgC16 >> 5) & 0x1F) * 255 / 31),
 			(((bgC16 >> 10) & 0x1F) * 255 / 31));
@@ -281,8 +281,6 @@ void GraphicsDriverClass::renderBuffer()
 	// Update title
 	tstringstream newTitle;
 	newTitle << FT800EMU_WINDOW_TITLE;
-	if (FT800SPI.getRam()[0x2809] == 0)
-		newTitle << TEXT(" [+J1]");
 	newTitle << TEXT(" [FPS: ");
 	newTitle << System.getFPSSmooth();
 	newTitle << TEXT(" (");

@@ -19,7 +19,7 @@
 // System includes
 
 // Project includes
-#include "wiring.h"
+#include "ft800emu_inttypes.h"
 
 namespace FT800EMU {
 
