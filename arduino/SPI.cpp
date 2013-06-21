@@ -37,7 +37,7 @@ SPIClass SPI;
 
 byte SPIClass::transfer(byte _data)
 {
-	return FT800EMU::FT800SPI.transfer(_data);
+	// TODO return FT800EMU::FT800SPI.transfer(_data);
 }
 
 /* end of file */

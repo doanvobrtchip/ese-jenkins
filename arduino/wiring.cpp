@@ -54,10 +54,10 @@ static int s_InterruptModes[2] = { 0 };
 // Interrupts
 static void ft800emuCallInterrupt(uint8_t i)
 {
-	bool isdt = FT800EMU::System.isDuinoThread();
-	if (!isdt) FT800EMU::System.holdDuinoThread();
+	bool isdt = FT800EMU::System.isMCUThread();
+	if (!isdt) FT800EMU::System.holdMCUThread();
 	s_InterruptFunctions[i]();
-	if (!isdt) FT800EMU::System.resumeDuinoThread();
+	if (!isdt) FT800EMU::System.resumeMCUThread();
 }
 
 static void ft800emuHandleInterrupt(uint8_t i, uint8_t val, uint8_t prev)
@@ -114,7 +114,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	switch (pin)
 	{
 	case FT800EMU_FT800_SS_PIN:
-		FT800EMU::FT800SPI.slaveSelectChanged(val);
+		//FT800EMU::FT800SPI.slaveSelectChanged(val); // TODO
 		break;
 	case FT800EMU_ARDUINO_INTERRUPT_PIN_0:
 		ft800emuHandleInterrupt(0, val, prev);

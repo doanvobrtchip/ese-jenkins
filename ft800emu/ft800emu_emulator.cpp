@@ -25,8 +25,9 @@
 
 // Project includes
 #include "WProgram.h"
-#include "GD.h"
+// #include "vc.h"
 #include "ft800emu_system.h"
+#include "ft800emu_keyboard.h"
 #include "ft800emu_graphics_driver.h"
 #include "ft800emu_audio_driver.h"
 #include "ft800emu_ft800_spi.h"
@@ -92,7 +93,7 @@ namespace {
 		while (s_MasterRunning)
 		{
 			//printf("sound thread\n");
-			if (s_Flags & EmulatorEnableAudio) AudioMachine.process();
+			// TODO_AUDIO if (s_Flags & EmulatorEnableAudio) AudioMachine.process();
 			if (s_Flags & EmulatorEnableKeyboard) Keyboard.update();
 			System.delay(10);
 		}
@@ -110,7 +111,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	System.begin();
 	FT800SPI.begin();
 	GraphicsDriver.begin();
-	if (flags & EmulatorEnableAudio) AudioDriver.begin();
+	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
 	if (flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	s_MasterRunning = true;
