@@ -199,6 +199,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_graphics_processor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_graphics_processor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_inttypes.h"
 				>
 			</File>

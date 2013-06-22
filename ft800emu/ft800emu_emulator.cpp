@@ -30,10 +30,10 @@
 #include "ft800emu_graphics_driver.h"
 #include "ft800emu_audio_driver.h"
 
-// #include "vc.h"
-
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
+
+#include "vc.h"
 
 #include "omp.h"
 
@@ -96,6 +96,7 @@ namespace {
 			// Flip buffer and also give a slice of time to the mcu main thread
 			{
 				// VBlank 1
+				Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				System.prioritizeMCUThread();
 
 #ifndef WIN32
@@ -104,7 +105,8 @@ namespace {
 #endif
 
 				unsigned long flipStart = System.getMicros();
-				// GraphicsProcessor.flip();
+				GraphicsDriver.renderBuffer();
+				if (!GraphicsDriver.update()) exit(0); // ...
 				unsigned long flipDelta = System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)

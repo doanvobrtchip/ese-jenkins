@@ -56,7 +56,7 @@ void MemoryClass::begin()
 	}
 
 	rawWriteU32(REG_ID, 0x7C);
-	rawWriteU32(REG_FRAMES, 0); // Frame counter
+	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
 	rawWriteU32(REG_CLOCK, 0);
 	rawWriteU32(REG_FREQUENCY, 48000000);
 	rawWriteU32(REG_RENDERMODE, 0);
