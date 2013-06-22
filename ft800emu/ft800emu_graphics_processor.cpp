@@ -96,7 +96,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 		
 		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
-			uint32_t v = displayList[c];
+			uint32_t v = displayList[c]; // (up to 2048 ops)
 			switch (v >> 24)
 			{
 			case FT800EMU_DL_DISPLAY:
@@ -110,7 +110,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 			case FT800EMU_DL_CLEAR:
 				if (v & 0x04)
 				{
-					// clear color buffer (480 ops)
+					// clear color buffer (about 480 ops)
 					for (uint32_t i = 0; i < hsize; ++i)
 					{
 						bc[i] = gs.ClearColorARGB;
