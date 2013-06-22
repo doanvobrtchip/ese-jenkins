@@ -37,8 +37,8 @@ public:
 	static void begin();
 	static void end();
 
-	static void csLow(bool low);
-	static void csHigh(bool high);
+	static void csLow(bool low = true);
+	static void csHigh(bool high = true);
 
 	// uint8_t transfer(uint8_t data); // TODO SPI r/w data protocol...
 

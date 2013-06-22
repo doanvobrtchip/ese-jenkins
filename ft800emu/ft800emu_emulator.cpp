@@ -68,6 +68,9 @@ namespace {
 
 		for (;;)
 		{
+			//printf("main thread\n");
+			System.makeRealtimePriorityThread();
+
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
 			double deltaSeconds;
 			// Calculate the display frequency
@@ -81,11 +84,13 @@ namespace {
 			}
 			else deltaSeconds = 1.0;
 
-			//printf("main thread\n");
-			System.makeRealtimePriorityThread();
-
 			System.update();
 			targetSeconds += deltaSeconds;
+
+			// Update display resolution
+			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
+			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
+			// TODO: Update display resolution
 
 			// If coprocessor running on render thread, REG_CPURESET goes into effect at this point.
 			// Must use the getCPUReset() function which buffers value switches.
@@ -97,7 +102,7 @@ namespace {
 				System.switchThread();
 				
 				unsigned long procStart = System.getMicros();
-				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888());
+				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), reg_hsize, reg_vsize);
 				unsigned long procDelta = System.getMicros() - procStart;
 
 				if (procDelta > 8000)
@@ -107,7 +112,7 @@ namespace {
 			// Flip buffer and also give a slice of time to the mcu main thread
 			{
 				// VBlank=1
-				Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
+				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				System.prioritizeMCUThread();
 
 #ifndef WIN32

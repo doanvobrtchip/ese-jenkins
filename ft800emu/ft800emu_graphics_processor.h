@@ -18,6 +18,7 @@
 // System includes
 
 // Project includes
+#include "ft800emu_inttypes.h"
 
 namespace FT800EMU {
 
@@ -32,7 +33,7 @@ class GraphicsProcessorClass
 public:
 	GraphicsProcessorClass() { }
 
-	static void process(void *screenArgb8888); // argb?
+	static void process(argb8888 *screenArgb8888, uint32_t hsize, uint32_t vsize);
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

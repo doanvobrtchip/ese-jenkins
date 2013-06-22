@@ -20,6 +20,9 @@
 
 // Project includes
 
+#define SWAP_FRAME 1 // missing for REG_DLSWAP write
+#define FT800EMU_DISPLAY_LIST_SIZE 2048
+
 namespace FT800EMU {
 
 /**
@@ -38,18 +41,19 @@ public:
 
 	static uint8_t *getRam();
 	static const uint8_t *getRom();
+	static const uint32_t *getDisplayList();
 
 	static void mcuWrite(size_t address, uint8_t data);
 	static uint8_t mcuRead(size_t address);
 
-	/// Return true if the registers were touched since the last call
-	static bool untouchResolutionRegisters();
-
 	static __forceinline void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
 	static __forceinline uint32_t rawReadU32(uint8_t *buffer, size_t address);
 
+	static void swapDisplayList();
+
 private:
 	static __forceinline void rawWriteU32(size_t address, uint32_t data);
+	static __forceinline uint32_t rawReadU32(size_t address);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);

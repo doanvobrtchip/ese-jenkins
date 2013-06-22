@@ -10,3 +10,4 @@ typedef signed __int64 int64_t;
 #else
 #include <stdint.h>
 #endif
+typedef uint32_t argb8888;

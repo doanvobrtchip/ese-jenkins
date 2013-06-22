@@ -23,8 +23,6 @@
 
 namespace FT800EMU {
 
-typedef uint32_t argb8888;
-
 /**
  * GraphicsDriverClass
  * \brief GraphicsDriverClass

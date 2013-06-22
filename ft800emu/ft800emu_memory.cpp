@@ -34,12 +34,18 @@ MemoryClass Memory;
 // RAM
 static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
 static uint8_t s_Rom[FT800EMU_ROM_SIZE];
+static uint32_t s_DisplayList[FT800EMU_DISPLAY_LIST_SIZE];
 
 static LONG s_TouchedResolutionRegisters = 0;
 
 __forceinline void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
 	rawWriteU32(s_Ram, address, data);
+}
+
+__forceinline uint32_t MemoryClass::rawReadU32(size_t address)
+{
+	return rawReadU32(s_Ram, address);
 }
 
 void MemoryClass::begin()
@@ -95,36 +101,49 @@ uint8_t *MemoryClass::getRam()
 	return s_Ram;
 }
 
+const uint32_t *MemoryClass::getDisplayList()
+{
+	return s_DisplayList;
+}
+
 void MemoryClass::mcuWrite(size_t address, uint8_t data)
 {
-	/*switch (address & 0xFFFFFFFC)
+	// switches for 1 byte regs
+	// least significant byte
+	if (address % 4 == 0)
 	{
-	case REG_PCLK:
-	case REG_PCLK_POL:
-	case REG_HCYCLE:
-	case REG_HOFFSET:
-	case REG_HSIZE:
-	case REG_HSYNC0:
-	case REG_HSYNC1:
-	case REG_VCYCLE:
-	case REG_VOFFSET:
-	case REG_VSIZE:
-	case REG_VSYNC0:
-	case REG_VSYNC1:
-		s_TouchedResolutionRegisters = 1;
+		switch (address)
+		{
+		case REG_DLSWAP:
+			if (data == SWAP_FRAME && s_Ram[REG_PCLK] == 0)
+			{
+				swapDisplayList();
+				data = 0;
+			}
+			break;
+		}
+	}
+	/*
+	switch (address & 0xFFFFFFFC)
+	{
+	case REG_...:
+		...
 		break;
-	}*/
+	}
+	*/
 	s_Ram[address] = data;
+}
+
+void MemoryClass::swapDisplayList()
+{
+	// Should this literally swap or is a copy good enough?
+	printf("swap display list");
+	memcpy(static_cast<void *>(s_DisplayList), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayList) * sizeof(s_DisplayList[0]));
 }
 
 uint8_t MemoryClass::mcuRead(size_t address)
 {
 	return s_Ram[address];
-}
-
-bool MemoryClass::untouchResolutionRegisters()
-{
-	return InterlockedExchange(&s_TouchedResolutionRegisters, 0);
 }
 
 } /* namespace FT800EMU */
