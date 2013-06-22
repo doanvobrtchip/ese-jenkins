@@ -32,7 +32,7 @@
 
 // #include "vc.h"
 
-#include "ft800emu_spi.h"
+#include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
 
 #include "omp.h"
@@ -117,7 +117,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 
 	System.begin();
 	Memory.begin();
-	SPI.begin();
+	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
 	if (flags & EmulatorEnableKeyboard) Keyboard.begin();
@@ -165,7 +165,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	if (flags & EmulatorEnableKeyboard) Keyboard.end();
 	if (flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
-	SPI.end();
+	SPII2C.end();
 	Memory.end();
 	System.end();
 }

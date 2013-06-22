@@ -20,7 +20,7 @@
 // System includes
 #include "ft800emu_system_windows.h"
 #include "ft800emu_system.h"
-// #include "ft800emu_ft800_spi.h"
+// #include "ft800emu_ft800_spi_i2c.h"
 
 // Project includes
 

@@ -1,8 +1,8 @@
 /**
- * SPIClass
+ * SPII2CClass
  * $Id$
- * \file ft800emu_spi.h
- * \brief SPIClass
+ * \file ft800emu_spi_i2c.h
+ * \brief SPII2CClass
  * \date 2013-06-21 21:56GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_SPI_H
-#define FT800EMU_SPI_H
+#ifndef FT800EMU_SPI_I2C_H
+#define FT800EMU_SPI_I2C_H
 // #include <...>
 
 // System includes
@@ -24,15 +24,15 @@
 namespace FT800EMU {
 
 /**
- * SPIClass
- * \brief SPIClass
+ * SPII2CClass
+ * \brief SPII2CClass
  * \date 2013-06-21 21:56GMT
  * \author Jan Boon (Kaetemi)
  */
-class SPIClass
+class SPII2CClass
 {
 public:
-	SPIClass() { }
+	SPII2CClass() { }
 
 	static void begin();
 	static void end();
@@ -48,15 +48,15 @@ public:
 	static uint8_t mcuReadByte();
 
 private:
-	SPIClass(const SPIClass &);
-	SPIClass &operator=(const SPIClass &);
+	SPII2CClass(const SPII2CClass &);
+	SPII2CClass &operator=(const SPII2CClass &);
 	
-}; /* class SPIClass */
+}; /* class SPII2CClass */
 
-extern SPIClass SPI;
+extern SPII2CClass SPII2C;
 
 } /* namespace FT800EMU */
 
-#endif /* #ifndef FT800EMU_SPI_H */
+#endif /* #ifndef FT800EMU_SPI_I2C_H */
 
 /* end of file */

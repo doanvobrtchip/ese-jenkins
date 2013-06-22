@@ -29,7 +29,7 @@
 // System includes
 
 // Project includes
-#include "ft800emu_spi.h"
+#include "ft800emu_spi_i2c.h"
 
 // using namespace ...;
 
