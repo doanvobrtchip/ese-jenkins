@@ -19,10 +19,11 @@
 // System includes
 
 // Project includes
+#include "ft800emu_inttypes.h"
 
 namespace FT800EMU {
 
-typedef unsigned short argb1555;
+typedef uint32_t argb8888;
 
 /**
  * GraphicsDriverClass
@@ -41,7 +42,7 @@ public:
 
 	static void renderBuffer();
 
-	static argb1555 *getBufferARGB1555();
+	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()
 	{
 		#ifdef FT800EMU_SDL

@@ -27,9 +27,9 @@
 using namespace std;
 
 #define FT800EMU_WINDOW_TITLE TEXT("FT800 Emulator")
-#define FT800EMU_WINDOW_WIDTH 400
-#define FT800EMU_WINDOW_HEIGHT 300
-#define FT800EMU_WINDOW_RATIO (4.0f / 3.0f)
+#define FT800EMU_WINDOW_WIDTH 480
+#define FT800EMU_WINDOW_HEIGHT 272
+#define FT800EMU_WINDOW_RATIO (480.0f / 272.0f)
 #define FT800EMU_WINDOW_KEEPRATIO 1
 
 #define FT800EMU_WINDOW_CLASS_NAME TEXT("FT800EMUGraphicsDriver")
@@ -41,7 +41,7 @@ namespace FT800EMU {
 
 
 GraphicsDriverClass GraphicsDriver;
-static argb1555 s_BufferARGB1555[FT800EMU_WINDOW_WIDTH * FT800EMU_WINDOW_HEIGHT];
+static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH * FT800EMU_WINDOW_HEIGHT];
 
 
 
@@ -64,9 +64,9 @@ BITMAPINFO s_BitInfo;
 
 
 
-argb1555 *GraphicsDriverClass::getBufferARGB1555()
+argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
-	return s_BufferARGB1555;
+	return s_BufferARGB8888;
 }
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -166,7 +166,7 @@ void GraphicsDriverClass::begin()
 	s_BitInfo.bmiHeader.biWidth = FT800EMU_WINDOW_WIDTH;
     s_BitInfo.bmiHeader.biHeight = FT800EMU_WINDOW_HEIGHT;
     s_BitInfo.bmiHeader.biPlanes = 1;
-    s_BitInfo.bmiHeader.biBitCount = 16; // was 24
+    s_BitInfo.bmiHeader.biBitCount = 32;
     s_BitInfo.bmiHeader.biCompression = BI_RGB;
 
 	// Meh
@@ -215,7 +215,7 @@ void GraphicsDriverClass::renderBuffer()
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
 	if (!SetDIBitsToDevice(s_HDC, 0, 0,
 		FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT,
-		0, 0, 0, FT800EMU_WINDOW_HEIGHT, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS))
+		0, 0, 0, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS))
 		SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
 #endif
 
@@ -224,10 +224,7 @@ void GraphicsDriverClass::renderBuffer()
 	GetClientRect(s_HWnd, &r);
 #if FT800EMU_WINDOW_KEEPRATIO
 	{
-		argb1555 bgC16 = 0; // TODO ((argb1555 *)(void *)(&FT800SPI.getRam()[0x280e]))[0];
-		COLORREF bgC32 = RGB((((bgC16) & 0x1F) * 255 / 31),
-			(((bgC16 >> 5) & 0x1F) * 255 / 31),
-			(((bgC16 >> 10) & 0x1F) * 255 / 31));
+		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
 		if (bgBrush == NULL) SystemWindows.ErrorWin32();
 		int width_r = (int)((float)r.bottom * FT800EMU_WINDOW_RATIO); int height_r;
@@ -239,7 +236,7 @@ void GraphicsDriverClass::renderBuffer()
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
 		StretchBlt(hdc, x_r, y_r, width_r, height_r, s_HDC, 0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, SRCCOPY);
 #else
-		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
 #endif
 		RECT rect;
 		if (x_r > 0)
