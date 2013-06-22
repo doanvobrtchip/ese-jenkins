@@ -63,8 +63,82 @@ namespace {
 
 		double targetSeconds = System.getSeconds();
 
-		// ... TODO ...
-		// Todo calculate the resolution and refresh and create the display buffer
+		uint8_t *ram = Memory.getRam();
+
+		for (;;)
+		{
+			double deltaSeconds = 0.1; // TODO
+
+			//printf("main thread\n");
+			System.makeRealtimePriorityThread();
+
+			System.update();
+			targetSeconds += deltaSeconds;
+
+			// If coprocessor running on render thread, REG_CPURESET goes into effect at this point.
+			// Must use the getCPUReset() function which buffers value switches.
+			// ...(Memory.getCPUReset());
+			
+			// Render lines
+			{
+				// VBlank 0
+				// System.delay(0);
+				System.switchThread();
+				
+				unsigned long procStart = System.getMicros();
+				// GraphicsProcessor.process();
+				unsigned long procDelta = System.getMicros() - procStart;
+
+				if (procDelta > 8000)
+					printf("process: %i micros (%i ms)\r\n", (int)procDelta, (int)procDelta / 1000);
+			}
+
+			// Flip buffer and also give a slice of time to the mcu main thread
+			{
+				// VBlank 1
+				System.prioritizeMCUThread();
+
+#ifndef WIN32
+				System.holdMCUThread(); // vblank'd !
+				System.resumeMCUThread();
+#endif
+
+				unsigned long flipStart = System.getMicros();
+				// GraphicsProcessor.flip();
+				unsigned long flipDelta = System.getMicros() - flipStart;
+
+				if (flipDelta > 8000)
+					printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
+
+				//System.delay(2); // ensure slice of time to mcu thread at cost of cpu cycles
+				System.switchThread();
+				System.unprioritizeMCUThread();
+			}
+
+			//long currentMillis = millis();
+			//long millisToWait = targetMillis - currentMillis;
+			double currentSeconds = System.getSeconds();
+			double secondsToWait = targetSeconds - currentSeconds;
+			//if (millisToWait < -100) targetMillis = millis();
+			if (secondsToWait < -0.25) // Skip freeze
+			{
+				//printf("skip freeze\n");
+				targetSeconds = System.getSeconds();
+			}
+
+			//printf("millis to wait: %i", (int)millisToWait);
+
+			if (secondsToWait > 0.0)
+			{
+				System.delay((int)(secondsToWait * 1000.0));
+				// If coprocessor enabled and runs on the same thread as the rendering it would run here.
+			}
+
+#ifdef WIN32
+			System.holdMCUThread(); // don't let the other thread hog cpu
+			System.resumeMCUThread();
+#endif
+		}
 
 		System.revertThreadCategory(taskHandle);
 		return 0;

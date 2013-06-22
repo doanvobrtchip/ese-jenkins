@@ -45,11 +45,26 @@ public:
 	/// Return true if the registers were touched since the last call
 	static bool untouchResolutionRegisters();
 
+	static __forceinline void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
+	static __forceinline uint32_t rawReadU32(uint8_t *buffer, size_t address);
+
 private:
+	static __forceinline void rawWriteU32(size_t address, uint32_t data);
+
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
 	
 }; /* class MemoryClass */
+
+__forceinline void MemoryClass::rawWriteU32(uint8_t *buffer, size_t address, uint32_t data)
+{
+	*static_cast<uint32_t *>(static_cast<void *>(&buffer[address])) = data;
+}
+
+__forceinline uint32_t MemoryClass::rawReadU32(uint8_t *buffer, size_t address)
+{
+	return *static_cast<uint32_t *>(static_cast<void *>(&buffer[address]));
+}
 
 extern MemoryClass Memory;
 
