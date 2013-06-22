@@ -71,7 +71,7 @@ void MemoryClass::begin()
 	rawWriteU32(REG_HSYNC0, 0);
 	rawWriteU32(REG_HSYNC1, 41);
 	rawWriteU32(REG_VCYCLE, 292);
-	rawWriteU32(REG_VOFFSET, 0);
+	rawWriteU32(REG_VOFFSET, 12);
 	rawWriteU32(REG_VSIZE, 272);
 	rawWriteU32(REG_VSYNC0, 0);
 	rawWriteU32(REG_VSYNC1, 10);

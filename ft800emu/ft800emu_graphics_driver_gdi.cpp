@@ -209,19 +209,23 @@ void GraphicsDriverClass::end()
 	UnregisterClass(FT800EMU_WINDOW_CLASS_NAME, s_HInstance);
 }
 
-void GraphicsDriverClass::renderBuffer()
+void GraphicsDriverClass::renderBuffer(bool output)
 {
 	// Render bitmap to buffer
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
-	if (!SetDIBitsToDevice(s_HDC, 0, 0,
-		FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT,
-		0, 0, 0, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS))
-		SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
+	if (output)
+	{
+		if (!SetDIBitsToDevice(s_HDC, 0, 0,
+			FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT,
+			0, 0, 0, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS))
+			SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
+	}
 #endif
 
 	// Draw buffer to screen
 	RECT r;
 	GetClientRect(s_HWnd, &r);
+	if (output)
 #if FT800EMU_WINDOW_KEEPRATIO
 	{
 		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
@@ -274,6 +278,17 @@ void GraphicsDriverClass::renderBuffer()
 		ReleaseDC(s_HWnd, hdc);
 	}
 #endif
+	else
+	{
+		// no output
+		HDC hdc = GetDC(s_HWnd);
+		COLORREF bgC32 = RGB(128, 128, 128); // bg off render
+		HBRUSH bgBrush = CreateSolidBrush(bgC32);
+		if (bgBrush == NULL) SystemWindows.ErrorWin32();
+		FillRect(hdc, &r, bgBrush);
+		if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32();
+		ReleaseDC(s_HWnd, hdc);
+	}
 
 	// Update title
 	tstringstream newTitle;

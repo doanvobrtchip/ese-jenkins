@@ -40,7 +40,7 @@ public:
 	static bool update();
 	static void end();
 
-	static void renderBuffer();
+	static void renderBuffer(bool output);
 
 	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()

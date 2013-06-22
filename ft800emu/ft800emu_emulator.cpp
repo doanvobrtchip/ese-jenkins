@@ -32,12 +32,15 @@
 
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
+#include "ft800emu_graphics_processor.h"
 
 #include "vc.h"
 
 #include "omp.h"
 
 // using namespace ...;
+
+#define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
 namespace FT800EMU {
 
@@ -48,8 +51,6 @@ namespace {
 	void (*s_Loop)() = NULL;
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
-
-	uint64_t s_Clock = 48 * 000 * 000; // 48 MHz
 
 	int masterThread(void * = NULL)
 	{
@@ -67,7 +68,18 @@ namespace {
 
 		for (;;)
 		{
-			double deltaSeconds = 0.1; // TODO
+			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
+			double deltaSeconds;
+			// Calculate the display frequency
+			if (reg_pclk)
+			{
+				double frequency = (double)Memory.rawReadU32(ram, REG_FREQUENCY);
+				frequency /= (double)reg_pclk;
+				frequency /= (double)Memory.rawReadU32(ram, REG_VCYCLE);
+				frequency /= (double)Memory.rawReadU32(ram, REG_HCYCLE);
+				deltaSeconds = 1.0 / frequency;
+			}
+			else deltaSeconds = 1.0;
 
 			//printf("main thread\n");
 			System.makeRealtimePriorityThread();
@@ -81,12 +93,11 @@ namespace {
 			
 			// Render lines
 			{
-				// VBlank 0
-				// System.delay(0);
+				// VBlank=0
 				System.switchThread();
 				
 				unsigned long procStart = System.getMicros();
-				// GraphicsProcessor.process();
+				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888());
 				unsigned long procDelta = System.getMicros() - procStart;
 
 				if (procDelta > 8000)
@@ -95,7 +106,7 @@ namespace {
 
 			// Flip buffer and also give a slice of time to the mcu main thread
 			{
-				// VBlank 1
+				// VBlank=1
 				Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				System.prioritizeMCUThread();
 
@@ -105,35 +116,48 @@ namespace {
 #endif
 
 				unsigned long flipStart = System.getMicros();
-				GraphicsDriver.renderBuffer();
+				GraphicsDriver.renderBuffer(reg_pclk != 0);
 				if (!GraphicsDriver.update()) exit(0); // ...
 				unsigned long flipDelta = System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)
 					printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
 
-				//System.delay(2); // ensure slice of time to mcu thread at cost of cpu cycles
-				System.switchThread();
+				System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
 				System.unprioritizeMCUThread();
 			}
 
-			//long currentMillis = millis();
-			//long millisToWait = targetMillis - currentMillis;
-			double currentSeconds = System.getSeconds();
-			double secondsToWait = targetSeconds - currentSeconds;
-			//if (millisToWait < -100) targetMillis = millis();
-			if (secondsToWait < -0.25) // Skip freeze
+			if (reg_pclk)
 			{
-				//printf("skip freeze\n");
-				targetSeconds = System.getSeconds();
+				//long currentMillis = millis();
+				//long millisToWait = targetMillis - currentMillis;
+				double currentSeconds = System.getSeconds();
+				double secondsToWait = targetSeconds - currentSeconds;
+				//if (millisToWait < -100) targetMillis = millis();
+				if (secondsToWait < -0.25) // Skip freeze
+				{
+					//printf("skip freeze\n");
+					targetSeconds = System.getSeconds();
+				}
+
+				//printf("millis to wait: %i", (int)millisToWait);
+
+				if (secondsToWait > 0.0)
+				{
+					System.delay((int)(secondsToWait * 1000.0));
+					// If coprocessor enabled and runs on the same thread as the rendering it would run here.
+				}
 			}
-
-			//printf("millis to wait: %i", (int)millisToWait);
-
-			if (secondsToWait > 0.0)
+			else
 			{
-				System.delay((int)(secondsToWait * 1000.0));
-				// If coprocessor enabled and runs on the same thread as the rendering it would run here.
+				// REG_PCLK is 0
+#if FT800EMU_REG_PCLK_ZERO_REDUCE
+				targetSeconds = System.getSeconds() + 0.1;
+				System.delay(100);
+#else
+				targetSeconds = System.getSeconds();
+				System.switchThread();
+#endif
 			}
 
 #ifdef WIN32
