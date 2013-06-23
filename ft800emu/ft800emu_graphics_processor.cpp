@@ -73,13 +73,24 @@ public:
 	GraphicsState()
 	{
 		ClearColorARGB = 0xFF000000;
+		ClearStencil = 0;
+		ClearTag = 0;
+		Tag = 0;
+		TagMask = true;
 	}
 
 	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
+	uint32_t ClearStencil; // PG says "Stencil value"
+	uint8_t ClearTag;
+	uint8_t Tag;
+	bool TagMask;
 };
 
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, uint32_t vsize)
 {
+	// If a frame is process and there is no clear command, is the tag buffer etc reset or not?
+	uint8_t *tag = Memory.getTagBuffer();
+
 	// Swap the display list... Is this done before the frame render or after?
 	if (Memory.getRam()[REG_DLSWAP] == SWAP_FRAME)
 		Memory.swapDisplayList();
@@ -90,10 +101,21 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 	{
 		GraphicsState gs = GraphicsState();
 		argb8888 *bc = &screenArgb8888[y * hsize];
+		uint8_t *bt = &tag[y * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per row
-		
+
+		// pre-clear bitmap buffer, but optimize!
+		if ((displayList[0] & 0xFF000004 != (FT800EMU_DL_CLEAR << 24) | 0x04) 
+			&& ((displayList[0] >> 24 != FT800EMU_DL_CLEAR_COLOR_RGB) 
+				&& (displayList[1] & 0xFF000004 != (FT800EMU_DL_CLEAR << 24) | 0x04)))
+		{
+			for (uint32_t i = 0; i < hsize; ++i)
+				bc[i] = 0xFF000000;
+		}
+
+		// run display list
 		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			uint32_t v = displayList[c]; // (up to 2048 ops)
@@ -104,13 +126,20 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 			case FT800EMU_DL_CLEAR_COLOR_RGB:
 				gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
 				break;
+			case FT800EMU_DL_TAG:
+				gs.Tag = v & 0xFF;
 			case FT800EMU_DL_COLOR_A:
 				gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
 				break;
+			case FT800EMU_DL_CLEAR_TAG:
+				gs.ClearTag = v & 0xFF;
+			case FT800EMU_DL_TAG_MASK:
+				gs.TagMask = (v & 0x01) != 0;
 			case FT800EMU_DL_CLEAR:
+				// TODO: Create merged versions for optimization to avoid repeated looping...
 				if (v & 0x04)
 				{
-					// clear color buffer (about 480 ops)
+					// clear color buffer (about 480(loop)+480 ops)
 					for (uint32_t i = 0; i < hsize; ++i)
 					{
 						bc[i] = gs.ClearColorARGB;
@@ -120,9 +149,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 				{
 					// Clear stencil buffer
 				}
-				if (v & 0x01)
+				if (gs.TagMask && v & 0x01)
 				{
-					// Clear tag buffer
+					// Clear tag buffer (about 480(loop)+480 ops)
+					for (uint32_t i = 0; i < hsize; ++i)
+					{
+						bt[i] = gs.ClearTag;
+					}
 				}
 				// printf("CLEAR\n");
 				// memset
