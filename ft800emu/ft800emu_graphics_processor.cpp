@@ -106,12 +106,76 @@ public:
 	bool TagMask;
 };
 
-void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, uint32_t vsize)
+namespace {
+
+__forceinline unsigned int div255(int value)
+{
+	return (value * 257 + 257) >> 16;
+}
+
+__forceinline argb8888 mulalpha(argb8888 value, int alpha)
+{
+	// todo optimize!
+	argb8888 result = div255(((value & 0x00FF0000) >> 16) * alpha);
+	result <<= 8;
+	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
+	result <<= 8;
+	result |= div255((value & 0x000000FF) * alpha);
+	return result;
+}
+
+void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
+{
+	int yy = y * 16;
+	int r = gs.PointSize;
+	int rsq = r * r;
+
+	int pytop = py - r; // incl pixel*16 top
+	int pybtm = py + r - 1; // incl pixel*16 btm
+
+	int pytopi = (pytop + 8) >> 4;
+	int pybtmi = (pybtm + 8) >> 4;
+
+	int pxlef = px - r;
+	int pxrig = px + r - 1;
+
+	int pxlefi = (pxlef + 8) >> 4;
+	int pxrigi = (pxrig + 8) >> 4;
+
+	if (pytopi <= y && y <= pybtmi)
+	{
+		for (int x = pxlefi; x <= pxrigi; ++x)
+		{
+			// todo optimize!
+			int xx = x * 16;
+			int xdist = xx - px;
+			int ydist = yy - py;
+			int distouter = (xdist * xdist) + (ydist * ydist) - (32 * 256); // pretty close to the aa in the pdf
+			int distinner = (xdist * xdist) + (ydist * ydist) + (32 * 256);
+			if (distinner < rsq)
+			{
+				int alpha = bc[x] >> 24;
+				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+			}
+			else if (distouter < rsq)
+			{
+				int alpha = bc[x] >> 24;
+				alpha *= (rsq - distouter);
+				alpha >>= 14;
+				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+			}
+		}
+	}
+}
+
+}
+
+void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
 	// If a frame is process and there is no clear command, is the tag buffer etc reset or not?
 	uint8_t *tag = Memory.getTagBuffer();
-	int hsize16 = hsize * 16; // << 4
-	int vsize16 = vsize * 16;
+	// int hsize16 = hsize * 16; // << 4
+	// int vsize16 = vsize * 16;
 
 	// Swap the display list... Is this done before the frame render or after?
 	if (Memory.getRam()[REG_DLSWAP] == SWAP_FRAME)
@@ -119,29 +183,25 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 
 	const uint32_t *displayList = Memory.getDisplayList();
 	uint8_t bs[512]; // stencil buffer (per-thread values!) TODO Max line width
-	argb8888 bcaa[512][16]; // aa buffer
-	bool bcaab[512]; // aa buffer flag
 	// TODO: option for multicore rendering
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
 		GraphicsState gs = GraphicsState();
-		argb8888 *bc = &screenArgb8888[y * hsize];
+		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
 		uint8_t *bt = &tag[y * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line
-		int px, py;
 
 		// pre-clear bitmap buffer, but optimize!
 		if (!(((displayList[0] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04))
 			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
 				&& ((displayList[1] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04)))))
 		{
-			// about loop+480+480 ops
+			// about loop+480 ops
 			for (uint32_t i = 0; i < hsize; ++i)
 			{
 				bc[i] = 0xFF000000;
-				bcaab[i] = false;
 			}
 		}
 		// pre-clear line stencil buffer, but optimize!
@@ -219,9 +279,8 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 						// clear color buffer (about loop+480 ops)
 						for (uint32_t i = 0; i < hsize; ++i)
 						{
-							// How does alpha work here?
+							// TODO How does alpha work here?
 							bc[i] = gs.ClearColorARGB;
-							bcaab[i] = false;
 						}
 					}
 					if (v & 0x02)
@@ -242,33 +301,45 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 					}
 					break;
 				}
+				break;
 			case FT800EMU_DL_VERTEX2II:
 //#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
 //#define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
 				switch (gs.Primitive)
 				{
 				case POINTS:
+#if 0
+					printf("%i POINT %i %i\n", c, ((v >> 21) & 0xFF), ((v >> 12) & 0xFF));
 					// Ugly square point rendering  code (it's a square)
-					size_t pr = gs.PointSize >> 4;
-					px = (v >> 21) & 0xFF;
-					py = (v >> 12) & 0xFF;
+					int pr = gs.PointSize >> 4;
+					int px = (v >> 21) & 0xFF;
+					int py = (v >> 12) & 0xFF;
 					if (py - pr <= y && y <= py + pr)
 					{
 						size_t pxl = px - pr;
 						size_t pxr = px + pr;
 						for (size_t x = pxl; x <= pxr; ++x)
 						{
-							bc[x] = gs.ColorARGB;
-							bcaab[x] = false;
+							// bc[x] = gs.ColorARGB;
+							bc[x] = ((x & 0xFF) << 8) | (y & 0xFF);
 						}
 					}
 					break;
+#else
+					displayPoint(gs, bc, bs, bt, y, hsize, 
+						((v >> 21) & 0xFF) * 16, 
+						((v >> 12) & 0xFF) * 16);
+					break;
+#endif
 				}
 				break;
 			case FT800EMU_DL_VERTEX2F:
 				switch (gs.Primitive)
 				{
 				case POINTS:
+					/*displayPoint(gs, bc, bs, bt, y, hsize, 
+						0, 
+						0);*/
 					break;
 				}
 				break;

@@ -33,7 +33,7 @@ class GraphicsProcessorClass
 public:
 	GraphicsProcessorClass() { }
 
-	static void process(argb8888 *screenArgb8888, uint32_t hsize, uint32_t vsize);
+	static void process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize);
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

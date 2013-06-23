@@ -102,7 +102,7 @@ namespace {
 				System.switchThread();
 				
 				unsigned long procStart = System.getMicros();
-				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), reg_hsize, reg_vsize);
+				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
 				unsigned long procDelta = System.getMicros() - procStart;
 
 				if (procDelta > 8000)
