@@ -74,6 +74,7 @@ struct GraphicsState
 public:
 	GraphicsState()
 	{
+		Primitive = 0; // Not sure if part of gs
 		ColorARGB = 0x00000000;
 		PointSize = 16;
 		ClearColorARGB = 0xFF000000; // Not found in the programmer guide
@@ -89,6 +90,7 @@ public:
 		StencilOpFail = KEEP;
 	}
 
+	int Primitive; // Not sure if part of gs
 	argb8888 ColorARGB;
 	int PointSize;
 	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
@@ -128,6 +130,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line
+		int px, py;
 
 		// pre-clear bitmap buffer, but optimize!
 		if (!(((displayList[0] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04))
@@ -153,97 +156,8 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 			}
 		}
 
-		size_t c = 0;
 		// run display list
-DisplayList:
-		for (; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
-		{
-			uint32_t v = displayList[c]; // (up to 2048 ops)
-			switch (v >> 24)
-			{
-			case FT800EMU_DL_DISPLAY:
-				goto DisplayListDisplay;
-			case FT800EMU_DL_CLEAR_COLOR_RGB:
-				gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
-				break;
-			case FT800EMU_DL_TAG:
-				gs.Tag = v & 0xFF;
-				break;
-			case FT800EMU_DL_COLOR_RGB:
-				gs.ColorARGB = (gs.ColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
-				break;
-			case FT800EMU_DL_STENCIL_FUNC:
-				gs.StencilFunc = (v >> 16) & 0x7;
-				gs.StencilFuncRef = (v >> 8) & 0xFF;
-				gs.StencilFuncMask = v & 0xFF;
-				break;
-			case FT800EMU_DL_STENCIL_OP:
-				gs.StencilOpFail = (v >> 3) & 0x7;
-				gs.StencilOpPass = v & 0x7;
-				break;
-			case FT800EMU_DL_POINT_SIZE:
-				gs.PointSize = v & 0x1FFF;
-				break;
-			case FT800EMU_DL_CLEAR_COLOR_A:
-				gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
-				break;
-			case FT800EMU_DL_COLOR_A:
-				gs.ColorARGB = (gs.ColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
-				break;
-			case FT800EMU_DL_CLEAR_STENCIL:
-				gs.ClearStencil = v & 0xFF;
-				break;
-			case FT800EMU_DL_CLEAR_TAG:
-				gs.ClearTag = v & 0xFF;
-				break;
-			case FT800EMU_DL_STENCIL_MASK:
-				gs.StencilMask = v & 0xFF;
-				break;
-			case FT800EMU_DL_TAG_MASK:
-				gs.TagMask = (v & 0x01) != 0;
-				break;
-			case FT800EMU_DL_BEGIN:
-				switch (v & 0x0F) // primitive
-				{
-				case POINTS:
-					++c;
-					goto DisplayListPoints;
-				}
-				break;
-			case FT800EMU_DL_CLEAR:
-				// TODO: Create merged versions for optimization to avoid repeated looping...
-				if (v & 0x04)
-				{
-					// clear color buffer (about loop+480 ops)
-					for (uint32_t i = 0; i < hsize; ++i)
-					{
-						// How does alpha work here?
-						bc[i] = gs.ClearColorARGB;
-						bcaab[i] = false;
-					}
-				}
-				if (v & 0x02)
-				{
-					// Clear stencil buffer (about loop+480 ops)
-					for (uint32_t i = 0; i < hsize; ++i)
-					{
-						bs[i] = gs.ClearStencil;
-					}
-				}
-				if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
-				{
-					// Clear tag buffer (about loop+480 ops)
-					for (uint32_t i = 0; i < hsize; ++i)
-					{
-						bt[i] = gs.ClearTag;
-					}
-				}
-				break;
-			}
-		}
-		goto DisplayListDisplay;
-DisplayListPoints:
-		for (; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			uint32_t v = displayList[c]; // (up to 2048 ops)
 			switch (v >> 30)
@@ -253,26 +167,109 @@ DisplayListPoints:
 				{
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
+				case FT800EMU_DL_CLEAR_COLOR_RGB:
+					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
+					break;
+				case FT800EMU_DL_TAG:
+					gs.Tag = v & 0xFF;
+					break;
+				case FT800EMU_DL_COLOR_RGB:
+					gs.ColorARGB = (gs.ColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
+					break;
+				case FT800EMU_DL_STENCIL_FUNC:
+					gs.StencilFunc = (v >> 16) & 0x7;
+					gs.StencilFuncRef = (v >> 8) & 0xFF;
+					gs.StencilFuncMask = v & 0xFF;
+					break;
+				case FT800EMU_DL_STENCIL_OP:
+					gs.StencilOpFail = (v >> 3) & 0x7;
+					gs.StencilOpPass = v & 0x7;
+					break;
+				case FT800EMU_DL_POINT_SIZE:
+					gs.PointSize = v & 0x1FFF;
+					break;
+				case FT800EMU_DL_CLEAR_COLOR_A:
+					gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+					break;
+				case FT800EMU_DL_COLOR_A:
+					gs.ColorARGB = (gs.ColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+					break;
+				case FT800EMU_DL_CLEAR_STENCIL:
+					gs.ClearStencil = v & 0xFF;
+					break;
+				case FT800EMU_DL_CLEAR_TAG:
+					gs.ClearTag = v & 0xFF;
+					break;
+				case FT800EMU_DL_STENCIL_MASK:
+					gs.StencilMask = v & 0xFF;
+					break;
+				case FT800EMU_DL_TAG_MASK:
+					gs.TagMask = (v & 0x01) != 0;
+					break;
+				case FT800EMU_DL_BEGIN:
+					gs.Primitive = v & 0x0F;
+					break;
 				case FT800EMU_DL_END:
-					++c;
-					goto DisplayList;
+					gs.Primitive = 0;
+					break;
+				case FT800EMU_DL_CLEAR:
+					// TODO: Create merged versions for optimization to avoid repeated looping...
+					if (v & 0x04)
+					{
+						// clear color buffer (about loop+480 ops)
+						for (uint32_t i = 0; i < hsize; ++i)
+						{
+							// How does alpha work here?
+							bc[i] = gs.ClearColorARGB;
+							bcaab[i] = false;
+						}
+					}
+					if (v & 0x02)
+					{
+						// Clear stencil buffer (about loop+480 ops)
+						for (uint32_t i = 0; i < hsize; ++i)
+						{
+							bs[i] = gs.ClearStencil;
+						}
+					}
+					if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
+					{
+						// Clear tag buffer (about loop+480 ops)
+						for (uint32_t i = 0; i < hsize; ++i)
+						{
+							bt[i] = gs.ClearTag;
+						}
+					}
+					break;
 				}
 			case FT800EMU_DL_VERTEX2II:
 //#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
 //#define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
-				// Ugly square point rendering  code (it's a square)
-				size_t pr = gs.PointSize >> 4;
-				size_t px = (v >> 21) & 0xFF;
-				size_t py = (v >> 12) & 0xFF;
-				if (py - pr <= y && y <= py + pr)
+				switch (gs.Primitive)
 				{
-					size_t pxl = px - pr;
-					size_t pxr = px + pr;
-					for (size_t x = pxl; x <= pxr; ++x)
+				case POINTS:
+					// Ugly square point rendering  code (it's a square)
+					size_t pr = gs.PointSize >> 4;
+					px = (v >> 21) & 0xFF;
+					py = (v >> 12) & 0xFF;
+					if (py - pr <= y && y <= py + pr)
 					{
-						bc[x] = gs.ColorARGB;
-						bcaab[x] = false;
+						size_t pxl = px - pr;
+						size_t pxr = px + pr;
+						for (size_t x = pxl; x <= pxr; ++x)
+						{
+							bc[x] = gs.ColorARGB;
+							bcaab[x] = false;
+						}
 					}
+					break;
+				}
+				break;
+			case FT800EMU_DL_VERTEX2F:
+				switch (gs.Primitive)
+				{
+				case POINTS:
+					break;
 				}
 				break;
 			}
