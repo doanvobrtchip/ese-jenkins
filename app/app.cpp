@@ -37,7 +37,7 @@ static void dl(uint32_t cmd)
 void setup()
 {
 	dli = RAM_DL;
-	dl(CLEAR_COLOR_RGB(0, 64, 128));
+	// dl(CLEAR_COLOR_RGB(0, 64, 128));
 	dl(CLEAR(1, 1, 1)); // clear screen
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(VERTEX2II(220, 110, 31, 'F')); // ascii F in font 31

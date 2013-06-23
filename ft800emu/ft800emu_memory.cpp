@@ -146,7 +146,6 @@ void MemoryClass::mcuWrite(size_t address, uint8_t data)
 void MemoryClass::swapDisplayList()
 {
 	// Should this literally swap or is a copy good enough?
-	printf("swap display list");
 	memcpy(static_cast<void *>(s_DisplayList), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayList) * sizeof(s_DisplayList[0]));
 }
 

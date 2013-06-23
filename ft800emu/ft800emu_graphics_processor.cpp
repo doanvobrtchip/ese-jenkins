@@ -23,6 +23,8 @@
 
 // using namespace ...;
 
+#define FT800EMU_DL_VERTEX2F 1
+#define FT800EMU_DL_VERTEX2II 2
 #define FT800EMU_DL_DISPLAY 0
 #define FT800EMU_DL_BITMAP_SOURCE 1
 #define FT800EMU_DL_CLEAR_COLOR_RGB 2
@@ -72,7 +74,9 @@ struct GraphicsState
 public:
 	GraphicsState()
 	{
-		ClearColorARGB = 0xFF000000;
+		ColorARGB = 0x00000000;
+		PointSize = 16;
+		ClearColorARGB = 0xFF000000; // Not found in the programmer guide
 		ClearStencil = 0;
 		ClearTag = 0;
 		Tag = 0;
@@ -85,6 +89,8 @@ public:
 		StencilOpFail = KEEP;
 	}
 
+	argb8888 ColorARGB;
+	int PointSize;
 	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
 	uint8_t ClearStencil; // PG says "Stencil value" instead of "Stencil clear value"...?
 	uint8_t ClearTag;
@@ -102,6 +108,8 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 {
 	// If a frame is process and there is no clear command, is the tag buffer etc reset or not?
 	uint8_t *tag = Memory.getTagBuffer();
+	int hsize16 = hsize * 16; // << 4
+	int vsize16 = vsize * 16;
 
 	// Swap the display list... Is this done before the frame render or after?
 	if (Memory.getRam()[REG_DLSWAP] == SWAP_FRAME)
@@ -145,19 +153,24 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 			}
 		}
 
+		size_t c = 0;
 		// run display list
-		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+DisplayList:
+		for (; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			uint32_t v = displayList[c]; // (up to 2048 ops)
 			switch (v >> 24)
 			{
 			case FT800EMU_DL_DISPLAY:
-				goto EndOfLine;
+				goto DisplayListDisplay;
 			case FT800EMU_DL_CLEAR_COLOR_RGB:
 				gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
 				break;
 			case FT800EMU_DL_TAG:
 				gs.Tag = v & 0xFF;
+				break;
+			case FT800EMU_DL_COLOR_RGB:
+				gs.ColorARGB = (gs.ColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
 				break;
 			case FT800EMU_DL_STENCIL_FUNC:
 				gs.StencilFunc = (v >> 16) & 0x7;
@@ -167,8 +180,15 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 			case FT800EMU_DL_STENCIL_OP:
 				gs.StencilOpFail = (v >> 3) & 0x7;
 				gs.StencilOpPass = v & 0x7;
+				break;
+			case FT800EMU_DL_POINT_SIZE:
+				gs.PointSize = v & 0x1FFF;
+				break;
 			case FT800EMU_DL_CLEAR_COLOR_A:
 				gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+				break;
+			case FT800EMU_DL_COLOR_A:
+				gs.ColorARGB = (gs.ColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
 				break;
 			case FT800EMU_DL_CLEAR_STENCIL:
 				gs.ClearStencil = v & 0xFF;
@@ -181,6 +201,14 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 				break;
 			case FT800EMU_DL_TAG_MASK:
 				gs.TagMask = (v & 0x01) != 0;
+				break;
+			case FT800EMU_DL_BEGIN:
+				switch (v & 0x0F) // primitive
+				{
+				case POINTS:
+					++c;
+					goto DisplayListPoints;
+				}
 				break;
 			case FT800EMU_DL_CLEAR:
 				// TODO: Create merged versions for optimization to avoid repeated looping...
@@ -213,7 +241,43 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 				break;
 			}
 		}
-EndOfLine:
+		goto DisplayListDisplay;
+DisplayListPoints:
+		for (; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+		{
+			uint32_t v = displayList[c]; // (up to 2048 ops)
+			switch (v >> 30)
+			{
+			case 0:
+				switch (v >> 24)
+				{
+				case FT800EMU_DL_DISPLAY:
+					goto DisplayListDisplay;
+				case FT800EMU_DL_END:
+					++c;
+					goto DisplayList;
+				}
+			case FT800EMU_DL_VERTEX2II:
+//#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
+//#define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
+				// Ugly square point rendering  code (it's a square)
+				size_t pr = gs.PointSize >> 4;
+				size_t px = (v >> 21) & 0xFF;
+				size_t py = (v >> 12) & 0xFF;
+				if (py - pr <= y && y <= py + pr)
+				{
+					size_t pxl = px - pr;
+					size_t pxr = px + pr;
+					for (size_t x = pxl; x <= pxr; ++x)
+					{
+						bc[x] = gs.ColorARGB;
+						bcaab[x] = false;
+					}
+				}
+				break;
+			}
+		}
+DisplayListDisplay:
 		;
 	}
 }
