@@ -35,7 +35,7 @@ MemoryClass Memory;
 static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
 static uint8_t s_Rom[FT800EMU_ROM_SIZE];
 static uint32_t s_DisplayList[FT800EMU_DISPLAY_LIST_SIZE];
-static uint8_t s_TagBuffer[512 * 512]; // What's the maximum resolution?
+static uint8_t s_TagBuffer[512 * 512]; // TODO What's the maximum resolution?
 
 __forceinline void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {

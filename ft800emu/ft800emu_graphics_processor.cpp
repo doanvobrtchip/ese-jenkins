@@ -77,12 +77,24 @@ public:
 		ClearTag = 0;
 		Tag = 0;
 		TagMask = true;
+		StencilMask = 0xFF;
+		StencilFunc = ALWAYS;
+		StencilFuncRef = 0x00;
+		StencilFuncMask = 0xFF;
+		StencilOpPass = KEEP;
+		StencilOpFail = KEEP;
 	}
 
 	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
-	uint32_t ClearStencil; // PG says "Stencil value"
+	uint8_t ClearStencil; // PG says "Stencil value" instead of "Stencil clear value"...?
 	uint8_t ClearTag;
 	uint8_t Tag;
+	uint8_t StencilMask;
+	int StencilFunc; // Not in the programmer guide's graphics state table
+	uint8_t StencilFuncRef; // Not in the programmer guide's graphics state table
+	uint8_t StencilFuncMask; // Not in the programmer guide's graphics state table
+	int StencilOpPass;
+	int StencilOpFail;
 	bool TagMask;
 };
 
@@ -96,6 +108,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 		Memory.swapDisplayList();
 
 	const uint32_t *displayList = Memory.getDisplayList();
+	uint8_t bs[512]; // stencil buffer (per-thread values!) TODO Max line width
+	argb8888 bcaa[512][16]; // aa buffer
+	bool bcaab[512]; // aa buffer flag
 	// TODO: option for multicore rendering
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
@@ -104,15 +119,30 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 		uint8_t *bt = &tag[y * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
-		// maximum 15360 argb8888 memory ops per row
+		// maximum 15360 argb8888 memory ops per line
 
 		// pre-clear bitmap buffer, but optimize!
-		if (((displayList[0] & 0xFF000004) != ((FT800EMU_DL_CLEAR << 24) | 0x04))
-			&& (((displayList[0] >> 24) != FT800EMU_DL_CLEAR_COLOR_RGB) 
-				&& ((displayList[1] & 0xFF000004) != ((FT800EMU_DL_CLEAR << 24) | 0x04))))
+		if (!(((displayList[0] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04))
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+				&& ((displayList[1] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04)))))
 		{
+			// about loop+480+480 ops
 			for (uint32_t i = 0; i < hsize; ++i)
+			{
 				bc[i] = 0xFF000000;
+				bcaab[i] = false;
+			}
+		}
+		// pre-clear line stencil buffer, but optimize!
+		if (!(((displayList[0] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02))
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+				&& ((displayList[1] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02)))))
+		{
+			// about loop+480 ops
+			for (uint32_t i = 0; i < hsize; ++i)
+			{
+				bs[i] = 0;
+			}
 		}
 
 		// run display list
@@ -128,37 +158,58 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 				break;
 			case FT800EMU_DL_TAG:
 				gs.Tag = v & 0xFF;
-			case FT800EMU_DL_COLOR_A:
+				break;
+			case FT800EMU_DL_STENCIL_FUNC:
+				gs.StencilFunc = (v >> 16) & 0x7;
+				gs.StencilFuncRef = (v >> 8) & 0xFF;
+				gs.StencilFuncMask = v & 0xFF;
+				break;
+			case FT800EMU_DL_STENCIL_OP:
+				gs.StencilOpFail = (v >> 3) & 0x7;
+				gs.StencilOpPass = v & 0x7;
+			case FT800EMU_DL_CLEAR_COLOR_A:
 				gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+				break;
+			case FT800EMU_DL_CLEAR_STENCIL:
+				gs.ClearStencil = v & 0xFF;
 				break;
 			case FT800EMU_DL_CLEAR_TAG:
 				gs.ClearTag = v & 0xFF;
+				break;
+			case FT800EMU_DL_STENCIL_MASK:
+				gs.StencilMask = v & 0xFF;
+				break;
 			case FT800EMU_DL_TAG_MASK:
 				gs.TagMask = (v & 0x01) != 0;
+				break;
 			case FT800EMU_DL_CLEAR:
 				// TODO: Create merged versions for optimization to avoid repeated looping...
 				if (v & 0x04)
 				{
-					// clear color buffer (about 480(loop)+480 ops)
+					// clear color buffer (about loop+480 ops)
 					for (uint32_t i = 0; i < hsize; ++i)
 					{
+						// How does alpha work here?
 						bc[i] = gs.ClearColorARGB;
+						bcaab[i] = false;
 					}
 				}
 				if (v & 0x02)
 				{
-					// Clear stencil buffer
+					// Clear stencil buffer (about loop+480 ops)
+					for (uint32_t i = 0; i < hsize; ++i)
+					{
+						bs[i] = gs.ClearStencil;
+					}
 				}
-				if (gs.TagMask && v & 0x01)
+				if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
 				{
-					// Clear tag buffer (about 480(loop)+480 ops)
+					// Clear tag buffer (about loop+480 ops)
 					for (uint32_t i = 0; i < hsize; ++i)
 					{
 						bt[i] = gs.ClearTag;
 					}
 				}
-				// printf("CLEAR\n");
-				// memset
 				break;
 			}
 		}
