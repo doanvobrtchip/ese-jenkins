@@ -107,9 +107,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, uint32_t hsize, u
 		// maximum 15360 argb8888 memory ops per row
 
 		// pre-clear bitmap buffer, but optimize!
-		if ((displayList[0] & 0xFF000004 != (FT800EMU_DL_CLEAR << 24) | 0x04) 
-			&& ((displayList[0] >> 24 != FT800EMU_DL_CLEAR_COLOR_RGB) 
-				&& (displayList[1] & 0xFF000004 != (FT800EMU_DL_CLEAR << 24) | 0x04)))
+		if (((displayList[0] & 0xFF000004) != ((FT800EMU_DL_CLEAR << 24) | 0x04))
+			&& (((displayList[0] >> 24) != FT800EMU_DL_CLEAR_COLOR_RGB) 
+				&& ((displayList[1] & 0xFF000004) != ((FT800EMU_DL_CLEAR << 24) | 0x04))))
 		{
 			for (uint32_t i = 0; i < hsize; ++i)
 				bc[i] = 0xFF000000;
