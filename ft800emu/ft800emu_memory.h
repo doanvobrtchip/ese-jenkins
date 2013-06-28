@@ -22,6 +22,7 @@
 
 #define SWAP_FRAME 1 // missing for REG_DLSWAP write
 #define FT800EMU_DISPLAY_LIST_SIZE 2048
+#define FT800EMU_ROM_FONTINFO 0xFFFFC // (RAM_DL - 4)
 
 namespace FT800EMU {
 

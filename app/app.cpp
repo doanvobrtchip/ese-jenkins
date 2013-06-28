@@ -65,7 +65,7 @@ dl( COLOR_RGB(128, 128, 0) );
 dl( POINT_SIZE(13 * 16) );
 dl( VERTEX2F(90 * 16, 51 * 16) );
 dl(END());
-
+/*
 dl(SCISSOR_XY(40, 20)); // Scissor rectangle top left at (40, 20)
 dl(SCISSOR_SIZE(40, 40)); // Scissor rectangle is 40 x 40 pixels
 dl(CLEAR_COLOR_RGB(255, 255, 0)); // Clear to yellow
@@ -79,6 +79,15 @@ for (int i = 0; i < 500; ++i)
 	dl(VERTEX2F(random(4096 * 2), random(4096)));
 }
 dl(END());
+*/
+dl( STENCIL_OP(INCR, INCR) );
+dl( POINT_SIZE(760) );
+dl( BEGIN(POINTS) );
+dl( VERTEX2II(50, 60, 0, 0) );
+dl( VERTEX2II(110, 60, 0, 0) );
+dl( STENCIL_FUNC(EQUAL, 2, 255) );
+dl( COLOR_RGB(100, 0, 0) );
+dl( VERTEX2II(80, 60, 0, 0) );
 
 	dl(DISPLAY()); // display the image
 

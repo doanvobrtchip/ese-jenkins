@@ -70,6 +70,8 @@ namespace FT800EMU {
 
 GraphicsProcessorClass GraphicsProcessor;
 
+namespace {
+
 struct GraphicsState
 {
 public:
@@ -96,6 +98,8 @@ public:
 		StencilOpPass = KEEP;
 		StencilOpFail = KEEP;
 		ColorMaskARGB = 0xFFFFFFFF;
+		BitmapHandle = 0;
+		Cell = 0;
 	}
 
 	int Primitive; // Not sure if part of gs
@@ -119,9 +123,35 @@ public:
 	int StencilOpFail;
 	bool TagMask;
 	argb8888 ColorMaskARGB; // 1,1,1,1 stored as 0xFFFFFFFF
+	uint8_t BitmapHandle;
+	uint8_t Cell; // Bitmap cell 0-127
 };
 
-namespace {
+#pragma pack(push)
+#pragma pack(4)
+struct FontMetricBlock
+{
+	uint8_t CharacterWidth[128];
+	uint32_t BitmapFormat;
+	uint32_t BitmapStride;
+	uint32_t BitmapWidth;
+	uint32_t BitmapHeight;
+	uint32_t Bitmap;
+};
+#pragma pack(pop)
+
+// Temp.
+// How does this work in the memory for 0-15 when command setfont is issued on the coprocessor?
+FontMetricBlock s_FontMetricBlocks[16];
+
+__forceinline FontMetricBlock *getFontMetricBlock(const GraphicsState &gs)
+{
+	if (gs.BitmapHandle < 16)
+		return &s_FontMetricBlocks[gs.BitmapHandle];
+	uint32_t pos = Memory.rawReadU32(Memory.getRam(), FT800EMU_ROM_FONTINFO) + (148 * gs.BitmapHandle - 16);
+	uint8_t *ptr = &Memory.getRam()[pos];
+	return static_cast<FontMetricBlock *>(static_cast<void *>(ptr));
+}
 
 __forceinline unsigned int div255(int value)
 {
@@ -209,6 +239,12 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 		break;
 	}
 	return result;
+}
+
+__forceinline argb8888 getPaletted(uint8_t *ram, uint8_t value)
+{
+	uint32_t result = static_cast<uint32_t *>(static_cast<void *>(&ram[RAM_PAL]))[value];
+	return (result >> 8) & (result << 24); // really, RGBA?
 }
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
@@ -329,6 +365,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				{
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
+				case FT800EMU_DL_BITMAP_SOURCE:
+					getFontMetricBlock(gs)->Bitmap = v & 0xFFFFF;
+					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
 					break;
@@ -338,6 +377,41 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				case FT800EMU_DL_COLOR_RGB:
 					gs.ColorARGB = (gs.ColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
 					break;
+				case FT800EMU_DL_BITMAP_HANDLE:
+					gs.BitmapHandle = v & 0x1F;
+					break;
+				case FT800EMU_DL_CELL:
+					gs.Cell = v & 0x7F;
+					break;
+				case FT800EMU_DL_BITMAP_LAYOUT: {
+					FontMetricBlock *fmb = getFontMetricBlock(gs);
+					fmb->BitmapFormat = (v >> 19) & 0x1F;
+					fmb->BitmapStride = (v >> 9) & 0x3FF;
+					fmb->BitmapHeight = v & 0x1FF;
+					switch (fmb->BitmapFormat) // ehh? not sure if really needed
+					{
+					case ARGB1555:
+					case ARGB4:
+					case RGB565:
+						fmb->BitmapWidth = fmb->BitmapStride / 2;
+						break;
+					case L1:
+						fmb->BitmapWidth = fmb->BitmapStride * 8;
+						break;
+					case L4:
+						fmb->BitmapWidth = fmb->BitmapStride * 2;
+						break;
+					case L8:
+					case RGB332:
+					case ARGB2:
+					case PALETTED: // palette at RAM_PAL
+					case BARGRAPH: // not sure
+					case TEXT8X8: // not sure
+					case TEXTVGA: // docs on format?
+						fmb->BitmapWidth = fmb->BitmapStride;
+						break;
+					}
+					} break;
 				case FT800EMU_DL_STENCIL_FUNC:
 					gs.StencilFunc = (v >> 16) & 0x7;
 					gs.StencilFuncRef = (v >> 8) & 0xFF;
@@ -424,8 +498,6 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:
-//#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
-//#define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
 				if (y >= gs.ScissorY && y < gs.ScissorY2)
 				{
 					switch (gs.Primitive)
