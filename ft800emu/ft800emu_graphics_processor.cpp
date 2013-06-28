@@ -149,17 +149,17 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	int pytopi = (pytop + 8) >> 4;
 	int pybtmi = (pybtm + 8) >> 4;
 
-	int pxlef = px - r;
-	int pxrig = px + r - 1;
-
-	int pxlefi = (pxlef + 8) >> 4;
-	int pxrigi = (pxrig + 8) >> 4;
-
-	pxlefi = max(gs.ScissorX, pxlefi);
-	pxrigi = min(gs.ScissorX2 - 1, pxrigi);
-
 	if (pytopi <= y && y <= pybtmi)
 	{
+		int pxlef = px - r;
+		int pxrig = px + r - 1;
+
+		int pxlefi = (pxlef + 8) >> 4;
+		int pxrigi = (pxrig + 8) >> 4;
+
+		pxlefi = max(gs.ScissorX, pxlefi);
+		pxrigi = min(gs.ScissorX2 - 1, pxrigi);
+
 		int border = 16 * r;
 		int border2sqrt = (int)sqrtf((float)(border * 2)); // sqrt :(
 		for (int x = pxlefi; x <= pxrigi; ++x)
