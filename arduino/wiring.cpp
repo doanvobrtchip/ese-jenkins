@@ -114,7 +114,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	switch (pin)
 	{
 	case FT800EMU_FT800_SS_PIN:
-		FT800EMU::SPII2C.csHigh(val);
+		FT800EMU::SPII2C.csHigh(val != 0);
 		break;
 	case FT800EMU_ARDUINO_INTERRUPT_PIN_0:
 		ft800emuHandleInterrupt(0, val, prev);

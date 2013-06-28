@@ -78,6 +78,12 @@ public:
 		Primitive = 0; // Not sure if part of gs
 		ColorARGB = 0xFF000000; // Default alpha 255?
 		PointSize = 16;
+		ScissorX = 0;
+		ScissorY = 0;
+		ScissorWidth = 512;
+		ScissorHeight = 512;
+		ScissorX2 = 512;
+		ScissorY2 = 512;
 		ClearColorARGB = 0xFF000000; // Not found in the programmer guide
 		ClearStencil = 0;
 		ClearTag = 0;
@@ -94,6 +100,12 @@ public:
 	int Primitive; // Not sure if part of gs
 	argb8888 ColorARGB;
 	int PointSize;
+	uint32_t ScissorX;
+	uint32_t ScissorY;
+	uint32_t ScissorWidth;
+	uint32_t ScissorHeight;
+	uint32_t ScissorX2; // min(hsize, X + Width)
+	uint32_t ScissorY2; // Y + Height
 	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
 	uint8_t ClearStencil; // PG says "Stencil value" instead of "Stencil clear value"...?
 	uint8_t ClearTag;
@@ -143,10 +155,13 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	int pxlefi = (pxlef + 8) >> 4;
 	int pxrigi = (pxrig + 8) >> 4;
 
+	pxlefi = max(gs.ScissorX, pxlefi);
+	pxrigi = min(gs.ScissorX2 - 1, pxrigi);
+
 	if (pytopi <= y && y <= pybtmi)
 	{
 		int border = 16 * r;
-		int border2sqrt = (int)sqrtf(border * 2); // sqrt :(
+		int border2sqrt = (int)sqrtf((float)(border * 2)); // sqrt :(
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
 			// todo optimize! (works fine for 500 average sized points at full fps)
@@ -164,7 +179,7 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			else if (distouter < rsq)
 			{
 				int alpha = gs.ColorARGB >> 24;
-				alpha *= (int)sqrtf(rsq - distouter); // sqrt :(
+				alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
 				alpha /= border2sqrt;
 				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
 			}
@@ -191,6 +206,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
 		GraphicsState gs = GraphicsState();
+		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
 		uint8_t *bt = &tag[y * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
@@ -270,6 +286,18 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				case FT800EMU_DL_TAG_MASK:
 					gs.TagMask = (v & 0x01) != 0;
 					break;
+				case FT800EMU_DL_SCISSOR_XY:
+					gs.ScissorY = v & 0x1FF;
+					gs.ScissorX = (v >> 9) & 0x1FF;
+					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
+					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
+					break;
+				case FT800EMU_DL_SCISSOR_SIZE:
+					gs.ScissorHeight = v & 0x3FF;
+					gs.ScissorWidth = (v >> 10) & 0x3FF;
+					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
+					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
+					break;
 				case FT800EMU_DL_BEGIN:
 					gs.Primitive = v & 0x0F;
 					break;
@@ -277,30 +305,33 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					gs.Primitive = 0;
 					break;
 				case FT800EMU_DL_CLEAR:
-					// TODO: Create merged versions for optimization to avoid repeated looping...
-					if (v & 0x04)
+					if (y >= gs.ScissorY && y < gs.ScissorY2)
 					{
-						// clear color buffer (about loop+480 ops)
-						for (uint32_t i = 0; i < hsize; ++i)
+						// TODO: Create merged versions for optimization to avoid repeated looping...
+						if (v & 0x04)
 						{
-							// TODO How does alpha work here?
-							bc[i] = gs.ClearColorARGB;
+							// clear color buffer (about loop+480 ops)
+							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							{
+								// TODO How does alpha work here?
+								bc[i] = gs.ClearColorARGB;
+							}
 						}
-					}
-					if (v & 0x02)
-					{
-						// Clear stencil buffer (about loop+480 ops)
-						for (uint32_t i = 0; i < hsize; ++i)
+						if (v & 0x02)
 						{
-							bs[i] = gs.ClearStencil;
+							// Clear stencil buffer (about loop+480 ops)
+							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							{
+								bs[i] = gs.ClearStencil;
+							}
 						}
-					}
-					if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
-					{
-						// Clear tag buffer (about loop+480 ops)
-						for (uint32_t i = 0; i < hsize; ++i)
+						if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
 						{
-							bt[i] = gs.ClearTag;
+							// Clear tag buffer (about loop+480 ops)
+							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							{
+								bt[i] = gs.ClearTag;
+							}
 						}
 					}
 					break;
@@ -309,42 +340,29 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 			case FT800EMU_DL_VERTEX2II:
 //#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
 //#define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
-				switch (gs.Primitive)
+				if (y >= gs.ScissorY && y < gs.ScissorY2)
 				{
-				case POINTS:
-#if 0
-					printf("%i POINT %i %i\n", c, ((v >> 21) & 0xFF), ((v >> 12) & 0xFF));
-					// Ugly square point rendering  code (it's a square)
-					int pr = gs.PointSize >> 4;
-					int px = (v >> 21) & 0xFF;
-					int py = (v >> 12) & 0xFF;
-					if (py - pr <= y && y <= py + pr)
+					switch (gs.Primitive)
 					{
-						size_t pxl = px - pr;
-						size_t pxr = px + pr;
-						for (size_t x = pxl; x <= pxr; ++x)
-						{
-							// bc[x] = gs.ColorARGB;
-							bc[x] = ((x & 0xFF) << 8) | (y & 0xFF);
-						}
+					case POINTS:
+						displayPoint(gs, bc, bs, bt, y, hsize, 
+							((v >> 21) & 0xFF) * 16, 
+							((v >> 12) & 0xFF) * 16);
+						break;
 					}
-					break;
-#else
-					displayPoint(gs, bc, bs, bt, y, hsize, 
-						((v >> 21) & 0xFF) * 16, 
-						((v >> 12) & 0xFF) * 16);
-					break;
-#endif
 				}
 				break;
-			case FT800EMU_DL_VERTEX2F:
-				switch (gs.Primitive)
+			case FT800EMU_DL_VERTEX2F:				
+				if (y >= gs.ScissorY && y < gs.ScissorY2)
 				{
-				case POINTS:
-					displayPoint(gs, bc, bs, bt, y, hsize, 
-						((v >> 15) & 0x7FFF), 
-						(v & 0x7FFF));
-					break;
+					switch (gs.Primitive)
+					{
+					case POINTS:
+						displayPoint(gs, bc, bs, bt, y, hsize, 
+							((v >> 15) & 0x7FFF), 
+							(v & 0x7FFF));
+						break;
+					}
 				}
 				break;
 			}

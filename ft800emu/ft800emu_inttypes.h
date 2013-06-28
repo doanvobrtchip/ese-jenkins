@@ -11,3 +11,9 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #endif
 typedef uint32_t argb8888;
+#ifndef min
+#define min(a,b) ((a)<(b)?(a):(b))
+#endif
+#ifndef max
+#define max(a,b) ((a)>(b)?(a):(b))
+#endif

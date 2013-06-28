@@ -66,6 +66,11 @@ dl( POINT_SIZE(13 * 16) );
 dl( VERTEX2F(90 * 16, 51 * 16) );
 dl(END());
 
+dl(SCISSOR_XY(40, 20)); // Scissor rectangle top left at (40, 20)
+dl(SCISSOR_SIZE(40, 40)); // Scissor rectangle is 40 x 40 pixels
+dl(CLEAR_COLOR_RGB(255, 255, 0)); // Clear to yellow
+dl(CLEAR(1, 1, 1));
+
 dl( BEGIN(POINTS) );
 dl( COLOR_RGB(255, 0, 128) );
 dl( POINT_SIZE(5 * 16) );
