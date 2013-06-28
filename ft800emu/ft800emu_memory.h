@@ -40,7 +40,6 @@ public:
 	static void end();
 
 	static uint8_t *getRam();
-	static const uint8_t *getRom();
 	static const uint32_t *getDisplayList();
 	static uint8_t *getTagBuffer();
 

@@ -26,6 +26,8 @@
 
 #define FT800EMU_ROM_FILE "../reference/ROM"
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
+#define FT800EMU_ROM_INDEX 0xC0000 //(RAM_DL - FT800EMU_ROM_SIZE)
+#define FT800EMU_ROM_FONTINFO 0xFFFFC // (RAM_DL - 4)
 
 namespace FT800EMU {
 
@@ -33,7 +35,6 @@ MemoryClass Memory;
 
 // RAM
 static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
-static uint8_t s_Rom[FT800EMU_ROM_SIZE];
 static uint32_t s_DisplayList[FT800EMU_DISPLAY_LIST_SIZE];
 static uint8_t s_TagBuffer[512 * 512]; // TODO What's the maximum resolution?
 
@@ -54,7 +55,7 @@ void MemoryClass::begin()
 	if (!f) printf("Failed to open ROM file\n");
 	else
 	{
-		size_t s = fread(s_Rom, 1, FT800EMU_ROM_SIZE, f);
+		size_t s = fread(&s_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
 		if (s != FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
 		else printf("Loaded ROM file\n");
 		if (fclose(f)) printf("Error closing ROM file\n");
@@ -88,6 +89,20 @@ void MemoryClass::begin()
 	rawWriteU32(REG_CSPREAD, 1);
 	rawWriteU32(REG_PCLK_POL, 0);	
 	rawWriteU32(REG_PCLK, 0);
+
+	// dump font info
+	uint32_t fi = rawReadU32(FT800EMU_ROM_FONTINFO);
+	printf("Font index: %u\n", fi);
+	for (int i = 0; i < 16; ++i)
+	{
+		uint32_t bi = (i * 148) + fi;
+		uint32_t format = rawReadU32(bi + 128);
+		uint32_t stride = rawReadU32(bi + 132);
+		uint32_t width = rawReadU32(bi + 136);
+		uint32_t height = rawReadU32(bi + 140);
+		uint32_t data = rawReadU32(bi + 144);
+		printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", (i + 16), format, stride, width, height, data);
+	}
 }
 
 void MemoryClass::end()
@@ -98,11 +113,6 @@ void MemoryClass::end()
 uint8_t *MemoryClass::getRam()
 {
 	return s_Ram;
-}
-
-const uint8_t *MemoryClass::getRom()
-{
-	return s_Rom;
 }
 
 const uint32_t *MemoryClass::getDisplayList()

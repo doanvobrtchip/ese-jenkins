@@ -213,7 +213,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line
 
-		// pre-clear bitmap buffer, but optimize!
+		// pre-clear bitmap buffer, but optimize! (don't clear if the user already does it)
 		if (!(((displayList[0] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04))
 			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
 				&& ((displayList[1] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04)))))
@@ -224,7 +224,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				bc[i] = 0xFF000000;
 			}
 		}
-		// pre-clear line stencil buffer, but optimize!
+		// pre-clear line stencil buffer, but optimize! (don't clear if the user already does it)
 		if (!(((displayList[0] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02))
 			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
 				&& ((displayList[1] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02)))))
