@@ -95,6 +95,7 @@ public:
 		StencilFuncMask = 0xFF;
 		StencilOpPass = KEEP;
 		StencilOpFail = KEEP;
+		ColorMaskARGB = 0xFFFFFFFF;
 	}
 
 	int Primitive; // Not sure if part of gs
@@ -117,6 +118,7 @@ public:
 	int StencilOpPass;
 	int StencilOpFail;
 	bool TagMask;
+	argb8888 ColorMaskARGB; // 1,1,1,1 stored as 0xFFFFFFFF
 };
 
 namespace {
@@ -134,6 +136,78 @@ __forceinline argb8888 mulalpha(argb8888 value, int alpha)
 	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
 	result <<= 8;
 	result |= div255((value & 0x000000FF) * alpha);
+	return result;
+}
+
+__forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
+{
+	if (gs.TagMask) bt[x] = gs.Tag;
+}
+
+__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
+{
+	bool result;
+	switch (gs.StencilFunc)
+	{
+	case NEVER:
+		result = false;
+		break;
+	case LESS:
+		result = (bs[x] & gs.StencilFuncMask) < (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case LEQUAL:
+		result = (bs[x] & gs.StencilFuncMask) <= (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case GREATER:
+		result = (bs[x] & gs.StencilFuncMask) > (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case GEQUAL:
+		result = (bs[x] & gs.StencilFuncMask) >= (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case EQUAL:
+		result = (bs[x] & gs.StencilFuncMask) == (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case NOTEQUAL:
+		result = (bs[x] & gs.StencilFuncMask) != (gs.StencilFuncRef & gs.StencilFuncMask);
+		break;
+	case ALWAYS:
+		result = true;
+		break;
+	default:
+		// error
+		printf("Invalid stencil func");
+		result = true;
+	}
+	switch (result ? gs.StencilOpPass : gs.StencilOpFail)
+	{
+	case KEEP:
+		break;
+	case ZERO:
+		bs[x] = 0;
+		break;
+	case REPLACE:
+		bs[x] = gs.StencilFuncRef; // i assume
+		break;
+	case INCR:
+		if (bs[x] < 0xFF) ++bs[x]; // i assume
+		break;
+	//case INCR_WRAP:
+	//	++bs[x];
+	//	break;
+	case DECR:
+		if (bs[x] > 0x00) --bs[x]; // i assume
+		break;
+	//case DECR_WRAP:
+	//	--bs[x];
+	//	break;
+	case INVERT:
+		bs[x] = ~bs[x];
+		break;
+	default:
+		// error
+		printf("Invalid stencil op");
+		break;
+	}
 	return result;
 }
 
@@ -157,8 +231,8 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		int pxlefi = (pxlef + 8) >> 4;
 		int pxrigi = (pxrig + 8) >> 4;
 
-		pxlefi = max(gs.ScissorX, pxlefi);
-		pxrigi = min(gs.ScissorX2 - 1, pxrigi);
+		pxlefi = max((int)gs.ScissorX, pxlefi);
+		pxrigi = min((int)gs.ScissorX2 - 1, pxrigi);
 
 		int border = 16 * r;
 		int border2sqrt = (int)sqrtf((float)(border * 2)); // sqrt :(
@@ -173,15 +247,23 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			int distinner = distctr + border;
 			if (distinner < rsq)
 			{
-				int alpha = gs.ColorARGB >> 24;
-				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+				if (testStencil(gs, bs, x))
+				{
+					int alpha = gs.ColorARGB >> 24;
+					bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+					writeTag(gs, bt, x);
+				}
 			}
 			else if (distouter < rsq)
 			{
-				int alpha = gs.ColorARGB >> 24;
-				alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
-				alpha /= border2sqrt;
-				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+				if (testStencil(gs, bs, x))
+				{
+					int alpha = gs.ColorARGB >> 24;
+					alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
+					alpha /= border2sqrt;
+					bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+					writeTag(gs, bt, x);
+				}
 			}
 		}
 	}
@@ -301,19 +383,23 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				case FT800EMU_DL_BEGIN:
 					gs.Primitive = v & 0x0F;
 					break;
+				case FT800EMU_DL_COLOR_MASK:
+					gs.ColorMaskARGB = (((v >> 1) & 0x1) * 0xFF)
+						| (((v >> 2) & 0x1) * 0xFF00)
+						| (((v >> 3) & 0x1) * 0xFF0000)
+						| ((v & 0x1) * 0xFF000000);
+					break;
 				case FT800EMU_DL_END:
 					gs.Primitive = 0;
 					break;
 				case FT800EMU_DL_CLEAR:
 					if (y >= gs.ScissorY && y < gs.ScissorY2)
 					{
-						// TODO: Create merged versions for optimization to avoid repeated looping...
 						if (v & 0x04)
 						{
 							// clear color buffer (about loop+480 ops)
 							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
 							{
-								// TODO How does alpha work here?
 								bc[i] = gs.ClearColorARGB;
 							}
 						}
