@@ -50,7 +50,33 @@ void setup()
 	dl(BEGIN(POINTS)); // start drawing points
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
+
+dl( COLOR_RGB(128, 0, 0) );
+dl( POINT_SIZE(5 * 16) );
+dl( BEGIN(POINTS) );
+dl( VERTEX2F(30 * 16,17 * 16) );
+dl( COLOR_RGB(0, 128, 0) );
+dl( POINT_SIZE(8 * 16) );
+dl( VERTEX2F(90 * 16, 17 * 16) );
+dl( COLOR_RGB(0, 0, 128) );
+dl( POINT_SIZE(10 * 16) );
+dl( VERTEX2F(30 * 16, 51 * 16) );
+dl( COLOR_RGB(128, 128, 0) );
+dl( POINT_SIZE(13 * 16) );
+dl( VERTEX2F(90 * 16, 51 * 16) );
+dl(END());
+
+dl( BEGIN(POINTS) );
+dl( COLOR_RGB(255, 0, 128) );
+dl( POINT_SIZE(5 * 16) );
+for (int i = 0; i < 500; ++i)
+{
+	dl(VERTEX2F(random(4096 * 2), random(4096)));
+}
+dl(END());
+
 	dl(DISPLAY()); // display the image
+
 	wr32(REG_DLSWAP, SWAP_FRAME);
 	wr32(REG_PCLK, 5);
 }

@@ -16,6 +16,7 @@
 
 // System includes
 #include <stdio.h>
+#include <math.h>
 
 // Project includes
 #include "ft800emu_memory.h"
@@ -75,7 +76,7 @@ public:
 	GraphicsState()
 	{
 		Primitive = 0; // Not sure if part of gs
-		ColorARGB = 0x00000000;
+		ColorARGB = 0xFF000000; // Default alpha 255?
 		PointSize = 16;
 		ClearColorARGB = 0xFF000000; // Not found in the programmer guide
 		ClearStencil = 0;
@@ -144,24 +145,27 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 	if (pytopi <= y && y <= pybtmi)
 	{
+		int border = 16 * r;
+		int border2sqrt = (int)sqrtf(border * 2); // sqrt :(
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
-			// todo optimize!
+			// todo optimize! (works fine for 500 average sized points at full fps)
 			int xx = x * 16;
 			int xdist = xx - px;
 			int ydist = yy - py;
-			int distouter = (xdist * xdist) + (ydist * ydist) - (32 * 256); // pretty close to the aa in the pdf
-			int distinner = (xdist * xdist) + (ydist * ydist) + (32 * 256);
+			int distctr = (xdist * xdist) + (ydist * ydist);
+			int distouter = distctr - border;
+			int distinner = distctr + border;
 			if (distinner < rsq)
 			{
-				int alpha = bc[x] >> 24;
+				int alpha = gs.ColorARGB >> 24;
 				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
 			}
 			else if (distouter < rsq)
 			{
-				int alpha = bc[x] >> 24;
-				alpha *= (rsq - distouter);
-				alpha >>= 14;
+				int alpha = gs.ColorARGB >> 24;
+				alpha *= (int)sqrtf(rsq - distouter); // sqrt :(
+				alpha /= border2sqrt;
 				bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
 			}
 		}
@@ -337,9 +341,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				switch (gs.Primitive)
 				{
 				case POINTS:
-					/*displayPoint(gs, bc, bs, bt, y, hsize, 
-						0, 
-						0);*/
+					displayPoint(gs, bc, bs, bt, y, hsize, 
+						((v >> 15) & 0x7FFF), 
+						(v & 0x7FFF));
 					break;
 				}
 				break;
