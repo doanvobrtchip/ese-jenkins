@@ -33,7 +33,7 @@ namespace FT800EMU {
 MemoryClass Memory;
 
 // RAM
-static uint8_t s_Ram[32 * 1024 * 1024]; // 32 MiB // TODO
+static uint8_t s_Ram[4 * 1024 * 1024]; // 4 MiB
 static uint32_t s_DisplayList[FT800EMU_DISPLAY_LIST_SIZE];
 static uint8_t s_TagBuffer[512 * 512]; // TODO What's the maximum resolution?
 
@@ -88,20 +88,6 @@ void MemoryClass::begin()
 	rawWriteU32(REG_CSPREAD, 1);
 	rawWriteU32(REG_PCLK_POL, 0);	
 	rawWriteU32(REG_PCLK, 0);
-
-	// dump font info
-	uint32_t fi = rawReadU32(FT800EMU_ROM_FONTINFO);
-	printf("Font index: %u\n", fi);
-	for (int i = 0; i < 16; ++i)
-	{
-		uint32_t bi = (i * 148) + fi;
-		uint32_t format = rawReadU32(bi + 128);
-		uint32_t stride = rawReadU32(bi + 132);
-		uint32_t width = rawReadU32(bi + 136);
-		uint32_t height = rawReadU32(bi + 140);
-		uint32_t data = rawReadU32(bi + 144);
-		printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", (i + 16), format, stride, width, height, data);
-	}
 }
 
 void MemoryClass::end()

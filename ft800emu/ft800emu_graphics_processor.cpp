@@ -127,31 +127,20 @@ public:
 	uint8_t Cell; // Bitmap cell 0-127
 };
 
-#pragma pack(push)
-#pragma pack(4)
-struct FontMetricBlock
+struct BitmapInfo
 {
-	uint8_t CharacterWidth[128];
-	uint32_t BitmapFormat;
-	uint32_t BitmapStride;
-	uint32_t BitmapWidth;
-	uint32_t BitmapHeight;
-	uint32_t Bitmap;
+	uint32_t Source;
+	int LayoutFormat;
+	int LayoutStride;
+	int LayoutHeight;
+	int SizeFilter;
+	int SizeWrapX;
+	int SizeWrapY;
+	int SizeWidth;
+	int SizeHeight;
 };
-#pragma pack(pop)
 
-// Temp.
-// How does this work in the memory for 0-15 when command setfont is issued on the coprocessor?
-FontMetricBlock s_FontMetricBlocks[16];
-
-__forceinline FontMetricBlock *getFontMetricBlock(const GraphicsState &gs)
-{
-	if (gs.BitmapHandle < 16)
-		return &s_FontMetricBlocks[gs.BitmapHandle];
-	uint32_t pos = Memory.rawReadU32(Memory.getRam(), FT800EMU_ROM_FONTINFO) + (148 * gs.BitmapHandle - 16);
-	uint8_t *ptr = &Memory.getRam()[pos];
-	return static_cast<FontMetricBlock *>(static_cast<void *>(ptr));
-}
+BitmapInfo s_BitmapInfo[32];
 
 __forceinline unsigned int div255(int value)
 {
@@ -307,6 +296,39 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 }
 
+void GraphicsProcessorClass::begin()
+{
+	uint8_t *ram = Memory.getRam();
+	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
+	printf("Font index: %u\n", fi);
+	for (int i = 0; i < 16; ++i)
+	{
+		int ir = i + 16;
+		uint32_t bi = (i * 148) + fi;
+		uint32_t format =  Memory.rawReadU32(ram, bi + 128);
+		uint32_t stride =  Memory.rawReadU32(ram, bi + 132);
+		uint32_t width =  Memory.rawReadU32(ram, bi + 136);
+		uint32_t height =  Memory.rawReadU32(ram, bi + 140);
+		uint32_t data =  Memory.rawReadU32(ram, bi + 144);
+		printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
+
+		s_BitmapInfo[ir].Source = data;
+		s_BitmapInfo[ir].LayoutFormat = format;
+		s_BitmapInfo[ir].LayoutStride = stride;
+		s_BitmapInfo[ir].LayoutHeight = height;
+		s_BitmapInfo[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+		s_BitmapInfo[ir].SizeWrapX = BORDER;
+		s_BitmapInfo[ir].SizeWrapY = BORDER;
+		s_BitmapInfo[ir].SizeWidth = width;
+		s_BitmapInfo[ir].SizeHeight = height;
+	}
+}
+
+void GraphicsProcessorClass::end()
+{
+	
+}
+
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
 	// If a frame is process and there is no clear command, is the tag buffer etc reset or not?
@@ -366,7 +388,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
 				case FT800EMU_DL_BITMAP_SOURCE:
-					getFontMetricBlock(gs)->Bitmap = v & 0xFFFFF;
+					s_BitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
@@ -383,35 +405,11 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				case FT800EMU_DL_CELL:
 					gs.Cell = v & 0x7F;
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT: {
-					FontMetricBlock *fmb = getFontMetricBlock(gs);
-					fmb->BitmapFormat = (v >> 19) & 0x1F;
-					fmb->BitmapStride = (v >> 9) & 0x3FF;
-					fmb->BitmapHeight = v & 0x1FF;
-					switch (fmb->BitmapFormat) // ehh? not sure if really needed
-					{
-					case ARGB1555:
-					case ARGB4:
-					case RGB565:
-						fmb->BitmapWidth = fmb->BitmapStride / 2;
-						break;
-					case L1:
-						fmb->BitmapWidth = fmb->BitmapStride * 8;
-						break;
-					case L4:
-						fmb->BitmapWidth = fmb->BitmapStride * 2;
-						break;
-					case L8:
-					case RGB332:
-					case ARGB2:
-					case PALETTED: // palette at RAM_PAL
-					case BARGRAPH: // not sure
-					case TEXT8X8: // not sure
-					case TEXTVGA: // docs on format?
-						fmb->BitmapWidth = fmb->BitmapStride;
-						break;
-					}
-					} break;
+				case FT800EMU_DL_BITMAP_LAYOUT: 
+					s_BitmapInfo[gs.BitmapHandle].LayoutFormat = (v >> 19) & 0x1F;
+					s_BitmapInfo[gs.BitmapHandle].LayoutStride = (v >> 9) & 0x3FF;
+					s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
+					break;
 				case FT800EMU_DL_STENCIL_FUNC:
 					gs.StencilFunc = (v >> 16) & 0x7;
 					gs.StencilFuncRef = (v >> 8) & 0xFF;

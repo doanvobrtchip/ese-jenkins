@@ -222,6 +222,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 
 	System.begin();
 	Memory.begin();
+	GraphicsProcessor.begin();
 	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
@@ -271,6 +272,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	if (flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
 	SPII2C.end();
+	GraphicsProcessor.end();
 	Memory.end();
 	System.end();
 }

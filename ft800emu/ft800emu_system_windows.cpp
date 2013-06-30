@@ -245,7 +245,7 @@ long SystemClass::getMillis()
 	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)1000;
 	c.QuadPart /= s_PerformanceFrequency.QuadPart;
-	return c.QuadPart;
+	return (long)c.QuadPart;
 }
 
 long SystemClass::getMicros()
@@ -255,7 +255,7 @@ long SystemClass::getMicros()
 	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)1000000;
 	c.QuadPart /= s_PerformanceFrequency.QuadPart;
-	return c.QuadPart;
+	return (long)c.QuadPart;
 }
 
 long SystemClass::getFreqTick(int hz)
@@ -265,7 +265,7 @@ long SystemClass::getFreqTick(int hz)
 	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)hz;
 	c.QuadPart /= s_PerformanceFrequency.QuadPart;
-	return c.QuadPart;
+	return (long)c.QuadPart;
 }
 
 void SystemClass::delay(int ms)
