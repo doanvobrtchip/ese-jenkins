@@ -80,6 +80,7 @@ for (int i = 0; i < 500; ++i)
 }
 dl(END());
 */
+dl( COLOR_RGB(255, 255, 255) );
 dl( STENCIL_OP(INCR, INCR) );
 dl( POINT_SIZE(760) );
 dl( BEGIN(POINTS) );

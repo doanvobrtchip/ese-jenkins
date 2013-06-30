@@ -294,6 +294,72 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
+// nb: currently uses 1/16 pixel units but will change after impl transforms
+__forceinline argb8888 sampleBitmap(uint8_t *src, int x, int y, int width, int height, int format, int stride, int wrapx, int wrapy, int filter)
+{
+	//return 0xFFFFFF00;
+	//switch (filter) NEAREST
+	int xi = x >> 4;
+	int yi = y >> 4;
+	int py = yi * stride;
+	switch (format)
+	{
+	case L4:
+		int val = (src[py + (xi >> 1)] >> (((xi + 1) % 2) << 2)) & 0xF;
+		val *= 255;
+		val /= 15; // todo opt
+		return 0xFF000000 | (val << 16) | (val << 8) | (val);
+		break;
+	}
+	return 0xFFFF00FF;
+}
+
+void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell)
+{
+	// printf("bitmap\n");
+	const BitmapInfo &bi = s_BitmapInfo[handle];
+
+	int pytop = py; // incl pixel*16 top
+	int pybtm = py + (bi.SizeHeight * 16) - 1; // incl pixel*16 btm
+
+	int pytopi = (pytop + 8) >> 4;
+	int pybtmi = (pybtm + 8) >> 4;
+
+	if (pytopi <= y && y <= pybtmi)
+	{
+		int pxlef = px;
+		int pxrig = px + (bi.SizeWidth * 16) - 1;
+
+		int pxlefi = (pxlef + 8) >> 4;
+		int pxrigi = (pxrig + 8) >> 4;
+
+		pxlefi = max((int)gs.ScissorX, pxlefi);
+		pxrigi = min((int)gs.ScissorX2 - 1, pxrigi);
+
+		//if (bi.
+		int vy = y * 16;
+		int ry = vy - py;
+		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
+		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
+		int sampleWidth = bi.SizeWidth * 16;
+		int sampleHeight = bi.SizeHeight * 16;
+		int sampleFormat = bi.LayoutFormat;
+		int sampleStride = bi.LayoutStride;
+		int sampleWrapX = bi.SizeWrapX;
+		int sampleWrapY = bi.SizeWrapY;
+		int sampleFilter = bi.SizeFilter;
+		//int sample
+		for (int x = pxlefi; x <= pxrigi; ++x)
+		{
+			// nb: currently uses 1/16 pixel units but will change after impl transforms
+			int vx = x * 16;
+			int rx = vx - px;
+			argb8888 sample = sampleBitmap(sampleSrc, rx, ry, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+			bc[x] = sample; // mulalpha(bc[x], (255 - 128)) + mulalpha(sample, 128);
+		}
+	}
+}
+
 }
 
 void GraphicsProcessorClass::begin()
@@ -410,6 +476,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					s_BitmapInfo[gs.BitmapHandle].LayoutStride = (v >> 9) & 0x3FF;
 					s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
 					break;
+				case FT800EMU_DL_BITMAP_SIZE:
+					s_BitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
+					s_BitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
+					s_BitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
+					s_BitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
+					s_BitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
+					break;
 				case FT800EMU_DL_STENCIL_FUNC:
 					gs.StencilFunc = (v >> 16) & 0x7;
 					gs.StencilFuncRef = (v >> 8) & 0xFF;
@@ -502,8 +575,15 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					{
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
-							((v >> 21) & 0xFF) * 16, 
-							((v >> 12) & 0xFF) * 16);
+							((v >> 21) & 0x1FF) * 16, 
+							((v >> 12) & 0x1FF) * 16);
+						break;
+					case BITMAPS:
+						displayBitmap(gs, bc, bs, bt, y, hsize, 
+							((v >> 21) & 0x1FF) * 16, 
+							((v >> 12) & 0x1FF) * 16,
+							((v >> 7) & 0x1F),
+							v & 0x7F);
 						break;
 					}
 				}
