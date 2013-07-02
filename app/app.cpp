@@ -14,6 +14,7 @@
 #include <SPI.h>
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
+#include <ft800emu_inttypes.h>
 #include <vc.h>
 
 void wr32(size_t address, uint32_t value)
@@ -34,13 +35,28 @@ static void dl(uint32_t cmd)
 	dli += 4;
 }
 
+inline uint32_t transformvalue(double d)
+{
+	uint32_t result = d < 0.0 ? 0x10000 : 0;
+	result |= (uint32_t)(abs(d) * 256.0) & 0xFFFF;
+	return result;
+}
+
 void setup()
 {
 	dli = RAM_DL;
 	// dl(CLEAR_COLOR_RGB(0, 64, 128));
 	dl(CLEAR(1, 1, 1)); // clear screen
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
+	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
+	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
+	dl(BITMAP_TRANSFORM_D(transformvalue(sin(0.5))));
+	dl(BITMAP_TRANSFORM_E(transformvalue(cos(0.5))));
 	dl(VERTEX2II(220, 110, 31, 'F')); // ascii F in font 31
+	dl(BITMAP_TRANSFORM_A(256));
+	dl(BITMAP_TRANSFORM_B(0));
+	dl(BITMAP_TRANSFORM_D(0));
+	dl(BITMAP_TRANSFORM_E(256));
 	dl(VERTEX2II(244, 110, 31, 'T')); // ascii T
 	dl(VERTEX2II(270, 110, 31, 'D')); // ascii D
 	dl(VERTEX2II(299, 110, 31, 'I')); // ascii I
