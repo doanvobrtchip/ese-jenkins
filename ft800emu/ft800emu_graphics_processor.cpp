@@ -170,6 +170,19 @@ __forceinline argb8888 mulalpha(argb8888 value, int alpha)
 	return result;
 }
 
+__forceinline argb8888 mulalpha_argb(argb8888 value, int alpha)
+{
+	// todo optimize!
+	argb8888 result = div255(((value & 0xFF000000) >> 24) * alpha);
+	result <<= 8;
+	result |= div255(((value & 0x00FF0000) >> 16) * alpha);
+	result <<= 8;
+	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
+	result <<= 8;
+	result |= div255((value & 0x000000FF) * alpha);
+	return result;
+}
+
 __forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
@@ -322,26 +335,82 @@ __forceinline bool wrap(int &value, int max, int type)
 	return true;
 }
 
-// uses 1/(256*16) pixel units, w & h in pixel units
-__forceinline argb8888 sampleBitmap(uint8_t *src, int x, int y, int width, int height, int format, int stride, int wrapx, int wrapy, int filter)
+// uses pixel units
+__forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
-	//return 0xFFFFFF00;
-	//switch (filter) NEAREST
-	int xi = x >> 12;
-	int yi = y >> 12;
-	if (!wrap(xi, width, wrapx)) return 0x00000000;
-	if (!wrap(yi, height, wrapx)) return 0x00000000;
-	int py = yi * stride;
+	if (!wrap(x, width, wrapx)) return 0x00000000;
+	if (!wrap(y, height, wrapx)) return 0x00000000;
+	int py = y * stride;
 	switch (format)
 	{
 	case L4:
-		int val = (src[py + (xi >> 1)] >> (((xi + 1) % 2) << 2)) & 0xF;
+		int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
 		val *= 255;
 		val /= 15; // todo opt
 		return 0xFF000000 | (val << 16) | (val << 8) | (val);
 		break;
 	}
-	return 0xFFFF00FF;
+	return 0xFFFF00FF; // invalid format
+}
+
+// uses 1/(256*16) pixel units, w & h in pixel units
+__forceinline argb8888 sampleBitmap(const uint8_t *src, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
+{
+	//return 0xFFFFFF00;
+	//switch (filter) NEAREST
+	switch (filter)
+	{
+	case NEAREST:
+		{
+			int xi = x >> 12;
+			int yi = y >> 12;
+			return sampleBitmapAt(src, xi, yi, width, height, format, stride, wrapx, wrapy);
+		}
+	case BILINEAR:
+		{
+			int xsep = x & 0xFFF;
+			int ysep = y & 0xFFF;
+			int xl = x >> 12;
+			int yt = y >> 12;
+			if (xsep == 0 && ysep == 0)
+			{
+				return sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy);
+			}
+			else if (xsep == 0)
+			{
+				int yab = ysep >> 4;
+				int yat = 255 - yab;
+				int yb = yt + 1;
+				argb8888 top = sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy);
+				argb8888 btm = sampleBitmapAt(src, xl, yb, width, height, format, stride, wrapx, wrapy);
+				return mulalpha(top, yat) + mulalpha(btm, yab);
+			}
+			else if (ysep == 0)
+			{
+				int xar = xsep >> 4;
+				int xal = 255 - xar;
+				int xr = xl + 1;
+				return mulalpha(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+			}
+			else
+			{
+				int xar = xsep >> 4;
+				int xal = 255 - xar;
+				int yab = ysep >> 4;
+				int yat = 255 - yab;
+				int xr = xl + 1;
+				int yb = yt + 1;
+				// todo optimize
+				argb8888 top = mulalpha(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				argb8888 btm = mulalpha(sampleBitmapAt(src, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha(sampleBitmapAt(src, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha(top, yat) + mulalpha(btm, yab);
+			}
+		}
+	}
+	return 0xFFFFFF00; // invalid filter
 }
 
 void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell)
