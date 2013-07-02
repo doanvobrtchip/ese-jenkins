@@ -306,35 +306,31 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
-// uses 1/(256*16) pixel units
+__forceinline bool wrap(int &value, int max, int type)
+{
+	switch (type)
+	{
+	case BORDER:
+		if (value < 0) return false;
+		else if (value >= max) return false;
+		break;
+	case REPEAT:
+		while (value < 0) value += max;
+		while (value >= max) value -= max;
+		break;
+	}
+	return true;
+}
+
+// uses 1/(256*16) pixel units, w & h in pixel units
 __forceinline argb8888 sampleBitmap(uint8_t *src, int x, int y, int width, int height, int format, int stride, int wrapx, int wrapy, int filter)
 {
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
-	switch (wrapx)
-	{
-	case BORDER:
-		if (x < 0) return 0x00000000;
-		else if (x >= width) return 0x00000000;
-		break;
-	case REPEAT:
-		while (x < 0) x += width;
-		while (x >= width) x -= width;
-		break;
-	}
-	switch (wrapy)
-	{
-	case BORDER:
-		if (y < 0) return 0x00000000;
-		else if (y >= height) return 0x00000000;
-		break;
-	case REPEAT:
-		while (y < 0) y += height;
-		while (y >= height) y -= height;
-		break;
-	}
 	int xi = x >> 12;
 	int yi = y >> 12;
+	if (!wrap(xi, width, wrapx)) return 0x00000000;
+	if (!wrap(yi, height, wrapx)) return 0x00000000;
 	int py = yi * stride;
 	switch (format)
 	{
@@ -375,8 +371,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int ry = vy - py;
 		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
 		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
-		int sampleWidth = bi.SizeWidth * 16 * 256;
-		int sampleHeight = bi.SizeHeight * 16 * 256;
+		int sampleWidth = bi.SizeWidth;
+		int sampleHeight = bi.SizeHeight;
 		int sampleFormat = bi.LayoutFormat;
 		int sampleStride = bi.LayoutStride;
 		int sampleWrapX = bi.SizeWrapX;
