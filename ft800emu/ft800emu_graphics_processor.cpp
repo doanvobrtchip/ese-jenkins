@@ -473,18 +473,64 @@ public:
 	int P2X, P2Y;
 };
 
-void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int px, const int py)
+void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int p2x, const int p2y)
 {
 	if (lss.Begin)
 	{
+		lss.P2X = p2x;
+		lss.P2Y = p2y;
 		lss.Begin = false;
 		return;
 	}
+	int p1x = lss.P1X = lss.P2X;
+	int p1y = lss.P1Y = lss.P2Y;
+	lss.P2X = p2x;
+	lss.P2Y = p2y;
 
 	// draw opening or connecting sphere part
 	// todo
 
 	// draw line
+	int ytop = min(p1y, p2y) >> 4; // todo fix accuracy
+	int ybtm = max(p1y, p2y) >> 4; // todo fix accuracy
+	if (ytop <= y && y <= ybtm)
+	{
+		int32_t p1x256 = p1x << 4;
+		int32_t p1y256 = p1y << 4;
+		int32_t p2x256 = p2x << 4;
+		int32_t p2y256 = p2y << 4;
+		int32_t pdx256 = p2x256 - p1x256;
+		int32_t pdy256 = p2y256 - p1y256;
+		int32_t pdx256a = abs(pdx256);
+		int32_t pdy256a = abs(pdy256);
+		int64_t pd256sq = (pdx256 * pdx256) + (pdy256 * pdy256);
+		int32_t pd256 = (int32_t)(sqrt((double)pd256sq)); // line len
+
+		if (pdy256a == 0)
+			return; // fixme div/0
+		
+		// find center point
+		int32_t y256 = y << 8;
+		int64_t x256 = ((y256 - p1y256) * pdx256 / pdy256) + p1x256;
+
+		// draw center point for test
+		int xtc = x256 >> 8;
+		bc[xtc] = gs.ColorARGB;
+
+		// find edges // use 10px test
+		int r256 = gs.PointSize << 4;
+		int outerdist256 = (r256 + 128) * pd256 / pdy256a;
+		int xtl = (x256 - outerdist256) >> 8;
+		int xtr = (x256 + outerdist256) >> 8;
+		bc[xtl] = gs.ColorARGB;
+		bc[xtr] = gs.ColorARGB;
+		/*int xl256a = x256 - (160 * 256 * pd256 / pdy256a);
+		int xr256a = x256 + (160 * 256 * pd256 / pdy256a);
+		int xla = xl256a >> 8;
+		bc[xla] = gs.ColorARGB;
+		int xra = xr256a >> 8;
+		bc[xra] = gs.ColorARGB;*/
+	}
 }
 
 void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
@@ -774,6 +820,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 							(v & 0x7FFF), 
 							gs.BitmapHandle, 
 							gs.Cell);
+						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
 							((v >> 15) & 0x7FFF), 
