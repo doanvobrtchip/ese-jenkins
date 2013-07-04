@@ -465,6 +465,34 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
+struct LineStripState
+{
+public:
+	bool Begin;
+	int P1X, P1Y;
+	int P2X, P2Y;
+};
+
+void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int px, const int py)
+{
+	if (lss.Begin)
+	{
+		lss.Begin = false;
+		return;
+	}
+
+	// draw opening or connecting sphere part
+	// todo
+
+	// draw line
+}
+
+void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
+{
+	// draw closing sphere cap
+	// todo
+}
+
 }
 
 void GraphicsProcessorClass::begin()
@@ -516,6 +544,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	// TODO: option for multicore rendering
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
+		LineStripState lss = LineStripState();
 		GraphicsState gs = GraphicsState();
 		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
@@ -656,6 +685,12 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					break;
 				case FT800EMU_DL_BEGIN:
 					gs.Primitive = v & 0x0F;
+					switch (gs.Primitive)
+					{
+					case LINE_STRIP:
+						lss.Begin = true;
+						break;
+					}
 					break;
 				case FT800EMU_DL_COLOR_MASK:
 					gs.ColorMaskARGB = (((v >> 1) & 0x1) * 0xFF)
@@ -664,6 +699,12 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 						| ((v & 0x1) * 0xFF000000);
 					break;
 				case FT800EMU_DL_END:
+					switch (gs.Primitive)
+					{
+					case LINE_STRIP:
+						endLineStrip(gs, bc, bs, bt, y, hsize, lss);
+						break;
+					}
 					gs.Primitive = 0;
 					break;
 				case FT800EMU_DL_CLEAR:
@@ -702,17 +743,22 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				{
 					switch (gs.Primitive)
 					{
-					case POINTS:
-						displayPoint(gs, bc, bs, bt, y, hsize, 
-							((v >> 21) & 0x1FF) * 16, 
-							((v >> 12) & 0x1FF) * 16);
-						break;
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, 
 							((v >> 21) & 0x1FF) * 16, 
 							((v >> 12) & 0x1FF) * 16,
 							((v >> 7) & 0x1F),
 							v & 0x7F);
+						break;
+					case POINTS:
+						displayPoint(gs, bc, bs, bt, y, hsize, 
+							((v >> 21) & 0x1FF) * 16, 
+							((v >> 12) & 0x1FF) * 16);
+						break;
+					case LINE_STRIP:
+						displayLineStrip(gs, bc, bs, bt, y, hsize, lss, 
+							((v >> 21) & 0x1FF) * 16, 
+							((v >> 12) & 0x1FF) * 16);
 						break;
 					}
 				}
@@ -722,8 +768,19 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 				{
 					switch (gs.Primitive)
 					{
+					case BITMAPS:
+						displayBitmap(gs, bc, bs, bt, y, hsize, 
+							((v >> 15) & 0x7FFF), 
+							(v & 0x7FFF), 
+							gs.BitmapHandle, 
+							gs.Cell);
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
+							((v >> 15) & 0x7FFF), 
+							(v & 0x7FFF));
+						break;
+					case LINE_STRIP:
+						displayLineStrip(gs, bc, bs, bt, y, hsize, lss,  
 							((v >> 15) & 0x7FFF), 
 							(v & 0x7FFF));
 						break;
