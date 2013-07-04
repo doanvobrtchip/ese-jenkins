@@ -491,8 +491,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	// todo
 
 	// draw line
-	int ytop = min(p1y, p2y) >> 4; // todo fix accuracy
-	int ybtm = max(p1y, p2y) >> 4; // todo fix accuracy
+	int ytop = (min(p1y, p2y) - gs.PointSize - 8) >> 4;
+	int ybtm = (max(p1y, p2y) + gs.PointSize + 8) >> 4;
 	if (ytop <= y && y <= ybtm)
 	{
 		int32_t p1x256 = p1x << 4;
@@ -505,31 +505,76 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		int32_t pdy256a = abs(pdy256);
 		int64_t pd256sq = (pdx256 * pdx256) + (pdy256 * pdy256);
 		int32_t pd256 = (int32_t)(sqrt((double)pd256sq)); // line len
-
-		if (pdy256a == 0)
-			return; // fixme div/0
+		int32_t r256 = gs.PointSize << 4;
 		
 		// find center point
 		int32_t y256 = y << 8;
-		int64_t x256 = ((y256 - p1y256) * pdx256 / pdy256) + p1x256;
+		int64_t x256;
+		if (pdy256 == 0)
+		{
+			// special case, horizontal line
+			x256 = (p1x256 + p2x256) >> 1; // not really necessary
+		}
+		else
+		{
+			// general case, diagonal line
+			x256 = ((y256 - p1y256) * pdx256 / pdy256) + p1x256;
+		}
 
 		// draw center point for test
 		int xtc = x256 >> 8;
 		bc[xtc] = gs.ColorARGB;
 
-		// find edges // use 10px test
-		int r256 = gs.PointSize << 4;
-		int outerdist256 = (r256 + 128) * pd256 / pdy256a;
-		int xtl = (x256 - outerdist256) >> 8;
-		int xtr = (x256 + outerdist256) >> 8;
-		bc[xtl] = gs.ColorARGB;
-		bc[xtr] = gs.ColorARGB;
-		/*int xl256a = x256 - (160 * 256 * pd256 / pdy256a);
-		int xr256a = x256 + (160 * 256 * pd256 / pdy256a);
-		int xla = xl256a >> 8;
-		bc[xla] = gs.ColorARGB;
-		int xra = xr256a >> 8;
-		bc[xra] = gs.ColorARGB;*/
+		// find edges, sides
+		int32_t xlout256, xlin256, xrout256, xrin256;
+		if (pdy256a == 0)
+		{
+			// special case, horizontal line
+			xlout256 = xlin256 = 0;
+			xrout256 = xrin256 = (hsize << 8);
+		}
+		else
+		{
+			// general case, diagonal line
+			int32_t outerdist256 = (r256 + 128) * pd256 / pdy256a;
+			xlout256 = min(max(x256 - outerdist256, 0), (hsize << 8));
+			xrout256 = min(max(x256 + outerdist256, 0), (hsize << 8));
+			// test...
+			int xtl = (x256 - outerdist256) >> 8;
+			int xtr = (x256 + outerdist256) >> 8;
+			bc[xtl] = 0xFF80FF00;
+			bc[xtr] = 0xFF00FF80;
+			// todo inner etc
+		}
+
+		// find edges, begin and end
+		int32_t xleft256, xright256;
+		if (pdx256 == 0)
+		{
+			// special case, vertical line
+			xleft256 = 0;
+			xright256 = (hsize << 9);
+		}
+		else
+		{
+			// general case, diagonal line
+			//xleft256 = min(p1x256, p2x256) + ((y256 - min(p1y256, p2y256)) * pd256 / pdx256a);
+			int32_t x1t256 = p1x256 + ((y256 - p1y256) * -pdy256 / pdx256);
+			int32_t x2t256 = p2x256 + ((y256 - p2y256) * -pdy256 / pdx256);
+			xleft256 = min(max(min(x1t256, x2t256), 0), (hsize << 8));
+			xright256 = min(max(max(x1t256, x2t256), 0), (hsize << 8));
+			// test
+			int lxl = xleft256 >> 8;
+			bc[lxl] = 0xFFFF0000;
+			int lxr = xright256 >> 8;
+			bc[lxr] = 0xFF0000FF;
+		}
+		
+		// test fill
+		for (int x = max(max(gs.ScissorX, xleft256 >> 8), xlout256 >> 8); x <= min(min(gs.ScissorX2, xright256 >> 8), xrout256 >> 8); ++x)
+		{
+			bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
+		}
 	}
 }
 

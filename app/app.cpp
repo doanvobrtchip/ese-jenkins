@@ -75,6 +75,9 @@ dl( VERTEX2F(50 * 16, 30 * 16) );
 dl( VERTEX2F(63 * 16, 50 * 16) );
 dl( VERTEX2F(73 * 16, 100 * 16) );
 dl( VERTEX2F(73 * 16, 200 * 16) );
+dl( VERTEX2F(150 * 16, 200 * 16) );
+dl( VERTEX2F(200 * 16, 150 * 16) );
+dl( VERTEX2F(150 * 16, 100 * 16) );
 	dl(END());
 
 /*
