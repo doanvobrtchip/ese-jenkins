@@ -465,13 +465,79 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
+struct LineStripDefer
+{
+	int32_t LeftOuter256, LeftInner256;
+	int32_t RightOuter256, RightInner256;
+};
+
 struct LineStripState
 {
 public:
 	bool Begin;
 	int P1X, P1Y;
 	int P2X, P2Y;
+	int SL, SR;
+	
+	int DeferCur;
+	bool DeferSet[2];
+	LineStripDefer Defer[2];
 };
+
+__forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, LineStripState &lss)
+{
+	for (int x = (lss.Defer[lss.DeferCur].LeftOuter256 >> 8); x < (lss.Defer[lss.DeferCur].RightOuter256 >> 8); ++x)
+	{
+		bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
+	}
+	//bc[(lss.Defer[lss.DeferCur].LeftOuter256 >> 8)] = 0xFFFF0000;
+	//bc[(lss.Defer[lss.DeferCur].RightOuter256 >> 8)] = 0xFF00FF00;
+}
+
+__forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, LineStripState &lss)
+{
+	int nextDefer = ((lss.DeferCur + 1) % 2);
+	if (lss.DeferSet[lss.DeferCur])
+	{
+		if (lss.DeferSet[nextDefer])
+		{
+			// verify and resolve overlap
+			LineStripDefer &cur = lss.Defer[lss.DeferCur];
+			LineStripDefer &nex = lss.Defer[nextDefer];
+
+			if (nex.RightInner256 < cur.RightInner256
+				&& nex.LeftInner256 > cur.LeftInner256)
+			{
+				nex.LeftInner256 = nex.RightInner256 = nex.LeftOuter256 = nex.RightOuter256 = 0;
+			}
+			else if (nex.RightInner256 >= cur.RightInner256
+				&& nex.LeftInner256 <= cur.LeftInner256)
+			{
+				cur.LeftInner256 = cur.RightInner256 = cur.LeftOuter256 = cur.RightOuter256 = 0;
+			}
+			else if (nex.RightInner256 > cur.RightInner256
+				&& nex.LeftInner256 < cur.RightInner256)
+			{
+				// cur cur cur ovr ovr ovr nex nex nex
+				nex.LeftOuter256 = nex.LeftInner256 = cur.RightOuter256 = cur.RightInner256 = (cur.LeftInner256 & (~0xFF));
+			}
+			else if (nex.LeftInner256 < cur.LeftInner256
+				&& nex.RightInner256 > cur.LeftInner256)
+			{
+				// nex nex nex ovr ovr ovr cur cur cur
+				nex.RightOuter256 = nex.RightInner256 = cur.LeftOuter256 = cur.LeftInner256 = (cur.RightInner256 & (~0xFF));
+			}
+			else
+			{
+				// todo: point inbetween lines
+			}
+		}
+
+		renderLineStrip(gs, bc, bs, bt, lss);
+		lss.DeferSet[lss.DeferCur] = false;
+	}
+	lss.DeferCur = nextDefer;
+}
 
 void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int p2x, const int p2y)
 {
@@ -480,6 +546,11 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		lss.P2X = p2x;
 		lss.P2Y = p2y;
 		lss.Begin = false;
+		lss.SL = 0;
+		lss.SR = hsize;
+		lss.DeferCur = 0;
+		lss.DeferSet[0] = false;
+		lss.DeferSet[1] = false;
 		return;
 	}
 	int p1x = lss.P1X = lss.P2X;
@@ -491,8 +562,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	// todo
 
 	// draw line
-	int ytop = (min(p1y, p2y) - gs.PointSize - 8) >> 4;
-	int ybtm = (max(p1y, p2y) + gs.PointSize + 8) >> 4;
+	int ytop = (min(p1y, p2y) - ((p2x - p1x) ? gs.PointSize : 0) - 8) >> 4;
+	int ybtm = (max(p1y, p2y) + ((p2x - p1x) ? gs.PointSize : 0) + 8) >> 4;
 	if (ytop <= y && y <= ybtm)
 	{
 		int32_t p1x256 = p1x << 4;
@@ -522,8 +593,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		}
 
 		// draw center point for test
-		int xtc = x256 >> 8;
-		bc[xtc] = gs.ColorARGB;
+		/*int xtc = x256 >> 8;
+		bc[xtc] = gs.ColorARGB;*/
 
 		// find edges, sides
 		int32_t xlout256, xlin256, xrout256, xrin256;
@@ -539,12 +610,14 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 			int32_t outerdist256 = (r256 + 128) * pd256 / pdy256a;
 			xlout256 = min(max(x256 - outerdist256, 0), (hsize << 8));
 			xrout256 = min(max(x256 + outerdist256, 0), (hsize << 8));
+			int32_t innerdist256 = (r256 - 128) * pd256 / pdy256a;
+			xlin256 = min(max(x256 - innerdist256, 0), (hsize << 8));
+			xrin256 = min(max(x256 + innerdist256, 0), (hsize << 8));
 			// test...
-			int xtl = (x256 - outerdist256) >> 8;
+			/*int xtl = (x256 - outerdist256) >> 8;
 			int xtr = (x256 + outerdist256) >> 8;
 			bc[xtl] = 0xFF80FF00;
-			bc[xtr] = 0xFF00FF80;
-			// todo inner etc
+			bc[xtr] = 0xFF00FF80;*/
 		}
 
 		// find edges, begin and end
@@ -564,22 +637,40 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 			xleft256 = min(max(min(x1t256, x2t256), 0), (hsize << 8));
 			xright256 = min(max(max(x1t256, x2t256), 0), (hsize << 8));
 			// test
-			int lxl = xleft256 >> 8;
+			/*int lxl = xleft256 >> 8;
 			bc[lxl] = 0xFFFF0000;
 			int lxr = xright256 >> 8;
-			bc[lxr] = 0xFF0000FF;
+			bc[lxr] = 0xFF0000FF;*/
 		}
-		
+
+		int32_t lsci = max(gs.ScissorX, xleft256 >> 8) << 8;
+		int32_t rsci = min(gs.ScissorX2, xright256 >> 8) << 8;
+		int32_t lsslo256 = max(xlout256, lsci);
+		int32_t lssli256 = max(xlin256, lsci);
+		int32_t lssro256 = min(xrout256, rsci);
+		int32_t lssri256 = min(xrin256, rsci);
+
+		int nextDefer = ((lss.DeferCur + 1) % 2);
+		lss.Defer[nextDefer].LeftOuter256 = lsslo256;
+		lss.Defer[nextDefer].LeftInner256 = lssli256;
+		lss.Defer[nextDefer].RightOuter256 = lssro256;
+		lss.Defer[nextDefer].RightInner256 = lssri256;
+		lss.DeferSet[nextDefer] = true;
+				
 		// test fill
 		for (int x = max(max(gs.ScissorX, xleft256 >> 8), xlout256 >> 8); x <= min(min(gs.ScissorX2, xright256 >> 8), xrout256 >> 8); ++x)
 		{
-			bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
+			//bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
 		}
 	}
+	
+	deferredLineStrip(gs, bc, bs, bt, lss);
 }
 
 void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
 {
+	deferredLineStrip(gs, bc, bs, bt, lss);
+
 	// draw closing sphere cap
 	// todo
 }
