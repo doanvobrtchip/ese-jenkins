@@ -79,7 +79,8 @@ public:
 	{
 		DebugDisplayListIndex = 0;
 		Primitive = 0; // Not sure if part of gs
-		ColorARGB = 0xFF000000; // Default alpha 255?
+		//ColorARGB = 0xFF000000; // Default alpha 255?
+		ColorARGB = 0xFFFFFFFF; // Default alpha 255? Default color white?
 		PointSize = 16;
 		ScissorX = 0;
 		ScissorY = 0;
@@ -108,7 +109,7 @@ public:
 		BitmapTransformE = 256;
 		BitmapTransformF = 0;
 		BlendFuncSrc = SRC_ALPHA;
-		BlendFuncDst = ONE_MINUS_DST_ALPHA;
+		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
 	}
 	
 	int DebugDisplayListIndex;
