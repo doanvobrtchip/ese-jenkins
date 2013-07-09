@@ -42,12 +42,12 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f;
-	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // todo: fix blend etc
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_wrap.0.vc1dump", "rb");
-	f = fopen("../reference/dumps/test_formats.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_formats.0.vc1dump", "rb");
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

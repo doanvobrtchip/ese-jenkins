@@ -107,6 +107,8 @@ public:
 		BitmapTransformD = 0;
 		BitmapTransformE = 256;
 		BitmapTransformF = 0;
+		BlendFuncSrc = SRC_ALPHA;
+		BlendFuncDst = ONE_MINUS_DST_ALPHA;
 	}
 	
 	int DebugDisplayListIndex;
@@ -139,6 +141,8 @@ public:
 	int BitmapTransformD;
 	int BitmapTransformE;
 	int BitmapTransformF;
+	int BlendFuncSrc;
+	int BlendFuncDst;
 };
 
 struct BitmapInfo
@@ -156,12 +160,12 @@ struct BitmapInfo
 
 BitmapInfo s_BitmapInfo[32];
 
-__forceinline unsigned int div255(int value)
+__forceinline unsigned int div255(const int &value)
 {
 	return (value * 257 + 257) >> 16;
 }
 
-__forceinline argb8888 mulalpha(argb8888 value, int alpha)
+__forceinline argb8888 mulalpha(const argb8888 &value, const int &alpha)
 {
 	// todo optimize!
 	argb8888 result = div255(((value & 0x00FF0000) >> 16) * alpha);
@@ -172,7 +176,7 @@ __forceinline argb8888 mulalpha(argb8888 value, int alpha)
 	return result;
 }
 
-__forceinline argb8888 mulalpha_argb(argb8888 value, int alpha)
+__forceinline argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 {
 	// todo optimize!
 	argb8888 result = div255(((value & 0xFF000000) >> 24) * alpha);
@@ -182,6 +186,16 @@ __forceinline argb8888 mulalpha_argb(argb8888 value, int alpha)
 	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
 	result <<= 8;
 	result |= div255((value & 0x000000FF) * alpha);
+	return result;
+}
+
+__forceinline argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
+{
+	// todo optimize!
+	argb8888 result = 0x00000000 | (div255((left >> 24) * (right >> 24)) << 24)
+		| (div255(((left >> 16) & 0xFF) * ((right >> 16) & 0xFF)) << 16)
+		| (div255(((left >> 8) & 0xFF) * ((right >> 8) & 0xFF)) << 8)
+		| div255((left & 0xFF) * (right & 0xFF));
 	return result;
 }
 
@@ -257,10 +271,34 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 	return result;
 }
 
-__forceinline argb8888 getPaletted(uint8_t *ram, uint8_t value)
+__forceinline argb8888 getPaletted(uint8_t *ram, uint8_t value) // not tested
 {
 	uint32_t result = static_cast<uint32_t *>(static_cast<void *>(&ram[RAM_PAL]))[value];
 	return (result >> 8) & (result << 24); // really, RGBA?
+}
+
+__forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
+{
+	switch (func) // todo optim (can avoid switch by storing some magic numbers in the DL instead of the func int)
+	{
+	case ZERO:
+		return 0;
+	case ONE:
+		return 255;
+	case SRC_ALPHA:
+		return src >> 24;
+	case DST_ALPHA:
+		return dst >> 24;
+	case ONE_MINUS_SRC_ALPHA:
+		return 255 - (src >> 24);
+	case ONE_MINUS_DST_ALPHA:
+		return 255 - (dst >> 24);
+	}
+}
+
+__forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
+{
+	return mulalpha(src, getAlpha(gs.BlendFuncSrc, src, dst)) + mulalpha(dst, getAlpha(gs.BlendFuncDst, src, dst));
 }
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
@@ -358,7 +396,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 		{
 			int val = (src[py + (x >> 3)] >> (7 - (x % 8))) & 0x1;
 			val *= 255;
-			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	// case L2: int val = (src[py + (x >> 2)] >> (3 - ((x % 4) << 1))) & 0x1; val *= 255; val /= 3;
 	case L4:
@@ -366,12 +404,12 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 			int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
 			val *= 255;
 			val /= 15; // todo opt
-			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	case L8:
 		{
 			uint8_t val = src[py + x];
-			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	case RGB332:
 		{
@@ -515,8 +553,10 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			// transform with 1/(256*16) pixel units
 			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
 			int ryt = (gs.BitmapTransformD * rx) + rytef;
-			argb8888 sample = sampleBitmap(sampleSrc, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
-			bc[x] = sample; // mulalpha(bc[x], (255 - 128)) + mulalpha(sample, 128);
+			const argb8888 sample = sampleBitmap(sampleSrc, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
+			const argb8888 out = mul_argb(sample, gs.ColorARGB);
+			bc[x] = blend(gs, out, bc[x]);
 		}
 	}
 }
@@ -861,6 +901,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					gs.StencilFuncRef = (v >> 8) & 0xFF;
 					gs.StencilFuncMask = v & 0xFF;
 					break;
+				case FT800EMU_DL_BLEND_FUNC:
+					gs.BlendFuncSrc = (v >> 3) & 0x7;
+					gs.BlendFuncDst = v & 0x7;
+					break;
 				case FT800EMU_DL_STENCIL_OP:
 					gs.StencilOpFail = (v >> 3) & 0x7;
 					gs.StencilOpPass = v & 0x7;
@@ -869,10 +913,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					gs.PointSize = v & 0x1FFF;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_A:
-					gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+					gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v << 24);
 					break;
 				case FT800EMU_DL_COLOR_A:
-					gs.ColorARGB = (gs.ColorARGB & 0x00FFFFFF) | (v & 0xFF000000);
+					gs.ColorARGB = (gs.ColorARGB & 0x00FFFFFF) | (v << 24);
 					break;
 				case FT800EMU_DL_CLEAR_STENCIL:
 					gs.ClearStencil = v & 0xFF;
