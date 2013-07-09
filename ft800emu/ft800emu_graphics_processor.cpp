@@ -330,9 +330,9 @@ __forceinline bool wrap(int &value, int max, int type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
-		while (value < 0) value += max;
-		while (value >= max) value -= max;
-		// (value + max * 512) % max <- test this as optim
+		// while (value < 0) value += max;
+		// while (value >= max) value -= max;
+		value = (value + max * 512) % max; // + max * 512 necessary to get correct negative behaviour	
 		break;
 	}
 	return true;
@@ -346,12 +346,56 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 	int py = y * stride;
 	switch (format)
 	{
+	case ARGB1555:
+		{
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			return (((val >> 15) * 255) << 24) // todo opt
+				| ((((val >> 10) & 0x1F) * 255 / 31) << 16)
+				| ((((val >> 5) & 0x1F) * 255 / 31) << 8)
+				| ((val & 0x1F) * 255 / 31);
+		}
+	case L1:
+		{
+			int val = (src[py + (x >> 3)] >> (7 - (x % 8))) & 0x1;
+			val *= 255;
+			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+		}
+	// case L2: int val = (src[py + (x >> 2)] >> (3 - ((x % 4) << 1))) & 0x1; val *= 255; val /= 3;
 	case L4:
 		{
 			int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
 			val *= 255;
 			val /= 15; // todo opt
-			return 0xFF000000 | (val << 16) | (val << 8) | (val);
+			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+		}
+	case L8:
+		{
+			uint8_t val = src[py + x];
+			return (val << 24) | (val << 16) | (val << 8) | (val); // todo: check alpha behaviour
+		}
+	case RGB332:
+		{
+			uint8_t val = src[py + x];
+			return 0xFF000000 // todo opt
+				| (((val >> 5) * 255 / 7) << 16)
+				| ((((val >> 2) & 0x7) * 255 / 7) << 8)
+				| ((val & 0x3) * 255 / 3);
+		}
+	case ARGB2:
+		{
+			uint8_t val = src[py + x];
+			return (((val >> 6) * 255 / 3) << 24) // todo opt
+				| ((((val >> 4) & 0x3) * 255 / 3) << 16)
+				| ((((val >> 2) & 0x3) * 255 / 3) << 8)
+				| ((val & 0x3) * 255 / 3);
+		}
+	case ARGB4:
+		{
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			return (((val >> 12) * 255 / 15) << 24) // todo opt
+				| ((((val >> 8) & 0xF) * 255 / 15) << 16)
+				| ((((val >> 4) & 0xF) * 255 / 15) << 8)
+				| ((val & 0xF) * 255 / 15);
 		}
 	case RGB565:
 		{
