@@ -88,7 +88,7 @@ public:
 		ScissorHeight = 512;
 		ScissorX2 = 512;
 		ScissorY2 = 512;
-		ClearColorARGB = 0xFF000000; // Not found in the programmer guide
+		ClearColorARGB = 0x00000000; // Not found in the programmer guide
 		ClearStencil = 0;
 		ClearTag = 0;
 		Tag = 0;
@@ -300,7 +300,7 @@ __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 
 
 __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
-	return mulalpha(src, getAlpha(gs.BlendFuncSrc, src, dst)) + mulalpha(dst, getAlpha(gs.BlendFuncDst, src, dst));
+	return mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)) + mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst));
 }
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
@@ -480,15 +480,15 @@ __forceinline argb8888 sampleBitmap(const uint8_t *src, const int x, const int y
 				int yb = yt + 1;
 				argb8888 top = sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy);
 				argb8888 btm = sampleBitmapAt(src, xl, yb, width, height, format, stride, wrapx, wrapy);
-				return mulalpha(top, yat) + mulalpha(btm, yab);
+				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
 			{
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha_argb(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
 			}
 			else
 			{
@@ -499,11 +499,11 @@ __forceinline argb8888 sampleBitmap(const uint8_t *src, const int x, const int y
 				int xr = xl + 1;
 				int yb = yt + 1;
 				// todo optimize
-				argb8888 top = mulalpha(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
-				argb8888 btm = mulalpha(sampleBitmapAt(src, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha(sampleBitmapAt(src, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
-				return mulalpha(top, yat) + mulalpha(btm, yab);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(src, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(src, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 		}
 	}
@@ -774,6 +774,21 @@ void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	// todo
 }
 
+__forceinline int getLayoutWidth(const int &format, const int &stride)
+{
+	switch (format)
+	{
+		case ARGB1555: return stride >> 1;
+		case L1: return stride << 3;
+		case L4: return stride << 1;
+		case L8: return stride;
+		case RGB332: return stride;
+		case ARGB2: return stride;
+		case ARGB4: return stride >> 1;
+		case RGB565: return stride >> 1;
+	}
+}
+
 }
 
 void GraphicsProcessorClass::begin()
@@ -796,6 +811,7 @@ void GraphicsProcessorClass::begin()
 		s_BitmapInfo[ir].LayoutFormat = format;
 		s_BitmapInfo[ir].LayoutStride = stride;
 		s_BitmapInfo[ir].LayoutHeight = height;
+		s_BitmapInfo[ir].LayoutWidth = getLayoutWidth(format, stride);
 		s_BitmapInfo[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
 		s_BitmapInfo[ir].SizeWrapX = BORDER;
 		s_BitmapInfo[ir].SizeWrapY = BORDER;
@@ -894,17 +910,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 						const int stride = (v >> 9) & 0x3FF;
 						s_BitmapInfo[gs.BitmapHandle].LayoutStride = stride;
 						s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
-						switch (format)
-						{
-							case ARGB1555: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
-							case L1: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride << 3; break;
-							case L4: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride << 1; break;
-							case L8: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
-							case RGB332: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
-							case ARGB2: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
-							case ARGB4: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
-							case RGB565: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
-						}
+						s_BitmapInfo[gs.BitmapHandle].LayoutWidth = getLayoutWidth(format, stride);
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
