@@ -150,6 +150,7 @@ struct BitmapInfo
 {
 	uint32_t Source;
 	int LayoutFormat;
+	int LayoutWidth;
 	int LayoutStride;
 	int LayoutHeight;
 	int SizeFilter;
@@ -514,15 +515,15 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	const BitmapInfo &bi = s_BitmapInfo[handle];
 
 	int pytop = py; // incl pixel*16 top
-	int pybtm = py + (bi.SizeHeight * 16) - 1; // incl pixel*16 btm
+	int pybtm = py + (bi.SizeHeight << 4) - 16; // incl pixel*16 btm
 
 	int pytopi = (pytop + 8) >> 4;
 	int pybtmi = (pybtm + 8) >> 4;
 
-	if (pytopi <= y && y < pybtmi)
+	if (pytopi <= y && y <= pybtmi)
 	{
 		int pxlef = px;
-		int pxrig = px + (bi.SizeWidth * 16) - 1;
+		int pxrig = px + (bi.SizeWidth << 4) - 16;
 
 		int pxlefi = (pxlef + 8) >> 4;
 		int pxrigi = (pxrig + 8) >> 4;
@@ -535,8 +536,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int ry = vy - py;
 		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
 		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
-		int sampleWidth = bi.SizeWidth;
-		int sampleHeight = bi.SizeHeight;
+		int sampleWidth = bi.LayoutWidth;
+		int sampleHeight = bi.LayoutHeight;
 		int sampleFormat = bi.LayoutFormat;
 		int sampleStride = bi.LayoutStride;
 		int sampleWrapX = bi.SizeWrapX;
@@ -546,7 +547,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
 		int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
 		//int sample
-		for (int x = pxlefi; x < pxrigi; ++x)
+		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
 			// relative at 1/16 pixel units
 			int vx = x * 16;
@@ -886,9 +887,24 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					gs.Cell = v & 0x7F;
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT: 
-					s_BitmapInfo[gs.BitmapHandle].LayoutFormat = (v >> 19) & 0x1F;
-					s_BitmapInfo[gs.BitmapHandle].LayoutStride = (v >> 9) & 0x3FF;
-					s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
+					{
+						const int format = (v >> 19) & 0x1F;
+						s_BitmapInfo[gs.BitmapHandle].LayoutFormat = format;
+						const int stride = (v >> 9) & 0x3FF;
+						s_BitmapInfo[gs.BitmapHandle].LayoutStride = stride;
+						s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
+						switch (format)
+						{
+							case ARGB1555: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
+							case L1: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride << 3; break;
+							case L4: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride << 1; break;
+							case L8: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
+							case RGB332: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
+							case ARGB2: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride; break;
+							case ARGB4: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
+							case RGB565: s_BitmapInfo[gs.BitmapHandle].LayoutWidth = stride >> 1; break;
+						}
+					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
 					s_BitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
