@@ -361,7 +361,7 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
-__forceinline bool wrap(int &value, int max, int type)
+__forceinline bool wrap(int &value, const int &max, const int &type)
 {
 	switch (type)
 	{
@@ -372,6 +372,7 @@ __forceinline bool wrap(int &value, int max, int type)
 	case REPEAT:
 		// while (value < 0) value += max;
 		// while (value >= max) value -= max;
+		// value = value >>
 		value = (value + max * 512) % max; // + max * 512 necessary to get correct negative behaviour	
 		break;
 	}
