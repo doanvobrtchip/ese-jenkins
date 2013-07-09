@@ -54,7 +54,8 @@ void setup()
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok, first row with 0 linestride and last with 0 height do not match
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb");
-	f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
+	f = fopen("../reference/dumps/test_bilinear_simple.0.vc1dump", "rb"); // verify: what does bitmap size width = 0 mean precisely
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

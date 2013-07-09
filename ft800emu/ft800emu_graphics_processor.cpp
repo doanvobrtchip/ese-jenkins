@@ -540,7 +540,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	const BitmapInfo &bi = s_BitmapInfo[handle];
 
 	int pytop = py; // incl pixel*16 top
-	int pybtm = py + (bi.SizeHeight << 4) - 16; // incl pixel*16 btm
+	int pybtm = py + ((bi.SizeHeight == 0 ? 1024 : bi.SizeHeight) << 4) - 16; // incl pixel*16 btm
 
 	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
 	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
@@ -548,7 +548,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	if (pytopi <= y && y <= pybtmi)
 	{
 		int pxlef = px;
-		int pxrig = px + (bi.SizeWidth << 4) - 16;
+		int pxrig = px + ((bi.SizeWidth == 0 ? hsize : bi.SizeWidth) << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
 
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
