@@ -42,7 +42,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f;
-	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb");
@@ -50,9 +50,11 @@ void setup()
 	// f = fopen("../reference/dumps/test_formats.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_bilinear_fmts.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_alpha_comparisons.0.vc1dump", "rb");
-	f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // todo: blend overflow
+	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok, first row with 0 linestride and last with 0 height do not match
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

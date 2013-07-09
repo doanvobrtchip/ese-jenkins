@@ -542,16 +542,16 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	int pytop = py; // incl pixel*16 top
 	int pybtm = py + (bi.SizeHeight << 4) - 16; // incl pixel*16 btm
 
-	int pytopi = (pytop + 8) >> 4;
-	int pybtmi = (pybtm + 8) >> 4;
+	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
+	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
 
 	if (pytopi <= y && y <= pybtmi)
 	{
 		int pxlef = px;
 		int pxrig = px + (bi.SizeWidth << 4) - 16;
 
-		int pxlefi = (pxlef + 8) >> 4;
-		int pxrigi = (pxrig + 8) >> 4;
+		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
+		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
 
 		pxlefi = max((int)gs.ScissorX, pxlefi);
 		pxrigi = min((int)gs.ScissorX2 - 1, pxrigi);
