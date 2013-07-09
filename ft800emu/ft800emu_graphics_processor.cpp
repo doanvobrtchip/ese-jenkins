@@ -167,6 +167,21 @@ __forceinline unsigned int div255(const int &value)
 	return (value * 257 + 257) >> 16;
 }
 
+__forceinline unsigned int mul255div63(const int &value)
+{
+	return ((value * 16575) + 65) >> 12;
+}
+
+__forceinline unsigned int mul255div31(const int &value)
+{
+	return ((value * 8415) + 33) >> 10;
+}
+
+__forceinline unsigned int mul255div3(const int &value)
+{
+	return value * 85;
+}
+
 __forceinline argb8888 mulalpha(const argb8888 &value, const int &alpha)
 {
 	// todo optimize!
@@ -181,20 +196,17 @@ __forceinline argb8888 mulalpha(const argb8888 &value, const int &alpha)
 __forceinline argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 {
 	// todo optimize!
-	argb8888 result = div255(((value & 0xFF000000) >> 24) * alpha);
-	result <<= 8;
-	result |= div255(((value & 0x00FF0000) >> 16) * alpha);
-	result <<= 8;
-	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
-	result <<= 8;
-	result |= div255((value & 0x000000FF) * alpha);
+	const argb8888 result = (div255(((value & 0xFF000000) >> 24) * alpha) << 24)
+		| (div255(((value & 0x00FF0000) >> 16) * alpha) << 16)
+		| (div255((value & 0x0000FF00) * alpha) & 0x0000FF00)
+		| (div255((value & 0x000000FF) * alpha) & 0x000000FF);
 	return result;
 }
 
 __forceinline argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
 {
 	// todo optimize!
-	argb8888 result = 0x00000000 | (div255((left >> 24) * (right >> 24)) << 24)
+	argb8888 result = (div255((left >> 24) * (right >> 24)) << 24)
 		| (div255(((left >> 16) & 0xFF) * ((right >> 16) & 0xFF)) << 16)
 		| (div255(((left >> 8) & 0xFF) * ((right >> 8) & 0xFF)) << 8)
 		| div255((left & 0xFF) * (right & 0xFF));
@@ -391,9 +403,9 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 		{
 			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
 			return (((val >> 15) * 255) << 24) // todo opt
-				| ((((val >> 10) & 0x1F) * 255 / 31) << 16)
-				| ((((val >> 5) & 0x1F) * 255 / 31) << 8)
-				| ((val & 0x1F) * 255 / 31);
+				| (mul255div31((val >> 10) & 0x1F) << 16)
+				| (mul255div31((val >> 5) & 0x1F) << 8)
+				| mul255div31(val & 0x1F);
 		}
 	case L1:
 		{
@@ -420,15 +432,15 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 			return 0xFF000000 // todo opt
 				| (((val >> 5) * 255 / 7) << 16)
 				| ((((val >> 2) & 0x7) * 255 / 7) << 8)
-				| ((val & 0x3) * 255 / 3);
+				| mul255div3(val & 0x3);
 		}
 	case ARGB2:
 		{
 			uint8_t val = src[py + x];
 			return (((val >> 6) * 255 / 3) << 24) // todo opt
-				| ((((val >> 4) & 0x3) * 255 / 3) << 16)
-				| ((((val >> 2) & 0x3) * 255 / 3) << 8)
-				| ((val & 0x3) * 255 / 3);
+				| (mul255div3((val >> 4) & 0x3) << 16)
+				| (mul255div3((val >> 2) & 0x3) << 8)
+				| mul255div3(val & 0x3);
 		}
 	case ARGB4:
 		{
@@ -442,9 +454,9 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const in
 		{
 			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
 			return 0xFF000000 // todo opt
-				| (((val >> 11) * 255 / 31) << 16)
-				| ((((val >> 5) & 0x3F) * 255 / 63) << 8)
-				| ((val & 0x1F) * 255 / 31);
+				| (mul255div31(val >> 11) << 16)
+				| (mul255div63((val >> 5) & 0x3F) << 8)
+				| mul255div31(val & 0x1F);
 		}
 	}
 	return 0xFFFF00FF; // invalid format
