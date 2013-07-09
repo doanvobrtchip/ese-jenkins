@@ -905,12 +905,15 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT: 
 					{
+						BitmapInfo &bi = s_BitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
-						s_BitmapInfo[gs.BitmapHandle].LayoutFormat = format;
-						const int stride = (v >> 9) & 0x3FF;
-						s_BitmapInfo[gs.BitmapHandle].LayoutStride = stride;
-						s_BitmapInfo[gs.BitmapHandle].LayoutHeight = v & 0x1FF;
-						s_BitmapInfo[gs.BitmapHandle].LayoutWidth = getLayoutWidth(format, stride);
+						bi.LayoutFormat = format;
+						int stride = (v >> 9) & 0x3FF;
+						if (stride == 0) { if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex); stride = 1; }
+						bi.LayoutStride = stride;
+						bi.LayoutHeight = v & 0x1FF;
+						if (bi.LayoutHeight == 0) { if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex); bi.LayoutHeight = 1; }
+						bi.LayoutWidth = getLayoutWidth(format, stride);
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
