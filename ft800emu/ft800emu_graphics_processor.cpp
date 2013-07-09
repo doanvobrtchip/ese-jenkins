@@ -213,6 +213,18 @@ __forceinline argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
 	return result;
 }
 
+__forceinline argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right)
+{
+	// add rgb and handle overflow
+	const argb8888 ag = ((left & 0xFF00FF00) >> 8) + ((right & 0xFF00FF00) >> 8);
+	const argb8888 rb = (left & 0x00FF00FF) + (right & 0x00FF00FF);
+	const argb8888 agclip = (ag & 0x00FF00FF) << 8;
+	const argb8888 rbclip = rb & 0x00FF00FF;
+	const argb8888 agover = (ag & 0x01000100) * 0xFF;
+	const argb8888 rbover = ((rb & 0x01000100) * 0xFF) >> 8;
+	return (agclip | agover) + (rbover | rbclip);
+}
+
 __forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
@@ -312,7 +324,7 @@ __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 
 
 __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
-	return mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)) + mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst));
+	return add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
 }
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
