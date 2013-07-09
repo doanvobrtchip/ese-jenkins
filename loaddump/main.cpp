@@ -41,8 +41,8 @@ void setup()
   2**10  Palette RAM contents
   2**13  Display list contents*/
 
-	FILE *f;
-	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	FILE *f = NULL;
+	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb");
@@ -51,11 +51,34 @@ void setup()
 	// f = fopen("../reference/dumps/test_bilinear_fmts.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_alpha_comparisons.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
-	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok, first row with 0 linestride and last with 0 height do not match
+	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
-	f = fopen("../reference/dumps/test_bilinear_simple.0.vc1dump", "rb"); // verify: what does bitmap size width = 0 mean precisely
+	// f = fopen("../reference/dumps/test_bilinear_simple.0.vc1dump", "rb"); // verify: what does bitmap size width = 0 mean precisely
+	// f = fopen("../reference/dumps/test_bm_draw_source_1.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_bm_height.0.vc1dump", "rb"); // ng
+	// f = fopen("../reference/dumps/test_bm_odd.0.vc1dump", "rb"); // ng
+	// f = fopen("../reference/dumps/test_bm_xform_zoom.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_bm_xy.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_font_aa.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_font_prop.0.vc1dump", "rb"); // seems ok, not sure about blue bg coming through on display?
+	// f = fopen("../reference/dumps/test_format_bargraph.0.vc1dump", "rb"); // todo
+	// f = fopen("../reference/dumps/test_format_paletted.0.vc1dump", "rb"); // todo
+	// f = fopen("../reference/dumps/test_formats_16.0.vc1dump", "rb"); // text todo
+	// f = fopen("../reference/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_modulate_256.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_nonpow2.0.vc1dump", "rb"); // undefined behaviour
+	// f = fopen("../reference/dumps/test_points_increase.0.vc1dump", "rb"); // seems ok, todo check sizes
+	// f = fopen("../reference/dumps/test_points_modulate.0.png", "rb"); // ng, invisible?
+	// f = fopen("../reference/dumps/test_points_offscreen.0.vc1dump", "rb"); // ng, todo
+	// f = fopen("../reference/dumps/test_points_subpixel.0.vc1dump", "rb"); // verify
+	// f = fopen("../reference/dumps/test_points_visit.0.vc1dump", "rb"); // vefrify
+	// f = fopen("../reference/dumps/test_ram.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_mem_exhaustive.0.vc1dump", "rb"); // looks ok
+	// f = fopen("../reference/dumps/test_scissor_connected.0.vc1dump", "rb"); // todo
+	// f = fopen("../reference/dumps/test_scissor_max.0.vc1dump", "rb"); // todo, partially ok
+	// f = fopen("../reference/dumps/test_stencil_ops.0.vc1dump", "rb"); // todo, not ok, and runs dead slow
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

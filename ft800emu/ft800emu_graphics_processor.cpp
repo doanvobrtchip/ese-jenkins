@@ -320,6 +320,8 @@ __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 
 	case ONE_MINUS_DST_ALPHA:
 		return 255 - (dst >> 24);
 	}
+	printf("Invalid blend func");
+	return 255;
 }
 
 __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
@@ -540,7 +542,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	const BitmapInfo &bi = s_BitmapInfo[handle];
 
 	int pytop = py; // incl pixel*16 top
-	int pybtm = py + ((bi.SizeHeight == 0 ? 1024 : bi.SizeHeight) << 4) - 16; // incl pixel*16 btm
+	int pybtm = py + (bi.SizeHeight << 4) - 16; // incl pixel*16 btm
 
 	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
 	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
@@ -548,7 +550,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	if (pytopi <= y && y <= pybtmi)
 	{
 		int pxlef = px;
-		int pxrig = px + ((bi.SizeWidth == 0 ? hsize : bi.SizeWidth) << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
+		int pxrig = px + (bi.SizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
 
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
@@ -811,6 +813,8 @@ __forceinline int getLayoutWidth(const int &format, const int &stride)
 		case ARGB4: return stride >> 1;
 		case RGB565: return stride >> 1;
 	}
+	printf("Invalid bitmap layout");
+	return stride;
 }
 
 }
@@ -933,10 +937,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 						int stride = (v >> 9) & 0x3FF;
-						if (stride == 0) { if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex); stride = 1; }
+						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = v & 0x1FF;
-						if (bi.LayoutHeight == 0) { if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex); bi.LayoutHeight = 1; }
+						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
 						bi.LayoutWidth = getLayoutWidth(format, stride);
 					}
 					break;
@@ -945,7 +949,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					s_BitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
 					s_BitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
 					s_BitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
+					if (s_BitmapInfo[gs.BitmapHandle].SizeWidth == 0) s_BitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
 					s_BitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
+					if (s_BitmapInfo[gs.BitmapHandle].SizeHeight== 0) s_BitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
 					break;
 				case FT800EMU_DL_STENCIL_FUNC:
 					gs.StencilFunc = (v >> 16) & 0x7;
