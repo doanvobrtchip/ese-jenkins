@@ -11,6 +11,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "app", "app\app.vcproj", "{4
 		{622F146A-1CF9-4F34-873F-6841D6BDAE4C} = {622F146A-1CF9-4F34-873F-6841D6BDAE4C}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "loaddump", "loaddump\loaddump.vcproj", "{4177D683-1F39-4EFC-A156-216F43DE7C4D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EB406741-EF76-46EE-9AA2-364DDC9DC543} = {EB406741-EF76-46EE-9AA2-364DDC9DC543}
+		{622F146A-1CF9-4F34-873F-6841D6BDAE4C} = {622F146A-1CF9-4F34-873F-6841D6BDAE4C}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -29,6 +35,10 @@ Global
 		{45F1274B-52FC-43D0-9BE5-845677CA3E8C}.Debug|Win32.Build.0 = Debug|Win32
 		{45F1274B-52FC-43D0-9BE5-845677CA3E8C}.Release|Win32.ActiveCfg = Release|Win32
 		{45F1274B-52FC-43D0-9BE5-845677CA3E8C}.Release|Win32.Build.0 = Release|Win32
+		{4177D683-1F39-4EFC-A156-216F43DE7C4D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4177D683-1F39-4EFC-A156-216F43DE7C4D}.Debug|Win32.Build.0 = Debug|Win32
+		{4177D683-1F39-4EFC-A156-216F43DE7C4D}.Release|Win32.ActiveCfg = Release|Win32
+		{4177D683-1F39-4EFC-A156-216F43DE7C4D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
