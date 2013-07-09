@@ -42,8 +42,8 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f;
-	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb");
-	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb");
+	//f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb");
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

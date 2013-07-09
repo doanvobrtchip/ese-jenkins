@@ -77,6 +77,7 @@ struct GraphicsState
 public:
 	GraphicsState()
 	{
+		DebugDisplayListIndex = 0;
 		Primitive = 0; // Not sure if part of gs
 		ColorARGB = 0xFF000000; // Default alpha 255?
 		PointSize = 16;
@@ -107,7 +108,8 @@ public:
 		BitmapTransformE = 256;
 		BitmapTransformF = 0;
 	}
-
+	
+	int DebugDisplayListIndex;
 	int Primitive; // Not sure if part of gs
 	argb8888 ColorARGB;
 	int PointSize;
@@ -330,6 +332,7 @@ __forceinline bool wrap(int &value, int max, int type)
 	case REPEAT:
 		while (value < 0) value += max;
 		while (value >= max) value -= max;
+		// (value + max * 512) % max <- test this as optim
 		break;
 	}
 	return true;
@@ -339,16 +342,25 @@ __forceinline bool wrap(int &value, int max, int type)
 __forceinline argb8888 sampleBitmapAt(const uint8_t *src, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
 	if (!wrap(x, width, wrapx)) return 0x00000000;
-	if (!wrap(y, height, wrapx)) return 0x00000000;
+	if (!wrap(y, height, wrapy)) return 0x00000000;
 	int py = y * stride;
 	switch (format)
 	{
 	case L4:
-		int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
-		val *= 255;
-		val /= 15; // todo opt
-		return 0xFF000000 | (val << 16) | (val << 8) | (val);
-		break;
+		{
+			int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
+			val *= 255;
+			val /= 15; // todo opt
+			return 0xFF000000 | (val << 16) | (val << 8) | (val);
+		}
+	case RGB565:
+		{
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			return 0xFF000000 // todo opt
+				| (((val >> 11) * 255 / 31) << 16)
+				| ((((val >> 5) & 0x3F) * 255 / 63) << 8)
+				| ((val & 0x1F) * 255 / 31);
+		}
 	}
 	return 0xFFFF00FF; // invalid format
 }
@@ -424,7 +436,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	int pytopi = (pytop + 8) >> 4;
 	int pybtmi = (pybtm + 8) >> 4;
 
-	if (pytopi <= y && y <= pybtmi)
+	if (pytopi <= y && y < pybtmi)
 	{
 		int pxlef = px;
 		int pxrig = px + (bi.SizeWidth * 16) - 1;
@@ -448,10 +460,10 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int sampleWrapY = bi.SizeWrapY;
 		int sampleFilter = bi.SizeFilter;
 		// pretransform
-		int rxtbc = (gs.BitmapTransformB * ry) + gs.BitmapTransformC;
-		int rytef = (gs.BitmapTransformE * ry) + gs.BitmapTransformF;
+		int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
+		int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
 		//int sample
-		for (int x = pxlefi; x <= pxrigi; ++x)
+		for (int x = pxlefi; x < pxrigi; ++x)
 		{
 			// relative at 1/16 pixel units
 			int vx = x * 16;
@@ -761,6 +773,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		// run display list
 		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
+			gs.DebugDisplayListIndex = c;
 			uint32_t v = displayList[c]; // (up to 2048 ops)
 			switch (v >> 30)
 			{
@@ -831,27 +844,27 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_A:
 					gs.BitmapTransformA = v & 0xFFFF; // 8.8 signed
-					if (v & 0x10000) gs.BitmapTransformA = -gs.BitmapTransformA;
+					if (v & 0x10000) gs.BitmapTransformA = gs.BitmapTransformA - 0x10000;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_B:
 					gs.BitmapTransformB = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformB = -gs.BitmapTransformB;
+					if (v & 0x10000) gs.BitmapTransformB = gs.BitmapTransformB - 0x10000;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_C: // 15.8 signed
 					gs.BitmapTransformC = v & 0x7FFFFF;
-					if (v & 0x800000) gs.BitmapTransformC = -gs.BitmapTransformC;
+					if (v & 0x800000) gs.BitmapTransformC = gs.BitmapTransformC - 0x800000;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_D:
 					gs.BitmapTransformD = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformD = -gs.BitmapTransformD;
+					if (v & 0x10000) gs.BitmapTransformD = gs.BitmapTransformD - 0x10000;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_E:
 					gs.BitmapTransformE = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformE = -gs.BitmapTransformE;
+					if (v & 0x10000) gs.BitmapTransformE = gs.BitmapTransformE - 0x10000;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_F:
 					gs.BitmapTransformF = v & 0x7FFFFF;
-					if (v & 0x800000) gs.BitmapTransformF = -gs.BitmapTransformF;
+					if (v & 0x800000) gs.BitmapTransformF = gs.BitmapTransformF - 0x800000;
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
 					gs.ScissorY = v & 0x1FF;

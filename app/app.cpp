@@ -37,9 +37,9 @@ static void dl(uint32_t cmd)
 
 inline uint32_t transformvalue(double d)
 {
-	uint32_t result = d < 0.0 ? 0x10000 : 0;
-	result |= (uint32_t)(abs(d) * 256.0) & 0xFFFF;
-	return result;
+	int result = (int)(d * 256.0);
+	if (result < 0) result = (0x10000 + result) | 0x10000;
+	return ((uint32_t)result) & 0x1FFFF;
 }
 
 void setup()
