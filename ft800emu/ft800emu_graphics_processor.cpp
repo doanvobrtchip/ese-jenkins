@@ -477,6 +477,18 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 			uint8_t val = src[py + x];
 			return getPaletted(ram, val);
 		}
+	case TEXT8X8:
+		{
+			const int yn = y >> 3;
+			py = yn * stride;
+			uint8_t c = src[py + (x >> 3)];
+			const uint8_t *nsrc = &ram[s_BitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
+			const int pyc = y & 0x7;
+			const int xc = x & 0x7;
+			int val = (nsrc[pyc] >> (7 - xc)) & 0x1;
+			val *= 255;
+			return (val << 24) | 0x00FFFFFF; 
+		}
 	case BARGRAPH:
 		{
 			uint8_t val = src[x];
@@ -577,9 +589,9 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int ry = vy - py;
 		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
 		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
-		int sampleWidth = bi.LayoutWidth;
-		int sampleHeight = bi.LayoutHeight;
 		int sampleFormat = bi.LayoutFormat;
+		int sampleWidth = bi.LayoutWidth;
+		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : bi.LayoutHeight;
 		int sampleStride = bi.LayoutStride;
 		int sampleWrapX = bi.SizeWrapX;
 		int sampleWrapY = bi.SizeWrapY;
@@ -827,8 +839,8 @@ __forceinline int getLayoutWidth(const int &format, const int &stride)
 		case ARGB4: return stride >> 1;
 		case RGB565: return stride >> 1;
 		case PALETTED: return stride;
-		// case TEXT8X8: return stride >> 3;
-		// case TEXTVGA: return stride >> 2;
+		case TEXT8X8: return stride << 3;
+		// case TEXTVGA: return stride << 2;
 		case BARGRAPH: return stride;
 	}
 	printf("Invalid bitmap layout\n");
