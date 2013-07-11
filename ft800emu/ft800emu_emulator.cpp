@@ -90,7 +90,7 @@ namespace {
 			// Update display resolution
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
-			// TODO: Update display resolution
+			GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
 			// If coprocessor running on render thread, REG_CPURESET goes into effect at this point.
 			// Must use the getCPUReset() function which buffers value switches.

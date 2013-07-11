@@ -26,12 +26,6 @@
 
 using namespace std;
 
-#define FT800EMU_WINDOW_TITLE TEXT("FT800 Emulator")
-#define FT800EMU_WINDOW_WIDTH 480
-#define FT800EMU_WINDOW_HEIGHT 272
-#define FT800EMU_WINDOW_RATIO (480.0f / 272.0f)
-#define FT800EMU_WINDOW_KEEPRATIO 1
-
 #define FT800EMU_WINDOW_CLASS_NAME TEXT("FT800EMUGraphicsDriver")
 
 // Getting more CPU usage with StretchDIBits for some reason, so I don't use it.
@@ -41,7 +35,7 @@ namespace FT800EMU {
 
 
 GraphicsDriverClass GraphicsDriver;
-static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH * FT800EMU_WINDOW_HEIGHT];
+static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 
 
 
@@ -61,6 +55,9 @@ static HDC s_HDC = NULL;//, m_WindowGraphics;
 
 
 BITMAPINFO s_BitInfo;
+static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
 
 
@@ -131,7 +128,7 @@ void GraphicsDriverClass::begin()
 /*#if FT800EMUWIN_DISPLAY_ASPECT_RATIO
 	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)FT800EMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = FT800EMU_WINDOW_WIDTH * 2; // window size
 #else*/
-	RECT r; r.top = 0; r.left = 0; r.bottom = FT800EMU_WINDOW_HEIGHT * 2; r.right = FT800EMU_WINDOW_WIDTH * 2; // window size
+	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * 2; r.right = s_Width * 2; // window size
 /*#endif*/
 	AdjustWindowRect(&r, dw_style, FALSE);
 	if (s_HWnd) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HWnd != NULL"));
@@ -150,7 +147,7 @@ void GraphicsDriverClass::begin()
 	s_HDC = CreateCompatibleDC(hdc);
 	if (!s_HDC) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HDC == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
 	if (s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_Buffer != NULL"));
-	s_Buffer = CreateCompatibleBitmap(hdc, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT);
+	s_Buffer = CreateCompatibleBitmap(hdc, s_Width, s_Height);
 	if (!s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
 	SelectObject(s_HDC, s_Buffer);
 	ReleaseDC(s_HWnd, hdc);
@@ -163,8 +160,8 @@ void GraphicsDriverClass::begin()
 	// Initialize Bitmap Buffer
 	ZeroMemory(&s_BitInfo, sizeof(s_BitInfo));
     s_BitInfo.bmiHeader.biSize = sizeof(s_BitInfo.bmiHeader);
-	s_BitInfo.bmiHeader.biWidth = FT800EMU_WINDOW_WIDTH;
-    s_BitInfo.bmiHeader.biHeight = FT800EMU_WINDOW_HEIGHT;
+	s_BitInfo.bmiHeader.biWidth = s_Width;
+    s_BitInfo.bmiHeader.biHeight = s_Height;
     s_BitInfo.bmiHeader.biPlanes = 1;
     s_BitInfo.bmiHeader.biBitCount = 32;
     s_BitInfo.bmiHeader.biCompression = BI_RGB;
@@ -209,6 +206,39 @@ void GraphicsDriverClass::end()
 	UnregisterClass(FT800EMU_WINDOW_CLASS_NAME, s_HInstance);
 }
 
+void GraphicsDriverClass::setMode(int width, int height)
+{
+	if (s_Width != width || s_Height != height)
+	{
+		s_Width = width;
+		s_Height = height;
+		s_Ratio = (float)width / (float)height;
+
+#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+		if (!s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.setMode(2)  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
+		HBITMAP oldBuffer = s_Buffer;
+		s_Buffer = NULL;
+
+		HDC hdc = GetDC(s_HWnd);
+		if (s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_Buffer != NULL"));
+		s_Buffer = CreateCompatibleBitmap(hdc, s_Width, s_Height);
+		if (!s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
+		SelectObject(s_HDC, s_Buffer);
+		ReleaseDC(s_HWnd, hdc);
+
+		DeleteObject(oldBuffer);
+#endif
+		
+		DWORD dw_style = WS_OVERLAPPEDWINDOW;
+		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * 2; r.right = s_Width * 2; // window size
+		AdjustWindowRect(&r, dw_style, FALSE);
+
+		SetWindowPos(s_HWnd, 0, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
+		s_BitInfo.bmiHeader.biWidth = s_Width;
+		s_BitInfo.bmiHeader.biHeight = s_Height;
+	}
+}
+
 void GraphicsDriverClass::renderBuffer(bool output)
 {
 	// Render bitmap to buffer
@@ -216,8 +246,8 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	if (output)
 	{
 		if (!SetDIBitsToDevice(s_HDC, 0, 0,
-			FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT,
-			0, 0, 0, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS))
+			s_Width, s_Height,
+			0, 0, 0, s_Height, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS))
 			SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
 	}
 #endif
@@ -231,16 +261,16 @@ void GraphicsDriverClass::renderBuffer(bool output)
 		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
 		if (bgBrush == NULL) SystemWindows.ErrorWin32();
-		int width_r = (int)((float)r.bottom * FT800EMU_WINDOW_RATIO); int height_r;
-		if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / FT800EMU_WINDOW_RATIO); }
+		int width_r = (int)((float)r.bottom * s_Ratio); int height_r;
+		if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / s_Ratio); }
 		else height_r = r.bottom;
 		int x_r = (r.right - width_r) / 2;
 		int y_r = (r.bottom - height_r) / 2;
 		HDC hdc = GetDC(s_HWnd);
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
-		StretchBlt(hdc, x_r, y_r, width_r, height_r, s_HDC, 0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, SRCCOPY);
+		StretchBlt(hdc, x_r, y_r, width_r, height_r, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
-		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, s_Width, s_Height, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
 #endif
 		RECT rect;
 		if (x_r > 0)
@@ -271,9 +301,9 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	{
 		HDC hdc = GetDC(s_HWnd);
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
-		StretchBlt(hdc, 0, 0, r.right, r.bottom, s_HDC, 0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, SRCCOPY);
+		StretchBlt(hdc, 0, 0, r.right, r.bottom, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
-		StretchDIBits(hdc, 0, 0, r.right, r.bottom, 0, 0, FT800EMU_WINDOW_WIDTH, FT800EMU_WINDOW_HEIGHT, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(hdc, 0, 0, r.right, r.bottom, 0, 0, s_Width, s_Height, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
 #endif
 		ReleaseDC(s_HWnd, hdc);
 	}
@@ -298,6 +328,7 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	newTitle << TEXT(" (");
 	newTitle << System.getFPS();
 	newTitle << TEXT(")]");
+	if (!output) newTitle << " [NO OUTPUT]";
 	SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
 }
 

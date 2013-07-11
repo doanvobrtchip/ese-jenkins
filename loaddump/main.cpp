@@ -44,8 +44,8 @@ void setup()
 	FILE *f = NULL;
 	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
-	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb");
-	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb"); // middle bar not ok
+	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb"); // middle bar not ok
 	// f = fopen("../reference/dumps/test_bm_wrap.0.vc1dump", "rb"); // ok, but does not match the 'undefined behaviour' of npot bitmap
 	// f = fopen("../reference/dumps/test_formats.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_bilinear_fmts.0.vc1dump", "rb"); // ok
@@ -53,7 +53,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
-	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bilinear_simple.0.vc1dump", "rb"); // verify: what does bitmap size width = 0 mean precisely
 	// f = fopen("../reference/dumps/test_bm_draw_source_1.0.vc1dump", "rb"); // seems ok
@@ -82,25 +82,33 @@ void setup()
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{
-		const size_t headersz = 4 * 6;
-		uint8_t header[headersz];
-		size_t s = fread(header, 1, headersz, f);
-		if (s != headersz) printf("Incomplete vc1dump header\n");
+		const size_t headersz = 6;
+		uint32_t header[headersz];
+		size_t s = fread(header, sizeof(uint32_t), headersz, f);
+		if (header[0] != 100) printf("Invalid header version");
 		else
 		{
-			// todo set regs
-			uint8_t *ram = FT800EMU::Memory.getRam();
-			s = fread(&ram[RAM_G], 1, 262144, f);
-			if (s != 262144) printf("Incomplete vc1dump RAM_G\n");
+			wr32(REG_HSIZE, header[1]);
+			wr32(REG_VSIZE, header[2]);
+			wr32(REG_MACRO_0, header[3]);
+			wr32(REG_MACRO_1, header[4]);
+			if (s != headersz) printf("Incomplete vc1dump header\n");
 			else
 			{
-				s = fread(&ram[RAM_PAL], 1, 1024, f);
-				if (s != 1024) printf("Incomplete vc1dump RAM_PAL\n");
+				// todo set regs
+				uint8_t *ram = FT800EMU::Memory.getRam();
+				s = fread(&ram[RAM_G], 1, 262144, f);
+				if (s != 262144) printf("Incomplete vc1dump RAM_G\n");
 				else
 				{
-					s = fread(&ram[RAM_DL], 1, 8192, f);
-					if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
-					else printf("Loaded vc1dump file\n");
+					s = fread(&ram[RAM_PAL], 1, 1024, f);
+					if (s != 1024) printf("Incomplete vc1dump RAM_PAL\n");
+					else
+					{
+						s = fread(&ram[RAM_DL], 1, 8192, f);
+						if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
+						else printf("Loaded vc1dump file\n");
+					}
 				}
 			}
 		}

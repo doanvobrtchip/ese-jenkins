@@ -21,6 +21,14 @@
 // Project includes
 #include "ft800emu_inttypes.h"
 
+#define FT800EMU_WINDOW_TITLE TEXT("FT800 Emulator")
+#define FT800EMU_WINDOW_WIDTH_DEFAULT 100 // 480
+#define FT800EMU_WINDOW_HEIGHT_DEFAULT 50 // 272
+#define FT800EMU_WINDOW_RATIO_DEFAULT 2.0f // (480.0f / 272.0f)
+#define FT800EMU_WINDOW_WIDTH_MAX 512
+#define FT800EMU_WINDOW_HEIGHT_MAX 512
+#define FT800EMU_WINDOW_KEEPRATIO 1
+
 namespace FT800EMU {
 
 /**
@@ -38,6 +46,7 @@ public:
 	static bool update();
 	static void end();
 
+	static void setMode(int width, int height);
 	static void renderBuffer(bool output);
 
 	static argb8888 *getBufferARGB8888();
