@@ -64,7 +64,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_font_aa.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_font_prop.0.vc1dump", "rb"); // seems ok, not sure about blue bg coming through on display?
 	// f = fopen("../reference/dumps/test_format_bargraph.0.vc1dump", "rb"); // todo
-	// f = fopen("../reference/dumps/test_format_paletted.0.vc1dump", "rb"); // todo
+	f = fopen("../reference/dumps/test_format_paletted.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_formats_16.0.vc1dump", "rb"); // text todo
 	// f = fopen("../reference/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_modulate_256.0.vc1dump", "rb"); // seems ok
