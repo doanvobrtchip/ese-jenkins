@@ -409,7 +409,7 @@ __forceinline bool wrap(int &value, const int &max, const int &type)
 __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
 	if (!wrap(x, width, wrapx)) return 0x00000000;
-	if (!wrap(y, height, wrapy)) return 0x00000000;
+	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
 	int py = y * stride;
 	switch (format)
 	{
@@ -476,6 +476,14 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		{
 			uint8_t val = src[py + x];
 			return getPaletted(ram, val);
+		}
+	case BARGRAPH:
+		{
+			uint8_t val = src[x];
+			if (val < y) 
+				return 0xFFFFFFFF;
+			else 
+				return 0x00FFFFFF; // a black or white transparent pixel? :)
 		}
 	}
 	return 0xFFFF00FF; // invalid format
@@ -819,6 +827,9 @@ __forceinline int getLayoutWidth(const int &format, const int &stride)
 		case ARGB4: return stride >> 1;
 		case RGB565: return stride >> 1;
 		case PALETTED: return stride;
+		// case TEXT8X8: return stride >> 3;
+		// case TEXTVGA: return stride >> 2;
+		case BARGRAPH: return stride;
 	}
 	printf("Invalid bitmap layout\n");
 	return stride;
