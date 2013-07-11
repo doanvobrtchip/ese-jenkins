@@ -326,7 +326,8 @@ __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 
 
 __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
-	return add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
+	argb8888 result = add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
+	return (result & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
 }
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
