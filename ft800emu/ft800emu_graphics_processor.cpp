@@ -1021,9 +1021,20 @@ EvaluateDisplayListValue:
 			switch (v >> 30)
 			{
 			case 0:
-				if (begun && primitive == LINE_STRIP && ((v >> 24) != FT800EMU_DL_END) && ((v >> 24) != FT800EMU_DL_MACRO))
+				if (begun && primitive == LINE_STRIP)
 				{
-					resetLineStrip(gs, bc, bs, bt, y, hsize, lss);
+					switch (v >> 24)
+					{
+					case FT800EMU_DL_END:
+					case FT800EMU_DL_CALL:
+					case FT800EMU_DL_RETURN:
+					case FT800EMU_DL_JUMP:
+					case FT800EMU_DL_MACRO:
+						break;
+					default:
+						resetLineStrip(gs, bc, bs, bt, y, hsize, lss);
+						break;
+					}
 				}
 				switch (v >> 24)
 				{
@@ -1155,6 +1166,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_BEGIN:
 					primitive = v & 0x0F;
+					if (begun) printf("Double begin\n");
 					begun = true;
 					switch (primitive)
 					{
