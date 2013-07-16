@@ -34,7 +34,10 @@ MemoryClass Memory;
 
 // RAM
 static uint8_t s_Ram[4 * 1024 * 1024]; // 4 MiB
-static uint32_t s_DisplayList[FT800EMU_DISPLAY_LIST_SIZE];
+static uint32_t s_DisplayListA[FT800EMU_DISPLAY_LIST_SIZE];
+static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
+static uint32_t *s_DisplayListActive = s_DisplayListA;
+static uint32_t *s_DisplayListFree = s_DisplayListB;
 
 __forceinline void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
@@ -101,7 +104,7 @@ uint8_t *MemoryClass::getRam()
 
 const uint32_t *MemoryClass::getDisplayList()
 {
-	return s_DisplayList;
+	return s_DisplayListActive;
 }
 
 void MemoryClass::mcuWrite(size_t address, uint8_t data)
@@ -134,8 +137,11 @@ void MemoryClass::mcuWrite(size_t address, uint8_t data)
 
 void MemoryClass::swapDisplayList()
 {
-	// Should this literally swap or is a copy good enough?
-	memcpy(static_cast<void *>(s_DisplayList), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayList) * sizeof(s_DisplayList[0]));
+	memcpy(static_cast<void *>(s_DisplayListFree), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayListA));
+	memcpy(static_cast<void *>(&s_Ram[RAM_DL]), static_cast<void *>(s_DisplayListActive), sizeof(s_DisplayListA));
+	uint32_t *active = s_DisplayListFree;
+	s_DisplayListFree = s_DisplayListActive;
+	s_DisplayListActive = active;
 }
 
 uint8_t MemoryClass::mcuRead(size_t address)
