@@ -949,7 +949,8 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	// int vsize16 = vsize * 16;
 
 	// Swap the display list... Is this done before the frame render or after?
-	if (Memory.getRam()[REG_DLSWAP] == SWAP_FRAME)
+	uint8_t *ram = Memory.getRam();
+	if (ram[REG_DLSWAP] == SWAP_FRAME)
 		Memory.swapDisplayList();
 
 	const uint32_t *displayList = Memory.getDisplayList();
@@ -994,6 +995,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		{
 			gs.DebugDisplayListIndex = c;
 			uint32_t v = displayList[c]; // (up to 2048 ops)
+EvaluateDisplayListValue:
 			switch (v >> 30)
 			{
 			case 0:
@@ -1138,6 +1140,11 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 						break;
 					}
 					gs.Primitive = 0;
+					break;
+				case FT800EMU_DL_MACRO:
+					v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
+					// What happens when the macro macros itself? :)
+					goto EvaluateDisplayListValue;
 					break;
 				case FT800EMU_DL_CLEAR:
 					if (y >= gs.ScissorY && y < gs.ScissorY2)
