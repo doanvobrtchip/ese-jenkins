@@ -20,6 +20,7 @@
 
 // Project includes
 #include "ft800emu_memory.h"
+#include "ft800emu_graphics_driver.h"
 #include "vc.h"
 
 // using namespace ...;
@@ -944,8 +945,6 @@ void GraphicsProcessorClass::end()
 
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
-	// If a frame is process and there is no clear command, is the tag buffer etc reset or not?
-	uint8_t *tag = Memory.getTagBuffer();
 	// int hsize16 = hsize * 16; // << 4
 	// int vsize16 = vsize * 16;
 
@@ -954,7 +953,8 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		Memory.swapDisplayList();
 
 	const uint32_t *displayList = Memory.getDisplayList();
-	uint8_t bs[512]; // stencil buffer (per-thread values!) TODO Max line width
+	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
+	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
 	// TODO: option for multicore rendering
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
@@ -962,7 +962,6 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		GraphicsState gs = GraphicsState();
 		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
-		uint8_t *bt = &tag[y * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line

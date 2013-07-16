@@ -42,7 +42,6 @@ public:
 
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
-	static uint8_t *getTagBuffer();
 
 	static void mcuWrite(size_t address, uint8_t data);
 	static uint8_t mcuRead(size_t address);

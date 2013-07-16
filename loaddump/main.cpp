@@ -42,8 +42,8 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
-	f = fopen("../reference/dumps/test_format_text8x8.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb"); // middle bar not ok
 	// f = fopen("../reference/dumps/test_bm_params.1.vc1dump", "rb"); // middle bar not ok
