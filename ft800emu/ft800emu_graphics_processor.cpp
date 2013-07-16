@@ -335,6 +335,8 @@ __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const
 
 #pragma endregion
 
+#pragma region Primitive: Point
+
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
 {
 	int yy = y * 16;
@@ -385,13 +387,19 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					int alpha = gs.ColorARGB >> 24;
 					alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
 					alpha /= border2sqrt;
-					bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+					if (alpha > 255) printf("Code error 390\n");
+					argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | alpha << 24;
+					bc[x] = blend(gs, out, bc[x]);
 					writeTag(gs, bt, x);
 				}
 			}
 		}
 	}
 }
+
+#pragma endregion
+
+#pragma region Primitive: Bitmap
 
 __forceinline bool wrap(int &value, const int &max, const int &type)
 {
@@ -621,6 +629,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		}
 	}
 }
+
+#pragma endregion
 
 struct LineStripDefer
 {
