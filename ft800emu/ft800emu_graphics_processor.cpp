@@ -17,6 +17,7 @@
 // System includes
 #include <stdio.h>
 #include <math.h>
+#include <stack>
 
 // Project includes
 #include "ft800emu_memory.h"
@@ -81,8 +82,7 @@ public:
 	GraphicsState()
 	{
 		DebugDisplayListIndex = 0;
-		Primitive = 0; // Not sure if part of gs
-		ColorARGB = 0xFFFFFFFF; // Default alpha 255? Default color white?
+		ColorARGB = 0xFFFFFFFF;
 		PointSize = 16;
 		ScissorX = 0;
 		ScissorY = 0;
@@ -90,7 +90,7 @@ public:
 		ScissorHeight = 512;
 		ScissorX2 = 512;
 		ScissorY2 = 512;
-		ClearColorARGB = 0x00000000; // Not found in the programmer guide
+		ClearColorARGB = 0x00000000;
 		ClearStencil = 0;
 		ClearTag = 0;
 		Tag = 0;
@@ -117,7 +117,6 @@ public:
 	}
 	
 	int DebugDisplayListIndex;
-	int Primitive; // Not sure if part of gs
 	argb8888 ColorARGB;
 	int PointSize;
 	uint32_t ScissorX;
@@ -126,8 +125,8 @@ public:
 	uint32_t ScissorHeight;
 	uint32_t ScissorX2; // min(hsize, X + Width)
 	uint32_t ScissorY2; // Y + Height
-	argb8888 ClearColorARGB; // Not in the programmer guide's graphics state table
-	uint8_t ClearStencil; // PG says "Stencil value" instead of "Stencil clear value"...?
+	argb8888 ClearColorARGB;
+	uint8_t ClearStencil;
 	uint8_t ClearTag;
 	uint8_t Tag;
 	uint8_t StencilMask;
@@ -305,15 +304,15 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 	return result;
 }
 
-__forceinline argb8888 getPaletted(const uint8_t *ram, const uint8_t &value) // not tested
+__forceinline argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
 	uint32_t result = static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
-	return result; // (result >> 8) | (result << 24); // really, RGBA?
+	return result;
 }
 
 __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
 {
-	switch (func) // todo optim (can avoid switch by storing some magic numbers in the DL instead of the func int)
+	switch (func)
 	{
 	case ZERO:
 		return 0;
@@ -897,12 +896,29 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	deferredLineStrip(gs, bc, bs, bt, lss);
 }
 
+void beginLineStrip(LineStripState &lss)
+{
+	lss.Begin = true;
+}
+
 void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
 {
 	deferredLineStrip(gs, bc, bs, bt, lss);
 
 	// draw closing sphere cap
 	// todo
+}
+
+void resetLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
+{
+	if (!lss.Begin)
+	{
+		int px = lss.P2X;
+		int py = lss.P2Y;
+		endLineStrip(gs, bc, bs, bt, y, hsize, lss);
+		beginLineStrip(lss);
+		displayLineStrip(gs, bc, bs, bt, y, hsize, lss, px, py);
+	}
 }
 
 #pragma endregion
@@ -960,7 +976,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
 		LineStripState lss = LineStripState();
+		bool begun = false;
+		int primitive = 0;
 		GraphicsState gs = GraphicsState();
+		std::stack<GraphicsState> gsstack;
 		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
@@ -999,6 +1018,10 @@ EvaluateDisplayListValue:
 			switch (v >> 30)
 			{
 			case 0:
+				if (begun && primitive == LINE_STRIP && ((v >> 24) != FT800EMU_DL_END) && ((v >> 24) != FT800EMU_DL_MACRO))
+				{
+					resetLineStrip(gs, bc, bs, bt, y, hsize, lss);
+				}
 				switch (v >> 24)
 				{
 				case FT800EMU_DL_DISPLAY:
@@ -1118,11 +1141,12 @@ EvaluateDisplayListValue:
 					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_BEGIN:
-					gs.Primitive = v & 0x0F;
-					switch (gs.Primitive)
+					primitive = v & 0x0F;
+					begun = true;
+					switch (primitive)
 					{
 					case LINE_STRIP:
-						lss.Begin = true;
+						beginLineStrip(lss);
 						break;
 					}
 					break;
@@ -1133,13 +1157,21 @@ EvaluateDisplayListValue:
 						| ((v & 0x1) * 0xFF000000);
 					break;
 				case FT800EMU_DL_END:
-					switch (gs.Primitive)
+					switch (primitive)
 					{
 					case LINE_STRIP:
 						endLineStrip(gs, bc, bs, bt, y, hsize, lss);
 						break;
 					}
-					gs.Primitive = 0;
+					primitive = 0;
+					begun = false;
+					break;
+				case FT800EMU_DL_SAVE_CONTEXT:
+					gsstack.push(gs);
+					break;
+				case FT800EMU_DL_RESTORE_CONTEXT:
+					gs = gsstack.top();
+					gsstack.pop();
 					break;
 				case FT800EMU_DL_MACRO:
 					v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
@@ -1175,12 +1207,14 @@ EvaluateDisplayListValue:
 						}
 					}
 					break;
+				default:
+					printf("%i: Invalid display list entry %i\n", c, (v >> 24));
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:
 				if (y >= gs.ScissorY && y < gs.ScissorY2)
 				{
-					switch (gs.Primitive)
+					switch (primitive)
 					{
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, 
@@ -1205,7 +1239,7 @@ EvaluateDisplayListValue:
 			case FT800EMU_DL_VERTEX2F:				
 				if (y >= gs.ScissorY && y < gs.ScissorY2)
 				{
-					switch (gs.Primitive)
+					switch (primitive)
 					{
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, 
