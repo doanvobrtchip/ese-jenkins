@@ -982,6 +982,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
 		std::stack<GraphicsState> gsstack;
+		std::stack<int> callstack;
 		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
@@ -1145,6 +1146,10 @@ EvaluateDisplayListValue:
 					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
 					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
 					break;
+				case FT800EMU_DL_CALL:
+					callstack.push(c);
+					c = (v & 0xFFFF) - 1;
+					break;
 				case FT800EMU_DL_JUMP:
 					c = (v & 0xFFFF) - 1;
 					break;
@@ -1180,6 +1185,10 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_RESTORE_CONTEXT:
 					gs = gsstack.top();
 					gsstack.pop();
+					break;
+				case FT800EMU_DL_RETURN:
+					c = callstack.top();
+					callstack.pop();
 					break;
 				case FT800EMU_DL_MACRO:
 					v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
