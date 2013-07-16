@@ -111,6 +111,8 @@ public:
 		BitmapTransformF = 0;
 		BlendFuncSrc = SRC_ALPHA;
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
+		AlphaFunc = ALWAYS;
+		AlphaFuncRef = 0;
 	}
 	
 	int DebugDisplayListIndex;
@@ -145,6 +147,8 @@ public:
 	int BitmapTransformF;
 	int BlendFuncSrc;
 	int BlendFuncDst;
+	int AlphaFunc;
+	int AlphaFuncRef;
 };
 
 struct BitmapInfo
@@ -327,6 +331,31 @@ __forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 
 	return 255;
 }
 
+__forceinline bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
+{
+	switch (gs.AlphaFunc)
+	{
+	case NEVER:
+		return false;
+	case LESS:
+		return (dst >> 24) < gs.AlphaFuncRef;
+	case LEQUAL:
+		return (dst >> 24) <= gs.AlphaFuncRef;
+	case GREATER:
+		return (dst >> 24) > gs.AlphaFuncRef;
+	case GEQUAL:
+		return (dst >> 24) >= gs.AlphaFuncRef;
+	case EQUAL:
+		return (dst >> 24) == gs.AlphaFuncRef;
+	case NOTEQUAL:
+		return (dst >> 24) != gs.AlphaFuncRef;
+	case ALWAYS:
+		return true;
+	}
+	printf("Invalid alpha test func\n");
+	return true;
+}
+
 __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
 	argb8888 result = add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
@@ -389,8 +418,11 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					alpha /= border2sqrt;
 					if (alpha > 255) printf("Code error 390\n");
 					argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | alpha << 24;
-					bc[x] = blend(gs, out, bc[x]);
-					writeTag(gs, bt, x);
+					if (testAlpha(gs, out))
+					{
+						bc[x] = blend(gs, out, bc[x]);
+						writeTag(gs, bt, x);
+					}
 				}
 			}
 		}
@@ -616,21 +648,51 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		//int sample
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
-			// relative at 1/16 pixel units
-			int vx = x * 16;
-			int rx = vx - px;
-			// transform with 1/(256*16) pixel units
-			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
-			int ryt = (gs.BitmapTransformD * rx) + rytef;
-			const argb8888 sample = sampleBitmap(ram, sampleSrc, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
-			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
-			const argb8888 out = mul_argb(sample, gs.ColorARGB);
-			bc[x] = blend(gs, out, bc[x]);
+			if (testStencil(gs, bs, x))
+			{
+				// relative at 1/16 pixel units
+				int vx = x * 16;
+				int rx = vx - px;
+				// transform with 1/(256*16) pixel units
+				int rxt = (gs.BitmapTransformA * rx) + rxtbc;
+				int ryt = (gs.BitmapTransformD * rx) + rytef;
+				const argb8888 sample = sampleBitmap(ram, sampleSrc, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+				// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
+				const argb8888 out = mul_argb(sample, gs.ColorARGB);
+				if (testAlpha(gs, out))
+				{
+					bc[x] = blend(gs, out, bc[x]);
+					writeTag(gs, bt, x);
+				}
+			}
 		}
 	}
 }
 
+__forceinline int getLayoutWidth(const int &format, const int &stride)
+{
+	switch (format)
+	{
+		case ARGB1555: return stride >> 1;
+		case L1: return stride << 3;
+		case L4: return stride << 1;
+		case L8: return stride;
+		case RGB332: return stride;
+		case ARGB2: return stride;
+		case ARGB4: return stride >> 1;
+		case RGB565: return stride >> 1;
+		case PALETTED: return stride;
+		case TEXT8X8: return stride << 3;
+		// case TEXTVGA: return stride << 2;
+		case BARGRAPH: return stride;
+	}
+	printf("Invalid bitmap layout\n");
+	return stride;
+}
+
 #pragma endregion
+
+#pragma region Primitive: Line Strip
 
 struct LineStripDefer
 {
@@ -842,26 +904,7 @@ void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	// todo
 }
 
-__forceinline int getLayoutWidth(const int &format, const int &stride)
-{
-	switch (format)
-	{
-		case ARGB1555: return stride >> 1;
-		case L1: return stride << 3;
-		case L4: return stride << 1;
-		case L8: return stride;
-		case RGB332: return stride;
-		case ARGB2: return stride;
-		case ARGB4: return stride >> 1;
-		case RGB565: return stride >> 1;
-		case PALETTED: return stride;
-		case TEXT8X8: return stride << 3;
-		// case TEXTVGA: return stride << 2;
-		case BARGRAPH: return stride;
-	}
-	printf("Invalid bitmap layout\n");
-	return stride;
-}
+#pragma endregion
 
 }
 
@@ -998,6 +1041,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 					if (s_BitmapInfo[gs.BitmapHandle].SizeWidth == 0) s_BitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
 					s_BitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
 					if (s_BitmapInfo[gs.BitmapHandle].SizeHeight== 0) s_BitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
+					break;
+				case FT800EMU_DL_ALPHA_FUNC:
+					gs.AlphaFunc = (v >> 8) & 0x07;
+					gs.AlphaFuncRef = v & 0xFF;
 					break;
 				case FT800EMU_DL_STENCIL_FUNC:
 					gs.StencilFunc = (v >> 16) & 0x7;
