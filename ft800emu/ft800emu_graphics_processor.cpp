@@ -84,6 +84,7 @@ public:
 		DebugDisplayListIndex = 0;
 		ColorARGB = 0xFFFFFFFF;
 		PointSize = 16;
+		LineWidth = 16;
 		ScissorX = 0;
 		ScissorY = 0;
 		ScissorWidth = 512;
@@ -119,6 +120,7 @@ public:
 	int DebugDisplayListIndex;
 	argb8888 ColorARGB;
 	int PointSize;
+	int LineWidth;
 	uint32_t ScissorX;
 	uint32_t ScissorY;
 	uint32_t ScissorWidth;
@@ -791,8 +793,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	// todo
 
 	// draw line
-	int ytop = (min(p1y, p2y) - ((p2x - p1x) ? gs.PointSize : 0) - 8) >> 4;
-	int ybtm = (max(p1y, p2y) + ((p2x - p1x) ? gs.PointSize : 0) + 8) >> 4;
+	int ytop = (min(p1y, p2y) - ((p2x - p1x) ? gs.LineWidth : 0) - 8) >> 4;
+	int ybtm = (max(p1y, p2y) + ((p2x - p1x) ? gs.LineWidth : 0) + 8) >> 4;
 	if (ytop <= y && y <= ybtm)
 	{
 		int32_t p1x256 = p1x << 4;
@@ -805,7 +807,7 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		int32_t pdy256a = abs(pdy256);
 		int64_t pd256sq = (pdx256 * pdx256) + (pdy256 * pdy256);
 		int32_t pd256 = (int32_t)(sqrt((double)pd256sq)); // line len
-		int32_t r256 = gs.PointSize << 4;
+		int32_t r256 = gs.LineWidth << 4;
 		
 		// find center point
 		int32_t y256 = y << 8;
@@ -1085,6 +1087,9 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_POINT_SIZE:
 					gs.PointSize = v & 0x1FFF;
+					break;
+				case FT800EMU_DL_LINE_WIDTH:
+					gs.LineWidth = v & 0xFFF;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_A:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0x00FFFFFF) | (v << 24);

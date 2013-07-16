@@ -42,7 +42,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb"); // middle bar not ok
@@ -53,7 +53,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_alpha_comparisons.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
-	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bilinear_simple.0.vc1dump", "rb"); // verify: what does bitmap size width = 0 mean precisely
