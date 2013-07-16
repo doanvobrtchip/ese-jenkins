@@ -72,6 +72,8 @@ GraphicsProcessorClass GraphicsProcessor;
 
 namespace {
 
+#pragma region Graphics State
+
 struct GraphicsState
 {
 public:
@@ -79,7 +81,6 @@ public:
 	{
 		DebugDisplayListIndex = 0;
 		Primitive = 0; // Not sure if part of gs
-		//ColorARGB = 0xFF000000; // Default alpha 255?
 		ColorARGB = 0xFFFFFFFF; // Default alpha 255? Default color white?
 		PointSize = 16;
 		ScissorX = 0;
@@ -162,6 +163,10 @@ struct BitmapInfo
 
 BitmapInfo s_BitmapInfo[32];
 
+#pragma endregion
+
+#pragma region Math
+
 __forceinline unsigned int div255(const int &value)
 {
 	return (value * 257 + 257) >> 16;
@@ -225,6 +230,10 @@ __forceinline argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right
 	return (agclip | agover) + (rbover | rbclip);
 }
 
+#pragma endregion
+
+#pragma region Write Buffer
+
 __forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
@@ -269,25 +278,19 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 	case KEEP:
 		break;
 	case ZERO:
-		bs[x] = 0;
+		bs[x] = (bs[x] & ~gs.StencilMask);
 		break;
 	case REPLACE:
-		bs[x] = gs.StencilFuncRef; // i assume
+		bs[x] = (gs.StencilFuncRef & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
 		break;
 	case INCR:
-		if (bs[x] < 0xFF) ++bs[x]; // i assume
+		if (bs[x] < 0xFF) bs[x] = ((bs[x] + 1) & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
 		break;
-	//case INCR_WRAP:
-	//	++bs[x];
-	//	break;
 	case DECR:
-		if (bs[x] > 0x00) --bs[x]; // i assume
+		if (bs[x] > 0x00) bs[x] = ((bs[x] - 1) & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
 		break;
-	//case DECR_WRAP:
-	//	--bs[x];
-	//	break;
 	case INVERT:
-		bs[x] = ~bs[x];
+		bs[x] = ((~bs[x]) & gs.StencilMask) | (bs[x] & (~gs.StencilMask));
 		break;
 	default:
 		// error
@@ -329,6 +332,8 @@ __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const
 	argb8888 result = add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
 	return (result & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
 }
+
+#pragma endregion
 
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
 {
