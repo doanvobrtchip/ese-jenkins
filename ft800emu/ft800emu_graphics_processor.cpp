@@ -1148,7 +1148,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 							// clear color buffer (about loop+480 ops)
 							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
 							{
-								bc[i] = gs.ClearColorARGB;
+								bc[i] = (gs.ClearColorARGB & gs.ColorMaskARGB) | (bc[i] & (~gs.ColorMaskARGB));
 							}
 						}
 						if (v & 0x02)
@@ -1156,10 +1156,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 							// Clear stencil buffer (about loop+480 ops)
 							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
 							{
-								bs[i] = gs.ClearStencil;
+								bs[i] = (gs.ClearStencil & gs.StencilMask) | (bs[i] & (~gs.StencilMask));
 							}
 						}
-						if (gs.TagMask && v & 0x01) // TODO What when clear when clear mask false?
+						if (gs.TagMask && v & 0x01)
 						{
 							// Clear tag buffer (about loop+480 ops)
 							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
