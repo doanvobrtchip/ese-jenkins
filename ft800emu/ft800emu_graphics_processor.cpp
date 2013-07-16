@@ -1145,6 +1145,9 @@ EvaluateDisplayListValue:
 					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
 					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
 					break;
+				case FT800EMU_DL_JUMP:
+					c = (v & 0xFFFF) - 1;
+					break;
 				case FT800EMU_DL_BEGIN:
 					primitive = v & 0x0F;
 					begun = true;

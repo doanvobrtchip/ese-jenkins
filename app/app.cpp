@@ -69,7 +69,7 @@ void setup()
 
 dl( COLOR_RGB(255, 168, 64) );
 dl( BEGIN(LINE_STRIP) );
-dl(POINT_SIZE(160));
+dl(LINE_WIDTH(160));
 dl( VERTEX2F(5 * 16, 5 * 16) );
 dl( VERTEX2F(50 * 16, 30 * 16) );
 dl( VERTEX2F(63 * 16, 50 * 16) );
