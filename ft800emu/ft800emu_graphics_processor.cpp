@@ -85,12 +85,12 @@ public:
 		ColorARGB = 0xFFFFFFFF;
 		PointSize = 16;
 		LineWidth = 16;
-		ScissorX = 0;
-		ScissorY = 0;
+		ScissorX.I = 0;
+		ScissorY.I = 0;
 		ScissorWidth = 512;
 		ScissorHeight = 512;
-		ScissorX2 = 512;
-		ScissorY2 = 512;
+		ScissorX2.I = 512;
+		ScissorY2.I = 512;
 		ClearColorARGB = 0x00000000;
 		ClearStencil = 0;
 		ClearTag = 0;
@@ -121,12 +121,12 @@ public:
 	argb8888 ColorARGB;
 	int PointSize;
 	int LineWidth;
-	uint32_t ScissorX;
-	uint32_t ScissorY;
+	union { uint32_t U; int I; } ScissorX;
+	union { uint32_t U; int I; } ScissorY;
 	uint32_t ScissorWidth;
 	uint32_t ScissorHeight;
-	uint32_t ScissorX2; // min(hsize, X + Width)
-	uint32_t ScissorY2; // Y + Height
+	union { uint32_t U; int I; } ScissorX2; // min(hsize, X + Width)
+	union { uint32_t U; int I; } ScissorY2; // Y + Height
 	argb8888 ClearColorARGB;
 	uint8_t ClearStencil;
 	uint8_t ClearTag;
@@ -150,7 +150,7 @@ public:
 	int BlendFuncSrc;
 	int BlendFuncDst;
 	int AlphaFunc;
-	int AlphaFuncRef;
+	uint8_t AlphaFuncRef;
 };
 
 struct BitmapInfo
@@ -388,8 +388,8 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		int pxlefi = (pxlef + 8) >> 4;
 		int pxrigi = (pxrig + 8) >> 4;
 
-		pxlefi = max((int)gs.ScissorX, pxlefi);
-		pxrigi = min((int)gs.ScissorX2 - 1, pxrigi);
+		pxlefi = max((int)gs.ScissorX.I, pxlefi);
+		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
 
 		int border = 16 * r;
 		int border2sqrt = (int)sqrtf((float)(border * 2)); // sqrt :(
@@ -444,9 +444,6 @@ __forceinline bool wrap(int &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
-		// while (value < 0) value += max;
-		// while (value >= max) value -= max;
-		// value = value >>
 		value = (value + max * 512) % max; // + max * 512 necessary to get correct negative behaviour	
 		break;
 	}
@@ -480,7 +477,6 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
-	// case L2: int val = (src[py + (x >> 2)] >> (3 - ((x % 4) << 1))) & 0x1; val *= 255; val /= 3;
 	case L4:
 		{
 			int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
@@ -646,8 +642,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
 
-		pxlefi = max((int)gs.ScissorX, pxlefi);
-		pxrigi = min((int)gs.ScissorX2 - 1, pxrigi);
+		pxlefi = max((int)gs.ScissorX.I, pxlefi);
+		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
 
 		//if (bi.
 		int vy = y * 16;
@@ -891,8 +887,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 			bc[lxr] = 0xFF0000FF;*/
 		}
 
-		int32_t lsci = max(gs.ScissorX, xleft256 >> 8) << 8;
-		int32_t rsci = min(gs.ScissorX2, xright256 >> 8) << 8;
+		int32_t lsci = max(gs.ScissorX.I, xleft256 >> 8) << 8;
+		int32_t rsci = min(gs.ScissorX2.I, xright256 >> 8) << 8;
 		int32_t lsslo256 = max(xlout256, lsci);
 		int32_t lssli256 = max(xlin256, lsci);
 		int32_t lssro256 = min(xrout256, rsci);
@@ -906,7 +902,7 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		lss.DeferSet[nextDefer] = true;
 				
 		// test fill
-		for (int x = max(max(gs.ScissorX, xleft256 >> 8), xlout256 >> 8); x <= min(min(gs.ScissorX2, xright256 >> 8), xrout256 >> 8); ++x)
+		for (int x = max(max(gs.ScissorX.I, xleft256 >> 8), xlout256 >> 8); x <= min(min(gs.ScissorX2.I, xright256 >> 8), xrout256 >> 8); ++x)
 		{
 			//bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
 		}
@@ -1000,7 +996,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		GraphicsState gs = GraphicsState();
 		std::stack<GraphicsState> gsstack;
 		std::stack<int> callstack;
-		gs.ScissorX2 = min((int)hsize, gs.ScissorX2);
+		gs.ScissorX2.I = min((int)hsize, gs.ScissorX2.I);
 		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
@@ -1166,16 +1162,16 @@ EvaluateDisplayListValue:
 					if (v & 0x800000) gs.BitmapTransformF = gs.BitmapTransformF - 0x800000;
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
-					gs.ScissorY = v & 0x1FF;
-					gs.ScissorX = (v >> 9) & 0x1FF;
-					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
-					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
+					gs.ScissorY.U = v & 0x1FF;
+					gs.ScissorX.U = (v >> 9) & 0x1FF;
+					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
+					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_SCISSOR_SIZE:
 					gs.ScissorHeight = v & 0x3FF;
 					gs.ScissorWidth = (v >> 10) & 0x3FF;
-					gs.ScissorX2 = min(hsize, gs.ScissorX + gs.ScissorWidth);
-					gs.ScissorY2 = gs.ScissorY + gs.ScissorHeight;
+					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
+					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_CALL:
 					callstack.push(c);
@@ -1228,12 +1224,12 @@ EvaluateDisplayListValue:
 					goto EvaluateDisplayListValue;
 					break;
 				case FT800EMU_DL_CLEAR:
-					if (y >= gs.ScissorY && y < gs.ScissorY2)
+					if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 					{
 						if (v & 0x04)
 						{
 							// clear color buffer (about loop+480 ops)
-							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							for (uint32_t i = gs.ScissorX.U; i < gs.ScissorX2.U; ++i)
 							{
 								bc[i] = (gs.ClearColorARGB & gs.ColorMaskARGB) | (bc[i] & (~gs.ColorMaskARGB));
 							}
@@ -1241,7 +1237,7 @@ EvaluateDisplayListValue:
 						if (v & 0x02)
 						{
 							// Clear stencil buffer (about loop+480 ops)
-							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							for (uint32_t i = gs.ScissorX.U; i < gs.ScissorX2.U; ++i)
 							{
 								bs[i] = (gs.ClearStencil & gs.StencilMask) | (bs[i] & (~gs.StencilMask));
 							}
@@ -1249,7 +1245,7 @@ EvaluateDisplayListValue:
 						if (gs.TagMask && v & 0x01)
 						{
 							// Clear tag buffer (about loop+480 ops)
-							for (uint32_t i = gs.ScissorX; i < gs.ScissorX2; ++i)
+							for (uint32_t i = gs.ScissorX.U; i < gs.ScissorX2.U; ++i)
 							{
 								bt[i] = gs.ClearTag;
 							}
@@ -1261,7 +1257,7 @@ EvaluateDisplayListValue:
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:
-				if (y >= gs.ScissorY && y < gs.ScissorY2)
+				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 				{
 					switch (primitive)
 					{
@@ -1286,7 +1282,7 @@ EvaluateDisplayListValue:
 				}
 				break;
 			case FT800EMU_DL_VERTEX2F:				
-				if (y >= gs.ScissorY && y < gs.ScissorY2)
+				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 				{
 					switch (primitive)
 					{
