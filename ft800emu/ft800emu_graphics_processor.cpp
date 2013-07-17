@@ -284,7 +284,7 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 	case KEEP:
 		break;
 	case ZERO:
-		bs[x] = (bs[x] & ~gs.StencilMask);
+		bs[x] = (bs[x] & (~gs.StencilMask));
 		break;
 	case REPLACE:
 		bs[x] = (gs.StencilFuncRef & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
@@ -453,6 +453,11 @@ __forceinline bool wrap(int &value, const int &max, const int &type)
 	return true;
 }
 
+static const argb8888 s_VGAPalette[] = 
+{
+	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF, 
+};
+
 // uses pixel units
 __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
@@ -533,9 +538,21 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 			const uint8_t *nsrc = &ram[s_BitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
 			const int xc = x & 0x7;
-			int val = (nsrc[pyc] >> (7 - xc)) & 0x1;
-			val *= 255;
-			return (val << 24) | 0x00FFFFFF; 
+			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1;
+			return (val * 0xFF000000) | 0x00FFFFFF;
+		}
+	case TEXTVGA:
+		{
+			const int yn = y >> 4;
+			py = yn * stride;
+			uint8_t c = src[py + ((x >> 3) << 1)]; // Character
+			uint8_t ca = src[py + ((x >> 3) << 1) + 1]; // Attribute
+			const uint8_t *nsrc = &ram[s_BitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
+			const int pyc = y & 0xF;
+			const int xc = x & 0x7;
+			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
+			const int colidx = (ca >> ((1 - val) << 3)) & 0xF; // Index in 16-color palette
+			return (val * 0xFF000000) | s_VGAPalette[colidx];
 		}
 	case BARGRAPH:
 		{
@@ -639,7 +656,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
 		int sampleFormat = bi.LayoutFormat;
 		int sampleWidth = bi.LayoutWidth;
-		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : bi.LayoutHeight;
+		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
 		int sampleStride = bi.LayoutStride;
 		int sampleWrapX = bi.SizeWrapX;
 		int sampleWrapY = bi.SizeWrapY;
@@ -685,7 +702,7 @@ __forceinline int getLayoutWidth(const int &format, const int &stride)
 		case RGB565: return stride >> 1;
 		case PALETTED: return stride;
 		case TEXT8X8: return stride << 3;
-		// case TEXTVGA: return stride << 2;
+		case TEXTVGA: return stride << 2;
 		case BARGRAPH: return stride;
 	}
 	printf("Invalid bitmap layout\n");
