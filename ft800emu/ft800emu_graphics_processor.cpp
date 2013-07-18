@@ -728,14 +728,59 @@ public:
 	LineStripDefer Defer[2];
 };
 
-__forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, LineStripState &lss)
+__forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const LineStripState &lss)
 {
-	for (int x = (lss.Defer[lss.DeferCur].LeftOuter256 >> 8); x < (lss.Defer[lss.DeferCur].RightOuter256 >> 8); ++x)
+	const LineStripDefer &d = lss.Defer[lss.DeferCur];
+
+	const int leftInc = d.LeftInner256 - d.LeftOuter256;
+	const int rightDec = d.RightOuter256 - d.RightInner256;
+
+	const int leftPA = d.LeftOuter256 >> 8; // inclusive left a
+	const int leftPB = ((d.LeftInner256 - 1) >> 8) /*+ 1*/; // exclusive left b
+	const int rightPA = d.RightInner256 >> 8; // inclusive right a
+	const int rightPB = ((d.RightOuter256 - 1) >> 8) /*+ 1*/; // exclusive right b
+
+	if (leftInc)
+	{
+		const int leftAdd = (65536 / leftInc);
+		int leftValue = ((0xFF - (d.LeftOuter256 & 0xFF)) * leftAdd) >> 8;
+		for (int x = leftPA; x < leftPB; ++x)
+		{
+			argb8888 out = 0x00FFFFFF | (div255(leftValue * 128) << 24);
+			bc[x] = blend(gs, out, bc[x]);
+
+			leftValue = min(255, leftValue + leftAdd); // todo opt
+		}
+	}
+
+	for (int x = leftPB; x < rightPA; ++x)
+	{
+		argb8888 out = 0x80FFFFFF;
+		bc[x] = blend(gs, out, bc[x]);
+	}
+
+	if (rightDec)
+	{
+		const int rightRem = 65536 / rightDec;
+		int rightValue = 0xFF - (((0xFF - (d.RightInner256 & 0xFF)) * rightRem) >> 8);
+		for (int x = rightPA; x < rightPB; ++x)
+		{
+			argb8888 out = 0x00FFFFFF | (div255(rightValue * 128) << 24);
+			bc[x] = blend(gs, out, bc[x]);
+
+			rightValue = max(0, rightValue - rightRem); // todo opt
+		}
+	}
+
+	//argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | alpha << 24;
+	//
+	/*for (int x = (d.LeftOuter256 >> 8); x < (d.RightOuter256 >> 8); ++x)
 	{
 		bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
-	}
-	//bc[(lss.Defer[lss.DeferCur].LeftOuter256 >> 8)] = 0xFFFF0000;
-	//bc[(lss.Defer[lss.DeferCur].RightOuter256 >> 8)] = 0xFF00FF00;
+	}*/
+	//bc[(d.LeftOuter256 >> 8)] = 0xFFFF0000;
+	//bc[(d.RightOuter256 >> 8)] = 0xFF00FF00;
+	
 }
 
 __forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, LineStripState &lss)
@@ -749,26 +794,30 @@ __forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint
 			LineStripDefer &cur = lss.Defer[lss.DeferCur];
 			LineStripDefer &nex = lss.Defer[nextDefer];
 
+			// cur [[]]
+			// next (())
 			if (nex.RightInner256 < cur.RightInner256
 				&& nex.LeftInner256 > cur.LeftInner256)
 			{
+				// [[(())]]
 				nex.LeftInner256 = nex.RightInner256 = nex.LeftOuter256 = nex.RightOuter256 = 0;
 			}
 			else if (nex.RightInner256 >= cur.RightInner256
 				&& nex.LeftInner256 <= cur.LeftInner256)
 			{
+				// (([[]]))
 				cur.LeftInner256 = cur.RightInner256 = cur.LeftOuter256 = cur.RightOuter256 = 0;
 			}
 			else if (nex.RightInner256 > cur.RightInner256
-				&& nex.LeftInner256 < cur.RightInner256)
+				&& nex.LeftInner256 > cur.RightInner256)
 			{
-				// cur cur cur ovr ovr ovr nex nex nex
+				// [[((]])) // [([(])])
 				nex.LeftOuter256 = nex.LeftInner256 = cur.RightOuter256 = cur.RightInner256 = (cur.LeftInner256 & (~0xFF));
 			}
 			else if (nex.LeftInner256 < cur.LeftInner256
-				&& nex.RightInner256 > cur.LeftInner256)
+				&& nex.RightInner256 < cur.LeftInner256)
 			{
-				// nex nex nex ovr ovr ovr cur cur cur
+				// (([[))]] // ([([)])]
 				nex.RightOuter256 = nex.RightInner256 = cur.LeftOuter256 = cur.LeftInner256 = (cur.RightInner256 & (~0xFF));
 			}
 			else
@@ -851,12 +900,12 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		else
 		{
 			// general case, diagonal line
-			int32_t outerdist256 = (r256 + 128) * pd256 / pdy256a;
-			xlout256 = min(max(x256 - outerdist256, 0), (hsize << 8));
-			xrout256 = min(max(x256 + outerdist256, 0), (hsize << 8));
-			int32_t innerdist256 = (r256 - 128) * pd256 / pdy256a;
-			xlin256 = min(max(x256 - innerdist256, 0), (hsize << 8));
-			xrin256 = min(max(x256 + innerdist256, 0), (hsize << 8));
+			int64_t outerdist256 = (r256 + 128) * pd256 / pdy256a;
+			xlout256 = (int32_t)min(max(x256 - outerdist256, 0), (hsize << 8));
+			xrout256 = (int32_t)min(max(x256 + outerdist256, 0), (hsize << 8));
+			int64_t innerdist256 = (r256 - 128) * pd256 / pdy256a;
+			xlin256 = (int32_t)min(max(x256 - innerdist256, 0), (hsize << 8));
+			xrin256 = (int32_t)min(max(x256 + innerdist256, 0), (hsize << 8));
 			// test...
 			/*int xtl = (x256 - outerdist256) >> 8;
 			int xtr = (x256 + outerdist256) >> 8;
@@ -881,10 +930,10 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 			xleft256 = min(max(min(x1t256, x2t256), 0), (hsize << 8));
 			xright256 = min(max(max(x1t256, x2t256), 0), (hsize << 8));
 			// test
-			/*int lxl = xleft256 >> 8;
+			int lxl = xleft256 >> 8;
 			bc[lxl] = 0xFFFF0000;
 			int lxr = xright256 >> 8;
-			bc[lxr] = 0xFF0000FF;*/
+			bc[lxr] = 0xFF0000FF;
 		}
 
 		int32_t lsci = max(gs.ScissorX.I, xleft256 >> 8) << 8;
