@@ -743,7 +743,7 @@ public:
 	int P1X, P1Y;
 	int P2X, P2Y;
 	int SL, SR;
-	bool WantPoint;
+	bool WantPoint, WantEndPoint;
 	int PointLeft, PointRight;
 	
 	int DeferCur;
@@ -1028,6 +1028,8 @@ void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt,
 		gs.PointSize = gsps;
 		gs.ScissorX.I = gsx1;
 		gs.ScissorX2.I = gsx2;
+		
+		lss.WantEndPoint = true;
 	}
 #endif
 
@@ -1043,6 +1045,7 @@ void beginLineStrip(LineStripState &lss)
 {
 	lss.Begin = true;
 	lss.WantPoint = true;
+	lss.WantEndPoint = false;
 	lss.PointLeft = 0;
 	lss.PointRight = FT800EMU_WINDOW_WIDTH_MAX;
 }
@@ -1050,7 +1053,7 @@ void beginLineStrip(LineStripState &lss)
 void endLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
 {
 #if !FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS
-	if (lss.WantPoint)
+	if (lss.WantPoint && lss.WantEndPoint)
 	{
 		int gsps = gs.PointSize;
 		int gsx1 = gs.ScissorX.I;
