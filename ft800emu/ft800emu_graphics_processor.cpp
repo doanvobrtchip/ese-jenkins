@@ -439,7 +439,7 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 #if FT800EMU_DEBUG_AA
 					argb8888 out = 0x80FF0000;
 #else
-					argb8888 out = mulalpha_alpha(gs.ColorARGB, alpha);
+					argb8888 out = gs.ColorARGB & 0x00FFFFFF | (alpha << 24);
 #endif
 					if (testAlpha(gs, out))
 					{
