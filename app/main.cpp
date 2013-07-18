@@ -19,8 +19,10 @@ void loop();
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT800EMU::Emulator.run(setup, loop, 
-		FT800EMU::EmulatorEnableKeyboard
-		);
+	FT800EMU::EmulatorParameters params;
+	params.Setup = setup;
+	params.Loop = loop;
+	params.Flags = FT800EMU::EmulatorEnableKeyboard;
+	FT800EMU::Emulator.run(params);
 	return 0;
 }

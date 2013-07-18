@@ -29,6 +29,24 @@ enum EmulatorFlags
 	EmulatorEnableAudio = 0x02,
 };
 
+struct EmulatorParameters
+{
+public:
+	EmulatorParameters() : 
+		Setup(0),
+		Loop(0), 
+		Flags(0),
+		Keyboard(0) 
+	{ }
+
+	void (*Setup)(); // mcu function called before loop
+	void (*Loop)(); // mcu continuous loop
+	int Flags; // see EmulatorFlags
+	
+	// called after keyboard update, check Keyboard.isKeyDown(FT800EMU_KEY_F3)
+	void (*Keyboard)();
+};
+
 /**
  * EmulatorClass
  * \brief EmulatorClass
@@ -40,7 +58,7 @@ class EmulatorClass
 public:
 	EmulatorClass() { }
 
-	static void run(void (*setup)(), void (*loop)(), int flags);
+	static void run(const EmulatorParameters &params);
 
 private:
 	EmulatorClass(const EmulatorClass &);

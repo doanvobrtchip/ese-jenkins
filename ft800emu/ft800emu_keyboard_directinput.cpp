@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -22,17 +21,8 @@
 // Project includes
 #include "ft800emu_system_windows.h"
 #include "ft800emu_system.h"
-#include "wiring.h"
 
 // using namespace ...;
-
-#define FT800EMU_DIGITAL_LEFT  6
-#define FT800EMU_DIGITAL_RIGHT 3
-#define FT800EMU_DIGITAL_UP    4
-#define FT800EMU_DIGITAL_DOWN  5
-#define FT800EMU_DIGITAL_SHOOT 2
-#define FT800EMU_ANALOG_X      0
-#define FT800EMU_ANALOG_Y      1
 
 namespace FT800EMU {
 
@@ -85,32 +75,8 @@ void KeyboardClass::update()
 		{
 			end();
 			SystemWindows.Error(TEXT("Keyboard not available (5)"));
-			//return false;
 		}
 	}
-
-	digitalWrite(FT800EMU_DIGITAL_LEFT, ((s_BufferKeyboard[DIK_LEFT] & 0x80) != 0) ? LOW : HIGH);
-	digitalWrite(FT800EMU_DIGITAL_RIGHT, ((s_BufferKeyboard[DIK_RIGHT] & 0x80) != 0) ? LOW : HIGH);
-	digitalWrite(FT800EMU_DIGITAL_UP, ((s_BufferKeyboard[DIK_UP] & 0x80) != 0) ? LOW : HIGH);
-	digitalWrite(FT800EMU_DIGITAL_DOWN, ((s_BufferKeyboard[DIK_DOWN] & 0x80) != 0) ? LOW : HIGH);
-	digitalWrite(FT800EMU_DIGITAL_SHOOT, ((s_BufferKeyboard[DIK_SPACE] & 0x80) != 0) ? LOW : HIGH);
-
-	uint16_t analogX = 511;
-	uint16_t analogY = 511;
-	if (((s_BufferKeyboard[DIK_Q] & 0x80) != 0) || ((s_BufferKeyboard[DIK_A] & 0x80) != 0))
-		analogX -= 511;
-	if (((s_BufferKeyboard[DIK_D] & 0x80) != 0))
-		analogX += 511;
-	if (((s_BufferKeyboard[DIK_S] & 0x80) != 0))
-		analogY -= 511;
-	if (((s_BufferKeyboard[DIK_Z] & 0x80) != 0) || ((s_BufferKeyboard[DIK_W] & 0x80) != 0))
-		analogY += 511;
-
-	System.setAnalogRead(FT800EMU_ANALOG_X, analogX);
-	System.setAnalogRead(FT800EMU_ANALOG_Y, analogY);
-
-	//return true;
-	return;
 }
 
 void KeyboardClass::end()
@@ -128,6 +94,11 @@ void KeyboardClass::end()
 		s_lpDI = NULL;
 	}
 	else SystemWindows.Debug(TEXT("KeyboardClass::end()  s_lpDI == NULL"));
+}
+
+bool KeyboardClass::isKeyDown(int key)
+{
+	return ((s_BufferKeyboard[key] & 0x80) != 0);
 }
 
 } /* namespace FT800EMU */

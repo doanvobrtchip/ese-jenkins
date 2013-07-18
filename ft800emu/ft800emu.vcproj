@@ -219,6 +219,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_keyboard_keys.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_keyboard_sdl.cpp"
 				>
 			</File>

@@ -13,7 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "app", "app\app.vcproj", "{4
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "loaddump", "loaddump\loaddump.vcproj", "{4177D683-1F39-4EFC-A156-216F43DE7C4D}"
 	ProjectSection(ProjectDependencies) = postProject
-		{EB406741-EF76-46EE-9AA2-364DDC9DC543} = {EB406741-EF76-46EE-9AA2-364DDC9DC543}
 		{622F146A-1CF9-4F34-873F-6841D6BDAE4C} = {622F146A-1CF9-4F34-873F-6841D6BDAE4C}
 	EndProjectSection
 EndProject

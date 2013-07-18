@@ -20,6 +20,12 @@
 // Project includes
 #include "ft800emu_inttypes.h"
 
+#define FT800EMU_DEBUGMODE_NONE 0
+#define FT800EMU_DEBUGMODE_ALPHA 1
+#define FT800EMU_DEBUGMODE_TAG 2
+#define FT800EMU_DEBUGMODE_STENCIL 3
+#define FT800EMU_DEBUGMODE_COUNT 2
+
 namespace FT800EMU {
 
 /**
@@ -37,6 +43,9 @@ public:
 	static void end();
 
 	static void process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize);
+	
+	static void setDebugMode(int debugMode);
+	static int getDebugMode();
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

@@ -1094,8 +1094,11 @@ void resetLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, c
 
 }
 
+static int s_DebugMode;
+
 void GraphicsProcessorClass::begin()
 {
+	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	uint8_t *ram = Memory.getRam();
 	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
 	printf("Font index: %u\n", fi);
@@ -1478,7 +1481,30 @@ DisplayListDisplay:
 			bc[x] = mulalpha(bc[x], bc[x] >> 24) | 0xFF000000;
 		}
 #endif
+		if (s_DebugMode)
+		{
+			switch (s_DebugMode)
+			{
+			case FT800EMU_DEBUGMODE_ALPHA:
+				for (uint32_t x = 0; x < hsize; ++x)
+				{
+					int alpha = bc[x] >> 24;
+					bc[x] = 0xFF000000 | (alpha << 16) | (alpha << 8) | (alpha);
+				}
+				break;
+			}
+		}
 	}
+}
+	
+void GraphicsProcessorClass::setDebugMode(int debugMode)
+{
+	s_DebugMode = debugMode;
+}
+
+int GraphicsProcessorClass::getDebugMode()
+{
+	return s_DebugMode;
 }
 
 } /* namespace FT800EMU */

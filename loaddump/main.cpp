@@ -11,10 +11,13 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#include <ft800emu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
+#include <ft800emu_keyboard.h>
 #include <ft800emu_system.h>
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
+#include <ft800emu_graphics_processor.h>
 #include <stdio.h>
 #include <vc.h>
 
@@ -54,6 +57,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
 	f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_lines_parse.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
 	// f = fopen("../reference/dumps/test_call.0.vc1dump", "rb"); // idem
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
@@ -127,11 +131,28 @@ void loop()
 	FT800EMU::System.delay(10);
 }
 
+void keyboard()
+{
+	static bool setDebugMode = false;
+	if (setDebugMode)
+	{
+		setDebugMode = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3);
+	}
+	else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3))
+	{
+		FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
+		setDebugMode = true;
+	}
+}
+
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT800EMU::Emulator.run(setup, loop, 
-		FT800EMU::EmulatorEnableKeyboard
-		);
+	FT800EMU::EmulatorParameters params;
+	params.Setup = setup;
+	params.Loop = loop;
+	params.Flags = FT800EMU::EmulatorEnableKeyboard;
+	params.Keyboard = keyboard;
+	FT800EMU::Emulator.run(params);
 	return 0;
 }

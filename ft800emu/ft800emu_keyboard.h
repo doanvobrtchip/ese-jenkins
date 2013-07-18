@@ -8,7 +8,6 @@
  */
 
 /* 
- * Copyright (C) 2011  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -37,6 +36,8 @@ public:
 	static void begin();
 	static void update();
 	static void end();
+
+	static bool isKeyDown(int key);
 	
 private:
 	KeyboardClass(const KeyboardClass &);

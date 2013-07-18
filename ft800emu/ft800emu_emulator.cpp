@@ -24,7 +24,6 @@
 #endif
 
 // Project includes
-#include "WProgram.h"
 #include "ft800emu_system.h"
 #include "ft800emu_keyboard.h"
 #include "ft800emu_graphics_driver.h"
@@ -49,6 +48,7 @@ EmulatorClass Emulator;
 namespace {
 	void (*s_Setup)() = NULL;
 	void (*s_Loop)() = NULL;
+	void (*s_Keyboard)() = NULL;
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
 
@@ -206,7 +206,14 @@ namespace {
 		{
 			//printf("sound thread\n");
 			// TODO_AUDIO if (s_Flags & EmulatorEnableAudio) AudioMachine.process();
-			if (s_Flags & EmulatorEnableKeyboard) Keyboard.update();
+			if (s_Flags & EmulatorEnableKeyboard) 
+			{
+				Keyboard.update();
+				if (s_Keyboard)
+				{
+					s_Keyboard();
+				}
+			}
 			System.delay(10);
 		}
 		System.revertThreadCategory(taskHandle);
@@ -214,11 +221,12 @@ namespace {
 	}
 }
 
-void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
+void EmulatorClass::run(const EmulatorParameters &params)
 {
-	s_Setup = setup;
-	s_Loop = loop;
-	s_Flags = flags;
+	s_Setup = params.Setup;
+	s_Loop = params.Loop;
+	s_Flags = params.Flags;
+	s_Keyboard = params.Keyboard;
 
 	System.begin();
 	Memory.begin();
@@ -226,7 +234,7 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
-	if (flags & EmulatorEnableKeyboard) Keyboard.begin();
+	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	s_MasterRunning = true;
 
@@ -268,8 +276,8 @@ void EmulatorClass::run(void (*setup)(), void (*loop)(), int flags)
 	}
 #endif /* #ifdef FT800EMU_SDL */
 
-	if (flags & EmulatorEnableKeyboard) Keyboard.end();
-	if (flags & EmulatorEnableAudio) AudioDriver.end();
+	if (params.Flags & EmulatorEnableKeyboard) Keyboard.end();
+	if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();
