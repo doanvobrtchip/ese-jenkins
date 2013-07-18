@@ -128,7 +128,7 @@ void GraphicsDriverClass::begin()
 /*#if FT800EMUWIN_DISPLAY_ASPECT_RATIO
 	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)FT800EMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = FT800EMU_WINDOW_WIDTH * 2; // window size
 #else*/
-	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * 2; r.right = s_Width * 2; // window size
+	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT800EMU_WINDOW_SCALE; r.right = s_Width * FT800EMU_WINDOW_SCALE; // window size
 /*#endif*/
 	AdjustWindowRect(&r, dw_style, FALSE);
 	if (s_HWnd) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HWnd != NULL"));
@@ -230,7 +230,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 #endif
 		
 		DWORD dw_style = WS_OVERLAPPEDWINDOW;
-		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * 2; r.right = s_Width * 2; // window size
+		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT800EMU_WINDOW_SCALE; r.right = s_Width * FT800EMU_WINDOW_SCALE; // window size
 		AdjustWindowRect(&r, dw_style, FALSE);
 
 		SetWindowPos(s_HWnd, 0, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
