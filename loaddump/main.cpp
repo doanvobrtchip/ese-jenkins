@@ -73,11 +73,11 @@ void setup()
 	// f = fopen("../reference/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_modulate_256.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_nonpow2.0.vc1dump", "rb"); // undefined behaviour
-	// f = fopen("../reference/dumps/test_points_increase.0.vc1dump", "rb"); // seems ok, todo check sizes
+	// f = fopen("../reference/dumps/test_points_increase.0.vc1dump", "rb"); // seems ok, todo check sizes, positions ok, size apparently larger
 	// f = fopen("../reference/dumps/test_points_modulate.0.png", "rb"); // ng, invisible?
 	// f = fopen("../reference/dumps/test_points_offscreen.0.vc1dump", "rb"); // ng, todo
 	// f = fopen("../reference/dumps/test_points_subpixel.0.vc1dump", "rb"); // verify
-	// f = fopen("../reference/dumps/test_points_visit.0.vc1dump", "rb"); // vefrify
+	// f = fopen("../reference/dumps/test_points_visit.0.vc1dump", "rb"); // positioning ok, aa is larger than ref
 	// f = fopen("../reference/dumps/test_ram.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_mem_exhaustive.0.vc1dump", "rb"); // looks ok
 	// f = fopen("../reference/dumps/test_scissor_connected.0.vc1dump", "rb"); // todo

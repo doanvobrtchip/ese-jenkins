@@ -72,6 +72,7 @@
 #define FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS 0
 #define FT800EMU_DEBUG_DISABLE_OVERLAP 0
 #define FT800EMU_DEBUG_LINES_SHIFT_HACK 1
+#define FT800EMU_DEBUG_ALPHA_MUL 0
 
 namespace FT800EMU {
 
@@ -864,11 +865,8 @@ __forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint
 	lss.DeferCur = nextDefer;
 }
 
-void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, int p2x, const int p2y)
+void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int &p2x, const int &p2y)
 {
-#if FT800EMU_DEBUG_LINES_SHIFT_HACK
-	p2x += 16; // hack ls shift
-#endif
 	if (lss.Begin)
 	{
 		lss.P2X = p2x;
@@ -1022,7 +1020,7 @@ void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt,
 #if FT800EMU_DEBUG_LINES_SHIFT_HACK
 		displayPoint(gs, bc, bs, bt, y, hsize, p1x - 16, p1y);  // hack ls shift (- 16)
 #else
-		displayPoint(gs, bc, bs, bt, y, hsize, p1x, p1y);  // hack ls shift (- 16)
+		displayPoint(gs, bc, bs, bt, y, hsize, p1x, p1y);
 #endif
 
 		gs.PointSize = gsps;
@@ -1431,7 +1429,11 @@ EvaluateDisplayListValue:
 						break;
 					case LINE_STRIP:
 						displayLineStrip(gs, bc, bs, bt, y, hsize, lss, 
-							((v >> 21) & 0x1FF) * 16, 
+							(((v >> 21) & 0x1FF) * 16)
+#if FT800EMU_DEBUG_LINES_SHIFT_HACK
+								+ 16
+#endif
+								, 
 							((v >> 12) & 0x1FF) * 16);
 						break;
 					}
@@ -1456,7 +1458,11 @@ EvaluateDisplayListValue:
 						break;
 					case LINE_STRIP:
 						displayLineStrip(gs, bc, bs, bt, y, hsize, lss,  
-							((v >> 15) & 0x7FFF), 
+							((v >> 15) & 0x7FFF)
+#if FT800EMU_DEBUG_LINES_SHIFT_HACK
+								+ 16
+#endif
+								, 
 							(v & 0x7FFF));
 						break;
 					}
@@ -1466,6 +1472,12 @@ EvaluateDisplayListValue:
 		}
 DisplayListDisplay:
 		;
+#if FT800EMU_DEBUG_ALPHA_MUL
+		for (uint32_t x = 0; x < hsize; ++x)
+		{
+			bc[x] = mulalpha(bc[x], bc[x] >> 24) | 0xFF000000;
+		}
+#endif
 	}
 }
 
