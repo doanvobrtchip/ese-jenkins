@@ -68,6 +68,11 @@
 #define FT800EMU_DL_MACRO 37
 #define FT800EMU_DL_CLEAR 38
 
+#define FT800EMU_DEBUG_AA 0
+#define FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS 0
+#define FT800EMU_DEBUG_DISABLE_OVERLAP 0
+#define FT800EMU_DEBUG_LINES_SHIFT_HACK 1
+
 namespace FT800EMU {
 
 GraphicsProcessorClass GraphicsProcessor;
@@ -211,6 +216,14 @@ __forceinline argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 		| (div255(((value & 0x00FF0000) >> 16) * alpha) << 16)
 		| (div255((value & 0x0000FF00) * alpha) & 0x0000FF00)
 		| (div255((value & 0x000000FF) * alpha) & 0x000000FF);
+	return result;
+}
+
+__forceinline argb8888 mulalpha_alpha(const argb8888 &value, const int &alpha)
+{
+	// todo optimize!
+	const argb8888 result = (div255(((value & 0xFF000000) >> 24) * alpha) << 24)
+		| value & 0x00FFFFFF;
 	return result;
 }
 
@@ -406,8 +419,12 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				if (testStencil(gs, bs, x))
 				{
-					int alpha = gs.ColorARGB >> 24;
-					bc[x] = mulalpha(bc[x], (255 - alpha)) + mulalpha(gs.ColorARGB, alpha);
+#if FT800EMU_DEBUG_AA
+					argb8888 out = 0x8000FF00;
+#else
+					argb8888 out = gs.ColorARGB;
+#endif
+					bc[x] = blend(gs, out, bc[x]);
 					writeTag(gs, bt, x);
 				}
 			}
@@ -419,7 +436,11 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
 					alpha /= border2sqrt;
 					if (alpha > 255) printf("Code error 390\n");
-					argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | alpha << 24;
+#if FT800EMU_DEBUG_AA
+					argb8888 out = 0x80FF0000;
+#else
+					argb8888 out = mulalpha_alpha(gs.ColorARGB, alpha);
+#endif
 					if (testAlpha(gs, out))
 					{
 						bc[x] = blend(gs, out, bc[x]);
@@ -722,6 +743,8 @@ public:
 	int P1X, P1Y;
 	int P2X, P2Y;
 	int SL, SR;
+	bool WantPoint;
+	int PointLeft, PointRight;
 	
 	int DeferCur;
 	bool DeferSet[2];
@@ -735,10 +758,10 @@ __forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_
 	const int leftInc = d.LeftInner256 - d.LeftOuter256;
 	const int rightDec = d.RightOuter256 - d.RightInner256;
 
-	const int leftPA = d.LeftOuter256 >> 8; // inclusive left a
-	const int leftPB = ((d.LeftInner256 - 1) >> 8) /*+ 1*/; // exclusive left b
-	const int rightPA = d.RightInner256 >> 8; // inclusive right a
-	const int rightPB = ((d.RightOuter256 - 1) >> 8) /*+ 1*/; // exclusive right b
+	const int leftPA = (d.LeftOuter256) >> 8; // inclusive left a
+	const int leftPB = ((d.LeftInner256) >> 8) /*+ 1*/; // exclusive left b
+	const int rightPA = (d.RightInner256) >> 8; // inclusive right a
+	const int rightPB = ((d.RightOuter256) >> 8) /*+ 1*/; // exclusive right b
 
 	if (leftInc)
 	{
@@ -746,7 +769,11 @@ __forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_
 		int leftValue = ((0xFF - (d.LeftOuter256 & 0xFF)) * leftAdd) >> 8;
 		for (int x = leftPA; x < leftPB; ++x)
 		{
-			argb8888 out = 0x00FFFFFF | (div255(leftValue * 128) << 24);
+#if FT800EMU_DEBUG_AA
+			argb8888 out = 0x80FF0000; // 0x00FFFFFF | (div255(leftValue * 128) << 24); // 0x80FF0000; //
+#else
+			argb8888 out = mulalpha_alpha(gs.ColorARGB, leftValue);
+#endif
 			bc[x] = blend(gs, out, bc[x]);
 
 			leftValue = min(255, leftValue + leftAdd); // todo opt
@@ -755,7 +782,11 @@ __forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_
 
 	for (int x = leftPB; x < rightPA; ++x)
 	{
-		argb8888 out = 0x80FFFFFF;
+#if FT800EMU_DEBUG_AA
+		argb8888 out = 0x8000FF00;
+#else
+		argb8888 out = gs.ColorARGB;
+#endif
 		bc[x] = blend(gs, out, bc[x]);
 	}
 
@@ -765,7 +796,11 @@ __forceinline void renderLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_
 		int rightValue = 0xFF - (((0xFF - (d.RightInner256 & 0xFF)) * rightRem) >> 8);
 		for (int x = rightPA; x < rightPB; ++x)
 		{
-			argb8888 out = 0x00FFFFFF | (div255(rightValue * 128) << 24);
+#if FT800EMU_DEBUG_AA
+			argb8888 out = 0x800000FF;// 0x00FFFFFF | (div255(rightValue * 128) << 24); //0x800000FF; // 
+#else
+			argb8888 out = mulalpha_alpha(gs.ColorARGB, rightValue);
+#endif
 			bc[x] = blend(gs, out, bc[x]);
 
 			rightValue = max(0, rightValue - rightRem); // todo opt
@@ -796,34 +831,31 @@ __forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint
 
 			// cur [[]]
 			// next (())
+#if !FT800EMU_DEBUG_DISABLE_OVERLAP
 			if (nex.RightInner256 < cur.RightInner256
 				&& nex.LeftInner256 > cur.LeftInner256)
 			{
-				// [[(())]]
 				nex.LeftInner256 = nex.RightInner256 = nex.LeftOuter256 = nex.RightOuter256 = 0;
 			}
 			else if (nex.RightInner256 >= cur.RightInner256
 				&& nex.LeftInner256 <= cur.LeftInner256)
 			{
-				// (([[]]))
 				cur.LeftInner256 = cur.RightInner256 = cur.LeftOuter256 = cur.RightOuter256 = 0;
 			}
-			else if (nex.RightInner256 > cur.RightInner256
-				&& nex.LeftInner256 > cur.RightInner256)
+			else if (nex.LeftInner256 <= cur.RightInner256
+				&& cur.LeftInner256 <= nex.RightInner256)
 			{
-				// [[((]])) // [([(])])
-				nex.LeftOuter256 = nex.LeftInner256 = cur.RightOuter256 = cur.RightInner256 = (cur.LeftInner256 & (~0xFF));
+				if (nex.LeftInner256 > cur.LeftInner256)
+				{
+					nex.LeftOuter256 = nex.LeftInner256 = cur.RightOuter256 = cur.RightInner256 = (cur.LeftInner256 & (~0xFF));
+				}
+				else
+				{
+					cur.LeftOuter256 = cur.LeftInner256 = nex.RightOuter256 = nex.RightInner256 = (nex.LeftInner256 & (~0xFF));
+				}
 			}
-			else if (nex.LeftInner256 < cur.LeftInner256
-				&& nex.RightInner256 < cur.LeftInner256)
-			{
-				// (([[))]] // ([([)])]
-				nex.RightOuter256 = nex.RightInner256 = cur.LeftOuter256 = cur.LeftInner256 = (cur.RightInner256 & (~0xFF));
-			}
-			else
-			{
-				// todo: point inbetween lines
-			}
+#endif
+			// todo some additional cases where only the aa part overlaps
 		}
 
 		renderLineStrip(gs, bc, bs, bt, lss);
@@ -832,8 +864,11 @@ __forceinline void deferredLineStrip(const GraphicsState &gs, argb8888 *bc, uint
 	lss.DeferCur = nextDefer;
 }
 
-void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, const int p2x, const int p2y)
+void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss, int p2x, const int p2y)
 {
+#if FT800EMU_DEBUG_LINES_SHIFT_HACK
+	p2x += 16; // hack ls shift
+#endif
 	if (lss.Begin)
 	{
 		lss.P2X = p2x;
@@ -855,6 +890,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	// todo
 
 	// draw line
+	int pointleft = gs.ScissorX.I, pointright = gs.ScissorX2.I;
+	int nextpointleft = gs.ScissorX.I, nextpointright = gs.ScissorX2.I;
 	int ytop = (min(p1y, p2y) - ((p2x - p1x) ? gs.LineWidth : 0) - 8) >> 4;
 	int ybtm = (max(p1y, p2y) + ((p2x - p1x) ? gs.LineWidth : 0) + 8) >> 4;
 	if (ytop <= y && y <= ybtm)
@@ -930,18 +967,18 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 			xleft256 = min(max(min(x1t256, x2t256), 0), (hsize << 8));
 			xright256 = min(max(max(x1t256, x2t256), 0), (hsize << 8));
 			// test
-			int lxl = xleft256 >> 8;
+			/*int lxl = xleft256 >> 8;
 			bc[lxl] = 0xFFFF0000;
 			int lxr = xright256 >> 8;
-			bc[lxr] = 0xFF0000FF;
+			bc[lxr] = 0xFF0000FF;*/
 		}
 
 		int32_t lsci = max(gs.ScissorX.I, xleft256 >> 8) << 8;
 		int32_t rsci = min(gs.ScissorX2.I, xright256 >> 8) << 8;
-		int32_t lsslo256 = max(xlout256, lsci);
-		int32_t lssli256 = max(xlin256, lsci);
-		int32_t lssro256 = min(xrout256, rsci);
-		int32_t lssri256 = min(xrin256, rsci);
+		int32_t lsslo256 = min(max(xlout256, lsci), rsci);
+		int32_t lssli256 = min(max(xlin256, lsci), rsci);
+		int32_t lssro256 = min(max(xrout256, lsci), rsci);
+		int32_t lssri256 = min(max(xrin256, lsci), rsci);
 
 		int nextDefer = ((lss.DeferCur + 1) % 2);
 		lss.Defer[nextDefer].LeftOuter256 = lsslo256;
@@ -955,7 +992,49 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 		{
 			//bc[x] = mulalpha(bc[x], (255 - 128)) + mulalpha(gs.ColorARGB, 128);
 		}
+		
+		if (pdx256 > 0)
+		{
+			// line going right
+			pointright = lsci >> 8;
+			nextpointleft = rsci >> 8;
+		}
+		else if (pdx256 < 0)
+		{
+			// line going left
+			pointleft = rsci >> 8;
+			nextpointright = lsci >> 8;
+		}
 	}
+
+	// draw point
+	bool nextwantpoint = (p2x - p1x) != 0 || !(ytop <= y && y <= ybtm); // vertical
+#if !FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS
+	if (lss.WantPoint && nextwantpoint)
+	{
+		int gsps = gs.PointSize;
+		int gsx1 = gs.ScissorX.I;
+		int gsx2 = gs.ScissorX2.I;
+
+		gs.ScissorX.I = max(pointleft, lss.PointLeft);
+		gs.ScissorX2.I = min(pointright, lss.PointRight);
+		gs.PointSize = gs.LineWidth;
+#if FT800EMU_DEBUG_LINES_SHIFT_HACK
+		displayPoint(gs, bc, bs, bt, y, hsize, p1x - 16, p1y);  // hack ls shift (- 16)
+#else
+		displayPoint(gs, bc, bs, bt, y, hsize, p1x, p1y);  // hack ls shift (- 16)
+#endif
+
+		gs.PointSize = gsps;
+		gs.ScissorX.I = gsx1;
+		gs.ScissorX2.I = gsx2;
+	}
+#endif
+
+	// data for next point
+	lss.WantPoint = nextwantpoint; // vertical
+	lss.PointLeft = nextpointleft;
+	lss.PointRight = nextpointright;
 	
 	deferredLineStrip(gs, bc, bs, bt, lss);
 }
@@ -963,17 +1042,42 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 void beginLineStrip(LineStripState &lss)
 {
 	lss.Begin = true;
+	lss.WantPoint = true;
+	lss.PointLeft = 0;
+	lss.PointRight = FT800EMU_WINDOW_WIDTH_MAX;
 }
 
-void endLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
+void endLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
 {
+#if !FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS
+	if (lss.WantPoint)
+	{
+		int gsps = gs.PointSize;
+		int gsx1 = gs.ScissorX.I;
+		int gsx2 = gs.ScissorX2.I;
+
+		gs.ScissorX.I = lss.PointLeft;
+		gs.ScissorX2.I = lss.PointRight;
+		gs.PointSize = gs.LineWidth;
+#if FT800EMU_DEBUG_LINES_SHIFT_HACK
+		displayPoint(gs, bc, bs, bt, y, hsize, lss.P2X - 16, lss.P2Y); // hack ls shift (- 16)
+#else
+		displayPoint(gs, bc, bs, bt, y, hsize, lss.P2X, lss.P2Y);
+#endif
+
+		gs.PointSize = gsps;
+		gs.ScissorX.I = gsx1;
+		gs.ScissorX2.I = gsx2;
+	}
+#endif
+
 	deferredLineStrip(gs, bc, bs, bt, lss);
 
 	// draw closing sphere cap
 	// todo
 }
 
-void resetLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
+void resetLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, LineStripState &lss)
 {
 	if (!lss.Begin)
 	{

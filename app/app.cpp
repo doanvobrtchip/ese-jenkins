@@ -67,6 +67,7 @@ void setup()
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
 
+	dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
 dl( BEGIN(LINE_STRIP) );
 dl(LINE_WIDTH(160));
@@ -78,6 +79,10 @@ dl( VERTEX2F(73 * 16, 200 * 16) );
 dl( VERTEX2F(150 * 16, 200 * 16) );
 dl( VERTEX2F(200 * 16, 150 * 16) );
 dl( VERTEX2F(150 * 16, 100 * 16) );
+dl( VERTEX2F(160 * 16, 50 * 16) );
+dl( VERTEX2F(240 * 16, 70 * 16) );
+dl( VERTEX2F(250 * 16, 100 * 16) );
+dl( VERTEX2F(350 * 16, 200 * 16) );
 	dl(END());
 
 /*
