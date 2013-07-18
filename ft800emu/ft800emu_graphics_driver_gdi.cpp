@@ -21,6 +21,7 @@
 #include "ft800emu_system_windows.h"
 #include "ft800emu_system.h"
 // #include "ft800emu_ft800_spi_i2c.h"
+#include "ft800emu_graphics_processor.h"
 
 // Project includes
 
@@ -323,12 +324,24 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	// Update title
 	tstringstream newTitle;
 	newTitle << FT800EMU_WINDOW_TITLE;
+	switch (GraphicsProcessor.getDebugMode())
+	{
+	case FT800EMU_DEBUGMODE_ALPHA:
+		newTitle << " [ALPHA]";
+		break;
+	case FT800EMU_DEBUGMODE_TAG:
+		newTitle << " [TAG]";
+		break;
+	case FT800EMU_DEBUGMODE_STENCIL:
+		newTitle << " [STENCIL]";
+		break;
+	}
+	if (!output) newTitle << " [NO OUTPUT]";
 	newTitle << TEXT(" [FPS: ");
 	newTitle << System.getFPSSmooth();
 	newTitle << TEXT(" (");
 	newTitle << System.getFPS();
 	newTitle << TEXT(")]");
-	if (!output) newTitle << " [NO OUTPUT]";
 	SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
 }
 

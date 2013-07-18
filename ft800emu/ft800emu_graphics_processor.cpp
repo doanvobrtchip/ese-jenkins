@@ -1488,8 +1488,22 @@ DisplayListDisplay:
 			case FT800EMU_DEBUGMODE_ALPHA:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
-					int alpha = bc[x] >> 24;
-					bc[x] = 0xFF000000 | (alpha << 16) | (alpha << 8) | (alpha);
+					int v = bc[x] >> 24;
+					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
+				}
+				break;
+			case FT800EMU_DEBUGMODE_TAG:
+				for (uint32_t x = 0; x < hsize; ++x)
+				{
+					int v = bt[x];
+					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
+				}
+				break;
+			case FT800EMU_DEBUGMODE_STENCIL:
+				for (uint32_t x = 0; x < hsize; ++x)
+				{
+					int v = bs[x];
+					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
 			}

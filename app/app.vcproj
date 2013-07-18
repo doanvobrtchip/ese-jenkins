@@ -178,10 +178,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\app.vcproj"
-			>
-		</File>
-		<File
 			RelativePath=".\main.cpp"
 			>
 		</File>

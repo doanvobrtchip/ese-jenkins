@@ -56,9 +56,9 @@ void setup()
 	// f = fopen("../reference/dumps/test_alpha_comparisons.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
-	f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_lines_parse.0.vc1dump", "rb");
-	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
+	f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
 	// f = fopen("../reference/dumps/test_call.0.vc1dump", "rb"); // idem
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok

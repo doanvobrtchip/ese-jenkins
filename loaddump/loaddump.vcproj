@@ -174,10 +174,6 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\loaddump.vcproj"
-			>
-		</File>
-		<File
 			RelativePath=".\main.cpp"
 			>
 		</File>
