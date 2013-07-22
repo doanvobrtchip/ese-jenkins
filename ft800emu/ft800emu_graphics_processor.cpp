@@ -216,7 +216,7 @@ __forceinline argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 	// todo optimize!
 	const argb8888 result = (div255(((value & 0xFF000000) >> 24) * alpha) << 24)
 		| (div255(((value & 0x00FF0000) >> 16) * alpha) << 16)
-		| (div255((value & 0x0000FF00) * alpha) & 0x0000FF00)
+		| (div255(((value & 0x0000FF00) >> 8) * alpha) << 8)
 		| (div255((value & 0x000000FF) * alpha) & 0x000000FF);
 	return result;
 }
@@ -480,6 +480,12 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 			else if (distsq <= pssqstc)
 			{
 				testStencil(gs, bs, x);
+				const argb8888 out = gs.ColorARGB & 0x00FFFFFF;
+				if (testAlpha(gs, out))
+				{
+					bc[x] = blend(gs, out, bc[x]);
+					writeTag(gs, bt, x);
+				}
 			}
 #endif
 		}
@@ -515,8 +521,20 @@ static const argb8888 s_VGAPalette[] =
 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF, 
 };
 
+__forceinline const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
+{
+	const int i = (srci + idx) & 0xFFFFF;
+	return ram[i];
+}
+
+__forceinline const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
+{
+	const int i = (srci + idx) & 0xFFFFE;
+	return ram[i];
+}
+
 // uses pixel units
-__forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
+__forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
 	if (!wrap(x, width, wrapx)) return 0x00000000;
 	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
@@ -525,7 +543,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 	{
 	case ARGB1555:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
 			return (((val >> 15) * 255) << 24) // todo opt
 				| (mul255div31((val >> 10) & 0x1F) << 16)
 				| (mul255div31((val >> 5) & 0x1F) << 8)
@@ -533,25 +551,25 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		}
 	case L1:
 		{
-			int val = (src[py + (x >> 3)] >> (7 - (x % 8))) & 0x1;
+			int val = (bmpSrc8(ram, srci, py + (x >> 3)) >> (7 - (x % 8))) & 0x1;
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	case L4:
 		{
-			int val = (src[py + (x >> 1)] >> (((x + 1) % 2) << 2)) & 0xF;
+			int val = (bmpSrc8(ram, srci, py + (x >> 1)) >> (((x + 1) % 2) << 2)) & 0xF;
 			val *= 255;
 			val /= 15; // todo opt
 			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	case L8:
 		{
-			uint8_t val = src[py + x];
+			uint8_t val = bmpSrc8(ram, srci, py + x);
 			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
 		}
 	case RGB332:
 		{
-			uint8_t val = src[py + x];
+			uint8_t val = bmpSrc8(ram, srci, py + x);
 			return 0xFF000000 // todo opt
 				| (((val >> 5) * 255 / 7) << 16)
 				| ((((val >> 2) & 0x7) * 255 / 7) << 8)
@@ -559,7 +577,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		}
 	case ARGB2:
 		{
-			uint8_t val = src[py + x];
+			uint8_t val = bmpSrc8(ram, srci, py + x);
 			return (((val >> 6) * 255 / 3) << 24) // todo opt
 				| (mul255div3((val >> 4) & 0x3) << 16)
 				| (mul255div3((val >> 2) & 0x3) << 8)
@@ -567,7 +585,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		}
 	case ARGB4:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
 			return (((val >> 12) * 255 / 15) << 24) // todo opt
 				| ((((val >> 8) & 0xF) * 255 / 15) << 16)
 				| ((((val >> 4) & 0xF) * 255 / 15) << 8)
@@ -575,7 +593,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		}
 	case RGB565:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&src[py + (x << 1)]));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
 			return 0xFF000000 // todo opt
 				| (mul255div31(val >> 11) << 16)
 				| (mul255div63((val >> 5) & 0x3F) << 8)
@@ -583,14 +601,14 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		}
 	case PALETTED:
 		{
-			uint8_t val = src[py + x];
+			uint8_t val = bmpSrc8(ram, srci, py + x);
 			return getPaletted(ram, val);
 		}
 	case TEXT8X8:
 		{
 			const int yn = y >> 3;
 			py = yn * stride;
-			uint8_t c = src[py + (x >> 3)];
+			uint8_t c = bmpSrc8(ram, srci, py + (x >> 3));
 			const uint8_t *nsrc = &ram[s_BitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
 			const int xc = x & 0x7;
@@ -601,18 +619,19 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 		{
 			const int yn = y >> 4;
 			py = yn * stride;
-			uint8_t c = src[py + ((x >> 3) << 1)]; // Character
-			uint8_t ca = src[py + ((x >> 3) << 1) + 1]; // Attribute
+			uint8_t c = bmpSrc8(ram, srci, py + ((x >> 3) << 1)); // Character
+			uint8_t ca = bmpSrc8(ram, srci, py + ((x >> 3) << 1) + 1); // Attribute
 			const uint8_t *nsrc = &ram[s_BitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
 			const int pyc = y & 0xF;
 			const int xc = x & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
-			const int colidx = (ca >> ((1 - val) << 3)) & 0xF; // Index in 16-color palette
+			const int vishift = ((1 - val) << 2);
+			const int colidx = (ca >> vishift) & 0xF; // Index in 16-color palette
 			return (val * 0xFF000000) | s_VGAPalette[colidx];
 		}
 	case BARGRAPH:
 		{
-			uint8_t val = src[x];
+			uint8_t val = bmpSrc8(ram, srci, x);
 			if (val < y) 
 				return 0xFFFFFFFF;
 			else 
@@ -623,7 +642,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint8_t *src, in
 }
 
 // uses 1/(256*16) pixel units, w & h in pixel units
-__forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint8_t *src, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
+__forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
 {
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
@@ -633,7 +652,7 @@ __forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint8_t *src, cons
 		{
 			int xi = x >> 12;
 			int yi = y >> 12;
-			return sampleBitmapAt(ram, src, xi, yi, width, height, format, stride, wrapx, wrapy);
+			return sampleBitmapAt(ram, srci, xi, yi, width, height, format, stride, wrapx, wrapy);
 		}
 	case BILINEAR:
 		{
@@ -643,15 +662,15 @@ __forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint8_t *src, cons
 			int yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
-				return sampleBitmapAt(ram, src, xl, yt, width, height, format, stride, wrapx, wrapy);
+				return sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy);
 			}
 			else if (xsep == 0)
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
 				int yb = yt + 1;
-				argb8888 top = sampleBitmapAt(ram, src, xl, yt, width, height, format, stride, wrapx, wrapy);
-				argb8888 btm = sampleBitmapAt(ram, src, xl, yb, width, height, format, stride, wrapx, wrapy);
+				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy);
+				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
@@ -659,8 +678,8 @@ __forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint8_t *src, cons
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(ram, src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
 			}
 			else
 			{
@@ -671,10 +690,10 @@ __forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint8_t *src, cons
 				int xr = xl + 1;
 				int yb = yt + 1;
 				// todo optimize
-				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, src, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, src, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, src, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, src, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 		}
@@ -709,7 +728,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int vy = y * 16;
 		int ry = vy - py;
 		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
-		uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
+		// uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
 		int sampleFormat = bi.LayoutFormat;
 		int sampleWidth = bi.LayoutWidth;
 		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
@@ -731,7 +750,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 				// transform with 1/(256*16) pixel units
 				int rxt = (gs.BitmapTransformA * rx) + rxtbc;
 				int ryt = (gs.BitmapTransformD * rx) + rytef;
-				const argb8888 sample = sampleBitmap(ram, sampleSrc, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+				const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
 				// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
 				const argb8888 out = mul_argb(sample, gs.ColorARGB);
 				if (testAlpha(gs, out))
@@ -1491,6 +1510,17 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 			for (uint32_t i = 0; i < hsize; ++i)
 			{
 				bs[i] = 0;
+			}
+		}
+		// pre-clear line tag buffer, but optimize! (don't clear if the user already does it)
+		if (!(((displayList[0] & 0xFF000001) == ((FT800EMU_DL_CLEAR << 24) | 0x01))
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+				&& ((displayList[1] & 0xFF000001) == ((FT800EMU_DL_CLEAR << 24) | 0x01)))))
+		{
+			// about loop+480 ops
+			for (uint32_t i = 0; i < hsize; ++i)
+			{
+				bt[i] = 0;
 			}
 		}
 
