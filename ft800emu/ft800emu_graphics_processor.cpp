@@ -1762,33 +1762,37 @@ EvaluateDisplayListValue:
 			case FT800EMU_DL_VERTEX2F:				
 				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 				{
+					int px = (v >> 15) & 0x3FFF;
+					if ((v >> 15) & 0x4000) px = px - 0x4000;
+					int py = (v)  & 0x3FFF;
+					if ((v) & 0x4000) py = py - 0x4000;
 					switch (primitive)
 					{
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, 
-							((v >> 15) & 0x7FFF), 
-							(v & 0x7FFF), 
+							px, 
+							py, 
 							gs.BitmapHandle, 
 							gs.Cell);
 						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
-							((v >> 15) & 0x7FFF), 
-							(v & 0x7FFF));
+							px, 
+							py);
 						break;
 					case LINE_STRIP:
 						displayLineStrip(gs, bc, bs, bt, y, hsize, lss,  
-							((v >> 15) & 0x7FFF)
+							px
 #if FT800EMU_DEBUG_LINES_SHIFT_HACK
 								+ 16
 #endif
 								, 
-							(v & 0x7FFF));
+							py);
 						break;
 					case RECTS:
 						displayRects(gs, bc, bs, bt, y, hsize, rs, 
-							((v >> 15) & 0x7FFF), 
-							(v & 0x7FFF));
+							px, 
+							py);
 						break;
 					}
 				}

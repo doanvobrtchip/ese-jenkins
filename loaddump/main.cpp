@@ -58,7 +58,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_lines_parse.0.vc1dump", "rb");
-	f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
+	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
 	// f = fopen("../reference/dumps/test_call.0.vc1dump", "rb"); // idem
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
@@ -79,7 +79,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_nonpow2.0.vc1dump", "rb"); // undefined behaviour
 	// f = fopen("../reference/dumps/test_points_increase.0.vc1dump", "rb"); // seems ok, todo check sizes, positions ok, size apparently larger
 	// f = fopen("../reference/dumps/test_points_modulate.0.png", "rb"); // ng, invisible?
-	// f = fopen("../reference/dumps/test_points_offscreen.0.vc1dump", "rb"); // ng, todo
+	f = fopen("../reference/dumps/test_points_offscreen.0.vc1dump", "rb"); // ng, todo
 	// f = fopen("../reference/dumps/test_points_subpixel.0.vc1dump", "rb"); // verify
 	// f = fopen("../reference/dumps/test_points_visit.0.vc1dump", "rb"); // positioning ok, aa is larger than ref
 	// f = fopen("../reference/dumps/test_ram.0.vc1dump", "rb"); // seems ok
