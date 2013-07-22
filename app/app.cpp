@@ -67,7 +67,43 @@ void setup()
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
 
+
+
 	dl(COLOR_A(255));
+
+
+
+
+	/*// ** SMALL POINTS X **
+	dl(COLOR_RGB(255, 255, 255));
+	dl(BEGIN(POINTS));
+	for (int y = 0; y <= 16; ++y)
+	{
+		for (int x = 0; x <= 8; ++x)
+		{
+			dl(POINT_SIZE(x));
+			dl(VERTEX2F(x * 32 + y, y * 16, 0, 0));
+		}	
+	}
+	dl(END());
+	// ** SMALL POINTS X ***/
+
+	// ** SMALL POINTS Y **
+	dl(COLOR_RGB(255, 255, 255));
+	dl(BEGIN(POINTS));
+	for (int y = 0; y <= 16; ++y)
+	{
+		for (int x = 0; x <= 8; ++x)
+		{
+			dl(POINT_SIZE(x));
+			dl(VERTEX2F(y * 16, x * 32 + y, 0, 0));
+		}	
+	}
+	dl(END());
+	// ** SMALL POINTS Y **
+
+
+
 	dl(LINE_WIDTH(0));
 	dl(BEGIN(RECTS));
 
@@ -141,9 +177,9 @@ void setup()
 
 
 
- /*// LINE_STRIP
+ // LINE_STRIP
 
-	dl(COLOR_A(128));
+/*	dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
 dl( BEGIN(LINE_STRIP) );
 dl(LINE_WIDTH(160));

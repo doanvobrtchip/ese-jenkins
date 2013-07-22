@@ -438,11 +438,24 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 			{
 				if (testStencil(gs, bs, x))
 				{
-					const argb8888 out = gs.ColorARGB;
-					if (testAlpha(gs, out))
+					if (psin > 0)
 					{
-						bc[x] = blend(gs, out, bc[x]);
-						writeTag(gs, bt, x);
+							const argb8888 out = gs.ColorARGB;
+							if (testAlpha(gs, out))
+							{
+								bc[x] = blend(gs, out, bc[x]);
+								writeTag(gs, bt, x);
+							}
+					}
+					else // Small point in single pixel
+					{
+						const int outalpha =  ((gs.ColorARGB >> 24) * ps) >> 3;
+						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+						if (testAlpha(gs, out))
+						{
+							bc[x] = blend(gs, out, bc[x]);
+							writeTag(gs, bt, x);
+						}
 					}
 				}
 			}
@@ -454,7 +467,7 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 					const double dist256d = sqrt(dist256sqd); // sqrt..
 					const long dist256 = (long)dist256d;
 					const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
-					const int outalpha = div255((gs.ColorARGB >> 24) * alpha);
+					const int outalpha = ((gs.ColorARGB >> 24) * alpha) >> 8;
 					const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
 					if (testAlpha(gs, out))
 					{
