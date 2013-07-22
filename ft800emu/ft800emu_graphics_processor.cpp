@@ -1173,6 +1173,48 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
+		else if (xslw_px == 1) // Single pixel width rects
+		{
+			if (x1lw_px >= gs.ScissorX.I && x2lw_px <= gs.ScissorX2.I) // Scissor X
+			{
+				const int x = x1lw_px;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int dxs = x2lw - x1lw; // Width in 1/16 pixel
+					const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel // Todo: Can be moved inside y condition in some way
+					const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
+#if FT800EMU_DEBUG_RECTS_MATH
+					{
+						if (dyb < 1) printf("Rect pixelwidth dyb < 1\n");
+						if (dyb > 16) printf("Rect pixelwidth dyb > 16\n");
+						if (dxs < 1) printf("Rect pixelwidth dxs < 1\n");
+						if (dxs > 16) printf("Rect pixelwidth dxs > 16\n");
+					}
+#endif
+					int alpha; // Alpha 0-255
+					if (y == y1lw_px && dyt > 0) // Top pixel, not fully filled
+					{
+						const int surf = dxs * (16 - dyt);
+						alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					}
+					else if (y == (y2lw_px - 1) && dyb < 16) // Bottom pixel, not fully filled
+					{
+						const int surf = dxs * dyb;
+						alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					}
+					else // Any other pixel
+					{
+						alpha = ((gs.ColorARGB >> 24) * dxs) >> 4;
+					}
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
 		else
 		{
 			printf("Unsupported rects dimensions\n");
