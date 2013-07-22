@@ -141,7 +141,7 @@ void setup()
 
 
 
- // LINE_STRIP
+ /*// LINE_STRIP
 
 	dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
@@ -159,7 +159,7 @@ dl( VERTEX2F(160 * 16, 50 * 16) );
 dl( VERTEX2F(240 * 16, 70 * 16) );
 dl( VERTEX2F(250 * 16, 100 * 16) );
 dl( VERTEX2F(350 * 16, 200 * 16) );
-	dl(END());
+	dl(END());*/
 
 
 

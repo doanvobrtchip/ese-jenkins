@@ -260,40 +260,36 @@ __forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 	if (gs.TagMask) bt[x] = gs.Tag;
 }
 
-__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
+__forceinline bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs, const int &x)
 {
-	bool result;
 	switch (gs.StencilFunc)
 	{
 	case NEVER:
-		result = false;
-		break;
+		return false;
 	case LESS:
-		result = (bs[x] & gs.StencilFuncMask) < (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) < (gs.StencilFuncRef & gs.StencilFuncMask);
 	case LEQUAL:
-		result = (bs[x] & gs.StencilFuncMask) <= (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) <= (gs.StencilFuncRef & gs.StencilFuncMask);
 	case GREATER:
-		result = (bs[x] & gs.StencilFuncMask) > (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) > (gs.StencilFuncRef & gs.StencilFuncMask);
 	case GEQUAL:
-		result = (bs[x] & gs.StencilFuncMask) >= (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) >= (gs.StencilFuncRef & gs.StencilFuncMask);
 	case EQUAL:
-		result = (bs[x] & gs.StencilFuncMask) == (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) == (gs.StencilFuncRef & gs.StencilFuncMask);
 	case NOTEQUAL:
-		result = (bs[x] & gs.StencilFuncMask) != (gs.StencilFuncRef & gs.StencilFuncMask);
-		break;
+		return (bs[x] & gs.StencilFuncMask) != (gs.StencilFuncRef & gs.StencilFuncMask);
 	case ALWAYS:
-		result = true;
-		break;
+		return true;
 	default:
 		// error
 		printf("Invalid stencil func\n");
-		result = true;
+		return true;
 	}
+}
+
+__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
+{
+	bool result = testStencilNoWrite(gs, bs, x);	
 	switch (result ? gs.StencilOpPass : gs.StencilOpFail)
 	{
 	case KEEP:
@@ -319,6 +315,11 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, int x)
 		break;
 	}
 	return result;
+}
+
+__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x, const bool &write)
+{
+	return write ? testStencil(gs, bs, x) : testStencilNoWrite(gs, bs, x);
 }
 
 __forceinline argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
@@ -383,12 +384,22 @@ __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const
 
 #pragma region Primitive: Point
 
+#define FT800EMU_POINT_STENCIL_INCREASE 1
+
 void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const int scy1, const int scx2, const int scy2, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int px, int py)
 {
-	const int x1ps = px + 8 - ps; // Top-left inclusive coordinates plus linewidth in 1/16 pixel
+#if FT800EMU_POINT_STENCIL_INCREASE // Add an extra border outside the outer AA for the stencil due to AA differences
+	const int stcinc = 8;
+	const int x1ps = px + 8 - ps - stcinc; // Top-left inclusive coordinates plus pointsize in 1/16 pixel
+	const int y1ps = py + 8 - ps - stcinc;
+	const int x2ps = px + 8 + ps + stcinc; // Bottom-right exclusive
+	const int y2ps = py + 8 + ps + stcinc;
+#else
+	const int x1ps = px + 8 - ps; // Top-left inclusive coordinates plus pointsize in 1/16 pixel
 	const int y1ps = py + 8 - ps;
 	const int x2ps = px + 8 + ps; // Bottom-right exclusive
 	const int y2ps = py + 8 + ps;
+#endif
 
 	const int x1ps_px = (x1ps >> 4); // Top-left inclusive in screen pixels
 	const int y1ps_px = (y1ps >> 4);
@@ -399,11 +410,15 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 
 	if (max(y1ps_px, scy1) <= y && y < min(y2ps_px, scy2)) // Scissor Y
 	{
-		// const int pssq = ps * ps; // Point size 1/16 squared
+		const int pssq = ps * ps; // Point size 1/16 squared
 		const int psin = ps - 8; // Inner point size 1/16
 		const int psout = ps + 8; // Outer
 		const int pssqin = (psin) * (psin); // Inner point size 1/16 squared
 		const int pssqout = (psout) * (psout); // Outer
+#if FT800EMU_POINT_STENCIL_INCREASE
+		const int psstc = psout + stcinc;
+		const int pssqstc = (psstc) * (psstc);
+#endif
 		const int y16 = y << 4; // Current Y coordinate in 1/16 pixels
 
 		const int psin256 = psin << 4; // Inner point size 1/256
@@ -448,6 +463,12 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 					}
 				}
 			}
+#if FT800EMU_POINT_STENCIL_INCREASE
+			else if (distsq <= pssqstc)
+			{
+				testStencil(gs, bs, x);
+			}
+#endif
 		}
 	}
 }
