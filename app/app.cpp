@@ -93,6 +93,7 @@ void setup()
 		}
 	}*/
 
+	/*
 	dl(COLOR_RGB(0, 255, 128));
 	for (int y = 0; y <= 16; ++y)
 	{
@@ -110,6 +111,28 @@ void setup()
 		{
 			dl(VERTEX2F((16 * 17) + x * 16 + x, y * 32 + y));
 			dl(VERTEX2F((16 * 17) + x * 16 + 16, y * 32 + 32));
+		}
+	}*/
+
+	
+
+	dl(COLOR_RGB(0, 255, 128));
+	for (int y = 0; y <= 16; ++y)
+	{
+		for (int x = 0; x <= 16; ++x)
+		{
+			dl(VERTEX2F(x * 32, y * 16));
+			dl(VERTEX2F(x * 32 + x + 16, y * 16 + y));
+		}
+	}
+
+	dl(COLOR_RGB(128, 0, 255));
+	for (int y = 0; y <= 16; ++y)
+	{
+		for (int x = 0; x <= 16; ++x)
+		{
+			dl(VERTEX2F(x * 32 + x, (16 * 17) + y * 16 + y));
+			dl(VERTEX2F(x * 32 + 16 + 16, (16 * 17) + y * 16 + 16));
 		}
 	}
 

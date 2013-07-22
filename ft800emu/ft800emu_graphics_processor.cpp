@@ -1215,6 +1215,67 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
+		else if (yslw_px == 1) // Single pixel height rects
+		{
+			const int dys = y2lw - y1lw; // Height in 1/16 pixel
+			int x1lw_px_sc = max(x1lw_px, gs.ScissorX.I); // Scissored X1
+			int x2lw_px_sc = min(x2lw_px, gs.ScissorX2.I); // Scissored X2
+			const int dxl = x1lw & 0xF; // Left coordinate in 1/16 relative to top pixel
+			const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to bottom pixel
+#if FT800EMU_DEBUG_RECTS_MATH
+			{
+				if (dxr < 1) printf("Rect pixelheight dxr < 1\n");
+				if (dxr > 16) printf("Rect pixelheight dxr > 16\n");
+				if (dys < 1) printf("Rect pixelheight dys < 1\n");
+				if (dys > 16) printf("Rect pixelheight dys > 16\n");
+			}
+#endif
+			if (dxl > 0) // Draw the left pixel if not fully on
+			{
+				const int x = x1lw_px_sc;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int surf = (16 - dxl) * dys;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+				++x1lw_px_sc;
+			}
+			if (dxr < 16) // Draw the right pixel if not fully on
+			{
+				const int x = x2lw_px_sc - 1;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int surf = dxr * dys;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+				--x2lw_px_sc;
+			}
+			for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
+			{
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int alpha = ((gs.ColorARGB >> 24) * dys) >> 4;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
 		else
 		{
 			printf("Unsupported rects dimensions\n");
