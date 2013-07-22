@@ -383,66 +383,64 @@ __forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const
 
 #pragma region Primitive: Point
 
-void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py)
+void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const int scy1, const int scx2, const int scy2, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int px, int py)
 {
-	int yy = y * 16;
-	int r = gs.PointSize;
-	int rsq = r * r;
+	const int x1ps = px + 8 - ps; // Top-left inclusive coordinates plus linewidth in 1/16 pixel
+	const int y1ps = py + 8 - ps;
+	const int x2ps = px + 8 + ps; // Bottom-right exclusive
+	const int y2ps = py + 8 + ps;
 
-	int pytop = py - r; // incl pixel*16 top
-	int pybtm = py + r - 1; // incl pixel*16 btm
+	const int x1ps_px = (x1ps >> 4); // Top-left inclusive in screen pixels
+	const int y1ps_px = (y1ps >> 4);
+	const int x2ps_px = ((x2ps + 15) >> 4); // Bottom-right exclusive in screen pixels
+	const int y2ps_px = ((y2ps + 15) >> 4);
+	const int xsps_px = x2ps_px - x1ps_px; // Size in screen pixels
+	const int ysps_px = y2ps_px - y1ps_px;
 
-	int pytopi = (pytop + 8) >> 4;
-	int pybtmi = (pybtm + 8) >> 4;
-
-	if (pytopi <= y && y <= pybtmi)
+	if (max(y1ps_px, scy1) <= y && y < min(y2ps_px, scy2)) // Scissor Y
 	{
-		int pxlef = px - r;
-		int pxrig = px + r - 1;
+		// const int pssq = ps * ps; // Point size 1/16 squared
+		const int psin = ps - 8; // Inner point size 1/16
+		const int psout = ps + 8; // Outer
+		const int pssqin = (psin) * (psin); // Inner point size 1/16 squared
+		const int pssqout = (psout) * (psout); // Outer
+		const int y16 = y << 4; // Current Y coordinate in 1/16 pixels
 
-		int pxlefi = (pxlef + 8) >> 4;
-		int pxrigi = (pxrig + 8) >> 4;
-
-		pxlefi = max((int)gs.ScissorX.I, pxlefi);
-		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
-
-		int border = 16 * r;
-		int border2sqrt = (int)sqrtf((float)(border * 2)); // sqrt :(
-		for (int x = pxlefi; x <= pxrigi; ++x)
+		const int psin256 = psin << 4; // Inner point size 1/256
+		
+		const int x1ps_px_sc = max(x1ps_px, scx1); // Scissored X1
+		const int x2ps_px_sc = min(x2ps_px, scx2); // Scissored X2
+		for (int x = x1ps_px_sc; x < x2ps_px_sc; ++x)
 		{
-			// todo optimize! (works fine for 500 average sized points at full fps)
-			int xx = x * 16;
-			int xdist = xx - px;
-			int ydist = yy - py;
-			int distctr = (xdist * xdist) + (ydist * ydist);
-			int distouter = distctr - border;
-			int distinner = distctr + border;
-			if (distinner < rsq)
+			const int x16 = x << 4; // Current X coordinate in 1/16 pixels
+
+			const int dx = x16 - px; // Distance to point center in 1/16 pixels
+			const int dy = y16 - py;
+
+			const int distsq = (dx * dx) + (dy * dy);
+
+			if (distsq <= pssqin) // Inside circle
 			{
 				if (testStencil(gs, bs, x))
 				{
-#if FT800EMU_DEBUG_AA
-					argb8888 out = 0x8000FF00;
-#else
-					argb8888 out = gs.ColorARGB;
-#endif
-					bc[x] = blend(gs, out, bc[x]);
-					writeTag(gs, bt, x);
+					const argb8888 out = gs.ColorARGB;
+					if (testAlpha(gs, out))
+					{
+						bc[x] = blend(gs, out, bc[x]);
+						writeTag(gs, bt, x);
+					}
 				}
 			}
-			else if (distouter < rsq)
+			else if (distsq <= pssqout) // AA Border
 			{
 				if (testStencil(gs, bs, x))
 				{
-					int alpha = gs.ColorARGB >> 24;
-					alpha *= (int)sqrtf((float)(rsq - distouter)); // sqrt :(
-					alpha /= border2sqrt;
-					if (alpha > 255) printf("Code error 390\n");
-#if FT800EMU_DEBUG_AA
-					argb8888 out = 0x80FF0000;
-#else
-					argb8888 out = gs.ColorARGB & 0x00FFFFFF | (alpha << 24);
-#endif
+					const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
+					const double dist256d = sqrt(dist256sqd); // sqrt..
+					const long dist256 = (long)dist256d;
+					const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
+					const int outalpha = div255((gs.ColorARGB >> 24) * alpha);
+					const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
 					if (testAlpha(gs, out))
 					{
 						bc[x] = blend(gs, out, bc[x]);
@@ -452,6 +450,11 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			}
 		}
 	}
+}
+
+void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int /*hsize*/, int px, int py)
+{
+	displayPoint(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);	
 }
 
 #pragma endregion
@@ -1011,22 +1014,11 @@ void displayLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt,
 #if !FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS
 	if (lss.WantPoint && nextwantpoint)
 	{
-		int gsps = gs.PointSize;
-		int gsx1 = gs.ScissorX.I;
-		int gsx2 = gs.ScissorX2.I;
-
-		gs.ScissorX.I = max(pointleft, lss.PointLeft);
-		gs.ScissorX2.I = min(pointright, lss.PointRight);
-		gs.PointSize = gs.LineWidth;
 #if FT800EMU_DEBUG_LINES_SHIFT_HACK
-		displayPoint(gs, bc, bs, bt, y, hsize, p1x - 16, p1y);  // hack ls shift (- 16)
+		displayPoint(gs, gs.LineWidth, max(pointleft, lss.PointLeft), gs.ScissorY.I, min(pointright, lss.PointRight), gs.ScissorY2.I, bc, bs, bt, y, p1x - 16, p1y);  // hack ls shift (- 16)
 #else
-		displayPoint(gs, bc, bs, bt, y, hsize, p1x, p1y);
+		displayPoint(gs, gs.LineWidth, max(pointleft, lss.PointLeft), gs.ScissorY.I, min(pointright, lss.PointRight), gs.ScissorY2.I, bc, bs, bt, y, p1x, p1y);
 #endif
-
-		gs.PointSize = gsps;
-		gs.ScissorX.I = gsx1;
-		gs.ScissorX2.I = gsx2;
 		
 		lss.WantEndPoint = true;
 	}
@@ -1054,22 +1046,11 @@ void endLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, con
 #if !FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS
 	if (lss.WantPoint && lss.WantEndPoint)
 	{
-		int gsps = gs.PointSize;
-		int gsx1 = gs.ScissorX.I;
-		int gsx2 = gs.ScissorX2.I;
-
-		gs.ScissorX.I = lss.PointLeft;
-		gs.ScissorX2.I = lss.PointRight;
-		gs.PointSize = gs.LineWidth;
 #if FT800EMU_DEBUG_LINES_SHIFT_HACK
-		displayPoint(gs, bc, bs, bt, y, hsize, lss.P2X - 16, lss.P2Y); // hack ls shift (- 16)
+		displayPoint(gs, gs.LineWidth, lss.PointLeft, gs.ScissorY.I, lss.PointRight, gs.ScissorY2.I, bc, bs, bt, y, lss.P2X - 16, lss.P2Y);  // hack ls shift (- 16)
 #else
-		displayPoint(gs, bc, bs, bt, y, hsize, lss.P2X, lss.P2Y);
+		displayPoint(gs, gs.LineWidth, lss.PointLeft, gs.ScissorY.I, lss.PointRight, gs.ScissorY2.I, bc, bs, bt, y, lss.P2X, lss.P2Y);
 #endif
-
-		gs.PointSize = gsps;
-		gs.ScissorX.I = gsx1;
-		gs.ScissorX2.I = gsx2;
 	}
 #endif
 
@@ -1095,6 +1076,8 @@ void resetLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, c
 
 #pragma region Primitive: Rects
 
+#define FT800EMU_RECTS_FT800_COORDINATES 1
+
 struct RectsState
 {
 public:
@@ -1103,18 +1086,27 @@ public:
 	int X1, Y1;
 };
 
-void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x2, const int y2)
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
 	{
-		rs.X1 = x2;
-		rs.Y1 = y2;
+		rs.X1 = xp;
+		rs.Y1 = yp;
 		rs.Set = true;
 		return;
 	}
 
+#if FT800EMU_RECTS_FT800_COORDINATES // Coordinate correction for the drawing code
+	const int x1 = rs.X1 + 8; // Coordinates in 1/16 pixel
+	const int y1 = rs.Y1 + 8;
+	const int x2 = xp + 8;
+	const int y2 = yp + 8;
+#else // Test version for the drawing code
 	const int x1 = rs.X1; // Coordinates in 1/16 pixel
 	const int y1 = rs.Y1;
+	const int x2 = xp;
+	const int y2 = yp;
+#endif
 	rs.Set = false;
 
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
@@ -1123,6 +1115,8 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int y1lw = y1 - lw;
 	const int x2lw = x2 + lw;
 	const int y2lw = y2 + lw;
+	const int xslw = x2lw - x1lw;
+	const int yslw = y2lw - y1lw;
 
 	const int x1lw_px = (x1lw >> 4); // Top-left inclusive in screen pixels
 	const int y1lw_px = (y1lw >> 4);
@@ -1132,14 +1126,17 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int yslw_px = y2lw_px - y1lw_px;
 
 	if (max(y1lw_px, gs.ScissorY.I) <= y && y < min(y2lw_px, gs.ScissorY2.I)) // Scissor Y
-	{		
-		if (xslw_px == 0)
+	{	
+		// Notes:
+		// Need special handling for x2 - x1 < 16 and y2 - y1 < 16 (multiple overlap in single pixel line), handle explicitly
+
+		if (xslw == 0)
 		{
-			// Zero
+			// Zero width
 		}
-		else if (yslw_px == 0)
+		else if (yslw == 0)
 		{
-			// Zero
+			// Zero height
 		}
 		else if (xslw_px == 1 && yslw_px == 1) // Display a single pixel (ignores impact of rounded corners)
 		{
@@ -1173,7 +1170,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
-		else if (xslw_px == 1) // Single pixel width rects
+		else if (xslw_px == 1) // Single pixel width rects (ignores impact of rounded corners)
 		{
 			if (x1lw_px >= gs.ScissorX.I && x2lw_px <= gs.ScissorX2.I) // Scissor X
 			{
@@ -1215,7 +1212,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
-		else if (yslw_px == 1) // Single pixel height rects
+		else if (yslw_px == 1) // Single pixel height rects (ignores impact of rounded corners)
 		{
 			const int dys = y2lw - y1lw; // Height in 1/16 pixel
 			int x1lw_px_sc = max(x1lw_px, gs.ScissorX.I); // Scissored X1
@@ -1230,7 +1227,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				if (dys > 16) printf("Rect pixelheight dys > 16\n");
 			}
 #endif
-			if (dxl > 0) // Draw the left pixel if not fully on
+			if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
 			{
 				const int x = x1lw_px_sc;
 				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
@@ -1246,7 +1243,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 				++x1lw_px_sc;
 			}
-			if (dxr < 16) // Draw the right pixel if not fully on
+			if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
 			{
 				const int x = x2lw_px_sc - 1;
 				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
@@ -1276,10 +1273,97 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
-		else
+		else // if (lw < 16) // Test
+		{
+			// Need special handling for gs.LineWidth < 16 (multiple overlap in single pixel line), ignore rounded corners
+			// Size is > 1px guaranteed here
+			int x1lw_px_sc = max(x1lw_px, gs.ScissorX.I); // Scissored X1
+			int x2lw_px_sc = min(x2lw_px, gs.ScissorX2.I); // Scissored X2
+			const int dxl = x1lw & 0xF; // Left coordinate in 1/16 relative to top pixel
+			const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to bottom pixel
+			const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel // Todo: Can be moved inside y condition in some way
+			const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
+			int rowfill; // Fill by row scale 16
+			if (y == y1lw_px && dyt > 0) // Top row, not fully filled
+			{
+				rowfill = (16 - dyt);
+			}
+			else if (y == (y2lw_px - 1) && dyb < 16) // Bottom row, not fully filled
+			{
+				rowfill = dyb;
+			}
+			else // Any other row
+			{
+				rowfill = 16;
+			}
+			if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
+			{
+				const int x = x1lw_px_sc;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int surf = (16 - dxl) * rowfill;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+				++x1lw_px_sc;
+			}
+			if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
+			{
+				const int x = x2lw_px_sc - 1;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int surf = dxr * rowfill;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+				--x2lw_px_sc;
+			}
+			if (rowfill < 16) // Top or bottom row
+			{
+				for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
+				{
+					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+					{
+						const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
+						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+						if (testAlpha(gs, out)) // Test alpha
+						{
+							bc[x] = blend(gs, out, bc[x]); // Write color
+							writeTag(gs, bt, x); // Write tag
+						}
+					}
+				}
+			}
+			else // Any other row
+			{
+				for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
+				{
+					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+					{
+						const argb8888 out = gs.ColorARGB;
+						if (testAlpha(gs, out)) // Test alpha
+						{
+							bc[x] = blend(gs, out, bc[x]); // Write color
+							writeTag(gs, bt, x); // Write tag
+						}
+					}
+				}
+			}
+		}
+		/*else
 		{
 			printf("Unsupported rects dimensions\n");
-		}
+		}*/
 	}
 }
 

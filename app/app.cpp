@@ -113,7 +113,7 @@ void setup()
 			dl(VERTEX2F((16 * 17) + x * 16 + 16, y * 32 + 32));
 		}
 	}*/
-
+/*
 	
 
 	dl(COLOR_RGB(0, 255, 128));
@@ -134,14 +134,14 @@ void setup()
 			dl(VERTEX2F(x * 32 + x, (16 * 17) + y * 16 + y));
 			dl(VERTEX2F(x * 32 + 16 + 16, (16 * 17) + y * 16 + 16));
 		}
-	}
+	}*/
 
 
 	dl(END());
 
 
 
-/* // LINE_STRIP
+ // LINE_STRIP
 
 	dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
@@ -161,7 +161,7 @@ dl( VERTEX2F(250 * 16, 100 * 16) );
 dl( VERTEX2F(350 * 16, 200 * 16) );
 	dl(END());
 
-*/
+
 
 
 

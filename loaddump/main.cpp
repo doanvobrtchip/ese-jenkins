@@ -58,7 +58,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_linestrip_changes.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_lines_parse.0.vc1dump", "rb");
-	f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
+	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
 	// f = fopen("../reference/dumps/test_call.0.vc1dump", "rb"); // idem
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
@@ -87,6 +87,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_scissor_connected.0.vc1dump", "rb"); // todo
 	// f = fopen("../reference/dumps/test_scissor_max.0.vc1dump", "rb"); // todo, partially ok
 	// f = fopen("../reference/dumps/test_stencil_ops.0.vc1dump", "rb"); // todo, not ok, and runs dead slow
+	f = fopen("../reference/dumps/test_rects.0.vc1dump", "rb");
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{
