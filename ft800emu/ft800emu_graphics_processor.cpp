@@ -73,6 +73,7 @@
 #define FT800EMU_DEBUG_DISABLE_OVERLAP 0
 #define FT800EMU_DEBUG_LINES_SHIFT_HACK 1
 #define FT800EMU_DEBUG_ALPHA_MUL 0
+#define FT800EMU_DEBUG_RECTS_MATH 1
 
 namespace FT800EMU {
 
@@ -1092,6 +1093,95 @@ void resetLineStrip(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, c
 
 #pragma endregion
 
+#pragma region Primitive: Rects
+
+struct RectsState
+{
+public:
+	RectsState() : Set(false) { }
+	bool Set;
+	int X1, Y1;
+};
+
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x2, const int y2)
+{
+	if (!rs.Set)
+	{
+		rs.X1 = x2;
+		rs.Y1 = y2;
+		rs.Set = true;
+		return;
+	}
+
+	const int x1 = rs.X1; // Coordinates in 1/16 pixel
+	const int y1 = rs.Y1;
+	rs.Set = false;
+
+	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
+
+	const int x1lw = x1 - lw; // Coordinates plus linewidth in 1/16 pixel
+	const int y1lw = y1 - lw;
+	const int x2lw = x2 + lw;
+	const int y2lw = y2 + lw;
+
+	const int x1lw_px = (x1lw >> 4); // Top-left inclusive in screen pixels
+	const int y1lw_px = (y1lw >> 4);
+	const int x2lw_px = ((x2lw + 15) >> 4); // Bottom-right exclusive in screen pixels
+	const int y2lw_px = ((y2lw + 15) >> 4);
+	const int xslw_px = x2lw_px - x1lw_px; // Size in screen pixels
+	const int yslw_px = y2lw_px - y1lw_px;
+
+	if (max(y1lw_px, gs.ScissorY.I) <= y && y < min(y2lw_px, gs.ScissorY2.I)) // Scissor Y
+	{		
+		if (xslw_px == 0)
+		{
+			// Zero
+		}
+		else if (yslw_px == 0)
+		{
+			// Zero
+		}
+		else if (xslw_px == 1 && yslw_px == 1) // Display a single pixel (ignores impact of rounded corners)
+		{
+			if (x1lw_px >= gs.ScissorX.I && x2lw_px <= gs.ScissorX2.I) // Scissor X
+			{
+				const int x = x1lw_px;
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const int dxs = x2lw - x1lw; // Width in 1/16 pixel
+					const int dys = y2lw - y1lw; // Height in 1/16 pixel
+#if FT800EMU_DEBUG_RECTS_MATH
+					{
+						const int dxl_ = x1lw & 0xF; // Left coordinate relative to pixel in 1/16
+						const int dyt_ = y1lw & 0xF; // Top
+						const int dxr_ = x2lw - (x1lw_px << 4); // Right
+						const int dyb_ = y2lw - (y1lw_px << 4); // Bottom
+						const int dxs_ = dxr_ - dxl_; // Width in 1/16 pixel
+						const int dys_ = dyb_ - dyt_; // Height in 1/16 pixel
+						if (dxs_ != dxs) printf("Rect 11 width error\n");
+						if (dys_ != dys) printf("Rect 11 height error\n");
+					}
+#endif
+					const int surf = dxs * dys; // Surface of the rectangle in scale 256
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8; // Alpha 0-255
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
+		else
+		{
+			printf("Unsupported rects dimensions\n");
+		}
+	}
+}
+
+#pragma endregion
+
 }
 
 static int s_DebugMode;
@@ -1148,6 +1238,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
 		LineStripState lss = LineStripState();
+		RectsState rs = RectsState();
 		bool begun = false;
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
@@ -1439,6 +1530,11 @@ EvaluateDisplayListValue:
 								, 
 							((v >> 12) & 0x1FF) * 16);
 						break;
+					case RECTS:
+						displayRects(gs, bc, bs, bt, y, hsize, rs, 
+							((v >> 21) & 0x1FF) * 16, 
+							((v >> 12) & 0x1FF) * 16);
+						break;
 					}
 				}
 				break;
@@ -1466,6 +1562,11 @@ EvaluateDisplayListValue:
 								+ 16
 #endif
 								, 
+							(v & 0x7FFF));
+						break;
+					case RECTS:
+						displayRects(gs, bc, bs, bt, y, hsize, rs, 
+							((v >> 15) & 0x7FFF), 
 							(v & 0x7FFF));
 						break;
 					}
