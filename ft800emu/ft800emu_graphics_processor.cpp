@@ -1907,12 +1907,32 @@ public:
 	int X1, Y1;
 };
 
+__forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
+{
+	const int yr = y - y1;
+	return x1 + (xd * yr / yd);
+}
+
 __forceinline int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
 {
 	const int xd = x2 - x1;
 	const int yd = y2 - y1;
 	const int yr = y - y1;
 	return x1 + (xd * yr / yd);
+}
+
+__forceinline int findyrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &x)
+{
+	const int xr = x - x1;
+	return y1 + (yd * xr / xd);
+}
+
+__forceinline int findy(const int &x1, const int &x2, const int &y1, const int &y2, const int &x)
+{
+	const int xd = x2 - x1;
+	const int yd = y2 - y1;
+	const int xr = x - x1;
+	return y1 + (yd * xr / xd);
 }
 
 void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
@@ -1949,7 +1969,6 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	{
 		// Get boundary
 		const int yv = (y << 4); // Y value 16
-		// const int yv_adj = ((y2 % 16) && (y == y2_px - 1)) ? yv - (y2 % 16) : yv; // Mimic strange behaviour with off-pixel edges
 		const int xv = findx(x1, x2, y1, y2, yv); // X value 16
 		const int xv_px = xv >> 4; // ((xv + 15) >> 4); // X pixel exclusive		
 
@@ -1970,6 +1989,221 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 				{
 					bc[x] = blend(gs, out, bc[x]); // Write color
 					writeTag(gs, bt, x); // Write tag
+				}
+			}
+		}
+	}
+}
+
+void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+{
+	if (!ess.Set)
+	{
+		ess.X1 = xp;
+		ess.Y1 = yp;
+		ess.Set = true;
+		return;
+	}
+
+	// Interpret coordinates
+	const int y1r = ess.Y1;
+	const int y2r = yp;
+	if (y1r == y2r) return; // No op
+	const int x1r = ess.X1;
+	const int x2r = xp;
+	const int y1 = min(y1r, y2r);
+	const int y2 = max(y1r, y2r);
+	const int x1 = y1 == y1r ? x1r : x2r;
+	const int x2 = y2 == y2r ? x2r : x1r;
+
+	// Store coordinates for next call
+	ess.X1 = xp;
+	ess.Y1 = yp;
+
+	// Get pixel positions
+	const int y1_px = ((y1 + 15) >> 4); // Y Inclusive
+	const int y2_px = ((y2 + 15) >> 4); // Y Exclusive
+	
+	// Render
+	if (max(y1_px, gs.ScissorY.I) <= y && y < min(y2_px, gs.ScissorY2.I))
+	{
+		// Get boundary
+		const int yv = (y << 4); // Y value 16
+		const int xv = findx(x1, x2, y1, y2, yv); // X value 16
+		const int xv_px = ((xv) >> 4); // ((xv + 15) >> 4); // X pixel exclusive		
+
+#if FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR
+		const int xm_px = (max(x1, x2) - 16) >> 4;
+		const int left_sc = max(min(xm_px, xv_px), gs.ScissorX.I);
+#else
+		const int left_sc = max(xv_px, gs.ScissorX.I);
+#endif
+		const int right_sc = gs.ScissorX2.I;
+
+		for (int x = left_sc; x < right_sc; ++x)
+		{
+			if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+			{
+				const argb8888 out = gs.ColorARGB;
+				if (testAlpha(gs, out)) // Test alpha
+				{
+					bc[x] = blend(gs, out, bc[x]); // Write color
+					writeTag(gs, bt, x); // Write tag
+				}
+			}
+		}
+	}
+}
+
+void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+{
+	if (!ess.Set)
+	{
+		ess.X1 = xp;
+		ess.Y1 = yp;
+		ess.Set = true;
+		return;
+	}
+
+	// Interpret coordinates
+	const int y1r = ess.Y1;
+	const int y2r = yp;
+	if (y1r == y2r) return; // No op
+	const int x1r = ess.X1;
+	const int x2r = xp;
+	const int x1 = min(x1r, x2r);
+	const int x2 = max(x1r, x2r);
+	const int y1 = x1 == x1r ? y1r : y2r;
+	const int y2 = x2 == x2r ? y2r : y1r;
+
+	// Store coordinates for next call
+	ess.X1 = xp;
+	ess.Y1 = yp;
+
+	
+	// Render
+	const int ym = max(y1, y2);
+	const int ym_px = (ym + 15) >> 4; // Clip
+	if (gs.ScissorY.I <= y && y < min(ym_px, gs.ScissorY2.I)) // Scissor
+	{
+		// Get pixel positions
+		const int x1_px = ((x1) >> 4); // X Inclusive
+		const int x2_px = ((x2) >> 4); // X Exclusive
+
+		const int x1_sc = max(x1_px, gs.ScissorX.I);
+		const int x2_sc = min(x2_px, gs.ScissorX2.I);
+
+		if (y1 - y2 != 0)
+		{
+			const int yv = (y << 4); // Y value 16
+			const int xv = findx(x1, x2, y1, y2, yv); // X value 16
+			const int xv_px = ((xv) >> 4); // X pixel exclusive or inclusive?
+
+			const int left_sc = y1 >= y2 ? x1_sc : max(xv_px, x1_sc);
+			const int right_sc = y1 <= y2 ? x2_sc : min(xv_px, x2_sc);
+
+			for (int x = left_sc; x < right_sc; ++x)
+			{
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const argb8888 out = gs.ColorARGB; // x == left_sc ? 0xFFFF8000 : x == right_sc - 1 ? 0xFF00FF80 : gs.ColorARGB;
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int x = x1_sc; x < x2_sc; ++x)
+			{
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const argb8888 out = gs.ColorARGB;
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
+	}
+}
+
+void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+{
+	if (!ess.Set)
+	{
+		ess.X1 = xp;
+		ess.Y1 = yp;
+		ess.Set = true;
+		return;
+	}
+
+	// Interpret coordinates
+	const int y1r = ess.Y1;
+	const int y2r = yp;
+	if (y1r == y2r) return; // No op
+	const int x1r = ess.X1;
+	const int x2r = xp;
+	const int x1 = min(x1r, x2r);
+	const int x2 = max(x1r, x2r);
+	const int y1 = x1 == x1r ? y1r : y2r;
+	const int y2 = x2 == x2r ? y2r : y1r;
+
+	// Store coordinates for next call
+	ess.X1 = xp;
+	ess.Y1 = yp;
+		
+	// Render
+	const int ym = min(y1, y2);
+	const int ym_px = (ym + 16) >> 4; // Clip
+	if (max(ym_px, gs.ScissorY.I) <= y && y < gs.ScissorY2.I) // Scissor
+	{
+		// Get pixel positions
+		const int x1_px = ((x1) >> 4); // X Inclusive
+		const int x2_px = ((x2) >> 4); // X Exclusive
+
+		const int x1_sc = max(x1_px, gs.ScissorX.I);
+		const int x2_sc = min(x2_px, gs.ScissorX2.I);
+
+		if (y1 - y2 != 0)
+		{
+			const int yv = (y << 4); // Y value 16
+			const int xv = findx(x1, x2, y1, y2, yv); // X value 16
+			const int xv_px = ((xv) >> 4); // X pixel exclusive or inclusive?
+
+			const int left_sc = y1 <= y2 ? x1_sc : max(xv_px, x1_sc);
+			const int right_sc = y1 >= y2 ? x2_sc : min(xv_px, x2_sc);;
+
+			for (int x = left_sc; x < right_sc; ++x)
+			{
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const argb8888 out = gs.ColorARGB;
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int x = x1_sc; x < x2_sc; ++x)
+			{
+				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+				{
+					const argb8888 out = gs.ColorARGB;
+					if (testAlpha(gs, out)) // Test alpha
+					{
+						bc[x] = blend(gs, out, bc[x]); // Write color
+						writeTag(gs, bt, x); // Write tag
+					}
 				}
 			}
 		}
@@ -2349,8 +2583,23 @@ EvaluateDisplayListValue:
 								, 
 							py);
 						break;
+					case EDGE_STRIP_R:
+						displayEdgeStripR(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
 					case EDGE_STRIP_L:
 						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
+					case EDGE_STRIP_A:
+						displayEdgeStripA(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
+					case EDGE_STRIP_B:
+						displayEdgeStripB(gs, bc, bs, bt, y, hsize, ess, 
 							px, 
 							py);
 						break;
@@ -2392,8 +2641,23 @@ EvaluateDisplayListValue:
 								, 
 							py);
 						break;
+					case EDGE_STRIP_R:
+						displayEdgeStripR(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
 					case EDGE_STRIP_L:
 						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
+					case EDGE_STRIP_A:
+						displayEdgeStripA(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
+						break;
+					case EDGE_STRIP_B:
+						displayEdgeStripB(gs, bc, bs, bt, y, hsize, ess, 
 							px, 
 							py);
 						break;
