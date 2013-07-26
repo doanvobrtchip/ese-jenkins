@@ -1895,6 +1895,89 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 #pragma endregion
 
+#pragma region Primitive: Edge Strip
+
+#define FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR 1 // Mimic strange clipping behaviour, this clips to the outer value transformed to pixels directly
+
+struct EdgeStripState
+{
+public:
+	EdgeStripState() : Set(false) { }
+	bool Set;
+	int X1, Y1;
+};
+
+__forceinline int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
+{
+	const int xd = x2 - x1;
+	const int yd = y2 - y1;
+	const int yr = y - y1;
+	return x1 + (xd * yr / yd);
+}
+
+void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+{
+	if (!ess.Set)
+	{
+		ess.X1 = xp;
+		ess.Y1 = yp;
+		ess.Set = true;
+		return;
+	}
+
+	// Interpret coordinates
+	const int y1r = ess.Y1;
+	const int y2r = yp;
+	if (y1r == y2r) return; // No op
+	const int x1r = ess.X1;
+	const int x2r = xp;
+	const int y1 = min(y1r, y2r);
+	const int y2 = max(y1r, y2r);
+	const int x1 = y1 == y1r ? x1r : x2r;
+	const int x2 = y2 == y2r ? x2r : x1r;
+
+	// Store coordinates for next call
+	ess.X1 = xp;
+	ess.Y1 = yp;
+
+	// Get pixel positions
+	const int y1_px = ((y1 + 15) >> 4); // Y Inclusive
+	const int y2_px = ((y2 + 15) >> 4); // Y Exclusive
+	
+	// Render
+	if (max(y1_px, gs.ScissorY.I) <= y && y < min(y2_px, gs.ScissorY2.I))
+	{
+		// Get boundary
+		const int yv = (y << 4); // Y value 16
+		// const int yv_adj = ((y2 % 16) && (y == y2_px - 1)) ? yv - (y2 % 16) : yv; // Mimic strange behaviour with off-pixel edges
+		const int xv = findx(x1, x2, y1, y2, yv); // X value 16
+		const int xv_px = xv >> 4; // ((xv + 15) >> 4); // X pixel exclusive		
+
+		const int left_sc = gs.ScissorX.I;
+#if FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR
+		const int xm_px = (max(x1, x2) - 16) >> 4;
+		const int right_sc = min(xm_px, min(xv_px, gs.ScissorX2.I));
+#else
+		const int right_sc = min(xv_px, gs.ScissorX2.I);
+#endif
+
+		for (int x = left_sc; x < right_sc; ++x)
+		{
+			if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+			{
+				const argb8888 out = gs.ColorARGB;
+				if (testAlpha(gs, out)) // Test alpha
+				{
+					bc[x] = blend(gs, out, bc[x]); // Write color
+					writeTag(gs, bt, x); // Write tag
+				}
+			}
+		}
+	}
+}
+
+#pragma endregion
+
 }
 
 static int s_DebugMode;
@@ -1952,6 +2035,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	{
 		LineStripState lss = LineStripState();
 		RectsState rs = RectsState();
+		EdgeStripState ess = EdgeStripState();
 		bool begun = false;
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
@@ -2175,6 +2259,15 @@ EvaluateDisplayListValue:
 					case LINE_STRIP:
 						endLineStrip(gs, bc, bs, bt, y, hsize, lss);
 						break;
+					case EDGE_STRIP_R:
+					case EDGE_STRIP_L:
+					case EDGE_STRIP_A:
+					case EDGE_STRIP_B:
+						ess.Set = false;
+						break;
+					case RECTS:
+						rs.Set = false;
+						break;
 					}
 					primitive = 0;
 					begun = false;
@@ -2231,33 +2324,40 @@ EvaluateDisplayListValue:
 			case FT800EMU_DL_VERTEX2II:
 				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 				{
+					int px = ((v >> 21) & 0x1FF) * 16;
+					int py = ((v >> 12) & 0x1FF) * 16;
 					switch (primitive)
 					{
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, 
-							((v >> 21) & 0x1FF) * 16, 
-							((v >> 12) & 0x1FF) * 16,
+							px, 
+							py,
 							((v >> 7) & 0x1F),
 							v & 0x7F);
 						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
-							((v >> 21) & 0x1FF) * 16, 
-							((v >> 12) & 0x1FF) * 16);
+							px, 
+							py);
 						break;
 					case LINE_STRIP:
 						displayLineStrip(gs, bc, bs, bt, y, hsize, lss, 
-							(((v >> 21) & 0x1FF) * 16)
+							px
 #if FT800EMU_DEBUG_LINES_SHIFT_HACK
 								+ 16
 #endif
 								, 
-							((v >> 12) & 0x1FF) * 16);
+							py);
+						break;
+					case EDGE_STRIP_L:
+						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
+							py);
 						break;
 					case RECTS:
 						displayRects(gs, bc, bs, bt, y, hsize, rs, 
-							((v >> 21) & 0x1FF) * 16, 
-							((v >> 12) & 0x1FF) * 16);
+							px, 
+							py);
 						break;
 					}
 				}
@@ -2290,6 +2390,11 @@ EvaluateDisplayListValue:
 								+ 16
 #endif
 								, 
+							py);
+						break;
+					case EDGE_STRIP_L:
+						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
+							px, 
 							py);
 						break;
 					case RECTS:
