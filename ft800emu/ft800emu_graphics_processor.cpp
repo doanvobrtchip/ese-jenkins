@@ -1175,10 +1175,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 
 #if FT800EMU_RECTS_FT800_COORDINATES // Coordinate correction for the drawing code
-	const int x1 = rs.X1 + 8; // Coordinates in 1/16 pixel
-	const int y1 = rs.Y1 + 8;
-	const int x2 = xp + 8;
-	const int y2 = yp + 8;
+	const int x1r = rs.X1 + 8; // Coordinates in 1/16 pixel
+	const int y1r = rs.Y1 + 8;
+	const int x2r = xp + 8;
+	const int y2r = yp + 8;
+	const int x1 = min(x1r, x2r);
+	const int x2 = max(x1r, x2r);
+	const int y1 = min(y1r, y2r);
+	const int y2 = max(y1r, y2r);
 #else // Test version for the drawing code
 	const int x1 = rs.X1; // Coordinates in 1/16 pixel
 	const int y1 = rs.Y1;
