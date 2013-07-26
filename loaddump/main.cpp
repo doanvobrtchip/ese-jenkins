@@ -45,7 +45,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb"); // ok
@@ -89,7 +89,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_scissor_max.0.vc1dump", "rb"); // looks good so far, missing some todo lines
 	// f = fopen("../reference/dumps/test_scissor_overlap.0.vc1dump", "rb"); // looks good so far, missing some todo lines
 	// f = fopen("../reference/dumps/test_stencil_ops.0.vc1dump", "rb"); // todo, not ok, and runs dead slow
-	// f = fopen("../reference/dumps/test_rects.0.vc1dump", "rb");
+	f = fopen("../reference/dumps/test_rects.0.vc1dump", "rb");
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

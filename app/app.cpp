@@ -104,10 +104,12 @@ void setup()
 
 
 	// ** RECT TEST **
+	dl(COLOR_A(128));
+
 	dl(LINE_WIDTH(160));
 	dl(BEGIN(RECTS));
-	dl(VERTEX2F(160, 160));
-	dl(VERTEX2F(160, 324));
+	dl(VERTEX2F(162, 160));
+	dl(VERTEX2F(164+16+24, 324));
 	dl(END());
 
 	dl(COLOR_RGB(0, 128, 255));

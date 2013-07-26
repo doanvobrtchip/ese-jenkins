@@ -1532,7 +1532,120 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 				else
 				{
-					// ...
+					const int bx1_px_sc_r = min(bx1_px, gs.ScissorX2.I); // Scissored
+					const int bx2_px_sc_l = max(bx2_px, gs.ScissorX.I); // Scissored
+					// Render top-left and top-right corner
+					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8);
+					displayPoint(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by1 - 8);
+					const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel
+					if (y == y1lw_px) // && dyt > 0) // Top row
+					{
+						int bx1_px_sc_l = max(bx1_px, gs.ScissorX.I); // Scissored
+						int bx2_px_sc_r = min(bx2_px, gs.ScissorX2.I); // Scissored
+						const int rowfill = (16 - dyt) * 16; // Alpha 256
+						if (ax2_px - 1 == cx1_px) // Triple blend
+						{
+							const int x = cx1_px;
+							if (bx1_px_sc_l <= x && x < bx2_px_sc_r) // Check scissor
+							{
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendleft - blendright;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}								
+							}
+						}
+						else
+						{
+							if (bx1_px_sc_l == bx1_px && ax2_px - 1 == bx1_px) // Left pixel overlaps
+							{
+								const int x = bx1_px;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									const int blendinv = 16 - blendleft;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								++bx1_px_sc_l;
+							}
+
+							if (bx2_px_sc_r == bx2_px && bx2_px - 1 == cx1_px) // Right pixel overlaps
+							{
+								const int x = cx1_px;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendright;
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
+									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								--bx2_px_sc_r;
+							}
+
+							// Draw the rest of this top row
+							{
+								const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 8;
+								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+
+								for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
+								{
+									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+									{
+										if (testAlpha(gs, out)) // Test alpha
+										{
+											bc[x] = blend(gs, out, bc[x]); // Write color
+											writeTag(gs, bt, x); // Write tag
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// Fill between the points
+						const int bx1_px_sc_l = max(bx1_px_sc_r, gs.ScissorX.I); // Scissored
+						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
+						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
+						{
+							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+							{
+								if (testAlpha(gs, gs.ColorARGB)) // Test alpha
+								{
+									bc[x] = blend(gs, gs.ColorARGB, bc[x]); // Write color
+									writeTag(gs, bt, x); // Write tag
+								}
+							}
+						}
+					}
 				}
 			}
 			else if (blendbottom == 16)
@@ -1543,7 +1656,120 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 				else
 				{
-					// ...
+					const int bx1_px_sc_r = min(bx1_px, gs.ScissorX2.I); // Scissored X2
+					const int bx2_px_sc_l = max(bx2_px, gs.ScissorX.I); // Scissored X1
+					// Render bottom-left and bottom-right corner
+					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8);
+					displayPoint(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by2 - 8);
+					const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel
+					if (y == (y2lw_px - 1)) // && dyb < 16) // Bottom row
+					{
+						int bx1_px_sc_l = max(bx1_px, gs.ScissorX.I); // Scissored
+						int bx2_px_sc_r = min(bx2_px, gs.ScissorX2.I); // Scissored
+						const int rowfill = dyb * 16; // Alpha 256
+						if (ax2_px - 1 == cx1_px) // Triple blend
+						{
+							const int x = cx1_px;
+							if (bx1_px_sc_l <= x && x < bx2_px_sc_r) // Check scissor
+							{
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendleft - blendright;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+							}
+						}
+						else
+						{
+							if (bx1_px_sc_l == bx1_px && ax2_px - 1 == bx1_px) // Left pixel overlaps
+							{
+								const int x = bx1_px;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									const int blendinv = 16 - blendleft;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								++bx1_px_sc_l;
+							}
+
+							if (bx2_px_sc_r == bx2_px && bx2_px - 1 == cx1_px) // Right pixel overlaps
+							{
+								const int x = cx1_px;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendright;
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
+									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								--bx2_px_sc_r;
+							}
+
+							// Draw the rest of this bottom row
+							{
+								const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 8;
+								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+
+								for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
+								{
+									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+									{
+										if (testAlpha(gs, out)) // Test alpha
+										{
+											bc[x] = blend(gs, out, bc[x]); // Write color
+											writeTag(gs, bt, x); // Write tag
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// Fill between the points
+						const int bx1_px_sc_l = max(bx1_px_sc_r, gs.ScissorX.I); // Scissored
+						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
+						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
+						{
+							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+							{
+								if (testAlpha(gs, gs.ColorARGB)) // Test alpha
+								{
+									bc[x] = blend(gs, gs.ColorARGB, bc[x]); // Write color
+									writeTag(gs, bt, x); // Write tag
+								}
+							}
+						}
+					}
 				}
 			}
 			else
@@ -1611,6 +1837,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 #endif
 					const int blendc = (16 - blendtop - blendbottom) * 16;
 					// Left
+					if (x1lw_px == x1lw_px_sc) // Check scissor
 					{
 						const int x = x1lw_px_sc;
 						if (testStencil(gs, bs, x)) // Test and write the stencil buffer
@@ -1627,6 +1854,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						++x1lw_px_sc;
 					}
 					// Right
+					if (x2lw_px == x2lw_px_sc) // Check scissor
 					{
 						const int x = x2lw_px_sc - 1;
 						if (testStencil(gs, bs, x)) // Test and write the stencil buffer
