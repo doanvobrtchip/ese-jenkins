@@ -89,24 +89,37 @@ void setup()
 	// ** SMALL POINTS X ***/
 
 	// ** SMALL POINTS Y **
-	dl(COLOR_RGB(255, 255, 255));
+	/*dl(COLOR_RGB(255, 255, 255));
 	dl(BEGIN(POINTS));
 	for (int y = 0; y <= 16; ++y)
 	{
 		for (int x = 0; x <= 8; ++x)
 		{
 			dl(POINT_SIZE(x));
-			dl(VERTEX2F(y * 16, x * 32 + y, 0, 0));
+			dl(VERTEX2F(y * 16, x * 32 + y));
 		}	
 	}
-	dl(END());
+	dl(END());*/
 	// ** SMALL POINTS Y **
 
+
+	// ** RECT TEST **
+	dl(LINE_WIDTH(160));
+	dl(BEGIN(RECTS));
+	dl(VERTEX2F(160, 160));
+	dl(VERTEX2F(160, 324));
+	dl(END());
+
+	dl(COLOR_RGB(0, 128, 255));
+	dl(POINT_SIZE(28));
+	dl(BEGIN(POINTS));
+	//dl(VERTEX2F(160, 324));
+	dl(END());
+	// ** RECT TEST **
 
 
 	dl(LINE_WIDTH(0));
 	dl(BEGIN(RECTS));
-
 
 	/*
 	dl(COLOR_RGB(255, 128, 0));

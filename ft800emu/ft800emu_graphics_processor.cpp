@@ -497,6 +497,31 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	displayPoint(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);	
 }
 
+// Utility for primitives that use points to blend the AA at the edges. 
+// Only used for 4 pixels at most in a primitive.
+// Only used with point size of 16 or larger.
+// Only used on the AA border itself.
+__forceinline int getPointAlpha256(const int ps, const int x, const int y, const int px, const int py)
+{
+	const int pssq = ps * ps; // Point size 1/16 squared
+	const int psin = ps - 8; // Inner point size 1/16
+	const int y16 = y << 4; // Current Y coordinate in 1/16 pixels
+	const int x16 = x << 4; // Current X coordinate in 1/16 pixels
+
+	const int psin256 = psin << 4; // Inner point size 1/256
+
+	const int dx = x16 - px; // Distance to point center in 1/16 pixels
+	const int dy = y16 - py;
+
+	const int distsq = (dx * dx) + (dy * dy);
+
+	const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
+	const double dist256d = sqrt(dist256sqd); // sqrt..
+	const long dist256 = (long)dist256d;
+	const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
+	return alpha;
+}
+
 #pragma endregion
 
 #pragma region Primitive: Bitmap
@@ -1326,14 +1351,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
-		else // if (lw < 16) // Test
+		else if (lw < 16)
 		{
 			// Need special handling for gs.LineWidth < 16 (multiple overlap in single pixel line), ignore rounded corners
 			// Size is > 1px guaranteed here
 			int x1lw_px_sc = max(x1lw_px, gs.ScissorX.I); // Scissored X1
 			int x2lw_px_sc = min(x2lw_px, gs.ScissorX2.I); // Scissored X2
-			const int dxl = x1lw & 0xF; // Left coordinate in 1/16 relative to top pixel
-			const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to bottom pixel
+			const int dxl = x1lw & 0xF; // Left coordinate in 1/16 relative to left pixel
+			const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to right pixel
 			const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel // Todo: Can be moved inside y condition in some way
 			const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
 			int rowfill; // Fill by row scale 16
@@ -1413,10 +1438,222 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				}
 			}
 		}
-		/*else
-		{
-			printf("Unsupported rects dimensions\n");
-		}*/
+		else
+		{			
+			// Divide into 9 parts
+			// Alias the coordinates for clarity
+			const int ax1 = x1lw;
+			const int ax2 = x1;
+			const int bx1 = x1;
+			const int bx2 = x2;
+			const int cx1 = x2;
+			const int cx2 = x2lw;
+			const int ay1 = y1lw;
+			const int ay2 = y1;
+			const int by1 = y1;
+			const int by2 = y2;
+			const int cy1 = y2;
+			const int cy2 = y2lw;
+
+			// Get the used pixel positions
+			const int ax1_px = x1lw_px;
+			const int ax2_px = ((ax2 + 15) >> 4);
+			const int bx1_px = (bx1 >> 4);
+			const int bx2_px = ((bx2 + 15) >> 4);
+			const int cx1_px = (cx1 >> 4);
+			const int cx2_px = x2lw_px;
+			const int ay1_px = y1lw_px;
+			const int ay2_px = ((ay2 + 15) >> 4);
+			const int by1_px = (by1 >> 4);
+			const int by2_px = ((by2 + 15) >> 4);
+			const int cy1_px = (cy1 >> 4);
+			const int cy2_px = y2lw_px;
+
+			if (bx2 - bx1 == 0) // Rectangle with no width between the points, essentially a vertical line
+			{
+				if (by2 - by1 == 0) // Rectangle that's actually a point
+				{
+					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+				}
+				else // Vertical line
+				{
+					// 0-16 how much to blend with the points
+					int blend1;
+					int blend2;
+					// Alpha 256 for blended point AA region
+					int alphatopleft;
+					int alphatopright;
+					int alphabottomleft;
+					int alphabottomright;
+					if (y < by1_px) // Top point
+					{
+						blend1 = 16;
+						blend2 = 0;
+					}
+					else if (y < ay2_px) 
+					{
+						if (y >= cy1_px) // Shared boundery top, center, bottom
+						{
+							blend1 = ay2 - ((ay2_px - 1) << 4);
+							blend2 = by2 - ((by2_px - 1) << 4);
+							blend2 = 16 - blend2;
+#if FT800EMU_DEBUG_RECTS_MATH
+							if (blend1 + blend2 >= 16) printf("Vertical line shared blend bad math (blend1 + blend2 >= 16)\n");
+#endif
+						}
+						else // Shared boundary between top and center
+						{
+							blend1 = ay2 - ((ay2_px - 1) << 4);
+							blend2 = 0;
+							alphabottomleft = 0;
+							alphabottomright = 0;
+						}
+					}
+					else if (y < cy1_px) // Center area
+					{
+						blend1 = 0;
+						blend2 = 0;
+					}
+					else if (y < by2_px) // Shared boundary between center and bottom
+					{
+						blend2 = by2 - ((by2_px - 1) << 4);
+						blend2 = 16 - blend2;
+						blend1 = 0;
+						alphatopleft = 0;
+						alphatopright = 0;
+					}
+					else if (y < cy2_px) // Bottom point
+					{
+						blend1 = 0;
+						blend2 = 16;
+					}
+
+					if (blend1 == 16) // Top
+					{
+						displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+					}
+					else if (blend2 == 16)
+					{
+						displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+					}
+					else
+					{
+						int x1lw_px_sc = max(x1lw_px, gs.ScissorX.I); // Scissored X1
+						int x2lw_px_sc = min(x2lw_px, gs.ScissorX2.I); // Scissored X2
+						const int dxl = x1lw & 0xF; // Left coordinate in 1/16 relative to left pixel
+						const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to right pixel
+
+						if (blend1 == 0 && blend2 == 0) // Center only
+						{
+							if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
+							{
+								const int x = x1lw_px_sc;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									const int surf = (16 - dxl);
+									const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								++x1lw_px_sc;
+							}
+							if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
+							{
+								const int x = x2lw_px_sc - 1;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									const int surf = dxr;
+									const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								--x2lw_px_sc;
+							}
+						}
+						else // Draw blended left and right pixels
+						{						
+							if (blend1 > 0)
+							{
+								// Calculate border alphas for top point
+								alphatopleft = getPointAlpha256(lw, x1lw_px_sc, y, bx1 - 8, by1 - 8);
+								alphatopright = getPointAlpha256(lw, x2lw_px_sc - 1, y, bx1 - 8, by1 - 8);
+							}
+							
+							if (blend2 > 0)
+							{
+								// Calculate border alphas for bottom point
+								alphabottomleft = getPointAlpha256(lw, x1lw_px_sc, y, bx1 - 8, by2 - 8);
+								alphabottomright = getPointAlpha256(lw, x2lw_px_sc - 1, y, bx1 - 8, by2 - 8);
+							}
+
+#if FT800EMU_DEBUG_RECTS_MATH
+							{
+								if (x1lw_px_sc == x2lw_px_sc) printf("Vertical line lr blend x1lw_px_sc == x2lw_px_sc\n");
+							}
+#endif
+							const int blendc = (16 - blend1 - blend2) * 16;
+							// Left
+							{
+								const int x = x1lw_px_sc;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									const int surf = ((16 - dxl) * blendc) + (alphatopleft * blend1) + (alphabottomleft * blend2);
+									const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								++x1lw_px_sc;
+							}
+							// Right
+							{
+								const int x = x2lw_px_sc - 1;
+								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+								{
+									const int surf = (dxr * blendc) + (alphatopright * blend1) + (alphabottomright * blend2);
+									const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									if (testAlpha(gs, out)) // Test alpha
+									{
+										bc[x] = blend(gs, out, bc[x]); // Write color
+										writeTag(gs, bt, x); // Write tag
+									}
+								}
+								--x2lw_px_sc;
+							}
+						}
+						// The rest of the pixels
+						for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
+						{
+							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
+							{
+								const argb8888 out = gs.ColorARGB;
+								if (testAlpha(gs, out)) // Test alpha
+								{
+									bc[x] = blend(gs, out, bc[x]); // Write color
+									writeTag(gs, bt, x); // Write tag
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				printf("Not implemented\n");
+			}
+		}
 	}
 }
 
