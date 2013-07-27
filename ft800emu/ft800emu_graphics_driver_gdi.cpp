@@ -327,14 +327,22 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	switch (GraphicsProcessor.getDebugMode())
 	{
 	case FT800EMU_DEBUGMODE_ALPHA:
-		newTitle << " [ALPHA]";
+		newTitle << " [ALPHA";
 		break;
 	case FT800EMU_DEBUGMODE_TAG:
-		newTitle << " [TAG]";
+		newTitle << " [TAG";
 		break;
 	case FT800EMU_DEBUGMODE_STENCIL:
-		newTitle << " [STENCIL]";
+		newTitle << " [STENCIL";
 		break;
+	}
+	if (GraphicsProcessor.getDebugMode())
+	{
+		if (GraphicsProcessor.getDebugMultiplier() > 1)
+		{
+			newTitle << " (" << GraphicsProcessor.getDebugMultiplier() << "x)";
+		}
+		newTitle << "]";
 	}
 	if (!output) newTitle << " [NO OUTPUT]";
 	newTitle << TEXT(" [FPS: ");

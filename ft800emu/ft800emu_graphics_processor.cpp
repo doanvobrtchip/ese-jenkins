@@ -1897,7 +1897,10 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 #pragma region Primitive: Edge Strip
 
-#define FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR 1 // Mimic strange clipping behaviour, this clips to the outer value transformed to pixels directly
+// Mimic strange clipping behaviour
+// This clips to the outer value transformed to pixels directly
+// Only works for L and R
+#define FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR 0
 
 struct EdgeStripState
 {
@@ -1907,32 +1910,12 @@ public:
 	int X1, Y1;
 };
 
-__forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
-{
-	const int yr = y - y1;
-	return x1 + (xd * yr / yd);
-}
-
 __forceinline int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
 {
 	const int xd = x2 - x1;
 	const int yd = y2 - y1;
 	const int yr = y - y1;
 	return x1 + (xd * yr / yd);
-}
-
-__forceinline int findyrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &x)
-{
-	const int xr = x - x1;
-	return y1 + (yd * xr / xd);
-}
-
-__forceinline int findy(const int &x1, const int &x2, const int &y1, const int &y2, const int &x)
-{
-	const int xd = x2 - x1;
-	const int yd = y2 - y1;
-	const int xr = x - x1;
-	return y1 + (yd * xr / xd);
 }
 
 void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
@@ -2066,11 +2049,11 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	}
 
 	// Interpret coordinates
-	const int y1r = ess.Y1;
-	const int y2r = yp;
-	if (y1r == y2r) return; // No op
 	const int x1r = ess.X1;
 	const int x2r = xp;
+	if (x1r == x2r) return; // No op
+	const int y1r = ess.Y1;
+	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
 	const int x2 = max(x1r, x2r);
 	const int y1 = x1 == x1r ? y1r : y2r;
@@ -2135,6 +2118,7 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
 {
+
 	if (!ess.Set)
 	{
 		ess.X1 = xp;
@@ -2144,11 +2128,11 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	}
 
 	// Interpret coordinates
-	const int y1r = ess.Y1;
-	const int y2r = yp;
-	if (y1r == y2r) return; // No op
 	const int x1r = ess.X1;
 	const int x2r = xp;
+	if (x1r == x2r) return; // No op
+	const int y1r = ess.Y1;
+	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
 	const int x2 = max(x1r, x2r);
 	const int y1 = x1 == x1r ? y1r : y2r;
@@ -2170,7 +2154,12 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 		const int x1_sc = max(x1_px, gs.ScissorX.I);
 		const int x2_sc = min(x2_px, gs.ScissorX2.I);
 
-		if (y1 - y2 != 0)
+		if (gs.DebugDisplayListIndex == 0x1b5)
+		{
+			printf("ah");
+		}
+
+		if ((y1 - y2) != 0)
 		{
 			const int yv = (y << 4); // Y value 16
 			const int xv = findx(x1, x2, y1, y2, yv); // X value 16
@@ -2215,6 +2204,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 }
 
 static int s_DebugMode;
+static int s_DebugMultiplier = 1;
 
 void GraphicsProcessorClass::begin()
 {
@@ -2253,9 +2243,6 @@ void GraphicsProcessorClass::end()
 
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
-	// int hsize16 = hsize * 16; // << 4
-	// int vsize16 = vsize * 16;
-
 	// Swap the display list... Is this done before the frame render or after?
 	uint8_t *ram = Memory.getRam();
 	if (ram[REG_DLSWAP] == SWAP_FRAME)
@@ -2479,6 +2466,15 @@ EvaluateDisplayListValue:
 					case LINE_STRIP:
 						beginLineStrip(lss);
 						break;
+					case EDGE_STRIP_R:
+					case EDGE_STRIP_L:
+					case EDGE_STRIP_A:
+					case EDGE_STRIP_B:
+						ess.Set = false;
+						break;
+					case RECTS:
+						rs.Set = false;
+						break;
 					}
 					break;
 				case FT800EMU_DL_COLOR_MASK:
@@ -2492,15 +2488,6 @@ EvaluateDisplayListValue:
 					{
 					case LINE_STRIP:
 						endLineStrip(gs, bc, bs, bt, y, hsize, lss);
-						break;
-					case EDGE_STRIP_R:
-					case EDGE_STRIP_L:
-					case EDGE_STRIP_A:
-					case EDGE_STRIP_B:
-						ess.Set = false;
-						break;
-					case RECTS:
-						rs.Set = false;
 						break;
 					}
 					primitive = 0;
@@ -2687,6 +2674,7 @@ DisplayListDisplay:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bc[x] >> 24;
+					v *= s_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
@@ -2694,6 +2682,7 @@ DisplayListDisplay:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bt[x];
+					v *= s_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
@@ -2701,6 +2690,7 @@ DisplayListDisplay:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bs[x];
+					v *= s_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
@@ -2717,6 +2707,16 @@ void GraphicsProcessorClass::setDebugMode(int debugMode)
 int GraphicsProcessorClass::getDebugMode()
 {
 	return s_DebugMode;
+}
+
+void GraphicsProcessorClass::setDebugMultiplier(int debugMultiplier)
+{
+	s_DebugMultiplier = debugMultiplier;
+}
+
+int GraphicsProcessorClass::getDebugMultiplier()
+{
+	return s_DebugMultiplier;
 }
 
 } /* namespace FT800EMU */

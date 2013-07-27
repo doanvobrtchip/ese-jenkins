@@ -46,6 +46,8 @@ public:
 	
 	static void setDebugMode(int debugMode);
 	static int getDebugMode();
+	static void setDebugMultiplier(int debugMultiplier);
+	static int getDebugMultiplier();
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);
