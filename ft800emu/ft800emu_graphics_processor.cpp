@@ -2204,11 +2204,15 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 }
 
 static int s_DebugMode;
-static int s_DebugMultiplier = 1;
+static int s_DebugMultiplier;
+static int s_DebugLimiter;
 
 void GraphicsProcessorClass::begin()
 {
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
+	s_DebugMultiplier = 1;
+	s_DebugLimiter = 0;
+
 	uint8_t *ram = Memory.getRam();
 	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
 	printf("Font index: %u\n", fi);
@@ -2303,9 +2307,17 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		}
 
 		// run display list
+		int debugCounter = 0;
 		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
+			if (s_DebugLimiter)
+			{
+				if (debugCounter >= s_DebugLimiter) break;
+				++debugCounter;
+			}
+			
 			gs.DebugDisplayListIndex = c;
+
 			uint32_t v = displayList[c]; // (up to 2048 ops)
 EvaluateDisplayListValue:
 			switch (v >> 30)
@@ -2717,6 +2729,16 @@ void GraphicsProcessorClass::setDebugMultiplier(int debugMultiplier)
 int GraphicsProcessorClass::getDebugMultiplier()
 {
 	return s_DebugMultiplier;
+}
+
+void GraphicsProcessorClass::setDebugLimiter(int debugLimiter)
+{
+	s_DebugLimiter = debugLimiter;
+}
+
+int GraphicsProcessorClass::getDebugLimiter()
+{
+	return s_DebugLimiter;
 }
 
 } /* namespace FT800EMU */

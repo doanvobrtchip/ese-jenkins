@@ -48,6 +48,8 @@ public:
 	static int getDebugMode();
 	static void setDebugMultiplier(int debugMultiplier);
 	static int getDebugMultiplier();
+	static void setDebugLimiter(int debugLimiter);
+	static int getDebugLimiter();
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

@@ -193,6 +193,45 @@ void keyboard()
 			resetDebugMultiplier = true;
 		}
 	}
+
+	{
+		static bool incDebugLimiter = false;
+		if (incDebugLimiter)
+		{
+			incDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8);
+		}
+		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8))
+		{
+			FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
+			incDebugLimiter = true;
+		}
+	}
+
+	{
+		static bool decDebugLimiter = false;
+		if (decDebugLimiter)
+		{
+			decDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7);
+		}
+		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7))
+		{
+			FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
+			decDebugLimiter = true;
+		}
+	}
+
+	{
+		static bool resetDebugLimiter = false;
+		if (resetDebugLimiter)
+		{
+			resetDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6);
+		}
+		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6))
+		{
+			FT800EMU::GraphicsProcessor.setDebugLimiter(0);
+			resetDebugLimiter = true;
+		}
+	}
 }
 
 // int __stdcall WinMain(void *, void *, void *, int)

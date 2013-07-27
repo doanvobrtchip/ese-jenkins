@@ -344,6 +344,10 @@ void GraphicsDriverClass::renderBuffer(bool output)
 		}
 		newTitle << "]";
 	}
+	if (GraphicsProcessor.getDebugLimiter())
+	{
+		newTitle << " [LIMIT: " << GraphicsProcessor.getDebugLimiter() << "]";
+	}
 	if (!output) newTitle << " [NO OUTPUT]";
 	newTitle << TEXT(" [FPS: ");
 	newTitle << System.getFPSSmooth();
