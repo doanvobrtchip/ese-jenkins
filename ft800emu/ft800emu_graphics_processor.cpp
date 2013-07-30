@@ -68,13 +68,6 @@
 #define FT800EMU_DL_MACRO 37
 #define FT800EMU_DL_CLEAR 38
 
-#define FT800EMU_DEBUG_AA 0
-#define FT800EMU_DEBUG_LINES_WITHOUT_ENDINGS 0
-#define FT800EMU_DEBUG_DISABLE_OVERLAP 0
-#define FT800EMU_DEBUG_LINES_SHIFT_HACK 1
-#define FT800EMU_DEBUG_ALPHA_MUL 0
-#define FT800EMU_DEBUG_RECTS_MATH 0
-
 namespace FT800EMU {
 
 GraphicsProcessorClass GraphicsProcessor;
@@ -813,6 +806,7 @@ __forceinline int getLayoutWidth(const int &format, const int &stride)
 
 #pragma region Primitive: Rects
 
+#define FT800EMU_DEBUG_RECTS_MATH 0
 #define FT800EMU_RECTS_FT800_COORDINATES 1
 
 struct RectsState
@@ -2726,12 +2720,6 @@ EvaluateDisplayListValue:
 		}
 DisplayListDisplay:
 		;
-#if FT800EMU_DEBUG_ALPHA_MUL
-		for (uint32_t x = 0; x < hsize; ++x)
-		{
-			bc[x] = mulalpha(bc[x], bc[x] >> 24) | 0xFF000000;
-		}
-#endif
 		if (s_DebugMode)
 		{
 			switch (s_DebugMode)
