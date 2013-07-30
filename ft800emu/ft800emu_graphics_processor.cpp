@@ -1875,7 +1875,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 __forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
 {
 	const int yr = y - y1;
-	return x1 + (xd * yr / yd);
+	return x1 + ((int64_t)xd * (int64_t)yr / (int64_t)yd);
 }
 
 void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x1, const int y1, const int x2, const int y2)
@@ -1915,7 +1915,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			const int qy2 = y2 << 4;
 			const int qxd = qx2 - qx1; // X-dist, 256 scale
 			const int qyd = qy2 - qy1; // Y-dist, 256 scale
-			const int qlensq = (qxd * qxd) + (qyd * qyd); // Length squared, 256*256 scale
+			const int64_t qlensq = ((int64_t)qxd * (int64_t)qxd) + ((int64_t)qyd * (int64_t)qyd); // Length squared, 256*256 scale
 			const int qlen = (int)sqrt((double)qlensq); // Length, 256 scale
 			// Use (... * qlen) / qyd
 
@@ -1935,8 +1935,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				// Line width boundaries in 256 scale
 				const int qlw = lw << 4; // Line width 256 scale
-				const int qwdo = ((qlw + 128) * qlen) / qyd; // Distance from center for outer boundary (always positive)
-				const int qwdi = ((qlw - 128) * qlen) / qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
+				const int qwdo = ((int64_t)(qlw + 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
+				const int qwdi = ((int64_t)(qlw - 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
 	#if FT800EMU_LINE_DEBUG_MATH
 				if (qwdo <= 0) printf("qwdo <= 0\n");
 				if (qwdi <= 0) printf("qwdi <= 0\n");
@@ -2151,7 +2151,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				// Render as if 1 pixel width and multiply the alpha to reduce.
 
 				// Line width boundaries in 256 scale
-				const int qwdo = ((256) * qlen) / qyd; // Distance from center for outer boundary (always positive)
+				const int qwdo = ((int64_t)(256) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
 #if FT800EMU_LINE_DEBUG_MATH
 				if (qwdo <= 0) printf("qwdo <= 0\n");
 #endif

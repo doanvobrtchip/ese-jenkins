@@ -47,6 +47,14 @@ void setup()
 	dli = RAM_DL;
 	// dl(CLEAR_COLOR_RGB(0, 64, 128));
 	dl(CLEAR(1, 1, 1)); // clear screen
+
+	dl(BEGIN(LINES));
+	dl(LINE_WIDTH(160));
+	dl(COLOR_RGB(105, 238, 100));
+	dl(VERTEX2F(2367, 58));
+	dl(VERTEX2F(8223, 409));
+	dl(END());
+
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
