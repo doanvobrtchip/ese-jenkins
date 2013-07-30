@@ -45,7 +45,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	// f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	f = fopen("../reference/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_params.0.vc1dump", "rb"); // ok
@@ -56,7 +56,7 @@ void setup()
 	// f = fopen("../reference/dumps/test_alpha_comparisons.0.vc1dump", "rb");
 	// f = fopen("../reference/dumps/test_blending.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_cell_handle.0.vc1dump", "rb"); // ok
-	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // missing some todo bits
+	// f = fopen("../reference/dumps/test_jump.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_call.0.vc1dump", "rb"); // idem
 	// f = fopen("../reference/dumps/test_blend_illegal.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_bm_subpixel.0.vc1dump", "rb"); // ok
@@ -83,10 +83,9 @@ void setup()
 	// f = fopen("../reference/dumps/test_ram.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_mem_exhaustive.0.vc1dump", "rb"); // looks ok
 	// f = fopen("../reference/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
-	// f = fopen("../reference/dumps/test_scissor_connected.0.vc1dump", "rb"); // todo
-	// f = fopen("../reference/dumps/test_scissor_max.0.vc1dump", "rb"); // looks good so far, missing some todo lines
-	// f = fopen("../reference/dumps/test_scissor_overlap.0.vc1dump", "rb"); // looks good so far, missing some todo lines
-	// f = fopen("../reference/dumps/test_stencil_ops.0.vc1dump", "rb"); // todo, not ok, and runs dead slow
+	// f = fopen("../reference/dumps/test_scissor_connected.0.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_scissor_max.0.vc1dump", "rb"); // seems ok
+	// f = fopen("../reference/dumps/test_scissor_overlap.0.vc1dump", "rb"); // seems ok
 	// f = fopen("../reference/dumps/test_rects.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_rects_offscreen.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_edge_polygon.0.vc1dump", "rb");
@@ -96,7 +95,11 @@ void setup()
 	// f = fopen("../reference/dumps/test_lines_xy.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_line_width.0.vc1dump", "rb"); // ok
 	// f = fopen("../reference/dumps/test_line_wide_offscreen.0.vc1dump", "rb"); // seems ok
-	f = fopen("../reference/dumps/test_line_scatter.3.vc1dump", "rb");
+	// f = fopen("../reference/dumps/test_line_scatter.3.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_line_scatter.2.vc1dump", "rb"); // ok
+	// f = fopen("../reference/dumps/test_line_gradients.0.vc1dump", "rb"); // technically ok, close enough aa
+	// f = fopen("../reference/dumps/test_line_extreme.0.vc1dump", "rb"); // technically ok, close enough aa
+	// f = fopen("../reference/dumps/test_stencil_ops.0.vc1dump", "rb"); // not ok, todo check the bitmap
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

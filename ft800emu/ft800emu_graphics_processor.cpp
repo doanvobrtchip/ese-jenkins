@@ -2609,7 +2609,6 @@ EvaluateDisplayListValue:
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:
-				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 				{
 					int px = ((v >> 21) & 0x1FF) * 16;
 					int py = ((v >> 12) & 0x1FF) * 16;
@@ -2665,8 +2664,7 @@ EvaluateDisplayListValue:
 					}
 				}
 				break;
-			case FT800EMU_DL_VERTEX2F:				
-				if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
+			case FT800EMU_DL_VERTEX2F:
 				{
 					int px = (v >> 15) & 0x3FFF;
 					if ((v >> 15) & 0x4000) px = px - 0x4000;
