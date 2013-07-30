@@ -14,10 +14,20 @@
 // #include <...>
 #include "ft800emu_graphics_processor.h"
 
+#define FT800EMU_SSE41_INSTRUCTIONS 1
+#define FT800EMU_SSE41_INSTRUCTIONS_ALL 0 // Slightly slower code, no performance improvement, just for testing
+#define FT800EMU_SSE41_INSTRUCTIONS_USE 1 // Faster code, up to 40% faster depending on the used features
+#define FT800EMU_FORCE_INLINE __forceinline
+
 // System includes
 #include <stdio.h>
 #include <math.h>
 #include <stack>
+#if FT800EMU_SSE41_INSTRUCTIONS
+#	include <xmmintrin.h>
+#	include <emmintrin.h>
+#	include <smmintrin.h>
+#endif
 
 // Project includes
 #include "ft800emu_memory.h"
@@ -173,67 +183,145 @@ BitmapInfo s_BitmapInfo[32];
 
 #pragma region Math
 
-__forceinline unsigned int div255(const int &value)
+#if FT800EMU_SSE41_INSTRUCTIONS
+	
+// Here's a nice reference table with all the intrinsics listed:
+// http://www.taffysoft.com/pages/20120418-01.html
+
+FT800EMU_FORCE_INLINE __m128i to_m128i(const argb8888 &value)
+{
+	const register __m128i mzero = _mm_setzero_si128();
+	register __m128i result = _mm_set1_epi32(value);
+	result = _mm_unpacklo_epi8(result, mzero);
+	result = _mm_unpacklo_epi8(result, mzero);
+	return result;
+}
+
+FT800EMU_FORCE_INLINE argb8888 to_argb8888(const __m128i &value)
+{
+	register __m128i result = _mm_packus_epi16(value, value);
+	result = _mm_packus_epi16(result, result);
+	return _mm_cvtsi128_si32(result);
+}
+
+FT800EMU_FORCE_INLINE __m128i div255(const __m128i &value)
+{
+	// There exists no integer division in SSE so we have to use these division tricks anyways.
+	static const __m128i cm257 = { 1,1,0,0, 1,1,0,0, 1,1,0,0, 1,1,0,0 };
+	const register __m128i m257 =  _mm_load_si128(&cm257);
+	register __m128i result = _mm_mullo_epi32(value, m257);
+	result = _mm_add_epi32(result, m257);
+	result = _mm_srli_epi32(result, 16);
+	return result;
+}
+
+FT800EMU_FORCE_INLINE __m128i mulalpha_argb(const __m128i &value, const int &alpha)
+{
+	const register __m128i malpha = _mm_set1_epi32(alpha);
+	register __m128i result = _mm_mullo_epi32(value, malpha);
+	result = div255(result);
+	return result;
+}
+
+FT800EMU_FORCE_INLINE __m128i mul_argb(const __m128i &left, const __m128i &right)
+{
+	register __m128i result = _mm_mullo_epi32(left, right);
+	result = div255(result);
+	return result;
+}
+
+FT800EMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &right)
+{
+	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	const register __m128i mmax = _mm_load_si128(&cmmax);
+	register __m128i result = _mm_add_epi32(left, right);
+	result = _mm_min_epi32(result, mmax);
+	return result;
+}
+
+FT800EMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
+{
+	static const __m128i cmone = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
+	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	switch (func)
+	{
+	case ZERO:
+		return _mm_setzero_si128();
+	case ONE:
+		return _mm_load_si128(&cmone);
+	case SRC_ALPHA:
+		return _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 3, 3, 3)); // test
+	case DST_ALPHA:
+		return _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)); // test
+	case ONE_MINUS_SRC_ALPHA:
+		return _mm_sub_epi32(_mm_load_si128(&cmmax), _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 3, 3, 3)));
+	case ONE_MINUS_DST_ALPHA:
+		return _mm_sub_epi32(_mm_load_si128(&cmmax), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
+	}
+	printf("Invalid blend func (sse)\n");
+	return _mm_load_si128(&cmone);
+}
+
+
+#endif
+
+FT800EMU_FORCE_INLINE unsigned int div255(const int &value)
 {
 	return (value * 257 + 257) >> 16;
 }
 
-__forceinline unsigned int mul255div63(const int &value)
+FT800EMU_FORCE_INLINE unsigned int mul255div63(const int &value)
 {
 	return ((value * 16575) + 65) >> 12;
 }
 
-__forceinline unsigned int mul255div31(const int &value)
+FT800EMU_FORCE_INLINE unsigned int mul255div31(const int &value)
 {
 	return ((value * 8415) + 33) >> 10;
 }
 
-__forceinline unsigned int mul255div3(const int &value)
+FT800EMU_FORCE_INLINE unsigned int mul255div7(const int &value)
+{
+	// Slightly noticeable loss of accuracy but also noticably faster.
+	return ((value * 2295) + 9) >> 6;
+}
+
+FT800EMU_FORCE_INLINE unsigned int mul255div3(const int &value)
 {
 	return value * 85;
 }
 
-__forceinline argb8888 mulalpha(const argb8888 &value, const int &alpha)
+FT800EMU_FORCE_INLINE argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 {
-	// todo optimize!
-	argb8888 result = div255(((value & 0x00FF0000) >> 16) * alpha);
-	result <<= 8;
-	result |= div255(((value & 0x0000FF00) >> 8) * alpha);
-	result <<= 8;
-	result |= div255((value & 0x000000FF) * alpha);
-	return result;
-}
-
-__forceinline argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
-{
-	// todo optimize!
+#if FT800EMU_SSE41_INSTRUCTIONS_ALL
+	return to_argb8888(mulalpha_argb(to_m128i(value), alpha));
+#else
 	const argb8888 result = (div255(((value & 0xFF000000) >> 24) * alpha) << 24)
 		| (div255(((value & 0x00FF0000) >> 16) * alpha) << 16)
 		| (div255(((value & 0x0000FF00) >> 8) * alpha) << 8)
 		| (div255((value & 0x000000FF) * alpha) & 0x000000FF);
 	return result;
+#endif
 }
 
-__forceinline argb8888 mulalpha_alpha(const argb8888 &value, const int &alpha)
+FT800EMU_FORCE_INLINE argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
 {
-	// todo optimize!
-	const argb8888 result = (div255(((value & 0xFF000000) >> 24) * alpha) << 24)
-		| value & 0x00FFFFFF;
-	return result;
-}
-
-__forceinline argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
-{
-	// todo optimize!
+#if FT800EMU_SSE41_INSTRUCTIONS_ALL
+	return to_argb8888(mul_argb(to_m128i(left), to_m128i(right)));
+#else
 	argb8888 result = (div255((left >> 24) * (right >> 24)) << 24)
 		| (div255(((left >> 16) & 0xFF) * ((right >> 16) & 0xFF)) << 16)
 		| (div255(((left >> 8) & 0xFF) * ((right >> 8) & 0xFF)) << 8)
 		| div255((left & 0xFF) * (right & 0xFF));
 	return result;
+#endif
 }
 
-__forceinline argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right)
+FT800EMU_FORCE_INLINE argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right)
 {
+#if FT800EMU_SSE41_INSTRUCTIONS_ALL
+	return to_argb8888(add_argb_safe(to_m128i(left), to_m128i(right)));
+#else
 	// add rgb and handle overflow
 	const argb8888 ag = ((left & 0xFF00FF00) >> 8) + ((right & 0xFF00FF00) >> 8);
 	const argb8888 rb = (left & 0x00FF00FF) + (right & 0x00FF00FF);
@@ -242,18 +330,19 @@ __forceinline argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right
 	const argb8888 agover = (ag & 0x01000100) * 0xFF;
 	const argb8888 rbover = ((rb & 0x01000100) * 0xFF) >> 8;
 	return (agclip | agover) + (rbover | rbclip);
+#endif
 }
 
 #pragma endregion
 
 #pragma region Write Buffer
 
-__forceinline void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
+FT800EMU_FORCE_INLINE void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
 }
 
-__forceinline bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs, const int &x)
+FT800EMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs, const int &x)
 {
 	switch (gs.StencilFunc)
 	{
@@ -280,7 +369,7 @@ __forceinline bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs
 	}
 }
 
-__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
+FT800EMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
 {
 	bool result = testStencilNoWrite(gs, bs, x);	
 	switch (result ? gs.StencilOpPass : gs.StencilOpFail)
@@ -310,39 +399,18 @@ __forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &
 	return result;
 }
 
-__forceinline bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x, const bool &write)
+FT800EMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x, const bool &write)
 {
 	return write ? testStencil(gs, bs, x) : testStencilNoWrite(gs, bs, x);
 }
 
-__forceinline argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
+FT800EMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
 	uint32_t result = static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
 	return result;
 }
 
-__forceinline int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
-{
-	switch (func)
-	{
-	case ZERO:
-		return 0;
-	case ONE:
-		return 255;
-	case SRC_ALPHA:
-		return src >> 24;
-	case DST_ALPHA:
-		return dst >> 24;
-	case ONE_MINUS_SRC_ALPHA:
-		return 255 - (src >> 24);
-	case ONE_MINUS_DST_ALPHA:
-		return 255 - (dst >> 24);
-	}
-	printf("Invalid blend func\n");
-	return 255;
-}
-
-__forceinline bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
+FT800EMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
 {
 	switch (gs.AlphaFunc)
 	{
@@ -367,10 +435,44 @@ __forceinline bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
 	return true;
 }
 
-__forceinline argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
+FT800EMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
 {
+	switch (func)
+	{
+	case ZERO:
+		return 0;
+	case ONE:
+		return 255;
+	case SRC_ALPHA:
+		return src >> 24;
+	case DST_ALPHA:
+		return dst >> 24;
+	case ONE_MINUS_SRC_ALPHA:
+		return 255 - (src >> 24);
+	case ONE_MINUS_DST_ALPHA:
+		return 255 - (dst >> 24);
+	}
+	printf("Invalid blend func\n");
+	return 255;
+}
+
+FT800EMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
+{
+#if FT800EMU_SSE41_INSTRUCTIONS_USE // > 10% faster
+	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	const register __m128i mmax = _mm_load_si128(&cmmax);
+	const register __m128i msrc = to_m128i(src);
+	const register __m128i mdst = to_m128i(dst);
+	const register __m128i srca = getAlphaSplat(gs.BlendFuncSrc, msrc, mdst);
+	const register __m128i dsta = getAlphaSplat(gs.BlendFuncDst, msrc, mdst);
+	register __m128i result = div255(_mm_add_epi32(_mm_mullo_epi32(msrc, srca), _mm_mullo_epi32(mdst, dsta)));
+	result = _mm_min_epi32(result, mmax);
+	return (to_argb8888(result) & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
+#else
 	argb8888 result = add_argb_safe(mulalpha_argb(src, getAlpha(gs.BlendFuncSrc, src, dst)), mulalpha_argb(dst, getAlpha(gs.BlendFuncDst, src, dst)));
 	return (result & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
+#endif
+
 }
 
 #pragma endregion
@@ -494,7 +596,7 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 // Only used for 4 pixels at most in a primitive.
 // Only used with point size of 16 or larger.
 // Only used on the AA border itself.
-__forceinline int getPointAlpha256(const int ps, const int x, const int y, const int px, const int py)
+FT800EMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int y, const int px, const int py)
 {
 	const int pssq = ps * ps; // Point size 1/16 squared
 	const int psin = ps - 8; // Inner point size 1/16
@@ -519,7 +621,7 @@ __forceinline int getPointAlpha256(const int ps, const int x, const int y, const
 
 #pragma region Primitive: Bitmap
 
-__forceinline bool wrap(int &value, const int &max, const int &type)
+FT800EMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 {
 	switch (type)
 	{
@@ -539,20 +641,20 @@ static const argb8888 s_VGAPalette[] =
 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF, 
 };
 
-__forceinline const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
+FT800EMU_FORCE_INLINE const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
 {
 	const int i = (srci + idx) & 0xFFFFF;
 	return ram[i];
 }
 
-__forceinline const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
+FT800EMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
 {
 	const int i = (srci + idx) & 0xFFFFE;
 	return ram[i];
 }
 
 // uses pixel units
-__forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
+FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
 	if (!wrap(x, width, wrapx)) return 0x00000000;
 	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
@@ -589,8 +691,8 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, i
 		{
 			uint8_t val = bmpSrc8(ram, srci, py + x);
 			return 0xFF000000 // todo opt
-				| (((val >> 5) * 255 / 7) << 16)
-				| ((((val >> 2) & 0x7) * 255 / 7) << 8)
+				| (mul255div7(val >> 5) << 16)
+				| (mul255div7((val >> 2) & 0x7) << 8)
 				| mul255div3(val & 0x3);
 		}
 	case ARGB2:
@@ -660,7 +762,7 @@ __forceinline argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, i
 }
 
 // uses 1/(256*16) pixel units, w & h in pixel units
-__forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
+FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
 {
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
@@ -707,12 +809,22 @@ __forceinline argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, con
 				int yat = 255 - yab;
 				int xr = xl + 1;
 				int yb = yt + 1;
-				// todo optimize
+#if FT800EMU_SSE41_INSTRUCTIONS_USE
+				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy));
+				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy));
+				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy));
+				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, width, height, format, stride, wrapx, wrapy));
+				const __m128i top = _mm_add_epi32(mulalpha_argb(tl, xal), mulalpha_argb(tr, xar));
+				const __m128i btm = _mm_add_epi32(mulalpha_argb(bl, xal), mulalpha_argb(br, xar));
+				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
+				return to_argb8888(result);
+#else
 				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
 					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
 				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
 					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
+#endif
 			}
 		}
 	}
@@ -781,7 +893,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
-__forceinline int getLayoutWidth(const int &format, const int &stride)
+FT800EMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 {
 	switch (format)
 	{
@@ -1568,7 +1680,7 @@ public:
 	int X1, Y1;
 };
 
-__forceinline int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
+FT800EMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
 {
 	const int xd = x2 - x1;
 	const int yd = y2 - y1;
@@ -1866,7 +1978,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 #define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 0
 #define FT800EMU_LINE_DEBUG_MATH 0
 
-__forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
+FT800EMU_FORCE_INLINE int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
 {
 	const int yr = y - y1;
 	return x1 + ((int64_t)xd * (int64_t)yr / (int64_t)yd);
