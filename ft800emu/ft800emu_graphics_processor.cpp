@@ -440,12 +440,12 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 				{
 					if (psin > 0)
 					{
-							const argb8888 out = gs.ColorARGB;
-							if (testAlpha(gs, out))
-							{
-								bc[x] = blend(gs, out, bc[x]);
-								writeTag(gs, bt, x);
-							}
+						const argb8888 out = gs.ColorARGB;
+						if (testAlpha(gs, out))
+						{
+							bc[x] = blend(gs, out, bc[x]);
+							writeTag(gs, bt, x);
+						}
 					}
 					else // Small point in single pixel
 					{
@@ -2210,7 +2210,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 #define FT800EMU_LINE_DEBUG_DRAW 0
 #define FT800EMU_LINE_DEBUG_DRAW_FILL 0
-#define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 1
+#define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 0
 #define FT800EMU_LINE_DEBUG_MATH 1
 
 __forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
@@ -2252,7 +2252,12 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 	if (max(y1lw_px, scy1) <= y && y < min(y2lw_px, scy2)) // Scissor Y
 	{	
-		if (x1 - x2 == 0 || y1 - y2 == 0) // Horizontal and vertical lines
+		if (x1 - x2 == 0 && y1 - y2 == 0) // This line is a point
+		{
+			// Use point rendering
+			displayPoint(gs, lw, gs.ScissorX.I, scy1, gs.ScissorX2.I, scy2, bc, bs, bt, y, x1, y1);
+		}
+		if (x1 - x2 == 0 || y1 - y2 == 0) // Horizontal or vertical lines
 		{
 			// Just use the rects optimized codepath for this
 			// printf("Not implemented horizontal or vertical line\n");
@@ -2373,6 +2378,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
 								bc[x] = 0xFFFF00FF;
 #endif
+								blendleft = findx(256, 0, ql1o, ql1i, qxc);
+								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1, y1);
 							}
 							else
 							{
@@ -2384,6 +2391,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
 								bc[x] = 0xFFFF00FF;
 #endif
+								blendright = findx(0, 256, ql2i, ql2o, qxc);
+								alpharight = blendright * getPointAlpha256(lw, x, y, x2, y2);
 							}
 							else
 							{
@@ -2393,7 +2402,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 							const int alpharest = 256 - blendleft - blendright;
 
-							const int outalpha =  ((gs.ColorARGB >> 24) * alphawidth) >> 8;
+							const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
 							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
 							if (testAlpha(gs, out))
 							{
@@ -2408,7 +2417,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int left_sc = max(scx1, max(w1i, l1o)); // Left included
 					const int right_sc = min(scx2, min(w2i, l2o));  // Right excluded
-
+						
 					for (int x = left_sc; x < right_sc; ++x)
 					{
 						if (testStencil(gs, bs, x))
@@ -2430,45 +2439,52 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						const int qxc = x << 8; // Current x in 256 scale
-						const int alphawidth = findx(256, 0, qw2i, qw2o, qxc); // Alpha 256
-
-						int blendleft;
-						int alphaleft;
-						int blendright;
-						int alpharight;
-
-						if (x < l1i) // Blend with left length boundary and circle
+						if (testStencil(gs, bs, x))
 						{
+							const int qxc = x << 8; // Current x in 256 scale
+							const int alphawidth = findx(256, 0, qw2i, qw2o, qxc); // Alpha 256
+
+							int blendleft;
+							int alphaleft;
+							int blendright;
+							int alpharight;
+
+							if (x < l1i) // Blend with left length boundary and circle
+							{
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-							bc[x] = 0xFFFF00FF;
+								bc[x] = 0xFFFF00FF;
 #endif
-						}
-						else
-						{
-							blendleft = 0;
-							alphaleft = 0;
-						}
-						if (x >= l2i) // Blend with right length boundary and circle
-						{
+								blendleft = findx(256, 0, ql1o, ql1i, qxc);
+								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1, y1);
+							}
+							else
+							{
+								blendleft = 0;
+								alphaleft = 0;
+							}
+							if (x >= l2i) // Blend with right length boundary and circle
+							{
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-							bc[x] = 0xFFFF00FF;
+								bc[x] = 0xFFFF00FF;
 #endif
-						}
-						else
-						{
-							blendright = 0;
-							alpharight = 0;
-						}
+								blendright = findx(0, 256, ql2i, ql2o, qxc);
+								alpharight = blendright * getPointAlpha256(lw, x, y, x2, y2);
+							}
+							else
+							{
+								blendright = 0;
+								alpharight = 0;
+							}
 
-						const int alpharest = 256 - blendleft - blendright;
+							const int alpharest = 256 - blendleft - blendright;
 
-						const int outalpha =  ((gs.ColorARGB >> 24) * alphawidth) >> 8;
-						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-						if (testAlpha(gs, out))
-						{
-							bc[x] = blend(gs, out, bc[x]);
-							writeTag(gs, bt, x);
+							const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
+							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+							if (testAlpha(gs, out))
+							{
+								bc[x] = blend(gs, out, bc[x]);
+								writeTag(gs, bt, x);
+							}
 						}
 					}
 				}
