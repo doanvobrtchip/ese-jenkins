@@ -16,7 +16,7 @@
 
 #define FT800EMU_SSE41_INSTRUCTIONS 1
 #define FT800EMU_SSE41_INSTRUCTIONS_ALL 0 // Slightly slower code, no performance improvement, just for testing
-#define FT800EMU_SSE41_INSTRUCTIONS_USE 1 // Faster code, up to 40% faster depending on the used features
+#define FT800EMU_SSE41_INSTRUCTIONS_USE 1 // Faster code, up to 40% faster depending on the used features (slower in debug, though)
 #define FT800EMU_FORCE_INLINE __forceinline
 
 // System includes
@@ -278,6 +278,11 @@ FT800EMU_FORCE_INLINE unsigned int mul255div63(const int &value)
 FT800EMU_FORCE_INLINE unsigned int mul255div31(const int &value)
 {
 	return ((value * 8415) + 33) >> 10;
+}
+
+FT800EMU_FORCE_INLINE unsigned int mul255div15(const int &value)
+{
+	return ((value * 4335) + 17) >> 8;
 }
 
 FT800EMU_FORCE_INLINE unsigned int mul255div7(const int &value)
@@ -664,7 +669,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case ARGB1555:
 		{
 			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
-			return (((val >> 15) * 255) << 24) // todo opt
+			return (((val >> 15) * 255) << 24)
 				| (mul255div31((val >> 10) & 0x1F) << 16)
 				| (mul255div31((val >> 5) & 0x1F) << 8)
 				| mul255div31(val & 0x1F);
@@ -673,24 +678,24 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		{
 			int val = (bmpSrc8(ram, srci, py + (x >> 3)) >> (7 - (x % 8))) & 0x1;
 			val *= 255;
-			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF;
 		}
 	case L4:
 		{
 			int val = (bmpSrc8(ram, srci, py + (x >> 1)) >> (((x + 1) % 2) << 2)) & 0xF;
 			val *= 255;
 			val /= 15; // todo opt
-			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF;
 		}
 	case L8:
 		{
 			uint8_t val = bmpSrc8(ram, srci, py + x);
-			return (val << 24) | 0x00FFFFFF; // todo: check alpha behaviour
+			return (val << 24) | 0x00FFFFFF;
 		}
 	case RGB332:
 		{
 			uint8_t val = bmpSrc8(ram, srci, py + x);
-			return 0xFF000000 // todo opt
+			return 0xFF000000
 				| (mul255div7(val >> 5) << 16)
 				| (mul255div7((val >> 2) & 0x7) << 8)
 				| mul255div3(val & 0x3);
@@ -698,7 +703,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case ARGB2:
 		{
 			uint8_t val = bmpSrc8(ram, srci, py + x);
-			return (((val >> 6) * 255 / 3) << 24) // todo opt
+			return (((val >> 6) * 255 / 3) << 24)
 				| (mul255div3((val >> 4) & 0x3) << 16)
 				| (mul255div3((val >> 2) & 0x3) << 8)
 				| mul255div3(val & 0x3);
@@ -706,10 +711,10 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case ARGB4:
 		{
 			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
-			return (((val >> 12) * 255 / 15) << 24) // todo opt
-				| ((((val >> 8) & 0xF) * 255 / 15) << 16)
-				| ((((val >> 4) & 0xF) * 255 / 15) << 8)
-				| ((val & 0xF) * 255 / 15);
+			return (mul255div15(val >> 12) << 24)
+				| (mul255div15((val >> 8) & 0xF) << 16)
+				| (mul255div15((val >> 4) & 0xF) << 8)
+				| (mul255div15(val & 0xF));
 		}
 	case RGB565:
 		{
@@ -921,15 +926,15 @@ FT800EMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 #define FT800EMU_DEBUG_RECTS_MATH 0
 #define FT800EMU_RECTS_FT800_COORDINATES 1
 
-struct RectsState
+struct VertexState
 {
 public:
-	RectsState() : Set(false) { }
+	VertexState() : Set(false) { }
 	bool Set;
 	int X1, Y1;
 };
 
-void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x1, const int y1, const int x2, const int y2)
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
 {
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
 
@@ -1633,7 +1638,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
-void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
 	{
@@ -1672,14 +1677,6 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 // Only works for L and R
 #define FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR 0
 
-struct EdgeStripState
-{
-public:
-	EdgeStripState() : Set(false) { }
-	bool Set;
-	int X1, Y1;
-};
-
 FT800EMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
 {
 	const int xd = x2 - x1;
@@ -1688,7 +1685,7 @@ FT800EMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, con
 	return x1 + (xd * yr / yd);
 }
 
-void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
 	{
@@ -1748,7 +1745,7 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	}
 }
 
-void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
 	{
@@ -1808,7 +1805,7 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	}
 }
 
-void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
 	{
@@ -1886,7 +1883,7 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	}
 }
 
-void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, EdgeStripState &ess, const int xp, const int yp)
+void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 
 	if (!ess.Set)
@@ -1984,7 +1981,7 @@ FT800EMU_FORCE_INLINE int findxrel(const int &x1, const int &xd, const int &y1, 
 	return x1 + ((int64_t)xd * (int64_t)yr / (int64_t)yd);
 }
 
-void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x1, const int y1, const int x2, const int y2)
+void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
 {
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
 	const int y1lw = y1 - lw; // Y coordinates plus linewidth in 1/16 pixel
@@ -2338,7 +2335,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
-void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
 	{
@@ -2365,7 +2362,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 #pragma region Primitive: Line Strip
 
-void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
 	{
@@ -2448,8 +2445,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	// TODO: option for multicore rendering
 	for (uint32_t y = 0; y < vsize; ++y)
 	{
-		RectsState rs = RectsState();
-		EdgeStripState ess = EdgeStripState();
+		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
 		std::stack<GraphicsState> gsstack;
@@ -2641,20 +2637,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_BEGIN:
 					primitive = v & 0x0F;
-					switch (primitive)
-					{
-					case EDGE_STRIP_R:
-					case EDGE_STRIP_L:
-					case EDGE_STRIP_A:
-					case EDGE_STRIP_B:
-						ess.Set = false;
-						break;
-					case LINE_STRIP:
-					case LINES:
-					case RECTS:
-						rs.Set = false;
-						break;
-					}
+					vs.Set = false;
 					break;
 				case FT800EMU_DL_COLOR_MASK:
 					gs.ColorMaskARGB = (((v >> 1) & 0x1) * 0xFF)
@@ -2721,51 +2704,33 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap(gs, bc, bs, bt, y, hsize, 
-							px, 
-							py,
+						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
 							((v >> 7) & 0x1F),
 							v & 0x7F);
 						break;
 					case POINTS:
-						displayPoint(gs, bc, bs, bt, y, hsize, 
-							px, 
-							py);
+						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						displayLines(gs, bc, bs, bt, y, hsize, rs, 
-							px, 
-							py);
+						displayLines(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip(gs, bc, bs, bt, y, hsize, rs, 
-							px, 
-							py);
+						displayLineStrip(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_R:
-						displayEdgeStripR(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripR(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripL(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						displayEdgeStripA(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripA(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						displayEdgeStripB(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripB(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						displayRects(gs, bc, bs, bt, y, hsize, rs, 
-							px, 
-							py);
+						displayRects(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
@@ -2779,51 +2744,33 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap(gs, bc, bs, bt, y, hsize, 
-							px, 
-							py, 
+						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
 							gs.BitmapHandle, 
 							gs.Cell);
 						break;
 					case POINTS:
-						displayPoint(gs, bc, bs, bt, y, hsize, 
-							px, 
-							py);
+						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						displayLines(gs, bc, bs, bt, y, hsize, rs, 
-							px, 
-							py);
+						displayLines(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip(gs, bc, bs, bt, y, hsize, rs,  
-							px, 
-							py);
+						displayLineStrip(gs, bc, bs, bt, y, hsize, vs,  px, py);
 						break;
 					case EDGE_STRIP_R:
-						displayEdgeStripR(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripR(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						displayEdgeStripL(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripL(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						displayEdgeStripA(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripA(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						displayEdgeStripB(gs, bc, bs, bt, y, hsize, ess, 
-							px, 
-							py);
+						displayEdgeStripB(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						displayRects(gs, bc, bs, bt, y, hsize, rs, 
-							px, 
-							py);
+						displayRects(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
