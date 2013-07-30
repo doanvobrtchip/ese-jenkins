@@ -193,8 +193,8 @@ void setup()
 
 
  // LINE_STRIP
-
-/*	dl(COLOR_A(128));
+/*
+dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
 dl( BEGIN(LINE_STRIP) );
 dl(LINE_WIDTH(160));
@@ -210,11 +210,45 @@ dl( VERTEX2F(160 * 16, 50 * 16) );
 dl( VERTEX2F(240 * 16, 70 * 16) );
 dl( VERTEX2F(250 * 16, 100 * 16) );
 dl( VERTEX2F(350 * 16, 200 * 16) );
+	dl(END());
+*/
+	dl(COLOR_A(128));
+dl( COLOR_RGB(0, 128, 255) );
+dl( BEGIN(LINES) );
+dl(LINE_WIDTH(160));
+dl( VERTEX2F(5 * 16, 5 * 16) );
+dl( VERTEX2F(50 * 16, 30 * 16) );
+dl( VERTEX2F(63 * 16, 50 * 16) );
+dl( VERTEX2F(73 * 16, 100 * 16) );
+
+dl( VERTEX2F(200 * 16, 150 * 16) );
+dl( VERTEX2F(150 * 16, 100 * 16) );
+dl( VERTEX2F(160 * 16, 50 * 16) );
+dl( VERTEX2F(240 * 16, 70 * 16) );
+dl( VERTEX2F(250 * 16, 100 * 16) );
+dl( VERTEX2F(350 * 16, 200 * 16) );
+	dl(END());
+
+/*
+dl( BEGIN(LINES) );
+
+dl( VERTEX2F(73 * 16, 200 * 16) );
+dl( VERTEX2F(150 * 16, 200 * 16) );
+
+dl( VERTEX2F(200 * 16, 200 * 16) );
+dl( VERTEX2F(300 * 16, 201 * 16) );
+
 	dl(END());*/
 
+dl( BEGIN(RECTS) );
 
+dl( VERTEX2F(400 * 16, 73 * 16) );
+dl( VERTEX2F(400 * 16, 150 * 16) );
 
+dl( VERTEX2F(400 * 16, 170 * 16) );
+dl( VERTEX2F(401 * 16, 250 * 16) );
 
+	dl(END());
 
 
 /*

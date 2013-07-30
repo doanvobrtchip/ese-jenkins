@@ -1164,33 +1164,8 @@ public:
 	int X1, Y1;
 };
 
-void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int x1, const int y1, const int x2, const int y2)
 {
-	if (!rs.Set)
-	{
-		rs.X1 = xp;
-		rs.Y1 = yp;
-		rs.Set = true;
-		return;
-	}
-
-#if FT800EMU_RECTS_FT800_COORDINATES // Coordinate correction for the drawing code
-	const int x1r = rs.X1 + 8; // Coordinates in 1/16 pixel
-	const int y1r = rs.Y1 + 8;
-	const int x2r = xp + 8;
-	const int y2r = yp + 8;
-	const int x1 = min(x1r, x2r);
-	const int x2 = max(x1r, x2r);
-	const int y1 = min(y1r, y2r);
-	const int y2 = max(y1r, y2r);
-#else // Test version for the drawing code
-	const int x1 = rs.X1; // Coordinates in 1/16 pixel
-	const int y1 = rs.Y1;
-	const int x2 = xp;
-	const int y2 = yp;
-#endif
-	rs.Set = false;
-
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
 
 	const int x1lw = x1 - lw; // Coordinates plus linewidth in 1/16 pixel
@@ -1893,6 +1868,36 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
+void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+{
+	if (!rs.Set)
+	{
+		rs.X1 = xp;
+		rs.Y1 = yp;
+		rs.Set = true;
+		return;
+	}
+
+#if FT800EMU_RECTS_FT800_COORDINATES // Coordinate correction for the drawing code
+	const int x1r = rs.X1 + 8; // Coordinates in 1/16 pixel
+	const int y1r = rs.Y1 + 8;
+	const int x2r = xp + 8;
+	const int y2r = yp + 8;
+	const int x1 = min(x1r, x2r);
+	const int x2 = max(x1r, x2r);
+	const int y1 = min(y1r, y2r);
+	const int y2 = max(y1r, y2r);
+#else // Test version for the drawing code
+	const int x1 = rs.X1; // Coordinates in 1/16 pixel
+	const int y1 = rs.Y1;
+	const int x2 = xp;
+	const int y2 = yp;
+#endif
+	rs.Set = false;
+
+	displayRects(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
+}
+
 #pragma endregion
 
 #pragma region Primitive: Edge Strip
@@ -2201,6 +2206,292 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 #pragma endregion
 
+#pragma region Primitive: Lines
+
+#define FT800EMU_LINE_DEBUG_DRAW 0
+#define FT800EMU_LINE_DEBUG_DRAW_FILL 0
+#define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 1
+#define FT800EMU_LINE_DEBUG_MATH 1
+
+__forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
+{
+	const int yr = y - y1;
+	return x1 + (xd * yr / yd);
+}
+
+void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
+{
+	// **************************************************************************************************************************************************************** DEV START
+
+	if (!rs.Set)
+	{
+		rs.X1 = xp;
+		rs.Y1 = yp;
+		rs.Set = true;
+		return;
+	}
+
+	const int x1r = rs.X1; // + 8; // Coordinates in 1/16 pixel
+	const int y1r = rs.Y1; // + 8;
+	const int x2r = xp; // + 8;
+	const int y2r = yp; // + 8;
+	const int x1 = min(x1r, x2r); // Simplify line coordinates from top-left to bottom-right
+	const int x2 = max(x1r, x2r);
+	const int y1 = min(y1r, y2r);
+	const int y2 = max(y1r, y2r);
+	rs.Set = false;
+
+	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
+	const int y1lw = y1 - lw; // Y coordinates plus linewidth in 1/16 pixel
+	const int y2lw = y2 + lw; 
+	const int y1lw_px = ((y1lw + 8) >> 4); // Top inclusive in screen pixels
+	const int y2lw_px = (((y2lw + 8) + 15) >> 4); // Bottom exclusive in screen pixels
+
+	const int scy1 = gs.ScissorY.I;
+	const int scy2 = gs.ScissorY2.I;
+
+	if (max(y1lw_px, scy1) <= y && y < min(y2lw_px, scy2)) // Scissor Y
+	{	
+		if (x1 - x2 == 0 || y1 - y2 == 0) // Horizontal and vertical lines
+		{
+			// Just use the rects optimized codepath for this
+			// printf("Not implemented horizontal or vertical line\n");
+			displayRects(gs, bc, bs, bt, y, hsize, rs, x1 + 8, y1 + 8, x2 + 8, y2 + 8);
+		}
+		else
+		{
+			const int scx1 = gs.ScissorX.I;
+			const int scx2 = gs.ScissorX2.I;
+			if (lw > 8) // Lines wider than a pixel
+			{
+				// Horizontal slice size factor based on the direction is Length / Y-dist
+				// Use 256 scale coordinates (prefix with q, because nothing uses q yet)
+				const int qx1 = x1 << 4; // Top-left, 256 scale
+				const int qy1 = y1 << 4;
+				const int qx2 = x2 << 4; // Bottom-right, 256 scale
+				const int qy2 = y2 << 4;
+				const int qxd = qx2 - qx1; // X-dist, 256 scale
+				const int qyd = qy2 - qy1; // Y-dist, 256 scale
+				const int qlensq = (qxd * qxd) + (qyd * qyd); // Length squared, 256*256 scale
+				const int qlen = (int)sqrt((double)qlensq); // Length, 256 scale
+				// Use (... * qlen) / qyd
+
+				// Current Y coord in 256 scale
+				const int qy = y << 8;
+				// Line center x coord in 256 scale
+				const int qx = findxrel(qx1, qxd, qy1, qyd, qy);
+
+#if FT800EMU_LINE_DEBUG_DRAW
+				{
+					const int x = qx >> 8;
+					if (x > 0) bc[x] = 0xFFFF0080;
+				}
+#endif
+
+				// Line width boundaries in 256 scale
+				const int qlw = lw << 4; // Line width 256 scale
+				const int qwdo = ((qlw + 128) * qlen) / qyd; // Distance from center for outer boundary (always positive)
+				const int qwdi = ((qlw - 128) * qlen) / qyd; // Distance from center for inner boundary (always positive)
+#if FT800EMU_LINE_DEBUG_MATH
+				if (qwdo <= 0) printf("qwdo <= 0\n");
+				if (qwdi <= 0) printf("qwdi <= 0\n");
+#endif
+				const int qw1o = qx - qwdo; // Left outer linewidth boundary in 256 scale
+				const int qw1i = qx - qwdi; // Left inner linewidth boundary in 256 scale
+				const int qw2i = qx + qwdi; // Right inner linewidth boundary in 256 scale
+				const int qw2o = qx + qwdo; // Right outer linewidth boundary in 256 scale
+
+#if FT800EMU_LINE_DEBUG_DRAW
+				{
+					int x = qw1o >> 8;
+					if (x > 0) bc[x] = 0xFF0080FF;
+					x = qw1i >> 8;
+					if (x > 0) bc[x] = 0xFF00FF80;
+					x = qw2i >> 8;
+					if (x > 0) bc[x] = 0xFF00FF80;
+					x = qw2o >> 8;
+					if (x > 0) bc[x] = 0xFF0080FF;
+				}
+#endif
+				
+				// Find the length boundaries
+				const int ql1 = findxrel(qx1, qyd, qy1, -qxd, qy); // Length boundary for top-left point in 256 scale
+				const int ql2 = findxrel(qx2, qyd, qy2, -qxd, qy); // Length boundary for bottom-right point in 256 scale
+				const int qlaa = (128 * qlen) / qxd; // AA distance
+				const int ql1o = ql1 - qlaa; // Outer and inner length boundaries
+				const int ql1i = ql1 + qlaa;
+				const int ql2i = ql2 - qlaa;
+				const int ql2o = ql2 + qlaa;
+
+#if FT800EMU_LINE_DEBUG_DRAW
+				{
+					int x = ql1o >> 8;
+					if (x > 0) bc[x] = 0xFFFF8000;
+					x = ql1i >> 8;
+					if (x > 0) bc[x] = 0xFF80FF00;
+					x = ql2i >> 8;
+					if (x > 0) bc[x] = 0xFF80FF00;
+					x = ql2o >> 8;
+					if (x > 0) bc[x] = 0xFFFF8000;
+				}
+#endif
+
+				// Convert to screen pixels
+				const int w1o = (qw1o + 255) >> 8; // Left outer linewidth boundary
+				const int w1i = (qw1i + 255) >> 8; // Left inner linewidth boundary
+				const int w2i = (qw2i + 255) >> 8; // Right inner linewidth boundary
+				const int w2o = (qw2o + 255) >> 8; // Right outer linewidth boundary
+				
+				const int l1o = (ql1o + 255) >> 8; // Left outer length boundary
+				const int l1i = (ql1i + 255) >> 8; // Left inner length boundary
+				const int l2i = (ql2i + 255) >> 8; // Right inner length boundary
+				const int l2o = (ql2o + 255) >> 8; // Right outer length boundary
+				
+				// Draw the left AA
+				{
+					const int left_sc = max(scx1, max(w1o, l1o)); // Left included
+					const int right_sc = min(scx2, min(w1i, l2o));  // Right excluded
+
+					for (int x = left_sc; x < right_sc; ++x)
+					{
+						if (testStencil(gs, bs, x))
+						{
+#if FT800EMU_LINE_DEBUG_DRAW_FILL
+							bc[x] = 0xFFFF0000;
+#endif
+
+							const int qxc = x << 8; // Current x in 256 scale
+							const int alphawidth = findx(0, 256, qw1o, qw1i, qxc); // Alpha 256
+
+							int blendleft;
+							int alphaleft;
+							int blendright;
+							int alpharight;
+
+							if (x < l1i) // Blend with left length boundary and circle
+							{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+								bc[x] = 0xFFFF00FF;
+#endif
+							}
+							else
+							{
+								blendleft = 0;
+								alphaleft = 0;
+							}
+							if (x >= l2i) // Blend with right length boundary and circle
+							{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+								bc[x] = 0xFFFF00FF;
+#endif
+							}
+							else
+							{
+								blendright = 0;
+								alpharight = 0;
+							}
+
+							const int alpharest = 256 - blendleft - blendright;
+
+							const int outalpha =  ((gs.ColorARGB >> 24) * alphawidth) >> 8;
+							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+							if (testAlpha(gs, out))
+							{
+								bc[x] = blend(gs, out, bc[x]);
+								writeTag(gs, bt, x);
+							}
+						}
+					}
+				}
+
+				// Draw the filler
+				{
+					const int left_sc = max(scx1, max(w1i, l1o)); // Left included
+					const int right_sc = min(scx2, min(w2i, l2o));  // Right excluded
+
+					for (int x = left_sc; x < right_sc; ++x)
+					{
+						if (testStencil(gs, bs, x))
+						{
+							const argb8888 out = gs.ColorARGB;
+							if (testAlpha(gs, out))
+							{
+								bc[x] = blend(gs, out, bc[x]);
+								writeTag(gs, bt, x);
+							}
+						}
+					}
+				}
+
+				// Draw right-side AA
+				{
+					const int left_sc = max(scx1, max(w2i, l1o)); // Left included
+					const int right_sc = min(scx2, min(w2o, l2o));  // Right excluded
+
+					for (int x = left_sc; x < right_sc; ++x)
+					{
+						const int qxc = x << 8; // Current x in 256 scale
+						const int alphawidth = findx(256, 0, qw2i, qw2o, qxc); // Alpha 256
+
+						int blendleft;
+						int alphaleft;
+						int blendright;
+						int alpharight;
+
+						if (x < l1i) // Blend with left length boundary and circle
+						{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+							bc[x] = 0xFFFF00FF;
+#endif
+						}
+						else
+						{
+							blendleft = 0;
+							alphaleft = 0;
+						}
+						if (x >= l2i) // Blend with right length boundary and circle
+						{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+							bc[x] = 0xFFFF00FF;
+#endif
+						}
+						else
+						{
+							blendright = 0;
+							alpharight = 0;
+						}
+
+						const int alpharest = 256 - blendleft - blendright;
+
+						const int outalpha =  ((gs.ColorARGB >> 24) * alphawidth) >> 8;
+						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+						if (testAlpha(gs, out))
+						{
+							bc[x] = blend(gs, out, bc[x]);
+							writeTag(gs, bt, x);
+						}
+					}
+				}
+
+				// Draw the points
+				{
+					displayPoint(gs, lw, scx1, scy1, min(l1o, scx2), scy2, bc, bs, bt, y, x1, y1);
+					displayPoint(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x2, y2);
+				}
+			}
+			else
+			{
+				// Todo, slightly different handling
+				printf("Not implemented line format\n");
+			}
+		}
+	}
+
+	// **************************************************************************************************************************************************************** DEV END
+}
+
+#pragma endregion
+
 }
 
 static int s_DebugMode;
@@ -2484,6 +2775,7 @@ EvaluateDisplayListValue:
 					case EDGE_STRIP_B:
 						ess.Set = false;
 						break;
+					case LINES:
 					case RECTS:
 						rs.Set = false;
 						break;
@@ -2573,6 +2865,11 @@ EvaluateDisplayListValue:
 							px, 
 							py);
 						break;
+					case LINES:
+						displayLines(gs, bc, bs, bt, y, hsize, rs, 
+							px, 
+							py);
+						break;
 					case LINE_STRIP:
 						displayLineStrip(gs, bc, bs, bt, y, hsize, lss, 
 							px
@@ -2628,6 +2925,11 @@ EvaluateDisplayListValue:
 						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, 
+							px, 
+							py);
+						break;
+					case LINES:
+						displayLines(gs, bc, bs, bt, y, hsize, rs, 
 							px, 
 							py);
 						break;
