@@ -73,7 +73,7 @@
 #define FT800EMU_DEBUG_DISABLE_OVERLAP 0
 #define FT800EMU_DEBUG_LINES_SHIFT_HACK 1
 #define FT800EMU_DEBUG_ALPHA_MUL 0
-#define FT800EMU_DEBUG_RECTS_MATH 1
+#define FT800EMU_DEBUG_RECTS_MATH 0
 
 namespace FT800EMU {
 
@@ -2211,7 +2211,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 #define FT800EMU_LINE_DEBUG_DRAW 0
 #define FT800EMU_LINE_DEBUG_DRAW_FILL 0
 #define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 0
-#define FT800EMU_LINE_DEBUG_MATH 1
+#define FT800EMU_LINE_DEBUG_MATH 0
 
 __forceinline int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
 {
@@ -2221,8 +2221,6 @@ __forceinline int findxrel(const int &x1, const int &xd, const int &y1, const in
 
 void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, RectsState &rs, const int xp, const int yp)
 {
-	// **************************************************************************************************************************************************************** DEV START
-
 	if (!rs.Set)
 	{
 		rs.X1 = xp;
@@ -2267,46 +2265,47 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		{
 			const int scx1 = gs.ScissorX.I;
 			const int scx2 = gs.ScissorX2.I;
-			if (lw > 8) // Lines wider than a pixel
-			{
-				// Horizontal slice size factor based on the direction is Length / Y-dist
-				// Use 256 scale coordinates (prefix with q, because nothing uses q yet)
-				const int qx1 = x1 << 4; // Top-left, 256 scale
-				const int qy1 = y1 << 4;
-				const int qx2 = x2 << 4; // Bottom-right, 256 scale
-				const int qy2 = y2 << 4;
-				const int qxd = qx2 - qx1; // X-dist, 256 scale
-				const int qyd = qy2 - qy1; // Y-dist, 256 scale
-				const int qlensq = (qxd * qxd) + (qyd * qyd); // Length squared, 256*256 scale
-				const int qlen = (int)sqrt((double)qlensq); // Length, 256 scale
-				// Use (... * qlen) / qyd
 
-				// Current Y coord in 256 scale
-				const int qy = y << 8;
-				// Line center x coord in 256 scale
-				const int qx = findxrel(qx1, qxd, qy1, qyd, qy);
+			// Horizontal slice size factor based on the direction is Length / Y-dist
+			// Use 256 scale coordinates (prefix with q, because nothing uses q yet)
+			const int qx1 = x1 << 4; // Top-left, 256 scale
+			const int qy1 = y1 << 4;
+			const int qx2 = x2 << 4; // Bottom-right, 256 scale
+			const int qy2 = y2 << 4;
+			const int qxd = qx2 - qx1; // X-dist, 256 scale
+			const int qyd = qy2 - qy1; // Y-dist, 256 scale
+			const int qlensq = (qxd * qxd) + (qyd * qyd); // Length squared, 256*256 scale
+			const int qlen = (int)sqrt((double)qlensq); // Length, 256 scale
+			// Use (... * qlen) / qyd
+
+			// Current Y coord in 256 scale
+			const int qy = y << 8;
+			// Line center x coord in 256 scale
+			const int qx = findxrel(qx1, qxd, qy1, qyd, qy);
 
 #if FT800EMU_LINE_DEBUG_DRAW
-				{
-					const int x = qx >> 8;
-					if (x > 0) bc[x] = 0xFFFF0080;
-				}
+			{
+				const int x = qx >> 8;
+				if (x > 0) bc[x] = 0xFFFF0080;
+			}
 #endif
 
+			if (lw > 8) // Lines wider than a pixel
+			{
 				// Line width boundaries in 256 scale
 				const int qlw = lw << 4; // Line width 256 scale
 				const int qwdo = ((qlw + 128) * qlen) / qyd; // Distance from center for outer boundary (always positive)
-				const int qwdi = ((qlw - 128) * qlen) / qyd; // Distance from center for inner boundary (always positive)
-#if FT800EMU_LINE_DEBUG_MATH
+				const int qwdi = ((qlw - 128) * qlen) / qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
+	#if FT800EMU_LINE_DEBUG_MATH
 				if (qwdo <= 0) printf("qwdo <= 0\n");
 				if (qwdi <= 0) printf("qwdi <= 0\n");
-#endif
+	#endif
 				const int qw1o = qx - qwdo; // Left outer linewidth boundary in 256 scale
 				const int qw1i = qx - qwdi; // Left inner linewidth boundary in 256 scale
 				const int qw2i = qx + qwdi; // Right inner linewidth boundary in 256 scale
 				const int qw2o = qx + qwdo; // Right outer linewidth boundary in 256 scale
 
-#if FT800EMU_LINE_DEBUG_DRAW
+	#if FT800EMU_LINE_DEBUG_DRAW
 				{
 					int x = qw1o >> 8;
 					if (x > 0) bc[x] = 0xFF0080FF;
@@ -2317,7 +2316,13 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					x = qw2o >> 8;
 					if (x > 0) bc[x] = 0xFF0080FF;
 				}
-#endif
+	#endif
+
+				// Convert to screen pixels
+				const int w1o = (qw1o + 255) >> 8; // Left outer linewidth boundary
+				const int w1i = (qw1i + 255) >> 8; // Left inner linewidth boundary
+				const int w2i = (qw2i + 255) >> 8; // Right inner linewidth boundary
+				const int w2o = (qw2o + 255) >> 8; // Right outer linewidth boundary
 				
 				// Find the length boundaries
 				const int ql1 = findxrel(qx1, qyd, qy1, -qxd, qy); // Length boundary for top-left point in 256 scale
@@ -2340,13 +2345,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					if (x > 0) bc[x] = 0xFFFF8000;
 				}
 #endif
-
-				// Convert to screen pixels
-				const int w1o = (qw1o + 255) >> 8; // Left outer linewidth boundary
-				const int w1i = (qw1i + 255) >> 8; // Left inner linewidth boundary
-				const int w2i = (qw2i + 255) >> 8; // Right inner linewidth boundary
-				const int w2o = (qw2o + 255) >> 8; // Right outer linewidth boundary
 				
+				// Convert to screen pixels
 				const int l1o = (ql1o + 255) >> 8; // Left outer length boundary
 				const int l1i = (ql1i + 255) >> 8; // Left inner length boundary
 				const int l2i = (ql2i + 255) >> 8; // Right inner length boundary
@@ -2495,15 +2495,90 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					displayPoint(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x2, y2);
 				}
 			}
-			else
+			else // Line width a pixel or less
 			{
-				// Todo, slightly different handling
-				printf("Not implemented line format\n");
+				// Slightly different handling, extend the line length by the line width, and don't draw any points.
+				// Use the minimum of the two AA borders as the alpha, multiply with length AA border if necessary.
+				// Render as if 1 pixel width and multiply the alpha to reduce.
+
+				// Line width boundaries in 256 scale
+				const int qwdo = ((256) * qlen) / qyd; // Distance from center for outer boundary (always positive)
+#if FT800EMU_LINE_DEBUG_MATH
+				if (qwdo <= 0) printf("qwdo <= 0\n");
+#endif
+				const int qw1o = qx - qwdo; // Left outer linewidth boundary in 256 scale
+				const int qwi = qx; // Inner linewidth boundary in 256 scale
+				const int qw2o = qx + qwdo; // Right outer linewidth boundary in 256 scale
+
+				// Convert to screen pixels
+				const int w1o = (qw1o + 255) >> 8; // Left outer linewidth boundary
+				const int w1i = (qwi + 255) >> 8; // Inner linewidth boundary
+				const int w2o = (qw2o + 255) >> 8; // Right outer linewidth boundary
+
+				const int qlw = lw << 4; // Line width 256 scale
+				const int qxext = (qxd * qlw) / qlen; // Extension in X direction
+				const int qyext = (qyd * qlw) / qlen; // Extension in Y direction
+
+				// Find the length boundaries
+				const int ql1 = findxrel(qx1 - qxext, qyd, qy1 - qyext, -qxd, qy); // Length boundary for top-left point in 256 scale
+				const int ql2 = findxrel(qx2 + qyext, qyd, qy2 + qyext, -qxd, qy); // Length boundary for bottom-right point in 256 scale
+				const int qlaa = (128 * qlen) / qxd; // AA distance
+				const int ql1o = ql1 - qlaa; // Outer and inner length boundaries
+				const int ql1i = ql1 + qlaa;
+				const int ql2i = ql2 - qlaa;
+				const int ql2o = ql2 + qlaa;
+
+				// Convert to screen pixels
+				const int l1o = (ql1o + 255) >> 8; // Left outer length boundary
+				const int l1i = (ql1i + 255) >> 8; // Left inner length boundary
+				const int l2i = (ql2i + 255) >> 8; // Right inner length boundary
+				const int l2o = (ql2o + 255) >> 8; // Right outer length boundary
+
+				// Draw AA
+				{
+					const int left_sc = max(scx1, max(w1o, l1o)); // Left included
+					const int right_sc = min(scx2, min(w2o, l2o));  // Right excluded
+
+					for (int x = left_sc; x < right_sc; ++x)
+					{
+						if (testStencil(gs, bs, x))
+						{
+							const int qxc = x << 8; // Current x in 256 scale
+							const int alphawidthleft = findx(0, 256, qw1o, qwi, qxc); // Alpha 256
+							const int alphawidthright = findx(256, 0, qwi, qw2o, qxc); // Alpha 256
+							const int alphawidth = min(alphawidthleft, alphawidthright);
+							
+							if (x >= l1i && x < l2i) // No blending with outer ends
+							{
+								// lw = 3, alphawidth = 8
+								const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth) >> 11;
+								const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+								if (testAlpha(gs, out))
+								{
+									bc[x] = blend(gs, out, bc[x]);
+									writeTag(gs, bt, x);
+								}
+							}
+							else
+							{
+								const int alphalenleft = findx(0, 256, ql1o, ql1i, qxc);
+								const int alphalenright = findx(256, 0, ql2i, ql2o, qxc);
+								const int alphalen = min(alphalenleft, alphalenright);
+
+								const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth * alphalen) >> 19;
+								const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+								if (testAlpha(gs, out))
+								{
+									bc[x] = blend(gs, out, bc[x]);
+									writeTag(gs, bt, x);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
-
-	// **************************************************************************************************************************************************************** DEV END
 }
 
 #pragma endregion

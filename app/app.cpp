@@ -215,7 +215,7 @@ dl( VERTEX2F(350 * 16, 200 * 16) );
 	dl(COLOR_A(128));
 dl( COLOR_RGB(0, 128, 255) );
 dl( BEGIN(LINES) );
-dl(LINE_WIDTH(160));
+dl(LINE_WIDTH(5));
 dl( VERTEX2F(5 * 16, 5 * 16) );
 dl( VERTEX2F(50 * 16, 30 * 16) );
 dl( VERTEX2F(63 * 16, 50 * 16) );
