@@ -18,6 +18,7 @@
 // System includes
 
 // Project includes (include standard stuff for user)
+#include "ft800emu_inttypes.h"
 
 namespace FT800EMU {
 
@@ -29,6 +30,8 @@ enum EmulatorFlags
 	EmulatorEnableAudio = 0x02,
 	// enables coprocessor
 	EmulatorEnableCoprocessor = 0x04,
+	// enables mouse as touch
+	EmulatorEnableMouse = 0x08, 
 };
 
 struct EmulatorParameters
@@ -38,15 +41,26 @@ public:
 		Setup(0),
 		Loop(0), 
 		Flags(0),
-		Keyboard(0) 
+		Keyboard(0), 
+		MousePressure(0), 
+		ExternalFrequency(0)
 	{ }
 
-	void (*Setup)(); // mcu function called before loop
-	void (*Loop)(); // mcu continuous loop
-	int Flags; // see EmulatorFlags
+	// Microcontroller function called before loop.
+	void (*Setup)();
+	// Microcontroller continuous loop.
+	void (*Loop)();
+	// See EmulatorFlags.
+	int Flags;
 	
-	// called after keyboard update, check Keyboard.isKeyDown(FT800EMU_KEY_F3)
+	// Called after keyboard update.
+	// Supplied function can use Keyboard.isKeyDown(FT800EMU_KEY_F3).
 	void (*Keyboard)();
+	// The default mouse pressure, default 0 (maximum).
+	// See REG_TOUCH_RZTRESH, etc.
+	uint32_t MousePressure;
+	// External frequency. See CLK, etc.
+	uint32_t ExternalFrequency;
 };
 
 /**

@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -356,26 +355,6 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	newTitle << TEXT(")]");
 	SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
 }
-
-/*
-// SET TO NULL WHEN NO LONGER NEEDED
-void setWindowProcedure(UINT message, WNDPROC procedure)
-{
-	map<UINT, WNDPROC>::iterator it = s_WindowProcedures.find(message);
-	if (procedure)
-	{
-		if (it != s_WindowProcedures.end())
-			SystemWindows.Debug(TEXT("setWindowProcedure  WindowProcedure already exists, replacing"));
-		s_WindowProcedures[message] = procedure;
-	}
-	else
-	{
-		if (it == s_WindowProcedures.end())
-			SystemWindows.Debug(TEXT("setWindowProcedure  WindowProcedure does not exist"));
-		else s_WindowProcedures.erase(it);
-	}
-}
-*/
 
 } /* namespace FT800EMU */
 
