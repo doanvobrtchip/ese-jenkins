@@ -132,6 +132,7 @@ namespace {
 				System.unprioritizeMCUThread();
 			}
 
+			System.prioritizeCoprocessorThread();
 			if (reg_pclk)
 			{
 				//long currentMillis = millis();
@@ -164,10 +165,13 @@ namespace {
 				System.switchThread();
 #endif
 			}
+			System.unprioritizeCoprocessorThread();
 
 #ifdef WIN32
 			System.holdMCUThread(); // don't let the other thread hog cpu
 			System.resumeMCUThread();
+			System.holdCoprocessorThread();
+			System.resumeCoprocessorThread();
 #endif
 		}
 
@@ -190,6 +194,22 @@ namespace {
 			//printf("mcu thread\n");
 			s_Loop();
 		}
+		System.revertThreadCategory(taskHandle);
+		return 0;
+	}
+
+	int coprocessorThread(void * = NULL)
+	{
+		System.makeCoprocessorThread();
+
+		unsigned long taskId = 0;
+		void *taskHandle;
+		taskHandle = System.setThreadGamesCategory(&taskId);
+		System.disableAutomaticPriorityBoost();
+		System.makeNormalPriorityThread();
+		
+		// todo
+
 		System.revertThreadCategory(taskHandle);
 		return 0;
 	}
@@ -234,6 +254,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
+	// TODO_COPROCESSOR if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin();
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	s_MasterRunning = true;
@@ -253,7 +274,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SDL_WaitThread(threadA, NULL);
 
 #else
-	#pragma omp parallel num_threads(3)
+	#pragma omp parallel num_threads(params.Flags & EmulatorEnableCoprocessor ? 4 : 3)
 	{
 		// graphics
 		#pragma omp master
@@ -273,10 +294,17 @@ void EmulatorClass::run(const EmulatorParameters &params)
 		{
 			audioThread();
 		}
+
+		// Coprocessor
+		if (omp_get_thread_num() == 3)
+		{
+			coprocessorThread();
+		}
 	}
 #endif /* #ifdef FT800EMU_SDL */
 
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.end();
+	// TODO_COPROCESSOR if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
 	if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
 	SPII2C.end();

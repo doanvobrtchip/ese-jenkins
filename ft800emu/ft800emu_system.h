@@ -66,6 +66,13 @@ public:
 	static void unprioritizeMCUThread();
 	static void holdMCUThread();
 	static void resumeMCUThread();
+	
+	static void makeCoprocessorThread();
+	static bool isCoprocessorThread();
+	static void prioritizeCoprocessorThread();
+	static void unprioritizeCoprocessorThread();
+	static void holdCoprocessorThread();
+	static void resumeCoprocessorThread();
 
 	static void switchThread();
 

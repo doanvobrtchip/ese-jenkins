@@ -44,7 +44,7 @@ static LARGE_INTEGER s_PerformanceFrequency = { 0 };
 static LARGE_INTEGER s_PerformanceCounterBegin = { 0 };
 
 
-//static HANDLE s_J1Thread = NULL;
+static HANDLE s_CoprocessorThread = NULL;
 static HANDLE s_MCUThread = NULL;
 static HANDLE s_MainThread = NULL;
 
@@ -193,26 +193,58 @@ void SystemClass::resumeMCUThread()
 		SystemWindows.Error(TEXT("ResumeThread  FAILED"));
 }
 
-
-
-/*
-void SystemClass::prioritizeJ1Thread()
+// Coprocessor thread control
+void SystemClass::makeCoprocessorThread()
 {
-	if (s_J1Thread != NULL)
-		SetThreadPriority(s_J1Thread, THREAD_PRIORITY_HIGHEST);
+	if (!DuplicateHandle(
+		GetCurrentProcess(),
+		GetCurrentThread(),
+		GetCurrentProcess(),
+		&s_CoprocessorThread,
+		0,
+		TRUE,
+		DUPLICATE_SAME_ACCESS))
+		SystemWindows.ErrorWin32();
 }
 
-void SystemClass::unprioritizeJ1Thread()
+bool SystemClass::isCoprocessorThread()
 {
-	if (s_J1Thread != NULL)
-		SetThreadPriority(s_J1Thread, THREAD_PRIORITY_NORMAL);
+	HANDLE currentThread;
+	if (!DuplicateHandle(
+		GetCurrentProcess(),
+		GetCurrentThread(),
+		GetCurrentProcess(),
+		&currentThread,
+		0,
+		TRUE,
+		DUPLICATE_SAME_ACCESS))
+		SystemWindows.ErrorWin32();
+	return currentThread == s_CoprocessorThread;
 }
 
-void SystemClass::makeJ1Thread()
+void SystemClass::prioritizeCoprocessorThread()
 {
-	s_J1Thread = GetCurrentThread();
+	if (s_CoprocessorThread != NULL)
+		SetThreadPriority(s_CoprocessorThread, THREAD_PRIORITY_HIGHEST);
 }
-*/
+
+void SystemClass::unprioritizeCoprocessorThread()
+{
+	if (s_CoprocessorThread != NULL)
+		SetThreadPriority(s_CoprocessorThread, THREAD_PRIORITY_NORMAL);
+}
+
+void SystemClass::holdCoprocessorThread()
+{
+	if (0 > SuspendThread(s_CoprocessorThread))
+		SystemWindows.Error(TEXT("SuspendThread  FAILED"));
+}
+
+void SystemClass::resumeCoprocessorThread()
+{
+	if (0 > ResumeThread(s_CoprocessorThread))
+		SystemWindows.Error(TEXT("ResumeThread  FAILED"));
+}
 
 void *SystemClass::setThreadGamesCategory(unsigned long *refId)
 {

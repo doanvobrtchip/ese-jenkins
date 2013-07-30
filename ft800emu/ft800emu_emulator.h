@@ -27,6 +27,8 @@ enum EmulatorFlags
 	EmulatorEnableKeyboard = 0x01,
 	// enables audio
 	EmulatorEnableAudio = 0x02,
+	// enables coprocessor
+	EmulatorEnableCoprocessor = 0x04,
 };
 
 struct EmulatorParameters
