@@ -100,7 +100,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			s_MouseX = (mouseX - x_r) * s_Width / width_r;
 			s_MouseY = (mouseY - y_r) * s_Height / height_r;
 			uint8_t *const ram = Memory.getRam();
-			if (s_MouseDown)
+			if (s_MouseDown && s_MouseX >= 0 && s_MouseX < s_Width && s_MouseY >= 0 && s_MouseY < s_Height)
 			{
 				uint16_t const touch_raw_x = ((uint32_t &)mouseX) & 0xFFFF;
 				uint16_t const touch_raw_y = ((uint32_t &)mouseY) & 0xFFFF;
@@ -114,6 +114,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			}
 			else
 			{
+				s_MouseDown = false;
 				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 				Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 				Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
