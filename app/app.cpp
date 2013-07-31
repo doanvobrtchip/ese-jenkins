@@ -18,14 +18,6 @@
 
 void wr32(size_t address, uint32_t value)
 {
-	/*FT800EMU::SPII2C.csLow();
-	FT800EMU::SPII2C.mcuSetAddress(address);
-	FT800EMU::SPII2C.mcuWriteByte(value & 0xFF);
-	FT800EMU::SPII2C.mcuWriteByte((value >> 8) & 0xFF);
-	FT800EMU::SPII2C.mcuWriteByte((value >> 16) & 0xFF);
-	FT800EMU::SPII2C.mcuWriteByte((value >> 24) & 0xFF);
-	FT800EMU::SPII2C.csHigh();*/
-
 	digitalWrite(9, LOW);
 
 	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
