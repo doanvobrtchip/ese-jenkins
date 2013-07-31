@@ -32,6 +32,8 @@ enum EmulatorFlags
 	EmulatorEnableCoprocessor = 0x04,
 	// enables mouse as touch
 	EmulatorEnableMouse = 0x08, 
+	// enable debug shortkeys
+	EmulatorEnableDebugShortkeys = 0x10, 
 };
 
 struct EmulatorParameters

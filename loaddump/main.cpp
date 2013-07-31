@@ -146,99 +146,7 @@ void loop()
 
 void keyboard()
 {
-	{
-		static bool setDebugMode = false;
-		if (setDebugMode)
-		{
-			setDebugMode = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3))
-		{
-			FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
-			setDebugMode = true;
-		}
-	}
 
-	{
-		static bool incDebugMultiplier = false;
-		if (incDebugMultiplier)
-		{
-			incDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADPLUS);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADPLUS))
-		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(FT800EMU::GraphicsProcessor.getDebugMultiplier() + 1);
-			incDebugMultiplier = true;
-		}
-	}
-
-	{
-		static bool decDebugMultiplier = false;
-		if (decDebugMultiplier)
-		{
-			decDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADMINUS);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADMINUS))
-		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(max(FT800EMU::GraphicsProcessor.getDebugMultiplier() - 1, 1));
-			decDebugMultiplier = true;
-		}
-	}
-
-	{
-		static bool resetDebugMultiplier = false;
-		if (resetDebugMultiplier)
-		{
-			resetDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADSLASH);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADSLASH))
-		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(1);
-			resetDebugMultiplier = true;
-		}
-	}
-
-	{
-		static bool incDebugLimiter = false;
-		if (incDebugLimiter)
-		{
-			incDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8))
-		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
-			incDebugLimiter = true;
-		}
-	}
-
-	{
-		static bool decDebugLimiter = false;
-		if (decDebugLimiter)
-		{
-			decDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7))
-		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
-			decDebugLimiter = true;
-		}
-	}
-
-	{
-		static bool resetDebugLimiter = false;
-		if (resetDebugLimiter)
-		{
-			resetDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6);
-		}
-		else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6))
-		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(0);
-			resetDebugLimiter = true;
-		}
-	}
 }
 
 // int __stdcall WinMain(void *, void *, void *, int)
@@ -247,7 +155,7 @@ int main(int, char* [])
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = FT800EMU::EmulatorEnableKeyboard | FT800EMU::EmulatorEnableMouse;
+	params.Flags = FT800EMU::EmulatorEnableKeyboard | FT800EMU::EmulatorEnableMouse | FT800EMU::EmulatorEnableDebugShortkeys;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;
