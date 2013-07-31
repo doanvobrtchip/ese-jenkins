@@ -78,19 +78,19 @@ Enables the mouse cursor as touch input in the emulator.
 Enables a number of debug shortkeys to help finding issues in an 
 application. 
 
-_F3_: Cycle through RGB, ALPHA, TAG and STENCIL display. 
+__F3__: Cycle through RGB, ALPHA, TAG and STENCIL display. 
 
-_NUMPADPLUS_: Increase multiplier for display of ALPHA, TAG and STENCIL. 
+__NUMPADPLUS__: Increase multiplier for display of ALPHA, TAG and STENCIL. 
 
-_NUMPADMINUS_: Decrease multiplier. 
+__NUMPADMINUS__: Decrease multiplier. 
 
-_NUMPADSLASH_: Reset multiplier to 1. 
+__NUMPADSLASH__: Reset multiplier to 1. 
 
-_F8_: Increases limiter for number of displaylist commands to process. 
+__F8__: Increases limiter for number of displaylist commands to process. 
 
-_F7_: Decreases displaylist limiter. 
+__F7__: Decreases displaylist limiter. 
 
-_F6_: Disable the displaylist limiter. 
+__F6__: Disable the displaylist limiter. 
 
 ## Manual use ##
 
