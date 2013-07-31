@@ -95,6 +95,15 @@ uint32_t micros(void);
 void delay(uint32_t ms);
 void delayMicroseconds(uint16_t us);
 
+namespace FT800EMU
+{
+	namespace ARDUINO
+	{
+		void setCSPin(uint8_t pin);
+		uint8_t getCSPin();
+	}
+}
+
 #endif /* #ifndef WIRING_H */
 
 /* end of file */

@@ -36,7 +36,6 @@
 
 
 // Defines
-#define FT800EMU_FT800_SS_PIN          9
 #define FT800EMU_ARDUINO_INTERRUPT_PIN_0   2
 #define FT800EMU_ARDUINO_INTERRUPT_PIN_1   3
 
@@ -49,6 +48,9 @@ void pinMode(uint8_t pin, uint8_t mode) { if (mode == INPUT) s_DigitalPins[pin] 
 static const int s_InterruptPins[2] = { FT800EMU_ARDUINO_INTERRUPT_PIN_0, FT800EMU_ARDUINO_INTERRUPT_PIN_1 };
 static void (*s_InterruptFunctions[2])() = { 0 };
 static int s_InterruptModes[2] = { 0 };
+
+// Settings
+static uint8_t s_csPin = 9;
 
 
 // Interrupts
@@ -111,11 +113,12 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	val = val > 0 ? HIGH : LOW;
 	uint8_t prev = s_DigitalPins[pin];
 	s_DigitalPins[pin] = val;
-	switch (pin)
+	if (pin == s_csPin)
 	{
-	case FT800EMU_FT800_SS_PIN:
 		FT800EMU::SPII2C.csHigh(val != 0);
-		break;
+	}
+	else switch (pin)
+	{
 	case FT800EMU_ARDUINO_INTERRUPT_PIN_0:
 		ft800emuHandleInterrupt(0, val, prev);
 		break;
@@ -135,6 +138,22 @@ uint8_t digitalRead(uint8_t pin)
 int16_t analogRead(uint8_t pin)
 {
 	return FT800EMU::System.getAnalogRead(pin);
+}
+
+namespace FT800EMU
+{
+	namespace ARDUINO
+	{
+		void setCSPin(uint8_t pin)
+		{
+			s_csPin = pin;
+		}
+
+		uint8_t getCSPin()
+		{
+			return s_csPin;
+		}
+	}
 }
 
 /* end of file */

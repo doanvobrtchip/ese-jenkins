@@ -19,13 +19,27 @@
 
 void wr32(size_t address, uint32_t value)
 {
-	FT800EMU::SPII2C.csLow();
+	/*FT800EMU::SPII2C.csLow();
 	FT800EMU::SPII2C.mcuSetAddress(address);
 	FT800EMU::SPII2C.mcuWriteByte(value & 0xFF);
 	FT800EMU::SPII2C.mcuWriteByte((value >> 8) & 0xFF);
 	FT800EMU::SPII2C.mcuWriteByte((value >> 16) & 0xFF);
 	FT800EMU::SPII2C.mcuWriteByte((value >> 24) & 0xFF);
-	FT800EMU::SPII2C.csHigh();
+	FT800EMU::SPII2C.csHigh();*/
+
+	digitalWrite(9, LOW);
+
+	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	SPI.transfer(0x00);
+
+	SPI.transfer(value & 0xFF);
+	SPI.transfer((value >> 8) & 0xFF);
+	SPI.transfer((value >> 16) & 0xFF);
+	SPI.transfer((value >> 24) & 0xFF);
+
+	digitalWrite(9, HIGH);
 }
 
 static size_t dli;

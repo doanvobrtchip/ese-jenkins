@@ -40,12 +40,7 @@ public:
 	static void csLow(bool low = true);
 	static void csHigh(bool high = true);
 
-	// uint8_t transfer(uint8_t data); // TODO SPI r/w data protocol...
-
-	// temporary interface
-	static void mcuSetAddress(size_t address);
-	static void mcuWriteByte(uint8_t data);
-	static uint8_t mcuReadByte();
+	uint8_t transfer(uint8_t data);
 
 private:
 	SPII2CClass(const SPII2CClass &);
