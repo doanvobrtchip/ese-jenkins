@@ -59,6 +59,9 @@ public:
 		#endif
 	}
 
+	static void enableMouse(bool enabled = true);
+	static void setMousePressure(int pressure = 0);
+
 private:
 	GraphicsDriverClass(const GraphicsDriverClass &);
 	GraphicsDriverClass &operator=(const GraphicsDriverClass &);

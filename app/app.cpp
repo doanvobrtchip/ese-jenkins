@@ -55,6 +55,8 @@ void setup()
 	dl(VERTEX2F(8223, 409));
 	dl(END());
 
+	dl(TAG(25));
+
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
@@ -110,6 +112,7 @@ void setup()
 	dl(END());*/
 	// ** SMALL POINTS Y **
 
+	dl(TAG(50));
 
 	// ** RECT TEST **
 	dl(COLOR_A(128));

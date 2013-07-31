@@ -2439,6 +2439,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	if (ram[REG_DLSWAP] == SWAP_FRAME)
 		Memory.swapDisplayList();
 
+	// Store the touch tag xy used for lookup
+	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
+
 	const uint32_t *displayList = Memory.getDisplayList();
 	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
@@ -2778,7 +2781,31 @@ EvaluateDisplayListValue:
 			}
 		}
 DisplayListDisplay:
-		;
+		// Check tag query
+		if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
+		{
+			uint32_t tag_x = Memory.rawReadU32(ram, REG_TAG_X);
+			if (tag_x < hsize)
+			{
+				// Write tag out
+				Memory.rawWriteU32(ram, REG_TAG, bt[tag_x]);
+			}
+		}
+		// Check touch
+		if (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH)) // Touching harder than the threshold
+		{
+			uint32_t tag_xy = Memory.rawReadU32(ram, REG_TOUCH_TAG_XY);
+			uint32_t tag_y = tag_xy & 0xFFFF;
+			if (tag_y == y)
+			{
+				uint32_t tag_x = tag_xy >> 16;
+				if (tag_x < hsize)
+				{
+					// Write tag out
+					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[tag_x]);
+				}
+			}
+		}
 		if (s_DebugMode)
 		{
 			switch (s_DebugMode)

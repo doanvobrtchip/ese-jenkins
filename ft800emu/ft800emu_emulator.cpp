@@ -257,6 +257,8 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	// TODO_COPROCESSOR if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin();
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
+	GraphicsDriver.enableMouse(params.Flags & EmulatorEnableMouse);
+
 	s_MasterRunning = true;
 
 #ifdef FT800EMU_SDL

@@ -18,11 +18,14 @@
 
 // System includes
 #include "ft800emu_system_windows.h"
+#include <Windowsx.h>
 #include "ft800emu_system.h"
-// #include "ft800emu_ft800_spi_i2c.h"
-#include "ft800emu_graphics_processor.h"
 
 // Project includes
+// #include "ft800emu_ft800_spi_i2c.h"
+#include "ft800emu_graphics_processor.h"
+#include "ft800emu_memory.h"
+#include "vc.h"
 
 using namespace std;
 
@@ -59,7 +62,12 @@ static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
 static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
+static bool s_MouseEnabled;
+static int s_MousePressure;
 
+static int s_MouseX;
+static int s_MouseY;
+static int s_MouseDown;
 
 argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
@@ -74,10 +82,46 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 	switch (message)
 	{
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+		if (s_MouseEnabled)
+		{
+			s_MouseDown = wParam & MK_LBUTTON;
+			int mouseX = GET_X_LPARAM(lParam);
+			int mouseY = GET_Y_LPARAM(lParam);
+			RECT r;
+			GetClientRect(s_HWnd, &r);
+			int width_r = (int)((float)r.bottom * s_Ratio); int height_r;
+			if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / s_Ratio); }
+			else height_r = r.bottom;
+			int x_r = (r.right - width_r) / 2;
+			int y_r = (r.bottom - height_r) / 2;
+			s_MouseX = (mouseX - x_r) * s_Width / width_r;
+			s_MouseY = (mouseY - y_r) * s_Height / height_r;
+			uint8_t *const ram = Memory.getRam();
+			if (s_MouseDown)
+			{
+				uint16_t const touch_raw_x = ((uint32_t &)mouseX) & 0xFFFF;
+				uint16_t const touch_raw_y = ((uint32_t &)mouseY) & 0xFFFF;
+				uint16_t const touch_screen_x = ((uint32_t &)s_MouseX) & 0xFFFF;
+				uint16_t const touch_screen_y = ((uint32_t &)s_MouseY) & 0xFFFF;
+				uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
+				uint32_t const touch_screen_xy = (uint32_t)touch_screen_x << 16 | touch_screen_y;
+				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
+				Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, touch_screen_xy);
+				Memory.rawWriteU32(ram, REG_TOUCH_RZ, s_MousePressure);
+			}
+			else
+			{
+				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+				Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
+				Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
+			}
+		}
+		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		// TODO: Add any drawing code here...
-		/*testpaint(hdc);*/
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
@@ -102,6 +146,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 void GraphicsDriverClass::begin()
 {
+	// Defaults
+	s_MouseEnabled = false;
+	s_MousePressure = 0;
+	s_MouseX = 0;
+	s_MouseY = 0;
+	s_MouseDown = false;
+
 	// Save params
 	s_HInstance = GetModuleHandle(NULL);
 
@@ -347,6 +398,17 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	{
 		newTitle << " [LIMIT: " << GraphicsProcessor.getDebugLimiter() << "]";
 	}
+	if (s_MouseEnabled)
+	{
+		newTitle << " [X: " << s_MouseX << ", Y: " << s_MouseY;
+		if (s_MouseDown)
+		{
+			newTitle << " (";
+			newTitle << Memory.rawReadU32(Memory.getRam(), REG_TOUCH_TAG);
+			newTitle << ")";
+		}
+		newTitle << "]";
+	}
 	if (!output) newTitle << " [NO OUTPUT]";
 	newTitle << TEXT(" [FPS: ");
 	newTitle << System.getFPSSmooth();
@@ -354,6 +416,16 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	newTitle << System.getFPS();
 	newTitle << TEXT(")]");
 	SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
+}
+
+void GraphicsDriverClass::enableMouse(bool enabled)
+{
+	s_MouseEnabled = enabled;
+}
+
+void GraphicsDriverClass::setMousePressure(int pressure)
+{
+	s_MousePressure = pressure;
 }
 
 } /* namespace FT800EMU */
