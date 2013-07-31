@@ -12,10 +12,9 @@
  */
 
 #include <SPI.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_spi_i2c.h>
-#include <ft800emu_inttypes.h>
 #include <vc.h>
+
+#define SWAP_FRAME 1 // FIXME
 
 void wr32(size_t address, uint32_t value)
 {
