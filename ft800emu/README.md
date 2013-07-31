@@ -1,15 +1,90 @@
-ft800emu
-========
+# ft800emu #
 
+## Emulator ##
 
-Emulator usage:
+For an automatic emulator, call FT800EMU::Emulator.run(...) with the 
+necessary initialization parameters. Make sure the platform pins are 
+correctly wired up using the initialization parameters before calling 
+run.
 
-For an automatic emulator, call FT800EMU::Emulator.run(...) with the necessary initialization parameters.
-Make sure the platform pins are correctly wired up using the FT800EMU::Emulator interface before calling run.
+### How to setup the emulator ###
 
+A project will consist of 3 main parts, the application code, the 
+ft800emu library, and a wrapper library for your microcontroller 
+architecture. 
 
-Manual usage:
+Inside the application code, create a main.cpp, which includes ft800emu_emulator.h, declares your application loop functions, and contains a main entry point function.
 
-Write to the memory directly through the FT800EMU::Memory or FT800EMU::SPII2C interfaces.
-Create a display buffer in ARGB8888 format with the correct resolution as in REG_HSIZE and REG_VSIZE.
-Call FT800EMU::GraphicsProcessor.process(buffer, hsize, vsize) to build the display image.
+    #include <ft800emu_emulator.h>
+
+    void setup();
+    void loop();
+
+    int main(int, char* [])
+    {
+        FT800EMU::EmulatorParameters params;
+        params.Setup = setup;
+        params.Loop = loop;
+        params.Flags = FT800EMU::EmulatorEnableKeyboard | FT800EMU::EmulatorEnableMouse | FT800EMU::EmulatorEnableDebugShortkeys;
+        FT800EMU::Emulator.run(params);
+        return 0;
+    }
+
+Add the ft800emu project and the microcontroller library wrapper as dependencies to your application project.
+
+That's all.
+
+### Emulator parameters ###
+
+#### Setup ####
+
+This is the function that your microcontroller would run when it launches, it is the same as the setup function in the arduino libraries.
+
+#### Loop ####
+
+This function will be called continuously until the application exits.
+
+#### Keyboard ####
+
+A user provided function called periodically, about 100 times per second, whenever new keyboard state is processed. You can use this to link digital pins on your microcontroller to keyboard keys, for example.
+
+    void keyboard()
+    {
+        digitalWrite(4, FT800EMU::Keyboard.isKeydown(FT800EMU_KEY_A) ? LOW : HIGH);
+    }
+
+#### MousePressure ####
+
+The value used as touch pressure when the left mouse button is pressed.
+
+#### Flags ####
+
+##### EmulatorEnableKeyboard #####
+
+Enables the keyboard functionality in the emulator.
+
+##### EmulatorEnableMouse #####
+
+Enables the mouse cursor as touch input in the emulator.
+
+##### EmulatorEnableDebugShortkeys #####
+
+Enables a number of debug shortkeys to help finding issues in an application.
+
+*F3*: Cycle through RGB, ALPHA, TAG and STENCIL display.
+*NUMPADPLUS*: Increase multiplier for display of ALPHA, TAG and STENCIL.
+*NUMPADMINUS*: Decrease multiplier.
+*NUMPADSLASH*: Reset multiplier to 1.
+*F8*: Increases limiter for number of displaylist commands to process.
+*F7*: Decreases displaylist limiter.
+*F6*: Disable the displaylist limiter.
+
+## Manual use ## 
+
+Write to the memory directly through the FT800EMU::Memory or 
+FT800EMU::SPII2C interfaces. Create a display buffer in ARGB8888 format 
+with the correct resolution as specified using REG_HSIZE and REG_VSIZE. 
+Call FT800EMU::GraphicsProcessor.process(buffer, hsize, vsize) to build 
+the display image. Before using a class, call the begin() function on it 
+to initialize it, call end() after you're done. 
+
