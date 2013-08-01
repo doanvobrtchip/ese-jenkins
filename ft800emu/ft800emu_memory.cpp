@@ -17,7 +17,7 @@
 
 // System includes
 #include <stdio.h>
-#include <WinBase.h>
+#include <string.h>
 
 // Project includes
 #include "vc.h"
