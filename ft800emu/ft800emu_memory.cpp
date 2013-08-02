@@ -94,6 +94,9 @@ void MemoryClass::begin()
 	rawWriteU32(REG_CSPREAD, 1);
 	rawWriteU32(REG_PCLK_POL, 0);	
 	rawWriteU32(REG_PCLK, 0);
+	rawWriteU32(REG_TAG_X, 0);
+	rawWriteU32(REG_TAG_Y, 0);
+	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
 }
 
 void MemoryClass::end()
@@ -151,6 +154,26 @@ void MemoryClass::swapDisplayList()
 uint8_t MemoryClass::mcuRead(size_t address)
 {
 	return s_Ram[address];
+}
+
+void MemoryClass::coprocessorWrite(size_t address, uint8_t data)
+{
+	s_Ram[address] = data;
+}
+
+uint8_t MemoryClass::coprocessorRead(size_t address)
+{
+	return s_Ram[address];
+}
+
+void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
+{
+	rawWriteU32(address, data);
+}
+
+uint32_t MemoryClass::coprocessorReadU32(size_t address)
+{
+	return rawReadU32(address);
 }
 
 } /* namespace FT800EMU */

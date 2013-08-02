@@ -48,8 +48,10 @@ public:
 	static uint8_t mcuRead(size_t address);
 
 	// Use separate functions for coprocessor access in case we need to put a hook on certain adresses for performance reasons.
-	// static void coprocessorWrite(size_t address, uint8_t data);
-	// static uint8_t coprocessorRead(size_t address);
+	static void coprocessorWrite(size_t address, uint8_t data);
+	static uint8_t coprocessorRead(size_t address);
+	static void coprocessorWriteU32(size_t address, uint32_t data);
+	static uint32_t coprocessorReadU32(size_t address);
 
 	static FT800EMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
 	static FT800EMU_FORCE_INLINE uint32_t rawReadU32(uint8_t *buffer, size_t address);

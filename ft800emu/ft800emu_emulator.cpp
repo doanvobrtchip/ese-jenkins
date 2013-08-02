@@ -33,6 +33,7 @@
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_processor.h"
+#include "ft800emu_coprocessor.h"
 
 #include "vc.h"
 
@@ -306,7 +307,7 @@ namespace {
 		System.disableAutomaticPriorityBoost();
 		System.makeNormalPriorityThread();
 		
-		// todo
+		Coprocessor.execute();
 
 		System.revertThreadCategory(taskHandle);
 		return 0;
@@ -356,7 +357,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
-	// TODO_COPROCESSOR if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin();
+	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin();
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
@@ -371,11 +372,15 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SDL_Thread *threadA = SDL_CreateThread(audioThread, NULL);
 	// TODO - Error handling
 
+	SDL_Thread *threadC = SDL_CreateThread(coprocessorThread, NULL);
+	// TODO - Error handling
+
 	masterThread();
 
 	s_MasterRunning = false;
 	SDL_WaitThread(threadD, NULL);
 	SDL_WaitThread(threadA, NULL);
+	SDL_WaitThread(threadC, NULL);
 
 #else
 	#pragma omp parallel num_threads(params.Flags & EmulatorEnableCoprocessor ? 4 : 3)
@@ -408,7 +413,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 #endif /* #ifdef FT800EMU_SDL */
 
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.end();
-	// TODO_COPROCESSOR if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
+	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
 	if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
 	SPII2C.end();
