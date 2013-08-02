@@ -22,6 +22,9 @@
 #include "ft800emu_spi_i2c.h"
 
 // Project includes
+#include "ft800emu_graphics_processor.h"
+#include "ft800emu_memory.h"
+#include "vc.h"
 
 using namespace std;
 
@@ -35,6 +38,10 @@ static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
 static bool s_MouseEnabled;
 static int s_MousePressure;
+
+static int s_MouseX;
+static int s_MouseY;
+static int s_MouseDown;
 
 #define FT800EMU_SDL_THREADED_FLIP 0
 
@@ -123,6 +130,33 @@ bool GraphicsDriverClass::update()
 				return false;
 		}
 	}
+	
+	int mouseX, mouseY;
+	int button = SDL_GetMouseState(&mouseX, &mouseY);
+	s_MouseDown = button & 1;
+	s_MouseX = mouseX / FT800EMU_WINDOW_SCALE;
+	s_MouseY = mouseY / FT800EMU_WINDOW_SCALE;
+	if (s_MouseDown)
+	{
+		uint8_t *const ram = Memory.getRam();
+		uint16_t const touch_raw_x = ((uint32_t &)mouseX) & 0xFFFF;
+		uint16_t const touch_raw_y = ((uint32_t &)mouseY) & 0xFFFF;
+		uint16_t const touch_screen_x = ((uint32_t &)s_MouseX) & 0xFFFF;
+		uint16_t const touch_screen_y = ((uint32_t &)s_MouseY) & 0xFFFF;
+		uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
+		uint32_t const touch_screen_xy = (uint32_t)touch_screen_x << 16 | touch_screen_y;
+		Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
+		Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, touch_screen_xy);
+		Memory.rawWriteU32(ram, REG_TOUCH_RZ, s_MousePressure);
+	}
+	else
+	{
+		uint8_t *const ram = Memory.getRam();
+		Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+		Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
+		Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
+	}
+	
 	return true;
 }
 
@@ -218,11 +252,47 @@ void GraphicsDriverClass::renderBuffer(bool output)
 
 	std::stringstream newTitle;
 	newTitle << FT800EMU_WINDOW_TITLE_A;
-	newTitle << (" [FPS: ");
+	switch (GraphicsProcessor.getDebugMode())
+	{
+	case FT800EMU_DEBUGMODE_ALPHA:
+		newTitle << " [ALPHA";
+		break;
+	case FT800EMU_DEBUGMODE_TAG:
+		newTitle << " [TAG";
+		break;
+	case FT800EMU_DEBUGMODE_STENCIL:
+		newTitle << " [STENCIL";
+		break;
+	}
+	if (GraphicsProcessor.getDebugMode())
+	{
+		if (GraphicsProcessor.getDebugMultiplier() > 1)
+		{
+			newTitle << " (" << GraphicsProcessor.getDebugMultiplier() << "x)";
+		}
+		newTitle << "]";
+	}
+	if (GraphicsProcessor.getDebugLimiter())
+	{
+		newTitle << " [LIMIT: " << GraphicsProcessor.getDebugLimiter() << "]";
+	}
+	if (s_MouseEnabled)
+	{
+		newTitle << " [X: " << s_MouseX << ", Y: " << s_MouseY;
+		if (s_MouseDown)
+		{
+			newTitle << " (";
+			newTitle << Memory.rawReadU32(Memory.getRam(), REG_TOUCH_TAG);
+			newTitle << ")";
+		}
+		newTitle << "]";
+	}
+	if (!output) newTitle << " [NO OUTPUT]";
+	newTitle << " [FPS: ";
 	newTitle << System.getFPSSmooth();
-	newTitle << (" (");
+	newTitle << " (";
 	newTitle << System.getFPS();
-	newTitle << (")]");
+	newTitle << ")]";
 	SDL_WM_SetCaption(newTitle.str().c_str(), NULL);
 }
 

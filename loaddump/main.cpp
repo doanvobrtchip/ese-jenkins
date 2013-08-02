@@ -55,7 +55,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_params.0.vc1dump", "rb"); // ok
@@ -98,7 +98,7 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_scissor_overlap.0.vc1dump", "rb"); // seems ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_rects.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_rects_offscreen.0.vc1dump", "rb"); // ok
-	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_polygon.0.vc1dump", "rb");
+	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_polygon.0.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_subpixel.0.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_linestrip_changes.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_lines_parse.0.vc1dump", "rb"); // ok
