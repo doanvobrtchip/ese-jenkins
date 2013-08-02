@@ -32,3 +32,5 @@ if (WITH_SDL)
 
 endif (WITH_SDL)
 
+add_definitions(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
+
