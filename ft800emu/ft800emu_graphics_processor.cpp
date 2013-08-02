@@ -14,14 +14,7 @@
 // #include <...>
 #include "ft800emu_graphics_processor.h"
 
-#ifdef FT800EMU_CMAKE
-#	ifdef FT800EMU_SSE41
-#		undef FT800EMU_SSE41
-#		define FT800EMU_SSE41 1
-#	else
-#		define FT800EMU_SSE41 0
-#	endif
-#else
+#ifndef FT800EMU_CMAKE
 #	define FT800EMU_SSE41 1
 #endif
 #define FT800EMU_SSE41_INSTRUCTIONS FT800EMU_SSE41

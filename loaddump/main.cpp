@@ -90,7 +90,7 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_offscreen.0.vc1dump", "rb"); // looks ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_subpixel.0.vc1dump", "rb"); // ok, close enough aa
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_visit.0.vc1dump", "rb"); // ok, close enough aa
-	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_ram.0.vc1dump", "rb"); // seems ok
+	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_ram.0.vc1dump", "rb"); // seems ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_mem_exhaustive.0.vc1dump", "rb"); // looks ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_scissor_connected.0.vc1dump", "rb"); // ok
@@ -98,7 +98,7 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_scissor_overlap.0.vc1dump", "rb"); // seems ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_rects.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_rects_offscreen.0.vc1dump", "rb"); // ok
-	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_polygon.0.vc1dump", "rb");
+	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_polygon.0.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_edge_subpixel.0.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_linestrip_changes.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_lines_parse.0.vc1dump", "rb"); // ok
