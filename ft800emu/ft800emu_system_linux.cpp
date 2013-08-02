@@ -203,20 +203,26 @@ void SystemClass::unprioritizeCoprocessorThread()
 
 void SystemClass::holdCoprocessorThread()
 {
-	if (!pthread_mutex_trylock(&s_CoprocessorSuspendMutex))
+	if (s_CoprocessorThread)
 	{
-		if (pthread_kill(s_CoprocessorThread, SIGUSR1))
-			SystemLinux.Error("Send user signal suspend fail");
-	}
-	else
-	{
-		printf("Trylock Coprocessor fail");
+		if (!pthread_mutex_trylock(&s_CoprocessorSuspendMutex))
+		{
+			if (pthread_kill(s_CoprocessorThread, SIGUSR1))
+				SystemLinux.Error("Send user signal suspend fail");
+		}
+		else
+		{
+			printf("Trylock Coprocessor fail");
+		}
 	}
 }
 
 void SystemClass::resumeCoprocessorThread()
 {
-	pthread_mutex_unlock(&s_CoprocessorSuspendMutex);
+	if (s_CoprocessorThread)
+	{
+		pthread_mutex_unlock(&s_CoprocessorSuspendMutex);
+	}
 }
 
 void *SystemClass::setThreadGamesCategory(unsigned long *refId)
