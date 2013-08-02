@@ -79,20 +79,20 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			case 0: // READ
 				s_State = SPII2CReadAddress;
 				s_Cursor = (data & 0x3F);
-				printf("SPI/I2C: Begin read\n");
+				// printf("SPI/I2C: Begin read\n");
 				break;
 			case 1: // COMMAND
 				s_State = SPII2CNotImplemented;
-				printf("SPI/I2C: Command received\n");
+				// printf("SPI/I2C: Command received\n");
 				break;
 			case 2: // WRITE
 				s_State = SPII2CWriteAddress;
 				s_Cursor = (data & 0x3F);
-				printf("SPI/I2C: Begin write\n");
+				// printf("SPI/I2C: Begin write\n");
 				break;
 			case 3: // INVALID
 				s_State = SPII2CInvalidState;
-				printf("SPI/I2C: Invalid request\n");
+				// printf("SPI/I2C: Invalid request\n");
 				break;
 			}
 			break;
@@ -107,7 +107,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			{
 				// Dummy byte
 				s_State = SPII2CRead;
-				printf("SPI/I2C: Address %d\n", s_Cursor);
+				// printf("SPI/I2C: Address %d\n", s_Cursor);
 			}
 			break;
 		case SPII2CWriteAddress:
@@ -121,7 +121,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			{
 				// Dummy byte
 				s_State = SPII2CWrite;
-				printf("SPI/I2C: Address %d\n", s_Cursor);
+				// printf("SPI/I2C: Address %d\n", s_Cursor);
 			}
 			break;
 		case SPII2CRead:

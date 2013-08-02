@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011-2012  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -37,12 +36,16 @@ static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 static bool s_MouseEnabled;
 static int s_MousePressure;
 
+#define FT800EMU_SDL_THREADED_FLIP 0
+
 namespace {
 
 static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 
 SDL_Surface *s_Screen = NULL;
 SDL_Surface *s_Buffer = NULL;
+
+#if FT800EMU_SDL_THREADED_FLIP
 
 SDL_Thread *s_FlipThread = NULL;
 
@@ -62,6 +65,8 @@ int flipThread(void *)
 	return 0;
 }
 
+#endif
+
 } /* anonymous namespace */
 
 argb8888 *GraphicsDriverClass::getBufferARGB8888()
@@ -77,7 +82,7 @@ void GraphicsDriverClass::begin()
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 
-	s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 15, SDL_SWSURFACE | SDL_ASYNCBLIT);
+	s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 	if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
 	SDL_WM_SetCaption(FT800EMU_WINDOW_TITLE_A, NULL);
@@ -90,16 +95,19 @@ void GraphicsDriverClass::begin()
 	bmask = 0x000000FF;
 	amask = 0x00000000;
 
-	bpp = 24;
+	bpp = 32;
 
 	s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
 	if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
+	
+#if FT800EMU_SDL_THREADED_FLIP
 
 	s_Running = true;
-
 	s_WaitFlip = SDL_CreateCond();
 	s_WaitFlipMutex = SDL_CreateMutex();
 	s_FlipThread = SDL_CreateThread(flipThread, NULL);
+	
+#endif
 
 	// TODO - Error handling
 }
@@ -119,7 +127,9 @@ bool GraphicsDriverClass::update()
 }
 
 void GraphicsDriverClass::end()
-{
+{	
+#if FT800EMU_SDL_THREADED_FLIP
+
 	s_Running = false;
 	SDL_CondBroadcast(s_WaitFlip);
 	SDL_WaitThread(s_FlipThread, NULL);
@@ -129,6 +139,8 @@ void GraphicsDriverClass::end()
 	s_WaitFlipMutex = NULL;
 	SDL_DestroyCond(s_WaitFlip);
 	s_WaitFlip = NULL;
+	
+#endif
 
 	SDL_FreeSurface(s_Buffer);
 	s_Buffer = NULL;
@@ -142,11 +154,13 @@ void GraphicsDriverClass::setMode(int width, int height)
 {
 	if (s_Width != width || s_Height != height)
 	{
+#if FT800EMU_SDL_THREADED_FLIP
 		// Stop the flip thread
 		s_Running = false;
 		SDL_CondBroadcast(s_WaitFlip);
 		SDL_WaitThread(s_FlipThread, NULL);
 		s_FlipThread = NULL;
+#endif
 		
 		// Update values
 		s_Width = width;
@@ -154,7 +168,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Ratio = (float)width / (float)height;
 
 		// Change the screen mode
-		s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 15, SDL_SWSURFACE | SDL_ASYNCBLIT);
+		s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 		if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
 		// Release the buffer
@@ -168,12 +182,14 @@ void GraphicsDriverClass::setMode(int width, int height)
 		gmask = 0x0000FF00;
 		bmask = 0x000000FF;
 		amask = 0x00000000;
-		bpp = 24;
+		bpp = 32;
 		s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
 		if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
 
+#if FT800EMU_SDL_THREADED_FLIP
 		// Resume the flip thread
 		s_FlipThread = SDL_CreateThread(flipThread, NULL);
+#endif
 	}
 }
 
@@ -192,8 +208,13 @@ void GraphicsDriverClass::renderBuffer(bool output)
 		if (SDL_FillRect(s_Screen, NULL, 0xFF808080) < 0)
 			SystemSdlClass::ErrorSdl();
 	}
-	
+
+#if FT800EMU_SDL_THREADED_FLIP
 	SDL_CondBroadcast(s_WaitFlip);
+#else
+	if (SDL_Flip(s_Screen) < 0)
+		SystemSdlClass::ErrorSdl();
+#endif
 
 	std::stringstream newTitle;
 	newTitle << FT800EMU_WINDOW_TITLE_A;
