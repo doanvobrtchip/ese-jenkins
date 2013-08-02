@@ -24,7 +24,8 @@
 
 // using namespace ...;
 
-#define FT800EMU_ROM_FILE "../reference/ROM"
+// #define FT800EMU_ROM_FILE "../reference/ROM"
+#define FT800EMU_ROM_FILE FT800EMU_REFERENCE_DIR "/ROM"
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
 #define FT800EMU_ROM_INDEX 0xC0000 //(RAM_DL - FT800EMU_ROM_SIZE)
 
