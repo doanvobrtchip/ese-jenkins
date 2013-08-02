@@ -14,10 +14,19 @@
 // #include <...>
 #include "ft800emu_graphics_processor.h"
 
-#define FT800EMU_SSE41_INSTRUCTIONS 1
+#ifdef FT800EMU_CMAKE
+#	ifdef FT800EMU_SSE41
+#		undef FT800EMU_SSE41
+#		define FT800EMU_SSE41 1
+#	else
+#		define FT800EMU_SSE41 0
+#	endif
+#else
+#	define FT800EMU_SSE41 1
+#endif
+#define FT800EMU_SSE41_INSTRUCTIONS FT800EMU_SSE41
 #define FT800EMU_SSE41_INSTRUCTIONS_ALL 0 // Slightly slower code, no performance improvement, just for testing
-#define FT800EMU_SSE41_INSTRUCTIONS_USE 1 // Faster code, up to 40% faster depending on the used features (slower in debug, though)
-#define FT800EMU_FORCE_INLINE __forceinline
+#define FT800EMU_SSE41_INSTRUCTIONS_USE FT800EMU_SSE41 // Faster code, up to 40% faster depending on the used features (slower in debug, though)
 
 // System includes
 #include <stdio.h>
@@ -30,6 +39,7 @@
 #endif
 
 // Project includes
+#include "ft800emu_inttypes.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_driver.h"
 #include "vc.h"
@@ -184,6 +194,14 @@ BitmapInfo s_BitmapInfo[32];
 #pragma region Math
 
 #if FT800EMU_SSE41_INSTRUCTIONS
+
+#ifdef WIN32
+#	define FT800EMU_STATIC_M128I(FTNAME) static const __m128i FTNAME
+#	define FT800EMU_STATIC_M128I_CAST(FTNAME) &FTNAME
+#else
+#	define FT800EMU_STATIC_M128I(FTNAME) static const int8_t FTNAME[16] __attribute__((aligned(16)))
+#	define FT800EMU_STATIC_M128I_CAST(FTNAME) static_cast<const __m128i *>(static_cast<const void *>(&FTNAME))
+#endif
 	
 // Here's a nice reference table with all the intrinsics listed:
 // http://www.taffysoft.com/pages/20120418-01.html
@@ -207,8 +225,8 @@ FT800EMU_FORCE_INLINE argb8888 to_argb8888(const __m128i &value)
 FT800EMU_FORCE_INLINE __m128i div255(const __m128i &value)
 {
 	// There exists no integer division in SSE so we have to use these division tricks anyways.
-	static const __m128i cm257 = { 1,1,0,0, 1,1,0,0, 1,1,0,0, 1,1,0,0 };
-	const register __m128i m257 =  _mm_load_si128(&cm257);
+	FT800EMU_STATIC_M128I(cm257) = { 1,1,0,0, 1,1,0,0, 1,1,0,0, 1,1,0,0 };
+	const register __m128i m257 =  _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cm257));
 	register __m128i result = _mm_mullo_epi32(value, m257);
 	result = _mm_add_epi32(result, m257);
 	result = _mm_srli_epi32(result, 16);
@@ -232,8 +250,8 @@ FT800EMU_FORCE_INLINE __m128i mul_argb(const __m128i &left, const __m128i &right
 
 FT800EMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &right)
 {
-	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
-	const register __m128i mmax = _mm_load_si128(&cmmax);
+	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	const register __m128i mmax = _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax));
 	register __m128i result = _mm_add_epi32(left, right);
 	result = _mm_min_epi32(result, mmax);
 	return result;
@@ -241,25 +259,25 @@ FT800EMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &
 
 FT800EMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
 {
-	static const __m128i cmone = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
-	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	FT800EMU_STATIC_M128I(cmone) = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
+	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
 	switch (func)
 	{
 	case ZERO:
 		return _mm_setzero_si128();
 	case ONE:
-		return _mm_load_si128(&cmone);
+		return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 	case SRC_ALPHA:
 		return _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 3, 3, 3)); // test
 	case DST_ALPHA:
 		return _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)); // test
 	case ONE_MINUS_SRC_ALPHA:
-		return _mm_sub_epi32(_mm_load_si128(&cmmax), _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 3, 3, 3)));
+		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 3, 3, 3)));
 	case ONE_MINUS_DST_ALPHA:
-		return _mm_sub_epi32(_mm_load_si128(&cmmax), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
+		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
 	}
 	printf("Invalid blend func (sse)\n");
-	return _mm_load_si128(&cmone);
+	return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 }
 
 
@@ -464,8 +482,8 @@ FT800EMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const a
 FT800EMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
 #if FT800EMU_SSE41_INSTRUCTIONS_USE // > 10% faster
-	static const __m128i cmmax = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
-	const register __m128i mmax = _mm_load_si128(&cmmax);
+	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
+	const register __m128i mmax = _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax));
 	const register __m128i msrc = to_m128i(src);
 	const register __m128i mdst = to_m128i(dst);
 	const register __m128i srca = getAlphaSplat(gs.BlendFuncSrc, msrc, mdst);
@@ -2697,7 +2715,7 @@ EvaluateDisplayListValue:
 					}
 					break;
 				default:
-					printf("%i: Invalid display list entry %i\n", c, (v >> 24));
+					printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:

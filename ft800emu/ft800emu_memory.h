@@ -51,26 +51,26 @@ public:
 	// static void coprocessorWrite(size_t address, uint8_t data);
 	// static uint8_t coprocessorRead(size_t address);
 
-	static __forceinline void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
-	static __forceinline uint32_t rawReadU32(uint8_t *buffer, size_t address);
+	static FT800EMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
+	static FT800EMU_FORCE_INLINE uint32_t rawReadU32(uint8_t *buffer, size_t address);
 
 	static void swapDisplayList();
 
 private:
-	static __forceinline void rawWriteU32(size_t address, uint32_t data);
-	static __forceinline uint32_t rawReadU32(size_t address);
+	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
+	static FT800EMU_FORCE_INLINE uint32_t rawReadU32(size_t address);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
 	
 }; /* class MemoryClass */
 
-__forceinline void MemoryClass::rawWriteU32(uint8_t *buffer, size_t address, uint32_t data)
+FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(uint8_t *buffer, size_t address, uint32_t data)
 {
 	*static_cast<uint32_t *>(static_cast<void *>(&buffer[address])) = data;
 }
 
-__forceinline uint32_t MemoryClass::rawReadU32(uint8_t *buffer, size_t address)
+FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(uint8_t *buffer, size_t address)
 {
 	return *static_cast<uint32_t *>(static_cast<void *>(&buffer[address]));
 }

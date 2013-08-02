@@ -9,6 +9,7 @@ typedef unsigned __int64 uint64_t;
 typedef signed __int64 int64_t;
 #else
 #include <stdint.h>
+#include <stdlib.h>
 #endif
 typedef uint32_t argb8888;
 #ifndef min
@@ -16,4 +17,9 @@ typedef uint32_t argb8888;
 #endif
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
+#endif
+#ifdef WIN32
+#	define FT800EMU_FORCE_INLINE __forceinline
+#else
+#	define FT800EMU_FORCE_INLINE inline __attribute__((always_inline))
 #endif

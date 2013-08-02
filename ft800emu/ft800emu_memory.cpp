@@ -39,12 +39,12 @@ static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
 static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
-__forceinline void MemoryClass::rawWriteU32(size_t address, uint32_t data)
+FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
 	rawWriteU32(s_Ram, address, data);
 }
 
-__forceinline uint32_t MemoryClass::rawReadU32(size_t address)
+FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
 {
 	return rawReadU32(s_Ram, address);
 }
