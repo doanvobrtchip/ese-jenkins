@@ -372,7 +372,8 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SDL_Thread *threadA = SDL_CreateThread(audioThread, NULL);
 	// TODO - Error handling
 
-	SDL_Thread *threadC = SDL_CreateThread(coprocessorThread, NULL);
+	SDL_Thread *threadC = NULL;
+	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThread(coprocessorThread, NULL);
 	// TODO - Error handling
 
 	masterThread();
@@ -380,7 +381,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_MasterRunning = false;
 	SDL_WaitThread(threadD, NULL);
 	SDL_WaitThread(threadA, NULL);
-	SDL_WaitThread(threadC, NULL);
+	if (params.Flags & EmulatorEnableCoprocessor) SDL_WaitThread(threadC, NULL);
 
 #else
 	#pragma omp parallel num_threads(params.Flags & EmulatorEnableCoprocessor ? 4 : 3)
