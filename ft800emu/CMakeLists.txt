@@ -48,7 +48,5 @@ else (USE_SSE_41)
 
 endif (USE_SSE_41)
 
-SET(FT800_REFERENCE_DIR "./" CACHE STRING "Directory containing ROM")
-add_definitions(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 add_definitions(-DFT800EMU_CMAKE)
 
