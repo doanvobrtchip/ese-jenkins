@@ -53,18 +53,13 @@ FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
 	return rawReadU32(s_Ram, address);
 }
 
+static const uint8_t rom[FT800EMU_ROM_SIZE] = {
+#include "rom.h"
+};
+
 void MemoryClass::begin()
 {
-	FILE *f;
-	f = fopen(FT800EMU_ROM_FILE, "rb");
-	if (!f) printf("Failed to open ROM file\n");
-	else
-	{
-		size_t s = fread(&s_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
-		if (s != FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
-		else printf("Loaded ROM file\n");
-		if (fclose(f)) printf("Error closing ROM file\n");
-	}
+    memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
