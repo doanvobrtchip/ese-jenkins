@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011-2012  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 

@@ -190,10 +190,6 @@ namespace {
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 			GraphicsDriver.setMode(reg_hsize, reg_vsize);
-
-			// If coprocessor running on render thread, REG_CPURESET goes into effect at this point.
-			// Must use the getCPUReset() function which buffers value switches.
-			// ...(Memory.getCPUReset());
 			
 			// Render lines
 			{
@@ -250,7 +246,6 @@ namespace {
 				if (secondsToWait > 0.0)
 				{
 					System.delay((int)(secondsToWait * 1000.0));
-					// If coprocessor enabled and runs on the same thread as the rendering it would run here.
 				}
 			}
 			else
