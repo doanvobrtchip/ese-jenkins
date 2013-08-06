@@ -233,8 +233,9 @@ void GraphicsDriverClass::renderBuffer(bool output)
 
 	if (output)
 	{
-		// FIXME: This SDL_SoftStretch is terribly slow!
-		if (SDL_SoftStretch(s_Buffer, NULL, s_Screen, NULL) < 0)
+		// FIXME: SDL_SoftStretch is terribly slow and does not
+                // convert pixel format!
+		if (SDL_BlitSurface(s_Buffer, NULL, s_Screen, NULL) < 0)
 			SystemSdlClass::ErrorSdl();
 	}
 	else
