@@ -51,5 +51,6 @@ ADD_SUBDIRECTORY(arduino)
 
 ADD_SUBDIRECTORY(loaddump)
 ADD_SUBDIRECTORY(app)
+ADD_SUBDIRECTORY(dump1)
 
 ########################################################################
