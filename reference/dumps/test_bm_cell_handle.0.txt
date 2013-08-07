@@ -6,67 +6,67 @@ Display list:
   000: 26000007   CLEAR c=1 s=1 t=1
   001: 0b000008   BLEND_FUNC src=1 dst=0
   002: 05000000   BITMAP_HANDLE handle=0
-  003: 0720000f   BITMAP_LAYOUT format=4 linestride=0 height=15
+  003: 07200010   BITMAP_LAYOUT format=4 linestride=0 height=16
   004: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   005: 01000000   BITMAP_SOURCE addr=0
   006: 05000001   BITMAP_HANDLE handle=1
-  007: 0720020e   BITMAP_LAYOUT format=4 linestride=1 height=14
+  007: 0720020f   BITMAP_LAYOUT format=4 linestride=1 height=15
   008: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   009: 01000003   BITMAP_SOURCE addr=3
   00a: 05000002   BITMAP_HANDLE handle=2
-  00b: 0720040d   BITMAP_LAYOUT format=4 linestride=2 height=13
+  00b: 0720040e   BITMAP_LAYOUT format=4 linestride=2 height=14
   00c: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   00d: 01000006   BITMAP_SOURCE addr=6
   00e: 05000003   BITMAP_HANDLE handle=3
-  00f: 0720060c   BITMAP_LAYOUT format=4 linestride=3 height=12
+  00f: 0720060d   BITMAP_LAYOUT format=4 linestride=3 height=13
   010: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   011: 01000009   BITMAP_SOURCE addr=9
   012: 05000004   BITMAP_HANDLE handle=4
-  013: 0720080b   BITMAP_LAYOUT format=4 linestride=4 height=11
+  013: 0720080c   BITMAP_LAYOUT format=4 linestride=4 height=12
   014: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   015: 0100000c   BITMAP_SOURCE addr=12
   016: 05000005   BITMAP_HANDLE handle=5
-  017: 07200a0a   BITMAP_LAYOUT format=4 linestride=5 height=10
+  017: 07200a0b   BITMAP_LAYOUT format=4 linestride=5 height=11
   018: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   019: 0100000f   BITMAP_SOURCE addr=15
   01a: 05000006   BITMAP_HANDLE handle=6
-  01b: 07200c09   BITMAP_LAYOUT format=4 linestride=6 height=9
+  01b: 07200c0a   BITMAP_LAYOUT format=4 linestride=6 height=10
   01c: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   01d: 01000012   BITMAP_SOURCE addr=18
   01e: 05000007   BITMAP_HANDLE handle=7
-  01f: 07200e08   BITMAP_LAYOUT format=4 linestride=7 height=8
+  01f: 07200e09   BITMAP_LAYOUT format=4 linestride=7 height=9
   020: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   021: 01000015   BITMAP_SOURCE addr=21
   022: 05000008   BITMAP_HANDLE handle=8
-  023: 07201007   BITMAP_LAYOUT format=4 linestride=8 height=7
+  023: 07201008   BITMAP_LAYOUT format=4 linestride=8 height=8
   024: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   025: 01000018   BITMAP_SOURCE addr=24
   026: 05000009   BITMAP_HANDLE handle=9
-  027: 07201206   BITMAP_LAYOUT format=4 linestride=9 height=6
+  027: 07201207   BITMAP_LAYOUT format=4 linestride=9 height=7
   028: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   029: 0100001b   BITMAP_SOURCE addr=27
   02a: 0500000a   BITMAP_HANDLE handle=10
-  02b: 07201405   BITMAP_LAYOUT format=4 linestride=10 height=5
+  02b: 07201406   BITMAP_LAYOUT format=4 linestride=10 height=6
   02c: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   02d: 0100001e   BITMAP_SOURCE addr=30
   02e: 0500000b   BITMAP_HANDLE handle=11
-  02f: 07201604   BITMAP_LAYOUT format=4 linestride=11 height=4
+  02f: 07201605   BITMAP_LAYOUT format=4 linestride=11 height=5
   030: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   031: 01000021   BITMAP_SOURCE addr=33
   032: 0500000c   BITMAP_HANDLE handle=12
-  033: 07201803   BITMAP_LAYOUT format=4 linestride=12 height=3
+  033: 07201804   BITMAP_LAYOUT format=4 linestride=12 height=4
   034: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   035: 01000024   BITMAP_SOURCE addr=36
   036: 0500000d   BITMAP_HANDLE handle=13
-  037: 07201a02   BITMAP_LAYOUT format=4 linestride=13 height=2
+  037: 07201a03   BITMAP_LAYOUT format=4 linestride=13 height=3
   038: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   039: 01000027   BITMAP_SOURCE addr=39
   03a: 0500000e   BITMAP_HANDLE handle=14
-  03b: 07201c01   BITMAP_LAYOUT format=4 linestride=14 height=1
+  03b: 07201c02   BITMAP_LAYOUT format=4 linestride=14 height=2
   03c: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   03d: 0100002a   BITMAP_SOURCE addr=42
   03e: 0500000f   BITMAP_HANDLE handle=15
-  03f: 07201e00   BITMAP_LAYOUT format=4 linestride=15 height=0
+  03f: 07201e01   BITMAP_LAYOUT format=4 linestride=15 height=1
   040: 080c0201   BITMAP_SIZE filter=0 wrapx=1 wrapy=1 width=1 height=1
   041: 0100002d   BITMAP_SOURCE addr=45
   042: 1f000001   BEGIN prim=1
