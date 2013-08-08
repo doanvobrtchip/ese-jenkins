@@ -53,8 +53,6 @@ def main(dump1, ref_dir, quiet):
         'test_prim_scissor.0',
         'test_rects.0',
         'test_restores.0',
-        'test_rom.0',
-        'test_rom.1',
         'test_rr_01.0',
         'test_rr_03.0',
         'test_rr_06.0',
