@@ -1,7 +1,7 @@
 Version: 100
 Screen: (100, 100)
-REG_MACRO_0: 80000000   VERTEX2II x=0 y=0 handle=0 cell=0
-REG_MACRO_1: 04ff0d00   COLOR_RGB red=255 green=13 blue=0
+REG_MACRO_0: 00000000   DISPLAY 
+REG_MACRO_1: 00000000   DISPLAY 
 Display list:
   000: 26000007   CLEAR c=1 s=1 t=1
   001: 1f000009   BEGIN prim=9
@@ -93,11 +93,11 @@ Display list:
   057: 04989474   COLOR_RGB red=152 green=148 blue=116
   058: 83c1e000   VERTEX2II x=30 y=30 handle=0 cell=0
   059: 88c46000   VERTEX2II x=70 y=70 handle=0 cell=0
-  05a: 0e000006   LINE_WIDTH width=6
-  05b: 04d7f179   COLOR_RGB red=215 green=241 blue=121
-  05c: 83c1e000   VERTEX2II x=30 y=30 handle=0 cell=0
-  05d: 88c46000   VERTEX2II x=70 y=70 handle=0 cell=0
-  05e: 21000000   END 
+  05a: 21000000   END 
+  05b: 00000000   DISPLAY 
+  05c: 00000000   DISPLAY 
+  05d: 00000000   DISPLAY 
+  05e: 00000000   DISPLAY 
   05f: 00000000   DISPLAY 
   060: 00000000   DISPLAY 
   061: 00000000   DISPLAY 
