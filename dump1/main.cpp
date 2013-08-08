@@ -39,7 +39,10 @@ void wr32(size_t address, uint32_t value)
 int main(int argc, char* argv[])
 {
 	FILE *f = fopen(argv[1], "rb");
-  int hsize, vsize;
+    int hsize, vsize;
+
+    FT800EMU::MemoryClass::begin();
+    FT800EMU::GraphicsProcessor.begin();
 
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
@@ -50,8 +53,8 @@ int main(int argc, char* argv[])
 		if (header[0] != 100) printf("Invalid header version %i\n", header[0]);
 		else
 		{
-      hsize = header[1];
-      vsize = header[2];
+            hsize = header[1];
+            vsize = header[2];
 			wr32(REG_HSIZE, hsize);
 			wr32(REG_VSIZE, vsize);
 			wr32(REG_MACRO_0, header[3]);
@@ -80,12 +83,10 @@ int main(int argc, char* argv[])
 	}
 	wr32(REG_DLSWAP, SWAP_FRAME);
 
-  argb8888 buffer[hsize*vsize];
-  FT800EMU::MemoryClass::begin();
-  FT800EMU::GraphicsProcessor.begin();
-  FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
-  f = fopen(argv[2], "wb");
-  fwrite(buffer, 1, sizeof(buffer), f);
-  fclose(f);
+    argb8888 buffer[hsize*vsize];
+    FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
+    f = fopen(argv[2], "wb");
+    fwrite(buffer, 1, sizeof(buffer), f);
+    fclose(f);
 	return 0;
 }
