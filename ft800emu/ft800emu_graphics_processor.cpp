@@ -24,6 +24,7 @@
 // System includes
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 #include <stack>
 #if FT800EMU_SSE41_INSTRUCTIONS
 #	include <xmmintrin.h>
@@ -646,7 +647,7 @@ FT800EMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
-		value = (value + max * 512) % max; // + max * 512 necessary to get correct negative behaviour	
+		value = value & (max - 1);
 		break;
 	}
 	return true;

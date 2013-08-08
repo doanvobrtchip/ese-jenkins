@@ -8,20 +8,17 @@ import numpy as np
 
 def main(dump1, ref_dir, quiet):
     dump_dir = os.path.join(ref_dir, "dumps")
-    tests = set([fn.replace(".vc1dump", "") for fn in os.listdir(dump_dir) if fn.endswith(".vc1dump")])
+    alltraces = set([fn.replace(".vc1dump", "") for fn in os.listdir(dump_dir) if fn.endswith(".vc1dump")])
 
     # This is a list of tests to exclude.
     # Please remove passing tests from this list to prevent regressions
     notyet = set([
         'test_aa_stencil.0',
         'test_alpha_killed.0',
-        'test_bm_wrap.0',
-        'test_bm_xy.0',
         'test_call.0',
         'test_clear_simple.0',
         'test_edge_polygon.0',
         'test_edge_subpixel.0',
-        'test_handles.0',
         'test_jump.0',
         'test_kitchensink.0',
         'test_line_extreme.0',
@@ -39,9 +36,6 @@ def main(dump1, ref_dir, quiet):
         'test_line_wide_offscreen.0',
         'test_line_width.0',
         'test_macro.0',
-        'test_mem_exhaustive_b.0',
-        'test_mem_exhaustive_b.1',
-        'test_mem_exhaustive_b.2',
         'test_mem_exhaustive_b.3',
         'test_nonpow2.0',
         'test_outside_beginend.0',
@@ -100,7 +94,7 @@ def main(dump1, ref_dir, quiet):
             return "pass"
 
     failed = []
-    for t in sorted(tests - notyet):
+    for t in sorted(alltraces - notyet):
         outcome = run1(t)
         if not quiet:
             print "%32s: %s" % (t, outcome)
