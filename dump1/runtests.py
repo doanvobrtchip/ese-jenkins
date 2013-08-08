@@ -36,8 +36,6 @@ def main(dump1, ref_dir, quiet):
         'test_line_wide_offscreen.0',
         'test_line_width.0',
         'test_macro.0',
-        'test_mem_exhaustive_b.3',
-        'test_nonpow2.0',
         'test_outside_beginend.0',
         'test_points_increase.0',
         'test_points_large.0',
@@ -88,13 +86,16 @@ def main(dump1, ref_dir, quiet):
             r.paste(actual, (w, 0))
             r.paste(err, (2 * w, 0))
             errf = "error_%s.png" % t
-            r.save(errf)
+            r.convert("RGB").save(errf)
             return "%d pixels differ, differences in %s" % (len(fails), errf)
         else:
             return "pass"
 
     failed = []
-    for t in sorted(alltraces - notyet):
+    tests = alltraces - notyet
+    # tests = ['test_nonpow2.0']
+    # tests = notyet
+    for t in sorted(tests):
         outcome = run1(t)
         if not quiet:
             print "%32s: %s" % (t, outcome)

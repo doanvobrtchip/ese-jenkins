@@ -671,16 +671,51 @@ FT800EMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 }
 
 // uses pixel units
-FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy)
+FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy)
 {
-	if (!wrap(x, width, wrapx)) return 0x00000000;
+    int xo;   // x byte offset
+	switch (format)
+	{
+		case ARGB1555:
+		case ARGB4:
+		case RGB565:
+          xo = x << 1;
+          break;
+
+		case RGB332:
+		case ARGB2:
+		case PALETTED:
+		case L8:
+          xo = x;
+          break;
+
+		case L1:
+		case TEXT8X8:
+          xo = x >> 3;
+          break;
+
+		case TEXTVGA:
+          xo = (x >> 3) << 1;
+          break;
+
+		case L4:
+          xo = x >> 1;
+          break;
+
+
+		case BARGRAPH:
+          xo = x;
+          break;
+	}
+
+	if (!wrap(xo, stride, wrapx)) return 0x00000000;
 	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
 	int py = y * stride;
 	switch (format)
 	{
 	case ARGB1555:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + xo)));
 			return (((val >> 15) * 255) << 24)
 				| (mul255div31((val >> 10) & 0x1F) << 16)
 				| (mul255div31((val >> 5) & 0x1F) << 8)
@@ -688,25 +723,25 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case L1:
 		{
-			int val = (bmpSrc8(ram, srci, py + (x >> 3)) >> (7 - (x % 8))) & 0x1;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (x % 8))) & 0x1;
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF;
 		}
 	case L4:
 		{
-			int val = (bmpSrc8(ram, srci, py + (x >> 1)) >> (((x + 1) % 2) << 2)) & 0xF;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (((x + 1) % 2) << 2)) & 0xF;
 			val *= 255;
 			val /= 15; // todo opt
 			return (val << 24) | 0x00FFFFFF;
 		}
 	case L8:
 		{
-			uint8_t val = bmpSrc8(ram, srci, py + x);
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
 			return (val << 24) | 0x00FFFFFF;
 		}
 	case RGB332:
 		{
-			uint8_t val = bmpSrc8(ram, srci, py + x);
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
 			return 0xFF000000
 				| (mul255div7(val >> 5) << 16)
 				| (mul255div7((val >> 2) & 0x7) << 8)
@@ -714,7 +749,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case ARGB2:
 		{
-			uint8_t val = bmpSrc8(ram, srci, py + x);
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
 			return (((val >> 6) * 255 / 3) << 24)
 				| (mul255div3((val >> 4) & 0x3) << 16)
 				| (mul255div3((val >> 2) & 0x3) << 8)
@@ -722,7 +757,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case ARGB4:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + xo)));
 			return (mul255div15(val >> 12) << 24)
 				| (mul255div15((val >> 8) & 0xF) << 16)
 				| (mul255div15((val >> 4) & 0xF) << 8)
@@ -730,7 +765,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case RGB565:
 		{
-			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + (x << 1))));
+			uint16_t val = *static_cast<const uint16_t *>(static_cast<const void *>(&bmpSrc16(ram, srci, py + xo)));
 			return 0xFF000000 // todo opt
 				| (mul255div31(val >> 11) << 16)
 				| (mul255div63((val >> 5) & 0x3F) << 8)
@@ -738,14 +773,14 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case PALETTED:
 		{
-			uint8_t val = bmpSrc8(ram, srci, py + x);
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
 			return getPaletted(ram, val);
 		}
 	case TEXT8X8:
 		{
 			const int yn = y >> 3;
 			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + (x >> 3));
+			uint8_t c = bmpSrc8(ram, srci, py + xo);
 			const uint8_t *nsrc = &ram[s_BitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
 			const int xc = x & 0x7;
@@ -756,8 +791,8 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		{
 			const int yn = y >> 4;
 			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + ((x >> 3) << 1)); // Character
-			uint8_t ca = bmpSrc8(ram, srci, py + ((x >> 3) << 1) + 1); // Attribute
+			uint8_t c = bmpSrc8(ram, srci, py + xo); // Character
+			uint8_t ca = bmpSrc8(ram, srci, py + xo + 1); // Attribute
 			const uint8_t *nsrc = &ram[s_BitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
 			const int pyc = y & 0xF;
 			const int xc = x & 0x7;
@@ -768,7 +803,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case BARGRAPH:
 		{
-			uint8_t val = bmpSrc8(ram, srci, x);
+			uint8_t val = bmpSrc8(ram, srci, xo);
 			if (val < y) 
 				return 0xFFFFFFFF;
 			else 
@@ -789,7 +824,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 		{
 			int xi = x >> 12;
 			int yi = y >> 12;
-			return sampleBitmapAt(ram, srci, xi, yi, width, height, format, stride, wrapx, wrapy);
+			return sampleBitmapAt(ram, srci, xi, yi, height, format, stride, wrapx, wrapy);
 		}
 	case BILINEAR:
 		{
@@ -799,15 +834,15 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 			int yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
-				return sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy);
+				return sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy);
 			}
 			else if (xsep == 0)
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
 				int yb = yt + 1;
-				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy);
-				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy);
+				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy);
+				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
@@ -815,8 +850,8 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy), xar);
 			}
 			else
 			{
@@ -827,19 +862,19 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xr = xl + 1;
 				int yb = yt + 1;
 #if FT800EMU_SSE41_INSTRUCTIONS_USE
-				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy));
-				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy));
-				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy));
-				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, width, height, format, stride, wrapx, wrapy));
+				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy));
+				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy));
+				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy));
+				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy));
 				const __m128i top = _mm_add_epi32(mulalpha_argb(tl, xal), mulalpha_argb(tr, xar));
 				const __m128i btm = _mm_add_epi32(mulalpha_argb(bl, xal), mulalpha_argb(br, xar));
 				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
 				return to_argb8888(result);
 #else
-				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, width, height, format, stride, wrapx, wrapy), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, width, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, width, height, format, stride, wrapx, wrapy), xar);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 #endif
 			}
@@ -850,6 +885,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 
 void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell)
 {
+    // if (y != 22) return;
 	// printf("bitmap\n");
 	const BitmapInfo &bi = s_BitmapInfo[handle];
 	const uint8_t *ram = Memory.getRam();
@@ -907,6 +943,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 				}
 			}
 		}
+        printf("bi LayoutWidth=%d LayoutStride=%d\n", bi.LayoutStride, bi.LayoutWidth);
 	}
 }
 
