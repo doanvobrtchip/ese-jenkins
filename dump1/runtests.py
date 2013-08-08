@@ -1,12 +1,12 @@
-import os
 import sys
+import getopt
+import os
 import Image
 import subprocess
 import tempfile
 import numpy as np
 
-def main():
-    ref_dir ="../reference"
+def main(dump1, ref_dir, quiet):
     dump_dir = os.path.join(ref_dir, "dumps")
     tests = set([fn.replace(".vc1dump", "") for fn in os.listdir(dump_dir) if fn.endswith(".vc1dump")])
 
@@ -74,7 +74,7 @@ def main():
         w,h = expected.size
 
         try:
-            subprocess.check_call([ "./dump1/dump1", os.path.join(dump_dir, t + ".vc1dump"), "out"], stdout = open("0", "w"))
+            subprocess.check_call([dump1, os.path.join(dump_dir, t + ".vc1dump"), "out"], stdout = open("0", "w"))
         except subprocess.CalledProcessError:
             return 'CRASH'
         bgra = Image.fromstring("RGBA", (w, h), open("out").read())
@@ -104,7 +104,8 @@ def main():
     failed = []
     for t in sorted(tests - notyet):
         outcome = run1(t)
-        print "%32s: %s" % (t, outcome)
+        if not quiet:
+            print "%32s: %s" % (t, outcome)
         if outcome != "pass":
             failed.append(t)
     if failed:
@@ -112,8 +113,21 @@ def main():
     return failed
 
 if __name__ == "__main__":
-    r = main() 
+    try:
+        optlist, args = getopt.getopt(sys.argv[1:], "r:d:q")
+    except getopt.GetoptError:
+        print "usage: runtest.py [options]"
+        print "  -r <dir>   reference dir (default '../reference')"
+        print "  -d exe     path to 'dump1' executable (default 'dump1/dump1')"
+        print "  -q         quiet"
+        sys.exit(1)
+
+    optdict = dict(optlist)
+
+    ref_dir = optdict.get('-r', "../reference")
+    dump1 = optdict.get('-d', "dump1/dump1")
+    r = main(dump1, ref_dir, quiet = '-q' in optdict) 
     if not r:
         sys.exit(0)
     else:
-        sys.exit(1) # failures, so exit nonzero
+        sys.exit(1) # there were failures, so exit nonzero
