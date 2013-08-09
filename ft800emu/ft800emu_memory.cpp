@@ -54,7 +54,7 @@ static const uint8_t rom[FT800EMU_ROM_SIZE] = {
 
 void MemoryClass::begin()
 {
-  memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+    memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
