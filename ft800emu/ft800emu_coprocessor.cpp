@@ -37,9 +37,17 @@ void CoprocessorClass::execute()
     int insn;
 
     int swapped = 0;
+    int starve = 0;
     do {
         insn = pgm[pc];
-        printf("PC=%04x %04x\n", pc, insn);
+        // printf("PC=%04x %04x\n", pc, insn);
+        if (pc == 0x1BA6)
+            printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+        if (pc == 0x0980) { // cmd.has1 
+            int rp = MemoryClass::coprocessorReadU32(0x1090f8);
+            printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
+            starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
+        }
         _pc = pc + 1;
         if (insn & 0x8000) { // literal
             push(insn & 0x7fff);
@@ -87,13 +95,13 @@ void CoprocessorClass::execute()
                 case 9:     _t = n >> t; break;
                 case 10:    _t = t - 1; break;
                 case 11:    _t = r[rsp]; break;
-                case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); printf("rd[%x] = %x\n", t, _t); break;
+                case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*printf("rd[%x] = %x\n", t, _t);*/ break;
                 case 13:    _t = product; break;
                 case 14:    _t = (n << 15) | (t & 0x7fff); break;
                 case 15:    _t = -(n < t); break;
                 case 16:    assert(0);
                 case 17:    _t = n << t; break;
-                case 18:    _t = MemoryClass::coprocessorReadU8(t); printf("rd8[%x] = %x\n", t, _t);break;
+                case 18:    _t = MemoryClass::coprocessorReadU8(t); /*printf("rd8[%x] = %x\n", t, _t);*/ break;
                 case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
                 case 20:    _t = product >> 32; break;
                 case 21:    _t = product >> 16; break;
@@ -115,7 +123,7 @@ void CoprocessorClass::execute()
                 if (do_T_R)
                     r[rsp] = t;
                 if (do_write32) {
-                    printf("wr[%x] <= %x\n", t, n);
+                    // printf("wr[%x] <= %x\n", t, n);
                     MemoryClass::coprocessorWriteU32(t, n);
                     if (t == REG_DLSWAP)
                         swapped = 1;
@@ -131,9 +139,9 @@ void CoprocessorClass::execute()
             }
         }
         pc = _pc;
-    } while (!swapped && MemoryClass::coprocessorReadU32(REG_CMD_WRITE) != MemoryClass::coprocessorReadU32(REG_CMD_READ));
-finish:
-    ;
+        fflush(stdout);
+    } while (!swapped && !starve);
+    printf("coprocessor done\n");
 }
 
 void CoprocessorClass::end()
