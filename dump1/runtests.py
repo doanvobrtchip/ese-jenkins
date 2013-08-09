@@ -44,7 +44,7 @@ def main(dump1, ref_dir, quiet):
         'test_points_visit.0',
         'test_prim_scissor.0',
         'test_rects.0',
-        'test_restores.0',
+        # 'test_restores.0',
         'test_rr_01.0',
         'test_rr_03.0',
         'test_rr_06.0',
@@ -93,7 +93,7 @@ def main(dump1, ref_dir, quiet):
 
     failed = []
     tests = alltraces - notyet
-    # tests = ['test_rects.0']
+    # tests = ['test_restores.0']
     # tests = notyet
     for t in sorted(tests):
         outcome = run1(t)

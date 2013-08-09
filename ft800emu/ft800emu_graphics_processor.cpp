@@ -2700,8 +2700,16 @@ EvaluateDisplayListValue:
 					gsstack.push(gs);
 					break;
 				case FT800EMU_DL_RESTORE_CONTEXT:
-					gs = gsstack.top();
-					gsstack.pop();
+                    if (gsstack.empty()) {
+                        gs = GraphicsState();
+                        gs.ScissorWidth = hsize;
+                        gs.ScissorHeight = vsize;
+                        gs.ScissorX2.U = hsize;
+                        gs.ScissorY2.U = vsize;
+                    } else {
+                        gs = gsstack.top();
+                        gsstack.pop();
+                    }
 					break;
 				case FT800EMU_DL_RETURN:
 					c = callstack.top();
