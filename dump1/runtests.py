@@ -93,7 +93,7 @@ def main(dump1, ref_dir, quiet):
 
     failed = []
     tests = alltraces - notyet
-    # tests = ['test_nonpow2.0']
+    # tests = ['test_rects.0']
     # tests = notyet
     for t in sorted(tests):
         outcome = run1(t)
@@ -101,6 +101,7 @@ def main(dump1, ref_dir, quiet):
             print "%32s: %s" % (t, outcome)
         if outcome != "pass":
             failed.append(t)
+    print "ran %d tests, %d failed" % (len(tests), len(failed))
     if failed:
         print "The following tests failed: " + ", ".join(failed)
     return failed
