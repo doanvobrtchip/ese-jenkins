@@ -943,7 +943,6 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 				}
 			}
 		}
-        printf("bi LayoutWidth=%d LayoutStride=%d\n", bi.LayoutStride, bi.LayoutWidth);
 	}
 }
 
