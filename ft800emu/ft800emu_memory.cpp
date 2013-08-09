@@ -38,14 +38,56 @@ static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
 static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
+void MemoryClass::actionWrite(size_t address, uint32_t data)
+{
+	// switches for 1 byte regs
+	// least significant byte
+	if (address % 4 == 0)
+	{
+		switch (address)
+		{
+		case REG_DLSWAP:
+            printf("swap: %x==%x %x==0\n", data, DLSWAP_FRAME, s_Ram[REG_PCLK]);
+			if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
+			{
+				swapDisplayList();
+			}
+			break;
+		}
+	}
+}
+
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
+    actionWrite(address, data);
 	rawWriteU32(s_Ram, address, data);
 }
 
 FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
 {
 	return rawReadU32(s_Ram, address);
+}
+
+FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU16(size_t address, uint16_t data)
+{
+    actionWrite(address, data);
+	rawWriteU16(s_Ram, address, data);
+}
+
+FT800EMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(size_t address)
+{
+	return rawReadU16(s_Ram, address);
+}
+
+FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU8(size_t address, uint8_t data)
+{
+    actionWrite(address, data);
+	rawWriteU8(s_Ram, address, data);
+}
+
+FT800EMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
+{
+	return rawReadU8(s_Ram, address);
 }
 
 static const uint8_t rom[FT800EMU_ROM_SIZE] = {
@@ -106,30 +148,8 @@ const uint32_t *MemoryClass::getDisplayList()
 
 void MemoryClass::mcuWrite(size_t address, uint8_t data)
 {
-	// switches for 1 byte regs
-	// least significant byte
-	if (address % 4 == 0)
-	{
-		switch (address)
-		{
-		case REG_DLSWAP:
-			if (data == SWAP_FRAME && s_Ram[REG_PCLK] == 0)
-			{
-				swapDisplayList();
-				data = 0;
-			}
-			break;
-		}
-	}
-	/*
-	switch (address & 0xFFFFFFFC)
-	{
-	case REG_...:
-		...
-		break;
-	}
-	*/
-	s_Ram[address] = data;
+
+	rawWriteU8(address, data);
 }
 
 void MemoryClass::swapDisplayList()
@@ -164,6 +184,26 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 	return rawReadU32(address);
+}
+
+void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
+{
+	rawWriteU16(address, data);
+}
+
+uint16_t MemoryClass::coprocessorReadU16(size_t address)
+{
+	return rawReadU16(address);
+}
+
+void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
+{
+	rawWriteU8(address, data);
+}
+
+uint8_t MemoryClass::coprocessorReadU8(size_t address)
+{
+	return rawReadU8(address);
 }
 
 } /* namespace FT800EMU */

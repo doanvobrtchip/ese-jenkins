@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <vc.h>
 
+#undef FT800EMU_REFERENCE_DIR
 #ifndef FT800EMU_REFERENCE_DIR
 #	define FT800EMU_REFERENCE_DIR "../reference"
 #endif
@@ -55,7 +56,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_params.0.vc1dump", "rb"); // ok
@@ -90,7 +91,7 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_offscreen.0.vc1dump", "rb"); // looks ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_subpixel.0.vc1dump", "rb"); // ok, close enough aa
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_points_visit.0.vc1dump", "rb"); // ok, close enough aa
-	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_ram.0.vc1dump", "rb"); // seems ok
+	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_ram.0.vc1dump", "rb"); // seems ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_mem_exhaustive.0.vc1dump", "rb"); // looks ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_mem_exhaustive_b.3.vc1dump", "rb");
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_scissor_connected.0.vc1dump", "rb"); // ok
@@ -145,7 +146,7 @@ void setup()
 		}
 		if (fclose(f)) printf("Error closing vc1dump file\n");
 	}
-	wr32(REG_DLSWAP, SWAP_FRAME);
+	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
 }
 

@@ -2482,10 +2482,7 @@ void GraphicsProcessorClass::end()
 
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
-	// Swap the display list... Is this done before the frame render or after?
 	uint8_t *ram = Memory.getRam();
-	if (ram[REG_DLSWAP] == SWAP_FRAME)
-		Memory.swapDisplayList();
 
 	// Store the touch tag xy used for lookup
 	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
