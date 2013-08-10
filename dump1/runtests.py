@@ -17,6 +17,7 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_alpha_killed.0',
         'test_call.0',
         'test_clear_simple.0',
+        'test_dodecahedron.0', 
         'test_edge_polygon.0',
         'test_edge_subpixel.0',
         'test_jump.0',
