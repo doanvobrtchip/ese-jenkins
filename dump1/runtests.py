@@ -25,7 +25,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_line_extreme.0',
         'test_line_gradients.0',
         'test_line_mini.0',
-        'test_line_offscreen_flat.0',
         'test_line_scatter.0',
         'test_line_scatter.1',
         'test_line_scatter.2',
