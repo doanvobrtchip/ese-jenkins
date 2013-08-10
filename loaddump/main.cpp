@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <vc.h>
 
-#undef FT800EMU_REFERENCE_DIR
 #ifndef FT800EMU_REFERENCE_DIR
 #	define FT800EMU_REFERENCE_DIR "../reference"
 #endif
@@ -56,7 +55,7 @@ void setup()
   2**13  Display list contents*/
 
 	FILE *f = NULL;
-	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
+	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_autumn.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_format_text8x8.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_xform_rot.0.vc1dump", "rb"); // ok
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_bm_params.0.vc1dump", "rb"); // ok
@@ -111,6 +110,7 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_line_gradients.0.vc1dump", "rb"); // technically ok, close enough aa
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_line_extreme.0.vc1dump", "rb"); // technically ok, close enough aa
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_stencil_ops.0.vc1dump", "rb"); // not ok, todo check the bitmap
+	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_dodecahedron.0.vc1dump", "rb"); // not ok, todo check the bitmap
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

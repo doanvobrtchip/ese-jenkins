@@ -1933,7 +1933,6 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
-
 	if (!ess.Set)
 	{
 		ess.X1 = xp;
@@ -1959,7 +1958,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 		
 	// Render
 	const int ym = min(y1, y2);
-	const int ym_px = (ym + 16) >> 4; // Clip
+	const int ym_px = (ym + 15) >> 4; // Clip
 	if (max(ym_px, gs.ScissorY.I) <= y && y < gs.ScissorY2.I) // Scissor
 	{
 		// Get pixel positions
