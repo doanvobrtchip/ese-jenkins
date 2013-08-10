@@ -14,8 +14,6 @@
 #include <SPI.h>
 #include <vc.h>
 
-#define SWAP_FRAME 1 // FIXME
-
 void wr32(size_t address, uint32_t value)
 {
 	digitalWrite(9, LOW);
@@ -50,9 +48,47 @@ inline uint32_t transformvalue(double d)
 void setup()
 {
 	dli = RAM_DL;
-	// dl(CLEAR_COLOR_RGB(0, 64, 128));
-	dl(CLEAR(1, 1, 1)); // clear screen
 
+	dl(CLEAR_COLOR_RGB(0, 64, 128));
+	dl(CLEAR(1, 1, 1)); // clear screen
+	
+	dl(TAG(200));
+
+	dl(BEGIN(LINES));
+	dl(LINE_WIDTH(8));
+	dl(VERTEX2F(4191, 2524));
+	dl(VERTEX2F(4185, 2548));
+	//dl(VERTEX2F(2367, 58));
+	//dl(VERTEX2F(8223, 409));
+
+	/*
++  2a3: 1f000003   BEGIN prim=3
++  2a4: 0e000008   LINE_WIDTH width=8
++  2a5: 48e18c3f   VERTEX2F x=4547 y=3135
++  2a6: 48d58c39   VERTEX2F x=4523 y=3129
+
++  2a7: 48e10b3d   VERTEX2F x=4546 y=2877
++  2a8: 48d50b44   VERTEX2F x=4522 y=2884
+
++  2a9: 489f8a5c   VERTEX2F x=4415 y=2652
++  2aa: 48968a6e   VERTEX2F x=4397 y=2670
+
++  2ab: 482f89dc   VERTEX2F x=4191 y=2524
++  2ac: 482c89f4   VERTEX2F x=4185 y=2548
+
++  2ad: 47ae89dd   VERTEX2F x=3933 y=2525
++  2ae: 47b209f5   VERTEX2F x=3940 y=2549
++  2af: 473e0a60   VERTEX2F x=3708 y=2656
++  2b0: 47470a72   VERTEX2F x=3726 y=2674
++  2b1: 46fe0b40   VERTEX2F x=3580 y=2880
++  2b2: 470a0b46   VERTEX2F x=3604 y=2886
++  2b3: 46fe8c42   VERTEX2F x=3581 y=3138
++  2b4: 470a8c3b   VERTEX2F x=3605 y=3131 */
+	dl(END());
+	
+	dl(TAG(0));
+
+/*
 	dl(BEGIN(LINES));
 	dl(LINE_WIDTH(160));
 	dl(COLOR_RGB(105, 238, 100));
@@ -61,7 +97,7 @@ void setup()
 	dl(END());
 
 	dl(TAG(25));
-
+*/
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
@@ -116,9 +152,9 @@ void setup()
 	}
 	dl(END());*/
 	// ** SMALL POINTS Y **
-
-	dl(TAG(50));
-
+/*
+	dl(TAG(50));*/
+/*
 	// ** RECT TEST **
 	dl(COLOR_A(128));
 
@@ -134,11 +170,11 @@ void setup()
 	//dl(VERTEX2F(160, 324));
 	dl(END());
 	// ** RECT TEST **
-
-
+*/
+/*
 	dl(LINE_WIDTH(0));
 	dl(BEGIN(RECTS));
-
+*/
 	/*
 	dl(COLOR_RGB(255, 128, 0));
 	for (int y = 0; y <= 16; ++y)
@@ -203,13 +239,13 @@ void setup()
 		}
 	}*/
 
-
+/*
 	dl(END());
 
 
-
+*/
  // LINE_STRIP
-
+/*
 dl(COLOR_A(128));
 dl( COLOR_RGB(255, 168, 64) );
 dl( BEGIN(LINE_STRIP) );
@@ -226,7 +262,7 @@ dl( VERTEX2F(160 * 16, 50 * 16) );
 dl( VERTEX2F(240 * 16, 70 * 16) );
 dl( VERTEX2F(250 * 16, 100 * 16) );
 dl( VERTEX2F(350 * 16, 200 * 16) );
-	dl(END());
+	dl(END());*/
 /*
 	dl(COLOR_A(128));
 dl( COLOR_RGB(0, 128, 255) );
@@ -255,7 +291,7 @@ dl( VERTEX2F(200 * 16, 200 * 16) );
 dl( VERTEX2F(300 * 16, 201 * 16) );
 
 	dl(END());*/
-
+/*
 dl( BEGIN(RECTS) );
 
 dl( VERTEX2F(400 * 16, 73 * 16) );
@@ -266,7 +302,7 @@ dl( VERTEX2F(401 * 16, 250 * 16) );
 
 	dl(END());
 
-
+*/
 /*
 dl( COLOR_RGB(128, 0, 0) );
 dl( POINT_SIZE(5 * 16) );
@@ -309,7 +345,7 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 
 	dl(DISPLAY()); // display the image
 
-	wr32(REG_DLSWAP, SWAP_FRAME);
+	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
 }
 
