@@ -55,6 +55,7 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_stencil_comparisons.0',
         'test_stencil_ops.0',
         'test_textvga_1.0',
+        'test_uiscape.0',
     ])
 
     def run1(t):
