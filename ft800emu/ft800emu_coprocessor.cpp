@@ -41,11 +41,10 @@ void CoprocessorClass::execute()
     do {
         insn = pgm[pc];
         // printf("PC=%04x %04x\n", pc, insn);
-        if (pc == 0x1BA6)
-            printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+        // if (pc == 0x1BA6) printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
         if (pc == 0x0980) { // cmd.has1 
             int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-            printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
+            // printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
             starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
         }
         _pc = pc + 1;
@@ -79,7 +78,7 @@ void CoprocessorClass::execute()
                 if (insn & (1 << 7)) /* R->PC */
                     _pc = r[rsp] >> 1;
                 n = d[dsp];
-                uint64_t product = (uint64_t)t * (uint64_t)n;
+                uint64_t product = (int64_t)(int32_t)t * (int64_t)(int32_t)n;
                 uint32_t sum32 = t + n;
 
                 switch ((insn >> 8) & 31) {
@@ -139,9 +138,9 @@ void CoprocessorClass::execute()
             }
         }
         pc = _pc;
-        fflush(stdout);
+        // fflush(stdout);
     } while (!swapped && !starve);
-    printf("coprocessor done\n");
+    // printf("coprocessor done\n");
 }
 
 void CoprocessorClass::end()

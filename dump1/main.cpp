@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
             int fullness = (wp - rp) & 4095;
             if (fullness < 2048) {
                 int n = fread(&ram[RAM_CMD + wp], 1, 1024, xbu);
-                printf("Feed %x to %x\n", n, wp);
+                // printf("Feed %x to %x\n", n, wp);
                 wp = (wp + n) & 4095;
                 FT800EMU::MemoryClass::rawWriteU32(ram, REG_CMD_WRITE, wp);
             }

@@ -47,7 +47,6 @@ void MemoryClass::actionWrite(size_t address, uint32_t data)
 		switch (address)
 		{
 		case REG_DLSWAP:
-            printf("swap: %x==%x %x==0\n", data, DLSWAP_FRAME, s_Ram[REG_PCLK]);
 			if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 			{
 				swapDisplayList();
