@@ -111,7 +111,8 @@ void setup()
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_line_extreme.0.vc1dump", "rb"); // technically ok, close enough aa
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_stencil_ops.0.vc1dump", "rb"); // not ok, todo check the bitmap
 	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_dodecahedron.0.vc1dump", "rb"); // ok
-	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_line_offscreen_flat.0.vc1dump", "rb"); // ok
+	// f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_line_offscreen_flat.0.vc1dump", "rb"); // ok
+	f = fopen(FT800EMU_REFERENCE_DIR "/dumps/test_uiscape.0.vc1dump", "rb");
 	if (!f) printf("Failed to open vc1dump file\n");
 	else
 	{

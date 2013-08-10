@@ -2135,7 +2135,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int ql2r = findxrel(qx2, qyd, qy2, -qxd, qy); // Length boundary for bottom-right point in 256 scale
 				const int ql1 = min(ql1r, ql2r);
 				const int ql2 = max(ql1r, ql2r);
-				const int qlaa = (128 * qlen) / qxd; // AA distance
+				const int qlaa = (128 * qlen) / abs(qxd); // AA distance
 				const int ql1o = ql1 - qlaa; // Outer and inner length boundaries
 				const int ql1i = ql1 + qlaa;
 				const int ql2i = ql2 - qlaa;
@@ -2338,7 +2338,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int ql2r = findxrel(qx2, qyd, qy2, -qxd, qy); // Length boundary for bottom-right point in 256 scale
 				const int ql1 = min(ql1r, ql2r);
 				const int ql2 = max(ql1r, ql2r);
-				const int qlaa = (128 * qlen) / qxd; // AA distance
+				const int qlaa = (128 * qlen) / abs(qxd); // AA distance
 				const int ql1o = ql1 - qlaa; // Outer and inner length boundaries
 				const int ql1i = ql1 + qlaa;
 				const int ql2i = ql2 - qlaa;
