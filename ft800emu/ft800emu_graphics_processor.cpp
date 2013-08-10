@@ -896,7 +896,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
 	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
 
-	if (pytopi <= y && y <= pybtmi)
+	if (max(pytopi, gs.ScissorY.I) <= y && y <= min(pybtmi, gs.ScissorY2.I - 1)) // Scissor Y
 	{
 		int pxlef = px;
 		int pxrig = px + (bi.SizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0

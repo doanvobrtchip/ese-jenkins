@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import numpy as np
 
-def main(dump1, ref_dir, quiet):
+def main(dump1, ref_dir, quiet, only = None):
     dump_dir = os.path.join(ref_dir, "dumps")
     alltraces = set([fn.replace(".vc1dump", "") for fn in os.listdir(dump_dir) if fn.endswith(".vc1dump")])
 
@@ -44,9 +44,7 @@ def main(dump1, ref_dir, quiet):
         'test_points_visit.0',
         'test_prim_scissor.0',
         'test_rects.0',
-        # 'test_restores.0',
         'test_rr_01.0',
-        'test_rr_03.0',
         'test_rr_06.0',
         'test_scissor.0',
         'test_scissor_connected.0',
@@ -93,7 +91,8 @@ def main(dump1, ref_dir, quiet):
 
     failed = []
     tests = alltraces - notyet
-    # tests = ['test_restores.0']
+    if only is not None:
+        tests = [only]
     # tests = notyet
     for t in sorted(tests):
         outcome = run1(t)
@@ -108,19 +107,21 @@ def main(dump1, ref_dir, quiet):
 
 if __name__ == "__main__":
     try:
-        optlist, args = getopt.getopt(sys.argv[1:], "r:d:q")
+        optlist, args = getopt.getopt(sys.argv[1:], "r:d:qo:")
     except getopt.GetoptError:
         print "usage: runtest.py [options]"
         print "  -r <dir>   reference dir (default '../reference')"
         print "  -d exe     path to 'dump1' executable (default 'dump1/dump1')"
         print "  -q         quiet"
+        print "  -o <test>  only run <test>"
         sys.exit(1)
 
     optdict = dict(optlist)
 
     ref_dir = optdict.get('-r', "../reference")
     dump1 = optdict.get('-d', "dump1/dump1")
-    r = main(dump1, ref_dir, quiet = '-q' in optdict) 
+    only = optdict.get('-o', None)
+    r = main(dump1, ref_dir, quiet = '-q' in optdict, only = only) 
     if not r:
         sys.exit(0)
     else:
