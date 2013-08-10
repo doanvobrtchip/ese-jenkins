@@ -2480,6 +2480,10 @@ void GraphicsProcessorClass::end()
 	
 }
 
+// Sign-extend the n-bit value v
+#define SIGNED_N(v, n) \
+    (((int32_t)((v) << (32-(n)))) >> (32-(n)))
+
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
 {
 	uint8_t *ram = Memory.getRam();
@@ -2641,28 +2645,22 @@ EvaluateDisplayListValue:
 					gs.TagMask = (v & 0x01) != 0;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_A:
-					gs.BitmapTransformA = v & 0xFFFF; // 8.8 signed
-					if (v & 0x10000) gs.BitmapTransformA = gs.BitmapTransformA - 0x10000;
+					gs.BitmapTransformA = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_B:
-					gs.BitmapTransformB = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformB = gs.BitmapTransformB - 0x10000;
+					gs.BitmapTransformB = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_C: // 15.8 signed
-					gs.BitmapTransformC = v & 0x7FFFFF;
-					if (v & 0x800000) gs.BitmapTransformC = gs.BitmapTransformC - 0x800000;
+					gs.BitmapTransformC = SIGNED_N(v, 24);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_D:
-					gs.BitmapTransformD = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformD = gs.BitmapTransformD - 0x10000;
+					gs.BitmapTransformD = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_E:
-					gs.BitmapTransformE = v & 0xFFFF;
-					if (v & 0x10000) gs.BitmapTransformE = gs.BitmapTransformE - 0x10000;
+					gs.BitmapTransformE = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_F:
-					gs.BitmapTransformF = v & 0x7FFFFF;
-					if (v & 0x800000) gs.BitmapTransformF = gs.BitmapTransformF - 0x800000;
+					gs.BitmapTransformF = SIGNED_N(v, 24);
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
 					gs.ScissorY.U = v & 0x1FF;
