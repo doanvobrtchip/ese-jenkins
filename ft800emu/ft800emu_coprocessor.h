@@ -8,11 +8,11 @@
 
 #ifndef FT800EMU_COPROCESSOR_H
 #define FT800EMU_COPROCESSOR_H
-#include <stdint.h>
-#include <stdio.h>
-#include <assert.h>
 
 // System includes
+#include "ft800emu_inttypes.h"
+#include <stdio.h>
+#include <assert.h>
 
 // Project includes
 

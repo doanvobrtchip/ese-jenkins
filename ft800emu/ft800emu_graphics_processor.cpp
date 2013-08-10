@@ -15,7 +15,7 @@
 #include "ft800emu_graphics_processor.h"
 
 #ifndef FT800EMU_CMAKE
-#	define FT800EMU_SSE41 1
+#	define FT800EMU_SSE41 0
 #endif
 #define FT800EMU_SSE41_INSTRUCTIONS FT800EMU_SSE41
 #define FT800EMU_SSE41_INSTRUCTIONS_ALL 0 // Slightly slower code, no performance improvement, just for testing

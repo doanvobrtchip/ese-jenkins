@@ -175,6 +175,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_coprocessor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_coprocessor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_emulator.cpp"
 				>
 			</File>
