@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="loaddump"
-	ProjectGUID="{4177D683-1F39-4EFC-A156-216F43DE7C4D}"
-	RootNamespace="loaddump"
+	Name="dump1"
+	ProjectGUID="{6421747F-B798-446A-8479-6BD722DE3107}"
+	RootNamespace="dump1"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>

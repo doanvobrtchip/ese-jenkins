@@ -197,7 +197,16 @@ namespace {
 				System.switchThread();
 				
 				unsigned long procStart = System.getMicros();
-				if (reg_pclk) GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
+				if (reg_pclk) 
+				{
+					if (ram[REG_DLSWAP] == DLSWAP_FRAME)
+					{
+						Memory.swapDisplayList();
+						ram[REG_DLSWAP] = DLSWAP_DONE;
+					}
+					GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
+
+				}
 				unsigned long procDelta = System.getMicros() - procStart;
 
 				if (procDelta > 8000)

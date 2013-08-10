@@ -38,7 +38,15 @@ static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
 static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
-void MemoryClass::actionWrite(size_t address, uint32_t data)
+static int s_DirectSwapCount;
+
+int MemoryClass::getDirectSwapCount()
+{
+	return s_DirectSwapCount;
+}
+
+template<typename T>
+FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -49,7 +57,10 @@ void MemoryClass::actionWrite(size_t address, uint32_t data)
 		case REG_DLSWAP:
 			if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 			{
+				// Direct swap
 				swapDisplayList();
+				data = 0;
+				++s_DirectSwapCount;
 			}
 			break;
 		}
@@ -96,6 +107,8 @@ static const uint8_t rom[FT800EMU_ROM_SIZE] = {
 void MemoryClass::begin()
 {
     memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+
+	s_DirectSwapCount = 0;
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?

@@ -63,8 +63,10 @@ public:
 	static FT800EMU_FORCE_INLINE void rawWriteU8(uint8_t *buffer, size_t address, uint8_t data);
 	static FT800EMU_FORCE_INLINE uint8_t rawReadU8(uint8_t *buffer, size_t address);
 
-    static void actionWrite(size_t address, uint32_t data);
 	static void swapDisplayList();
+
+	// Get nb of frames swapped without waiting for begin of frame render (when REG_PCLK == 0).
+	static int getDirectSwapCount();
 
 private:
 	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
@@ -73,6 +75,9 @@ private:
 	static FT800EMU_FORCE_INLINE uint16_t rawReadU16(size_t address);
 	static FT800EMU_FORCE_INLINE void rawWriteU8(size_t address, uint8_t data);
 	static FT800EMU_FORCE_INLINE uint8_t rawReadU8(size_t address);
+
+	template<typename T>
+    static FT800EMU_FORCE_INLINE void actionWrite(const size_t address, T &data);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
