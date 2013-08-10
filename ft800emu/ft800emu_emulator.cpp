@@ -311,7 +311,9 @@ namespace {
 		System.disableAutomaticPriorityBoost();
 		System.makeNormalPriorityThread();
 		
-		Coprocessor.execute();
+		Coprocessor.executeEmulator();
+
+		printf("Coprocessor thread exit\n");
 
 		System.revertThreadCategory(taskHandle);
 		return 0;
@@ -383,6 +385,8 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	masterThread();
 
 	s_MasterRunning = false;
+	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
+
 	SDL_WaitThread(threadD, NULL);
 	SDL_WaitThread(threadA, NULL);
 	if (params.Flags & EmulatorEnableCoprocessor) SDL_WaitThread(threadC, NULL);
@@ -395,6 +399,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 		{
 			masterThread();
 			s_MasterRunning = false;
+			if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
 		}
 
 		// arduino
@@ -419,7 +424,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.end();
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
-	if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
+	// TODO_AUDIO if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
 	GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();

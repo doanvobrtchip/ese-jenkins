@@ -21,6 +21,8 @@ namespace FT800EMU {
 
 CoprocessorClass Coprocessor;
 
+static bool s_Running;
+
 static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
 static const uint16_t pgm[8192] = {
 #include "crom.h"
@@ -31,8 +33,12 @@ void CoprocessorClass::begin()
     pc = 0;
 }
 
+template <bool singleFrame>
 void CoprocessorClass::execute()
 {
+	if (!singleFrame)
+		s_Running = true;
+
     int _pc, _t, n;
     int insn;
 
@@ -42,11 +48,14 @@ void CoprocessorClass::execute()
         insn = pgm[pc];
         // printf("PC=%04x %04x\n", pc, insn);
         // if (pc == 0x1BA6) printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
-        if (pc == 0x0980) { // cmd.has1 
-            int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-            // printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
-            starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
-        }
+		if (singleFrame)
+		{
+			if (pc == 0x0980) { // cmd.has1 
+				int rp = MemoryClass::coprocessorReadU32(0x1090f8);
+				// printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
+				starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
+			}
+		}
         _pc = pc + 1;
         if (insn & 0x8000) { // literal
             push(insn & 0x7fff);
@@ -124,8 +133,11 @@ void CoprocessorClass::execute()
                 if (do_write32) {
                     // printf("wr[%x] <= %x\n", t, n);
                     MemoryClass::coprocessorWriteU32(t, n);
-                    if (t == REG_DLSWAP)
-                        swapped = 1;
+					if (singleFrame)
+					{
+						if (t == REG_DLSWAP)
+							swapped = 1;
+					}
                 }
                 if (do_write16)
                     MemoryClass::coprocessorWriteU16(t, n);
@@ -139,8 +151,23 @@ void CoprocessorClass::execute()
         }
         pc = _pc;
         // fflush(stdout);
-    } while (!swapped && !starve);
+	} while (singleFrame ? (!swapped && !starve) : s_Running);
     // printf("coprocessor done\n");
+}
+
+void CoprocessorClass::executeManual()
+{
+	execute<true>();
+}
+
+void CoprocessorClass::executeEmulator()
+{
+	execute<false>();
+}
+
+void CoprocessorClass::stopEmulator()
+{
+	s_Running = false;
 }
 
 void CoprocessorClass::end()
