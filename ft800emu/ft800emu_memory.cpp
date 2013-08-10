@@ -189,31 +189,10 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 	// printf("Coprocessor read U32 %i\n", address);
-	if (address < RAM_J1RAM)
+	if ((address >= RAM_CMD && address < RAM_CMD + 4096)
+		|| address == REG_CMD_WRITE
+		|| address == REG_DLSWAP)
 	{
-#if 1
-		switch (address)
-		{
-		case REG_CMD_WRITE:
-			// printf("Coprocessor read U32 REG_CMD_WRITE\n");
-			break;
-		case REG_DLSWAP:
-			// printf("Coprocessor read U32 REG_DLSWAP\n");
-			break;
-		case REG_FRAMES:
-			// printf("Coprocessor read U32 REG_FRAMES\n");
-			break;
-		case REG_VSIZE:
-			// printf("Coprocessor read U32 REG_VSIZE\n");
-			break;
-		case REG_CMD_DL:
-			// printf("Coprocessor read U32 REG_CMD_DL\n");
-			break;
-		default:
-			printf("Coprocessor read U32 %i\n", address);
-			break;
-		}
-#endif
 		if (s_LastCoprocessorRead == address)
 		{
 			++s_IdenticalCoprocessorReadCounter;
@@ -239,14 +218,9 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 		}
 		else
 		{
-			if ((address >= RAM_CMD && address < RAM_CMD + 4096)
-				|| address == REG_CMD_WRITE
-				|| address == REG_DLSWAP)
-			{
-				// printf("Reset %i\n", address);			
-				s_LastCoprocessorRead = address;
-				s_IdenticalCoprocessorReadCounter = 0;
-			}
+			// printf("Reset %i\n", address);			
+			s_LastCoprocessorRead = address;
+			s_IdenticalCoprocessorReadCounter = 0;
 		}
 	}
 	return rawReadU32(address);
