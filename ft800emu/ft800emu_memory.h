@@ -47,8 +47,6 @@ public:
 	static uint8_t mcuRead(size_t address);
 
 	// Use separate functions for coprocessor access in case we need to put a hook on certain adresses for performance reasons.
-	static void coprocessorWrite(size_t address, uint8_t data);
-	static uint8_t coprocessorRead(size_t address);
 	static void coprocessorWriteU32(size_t address, uint32_t data);
 	static uint32_t coprocessorReadU32(size_t address);
 	static void coprocessorWriteU16(size_t address, uint16_t data);
@@ -106,12 +104,12 @@ FT800EMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(uint8_t *buffer, size_t a
 
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU8(uint8_t *buffer, size_t address, uint8_t data)
 {
-	*static_cast<uint8_t *>(static_cast<void *>(&buffer[address])) = data;
+	buffer[address] = data;
 }
 
 FT800EMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(uint8_t *buffer, size_t address)
 {
-	return *static_cast<uint8_t *>(static_cast<void *>(&buffer[address]));
+	return buffer[address];
 }
 
 extern MemoryClass Memory;

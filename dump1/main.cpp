@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
                 wp = (wp + n) & 4095;
                 FT800EMU::Memory.rawWriteU32(ram, REG_CMD_WRITE, wp);
             }
-            FT800EMU::Coprocessor.execute();
+            FT800EMU::Coprocessor.executeManual();
 			if (FT800EMU::Memory.getDirectSwapCount() != i) {
                 fprintf(stderr, "%d\n", i);
                 if (0) {

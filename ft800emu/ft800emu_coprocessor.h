@@ -31,9 +31,15 @@ public:
 	void begin();
 	void end();
 
-	void execute();
+	void executeManual();
+	void executeEmulator();
+	
+	void stopEmulator();
 
 private:
+	template <bool singleFrame>
+	void execute();
+
 	CoprocessorClass(const CoprocessorClass &);
 	CoprocessorClass &operator=(const CoprocessorClass &);
 

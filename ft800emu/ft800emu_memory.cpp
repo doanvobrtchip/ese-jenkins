@@ -21,6 +21,7 @@
 
 // Project includes
 #include "vc.h"
+#include "ft800emu_system.h"
 
 // using namespace ...;
 
@@ -39,6 +40,10 @@ static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
 static int s_DirectSwapCount;
+
+// Avoid getting hammered in wait loops
+static int s_LastCoprocessorRead = -1;
+static int s_IdenticalCoprocessorReadCounter = 0;
 
 int MemoryClass::getDirectSwapCount()
 {
@@ -69,7 +74,6 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
-    actionWrite(address, data);
 	rawWriteU32(s_Ram, address, data);
 }
 
@@ -80,7 +84,6 @@ FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
 
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU16(size_t address, uint16_t data)
 {
-    actionWrite(address, data);
 	rawWriteU16(s_Ram, address, data);
 }
 
@@ -91,7 +94,6 @@ FT800EMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(size_t address)
 
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU8(size_t address, uint8_t data)
 {
-    actionWrite(address, data);
 	rawWriteU8(s_Ram, address, data);
 }
 
@@ -160,7 +162,7 @@ const uint32_t *MemoryClass::getDisplayList()
 
 void MemoryClass::mcuWrite(size_t address, uint8_t data)
 {
-
+    actionWrite(address, data);
 	rawWriteU8(address, data);
 }
 
@@ -175,46 +177,76 @@ void MemoryClass::swapDisplayList()
 
 uint8_t MemoryClass::mcuRead(size_t address)
 {
-	return s_Ram[address];
-}
-
-void MemoryClass::coprocessorWrite(size_t address, uint8_t data)
-{
-	s_Ram[address] = data;
-}
-
-uint8_t MemoryClass::coprocessorRead(size_t address)
-{
-	return s_Ram[address];
+	return rawReadU8(address);
 }
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 {
+    actionWrite(address, data);
 	rawWriteU32(address, data);
 }
 
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
+	// printf("Coprocessor read U32 %i\n", address);
+	if ((address >= RAM_CMD && address < RAM_CMD + 4096)
+		|| address == REG_CMD_WRITE
+		|| address == REG_DLSWAP)
+	{
+		if (s_LastCoprocessorRead == address)
+		{
+			++s_IdenticalCoprocessorReadCounter;
+			if (s_IdenticalCoprocessorReadCounter > 8)
+			{
+				switch (address)
+				{
+				case REG_CMD_WRITE: // wait for writes from mcu thread
+				case REG_DLSWAP: // wait for frame swap from main thread
+					// printf(" Delay ");
+					System.prioritizeMCUThread();
+					System.delay(1);
+					System.unprioritizeMCUThread();
+					break;
+				default:
+					// printf(" Switch ");
+					System.prioritizeMCUThread();
+					System.switchThread();
+					System.unprioritizeMCUThread();
+					break;
+				}
+			}
+		}
+		else
+		{
+			// printf("Reset %i\n", address);			
+			s_LastCoprocessorRead = address;
+			s_IdenticalCoprocessorReadCounter = 0;
+		}
+	}
 	return rawReadU32(address);
 }
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 {
+    actionWrite(address, data);
 	rawWriteU16(address, data);
 }
 
 uint16_t MemoryClass::coprocessorReadU16(size_t address)
 {
+	// printf("Coprocessor read U16 %i\n", address);
 	return rawReadU16(address);
 }
 
 void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 {
+    actionWrite(address, data);
 	rawWriteU8(address, data);
 }
 
 uint8_t MemoryClass::coprocessorReadU8(size_t address)
 {
+	// printf("Coprocessor read U8 %i\n", address);
 	return rawReadU8(address);
 }
 

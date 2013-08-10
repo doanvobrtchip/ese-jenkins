@@ -134,7 +134,8 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 		case SPII2CWrite:
 			{
 				Memory.mcuWrite(s_Cursor, data);
-				++s_Cursor;
+				if (s_Cursor == 0x0010AFFF) s_Cursor = 0x00109000;
+				else ++s_Cursor;
 			}
 			break;
 		}
