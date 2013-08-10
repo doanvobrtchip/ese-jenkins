@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 		int bsize = hsize * vsize;
         FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
         f = fopen(argv[2], "wb");
-        fwrite(buffer, 1, bsize, f);
+        fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f);
         fclose(f);
     }
 	return 0;
