@@ -16,6 +16,7 @@
 #include <ft800emu_coprocessor.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <vc.h>
@@ -58,10 +59,12 @@ int main(int argc, char* argv[])
 
         wr32(REG_HSIZE, hsize);
         wr32(REG_VSIZE, vsize);
-        argb8888 buffer[hsize*vsize];
+        argb8888 buffer[hsize * vsize + 1];
 
         FT800EMU::Coprocessor.begin();
         int i = 0;
+        buffer[hsize * vsize] = 1234567;
+
         while (1) {
             int wp = FT800EMU::MemoryClass::rawReadU32(ram, REG_CMD_WRITE);
             int rp = FT800EMU::MemoryClass::rawReadU32(ram, REG_CMD_READ);
@@ -74,14 +77,23 @@ int main(int argc, char* argv[])
             }
             FT800EMU::Coprocessor.execute();
             if (FT800EMU::MemoryClass::rawReadU32(ram, REG_DLSWAP) != 0) {
+                fprintf(stderr, "%d\n", i);
+                if (0) {
+                    FT800EMU::MemoryClass::swapDisplayList();
+                    FILE *dl = fopen("dl.bin", "wb");
+                    fwrite(&ram[RAM_DL], 1, FT800EMU::MemoryClass::rawReadU32(ram, REG_CMD_DL), dl);
+                    fclose(dl);
+                    FT800EMU::MemoryClass::swapDisplayList();
+                }
                 FT800EMU::MemoryClass::rawWriteU32(ram, REG_DLSWAP, 0);
                 FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
-                fwrite(buffer, 1, sizeof(buffer), f);
-                fprintf(stderr, "%d\n", i);
+                fwrite(buffer, 1, (hsize * vsize * sizeof(buffer[0])), f);
                 i++;
             }
             if ((FT800EMU::MemoryClass::rawReadU32(ram, REG_DLSWAP) == 0) && feof(xbu))
                 break;
+            // if (i == 300) break;
+            assert(buffer[hsize * vsize] == 1234567);
         }
         fclose(f);
     } else {
