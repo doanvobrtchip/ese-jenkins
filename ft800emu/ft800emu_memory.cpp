@@ -191,7 +191,7 @@ void MemoryClass::swapDisplayList()
 
 uint8_t MemoryClass::mcuRead(size_t address)
 {
-	if (address % 4)
+	if (address % 4 == 0)
 	{
 		switch (address)
 		{
@@ -200,6 +200,7 @@ uint8_t MemoryClass::mcuRead(size_t address)
 			++s_WaitMCUReadCounter;
 			if (s_WaitMCUReadCounter > 8)
 			{
+				// printf(" Delay MCU ");
 				System.prioritizeMCUThread();
 				System.delay(1);
 				System.unprioritizeMCUThread();
@@ -253,6 +254,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			++s_WaitCoprocessorReadCounter;
 			if (s_WaitCoprocessorReadCounter > 8)
 			{
+				// printf(" Delay CO ");
 				System.prioritizeMCUThread();
 				System.delay(1);
 				System.unprioritizeMCUThread();
@@ -286,7 +288,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 {	
-	if (address % 4)
+	if (address % 4 == 0)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
@@ -305,7 +307,7 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 
 void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 {	
-	if (address % 4)
+	if (address % 4 == 0)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
