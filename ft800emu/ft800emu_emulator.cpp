@@ -367,6 +367,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
+	Memory.enableReadDelay();
 
 	s_MasterRunning = true;
 

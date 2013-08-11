@@ -39,6 +39,8 @@ public:
 	static void begin();
 	static void end();
 
+	static void enableReadDelay(bool enabled = true);
+
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
 

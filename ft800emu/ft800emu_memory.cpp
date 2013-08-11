@@ -54,6 +54,8 @@ static int s_IdenticalMCUReadCounter = 0;
 static int s_WaitMCUReadCounter = 0;
 static int s_SwapMCUReadCounter = 0;
 
+static bool s_ReadDelay;
+
 int MemoryClass::getDirectSwapCount()
 {
 	return s_DirectSwapCount;
@@ -121,6 +123,8 @@ void MemoryClass::begin()
 
 	s_DirectSwapCount = 0;
 
+	s_ReadDelay = false;
+
 	s_LastCoprocessorRead = -1;
 	s_IdenticalCoprocessorReadCounter = 0;
 	s_WaitCoprocessorReadCounter = 0;
@@ -169,6 +173,11 @@ void MemoryClass::end()
 	
 }
 
+void MemoryClass::enableReadDelay(bool enabled)
+{
+	s_ReadDelay = enabled;
+}
+
 uint8_t *MemoryClass::getRam()
 {
 	return s_Ram;
@@ -193,6 +202,10 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 void MemoryClass::mcuWrite(size_t address, uint8_t data)
 {	
 	s_SwapMCUReadCounter = 0;
+	if (address == REG_CMD_WRITE + 3)
+	{
+		s_WaitCoprocessorReadCounter = 0;
+	}
     actionWrite(address, data);
 	rawWriteU8(address, data);
 }
@@ -208,7 +221,7 @@ void MemoryClass::swapDisplayList()
 
 uint8_t MemoryClass::mcuRead(size_t address)
 {
-	if (address % 4 == 0)
+	if (s_ReadDelay && address % 4 == 0)
 	{
 		switch (address)
 		{
@@ -284,7 +297,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 		return 0;
 	}
 
-	if (address < RAM_J1RAM)
+	if (s_ReadDelay && address < RAM_J1RAM)
 	{
 		switch (address)
 		{
