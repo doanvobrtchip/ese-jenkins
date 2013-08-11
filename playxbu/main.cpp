@@ -149,6 +149,14 @@ void loop()
 			swrend();
 
 			wr32(REG_CMD_WRITE, (wp + 4 + 4 + (2 * 4)) & 0xFFF);
+
+			/*swrbegin(RAM_CMD + wp);
+			swr32(CMD_LOGO);
+			swrend();
+
+			wr32(REG_CMD_WRITE, (wp + 4) & 0xFFF);
+
+			FT800EMU::System.delay(3000);*/
 		}
 	}
 }
