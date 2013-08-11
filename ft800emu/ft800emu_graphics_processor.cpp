@@ -2187,7 +2187,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								bc[x] = 0xFFFF00FF;
 #endif
 								blendleft = findx(256, 0, ql1o, ql1i, qxc);
-								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1, y1);
+								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
 							}
 							else
 							{
@@ -2200,7 +2200,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								bc[x] = 0xFFFF00FF;
 #endif
 								blendright = findx(0, 256, ql2i, ql2o, qxc);
-								alpharight = blendright * getPointAlpha256(lw, x, y, x2, y2);
+								alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
 							}
 							else
 							{
@@ -2263,7 +2263,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								bc[x] = 0xFFFF00FF;
 #endif
 								blendleft = findx(256, 0, ql1o, ql1i, qxc);
-								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1, y1);
+								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
 							}
 							else
 							{
@@ -2276,7 +2276,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								bc[x] = 0xFFFF00FF;
 #endif
 								blendright = findx(0, 256, ql2i, ql2o, qxc);
-								alpharight = blendright * getPointAlpha256(lw, x, y, x2, y2);
+								alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
 							}
 							else
 							{
