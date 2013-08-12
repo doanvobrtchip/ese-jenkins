@@ -37,7 +37,9 @@
 
 #include "vc.h"
 
-#include "omp.h"
+#ifndef FT800EMU_SDL
+#	include "omp.h"
+#endif
 
 // using namespace ...;
 
