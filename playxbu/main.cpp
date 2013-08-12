@@ -91,11 +91,14 @@ void setup()
 	if (!s_F) printf("Failed to open XBU file\n");
 	else
 	{
+		printf("Load XBU\n");
+
 		wr32(REG_HSIZE, 480);
 		wr32(REG_VSIZE, 272);
 		wr32(REG_PCLK, 5);
 		// if (fclose(s_F)) printf("Error closing vc1dump file\n");
 
+		/*
 		swrbegin(RAM_CMD);
 		swr32(CMD_DLSTART);
 		swr32(CMD_SWAP);
@@ -117,9 +120,16 @@ void setup()
 		swr32(CMD_SWAP);
 		swrend();
 
-		wr32(REG_CMD_WRITE, (6 * 4) + (4 * 4) + 4 + 4);
+		wr32(REG_CMD_WRITE, (6 * 4) + (4 * 4) + 4 + 4);*/
 	}
 }
+
+static int wp = 0;
+static int wpr = 0;
+
+static bool okwrite = false;
+
+static int lastround = 0;
 
 void loop()
 {
@@ -129,13 +139,88 @@ void loop()
 	}
 	else
 	{
-		FT800EMU::System.delay(10);
-
-		int wp = rd32(REG_CMD_WRITE);
+		int regwp = rd32(REG_CMD_WRITE);
 		int rp = rd32(REG_CMD_READ);
-		int fullness = (wp - rp) & 0xFFF;
-		int freespace = (4096 - 4) - fullness;
+		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+		int freespace = ((4096 - 4) - fullness);
 
+		// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
+		if (rp == -1)
+		{
+			printf("rp < 0, error\n");
+			printf("Close XBU\n");
+			if (fclose(s_F)) printf("Error closing vc1dump file\n");
+			s_F = NULL;
+		}
+		else
+		{
+			if (freespace)
+			// if (freespace >= 2048)
+			{
+				int freespacediv = freespace >> 2;
+				
+				swrbegin(RAM_CMD + (wp & 0xFFF));
+				for (int i = 0; i < freespacediv; ++i)
+				{
+					uint32_t buffer;
+					size_t nb = fread(&buffer, 4, 1, s_F);
+					if (nb == 1)
+					{
+						/*if (buffer == CMD_DLSTART) okwrite = true;
+						
+						if (okwrite)
+						{*/
+							swr32(buffer);
+							wp += 4;
+						//}
+
+						if (buffer == CMD_SWAP)
+						{
+							wpr = wp;
+							swrend();
+							wr32(REG_CMD_WRITE, (wpr & 0xFFF));
+							swrbegin(RAM_CMD + (wp & 0xFFF));
+						}
+					}
+					else
+					{
+						printf("Close XBU, nb = %i\n", nb);
+						if (fclose(s_F)) printf("Error closing vc1dump file\n");
+						s_F = NULL;
+						break;
+					}
+				}
+				swrend();
+
+				if (s_F)
+				{
+					int wprn = (wp - 128);
+					if (wprn > wpr)
+					{
+						wpr = wprn;
+						wr32(REG_CMD_WRITE, (wpr & 0xFFF));
+					}
+				}
+				else
+				{
+					wpr = wp;
+					wr32(REG_CMD_WRITE, (wpr & 0xFFF));
+				}
+			}
+			else
+			{
+				// FT800EMU::System.delay(1000);
+			}
+			int newround = wpr / 4096;
+			if (lastround != newround)
+			{
+				printf("new round\n");
+				lastround = newround;
+			}
+		}
+
+
+		/*
 		int tag = rd32(REG_TOUCH_TAG);
 		if (tag == 1)
 		{
@@ -149,7 +234,15 @@ void loop()
 			swrend();
 
 			wr32(REG_CMD_WRITE, (wp + 4 + 4 + (2 * 4)) & 0xFFF);
-		}
+
+			/*swrbegin(RAM_CMD + wp);
+			swr32(CMD_LOGO);
+			swrend();
+
+			wr32(REG_CMD_WRITE, (wp + 4) & 0xFFF);
+
+			FT800EMU::System.delay(3000);*/
+		//}
 	}
 }
 

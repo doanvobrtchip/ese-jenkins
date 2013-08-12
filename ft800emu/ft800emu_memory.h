@@ -39,10 +39,13 @@ public:
 	static void begin();
 	static void end();
 
+	static void enableReadDelay(bool enabled = true);
+
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
 
 	// Use separate functions for microcontroller access in case we need to put a hook on certain adresses for performance reasons.
+	static void mcuWriteU32(size_t address, uint32_t data);
 	static void mcuWrite(size_t address, uint8_t data);
 	static uint8_t mcuRead(size_t address);
 

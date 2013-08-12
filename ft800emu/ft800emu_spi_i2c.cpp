@@ -19,6 +19,7 @@
 
 // Project includes
 #include "ft800emu_memory.h"
+#include "vc.h"
 
 // using namespace ...;
 
@@ -27,6 +28,9 @@ namespace FT800EMU {
 SPII2CClass SPII2C;
 
 static bool s_CSLow = false;
+
+static uint32_t s_WriteBuffer;
+static uint32_t s_WriteBufferStage;
 
 enum SPII2CState
 {
@@ -60,6 +64,24 @@ void SPII2CClass::csLow(bool low)
 	s_State = SPII2CIdle;
 	s_Cursor = 0;
 	s_Stage = 0;
+
+	if (s_WriteBufferStage)
+	{
+		printf("Non-32bit write size\n");
+
+		while (s_WriteBufferStage != 32)
+		{
+			uint8_t data = Memory.rawReadU8(Memory.getRam(), s_Cursor);
+			s_WriteBuffer |= (data << s_WriteBufferStage);
+			s_WriteBufferStage += 8;
+			++s_Cursor;
+		}
+
+		Memory.mcuWriteU32(s_Cursor - 4, s_WriteBuffer);
+
+		s_WriteBuffer = 0;
+		s_WriteBufferStage = 0;
+	}
 }
 
 void SPII2CClass::csHigh(bool high)
@@ -122,6 +144,8 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 				// Dummy byte
 				s_State = SPII2CWrite;
 				// printf("SPI/I2C: Address %d\n", s_Cursor);
+				s_WriteBuffer = 0;
+				s_WriteBufferStage = 0;
 			}
 			break;
 		case SPII2CRead:
@@ -133,8 +157,28 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			break;
 		case SPII2CWrite:
 			{
-				Memory.mcuWrite(s_Cursor, data);
-				if (s_Cursor == 0x0010AFFF) s_Cursor = 0x00109000;
+				// Memory.mcuWrite(s_Cursor, data);
+				
+				s_WriteBuffer |= (data << s_WriteBufferStage);
+				s_WriteBufferStage += 8;
+
+				if (s_WriteBufferStage == 32)
+				{
+					// printf("write %i\n", (s_Cursor - 3));
+
+					if ((s_Cursor - 3) % 4)
+						printf("Non-aligned write\n");
+
+					Memory.mcuWriteU32(s_Cursor - 3, s_WriteBuffer);
+					s_WriteBuffer = 0;
+					s_WriteBufferStage = 0;
+				}
+
+				if (s_Cursor == RAM_CMD + 4095) 
+				{
+					printf("Cursor wrap to RAM_CMD\n");
+					s_Cursor = RAM_CMD;
+				}
 				else ++s_Cursor;
 			}
 			break;

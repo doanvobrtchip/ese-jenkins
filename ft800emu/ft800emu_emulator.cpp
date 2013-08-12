@@ -37,7 +37,9 @@
 
 #include "vc.h"
 
-#include "omp.h"
+#ifndef FT800EMU_SDL
+#	include "omp.h"
+#endif
 
 // using namespace ...;
 
@@ -367,6 +369,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
+	Memory.enableReadDelay();
 
 	s_MasterRunning = true;
 
