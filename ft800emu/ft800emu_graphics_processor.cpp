@@ -2065,7 +2065,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		{
 			// Just use the rects optimized codepath for this
 			// printf("Not implemented horizontal or vertical line\n");
-			displayRects(gs, bc, bs, bt, y, hsize, rs, x1 + 8, y1 + 8, x2 + 8, y2 + 8);
+			displayRects(gs, bc, bs, bt, y, hsize, rs, min(x1, x2) + 8, y1 + 8, max(x1, x2) + 8, y2 + 8);
 		}
 		else
 		{
