@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
             }
             FT800EMU::Coprocessor.executeManual();
 			if (FT800EMU::Memory.getDirectSwapCount() != i) {
-                fprintf(stderr, "%d\n", i);
+                // fprintf(stderr, "%d\n", i);
                 if (0) {
                     FT800EMU::Memory.swapDisplayList();
                     FILE *dl = fopen("dl.bin", "wb");
