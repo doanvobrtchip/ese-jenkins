@@ -52,7 +52,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_scissor_overlap.0',
         'test_shortlines.0',
         'test_state_saverestore.0',
-        'test_stencil_comparisons.0',
         'test_stencil_ops.0',
         'test_textvga_1.0',
         'test_uiscape.0',

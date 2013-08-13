@@ -492,6 +492,18 @@ FT800EMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &sr
 
 }
 
+FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int x, const argb8888 out)
+{
+	if (testAlpha(gs, out))
+	{
+		if (testStencil(gs, bs, x))
+		{
+			bc[x] = blend(gs, out, bc[x]);
+			writeTag(gs, bt, x);
+		}
+	}
+}
+
 #pragma endregion
 
 #pragma region Primitive: Point
@@ -548,56 +560,33 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 
 			if (distsq <= pssqin) // Inside circle
 			{
-				if (testStencil(gs, bs, x))
+				if (psin > 0)
 				{
-					if (psin > 0)
-					{
-						const argb8888 out = gs.ColorARGB;
-						if (testAlpha(gs, out))
-						{
-							bc[x] = blend(gs, out, bc[x]);
-							writeTag(gs, bt, x);
-						}
-					}
-					else // Small point in single pixel
-					{
-						const int outalpha =  ((gs.ColorARGB >> 24) * ps) >> 3;
-						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-						if (testAlpha(gs, out))
-						{
-							bc[x] = blend(gs, out, bc[x]);
-							writeTag(gs, bt, x);
-						}
-					}
+					const argb8888 out = gs.ColorARGB;
+					processPixel(gs, bc, bs, bt, x, out);
+				}
+				else // Small point in single pixel
+				{
+					const int outalpha =  ((gs.ColorARGB >> 24) * ps) >> 3;
+					const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 				}
 			}
 			else if (distsq <= pssqout) // AA Border
 			{
-				if (testStencil(gs, bs, x))
-				{
-					const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
-					const double dist256d = sqrt(dist256sqd); // sqrt..
-					const long dist256 = (long)dist256d;
-					const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
-					const int outalpha = ((gs.ColorARGB >> 24) * alpha) >> 8;
-					const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-					if (testAlpha(gs, out))
-					{
-						bc[x] = blend(gs, out, bc[x]);
-						writeTag(gs, bt, x);
-					}
-				}
+				const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
+				const double dist256d = sqrt(dist256sqd); // sqrt..
+				const long dist256 = (long)dist256d;
+				const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
+				const int outalpha = ((gs.ColorARGB >> 24) * alpha) >> 8;
+				const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+				processPixel(gs, bc, bs, bt, x, out);
 			}
 #if FT800EMU_POINT_STENCIL_INCREASE
 			else if (distsq <= pssqstc)
 			{
-				testStencil(gs, bs, x);
 				const argb8888 out = gs.ColorARGB & 0x00FFFFFF;
-				if (testAlpha(gs, out))
-				{
-					bc[x] = blend(gs, out, bc[x]);
-					writeTag(gs, bt, x);
-				}
+				processPixel(gs, bc, bs, bt, x, out);
 			}
 #endif
 		}
@@ -925,23 +914,16 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		//int sample
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
-			if (testStencil(gs, bs, x))
-			{
-				// relative at 1/16 pixel units
-				int vx = x * 16;
-				int rx = vx - px;
-				// transform with 1/(256*16) pixel units
-				int rxt = (gs.BitmapTransformA * rx) + rxtbc;
-				int ryt = (gs.BitmapTransformD * rx) + rytef;
-				const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
-				// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
-				const argb8888 out = mul_argb(sample, gs.ColorARGB);
-				if (testAlpha(gs, out))
-				{
-					bc[x] = blend(gs, out, bc[x]);
-					writeTag(gs, bt, x);
-				}
-			}
+			// relative at 1/16 pixel units
+			int vx = x * 16;
+			int rx = vx - px;
+			// transform with 1/(256*16) pixel units
+			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
+			int ryt = (gs.BitmapTransformD * rx) + rytef;
+			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
+			const argb8888 out = mul_argb(sample, gs.ColorARGB);
+			processPixel(gs, bc, bs, bt, x, out);
 		}
 	}
 }
@@ -1018,31 +1000,24 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			if (x1lw_px >= gs.ScissorX.I && x2lw_px <= gs.ScissorX2.I) // Scissor X
 			{
 				const int x = x1lw_px;
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const int dxs = x2lw - x1lw; // Width in 1/16 pixel
-					const int dys = y2lw - y1lw; // Height in 1/16 pixel
+				const int dxs = x2lw - x1lw; // Width in 1/16 pixel
+				const int dys = y2lw - y1lw; // Height in 1/16 pixel
 #if FT800EMU_DEBUG_RECTS_MATH
-					{
-						const int dxl_ = x1lw & 0xF; // Left coordinate relative to pixel in 1/16
-						const int dyt_ = y1lw & 0xF; // Top
-						const int dxr_ = x2lw - (x1lw_px << 4); // Right
-						const int dyb_ = y2lw - (y1lw_px << 4); // Bottom
-						const int dxs_ = dxr_ - dxl_; // Width in 1/16 pixel
-						const int dys_ = dyb_ - dyt_; // Height in 1/16 pixel
-						if (dxs_ != dxs) printf("Rect 11 width error\n");
-						if (dys_ != dys) printf("Rect 11 height error\n");
-					}
-#endif
-					const int surf = dxs * dys; // Surface of the rectangle in scale 256
-					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8; // Alpha 0-255
-					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
+				{
+					const int dxl_ = x1lw & 0xF; // Left coordinate relative to pixel in 1/16
+					const int dyt_ = y1lw & 0xF; // Top
+					const int dxr_ = x2lw - (x1lw_px << 4); // Right
+					const int dyb_ = y2lw - (y1lw_px << 4); // Bottom
+					const int dxs_ = dxr_ - dxl_; // Width in 1/16 pixel
+					const int dys_ = dyb_ - dyt_; // Height in 1/16 pixel
+					if (dxs_ != dxs) printf("Rect 11 width error\n");
+					if (dys_ != dys) printf("Rect 11 height error\n");
 				}
+#endif
+				const int surf = dxs * dys; // Surface of the rectangle in scale 256
+				const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8; // Alpha 0-255
+				const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+				processPixel(gs, bc, bs, bt, x, out);
 			}
 		}
 		else if (xslw_px == 1) // Single pixel width rects (ignores impact of rounded corners)
@@ -1050,41 +1025,34 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			if (x1lw_px >= gs.ScissorX.I && x2lw_px <= gs.ScissorX2.I) // Scissor X
 			{
 				const int x = x1lw_px;
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const int dxs = x2lw - x1lw; // Width in 1/16 pixel
-					const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel // Todo: Can be moved inside y condition in some way
-					const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
+				const int dxs = x2lw - x1lw; // Width in 1/16 pixel
+				const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel // Todo: Can be moved inside y condition in some way
+				const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
 #if FT800EMU_DEBUG_RECTS_MATH
-					{
-						if (dyb < 1) printf("Rect pixelwidth dyb < 1\n");
-						if (dyb > 16) printf("Rect pixelwidth dyb > 16\n");
-						if (dxs < 1) printf("Rect pixelwidth dxs < 1\n");
-						if (dxs > 16) printf("Rect pixelwidth dxs > 16\n");
-					}
-#endif
-					int alpha; // Alpha 0-255
-					if (y == y1lw_px && dyt > 0) // Top pixel, not fully filled
-					{
-						const int surf = dxs * (16 - dyt);
-						alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-					}
-					else if (y == (y2lw_px - 1) && dyb < 16) // Bottom pixel, not fully filled
-					{
-						const int surf = dxs * dyb;
-						alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-					}
-					else // Any other pixel
-					{
-						alpha = ((gs.ColorARGB >> 24) * dxs) >> 4;
-					}
-					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
+				{
+					if (dyb < 1) printf("Rect pixelwidth dyb < 1\n");
+					if (dyb > 16) printf("Rect pixelwidth dyb > 16\n");
+					if (dxs < 1) printf("Rect pixelwidth dxs < 1\n");
+					if (dxs > 16) printf("Rect pixelwidth dxs > 16\n");
 				}
+#endif
+				int alpha; // Alpha 0-255
+				if (y == y1lw_px && dyt > 0) // Top pixel, not fully filled
+				{
+					const int surf = dxs * (16 - dyt);
+					alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+				}
+				else if (y == (y2lw_px - 1) && dyb < 16) // Bottom pixel, not fully filled
+				{
+					const int surf = dxs * dyb;
+					alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+				}
+				else // Any other pixel
+				{
+					alpha = ((gs.ColorARGB >> 24) * dxs) >> 4;
+				}
+				const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+				processPixel(gs, bc, bs, bt, x, out);
 			}
 		}
 		else if (yslw_px == 1) // Single pixel height rects (ignores impact of rounded corners)
@@ -1107,47 +1075,26 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
 				{
 					const int x = x1lw_px_sc;
-					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-					{
-						const int surf = (16 - dxl) * dys;
-						const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						if (testAlpha(gs, out)) // Test alpha
-						{
-							bc[x] = blend(gs, out, bc[x]); // Write color
-							writeTag(gs, bt, x); // Write tag
-						}
-					}
+					const int surf = (16 - dxl) * dys;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
 				}
 				if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
 				{
 					const int x = x2lw_px_sc - 1;
-					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-					{
-						const int surf = dxr * dys;
-						const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						if (testAlpha(gs, out)) // Test alpha
-						{
-							bc[x] = blend(gs, out, bc[x]); // Write color
-							writeTag(gs, bt, x); // Write tag
-						}
-					}
+					const int surf = dxr * dys;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
 				}
 				for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 				{
-					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-					{
-						const int alpha = ((gs.ColorARGB >> 24) * dys) >> 4;
-						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						if (testAlpha(gs, out)) // Test alpha
-						{
-							bc[x] = blend(gs, out, bc[x]); // Write color
-							writeTag(gs, bt, x); // Write tag
-						}
-					}
+					const int alpha = ((gs.ColorARGB >> 24) * dys) >> 4;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 				}
 			}
 		}
@@ -1179,64 +1126,36 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
 				{
 					const int x = x1lw_px_sc;
-					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-					{
-						const int surf = (16 - dxl) * rowfill;
-						const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						if (testAlpha(gs, out)) // Test alpha
-						{
-							bc[x] = blend(gs, out, bc[x]); // Write color
-							writeTag(gs, bt, x); // Write tag
-						}
-					}
+					const int surf = (16 - dxl) * rowfill;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
 				}
 				if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
 				{
 					const int x = x2lw_px_sc - 1;
-					if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-					{
-						const int surf = dxr * rowfill;
-						const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
-						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						if (testAlpha(gs, out)) // Test alpha
-						{
-							bc[x] = blend(gs, out, bc[x]); // Write color
-							writeTag(gs, bt, x); // Write tag
-						}
-					}
+					const int surf = dxr * rowfill;
+					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+					processPixel(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
 				}
 				if (rowfill < 16) // Top or bottom row
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
-						if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-						{
-							const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
-							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-							if (testAlpha(gs, out)) // Test alpha
-							{
-								bc[x] = blend(gs, out, bc[x]); // Write color
-								writeTag(gs, bt, x); // Write tag
-							}
-						}
+						const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
+						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+						processPixel(gs, bc, bs, bt, x, out);
 					}
 				}
 				else // Any other row
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
-						if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-						{
-							const argb8888 out = gs.ColorARGB;
-							if (testAlpha(gs, out)) // Test alpha
-							{
-								bc[x] = blend(gs, out, bc[x]); // Write color
-								writeTag(gs, bt, x); // Write tag
-							}
-						}
+						const argb8888 out = gs.ColorARGB;
+						processPixel(gs, bc, bs, bt, x, out);
 					}
 				}
 			}
@@ -1351,23 +1270,16 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int x = cx1_px;
 							if (bx1_px_sc_l <= x && x < bx2_px_sc_r) // Check scissor
 							{
-								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-								{
-									int blendleft = ax2 - ((ax2_px - 1) << 4);
-									int blendright = bx2 - ((bx2_px - 1) << 4);
-									blendright = 16 - blendright;
-									const int blendinv = 16 - blendleft - blendright;
-									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
-									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
-									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
-									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									if (testAlpha(gs, out)) // Test alpha
-									{
-										bc[x] = blend(gs, out, bc[x]); // Write color
-										writeTag(gs, bt, x); // Write tag
-									}
-								}								
+								int blendleft = ax2 - ((ax2_px - 1) << 4);
+								int blendright = bx2 - ((bx2_px - 1) << 4);
+								blendright = 16 - blendright;
+								const int blendinv = 16 - blendleft - blendright;
+								const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
+								const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
+								const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
+								const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+								processPixel(gs, bc, bs, bt, x, out);						
 							}
 						}
 						else
@@ -1377,41 +1289,27 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								if (bx1_px_sc_l == bx1_px && ax2_px - 1 == bx1_px) // Left pixel overlaps
 								{
 									const int x = bx1_px;
-									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-									{
-										int blendleft = ax2 - ((ax2_px - 1) << 4);
-										const int blendinv = 16 - blendleft;
-										const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
-										const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
-										const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-										const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-										if (testAlpha(gs, out)) // Test alpha
-										{
-											bc[x] = blend(gs, out, bc[x]); // Write color
-											writeTag(gs, bt, x); // Write tag
-										}
-									}
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									const int blendinv = 16 - blendleft;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by1 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									processPixel(gs, bc, bs, bt, x, out);
 									++bx1_px_sc_l;
 								}
 
 								if (bx2_px_sc_r == bx2_px && bx2_px - 1 == cx1_px) // Right pixel overlaps
 								{
 									const int x = cx1_px;
-									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-									{
-										int blendright = bx2 - ((bx2_px - 1) << 4);
-										blendright = 16 - blendright;
-										const int blendinv = 16 - blendright;
-										const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
-										const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
-										const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-										const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-										if (testAlpha(gs, out)) // Test alpha
-										{
-											bc[x] = blend(gs, out, bc[x]); // Write color
-											writeTag(gs, bt, x); // Write tag
-										}
-									}
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendright;
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by1 - 8);
+									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									processPixel(gs, bc, bs, bt, x, out);
 									--bx2_px_sc_r;
 								}
 
@@ -1422,14 +1320,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 									for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 									{
-										if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-										{
-											if (testAlpha(gs, out)) // Test alpha
-											{
-												bc[x] = blend(gs, out, bc[x]); // Write color
-												writeTag(gs, bt, x); // Write tag
-											}
-										}
+										processPixel(gs, bc, bs, bt, x, out);
 									}
 								}
 							}
@@ -1442,14 +1333,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
 						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 						{
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								if (testAlpha(gs, gs.ColorARGB)) // Test alpha
-								{
-									bc[x] = blend(gs, gs.ColorARGB, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 						}
 					}
 				}
@@ -1478,23 +1362,16 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int x = cx1_px;
 							if (bx1_px_sc_l <= x && x < bx2_px_sc_r) // Check scissor
 							{
-								if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-								{
-									int blendleft = ax2 - ((ax2_px - 1) << 4);
-									int blendright = bx2 - ((bx2_px - 1) << 4);
-									blendright = 16 - blendright;
-									const int blendinv = 16 - blendleft - blendright;
-									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
-									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
-									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
-									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									if (testAlpha(gs, out)) // Test alpha
-									{
-										bc[x] = blend(gs, out, bc[x]); // Write color
-										writeTag(gs, bt, x); // Write tag
-									}
-								}
+								int blendleft = ax2 - ((ax2_px - 1) << 4);
+								int blendright = bx2 - ((bx2_px - 1) << 4);
+								blendright = 16 - blendright;
+								const int blendinv = 16 - blendleft - blendright;
+								const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
+								const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
+								const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
+								const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+								processPixel(gs, bc, bs, bt, x, out);
 							}
 						}
 						else
@@ -1504,41 +1381,27 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								if (bx1_px_sc_l == bx1_px && ax2_px - 1 == bx1_px) // Left pixel overlaps
 								{
 									const int x = bx1_px;
-									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-									{
-										int blendleft = ax2 - ((ax2_px - 1) << 4);
-										const int blendinv = 16 - blendleft;
-										const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
-										const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
-										const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-										const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-										if (testAlpha(gs, out)) // Test alpha
-										{
-											bc[x] = blend(gs, out, bc[x]); // Write color
-											writeTag(gs, bt, x); // Write tag
-										}
-									}
+									int blendleft = ax2 - ((ax2_px - 1) << 4);
+									const int blendinv = 16 - blendleft;
+									const int alphaleft = getPointAlpha256(gs.LineWidth, x, y, bx1 - 8, by2 - 8);
+									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									processPixel(gs, bc, bs, bt, x, out);
 									++bx1_px_sc_l;
 								}
 
 								if (bx2_px_sc_r == bx2_px && bx2_px - 1 == cx1_px) // Right pixel overlaps
 								{
 									const int x = cx1_px;
-									if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-									{
-										int blendright = bx2 - ((bx2_px - 1) << 4);
-										blendright = 16 - blendright;
-										const int blendinv = 16 - blendright;
-										const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
-										const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
-										const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
-										const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-										if (testAlpha(gs, out)) // Test alpha
-										{
-											bc[x] = blend(gs, out, bc[x]); // Write color
-											writeTag(gs, bt, x); // Write tag
-										}
-									}
+									int blendright = bx2 - ((bx2_px - 1) << 4);
+									blendright = 16 - blendright;
+									const int blendinv = 16 - blendright;
+									const int alpharight = getPointAlpha256(gs.LineWidth, x, y, bx2 - 8, by2 - 8);
+									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
+									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
+									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+									processPixel(gs, bc, bs, bt, x, out);
 									--bx2_px_sc_r;
 								}
 
@@ -1549,14 +1412,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 									for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 									{
-										if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-										{
-											if (testAlpha(gs, out)) // Test alpha
-											{
-												bc[x] = blend(gs, out, bc[x]); // Write color
-												writeTag(gs, bt, x); // Write tag
-											}
-										}
+										processPixel(gs, bc, bs, bt, x, out);
 									}
 								}
 							}
@@ -1569,14 +1425,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
 						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 						{
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								if (testAlpha(gs, gs.ColorARGB)) // Test alpha
-								{
-									bc[x] = blend(gs, gs.ColorARGB, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 						}
 					}
 				}
@@ -1595,33 +1444,19 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						if (x1lw_px == x1lw_px_sc && dxl > 0) // Draw the left pixel if not fully on
 						{
 							const int x = x1lw_px_sc;
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								const int surf = (16 - dxl);
-								const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
-								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								if (testAlpha(gs, out)) // Test alpha
-								{
-									bc[x] = blend(gs, out, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							const int surf = (16 - dxl);
+							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
+							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
 							++x1lw_px_sc;
 						}
 						if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
 						{
 							const int x = x2lw_px_sc - 1;
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								const int surf = dxr;
-								const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
-								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								if (testAlpha(gs, out)) // Test alpha
-								{
-									bc[x] = blend(gs, out, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							const int surf = dxr;
+							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
+							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
 							--x2lw_px_sc;
 						}
 					}
@@ -1651,49 +1486,27 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						if (x1lw_px == x1lw_px_sc) // Check scissor
 						{
 							const int x = x1lw_px_sc;
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
-								const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
-								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								if (testAlpha(gs, out)) // Test alpha
-								{
-									bc[x] = blend(gs, out, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
+							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
+							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
 							++x1lw_px_sc;
 						}
 						// Right
 						if (x2lw_px == x2lw_px_sc) // Check scissor
 						{
 							const int x = x2lw_px_sc - 1;
-							if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-							{
-								const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
-								const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
-								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								if (testAlpha(gs, out)) // Test alpha
-								{
-									bc[x] = blend(gs, out, bc[x]); // Write color
-									writeTag(gs, bt, x); // Write tag
-								}
-							}
+							const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
+							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
+							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
 							--x2lw_px_sc;
 						}
 					}
 					// The rest of the pixels
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
-						if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-						{
-							const argb8888 out = gs.ColorARGB;
-							if (testAlpha(gs, out)) // Test alpha
-							{
-								bc[x] = blend(gs, out, bc[x]); // Write color
-								writeTag(gs, bt, x); // Write tag
-							}
-						}
+						processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 					}
 				}
 			}
@@ -1795,15 +1608,7 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 		for (int x = left_sc; x < right_sc; ++x)
 		{
-			if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-			{
-				const argb8888 out = gs.ColorARGB;
-				if (testAlpha(gs, out)) // Test alpha
-				{
-					bc[x] = blend(gs, out, bc[x]); // Write color
-					writeTag(gs, bt, x); // Write tag
-				}
-			}
+			processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 		}
 	}
 }
@@ -1855,15 +1660,7 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 		for (int x = left_sc; x < right_sc; ++x)
 		{
-			if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-			{
-				const argb8888 out = gs.ColorARGB;
-				if (testAlpha(gs, out)) // Test alpha
-				{
-					bc[x] = blend(gs, out, bc[x]); // Write color
-					writeTag(gs, bt, x); // Write tag
-				}
-			}
+			processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 		}
 	}
 }
@@ -1917,30 +1714,14 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 			for (int x = left_sc; x < right_sc; ++x)
 			{
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const argb8888 out = gs.ColorARGB; // x == left_sc ? 0xFFFF8000 : x == right_sc - 1 ? 0xFF00FF80 : gs.ColorARGB;
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
-				}
+				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 		else
 		{
 			for (int x = x1_sc; x < x2_sc; ++x)
 			{
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const argb8888 out = gs.ColorARGB;
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
-				}
+				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 	}
@@ -1999,30 +1780,14 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 			for (int x = left_sc; x < right_sc; ++x)
 			{
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const argb8888 out = gs.ColorARGB;
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
-				}
+				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 		else
 		{
 			for (int x = x1_sc; x < x2_sc; ++x)
 			{
-				if (testStencil(gs, bs, x)) // Test and write the stencil buffer
-				{
-					const argb8888 out = gs.ColorARGB;
-					if (testAlpha(gs, out)) // Test alpha
-					{
-						bc[x] = blend(gs, out, bc[x]); // Write color
-						writeTag(gs, bt, x); // Write tag
-					}
-				}
+				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 	}
@@ -2167,57 +1932,50 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						if (testStencil(gs, bs, x))
-						{
 #if FT800EMU_LINE_DEBUG_DRAW_FILL
-							bc[x] = 0xFFFF0000;
+						bc[x] = 0xFFFF0000;
 #endif
 
-							const int qxc = x << 8; // Current x in 256 scale
-							const int alphawidth = findx(0, 256, qw1o, qw1i, qxc); // Alpha 256
+						const int qxc = x << 8; // Current x in 256 scale
+						const int alphawidth = findx(0, 256, qw1o, qw1i, qxc); // Alpha 256
 
-							int blendleft;
-							int alphaleft;
-							int blendright;
-							int alpharight;
+						int blendleft;
+						int alphaleft;
+						int blendright;
+						int alpharight;
 
-							if (x < l1i) // Blend with left length boundary and circle
-							{
+						if (x < l1i) // Blend with left length boundary and circle
+						{
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-								bc[x] = 0xFFFF00FF;
+							bc[x] = 0xFFFF00FF;
 #endif
-								blendleft = findx(256, 0, ql1o, ql1i, qxc);
-								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
-							}
-							else
-							{
-								blendleft = 0;
-								alphaleft = 0;
-							}
-							if (x >= l2i) // Blend with right length boundary and circle
-							{
-#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-								bc[x] = 0xFFFF00FF;
-#endif
-								blendright = findx(0, 256, ql2i, ql2o, qxc);
-								alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
-							}
-							else
-							{
-								blendright = 0;
-								alpharight = 0;
-							}
-
-							const int alpharest = 256 - blendleft - blendright;
-
-							const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
-							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-							if (testAlpha(gs, out))
-							{
-								bc[x] = blend(gs, out, bc[x]);
-								writeTag(gs, bt, x);
-							}
+							blendleft = findx(256, 0, ql1o, ql1i, qxc);
+							alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
 						}
+						else
+						{
+							blendleft = 0;
+							alphaleft = 0;
+						}
+						if (x >= l2i) // Blend with right length boundary and circle
+						{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+							bc[x] = 0xFFFF00FF;
+#endif
+							blendright = findx(0, 256, ql2i, ql2o, qxc);
+							alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
+						}
+						else
+						{
+							blendright = 0;
+							alpharight = 0;
+						}
+
+						const int alpharest = 256 - blendleft - blendright;
+
+						const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
+						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+						processPixel(gs, bc, bs, bt, x, out);
 					}
 				}
 
@@ -2228,15 +1986,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						if (testStencil(gs, bs, x))
-						{
-							const argb8888 out = gs.ColorARGB;
-							if (testAlpha(gs, out))
-							{
-								bc[x] = blend(gs, out, bc[x]);
-								writeTag(gs, bt, x);
-							}
-						}
+						processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
 					}
 				}
 
@@ -2247,53 +1997,46 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						if (testStencil(gs, bs, x))
+						const int qxc = x << 8; // Current x in 256 scale
+						const int alphawidth = findx(256, 0, qw2i, qw2o, qxc); // Alpha 256
+
+						int blendleft;
+						int alphaleft;
+						int blendright;
+						int alpharight;
+
+						if (x < l1i) // Blend with left length boundary and circle
 						{
-							const int qxc = x << 8; // Current x in 256 scale
-							const int alphawidth = findx(256, 0, qw2i, qw2o, qxc); // Alpha 256
-
-							int blendleft;
-							int alphaleft;
-							int blendright;
-							int alpharight;
-
-							if (x < l1i) // Blend with left length boundary and circle
-							{
 #if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-								bc[x] = 0xFFFF00FF;
+							bc[x] = 0xFFFF00FF;
 #endif
-								blendleft = findx(256, 0, ql1o, ql1i, qxc);
-								alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
-							}
-							else
-							{
-								blendleft = 0;
-								alphaleft = 0;
-							}
-							if (x >= l2i) // Blend with right length boundary and circle
-							{
-#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
-								bc[x] = 0xFFFF00FF;
-#endif
-								blendright = findx(0, 256, ql2i, ql2o, qxc);
-								alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
-							}
-							else
-							{
-								blendright = 0;
-								alpharight = 0;
-							}
-
-							const int alpharest = 256 - blendleft - blendright;
-
-							const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
-							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-							if (testAlpha(gs, out))
-							{
-								bc[x] = blend(gs, out, bc[x]);
-								writeTag(gs, bt, x);
-							}
+							blendleft = findx(256, 0, ql1o, ql1i, qxc);
+							alphaleft = blendleft * getPointAlpha256(lw, x, y, x1 < x2 ? x1 : x2, x1 < x2 ? y1 : y2);
 						}
+						else
+						{
+							blendleft = 0;
+							alphaleft = 0;
+						}
+						if (x >= l2i) // Blend with right length boundary and circle
+						{
+#if FT800EMU_LINE_DEBUG_DRAW_SPECIAL
+							bc[x] = 0xFFFF00FF;
+#endif
+							blendright = findx(0, 256, ql2i, ql2o, qxc);
+							alpharight = blendright * getPointAlpha256(lw, x, y, x1 < x2 ? x2 : x1, x1 < x2 ? y2 : y1);
+						}
+						else
+						{
+							blendright = 0;
+							alpharight = 0;
+						}
+
+						const int alpharest = 256 - blendleft - blendright;
+
+						const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
+						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+						processPixel(gs, bc, bs, bt, x, out);
 					}
 				}
 
@@ -2357,38 +2100,27 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						if (testStencil(gs, bs, x))
+						const int qxc = x << 8; // Current x in 256 scale
+						const int alphawidthleft = findx(0, 256, qw1o, qwi, qxc); // Alpha 256
+						const int alphawidthright = findx(256, 0, qwi, qw2o, qxc); // Alpha 256
+						const int alphawidth = min(alphawidthleft, alphawidthright);
+						
+						if (x >= l1i && x < l2i) // No blending with outer ends
 						{
-							const int qxc = x << 8; // Current x in 256 scale
-							const int alphawidthleft = findx(0, 256, qw1o, qwi, qxc); // Alpha 256
-							const int alphawidthright = findx(256, 0, qwi, qw2o, qxc); // Alpha 256
-							const int alphawidth = min(alphawidthleft, alphawidthright);
-							
-							if (x >= l1i && x < l2i) // No blending with outer ends
-							{
-								// lw = 3, alphawidth = 8
-								const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth) >> 11;
-								const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-								if (testAlpha(gs, out))
-								{
-									bc[x] = blend(gs, out, bc[x]);
-									writeTag(gs, bt, x);
-								}
-							}
-							else
-							{
-								const int alphalenleft = findx(0, 256, ql1o, ql1i, qxc);
-								const int alphalenright = findx(256, 0, ql2i, ql2o, qxc);
-								const int alphalen = min(alphalenleft, alphalenright);
+							// lw = 3, alphawidth = 8
+							const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth) >> 11;
+							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
+						}
+						else
+						{
+							const int alphalenleft = findx(0, 256, ql1o, ql1i, qxc);
+							const int alphalenright = findx(256, 0, ql2i, ql2o, qxc);
+							const int alphalen = min(alphalenleft, alphalenright);
 
-								const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth * alphalen) >> 19;
-								const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-								if (testAlpha(gs, out))
-								{
-									bc[x] = blend(gs, out, bc[x]);
-									writeTag(gs, bt, x);
-								}
-							}
+							const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth * alphalen) >> 19;
+							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
+							processPixel(gs, bc, bs, bt, x, out);
 						}
 					}
 				}
