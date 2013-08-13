@@ -199,7 +199,7 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 	rawWriteU32(address, data);
 }
 
-void MemoryClass::mcuWrite(size_t address, uint8_t data)
+/* void MemoryClass::mcuWrite(size_t address, uint8_t data)
 {	
 	s_SwapMCUReadCounter = 0;
 	if (address == REG_CMD_WRITE + 3)
@@ -208,7 +208,7 @@ void MemoryClass::mcuWrite(size_t address, uint8_t data)
 	}
     actionWrite(address, data);
 	rawWriteU8(address, data);
-}
+} */
 
 void MemoryClass::swapDisplayList()
 {
@@ -219,7 +219,58 @@ void MemoryClass::swapDisplayList()
 	s_DisplayListActive = active;
 }
 
-uint8_t MemoryClass::mcuRead(size_t address)
+uint32_t MemoryClass::mcuReadU32(size_t address)
+{
+	if (s_ReadDelay)
+	{
+		switch (address)
+		{
+		case REG_CMD_READ: // wait for read advance from coprocessor thread
+			++s_SwapMCUReadCounter;
+			if (s_SwapMCUReadCounter > 8)
+			{
+				// printf(" Delay MCU ");
+				System.prioritizeCoprocessorThread();
+				System.delay(1);
+				System.unprioritizeCoprocessorThread();
+			}
+			break;
+		case REG_DLSWAP: // wait for frame swap from main thread
+			++s_WaitMCUReadCounter;
+			if (s_WaitMCUReadCounter > 8)
+			{
+				// printf(" Delay MCU ");
+				System.prioritizeCoprocessorThread();
+				System.delay(1);
+				System.unprioritizeCoprocessorThread();
+			}
+			break;
+		default:
+			if (s_LastMCURead == address)
+			{
+				++s_IdenticalMCUReadCounter;
+				if (s_IdenticalMCUReadCounter > 8)
+				{
+					// printf(" Switch ");
+					System.prioritizeCoprocessorThread();
+					System.switchThread();
+					System.unprioritizeCoprocessorThread();
+				}
+			}
+			else
+			{
+				// printf("Reset %i\n", address);			
+				s_LastMCURead = address;
+				s_IdenticalMCUReadCounter = 0;
+			}
+			break;
+		}
+	}
+
+	return rawReadU32(address);
+}
+
+/* uint8_t MemoryClass::mcuRead(size_t address)
 {
 	if (s_ReadDelay && address % 4 == 0)
 	{
@@ -268,7 +319,7 @@ uint8_t MemoryClass::mcuRead(size_t address)
 	}
 
 	return rawReadU8(address);
-}
+} */
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 {	

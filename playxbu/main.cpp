@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <vc.h>
 
-#define FT800EMU_XBU_FILE "../reference/xbu/3D.XBU"
+#define FT800EMU_XBU_FILE "../reference/xbu/BIRDS.XBU"
 
 void swrbegin(size_t address)
 {
