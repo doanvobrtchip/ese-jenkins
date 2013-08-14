@@ -22,6 +22,7 @@
 #define FT800EMU_SSE41_INSTRUCTIONS_USE FT800EMU_SSE41 // Faster code, up to 40% faster depending on the used features (slower in debug, though)
 
 // System includes
+#include <vector>
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
@@ -30,6 +31,9 @@
 #	include <xmmintrin.h>
 #	include <emmintrin.h>
 #	include <smmintrin.h>
+#endif
+#ifdef FT800EMU_SDL
+#	include <SDL_thread.h>
 #endif
 
 // Project includes
@@ -2226,9 +2230,57 @@ void GraphicsProcessorClass::begin()
 	}
 }
 
+struct ThreadInfo
+{
+public:
+#ifdef FT800EMU_SDL
+	bool Running;
+	SDL_Thread *Thread;
+	SDL_cond *StartCond;
+	SDL_mutex *StartMutex;
+#endif
+	argb8888 *ScreenArgb8888;
+	bool UpsideDown;
+	uint32_t HSize;
+	uint32_t VSize;
+	uint32_t YIdx;
+	uint32_t YInc;
+};
+
+std::vector<ThreadInfo> s_ThreadInfos;
+
+int launchGraphicsProcessorThread(void *startInfo);
+
+void resizeThreadInfos(int size)
+{
+#ifdef FT800EMU_SDL
+	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	{
+		s_ThreadInfos[i].Running = false;
+		SDL_CondSignal(s_ThreadInfos[i].StartCond);
+		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
+		s_ThreadInfos[i].Thread = NULL;
+		SDL_DestroyCond(s_ThreadInfos[i].StartCond);
+		s_ThreadInfos[i].StartCond = NULL;
+		SDL_DestroyMutex(s_ThreadInfos[i].StartMutex);
+		s_ThreadInfos[i].StartMutex = NULL;
+	}
+#endif
+	s_ThreadInfos.resize(s_ThreadCount - 1);
+#ifdef FT800EMU_SDL
+	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	{
+		s_ThreadInfos[i].Running = true;
+		s_ThreadInfos[i].StartCond = SDL_CreateCond();
+		s_ThreadInfos[i].StartMutex = SDL_CreateMutex();
+		s_ThreadInfos[i].Thread = SDL_CreateThread(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
+	}
+#endif
+}
+
 void GraphicsProcessorClass::end()
 {
-	
+	resizeThreadInfos(0);
 }
 
 void GraphicsProcessorClass::enableMultithread(bool enabled)
@@ -2242,12 +2294,14 @@ void GraphicsProcessorClass::enableMultithread(bool enabled)
 		s_ThreadCount = 1;
 	}
 	printf("Graphics processor threads: %i\n", s_ThreadCount);
+	resizeThreadInfos(s_ThreadCount - 1);
 }
 
 void GraphicsProcessorClass::reduceThreads(int nb)
 {
 	s_ThreadCount = max(1, s_ThreadCount - nb);
 	printf("Graphics processor threads: %i\n", s_ThreadCount);
+	resizeThreadInfos(s_ThreadCount - 1);
 }
 
 // Sign-extend the n-bit value v
@@ -2660,6 +2714,36 @@ DisplayListDisplay:
 	
 } /* anonymous namespace */
 
+#ifdef FT800EMU_SDL
+int launchGraphicsProcessorThread(void *startInfo)
+{		
+	unsigned long taskId = 0;
+	void *taskHandle;
+	taskHandle = System.setThreadGamesCategory(&taskId);
+	System.disableAutomaticPriorityBoost();
+	System.makeRealtimePriorityThread();
+	
+	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
+	SDL_mutexP(li->StartMutex);
+	for (; ; )
+	{
+		SDL_CondWait(li->StartCond, li->StartMutex);
+		
+		if (!li->Running)
+		{
+			break;
+		}
+		
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc);
+	}
+	SDL_mutexV(li->StartMutex);
+	
+	System.revertThreadCategory(taskHandle);
+	
+	return 0;
+}
+#endif
+
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
 {
 	uint8_t *const ram = Memory.getRam();
@@ -2670,7 +2754,20 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t i = 1; i < s_ThreadCount; ++i)
 	{
 		// Launch threads
+		// processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+		ThreadInfo *li = &s_ThreadInfos[i - 1];
+		li->ScreenArgb8888 = screenArgb8888;
+		li->UpsideDown = upsideDown;
+		li->HSize = hsize;
+		li->VSize = vsize;
+		li->YIdx = (i * yInc) + yIdx;
+		li->YInc = s_ThreadCount * yInc;
+#ifdef FT800EMU_SDL
+		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
+		SDL_CondSignal(li->StartCond);
+#else
 		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+#endif
 	}
 	
 	// Run part on this thread
@@ -2679,7 +2776,14 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t i = 1; i < s_ThreadCount; ++i)
 	{
 		// Wait for threads
+#ifdef FT800EMU_SDL
+		ThreadInfo *li = &s_ThreadInfos[i - 1];
+		// SDL_WaitThread(li->Thread, NULL);
+		SDL_mutexP(li->StartMutex);
+		SDL_mutexV(li->StartMutex);
+#else
 		// ...
+#endif
 	}
 }
 	

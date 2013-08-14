@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 
     FT800EMU::Memory.begin();
     FT800EMU::GraphicsProcessor.begin();
+    FT800EMU::GraphicsProcessor.enableMultithread();
 
     uint8_t *ram = FT800EMU::Memory.getRam();
 	argb8888 *buffer = s_Buffer;

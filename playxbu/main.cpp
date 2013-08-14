@@ -257,7 +257,7 @@ int main(int, char* [])
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = FT800EMU::EmulatorEnableKeyboard | FT800EMU::EmulatorEnableMouse | FT800EMU::EmulatorEnableDebugShortkeys | FT800EMU::EmulatorEnableCoprocessor | FT800EMU::EmulatorEnableGraphicsMultithread | FT800EMU::EmulatorEnableDynamicDegrade;
+	params.Flags = FT800EMU::EmulatorEnableKeyboard | FT800EMU::EmulatorEnableMouse | FT800EMU::EmulatorEnableDebugShortkeys | FT800EMU::EmulatorEnableCoprocessor | FT800EMU::EmulatorEnableGraphicsMultithread/* | FT800EMU::EmulatorEnableDynamicDegrade*/;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;
