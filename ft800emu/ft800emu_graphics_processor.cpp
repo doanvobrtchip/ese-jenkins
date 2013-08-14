@@ -34,6 +34,10 @@
 #endif
 #ifdef FT800EMU_SDL
 #	include <SDL_thread.h>
+#else
+#	ifdef WIN32
+#		include "ft800emu_system_windows.h"
+#	endif
 #endif
 
 // Project includes
@@ -2238,6 +2242,13 @@ public:
 	SDL_Thread *Thread;
 	SDL_cond *StartCond;
 	SDL_mutex *StartMutex;
+#else
+#	ifdef WIN32
+	bool Running;
+	HANDLE Thread;
+	HANDLE StartEvent;
+	HANDLE EndEvent;
+#	endif
 #endif
 	argb8888 *ScreenArgb8888;
 	bool UpsideDown;
@@ -2249,7 +2260,13 @@ public:
 
 std::vector<ThreadInfo> s_ThreadInfos;
 
+#ifdef FT800EMU_SDL
 int launchGraphicsProcessorThread(void *startInfo);
+#else
+#	ifdef WIN32
+DWORD WINAPI launchGraphicsProcessorThread(void *startInfo);
+#	endif
+#endif
 
 void resizeThreadInfos(int size)
 {
@@ -2265,6 +2282,18 @@ void resizeThreadInfos(int size)
 		SDL_DestroyMutex(s_ThreadInfos[i].StartMutex);
 		s_ThreadInfos[i].StartMutex = NULL;
 	}
+#else
+#	ifdef WIN32
+	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	{
+		s_ThreadInfos[i].Running = false;
+		SetEvent(s_ThreadInfos[i].StartEvent);
+		WaitForSingleObject(s_ThreadInfos[i].Thread, INFINITE);
+		CloseHandle(s_ThreadInfos[i].Thread);
+		CloseHandle(s_ThreadInfos[i].StartEvent);
+		CloseHandle(s_ThreadInfos[i].EndEvent);
+	}
+#	endif
 #endif
 	s_ThreadInfos.resize(s_ThreadCount - 1);
 #ifdef FT800EMU_SDL
@@ -2275,6 +2304,16 @@ void resizeThreadInfos(int size)
 		s_ThreadInfos[i].StartMutex = SDL_CreateMutex();
 		s_ThreadInfos[i].Thread = SDL_CreateThread(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
 	}
+#else
+#	ifdef WIN32
+	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	{
+		s_ThreadInfos[i].Running = true;
+		s_ThreadInfos[i].StartEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		s_ThreadInfos[i].EndEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		s_ThreadInfos[i].Thread = CreateThread(NULL, 0, launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]), 0, NULL);
+	}
+#	endif
 #endif
 }
 
@@ -2742,6 +2781,36 @@ int launchGraphicsProcessorThread(void *startInfo)
 	
 	return 0;
 }
+#else
+#	ifdef WIN32
+DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
+{		
+	unsigned long taskId = 0;
+	void *taskHandle;
+	taskHandle = System.setThreadGamesCategory(&taskId);
+	System.disableAutomaticPriorityBoost();
+	System.makeRealtimePriorityThread();
+
+	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
+	for (; ; )
+	{
+		WaitForSingleObject(li->StartEvent, INFINITE);
+		
+		if (!li->Running)
+		{
+			break;
+		}
+		
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc);
+
+		SetEvent(li->EndEvent);
+	}
+	
+	System.revertThreadCategory(taskHandle);
+	
+	return 0;
+}
+#	endif
 #endif
 
 void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
@@ -2766,7 +2835,11 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
 		SDL_CondSignal(li->StartCond);
 #else
+#	if WIN32
+		SetEvent(li->StartEvent);
+#	else
 		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+#	endif
 #endif
 	}
 	
@@ -2782,7 +2855,11 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		SDL_mutexP(li->StartMutex);
 		SDL_mutexV(li->StartMutex);
 #else
-		// ...
+#	if WIN32
+		ThreadInfo *li = &s_ThreadInfos[i - 1];
+		WaitForSingleObject(li->EndEvent, INFINITE);
+		ResetEvent(li->EndEvent);
+#	endif
 #endif
 	}
 }

@@ -72,6 +72,14 @@ void SystemClass::_end()
 	SDL_Quit();
 #endif
 }
+
+unsigned int SystemClass::getCPUCount()
+{
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
+}
+
 /*
 void SystemClass::enterCriticalSection()
 {
