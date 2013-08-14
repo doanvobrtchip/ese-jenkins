@@ -190,7 +190,7 @@ struct BitmapInfo
 	int SizeHeight;
 };
 
-BitmapInfo s_BitmapInfo[32];
+BitmapInfo s_BitmapInfoMain[32];
 
 #pragma endregion
 
@@ -669,7 +669,7 @@ FT800EMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 }
 
 // uses pixel units
-FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy)
+FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 {
     int xo;   // x byte offset
 	switch (format)
@@ -779,7 +779,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 			const int yn = y >> 3;
 			py = yn * stride;
 			uint8_t c = bmpSrc8(ram, srci, py + xo);
-			const uint8_t *nsrc = &ram[s_BitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
+			const uint8_t *nsrc = &ram[bitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
 			const int xc = x & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1;
@@ -791,7 +791,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 			py = yn * stride;
 			uint8_t c = bmpSrc8(ram, srci, py + xo); // Character
 			uint8_t ca = bmpSrc8(ram, srci, py + xo + 1); // Attribute
-			const uint8_t *nsrc = &ram[s_BitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
+			const uint8_t *nsrc = &ram[bitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
 			const int pyc = y & 0xF;
 			const int xc = x & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
@@ -812,7 +812,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 }
 
 // uses 1/(256*16) pixel units, w & h in pixel units
-FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter)
+FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 {
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
@@ -822,7 +822,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 		{
 			int xi = x >> 12;
 			int yi = y >> 12;
-			return sampleBitmapAt(ram, srci, xi, yi, height, format, stride, wrapx, wrapy);
+			return sampleBitmapAt(ram, srci, xi, yi, height, format, stride, wrapx, wrapy, bitmapInfo);
 		}
 	case BILINEAR:
 		{
@@ -832,15 +832,15 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 			int yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
-				return sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy);
+				return sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo);
 			}
 			else if (xsep == 0)
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
 				int yb = yt + 1;
-				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy);
-				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy);
+				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo);
+				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
@@ -848,8 +848,8 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy), xar);
+				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
 			}
 			else
 			{
@@ -860,19 +860,19 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xr = xl + 1;
 				int yb = yt + 1;
 #if FT800EMU_SSE41_INSTRUCTIONS_USE
-				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy));
-				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy));
-				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy));
-				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy));
+				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo));
+				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo));
+				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo));
+				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy, bitmapInfo));
 				const __m128i top = _mm_add_epi32(mulalpha_argb(tl, xal), mulalpha_argb(tr, xar));
 				const __m128i btm = _mm_add_epi32(mulalpha_argb(bl, xal), mulalpha_argb(br, xar));
 				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
 				return to_argb8888(result);
 #else
-				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy), xal) 
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy), xar);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 #endif
 			}
@@ -881,11 +881,11 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 	return 0xFFFFFF00; // invalid filter
 }
 
-void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell)
+void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, BitmapInfo *const bitmapInfo)
 {
     // if (y != 22) return;
 	// printf("bitmap\n");
-	const BitmapInfo &bi = s_BitmapInfo[handle];
+	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *ram = Memory.getRam();
 
 	int pytop = py; // incl pixel*16 top
@@ -929,7 +929,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			// transform with 1/(256*16) pixel units
 			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
 			int ryt = (gs.BitmapTransformD * rx) + rytef;
-			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter);
+			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
 			processPixel(gs, bc, bs, bt, x, out);
@@ -2221,16 +2221,16 @@ void GraphicsProcessorClass::begin()
 		uint32_t data =  Memory.rawReadU32(ram, bi + 144);
 		printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
-		s_BitmapInfo[ir].Source = data;
-		s_BitmapInfo[ir].LayoutFormat = format;
-		s_BitmapInfo[ir].LayoutStride = stride;
-		s_BitmapInfo[ir].LayoutHeight = height;
-		s_BitmapInfo[ir].LayoutWidth = getLayoutWidth(format, stride);
-		s_BitmapInfo[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
-		s_BitmapInfo[ir].SizeWrapX = BORDER;
-		s_BitmapInfo[ir].SizeWrapY = BORDER;
-		s_BitmapInfo[ir].SizeWidth = width;
-		s_BitmapInfo[ir].SizeHeight = height;
+		s_BitmapInfoMain[ir].Source = data;
+		s_BitmapInfoMain[ir].LayoutFormat = format;
+		s_BitmapInfoMain[ir].LayoutStride = stride;
+		s_BitmapInfoMain[ir].LayoutHeight = height;
+		s_BitmapInfoMain[ir].LayoutWidth = getLayoutWidth(format, stride);
+		s_BitmapInfoMain[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+		s_BitmapInfoMain[ir].SizeWrapX = BORDER;
+		s_BitmapInfoMain[ir].SizeWrapY = BORDER;
+		s_BitmapInfoMain[ir].SizeWidth = width;
+		s_BitmapInfoMain[ir].SizeHeight = height;
 	}
 }
 
@@ -2242,6 +2242,7 @@ public:
 	SDL_Thread *Thread;
 	SDL_cond *StartCond;
 	SDL_mutex *StartMutex;
+	SDL_sem *EndSem;
 #else
 #	ifdef WIN32
 	bool Running;
@@ -2256,6 +2257,7 @@ public:
 	uint32_t VSize;
 	uint32_t YIdx;
 	uint32_t YInc;
+	BitmapInfo Bitmap[32];
 };
 
 std::vector<ThreadInfo> s_ThreadInfos;
@@ -2281,6 +2283,8 @@ void resizeThreadInfos(int size)
 		s_ThreadInfos[i].StartCond = NULL;
 		SDL_DestroyMutex(s_ThreadInfos[i].StartMutex);
 		s_ThreadInfos[i].StartMutex = NULL;
+		SDL_DestroySemaphore(s_ThreadInfos[i].EndSem);
+		s_ThreadInfos[i].EndSem = NULL;
 	}
 #else
 #	ifdef WIN32
@@ -2296,25 +2300,24 @@ void resizeThreadInfos(int size)
 #	endif
 #endif
 	s_ThreadInfos.resize(s_ThreadCount - 1);
-#ifdef FT800EMU_SDL
 	for (int i = 0; i < s_ThreadInfos.size(); ++i)
 	{
+		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+#ifdef FT800EMU_SDL
 		s_ThreadInfos[i].Running = true;
 		s_ThreadInfos[i].StartCond = SDL_CreateCond();
 		s_ThreadInfos[i].StartMutex = SDL_CreateMutex();
+		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].Thread = SDL_CreateThread(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
-	}
 #else
 #	ifdef WIN32
-	for (int i = 0; i < s_ThreadInfos.size(); ++i)
-	{
 		s_ThreadInfos[i].Running = true;
 		s_ThreadInfos[i].StartEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 		s_ThreadInfos[i].EndEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 		s_ThreadInfos[i].Thread = CreateThread(NULL, 0, launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]), 0, NULL);
-	}
 #	endif
 #endif
+	}
 }
 
 void GraphicsProcessorClass::end()
@@ -2349,7 +2352,7 @@ void GraphicsProcessorClass::reduceThreads(int nb)
     
 namespace {
 
-void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc)
+void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = Memory.getRam();
 	const uint32_t *displayList = Memory.getDisplayList();
@@ -2425,7 +2428,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
 				case FT800EMU_DL_BITMAP_SOURCE:
-					s_BitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
+					bitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
@@ -2444,7 +2447,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT: 
 					{
-						BitmapInfo &bi = s_BitmapInfo[gs.BitmapHandle];
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 						int stride = (v >> 9) & 0x3FF;
@@ -2456,13 +2459,13 @@ EvaluateDisplayListValue:
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
-					s_BitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
-					s_BitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
-					s_BitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
-					s_BitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
-					if (s_BitmapInfo[gs.BitmapHandle].SizeWidth == 0) s_BitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
-					s_BitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
-					if (s_BitmapInfo[gs.BitmapHandle].SizeHeight== 0) s_BitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
+					bitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
+					bitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
+					bitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
+					bitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
+					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
+					bitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
+					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
 					break;
 				case FT800EMU_DL_ALPHA_FUNC:
 					gs.AlphaFunc = (v >> 8) & 0x07;
@@ -2621,7 +2624,8 @@ EvaluateDisplayListValue:
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
 							((v >> 7) & 0x1F),
-							v & 0x7F);
+							v & 0x7F,
+							bitmapInfo);
 						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
@@ -2661,7 +2665,8 @@ EvaluateDisplayListValue:
 					case BITMAPS:
 						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
 							gs.BitmapHandle, 
-							gs.Cell);
+							gs.Cell,
+							bitmapInfo);
 						break;
 					case POINTS:
 						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
@@ -2773,7 +2778,9 @@ int launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc);
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		
+		SDL_SemPost(li->EndSem);
 	}
 	SDL_mutexV(li->StartMutex);
 	
@@ -2801,7 +2808,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc);
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 
 		SetEvent(li->EndEvent);
 	}
@@ -2838,13 +2845,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	if WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 #	endif
 #endif
 	}
 	
 	// Run part on this thread
-	processPart(screenArgb8888, upsideDown, hsize, vsize, yIdx, s_ThreadCount * yInc);
+	processPart(screenArgb8888, upsideDown, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 	
 	for (uint32_t i = 1; i < s_ThreadCount; ++i)
 	{
@@ -2852,8 +2859,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #ifdef FT800EMU_SDL
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
 		// SDL_WaitThread(li->Thread, NULL);
-		SDL_mutexP(li->StartMutex);
-		SDL_mutexV(li->StartMutex);
+		// SDL_mutexP(li->StartMutex);
+		// SDL_mutexV(li->StartMutex);
+		SDL_SemWait(li->EndSem);
 #else
 #	if WIN32
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
