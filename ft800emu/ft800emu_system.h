@@ -46,6 +46,8 @@ public:
 	static void delay(int ms);
 	static void delayMicros(int us);
 
+	static unsigned int getCPUCount();
+
 	static void disableAutomaticPriorityBoost();
 
 	static void makeLowPriorityThread();

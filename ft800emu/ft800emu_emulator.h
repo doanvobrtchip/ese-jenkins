@@ -34,6 +34,10 @@ enum EmulatorFlags
 	EmulatorEnableMouse = 0x08, 
 	// enable debug shortkeys
 	EmulatorEnableDebugShortkeys = 0x10, 
+	// enable graphics processor multithreading
+	EmulatorEnableGraphicsMultithread = 0x20, 
+	// enable dynamic graphics quality degrading by interlacing
+	EmulatorEnableDynamicDegrade = 0x40,
 };
 
 struct EmulatorParameters
@@ -45,7 +49,8 @@ public:
 		Flags(0),
 		Keyboard(0), 
 		MousePressure(0), 
-		ExternalFrequency(0)
+		ExternalFrequency(0), 
+		ReduceGraphicsThreads(0)
 	{ }
 
 	// Microcontroller function called before loop.
@@ -63,6 +68,11 @@ public:
 	uint32_t MousePressure;
 	// External frequency. See CLK, etc.
 	uint32_t ExternalFrequency;
+	
+	// Reduce graphics processor threads by specified number, default 0
+	// Necessary when doing very heavy work on the MCU or Coprocessor
+	// TODO: Maybe possible to automate this based on thread info
+	uint32_t ReduceGraphicsThreads;
 };
 
 /**

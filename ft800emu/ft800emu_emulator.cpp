@@ -152,6 +152,10 @@ namespace {
 	void (*s_Keyboard)() = NULL;
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
+	bool s_DynamicDegrade = false;
+	
+	bool s_DegradeOn = false;
+	int s_DegradeStage = 0;
 
 	int masterThread(void * = NULL)
 	{
@@ -206,13 +210,41 @@ namespace {
 						Memory.swapDisplayList();
 						ram[REG_DLSWAP] = DLSWAP_DONE;
 					}
-					GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
+					if (s_DegradeOn)
+					{
+						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize, s_DegradeStage, 2);
+						++s_DegradeStage;
+						s_DegradeStage %= 2;
+					}
+					else
+					{
+						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
+					}
 
 				}
 				unsigned long procDelta = System.getMicros() - procStart;
 
-				if (procDelta > 8000)
-					printf("process: %i micros (%i ms)\r\n", (int)procDelta, (int)procDelta / 1000);
+				if (s_DegradeOn)
+				{
+					if (procDelta < 4000)
+					{
+						s_DegradeOn = false;
+						printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						printf("Dynamic degrade switched OFF\n");
+					}
+				}
+				else
+				{
+					if (procDelta > 8000)
+					{
+						printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						if (s_DynamicDegrade)
+						{
+							s_DegradeOn = true;
+							printf("Dynamic degrade switched ON\n");
+						}
+					}
+				}
 			}
 
 			// Flip buffer and also give a slice of time to the mcu main thread
@@ -370,6 +402,14 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
 	Memory.enableReadDelay();
+	
+	if (params.Flags & EmulatorEnableGraphicsMultithread)
+	{
+		GraphicsProcessor.enableMultithread();
+		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
+	}
+	
+	s_DynamicDegrade = params.Flags & EmulatorEnableDynamicDegrade;
 
 	s_MasterRunning = true;
 

@@ -84,6 +84,11 @@ void SystemClass::_end()
 #endif
 }
 
+unsigned int SystemClass::getCPUCount()
+{
+	return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
 void SystemClass::disableAutomaticPriorityBoost()
 {
 	//SetThreadPriorityBoost(GetCurrentThread(), TRUE);

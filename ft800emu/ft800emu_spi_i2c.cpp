@@ -198,7 +198,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 
 				if (s_Cursor == RAM_CMD + 4095) 
 				{
-					printf("Cursor wrap to RAM_CMD\n");
+					// printf("Cursor wrap to RAM_CMD\n");
 					s_Cursor = RAM_CMD;
 				}
 				else ++s_Cursor;

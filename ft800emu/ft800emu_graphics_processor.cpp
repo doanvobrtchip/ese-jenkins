@@ -34,6 +34,7 @@
 
 // Project includes
 #include "ft800emu_inttypes.h"
+#include "ft800emu_system.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_driver.h"
 #include "vc.h"
@@ -2188,11 +2189,15 @@ static int s_DebugMode;
 static int s_DebugMultiplier;
 static int s_DebugLimiter;
 
+static int s_ThreadCount;
+
 void GraphicsProcessorClass::begin()
 {
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	s_DebugMultiplier = 1;
 	s_DebugLimiter = 0;
+	
+	s_ThreadCount = 1;
 
 	uint8_t *ram = Memory.getRam();
 	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
@@ -2226,22 +2231,39 @@ void GraphicsProcessorClass::end()
 	
 }
 
+void GraphicsProcessorClass::enableMultithread(bool enabled)
+{
+	if (enabled)
+	{
+		s_ThreadCount = System.getCPUCount();
+	}
+	else
+	{
+		s_ThreadCount = 1;
+	}
+	printf("Graphics processor threads: %i\n", s_ThreadCount);
+}
+
+void GraphicsProcessorClass::reduceThreads(int nb)
+{
+	s_ThreadCount = max(1, s_ThreadCount - nb);
+	printf("Graphics processor threads: %i\n", s_ThreadCount);
+}
+
 // Sign-extend the n-bit value v
 #define SIGNED_N(v, n) \
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
+    
+namespace {
 
-void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize)
+void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc)
 {
 	uint8_t *const ram = Memory.getRam();
-
-	// Store the touch tag xy used for lookup
-	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
-
 	const uint32_t *displayList = Memory.getDisplayList();
 	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
-	// TODO: option for multicore rendering
-	for (uint32_t y = 0; y < vsize; ++y)
+	
+	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
 		VertexState vs = VertexState();
 		int primitive = 0;
@@ -2633,6 +2655,31 @@ DisplayListDisplay:
 				break;
 			}
 		}
+	}
+}
+	
+} /* anonymous namespace */
+
+void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
+{
+	uint8_t *const ram = Memory.getRam();
+
+	// Store the touch tag xy used for lookup
+	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
+		
+	for (uint32_t i = 1; i < s_ThreadCount; ++i)
+	{
+		// Launch threads
+		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+	}
+	
+	// Run part on this thread
+	processPart(screenArgb8888, upsideDown, hsize, vsize, yIdx, s_ThreadCount * yInc);
+	
+	for (uint32_t i = 1; i < s_ThreadCount; ++i)
+	{
+		// Wait for threads
+		// ...
 	}
 }
 	
