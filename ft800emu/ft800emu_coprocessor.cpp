@@ -51,6 +51,7 @@ void CoprocessorClass::execute()
 		if (singleFrame)
 		{
 			if (pc == 0x0980) { // cmd.has1 
+                // 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
 				int rp = MemoryClass::coprocessorReadU32(0x1090f8);
 				// printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
 				starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
