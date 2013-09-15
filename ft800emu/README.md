@@ -78,6 +78,10 @@ Enables the mouse cursor as touch input in the emulator.
 Enables a number of debug shortkeys to help finding issues in an 
 application. 
 
+##### EmulatorEnableRegRotate #####
+
+Enables support for the REG_ROTATE registry.
+
 __F3__: Cycle through RGB, ALPHA, TAG and STENCIL display. 
 
 __NUMPADPLUS__: Increase multiplier for display of ALPHA, TAG and STENCIL. 
