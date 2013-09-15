@@ -89,6 +89,18 @@ void setup()
 		if (v == i) printf("OK (%i)\n", v);
 		else printf("FAIL (%i)\n", v);
 	}
+	// test per byte access backwards
+	for (uint8_t i = 63; i >= 32; --i)
+	{
+		wr8(i, i);
+	}
+	for (uint8_t i = 63; i >= 32; --i)
+	{
+		uint8_t v = rd8(i);
+		if (v == i) printf("OK (%i)\n", v);
+		else printf("FAIL (%i)\n", v);
+	}
+
 
 	dli = RAM_DL;
 
