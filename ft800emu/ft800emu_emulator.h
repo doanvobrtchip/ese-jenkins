@@ -37,7 +37,9 @@ enum EmulatorFlags
 	// enable graphics processor multithreading
 	EmulatorEnableGraphicsMultithread = 0x20, 
 	// enable dynamic graphics quality degrading by interlacing
-	EmulatorEnableDynamicDegrade = 0x40,
+	EmulatorEnableDynamicDegrade = 0x40, 
+	// enable usage of REG_ROTATE
+	EmulatorEnableRegRotate = 0x80, 
 };
 
 struct EmulatorParameters

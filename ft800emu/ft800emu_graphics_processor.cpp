@@ -2253,6 +2253,7 @@ public:
 #endif
 	argb8888 *ScreenArgb8888;
 	bool UpsideDown;
+	bool Mirrored;
 	uint32_t HSize;
 	uint32_t VSize;
 	uint32_t YIdx;
@@ -2352,7 +2353,7 @@ void GraphicsProcessorClass::reduceThreads(int nb)
     
 namespace {
 
-void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = Memory.getRam();
 	const uint32_t *displayList = Memory.getDisplayList();
@@ -2719,7 +2720,7 @@ DisplayListDisplay:
 				if (tag_x < hsize)
 				{
 					// Write tag out
-					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[tag_x]);
+					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
 				}
 			}
 		}
@@ -2753,6 +2754,15 @@ DisplayListDisplay:
 				break;
 			}
 		}
+		// mirror display
+		if (mirrored)
+		{
+			for (uint32_t xl = 0; xl < (hsize >> 1); ++xl)
+			{
+				uint32_t xr = hsize - xl - 1;
+				std::swap(bc[xl], bc[xr]);
+			}
+		}
 	}
 }
 	
@@ -2778,7 +2788,7 @@ int launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 		
 		SDL_SemPost(li->EndSem);
 	}
@@ -2808,7 +2818,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 
 		SetEvent(li->EndEvent);
 	}
@@ -2820,7 +2830,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 #	endif
 #endif
 
-void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
+void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, bool mirrored, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
 {
 	uint8_t *const ram = Memory.getRam();
 
@@ -2830,10 +2840,11 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (uint32_t i = 1; i < s_ThreadCount; ++i)
 	{
 		// Launch threads
-		// processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
+		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
 		li->ScreenArgb8888 = screenArgb8888;
 		li->UpsideDown = upsideDown;
+		li->Mirrored = mirrored;
 		li->HSize = hsize;
 		li->VSize = vsize;
 		li->YIdx = (i * yInc) + yIdx;
@@ -2845,13 +2856,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	if WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart(screenArgb8888, upsideDown, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+		processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 #	endif
 #endif
 	}
 	
 	// Run part on this thread
-	processPart(screenArgb8888, upsideDown, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+	processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 	
 	for (uint32_t i = 1; i < s_ThreadCount; ++i)
 	{

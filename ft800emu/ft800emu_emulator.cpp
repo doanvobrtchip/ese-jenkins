@@ -157,6 +157,8 @@ namespace {
 	bool s_DegradeOn = false;
 	int s_DegradeStage = 0;
 
+	bool s_RotateEnabled = false;
+
 	int masterThread(void * = NULL)
 	{
 		System.makeMainThread();
@@ -210,15 +212,20 @@ namespace {
 						Memory.swapDisplayList();
 						ram[REG_DLSWAP] = DLSWAP_DONE;
 					}
+					bool rotate = s_RotateEnabled && ram[REG_ROTATE];
 					if (s_DegradeOn)
 					{
-						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize, s_DegradeStage, 2);
+						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), 
+							rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown(), rotate, 
+							reg_hsize, reg_vsize, s_DegradeStage, 2);
 						++s_DegradeStage;
 						s_DegradeStage %= 2;
 					}
 					else
 					{
-						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), GraphicsDriver.isUpsideDown(), reg_hsize, reg_vsize);
+						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), 
+							rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown(), rotate, 
+							reg_hsize, reg_vsize);
 					}
 
 				}
@@ -410,6 +417,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	}
 	
 	s_DynamicDegrade = params.Flags & EmulatorEnableDynamicDegrade;
+	s_RotateEnabled = params.Flags & EmulatorEnableRegRotate;
 
 	s_MasterRunning = true;
 

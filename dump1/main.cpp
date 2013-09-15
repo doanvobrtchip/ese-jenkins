@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
                     fclose(dl);
                     FT800EMU::Memory.swapDisplayList();
                 }
-                FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
+                FT800EMU::GraphicsProcessor.process(buffer, false, false, hsize, vsize);
                 fwrite(buffer, 1, (hsize * vsize * sizeof(buffer[0])), f);
                 i++;
             }
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
         wr32(REG_DLSWAP, DLSWAP_FRAME);
 
 		int bsize = hsize * vsize;
-        FT800EMU::GraphicsProcessor.process(buffer, false, hsize, vsize);
+        FT800EMU::GraphicsProcessor.process(buffer, false, false, hsize, vsize);
         f = fopen(argv[2], "wb");
         fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f);
         fclose(f);

@@ -347,6 +347,8 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 
 	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
+
+	wr32(REG_ROTATE, 1);
 }
 
 void loop()

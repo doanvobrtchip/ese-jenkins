@@ -42,7 +42,7 @@ public:
 	static void begin();
 	static void end();
 
-	static void process(argb8888 *screenArgb8888, bool upsideDown, uint32_t hsize, uint32_t vsize, uint32_t yIdx = 0, uint32_t yInc = 1);
+	static void process(argb8888 *screenArgb8888, bool upsideDown, bool mirrored, uint32_t hsize, uint32_t vsize, uint32_t yIdx = 0, uint32_t yInc = 1);
 	
 	// Enables multithreaded rendering, sets thread count to number of available CPU cores
 	static void enableMultithread(bool enabled = true);
