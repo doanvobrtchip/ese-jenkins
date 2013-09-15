@@ -60,14 +60,9 @@ void SPII2CClass::csLow(bool low)
 {
 	s_CSLow = low;
 
-	// Reset state
-	s_State = SPII2CIdle;
-	s_Cursor = 0;
-	s_Stage = 0;
-
 	if (s_RWBufferStage)
 	{
-		printf("Non-32bit write size\n");
+		// printf("Non-32bit write size, cursor %i\n", s_Cursor);
 
 		while (s_RWBufferStage != 32)
 		{
@@ -77,11 +72,17 @@ void SPII2CClass::csLow(bool low)
 			++s_Cursor;
 		}
 
+		// printf("Write to %i, %i\n", (s_Cursor - 4), s_RWBuffer);
 		Memory.mcuWriteU32(s_Cursor - 4, s_RWBuffer);
 
 		s_RWBuffer = 0;
 		s_RWBufferStage = 0;
 	}
+
+	// Reset state
+	s_State = SPII2CIdle;
+	s_Cursor = 0;
+	s_Stage = 0;
 }
 
 void SPII2CClass::csHigh(bool high)
@@ -133,7 +134,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 				uint32_t aligned = s_Cursor & ~0x3;
 				if (aligned != s_Cursor)
 				{
-					printf("Non-aligned read\n");
+					// printf("Non-aligned read\n");
 					s_RWBuffer = Memory.mcuReadU32(aligned);
 					uint32_t misaligned = s_Cursor - aligned;
 					s_RWBuffer >>= (8 * misaligned);
@@ -156,18 +157,30 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 				// Dummy byte
 				s_State = SPII2CWrite;
 				// printf("SPI/I2C: Address %d\n", s_Cursor);
-				s_RWBuffer = 0;
-				s_RWBufferStage = 0;
+				if (s_Cursor % 4)
+				{
+					// printf("Non-aligned write address %d\n", s_Cursor);
+					s_RWBufferStage = s_Cursor % 4;
+					// printf("align to address %d\n", s_Cursor - (s_Cursor % 4));
+					s_RWBuffer = Memory.rawReadU32(Memory.getRam(), s_Cursor - (s_Cursor % 4));
+					// printf("rwbuffer %d\n", s_RWBuffer);
+					s_RWBufferStage *= 8;
+				}
+				else
+				{
+					s_RWBuffer = 0;
+					s_RWBufferStage = 0;
+				}
 			}
 			break;
 		case SPII2CRead:
 			{
 				// printf("Read\n");
 				
-				if (s_Cursor % 4)
+				if (!(s_Cursor % 4))
 				{
-					// printf("Read U32 %d\n", s_Cursor);
 					s_RWBuffer = Memory.mcuReadU32(s_Cursor);
+					// printf("Read U32 %d (%d)\n", s_Cursor, s_RWBuffer);
 				}
 				
 				uint8_t result = s_RWBuffer & 0xFF;

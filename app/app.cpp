@@ -14,6 +14,37 @@
 #include <SPI.h>
 #include <vc.h>
 
+void wr8(size_t address, uint8_t value)
+{
+	digitalWrite(9, LOW);
+
+	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	SPI.transfer(0x00);
+
+	SPI.transfer(value);
+
+	digitalWrite(9, HIGH);
+}
+
+uint8_t rd8(size_t address)
+{
+	digitalWrite(9, LOW);
+
+	SPI.transfer((address >> 16) & 0x3F);
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	SPI.transfer(0x00);
+
+	uint8_t value;
+	value = SPI.transfer(0);
+
+	digitalWrite(9, HIGH);
+
+	return value;
+}
+
 void wr32(size_t address, uint32_t value)
 {
 	digitalWrite(9, LOW);
@@ -47,6 +78,18 @@ inline uint32_t transformvalue(double d)
 
 void setup()
 {
+	// test per byte access
+	for (uint8_t i = 0; i < 32; ++i)
+	{
+		wr8(i, i);
+	}
+	for (uint8_t i = 0; i < 32; ++i)
+	{
+		uint8_t v = rd8(i);
+		if (v == i) printf("OK (%i)\n", v);
+		else printf("FAIL (%i)\n", v);
+	}
+
 	dli = RAM_DL;
 
 	dl(CLEAR_COLOR_RGB(0, 64, 128));
