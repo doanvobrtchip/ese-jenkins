@@ -12,6 +12,7 @@
  */
 
 #include <ft800emu_emulator.h>
+#include <wiring.h>
 
 void setup();
 void loop();
@@ -19,6 +20,7 @@ void loop();
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
+	FT800EMU::ARDUINO::setCSPin(9);
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
