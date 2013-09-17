@@ -2881,6 +2881,12 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	endif
 #endif
 	}
+
+	if (Memory.rawReadU32(ram, REG_TOUCH_RZ) > Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH)) // Not touching
+	{
+		// Reset tag to 0
+		Memory.rawWriteU32(ram, REG_TOUCH_TAG, 0);
+	}
 }
 	
 void GraphicsProcessorClass::setDebugMode(int debugMode)
