@@ -23,6 +23,7 @@ void loop();
 // - Copy files from Src into sampleapp, rename all *.c to *.cpp
 // - Copy files from Project/Arduino into sampleapp, overwrite all
 // - Add files to build project
+// - Maybe necessary to setCSPin in main to 10 or another value
 // - Compile and run
 
 // int __stdcall WinMain(void *, void *, void *, int)

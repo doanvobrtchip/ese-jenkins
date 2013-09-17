@@ -31,7 +31,7 @@
 
 // Project includes
 
-typedef signed char prog_char;
+typedef char prog_char;
 typedef unsigned char prog_uchar;
 
 #define PROGMEM
