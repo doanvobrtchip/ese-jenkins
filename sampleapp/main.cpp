@@ -22,6 +22,7 @@ void loop();
 // - Copy files from Hdr into sampleapp
 // - Copy files from Src into sampleapp, rename all *.c to *.cpp
 // - Copy files from Project/Arduino into sampleapp, overwrite all
+// - Add files to build project
 // - Compile and run
 
 // int __stdcall WinMain(void *, void *, void *, int)

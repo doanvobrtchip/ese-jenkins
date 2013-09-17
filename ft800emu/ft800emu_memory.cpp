@@ -56,6 +56,145 @@ static int s_SwapMCUReadCounter = 0;
 
 static bool s_ReadDelay;
 
+static long s_TouchScreenSet = 0;
+static int s_TouchScreenX1;
+static int s_TouchScreenX2;
+static int s_TouchScreenY1;
+static int s_TouchScreenY2;
+static long s_TouchScreenFrameTime;
+static bool s_TouchScreenJitter = true;
+
+long s_LastJitteredTime;
+inline long jitteredTime(long micros)
+{
+	const long deltadiv = 20;
+	long delta = micros - s_LastJitteredTime;
+	if (delta >= deltadiv)
+	{
+		delta /= deltadiv;
+		delta = (long)rand() % delta;
+	}
+	s_LastJitteredTime += delta;
+	return s_LastJitteredTime;
+}
+
+inline void getTouchScreenXY(long micros, int &x, int &y, bool jitter)
+{
+	long delta;//
+	if (jitter)
+	{
+		delta = jitteredTime(micros) - s_TouchScreenSet;
+	}
+	else
+	{
+		delta = micros - s_TouchScreenSet;
+	}
+	/*if (s_TouchScreenJitter)
+	{
+		delta += ((rand() % 2000) - 1000) * s_TouchScreenFrameTime / 1000; // add some time jitter
+	}*/
+	if (delta < 0)
+	{
+		x = s_TouchScreenX1;
+		y = s_TouchScreenY1;
+	}
+	else if (delta >= s_TouchScreenFrameTime)
+	{
+		x = s_TouchScreenX2;
+		y = s_TouchScreenY2;
+	}
+	else
+	{
+		long xdelta = s_TouchScreenX2 - s_TouchScreenX1;
+		long ydelta = s_TouchScreenY2 - s_TouchScreenY1;
+		x = s_TouchScreenX1 + (int)(xdelta * delta / s_TouchScreenFrameTime);
+		y = s_TouchScreenY1 + (int)(ydelta * delta / s_TouchScreenFrameTime);
+	}
+	if (jitter)
+	{
+		x += ((rand() % 2000) - 1000) / 1000;
+		y += ((rand() % 2000) - 1000) / 1000;
+	}
+}
+
+inline void getTouchScreenXY(long micros, int &x, int &y)
+{
+	getTouchScreenXY(micros, x, y, s_TouchScreenJitter);
+}
+
+inline uint32_t getTouchScreenXY(int x, int y)
+{
+	uint16_t const touch_screen_x = ((uint32_t &)x) & 0xFFFF;
+	uint16_t const touch_screen_y = ((uint32_t &)y) & 0xFFFF;
+	uint32_t const touch_screen_xy = (uint32_t)touch_screen_x << 16 | touch_screen_y;
+	return touch_screen_xy;
+}
+
+inline uint32_t getTouchScreenXY(long micros)
+{
+	if (s_TouchScreenSet)
+	{
+		int x, y;
+		getTouchScreenXY(micros, x, y);
+		return getTouchScreenXY(x, y);
+	}
+	else
+	{
+		return 0x80008000;
+	}
+}
+
+inline uint32_t getTouchScreenXY()
+{
+	long micros = System.getMicros();
+	return getTouchScreenXY(micros);
+}
+
+void MemoryClass::setTouchScreenXY(int x, int y)
+{
+	if (s_TouchScreenSet)
+	{
+		if (s_TouchScreenJitter)
+		{
+			long micros = jitteredTime(System.getMicros());
+			getTouchScreenXY(micros, s_TouchScreenX1, s_TouchScreenY1, false);
+			//s_TouchScreenX1 = s_TouchScreenX2;
+			//s_TouchScreenY1 = s_TouchScreenY2;
+			s_TouchScreenSet = micros;
+		}
+		else
+		{
+			long micros = System.getMicros();
+			s_TouchScreenX1 = s_TouchScreenX2;
+			s_TouchScreenY1 = s_TouchScreenY2;
+			s_TouchScreenSet = micros;
+		}
+	}
+	else
+	{
+		long micros = System.getMicros();
+		s_LastJitteredTime = micros;
+		s_TouchScreenX1 = x;
+		s_TouchScreenY1 = y;
+		s_TouchScreenSet = micros;
+	}
+	s_TouchScreenX2 = x;
+	s_TouchScreenY2 = y;
+	rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
+}
+
+void MemoryClass::setTouchScreenXYFrameTime(long micros)
+{
+	s_TouchScreenFrameTime = micros; // * 3 / 2;
+}
+
+void MemoryClass::resetTouchScreenXY()
+{
+	s_TouchScreenSet = 0;
+	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+	s_LastJitteredTime = System.getMicros();
+}
+
 int MemoryClass::getDirectSwapCount()
 {
 	return s_DirectSwapCount;
@@ -134,6 +273,8 @@ void MemoryClass::begin()
 	s_IdenticalMCUReadCounter = 0;
 	s_WaitMCUReadCounter = 0;
 	s_SwapMCUReadCounter = 0;
+	s_TouchScreenSet = 0;
+	s_LastJitteredTime = System.getMicros();
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
@@ -166,6 +307,7 @@ void MemoryClass::begin()
 	rawWriteU32(REG_TAG_X, 0);
 	rawWriteU32(REG_TAG_Y, 0);
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
+	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 }
 
 void MemoryClass::end()
@@ -270,6 +412,12 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			}
 			break;
 		}
+	}
+
+	switch (address)
+	{
+	case REG_TOUCH_SCREEN_XY:
+		return getTouchScreenXY();
 	}
 
 	return rawReadU32(address);
@@ -399,6 +547,12 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			}
 			break;
 		}
+	}
+
+	switch (address)
+	{
+	case REG_TOUCH_SCREEN_XY:
+		return getTouchScreenXY();
 	}
 
 	return rawReadU32(address);

@@ -70,6 +70,11 @@ public:
 	// Get nb of frames swapped without waiting for begin of frame render (when REG_PCLK == 0).
 	static int getDirectSwapCount();
 
+	// Set touch screen xy for interpolation
+	static void setTouchScreenXY(int x, int y);
+	static void resetTouchScreenXY();
+	static void setTouchScreenXYFrameTime(long micros);
+
 private:
 	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
 	static FT800EMU_FORCE_INLINE uint32_t rawReadU32(size_t address);

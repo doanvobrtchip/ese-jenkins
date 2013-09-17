@@ -194,6 +194,8 @@ namespace {
 			System.update();
 			targetSeconds += deltaSeconds;
 
+			Memory.setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
+
 			// Update display resolution
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);

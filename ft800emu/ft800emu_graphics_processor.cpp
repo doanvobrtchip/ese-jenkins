@@ -2289,7 +2289,7 @@ void resizeThreadInfos(int size)
 	}
 #else
 #	ifdef WIN32
-	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
 		SetEvent(s_ThreadInfos[i].StartEvent);
@@ -2301,7 +2301,7 @@ void resizeThreadInfos(int size)
 #	endif
 #endif
 	s_ThreadInfos.resize(s_ThreadCount - 1);
-	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 #ifdef FT800EMU_SDL
@@ -2837,7 +2837,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	// Store the touch tag xy used for lookup
 	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
 		
-	for (uint32_t i = 1; i < s_ThreadCount; ++i)
+	for (int i = 1; i < s_ThreadCount; ++i)
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
@@ -2864,7 +2864,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	// Run part on this thread
 	processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 	
-	for (uint32_t i = 1; i < s_ThreadCount; ++i)
+	for (int i = 1; i < s_ThreadCount; ++i)
 	{
 		// Wait for threads
 #ifdef FT800EMU_SDL
