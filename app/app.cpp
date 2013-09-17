@@ -21,7 +21,7 @@ void wr8(size_t address, uint8_t value)
 	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
 	SPI.transfer((address >> 8) & 0xFF);
 	SPI.transfer(address & 0xFF);
-	SPI.transfer(0x00);
+	// SPI.transfer(0x00);
 
 	SPI.transfer(value);
 
@@ -52,7 +52,7 @@ void wr32(size_t address, uint32_t value)
 	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
 	SPI.transfer((address >> 8) & 0xFF);
 	SPI.transfer(address & 0xFF);
-	SPI.transfer(0x00);
+	// SPI.transfer(0x00);
 
 	SPI.transfer(value & 0xFF);
 	SPI.transfer((value >> 8) & 0xFF);
