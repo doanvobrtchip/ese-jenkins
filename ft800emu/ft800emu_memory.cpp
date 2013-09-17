@@ -65,16 +65,36 @@ static long s_TouchScreenFrameTime;
 static bool s_TouchScreenJitter = true;
 
 long s_LastJitteredTime;
+long s_LastDeltas[8] = { 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
+long s_LastDeltaI = 0;
 inline long jitteredTime(long micros)
 {
-	const long deltadiv = 20;
 	long delta = micros - s_LastJitteredTime;
-	if (delta >= deltadiv)
+	if (delta > 0)
 	{
-		delta /= deltadiv;
-		delta = (long)rand() % delta;
+		const long od = delta;
+		long avgLastDelta = 0;
+		for (int i = 0; i < 8; ++i)
+			avgLastDelta += s_LastDeltas[i];
+		avgLastDelta /= 8;
+		if (avgLastDelta < delta)
+		{
+			delta = avgLastDelta;
+		}
+		static const long deltadiv = 3;
+		if (delta >= deltadiv)
+		{
+			delta /= deltadiv;
+			delta = (long)rand() % delta;
+			s_LastJitteredTime += delta;
+		}
+		if (od > 0)
+		{
+			s_LastDeltas[s_LastDeltaI] = od;
+			++s_LastDeltaI;
+			s_LastDeltaI %= 8;
+		}
 	}
-	s_LastJitteredTime += delta;
 	return s_LastJitteredTime;
 }
 
