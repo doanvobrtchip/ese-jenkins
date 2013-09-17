@@ -191,9 +191,14 @@ const uint32_t *MemoryClass::getDisplayList()
 void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 {
 	s_SwapMCUReadCounter = 0;
-	if (address == REG_CMD_WRITE)
+	switch (address)
 	{
+	case REG_CMD_WRITE:
 		s_WaitCoprocessorReadCounter = 0;
+		break;
+	case REG_CPURESET:
+		printf("REG_CPURESET not implemented!!!\n");
+		break;
 	}
     actionWrite(address, data);
 	rawWriteU32(address, data);
