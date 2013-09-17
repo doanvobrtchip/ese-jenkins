@@ -29,6 +29,8 @@ SPII2CClass SPII2C;
 
 static bool s_CSLow = false;
 
+#define FT800EMU_DUMMY_WRITE 0
+
 static uint32_t s_RWBuffer;
 static uint32_t s_RWBufferStage;
 
@@ -171,6 +173,9 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBuffer = 0;
 					s_RWBufferStage = 0;
 				}
+#if !FT800EMU_DUMMY_WRITE
+				return transfer(data);
+#endif
 			}
 			break;
 		case SPII2CRead:
