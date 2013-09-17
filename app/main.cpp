@@ -28,7 +28,9 @@ int main(int, char* [])
 		FT800EMU::EmulatorEnableKeyboard 
 		| FT800EMU::EmulatorEnableMouse 
 		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableRegRotate;
+		| FT800EMU::EmulatorEnableRegRotate
+		// | FT800EMU::EmulatorEnableCoprocessor
+		| FT800EMU::EmulatorEnableGraphicsMultithread;
 	FT800EMU::Emulator.run(params);
 	return 0;
 }
