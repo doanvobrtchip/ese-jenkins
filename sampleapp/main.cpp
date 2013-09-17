@@ -17,6 +17,13 @@
 void setup();
 void loop();
 
+// HOWTO:
+// - Download sample app and extract
+// - Copy files from Hdr into sampleapp
+// - Copy files from Src into sampleapp, rename all *.c to *.cpp
+// - Copy files from Project/Arduino into sampleapp, overwrite all
+// - Compile and run
+
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
