@@ -30,7 +30,7 @@ void swrbegin(size_t address)
 	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
 	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
 	FT800EMU::SPII2C.transfer(address & 0xFF);
-	FT800EMU::SPII2C.transfer(0x00);
+	// FT800EMU::SPII2C.transfer(0x00);
 }
 
 void swr8(uint8_t value)

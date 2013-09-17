@@ -32,7 +32,7 @@ void wr32(size_t address, uint32_t value)
 	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
 	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
 	FT800EMU::SPII2C.transfer(address & 0xFF);
-	FT800EMU::SPII2C.transfer(0x00);
+	// FT800EMU::SPII2C.transfer(0x00);
 
 	FT800EMU::SPII2C.transfer(value & 0xFF);
 	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
