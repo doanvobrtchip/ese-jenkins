@@ -36,7 +36,7 @@ class MemoryClass
 public:
 	MemoryClass() { }
 
-	static void begin();
+	static void begin(const char *romFilePath = 0);
 	static void end();
 
 	static void enableReadDelay(bool enabled = true);

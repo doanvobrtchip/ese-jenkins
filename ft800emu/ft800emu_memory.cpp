@@ -276,9 +276,25 @@ static const uint8_t rom[FT800EMU_ROM_SIZE] = {
 #include "rom.h"
 };
 
-void MemoryClass::begin()
+void MemoryClass::begin(const char *romFilePath)
 {
-    memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+	if (romFilePath)
+	{
+		FILE *f;
+		f = fopen(romFilePath, "rb");
+		if (!f) printf("Failed to open ROM file\n");
+		else
+		{
+			size_t s = fread(&s_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
+			if (s != FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
+			else printf("Loaded ROM file\n");
+			if (fclose(f)) printf("Error closing ROM file\n");
+		} 
+	}
+	else
+	{
+		memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+	}
 
 	s_DirectSwapCount = 0;
 

@@ -16,6 +16,7 @@
 // #include <...>
 
 // System includes
+#include <string>
 
 // Project includes (include standard stuff for user)
 #include "ft800emu_inttypes.h"
@@ -75,6 +76,9 @@ public:
 	// Necessary when doing very heavy work on the MCU or Coprocessor
 	// TODO: Maybe possible to automate this based on thread info
 	uint32_t ReduceGraphicsThreads;
+
+	// Replaces the default builtin ROM with a custom ROM from a file.
+	std::string RomFilePath;
 };
 
 /**

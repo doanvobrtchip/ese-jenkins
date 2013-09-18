@@ -401,7 +401,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Keyboard = params.Keyboard;
 
 	System.begin();
-	Memory.begin();
+	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str());
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	GraphicsDriver.begin();
