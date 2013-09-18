@@ -79,6 +79,8 @@ public:
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	std::string RomFilePath;
+	// Replaces the builtin coprocessor ROM.
+	std::string CoprocessorRomFilePath;
 };
 
 /**

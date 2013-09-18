@@ -9,6 +9,8 @@
 #include "ft800emu_coprocessor.h"
 
 // System includes
+#include <stdio.h>
+#include <string.h>
 
 // Project includes
 #include "ft800emu_memory.h"
@@ -19,17 +21,38 @@
 
 namespace FT800EMU {
 
+#define FT800EMU_COPROCESSOR_ROM_SIZE 8192
+
 CoprocessorClass Coprocessor;
 
 static bool s_Running;
 
 static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
-static const uint16_t pgm[8192] = {
+static const uint16_t pgm_rom[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "crom.h"
 };
+static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-void CoprocessorClass::begin()
+void CoprocessorClass::begin(const char *romFilePath)
 {
+	if (romFilePath)
+	{
+		FILE *f;
+		f = fopen(romFilePath, "rb");
+		if (!f) printf("Failed to open coprocessor ROM file\n");
+		else
+		{
+			size_t s = fread(pgm, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) printf("Incomplete coprocessor ROM file\n");
+			else printf("Loaded coprocessor ROM file\n");
+			if (fclose(f)) printf("Error closing coprocessor ROM file\n");
+		} 
+	}
+	else
+	{
+		memcpy(pgm, pgm_rom, sizeof(pgm_rom));
+	}
+
     pc = 0;
 }
 

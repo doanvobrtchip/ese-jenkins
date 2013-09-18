@@ -28,7 +28,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin();
+	void begin(const char *romFilePath = 0);
 	void end();
 
 	void executeManual();

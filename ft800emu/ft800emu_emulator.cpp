@@ -406,7 +406,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SPII2C.begin();
 	GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
-	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin();
+	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin(params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str());
 	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
 
 	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
