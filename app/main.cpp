@@ -30,7 +30,8 @@ int main(int, char* [])
 		| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableRegRotate
 		// | FT800EMU::EmulatorEnableCoprocessor
-		| FT800EMU::EmulatorEnableGraphicsMultithread;
+		| FT800EMU::EmulatorEnableGraphicsMultithread
+		| FT800EMU::EmulatorEnableRegPwmDutyEmulation;
 	FT800EMU::Emulator.run(params);
 	return 0;
 }
