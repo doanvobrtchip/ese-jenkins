@@ -70,9 +70,11 @@ public:
 	// Get nb of frames swapped without waiting for begin of frame render (when REG_PCLK == 0).
 	static int getDirectSwapCount();
 
-	// Set touch screen xy for interpolation
+	// Set touch screen xy for interpolation in time when touch is pressed
 	static void setTouchScreenXY(int x, int y, int pressure);
+	// Touch is not pressed
 	static void resetTouchScreenXY();
+	// Internal call used for touch interpolation
 	static void setTouchScreenXYFrameTime(long micros);
 
 private:

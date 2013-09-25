@@ -13,9 +13,18 @@
 
 #include <ft800emu_emulator.h>
 #include <wiring.h>
+#include <stdio.h>
 
 void setup();
 void loop();
+
+bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
+{
+	static int i = 0;
+	printf("frame %i\n", i);
+	++i;
+	return (i < 100);
+}
 
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
@@ -32,6 +41,7 @@ int main(int, char* [])
 		// | FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableRegPwmDutyEmulation;
+	// params.Graphics = graphics;
 	FT800EMU::Emulator.run(params);
 	return 0;
 }

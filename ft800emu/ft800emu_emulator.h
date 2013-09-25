@@ -55,7 +55,8 @@ public:
 		Keyboard(0), 
 		MousePressure(0), 
 		ExternalFrequency(0), 
-		ReduceGraphicsThreads(0)
+		ReduceGraphicsThreads(0),
+		Graphics(0)
 	{ }
 
 	// Microcontroller function called before loop.
@@ -83,6 +84,20 @@ public:
 	std::string RomFilePath;
 	// Replaces the builtin coprocessor ROM.
 	std::string CoprocessorRomFilePath;
+	
+	// Graphics driverless mode
+	// Setting this callback means no window will be created, and all
+	// rendered graphics will be automatically sent to this function.
+	// For enabling touch functionality, the functions 
+	// Memory.setTouchScreenXY and Memory.resetTouchScreenXY must be
+	// called manually from the host application.
+	// Builtin keyboard functionality is not supported and must be
+	// implemented manually when using this mode.
+	// The output parameter is false when the display is turned off.
+	// The contents of the buffer pointer are undefined after this
+	// function returns.
+	// Return false when the application must exit.
+	bool (*Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize);
 };
 
 /**

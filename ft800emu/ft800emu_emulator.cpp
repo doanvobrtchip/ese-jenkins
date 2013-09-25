@@ -155,6 +155,9 @@ namespace {
 	int s_DegradeStage = 0;
 
 	bool s_RotateEnabled = false;
+	
+	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize) = NULL;
+	argb8888 *s_GraphicsBuffer = NULL;
 
 	int masterThread(void * = NULL)
 	{
@@ -196,7 +199,7 @@ namespace {
 			// Update display resolution
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
-			GraphicsDriver.setMode(reg_hsize, reg_vsize);
+			if (!s_Graphics) GraphicsDriver.setMode(reg_hsize, reg_vsize);
 			
 			// Render lines
 			{
@@ -214,16 +217,16 @@ namespace {
 					bool rotate = s_RotateEnabled && ram[REG_ROTATE];
 					if (s_DegradeOn)
 					{
-						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), 
-							rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown(), rotate, 
+						GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
+							s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
 							reg_hsize, reg_vsize, s_DegradeStage, 2);
 						++s_DegradeStage;
 						s_DegradeStage %= 2;
 					}
 					else
 					{
-						GraphicsProcessor.process(GraphicsDriver.getBufferARGB8888(), 
-							rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown(), rotate, 
+						GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
+							s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
 							reg_hsize, reg_vsize);
 					}
 
@@ -265,8 +268,18 @@ namespace {
 #endif
 
 				unsigned long flipStart = System.getMicros();
-				GraphicsDriver.renderBuffer(reg_pclk != 0);
-				if (!GraphicsDriver.update()) exit(0); // ...
+				if (s_Graphics)
+				{
+					if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize))
+					{
+						exit(0); // TODO: Properly exit!!!
+					}
+				}
+				else
+				{
+					GraphicsDriver.renderBuffer(reg_pclk != 0);
+					if (!GraphicsDriver.update()) exit(0); // ...
+				}
 				unsigned long flipDelta = System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)
@@ -396,17 +409,23 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Loop = params.Loop;
 	s_Flags = params.Flags;
 	s_Keyboard = params.Keyboard;
+	s_Graphics = params.Graphics;
 
 	System.begin();
 	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str());
 	GraphicsProcessor.begin();
 	SPII2C.begin();
-	GraphicsDriver.begin();
+	if (!s_Graphics) GraphicsDriver.begin();
 	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin(params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str());
-	if (params.Flags & EmulatorEnableKeyboard) Keyboard.begin();
+	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.begin();
 
-	GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
+	if (s_Graphics)
+	{
+		s_GraphicsBuffer = new argb8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
+	}
+
+	if (!s_Graphics) GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
 	Memory.enableReadDelay();
 	
 	if (params.Flags & EmulatorEnableGraphicsMultithread)
@@ -473,10 +492,12 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	}
 #endif /* #ifdef FT800EMU_SDL */
 
-	if (params.Flags & EmulatorEnableKeyboard) Keyboard.end();
+	delete[] s_GraphicsBuffer;
+	s_GraphicsBuffer = NULL;
+	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.end();
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
 	// TODO_AUDIO if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
-	GraphicsDriver.end();
+	if (!s_Graphics) GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();
 	Memory.end();
