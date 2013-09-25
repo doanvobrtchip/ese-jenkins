@@ -116,10 +116,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			else
 			{
 				s_MouseDown = false;
+				Memory.rawWriteU32(ram, REG_TOUCH_TAG, 0);
+				Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
 				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 				// Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 				Memory.resetTouchScreenXY();
-				Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
 			}
 		}
 		break;

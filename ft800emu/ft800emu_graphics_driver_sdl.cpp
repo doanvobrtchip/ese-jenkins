@@ -153,10 +153,11 @@ bool GraphicsDriverClass::update()
 	else
 	{
 		uint8_t *const ram = Memory.getRam();
+		Memory.rawWriteU32(ram, REG_TOUCH_TAG, 0);
+		Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
 		Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 		// Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 		Memory.resetTouchScreenXY();
-		Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
 	}
 	
 	return true;
