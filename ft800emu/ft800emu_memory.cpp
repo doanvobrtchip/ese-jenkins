@@ -344,6 +344,8 @@ void MemoryClass::begin(const char *romFilePath)
 	rawWriteU32(REG_TAG_Y, 0);
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+	rawWriteU32(REG_PWM_HZ, 250);
+	rawWriteU32(REG_PWM_DUTY, 128);
 }
 
 void MemoryClass::end()
