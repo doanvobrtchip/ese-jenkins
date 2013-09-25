@@ -414,6 +414,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 		GraphicsProcessor.enableMultithread();
 		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
 	}
+	if (params.Flags & EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
 	
 	s_DynamicDegrade = params.Flags & EmulatorEnableDynamicDegrade;
 	s_RotateEnabled = params.Flags & EmulatorEnableRegRotate;

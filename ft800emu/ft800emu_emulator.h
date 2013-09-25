@@ -41,6 +41,8 @@ enum EmulatorFlags
 	EmulatorEnableDynamicDegrade = 0x40, 
 	// enable usage of REG_ROTATE
 	EmulatorEnableRegRotate = 0x80, 
+	// enable emulating REG_PWM_DUTY by fading the rendered display to black
+	EmulatorEnableRegPwmDutyEmulation = 0x100, 
 };
 
 struct EmulatorParameters

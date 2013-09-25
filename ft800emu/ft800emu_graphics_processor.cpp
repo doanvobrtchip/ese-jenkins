@@ -192,6 +192,8 @@ struct BitmapInfo
 
 BitmapInfo s_BitmapInfoMain[32];
 
+bool s_RegPwmDutyEmulation = false;
+
 #pragma endregion
 
 #pragma region Math
@@ -315,6 +317,15 @@ FT800EMU_FORCE_INLINE unsigned int mul255div7(const int &value)
 FT800EMU_FORCE_INLINE unsigned int mul255div3(const int &value)
 {
 	return value * 85;
+}
+
+FT800EMU_FORCE_INLINE argb8888 mulalpha128_argb(const argb8888 &value, const int &alpha)
+{
+	const argb8888 result = (((((value & 0xFF000000) >> 24) * alpha) >> 7) << 24)
+		| (((((value & 0x00FF0000) >> 16) * alpha) >> 7) << 16)
+		| (((((value & 0x0000FF00) >> 8) * alpha) >> 7) << 8)
+		| ((((value & 0x000000FF) * alpha) >> 7) & 0x000000FF);
+	return result;
 }
 
 FT800EMU_FORCE_INLINE argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
@@ -2205,6 +2216,7 @@ void GraphicsProcessorClass::begin()
 	s_DebugMultiplier = 1;
 	s_DebugLimiter = 0;
 	
+	s_RegPwmDutyEmulation = false;
 	s_ThreadCount = 1;
 
 	uint8_t *ram = Memory.getRam();
@@ -2321,6 +2333,11 @@ void resizeThreadInfos(int size)
 void GraphicsProcessorClass::end()
 {
 	resizeThreadInfos(0);
+}
+
+void GraphicsProcessorClass::enableRegPwmDutyEmulation(bool enabled)
+{
+	s_RegPwmDutyEmulation = enabled;
 }
 
 void GraphicsProcessorClass::enableMultithread(bool enabled)
@@ -2749,6 +2766,18 @@ DisplayListDisplay:
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
+			}
+		}
+		// backlight emulation
+		else if (s_RegPwmDutyEmulation)
+		{
+			uint32_t pwmduty = Memory.rawReadU32(ram, REG_PWM_DUTY);
+			if (pwmduty < 128)
+			{
+				for (uint32_t x = 0; x < hsize; ++x)
+				{
+					bc[x] = mulalpha128_argb(bc[x], pwmduty);
+				}
 			}
 		}
 		// mirror display
