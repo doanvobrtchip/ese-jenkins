@@ -2238,14 +2238,13 @@ struct ThreadInfo
 {
 public:
 #ifdef FT800EMU_SDL
-	bool Running;
+	volatile bool Running;
 	SDL_Thread *Thread;
-	SDL_cond *StartCond;
-	SDL_mutex *StartMutex;
+	SDL_sem *StartSem;
 	SDL_sem *EndSem;
 #else
 #	ifdef WIN32
-	bool Running;
+	volatile bool Running;
 	HANDLE Thread;
 	HANDLE StartEvent;
 	HANDLE EndEvent;
@@ -2277,13 +2276,12 @@ void resizeThreadInfos(int size)
 	for (int i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
-		SDL_CondSignal(s_ThreadInfos[i].StartCond);
+		printf("Stop thread %i\n", i);
+		SDL_SemPost(s_ThreadInfos[i].StartSem);
 		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
 		s_ThreadInfos[i].Thread = NULL;
-		SDL_DestroyCond(s_ThreadInfos[i].StartCond);
-		s_ThreadInfos[i].StartCond = NULL;
-		SDL_DestroyMutex(s_ThreadInfos[i].StartMutex);
-		s_ThreadInfos[i].StartMutex = NULL;
+		SDL_DestroySemaphore(s_ThreadInfos[i].StartSem);
+		s_ThreadInfos[i].StartSem = NULL;
 		SDL_DestroySemaphore(s_ThreadInfos[i].EndSem);
 		s_ThreadInfos[i].EndSem = NULL;
 	}
@@ -2306,8 +2304,7 @@ void resizeThreadInfos(int size)
 		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 #ifdef FT800EMU_SDL
 		s_ThreadInfos[i].Running = true;
-		s_ThreadInfos[i].StartCond = SDL_CreateCond();
-		s_ThreadInfos[i].StartMutex = SDL_CreateMutex();
+		s_ThreadInfos[i].StartSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].Thread = SDL_CreateThread(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
 #else
@@ -2778,10 +2775,9 @@ int launchGraphicsProcessorThread(void *startInfo)
 	System.makeRealtimePriorityThread();
 	
 	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
-	SDL_mutexP(li->StartMutex);
 	for (; ; )
 	{
-		SDL_CondWait(li->StartCond, li->StartMutex);
+		SDL_SemWait(li->StartSem);
 		
 		if (!li->Running)
 		{
@@ -2790,9 +2786,10 @@ int launchGraphicsProcessorThread(void *startInfo)
 		
 		processPart(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 		
+		// printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
+		// printf("%i: sem post (%i) <-\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 	}
-	SDL_mutexV(li->StartMutex);
 	
 	System.revertThreadCategory(taskHandle);
 	
@@ -2851,7 +2848,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		li->YInc = s_ThreadCount * yInc;
 #ifdef FT800EMU_SDL
 		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
-		SDL_CondSignal(li->StartCond);
+		SDL_SemPost(li->StartSem);
 #else
 #	if WIN32
 		SetEvent(li->StartEvent);
@@ -2872,7 +2869,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);
 		// SDL_mutexV(li->StartMutex);
+		// printf("%i: sem wait %i (%i)->\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 		SDL_SemWait(li->EndSem);
+		// printf("%i: sem wait %i (%i)<-\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 #else
 #	if WIN32
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
