@@ -102,24 +102,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			uint8_t *const ram = Memory.getRam();
 			if (s_MouseDown && s_MouseX >= 0 && s_MouseX < s_Width && s_MouseY >= 0 && s_MouseY < s_Height)
 			{
-				uint16_t const touch_raw_x = ((uint32_t &)mouseX) & 0xFFFF;
-				uint16_t const touch_raw_y = ((uint32_t &)mouseY) & 0xFFFF;
-				//uint16_t const touch_screen_x = ((uint32_t &)s_MouseX) & 0xFFFF;
-				//uint16_t const touch_screen_y = ((uint32_t &)s_MouseY) & 0xFFFF;
-				uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
-				//uint32_t const touch_screen_xy = (uint32_t)touch_screen_x << 16 | touch_screen_y;
-				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
-				//Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, touch_screen_xy);
-				Memory.setTouchScreenXY(s_MouseX, s_MouseY);
-				Memory.rawWriteU32(ram, REG_TOUCH_RZ, s_MousePressure);
+				Memory.setTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
 			}
 			else
 			{
 				s_MouseDown = false;
-				Memory.rawWriteU32(ram, REG_TOUCH_TAG, 0);
-				Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
-				Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-				// Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 				Memory.resetTouchScreenXY();
 			}
 		}

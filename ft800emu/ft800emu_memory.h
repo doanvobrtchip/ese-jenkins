@@ -71,7 +71,7 @@ public:
 	static int getDirectSwapCount();
 
 	// Set touch screen xy for interpolation
-	static void setTouchScreenXY(int x, int y);
+	static void setTouchScreenXY(int x, int y, int pressure);
 	static void resetTouchScreenXY();
 	static void setTouchScreenXYFrameTime(long micros);
 

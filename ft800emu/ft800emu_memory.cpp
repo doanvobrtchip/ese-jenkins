@@ -170,8 +170,12 @@ inline uint32_t getTouchScreenXY()
 	return getTouchScreenXY(micros);
 }
 
-void MemoryClass::setTouchScreenXY(int x, int y)
+void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 {
+	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
+	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
+	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
+	rawWriteU32(REG_TOUCH_RAW_XY, touch_raw_xy);
 	if (s_TouchScreenSet)
 	{
 		if (s_TouchScreenJitter)
@@ -201,6 +205,7 @@ void MemoryClass::setTouchScreenXY(int x, int y)
 	s_TouchScreenX2 = x;
 	s_TouchScreenY2 = y;
 	rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
+	rawWriteU32(REG_TOUCH_RZ, pressure);
 }
 
 void MemoryClass::setTouchScreenXYFrameTime(long micros)
@@ -211,6 +216,9 @@ void MemoryClass::setTouchScreenXYFrameTime(long micros)
 void MemoryClass::resetTouchScreenXY()
 {
 	s_TouchScreenSet = 0;
+	Memory.rawWriteU32(REG_TOUCH_TAG, 0);
+	Memory.rawWriteU32(REG_TOUCH_RZ, 32767);
+	Memory.rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	s_LastJitteredTime = System.getMicros();
 }
