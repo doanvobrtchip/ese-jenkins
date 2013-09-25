@@ -10,7 +10,17 @@ ADD_LIBRARY(libft800emu
 target_link_libraries(libft800emu
 	)
 
-option(WITH_SDL "Build an SDL application." !WIN32)
+IF (NOT DEFINED WITH_SDL)
+  IF (WIN32)
+    MESSAGE("false")
+    SET(WITH_SDL CACHE BOOL "Build an SDL application." FALSE ..)
+  ELSE (WIN32)
+    MESSAGE("true")
+    SET(WITH_SDL CACHE BOOL "Build an SDL application." TRUE ..)
+  ENDIF (WIN32)
+ENDIF (NOT DEFINED WITH_SDL)
+
+# option(WITH_SDL "Build an SDL application.")
 
 if (WITH_SDL)
 
