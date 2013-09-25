@@ -15,9 +15,6 @@
 #include "ft800emu_emulator.h"
 
 // System includes
-#include <istream>
-#include <ostream>
-#include <iostream>
 #ifdef FT800EMU_SDL
 #include <SDL.h>
 #include <SDL_thread.h>
