@@ -1594,7 +1594,11 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int y1r = ess.Y1;
 	const int y2r = yp;
-	if (y1r == y2r) return; // No op
+	if (y1r == y2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int x1r = ess.X1;
 	const int x2r = xp;
 	const int y1 = min(y1r, y2r);
@@ -1646,7 +1650,11 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int y1r = ess.Y1;
 	const int y2r = yp;
-	if (y1r == y2r) return; // No op
+	if (y1r == y2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int x1r = ess.X1;
 	const int x2r = xp;
 	const int y1 = min(y1r, y2r);
@@ -1698,7 +1706,11 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int x1r = ess.X1;
 	const int x2r = xp;
-	if (x1r == x2r) return; // No op
+	if (x1r == x2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int y1r = ess.Y1;
 	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
@@ -1760,7 +1772,11 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int x1r = ess.X1;
 	const int x2r = xp;
-	if (x1r == x2r) return; // No op
+	if (x1r == x2r) { // Nop op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int y1r = ess.Y1;
 	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
