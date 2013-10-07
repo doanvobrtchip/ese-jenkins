@@ -247,6 +247,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_system_linux.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_system_linux.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_system_sdl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_system_sdl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_system_windows.cpp"
 				>
 			</File>
