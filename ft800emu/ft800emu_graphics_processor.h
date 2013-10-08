@@ -43,7 +43,8 @@ public:
 	static void end();
 
 	static void process(argb8888 *screenArgb8888, bool upsideDown, bool mirrored, uint32_t hsize, uint32_t vsize, uint32_t yIdx = 0, uint32_t yInc = 1);
-	
+	static void processBlank();
+
 	// Enables or disables emuating REG_PWM_DUTY by fading to black
 	static void enableRegPwmDutyEmulation(bool enabled = true);
 	

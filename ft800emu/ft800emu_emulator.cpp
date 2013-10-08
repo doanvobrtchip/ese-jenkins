@@ -178,6 +178,8 @@ namespace {
 			//printf("main thread\n");
 			System.makeRealtimePriorityThread();
 
+			System.enterSwapDL();
+
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
 			double deltaSeconds;
 			// Calculate the display frequency
@@ -229,7 +231,6 @@ namespace {
 							s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
 							reg_hsize, reg_vsize);
 					}
-
 				}
 				unsigned long procDelta = System.getMicros() - procStart;
 
@@ -255,6 +256,8 @@ namespace {
 					}
 				}
 			}
+
+			System.leaveSwapDL();
 
 			// Flip buffer and also give a slice of time to the mcu main thread
 			{
@@ -314,8 +317,8 @@ namespace {
 			{
 				// REG_PCLK is 0
 #if FT800EMU_REG_PCLK_ZERO_REDUCE
-				targetSeconds = System.getSeconds() + 0.1;
-				System.delay(100);
+				targetSeconds = System.getSeconds() + 0.02;
+				System.delay(20);
 #else
 				targetSeconds = System.getSeconds();
 				System.switchThread();

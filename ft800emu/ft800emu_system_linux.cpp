@@ -55,6 +55,7 @@ static pthread_t s_MainThread = 0;
 static sigset_t s_SIGUSR1SigSet;
 static pthread_mutex_t s_MCUSuspendMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t s_CoprocessorSuspendMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_SwapMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static time_t s_BeginTime = 0;
 
@@ -245,6 +246,16 @@ void SystemClass::resumeCoprocessorThread()
 	{
 		pthread_mutex_unlock(&s_CoprocessorSuspendMutex);
 	}
+}
+
+void SystemClass::enterSwapDL()
+{
+	pthread_mutex_lock(&s_SwapMutex);
+}
+
+void SystemClass::leaveSwapDL()
+{
+	pthread_mutex_unlock(&s_SwapMutex);
 }
 
 void *SystemClass::setThreadGamesCategory(unsigned long *refId)

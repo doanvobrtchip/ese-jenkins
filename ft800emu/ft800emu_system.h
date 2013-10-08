@@ -79,6 +79,9 @@ public:
 
 	static void *setThreadGamesCategory(unsigned long *);
 	static void revertThreadCategory(void *);
+	
+	static void enterSwapDL();
+	static void leaveSwapDL();
 
 	// MCU
 	static uint16_t getAnalogRead(uint8_t pin);
