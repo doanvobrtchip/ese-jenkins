@@ -22,6 +22,7 @@
 // Project includes
 #include "vc.h"
 #include "ft800emu_system.h"
+#include "ft800emu_graphics_processor.h"
 
 // using namespace ...;
 
@@ -237,13 +238,38 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 	{
 		switch (address)
 		{
+		case REG_PCLK:
+			// printf("Write REG_PCLK %u\n", (uint32_t)data);
+			if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+			{
+				// printf("Direct swap from REG_PCLK\n");
+				// Direct swap
+				System.enterSwapDL();
+				if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				{
+					swapDisplayList();
+					s_Ram[REG_DLSWAP] = 0;
+					GraphicsProcessor.processBlank();
+					++s_DirectSwapCount;
+				}
+				System.leaveSwapDL();
+			}
+			break;
 		case REG_DLSWAP:
+			// printf("Write REG_DLSWAP %u\n", data);
 			if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 			{
+				// printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
-				swapDisplayList();
-				data = 0;
-				++s_DirectSwapCount;
+				System.enterSwapDL();
+				if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				{
+					swapDisplayList();
+					data = 0;
+					GraphicsProcessor.processBlank();
+					++s_DirectSwapCount;
+				}
+				System.leaveSwapDL();
 			}
 			break;
 		}
@@ -564,6 +590,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			++s_WaitCoprocessorReadCounter;
 			if (s_WaitCoprocessorReadCounter > 8)
 			{
+				// printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
 				System.prioritizeMCUThread();
 				System.delay(1);
 				System.unprioritizeMCUThread();

@@ -1594,7 +1594,11 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int y1r = ess.Y1;
 	const int y2r = yp;
-	if (y1r == y2r) return; // No op
+	if (y1r == y2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int x1r = ess.X1;
 	const int x2r = xp;
 	const int y1 = min(y1r, y2r);
@@ -1646,7 +1650,11 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int y1r = ess.Y1;
 	const int y2r = yp;
-	if (y1r == y2r) return; // No op
+	if (y1r == y2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int x1r = ess.X1;
 	const int x2r = xp;
 	const int y1 = min(y1r, y2r);
@@ -1698,7 +1706,11 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int x1r = ess.X1;
 	const int x2r = xp;
-	if (x1r == x2r) return; // No op
+	if (x1r == x2r) { // No op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int y1r = ess.Y1;
 	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
@@ -1760,7 +1772,11 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Interpret coordinates
 	const int x1r = ess.X1;
 	const int x2r = xp;
-	if (x1r == x2r) return; // No op
+	if (x1r == x2r) { // Nop op
+        ess.X1 = xp;
+        ess.Y1 = yp;
+        return;
+    }
 	const int y1r = ess.Y1;
 	const int y2r = yp;
 	const int x1 = min(x1r, x2r);
@@ -2367,6 +2383,85 @@ void GraphicsProcessorClass::reduceThreads(int nb)
     
 namespace {
 
+void processBlankDL(BitmapInfo *const bitmapInfo)
+{
+	uint8_t *const ram = Memory.getRam();
+	const uint32_t *displayList = Memory.getDisplayList();
+
+	GraphicsState gs = GraphicsState();
+	std::stack<GraphicsState> gsstack;
+	std::stack<int> callstack;
+
+	// run display list
+	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+	{
+		uint32_t v = displayList[c]; // (up to 2048 ops)
+EvaluateDisplayListValue:
+		switch (v >> 24)
+		{
+		case FT800EMU_DL_DISPLAY:
+			goto DisplayListDisplay;
+		case FT800EMU_DL_BITMAP_SOURCE:
+			bitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
+			break;
+		case FT800EMU_DL_BITMAP_HANDLE:
+			gs.BitmapHandle = v & 0x1F;
+			break;
+		case FT800EMU_DL_BITMAP_LAYOUT: 
+			{
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+				const int format = (v >> 19) & 0x1F;
+				bi.LayoutFormat = format;
+				int stride = (v >> 9) & 0x3FF;
+				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
+				bi.LayoutStride = stride;
+				bi.LayoutHeight = v & 0x1FF;
+				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+				bi.LayoutWidth = getLayoutWidth(format, stride);
+			}
+			break;
+		case FT800EMU_DL_BITMAP_SIZE:
+			bitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
+			bitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
+			bitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
+			bitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
+			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
+			bitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
+			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
+			break;
+		case FT800EMU_DL_CALL:
+			callstack.push(c);
+			c = (v & 0xFFFF) - 1;
+			break;
+		case FT800EMU_DL_JUMP:
+			c = (v & 0xFFFF) - 1;
+			break;
+		case FT800EMU_DL_SAVE_CONTEXT:
+			gsstack.push(gs);
+			break;
+		case FT800EMU_DL_RESTORE_CONTEXT:
+            if (gsstack.empty()) {
+                gs = GraphicsState();
+            } else {
+                gs = gsstack.top();
+                gsstack.pop();
+            }
+			break;
+		case FT800EMU_DL_RETURN:
+			c = callstack.top();
+			callstack.pop();
+			break;
+		case FT800EMU_DL_MACRO:
+			v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
+			// What happens when the macro macros itself? :)
+			goto EvaluateDisplayListValue;
+			break;
+		}
+	}
+DisplayListDisplay:
+	;
+}
+
 void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = Memory.getRam();
@@ -2374,6 +2469,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
 	
+	intptr_t lines_processed = 0;
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
 		VertexState vs = VertexState();
@@ -2789,6 +2885,12 @@ DisplayListDisplay:
 				std::swap(bc[xl], bc[xr]);
 			}
 		}
+		++lines_processed;
+	}
+
+	if (!lines_processed)
+	{
+		processBlankDL(bitmapInfo);
 	}
 }
 	
@@ -2910,7 +3012,18 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #endif
 	}
 }
-	
+
+void GraphicsProcessorClass::processBlank()
+{
+	processBlankDL(s_BitmapInfoMain);
+
+	// Copy bitmap infos to thread local
+	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
+	{
+		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+	}
+}
+
 void GraphicsProcessorClass::setDebugMode(int debugMode)
 {
 	s_DebugMode = debugMode;

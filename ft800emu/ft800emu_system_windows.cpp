@@ -48,6 +48,7 @@ static HANDLE s_MCUThread = NULL;
 static HANDLE s_MainThread = NULL;
 
 //static CRITICAL_SECTION s_CriticalSection;
+static CRITICAL_SECTION s_SwapCriticalSection;
 
 
 void SystemClass::_begin()
@@ -58,6 +59,7 @@ void SystemClass::_begin()
 	QueryPerformanceFrequency(&s_PerformanceFrequency);
 	QueryPerformanceCounter(&s_PerformanceCounterBegin);
 	//InitializeCriticalSection(&s_CriticalSection);
+	InitializeCriticalSection(&s_SwapCriticalSection);
 }
 
 void SystemClass::_update()
@@ -68,6 +70,7 @@ void SystemClass::_update()
 void SystemClass::_end()
 {
 	//DeleteCriticalSection(&s_CriticalSection);
+	DeleteCriticalSection(&s_SwapCriticalSection);
 #ifdef FT800EMU_SDL
 	SDL_Quit();
 #endif
@@ -91,6 +94,17 @@ void SystemClass::leaveCriticalSection()
 	//LeaveCriticalSection(&s_CriticalSection);
 }
 */
+
+void SystemClass::enterSwapDL()
+{
+	EnterCriticalSection(&s_SwapCriticalSection);
+}
+
+void SystemClass::leaveSwapDL()
+{
+	LeaveCriticalSection(&s_SwapCriticalSection);
+}
+
 void SystemClass::disableAutomaticPriorityBoost()
 {
 	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
