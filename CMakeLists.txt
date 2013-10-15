@@ -1,11 +1,9 @@
-
-# From http://eldalin.com/2010/10/21/introduction-to-cmake-2/
 ########################################################################
-#
-# A generalized cmake file for developing cross-platform games.
-#
+# CMake project
 
-cmake_minimum_required (VERSION 2.6 FATAL_ERROR)
+# Minimum required 2.6
+# Minimum required 2.8.11 for automatic linking to qtmain.lib
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 # set (CMAKE_VERBOSE_MAKEFILE ON)
 
 
@@ -53,5 +51,12 @@ ADD_SUBDIRECTORY(loaddump)
 ADD_SUBDIRECTORY(app)
 ADD_SUBDIRECTORY(dump1)
 ADD_SUBDIRECTORY(playxbu)
+
+OPTION(WITH_QT "Build projects that depend on Qt" OFF)
+
+IF (WITH_QT)
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
+  ADD_SUBDIRECTORY(qtsample)
+ENDIF (WITH_QT)
 
 ########################################################################
