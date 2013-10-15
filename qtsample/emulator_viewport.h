@@ -24,6 +24,8 @@
 // Project includes
 
 class QAction;
+class QPixmap;
+class QLabel;
 
 namespace FTQT {
 	// class GraphicsConfig;
@@ -42,7 +44,7 @@ public:
 	EmulatorViewport(QWidget *parent);
 	virtual ~EmulatorViewport();
 
-	virtual QPaintEngine* paintEngine() const { return NULL; }
+	// virtual QPaintEngine* paintEngine() const { return NULL; }
 
 	// QAction *createSaveScreenshotAction(QObject *parent);
 
@@ -51,6 +53,8 @@ public slots:
 
 private:
 	// EmulatorConfig *m_EmulatorConfig;
+	QPixmap *m_Pixmap;
+	QLabel *m_Label;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);
