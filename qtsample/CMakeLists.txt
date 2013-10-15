@@ -2,6 +2,9 @@
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
 
+# Instruct CMake to run moc automatically when needed.
+SET(CMAKE_AUTOMOC ON)
+
 ADD_EXECUTABLE(ftqtsample
 	${SRCS}
 	${HDRS}
@@ -32,9 +35,6 @@ IF (WITH_SDL)
 
 ENDIF (WITH_SDL)
 
-# Instruct CMake to run moc automatically when needed.
-SET(CMAKE_AUTOMOC ON)
-
 # Find the QtWidgets library
 FIND_PACKAGE(Qt5Widgets)
 
@@ -42,6 +42,8 @@ TARGET_LINK_LIBRARIES(ftqtsample
   Qt5::Widgets
   ${TARGET_LINK_LIBRARIES}
 )
+
+qt5_use_modules(ftqtsample Widgets)
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 
