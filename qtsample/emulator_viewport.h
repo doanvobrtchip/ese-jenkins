@@ -11,16 +11,17 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FTQT_EMULATOR_VIEWPORT_H
-#define FTQT_EMULATOR_VIEWPORT_H
+#ifndef FT800EMUQT_EMULATOR_VIEWPORT_H
+#define FT800EMUQT_EMULATOR_VIEWPORT_H
 
 // STL includes
 
 // Qt includes
 #include <QWidget>
+#include <QThread>
 
 // Emulator includes
-#include <ft800emu_inttypes.h>
+#include <ft800emu_emulator.h>
 
 // Project includes
 
@@ -29,10 +30,7 @@ class QImage;
 class QPixmap;
 class QLabel;
 
-namespace FTQT {
-	// class GraphicsConfig;
-	
-bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize);
+namespace FT800EMUQT {
 
 /**
  * EmulatorViewport
@@ -47,6 +45,9 @@ class EmulatorViewport : public QWidget
 public:
 	EmulatorViewport(QWidget *parent);
 	virtual ~EmulatorViewport();
+	
+	// Runs the emulator on a new thread and connects it with this viewport
+	void run(const FT800EMU::EmulatorParameters &params);
 
 	// virtual QPaintEngine* paintEngine() const { return NULL; }
 
@@ -56,7 +57,6 @@ public slots:
 	// void saveScreenshot();
 
 private:
-	// EmulatorConfig *m_EmulatorConfig;
 	QImage *m_Image;
 	QPixmap *m_Pixmap;
 	QLabel *m_Label;
@@ -67,8 +67,20 @@ private:
 	
 }; /* class EmulatorViewport */
 
-} /* namespace FTQT */
+class EmulatorThread : public QThread
+{
+	Q_OBJECT
 
-#endif /* #ifndef FTQT_EMULATOR_VIEWPORT_H */
+protected:
+	void run();
+	
+signals:
+	void repaint();
+	
+};
+
+} /* namespace FT800EMUQT */
+
+#endif /* #ifndef FT800EMUQT_EMULATOR_VIEWPORT_H */
 
 /* end of file */

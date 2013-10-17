@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FTQT_MAIN_WINDOW_H
-#define FTQT_MAIN_WINDOW_H
+#ifndef FT800EMUQT_MAIN_WINDOW_H
+#define FT800EMUQT_MAIN_WINDOW_H
 
 // STL includes
 
@@ -28,7 +28,7 @@ class QDirModel;
 class QUndoStack;
 class QScrollArea;
 
-namespace FTQT {
+namespace FT800EMUQT {
 	class CommandLog;
 	class EmulatorViewport;
 	// class EmulatorConfig;
@@ -108,8 +108,8 @@ private:
 
 }; /* class MainWindow */
 
-} /* namespace FTQT */
+} /* namespace FT800EMUQT */
 
-#endif /* #ifndef FTQT_MAIN_WINDOW_H */
+#endif /* #ifndef FT800EMUQT_MAIN_WINDOW_H */
 
 /* end of file */

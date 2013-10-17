@@ -27,16 +27,15 @@
 #include <ft800emu_graphics_driver.h>
 
 // Project includes
-#include "main.h"
 // #include "emulator_config.h"
 
-extern EmulatorThread *g_EmulatorThread;
-void ftqtRepaint();
+namespace FT800EMUQT {
 
-namespace FTQT {
-	
+static FT800EMU::EmulatorParameters s_EmulatorParameters;
+EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
+
 bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
 {
 	// TODO: Optimize using platform specific access to QImage so we 
@@ -49,7 +48,7 @@ bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t 
 			QImage *image = new QImage(hsize, vsize, QImage::Format_RGB32);
 			s_Image->swap(*image);
 			delete image;
-			QPixmap *pixmap = new QPixmap(hsize, vsize);
+			QPixmap *pixmap = new QPixmap(hsize, vsize); // Probably not safe with the threading
 			s_Pixmap->swap(*pixmap);
 			delete pixmap;
 		}
@@ -59,15 +58,21 @@ bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t 
 			// This is just terrible code.
 			for (int y = 0; y < vsize; ++y)
 				memcpy(s_Image->scanLine(y), &buffer[y * hsize], sizeof(argb8888) * hsize);
-			s_Pixmap->convertFromImage(*s_Image);
-			ftqtRepaint();
+			s_Pixmap->convertFromImage(*s_Image); // Probably not safe with the threading
+			s_EmulatorThread->repaint();
 		}
 		else
 		{
+			// TODO: Blank
 			// ..
 		}
 	}
 	return true; // g_EmulatorThread != NULL;
+}
+
+void EmulatorThread::run()
+{
+	FT800EMU::Emulator.run(s_EmulatorParameters);
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent) 
@@ -75,29 +80,49 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	// m_EmulatorConfig(NULL)
 {
 	m_Image = new QImage(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
-	s_Image = m_Image;
 	m_Pixmap = new QPixmap(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT);
-	s_Pixmap = m_Pixmap;
 	m_Label = new QLabel();
 	m_Label->setPixmap(*m_Pixmap);
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	layout->addWidget(m_Label);
 	setLayout(layout);
-	
-	printf("Emu thread is %i\n", g_EmulatorThread);
-	connect(g_EmulatorThread, SIGNAL(repaint()), m_Label, SLOT(repaint()));
 }
 
 EmulatorViewport::~EmulatorViewport()
 {
 	delete m_Label; m_Label = NULL;
-	s_Pixmap = NULL;
+	if (m_Pixmap == s_Pixmap) s_Pixmap = NULL;
 	delete m_Pixmap; m_Pixmap = NULL;
-	s_Image = NULL;
+	if (m_Image == s_Image) s_Image = NULL;
 	delete m_Image; m_Image = NULL;
+	// TODO: End the emulator thread in a clean way
 }
 
-} /* namespace FTQT */
+void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
+{
+	// There can be only one
+	if (s_EmulatorThread == NULL)
+	{
+		// Copy pointers to Qt buffers
+		s_Pixmap = m_Pixmap;
+		s_Image = m_Image;
+		
+		// Copy the params for the new thread to use
+		s_EmulatorParameters = params;
+		
+		// Add the graphics callback to the parameters
+		s_EmulatorParameters.Graphics = ftqtGraphics;
+		
+		// Create the main thread for the emulator
+		s_EmulatorThread = new EmulatorThread();
+		s_EmulatorThread->start();
+		
+		// Connect the cross thread repaint event
+		connect(s_EmulatorThread, SIGNAL(repaint()), m_Label, SLOT(repaint()));
+	}
+}
+
+} /* namespace FT800EMUQT */
 
 /* end of file */

@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FTQT_COMMAND_LOG_H
-#define FTQT_COMMAND_LOG_H
+#ifndef FT800EMUQT_COMMAND_LOG_H
+#define FT800EMUQT_COMMAND_LOG_H
 
 // STL includes
 
@@ -25,7 +25,7 @@
 
 // Project includes
 
-namespace FTQT {
+namespace FT800EMUQT {
 
 /**
  * CommandLog
@@ -54,8 +54,8 @@ private:
 	
 }; /* class CommandLog */
 
-} /* namespace FTQT */
+} /* namespace FT800EMUQT */
 
-#endif /* #ifndef FTQT_COMMAND_LOG_H */
+#endif /* #ifndef FT800EMUQT_COMMAND_LOG_H */
 
 /* end of file */

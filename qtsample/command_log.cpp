@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace FTQT {
+namespace FT800EMUQT {
 
 CommandLog::CommandLog(QWidget *parent) : QWidget(parent)
 {
@@ -60,6 +60,6 @@ void CommandLog::returnPressed()
 	m_CommandInput->clear();
 }
 
-} /* namespace FTQT */
+} /* namespace FT800EMUQT */
 
 /* end of file */
