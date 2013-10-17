@@ -20,15 +20,19 @@
 #include <QWidget>
 
 // Emulator includes
+#include <ft800emu_inttypes.h>
 
 // Project includes
 
 class QAction;
+class QImage;
 class QPixmap;
 class QLabel;
 
 namespace FTQT {
 	// class GraphicsConfig;
+	
+bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize);
 
 /**
  * EmulatorViewport
@@ -53,6 +57,7 @@ public slots:
 
 private:
 	// EmulatorConfig *m_EmulatorConfig;
+	QImage *m_Image;
 	QPixmap *m_Pixmap;
 	QLabel *m_Label;
 
