@@ -35,6 +35,14 @@ endif ()
 
 ########################################################################
 
+IF (NOT DEFINED WITH_SDL)
+  IF (WIN32)
+    SET(WITH_SDL FALSE CACHE BOOL "Build an SDL application." FORCE)
+  ELSE (WIN32)
+    SET(WITH_SDL TRUE CACHE BOOL "Build an SDL application." FORCE)
+  ENDIF (WIN32)
+ENDIF (NOT DEFINED WITH_SDL)
+
 link_directories(
   )
 
