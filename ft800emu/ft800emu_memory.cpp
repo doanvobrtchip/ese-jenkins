@@ -239,7 +239,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 		switch (address)
 		{
 		case REG_PCLK:
-			// printf("Write REG_PCLK %u\n", (uint32_t)data);
+			printf("Write REG_PCLK %u\n", (uint32_t)data);
 			if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
 			{
 				// printf("Direct swap from REG_PCLK\n");
@@ -262,13 +262,18 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				// printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
 				System.enterSwapDL();
-				if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 				{
+					// printf("Go\n");
 					swapDisplayList();
 					data = 0;
 					GraphicsProcessor.processBlank();
 					++s_DirectSwapCount;
 				}
+				// else
+				// {
+				// 	printf("No go\n");
+				// }
 				System.leaveSwapDL();
 			}
 			break;
