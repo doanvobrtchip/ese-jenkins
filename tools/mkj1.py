@@ -149,18 +149,17 @@ for ip,insn in enumerate(pgm):
                     "TT = t + 4;",
                     ""][aluop]
                 alu = alu.replace("NN", "d[dsp]")
-                if insn_6_4 in (1,2,3,4,5,6):
+                if insn_6_4 in (1,2,4,5,6):
                     alu = alu.replace("TT", "Xreg")
                 else:
                     alu = alu.replace("TT", "t")
-                act.append(alu)
+                if aluop != 0:
+                    act.append(alu)
 
                 if insn_6_4 in (4,5,6):
                     act.append(hop)
 
                 sx = [ None, "++", None, "--" ]
-                s1 = [ "", "+1", None, "-1" ]
-                # act.append("dsp = 31 & (dsp %s);" % s1[insn & 3]);
                 if insn & 3:
                     act.append("dsp%s;" % sx[insn & 3])
                 if (insn >> 2) & 3:
@@ -169,7 +168,7 @@ for ip,insn in enumerate(pgm):
                 if insn_6_4 in (1,2,3):
                     act.append(hop)
 
-                if insn_6_4 in (1,2,3,4,5,6):
+                if aluop != 0 and insn_6_4 in (1,2,4,5,6):
                     act.append("t = Xreg;");
                 if isret:
                     act.append("break;")
