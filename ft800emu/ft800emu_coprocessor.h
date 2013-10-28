@@ -62,6 +62,11 @@ private:
         return v;
     }
 
+    int state;
+    uint32_t acc;               // accumulator
+    uint32_t cV[48], dV[48];    // code and data vectors
+    uint32_t *pcV, *pdV;
+
 }; /* class CoprocessorClass */
 
 extern CoprocessorClass Coprocessor;

@@ -1,7 +1,6 @@
 import array
 
-c_func = r"""
-/**
+c_func = r"""/**
  * graphics coprocessor
  * $Id$
  * \file ft800emu_coprocessor.cpp
@@ -32,9 +31,9 @@ static bool s_Running;
 
 void CoprocessorClass::begin(const char *romFilePath)
 {
-    pc = 0;
-    dsp = 0;
-    rsp = 0;
+    state = 0;
+    pcV = cV;
+    pdV = dV;
 }
 
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
@@ -50,8 +49,11 @@ void CoprocessorClass::execute()
     int swapped = 0;
     int starve = 0;
     do {
-        switch (pc) {
+        if (state == 0x1BA6) printf("COMMAND [%%03x] %%08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), acc);
+        switch (state) {
 %(handle)s
+        default:
+            assert(0);
         }
     } while (singleFrame ? (!swapped && !starve) : s_Running);
 }
@@ -78,27 +80,49 @@ void CoprocessorClass::end()
 
 } /* namespace GDEMU */
 
-/* end of file %(pc)s */
+/* end of file */
 """
 
 
 pgm = array.array('H', open("main.binle").read())[:7608]
-for pc,op in enumerate(pgm):
-    print pc, hex(op)
+
+pop = {}
+for i in pgm:
+    if i in pop:
+        pop[i] += 1
+    else:
+        pop[i] = 1
+# print pop
+
+iN = "pdV"
+N = "*pdV"
+pN = "*++pdV"
+Nm = "*pdV--"
 
 handle = []
 for ip,insn in enumerate(pgm):
+    if ip == 0x1bb9:    # Patch to balance stack in cmd1
+        insn |= 3;
     if insn & 0x8000:
-        act = ["push(%d);" % (insn & 0x7fff)]
+        act = ["%s = acc;" % pN,
+               "acc = %d;" % (insn & 0x7fff)]
     else:
         op = (insn >> 13)
         if op == 0:
-            act = ["pc = %d; break;" % (insn & 8191)]
+            act = ["state = %d; break;" % (insn & 8191)]
         elif op == 1:
-            act = ["if (pop() == 0) { pc = %d; break;}" % (insn & 8191)]
+            act = ["Xreg = acc;",
+                   "acc = %s;" % Nm,
+                   "if (Xreg == 0) { state = %d; break;}" % (insn & 8191)]
         elif op == 2:
-            act = ["r[++rsp] = %d;" % ((ip + 1) * 2),
-                   "pc = %d; break;" % (insn & 8191)]
+            if ip == 0x980:
+                # 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
+                act = ["starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == MemoryClass::coprocessorReadU32(0x1090f8);"]
+            else:
+                act = []
+            act += ["*++pcV = %d;" % ((ip + 1) * 2),
+                    "state = %d;" % (insn & 8191),
+                    "break;"]
         elif op == 3:
             insn_6_4 = 7 & (insn >> 4)
             aluop =  ((insn >> 8) & 31)
@@ -106,53 +130,53 @@ for ip,insn in enumerate(pgm):
                 isret = (insn & (1 << 7))
                 act = []
                 if isret:
-                    act.append("pc = r[rsp] >> 1;")
+                    act.append("state = *pcV >> 1;")
                 hop = [None,
-                       "d[dsp] = t;",
-                       "r[rsp] = t;",
-                       "r[rsp]++;",
-                       "MemoryClass::coprocessorWriteU32(t, d[dsp]); swapped = singleFrame && (t == REG_DLSWAP);",
-                       "MemoryClass::coprocessorWriteU16(t, d[dsp]);",
-                       "MemoryClass::coprocessorWriteU8(t, d[dsp]);",
+                       "%s = acc;" % N,
+                       "*pcV = acc;",
+                       "*pcV++;",
+                       "MemoryClass::coprocessorWriteU32(acc, %s); swapped |= (singleFrame && (acc == REG_DLSWAP));" % N,
+                       "MemoryClass::coprocessorWriteU16(acc, %s);" % N,
+                       "MemoryClass::coprocessorWriteU8(acc, %s);" % N,
                        None][insn_6_4]
                 alu = [
-                    "TT = t;",
+                    "TT = acc;",
                     "TT = NN;",
-                    "TT = t + NN;",
-                    "TT = t & NN;",
-                    "TT = t | NN;",
-                    "TT = t ^ NN;",
-                    "TT = ~t;",
-                    "TT = -(t == NN);",
-                    "TT = -((int32_t)NN < (int32_t)t);",
-                    "TT = NN >> t;",
-                    "TT = t - 1;",
-                    "TT = r[rsp];",
-                    "TT = MemoryClass::coprocessorReadU32(t & ~3);",
-                    "TT = PRODUCT64(t, NN);",
-                    "TT = (NN << 15) | (t & 0x7fff);",
-                    "TT = -(NN < t);",
+                    "TT = acc + NN;",
+                    "TT = acc & NN;",
+                    "TT = acc | NN;",
+                    "TT = acc ^ NN;",
+                    "TT = ~acc;",
+                    "TT = -(acc == NN);",
+                    "TT = -((int32_t)NN < (int32_t)acc);",
+                    "TT = NN >> acc;",
+                    "TT = acc - 1;",
+                    "TT = *pcV;",
+                    "TT = MemoryClass::coprocessorReadU32(acc & ~3);",
+                    "TT = acc * NN;",
+                    "TT = (NN << 15) | (acc & 0x7fff);",
+                    "TT = -(NN < acc);",
                     "",
-                    "TT = NN << t;",
-                    "TT = MemoryClass::coprocessorReadU8(t);",
-                    "TT = MemoryClass::coprocessorReadU16(t & ~1);",
-                    "TT = PRODUCT64(t, NN) >> 32;",
-                    "TT = PRODUCT64(t, NN) >> 16;",
-                    "TT = t == r[rsp];",
-                    "TT = NN - t;",
-                    "TT = t + 1;",
-                    "TT = (int16_t)MemoryClass::coprocessorReadU16(t);",
-                    "{ uint32_t sum32 = t + NN; TT = (sum32 & 0x80000000) ? 0 : ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); }",
-                    "TT = (0x00109 << 12) | (t & 0xfff);",
-                    "TT = t + 2;",
-                    "TT = t << 1;",
-                    "TT = t + 4;",
+                    "TT = NN << acc;",
+                    "TT = MemoryClass::coprocessorReadU8(acc);",
+                    "TT = MemoryClass::coprocessorReadU16(acc & ~1);",
+                    "TT = PRODUCT64(acc, NN) >> 32;",
+                    "TT = PRODUCT64(acc, NN) >> 16;",
+                    "TT = acc == *pcV;",
+                    "TT = NN - acc;",
+                    "TT = acc + 1;",
+                    "TT = (int16_t)MemoryClass::coprocessorReadU16(acc);",
+                    "{ uint32_t sum32 = acc + NN; TT = (sum32 & 0x80000000) ? 0 : ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); }",
+                    "TT = (0x00109 << 12) | (acc & 0xfff);",
+                    "TT = acc + 2;",
+                    "TT = acc << 1;",
+                    "TT = acc + 4;",
                     ""][aluop]
-                alu = alu.replace("NN", "d[dsp]")
+                alu = alu.replace("NN", N)
                 if insn_6_4 in (1,2,4,5,6):
                     alu = alu.replace("TT", "Xreg")
                 else:
-                    alu = alu.replace("TT", "t")
+                    alu = alu.replace("TT", "acc")
                 if aluop != 0:
                     act.append(alu)
 
@@ -161,18 +185,19 @@ for ip,insn in enumerate(pgm):
 
                 sx = [ None, "++", None, "--" ]
                 if insn & 3:
-                    act.append("dsp%s;" % sx[insn & 3])
+                    act.append("%s%s;" % (iN, sx[insn & 3]))
                 if (insn >> 2) & 3:
-                    act.append("rsp%s;" % sx[(insn >> 2) & 3])
+                    act.append("pcV%s;" % sx[(insn >> 2) & 3])
 
                 if insn_6_4 in (1,2,3):
                     act.append(hop)
 
                 if aluop != 0 and insn_6_4 in (1,2,4,5,6):
-                    act.append("t = Xreg;");
+                    act.append("acc = Xreg;");
                 if isret:
                     act.append("break;")
 
+    # act.append("state = %d; break;" % (ip + 1));
     handle.append("case %d:" % ip)
     handle += ["    " + s for s in act]
 handle = "\n".join([" "*8 + s for s in handle])
