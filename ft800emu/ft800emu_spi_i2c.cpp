@@ -167,6 +167,16 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBuffer = Memory.rawReadU32(Memory.getRam(), s_Cursor - (s_Cursor % 4));
 					// printf("rwbuffer %d\n", s_RWBuffer);
 					s_RWBufferStage *= 8;
+					// mask away bytes that will be written
+					// printf("> %i", s_Cursor);
+					for (int i = s_RWBufferStage; i < (4 * 8); i += 8)
+					{
+						uint32_t mask = ~(0xFF << i);
+						// printf(" | %#010x & %#010x (%i)", s_RWBuffer, mask, i);
+						s_RWBuffer = s_RWBuffer & mask;
+					}
+					// printf("\n");
+					// printf(">>> %#010x\n", s_RWBuffer);
 				}
 				else
 				{
