@@ -1,5 +1,7 @@
 import array
 
+# if (state == 0x1BA6) printf("COMMAND [%%03x] %%08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), acc);
+
 c_func = r"""/**
  * graphics coprocessor
  * $Id$
@@ -49,7 +51,6 @@ void CoprocessorClass::execute()
     int swapped = 0;
     int starve = 0;
     do {
-        if (state == 0x1BA6) printf("COMMAND [%%03x] %%08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), acc);
         switch (state) {
 %(handle)s
         default:
@@ -99,30 +100,49 @@ N = "*pdV"
 pN = "*++pdV"
 Nm = "*pdV--"
 
+class Destlist:
+    def __init__(self):
+        self.d = {}
+    def get(self, ip):
+        if not ip in self.d:
+            self.d[ip] = len(self.d)
+        return self.d[ip]
+
+destinations = Destlist()
 handle = []
+allcode = {}
 for ip,insn in enumerate(pgm):
     if ip == 0x1bb9:    # Patch to balance stack in cmd1
         insn |= 3;
-    if insn & 0x8000:
+    if ip == 0x0378:
+        act = ["assert(0);"]
+    elif insn & 0x8000:
         act = ["%s = acc;" % pN,
                "acc = %d;" % (insn & 0x7fff)]
     else:
         op = (insn >> 13)
-        if op == 0:
-            act = ["state = %d; break;" % (insn & 8191)]
+        if insn == 0x40f7:
+            act = [
+                "{",
+                "    uint64_t x = *(uint64_t *)(--pdV);",
+                "    *pdV = x % acc;",
+                "    acc = x / acc;",
+                "}"]
+        elif op == 0:
+            # act = ["state = %d; break;" % (insn & 8191)]
+            act = ["goto S_%d;" % destinations.get(insn & 8191)]
         elif op == 1:
             act = ["Xreg = acc;",
                    "acc = %s;" % Nm,
-                   "if (Xreg == 0) { state = %d; break;}" % (insn & 8191)]
+                   "if (Xreg == 0)",
+                   "    goto S_%d;" % destinations.get(insn & 8191)]
         elif op == 2:
+            act = ["*++pcV = %d;" % ((ip + 1) * 2)]
             if ip == 0x980:
                 # 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
-                act = ["starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == MemoryClass::coprocessorReadU32(0x1090f8);"]
-            else:
-                act = []
-            act += ["*++pcV = %d;" % ((ip + 1) * 2),
-                    "state = %d;" % (insn & 8191),
-                    "break;"]
+                act.append("starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == MemoryClass::coprocessorReadU32(0x1090f8);")
+                act.append("if (starve) { state = %d; break;}" % (insn & 8191))
+            act.append("goto S_%d;" % destinations.get(insn & 8191))
         elif op == 3:
             insn_6_4 = 7 & (insn >> 4)
             aluop =  ((insn >> 8) & 31)
@@ -134,8 +154,8 @@ for ip,insn in enumerate(pgm):
                 hop = [None,
                        "%s = acc;" % N,
                        "*pcV = acc;",
-                       "*pcV++;",
-                       "MemoryClass::coprocessorWriteU32(acc, %s); swapped |= (singleFrame && (acc == REG_DLSWAP));" % N,
+                       "(*pcV)++;",
+                       "MemoryClass::coprocessorWriteU32(acc, %s);" % N,
                        "MemoryClass::coprocessorWriteU16(acc, %s);" % N,
                        "MemoryClass::coprocessorWriteU8(acc, %s);" % N,
                        None][insn_6_4]
@@ -149,7 +169,7 @@ for ip,insn in enumerate(pgm):
                     "TT = ~acc;",
                     "TT = -(acc == NN);",
                     "TT = -((int32_t)NN < (int32_t)acc);",
-                    "TT = NN >> acc;",
+                    "TT = ((int32_t)(NN)) >> acc;",
                     "TT = acc - 1;",
                     "TT = *pcV;",
                     "TT = MemoryClass::coprocessorReadU32(acc & ~3);",
@@ -167,7 +187,7 @@ for ip,insn in enumerate(pgm):
                     "TT = acc + 1;",
                     "TT = (int16_t)MemoryClass::coprocessorReadU16(acc);",
                     "{ uint32_t sum32 = acc + NN; TT = (sum32 & 0x80000000) ? 0 : ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); }",
-                    "TT = (0x00109 << 12) | (acc & 0xfff);",
+                    "TT = acc | 0x109000;",
                     "TT = acc + 2;",
                     "TT = acc << 1;",
                     "TT = acc + 4;",
@@ -188,6 +208,9 @@ for ip,insn in enumerate(pgm):
                     act.append("%s%s;" % (iN, sx[insn & 3]))
                 if (insn >> 2) & 3:
                     act.append("pcV%s;" % sx[(insn >> 2) & 3])
+                if ip == 0xafa:
+                    act.append("swapped |= singleFrame;")
+                    act.append("if (swapped) { state = %d; break;}" % (ip + 1))
 
                 if insn_6_4 in (1,2,3):
                     act.append(hop)
@@ -196,10 +219,17 @@ for ip,insn in enumerate(pgm):
                     act.append("acc = Xreg;");
                 if isret:
                     act.append("break;")
+    allcode[ip] = act
 
-    # act.append("state = %d; break;" % (ip + 1));
-    handle.append("case %d:" % ip)
-    handle += ["    " + s for s in act]
+for ip,insn in enumerate(pgm):
+    if not ip in range(0x00e2, 0x011b):
+        act = allcode[ip]
+        # act.append("state = %d; break;" % (ip + 1));
+        if ip in destinations.d:
+            handle.append("S_%d:" % destinations.d[ip])
+        handle.append("case %d: " % ip)
+        # handle.append(r'printf("%d\n");' % ip);
+        handle += ["    " + s for s in act]
 handle = "\n".join([" "*8 + s for s in handle])
 
 open("../ft800emu/ft800emu_coprocessor.cpp", "w").write(c_func % locals())
