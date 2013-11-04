@@ -45,6 +45,25 @@ uint8_t rd8(size_t address)
 	return value;
 }
 
+uint32_t rd32(size_t address)
+{
+	digitalWrite(9, LOW);
+
+	SPI.transfer((address >> 16) & 0x3F);
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	SPI.transfer(0x00);
+
+	uint32_t value;
+	value = SPI.transfer(0);
+	value |= SPI.transfer(0) << 8;
+	value |= SPI.transfer(0) << 16;
+	value |= SPI.transfer(0) << 24;
+
+	digitalWrite(9, HIGH);
+	return value;
+}
+
 void wr32(size_t address, uint32_t value)
 {
 	digitalWrite(9, LOW);
@@ -427,12 +446,20 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
 
-	//wr32(REG_ROTATE, 1);
+	wr32(REG_ROTATE, 1);
 	wr32(REG_PWM_DUTY, 64);
+
+	/*wr32(RAM_CMD, CMD_CALIBRATE);
+	wr32(REG_CMD_WRITE, 4);*/
 }
 
 void loop()
 {
 	delay(10); // let's be nice on the cpu today :)
 	// wr32(REG_DLSWAP, SWAP_FRAME);
+	/*uint32_t t = rd32(REG_TOUCH_RZ);
+	if (t != 32767)
+	{
+		printf("touch: %i\n", t);
+	}*/
 }

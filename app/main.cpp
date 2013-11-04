@@ -38,7 +38,7 @@ int main(int, char* [])
 		| FT800EMU::EmulatorEnableMouse 
 		| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableRegRotate
-		// | FT800EMU::EmulatorEnableCoprocessor
+	    | FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableRegPwmDutyEmulation;
 	// params.Graphics = graphics;
