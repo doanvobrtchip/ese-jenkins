@@ -34,6 +34,8 @@ static bool s_CSLow = false;
 static uint32_t s_RWBuffer;
 static uint32_t s_RWBufferStage;
 
+static uint32_t s_WriteStartAddr;
+
 enum SPII2CState
 {
 	SPII2CIdle, 
@@ -183,6 +185,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBuffer = 0;
 					s_RWBufferStage = 0;
 				}
+				s_WriteStartAddr = s_Cursor;
 #if !FT800EMU_DUMMY_WRITE
 				return transfer(data);
 #endif
@@ -224,7 +227,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBufferStage = 0;
 				}
 
-				if (s_Cursor == RAM_CMD + 4095) 
+				if (s_Cursor == RAM_CMD + 4095 && s_WriteStartAddr >= RAM_CMD) 
 				{
 					// printf("Cursor wrap to RAM_CMD\n");
 					s_Cursor = RAM_CMD;
