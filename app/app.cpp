@@ -175,6 +175,7 @@ void setup()
 
 	dl(TAG(25));
 */
+	dl(TAG(10));
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
@@ -191,6 +192,7 @@ void setup()
 	dl(END());
 	dl(COLOR_RGB(160, 22, 22)); // change color to red
 	dl(POINT_SIZE(320)); // set point size to 20 pixels in radius
+	dl(TAG(50));
 	dl(BEGIN(POINTS)); // start drawing points
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
@@ -425,7 +427,7 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
 
-	wr32(REG_ROTATE, 1);
+	//wr32(REG_ROTATE, 1);
 	wr32(REG_PWM_DUTY, 64);
 }
 

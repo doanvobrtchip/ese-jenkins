@@ -2816,7 +2816,7 @@ DisplayListDisplay:
 			if (tag_x < hsize)
 			{
 				// Write tag out
-				Memory.rawWriteU32(ram, REG_TAG, bt[tag_x]);
+				Memory.rawWriteU32(ram, REG_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
 			}
 		}
 		// Check touch
