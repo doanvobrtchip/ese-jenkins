@@ -32,7 +32,8 @@
 // Emulator includes
 
 // Project includes
-#include "command_log.h"
+#include "dl_editor.h"
+// #include "command_log.h"
 #include "emulator_viewport.h"
 // #include "emulator_config.h"
 
@@ -252,7 +253,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	: QMainWindow(parent, flags),
 	m_UndoStack(NULL), 
 	m_EmulatorViewport(NULL), 
-	m_CommandLog(NULL), m_CommandLogDock(NULL), 
+	m_DlEditor(NULL), m_DlEditorDock(NULL), 
 	// m_EmulatorConfig(NULL), m_EmulatorConfigScroll(NULL), m_EmulatorConfigDock(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
@@ -388,14 +389,14 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
-	// CommandLog (Console)
+	// DlEditor (Console)
 	{
-		m_CommandLogDock = new QDockWidget(this);
-		m_CommandLogDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_CommandLog = new CommandLog(m_CommandLogDock);
-		m_CommandLogDock->setWidget(m_CommandLog);
-		addDockWidget(Qt::BottomDockWidgetArea, m_CommandLogDock);
-		m_WidgetsMenu->addAction(m_CommandLogDock->toggleViewAction());
+		m_DlEditorDock = new QDockWidget(this);
+		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_DlEditor = new DlEditor(m_DlEditorDock);
+		m_DlEditorDock->setWidget(m_DlEditor);
+		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
+		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
 	}
 
 	// EmulatorConfig (Emulator Configuration)
@@ -428,7 +429,7 @@ void MainWindow::createDockWindows()
 
 void MainWindow::translateDockWindows()
 {
-	m_CommandLogDock->setWindowTitle(tr("WidgetCommandLog"));
+	m_DlEditorDock->setWindowTitle(tr("WidgetDlEditor"));
 	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
 	m_AssetTreeDock->setWindowTitle(tr("WidgetAssetTree"));
 }

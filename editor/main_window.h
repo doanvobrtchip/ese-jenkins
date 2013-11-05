@@ -29,8 +29,9 @@ class QUndoStack;
 class QScrollArea;
 
 namespace FT800EMUQT {
-	class CommandLog;
+	// class CommandLog;
 	class EmulatorViewport;
+	class DlEditor;
 	// class EmulatorConfig;
 
 /**
@@ -77,8 +78,10 @@ private:
 
 	QUndoStack *m_UndoStack;
 	
-	CommandLog *m_CommandLog;
-	QDockWidget *m_CommandLogDock;
+	//CommandLog *m_CommandLog;
+	//QDockWidget *m_CommandLogDock;
+	DlEditor *m_DlEditor;
+	QDockWidget *m_DlEditorDock;
 
 	EmulatorViewport *m_EmulatorViewport;
 
