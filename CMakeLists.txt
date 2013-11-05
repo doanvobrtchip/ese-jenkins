@@ -65,6 +65,7 @@ OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 IF (WITH_QT)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
   ADD_SUBDIRECTORY(qtsample)
+  ADD_SUBDIRECTORY(editor)
 ENDIF (WITH_QT)
 
 ########################################################################

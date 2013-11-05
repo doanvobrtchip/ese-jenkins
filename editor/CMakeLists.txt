@@ -1,0 +1,49 @@
+
+FILE(GLOB SRCS *.cpp)
+FILE(GLOB HDRS *.h)
+
+# Instruct CMake to run moc automatically when needed.
+SET(CMAKE_AUTOMOC ON)
+
+ADD_EXECUTABLE(fteditor
+	${SRCS}
+	${HDRS}
+	)
+
+TARGET_LINK_LIBRARIES(fteditor
+	libft800emu
+	)
+
+IF (WITH_SDL)
+
+  # SDL base package
+  FIND_PACKAGE(SDL)
+  IF (NOT SDL_FOUND)
+    MESSAGE(FATAL_ERROR "SDL not found!")
+  ENDIF (NOT SDL_FOUND)
+  INCLUDE_DIRECTORIES(
+    ${SDL_INCLUDE_DIR}
+    ${INCLUDE_DIRECTORIES}
+    )
+  TARGET_LINK_LIBRARIES(fteditor
+    ${SDL_LIBRARY}
+    ${TARGET_LINK_LIBRARIES}
+    )
+
+  SET(CMAKE_C_FLAGS "-DFT800EMU_SDL ${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
+  SET(CMAKE_CXX_FLAGS "-DFT800EMU_SDL ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+
+ENDIF (WITH_SDL)
+
+# Find the QtWidgets library
+FIND_PACKAGE(Qt5Widgets)
+
+TARGET_LINK_LIBRARIES(fteditor
+  Qt5::Widgets
+  ${TARGET_LINK_LIBRARIES}
+)
+
+qt5_use_modules(fteditor Widgets)
+
+ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
+
