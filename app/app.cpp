@@ -45,6 +45,25 @@ uint8_t rd8(size_t address)
 	return value;
 }
 
+uint32_t rd32(size_t address)
+{
+	digitalWrite(9, LOW);
+
+	SPI.transfer((address >> 16) & 0x3F);
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	SPI.transfer(0x00);
+
+	uint32_t value;
+	value = SPI.transfer(0);
+	value |= SPI.transfer(0) << 8;
+	value |= SPI.transfer(0) << 16;
+	value |= SPI.transfer(0) << 24;
+
+	digitalWrite(9, HIGH);
+	return value;
+}
+
 void wr32(size_t address, uint32_t value)
 {
 	digitalWrite(9, LOW);
@@ -100,6 +119,28 @@ void setup()
 		if (v == i) printf("OK (%i)\n", v);
 		else printf("FAIL (%i)\n", v);
 	}
+	// test per byte access
+	for (uint8_t i = 0; i < 32; ++i)
+	{
+		wr8(i, i * 2);
+	}
+	for (uint8_t i = 0; i < 32; ++i)
+	{
+		uint8_t v = rd8(i);
+		if (v == i * 2) printf("OK (%i)\n", v);
+		else printf("FAIL (%i)\n", v);
+	}
+	// test per byte access backwards
+	for (uint8_t i = 63; i >= 32; --i)
+	{
+		wr8(i, i * 2);
+	}
+	for (uint8_t i = 63; i >= 32; --i)
+	{
+		uint8_t v = rd8(i);
+		if (v == i * 2) printf("OK (%i)\n", v);
+		else printf("FAIL (%i)\n", v);
+	}
 
 
 	dli = RAM_DL;
@@ -153,6 +194,7 @@ void setup()
 
 	dl(TAG(25));
 */
+	dl(TAG(10));
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
@@ -169,6 +211,7 @@ void setup()
 	dl(END());
 	dl(COLOR_RGB(160, 22, 22)); // change color to red
 	dl(POINT_SIZE(320)); // set point size to 20 pixels in radius
+	dl(TAG(50));
 	dl(BEGIN(POINTS)); // start drawing points
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
@@ -405,10 +448,18 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 
 	wr32(REG_ROTATE, 1);
 	wr32(REG_PWM_DUTY, 64);
+
+	/*wr32(RAM_CMD, CMD_CALIBRATE);
+	wr32(REG_CMD_WRITE, 4);*/
 }
 
 void loop()
 {
 	delay(10); // let's be nice on the cpu today :)
 	// wr32(REG_DLSWAP, SWAP_FRAME);
+	/*uint32_t t = rd32(REG_TOUCH_RZ);
+	if (t != 32767)
+	{
+		printf("touch: %i\n", t);
+	}*/
 }
