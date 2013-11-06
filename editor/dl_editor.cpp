@@ -22,6 +22,7 @@
 
 // Project includes
 #include "code_editor.h"
+#include "dl_highlighter.h"
 
 using namespace std;
 
@@ -39,6 +40,8 @@ DlEditor::DlEditor(QWidget *parent) : QWidget(parent)
 	layout->addWidget(m_CodeEditor);
 	// layout->addWidget(m_CommandInput);
 	setLayout(layout);
+	
+	m_DlHighlighter = new DlHighlighter(m_CodeEditor->document());
 
 	// connect(m_CommandInput, SIGNAL(returnPressed()), this, SLOT(returnPressed()));
 }

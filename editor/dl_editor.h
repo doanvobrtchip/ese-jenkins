@@ -26,6 +26,7 @@
 class CodeEditor;
 
 namespace FT800EMUQT {
+	class DlHighlighter;
 
 /**
  * DlEditor
@@ -46,6 +47,7 @@ public:
 
 private:
 	CodeEditor *m_CodeEditor;
+	DlHighlighter *m_DlHighlighter;
 
 private:
 	DlEditor(const DlEditor &);

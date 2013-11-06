@@ -18,6 +18,7 @@
 
 // Qt includes
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
 class QTextDocument;
 
 // Emulator includes
@@ -42,11 +43,16 @@ public:
 	virtual ~DlHighlighter();
 	
 protected:
-	// virtual void highlightBlock(const QString &text);
+	virtual void highlightBlock(const QString &text);
 
 private:
 	DlHighlighter(const DlHighlighter &);
 	DlHighlighter &operator=(const DlHighlighter &);
+	
+	QTextCharFormat errorFormat;
+	QTextCharFormat badIdFormat;
+	QTextCharFormat idFormat;
+	QTextCharFormat paramFormat;
 	
 }; /* class DlHighlighter */
 
