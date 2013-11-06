@@ -24,6 +24,7 @@
 // Project includes
 
 class CodeEditor;
+class QUndoStack;
 
 namespace FT800EMUQT {
 	class DlHighlighter;
@@ -41,6 +42,8 @@ class DlEditor : public QWidget
 public:
 	DlEditor(QWidget *parent);
 	virtual ~DlEditor();
+	
+	void setUndoStack(QUndoStack *undo_stack);
 
 // private slots:
 //	void returnPressed();

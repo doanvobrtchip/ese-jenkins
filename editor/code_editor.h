@@ -50,6 +50,7 @@
  class QResizeEvent;
  class QSize;
  class QWidget;
+ class QUndoStack;
 
  class LineNumberArea;
 
@@ -64,18 +65,29 @@
      void lineNumberAreaPaintEvent(QPaintEvent *event);
      int lineNumberAreaWidth();
      void setMaxLinesNotice(int lines) { m_MaxLinesNotice = lines; }
+	
+     void setUndoStack(QUndoStack *undo_stack);
+	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
 
  protected:
-     void resizeEvent(QResizeEvent *event);
+     virtual void resizeEvent(QResizeEvent *event);
+     virtual void keyPressEvent(QKeyEvent *e);
+     virtual void contextMenuEvent(QContextMenuEvent *event);
 
  private slots:
      void updateLineNumberAreaWidth(int newBlockCount);
      void highlightCurrentLine();
      void updateLineNumberArea(const QRect &, int);
+     void documentUndoCommandAdded();
+     void undoIndexChanged(int idx);
 
  private:
      QWidget *lineNumberArea;
      int m_MaxLinesNotice;
+     QUndoStack *m_UndoStack;
+     bool m_UndoIndexDummy;
+     bool m_UndoNeedsClosure;
+     bool m_UndoIsClosing;
      
  };
 

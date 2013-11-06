@@ -20,6 +20,7 @@
 #include <QTreeView>
 #include <QDirModel>
 #include <QUndoStack>
+#include <QUndoCommand>
 #include <QScrollArea>
 #include <QAction>
 #include <QMenu>
@@ -315,6 +316,9 @@ void MainWindow::createActions()
 	m_UndoAct->setShortcuts(QKeySequence::Undo);
 	m_RedoAct = m_UndoStack->createRedoAction(this);
 	m_RedoAct->setShortcuts(QKeySequence::Redo);
+	
+	m_DummyAct = new QAction(this);
+	connect(m_DummyAct, SIGNAL(triggered()), this, SLOT(dummyCommand()));
 
 	// m_SaveScreenshotAct = m_EmulatorViewport->createSaveScreenshotAction(this);
 }
@@ -331,6 +335,8 @@ void MainWindow::translateActions()
 	m_UndoAct->setStatusTip(tr("ActionUndoStatusTip"));
 	m_RedoAct->setText(tr("ActionRedo"));
 	m_RedoAct->setStatusTip(tr("ActionRedoStatusTip"));
+	m_DummyAct->setText(tr("ActionDummy"));
+	m_RedoAct->setStatusTip(tr("ActionDummyStatusTip"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
 	// m_SaveScreenshotAct->setStatusTip(tr("ActionSaveScreenshotStatusTip"));
 }
@@ -345,6 +351,7 @@ void MainWindow::createMenus()
 	m_EditMenu = menuBar()->addMenu(QString::null);
 	m_EditMenu->addAction(m_UndoAct);
 	m_EditMenu->addAction(m_RedoAct);
+	m_EditMenu->addAction(m_DummyAct);
 
 	m_ViewportMenu = menuBar()->addMenu(QString::null);
 	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
@@ -394,6 +401,7 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
 		m_DlEditor = new DlEditor(m_DlEditorDock);
+		m_DlEditor->setUndoStack(m_UndoStack);
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
@@ -448,6 +456,12 @@ void MainWindow::incbLanguageCode()
 	translateToolBars();
 	translateDockWindows();
 	recalculateMinimumWidth();
+}
+
+void MainWindow::dummyCommand()
+{
+	printf("!!!!!!!! dummy action !!!!!!!!!!!!!!!!\n");
+	m_UndoStack->push(new QUndoCommand());
 }
 
 void MainWindow::about()

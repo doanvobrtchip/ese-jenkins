@@ -41,23 +41,118 @@
 // http://qt-project.org/doc/qt-4.8/widgets-codeeditor-codeeditor-cpp.html
 
  #include <QtGui>
+ #include <QUndoCommand>
+ #include <QUndoStack>
 
  #include "code_editor.h"
 
 
- CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent), m_MaxLinesNotice(0)
+ CodeEditor::CodeEditor(QWidget *parent) 
+	: QPlainTextEdit(parent), 
+		m_MaxLinesNotice(0),
+		m_UndoStack(NULL),
+		m_UndoIndexDummy(false),
+		m_UndoNeedsClosure(false),
+		m_UndoIsClosing(false)
  {
      lineNumberArea = new LineNumberArea(this);
 
      connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
      connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
      connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
-
+	 connect(document(), SIGNAL(undoCommandAdded()), this, SLOT(documentUndoCommandAdded()));
+	 
      updateLineNumberAreaWidth(0);
      highlightCurrentLine();
  }
 
+void CodeEditor::setUndoStack(QUndoStack *undo_stack)
+{
+	// setUndoRedoEnabled(undo_stack == NULL);
+	// document()->setUndoRedoEnabled(true);
+	m_UndoStack = undo_stack;
+	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
+}
 
+class UndoEditor : public QUndoCommand
+{
+public:
+	UndoEditor(CodeEditor *editor) : QUndoCommand(), m_Editor(editor), m_DoneDummy(false) { }
+	virtual ~UndoEditor() { }
+	virtual void undo() { /*printf("*** undo ***\n");*/ m_Editor->undo(); }
+	virtual void redo() { if (m_DoneDummy) { /*printf("*** redo ***\n");*/ m_Editor->redo(); } else { m_DoneDummy = true; } }
+	
+private:
+	CodeEditor *m_Editor;
+	bool m_DoneDummy;
+	
+};
+
+void CodeEditor::documentUndoCommandAdded()
+{
+	if (m_UndoIsClosing)
+	{
+		// skip
+		m_UndoIsClosing = false;
+		return;
+	}
+	
+	/*printf("************ display list undo command added ************\n");*/
+	m_UndoIndexDummy = true;
+	m_UndoNeedsClosure = true;
+	UndoEditor *uc = new UndoEditor(this);
+	uc->setText(tr("UndoEditCode"));
+	m_UndoStack->push(uc);
+}
+
+void CodeEditor::undoIndexChanged(int idx)
+{
+	if (m_UndoIndexDummy)
+	{
+		// skip
+		m_UndoIndexDummy = false;
+	}
+	else
+	{
+		/*printf("*** undo index changed!!! ***\n");*/
+		if (m_UndoNeedsClosure)
+		{
+			/*printf("*** close current undo!!! ***\n");*/
+			m_UndoIsClosing = true;
+			textCursor().insertText("\n");
+			undo();
+			m_UndoNeedsClosure = false;
+		}
+	}
+}
+
+void CodeEditor::keyPressEvent(QKeyEvent *e)
+{
+	if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
+		&& (e->key() == Qt::Key_Z))
+	{
+		// trap
+		m_UndoStack->undo();
+	}
+	else if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
+		&& (e->key() == Qt::Key_Y))
+	{
+		// trap
+		m_UndoStack->redo();
+	}
+	else
+	{
+		QPlainTextEdit::keyPressEvent(e);
+	}
+}
+
+void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
+{
+	if (m_UndoStack)
+	{
+		// trap
+	}
+}
 
  int CodeEditor::lineNumberAreaWidth()
  {

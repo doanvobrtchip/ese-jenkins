@@ -51,6 +51,11 @@ DlEditor::~DlEditor()
 
 }
 
+void DlEditor::setUndoStack(QUndoStack *undo_stack)
+{
+	m_CodeEditor->setUndoStack(undo_stack);
+}
+
 // m_DisplayerOutput->append(str.c_str());
 
 /* void DlEditor::returnPressed()

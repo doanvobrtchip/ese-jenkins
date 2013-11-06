@@ -52,6 +52,7 @@ private slots:
 	// void applyEmulatorConfig();
 
 	void about();
+	void dummyCommand();
 	
 private:
 	void updateInitialization(bool visible);
@@ -107,6 +108,7 @@ private:
 	// QAction *m_PrintDebugAct;
 	QAction *m_UndoAct;
 	QAction *m_RedoAct;
+	QAction *m_DummyAct;
 	// QAction *m_SaveScreenshotAct;
 
 }; /* class MainWindow */
