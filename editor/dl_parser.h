@@ -16,14 +16,16 @@
 
 // STL includes
 #include <string>
+#include <map>
+#include <sstream>
 
 // Qt includes
 #include <QString>
 
 // Emulator includes
+#include "ft800emu_inttypes.h"
 
 // Project includes
-
 
 namespace FT800EMUQT {
 	
@@ -32,7 +34,7 @@ struct DlParsed
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
-	int Parameter[8];
+	uint32_t Parameter[8];
 	
 	bool ValidId;
 	bool ValidParameter[8];
@@ -58,7 +60,9 @@ class DlParser
 public:
 	static void init();
 	
-	static void parse(DlParsed &parsed, const QString &line);
+	static void parse(DlParsed &parsed, const QString &line);	
+	static uint32_t compile(const DlParsed &parsed);
+	static void toString(std::string &dst, uint32_t v);
 	
 }; /* class DlParser */
 

@@ -16,8 +16,6 @@
 // STL includes
 #include <stdio.h>
 #include <stdlib.h>
-#include <sstream>
-#include <map>
 
 // Qt includes
 
@@ -410,6 +408,427 @@ void DlParser::parse(DlParsed &parsed, const QString &line)
 			return;
 		}
 	}
+}
+
+uint32_t DlParser::compile(const DlParsed &parsed)
+{
+	const uint32_t *p = parsed.Parameter;
+	if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+	{
+		return VERTEX2F(p[0], p[1]);
+	}
+	else if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+	{
+		return VERTEX2II(p[0], p[1], p[2], p[3]);
+	}
+	else switch (parsed.IdRight)
+	{
+		case FT800EMU_DL_DISPLAY:
+			return DISPLAY();
+		case FT800EMU_DL_BITMAP_SOURCE:
+			return BITMAP_SOURCE(p[0]);
+		case FT800EMU_DL_CLEAR_COLOR_RGB:
+			return CLEAR_COLOR_RGB(p[0], p[1], p[2]);
+		case FT800EMU_DL_TAG:
+			return TAG(p[0]);
+		case FT800EMU_DL_COLOR_RGB:
+			return COLOR_RGB(p[0], p[1], p[2]);
+		case FT800EMU_DL_BITMAP_HANDLE:
+			return BITMAP_HANDLE(p[0]);
+		case FT800EMU_DL_CELL:
+			return CELL(p[0]);
+		case FT800EMU_DL_BITMAP_LAYOUT:
+			return BITMAP_LAYOUT(p[0], p[1], p[2]);
+		case FT800EMU_DL_BITMAP_SIZE:
+			return BITMAP_SIZE(p[0], p[1], p[2], p[3], p[4]);
+		case FT800EMU_DL_ALPHA_FUNC:
+			return ALPHA_FUNC(p[0], p[1]);
+		case FT800EMU_DL_STENCIL_FUNC:
+			return STENCIL_FUNC(p[0], p[1], p[2]);
+		case FT800EMU_DL_BLEND_FUNC:
+			return BLEND_FUNC(p[0], p[1]);
+		case FT800EMU_DL_STENCIL_OP:
+			return STENCIL_OP(p[0], p[1]);
+		case FT800EMU_DL_POINT_SIZE:
+			return POINT_SIZE(p[0]);
+		case FT800EMU_DL_LINE_WIDTH:
+			return LINE_WIDTH(p[0]);
+		case FT800EMU_DL_CLEAR_COLOR_A:
+			return CLEAR_COLOR_A(p[0]);
+		case FT800EMU_DL_COLOR_A:
+			return COLOR_A(p[0]);
+		case FT800EMU_DL_CLEAR_STENCIL:
+			return CLEAR_STENCIL(p[0]);
+		case FT800EMU_DL_CLEAR_TAG:
+			return CLEAR_TAG(p[0]);
+		case FT800EMU_DL_STENCIL_MASK:
+			return STENCIL_MASK(p[0]);
+		case FT800EMU_DL_TAG_MASK:
+			return TAG_MASK(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_A:
+			return BITMAP_TRANSFORM_A(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_B:
+			return BITMAP_TRANSFORM_B(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_C:
+			return BITMAP_TRANSFORM_C(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_D:
+			return BITMAP_TRANSFORM_D(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_E:
+			return BITMAP_TRANSFORM_E(p[0]);
+		case FT800EMU_DL_BITMAP_TRANSFORM_F:
+			return BITMAP_TRANSFORM_F(p[0]);
+		case FT800EMU_DL_SCISSOR_XY:
+			return SCISSOR_XY(p[0], p[1]);
+		case FT800EMU_DL_SCISSOR_SIZE:
+			return SCISSOR_SIZE(p[0], p[1]);
+		case FT800EMU_DL_CALL:
+			return CALL(p[0]);
+		case FT800EMU_DL_JUMP:
+			return JUMP(p[0]);
+		case FT800EMU_DL_BEGIN:
+			return BEGIN(p[0]);
+		case FT800EMU_DL_COLOR_MASK:
+			return COLOR_MASK(p[0], p[1], p[2], p[3]);
+		case FT800EMU_DL_END:
+			return END();
+		case FT800EMU_DL_SAVE_CONTEXT:
+			return SAVE_CONTEXT();
+		case FT800EMU_DL_RESTORE_CONTEXT:
+			return RESTORE_CONTEXT();
+		case FT800EMU_DL_RETURN:
+			return RETURN();
+		case FT800EMU_DL_MACRO:
+			return MACRO(p[0]);
+		case FT800EMU_DL_CLEAR:
+			return CLEAR(p[0], p[1], p[2]);
+	}
+	return DISPLAY();
+}
+
+static void toString(std::string &dst, uint32_t v)
+{
+	std::stringstream res;
+	
+	switch (v >> 30)
+	{
+		case 0:
+		{
+			switch (v >> 24)
+			{
+				case FT800EMU_DL_DISPLAY:
+				{
+					res << "DISPLAY()";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_SOURCE:
+				{
+					int addr = v & 0xFFFFF;
+					res << "BITMAP_SOURCE(";
+					res << addr << ")";
+					break;
+				}
+				case FT800EMU_DL_CLEAR_COLOR_RGB:
+				{
+					int red = (v >> 16) & 0xFF;
+					int green = (v >> 8) & 0xFF;
+					int blue = v & 0xFF;
+					res << "CLEAR_COLOR_RGB(";
+					res << red << ", " << green << ", " << blue << ")";
+					break;
+				}
+				case FT800EMU_DL_TAG:
+				{
+					int s = v & 0xFF;
+					res << "TAG(";
+					res << s << ")";
+					break;
+				}
+				case FT800EMU_DL_COLOR_RGB:
+				{
+					int red = (v >> 16) & 0xFF;
+					int green = (v >> 8) & 0xFF;
+					int blue = v & 0xFF;
+					res << "COLOR_RGB(";
+					res << red << ", " << green << ", " << blue << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_HANDLE:
+				{
+					int handle = v & 0x1F;
+					res << "BITMAP_HANDLE(";
+					res << handle << ")";
+					break;
+				}
+				case FT800EMU_DL_CELL:
+				{
+					int cell = v & 0x7F;
+					res << "CELL(";
+					res << cell << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_LAYOUT:
+				{
+					int format = (v >> 19) & 0x1F;
+					int linestride = (v >> 9) & 0x3FF;
+					int height = v & 0x1FF;
+					res << "BITMAP_LAYOUT(";
+					res << format << ", " << linestride << ", " << height << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_SIZE:
+				{
+					int filter = (v >> 20) & 0x1;
+					int wrapx = (v >> 19) & 0x1;
+					int wrapy = (v >> 18) & 0x1;
+					int width = (v >> 9) & 0x1FF;
+					int height = v & 0x1FF;
+					res << "BITMAP_SIZE(";
+					res << filter << ", ";
+					res << wrapx << ", " << wrapy << ", ";
+					res << width << ", " << height << ")";
+					break;
+				}
+				case FT800EMU_DL_ALPHA_FUNC:
+				{
+					int func = (v >> 8) & 0x07;
+					int ref = v & 0xFF;
+					res << "ALPHA_FUNC(";
+					res << func << ", " << ref << ")";
+					break;
+				}
+				case FT800EMU_DL_STENCIL_FUNC:
+				{
+					int func = (v >> 16) & 0x7;
+					int ref = (v >> 8) & 0xFF;
+					int mask = v & 0xFF;
+					res << "STENCIL_FUNC(";
+					res << func << ", " << ref <<  ", " << mask << ")";
+					break;
+				}
+				case FT800EMU_DL_BLEND_FUNC:
+				{
+					int src = (v >> 3) & 0x7;
+					int dst = v & 0x7;
+					res << "BLEND_FUNC(";
+					res << src << ", " << dst << ")";
+					break;
+				}
+				case FT800EMU_DL_STENCIL_OP:
+				{
+					int sfail = (v >> 3) & 0x7;
+					int spass = v & 0x7;
+					res << "STENCIL_OP(";
+					res << sfail << ", " << spass << ")";
+					break;
+				}
+				case FT800EMU_DL_POINT_SIZE:
+				{
+					int size = v & 0x1FFF;
+					res << "POINT_SIZE(";
+					res << size << ")";
+					break;
+				}
+				case FT800EMU_DL_LINE_WIDTH:
+				{
+					int width = v & 0xFFF;
+					res << "LINE_WIDTH(";
+					res << width << ")";
+					break;
+				}
+				case FT800EMU_DL_CLEAR_COLOR_A:
+				{
+					int alpha = v & 0xFF;
+					res << "CLEAR_COLOR_A(";
+					res << alpha << ")";
+					break;
+				}
+				case FT800EMU_DL_COLOR_A:
+				{
+					int alpha = v & 0xFF;
+					res << "COLOR_A(";
+					res << alpha << ")";
+					break;
+				}
+				case FT800EMU_DL_CLEAR_STENCIL:
+				{
+					int s = v & 0xFF;
+					res << "CLEAR_STENCIL(";
+					res << s << ")";
+					break;
+				}
+				case FT800EMU_DL_CLEAR_TAG:
+				{
+					int s = v & 0xFF;
+					res << "CLEAR_TAG(";
+					res << s << ")";
+					break;
+				}
+				case FT800EMU_DL_STENCIL_MASK:
+				{
+					int mask = v & 0xFF;
+					res << "STENCIL_MASK(";
+					res << mask << ")";
+					break;
+				}
+				case FT800EMU_DL_TAG_MASK:
+				{
+					int mask = v & 0x01;
+					res << "TAG_MASK(";
+					res << mask << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_A:
+				{
+					int a = v & 0x1FFFF;
+					res << "BITMAP_TRANSFORM_A(";
+					res << a << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_B:
+				{
+					int b = v & 0x1FFFF;
+					res << "BITMAP_TRANSFORM_B(";
+					res << b << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_C:
+				{
+					int c = v & 0xFFFFFF;
+					res << "BITMAP_TRANSFORM_C(";
+					res << c << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_D:
+				{
+					int d = v & 0x1FFFF;
+					res << "BITMAP_TRANSFORM_D(";
+					res << d << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_E:
+				{
+					int e = v & 0x1FFFF;
+					res << "BITMAP_TRANSFORM_E(";
+					res << e << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_TRANSFORM_F:
+				{
+					int f = v & 0xFFFFFF;
+					res << "BITMAP_TRANSFORM_F(";
+					res << f << ")";
+					break;
+				}
+				case FT800EMU_DL_SCISSOR_XY:
+				{
+					int x = (v >> 9) & 0x1FF;
+					int y = v & 0x1FF;
+					res << "SCISSOR_XY(";
+					res << x << ", " << y << ")";
+					break;
+				}
+				case FT800EMU_DL_SCISSOR_SIZE:
+				{
+					int width = (v >> 10) & 0x3FF;
+					int height = v & 0x3FF;
+					res << "SCISSOR_SIZE(";
+					res << width << ", " << height << ")";
+					break;
+				}
+				case FT800EMU_DL_CALL:
+				{
+					int dest = v & 0xFFFF;
+					res << "CALL(";
+					res << dest << ")";
+					break;
+				}
+				case FT800EMU_DL_JUMP:
+				{
+					int dest = v & 0xFFFF;
+					res << "JUMP(";
+					res << dest << ")";
+					break;
+				}
+				case FT800EMU_DL_BEGIN:
+				{
+					int primitive = v & 0x0F;
+					res << "BEGIN(";
+					res << primitive << ")";
+					break;
+				}
+				case FT800EMU_DL_COLOR_MASK:
+				{
+					int r = (v >> 3) & 0x1;
+					int g = (v >> 2) & 0x1;
+					int b = (v >> 1) & 0x1;
+					int a = v & 0x1;
+					res << "COLOR_MASK(";
+					res << r << ", " << g << ", " << b << ", " << a << ")";
+					break;
+				}
+				case FT800EMU_DL_END:
+				{
+					res << "END()";
+					break;
+				}
+				case FT800EMU_DL_SAVE_CONTEXT:
+				{
+					res << "SAVE_CONTEXT()";
+					break;
+				}
+				case FT800EMU_DL_RESTORE_CONTEXT:
+				{
+					res << "RESTORE_CONTEXT()";
+					break;
+				}
+				case FT800EMU_DL_RETURN:
+				{
+					res << "RETURN()";
+					break;
+				}
+				case FT800EMU_DL_MACRO:
+				{
+					int m = v & 0x01;
+					res << "MACRO(";
+					res << m << ")";
+					break;
+				}
+				case FT800EMU_DL_CLEAR:
+				{
+					int c = (v >> 2) & 0x1;
+					int s = (v >> 1) & 0x1;
+					int t = v & 0x1;
+					res << "CLEAR(";
+					res << c << ", " << s << ", " << t << ")";
+					break;
+				}
+			}
+			break;
+		}
+		case FT800EMU_DL_VERTEX2II:
+		{
+			int px = ((v >> 21) & 0x1FF) * 16;
+			int py = ((v >> 12) & 0x1FF) * 16;
+			int handle = ((v >> 7) & 0x1F);
+			int cell = v & 0x7F;
+			res << "VERTEX2II(";
+			res << px << ", " << py << ", ";
+			res << handle << ", " << cell << ")";
+			break;
+		}
+		case FT800EMU_DL_VERTEX2F:
+		{
+			int px = (v >> 15) & 0x3FFF;
+			// if ((v >> 15) & 0x4000) px = px - 0x4000;
+			int py = (v) & 0x3FFF;
+			// if ((v) & 0x4000) py = py - 0x4000;
+			res << "VERTEX2F(";
+			res << px << ", " << py << ")";
+			break;
+		}
+	}
+	
+	dst = res.str();
 }
 
 } /* namespace FT800EMUQT */
