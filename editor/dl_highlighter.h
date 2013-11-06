@@ -53,6 +53,7 @@ private:
 	QTextCharFormat badIdFormat;
 	QTextCharFormat idFormat;
 	QTextCharFormat paramFormat;
+	QTextCharFormat numberFormat;
 	
 }; /* class DlHighlighter */
 

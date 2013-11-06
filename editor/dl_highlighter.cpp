@@ -30,8 +30,9 @@ DlHighlighter::DlHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
 	errorFormat.setForeground(Qt::red);
 	badIdFormat.setForeground(Qt::magenta);
-	idFormat.setForeground(Qt::blue);
-	paramFormat.setForeground(Qt::green);
+	idFormat.setForeground(Qt::darkBlue);
+	paramFormat.setForeground(Qt::darkCyan);
+	numberFormat.setForeground(Qt::darkGreen);
 }
 
 DlHighlighter::~DlHighlighter()
@@ -49,6 +50,16 @@ void DlHighlighter::highlightBlock(const QString &text)
 		setFormat(parsed.IdIndex, parsed.IdLength, parsed.ValidId ? idFormat : badIdFormat);
 	}
 	
+	for (int p = 0; p < 8; ++p)
+	{
+		if (parsed.ParameterLength[p])
+		{
+			setFormat(parsed.ParameterIndex[p], parsed.ParameterLength[p], 
+				parsed.NumericParameter[p] 
+					? (parsed.ValidParameter[p] ? numberFormat : errorFormat)
+					: (parsed.ValidParameter[p] ? paramFormat : badIdFormat));
+		}
+	}
 	
 	if (parsed.BadCharacterIndex >= 0)
 	{

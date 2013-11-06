@@ -35,14 +35,15 @@ struct DlParsed
 	int Parameter[8];
 	
 	bool ValidId;
-	bool ValidParameterCount;
 	bool ValidParameter[8];
+	bool NumericParameter[8];
 	
 	int IdIndex;
 	int IdLength;
 	int ParameterIndex[8];
 	int ParameterLength[8];
 	
+	int ExpectedParameterCount;
 	int BadCharacterIndex;
 };
 
