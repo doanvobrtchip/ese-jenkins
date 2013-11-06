@@ -1,8 +1,8 @@
 /**
- * DlEditor.h
+ * dl_editor.h
  * $Id$
- * \file DlEditor.h
- * \brief DlEditor.h
+ * \file dl_editor.h
+ * \brief dl_editor.h
  * \date 2013-11-05 09:02GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -30,7 +30,7 @@ namespace FT800EMUQT {
 /**
  * DlEditor
  * \brief DlEditor
- * \date 2010-02-05 20:27GMT
+ * \date 2013-11-05 09:02GMT
  * \author Jan Boon (Kaetemi)
  */
 class DlEditor : public QWidget
