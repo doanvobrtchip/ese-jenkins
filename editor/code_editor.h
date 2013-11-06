@@ -63,6 +63,7 @@
 
      void lineNumberAreaPaintEvent(QPaintEvent *event);
      int lineNumberAreaWidth();
+     void setMaxLinesNotice(int lines) { m_MaxLinesNotice = lines; }
 
  protected:
      void resizeEvent(QResizeEvent *event);
@@ -74,6 +75,8 @@
 
  private:
      QWidget *lineNumberArea;
+     int m_MaxLinesNotice;
+     
  };
 
 

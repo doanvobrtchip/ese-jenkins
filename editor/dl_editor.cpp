@@ -30,6 +30,7 @@ namespace FT800EMUQT {
 DlEditor::DlEditor(QWidget *parent) : QWidget(parent)
 {
 	m_CodeEditor = new CodeEditor();
+	m_CodeEditor->setMaxLinesNotice(1024);
 	// m_CodeEditor->setReadOnly(true);
 	// m_CodeEditor->setFocusPolicy(Qt::NoFocus);
 	// m_CommandInput = new QLineEdit();

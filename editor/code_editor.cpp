@@ -45,7 +45,7 @@
  #include "code_editor.h"
 
 
- CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
+ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent), m_MaxLinesNotice(0)
  {
      lineNumberArea = new LineNumberArea(this);
 
@@ -61,16 +61,17 @@
 
  int CodeEditor::lineNumberAreaWidth()
  {
-     int digits = 1;
+     /*int digits = 1;
      int max = qMax(1, blockCount());
      while (max >= 10) {
          max /= 10;
          ++digits;
-     }
+     }*/
+     int digits = 4;
 
      int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
 
-     return space;
+     return space + 4;
  }
 
 
@@ -112,7 +113,7 @@
      if (!isReadOnly()) {
          QTextEdit::ExtraSelection selection;
 
-         QColor lineColor = QColor(Qt::yellow).lighter(160);
+         QColor lineColor = QColor(Qt::lightGray).lighter(120);
 
          selection.format.setBackground(lineColor);
          selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -129,7 +130,7 @@
  void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
  {
      QPainter painter(lineNumberArea);
-     painter.fillRect(event->rect(), Qt::lightGray);
+     // painter.fillRect(event->rect(), QColor(Qt::lightGray));
 
 
      QTextBlock block = firstVisibleBlock();
@@ -139,9 +140,9 @@
 
      while (block.isValid() && top <= event->rect().bottom()) {
          if (block.isVisible() && bottom >= event->rect().top()) {
-             QString number = QString::number(blockNumber + 1);
-             painter.setPen(Qt::black);
-             painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(),
+             QString number = QString::number(blockNumber/* + 1*/); 
+             painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice) ? Qt::red : Qt::black);
+             painter.drawText(0, top, lineNumberArea->width() - 4, fontMetrics().height(),
                               Qt::AlignRight, number);
          }
 
