@@ -325,18 +325,18 @@ void MainWindow::createActions()
 
 void MainWindow::translateActions()
 {
-	m_QuitAct->setText(tr("ActionQuit"));
-	m_QuitAct->setStatusTip(tr("ActionQuitStatusTip"));
-	m_AboutAct->setText(tr("ActionAbout"));
-	m_AboutAct->setStatusTip(tr("ActionAboutStatusTip"));
+	m_QuitAct->setText(tr("Quit"));
+	m_QuitAct->setStatusTip(tr("Exit the application"));
+	m_AboutAct->setText(tr("About"));
+	m_AboutAct->setStatusTip(tr("Show information about the application"));
 	// m_PrintDebugAct->setText(tr("ActionPrintDebug"));
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
-	m_UndoAct->setText(tr("ActionUndo"));
-	m_UndoAct->setStatusTip(tr("ActionUndoStatusTip"));
-	m_RedoAct->setText(tr("ActionRedo"));
-	m_RedoAct->setStatusTip(tr("ActionRedoStatusTip"));
-	m_DummyAct->setText(tr("ActionDummy"));
-	m_RedoAct->setStatusTip(tr("ActionDummyStatusTip"));
+	m_UndoAct->setText(tr("Undo"));
+	m_UndoAct->setStatusTip(tr("Reverses the last action"));
+	m_RedoAct->setText(tr("Redo"));
+	m_RedoAct->setStatusTip(tr("Reapply the action"));
+	m_DummyAct->setText(tr("Dummy"));
+	m_RedoAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
 	// m_SaveScreenshotAct->setStatusTip(tr("ActionSaveScreenshotStatusTip"));
 }
@@ -366,11 +366,11 @@ void MainWindow::createMenus()
 
 void MainWindow::translateMenus()
 {
-	m_FileMenu->setTitle(tr("MenuFile"));
-	m_EditMenu->setTitle(tr("MenuEdit"));
-	m_ViewportMenu->setTitle(tr("MenuViewport"));
-	m_WidgetsMenu->setTitle(tr("MenuWidgets"));
-	m_HelpMenu->setTitle(tr("MenuHelp"));
+	m_FileMenu->setTitle(tr("File"));
+	m_EditMenu->setTitle(tr("Edit"));
+	m_ViewportMenu->setTitle(tr("Viewport"));
+	m_WidgetsMenu->setTitle(tr("Widgets"));
+	m_HelpMenu->setTitle(tr("Help"));
 }
 
 void MainWindow::createToolBars()
@@ -385,13 +385,13 @@ void MainWindow::createToolBars()
 
 void MainWindow::translateToolBars()
 {
-	m_FileToolBar->setWindowTitle(tr("BarFile"));
-	m_EditToolBar->setWindowTitle(tr("BarEdit"));
+	m_FileToolBar->setWindowTitle(tr("File"));
+	m_EditToolBar->setWindowTitle(tr("Edit"));
 }
 
 void MainWindow::createStatusBar()
 {
-	statusBar()->showMessage(tr("StatusReady"));
+	statusBar()->showMessage(tr("Ready"));
 }
 
 void MainWindow::createDockWindows()
@@ -437,9 +437,9 @@ void MainWindow::createDockWindows()
 
 void MainWindow::translateDockWindows()
 {
-	m_DlEditorDock->setWindowTitle(tr("WidgetDlEditor"));
+	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
-	m_AssetTreeDock->setWindowTitle(tr("WidgetAssetTree"));
+	m_AssetTreeDock->setWindowTitle(tr("Assets"));
 }
 
 void MainWindow::recalculateMinimumWidth()
@@ -450,7 +450,7 @@ void MainWindow::recalculateMinimumWidth()
 
 void MainWindow::incbLanguageCode()
 {
-	setWindowTitle(tr("WindowTitle"));
+	setWindowTitle(tr("FT800 Editor"));
 	translateActions();
 	translateMenus();
 	translateToolBars();
@@ -466,7 +466,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::about()
 {
-	QMessageBox::about(this, tr("AboutTitle"), tr("AboutText"));
+	QMessageBox::about(this, tr("About FT800 Editor"), tr("Copyright (C) 2013  Future Technology Devices International Ltd"));
 }
 
 } /* namespace FT800EMUQT */

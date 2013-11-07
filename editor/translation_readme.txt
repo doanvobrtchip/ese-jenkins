@@ -1,0 +1,1 @@
+lupdate translation.pro
