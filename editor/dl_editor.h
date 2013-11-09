@@ -18,13 +18,18 @@
 
 // Qt includes
 #include <QWidget>
+#include <QMutex>
 
 // Emulator includes
+#define NOMINMAX
+#include <ft800emu_inttypes.h>
 
 // Project includes
 
 class CodeEditor;
 class QUndoStack;
+
+#define FT800EMU_DL_SIZE 2048
 
 namespace FT800EMUQT {
 	class DlHighlighter;
@@ -44,6 +49,16 @@ public:
 	virtual ~DlEditor();
 	
 	void setUndoStack(QUndoStack *undo_stack);
+	
+	void clearUndoStack();
+	void clear();
+	
+	void lockDisplayList(); // mutex
+	void unlockDisplayList(); // mutex
+	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
+	inline bool isDisplayListModified() { return m_DisplayListModified; }
+	
+	void reloadDisplayList(); // reloads the entire display list from m_DisplayListShared
 
 // private slots:
 //	void returnPressed();
@@ -51,6 +66,9 @@ public:
 private:
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
+	uint32_t m_DisplayListShared[FT800EMU_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator
+	bool m_DisplayListModified; // flagged whenever the emulator needs to refresh the display list from m_DisplayListShared
+	QMutex m_Mutex;
 
 private:
 	DlEditor(const DlEditor &);

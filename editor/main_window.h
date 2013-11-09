@@ -18,6 +18,7 @@
 
 // Qt includes
 #include <QMainWindow>
+#include <QString>
 
 // Emulator includes
 
@@ -54,8 +55,16 @@ private slots:
 	void about();
 	void dummyCommand();
 	
+	void actNew();
+	void actOpen();
+	void actSave();
+	void actSaveAs();
+	
 private:
 	void updateInitialization(bool visible);
+	
+	void clearEditor();
+	void clearUndoStack();
 
 	void createActions();
 	void translateActions();
@@ -103,6 +112,10 @@ private:
 	QToolBar *m_FileToolBar;
 	QToolBar *m_EditToolBar;
 
+	QAction *m_NewAct;
+	QAction *m_OpenAct;
+	QAction *m_SaveAct;
+	QAction *m_SaveAsAct;
 	QAction *m_AboutAct;
 	QAction *m_QuitAct;
 	// QAction *m_PrintDebugAct;
@@ -110,6 +123,8 @@ private:
 	QAction *m_RedoAct;
 	QAction *m_DummyAct;
 	// QAction *m_SaveScreenshotAct;
+	
+	QString m_CurrentFile;
 
 }; /* class MainWindow */
 

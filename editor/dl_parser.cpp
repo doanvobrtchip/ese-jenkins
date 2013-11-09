@@ -16,6 +16,9 @@
 // STL includes
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <map>
+#include <sstream>
 
 // Qt includes
 
@@ -349,7 +352,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line)
 					++i;
 					break;
 				}
-				else if (parsed.ParameterLength[p] > 0 && c == ')')
+				else if ((p == 0 || parsed.ParameterLength[p]) > 0 && c == ')')
 				{
 					/* valid, last, continue */
 					finalIndex = i;
@@ -505,7 +508,7 @@ uint32_t DlParser::compile(const DlParsed &parsed)
 	return DISPLAY();
 }
 
-static void toString(std::string &dst, uint32_t v)
+void DlParser::toString(std::string &dst, uint32_t v)
 {
 	std::stringstream res;
 	
@@ -807,8 +810,8 @@ static void toString(std::string &dst, uint32_t v)
 		}
 		case FT800EMU_DL_VERTEX2II:
 		{
-			int px = ((v >> 21) & 0x1FF) * 16;
-			int py = ((v >> 12) & 0x1FF) * 16;
+			int px = ((v >> 21) & 0x1FF);
+			int py = ((v >> 12) & 0x1FF);
 			int handle = ((v >> 7) & 0x1F);
 			int cell = v & 0x7F;
 			res << "VERTEX2II(";
@@ -818,10 +821,12 @@ static void toString(std::string &dst, uint32_t v)
 		}
 		case FT800EMU_DL_VERTEX2F:
 		{
-			int px = (v >> 15) & 0x3FFF;
+			// int px = (v >> 15) & 0x3FFF;
 			// if ((v >> 15) & 0x4000) px = px - 0x4000;
-			int py = (v) & 0x3FFF;
+			// int py = (v) & 0x3FFF;
 			// if ((v) & 0x4000) py = py - 0x4000;
+			int px = (v >> 15) & 0x7FFF;
+			int py = (v) & 0x7FFF;
 			res << "VERTEX2F(";
 			res << px << ", " << py << ")";
 			break;
@@ -829,6 +834,13 @@ static void toString(std::string &dst, uint32_t v)
 	}
 	
 	dst = res.str();
+}
+
+QString DlParser::toString(uint32_t v)
+{
+	std::string str;
+	toString(str, v);
+	return QString(str.c_str());
 }
 
 } /* namespace FT800EMUQT */

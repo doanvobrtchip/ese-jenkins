@@ -12,11 +12,13 @@ typedef signed __int64 int64_t;
 #include <stdlib.h>
 #endif
 typedef uint32_t argb8888;
+#ifndef NOMINMAX
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
+#endif
 #endif
 #ifdef WIN32
 #	define FT800EMU_FORCE_INLINE __forceinline

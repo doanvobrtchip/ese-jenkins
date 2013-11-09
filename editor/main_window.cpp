@@ -14,6 +14,7 @@
 #include "main_window.h"
 
 // STL includes
+#include <stdio.h>
 
 // Qt includes
 #include <QtGui>
@@ -29,15 +30,13 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QFileDialog>
+#include <QFile>
+#include <QDataStream>
 
 // Emulator includes
-
-// Project includes
-#include "dl_editor.h"
-// #include "command_log.h"
-#include "emulator_viewport.h"
-// #include "emulator_config.h"
-
+#define NOMINMAX
+#include <ft800emu_inttypes.h>
 #include <ft800emu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
 #include <ft800emu_keyboard.h>
@@ -45,8 +44,13 @@
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
-#include <stdio.h>
 #include <vc.h>
+
+// Project includes
+#include "dl_editor.h"
+// #include "command_log.h"
+#include "emulator_viewport.h"
+// #include "emulator_config.h"
 
 namespace FT800EMUQT {
 
@@ -112,137 +116,44 @@ uint32_t rd32(size_t address)
 	return value;
 }
 
-static FILE *s_F = NULL;
+static DlEditor *s_DlEditor = NULL;
+// static FILE *s_F = NULL;
 
 void setup()
 {
-	s_F = fopen(FT800EMU_XBU_FILE, "rb");
-	if (!s_F) printf("Failed to open XBU file\n");
-	else
-	{
-		printf("Load XBU\n");
-
-		wr32(REG_HSIZE, 480);
-		wr32(REG_VSIZE, 272);
-		wr32(REG_PCLK, 5);
-		// if (fclose(s_F)) printf("Error closing vc1dump file\n");
-
-		
-		/*swrbegin(RAM_CMD);
-		swr32(CMD_DLSTART);
-		swr32(CMD_SWAP);
-		swr32(CMD_DLSTART);
-		swr32(CLEAR_COLOR_RGB(0, 32, 64));
-		swr32(CLEAR(1, 1, 1));
-		swr32(TAG(1));
-		swr32(CMD_BUTTON);
-		swr16(10);
-		swr16(10);
-		swr16(160);
-		swr16(24);
-		swr16(26);
-		swr16(0);
-		swr8('B');
-		swr8('a');
-		swr8('r');
-		swr8(0);
-		swr32(CMD_SWAP);
-		swrend();
-
-		wr32(REG_CMD_WRITE, (6 * 4) + (4 * 4) + 4 + 4);*/
-	}
+	wr32(REG_HSIZE, 480);
+	wr32(REG_VSIZE, 272);
+	wr32(REG_PCLK, 5);
 }
 
-static int wp = 0;
-static int wpr = 0;
-
-static bool okwrite = false;
-
-static int lastround = 0;
-
+static bool displayListSwapped = false;
 void loop()
 {
-	if (!s_F)
+	// wait
+	if (displayListSwapped)
+	{
+		// dl swap wait
+		while (rd32(REG_DLSWAP) != DLSWAP_DONE) { /* do nothing */ }
+		displayListSwapped = false;
+	}
+	else
 	{
 		FT800EMU::System.delay(10);
 	}
-	else
+	
+	// do next action
+	s_DlEditor->lockDisplayList();
+	if (s_DlEditor->isDisplayListModified())
 	{
-		int regwp = rd32(REG_CMD_WRITE);
-		int rp = rd32(REG_CMD_READ);
-		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-		int freespace = ((4096 - 4) - fullness);
-
-		// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
-		if (rp == -1)
-		{
-			printf("rp < 0, error\n");
-			printf("Close XBU\n");
-			if (fclose(s_F)) printf("Error closing vc1dump file\n");
-			s_F = NULL;
-		}
-		else
-		{
-			if (freespace)
-			// if (freespace >= 2048)
-			{
-				int freespacediv = freespace >> 2;
-				
-				swrbegin(RAM_CMD + (wp & 0xFFF));
-				for (int i = 0; i < freespacediv; ++i)
-				{
-					uint32_t buffer;
-					size_t nb = fread(&buffer, 4, 1, s_F);
-					if (nb == 1)
-					{
-						swr32(buffer);
-						wp += 4;
-
-						if (buffer == CMD_SWAP)
-						{
-							wpr = wp;
-							swrend();
-							wr32(REG_CMD_WRITE, (wpr & 0xFFF));
-							swrbegin(RAM_CMD + (wp & 0xFFF));
-						}
-					}
-					else
-					{
-						printf("Close XBU, nb = %i\n", nb);
-						if (fclose(s_F)) printf("Error closing vc1dump file\n");
-						s_F = NULL;
-						break;
-					}
-				}
-				swrend();
-
-				if (s_F)
-				{
-					int wprn = (wp - 128);
-					if (wprn > wpr)
-					{
-						wpr = wprn;
-						wr32(REG_CMD_WRITE, (wpr & 0xFFF));
-					}
-				}
-				else
-				{
-					wpr = wp;
-					wr32(REG_CMD_WRITE, (wpr & 0xFFF));
-				}
-			}
-			else
-			{
-				// FT800EMU::System.delay(1000);
-			}
-			int newround = wpr / 4096;
-			if (lastround != newround)
-			{
-				// printf("new round\n");
-				lastround = newround;
-			}
-		}
+		uint32_t *displayList = s_DlEditor->getDisplayList();
+		swrbegin(RAM_DL);
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+			swr32(displayList[i]);
+		swrend();
+		wr32(REG_DLSWAP, DLSWAP_FRAME);
+		displayListSwapped = true;
 	}
+	s_DlEditor->unlockDisplayList();
 }
 
 void keyboard()
@@ -258,6 +169,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	// m_EmulatorConfig(NULL), m_EmulatorConfigScroll(NULL), m_EmulatorConfigDock(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
+	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
 	m_AboutAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
 	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
 {
@@ -280,6 +192,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	
 	// connect(m_EmulatorConfig, SIGNAL(applyEmulatorConfig()), this, SLOT(applyEmulatorConfig()));
 	
+	s_DlEditor = m_DlEditor;
+	
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
@@ -297,11 +211,21 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 MainWindow::~MainWindow()
 {
-	// delete m_EmulatorConfig; m_EmulatorConfig = NULL;
+	s_DlEditor = NULL;
 }
 
 void MainWindow::createActions()
 {
+	m_NewAct = new QAction(this);
+	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
+	m_OpenAct = new QAction(this);
+	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
+	
+	m_SaveAct = new QAction(this);
+	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
+	m_SaveAsAct = new QAction(this);
+	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
+	
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);	
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -325,6 +249,14 @@ void MainWindow::createActions()
 
 void MainWindow::translateActions()
 {
+	m_NewAct->setText(tr("New"));
+	m_NewAct->setStatusTip(tr("Create a new project"));
+	m_OpenAct->setText(tr("Open"));
+	m_OpenAct->setStatusTip(tr("Open or import an existing project"));
+	m_SaveAct->setText(tr("Save"));
+	m_SaveAct->setStatusTip(tr("Save the current project"));
+	m_SaveAsAct->setText(tr("Save As"));
+	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_AboutAct->setText(tr("About"));
@@ -336,7 +268,7 @@ void MainWindow::translateActions()
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
 	m_DummyAct->setText(tr("Dummy"));
-	m_RedoAct->setStatusTip(tr("Does nothing"));
+	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
 	// m_SaveScreenshotAct->setStatusTip(tr("ActionSaveScreenshotStatusTip"));
 }
@@ -344,8 +276,12 @@ void MainWindow::translateActions()
 void MainWindow::createMenus()
 {
 	m_FileMenu = menuBar()->addMenu(QString::null);
-	//m_FileMenu->addAction(saveAct);
-	//m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_NewAct);
+	m_FileMenu->addAction(m_OpenAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_SaveAct);
+	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
 	m_EditMenu = menuBar()->addMenu(QString::null);
@@ -426,12 +362,13 @@ void MainWindow::createDockWindows()
 		m_AssetTreeDock = new QDockWidget(this);
 		m_AssetTreeDock->setAllowedAreas(Qt::AllDockWidgetAreas);
 		m_AssetTreeView = new QTreeView(m_AssetTreeDock);
-		m_AssetTreeModel = new QDirModel();
+		m_AssetTreeModel = new QDirModel(m_AssetTreeView);
 		m_AssetTreeView->setModel(m_AssetTreeModel);
 		m_AssetTreeView->setSortingEnabled(true);
 		m_AssetTreeDock->setWidget(m_AssetTreeView);
 		addDockWidget(Qt::LeftDockWidgetArea, m_AssetTreeDock);
 		m_WidgetsMenu->addAction(m_AssetTreeDock->toggleViewAction());
+		m_AssetTreeDock->setVisible(false);
 	}
 }
 
@@ -456,6 +393,117 @@ void MainWindow::incbLanguageCode()
 	translateToolBars();
 	translateDockWindows();
 	recalculateMinimumWidth();
+}
+
+void MainWindow::clearEditor()
+{
+	m_DlEditor->clear();
+}
+
+void MainWindow::clearUndoStack()
+{
+	m_UndoStack->clear();
+	m_DlEditor->clearUndoStack();
+}
+
+void MainWindow::actNew()
+{
+	// reset filename
+	m_CurrentFile = QString();
+	
+	// reset editors to their default state
+	clearEditor();
+	
+	// clear undo stacks
+	clearUndoStack();
+}
+
+void MainWindow::actOpen()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), "",
+		tr("Memory dump: *.vc1dump (*.vc1dump)"));
+	if (fileName.isNull())
+		return;
+	
+	m_CurrentFile = fileName;
+	
+	// reset editors to their default state
+	clearEditor();
+	
+	// open a project
+	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
+	// int QDataStream::readRawData(char * s, int len)
+	QFile file(fileName);
+	file.open(QIODevice::ReadOnly);
+	QDataStream in(&file);
+	bool loadOk = false;
+	if (true) // todo: if .vc1dump
+	{
+		const size_t headersz = 6;
+		uint32_t header[headersz];
+		int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
+		if (header[0] != 100) 
+		{
+			QString message;
+			message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
+			QMessageBox::critical(this, tr("Import .vc1dump"), message);
+		}
+		else
+		{
+			if (s != sizeof(uint32_t) * headersz)
+			{
+				QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
+			}
+			else
+			{
+				// wr32(REG_HSIZE, header[1]); // FIXME_GUI REGISTERS // FIXME_RESIZE
+				// wr32(REG_VSIZE, header[2]); // FIXME_GUI REGISTERS // FIXME_RESIZE
+				wr32(REG_MACRO_0, header[3]); // FIXME_GUI REGISTERS
+				wr32(REG_MACRO_1, header[4]); // FIXME_GUI REGISTERS
+				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+				s = in.readRawData(&ram[RAM_G], 262144); // FIXME_GUI GLOBAL MEMORY
+				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+				else
+				{
+					s = in.readRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
+					else
+					{
+						// s = fread(&ram[RAM_DL], 1, 8192, f);
+						m_DlEditor->lockDisplayList();
+						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+						m_DlEditor->unlockDisplayList();
+						m_DlEditor->reloadDisplayList();
+						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+						else 
+						{
+							loadOk = true;
+							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if (!loadOk)
+	{
+		m_CurrentFile = QString();
+		clearEditor();
+	}
+	
+	// clear undo stacks
+	clearUndoStack();
+}
+
+void MainWindow::actSave()
+{
+	
+}
+
+void MainWindow::actSaveAs()
+{
+	
 }
 
 void MainWindow::dummyCommand()

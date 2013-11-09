@@ -15,14 +15,12 @@
 #define FT800EMUQT_DL_PARSER_H
 
 // STL includes
-#include <string>
-#include <map>
-#include <sstream>
 
 // Qt includes
 #include <QString>
 
 // Emulator includes
+#define NOMINMAX
 #include "ft800emu_inttypes.h"
 
 // Project includes
@@ -63,6 +61,7 @@ public:
 	static void parse(DlParsed &parsed, const QString &line);	
 	static uint32_t compile(const DlParsed &parsed);
 	static void toString(std::string &dst, uint32_t v);
+	static QString toString(uint32_t v);
 	
 }; /* class DlParser */
 
