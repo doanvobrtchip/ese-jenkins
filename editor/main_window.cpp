@@ -472,8 +472,8 @@ void MainWindow::actOpen()
 						// s = fread(&ram[RAM_DL], 1, 8192, f);
 						m_DlEditor->lockDisplayList();
 						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+						m_DlEditor->reloadDisplayList(false);
 						m_DlEditor->unlockDisplayList();
-						m_DlEditor->reloadDisplayList();
 						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
 						else 
 						{

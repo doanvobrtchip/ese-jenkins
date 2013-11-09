@@ -17,6 +17,7 @@
 
 // Qt includes
 #include <QVBoxLayout>
+#include <QTextBlock>
 
 // Emulator includes
 #include <vc.h>
@@ -24,14 +25,15 @@
 // Project includes
 #include "code_editor.h"
 #include "dl_highlighter.h"
-#include "dl_parser.h"
 
 using namespace std;
 
 namespace FT800EMUQT {
 
-DlEditor::DlEditor(QWidget *parent) : QWidget(parent)
+DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false)
 {
+	m_DisplayListShared[0] = DISPLAY();
+	
 	m_CodeEditor = new CodeEditor();
 	m_CodeEditor->setMaxLinesNotice(FT800EMU_DL_SIZE);
 	// m_CodeEditor->setReadOnly(true);
@@ -46,6 +48,9 @@ DlEditor::DlEditor(QWidget *parent) : QWidget(parent)
 	m_DlHighlighter = new DlHighlighter(m_CodeEditor->document());
 
 	// connect(m_CommandInput, SIGNAL(returnPressed()), this, SLOT(returnPressed()));
+	
+	connect(m_CodeEditor->document(), SIGNAL(contentsChange(int, int, int)), this, SLOT(documentContentsChange(int, int, int)));
+	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
 }
 
 DlEditor::~DlEditor()
@@ -87,10 +92,13 @@ void DlEditor::unlockDisplayList()
 }
 
 // reloads the entire display list from m_DisplayListShared
-void DlEditor::reloadDisplayList()
+void DlEditor::reloadDisplayList(bool fromEmulator)
 {
-	lockDisplayList();
-	m_DisplayListModified = true;
+	m_Reloading = true;
+	if (!fromEmulator)
+	{
+		m_DisplayListModified = true;
+	}
 	int dcount = 0;
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
@@ -113,10 +121,10 @@ void DlEditor::reloadDisplayList()
 				++dcount;
 			}
 			QString line = DlParser::toString(m_DisplayListShared[i]);
-			DlParsed parsed;
+			m_DisplayListParsed[i] = DlParsed();
 			// verify parsing ->
-			DlParser::parse(parsed, line);
-			uint32_t compiled = DlParser::compile(parsed);
+			DlParser::parse(m_DisplayListParsed[i], line);
+			uint32_t compiled = DlParser::compile(m_DisplayListParsed[i]);
 			if (compiled != m_DisplayListShared[i])
 			{
 				QByteArray chars = line.toLatin1();
@@ -128,7 +136,52 @@ void DlEditor::reloadDisplayList()
 			m_CodeEditor->textCursor().insertText("\n");
 		}
 	}
+	m_Reloading = false;
+}
+
+void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
+{
+	if (m_Reloading)
+		return;
+	
+	lockDisplayList();
+	parseLine(m_CodeEditor->document()->findBlock(position));
+	m_DisplayListModified = true;
 	unlockDisplayList();
+}
+
+void DlEditor::documentBlockCountChanged(int newBlockCount)
+{
+	if (m_Reloading)
+		return;
+	
+	lockDisplayList();
+	for (int i = 0; i < newBlockCount && i < FT800EMU_DL_SIZE; ++i)
+	{
+		parseLine(m_CodeEditor->document()->findBlockByNumber(i));
+	}
+	for (int i = newBlockCount; i < FT800EMU_DL_SIZE; ++i)
+	{
+		m_DisplayListParsed[i] = DlParsed();
+		m_DisplayListShared[i] = DISPLAY();
+	}
+	m_DisplayListModified = true;
+	unlockDisplayList();
+}
+
+void DlEditor::parseLine(QTextBlock block)
+{
+	QString line = block.text();
+	int i = block.blockNumber();
+	m_DisplayListParsed[i] = DlParsed();
+	DlParser::parse(m_DisplayListParsed[i], line);
+	m_DisplayListShared[i] = DlParser::compile(m_DisplayListParsed[i]);
+	
+	// check for misformed lines and do a no-op (todo: mark them)
+	if (m_DisplayListShared[i] == DISPLAY() && !m_DisplayListParsed[i].ValidId)
+	{
+		m_DisplayListShared[i] = JUMP(i + 1);
+	}
 }
 
 } /* namespace FT800EMUQT */

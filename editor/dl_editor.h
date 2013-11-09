@@ -25,9 +25,11 @@
 #include <ft800emu_inttypes.h>
 
 // Project includes
+#include "dl_parser.h"
 
 class CodeEditor;
 class QUndoStack;
+class QTextBlock;
 
 #define FT800EMU_DL_SIZE 2048
 
@@ -56,19 +58,25 @@ public:
 	void lockDisplayList(); // mutex
 	void unlockDisplayList(); // mutex
 	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
+	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
 	inline bool isDisplayListModified() { return m_DisplayListModified; }
 	
-	void reloadDisplayList(); // reloads the entire display list from m_DisplayListShared
+	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
 
-// private slots:
-//	void returnPressed();
+private slots:
+	void documentContentsChange(int position, int charsRemoved, int charsAdded);
+	void documentBlockCountChanged(int newBlockCount);
 
 private:
+	void parseLine(QTextBlock block);
+	
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
-	uint32_t m_DisplayListShared[FT800EMU_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator
+	uint32_t m_DisplayListShared[FT800EMU_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator, todo: internal copy to compare when coprocessor changes stuff
+	DlParsed m_DisplayListParsed[FT800EMU_DL_SIZE]; // parsed version of the display list
 	bool m_DisplayListModified; // flagged whenever the emulator needs to refresh the display list from m_DisplayListShared
 	QMutex m_Mutex;
+	bool m_Reloading;
 
 private:
 	DlEditor(const DlEditor &);
