@@ -10,16 +10,6 @@ ADD_LIBRARY(libft800emu
 target_link_libraries(libft800emu
 	)
 
-IF (NOT DEFINED WITH_SDL)
-  IF (WIN32)
-    SET(WITH_SDL CACHE BOOL "Build an SDL application." FALSE ..)
-  ELSE (WIN32)
-    SET(WITH_SDL CACHE BOOL "Build an SDL application." TRUE ..)
-  ENDIF (WIN32)
-ENDIF (NOT DEFINED WITH_SDL)
-
-# option(WITH_SDL "Build an SDL application.")
-
 if (WITH_SDL)
 
   # SDL base package
