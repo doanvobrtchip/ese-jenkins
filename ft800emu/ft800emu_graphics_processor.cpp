@@ -2685,8 +2685,15 @@ EvaluateDisplayListValue:
                     }
 					break;
 				case FT800EMU_DL_RETURN:
-					c = callstack.top();
-					callstack.pop();
+					if (callstack.empty())
+					{
+						printf("Invalid RETURN() in display list\n");
+					}
+					else
+					{
+						c = callstack.top();
+						callstack.pop();
+					}
 					break;
 				case FT800EMU_DL_MACRO:
 					v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
