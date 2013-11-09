@@ -51,6 +51,7 @@
  class QSize;
  class QWidget;
  class QUndoStack;
+ class QCompleter;
 
  class LineNumberArea;
 
@@ -69,6 +70,9 @@
      void setUndoStack(QUndoStack *undo_stack);
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
 
+     void setCompleter(QCompleter *c);
+     QCompleter *completer() const;
+
  protected:
      virtual void resizeEvent(QResizeEvent *event);
      virtual void keyPressEvent(QKeyEvent *e);
@@ -80,7 +84,11 @@
      void updateLineNumberArea(const QRect &, int);
      void documentUndoCommandAdded();
      void undoIndexChanged(int idx);
+     void insertCompletion(const QString &completion);
 
+ private:
+     QString textUnderCursor() const;
+     
  private:
      QWidget *lineNumberArea;
      int m_MaxLinesNotice;
@@ -88,6 +96,7 @@
      bool m_UndoIndexDummy;
      bool m_UndoNeedsClosure;
      bool m_UndoIsClosing;
+     QCompleter *m_Completer;
      
  };
 

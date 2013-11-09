@@ -21,6 +21,7 @@
 #include <sstream>
 
 // Qt includes
+#include <QStringList>
 
 // Emulator includes
 #include "ft800emu_inttypes.h"
@@ -206,6 +207,29 @@ void DlParser::init()
 		s_ParamMap["TEXT8X8"] = TEXT8X8;
 		s_ParamMap["TEXTVGA"] = TEXTVGA;
 		s_ParamMap["ZERO"] = ZERO;
+	}
+}
+
+void DlParser::getIdentifiers(QStringList &list)
+{
+	init();
+	
+	for (std::map<std::string, int>::iterator it = s_IdMap.begin(), end = s_IdMap.end(); it != end; ++it)
+	{
+		list.push_back(QString(it->first.c_str()));
+	}
+	
+	list.push_back("VERTEX2II");
+	list.push_back("VERTEX2F");
+}
+
+void DlParser::getParams(QStringList &list)
+{
+	init();
+	
+	for (std::map<std::string, int>::iterator it = s_ParamMap.begin(), end = s_ParamMap.end(); it != end; ++it)
+	{
+		list.push_back(QString(it->first.c_str()));
 	}
 }
 

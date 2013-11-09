@@ -18,6 +18,8 @@
 // Qt includes
 #include <QVBoxLayout>
 #include <QTextBlock>
+#include <QCompleter>
+#include <QStringListModel>
 
 // Emulator includes
 #include <vc.h>
@@ -30,7 +32,7 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false)
+DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false), m_CompleterIdentifiersActive(true)
 {
 	m_DisplayListShared[0] = DISPLAY();
 	
@@ -51,6 +53,15 @@ DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false)
 	
 	connect(m_CodeEditor->document(), SIGNAL(contentsChange(int, int, int)), this, SLOT(documentContentsChange(int, int, int)));
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
+	
+	DlParser::getIdentifiers(m_CompleterIdentifiers);
+	DlParser::getParams(m_CompleterParams);
+	
+	m_CompleterModel = new QStringListModel(m_CodeEditor);
+	m_CompleterModel->setStringList(m_CompleterIdentifiers);
+	
+	m_Completer = new QCompleter(m_CompleterModel, m_CodeEditor);
+	m_CodeEditor->setCompleter(m_Completer);
 }
 
 DlEditor::~DlEditor()
@@ -146,11 +157,25 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 {
 	if (m_Reloading)
 		return;
+		
+	QTextBlock block = m_CodeEditor->document()->findBlock(position);
 	
 	lockDisplayList();
-	parseLine(m_CodeEditor->document()->findBlock(position));
+	parseLine(block);
 	m_DisplayListModified = true;
 	unlockDisplayList();
+	
+	// switch between auto completers
+	if (m_DisplayListParsed[block.blockNumber()].ValidId && m_CompleterIdentifiersActive)
+	{
+		m_CompleterIdentifiersActive = false;
+		m_CompleterModel->setStringList(m_CompleterParams);
+	}
+	else if (!m_DisplayListParsed[block.blockNumber()].ValidId && !m_CompleterIdentifiersActive)
+	{
+		m_CompleterIdentifiersActive = true;
+		m_CompleterModel->setStringList(m_CompleterIdentifiers);
+	}
 }
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)

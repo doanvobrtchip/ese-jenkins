@@ -19,6 +19,7 @@
 // Qt includes
 #include <QWidget>
 #include <QMutex>
+#include <QStringList>
 
 // Emulator includes
 #define NOMINMAX
@@ -30,6 +31,8 @@
 class CodeEditor;
 class QUndoStack;
 class QTextBlock;
+class QCompleter;
+class QStringListModel;
 
 #define FT800EMU_DL_SIZE 2048
 
@@ -77,6 +80,11 @@ private:
 	bool m_DisplayListModified; // flagged whenever the emulator needs to refresh the display list from m_DisplayListShared
 	QMutex m_Mutex;
 	bool m_Reloading;
+	QCompleter *m_Completer;
+	QStringListModel *m_CompleterModel;
+	QStringList m_CompleterIdentifiers;
+	QStringList m_CompleterParams;
+	bool m_CompleterIdentifiersActive;
 
 private:
 	DlEditor(const DlEditor &);

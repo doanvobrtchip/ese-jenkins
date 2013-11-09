@@ -39,10 +39,14 @@
  ****************************************************************************/
 
 // http://qt-project.org/doc/qt-4.8/widgets-codeeditor-codeeditor-cpp.html
+// http://qt-project.org/doc/qt-4.8/tools-customcompleter.html
 
  #include <QtGui>
  #include <QUndoCommand>
  #include <QUndoStack>
+ #include <QCompleter>
+ #include <QAbstractItemView>
+ #include <QScrollBar>
 
  #include "code_editor.h"
 
@@ -53,7 +57,8 @@
 		m_UndoStack(NULL),
 		m_UndoIndexDummy(false),
 		m_UndoNeedsClosure(false),
-		m_UndoIsClosing(false)
+		m_UndoIsClosing(false),
+		m_Completer(NULL)
  {
      lineNumberArea = new LineNumberArea(this);
 
@@ -128,22 +133,65 @@ void CodeEditor::undoIndexChanged(int idx)
 
 void CodeEditor::keyPressEvent(QKeyEvent *e)
 {
-	if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
-		&& (e->key() == Qt::Key_Z))
+     if (m_Completer && m_Completer->popup()->isVisible()) {
+         // The following keys are forwarded by the completer to the widget
+        switch (e->key()) {
+        case Qt::Key_Enter:
+        case Qt::Key_Return:
+        case Qt::Key_Escape:
+        case Qt::Key_Tab:
+        case Qt::Key_Backtab:
+             e->ignore();
+             return; // let the completer do default behavior
+        default:
+            break;
+        }
+     }
+     
+     bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E);
+	
+	if (!isShortcut || !m_Completer)
 	{
-		// trap
-		m_UndoStack->undo();
+		if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
+			&& (e->key() == Qt::Key_Z))
+		{
+			// trap
+			m_UndoStack->undo();
+		}
+		else if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
+			&& (e->key() == Qt::Key_Y))
+		{
+			// trap
+			m_UndoStack->redo();
+		}
+		else
+		{
+			QPlainTextEdit::keyPressEvent(e);
+		}
 	}
-	else if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
-		&& (e->key() == Qt::Key_Y))
-	{
-		// trap
-		m_UndoStack->redo();
-	}
-	else
-	{
-		QPlainTextEdit::keyPressEvent(e);
-	}
+	
+	const bool ctrlOrShift = e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
+     if (!m_Completer || (ctrlOrShift && e->text().isEmpty()))
+         return;
+
+     static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="); // end of word
+     bool hasModifier = (e->modifiers() != Qt::NoModifier) && !ctrlOrShift;
+     QString completionPrefix = textUnderCursor();
+
+     if (!isShortcut && (hasModifier || e->text().isEmpty()|| completionPrefix.length() < 3
+                       || eow.contains(e->text().right(1)))) {
+         m_Completer->popup()->hide();
+         return;
+     }
+
+     if (completionPrefix != m_Completer->completionPrefix()) {
+         m_Completer->setCompletionPrefix(completionPrefix);
+         m_Completer->popup()->setCurrentIndex(m_Completer->completionModel()->index(0, 0));
+     }
+     QRect cr = cursorRect();
+     cr.setWidth(m_Completer->popup()->sizeHintForColumn(0)
+                 + m_Completer->popup()->verticalScrollBar()->sizeHint().width());
+     m_Completer->complete(cr); // popup it up!
 }
 
 void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
@@ -220,7 +268,49 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
      setExtraSelections(extraSelections);
  }
 
+ void CodeEditor::setCompleter(QCompleter *completer)
+ {
+     if (m_Completer)
+         QObject::disconnect(m_Completer, 0, this, 0);
 
+     m_Completer = completer;
+
+     if (!m_Completer)
+         return;
+
+     m_Completer->setWidget(this);
+     m_Completer->setCompletionMode(QCompleter::PopupCompletion);
+     m_Completer->setCaseSensitivity(Qt::CaseInsensitive);
+     QObject::connect(m_Completer, SIGNAL(activated(QString)),
+                      this, SLOT(insertCompletion(QString)));
+ }
+ 
+  QCompleter *CodeEditor::completer() const
+ {
+     return m_Completer;
+ }
+ 
+  void CodeEditor::insertCompletion(const QString& completion)
+ {
+     if (m_Completer->widget() != this)
+         return;
+     QTextCursor tc = textCursor();
+     int extra = completion.length() - m_Completer->completionPrefix().length();
+     //tc.movePosition(QTextCursor::Left);
+     //tc.movePosition(QTextCursor::EndOfWord);
+     tc.select(QTextCursor::WordUnderCursor);
+     tc.setPosition(tc.selectionEnd());
+     tc.insertText(completion.right(extra));
+     setTextCursor(tc);
+ }
+ 
+  QString CodeEditor::textUnderCursor() const
+ {
+     QTextCursor tc = textCursor();
+     tc.select(QTextCursor::WordUnderCursor);
+     return tc.selectedText();
+ }
+ 
 
  void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
  {

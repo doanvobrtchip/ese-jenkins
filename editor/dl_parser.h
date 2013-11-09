@@ -58,6 +58,9 @@ class DlParser
 public:
 	static void init();
 	
+	static void getIdentifiers(QStringList &list);
+	static void getParams(QStringList &list);
+	
 	static void parse(DlParsed &parsed, const QString &line);	
 	static uint32_t compile(const DlParsed &parsed);
 	static void toString(std::string &dst, uint32_t v);
