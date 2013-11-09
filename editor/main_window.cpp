@@ -171,7 +171,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
 	m_ImportAct(NULL), m_ExportAct(NULL), 
-	m_AboutAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
+	m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
 	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
 {
 	setObjectName("MainWindow");
@@ -241,6 +241,8 @@ void MainWindow::createActions()
 	
 	m_AboutAct = new QAction(this);
 	connect(m_AboutAct, SIGNAL(triggered()), this, SLOT(about()));
+	m_AboutQtAct = new QAction(this);
+	connect(m_AboutQtAct, SIGNAL(triggered()), this, SLOT(aboutQt()));
 
 	//m_PrintDebugAct = new QAction(this);
 	//connect(m_PrintDebugAct, SIGNAL(triggered()), this, SLOT(printDebug()));
@@ -274,6 +276,8 @@ void MainWindow::translateActions()
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_AboutAct->setText(tr("About"));
 	m_AboutAct->setStatusTip(tr("Show information about the application"));
+	m_AboutQtAct->setText(tr("About Qt"));
+	m_AboutQtAct->setStatusTip(tr("Show information about the Qt libraries"));
 	// m_PrintDebugAct->setText(tr("ActionPrintDebug"));
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
 	m_UndoAct->setText(tr("Undo"));
@@ -314,6 +318,7 @@ void MainWindow::createMenus()
 	
 	m_HelpMenu = menuBar()->addMenu(QString::null);
 	m_HelpMenu->addAction(m_AboutAct);
+	m_HelpMenu->addAction(m_AboutQtAct);
 }
 
 void MainWindow::translateMenus()
@@ -591,6 +596,29 @@ void MainWindow::dummyCommand()
 void MainWindow::about()
 {
 	QMessageBox::about(this, tr("About FT800 Editor"), tr("Copyright (C) 2013  Future Technology Devices International Ltd"));
+}
+
+void MainWindow::aboutQt()
+{
+	QMessageBox::about(this, tr("About Qt"), tr(
+		"The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+		"Contact: http://www.qt-project.org/legal\n"
+		"Qt is available under the LGPL.\n"
+		"\n"
+		"Portions part of the examples of the Qt Toolkit, under the BSD license.\n"
+		"Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+		"Contact: http://www.qt-project.org/legal\n"
+		"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
+		"\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
+		"LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
+		"A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
+		"OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
+		"SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
+		"LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
+		"DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
+		"THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
+		"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
+		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."));
 }
 
 } /* namespace FT800EMUQT */
