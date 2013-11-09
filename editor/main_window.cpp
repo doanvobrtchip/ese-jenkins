@@ -170,6 +170,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
+	m_ImportAct(NULL), m_ExportAct(NULL), 
 	m_AboutAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
 	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
 {
@@ -220,11 +221,19 @@ void MainWindow::createActions()
 	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
 	m_OpenAct = new QAction(this);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
+	m_OpenAct->setEnabled(false);
 	
 	m_SaveAct = new QAction(this);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
+	m_SaveAct->setEnabled(false);
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
+	m_SaveAsAct->setEnabled(false);
+	
+	m_ImportAct = new QAction(this);
+	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
+	m_ExportAct = new QAction(this);
+	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
 	
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);	
@@ -252,11 +261,15 @@ void MainWindow::translateActions()
 	m_NewAct->setText(tr("New"));
 	m_NewAct->setStatusTip(tr("Create a new project"));
 	m_OpenAct->setText(tr("Open"));
-	m_OpenAct->setStatusTip(tr("Open or import an existing project"));
+	m_OpenAct->setStatusTip(tr("Open an existing project"));
 	m_SaveAct->setText(tr("Save"));
 	m_SaveAct->setStatusTip(tr("Save the current project"));
 	m_SaveAsAct->setText(tr("Save As"));
 	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
+	m_ImportAct->setText(tr("Import"));
+	m_ImportAct->setStatusTip(tr("Import file to a new project"));
+	m_ExportAct->setText(tr("Export"));
+	m_ExportAct->setStatusTip(tr("Export project to file"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_AboutAct->setText(tr("About"));
@@ -281,6 +294,9 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveAct);
 	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_ImportAct);
+	m_FileMenu->addAction(m_ExportAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
@@ -311,18 +327,18 @@ void MainWindow::translateMenus()
 
 void MainWindow::createToolBars()
 {
-	m_FileToolBar = addToolBar(QString::null);
-	m_FileToolBar->addAction(m_QuitAct);
+	//m_FileToolBar = addToolBar(QString::null);
+	//m_FileToolBar->addAction(m_QuitAct);
 	// m_FileToolBar->addAction(m_PrintDebugAct);
 
-	m_EditToolBar = addToolBar(QString::null);
-	m_EditToolBar->addAction(m_AboutAct);
+	//m_EditToolBar = addToolBar(QString::null);
+	//m_EditToolBar->addAction(m_AboutAct);
 }
 
 void MainWindow::translateToolBars()
 {
-	m_FileToolBar->setWindowTitle(tr("File"));
-	m_EditToolBar->setWindowTitle(tr("Edit"));
+	//m_FileToolBar->setWindowTitle(tr("File"));
+	//m_EditToolBar->setWindowTitle(tr("Edit"));
 }
 
 void MainWindow::createStatusBar()
@@ -420,12 +436,27 @@ void MainWindow::actNew()
 
 void MainWindow::actOpen()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), "",
-		tr("Memory dump: *.vc1dump (*.vc1dump)"));
+	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+}
+
+void MainWindow::actSave()
+{
+	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+}
+
+void MainWindow::actSaveAs()
+{
+	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+}
+
+void MainWindow::actImport()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), "",
+		tr("Memory dump, *.vc1dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
 	
-	m_CurrentFile = fileName;
+	m_CurrentFile = QString();
 	
 	// reset editors to their default state
 	clearEditor();
@@ -457,7 +488,9 @@ void MainWindow::actOpen()
 			else
 			{
 				// wr32(REG_HSIZE, header[1]); // FIXME_GUI REGISTERS // FIXME_RESIZE
+				if (rd32(REG_HSIZE) != header[1]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom horizontal size not supported yet"));
 				// wr32(REG_VSIZE, header[2]); // FIXME_GUI REGISTERS // FIXME_RESIZE
+				if (rd32(REG_VSIZE) != header[2]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom vertical size not supported yet"));
 				wr32(REG_MACRO_0, header[3]); // FIXME_GUI REGISTERS
 				wr32(REG_MACRO_1, header[4]); // FIXME_GUI REGISTERS
 				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
@@ -477,6 +510,19 @@ void MainWindow::actOpen()
 						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
 						else 
 						{
+							/*
+							// FIXME: How is the CRC32 for the .vc1dump calculated?
+							uint32_t crc;
+							crc = Crc32_ComputeBuf(0, &ram[RAM_G], 262144);
+							crc = Crc32_ComputeBuf(crc, &ram[RAM_PAL], 1024);
+							crc = Crc32_ComputeBuf(crc, m_DlEditor->getDisplayList(), 8192);
+							if (crc != header[5])
+							{
+								QString message;
+								message.sprintf(tr("CRC32 mismatch, %u, %u").toUtf8().constData(), header[5], crc);
+								QMessageBox::critical(this, tr("Import .vc1dump"), message);
+							}
+							*/
 							loadOk = true;
 							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
 						}
@@ -496,14 +542,44 @@ void MainWindow::actOpen()
 	clearUndoStack();
 }
 
-void MainWindow::actSave()
+void MainWindow::actExport()
 {
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), "",
+		tr("Memory dump, *.vc1dump (*.vc1dump)"));
+	if (fileName.isNull())
+		return;
 	
-}
-
-void MainWindow::actSaveAs()
-{
+	QFile file(fileName);
+	file.open(QIODevice::WriteOnly);
+	QDataStream out(&file);
 	
+	if (true) // todo: if .vc1dump
+	{
+		const size_t headersz = 6;
+		uint32_t header[headersz];
+		header[0] = 100;
+		header[1] = rd32(REG_HSIZE); // FIXME_GUI REGISTERS
+		header[2] = rd32(REG_VSIZE); // FIXME_GUI REGISTERS
+		header[3] = rd32(REG_MACRO_0); // FIXME_GUI REGISTERS
+		header[4] = rd32(REG_MACRO_1); // FIXME_GUI REGISTERS
+		header[5] = 0; // FIXME: CRC32
+		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
+		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
+		s = out.writeRawData(&ram[RAM_G], 262144); // FIXME_GUI GLOBAL MEMORY
+		if (s != 262144) goto ExportWriteError;
+		s = out.writeRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+		if (s != 1024) goto ExportWriteError;
+		m_DlEditor->lockDisplayList();
+		s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+		m_DlEditor->unlockDisplayList();
+		if (s != FT800EMU_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
+		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
+	}
+	
+	return;
+ExportWriteError:
+	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
 }
 
 void MainWindow::dummyCommand()

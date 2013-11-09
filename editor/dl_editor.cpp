@@ -94,6 +94,7 @@ void DlEditor::unlockDisplayList()
 // reloads the entire display list from m_DisplayListShared
 void DlEditor::reloadDisplayList(bool fromEmulator)
 {
+	bool firstLine = true;
 	m_Reloading = true;
 	if (!fromEmulator)
 	{
@@ -112,7 +113,8 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 			{
 				for (int dc = 1; dc < dcount; ++dc)
 				{
-					m_CodeEditor->textCursor().insertText("\n");
+					if (firstLine) firstLine = false;
+					else m_CodeEditor->textCursor().insertText("\n");
 				}
 				dcount = 0;
 			}
@@ -132,8 +134,9 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 				printf("Parser bug at dl %i: '%s' -> expect %u, compiled %u\n", i, src, m_DisplayListShared[i], compiled);
 			}
 			// <- verify parsing
+			if (firstLine) firstLine = false;
+			else m_CodeEditor->textCursor().insertText("\n");
 			m_CodeEditor->textCursor().insertText(line);
-			m_CodeEditor->textCursor().insertText("\n");
 		}
 	}
 	m_Reloading = false;

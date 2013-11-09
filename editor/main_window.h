@@ -59,6 +59,8 @@ private slots:
 	void actOpen();
 	void actSave();
 	void actSaveAs();
+	void actImport();
+	void actExport();
 	
 private:
 	void updateInitialization(bool visible);
@@ -116,6 +118,8 @@ private:
 	QAction *m_OpenAct;
 	QAction *m_SaveAct;
 	QAction *m_SaveAsAct;
+	QAction *m_ImportAct;
+	QAction *m_ExportAct;
 	QAction *m_AboutAct;
 	QAction *m_QuitAct;
 	// QAction *m_PrintDebugAct;
