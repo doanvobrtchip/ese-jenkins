@@ -2650,6 +2650,11 @@ EvaluateDisplayListValue:
 					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_CALL:
+					if (callstack.size() >= 1024)
+					{
+						printf("Invalid CALL() in display list\n");
+						goto DisplayListDisplay;
+					}
 					callstack.push(c);
 					c = (v & 0xFFFF) - 1;
 					break;
