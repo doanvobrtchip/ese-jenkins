@@ -69,6 +69,7 @@ public:
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
+	void editorCursorPositionChanged();
 
 private:
 	void parseLine(QTextBlock block);

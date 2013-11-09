@@ -174,11 +174,11 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
      if (!m_Completer || (ctrlOrShift && e->text().isEmpty()))
          return;
 
-     static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="); // end of word
+     static QString eow("~!@#$%^&*()+{}|:\"<>?,./;'[]\\-="); // end of word
      bool hasModifier = (e->modifiers() != Qt::NoModifier) && !ctrlOrShift;
      QString completionPrefix = textUnderCursor();
 
-     if (!isShortcut && (hasModifier || e->text().isEmpty()|| completionPrefix.length() < 3
+     if (!isShortcut && (hasModifier || e->text().isEmpty()|| completionPrefix.length() < 1
                        || eow.contains(e->text().right(1)))) {
          m_Completer->popup()->hide();
          return;

@@ -20,6 +20,7 @@
 #include <QTextBlock>
 #include <QCompleter>
 #include <QStringListModel>
+#include <QAbstractItemView>
 
 // Emulator includes
 #include <vc.h>
@@ -53,6 +54,7 @@ DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false), m_Com
 	
 	connect(m_CodeEditor->document(), SIGNAL(contentsChange(int, int, int)), this, SLOT(documentContentsChange(int, int, int)));
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
+	connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this, SLOT(editorCursorPositionChanged()));
 	
 	DlParser::getIdentifiers(m_CompleterIdentifiers);
 	DlParser::getParams(m_CompleterParams);
@@ -153,29 +155,36 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 	m_Reloading = false;
 }
 
-void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
+void DlEditor::editorCursorPositionChanged()
 {
-	if (m_Reloading)
-		return;
-		
-	QTextBlock block = m_CodeEditor->document()->findBlock(position);
-	
-	lockDisplayList();
-	parseLine(block);
-	m_DisplayListModified = true;
-	unlockDisplayList();
+	QTextBlock block = m_CodeEditor->document()->findBlock(m_CodeEditor->textCursor().position());
 	
 	// switch between auto completers
 	if (m_DisplayListParsed[block.blockNumber()].ValidId && m_CompleterIdentifiersActive)
 	{
 		m_CompleterIdentifiersActive = false;
 		m_CompleterModel->setStringList(m_CompleterParams);
+		m_Completer->popup()->hide();
 	}
 	else if (!m_DisplayListParsed[block.blockNumber()].ValidId && !m_CompleterIdentifiersActive)
 	{
 		m_CompleterIdentifiersActive = true;
 		m_CompleterModel->setStringList(m_CompleterIdentifiers);
+		m_Completer->popup()->hide();
 	}
+}
+
+void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
+{
+	if (m_Reloading)
+		return;
+	
+	QTextBlock block = m_CodeEditor->document()->findBlock(position);
+	
+	lockDisplayList();
+	parseLine(block);
+	m_DisplayListModified = true;
+	unlockDisplayList();
 }
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
