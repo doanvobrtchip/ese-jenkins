@@ -606,7 +606,6 @@ void MainWindow::stepEnabled(bool enabled)
 	m_StepCount->setEnabled(enabled);
 	if (enabled)
 	{
-		m_DlEditor->followStep();
 		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
 	}
 	else
@@ -619,7 +618,6 @@ void MainWindow::stepChanged(int step)
 {
 	if (m_StepEnabled->isChecked())
 	{
-		m_DlEditor->followStep();
 		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
 	}
 }

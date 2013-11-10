@@ -835,11 +835,6 @@ void DlEditor::frame()
 	// update current step highlight
 	m_CodeEditor->setStepHighlight(FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1);
 }
-	
-void DlEditor::followStep()
-{
-	m_CodeEditor->followStep(true);
-}
 
 } /* namespace FT800EMUQT */
 

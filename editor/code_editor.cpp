@@ -61,7 +61,7 @@
 		m_Completer(NULL),
 		m_StepHighlight(-1),
 		m_LastStepHighlight(-1),
-		m_FollowStep(false)
+		m_StepMovingCursor(false)
  {
      lineNumberArea = new LineNumberArea(this);
 
@@ -69,7 +69,6 @@
      connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
      connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
 	 connect(document(), SIGNAL(undoCommandAdded()), this, SLOT(documentUndoCommandAdded()));
-     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(stopFollowStep()));
 	 
      updateLineNumberAreaWidth(0);
      highlightCurrentLine();
@@ -256,6 +255,9 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
 
  void CodeEditor::highlightCurrentLine()
  {
+	 if (m_StepMovingCursor)
+		return;
+	
      QList<QTextEdit::ExtraSelection> extraSelections;
 
      if (!isReadOnly()) 
@@ -264,11 +266,13 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
 		{
 			 if (m_LastStepHighlight != m_StepHighlight)
 			 {
-				 if (m_FollowStep)
+				 if (!hasFocus())
 				 {
+					 m_StepMovingCursor = true;
 					 QTextCursor c = textCursor();
 					 c.setPosition(document()->findBlockByNumber(m_StepHighlight).position());
 					 setTextCursor(c);
+					 m_StepMovingCursor = false;
 				 }
 				 m_LastStepHighlight = m_StepHighlight;
 			 }
@@ -366,7 +370,4 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
          ++blockNumber;
      }
  }
- void CodeEditor::stopFollowStep()
- {
-	 followStep(false);
- }
+ 
