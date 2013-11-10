@@ -2223,6 +2223,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 static int s_DebugMode;
 static int s_DebugMultiplier;
 static int s_DebugLimiter;
+static bool s_DebugLimiterEffective;
+static int s_DebugLimiterIndex;
 
 static int s_ThreadCount;
 
@@ -2231,6 +2233,8 @@ void GraphicsProcessorClass::begin()
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	s_DebugMultiplier = 1;
 	s_DebugLimiter = 0;
+	s_DebugLimiterEffective = false;
+	s_DebugLimiterIndex = 0;
 	
 	s_RegPwmDutyEmulation = false;
 	s_ThreadCount = 1;
@@ -2470,6 +2474,8 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
 	
 	intptr_t lines_processed = 0;
+	bool debugLimiterEffective = false;
+	int debugLimiterIndex = 0;
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
 		VertexState vs = VertexState();
@@ -2523,7 +2529,15 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 		{
 			if (s_DebugLimiter)
 			{
-				if (debugCounter >= s_DebugLimiter) break;
+				if (debugCounter >= s_DebugLimiter)
+				{
+					if (y == 0)
+					{
+						debugLimiterEffective = true;
+					}
+					break;
+				}
+				if (y == 0) debugLimiterIndex = c;
 				++debugCounter;
 			}
 			
@@ -2899,6 +2913,13 @@ DisplayListDisplay:
 		}
 		++lines_processed;
 	}
+	
+	if (yIdx == 0)
+	{
+		s_DebugLimiterEffective = false;
+		s_DebugLimiterIndex = debugLimiterIndex;
+		s_DebugLimiterEffective = debugLimiterEffective;
+	}
 
 	if (!lines_processed)
 	{
@@ -3064,6 +3085,16 @@ void GraphicsProcessorClass::setDebugLimiter(int debugLimiter)
 int GraphicsProcessorClass::getDebugLimiter()
 {
 	return s_DebugLimiter;
+}
+	
+bool GraphicsProcessorClass::getDebugLimiterEffective()
+{
+	return s_DebugLimiterEffective;
+}
+
+int GraphicsProcessorClass::getDebugLimiterIndex()
+{
+	return s_DebugLimiterIndex;
 }
 
 } /* namespace FT800EMU */

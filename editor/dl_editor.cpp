@@ -23,6 +23,7 @@
 #include <QAbstractItemView>
 
 // Emulator includes
+#include <ft800emu_graphics_processor.h>
 #include <vc.h>
 
 // Project includes
@@ -827,6 +828,17 @@ void DlEditor::editingLine(QTextBlock block)
 			m_PropertiesEditor->setEditWidget(NULL, false, this);
 		}
 	}
+}
+
+void DlEditor::frame()
+{
+	// update current step highlight
+	m_CodeEditor->setStepHighlight(FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1);
+}
+	
+void DlEditor::followStep()
+{
+	m_CodeEditor->followStep(true);
 }
 
 } /* namespace FT800EMUQT */

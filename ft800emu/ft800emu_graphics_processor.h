@@ -59,6 +59,9 @@ public:
 	static int getDebugMultiplier();
 	static void setDebugLimiter(int debugLimiter);
 	static int getDebugLimiter();
+	
+	static bool getDebugLimiterEffective();
+	static int getDebugLimiterIndex();
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

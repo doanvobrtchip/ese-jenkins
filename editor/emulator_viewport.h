@@ -57,6 +57,9 @@ public slots:
 	// void saveScreenshot();
 	void threadRepaint();
 
+signals:
+	void frame();
+
 private:
 	QLabel *m_Label;
 

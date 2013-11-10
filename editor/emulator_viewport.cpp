@@ -131,6 +131,7 @@ void EmulatorViewport::threadRepaint()
 	s_Pixmap->convertFromImage(*s_Image);
 	s_Mutex.unlock();
 	m_Label->repaint();
+	frame();
 }
 
 } /* namespace FT800EMUQT */

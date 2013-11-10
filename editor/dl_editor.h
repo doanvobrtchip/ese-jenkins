@@ -69,11 +69,16 @@ public:
 	inline bool isDisplayListModified() { return m_DisplayListModified; }
 	
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
+	
+	void followStep();
 
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
 	void editorCursorPositionChanged();
+
+public slots:
+	void frame();
 
 private:
 	void parseLine(QTextBlock block);

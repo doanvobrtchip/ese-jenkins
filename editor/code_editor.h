@@ -72,6 +72,9 @@
 
      void setCompleter(QCompleter *c);
      QCompleter *completer() const;
+     
+     void setStepHighlight(int index) { if (m_StepHighlight != index) { m_StepHighlight = index; highlightCurrentLine(); } }
+     void followStep(bool follow) { m_FollowStep = follow; }
 
  protected:
      virtual void resizeEvent(QResizeEvent *event);
@@ -85,6 +88,7 @@
      void documentUndoCommandAdded();
      void undoIndexChanged(int idx);
      void insertCompletion(const QString &completion);
+     void stopFollowStep();
 
  private:
      QString textUnderCursor() const;
@@ -97,6 +101,9 @@
      bool m_UndoNeedsClosure;
      bool m_UndoIsClosing;
      QCompleter *m_Completer;
+     int m_StepHighlight;
+     int m_LastStepHighlight;
+     int m_FollowStep;
      
  };
 

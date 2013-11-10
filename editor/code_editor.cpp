@@ -58,7 +58,10 @@
 		m_UndoIndexDummy(false),
 		m_UndoNeedsClosure(false),
 		m_UndoIsClosing(false),
-		m_Completer(NULL)
+		m_Completer(NULL),
+		m_StepHighlight(-1),
+		m_LastStepHighlight(-1),
+		m_FollowStep(false)
  {
      lineNumberArea = new LineNumberArea(this);
 
@@ -66,6 +69,7 @@
      connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
      connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
 	 connect(document(), SIGNAL(undoCommandAdded()), this, SLOT(documentUndoCommandAdded()));
+     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(stopFollowStep()));
 	 
      updateLineNumberAreaWidth(0);
      highlightCurrentLine();
@@ -254,16 +258,41 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
  {
      QList<QTextEdit::ExtraSelection> extraSelections;
 
-     if (!isReadOnly()) {
-         QTextEdit::ExtraSelection selection;
-
-         QColor lineColor = QColor(Qt::lightGray).lighter(120);
-
-         selection.format.setBackground(lineColor);
-         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-         selection.cursor = textCursor();
-         selection.cursor.clearSelection();
-         extraSelections.append(selection);
+     if (!isReadOnly()) 
+     {
+		 if (m_StepHighlight >= 0 && m_StepHighlight < document()->blockCount())
+		{
+			 if (m_LastStepHighlight != m_StepHighlight)
+			 {
+				 if (m_FollowStep)
+				 {
+					 QTextCursor c = textCursor();
+					 c.setPosition(document()->findBlockByNumber(m_StepHighlight).position());
+					 setTextCursor(c);
+				 }
+				 m_LastStepHighlight = m_StepHighlight;
+			 }
+		 }
+		 // cursor position
+		 {
+			 QTextEdit::ExtraSelection selection;
+			 QColor lineColor = QColor(Qt::lightGray).lighter(120);
+			 selection.format.setBackground(lineColor);
+			 selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+			 selection.cursor = textCursor();
+			 selection.cursor.clearSelection();
+			 extraSelections.append(selection);
+		 }
+		 if (m_StepHighlight >= 0 && m_StepHighlight < document()->blockCount())
+		 {
+			 QTextEdit::ExtraSelection selection; 
+			 QColor lineColor = QColor(Qt::yellow);
+			 selection.format.setBackground(lineColor);
+			 selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+			 selection.cursor = textCursor();
+			 selection.cursor.setPosition(document()->findBlockByNumber(m_StepHighlight).position());
+			 extraSelections.append(selection);
+		 }
      }
 
      setExtraSelections(extraSelections);
@@ -311,7 +340,6 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
      tc.select(QTextCursor::WordUnderCursor);
      return tc.selectedText();
  }
- 
 
  void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
  {
@@ -337,4 +365,8 @@ void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
          bottom = top + (int) blockBoundingRect(block).height();
          ++blockNumber;
      }
+ }
+ void CodeEditor::stopFollowStep()
+ {
+	 followStep(false);
  }

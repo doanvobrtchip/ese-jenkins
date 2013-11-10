@@ -405,6 +405,7 @@ void MainWindow::createDockWindows()
 		m_DlEditor = new DlEditor(m_DlEditorDock);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
+		connect(m_EmulatorViewport, SIGNAL(frame()), m_DlEditor, SLOT(frame()));
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
@@ -495,11 +496,11 @@ void MainWindow::createDockWindows()
 		// Step
 		{
 			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Step"));
+			group->setTitle(tr("Display List Steps"));
 			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
 			
 			m_StepEnabled = new QCheckBox(this);
-			m_StepEnabled->setDown(false);
+			m_StepEnabled->setChecked(false);
 			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
 			groupLayout->addWidget(m_StepEnabled);
 			m_StepCount = new QSpinBox(this);
@@ -605,6 +606,7 @@ void MainWindow::stepEnabled(bool enabled)
 	m_StepCount->setEnabled(enabled);
 	if (enabled)
 	{
+		m_DlEditor->followStep();
 		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
 	}
 	else
@@ -617,6 +619,7 @@ void MainWindow::stepChanged(int step)
 {
 	if (m_StepEnabled->isChecked())
 	{
+		m_DlEditor->followStep();
 		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
 	}
 }
@@ -625,7 +628,7 @@ void MainWindow::clearEditor()
 {
 	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
 	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
-	m_StepEnabled->setDown(false);
+	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
 	m_DlEditor->clear();
 	m_Macro->clear();
