@@ -211,6 +211,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_EmulatorViewport->run(params);
 	
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
+	
+	actNew();
 }
 
 MainWindow::~MainWindow()
