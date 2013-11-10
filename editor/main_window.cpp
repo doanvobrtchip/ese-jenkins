@@ -49,6 +49,7 @@
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
+#include <ft800emu_graphics_driver.h>
 #include <vc.h>
 
 // Project includes
@@ -61,6 +62,9 @@
 namespace FT800EMUQT {
 
 #define FT800EMU_XBU_FILE "../reference/xbu/BIRDS.XBU"
+
+int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
+int s_VSize = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 
 void swrbegin(size_t address)
 {
@@ -148,6 +152,9 @@ void loop()
 		FT800EMU::System.delay(10);
 	}
 	
+	// switch to next resolution
+	wr32(REG_HSIZE, s_HSize);
+	wr32(REG_VSIZE, s_VSize);
 	// switch to next macro list
 	s_Macro->lockDisplayList();
 	if (s_Macro->isDisplayListModified())
@@ -419,7 +426,9 @@ void MainWindow::createDockWindows()
 			QVBoxLayout *sizeLayout = new QVBoxLayout(widget);
 			
 			m_HSize = new QSpinBox(widget);
-			m_HSize->setEnabled(false);
+			m_HSize->setMinimum(1);
+			m_HSize->setMaximum(512);
+			connect(m_HSize, SIGNAL(valueChanged(int)), this, SLOT(hsizeChanged(int)));
 			QHBoxLayout *hsizeLayout = new QHBoxLayout(widget);
 			QLabel *hsizeLabel = new QLabel(widget);
 			hsizeLabel->setText(tr("Horizontal"));
@@ -428,7 +437,9 @@ void MainWindow::createDockWindows()
 			sizeLayout->addLayout(hsizeLayout);
 			
 			m_VSize = new QSpinBox(widget);
-			m_VSize->setEnabled(false);
+			m_VSize->setMinimum(1);
+			m_VSize->setMaximum(512);
+			connect(m_VSize, SIGNAL(valueChanged(int)), this, SLOT(vsizeChanged(int)));
 			QHBoxLayout *vsizeLayout = new QHBoxLayout(widget);
 			QLabel *vsizeLabel = new QLabel(widget);
 			vsizeLabel->setText(tr("Vertical"));
@@ -483,7 +494,7 @@ void MainWindow::createDockWindows()
 	}*/
 
 	// AssetTree (Assets)
-	{
+	/*{
 		m_AssetTreeDock = new QDockWidget(this);
 		m_AssetTreeDock->setAllowedAreas(Qt::AllDockWidgetAreas);
 		m_AssetTreeView = new QTreeView(m_AssetTreeDock);
@@ -494,7 +505,7 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::LeftDockWidgetArea, m_AssetTreeDock);
 		m_WidgetsMenu->addAction(m_AssetTreeDock->toggleViewAction());
 		m_AssetTreeDock->setVisible(false);
-	}
+	}*/
 }
 
 void MainWindow::translateDockWindows()
@@ -503,7 +514,7 @@ void MainWindow::translateDockWindows()
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
-	m_AssetTreeDock->setWindowTitle(tr("Assets"));
+	//m_AssetTreeDock->setWindowTitle(tr("Assets"));
 }
 
 void MainWindow::recalculateMinimumWidth()
@@ -524,6 +535,8 @@ void MainWindow::incbLanguageCode()
 
 void MainWindow::clearEditor()
 {
+	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
+	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
 	m_DlEditor->clear();
 	m_Macro->clear();
 }
@@ -533,6 +546,58 @@ void MainWindow::clearUndoStack()
 	m_UndoStack->clear();
 	m_DlEditor->clearUndoStack();
 	m_Macro->clearUndoStack();
+}
+
+static bool s_UndoRedoWorking = false;
+
+class HSizeCommand : public QUndoCommand
+{
+public:
+	HSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewHSize(hsize), m_OldHSize(s_HSize), m_SpinBox(spinbox) { }
+	virtual ~HSizeCommand() { }
+	virtual void undo() { s_HSize = m_OldHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
+	virtual void redo() { s_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
+	virtual int id() const { return 41517686; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize; return true; }
+	
+private:
+	int m_NewHSize;
+	int m_OldHSize;
+	QSpinBox *m_SpinBox;
+	
+};
+
+class VSizeCommand : public QUndoCommand
+{
+public:
+	VSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewVSize(hsize), m_OldVSize(s_VSize), m_SpinBox(spinbox) { }
+	virtual ~VSizeCommand() { }
+	virtual void undo() { s_VSize = m_OldVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
+	virtual void redo() { s_VSize = m_NewVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
+	virtual int id() const { return 78984351; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize; return true; }
+	
+private:
+	int m_NewVSize;
+	int m_OldVSize;
+	QSpinBox *m_SpinBox;
+	
+};
+
+void MainWindow::hsizeChanged(int hsize)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	m_UndoStack->push(new HSizeCommand(hsize, m_HSize));
+}
+
+void MainWindow::vsizeChanged(int vsize)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
 }
 
 void MainWindow::actNew()
@@ -548,6 +613,7 @@ void MainWindow::actNew()
 	
 	// be helpful
 	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Display List</b> editor."));
+	m_PropertiesEditor->setEditWidget(NULL, false, this);
 }
 
 void MainWindow::actOpen()
@@ -603,10 +669,8 @@ void MainWindow::actImport()
 			}
 			else
 			{
-				// wr32(REG_HSIZE, header[1]); // FIXME_GUI REGISTERS // FIXME_RESIZE
-				if (rd32(REG_HSIZE) != header[1]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom horizontal size not supported yet"));
-				// wr32(REG_VSIZE, header[2]); // FIXME_GUI REGISTERS // FIXME_RESIZE
-				if (rd32(REG_VSIZE) != header[2]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom vertical size not supported yet"));
+				m_HSize->setValue(header[1]);
+				m_VSize->setValue(header[2]);
 				m_Macro->lockDisplayList();
 				m_Macro->getDisplayList()[0] = header[3];
 				m_Macro->getDisplayList()[1] = header[4];
@@ -621,7 +685,6 @@ void MainWindow::actImport()
 					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
 					else
 					{
-						// s = fread(&ram[RAM_DL], 1, 8192, f);
 						m_DlEditor->lockDisplayList();
 						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
 						m_DlEditor->reloadDisplayList(false);
@@ -659,6 +722,9 @@ void MainWindow::actImport()
 	
 	// clear undo stacks
 	clearUndoStack();
+	
+	m_PropertiesEditor->setInfo(tr("Imported project from .vc1dump file."));
+	m_PropertiesEditor->setEditWidget(NULL, false, this);
 }
 
 void MainWindow::actExport()
@@ -677,8 +743,8 @@ void MainWindow::actExport()
 		const size_t headersz = 6;
 		uint32_t header[headersz];
 		header[0] = 100;
-		header[1] = rd32(REG_HSIZE); // FIXME_GUI REGISTERS
-		header[2] = rd32(REG_VSIZE); // FIXME_GUI REGISTERS
+		header[1] = s_HSize;
+		header[2] = s_VSize;
 		m_Macro->lockDisplayList();
 		header[3] = m_Macro->getDisplayList()[0];
 		header[4] = m_Macro->getDisplayList()[1];
@@ -697,6 +763,9 @@ void MainWindow::actExport()
 		if (s != FT800EMU_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
 		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
 	}
+	
+	m_PropertiesEditor->setInfo(tr("Exported project to .vc1dump file."));
+	m_PropertiesEditor->setEditWidget(NULL, false, this);
 	
 	return;
 ExportWriteError:

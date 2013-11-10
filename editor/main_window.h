@@ -65,6 +65,9 @@ private slots:
 	void actImport();
 	void actExport();
 	
+	void hsizeChanged(int hsize);
+	void vsizeChanged(int vsize);
+	
 private:
 	void updateInitialization(bool visible);
 	
@@ -106,10 +109,6 @@ private:
 	DlEditor *m_Macro;
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
-
-	QTreeView *m_AssetTreeView;
-	QDirModel *m_AssetTreeModel;
-	QDockWidget *m_AssetTreeDock;
 	
 	QMenu *m_FileMenu;
 	QMenu *m_EditMenu;

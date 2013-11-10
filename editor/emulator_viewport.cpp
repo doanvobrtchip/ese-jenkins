@@ -125,6 +125,7 @@ void EmulatorViewport::threadRepaint()
 	{
 		QPixmap *pixmap = s_Pixmap;
 		s_Pixmap = new QPixmap(s_Image->width(), s_Image->height());
+		m_Label->setPixmap(*s_Pixmap);
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
