@@ -23,6 +23,10 @@
 
 // Project includes
 
+class QLabel;
+class QGroupBox;
+class QVBoxLayout;
+
 namespace FT800EMUQT {
 	class DlHighlighter;
 
@@ -39,7 +43,20 @@ class PropertiesEditor : public QWidget
 public:
 	PropertiesEditor(QWidget *parent);
 	virtual ~PropertiesEditor();
+	
+	void setInfo(QString message);
+	void setEditWidget(QWidget *widget, bool own);
+	
+	void translate();
 
+private:
+	QGroupBox *m_InfoGroupBox;
+	QLabel *m_InfoLabel;
+	QVBoxLayout *m_EditLayout;
+	QGroupBox *m_EditGroupBox;
+	QWidget *m_CurrentEditWidget;
+	bool m_OwnCurrentEditWidget;
+	
 private:
 	PropertiesEditor(const PropertiesEditor &);
 	PropertiesEditor &operator=(const PropertiesEditor &);

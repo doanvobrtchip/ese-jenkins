@@ -34,6 +34,7 @@ namespace FT800EMUQT {
 	class EmulatorViewport;
 	class DlEditor;
 	// class EmulatorConfig;
+	class PropertiesEditor;
 
 /**
  * MainWindow
@@ -90,17 +91,15 @@ private:
 private:
 
 	QUndoStack *m_UndoStack;
-	
-	//CommandLog *m_CommandLog;
-	//QDockWidget *m_CommandLogDock;
-	DlEditor *m_DlEditor;
-	QDockWidget *m_DlEditorDock;
 
 	EmulatorViewport *m_EmulatorViewport;
-
-	/*CEmulatorConfig *m_EmulatorConfig;
-	QScrollArea *m_EmulatorConfigScroll;
-	QDockWidget *m_EmulatorConfigDock;*/
+	
+	DlEditor *m_DlEditor;
+	QDockWidget *m_DlEditorDock;
+	
+	PropertiesEditor *m_PropertiesEditor;
+	QScrollArea *m_PropertiesEditorScroll;
+	QDockWidget *m_PropertiesEditorDock;
 
 	QTreeView *m_AssetTreeView;
 	QDirModel *m_AssetTreeModel;

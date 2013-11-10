@@ -51,6 +51,7 @@
 // #include "command_log.h"
 #include "emulator_viewport.h"
 // #include "emulator_config.h"
+#include "properties_editor.h"
 
 namespace FT800EMUQT {
 
@@ -166,7 +167,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_UndoStack(NULL), 
 	m_EmulatorViewport(NULL), 
 	m_DlEditor(NULL), m_DlEditorDock(NULL), 
-	// m_EmulatorConfig(NULL), m_EmulatorConfigScroll(NULL), m_EmulatorConfigDock(NULL), 
+	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
@@ -355,7 +356,7 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
-	// DlEditor (Console)
+	// DlEditor (Display List)
 	{
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
@@ -364,6 +365,21 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
+	}
+	
+	// PropertiesEditor
+	{
+		m_PropertiesEditorDock = new QDockWidget(this);
+		m_PropertiesEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_PropertiesEditorScroll = new QScrollArea();
+		m_PropertiesEditorScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		m_PropertiesEditorScroll->setWidgetResizable(true);
+		m_PropertiesEditorScroll->setMinimumWidth(240);
+		m_PropertiesEditor = new PropertiesEditor(this);
+		m_PropertiesEditorScroll->setWidget(m_PropertiesEditor);
+		m_PropertiesEditorDock->setWidget(m_PropertiesEditorScroll);
+		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
+		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
 
 	// EmulatorConfig (Emulator Configuration)
@@ -398,6 +414,7 @@ void MainWindow::createDockWindows()
 void MainWindow::translateDockWindows()
 {
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
+	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
 	m_AssetTreeDock->setWindowTitle(tr("Assets"));
 }
@@ -439,6 +456,9 @@ void MainWindow::actNew()
 	
 	// clear undo stacks
 	clearUndoStack();
+	
+	// be helpful
+	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Display List</b> editor."));
 }
 
 void MainWindow::actOpen()
