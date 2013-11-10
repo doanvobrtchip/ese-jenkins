@@ -55,10 +55,9 @@ public:
 
 public slots:		
 	// void saveScreenshot();
+	void threadRepaint();
 
 private:
-	QImage *m_Image;
-	QPixmap *m_Pixmap;
 	QLabel *m_Label;
 
 private:
