@@ -208,6 +208,8 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	}
 	m_DisplayListModified = true;
 	unlockDisplayList();
+	
+	editorCursorPositionChanged();
 }
 
 void DlEditor::parseLine(QTextBlock block)
