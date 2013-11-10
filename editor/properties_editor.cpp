@@ -72,7 +72,7 @@ void PropertiesEditor::setInfo(QString message)
 	}
 }
 
-void PropertiesEditor::setEditWidget(QWidget *widget, bool own)
+void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 {
 	if (m_CurrentEditWidget)
 	{
@@ -96,6 +96,8 @@ void PropertiesEditor::setEditWidget(QWidget *widget, bool own)
 	{
 		m_EditGroupBox->hide();
 	}
+	
+	m_CurrentEditWidgetSetter = setter;
 }
 
 void PropertiesEditor::translate()

@@ -38,6 +38,7 @@ class QStringListModel;
 
 namespace FT800EMUQT {
 	class DlHighlighter;
+	class PropertiesEditor;
 
 /**
  * DlEditor
@@ -54,6 +55,7 @@ public:
 	virtual ~DlEditor();
 	
 	void setUndoStack(QUndoStack *undo_stack);
+	void setPropertiesEditor(PropertiesEditor *props) { m_PropertiesEditor = props; }
 	
 	void clearUndoStack();
 	void clear();
@@ -73,6 +75,7 @@ private slots:
 
 private:
 	void parseLine(QTextBlock block);
+	void editingLine(QTextBlock block);
 	
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
@@ -86,6 +89,12 @@ private:
 	QStringList m_CompleterIdentifiers;
 	QStringList m_CompleterParams;
 	bool m_CompleterIdentifiersActive;
+	
+	PropertiesEditor *m_PropertiesEditor;
+	int m_PropLine;
+	int m_PropIdLeft;
+	int m_PropIdRight;
+	bool m_PropIdValid;
 
 private:
 	DlEditor(const DlEditor &);

@@ -357,18 +357,7 @@ void MainWindow::createStatusBar()
 }
 
 void MainWindow::createDockWindows()
-{
-	// DlEditor (Display List)
-	{
-		m_DlEditorDock = new QDockWidget(this);
-		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_DlEditor = new DlEditor(m_DlEditorDock);
-		m_DlEditor->setUndoStack(m_UndoStack);
-		m_DlEditorDock->setWidget(m_DlEditor);
-		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
-		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
-	}
-	
+{	
 	// PropertiesEditor
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
@@ -382,6 +371,18 @@ void MainWindow::createDockWindows()
 		m_PropertiesEditorDock->setWidget(m_PropertiesEditorScroll);
 		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
+	}
+	
+	// DlEditor (Display List)
+	{
+		m_DlEditorDock = new QDockWidget(this);
+		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_DlEditor = new DlEditor(m_DlEditorDock);
+		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
+		m_DlEditor->setUndoStack(m_UndoStack);
+		m_DlEditorDock->setWidget(m_DlEditor);
+		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
+		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
 	}
 
 	// EmulatorConfig (Emulator Configuration)

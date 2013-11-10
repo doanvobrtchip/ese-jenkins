@@ -45,7 +45,8 @@ public:
 	virtual ~PropertiesEditor();
 	
 	void setInfo(QString message);
-	void setEditWidget(QWidget *widget, bool own);
+	void setEditWidget(QWidget *widget, bool own, QWidget *setter);
+	QWidget *getEditWidgetSetter() const { return m_CurrentEditWidgetSetter; }
 	
 	void translate();
 
@@ -56,6 +57,7 @@ private:
 	QGroupBox *m_EditGroupBox;
 	QWidget *m_CurrentEditWidget;
 	bool m_OwnCurrentEditWidget;
+	QWidget *m_CurrentEditWidgetSetter;
 	
 private:
 	PropertiesEditor(const PropertiesEditor &);
