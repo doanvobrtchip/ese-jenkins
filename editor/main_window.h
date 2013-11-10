@@ -29,6 +29,7 @@ class QDirModel;
 class QUndoStack;
 class QScrollArea;
 class QSpinBox;
+class QCheckBox;
 
 namespace FT800EMUQT {
 	// class CommandLog;
@@ -67,6 +68,9 @@ private slots:
 	
 	void hsizeChanged(int hsize);
 	void vsizeChanged(int vsize);
+	
+	void stepEnabled(bool enabled);
+	void stepChanged(int step);
 	
 private:
 	void updateInitialization(bool visible);
@@ -109,6 +113,10 @@ private:
 	DlEditor *m_Macro;
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
+	
+	QDockWidget *m_ControlsDock;
+	QCheckBox *m_StepEnabled;
+	QSpinBox *m_StepCount;
 	
 	QMenu *m_FileMenu;
 	QMenu *m_EditMenu;

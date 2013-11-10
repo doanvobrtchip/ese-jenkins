@@ -38,6 +38,7 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QGroupBox>
+#include <QCheckBox>
 
 // Emulator includes
 #define NOMINMAX
@@ -190,6 +191,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_DlEditor(NULL), m_DlEditorDock(NULL), 
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), 
+	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
@@ -337,7 +339,7 @@ void MainWindow::createMenus()
 	m_EditMenu->addAction(m_RedoAct);
 	m_EditMenu->addAction(m_DummyAct);
 
-	m_ViewportMenu = menuBar()->addMenu(QString::null);
+	//m_ViewportMenu = menuBar()->addMenu(QString::null);
 	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
 	
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
@@ -353,7 +355,7 @@ void MainWindow::translateMenus()
 {
 	m_FileMenu->setTitle(tr("File"));
 	m_EditMenu->setTitle(tr("Edit"));
-	m_ViewportMenu->setTitle(tr("Viewport"));
+	//m_ViewportMenu->setTitle(tr("Viewport"));
 	m_WidgetsMenu->setTitle(tr("Widgets"));
 	m_HelpMenu->setTitle(tr("Help"));
 }
@@ -380,7 +382,7 @@ void MainWindow::createStatusBar()
 }
 
 void MainWindow::createDockWindows()
-{	
+{
 	// PropertiesEditor
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
@@ -411,7 +413,7 @@ void MainWindow::createDockWindows()
 	// Registers
 	{
 		m_RegistersDock = new QDockWidget(this);
-		m_PropertiesEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_RegistersDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -478,34 +480,48 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::LeftDockWidgetArea, m_RegistersDock);
 		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
 	}
-
-	// EmulatorConfig (Emulator Configuration)
-	/*{
-		m_EmulatorConfigDock = new QDockWidget(this);
-		m_EmulatorConfigDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-		m_EmulatorConfigScroll = new QScrollArea();
-		m_EmulatorConfigScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		m_EmulatorConfigScroll->setWidgetResizable(true);
-		m_EmulatorConfig = new CEmulatorConfig(m_EmulatorConfigDock, &m_Configuration, &m_Internationalization, m_UndoStack);
-		m_EmulatorConfigScroll->setWidget(m_EmulatorConfig);
-		m_EmulatorConfigDock->setWidget(m_EmulatorConfigScroll);
-		addDockWidget(Qt::RightDockWidgetArea, m_EmulatorConfigDock);
-		m_WidgetsMenu->addAction(m_EmulatorConfigDock->toggleViewAction());
-	}*/
-
-	// AssetTree (Assets)
-	/*{
-		m_AssetTreeDock = new QDockWidget(this);
-		m_AssetTreeDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-		m_AssetTreeView = new QTreeView(m_AssetTreeDock);
-		m_AssetTreeModel = new QDirModel(m_AssetTreeView);
-		m_AssetTreeView->setModel(m_AssetTreeModel);
-		m_AssetTreeView->setSortingEnabled(true);
-		m_AssetTreeDock->setWidget(m_AssetTreeView);
-		addDockWidget(Qt::LeftDockWidgetArea, m_AssetTreeDock);
-		m_WidgetsMenu->addAction(m_AssetTreeDock->toggleViewAction());
-		m_AssetTreeDock->setVisible(false);
-	}*/
+	
+	// Controls
+	{
+		m_ControlsDock = new QDockWidget(this);
+		m_ControlsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		QWidget *widget = new QWidget(this);
+		QVBoxLayout *layout = new QVBoxLayout(widget);
+		
+		// Step
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Step"));
+			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+			
+			m_StepEnabled = new QCheckBox(this);
+			m_StepEnabled->setDown(false);
+			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
+			groupLayout->addWidget(m_StepEnabled);
+			m_StepCount = new QSpinBox(this);
+			m_StepCount->setMinimum(1);
+			m_StepCount->setMaximum(2048 * 64);
+			m_StepCount->setEnabled(false);
+			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
+			groupLayout->addWidget(m_StepCount);
+			
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+		
+		layout->addStretch();
+		widget->setLayout(layout);
+		scrollArea->setWidget(widget);
+		m_ControlsDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_ControlsDock);
+		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
+	}
+	
+	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 }
 
 void MainWindow::translateDockWindows()
@@ -513,8 +529,7 @@ void MainWindow::translateDockWindows()
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
-	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
-	//m_AssetTreeDock->setWindowTitle(tr("Assets"));
+	m_ControlsDock->setWindowTitle(tr("Controls"));
 }
 
 void MainWindow::recalculateMinimumWidth()
@@ -531,21 +546,6 @@ void MainWindow::incbLanguageCode()
 	translateToolBars();
 	translateDockWindows();
 	recalculateMinimumWidth();
-}
-
-void MainWindow::clearEditor()
-{
-	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
-	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
-	m_DlEditor->clear();
-	m_Macro->clear();
-}
-
-void MainWindow::clearUndoStack()
-{
-	m_UndoStack->clear();
-	m_DlEditor->clearUndoStack();
-	m_Macro->clearUndoStack();
 }
 
 static bool s_UndoRedoWorking = false;
@@ -598,6 +598,44 @@ void MainWindow::vsizeChanged(int vsize)
 		return;
 	
 	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
+}
+
+void MainWindow::stepEnabled(bool enabled)
+{
+	m_StepCount->setEnabled(enabled);
+	if (enabled)
+	{
+		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
+	}
+	else
+	{
+		FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
+	}
+}
+
+void MainWindow::stepChanged(int step)
+{
+	if (m_StepEnabled->isChecked())
+	{
+		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
+	}
+}
+
+void MainWindow::clearEditor()
+{
+	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
+	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
+	m_StepEnabled->setDown(false);
+	m_StepCount->setValue(1);
+	m_DlEditor->clear();
+	m_Macro->clear();
+}
+
+void MainWindow::clearUndoStack()
+{
+	m_UndoStack->clear();
+	m_DlEditor->clearUndoStack();
+	m_Macro->clearUndoStack();
 }
 
 void MainWindow::actNew()
