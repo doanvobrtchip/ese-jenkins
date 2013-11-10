@@ -33,6 +33,11 @@
 #include <QFileDialog>
 #include <QFile>
 #include <QDataStream>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
+#include <QGroupBox>
 
 // Emulator includes
 #define NOMINMAX
@@ -118,6 +123,7 @@ uint32_t rd32(size_t address)
 }
 
 static DlEditor *s_DlEditor = NULL;
+static DlEditor *s_Macro = NULL;
 // static FILE *s_F = NULL;
 
 void setup()
@@ -142,7 +148,15 @@ void loop()
 		FT800EMU::System.delay(10);
 	}
 	
-	// do next action
+	// switch to next macro list
+	s_Macro->lockDisplayList();
+	if (s_Macro->isDisplayListModified())
+	{
+		wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
+		wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
+	}
+	s_Macro->unlockDisplayList();
+	// switch to next display list
 	s_DlEditor->lockDisplayList();
 	if (s_DlEditor->isDisplayListModified())
 	{
@@ -168,6 +182,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_EmulatorViewport(NULL), 
 	m_DlEditor(NULL), m_DlEditorDock(NULL), 
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
+	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
@@ -195,6 +210,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	// connect(m_EmulatorConfig, SIGNAL(applyEmulatorConfig()), this, SLOT(applyEmulatorConfig()));
 	
 	s_DlEditor = m_DlEditor;
+	s_Macro = m_Macro;
 	
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
@@ -362,7 +378,7 @@ void MainWindow::createDockWindows()
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
 		m_PropertiesEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-		m_PropertiesEditorScroll = new QScrollArea();
+		m_PropertiesEditorScroll = new QScrollArea(this);
 		m_PropertiesEditorScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		m_PropertiesEditorScroll->setWidgetResizable(true);
 		m_PropertiesEditorScroll->setMinimumWidth(240);
@@ -383,6 +399,73 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
+	}
+	
+	// Registers
+	{
+		m_RegistersDock = new QDockWidget(this);
+		m_PropertiesEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		QWidget *widget = new QWidget(this);
+		QVBoxLayout *layout = new QVBoxLayout(widget);
+		
+		// Size
+		{
+			QGroupBox *sizeGroup = new QGroupBox(widget);
+			sizeGroup->setTitle(tr("Size"));
+			QVBoxLayout *sizeLayout = new QVBoxLayout(widget);
+			
+			m_HSize = new QSpinBox(widget);
+			m_HSize->setEnabled(false);
+			QHBoxLayout *hsizeLayout = new QHBoxLayout(widget);
+			QLabel *hsizeLabel = new QLabel(widget);
+			hsizeLabel->setText(tr("Horizontal"));
+			hsizeLayout->addWidget(hsizeLabel);
+			hsizeLayout->addWidget(m_HSize);
+			sizeLayout->addLayout(hsizeLayout);
+			
+			m_VSize = new QSpinBox(widget);
+			m_VSize->setEnabled(false);
+			QHBoxLayout *vsizeLayout = new QHBoxLayout(widget);
+			QLabel *vsizeLabel = new QLabel(widget);
+			vsizeLabel->setText(tr("Vertical"));
+			vsizeLayout->addWidget(vsizeLabel);
+			vsizeLayout->addWidget(m_VSize);
+			sizeLayout->addLayout(vsizeLayout);
+			
+			sizeGroup->setLayout(sizeLayout);
+			layout->addWidget(sizeGroup);
+		}
+		
+		// Macro
+		{
+			QGroupBox *macroGroup = new QGroupBox(widget);
+			macroGroup->setTitle(tr("Macro"));
+			QVBoxLayout *macroLayout = new QVBoxLayout(widget);
+			
+			m_Macro = new DlEditor(widget);
+			m_Macro->setPropertiesEditor(m_PropertiesEditor);
+			m_Macro->setUndoStack(m_UndoStack);
+			m_Macro->setModeMacro();
+			//QHBoxLayout *macroLayout = new QHBoxLayout(widget);
+			//QLabel *macroLabel = new QLabel(widget);
+			//macroLabel->setText(tr("Macro"));
+			//layout->addWidget(macroLabel);
+			macroLayout->addWidget(m_Macro);
+			//layout->addLayout(macroLayout);
+			
+			macroGroup->setLayout(macroLayout);
+			layout->addWidget(macroGroup);
+		}
+		
+		widget->setLayout(layout);
+		scrollArea->setWidget(widget);
+		m_RegistersDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_RegistersDock);
+		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
 	}
 
 	// EmulatorConfig (Emulator Configuration)
@@ -418,6 +501,7 @@ void MainWindow::translateDockWindows()
 {
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	m_RegistersDock->setWindowTitle(tr("Registers"));
 	//m_EmulatorConfigDock->setWindowTitle(tr("WidgetEmulatorConfig"));
 	m_AssetTreeDock->setWindowTitle(tr("Assets"));
 }
@@ -441,12 +525,14 @@ void MainWindow::incbLanguageCode()
 void MainWindow::clearEditor()
 {
 	m_DlEditor->clear();
+	m_Macro->clear();
 }
 
 void MainWindow::clearUndoStack()
 {
 	m_UndoStack->clear();
 	m_DlEditor->clearUndoStack();
+	m_Macro->clearUndoStack();
 }
 
 void MainWindow::actNew()
@@ -521,8 +607,11 @@ void MainWindow::actImport()
 				if (rd32(REG_HSIZE) != header[1]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom horizontal size not supported yet"));
 				// wr32(REG_VSIZE, header[2]); // FIXME_GUI REGISTERS // FIXME_RESIZE
 				if (rd32(REG_VSIZE) != header[2]) QMessageBox::critical(this, tr("Not implemented"), tr("Custom vertical size not supported yet"));
-				wr32(REG_MACRO_0, header[3]); // FIXME_GUI REGISTERS
-				wr32(REG_MACRO_1, header[4]); // FIXME_GUI REGISTERS
+				m_Macro->lockDisplayList();
+				m_Macro->getDisplayList()[0] = header[3];
+				m_Macro->getDisplayList()[1] = header[4];
+				m_Macro->reloadDisplayList(false);
+				m_Macro->unlockDisplayList();
 				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
 				s = in.readRawData(&ram[RAM_G], 262144); // FIXME_GUI GLOBAL MEMORY
 				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
@@ -590,8 +679,10 @@ void MainWindow::actExport()
 		header[0] = 100;
 		header[1] = rd32(REG_HSIZE); // FIXME_GUI REGISTERS
 		header[2] = rd32(REG_VSIZE); // FIXME_GUI REGISTERS
-		header[3] = rd32(REG_MACRO_0); // FIXME_GUI REGISTERS
-		header[4] = rd32(REG_MACRO_1); // FIXME_GUI REGISTERS
+		m_Macro->lockDisplayList();
+		header[3] = m_Macro->getDisplayList()[0];
+		header[4] = m_Macro->getDisplayList()[1];
+		m_Macro->unlockDisplayList();
 		header[5] = 0; // FIXME: CRC32
 		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
 		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);

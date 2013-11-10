@@ -28,6 +28,7 @@ class QTreeView;
 class QDirModel;
 class QUndoStack;
 class QScrollArea;
+class QSpinBox;
 
 namespace FT800EMUQT {
 	// class CommandLog;
@@ -100,6 +101,11 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+	
+	QDockWidget *m_RegistersDock;
+	DlEditor *m_Macro;
+	QSpinBox *m_HSize;
+	QSpinBox *m_VSize;
 
 	QTreeView *m_AssetTreeView;
 	QDirModel *m_AssetTreeModel;

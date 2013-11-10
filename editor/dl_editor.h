@@ -35,6 +35,7 @@ class QCompleter;
 class QStringListModel;
 
 #define FT800EMU_DL_SIZE 2048
+#define FT800EMU_MACRO_SIZE 2
 
 namespace FT800EMUQT {
 	class DlHighlighter;
@@ -56,6 +57,7 @@ public:
 	
 	void setUndoStack(QUndoStack *undo_stack);
 	void setPropertiesEditor(PropertiesEditor *props) { m_PropertiesEditor = props; }
+	void setModeMacro();
 	
 	void clearUndoStack();
 	void clear();
@@ -95,6 +97,8 @@ private:
 	int m_PropIdLeft;
 	int m_PropIdRight;
 	bool m_PropIdValid;
+	
+	bool m_ModeMacro;
 
 private:
 	DlEditor(const DlEditor &);

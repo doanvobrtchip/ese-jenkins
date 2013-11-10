@@ -149,6 +149,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
      }
      
      bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E);
+     
 	
 	if (!isShortcut || !m_Completer)
 	{

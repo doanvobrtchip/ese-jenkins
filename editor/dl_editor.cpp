@@ -35,7 +35,7 @@ using namespace std;
 namespace FT800EMUQT {
 
 DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
-m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1)
+m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false)
 {
 	m_DisplayListShared[0] = DISPLAY();
 	
@@ -83,6 +83,15 @@ void DlEditor::clearUndoStack()
 	m_CodeEditor->document()->clearUndoRedoStacks();
 }
 
+void DlEditor::setModeMacro()
+{
+	m_ModeMacro = true;
+	m_CodeEditor->setMaxLinesNotice(FT800EMU_MACRO_SIZE);
+	/*QFontMetrics m(m_CodeEditor->font()) ;
+	int height = m.lineSpacing() ;
+	m_CodeEditor->setFixedHeight(3 * height) ;*/
+}
+
 void DlEditor::clear()
 {
 	m_CodeEditor->clear();
@@ -116,9 +125,9 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 		m_DisplayListModified = true;
 	}
 	int dcount = 0;
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
 	{
-		if (m_DisplayListShared[i] == DISPLAY() && dcount > 0)
+		if (!m_ModeMacro && m_DisplayListShared[i] == DISPLAY() && dcount > 0)
 		{
 			++dcount;
 		}
@@ -197,11 +206,11 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 		return;
 	
 	lockDisplayList();
-	for (int i = 0; i < newBlockCount && i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < newBlockCount && i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
 	{
 		parseLine(m_CodeEditor->document()->findBlockByNumber(i));
 	}
-	for (int i = newBlockCount; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = newBlockCount; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
 	{
 		m_DisplayListParsed[i] = DlParsed();
 		m_DisplayListShared[i] = DISPLAY();
