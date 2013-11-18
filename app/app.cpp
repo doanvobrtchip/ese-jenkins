@@ -64,6 +64,21 @@ uint32_t rd32(size_t address)
 	return value;
 }
 
+void wr16(size_t address, uint16_t value)
+{
+	digitalWrite(9, LOW);
+
+	SPI.transfer((2 << 6) | ((address >> 16) & 0x3F));
+	SPI.transfer((address >> 8) & 0xFF);
+	SPI.transfer(address & 0xFF);
+	// SPI.transfer(0x00);
+
+	SPI.transfer(value & 0xFF);
+	SPI.transfer((value >> 8) & 0xFF);
+
+	digitalWrite(9, HIGH);
+}
+
 void wr32(size_t address, uint32_t value)
 {
 	digitalWrite(9, LOW);
@@ -141,6 +156,10 @@ void setup()
 		if (v == i * 2) printf("OK (%i)\n", v);
 		else printf("FAIL (%i)\n", v);
 	}
+	
+	wr8(REG_VOL_SOUND, 64);
+	wr16(REG_SOUND, ((68 << 8) + 0x46));
+	wr8(REG_PLAY, 1);
 
 
 	dli = RAM_DL;

@@ -32,6 +32,9 @@
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_coprocessor.h"
 
+#include "ft800emu_audio_render.h"
+#include "ft800emu_audio_processor.h"
+
 #include "vc.h"
 
 #ifndef FT800EMU_SDL
@@ -386,7 +389,10 @@ namespace {
 		while (s_MasterRunning)
 		{
 			//printf("sound thread\n");
-			// TODO_AUDIO if (s_Flags & EmulatorEnableAudio) AudioMachine.process();
+			if (s_Flags & EmulatorEnableAudio)
+			{
+				AudioRender.process();
+			}
 			if (s_Flags & EmulatorEnableKeyboard) 
 			{
 				Keyboard.update();
@@ -419,7 +425,11 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) GraphicsDriver.begin();
-	// TODO_AUDIO if (flags & EmulatorEnableAudio) AudioDriver.begin();
+	if (params.Flags & EmulatorEnableAudio)
+	{
+		AudioProcessor.begin();
+		AudioDriver.begin();
+	}
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin(params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str());
 	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.begin();
 
@@ -499,7 +509,11 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_GraphicsBuffer = NULL;
 	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.end();
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
-	// TODO_AUDIO if (params.Flags & EmulatorEnableAudio) AudioDriver.end();
+	if (params.Flags & EmulatorEnableAudio)
+	{
+		AudioDriver.end();
+		AudioProcessor.end();
+	}
 	if (!s_Graphics) GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();

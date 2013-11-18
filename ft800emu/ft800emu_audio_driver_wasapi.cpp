@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -128,6 +127,11 @@ bool AudioDriverClass::update()
 int AudioDriverClass::getFrequency()
 {
 	return s_AudioFrequency;
+}
+
+int AudioDriverClass::getChannels()
+{
+	return 2;
 }
 
 void AudioDriverClass::beginBuffer(short **buffer, int *samples)

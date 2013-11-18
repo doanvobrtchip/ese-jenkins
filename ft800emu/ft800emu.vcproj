@@ -175,6 +175,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ft800emu_audio_processor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_audio_processor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_audio_render.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ft800emu_audio_render.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ft800emu_coprocessor.cpp"
 				>
 			</File>

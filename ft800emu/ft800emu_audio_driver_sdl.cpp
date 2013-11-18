@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011-2012  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -21,7 +20,7 @@
 #include "ft800emu_system_sdl.h"
 
 // Project includes
-// #include "ft800emu_audio_processor.h"
+#include "ft800emu_audio_render.h"
 
 // using namespace ...;
 
@@ -30,12 +29,13 @@ namespace FT800EMU {
 AudioDriverClass AudioDriver;
 
 static int s_AudioFrequency = 0;
+static int s_AudioChannels = 0;
 
 namespace {
 
 void sdlAudioCallback(void *userdata, Uint8 *stream, int len)
 {
-	// AudioProcessor.process((short *)stream, len / 4); // 2 channels, 2 bytes per channel (hopefully...)
+	AudioRender.process((short *)stream, len / 2); // 1 channel, 2 bytes per channel (hopefully...)
 }
 
 } /* anonymous namespace */
@@ -47,9 +47,9 @@ void AudioDriverClass::begin()
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 
-	desired.freq = 22050;
+	desired.freq = 48000;
 	desired.format = AUDIO_S16LSB;
-	desired.channels = 2;
+	desired.channels = 1;
 	desired.samples = 512; // 2048; //8192;
 	desired.callback = sdlAudioCallback;
 	desired.userdata = NULL;
@@ -58,6 +58,7 @@ void AudioDriverClass::begin()
 		SystemSdl.ErrorSdl();
 
 	s_AudioFrequency = obtained.freq;
+	s_AudioChannels = obtained.channels;
 
 	SDL_PauseAudio(0);
 }
@@ -70,6 +71,11 @@ bool AudioDriverClass::update()
 int AudioDriverClass::getFrequency()
 {
 	return s_AudioFrequency;
+}
+
+int AudioDriverClass::getChannels()
+{
+	return s_AudioChannels;
 }
 
 void AudioDriverClass::beginBuffer(short **buffer, int *samples)

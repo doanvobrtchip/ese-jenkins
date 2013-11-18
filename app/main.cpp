@@ -36,6 +36,7 @@ int main(int, char* [])
 	params.Flags = 
 		FT800EMU::EmulatorEnableKeyboard 
 		| FT800EMU::EmulatorEnableMouse 
+		| FT800EMU::EmulatorEnableAudio 
 		| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableRegRotate
 	    | FT800EMU::EmulatorEnableCoprocessor

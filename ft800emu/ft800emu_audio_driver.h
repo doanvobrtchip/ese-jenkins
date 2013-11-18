@@ -8,7 +8,6 @@
  */
 
 /*
- * Copyright (C) 2011  Jan Boon (Kaetemi)
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -37,7 +36,8 @@ public:
 	static bool update();
 	static void end();
 
-	static int getFrequency(); // for now because in wasapi i can't have it automagically resample :(
+	static int getFrequency(); // WASAPI doesn't resample
+	static int getChannels(); // WASAPI doesn't adjust channels
 
 	static void beginBuffer(short **buffer, int *samples);
 	static void endBuffer();
