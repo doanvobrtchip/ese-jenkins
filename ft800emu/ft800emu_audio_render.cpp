@@ -70,8 +70,8 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 BeginSample:
 			if (s_SecondsPassedForSample < s_SecondsPerSample)
 				goto EndSample;
+			s_SecondsPassedForSample -= s_SecondsPerSample;
 		}
-		s_SecondsPassedForSample -= s_SecondsPerSample;
 		
 		synth = AudioProcessor.execute(busy, sound, volume);
 		
