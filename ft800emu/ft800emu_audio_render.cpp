@@ -45,7 +45,6 @@ static bool s_RequestPlayback = false;
 
 void AudioRenderClass::playbackPlay()
 {
-	printf("playback request\n");
 	s_RequestPlayback = true;
 }
 
@@ -77,7 +76,7 @@ static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 	if (s_RequestPlayback)
 	{
 		s_RequestPlayback = false;
-		playbackBusy = true;
+		playbackBusy = 1;
 		playbackReadPtr = playbackStart;
 	}
 	if (playbackBusy)
