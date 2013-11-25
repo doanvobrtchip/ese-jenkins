@@ -32,6 +32,7 @@ class AudioRenderClass
 public:
 	AudioRenderClass() { }
 
+	static void playbackPlay();
 	static void process();
 	static void process(short *audioBuffer, int samples);
 

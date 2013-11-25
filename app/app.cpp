@@ -14,6 +14,14 @@
 #include <SPI.h>
 #include <vc.h>
 
+uint8_t s_PCM[] = {
+#include "pcm.h"
+};
+
+uint8_t s_uLaw[] = {
+#include "ulaw.h"
+};
+
 void wr8(size_t address, uint8_t value)
 {
 	digitalWrite(9, LOW);
@@ -157,11 +165,29 @@ void setup()
 		else printf("FAIL (%i)\n", v);
 	}
 	
+	
+	
+	
+	// AUDIO TEST
+	
 	wr8(REG_VOL_SOUND, 64);
 	wr16(REG_SOUND, ((68 << 8) + 0x46));
 	wr8(REG_PLAY, 1);
-
-
+	
+	for (int i = 0; i < sizeof(s_uLaw); ++i)
+	{
+		wr8(i, s_uLaw[i]);
+	}
+	wr32(REG_PLAYBACK_START, 0);
+	wr32(REG_PLAYBACK_LENGTH, sizeof(s_uLaw));
+	wr32(REG_PLAYBACK_FREQ, 44100);
+	wr32(REG_PLAYBACK_FORMAT, 1);
+	wr32(REG_PLAYBACK_LOOP, 0);
+	wr32(REG_PLAYBACK_PLAY, 1);
+	wr32(REG_VOL_PB, 128);
+	
+	
+	
 	dli = RAM_DL;
 
 	dl(CLEAR_COLOR_RGB(0, 64, 128));

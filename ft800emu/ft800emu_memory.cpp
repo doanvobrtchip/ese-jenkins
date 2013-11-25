@@ -24,6 +24,7 @@
 #include "ft800emu_system.h"
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_audio_processor.h"
+#include "ft800emu_audio_render.h"
 
 // using namespace ...;
 
@@ -282,6 +283,12 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			if (data == 1)
 			{
 				AudioProcessor.play();
+			}
+			break;
+		case REG_PLAYBACK_PLAY:
+			if (data == 1)
+			{
+				AudioRender.playbackPlay();
 			}
 			break;
 		}
