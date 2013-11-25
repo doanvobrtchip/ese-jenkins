@@ -67,6 +67,24 @@ static int16_t ulawranges[] = {
 	30
 };
 
+static int s_ADPCMPredictedSample = 0;
+static int s_ADPCMIndex = 0;
+static int s_ADPCMIndexTable[16] = {
+	-1, -1, -1, -1, 2, 4, 6, 8,
+	-1, -1, -1, -1, 2, 4, 6, 8
+};
+static int s_ADPCMStepsizeTable[89] = {
+	7, 8, 9, 10, 11, 12, 13, 14, 
+	16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60,
+	66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209,
+	230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658,
+	724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878,
+	2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871,
+	5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635,
+	13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794,
+	32767
+};
+
 static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart, 
 	uint32_t &playbackLength, uint8_t &playbackFormat, 
 	uint8_t &playbackLoop, uint8_t &playbackBusy, 
@@ -78,6 +96,9 @@ static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 		s_RequestPlayback = false;
 		playbackBusy = 1;
 		playbackReadPtr = playbackStart;
+		adpcmNext = false;
+		s_ADPCMPredictedSample = 0;
+		s_ADPCMIndex = 0;
 	}
 	if (playbackBusy)
 	{
@@ -117,14 +138,51 @@ static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 				}
 				uint8_t sign = value & (0x80);
 				int16_t range = (int16_t)(uint8_t)((value & (0x70)) >> 4);
-				uint8_t step = value & (0x0F);
-				int16_t mul = 1 << (8 - range); // 0 becomes 256, 7=2
-				int16_t stepmul = (int16_t)step * mul;
+				int16_t step = (int16_t)(uint8_t)(value & (0x0F));
+				int16_t stepm = step << (8 - range); // 0 becomes 256, 7=2
 				int16_t rangem = ulawranges[(value & (0xF0)) >> 4];
-				if (sign) stepmul = -stepmul;
-				int16_t result = rangem + stepmul;
+				if (sign) stepm = -stepm;
+				int16_t result = rangem + stepm;
 				int32_t resultv = (int32_t)result * (int32_t)playbackVolume;
 				return (int16_t)(resultv >> 8);
+			}
+			case 2: // ADPCM
+			{
+				// See: http://www.cs.columbia.edu/~hgs/audio/dvi/
+				// Adapted from public domain IMA reference implementation
+				
+				uint8_t originalSample = ram[playbackReadPtr];
+				if (adpcmNext) originalSample = originalSample >> 4;
+				else originalSample = originalSample & 0x0F;
+				adpcmNext = !adpcmNext;
+				
+				/* compute predicted sample estimate newSample */
+				/* calculate difference = (originalSample + 1⁄2) * stepsize/4: */
+				int stepSize = s_ADPCMStepsizeTable[s_ADPCMIndex];
+				int difference = 0;
+				if (originalSample & 4) /* perform multiplication through repetitive addition */
+					difference += stepSize;
+				if (originalSample & 2)
+					difference += stepSize >> 1;
+				if (originalSample & 1) 
+					difference += stepSize >> 2;
+				
+				/* (originalSample + 1⁄2) * stepsize/4 =originalSample * stepsize/4 + stepsize/8: */
+				difference += stepSize >> 3;
+				
+				if (originalSample & 8) /* account for sign bit */
+					difference = -difference;
+				
+				/* adjust predicted sample based on calculated difference: */
+				s_ADPCMPredictedSample += difference;
+				s_ADPCMPredictedSample = min(max(-32768, s_ADPCMPredictedSample), 32767); /* check for overflow */
+				
+				/* compute new stepsize */
+				/*adjust index into stepsize lookup table using originalSample: */
+				s_ADPCMIndex += s_ADPCMIndexTable[originalSample];
+				s_ADPCMIndex = min(max(0, s_ADPCMIndex), 88); /* check for overflow */
+				
+				return (int16_t)((s_ADPCMPredictedSample * (int32_t)playbackVolume) >> 8);
 			}
 			default:
 			{
