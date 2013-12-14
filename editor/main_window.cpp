@@ -17,7 +17,6 @@
 #include <stdio.h>
 
 // Qt includes
-#include <QtGui>
 #include <QTreeView>
 #include <QDirModel>
 #include <QUndoStack>
@@ -41,7 +40,9 @@
 #include <QCheckBox>
 
 // Emulator includes
-#define NOMINMAX
+#ifndef WIN32
+#	define NOMINMAX
+#endif
 #include <ft800emu_inttypes.h>
 #include <ft800emu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
@@ -66,6 +67,8 @@ namespace FT800EMUQT {
 
 int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
 int s_VSize = FT800EMU_WINDOW_HEIGHT_DEFAULT;
+
+bool s_EmulatorRunning = false;
 
 void swrbegin(size_t address)
 {
@@ -145,7 +148,7 @@ void loop()
 	if (displayListSwapped)
 	{
 		// dl swap wait
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE) { /* do nothing */ }
+		while (rd32(REG_DLSWAP) != DLSWAP_DONE) { /* do nothing */ if (!s_EmulatorRunning) return; }
 		displayListSwapped = false;
 	}
 	else
@@ -225,14 +228,15 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Flags = 
-		FT800EMU::EmulatorEnableKeyboard 
-		| FT800EMU::EmulatorEnableMouse 
-		| FT800EMU::EmulatorEnableDebugShortkeys
+		// FT800EMU::EmulatorEnableKeyboard 
+		/*|*/ FT800EMU::EmulatorEnableMouse 
+		//| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableCoprocessor 
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		//| FT800EMU::EmulatorEnableDynamicDegrade
 		;
 	params.Keyboard = keyboard;
+	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 	
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
@@ -242,6 +246,9 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 MainWindow::~MainWindow()
 {
+	s_EmulatorRunning = false;
+	m_EmulatorViewport->stop();
+
 	s_DlEditor = NULL;
 }
 

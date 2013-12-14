@@ -112,6 +112,7 @@ public:
 	EmulatorClass() { }
 
 	static void run(const EmulatorParameters &params);
+	static void stop();
 
 private:
 	EmulatorClass(const EmulatorClass &);

@@ -16,7 +16,6 @@
 // STL includes
 
 // Qt includes
-#include <QtGui>
 #include <QTreeView>
 #include <QDirModel>
 #include <QUndoStack>

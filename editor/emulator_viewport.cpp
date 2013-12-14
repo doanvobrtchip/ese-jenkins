@@ -91,6 +91,7 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 
 EmulatorViewport::~EmulatorViewport()
 {
+	stop();
 	delete m_Label; m_Label = NULL;
 	delete s_Pixmap; s_Pixmap = NULL;
 	delete s_Image; s_Image = NULL;
@@ -115,6 +116,11 @@ void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
 		// Connect the cross thread repaint event
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
 	}
+}
+
+void EmulatorViewport::stop()
+{
+	FT800EMU::Emulator.stop();
 }
 
 void EmulatorViewport::threadRepaint()

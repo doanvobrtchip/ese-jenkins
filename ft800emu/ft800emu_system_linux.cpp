@@ -185,6 +185,11 @@ void SystemClass::resumeMCUThread()
 	pthread_mutex_unlock(&s_MCUSuspendMutex);
 }
 
+void SystemClass::killMCUThread()
+{
+	// todo
+}
+
 
 static void suspendCoprocessorWait(int signum)
 {

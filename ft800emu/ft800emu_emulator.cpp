@@ -147,6 +147,8 @@ namespace {
 		}
 	}
 
+	bool s_EmulatorRunning = false;
+
 	void (*s_Setup)() = NULL;
 	void (*s_Loop)() = NULL;
 	void (*s_Keyboard)() = NULL;
@@ -176,7 +178,7 @@ namespace {
 
 		uint8_t *ram = Memory.getRam();
 
-		for (;;)
+		while (s_MasterRunning)
 		{
 			//printf("main thread\n");
 			System.makeRealtimePriorityThread();
@@ -414,6 +416,8 @@ namespace {
 
 void EmulatorClass::run(const EmulatorParameters &params)
 {
+	s_EmulatorRunning = true;
+
 	s_Setup = params.Setup;
 	s_Loop = params.Loop;
 	s_Flags = params.Flags;
@@ -482,28 +486,35 @@ void EmulatorClass::run(const EmulatorParameters &params)
 		{
 			masterThread();
 			s_MasterRunning = false;
+			// System.killMCUThread();
 			if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
+			printf("(0) master thread exit\n");
 		}
 
 		// arduino
 		if (omp_get_thread_num() == 1)
 		{
 			mcuThread();
+			printf("(1) mcu thread exit\n");
 		}
 
 		// sound
 		if (omp_get_thread_num() == 2)
 		{
 			audioThread();
+			printf("(2) sound thread exit\n");
 		}
 
 		// Coprocessor
 		if (omp_get_thread_num() == 3)
 		{
 			coprocessorThread();
+			printf("(3) coproc thread exit\n");
 		}
 	}
 #endif /* #ifdef FT800EMU_SDL */
+
+	printf("ending\n");
 
 	delete[] s_GraphicsBuffer;
 	s_GraphicsBuffer = NULL;
@@ -519,6 +530,21 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	GraphicsProcessor.end();
 	Memory.end();
 	System.end();
+
+	s_EmulatorRunning = false;
+	printf("emulator stop running\n");
+}
+
+void EmulatorClass::stop()
+{
+	s_MasterRunning = false;
+
+	while (s_EmulatorRunning) // TODO: Mutex?
+	{
+		System.delay(1);
+	}
+
+	printf("stop ok\n");
 }
 
 } /* namespace FT800EMU */

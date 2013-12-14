@@ -214,6 +214,14 @@ void SystemClass::resumeMCUThread()
 		SystemWindows.Error(TEXT("ResumeThread  FAILED"));
 }
 
+void SystemClass::killMCUThread()
+{
+	if (TerminateThread(s_MCUThread, 0) == FALSE)
+		SystemWindows.Error(TEXT("ExitThread  FAILED"));
+	printf("(1) mcu thread killed\n");
+}
+
+
 // Coprocessor thread control
 void SystemClass::makeCoprocessorThread()
 {

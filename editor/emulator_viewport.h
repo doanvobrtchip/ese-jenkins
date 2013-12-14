@@ -48,6 +48,7 @@ public:
 	
 	// Runs the emulator on a new thread and connects it with this viewport
 	void run(const FT800EMU::EmulatorParameters &params);
+	void stop();
 
 	// virtual QPaintEngine* paintEngine() const { return NULL; }
 
