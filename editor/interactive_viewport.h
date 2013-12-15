@@ -49,11 +49,21 @@ public:
 	virtual void graphics(QImage *image);
 
 private:
+	int getPointerMethod(int x, int y);
+
+protected:
+	virtual void mouseMoveEvent(QMouseEvent *e);
+	virtual void mousePressEvent(QMouseEvent *e);
+	virtual void mouseReleaseEvent(QMouseEvent *e);
+
+private:
 	MainWindow *m_MainWindow;
 
 	bool m_TraceEnabled;
 	uint32_t m_TraceX, m_TraceY;
 	std::vector<int> m_TraceStack;
+
+	bool m_MouseTouch;
 
 private:
 	InteractiveViewport(const InteractiveViewport &);

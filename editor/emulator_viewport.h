@@ -50,15 +50,16 @@ public:
 	void run(const FT800EMU::EmulatorParameters &params);
 	void stop();
 
-	// virtual QPaintEngine* paintEngine() const { return NULL; }
-
 	// Graphics callback synchronized to the emulator thread, use to get debug information for a frame
 	virtual void graphics() { }
 
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
 	virtual void graphics(QImage *image) { }
 
-	// QAction *createSaveScreenshotAction(QObject *parent);
+	int hsize();
+
+protected:
+	virtual void paintEvent(QPaintEvent *e);
 
 public slots:		
 	// void saveScreenshot();
@@ -66,9 +67,6 @@ public slots:
 
 signals:
 	void frame();
-
-private:
-	QLabel *m_Label;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);

@@ -205,8 +205,18 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	
 	m_UndoStack = new QUndoStack(this);
 	
+	QWidget *centralWidget = new QWidget(this);
+	QVBoxLayout *cvLayout = new QVBoxLayout(this);
+	QHBoxLayout *chLayout = new QHBoxLayout(this);
+	chLayout->addStretch();
 	m_EmulatorViewport = new InteractiveViewport(this);
-    setCentralWidget(m_EmulatorViewport);
+	chLayout->addWidget(m_EmulatorViewport);
+	chLayout->addStretch();
+	cvLayout->addStretch();
+	cvLayout->addLayout(chLayout);
+	cvLayout->addStretch();
+	centralWidget->setLayout(cvLayout);
+    setCentralWidget(centralWidget);
 	
 	createActions();
 	createMenus();
@@ -528,19 +538,17 @@ void MainWindow::createDockWindows()
 			
 			m_TraceEnabled = new QCheckBox(this);
 			m_TraceEnabled->setChecked(false);
-			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabled(bool)));
+			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
 			groupLayout->addWidget(m_TraceEnabled);
 			m_TraceX = new QSpinBox(this);
 			m_TraceX->setMinimum(0);
 			m_TraceX->setMaximum(511);
 			m_TraceX->setEnabled(false);
-			connect(m_TraceX, SIGNAL(valueChanged(int)), this, SLOT(traceX(int)));
 			groupLayout->addWidget(m_TraceX);
 			m_TraceY = new QSpinBox(this);
 			m_TraceY->setMinimum(0);
 			m_TraceY->setMaximum(511);
 			m_TraceY->setEnabled(false);
-			connect(m_TraceY, SIGNAL(valueChanged(int)), this, SLOT(traceY(int)));
 			groupLayout->addWidget(m_TraceY);
 			
 			group->setLayout(groupLayout);
@@ -655,21 +663,40 @@ void MainWindow::stepChanged(int step)
 	}
 }
 
-void MainWindow::traceEnabled(bool enabled)
+void MainWindow::setTraceEnabled(bool enabled)
 {
-	FT800EMU::GraphicsProcessor.setDebugTrace(enabled);
+	m_TraceEnabled->setChecked(enabled);
+}
+
+void MainWindow::setTraceX(int x)
+{
+	m_TraceX->setValue(x);
+}
+
+void MainWindow::setTraceY(int y)
+{
+	m_TraceY->setValue(y);
+}
+
+bool MainWindow::traceEnabled()
+{
+	return m_TraceEnabled->isChecked();
+}
+
+int MainWindow::traceX()
+{
+	return m_TraceX->value();
+}
+
+int MainWindow::traceY()
+{
+	return m_TraceY->value();
+}
+
+void MainWindow::traceEnabledChanged(bool enabled)
+{
 	m_TraceX->setEnabled(enabled);
 	m_TraceY->setEnabled(enabled);
-}
-
-void MainWindow::traceX(int x)
-{
-	FT800EMU::GraphicsProcessor.setDebugTrace(x, m_TraceY->value());
-}
-
-void MainWindow::traceY(int y)
-{
-	FT800EMU::GraphicsProcessor.setDebugTrace(m_TraceX->value(), y);
 }
 
 void MainWindow::clearEditor()

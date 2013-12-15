@@ -23,6 +23,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QMutex>
+#include <QPaintEvent>
+#include <QPainter>
 
 // Emulator includes
 #include <ft800emu_graphics_driver.h>
@@ -79,26 +81,26 @@ void EmulatorThread::run()
 
 EmulatorViewport::EmulatorViewport(QWidget *parent) 
 	: QWidget(parent)
-	// m_EmulatorConfig(NULL)
 {
 	s_EmulatorViewport = this;
 	s_Image = new QImage(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
 	s_Pixmap = new QPixmap(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT);
-	m_Label = new QLabel();
-	m_Label->setPixmap(*s_Pixmap);
 
-	QVBoxLayout *layout = new QVBoxLayout();
-	layout->addWidget(m_Label);
-	setLayout(layout);
+	setMinimumWidth(FT800EMU_WINDOW_WIDTH_DEFAULT);
+	setMinimumHeight(FT800EMU_WINDOW_HEIGHT_DEFAULT);
 }
 
 EmulatorViewport::~EmulatorViewport()
 {
 	stop();
-	delete m_Label; m_Label = NULL;
 	delete s_Pixmap; s_Pixmap = NULL;
 	delete s_Image; s_Image = NULL;
 	s_EmulatorViewport = NULL;
+}
+
+int EmulatorViewport::hsize()
+{
+	return s_Pixmap->width();
 }
 
 void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
@@ -126,6 +128,12 @@ void EmulatorViewport::stop()
 	FT800EMU::Emulator.stop();
 }
 
+void EmulatorViewport::paintEvent(QPaintEvent* e)
+{
+	QPainter painter(this);
+	painter.drawPixmap(0, 0, *s_Pixmap);
+}
+
 void EmulatorViewport::threadRepaint()
 {
 	s_Mutex.lock();
@@ -135,12 +143,13 @@ void EmulatorViewport::threadRepaint()
 	{
 		QPixmap *pixmap = s_Pixmap;
 		s_Pixmap = new QPixmap(s_Image->width(), s_Image->height());
-		m_Label->setPixmap(*s_Pixmap);
+		setMinimumWidth(s_Pixmap->width());
+		setMinimumHeight(s_Image->height());
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
 	s_Mutex.unlock();
-	m_Label->repaint();
+	repaint();
 	frame();
 }
 

@@ -194,11 +194,9 @@ BitmapInfo s_BitmapInfoMain[32];
 
 bool s_RegPwmDutyEmulation = false;
 
-bool s_DebugTraceEnabled = false;
 uint32_t s_DebugTraceX = 0;
-uint32_t s_DebugTraceY = 0;
 uint32_t s_DebugTraceLine = 0;
-std::vector<uint32_t> s_DebugTraceStack;
+std::vector<int> *s_DebugTraceStack = NULL;
 
 #pragma endregion
 
@@ -534,7 +532,7 @@ FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 				// Check the point to be traced.
 				if (x == s_DebugTraceX)
 				{
-					s_DebugTraceStack.push_back(s_DebugTraceLine);
+					s_DebugTraceStack->push_back(s_DebugTraceLine);
 				}
 			}
 		}
@@ -2495,6 +2493,7 @@ DisplayListDisplay:
 	;
 }
 
+template <bool debugTrace>
 void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = Memory.getRam();
@@ -2507,19 +2506,6 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	int debugLimiterIndex = 0;
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
-		bool debugTrace = false;
-		if (s_DebugTraceEnabled)
-		{
-			if (s_DebugTraceY == y)
-			{
-				// Enable tracing for this line.
-				debugTrace = true;
-
-				// Reset the debug trace stack.
-				s_DebugTraceStack.clear();
-			}
-		}
-
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
@@ -2769,9 +2755,12 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_CLEAR:
 					if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 					{
-						if (debugTrace && gs.ScissorX.U <= s_DebugTraceX && s_DebugTraceX < gs.ScissorX2.U)
+						if (debugTrace)
 						{
-							s_DebugTraceStack.push_back(s_DebugTraceLine);
+							if (v && gs.ScissorX.U <= s_DebugTraceX && s_DebugTraceX < gs.ScissorX2.U)
+							{
+								s_DebugTraceStack->push_back(s_DebugTraceLine);
+							}
 						}
 						if (v & 0x04)
 						{
@@ -2810,55 +2799,34 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						debugTrace
-							? displayBitmap<true>(gs, bc, bs, bt, y, hsize, px, py, 
-								((v >> 7) & 0x1F),
-								v & 0x7F,
-								bitmapInfo)
-							: displayBitmap<false>(gs, bc, bs, bt, y, hsize, px, py, 
-								((v >> 7) & 0x1F),
-								v & 0x7F,
-								bitmapInfo);
+						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py, 
+							((v >> 7) & 0x1F),
+							v & 0x7F,
+							bitmapInfo);
 						break;
 					case POINTS:
-						debugTrace
-							? displayPoint<true>(gs, bc, bs, bt, y, hsize, px, py)
-							: displayPoint<false>(gs, bc, bs, bt, y, hsize, px, py);
+						displayPoint<debugTrace>(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						debugTrace
-							? displayLines<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						debugTrace
-							? displayLineStrip<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs,  px, py);
 						break;
 					case EDGE_STRIP_R:
-						debugTrace
-							? displayEdgeStripR<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripR<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						debugTrace
-							? displayEdgeStripL<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripL<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						debugTrace
-							? displayEdgeStripA<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripA<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						debugTrace
-							? displayEdgeStripB<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripB<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						debugTrace
-							? displayRects<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayRects<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
@@ -2872,55 +2840,34 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						debugTrace
-							? displayBitmap<true>(gs, bc, bs, bt, y, hsize, px, py, 
-								gs.BitmapHandle, 
-								gs.Cell,
-								bitmapInfo)
-							: displayBitmap<false>(gs, bc, bs, bt, y, hsize, px, py, 
-								gs.BitmapHandle, 
-								gs.Cell,
-								bitmapInfo);
+						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py, 
+							gs.BitmapHandle, 
+							gs.Cell,
+							bitmapInfo);
 						break;
 					case POINTS:
-						debugTrace
-							? displayPoint<true>(gs, bc, bs, bt, y, hsize, px, py)
-							: displayPoint<false>(gs, bc, bs, bt, y, hsize, px, py);
+						displayPoint<debugTrace>(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						debugTrace
-							? displayLines<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						debugTrace
-							? displayLineStrip<true>(gs, bc, bs, bt, y, hsize, vs,  px, py)
-							: displayLineStrip<false>(gs, bc, bs, bt, y, hsize, vs,  px, py);
+						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs,  px, py);
 						break;
 					case EDGE_STRIP_R:
-						debugTrace
-							? displayEdgeStripR<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripR<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						debugTrace
-							? displayEdgeStripL<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripL<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						debugTrace
-							? displayEdgeStripA<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripA<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						debugTrace
-							? displayEdgeStripB<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayEdgeStripB<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						debugTrace
-							? displayRects<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
-							: displayRects<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
@@ -3041,7 +2988,7 @@ int launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 		
 		// printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
@@ -3072,7 +3019,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 		
-		processPart(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 
 		SetEvent(li->EndEvent);
 	}
@@ -3110,13 +3057,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+		processPart<false>(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 #	endif
 #endif
 	}
 	
 	// Run part on this thread
-	processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+	processPart<false>(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 	
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
@@ -3148,6 +3095,18 @@ void GraphicsProcessorClass::processBlank()
 	{
 		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 	}
+}
+
+void GraphicsProcessorClass::processTrace(std::vector<int> &result, uint32_t x, uint32_t y, uint32_t hsize)
+{
+	argb8888 buffer[FT800EMU_WINDOW_WIDTH_MAX];
+	argb8888 *dummyBuffer = buffer - (y * hsize);
+	BitmapInfo bitmapInfo[32];
+	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+	s_DebugTraceX = x;
+	s_DebugTraceStack = &result;
+	processPart<true>(dummyBuffer, false, false, hsize, y + 1, y, FT800EMU_WINDOW_HEIGHT_MAX, bitmapInfo);
+	s_DebugTraceStack = NULL;
 }
 
 void GraphicsProcessorClass::setDebugMode(int debugMode)
@@ -3190,6 +3149,7 @@ int GraphicsProcessorClass::getDebugLimiterIndex()
 	return s_DebugLimiterIndex;
 }
 
+/*
 // Sets operation trace on specified point
 void GraphicsProcessorClass::setDebugTrace(uint32_t x, uint32_t y)
 {
@@ -3214,11 +3174,12 @@ void GraphicsProcessorClass::getDebugTrace(bool &enabled, uint32_t &x, uint32_t 
 // Returns a *copy* of the debug trace
 void GraphicsProcessorClass::getDebugTrace(std::vector<int> &result)
 {
-	for (int i = 0; i < s_DebugTraceStack.size(); ++i)
+	for (int i = 0; i < s_DebugTraceStackData.size(); ++i)
 	{
-		result.push_back(s_DebugTraceStack[i]);
+		result.push_back(s_DebugTraceStackData[i]);
 	}
 }
+*/
 
 } /* namespace FT800EMU */
 

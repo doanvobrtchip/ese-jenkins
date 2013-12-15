@@ -54,6 +54,14 @@ public:
 
 	DlEditor *dlEditor() { return m_DlEditor; }
 
+	void setTraceEnabled(bool enabled);
+	void setTraceX(int x);
+	void setTraceY(int y);
+
+	bool traceEnabled();
+	int traceX();
+	int traceY();
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -74,9 +82,7 @@ private slots:
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
 
-	void traceEnabled(bool enabled);
-	void traceX(int x);
-	void traceY(int y);
+	void traceEnabledChanged(bool enabled);
 	
 private:
 	void updateInitialization(bool visible);
