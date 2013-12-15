@@ -194,6 +194,12 @@ BitmapInfo s_BitmapInfoMain[32];
 
 bool s_RegPwmDutyEmulation = false;
 
+bool s_DebugTraceEnabled = false;
+uint32_t s_DebugTraceX = 0;
+uint32_t s_DebugTraceY = 0;
+uint32_t s_DebugTraceLine = 0;
+std::vector<uint32_t> s_DebugTraceStack;
+
 #pragma endregion
 
 #pragma region Math
@@ -512,6 +518,7 @@ FT800EMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &sr
 
 }
 
+template <bool debugTrace>
 FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int x, const argb8888 out)
 {
 	if (testAlpha(gs, out))
@@ -520,6 +527,16 @@ FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 		{
 			bc[x] = blend(gs, out, bc[x]);
 			writeTag(gs, bt, x);
+			
+			// Conditionally compiled debug functionality, will only be called on the line that is being debugged.
+			if (debugTrace)
+			{
+				// Check the point to be traced.
+				if (x == s_DebugTraceX)
+				{
+					s_DebugTraceStack.push_back(s_DebugTraceLine);
+				}
+			}
 		}
 	}
 }
@@ -530,6 +547,7 @@ FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 
 #define FT800EMU_POINT_STENCIL_INCREASE 1
 
+template <bool debugTrace>
 void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const int scy1, const int scx2, const int scy2, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int px, int py)
 {
 #if FT800EMU_POINT_STENCIL_INCREASE // Add an extra border outside the outer AA for the stencil due to AA differences
@@ -583,13 +601,13 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 				if (psin > 0)
 				{
 					const argb8888 out = gs.ColorARGB;
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 				}
 				else // Small point in single pixel
 				{
 					const int outalpha =  ((gs.ColorARGB >> 24) * ps) >> 3;
 					const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 				}
 			}
 			else if (distsq <= pssqout) // AA Border
@@ -600,22 +618,23 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 				const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
 				const int outalpha = ((gs.ColorARGB >> 24) * alpha) >> 8;
 				const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-				processPixel(gs, bc, bs, bt, x, out);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 			}
 #if FT800EMU_POINT_STENCIL_INCREASE
 			else if (distsq <= pssqstc)
 			{
 				const argb8888 out = gs.ColorARGB & 0x00FFFFFF;
-				processPixel(gs, bc, bs, bt, x, out);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 			}
 #endif
 		}
 	}
 }
 
+template <bool debugTrace>
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int /*hsize*/, int px, int py)
 {
-	displayPoint(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);	
+	displayPoint<debugTrace>(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);	
 }
 
 // Utility for primitives that use points to blend the AA at the edges. 
@@ -892,6 +911,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 	return 0xFFFFFF00; // invalid filter
 }
 
+template <bool debugTrace>
 void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, BitmapInfo *const bitmapInfo)
 {
     // if (y != 22) return;
@@ -943,7 +963,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
-			processPixel(gs, bc, bs, bt, x, out);
+			processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 		}
 	}
 }
@@ -984,6 +1004,7 @@ public:
 	int X1, Y1;
 };
 
+template <bool debugTrace>
 void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
 {
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
@@ -1037,7 +1058,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int surf = dxs * dys; // Surface of the rectangle in scale 256
 				const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8; // Alpha 0-255
 				const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-				processPixel(gs, bc, bs, bt, x, out);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 			}
 		}
 		else if (xslw_px == 1) // Single pixel width rects (ignores impact of rounded corners)
@@ -1072,7 +1093,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					alpha = ((gs.ColorARGB >> 24) * dxs) >> 4;
 				}
 				const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-				processPixel(gs, bc, bs, bt, x, out);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 			}
 		}
 		else if (yslw_px == 1) // Single pixel height rects (ignores impact of rounded corners)
@@ -1098,7 +1119,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					const int surf = (16 - dxl) * dys;
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
 				}
 				if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
@@ -1107,14 +1128,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					const int surf = dxr * dys;
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
 				}
 				for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 				{
 					const int alpha = ((gs.ColorARGB >> 24) * dys) >> 4;
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 				}
 			}
 		}
@@ -1149,7 +1170,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					const int surf = (16 - dxl) * rowfill;
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
 				}
 				if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
@@ -1158,7 +1179,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					const int surf = dxr * rowfill;
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-					processPixel(gs, bc, bs, bt, x, out);
+					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
 				}
 				if (rowfill < 16) // Top or bottom row
@@ -1167,7 +1188,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					{
 						const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
 						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-						processPixel(gs, bc, bs, bt, x, out);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
 				else // Any other row
@@ -1175,14 +1196,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
 						const argb8888 out = gs.ColorARGB;
-						processPixel(gs, bc, bs, bt, x, out);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
 			}
 		}
 		else if (x2 - x1 == 0 && y2 - y1 == 0) // Rectangle that's actually a point
 		{
-			displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, x1 - 8, y1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+			displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, x1 - 8, y1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
 		}
 		else
 		{
@@ -1270,15 +1291,15 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				if (x2 - x1 == 0) // Vertical line
 				{				
-					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+					displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
 				}
 				else
 				{
 					const int bx1_px_sc_r = min(bx1_px, gs.ScissorX2.I); // Scissored
 					const int bx2_px_sc_l = max(bx2_px, gs.ScissorX.I); // Scissored
 					// Render top-left and top-right corner
-					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8);
-					displayPoint(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by1 - 8);
+					displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8);
+					displayPoint<debugTrace>(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by1 - 8);
 					const int dyt = y1lw & 0xF; // Top coordinate in 1/16 relative to top pixel
 					if (y == y1lw_px) // && dyt > 0) // Top row
 					{
@@ -1299,7 +1320,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
 								const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								processPixel(gs, bc, bs, bt, x, out);						
+								processPixel<debugTrace>(gs, bc, bs, bt, x, out);						
 							}
 						}
 						else
@@ -1315,7 +1336,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
 									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									processPixel(gs, bc, bs, bt, x, out);
+									processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									++bx1_px_sc_l;
 								}
 
@@ -1329,7 +1350,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
 									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									processPixel(gs, bc, bs, bt, x, out);
+									processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									--bx2_px_sc_r;
 								}
 
@@ -1340,7 +1361,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 									for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 									{
-										processPixel(gs, bc, bs, bt, x, out);
+										processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									}
 								}
 							}
@@ -1353,7 +1374,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
 						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 						{
-							processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 						}
 					}
 				}
@@ -1362,15 +1383,15 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				if (x2 - x1 == 0) // Vertical line
 				{
-					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
+					displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
 				}
 				else
 				{
 					const int bx1_px_sc_r = min(bx1_px, gs.ScissorX2.I); // Scissored X2
 					const int bx2_px_sc_l = max(bx2_px, gs.ScissorX.I); // Scissored X1
 					// Render bottom-left and bottom-right corner
-					displayPoint(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8);
-					displayPoint(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by2 - 8);
+					displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, bx1_px_sc_r, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by2 - 8);
+					displayPoint<debugTrace>(gs, gs.LineWidth, bx2_px_sc_l, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx2 - 8, by2 - 8);
 					const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel
 					if (y == (y2lw_px - 1)) // && dyb < 16) // Bottom row
 					{
@@ -1391,7 +1412,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
 								const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								processPixel(gs, bc, bs, bt, x, out);
+								processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							}
 						}
 						else
@@ -1407,7 +1428,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 									const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft);
 									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									processPixel(gs, bc, bs, bt, x, out);
+									processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									++bx1_px_sc_l;
 								}
 
@@ -1421,7 +1442,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 									const int alphaval = (rowfill * blendinv) + (alpharight * blendright);
 									const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 									const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-									processPixel(gs, bc, bs, bt, x, out);
+									processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									--bx2_px_sc_r;
 								}
 
@@ -1432,7 +1453,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 									for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 									{
-										processPixel(gs, bc, bs, bt, x, out);
+										processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 									}
 								}
 							}
@@ -1445,7 +1466,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						const int bx2_px_sc_r = min(bx2_px_sc_l, gs.ScissorX2.I); // Scissored
 						for (int x = bx1_px_sc_l; x < bx2_px_sc_r; ++x)
 						{
-							processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 						}
 					}
 				}
@@ -1467,7 +1488,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int surf = (16 - dxl);
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							++x1lw_px_sc;
 						}
 						if (x2lw_px == x2lw_px_sc && dxr < 16) // Draw the right pixel if not fully on
@@ -1476,7 +1497,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int surf = dxr;
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 4;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							--x2lw_px_sc;
 						}
 					}
@@ -1509,7 +1530,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							++x1lw_px_sc;
 						}
 						// Right
@@ -1519,14 +1540,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							--x2lw_px_sc;
 						}
 					}
 					// The rest of the pixels
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
-						processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 					}
 				}
 			}
@@ -1534,6 +1555,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
+template <bool debugTrace>
 void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
@@ -1561,7 +1583,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 #endif
 	rs.Set = false;
 
-	displayRects(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
+	displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
 }
 
 #pragma endregion
@@ -1581,6 +1603,7 @@ FT800EMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, con
 	return x1 + (xd * yr / yd);
 }
 
+template <bool debugTrace>
 void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
@@ -1632,11 +1655,12 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 		for (int x = left_sc; x < right_sc; ++x)
 		{
-			processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+			processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 		}
 	}
 }
 
+template <bool debugTrace>
 void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
@@ -1688,11 +1712,12 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 		for (int x = left_sc; x < right_sc; ++x)
 		{
-			processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+			processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 		}
 	}
 }
 
+template <bool debugTrace>
 void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
@@ -1746,19 +1771,20 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 			for (int x = left_sc; x < right_sc; ++x)
 			{
-				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 		else
 		{
 			for (int x = x1_sc; x < x2_sc; ++x)
 			{
-				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 	}
 }
 
+template <bool debugTrace>
 void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &ess, const int xp, const int yp)
 {
 	if (!ess.Set)
@@ -1816,14 +1842,14 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 			for (int x = left_sc; x < right_sc; ++x)
 			{
-				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 		else
 		{
 			for (int x = x1_sc; x < x2_sc; ++x)
 			{
-				processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+				processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 			}
 		}
 	}
@@ -1844,6 +1870,7 @@ FT800EMU_FORCE_INLINE int findxrel(const int &x1, const int &xd, const int &y1, 
 	return x1 + ((int64_t)xd * (int64_t)yr / (int64_t)yd);
 }
 
+template <bool debugTrace>
 void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
 {
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
@@ -1860,13 +1887,13 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		if (x1 - x2 == 0 && y1 - y2 == 0) // This line is a point
 		{
 			// Use point rendering
-			displayPoint(gs, lw, gs.ScissorX.I, scy1, gs.ScissorX2.I, scy2, bc, bs, bt, y, x1, y1);
+			displayPoint<debugTrace>(gs, lw, gs.ScissorX.I, scy1, gs.ScissorX2.I, scy2, bc, bs, bt, y, x1, y1);
 		}
 		if (x1 - x2 == 0 || y1 - y2 == 0) // Horizontal or vertical lines
 		{
 			// Just use the rects optimized codepath for this
 			// printf("Not implemented horizontal or vertical line\n");
-			displayRects(gs, bc, bs, bt, y, hsize, rs, min(x1, x2) + 8, y1 + 8, max(x1, x2) + 8, y2 + 8);
+			displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, rs, min(x1, x2) + 8, y1 + 8, max(x1, x2) + 8, y2 + 8);
 		}
 		else
 		{
@@ -2011,7 +2038,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 						const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
 						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-						processPixel(gs, bc, bs, bt, x, out);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
 
@@ -2022,7 +2049,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						
 					for (int x = left_sc; x < right_sc; ++x)
 					{
-						processPixel(gs, bc, bs, bt, x, gs.ColorARGB);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
 					}
 				}
 
@@ -2072,20 +2099,20 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 						const int outalpha = ((gs.ColorARGB >> 24) * ((alphawidth * alpharest) + (alphaleft) + (alpharight))) >> 16;
 						const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-						processPixel(gs, bc, bs, bt, x, out);
+						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
 
 				// Draw the points
 				if (ql2r > ql1r)
 				{
-					displayPoint(gs, lw, scx1, scy1, min(l1o, scx2), scy2, bc, bs, bt, y, x1, y1);
-					displayPoint(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x2, y2);
+					displayPoint<debugTrace>(gs, lw, scx1, scy1, min(l1o, scx2), scy2, bc, bs, bt, y, x1, y1);
+					displayPoint<debugTrace>(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x2, y2);
 				}
 				else
 				{
-					displayPoint(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x1, y1);
-					displayPoint(gs, lw, scx1, scy1, min(l1o, scx2), scy2, bc, bs, bt, y, x2, y2);
+					displayPoint<debugTrace>(gs, lw, max(l2o, scx1), scy1, scx2, scy2, bc, bs, bt, y, x1, y1);
+					displayPoint<debugTrace>(gs, lw, scx1, scy1, min(l1o, scx2), scy2, bc, bs, bt, y, x2, y2);
 				}
 			}
 			else // Line width a pixel or less
@@ -2146,7 +2173,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 							// lw = 3, alphawidth = 8
 							const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth) >> 11;
 							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 						}
 						else
 						{
@@ -2156,7 +2183,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 							const int outalpha = ((gs.ColorARGB >> 24) * lw * alphawidth * alphalen) >> 19;
 							const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
-							processPixel(gs, bc, bs, bt, x, out);
+							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 						}
 					}
 				}
@@ -2165,6 +2192,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	}
 }
 
+template <bool debugTrace>
 void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
@@ -2185,13 +2213,14 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int x2 = y2 == y2r ? x2r : x1r; 
 	rs.Set = false;
 
-	displayLines(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
+	displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
 }
 
 #pragma endregion
 
 #pragma region Primitive: Line Strip
 
+template <bool debugTrace>
 void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int xp, const int yp)
 {
 	if (!rs.Set)
@@ -2213,7 +2242,7 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	rs.X1 = xp;
 	rs.Y1 = yp;
 
-	displayLines(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
+	displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
 }
 
 #pragma endregion
@@ -2478,6 +2507,19 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	int debugLimiterIndex = 0;
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
+		bool debugTrace = false;
+		if (s_DebugTraceEnabled)
+		{
+			if (s_DebugTraceY == y)
+			{
+				// Enable tracing for this line.
+				debugTrace = true;
+
+				// Reset the debug trace stack.
+				s_DebugTraceStack.clear();
+			}
+		}
+
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState();
@@ -2759,34 +2801,55 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
-							((v >> 7) & 0x1F),
-							v & 0x7F,
-							bitmapInfo);
+						debugTrace
+							? displayBitmap<true>(gs, bc, bs, bt, y, hsize, px, py, 
+								((v >> 7) & 0x1F),
+								v & 0x7F,
+								bitmapInfo)
+							: displayBitmap<false>(gs, bc, bs, bt, y, hsize, px, py, 
+								((v >> 7) & 0x1F),
+								v & 0x7F,
+								bitmapInfo);
 						break;
 					case POINTS:
-						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
+						debugTrace
+							? displayPoint<true>(gs, bc, bs, bt, y, hsize, px, py)
+							: displayPoint<false>(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						displayLines(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayLines<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayLineStrip<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_R:
-						displayEdgeStripR(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripR<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripR<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						displayEdgeStripL(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripL<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripL<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						displayEdgeStripA(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripA<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripA<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						displayEdgeStripB(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripB<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripB<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						displayRects(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayRects<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayRects<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
@@ -2800,34 +2863,55 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap(gs, bc, bs, bt, y, hsize, px, py, 
-							gs.BitmapHandle, 
-							gs.Cell,
-							bitmapInfo);
+						debugTrace
+							? displayBitmap<true>(gs, bc, bs, bt, y, hsize, px, py, 
+								gs.BitmapHandle, 
+								gs.Cell,
+								bitmapInfo)
+							: displayBitmap<false>(gs, bc, bs, bt, y, hsize, px, py, 
+								gs.BitmapHandle, 
+								gs.Cell,
+								bitmapInfo);
 						break;
 					case POINTS:
-						displayPoint(gs, bc, bs, bt, y, hsize, px, py);
+						debugTrace
+							? displayPoint<true>(gs, bc, bs, bt, y, hsize, px, py)
+							: displayPoint<false>(gs, bc, bs, bt, y, hsize, px, py);
 						break;
 					case LINES:
-						displayLines(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayLines<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayLines<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip(gs, bc, bs, bt, y, hsize, vs,  px, py);
+						debugTrace
+							? displayLineStrip<true>(gs, bc, bs, bt, y, hsize, vs,  px, py)
+							: displayLineStrip<false>(gs, bc, bs, bt, y, hsize, vs,  px, py);
 						break;
 					case EDGE_STRIP_R:
-						displayEdgeStripR(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripR<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripR<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						displayEdgeStripL(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripL<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripL<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						displayEdgeStripA(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripA<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripA<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						displayEdgeStripB(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayEdgeStripB<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayEdgeStripB<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
-						displayRects(gs, bc, bs, bt, y, hsize, vs, px, py);
+						debugTrace
+							? displayRects<true>(gs, bc, bs, bt, y, hsize, vs, px, py)
+							: displayRects<false>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					}
 				}
@@ -3095,6 +3179,34 @@ bool GraphicsProcessorClass::getDebugLimiterEffective()
 int GraphicsProcessorClass::getDebugLimiterIndex()
 {
 	return s_DebugLimiterIndex;
+}
+
+// Enables operation trace on specified point, implicitly enables tracing
+void GraphicsProcessorClass::setDebugTrace(uint32_t x, uint32_t y)
+{
+	s_DebugTraceEnabled = true;
+	s_DebugTraceX = x;
+	s_DebugTraceY = y;
+}
+
+// Disables or enables tracing
+void GraphicsProcessorClass::setDebugTrace(bool enabled)
+{
+	s_DebugTraceEnabled = enabled;
+}
+
+// Returns the debug tracing state
+void GraphicsProcessorClass::getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y)
+{
+	enabled = s_DebugTraceEnabled;
+	x = s_DebugTraceX;
+	y = s_DebugTraceY;
+}
+
+// Returns a *copy* of the debug trace
+void GraphicsProcessorClass::getDebugTrace(std::vector<uint32_t> &result)
+{
+	std::copy(s_DebugTraceStack.begin(), s_DebugTraceStack.end(), result.end());
 }
 
 } /* namespace FT800EMU */
