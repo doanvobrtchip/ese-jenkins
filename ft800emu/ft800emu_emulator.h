@@ -43,6 +43,8 @@ enum EmulatorFlags
 	EmulatorEnableRegRotate = 0x80, 
 	// enable emulating REG_PWM_DUTY by fading the rendered display to black
 	EmulatorEnableRegPwmDutyEmulation = 0x100, 
+	// enable killing the loop thread on exit
+	// EmulatorEnableKillLoopThread = 0x200, 
 };
 
 struct EmulatorParameters

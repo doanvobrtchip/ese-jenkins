@@ -64,14 +64,14 @@ public:
 	static bool getDebugLimiterEffective();
 	static int getDebugLimiterIndex();
 
-	// Enables operation trace on specified point, implicitly enables tracing
+	// Sets operation trace on specified point
 	static void setDebugTrace(uint32_t x, uint32_t y);
 	// Disables or enables tracing
 	static void setDebugTrace(bool enabled);
 	// Returns the debug tracing state
 	static void getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y);
 	// Returns a *copy* of the debug trace
-	static void getDebugTrace(std::vector<uint32_t> &result);
+	static void getDebugTrace(std::vector<int> &result);
 
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);

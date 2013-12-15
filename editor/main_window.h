@@ -33,7 +33,7 @@ class QCheckBox;
 
 namespace FT800EMUQT {
 	// class CommandLog;
-	class EmulatorViewport;
+	class InteractiveViewport;
 	class DlEditor;
 	// class EmulatorConfig;
 	class PropertiesEditor;
@@ -51,6 +51,8 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = 0);
 	virtual ~MainWindow();
+
+	DlEditor *dlEditor() { return m_DlEditor; }
 
 private slots:
 	// void applyEmulatorConfig();
@@ -71,6 +73,10 @@ private slots:
 	
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
+
+	void traceEnabled(bool enabled);
+	void traceX(int x);
+	void traceY(int y);
 	
 private:
 	void updateInitialization(bool visible);
@@ -100,7 +106,7 @@ private:
 
 	QUndoStack *m_UndoStack;
 
-	EmulatorViewport *m_EmulatorViewport;
+	InteractiveViewport *m_EmulatorViewport;
 	
 	DlEditor *m_DlEditor;
 	QDockWidget *m_DlEditorDock;
@@ -114,9 +120,13 @@ private:
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
 	
+	// Controls
 	QDockWidget *m_ControlsDock;
 	QCheckBox *m_StepEnabled;
 	QSpinBox *m_StepCount;
+	QCheckBox *m_TraceEnabled;
+	QSpinBox *m_TraceX;
+	QSpinBox *m_TraceY;
 	
 	QMenu *m_FileMenu;
 	QMenu *m_EditMenu;

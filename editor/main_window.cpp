@@ -57,13 +57,11 @@
 // Project includes
 #include "dl_editor.h"
 // #include "command_log.h"
-#include "emulator_viewport.h"
+#include "interactive_viewport.h"
 // #include "emulator_config.h"
 #include "properties_editor.h"
 
 namespace FT800EMUQT {
-
-#define FT800EMU_XBU_FILE "../reference/xbu/BIRDS.XBU"
 
 int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
 int s_VSize = FT800EMU_WINDOW_HEIGHT_DEFAULT;
@@ -195,6 +193,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), 
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), 
+	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL), 
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
@@ -206,7 +205,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	
 	m_UndoStack = new QUndoStack(this);
 	
-	m_EmulatorViewport = new EmulatorViewport(this);
+	m_EmulatorViewport = new InteractiveViewport(this);
     setCentralWidget(m_EmulatorViewport);
 	
 	createActions();
@@ -520,6 +519,33 @@ void MainWindow::createDockWindows()
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
+
+		// Trace
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Trace"));
+			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+			
+			m_TraceEnabled = new QCheckBox(this);
+			m_TraceEnabled->setChecked(false);
+			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabled(bool)));
+			groupLayout->addWidget(m_TraceEnabled);
+			m_TraceX = new QSpinBox(this);
+			m_TraceX->setMinimum(0);
+			m_TraceX->setMaximum(511);
+			m_TraceX->setEnabled(false);
+			connect(m_TraceX, SIGNAL(valueChanged(int)), this, SLOT(traceX(int)));
+			groupLayout->addWidget(m_TraceX);
+			m_TraceY = new QSpinBox(this);
+			m_TraceY->setMinimum(0);
+			m_TraceY->setMaximum(511);
+			m_TraceY->setEnabled(false);
+			connect(m_TraceY, SIGNAL(valueChanged(int)), this, SLOT(traceY(int)));
+			groupLayout->addWidget(m_TraceY);
+			
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
 		
 		layout->addStretch();
 		widget->setLayout(layout);
@@ -627,6 +653,23 @@ void MainWindow::stepChanged(int step)
 	{
 		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
 	}
+}
+
+void MainWindow::traceEnabled(bool enabled)
+{
+	FT800EMU::GraphicsProcessor.setDebugTrace(enabled);
+	m_TraceX->setEnabled(enabled);
+	m_TraceY->setEnabled(enabled);
+}
+
+void MainWindow::traceX(int x)
+{
+	FT800EMU::GraphicsProcessor.setDebugTrace(x, m_TraceY->value());
+}
+
+void MainWindow::traceY(int y)
+{
+	FT800EMU::GraphicsProcessor.setDebugTrace(m_TraceX->value(), y);
 }
 
 void MainWindow::clearEditor()

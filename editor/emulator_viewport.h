@@ -35,7 +35,7 @@ namespace FT800EMUQT {
 /**
  * EmulatorViewport
  * \brief EmulatorViewport
- * \date 2010-02-06 10:11GMT
+ * \date 2013-10-15 13:18GMT
  * \author Jan Boon (Kaetemi)
  */
 class EmulatorViewport : public QWidget
@@ -51,6 +51,12 @@ public:
 	void stop();
 
 	// virtual QPaintEngine* paintEngine() const { return NULL; }
+
+	// Graphics callback synchronized to the emulator thread, use to get debug information for a frame
+	virtual void graphics() { }
+
+	// Graphics callback synchronized to Qt thread, use to overlay graphics
+	virtual void graphics(QImage *image) { }
 
 	// QAction *createSaveScreenshotAction(QObject *parent);
 

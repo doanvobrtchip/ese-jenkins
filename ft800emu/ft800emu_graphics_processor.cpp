@@ -2582,6 +2582,11 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 				if (y == 0) debugLimiterIndex = c;
 				++debugCounter;
 			}
+
+			if (debugTrace)
+			{
+				s_DebugTraceLine = c;
+			}
 			
 			gs.DebugDisplayListIndex = c;
 
@@ -2764,6 +2769,10 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_CLEAR:
 					if (y >= gs.ScissorY.U && y < gs.ScissorY2.U)
 					{
+						if (debugTrace && gs.ScissorX.U <= s_DebugTraceX && s_DebugTraceX < gs.ScissorX2.U)
+						{
+							s_DebugTraceStack.push_back(s_DebugTraceLine);
+						}
 						if (v & 0x04)
 						{
 							// clear color buffer (about loop+480 ops)
@@ -3181,10 +3190,9 @@ int GraphicsProcessorClass::getDebugLimiterIndex()
 	return s_DebugLimiterIndex;
 }
 
-// Enables operation trace on specified point, implicitly enables tracing
+// Sets operation trace on specified point
 void GraphicsProcessorClass::setDebugTrace(uint32_t x, uint32_t y)
 {
-	s_DebugTraceEnabled = true;
 	s_DebugTraceX = x;
 	s_DebugTraceY = y;
 }
@@ -3204,9 +3212,12 @@ void GraphicsProcessorClass::getDebugTrace(bool &enabled, uint32_t &x, uint32_t 
 }
 
 // Returns a *copy* of the debug trace
-void GraphicsProcessorClass::getDebugTrace(std::vector<uint32_t> &result)
+void GraphicsProcessorClass::getDebugTrace(std::vector<int> &result)
 {
-	std::copy(s_DebugTraceStack.begin(), s_DebugTraceStack.end(), result.end());
+	for (int i = 0; i < s_DebugTraceStack.size(); ++i)
+	{
+		result.push_back(s_DebugTraceStack[i]);
+	}
 }
 
 } /* namespace FT800EMU */

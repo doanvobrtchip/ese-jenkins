@@ -37,6 +37,7 @@ EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
 static QMutex s_Mutex;
+static EmulatorViewport *s_EmulatorViewport = NULL;
 
 bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
 {
@@ -56,7 +57,7 @@ bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t 
 		{
 			// printf("Graphics received");
 			// This is just terrible code.
-			for (int y = 0; y < vsize; ++y)
+			for (uint32_t y = 0; y < vsize; ++y)
 				memcpy(s_Image->scanLine(y), &buffer[y * hsize], sizeof(argb8888) * hsize);
 		}
 		else
@@ -64,6 +65,7 @@ bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t 
 			// TODO: Blank
 			// ..
 		}
+		s_EmulatorViewport->graphics();
 		s_Mutex.unlock();
 		s_EmulatorThread->repaint();
 	}
@@ -79,6 +81,7 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	: QWidget(parent)
 	// m_EmulatorConfig(NULL)
 {
+	s_EmulatorViewport = this;
 	s_Image = new QImage(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
 	s_Pixmap = new QPixmap(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT);
 	m_Label = new QLabel();
@@ -95,7 +98,7 @@ EmulatorViewport::~EmulatorViewport()
 	delete m_Label; m_Label = NULL;
 	delete s_Pixmap; s_Pixmap = NULL;
 	delete s_Image; s_Image = NULL;
-	// TODO: End the emulator thread in a clean way
+	s_EmulatorViewport = NULL;
 }
 
 void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
@@ -126,6 +129,7 @@ void EmulatorViewport::stop()
 void EmulatorViewport::threadRepaint()
 {
 	s_Mutex.lock();
+	graphics(s_Image);
 	if (s_Image->width() != s_Pixmap->width()
 		|| s_Image->height() != s_Image->height())
 	{
