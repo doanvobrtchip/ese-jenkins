@@ -3014,7 +3014,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
 #else
-#	if WIN32
+#	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
 		processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
@@ -3037,7 +3037,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		SDL_SemWait(li->EndSem);
 		// printf("%i: sem wait %i (%i)<-\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 #else
-#	if WIN32
+#	ifdef WIN32
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
 		WaitForSingleObject(li->EndEvent, INFINITE);
 		ResetEvent(li->EndEvent);
