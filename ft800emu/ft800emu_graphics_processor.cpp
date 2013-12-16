@@ -45,6 +45,7 @@
 #include "ft800emu_system.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_driver.h"
+#include "ft800emu_minmax.h"
 #include "vc.h"
 
 // using namespace ...;

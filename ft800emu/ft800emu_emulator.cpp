@@ -35,6 +35,8 @@
 #include "ft800emu_audio_render.h"
 #include "ft800emu_audio_processor.h"
 
+#include "ft800emu_minmax.h"
+
 #include "vc.h"
 
 #ifndef FT800EMU_SDL

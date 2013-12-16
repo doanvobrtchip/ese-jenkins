@@ -22,6 +22,7 @@
 #include "ft800emu_audio_driver.h"
 #include "ft800emu_audio_processor.h"
 #include "ft800emu_memory.h"
+#include "ft800emu_minmax.h"
 #include "vc.h"
 
 // using namespace ...;
