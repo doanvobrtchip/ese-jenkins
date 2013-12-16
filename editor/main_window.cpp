@@ -40,10 +40,10 @@
 #include <QCheckBox>
 
 // Emulator includes
-#ifndef WIN32
-#	define NOMINMAX
-#endif
 #include <ft800emu_inttypes.h>
+#ifdef WIN32
+#	include <ft800emu_minmax.h>
+#endif
 #include <ft800emu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
 #include <ft800emu_keyboard.h>

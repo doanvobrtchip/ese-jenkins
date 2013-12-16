@@ -22,7 +22,6 @@
 #include <QStringList>
 
 // Emulator includes
-#define NOMINMAX
 #include <ft800emu_inttypes.h>
 
 // Project includes
