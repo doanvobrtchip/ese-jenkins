@@ -18,6 +18,8 @@
 // Qt includes
 #include <QLabel>
 #include <QMouseEvent>
+#include <QAction>
+#include <QToolBar>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -32,10 +34,37 @@ namespace FT800EMUQT {
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent) 
 	: EmulatorViewport(parent), m_MainWindow(parent),
-	m_MouseTouch(false)
+	m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), 
+	m_PointerMode(0), m_PointerMethod(0)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
+	
+	QActionGroup *cursorGroup = new QActionGroup(this);
+	
+	QAction *automatic = new QAction(cursorGroup);
+	connect(automatic, SIGNAL(triggered()), this, SLOT(automaticChecked()));
+	automatic->setText(tr("Auto"));
+	automatic->setStatusTip(tr("Context dependent cursor"));
+	automatic->setCheckable(true);
+	automatic->setChecked(true);
+	
+	QAction *touch = new QAction(cursorGroup);
+	connect(touch, SIGNAL(triggered()), this, SLOT(touchChecked()));
+	touch->setText(tr("Touch"));
+	touch->setStatusTip(tr("Use to cursor to touch the emulated display"));
+	touch->setCheckable(true);
+	
+	QAction *trace = new QAction(cursorGroup);
+	connect(trace, SIGNAL(triggered()), this, SLOT(traceChecked()));
+	trace->setText(tr("Trace"));
+	trace->setStatusTip(tr("Select a pixel to trace display commands"));
+	trace->setCheckable(true);
+	
+	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Cursor"));
+	toolBar->addAction(automatic);
+	toolBar->addAction(touch);
+	toolBar->addAction(trace);
 }
 
 InteractiveViewport::~InteractiveViewport()
@@ -46,12 +75,16 @@ InteractiveViewport::~InteractiveViewport()
 // Graphics callback synchronized to the emulator thread, use to get debug information for a frame
 void InteractiveViewport::graphics()
 {
-	//FT800EMU::GraphicsProcessor.getDebugTrace(m_TraceEnabled, m_TraceX, m_TraceY);
+	// Get the trace stack
 	m_TraceEnabled = m_MainWindow->traceEnabled();
 	m_TraceX = m_MainWindow->traceX();
 	m_TraceY = m_MainWindow->traceY();
 	m_TraceStack.clear();
 	if (m_TraceEnabled) FT800EMU::GraphicsProcessor.processTrace(m_TraceStack, m_TraceX, m_TraceY, hsize());
+	
+	// Get the stack under the mouse cursor
+	m_MouseStackWrite.clear();
+	if (m_MouseOver) FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
 }
 
 // Graphics callback synchronized to Qt thread, use to overlay graphics
@@ -59,44 +92,68 @@ void InteractiveViewport::graphics(QImage *image)
 {
 	// Update frame dependent gui
 	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStack);
+	m_MouseX = m_NextMouseX;
+	m_MouseY = m_NextMouseY;
+	m_MouseStackRead.swap(m_MouseStackWrite);
+	updatePointerMethod();
 
 	// Draw image overlays
 }
 
-int InteractiveViewport::getPointerMethod(int x, int y)
+void InteractiveViewport::automaticChecked()
 {
-	return 0;
+	m_PointerMode = 0;
 }
 
-void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
+void InteractiveViewport::touchChecked()
 {
-	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
+	m_PointerMode = 1;
+}
 
+void InteractiveViewport::traceChecked()
+{
+	m_PointerMode = 2;
+}
+
+int InteractiveViewport::updatePointerMethod()
+{
 	if (m_MouseTouch)
 	{
-		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		// Cannot change now
 	}
-	else // no ongoing action
+	else
 	{
-		int method = 1; // auto = 0, touch = 1, trace = 2, edit = 3
-
-		// if auto, select correct method depending on positiongetPointerMethod
-
-		switch (method)
+		switch (m_PointerMode)
 		{
 		case 0: // none
 			setCursor(Qt::ArrowCursor);
+			m_PointerMethod = 0;
 			break;
 		case 1:
 			setCursor(Qt::PointingHandCursor);
+			m_PointerMethod = 1;
 			break;
 		case 2:
 			setCursor(Qt::CrossCursor);
+			m_PointerMethod = 2;
 			break;
 		case 3:
 			setCursor(Qt::ArrowCursor); // todo
 			break;
 		}
+	}
+}
+
+void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
+{
+	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
+	
+	m_NextMouseX = e->pos().x();
+	m_NextMouseY = e->pos().y();
+	
+	if (m_MouseTouch)
+	{
+		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);
@@ -104,16 +161,16 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 
 void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 {
-	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
-
-	int method = 1; // none = 0, touch = 1
-
-	// Touch mode
-	switch (method)
+	switch (m_PointerMethod)
 	{
 	case 1: // touch
 		m_MouseTouch = true;
 		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		break;
+	case 2: // trace
+		m_MainWindow->setTraceX(e->pos().x());
+		m_MainWindow->setTraceY(e->pos().y());
+		m_MainWindow->setTraceEnabled(true);
 		break;
 	}
 
@@ -122,15 +179,28 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 
 void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 {
-	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
-
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
 		FT800EMU::Memory.resetTouchScreenXY();
+		updatePointerMethod(); // update because update is not done while m_MouseTouch true
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);
+}
+
+void InteractiveViewport::enterEvent(QEvent *e)
+{
+	m_MouseOver = true;
+
+	EmulatorViewport::enterEvent(e);
+}
+
+void InteractiveViewport::leaveEvent(QEvent *e)
+{
+	m_MouseOver = false;
+
+	EmulatorViewport::leaveEvent(e);
 }
 
 } /* namespace FT800EMUQT */

@@ -49,12 +49,19 @@ public:
 	virtual void graphics(QImage *image);
 
 private:
-	int getPointerMethod(int x, int y);
+	int updatePointerMethod();
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);
 	virtual void mousePressEvent(QMouseEvent *e);
 	virtual void mouseReleaseEvent(QMouseEvent *e);
+	virtual void enterEvent(QEvent *e);
+	virtual void leaveEvent(QEvent *e);
+
+private slots:
+	void automaticChecked();
+	void touchChecked();
+	void traceChecked();
 
 private:
 	MainWindow *m_MainWindow;
@@ -62,6 +69,17 @@ private:
 	bool m_TraceEnabled;
 	uint32_t m_TraceX, m_TraceY;
 	std::vector<int> m_TraceStack;
+	
+	bool m_MouseOver;
+	uint32_t m_NextMouseX, m_NextMouseY;
+	uint32_t m_MouseX, m_MouseY;
+	std::vector<int> m_MouseStackWrite;
+	std::vector<int> m_MouseStackRead;
+	
+	// User selected pointer mode
+	int m_PointerMode;
+	// Actual current pointer method, depending on stack under cursor
+	int m_PointerMethod;
 
 	bool m_MouseTouch;
 
