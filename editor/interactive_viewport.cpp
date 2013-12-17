@@ -41,9 +41,9 @@ namespace FT800EMUQT {
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent) 
 	: EmulatorViewport(parent), m_MainWindow(parent),
-	m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), 
+	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), 
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
-	m_MouseOverVertex(false), m_MouseOverVertexLine(-1)
+	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
@@ -91,6 +91,10 @@ InteractiveViewport::~InteractiveViewport()
 void InteractiveViewport::graphics()
 {
 	// Get the trace stack
+	if (!m_TraceEnabled && m_MainWindow->traceEnabled())
+	{
+		m_PreferTraceCursor = true;
+	}
 	m_TraceEnabled = m_MainWindow->traceEnabled();
 	m_TraceX = m_MainWindow->traceX();
 	m_TraceY = m_MainWindow->traceY();
@@ -257,6 +261,7 @@ END()
 
 void InteractiveViewport::setEditorLine(DlEditor *editor, int line)
 {
+	m_PreferTraceCursor = false;
 	m_LineEditor = editor;
 	m_LineNumber = line;
 }
@@ -268,6 +273,7 @@ void InteractiveViewport::unsetEditorLine()
 
 void InteractiveViewport::automaticChecked()
 {
+	m_PreferTraceCursor = false;
 	m_PointerFilter = POINTER_ALL;
 }
 
@@ -291,12 +297,16 @@ void InteractiveViewport::editChecked()
 
 void InteractiveViewport::updatePointerMethod()
 {
-	if (m_MouseTouch)
+	if (m_MouseTouch || m_MouseMovingVertex)
 	{
 		// Cannot change now
 	}
 	else
 	{
+		if (m_PreferTraceCursor)
+		{
+			goto PreferTraceCursor;
+		}
 		// Vertex movement
 		if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
 		{
@@ -382,6 +392,7 @@ void InteractiveViewport::updatePointerMethod()
 			m_PointerMethod = POINTER_TOUCH;
 			return;
 		}
+	PreferTraceCursor:
 		if (m_PointerFilter & POINTER_TRACE)
 		{
 			setCursor(Qt::CrossCursor);
@@ -404,6 +415,30 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	if (m_MouseTouch)
 	{
 		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+	}
+	else if (m_MouseMovingVertex)
+	{
+		if (m_LineEditor)
+		{
+			int xd = e->pos().x() - m_MovingLastX;
+			int yd = e->pos().y() - m_MovingLastY;
+			m_MovingLastX = e->pos().x();
+			m_MovingLastY = e->pos().y();
+			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
+			if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+			{
+				xd *= 16;
+				yd *= 16;
+			}
+			pa.Parameter[0] += xd;
+			pa.Parameter[1] += yd;
+			m_LineEditor->replaceLine(m_LineNumber, pa);
+		}
+		else
+		{
+			m_MouseMovingVertex = false;
+			updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
+		}
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);
@@ -429,9 +464,27 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MainWindow->setTraceEnabled(true);
 			break;
 		case Qt::RightButton:
+			if (m_PointerFilter != POINTER_TRACE)
+			{
+				m_PreferTraceCursor = false;
+				break;
+			}
+			// fallthrough to Qt::MidButton
 		case Qt::MidButton:
 			m_MainWindow->setTraceEnabled(false);
 			break;
+		}
+		break;
+	case POINTER_EDIT_VERTEX_MOVE:
+		if (m_LineEditor)
+		{
+			if (m_MouseOverVertexLine != m_LineNumber)
+			{
+				m_LineEditor->selectLine(m_MouseOverVertexLine);
+			}
+			m_MovingLastX = e->pos().x();
+			m_MovingLastY = e->pos().y();
+			m_MouseMovingVertex = true;
 		}
 		break;
 	case POINTER_EDIT_STACK_SELECT:
@@ -457,6 +510,11 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 		m_MouseTouch = false;
 		FT800EMU::Memory.resetTouchScreenXY();
 		updatePointerMethod(); // update because update is not done while m_MouseTouch true
+	}
+	else if (m_MouseMovingVertex)
+	{
+		m_MouseMovingVertex = false;
+		updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);

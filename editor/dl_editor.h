@@ -72,7 +72,7 @@ public:
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
 	
 	// Replace a line (creates undo stack), used for example from the interactive viewport
-	void replaceLine(int line, DlParsed &parsed);
+	void replaceLine(int line, const DlParsed &parsed);
 	const DlParsed &getLine(int line) const;
 	// Move cursor to line
 	void selectLine(int line);

@@ -72,6 +72,7 @@ private slots:
 private:
 	MainWindow *m_MainWindow;
 
+	bool m_PreferTraceCursor;
 	bool m_TraceEnabled;
 	uint32_t m_TraceX, m_TraceY;
 	std::vector<int> m_TraceStack;
@@ -91,6 +92,9 @@ private:
 	
 	bool m_MouseOverVertex;
 	int m_MouseOverVertexLine;
+	bool m_MouseMovingVertex;
+	
+	int m_MovingLastX, m_MovingLastY;
 	
 	// Current line
 	DlEditor *m_LineEditor;

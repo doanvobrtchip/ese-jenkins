@@ -239,7 +239,7 @@ void DlEditor::parseLine(QTextBlock block)
 	}
 }
 
-void DlEditor::replaceLine(int line, DlParsed &parsed)
+void DlEditor::replaceLine(int line, const DlParsed &parsed)
 {
 	uint32_t compiled = DlParser::compile(parsed);
 	QString linestr = DlParser::toString(compiled);
