@@ -466,14 +466,14 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MainWindow->setTraceY(e->pos().y());
 			m_MainWindow->setTraceEnabled(true);
 			break;
-		case Qt::RightButton:
+		case Qt::MidButton:
 			if (m_PointerFilter != POINTER_TRACE)
 			{
 				m_PreferTraceCursor = false;
 				break;
 			}
-			// fallthrough to Qt::MidButton
-		case Qt::MidButton:
+			// fallthrough to Qt::RightButton
+		case Qt::RightButton:
 			m_MainWindow->setTraceEnabled(false);
 			break;
 		}
