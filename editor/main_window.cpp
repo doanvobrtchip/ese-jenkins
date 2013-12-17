@@ -705,6 +705,9 @@ void MainWindow::clearEditor()
 	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
 	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
+	setTraceEnabled(false);
+	setTraceX(0);
+	setTraceY(0);
 	m_DlEditor->clear();
 	m_Macro->clear();
 }
