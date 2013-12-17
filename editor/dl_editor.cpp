@@ -239,14 +239,27 @@ void DlEditor::parseLine(QTextBlock block)
 	}
 }
 
-void DlEditor::replaceLine(int line, const DlParsed &parsed)
+void DlEditor::replaceLine(int line, DlParsed &parsed)
 {
-	// todo
+	uint32_t compiled = DlParser::compile(parsed);
+	QString linestr = DlParser::toString(compiled);
+	QTextCursor c = m_CodeEditor->textCursor();
+	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
+	//m_CodeEditor->setTextCursor(c);
+	c.select(QTextCursor::LineUnderCursor);
+	c.insertText(linestr);
 }
 
 const DlParsed &DlEditor::getLine(int line) const
 {
 	return m_DisplayListParsed[line];
+}
+
+void DlEditor::selectLine(int line)
+{
+	QTextCursor c = m_CodeEditor->textCursor();
+	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
+	m_CodeEditor->setTextCursor(c);
 }
 
 void DlEditor::editingLine(QTextBlock block)

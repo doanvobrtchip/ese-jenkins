@@ -33,10 +33,17 @@
 
 namespace FT800EMUQT {
 
+#define POINTER_ALL 0xFF
+#define POINTER_TOUCH 0x01
+#define POINTER_TRACE 0x02
+#define POINTER_EDIT_VERTEX_MOVE 0x04
+#define POINTER_EDIT_STACK_SELECT 0x08
+
 InteractiveViewport::InteractiveViewport(MainWindow *parent) 
 	: EmulatorViewport(parent), m_MainWindow(parent),
 	m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), 
-	m_PointerMode(0), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0)
+	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
+	m_MouseOverVertex(false), m_MouseOverVertexLine(-1)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
@@ -62,10 +69,17 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	trace->setStatusTip(tr("Select a pixel to trace display commands"));
 	trace->setCheckable(true);
 	
+	QAction *edit = new QAction(cursorGroup);
+	connect(edit, SIGNAL(triggered()), this, SLOT(editChecked()));
+	edit->setText(tr("Edit"));
+	edit->setStatusTip(tr("Interactive editing tools"));
+	edit->setCheckable(true);
+	
 	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Cursor"));
 	toolBar->addAction(automatic);
 	toolBar->addAction(touch);
 	toolBar->addAction(trace);
+	toolBar->addAction(edit);
 }
 
 InteractiveViewport::~InteractiveViewport()
@@ -254,20 +268,28 @@ void InteractiveViewport::unsetEditorLine()
 
 void InteractiveViewport::automaticChecked()
 {
-	m_PointerMode = 0;
+	m_PointerFilter = POINTER_ALL;
 }
 
 void InteractiveViewport::touchChecked()
 {
-	m_PointerMode = 1;
+	m_PointerFilter = POINTER_TOUCH;
 }
 
 void InteractiveViewport::traceChecked()
 {
-	m_PointerMode = 2;
+	m_PointerFilter = POINTER_TRACE;
 }
 
-int InteractiveViewport::updatePointerMethod()
+void InteractiveViewport::editChecked()
+{
+	m_PointerFilter = 
+		POINTER_EDIT_VERTEX_MOVE // vertex movement
+		| POINTER_EDIT_STACK_SELECT // stack selection
+		;
+}
+
+void InteractiveViewport::updatePointerMethod()
 {
 	if (m_MouseTouch)
 	{
@@ -275,24 +297,100 @@ int InteractiveViewport::updatePointerMethod()
 	}
 	else
 	{
-		switch (m_PointerMode)
+		// Vertex movement
+		if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
 		{
-		case 0: // none
-			setCursor(Qt::ArrowCursor);
-			m_PointerMethod = 0;
-			break;
-		case 1:
-			setCursor(Qt::PointingHandCursor);
-			m_PointerMethod = 1;
-			break;
-		case 2:
-			setCursor(Qt::CrossCursor);
-			m_PointerMethod = 2;
-			break;
-		case 3:
-			setCursor(Qt::ArrowCursor); // todo
-			break;
+			if (m_LineEditor)
+			{
+				m_MouseOverVertex = false;
+				m_MouseOverVertexLine = -1;
+				const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+				{
+					int firstLine = m_LineNumber;
+					for (int l = firstLine - 1; l > 0; --l)
+					{
+						const DlParsed &pa = m_LineEditor->getLine(l);
+						if (pa.IdLeft == 0 && 
+							(pa.IdRight == FT800EMU_DL_BEGIN 
+							|| pa.IdRight == FT800EMU_DL_END
+							|| pa.IdRight == FT800EMU_DL_RETURN
+							|| pa.IdRight == FT800EMU_DL_JUMP))
+						{
+							break;
+						}
+						else
+						{
+							firstLine = l;
+						}
+					}
+					// Iterate over neighbouring vertices
+					for (int l = firstLine; l < FT800EMU_DL_SIZE; ++l) // FIXME
+					{
+						const DlParsed &pa = m_LineEditor->getLine(l);
+						if (pa.IdLeft == FT800EMU_DL_VERTEX2F || pa.IdLeft == FT800EMU_DL_VERTEX2II)
+						{
+							int x, y;
+							if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+							{
+								x = pa.Parameter[0] / 16;
+								y = pa.Parameter[1] / 16;
+							}
+							else
+							{
+								x = pa.Parameter[0];
+								y = pa.Parameter[1];
+							}
+							
+							// Mouse over
+							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
+							{
+								m_MouseOverVertex = true;
+								m_MouseOverVertexLine = l;
+								if (l == m_LineNumber) break; // Currently selected line always has preference
+							}
+						}
+						else if (pa.IdRight == FT800EMU_DL_BEGIN
+							|| pa.IdRight == FT800EMU_DL_END
+							|| pa.IdRight == FT800EMU_DL_RETURN
+							|| pa.IdRight == FT800EMU_DL_JUMP)
+						{
+							break;
+						}
+					}
+					if (m_MouseOverVertex)
+					{
+						setCursor(Qt::SizeAllCursor);
+						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
+						return;
+					}
+				}
+			}
 		}
+		// Stack selection
+		if (m_PointerFilter & POINTER_EDIT_STACK_SELECT)
+		{
+			// FIXME: Only works on display list.
+			setCursor(Qt::ArrowCursor);
+			m_PointerMethod = POINTER_EDIT_STACK_SELECT; // Stack selection
+			return;
+		}
+		if (m_PointerFilter & POINTER_TOUCH)
+		{
+			// TODO: Get the TAG from stack trace and show hand or not depending on TAG value (maybe also show tootip with tag?)
+			setCursor(Qt::PointingHandCursor);
+			m_PointerMethod = POINTER_TOUCH;
+			return;
+		}
+		if (m_PointerFilter & POINTER_TRACE)
+		{
+			setCursor(Qt::CrossCursor);
+			m_PointerMethod = POINTER_TRACE;
+			return;
+		}
+		setCursor(Qt::ArrowCursor);
+		m_PointerMethod = 0;
+		return;
 	}
 }
 
@@ -315,14 +413,14 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 {
 	switch (m_PointerMethod)
 	{
-	case 1: // touch
+	case POINTER_TOUCH: // touch
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
 			FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 		}
 		break;
-	case 2: // trace
+	case POINTER_TRACE: // trace
 		switch (e->button())
 		{
 		case Qt::LeftButton:
@@ -334,6 +432,17 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		case Qt::MidButton:
 			m_MainWindow->setTraceEnabled(false);
 			break;
+		}
+		break;
+	case POINTER_EDIT_STACK_SELECT:
+		if (m_LineEditor && m_MouseStackRead.size() > 0)
+		{
+			if (e->button() == Qt::LeftButton)
+			{
+				// FIXME: Only works on display list.
+				// Select topmost command
+				m_LineEditor->selectLine(m_MouseStackRead[m_MouseStackRead.size() - 1]);
+			}
 		}
 		break;
 	}

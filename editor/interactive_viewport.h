@@ -54,7 +54,7 @@ public:
 	void unsetEditorLine();
 
 private:
-	int updatePointerMethod();
+	void updatePointerMethod();
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);
@@ -67,6 +67,7 @@ private slots:
 	void automaticChecked();
 	void touchChecked();
 	void traceChecked();
+	void editChecked();
 
 private:
 	MainWindow *m_MainWindow;
@@ -82,11 +83,14 @@ private:
 	std::vector<int> m_MouseStackRead;
 	
 	// User selected pointer mode
-	int m_PointerMode;
+	int m_PointerFilter;
 	// Actual current pointer method, depending on stack under cursor
 	int m_PointerMethod;
 
 	bool m_MouseTouch;
+	
+	bool m_MouseOverVertex;
+	int m_MouseOverVertexLine;
 	
 	// Current line
 	DlEditor *m_LineEditor;
