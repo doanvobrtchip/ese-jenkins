@@ -142,98 +142,100 @@ void InteractiveViewport::graphics(QImage *image)
 		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
 		if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
 		{
-			QPen outer;
-			QPen inner;
-			outer.setWidth(3);
-			outer.setColor(QColor(Qt::black));
-			inner.setWidth(1);
-			inner.setColor(QColor(Qt::gray));
-			// Find first line
-			int firstLine = m_LineNumber;
-			for (int l = firstLine - 1; l > 0; --l)
+			if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
 			{
-				const DlParsed &pa = m_LineEditor->getLine(l);
-				if (pa.IdLeft == 0 && 
-					(pa.IdRight == FT800EMU_DL_BEGIN 
-					|| pa.IdRight == FT800EMU_DL_END
-					|| pa.IdRight == FT800EMU_DL_RETURN
-					|| pa.IdRight == FT800EMU_DL_JUMP))
+				QPen outer;
+				QPen inner;
+				outer.setWidth(3);
+				outer.setColor(QColor(Qt::black));
+				inner.setWidth(1);
+				inner.setColor(QColor(Qt::gray));
+				// Find first line
+				int firstLine = m_LineNumber;
+				for (int l = firstLine - 1; l > 0; --l)
 				{
-					break;
-				}
-				else
-				{
-					firstLine = l;
-				}
-			}
-			// Iterate over neighbouring vertices
-			for (int l = firstLine; l < FT800EMU_DL_SIZE; ++l) // FIXME
-			{
-				if (l == m_LineNumber) continue;
-				const DlParsed &pa = m_LineEditor->getLine(l);
-				if (pa.IdLeft == FT800EMU_DL_VERTEX2F || pa.IdLeft == FT800EMU_DL_VERTEX2II)
-				{
-					int x, y;
-					if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+					const DlParsed &pa = m_LineEditor->getLine(l);
+					if (pa.IdLeft == 0 && 
+						(pa.IdRight == FT800EMU_DL_BEGIN 
+						|| pa.IdRight == FT800EMU_DL_END
+						|| pa.IdRight == FT800EMU_DL_RETURN
+						|| pa.IdRight == FT800EMU_DL_JUMP))
 					{
-						x = pa.Parameter[0] / 16;
-						y = pa.Parameter[1] / 16;
+						break;
 					}
 					else
 					{
-						x = pa.Parameter[0];
-						y = pa.Parameter[1];
+						firstLine = l;
 					}
-					p.setPen(outer);
-					p.drawLine(x - 4, y - 4, x + 4, y - 4);
-					p.drawLine(x - 4, y + 4, x + 4, y + 4);
-					p.drawLine(x - 4, y - 4, x - 4, y + 4);
-					p.drawLine(x + 4, y - 4, x + 4, y + 4);
-					p.setPen(inner);
-					p.drawLine(x - 4, y - 4, x + 4, y - 4);
-					p.drawLine(x - 4, y + 4, x + 4, y + 4);
-					p.drawLine(x - 4, y - 4, x - 4, y + 4);
-					p.drawLine(x + 4, y - 4, x + 4, y + 4);
 				}
-				else if (pa.IdRight == FT800EMU_DL_BEGIN
-					|| pa.IdRight == FT800EMU_DL_END
-					|| pa.IdRight == FT800EMU_DL_RETURN
-					|| pa.IdRight == FT800EMU_DL_JUMP)
+				// Iterate over neighbouring vertices
+				for (int l = firstLine; l < FT800EMU_DL_SIZE; ++l) // FIXME
 				{
-					break;
+					if (l == m_LineNumber) continue;
+					const DlParsed &pa = m_LineEditor->getLine(l);
+					if (pa.IdLeft == FT800EMU_DL_VERTEX2F || pa.IdLeft == FT800EMU_DL_VERTEX2II)
+					{
+						int x, y;
+						if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+						{
+							x = pa.Parameter[0] / 16;
+							y = pa.Parameter[1] / 16;
+						}
+						else
+						{
+							x = pa.Parameter[0];
+							y = pa.Parameter[1];
+						}
+						p.setPen(outer);
+						p.drawLine(x - 4, y - 4, x + 4, y - 4);
+						p.drawLine(x - 4, y + 4, x + 4, y + 4);
+						p.drawLine(x - 4, y - 4, x - 4, y + 4);
+						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						p.setPen(inner);
+						p.drawLine(x - 4, y - 4, x + 4, y - 4);
+						p.drawLine(x - 4, y + 4, x + 4, y + 4);
+						p.drawLine(x - 4, y - 4, x - 4, y + 4);
+						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+					}
+					else if (pa.IdRight == FT800EMU_DL_BEGIN
+						|| pa.IdRight == FT800EMU_DL_END
+						|| pa.IdRight == FT800EMU_DL_RETURN
+						|| pa.IdRight == FT800EMU_DL_JUMP)
+					{
+						break;
+					}
 				}
-			}
-			// Show central vertex
-			int x, y;
-			if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
-			{
-				x = parsed.Parameter[0] / 16;
-				y = parsed.Parameter[1] / 16;
-			}
-			else
-			{
-				x = parsed.Parameter[0];
-				y = parsed.Parameter[1];
-			}
-			p.setPen(outer);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
-			inner.setColor(QColor(Qt::red));
-			p.setPen(inner);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+				// Show central vertex
+				int x, y;
+				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+				{
+					x = parsed.Parameter[0] / 16;
+					y = parsed.Parameter[1] / 16;
+				}
+				else
+				{
+					x = parsed.Parameter[0];
+					y = parsed.Parameter[1];
+				}
+				p.setPen(outer);
+				p.drawLine(x, y - 5, x, y - 12);
+				p.drawLine(x, y + 5, x, y + 12);
+				p.drawLine(x - 5, y, x - 12, y);
+				p.drawLine(x + 5, y, x + 12, y);
+				p.drawLine(x - 4, y - 4, x + 4, y - 4);
+				p.drawLine(x - 4, y + 4, x + 4, y + 4);
+				p.drawLine(x - 4, y - 4, x - 4, y + 4);
+				p.drawLine(x + 4, y - 4, x + 4, y + 4);
+				inner.setColor(QColor(Qt::red));
+				p.setPen(inner);
+				p.drawLine(x, y - 5, x, y - 12);
+				p.drawLine(x, y + 5, x, y + 12);
+				p.drawLine(x - 5, y, x - 12, y);
+				p.drawLine(x + 5, y, x + 12, y);
+				p.drawLine(x - 4, y - 4, x + 4, y - 4);
+				p.drawLine(x - 4, y + 4, x + 4, y + 4);
+				p.drawLine(x - 4, y - 4, x - 4, y + 4);
+				p.drawLine(x + 4, y - 4, x + 4, y + 4);
 			
 			/*
 
@@ -247,6 +249,7 @@ VERTEX2II(220, 150, 0, 0)
 END()
 
 			 */
+			}
 		}
 		else
 		{
