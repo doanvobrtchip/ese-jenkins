@@ -20,6 +20,8 @@
 #include <QMouseEvent>
 #include <QAction>
 #include <QToolBar>
+#include <QPainter>
+#include <QPen>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -44,7 +46,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	
 	QAction *automatic = new QAction(cursorGroup);
 	connect(automatic, SIGNAL(triggered()), this, SLOT(automaticChecked()));
-	automatic->setText(tr("Auto"));
+	automatic->setText(tr("Cursor"));
 	automatic->setStatusTip(tr("Context dependent cursor"));
 	automatic->setCheckable(true);
 	automatic->setChecked(true);
@@ -98,6 +100,28 @@ void InteractiveViewport::graphics(QImage *image)
 	updatePointerMethod();
 
 	// Draw image overlays
+	QPainter p;
+	p.begin(image);
+	if (m_TraceEnabled)
+	{
+		QPen outer;
+		QPen inner;
+		outer.setWidth(3);
+		inner.setWidth(1);
+		outer.setColor(QColor(Qt::black));
+		inner.setColor(QColor(Qt::green).lighter(160));
+		p.setPen(outer);
+		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+		p.setPen(inner);
+		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+	}
+	p.end();
 }
 
 void InteractiveViewport::automaticChecked()
@@ -164,13 +188,25 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 	switch (m_PointerMethod)
 	{
 	case 1: // touch
-		m_MouseTouch = true;
-		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		if (e->button() == Qt::LeftButton)
+		{
+			m_MouseTouch = true;
+			FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		}
 		break;
 	case 2: // trace
-		m_MainWindow->setTraceX(e->pos().x());
-		m_MainWindow->setTraceY(e->pos().y());
-		m_MainWindow->setTraceEnabled(true);
+		switch (e->button())
+		{
+		case Qt::LeftButton:
+			m_MainWindow->setTraceX(e->pos().x());
+			m_MainWindow->setTraceY(e->pos().y());
+			m_MainWindow->setTraceEnabled(true);
+			break;
+		case Qt::RightButton:
+		case Qt::MidButton:
+			m_MainWindow->setTraceEnabled(false);
+			break;
+		}
 		break;
 	}
 
