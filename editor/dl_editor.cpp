@@ -27,6 +27,8 @@
 #include <vc.h>
 
 // Project includes
+#include "main_window.h"
+#include "interactive_viewport.h"
 #include "code_editor.h"
 #include "dl_highlighter.h"
 #include "properties_editor.h"
@@ -35,7 +37,7 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-DlEditor::DlEditor(QWidget *parent) : QWidget(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
+DlEditor::DlEditor(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
 m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false)
 {
 	m_DisplayListShared[0] = DISPLAY();
@@ -237,6 +239,16 @@ void DlEditor::parseLine(QTextBlock block)
 	}
 }
 
+void DlEditor::replaceLine(int line, const DlParsed &parsed)
+{
+	// todo
+}
+
+const DlParsed &DlEditor::getLine(int line) const
+{
+	return m_DisplayListParsed[line];
+}
+
 void DlEditor::editingLine(QTextBlock block)
 {
 	// update properties editor
@@ -252,6 +264,7 @@ void DlEditor::editingLine(QTextBlock block)
 		m_PropIdValid = m_DisplayListParsed[m_PropLine].ValidId;
 		if (m_PropIdValid)
 		{
+			m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
 			bool ok = false;
 			// const uint32_t *p = m_DisplayListParsed[i].Parameter;
 			if (m_DisplayListParsed[m_PropLine].IdLeft == FT800EMU_DL_VERTEX2F)
@@ -815,6 +828,7 @@ void DlEditor::editingLine(QTextBlock block)
 		}
 		else
 		{
+			m_MainWindow->viewport()->unsetEditorLine();
 			if (m_DisplayListParsed[m_PropLine].IdText.size() > 0)
 			{
 				QString message;

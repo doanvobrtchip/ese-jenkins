@@ -37,8 +37,10 @@ class QStringListModel;
 #define FT800EMU_MACRO_SIZE 2
 
 namespace FT800EMUQT {
-	class DlHighlighter;
-	class PropertiesEditor;
+
+class MainWindow;
+class DlHighlighter;
+class PropertiesEditor;
 
 /**
  * DlEditor
@@ -51,7 +53,7 @@ class DlEditor : public QWidget
 	Q_OBJECT
 	
 public:
-	DlEditor(QWidget *parent);
+	DlEditor(MainWindow *parent);
 	virtual ~DlEditor();
 	
 	void setUndoStack(QUndoStack *undo_stack);
@@ -68,6 +70,10 @@ public:
 	inline bool isDisplayListModified() { return m_DisplayListModified; }
 	
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
+	
+	// Replace a line (creates undo stack), used for example from the interactive viewport
+	void replaceLine(int line, const DlParsed &parsed);
+	const DlParsed &getLine(int line) const;
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
 
@@ -83,6 +89,7 @@ private:
 	void parseLine(QTextBlock block);
 	void editingLine(QTextBlock block);
 	
+	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
 	uint32_t m_DisplayListShared[FT800EMU_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator, todo: internal copy to compare when coprocessor changes stuff

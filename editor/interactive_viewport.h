@@ -23,6 +23,7 @@
 
 // Project includes
 #include "emulator_viewport.h"
+#include "dl_editor.h"
 
 namespace FT800EMUQT {
 
@@ -47,6 +48,10 @@ public:
 
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
 	virtual void graphics(QImage *image);
+	
+	// Called by a editor when the active line changes
+	void setEditorLine(DlEditor *editor, int line);
+	void unsetEditorLine();
 
 private:
 	int updatePointerMethod();
@@ -82,6 +87,10 @@ private:
 	int m_PointerMethod;
 
 	bool m_MouseTouch;
+	
+	// Current line
+	DlEditor *m_LineEditor;
+	int m_LineNumber;
 
 private:
 	InteractiveViewport(const InteractiveViewport &);

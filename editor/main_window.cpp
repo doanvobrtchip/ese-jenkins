@@ -418,7 +418,7 @@ void MainWindow::createDockWindows()
 	{
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_DlEditor = new DlEditor(m_DlEditorDock);
+		m_DlEditor = new DlEditor(this);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
 		connect(m_EmulatorViewport, SIGNAL(frame()), m_DlEditor, SLOT(frame()));
@@ -476,7 +476,7 @@ void MainWindow::createDockWindows()
 			macroGroup->setTitle(tr("Macro"));
 			QVBoxLayout *macroLayout = new QVBoxLayout(widget);
 			
-			m_Macro = new DlEditor(widget);
+			m_Macro = new DlEditor(this);
 			m_Macro->setPropertiesEditor(m_PropertiesEditor);
 			m_Macro->setUndoStack(m_UndoStack);
 			m_Macro->setModeMacro();

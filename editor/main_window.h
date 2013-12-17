@@ -52,7 +52,8 @@ public:
 	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = 0);
 	virtual ~MainWindow();
 
-	DlEditor *dlEditor() { return m_DlEditor; }
+	inline DlEditor *dlEditor() { return m_DlEditor; }
+	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);
