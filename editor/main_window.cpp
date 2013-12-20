@@ -140,6 +140,12 @@ void setup()
 	wr32(REG_PCLK, 5);
 }
 
+// Array indexed by display list index containing coprocessor line which wrote the display list command
+static int s_DisplayListCoprocessorCommandA[FT800EMU_DL_SIZE];
+static int s_DisplayListCoprocessorCommandB[FT800EMU_DL_SIZE];
+static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
+static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
+
 // static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 static int s_SwapCount = 0;
@@ -201,6 +207,9 @@ void loop()
 		// wr32(REG_DLSWAP, DLSWAP_FRAME);
 		// displayListSwapped = true;
 		
+		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
+		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
 		uint32_t *cmdList = s_CmdEditor->getDisplayList(); // FIXME CMD PARAMETERS
 		const DlParsed *cmdParsed = s_CmdEditor->getDisplayListParsed();
 		int wp = rd32(REG_CMD_WRITE);
@@ -208,6 +217,7 @@ void loop()
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
 		int freespace = ((4096 - 4) - fullness);
+		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 		swrbegin(RAM_CMD + (wp & 0xFFF));
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) // FIXME CMD SIZE
 		{
@@ -224,8 +234,22 @@ void loop()
 					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				} while (fullness != 0);
 				freespace = ((4096 - 4) - fullness);
+				
+				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+				{
+					if (cpWrite[i] >= 0)
+					{
+						s_DisplayListCoprocessorCommandWrite[i]
+							= coprocessorWrites[cpWrite[i]];
+					}
+				}
+				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+				
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 			}
+			coprocessorWrites[wp >> 2] = i;
 			swr32(cmdList[i]);
 			wp += 4;
 			freespace -= 4;
@@ -242,11 +266,56 @@ void loop()
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 			} while (fullness != 0);
 			freespace = ((4096 - 4) - fullness);
+			
+			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+			for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+			{
+				if (cpWrite[i] >= 0)
+				{
+					s_DisplayListCoprocessorCommandWrite[i]
+						= coprocessorWrites[cpWrite[i]];
+				}
+			}
+			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+			
 			swrbegin(RAM_CMD + (wp & 0xFFF));
 		}
+		
 		swr32(CMD_SWAP);
+		wp += 4;
+		swrend();
+		wr32(REG_CMD_WRITE, (wp & 0xFFF));
+		
+		// Finish all processing
+		while (wp != rd32(REG_CMD_READ))
+		{
+			if (!s_EmulatorRunning) return;
+		}
+		int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		{
+			if (cpWrite[i] >= 0)
+			{
+				s_DisplayListCoprocessorCommandWrite[i]
+					= coprocessorWrites[cpWrite[i]];
+			}
+		}
+		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+		
+		// Test
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		{
+			if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
+			{
+				printf("DL %i was written by CMD %i\n", i, s_DisplayListCoprocessorCommandWrite[i]);
+			}
+		}
+		
+		swrbegin(RAM_CMD + (wp & 0xFFF));
 		swr32(CMD_DLSTART);
-		wp += 8;
+		wp += 4;
 		swrend();
 		wr32(REG_CMD_WRITE, (wp & 0xFFF));
 		
