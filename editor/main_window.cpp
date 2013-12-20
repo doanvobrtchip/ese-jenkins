@@ -178,11 +178,11 @@ void loop()
 	// switch to next macro list
 	s_Macro->lockDisplayList();
 	bool macroModified = s_Macro->isDisplayListModified();
-	if (macroModified)
-	{
+	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
+	// {
 		wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
 		wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
-	}
+	// }
 	s_Macro->unlockDisplayList();
 	// switch to next display list
 	s_DlEditor->lockDisplayList();
@@ -651,8 +651,28 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
 	}
 	
-	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
+	
+	// Event for editor tab change
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
+	}
+	
+	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
+	
+	// Event for all tab changes
+	tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		// printf("tab bar found\n");
+		QTabBar *tabBar = tabList.at(i);
+		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+		
+		// FIXME: Figure out and connect when new tab bars are created...
+	}
 }
 
 void MainWindow::translateDockWindows()
@@ -671,6 +691,17 @@ void MainWindow::incbLanguageCode()
 	translateMenus();
 	translateToolBars();
 	translateDockWindows();
+}
+
+void MainWindow::editorTabChanged(int i)
+{
+	m_EmulatorViewport->unsetEditorLine();
+}
+
+void MainWindow::tabChanged(int i)
+{
+	// Defocus editor
+	setFocus(Qt::OtherFocusReason);
 }
 
 static bool s_UndoRedoWorking = false;

@@ -86,6 +86,9 @@ private slots:
 
 	void traceEnabledChanged(bool enabled);
 	
+	void editorTabChanged(int i);
+	void tabChanged(int i);
+	
 private:
 	void updateInitialization(bool visible);
 	
