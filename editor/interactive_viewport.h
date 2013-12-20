@@ -78,8 +78,8 @@ private:
 	std::vector<int> m_TraceStack;
 	
 	bool m_MouseOver;
-	uint32_t m_NextMouseX, m_NextMouseY;
-	uint32_t m_MouseX, m_MouseY;
+	int m_NextMouseX, m_NextMouseY;
+	int m_MouseX, m_MouseY;
 	std::vector<int> m_MouseStackWrite;
 	std::vector<int> m_MouseStackRead;
 	

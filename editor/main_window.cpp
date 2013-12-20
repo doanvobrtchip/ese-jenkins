@@ -189,7 +189,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	: QMainWindow(parent, flags),
 	m_UndoStack(NULL), 
 	m_EmulatorViewport(NULL), 
-	m_DlEditor(NULL), m_DlEditorDock(NULL), 
+	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL), 
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), 
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), 
@@ -225,10 +225,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createDockWindows();
 	
 	incbLanguageCode();
-
-	recalculateMinimumWidth();
-	
-	// connect(m_EmulatorConfig, SIGNAL(applyEmulatorConfig()), this, SLOT(applyEmulatorConfig()));
 	
 	s_DlEditor = m_DlEditor;
 	s_Macro = m_Macro;
@@ -353,7 +349,7 @@ void MainWindow::createMenus()
 	m_EditMenu = menuBar()->addMenu(QString::null);
 	m_EditMenu->addAction(m_UndoAct);
 	m_EditMenu->addAction(m_RedoAct);
-	m_EditMenu->addAction(m_DummyAct);
+	//m_EditMenu->addAction(m_DummyAct);
 
 	//m_ViewportMenu = menuBar()->addMenu(QString::null);
 	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
@@ -372,7 +368,7 @@ void MainWindow::translateMenus()
 	m_FileMenu->setTitle(tr("File"));
 	m_EditMenu->setTitle(tr("Edit"));
 	//m_ViewportMenu->setTitle(tr("Viewport"));
-	m_WidgetsMenu->setTitle(tr("Widgets"));
+	m_WidgetsMenu->setTitle(tr("View"));
 	m_HelpMenu->setTitle(tr("Help"));
 }
 
@@ -425,6 +421,19 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
+	}
+	
+	// CmdEditor (Coprocessor)
+	{
+		m_CmdEditorDock = new QDockWidget(this);
+		m_CmdEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_CmdEditor = new DlEditor(this);
+		m_CmdEditor->setPropertiesEditor(m_PropertiesEditor);
+		m_CmdEditor->setUndoStack(m_UndoStack);
+		connect(m_EmulatorViewport, SIGNAL(frame()), m_CmdEditor, SLOT(frame()));
+		m_CmdEditorDock->setWidget(m_CmdEditor);
+		addDockWidget(Qt::BottomDockWidgetArea, m_CmdEditorDock);
+		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
 	}
 	
 	// Registers
@@ -564,20 +573,16 @@ void MainWindow::createDockWindows()
 	}
 	
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
+	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
 }
 
 void MainWindow::translateDockWindows()
 {
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
+	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
-}
-
-void MainWindow::recalculateMinimumWidth()
-{
-	//if (m_EmulatorConfigScroll) 
-	//	m_EmulatorConfigScroll->setMinimumWidth(m_EmulatorConfig->minimumSizeHint().width() + m_EmulatorConfigScroll->minimumSizeHint().width());
 }
 
 void MainWindow::incbLanguageCode()
@@ -587,7 +592,6 @@ void MainWindow::incbLanguageCode()
 	translateMenus();
 	translateToolBars();
 	translateDockWindows();
-	recalculateMinimumWidth();
 }
 
 static bool s_UndoRedoWorking = false;
@@ -599,7 +603,7 @@ public:
 	virtual ~HSizeCommand() { }
 	virtual void undo() { s_HSize = m_OldHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
 	virtual void redo() { s_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
-	virtual int id() const { return 41517686; }
+	virtual int id() const { printf("id get\n"); return 41517686; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize; return true; }
 	
 private:

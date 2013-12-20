@@ -178,8 +178,8 @@ void InteractiveViewport::graphics(QImage *image)
 						int x, y;
 						if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 						{
-							x = pa.Parameter[0] / 16;
-							y = pa.Parameter[1] / 16;
+							x = pa.Parameter[0] >> 4;
+							y = pa.Parameter[1] >> 4;
 						}
 						else
 						{
@@ -209,8 +209,8 @@ void InteractiveViewport::graphics(QImage *image)
 				int x, y;
 				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
 				{
-					x = parsed.Parameter[0] / 16;
-					y = parsed.Parameter[1] / 16;
+					x = parsed.Parameter[0] >> 4;
+					y = parsed.Parameter[1] >> 4;
 				}
 				else
 				{
@@ -264,6 +264,10 @@ END()
 
 void InteractiveViewport::setEditorLine(DlEditor *editor, int line)
 {
+	if (m_MouseMovingVertex && m_LineEditor)
+	{
+		m_LineEditor->codeEditor()->endUndoCombine();
+	}
 	m_PreferTraceCursor = false;
 	m_LineEditor = editor;
 	m_LineNumber = line;
@@ -346,8 +350,8 @@ void InteractiveViewport::updatePointerMethod()
 							int x, y;
 							if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 							{
-								x = pa.Parameter[0] / 16;
-								y = pa.Parameter[1] / 16;
+								x = pa.Parameter[0] >> 4;
+								y = pa.Parameter[1] >> 4;
 							}
 							else
 							{
@@ -430,8 +434,8 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 			{
-				xd *= 16;
-				yd *= 16;
+				xd >>= 4;
+				yd >>= 4;
 			}
 			pa.Parameter[0] += xd;
 			pa.Parameter[1] += yd;
@@ -488,6 +492,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MovingLastX = e->pos().x();
 			m_MovingLastY = e->pos().y();
 			m_MouseMovingVertex = true;
+			m_LineEditor->codeEditor()->beginUndoCombine();
 		}
 		break;
 	case POINTER_EDIT_STACK_SELECT:
@@ -517,6 +522,10 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	else if (m_MouseMovingVertex)
 	{
 		m_MouseMovingVertex = false;
+		if (m_LineEditor)
+		{
+			m_LineEditor->codeEditor()->endUndoCombine();
+		}
 		updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
 	}
 

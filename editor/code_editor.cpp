@@ -61,7 +61,9 @@ m_UndoIsClosing(false),
 m_Completer(NULL),
 m_StepHighlight(-1),
 m_LastStepHighlight(-1),
-m_StepMovingCursor(false)
+m_StepMovingCursor(false),
+m_CombineId(-1),
+m_LastCombineId(917681768)
 {
 	lineNumberArea = new LineNumberArea(this);
 
@@ -81,19 +83,33 @@ void CodeEditor::setUndoStack(QUndoStack *undo_stack)
 	m_UndoStack = undo_stack;
 	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
 }
+	
+void CodeEditor::beginUndoCombine()
+{
+	++m_LastCombineId;
+	m_CombineId = m_LastCombineId;
+}
+
+void CodeEditor::endUndoCombine()
+{
+	m_CombineId = -1;
+}
 
 class UndoEditor : public QUndoCommand
 {
 public:
-	UndoEditor(CodeEditor *editor) : QUndoCommand(), m_Editor(editor), m_DoneDummy(false) { }
+	UndoEditor(CodeEditor *editor, int id) : QUndoCommand(), m_Editor(editor), m_DoneDummy(false), m_CombineId(id), m_UndoCount(1) { }
 	virtual ~UndoEditor() { }
-	virtual void undo() { /*printf("*** undo ***\n");*/ m_Editor->undo(); }
-	virtual void redo() { if (m_DoneDummy) { /*printf("*** redo ***\n");*/ m_Editor->redo(); } else { m_DoneDummy = true; } }
+	virtual int id() const { printf("*** ret %i ***\n", m_CombineId); return m_CombineId; }
+	virtual void undo() { printf("*** undo %i ***\n", m_UndoCount); for (int i = 0; i < m_UndoCount; ++i) m_Editor->undo(); }
+	virtual void redo() { if (m_DoneDummy) { printf("*** redo %i ***\n", m_UndoCount); for (int i = 0; i < m_UndoCount; ++i) m_Editor->redo(); } else { m_DoneDummy = true; } }
+	virtual bool mergeWith(const QUndoCommand *command) { ++m_UndoCount; return true; }
 
 private:
 	CodeEditor *m_Editor;
 	bool m_DoneDummy;
-
+	int m_CombineId;
+	int m_UndoCount;
 };
 
 void CodeEditor::documentUndoCommandAdded()
@@ -108,7 +124,7 @@ void CodeEditor::documentUndoCommandAdded()
 	/*printf("************ display list undo command added ************\n");*/
 	m_UndoIndexDummy = true;
 	m_UndoNeedsClosure = true;
-	UndoEditor *uc = new UndoEditor(this);
+	UndoEditor *uc = new UndoEditor(this, m_CombineId);
 	uc->setText(tr("Edit Code"));
 	m_UndoStack->push(uc);
 }

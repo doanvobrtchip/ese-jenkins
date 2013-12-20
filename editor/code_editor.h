@@ -70,6 +70,9 @@ public:
 
 	void setUndoStack(QUndoStack *undo_stack);
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
+	
+	void beginUndoCombine();
+	void endUndoCombine();
 
 	void setCompleter(QCompleter *c);
 	QCompleter *completer() const;
@@ -106,6 +109,8 @@ private:
 	bool m_StepMovingCursor;
 	std::vector<int> m_TraceHighlights;
 	std::vector<int> m_TraceStack;
+	int m_CombineId;
+	int m_LastCombineId;
 
 };
 

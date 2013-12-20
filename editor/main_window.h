@@ -101,8 +101,6 @@ private:
 	void createDockWindows();
 	void translateDockWindows();
 
-	void recalculateMinimumWidth();
-
 	void incbLanguageCode();
 
 private:
@@ -117,6 +115,8 @@ private:
 	
 	DlEditor *m_DlEditor;
 	QDockWidget *m_DlEditorDock;
+	DlEditor *m_CmdEditor;
+	QDockWidget *m_CmdEditorDock;
 	
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
