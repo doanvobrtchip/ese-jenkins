@@ -387,7 +387,6 @@ void InteractiveViewport::updatePointerMethod()
 		// Stack selection
 		if (m_PointerFilter & POINTER_EDIT_STACK_SELECT)
 		{
-			// FIXME: Only works on display list.
 			setCursor(Qt::ArrowCursor);
 			m_PointerMethod = POINTER_EDIT_STACK_SELECT; // Stack selection
 			return;
@@ -500,9 +499,16 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		{
 			if (e->button() == Qt::LeftButton)
 			{
-				// FIXME: Only works on display list.
 				// Select topmost command
-				m_LineEditor->selectLine(m_MouseStackRead[m_MouseStackRead.size() - 1]);
+				printf("Select topmost command\n");
+				int idx = m_MouseStackRead[m_MouseStackRead.size() - 1]; // DL
+				printf("DL %i\n", idx);
+				if (m_LineEditor->isCoprocessor())
+				{
+					idx = m_MainWindow->getDlCmd()[idx]; // DL to CMD
+					printf("CMD %i\n", idx);
+				}
+				m_LineEditor->selectLine(idx);
 			}
 		}
 		break;

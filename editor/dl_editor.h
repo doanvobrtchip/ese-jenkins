@@ -76,6 +76,8 @@ public:
 	const DlParsed &getLine(int line) const;
 	// Move cursor to line
 	void selectLine(int line);
+	
+	bool isCoprocessor() { return m_ModeCoprocessor; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
 

@@ -64,6 +64,9 @@ public:
 	int traceX();
 	int traceY();
 
+	// Tracking coprocessor command used to write display list i
+	int *getDlCmd();
+
 private slots:
 	// void applyEmulatorConfig();
 

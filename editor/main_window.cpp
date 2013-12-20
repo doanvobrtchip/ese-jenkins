@@ -232,6 +232,7 @@ void loop()
 				wr32(REG_CMD_WRITE, wp);
 				do
 				{
+					if (!s_EmulatorRunning) return;
 					rp = rd32(REG_CMD_READ);
 					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				} while (fullness != 0);
@@ -264,6 +265,7 @@ void loop()
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
 			do
 			{
+				if (!s_EmulatorRunning) return;
 				rp = rd32(REG_CMD_READ);
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 			} while (fullness != 0);
@@ -290,7 +292,7 @@ void loop()
 		wr32(REG_CMD_WRITE, (wp & 0xFFF));
 		
 		// Finish all processing
-		while (wp != rd32(REG_CMD_READ))
+		while ((wp & 0xFFF) != rd32(REG_CMD_READ))
 		{
 			if (!s_EmulatorRunning) return;
 		}
@@ -322,6 +324,11 @@ void loop()
 		wr32(REG_CMD_WRITE, (wp & 0xFFF));
 		
 		coprocessorSwapped = true;
+		
+		// FIXME: Not very thread-safe, but not too critical
+		int *nextWrite = s_DisplayListCoprocessorCommandRead;
+		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
+		s_DisplayListCoprocessorCommandWrite = nextWrite;
 	}
 	s_CmdEditor->unlockDisplayList();
 	s_DlEditor->unlockDisplayList();
@@ -330,6 +337,12 @@ void loop()
 void keyboard()
 {
 
+}
+
+int *MainWindow::getDlCmd()
+{
+	// FIXME: Not very thread-safe, but not too critical
+	return s_DisplayListCoprocessorCommandRead;
 }
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
@@ -577,7 +590,7 @@ void MainWindow::createDockWindows()
 	{
 		m_CmdEditorDock = new QDockWidget(this);
 		m_CmdEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_CmdEditor = new DlEditor(this);
+		m_CmdEditor = new DlEditor(this, true);
 		m_CmdEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_CmdEditor->setUndoStack(m_UndoStack);
 		connect(m_EmulatorViewport, SIGNAL(frame()), m_CmdEditor, SLOT(frame()));
