@@ -859,6 +859,7 @@ void DlEditor::editingLine(QTextBlock block)
 
 void DlEditor::frame()
 {
+	// FIXME DL/CMD Mapping
 	// update current step highlight
 	m_CodeEditor->setStepHighlight(FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1);
 }

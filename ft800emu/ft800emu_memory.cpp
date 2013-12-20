@@ -44,6 +44,9 @@ static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
 static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
+static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
+static int s_LastCoprocessorCommandRead = -1;
+
 static int s_DirectSwapCount;
 
 // Avoid getting hammered in wait loops
@@ -578,6 +581,13 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 	{
 		s_WaitMCUReadCounter = 0;
 	}
+	
+	if (address >= RAM_DL && address < RAM_DL + 8192)
+	{
+		int dlAddr = (address - RAM_DL) >> 2;
+		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
+		printf("Coprocessor command at %i writes to display list at %i\n", s_LastCoprocessorCommandRead, dlAddr);
+	}
 
     actionWrite(address, data);
 	rawWriteU32(address, data);
@@ -620,6 +630,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			if (address >= RAM_CMD && address < RAM_CMD + 4096)
 			{
 				s_SwapCoprocessorReadCounter = 0;
+				s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 			}
 			if (s_LastCoprocessorRead == address)
 			{
@@ -639,6 +650,13 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 				s_IdenticalCoprocessorReadCounter = 0;
 			}
 			break;
+		}
+	}
+	else
+	{
+		if (address >= RAM_CMD && address < RAM_CMD + 4096)
+		{
+			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 	}
 
@@ -672,6 +690,7 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
 			s_SwapCoprocessorReadCounter = 0;
+			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 	}
 
@@ -711,10 +730,24 @@ uint8_t MemoryClass::coprocessorReadU8(size_t address)
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
 			s_SwapCoprocessorReadCounter = 0;
+			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 	}
 
 	return rawReadU8(address);
+}
+
+int *MemoryClass::getDisplayListCoprocessorWrites()
+{
+	return s_DisplayListCoprocessorWrites;
+}
+
+void MemoryClass::clearDisplayListCoprocessorWrites()
+{
+	for (int i = 0; i < FT800EMU_DISPLAY_LIST_SIZE; ++i)
+	{
+		s_DisplayListCoprocessorWrites[i] = -1;
+	}
 }
 
 } /* namespace FT800EMU */

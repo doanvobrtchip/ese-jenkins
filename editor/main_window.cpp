@@ -191,8 +191,8 @@ void loop()
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
 	if (dlModified || cmdModified)
 	{
-		if (dlModified) printf("dl modified\n");
-		if (cmdModified) printf("cmd modified\n");
+		// if (dlModified) printf("dl modified\n");
+		// if (cmdModified) printf("cmd modified\n");
 		uint32_t *displayList = s_DlEditor->getDisplayList();
 		swrbegin(RAM_DL);
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
