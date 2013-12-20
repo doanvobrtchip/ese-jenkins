@@ -50,7 +50,7 @@ void DlHighlighter::highlightBlock(const QString &text)
 		setFormat(parsed.IdIndex, parsed.IdLength, parsed.ValidId ? idFormat : badIdFormat);
 	}
 	
-	for (int p = 0; p < 8; ++p)
+	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
 	{
 		if (parsed.ParameterLength[p])
 		{

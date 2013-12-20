@@ -186,8 +186,10 @@ void loop()
 	bool macroModified = s_Macro->isDisplayListModified();
 	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
 	// {
-		wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
-		wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
+		if (s_CmdEditor->getDisplayListParsed()[0].ValidId)
+			wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
+		if (s_CmdEditor->getDisplayListParsed()[1].ValidId)
+			wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
 	// }
 	s_Macro->unlockDisplayList();
 	// switch to next display list

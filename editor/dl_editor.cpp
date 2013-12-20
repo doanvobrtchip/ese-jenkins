@@ -37,8 +37,8 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-DlEditor::DlEditor(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
-m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false)
+DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
+m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor)
 {
 	m_DisplayListShared[0] = DISPLAY();
 	
@@ -61,8 +61,8 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this, SLOT(editorCursorPositionChanged()));
 	
-	DlParser::getIdentifiers(m_CompleterIdentifiers);
-	DlParser::getParams(m_CompleterParams);
+	DlParser::getIdentifiers(m_CompleterIdentifiers, m_ModeCoprocessor);
+	DlParser::getParams(m_CompleterParams, m_ModeCoprocessor);
 	
 	m_CompleterModel = new QStringListModel(m_CodeEditor);
 	m_CompleterModel->setStringList(m_CompleterIdentifiers);
@@ -229,7 +229,7 @@ void DlEditor::parseLine(QTextBlock block)
 	QString line = block.text();
 	int i = block.blockNumber();
 	m_DisplayListParsed[i] = DlParsed();
-	DlParser::parse(m_DisplayListParsed[i], line);
+	DlParser::parse(m_DisplayListParsed[i], line, m_ModeCoprocessor);
 	m_DisplayListShared[i] = DlParser::compile(m_DisplayListParsed[i]);
 	
 	// check for misformed lines and do a no-op (todo: mark them)

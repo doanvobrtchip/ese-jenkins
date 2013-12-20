@@ -53,7 +53,7 @@ class DlEditor : public QWidget
 	Q_OBJECT
 	
 public:
-	DlEditor(MainWindow *parent);
+	DlEditor(MainWindow *parent, bool coprocessor = false);
 	virtual ~DlEditor();
 	
 	void setUndoStack(QUndoStack *undo_stack);
@@ -112,6 +112,7 @@ private:
 	bool m_PropIdValid;
 	
 	bool m_ModeMacro;
+	bool m_ModeCoprocessor;
 
 private:
 	DlEditor(const DlEditor &);

@@ -33,7 +33,15 @@ namespace FT800EMUQT {
 
 static std::map<std::string, int> s_IdMap;
 static std::map<std::string, int> s_ParamMap;
-static int s_ParamCount[39];
+
+static std::map<std::string, int> s_CmdIdMap;
+static std::map<std::string, int> s_CmdParamMap;
+
+#define DL_ID_NB 39
+#define CMD_ID_NB 53
+static int s_ParamCount[DL_ID_NB];
+static int s_CmdParamCount[CMD_ID_NB];
+static bool s_CmdParamString[CMD_ID_NB];
 
 void DlParser::init()
 {
@@ -166,9 +174,188 @@ void DlParser::init()
 		s_ParamMap["TEXTVGA"] = TEXTVGA;
 		s_ParamMap["ZERO"] = ZERO;
 	}
+	if (!s_CmdIdMap.size())
+	{
+		s_CmdIdMap["CMD_DLSTART"] = CMD_DLSTART & 0xFF;
+		s_CmdParamCount[CMD_DLSTART & 0xFF] = 0;
+		s_CmdParamString[CMD_DLSTART & 0xFF] = false;
+		s_CmdIdMap["CMD_SWAP"] = CMD_SWAP & 0xFF;
+		s_CmdParamCount[CMD_SWAP & 0xFF] = 0;
+		s_CmdParamString[CMD_SWAP & 0xFF] = false;
+		s_CmdIdMap["CMD_INTERRUPT"] = CMD_INTERRUPT & 0xFF;
+		s_CmdParamCount[CMD_INTERRUPT & 0xFF] = 1;
+		s_CmdParamString[CMD_INTERRUPT & 0xFF] = false;
+		s_CmdIdMap["CMD_CRC"] = CMD_CRC & 0xFF;
+		s_CmdParamCount[CMD_CRC & 0xFF] = 3;
+		s_CmdParamString[CMD_CRC & 0xFF] = false;
+		// s_CmdIdMap["CMD_HAMMERAUX"] = CMD_HAMMERAUX & 0xFF;
+		// s_CmdParamCount[CMD_HAMMERAUX & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_HAMMERAUX & 0xFF] = false;
+		// s_CmdIdMap["CMD_MARCH"] = CMD_MARCH & 0xFF;
+		// s_CmdParamCount[CMD_MARCH & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_MARCH & 0xFF] = false;
+		// s_CmdIdMap["CMD_IDCT"] = CMD_IDCT & 0xFF;
+		// s_CmdParamCount[CMD_IDCT & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_IDCT & 0xFF] = false;
+		// s_CmdIdMap["CMD_EXECUTE"] = CMD_EXECUTE & 0xFF;
+		// s_CmdParamCount[CMD_EXECUTE & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_EXECUTE & 0xFF] = false;
+		// s_CmdIdMap["CMD_GETPOINT"] = CMD_GETPOINT & 0xFF;
+		// s_CmdParamCount[CMD_GETPOINT & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_GETPOINT & 0xFF] = false;
+		s_CmdIdMap["CMD_BGCOLOR"] = CMD_BGCOLOR & 0xFF;
+		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamString[CMD_BGCOLOR & 0xFF] = false;
+		s_CmdIdMap["CMD_FGCOLOR"] = CMD_FGCOLOR & 0xFF;
+		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
+		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
+		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 3 + 2 + 3; // rgb
+		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
+		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
+		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
+		s_CmdParamString[CMD_TEXT & 0xFF] = true;
+		s_CmdIdMap["CMD_BUTTON"] = CMD_BUTTON & 0xFF;
+		s_CmdParamCount[CMD_BUTTON & 0xFF] = 7;
+		s_CmdParamString[CMD_BUTTON & 0xFF] = true;
+		s_CmdIdMap["CMD_KEYS"] = CMD_KEYS & 0xFF;
+		s_CmdParamCount[CMD_KEYS & 0xFF] = 7;
+		s_CmdParamString[CMD_KEYS & 0xFF] = true;
+		s_CmdIdMap["CMD_PROGRESS"] = CMD_PROGRESS & 0xFF;
+		s_CmdParamCount[CMD_PROGRESS & 0xFF] = 7;
+		s_CmdParamString[CMD_PROGRESS & 0xFF] = false;
+		s_CmdIdMap["CMD_SLIDER"] = CMD_SLIDER & 0xFF;
+		s_CmdParamCount[CMD_SLIDER & 0xFF] = 7;
+		s_CmdParamString[CMD_SLIDER & 0xFF] = false;
+		s_CmdIdMap["CMD_SCROLLBAR"] = CMD_SCROLLBAR & 0xFF;
+		s_CmdParamCount[CMD_SCROLLBAR & 0xFF] = 8;
+		s_CmdParamString[CMD_SCROLLBAR & 0xFF] = false;
+		s_CmdIdMap["CMD_TOGGLE"] = CMD_TOGGLE & 0xFF;
+		s_CmdParamCount[CMD_TOGGLE & 0xFF] = 7;
+		s_CmdParamString[CMD_TOGGLE & 0xFF] = true;
+		s_CmdIdMap["CMD_GAUGE"] = CMD_GAUGE & 0xFF;
+		s_CmdParamCount[CMD_GAUGE & 0xFF] = 8;
+		s_CmdParamString[CMD_GAUGE & 0xFF] = false;
+		s_CmdIdMap["CMD_CLOCK"] = CMD_CLOCK & 0xFF;
+		s_CmdParamCount[CMD_CLOCK & 0xFF] = 8;
+		s_CmdParamString[CMD_CLOCK & 0xFF] = false;
+		s_CmdIdMap["CMD_CALIBRATE"] = CMD_CALIBRATE & 0xFF;
+		s_CmdParamCount[CMD_CALIBRATE & 0xFF] = 1;
+		s_CmdParamString[CMD_CALIBRATE & 0xFF] = false;
+		s_CmdIdMap["CMD_SPINNER"] = CMD_SPINNER & 0xFF;
+		s_CmdParamCount[CMD_SPINNER & 0xFF] = 4;
+		s_CmdParamString[CMD_SPINNER & 0xFF] = false;
+		s_CmdIdMap["CMD_STOP"] = CMD_STOP & 0xFF;
+		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
+		s_CmdParamString[CMD_STOP & 0xFF] = false;
+		s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF;
+		s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMCRC & 0xFF] = false;
+		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
+		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
+		// s_CmdParamString[CMD_REGREAD & 0xFF] = false;
+		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF;
+		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 2;
+		s_CmdParamString[CMD_MEMWRITE & 0xFF] = false;
+		s_CmdIdMap["CMD_MEMSET"] = CMD_MEMSET & 0xFF;
+		s_CmdParamCount[CMD_MEMSET & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMSET & 0xFF] = false;
+		s_CmdIdMap["CMD_MEMZERO"] = CMD_MEMZERO & 0xFF;
+		s_CmdParamCount[CMD_MEMZERO & 0xFF] = 2;
+		s_CmdParamString[CMD_MEMZERO & 0xFF] = false;
+		s_CmdIdMap["CMD_MEMCPY"] = CMD_MEMCPY & 0xFF;
+		s_CmdParamCount[CMD_MEMZERO & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMZERO & 0xFF] = false;
+		s_CmdIdMap["CMD_APPEND"] = CMD_APPEND & 0xFF;
+		s_CmdParamCount[CMD_APPEND & 0xFF] = 2;
+		s_CmdParamString[CMD_APPEND & 0xFF] = false;
+		s_CmdIdMap["CMD_SNAPSHOT"] = CMD_SNAPSHOT & 0xFF;
+		s_CmdParamCount[CMD_SNAPSHOT & 0xFF] = 1;
+		s_CmdParamString[CMD_SNAPSHOT & 0xFF] = false;
+		// s_CmdIdMap["CMD_TOUCH_TRANSFORM"] = CMD_TOUCH_TRANSFORM & 0xFF;
+		// s_CmdParamCount[CMD_TOUCH_TRANSFORM & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_TOUCH_TRANSFORM & 0xFF] = false;
+		// s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
+		// s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
+		s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
+		s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+		s_CmdParamString[CMD_INFLATE & 0xFF] = false;
+		// s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
+		// s_CmdParamCount[CMD_GETPTR & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_GETPTR & 0xFF] = false;
+		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF;
+		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 2;
+		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = false;
+		// s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
+		// s_CmdParamCount[CMD_GETPROPS & 0xFF] = 0; // undocumented
+		// s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
+		s_CmdIdMap["CMD_LOADIDENTITY"] = CMD_LOADIDENTITY & 0xFF;
+		s_CmdParamCount[CMD_LOADIDENTITY & 0xFF] = 0;
+		s_CmdParamString[CMD_LOADIDENTITY & 0xFF] = false;
+		s_CmdIdMap["CMD_TRANSLATE"] = CMD_TRANSLATE & 0xFF;
+		s_CmdParamCount[CMD_TRANSLATE & 0xFF] = 2;
+		s_CmdParamString[CMD_TRANSLATE & 0xFF] = false;
+		s_CmdIdMap["CMD_SCALE"] = CMD_SCALE & 0xFF;
+		s_CmdParamCount[CMD_SCALE & 0xFF] = 2;
+		s_CmdParamString[CMD_SCALE & 0xFF] = false;
+		s_CmdIdMap["CMD_ROTATE"] = CMD_ROTATE & 0xFF;
+		s_CmdParamCount[CMD_ROTATE & 0xFF] = 1;
+		s_CmdParamString[CMD_ROTATE & 0xFF] = false;
+		s_CmdIdMap["CMD_SETMATRIX"] = CMD_SETMATRIX & 0xFF;
+		s_CmdParamCount[CMD_SETMATRIX & 0xFF] = 0;
+		s_CmdParamString[CMD_SETMATRIX & 0xFF] = false;
+		s_CmdIdMap["CMD_SETFONT"] = CMD_SETFONT & 0xFF;
+		s_CmdParamCount[CMD_SETFONT & 0xFF] = 2;
+		s_CmdParamString[CMD_SETFONT & 0xFF] = false;
+		s_CmdIdMap["CMD_TRACK"] = CMD_TRACK & 0xFF;
+		s_CmdParamCount[CMD_TRACK & 0xFF] = 5;
+		s_CmdParamString[CMD_TRACK & 0xFF] = false;
+		s_CmdIdMap["CMD_DIAL"] = CMD_DIAL & 0xFF;
+		s_CmdParamCount[CMD_DIAL & 0xFF] = 5;
+		s_CmdParamString[CMD_DIAL & 0xFF] = false;
+		s_CmdIdMap["CMD_NUMBER"] = CMD_NUMBER & 0xFF;
+		s_CmdParamCount[CMD_NUMBER & 0xFF] = 5;
+		s_CmdParamString[CMD_NUMBER & 0xFF] = false;
+		s_CmdIdMap["CMD_SCREENSAVER"] = CMD_SCREENSAVER & 0xFF;
+		s_CmdParamCount[CMD_NUMBER & 0xFF] = 0;
+		s_CmdParamString[CMD_NUMBER & 0xFF] = false;
+		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
+		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
+		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
+		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF;
+		s_CmdParamCount[CMD_LOGO & 0xFF] = 0;
+		s_CmdParamString[CMD_LOGO & 0xFF] = false;
+		s_CmdIdMap["CMD_COLDSTART"] = CMD_COLDSTART & 0xFF;
+		s_CmdParamCount[CMD_COLDSTART & 0xFF] = 0;
+		s_CmdParamString[CMD_COLDSTART & 0xFF] = false;
+		// s_CmdIdMap["CMD_GETMATRIX"] = CMD_GETMATRIX & 0xFF; // don't support reading values
+		// s_CmdParamCount[CMD_GETMATRIX & 0xFF] = 6;
+		// s_CmdParamString[CMD_GETMATRIX & 0xFF] = false;
+		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
+		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
+	}
+	if (!s_CmdParamMap.size())
+	{
+		s_CmdParamMap["OPT_CENTER"] = OPT_CENTER;
+		s_CmdParamMap["OPT_CENTERX"] = OPT_CENTERX;
+		s_CmdParamMap["OPT_CENTERY"] = OPT_CENTERY;
+		s_CmdParamMap["OPT_FLAT"] = OPT_FLAT;
+		s_CmdParamMap["OPT_MONO"] = OPT_MONO;
+		s_CmdParamMap["OPT_NOBACK"] = OPT_NOBACK;
+		s_CmdParamMap["OPT_NODL"] = OPT_NODL;
+		s_CmdParamMap["OPT_NOHANDS"] = OPT_NOHANDS;
+		s_CmdParamMap["OPT_NOHM"] = OPT_NOHM;
+		s_CmdParamMap["OPT_NOPOINTER"] = OPT_NOPOINTER;
+		s_CmdParamMap["OPT_NOSECS"] = OPT_NOSECS;
+		s_CmdParamMap["OPT_NOTICKS"] = OPT_NOTICKS;
+		s_CmdParamMap["OPT_RIGHTX"] = OPT_RIGHTX;
+		s_CmdParamMap["OPT_SIGNED"] = OPT_SIGNED;
+	}
 }
 
-void DlParser::getIdentifiers(QStringList &list)
+void DlParser::getIdentifiers(QStringList &list, bool coprocessor)
 {
 	init();
 	
@@ -179,9 +366,17 @@ void DlParser::getIdentifiers(QStringList &list)
 	
 	list.push_back("VERTEX2II");
 	list.push_back("VERTEX2F");
+	
+	if (coprocessor)
+	{
+		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
+		{
+			list.push_back(QString(it->first.c_str()));
+		}
+	}
 }
 
-void DlParser::getParams(QStringList &list)
+void DlParser::getParams(QStringList &list, bool coprocessor)
 {
 	init();
 	
@@ -189,9 +384,17 @@ void DlParser::getParams(QStringList &list)
 	{
 		list.push_back(QString(it->first.c_str()));
 	}
+	
+	if (coprocessor)
+	{
+		for (std::map<std::string, int>::iterator it = s_CmdParamMap.begin(), end = s_CmdParamMap.end(); it != end; ++it)
+		{
+			list.push_back(QString(it->first.c_str()));
+		}
+	}
 }
 
-void DlParser::parse(DlParsed &parsed, const QString &line)
+void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 {
 	init();
 	
@@ -201,7 +404,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line)
 	
 	parsed.BadCharacterIndex = -1;
 	
-	for (int p = 0; p < 8; ++p)
+	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
 	{
 		parsed.ValidParameter[p] = false;
 		parsed.NumericParameter[p] = true;
@@ -296,7 +499,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line)
 	// for each possible parameter
 	bool failParam = false;
 	int finalIndex = -1;
-	for (int p = 0; p < 8; ++p)
+	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
 	{
 		parsed.ParameterIndex[p] = i;
 		std::stringstream pss;

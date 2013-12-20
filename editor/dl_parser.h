@@ -15,6 +15,7 @@
 #define FT800EMUQT_DL_PARSER_H
 
 // STL includes
+#include <vector>
 
 // Qt includes
 #include <QString>
@@ -67,25 +68,29 @@
 #define FT800EMU_DL_CLEAR 38
 
 namespace FT800EMUQT {
-	
+
+#define DLPARSED_MAX_PARAMETER 16
 struct DlParsed
 {
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
-	uint32_t Parameter[8];
+	uint32_t Parameter[DLPARSED_MAX_PARAMETER];
 	
 	bool ValidId;
-	bool ValidParameter[8];
-	bool NumericParameter[8];
+	bool ValidParameter[DLPARSED_MAX_PARAMETER];
+	bool NumericParameter[DLPARSED_MAX_PARAMETER];
 	
 	int IdIndex;
 	int IdLength;
-	int ParameterIndex[8];
-	int ParameterLength[8];
+	int ParameterIndex[DLPARSED_MAX_PARAMETER];
+	int ParameterLength[DLPARSED_MAX_PARAMETER];
 	
 	int ExpectedParameterCount;
 	int BadCharacterIndex;
+	
+	bool ValidStringParameter; // single string parameter at end
+	std::string StringParameter;
 };
 
 /**
@@ -99,13 +104,14 @@ class DlParser
 public:
 	static void init();
 	
-	static void getIdentifiers(QStringList &list);
-	static void getParams(QStringList &list);
+	static void getIdentifiers(QStringList &list, bool coprocessor = false);
+	static void getParams(QStringList &list, bool coprocessor = false);
 	
-	static void parse(DlParsed &parsed, const QString &line);	
-	static uint32_t compile(const DlParsed &parsed);
-	static void toString(std::string &dst, uint32_t v);
-	static QString toString(uint32_t v);
+	static void parse(DlParsed &parsed, const QString &line, bool coprocessor = false);
+	static uint32_t compile(const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static void compile(std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void toString(std::string &dst, uint32_t v); // DL only
+	static QString toString(uint32_t v); // DL only
 	
 }; /* class DlParser */
 
