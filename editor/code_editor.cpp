@@ -100,9 +100,9 @@ class UndoEditor : public QUndoCommand
 public:
 	UndoEditor(CodeEditor *editor, int id) : QUndoCommand(), m_Editor(editor), m_DoneDummy(false), m_CombineId(id), m_UndoCount(1) { }
 	virtual ~UndoEditor() { }
-	virtual int id() const { printf("*** ret %i ***\n", m_CombineId); return m_CombineId; }
-	virtual void undo() { printf("*** undo %i ***\n", m_UndoCount); for (int i = 0; i < m_UndoCount; ++i) m_Editor->undo(); }
-	virtual void redo() { if (m_DoneDummy) { printf("*** redo %i ***\n", m_UndoCount); for (int i = 0; i < m_UndoCount; ++i) m_Editor->redo(); } else { m_DoneDummy = true; } }
+	virtual int id() const { /*printf("*** ret %i ***\n", m_CombineId);*/ return m_CombineId; }
+	virtual void undo() { /*printf("*** undo %i ***\n", m_UndoCount);*/ for (int i = 0; i < m_UndoCount; ++i) m_Editor->undo(); }
+	virtual void redo() { if (m_DoneDummy) { /*printf("*** redo %i ***\n", m_UndoCount);*/ for (int i = 0; i < m_UndoCount; ++i) m_Editor->redo(); } else { m_DoneDummy = true; } }
 	virtual bool mergeWith(const QUndoCommand *command) { ++m_UndoCount; return true; }
 
 private:

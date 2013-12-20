@@ -53,6 +53,7 @@ public:
 	virtual ~MainWindow();
 
 	inline DlEditor *dlEditor() { return m_DlEditor; }
+	inline DlEditor *cmdEditor() { return m_CmdEditor; }
 	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 
 	void setTraceEnabled(bool enabled);

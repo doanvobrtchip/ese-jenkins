@@ -67,7 +67,7 @@ public:
 	void unlockDisplayList(); // mutex
 	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
 	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
-	inline bool isDisplayListModified() { return m_DisplayListModified; }
+	inline bool isDisplayListModified() { bool result = m_DisplayListModified; m_DisplayListModified = false; return result; }
 	
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
 	

@@ -129,6 +129,7 @@ uint32_t rd32(size_t address)
 }
 
 static DlEditor *s_DlEditor = NULL;
+static DlEditor *s_CmdEditor = NULL;
 static DlEditor *s_Macro = NULL;
 // static FILE *s_F = NULL;
 
@@ -139,16 +140,33 @@ void setup()
 	wr32(REG_PCLK, 5);
 }
 
-static bool displayListSwapped = false;
+// static bool displayListSwapped = false;
+static bool coprocessorSwapped = false;
+static int s_SwapCount = 0;
 void loop()
 {
 	// wait
-	if (displayListSwapped)
+	if (coprocessorSwapped)
 	{
-		// dl swap wait
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE) { /* do nothing */ if (!s_EmulatorRunning) return; }
-		displayListSwapped = false;
+		int wp = rd32(REG_CMD_WRITE);
+		while (wp != rd32(REG_CMD_READ))
+		{
+			if (!s_EmulatorRunning) return;
+		}
+		coprocessorSwapped = false;
+		++s_SwapCount;
+		printf("Swapped CMD %i\n", s_SwapCount);
 	}
+	/*else if (displayListSwapped)
+	{
+		while (rd32(REG_DLSWAP) != DLSWAP_DONE) 
+		{
+			if (!s_EmulatorRunning) return;
+		}
+		displayListSwapped = false;
+		++s_SwapCount;
+		printf("Swapped DL %i\n", s_SwapCount);
+	}*/
 	else
 	{
 		FT800EMU::System.delay(10);
@@ -159,7 +177,8 @@ void loop()
 	wr32(REG_VSIZE, s_VSize);
 	// switch to next macro list
 	s_Macro->lockDisplayList();
-	if (s_Macro->isDisplayListModified())
+	bool macroModified = s_Macro->isDisplayListModified();
+	if (macroModified)
 	{
 		wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
 		wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
@@ -167,16 +186,73 @@ void loop()
 	s_Macro->unlockDisplayList();
 	// switch to next display list
 	s_DlEditor->lockDisplayList();
-	if (s_DlEditor->isDisplayListModified())
+	s_CmdEditor->lockDisplayList();
+	bool dlModified = s_DlEditor->isDisplayListModified();
+	bool cmdModified = s_CmdEditor->isDisplayListModified();
+	if (dlModified || cmdModified)
 	{
+		if (dlModified) printf("dl modified\n");
+		if (cmdModified) printf("cmd modified\n");
 		uint32_t *displayList = s_DlEditor->getDisplayList();
 		swrbegin(RAM_DL);
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 			swr32(displayList[i]);
 		swrend();
-		wr32(REG_DLSWAP, DLSWAP_FRAME);
-		displayListSwapped = true;
+		// wr32(REG_DLSWAP, DLSWAP_FRAME);
+		// displayListSwapped = true;
+		
+		uint32_t *cmdList = s_CmdEditor->getDisplayList(); // FIXME CMD PARAMETERS
+		const DlParsed *cmdParsed = s_CmdEditor->getDisplayListParsed();
+		int wp = rd32(REG_CMD_WRITE);
+		int rp = rd32(REG_CMD_READ);
+		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
+		int freespace = ((4096 - 4) - fullness);
+		swrbegin(RAM_CMD + (wp & 0xFFF));
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) // FIXME CMD SIZE
+		{
+			const DlParsed &pa = cmdParsed[i];
+			// Skip invalid lines (invalid id)
+			if (!pa.ValidId) continue;
+			if (freespace < 4) // Wait for coprocessor ready
+			{
+				swrend();
+				wr32(REG_CMD_WRITE, wp);
+				do
+				{
+					rp = rd32(REG_CMD_READ);
+					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+				} while (fullness != 0);
+				freespace = ((4096 - 4) - fullness);
+				swrbegin(RAM_CMD + (wp & 0xFFF));
+			}
+			swr32(cmdList[i]);
+			wp += 4;
+			freespace -= 4;
+		}
+		
+		// Write swap to cmd
+		if (freespace < 4) // Wait for coprocessor ready
+		{
+			swrend();
+			wr32(REG_CMD_WRITE, (wp & 0xFFF));
+			do
+			{
+				rp = rd32(REG_CMD_READ);
+				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+			} while (fullness != 0);
+			freespace = ((4096 - 4) - fullness);
+			swrbegin(RAM_CMD + (wp & 0xFFF));
+		}
+		swr32(CMD_SWAP);
+		swr32(CMD_DLSTART);
+		wp += 8;
+		swrend();
+		wr32(REG_CMD_WRITE, (wp & 0xFFF));
+		
+		coprocessorSwapped = true;
 	}
+	s_CmdEditor->unlockDisplayList();
 	s_DlEditor->unlockDisplayList();
 }
 
@@ -227,6 +303,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	incbLanguageCode();
 	
 	s_DlEditor = m_DlEditor;
+	s_CmdEditor = m_CmdEditor;
 	s_Macro = m_Macro;
 	
 	FT800EMU::EmulatorParameters params;
@@ -255,6 +332,8 @@ MainWindow::~MainWindow()
 	m_EmulatorViewport->stop();
 
 	s_DlEditor = NULL;
+	s_CmdEditor = NULL;
+	s_Macro = NULL;
 }
 
 void MainWindow::createActions()
