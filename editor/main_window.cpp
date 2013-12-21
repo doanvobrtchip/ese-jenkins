@@ -147,7 +147,7 @@ static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorComma
 
 static std::vector<uint32_t> s_CmdParamCache;
 
-// static bool displayListSwapped = false;
+static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 // static int s_SwapCount = 0;
 void loop()
@@ -168,16 +168,16 @@ void loop()
 		// ++s_SwapCount;
 		// printf("Swapped CMD %i\n", s_SwapCount);
 	}
-	/*else if (displayListSwapped)
+	else if (displayListSwapped)
 	{
 		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
 		{
 			if (!s_EmulatorRunning) return;
 		}
 		displayListSwapped = false;
-		++s_SwapCount;
-		printf("Swapped DL %i\n", s_SwapCount);
-	}*/
+		// ++s_SwapCount;
+		// printf("Swapped DL %i\n", s_SwapCount);
+	}
 	else
 	{
 		FT800EMU::System.delay(10);
@@ -209,7 +209,10 @@ void loop()
 		uint32_t *displayList = s_DlEditor->getDisplayList();
 		swrbegin(RAM_DL);
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		{
+			// printf("dl %i: %i\n", i, displayList[i]);
 			swr32(displayList[i]);
+		}
 		swrend();
 		// wr32(REG_DLSWAP, DLSWAP_FRAME);
 		// displayListSwapped = true;
@@ -234,6 +237,7 @@ void loop()
 		cmdParamCache[FT800EMU_DL_SIZE] = s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
 
+		bool validCmd = false;
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
@@ -249,6 +253,7 @@ void loop()
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
+			validCmd = true;
 			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
 			int cmdLen = 4 + (paramNb * 4);
 			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
@@ -357,25 +362,25 @@ void loop()
 			}
 		}
 
-		// Write swap to cmd
-		/*if (freespace < 4) // Wait for coprocessor ready
+		if (validCmd)
 		{
+			swr32(DISPLAY());
+			swr32(CMD_SWAP);
+			wp += 8;
 			swrend();
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
-			do
+
+			// Finish all processing
+			while ((wp & 0xFFF) != rd32(REG_CMD_READ))
 			{
 				if (!s_EmulatorRunning) return;
-				rp = rd32(REG_CMD_READ);
-				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-			} while (fullness != 0);
-			freespace = ((4096 - 4) - fullness);
-
+			}
 			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
 			for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 			{
 				if (cpWrite[i] >= 0)
 				{
-					// printf("B %i\n", i);
+					// printf("C %i, %i, %i\n", i, cpWrite[i], coprocessorWrites[cpWrite[i]]);
 					s_DisplayListCoprocessorCommandWrite[i]
 						= coprocessorWrites[cpWrite[i]];
 				}
@@ -383,51 +388,34 @@ void loop()
 			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
+			// Test
+			/*for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+			{
+				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
+				{
+					std::string res;
+					DlParser::toString(res, rd32(RAM_DL + (i * 4)));
+					printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
+				}
+			}*/
+
 			swrbegin(RAM_CMD + (wp & 0xFFF));
-		}*/
+			swr32(CMD_DLSTART);
+			wp += 4;
+			swrend();
+			wr32(REG_CMD_WRITE, (wp & 0xFFF));
 
-		swr32(DISPLAY());
-		swr32(CMD_SWAP);
-		wp += 8;
-		swrend();
-		wr32(REG_CMD_WRITE, (wp & 0xFFF));
-
-		// Finish all processing
-		while ((wp & 0xFFF) != rd32(REG_CMD_READ))
-		{
-			if (!s_EmulatorRunning) return;
+			coprocessorSwapped = true;
 		}
-		int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
-		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		else
 		{
-			if (cpWrite[i] >= 0)
-			{
-				// printf("C %i, %i, %i\n", i, cpWrite[i], coprocessorWrites[cpWrite[i]]);
-				s_DisplayListCoprocessorCommandWrite[i]
-					= coprocessorWrites[cpWrite[i]];
-			}
+			// Swap frame directly if nothing was written to the coprocessor
+
+			swrend();
+			wr32(REG_CMD_WRITE, (wp & 0xFFF));
+
+			wr32(REG_DLSWAP, DLSWAP_FRAME);
 		}
-		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-
-		// Test
-		/*for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
-		{
-			if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
-			{
-				std::string res;
-				DlParser::toString(res, rd32(RAM_DL + (i * 4)));
-				printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
-			}
-		}*/
-
-		swrbegin(RAM_CMD + (wp & 0xFFF));
-		swr32(CMD_DLSTART);
-		wp += 4;
-		swrend();
-		wr32(REG_CMD_WRITE, (wp & 0xFFF));
-
-		coprocessorSwapped = true;
 
 		// FIXME: Not very thread-safe, but not too critical
 		int *nextWrite = s_DisplayListCoprocessorCommandRead;
@@ -1267,7 +1255,8 @@ void MainWindow::actExport()
 		s = out.writeRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();
-		s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(FT800EMU::Memory.getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
 		m_DlEditor->unlockDisplayList();
 		if (s != FT800EMU_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
 		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
