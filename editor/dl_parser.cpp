@@ -254,9 +254,9 @@ void DlParser::init()
 		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		// s_CmdParamString[CMD_REGREAD & 0xFF] = false;
-		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF;
-		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 2;
-		s_CmdParamString[CMD_MEMWRITE & 0xFF] = false;
+		// s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // don't support streaming data into cmd
+		// s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 2;
+		// s_CmdParamString[CMD_MEMWRITE & 0xFF] = false;
 		s_CmdIdMap["CMD_MEMSET"] = CMD_MEMSET & 0xFF;
 		s_CmdParamCount[CMD_MEMSET & 0xFF] = 3;
 		s_CmdParamString[CMD_MEMSET & 0xFF] = false;
@@ -278,15 +278,15 @@ void DlParser::init()
 		// s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
 		// s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
-		s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
-		s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
-		s_CmdParamString[CMD_INFLATE & 0xFF] = false;
+		// s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF; // don't support streaming data into cmd
+		// s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+		// s_CmdParamString[CMD_INFLATE & 0xFF] = false;
 		// s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
 		// s_CmdParamCount[CMD_GETPTR & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPTR & 0xFF] = false;
-		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF;
-		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 2;
-		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = false;
+		// s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF;  // don't support streaming data into cmd
+		// s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 2;
+		// s_CmdParamString[CMD_LOADIMAGE & 0xFF] = false;
 		// s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
 		// s_CmdParamCount[CMD_GETPROPS & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
@@ -358,15 +358,15 @@ void DlParser::init()
 void DlParser::getIdentifiers(QStringList &list, bool coprocessor)
 {
 	init();
-	
+
 	for (std::map<std::string, int>::iterator it = s_IdMap.begin(), end = s_IdMap.end(); it != end; ++it)
 	{
 		list.push_back(QString(it->first.c_str()));
 	}
-	
+
 	list.push_back("VERTEX2II");
 	list.push_back("VERTEX2F");
-	
+
 	if (coprocessor)
 	{
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
@@ -379,12 +379,12 @@ void DlParser::getIdentifiers(QStringList &list, bool coprocessor)
 void DlParser::getParams(QStringList &list, bool coprocessor)
 {
 	init();
-	
+
 	for (std::map<std::string, int>::iterator it = s_ParamMap.begin(), end = s_ParamMap.end(); it != end; ++it)
 	{
 		list.push_back(QString(it->first.c_str()));
 	}
-	
+
 	if (coprocessor)
 	{
 		for (std::map<std::string, int>::iterator it = s_CmdParamMap.begin(), end = s_CmdParamMap.end(); it != end; ++it)
@@ -397,35 +397,35 @@ void DlParser::getParams(QStringList &list, bool coprocessor)
 void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 {
 	init();
-	
+
 	QByteArray chars = line.toLatin1();
 	const char *src = chars.constData();
 	const int len = chars.size();
-	
+
 	parsed.BadCharacterIndex = -1;
-	
+
 	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
 	{
 		parsed.ValidParameter[p] = false;
 		parsed.NumericParameter[p] = true;
 		parsed.ParameterLength[p] = 0;
 	}
-	
+
 	parsed.ValidId = false;
 	parsed.IdIndex = 0;
 	parsed.IdLength = 0;
 	std::stringstream idss;
 	bool failId = false;
-	
+
 	int i = 0;
-	
+
 	// find function name
 	for (; ; ++i)
 	{
 		if (i < len)
 		{
 			char c = src[i];
-			if (c >= 'a' && c <= 'z') 
+			if (c >= 'a' && c <= 'z')
 			{
 				c = c - 'a' + 'A'; // uppercase
 			}
@@ -454,7 +454,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				failId = true; /* bad character after or inside name */
 				break;
 			}
-			
+
 		}
 		else
 		{
@@ -462,12 +462,12 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			break;
 		}
 	}
-	
+
 	parsed.IdText = idss.str();
-	
+
 	parsed.IdLeft = 0;
 	parsed.IdRight = 0;
-	
+
 	if (parsed.IdText == "VERTEX2F")
 	{
 		parsed.IdLeft = FT800EMU_DL_VERTEX2F;
@@ -501,12 +501,12 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			}
 		}
 	}
-	
+
 	if (failId)
 	{
 		return;
 	}
-	
+
 	// for each possible parameter
 	bool failParam = false;
 	int finalIndex = -1;
@@ -519,7 +519,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			if (i < len)
 			{
 				char c = src[i];
-				if (c >= 'a' && c <= 'z') 
+				if (c >= 'a' && c <= 'z')
 				{
 					c = c - 'a' + 'A'; // uppercase
 				}
@@ -568,7 +568,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				break;
 			}
 		}
-		
+
 		// validate named parameter
 		if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
 		{
@@ -597,7 +597,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				}
 			}
 		}
-		
+
 		if (finalIndex >= 0)
 		{
 			if (parsed.BadCharacterIndex == -1)
@@ -610,7 +610,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			}
 			break;
 		}
-		
+
 		if (failParam)
 		{
 			return;
@@ -966,7 +966,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 void DlParser::toString(std::string &dst, uint32_t v)
 {
 	std::stringstream res;
-	
+
 	switch (v >> 30)
 	{
 		case 0:
@@ -1287,7 +1287,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 			break;
 		}
 	}
-	
+
 	dst = res.str();
 }
 

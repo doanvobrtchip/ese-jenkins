@@ -37,11 +37,11 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true), 
+DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true),
 m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor)
 {
 	m_DisplayListShared[0] = DISPLAY();
-	
+
 	m_CodeEditor = new CodeEditor();
 	m_CodeEditor->setMaxLinesNotice(FT800EMU_DL_SIZE);
 	// m_CodeEditor->setReadOnly(true);
@@ -52,21 +52,21 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	layout->addWidget(m_CodeEditor);
 	// layout->addWidget(m_CommandInput);
 	setLayout(layout);
-	
+
 	m_DlHighlighter = new DlHighlighter(m_CodeEditor->document(), coprocessor);
 
 	// connect(m_CommandInput, SIGNAL(returnPressed()), this, SLOT(returnPressed()));
-	
+
 	connect(m_CodeEditor->document(), SIGNAL(contentsChange(int, int, int)), this, SLOT(documentContentsChange(int, int, int)));
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this, SLOT(editorCursorPositionChanged()));
-	
+
 	DlParser::getIdentifiers(m_CompleterIdentifiers, m_ModeCoprocessor);
 	DlParser::getParams(m_CompleterParams, m_ModeCoprocessor);
-	
+
 	m_CompleterModel = new QStringListModel(m_CodeEditor);
 	m_CompleterModel->setStringList(m_CompleterIdentifiers);
-	
+
 	m_Completer = new QCompleter(m_CompleterModel, m_CodeEditor);
 	m_CodeEditor->setCompleter(m_Completer);
 }
@@ -172,7 +172,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 void DlEditor::editorCursorPositionChanged()
 {
 	QTextBlock block = m_CodeEditor->document()->findBlock(m_CodeEditor->textCursor().position());
-	
+
 	// switch between auto completers
 	if (m_DisplayListParsed[block.blockNumber()].ValidId && m_CompleterIdentifiersActive)
 	{
@@ -186,7 +186,7 @@ void DlEditor::editorCursorPositionChanged()
 		m_CompleterModel->setStringList(m_CompleterIdentifiers);
 		m_Completer->popup()->hide();
 	}
-	
+
 	editingLine(block);
 }
 
@@ -194,9 +194,9 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 {
 	if (m_Reloading)
 		return;
-	
+
 	QTextBlock block = m_CodeEditor->document()->findBlock(position);
-	
+
 	lockDisplayList();
 	parseLine(block);
 	m_DisplayListModified = true;
@@ -207,7 +207,7 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 {
 	if (m_Reloading)
 		return;
-	
+
 	lockDisplayList();
 	for (int i = 0; i < newBlockCount && i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
 	{
@@ -220,7 +220,7 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	}
 	m_DisplayListModified = true;
 	unlockDisplayList();
-	
+
 	editorCursorPositionChanged();
 }
 
@@ -231,7 +231,7 @@ void DlEditor::parseLine(QTextBlock block)
 	m_DisplayListParsed[i] = DlParsed();
 	DlParser::parse(m_DisplayListParsed[i], line, m_ModeCoprocessor);
 	m_DisplayListShared[i] = DlParser::compile(m_DisplayListParsed[i]);
-	
+
 	// check for misformed lines and do a no-op (todo: mark them)
 	if (m_DisplayListShared[i] == DISPLAY() && !m_DisplayListParsed[i].ValidId)
 	{
@@ -267,7 +267,7 @@ void DlEditor::editingLine(QTextBlock block)
 	// update properties editor
 	if (m_PropertiesEditor->getEditWidgetSetter() != this
 		|| block.blockNumber() != m_PropLine
-		|| m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft 
+		|| m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft
 		|| m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
 		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid)
 	{
@@ -316,12 +316,594 @@ void DlEditor::editingLine(QTextBlock block)
 				m_PropertiesEditor->setEditWidget(NULL, false, this);
 				ok = true;
 			}
-			else if (m_DisplayListParsed[m_PropLine].IdLeft == 0xFFFFFF00) switch (m_DisplayListParsed[m_PropLine].IdRight)
+			else if (m_DisplayListParsed[m_PropLine].IdLeft == 0xFFFFFF00) switch (m_DisplayListParsed[m_PropLine].IdRight | 0xFFFFFF00)
 			{
-				// ...
+				case CMD_DLSTART:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_DLSTART</b>()<br>"
+						"<br>"
+						"When the co-processor engine executes this command, it waits until the display list is "
+						"ready for writing, then sets REG_CMD_DL to zero."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SWAP:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SWAP</b>()<br>"
+						"<br>"
+						"When the co-processor engine executes this command, it requests a display list swap by "
+						"writing to REG_DLSWAP."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_INTERRUPT:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_INTERRUPT</b>(<i>ms</i>)<br>"
+						"<b>ms</b>: Delay before interrupt triggers, in milliseconds. The interrupt is guaranteed "
+						"not to fire before this delay. If ms is zero, the interrupt fires immediately.<br>"
+						"<br>"
+						"When the co-processor engine executes this command, it triggers interrupt INT_CMDFLAG."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_BGCOLOR:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_BGCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>argb</b>: New background color, as a 32-bit ARGB number. Red is the most significant 8 "
+						"bits, blue is the least. So 0xffff0000 is bright red.<br>"
+						"Background color is applicable for things that the user cannot move. Example "
+						"behind gauges and sliders etc.<br>"
+						"<br>"
+						"Set the background color."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_FGCOLOR:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_FGCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>argb</b>: New foreground color, as a 32-bit ARGB number. Red is the most significant 8 "
+						"bits, blue is the least. So 0xffff0000 is bright red.<br>"
+						"Foreground color is applicable "
+						"for things that the user can move such as handles and buttons "
+						"(\"affordances\").<br>"
+						"<br>"
+						"Set the foreground color."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_GRADIENT:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_GRADIENT</b>("
+						"<i>x0</i>, <i>y0</i>, <i>a0</i>, <i>r0</i>, <i>g0</i>, <i>b0</i>, "
+						"<i>x1</i>, <i>y1</i>, <i>a1</i>, <i>r1</i>, <i>g1</i>, <i>b1</i>)<br>"
+						"<b>x0</b>: x-coordinate of point 0, in pixels<br>"
+						"<b>y0</b>: y-coordinate of point 0, in pixels<br>"
+						"<b>argb0</b>: Color of point 0, as a 32-bit ARGB number. R is the most significant 8 bits, B is "
+						"the least. So 0xffff0000 is bright red.<br>"
+						"<b>x1</b>: x-coordinate of point 1, in pixels<br>"
+						"<b>y1</b>: y-coordinate of point 1, in pixels<br>"
+						"<b>argb1</b>: Color of point 1.<br>"
+						"<br>"
+						"Draw a smooth color gradient.<br>"
+						"<br>"
+						"All the colours step values are calculated based on smooth curve interpolated from the "
+						"RGB0 to RGB1 parameter. The smooth curve equation is independently calculated for all "
+						"three colors and the equation used is R0 + t * (R1 - R0), where t is interpolated between "
+						"0 and 1. Gradient must be used with Scissor function to get the intended gradient "
+						"display."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_TEXT:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_TEXT</b>(<i>x</i>, <i>y</i>, <i>font</i>, <i>options</i>, <i>s</i>)<br>"
+						"<b>x</b>: x-coordinate of text base, in pixels<br>"
+						"<b>y</b>: y-coordinate of text base, in pixels<br>"
+						"<b>font</b>: Font to use for text, 0-31. See ROM and RAM Fonts<br>"
+						"<b>options</b>: By default (x; y) is the top-left pixel of the text. OPT_CENTERX centers the "
+						"text horizontally, OPT_CENTERY centers it vertically. OPT_CENTER centers the "
+						"text in both directions. OPT_RIGHTX right-justifies the text, so that the x is "
+						"the rightmost pixel.<br>"
+						"<b>s</b>: text<br>"
+						"<br>"
+						"Draw text."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_BUTTON:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_BUTTON</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>font</i>, <i>options</i>, <i>s</i>)<br>"
+						"<b>x</b>: x-coordinate of button top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of button top-left, in pixels<br>"
+						"<b>w</b>: width of button, in pixels<br>"
+						"<b>h</b>: height of button, in pixels<br>"
+						"<b>font</b>: Font to use for text, 0-31. See ROM and RAM Fonts<br>"
+						"<b>options</b>: By default the button is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect.<br>"
+						"<b>s</b>: button label<br>"
+						"<br>"
+						"Draw a button."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_KEYS:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_BUTTON</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>font</i>, <i>options</i>, <i>s</i>)<br>"
+						"<b>x</b>: x-coordinate of keys top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of keys top-left, in pixels<br>"
+						"<b>w</b>: width of keys, in pixels<br>"
+						"<b>h</b>: height of keys, in pixels<br>"
+						"<b>font</b>: Font to use for keys, 0-31. See ROM and RAM Fonts<br>"
+						"<b>options</b>: By default the keys are drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect. If OPT_CENTER is given the keys are drawn at minimum size centered "
+						"within the w x h rectangle. Otherwise the keys are expanded so that they "
+						"completely fill the available space. If an ASCII code is specified, that key is "
+						"drawn 'pressed' - i.e. in background color with any 3D effect removed..<br>"
+						"<b>s</b>: key labels, one character per key. The TAG value is set to the ASCII value of "
+						"each key, so that key presses can be detected using the REG_TOUCH_TAG "
+						"register.<br>"
+						"<br>"
+						"Draw a row of keys."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_PROGRESS:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_BUTTON</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>options</i>, <i>val</i>, <i>range</i>)<br>"
+						"<b>x</b>: x-coordinate of progress bar top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of progress bar top-left, in pixels<br>"
+						"<b>w</b>: width of progress bar, in pixels<br>"
+						"<b>h</b>: height of progress bar, in pixels<br>"
+						"<b>options</b>: By default the progress bar is drawn with a 3D effect. OPT_FLAT removes the "
+						"3D effect<br>"
+						"<b>val</b>: Displayed value of progress bar, between 0 and range inclusive<br>"
+						"<b>range</b>: Maximum value<br>"
+						"<br>"
+						"Draw a progress bar."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SLIDER:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SLIDER</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>options</i>, <i>val</i>, <i>range</i>)<br>"
+						"<b>x</b>: x-coordinate of slider top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of slider top-left, in pixels<br>"
+						"<b>w</b>: width of slider, in pixels<br>"
+						"<b>h</b>: height of slider, in pixels<br>"
+						"<b>options</b>: By default the slider is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect<br>"
+						"<b>val</b>: Displayed value of slider, between 0 and range inclusive<br>"
+						"<b>range</b>: Maximum value<br>"
+						"<br>"
+						"Draw a slider."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SCROLLBAR:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SCROLLBAR</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>options</i>, <i>val</i>, <i>size</i>, <i>range</i>)<br>"
+						"<b>x</b>: x-coordinate of scroll bar top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of scroll bar top-left, in pixels<br>"
+						"<b>w</b>: width of scroll bar, in pixels. If width is greater, the scroll bar is drawn horizontally<br>"
+						"<b>h</b>: height of scroll bar, in pixels. If height is greater, the scroll bar is drawn vertically<br>"
+						"<b>options</b>: By default the scroll bar is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect<br>"
+						"<b>val</b>: Displayed value of scroll bar, between 0 and range inclusive<br>"
+						"<b>size</b>: Size<br>"
+						"<b>range</b>: Maximum value<br>"
+						"<br>"
+						"Draw a scroll bar."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_TOGGLE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SCROLLBAR</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>f</i>, <i>options</i>, <i>state</i>, <i>s</i>)<br>"
+						"<b>x</b>: x-coordinate of top-left of toggle, in pixels<br>"
+						"<b>y</b>: y-coordinate of top-left of toggle, in pixels<br>"
+						"<b>w</b>: width of toggle, in pixels<br>"
+						"<b>f</b>: font to use for text, 0-31. See ROM and RAM Fonts<br>"
+						"<b>state</b>: state of the toggle: 0 is off, 65535 is on.<br>"
+						"<b>options</b>: By default the toggle bar is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect<br>"
+						"<b>s</b>: String label for toggle. A character value of 255 (in C it can be written as \xff) "
+						"separates the two labels.<br>"
+						"<br>"
+						"Draw a toggle switch."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_GAUGE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_GAUGE</b>(<i>x</i>, <i>y</i>, <i>r</i>, <i>options</i>, <i>major</i>, <i>minor</i>, <i>val</i>, <i>range</i>)<br>"
+						"<b>x</b>: X-coordinate of gauge center, in pixels<br>"
+						"<b>y</b>: Y-coordinate of gauge center, in pixels<br>"
+						"<b>r</b>: Radius of the gauge, in pixels<br>"
+						"<b>options</b>: By default the gauge dial is drawn with a 3D effect. OPT_FLAT removes the "
+						"3D effect. With option OPT_NOBACK, the background is not drawn. With "
+						"option OPT_NOTICKS, the tick marks are not drawn. With option "
+						"OPT_NOPOINTER, the pointer is not drawn.<br>"
+						"<b>major</b>: Number of major subdivisions on the dial, 1-10<br>"
+						"<b>minor</b>: Number of minor subdivisions on the dial, 1-10<br>"
+						"<b>val</b>: Gauge indicated value, between 0 and range, inclusive<br>"
+						"<b>range</b>: Maximum value<br>"
+						"<br>"
+						"Draw a gauge."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_CLOCK:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_CLOCK</b>(<i>x</i>, <i>y</i>, <i>r</i>, <i>options</i>, <i>h</i>, <i>m</i>, <i>s</i>, <i>ms</i>)<br>"
+						"<b>x</b>: X-coordinate of clock center, in pixels<br>"
+						"<b>y</b>: Y-coordinate of clock center, in pixels<br>"
+						"<b>r</b>: Radius of the clock, in pixels<br>"
+						"<b>options</b>: By default the clock dial is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect. With option OPT_NOBACK, the background is not drawn. With option "
+						"OPT_NOTICKS, the twelve hour ticks are not drawn. With option OPT_NOSECS, "
+						"the seconds hand is not drawn. With option OPT_NOHANDS, no hands are "
+						"drawn. With option OPT_NOHM, no hour and minutes hands are drawn.<br>"
+						"<b>h</b>: hours<br>"
+						"<b>m</b>: minutes<br>"
+						"<b>s</b>: seconds<br>"
+						"<b>ms</b>: milliseconds<br>"
+						"<br>"
+						"Draw a clock."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_CALIBRATE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_CALIBRATE</b>(<i>result</i>)<br>"
+						"<b>result</b>: output parameter; written with 0 on failure<br>"
+						"<br>"
+						"The calibration procedure collects three touches from the touch screen, then computes "
+						"and loads an appropriate matrix into REG_TOUCH_TRANSFORM_A-F. To use it, create a "
+						"display list and then use CMD_CALIBRATE. The co-processor engine overlays the touch "
+						"targets on the current display list, gathers the calibration input and updates "
+						"REG_TOUCH_TRANSFORM_A-F."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SPINNER:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SPINNER</b>(<i>x</i>, <i>y</i>, <i>style</i>, <i>scale</i>)<br>"
+						"<b>x</b>: x<br>"
+						"<b>y</b>: y<br>"
+						"<b>style</b>: style<br>"
+						"<b>scale</b>: scale<br>"
+						"<br>"
+						"The spinner is an animated overlay that shows the user that some task is continuing. To "
+						"trigger the spinner, create a display list and then use CMD_SPINNER. The co-processor "
+						"engine overlays the spinner on the current display list, swaps the display list to make it "
+						"visible, then continuously animates until it receives CMD_STOP. REG_MACRO_0 and "
+						"REG_MACRO_1 registers are utilized to perform the animation kind of effect. The "
+						"frequency of points movement is wrt display frame rate configured.<br>"
+						"Typically for 480x272 display panels the display rate is ~60fps. For style 0 and 60fps, "
+						"the point repeats the sequence within 2 seconds. For style 1 and 60fps, the point repeats "
+						"the sequence within 1.25 seconds. For style 2 and 60fps, the clock hand repeats the "
+						"sequence within 2 seconds. For style 3 and 60fps, the moving dots repeat the sequence "
+						"within 1 second.<br>"
+						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+						"active at one time."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_STOP:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_STOP</b>()<br>"
+						"<br>"
+						"Stop any spinner, screensaver or sketch."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_MEMSET:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_MEMSET</b>(<i>ptr</i>, <i>value</i>, <i>num</i>)<br>"
+						"<b>ptr</b>: Starting address of the memory block<br>"
+						"<b>value</b>: Value to be written to memory<br>"
+						"<b>num</b>: Number of bytes in the memory block<br>"
+						"<br>"
+						"Fill memory with a byte value."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_MEMZERO:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_MEMSET</b>(<i>ptr</i>, <i>num</i>)<br>"
+						"<b>ptr</b>: Starting address of the memory block<br>"
+						"<b>num</b>: Number of bytes in the memory block<br>"
+						"<br>"
+						"Write zero to a block of memory."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_MEMCPY:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_MEMCPY</b>(<i>dest</i>, <i>src</i>, <i>num</i>)<br>"
+						"<b>dest</b>: address of the destination memory block<br>"
+						"<b>src</b>: address of the source memory block<br>"
+						"<b>num</b>: Number of bytes in the memory block<br>"
+						"<br>"
+						"Copy a block of memory."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_APPEND:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_APPEND</b>(<i>ptr</i>, <i>num</i>)<br>"
+						"<b>ptr</b>: Start of source commands in main memory<br>"
+						"<b>num</b>: Number of bytes to copy. This must be a multiple of 4<br>"
+						"<br>"
+						"Append memory to display list."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SNAPSHOT:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SNAPSHOT</b>(<i>ptr</i>)<br>"
+						"<b>ptr</b>: Snapshot destination address, in main memory<br>"
+						"<br>"
+						"Take a snapshot of the current screen."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_LOADIDENTITY:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_LOADIDENTITY</b>()<br>"
+						"<br>"
+						"Set the current matrix to identity."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_TRANSLATE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_TRANSLATE</b>(<i>tx</i>, <i>ty</i>)<br>"
+						"<b>tx</b>: x translate factor, in signed 16.16 bit fixed-point form.<br>"
+						"<b>ty</b>: y translate factor, in signed 16.16 bit fixed-point form.<br>"
+						"<br>"
+						"Apply a translation to the current matrix."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SCALE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SCALE</b>(<i>sx</i>, <i>sy</i>)<br>"
+						"<b>sx</b>: x scale factor, in signed 16.16 bit fixed-point form.<br>"
+						"<b>sy</b>: y scale factor, in signed 16.16 bit fixed-point form.<br>"
+						"<br>"
+						"Apply a scale to the current matrix."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_ROTATE:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_ROTATE</b>(<i>a</i>)<br>"
+						"<b>a</b>: Clockwise rotation angle, in units of 1/65536 of a circle.<br>"
+						"<br>"
+						"Apply a rotation to the current matrix."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SETMATRIX:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SETMATRIX</b>()<br>"
+						"<br>"
+						"Write the current matrix as a bitmap transform."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SETFONT:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SETFONT</b>(<i>font</i>, <i>ptr</i>)<br>"
+						"<b>font</b>: font<br>"
+						"<b>ptr</b>: ptr<br>"
+						"<br>"
+						"To use a custom font with the co-processor engine objects, create the font definition "
+						"data in FT800 RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_TRACK:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_TRACK</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>tag</i>)<br>"
+						"<b>x</b>: x-coordinate of track area top-left, in pixels<br>"
+						"<b>y</b>: y-coordinate of track area top-left, in pixels<br>"
+						"<b>w</b>: Width of track area, in pixels<br>"
+						"<b>h</b>: Height of track area, in pixels.<br>"
+						"A w and h of (1,1) means that the tracker is rotary, and reports an "
+						"angle value in REG_TRACKER. (0,0) disables the tracker. Other values "
+						"mean that the tracker is linear, and reports values along its length "
+						"from 0 to 65535 in REG_TRACKER.<br>"
+						"<b>tag</b>: tag for this track, 1-255<br>"
+						"<br>"
+						"The co-processor engine can assist the MCU in tracking touches on graphical objects. For "
+						"example touches on dial objects can be reported as angles, saving MCU computation. To "
+						"do this the MCU draws the object using a chosen tag value, and registers a track area for "
+						"that tag.<br>"
+						"From then on any touch on that object is reported in REG_TRACKER. "
+						"The MCU can detect any touch on the object by reading the 32-bit value in "
+						"REG_TRACKER. The low 8 bits give the current tag, or zero if there is no touch. The high "
+						"sixteen bits give the tracked value.<br>"
+						"For a rotary tracker - used for clocks, gauges and dials - this value is the angle of the "
+						"touch point relative to the object center, in units of 1=65536 of a circle. 0 means that "
+						"the angle is straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
+						"For a linear tracker - used for sliders and scrollbars - this value is the distance along the "
+						"tracked object, from 0 to 65535."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_DIAL:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_DIAL</b>(<i>x</i>, <i>y</i>, <i>r</i>, <i>options</i>, <i>val</i>)<br>"
+						"<b>x</b>: x-coordinate of dial center, in pixels<br>"
+						"<b>y</b>: y-coordinate of dial center, in pixels<br>"
+						"<b>r</b>: radius of dial, in pixels<br>"
+						"<b>options</b>: By default the dial is drawn with a 3D effect. OPT_FLAT removes the 3D "
+						"effect<br>"
+						"<b>val</b>: Displayed value of slider, between 0 and 65535 inclusive. 0 means that the "
+						"dial points straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
+						"<br>"
+						"Draw a rotary dial control."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_NUMBER:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_NUMBER</b>(<i>x</i>, <i>y</i>, <i>font</i>, <i>options</i>, <i>n</i>)<br>"
+						"<b>x</b>: x-coordinate of text base, in pixels<br>"
+						"<b>y</b>: y-coordinate of text base, in pixels<br>"
+						"<b>font</b>: Font to use for text, 0-31. See ROM and RAM Fonts<br>"
+						"<b>options</b>: By default (x; y) is the top-left pixel of the text. OPT_CENTERX centers the "
+						"text horizontally, OPT_CENTERY centers it vertically. OPT_CENTER centers the "
+						"text in both directions. OPT_RIGHTX right-justifies the text, so that the x is "
+						"the rightmost pixel. By default the number is displayed with no leading "
+						"zeroes, but if a width 1-9 is specified in the options, then the number is "
+						"padded if necessary with leading zeroes so that it has the given width. If "
+						"OPT_SIGNED is given, the number is treated as signed, and prefixed by a "
+						"minus sign if negative.<br>"
+						"<b>n</b>: The number to display, either unsigned or signed 32-bit<br>"
+						"<br>"
+						"Draw text."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SCREENSAVER:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SCREENSAVER</b>()<br>"
+						"<br>"
+						"After the screensaver command, the co-processor engine continuously updates "
+						"REG_MACRO_0 with VERTEX2F with varying (x; y) coordinates. With an appropriate "
+						"display list, this causes a bitmap to move around the screen without any MCU work.<br>"
+						"Command CMD_STOP stops the update process.<br>"
+						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+						"active at one time."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_SKETCH:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_SKETCH</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ptr</i>, <i>format</i>)<br>"
+						"<b>x</b>: x-coordinate of sketch area, in pixels<br>"
+						"<b>y</b>: y-coordinate of sketch area, in pixels<br>"
+						"<b>w</b>: Width of sketch area, in pixels<br>"
+						"<b>h</b>: Height of sketch area, in pixels<br>"
+						"<b>ptr</b>: Base address of sketch bitmap<br>"
+						"<b>format</b>: Format of sketch bitmap, either L1 or L8<br>"
+						"<br>"
+						"After the sketch command, the co-processor engine continuously samples the touch "
+						"inputs and paints pixels into a bitmap, according to the touch (x; y). This means that the "
+						"user touch inputs are drawn into the bitmap without any need for MCU work.<br>Command "
+						"CMD_STOP stops the update process.<br>"
+						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+						"active at one time."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_LOGO:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_LOGO</b>()<br>"
+						"<br>"
+						"Play device logo animation."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_COLDSTART:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_LOGO</b>()<br>"
+						"<br>"
+						"Set co-processor engine state to default values."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
+				case CMD_GRADCOLOR:
+				{
+					m_PropertiesEditor->setInfo(tr(
+						"<b>CMD_GRADCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>argb</b>: New highlight gradient color, as a 32-bit ARGB number. Red is the most "
+						"significant 8 bits, blue is the least. So 0xffff0000 is bright red.<br>"
+						"<br>"
+						"Set the 3D button highlight color."));
+					m_PropertiesEditor->setEditWidget(NULL, false, this);
+					ok = true;
+					break;
+				}
 			}
 			else switch (m_DisplayListParsed[m_PropLine].IdRight)
 			{
+				// ******************************************
 				case FT800EMU_DL_DISPLAY:
 				{
 					m_PropertiesEditor->setInfo(tr(
