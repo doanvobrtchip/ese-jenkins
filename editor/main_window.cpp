@@ -160,6 +160,10 @@ void loop()
 		{
 			if (!s_EmulatorRunning) return;
 		}
+		while (rd32(REG_CMD_DL) != 0)
+		{
+			if (!s_EmulatorRunning) return;
+		}
 		coprocessorSwapped = false;
 		// ++s_SwapCount;
 		// printf("Swapped CMD %i\n", s_SwapCount);

@@ -510,9 +510,13 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 	// for each possible parameter
 	bool failParam = false;
 	int finalIndex = -1;
-	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
+	for (int p = 0, pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
 	{
-		parsed.ParameterIndex[p] = i;
+		bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
+	CombineParameter:
+		bool combinedParameter = combineParameter;
+		combineParameter = false;
+		parsed.ParameterIndex[pq] = i;
 		std::stringstream pss;
 		for (; ; ++i)
 		{
@@ -523,32 +527,39 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				{
 					c = c - 'a' + 'A'; // uppercase
 				}
-				if (parsed.ParameterLength[p]== 0 && (c == ' ' || c == '\t'))
+				if (parsed.ParameterLength[pq] == 0 && (c == ' ' || c == '\t'))
 				{
-					++parsed.ParameterIndex[p]; /* pre-trim */
+					++parsed.ParameterIndex[pq]; /* pre-trim */
 				}
-				else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[p] + parsed.ParameterLength[p] == i)
+				else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i)
 				{
 					pss << c;
-					++parsed.ParameterLength[p];
+					++parsed.ParameterLength[pq];
 				}
-				else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[p] + parsed.ParameterLength[p] == i)
+				else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i)
 				{
-					parsed.NumericParameter[p] = false;
+					parsed.NumericParameter[pq] = false;
 					pss << c;
-					++parsed.ParameterLength[p];
+					++parsed.ParameterLength[pq];
 				}
 				else if (c == ' ' || c == '\t')
 				{
 					/* post-trim */
 				}
-				else if (parsed.ParameterLength[p] > 0 && c == ',')
+				else if (parsed.ParameterLength[pq] > 0 && c == ',')
 				{
 					/* valid, more, continue */
 					++i;
 					break;
 				}
-				else if ((p == 0 || parsed.ParameterLength[p]) > 0 && c == ')')
+				else if (parsed.ParameterLength[pq] > 0 && c == '|')
+				{
+					/* valid, more, continue */
+					++i;
+					combineParameter = true;
+					break;
+				}
+				else if ((p == 0 || parsed.ParameterLength[pq]) > 0 && c == ')')
 				{
 					/* valid, last, continue */
 					finalIndex = i;
@@ -573,26 +584,26 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
 		{
 			std::string ps = pss.str();
-			if (parsed.NumericParameter[p] && ps.length() > 0)
+			if (parsed.NumericParameter[pq] && ps.length() > 0)
 			{
-				parsed.Parameter[p] = atoi(ps.c_str());
-				parsed.ValidParameter[p] = true;
+				parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | atoi(ps.c_str());
+				parsed.ValidParameter[pq] = true;
 			}
 			else
 			{
 				std::map<std::string, int>::iterator it = s_ParamMap.find(ps);
 				if (it != s_ParamMap.end())
 				{
-					parsed.Parameter[p] = it->second;
-					parsed.ValidParameter[p] = true;
+					parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+					parsed.ValidParameter[pq] = true;
 				}
 				else if (coprocessor)
 				{
 					it = s_CmdParamMap.find(ps);
 					if (it != s_CmdParamMap.end())
 					{
-						parsed.Parameter[p] = it->second;
-						parsed.ValidParameter[p] = true;
+						parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+						parsed.ValidParameter[pq] = true;
 					}
 				}
 			}
@@ -614,6 +625,13 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		if (failParam)
 		{
 			return;
+		}
+
+		if (combineParameter)
+		{
+			// parsed.ParameterLength[p] = 0;
+			++pq;
+			goto CombineParameter;
 		}
 	}
 }
