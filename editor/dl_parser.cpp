@@ -264,8 +264,8 @@ void DlParser::init()
 		s_CmdParamCount[CMD_MEMZERO & 0xFF] = 2;
 		s_CmdParamString[CMD_MEMZERO & 0xFF] = false;
 		s_CmdIdMap["CMD_MEMCPY"] = CMD_MEMCPY & 0xFF;
-		s_CmdParamCount[CMD_MEMZERO & 0xFF] = 3;
-		s_CmdParamString[CMD_MEMZERO & 0xFF] = false;
+		s_CmdParamCount[CMD_MEMCPY & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMCPY & 0xFF] = false;
 		s_CmdIdMap["CMD_APPEND"] = CMD_APPEND & 0xFF;
 		s_CmdParamCount[CMD_APPEND & 0xFF] = 2;
 		s_CmdParamString[CMD_APPEND & 0xFF] = false;
@@ -318,8 +318,8 @@ void DlParser::init()
 		s_CmdParamCount[CMD_NUMBER & 0xFF] = 5;
 		s_CmdParamString[CMD_NUMBER & 0xFF] = false;
 		s_CmdIdMap["CMD_SCREENSAVER"] = CMD_SCREENSAVER & 0xFF;
-		s_CmdParamCount[CMD_NUMBER & 0xFF] = 0;
-		s_CmdParamString[CMD_NUMBER & 0xFF] = false;
+		s_CmdParamCount[CMD_SCREENSAVER & 0xFF] = 0;
+		s_CmdParamString[CMD_SCREENSAVER & 0xFF] = false;
 		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
 		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
 		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
@@ -767,6 +767,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(0); // FIXME: String support
 					break;
 				}
+				case CMD_BUTTON:
 				case CMD_KEYS:
 				{
 					uint32_t xy = parsed.Parameter[1] << 16
