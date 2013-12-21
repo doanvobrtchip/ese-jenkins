@@ -1204,6 +1204,7 @@ void MainWindow::actImport()
 							*/
 							loadOk = true;
 							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
+							focusDlEditor();
 						}
 					}
 				}
