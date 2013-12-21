@@ -722,6 +722,7 @@ void InteractiveViewport::updatePointerMethod()
 	}
 }
 
+// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 // CMD_BUTTON(50, 50, 100, 40, 21, 0, "hello world")
 
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
@@ -778,39 +779,28 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			{
 				int x = pa.Parameter[0];
 				int y = pa.Parameter[1];
-				int w, h;
 				if (m_WidgetWH)
 				{
-					w = pa.Parameter[2];
-					h = pa.Parameter[3];
-				}
-				else
-				{
-					x = x - pa.Parameter[2];
-					y = y - pa.Parameter[2];
-					w = pa.Parameter[2] * 2;
-					h = pa.Parameter[2] * 2;
-				}
-				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
-				{
-					y += yd;
-					h -= yd;
-				}
-				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-				{
-					h += yd;
-				}
-				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
-				{
-					x += xd;
-					w -= xd;
-				}
-				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
-				{
-					w += xd;
-				}
-				if (m_WidgetWH)
-				{
+					int w = pa.Parameter[2];
+					int h = pa.Parameter[3];
+					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
+					{
+						y += yd;
+						h -= yd;
+					}
+					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+					{
+						h += yd;
+					}
+					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
+					{
+						x += xd;
+						w -= xd;
+					}
+					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
+					{
+						w += xd;
+					}
 					pa.Parameter[0] = x;
 					pa.Parameter[1] = y;
 					pa.Parameter[2] = w;
@@ -818,9 +808,24 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 				}
 				else
 				{
-					pa.Parameter[2] = (w + h) / 4;
-					pa.Parameter[0] = x + pa.Parameter[2];
-					pa.Parameter[1] = y + pa.Parameter[2];
+					int r = pa.Parameter[2];
+					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
+					{
+						r -= yd;
+					}
+					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+					{
+						r += yd;
+					}
+					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
+					{
+						r -= xd;
+					}
+					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
+					{
+						r += xd;
+					}
+					pa.Parameter[2] = r;
 				}
 			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
