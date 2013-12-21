@@ -241,13 +241,15 @@ void InteractiveViewport::graphics(QImage *image)
 
 test dl
 
+CMD_LOGO()
 CLEAR_COLOR_RGB(50, 80, 160)
 CLEAR(1, 1, 1)
 BEGIN(RECTS)
 VERTEX2II(100, 100, 0, 0)
-VERTEX2II(220, 150, 0, 0)
+MACRO(0) // VERTEX2II(220, 150, 0, 0)
 END()
 CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+CMD_SCREENSAVER()
 
 			 */
 			}
