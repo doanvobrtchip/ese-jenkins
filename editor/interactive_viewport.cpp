@@ -45,10 +45,10 @@ namespace FT800EMUQT {
 #define POINTER_EDIT_WIDGET_SIZE_LEFT 0x0080
 #define POINTER_EDIT_WIDGET_SIZE_BOTTOM 0x0100
 #define POINTER_EDIT_WIDGET_MOVE (POINTER_EDIT_WIDGET_TRANSLATE | POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT | POINTER_EDIT_WIDGET_SIZE_LEFT | POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-#define POINTER_EDIT_WIDGET_SIZE_TOPLEFT = (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_LEFT)
-#define POINTER_EDIT_WIDGET_SIZE_TOPRIGHT = (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT)
-#define POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT = (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_LEFT)
-#define POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT = (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_RIGHT)
+#define POINTER_EDIT_WIDGET_SIZE_TOPLEFT (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_LEFT)
+#define POINTER_EDIT_WIDGET_SIZE_TOPRIGHT (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT)
+#define POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_LEFT)
+#define POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_RIGHT)
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
@@ -454,7 +454,7 @@ CMD_SCREENSAVER()
 						int x1 = x;
 						int y1 = y;
 						int x2 = x + w;
-						int y2 = y + w;
+						int y2 = y + h;
 						p.setPen(outer);
 						p.drawRect(x, y, w, h);
 						p.drawRect(x1 - 1, y1 - 1, 2, 2);
@@ -637,7 +637,50 @@ void InteractiveViewport::updatePointerMethod()
 					int x1 = x;
 					int y1 = y;
 					int x2 = x + w;
-					int y2 = y + w;
+					int y2 = y + h;
+					m_PointerMethod = 0;
+					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_TOP)
+					{
+						if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y1 + 3)
+						{
+							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_TOP;
+						}
+					}
+					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+					{
+						if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y2 - 3 < m_MouseY && m_MouseY < y2 + 3)
+						{
+							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_BOTTOM;
+						}
+					}
+					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_LEFT)
+					{
+						if (x1 - 3 < m_MouseX && m_MouseX < x1 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
+						{
+							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_LEFT;
+						}
+					}
+					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_RIGHT)
+					{
+						if (x2 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
+						{
+							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_RIGHT;
+						}
+					}
+					if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPLEFT
+						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT)
+						setCursor(Qt::SizeFDiagCursor);
+					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPRIGHT
+						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT)
+						setCursor(Qt::SizeBDiagCursor);
+					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOP
+						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+						setCursor(Qt::SizeVerCursor);
+					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_LEFT
+						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_RIGHT)
+						setCursor(Qt::SizeHorCursor);
+					if (m_PointerMethod)
+						return;
 					if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
 					{
 						if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY && m_MouseY < y2)
@@ -679,6 +722,8 @@ void InteractiveViewport::updatePointerMethod()
 	}
 }
 
+// CMD_BUTTON(50, 50, 100, 40, 21, 0, "hello world")
+
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
@@ -719,36 +764,66 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 		if (m_LineEditor)
 		{
 			// Apply action
+			int xd = e->pos().x() - m_MovingLastX;
+			int yd = e->pos().y() - m_MovingLastY;
+			m_MovingLastX = e->pos().x();
+			m_MovingLastY = e->pos().y();
+			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE)
 			{
-				int xd = e->pos().x() - m_MovingLastX;
-				int yd = e->pos().y() - m_MovingLastY;
-				m_MovingLastX = e->pos().x();
-				m_MovingLastY = e->pos().y();
-				DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 				pa.Parameter[0] += xd;
 				pa.Parameter[1] += yd;
-				m_LineEditor->replaceLine(m_LineNumber, pa);
 			}
 			else // resize, check top/bottom and left/right
 			{
+				int x = pa.Parameter[0];
+				int y = pa.Parameter[1];
+				int w, h;
+				if (m_WidgetWH)
+				{
+					w = pa.Parameter[2];
+					h = pa.Parameter[3];
+				}
+				else
+				{
+					x = x - pa.Parameter[2];
+					y = y - pa.Parameter[2];
+					w = pa.Parameter[2] * 2;
+					h = pa.Parameter[2] * 2;
+				}
 				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
 				{
-
+					y += yd;
+					h -= yd;
 				}
 				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
 				{
-
+					h += yd;
 				}
 				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
 				{
-
+					x += xd;
+					w -= xd;
 				}
 				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
 				{
-
+					w += xd;
+				}
+				if (m_WidgetWH)
+				{
+					pa.Parameter[0] = x;
+					pa.Parameter[1] = y;
+					pa.Parameter[2] = w;
+					pa.Parameter[3] = h;
+				}
+				else
+				{
+					pa.Parameter[2] = (w + h) / 4;
+					pa.Parameter[0] = x + pa.Parameter[2];
+					pa.Parameter[1] = y + pa.Parameter[2];
 				}
 			}
+			m_LineEditor->replaceLine(m_LineNumber, pa);
 		}
 		else
 		{
