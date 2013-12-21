@@ -511,188 +511,192 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		}
 	}
 
-	if (failId)
-	{
-		return;
-	}
-
-	// for each possible parameter
-	bool failParam = false;
 	int finalIndex = -1;
-	for (int p = 0, pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
+	if (!failId)
 	{
-		bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
-	CombineParameter:
-		bool combinedParameter = combineParameter;
-		combineParameter = false;
-		parsed.ParameterIndex[pq] = i;
-		std::stringstream pss;
-	ContinueParameter:
-		for (; ; ++i)
+		// for each possible parameter
+		bool failParam = false;
+		for (int p = 0, pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
 		{
-			if (i < len)
+			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
+		CombineParameter:
+			bool combinedParameter = combineParameter;
+			combineParameter = false;
+			parsed.ParameterIndex[pq] = i;
+			std::stringstream pss;
+		ContinueParameter:
+			for (; ; ++i)
 			{
-				char c = src[i];
-				if (c >= 'a' && c <= 'z')
+				if (i < len)
 				{
-					c = c - 'a' + 'A'; // uppercase
-				}
-				if (parsed.ParameterLength[pq] == 0 && (c == ' ' || c == '\t'))
-				{
-					++parsed.ParameterIndex[pq]; /* pre-trim */
-				}
-				else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
-				{
-					/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
-					pss << c;
-					++i;
-					goto ParseString;
-				}
-				else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
-				{
-					pss << c;
-					++parsed.ParameterLength[pq];
-				}
-				else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
-				{
-					parsed.NumericParameter[pq] = false;
-					pss << c;
-					++parsed.ParameterLength[pq];
-				}
-				else if (c == ' ' || c == '\t')
-				{
-					/* post-trim */
-				}
-				else if (parsed.ParameterLength[pq] > 0 && c == ',')
-				{
-					/* valid, more, continue */
-					++i;
-					break;
-				}
-				else if (parsed.ParameterLength[pq] > 0 && c == '|')
-				{
-					/* valid, more, continue */
-					++i;
-					combineParameter = true;
-					break;
-				}
-				else if ((p == 0 || parsed.ParameterLength[pq]) > 0 && c == ')')
-				{
-					/* valid, last, continue */
-					finalIndex = i;
-					++i;
-					break;
+					char c = src[i];
+					if (c >= 'a' && c <= 'z')
+					{
+						c = c - 'a' + 'A'; // uppercase
+					}
+					if (parsed.ParameterLength[pq] == 0 && (c == ' ' || c == '\t'))
+					{
+						++parsed.ParameterIndex[pq]; /* pre-trim */
+					}
+					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+					{
+						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
+						pss << c;
+						++i;
+						goto ParseString;
+					}
+					else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					{
+						pss << c;
+						++parsed.ParameterLength[pq];
+					}
+					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					{
+						parsed.NumericParameter[pq] = false;
+						pss << c;
+						++parsed.ParameterLength[pq];
+					}
+					else if (c == ' ' || c == '\t')
+					{
+						/* post-trim */
+					}
+					else if (parsed.ParameterLength[pq] > 0 && c == ',')
+					{
+						/* valid, more, continue */
+						++i;
+						break;
+					}
+					else if (parsed.ParameterLength[pq] > 0 && c == '|')
+					{
+						/* valid, more, continue */
+						++i;
+						combineParameter = true;
+						break;
+					}
+					else if ((p == 0 || parsed.ParameterLength[pq]) > 0 && c == ')')
+					{
+						/* valid, last, continue */
+						finalIndex = i;
+						++i;
+						break;
+					}
+					else
+					{
+						parsed.BadCharacterIndex = i;
+						failParam = true; /* bad character after or inside name */
+						break;
+					}
 				}
 				else
 				{
-					parsed.BadCharacterIndex = i;
-					failParam = true; /* bad character after or inside name */
+					failParam = true; /* fail incomplete entry */
 					break;
 				}
 			}
-			else
-			{
-				failParam = true; /* fail incomplete entry */
-				break;
-			}
-		}
 
-		goto ValidateNamed;
-	ParseString:
-		for (; ; ++i)
-		{
-			if (i < len)
+			goto ValidateNamed;
+		ParseString:
+			for (; ; ++i)
 			{
-				char c = src[i];
-				pss << c;
-				if (c == '\\')
+				if (i < len)
 				{
-					// skip
-					++i;
-					pss << src[i];
+					char c = src[i];
+					pss << c;
+					if (c == '\\')
+					{
+						// skip
+						++i;
+						pss << src[i];
+					}
+					else if (c == '"')
+					{
+						// end (post-trim)
+						++i;
+						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						goto ContinueParameter;
+					}
 				}
-				else if (c == '"')
+				else
 				{
-					// end (post-trim)
-					++i;
-					parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
-					goto ContinueParameter;
+					failParam = true; /* fail incomplete entry */
+					break;
 				}
 			}
-			else
-			{
-				failParam = true; /* fail incomplete entry */
-				break;
-			}
-		}
-	ValidateNamed:
+		ValidateNamed:
 
-		// validate named parameter
-		if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
-		{
-			std::string ps = pss.str();
-			if (p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+			// validate named parameter
+			if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
 			{
-				// CMD_TEXT(50, 119, 31, 0, "hello world")
-				if (ps.length() >= 2)
+				std::string ps = pss.str();
+				if (p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
 				{
-					std::string psstr = ps.substr(1, ps.size() - 2);
-					parsed.Parameter[p] = 0;
-					parsed.StringParameter = psstr; // TODO: Parse escape characters
-					parsed.ValidParameter[pq] = true;
-					parsed.StringParameterAt = pq;
+					// CMD_TEXT(50, 119, 31, 0, "hello world")
+					if (ps.length() >= 2)
+					{
+						std::string psstr = ps.substr(1, ps.size() - 2);
+						parsed.Parameter[p] = 0;
+						parsed.StringParameter = psstr; // TODO: Parse escape characters
+						parsed.ValidParameter[pq] = true;
+						parsed.StringParameterAt = pq;
+					}
 				}
-			}
-			else if (parsed.NumericParameter[pq] && ps.length() > 0)
-			{
-				parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | atoi(ps.c_str());
-				parsed.ValidParameter[pq] = true;
-			}
-			else
-			{
-				std::map<std::string, int>::iterator it = s_ParamMap.find(ps);
-				if (it != s_ParamMap.end())
+				else if (parsed.NumericParameter[pq] && ps.length() > 0)
 				{
-					parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+					parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | atoi(ps.c_str());
 					parsed.ValidParameter[pq] = true;
 				}
-				else if (coprocessor)
+				else
 				{
-					it = s_CmdParamMap.find(ps);
-					if (it != s_CmdParamMap.end())
+					std::map<std::string, int>::iterator it = s_ParamMap.find(ps);
+					if (it != s_ParamMap.end())
 					{
 						parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
 						parsed.ValidParameter[pq] = true;
 					}
+					else if (coprocessor)
+					{
+						it = s_CmdParamMap.find(ps);
+						if (it != s_CmdParamMap.end())
+						{
+							parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+							parsed.ValidParameter[pq] = true;
+						}
+					}
 				}
 			}
-		}
 
-		if (finalIndex >= 0)
-		{
-			if (parsed.BadCharacterIndex == -1)
+			if (finalIndex >= 0)
 			{
-				if (p + 1 < parsed.ExpectedParameterCount)
+				if (parsed.BadCharacterIndex == -1)
 				{
-					// not enough params
-					parsed.BadCharacterIndex = finalIndex;
+					if (p + 1 < parsed.ExpectedParameterCount)
+					{
+						// not enough params
+						parsed.BadCharacterIndex = finalIndex;
+					}
 				}
+				break;
 			}
-			break;
-		}
 
-		if (failParam)
-		{
-			return;
-		}
+			if (failParam)
+			{
+				break;
+			}
 
-		if (combineParameter)
-		{
-			// parsed.ParameterLength[p] = 0;
-			++pq;
-			goto CombineParameter;
+			if (combineParameter)
+			{
+				// parsed.ParameterLength[p] = 0;
+				++pq;
+				goto CombineParameter;
+			}
 		}
 	}
+
+	// Clear unfilled to be safe
+	/*for (int p = finalIndex + 1; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+	{
+		parsed.Parameter[p] = 0;
+	}*/
 }
 
 uint32_t DlParser::compile(const DlParsed &parsed)
@@ -1400,6 +1404,135 @@ QString DlParser::toString(uint32_t v)
 	return QString(str.c_str());
 }
 
+void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
+{
+	if (opt == 0)
+	{
+		dst << "0";
+		return;
+	}
+	bool combine = false;
+	if (opt & OPT_MONO)
+	{
+		dst << "OPT_MONO";
+		combine = true;
+	}
+	if (opt & OPT_NODL)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_NODL";
+		combine = true;
+	}
+	if (cmd == CMD_NUMBER)
+	{
+		if (opt & OPT_SIGNED)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_SIGNED";
+			combine = true;
+		}
+	}
+	else
+	{
+		if (opt & OPT_FLAT)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_FLAT";
+			combine = true;
+		}
+	}
+	if ((opt & OPT_CENTER) == OPT_CENTER)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_CENTER";
+		combine = true;
+	}
+	else if (opt & OPT_CENTERX)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_CENTERX";
+		combine = true;
+	}
+	else if (opt & OPT_CENTERY)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_CENTERY";
+		combine = true;
+	}
+	if (opt & OPT_RIGHTX)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_RIGHTX";
+		combine = true;
+	}
+	if (opt & OPT_RIGHTX)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_RIGHTX";
+		combine = true;
+	}
+	if (opt & OPT_NOBACK)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_NOBACK";
+		combine = true;
+	}
+	if (opt & OPT_NOTICKS)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_NOTICKS";
+		combine = true;
+	}
+	if (opt == CMD_GAUGE)
+	{
+		if (opt & OPT_NOPOINTER)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOPOINTER";
+			combine = true;
+		}
+	}
+	else
+	{
+		if ((opt & OPT_NOHANDS) == OPT_NOHANDS)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOHANDS";
+			combine = true;
+		}
+		else if (opt & OPT_NOHM)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOHM";
+			combine = true;
+		}
+		else if (opt & OPT_NOSECS)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOSECS";
+			combine = true;
+		}
+	}
+}
+
+/*
+#define OPT_MONO             1UL
+#define OPT_NODL             2UL
+#define OPT_SIGNED           256UL <- special case
+#define OPT_FLAT             256UL
+#define OPT_CENTERX          512UL
+#define OPT_CENTERY          1024UL
+#define OPT_CENTER           1536UL ----
+#define OPT_RIGHTX           2048UL
+#define OPT_NOBACK           4096UL
+#define OPT_NOTICKS          8192UL
+#define OPT_NOHM             16384UL
+#define OPT_NOPOINTER        16384UL <- special case
+#define OPT_NOSECS           32768UL
+#define OPT_NOHANDS          49152UL ---- */
+
+
+
 void DlParser::toString(std::string &dst, const DlParsed &parsed)
 {
 	if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
@@ -1422,8 +1555,35 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			else
 			{
 				// Numberic parameter
-				// TODO: Use constants where possible
-				res << parsed.Parameter[p];
+				bool constantOpt = false;
+				switch (parsed.IdRight | 0xFFFFFF00)
+				{
+				case CMD_TEXT:
+				case CMD_GAUGE:
+				case CMD_CLOCK:
+				case CMD_DIAL:
+				case CMD_NUMBER:
+					if (p == 3) constantOpt = true;
+					break;
+				case CMD_PROGRESS:
+				case CMD_SLIDER:
+				case CMD_SCROLLBAR:
+				case CMD_TOGGLE:
+					if (p == 4) constantOpt = true;
+					break;
+				case CMD_BUTTON:
+				case CMD_KEYS:
+					if (p == 5) constantOpt = true;
+					break;
+				}
+				if (constantOpt)
+				{
+					optToString(res, parsed.Parameter[p], parsed.IdRight | 0xFFFFFF00);
+				}
+				else
+				{
+					res << parsed.Parameter[p];
+				}
 			}
 		}
 
