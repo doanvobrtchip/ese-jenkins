@@ -247,8 +247,8 @@ void loop()
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
 			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
-			int cmdLen = 4 + (paramNb * 4) + 4; // + 4 for swap afterwards
-			if (freespace < cmdLen) // Wait for coprocessor ready
+			int cmdLen = 4 + (paramNb * 4);
+			if (freespace < (cmdLen + 4)) // Wait for coprocessor ready, + 4 for swap afterwards
 			{
 				swrend();
 				wr32(REG_CMD_WRITE, wp);
@@ -303,6 +303,20 @@ void loop()
 				rp = 0;
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				freespace = ((4096 - 4) - fullness);
+				
+				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+				{
+					if (cpWrite[i] >= 0)
+					{
+						// printf("D %i\n", i);
+						s_DisplayListCoprocessorCommandWrite[i]
+							= coprocessorWrites[cpWrite[i]];
+					}
+				}
+				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+				
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				printf("Finished CMD_LOGO\n");
 			}
@@ -388,7 +402,7 @@ void loop()
 			if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 			{
 				std::string res;
-				DlParser::toString(res, rd32(RAM_DL + i));
+				DlParser::toString(res, rd32(RAM_DL + (i * 4)));
 				printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
 			}
 		}
