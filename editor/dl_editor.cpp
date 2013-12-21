@@ -241,8 +241,7 @@ void DlEditor::parseLine(QTextBlock block)
 
 void DlEditor::replaceLine(int line, const DlParsed &parsed)
 {
-	uint32_t compiled = DlParser::compile(parsed);
-	QString linestr = DlParser::toString(compiled);
+	QString linestr = DlParser::toString(parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	//m_CodeEditor->setTextCursor(c);
@@ -446,7 +445,7 @@ void DlEditor::editingLine(QTextBlock block)
 				case CMD_KEYS:
 				{
 					m_PropertiesEditor->setInfo(tr(
-						"<b>CMD_BUTTON</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>font</i>, <i>options</i>, <i>s</i>)<br>"
+						"<b>CMD_KEYS</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>font</i>, <i>options</i>, <i>s</i>)<br>"
 						"<b>x</b>: x-coordinate of keys top-left, in pixels<br>"
 						"<b>y</b>: y-coordinate of keys top-left, in pixels<br>"
 						"<b>w</b>: width of keys, in pixels<br>"
@@ -469,7 +468,7 @@ void DlEditor::editingLine(QTextBlock block)
 				case CMD_PROGRESS:
 				{
 					m_PropertiesEditor->setInfo(tr(
-						"<b>CMD_BUTTON</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>options</i>, <i>val</i>, <i>range</i>)<br>"
+						"<b>CMD_PROGRESS</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>options</i>, <i>val</i>, <i>range</i>)<br>"
 						"<b>x</b>: x-coordinate of progress bar top-left, in pixels<br>"
 						"<b>y</b>: y-coordinate of progress bar top-left, in pixels<br>"
 						"<b>w</b>: width of progress bar, in pixels<br>"

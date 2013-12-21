@@ -26,6 +26,7 @@
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
 #include <ft800emu_memory.h>
+#include <vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -33,17 +34,29 @@
 
 namespace FT800EMUQT {
 
-#define POINTER_ALL 0xFF
-#define POINTER_TOUCH 0x01
-#define POINTER_TRACE 0x02
-#define POINTER_EDIT_VERTEX_MOVE 0x04
-#define POINTER_EDIT_STACK_SELECT 0x08
+#define POINTER_ALL 0xFFFF
+#define POINTER_TOUCH 0x0001
+#define POINTER_TRACE 0x0002
+#define POINTER_EDIT_VERTEX_MOVE 0x0004
+#define POINTER_EDIT_STACK_SELECT 0x0008
+#define POINTER_EDIT_WIDGET_TRANSLATE 0x0010
+#define POINTER_EDIT_WIDGET_SIZE_TOP 0x0020
+#define POINTER_EDIT_WIDGET_SIZE_RIGHT 0x0040
+#define POINTER_EDIT_WIDGET_SIZE_LEFT 0x0080
+#define POINTER_EDIT_WIDGET_SIZE_BOTTOM 0x0100
+#define POINTER_EDIT_WIDGET_MOVE (POINTER_EDIT_WIDGET_TRANSLATE | POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT | POINTER_EDIT_WIDGET_SIZE_LEFT | POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+#define POINTER_EDIT_WIDGET_SIZE_TOPLEFT = (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_LEFT)
+#define POINTER_EDIT_WIDGET_SIZE_TOPRIGHT = (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT)
+#define POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT = (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_LEFT)
+#define POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT = (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_RIGHT)
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false),
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
-	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false)
+	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
+	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false),
+	m_MouseMovingWidget(0)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
@@ -187,6 +200,7 @@ void InteractiveViewport::graphics(QImage *image)
 		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
 		if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
 		{
+			m_WidgetXY = false;
 			if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
 			{
 				QPen outer;
@@ -345,9 +359,127 @@ CMD_SCREENSAVER()
 			 */
 			}
 		}
+		else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+		{
+			switch (parsed.IdRight | 0xFFFFFF00)
+			{
+				case CMD_TEXT:
+				case CMD_BUTTON:
+				case CMD_KEYS:
+				case CMD_PROGRESS:
+				case CMD_SLIDER:
+				case CMD_SCROLLBAR:
+				case CMD_TOGGLE:
+				case CMD_GAUGE:
+				case CMD_CLOCK:
+				case CMD_SPINNER:
+				case CMD_TRACK:
+				case CMD_DIAL:
+				case CMD_NUMBER:
+				case CMD_SKETCH:
+				{
+					QPen outer;
+					QPen inner;
+					outer.setWidth(3);
+					outer.setColor(QColor(Qt::black));
+					inner.setWidth(1);
+					inner.setColor(QColor(Qt::red));
+					m_WidgetXY = true;
+					switch (parsed.IdRight | 0xFFFFFF00)
+					{
+					case CMD_BUTTON:
+					case CMD_KEYS:
+					case CMD_PROGRESS:
+					case CMD_SLIDER:
+					case CMD_SCROLLBAR:
+					case CMD_TRACK:
+					case CMD_SKETCH:
+						m_WidgetWH = true;
+						m_WidgetR = false;
+						break;
+					case CMD_GAUGE:
+					case CMD_CLOCK:
+					case CMD_DIAL:
+						m_WidgetWH = false;
+						m_WidgetR = true;
+						break;
+					default:
+						m_WidgetWH = false;
+						m_WidgetR = false;
+						break;
+					}
+
+					int x = parsed.Parameter[0];
+					int y = parsed.Parameter[1];
+
+// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+					// Draw...
+					if (m_WidgetWH == false && m_WidgetR == false)
+					{
+						// Only have vertex control
+						p.setPen(outer);
+						p.drawLine(x, y - 5, x, y - 12);
+						p.drawLine(x, y + 5, x, y + 12);
+						p.drawLine(x - 5, y, x - 12, y);
+						p.drawLine(x + 5, y, x + 12, y);
+						p.drawLine(x - 4, y - 4, x + 4, y - 4);
+						p.drawLine(x - 4, y + 4, x + 4, y + 4);
+						p.drawLine(x - 4, y - 4, x - 4, y + 4);
+						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						p.setPen(inner);
+						p.drawLine(x, y - 5, x, y - 12);
+						p.drawLine(x, y + 5, x, y + 12);
+						p.drawLine(x - 5, y, x - 12, y);
+						p.drawLine(x + 5, y, x + 12, y);
+						p.drawLine(x - 4, y - 4, x + 4, y - 4);
+						p.drawLine(x - 4, y + 4, x + 4, y + 4);
+						p.drawLine(x - 4, y - 4, x - 4, y + 4);
+						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+					}
+					else
+					{
+						int w, h;
+						if (m_WidgetWH)
+						{
+							w = parsed.Parameter[2];
+							h = parsed.Parameter[3];
+						}
+						else
+						{
+							x = x - parsed.Parameter[2];
+							y = y - parsed.Parameter[2];
+							w = parsed.Parameter[2] * 2;
+							h = parsed.Parameter[2] * 2;
+						}
+						int x1 = x;
+						int y1 = y;
+						int x2 = x + w;
+						int y2 = y + w;
+						p.setPen(outer);
+						p.drawRect(x, y, w, h);
+						p.drawRect(x1 - 1, y1 - 1, 2, 2);
+						p.drawRect(x1 - 1, y2 - 1, 2, 2);
+						p.drawRect(x2 - 1, y2 - 1, 2, 2);
+						p.drawRect(x2 - 1, y1 - 1, 2, 2);
+						p.setPen(inner);
+						p.drawRect(x, y, w, h);
+						p.drawRect(x1 - 1, y1 - 1, 2, 2);
+						p.drawRect(x1 - 1, y2 - 1, 2, 2);
+						p.drawRect(x2 - 1, y2 - 1, 2, 2);
+						p.drawRect(x2 - 1, y1 - 1, 2, 2);
+					}
+					break;
+				}
+				default:
+				{
+					m_WidgetXY = false;
+					break;
+				}
+			}
+		}
 		else
 		{
-			// switch ...
+			m_WidgetXY = false;
 		}
 	}
 	p.end();
@@ -393,12 +525,13 @@ void InteractiveViewport::editChecked()
 	m_PointerFilter =
 		POINTER_EDIT_VERTEX_MOVE // vertex movement
 		| POINTER_EDIT_STACK_SELECT // stack selection
+		| POINTER_EDIT_WIDGET_MOVE // widget movement
 		;
 }
 
 void InteractiveViewport::updatePointerMethod()
 {
-	if (m_MouseTouch || m_MouseMovingVertex)
+	if (m_MouseTouch || m_MouseMovingVertex || m_MouseMovingWidget)
 	{
 		// Cannot change now
 	}
@@ -478,6 +611,47 @@ void InteractiveViewport::updatePointerMethod()
 				}
 			}
 		}
+		// Widget movement
+		if (m_PointerFilter & POINTER_EDIT_WIDGET_MOVE)
+		{
+			if (m_LineEditor)
+			{
+				if (m_WidgetXY)
+				{
+					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+					int x = parsed.Parameter[0];
+					int y = parsed.Parameter[1];
+					int w, h;
+					if (m_WidgetWH)
+					{
+						w = parsed.Parameter[2];
+						h = parsed.Parameter[3];
+					}
+					else
+					{
+						x = x - parsed.Parameter[2];
+						y = y - parsed.Parameter[2];
+						w = parsed.Parameter[2] * 2;
+						h = parsed.Parameter[2] * 2;
+					}
+					int x1 = x;
+					int y1 = y;
+					int x2 = x + w;
+					int y2 = y + w;
+					if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
+					{
+						if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY && m_MouseY < y2)
+						{
+							// m_MouseOverWidget = true;
+							setCursor(Qt::SizeAllCursor);
+							m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
+							return;
+							// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+						}
+					}
+				}
+			}
+		}
 		// Stack selection
 		if (m_PointerFilter & POINTER_EDIT_STACK_SELECT)
 		{
@@ -538,6 +712,48 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 		{
 			m_MouseMovingVertex = false;
 			updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
+		}
+	}
+	else if (m_MouseMovingWidget)
+	{
+		if (m_LineEditor)
+		{
+			// Apply action
+			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE)
+			{
+				int xd = e->pos().x() - m_MovingLastX;
+				int yd = e->pos().y() - m_MovingLastY;
+				m_MovingLastX = e->pos().x();
+				m_MovingLastY = e->pos().y();
+				DlParsed pa = m_LineEditor->getLine(m_LineNumber);
+				pa.Parameter[0] += xd;
+				pa.Parameter[1] += yd;
+				m_LineEditor->replaceLine(m_LineNumber, pa);
+			}
+			else // resize, check top/bottom and left/right
+			{
+				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
+				{
+
+				}
+				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+				{
+
+				}
+				if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
+				{
+
+				}
+				else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
+				{
+
+				}
+			}
+		}
+		else
+		{
+			m_MouseMovingWidget = 0;
+			updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
 		}
 	}
 
@@ -627,6 +843,16 @@ RETURN()
 			}
 		}
 		break;
+	default:
+		if (m_PointerMethod & POINTER_EDIT_WIDGET_MOVE)
+		{
+			// Works for any widget move action
+			m_MovingLastX = e->pos().x();
+			m_MovingLastY = e->pos().y();
+			m_MouseMovingWidget = m_PointerMethod;
+			m_LineEditor->codeEditor()->beginUndoCombine();
+		}
+		break;
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);
@@ -648,6 +874,15 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 			m_LineEditor->codeEditor()->endUndoCombine();
 		}
 		updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
+	}
+	else if (m_MouseMovingWidget)
+	{
+		m_MouseMovingWidget = 0;
+		if (m_LineEditor)
+		{
+			m_LineEditor->codeEditor()->endUndoCombine();
+		}
+		updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
 	}
 
 	EmulatorViewport::mouseMoveEvent(e);

@@ -114,6 +114,8 @@ public:
 	static void compile(std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void toString(std::string &dst, uint32_t v); // DL only
 	static QString toString(uint32_t v); // DL only
+	static void toString(std::string &dst, const DlParsed &parsed); // DL and CMD
+	static QString toString(const DlParsed &parsed); // DL and CMD
 
 }; /* class DlParser */
 

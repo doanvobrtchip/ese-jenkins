@@ -43,6 +43,8 @@ static int s_ParamCount[DL_ID_NB];
 static int s_CmdParamCount[CMD_ID_NB];
 static bool s_CmdParamString[CMD_ID_NB];
 
+static std::string s_CmdIdList[CMD_ID_NB];
+
 void DlParser::init()
 {
 	if (!s_IdMap.size())
@@ -335,6 +337,10 @@ void DlParser::init()
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 3; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
+		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
+		{
+			s_CmdIdList[it->second] = it->first;
+		}
 	}
 	if (!s_CmdParamMap.size())
 	{
@@ -1391,6 +1397,51 @@ QString DlParser::toString(uint32_t v)
 {
 	std::string str;
 	toString(str, v);
+	return QString(str.c_str());
+}
+
+void DlParser::toString(std::string &dst, const DlParsed &parsed)
+{
+	if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	{
+		std::stringstream res;
+
+		res << s_CmdIdList[parsed.IdRight];
+		res << "(";
+
+		for (int p = 0; p < parsed.ExpectedParameterCount; ++p)
+		{
+			if (p != 0) res << ", ";
+			if (p == parsed.ExpectedParameterCount - 1 && parsed.ExpectedStringParameter)
+			{
+				// String parameter
+				res << "\"";
+				res << parsed.StringParameter; // TODO: Escape string
+				res << "\"";
+			}
+			else
+			{
+				// Numberic parameter
+				// TODO: Use constants where possible
+				res << parsed.Parameter[p];
+			}
+		}
+
+		res << ")";
+
+		dst = res.str();
+	}
+	else
+	{
+		uint32_t compiled = DlParser::compile(parsed);
+		DlParser::toString(dst, compiled);
+	}
+}
+
+QString DlParser::toString(const DlParsed &parsed)
+{
+	std::string str;
+	toString(str, parsed);
 	return QString(str.c_str());
 }
 

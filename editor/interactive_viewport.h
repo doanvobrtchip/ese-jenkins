@@ -98,6 +98,12 @@ private:
 
 	int m_MovingLastX, m_MovingLastY;
 
+	bool m_WidgetXY;
+	bool m_WidgetWH;
+	bool m_WidgetR;
+
+	int m_MouseMovingWidget;
+
 	// Current line
 	DlEditor *m_LineEditor;
 	int m_LineNumber;
