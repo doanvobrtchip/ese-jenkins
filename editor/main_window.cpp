@@ -167,7 +167,7 @@ void loop()
 	}
 	/*else if (displayListSwapped)
 	{
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE) 
+		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
 		{
 			if (!s_EmulatorRunning) return;
 		}
@@ -179,7 +179,7 @@ void loop()
 	{
 		FT800EMU::System.delay(10);
 	}
-	
+
 	// switch to next resolution
 	wr32(REG_HSIZE, s_HSize);
 	wr32(REG_VSIZE, s_VSize);
@@ -211,7 +211,7 @@ void loop()
 		// wr32(REG_DLSWAP, DLSWAP_FRAME);
 		// displayListSwapped = true;
 		s_DlEditor->unlockDisplayList();
-		
+
 		uint32_t cmdList[FT800EMU_DL_SIZE];
 		// DlParsed cmdParsed[FT800EMU_DL_SIZE];
 		s_CmdParamCache.clear();
@@ -230,7 +230,7 @@ void loop()
 		}
 		cmdParamCache[FT800EMU_DL_SIZE] = s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
-		
+
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
@@ -259,7 +259,7 @@ void loop()
 					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				} while (fullness != 0);
 				freespace = ((4096 - 4) - fullness);
-				
+
 				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
 				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 				{
@@ -272,7 +272,7 @@ void loop()
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-				
+
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 			}
 			int wpn = 0;
@@ -303,7 +303,7 @@ void loop()
 				rp = 0;
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				freespace = ((4096 - 4) - fullness);
-				
+
 				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
 				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 				{
@@ -316,7 +316,7 @@ void loop()
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-				
+
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
 				wp += 4;
@@ -353,7 +353,7 @@ void loop()
 				printf("Finished CMD_CALIBRATE\n");
 			}
 		}
-		
+
 		// Write swap to cmd
 		/*if (freespace < 4) // Wait for coprocessor ready
 		{
@@ -366,7 +366,7 @@ void loop()
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 			} while (fullness != 0);
 			freespace = ((4096 - 4) - fullness);
-			
+
 			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
 			for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 			{
@@ -379,16 +379,16 @@ void loop()
 			}
 			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-			
+
 			swrbegin(RAM_CMD + (wp & 0xFFF));
 		}*/
-		
+
 		swr32(DISPLAY());
 		swr32(CMD_SWAP);
 		wp += 8;
 		swrend();
 		wr32(REG_CMD_WRITE, (wp & 0xFFF));
-		
+
 		// Finish all processing
 		while ((wp & 0xFFF) != rd32(REG_CMD_READ))
 		{
@@ -406,7 +406,7 @@ void loop()
 		}
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-		
+
 		// Test
 		/*for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 		{
@@ -417,15 +417,15 @@ void loop()
 				printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
 			}
 		}*/
-		
+
 		swrbegin(RAM_CMD + (wp & 0xFFF));
 		swr32(CMD_DLSTART);
 		wp += 4;
 		swrend();
 		wr32(REG_CMD_WRITE, (wp & 0xFFF));
-		
+
 		coprocessorSwapped = true;
-		
+
 		// FIXME: Not very thread-safe, but not too critical
 		int *nextWrite = s_DisplayListCoprocessorCommandRead;
 		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
@@ -451,24 +451,24 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
-	m_UndoStack(NULL), 
-	m_EmulatorViewport(NULL), 
-	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL), 
-	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL), 
-	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), 
-	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), 
-	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL), 
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
+	m_UndoStack(NULL),
+	m_EmulatorViewport(NULL),
+	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
+	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
+	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
+	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
+	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
-	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), 
-	m_ImportAct(NULL), m_ExportAct(NULL), 
-	m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
+	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
+	m_ImportAct(NULL), m_ExportAct(NULL),
+	m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
 {
 	setObjectName("MainWindow");
-	
+
 	m_UndoStack = new QUndoStack(this);
-	
+
 	QWidget *centralWidget = new QWidget(this);
 	QVBoxLayout *cvLayout = new QVBoxLayout(this);
 	QHBoxLayout *chLayout = new QHBoxLayout(this);
@@ -481,36 +481,36 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	cvLayout->addStretch();
 	centralWidget->setLayout(cvLayout);
     setCentralWidget(centralWidget);
-	
+
 	createActions();
 	createMenus();
 	createToolBars();
 	createStatusBar();
 	createDockWindows();
-	
+
 	incbLanguageCode();
-	
+
 	s_DlEditor = m_DlEditor;
 	s_CmdEditor = m_CmdEditor;
 	s_Macro = m_Macro;
-	
+
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = 
-		// FT800EMU::EmulatorEnableKeyboard 
-		/*|*/ FT800EMU::EmulatorEnableMouse 
+	params.Flags =
+		// FT800EMU::EmulatorEnableKeyboard
+		/*|*/ FT800EMU::EmulatorEnableMouse
 		//| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableCoprocessor 
+		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		//| FT800EMU::EmulatorEnableDynamicDegrade
 		;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
-	
+
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
-	
+
 	actNew();
 }
 
@@ -531,23 +531,23 @@ void MainWindow::createActions()
 	m_OpenAct = new QAction(this);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
 	m_OpenAct->setEnabled(false);
-	
+
 	m_SaveAct = new QAction(this);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
 	m_SaveAct->setEnabled(false);
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
 	m_SaveAsAct->setEnabled(false);
-	
+
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
-	
+
 	m_QuitAct = new QAction(this);
-	m_QuitAct->setShortcuts(QKeySequence::Quit);	
+	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
-	
+
 	m_AboutAct = new QAction(this);
 	connect(m_AboutAct, SIGNAL(triggered()), this, SLOT(about()));
 	m_AboutQtAct = new QAction(this);
@@ -560,7 +560,7 @@ void MainWindow::createActions()
 	m_UndoAct->setShortcuts(QKeySequence::Undo);
 	m_RedoAct = m_UndoStack->createRedoAction(this);
 	m_RedoAct->setShortcuts(QKeySequence::Redo);
-	
+
 	m_DummyAct = new QAction(this);
 	connect(m_DummyAct, SIGNAL(triggered()), this, SLOT(dummyCommand()));
 
@@ -620,11 +620,11 @@ void MainWindow::createMenus()
 
 	//m_ViewportMenu = menuBar()->addMenu(QString::null);
 	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
-	
+
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
-	
+
 	menuBar()->addSeparator();
-	
+
 	m_HelpMenu = menuBar()->addMenu(QString::null);
 	m_HelpMenu->addAction(m_AboutAct);
 	m_HelpMenu->addAction(m_AboutQtAct);
@@ -676,7 +676,7 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
-	
+
 	// DlEditor (Display List)
 	{
 		m_DlEditorDock = new QDockWidget(this);
@@ -689,7 +689,7 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
 	}
-	
+
 	// CmdEditor (Coprocessor)
 	{
 		m_CmdEditorDock = new QDockWidget(this);
@@ -702,7 +702,7 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::BottomDockWidgetArea, m_CmdEditorDock);
 		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
 	}
-	
+
 	// Registers
 	{
 		m_RegistersDock = new QDockWidget(this);
@@ -713,13 +713,13 @@ void MainWindow::createDockWindows()
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
 		QVBoxLayout *layout = new QVBoxLayout(widget);
-		
+
 		// Size
 		{
 			QGroupBox *sizeGroup = new QGroupBox(widget);
 			sizeGroup->setTitle(tr("Size"));
 			QVBoxLayout *sizeLayout = new QVBoxLayout(widget);
-			
+
 			m_HSize = new QSpinBox(widget);
 			m_HSize->setMinimum(1);
 			m_HSize->setMaximum(512);
@@ -730,7 +730,7 @@ void MainWindow::createDockWindows()
 			hsizeLayout->addWidget(hsizeLabel);
 			hsizeLayout->addWidget(m_HSize);
 			sizeLayout->addLayout(hsizeLayout);
-			
+
 			m_VSize = new QSpinBox(widget);
 			m_VSize->setMinimum(1);
 			m_VSize->setMaximum(512);
@@ -741,17 +741,17 @@ void MainWindow::createDockWindows()
 			vsizeLayout->addWidget(vsizeLabel);
 			vsizeLayout->addWidget(m_VSize);
 			sizeLayout->addLayout(vsizeLayout);
-			
+
 			sizeGroup->setLayout(sizeLayout);
 			layout->addWidget(sizeGroup);
 		}
-		
+
 		// Macro
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
 			macroGroup->setTitle(tr("Macro"));
 			QVBoxLayout *macroLayout = new QVBoxLayout(widget);
-			
+
 			m_Macro = new DlEditor(this);
 			m_Macro->setPropertiesEditor(m_PropertiesEditor);
 			m_Macro->setUndoStack(m_UndoStack);
@@ -762,18 +762,18 @@ void MainWindow::createDockWindows()
 			//layout->addWidget(macroLabel);
 			macroLayout->addWidget(m_Macro);
 			//layout->addLayout(macroLayout);
-			
+
 			macroGroup->setLayout(macroLayout);
 			layout->addWidget(macroGroup);
 		}
-		
+
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
 		m_RegistersDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_RegistersDock);
 		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
 	}
-	
+
 	// Controls
 	{
 		m_ControlsDock = new QDockWidget(this);
@@ -784,13 +784,13 @@ void MainWindow::createDockWindows()
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
 		QVBoxLayout *layout = new QVBoxLayout(widget);
-		
+
 		// Step
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Display List Steps"));
 			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
-			
+
 			m_StepEnabled = new QCheckBox(this);
 			m_StepEnabled->setChecked(false);
 			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
@@ -801,7 +801,7 @@ void MainWindow::createDockWindows()
 			m_StepCount->setEnabled(false);
 			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
 			groupLayout->addWidget(m_StepCount);
-			
+
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
@@ -811,7 +811,7 @@ void MainWindow::createDockWindows()
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Trace"));
 			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
-			
+
 			m_TraceEnabled = new QCheckBox(this);
 			m_TraceEnabled->setChecked(false);
 			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
@@ -826,11 +826,11 @@ void MainWindow::createDockWindows()
 			m_TraceY->setMaximum(511);
 			m_TraceY->setEnabled(false);
 			groupLayout->addWidget(m_TraceY);
-			
+
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
-		
+
 		layout->addStretch();
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
@@ -838,9 +838,9 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::LeftDockWidgetArea, m_ControlsDock);
 		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
 	}
-	
+
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
-	
+
 	// Event for editor tab change
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
@@ -848,9 +848,9 @@ void MainWindow::createDockWindows()
 		QTabBar *tabBar = tabList.at(i);
 		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
 	}
-	
+
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
-	
+
 	// Event for all tab changes
 	tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
@@ -858,7 +858,7 @@ void MainWindow::createDockWindows()
 		// printf("tab bar found\n");
 		QTabBar *tabBar = tabList.at(i);
 		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
-		
+
 		// FIXME: Figure out and connect when new tab bars are created...
 	}
 }
@@ -903,12 +903,12 @@ public:
 	virtual void redo() { s_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
 	virtual int id() const { printf("id get\n"); return 41517686; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize; return true; }
-	
+
 private:
 	int m_NewHSize;
 	int m_OldHSize;
 	QSpinBox *m_SpinBox;
-	
+
 };
 
 class VSizeCommand : public QUndoCommand
@@ -920,19 +920,19 @@ public:
 	virtual void redo() { s_VSize = m_NewVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
 	virtual int id() const { return 78984351; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize; return true; }
-	
+
 private:
 	int m_NewVSize;
 	int m_OldVSize;
 	QSpinBox *m_SpinBox;
-	
+
 };
 
 void MainWindow::hsizeChanged(int hsize)
 {
 	if (s_UndoRedoWorking)
 		return;
-	
+
 	m_UndoStack->push(new HSizeCommand(hsize, m_HSize));
 }
 
@@ -940,7 +940,7 @@ void MainWindow::vsizeChanged(int vsize)
 {
 	if (s_UndoRedoWorking)
 		return;
-	
+
 	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
 }
 
@@ -1011,6 +1011,7 @@ void MainWindow::clearEditor()
 	setTraceX(0);
 	setTraceY(0);
 	m_DlEditor->clear();
+	m_CmdEditor->clear();
 	m_Macro->clear();
 }
 
@@ -1018,6 +1019,7 @@ void MainWindow::clearUndoStack()
 {
 	m_UndoStack->clear();
 	m_DlEditor->clearUndoStack();
+	m_CmdEditor->clearUndoStack();
 	m_Macro->clearUndoStack();
 }
 
@@ -1025,15 +1027,15 @@ void MainWindow::actNew()
 {
 	// reset filename
 	m_CurrentFile = QString();
-	
+
 	// reset editors to their default state
 	clearEditor();
-	
+
 	// clear undo stacks
 	clearUndoStack();
-	
+
 	// be helpful
-	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Display List</b> editor."));
+	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 }
 
@@ -1058,12 +1060,12 @@ void MainWindow::actImport()
 		tr("Memory dump, *.vc1dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
-	
+
 	m_CurrentFile = QString();
-	
+
 	// reset editors to their default state
 	clearEditor();
-	
+
 	// open a project
 	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
 	// int QDataStream::readRawData(char * s, int len)
@@ -1076,7 +1078,7 @@ void MainWindow::actImport()
 		const size_t headersz = 6;
 		uint32_t header[headersz];
 		int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (header[0] != 100) 
+		if (header[0] != 100)
 		{
 			QString message;
 			message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
@@ -1111,7 +1113,7 @@ void MainWindow::actImport()
 						m_DlEditor->reloadDisplayList(false);
 						m_DlEditor->unlockDisplayList();
 						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-						else 
+						else
 						{
 							/*
 							// FIXME: How is the CRC32 for the .vc1dump calculated?
@@ -1134,16 +1136,16 @@ void MainWindow::actImport()
 			}
 		}
 	}
-	
+
 	if (!loadOk)
 	{
 		m_CurrentFile = QString();
 		clearEditor();
 	}
-	
+
 	// clear undo stacks
 	clearUndoStack();
-	
+
 	m_PropertiesEditor->setInfo(tr("Imported project from .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 }
@@ -1154,11 +1156,11 @@ void MainWindow::actExport()
 		tr("Memory dump, *.vc1dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
-	
+
 	QFile file(fileName);
 	file.open(QIODevice::WriteOnly);
 	QDataStream out(&file);
-	
+
 	if (true) // todo: if .vc1dump
 	{
 		const size_t headersz = 6;
@@ -1184,10 +1186,10 @@ void MainWindow::actExport()
 		if (s != FT800EMU_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
 		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
 	}
-	
+
 	m_PropertiesEditor->setInfo(tr("Exported project to .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
-	
+
 	return;
 ExportWriteError:
 	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
