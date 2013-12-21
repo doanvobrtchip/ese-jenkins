@@ -247,6 +247,7 @@ BEGIN(RECTS)
 VERTEX2II(100, 100, 0, 0)
 VERTEX2II(220, 150, 0, 0)
 END()
+CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 
 			 */
 			}

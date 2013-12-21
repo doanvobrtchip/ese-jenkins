@@ -146,6 +146,8 @@ static int s_DisplayListCoprocessorCommandB[FT800EMU_DL_SIZE];
 static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
 static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 
+static std::vector<uint32_t> s_CmdParamCache;
+
 // static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 static int s_SwapCount = 0;
@@ -208,12 +210,30 @@ void loop()
 		swrend();
 		// wr32(REG_DLSWAP, DLSWAP_FRAME);
 		// displayListSwapped = true;
+		s_DlEditor->unlockDisplayList();
+		
+		uint32_t cmdList[FT800EMU_DL_SIZE];
+		// DlParsed cmdParsed[FT800EMU_DL_SIZE];
+		s_CmdParamCache.clear();
+		int cmdParamCache[FT800EMU_DL_SIZE + 1];
+		bool cmdValid[FT800EMU_DL_SIZE];
+		uint32_t *cmdListPtr = s_CmdEditor->getDisplayList();
+		const DlParsed *cmdParsedPtr = s_CmdEditor->getDisplayListParsed();
+		// Make local copy, necessary in case of blocking commands
+		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		{
+			cmdList[i] = cmdListPtr[i];
+			// cmdParsed[i] = cmdParsedPtr[i];
+			cmdParamCache[i] = s_CmdParamCache.size();
+			DlParser::compile(s_CmdParamCache, cmdParsedPtr[i]);
+			cmdValid[i] = cmdParsedPtr[i].ValidId;
+		}
+		cmdParamCache[FT800EMU_DL_SIZE] = s_CmdParamCache.size();
+		s_CmdEditor->unlockDisplayList();
 		
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
-		uint32_t *cmdList = s_CmdEditor->getDisplayList(); // FIXME CMD PARAMETERS
-		const DlParsed *cmdParsed = s_CmdEditor->getDisplayListParsed();
 		int wp = rd32(REG_CMD_WRITE);
 		int rp = rd32(REG_CMD_READ);
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -223,10 +243,12 @@ void loop()
 		swrbegin(RAM_CMD + (wp & 0xFFF));
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) // FIXME CMD SIZE
 		{
-			const DlParsed &pa = cmdParsed[i];
+			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
-			if (!pa.ValidId) continue;
-			if (freespace < 4) // Wait for coprocessor ready
+			if (!cmdValid[i]) continue;
+			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
+			int cmdLen = 4 + (paramNb * 4) + 4; // + 4 for swap afterwards
+			if (freespace < cmdLen) // Wait for coprocessor ready
 			{
 				swrend();
 				wr32(REG_CMD_WRITE, wp);
@@ -243,6 +265,7 @@ void loop()
 				{
 					if (cpWrite[i] >= 0)
 					{
+						// printf("A %i\n", i);
 						s_DisplayListCoprocessorCommandWrite[i]
 							= coprocessorWrites[cpWrite[i]];
 					}
@@ -252,14 +275,63 @@ void loop()
 				
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 			}
+			int wpn = 0;
 			coprocessorWrites[wp >> 2] = i;
 			swr32(cmdList[i]);
-			wp += 4;
-			freespace -= 4;
+			// printf("cmd %i", cmdList[i]);
+			for (int j = cmdParamCache[i]; j < cmdParamCache[i + 1]; ++j)
+			{
+				++wpn;
+				// printf("; param %i", s_CmdParamCache[j]);
+				coprocessorWrites[(wp >> 2) + wpn] = i;
+				swr32(s_CmdParamCache[j]);
+			}
+			// printf("\n");
+			wp += cmdLen;
+			freespace -= cmdLen;
+			// Handle special cases
+			if (cmdList[i] == CMD_LOGO)
+			{
+				printf("Waiting for CMD_LOGO...\n");
+				swrend();
+				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				while (rd32(REG_CMD_READ) || rd32(REG_CMD_WRITE))
+				{
+					if (!s_EmulatorRunning) return;
+				}
+				wp = 0;
+				rp = 0;
+				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+				freespace = ((4096 - 4) - fullness);
+				swrbegin(RAM_CMD + (wp & 0xFFF));
+				printf("Finished CMD_LOGO\n");
+			}
+			else if (cmdList[i] == CMD_CALIBRATE)
+			{
+				printf("Waiting for CMD_CALIBRATE...\n");
+				swrend();
+				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) return;
+				}
+				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swr32(CMD_DLSTART);
+				wp += 4;
+				freespace -= 4;
+				swrend();
+				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) return;
+				}
+				swrbegin(RAM_CMD + (wp & 0xFFF));
+				printf("Finished CMD_CALIBRATE\n");
+			}
 		}
 		
 		// Write swap to cmd
-		if (freespace < 4) // Wait for coprocessor ready
+		/*if (freespace < 4) // Wait for coprocessor ready
 		{
 			swrend();
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
@@ -276,6 +348,7 @@ void loop()
 			{
 				if (cpWrite[i] >= 0)
 				{
+					// printf("B %i\n", i);
 					s_DisplayListCoprocessorCommandWrite[i]
 						= coprocessorWrites[cpWrite[i]];
 				}
@@ -284,7 +357,7 @@ void loop()
 			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 			
 			swrbegin(RAM_CMD + (wp & 0xFFF));
-		}
+		}*/
 		
 		swr32(CMD_SWAP);
 		wp += 4;
@@ -301,6 +374,7 @@ void loop()
 		{
 			if (cpWrite[i] >= 0)
 			{
+				// printf("C %i, %i, %i\n", i, cpWrite[i], coprocessorWrites[cpWrite[i]]);
 				s_DisplayListCoprocessorCommandWrite[i]
 					= coprocessorWrites[cpWrite[i]];
 			}
@@ -313,7 +387,9 @@ void loop()
 		{
 			if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 			{
-				printf("DL %i was written by CMD %i\n", i, s_DisplayListCoprocessorCommandWrite[i]);
+				std::string res;
+				DlParser::toString(res, rd32(RAM_DL + i));
+				printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
 			}
 		}
 		
@@ -330,8 +406,11 @@ void loop()
 		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
 		s_DisplayListCoprocessorCommandWrite = nextWrite;
 	}
-	s_CmdEditor->unlockDisplayList();
-	s_DlEditor->unlockDisplayList();
+	else
+	{
+		s_CmdEditor->unlockDisplayList();
+		s_DlEditor->unlockDisplayList();
+	}
 }
 
 void keyboard()
@@ -577,7 +656,7 @@ void MainWindow::createDockWindows()
 	{
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_DlEditor = new DlEditor(this);
+		m_DlEditor = new DlEditor(this, false);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
 		connect(m_EmulatorViewport, SIGNAL(frame()), m_DlEditor, SLOT(frame()));

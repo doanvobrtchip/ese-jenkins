@@ -53,7 +53,7 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	// layout->addWidget(m_CommandInput);
 	setLayout(layout);
 	
-	m_DlHighlighter = new DlHighlighter(m_CodeEditor->document());
+	m_DlHighlighter = new DlHighlighter(m_CodeEditor->document(), coprocessor);
 
 	// connect(m_CommandInput, SIGNAL(returnPressed()), this, SLOT(returnPressed()));
 	
@@ -152,7 +152,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 			QString line = DlParser::toString(m_DisplayListShared[i]);
 			m_DisplayListParsed[i] = DlParsed();
 			// verify parsing ->
-			DlParser::parse(m_DisplayListParsed[i], line);
+			DlParser::parse(m_DisplayListParsed[i], line, m_ModeCoprocessor);
 			uint32_t compiled = DlParser::compile(m_DisplayListParsed[i]);
 			if (compiled != m_DisplayListShared[i])
 			{
@@ -315,6 +315,10 @@ void DlEditor::editingLine(QTextBlock block)
 					"command BEGIN, prior to this command."));
 				m_PropertiesEditor->setEditWidget(NULL, false, this);
 				ok = true;
+			}
+			else if (m_DisplayListParsed[m_PropLine].IdLeft == 0xFFFFFF00) switch (m_DisplayListParsed[m_PropLine].IdRight)
+			{
+				// ...
 			}
 			else switch (m_DisplayListParsed[m_PropLine].IdRight)
 			{
@@ -861,7 +865,19 @@ void DlEditor::frame()
 {
 	// FIXME DL/CMD Mapping
 	// update current step highlight
-	m_CodeEditor->setStepHighlight(FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1);
+	int idx = FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1;
+	if (idx > 0 && m_ModeCoprocessor)
+	{
+		if (idx < FT800EMU_DL_SIZE)
+		{
+			idx = m_MainWindow->getDlCmd()[idx];
+		}
+		else
+		{
+			idx = -1;
+		}
+	}
+	m_CodeEditor->setStepHighlight(idx);
 }
 
 } /* namespace FT800EMUQT */

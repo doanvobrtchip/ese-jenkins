@@ -26,7 +26,7 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-DlHighlighter::DlHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
+DlHighlighter::DlHighlighter(QTextDocument *parent, bool coprocessor) : QSyntaxHighlighter(parent), m_ModeCoprocessor(coprocessor)
 {
 	errorFormat.setForeground(Qt::red);
 	badIdFormat.setForeground(Qt::magenta);
@@ -43,7 +43,7 @@ DlHighlighter::~DlHighlighter()
 void DlHighlighter::highlightBlock(const QString &text)
 {
 	DlParsed parsed;
-	DlParser::parse(parsed, text);
+	DlParser::parse(parsed, text, m_ModeCoprocessor);
 	// setFormat
 	if (parsed.IdLength)
 	{

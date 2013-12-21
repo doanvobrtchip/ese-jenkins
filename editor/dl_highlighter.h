@@ -39,7 +39,7 @@ class DlHighlighter : public QSyntaxHighlighter
 	Q_OBJECT
 	
 public:
-	DlHighlighter(QTextDocument *parent = 0);
+	DlHighlighter(QTextDocument *parent = 0, bool coprocessor = false);
 	virtual ~DlHighlighter();
 	
 protected:
@@ -54,6 +54,8 @@ private:
 	QTextCharFormat idFormat;
 	QTextCharFormat paramFormat;
 	QTextCharFormat numberFormat;
+	
+	bool m_ModeCoprocessor;
 	
 }; /* class DlHighlighter */
 

@@ -69,7 +69,7 @@
 
 namespace FT800EMUQT {
 
-#define DLPARSED_MAX_PARAMETER 16
+#define DLPARSED_MAX_PARAMETER 12
 struct DlParsed
 {
 	std::string IdText;

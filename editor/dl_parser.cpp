@@ -185,9 +185,9 @@ void DlParser::init()
 		s_CmdIdMap["CMD_INTERRUPT"] = CMD_INTERRUPT & 0xFF;
 		s_CmdParamCount[CMD_INTERRUPT & 0xFF] = 1;
 		s_CmdParamString[CMD_INTERRUPT & 0xFF] = false;
-		s_CmdIdMap["CMD_CRC"] = CMD_CRC & 0xFF;
-		s_CmdParamCount[CMD_CRC & 0xFF] = 3;
-		s_CmdParamString[CMD_CRC & 0xFF] = false;
+		// s_CmdIdMap["CMD_CRC"] = CMD_CRC & 0xFF;
+		// s_CmdParamCount[CMD_CRC & 0xFF] = 3;
+		// s_CmdParamString[CMD_CRC & 0xFF] = false; // undocumented
 		// s_CmdIdMap["CMD_HAMMERAUX"] = CMD_HAMMERAUX & 0xFF;
 		// s_CmdParamCount[CMD_HAMMERAUX & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_HAMMERAUX & 0xFF] = false;
@@ -204,13 +204,13 @@ void DlParser::init()
 		// s_CmdParamCount[CMD_GETPOINT & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPOINT & 0xFF] = false;
 		s_CmdIdMap["CMD_BGCOLOR"] = CMD_BGCOLOR & 0xFF;
-		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 4; // argb
 		s_CmdParamString[CMD_BGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_FGCOLOR"] = CMD_FGCOLOR & 0xFF;
-		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 4; // argb
 		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
-		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 3 + 2 + 3; // rgb
+		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 4 + 2 + 4; // argb
 		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
@@ -248,9 +248,9 @@ void DlParser::init()
 		s_CmdIdMap["CMD_STOP"] = CMD_STOP & 0xFF;
 		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
 		s_CmdParamString[CMD_STOP & 0xFF] = false;
-		s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF;
-		s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
-		s_CmdParamString[CMD_MEMCRC & 0xFF] = false;
+		// s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF; // don't support reading values
+		// s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
+		// s_CmdParamString[CMD_MEMCRC & 0xFF] = false;
 		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		// s_CmdParamString[CMD_REGREAD & 0xFF] = false;
@@ -323,7 +323,7 @@ void DlParser::init()
 		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
 		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
 		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
-		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF;
+		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF; // hanging commands not allowed
 		s_CmdParamCount[CMD_LOGO & 0xFF] = 0;
 		s_CmdParamString[CMD_LOGO & 0xFF] = false;
 		s_CmdIdMap["CMD_COLDSTART"] = CMD_COLDSTART & 0xFF;
@@ -489,6 +489,17 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			parsed.ValidId = true;
 			parsed.ExpectedParameterCount = s_ParamCount[parsed.IdRight];
 		}
+		if (coprocessor)
+		{
+			it = s_CmdIdMap.find(parsed.IdText);
+			if (it != s_CmdIdMap.end())
+			{
+				parsed.IdLeft = 0xFFFFFF00;
+				parsed.IdRight = it->second;
+				parsed.ValidId = true;
+				parsed.ExpectedParameterCount = s_CmdParamCount[parsed.IdRight];
+			}
+		}
 	}
 	
 	if (failId)
@@ -575,6 +586,15 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					parsed.Parameter[p] = it->second;
 					parsed.ValidParameter[p] = true;
 				}
+				else if (coprocessor)
+				{
+					it = s_CmdParamMap.find(ps);
+					if (it != s_CmdParamMap.end())
+					{
+						parsed.Parameter[p] = it->second;
+						parsed.ValidParameter[p] = true;
+					}
+				}
 			}
 		}
 		
@@ -608,6 +628,10 @@ uint32_t DlParser::compile(const DlParsed &parsed)
 	else if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
 	{
 		return VERTEX2II(p[0], p[1], p[2], p[3]);
+	}
+	else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	{
+		return 0xFFFFFF00 | (parsed.IdRight);
 	}
 	else switch (parsed.IdRight)
 	{
@@ -691,6 +715,251 @@ uint32_t DlParser::compile(const DlParsed &parsed)
 			return CLEAR(p[0], p[1], p[2]);
 	}
 	return DISPLAY();
+}
+
+void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) // compile CMD parameters
+{
+	if (parsed.ValidId)
+	{
+		if (parsed.IdLeft == 0xFFFFFF00)
+		{
+			switch (0xFFFFFF00 | parsed.IdRight)
+			{
+				case CMD_BGCOLOR:
+				case CMD_FGCOLOR:
+				case CMD_GRADCOLOR:
+				{
+					uint32_t rgba = parsed.Parameter[0] << 24
+						| parsed.Parameter[1] << 16
+						| parsed.Parameter[2] << 8
+						| parsed.Parameter[3];
+					compiled.push_back(rgba);
+					break;
+				}
+				case CMD_GRADIENT:
+				{
+					uint32_t xy0 = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy0);
+					uint32_t rgba0 = parsed.Parameter[2] << 24
+						| parsed.Parameter[3] << 16
+						| parsed.Parameter[4] << 8
+						| parsed.Parameter[5];
+					compiled.push_back(rgba0);
+					uint32_t xy1 = parsed.Parameter[7] << 16
+						| parsed.Parameter[6];
+					compiled.push_back(xy1);
+					uint32_t rgba1 = parsed.Parameter[8] << 24
+						| parsed.Parameter[9] << 16
+						| parsed.Parameter[10] << 8
+						| parsed.Parameter[11];
+					compiled.push_back(rgba1);
+					break;
+				}
+				case CMD_TEXT:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t fo = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(fo);
+					compiled.push_back(0); // FIXME: String support
+					break;
+				}
+				case CMD_KEYS:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wh);
+					uint32_t fo = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(fo);
+					compiled.push_back(0); // FIXME: String support
+					break;
+				}
+				case CMD_PROGRESS:
+				case CMD_SLIDER:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wh);
+					uint32_t ov = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(ov);
+					uint32_t r = parsed.Parameter[6] & 0xFFFF;
+					compiled.push_back(r);
+					break;
+				}
+				case CMD_SCROLLBAR:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wh);
+					uint32_t ov = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(ov);
+					uint32_t sr = parsed.Parameter[7] << 16
+						| parsed.Parameter[6] & 0xFFFF;
+					compiled.push_back(sr);
+					break;
+				}
+				case CMD_TOGGLE:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wf = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wf);
+					uint32_t os = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(os);
+					compiled.push_back(0); // FIXME: String support
+					break;
+				}
+				case CMD_GAUGE:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t ro = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(ro);
+					uint32_t mm = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(mm);
+					uint32_t vr = parsed.Parameter[7] << 16
+						| parsed.Parameter[6] & 0xFFFF;
+					compiled.push_back(vr);
+					break;
+				}
+				case CMD_CLOCK:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t ro = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(ro);
+					uint32_t hm = parsed.Parameter[5] << 16
+						| parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(hm);
+					uint32_t sm = parsed.Parameter[7] << 16
+						| parsed.Parameter[6] & 0xFFFF;
+					compiled.push_back(sm);
+					break;
+				}
+				case CMD_SPINNER:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t ss = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(ss);
+					break;
+				}
+				case CMD_DLSTART:
+				case CMD_SWAP:
+				case CMD_STOP:
+				case CMD_LOADIDENTITY:
+				case CMD_SETMATRIX:
+				case CMD_SCREENSAVER:
+				case CMD_LOGO:
+				case CMD_COLDSTART:
+				{
+					break;
+				}
+				case CMD_SNAPSHOT:
+				case CMD_INFLATE:
+				case CMD_ROTATE:
+				case CMD_INTERRUPT:
+				case CMD_CALIBRATE:
+				{
+					compiled.push_back(parsed.Parameter[0]);
+					break;
+				}
+				case CMD_MEMWRITE:
+				case CMD_MEMZERO:
+				case CMD_APPEND:
+				case CMD_LOADIMAGE:
+				case CMD_TRANSLATE:
+				case CMD_SCALE:
+				case CMD_SETFONT:
+				{
+					compiled.push_back(parsed.Parameter[0]);
+					compiled.push_back(parsed.Parameter[1]);
+					break;
+				}
+				case CMD_MEMSET:
+				case CMD_MEMCPY:
+				{
+					compiled.push_back(parsed.Parameter[0]);
+					compiled.push_back(parsed.Parameter[1]);
+					compiled.push_back(parsed.Parameter[2]);
+					break;
+				}
+				case CMD_TRACK:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wh);
+					uint32_t t = parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(t);
+					break;
+				}
+				case CMD_DIAL:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t ro = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(ro);
+					uint32_t v = parsed.Parameter[4] & 0xFFFF;
+					compiled.push_back(v);
+					break;
+				}
+				case CMD_NUMBER:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t fo = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(fo);
+					compiled.push_back(parsed.Parameter[4]);
+					break;
+				}
+				case CMD_SKETCH:
+				{
+					uint32_t xy = parsed.Parameter[1] << 16
+						| parsed.Parameter[0] & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3] << 16
+						| parsed.Parameter[2] & 0xFFFF;
+					compiled.push_back(wh);
+					compiled.push_back(parsed.Parameter[4]);
+					uint32_t f = parsed.Parameter[5] & 0xFFFF;
+					compiled.push_back(f);
+					break;
+				}
+			}
+		}
+	}
 }
 
 void DlParser::toString(std::string &dst, uint32_t v)
