@@ -10,7 +10,7 @@
 /*
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
- 
+
 #include "interactive_viewport.h"
 
 // STL includes
@@ -39,42 +39,42 @@ namespace FT800EMUQT {
 #define POINTER_EDIT_VERTEX_MOVE 0x04
 #define POINTER_EDIT_STACK_SELECT 0x08
 
-InteractiveViewport::InteractiveViewport(MainWindow *parent) 
+InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
-	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), 
+	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false),
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
-	
+
 	QActionGroup *cursorGroup = new QActionGroup(this);
-	
+
 	QAction *automatic = new QAction(cursorGroup);
 	connect(automatic, SIGNAL(triggered()), this, SLOT(automaticChecked()));
 	automatic->setText(tr("Cursor"));
 	automatic->setStatusTip(tr("Context dependent cursor"));
 	automatic->setCheckable(true);
 	automatic->setChecked(true);
-	
+
 	QAction *touch = new QAction(cursorGroup);
 	connect(touch, SIGNAL(triggered()), this, SLOT(touchChecked()));
 	touch->setText(tr("Touch"));
 	touch->setStatusTip(tr("Use to cursor to touch the emulated display"));
 	touch->setCheckable(true);
-	
+
 	QAction *trace = new QAction(cursorGroup);
 	connect(trace, SIGNAL(triggered()), this, SLOT(traceChecked()));
 	trace->setText(tr("Trace"));
 	trace->setStatusTip(tr("Select a pixel to trace display commands"));
 	trace->setCheckable(true);
-	
+
 	QAction *edit = new QAction(cursorGroup);
 	connect(edit, SIGNAL(triggered()), this, SLOT(editChecked()));
 	edit->setText(tr("Edit"));
 	edit->setStatusTip(tr("Interactive editing tools"));
 	edit->setCheckable(true);
-	
+
 	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Cursor"));
 	toolBar->addAction(automatic);
 	toolBar->addAction(touch);
@@ -84,7 +84,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 
 InteractiveViewport::~InteractiveViewport()
 {
-	
+
 }
 
 // Graphics callback synchronized to the emulator thread, use to get debug information for a frame
@@ -95,22 +95,67 @@ void InteractiveViewport::graphics()
 	{
 		m_PreferTraceCursor = true;
 	}
+	else if (m_PreferTraceCursor && !m_MainWindow->traceEnabled())
+	{
+		m_PreferTraceCursor = false;
+	}
 	m_TraceEnabled = m_MainWindow->traceEnabled();
 	m_TraceX = m_MainWindow->traceX();
 	m_TraceY = m_MainWindow->traceY();
 	m_TraceStack.clear();
-	if (m_TraceEnabled) FT800EMU::GraphicsProcessor.processTrace(m_TraceStack, m_TraceX, m_TraceY, hsize());
-	
+	m_TraceStackDl.clear();
+	m_TraceStackCmd.clear();
+	bool cmdLast = false;
+	if (m_TraceEnabled)
+	{
+		FT800EMU::GraphicsProcessor.processTrace(m_TraceStack, m_TraceX, m_TraceY, hsize());
+		for (int i = 0; i < m_TraceStack.size(); ++i)
+		{
+			int cmdIdx = m_MainWindow->getDlCmd()[m_TraceStack[i]];
+			if (cmdIdx >= 0)
+			{
+				m_TraceStackCmd.push_back(cmdIdx);
+				cmdLast = true;
+			}
+			else
+			{
+				m_TraceStackDl.push_back(m_TraceStack[i]);
+				cmdLast = false;
+			}
+		}
+		if (cmdLast)
+		{
+			m_TraceStackDl.push_back(-1);
+		}
+		else
+		{
+			m_TraceStackCmd.push_back(-1);
+		}
+	}
+
 	// Get the stack under the mouse cursor
 	m_MouseStackWrite.clear();
 	if (m_MouseOver) FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
 }
 
+/*
+ *
+CLEAR_COLOR_RGB(50, 80, 160)
+CLEAR(1, 1, 1)
+BEGIN(RECTS)
+VERTEX2II(100, 100, 0, 0)
+VERTEX2II(220, 150, 0, 0)
+END()
+CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+ *
+ */
+
 // Graphics callback synchronized to Qt thread, use to overlay graphics
 void InteractiveViewport::graphics(QImage *image)
 {
 	// Update frame dependent gui
-	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStack);
+	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStackDl);
+	m_MainWindow->cmdEditor()->codeEditor()->setTraceHighlights(m_TraceStackCmd);
 	m_MouseX = m_NextMouseX;
 	m_MouseY = m_NextMouseY;
 	m_MouseStackRead.swap(m_MouseStackWrite);
@@ -155,8 +200,8 @@ void InteractiveViewport::graphics(QImage *image)
 				for (int l = firstLine - 1; l > 0; --l)
 				{
 					const DlParsed &pa = m_LineEditor->getLine(l);
-					if (pa.IdLeft == 0 && 
-						(pa.IdRight == FT800EMU_DL_BEGIN 
+					if (pa.IdLeft == 0 &&
+						(pa.IdRight == FT800EMU_DL_BEGIN
 						|| pa.IdRight == FT800EMU_DL_END
 						|| pa.IdRight == FT800EMU_DL_RETURN
 						|| pa.IdRight == FT800EMU_DL_JUMP))
@@ -236,7 +281,7 @@ void InteractiveViewport::graphics(QImage *image)
 				p.drawLine(x - 4, y + 4, x + 4, y + 4);
 				p.drawLine(x - 4, y - 4, x - 4, y + 4);
 				p.drawLine(x + 4, y - 4, x + 4, y + 4);
-			
+
 			/*
 
 test dl
@@ -250,15 +295,15 @@ MACRO(0) // VERTEX2II(220, 150, 0, 0)
 END()
 CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 CMD_SCREENSAVER()
-* 
-* 
+*
+*
 CLEAR_COLOR_RGB(50, 0, 0)
 CLEAR(1, 1, 1)
 CMD_SPINNER(240, 136, 1, 2)
-* 
-* 
+*
+*
 CMD_MEMZERO(0, 16320)
-* 
+*
 CMD_SKETCH(0, 0, 480, 272, 0, L1)
 BITMAP_SOURCE(0)
 BITMAP_LAYOUT(L1, 60, 270)
@@ -276,7 +321,7 @@ CMD_NUMBER(80, 60, 31, OPT_CENTER, 42)
 		}
 	}
 	p.end();
-	
+
 	// Update pointer method
 	updatePointerMethod();
 }
@@ -315,7 +360,7 @@ void InteractiveViewport::traceChecked()
 
 void InteractiveViewport::editChecked()
 {
-	m_PointerFilter = 
+	m_PointerFilter =
 		POINTER_EDIT_VERTEX_MOVE // vertex movement
 		| POINTER_EDIT_STACK_SELECT // stack selection
 		;
@@ -347,8 +392,8 @@ void InteractiveViewport::updatePointerMethod()
 					for (int l = firstLine - 1; l > 0; --l)
 					{
 						const DlParsed &pa = m_LineEditor->getLine(l);
-						if (pa.IdLeft == 0 && 
-							(pa.IdRight == FT800EMU_DL_BEGIN 
+						if (pa.IdLeft == 0 &&
+							(pa.IdRight == FT800EMU_DL_BEGIN
 							|| pa.IdRight == FT800EMU_DL_END
 							|| pa.IdRight == FT800EMU_DL_RETURN
 							|| pa.IdRight == FT800EMU_DL_JUMP))
@@ -377,7 +422,7 @@ void InteractiveViewport::updatePointerMethod()
 								x = pa.Parameter[0];
 								y = pa.Parameter[1];
 							}
-							
+
 							// Mouse over
 							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
 							{
@@ -433,10 +478,10 @@ void InteractiveViewport::updatePointerMethod()
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
-	
+
 	m_NextMouseX = e->pos().x();
 	m_NextMouseY = e->pos().y();
-	
+
 	if (m_MouseTouch)
 	{
 		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);

@@ -51,8 +51,8 @@
 #include "code_editor.h"
 
 
-CodeEditor::CodeEditor(QWidget *parent) 
-: QPlainTextEdit(parent), 
+CodeEditor::CodeEditor(QWidget *parent)
+: QPlainTextEdit(parent),
 m_MaxLinesNotice(0),
 m_UndoStack(NULL),
 m_UndoIndexDummy(false),
@@ -83,7 +83,7 @@ void CodeEditor::setUndoStack(QUndoStack *undo_stack)
 	m_UndoStack = undo_stack;
 	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
 }
-	
+
 void CodeEditor::beginUndoCombine()
 {
 	++m_LastCombineId;
@@ -326,7 +326,7 @@ void CodeEditor::highlightCurrentLine()
 
 	QList<QTextEdit::ExtraSelection> extraSelections;
 
-	if (!isReadOnly()) 
+	if (!isReadOnly())
 	{
 		if (m_StepHighlight >= 0 && m_StepHighlight < document()->blockCount())
 		{
@@ -356,7 +356,7 @@ void CodeEditor::highlightCurrentLine()
 		// step
 		if (m_StepHighlight >= 0 && m_StepHighlight < document()->blockCount())
 		{
-			QTextEdit::ExtraSelection selection; 
+			QTextEdit::ExtraSelection selection;
 			QColor lineColor = QColor(Qt::yellow);
 			selection.format.setBackground(lineColor);
 			selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -365,9 +365,9 @@ void CodeEditor::highlightCurrentLine()
 			extraSelections.append(selection);
 		}
 		// trace
-		if (m_TraceHighlights.size() > 0)
+		if (m_TraceHighlights.size() > 0 && m_TraceHighlights[0] >= 0)
 		{
-			QTextEdit::ExtraSelection selection; 
+			QTextEdit::ExtraSelection selection;
 			QColor lineColor = QColor(Qt::green).lighter(120);
 			selection.format.setBackground(lineColor);
 			selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -377,9 +377,9 @@ void CodeEditor::highlightCurrentLine()
 		}
 		for (int i = 1; i < m_TraceHighlights.size(); ++i)
 		{
-			if (m_TraceHighlights[i] != m_StepHighlight)
+			if (m_TraceHighlights[i] != m_StepHighlight && m_TraceHighlights[i] >= 0)
 			{
-				QTextEdit::ExtraSelection selection; 
+				QTextEdit::ExtraSelection selection;
 				QColor lineColor = QColor(Qt::green).lighter(160);
 				selection.format.setBackground(lineColor);
 				selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -449,7 +449,7 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 
 	while (block.isValid() && top <= event->rect().bottom()) {
 		if (block.isVisible() && bottom >= event->rect().top()) {
-			QString number = QString::number(blockNumber/* + 1*/); 
+			QString number = QString::number(blockNumber/* + 1*/);
 			painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice) ? Qt::red : Qt::black);
 			painter.drawText(0, top, lineNumberArea->width() - 4, fontMetrics().height(),
 				Qt::AlignRight, number);

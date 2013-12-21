@@ -48,7 +48,7 @@ public:
 
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
 	virtual void graphics(QImage *image);
-	
+
 	// Called by a editor when the active line changes
 	void setEditorLine(DlEditor *editor, int line);
 	void unsetEditorLine();
@@ -76,26 +76,28 @@ private:
 	bool m_TraceEnabled;
 	uint32_t m_TraceX, m_TraceY;
 	std::vector<int> m_TraceStack;
-	
+	std::vector<int> m_TraceStackDl;
+	std::vector<int> m_TraceStackCmd;
+
 	bool m_MouseOver;
 	int m_NextMouseX, m_NextMouseY;
 	int m_MouseX, m_MouseY;
 	std::vector<int> m_MouseStackWrite;
 	std::vector<int> m_MouseStackRead;
-	
+
 	// User selected pointer mode
 	int m_PointerFilter;
 	// Actual current pointer method, depending on stack under cursor
 	int m_PointerMethod;
 
 	bool m_MouseTouch;
-	
+
 	bool m_MouseOverVertex;
 	int m_MouseOverVertexLine;
 	bool m_MouseMovingVertex;
-	
+
 	int m_MovingLastX, m_MovingLastY;
-	
+
 	// Current line
 	DlEditor *m_LineEditor;
 	int m_LineNumber;
@@ -103,7 +105,7 @@ private:
 private:
 	InteractiveViewport(const InteractiveViewport &);
 	InteractiveViewport &operator=(const InteractiveViewport &);
-	
+
 }; /* class InteractiveViewport */
 
 } /* namespace FT800EMUQT */
