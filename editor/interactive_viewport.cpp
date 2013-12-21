@@ -621,75 +621,92 @@ void InteractiveViewport::updatePointerMethod()
 					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
 					int x = parsed.Parameter[0];
 					int y = parsed.Parameter[1];
-					int w, h;
-					if (m_WidgetWH)
+					if (m_WidgetWH || m_WidgetR)
 					{
-						w = parsed.Parameter[2];
-						h = parsed.Parameter[3];
+						int w, h;
+						if (m_WidgetWH)
+						{
+							w = parsed.Parameter[2];
+							h = parsed.Parameter[3];
+						}
+						else
+						{
+							x = x - parsed.Parameter[2];
+							y = y - parsed.Parameter[2];
+							w = parsed.Parameter[2] * 2;
+							h = parsed.Parameter[2] * 2;
+						}
+						int x1 = x;
+						int y1 = y;
+						int x2 = x + w;
+						int y2 = y + h;
+						m_PointerMethod = 0;
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_TOP)
+						{
+							if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y1 + 3)
+							{
+								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_TOP;
+							}
+						}
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+						{
+							if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y2 - 3 < m_MouseY && m_MouseY < y2 + 3)
+							{
+								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_BOTTOM;
+							}
+						}
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_LEFT)
+						{
+							if (x1 - 3 < m_MouseX && m_MouseX < x1 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
+							{
+								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_LEFT;
+							}
+						}
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_RIGHT)
+						{
+							if (x2 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
+							{
+								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_RIGHT;
+							}
+						}
+						if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPLEFT
+							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT)
+							setCursor(Qt::SizeFDiagCursor);
+						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPRIGHT
+							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT)
+							setCursor(Qt::SizeBDiagCursor);
+						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOP
+							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+							setCursor(Qt::SizeVerCursor);
+						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_LEFT
+							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_RIGHT)
+							setCursor(Qt::SizeHorCursor);
+						if (m_PointerMethod)
+							return;
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
+						{
+							if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY && m_MouseY < y2)
+							{
+								// m_MouseOverWidget = true;
+								setCursor(Qt::SizeAllCursor);
+								m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
+								return;
+								// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+							}
+						}
 					}
 					else
 					{
-						x = x - parsed.Parameter[2];
-						y = y - parsed.Parameter[2];
-						w = parsed.Parameter[2] * 2;
-						h = parsed.Parameter[2] * 2;
-					}
-					int x1 = x;
-					int y1 = y;
-					int x2 = x + w;
-					int y2 = y + h;
-					m_PointerMethod = 0;
-					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_TOP)
-					{
-						if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y1 + 3)
+						if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
 						{
-							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_TOP;
-						}
-					}
-					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-					{
-						if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y2 - 3 < m_MouseY && m_MouseY < y2 + 3)
-						{
-							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_BOTTOM;
-						}
-					}
-					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_LEFT)
-					{
-						if (x1 - 3 < m_MouseX && m_MouseX < x1 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
-						{
-							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_LEFT;
-						}
-					}
-					if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_RIGHT)
-					{
-						if (x2 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
-						{
-							m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_RIGHT;
-						}
-					}
-					if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPLEFT
-						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT)
-						setCursor(Qt::SizeFDiagCursor);
-					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPRIGHT
-						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT)
-						setCursor(Qt::SizeBDiagCursor);
-					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOP
-						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-						setCursor(Qt::SizeVerCursor);
-					else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_LEFT
-						|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_RIGHT)
-						setCursor(Qt::SizeHorCursor);
-					if (m_PointerMethod)
-						return;
-					if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
-					{
-						if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY && m_MouseY < y2)
-						{
-							// m_MouseOverWidget = true;
-							setCursor(Qt::SizeAllCursor);
-							m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
-							return;
-							// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
+							{
+								// m_MouseOverWidget = true;
+								setCursor(Qt::SizeAllCursor);
+								m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
+								return;
+								// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+							}
 						}
 					}
 				}
@@ -724,6 +741,7 @@ void InteractiveViewport::updatePointerMethod()
 
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 // CMD_BUTTON(50, 50, 100, 40, 21, 0, "hello world")
+// CMD_SPINNER(50, 50, 0, 0)
 
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
