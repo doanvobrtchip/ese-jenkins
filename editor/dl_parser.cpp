@@ -467,6 +467,8 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 
 	parsed.IdLeft = 0;
 	parsed.IdRight = 0;
+	parsed.ExpectedStringParameter = false;
+	parsed.StringParameterAt = DLPARSED_MAX_PARAMETER;
 
 	if (parsed.IdText == "VERTEX2F")
 	{
@@ -498,6 +500,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				parsed.IdRight = it->second;
 				parsed.ValidId = true;
 				parsed.ExpectedParameterCount = s_CmdParamCount[parsed.IdRight];
+				parsed.ExpectedStringParameter = s_CmdParamString[parsed.IdRight];
 			}
 		}
 	}
@@ -518,6 +521,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		combineParameter = false;
 		parsed.ParameterIndex[pq] = i;
 		std::stringstream pss;
+	ContinueParameter:
 		for (; ; ++i)
 		{
 			if (i < len)
@@ -531,12 +535,19 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				{
 					++parsed.ParameterIndex[pq]; /* pre-trim */
 				}
-				else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i)
+				else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+				{
+					/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
+					pss << c;
+					++i;
+					goto ParseString;
+				}
+				else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
 				{
 					pss << c;
 					++parsed.ParameterLength[pq];
 				}
-				else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i)
+				else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
 				{
 					parsed.NumericParameter[pq] = false;
 					pss << c;
@@ -580,11 +591,53 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 			}
 		}
 
+		goto ValidateNamed;
+	ParseString:
+		for (; ; ++i)
+		{
+			if (i < len)
+			{
+				char c = src[i];
+				pss << c;
+				if (c == '\\')
+				{
+					// skip
+					++i;
+					pss << src[i];
+				}
+				else if (c == '"')
+				{
+					// end (post-trim)
+					++i;
+					parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+					goto ContinueParameter;
+				}
+			}
+			else
+			{
+				failParam = true; /* fail incomplete entry */
+				break;
+			}
+		}
+	ValidateNamed:
+
 		// validate named parameter
 		if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
 		{
 			std::string ps = pss.str();
-			if (parsed.NumericParameter[pq] && ps.length() > 0)
+			if (p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+			{
+				// CMD_TEXT(50, 119, 31, 0, "hello world")
+				if (ps.length() >= 2)
+				{
+					std::string psstr = ps.substr(1, ps.size() - 2);
+					parsed.Parameter[p] = 0;
+					parsed.StringParameter = psstr; // TODO: Parse escape characters
+					parsed.ValidParameter[pq] = true;
+					parsed.StringParameterAt = pq;
+				}
+			}
+			else if (parsed.NumericParameter[pq] && ps.length() > 0)
 			{
 				parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | atoi(ps.c_str());
 				parsed.ValidParameter[pq] = true;
@@ -782,7 +835,16 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t fo = parsed.Parameter[3] << 16
 						| parsed.Parameter[2] & 0xFFFF;
 					compiled.push_back(fo);
-					compiled.push_back(0); // FIXME: String support
+					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					{
+						// CMD_TEXT(50, 119, 31, 0, "hello world")
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
+						compiled.push_back(s);
+					}
 					break;
 				}
 				case CMD_BUTTON:
@@ -797,7 +859,15 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t fo = parsed.Parameter[5] << 16
 						| parsed.Parameter[4] & 0xFFFF;
 					compiled.push_back(fo);
-					compiled.push_back(0); // FIXME: String support
+					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					{
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
+						compiled.push_back(s);
+					}
 					break;
 				}
 				case CMD_PROGRESS:
@@ -843,7 +913,15 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t os = parsed.Parameter[5] << 16
 						| parsed.Parameter[4] & 0xFFFF;
 					compiled.push_back(os);
-					compiled.push_back(0); // FIXME: String support
+					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					{
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
+						compiled.push_back(s);
+					}
 					break;
 				}
 				case CMD_GAUGE:

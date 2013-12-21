@@ -76,21 +76,23 @@ struct DlParsed
 	int IdLeft;
 	int IdRight;
 	uint32_t Parameter[DLPARSED_MAX_PARAMETER];
-	
+
 	bool ValidId;
 	bool ValidParameter[DLPARSED_MAX_PARAMETER];
 	bool NumericParameter[DLPARSED_MAX_PARAMETER];
-	
+
 	int IdIndex;
 	int IdLength;
 	int ParameterIndex[DLPARSED_MAX_PARAMETER];
 	int ParameterLength[DLPARSED_MAX_PARAMETER];
-	
+
 	int ExpectedParameterCount;
 	int BadCharacterIndex;
-	
+	bool ExpectedStringParameter;
+
 	bool ValidStringParameter; // single string parameter at end
 	std::string StringParameter;
+	int StringParameterAt; // temporary pq
 };
 
 /**
@@ -100,19 +102,19 @@ struct DlParsed
  * \author Jan Boon (Kaetemi)
  */
 class DlParser
-{	
+{
 public:
 	static void init();
-	
+
 	static void getIdentifiers(QStringList &list, bool coprocessor = false);
 	static void getParams(QStringList &list, bool coprocessor = false);
-	
+
 	static void parse(DlParsed &parsed, const QString &line, bool coprocessor = false);
 	static uint32_t compile(const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static void compile(std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void toString(std::string &dst, uint32_t v); // DL only
 	static QString toString(uint32_t v); // DL only
-	
+
 }; /* class DlParser */
 
 } /* namespace FT800EMUQT */

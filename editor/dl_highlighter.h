@@ -37,26 +37,27 @@ namespace FT800EMUQT {
 class DlHighlighter : public QSyntaxHighlighter
 {
 	Q_OBJECT
-	
+
 public:
 	DlHighlighter(QTextDocument *parent = 0, bool coprocessor = false);
 	virtual ~DlHighlighter();
-	
+
 protected:
 	virtual void highlightBlock(const QString &text);
 
 private:
 	DlHighlighter(const DlHighlighter &);
 	DlHighlighter &operator=(const DlHighlighter &);
-	
+
 	QTextCharFormat errorFormat;
 	QTextCharFormat badIdFormat;
 	QTextCharFormat idFormat;
 	QTextCharFormat paramFormat;
 	QTextCharFormat numberFormat;
-	
+	QTextCharFormat stringFormat;
+
 	bool m_ModeCoprocessor;
-	
+
 }; /* class DlHighlighter */
 
 } /* namespace FT800EMUQT */
