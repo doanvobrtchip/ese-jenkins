@@ -559,20 +559,41 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		}
 		break;
 	case POINTER_EDIT_STACK_SELECT:
-		if (m_LineEditor && m_MouseStackRead.size() > 0)
+		if (m_MouseStackRead.size() > 0)
 		{
 			if (e->button() == Qt::LeftButton)
 			{
 				// Select topmost command
 				printf("Select topmost command\n");
-				int idx = m_MouseStackRead[m_MouseStackRead.size() - 1]; // DL
-				printf("DL %i\n", idx);
-				if (m_LineEditor->isCoprocessor())
+				int idxDl = m_MouseStackRead[m_MouseStackRead.size() - 1]; // DL
+				int idxCmd = m_MainWindow->getDlCmd()[idxDl];
+				printf("DL %i\n", idxDl);
+				printf("CMD %i\n", idxCmd);
+				// m_LineEditor->selectLine(idx);
+				if (idxCmd >= 0)
 				{
-					idx = m_MainWindow->getDlCmd()[idx]; // DL to CMD
-					printf("CMD %i\n", idx);
+					m_MainWindow->focusCmdEditor();
+					m_MainWindow->cmdEditor()->selectLine(idxCmd);
 				}
-				m_LineEditor->selectLine(idx);
+				else
+				{
+					m_MainWindow->focusDlEditor();
+					m_MainWindow->dlEditor()->selectLine(idxDl);
+				}
+/*
+ *
+CLEAR_COLOR_RGB(50, 80, 160)
+CLEAR(1, 1, 1)
+CALL(100)
+CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+*
+BEGIN(RECTS)
+VERTEX2II(100, 100, 0, 0)
+VERTEX2II(220, 150, 0, 0)
+END()
+RETURN()
+ *
+ */
 			}
 		}
 		break;

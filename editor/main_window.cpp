@@ -56,10 +56,9 @@
 
 // Project includes
 #include "dl_editor.h"
-// #include "command_log.h"
 #include "interactive_viewport.h"
-// #include "emulator_config.h"
 #include "properties_editor.h"
+#include "code_editor.h"
 
 namespace FT800EMUQT {
 
@@ -842,10 +841,12 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
 
 	// Event for editor tab change
+	QTabBar *editorTabbar = NULL;
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		QTabBar *tabBar = tabList.at(i);
+		editorTabbar = tabBar;
 		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
 	}
 
@@ -857,7 +858,10 @@ void MainWindow::createDockWindows()
 	{
 		// printf("tab bar found\n");
 		QTabBar *tabBar = tabList.at(i);
-		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+		if (tabBar != editorTabbar)
+		{
+			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+		}
 
 		// FIXME: Figure out and connect when new tab bars are created...
 	}
@@ -884,12 +888,90 @@ void MainWindow::incbLanguageCode()
 void MainWindow::editorTabChanged(int i)
 {
 	m_EmulatorViewport->unsetEditorLine();
+	bool cmdTop = true;
+	bool dlTop = true;
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_CmdEditorDock)
+			{
+				if (tabBar->currentIndex() != j)
+					cmdTop = false;
+			}
+			else if (dw == m_DlEditorDock)
+			{
+				if (tabBar->currentIndex() != j)
+					dlTop = false;
+			}
+		}
+	}
+	// printf("x: %i,y: %i\n", cmdTop, dlTop);
+	if (cmdTop != dlTop)
+	{
+		if (cmdTop)
+		{
+			// printf("focus cmd\n");
+			m_CmdEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
+		}
+		else
+		{
+			// printf("focus dl\n");
+			m_DlEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
+		}
+	}
+	else
+	{
+		setFocus(Qt::OtherFocusReason);
+	}
 }
 
 void MainWindow::tabChanged(int i)
 {
 	// Defocus editor
 	setFocus(Qt::OtherFocusReason);
+}
+
+void MainWindow::focusDlEditor()
+{
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_DlEditorDock)
+			{
+				tabBar->setCurrentIndex(j);
+				goto Out;
+			}
+		}
+	}
+Out:
+	m_DlEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
+}
+void MainWindow::focusCmdEditor()
+{
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_CmdEditorDock)
+			{
+				tabBar->setCurrentIndex(j);
+				goto Out;
+			}
+		}
+	}
+Out:
+	m_CmdEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
 }
 
 static bool s_UndoRedoWorking = false;

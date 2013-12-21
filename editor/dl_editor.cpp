@@ -260,6 +260,7 @@ void DlEditor::selectLine(int line)
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	m_CodeEditor->setTextCursor(c);
+	editingLine(m_CodeEditor->document()->findBlockByNumber(line));
 }
 
 void DlEditor::editingLine(QTextBlock block)

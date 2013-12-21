@@ -56,6 +56,9 @@ public:
 	inline DlEditor *cmdEditor() { return m_CmdEditor; }
 	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 
+	void focusDlEditor();
+	void focusCmdEditor();
+
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);
 	void setTraceY(int y);
@@ -73,28 +76,28 @@ private slots:
 	void about();
 	void aboutQt();
 	void dummyCommand();
-	
+
 	void actNew();
 	void actOpen();
 	void actSave();
 	void actSaveAs();
 	void actImport();
 	void actExport();
-	
+
 	void hsizeChanged(int hsize);
 	void vsizeChanged(int vsize);
-	
+
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
 
 	void traceEnabledChanged(bool enabled);
-	
+
 	void editorTabChanged(int i);
 	void tabChanged(int i);
-	
+
 private:
 	void updateInitialization(bool visible);
-	
+
 	void clearEditor();
 	void clearUndoStack();
 
@@ -119,21 +122,21 @@ private:
 	QUndoStack *m_UndoStack;
 
 	InteractiveViewport *m_EmulatorViewport;
-	
+
 	DlEditor *m_DlEditor;
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
-	
+
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
-	
+
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
-	
+
 	// Controls
 	QDockWidget *m_ControlsDock;
 	QCheckBox *m_StepEnabled;
@@ -141,7 +144,7 @@ private:
 	QCheckBox *m_TraceEnabled;
 	QSpinBox *m_TraceX;
 	QSpinBox *m_TraceY;
-	
+
 	QMenu *m_FileMenu;
 	QMenu *m_EditMenu;
 	QMenu *m_ViewportMenu;
@@ -165,7 +168,7 @@ private:
 	QAction *m_RedoAct;
 	QAction *m_DummyAct;
 	// QAction *m_SaveScreenshotAct;
-	
+
 	QString m_CurrentFile;
 
 }; /* class MainWindow */
