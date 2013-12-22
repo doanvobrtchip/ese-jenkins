@@ -511,12 +511,14 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		}
 	}
 
-	int finalIndex = -1;
+	int p;
 	if (!failId)
 	{
 		// for each possible parameter
 		bool failParam = false;
-		for (int p = 0, pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
+		int finalIndex = -1;
+		int pq;
+		for (p = 0, pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
 		{
 			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
 		CombineParameter:
@@ -693,10 +695,13 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 	}
 
 	// Clear unfilled to be safe
-	/*for (int p = finalIndex + 1; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+	if (parsed.ValidId)
 	{
-		parsed.Parameter[p] = 0;
-	}*/
+		for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+		{
+			parsed.Parameter[p] = 0;
+		}
+	}
 }
 
 uint32_t DlParser::compile(const DlParsed &parsed)
