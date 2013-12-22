@@ -70,7 +70,7 @@ public:
 
 	void setUndoStack(QUndoStack *undo_stack);
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
-	
+
 	void beginUndoCombine();
 	void endUndoCombine();
 
@@ -84,6 +84,7 @@ protected:
 	virtual void resizeEvent(QResizeEvent *event);
 	virtual void keyPressEvent(QKeyEvent *e);
 	virtual void contextMenuEvent(QContextMenuEvent *event);
+	virtual void focusInEvent(QFocusEvent *event);
 
 private slots:
 	void updateLineNumberAreaWidth(int newBlockCount);

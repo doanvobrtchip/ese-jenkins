@@ -248,6 +248,7 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed)
 	//m_CodeEditor->setTextCursor(c);
 	c.select(QTextCursor::LineUnderCursor);
 	c.insertText(linestr);
+	// editorCursorPositionChanged() needed? // VERIFY
 }
 
 const DlParsed &DlEditor::getLine(int line) const
@@ -261,6 +262,7 @@ void DlEditor::selectLine(int line)
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	m_CodeEditor->setTextCursor(c);
 	editingLine(m_CodeEditor->document()->findBlockByNumber(line));
+	// editorCursorPositionChanged() instead of editingLine? // VERIFY
 }
 
 void DlEditor::editingLine(QTextBlock block)
@@ -272,6 +274,7 @@ void DlEditor::editingLine(QTextBlock block)
 		|| m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
 		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid)
 	{
+		m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
 		m_PropLine = block.blockNumber();
 		m_PropIdLeft = m_DisplayListParsed[m_PropLine].IdLeft;
 		m_PropIdRight = m_DisplayListParsed[m_PropLine].IdRight;
@@ -279,7 +282,6 @@ void DlEditor::editingLine(QTextBlock block)
 		if (m_PropIdValid)
 		{
 			m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
-			m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
 			bool ok = false;
 			// const uint32_t *p = m_DisplayListParsed[i].Parameter;
 			if (m_DisplayListParsed[m_PropLine].IdLeft == FT800EMU_DL_VERTEX2F)

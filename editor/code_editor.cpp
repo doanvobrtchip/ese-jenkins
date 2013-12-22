@@ -76,6 +76,12 @@ m_LastCombineId(917681768)
 	highlightCurrentLine();
 }
 
+void CodeEditor::focusInEvent(QFocusEvent *event)
+{
+	QPlainTextEdit::focusInEvent(event);
+	cursorPositionChanged();
+}
+
 void CodeEditor::setUndoStack(QUndoStack *undo_stack)
 {
 	// setUndoRedoEnabled(undo_stack == NULL);
