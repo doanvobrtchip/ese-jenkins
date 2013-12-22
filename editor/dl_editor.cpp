@@ -32,6 +32,7 @@
 #include "code_editor.h"
 #include "dl_highlighter.h"
 #include "properties_editor.h"
+#include "toolbox.h"
 
 using namespace std;
 
@@ -278,6 +279,7 @@ void DlEditor::editingLine(QTextBlock block)
 		if (m_PropIdValid)
 		{
 			m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
+			m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
 			bool ok = false;
 			// const uint32_t *p = m_DisplayListParsed[i].Parameter;
 			if (m_DisplayListParsed[m_PropLine].IdLeft == FT800EMU_DL_VERTEX2F)

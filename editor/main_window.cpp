@@ -899,6 +899,7 @@ void MainWindow::incbLanguageCode()
 void MainWindow::editorTabChanged(int i)
 {
 	m_EmulatorViewport->unsetEditorLine();
+	m_Toolbox->unsetEditorLine();
 	bool cmdTop = true;
 	bool dlTop = true;
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
