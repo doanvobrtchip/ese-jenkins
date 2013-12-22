@@ -63,6 +63,10 @@ protected:
 	virtual void enterEvent(QEvent *e);
 	virtual void leaveEvent(QEvent *e);
 
+	virtual void dropEvent(QDropEvent *e);
+	virtual void dragMoveEvent(QDragMoveEvent *e);
+	virtual void dragEnterEvent(QDragEnterEvent *e);
+
 private slots:
 	void automaticChecked();
 	void touchChecked();

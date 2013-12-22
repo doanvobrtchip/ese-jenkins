@@ -22,6 +22,7 @@
 #include <QToolBar>
 #include <QPainter>
 #include <QPen>
+#include <QListWidget>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -31,6 +32,7 @@
 // Project includes
 #include "main_window.h"
 #include "code_editor.h"
+#include "toolbox.h"
 
 namespace FT800EMUQT {
 
@@ -60,6 +62,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
+	setAcceptDrops(true);
 
 	QActionGroup *cursorGroup = new QActionGroup(this);
 
@@ -998,6 +1001,33 @@ void InteractiveViewport::leaveEvent(QEvent *e)
 	m_MouseOver = false;
 
 	EmulatorViewport::leaveEvent(e);
+}
+
+void InteractiveViewport::dropEvent(QDropEvent *e)
+{
+	// TODO: Bitmaps from files, etc
+	if (e->source() == m_MainWindow->toolbox()->listWidget())
+	{
+		e->accept();
+		printf("Dropped item from toolbox, type %i\n", m_MainWindow->toolbox()->getSelection());
+	}
+}
+
+void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
+{
+	// TODO: Bitmaps from files, etc
+	if (e->source() == m_MainWindow->toolbox()->listWidget())
+	{
+		e->acceptProposedAction();
+	}
+}
+void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
+{
+	// TODO: Bitmaps from files, etc
+	if (e->source() == m_MainWindow->toolbox()->listWidget())
+	{
+		e->acceptProposedAction();
+	}
 }
 
 } /* namespace FT800EMUQT */
