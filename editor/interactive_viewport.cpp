@@ -51,6 +51,7 @@ namespace FT800EMUQT {
 #define POINTER_EDIT_WIDGET_SIZE_TOPRIGHT (POINTER_EDIT_WIDGET_SIZE_TOP | POINTER_EDIT_WIDGET_SIZE_RIGHT)
 #define POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_LEFT)
 #define POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_RIGHT)
+#define POINTER_INSERT 0x0200
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
@@ -91,16 +92,92 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	edit->setStatusTip(tr("Interactive editing tools"));
 	edit->setCheckable(true);
 
-	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Cursor"));
-	toolBar->addAction(automatic);
-	toolBar->addAction(touch);
-	toolBar->addAction(trace);
-	toolBar->addAction(edit);
+	QToolBar *cursorToolBar = m_MainWindow->addToolBar(tr("Cursor"));
+	cursorToolBar->addAction(automatic);
+	cursorToolBar->addAction(touch);
+	cursorToolBar->addAction(trace);
+	cursorToolBar->addAction(edit);
+
+	// TODO: Sexy toolbar icons.
+
+	// icon something
+	m_Insert = new QAction(this);
+	m_Insert->setText(tr("Insert"));
+	m_Insert->setStatusTip(tr("Place a new vertex or clone the selected widget directly on the screen"));
+	m_Insert->setCheckable(true);
+
+	/*
+	// icon arrow left
+	QAction *decrease = new QAction(this);
+	// connect(decrease, SIGNAL(triggered()), this, SLOT(backTriggered()));
+	decrease->setText(tr("Back"));
+	decrease->setStatusTip(tr("Move selected vertex or widget behind the preceding operation"));
+
+	// icon arrow right
+	QAction *increase = new QAction(this);
+	// connect(increase, SIGNAL(triggered()), this, SLOT(frontTriggered()));
+	increase->setText(tr("Front"));
+	increase->setStatusTip(tr("Move selected vertex or widget in front of the following operation"));
+	*/
+
+	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Toolbar"));
+	toolBar->addAction(m_Insert);
+	// toolBar->addAction(decrease);
+	// toolBar->addAction(increase);
 }
 
 InteractiveViewport::~InteractiveViewport()
 {
 
+}
+
+/*
+
+LINE_WIDTH(24)
+POINT_SIZE(36)
+BEGIN(LINE_STRIP)
+CALL(8)
+END()
+BEGIN(POINTS)
+CALL(8)
+END()
+VERTEX2II(50, 50, 0, 0)
+RETURN()
+
+*/
+
+static bool isValidInsert(const DlParsed &parsed)
+{
+	if (parsed.ValidId)
+	{
+		if (parsed.IdLeft == FT800EMU_DL_VERTEX2II
+			|| parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+		{
+			return true;
+		}
+		else if (parsed.IdLeft == 0xFFFFFF00)
+		{
+			switch (parsed.IdRight | 0xFFFFFF00)
+			{
+			case CMD_TEXT:
+			case CMD_BUTTON:
+			case CMD_KEYS:
+			case CMD_PROGRESS:
+			case CMD_SLIDER:
+			case CMD_SCROLLBAR:
+			case CMD_TOGGLE:
+			case CMD_GAUGE:
+			case CMD_CLOCK:
+			case CMD_SPINNER:
+			case CMD_TRACK:
+			case CMD_DIAL:
+			case CMD_NUMBER:
+			case CMD_SKETCH:
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 // Graphics callback synchronized to the emulator thread, use to get debug information for a frame
@@ -500,11 +577,13 @@ void InteractiveViewport::setEditorLine(DlEditor *editor, int line)
 	m_PreferTraceCursor = false;
 	m_LineEditor = editor;
 	m_LineNumber = line;
+	// printf("Set line editor\n");
 }
 
 void InteractiveViewport::unsetEditorLine()
 {
 	m_LineEditor = NULL;
+	// printf("Unset line editor\n");
 }
 
 void InteractiveViewport::automaticChecked()
@@ -540,6 +619,22 @@ void InteractiveViewport::updatePointerMethod()
 	}
 	else
 	{
+		if (m_Insert->isChecked())
+		{
+			const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+			if (isValidInsert(parsed))
+			{
+				// Special case override cursur (not a filter), strange...
+				m_PointerMethod = POINTER_INSERT;
+				setCursor(Qt::CrossCursor);
+				return;
+			}
+			else
+			{
+				printf("Uncheck insert\n");
+				m_Insert->setChecked(false);
+			}
+		}
 		if (m_PreferTraceCursor)
 		{
 			goto PreferTraceCursor;
@@ -944,6 +1039,26 @@ RETURN()
 			}
 		}
 		break;
+	case POINTER_INSERT:
+		if (e->button() == Qt::LeftButton)
+		{
+			int line = m_LineNumber;
+			DlParsed pa = m_LineEditor->getLine(line);
+			if (isValidInsert(pa))
+			{
+				++line;
+				pa.Parameter[0] = e->pos().x();
+				pa.Parameter[1] = e->pos().y();
+				m_LineEditor->insertLine(line, pa);
+				m_LineEditor->selectLine(line);
+			}
+			break;
+		}
+		else if (e->button() == Qt::MidButton
+			|| e->button() == Qt::RightButton)
+		{
+			m_Insert->setChecked(false);
+		}
 	default:
 		if (m_PointerMethod & POINTER_EDIT_WIDGET_MOVE)
 		{
@@ -1005,11 +1120,212 @@ void InteractiveViewport::leaveEvent(QEvent *e)
 
 void InteractiveViewport::dropEvent(QDropEvent *e)
 {
+	// Should probably lock the display list at this point ... ?
 	// TODO: Bitmaps from files, etc
 	if (e->source() == m_MainWindow->toolbox()->listWidget())
 	{
-		e->accept();
-		printf("Dropped item from toolbox, type %i\n", m_MainWindow->toolbox()->getSelection());
+		if (m_LineEditor)
+		{
+			e->accept();
+
+			uint32_t selection = m_MainWindow->toolbox()->getSelection();
+			int line = m_LineNumber;
+			if (m_LineEditor->getLine(line).ValidId)
+			{
+				// printf("Valid Id\n");
+				if (m_LineEditor->getLine(line).IdLeft == FT800EMU_DL_VERTEX2II
+					|| m_LineEditor->getLine(line).IdLeft == FT800EMU_DL_VERTEX2F)
+				{
+					// Search down for end of vertex set
+					for (; line < FT800EMU_DL_SIZE /*&& line < m_LineEditor->codeEditor()->document()->blockCount()*/; ++line)
+					{
+						printf("line %i\n", line);
+						const DlParsed &pa = m_LineEditor->getLine(line);
+						if (!pa.ValidId)
+						{
+							break;
+						}
+						if (pa.IdLeft == 0)
+						{
+							if (pa.IdRight == FT800EMU_DL_END)
+							{
+								++line;
+								break;
+							}
+							else if (pa.IdRight == FT800EMU_DL_BEGIN
+								|| pa.IdRight == FT800EMU_DL_RETURN
+								|| pa.IdRight == FT800EMU_DL_JUMP)
+							{
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					// Write after current line
+					++line;
+				}
+			}
+
+			// printf("Dropped item from toolbox, type %i\n", selection);
+
+			// void insertLine(int line, const DlParsed &parsed);
+			if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
+			{
+				m_LineEditor->codeEditor()->beginUndoCombine();
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0xFFFFFF00;
+				pa.IdRight = selection & 0xFF;
+				pa.Parameter[0] = e->pos().x();
+				pa.Parameter[1] = e->pos().y();
+				pa.ExpectedStringParameter = false;
+				switch (selection)
+				{
+				case CMD_TEXT:
+					pa.Parameter[2] = 28;
+					pa.Parameter[3] = 0;
+					pa.StringParameter = "Text";
+					pa.ExpectedStringParameter = true;
+					pa.ExpectedParameterCount = 5;
+					break;
+				case CMD_BUTTON:
+					pa.Parameter[2] = 120;
+					pa.Parameter[3] = 36;
+					pa.Parameter[4] = 27;
+					pa.Parameter[5] = 0;
+					pa.StringParameter = "Button";
+					pa.ExpectedStringParameter = true;
+					pa.ExpectedParameterCount = 7;
+					break;
+				case CMD_KEYS:
+					pa.Parameter[2] = 160;
+					pa.Parameter[3] = 36;
+					pa.Parameter[4] = 29;
+					pa.Parameter[5] = 0;
+					pa.StringParameter = "keys";
+					pa.ExpectedStringParameter = true;
+					pa.ExpectedParameterCount = 7;
+					break;
+				case CMD_PROGRESS:
+					pa.Parameter[2] = 180;
+					pa.Parameter[3] = 12;
+					pa.Parameter[4] = 0;
+					pa.Parameter[5] = 20;
+					pa.Parameter[6] = 100;
+					pa.ExpectedParameterCount = 7;
+					break;
+				case CMD_SLIDER:
+					pa.Parameter[2] = 80;
+					pa.Parameter[3] = 8;
+					pa.Parameter[4] = 0;
+					pa.Parameter[5] = 30;
+					pa.Parameter[6] = 100;
+					pa.ExpectedParameterCount = 7;
+					break;
+				case CMD_SCROLLBAR:
+					pa.Parameter[2] = 16;
+					pa.Parameter[3] = 160;
+					pa.Parameter[4] = 0;
+					pa.Parameter[5] = 120;
+					pa.Parameter[6] = 60;
+					pa.Parameter[7] = 480;
+					pa.ExpectedParameterCount = 8;
+					break;
+				case CMD_TOGGLE:
+					pa.Parameter[2] = 40;
+					pa.Parameter[3] = 27;
+					pa.Parameter[4] = 0;
+					pa.Parameter[5] = 0;
+					pa.StringParameter = "on\\xFFoff";
+					pa.ExpectedStringParameter = true;
+					pa.ExpectedParameterCount = 7;
+					break;
+				case CMD_GAUGE:
+					pa.Parameter[2] = 36;
+					pa.Parameter[3] = 0;
+					pa.Parameter[4] = 4;
+					pa.Parameter[5] = 8;
+					pa.Parameter[6] = 40;
+					pa.Parameter[7] = 100;
+					pa.ExpectedParameterCount = 8;
+					break;
+				case CMD_CLOCK:
+					pa.Parameter[2] = 36;
+					pa.Parameter[3] = 0;
+					pa.Parameter[4] = 13;
+					pa.Parameter[5] = 51;
+					pa.Parameter[6] = 17;
+					pa.Parameter[7] = 0;
+					pa.ExpectedParameterCount = 8;
+					break;
+				case CMD_DIAL:
+					pa.Parameter[2] = 36;
+					pa.Parameter[3] = 0;
+					pa.Parameter[4] = 6144;
+					pa.ExpectedParameterCount = 5;
+					break;
+				case CMD_NUMBER:
+					pa.Parameter[2] = 28;
+					pa.Parameter[3] = 0;
+					pa.Parameter[4] = 42;
+					pa.ExpectedParameterCount = 5;
+					break;
+				case CMD_SPINNER:
+					pa.Parameter[2] = 0;
+					pa.Parameter[3] = 0;
+					pa.ExpectedParameterCount = 4;
+					break;
+/*
+
+CMD_TEXT(19, 23, 28, 0, "Text")
+CMD_BUTTON(15, 59, 120, 36, 27, 0, "Button")
+CMD_KEYS(14, 103, 160, 36, 29, 0, "keys")
+CMD_PROGRESS(15, 148, 180, 12, 0, 20, 100)
+CMD_SLIDER(15, 174, 80, 8, 0, 30, 100)
+CMD_SCROLLBAR(426, 53, 16, 160, 0, 120, 60, 480)
+CMD_TOGGLE(22, 199, 40, 27, 0, 0, "on\\xFFoff")
+CMD_GAUGE(274, 55, 36, 0, 4, 8, 40, 100)
+CMD_CLOCK(191, 55, 36, 0, 13, 51, 17, 0)
+CMD_DIAL(356, 55, 36, 0, 6144)
+CMD_NUMBER(14, 233, 28, 0, 42)
+CMD_SPINNER(305, 172, 0, 0)
+
+*/
+				}
+				m_LineEditor->insertLine(line, pa);
+				m_LineEditor->selectLine(line);
+				m_LineEditor->codeEditor()->endUndoCombine();
+			}
+			else // Primitive
+			{
+				m_LineEditor->codeEditor()->beginUndoCombine();
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = FT800EMU_DL_BEGIN;
+				pa.Parameter[0] = selection;
+				m_LineEditor->insertLine(line, pa);
+				++line;
+				pa.IdLeft = FT800EMU_DL_VERTEX2II;
+				pa.IdRight = 0;
+				pa.Parameter[0] = e->pos().x();
+				pa.Parameter[1] = e->pos().y();
+				m_LineEditor->insertLine(line, pa);
+				++line;
+				pa.IdLeft = 0;
+				pa.IdRight = FT800EMU_DL_END;
+				m_LineEditor->insertLine(line, pa);
+				m_LineEditor->selectLine(line - 1);
+				m_LineEditor->codeEditor()->endUndoCombine();
+				m_Insert->setChecked(true);
+			}
+		}
+		else
+		{
+			printf("Warning: No line editor\n");
+		}
 	}
 }
 
@@ -1018,7 +1334,14 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 	// TODO: Bitmaps from files, etc
 	if (e->source() == m_MainWindow->toolbox()->listWidget())
 	{
-		e->acceptProposedAction();
+		if (m_LineEditor)
+		{
+			e->acceptProposedAction();
+		}
+		else
+		{
+			printf("Warning: No line editor\n");
+		}
 	}
 }
 void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
@@ -1026,7 +1349,14 @@ void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
 	// TODO: Bitmaps from files, etc
 	if (e->source() == m_MainWindow->toolbox()->listWidget())
 	{
-		e->acceptProposedAction();
+		if (m_LineEditor)
+		{
+			e->acceptProposedAction();
+		}
+		else
+		{
+			printf("Warning: No line editor\n");
+		}
 	}
 }
 

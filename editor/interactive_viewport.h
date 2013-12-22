@@ -25,6 +25,8 @@
 #include "emulator_viewport.h"
 #include "dl_editor.h"
 
+class QAction;
+
 namespace FT800EMUQT {
 
 class MainWindow;
@@ -75,6 +77,7 @@ private slots:
 
 private:
 	MainWindow *m_MainWindow;
+	QAction *m_Insert;
 
 	bool m_PreferTraceCursor;
 	bool m_TraceEnabled;

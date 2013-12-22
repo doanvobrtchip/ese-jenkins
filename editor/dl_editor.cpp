@@ -217,6 +217,7 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	for (int i = newBlockCount; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
 	{
 		m_DisplayListParsed[i] = DlParsed();
+		m_DisplayListParsed[i].ValidId = false;
 		m_DisplayListShared[i] = DISPLAY();
 	}
 	m_DisplayListModified = true;
@@ -251,6 +252,25 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed)
 	// editorCursorPositionChanged() needed? // VERIFY
 }
 
+void DlEditor::insertLine(int line, const DlParsed &parsed)
+{
+	QString linestr = DlParser::toString(parsed);
+	if (line == 0)
+	{
+		QTextCursor c = m_CodeEditor->textCursor();
+		c.setPosition(0);
+		c.insertText(linestr + "\n");
+	}
+	else
+	{
+		QTextCursor c = m_CodeEditor->textCursor();
+		c.setPosition(m_CodeEditor->document()->findBlockByNumber(line - 1).position());
+		c.movePosition(QTextCursor::EndOfLine, QTextCursor::MoveAnchor);
+		c.insertText("\n" + linestr);
+	}
+	// editorCursorPositionChanged() needed? // VERIFY
+}
+
 const DlParsed &DlEditor::getLine(int line) const
 {
 	return m_DisplayListParsed[line];
@@ -274,14 +294,14 @@ void DlEditor::editingLine(QTextBlock block)
 		|| m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
 		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid)
 	{
-		m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
 		m_PropLine = block.blockNumber();
 		m_PropIdLeft = m_DisplayListParsed[m_PropLine].IdLeft;
 		m_PropIdRight = m_DisplayListParsed[m_PropLine].IdRight;
 		m_PropIdValid = m_DisplayListParsed[m_PropLine].ValidId;
+		m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
+		m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
 		if (m_PropIdValid)
 		{
-			m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
 			bool ok = false;
 			// const uint32_t *p = m_DisplayListParsed[i].Parameter;
 			if (m_DisplayListParsed[m_PropLine].IdLeft == FT800EMU_DL_VERTEX2F)
@@ -1431,7 +1451,6 @@ void DlEditor::editingLine(QTextBlock block)
 		}
 		else
 		{
-			m_MainWindow->viewport()->unsetEditorLine();
 			if (m_DisplayListParsed[m_PropLine].IdText.size() > 0)
 			{
 				QString message;

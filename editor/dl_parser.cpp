@@ -697,6 +697,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 	// Clear unfilled to be safe
 	if (parsed.ValidId)
 	{
+		++p;
 		for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
 		{
 			parsed.Parameter[p] = 0;

@@ -505,6 +505,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
 
 	actNew();
+	s_CmdEditor->codeEditor()->setFocus();
 }
 
 MainWindow::~MainWindow()

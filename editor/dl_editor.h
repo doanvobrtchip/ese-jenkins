@@ -51,32 +51,33 @@ class PropertiesEditor;
 class DlEditor : public QWidget
 {
 	Q_OBJECT
-	
+
 public:
 	DlEditor(MainWindow *parent, bool coprocessor = false);
 	virtual ~DlEditor();
-	
+
 	void setUndoStack(QUndoStack *undo_stack);
 	void setPropertiesEditor(PropertiesEditor *props) { m_PropertiesEditor = props; }
 	void setModeMacro();
-	
+
 	void clearUndoStack();
 	void clear();
-	
+
 	void lockDisplayList(); // mutex
 	void unlockDisplayList(); // mutex
 	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
 	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
 	inline bool isDisplayListModified() { bool result = m_DisplayListModified; m_DisplayListModified = false; return result; }
-	
+
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
-	
+
 	// Replace a line (creates undo stack), used for example from the interactive viewport
 	void replaceLine(int line, const DlParsed &parsed);
 	const DlParsed &getLine(int line) const;
 	// Move cursor to line
 	void selectLine(int line);
-	
+	void insertLine(int line, const DlParsed &parsed);
+
 	bool isCoprocessor() { return m_ModeCoprocessor; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
@@ -92,7 +93,7 @@ public slots:
 private:
 	void parseLine(QTextBlock block);
 	void editingLine(QTextBlock block);
-	
+
 	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
@@ -106,20 +107,20 @@ private:
 	QStringList m_CompleterIdentifiers;
 	QStringList m_CompleterParams;
 	bool m_CompleterIdentifiersActive;
-	
+
 	PropertiesEditor *m_PropertiesEditor;
 	int m_PropLine;
 	int m_PropIdLeft;
 	int m_PropIdRight;
 	bool m_PropIdValid;
-	
+
 	bool m_ModeMacro;
 	bool m_ModeCoprocessor;
 
 private:
 	DlEditor(const DlEditor &);
 	DlEditor &operator=(const DlEditor &);
-	
+
 }; /* class DlEditor */
 
 } /* namespace FT800EMUQT */
