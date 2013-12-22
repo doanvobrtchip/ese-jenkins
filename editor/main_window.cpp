@@ -59,6 +59,7 @@
 #include "interactive_viewport.h"
 #include "properties_editor.h"
 #include "code_editor.h"
+#include "toolbox.h"
 
 namespace FT800EMUQT {
 
@@ -446,6 +447,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
+	m_ToolboxDock(NULL), m_Toolbox(NULL),
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
@@ -694,6 +696,71 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
 	}
 
+	// Controls
+	{
+		m_ControlsDock = new QDockWidget(this);
+		m_ControlsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		QWidget *widget = new QWidget(this);
+		QVBoxLayout *layout = new QVBoxLayout(widget);
+
+		// Step
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Display List Steps"));
+			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+
+			m_StepEnabled = new QCheckBox(this);
+			m_StepEnabled->setChecked(false);
+			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
+			groupLayout->addWidget(m_StepEnabled);
+			m_StepCount = new QSpinBox(this);
+			m_StepCount->setMinimum(1);
+			m_StepCount->setMaximum(2048 * 64);
+			m_StepCount->setEnabled(false);
+			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
+			groupLayout->addWidget(m_StepCount);
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+
+		// Trace
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Trace"));
+			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+
+			m_TraceEnabled = new QCheckBox(this);
+			m_TraceEnabled->setChecked(false);
+			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
+			groupLayout->addWidget(m_TraceEnabled);
+			m_TraceX = new QSpinBox(this);
+			m_TraceX->setMinimum(0);
+			m_TraceX->setMaximum(511);
+			m_TraceX->setEnabled(false);
+			groupLayout->addWidget(m_TraceX);
+			m_TraceY = new QSpinBox(this);
+			m_TraceY->setMinimum(0);
+			m_TraceY->setMaximum(511);
+			m_TraceY->setEnabled(false);
+			groupLayout->addWidget(m_TraceY);
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+
+		layout->addStretch();
+		widget->setLayout(layout);
+		scrollArea->setWidget(widget);
+		m_ControlsDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_ControlsDock);
+		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
+	}
+
 	// Registers
 	{
 		m_RegistersDock = new QDockWidget(this);
@@ -765,69 +832,19 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
 	}
 
-	// Controls
+	// Toolbox
 	{
-		m_ControlsDock = new QDockWidget(this);
-		m_ControlsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ToolboxDock = new QDockWidget(this);
+		m_ToolboxDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
-		QWidget *widget = new QWidget(this);
-		QVBoxLayout *layout = new QVBoxLayout(widget);
-
-		// Step
-		{
-			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Display List Steps"));
-			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
-
-			m_StepEnabled = new QCheckBox(this);
-			m_StepEnabled->setChecked(false);
-			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
-			groupLayout->addWidget(m_StepEnabled);
-			m_StepCount = new QSpinBox(this);
-			m_StepCount->setMinimum(1);
-			m_StepCount->setMaximum(2048 * 64);
-			m_StepCount->setEnabled(false);
-			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
-			groupLayout->addWidget(m_StepCount);
-
-			group->setLayout(groupLayout);
-			layout->addWidget(group);
-		}
-
-		// Trace
-		{
-			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Trace"));
-			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
-
-			m_TraceEnabled = new QCheckBox(this);
-			m_TraceEnabled->setChecked(false);
-			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
-			groupLayout->addWidget(m_TraceEnabled);
-			m_TraceX = new QSpinBox(this);
-			m_TraceX->setMinimum(0);
-			m_TraceX->setMaximum(511);
-			m_TraceX->setEnabled(false);
-			groupLayout->addWidget(m_TraceX);
-			m_TraceY = new QSpinBox(this);
-			m_TraceY->setMinimum(0);
-			m_TraceY->setMaximum(511);
-			m_TraceY->setEnabled(false);
-			groupLayout->addWidget(m_TraceY);
-
-			group->setLayout(groupLayout);
-			layout->addWidget(group);
-		}
-
-		layout->addStretch();
-		widget->setLayout(layout);
-		scrollArea->setWidget(widget);
-		m_ControlsDock->setWidget(scrollArea);
-		addDockWidget(Qt::LeftDockWidgetArea, m_ControlsDock);
-		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
+		m_Toolbox = new Toolbox(this);
+		scrollArea->setWidget(m_Toolbox);
+		m_ToolboxDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_ToolboxDock);
+		m_WidgetsMenu->addAction(m_ToolboxDock->toggleViewAction());
 	}
 
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
@@ -843,6 +860,7 @@ void MainWindow::createDockWindows()
 	}
 
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
+	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
 
 	// Event for all tab changes
 	tabList = findChildren<QTabBar *>();
@@ -864,6 +882,7 @@ void MainWindow::translateDockWindows()
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
 }

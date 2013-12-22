@@ -32,11 +32,11 @@ class QSpinBox;
 class QCheckBox;
 
 namespace FT800EMUQT {
-	// class CommandLog;
-	class InteractiveViewport;
-	class DlEditor;
-	// class EmulatorConfig;
-	class PropertiesEditor;
+
+class InteractiveViewport;
+class DlEditor;
+class PropertiesEditor;
+class Toolbox;
 
 /**
  * MainWindow
@@ -131,6 +131,9 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+
+	QDockWidget *m_ToolboxDock;
+	Toolbox *m_Toolbox;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
