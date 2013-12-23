@@ -70,6 +70,13 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 
 	m_Completer = new QCompleter(m_CompleterModel, m_CodeEditor);
 	m_CodeEditor->setCompleter(m_Completer);
+
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		m_DisplayListParsed[i] = DlParsed();
+		m_DisplayListParsed[i].ValidId = false;
+		m_DisplayListShared[i] = DISPLAY();
+	}
 }
 
 DlEditor::~DlEditor()

@@ -260,7 +260,7 @@ void loop()
 			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
 			{
 				swrend();
-				wr32(REG_CMD_WRITE, wp);
+				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				do
 				{
 					if (!s_EmulatorRunning) return;
@@ -285,14 +285,14 @@ void loop()
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 			}
 			int wpn = 0;
-			coprocessorWrites[wp >> 2] = i;
+			coprocessorWrites[(wp & 0xFFF) >> 2] = i;
 			swr32(cmdList[i]);
 			// printf("cmd %i", cmdList[i]);
 			for (int j = cmdParamCache[i]; j < cmdParamCache[i + 1]; ++j)
 			{
 				++wpn;
 				// printf("; param %i", s_CmdParamCache[j]);
-				coprocessorWrites[(wp >> 2) + wpn] = i;
+				coprocessorWrites[((wp >> 2) + wpn) & 0x3FF] = i;
 				swr32(s_CmdParamCache[j]);
 			}
 			// printf("\n");
@@ -372,8 +372,10 @@ void loop()
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
 
 			// Finish all processing
-			while ((wp & 0xFFF) != rd32(REG_CMD_READ))
+			int rpl = rd32(REG_CMD_READ);
+			while ((wp & 0xFFF) != rpl)
 			{
+				rpl = rd32(REG_CMD_READ);
 				if (!s_EmulatorRunning) return;
 			}
 			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
