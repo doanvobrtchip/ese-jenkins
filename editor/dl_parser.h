@@ -75,7 +75,7 @@ struct DlParsed
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
-	uint32_t Parameter[DLPARSED_MAX_PARAMETER];
+	union { uint32_t U; int I; } Parameter[DLPARSED_MAX_PARAMETER];
 
 	bool ValidId;
 	bool ValidParameter[DLPARSED_MAX_PARAMETER];

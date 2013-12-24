@@ -547,6 +547,11 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						++i;
 						goto ParseString;
 					}
+					else if (parsed.ParameterLength[pq] == 0 && (c == '-'))
+					{
+						pss << c;
+						++parsed.ParameterLength[pq];
+					}
 					else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
 					{
 						pss << c;
@@ -636,7 +641,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					if (ps.length() >= 2)
 					{
 						std::string psstr = ps.substr(1, ps.size() - 2);
-						parsed.Parameter[p] = 0;
+						parsed.Parameter[p].U = 0;
 						parsed.StringParameter = psstr; // TODO: Parse escape characters
 						parsed.ValidParameter[pq] = true;
 						parsed.StringParameterAt = pq;
@@ -644,7 +649,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				}
 				else if (parsed.NumericParameter[pq] && ps.length() > 0)
 				{
-					parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | atoi(ps.c_str());
+					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | atoi(ps.c_str());
 					parsed.ValidParameter[pq] = true;
 				}
 				else
@@ -652,7 +657,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					std::map<std::string, int>::iterator it = s_ParamMap.find(ps);
 					if (it != s_ParamMap.end())
 					{
-						parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+						parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
 						parsed.ValidParameter[pq] = true;
 					}
 					else if (coprocessor)
@@ -660,7 +665,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						it = s_CmdParamMap.find(ps);
 						if (it != s_CmdParamMap.end())
 						{
-							parsed.Parameter[p] = (combinedParameter ? parsed.Parameter[p] : 0) | it->second;
+							parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
 							parsed.ValidParameter[pq] = true;
 						}
 					}
@@ -700,14 +705,14 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		++p;
 		for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
 		{
-			parsed.Parameter[p] = 0;
+			parsed.Parameter[p].U = 0;
 		}
 	}
 }
 
 uint32_t DlParser::compile(const DlParsed &parsed)
 {
-	const uint32_t *p = parsed.Parameter;
+	const uint32_t *p = static_cast<const uint32_t *>(static_cast<const void *>(parsed.Parameter));
 	if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
 	{
 		return VERTEX2F(p[0], p[1]);
@@ -816,40 +821,40 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_FGCOLOR:
 				case CMD_GRADCOLOR:
 				{
-					uint32_t rgba = parsed.Parameter[0] << 24
-						| parsed.Parameter[1] << 16
-						| parsed.Parameter[2] << 8
-						| parsed.Parameter[3];
+					uint32_t rgba = parsed.Parameter[0].U << 24
+						| parsed.Parameter[1].U << 16
+						| parsed.Parameter[2].U << 8
+						| parsed.Parameter[3].U;
 					compiled.push_back(rgba);
 					break;
 				}
 				case CMD_GRADIENT:
 				{
-					uint32_t xy0 = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy0 = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy0);
-					uint32_t rgba0 = parsed.Parameter[2] << 24
-						| parsed.Parameter[3] << 16
-						| parsed.Parameter[4] << 8
-						| parsed.Parameter[5];
+					uint32_t rgba0 = parsed.Parameter[2].U << 24
+						| parsed.Parameter[3].U << 16
+						| parsed.Parameter[4].U << 8
+						| parsed.Parameter[5].U;
 					compiled.push_back(rgba0);
-					uint32_t xy1 = parsed.Parameter[7] << 16
-						| parsed.Parameter[6];
+					uint32_t xy1 = parsed.Parameter[7].U << 16
+						| parsed.Parameter[6].U;
 					compiled.push_back(xy1);
-					uint32_t rgba1 = parsed.Parameter[8] << 24
-						| parsed.Parameter[9] << 16
-						| parsed.Parameter[10] << 8
-						| parsed.Parameter[11];
+					uint32_t rgba1 = parsed.Parameter[8].U << 24
+						| parsed.Parameter[9].U << 16
+						| parsed.Parameter[10].U << 8
+						| parsed.Parameter[11].U;
 					compiled.push_back(rgba1);
 					break;
 				}
 				case CMD_TEXT:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t fo = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t fo = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(fo);
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
@@ -866,14 +871,14 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_BUTTON:
 				case CMD_KEYS:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wh);
-					uint32_t fo = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t fo = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(fo);
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
@@ -889,45 +894,45 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_PROGRESS:
 				case CMD_SLIDER:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wh);
-					uint32_t ov = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t ov = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(ov);
-					uint32_t r = parsed.Parameter[6] & 0xFFFF;
+					uint32_t r = parsed.Parameter[6].U & 0xFFFF;
 					compiled.push_back(r);
 					break;
 				}
 				case CMD_SCROLLBAR:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wh);
-					uint32_t ov = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t ov = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(ov);
-					uint32_t sr = parsed.Parameter[7] << 16
-						| parsed.Parameter[6] & 0xFFFF;
+					uint32_t sr = parsed.Parameter[7].U << 16
+						| parsed.Parameter[6].U & 0xFFFF;
 					compiled.push_back(sr);
 					break;
 				}
 				case CMD_TOGGLE:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wf = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wf = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wf);
-					uint32_t os = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t os = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(os);
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
@@ -942,43 +947,43 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				}
 				case CMD_GAUGE:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t ro = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t ro = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(ro);
-					uint32_t mm = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t mm = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(mm);
-					uint32_t vr = parsed.Parameter[7] << 16
-						| parsed.Parameter[6] & 0xFFFF;
+					uint32_t vr = parsed.Parameter[7].U << 16
+						| parsed.Parameter[6].U & 0xFFFF;
 					compiled.push_back(vr);
 					break;
 				}
 				case CMD_CLOCK:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t ro = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t ro = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(ro);
-					uint32_t hm = parsed.Parameter[5] << 16
-						| parsed.Parameter[4] & 0xFFFF;
+					uint32_t hm = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(hm);
-					uint32_t sm = parsed.Parameter[7] << 16
-						| parsed.Parameter[6] & 0xFFFF;
+					uint32_t sm = parsed.Parameter[7].U << 16
+						| parsed.Parameter[6].U & 0xFFFF;
 					compiled.push_back(sm);
 					break;
 				}
 				case CMD_SPINNER:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t ss = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t ss = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(ss);
 					break;
 				}
@@ -999,7 +1004,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_INTERRUPT:
 				case CMD_CALIBRATE:
 				{
-					compiled.push_back(parsed.Parameter[0]);
+					compiled.push_back(parsed.Parameter[0].U);
 					break;
 				}
 				case CMD_MEMWRITE:
@@ -1010,63 +1015,63 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_SCALE:
 				case CMD_SETFONT:
 				{
-					compiled.push_back(parsed.Parameter[0]);
-					compiled.push_back(parsed.Parameter[1]);
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
 					break;
 				}
 				case CMD_MEMSET:
 				case CMD_MEMCPY:
 				{
-					compiled.push_back(parsed.Parameter[0]);
-					compiled.push_back(parsed.Parameter[1]);
-					compiled.push_back(parsed.Parameter[2]);
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[2].U);
 					break;
 				}
 				case CMD_TRACK:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wh);
-					uint32_t t = parsed.Parameter[4] & 0xFFFF;
+					uint32_t t = parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(t);
 					break;
 				}
 				case CMD_DIAL:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t ro = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t ro = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(ro);
-					uint32_t v = parsed.Parameter[4] & 0xFFFF;
+					uint32_t v = parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(v);
 					break;
 				}
 				case CMD_NUMBER:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t fo = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t fo = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(fo);
-					compiled.push_back(parsed.Parameter[4]);
+					compiled.push_back(parsed.Parameter[4].U);
 					break;
 				}
 				case CMD_SKETCH:
 				{
-					uint32_t xy = parsed.Parameter[1] << 16
-						| parsed.Parameter[0] & 0xFFFF;
+					uint32_t xy = parsed.Parameter[1].U << 16
+						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[3] << 16
-						| parsed.Parameter[2] & 0xFFFF;
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(wh);
-					compiled.push_back(parsed.Parameter[4]);
-					uint32_t f = parsed.Parameter[5] & 0xFFFF;
+					compiled.push_back(parsed.Parameter[4].U);
+					uint32_t f = parsed.Parameter[5].U & 0xFFFF;
 					compiled.push_back(f);
 					break;
 				}
@@ -1584,11 +1589,11 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 				}
 				if (constantOpt)
 				{
-					optToString(res, parsed.Parameter[p], parsed.IdRight | 0xFFFFFF00);
+					optToString(res, parsed.Parameter[p].U, parsed.IdRight | 0xFFFFFF00);
 				}
 				else
 				{
-					res << parsed.Parameter[p];
+					res << parsed.Parameter[p].I;
 				}
 			}
 		}

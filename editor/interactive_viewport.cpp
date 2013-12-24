@@ -323,13 +323,13 @@ void InteractiveViewport::graphics(QImage *image)
 						int x, y;
 						if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 						{
-							x = pa.Parameter[0] >> 4;
-							y = pa.Parameter[1] >> 4;
+							x = pa.Parameter[0].I >> 4;
+							y = pa.Parameter[1].I >> 4;
 						}
 						else
 						{
-							x = pa.Parameter[0];
-							y = pa.Parameter[1];
+							x = pa.Parameter[0].U;
+							y = pa.Parameter[1].U;
 						}
 						p.setPen(outer);
 						p.drawLine(x - 4, y - 4, x + 4, y - 4);
@@ -354,13 +354,13 @@ void InteractiveViewport::graphics(QImage *image)
 				int x, y;
 				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
 				{
-					x = parsed.Parameter[0] >> 4;
-					y = parsed.Parameter[1] >> 4;
+					x = parsed.Parameter[0].I >> 4;
+					y = parsed.Parameter[1].I >> 4;
 				}
 				else
 				{
-					x = parsed.Parameter[0];
-					y = parsed.Parameter[1];
+					x = parsed.Parameter[0].U;
+					y = parsed.Parameter[1].U;
 				}
 				p.setPen(outer);
 				p.drawLine(x, y - 5, x, y - 12);
@@ -495,8 +495,8 @@ CMD_SCREENSAVER()
 						break;
 					}
 
-					int x = parsed.Parameter[0];
-					int y = parsed.Parameter[1];
+					int x = parsed.Parameter[0].I;
+					int y = parsed.Parameter[1].I;
 
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 					// Draw...
@@ -527,15 +527,15 @@ CMD_SCREENSAVER()
 						int w, h;
 						if (m_WidgetWH)
 						{
-							w = parsed.Parameter[2];
-							h = parsed.Parameter[3];
+							w = parsed.Parameter[2].I;
+							h = parsed.Parameter[3].I;
 						}
 						else
 						{
-							x = x - parsed.Parameter[2];
-							y = y - parsed.Parameter[2];
-							w = parsed.Parameter[2] * 2;
-							h = parsed.Parameter[2] * 2;
+							x = x - parsed.Parameter[2].I;
+							y = y - parsed.Parameter[2].I;
+							w = parsed.Parameter[2].I * 2;
+							h = parsed.Parameter[2].I * 2;
 						}
 						int x1 = x;
 						int y1 = y;
@@ -681,13 +681,13 @@ void InteractiveViewport::updatePointerMethod()
 							int x, y;
 							if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 							{
-								x = pa.Parameter[0] >> 4;
-								y = pa.Parameter[1] >> 4;
+								x = pa.Parameter[0].I >> 4;
+								y = pa.Parameter[1].I >> 4;
 							}
 							else
 							{
-								x = pa.Parameter[0];
-								y = pa.Parameter[1];
+								x = pa.Parameter[0].U;
+								y = pa.Parameter[1].U;
 							}
 
 							// Mouse over
@@ -723,22 +723,22 @@ void InteractiveViewport::updatePointerMethod()
 				if (m_WidgetXY)
 				{
 					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-					int x = parsed.Parameter[0];
-					int y = parsed.Parameter[1];
+					int x = parsed.Parameter[0].I;
+					int y = parsed.Parameter[1].I;
 					if (m_WidgetWH || m_WidgetR)
 					{
 						int w, h;
 						if (m_WidgetWH)
 						{
-							w = parsed.Parameter[2];
-							h = parsed.Parameter[3];
+							w = parsed.Parameter[2].I;
+							h = parsed.Parameter[3].I;
 						}
 						else
 						{
-							x = x - parsed.Parameter[2];
-							y = y - parsed.Parameter[2];
-							w = parsed.Parameter[2] * 2;
-							h = parsed.Parameter[2] * 2;
+							x = x - parsed.Parameter[2].I;
+							y = y - parsed.Parameter[2].I;
+							w = parsed.Parameter[2].I * 2;
+							h = parsed.Parameter[2].I * 2;
 						}
 						int x1 = x;
 						int y1 = y;
@@ -869,11 +869,11 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 			{
-				xd >>= 4;
-				yd >>= 4;
+				xd <<= 4;
+				yd <<= 4;
 			}
-			pa.Parameter[0] += xd;
-			pa.Parameter[1] += yd;
+			pa.Parameter[0].I += xd;
+			pa.Parameter[1].I += yd;
 			m_LineEditor->replaceLine(m_LineNumber, pa);
 		}
 		else
@@ -894,17 +894,17 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE)
 			{
-				pa.Parameter[0] += xd;
-				pa.Parameter[1] += yd;
+				pa.Parameter[0].I += xd;
+				pa.Parameter[1].I += yd;
 			}
 			else // resize, check top/bottom and left/right
 			{
-				int x = pa.Parameter[0];
-				int y = pa.Parameter[1];
+				int x = pa.Parameter[0].I;
+				int y = pa.Parameter[1].I;
 				if (m_WidgetWH)
 				{
-					int w = pa.Parameter[2];
-					int h = pa.Parameter[3];
+					int w = pa.Parameter[2].I;
+					int h = pa.Parameter[3].I;
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
 					{
 						y += yd;
@@ -923,14 +923,14 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					{
 						w += xd;
 					}
-					pa.Parameter[0] = x;
-					pa.Parameter[1] = y;
-					pa.Parameter[2] = w;
-					pa.Parameter[3] = h;
+					pa.Parameter[0].I = x;
+					pa.Parameter[1].I = y;
+					pa.Parameter[2].I = w;
+					pa.Parameter[3].I = h;
 				}
 				else
 				{
-					int r = pa.Parameter[2];
+					int r = pa.Parameter[2].I;
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
 					{
 						r -= yd;
@@ -947,7 +947,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					{
 						r += xd;
 					}
-					pa.Parameter[2] = r;
+					pa.Parameter[2].I = r;
 				}
 			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
@@ -1053,8 +1053,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0] = e->pos().x();
-				pa.Parameter[1] = e->pos().y();
+				pa.Parameter[0].I = e->pos().x();
+				pa.Parameter[1].I = e->pos().y();
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -1184,103 +1184,103 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				pa.ValidId = true;
 				pa.IdLeft = 0xFFFFFF00;
 				pa.IdRight = selection & 0xFF;
-				pa.Parameter[0] = e->pos().x();
-				pa.Parameter[1] = e->pos().y();
+				pa.Parameter[0].I = e->pos().x();
+				pa.Parameter[1].I = e->pos().y();
 				pa.ExpectedStringParameter = false;
 				switch (selection)
 				{
 				case CMD_TEXT:
-					pa.Parameter[2] = 28;
-					pa.Parameter[3] = 0;
+					pa.Parameter[2].U = 28;
+					pa.Parameter[3].U = 0;
 					pa.StringParameter = "Text";
 					pa.ExpectedStringParameter = true;
 					pa.ExpectedParameterCount = 5;
 					break;
 				case CMD_BUTTON:
-					pa.Parameter[2] = 120;
-					pa.Parameter[3] = 36;
-					pa.Parameter[4] = 27;
-					pa.Parameter[5] = 0;
+					pa.Parameter[2].U = 120;
+					pa.Parameter[3].U = 36;
+					pa.Parameter[4].U = 27;
+					pa.Parameter[5].U = 0;
 					pa.StringParameter = "Button";
 					pa.ExpectedStringParameter = true;
 					pa.ExpectedParameterCount = 7;
 					break;
 				case CMD_KEYS:
-					pa.Parameter[2] = 160;
-					pa.Parameter[3] = 36;
-					pa.Parameter[4] = 29;
-					pa.Parameter[5] = 0;
+					pa.Parameter[2].U = 160;
+					pa.Parameter[3].U = 36;
+					pa.Parameter[4].U = 29;
+					pa.Parameter[5].U = 0;
 					pa.StringParameter = "keys";
 					pa.ExpectedStringParameter = true;
 					pa.ExpectedParameterCount = 7;
 					break;
 				case CMD_PROGRESS:
-					pa.Parameter[2] = 180;
-					pa.Parameter[3] = 12;
-					pa.Parameter[4] = 0;
-					pa.Parameter[5] = 20;
-					pa.Parameter[6] = 100;
+					pa.Parameter[2].U = 180;
+					pa.Parameter[3].U = 12;
+					pa.Parameter[4].U = 0;
+					pa.Parameter[5].U = 20;
+					pa.Parameter[6].U = 100;
 					pa.ExpectedParameterCount = 7;
 					break;
 				case CMD_SLIDER:
-					pa.Parameter[2] = 80;
-					pa.Parameter[3] = 8;
-					pa.Parameter[4] = 0;
-					pa.Parameter[5] = 30;
-					pa.Parameter[6] = 100;
+					pa.Parameter[2].U = 80;
+					pa.Parameter[3].U = 8;
+					pa.Parameter[4].U = 0;
+					pa.Parameter[5].U = 30;
+					pa.Parameter[6].U = 100;
 					pa.ExpectedParameterCount = 7;
 					break;
 				case CMD_SCROLLBAR:
-					pa.Parameter[2] = 16;
-					pa.Parameter[3] = 160;
-					pa.Parameter[4] = 0;
-					pa.Parameter[5] = 120;
-					pa.Parameter[6] = 60;
-					pa.Parameter[7] = 480;
+					pa.Parameter[2].U = 16;
+					pa.Parameter[3].U = 160;
+					pa.Parameter[4].U = 0;
+					pa.Parameter[5].U = 120;
+					pa.Parameter[6].U = 60;
+					pa.Parameter[7].U = 480;
 					pa.ExpectedParameterCount = 8;
 					break;
 				case CMD_TOGGLE:
-					pa.Parameter[2] = 40;
-					pa.Parameter[3] = 27;
-					pa.Parameter[4] = 0;
-					pa.Parameter[5] = 0;
+					pa.Parameter[2].U = 40;
+					pa.Parameter[3].U = 27;
+					pa.Parameter[4].U = 0;
+					pa.Parameter[5].U = 0;
 					pa.StringParameter = "on\\xFFoff";
 					pa.ExpectedStringParameter = true;
 					pa.ExpectedParameterCount = 7;
 					break;
 				case CMD_GAUGE:
-					pa.Parameter[2] = 36;
-					pa.Parameter[3] = 0;
-					pa.Parameter[4] = 4;
-					pa.Parameter[5] = 8;
-					pa.Parameter[6] = 40;
-					pa.Parameter[7] = 100;
+					pa.Parameter[2].U = 36;
+					pa.Parameter[3].U = 0;
+					pa.Parameter[4].U = 4;
+					pa.Parameter[5].U = 8;
+					pa.Parameter[6].U = 40;
+					pa.Parameter[7].U = 100;
 					pa.ExpectedParameterCount = 8;
 					break;
 				case CMD_CLOCK:
-					pa.Parameter[2] = 36;
-					pa.Parameter[3] = 0;
-					pa.Parameter[4] = 13;
-					pa.Parameter[5] = 51;
-					pa.Parameter[6] = 17;
-					pa.Parameter[7] = 0;
+					pa.Parameter[2].U = 36;
+					pa.Parameter[3].U = 0;
+					pa.Parameter[4].U = 13;
+					pa.Parameter[5].U = 51;
+					pa.Parameter[6].U = 17;
+					pa.Parameter[7].U = 0;
 					pa.ExpectedParameterCount = 8;
 					break;
 				case CMD_DIAL:
-					pa.Parameter[2] = 36;
-					pa.Parameter[3] = 0;
-					pa.Parameter[4] = 6144;
+					pa.Parameter[2].U = 36;
+					pa.Parameter[3].U = 0;
+					pa.Parameter[4].U = 6144;
 					pa.ExpectedParameterCount = 5;
 					break;
 				case CMD_NUMBER:
-					pa.Parameter[2] = 28;
-					pa.Parameter[3] = 0;
-					pa.Parameter[4] = 42;
+					pa.Parameter[2].U = 28;
+					pa.Parameter[3].U = 0;
+					pa.Parameter[4].U = 42;
 					pa.ExpectedParameterCount = 5;
 					break;
 				case CMD_SPINNER:
-					pa.Parameter[2] = 0;
-					pa.Parameter[3] = 0;
+					pa.Parameter[2].U = 0;
+					pa.Parameter[3].U = 0;
 					pa.ExpectedParameterCount = 4;
 					break;
 /*
@@ -1311,13 +1311,13 @@ CMD_SPINNER(305, 172, 0, 0)
 				pa.ValidId = true;
 				pa.IdLeft = 0;
 				pa.IdRight = FT800EMU_DL_BEGIN;
-				pa.Parameter[0] = selection;
+				pa.Parameter[0].U = selection;
 				m_LineEditor->insertLine(line, pa);
 				++line;
 				pa.IdLeft = FT800EMU_DL_VERTEX2II;
 				pa.IdRight = 0;
-				pa.Parameter[0] = e->pos().x();
-				pa.Parameter[1] = e->pos().y();
+				pa.Parameter[0].I = e->pos().x();
+				pa.Parameter[1].I = e->pos().y();
 				m_LineEditor->insertLine(line, pa);
 				++line;
 				pa.IdLeft = 0;
