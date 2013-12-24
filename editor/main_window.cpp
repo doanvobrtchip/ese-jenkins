@@ -185,16 +185,20 @@ void loop()
 	}
 
 	// switch to next resolution
-	wr32(REG_HSIZE, s_HSize);
-	wr32(REG_VSIZE, s_VSize);
+	if (rd32(REG_HSIZE) != s_HSize)
+		wr32(REG_HSIZE, s_HSize);
+	if (rd32(REG_VSIZE) != s_VSize)
+		wr32(REG_VSIZE, s_VSize);
 	// switch to next macro list
 	s_Macro->lockDisplayList();
 	bool macroModified = s_Macro->isDisplayListModified();
 	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
 	// {
-		if (s_Macro->getDisplayListParsed()[0].ValidId)
+		if (s_Macro->getDisplayListParsed()[0].ValidId
+			&& rd32(REG_MACRO_0) != s_Macro->getDisplayList()[0])
 			wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
-		if (s_Macro->getDisplayListParsed()[1].ValidId)
+		if (s_Macro->getDisplayListParsed()[1].ValidId
+			&& rd32(REG_MACRO_1) != s_Macro->getDisplayList()[1])
 			wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
 	// }
 	s_Macro->unlockDisplayList();
@@ -498,7 +502,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		//| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
-		//| FT800EMU::EmulatorEnableDynamicDegrade
+		| FT800EMU::EmulatorEnableDynamicDegrade
 		;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;

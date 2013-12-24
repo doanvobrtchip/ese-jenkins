@@ -80,7 +80,9 @@ public:
 	// Tracking of coprocessor writes to display list
 	static int *getDisplayListCoprocessorWrites();
 	static void clearDisplayListCoprocessorWrites();
-	
+
+	// Gets a total count of write operations
+	static int getWriteOpCount();
 
 private:
 	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);

@@ -166,6 +166,9 @@ namespace {
 	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
 
+	int s_LastWriteOpCount = 0;
+	bool s_FrameFullyDrawn = true;
+
 	int masterThread(void * = NULL)
 	{
 		System.makeMainThread();
@@ -214,29 +217,44 @@ namespace {
 			{
 				// VBlank=0
 				System.switchThread();
+
+				int lwoc = s_LastWriteOpCount;
+				int woc = Memory.getWriteOpCount();
+				bool hasChanges = lwoc != woc;
+				s_LastWriteOpCount = woc;
 				
 				unsigned long procStart = System.getMicros();
 				if (reg_pclk) 
 				{
-					if (ram[REG_DLSWAP] == DLSWAP_FRAME)
+					if (hasChanges || !s_FrameFullyDrawn)
 					{
-						Memory.swapDisplayList();
-						ram[REG_DLSWAP] = DLSWAP_DONE;
-					}
-					bool rotate = s_RotateEnabled && ram[REG_ROTATE];
-					if (s_DegradeOn)
-					{
-						GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
-							s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
-							reg_hsize, reg_vsize, s_DegradeStage, 2);
-						++s_DegradeStage;
-						s_DegradeStage %= 2;
+						// printf("%i != %i\n", lwoc, woc);
+						if (ram[REG_DLSWAP] == DLSWAP_FRAME)
+						{
+							Memory.swapDisplayList();
+							ram[REG_DLSWAP] = DLSWAP_DONE;
+						}
+						bool rotate = s_RotateEnabled && ram[REG_ROTATE];
+						if (s_DegradeOn)
+						{
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
+								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
+								reg_hsize, reg_vsize, s_DegradeStage, 2);
+							++s_DegradeStage;
+							s_DegradeStage %= 2;
+							s_FrameFullyDrawn = !hasChanges;
+						}
+						else
+						{
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
+								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
+								reg_hsize, reg_vsize);
+							s_FrameFullyDrawn = true;
+						}
 					}
 					else
 					{
-						GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
-							s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
-							reg_hsize, reg_vsize);
+						// printf("no changes\n");
 					}
 				}
 				unsigned long procDelta = System.getMicros() - procStart;

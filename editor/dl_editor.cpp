@@ -16,6 +16,7 @@
 // STL includes
 
 // Qt includes
+#include <QApplication>
 #include <QVBoxLayout>
 #include <QTextBlock>
 #include <QCompleter>
@@ -179,6 +180,8 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 
 void DlEditor::editorCursorPositionChanged()
 {
+	if (QApplication::instance()->closingDown()) return;
+
 	QTextBlock block = m_CodeEditor->document()->findBlock(m_CodeEditor->textCursor().position());
 
 	// switch between auto completers
@@ -200,6 +203,8 @@ void DlEditor::editorCursorPositionChanged()
 
 void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
 {
+	if (QApplication::instance()->closingDown()) return;
+
 	if (m_Reloading)
 		return;
 
@@ -213,6 +218,8 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
 {
+	if (QApplication::instance()->closingDown()) return;
+
 	if (m_Reloading)
 		return;
 

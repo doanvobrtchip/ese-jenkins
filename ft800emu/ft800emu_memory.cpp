@@ -48,6 +48,7 @@ static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
 static int s_LastCoprocessorCommandRead = -1;
 
 static int s_DirectSwapCount;
+static int s_WriteOpCount;
 
 // Avoid getting hammered in wait loops
 static int s_LastCoprocessorRead = -1;
@@ -178,6 +179,8 @@ inline uint32_t getTouchScreenXY()
 
 void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 {
+	++s_WriteOpCount;
+
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
@@ -232,6 +235,11 @@ void MemoryClass::resetTouchScreenXY()
 int MemoryClass::getDirectSwapCount()
 {
 	return s_DirectSwapCount;
+}
+
+int MemoryClass::getWriteOpCount()
+{
+	return s_WriteOpCount;
 }
 
 template<typename T>
@@ -353,6 +361,7 @@ void MemoryClass::begin(const char *romFilePath)
 	}
 
 	s_DirectSwapCount = 0;
+	s_WriteOpCount = 0;
 
 	s_ReadDelay = false;
 
@@ -427,6 +436,8 @@ const uint32_t *MemoryClass::getDisplayList()
 
 void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 {
+	++s_WriteOpCount;
+
 	s_SwapMCUReadCounter = 0;
 	switch (address)
 	{
@@ -571,6 +582,8 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 {	
+	++s_WriteOpCount;
+
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U32 write address %i exceeds RAM size", address);
@@ -671,6 +684,8 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 {	
+	++s_WriteOpCount;
+
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U16 write address %i exceeds RAM size", address);
@@ -704,7 +719,9 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 }
 
 void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
-{	
+{
+	++s_WriteOpCount;
+
 	if (address >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U8 write address %i exceeds RAM size", address);
