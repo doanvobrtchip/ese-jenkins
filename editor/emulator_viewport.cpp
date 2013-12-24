@@ -103,6 +103,11 @@ int EmulatorViewport::hsize()
 	return s_Pixmap->width();
 }
 
+int EmulatorViewport::vsize()
+{
+	return s_Pixmap->height();
+}
+
 void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
 {
 	// There can be only one

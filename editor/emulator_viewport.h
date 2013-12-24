@@ -57,6 +57,7 @@ public:
 	virtual void graphics(QImage *image) { }
 
 	int hsize();
+	int vsize();
 
 protected:
 	virtual void paintEvent(QPaintEvent *e);

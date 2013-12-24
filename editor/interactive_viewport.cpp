@@ -228,7 +228,13 @@ void InteractiveViewport::graphics()
 
 	// Get the stack under the mouse cursor
 	m_MouseStackWrite.clear();
-	if (m_MouseOver) FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
+	if (m_MouseOver)
+	{
+		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
+		{
+			FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
+		}
+	}
 }
 
 /*
