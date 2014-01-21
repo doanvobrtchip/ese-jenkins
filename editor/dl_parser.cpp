@@ -522,6 +522,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 		{
 			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
 		CombineParameter:
+			bool hexadecimal = false;
 			bool combinedParameter = combineParameter;
 			combineParameter = false;
 			parsed.ParameterIndex[pq] = i;
@@ -552,10 +553,17 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						pss << c;
 						++parsed.ParameterLength[pq];
 					}
-					else if ((c >= '0' && c <= '9') && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
 					{
 						pss << c;
 						++parsed.ParameterLength[pq];
+					}
+					else if (parsed.ParameterLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					{
+						pss.clear();
+						hexadecimal = true;
+						++parsed.ParameterLength[pq];
+						pss << std::hex;
 					}
 					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
 					{
@@ -646,6 +654,13 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						parsed.ValidParameter[pq] = true;
 						parsed.StringParameterAt = pq;
 					}
+				}
+				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
+				{
+					int vhex;
+					pss >> vhex;
+					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vhex;
+					parsed.ValidParameter[pq] = true;
 				}
 				else if (parsed.NumericParameter[pq] && ps.length() > 0)
 				{
