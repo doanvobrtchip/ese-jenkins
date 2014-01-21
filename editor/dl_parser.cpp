@@ -548,6 +548,12 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						++i;
 						goto ParseString;
 					}
+					else if (parsed.ParameterLength[pq] == 0 && (c == '\'') && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					{
+						pss << c;
+						++i;
+						goto ParseChar;
+					}
 					else if (parsed.ParameterLength[pq] == 0 && (c == '-'))
 					{
 						pss << c;
@@ -637,6 +643,36 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					break;
 				}
 			}
+
+			goto ValidateNamed;
+		ParseChar:
+			for (; ; ++i)
+			{
+				if (i < len)
+				{
+					char c = src[i];
+					pss << c;
+					if (c == '\\')
+					{
+						// skip
+						++i;
+						pss << src[i];
+					}
+					else if (c == '\'')
+					{
+						// end (post-trim)
+						++i;
+						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						goto ContinueParameter;
+					}
+				}
+				else
+				{
+					failParam = true; /* fail incomplete entry */
+					break;
+				}
+			}		
+
 		ValidateNamed:
 
 			// validate named parameter
@@ -654,6 +690,17 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						parsed.ValidParameter[pq] = true;
 						parsed.StringParameterAt = pq;
 					}
+				}
+				else if (ps.length() > 0 && ps[0] == '\'')
+				{
+					int vchar = 0;
+					for (int ci = ps.length() - 2; ci > 0; --ci)
+					{
+						vchar <<= 8;
+						vchar |= ps[ci];
+					}
+					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
+					parsed.ValidParameter[pq] = true;
 				}
 				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
 				{
@@ -1403,7 +1450,10 @@ void DlParser::toString(std::string &dst, uint32_t v)
 			int cell = v & 0x7F;
 			res << "VERTEX2II(";
 			res << px << ", " << py << ", ";
-			res << handle << ", " << cell << ")";
+			res << handle << ", ";
+			if (cell >= 32 && cell <= 126) res << "'" << (char)cell << "'";
+			else res << cell;
+			res << ")";
 			break;
 		}
 		case FT800EMU_DL_VERTEX2F:
