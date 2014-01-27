@@ -14,6 +14,7 @@
 #include "properties_editor.h"
 
 // STL includes
+#include "stdio.h"
 
 // Qt includes
 #include <QVBoxLayout>
@@ -39,28 +40,29 @@ PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_Current
 	m_InfoLabel->setWordWrap(true);
 	infoLayout->addWidget(m_InfoLabel);
 	m_InfoGroupBox->hide();
-	
+
 	m_EditLayout = new QVBoxLayout(this);
 	m_EditGroupBox = new QGroupBox(this);
 	m_EditGroupBox->setLayout(m_EditLayout);
 	m_EditGroupBox->hide();
-	
+
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->addWidget(m_EditGroupBox);
 	layout->addWidget(m_InfoGroupBox);
 	layout->addStretch();
 	setLayout(layout);
-	
+
 	translate();
 }
 
 PropertiesEditor::~PropertiesEditor()
 {
-	
+
 }
 
 void PropertiesEditor::setInfo(QString message)
 {
+	printf("set info: %s\n", message.toLatin1().data());
 	m_InfoLabel->setText(message);
 	if (message.isEmpty() || message.isNull())
 	{
@@ -84,7 +86,7 @@ void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 		m_CurrentEditWidget = NULL;
 		m_OwnCurrentEditWidget = false;
 	}
-	
+
 	if (widget)
 	{
 		m_CurrentEditWidget = widget;
@@ -96,7 +98,7 @@ void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 	{
 		m_EditGroupBox->hide();
 	}
-	
+
 	m_CurrentEditWidgetSetter = setter;
 }
 

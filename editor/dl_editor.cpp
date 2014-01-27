@@ -306,7 +306,8 @@ void DlEditor::editingLine(QTextBlock block)
 		|| block.blockNumber() != m_PropLine
 		|| m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft
 		|| m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
-		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid)
+		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid
+		|| !m_DisplayListParsed[block.blockNumber()].ValidId) // Necessary for the "Unknown command" info message
 	{
 		m_PropLine = block.blockNumber();
 		m_PropIdLeft = m_DisplayListParsed[m_PropLine].IdLeft;
@@ -1470,12 +1471,13 @@ void DlEditor::editingLine(QTextBlock block)
 				QString message;
 				message.sprintf(tr("Unknown command '<i>%s</i>'").toUtf8().constData(), m_DisplayListParsed[m_PropLine].IdText.c_str());
 				m_PropertiesEditor->setInfo(message);
+				m_PropertiesEditor->setEditWidget(NULL, false, this);
 			}
-			else
+			else if (m_PropertiesEditor->getEditWidgetSetter())
 			{
 				m_PropertiesEditor->setInfo(QString());
+				m_PropertiesEditor->setEditWidget(NULL, false, this);
 			}
-			m_PropertiesEditor->setEditWidget(NULL, false, this);
 		}
 	}
 }

@@ -37,6 +37,7 @@ class InteractiveViewport;
 class DlEditor;
 class PropertiesEditor;
 class Toolbox;
+class DeviceManager;
 
 /**
  * MainWindow
@@ -135,6 +136,9 @@ private:
 
 	QDockWidget *m_ToolboxDock;
 	Toolbox *m_Toolbox;
+
+	QDockWidget *m_DeviceManagerDock;
+	DeviceManager *m_DeviceManager;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;

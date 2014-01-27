@@ -60,6 +60,7 @@
 #include "properties_editor.h"
 #include "code_editor.h"
 #include "toolbox.h"
+#include "device_manager.h"
 
 namespace FT800EMUQT {
 
@@ -195,8 +196,8 @@ void loop()
 	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
 	// {
 		if (s_Macro->getDisplayListParsed()[0].ValidId
-			&& rd32(REG_MACRO_0) != s_Macro->getDisplayList()[0])
-			wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]);
+			&& rd32(REG_MACRO_0) != s_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
+			wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
 		if (s_Macro->getDisplayListParsed()[1].ValidId
 			&& rd32(REG_MACRO_1) != s_Macro->getDisplayList()[1])
 			wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
@@ -511,7 +512,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
 
 	actNew();
-	s_CmdEditor->codeEditor()->setFocus();
 }
 
 MainWindow::~MainWindow()
@@ -662,6 +662,21 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
+	// Devices
+	{
+		m_DeviceManagerDock = new QDockWidget(this);
+		m_DeviceManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		m_DeviceManager = new DeviceManager(this);
+		scrollArea->setWidget(m_DeviceManager);
+		m_DeviceManagerDock->setWidget(scrollArea);
+		addDockWidget(Qt::RightDockWidgetArea, m_DeviceManagerDock);
+		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
+	}
+
 	// PropertiesEditor
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
@@ -869,6 +884,8 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
 
+	tabifyDockWidget(m_DeviceManagerDock, m_PropertiesEditorDock);
+
 	// Event for all tab changes
 	tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
@@ -888,6 +905,7 @@ void MainWindow::translateDockWindows()
 {
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
+	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -1126,6 +1144,8 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::actNew()
 {
+	printf("** New **\n");
+
 	// reset filename
 	m_CurrentFile = QString();
 
@@ -1136,8 +1156,10 @@ void MainWindow::actNew()
 	clearUndoStack();
 
 	// be helpful
+	focusCmdEditor();
 	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
-	m_PropertiesEditor->setEditWidget(NULL, false, this);
+	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
+	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 }
 
 void MainWindow::actOpen()
