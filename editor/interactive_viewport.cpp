@@ -1321,6 +1321,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdRight = 0;
 					pa.Parameter[0].I = e->pos().x();
 					pa.Parameter[1].I = e->pos().y();
+					pa.Parameter[2].I = 0;
+					pa.Parameter[3].I = 0;
 					m_LineEditor->insertLine(line, pa);
 					++line;
 					pa.IdLeft = 0;

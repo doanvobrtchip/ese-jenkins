@@ -671,7 +671,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					failParam = true; /* fail incomplete entry */
 					break;
 				}
-			}		
+			}
 
 		ValidateNamed:
 
@@ -1142,6 +1142,43 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 	}
 }
 
+static void primToString(std::stringstream &dst, uint32_t id)
+{
+	switch (id)
+	{
+		case BITMAPS:
+			dst << "BITMAPS";
+			break;
+		case POINTS:
+			dst << "POINTS";
+			break;
+		case LINES:
+			dst << "LINES";
+			break;
+		case LINE_STRIP:
+			dst << "LINE_STRIP";
+			break;
+		case EDGE_STRIP_R:
+			dst << "EDGE_STRIP_R";
+			break;
+		case EDGE_STRIP_L:
+			dst << "EDGE_STRIP_L";
+			break;
+		case EDGE_STRIP_A:
+			dst << "EDGE_STRIP_A";
+			break;
+		case EDGE_STRIP_B:
+			dst << "EDGE_STRIP_B";
+			break;
+		case RECTS:
+			dst << "RECTS";
+			break;
+		default:
+			dst << id;
+			break;
+	}
+}
+
 void DlParser::toString(std::string &dst, uint32_t v)
 {
 	std::stringstream res;
@@ -1390,7 +1427,8 @@ void DlParser::toString(std::string &dst, uint32_t v)
 				{
 					int primitive = v & 0x0F;
 					res << "BEGIN(";
-					res << primitive << ")";
+					primToString(res, primitive);
+					res << ")";
 					break;
 				}
 				case FT800EMU_DL_COLOR_MASK:
