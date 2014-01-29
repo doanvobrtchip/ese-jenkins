@@ -55,7 +55,7 @@ namespace FT800EMUQT {
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
-	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false),
+	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false),
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
 	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false),
@@ -233,6 +233,13 @@ void InteractiveViewport::graphics()
 		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 		{
 			FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
+			if (m_MouseStackWrite.size())
+			{
+				m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
+				m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
+				m_MouseStackValid = true;
+			}
+			else m_MouseStackValid = false;
 		}
 		m_DragMoving = false;
 	}
@@ -1178,6 +1185,18 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 				}
 
+				// Skip past CLEAR commands
+				while (m_LineEditor->getLine(line).ValidId && m_LineEditor->getLine(line).IdLeft == 0 && (
+					m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR
+					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_COLOR_RGB
+					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_COLOR_A
+					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_STENCIL
+					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_TAG
+					))
+				{
+					++line;
+				}
+
 				// printf("Dropped item from toolbox, type %i\n", selection);
 
 				// void insertLine(int line, const DlParsed &parsed);
@@ -1354,6 +1373,40 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->codeEditor()->endUndoCombine();
 					m_Insert->setChecked(true);
 				}
+			}
+			else if (selectionType == 3 && m_MouseStackValid)
+			{
+				int line = m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop;
+				m_LineEditor->codeEditor()->beginUndoCombine();
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = selection;
+				pa.ExpectedStringParameter = false;
+				switch (selection)
+				{
+				case FT800EMU_DL_CLEAR_COLOR_RGB:
+					pa.Parameter[0].U = 31;
+					pa.Parameter[1].U = 63;
+					pa.Parameter[2].U = 127;
+					pa.ExpectedParameterCount = 3;
+					break;
+				case FT800EMU_DL_CLEAR_COLOR_A:
+					pa.Parameter[0].U = 0;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_CLEAR_STENCIL:
+					pa.Parameter[0].U = 0;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_CLEAR_TAG:
+					pa.Parameter[0].U = 0;
+					pa.ExpectedParameterCount = 1;
+					break;
+				}
+				m_LineEditor->insertLine(line, pa);
+				m_LineEditor->selectLine(line);
+				m_LineEditor->codeEditor()->endUndoCombine();
 			}
 		}
 		else

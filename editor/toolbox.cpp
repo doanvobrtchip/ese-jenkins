@@ -52,6 +52,22 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Clear"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR));
+		item = new QTreeWidgetItem(m_Background);
+		item->setText(0, tr("Clear Color RGB"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR_COLOR_RGB));
+		item = new QTreeWidgetItem(m_Background);
+		item->setText(0, tr("Clear Color Alpha"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR_COLOR_A));
+		item = new QTreeWidgetItem(m_Background);
+		item->setText(0, tr("Clear Stencil"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR_STENCIL));
+		item = new QTreeWidgetItem(m_Background);
+		item->setText(0, tr("Clear Tag"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR_TAG));
 	}
 
 	m_Primitives = new QTreeWidgetItem(m_Tools);

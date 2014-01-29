@@ -91,6 +91,9 @@ private:
 	int m_MouseX, m_MouseY;
 	std::vector<int> m_MouseStackWrite;
 	std::vector<int> m_MouseStackRead;
+	int m_MouseStackDlTop;
+	int m_MouseStackCmdTop;
+	bool m_MouseStackValid;
 
 	// User selected pointer mode
 	int m_PointerFilter;
