@@ -62,7 +62,7 @@ PropertiesEditor::~PropertiesEditor()
 
 void PropertiesEditor::setInfo(QString message)
 {
-	printf("set info: %s\n", message.toLatin1().data());
+	// printf("set info: %s\n", message.toLatin1().data());
 	m_InfoLabel->setText(message);
 	if (message.isEmpty() || message.isNull())
 	{

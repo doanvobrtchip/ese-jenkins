@@ -24,7 +24,8 @@
 
 // Project includes
 
-class QListWidget;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 namespace FT800EMUQT {
 
@@ -49,13 +50,21 @@ public:
 	void setEditorLine(DlEditor *editor, int line);
 	void unsetEditorLine();
 
-	QListWidget *listWidget() { return m_Tools; }
+	QTreeWidget *treeWidget() { return m_Tools; }
 
-	uint32_t getSelection();
+	uint32_t getSelectionType();
+	uint32_t getSelectionId();
 
 private:
 	MainWindow *m_MainWindow;
-	QListWidget *m_Tools;
+	QTreeWidget *m_Tools;
+
+	QTreeWidgetItem *m_Background;
+	QTreeWidgetItem *m_Primitives;
+	QTreeWidgetItem *m_Widgets;
+	QTreeWidgetItem *m_Graphics;
+	QTreeWidgetItem *m_Bitmaps;
+	QTreeWidgetItem *m_Advanced;
 
 	// Current line
 	DlEditor *m_LineEditor;
