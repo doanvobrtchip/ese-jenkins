@@ -884,14 +884,14 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
 
 	// Event for editor tab change
-	QTabBar *editorTabbar = NULL;
+	/*QTabBar *editorTabbar = NULL;
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		QTabBar *tabBar = tabList.at(i);
 		editorTabbar = tabBar;
 		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
-	}
+	}*/
 
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
@@ -899,17 +899,20 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_DeviceManagerDock, m_PropertiesEditorDock);
 
 	// Event for all tab changes
-	tabList = findChildren<QTabBar *>();
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		// printf("tab bar found\n");
 		QTabBar *tabBar = tabList.at(i);
-		if (tabBar != editorTabbar)
-		{
-			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
-		}
+		/*if (tabBar != editorTabbar)
+		{*/
+			//connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
+			connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
+		//}
 
-		// FIXME: Figure out and connect when new tab bars are created...
+		// FIX-----ME: Figure out and connect when new tab bars are created... done
+		m_HookedTabs.push_back(tabBar);
 	}
 }
 
@@ -936,29 +939,42 @@ void MainWindow::incbLanguageCode()
 
 void MainWindow::editorTabChanged(int i)
 {
-	m_EmulatorViewport->unsetEditorLine();
-	m_Toolbox->unsetEditorLine();
+	printf("blip\n");
+	//m_EmulatorViewport->unsetEditorLine();
+	//m_Toolbox->unsetEditorLine();
+	bool cmdExist = false;
+	bool dlExist = false;
 	bool cmdTop = true;
 	bool dlTop = true;
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		QTabBar *tabBar = tabList.at(i);
+		if (std::find(m_HookedTabs.begin(), m_HookedTabs.end(), tabBar) == m_HookedTabs.end())
+		{
+			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
+			connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
+			m_HookedTabs.push_back(tabBar);
+		}
 		for (int j = 0; j < tabBar->count(); ++j)
 		{
 			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
 			if (dw == m_CmdEditorDock)
 			{
+				cmdExist = true;
 				if (tabBar->currentIndex() != j)
 					cmdTop = false;
 			}
 			else if (dw == m_DlEditorDock)
 			{
+				dlExist = true;
 				if (tabBar->currentIndex() != j)
 					dlTop = false;
 			}
 		}
 	}
+	if (!cmdExist) cmdTop = false;
+	if (!dlExist) dlTop = false;
 	// printf("x: %i,y: %i\n", cmdTop, dlTop);
 	if (cmdTop != dlTop)
 	{
@@ -973,8 +989,10 @@ void MainWindow::editorTabChanged(int i)
 			m_DlEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
 		}
 	}
-	else
+	else if (!cmdTop)
 	{
+		m_EmulatorViewport->unsetEditorLine();
+		m_Toolbox->unsetEditorLine();
 		setFocus(Qt::OtherFocusReason);
 	}
 }
@@ -982,7 +1000,7 @@ void MainWindow::editorTabChanged(int i)
 void MainWindow::tabChanged(int i)
 {
 	// Defocus editor
-	setFocus(Qt::OtherFocusReason);
+	// setFocus(Qt::OtherFocusReason);
 }
 
 void MainWindow::focusDlEditor()

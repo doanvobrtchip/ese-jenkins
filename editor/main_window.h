@@ -15,6 +15,7 @@
 #define FT800EMUQT_MAIN_WINDOW_H
 
 // STL includes
+#include <vector>
 
 // Qt includes
 #include <QMainWindow>
@@ -30,6 +31,7 @@ class QUndoStack;
 class QScrollArea;
 class QSpinBox;
 class QCheckBox;
+class QTabBar;
 
 namespace FT800EMUQT {
 
@@ -149,6 +151,8 @@ private:
 	DlEditor *m_Macro;
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
+
+	std::vector<QTabBar *> m_HookedTabs;
 
 	// Controls
 	QDockWidget *m_ControlsDock;
