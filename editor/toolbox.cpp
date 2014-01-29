@@ -165,9 +165,24 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
-	m_Graphics->setText(0, tr("Graphics"));
+	m_Graphics->setText(0, tr("Graphics State"));
 	{
 		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Foreground Color"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FGCOLOR));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Background Color"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_BGCOLOR));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Gradient Color"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADCOLOR));
+		m_CoprocessorTools.push_back(item);
 		item = new QTreeWidgetItem(m_Graphics);
 		item->setText(0, tr("Color RGB"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
@@ -227,7 +242,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	}
 
 	m_Bitmaps = new QTreeWidgetItem(m_Tools);
-	m_Bitmaps->setText(0, tr("Bitmaps"));
+	m_Bitmaps->setText(0, tr("Bitmap State"));
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
 	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
@@ -264,10 +279,14 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 	if (editor != m_LineEditor)
 	{
 		m_LineEditor = editor;
-		//m_Tools->clear();
+		// m_Tools->clear();
 		if (editor)
 		{
 			m_Widgets->setHidden(!editor->isCoprocessor());
+			for (int i = 0; i < m_CoprocessorTools.size(); ++i)
+			{
+				m_CoprocessorTools[i]->setHidden(!editor->isCoprocessor());
+			}
 		}
 	}
 }
@@ -275,7 +294,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 void Toolbox::unsetEditorLine()
 {
 	m_LineEditor = NULL;
-	//m_Tools->clear();
+	// m_Tools->clear();
 }
 
 } /* namespace FT800EMUQT */

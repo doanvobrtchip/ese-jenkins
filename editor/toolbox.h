@@ -15,6 +15,7 @@
 #define FT800EMUQT_TOOLBOX_H
 
 // STL includes
+#include <vector>
 
 // Qt includes
 #include <QWidget>
@@ -65,6 +66,7 @@ private:
 	QTreeWidgetItem *m_Graphics;
 	QTreeWidgetItem *m_Bitmaps;
 	QTreeWidgetItem *m_Advanced;
+	std::vector<QTreeWidgetItem *> m_CoprocessorTools;
 
 	// Current line
 	DlEditor *m_LineEditor;
