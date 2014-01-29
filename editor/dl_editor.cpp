@@ -261,7 +261,8 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed)
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	//m_CodeEditor->setTextCursor(c);
-	c.select(QTextCursor::LineUnderCursor);
+	//c.select(QTextCursor::BlockUnderCursor);
+	c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	c.insertText(linestr);
 	// editorCursorPositionChanged() needed? // VERIFY
 }
@@ -279,7 +280,7 @@ void DlEditor::insertLine(int line, const DlParsed &parsed)
 	{
 		QTextCursor c = m_CodeEditor->textCursor();
 		c.setPosition(m_CodeEditor->document()->findBlockByNumber(line - 1).position());
-		c.movePosition(QTextCursor::EndOfLine, QTextCursor::MoveAnchor);
+		c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
 		c.insertText("\n" + linestr);
 	}
 	// editorCursorPositionChanged() needed? // VERIFY
