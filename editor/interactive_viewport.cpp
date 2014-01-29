@@ -33,6 +33,7 @@
 #include "main_window.h"
 #include "code_editor.h"
 #include "toolbox.h"
+#include "inspector.h"
 
 namespace FT800EMUQT {
 
@@ -243,6 +244,8 @@ void InteractiveViewport::graphics()
 		}
 		m_DragMoving = false;
 	}
+
+	m_MainWindow->inspector()->frameEmu();
 }
 
 /*
@@ -580,6 +583,8 @@ CMD_SCREENSAVER()
 
 	// Update pointer method
 	updatePointerMethod();
+
+	m_MainWindow->inspector()->frameQt();
 }
 
 void InteractiveViewport::setEditorLine(DlEditor *editor, int line)
@@ -598,6 +603,7 @@ void InteractiveViewport::unsetEditorLine()
 {
 	m_LineEditor = NULL;
 	// printf("Unset line editor\n");
+	m_Insert->setChecked(false);
 }
 
 void InteractiveViewport::automaticChecked()
@@ -635,17 +641,25 @@ void InteractiveViewport::updatePointerMethod()
 	{
 		if (m_Insert->isChecked())
 		{
-			const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-			if (isValidInsert(parsed))
+			if (m_LineEditor)
 			{
-				// Special case override cursur (not a filter), strange...
-				m_PointerMethod = POINTER_INSERT;
-				setCursor(Qt::CrossCursor);
-				return;
+				const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+				if (isValidInsert(parsed))
+				{
+					// Special case override cursur (not a filter), strange...
+					m_PointerMethod = POINTER_INSERT;
+					setCursor(Qt::CrossCursor);
+					return;
+				}
+				else
+				{
+					printf("Uncheck insert\n");
+					m_Insert->setChecked(false);
+				}
 			}
 			else
 			{
-				printf("Uncheck insert\n");
+				printf("Force uncheck insert, no line editor\n");
 				m_Insert->setChecked(false);
 			}
 		}

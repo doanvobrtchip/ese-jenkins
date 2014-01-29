@@ -282,11 +282,25 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 		// m_Tools->clear();
 		if (editor)
 		{
+			m_Background->setHidden(false);
+			m_Primitives->setHidden(false);
 			m_Widgets->setHidden(!editor->isCoprocessor());
+			m_Graphics->setHidden(false);
+			m_Bitmaps->setHidden(false);
+			// m_Advanced->setHidden(false);
 			for (int i = 0; i < m_CoprocessorTools.size(); ++i)
 			{
 				m_CoprocessorTools[i]->setHidden(!editor->isCoprocessor());
 			}
+		}
+		else
+		{
+			m_Background->setHidden(true);
+			m_Primitives->setHidden(true);
+			m_Widgets->setHidden(true);
+			m_Graphics->setHidden(true);
+			m_Bitmaps->setHidden(true);
+			// m_Advanced->setHidden(true);
 		}
 	}
 }
@@ -295,6 +309,12 @@ void Toolbox::unsetEditorLine()
 {
 	m_LineEditor = NULL;
 	// m_Tools->clear();
+	m_Background->setHidden(true);
+	m_Primitives->setHidden(true);
+	m_Widgets->setHidden(true);
+	m_Graphics->setHidden(true);
+	m_Bitmaps->setHidden(true);
+	// m_Advanced->setHidden(true);
 }
 
 } /* namespace FT800EMUQT */

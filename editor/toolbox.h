@@ -65,7 +65,7 @@ private:
 	QTreeWidgetItem *m_Widgets;
 	QTreeWidgetItem *m_Graphics;
 	QTreeWidgetItem *m_Bitmaps;
-	QTreeWidgetItem *m_Advanced;
+	// QTreeWidgetItem *m_Advanced;
 	std::vector<QTreeWidgetItem *> m_CoprocessorTools;
 
 	// Current line

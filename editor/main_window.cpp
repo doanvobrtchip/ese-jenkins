@@ -61,6 +61,7 @@
 #include "code_editor.h"
 #include "toolbox.h"
 #include "device_manager.h"
+#include "inspector.h"
 
 namespace FT800EMUQT {
 
@@ -692,10 +693,20 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
 
+	// Inspector
+	{
+		m_InspectorDock = new QDockWidget(this);
+		m_InspectorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_Inspector = new Inspector(this);
+		m_InspectorDock->setWidget(m_Inspector);
+		addDockWidget(Qt::BottomDockWidgetArea, m_InspectorDock);
+		m_WidgetsMenu->addAction(m_InspectorDock->toggleViewAction());
+	}
+
 	// DlEditor (Display List)
 	{
 		m_DlEditorDock = new QDockWidget(this);
-		m_DlEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_DlEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 		m_DlEditor = new DlEditor(this, false);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
@@ -708,7 +719,7 @@ void MainWindow::createDockWindows()
 	// CmdEditor (Coprocessor)
 	{
 		m_CmdEditorDock = new QDockWidget(this);
-		m_CmdEditorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_CmdEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 		m_CmdEditor = new DlEditor(this, true);
 		m_CmdEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_CmdEditor->setUndoStack(m_UndoStack);
@@ -869,6 +880,7 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_ToolboxDock->toggleViewAction());
 	}
 
+	tabifyDockWidget(m_InspectorDock, m_DlEditorDock);
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
 
 	// Event for editor tab change
@@ -903,6 +915,7 @@ void MainWindow::createDockWindows()
 
 void MainWindow::translateDockWindows()
 {
+	m_InspectorDock->setWindowTitle(tr("Inspector"));
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
 	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
@@ -1328,7 +1341,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::about()
 {
-	QMessageBox::about(this, tr("About FT800 Editor"), tr("Copyright (C) 2013  Future Technology Devices International Ltd"));
+	QMessageBox::about(this, tr("About FT800 Editor"), tr("Copyright (C) 2013-2014  Future Technology Devices International Ltd"));
 }
 
 void MainWindow::aboutQt()

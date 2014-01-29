@@ -38,6 +38,7 @@ class DlEditor;
 class PropertiesEditor;
 class Toolbox;
 class DeviceManager;
+class Inspector;
 
 /**
  * MainWindow
@@ -57,6 +58,7 @@ public:
 	inline DlEditor *cmdEditor() { return m_CmdEditor; }
 	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 	inline Toolbox *toolbox() { return m_Toolbox; }
+	inline Inspector *inspector() { return m_Inspector; }
 
 	void focusDlEditor();
 	void focusCmdEditor();
@@ -136,6 +138,9 @@ private:
 
 	QDockWidget *m_ToolboxDock;
 	Toolbox *m_Toolbox;
+
+	QDockWidget *m_InspectorDock;
+	Inspector *m_Inspector;
 
 	QDockWidget *m_DeviceManagerDock;
 	DeviceManager *m_DeviceManager;
