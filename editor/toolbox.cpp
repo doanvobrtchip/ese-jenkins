@@ -46,6 +46,13 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Background = new QTreeWidgetItem(m_Tools);
 	m_Background->setText(0, tr("Background"));
+	{
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Background);
+		item->setText(0, tr("Clear"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_CLEAR));
+	}
 
 	m_Primitives = new QTreeWidgetItem(m_Tools);
 	m_Primitives->setText(0, tr("Primitives"));

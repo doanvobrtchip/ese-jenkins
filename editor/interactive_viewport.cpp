@@ -228,12 +228,13 @@ void InteractiveViewport::graphics()
 
 	// Get the stack under the mouse cursor
 	m_MouseStackWrite.clear();
-	if (m_MouseOver)
+	if (m_MouseOver || m_DragMoving)
 	{
 		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 		{
 			FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
 		}
+		m_DragMoving = false;
 	}
 }
 
@@ -1307,7 +1308,28 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
-				else // Primitive
+				else if (selectionType == 2)
+				{
+					m_LineEditor->codeEditor()->beginUndoCombine();
+					DlParsed pa;
+					pa.ValidId = true;
+					pa.IdLeft = 0;
+					pa.IdRight = selection;
+					pa.ExpectedStringParameter = false;
+					switch (selection)
+					{
+					case FT800EMU_DL_CLEAR:
+						pa.Parameter[0].U = 1;
+						pa.Parameter[1].U = 1;
+						pa.Parameter[2].U = 1;
+						pa.ExpectedParameterCount = 3;
+						break;
+					}
+					m_LineEditor->insertLine(line, pa);
+					m_LineEditor->selectLine(line);
+					m_LineEditor->codeEditor()->endUndoCombine();
+				}
+				else if (selectionType == 1) // Primitive
 				{
 					m_LineEditor->codeEditor()->beginUndoCombine();
 					DlParsed pa;
@@ -1348,6 +1370,10 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 	{
 		if (m_LineEditor)
 		{
+			m_NextMouseX = e->pos().x();
+			m_NextMouseY = e->pos().y();
+			m_DragMoving = true;
+
 			e->acceptProposedAction();
 		}
 		else

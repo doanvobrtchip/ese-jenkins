@@ -115,6 +115,8 @@ private:
 	DlEditor *m_LineEditor;
 	int m_LineNumber;
 
+	bool m_DragMoving;
+
 private:
 	InteractiveViewport(const InteractiveViewport &);
 	InteractiveViewport &operator=(const InteractiveViewport &);
