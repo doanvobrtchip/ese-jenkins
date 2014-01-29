@@ -394,9 +394,9 @@ void DlEditor::editingLine(QTextBlock block)
 				case CMD_BGCOLOR:
 				{
 					m_PropertiesEditor->setInfo(tr(
-						"<b>CMD_BGCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
-						"<b>argb</b>: New background color, as a 32-bit ARGB number. Red is the most significant 8 "
-						"bits, blue is the least. So 0xffff0000 is bright red.<br>"
+						"<b>CMD_BGCOLOR</b>(<i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>rgb</b>: New background color, as a 32-bit RGB number. Red is the most significant 8 "
+						"bits, blue is the least. So 0xff0000 is bright red.<br>"
 						"Background color is applicable for things that the user cannot move. Example "
 						"behind gauges and sliders etc.<br>"
 						"<br>"
@@ -408,9 +408,9 @@ void DlEditor::editingLine(QTextBlock block)
 				case CMD_FGCOLOR:
 				{
 					m_PropertiesEditor->setInfo(tr(
-						"<b>CMD_FGCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
-						"<b>argb</b>: New foreground color, as a 32-bit ARGB number. Red is the most significant 8 "
-						"bits, blue is the least. So 0xffff0000 is bright red.<br>"
+						"<b>CMD_FGCOLOR</b>(<i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>rgb</b>: New foreground color, as a 32-bit RGB number. Red is the most significant 8 "
+						"bits, blue is the least. So 0xff0000 is bright red.<br>"
 						"Foreground color is applicable "
 						"for things that the user can move such as handles and buttons "
 						"(\"affordances\").<br>"
@@ -930,8 +930,8 @@ void DlEditor::editingLine(QTextBlock block)
 				case CMD_GRADCOLOR:
 				{
 					m_PropertiesEditor->setInfo(tr(
-						"<b>CMD_GRADCOLOR</b>(<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>)<br>"
-						"<b>argb</b>: New highlight gradient color, as a 32-bit ARGB number. Red is the most "
+						"<b>CMD_GRADCOLOR</b>(<i>r</i>, <i>g</i>, <i>b</i>)<br>"
+						"<b>rgb</b>: New highlight gradient color, as a 32-bit RGB number. Red is the most "
 						"significant 8 bits, blue is the least. So 0xffff0000 is bright red.<br>"
 						"<br>"
 						"Set the 3D button highlight color."));

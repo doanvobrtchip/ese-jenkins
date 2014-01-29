@@ -166,12 +166,71 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
 	m_Graphics->setText(0, tr("Graphics"));
+	{
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color RGB"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_RGB));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color A"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_A));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color Mask"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_MASK));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Line Width"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_LINE_WIDTH));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Point Size"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_POINT_SIZE));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Blend Func"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_BLEND_FUNC));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Scissor Size"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_SCISSOR_SIZE));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Scissor XY"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_SCISSOR_XY));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Alpha Func"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_ALPHA_FUNC));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Stencil Func"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_STENCIL_FUNC));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Stencil Mask"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_STENCIL_MASK));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Stencil Op"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_STENCIL_OP));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Tag"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_TAG));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Tag Mask"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_TAG_MASK));
+	}
 
 	m_Bitmaps = new QTreeWidgetItem(m_Tools);
 	m_Bitmaps->setText(0, tr("Bitmaps"));
 
-	m_Advanced = new QTreeWidgetItem(m_Tools);
-	m_Advanced->setText(0, tr("Advanced"));
+	// m_Advanced = new QTreeWidgetItem(m_Tools);
+	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
 }
 
 Toolbox::~Toolbox()

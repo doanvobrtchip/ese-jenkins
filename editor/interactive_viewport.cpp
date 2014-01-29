@@ -1374,9 +1374,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_Insert->setChecked(true);
 				}
 			}
-			else if (selectionType == 3 && m_MouseStackValid)
+			else if (selectionType == 3)
 			{
-				int line = m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop;
+				int line = m_MouseStackValid ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : 0;
 				m_LineEditor->codeEditor()->beginUndoCombine();
 				DlParsed pa;
 				pa.ValidId = true;
@@ -1392,7 +1392,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ExpectedParameterCount = 3;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_A:
-					pa.Parameter[0].U = 0;
+					pa.Parameter[0].U = 255;
 					pa.ExpectedParameterCount = 1;
 					break;
 				case FT800EMU_DL_CLEAR_STENCIL:
@@ -1401,6 +1401,74 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					break;
 				case FT800EMU_DL_CLEAR_TAG:
 					pa.Parameter[0].U = 0;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_COLOR_RGB:
+					pa.Parameter[0].U = 31;
+					pa.Parameter[1].U = 127;
+					pa.Parameter[2].U = 63;
+					pa.ExpectedParameterCount = 3;
+					break;
+				case FT800EMU_DL_COLOR_A:
+					pa.Parameter[0].U = 255;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_COLOR_MASK:
+					pa.Parameter[0].U = 1;
+					pa.Parameter[1].U = 1;
+					pa.Parameter[2].U = 1;
+					pa.Parameter[3].U = 1;
+					pa.ExpectedParameterCount = 4;
+					break;
+				case FT800EMU_DL_LINE_WIDTH:
+					pa.Parameter[0].U = 64;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_POINT_SIZE:
+					pa.Parameter[0].U = 256;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_BLEND_FUNC:
+					pa.Parameter[0].U = SRC_ALPHA;
+					pa.Parameter[1].U = ONE_MINUS_SRC_ALPHA;
+					pa.ExpectedParameterCount = 2;
+					break;
+				case FT800EMU_DL_SCISSOR_SIZE:
+					pa.Parameter[0].U = 512;
+					pa.Parameter[1].U = 512;
+					pa.ExpectedParameterCount = 2;
+					break;
+				case FT800EMU_DL_SCISSOR_XY:
+					pa.Parameter[0].U = 0;
+					pa.Parameter[1].U = 0;
+					pa.ExpectedParameterCount = 2;
+					break;
+				case FT800EMU_DL_ALPHA_FUNC:
+					pa.Parameter[0].U = ALWAYS;
+					pa.Parameter[1].U = ZERO;
+					pa.ExpectedParameterCount = 2;
+					break;
+				case FT800EMU_DL_STENCIL_FUNC:
+					pa.Parameter[0].U = ALWAYS;
+					pa.Parameter[1].U = 0;
+					pa.Parameter[2].U = 255;
+					pa.ExpectedParameterCount = 3;
+					break;
+				case FT800EMU_DL_STENCIL_MASK:
+					pa.Parameter[0].U = 255;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_STENCIL_OP:
+					pa.Parameter[0].U = KEEP;
+					pa.Parameter[1].U = KEEP;
+					pa.ExpectedParameterCount = 2;
+					break;
+				case FT800EMU_DL_TAG:
+					pa.Parameter[0].U = 0;
+					pa.ExpectedParameterCount = 1;
+					break;
+				case FT800EMU_DL_TAG_MASK:
+					pa.Parameter[0].U = 1;
 					pa.ExpectedParameterCount = 1;
 					break;
 				}
