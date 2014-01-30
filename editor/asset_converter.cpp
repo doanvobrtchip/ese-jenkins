@@ -31,6 +31,7 @@ namespace {
 
 #ifdef FT800EMU_PYTHON
 PyObject *a_ImageConvModule = NULL;
+PyObject *a_ImageConvObject = NULL;
 PyObject *a_ImageConvRun = NULL;
 #endif /* FT800EMU_PYTHON */
 
@@ -51,13 +52,13 @@ void AssetConverter::init()
 		if (pyImageConvClass)
 		{
 			PyObject *pyArgs = PyTuple_New(0);
-			PyObject *pyImageConv = PyObject_CallObject(pyImageConvClass, pyArgs);
+			a_ImageConvObject = PyObject_CallObject(pyImageConvClass, pyArgs);
 			Py_DECREF(pyImageConvClass); pyImageConvClass = NULL;
 			Py_DECREF(pyArgs); pyArgs = NULL;
 
-			if (pyImageConv)
+			if (a_ImageConvObject)
 			{
-				a_ImageConvRun = PyObject_GetAttrString(pyImageConv, "run");
+				a_ImageConvRun = PyObject_GetAttrString(a_ImageConvObject, "run");
 				if (a_ImageConvRun)
 				{
 					printf("Image Converter available\n");
@@ -83,8 +84,9 @@ void AssetConverter::init()
 void AssetConverter::release()
 {
 #ifdef FT800EMU_PYTHON
-	Py_DECREF(a_ImageConvRun); a_ImageConvRun = NULL;
-	Py_DECREF(a_ImageConvModule); a_ImageConvModule = NULL;
+	Py_XDECREF(a_ImageConvRun); a_ImageConvRun = NULL;
+	Py_XDECREF(a_ImageConvObject); a_ImageConvObject = NULL;
+	Py_XDECREF(a_ImageConvModule); a_ImageConvModule = NULL;
 #endif /* FT800EMU_PYTHON */
 }
 
