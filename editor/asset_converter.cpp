@@ -8,7 +8,7 @@
  */
 
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
+ * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
 #ifdef FT800EMU_PYTHON
