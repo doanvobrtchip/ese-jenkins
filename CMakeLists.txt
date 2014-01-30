@@ -62,6 +62,8 @@ ADD_SUBDIRECTORY(playxbu)
 
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
+OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
+
 IF (WITH_QT)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
   ADD_SUBDIRECTORY(qtsample)

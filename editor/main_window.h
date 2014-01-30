@@ -16,6 +16,8 @@
 
 // STL includes
 #include <vector>
+#include <map>
+#include <string>
 
 // Qt includes
 #include <QMainWindow>
@@ -41,6 +43,28 @@ class PropertiesEditor;
 class Toolbox;
 class DeviceManager;
 class Inspector;
+class MainWindow;
+
+class RunScript : public QObject
+{
+	Q_OBJECT
+
+public:
+	RunScript() : Action(NULL), Window(NULL)
+	{
+
+	}
+
+	virtual ~RunScript();
+
+	QAction *Action;
+	QString Script;
+	MainWindow *Window;
+
+public slots:
+	void runScript();
+
+};
 
 /**
  * MainWindow
@@ -76,6 +100,8 @@ public:
 	// Tracking coprocessor command used to write display list i
 	int *getDlCmd();
 
+	void runScript(const QString &script);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -100,6 +126,8 @@ private slots:
 
 	void editorTabChanged(int i);
 	void tabChanged(int i);
+
+	void refreshScriptsMenu();
 
 private:
 	void updateInitialization(bool visible);
@@ -166,6 +194,7 @@ private:
 	QMenu *m_EditMenu;
 	QMenu *m_ViewportMenu;
 	QMenu *m_WidgetsMenu;
+	QMenu *m_ScriptsMenu;
 	QMenu *m_HelpMenu;
 
 	QToolBar *m_FileToolBar;
@@ -185,6 +214,7 @@ private:
 	QAction *m_RedoAct;
 	QAction *m_DummyAct;
 	// QAction *m_SaveScreenshotAct;
+	std::map<QString, RunScript *> m_ScriptActs;
 
 	QString m_CurrentFile;
 

@@ -11,6 +11,9 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#ifdef FT800EMU_PYTHON
+#include <Python.h>
+#endif /* FT800EMU_PYTHON */
 #include <stdio.h>
 #include <QApplication>
 #include <QDebug>
@@ -68,12 +71,19 @@ int main(int argc, char* argv[])
 	hr = hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	bool coInitOk = (hr == S_OK) || (hr == S_FALSE);
 #endif
+#ifdef FT800EMU_PYTHON
+	printf("With Python support\n");
+	Py_Initialize();
+#endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 	FT800EMUQT::MainWindow mainWin(customSizeHints);
 	mainWin.resize(800, 600);
 	mainWin.show(); // calls isVisible(true)
 	int result = app.exec();
+#ifdef FT800EMU_PYTHON
+    Py_Finalize();
+#endif /* FT800EMU_PYTHON */
 #ifdef NL_OS_WINDOWS
 	if (coInitOk) CoUninitialize();
 #endif

@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 // Qt includes
+#include <QCoreApplication>
 #include <QTreeView>
 #include <QDirModel>
 #include <QUndoStack>
@@ -459,7 +460,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL),
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_ScriptsMenu(NULL), m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL),
@@ -523,6 +524,60 @@ MainWindow::~MainWindow()
 	s_DlEditor = NULL;
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
+}
+
+void MainWindow::refreshScriptsMenu()
+{
+	//printf("Refresh scripts menu\n");
+	QDir currentDir(QCoreApplication::applicationDirPath());
+	QStringList filters;
+	filters.push_back("*.py");
+	QStringList scriptFiles = currentDir.entryList(filters);
+	std::map<QString, RunScript *> scriptActs;
+	scriptActs.swap(m_ScriptActs);
+	for (int i = 0; i < scriptFiles.size(); ++i)
+	{
+		//char *fileName = scriptFiles[i].toLatin1().data();
+		//printf("Script: %s\n", fileName);
+		if (scriptActs.find(scriptFiles[i]) == scriptActs.end())
+		{
+			RunScript *rs = new RunScript();
+			QAction *act = new QAction(this);
+			act->setText(scriptFiles[i]);
+			act->setStatusTip(tr("Run Python script"));
+			m_ScriptsMenu->addAction(act);
+			rs->Action = act;
+			rs->Script = scriptFiles[i];
+			rs->Window = this,
+			connect(act, SIGNAL(triggered()), rs, SLOT(runScript()));
+			m_ScriptActs[scriptFiles[i]] = rs;
+		}
+		else
+		{
+			m_ScriptActs[scriptFiles[i]] = scriptActs[scriptFiles[i]];
+			scriptActs.erase(scriptFiles[i]);
+		}
+	}
+	for (std::map<QString, RunScript *>::iterator it = scriptActs.begin(), end = scriptActs.end(); it != end; ++it)
+	{
+		delete it->second;
+	}
+}
+
+RunScript::~RunScript()
+{
+	delete Action;
+}
+
+void RunScript::runScript()
+{
+	Window->runScript(Script);
+}
+
+void MainWindow::runScript(const QString &script)
+{
+	char *fileName = script.toLatin1().data();
+	printf("Script: %s\n", fileName);
 }
 
 void MainWindow::createActions()
@@ -624,6 +679,9 @@ void MainWindow::createMenus()
 
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
 
+	m_ScriptsMenu = menuBar()->addMenu(QString::null);
+	connect(m_ScriptsMenu, SIGNAL(aboutToShow()), this, SLOT(refreshScriptsMenu()));
+
 	menuBar()->addSeparator();
 
 	m_HelpMenu = menuBar()->addMenu(QString::null);
@@ -637,6 +695,7 @@ void MainWindow::translateMenus()
 	m_EditMenu->setTitle(tr("Edit"));
 	//m_ViewportMenu->setTitle(tr("Viewport"));
 	m_WidgetsMenu->setTitle(tr("View"));
+	m_ScriptsMenu->setTitle(tr("Scripts"));
 	m_HelpMenu->setTitle(tr("Help"));
 }
 
@@ -939,7 +998,7 @@ void MainWindow::incbLanguageCode()
 
 void MainWindow::editorTabChanged(int i)
 {
-	printf("blip\n");
+	//printf("blip\n");
 	//m_EmulatorViewport->unsetEditorLine();
 	//m_Toolbox->unsetEditorLine();
 	bool cmdExist = false;
