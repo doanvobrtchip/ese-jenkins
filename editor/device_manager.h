@@ -14,6 +14,9 @@
 #ifndef FT800EMUQT_DEVICE_MANAGER_H
 #define FT800EMUQT_DEVICE_MANAGER_H
 
+#define FT800_DEVICE_MANAGER 0
+#define FT800_DEVICE_MANAGER_REALTIME 0
+
 // STL includes
 
 // Qt includes
@@ -26,6 +29,8 @@
 namespace FT800EMUQT {
 
 class MainWindow;
+
+#if FT800_DEVICE_MANAGER
 
 /**
  * DeviceManager
@@ -55,6 +60,15 @@ private:
 	DeviceManager &operator=(const DeviceManager &);
 
 }; /* class DeviceManager */
+
+#else /* FT800_DEVICE_MANAGER */
+
+class DeviceManager : public QWidget
+{
+	Q_OBJECT
+};
+
+#endif /* FT800_DEVICE_MANAGER */
 
 } /* namespace FT800EMUQT */
 

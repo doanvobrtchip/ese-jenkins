@@ -824,6 +824,7 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
+#if FT800_DEVICE_MANAGER
 	// Devices
 	{
 		m_DeviceManagerDock = new QDockWidget(this);
@@ -838,6 +839,7 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::RightDockWidgetArea, m_DeviceManagerDock);
 		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
 	}
+#endif /* FT800_DEVICE_MANAGER */
 
 	// PropertiesEditor
 	{
@@ -1057,7 +1059,9 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
 
+#if FT800_DEVICE_MANAGER
 	tabifyDockWidget(m_DeviceManagerDock, m_PropertiesEditorDock);
+#endif /* FT800_DEVICE_MANAGER */
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1082,7 +1086,9 @@ void MainWindow::translateDockWindows()
 	m_InspectorDock->setWindowTitle(tr("Inspector"));
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
+#if FT800_DEVICE_MANAGER
 	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
+#endif /* FT800_DEVICE_MANAGER */
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));

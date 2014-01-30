@@ -28,6 +28,8 @@ using namespace std;
 
 namespace FT800EMUQT {
 
+#if FT800_DEVICE_MANAGER
+
 DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
@@ -38,6 +40,8 @@ DeviceManager::~DeviceManager()
 {
 
 }
+
+#endif /* FT800_DEVICE_MANAGER */
 
 } /* namespace FT800EMUQT */
 

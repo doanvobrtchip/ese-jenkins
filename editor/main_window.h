@@ -174,8 +174,10 @@ private:
 	QDockWidget *m_InspectorDock;
 	Inspector *m_Inspector;
 
+#if FT800_DEVICE_MANAGER
 	QDockWidget *m_DeviceManagerDock;
 	DeviceManager *m_DeviceManager;
+#endif /* FT800_DEVICE_MANAGER */
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
