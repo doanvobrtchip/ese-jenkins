@@ -18,6 +18,8 @@
 #include <QApplication>
 #include <QDebug>
 #include <QThread>
+#include <QDir>
+#include <QString>
 #include "main_window.h"
 #include "emulator_viewport.h"
 #include "ft800emu_emulator.h"
@@ -74,6 +76,10 @@ int main(int argc, char* argv[])
 #ifdef FT800EMU_PYTHON
 	printf("With Python support\n");
 	Py_Initialize();
+	PyObject* sysPath = PySys_GetObject((char*)"path");
+	PyObject* curPath = PyString_FromString(QDir::currentPath().toLatin1().data()); // FIXME Unicode
+	PyList_Append(sysPath, curPath);
+	Py_DECREF(curPath);
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);

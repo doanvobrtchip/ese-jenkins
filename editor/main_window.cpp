@@ -11,6 +11,7 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#include <Python.h>
 #include "main_window.h"
 
 // STL includes
@@ -529,7 +530,7 @@ MainWindow::~MainWindow()
 void MainWindow::refreshScriptsMenu()
 {
 	//printf("Refresh scripts menu\n");
-	QDir currentDir(QCoreApplication::applicationDirPath());
+	QDir currentDir = QDir::currentPath(); //currentDir(QCoreApplication::applicationDirPath());
 	QStringList filters;
 	filters.push_back("*.py");
 	QStringList scriptFiles = currentDir.entryList(filters);
@@ -576,8 +577,51 @@ void RunScript::runScript()
 
 void MainWindow::runScript(const QString &script)
 {
-	char *fileName = script.toLatin1().data();
-	printf("Script: %s\n", fileName);
+	QString scriptN = script.left(script.size() - 3);
+	QByteArray scriptNa = scriptN.toLatin1();
+	char *scriptName = scriptNa.data();
+	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
+
+	PyObject *pyScript = PyString_FromString(scriptName); // FIXME Unicode
+	PyObject *pyModule = PyImport_Import(pyScript);
+	Py_DECREF(pyScript); pyScript = NULL;
+
+	if (pyModule != NULL)
+	{
+		PyObject *pyFunc = PyObject_GetAttrString(pyModule, "multiply");
+		if (pyFunc && PyCallable_Check(pyFunc))
+		{
+			PyObject *pyValue;
+			PyObject *pyArgs = PyTuple_New(2);
+			pyValue = PyInt_FromLong(5);
+			PyTuple_SetItem(pyArgs, 0, pyValue);
+			pyValue = PyInt_FromLong(10);
+			PyTuple_SetItem(pyArgs, 1, pyValue);
+			pyValue = PyObject_CallObject(pyFunc, pyArgs);
+			Py_DECREF(pyArgs);
+			if (pyValue)
+			{
+				printf("Ok\n");
+			}
+			else
+			{
+				printf("Not ok\n");
+			}
+		}
+		else
+		{
+			printf("Missing function\n");
+		}
+
+		Py_XDECREF(pyFunc); pyFunc = NULL;
+		Py_DECREF(pyModule); pyModule = NULL;
+	}
+	else
+	{
+		printf("---\nPython ERROR: \n");
+		PyErr_Print();
+		printf("---\n");
+	}
 }
 
 void MainWindow::createActions()
