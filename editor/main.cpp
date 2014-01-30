@@ -23,6 +23,7 @@
 #include "main_window.h"
 #include "emulator_viewport.h"
 #include "ft800emu_emulator.h"
+#include "asset_converter.h"
 
 void usage()
 {
@@ -80,6 +81,7 @@ int main(int argc, char* argv[])
 	PyObject* curPath = PyString_FromString(QDir::currentPath().toLatin1().data()); // FIXME Unicode
 	PyList_Append(sysPath, curPath);
 	Py_DECREF(curPath);
+	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
@@ -88,6 +90,7 @@ int main(int argc, char* argv[])
 	mainWin.show(); // calls isVisible(true)
 	int result = app.exec();
 #ifdef FT800EMU_PYTHON
+	FT800EMUQT::AssetConverter::release();
     Py_Finalize();
 #endif /* FT800EMU_PYTHON */
 #ifdef NL_OS_WINDOWS

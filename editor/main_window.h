@@ -27,6 +27,7 @@
 
 // Project includes
 
+class QTemporaryDir;
 class QTreeView;
 class QDirModel;
 class QUndoStack;
@@ -153,6 +154,7 @@ private:
 
 private:
 
+	QString m_InitialWorkingDir;
 	QUndoStack *m_UndoStack;
 
 	InteractiveViewport *m_EmulatorViewport;
@@ -217,6 +219,7 @@ private:
 	std::map<QString, RunScript *> m_ScriptActs;
 
 	QString m_CurrentFile;
+	QTemporaryDir *m_TemporaryDir;
 
 }; /* class MainWindow */
 

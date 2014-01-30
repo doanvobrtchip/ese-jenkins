@@ -11,7 +11,9 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#ifdef FT800EMU_PYTHON
 #include <Python.h>
+#endif /* FT800EMU_PYTHON */
 #include "main_window.h"
 
 // STL includes
@@ -19,6 +21,7 @@
 
 // Qt includes
 #include <QCoreApplication>
+#include <QTemporaryDir>
 #include <QTreeView>
 #include <QDirModel>
 #include <QUndoStack>
@@ -466,10 +469,12 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL),
 	m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
+	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
+	m_TemporaryDir(NULL)
 {
 	setObjectName("MainWindow");
 
+	m_InitialWorkingDir = QDir::currentPath();
 	m_UndoStack = new QUndoStack(this);
 
 	QWidget *centralWidget = new QWidget(this);
@@ -525,12 +530,16 @@ MainWindow::~MainWindow()
 	s_DlEditor = NULL;
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
+
+	QDir::setCurrent(m_InitialWorkingDir);
+	delete m_TemporaryDir;
+	m_TemporaryDir = NULL;
 }
 
 void MainWindow::refreshScriptsMenu()
 {
 	//printf("Refresh scripts menu\n");
-	QDir currentDir = QDir::currentPath(); //currentDir(QCoreApplication::applicationDirPath());
+	QDir currentDir = m_InitialWorkingDir; //QDir::currentPath(); //currentDir(QCoreApplication::applicationDirPath());
 	QStringList filters;
 	filters.push_back("*.py");
 	QStringList scriptFiles = currentDir.entryList(filters);
@@ -577,6 +586,7 @@ void RunScript::runScript()
 
 void MainWindow::runScript(const QString &script)
 {
+#ifdef FT800EMU_PYTHON
 	QString scriptN = script.left(script.size() - 3);
 	QByteArray scriptNa = scriptN.toLatin1();
 	char *scriptName = scriptNa.data();
@@ -586,9 +596,11 @@ void MainWindow::runScript(const QString &script)
 	PyObject *pyModule = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
 
+	bool error = true;
+
 	if (pyModule != NULL)
 	{
-		PyObject *pyFunc = PyObject_GetAttrString(pyModule, "multiply");
+		/*PyObject *pyFunc = PyObject_GetAttrString(pyModule, "multiply");
 		if (pyFunc && PyCallable_Check(pyFunc))
 		{
 			PyObject *pyValue;
@@ -613,15 +625,59 @@ void MainWindow::runScript(const QString &script)
 			printf("Missing function\n");
 		}
 
-		Py_XDECREF(pyFunc); pyFunc = NULL;
+		Py_XDECREF(pyFunc); pyFunc = NULL;*/
+
+		PyObject *pyImageConvClass = PyObject_GetAttrString(pyModule, "Image_Conv");
+		if (pyImageConvClass)
+		{
+			PyObject *pyArgs = PyTuple_New(0);
+			PyObject *pyImageConv = PyObject_CallObject(pyImageConvClass, pyArgs);
+			Py_DECREF(pyImageConvClass); pyImageConvClass = NULL;
+			Py_DECREF(pyArgs); pyArgs = NULL;
+
+			if (pyImageConv)
+			{
+				PyObject *pyRunFunc = PyObject_GetAttrString(pyImageConv, "run");
+				if (pyRunFunc)
+				{
+					PyObject *pyValue;
+					PyObject *pyArgs = PyTuple_New(1);
+					PyObject *pyTuple = PyTuple_New(6);
+					pyValue = PyString_FromString("-i");
+					PyTuple_SetItem(pyTuple, 0, pyValue);
+					pyValue = PyString_FromString("/home/kaetemi/Downloads/blocks.jpg"); // FIXME Unicode
+					PyTuple_SetItem(pyTuple, 1, pyValue);
+					pyValue = PyString_FromString("-o");
+					PyTuple_SetItem(pyTuple, 2, pyValue);
+					pyValue = PyString_FromString("blocks_argb1555");
+					PyTuple_SetItem(pyTuple, 3, pyValue);
+					pyValue = PyString_FromString("-f");
+					PyTuple_SetItem(pyTuple, 4, pyValue);
+					pyValue = PyString_FromString("0");
+					PyTuple_SetItem(pyTuple, 5, pyValue);
+					PyTuple_SetItem(pyArgs, 0, pyTuple);
+					PyObject *pyResult = PyObject_CallObject(pyRunFunc, pyArgs);
+					Py_DECREF(pyRunFunc); pyRunFunc = NULL;
+					Py_DECREF(pyArgs); pyArgs = NULL;
+					if (pyResult)
+					{
+						printf("Ok\n");
+						error = false;
+					}
+				}
+			}
+		}
+
 		Py_DECREF(pyModule); pyModule = NULL;
 	}
-	else
+
+	if (error)
 	{
 		printf("---\nPython ERROR: \n");
 		PyErr_Print();
 		printf("---\n");
 	}
+#endif /* FT800EMU_PYTHON */
 }
 
 void MainWindow::createActions()
@@ -723,8 +779,10 @@ void MainWindow::createMenus()
 
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
 
+#ifdef FT800EMU_PYTHON
 	m_ScriptsMenu = menuBar()->addMenu(QString::null);
 	connect(m_ScriptsMenu, SIGNAL(aboutToShow()), this, SLOT(refreshScriptsMenu()));
+#endif /* FT800EMU_PYTHON */
 
 	menuBar()->addSeparator();
 
@@ -1294,6 +1352,12 @@ void MainWindow::actNew()
 	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+
+	// set working directory to temporary directory
+	QDir::setCurrent(m_InitialWorkingDir);
+	delete m_TemporaryDir;
+	m_TemporaryDir = new QTemporaryDir("ft800editor");
+	QDir::setCurrent(m_TemporaryDir->path());
 }
 
 void MainWindow::actOpen()
