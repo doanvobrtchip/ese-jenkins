@@ -16,6 +16,7 @@
 #endif /* FT800EMU_PYTHON */
 #include <stdio.h>
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QThread>
 #include <QDir>
@@ -78,13 +79,22 @@ int main(int argc, char* argv[])
 	printf("With Python support\n");
 	Py_Initialize();
 	PyObject* sysPath = PySys_GetObject((char*)"path");
-	PyObject* curPath = PyString_FromString(QDir::currentPath().toLatin1().data()); // FIXME Unicode
-	PyList_Append(sysPath, curPath);
-	Py_DECREF(curPath);
+	{
+		PyObject* curPath = PyString_FromString(QDir::currentPath().toUtf8().data()); // FIXME Unicode ?
+		PyList_Append(sysPath, curPath);
+		Py_DECREF(curPath);
+	}
 	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
+#ifdef FT800EMU_PYTHON
+	{
+		PyObject* curPath = PyString_FromString(QCoreApplication::applicationDirPath().toUtf8().data()); // FIXME Unicode ?
+		PyList_Append(sysPath, curPath);
+		Py_DECREF(curPath);
+	}
+#endif /* FT800EMU_PYTHON */
 	FT800EMUQT::MainWindow mainWin(customSizeHints);
 	mainWin.resize(800, 600);
 	mainWin.show(); // calls isVisible(true)
