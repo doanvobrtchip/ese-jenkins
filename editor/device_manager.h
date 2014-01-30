@@ -14,17 +14,23 @@
 #ifndef FT800EMUQT_DEVICE_MANAGER_H
 #define FT800EMUQT_DEVICE_MANAGER_H
 
-#define FT800_DEVICE_MANAGER 0
+#define FT800_DEVICE_MANAGER 1
 #define FT800_DEVICE_MANAGER_REALTIME 0
 
 // STL includes
+#include <map>
 
 // Qt includes
 #include <QWidget>
 
 // Emulator includes
+#include <ft800emu_inttypes.h>
 
 // Project includes
+
+class QTreeWidget;
+class QTreeWidgetItem;
+class QPushButton;
 
 namespace FT800EMUQT {
 
@@ -47,13 +53,32 @@ public:
 	virtual ~DeviceManager();
 
 private:
+	typedef uint32_t DeviceId; // Change type to whatever needed
 	struct DeviceInfo
 	{
+		DeviceId Id;
+		QTreeWidgetItem *View;
+		bool Connected;
 		// ...
+		// Add necessary device specific data here
 	};
 
 	MainWindow *m_MainWindow;
-	// QVBoxLayout *m_DeviceList;
+	QTreeWidget *m_DeviceList;
+	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
+	QPushButton *m_ConnectButton;
+	QPushButton *m_DisconnectButton;
+	QPushButton *m_SendImageButton;
+
+private slots:
+	void refreshDevices();
+	void connectDevice();
+	void disconnectDevice();
+	void sendImage();
+	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+
+private:
+	void updateSelection();
 
 private:
 	DeviceManager(const DeviceManager &);

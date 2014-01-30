@@ -26,6 +26,7 @@
 // Emulator includes
 
 // Project includes
+#include "device_manager.h" // for the #define
 
 class QTemporaryDir;
 class QTreeView;
