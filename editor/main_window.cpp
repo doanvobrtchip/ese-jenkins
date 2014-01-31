@@ -1459,20 +1459,31 @@ void MainWindow::actSaveAs()
 	dir.cdUp();
 	QString dstPath = dir.path();
 	QString srcPath = QDir::currentPath();
-	// printf("Path: %s\n", dirPath.toUtf8().data());
-	// (copy assets from srcPath to dstPath)
+	if (dstPath != srcPath)
+	{
+		// printf("Path: %s\n", dirPath.toUtf8().data());
+		// (copy assets from srcPath to dstPath)
+	}
 
-	// Delete temporary directory
-	QDir::setCurrent(QDir::tempPath());
-	delete m_TemporaryDir; m_TemporaryDir = NULL;
+	if (m_TemporaryDir)
+	{
+		// Delete temporary directory
+		QDir::setCurrent(QDir::tempPath());
+		delete m_TemporaryDir; m_TemporaryDir = NULL;
+	}
 
 	// Set the folder to be the project folder
 	QDir::setCurrent(dstPath);
+
+	// Save the project itself
+	actSave();
 }
 
 void MainWindow::actImport()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), "",
+	printf("*** Import ***\n");
+
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(),
 		tr("Memory dump, *.vc1dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
@@ -1563,14 +1574,24 @@ void MainWindow::actImport()
 	// clear undo stacks
 	clearUndoStack();
 
+	// be helpful
+	focusDlEditor();
 	m_PropertiesEditor->setInfo(tr("Imported project from .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
+	m_Toolbox->setEditorLine(m_DlEditor, 0);
+
+	// set working directory to temporary directory // FIXME: tempPath()
+	QDir::setCurrent(QDir::tempPath());
+	delete m_TemporaryDir;
+	m_TemporaryDir = new QTemporaryDir("ft800editor");
+	QDir::setCurrent(m_TemporaryDir->path());
+	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
 void MainWindow::actExport()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), "",
-		tr("Memory dump, *.vc1dump (*.vc1dump)"));
+	QString filter = tr("Memory dump, *.vc1dump (*.vc1dump)");
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
 
