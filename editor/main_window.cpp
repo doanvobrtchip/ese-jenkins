@@ -1449,10 +1449,17 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filter = tr("FT800 Editor Project, *.ft800proj (*.ft800proj)");
+	QString filterft800proj = tr("FT800 Editor Project, *.ft800proj (*.ft800proj)");
+	QString filter = filterft800proj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
+
+	if (filter == filterft800proj)
+	{
+		if (!fileName.endsWith(".ft800proj"))
+			fileName = fileName + ".ft800proj";
+	}
 
 	// Copy asset files, abort if already exists (check first)
 	QDir dir(fileName);
@@ -1590,10 +1597,17 @@ void MainWindow::actImport()
 
 void MainWindow::actExport()
 {
-	QString filter = tr("Memory dump, *.vc1dump (*.vc1dump)");
+	QString filtervc1dump = tr("Memory dump, *.vc1dump (*.vc1dump)");
+	QString filter = filtervc1dump;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
+
+	if (filter == filtervc1dump)
+	{
+		if (!fileName.endsWith(".vc1dump"))
+			fileName = fileName + ".vc1dump";
+	}
 
 	QFile file(fileName);
 	file.open(QIODevice::WriteOnly);
