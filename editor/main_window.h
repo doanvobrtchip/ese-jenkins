@@ -211,7 +211,9 @@ private:
 	QMenu *m_EditMenu;
 	QMenu *m_ViewportMenu;
 	QMenu *m_WidgetsMenu;
+#ifdef FT800EMU_PYTHON
 	QMenu *m_ScriptsMenu;
+#endif
 	QMenu *m_HelpMenu;
 
 	QToolBar *m_FileToolBar;

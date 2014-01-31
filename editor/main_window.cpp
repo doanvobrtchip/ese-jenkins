@@ -65,6 +65,10 @@
 #include <ft800emu_graphics_processor.h>
 #include <ft800emu_graphics_driver.h>
 #include <vc.h>
+#ifdef WIN32
+#	undef min
+#	undef max
+#endif
 
 // Project includes
 #include "dl_editor.h"
@@ -485,7 +489,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_ScriptsMenu(NULL), m_HelpMenu(NULL),
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), 
+#ifdef FT800EMU_PYTHON
+	m_ScriptsMenu(NULL), 
+#endif
+	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL),
@@ -562,6 +570,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::refreshScriptsMenu()
 {
+#ifdef FT800EMU_PYTHON
 	//printf("Refresh scripts menu\n");
 	QDir currentDir = m_InitialWorkingDir; //QDir::currentPath(); //currentDir(QCoreApplication::applicationDirPath());
 	QStringList filters;
@@ -596,11 +605,14 @@ void MainWindow::refreshScriptsMenu()
 	{
 		delete it->second;
 	}
+#endif
 }
 
 RunScript::~RunScript()
 {
+#ifdef FT800EMU_PYTHON
 	delete Action;
+#endif
 }
 
 void RunScript::runScript()
@@ -829,7 +841,9 @@ void MainWindow::translateMenus()
 	m_EditMenu->setTitle(tr("Edit"));
 	//m_ViewportMenu->setTitle(tr("Viewport"));
 	m_WidgetsMenu->setTitle(tr("View"));
+#ifdef FT800EMU_PYTHON
 	m_ScriptsMenu->setTitle(tr("Scripts"));
+#endif /* FT800EMU_PYTHON */
 	m_HelpMenu->setTitle(tr("Help"));
 }
 
