@@ -411,7 +411,6 @@ void loop()
 				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 				{
 					s_UtilizationDisplayListCmd = i;
-					printf("%i\n", s_UtilizationDisplayListCmd);
 					break;
 				}
 			}
