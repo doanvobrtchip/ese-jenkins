@@ -49,6 +49,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QTextBlock>
+#include <QPlainTextEdit>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -1435,14 +1436,93 @@ void MainWindow::actNew()
 	// set working directory to temporary directory // FIXME: tempPath()
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ft800editor");
+	m_TemporaryDir = new QTemporaryDir("ft800editor-");
 	QDir::setCurrent(m_TemporaryDir->path());
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
+void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &array)
+{
+	bool firstLine = true;
+	for (int i = 0; i < array.size(); ++i)
+	{
+		if (firstLine) firstLine = false;
+		else textEditor->textCursor().insertText("\n");
+		textEditor->textCursor().insertText(array[i].toString());
+	}
+}
+
 void MainWindow::actOpen()
 {
-	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+	printf("*** Open ***\n");
+
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(),
+		tr("FT800 Editor Project, *.ft800proj (*.ft800proj)"));
+	if (fileName.isNull())
+		return;
+
+	// Reset editors to their default state
+	clearEditor();
+
+	// Remove temporary paths
+	if (m_TemporaryDir)
+	{
+		QDir::setCurrent(QDir::tempPath());
+		delete m_TemporaryDir; m_TemporaryDir = NULL;
+	}
+
+	// Set current project path
+	m_CurrentFile = fileName;
+	QDir dir(fileName);
+	dir.cdUp();
+	QString dstPath = dir.path();
+	QDir::setCurrent(dstPath);
+
+	// Load the data
+	bool loadOk = false;
+	QFile file(fileName);
+	file.open(QIODevice::ReadOnly);
+	QByteArray data = file.readAll();
+	file.close();
+	QJsonParseError parseError;
+	QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+	if (parseError.error == QJsonParseError::NoError)
+	{
+		QJsonObject root = doc.object();
+		QJsonObject registers = root["registers"].toObject();
+		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
+		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
+		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
+		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
+		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		statusBar()->showMessage(tr("Opened FT800 Editor project"));
+		loadOk = true;
+	}
+	else
+	{
+		statusBar()->showMessage(parseError.errorString());
+	}
+
+	// Fallback
+	if (!loadOk)
+	{
+		// Reset editor and paths
+		clearEditor();
+		m_CurrentFile = QString();
+		QDir::setCurrent(QDir::tempPath());
+		m_TemporaryDir = new QTemporaryDir("ft800editor-");
+		QDir::setCurrent(m_TemporaryDir->path());
+	}
+
+	// clear undo stacks
+	clearUndoStack();
+
+	// be helpful
+	focusCmdEditor();
+	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
+	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
+	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument)
@@ -1605,7 +1685,6 @@ void MainWindow::actImport()
 
 	if (!loadOk)
 	{
-		m_CurrentFile = QString();
 		clearEditor();
 	}
 
@@ -1621,7 +1700,7 @@ void MainWindow::actImport()
 	// set working directory to temporary directory // FIXME: tempPath()
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ft800editor");
+	m_TemporaryDir = new QTemporaryDir("ft800editor-");
 	QDir::setCurrent(m_TemporaryDir->path());
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
