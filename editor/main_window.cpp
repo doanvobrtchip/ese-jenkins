@@ -43,6 +43,7 @@
 #include <QSpinBox>
 #include <QGroupBox>
 #include <QCheckBox>
+#include <QProgressBar>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -146,6 +147,9 @@ void setup()
 	wr32(REG_VSIZE, 272);
 	wr32(REG_PCLK, 5);
 }
+
+// Utilization
+static int s_UtilizationDisplayListCmd = 0;
 
 // Array indexed by display list index containing coprocessor line which wrote the display list command
 static int s_DisplayListCoprocessorCommandA[FT800EMU_DL_SIZE];
@@ -402,6 +406,16 @@ void loop()
 			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
+			for (int i = FT800EMU_DL_SIZE - 1; i >= 0; --i)
+			{
+				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
+				{
+					s_UtilizationDisplayListCmd = i;
+					printf("%i\n", s_UtilizationDisplayListCmd);
+					break;
+				}
+			}
+
 			// Test
 			/*for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 			{
@@ -424,6 +438,7 @@ void loop()
 		else
 		{
 			// Swap frame directly if nothing was written to the coprocessor
+			s_UtilizationDisplayListCmd = 0;
 
 			swrend();
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
@@ -680,6 +695,17 @@ void MainWindow::runScript(const QString &script)
 #endif /* FT800EMU_PYTHON */
 }
 
+void MainWindow::frameEmu()
+{
+
+}
+
+void MainWindow::frameQt()
+{
+	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+	m_UtilizationDisplayList->setValue(utilizationDisplayList);
+}
+
 void MainWindow::createActions()
 {
 	m_NewAct = new QAction(this);
@@ -840,6 +866,50 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
 	}
 #endif /* FT800_DEVICE_MANAGER */
+
+	// Utilization
+	{
+		m_UtilizationDock = new QDockWidget(this);
+		m_UtilizationDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		QWidget *widget = new QWidget(this);
+		QVBoxLayout *layout = new QVBoxLayout(widget);
+
+		// Display List
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Display List"));
+			QVBoxLayout *groupLayout = new QVBoxLayout(widget);
+
+			m_UtilizationDisplayList = new QProgressBar(this);
+			m_UtilizationDisplayList->setMinimum(0);
+			m_UtilizationDisplayList->setMaximum(FT800EMU_DL_SIZE);
+			groupLayout->addWidget(m_UtilizationDisplayList);
+
+			//QString danger = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 ); }";
+			//QString safe= "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #78d,stop: 0.4999 #46a,stop: 0.5 #45a,stop: 1 #238 ); }";
+			QPalette p = m_UtilizationDisplayList->palette();
+			/*p.setColor(QPalette::Active, QColorGroup::Highlight, Qt::red);
+			p.setColor(QPalette::Inactive, QColorGroup::Highlight, Qt::red);
+			p.setColor(QPalette::Disabled, QColorGroup::Highlight, Qt::red);*/
+			p.setColor(QPalette::Highlight, Qt::red);
+			m_UtilizationDisplayList->setPalette(p);
+			//m_UtilizationDisplayList->setStyleSheet(danger);
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+
+		layout->addStretch();
+		widget->setLayout(layout);
+		scrollArea->setWidget(widget);
+		m_UtilizationDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_UtilizationDock);
+		m_WidgetsMenu->addAction(m_UtilizationDock->toggleViewAction());
+	}
 
 	// PropertiesEditor
 	{
@@ -1060,8 +1130,9 @@ void MainWindow::createDockWindows()
 	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
-	tabifyDockWidget(m_DeviceManagerDock, m_PropertiesEditorDock);
+	tabifyDockWidget(m_DeviceManagerDock, m_UtilizationDock);
 #endif /* FT800_DEVICE_MANAGER */
+	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1089,6 +1160,7 @@ void MainWindow::translateDockWindows()
 #if FT800_DEVICE_MANAGER
 	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
 #endif /* FT800_DEVICE_MANAGER */
+	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));

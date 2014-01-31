@@ -36,6 +36,7 @@ class QScrollArea;
 class QSpinBox;
 class QCheckBox;
 class QTabBar;
+class QProgressBar;
 
 namespace FT800EMUQT {
 
@@ -103,6 +104,9 @@ public:
 	int *getDlCmd();
 
 	void runScript(const QString &script);
+
+	void frameEmu();
+	void frameQt();
 
 private slots:
 	// void applyEmulatorConfig();
@@ -179,6 +183,9 @@ private:
 	QDockWidget *m_DeviceManagerDock;
 	DeviceManager *m_DeviceManager;
 #endif /* FT800_DEVICE_MANAGER */
+
+	QDockWidget *m_UtilizationDock;
+	QProgressBar *m_UtilizationDisplayList;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;

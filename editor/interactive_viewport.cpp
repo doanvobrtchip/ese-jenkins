@@ -245,6 +245,7 @@ void InteractiveViewport::graphics()
 		m_DragMoving = false;
 	}
 
+	m_MainWindow->frameEmu();
 	m_MainWindow->inspector()->frameEmu();
 }
 
@@ -584,6 +585,7 @@ CMD_SCREENSAVER()
 	// Update pointer method
 	updatePointerMethod();
 
+	m_MainWindow->frameQt();
 	m_MainWindow->inspector()->frameQt();
 }
 

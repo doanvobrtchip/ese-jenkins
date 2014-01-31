@@ -268,7 +268,16 @@ void Inspector::frameQt()
 		{
 			m_RegisterCopy[id] = regValue;
 			m_RegisterItems[id]->setText(2, asRaw(regValue));
-			m_RegisterItems[id]->setText(3, asInt(regValue));
+			switch (i)
+			{
+			case REG_MACRO_0:
+			case REG_MACRO_1:
+				m_RegisterItems[id]->setText(3, asText(regValue));
+				break;
+			default:
+				m_RegisterItems[id]->setText(3, asInt(regValue));
+				break;
+			}
 		}
 	}
 }
