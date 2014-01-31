@@ -74,6 +74,7 @@
 #include "toolbox.h"
 #include "device_manager.h"
 #include "inspector.h"
+#include "content_manager.h"
 
 namespace FT800EMUQT {
 
@@ -480,7 +481,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
-	m_ToolboxDock(NULL), m_Toolbox(NULL),
+	m_ToolboxDock(NULL), m_Toolbox(NULL), m_ContentManagerDock(NULL), m_ContentManager(NULL),
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
@@ -493,6 +494,9 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_TemporaryDir(NULL)
 {
 	setObjectName("MainWindow");
+
+	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
+	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
 
 	m_InitialWorkingDir = QDir::currentPath();
 	m_UndoStack = new QUndoStack(this);
@@ -1100,6 +1104,21 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
 	}
 
+	// Content
+	{
+		m_ContentManagerDock = new QDockWidget(this);
+		m_ContentManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		m_ContentManager = new ContentManager(this);
+		scrollArea->setWidget(m_ContentManager);
+		m_ContentManagerDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);
+		m_WidgetsMenu->addAction(m_ContentManagerDock->toggleViewAction());
+	}
+
 	// Toolbox
 	{
 		m_ToolboxDock = new QDockWidget(this);
@@ -1129,7 +1148,8 @@ void MainWindow::createDockWindows()
 	}*/
 
 	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
-	tabifyDockWidget(m_RegistersDock, m_ToolboxDock);
+	tabifyDockWidget(m_RegistersDock, m_ContentManagerDock);
+	tabifyDockWidget(m_ContentManagerDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
 	tabifyDockWidget(m_DeviceManagerDock, m_UtilizationDock);
@@ -1165,6 +1185,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
+	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
 }
@@ -1281,6 +1302,24 @@ void MainWindow::focusCmdEditor()
 	}
 Out:
 	m_CmdEditor->codeEditor()->setFocus(Qt::OtherFocusReason);
+}
+
+void MainWindow::focusProperties()
+{
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_PropertiesEditorDock)
+			{
+				tabBar->setCurrentIndex(j);
+				return;
+			}
+		}
+	}
 }
 
 static bool s_UndoRedoWorking = false;

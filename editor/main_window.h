@@ -47,6 +47,7 @@ class Toolbox;
 class DeviceManager;
 class Inspector;
 class MainWindow;
+class ContentManager;
 
 class RunScript : public QObject
 {
@@ -91,6 +92,7 @@ public:
 
 	void focusDlEditor();
 	void focusCmdEditor();
+	void focusProperties();
 
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);
@@ -172,6 +174,9 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+
+	QDockWidget *m_ContentManagerDock;
+	ContentManager *m_ContentManager;
 
 	QDockWidget *m_ToolboxDock;
 	Toolbox *m_Toolbox;
