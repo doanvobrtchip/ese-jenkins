@@ -861,6 +861,7 @@ void MainWindow::createDockWindows()
 	{
 		m_DeviceManagerDock = new QDockWidget(this);
 		m_DeviceManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_DeviceManagerDock->setObjectName("Devices");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -877,6 +878,7 @@ void MainWindow::createDockWindows()
 	{
 		m_UtilizationDock = new QDockWidget(this);
 		m_UtilizationDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_UtilizationDock->setObjectName("Utilization");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -921,6 +923,7 @@ void MainWindow::createDockWindows()
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
 		m_PropertiesEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_PropertiesEditorDock->setObjectName("PropertiesEditor");
 		m_PropertiesEditorScroll = new QScrollArea(this);
 		m_PropertiesEditorScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		m_PropertiesEditorScroll->setWidgetResizable(true);
@@ -936,6 +939,7 @@ void MainWindow::createDockWindows()
 	{
 		m_InspectorDock = new QDockWidget(this);
 		m_InspectorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_InspectorDock->setObjectName("Inspector");
 		m_Inspector = new Inspector(this);
 		m_InspectorDock->setWidget(m_Inspector);
 		addDockWidget(Qt::BottomDockWidgetArea, m_InspectorDock);
@@ -946,6 +950,7 @@ void MainWindow::createDockWindows()
 	{
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+		m_DlEditorDock->setObjectName("DlEditor");
 		m_DlEditor = new DlEditor(this, false);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
@@ -959,6 +964,7 @@ void MainWindow::createDockWindows()
 	{
 		m_CmdEditorDock = new QDockWidget(this);
 		m_CmdEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+		m_CmdEditorDock->setObjectName("CmdEditor");
 		m_CmdEditor = new DlEditor(this, true);
 		m_CmdEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_CmdEditor->setUndoStack(m_UndoStack);
@@ -972,6 +978,7 @@ void MainWindow::createDockWindows()
 	{
 		m_ControlsDock = new QDockWidget(this);
 		m_ControlsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ControlsDock->setObjectName("Controls");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -1037,6 +1044,7 @@ void MainWindow::createDockWindows()
 	{
 		m_RegistersDock = new QDockWidget(this);
 		m_RegistersDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_RegistersDock->setObjectName("Registers");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -1108,6 +1116,7 @@ void MainWindow::createDockWindows()
 	{
 		m_ContentManagerDock = new QDockWidget(this);
 		m_ContentManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ContentManagerDock->setObjectName("ContentManager");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -1123,6 +1132,7 @@ void MainWindow::createDockWindows()
 	{
 		m_ToolboxDock = new QDockWidget(this);
 		m_ToolboxDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ToolboxDock->setObjectName("Toolbox");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
