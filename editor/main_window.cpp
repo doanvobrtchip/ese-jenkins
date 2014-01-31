@@ -44,6 +44,11 @@
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QProgressBar>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QTextBlock>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -1440,11 +1445,36 @@ void MainWindow::actOpen()
 	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
 }
 
+QJsonArray documentToJsonArray(const QTextDocument *textDocument)
+{
+	QJsonArray result;
+	for (int i = 0; i < textDocument->blockCount(); ++i)
+	{
+		result.push_back(textDocument->findBlockByNumber(i).text());
+	}
+	return result;
+}
+
 void MainWindow::actSave()
 {
 	if (m_TemporaryDir) { actSaveAs(); return; }
 
-	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+	QFile file(m_CurrentFile);
+	file.open(QIODevice::WriteOnly);
+	QDataStream out(&file);
+
+	QJsonObject root;
+	QJsonObject registers;
+	registers["hSize"] = s_HSize;
+	registers["vSize"] = s_VSize;
+	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document());
+	root["registers"] = registers;
+	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document());
+	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document());
+	QJsonDocument doc(root);
+
+	QByteArray data = doc.toJson();
+	out.writeRawData(data, data.size());
 }
 
 void MainWindow::actSaveAs()
@@ -1483,6 +1513,7 @@ void MainWindow::actSaveAs()
 	QDir::setCurrent(dstPath);
 
 	// Save the project itself
+	m_CurrentFile = fileName;
 	actSave();
 }
 
