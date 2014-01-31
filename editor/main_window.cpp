@@ -545,7 +545,7 @@ MainWindow::~MainWindow()
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
 
-	QDir::setCurrent(m_InitialWorkingDir);
+	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = NULL;
 }
@@ -711,14 +711,11 @@ void MainWindow::createActions()
 	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
 	m_OpenAct = new QAction(this);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
-	m_OpenAct->setEnabled(false);
 
 	m_SaveAct = new QAction(this);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
-	m_SaveAct->setEnabled(false);
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
-	m_SaveAsAct->setEnabled(false);
 
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
@@ -1430,11 +1427,12 @@ void MainWindow::actNew()
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 
-	// set working directory to temporary directory
-	QDir::setCurrent(m_InitialWorkingDir);
+	// set working directory to temporary directory // FIXME: tempPath()
+	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = new QTemporaryDir("ft800editor");
 	QDir::setCurrent(m_TemporaryDir->path());
+	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
 void MainWindow::actOpen()
@@ -1444,12 +1442,32 @@ void MainWindow::actOpen()
 
 void MainWindow::actSave()
 {
+	if (m_TemporaryDir) { actSaveAs(); return; }
+
 	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
 }
 
 void MainWindow::actSaveAs()
 {
-	QMessageBox::critical(this, tr("Not implemented"), tr("Not implemented"));
+	QString filter = tr("FT800 Editor Project, *.ft800proj (*.ft800proj)");
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
+	if (fileName.isNull())
+		return;
+
+	// Copy asset files, abort if already exists (check first)
+	QDir dir(fileName);
+	dir.cdUp();
+	QString dstPath = dir.path();
+	QString srcPath = QDir::currentPath();
+	// printf("Path: %s\n", dirPath.toUtf8().data());
+	// (copy assets from srcPath to dstPath)
+
+	// Delete temporary directory
+	QDir::setCurrent(QDir::tempPath());
+	delete m_TemporaryDir; m_TemporaryDir = NULL;
+
+	// Set the folder to be the project folder
+	QDir::setCurrent(dstPath);
 }
 
 void MainWindow::actImport()
