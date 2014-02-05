@@ -38,6 +38,7 @@
 #include "main_window.h"
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
+#include "asset_converter.h"
 
 using namespace std;
 
@@ -122,11 +123,12 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QPushButton *browseSourceFile = new QPushButton(this);
 	browseSourceFile->setMaximumWidth(browseSourceFile->height());
 	addLabeledWidget(this, propCommonLayout, tr("Source file: "), m_PropertiesCommonSourceFile, browseSourceFile);
-	connect(m_PropertiesCommonSourceFile, SIGNAL(textChanged(const QString &)), this, SLOT(propertiesCommonSourcePathChanged(const QString &)));
+	connect(m_PropertiesCommonSourceFile, SIGNAL(editingFinished()), this, SLOT(propertiesCommonSourcePathChanged()));
 	connect(browseSourceFile, SIGNAL(clicked()), this, SLOT(propertiesCommonSourcePathBrowse()));
 	m_PropertiesCommonName = new UndoStackDisabler<QLineEdit>(this);
 	m_PropertiesCommonName->setUndoStack(m_MainWindow->undoStack());
 	addLabeledWidget(this, propCommonLayout, tr("Name: "), m_PropertiesCommonName);
+	connect(m_PropertiesCommonName, SIGNAL(editingFinished()), this, SLOT(propertiesCommonDestNameChanged()));
 	QComboBox *propCommonConverter = new QComboBox(this);
 	m_PropertiesCommonConverter = propCommonConverter;
 	propCommonConverter->addItem("");
@@ -134,7 +136,16 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommonConverter->addItem(tr("Raw"));
 	propCommonConverter->addItem(tr("Raw JPEG"));
 	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
+	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
+
+	m_PropertiesImagePreview = new QGroupBox(this);
+	QVBoxLayout *imagePreviewLayout = new QVBoxLayout(this);
+	m_PropertiesImagePreview->setHidden(true);
+	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
+	m_PropertiesImageLabel = new QLabel(this);
+	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
+	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 }
 
 ContentManager::~ContentManager()
@@ -381,11 +392,6 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	m_CurrentPropertiesContent = contentInfo;
 	rebuildViewInternal(contentInfo);
 
-	// Set common widget values
-	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
-	m_PropertiesCommonName->setText(contentInfo->DestName);
-	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
-
 	// Display widgets in properties tab
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
 	if (m_CurrentPropertiesContent != contentInfo
@@ -395,19 +401,52 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		std::vector<QWidget *> widgets;
 
 		widgets.push_back(m_PropertiesCommon);
-		// ...
+		widgets.push_back(m_PropertiesImagePreview);
 
 		props->setEditWidgets(widgets, false, this);
 	}
 
+	// Set common widget values
+	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
+	m_PropertiesCommonName->setText(contentInfo->DestName);
+	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
+
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
+		m_PropertiesImagePreview->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
+	}
+	else if (!contentInfo->BuildError.isEmpty())
+	{
+		props->setInfo(tr("<b>Error</b>: ") + contentInfo->BuildError);
 	}
 	else
 	{
-		props->setInfo(tr("Content Manager"));
+		props->setInfo(tr("Ready."));
+		switch (contentInfo->Converter)
+		{
+			case ContentInfo::Image:
+			{
+				QPixmap pixmap;
+				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted.png");
+				m_PropertiesImagePreview->setHidden(!loadSuccess);
+				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
+				if (loadSuccess) m_PropertiesImageLabel->repaint();
+				else props->setInfo(tr("Failed to load image preview."));
+				break;
+			}
+			case ContentInfo::Raw:
+			{
+				m_PropertiesImagePreview->setHidden(true);
+				break;
+			}
+			case ContentInfo::Jpeg:
+			{
+				m_PropertiesImagePreview->setHidden(true);
+				break;
+			}
+		}
 	}
 }
 
@@ -416,6 +455,23 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	printf("ContentManager::reprocessInternal()\n");
 
 	// Reprocess this content
+	// TODO: Check for changes and datestamps and so on...
+	contentInfo->BuildError = "";
+	switch (contentInfo->Converter)
+	{
+	case ContentInfo::Image:
+		AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
+		break;
+	case ContentInfo::Raw:
+		AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
+		break;
+	case ContentInfo::Jpeg:
+		AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+		break;
+	default:
+		contentInfo->BuildError = "No converter selected";
+		break;
+	}
 
 	// Update GUI if it exists
 	if (m_CurrentPropertiesContent == contentInfo)
@@ -430,6 +486,13 @@ void ContentManager::propertiesSetterChanged(QWidget *setter)
 	{
 		m_ContentList->setCurrentItem(NULL);
 	}
+}
+
+ContentInfo *ContentManager::current()
+{
+	if (!m_ContentList->currentItem())
+		return NULL;
+	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
 }
 
 class ContentManager::ChangeSourcePath : public QUndoCommand
@@ -492,19 +555,12 @@ void ContentManager::changeSourcePath(ContentInfo *contentInfo, const QString &v
 	m_MainWindow->undoStack()->push(changeSourcePath);
 }
 
-ContentInfo *ContentManager::current()
-{
-	if (!m_ContentList->currentItem())
-		return NULL;
-	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
-}
-
-void ContentManager::propertiesCommonSourcePathChanged(const QString &value)
+void ContentManager::propertiesCommonSourcePathChanged()
 {
 	printf("ContentManager::propertiesCommonSourcePathChanged(value)\n");
 
-	if (current() && current()->SourcePath != value)
-		changeSourcePath(current(), value);
+	if (current() && current()->SourcePath != m_PropertiesCommonSourceFile->text())
+		changeSourcePath(current(), m_PropertiesCommonSourceFile->text());
 }
 
 void ContentManager::propertiesCommonSourcePathBrowse()
@@ -521,6 +577,142 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 		return;
 
 	changeSourcePath(current(), fileName);
+}
+
+class ContentManager::ChangeDestName : public QUndoCommand
+{
+public:
+	ChangeDestName(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->DestName),
+		m_NewValue(value)
+	{
+		setText(tr("Change content destination name"));
+	}
+
+	virtual ~ChangeDestName()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->DestName = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->DestName = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064401;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeDestName *c = static_cast<const ChangeDestName *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	QString m_OldValue;
+	QString m_NewValue;
+};
+
+void ContentManager::changeDestName(ContentInfo *contentInfo, const QString &value)
+{
+	// Create undo/redo
+	ChangeDestName *changeDestName = new ChangeDestName(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeDestName);
+}
+
+void ContentManager::propertiesCommonDestNameChanged()
+{
+	printf("ContentManager::propertiesCommonDestNameChanged(value)\n");
+
+	if (current() && current()->DestName != m_PropertiesCommonName->text())
+		changeDestName(current(), m_PropertiesCommonName->text());
+}
+
+class ContentManager::ChangeConverter : public QUndoCommand
+{
+public:
+	ChangeConverter(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::ConverterType value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->Converter),
+		m_NewValue(value)
+	{
+		setText(tr("Set content converter"));
+	}
+
+	virtual ~ChangeConverter()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->Converter = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->Converter = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064402;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeConverter *c = static_cast<const ChangeConverter *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	ContentInfo::ConverterType m_OldValue;
+	ContentInfo::ConverterType m_NewValue;
+};
+
+void ContentManager::changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value)
+{
+	// Create undo/redo
+	ChangeConverter *changeConverter = new ChangeConverter(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeConverter);
+}
+
+void ContentManager::propertiesCommonConverterChanged(int value)
+{
+	printf("ContentManager::propertiesCommonConverterChanged(value)\n");
+
+	if (current() && current()->Converter != (ContentInfo::ConverterType)value)
+		changeConverter(current(), (ContentInfo::ConverterType)value);
 }
 
 } /* namespace FT800EMUQT */

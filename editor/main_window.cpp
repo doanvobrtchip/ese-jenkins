@@ -1458,6 +1458,8 @@ void MainWindow::traceEnabledChanged(bool enabled)
 	m_TraceY->setEnabled(enabled);
 }
 
+#define FT800EMUQT_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
+
 void MainWindow::clearEditor()
 {
 	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
@@ -1496,7 +1498,7 @@ void MainWindow::actNew()
 
 	// be helpful
 	focusCmdEditor();
-	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
+	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 
@@ -1591,7 +1593,7 @@ void MainWindow::actOpen()
 
 	// be helpful
 	focusCmdEditor();
-	m_PropertiesEditor->setInfo(tr("Start typing in the <b>Coprocessor</b> editor."));
+	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());

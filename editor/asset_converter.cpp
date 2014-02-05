@@ -132,13 +132,13 @@ void AssetConverter::release()
 #endif /* FT800EMU_PYTHON */
 }
 
-void AssetConverter::convertImage(const QString &inFile, const QString &outName, int format)
+void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
 #ifdef FT800EMU_PYTHON
 	bool error = true;
 
-	QByteArray inFileU8 = inFile.toUtf8(); // FIXME Unicode ?
-	QByteArray outNameU8 = outName.toUtf8();
+	QByteArray inFileU8 = inFile.toLocal8Bit(); // FIXME Unicode ?
+	QByteArray outNameU8 = outName.toLocal8Bit();
 	std::stringstream sFormat;
 	sFormat << format;
 
@@ -169,20 +169,25 @@ void AssetConverter::convertImage(const QString &inFile, const QString &outName,
 	if (error)
 	{
 		printf("---\nPython ERROR: \n");
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		char *pStrErrorMessage = PyString_AsString(pvalue);
+		buildError = QString::fromLocal8Bit(pStrErrorMessage);
 		PyErr_Print();
 		printf("---\n");
 	}
-
+#else
+	buildError = "Python not available";
 #endif /* FT800EMU_PYTHON */
 }
 
-void AssetConverter::convertRaw(const QString &inFile, const QString &outName, int begin, int length)
+void AssetConverter::convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length)
 {
 #ifdef FT800EMU_PYTHON
 	bool error = true;
 
-	QByteArray inFileU8 = inFile.toUtf8(); // FIXME Unicode ?
-	QByteArray outNameU8 = outName.toUtf8();
+	QByteArray inFileU8 = inFile.toLocal8Bit(); // FIXME Unicode ?
+	QByteArray outNameU8 = outName.toLocal8Bit();
 	std::stringstream sBegin;
 	sBegin << begin;
 	std::stringstream sLength;
@@ -219,10 +224,15 @@ void AssetConverter::convertRaw(const QString &inFile, const QString &outName, i
 	if (error)
 	{
 		printf("---\nPython ERROR: \n");
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		char *pStrErrorMessage = PyString_AsString(pvalue);
+		buildError = QString::fromLocal8Bit(pStrErrorMessage);
 		PyErr_Print();
 		printf("---\n");
 	}
-
+#else
+	buildError = "Python not available";
 #endif /* FT800EMU_PYTHON */
 }
 

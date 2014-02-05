@@ -31,6 +31,8 @@ class QTreeWidgetItem;
 class QPushButton;
 class QComboBox;
 class QLineEdit;
+class QGroupBox;
+class QLabel;
 
 namespace FT800EMUQT {
 
@@ -68,6 +70,8 @@ struct ContentInfo
 	int RawLength; // Raw length of memory
 
 	int ImageFormat;
+
+	QString BuildError;
 };
 
 /**
@@ -100,12 +104,16 @@ public:
 
 	// Changes
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
+	void changeDestName(ContentInfo *contentInfo, const QString &value);
+	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 
 private:
 	class Add;
 	class Remove;
 
 	class ChangeSourcePath;
+	class ChangeDestName;
+	class ChangeConverter;
 
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
@@ -123,14 +131,19 @@ private:
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
 	QComboBox *m_PropertiesCommonConverter;
 
+	QGroupBox *m_PropertiesImagePreview;
+	QLabel *m_PropertiesImageLabel;
+
 private slots:
 	void add();
 	void remove();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 	void propertiesSetterChanged(QWidget *setter);
 
-	void propertiesCommonSourcePathChanged(const QString &value);
+	void propertiesCommonSourcePathChanged();
 	void propertiesCommonSourcePathBrowse();
+	void propertiesCommonDestNameChanged();
+	void propertiesCommonConverterChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);
