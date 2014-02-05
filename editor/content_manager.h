@@ -29,6 +29,8 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
+class QComboBox;
+class QLineEdit;
 
 namespace FT800EMUQT {
 
@@ -105,11 +107,15 @@ private:
 	ContentInfo *m_CurrentPropertiesContent; // This pointer may be invalid. Only use to compare with current.
 
 	QWidget *m_PropertiesCommon;
+	QLineEdit *m_PropertiesCommonSourceFile;
+	QLineEdit *m_PropertiesCommonName;
+	QComboBox *m_PropertiesCommonConverter;
 
 private slots:
 	void add();
 	void remove();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+	void propertiesSetterChanged(QWidget *setter);
 
 private:
 	ContentManager(const ContentManager &);

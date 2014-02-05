@@ -51,6 +51,9 @@ public:
 
 	void translate();
 
+signals:
+	void setterChanged(QWidget *setter);
+
 private:
 	QGroupBox *m_InfoGroupBox;
 	QLabel *m_InfoLabel;

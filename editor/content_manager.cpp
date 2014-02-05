@@ -28,6 +28,8 @@
 #include <QFileInfo>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
 
 // Emulator includes
 #include <vc.h>
@@ -53,6 +55,27 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
+}
+
+void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
+{
+	QHBoxLayout *hbox = new QHBoxLayout(parent);
+	QLabel *l = new QLabel(parent);
+	l->setText(label);
+	hbox->addWidget(l);
+	hbox->addWidget(widget);
+	layout->addLayout(hbox);
+}
+
+void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget0, QWidget *widget1)
+{
+	QHBoxLayout *hbox = new QHBoxLayout(parent);
+	QLabel *l = new QLabel(parent);
+	l->setText(label);
+	hbox->addWidget(l);
+	hbox->addWidget(widget0);
+	hbox->addWidget(widget1);
+	layout->addLayout(hbox);
 }
 
 ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL)
@@ -84,18 +107,28 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	setLayout(layout);
 
+	// Attach selection to properties
+	connect(m_MainWindow->propertiesEditor(), SIGNAL(setterChanged(QWidget *)), this, SLOT(propertiesSetterChanged(QWidget *)));
+
 	// Build properties widgets
 	QGroupBox *propCommon = new QGroupBox(this);
 	propCommon->setHidden(true);
 	m_PropertiesCommon = propCommon;
 	propCommon->setTitle(tr("Content"));
 	QVBoxLayout *propCommonLayout = new QVBoxLayout(this);
+	m_PropertiesCommonSourceFile = new QLineEdit(this);
+	QPushButton *browseSourceFile = new QPushButton(this);
+	browseSourceFile->setMaximumWidth(browseSourceFile->height());
+	addLabeledWidget(this, propCommonLayout, tr("Source file: "), m_PropertiesCommonSourceFile, browseSourceFile);
+	m_PropertiesCommonName = new QLineEdit(this);
+	addLabeledWidget(this, propCommonLayout, tr("Name: "), m_PropertiesCommonName);
 	QComboBox *propCommonConverter = new QComboBox(this);
+	m_PropertiesCommonConverter = propCommonConverter;
 	propCommonConverter->addItem("");
 	propCommonConverter->addItem(tr("Raw"));
 	propCommonConverter->addItem(tr("Image"));
 	propCommonConverter->addItem(tr("Raw Jpeg"));
-	propCommonLayout->addWidget(propCommonConverter);
+	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	propCommon->setLayout(propCommonLayout);
 }
 
@@ -323,7 +356,9 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 
 	// Build GUI for this content
 	// Set widget values
-
+	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
+	m_PropertiesCommonName->setText(contentInfo->DestName);
+	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
 
 	// Display widgets in properties tab
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
@@ -347,6 +382,16 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 
 	// Reprocess this content
 
+}
+
+void ContentManager::propertiesSetterChanged(QWidget *setter)
+{
+	printf("ContentManager::propertiesSetterChanged()\n");
+
+	if (setter != this)
+	{
+		m_ContentList->setCurrentItem(NULL);
+	}
 }
 
 } /* namespace FT800EMUQT */
