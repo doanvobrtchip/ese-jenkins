@@ -302,7 +302,8 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	int renumber = 2;
 	while (nameExists(contentInfo->DestName))
 	{
-		contentInfo->DestName = destName + "_" + renumber;
+		contentInfo->DestName = destName + "_" + QString::number(renumber);
+		++renumber;
 	}
 
 	// Add to the content list
@@ -453,16 +454,20 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
+		m_PropertiesImage->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
 	}
-	else if (!contentInfo->BuildError.isEmpty())
-	{
-		props->setInfo(tr("<b>Error</b>: ") + contentInfo->BuildError);
-	}
 	else
 	{
-		props->setInfo(tr("Ready."));
+		if (!contentInfo->BuildError.isEmpty())
+		{
+			props->setInfo(tr("<b>Error</b>: ") + contentInfo->BuildError);
+		}
+		else
+		{
+			props->setInfo(tr("Ready."));
+		}
 		switch (contentInfo->Converter)
 		{
 			case ContentInfo::Image:
@@ -473,7 +478,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImagePreview->setHidden(!loadSuccess);
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
-				else props->setInfo(tr("Failed to load image preview."));
+				else if (contentInfo->BuildError.isEmpty()) props->setInfo(tr("Failed to load image preview."));
 				break;
 			}
 			case ContentInfo::Raw:
