@@ -1027,7 +1027,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MovingLastX = e->pos().x();
 			m_MovingLastY = e->pos().y();
 			m_MouseMovingVertex = true;
-			m_LineEditor->codeEditor()->beginUndoCombine();
+			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
 		}
 		break;
 	case POINTER_EDIT_STACK_SELECT:
@@ -1096,7 +1096,7 @@ RETURN()
 			m_MovingLastX = e->pos().x();
 			m_MovingLastY = e->pos().y();
 			m_MouseMovingWidget = m_PointerMethod;
-			m_LineEditor->codeEditor()->beginUndoCombine();
+			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
 		}
 		break;
 	}
@@ -1218,7 +1218,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				// void insertLine(int line, const DlParsed &parsed);
 				if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
 				{
-					m_LineEditor->codeEditor()->beginUndoCombine();
+					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop coprocessor widget");
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0xFFFFFF00;
@@ -1345,7 +1345,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				}
 				else if (selectionType == 2)
 				{
-					m_LineEditor->codeEditor()->beginUndoCombine();
+					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop background");
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1366,7 +1366,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				}
 				else if (selectionType == 1) // Primitive
 				{
-					m_LineEditor->codeEditor()->beginUndoCombine();
+					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop primitive");
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1393,7 +1393,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			else if (selectionType == 3 || selectionType == 4)
 			{
 				int line = m_MouseStackValid ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : 0;
-				m_LineEditor->codeEditor()->beginUndoCombine();
+				m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop property");
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.ExpectedStringParameter = false;

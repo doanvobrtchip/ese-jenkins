@@ -73,7 +73,7 @@ public:
 	// void setUndoStack(QUndoStack *undo_stack);
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
 
-	void beginUndoCombine();
+	void beginUndoCombine(const QString &message);
 	void endUndoCombine();
 
 	void setCompleter(QCompleter *c);
@@ -114,6 +114,7 @@ private:
 	std::vector<int> m_TraceStack;
 	int m_CombineId;
 	int m_LastCombineId;
+	QString m_UndoRedoMessage;
 
 };
 

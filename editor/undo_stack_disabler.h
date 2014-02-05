@@ -20,6 +20,8 @@
 #include <QWidget>
 #include <QUndoStack>
 #include <QKeyEvent>
+#include <QMenu>
+#include <QString>
 
 // Emulator includes
 
@@ -71,6 +73,28 @@ protected:
 	virtual void contextMenuEvent(QContextMenuEvent *event)
 	{
 		// TODO: Create new context menu with proper undo/redo
+		QMenu* menu = new QMenu(this);
+		if (m_UndoStack)
+		{
+			menu->addAction(m_UndoStack->createUndoAction(menu));
+			menu->addAction(m_UndoStack->createRedoAction(menu));
+			menu->addSeparator();
+		}
+		QAction *actCut = new QAction(QWidget::tr("Cut"), menu);
+		QWidget::connect(actCut, SIGNAL(triggered()), this, SLOT(cut()));
+		menu->addAction(actCut);
+		QAction *actCopy = new QAction(QWidget::tr("Copy"), menu);
+		QWidget::connect(actCopy, SIGNAL(triggered()), this, SLOT(copy()));
+		menu->addAction(actCopy);
+		QAction *actPaste = new QAction(QWidget::tr("Paste"), menu);
+		QWidget::connect(actPaste, SIGNAL(triggered()), this, SLOT(paste()));
+		menu->addAction(actPaste);
+		menu->addSeparator();
+		QAction *actSelectAll = new QAction(QWidget::tr("Select All"), menu);
+		QWidget::connect(actSelectAll, SIGNAL(triggered()), this, SLOT(selectAll()));
+		menu->addAction(actSelectAll);
+		menu->exec(event->globalPos());
+		delete menu;
 	}
 
 public:

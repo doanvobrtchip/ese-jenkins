@@ -90,15 +90,17 @@ void CodeEditor::focusInEvent(QFocusEvent *event)
 	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
 }*/
 
-void CodeEditor::beginUndoCombine()
+void CodeEditor::beginUndoCombine(const QString &message)
 {
 	++m_LastCombineId;
 	m_CombineId = m_LastCombineId;
+	m_UndoRedoMessage = message;
 }
 
 void CodeEditor::endUndoCombine()
 {
 	m_CombineId = -1;
+	m_UndoRedoMessage = QString();
 }
 
 class UndoEditor : public QUndoCommand
@@ -131,7 +133,7 @@ void CodeEditor::documentUndoCommandAdded()
 	m_UndoIndexDummy = true;
 	m_UndoNeedsClosure = true;
 	UndoEditor *uc = new UndoEditor(this, m_CombineId);
-	uc->setText(tr("Edit code"));
+	uc->setText(m_UndoRedoMessage.isEmpty() ? tr("Edit code") : m_UndoRedoMessage);
 	m_UndoStack->push(uc);
 }
 
