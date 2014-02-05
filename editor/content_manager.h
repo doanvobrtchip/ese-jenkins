@@ -115,6 +115,7 @@ private:
 	class ChangeDestName;
 	class ChangeConverter;
 
+	bool nameExists(const QString &name);
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
@@ -130,6 +131,11 @@ private:
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
 	QComboBox *m_PropertiesCommonConverter;
+
+	// QGroupBox *m_PropertiesMemory; // TODO
+
+	QGroupBox *m_PropertiesImage;
+	QComboBox *m_PropertiesImageFormat;
 
 	QGroupBox *m_PropertiesImagePreview;
 	QLabel *m_PropertiesImageLabel;

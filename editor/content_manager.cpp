@@ -139,6 +139,23 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
 
+	m_PropertiesImage = new QGroupBox(this);
+	m_PropertiesImage->setHidden(true);
+	m_PropertiesImage->setTitle(tr("Image Settings"));
+	QVBoxLayout *imagePropsLayout = new QVBoxLayout(this);
+	m_PropertiesImageFormat = new QComboBox(this);
+	m_PropertiesImageFormat->addItem("ARGB1555");
+	m_PropertiesImageFormat->addItem("L1");
+	m_PropertiesImageFormat->addItem("L4");
+	m_PropertiesImageFormat->addItem("L8");
+	m_PropertiesImageFormat->addItem("RGB332");
+	m_PropertiesImageFormat->addItem("ARGB2");
+	m_PropertiesImageFormat->addItem("ARGB4");
+	m_PropertiesImageFormat->addItem("RGB565");
+	m_PropertiesImageFormat->addItem("PALETTED");
+	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
+	m_PropertiesImage->setLayout(imagePropsLayout);
+
 	m_PropertiesImagePreview = new QGroupBox(this);
 	QVBoxLayout *imagePreviewLayout = new QVBoxLayout(this);
 	m_PropertiesImagePreview->setHidden(true);
@@ -280,6 +297,14 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
 
+	// Ensure no duplicate names are used
+	QString destName = contentInfo->DestName;
+	int renumber = 2;
+	while (nameExists(contentInfo->DestName))
+	{
+		contentInfo->DestName = destName + "_" + renumber;
+	}
+
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
 	contentInfo->View = view;
@@ -300,6 +325,19 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
+}
+
+bool ContentManager::nameExists(const QString &name)
+{
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		if (info->DestName == name)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void ContentManager::add()
@@ -401,6 +439,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		std::vector<QWidget *> widgets;
 
 		widgets.push_back(m_PropertiesCommon);
+		widgets.push_back(m_PropertiesImage);
 		widgets.push_back(m_PropertiesImagePreview);
 
 		props->setEditWidgets(widgets, false, this);
@@ -428,6 +467,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		{
 			case ContentInfo::Image:
 			{
+				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
 				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted.png");
 				m_PropertiesImagePreview->setHidden(!loadSuccess);
@@ -438,11 +478,13 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::Raw:
 			{
+				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				break;
 			}
 			case ContentInfo::Jpeg:
 			{
+				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				break;
 			}
