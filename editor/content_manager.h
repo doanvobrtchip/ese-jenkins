@@ -8,7 +8,7 @@
  */
 
 /*
- * Copyright (C) 2014  Future Technology Contents International Ltd
+ * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
 #ifndef FT800EMUQT_CONTENT_MANAGER_H
@@ -26,15 +26,20 @@
 // Project includes
 
 class QTreeWidget;
+class QTreeWidgetItem;
 
 namespace FT800EMUQT {
 
 class MainWindow;
 
+// Content information. Read-only. Writable through ContentManager only.
 struct ContentInfo
 {
+	QTreeWidgetItem *View;
+
 	enum ConverterType
 	{
+		Invalid,
 		Raw, // Raw copy to ram
 		Image, // Process image
 		Jpeg, // Load jpeg on coprocessor
@@ -70,7 +75,20 @@ public:
 	ContentManager(MainWindow *parent);
 	virtual ~ContentManager();
 
+	// Add the file to the content (this creates the undo/redo)
+	ContentInfo *add(const QString &filePath);
+	// Remove the content
+	void remove(ContentInfo *remove);
+	// Clear all content
+	void clear();
+
 private:
+	class Add;
+	class Remove;
+
+	void addInternal(ContentInfo *contentInfo);
+	void removeInternal(ContentInfo *contentInfo);
+
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_ContentList;
 

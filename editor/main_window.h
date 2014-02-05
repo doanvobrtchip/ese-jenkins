@@ -89,6 +89,7 @@ public:
 	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 	inline Toolbox *toolbox() { return m_Toolbox; }
 	inline Inspector *inspector() { return m_Inspector; }
+	inline QUndoStack *undoStack() { return m_UndoStack; }
 
 	void focusDlEditor();
 	void focusCmdEditor();
@@ -109,6 +110,8 @@ public:
 
 	void frameEmu();
 	void frameQt();
+
+	QString getFileDialogPath();
 
 private slots:
 	// void applyEmulatorConfig();

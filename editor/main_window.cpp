@@ -489,9 +489,9 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), 
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL),
 #ifdef FT800EMU_PYTHON
-	m_ScriptsMenu(NULL), 
+	m_ScriptsMenu(NULL),
 #endif
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
@@ -1515,11 +1515,16 @@ void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &array)
 	}
 }
 
+QString MainWindow::getFileDialogPath()
+{
+	return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
+}
+
 void MainWindow::actOpen()
 {
 	printf("*** Open ***\n");
 
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(),
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
 		tr("FT800 Editor Project, *.ft800proj (*.ft800proj)"));
 	if (fileName.isNull())
 		return;
@@ -1624,7 +1629,7 @@ void MainWindow::actSaveAs()
 {
 	QString filterft800proj = tr("FT800 Editor Project, *.ft800proj (*.ft800proj)");
 	QString filter = filterft800proj;
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
 
@@ -1664,7 +1669,7 @@ void MainWindow::actImport()
 {
 	printf("*** Import ***\n");
 
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(),
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), getFileDialogPath(),
 		tr("Memory dump, *.vc1dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
@@ -1772,7 +1777,7 @@ void MainWindow::actExport()
 {
 	QString filtervc1dump = tr("Memory dump, *.vc1dump (*.vc1dump)");
 	QString filter = filtervc1dump;
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath(), filter, &filter);
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
 
