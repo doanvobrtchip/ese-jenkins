@@ -299,13 +299,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	printf("ContentManager::addInternal(contentInfo)\n");
 
 	// Ensure no duplicate names are used
-	QString destName = contentInfo->DestName;
-	int renumber = 2;
-	while (nameExists(contentInfo->DestName))
-	{
-		contentInfo->DestName = destName + "_" + QString::number(renumber);
-		++renumber;
-	}
+	contentInfo->DestName = createName(contentInfo->DestName);
 
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
@@ -340,6 +334,18 @@ bool ContentManager::nameExists(const QString &name)
 		}
 	}
 	return false;
+}
+
+QString ContentManager::createName(const QString &name)
+{
+	QString destName = name;
+	int renumber = 2;
+	while (nameExists(destName))
+	{
+		destName = name + "_" + QString::number(renumber);
+		++renumber;
+	}
+	return destName;
 }
 
 void ContentManager::add()
@@ -689,15 +695,18 @@ private:
 void ContentManager::changeDestName(ContentInfo *contentInfo, const QString &value)
 {
 	// Create undo/redo
-	ChangeDestName *changeDestName = new ChangeDestName(this, contentInfo, value);
-	m_MainWindow->undoStack()->push(changeDestName);
+	if (contentInfo->DestName != value)
+	{
+		ChangeDestName *changeDestName = new ChangeDestName(this, contentInfo, createName(value));
+		m_MainWindow->undoStack()->push(changeDestName);
+	}
 }
 
 void ContentManager::propertiesCommonDestNameChanged()
 {
 	printf("ContentManager::propertiesCommonDestNameChanged(value)\n");
 
-	if (current() && current()->DestName != m_PropertiesCommonName->text())
+	if (current())
 		changeDestName(current(), m_PropertiesCommonName->text());
 }
 

@@ -118,6 +118,8 @@ private:
 	class ChangeImageFormat;
 
 	bool nameExists(const QString &name);
+	QString createName(const QString &name); // Rename if already exists.
+
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
