@@ -74,12 +74,12 @@ protected:
 	{
 		// TODO: Create new context menu with proper undo/redo
 		QMenu* menu = new QMenu(this);
-		if (m_UndoStack)
+		/*if (m_UndoStack)
 		{
 			menu->addAction(m_UndoStack->createUndoAction(menu));
 			menu->addAction(m_UndoStack->createRedoAction(menu));
 			menu->addSeparator();
-		}
+		}*/
 		QAction *actCut = new QAction(QWidget::tr("Cut"), menu);
 		QWidget::connect(actCut, SIGNAL(triggered()), this, SLOT(cut()));
 		menu->addAction(actCut);
