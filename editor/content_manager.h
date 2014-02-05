@@ -106,6 +106,7 @@ public:
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
+	void changeImageFormat(ContentInfo *contentInfo, int value);
 
 private:
 	class Add;
@@ -114,6 +115,7 @@ private:
 	class ChangeSourcePath;
 	class ChangeDestName;
 	class ChangeConverter;
+	class ChangeImageFormat;
 
 	bool nameExists(const QString &name);
 	void addInternal(ContentInfo *contentInfo);
@@ -150,6 +152,7 @@ private slots:
 	void propertiesCommonSourcePathBrowse();
 	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
+	void propertiesCommonImageFormatChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);

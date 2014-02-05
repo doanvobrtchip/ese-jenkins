@@ -154,6 +154,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImageFormat->addItem("RGB565");
 	m_PropertiesImageFormat->addItem("PALETTED");
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
+	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
 
 	m_PropertiesImagePreview = new QGroupBox(this);
@@ -450,6 +451,12 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
 	m_PropertiesCommonName->setText(contentInfo->DestName);
 	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
+	switch (contentInfo->Converter)
+	{
+	case ContentInfo::Image:
+		m_PropertiesImageFormat->setCurrentIndex(contentInfo->ImageFormat);
+		break;
+	}
 
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
@@ -760,6 +767,74 @@ void ContentManager::propertiesCommonConverterChanged(int value)
 
 	if (current() && current()->Converter != (ContentInfo::ConverterType)value)
 		changeConverter(current(), (ContentInfo::ConverterType)value);
+}
+
+class ContentManager::ChangeImageFormat : public QUndoCommand
+{
+public:
+	ChangeImageFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->ImageFormat),
+		m_NewValue(value)
+	{
+		setText(tr("Change image format"));
+	}
+
+	virtual ~ChangeImageFormat()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->ImageFormat = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->ImageFormat = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064403;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeImageFormat *c = static_cast<const ChangeImageFormat *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeImageFormat *changeImageFormat = new ChangeImageFormat(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeImageFormat);
+}
+
+void ContentManager::propertiesCommonImageFormatChanged(int value)
+{
+	printf("ContentManager::propertiesCommonImageFormatChanged(value)\n");
+
+	if (current() && current()->ImageFormat != value)
+		changeImageFormat(current(), value);
 }
 
 } /* namespace FT800EMUQT */
