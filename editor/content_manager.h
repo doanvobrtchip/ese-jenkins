@@ -41,25 +41,25 @@ struct ContentInfo
 	enum ConverterType
 	{
 		Invalid,
-		// Raw, // Raw copy to ram
+		Raw, // Raw copy to ram
 		Image, // Process image
-		// Jpeg, // Load jpeg on coprocessor
+		Jpeg, // Load jpeg on coprocessor
 	};
 
 	QString SourcePath; // Relative source path
+	QString DestName; // Local destination name
 	ConverterType Converter;
 
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
 	int MemoryAddress; // Target memory address
 
-	int DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
-	int DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
+	bool DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
+	bool DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
 
 	int RawStart; // Raw start of memory
 	int RawLength; // Raw length of memory
 
 	int ImageFormat;
-	QString ImageName;
 };
 
 /**
@@ -78,6 +78,8 @@ public:
 
 	// Add the file to the content (this creates the undo/redo)
 	ContentInfo *add(const QString &filePath);
+	// Add the content (this creates the undo/redo)
+	void add(ContentInfo *contentInfo);
 	// Remove the content
 	void remove(ContentInfo *remove);
 	// Clear all content

@@ -25,6 +25,7 @@
 #include <QHeaderView>
 #include <QUndoCommand>
 #include <QFileDialog>
+#include <QFileInfo>
 
 // Emulator includes
 #include <vc.h>
@@ -126,16 +127,23 @@ ContentInfo *ContentManager::add(const QString &filePath)
 
 	ContentInfo *contentInfo = new ContentInfo();
 	contentInfo->SourcePath = filePath;
+	contentInfo->DestName = QFileInfo(filePath).baseName();
 	contentInfo->View = NULL;
 	contentInfo->Converter = ContentInfo::Invalid;
 	contentInfo->MemoryLoaded = false;
 	contentInfo->MemoryAddress = 0;
-	contentInfo->DataCompressed = 0;
-	contentInfo->DataEmbedded = 0;
+	contentInfo->DataCompressed = true;
+	contentInfo->DataEmbedded = true;
 	contentInfo->RawStart = 0;
 	contentInfo->RawLength = 0;
 	contentInfo->ImageFormat = 0;
-	contentInfo->ImageName = "todo";
+
+	add(contentInfo);
+}
+
+void ContentManager::add(ContentInfo *contentInfo)
+{
+	printf("ContentManager::add(contentInfo)\n");
 
 	Add *add = new Add(this, contentInfo);
 	m_MainWindow->undoStack()->push(add);
