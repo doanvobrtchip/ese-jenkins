@@ -52,9 +52,9 @@
 
 
 CodeEditor::CodeEditor(QWidget *parent)
-: QPlainTextEdit(parent),
+: CodeEditorParent(parent),
 m_MaxLinesNotice(0),
-m_UndoStack(NULL),
+// m_UndoStack(NULL),
 m_UndoIndexDummy(false),
 m_UndoNeedsClosure(false),
 m_UndoIsClosing(false),
@@ -82,13 +82,13 @@ void CodeEditor::focusInEvent(QFocusEvent *event)
 	cursorPositionChanged();
 }
 
-void CodeEditor::setUndoStack(QUndoStack *undo_stack)
+/*void CodeEditor::setUndoStack(QUndoStack *undo_stack)
 {
 	// setUndoRedoEnabled(undo_stack == NULL);
 	// document()->setUndoRedoEnabled(true);
 	m_UndoStack = undo_stack;
 	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
-}
+}*/
 
 void CodeEditor::beginUndoCombine()
 {
@@ -178,7 +178,7 @@ default:
 
 	if (!isShortcut || !m_Completer)
 	{
-		if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
+		/*if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
 			&& (e->key() == Qt::Key_Z))
 		{
 			// trap
@@ -191,9 +191,9 @@ default:
 			m_UndoStack->redo();
 		}
 		else
-		{
-			QPlainTextEdit::keyPressEvent(e);
-		}
+		{*/
+			CodeEditorParent::keyPressEvent(e);
+		/*}*/
 	}
 
 	const bool ctrlOrShift = e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
@@ -220,13 +220,13 @@ default:
 	m_Completer->complete(cr); // popup it up!
 }
 
-void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
+/*void CodeEditor::contextMenuEvent(QContextMenuEvent *event)
 {
 	if (m_UndoStack)
 	{
 		// trap
 	}
-}
+}*/
 
 int CodeEditor::lineNumberAreaWidth()
 {

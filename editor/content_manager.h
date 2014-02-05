@@ -36,6 +36,9 @@ namespace FT800EMUQT {
 
 class MainWindow;
 
+template<class T>
+class UndoStackDisabler;
+
 // Content information. Read-only. Writable through ContentManager only.
 struct ContentInfo
 {
@@ -116,8 +119,8 @@ private:
 	ContentInfo *m_CurrentPropertiesContent; // This pointer may be invalid. Only use to compare with current.
 
 	QWidget *m_PropertiesCommon;
-	QLineEdit *m_PropertiesCommonSourceFile;
-	QLineEdit *m_PropertiesCommonName;
+	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;
+	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
 	QComboBox *m_PropertiesCommonConverter;
 
 private slots:

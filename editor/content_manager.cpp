@@ -37,6 +37,7 @@
 // Project includes
 #include "main_window.h"
 #include "properties_editor.h"
+#include "undo_stack_disabler.h"
 
 using namespace std;
 
@@ -116,13 +117,15 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesCommon = propCommon;
 	propCommon->setTitle(tr("Content"));
 	QVBoxLayout *propCommonLayout = new QVBoxLayout(this);
-	m_PropertiesCommonSourceFile = new QLineEdit(this);
+	m_PropertiesCommonSourceFile = new UndoStackDisabler<QLineEdit>(this);
+	m_PropertiesCommonSourceFile->setUndoStack(m_MainWindow->undoStack());
 	QPushButton *browseSourceFile = new QPushButton(this);
 	browseSourceFile->setMaximumWidth(browseSourceFile->height());
 	addLabeledWidget(this, propCommonLayout, tr("Source file: "), m_PropertiesCommonSourceFile, browseSourceFile);
 	connect(m_PropertiesCommonSourceFile, SIGNAL(textChanged(const QString &)), this, SLOT(propertiesCommonSourcePathChanged(const QString &)));
 	connect(browseSourceFile, SIGNAL(clicked()), this, SLOT(propertiesCommonSourcePathBrowse()));
-	m_PropertiesCommonName = new QLineEdit(this);
+	m_PropertiesCommonName = new UndoStackDisabler<QLineEdit>(this);
+	m_PropertiesCommonName->setUndoStack(m_MainWindow->undoStack());
 	addLabeledWidget(this, propCommonLayout, tr("Name: "), m_PropertiesCommonName);
 	QComboBox *propCommonConverter = new QComboBox(this);
 	m_PropertiesCommonConverter = propCommonConverter;

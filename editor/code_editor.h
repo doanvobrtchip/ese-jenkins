@@ -46,6 +46,7 @@
 #include <vector>
 #include <QPlainTextEdit>
 #include <QObject>
+#include "undo_stack_disabler.h"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -56,8 +57,9 @@ class QCompleter;
 
 class LineNumberArea;
 
+typedef FT800EMUQT::UndoStackDisabler<QPlainTextEdit> CodeEditorParent;
 
-class CodeEditor : public QPlainTextEdit
+class CodeEditor : public CodeEditorParent
 {
 	Q_OBJECT
 
@@ -68,7 +70,7 @@ public:
 	int lineNumberAreaWidth();
 	void setMaxLinesNotice(int lines) { m_MaxLinesNotice = lines; }
 
-	void setUndoStack(QUndoStack *undo_stack);
+	// void setUndoStack(QUndoStack *undo_stack);
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
 
 	void beginUndoCombine();
@@ -83,7 +85,7 @@ public:
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
 	virtual void keyPressEvent(QKeyEvent *e);
-	virtual void contextMenuEvent(QContextMenuEvent *event);
+	// virtual void contextMenuEvent(QContextMenuEvent *event);
 	virtual void focusInEvent(QFocusEvent *event);
 
 private slots:
@@ -100,7 +102,7 @@ private:
 private:
 	QWidget *lineNumberArea;
 	int m_MaxLinesNotice;
-	QUndoStack *m_UndoStack;
+	// QUndoStack *m_UndoStack;
 	bool m_UndoIndexDummy;
 	bool m_UndoNeedsClosure;
 	bool m_UndoIsClosing;
