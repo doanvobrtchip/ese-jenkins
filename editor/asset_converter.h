@@ -36,6 +36,7 @@ class AssetConverter
 public:
 	static void init();
 	static void convertImage(const QString &inFile, const QString &outName, int format);
+	static void convertRaw(const QString &inFile, const QString &outName, int begin, int length);
 	static void release();
 
 }; /* class AssetConverter */

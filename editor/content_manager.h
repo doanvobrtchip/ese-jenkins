@@ -41,9 +41,9 @@ struct ContentInfo
 	enum ConverterType
 	{
 		Invalid,
-		Raw, // Raw copy to ram
+		// Raw, // Raw copy to ram
 		Image, // Process image
-		Jpeg, // Load jpeg on coprocessor
+		// Jpeg, // Load jpeg on coprocessor
 	};
 
 	QString SourcePath; // Relative source path
