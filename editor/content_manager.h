@@ -15,6 +15,7 @@
 #define FT800EMUQT_CONTENT_MANAGER_H
 
 // STL includes
+#include <vector>
 
 // Qt includes
 #include <QWidget>
@@ -36,6 +37,8 @@ class MainWindow;
 // Content information. Read-only. Writable through ContentManager only.
 struct ContentInfo
 {
+	ContentInfo(const QString &filePath);
+
 	QTreeWidgetItem *View;
 
 	enum ConverterType
@@ -84,6 +87,8 @@ public:
 	void remove(ContentInfo *remove);
 	// Clear all content
 	void clear();
+	// Get all content
+	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
 
 private:
 	class Add;
@@ -97,6 +102,9 @@ private:
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_ContentList;
 	QPushButton *m_RemoveButton;
+	ContentInfo *m_CurrentPropertiesContent; // This pointer may be invalid. Only use to compare with current.
+
+	QWidget *m_PropertiesCommon;
 
 private slots:
 	void add();

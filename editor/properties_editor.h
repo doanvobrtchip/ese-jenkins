@@ -55,7 +55,8 @@ private:
 	QGroupBox *m_InfoGroupBox;
 	QLabel *m_InfoLabel;
 	QVBoxLayout *m_EditLayout;
-	QWidget *m_EditWidget;
+	bool m_LayoutInserted;
+	QVBoxLayout *m_GlobalLayout;
 	std::vector<QWidget *> m_CurrentEditWidgets;
 	bool m_OwnCurrentEditWidget;
 	QWidget *m_CurrentEditWidgetSetter;

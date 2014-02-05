@@ -41,16 +41,14 @@ PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurr
 	infoLayout->addWidget(m_InfoLabel);
 	m_InfoGroupBox->hide();
 
-	m_EditLayout = new QVBoxLayout(this);
-	m_EditWidget = new QWidget(this);
-	m_EditWidget->setLayout(m_EditLayout);
-	m_EditWidget->hide();
-
 	QVBoxLayout *layout = new QVBoxLayout(this);
-	layout->addWidget(m_EditWidget);
 	layout->addWidget(m_InfoGroupBox);
 	layout->addStretch();
 	setLayout(layout);
+	m_GlobalLayout = layout;
+
+	m_EditLayout = new QVBoxLayout(this);
+	m_LayoutInserted = false;
 
 	translate();
 }
@@ -90,6 +88,10 @@ void PropertiesEditor::setEditWidgets(const std::vector<QWidget *> &widgets, boo
 		{
 			delete (*it);
 		}
+		else
+		{
+			(*it)->setHidden(true);
+		}
 	}
 	m_CurrentEditWidgets.clear();
 	m_OwnCurrentEditWidget = false;
@@ -101,12 +103,18 @@ void PropertiesEditor::setEditWidgets(const std::vector<QWidget *> &widgets, boo
 		for (std::vector<QWidget *>::iterator it(m_CurrentEditWidgets.begin()), end(m_CurrentEditWidgets.end()); it != end; ++it)
 		{
 			m_EditLayout->addWidget((*it));
+			(*it)->setHidden(false);
 		}
-		m_EditWidget->show();
+		if (!m_LayoutInserted)
+		{
+			m_GlobalLayout->insertLayout(0, m_EditLayout);
+			m_LayoutInserted = true;
+		}
 	}
-	else
+	else if (m_LayoutInserted)
 	{
-		m_EditWidget->hide();
+		m_GlobalLayout->removeItem(m_EditLayout);
+		m_LayoutInserted = false;
 	}
 
 	m_CurrentEditWidgetSetter = setter;

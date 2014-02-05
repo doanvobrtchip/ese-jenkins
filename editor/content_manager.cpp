@@ -26,6 +26,8 @@
 #include <QUndoCommand>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QComboBox>
+#include <QGroupBox>
 
 // Emulator includes
 #include <vc.h>
@@ -38,7 +40,22 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
+ContentInfo::ContentInfo(const QString &filePath)
+{
+	SourcePath = filePath;
+	DestName = QFileInfo(filePath).baseName();
+	View = NULL;
+	Converter = ContentInfo::Invalid;
+	MemoryLoaded = false;
+	MemoryAddress = 0;
+	DataCompressed = true;
+	DataEmbedded = true;
+	RawStart = 0;
+	RawLength = 0;
+	ImageFormat = 0;
+}
+
+ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
 
@@ -66,6 +83,20 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	layout->addLayout(buttonsLayout);
 
 	setLayout(layout);
+
+	// Build properties widgets
+	QGroupBox *propCommon = new QGroupBox(this);
+	propCommon->setHidden(true);
+	m_PropertiesCommon = propCommon;
+	propCommon->setTitle(tr("Content"));
+	QVBoxLayout *propCommonLayout = new QVBoxLayout(this);
+	QComboBox *propCommonConverter = new QComboBox(this);
+	propCommonConverter->addItem("");
+	propCommonConverter->addItem(tr("Raw"));
+	propCommonConverter->addItem(tr("Image"));
+	propCommonConverter->addItem(tr("Raw Jpeg"));
+	propCommonLayout->addWidget(propCommonConverter);
+	propCommon->setLayout(propCommonLayout);
 }
 
 ContentManager::~ContentManager()
@@ -125,18 +156,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
 
-	ContentInfo *contentInfo = new ContentInfo();
-	contentInfo->SourcePath = filePath;
-	contentInfo->DestName = QFileInfo(filePath).baseName();
-	contentInfo->View = NULL;
-	contentInfo->Converter = ContentInfo::Invalid;
-	contentInfo->MemoryLoaded = false;
-	contentInfo->MemoryAddress = 0;
-	contentInfo->DataCompressed = true;
-	contentInfo->DataEmbedded = true;
-	contentInfo->RawStart = 0;
-	contentInfo->RawLength = 0;
-	contentInfo->ImageFormat = 0;
+	ContentInfo *contentInfo = new ContentInfo(filePath);
 
 	add(contentInfo);
 }
@@ -253,17 +273,23 @@ void ContentManager::remove()
 	remove(info);
 }
 
+void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
+{
+	// Iterate through the list and copy the pointer to the data
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		contentInfos.push_back(info);
+	}
+}
+
 void ContentManager::clear()
 {
 	printf("ContentManager::clear()\n");
 
 	std::vector<ContentInfo *> contentInfos;
 	// Iterate through the list and copy, because we shouldn't delete while iterating
-	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
-	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
-		contentInfos.push_back(info);
-	}
+	getContentInfos(contentInfos);
 	// Delete all
 	m_MainWindow->undoStack()->beginMacro(tr("Clear content"));
 	for (std::vector<ContentInfo *>::iterator it = contentInfos.begin(), end = contentInfos.end(); it != end; ++it)
@@ -283,7 +309,7 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		rebuildGUIInternal((ContentInfo *)current->data(0, Qt::UserRole).value<void *>());
 
 		// Be helpful
-		// TODO: Focus the Properties GUI. m_MainWindow->focusProperties();
+		m_MainWindow->focusProperties();
 	}
 	else
 	{
@@ -296,14 +322,23 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	printf("ContentManager::rebuildGUIInternal()\n");
 
 	// Build GUI for this content
+	// Set widget values
+
+
+	// Display widgets in properties tab
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
-	ContentInfo *info = contentInfo;
-	std::vector<QWidget *> widgets;
+	if (m_CurrentPropertiesContent != contentInfo
+		|| props->getEditWidgetSetter() != this)
+	{
+		ContentInfo *info = contentInfo;
+		std::vector<QWidget *> widgets;
 
-	// ...
+		widgets.push_back(m_PropertiesCommon);
+		// ...
 
-	props->setInfo(tr("<b>Source</b>: ") + info->SourcePath);
-	props->setEditWidgets(widgets, true, this);
+		props->setInfo(tr("<b>Source</b>: ") + info->SourcePath);
+		props->setEditWidgets(widgets, false, this);
+	}
 }
 
 void ContentManager::reprocessInternal(ContentInfo *contentInfo)
