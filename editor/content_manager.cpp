@@ -31,6 +31,7 @@
 
 // Project includes
 #include "main_window.h"
+#include "properties_editor.h"
 
 using namespace std;
 
@@ -43,6 +44,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_ContentList = new QTreeWidget(this);
 	m_ContentList->header()->close();
 	layout->addWidget(m_ContentList);
+	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout(this);
 
@@ -54,8 +56,10 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	uint minusSign[2] = { 0x2796, 0 };
 	QPushButton *removeButton = new QPushButton();
+	m_RemoveButton = removeButton;
 	removeButton->setText(QString::fromUcs4(minusSign) + " " + tr("Remove"));
 	connect(removeButton, SIGNAL(clicked()), this, SLOT(remove()));
+	removeButton->setEnabled(false);
 	buttonsLayout->addWidget(removeButton);
 
 	layout->addLayout(buttonsLayout);
@@ -200,6 +204,10 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	contentInfo->View = view;
 
 	// Reprocess to RAM
+	reprocessInternal(contentInfo);
+
+	// Be helpful
+	m_ContentList->setCurrentItem(view);
 }
 
 void ContentManager::removeInternal(ContentInfo *contentInfo)
@@ -223,7 +231,7 @@ void ContentManager::add()
 	if (fileName.isNull())
 		return;
 
-	add(fileName);
+	ContentInfo *info = add(fileName);
 }
 
 void ContentManager::remove()
@@ -255,6 +263,47 @@ void ContentManager::clear()
 		remove(*it);
 	}
 	m_MainWindow->undoStack()->endMacro();
+}
+
+void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+	printf("ContentManager::selectionChanged\n");
+
+	if (current)
+	{
+		m_RemoveButton->setEnabled(true);
+		rebuildGUIInternal((ContentInfo *)current->data(0, Qt::UserRole).value<void *>());
+
+		// Be helpful
+		// TODO: Focus the Properties GUI. m_MainWindow->focusProperties();
+	}
+	else
+	{
+		m_RemoveButton->setEnabled(false);
+	}
+}
+
+void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
+{
+	printf("ContentManager::rebuildGUIInternal()\n");
+
+	// Build GUI for this content
+	PropertiesEditor *props = m_MainWindow->propertiesEditor();
+	ContentInfo *info = contentInfo;
+	std::vector<QWidget *> widgets;
+
+	// ...
+
+	props->setInfo(tr("<b>Source</b>: ") + info->SourcePath);
+	props->setEditWidgets(widgets, true, this);
+}
+
+void ContentManager::reprocessInternal(ContentInfo *contentInfo)
+{
+	printf("ContentManager::reprocessInternal()\n");
+
+	// Reprocess this content
+
 }
 
 } /* namespace FT800EMUQT */

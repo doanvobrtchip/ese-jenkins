@@ -242,6 +242,11 @@ int MemoryClass::getWriteOpCount()
 	return s_WriteOpCount;
 }
 
+int MemoryClass::poke()
+{
+	++s_WriteOpCount;
+}
+
 template<typename T>
 FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &data)
 {
@@ -353,7 +358,7 @@ void MemoryClass::begin(const char *romFilePath)
 			if (s != FT800EMU_ROM_SIZE) printf("Incomplete ROM file\n");
 			else printf("Loaded ROM file\n");
 			if (fclose(f)) printf("Error closing ROM file\n");
-		} 
+		}
 	}
 	else
 	{
@@ -403,7 +408,7 @@ void MemoryClass::begin(const char *romFilePath)
 	rawWriteU32(REG_DITHER, 1);
 	rawWriteU32(REG_SWIZZLE, 0);
 	rawWriteU32(REG_CSPREAD, 1);
-	rawWriteU32(REG_PCLK_POL, 0);	
+	rawWriteU32(REG_PCLK_POL, 0);
 	rawWriteU32(REG_PCLK, 0);
 	rawWriteU32(REG_TAG_X, 0);
 	rawWriteU32(REG_TAG_Y, 0);
@@ -416,7 +421,7 @@ void MemoryClass::begin(const char *romFilePath)
 
 void MemoryClass::end()
 {
-	
+
 }
 
 void MemoryClass::enableReadDelay(bool enabled)
@@ -453,7 +458,7 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 }
 
 /* void MemoryClass::mcuWrite(size_t address, uint8_t data)
-{	
+{
 	s_SwapMCUReadCounter = 0;
 	if (address == REG_CMD_WRITE + 3)
 	{
@@ -512,7 +517,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			}
 			else
 			{
-				// printf("Reset %i\n", address);			
+				// printf("Reset %i\n", address);
 				s_LastMCURead = address;
 				s_IdenticalMCUReadCounter = 0;
 			}
@@ -569,7 +574,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			}
 			else
 			{
-				// printf("Reset %i\n", address);			
+				// printf("Reset %i\n", address);
 				s_LastMCURead = address;
 				s_IdenticalMCUReadCounter = 0;
 			}
@@ -581,7 +586,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 } */
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
-{	
+{
 	++s_WriteOpCount;
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
@@ -594,7 +599,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 	{
 		s_WaitMCUReadCounter = 0;
 	}
-	
+
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
 		int dlAddr = (address - RAM_DL) >> 2;
@@ -609,7 +614,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 	// printf("Coprocessor read U32 %i\n", address);
-	
+
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U32 read address %i exceeds RAM size", address);
@@ -658,7 +663,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			}
 			else
 			{
-				// printf("Reset %i\n", address);			
+				// printf("Reset %i\n", address);
 				s_LastCoprocessorRead = address;
 				s_IdenticalCoprocessorReadCounter = 0;
 			}
@@ -683,7 +688,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 }
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
-{	
+{
 	++s_WriteOpCount;
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
@@ -691,7 +696,7 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 		printf("Coprocessor U16 write address %i exceeds RAM size", address);
 		return;
 	}
-	
+
     actionWrite(address, data);
 	rawWriteU16(address, data);
 }

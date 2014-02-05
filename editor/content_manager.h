@@ -27,6 +27,7 @@
 
 class QTreeWidget;
 class QTreeWidgetItem;
+class QPushButton;
 
 namespace FT800EMUQT {
 
@@ -88,13 +89,17 @@ private:
 
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
+	void reprocessInternal(ContentInfo *contentInfo);
+	void rebuildGUIInternal(ContentInfo *contentInfo);
 
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_ContentList;
+	QPushButton *m_RemoveButton;
 
 private slots:
 	void add();
 	void remove();
+	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
 	ContentManager(const ContentManager &);

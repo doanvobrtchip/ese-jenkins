@@ -30,7 +30,7 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_CurrentEditWidget(NULL), m_OwnCurrentEditWidget(false)
+PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false)
 {
 	QVBoxLayout *infoLayout = new QVBoxLayout(this);
 	m_InfoGroupBox = new QGroupBox(this);
@@ -42,12 +42,12 @@ PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_Current
 	m_InfoGroupBox->hide();
 
 	m_EditLayout = new QVBoxLayout(this);
-	m_EditGroupBox = new QGroupBox(this);
-	m_EditGroupBox->setLayout(m_EditLayout);
-	m_EditGroupBox->hide();
+	m_EditWidget = new QWidget(this);
+	m_EditWidget->setLayout(m_EditLayout);
+	m_EditWidget->hide();
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
-	layout->addWidget(m_EditGroupBox);
+	layout->addWidget(m_EditWidget);
 	layout->addWidget(m_InfoGroupBox);
 	layout->addStretch();
 	setLayout(layout);
@@ -76,27 +76,37 @@ void PropertiesEditor::setInfo(QString message)
 
 void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 {
-	if (m_CurrentEditWidget)
+	std::vector<QWidget *> widgets;
+	if (widget) widgets.push_back(widget);
+	setEditWidgets(widgets, own, setter);
+}
+
+void PropertiesEditor::setEditWidgets(const std::vector<QWidget *> &widgets, bool own, QWidget *setter)
+{
+	for (std::vector<QWidget *>::iterator it(m_CurrentEditWidgets.begin()), end(m_CurrentEditWidgets.end()); it != end; ++it)
 	{
-		m_EditLayout->removeWidget(m_CurrentEditWidget);
+		m_EditLayout->removeWidget((*it));
 		if (m_OwnCurrentEditWidget)
 		{
-			delete m_CurrentEditWidget;
+			delete (*it);
 		}
-		m_CurrentEditWidget = NULL;
-		m_OwnCurrentEditWidget = false;
 	}
+	m_CurrentEditWidgets.clear();
+	m_OwnCurrentEditWidget = false;
 
-	if (widget)
+	if (widgets.size())
 	{
-		m_CurrentEditWidget = widget;
+		m_CurrentEditWidgets = widgets;
 		m_OwnCurrentEditWidget = own;
-		m_EditLayout->addWidget(m_CurrentEditWidget);
-		m_EditGroupBox->show();
+		for (std::vector<QWidget *>::iterator it(m_CurrentEditWidgets.begin()), end(m_CurrentEditWidgets.end()); it != end; ++it)
+		{
+			m_EditLayout->addWidget((*it));
+		}
+		m_EditWidget->show();
 	}
 	else
 	{
-		m_EditGroupBox->hide();
+		m_EditWidget->hide();
 	}
 
 	m_CurrentEditWidgetSetter = setter;
@@ -105,7 +115,6 @@ void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 void PropertiesEditor::translate()
 {
 	m_InfoGroupBox->setTitle(tr("Information"));
-	m_EditGroupBox->setTitle(tr("Edit"));
 }
 
 } /* namespace FT800EMUQT */

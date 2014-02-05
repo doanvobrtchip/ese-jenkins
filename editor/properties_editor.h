@@ -39,30 +39,31 @@ namespace FT800EMUQT {
 class PropertiesEditor : public QWidget
 {
 	Q_OBJECT
-	
+
 public:
 	PropertiesEditor(QWidget *parent);
 	virtual ~PropertiesEditor();
-	
+
 	void setInfo(QString message);
 	void setEditWidget(QWidget *widget, bool own, QWidget *setter);
+	void setEditWidgets(const std::vector<QWidget *> &widgets, bool own, QWidget *setter);
 	QWidget *getEditWidgetSetter() const { return m_CurrentEditWidgetSetter; }
-	
+
 	void translate();
 
 private:
 	QGroupBox *m_InfoGroupBox;
 	QLabel *m_InfoLabel;
 	QVBoxLayout *m_EditLayout;
-	QGroupBox *m_EditGroupBox;
-	QWidget *m_CurrentEditWidget;
+	QWidget *m_EditWidget;
+	std::vector<QWidget *> m_CurrentEditWidgets;
 	bool m_OwnCurrentEditWidget;
 	QWidget *m_CurrentEditWidgetSetter;
-	
+
 private:
 	PropertiesEditor(const PropertiesEditor &);
 	PropertiesEditor &operator=(const PropertiesEditor &);
-	
+
 }; /* class PropertiesEditor */
 
 } /* namespace FT800EMUQT */

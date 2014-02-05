@@ -90,6 +90,7 @@ public:
 	inline Toolbox *toolbox() { return m_Toolbox; }
 	inline Inspector *inspector() { return m_Inspector; }
 	inline QUndoStack *undoStack() { return m_UndoStack; }
+	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
 
 	void focusDlEditor();
 	void focusCmdEditor();

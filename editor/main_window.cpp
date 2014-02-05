@@ -1404,10 +1404,12 @@ void MainWindow::stepEnabled(bool enabled)
 	if (enabled)
 	{
 		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
+		FT800EMU::Memory.poke();
 	}
 	else
 	{
 		FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
+		FT800EMU::Memory.poke();
 	}
 }
 
@@ -1416,6 +1418,7 @@ void MainWindow::stepChanged(int step)
 	if (m_StepEnabled->isChecked())
 	{
 		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
+		FT800EMU::Memory.poke();
 	}
 }
 
@@ -1467,6 +1470,7 @@ void MainWindow::clearEditor()
 	m_DlEditor->clear();
 	m_CmdEditor->clear();
 	m_Macro->clear();
+	m_ContentManager->clear();
 }
 
 void MainWindow::clearUndoStack()

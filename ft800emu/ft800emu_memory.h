@@ -76,13 +76,15 @@ public:
 	static void resetTouchScreenXY();
 	// Internal call used for touch interpolation
 	static void setTouchScreenXYFrameTime(long micros);
-	
+
 	// Tracking of coprocessor writes to display list
 	static int *getDisplayListCoprocessorWrites();
 	static void clearDisplayListCoprocessorWrites();
 
 	// Gets a total count of write operations
 	static int getWriteOpCount();
+	// Increases the write op count
+	static int poke();
 
 private:
 	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
@@ -97,7 +99,7 @@ private:
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
-	
+
 }; /* class MemoryClass */
 
 FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(uint8_t *buffer, size_t address, uint32_t data)
