@@ -120,14 +120,16 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QPushButton *browseSourceFile = new QPushButton(this);
 	browseSourceFile->setMaximumWidth(browseSourceFile->height());
 	addLabeledWidget(this, propCommonLayout, tr("Source file: "), m_PropertiesCommonSourceFile, browseSourceFile);
+	connect(m_PropertiesCommonSourceFile, SIGNAL(textChanged(const QString &)), this, SLOT(propertiesCommonSourcePathChanged(const QString &)));
+	connect(browseSourceFile, SIGNAL(clicked()), this, SLOT(propertiesCommonSourcePathBrowse()));
 	m_PropertiesCommonName = new QLineEdit(this);
 	addLabeledWidget(this, propCommonLayout, tr("Name: "), m_PropertiesCommonName);
 	QComboBox *propCommonConverter = new QComboBox(this);
 	m_PropertiesCommonConverter = propCommonConverter;
 	propCommonConverter->addItem("");
-	propCommonConverter->addItem(tr("Raw"));
 	propCommonConverter->addItem(tr("Image"));
-	propCommonConverter->addItem(tr("Raw Jpeg"));
+	propCommonConverter->addItem(tr("Raw"));
+	propCommonConverter->addItem(tr("Raw JPEG"));
 	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	propCommon->setLayout(propCommonLayout);
 }
@@ -149,7 +151,10 @@ public:
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_Owner(true) { }
+		m_Owner(true)
+	{
+		setText(tr("Add content"));
+	}
 
 	virtual ~Add()
 	{
@@ -209,7 +214,10 @@ public:
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_Owner(false) { }
+		m_Owner(false)
+	{
+		setText(tr("Remove content"));
+	}
 
 	virtual ~Remove()
 	{
@@ -260,9 +268,9 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
-	view->setData(0, Qt::UserRole, qVariantFromValue((void *)contentInfo));
-	view->setText(0, contentInfo->SourcePath);
 	contentInfo->View = view;
+	view->setData(0, Qt::UserRole, qVariantFromValue((void *)contentInfo));
+	rebuildViewInternal(contentInfo);
 
 	// Reprocess to RAM
 	reprocessInternal(contentInfo);
@@ -347,7 +355,19 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 	else
 	{
 		m_RemoveButton->setEnabled(false);
+		PropertiesEditor *props = m_MainWindow->propertiesEditor();
+		if (props->getEditWidgetSetter() == this)
+		{
+			props->setInfo("");
+			props->setEditWidget(NULL, false, NULL);
+		}
+		m_CurrentPropertiesContent = NULL;
 	}
+}
+
+void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
+{
+	contentInfo->View->setText(0, contentInfo->SourcePath);
 }
 
 void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
@@ -355,7 +375,10 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	printf("ContentManager::rebuildGUIInternal()\n");
 
 	// Build GUI for this content
-	// Set widget values
+	m_CurrentPropertiesContent = contentInfo;
+	rebuildViewInternal(contentInfo);
+
+	// Set common widget values
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
 	m_PropertiesCommonName->setText(contentInfo->DestName);
 	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
@@ -371,8 +394,17 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		widgets.push_back(m_PropertiesCommon);
 		// ...
 
-		props->setInfo(tr("<b>Source</b>: ") + info->SourcePath);
 		props->setEditWidgets(widgets, false, this);
+	}
+
+	// Set user help, wizard format
+	if (contentInfo->Converter == ContentInfo::Invalid)
+	{
+		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
+	}
+	else
+	{
+		props->setInfo(tr("Content Manager"));
 	}
 }
 
@@ -382,6 +414,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 
 	// Reprocess this content
 
+	// Update GUI if it exists
+	if (m_CurrentPropertiesContent == contentInfo)
+		rebuildGUIInternal(contentInfo);
 }
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
@@ -392,6 +427,97 @@ void ContentManager::propertiesSetterChanged(QWidget *setter)
 	{
 		m_ContentList->setCurrentItem(NULL);
 	}
+}
+
+class ContentManager::ChangeSourcePath : public QUndoCommand
+{
+public:
+	ChangeSourcePath(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->SourcePath),
+		m_NewValue(value)
+	{
+		setText(tr("Change content source path"));
+	}
+
+	virtual ~ChangeSourcePath()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->SourcePath = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->SourcePath = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064400;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSourcePath *c = static_cast<const ChangeSourcePath *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	QString m_OldValue;
+	QString m_NewValue;
+};
+
+void ContentManager::changeSourcePath(ContentInfo *contentInfo, const QString &value)
+{
+	// Create undo/redo
+	ChangeSourcePath *changeSourcePath = new ChangeSourcePath(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeSourcePath);
+}
+
+ContentInfo *ContentManager::current()
+{
+	if (!m_ContentList->currentItem())
+		return NULL;
+	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
+}
+
+void ContentManager::propertiesCommonSourcePathChanged(const QString &value)
+{
+	printf("ContentManager::propertiesCommonSourcePathChanged(value)\n");
+
+	if (current() && current()->SourcePath != value)
+		changeSourcePath(current(), value);
+}
+
+void ContentManager::propertiesCommonSourcePathBrowse()
+{
+	if (!current())
+		return;
+
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Load Content"),
+		m_MainWindow->getFileDialogPath(),
+		tr("All files (*.*)"));
+
+	if (fileName.isNull())
+		return;
+
+	changeSourcePath(current(), fileName);
 }
 
 } /* namespace FT800EMUQT */

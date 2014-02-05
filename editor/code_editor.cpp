@@ -131,7 +131,7 @@ void CodeEditor::documentUndoCommandAdded()
 	m_UndoIndexDummy = true;
 	m_UndoNeedsClosure = true;
 	UndoEditor *uc = new UndoEditor(this, m_CombineId);
-	uc->setText(tr("Edit Code"));
+	uc->setText(tr("Edit code"));
 	m_UndoStack->push(uc);
 }
 

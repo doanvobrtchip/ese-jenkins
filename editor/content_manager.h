@@ -46,8 +46,8 @@ struct ContentInfo
 	enum ConverterType
 	{
 		Invalid,
-		Raw, // Raw copy to ram
 		Image, // Process image
+		Raw, // Raw copy to ram
 		Jpeg, // Load jpeg on coprocessor
 	};
 
@@ -92,13 +92,22 @@ public:
 	// Get all content
 	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
 
+	// Get the currently selected content, may be NULL
+	ContentInfo *current();
+
+	// Changes
+	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
+
 private:
 	class Add;
 	class Remove;
 
+	class ChangeSourcePath;
+
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
+	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
 
 	MainWindow *m_MainWindow;
@@ -116,6 +125,9 @@ private slots:
 	void remove();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 	void propertiesSetterChanged(QWidget *setter);
+
+	void propertiesCommonSourcePathChanged(const QString &value);
+	void propertiesCommonSourcePathBrowse();
 
 private:
 	ContentManager(const ContentManager &);
