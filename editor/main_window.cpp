@@ -1569,6 +1569,14 @@ void MainWindow::actOpen()
 		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
 		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		QJsonArray content = root["content"].toArray();
+		for (int i = 0; i < content.size(); ++i)
+		{
+			ContentInfo *ci = new ContentInfo("");
+			QJsonObject cio = content[i].toObject();
+			ci->fromJson(cio, false);
+			m_ContentManager->add(ci);
+		}
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;
 	}
