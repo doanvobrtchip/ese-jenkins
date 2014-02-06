@@ -108,6 +108,9 @@ public:
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
 
+	// Get
+	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
+
 private:
 	class Add;
 	class Remove;
@@ -143,6 +146,8 @@ private:
 
 	QGroupBox *m_PropertiesImagePreview;
 	QLabel *m_PropertiesImageLabel;
+
+	static std::vector<QString> s_FileExtensions;
 
 private slots:
 	void add();

@@ -30,6 +30,7 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QFile>
 
 // Emulator includes
 #include <vc.h>
@@ -43,6 +44,8 @@
 using namespace std;
 
 namespace FT800EMUQT {
+
+std::vector<QString> ContentManager::s_FileExtensions;
 
 ContentInfo::ContentInfo(const QString &filePath)
 {
@@ -82,6 +85,20 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 
 ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL)
 {
+	if (s_FileExtensions.empty())
+	{
+		s_FileExtensions.push_back(".bin");
+		s_FileExtensions.push_back(".binh");
+		s_FileExtensions.push_back(".raw");
+		s_FileExtensions.push_back(".rawh");
+		s_FileExtensions.push_back(".lut.bin");
+		s_FileExtensions.push_back(".lut.binh");
+		s_FileExtensions.push_back(".lut.raw");
+		s_FileExtensions.push_back(".lut.rawh");
+		s_FileExtensions.push_back("_converted.png");
+		s_FileExtensions.push_back(".meta");
+	}
+
 	QVBoxLayout *layout = new QVBoxLayout(this);
 
 	m_ContentList = new QTreeWidget(this);
@@ -657,15 +674,32 @@ public:
 
 	}
 
+	void renameFileExt(const QString &from, const QString &to, const QString &ext) const
+	{
+		QFile::rename(from + ext, to + ext);
+	}
+
+	void renameFiles(const QString &from, const QString &to) const
+	{
+		// Rename files to their new destination name
+		const std::vector<QString> &fileExt = ContentManager::getFileExtensions();
+		for (std::vector<QString>::const_iterator it(fileExt.begin()), end(fileExt.end()); it != end; ++it)
+		{
+			renameFileExt(from, to, (*it));
+		}
+	}
+
 	virtual void undo()
 	{
 		m_ContentInfo->DestName = m_OldValue;
+		renameFiles(m_NewValue, m_OldValue);
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
 		m_ContentInfo->DestName = m_NewValue;
+		renameFiles(m_OldValue, m_NewValue);
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
