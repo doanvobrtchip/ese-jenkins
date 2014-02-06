@@ -520,10 +520,12 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 	if (current)
 	{
 		m_RemoveButton->setEnabled(true);
-		rebuildGUIInternal((ContentInfo *)current->data(0, Qt::UserRole).value<void *>());
 
 		// Be helpful
 		m_MainWindow->focusProperties();
+
+		// Rebuild GUI
+		rebuildGUIInternal((ContentInfo *)current->data(0, Qt::UserRole).value<void *>());
 	}
 	else
 	{
