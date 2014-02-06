@@ -1625,6 +1625,15 @@ void MainWindow::actSave()
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document());
 	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document());
+	QJsonArray content;
+	std::vector<ContentInfo *> contentInfos;
+	m_ContentManager->getContentInfos(contentInfos);
+	for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
+	{
+		ContentInfo *info = (*it);
+		content.push_back(info->toJson(false));
+	}
+	root["content"] = content;
 	QJsonDocument doc(root);
 
 	QByteArray data = doc.toJson();
