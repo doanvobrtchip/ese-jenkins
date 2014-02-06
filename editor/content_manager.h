@@ -20,6 +20,8 @@
 // Qt includes
 #include <QWidget>
 #include <QString>
+#include <QMutex>
+#include <QJsonObject>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -53,7 +55,7 @@ struct ContentInfo
 		Invalid,
 		Image, // Process image
 		Raw, // Raw copy to ram
-		Jpeg, // Load jpeg on coprocessor
+		RawJpeg, // Load jpeg on coprocessor
 	};
 
 	QString SourcePath; // Relative source path
@@ -72,6 +74,10 @@ struct ContentInfo
 	int ImageFormat;
 
 	QString BuildError;
+
+	QJsonObject toJson(bool meta) const;
+	void fromJson(QJsonObject &j, bool meta);
+	bool equalsMeta(const ContentInfo *other) const;
 };
 
 /**
@@ -107,6 +113,10 @@ public:
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
+
+	// Lock to call when editing/moving content files from qt thread, when reading content from non-qt threads
+	void lockContent() { m_Mutex.lock(); }
+	void unlockContent() { m_Mutex.unlock(); }
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
@@ -148,6 +158,8 @@ private:
 	QLabel *m_PropertiesImageLabel;
 
 	static std::vector<QString> s_FileExtensions;
+
+	QMutex m_Mutex;
 
 private slots:
 	void add();

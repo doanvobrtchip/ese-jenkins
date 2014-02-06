@@ -1652,8 +1652,28 @@ void MainWindow::actSaveAs()
 	QString srcPath = QDir::currentPath();
 	if (dstPath != srcPath)
 	{
-		// printf("Path: %s\n", dirPath.toUtf8().data());
-		// (copy assets from srcPath to dstPath)
+		printf("From: %s\n", srcPath.toUtf8().data());
+		printf("To: %s\n", dstPath.toUtf8().data());
+		m_ContentManager->lockContent();
+		// Copy assets from srcPath to dstPath
+		std::vector<ContentInfo *> contentInfos;
+		m_ContentManager->getContentInfos(contentInfos);
+		const std::vector<QString> &fileExt = ContentManager::getFileExtensions();
+		// printf("Number: %i\n", (int)contentInfos.size());
+		for (std::vector<ContentInfo *>::iterator it1(contentInfos.begin()), end1(contentInfos.end()); it1 != end1; ++it1)
+		{
+			ContentInfo *info = (*it1);
+			// printf("Content: %s\n", info->DestName.toUtf8().data());
+			for (std::vector<QString>::const_iterator it2(fileExt.begin()), end2(fileExt.end()); it2 != end2; ++it2)
+			{
+				QString src = srcPath + "/" + info->DestName + (*it2);
+				QString dst = dstPath + "/" + info->DestName + (*it2);
+				// printf("Move from '%s' to '%s'", src.toUtf8().data(), dst.toUtf8().data());
+				QFile::copy(src, dst);
+				// TODO: Reprocess to verify.
+			}
+		}
+		m_ContentManager->unlockContent();
 	}
 
 	if (m_TemporaryDir)

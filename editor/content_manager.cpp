@@ -31,6 +31,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QFile>
+#include <QJsonDocument>
 
 // Emulator includes
 #include <vc.h>
@@ -60,6 +61,101 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
+}
+
+QJsonObject ContentInfo::toJson(bool meta) const
+{
+	QJsonObject j;
+	j["sourcePath"] = SourcePath;
+	if (!meta)
+	{
+		j["destName"] = DestName;
+		j["memoryLoaded"] = MemoryLoaded;
+		j["memoryAddress"] = MemoryAddress;
+		j["dataCompressed"] = DataCompressed;
+		j["dataEmbedded"] = DataEmbedded;
+	}
+	switch (Converter)
+	{
+	case Raw:
+		j["converter"] = QString("Raw");
+		j["rawStart"] = RawStart;
+		j["rawLength"] = RawLength;
+		break;
+	case Image:
+		j["converter"] = QString("Image");
+		j["imageFormat"] = ImageFormat;
+		break;
+	case RawJpeg:
+		j["converter"] = QString("RawJpeg");
+		break;
+	}
+	return j;
+}
+
+void ContentInfo::fromJson(QJsonObject &j, bool meta)
+{
+	SourcePath = j["sourcePath"].toString();
+	if (!meta)
+	{
+		DestName = j["destName"].toString();
+		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
+		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
+		DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
+		DataEmbedded = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool();
+	}
+	QString converter = j["converter"].toString();
+	if (converter == "Raw")
+	{
+		Converter = Raw;
+		RawStart = ((QJsonValue)j["rawStart"]).toVariant().toInt();
+		RawLength = ((QJsonValue)j["rawLength"]).toVariant().toInt();
+	}
+	else if (converter == "Image")
+	{
+		Converter = Image;
+		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
+	}
+	else if (converter == "RawJpeg")
+	{
+		Converter = RawJpeg;
+	}
+	else
+	{
+		Converter = Invalid;
+	}
+}
+
+bool ContentInfo::equalsMeta(const ContentInfo *other) const
+{
+	if (SourcePath != other->SourcePath)
+	{
+		return false;
+	}
+	if (Converter != other->Converter)
+	{
+		return false;
+	}
+	switch (Converter)
+	{
+	case Raw:
+		if (RawStart != other->RawStart)
+		{
+			return false;
+		}
+		if (RawLength != other->RawLength)
+		{
+			return false;
+		}
+		break;
+	case Image:
+		if (ImageFormat != other->ImageFormat)
+		{
+			return false;
+		}
+		break;
+	}
+	return true;
 }
 
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
@@ -96,7 +192,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 		s_FileExtensions.push_back(".lut.raw");
 		s_FileExtensions.push_back(".lut.rawh");
 		s_FileExtensions.push_back("_converted.png");
-		s_FileExtensions.push_back(".meta");
+		s_FileExtensions.push_back(".ft800meta");
 	}
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
@@ -517,7 +613,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImagePreview->setHidden(true);
 				break;
 			}
-			case ContentInfo::Jpeg:
+			case ContentInfo::RawJpeg:
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
@@ -532,22 +628,67 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	printf("ContentManager::reprocessInternal()\n");
 
 	// Reprocess this content
-	// TODO: Check for changes and datestamps and so on...
-	contentInfo->BuildError = "";
-	switch (contentInfo->Converter)
+	if (contentInfo->Converter != ContentInfo::Invalid)
 	{
-	case ContentInfo::Image:
-		AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
-		break;
-	case ContentInfo::Raw:
-		AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
-		break;
-	case ContentInfo::Jpeg:
-		AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
-		break;
-	default:
-		contentInfo->BuildError = "No converter selected";
-		break;
+		lockContent();
+		// TODO: Compare datestamp of source file with meta file
+		QString metaFile = contentInfo->DestName + ".ft800meta";
+		bool metaExists = QFile::exists(metaFile);
+		bool equalMeta = false;
+		if (metaExists)
+		{
+			QFile file(metaFile);
+			file.open(QIODevice::ReadOnly);
+			QByteArray data = file.readAll();
+			file.close();
+			QJsonParseError parseError;
+			QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+			if (parseError.error == QJsonParseError::NoError)
+			{
+				QJsonObject root = doc.object();
+				ContentInfo ci("");
+				ci.fromJson(root, true);
+				equalMeta = contentInfo->equalsMeta(&ci);
+			}
+		}
+		if (!equalMeta)
+		{
+			if (metaExists)
+			{
+				QFile::remove(metaFile); // *** FILE REMOVE ***
+			}
+			contentInfo->BuildError = "";
+			switch (contentInfo->Converter)
+			{
+			case ContentInfo::Image:
+				AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
+				break;
+			case ContentInfo::Raw:
+				AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
+				break;
+			case ContentInfo::RawJpeg:
+				AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+				break;
+			default:
+				contentInfo->BuildError = "<b>Critical Error</b><br>Unknown converter selected.";
+				break;
+			}
+			if (contentInfo->BuildError.isEmpty())
+			{
+				// Write meta file
+				QFile file(metaFile);
+				file.open(QIODevice::WriteOnly);
+				QDataStream out(&file);
+				QJsonDocument doc(contentInfo->toJson(true));
+				QByteArray data = doc.toJson();
+				out.writeRawData(data, data.size());
+			}
+		}
+		else
+		{
+			printf("Equal meta, skip convert\n");
+		}
+		unlockContent();
 	}
 
 	// Update GUI if it exists
@@ -614,6 +755,9 @@ public:
 		if (c->m_ContentInfo != m_ContentInfo)
 			return false;
 
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
 		m_NewValue = c->m_NewValue;
 		return true;
 	}
@@ -674,21 +818,26 @@ public:
 
 	}
 
+private:
 	void renameFileExt(const QString &from, const QString &to, const QString &ext) const
 	{
 		QFile::rename(from + ext, to + ext);
 	}
 
+protected:
 	void renameFiles(const QString &from, const QString &to) const
 	{
+		m_ContentManager->lockContent();
 		// Rename files to their new destination name
 		const std::vector<QString> &fileExt = ContentManager::getFileExtensions();
 		for (std::vector<QString>::const_iterator it(fileExt.begin()), end(fileExt.end()); it != end; ++it)
 		{
 			renameFileExt(from, to, (*it));
 		}
+		m_ContentManager->unlockContent();
 	}
 
+public:
 	virtual void undo()
 	{
 		m_ContentInfo->DestName = m_OldValue;
@@ -713,6 +862,9 @@ public:
 		const ChangeDestName *c = static_cast<const ChangeDestName *>(command);
 
 		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
 			return false;
 
 		m_NewValue = c->m_NewValue;
@@ -786,6 +938,9 @@ public:
 		if (c->m_ContentInfo != m_ContentInfo)
 			return false;
 
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
 		m_NewValue = c->m_NewValue;
 		return true;
 	}
@@ -852,6 +1007,9 @@ public:
 		const ChangeImageFormat *c = static_cast<const ChangeImageFormat *>(command);
 
 		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
 			return false;
 
 		m_NewValue = c->m_NewValue;
