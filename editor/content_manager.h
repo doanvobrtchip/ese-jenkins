@@ -35,6 +35,8 @@ class QComboBox;
 class QLineEdit;
 class QGroupBox;
 class QLabel;
+class QSpinBox;
+class QCheckBox;
 
 namespace FT800EMUQT {
 
@@ -136,6 +138,7 @@ private:
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
+	void reuploadInternal(ContentInfo *contentInfo);
 	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
 
@@ -149,13 +152,17 @@ private:
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
 	QComboBox *m_PropertiesCommonConverter;
 
-	// QGroupBox *m_PropertiesMemory; // TODO
-
 	QGroupBox *m_PropertiesImage;
 	QComboBox *m_PropertiesImageFormat;
 
 	QGroupBox *m_PropertiesImagePreview;
 	QLabel *m_PropertiesImageLabel;
+
+	QGroupBox *m_PropertiesMemory;
+	QCheckBox *m_PropertiesMemoryLoaded;
+	QSpinBox *m_PropertiesMemoryAddress;
+	QCheckBox *m_PropertiesDataCompressed;
+	QCheckBox *m_PropertiesDataEmbedded;
 
 	static std::vector<QString> s_FileExtensions;
 

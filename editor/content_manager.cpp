@@ -32,6 +32,8 @@
 #include <QLineEdit>
 #include <QFile>
 #include <QJsonDocument>
+#include <QCheckBox>
+#include <QSpinBox>
 
 // Emulator includes
 #include <vc.h>
@@ -277,6 +279,27 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImageLabel = new QLabel(this);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
+
+	m_PropertiesMemory = new QGroupBox(this);
+	m_PropertiesMemory->setHidden(true);
+	m_PropertiesMemory->setTitle(tr("Memory Options"));
+	QVBoxLayout *propMemLayout = new QVBoxLayout(this);
+	m_PropertiesMemoryAddress = new QSpinBox(this);
+	m_PropertiesMemoryAddress->setMinimum(0);
+	m_PropertiesMemoryAddress->setMaximum(RAM_DL - 4);
+	m_PropertiesMemoryAddress->setSingleStep(4);
+	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
+	m_PropertiesMemoryLoaded = new QCheckBox(this);
+	addLabeledWidget(this, propMemLayout, tr("Loaded: "), m_PropertiesMemoryLoaded);
+	QFrame* line = new QFrame();
+	line->setFrameShape(QFrame::HLine);
+	line->setFrameShadow(QFrame::Sunken);
+	propMemLayout->addWidget(line);
+	m_PropertiesDataCompressed = new QCheckBox(this);
+	addLabeledWidget(this, propMemLayout, tr("Compressed: "), m_PropertiesDataCompressed);
+	m_PropertiesDataEmbedded = new QCheckBox(this);
+	addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
+	m_PropertiesMemory->setLayout(propMemLayout);
 }
 
 ContentManager::~ContentManager()
@@ -564,6 +587,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		widgets.push_back(m_PropertiesCommon);
 		widgets.push_back(m_PropertiesImage);
 		widgets.push_back(m_PropertiesImagePreview);
+		widgets.push_back(m_PropertiesMemory);
 
 		props->setEditWidgets(widgets, false, this);
 	}
@@ -578,12 +602,20 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesImageFormat->setCurrentIndex(contentInfo->ImageFormat);
 		break;
 	}
+	if (contentInfo->Converter != ContentInfo::Invalid)
+	{
+		m_PropertiesMemoryLoaded->setCheckState(contentInfo->MemoryLoaded ? Qt::Checked : Qt::Unchecked);
+		m_PropertiesMemoryAddress->setValue(contentInfo->MemoryAddress);
+		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
+		m_PropertiesDataEmbedded->setCheckState(contentInfo->DataEmbedded ? Qt::Checked : Qt::Unchecked);
+	}
 
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
 		m_PropertiesImage->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
+		m_PropertiesMemory->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
 	}
 	else
@@ -607,18 +639,21 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
 				else if (contentInfo->BuildError.isEmpty()) props->setInfo(tr("Failed to load image preview."));
+				m_PropertiesMemory->setHidden(false);
 				break;
 			}
 			case ContentInfo::Raw:
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesMemory->setHidden(false);
 				break;
 			}
 			case ContentInfo::RawJpeg:
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesMemory->setHidden(false);
 				break;
 			}
 		}
@@ -693,9 +728,20 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		unlockContent();
 	}
 
+	// Reupload the content to emulator ram
+	reuploadInternal(contentInfo);
+
 	// Update GUI if it exists
 	if (m_CurrentPropertiesContent == contentInfo)
 		rebuildGUIInternal(contentInfo);
+}
+
+void ContentManager::reuploadInternal(ContentInfo *contentInfo)
+{
+	// Reupload the content to emulator RAM
+	// This happens in the emulator main loop
+	// Emulator main loop will lock the content mutex
+	// TODO
 }
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
