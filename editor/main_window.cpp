@@ -159,6 +159,9 @@ void setup()
 	wr32(REG_PCLK, 5);
 }
 
+// Content manager
+static ContentManager *s_ContentManager = NULL;
+
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
 
@@ -205,6 +208,44 @@ void loop()
 	{
 		FT800EMU::System.delay(10);
 	}
+
+	s_ContentManager->lockContent();
+	std::set<ContentInfo *> contentInfo;
+	s_ContentManager->swapUploadDirty(contentInfo);
+	for (std::set<ContentInfo *>::iterator it(contentInfo.begin()), end(contentInfo.end()); it != end; ++it)
+	{
+		ContentInfo *info = (*it);
+		QString fileName = info->DestName + ".raw";
+		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), info->MemoryAddress);
+		QFile binFile(fileName);
+		if (!binFile.exists())
+		{
+			printf("[RAM_G] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
+			continue;
+		}
+		int binSize = (int)binFile.size();
+		if (binSize + info->MemoryAddress > RAM_DL)
+		{
+			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
+			continue;
+		}
+		// ok
+		{
+			binFile.open(QIODevice::ReadOnly);
+			QDataStream in(&binFile);
+			/*swrbegin(info->MemoryAddress);
+			char b;
+			while (in.readRawData(&b, 1))
+			{
+				swr8(b);
+			}
+			swrend();*/
+			char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+			int s = in.readRawData(&ram[RAM_G + info->MemoryAddress], binSize);
+			FT800EMU::Memory.poke();
+		}
+	}
+	s_ContentManager->unlockContent();
 
 	// switch to next resolution
 	if (rd32(REG_HSIZE) != s_HSize)
@@ -562,6 +603,7 @@ MainWindow::~MainWindow()
 	s_DlEditor = NULL;
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
+	s_ContentManager = NULL;
 
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
@@ -1136,6 +1178,7 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		m_ContentManager = new ContentManager(this);
+		s_ContentManager = m_ContentManager;
 		scrollArea->setWidget(m_ContentManager);
 		m_ContentManagerDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);

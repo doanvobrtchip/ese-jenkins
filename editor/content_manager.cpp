@@ -56,13 +56,14 @@ ContentInfo::ContentInfo(const QString &filePath)
 	DestName = QFileInfo(filePath).baseName();
 	View = NULL;
 	Converter = ContentInfo::Invalid;
-	DataCompressed = false;
+	MemoryLoaded = false;
 	MemoryAddress = 0;
 	DataCompressed = true;
 	DataEmbedded = true;
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
+	UploadDirty = true;
 }
 
 QJsonObject ContentInfo::toJson(bool meta) const
@@ -72,7 +73,7 @@ QJsonObject ContentInfo::toJson(bool meta) const
 	if (!meta)
 	{
 		j["destName"] = DestName;
-		j["memoryLoaded"] = DataCompressed;
+		j["memoryLoaded"] = MemoryLoaded;
 		j["memoryAddress"] = MemoryAddress;
 		j["dataCompressed"] = DataCompressed;
 		j["dataEmbedded"] = DataEmbedded;
@@ -101,7 +102,7 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	if (!meta)
 	{
 		DestName = j["destName"].toString();
-		DataCompressed = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
+		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
 		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
 		DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
 		DataEmbedded = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool();
@@ -724,6 +725,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				QJsonDocument doc(contentInfo->toJson(true));
 				QByteArray data = doc.toJson();
 				out.writeRawData(data, data.size());
+				contentInfo->UploadDirty = true;
 			}
 		}
 		else
@@ -733,20 +735,32 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		unlockContent();
 	}
 
-	// Reupload the content to emulator ram
-	reuploadInternal(contentInfo);
-}
-
-void ContentManager::reuploadInternal(ContentInfo *contentInfo)
-{
-	// Reupload the content to emulator RAM
-	// This happens in the emulator main loop
-	// Emulator main loop will lock the content mutex
-	// TODO
+	// Reupload the content to emulator RAM if dirty
+	if (contentInfo->UploadDirty)
+	{
+		contentInfo->UploadDirty = false;
+		reuploadInternal(contentInfo);
+	}
 
 	// Update GUI if it exists
 	if (m_CurrentPropertiesContent == contentInfo)
 		rebuildGUIInternal(contentInfo);
+}
+
+void ContentManager::reuploadInternal(ContentInfo *contentInfo)
+{
+	printf("ContentManager::reuploadInternal()\n");
+
+	// Reupload the content to emulator RAM
+	// This happens in the emulator main loop
+	// Emulator main loop will lock the content mutex
+	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
+	{
+		lockContent();
+		if (m_ContentUploadDirty.find(contentInfo) == m_ContentUploadDirty.end())
+			m_ContentUploadDirty.insert(contentInfo);
+		unlockContent();
+	}
 }
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
@@ -1113,12 +1127,16 @@ public:
 	{
 		m_ContentInfo->MemoryLoaded = m_OldValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
 		m_ContentInfo->MemoryLoaded = m_NewValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
 
 private:
@@ -1165,12 +1183,16 @@ public:
 	{
 		m_ContentInfo->MemoryAddress = m_OldValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
 		m_ContentInfo->MemoryAddress = m_NewValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
 
 	virtual int id() const

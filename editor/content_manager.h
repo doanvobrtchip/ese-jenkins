@@ -16,6 +16,7 @@
 
 // STL includes
 #include <vector>
+#include <set>
 
 // Qt includes
 #include <QWidget>
@@ -80,6 +81,8 @@ struct ContentInfo
 	QJsonObject toJson(bool meta) const;
 	void fromJson(QJsonObject &j, bool meta);
 	bool equalsMeta(const ContentInfo *other) const;
+
+	bool UploadDirty;
 };
 
 /**
@@ -126,6 +129,7 @@ public:
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
+	inline void swapUploadDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadDirty.swap(contentInfo); }
 
 private:
 	class Add;
@@ -173,6 +177,8 @@ private:
 	QCheckBox *m_PropertiesDataEmbedded;
 
 	static std::vector<QString> s_FileExtensions;
+
+	std::set<ContentInfo *> m_ContentUploadDirty;
 
 	QMutex m_Mutex;
 
