@@ -115,6 +115,10 @@ public:
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
+	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
+	void changeMemoryAddress(ContentInfo *contentInfo, int value);
+	void changeDataCompressed(ContentInfo *contentInfo, bool value);
+	void changeDataEmbedded(ContentInfo *contentInfo, bool value);
 
 	// Lock to call when editing/moving content files from qt thread, when reading content from non-qt threads
 	void lockContent() { m_Mutex.lock(); }
@@ -131,6 +135,10 @@ private:
 	class ChangeDestName;
 	class ChangeConverter;
 	class ChangeImageFormat;
+	class ChangeMemoryLoaded;
+	class ChangeMemoryAddress;
+	class ChangeDataCompressed;
+	class ChangeDataEmbedded;
 
 	bool nameExists(const QString &name);
 	QString createName(const QString &name); // Rename if already exists.
@@ -179,6 +187,10 @@ private slots:
 	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
 	void propertiesCommonImageFormatChanged(int value);
+	void propertiesCommonMemoryLoadedChanged(int value);
+	void propertiesCommonMemoryAddressChanged(int value);
+	void propertiesCommonDataCompressedChanged(int value);
+	void propertiesCommonDataEmbeddedChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);

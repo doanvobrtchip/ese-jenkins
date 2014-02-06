@@ -56,7 +56,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	DestName = QFileInfo(filePath).baseName();
 	View = NULL;
 	Converter = ContentInfo::Invalid;
-	MemoryLoaded = false;
+	DataCompressed = false;
 	MemoryAddress = 0;
 	DataCompressed = true;
 	DataEmbedded = true;
@@ -72,7 +72,7 @@ QJsonObject ContentInfo::toJson(bool meta) const
 	if (!meta)
 	{
 		j["destName"] = DestName;
-		j["memoryLoaded"] = MemoryLoaded;
+		j["memoryLoaded"] = DataCompressed;
 		j["memoryAddress"] = MemoryAddress;
 		j["dataCompressed"] = DataCompressed;
 		j["dataEmbedded"] = DataEmbedded;
@@ -101,7 +101,7 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	if (!meta)
 	{
 		DestName = j["destName"].toString();
-		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
+		DataCompressed = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
 		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
 		DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
 		DataEmbedded = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool();
@@ -288,17 +288,22 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesMemoryAddress->setMinimum(0);
 	m_PropertiesMemoryAddress->setMaximum(RAM_DL - 4);
 	m_PropertiesMemoryAddress->setSingleStep(4);
+	m_PropertiesMemoryAddress->setKeyboardTracking(false);
 	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
+	connect(m_PropertiesMemoryAddress, SIGNAL(valueChanged(int)), this, SLOT(propertiesCommonMemoryAddressChanged(int)));
 	m_PropertiesMemoryLoaded = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Loaded: "), m_PropertiesMemoryLoaded);
+	connect(m_PropertiesMemoryLoaded, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonMemoryLoadedChanged(int)));
 	QFrame* line = new QFrame();
 	line->setFrameShape(QFrame::HLine);
 	line->setFrameShadow(QFrame::Sunken);
 	propMemLayout->addWidget(line);
 	m_PropertiesDataCompressed = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Compressed: "), m_PropertiesDataCompressed);
+	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonDataCompressedChanged(int)));
 	m_PropertiesDataEmbedded = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
+	connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonDataEmbeddedChanged(int)));
 	m_PropertiesMemory->setLayout(propMemLayout);
 }
 
@@ -730,10 +735,6 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 
 	// Reupload the content to emulator ram
 	reuploadInternal(contentInfo);
-
-	// Update GUI if it exists
-	if (m_CurrentPropertiesContent == contentInfo)
-		rebuildGUIInternal(contentInfo);
 }
 
 void ContentManager::reuploadInternal(ContentInfo *contentInfo)
@@ -742,6 +743,10 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	// This happens in the emulator main loop
 	// Emulator main loop will lock the content mutex
 	// TODO
+
+	// Update GUI if it exists
+	if (m_CurrentPropertiesContent == contentInfo)
+		rebuildGUIInternal(contentInfo);
 }
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
@@ -1084,6 +1089,239 @@ void ContentManager::propertiesCommonImageFormatChanged(int value)
 
 	if (current() && current()->ImageFormat != value)
 		changeImageFormat(current(), value);
+}
+
+class ContentManager::ChangeMemoryLoaded : public QUndoCommand
+{
+public:
+	ChangeMemoryLoaded(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->MemoryLoaded),
+		m_NewValue(value)
+	{
+		setText(value ? tr("Load content to memory") : tr("Unload content from memory"));
+	}
+
+	virtual ~ChangeMemoryLoaded()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->MemoryLoaded = m_OldValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->MemoryLoaded = m_NewValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	bool m_OldValue;
+	bool m_NewValue;
+};
+
+void ContentManager::changeMemoryLoaded(ContentInfo *contentInfo, bool value)
+{
+	// Create undo/redo
+	ChangeMemoryLoaded *changeMemoryLoaded = new ChangeMemoryLoaded(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeMemoryLoaded);
+}
+
+void ContentManager::propertiesCommonMemoryLoadedChanged(int value)
+{
+	printf("ContentManager::propertiesCommonMemoryLoadedChanged(value)\n");
+
+	if (current() && current()->MemoryLoaded != (value == (int)Qt::Checked))
+		changeMemoryLoaded(current(), (value == (int)Qt::Checked));
+}
+
+class ContentManager::ChangeMemoryAddress : public QUndoCommand
+{
+public:
+	ChangeMemoryAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->MemoryAddress),
+		m_NewValue(value)
+	{
+		setText(tr("Change memory address"));
+	}
+
+	virtual ~ChangeMemoryAddress()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->MemoryAddress = m_OldValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->MemoryAddress = m_NewValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064404;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeMemoryAddress *c = static_cast<const ChangeMemoryAddress *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeMemoryAddress *changeMemoryAddress = new ChangeMemoryAddress(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
+	m_MainWindow->undoStack()->push(changeMemoryAddress);
+}
+
+void ContentManager::propertiesCommonMemoryAddressChanged(int value)
+{
+	printf("ContentManager::propertiesCommonMemoryAddressChanged(value)\n");
+
+	if (current() && current()->MemoryAddress != (value & 0x7FFFFFFC))
+		changeMemoryAddress(current(), value);
+	else if (current() && value != (value & 0x7FFFFFFC))
+		rebuildGUIInternal(current());
+}
+
+class ContentManager::ChangeDataCompressed : public QUndoCommand
+{
+public:
+	ChangeDataCompressed(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->DataCompressed),
+		m_NewValue(value)
+	{
+		setText(value ? tr("Store data compressed") : tr("Store data uncompressed"));
+	}
+
+	virtual ~ChangeDataCompressed()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->DataCompressed = m_OldValue;
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->DataCompressed = m_NewValue;
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	bool m_OldValue;
+	bool m_NewValue;
+};
+
+void ContentManager::changeDataCompressed(ContentInfo *contentInfo, bool value)
+{
+	// Create undo/redo
+	ChangeDataCompressed *changeDataCompressed = new ChangeDataCompressed(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeDataCompressed);
+}
+
+void ContentManager::propertiesCommonDataCompressedChanged(int value)
+{
+	printf("ContentManager::propertiesCommonDataCompressedChanged(value)\n");
+
+	if (current() && current()->DataCompressed != (value == (int)Qt::Checked))
+		changeDataCompressed(current(), (value == (int)Qt::Checked));
+}
+
+class ContentManager::ChangeDataEmbedded : public QUndoCommand
+{
+public:
+	ChangeDataEmbedded(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->DataEmbedded),
+		m_NewValue(value)
+	{
+		setText(value ? tr("Store data in header") : tr("Store data as file"));
+	}
+
+	virtual ~ChangeDataEmbedded()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->DataEmbedded = m_OldValue;
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->DataEmbedded = m_NewValue;
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	bool m_OldValue;
+	bool m_NewValue;
+};
+
+void ContentManager::changeDataEmbedded(ContentInfo *contentInfo, bool value)
+{
+	// Create undo/redo
+	ChangeDataEmbedded *changeDataEmbedded = new ChangeDataEmbedded(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeDataEmbedded);
+}
+
+void ContentManager::propertiesCommonDataEmbeddedChanged(int value)
+{
+	printf("ContentManager::propertiesCommonDataEmbeddedChanged(value)\n");
+
+	if (current() && current()->DataEmbedded != (value == (int)Qt::Checked))
+		changeDataEmbedded(current(), (value == (int)Qt::Checked));
 }
 
 } /* namespace FT800EMUQT */
