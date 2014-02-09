@@ -242,7 +242,7 @@ int MemoryClass::getWriteOpCount()
 	return s_WriteOpCount;
 }
 
-int MemoryClass::poke()
+void MemoryClass::poke()
 {
 	++s_WriteOpCount;
 }

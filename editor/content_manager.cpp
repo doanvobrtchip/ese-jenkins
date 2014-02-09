@@ -371,6 +371,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	ContentInfo *contentInfo = new ContentInfo(filePath);
 
 	add(contentInfo);
+
+	return contentInfo;
 }
 
 void ContentManager::add(ContentInfo *contentInfo)
