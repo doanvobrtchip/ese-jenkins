@@ -295,15 +295,23 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				System.leaveSwapDL();
 			}
 			break;
+		// case REG_VOL_SOUND:
+		// 	printf("REG_VOL_SOUND %i\n", data);
+		// 	break;
+		// case REG_SOUND:
+		// 	printf("REG_SOUND %i\n", data);
+		// 	break;
 		case REG_PLAY:
-			if (data == 1)
+			if (data & 0x01)
 			{
+				// printf("REG_PLAY\n");
 				AudioProcessor.play();
 			}
 			break;
 		case REG_PLAYBACK_PLAY:
-			if (data == 1)
+			if (data & 0x01)
 			{
+				// printf("REG_PLAYBACK_PLAY\n");
 				AudioRender.playbackPlay();
 			}
 			break;
@@ -412,6 +420,9 @@ void MemoryClass::begin(const char *romFilePath)
 	rawWriteU32(REG_PCLK, 0);
 	rawWriteU32(REG_TAG_X, 0);
 	rawWriteU32(REG_TAG_Y, 0);
+	rawWriteU32(REG_VOL_PB, 0xFF);
+	rawWriteU32(REG_VOL_SOUND, 0xFF);
+	rawWriteU32(REG_SOUND, 0);
 	rawWriteU32(REG_TOUCH_RZ, 0x7FFF);
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);

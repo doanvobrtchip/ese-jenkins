@@ -75,7 +75,7 @@ static int s_ADPCMIndexTable[16] = {
 	-1, -1, -1, -1, 2, 4, 6, 8
 };
 static int s_ADPCMStepsizeTable[89] = {
-	7, 8, 9, 10, 11, 12, 13, 14, 
+	7, 8, 9, 10, 11, 12, 13, 14,
 	16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60,
 	66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209,
 	230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658,
@@ -86,10 +86,10 @@ static int s_ADPCMStepsizeTable[89] = {
 	32767
 };
 
-static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart, 
-	uint32_t &playbackLength, uint8_t &playbackFormat, 
-	uint8_t &playbackLoop, uint8_t &playbackBusy, 
-	uint32_t &playbackReadPtr, uint8_t &playbackVolume, 
+static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
+	uint32_t &playbackLength, uint8_t &playbackFormat,
+	uint8_t &playbackLoop, uint8_t &playbackBusy,
+	uint32_t &playbackReadPtr, uint8_t &playbackVolume,
 	bool &adpcmNext, uint8_t *ram)
 {
 	if (s_RequestPlayback)
@@ -151,12 +151,12 @@ static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 			{
 				// See: http://www.cs.columbia.edu/~hgs/audio/dvi/
 				// Adapted from public domain IMA reference implementation
-				
+
 				uint8_t originalSample = ram[playbackReadPtr];
 				if (adpcmNext) originalSample = originalSample >> 4;
 				else originalSample = originalSample & 0x0F;
 				adpcmNext = !adpcmNext;
-				
+
 				/* compute predicted sample estimate newSample */
 				/* calculate difference = (originalSample + 1⁄2) * stepsize/4: */
 				int stepSize = s_ADPCMStepsizeTable[s_ADPCMIndex];
@@ -165,24 +165,24 @@ static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 					difference += stepSize;
 				if (originalSample & 2)
 					difference += stepSize >> 1;
-				if (originalSample & 1) 
+				if (originalSample & 1)
 					difference += stepSize >> 2;
-				
+
 				/* (originalSample + 1⁄2) * stepsize/4 =originalSample * stepsize/4 + stepsize/8: */
 				difference += stepSize >> 3;
-				
+
 				if (originalSample & 8) /* account for sign bit */
 					difference = -difference;
-				
+
 				/* adjust predicted sample based on calculated difference: */
 				s_ADPCMPredictedSample += difference;
 				s_ADPCMPredictedSample = min(max(-32768, s_ADPCMPredictedSample), 32767); /* check for overflow */
-				
+
 				/* compute new stepsize */
 				/*adjust index into stepsize lookup table using originalSample: */
 				s_ADPCMIndex += s_ADPCMIndexTable[originalSample];
 				s_ADPCMIndex = min(max(0, s_ADPCMIndex), 88); /* check for overflow */
-				
+
 				return (int16_t)((s_ADPCMPredictedSample * (int32_t)playbackVolume) >> 8);
 			}
 			default:
@@ -215,32 +215,32 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 {
 	// printf("process audio\n");
 	uint8_t *ram = Memory.getRam();
-	
+
 	int16_t synthSample0 = s_SynthSample0;
 	int16_t synthSample1 = s_SynthSample1;
-	
+
 	int16_t playbackSample0 = s_PlaybackSample0;
 	int16_t playbackSample1 = s_PlaybackSample1;
-	
+
 	uint8_t &busy = ram[REG_PLAY];
 	uint16_t &sound = *static_cast<uint16_t *>(static_cast<void *>(&ram[REG_SOUND]));
 	uint8_t &volume = ram[REG_VOL_SOUND];
-	
-	uint32_t &playbackStart = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_START]));
-	uint32_t &playbackLength = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_LENGTH]));
+
+	uint32_t &playbackStart = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_START])); playbackStart &= 0xFFFFF;
+	uint32_t &playbackLength = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_LENGTH])); playbackLength &= 0xFFFFF;
 	uint16_t playbackFreq = *static_cast<uint16_t *>(static_cast<void *>(&ram[REG_PLAYBACK_FREQ]));
 	double secondsPerPlaybackSample = 1.0 / (double)playbackFreq;
 	uint8_t &playbackFormat = ram[REG_PLAYBACK_FORMAT];
 	uint8_t &playbackLoop = ram[REG_PLAYBACK_LOOP];
 	uint8_t &playbackBusy = ram[REG_PLAYBACK_PLAY];
-	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR]));
+	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR])); playbackReadPtr &= 0xFFFFF;
 	uint8_t &playbackVolume = ram[REG_VOL_PB];
 	bool adpcmNext = s_ADPCMNext;
-	
+
 	int audioFrequency = AudioDriver.getFrequency();
 	double secondsPerSample = 1.0 / (double)audioFrequency;
 	int channels = AudioDriver.getChannels();
-	
+
 	for (int i = 0; i < samples; ++i)
 	{
 		int16_t synth;
@@ -264,12 +264,14 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 		{
 			synth = AudioProcessor.execute(busy, sound, volume);
 		}
-		
+
 		int16_t pb;
-		if (audioFrequency != playbackFreq)
+		int loopc = 0;
+		if (audioFrequency != playbackFreq && playbackFreq >= 8000 && playbackFreq <= 48000)
 		{
 			while (s_SecondsPassedForPlaybackSample > secondsPerPlaybackSample)
 			{
+				++loopc;
 				s_SecondsPassedForPlaybackSample -= secondsPerPlaybackSample;
 				playbackSample0 = playbackSample1;
 				playbackSample1 = playback(playbackStart, playbackLength, playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, adpcmNext, ram);

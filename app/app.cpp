@@ -168,16 +168,16 @@ void setup()
 		if (v == i * 2) printf("OK (%i)\n", v);
 		else printf("FAIL (%i)\n", v);
 	}
-	
-	
-	
-	
+
+
+
+
 	// AUDIO TEST
-	
+
 	wr8(REG_VOL_SOUND, 64);
 	wr16(REG_SOUND, ((68 << 8) + 0x46));
 	wr8(REG_PLAY, 1);
-	
+
 	for (int i = 0; i < sizeof(s_ADPCM); ++i)
 	{
 		wr8(i, s_ADPCM[i]);
@@ -189,14 +189,14 @@ void setup()
 	wr32(REG_PLAYBACK_LOOP, 0);
 	wr32(REG_PLAYBACK_PLAY, 1);
 	wr32(REG_VOL_PB, 255);
-	
-	
-	
+
+
+
 	dli = RAM_DL;
 
 	dl(CLEAR_COLOR_RGB(0, 64, 128));
 	dl(CLEAR(1, 1, 1)); // clear screen
-	
+
 	dl(TAG(200));
 
 	dl(BEGIN(LINES));
@@ -230,7 +230,7 @@ void setup()
 +  2b3: 46fe8c42   VERTEX2F x=3581 y=3138
 +  2b4: 470a8c3b   VERTEX2F x=3605 y=3131 */
 	dl(END());
-	
+
 	dl(TAG(0));
 
 /*
@@ -281,7 +281,7 @@ void setup()
 		{
 			dl(POINT_SIZE(x));
 			dl(VERTEX2F(x * 32 + y, y * 16, 0, 0));
-		}	
+		}
 	}
 	dl(END());
 	// ** SMALL POINTS X ***/
@@ -295,7 +295,7 @@ void setup()
 		{
 			dl(POINT_SIZE(x));
 			dl(VERTEX2F(y * 16, x * 32 + y));
-		}	
+		}
 	}
 	dl(END());*/
 	// ** SMALL POINTS Y **
@@ -332,7 +332,7 @@ void setup()
 			dl(VERTEX2F(x * 16 + x, y * 16 + y));
 		}
 	}
-	
+
 	dl(COLOR_RGB(0, 128, 255));
 	for (int y = 0; y <= 16; ++y)
 	{
@@ -364,7 +364,7 @@ void setup()
 		}
 	}*/
 /*
-	
+
 
 	dl(COLOR_RGB(0, 255, 128));
 	for (int y = 0; y <= 16; ++y)
