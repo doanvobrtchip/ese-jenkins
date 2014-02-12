@@ -266,12 +266,10 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 		}
 
 		int16_t pb;
-		int loopc = 0;
 		if (audioFrequency != playbackFreq && playbackFreq >= 8000 && playbackFreq <= 48000)
 		{
 			while (s_SecondsPassedForPlaybackSample > secondsPerPlaybackSample)
 			{
-				++loopc;
 				s_SecondsPassedForPlaybackSample -= secondsPerPlaybackSample;
 				playbackSample0 = playbackSample1;
 				playbackSample1 = playback(playbackStart, playbackLength, playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, adpcmNext, ram);
