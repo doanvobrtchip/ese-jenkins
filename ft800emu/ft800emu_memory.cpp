@@ -53,8 +53,8 @@ static int s_WriteOpCount;
 // Avoid getting hammered in wait loops
 static int s_LastCoprocessorRead = -1;
 static int s_IdenticalCoprocessorReadCounter = 0;
-static int s_WaitCoprocessorReadCounter = 0;
 static int s_SwapCoprocessorReadCounter = 0;
+static int s_WaitCoprocessorReadCounter = 0;
 
 static int s_LastMCURead = -1;
 static int s_IdenticalMCUReadCounter = 0;
@@ -372,8 +372,8 @@ void MemoryClass::begin(const char *romFilePath)
 
 	s_LastCoprocessorRead = -1;
 	s_IdenticalCoprocessorReadCounter = 0;
-	s_WaitCoprocessorReadCounter = 0;
 	s_SwapCoprocessorReadCounter = 0;
+	s_WaitCoprocessorReadCounter = 0;
 
 	s_LastMCURead = -1;
 	s_IdenticalMCUReadCounter = 0;
@@ -443,7 +443,8 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 {
 	++s_WriteOpCount;
 
-	s_SwapMCUReadCounter = 0;
+	// s_WaitMCUReadCounter = 0;
+	// s_SwapMCUReadCounter = 0;
 	switch (address)
 	{
 	case REG_CMD_WRITE:
@@ -484,18 +485,18 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 		switch (address)
 		{
 		case REG_CMD_READ: // wait for read advance from coprocessor thread
-			++s_SwapMCUReadCounter;
-			if (s_SwapMCUReadCounter > 8)
+			++s_WaitMCUReadCounter;
+			if (s_WaitMCUReadCounter > 8)
 			{
-				// printf(" Delay MCU ");
+				// printf(" Delay MCU \n");
 				System.prioritizeCoprocessorThread();
 				System.delay(1);
 				System.unprioritizeCoprocessorThread();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
-			++s_WaitMCUReadCounter;
-			if (s_WaitMCUReadCounter > 8)
+			++s_SwapMCUReadCounter;
+			if (s_SwapMCUReadCounter > 8)
 			{
 				// printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
@@ -597,6 +598,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 	if (address == REG_CMD_READ)
 	{
+		// printf("REG_CMD_READ\n");
 		s_WaitMCUReadCounter = 0;
 	}
 
@@ -626,8 +628,8 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 		switch (address)
 		{
 		case REG_CMD_WRITE: // wait for writes from mcu thread
-			++s_SwapCoprocessorReadCounter;
-			if (s_SwapCoprocessorReadCounter > 8)
+			++s_WaitCoprocessorReadCounter;
+			if (s_WaitCoprocessorReadCounter > 8)
 			{
 				System.prioritizeMCUThread();
 				System.delay(1);
@@ -635,8 +637,8 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
-			++s_WaitCoprocessorReadCounter;
-			if (s_WaitCoprocessorReadCounter > 8)
+			++s_SwapCoprocessorReadCounter;
+			if (s_SwapCoprocessorReadCounter > 8)
 			{
 				// printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
 				System.prioritizeMCUThread();
@@ -647,7 +649,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 		default:
 			if (address >= RAM_CMD && address < RAM_CMD + 4096)
 			{
-				s_SwapCoprocessorReadCounter = 0;
+				s_WaitCoprocessorReadCounter = 0;
 				s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 			}
 			if (s_LastCoprocessorRead == address)
@@ -709,7 +711,7 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
-			s_SwapCoprocessorReadCounter = 0;
+			s_WaitCoprocessorReadCounter = 0;
 			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 	}
@@ -751,7 +753,7 @@ uint8_t MemoryClass::coprocessorReadU8(size_t address)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
-			s_SwapCoprocessorReadCounter = 0;
+			s_WaitCoprocessorReadCounter = 0;
 			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 	}
