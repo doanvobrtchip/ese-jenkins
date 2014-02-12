@@ -663,7 +663,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 				s_WaitCoprocessorReadCounter = 0;
 				s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 			}
-			if (s_LastCoprocessorRead == address)
+			if (s_LastCoprocessorRead == address || (address == REG_TOUCH_RAW_XY && s_LastCoprocessorRead == REG_TOUCH_RZ))
 			{
 				++s_IdenticalCoprocessorReadCounter;
 				if (s_IdenticalCoprocessorReadCounter > 8)
