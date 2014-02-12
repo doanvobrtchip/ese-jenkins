@@ -641,6 +641,8 @@ void InteractiveViewport::updatePointerMethod()
 	}
 	else
 	{
+		if (m_MainWindow->waitingCoprocessorAnimation())
+			goto PreferTouchCursor;
 		if (m_Insert->isChecked())
 		{
 			if (m_LineEditor)
@@ -847,6 +849,7 @@ void InteractiveViewport::updatePointerMethod()
 			m_PointerMethod = POINTER_EDIT_STACK_SELECT; // Stack selection
 			return;
 		}
+	PreferTouchCursor:
 		if (m_PointerFilter & POINTER_TOUCH)
 		{
 			// TODO: Get the TAG from stack trace and show hand or not depending on TAG value (maybe also show tootip with tag?)
@@ -854,6 +857,8 @@ void InteractiveViewport::updatePointerMethod()
 			m_PointerMethod = POINTER_TOUCH;
 			return;
 		}
+		if (m_MainWindow->waitingCoprocessorAnimation())
+			goto NoCursor;
 	PreferTraceCursor:
 		if (m_PointerFilter & POINTER_TRACE)
 		{
@@ -861,6 +866,7 @@ void InteractiveViewport::updatePointerMethod()
 			m_PointerMethod = POINTER_TRACE;
 			return;
 		}
+	NoCursor:
 		setCursor(Qt::ArrowCursor);
 		m_PointerMethod = 0;
 		return;

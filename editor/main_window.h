@@ -92,6 +92,8 @@ public:
 	inline QUndoStack *undoStack() { return m_UndoStack; }
 	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
 
+	bool waitingCoprocessorAnimation();
+
 	void focusDlEditor();
 	void focusCmdEditor();
 	void focusProperties();

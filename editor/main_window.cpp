@@ -164,6 +164,7 @@ static ContentManager *s_ContentManager = NULL;
 
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
+static bool s_WaitingCoprocessorAnimation = false;
 
 // Array indexed by display list index containing coprocessor line which wrote the display list command
 static int s_DisplayListCoprocessorCommandA[FT800EMU_DL_SIZE];
@@ -369,6 +370,7 @@ void loop()
 			if (cmdList[i] == CMD_LOGO)
 			{
 				printf("Waiting for CMD_LOGO...\n");
+				s_WaitingCoprocessorAnimation = true;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				while (rd32(REG_CMD_READ) || rd32(REG_CMD_WRITE))
@@ -404,11 +406,13 @@ void loop()
 					if (!s_EmulatorRunning) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
+				s_WaitingCoprocessorAnimation = false;
 				printf("Finished CMD_LOGO\n");
 			}
 			else if (cmdList[i] == CMD_CALIBRATE)
 			{
 				printf("Waiting for CMD_CALIBRATE...\n");
+				s_WaitingCoprocessorAnimation = true;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
@@ -426,6 +430,7 @@ void loop()
 					if (!s_EmulatorRunning) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
+				s_WaitingCoprocessorAnimation = false;
 				printf("Finished CMD_CALIBRATE\n");
 			}
 		}
@@ -512,6 +517,11 @@ void loop()
 void keyboard()
 {
 
+}
+
+bool MainWindow::waitingCoprocessorAnimation()
+{
+	return s_WaitingCoprocessorAnimation;
 }
 
 int *MainWindow::getDlCmd()

@@ -311,6 +311,12 @@ void DlEditor::editingLine(QTextBlock block)
 		|| !m_DisplayListParsed[block.blockNumber()].ValidId) // Necessary for the "Unknown command" info message
 	{
 		m_PropLine = block.blockNumber();
+		if (m_PropLine < 0) // ?
+		{
+			m_PropertiesEditor->setInfo(QString());
+			m_PropertiesEditor->setEditWidget(NULL, false, this);
+			return;
+		}
 		m_PropIdLeft = m_DisplayListParsed[m_PropLine].IdLeft;
 		m_PropIdRight = m_DisplayListParsed[m_PropLine].IdRight;
 		m_PropIdValid = m_DisplayListParsed[m_PropLine].ValidId;
