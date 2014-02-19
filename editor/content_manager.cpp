@@ -262,7 +262,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommonConverter->addItem("");
 	propCommonConverter->addItem(tr("Image"));
 	propCommonConverter->addItem(tr("Raw"));
-	propCommonConverter->addItem(tr("Raw JPEG"));
+	// propCommonConverter->addItem(tr("Raw JPEG")); // TODO
 	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
@@ -529,16 +529,16 @@ QString ContentManager::createName(const QString &name)
 			}
 		}
 	}
-	destName = destName.simplified();
+	QString resultDestName = destName.simplified();
 	printf("%s\n", destName.toLocal8Bit().data());
 	// Renumber in case of duplicate
 	int renumber = 2;
-	while (nameExists(destName))
+	while (nameExists(resultDestName))
 	{
-		destName = destName + "_" + QString::number(renumber);
+		resultDestName = destName + "_" + QString::number(renumber);
 		++renumber;
 	}
-	return destName;
+	return resultDestName;
 }
 
 void ContentManager::add()
