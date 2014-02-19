@@ -650,13 +650,10 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	}
 	else
 	{
+		QString propInfo;
 		if (!contentInfo->BuildError.isEmpty())
 		{
-			props->setInfo(tr("<b>Error</b>: ") + contentInfo->BuildError);
-		}
-		else
-		{
-			props->setInfo(tr("Ready."));
+			propInfo = tr("<b>Error</b>: ") + contentInfo->BuildError;
 		}
 		switch (contentInfo->Converter)
 		{
@@ -668,8 +665,20 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImagePreview->setHidden(!loadSuccess);
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
-				else if (contentInfo->BuildError.isEmpty()) props->setInfo(tr("Failed to load image preview."));
+				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
 				m_PropertiesMemory->setHidden(false);
+				if (contentInfo->BuildError.isEmpty())
+				{
+					if (!propInfo.isEmpty()) propInfo += "<br>";
+					QFileInfo rawInfo(contentInfo->DestName + ".raw");
+					QFileInfo binInfo(contentInfo->DestName + ".bin");
+					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+					if (loadSuccess)
+					{
+						// stride etc
+					}
+				}
 				break;
 			}
 			case ContentInfo::Raw:
@@ -677,6 +686,14 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				if (contentInfo->BuildError.isEmpty())
+				{
+					if (!propInfo.isEmpty()) propInfo += "<br>";
+					QFileInfo rawInfo(contentInfo->DestName + ".raw");
+					QFileInfo binInfo(contentInfo->DestName + ".bin");
+					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				}
 				break;
 			}
 			case ContentInfo::RawJpeg:
@@ -684,9 +701,13 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				if (!propInfo.isEmpty()) propInfo += "<br>";
+				propInfo += tr("<b>Not yet implemented</b>");
+				// This will show JPG size, uncompressed size, and necessary info to load the image into the handles
 				break;
 			}
 		}
+		props->setInfo(propInfo);
 	}
 }
 
