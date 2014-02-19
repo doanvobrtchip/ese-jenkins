@@ -124,7 +124,7 @@ void setup()
 		wr32(REG_PCLK, 5);
 		// if (fclose(s_F)) printf("Error closing vc1dump file\n");
 
-		
+
 		/*swrbegin(RAM_CMD);
 		swr32(CMD_DLSTART);
 		swr32(CMD_SWAP);
@@ -184,7 +184,7 @@ void loop()
 			// if (freespace >= 2048)
 			{
 				int freespacediv = freespace >> 2;
-				
+
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				for (int i = 0; i < freespacediv; ++i)
 				{
@@ -205,7 +205,7 @@ void loop()
 					}
 					else
 					{
-						printf("Close XBU, nb = %i\n", nb);
+						printf("Close XBU, nb = %i\n", (int)nb);
 						if (fclose(s_F)) printf("Error closing vc1dump file\n");
 						s_F = NULL;
 						break;
@@ -249,42 +249,42 @@ void keyboard()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
-	m_UndoStack(NULL), 
-	m_EmulatorViewport(NULL), 
-	m_CommandLog(NULL), m_CommandLogDock(NULL), 
-	// m_EmulatorConfig(NULL), m_EmulatorConfigScroll(NULL), m_EmulatorConfigDock(NULL), 
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL), 
+	m_UndoStack(NULL),
+	m_EmulatorViewport(NULL),
+	m_CommandLog(NULL), m_CommandLogDock(NULL),
+	// m_EmulatorConfig(NULL), m_EmulatorConfigScroll(NULL), m_EmulatorConfigDock(NULL),
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL), m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
-	m_AboutAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL), 
+	m_AboutAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL) //, m_SaveScreenshotAct(NULL)
 {
 	setObjectName("MainWindow");
-	
+
 	m_UndoStack = new QUndoStack(this);
-	
+
 	m_EmulatorViewport = new EmulatorViewport(this);
     setCentralWidget(m_EmulatorViewport);
-	
+
 	createActions();
 	createMenus();
 	createToolBars();
 	createStatusBar();
 	createDockWindows();
-	
+
 	incbLanguageCode();
 
 	recalculateMinimumWidth();
-	
+
 	// connect(m_EmulatorConfig, SIGNAL(applyEmulatorConfig()), this, SLOT(applyEmulatorConfig()));
-	
+
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = 
-		FT800EMU::EmulatorEnableKeyboard 
-		| FT800EMU::EmulatorEnableMouse 
+	params.Flags =
+		FT800EMU::EmulatorEnableKeyboard
+		| FT800EMU::EmulatorEnableMouse
 		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableCoprocessor 
+		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		//| FT800EMU::EmulatorEnableDynamicDegrade
 		;
@@ -300,9 +300,9 @@ MainWindow::~MainWindow()
 void MainWindow::createActions()
 {
 	m_QuitAct = new QAction(this);
-	m_QuitAct->setShortcuts(QKeySequence::Quit);	
+	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
-	
+
 	m_AboutAct = new QAction(this);
 	connect(m_AboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
@@ -346,11 +346,11 @@ void MainWindow::createMenus()
 
 	m_ViewportMenu = menuBar()->addMenu(QString::null);
 	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
-	
+
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
-	
+
 	menuBar()->addSeparator();
-	
+
 	m_HelpMenu = menuBar()->addMenu(QString::null);
 	m_HelpMenu->addAction(m_AboutAct);
 }
@@ -434,7 +434,7 @@ void MainWindow::translateDockWindows()
 
 void MainWindow::recalculateMinimumWidth()
 {
-	//if (m_EmulatorConfigScroll) 
+	//if (m_EmulatorConfigScroll)
 	//	m_EmulatorConfigScroll->setMinimumWidth(m_EmulatorConfig->minimumSizeHint().width() + m_EmulatorConfigScroll->minimumSizeHint().width());
 }
 

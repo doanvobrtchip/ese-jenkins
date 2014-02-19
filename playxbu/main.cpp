@@ -158,7 +158,7 @@ void loop()
 			// if (freespace >= 2048)
 			{
 				int freespacediv = freespace >> 2;
-				
+
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				for (int i = 0; i < freespacediv; ++i)
 				{
@@ -167,7 +167,7 @@ void loop()
 					if (nb == 1)
 					{
 						/*if (buffer == CMD_DLSTART) okwrite = true;
-						
+
 						if (okwrite)
 						{*/
 							swr32(buffer);
@@ -184,7 +184,7 @@ void loop()
 					}
 					else
 					{
-						printf("Close XBU, nb = %i\n", nb);
+						printf("Close XBU, nb = %i\n", (int)nb);
 						if (fclose(s_F)) printf("Error closing vc1dump file\n");
 						s_F = NULL;
 						break;
@@ -257,11 +257,11 @@ int main(int, char* [])
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = 
-		FT800EMU::EmulatorEnableKeyboard 
-		| FT800EMU::EmulatorEnableMouse 
+	params.Flags =
+		FT800EMU::EmulatorEnableKeyboard
+		| FT800EMU::EmulatorEnableMouse
 		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableCoprocessor 
+		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		//| FT800EMU::EmulatorEnableDynamicDegrade
 		;
