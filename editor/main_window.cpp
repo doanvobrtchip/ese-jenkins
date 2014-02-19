@@ -968,7 +968,7 @@ void MainWindow::createDockWindows()
 			m_UtilizationDisplayListStatus->setMinimum(0);
 			m_UtilizationDisplayListStatus->setMaximum(FT800EMU_DL_SIZE);
 			m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
-			m_UtilizationDisplayListStatus->setMaximumSize(120, 19);
+			m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
 			statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 
 			//QString danger = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 ); }";

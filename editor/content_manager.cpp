@@ -34,6 +34,7 @@
 #include <QJsonDocument>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QDateTime>
 
 // Emulator includes
 #include <vc.h>
@@ -195,7 +196,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 		s_FileExtensions.push_back(".lut.raw");
 		s_FileExtensions.push_back(".lut.rawh");
 		s_FileExtensions.push_back("_converted.png");
-		s_FileExtensions.push_back(".ft800meta");
+		s_FileExtensions.push_back(".meta");
 	}
 
 	QVBoxLayout *layout = new QVBoxLayout();
@@ -677,62 +678,80 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	{
 		lockContent();
 		// TODO: Compare datestamp of source file with meta file
-		QString metaFile = contentInfo->DestName + ".ft800meta";
-		bool metaExists = QFile::exists(metaFile);
-		bool equalMeta = false;
-		if (metaExists)
+		QString srcFile = contentInfo->SourcePath;
+		bool srcExists = QFile::exists(srcFile);
+		if (!srcExists)
 		{
-			QFile file(metaFile);
-			file.open(QIODevice::ReadOnly);
-			QByteArray data = file.readAll();
-			file.close();
-			QJsonParseError parseError;
-			QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-			if (parseError.error == QJsonParseError::NoError)
-			{
-				QJsonObject root = doc.object();
-				ContentInfo ci("");
-				ci.fromJson(root, true);
-				equalMeta = contentInfo->equalsMeta(&ci);
-			}
-		}
-		if (!equalMeta)
-		{
-			if (metaExists)
-			{
-				QFile::remove(metaFile); // *** FILE REMOVE ***
-			}
-			contentInfo->BuildError = "";
-			switch (contentInfo->Converter)
-			{
-			case ContentInfo::Image:
-				AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
-				break;
-			case ContentInfo::Raw:
-				AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
-				break;
-			case ContentInfo::RawJpeg:
-				AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
-				break;
-			default:
-				contentInfo->BuildError = "<b>Critical Error</b><br>Unknown converter selected.";
-				break;
-			}
-			if (contentInfo->BuildError.isEmpty())
-			{
-				// Write meta file
-				QFile file(metaFile);
-				file.open(QIODevice::WriteOnly);
-				QDataStream out(&file);
-				QJsonDocument doc(contentInfo->toJson(true));
-				QByteArray data = doc.toJson();
-				out.writeRawData(data, data.size());
-				contentInfo->UploadDirty = true;
-			}
+			contentInfo->BuildError = "<b>Files Error</b><br>Source file does not exist.";
 		}
 		else
 		{
-			printf("Equal meta, skip convert\n");
+			QString metaFile = contentInfo->DestName + ".meta";
+			bool metaExists = QFile::exists(metaFile);
+			bool equalMeta = false;
+			if (metaExists)
+			{
+				QFileInfo srcInfo(srcFile);
+				QFileInfo metaInfo(metaFile);
+				if (srcInfo.lastModified() > metaInfo.lastModified())
+				{
+					printf("Source file has been modified, ignore meta, rebuild\n");
+				}
+				else
+				{
+					QFile file(metaFile);
+					file.open(QIODevice::ReadOnly);
+					QByteArray data = file.readAll();
+					file.close();
+					QJsonParseError parseError;
+					QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+					if (parseError.error == QJsonParseError::NoError)
+					{
+						QJsonObject root = doc.object();
+						ContentInfo ci("");
+						ci.fromJson(root, true);
+						equalMeta = contentInfo->equalsMeta(&ci);
+					}
+				}
+			}
+			if (equalMeta)
+			{
+				printf("Equal meta, skip convert\n");
+			}
+			else
+			{
+				if (metaExists)
+				{
+					QFile::remove(metaFile); // *** FILE REMOVE ***
+				}
+				contentInfo->BuildError = "";
+				switch (contentInfo->Converter)
+				{
+				case ContentInfo::Image:
+					AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
+					break;
+				case ContentInfo::Raw:
+					AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
+					break;
+				case ContentInfo::RawJpeg:
+					AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+					break;
+				default:
+					contentInfo->BuildError = "<b>Critical Error</b><br>Unknown converter selected.";
+					break;
+				}
+				if (contentInfo->BuildError.isEmpty())
+				{
+					// Write meta file
+					QFile file(metaFile);
+					file.open(QIODevice::WriteOnly);
+					QDataStream out(&file);
+					QJsonDocument doc(contentInfo->toJson(true));
+					QByteArray data = doc.toJson();
+					out.writeRawData(data, data.size());
+					contentInfo->UploadDirty = true;
+				}
+			}
 		}
 		unlockContent();
 	}
