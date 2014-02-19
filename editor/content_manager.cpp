@@ -529,7 +529,8 @@ QString ContentManager::createName(const QString &name)
 			}
 		}
 	}
-	QString resultDestName = destName.simplified();
+	destName = destName.simplified();
+	QString resultDestName = destName;
 	printf("%s\n", destName.toLocal8Bit().data());
 	// Renumber in case of duplicate
 	int renumber = 2;
