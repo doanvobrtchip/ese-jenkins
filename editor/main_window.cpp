@@ -1728,6 +1728,7 @@ void MainWindow::actSaveAs()
 	dir.cdUp();
 	QString dstPath = dir.path();
 	QString srcPath = QDir::currentPath();
+	bool wantRebuildAll = false;
 	if (dstPath != srcPath)
 	{
 		printf("From: %s\n", srcPath.toUtf8().data());
@@ -1741,6 +1742,17 @@ void MainWindow::actSaveAs()
 		for (std::vector<ContentInfo *>::iterator it1(contentInfos.begin()), end1(contentInfos.end()); it1 != end1; ++it1)
 		{
 			ContentInfo *info = (*it1);
+			// Create destination directory
+			if (info->DestName.contains('/'))
+			{
+				QString destDir = info->DestName.left(info->DestName.lastIndexOf('/'));
+				if (!QDir(dstPath).mkpath(destDir))
+				{
+					// Will fail at copy, and a rebuild will happen which will also fail with mkpath failure
+					printf("Unable to create destination path\n");
+				}
+			}
+			// Copy related files
 			// printf("Content: %s\n", info->DestName.toUtf8().data());
 			for (std::vector<QString>::const_iterator it2(fileExt.begin()), end2(fileExt.end()); it2 != end2; ++it2)
 			{
@@ -1748,10 +1760,10 @@ void MainWindow::actSaveAs()
 				QString dst = dstPath + "/" + info->DestName + (*it2);
 				// printf("Move from '%s' to '%s'", src.toUtf8().data(), dst.toUtf8().data());
 				QFile::copy(src, dst);
-				// TODO: Reprocess to verify.
 			}
 		}
 		m_ContentManager->unlockContent();
+		wantRebuildAll = true;
 	}
 
 	if (m_TemporaryDir)
@@ -1763,6 +1775,12 @@ void MainWindow::actSaveAs()
 
 	// Set the folder to be the project folder
 	QDir::setCurrent(dstPath);
+
+	// Rebuild content to ensure correct functionality
+	if (wantRebuildAll)
+	{
+		m_ContentManager->rebuildAll();
+	}
 
 	// Save the project itself
 	m_CurrentFile = fileName;

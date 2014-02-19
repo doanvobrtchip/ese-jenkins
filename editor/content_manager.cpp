@@ -494,11 +494,48 @@ bool ContentManager::nameExists(const QString &name)
 
 QString ContentManager::createName(const QString &name)
 {
-	QString destName = name;
+	// Strip invalid characters
+	QString destName;
+	bool lastIsSlash = true;
+	for (QString::const_iterator it(name.begin()), end (name.end()); it != end; ++it)
+	{
+		QChar c = *it;
+		if (c == '.'
+			|| c == ' ')
+		{
+			if (!lastIsSlash)
+			{
+				destName += c;
+			}
+		}
+		else if (c.isLetterOrNumber()
+			|| c == '_'
+			|| c == '-'
+			|| c == '('
+			|| c == ')'
+			|| c == '['
+			|| c == ']'
+			|| c == '+')
+		{
+			destName += c;
+			lastIsSlash = false;
+		}
+		else if (c == '\\' || c == '/')
+		{
+			if (!lastIsSlash)
+			{
+				destName += '/';
+				lastIsSlash = true;
+			}
+		}
+	}
+	destName = destName.simplified();
+	printf("%s\n", destName.toLocal8Bit().data());
+	// Renumber in case of duplicate
 	int renumber = 2;
 	while (nameExists(destName))
 	{
-		destName = name + "_" + QString::number(renumber);
+		destName = destName + "_" + QString::number(renumber);
 		++renumber;
 	}
 	return destName;
@@ -772,20 +809,33 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					QFile::remove(metaFile); // *** FILE REMOVE ***
 				}
 				contentInfo->BuildError = "";
-				switch (contentInfo->Converter)
+				// Create directory if necessary
+				if (contentInfo->DestName.contains('/'))
 				{
-				case ContentInfo::Image:
-					AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
-					break;
-				case ContentInfo::Raw:
-					AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
-					break;
-				case ContentInfo::RawJpeg:
-					AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
-					break;
-				default:
-					contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
-					break;
+					QString destDir = contentInfo->DestName.left(contentInfo->DestName.lastIndexOf('/'));
+					if (!QDir(QDir::currentPath()).mkpath(destDir))
+					{
+						contentInfo->BuildError = "<i>(Filesystem)</i><br>Unable to create destination path.";
+					}
+				}
+				if (contentInfo->BuildError.isEmpty())
+				{
+					// Run convertor
+					switch (contentInfo->Converter)
+					{
+					case ContentInfo::Image:
+						AssetConverter::convertImage(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat);
+						break;
+					case ContentInfo::Raw:
+						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
+						break;
+					case ContentInfo::RawJpeg:
+						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+						break;
+					default:
+						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
+						break;
+					}
 				}
 				if (contentInfo->BuildError.isEmpty())
 				{
@@ -956,13 +1006,34 @@ public:
 private:
 	void renameFileExt(const QString &from, const QString &to, const QString &ext) const
 	{
-		QFile::rename(from + ext, to + ext);
+		if (!QFile::rename(from + ext, to + ext))
+		{
+			// printf("cannot rename '%s' to '%s'\n", (from + ext).toLocal8Bit().data(), (to + ext).toLocal8Bit().data());
+			if (QFile::copy(from + ext, to + ext))
+			{
+				QFile::remove(from + ext);
+			}
+			else
+			{
+				// printf("cannot copy\n");
+			}
+		}
 	}
 
 protected:
 	void renameFiles(const QString &from, const QString &to) const
 	{
 		m_ContentManager->lockContent();
+		// Create destination directory
+		if (to.contains('/'))
+		{
+			QString destDir = to.left(to.lastIndexOf('/'));
+			if (!QDir(QDir::currentPath()).mkpath(destDir))
+			{
+				// Will fail at copy, and a rebuild will happen which will also fail with mkpath failure
+				printf("Unable to create destination path\n");
+			}
+		}
 		// Rename files to their new destination name
 		const std::vector<QString> &fileExt = ContentManager::getFileExtensions();
 		for (std::vector<QString>::const_iterator it(fileExt.begin()), end(fileExt.end()); it != end; ++it)
