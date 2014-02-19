@@ -777,6 +777,7 @@ void MainWindow::frameQt()
 {
 	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
+	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 }
 
 void MainWindow::createActions()
@@ -962,6 +963,13 @@ void MainWindow::createDockWindows()
 			m_UtilizationDisplayList->setMinimum(0);
 			m_UtilizationDisplayList->setMaximum(FT800EMU_DL_SIZE);
 			groupLayout->addWidget(m_UtilizationDisplayList);
+
+			m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
+			m_UtilizationDisplayListStatus->setMinimum(0);
+			m_UtilizationDisplayListStatus->setMaximum(FT800EMU_DL_SIZE);
+			m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
+			m_UtilizationDisplayListStatus->setMaximumSize(120, 19);
+			statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 
 			//QString danger = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 ); }";
 			//QString safe= "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #78d,stop: 0.4999 #46a,stop: 0.5 #45a,stop: 1 #238 ); }";

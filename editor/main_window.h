@@ -197,6 +197,7 @@ private:
 
 	QDockWidget *m_UtilizationDock;
 	QProgressBar *m_UtilizationDisplayList;
+	QProgressBar *m_UtilizationDisplayListStatus;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
