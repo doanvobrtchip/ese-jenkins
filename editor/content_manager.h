@@ -185,6 +185,8 @@ private:
 private slots:
 	void add();
 	void remove();
+	void rebuildAll();
+
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 	void propertiesSetterChanged(QWidget *setter);
 

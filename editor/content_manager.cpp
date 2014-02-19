@@ -224,6 +224,17 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	layout->addLayout(buttonsLayout);
 
+	QHBoxLayout *secondLayout = new QHBoxLayout();
+
+	uint refreshIcon[2] = { 0x27F2, 0 };
+	QPushButton *rebuildButton = new QPushButton();
+	rebuildButton->setText(QString::fromUcs4(refreshIcon) + " " + tr("Rebuild All"));
+	rebuildButton->setStatusTip(tr("Rebuilds all content that is out of date"));
+	connect(rebuildButton, SIGNAL(clicked()), this, SLOT(rebuildAll()));
+	secondLayout->addWidget(rebuildButton);
+
+	layout->addLayout(secondLayout);
+
 	setLayout(layout);
 
 	// Attach selection to properties
@@ -519,6 +530,16 @@ void ContentManager::remove()
 	remove(info);
 }
 
+void ContentManager::rebuildAll()
+{
+	// Reprocess all content if necessary
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		reprocessInternal(info);
+	}
+}
+
 void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
 {
 	// Iterate through the list and copy the pointer to the data
@@ -695,6 +716,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				QFileInfo metaInfo(metaFile);
 				if (srcInfo.lastModified() > metaInfo.lastModified())
 				{
+					// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
 					printf("Source file has been modified, ignore meta, rebuild\n");
 				}
 				else
