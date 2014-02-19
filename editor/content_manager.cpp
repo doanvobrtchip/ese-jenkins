@@ -163,7 +163,7 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
 {
-	QHBoxLayout *hbox = new QHBoxLayout(parent);
+	QHBoxLayout *hbox = new QHBoxLayout();
 	QLabel *l = new QLabel(parent);
 	l->setText(label);
 	hbox->addWidget(l);
@@ -173,7 +173,7 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget0, QWidget *widget1)
 {
-	QHBoxLayout *hbox = new QHBoxLayout(parent);
+	QHBoxLayout *hbox = new QHBoxLayout();
 	QLabel *l = new QLabel(parent);
 	l->setText(label);
 	hbox->addWidget(l);
@@ -198,14 +198,14 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 		s_FileExtensions.push_back(".ft800meta");
 	}
 
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	QVBoxLayout *layout = new QVBoxLayout();
 
 	m_ContentList = new QTreeWidget(this);
 	m_ContentList->header()->close();
 	layout->addWidget(m_ContentList);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
-	QHBoxLayout *buttonsLayout = new QHBoxLayout(this);
+	QHBoxLayout *buttonsLayout = new QHBoxLayout();
 
 	uint plusSign[2] = { 0x2795, 0 };
 	QPushButton *addButton = new QPushButton();
@@ -233,7 +233,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommon->setHidden(true);
 	m_PropertiesCommon = propCommon;
 	propCommon->setTitle(tr("Content"));
-	QVBoxLayout *propCommonLayout = new QVBoxLayout(this);
+	QVBoxLayout *propCommonLayout = new QVBoxLayout();
 	m_PropertiesCommonSourceFile = new UndoStackDisabler<QLineEdit>(this);
 	m_PropertiesCommonSourceFile->setUndoStack(m_MainWindow->undoStack());
 	QPushButton *browseSourceFile = new QPushButton(this);
@@ -258,7 +258,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage = new QGroupBox(this);
 	m_PropertiesImage->setHidden(true);
 	m_PropertiesImage->setTitle(tr("Image Settings"));
-	QVBoxLayout *imagePropsLayout = new QVBoxLayout(this);
+	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
 	m_PropertiesImageFormat->addItem("ARGB1555");
 	m_PropertiesImageFormat->addItem("L1");
@@ -274,7 +274,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setLayout(imagePropsLayout);
 
 	m_PropertiesImagePreview = new QGroupBox(this);
-	QVBoxLayout *imagePreviewLayout = new QVBoxLayout(this);
+	QVBoxLayout *imagePreviewLayout = new QVBoxLayout();
 	m_PropertiesImagePreview->setHidden(true);
 	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
 	m_PropertiesImageLabel = new QLabel(this);
@@ -284,7 +284,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesMemory = new QGroupBox(this);
 	m_PropertiesMemory->setHidden(true);
 	m_PropertiesMemory->setTitle(tr("Memory Options"));
-	QVBoxLayout *propMemLayout = new QVBoxLayout(this);
+	QVBoxLayout *propMemLayout = new QVBoxLayout();
 	m_PropertiesMemoryAddress = new QSpinBox(this);
 	m_PropertiesMemoryAddress->setMinimum(0);
 	m_PropertiesMemoryAddress->setMaximum(RAM_DL - 4);

@@ -36,7 +36,7 @@ namespace FT800EMUQT {
 Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_LineEditor(NULL), m_LineNumber(0)
 {
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	QVBoxLayout *layout = new QVBoxLayout();
 	m_Tools = new QTreeWidget(this);
 	m_Tools->setDragEnabled(true);
 	layout->addWidget(m_Tools);

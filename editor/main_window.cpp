@@ -561,8 +561,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_UndoStack = new QUndoStack(this);
 
 	QWidget *centralWidget = new QWidget(this);
-	QVBoxLayout *cvLayout = new QVBoxLayout(this);
-	QHBoxLayout *chLayout = new QHBoxLayout(this);
+	QVBoxLayout *cvLayout = new QVBoxLayout();
+	QHBoxLayout *chLayout = new QHBoxLayout();
 	chLayout->addStretch();
 	m_EmulatorViewport = new InteractiveViewport(this);
 	chLayout->addWidget(m_EmulatorViewport);
@@ -950,13 +950,13 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
-		QVBoxLayout *layout = new QVBoxLayout(widget);
+		QVBoxLayout *layout = new QVBoxLayout();
 
 		// Display List
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Display List"));
-			QVBoxLayout *groupLayout = new QVBoxLayout(widget);
+			QVBoxLayout *groupLayout = new QVBoxLayout();
 
 			m_UtilizationDisplayList = new QProgressBar(this);
 			m_UtilizationDisplayList->setMinimum(0);
@@ -1050,13 +1050,13 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
-		QVBoxLayout *layout = new QVBoxLayout(widget);
+		QVBoxLayout *layout = new QVBoxLayout();
 
 		// Step
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Display List Steps"));
-			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+			QHBoxLayout *groupLayout = new QHBoxLayout();
 
 			m_StepEnabled = new QCheckBox(this);
 			m_StepEnabled->setChecked(false);
@@ -1077,7 +1077,7 @@ void MainWindow::createDockWindows()
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Trace"));
-			QHBoxLayout *groupLayout = new QHBoxLayout(widget);
+			QHBoxLayout *groupLayout = new QHBoxLayout();
 
 			m_TraceEnabled = new QCheckBox(this);
 			m_TraceEnabled->setChecked(false);
@@ -1116,19 +1116,19 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
-		QVBoxLayout *layout = new QVBoxLayout(widget);
+		QVBoxLayout *layout = new QVBoxLayout();
 
 		// Size
 		{
 			QGroupBox *sizeGroup = new QGroupBox(widget);
 			sizeGroup->setTitle(tr("Size"));
-			QVBoxLayout *sizeLayout = new QVBoxLayout(widget);
+			QVBoxLayout *sizeLayout = new QVBoxLayout();
 
 			m_HSize = new QSpinBox(widget);
 			m_HSize->setMinimum(1);
 			m_HSize->setMaximum(512);
 			connect(m_HSize, SIGNAL(valueChanged(int)), this, SLOT(hsizeChanged(int)));
-			QHBoxLayout *hsizeLayout = new QHBoxLayout(widget);
+			QHBoxLayout *hsizeLayout = new QHBoxLayout();
 			QLabel *hsizeLabel = new QLabel(widget);
 			hsizeLabel->setText(tr("Horizontal"));
 			hsizeLayout->addWidget(hsizeLabel);
@@ -1139,7 +1139,7 @@ void MainWindow::createDockWindows()
 			m_VSize->setMinimum(1);
 			m_VSize->setMaximum(512);
 			connect(m_VSize, SIGNAL(valueChanged(int)), this, SLOT(vsizeChanged(int)));
-			QHBoxLayout *vsizeLayout = new QHBoxLayout(widget);
+			QHBoxLayout *vsizeLayout = new QHBoxLayout();
 			QLabel *vsizeLabel = new QLabel(widget);
 			vsizeLabel->setText(tr("Vertical"));
 			vsizeLayout->addWidget(vsizeLabel);
@@ -1154,13 +1154,13 @@ void MainWindow::createDockWindows()
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
 			macroGroup->setTitle(tr("Macro"));
-			QVBoxLayout *macroLayout = new QVBoxLayout(widget);
+			QVBoxLayout *macroLayout = new QVBoxLayout();
 
 			m_Macro = new DlEditor(this);
 			m_Macro->setPropertiesEditor(m_PropertiesEditor);
 			m_Macro->setUndoStack(m_UndoStack);
 			m_Macro->setModeMacro();
-			//QHBoxLayout *macroLayout = new QHBoxLayout(widget);
+			//QHBoxLayout *macroLayout = new QHBoxLayout();
 			//QLabel *macroLabel = new QLabel(widget);
 			//macroLabel->setText(tr("Macro"));
 			//layout->addWidget(macroLabel);

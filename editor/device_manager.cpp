@@ -38,7 +38,7 @@ namespace FT800EMUQT {
 
 DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 {
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	QVBoxLayout *layout = new QVBoxLayout();
 
 	m_DeviceList = new QTreeWidget(this);
 	m_DeviceList->setColumnCount(2);
@@ -50,7 +50,7 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	m_DeviceList->resizeColumnToContents(0);
 	connect(m_DeviceList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
-	QHBoxLayout *buttons = new QHBoxLayout(this);
+	QHBoxLayout *buttons = new QHBoxLayout();
 
 	QPushButton *refreshButton = new QPushButton(this);
 	uint icon[2] = { 0x27F2, 0 };

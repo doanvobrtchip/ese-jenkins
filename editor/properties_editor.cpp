@@ -32,7 +32,7 @@ namespace FT800EMUQT {
 
 PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false)
 {
-	QVBoxLayout *infoLayout = new QVBoxLayout(this);
+	QVBoxLayout *infoLayout = new QVBoxLayout();
 	m_InfoGroupBox = new QGroupBox(this);
 	m_InfoGroupBox->setLayout(infoLayout);
 	m_InfoLabel = new QLabel(this);
@@ -41,13 +41,13 @@ PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurr
 	infoLayout->addWidget(m_InfoLabel);
 	m_InfoGroupBox->hide();
 
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	QVBoxLayout *layout = new QVBoxLayout();
 	layout->addWidget(m_InfoGroupBox);
 	layout->addStretch();
 	setLayout(layout);
 	m_GlobalLayout = layout;
 
-	m_EditLayout = new QVBoxLayout(this);
+	m_EditLayout = new QVBoxLayout();
 	m_LayoutInserted = false;
 
 	translate();
