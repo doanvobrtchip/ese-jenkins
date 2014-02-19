@@ -144,7 +144,7 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
-#ifdef FT800EMU_PYTHON	
+#ifdef FT800EMU_PYTHON
 	if (a_ImageConvRun)
 	{
 		bool error = true;
@@ -177,16 +177,27 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			printf("Image converted\n");
 			error = false;
 		}
-
 		if (error)
 		{
 			printf("---\nPython ERROR: \n");
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			char *pStrErrorMessage = PyString_AsString(pvalue);
-			buildError = QString::fromLocal8Bit(pStrErrorMessage);
-			printf("%s\n", pStrErrorMessage);
+			if (pStrErrorMessage)
+			{
+				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+			}
+			else
+			{
+				buildError = "<i>(Python)</i> Unknown Error";
+			}
+			QByteArray er = buildError.toLocal8Bit();
+			printf("%s\n", er.data());
 			printf("---\n");
+
+			// Reinitialize Python converters
+			release();
+			init();
 		}
 	}
 	else
@@ -200,7 +211,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 
 void AssetConverter::convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length)
 {
-#ifdef FT800EMU_PYTHON	
+#ifdef FT800EMU_PYTHON
 	if (a_RawConvRun)
 	{
 		bool error = true;
@@ -239,16 +250,27 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			printf("Raw converted\n");
 			error = false;
 		}
-
 		if (error)
 		{
 			printf("---\nPython ERROR: \n");
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			char *pStrErrorMessage = PyString_AsString(pvalue);
-			buildError = QString::fromLocal8Bit(pStrErrorMessage);
-			printf("%s\n", pStrErrorMessage);
+			if (pStrErrorMessage)
+			{
+				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+			}
+			else
+			{
+				buildError = "<i>(Python)</i> Unknown Error";
+			}
+			QByteArray er = buildError.toLocal8Bit();
+			printf("%s\n", er.data());
 			printf("---\n");
+
+			// Reinitialize Python converters
+			release();
+			init();
 		}
 	}
 	else

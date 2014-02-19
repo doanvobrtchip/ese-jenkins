@@ -703,36 +703,40 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		bool srcExists = QFile::exists(srcFile);
 		if (!srcExists)
 		{
-			contentInfo->BuildError = "<b>Files Error</b><br>Source file does not exist.";
+			contentInfo->BuildError = "<i>(Filesystem)</i><br>Source file does not exist.";
 		}
 		else
 		{
+			// Only able to skip rebuild if no build error occured last time
+			bool equalMeta = false;
 			QString metaFile = contentInfo->DestName + ".meta";
 			bool metaExists = QFile::exists(metaFile);
-			bool equalMeta = false;
-			if (metaExists)
+			if (contentInfo->BuildError.isEmpty())
 			{
-				QFileInfo srcInfo(srcFile);
-				QFileInfo metaInfo(metaFile);
-				if (srcInfo.lastModified() > metaInfo.lastModified())
+				if (metaExists)
 				{
-					// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
-					printf("Source file has been modified, ignore meta, rebuild\n");
-				}
-				else
-				{
-					QFile file(metaFile);
-					file.open(QIODevice::ReadOnly);
-					QByteArray data = file.readAll();
-					file.close();
-					QJsonParseError parseError;
-					QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-					if (parseError.error == QJsonParseError::NoError)
+					QFileInfo srcInfo(srcFile);
+					QFileInfo metaInfo(metaFile);
+					if (srcInfo.lastModified() > metaInfo.lastModified())
 					{
-						QJsonObject root = doc.object();
-						ContentInfo ci("");
-						ci.fromJson(root, true);
-						equalMeta = contentInfo->equalsMeta(&ci);
+						// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
+						printf("Source file has been modified, ignore meta, rebuild\n");
+					}
+					else
+					{
+						QFile file(metaFile);
+						file.open(QIODevice::ReadOnly);
+						QByteArray data = file.readAll();
+						file.close();
+						QJsonParseError parseError;
+						QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+						if (parseError.error == QJsonParseError::NoError)
+						{
+							QJsonObject root = doc.object();
+							ContentInfo ci("");
+							ci.fromJson(root, true);
+							equalMeta = contentInfo->equalsMeta(&ci);
+						}
 					}
 				}
 			}
@@ -759,7 +763,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
 					break;
 				default:
-					contentInfo->BuildError = "<b>Critical Error</b><br>Unknown converter selected.";
+					contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
 					break;
 				}
 				if (contentInfo->BuildError.isEmpty())
