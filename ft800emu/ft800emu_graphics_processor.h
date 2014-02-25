@@ -29,6 +29,20 @@
 
 namespace FT800EMU {
 
+struct BitmapInfo
+{
+	uint32_t Source;
+	int LayoutFormat;
+	int LayoutWidth;
+	int LayoutStride;
+	int LayoutHeight;
+	int SizeFilter;
+	int SizeWrapX;
+	int SizeWrapY;
+	int SizeWidth;
+	int SizeHeight;
+};
+
 /**
  * GraphicsProcessorClass
  * \brief GraphicsProcessorClass
@@ -50,19 +64,19 @@ public:
 
 	// Enables or disables emuating REG_PWM_DUTY by fading to black
 	static void enableRegPwmDutyEmulation(bool enabled = true);
-	
+
 	// Enables multithreaded rendering, sets thread count to number of available CPU cores
 	static void enableMultithread(bool enabled = true);
 	// Reduces the number of used threads with the specified amount
 	static void reduceThreads(int nb);
-	
+
 	static void setDebugMode(int debugMode);
 	static int getDebugMode();
 	static void setDebugMultiplier(int debugMultiplier);
 	static int getDebugMultiplier();
 	static void setDebugLimiter(int debugLimiter);
 	static int getDebugLimiter();
-	
+
 	static bool getDebugLimiterEffective();
 	static int getDebugLimiterIndex();
 
@@ -80,7 +94,7 @@ public:
 private:
 	GraphicsProcessorClass(const GraphicsProcessorClass &);
 	GraphicsProcessorClass &operator=(const GraphicsProcessorClass &);
-	
+
 }; /* class GraphicsProcessorClass */
 
 extern GraphicsProcessorClass GraphicsProcessor;

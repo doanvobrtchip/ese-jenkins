@@ -23,6 +23,12 @@
 
 // Project includes
 
+namespace FT800EMU {
+
+struct BitmapInfo;
+
+}
+
 namespace FT800EMUQT {
 
 /**
@@ -36,6 +42,7 @@ class AssetConverter
 public:
 	static void init();
 	static void convertImage(QString &buildError, const QString &inFile, const QString &outName, int format);
+	static bool getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QString &name);
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
 	static void release();
 

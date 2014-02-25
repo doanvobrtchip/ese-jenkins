@@ -140,7 +140,7 @@ public:
 		AlphaFunc = ALWAYS;
 		AlphaFuncRef = 0;
 	}
-	
+
 	int DebugDisplayListIndex;
 	argb8888 ColorARGB;
 	int PointSize;
@@ -177,20 +177,6 @@ public:
 	uint8_t AlphaFuncRef;
 };
 
-struct BitmapInfo
-{
-	uint32_t Source;
-	int LayoutFormat;
-	int LayoutWidth;
-	int LayoutStride;
-	int LayoutHeight;
-	int SizeFilter;
-	int SizeWrapX;
-	int SizeWrapY;
-	int SizeWidth;
-	int SizeHeight;
-};
-
 BitmapInfo s_BitmapInfoMain[32];
 
 bool s_RegPwmDutyEmulation = false;
@@ -212,7 +198,7 @@ std::vector<int> *s_DebugTraceStack = NULL;
 #	define FT800EMU_STATIC_M128I(FTNAME) static const int8_t FTNAME[16] __attribute__((aligned(16)))
 #	define FT800EMU_STATIC_M128I_CAST(FTNAME) static_cast<const __m128i *>(static_cast<const void *>(&FTNAME))
 #endif
-	
+
 // Here's a nice reference table with all the intrinsics listed:
 // http://www.taffysoft.com/pages/20120418-01.html
 
@@ -413,7 +399,7 @@ FT800EMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uin
 
 FT800EMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
 {
-	bool result = testStencilNoWrite(gs, bs, x);	
+	bool result = testStencilNoWrite(gs, bs, x);
 	switch (result ? gs.StencilOpPass : gs.StencilOpFail)
 	{
 	case KEEP:
@@ -526,7 +512,7 @@ FT800EMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 		{
 			bc[x] = blend(gs, out, bc[x]);
 			writeTag(gs, bt, x);
-			
+
 			// Conditionally compiled debug functionality, will only be called on the line that is being debugged.
 			if (debugTrace)
 			{
@@ -583,7 +569,7 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 		const int y16 = y << 4; // Current Y coordinate in 1/16 pixels
 
 		const int psin256 = psin << 4; // Inner point size 1/256
-		
+
 		const int x1ps_px_sc = max(x1ps_px, scx1); // Scissored X1
 		const int x2ps_px_sc = min(x2ps_px, scx2); // Scissored X2
 		for (int x = x1ps_px_sc; x < x2ps_px_sc; ++x)
@@ -633,10 +619,10 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 template <bool debugTrace>
 void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int /*hsize*/, int px, int py)
 {
-	displayPoint<debugTrace>(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);	
+	displayPoint<debugTrace>(gs, gs.PointSize, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, px, py);
 }
 
-// Utility for primitives that use points to blend the AA at the edges. 
+// Utility for primitives that use points to blend the AA at the edges.
 // Only used for 4 pixels at most in a primitive.
 // Only used with point size of 16 or larger.
 // Only used on the AA border itself.
@@ -680,9 +666,9 @@ FT800EMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 	return true;
 }
 
-static const argb8888 s_VGAPalette[] = 
+static const argb8888 s_VGAPalette[] =
 {
-	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF, 
+	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF,
 };
 
 FT800EMU_FORCE_INLINE const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
@@ -831,9 +817,9 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case BARGRAPH:
 		{
 			uint8_t val = bmpSrc8(ram, srci, xo);
-			if (val < y) 
+			if (val < y)
 				return 0xFFFFFFFF;
-			else 
+			else
 				return 0x00FFFFFF; // a black or white transparent pixel? :)
 		}
 	}
@@ -877,7 +863,7 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
 					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
 			}
 			else
@@ -898,9 +884,9 @@ FT800EMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
 				return to_argb8888(result);
 #else
-				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
 					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xal) 
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
 					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 #endif
@@ -1023,7 +1009,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int yslw_px = y2lw_px - y1lw_px;
 
 	if (max(y1lw_px, gs.ScissorY.I) <= y && y < min(y2lw_px, gs.ScissorY2.I)) // Scissor Y
-	{	
+	{
 		// Notes:
 		// Need special handling for x2 - x1 < 16 and y2 - y1 < 16 (multiple overlap in single pixel line), handle explicitly
 
@@ -1234,7 +1220,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			const int by2_px = ((by2 + 15) >> 4);
 			const int cy1_px = (cy1 >> 4);
 			const int cy2_px = y2lw_px;
-			
+
 			// 0-16 how much to blend with the points
 			int blendtop;
 			int blendbottom;
@@ -1248,7 +1234,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				blendtop = 16;
 				blendbottom = 0;
 			}
-			else if (y < ay2_px) 
+			else if (y < ay2_px)
 			{
 				if (y >= cy1_px) // Shared boundery top, center, bottom
 				{
@@ -1289,7 +1275,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			if (blendtop == 16) // Top
 			{
 				if (x2 - x1 == 0) // Vertical line
-				{				
+				{
 					displayPoint<debugTrace>(gs, gs.LineWidth, gs.ScissorX.I, gs.ScissorY.I, gs.ScissorX2.I, gs.ScissorY2.I, bc, bs, bt, y, bx1 - 8, by1 - 8); // -8 correction due to shifted coordinate space used for easier rectangle AA.
 				}
 				else
@@ -1319,7 +1305,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 								const int alphaval = (rowfill * blendinv) + (alphaleft * blendleft) + (alpharight * blendright);
 								const int alpha = ((gs.ColorARGB >> 24) * alphaval) >> 12;
 								const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
-								processPixel<debugTrace>(gs, bc, bs, bt, x, out);						
+								processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 							}
 						}
 						else
@@ -1501,14 +1487,14 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						}
 					}
 					else // Draw blended left and right pixels
-					{						
+					{
 						if (blendtop > 0)
 						{
 							// Calculate border alphas for top point
 							alphatopleft = getPointAlpha256(lw, x1lw_px_sc, y, bx1 - 8, by1 - 8);
 							alphatopright = getPointAlpha256(lw, x2lw_px_sc - 1, y, bx2 - 8, by1 - 8);
 						}
-						
+
 						if (blendbottom > 0)
 						{
 							// Calculate border alphas for bottom point
@@ -1635,14 +1621,14 @@ void displayEdgeStripL(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Get pixel positions
 	const int y1_px = ((y1 + 15) >> 4); // Y Inclusive
 	const int y2_px = ((y2 + 15) >> 4); // Y Exclusive
-	
+
 	// Render
 	if (max(y1_px, gs.ScissorY.I) <= y && y < min(y2_px, gs.ScissorY2.I))
 	{
 		// Get boundary
 		const int yv = (y << 4); // Y value 16
 		const int xv = findx(x1, x2, y1, y2, yv); // X value 16
-		const int xv_px = xv >> 4; // ((xv + 15) >> 4); // X pixel exclusive		
+		const int xv_px = xv >> 4; // ((xv + 15) >> 4); // X pixel exclusive
 
 		const int left_sc = gs.ScissorX.I;
 #if FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR
@@ -1692,14 +1678,14 @@ void displayEdgeStripR(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Get pixel positions
 	const int y1_px = ((y1 + 15) >> 4); // Y Inclusive
 	const int y2_px = ((y2 + 15) >> 4); // Y Exclusive
-	
+
 	// Render
 	if (max(y1_px, gs.ScissorY.I) <= y && y < min(y2_px, gs.ScissorY2.I))
 	{
 		// Get boundary
 		const int yv = (y << 4); // Y value 16
 		const int xv = findx(x1, x2, y1, y2, yv); // X value 16
-		const int xv_px = ((xv) >> 4); // ((xv + 15) >> 4); // X pixel exclusive		
+		const int xv_px = ((xv) >> 4); // ((xv + 15) >> 4); // X pixel exclusive
 
 #if FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR
 		const int xm_px = (max(x1, x2) - 16) >> 4;
@@ -1746,7 +1732,7 @@ void displayEdgeStripA(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	ess.X1 = xp;
 	ess.Y1 = yp;
 
-	
+
 	// Render
 	const int ym = max(y1, y2);
 	const int ym_px = (ym + 15) >> 4; // Clip
@@ -1812,7 +1798,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 	// Store coordinates for next call
 	ess.X1 = xp;
 	ess.Y1 = yp;
-		
+
 	// Render
 	const int ym = min(y1, y2);
 	const int ym_px = (ym + 15) >> 4; // Clip
@@ -1874,7 +1860,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 {
 	const int lw = gs.LineWidth; // Linewidth in 1/16 pixel
 	const int y1lw = y1 - lw; // Y coordinates plus linewidth in 1/16 pixel
-	const int y2lw = y2 + lw; 
+	const int y2lw = y2 + lw;
 	const int y1lw_px = ((y1lw + 8) >> 4); // Top inclusive in screen pixels
 	const int y2lw_px = (((y2lw + 8) + 15) >> 4); // Bottom exclusive in screen pixels
 
@@ -1882,7 +1868,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int scy2 = gs.ScissorY2.I;
 
 	if (max(y1lw_px, scy1) <= y && y < min(y2lw_px, scy2)) // Scissor Y
-	{	
+	{
 		if (x1 - x2 == 0 && y1 - y2 == 0) // This line is a point
 		{
 			// Use point rendering
@@ -1956,7 +1942,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int w1i = (qw1i + 255) >> 8; // Left inner linewidth boundary
 				const int w2i = (qw2i + 255) >> 8; // Right inner linewidth boundary
 				const int w2o = (qw2o + 255) >> 8; // Right outer linewidth boundary
-				
+
 				// Find the length boundaries
 				const int ql1r = findxrel(qx1, qyd, qy1, -qxd, qy); // Length boundary for top-left point in 256 scale
 				const int ql2r = findxrel(qx2, qyd, qy2, -qxd, qy); // Length boundary for bottom-right point in 256 scale
@@ -1980,13 +1966,13 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					if (x > 0) bc[x] = 0xFFFF8000;
 				}
 #endif
-				
+
 				// Convert to screen pixels
 				const int l1o = (ql1o + 255) >> 8; // Left outer length boundary
 				const int l1i = (ql1i + 255) >> 8; // Left inner length boundary
 				const int l2i = (ql2i + 255) >> 8; // Right inner length boundary
 				const int l2o = (ql2o + 255) >> 8; // Right outer length boundary
-				
+
 				// Draw the left AA
 				{
 					const int left_sc = max(scx1, max(w1o, l1o)); // Left included
@@ -2045,7 +2031,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int left_sc = max(scx1, max(w1i, l1o)); // Left included
 					const int right_sc = min(scx2, min(w2i, l2o));  // Right excluded
-						
+
 					for (int x = left_sc; x < right_sc; ++x)
 					{
 						processPixel<debugTrace>(gs, bc, bs, bt, x, gs.ColorARGB);
@@ -2166,7 +2152,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						const int alphawidthleft = findx(0, 256, qw1o, qwi, qxc); // Alpha 256
 						const int alphawidthright = findx(256, 0, qwi, qw2o, qxc); // Alpha 256
 						const int alphawidth = min(alphawidthleft, alphawidthright);
-						
+
 						if (x >= l1i && x < l2i) // No blending with outer ends
 						{
 							// lw = 3, alphawidth = 8
@@ -2208,8 +2194,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 	const int y2r = yp;
 	const int y1 = min(y1r, y2r); // Simplify line coordinates from top to bottom
 	const int y2 = max(y1r, y2r);
-	const int x1 = y1 == y1r ? x1r : x2r; 
-	const int x2 = y2 == y2r ? x2r : x1r; 
+	const int x1 = y1 == y1r ? x1r : x2r;
+	const int x2 = y2 == y2r ? x2r : x1r;
 	rs.Set = false;
 
 	displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, rs, x1, y1, x2, y2);
@@ -2236,8 +2222,8 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 	const int y2r = yp;
 	const int y1 = min(y1r, y2r); // Simplify line coordinates from top to bottom
 	const int y2 = max(y1r, y2r);
-	const int x1 = y1 == y1r ? x1r : x2r; 
-	const int x2 = y2 == y2r ? x2r : x1r; 
+	const int x1 = y1 == y1r ? x1r : x2r;
+	const int x2 = y2 == y2r ? x2r : x1r;
 	rs.X1 = xp;
 	rs.Y1 = yp;
 
@@ -2263,7 +2249,7 @@ void GraphicsProcessorClass::begin()
 	s_DebugLimiter = 0;
 	s_DebugLimiterEffective = false;
 	s_DebugLimiterIndex = 0;
-	
+
 	s_RegPwmDutyEmulation = false;
 	s_ThreadCount = 1;
 
@@ -2412,7 +2398,7 @@ void GraphicsProcessorClass::reduceThreads(int nb)
 // Sign-extend the n-bit value v
 #define SIGNED_N(v, n) \
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
-    
+
 namespace {
 
 void processBlankDL(BitmapInfo *const bitmapInfo)
@@ -2439,7 +2425,7 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_BITMAP_HANDLE:
 			gs.BitmapHandle = v & 0x1F;
 			break;
-		case FT800EMU_DL_BITMAP_LAYOUT: 
+		case FT800EMU_DL_BITMAP_LAYOUT:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				const int format = (v >> 19) & 0x1F;
@@ -2501,7 +2487,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	const uint32_t *displayList = Memory.getDisplayList();
 	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
-	
+
 	intptr_t lines_processed = 0;
 	bool debugLimiterEffective = false;
 	int debugLimiterIndex = 0;
@@ -2520,7 +2506,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 
 		// pre-clear bitmap buffer, but optimize! (don't clear if the user already does it)
 		if (!(((displayList[0] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04))
-			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB)
 				&& ((displayList[1] & 0xFF000004) == ((FT800EMU_DL_CLEAR << 24) | 0x04)))))
 		{
 			// about loop+480 ops
@@ -2531,7 +2517,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 		}
 		// pre-clear line stencil buffer, but optimize! (don't clear if the user already does it)
 		if (!(((displayList[0] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02))
-			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB)
 				&& ((displayList[1] & 0xFF000002) == ((FT800EMU_DL_CLEAR << 24) | 0x02)))))
 		{
 			// about loop+480 ops
@@ -2542,7 +2528,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 		}
 		// pre-clear line tag buffer, but optimize! (don't clear if the user already does it)
 		if (!(((displayList[0] & 0xFF000001) == ((FT800EMU_DL_CLEAR << 24) | 0x01))
-			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB) 
+			|| (((displayList[0] >> 24) == FT800EMU_DL_CLEAR_COLOR_RGB)
 				&& ((displayList[1] & 0xFF000001) == ((FT800EMU_DL_CLEAR << 24) | 0x01)))))
 		{
 			// about loop+480 ops
@@ -2574,7 +2560,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 			{
 				s_DebugTraceLine = c;
 			}
-			
+
 			gs.DebugDisplayListIndex = c;
 
 			uint32_t v = displayList[c]; // (up to 2048 ops)
@@ -2604,7 +2590,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_CELL:
 					gs.Cell = v & 0x7F;
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT: 
+				case FT800EMU_DL_BITMAP_LAYOUT:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
@@ -2800,7 +2786,7 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py, 
+						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py,
 							((v >> 7) & 0x1F),
 							v & 0x7F,
 							bitmapInfo);
@@ -2841,8 +2827,8 @@ EvaluateDisplayListValue:
 					switch (primitive)
 					{
 					case BITMAPS:
-						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py, 
-							gs.BitmapHandle, 
+						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py,
+							gs.BitmapHandle,
 							gs.Cell,
 							bitmapInfo);
 						break;
@@ -2954,7 +2940,7 @@ DisplayListDisplay:
 		}
 		++lines_processed;
 	}
-	
+
 	if (yIdx == 0)
 	{
 		s_DebugLimiterEffective = false;
@@ -2967,43 +2953,43 @@ DisplayListDisplay:
 		processBlankDL(bitmapInfo);
 	}
 }
-	
+
 } /* anonymous namespace */
 
 #ifdef FT800EMU_SDL
 int launchGraphicsProcessorThread(void *startInfo)
-{		
+{
 	unsigned long taskId = 0;
 	void *taskHandle;
 	taskHandle = System.setThreadGamesCategory(&taskId);
 	System.disableAutomaticPriorityBoost();
 	System.makeRealtimePriorityThread();
-	
+
 	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
 	for (; ; )
 	{
 		SDL_SemWait(li->StartSem);
-		
+
 		if (!li->Running)
 		{
 			break;
 		}
-		
+
 		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
-		
+
 		// printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
 		// printf("%i: sem post (%i) <-\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 	}
-	
+
 	System.revertThreadCategory(taskHandle);
-	
+
 	return 0;
 }
 #else
 #	ifdef WIN32
 DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
-{		
+{
 	unsigned long taskId = 0;
 	void *taskHandle;
 	taskHandle = System.setThreadGamesCategory(&taskId);
@@ -3014,19 +3000,19 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 	for (; ; )
 	{
 		WaitForSingleObject(li->StartEvent, INFINITE);
-		
+
 		if (!li->Running)
 		{
 			break;
 		}
-		
+
 		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
 
 		SetEvent(li->EndEvent);
 	}
-	
+
 	System.revertThreadCategory(taskHandle);
-	
+
 	return 0;
 }
 #	endif
@@ -3038,7 +3024,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 
 	// Store the touch tag xy used for lookup
 	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
-		
+
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
 		// Launch threads
@@ -3062,10 +3048,10 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	endif
 #endif
 	}
-	
+
 	// Run part on this thread
 	processPart<false>(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
-	
+
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
 		// Wait for threads
@@ -3139,7 +3125,7 @@ int GraphicsProcessorClass::getDebugLimiter()
 {
 	return s_DebugLimiter;
 }
-	
+
 bool GraphicsProcessorClass::getDebugLimiterEffective()
 {
 	return s_DebugLimiterEffective;

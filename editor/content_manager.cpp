@@ -37,6 +37,7 @@
 #include <QDateTime>
 
 // Emulator includes
+#include <ft800emu_graphics_processor.h>
 #include <vc.h>
 
 // Project includes
@@ -715,6 +716,33 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					if (loadSuccess)
 					{
 						// stride etc
+						FT800EMU::BitmapInfo bitmapInfo;
+						if (AssetConverter::getImageInfo(bitmapInfo, contentInfo->DestName))
+						{
+							propInfo += tr("<br><b>Width: </b> ") + QString::number(bitmapInfo.LayoutWidth);
+							propInfo += tr("<br><b>Height: </b> ") + QString::number(bitmapInfo.LayoutHeight);
+							propInfo += tr("<br><b>Format: </b> ");
+							switch (bitmapInfo.LayoutFormat)
+							{
+								case ARGB1555: propInfo += "ARGB1555"; break;
+								case L1: propInfo += "L1"; break;
+								case L4: propInfo += "L4"; break;
+								case L8: propInfo += "L8"; break;
+								case RGB332: propInfo += "RGB332"; break;
+								case ARGB2: propInfo += "ARGB2"; break;
+								case ARGB4: propInfo += "ARGB4"; break;
+								case RGB565: propInfo += "RGB565"; break;
+								case PALETTED: propInfo += "PALETTED"; break;
+								case TEXT8X8: propInfo += "TEXT8X8"; break;
+								case TEXTVGA: propInfo += "TEXTVGA"; break;
+								case BARGRAPH: propInfo += "BARGRAPH"; break;
+							}
+							propInfo += tr("<br><b>Stride: </b> ") + QString::number(bitmapInfo.LayoutStride);
+						}
+						else
+						{
+							propInfo += tr("<br><b>Error: </b>Unable to load raw header.");
+						}
 					}
 				}
 				break;

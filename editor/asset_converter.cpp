@@ -23,6 +23,8 @@
 // Qt includes
 
 // Emulator includes
+#include <ft800emu_graphics_processor.h>
+#include <vc.h>
 
 // Project includes
 
@@ -207,6 +209,53 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 #else
 	buildError = "Python not available";
 #endif /* FT800EMU_PYTHON */
+}
+
+bool AssetConverter::getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QString &name)
+{
+	// Returns image layout
+	// /*('file properties: ', 'resolution ', 360, 'x', 238, 'format ', 'L1', 'stride ', 45, ' total size ', 10710)*/
+	QString fileName = name + ".rawh";
+	QByteArray fileNameCStr = fileName.toLocal8Bit();
+	FILE *f = fopen(fileNameCStr.data(), "r");
+	if (!f)
+	{
+		printf("Failed to open RAWH file\n");
+		return false;
+	}
+	int width, height;
+	char format[32];
+	format[0] = 0x00;
+	int stride;
+	int result = fscanf(f, "/*('file properties: ', 'resolution ', %i, 'x', %i, 'format ', '%31[A-Z0-9]', 'stride ', %i", &width, &height, format, &stride);
+	fclose(f);
+	if (result != 4)
+	{
+		printf("Invalid scanf on RAWH: %i (%i, %i, %s, %i)\n", result, width, height, format, stride);
+		return false;
+	}
+	// NOTE: LayoutWidth is set incorrectly here on purpose. The graphics processor rewrites this.
+	bitmapInfo.LayoutWidth = width;
+	bitmapInfo.LayoutHeight = height;
+	if (!strcmp(format, "ARGB1555")) bitmapInfo.LayoutFormat = ARGB1555;
+	else if (!strcmp(format, "L1")) bitmapInfo.LayoutFormat = L1;
+	else if (!strcmp(format, "L4")) bitmapInfo.LayoutFormat = L4;
+	else if (!strcmp(format, "L8")) bitmapInfo.LayoutFormat = L8;
+	else if (!strcmp(format, "RGB332")) bitmapInfo.LayoutFormat = RGB332;
+	else if (!strcmp(format, "ARGB2")) bitmapInfo.LayoutFormat = ARGB2;
+	else if (!strcmp(format, "ARGB4")) bitmapInfo.LayoutFormat = ARGB4;
+	else if (!strcmp(format, "RGB565")) bitmapInfo.LayoutFormat = RGB565;
+	else if (!strcmp(format, "PALETTED")) bitmapInfo.LayoutFormat = PALETTED;
+	else if (!strcmp(format, "TEXT8X8")) bitmapInfo.LayoutFormat = TEXT8X8;
+	else if (!strcmp(format, "TEXTVGA")) bitmapInfo.LayoutFormat = TEXTVGA;
+	else if (!strcmp(format, "BARGRAPH")) bitmapInfo.LayoutFormat = BARGRAPH;
+	else
+	{
+		printf("Invalid format in RAWH: '%s'\n", format);
+		return false;
+	}
+	bitmapInfo.LayoutStride = stride;
+	return true;
 }
 
 void AssetConverter::convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length)
