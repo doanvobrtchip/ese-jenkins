@@ -1219,6 +1219,7 @@ void MainWindow::createDockWindows()
 		m_BitmapSetupDock->setObjectName("BitmapSetup");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		m_BitmapSetup = new BitmapSetup(this);

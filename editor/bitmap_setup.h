@@ -3,7 +3,7 @@
  * $Id$
  * \file bitmap_setup.h
  * \brief bitmap_setup.h
- * \date 2014-01-31 16:56GMT
+ * \date 2014-02-25 13:59GMT
  * \author Jan Boon (Kaetemi)
  */
 
@@ -17,12 +17,12 @@
 // STL includes
 #include <vector>
 #include <set>
+#include <stdio.h>
 
 // Qt includes
+#include <QFrame>
 #include <QWidget>
 #include <QString>
-#include <QMutex>
-#include <QJsonObject>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -30,14 +30,39 @@
 // Project includes
 // ...
 
+class QResizeEvent;
+
 namespace FT800EMUQT {
 
 class MainWindow;
 
 /**
+ * BitmapWidget
+ * \brief BitmapWidget
+ * \date 2014-02-25 13:59GMT
+ * \author Jan Boon (Kaetemi)
+ */
+class BitmapWidget : public QFrame
+{
+	Q_OBJECT
+
+public:
+	BitmapWidget(MainWindow *parent, int index);
+	virtual ~BitmapWidget();
+
+private:
+	MainWindow *m_MainWindow;
+	int m_Index;
+
+private:
+	BitmapWidget(const BitmapWidget &);
+	BitmapWidget &operator=(const BitmapWidget &);
+}; /* class BitmapWidget */
+
+/**
  * BitmapSetup
  * \brief BitmapSetup
- * \date 2014-01-31 16:56GMT
+ * \date 2014-02-25 13:59GMT
  * \author Jan Boon (Kaetemi)
  */
 class BitmapSetup : public QWidget
@@ -50,6 +75,10 @@ public:
 
 private:
 	MainWindow *m_MainWindow;
+	BitmapWidget *m_Bitmaps[32];
+
+protected:
+	virtual void resizeEvent(QResizeEvent *event);
 
 private:
 	BitmapSetup(const BitmapSetup &);
