@@ -48,6 +48,7 @@ class DeviceManager;
 class Inspector;
 class MainWindow;
 class ContentManager;
+class BitmapSetup;
 
 class RunScript : public QObject
 {
@@ -183,6 +184,9 @@ private:
 
 	QDockWidget *m_ContentManagerDock;
 	ContentManager *m_ContentManager;
+
+	QDockWidget *m_BitmapSetupDock;
+	BitmapSetup *m_BitmapSetup;
 
 	QDockWidget *m_ToolboxDock;
 	Toolbox *m_Toolbox;

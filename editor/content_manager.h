@@ -159,6 +159,8 @@ private:
 	QPushButton *m_RemoveButton;
 	ContentInfo *m_CurrentPropertiesContent; // This pointer may be invalid. Only use to compare with current.
 
+	QLabel *m_HelpfulLabel;
+
 	QWidget *m_PropertiesCommon;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;

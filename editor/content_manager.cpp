@@ -319,6 +319,13 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
 	connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonDataEmbeddedChanged(int)));
 	m_PropertiesMemory->setLayout(propMemLayout);
+
+	QVBoxLayout *helpLayout = new QVBoxLayout();
+	m_HelpfulLabel = new QLabel(m_ContentList);
+	m_HelpfulLabel->setWordWrap(true);
+	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
+	helpLayout->addWidget(m_HelpfulLabel);
+	m_ContentList->setLayout(helpLayout);
 }
 
 ContentManager::~ContentManager()
@@ -469,6 +476,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 
 	// Be helpful
 	m_ContentList->setCurrentItem(view);
+	m_HelpfulLabel->setVisible(false);
 }
 
 void ContentManager::removeInternal(ContentInfo *contentInfo)
@@ -478,6 +486,9 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
+
+	// Be helpful
+	m_HelpfulLabel->setVisible(m_ContentList->topLevelItemCount() == 0);
 }
 
 bool ContentManager::nameExists(const QString &name)

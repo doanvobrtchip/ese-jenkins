@@ -79,6 +79,7 @@
 #include "device_manager.h"
 #include "inspector.h"
 #include "content_manager.h"
+#include "bitmap_setup.h"
 
 namespace FT800EMUQT {
 
@@ -161,6 +162,7 @@ void setup()
 
 // Content manager
 static ContentManager *s_ContentManager = NULL;
+static BitmapSetup *s_BitmapSetup = NULL;
 
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
@@ -1210,6 +1212,23 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_ContentManagerDock->toggleViewAction());
 	}
 
+	// Bitmap
+	{
+		m_BitmapSetupDock = new QDockWidget(this);
+		m_BitmapSetupDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_BitmapSetupDock->setObjectName("BitmapSetup");
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		m_BitmapSetup = new BitmapSetup(this);
+		s_BitmapSetup = m_BitmapSetup;
+		scrollArea->setWidget(m_BitmapSetup);
+		m_BitmapSetupDock->setWidget(scrollArea);
+		addDockWidget(Qt::LeftDockWidgetArea, m_BitmapSetupDock);
+		m_WidgetsMenu->addAction(m_BitmapSetupDock->toggleViewAction());
+	}
+
 	// Toolbox
 	{
 		m_ToolboxDock = new QDockWidget(this);
@@ -1240,7 +1259,8 @@ void MainWindow::createDockWindows()
 	}*/
 
 	tabifyDockWidget(m_RegistersDock, m_ContentManagerDock);
-	tabifyDockWidget(m_ContentManagerDock, m_ToolboxDock);
+	tabifyDockWidget(m_ContentManagerDock, m_BitmapSetupDock);
+	tabifyDockWidget(m_BitmapSetupDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
 	tabifyDockWidget(m_DeviceManagerDock, m_ControlsDock);
@@ -1280,6 +1300,7 @@ void MainWindow::translateDockWindows()
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
+	m_BitmapSetupDock->setWindowTitle(tr("Bitmaps"));
 }
 
 void MainWindow::incbLanguageCode()
