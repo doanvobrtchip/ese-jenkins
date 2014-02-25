@@ -943,6 +943,28 @@ void MainWindow::createDockWindows()
 
 	// Utilization
 	{
+		/*QWidget *w = new QWidget(statusBar());
+		w->setMinimumSize(120, 8);
+		w->setMaximumSize(180, 19); // FIXME
+		w->setContentsMargins(0, 0, 0, 0);
+
+		QHBoxLayout *l = new QHBoxLayout();
+		l->setContentsMargins(0, 0, 0, 0);*/
+
+		QLabel *dlLabel = new QLabel(statusBar());
+		dlLabel->setText(tr("RAM_DL: "));
+		statusBar()->addPermanentWidget(dlLabel);
+
+		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
+		m_UtilizationDisplayListStatus->setMinimum(0);
+		m_UtilizationDisplayListStatus->setMaximum(FT800EMU_DL_SIZE);
+		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
+		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
+		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
+
+		/*w->setLayout(l);
+		statusBar()->addPermanentWidget(w);*/
+
 		m_UtilizationDock = new QDockWidget(this);
 		m_UtilizationDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
 		m_UtilizationDock->setObjectName("Utilization");
@@ -964,23 +986,6 @@ void MainWindow::createDockWindows()
 			m_UtilizationDisplayList->setMaximum(FT800EMU_DL_SIZE);
 			groupLayout->addWidget(m_UtilizationDisplayList);
 
-			m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
-			m_UtilizationDisplayListStatus->setMinimum(0);
-			m_UtilizationDisplayListStatus->setMaximum(FT800EMU_DL_SIZE);
-			m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
-			m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
-			statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
-
-			//QString danger = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 ); }";
-			//QString safe= "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #78d,stop: 0.4999 #46a,stop: 0.5 #45a,stop: 1 #238 ); }";
-			QPalette p = m_UtilizationDisplayList->palette();
-			/*p.setColor(QPalette::Active, QColorGroup::Highlight, Qt::red);
-			p.setColor(QPalette::Inactive, QColorGroup::Highlight, Qt::red);
-			p.setColor(QPalette::Disabled, QColorGroup::Highlight, Qt::red);*/
-			p.setColor(QPalette::Highlight, Qt::red);
-			m_UtilizationDisplayList->setPalette(p);
-			//m_UtilizationDisplayList->setStyleSheet(danger);
-
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
@@ -991,6 +996,8 @@ void MainWindow::createDockWindows()
 		m_UtilizationDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_UtilizationDock);
 		m_WidgetsMenu->addAction(m_UtilizationDock->toggleViewAction());
+
+		m_UtilizationDock->setVisible(false);
 	}
 
 	// PropertiesEditor
@@ -1110,7 +1117,7 @@ void MainWindow::createDockWindows()
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
 		m_ControlsDock->setWidget(scrollArea);
-		addDockWidget(Qt::LeftDockWidgetArea, m_ControlsDock);
+		addDockWidget(Qt::RightDockWidgetArea, m_ControlsDock);
 		m_WidgetsMenu->addAction(m_ControlsDock->toggleViewAction());
 	}
 
@@ -1232,13 +1239,13 @@ void MainWindow::createDockWindows()
 		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
 	}*/
 
-	tabifyDockWidget(m_ControlsDock, m_RegistersDock);
 	tabifyDockWidget(m_RegistersDock, m_ContentManagerDock);
 	tabifyDockWidget(m_ContentManagerDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
-	tabifyDockWidget(m_DeviceManagerDock, m_UtilizationDock);
+	tabifyDockWidget(m_DeviceManagerDock, m_ControlsDock);
 #endif /* FT800_DEVICE_MANAGER */
+	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
 
 	// Event for all tab changes

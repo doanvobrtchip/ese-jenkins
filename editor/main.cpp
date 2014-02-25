@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
 	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
+	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{
