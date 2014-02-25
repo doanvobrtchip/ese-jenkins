@@ -616,6 +616,7 @@ MainWindow::~MainWindow()
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
 	s_ContentManager = NULL;
+	s_BitmapSetup = NULL;
 
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;

@@ -92,6 +92,8 @@ public:
 	inline Inspector *inspector() { return m_Inspector; }
 	inline QUndoStack *undoStack() { return m_UndoStack; }
 	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
+	inline ContentManager *contentManager() { return m_ContentManager; }
+	inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 
 	bool waitingCoprocessorAnimation();
 
