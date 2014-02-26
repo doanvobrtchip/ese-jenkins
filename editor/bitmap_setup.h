@@ -29,12 +29,16 @@
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
+#include <ft800emu_graphics_processor.h>
 
 // Project includes
-// ...
+#include "content_manager.h"
 
 class QResizeEvent;
 class QLabel;
+class QGroupBox;
+class QComboBox;
+class QSpinBox;
 
 namespace FT800EMUQT {
 
@@ -130,13 +134,41 @@ public:
 	void select(int i);
 	void deselect();
 
+	void lockBitmaps();
+	void unlockBitmaps();
+
+	inline int getModificationNb() const { return m_ModificationNb; }
+
+private:
+	void rebuildGUIInternal();
+	void refreshGUIInternal();
+
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
 
 private:
 	MainWindow *m_MainWindow;
 	BitmapWidget *m_Bitmaps[32];
+	FT800EMU::BitmapInfo m_BitmapInfo[32];
+	ContentInfo *m_BitmapSource[32]; // NOTE: Must check with ContentManager if pointer is still valid!
 	int m_Selected;
+	int m_ModificationNb;
+
+	QGroupBox *m_PropSource;
+	QComboBox *m_PropSourceContent;
+
+	QGroupBox *m_PropLayout; // BITMAP_LAYOUT(format, linestride, height)
+	QComboBox *m_PropLayoutFormat;
+	QSpinBox *m_PropLayoutStride;
+	QSpinBox *m_PropLayoutHeight;
+
+	QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
+	QComboBox *m_PropSizeWrapX;
+	QComboBox *m_PropSizeWrapY;
+	QSpinBox *m_PropSizeWidth;
+	QSpinBox *m_PropSizeHeight;
+
+	QMutex m_Mutex;
 
 protected:
 	virtual void resizeEvent(QResizeEvent *event);

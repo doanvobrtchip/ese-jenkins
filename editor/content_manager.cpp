@@ -488,7 +488,7 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	contentInfo->View = NULL;
 
 	// Be helpful
-	m_HelpfulLabel->setVisible(m_ContentList->topLevelItemCount() == 0);
+	m_HelpfulLabel->setVisible(getContentCount() == 0);
 }
 
 bool ContentManager::nameExists(const QString &name)
@@ -600,6 +600,11 @@ void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
 	}
 }
 
+int ContentManager::getContentCount() const
+{
+	return m_ContentList->topLevelItemCount();
+}
+
 void ContentManager::clear()
 {
 	printf("ContentManager::clear()\n");
@@ -661,7 +666,6 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	if (m_CurrentPropertiesContent != contentInfo
 		|| props->getEditWidgetSetter() != this)
 	{
-		ContentInfo *info = contentInfo;
 		std::vector<QWidget *> widgets;
 
 		widgets.push_back(m_PropertiesCommon);

@@ -109,6 +109,8 @@ public:
 	void clear();
 	// Get all content
 	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
+	// Get the number of content
+	int getContentCount() const;
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
