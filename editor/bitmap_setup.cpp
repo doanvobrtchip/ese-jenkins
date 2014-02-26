@@ -45,7 +45,7 @@ BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_Ma
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	QLabel *label = new QLabel(this);
-	label->setText(/*QString("<i>") +*/  QString::number(index) + /*"<i>*/" ");
+	label->setText(QString("<i>") + QString::number(index) + "<i> ");
 	layout->addWidget(label);
 	label->setWordWrap(true);
 	label->setAlignment(Qt::AlignRight | Qt::AlignBottom);
@@ -62,6 +62,10 @@ BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_Ma
 	label->setMargin(cm.left() / 4);
 	layout->setContentsMargins(0, 0, 0, 0);
 	l->setContentsMargins(0, 0, 0, 0);
+
+	m_DefaultPalette = palette();
+	m_SelectedPalette = m_DefaultPalette;
+	m_SelectedPalette.setColor(QPalette::WindowText, Qt::red);
 
 	deselect();
 
@@ -97,7 +101,7 @@ void BitmapWidget::resizeEvent(QResizeEvent *event)
 	if (m_PixmapOkay)
 	{
 		// Rescale locally
-		/*m_Pixmap = m_Pixmap.scaled(width(), height(), Qt::IgnoreAspectRatio);
+		/*m_Pixmap = m_Pixmap.scaled(width(), height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 		m_Label->setPixmap(m_Pixmap);
 		m_Label->repaint();*/
 	}
@@ -108,11 +112,13 @@ void BitmapWidget::resizeEvent(QResizeEvent *event)
 
 void BitmapWidget::select()
 {
+	setPalette(m_SelectedPalette);
 	setFrameStyle(QFrame::Panel | QFrame::Plain);
 }
 
 void BitmapWidget::deselect()
 {
+	setPalette(m_DefaultPalette);
 	setFrameStyle(QFrame::Panel | QFrame::Sunken);
 }
 
@@ -176,7 +182,7 @@ void BitmapWidgetThread::run()
 	QImage image;
 	m_BitmapWidget->m_ReloadSuccess = image.load(name + "_converted.png");
 	if (!m_BitmapWidget->m_ReloadSuccess) { printf("Bitmap widget reload failed\n"); return; }
-	m_BitmapWidget->m_ReloadImage = image.scaled(width, height, Qt::KeepAspectRatioByExpanding).copy(0, 0, width, height);
+	m_BitmapWidget->m_ReloadImage = image.scaled(width, height, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation).copy(0, 0, width, height);
 }
 
 BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_Selected(-1)

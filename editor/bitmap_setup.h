@@ -79,6 +79,8 @@ private:
 	QString m_ImageName;
 	QMutex m_Mutex;
 	bool m_ThreadRunning;
+	QPalette m_DefaultPalette;
+	QPalette m_SelectedPalette;
 
 	BitmapWidgetThread *m_ReloadThread;
 
