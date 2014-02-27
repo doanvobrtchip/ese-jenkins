@@ -297,19 +297,36 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	QVBoxLayout *sizeLayout = new QVBoxLayout();
 	m_PropSize->setHidden(true);
 	m_PropSize->setTitle(tr("Size"));
+	m_PropSizeFilter = new QComboBox(this);
+	m_PropSizeFilter->addItem("NEAREST");
+	m_PropSizeFilter->addItem("BILINEAR");
+	addLabeledWidget(this, sizeLayout, tr("Filter: "), m_PropSizeFilter);
+	connect(m_PropSizeFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(propSizeFilterChanged(int)));
+	m_PropSizeWrapX = new QComboBox(this);
+	m_PropSizeWrapX->addItem("BORDER");
+	m_PropSizeWrapX->addItem("REPEAT");
+	addLabeledWidget(this, sizeLayout, tr("Wrap X: "), m_PropSizeWrapX);
+	connect(m_PropSizeWrapX, SIGNAL(currentIndexChanged(int)), this, SLOT(propSizeWrapXChanged(int)));
+	m_PropSizeWrapY = new QComboBox(this);
+	m_PropSizeWrapY->addItem("BORDER");
+	m_PropSizeWrapY->addItem("REPEAT");
+	addLabeledWidget(this, sizeLayout, tr("Wrap Y: "), m_PropSizeWrapY);
+	connect(m_PropSizeWrapY, SIGNAL(currentIndexChanged(int)), this, SLOT(propSizeWrapYChanged(int)));
+	m_PropSizeWidth = new QSpinBox(this);
+	m_PropSizeWidth->setMinimum(0);
+	m_PropSizeWidth->setMaximum(512);
+	m_PropSizeWidth->setSingleStep(1);
+	// m_PropSizeWidth->setKeyboardTracking(false);
+	addLabeledWidget(this, sizeLayout, tr("Width: "), m_PropSizeWidth);
+	connect(m_PropSizeWidth, SIGNAL(valueChanged(int)), this, SLOT(propSizeWidthChanged(int)));
+	m_PropSizeHeight = new QSpinBox(this);
+	m_PropSizeHeight->setMinimum(0);
+	m_PropSizeHeight->setMaximum(512);
+	m_PropSizeHeight->setSingleStep(1);
+	// m_PropSizeHeight->setKeyboardTracking(false);
+	addLabeledWidget(this, sizeLayout, tr("Height: "), m_PropSizeHeight);
+	connect(m_PropSizeHeight, SIGNAL(valueChanged(int)), this, SLOT(propSizeHeightChanged(int)));
 	m_PropSize->setLayout(sizeLayout);
-
-
-	/*QGroupBox *m_PropLayout; // BITMAP_LAYOUT(format, linestride, height)
-	QComboBox *m_PropLayoutFormat;
-	QSpinBox *m_PropLayoutStride;
-	QSpinBox *m_PropLayoutHeight;*/
-
-	/*QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
-	QComboBox *m_PropSizeWrapX;
-	QComboBox *m_PropSizeWrapY;
-	QSpinBox *m_PropSizeWidth;
-	QSpinBox *m_PropSizeHeight;*/
 }
 
 BitmapSetup::~BitmapSetup()
@@ -426,6 +443,28 @@ void BitmapSetup::refreshGUIInternal(int bitmapHandle)
 		refreshGUIInternal();
 }
 
+static const char *formatOption[] = {
+	"ARGB1555",
+	"L1",
+	"L4",
+	"L8",
+	"RGB332",
+	"ARGB2",
+	"ARGB4",
+	"RGB565",
+	"PALETTED"
+};
+
+static const char *wrapOption[] = {
+	"BORDER",
+	"REPEAT"
+};
+
+static const char *filterOption[] = {
+	"NEAREST",
+	"BILINEAR"
+};
+
 void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
 {
 	printf("BitmapSetup::refreshGUIInternal()\n");
@@ -447,19 +486,54 @@ void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
 	}
 	if (!sourceContentSet)
 	{
-		// Content no longer exists
+		// Content no longer exists, add a false value
 		m_RebuildingPropSourceContent = true;
 		m_PropSourceContent->addItem(QString::number((intptr_t)m_BitmapSource[m_Selected]), qVariantFromValue((void *)m_BitmapSource[m_Selected]));
 		m_RebuildingPropSourceContent = false;
 		m_PropSourceContent->setCurrentIndex(m_PropSourceContent->count() - 1);
 	}
 
-	// Layout
-	m_PropLayoutFormat->setCurrentIndex(m_BitmapInfo[m_Selected].LayoutFormat);
-	m_PropLayoutStride->setValue(m_BitmapInfo[m_Selected].LayoutStride);
-	m_PropLayoutHeight->setValue(m_BitmapInfo[m_Selected].LayoutHeight);
+	if (m_BitmapSource[m_Selected] && sourceContentSet)
+	{
+		if (m_BitmapSource[m_Selected]->Converter != ContentInfo::Image) // Image converter uses layout cached in ContentInfo directly
+		{
+			// Layout
+			m_PropLayout->setVisible(true);
+			m_PropLayoutFormat->setCurrentIndex(m_BitmapInfo[m_Selected].LayoutFormat);
+			m_PropLayoutStride->setValue(m_BitmapInfo[m_Selected].LayoutStride);
+			m_PropLayoutHeight->setValue(m_BitmapInfo[m_Selected].LayoutHeight);
+		}
+		else
+		{
+			m_PropLayout->setVisible(false);
+		}
 
-	props->setInfo("<b>BITMAP_HANDLE</b>(" + QString::number(m_Selected) + ")");
+		// Size
+		m_PropSize->setVisible(true);
+		m_PropSizeFilter->setCurrentIndex(m_BitmapInfo[m_Selected].SizeFilter);
+		m_PropSizeWrapX->setCurrentIndex(m_BitmapInfo[m_Selected].SizeWrapX);
+		m_PropSizeWrapY->setCurrentIndex(m_BitmapInfo[m_Selected].SizeWrapY);
+		m_PropSizeWidth->setValue(m_BitmapInfo[m_Selected].SizeWidth);
+		m_PropSizeHeight->setValue(m_BitmapInfo[m_Selected].SizeHeight);
+	}
+	else
+	{
+		m_PropLayout->setVisible(false);
+		m_PropSize->setVisible(false);
+	}
+
+	if (!sourceContentSet)
+	{
+		props->setInfo(tr("<b>Warning: </b>Selected content no longer exists in project"));
+	}
+	else
+	{
+		props->setInfo("<b>BITMAP_HANDLE</b>(" + QString::number(m_Selected) + ")<br>"
+			+ "<b>BITMAP_SOURCE</b>(" + (m_BitmapSource[m_Selected] == NULL ? "..." : QString::number(m_BitmapSource[m_Selected]->MemoryAddress)) + ")<br>"
+			+ "<b>BITMAP_LAYOUT</b>(" + formatOption[m_BitmapInfo[m_Selected].LayoutFormat] + ", " + QString::number(m_BitmapInfo[m_Selected].LayoutStride) + ", " + QString::number(m_BitmapInfo[m_Selected].LayoutHeight) + ")<br>"
+			+ "<b>BITMAP_SIZE</b>(" + filterOption[m_BitmapInfo[m_Selected].SizeFilter] + ", " + wrapOption[m_BitmapInfo[m_Selected].SizeWrapX] + ", " + wrapOption[m_BitmapInfo[m_Selected].SizeWrapY] + ", " + QString::number(m_BitmapInfo[m_Selected].SizeWidth) + ", " + QString::number(m_BitmapInfo[m_Selected].SizeHeight) + ")<br>"
+			);
+	}
 }
 
 void BitmapSetup::deselect()
@@ -746,7 +820,7 @@ public:
 
 	virtual int id() const
 	{
-		return 9065501;
+		return 9065502;
 	}
 
 	virtual bool mergeWith(const QUndoCommand *command)
@@ -821,7 +895,7 @@ public:
 
 	virtual int id() const
 	{
-		return 9065501;
+		return 9065503;
 	}
 
 	virtual bool mergeWith(const QUndoCommand *command)
@@ -858,6 +932,381 @@ void BitmapSetup::propLayoutHeightChanged(int value)
 {
 	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].LayoutHeight != value)
 		changeLayoutHeight(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSizeFilter : public QUndoCommand
+{
+public:
+	ChangeSizeFilter(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].SizeFilter),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Size filter"));
+	}
+
+	virtual ~ChangeSizeFilter()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeFilter = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeFilter = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065504;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSizeFilter *c = static_cast<const ChangeSizeFilter *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeSizeFilter(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeSizeFilter(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSizeFilter *changeSizeFilter = new ChangeSizeFilter(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSizeFilter);
+}
+
+void BitmapSetup::propSizeFilterChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].SizeFilter != value)
+		changeSizeFilter(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSizeWrapX : public QUndoCommand
+{
+public:
+	ChangeSizeWrapX(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].SizeWrapX),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Size wrap x"));
+	}
+
+	virtual ~ChangeSizeWrapX()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWrapX = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWrapX = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065505;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSizeWrapX *c = static_cast<const ChangeSizeWrapX *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeSizeWrapX(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeSizeWrapX(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSizeWrapX *changeSizeWrapX = new ChangeSizeWrapX(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSizeWrapX);
+}
+
+void BitmapSetup::propSizeWrapXChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].SizeWrapX != value)
+		changeSizeWrapX(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSizeWrapY : public QUndoCommand
+{
+public:
+	ChangeSizeWrapY(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].SizeWrapY),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Size wrap y"));
+	}
+
+	virtual ~ChangeSizeWrapY()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWrapY = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWrapY = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065506;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSizeWrapY *c = static_cast<const ChangeSizeWrapY *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeSizeWrapY(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeSizeWrapY(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSizeWrapY *changeSizeWrapY = new ChangeSizeWrapY(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSizeWrapY);
+}
+
+void BitmapSetup::propSizeWrapYChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].SizeWrapY != value)
+		changeSizeWrapY(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSizeWidth : public QUndoCommand
+{
+public:
+	ChangeSizeWidth(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].SizeWidth),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Size width"));
+	}
+
+	virtual ~ChangeSizeWidth()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWidth = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeWidth = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065507;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSizeWidth *c = static_cast<const ChangeSizeWidth *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeSizeWidth(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeSizeWidth(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSizeWidth *changeSizeWidth = new ChangeSizeWidth(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSizeWidth);
+}
+
+void BitmapSetup::propSizeWidthChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].SizeWidth != value)
+		changeSizeWidth(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSizeHeight : public QUndoCommand
+{
+public:
+	ChangeSizeHeight(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].SizeHeight),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Size height"));
+	}
+
+	virtual ~ChangeSizeHeight()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeHeight = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].SizeHeight = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065508;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSizeHeight *c = static_cast<const ChangeSizeHeight *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeSizeHeight(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeSizeHeight(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSizeHeight *changeSizeHeight = new ChangeSizeHeight(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSizeHeight);
+}
+
+void BitmapSetup::propSizeHeightChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].SizeHeight != value)
+		changeSizeHeight(m_Selected, value);
 }
 
 ////////////////////////////////////////////////////////////////////////

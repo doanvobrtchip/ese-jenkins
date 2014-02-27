@@ -140,6 +140,11 @@ public:
 	void changeLayoutFormat(int bitmapHandle, int value);
 	void changeLayoutStride(int bitmapHandle, int value);
 	void changeLayoutHeight(int bitmapHandle, int value);
+	void changeSizeFilter(int bitmapHandle, int value);
+	void changeSizeWrapX(int bitmapHandle, int value);
+	void changeSizeWrapY(int bitmapHandle, int value);
+	void changeSizeWidth(int bitmapHandle, int value);
+	void changeSizeHeight(int bitmapHandle, int value);
 
 	// Lock to call when reading bitmap info from emulator thread
 	// void lockBitmaps();
@@ -154,6 +159,11 @@ private:
 	class ChangeLayoutFormat;
 	class ChangeLayoutStride;
 	class ChangeLayoutHeight;
+	class ChangeSizeFilter;
+	class ChangeSizeWrapX;
+	class ChangeSizeWrapY;
+	class ChangeSizeWidth;
+	class ChangeSizeHeight;
 
 	void rebuildGUIInternal();
 	void refreshGUIInternal(int bitmapHandle);
@@ -167,6 +177,11 @@ private slots:
 	void propLayoutFormatChanged(int value);
 	void propLayoutStrideChanged(int value);
 	void propLayoutHeightChanged(int value);
+	void propSizeFilterChanged(int value);
+	void propSizeWrapXChanged(int value);
+	void propSizeWrapYChanged(int value);
+	void propSizeWidthChanged(int value);
+	void propSizeHeightChanged(int value);
 
 private:
 	MainWindow *m_MainWindow;
@@ -186,6 +201,7 @@ private:
 	QSpinBox *m_PropLayoutHeight;
 
 	QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
+	QComboBox *m_PropSizeFilter;
 	QComboBox *m_PropSizeWrapX;
 	QComboBox *m_PropSizeWrapY;
 	QSpinBox *m_PropSizeWidth;
