@@ -136,7 +136,10 @@ public:
 	void deselect();
 
 	// Changes
-	void changeSourceContent(int bitmapHandle, ContentInfo *contentInfo);
+	void changeSourceContent(int bitmapHandle, ContentInfo *value);
+	void changeLayoutFormat(int bitmapHandle, int value);
+	void changeLayoutStride(int bitmapHandle, int value);
+	void changeLayoutHeight(int bitmapHandle, int value);
 
 	// Lock to call when reading bitmap info from emulator thread
 	// void lockBitmaps();
@@ -148,6 +151,9 @@ public:
 
 private:
 	class ChangeSourceContent;
+	class ChangeLayoutFormat;
+	class ChangeLayoutStride;
+	class ChangeLayoutHeight;
 
 	void rebuildGUIInternal();
 	void refreshGUIInternal(int bitmapHandle);
@@ -158,6 +164,9 @@ private slots:
 	void propertiesSetterChanged(QWidget *setter);
 
 	void propSourceContentChanged(int value);
+	void propLayoutFormatChanged(int value);
+	void propLayoutStrideChanged(int value);
+	void propLayoutHeightChanged(int value);
 
 private:
 	MainWindow *m_MainWindow;

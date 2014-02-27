@@ -84,6 +84,11 @@ struct ContentInfo
 
 	bool UploadDirty;
 	bool ExternalDirty;
+
+	bool CachedImage;
+	int CachedImageWidth;
+	int CachedImageHeight;
+	int CachedImageStride;
 };
 
 /**
@@ -114,6 +119,8 @@ public:
 	int getContentCount() const;
 	// Returns if content info is part of the manager currently
 	bool isValidContent(ContentInfo *info);
+	// Cache image build info (Only call if info is valid!)
+	bool cacheImageInfo(ContentInfo *info);
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();

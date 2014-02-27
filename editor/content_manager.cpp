@@ -68,6 +68,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	ImageFormat = 0;
 	UploadDirty = true;
 	ExternalDirty = false;
+	CachedImage = false;
 }
 
 QJsonObject ContentInfo::toJson(bool meta) const
@@ -633,6 +634,20 @@ bool ContentManager::isValidContent(ContentInfo *info)
 	return false;
 }
 
+bool ContentManager::cacheImageInfo(ContentInfo *info)
+{
+	if (info->CachedImage)
+		return true;
+	FT800EMU::BitmapInfo bitmapInfo;
+	if (!AssetConverter::getImageInfo(bitmapInfo, info->DestName))
+		return false;
+	info->CachedImageWidth = bitmapInfo.LayoutWidth;
+	info->CachedImageHeight = bitmapInfo.LayoutHeight;
+	info->CachedImageStride = bitmapInfo.LayoutStride;
+	info->CachedImage = true;
+	return true;
+}
+
 void ContentManager::clear()
 {
 	printf("ContentManager::clear()\n");
@@ -756,7 +771,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					QFileInfo binInfo(contentInfo->DestName + ".bin");
 					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
 					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
-					if (loadSuccess)
+					/*if (loadSuccess)
 					{
 						// stride etc
 						FT800EMU::BitmapInfo bitmapInfo;
@@ -786,6 +801,12 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 						{
 							propInfo += tr("<br><b>Error: </b>Unable to load raw header.");
 						}
+					}*/
+					if (cacheImageInfo(contentInfo))
+					{
+						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -881,6 +902,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				{
 					QFile::remove(metaFile); // *** FILE REMOVE ***
 				}
+				contentInfo->CachedImage = false;
 				contentInfo->ExternalDirty = true;
 				contentInfo->BuildError = "";
 				// Create directory if necessary

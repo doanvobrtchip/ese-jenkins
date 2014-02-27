@@ -228,6 +228,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 		m_Bitmaps[i] = new BitmapWidget(parent, i);
 		layout->addWidget(m_Bitmaps[i], i / 4, i % 4);
 		m_BitmapSource[i] = NULL;
+		memset(&m_BitmapInfo[i], 0, sizeof(FT800EMU::BitmapInfo));
 	}
 
 	layout->setRowStretch(32 / 4, 1);
@@ -274,21 +275,21 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropLayoutFormat->addItem("RGB565");
 	m_PropLayoutFormat->addItem("PALETTED");
 	addLabeledWidget(this, layoutLayout, tr("Format: "), m_PropLayoutFormat);
-	// connect(m_PropLayoutFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propLayoutFormatChanged(int)));
+	connect(m_PropLayoutFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propLayoutFormatChanged(int)));
 	m_PropLayoutStride = new QSpinBox(this);
 	m_PropLayoutStride->setMinimum(0);
 	m_PropLayoutStride->setMaximum(2048);
 	m_PropLayoutStride->setSingleStep(1);
 	// m_PropLayoutStride->setKeyboardTracking(false);
 	addLabeledWidget(this, layoutLayout, tr("Stride: "), m_PropLayoutStride);
-	// connect(m_PropLayoutStride, SIGNAL(valueChanged(int)), this, SLOT(propLayoutStrideChanged(int)));
+	connect(m_PropLayoutStride, SIGNAL(valueChanged(int)), this, SLOT(propLayoutStrideChanged(int)));
 	m_PropLayoutHeight = new QSpinBox(this);
 	m_PropLayoutHeight->setMinimum(0);
 	m_PropLayoutHeight->setMaximum(512);
 	m_PropLayoutHeight->setSingleStep(1);
 	// m_PropLayoutHeight->setKeyboardTracking(false);
 	addLabeledWidget(this, layoutLayout, tr("Height: "), m_PropLayoutHeight);
-	// connect(m_PropLayoutHeight, SIGNAL(valueChanged(int)), this, SLOT(propLayoutHeightChanged(int)));
+	connect(m_PropLayoutHeight, SIGNAL(valueChanged(int)), this, SLOT(propLayoutHeightChanged(int)));
 	// TODO: Reset button
 	m_PropLayout->setLayout(layoutLayout);
 
@@ -299,21 +300,16 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropSize->setLayout(sizeLayout);
 
 
-	/*
-	 *
-
-	QGroupBox *m_PropLayout; // BITMAP_LAYOUT(format, linestride, height)
+	/*QGroupBox *m_PropLayout; // BITMAP_LAYOUT(format, linestride, height)
 	QComboBox *m_PropLayoutFormat;
 	QSpinBox *m_PropLayoutStride;
-	QSpinBox *m_PropLayoutHeight;
+	QSpinBox *m_PropLayoutHeight;*/
 
-	QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
+	/*QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
 	QComboBox *m_PropSizeWrapX;
 	QComboBox *m_PropSizeWrapY;
 	QSpinBox *m_PropSizeWidth;
-	QSpinBox *m_PropSizeHeight;
-	 *
-	 * */
+	QSpinBox *m_PropSizeHeight;*/
 }
 
 BitmapSetup::~BitmapSetup()
@@ -437,6 +433,7 @@ void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
 	ContentManager *cm = m_MainWindow->contentManager();
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
 
+	// Source
 	bool sourceContentSet = false;
 	for (int i = 0; i < m_PropSourceContent->count(); ++i)
 	{
@@ -456,6 +453,11 @@ void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
 		m_RebuildingPropSourceContent = false;
 		m_PropSourceContent->setCurrentIndex(m_PropSourceContent->count() - 1);
 	}
+
+	// Layout
+	m_PropLayoutFormat->setCurrentIndex(m_BitmapInfo[m_Selected].LayoutFormat);
+	m_PropLayoutStride->setValue(m_BitmapInfo[m_Selected].LayoutStride);
+	m_PropLayoutHeight->setValue(m_BitmapInfo[m_Selected].LayoutHeight);
 
 	props->setInfo("<b>BITMAP_HANDLE</b>(" + QString::number(m_Selected) + ")");
 }
@@ -537,8 +539,20 @@ public:
 		m_BitmapSetup(bitmapSetup),
 		m_BitmapHandle(bitmapHandle),
 		m_OldValue(bitmapSetup->m_BitmapSource[bitmapHandle]),
-		m_NewValue(value)
+		m_NewValue(value),
+		m_OldInfo(bitmapSetup->m_BitmapInfo[bitmapHandle]),
+		m_NewInfo(bitmapSetup->m_BitmapInfo[bitmapHandle])
 	{
+		ContentManager *cm = bitmapSetup->m_MainWindow->contentManager();
+		if (cm->isValidContent(value) && value->Converter == ContentInfo::Image && cm->cacheImageInfo(value))
+		{
+			printf("Replace bitmap info with cached info from new content\n");
+			m_NewInfo.LayoutFormat = value->ImageFormat; //
+			m_NewInfo.LayoutStride = value->CachedImageStride; //
+			m_NewInfo.LayoutHeight = value->CachedImageHeight; //
+			m_NewInfo.SizeWidth = value->CachedImageWidth;
+			m_NewInfo.SizeHeight = value->CachedImageHeight;
+		}
 		setText(tr("Bitmap Handle: Source content"));
 	}
 
@@ -550,6 +564,8 @@ public:
 	virtual void undo()
 	{
 		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_OldValue;
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle] = m_OldInfo;
+		++m_BitmapSetup->m_ModificationNb;
 		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);
 		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
 	}
@@ -557,6 +573,8 @@ public:
 	virtual void redo()
 	{
 		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_NewValue;
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle] = m_NewInfo;
+		++m_BitmapSetup->m_ModificationNb;
 		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);
 		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
 	}
@@ -577,6 +595,7 @@ public:
 			return false;
 
 		m_NewValue = c->m_NewValue;
+		m_NewInfo = c->m_NewInfo;
 		return true;
 	}
 
@@ -585,6 +604,8 @@ private:
 	int m_BitmapHandle;
 	ContentInfo *m_OldValue;
 	ContentInfo *m_NewValue;
+	FT800EMU::BitmapInfo m_OldInfo;
+	FT800EMU::BitmapInfo m_NewInfo;
 };
 
 void BitmapSetup::changeSourceContent(int bitmapHandle, ContentInfo *value)
@@ -612,6 +633,231 @@ void BitmapSetup::propSourceContentChanged(int value)
 
 	if (m_Selected >= 0 && m_BitmapSource[m_Selected] != info)
 		changeSourceContent(m_Selected, info);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeLayoutFormat : public QUndoCommand
+{
+public:
+	ChangeLayoutFormat(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].LayoutFormat),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Layout format"));
+	}
+
+	virtual ~ChangeLayoutFormat()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutFormat = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutFormat = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065501;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeLayoutFormat *c = static_cast<const ChangeLayoutFormat *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeLayoutFormat(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeLayoutFormat(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeLayoutFormat *changeLayoutFormat = new ChangeLayoutFormat(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeLayoutFormat);
+}
+
+void BitmapSetup::propLayoutFormatChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].LayoutFormat != value)
+		changeLayoutFormat(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeLayoutStride : public QUndoCommand
+{
+public:
+	ChangeLayoutStride(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].LayoutStride),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Layout stride"));
+	}
+
+	virtual ~ChangeLayoutStride()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutStride = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutStride = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065501;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeLayoutStride *c = static_cast<const ChangeLayoutStride *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeLayoutStride(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeLayoutStride(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeLayoutStride *changeLayoutStride = new ChangeLayoutStride(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeLayoutStride);
+}
+
+void BitmapSetup::propLayoutStrideChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].LayoutStride != value)
+		changeLayoutStride(m_Selected, value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeLayoutHeight : public QUndoCommand
+{
+public:
+	ChangeLayoutHeight(BitmapSetup *bitmapSetup, int bitmapHandle, int value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapInfo[bitmapHandle].LayoutHeight),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Layout height"));
+	}
+
+	virtual ~ChangeLayoutHeight()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutHeight = m_OldValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle].LayoutHeight = m_NewValue;
+		++m_BitmapSetup->m_ModificationNb;
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065501;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeLayoutHeight *c = static_cast<const ChangeLayoutHeight *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void BitmapSetup::changeLayoutHeight(int bitmapHandle, int value)
+{
+	printf("BitmapSetup::changeLayoutHeight(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeLayoutHeight *changeLayoutHeight = new ChangeLayoutHeight(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeLayoutHeight);
+}
+
+void BitmapSetup::propLayoutHeightChanged(int value)
+{
+	if (m_Selected >= 0 && m_BitmapInfo[m_Selected].LayoutHeight != value)
+		changeLayoutHeight(m_Selected, value);
 }
 
 ////////////////////////////////////////////////////////////////////////
