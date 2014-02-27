@@ -263,6 +263,7 @@ void loop()
 			if (info && s_BitmapSetup->bitmapSourceExists(i))
 			{
 				swr32(BITMAP_HANDLE(i));
+				// printf("%i\n", i);
 				swr32(BITMAP_SOURCE(info->MemoryAddress));
 				// printf("%i, %i, %i\n", info->ImageFormat, info->CachedImageStride, info->CachedImageHeight);
 				if (info->Converter == ContentInfo::Image) // Always use cached data from content info for image layout
