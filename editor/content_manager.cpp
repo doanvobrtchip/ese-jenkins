@@ -45,6 +45,7 @@
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
 #include "asset_converter.h"
+#include "bitmap_setup.h"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawLength = 0;
 	ImageFormat = 0;
 	UploadDirty = true;
+	ExternalDirty = false;
 }
 
 QJsonObject ContentInfo::toJson(bool meta) const
@@ -472,6 +474,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	rebuildViewInternal(contentInfo);
 
 	// Reprocess to RAM
+	contentInfo->ExternalDirty = true;
 	reprocessInternal(contentInfo);
 
 	// Be helpful
@@ -486,6 +489,12 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
+
+	// Mark upload as dirty
+	contentInfo->UploadDirty = true;
+
+	// Reload external dependencies
+	reloadExternal(contentInfo);
 
 	// Be helpful
 	m_HelpfulLabel->setVisible(getContentCount() == 0);
@@ -603,6 +612,25 @@ void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
 int ContentManager::getContentCount() const
 {
 	return m_ContentList->topLevelItemCount();
+}
+
+bool ContentManager::isValidContent(ContentInfo *info)
+{
+	// Null is always invalid
+	if (info == NULL) return false;
+
+	// Iterate through the list and copy the pointer to the data
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		if (info == (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>())
+		{
+			// Found the content
+			return true;
+		}
+	}
+
+	// Does not exist here (may still exist in the undo stack)
+	return false;
 }
 
 void ContentManager::clear()
@@ -806,6 +834,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		if (!srcExists)
 		{
 			contentInfo->BuildError = "<i>(Filesystem)</i><br>Source file does not exist.";
+			contentInfo->ExternalDirty = true;
 		}
 		else
 		{
@@ -852,6 +881,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				{
 					QFile::remove(metaFile); // *** FILE REMOVE ***
 				}
+				contentInfo->ExternalDirty = true;
 				contentInfo->BuildError = "";
 				// Create directory if necessary
 				if (contentInfo->DestName.contains('/'))
@@ -896,12 +926,26 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		}
 		unlockContent();
 	}
+	else
+	{
+		// Always refresh external if converter deselected...
+		contentInfo->ExternalDirty = true;
+	}
 
 	// Reupload the content to emulator RAM if dirty
 	if (contentInfo->UploadDirty)
 	{
 		contentInfo->UploadDirty = false;
 		reuploadInternal(contentInfo);
+	}
+
+	// Reload external if dirty
+	if (contentInfo->ExternalDirty)
+	{
+		if (contentInfo->Converter != ContentInfo::Invalid)
+			contentInfo->ExternalDirty = false;
+
+		reloadExternal(contentInfo);
 	}
 
 	// Update GUI if it exists
@@ -911,7 +955,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 
 void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 {
-	printf("ContentManager::reuploadInternal()\n");
+	printf("ContentManager::reuploadInternal(contentInfo)\n");
 
 	// Reupload the content to emulator RAM
 	// This happens in the emulator main loop
@@ -925,9 +969,16 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	}
 }
 
+void ContentManager::reloadExternal(ContentInfo *contentInfo)
+{
+	printf("ContentManager::reloadExternal(contentInfo)\n");
+
+	m_MainWindow->bitmapSetup()->reloadContent(contentInfo);
+}
+
 void ContentManager::propertiesSetterChanged(QWidget *setter)
 {
-	printf("ContentManager::propertiesSetterChanged()\n");
+	printf("ContentManager::propertiesSetterChanged(setter)\n");
 
 	if (setter != this)
 	{
@@ -1310,6 +1361,7 @@ public:
 	{
 		m_ContentInfo->MemoryLoaded = m_OldValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -1318,6 +1370,7 @@ public:
 	{
 		m_ContentInfo->MemoryLoaded = m_NewValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}

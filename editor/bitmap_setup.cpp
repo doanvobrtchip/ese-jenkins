@@ -26,6 +26,7 @@
 #include <QGroupBox>
 #include <QSpinBox>
 #include <QComboBox>
+#include <QUndoCommand>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -132,8 +133,23 @@ void BitmapWidget::deselect()
 
 void BitmapWidget::setImage(const QString &name)
 {
+	printf("BitmapWidget::setImage(name)\n");
+
+	// if (m_ImageName == name) return; // Also used for refreshing...
+
 	m_ImageName = name;
 	reloadInternal();
+}
+
+void BitmapWidget::unsetImage()
+{
+	printf("BitmapWidget::unsetImage(name)\n");
+
+	m_ImageName = "";
+	m_Pixmap = QPixmap();
+	m_Label->setPixmap(m_Pixmap);
+	m_Label->repaint();
+	m_PixmapOkay = false;
 }
 
 void BitmapWidget::reloadInternal()
@@ -158,17 +174,20 @@ void BitmapWidget::threadFinished()
 	// printf("BitmapWidget::threadFinished()\n");
 
 	m_ThreadRunning = false;
-	if (m_ReloadSuccess)
+	if (!m_ImageName.isEmpty()) // may be empty after unset while thread running
 	{
-		m_Pixmap.convertFromImage(m_ReloadImage);
+		if (m_ReloadSuccess)
+		{
+			m_Pixmap.convertFromImage(m_ReloadImage);
+		}
+		else
+		{
+			m_Pixmap = QPixmap();
+		}
+		m_Label->setPixmap(m_Pixmap);
+		m_Label->repaint();
+		m_PixmapOkay = m_ReloadSuccess;
 	}
-	else
-	{
-		m_Pixmap = QPixmap();
-	}
-	m_Label->setPixmap(m_Pixmap);
-	m_Label->repaint();
-	m_PixmapOkay = m_ReloadSuccess;
 	if (m_ReloadRequested)
 	{
 		m_ThreadRunning = true;
@@ -200,7 +219,7 @@ void BitmapWidgetThread::run()
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget);
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget0, QWidget *widget1);
 
-BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_Selected(-1), m_ModificationNb(0)
+BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_Selected(-1), m_ModificationNb(0), m_RebuildingPropSourceContent(false)
 {
 	QGridLayout *layout = new QGridLayout();
 
@@ -231,7 +250,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropSource->setTitle(tr("Source"));
 	m_PropSourceContent = new QComboBox(this);
 	sourceLayout->addWidget(m_PropSourceContent);
-	// connect(m_PropContent, SIGNAL(currentIndexChanged(int)), this, SLOT(propSourceContentChanged(int)));
+	connect(m_PropSourceContent, SIGNAL(currentIndexChanged(int)), this, SLOT(propSourceContentChanged(int)));
 	/*m_PropAddress = new QSpinBox(this);
 	m_PropAddress->setMinimum(0);
 	m_PropAddress->setMaximum(RAM_DL - 4);
@@ -324,11 +343,12 @@ void BitmapSetup::select(int i)
 
 bool isValidContent(ContentInfo *info)
 {
-	return info->MemoryLoaded;
+	return (info->MemoryLoaded) && (info->Converter == ContentInfo::Image || info->Converter == ContentInfo::Raw || info->Converter == ContentInfo::RawJpeg);
 }
 
 void BitmapSetup::rebuildGUIInternal()
 {
+	printf("BitmapSetup::rebuildGUIInternal()\n");
 	// NOTE: Changes to ContentManager::contentInfos require rebuildGUIInternal() call
 
 	// Construct properties GUI
@@ -367,26 +387,75 @@ void BitmapSetup::rebuildGUIInternal()
 		props->setEditWidgets(widgets, false, this);
 
 		// Add contents to the combobox
+		m_RebuildingPropSourceContent = true;
 		m_PropSourceContent->clear();
-		m_PropSourceContent->addItem("");
+		m_PropSourceContent->addItem("", qVariantFromValue((void *)(NULL)));
 		for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
 		{
-			if (isValidContent(*it))
+			ContentInfo *info = *it;
+			if (isValidContent(info))
 			{
-				m_PropSourceContent->addItem((*it)->DestName);
+				m_PropSourceContent->addItem((*it)->DestName, qVariantFromValue((void *)info));
+				// ref (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+				// ref view->setData(0, Qt::UserRole, qVariantFromValue((void *)contentInfo));
 			}
 		}
+		m_RebuildingPropSourceContent = false;
 
 		// Refresh GUI contents
 		refreshGUIInternal();
 	}
 }
 
-void BitmapSetup::refreshGUIInternal()
+void BitmapSetup::refreshViewInternal(int bitmapHandle)
 {
-	// NOTE: Local changes (from undo stack) to BitmapSetup require refreshGUIInternal() if to current index
+	printf("BitmapSetup::refreshViewInternal(bitmapHandle)\n");
 
+	// Update the preview icon
+	ContentManager *cm = m_MainWindow->contentManager();
+	if (cm->isValidContent(m_BitmapSource[bitmapHandle]) && isValidContent(m_BitmapSource[bitmapHandle]))
+	{
+		m_Bitmaps[bitmapHandle]->setImage(m_BitmapSource[bitmapHandle]->DestName);
+	}
+	else
+	{
+		m_Bitmaps[bitmapHandle]->unsetImage();
+	}
+}
+
+void BitmapSetup::refreshGUIInternal(int bitmapHandle)
+{
+	// NOTE: Local changes (from undo stack) to BitmapSetup require refreshGUIInternal(bitmapHandle) if current
+	if (bitmapHandle == m_Selected)
+		refreshGUIInternal();
+}
+
+void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
+{
+	printf("BitmapSetup::refreshGUIInternal()\n");
+
+	ContentManager *cm = m_MainWindow->contentManager();
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
+
+	bool sourceContentSet = false;
+	for (int i = 0; i < m_PropSourceContent->count(); ++i)
+	{
+		ContentInfo *info = (ContentInfo *)m_PropSourceContent->itemData(i, Qt::UserRole).value<void *>();
+		if (info == m_BitmapSource[m_Selected])
+		{
+			m_PropSourceContent->setCurrentIndex(i);
+			sourceContentSet = true;
+			break;
+		}
+	}
+	if (!sourceContentSet)
+	{
+		// Content no longer exists
+		m_RebuildingPropSourceContent = true;
+		m_PropSourceContent->addItem(QString::number((intptr_t)m_BitmapSource[m_Selected]), qVariantFromValue((void *)m_BitmapSource[m_Selected]));
+		m_RebuildingPropSourceContent = false;
+		m_PropSourceContent->setCurrentIndex(m_PropSourceContent->count() - 1);
+	}
 
 	props->setInfo("<b>BITMAP_HANDLE</b>(" + QString::number(m_Selected) + ")");
 }
@@ -432,7 +501,7 @@ void BitmapSetup::resizeEvent(QResizeEvent *event)
 	}
 }
 
-void BitmapSetup::lockBitmaps()
+/*void BitmapSetup::lockBitmaps()
 {
 	m_Mutex.lock();
 }
@@ -440,7 +509,112 @@ void BitmapSetup::lockBitmaps()
 void BitmapSetup::unlockBitmaps()
 {
 	m_Mutex.unlock();
+}*/
+
+void BitmapSetup::reloadContent(ContentInfo *info)
+{
+	// If currently selected GUI dependent, rebuild it completely
+	if (m_Selected >= 0 && m_BitmapSource[m_Selected] == info)
+		rebuildGUIInternal();
+
+	// Refresh all of the thumbnails (even if not necessary... simplifies the code)
+	for (int i = 0; i < 32; ++i)
+	{
+		if (m_BitmapSource[i] == info)
+			refreshViewInternal(i);
+	}
 }
+
+////////////////////////////////////////////////////////////////////////
+// Undo/Redo
+////////////////////////////////////////////////////////////////////////
+
+class BitmapSetup::ChangeSourceContent : public QUndoCommand
+{
+public:
+	ChangeSourceContent(BitmapSetup *bitmapSetup, int bitmapHandle, ContentInfo *value) :
+		QUndoCommand(),
+		m_BitmapSetup(bitmapSetup),
+		m_BitmapHandle(bitmapHandle),
+		m_OldValue(bitmapSetup->m_BitmapSource[bitmapHandle]),
+		m_NewValue(value)
+	{
+		setText(tr("Bitmap Handle: Source content"));
+	}
+
+	virtual ~ChangeSourceContent()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_OldValue;
+		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual void redo()
+	{
+		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_NewValue;
+		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);
+		m_BitmapSetup->refreshGUIInternal(m_BitmapHandle);
+	}
+
+	virtual int id() const
+	{
+		return 9065500;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeSourceContent *c = static_cast<const ChangeSourceContent *>(command);
+
+		if (c->m_BitmapHandle != m_BitmapHandle)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	BitmapSetup *m_BitmapSetup;
+	int m_BitmapHandle;
+	ContentInfo *m_OldValue;
+	ContentInfo *m_NewValue;
+};
+
+void BitmapSetup::changeSourceContent(int bitmapHandle, ContentInfo *value)
+{
+	printf("BitmapSetup::changeSourceContent(bitmapHandle, value)\n");
+
+	// Create undo/redo
+	ChangeSourceContent *changeSourceContent = new ChangeSourceContent(this, bitmapHandle, value);
+	m_MainWindow->undoStack()->push(changeSourceContent);
+}
+
+void BitmapSetup::propSourceContentChanged(int value)
+{
+	printf("BitmapSetup::propSourceContentChanged(value)\n");
+
+	if (m_RebuildingPropSourceContent)
+	{
+		printf("Rebuilding combo box, ignore\n");
+		return;
+	}
+
+	ContentInfo *info = (ContentInfo *)m_PropSourceContent->itemData(value, Qt::UserRole).value<void *>();
+
+	// printf("info: %p, selected: %i, selected info: %p\n", info, m_Selected, m_BitmapSource[m_Selected]);
+
+	if (m_Selected >= 0 && m_BitmapSource[m_Selected] != info)
+		changeSourceContent(m_Selected, info);
+}
+
+////////////////////////////////////////////////////////////////////////
 
 } /* namespace FT800EMUQT */
 

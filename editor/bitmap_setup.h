@@ -63,6 +63,7 @@ public:
 	void deselect();
 
 	void setImage(const QString &name);
+	void unsetImage();
 
 private:
 	void reloadInternal();
@@ -134,17 +135,29 @@ public:
 	void select(int i);
 	void deselect();
 
-	void lockBitmaps();
-	void unlockBitmaps();
+	// Changes
+	void changeSourceContent(int bitmapHandle, ContentInfo *contentInfo);
+
+	// Lock to call when reading bitmap info from emulator thread
+	// void lockBitmaps();
+	// void unlockBitmaps();
 
 	inline int getModificationNb() const { return m_ModificationNb; }
 
+	void reloadContent(ContentInfo *contentInfo);
+
 private:
+	class ChangeSourceContent;
+
 	void rebuildGUIInternal();
+	void refreshGUIInternal(int bitmapHandle);
 	void refreshGUIInternal();
+	void refreshViewInternal(int bitmapHandle);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
+
+	void propSourceContentChanged(int value);
 
 private:
 	MainWindow *m_MainWindow;
@@ -153,6 +166,7 @@ private:
 	ContentInfo *m_BitmapSource[32]; // NOTE: Must check with ContentManager if pointer is still valid!
 	int m_Selected;
 	int m_ModificationNb;
+	bool m_RebuildingPropSourceContent;
 
 	QGroupBox *m_PropSource;
 	QComboBox *m_PropSourceContent;

@@ -83,6 +83,7 @@ struct ContentInfo
 	bool equalsMeta(const ContentInfo *other) const;
 
 	bool UploadDirty;
+	bool ExternalDirty;
 };
 
 /**
@@ -111,6 +112,8 @@ public:
 	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
 	// Get the number of content
 	int getContentCount() const;
+	// Returns if content info is part of the manager currently
+	bool isValidContent(ContentInfo *info);
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
@@ -155,6 +158,8 @@ private:
 	void reuploadInternal(ContentInfo *contentInfo);
 	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
+
+	void reloadExternal(ContentInfo *contentInfo);
 
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_ContentList;
