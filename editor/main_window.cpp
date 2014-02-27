@@ -163,6 +163,7 @@ void setup()
 // Content manager
 static ContentManager *s_ContentManager = NULL;
 static BitmapSetup *s_BitmapSetup = NULL;
+static int s_BitmapSetupModNb = 0;
 
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
@@ -248,6 +249,39 @@ void loop()
 			FT800EMU::Memory.poke();
 		}
 	}
+	bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
+	if (reuploadBitmapSetup)
+	{
+		printf("Reupload bitmap setup to RAM_DL\n");
+		wr32(REG_PCLK, 0);
+		swrbegin(RAM_DL);
+		const FT800EMU::BitmapInfo *bitmapInfo = s_BitmapSetup->getBitmapInfos();
+		const ContentInfo *const *bitmapSources = s_BitmapSetup->getBitmapSources();
+		for (int i = 0; i < 32; ++i)
+		{
+			const ContentInfo *info = bitmapSources[i];
+			if (info && s_BitmapSetup->bitmapSourceExists(i))
+			{
+				swr32(BITMAP_HANDLE(i));
+				swr32(BITMAP_SOURCE(info->MemoryAddress));
+				// printf("%i, %i, %i\n", info->ImageFormat, info->CachedImageStride, info->CachedImageHeight);
+				if (info->Converter == ContentInfo::Image) // Always use cached data from content info for image layout
+					swr32(BITMAP_LAYOUT(info->ImageFormat, info->CachedImageStride, info->CachedImageHeight));
+				else
+					swr32(BITMAP_LAYOUT(bitmapInfo[i].LayoutFormat, bitmapInfo[i].LayoutStride, bitmapInfo[i].LayoutHeight));
+				swr32(BITMAP_SIZE(bitmapInfo[i].SizeFilter, bitmapInfo[i].SizeWrapX, bitmapInfo[i].SizeWrapY, bitmapInfo[i].SizeWidth, bitmapInfo[i].SizeHeight));
+			}
+		}
+		swrend();
+		wr32(REG_DLSWAP, DLSWAP_FRAME);
+		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
+		{
+			printf("Waiting for bitmap setup DL swap\n");
+			if (!s_EmulatorRunning) return;
+		}
+		wr32(REG_PCLK, 5);
+		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
+	}
 	s_ContentManager->unlockContent();
 
 	// switch to next resolution
@@ -273,7 +307,7 @@ void loop()
 	s_CmdEditor->lockDisplayList();
 	bool dlModified = s_DlEditor->isDisplayListModified();
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified)
+	if (dlModified || cmdModified || reuploadBitmapSetup)
 	{
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");

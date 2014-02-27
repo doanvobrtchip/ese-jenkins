@@ -229,6 +229,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 		layout->addWidget(m_Bitmaps[i], i / 4, i % 4);
 		m_BitmapSource[i] = NULL;
 		memset(&m_BitmapInfo[i], 0, sizeof(FT800EMU::BitmapInfo));
+		m_BitmapSourceExists[i] = false;
 	}
 
 	layout->setRowStretch(32 / 4, 1);
@@ -426,7 +427,7 @@ void BitmapSetup::refreshViewInternal(int bitmapHandle)
 
 	// Update the preview icon
 	ContentManager *cm = m_MainWindow->contentManager();
-	if (cm->isValidContent(m_BitmapSource[bitmapHandle]) && isValidContent(m_BitmapSource[bitmapHandle]))
+	if (m_BitmapSourceExists[bitmapHandle] && isValidContent(m_BitmapSource[bitmapHandle]))
 	{
 		m_Bitmaps[bitmapHandle]->setImage(m_BitmapSource[bitmapHandle]->DestName);
 	}
@@ -593,9 +594,14 @@ void BitmapSetup::reloadContent(ContentInfo *info)
 	if (m_Selected >= 0 && m_BitmapSource[m_Selected] == info)
 		rebuildGUIInternal();
 
-	// Refresh all of the thumbnails (even if not necessary... simplifies the code)
+	bool exists = m_MainWindow->contentManager()->isValidContent(info);
+
 	for (int i = 0; i < 32; ++i)
 	{
+		// Update valid state
+		m_BitmapSourceExists[i] = exists;
+
+		// Refresh all of the thumbnails (even if not necessary... simplifies the code)
 		if (m_BitmapSource[i] == info)
 			refreshViewInternal(i);
 	}
@@ -618,7 +624,11 @@ public:
 		m_NewInfo(bitmapSetup->m_BitmapInfo[bitmapHandle])
 	{
 		ContentManager *cm = bitmapSetup->m_MainWindow->contentManager();
-		if (cm->isValidContent(value) && value->Converter == ContentInfo::Image && cm->cacheImageInfo(value))
+		if (!value)
+		{
+			memset(&m_NewInfo, 0, sizeof(FT800EMU::BitmapInfo));
+		}
+		else if (cm->isValidContent(value) && value->Converter == ContentInfo::Image && cm->cacheImageInfo(value))
 		{
 			printf("Replace bitmap info with cached info from new content\n");
 			m_NewInfo.LayoutFormat = value->ImageFormat; //
@@ -637,7 +647,10 @@ public:
 
 	virtual void undo()
 	{
+		ContentManager *cm = m_BitmapSetup->m_MainWindow->contentManager();
+		m_BitmapSetup->m_BitmapSourceExists[m_BitmapHandle] = false;
 		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_OldValue;
+		m_BitmapSetup->m_BitmapSourceExists[m_BitmapHandle] = cm->isValidContent(m_OldValue);
 		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle] = m_OldInfo;
 		++m_BitmapSetup->m_ModificationNb;
 		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);
@@ -646,7 +659,10 @@ public:
 
 	virtual void redo()
 	{
+		ContentManager *cm = m_BitmapSetup->m_MainWindow->contentManager();
+		m_BitmapSetup->m_BitmapSourceExists[m_BitmapHandle] = false;
 		m_BitmapSetup->m_BitmapSource[m_BitmapHandle] = m_NewValue;
+		m_BitmapSetup->m_BitmapSourceExists[m_BitmapHandle] = cm->isValidContent(m_NewValue);
 		m_BitmapSetup->m_BitmapInfo[m_BitmapHandle] = m_NewInfo;
 		++m_BitmapSetup->m_ModificationNb;
 		m_BitmapSetup->refreshViewInternal(m_BitmapHandle);

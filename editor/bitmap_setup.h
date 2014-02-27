@@ -151,6 +151,9 @@ public:
 	// void unlockBitmaps();
 
 	inline int getModificationNb() const { return m_ModificationNb; }
+	inline const FT800EMU::BitmapInfo *getBitmapInfos() const { return m_BitmapInfo; }
+	inline const ContentInfo *const *getBitmapSources() const { return m_BitmapSource; }
+	inline bool bitmapSourceExists(int bitmapHandle) const { return m_BitmapSourceExists[bitmapHandle]; }
 
 	void reloadContent(ContentInfo *contentInfo);
 
@@ -188,6 +191,7 @@ private:
 	BitmapWidget *m_Bitmaps[32];
 	FT800EMU::BitmapInfo m_BitmapInfo[32];
 	ContentInfo *m_BitmapSource[32]; // NOTE: Must check with ContentManager if pointer is still valid!
+	volatile bool m_BitmapSourceExists[32]; // Caches above mentioned check.
 	int m_Selected;
 	int m_ModificationNb;
 	bool m_RebuildingPropSourceContent;

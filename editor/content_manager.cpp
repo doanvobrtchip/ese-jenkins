@@ -984,6 +984,9 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	// Emulator main loop will lock the content mutex
 	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
 	{
+		// Bitmap setup is always updated after upload and requires cached image info
+		cacheImageInfo(contentInfo);
+
 		lockContent();
 		if (m_ContentUploadDirty.find(contentInfo) == m_ContentUploadDirty.end())
 			m_ContentUploadDirty.insert(contentInfo);
