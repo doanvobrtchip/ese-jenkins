@@ -206,6 +206,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QVBoxLayout *layout = new QVBoxLayout();
 
 	m_ContentList = new QTreeWidget(this);
+	m_ContentList->setDragEnabled(true);
 	m_ContentList->header()->close();
 	layout->addWidget(m_ContentList);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));

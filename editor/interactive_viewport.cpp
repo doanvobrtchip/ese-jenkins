@@ -35,6 +35,8 @@
 #include "toolbox.h"
 #include "inspector.h"
 #include "bitmap_setup.h"
+#include "content_manager.h"
+#include "properties_editor.h"
 
 namespace FT800EMUQT {
 
@@ -1155,12 +1157,24 @@ void InteractiveViewport::leaveEvent(QEvent *e)
 	EmulatorViewport::leaveEvent(e);
 }
 
+bool InteractiveViewport::acceptableSource(QDropEvent *e)
+{
+	if (e->source() == m_MainWindow->toolbox()->treeWidget()) return true;
+	if (e->source() == m_MainWindow->bitmapSetup()) return true;
+	if (e->source() == m_MainWindow->contentManager()->contentList())
+	{
+		if (!m_MainWindow->contentManager()->current()->MemoryLoaded) return false;
+		if (m_MainWindow->contentManager()->current()->Converter != ContentInfo::Image) return false;
+		return true;
+	}
+	return false;
+}
+
 void InteractiveViewport::dropEvent(QDropEvent *e)
 {
 	// Should probably lock the display list at this point ... ?
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget()
-		|| e->source() == m_MainWindow->bitmapSetup())
+	if (acceptableSource(e))
 	{
 		if (m_LineEditor)
 		{
@@ -1169,17 +1183,27 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			uint32_t selectionType;
 			uint32_t selection;
 			uint32_t bitmapHandle;
+			ContentInfo *contentInfo;
 			if (e->source() == m_MainWindow->toolbox()->treeWidget())
 			{
 				selectionType = m_MainWindow->toolbox()->getSelectionType();
 				selection = m_MainWindow->toolbox()->getSelectionId();
 				bitmapHandle = 0;
+				contentInfo = NULL;
 			}
 			else if (e->source() == m_MainWindow->bitmapSetup())
 			{
 				selectionType = 1; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = m_MainWindow->bitmapSetup()->selected();
+				contentInfo = NULL;
+			}
+			else if (e->source() == m_MainWindow->contentManager()->contentList())
+			{
+				selectionType = 1; // PRIMITIVE
+				selection = BITMAPS;
+				bitmapHandle = 0;
+				contentInfo = m_MainWindow->contentManager()->current();
 			}
 			else
 			{
@@ -1392,7 +1416,48 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				}
 				else if (selectionType == 1) // Primitive
 				{
+					bool mustCreateHandle = true;
+					if (contentInfo)
+					{
+						printf("Find or create handle for image content\n");
+						const ContentInfo *const *bitmapSources = m_MainWindow->bitmapSetup()->getBitmapSources();
+						for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+						{
+							if (bitmapSources[i] == contentInfo)
+							{
+								bitmapHandle = i;
+								mustCreateHandle = false;
+								break;
+							}
+						}
+						if (mustCreateHandle)
+						{
+							mustCreateHandle = false;
+							for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+							{
+								if (bitmapSources[i] == NULL)
+								{
+									bitmapHandle = i;
+									mustCreateHandle = true;
+									break;
+								}
+							}
+							if (!mustCreateHandle)
+							{
+								printf("No free handle available\n");
+								PropertiesEditor *props = m_MainWindow->propertiesEditor();
+								props->setInfo(tr("<b>Error<b>: No free bitmap handle available"));
+								props->setEditWidget(NULL, false, NULL);
+								return;
+							}
+						}
+					}
 					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop primitive");
+					if (contentInfo && mustCreateHandle)
+					{
+						printf("Create handle for image content\n");
+						m_MainWindow->bitmapSetup()->changeSourceContent(bitmapHandle, contentInfo);
+					}
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1567,8 +1632,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 {
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget()
-		|| e->source() == m_MainWindow->bitmapSetup())
+	if (acceptableSource(e))
 	{
 		if (m_LineEditor)
 		{
@@ -1591,8 +1655,7 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
 {
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget()
-		|| e->source() == m_MainWindow->bitmapSetup())
+	if (acceptableSource(e))
 	{
 		if (m_LineEditor)
 		{

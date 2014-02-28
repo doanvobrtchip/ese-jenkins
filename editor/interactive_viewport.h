@@ -57,6 +57,7 @@ public:
 
 private:
 	void updatePointerMethod();
+	bool acceptableSource(QDropEvent *e);
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);

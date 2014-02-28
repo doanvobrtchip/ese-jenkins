@@ -41,6 +41,8 @@ class QGroupBox;
 class QComboBox;
 class QSpinBox;
 
+#define BITMAP_SETUP_HANDLES_NB 16
+
 namespace FT800EMUQT {
 
 class MainWindow;
