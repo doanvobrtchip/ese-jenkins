@@ -1452,12 +1452,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 						}
 					}
-					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop primitive");
+					m_MainWindow->undoStack()->beginMacro(tr("Drag and drop primitive"));
 					if (contentInfo && mustCreateHandle)
 					{
 						printf("Create handle for image content\n");
 						m_MainWindow->bitmapSetup()->changeSourceContent(bitmapHandle, contentInfo);
 					}
+					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop primitive");
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1478,6 +1479,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->insertLine(line, pa);
 					m_LineEditor->selectLine(line - 1);
 					m_LineEditor->codeEditor()->endUndoCombine();
+					m_MainWindow->undoStack()->endMacro();
 					switch (selection)
 					{
 						case BITMAPS:
