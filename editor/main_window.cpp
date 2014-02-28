@@ -282,7 +282,7 @@ void loop()
 		swrbegin(RAM_DL);
 		const FT800EMU::BitmapInfo *bitmapInfo = s_BitmapSetup->getBitmapInfos();
 		const ContentInfo *const *bitmapSources = s_BitmapSetup->getBitmapSources();
-		for (int i = 0; i < 32; ++i)
+		for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 		{
 			const ContentInfo *info = bitmapSources[i];
 			if (info && s_BitmapSetup->bitmapSourceExists(i))

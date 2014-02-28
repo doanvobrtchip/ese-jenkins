@@ -203,10 +203,10 @@ private slots:
 
 private:
 	MainWindow *m_MainWindow;
-	BitmapWidget *m_Bitmaps[32];
-	FT800EMU::BitmapInfo m_BitmapInfo[32];
-	ContentInfo *m_BitmapSource[32]; // NOTE: Must check with ContentManager if pointer is still valid!
-	volatile bool m_BitmapSourceExists[32]; // Caches above mentioned check.
+	BitmapWidget *m_Bitmaps[BITMAP_SETUP_HANDLES_NB];
+	FT800EMU::BitmapInfo m_BitmapInfo[BITMAP_SETUP_HANDLES_NB];
+	ContentInfo *m_BitmapSource[BITMAP_SETUP_HANDLES_NB]; // NOTE: Must check with ContentManager if pointer is still valid!
+	volatile bool m_BitmapSourceExists[BITMAP_SETUP_HANDLES_NB]; // Caches above mentioned check.
 	int m_Selected;
 	int m_ModificationNb;
 	bool m_RebuildingPropSourceContent;

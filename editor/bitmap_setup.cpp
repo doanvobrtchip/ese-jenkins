@@ -258,7 +258,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 {
 	QGridLayout *layout = new QGridLayout();
 
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
 		m_Bitmaps[i] = new BitmapWidget(parent, i);
 		layout->addWidget(m_Bitmaps[i], i / 4, i % 4);
@@ -267,7 +267,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 		m_BitmapSourceExists[i] = false;
 	}
 
-	layout->setRowStretch(32 / 4, 1);
+	layout->setRowStretch(BITMAP_SETUP_HANDLES_NB / 4, 1);
 
 	setLayout(layout);
 
@@ -372,7 +372,7 @@ BitmapSetup::~BitmapSetup()
 
 void BitmapSetup::clear()
 {
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
 		m_BitmapSourceExists[i] = false;
 		m_BitmapSource[i] = NULL;
@@ -385,7 +385,7 @@ void BitmapSetup::clear()
 QJsonArray BitmapSetup::toJson() const
 {
 	QJsonArray bitmaps;
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
 		QJsonObject j;
 
@@ -417,7 +417,7 @@ QJsonArray BitmapSetup::toJson() const
 
 void BitmapSetup::fromJson(QJsonArray &bitmaps)
 {
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
 		QJsonObject j = bitmaps[i].toObject();
 
@@ -668,7 +668,7 @@ void BitmapSetup::deselect()
 
 	if (m_Selected == -1) return;
 
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 		m_Bitmaps[i]->deselect();
 
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
@@ -697,7 +697,7 @@ void BitmapSetup::resizeEvent(QResizeEvent *event)
 
 	int width = m_Bitmaps[0]->width();
 
-	for (int i = 0; i < 32 / 4; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB / 4; ++i)
 	{
 		((QGridLayout *)layout())->setRowMinimumHeight(i, width);
 	}
@@ -721,7 +721,7 @@ void BitmapSetup::reloadContent(ContentInfo *info)
 
 	bool exists = m_MainWindow->contentManager()->isValidContent(info);
 
-	for (int i = 0; i < 32; ++i)
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
 		// Update valid state
 		m_BitmapSourceExists[i] = exists;
