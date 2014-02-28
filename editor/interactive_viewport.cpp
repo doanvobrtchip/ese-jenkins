@@ -34,6 +34,7 @@
 #include "code_editor.h"
 #include "toolbox.h"
 #include "inspector.h"
+#include "bitmap_setup.h"
 
 namespace FT800EMUQT {
 
@@ -1158,14 +1159,33 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 {
 	// Should probably lock the display list at this point ... ?
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget())
+	if (e->source() == m_MainWindow->toolbox()->treeWidget()
+		|| e->source() == m_MainWindow->bitmapSetup())
 	{
 		if (m_LineEditor)
 		{
 			e->accept();
 
-			uint32_t selectionType = m_MainWindow->toolbox()->getSelectionType();
-			uint32_t selection = m_MainWindow->toolbox()->getSelectionId();
+			uint32_t selectionType;
+			uint32_t selection;
+			uint32_t bitmapHandle;
+			if (e->source() == m_MainWindow->toolbox()->treeWidget())
+			{
+				selectionType = m_MainWindow->toolbox()->getSelectionType();
+				selection = m_MainWindow->toolbox()->getSelectionId();
+				bitmapHandle = 0;
+			}
+			else if (e->source() == m_MainWindow->bitmapSetup())
+			{
+				selectionType = 1; // PRIMITIVE
+				selection = BITMAPS;
+				bitmapHandle = m_MainWindow->bitmapSetup()->selected();
+			}
+			else
+			{
+				printf("Unknown error. This code is unreachable\n");
+				return;
+			}
 			if (selectionType == 1 || selectionType == 2)
 			{
 				int line = m_LineNumber;
@@ -1384,7 +1404,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdRight = 0;
 					pa.Parameter[0].I = e->pos().x();
 					pa.Parameter[1].I = e->pos().y();
-					pa.Parameter[2].I = 0;
+					pa.Parameter[2].I = bitmapHandle;
 					pa.Parameter[3].I = 0;
 					m_LineEditor->insertLine(line, pa);
 					++line;
@@ -1393,7 +1413,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->insertLine(line, pa);
 					m_LineEditor->selectLine(line - 1);
 					m_LineEditor->codeEditor()->endUndoCombine();
-					m_Insert->setChecked(true);
+					switch (selection)
+					{
+						case BITMAPS:
+						case POINTS:
+							break;
+						default:
+							// Used for linestrip style drawing
+							m_Insert->setChecked(true);
+							break;
+					}
 				}
 			}
 			else if (selectionType == 3 || selectionType == 4)
@@ -1538,7 +1567,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 {
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget())
+	if (e->source() == m_MainWindow->toolbox()->treeWidget()
+		|| e->source() == m_MainWindow->bitmapSetup())
 	{
 		if (m_LineEditor)
 		{
@@ -1553,11 +1583,16 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 			printf("Warning: No line editor\n");
 		}
 	}
+	else
+	{
+		printf("Unknown dragMoveEvent from %p\n", e->source());
+	}
 }
 void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
 {
 	// TODO: Bitmaps from files, etc
-	if (e->source() == m_MainWindow->toolbox()->treeWidget())
+	if (e->source() == m_MainWindow->toolbox()->treeWidget()
+		|| e->source() == m_MainWindow->bitmapSetup())
 	{
 		if (m_LineEditor)
 		{
@@ -1567,6 +1602,10 @@ void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
 		{
 			printf("Warning: No line editor\n");
 		}
+	}
+	else
+	{
+		printf("Unknown dragEnterEvent from %p\n", e->source());
 	}
 }
 

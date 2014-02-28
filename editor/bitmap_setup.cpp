@@ -29,6 +29,8 @@
 #include <QUndoCommand>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QDrag>
+#include <QMimeData>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -47,16 +49,21 @@ namespace FT800EMUQT {
 // BitmapWidget
 ////////////////////////////////////////////////////////////////////////
 
-BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_MainWindow(parent), m_Index(index), m_PixmapOkay(false), m_ThreadRunning(false), m_ReloadRequested(false)
+BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_MainWindow(parent), m_Index(index), m_PixmapOkay(false), m_MouseDown(false), m_ThreadRunning(false), m_ReloadRequested(false)
 {
+	setMouseTracking(true);
+	// setAcceptDrops(true); // TODO: Handle swapping!
+
 	QVBoxLayout *l = new QVBoxLayout();
 	m_Label = new QLabel(this);
+	m_Label->setAttribute(Qt::WA_TransparentForMouseEvents);
 	l->addWidget(m_Label);
 	setLayout(l);
 
 	QVBoxLayout *layout = new QVBoxLayout();
 	QLabel *label = new QLabel(this);
 	label->setText(QString("<i>") + QString::number(index) + "<i> ");
+	label->setAttribute(Qt::WA_TransparentForMouseEvents);
 	layout->addWidget(label);
 	label->setWordWrap(true);
 	label->setAlignment(Qt::AlignRight | Qt::AlignBottom);
@@ -103,7 +110,33 @@ BitmapWidget::~BitmapWidget()
 void BitmapWidget::mousePressEvent(QMouseEvent *event)
 {
 	m_MainWindow->bitmapSetup()->select(m_Index);
+	m_MouseDown = (event->button() == Qt::LeftButton);
 }
+
+void BitmapWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+	m_MouseDown = false;
+}
+
+void BitmapWidget::mouseMoveEvent(QMouseEvent *event)
+{
+	if (m_MouseDown)
+	{
+		m_MouseDown = false;
+		if (m_PixmapOkay)
+		{
+			printf("Bitmap handle drag from %p (parent %p)\n", this, m_MainWindow->bitmapSetup());
+			QDrag *drag = new QDrag(m_MainWindow->bitmapSetup());
+			drag->setPixmap(m_Pixmap);
+			drag->setHotSpot(event->pos() - QPoint(1, 1));
+			QMimeData *mimeData = new QMimeData();
+			mimeData->setText(QString("BITMAP_HANDLE(") + QString::number(m_Index) + ")");
+			drag->setMimeData(mimeData);
+			drag->exec();
+		}
+	}
+}
+
 
 void BitmapWidget::resizeEvent(QResizeEvent *event)
 {

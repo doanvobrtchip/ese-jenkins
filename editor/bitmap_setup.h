@@ -71,6 +71,8 @@ private:
 
 protected:
 	virtual void mousePressEvent(QMouseEvent *event);
+	virtual void mouseReleaseEvent(QMouseEvent *event);
+	virtual void mouseMoveEvent(QMouseEvent *event);
 	virtual void resizeEvent(QResizeEvent *event);
 
 private slots:
@@ -87,6 +89,7 @@ private:
 	bool m_ThreadRunning;
 	QPalette m_DefaultPalette;
 	QPalette m_SelectedPalette;
+	bool m_MouseDown;
 
 	BitmapWidgetThread *m_ReloadThread;
 
@@ -163,6 +166,7 @@ public:
 	inline const FT800EMU::BitmapInfo *getBitmapInfos() const { return m_BitmapInfo; }
 	inline const ContentInfo *const *getBitmapSources() const { return m_BitmapSource; }
 	inline bool bitmapSourceExists(int bitmapHandle) const { return m_BitmapSourceExists[bitmapHandle]; }
+	inline int selected() const { return m_Selected; }
 
 	void reloadContent(ContentInfo *contentInfo);
 
