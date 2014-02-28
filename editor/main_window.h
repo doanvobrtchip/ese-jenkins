@@ -22,6 +22,7 @@
 // Qt includes
 #include <QMainWindow>
 #include <QString>
+#include <QByteArray>
 
 // Emulator includes
 
@@ -118,6 +119,8 @@ public:
 	void frameQt();
 
 	QString getFileDialogPath();
+
+	QByteArray toJson(bool cleanCode = false);
 
 private slots:
 	// void applyEmulatorConfig();

@@ -743,28 +743,93 @@ void MainWindow::runScript(const QString &script)
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
 
-	PyObject *pyScript = PyString_FromString(scriptName); // FIXME Unicode
-	PyObject *pyModule = PyImport_Import(pyScript);
-	Py_DECREF(pyScript); pyScript = NULL;
+	////////////////////////////////////////////////////////////////////
+	// Initialize JSON
 
 	bool error = true;
 
-	if (pyModule != NULL)
+	PyObject *pyJsonScript = PyString_FromString("json");
+	PyObject *pyJsonModule = PyImport_Import(pyJsonScript);
+	Py_DECREF(pyJsonScript); pyJsonScript = NULL;
+	PyObject *pyJsonLoadS = NULL;
+
+	if (pyJsonModule)
 	{
-		/*PyObject *pyFunc = PyObject_GetAttrString(pyModule, "multiply");
-		if (pyFunc && PyCallable_Check(pyFunc))
+		pyJsonLoadS = PyObject_GetAttrString(pyJsonModule, "loads");
+		if (pyJsonLoadS)
+		{
+			printf("Json available\n");
+			error = false;
+		}
+	}
+
+	if (error)
+	{
+		printf("---\nPython ERROR: \n");
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		PyObject *errStr = PyObject_Repr(pvalue);
+		char *pStrErrorMessage = PyString_AsString(errStr);
+		QString error = QString::fromLocal8Bit(pStrErrorMessage);
+		printf("%s\n", pStrErrorMessage);
+		Py_DECREF(errStr);
+		printf("---\n");
+	}
+
+	////////////////////////////////////////////////////////////////////
+	// Create python object from JSON
+	error = true;
+	QByteArray jsonDoc = toJson(true);
+	PyObject *pyJsonDoc = PyString_FromString(jsonDoc.data());
+	PyObject *pyArgs = PyTuple_New(1);
+	PyTuple_SetItem(pyArgs, 0, pyJsonDoc);
+	PyObject *pyDocument = PyObject_CallObject(pyJsonLoadS, pyArgs);
+	if (pyDocument) error = false;
+	Py_DECREF(pyArgs); pyArgs = NULL;
+	Py_DECREF(pyJsonLoadS); pyJsonLoadS = NULL;
+	Py_DECREF(pyJsonModule); pyJsonModule = NULL;
+
+	if (error)
+	{
+		printf("---\nPython ERROR: \n");
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		PyObject *errStr = PyObject_Repr(pvalue);
+		char *pStrErrorMessage = PyString_AsString(errStr);
+		QString error = QString::fromLocal8Bit(pStrErrorMessage);
+		printf("%s\n", pStrErrorMessage);
+		Py_DECREF(errStr);
+		printf("---\n");
+	}
+
+	/*PyObject *pyDocumentString = PyObject_Repr(pyDocument);
+	printf("Demo: %s\n", PyString_AsString(pyDocumentString));
+	Py_DECREF(pyDocumentString); pyDocumentString = NULL;
+	Py_DECREF(pyDocument); pyDocument = NULL;*/
+
+	////////////////////////////////////////////////////////////////////
+	// Run script
+
+	error = true;
+
+	PyObject *pyUserScript = PyString_FromString(scriptName); // FIXME Unicode
+	PyObject *pyUserModule = PyImport_Import(pyUserScript);
+	Py_DECREF(pyUserScript); pyUserScript = NULL;
+
+	if (pyUserModule != NULL)
+	{
+		PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "run");
+		if (pyUserFunc && PyCallable_Check(pyUserFunc))
 		{
 			PyObject *pyValue;
-			PyObject *pyArgs = PyTuple_New(2);
-			pyValue = PyInt_FromLong(5);
-			PyTuple_SetItem(pyArgs, 0, pyValue);
-			pyValue = PyInt_FromLong(10);
-			PyTuple_SetItem(pyArgs, 1, pyValue);
-			pyValue = PyObject_CallObject(pyFunc, pyArgs);
+			PyObject *pyArgs = PyTuple_New(1);
+			PyTuple_SetItem(pyArgs, 0, pyDocument); pyDocument = NULL;
+			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
 			Py_DECREF(pyArgs);
 			if (pyValue)
 			{
 				printf("Ok\n");
+				error = false;
 			}
 			else
 			{
@@ -773,59 +838,24 @@ void MainWindow::runScript(const QString &script)
 		}
 		else
 		{
-			printf("Missing function\n");
+			printf("Missing run function\n");
 		}
 
-		Py_XDECREF(pyFunc); pyFunc = NULL;*/
-
-		PyObject *pyImageConvClass = PyObject_GetAttrString(pyModule, "Image_Conv");
-		if (pyImageConvClass)
-		{
-			PyObject *pyArgs = PyTuple_New(0);
-			PyObject *pyImageConv = PyObject_CallObject(pyImageConvClass, pyArgs);
-			Py_DECREF(pyImageConvClass); pyImageConvClass = NULL;
-			Py_DECREF(pyArgs); pyArgs = NULL;
-
-			if (pyImageConv)
-			{
-				PyObject *pyRunFunc = PyObject_GetAttrString(pyImageConv, "run");
-				if (pyRunFunc)
-				{
-					PyObject *pyValue;
-					PyObject *pyArgs = PyTuple_New(1);
-					PyObject *pyTuple = PyTuple_New(6);
-					pyValue = PyString_FromString("-i");
-					PyTuple_SetItem(pyTuple, 0, pyValue);
-					pyValue = PyString_FromString("/home/kaetemi/Downloads/blocks.jpg"); // FIXME Unicode
-					PyTuple_SetItem(pyTuple, 1, pyValue);
-					pyValue = PyString_FromString("-o");
-					PyTuple_SetItem(pyTuple, 2, pyValue);
-					pyValue = PyString_FromString("blocks_argb1555");
-					PyTuple_SetItem(pyTuple, 3, pyValue);
-					pyValue = PyString_FromString("-f");
-					PyTuple_SetItem(pyTuple, 4, pyValue);
-					pyValue = PyString_FromString("0");
-					PyTuple_SetItem(pyTuple, 5, pyValue);
-					PyTuple_SetItem(pyArgs, 0, pyTuple);
-					PyObject *pyResult = PyObject_CallObject(pyRunFunc, pyArgs);
-					Py_DECREF(pyRunFunc); pyRunFunc = NULL;
-					Py_DECREF(pyArgs); pyArgs = NULL;
-					if (pyResult)
-					{
-						printf("Ok\n");
-						error = false;
-					}
-				}
-			}
-		}
-
-		Py_DECREF(pyModule); pyModule = NULL;
+		Py_XDECREF(pyUserFunc); pyUserFunc = NULL;
 	}
+
+	Py_XDECREF(pyDocument); pyDocument = NULL;
 
 	if (error)
 	{
 		printf("---\nPython ERROR: \n");
-		PyErr_Print();
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		PyObject *errStr = PyObject_Repr(pvalue);
+		char *pStrErrorMessage = PyString_AsString(errStr);
+		QString error = QString::fromLocal8Bit(pStrErrorMessage);
+		printf("%s\n", pStrErrorMessage);
+		Py_DECREF(errStr);
 		printf("---\n");
 	}
 #endif /* FT800EMU_PYTHON */
@@ -1730,7 +1760,7 @@ void MainWindow::actOpen()
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 		}
-		QJsonArray bitmaps = root["bitmaps"].toArray();
+		QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray();
 		m_BitmapSetup->fromJson(bitmaps);
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;
@@ -1762,14 +1792,47 @@ void MainWindow::actOpen()
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
-QJsonArray documentToJsonArray(const QTextDocument *textDocument)
+QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool cleanCode)
 {
 	QJsonArray result;
 	for (int i = 0; i < textDocument->blockCount(); ++i)
 	{
-		result.push_back(textDocument->findBlockByNumber(i).text());
+		QString line = textDocument->findBlockByNumber(i).text();
+		if (cleanCode)
+		{
+			DlParsed parsed;
+			DlParser::parse(parsed, line, coprocessor);
+			if (!parsed.ValidId) line = "";
+			else line = DlParser::toString(parsed);
+		}
+		result.push_back(line);
 	}
 	return result;
+}
+
+QByteArray MainWindow::toJson(bool cleanCode)
+{
+	QJsonObject root;
+	QJsonObject registers;
+	registers["hSize"] = s_HSize;
+	registers["vSize"] = s_VSize;
+	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, cleanCode);
+	root["registers"] = registers;
+	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, cleanCode);
+	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), false, cleanCode);
+	QJsonArray content;
+	std::vector<ContentInfo *> contentInfos;
+	m_ContentManager->getContentInfos(contentInfos);
+	for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
+	{
+		ContentInfo *info = (*it);
+		content.push_back(info->toJson(false));
+	}
+	root["content"] = content;
+	root["handles"] = m_BitmapSetup->toJson();
+	QJsonDocument doc(root);
+
+	return doc.toJson();
 }
 
 void MainWindow::actSave()
@@ -1780,27 +1843,8 @@ void MainWindow::actSave()
 	file.open(QIODevice::WriteOnly);
 	QDataStream out(&file);
 
-	QJsonObject root;
-	QJsonObject registers;
-	registers["hSize"] = s_HSize;
-	registers["vSize"] = s_VSize;
-	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document());
-	root["registers"] = registers;
-	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document());
-	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document());
-	QJsonArray content;
-	std::vector<ContentInfo *> contentInfos;
-	m_ContentManager->getContentInfos(contentInfos);
-	for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
-	{
-		ContentInfo *info = (*it);
-		content.push_back(info->toJson(false));
-	}
-	root["content"] = content;
-	root["bitmaps"] = m_BitmapSetup->toJson();
-	QJsonDocument doc(root);
+	QByteArray data = toJson();
 
-	QByteArray data = doc.toJson();
 	out.writeRawData(data, data.size());
 }
 

@@ -51,7 +51,7 @@ void AssetConverter::init()
 	bool error = true;
 
 	PyObject *pyImageConvScript = PyString_FromString("img_cvt");
-	PyObject *a_ImageConvModule = PyImport_Import(pyImageConvScript);
+	a_ImageConvModule = PyImport_Import(pyImageConvScript);
 	Py_DECREF(pyImageConvScript); pyImageConvScript = NULL;
 
 	if (a_ImageConvModule)
@@ -90,7 +90,7 @@ void AssetConverter::init()
 	error = true;
 
 	PyObject *pyRawConvScript = PyString_FromString("raw_cvt");
-	PyObject *a_RawConvModule = PyImport_Import(pyRawConvScript);
+	a_RawConvModule = PyImport_Import(pyRawConvScript);
 	Py_DECREF(pyRawConvScript); pyRawConvScript = NULL;
 
 	if (a_RawConvModule)
@@ -184,7 +184,9 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			printf("---\nPython ERROR: \n");
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			char *pStrErrorMessage = PyString_AsString(pvalue);
+			PyObject *errStr = PyObject_Repr(pvalue);
+			char *pStrErrorMessage = PyString_AsString(errStr);
+			QString error = QString::fromLocal8Bit(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
 				buildError = QString::fromLocal8Bit(pStrErrorMessage);
@@ -195,6 +197,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			}
 			QByteArray er = buildError.toLocal8Bit();
 			printf("%s\n", er.data());
+			Py_DECREF(errStr);
 			printf("---\n");
 
 			// Reinitialize Python converters
@@ -304,7 +307,9 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			printf("---\nPython ERROR: \n");
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			char *pStrErrorMessage = PyString_AsString(pvalue);
+			PyObject *errStr = PyObject_Repr(pvalue);
+			char *pStrErrorMessage = PyString_AsString(errStr);
+			QString error = QString::fromLocal8Bit(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
 				buildError = QString::fromLocal8Bit(pStrErrorMessage);
@@ -315,6 +320,7 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			}
 			QByteArray er = buildError.toLocal8Bit();
 			printf("%s\n", er.data());
+			Py_DECREF(errStr);
 			printf("---\n");
 
 			// Reinitialize Python converters
