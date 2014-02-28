@@ -248,6 +248,31 @@ void loop()
 			int s = in.readRawData(&ram[RAM_G + info->MemoryAddress], binSize);
 			FT800EMU::Memory.poke();
 		}
+		if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
+		{
+			QString palName = info->DestName + ".lut.raw";
+			printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
+			QFile palFile(palName);
+			if (!palFile.exists())
+			{
+				printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
+				continue;
+			}
+			int palSize = (int)palFile.size();
+			if (palSize != 1024)
+			{
+				printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
+				continue;
+			}
+			// ok
+			{
+				palFile.open(QIODevice::ReadOnly);
+				QDataStream in(&palFile);
+				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+				int s = in.readRawData(&ram[RAM_PAL], palSize);
+				FT800EMU::Memory.poke();
+			}
+		}
 	}
 	bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
 	if (reuploadBitmapSetup)
