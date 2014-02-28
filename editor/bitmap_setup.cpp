@@ -382,7 +382,7 @@ void BitmapSetup::clear()
 	}
 }
 
-QJsonArray BitmapSetup::toJson() const
+QJsonArray BitmapSetup::toJson(bool extended) const
 {
 	QJsonArray bitmaps;
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
@@ -400,6 +400,12 @@ QJsonArray BitmapSetup::toJson() const
 				j["layoutFormat"] = m_BitmapInfo[i].LayoutFormat;
 				j["layoutStride"] = m_BitmapInfo[i].LayoutStride;
 				j["layoutHeight"] = m_BitmapInfo[i].LayoutHeight;
+			}
+			else if (extended)
+			{
+				j["layoutFormat"] = m_BitmapSource[i]->ImageFormat;
+				j["layoutStride"] = m_BitmapSource[i]->CachedImageStride;
+				j["layoutHeight"] = m_BitmapSource[i]->CachedImageHeight;
 			}
 
 			// Size

@@ -145,7 +145,7 @@ public:
 	// Clear all settings. This is not undostack friendly
 	void clear();
 	// Save
-	QJsonArray toJson() const;
+	QJsonArray toJson(bool extended) const;
 	// Load. This is not undostack friendly
 	void fromJson(QJsonArray &bitmaps);
 

@@ -739,9 +739,12 @@ void MainWindow::runScript(const QString &script)
 {
 #ifdef FT800EMU_PYTHON
 	QString scriptN = script.left(script.size() - 3);
-	QByteArray scriptNa = scriptN.toLatin1();
+	QByteArray scriptNa = scriptN.toLocal8Bit();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
+	QString outputName = QFileInfo(m_CurrentFile).baseName();
+	if (outputName.isEmpty()) outputName = "untitled";
+	QByteArray outN = outputName.toLocal8Bit();
 
 	////////////////////////////////////////////////////////////////////
 	// Initialize JSON
@@ -774,6 +777,8 @@ void MainWindow::runScript(const QString &script)
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
 		printf("---\n");
+		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
 	////////////////////////////////////////////////////////////////////
@@ -800,6 +805,8 @@ void MainWindow::runScript(const QString &script)
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
 		printf("---\n");
+		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
 	/*PyObject *pyDocumentString = PyObject_Repr(pyDocument);
@@ -822,13 +829,20 @@ void MainWindow::runScript(const QString &script)
 		if (pyUserFunc && PyCallable_Check(pyUserFunc))
 		{
 			PyObject *pyValue;
-			PyObject *pyArgs = PyTuple_New(1);
-			PyTuple_SetItem(pyArgs, 0, pyDocument); pyDocument = NULL;
+			PyObject *pyArgs = PyTuple_New(2);
+			pyValue = PyString_FromString(outN.data());;
+			PyTuple_SetItem(pyArgs, 0, pyValue);
+			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
 			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
 			Py_DECREF(pyArgs);
 			if (pyValue)
 			{
 				printf("Ok\n");
+				PyObject *resStr = PyObject_Repr(pyValue);
+				char *resCStr = PyString_AsString(resStr);
+				QString res = QString::fromLocal8Bit(resCStr);
+				m_PropertiesEditor->setInfo(res);
+				m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 				error = false;
 			}
 			else
@@ -857,6 +871,8 @@ void MainWindow::runScript(const QString &script)
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
 		printf("---\n");
+		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 #endif /* FT800EMU_PYTHON */
 }
@@ -1819,7 +1835,7 @@ QByteArray MainWindow::toJson(bool cleanCode)
 	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, cleanCode);
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, cleanCode);
-	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), false, cleanCode);
+	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, cleanCode);
 	QJsonArray content;
 	std::vector<ContentInfo *> contentInfos;
 	m_ContentManager->getContentInfos(contentInfos);
@@ -1829,7 +1845,7 @@ QByteArray MainWindow::toJson(bool cleanCode)
 		content.push_back(info->toJson(false));
 	}
 	root["content"] = content;
-	root["handles"] = m_BitmapSetup->toJson();
+	root["handles"] = m_BitmapSetup->toJson(cleanCode);
 	QJsonDocument doc(root);
 
 	return doc.toJson();
