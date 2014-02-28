@@ -1362,7 +1362,8 @@ void MainWindow::translateDockWindows()
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
-	m_BitmapSetupDock->setWindowTitle(tr("Bitmaps"));
+	// m_BitmapSetupDock->setWindowTitle(tr("Bitmaps"));
+	m_BitmapSetupDock->setWindowTitle(tr("Handles"));
 }
 
 void MainWindow::incbLanguageCode()
