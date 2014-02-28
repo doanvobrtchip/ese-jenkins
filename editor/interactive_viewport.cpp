@@ -914,10 +914,22 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					m_MovingLastX -= pa.Parameter[0].I;
 					pa.Parameter[0].I = 0;
 				}
+				if (pa.Parameter[0].I > 511)
+				{
+					int diff = pa.Parameter[0].I - 511;
+					m_MovingLastX -= diff;
+					pa.Parameter[0].I -= diff;
+				}
 				if (pa.Parameter[1].I < 0)
 				{
 					m_MovingLastY -= pa.Parameter[1].I;
 					pa.Parameter[1].I = 0;
+				}
+				if (pa.Parameter[1].I > 511)
+				{
+					int diff = pa.Parameter[1].I - 511;
+					m_MovingLastY -= diff;
+					pa.Parameter[1].I -= diff;
 				}
 			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
