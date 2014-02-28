@@ -907,6 +907,19 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			}
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
+			if (pa.IdLeft == FT800EMU_DL_VERTEX2II) // Do not allow negative values
+			{
+				if (pa.Parameter[0].I < 0)
+				{
+					m_MovingLastX -= pa.Parameter[0].I;
+					pa.Parameter[0].I = 0;
+				}
+				if (pa.Parameter[1].I < 0)
+				{
+					m_MovingLastY -= pa.Parameter[1].I;
+					pa.Parameter[1].I = 0;
+				}
+			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
 		}
 		else
