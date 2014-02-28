@@ -121,6 +121,8 @@ public:
 	bool isValidContent(ContentInfo *info);
 	// Cache image build info (Only call if info is valid!)
 	bool cacheImageInfo(ContentInfo *info);
+	// Find content info
+	ContentInfo *find(const QString &destName);
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();

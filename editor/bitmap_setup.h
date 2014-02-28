@@ -26,6 +26,7 @@
 #include <QMutex>
 #include <QThread>
 #include <QImage>
+#include <QJsonArray>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -134,6 +135,14 @@ public:
 
 	void select(int i);
 	void deselect();
+
+	// Utility
+	// Clear all settings. This is not undostack friendly
+	void clear();
+	// Save
+	QJsonArray toJson() const;
+	// Load. This is not undostack friendly
+	void fromJson(QJsonArray &bitmaps);
 
 	// Changes
 	void changeSourceContent(int bitmapHandle, ContentInfo *value);

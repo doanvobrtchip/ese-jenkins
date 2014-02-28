@@ -552,8 +552,11 @@ QString ContentManager::createName(const QString &name)
 		}
 	}
 	destName = destName.simplified();
-	QString resultDestName = destName;
+	// Cannot have empty name
+	if (destName.isEmpty())
+		destName = "untitled";
 	// Renumber in case of duplicate
+	QString resultDestName = destName;
 	int renumber = 2;
 	while (nameExists(resultDestName))
 	{
@@ -632,6 +635,22 @@ bool ContentManager::isValidContent(ContentInfo *info)
 
 	// Does not exist here (may still exist in the undo stack)
 	return false;
+}
+
+ContentInfo *ContentManager::find(const QString &destName)
+{
+	if (destName.isEmpty())
+		return NULL;
+
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		if (info->DestName == destName)
+			return info;
+	}
+
+	printf("Content '%s' not found\n", destName.toLocal8Bit().data());
+	return NULL;
 }
 
 bool ContentManager::cacheImageInfo(ContentInfo *info)
@@ -984,8 +1003,11 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	// Emulator main loop will lock the content mutex
 	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
 	{
-		// Bitmap setup is always updated after upload and requires cached image info
-		cacheImageInfo(contentInfo);
+		if (contentInfo->Converter == ContentInfo::Image)
+		{
+			// Bitmap setup is always updated after upload and requires cached image info
+			cacheImageInfo(contentInfo);
+		}
 
 		lockContent();
 		if (m_ContentUploadDirty.find(contentInfo) == m_ContentUploadDirty.end())

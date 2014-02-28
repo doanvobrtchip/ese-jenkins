@@ -1599,6 +1599,7 @@ void MainWindow::clearEditor()
 	m_CmdEditor->clear();
 	m_Macro->clear();
 	m_ContentManager->clear();
+	m_BitmapSetup->clear();
 }
 
 void MainWindow::clearUndoStack()
@@ -1703,6 +1704,8 @@ void MainWindow::actOpen()
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 		}
+		QJsonArray bitmaps = root["bitmaps"].toArray();
+		m_BitmapSetup->fromJson(bitmaps);
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;
 	}
@@ -1768,6 +1771,7 @@ void MainWindow::actSave()
 		content.push_back(info->toJson(false));
 	}
 	root["content"] = content;
+	root["bitmaps"] = m_BitmapSetup->toJson();
 	QJsonDocument doc(root);
 
 	QByteArray data = doc.toJson();

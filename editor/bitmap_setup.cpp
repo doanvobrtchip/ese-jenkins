@@ -27,6 +27,8 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QUndoCommand>
+#include <QJsonArray>
+#include <QJsonObject>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -335,6 +337,93 @@ BitmapSetup::~BitmapSetup()
 
 }
 
+void BitmapSetup::clear()
+{
+	for (int i = 0; i < 32; ++i)
+	{
+		m_BitmapSourceExists[i] = false;
+		m_BitmapSource[i] = NULL;
+		memset(&m_BitmapInfo[i], 0, sizeof(FT800EMU::BitmapInfo));
+		refreshGUIInternal(i);
+		refreshViewInternal(i);
+	}
+}
+
+QJsonArray BitmapSetup::toJson() const
+{
+	QJsonArray bitmaps;
+	for (int i = 0; i < 32; ++i)
+	{
+		QJsonObject j;
+
+		if (m_BitmapSource[i] && m_BitmapSourceExists[i])
+		{
+			// Source
+			j["sourceContent"] = m_BitmapSource[i]->DestName;
+
+			// Layout
+			if (m_BitmapSource[i]->Converter != ContentInfo::Image)
+			{
+				j["layoutFormat"] = m_BitmapInfo[i].LayoutFormat;
+				j["layoutStride"] = m_BitmapInfo[i].LayoutStride;
+				j["layoutHeight"] = m_BitmapInfo[i].LayoutHeight;
+			}
+
+			// Size
+			j["sizeFilter"] = m_BitmapInfo[i].SizeFilter;
+			j["sizeWrapX"] = m_BitmapInfo[i].SizeWrapX;
+			j["sizeWrapY"] = m_BitmapInfo[i].SizeWrapY;
+			j["sizeWidth"] = m_BitmapInfo[i].SizeWidth;
+			j["sizeHeight"] = m_BitmapInfo[i].SizeHeight;
+		}
+
+		bitmaps.push_back(j);
+	}
+	return bitmaps;
+}
+
+void BitmapSetup::fromJson(QJsonArray &bitmaps)
+{
+	for (int i = 0; i < 32; ++i)
+	{
+		QJsonObject j = bitmaps[i].toObject();
+
+		// Source
+		m_BitmapSourceExists[i] = false;
+		m_BitmapSource[i] = m_MainWindow->contentManager()->find(j["sourceContent"].toString());
+		m_BitmapSourceExists[i] = (m_BitmapSource[i] != NULL);
+
+		if (m_BitmapSourceExists[i])
+		{
+			// Layout
+			if (m_BitmapSource[i]->Converter == ContentInfo::Image)
+			{
+				m_MainWindow->contentManager()->cacheImageInfo(m_BitmapSource[i]);
+				m_BitmapInfo[i].LayoutFormat = m_BitmapSource[i]->ImageFormat;
+				m_BitmapInfo[i].LayoutStride = m_BitmapSource[i]->CachedImageStride;
+				m_BitmapInfo[i].LayoutHeight = m_BitmapSource[i]->CachedImageHeight;
+			}
+			else
+			{
+				m_BitmapInfo[i].LayoutFormat = ((QJsonValue)j["layoutFormat"]).toVariant().toInt();
+				m_BitmapInfo[i].LayoutStride = ((QJsonValue)j["layoutStride"]).toVariant().toInt();
+				m_BitmapInfo[i].LayoutHeight = ((QJsonValue)j["layoutHeight"]).toVariant().toInt();
+			}
+
+			// Size
+			m_BitmapInfo[i].SizeFilter = ((QJsonValue)j["sizeFilter"]).toVariant().toInt();
+			m_BitmapInfo[i].SizeWrapX = ((QJsonValue)j["sizeWrapX"]).toVariant().toInt();
+			m_BitmapInfo[i].SizeWrapY = ((QJsonValue)j["sizeWrapY"]).toVariant().toInt();
+			m_BitmapInfo[i].SizeWidth = ((QJsonValue)j["sizeWidth"]).toVariant().toInt();
+			m_BitmapInfo[i].SizeHeight = ((QJsonValue)j["sizeHeight"]).toVariant().toInt();
+		}
+
+		refreshGUIInternal(i);
+		refreshViewInternal(i);
+	}
+	++m_ModificationNb;
+}
+
 void BitmapSetup::select(int i)
 {
 	printf("BitmapSetup::select(i)\n");
@@ -419,6 +508,9 @@ void BitmapSetup::rebuildGUIInternal()
 		// Refresh GUI contents
 		refreshGUIInternal();
 	}
+
+	// Be helpful
+	m_MainWindow->focusProperties();
 }
 
 void BitmapSetup::refreshViewInternal(int bitmapHandle)
