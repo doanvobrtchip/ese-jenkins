@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, subprocess, sys
 
 def run(name, document):
 	resultText = "<b>Gameduino 2 Export</b><br>"
@@ -152,7 +152,9 @@ def run(name, document):
 			shutil.copy(headerName, targetPath)
 			content["gd2Name"] = contentName
 			f.write("\n")
-			f.write("static const PROGMEM char " + contentName + "[] = {\n")
+			charType = "prog_uchar"
+			#charType = "char" # For older Linux distro
+			f.write("static const PROGMEM " + charType + " " + contentName + "[] = {\n")
 			f.write("#\tinclude \"" + targetName + "\"\n")
 			f.write("};\n")
 	f.write("\n")
@@ -197,5 +199,11 @@ def run(name, document):
 	f.write("/* end of file */\n")
 	f.close()
 	resultText += "<b>Output</b>: " + outName
+	if sys.platform.startswith('darwin'):
+		subprocess.call(('open', outName))
+	elif os.name == 'nt':
+		os.startfile((os.getcwd() + "/" + outName).replace("/", "\\"))
+	elif os.name == 'posix':
+		subprocess.call(('xdg-open', outName))
 	print resultText
 	return resultText

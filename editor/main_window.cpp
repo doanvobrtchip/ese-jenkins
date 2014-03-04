@@ -820,7 +820,8 @@ void MainWindow::runScript(const QString &script)
 	error = true;
 
 	PyObject *pyUserScript = PyString_FromString(scriptName); // FIXME Unicode
-	PyObject *pyUserModule = PyImport_Import(pyUserScript);
+	PyObject *pyUserModuleOld = PyImport_Import(pyUserScript);
+	PyObject *pyUserModule = PyImport_ReloadModule(pyUserModuleOld);
 	Py_DECREF(pyUserScript); pyUserScript = NULL;
 
 	if (pyUserModule != NULL)
@@ -856,6 +857,8 @@ void MainWindow::runScript(const QString &script)
 		}
 
 		Py_XDECREF(pyUserFunc); pyUserFunc = NULL;
+		Py_XDECREF(pyUserModuleOld); pyUserModuleOld = NULL;
+		Py_XDECREF(pyUserModule); pyUserModule = NULL;
 	}
 
 	Py_XDECREF(pyDocument); pyDocument = NULL;
