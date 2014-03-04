@@ -685,6 +685,7 @@ void InteractiveViewport::updatePointerMethod()
 				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
 				{
 					int firstLine = m_LineNumber;
+					int vertexType = -1;
 					for (int l = firstLine - 1; l > 0; --l)
 					{
 						const DlParsed &pa = m_LineEditor->getLine(l);
@@ -694,6 +695,8 @@ void InteractiveViewport::updatePointerMethod()
 							|| pa.IdRight == FT800EMU_DL_RETURN
 							|| pa.IdRight == FT800EMU_DL_JUMP))
 						{
+							if (pa.IdRight == FT800EMU_DL_BEGIN)
+								vertexType = pa.Parameter[0].I;
 							break;
 						}
 						else
@@ -737,6 +740,16 @@ void InteractiveViewport::updatePointerMethod()
 					}
 					if (m_MouseOverVertex)
 					{
+						setCursor(Qt::SizeAllCursor);
+						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
+						return;
+					}
+					if ((vertexType == BITMAPS || vertexType == POINTS) &&
+						((m_MouseStackValid && m_LineEditor->isCoprocessor() && m_MouseStackCmdTop == m_LineNumber)
+						|| (m_MouseStackValid && !m_LineEditor->isCoprocessor() && m_MouseStackDlTop == m_LineNumber)))
+					{
+						m_MouseOverVertex = true;
+						m_MouseOverVertexLine = m_LineNumber;
 						setCursor(Qt::SizeAllCursor);
 						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
 						return;
@@ -832,7 +845,9 @@ void InteractiveViewport::updatePointerMethod()
 					{
 						if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
 						{
-							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
+							if ((m_MouseStackValid && m_LineEditor->isCoprocessor() && m_MouseStackCmdTop == m_LineNumber)
+								|| (m_MouseStackValid && !m_LineEditor->isCoprocessor() && m_MouseStackDlTop == m_LineNumber)
+								|| (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4))
 							{
 								// m_MouseOverWidget = true;
 								setCursor(Qt::SizeAllCursor);
