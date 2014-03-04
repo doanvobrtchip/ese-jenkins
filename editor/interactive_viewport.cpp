@@ -1358,7 +1358,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[3].U = 27;
 						pa.Parameter[4].U = 0;
 						pa.Parameter[5].U = 0;
-						pa.StringParameter = "on\\xFFoff";
+						pa.StringParameter = "on\xFFoff";
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 7;
 						break;

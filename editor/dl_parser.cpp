@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include <iomanip>
 
 // Qt includes
 #include <QStringList>
@@ -544,7 +545,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
-						pss << c;
+						// pss << c;
 						++i;
 						goto ParseString;
 					}
@@ -622,12 +623,54 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				if (i < len)
 				{
 					char c = src[i];
-					pss << c;
 					if (c == '\\')
 					{
-						// skip
+						// unescape
 						++i;
-						pss << src[i];
+						if (i < len)
+						{
+							c = src[i];
+							switch (c)
+							{
+							case 't':
+								pss << '\t';
+								break;
+							case 'n':
+								pss << '\n';
+								break;
+							case 'r':
+								pss << '\r';
+								break;
+							case 'x':
+							{
+								if (i + 2 < len
+									&& ('A' <= src[i + 1] && src[i + 1] <= 'F' || 'a' <= src[i + 1] && src[i + 1] <= 'f' || '0' <= src[i + 1] && src[i + 1] <= '9')
+									&& ('A' <= src[i + 2] && src[i + 2] <= 'F' || 'a' <= src[i + 2] && src[i + 2] <= 'f' || '0' <= src[i + 2] && src[i + 2] <= '9'))
+								{
+									std::stringstream tmp;
+									tmp << std::hex << src[i + 1] << src[i + 2];
+									unsigned int ch;
+									tmp >> ch;
+									c = (char)(unsigned char)(ch & 0xFF);
+									// printf("char %i\n", (int)c);
+									pss << c;
+									i += 2;
+								}
+								else
+								{
+									pss << "\\x";
+								}
+								break;
+							}
+							default:
+								pss << c;
+								break;
+							}
+						}
+						else
+						{
+							pss << '\\';
+						}
 					}
 					else if (c == '"')
 					{
@@ -635,6 +678,10 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						++i;
 						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
 						goto ContinueParameter;
+					}
+					else
+					{
+						pss << c;
 					}
 				}
 				else
@@ -684,9 +731,9 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					// CMD_TEXT(50, 119, 31, 0, "hello world")
 					if (ps.length() >= 2)
 					{
-						std::string psstr = ps.substr(1, ps.size() - 2);
+						// std::string psstr = ps.substr(1, ps.size() - 2);
 						parsed.Parameter[p].U = 0;
-						parsed.StringParameter = psstr; // TODO: Parse escape characters
+						parsed.StringParameter = ps; // TODO: Parse escape characters
 						parsed.ValidParameter[pq] = true;
 						parsed.StringParameterAt = pq;
 					}
@@ -921,10 +968,10 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
 						// CMD_TEXT(50, 119, 31, 0, "hello world")
-						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
-						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
-						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
-						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 3] : 0;
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
@@ -944,10 +991,10 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(fo);
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
-						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
-						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
-						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
-						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 3] : 0;
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
@@ -998,10 +1045,10 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(os);
 					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
-						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? parsed.StringParameter[i] : 0;
-						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 1] : 0;
-						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 2] : 0;
-						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? parsed.StringParameter[i + 3] : 0;
+						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
+						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 1] : 0;
+						uint32_t c2 = ((i + 2) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 2] : 0;
+						uint32_t c3 = ((i + 3) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 3] : 0;
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
@@ -1663,7 +1710,22 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			{
 				// String parameter
 				res << "\"";
-				res << parsed.StringParameter; // TODO: Escape string
+				//res << parsed.StringParameter; // TODO: Escape string
+				for (int c = 0; c < parsed.StringParameter.size(); ++c)
+				{
+					unsigned char ch = parsed.StringParameter[c];
+					if (ch == '\t') res << "\\t";
+					else if (ch == '\\') res << "\\\\";
+					else if (ch == '\n') res << "\\n";
+					else if (ch == '\r') res << "\\r";
+					else if (ch >= 32 && ch <= 126) res << ch;
+					else
+					{
+						std::stringstream tmp;
+						tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
+						res << tmp.str();
+					}
+				}
 				res << "\"";
 			}
 			else
