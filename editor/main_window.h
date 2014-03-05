@@ -50,6 +50,7 @@ class Inspector;
 class MainWindow;
 class ContentManager;
 class BitmapSetup;
+class InteractiveProperties;
 
 class RunScript : public QObject
 {
@@ -95,6 +96,7 @@ public:
 	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
 	inline ContentManager *contentManager() { return m_ContentManager; }
 	inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
+	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
 
 	bool waitingCoprocessorAnimation();
 
@@ -186,6 +188,8 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+
+	InteractiveProperties *m_InteractiveProperties;
 
 	QDockWidget *m_ContentManagerDock;
 	ContentManager *m_ContentManager;

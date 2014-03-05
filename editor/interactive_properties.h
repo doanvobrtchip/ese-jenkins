@@ -18,7 +18,7 @@
 #include <vector>
 
 // Qt includes
-#include <QWidget>
+#include <QGroupBox>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -36,7 +36,7 @@ class DlEditor;
  * \date 2013-12-22 01:01GMT
  * \author Jan Boon (Kaetemi)
  */
-class InteractiveProperties : public QWidget
+class InteractiveProperties : public QGroupBox
 {
 	Q_OBJECT
 

@@ -80,6 +80,7 @@
 #include "inspector.h"
 #include "content_manager.h"
 #include "bitmap_setup.h"
+#include "interactive_properties.h"
 
 namespace FT800EMUQT {
 
@@ -633,7 +634,10 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	cvLayout->addLayout(chLayout);
 	cvLayout->addStretch();
 	centralWidget->setLayout(cvLayout);
-    setCentralWidget(centralWidget);
+	setCentralWidget(centralWidget);
+
+	m_InteractiveProperties = new InteractiveProperties(this);
+	m_InteractiveProperties->setVisible(false);
 
 	createActions();
 	createMenus();
