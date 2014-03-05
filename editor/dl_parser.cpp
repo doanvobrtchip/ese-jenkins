@@ -1626,12 +1626,6 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 		dst << "OPT_RIGHTX";
 		combine = true;
 	}
-	if (opt & OPT_RIGHTX)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_RIGHTX";
-		combine = true;
-	}
 	if (opt & OPT_NOBACK)
 	{
 		if (combine) dst << " | ";
@@ -1691,8 +1685,6 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 #define OPT_NOPOINTER        16384UL <- special case
 #define OPT_NOSECS           32768UL
 #define OPT_NOHANDS          49152UL ---- */
-
-
 
 void DlParser::toString(std::string &dst, const DlParsed &parsed)
 {

@@ -54,12 +54,20 @@ private:
 	void addLabeledWidget(const QString &label, QWidget *widget);
 	void addLabeledWidget(const QString &label, QWidget *widget0, QWidget *widget1);
 
+	void addXY(int x, int y, int minim, int maxim);
+	void addXY16(int x, int y, int minim, int maxim);
+	void addHandle(int handle);
+	void addCell(int cell);
+	void addOptions(int options, uint32_t flags);
+
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
 
 private:
 	class PropertiesWidget;
 	class PropertiesSpinBox;
+	class PropertiesSpinBox16;
+	class PropertiesCheckBox;
 
 	MainWindow *m_MainWindow;
 

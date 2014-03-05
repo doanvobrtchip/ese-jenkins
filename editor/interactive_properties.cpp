@@ -103,6 +103,141 @@ void InteractiveProperties::addLabeledWidget(const QString &label, QWidget *widg
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
+void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
+{
+	PropertiesSpinBox *propX = new PropertiesSpinBox(this, x);
+	propX->setMinimum(minim);
+	propX->setMaximum(maxim);
+	PropertiesSpinBox *propY = new PropertiesSpinBox(this, y);
+	propY->setMinimum(minim);
+	propY->setMaximum(maxim);
+	addLabeledWidget("XY: ", propX, propY);
+	m_CurrentProperties.push_back(propX);
+	m_CurrentProperties.push_back(propY);
+}
+
+void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
+{
+	PropertiesSpinBox16 *propX = new PropertiesSpinBox16(this, x);
+	propX->setMinimum(minim);
+	propX->setMaximum(maxim);
+	PropertiesSpinBox16 *propY = new PropertiesSpinBox16(this, y);
+	propY->setMinimum(minim);
+	propY->setMaximum(maxim);
+	addLabeledWidget("XY: ", propX, propY);
+	m_CurrentProperties.push_back(propX);
+	m_CurrentProperties.push_back(propY);
+}
+
+void InteractiveProperties::addHandle(int handle)
+{
+	PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, handle); // TODO: Handle combobox
+	propHandle->setMinimum(0);
+	propHandle->setMaximum(31);
+	addLabeledWidget("Handle: ", propHandle);
+	m_CurrentProperties.push_back(propHandle);
+}
+
+void InteractiveProperties::addCell(int cell)
+{
+	PropertiesSpinBox *propCell = new PropertiesSpinBox(this, cell);
+	propCell->setMinimum(0);
+	propCell->setMaximum(255);
+	addLabeledWidget("Cell: ", propCell);
+	m_CurrentProperties.push_back(propCell);
+}
+
+void InteractiveProperties::addOptions(int options, uint32_t flags)
+{
+	/*
+	#define OPT_MONO             1UL
+	#define OPT_NODL             2UL
+	#define OPT_SIGNED           256UL <- special case (when CMD_NUMBER, probably whenever no NOBACK)
+	#define OPT_FLAT             256UL
+	#define OPT_CENTERX          512UL
+	#define OPT_CENTERY          1024UL
+	#define OPT_CENTER           1536UL ----
+	#define OPT_RIGHTX           2048UL
+	#define OPT_NOBACK           4096UL
+	#define OPT_NOTICKS          8192UL
+	#define OPT_NOHM             16384UL
+	#define OPT_NOPOINTER        16384UL <- special case (when NOHM this but not NOSECS)
+	#define OPT_NOSECS           32768UL
+	#define OPT_NOHANDS          49152UL ---- */
+	if (flags & OPT_MONO)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_MONO);
+		addLabeledWidget("OPT_MONO: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_NODL)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NODL);
+		addLabeledWidget("OPT_NODL: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_FLAT)
+	{
+		if (flags & OPT_NOBACK)
+		{
+			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, options, OPT_FLAT);
+			addLabeledWidget("OPT_FLAT: ", chb0);
+			m_CurrentProperties.push_back(chb0);
+			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOBACK);
+			addLabeledWidget("OPT_NOBACK: ", chb1);
+			m_CurrentProperties.push_back(chb1);
+		}
+		else
+		{
+			PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_SIGNED);
+			addLabeledWidget("OPT_SIGNED: ", chb);
+			m_CurrentProperties.push_back(chb);
+		}
+	}
+	if (flags & OPT_CENTERX)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_CENTERX);
+		addLabeledWidget("OPT_CENTERX: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_CENTERY)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_CENTERY);
+		addLabeledWidget("OPT_CENTERY: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_CENTERY)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_RIGHTX);
+		addLabeledWidget("OPT_RIGHTX: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_NOTICKS)
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NOTICKS);
+		addLabeledWidget("OPT_NOTICKS: ", chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	if (flags & OPT_NOHM)
+	{
+		if (flags & OPT_NOSECS)
+		{
+			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, options, OPT_NOHM);
+			addLabeledWidget("OPT_NOHM: ", chb0);
+			m_CurrentProperties.push_back(chb0);
+			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOSECS);
+			addLabeledWidget("OPT_NOSECS: ", chb1);
+			m_CurrentProperties.push_back(chb1);
+		}
+		else
+		{
+			PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NOPOINTER);
+			addLabeledWidget("OPT_NOPOINTER: ", chb);
+			m_CurrentProperties.push_back(chb);
+		}
+	}
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
 	// printf("InteractiveProperties::setEditorLine(...)\n");
@@ -134,7 +269,8 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"coordinate in the upper virtual screen from (0, 0). If drawing on the negative "
 					"coordinate position, the drawing operation will not be visible."));
 				setTitle("VERTEX2F");
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+				addXY16(0, 1, -16384, 16383);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 				ok = true;
 			}
 			else if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
@@ -153,25 +289,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"parameters will be ignored unless the graphics primitive is specified as bitmap by "
 					"command BEGIN, prior to this command."));
 				setTitle("VERTEX2II");
-				PropertiesSpinBox *propX = new PropertiesSpinBox(this, 0);
-				propX->setMinimum(0);
-				propX->setMaximum(512);
-				PropertiesSpinBox *propY = new PropertiesSpinBox(this, 1);
-				propY->setMinimum(0);
-				propY->setMaximum(512);
-				addLabeledWidget("XY: ", propX, propY);
-				m_CurrentProperties.push_back(propX);
-				m_CurrentProperties.push_back(propY);
-				PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, 2); // TODO: Handle combobox
-				propHandle->setMinimum(0);
-				propHandle->setMaximum(31);
-				addLabeledWidget("Handle: ", propHandle);
-				m_CurrentProperties.push_back(propHandle);
-				PropertiesSpinBox *propCell = new PropertiesSpinBox(this, 3);
-				propCell->setMinimum(0);
-				propCell->setMaximum(255);
-				addLabeledWidget("Cell: ", propCell);
-				m_CurrentProperties.push_back(propCell);
+				addXY(0, 1, 0, 511);
+				addHandle(2);
+				addCell(3);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 				ok = true;
 			}
@@ -279,7 +399,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: text<br>"
 						"<br>"
 						"Draw text."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_TEXT");
+					addXY(0, 1, -1024, 1023);
+					addHandle(2);
+					addOptions(3, OPT_CENTER);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1304,7 +1428,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 
 void InteractiveProperties::modifiedEditorLine()
 {
-	printf("InteractiveProperties::modifiedEditorLine()\n");
+	// printf("InteractiveProperties::modifiedEditorLine()\n");
 
 	for (std::vector<PropertiesWidget *>::iterator it(m_CurrentProperties.begin()), end(m_CurrentProperties.end()); it != end; ++it)
 	{
