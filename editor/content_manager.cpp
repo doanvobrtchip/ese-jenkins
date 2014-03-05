@@ -859,6 +859,8 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesRaw->setHidden(false);
+				m_PropertiesRawStart->setValue(contentInfo->RawStart);
+				m_PropertiesRawLength->setValue(contentInfo->RawLength);
 				m_PropertiesMemory->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{

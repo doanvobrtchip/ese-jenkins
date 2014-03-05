@@ -256,8 +256,9 @@ void DlEditor::parseLine(QTextBlock block)
 	}
 }
 
-void DlEditor::replaceLine(int line, const DlParsed &parsed)
+void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, const QString &message)
 {
+	if (combineId >= 0) m_CodeEditor->setUndoCombine(combineId, message);
 	QString linestr = DlParser::toString(parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
@@ -266,6 +267,7 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed)
 	c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	c.insertText(linestr);
 	// editorCursorPositionChanged() needed? // VERIFY
+	if (combineId >= 0) m_CodeEditor->endUndoCombine();
 }
 
 void DlEditor::insertLine(int line, const DlParsed &parsed)

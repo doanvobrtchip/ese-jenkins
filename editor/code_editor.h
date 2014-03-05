@@ -56,6 +56,7 @@ class QUndoStack;
 class QCompleter;
 
 class LineNumberArea;
+class UndoEditor;
 
 typedef FT800EMUQT::UndoStackDisabler<QPlainTextEdit> CodeEditorParent;
 
@@ -74,6 +75,7 @@ public:
 	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
 
 	void beginUndoCombine(const QString &message);
+	void setUndoCombine(int combineId, const QString &message);
 	void endUndoCombine();
 
 	void setCompleter(QCompleter *c);

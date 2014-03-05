@@ -105,10 +105,10 @@ void InteractiveProperties::addLabeledWidget(const QString &label, QWidget *widg
 
 void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
 {
-	PropertiesSpinBox *propX = new PropertiesSpinBox(this, x);
+	PropertiesSpinBox *propX = new PropertiesSpinBox(this, "Set x position", x);
 	propX->setMinimum(minim);
 	propX->setMaximum(maxim);
-	PropertiesSpinBox *propY = new PropertiesSpinBox(this, y);
+	PropertiesSpinBox *propY = new PropertiesSpinBox(this, "Set y position", y);
 	propY->setMinimum(minim);
 	propY->setMaximum(maxim);
 	addLabeledWidget("XY: ", propX, propY);
@@ -118,10 +118,10 @@ void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
 
 void InteractiveProperties::addWH(int w, int h, int minim, int maxim)
 {
-	PropertiesSpinBox *propW = new PropertiesSpinBox(this, w);
+	PropertiesSpinBox *propW = new PropertiesSpinBox(this, "Set width", w);
 	propW->setMinimum(minim);
 	propW->setMaximum(maxim);
-	PropertiesSpinBox *propH = new PropertiesSpinBox(this, h);
+	PropertiesSpinBox *propH = new PropertiesSpinBox(this, "Set height", h);
 	propH->setMinimum(minim);
 	propH->setMaximum(maxim);
 	addLabeledWidget("WH: ", propW, propH);
@@ -131,10 +131,10 @@ void InteractiveProperties::addWH(int w, int h, int minim, int maxim)
 
 void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 {
-	PropertiesSpinBox16 *propX = new PropertiesSpinBox16(this, x);
+	PropertiesSpinBox16 *propX = new PropertiesSpinBox16(this, "Set x position", x);
 	propX->setMinimum(minim);
 	propX->setMaximum(maxim);
-	PropertiesSpinBox16 *propY = new PropertiesSpinBox16(this, y);
+	PropertiesSpinBox16 *propY = new PropertiesSpinBox16(this, "Set y position", y);
 	propY->setMinimum(minim);
 	propY->setMaximum(maxim);
 	addLabeledWidget("XY: ", propX, propY);
@@ -144,7 +144,7 @@ void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 
 void InteractiveProperties::addHandle(int handle, bool font)
 {
-	PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, handle); // TODO: Handle combobox
+	PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, font ? "Set font" : "Set handle", handle); // TODO: Handle combobox
 	propHandle->setMinimum(0);
 	propHandle->setMaximum(31);
 	addLabeledWidget(font ? "Font: " : "Handle: ", propHandle);
@@ -153,7 +153,7 @@ void InteractiveProperties::addHandle(int handle, bool font)
 
 void InteractiveProperties::addCell(int cell)
 {
-	PropertiesSpinBox *propCell = new PropertiesSpinBox(this, cell);
+	PropertiesSpinBox *propCell = new PropertiesSpinBox(this, "Set cell", cell);
 	propCell->setMinimum(0);
 	propCell->setMaximum(255);
 	addLabeledWidget("Cell: ", propCell);
@@ -179,13 +179,13 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_NOHANDS          49152UL ---- */
 	if (flags & OPT_MONO)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_MONO);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_MONO", options, OPT_MONO);
 		addLabeledWidget("OPT_MONO: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
 	if (flags & OPT_NODL)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NODL);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NODL", options, OPT_NODL);
 		addLabeledWidget("OPT_NODL: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
@@ -193,44 +193,44 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		if (flags & OPT_NOBACK || flatOnly)
 		{
-			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, options, OPT_FLAT);
+			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, "Set OPT_FLAT", options, OPT_FLAT);
 			addLabeledWidget("OPT_FLAT: ", chb0);
 			m_CurrentProperties.push_back(chb0);
 			if (flags & OPT_NOBACK)
 			{
-				PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOBACK);
+				PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, "Set OPT_NOBACK", options, OPT_NOBACK);
 				addLabeledWidget("OPT_NOBACK: ", chb1);
 				m_CurrentProperties.push_back(chb1);
 			}
 		}
 		else
 		{
-			PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_SIGNED);
+			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_SIGNED", options, OPT_SIGNED);
 			addLabeledWidget("OPT_SIGNED: ", chb);
 			m_CurrentProperties.push_back(chb);
 		}
 	}
 	if (flags & OPT_CENTERX)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_CENTERX);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_CENTERX", options, OPT_CENTERX);
 		addLabeledWidget("OPT_CENTERX: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
 	if (flags & OPT_CENTERY)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_CENTERY);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_CENTERY", options, OPT_CENTERY);
 		addLabeledWidget("OPT_CENTERY: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
 	if (flags & OPT_RIGHTX)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_RIGHTX);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_RIGHTX", options, OPT_RIGHTX);
 		addLabeledWidget("OPT_RIGHTX: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
 	if (flags & OPT_NOTICKS)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NOTICKS);
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NOTICKS", options, OPT_NOTICKS);
 		addLabeledWidget("OPT_NOTICKS: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
@@ -238,16 +238,16 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		if (flags & OPT_NOSECS)
 		{
-			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, options, OPT_NOHM);
+			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, "Set OPT_NOHM", options, OPT_NOHM);
 			addLabeledWidget("OPT_NOHM: ", chb0);
 			m_CurrentProperties.push_back(chb0);
-			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOSECS);
+			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, "Set OPT_NOSECS", options, OPT_NOSECS);
 			addLabeledWidget("OPT_NOSECS: ", chb1);
 			m_CurrentProperties.push_back(chb1);
 		}
 		else
 		{
-			PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_NOPOINTER);
+			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NOPOINTER", options, OPT_NOPOINTER);
 			addLabeledWidget("OPT_NOPOINTER: ", chb);
 			m_CurrentProperties.push_back(chb);
 		}
@@ -256,14 +256,14 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 
 void InteractiveProperties::addCharacter(int character)
 {
-	PropertiesLineEditChar *propCharacter = new PropertiesLineEditChar(this, character);
+	PropertiesLineEditChar *propCharacter = new PropertiesLineEditChar(this, "Set character", character);
 	addLabeledWidget("Character: ", propCharacter);
 	m_CurrentProperties.push_back(propCharacter);
 }
 
 void InteractiveProperties::addText(int text)
 {
-	PropertiesLineEdit *propText = new PropertiesLineEdit(this, text);
+	PropertiesLineEdit *propText = new PropertiesLineEdit(this, "Set text", text);
 	addLabeledWidget("Text: ", propText);
 	m_CurrentProperties.push_back(propText);
 }

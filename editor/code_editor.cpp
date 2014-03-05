@@ -90,19 +90,6 @@ void CodeEditor::focusInEvent(QFocusEvent *event)
 	connect(undo_stack, SIGNAL(indexChanged(int)), this, SLOT(undoIndexChanged(int)));
 }*/
 
-void CodeEditor::beginUndoCombine(const QString &message)
-{
-	++m_LastCombineId;
-	m_CombineId = m_LastCombineId;
-	m_UndoRedoMessage = message;
-}
-
-void CodeEditor::endUndoCombine()
-{
-	m_CombineId = -1;
-	m_UndoRedoMessage = QString();
-}
-
 class UndoEditor : public QUndoCommand
 {
 public:
@@ -114,11 +101,32 @@ public:
 	virtual bool mergeWith(const QUndoCommand *command) { ++m_UndoCount; return true; }
 
 private:
+	friend class CodeEditor;
 	CodeEditor *m_Editor;
 	bool m_DoneDummy;
 	int m_CombineId;
 	int m_UndoCount;
+
 };
+
+void CodeEditor::beginUndoCombine(const QString &message)
+{
+	++m_LastCombineId;
+	m_CombineId = m_LastCombineId;
+	m_UndoRedoMessage = message;
+}
+
+void CodeEditor::setUndoCombine(int combineId, const QString &message)
+{
+	m_CombineId = combineId;
+	m_UndoRedoMessage = message;
+}
+
+void CodeEditor::endUndoCombine()
+{
+	m_CombineId = -1;
+	m_UndoRedoMessage = QString();
+}
 
 void CodeEditor::documentUndoCommandAdded()
 {
