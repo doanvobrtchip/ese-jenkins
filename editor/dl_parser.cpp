@@ -1541,16 +1541,19 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 		return;
 	}
 	bool combine = false;
-	if (opt & OPT_MONO)
+	if (cmd != CMD_KEYS)
 	{
-		dst << "OPT_MONO";
-		combine = true;
-	}
-	if (opt & OPT_NODL)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_NODL";
-		combine = true;
+		if (opt & OPT_MONO)
+		{
+			dst << "OPT_MONO";
+			combine = true;
+		}
+		if (opt & OPT_NODL)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NODL";
+			combine = true;
+		}
 	}
 	if (cmd == CMD_NUMBER)
 	{
@@ -1606,7 +1609,7 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 		dst << "OPT_NOTICKS";
 		combine = true;
 	}
-	if (opt == CMD_GAUGE)
+	if (cmd == CMD_GAUGE)
 	{
 		if (opt & OPT_NOPOINTER)
 		{
@@ -1634,6 +1637,23 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			if (combine) dst << " | ";
 			dst << "OPT_NOSECS";
 			combine = true;
+		}
+	}
+	if (cmd == CMD_KEYS)
+	{
+		if (opt & 0xFF)
+		{
+			if (combine) dst << " | ";
+			if ((opt & 0xFF) >= 32 && (opt & 0xFF) <= 126)
+			{
+				dst << "'" << (char)(opt & 0xFF) << "'";
+			}
+			else
+			{
+				std::stringstream tmp;
+				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)(opt & 0xFF);
+				dst << tmp.str();
+			}
 		}
 	}
 }

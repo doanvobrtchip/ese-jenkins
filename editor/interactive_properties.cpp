@@ -116,6 +116,19 @@ void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
 	m_CurrentProperties.push_back(propY);
 }
 
+void InteractiveProperties::addWH(int w, int h, int minim, int maxim)
+{
+	PropertiesSpinBox *propW = new PropertiesSpinBox(this, w);
+	propW->setMinimum(minim);
+	propW->setMaximum(maxim);
+	PropertiesSpinBox *propH = new PropertiesSpinBox(this, h);
+	propH->setMinimum(minim);
+	propH->setMaximum(maxim);
+	addLabeledWidget("WH: ", propW, propH);
+	m_CurrentProperties.push_back(propW);
+	m_CurrentProperties.push_back(propH);
+}
+
 void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 {
 	PropertiesSpinBox16 *propX = new PropertiesSpinBox16(this, x);
@@ -129,12 +142,12 @@ void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 	m_CurrentProperties.push_back(propY);
 }
 
-void InteractiveProperties::addHandle(int handle)
+void InteractiveProperties::addHandle(int handle, bool font)
 {
 	PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, handle); // TODO: Handle combobox
 	propHandle->setMinimum(0);
 	propHandle->setMaximum(31);
-	addLabeledWidget("Handle: ", propHandle);
+	addLabeledWidget(font ? "Font: " : "Handle: ", propHandle);
 	m_CurrentProperties.push_back(propHandle);
 }
 
@@ -147,7 +160,7 @@ void InteractiveProperties::addCell(int cell)
 	m_CurrentProperties.push_back(propCell);
 }
 
-void InteractiveProperties::addOptions(int options, uint32_t flags)
+void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly)
 {
 	/*
 	#define OPT_MONO             1UL
@@ -178,14 +191,17 @@ void InteractiveProperties::addOptions(int options, uint32_t flags)
 	}
 	if (flags & OPT_FLAT)
 	{
-		if (flags & OPT_NOBACK)
+		if (flags & OPT_NOBACK || flatOnly)
 		{
 			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, options, OPT_FLAT);
 			addLabeledWidget("OPT_FLAT: ", chb0);
 			m_CurrentProperties.push_back(chb0);
-			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOBACK);
-			addLabeledWidget("OPT_NOBACK: ", chb1);
-			m_CurrentProperties.push_back(chb1);
+			if (flags & OPT_NOBACK)
+			{
+				PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, options, OPT_NOBACK);
+				addLabeledWidget("OPT_NOBACK: ", chb1);
+				m_CurrentProperties.push_back(chb1);
+			}
 		}
 		else
 		{
@@ -206,7 +222,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags)
 		addLabeledWidget("OPT_CENTERY: ", chb);
 		m_CurrentProperties.push_back(chb);
 	}
-	if (flags & OPT_CENTERY)
+	if (flags & OPT_RIGHTX)
 	{
 		PropertiesCheckBox *chb = new PropertiesCheckBox(this, options, OPT_RIGHTX);
 		addLabeledWidget("OPT_RIGHTX: ", chb);
@@ -236,6 +252,13 @@ void InteractiveProperties::addOptions(int options, uint32_t flags)
 			m_CurrentProperties.push_back(chb);
 		}
 	}
+}
+
+void InteractiveProperties::addCharacter(int character)
+{
+	PropertiesLineEditChar *propCharacter = new PropertiesLineEditChar(this, character);
+	addLabeledWidget("Character: ", propCharacter);
+	m_CurrentProperties.push_back(propCharacter);
 }
 
 void InteractiveProperties::addText(int text)
@@ -408,8 +431,8 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Draw text."));
 					setTitle("CMD_TEXT");
 					addXY(0, 1, -1024, 1023);
-					addHandle(2);
-					addOptions(3, OPT_CENTER);
+					addHandle(2, true);
+					addOptions(3, OPT_CENTER | OPT_RIGHTX);
 					addText(4);
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
@@ -429,7 +452,13 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: button label<br>"
 						"<br>"
 						"Draw a button."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_BUTTON");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, -1024, 1023);
+					addHandle(4, true);
+					addOptions(5, OPT_FLAT, true);
+					addText(6);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -452,7 +481,14 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"register.<br>"
 						"<br>"
 						"Draw a row of keys."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_KEYS");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, -1024, 1023);
+					addHandle(4, true);
+					addOptions(5, OPT_FLAT | OPT_CENTERX, true);
+					addCharacter(5);
+					addText(6);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -971,7 +1007,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is "
 						"no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in "
 						"the current display list, users can even define a bitmap using handle 15."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_HANDLE");
+					addHandle(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -982,7 +1020,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>cell</b>: Bitmap cell number. The initial value is 0<br>"
 						"<br>"
 						"Specify the bitmap cell number for the VERTEX2F command."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CELL");
+					addCell(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1248,7 +1288,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>y</b>: The y coordinate of the scissor clip rectangle, in pixels. The initial value is 0<br>"
 						"<br>"
 						"Sets the top-left position of the scissor clip rectangle, which limits the drawing area."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("SCISSOR_XY");
+					addXY(0, 1, 0, 512);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1262,7 +1304,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"The valid value range is from 0 to 512.<br>"
 						"<br>"
 						"Sets the width and height of the scissor clip rectangle, which limits the drawing area."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("SCISSOR_SIZE");
+					addWH(0, 1, 0, 512);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

@@ -55,10 +55,12 @@ private:
 	void addLabeledWidget(const QString &label, QWidget *widget0, QWidget *widget1);
 
 	void addXY(int x, int y, int minim, int maxim);
+	void addWH(int w, int h, int minim, int maxim);
 	void addXY16(int x, int y, int minim, int maxim);
-	void addHandle(int handle);
+	void addHandle(int handle, bool font = false);
 	void addCell(int cell);
-	void addOptions(int options, uint32_t flags);
+	void addOptions(int options, uint32_t flags, bool flatOnly = false);
+	void addCharacter(int character);
 	void addText(int text);
 
 private slots:
@@ -70,6 +72,7 @@ private:
 	class PropertiesSpinBox16;
 	class PropertiesCheckBox;
 	class PropertiesLineEdit;
+	class PropertiesLineEditChar;
 
 	MainWindow *m_MainWindow;
 
