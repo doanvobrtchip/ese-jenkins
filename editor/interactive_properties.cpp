@@ -268,6 +268,71 @@ void InteractiveProperties::addText(int text)
 	m_CurrentProperties.push_back(propText);
 }
 
+void InteractiveProperties::addValueSlider(int val, int maxim)
+{
+	PropertiesSlider *propVal = new PropertiesSlider(this, "Set value", val);
+	propVal->setMaximum(maxim);
+	addLabeledWidget("Value: ", propVal);
+	m_CurrentProperties.push_back(propVal);
+}
+
+void InteractiveProperties::addValueSliderDyn(int val, int maxim)
+{
+	PropertiesSliderDyn *propVal = new PropertiesSliderDyn(this, "Set value", val, maxim);
+	addLabeledWidget("Value: ", propVal);
+	m_CurrentProperties.push_back(propVal);
+}
+
+void InteractiveProperties::addValueSliderDynSub(int val, int sub, int maxim)
+{
+	PropertiesSliderDynSub *propVal = new PropertiesSliderDynSub(this, "Set value", val, sub, maxim);
+	addLabeledWidget("Value: ", propVal);
+	m_CurrentProperties.push_back(propVal);
+}
+
+void InteractiveProperties::addSizeSubDynSlider(int size, int clip, int maxim)
+{
+	PropertiesSliderDynSubClip *propSize = new PropertiesSliderDynSubClip(this, "Set size", size, clip, maxim);
+	addLabeledWidget("Size: ", propSize);
+	m_CurrentProperties.push_back(propSize);
+}
+
+void InteractiveProperties::addRangeMaximum(int range, int maxim)
+{
+	PropertiesSpinBox *propRange = new PropertiesSpinBox(this, "Set range", range);
+	propRange->setMinimum(0);
+	propRange->setMaximum(maxim);
+	addLabeledWidget("Range: ", propRange);
+	m_CurrentProperties.push_back(propRange);
+}
+
+void InteractiveProperties::addWidth(int width, int minim, int maxim)
+{
+	PropertiesSpinBox *propWidth = new PropertiesSpinBox(this, "Set width", width);
+	propWidth->setMinimum(minim);
+	propWidth->setMaximum(maxim);
+	addLabeledWidget("Width: ", propWidth);
+	m_CurrentProperties.push_back(propWidth);
+}
+
+void InteractiveProperties::addRadius(int radius, int minim, int maxim)
+{
+	PropertiesSpinBox *propRadius = new PropertiesSpinBox(this, "Set radius", radius);
+	propRadius->setMinimum(minim);
+	propRadius->setMaximum(maxim);
+	addLabeledWidget("Radius: ", propRadius);
+	m_CurrentProperties.push_back(propRadius);
+}
+
+void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBox *prop = new PropertiesSpinBox(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
 	// printf("InteractiveProperties::setEditorLine(...)\n");
@@ -454,7 +519,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Draw a button."));
 					setTitle("CMD_BUTTON");
 					addXY(0, 1, -1024, 1023);
-					addWH(2, 3, -1024, 1023);
+					addWH(2, 3, 0, 1023);
 					addHandle(4, true);
 					addOptions(5, OPT_FLAT, true);
 					addText(6);
@@ -483,7 +548,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Draw a row of keys."));
 					setTitle("CMD_KEYS");
 					addXY(0, 1, -1024, 1023);
-					addWH(2, 3, -1024, 1023);
+					addWH(2, 3, 0, 1023);
 					addHandle(4, true);
 					addOptions(5, OPT_FLAT | OPT_CENTERX, true);
 					addCharacter(5);
@@ -506,7 +571,13 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a progress bar."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_PROGRESS");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, 0, 1023);
+					addOptions(4, OPT_FLAT, true);
+					addValueSliderDyn(5, 6);
+					addRangeMaximum(6, 0xFFFF);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -524,7 +595,13 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a slider."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SLIDER");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, 0, 1023);
+					addOptions(4, OPT_FLAT, true);
+					addValueSliderDyn(5, 6);
+					addRangeMaximum(6, 0xFFFF);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -543,26 +620,40 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a scroll bar."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SCROLLBAR");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, 0, 1023);
+					addOptions(4, OPT_FLAT, true);
+					addValueSliderDynSub(5, 6, 7);
+					addSizeSubDynSlider(6, 5, 7);
+					addRangeMaximum(7, 0xFFFF);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
 				case CMD_TOGGLE:
 				{
 					m_MainWindow->propertiesEditor()->setInfo(tr(
-						"<b>CMD_SCROLLBAR</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>f</i>, <i>options</i>, <i>state</i>, <i>s</i>)<br>"
+						"<b>CMD_TOGGLE</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>f</i>, <i>options</i>, <i>state</i>, <i>s</i>)<br>"
 						"<b>x</b>: x-coordinate of top-left of toggle, in pixels<br>"
 						"<b>y</b>: y-coordinate of top-left of toggle, in pixels<br>"
 						"<b>w</b>: width of toggle, in pixels<br>"
 						"<b>f</b>: font to use for text, 0-31. See ROM and RAM Fonts<br>"
-						"<b>state</b>: state of the toggle: 0 is off, 65535 is on.<br>"
 						"<b>options</b>: By default the toggle bar is drawn with a 3D effect. OPT_FLAT removes the 3D "
 						"effect<br>"
+						"<b>state</b>: state of the toggle: 0 is off, 65535 is on.<br>"
 						"<b>s</b>: String label for toggle. A character value of 255 (in C it can be written as \xff) "
 						"separates the two labels.<br>"
 						"<br>"
 						"Draw a toggle switch."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_TOGGLE");
+					addXY(0, 1, -1024, 1023);
+					addWidth(2, 0, 1023);
+					addHandle(3, true);
+					addOptions(4, OPT_FLAT, true);
+					addValueSlider(5, 0xFFFF);
+					addText(6); // TODO: Separate
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -583,7 +674,15 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a gauge."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_GAUGE");
+					addXY(0, 1, -1024, 1023);
+					addRadius(2, 0, 1023);
+					addOptions(3, OPT_FLAT | OPT_NOBACK | OPT_NOTICKS | OPT_NOPOINTER);
+					addSpinBox(4, 1, 10, "Major: ", "Edit major");
+					addSpinBox(5, 1, 10, "Minor: ", "Edit minor");
+					addValueSliderDyn(6, 7);
+					addRangeMaximum(7, 0xFFFF);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -605,7 +704,15 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ms</b>: milliseconds<br>"
 						"<br>"
 						"Draw a clock."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_CLOCK");
+					addXY(0, 1, -1024, 1023);
+					addRadius(2, 0, 1023);
+					addOptions(3, OPT_FLAT | OPT_NOBACK | OPT_NOTICKS | OPT_NOHANDS);
+					addSpinBox(4, 0, 23, "Hours: ", "Edit hours"); // TODO: Clock ?
+					addSpinBox(5, 0, 59, "Minutes: ", "Edit minutes");
+					addSpinBox(6, 0, 59, "Seconds: ", "Edit seconds");
+					addSpinBox(7, 0, 999, "Millis: ", "Edit milliseconds");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -646,7 +753,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"within 1 second.<br>"
 						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 						"active at one time."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SPINNER");
+					addXY(0, 1, -1024, 1023);
+					addSpinBox(2, 0, 3, "Style: ", "Edit style"); // TODO: ComboBox
+					addSpinBox(3, 0, 1023, "Scale: ", "Edit scale");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -833,7 +944,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"dial points straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
 						"<br>"
 						"Draw a rotary dial control."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_DIAL");
+					addXY(0, 1, -1024, 1023);
+					addRadius(2, 0, 1023);
+					addOptions(3, OPT_FLAT, true);
+					addValueSlider(4, 0xFFFF);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -855,7 +971,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>n</b>: The number to display, either unsigned or signed 32-bit<br>"
 						"<br>"
 						"Draw text."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_TEXT");
+					addXY(0, 1, -1024, 1023);
+					addHandle(2, true);
+					addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_SIGNED);
+					addSpinBox(4, 0x80000000, 0x7FFFFFFF, "Number: ", "Edit number");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

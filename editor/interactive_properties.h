@@ -62,6 +62,14 @@ private:
 	void addOptions(int options, uint32_t flags, bool flatOnly = false);
 	void addCharacter(int character);
 	void addText(int text);
+	void addValueSlider(int val, int maxim);
+	void addValueSliderDyn(int val, int maxim);
+	void addValueSliderDynSub(int val, int sub, int maxim);
+	void addSizeSubDynSlider(int size, int clip, int maxim);
+	void addRangeMaximum(int range, int maxim);
+	void addWidth(int width, int minim, int maxim);
+	void addRadius(int width, int minim, int maxim);
+	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
@@ -74,6 +82,9 @@ private:
 	class PropertiesLineEdit;
 	class PropertiesLineEditChar;
 	class PropertiesSlider;
+	class PropertiesSliderDyn;
+	class PropertiesSliderDynSub;
+	class PropertiesSliderDynSubClip;
 
 	MainWindow *m_MainWindow;
 

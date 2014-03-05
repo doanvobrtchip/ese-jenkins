@@ -1617,6 +1617,12 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			dst << "OPT_NOPOINTER";
 			combine = true;
 		}
+		if (opt & OPT_NOSECS)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOSECS";
+			combine = true;
+		}
 	}
 	else
 	{
