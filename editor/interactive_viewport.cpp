@@ -1150,7 +1150,7 @@ RETURN()
 		break;
 	}
 
-	EmulatorViewport::mouseMoveEvent(e);
+	EmulatorViewport::mousePressEvent(e);
 }
 
 void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
@@ -1180,11 +1180,13 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 		updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
 	}
 
-	EmulatorViewport::mouseMoveEvent(e);
+	EmulatorViewport::mouseReleaseEvent(e);
 }
 
 void InteractiveViewport::enterEvent(QEvent *e)
 {
+	//printf("InteractiveViewport::enterEvent\n");
+
 	m_MouseOver = true;
 
 	EmulatorViewport::enterEvent(e);
@@ -1192,6 +1194,8 @@ void InteractiveViewport::enterEvent(QEvent *e)
 
 void InteractiveViewport::leaveEvent(QEvent *e)
 {
+	//printf("InteractiveViewport::leaveEvent\n");
+
 	m_MouseOver = false;
 
 	EmulatorViewport::leaveEvent(e);
