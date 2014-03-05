@@ -18,6 +18,8 @@
 
 // Qt includes
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QSpinBox>
 
 // Emulator includes
@@ -27,68 +29,17 @@
 #include "main_window.h"
 #include "dl_editor.h"
 #include "properties_editor.h"
+#include "interactive_widgets.h"
 
 using namespace std;
 
 namespace FT800EMUQT {
 
-class InteractiveProperties::PropertiesWidget
-{
-public:
-	PropertiesWidget(InteractiveProperties *parent) : m_InteractiveProperties(parent)
-	{
-
-	}
-
-	virtual ~PropertiesWidget()
-	{
-
-	}
-
-	virtual void modifiedEditorLine() = 0;
-
-protected:
-	void setLine(const DlParsed &parsed)
-	{
-		m_InteractiveProperties->m_LineEditor->replaceLine(m_InteractiveProperties->m_LineNumber, parsed);
-	}
-
-	const DlParsed &getLine()
-	{
-		return m_InteractiveProperties->m_LineEditor->getLine(m_InteractiveProperties->m_LineNumber);
-	}
-
-	InteractiveProperties *m_InteractiveProperties;
-};
-
-class InteractiveProperties::PropertiesSpinBox : QSpinBox, PropertiesWidget
-{
-public:
-	PropertiesSpinBox(InteractiveProperties *parent, int index) : QSpinBox(parent), PropertiesWidget(parent), m_Index(index)
-	{
-
-	}
-
-	virtual ~PropertiesSpinBox()
-	{
-
-	}
-
-	virtual void modifiedEditorLine()
-	{
-		setValue(getLine().Parameter[m_Index].I);
-	}
-
-private:
-	int m_Index;
-
-};
-
 InteractiveProperties::InteractiveProperties(MainWindow *parent) : QGroupBox(parent), m_MainWindow(parent),
 	m_LineEditor(NULL), m_LineNumber(0)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
-	// ...
+	setLayout(layout);
 	connect(m_MainWindow->propertiesEditor(), SIGNAL(setterChanged(QWidget *)), this, SLOT(propertiesSetterChanged(QWidget *)));
 }
 
@@ -122,6 +73,34 @@ void InteractiveProperties::propertiesSetterChanged(QWidget *setter)
 	{
 		clear();
 	}
+}
+
+void InteractiveProperties::addLabeledWidget(const QString &label, QWidget *widget)
+{
+	QHBoxLayout *hbox = new QHBoxLayout();
+	QLabel *l = new QLabel(this);
+	l->setText(label);
+	hbox->addWidget(l);
+	hbox->addWidget(widget);
+	m_CurrentWidgets.push_back(l);
+	m_CurrentWidgets.push_back(widget);
+	m_CurrentLayouts.push_back(hbox);
+	((QVBoxLayout *)layout())->addLayout(hbox);
+}
+
+void InteractiveProperties::addLabeledWidget(const QString &label, QWidget *widget0, QWidget *widget1)
+{
+	QHBoxLayout *hbox = new QHBoxLayout();
+	QLabel *l = new QLabel(this);
+	l->setText(label);
+	hbox->addWidget(l);
+	hbox->addWidget(widget0);
+	hbox->addWidget(widget1);
+	m_CurrentWidgets.push_back(l);
+	m_CurrentWidgets.push_back(widget0);
+	m_CurrentWidgets.push_back(widget1);
+	m_CurrentLayouts.push_back(hbox);
+	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
@@ -173,7 +152,27 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"Start the operation of graphics primitive at the specified coordinates. The handle and cell "
 					"parameters will be ignored unless the graphics primitive is specified as bitmap by "
 					"command BEGIN, prior to this command."));
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+				setTitle("VERTEX2II");
+				PropertiesSpinBox *propX = new PropertiesSpinBox(this, 0);
+				propX->setMinimum(0);
+				propX->setMaximum(512);
+				PropertiesSpinBox *propY = new PropertiesSpinBox(this, 1);
+				propY->setMinimum(0);
+				propY->setMaximum(512);
+				addLabeledWidget("XY: ", propX, propY);
+				m_CurrentProperties.push_back(propX);
+				m_CurrentProperties.push_back(propY);
+				PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, 2); // TODO: Handle combobox
+				propHandle->setMinimum(0);
+				propHandle->setMaximum(31);
+				addLabeledWidget("Handle: ", propHandle);
+				m_CurrentProperties.push_back(propHandle);
+				PropertiesSpinBox *propCell = new PropertiesSpinBox(this, 3);
+				propCell->setMinimum(0);
+				propCell->setMaximum(255);
+				addLabeledWidget("Cell: ", propCell);
+				m_CurrentProperties.push_back(propCell);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 				ok = true;
 			}
 			else if (parsed.IdLeft == 0xFFFFFF00) switch (parsed.IdRight | 0xFFFFFF00)
@@ -1306,6 +1305,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 void InteractiveProperties::modifiedEditorLine()
 {
 	printf("InteractiveProperties::modifiedEditorLine()\n");
+
+	for (std::vector<PropertiesWidget *>::iterator it(m_CurrentProperties.begin()), end(m_CurrentProperties.end()); it != end; ++it)
+	{
+		(*it)->modifiedEditorLine();
+	}
 }
 
 } /* namespace FT800EMUQT */

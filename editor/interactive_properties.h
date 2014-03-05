@@ -50,6 +50,10 @@ public:
 	void setEditorLine(DlEditor *editor, int line);
 	void modifiedEditorLine();
 
+private:
+	void addLabeledWidget(const QString &label, QWidget *widget);
+	void addLabeledWidget(const QString &label, QWidget *widget0, QWidget *widget1);
+
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
 
