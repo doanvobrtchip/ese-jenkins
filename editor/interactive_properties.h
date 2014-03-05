@@ -73,6 +73,7 @@ private:
 	class PropertiesCheckBox;
 	class PropertiesLineEdit;
 	class PropertiesLineEditChar;
+	class PropertiesSlider;
 
 	MainWindow *m_MainWindow;
 
