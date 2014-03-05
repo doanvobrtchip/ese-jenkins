@@ -325,6 +325,10 @@ void DlEditor::editingLine(QTextBlock block)
 		m_MainWindow->viewport()->setEditorLine(this, m_PropLine);
 		m_MainWindow->interactiveProperties()->setEditorLine(this, m_PropLine);
 	}
+	else
+	{
+		m_MainWindow->interactiveProperties()->modifiedEditorLine();
+	}
 }
 
 void DlEditor::frame()

@@ -46,7 +46,7 @@ public:
 
 	// Called by a editor when the active line changes
 	void setEditorLine(DlEditor *editor, int line);
-	void unsetEditorLine();
+	void modifiedEditorLine();
 
 private:
 	MainWindow *m_MainWindow;

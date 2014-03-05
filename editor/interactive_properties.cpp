@@ -71,6 +71,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"virtual screen from (0, 0), while the negative y coordinate value means the "
 					"coordinate in the upper virtual screen from (0, 0). If drawing on the negative "
 					"coordinate position, the drawing operation will not be visible."));
+				setTitle("VERTEX2F");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 				ok = true;
 			}
@@ -1217,17 +1218,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 			}
 		}
 	}
-	else
-	{
-		unsetEditorLine();
-	}
 }
 
-void InteractiveProperties::unsetEditorLine()
+void InteractiveProperties::modifiedEditorLine()
 {
-	m_LineEditor = NULL;
-
-	// ...
+	printf("InteractiveProperties::modifiedEditorLine()\n");
 }
 
 } /* namespace FT800EMUQT */
