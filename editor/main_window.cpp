@@ -1959,6 +1959,13 @@ void MainWindow::actImport()
 	// reset editors to their default state
 	clearEditor();
 
+	// set working directory to temporary directory // FIXME: tempPath()
+	QDir::setCurrent(QDir::tempPath());
+	delete m_TemporaryDir;
+	m_TemporaryDir = new QTemporaryDir("ft800editor-");
+	QDir::setCurrent(m_TemporaryDir->path());
+	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
+
 	// open a project
 	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
 	// int QDataStream::readRawData(char * s, int len)
@@ -1993,7 +2000,14 @@ void MainWindow::actImport()
 				m_Macro->reloadDisplayList(false);
 				m_Macro->unlockDisplayList();
 				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
-				s = in.readRawData(&ram[RAM_G], 262144); // FIXME_GUI GLOBAL MEMORY
+				ContentInfo *ramG = m_ContentManager->add(fileName);
+				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
+				m_ContentManager->changeMemoryAddress(ramG, 0);
+				m_ContentManager->changeMemoryLoaded(ramG, true);
+				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
+				m_ContentManager->changeRawLength(ramG, 262144);
+				s = in.skipRawData(262144);
+				// s = in.readRawData(&ram[RAM_G], 262144);
 				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
 				else
 				{
@@ -2044,13 +2058,6 @@ void MainWindow::actImport()
 	m_PropertiesEditor->setInfo(tr("Imported project from .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 	m_Toolbox->setEditorLine(m_DlEditor, 0);
-
-	// set working directory to temporary directory // FIXME: tempPath()
-	QDir::setCurrent(QDir::tempPath());
-	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ft800editor-");
-	QDir::setCurrent(m_TemporaryDir->path());
-	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
 void MainWindow::actExport()

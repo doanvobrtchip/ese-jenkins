@@ -132,6 +132,8 @@ public:
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
+	void changeRawStart(ContentInfo *contentInfo, int value);
+	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
 	void changeMemoryAddress(ContentInfo *contentInfo, int value);
 	void changeDataCompressed(ContentInfo *contentInfo, bool value);
@@ -156,6 +158,8 @@ private:
 	class ChangeDestName;
 	class ChangeConverter;
 	class ChangeImageFormat;
+	class ChangeRawStart;
+	class ChangeRawLength;
 	class ChangeMemoryLoaded;
 	class ChangeMemoryAddress;
 	class ChangeDataCompressed;
@@ -191,6 +195,10 @@ private:
 	QGroupBox *m_PropertiesImagePreview;
 	QLabel *m_PropertiesImageLabel;
 
+	QGroupBox *m_PropertiesRaw;
+	QSpinBox *m_PropertiesRawStart;
+	QSpinBox *m_PropertiesRawLength;
+
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
 	QSpinBox *m_PropertiesMemoryAddress;
@@ -218,11 +226,13 @@ private slots:
 	void propertiesCommonSourcePathBrowse();
 	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
-	void propertiesCommonImageFormatChanged(int value);
-	void propertiesCommonMemoryLoadedChanged(int value);
-	void propertiesCommonMemoryAddressChanged(int value);
-	void propertiesCommonDataCompressedChanged(int value);
-	void propertiesCommonDataEmbeddedChanged(int value);
+	void propertiesImageFormatChanged(int value);
+	void propertiesRawStartChanged(int value);
+	void propertiesRawLengthChanged(int value);
+	void propertiesMemoryLoadedChanged(int value);
+	void propertiesMemoryAddressChanged(int value);
+	void propertiesDataCompressedChanged(int value);
+	void propertiesDataEmbeddedChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);

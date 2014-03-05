@@ -287,7 +287,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImageFormat->addItem("RGB565");
 	m_PropertiesImageFormat->addItem("PALETTED");
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
-	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonImageFormatChanged(int)));
+	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
 
 	m_PropertiesImagePreview = new QGroupBox(this);
@@ -297,6 +297,26 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImageLabel = new QLabel(this);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
+
+	m_PropertiesRaw = new QGroupBox(this);
+	QVBoxLayout *rawLayout = new QVBoxLayout();
+	m_PropertiesRaw->setHidden(true);
+	m_PropertiesRaw->setTitle(tr("Raw"));
+	m_PropertiesRawStart = new QSpinBox(this);
+	m_PropertiesRawStart->setMinimum(0);
+	m_PropertiesRawStart->setMaximum(RAM_DL);
+	m_PropertiesRawStart->setSingleStep(4);
+	m_PropertiesRawStart->setKeyboardTracking(false);
+	addLabeledWidget(this, rawLayout, tr("Start: "), m_PropertiesRawStart);
+	connect(m_PropertiesRawStart, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawStartChanged(int)));
+	m_PropertiesRawLength = new QSpinBox(this);
+	m_PropertiesRawLength->setMinimum(0);
+	m_PropertiesRawLength->setMaximum(RAM_DL);
+	m_PropertiesRawLength->setSingleStep(4);
+	m_PropertiesRawLength->setKeyboardTracking(false);
+	addLabeledWidget(this, rawLayout, tr("Length: "), m_PropertiesRawLength);
+	connect(m_PropertiesRawLength, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawLengthChanged(int)));
+	m_PropertiesRaw->setLayout(rawLayout);
 
 	m_PropertiesMemory = new QGroupBox(this);
 	m_PropertiesMemory->setHidden(true);
@@ -308,20 +328,20 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesMemoryAddress->setSingleStep(4);
 	m_PropertiesMemoryAddress->setKeyboardTracking(false);
 	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
-	connect(m_PropertiesMemoryAddress, SIGNAL(valueChanged(int)), this, SLOT(propertiesCommonMemoryAddressChanged(int)));
+	connect(m_PropertiesMemoryAddress, SIGNAL(valueChanged(int)), this, SLOT(propertiesMemoryAddressChanged(int)));
 	m_PropertiesMemoryLoaded = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Loaded: "), m_PropertiesMemoryLoaded);
-	connect(m_PropertiesMemoryLoaded, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonMemoryLoadedChanged(int)));
+	connect(m_PropertiesMemoryLoaded, SIGNAL(stateChanged(int)), this, SLOT(propertiesMemoryLoadedChanged(int)));
 	QFrame* line = new QFrame();
 	line->setFrameShape(QFrame::HLine);
 	line->setFrameShadow(QFrame::Sunken);
 	propMemLayout->addWidget(line);
 	m_PropertiesDataCompressed = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Compressed: "), m_PropertiesDataCompressed);
-	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonDataCompressedChanged(int)));
+	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataCompressedChanged(int)));
 	m_PropertiesDataEmbedded = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
-	connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesCommonDataEmbeddedChanged(int)));
+	connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataEmbeddedChanged(int)));
 	m_PropertiesMemory->setLayout(propMemLayout);
 
 	QVBoxLayout *helpLayout = new QVBoxLayout();
@@ -734,6 +754,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		widgets.push_back(m_PropertiesCommon);
 		widgets.push_back(m_PropertiesImage);
 		widgets.push_back(m_PropertiesImagePreview);
+		widgets.push_back(m_PropertiesRaw);
 		widgets.push_back(m_PropertiesMemory);
 
 		props->setEditWidgets(widgets, false, this);
@@ -762,6 +783,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	{
 		m_PropertiesImage->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
+		m_PropertiesRaw->setHidden(true);
 		m_PropertiesMemory->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
 	}
@@ -783,6 +805,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
 				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
+				m_PropertiesRaw->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
@@ -835,6 +858,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesRaw->setHidden(false);
 				m_PropertiesMemory->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
@@ -850,6 +874,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesRaw->setHidden(false);
 				m_PropertiesMemory->setHidden(false);
 				if (!propInfo.isEmpty()) propInfo += "<br>";
 				propInfo += tr("<b>Not yet implemented</b>");
@@ -1379,9 +1404,9 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	m_MainWindow->undoStack()->push(changeImageFormat);
 }
 
-void ContentManager::propertiesCommonImageFormatChanged(int value)
+void ContentManager::propertiesImageFormatChanged(int value)
 {
-	printf("ContentManager::propertiesCommonImageFormatChanged(value)\n");
+	printf("ContentManager::propertiesImageFormatChanged(value)\n");
 
 	if (current() && current()->ImageFormat != value)
 		changeImageFormat(current(), value);
@@ -1437,9 +1462,9 @@ void ContentManager::changeMemoryLoaded(ContentInfo *contentInfo, bool value)
 	m_MainWindow->undoStack()->push(changeMemoryLoaded);
 }
 
-void ContentManager::propertiesCommonMemoryLoadedChanged(int value)
+void ContentManager::propertiesMemoryLoadedChanged(int value)
 {
-	printf("ContentManager::propertiesCommonMemoryLoadedChanged(value)\n");
+	printf("ContentManager::propertiesMemoryLoadedChanged(value)\n");
 
 	if (current() && current()->MemoryLoaded != (value == (int)Qt::Checked))
 		changeMemoryLoaded(current(), (value == (int)Qt::Checked));
@@ -1512,9 +1537,9 @@ void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value)
 	m_MainWindow->undoStack()->push(changeMemoryAddress);
 }
 
-void ContentManager::propertiesCommonMemoryAddressChanged(int value)
+void ContentManager::propertiesMemoryAddressChanged(int value)
 {
-	printf("ContentManager::propertiesCommonMemoryAddressChanged(value)\n");
+	printf("ContentManager::propertiesMemoryAddressChanged(value)\n");
 
 	if (current() && current()->MemoryAddress != (value & 0x7FFFFFFC))
 		changeMemoryAddress(current(), value);
@@ -1568,9 +1593,9 @@ void ContentManager::changeDataCompressed(ContentInfo *contentInfo, bool value)
 	m_MainWindow->undoStack()->push(changeDataCompressed);
 }
 
-void ContentManager::propertiesCommonDataCompressedChanged(int value)
+void ContentManager::propertiesDataCompressedChanged(int value)
 {
-	printf("ContentManager::propertiesCommonDataCompressedChanged(value)\n");
+	printf("ContentManager::propertiesDataCompressedChanged(value)\n");
 
 	if (current() && current()->DataCompressed != (value == (int)Qt::Checked))
 		changeDataCompressed(current(), (value == (int)Qt::Checked));
@@ -1622,13 +1647,165 @@ void ContentManager::changeDataEmbedded(ContentInfo *contentInfo, bool value)
 	m_MainWindow->undoStack()->push(changeDataEmbedded);
 }
 
-void ContentManager::propertiesCommonDataEmbeddedChanged(int value)
+void ContentManager::propertiesDataEmbeddedChanged(int value)
 {
-	printf("ContentManager::propertiesCommonDataEmbeddedChanged(value)\n");
+	printf("ContentManager::propertiesDataEmbeddedChanged(value)\n");
 
 	if (current() && current()->DataEmbedded != (value == (int)Qt::Checked))
 		changeDataEmbedded(current(), (value == (int)Qt::Checked));
 }
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeRawStart : public QUndoCommand
+{
+public:
+	ChangeRawStart(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->RawStart),
+		m_NewValue(value)
+	{
+		setText(tr("Change memory address"));
+	}
+
+	virtual ~ChangeRawStart()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->RawStart = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->RawStart = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064411;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeRawStart *c = static_cast<const ChangeRawStart *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeRawStart(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeRawStart *changeRawStart = new ChangeRawStart(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
+	m_MainWindow->undoStack()->push(changeRawStart);
+}
+
+void ContentManager::propertiesRawStartChanged(int value)
+{
+	printf("ContentManager::propertiesRawStartChanged(value)\n");
+
+	if (current() && current()->RawStart != (value & 0x7FFFFFFC))
+		changeRawStart(current(), value);
+	else if (current() && value != (value & 0x7FFFFFFC))
+		rebuildGUIInternal(current());
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeRawLength : public QUndoCommand
+{
+public:
+	ChangeRawLength(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->RawLength),
+		m_NewValue(value)
+	{
+		setText(tr("Change memory address"));
+	}
+
+	virtual ~ChangeRawLength()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->RawLength = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->RawLength = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064412;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeRawLength *c = static_cast<const ChangeRawLength *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeRawLength(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeRawLength *changeRawLength = new ChangeRawLength(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
+	m_MainWindow->undoStack()->push(changeRawLength);
+}
+
+void ContentManager::propertiesRawLengthChanged(int value)
+{
+	printf("ContentManager::propertiesRawLengthChanged(value)\n");
+
+	if (current() && current()->RawLength != (value & 0x7FFFFFFC))
+		changeRawLength(current(), value);
+	else if (current() && value != (value & 0x7FFFFFFC))
+		rebuildGUIInternal(current());
+}
+
+////////////////////////////////////////////////////////////////////////
 
 } /* namespace FT800EMUQT */
 
