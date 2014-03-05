@@ -636,14 +636,14 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	centralWidget->setLayout(cvLayout);
 	setCentralWidget(centralWidget);
 
-	m_InteractiveProperties = new InteractiveProperties(this);
-	m_InteractiveProperties->setVisible(false);
-
 	createActions();
 	createMenus();
 	createToolBars();
 	createStatusBar();
 	createDockWindows();
+
+	m_InteractiveProperties = new InteractiveProperties(this);
+	m_InteractiveProperties->setVisible(false);
 
 	incbLanguageCode();
 

@@ -33,7 +33,7 @@ class DlEditor;
 /**
  * InteractiveProperties
  * \brief InteractiveProperties
- * \date 2013-12-22 01:01GMT
+ * \date 2014-03-04 22:58GMT
  * \author Jan Boon (Kaetemi)
  */
 class InteractiveProperties : public QGroupBox
@@ -44,16 +44,28 @@ public:
 	InteractiveProperties(MainWindow *parent);
 	virtual ~InteractiveProperties();
 
+	void clear();
+
 	// Called by a editor when the active line changes
 	void setEditorLine(DlEditor *editor, int line);
 	void modifiedEditorLine();
 
+private slots:
+	void propertiesSetterChanged(QWidget *setter);
+
 private:
+	class PropertiesWidget;
+	class PropertiesSpinBox;
+
 	MainWindow *m_MainWindow;
 
 	// Current line
 	DlEditor *m_LineEditor;
 	int m_LineNumber;
+
+	std::vector<QLayout *> m_CurrentLayouts;
+	std::vector<QWidget *> m_CurrentWidgets;
+	std::vector<PropertiesWidget *> m_CurrentProperties;
 
 private:
 	InteractiveProperties(const InteractiveProperties &);

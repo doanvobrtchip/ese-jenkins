@@ -18,6 +18,7 @@
 
 // Qt includes
 #include <QVBoxLayout>
+#include <QSpinBox>
 
 // Emulator includes
 #include <vc.h>
@@ -31,11 +32,64 @@ using namespace std;
 
 namespace FT800EMUQT {
 
+class InteractiveProperties::PropertiesWidget
+{
+public:
+	PropertiesWidget(InteractiveProperties *parent) : m_InteractiveProperties(parent)
+	{
+
+	}
+
+	virtual ~PropertiesWidget()
+	{
+
+	}
+
+	virtual void modifiedEditorLine() = 0;
+
+protected:
+	void setLine(const DlParsed &parsed)
+	{
+		m_InteractiveProperties->m_LineEditor->replaceLine(m_InteractiveProperties->m_LineNumber, parsed);
+	}
+
+	const DlParsed &getLine()
+	{
+		return m_InteractiveProperties->m_LineEditor->getLine(m_InteractiveProperties->m_LineNumber);
+	}
+
+	InteractiveProperties *m_InteractiveProperties;
+};
+
+class InteractiveProperties::PropertiesSpinBox : QSpinBox, PropertiesWidget
+{
+public:
+	PropertiesSpinBox(InteractiveProperties *parent, int index) : QSpinBox(parent), PropertiesWidget(parent), m_Index(index)
+	{
+
+	}
+
+	virtual ~PropertiesSpinBox()
+	{
+
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		setValue(getLine().Parameter[m_Index].I);
+	}
+
+private:
+	int m_Index;
+
+};
+
 InteractiveProperties::InteractiveProperties(MainWindow *parent) : QGroupBox(parent), m_MainWindow(parent),
 	m_LineEditor(NULL), m_LineNumber(0)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 	// ...
+	connect(m_MainWindow->propertiesEditor(), SIGNAL(setterChanged(QWidget *)), this, SLOT(propertiesSetterChanged(QWidget *)));
 }
 
 InteractiveProperties::~InteractiveProperties()
@@ -43,9 +97,38 @@ InteractiveProperties::~InteractiveProperties()
 
 }
 
+void InteractiveProperties::clear()
+{
+	// printf("InteractiveProperties::clear()\n");
+
+	for (std::vector<QWidget *>::iterator it(m_CurrentWidgets.begin()), end(m_CurrentWidgets.end()); it != end; ++it)
+	{
+		delete (*it);
+	}
+	m_CurrentWidgets.clear();
+	m_CurrentProperties.clear();
+	for (std::vector<QLayout *>::iterator it(m_CurrentLayouts.begin()), end(m_CurrentLayouts.end()); it != end; ++it)
+	{
+		delete (*it);
+	}
+	m_CurrentLayouts.clear();
+}
+
+void InteractiveProperties::propertiesSetterChanged(QWidget *setter)
+{
+	// printf("InteractiveProperties::propertiesSetterChanged(setter)\n");
+
+	if (m_LineEditor && setter != m_LineEditor)
+	{
+		clear();
+	}
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
-	printf("InteractiveProperties::setEditorLine(...)\n");
+	// printf("InteractiveProperties::setEditorLine(...)\n");
+
+	clear();
 
 	m_LineNumber = line;
 	m_LineEditor = editor;
@@ -72,7 +155,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"coordinate in the upper virtual screen from (0, 0). If drawing on the negative "
 					"coordinate position, the drawing operation will not be visible."));
 				setTitle("VERTEX2F");
-				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 				ok = true;
 			}
 			else if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
@@ -90,7 +173,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					"Start the operation of graphics primitive at the specified coordinates. The handle and cell "
 					"parameters will be ignored unless the graphics primitive is specified as bitmap by "
 					"command BEGIN, prior to this command."));
-				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 				ok = true;
 			}
 			else if (parsed.IdLeft == 0xFFFFFF00) switch (parsed.IdRight | 0xFFFFFF00)
@@ -102,7 +185,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"When the co-processor engine executes this command, it waits until the display list is "
 						"ready for writing, then sets REG_CMD_DL to zero."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -113,7 +196,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"When the co-processor engine executes this command, it requests a display list swap by "
 						"writing to REG_DLSWAP."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -125,7 +208,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"not to fire before this delay. If ms is zero, the interrupt fires immediately.<br>"
 						"<br>"
 						"When the co-processor engine executes this command, it triggers interrupt INT_CMDFLAG."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -139,7 +222,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"behind gauges and sliders etc.<br>"
 						"<br>"
 						"Set the background color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -154,7 +237,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"(\"affordances\").<br>"
 						"<br>"
 						"Set the foreground color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -179,7 +262,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"three colors and the equation used is R0 + t * (R1 - R0), where t is interpolated between "
 						"0 and 1. Gradient must be used with Scissor function to get the intended gradient "
 						"display."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -197,7 +280,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: text<br>"
 						"<br>"
 						"Draw text."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -215,7 +298,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: button label<br>"
 						"<br>"
 						"Draw a button."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -238,7 +321,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"register.<br>"
 						"<br>"
 						"Draw a row of keys."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -256,7 +339,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a progress bar."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -274,7 +357,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a slider."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -293,7 +376,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a scroll bar."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -312,7 +395,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"separates the two labels.<br>"
 						"<br>"
 						"Draw a toggle switch."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -333,7 +416,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>range</b>: Maximum value<br>"
 						"<br>"
 						"Draw a gauge."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -355,7 +438,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ms</b>: milliseconds<br>"
 						"<br>"
 						"Draw a clock."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -370,7 +453,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"display list and then use CMD_CALIBRATE. The co-processor engine overlays the touch "
 						"targets on the current display list, gathers the calibration input and updates "
 						"REG_TOUCH_TRANSFORM_A-F."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -396,7 +479,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"within 1 second.<br>"
 						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 						"active at one time."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -406,7 +489,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>CMD_STOP</b>()<br>"
 						"<br>"
 						"Stop any spinner, screensaver or sketch."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -419,7 +502,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Fill memory with a byte value."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -431,7 +514,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Write zero to a block of memory."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -444,7 +527,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Copy a block of memory."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -456,7 +539,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes to copy. This must be a multiple of 4<br>"
 						"<br>"
 						"Append memory to display list."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -467,7 +550,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ptr</b>: Snapshot destination address, in main memory<br>"
 						"<br>"
 						"Take a snapshot of the current screen."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -477,7 +560,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>CMD_LOADIDENTITY</b>()<br>"
 						"<br>"
 						"Set the current matrix to identity."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -489,7 +572,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ty</b>: y translate factor, in signed 16.16 bit fixed-point form.<br>"
 						"<br>"
 						"Apply a translation to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -501,7 +584,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>sy</b>: y scale factor, in signed 16.16 bit fixed-point form.<br>"
 						"<br>"
 						"Apply a scale to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -512,7 +595,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>a</b>: Clockwise rotation angle, in units of 1/65536 of a circle.<br>"
 						"<br>"
 						"Apply a rotation to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -522,7 +605,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>CMD_SETMATRIX</b>()<br>"
 						"<br>"
 						"Write the current matrix as a bitmap transform."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -535,7 +618,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"To use a custom font with the co-processor engine objects, create the font definition "
 						"data in FT800 RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -566,7 +649,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"the angle is straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
 						"For a linear tracker - used for sliders and scrollbars - this value is the distance along the "
 						"tracked object, from 0 to 65535."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -583,7 +666,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"dial points straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
 						"<br>"
 						"Draw a rotary dial control."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -605,7 +688,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>n</b>: The number to display, either unsigned or signed 32-bit<br>"
 						"<br>"
 						"Draw text."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -620,7 +703,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Command CMD_STOP stops the update process.<br>"
 						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 						"active at one time."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -641,7 +724,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CMD_STOP stops the update process.<br>"
 						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 						"active at one time."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -651,7 +734,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>CMD_LOGO</b>()<br>"
 						"<br>"
 						"Play device logo animation."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -661,7 +744,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>CMD_LOGO</b>()<br>"
 						"<br>"
 						"Set co-processor engine state to default values."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -673,7 +756,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"significant 8 bits, blue is the least. So 0xffff0000 is bright red.<br>"
 						"<br>"
 						"Set the 3D button highlight color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -687,7 +770,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>DISPLAY</b>()<br>"
 						"<br>"
 						"End the display list. FT800 will ignore all the commands following this command."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -701,7 +784,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"source shall be aligned to 2 bytes.<br>"
 						"<br>"
 						"Specify the source address of bitmap data in FT800 graphics memory RAM_G."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -714,7 +797,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>blue</b>: Blue value used when the color buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Sets the color values used by a following CLEAR."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -726,7 +809,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Attach the tag value for the following graphics objects drawn on the screen. The initial "
 						"tag buffer value is 255."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -740,7 +823,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Sets red, green and blue values of the FT800 color buffer which will be applied to the "
 						"following draw operation."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -757,7 +840,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is "
 						"no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in "
 						"the current display list, users can even define a bitmap using handle 15."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -768,7 +851,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>cell</b>: Bitmap cell number. The initial value is 0<br>"
 						"<br>"
 						"Specify the bitmap cell number for the VERTEX2F command."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -783,7 +866,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>height</b>: Bitmap height, in lines<br>"
 						"<br>"
 						"Specify the source bitmap memory format and layout for the current handle."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -798,7 +881,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>height</b>: Drawn bitmap height, in pixels<br>"
 						"<br>"
 						"Specify the screen drawing of bitmaps for the current handle."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -811,7 +894,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ref</b>: Specifies the reference value for the alpha test. The initial value is 0<br>"
 						"<br>"
 						"Specify the alpha test function."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -826,7 +909,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"value. The initial value is 255<br>"
 						"<br>"
 						"Set function and reference value for stencil testing."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -839,7 +922,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"constants as src. The initial value is ONE_MINUS_SRC_ALPHA(4)<br>"
 						"<br>"
 						"Specify pixel arithmetic."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -853,7 +936,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"constants as sfail. The initial value is KEEP (1)<br>"
 						"<br>"
 						"Set stencil test actions."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -866,7 +949,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Sets the size of drawn points. The width is the distance from the center of the point "
 						"to the outermost drawn pixel, in units of 1/16 pixels. The valid range is from 16 to "
 						"8191 with respect to 1/16th pixel unit."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -879,7 +962,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Sets the width of drawn lines. The width is the distance from the center of the line to "
 						"the outermost drawn pixel, in units of 1/16 pixel. The valid range is from 16 to 4095 "
 						"in terms of 1/16th pixel units."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -890,7 +973,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>alpha</b>: Alpha value used when the color buffer is cleared. The initial value is 0.<br>"
 						"<br>"
 						"Specify clear value for the alpha channel."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -901,7 +984,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>alpha</b>: Alpha for the current color. The initial value is 255<br>"
 						"<br>"
 						"Set the current color alpha."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -912,7 +995,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: Value used when the stencil buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Specify clear value for the stencil buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -923,7 +1006,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: Value used when the tag buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Specify clear value for the tag buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -934,7 +1017,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>mask</b>: The mask used to enable writing stencil bits. The initial value is 255<br>"
 						"<br>"
 						"Control the writing of individual bits in the stencil planes."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -950,7 +1033,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"rather than the value given by TAG command in the display list.<br>"
 						"<br>"
 						"Control the writing of the tag buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -962,7 +1045,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 256<br>"
 						"<br>"
 						"Specify the A coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -974,7 +1057,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the B coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -986,7 +1069,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the C coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -998,7 +1081,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the D coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1010,7 +1093,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 256<br>"
 						"<br>"
 						"Specify the E coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1022,7 +1105,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the F coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1034,7 +1117,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>y</b>: The y coordinate of the scissor clip rectangle, in pixels. The initial value is 0<br>"
 						"<br>"
 						"Sets the top-left position of the scissor clip rectangle, which limits the drawing area."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1048,7 +1131,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"The valid value range is from 0 to 512.<br>"
 						"<br>"
 						"Sets the width and height of the scissor clip rectangle, which limits the drawing area."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1064,7 +1147,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"CALL and RETURN have a 4 level stack in addition to the current pointer. Any "
 						"additional CALL/RETURN done will lead to unexpected behavior."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1075,7 +1158,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>dest</b>: Display list address to be jumped.<br>"
 						"<br>"
 						"Execute commands at another location in the display list."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1086,7 +1169,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>prim</b>: Graphics primitive. The valid value is defined as: BITMAPS, POINTS, LINES, LINE_STRIP, EDGE_STRIP_R, EDGE_STRIP_L, EDGE_STRIP_A, EDGE_STRIP_B, RECTS<br>"
 						"<br>"
 						"Begin drawing a graphics primitive."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1103,7 +1186,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"it is used to selectively update only the red, green, blue or alpha channels of the "
 						"image. More often, it is used to completely disable color updates while updating the "
 						"tag and stencil buffers."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1117,7 +1200,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"It is recommended to have an END for each BEGIN. Whereas advanced users can "
 						"avoid the usage of END in order to save extra graphics instructions in the display list "
 						"RAM."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1129,7 +1212,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Push the current graphics context on the context stack.<br>"
 						"<br>"
 						"Any extra SAVE_CONTEXT will throw away the earliest saved context."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1141,7 +1224,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Restore the current graphics context from the context stack.<br>"
 						"<br>"
 						"Any extra RESTORE_CONTEXT will load the default values into the present context."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1153,7 +1236,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Return from a previous CALL command.<br>"
 						"<br>"
 						"CALL and RETURN have 4 levels of stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1168,7 +1251,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"is undefined.<br>"
 						"<br>"
 						"Execute a single command from a macro register."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1191,7 +1274,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CLEAR_TAG.<br>"
 						"<br>"
 						"Clear buffers to preset values."));
-					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
 				}
@@ -1199,7 +1282,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 			if (!ok)
 			{
 				m_MainWindow->propertiesEditor()->setInfo(tr("</i>Not yet implemented.</i>"));
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, this);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 		}
 		else
@@ -1209,12 +1292,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 				QString message;
 				message.sprintf(tr("Unknown command '<i>%s</i>'").toUtf8().constData(), parsed.IdText.c_str());
 				m_MainWindow->propertiesEditor()->setInfo(message);
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, this);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			else if (m_MainWindow->propertiesEditor()->getEditWidgetSetter())
 			{
 				m_MainWindow->propertiesEditor()->setInfo(QString());
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, this);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 		}
 	}

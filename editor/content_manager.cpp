@@ -1051,7 +1051,7 @@ void ContentManager::reloadExternal(ContentInfo *contentInfo)
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
 {
-	printf("ContentManager::propertiesSetterChanged(setter)\n");
+	// printf("ContentManager::propertiesSetterChanged(setter)\n");
 
 	if (setter != this)
 	{

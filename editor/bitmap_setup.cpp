@@ -168,7 +168,7 @@ void BitmapWidget::deselect()
 
 void BitmapWidget::setImage(const QString &name)
 {
-	printf("BitmapWidget::setImage(name)\n");
+	// printf("BitmapWidget::setImage(name)\n");
 
 	// if (m_ImageName == name) return; // Also used for refreshing...
 
@@ -178,7 +178,7 @@ void BitmapWidget::setImage(const QString &name)
 
 void BitmapWidget::unsetImage()
 {
-	printf("BitmapWidget::unsetImage(name)\n");
+	// printf("BitmapWidget::unsetImage(name)\n");
 
 	m_ImageName = "";
 	m_Pixmap = QPixmap();
@@ -554,7 +554,7 @@ void BitmapSetup::rebuildGUIInternal()
 
 void BitmapSetup::refreshViewInternal(int bitmapHandle)
 {
-	printf("BitmapSetup::refreshViewInternal(bitmapHandle)\n");
+	// printf("BitmapSetup::refreshViewInternal(bitmapHandle)\n");
 
 	// Update the preview icon
 	ContentManager *cm = m_MainWindow->contentManager();
@@ -670,9 +670,9 @@ void BitmapSetup::refreshGUIInternal() // acts on m_Selected as bitmapHandle
 
 void BitmapSetup::deselect()
 {
-	printf("BitmapSetup::deselect()\n");
-
 	if (m_Selected == -1) return;
+
+	printf("BitmapSetup::deselect()\n");
 
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 		m_Bitmaps[i]->deselect();
@@ -689,7 +689,7 @@ void BitmapSetup::deselect()
 
 void BitmapSetup::propertiesSetterChanged(QWidget *setter)
 {
-	printf("BitmapSetup::propertiesSetterChanged(setter)\n");
+	// printf("BitmapSetup::propertiesSetterChanged(setter)\n");
 
 	if (setter != this)
 	{
