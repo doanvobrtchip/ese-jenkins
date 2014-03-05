@@ -59,6 +59,7 @@ private:
 	void addHandle(int handle);
 	void addCell(int cell);
 	void addOptions(int options, uint32_t flags);
+	void addText(int text);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
@@ -68,6 +69,7 @@ private:
 	class PropertiesSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesCheckBox;
+	class PropertiesLineEdit;
 
 	MainWindow *m_MainWindow;
 

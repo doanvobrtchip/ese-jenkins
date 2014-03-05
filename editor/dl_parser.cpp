@@ -626,46 +626,12 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					if (c == '\\')
 					{
 						// unescape
+						pss << '\\';
 						++i;
 						if (i < len)
 						{
 							c = src[i];
-							switch (c)
-							{
-							case 't':
-								pss << '\t';
-								break;
-							case 'n':
-								pss << '\n';
-								break;
-							case 'r':
-								pss << '\r';
-								break;
-							case 'x':
-							{
-								if (i + 2 < len
-									&& ('A' <= src[i + 1] && src[i + 1] <= 'F' || 'a' <= src[i + 1] && src[i + 1] <= 'f' || '0' <= src[i + 1] && src[i + 1] <= '9')
-									&& ('A' <= src[i + 2] && src[i + 2] <= 'F' || 'a' <= src[i + 2] && src[i + 2] <= 'f' || '0' <= src[i + 2] && src[i + 2] <= '9'))
-								{
-									std::stringstream tmp;
-									tmp << std::hex << src[i + 1] << src[i + 2];
-									unsigned int ch;
-									tmp >> ch;
-									c = (char)(unsigned char)(ch & 0xFF);
-									// printf("char %i\n", (int)c);
-									pss << c;
-									i += 2;
-								}
-								else
-								{
-									pss << "\\x";
-								}
-								break;
-							}
-							default:
-								pss << c;
-								break;
-							}
+							pss << c;
 						}
 						else
 						{
@@ -732,8 +698,10 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					if (ps.length() >= 2)
 					{
 						// std::string psstr = ps.substr(1, ps.size() - 2);
+						std::string psstr;
+						unescapeString(psstr, ps);
 						parsed.Parameter[p].U = 0;
-						parsed.StringParameter = ps; // TODO: Parse escape characters
+						parsed.StringParameter = psstr;
 						parsed.ValidParameter[pq] = true;
 						parsed.StringParameterAt = pq;
 					}
@@ -1702,22 +1670,9 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			{
 				// String parameter
 				res << "\"";
-				//res << parsed.StringParameter; // TODO: Escape string
-				for (int c = 0; c < parsed.StringParameter.size(); ++c)
-				{
-					unsigned char ch = parsed.StringParameter[c];
-					if (ch == '\t') res << "\\t";
-					else if (ch == '\\') res << "\\\\";
-					else if (ch == '\n') res << "\\n";
-					else if (ch == '\r') res << "\\r";
-					else if (ch >= 32 && ch <= 126) res << ch;
-					else
-					{
-						std::stringstream tmp;
-						tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
-						res << tmp.str();
-					}
-				}
+				std::string escstr;
+				escapeString(escstr, parsed.StringParameter);
+				res << escstr;
 				res << "\"";
 			}
 			else
@@ -1771,6 +1726,90 @@ QString DlParser::toString(const DlParsed &parsed)
 	std::string str;
 	toString(str, parsed);
 	return QString(str.c_str());
+}
+
+void DlParser::escapeString(std::string &dst, const std::string &src)
+{
+	std::stringstream res;
+	for (int c = 0; c < src.size(); ++c)
+	{
+		unsigned char ch = src[c];
+		if (ch == '\t') res << "\\t";
+		else if (ch == '\\') res << "\\\\";
+		else if (ch == '\n') res << "\\n";
+		else if (ch == '\r') res << "\\r";
+		else if (ch >= 32 && ch <= 126) res << ch;
+		else
+		{
+			std::stringstream tmp;
+			tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
+			res << tmp.str();
+		}
+	}
+	dst = res.str();
+}
+
+void DlParser::unescapeString(std::string &dst, const std::string &src)
+{
+	std::stringstream res;
+	for (int i = 0; i < src.size(); ++i)
+	{
+		char c = src[i];
+		if (c == '\\')
+		{
+			// unescape
+			++i;
+			if (i < src.size())
+			{
+				c = src[i];
+				switch (c)
+				{
+				case 't':
+					res << '\t';
+					break;
+				case 'n':
+					res << '\n';
+					break;
+				case 'r':
+					res << '\r';
+					break;
+				case 'x':
+				{
+					if (i + 2 < src.size()
+						&& ('A' <= src[i + 1] && src[i + 1] <= 'F' || 'a' <= src[i + 1] && src[i + 1] <= 'f' || '0' <= src[i + 1] && src[i + 1] <= '9')
+						&& ('A' <= src[i + 2] && src[i + 2] <= 'F' || 'a' <= src[i + 2] && src[i + 2] <= 'f' || '0' <= src[i + 2] && src[i + 2] <= '9'))
+					{
+						std::stringstream tmp;
+						tmp << std::hex << src[i + 1] << src[i + 2];
+						unsigned int ch;
+						tmp >> ch;
+						c = (char)(unsigned char)(ch & 0xFF);
+						// printf("char %i\n", (int)c);
+						res << c;
+						i += 2;
+					}
+					else
+					{
+						res << "\\x";
+					}
+					break;
+				}
+				default:
+					res << c;
+					break;
+				}
+			}
+			else
+			{
+				res << '\\';
+			}
+		}
+		else
+		{
+			res << c;
+		}
+	}
+	dst = res.str();
 }
 
 } /* namespace FT800EMUQT */

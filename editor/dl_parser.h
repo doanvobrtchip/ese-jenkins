@@ -117,6 +117,9 @@ public:
 	static void toString(std::string &dst, const DlParsed &parsed); // DL and CMD
 	static QString toString(const DlParsed &parsed); // DL and CMD
 
+	static void escapeString(std::string &dst, const std::string &src);
+	static void unescapeString(std::string &dst, const std::string &src);
+
 }; /* class DlParser */
 
 } /* namespace FT800EMUQT */

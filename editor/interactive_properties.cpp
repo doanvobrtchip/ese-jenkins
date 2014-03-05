@@ -238,6 +238,13 @@ void InteractiveProperties::addOptions(int options, uint32_t flags)
 	}
 }
 
+void InteractiveProperties::addText(int text)
+{
+	PropertiesLineEdit *propText = new PropertiesLineEdit(this, text);
+	addLabeledWidget("Text: ", propText);
+	m_CurrentProperties.push_back(propText);
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
 	// printf("InteractiveProperties::setEditorLine(...)\n");
@@ -403,6 +410,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					addXY(0, 1, -1024, 1023);
 					addHandle(2);
 					addOptions(3, OPT_CENTER);
+					addText(4);
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
