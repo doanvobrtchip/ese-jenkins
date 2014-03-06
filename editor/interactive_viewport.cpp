@@ -1082,19 +1082,41 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					{
 						y += yd;
 						h -= yd;
+						if (h < 0)
+						{
+							m_MovingLastY += h;
+							y += h;
+							h = 0;
+						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
 					{
 						h += yd;
+						if (h < 0)
+						{
+							m_MovingLastY -= h;
+							h = 0;
+						}
 					}
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
 					{
 						x += xd;
 						w -= xd;
+						if (w < 0)
+						{
+							m_MovingLastX += w;
+							x += w;
+							w = 0;
+						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
 					{
 						w += xd;
+						if (w < 0)
+						{
+							m_MovingLastX -= w;
+							w = 0;
+						}
 					}
 					pa.Parameter[0].I = x;
 					pa.Parameter[1].I = y;
@@ -1107,18 +1129,38 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
 					{
 						r -= yd;
+						if (r < 0)
+						{
+							m_MovingLastY += r;
+							r = 0;
+						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
 					{
 						r += yd;
+						if (r < 0)
+						{
+							m_MovingLastY -= r;
+							r = 0;
+						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
 					{
 						r -= xd;
+						if (r < 0)
+						{
+							m_MovingLastX += r;
+							r = 0;
+						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
 					{
 						r += xd;
+						if (r < 0)
+						{
+							m_MovingLastX -= r;
+							r = 0;
+						}
 					}
 					pa.Parameter[2].I = r;
 				}
