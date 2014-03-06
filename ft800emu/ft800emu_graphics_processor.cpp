@@ -412,9 +412,11 @@ FT800EMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 		break;
 	case INCR:
 		if (bs[x] < 0xFF) bs[x] = ((bs[x] + 1) & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
+		else bs[x] = (bs[x] & (~gs.StencilMask));
 		break;
 	case DECR:
 		if (bs[x] > 0x00) bs[x] = ((bs[x] - 1) & gs.StencilMask) | (bs[x] & (~gs.StencilMask)); // i assume
+		else bs[x] = (bs[x] | gs.StencilMask);
 		break;
 	case INVERT:
 		bs[x] = ((~bs[x]) & gs.StencilMask) | (bs[x] & (~gs.StencilMask));
