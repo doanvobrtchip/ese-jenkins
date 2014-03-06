@@ -25,6 +25,7 @@
 #include <QSlider>
 #include <QFrame>
 #include <QColorDialog>
+#include <QComboBox>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -147,6 +148,33 @@ protected:
 	virtual int valueFromText(const QString &text) const
 	{
 		return (int)floorf((text.toFloat() * 16.f) + 0.5f);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBox256 : public InteractiveProperties::PropertiesSpinBox
+{
+public:
+	PropertiesSpinBox256(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	{
+
+	}
+
+	virtual ~PropertiesSpinBox256()
+	{
+
+	}
+
+protected:
+	virtual QString textFromValue(int value) const
+	{
+		return QString::number((double)value / 256.0);
+	}
+
+	virtual int valueFromText(const QString &text) const
+	{
+		return (int)floor((text.toDouble() * 256.0) + 0.5);
 	}
 };
 
@@ -598,6 +626,57 @@ private:
 	int m_R;
 	int m_G;
 	int m_B;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesComboBox : public QComboBox, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesComboBox(InteractiveProperties *parent, const QString &undoMessage, int index) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesComboBox()
+	{
+
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setCurrentIndex(getLine().Parameter[m_Index].U);
+		m_SoftMod = false;
+	}
+
+private slots:
+	void updateValue(int value)
+	{
+		if (m_SoftMod) return;
+		if (value < 0) return;
+		m_SoftMod = true;
+		//printf("PropertiesSlider::updateValue(value) %i\n", value);
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].U = value;
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
 
 };
 

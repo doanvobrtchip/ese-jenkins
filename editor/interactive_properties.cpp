@@ -333,6 +333,16 @@ void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QS
 	m_CurrentProperties.push_back(prop);
 }
 
+void InteractiveProperties::addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBox256 *prop = new PropertiesSpinBox256(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	prop->setSingleStep(256);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+}
+
 void InteractiveProperties::addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
 {
 	PropertiesSpinBox65536 *prop = new PropertiesSpinBox65536(this, undoMessage, index);
@@ -435,6 +445,82 @@ void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 	m_CurrentLayouts.push_back(hbox);
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
+
+void InteractiveProperties::addBlendFunction(int blend, const QString &label, const QString &undoMessage)
+{
+	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, blend);
+	prop->addItem("ZERO");
+	prop->addItem("ONE");
+	prop->addItem("SRC_ALPHA");
+	prop->addItem("DST_ALPHA");
+	prop->addItem("ONE_MINUS_SRC_ALPHA");
+	prop->addItem("ONE_MINUS_DST_ALPHA");
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->ready();
+}
+
+void InteractiveProperties::addCompareFunction(int compare)
+{
+	PropertiesComboBox *prop = new PropertiesComboBox(this, "Set func", compare);
+	prop->addItem("NEVER");
+	prop->addItem("LESS");
+	prop->addItem("LEQUAL");
+	prop->addItem("GREATER");
+	prop->addItem("GEQUAL");
+	prop->addItem("EQUAL");
+	prop->addItem("NOTEQUAL");
+	prop->addItem("ALWAYS");
+	addLabeledWidget("Func: ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->ready();
+}
+
+void InteractiveProperties::addStencilOperation(int operation, const QString &label, const QString &undoMessage)
+{
+	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, operation);
+	prop->addItem("ZERO");
+	prop->addItem("KEEP");
+	prop->addItem("REPLACE");
+	prop->addItem("INCR");
+	prop->addItem("DECR");
+	prop->addItem("INVERT");
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->ready();
+}
+
+// TODO
+/*
+#define ARGB1555             0
+#define L1                   1
+#define L4                   2
+#define L8                   3
+#define RGB332               4
+#define ARGB2                5
+#define ARGB4                6
+#define RGB565               7
+#define PALETTED             8
+#define TEXT8X8              9
+#define TEXTVGA              10
+#define BARGRAPH             11
+
+#define NEAREST              0
+#define BILINEAR             1
+
+#define BORDER               0
+#define REPEAT               1
+
+#define BITMAPS              1
+#define POINTS               2
+#define LINES                3
+#define LINE_STRIP           4
+#define EDGE_STRIP_R         5
+#define EDGE_STRIP_L         6
+#define EDGE_STRIP_A         7
+#define EDGE_STRIP_B         8
+#define RECTS                9
+*/
 
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
@@ -1321,7 +1407,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ref</b>: Specifies the reference value for the alpha test. The initial value is 0<br>"
 						"<br>"
 						"Specify the alpha test function."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("ALPHA_FUNC");
+					addCompareFunction(0);
+					addSpinBox(1, 0, 255, "Ref: ", "Set ref");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1336,7 +1425,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"value. The initial value is 255<br>"
 						"<br>"
 						"Set function and reference value for stencil testing."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("STENCIL_FUNC");
+					addCompareFunction(0);
+					addSpinBox(1, 0, 255, "Ref: ", "Set ref");
+					addSpinBox(2, 0, 255, "Mask: ", "Set mask");
+					addByteFlag(2, "Set mask");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1349,7 +1443,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"constants as src. The initial value is ONE_MINUS_SRC_ALPHA(4)<br>"
 						"<br>"
 						"Specify pixel arithmetic."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BLEND_FUNC");
+					addBlendFunction(0, "Src: ", "Set blend src");
+					addBlendFunction(1, "Dst: ", "Set blend dst");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1363,7 +1460,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"constants as sfail. The initial value is KEEP (1)<br>"
 						"<br>"
 						"Set stencil test actions."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("STENCIL_OP");
+					addStencilOperation(0, "Fail: ", "Set stencil fail");
+					addStencilOperation(1, "Pass: ", "Set stencil pass");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1490,7 +1590,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 256<br>"
 						"<br>"
 						"Specify the A coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_A");
+					addSpinBox256(0, 0x8000, 0x7FFF, "A: ", "Set transform a");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1502,7 +1604,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the B coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_B");
+					addSpinBox256(0, 0x8000, 0x7FFF, "B: ", "Set transform b");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1514,7 +1618,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the C coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_C");
+					addSpinBox256(0, 0x800000, 0x7FFFFF, "C: ", "Set transform c");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1526,7 +1632,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the D coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_D");
+					addSpinBox256(0, 0x8000, 0x7FFF, "D: ", "Set transform d");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1538,7 +1646,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 256<br>"
 						"<br>"
 						"Specify the E coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_E");
+					addSpinBox256(0, 0x8000, 0x7FFF, "E: ", "Set transform e");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1550,7 +1660,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"form. The initial value is 0<br>"
 						"<br>"
 						"Specify the F coefficient of the bitmap transform matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_TRANSFORM_F");
+					addSpinBox256(0, 0x800000, 0x7FFFFF, "F: ", "Set transform f");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

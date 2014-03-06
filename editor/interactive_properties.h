@@ -70,6 +70,7 @@ private:
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addColor(int r, int g, int b);
@@ -78,6 +79,9 @@ private:
 	void addAlpha(int alpha);
 	void addByteFlag(int flag, const QString &undoMessage);
 	// void addAddress(int address);
+	void addBlendFunction(int blend, const QString &label, const QString &undoMessage);
+	void addCompareFunction(int compare);
+	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
@@ -86,6 +90,7 @@ private:
 	class PropertiesWidget;
 	class PropertiesSpinBox;
 	class PropertiesSpinBox16;
+	class PropertiesSpinBox256;
 	class PropertiesSpinBox65536;
 	class PropertiesSpinBoxAngle65536;
 	class PropertiesCheckBox;
@@ -96,6 +101,7 @@ private:
 	class PropertiesSliderDynSub;
 	class PropertiesSliderDynSubClip;
 	class PropertiesColor;
+	class PropertiesComboBox;
 
 	MainWindow *m_MainWindow;
 
