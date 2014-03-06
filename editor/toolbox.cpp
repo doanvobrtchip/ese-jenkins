@@ -181,6 +181,18 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	{
 		QTreeWidgetItem *item;
 		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color RGB"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_RGB));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color A"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_A));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Color Mask"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_MASK));
+		item = new QTreeWidgetItem(m_Graphics);
 		item->setText(0, tr("Foreground Color"));
 		item->setData(1, Qt::UserRole, QVariant((uint)4));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FGCOLOR));
@@ -195,18 +207,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)4));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADCOLOR));
 		m_CoprocessorTools.push_back(item);
-		item = new QTreeWidgetItem(m_Graphics);
-		item->setText(0, tr("Color RGB"));
-		item->setData(1, Qt::UserRole, QVariant((uint)3));
-		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_RGB));
-		item = new QTreeWidgetItem(m_Graphics);
-		item->setText(0, tr("Color A"));
-		item->setData(1, Qt::UserRole, QVariant((uint)3));
-		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_A));
-		item = new QTreeWidgetItem(m_Graphics);
-		item->setText(0, tr("Color Mask"));
-		item->setData(1, Qt::UserRole, QVariant((uint)3));
-		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_COLOR_MASK));
 		item = new QTreeWidgetItem(m_Graphics);
 		item->setText(0, tr("Line Width"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
