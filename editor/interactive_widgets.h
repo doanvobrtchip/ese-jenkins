@@ -83,12 +83,12 @@ class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<QSpinB
 public:
 	PropertiesSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
 	{
+		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
-		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 		setKeyboardTracking(false);
 		setMinimum(0x80000000);
 		setMaximum(0x7FFFFFFF);
-		modifiedEditorLine();
+		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 	}
 
 	virtual ~PropertiesSpinBox()
@@ -96,22 +96,29 @@ public:
 
 	}
 
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
 	virtual void modifiedEditorLine()
 	{
-		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
 		if (m_SoftMod) return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
+		printf("bye");
 	}
 
 private slots:
 	void updateValue(int value)
 	{
-		//printf("updateValue\n");
+		printf("updateValue\n");
 		if (m_SoftMod) return;
 		m_SoftMod = true;
-		// printf("PropertiesSpinBox::updateValue(value)\n");
+		printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
 		parsed.Parameter[m_Index].I = value;
 		setLine(parsed);
@@ -398,15 +405,21 @@ class InteractiveProperties::PropertiesSlider : public QSlider, public Propertie
 public:
 	PropertiesSlider(InteractiveProperties *parent, const QString &undoMessage, int index) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
 	{
+		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 		setMinimum(0x80000000);
 		setMaximum(0x7FFFFFFF);
-		modifiedEditorLine();
 	}
 
 	virtual ~PropertiesSlider()
 	{
 
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
 	}
 
 	virtual void modifiedEditorLine()
@@ -444,7 +457,13 @@ class InteractiveProperties::PropertiesSliderDyn : public QSlider, public Proper
 public:
 	PropertiesSliderDyn(InteractiveProperties *parent, const QString &undoMessage, int index, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Maxim(maxim)
 	{
+		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
 		modifiedEditorLine();
 	}
 
@@ -490,13 +509,19 @@ class InteractiveProperties::PropertiesSliderDynSubClip : public QSlider, public
 public:
 	PropertiesSliderDynSubClip(InteractiveProperties *parent, const QString &undoMessage, int index, int clip, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_Clip(clip), m_SoftMod(false), m_Maxim(maxim)
 	{
+		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
-		modifiedEditorLine();
 	}
 
 	virtual ~PropertiesSliderDynSubClip()
 	{
 
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
 	}
 
 	virtual void modifiedEditorLine()
@@ -539,13 +564,19 @@ class InteractiveProperties::PropertiesSliderDynSub : public QSlider, public Pro
 public:
 	PropertiesSliderDynSub(InteractiveProperties *parent, const QString &undoMessage, int index, int sub, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Sub(sub), m_Maxim(maxim)
 	{
+		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
-		modifiedEditorLine();
 	}
 
 	virtual ~PropertiesSliderDynSub()
 	{
 
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
 	}
 
 	virtual void modifiedEditorLine()

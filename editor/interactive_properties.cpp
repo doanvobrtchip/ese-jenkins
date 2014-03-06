@@ -114,6 +114,8 @@ void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
 	addLabeledWidget("XY: ", propX, propY);
 	m_CurrentProperties.push_back(propX);
 	m_CurrentProperties.push_back(propY);
+	propX->done();
+	propY->done();
 }
 
 void InteractiveProperties::addWH(int w, int h, int minim, int maxim)
@@ -127,6 +129,8 @@ void InteractiveProperties::addWH(int w, int h, int minim, int maxim)
 	addLabeledWidget("WH: ", propW, propH);
 	m_CurrentProperties.push_back(propW);
 	m_CurrentProperties.push_back(propH);
+	propW->done();
+	propH->done();
 }
 
 void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
@@ -140,6 +144,8 @@ void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 	addLabeledWidget("XY: ", propX, propY);
 	m_CurrentProperties.push_back(propX);
 	m_CurrentProperties.push_back(propY);
+	propX->done();
+	propY->done();
 }
 
 void InteractiveProperties::addHandle(int handle, bool font)
@@ -149,6 +155,7 @@ void InteractiveProperties::addHandle(int handle, bool font)
 	propHandle->setMaximum(31);
 	addLabeledWidget(font ? "Font: " : "Handle: ", propHandle);
 	m_CurrentProperties.push_back(propHandle);
+	propHandle->done();
 }
 
 void InteractiveProperties::addCell(int cell)
@@ -158,6 +165,7 @@ void InteractiveProperties::addCell(int cell)
 	propCell->setMaximum(255);
 	addLabeledWidget("Cell: ", propCell);
 	m_CurrentProperties.push_back(propCell);
+	propCell->done();
 }
 
 void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly)
@@ -274,6 +282,7 @@ void InteractiveProperties::addValueSlider(int val, int maxim)
 	propVal->setMaximum(maxim);
 	addLabeledWidget("Value: ", propVal);
 	m_CurrentProperties.push_back(propVal);
+	propVal->ready();
 }
 
 void InteractiveProperties::addValueSliderDyn(int val, int maxim)
@@ -281,6 +290,7 @@ void InteractiveProperties::addValueSliderDyn(int val, int maxim)
 	PropertiesSliderDyn *propVal = new PropertiesSliderDyn(this, "Set value", val, maxim);
 	addLabeledWidget("Value: ", propVal);
 	m_CurrentProperties.push_back(propVal);
+	propVal->ready();
 }
 
 void InteractiveProperties::addValueSliderDynSub(int val, int sub, int maxim)
@@ -288,6 +298,7 @@ void InteractiveProperties::addValueSliderDynSub(int val, int sub, int maxim)
 	PropertiesSliderDynSub *propVal = new PropertiesSliderDynSub(this, "Set value", val, sub, maxim);
 	addLabeledWidget("Value: ", propVal);
 	m_CurrentProperties.push_back(propVal);
+	propVal->ready();
 }
 
 void InteractiveProperties::addSizeSubDynSlider(int size, int clip, int maxim)
@@ -295,6 +306,7 @@ void InteractiveProperties::addSizeSubDynSlider(int size, int clip, int maxim)
 	PropertiesSliderDynSubClip *propSize = new PropertiesSliderDynSubClip(this, "Set size", size, clip, maxim);
 	addLabeledWidget("Size: ", propSize);
 	m_CurrentProperties.push_back(propSize);
+	propSize->ready();
 }
 
 void InteractiveProperties::addRangeMaximum(int range, int maxim)
@@ -304,6 +316,7 @@ void InteractiveProperties::addRangeMaximum(int range, int maxim)
 	propRange->setMaximum(maxim);
 	addLabeledWidget("Range: ", propRange);
 	m_CurrentProperties.push_back(propRange);
+	propRange->done();
 }
 
 void InteractiveProperties::addWidth(int width, int minim, int maxim)
@@ -313,6 +326,7 @@ void InteractiveProperties::addWidth(int width, int minim, int maxim)
 	propWidth->setMaximum(maxim);
 	addLabeledWidget("Width: ", propWidth);
 	m_CurrentProperties.push_back(propWidth);
+	propWidth->done();
 }
 
 void InteractiveProperties::addRadius(int radius, int minim, int maxim)
@@ -322,6 +336,7 @@ void InteractiveProperties::addRadius(int radius, int minim, int maxim)
 	propRadius->setMaximum(maxim);
 	addLabeledWidget("Radius: ", propRadius);
 	m_CurrentProperties.push_back(propRadius);
+	propRadius->done();
 }
 
 void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
@@ -331,6 +346,7 @@ void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QS
 	prop->setMaximum(maxim);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
+	prop->done();
 }
 
 void InteractiveProperties::addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
@@ -341,6 +357,7 @@ void InteractiveProperties::addSpinBox256(int index, int minim, int maxim, const
 	prop->setSingleStep(256);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
+	prop->done();
 }
 
 void InteractiveProperties::addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
@@ -351,6 +368,7 @@ void InteractiveProperties::addSpinBox65536(int index, int minim, int maxim, con
 	prop->setSingleStep(65536);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
+	prop->done();
 }
 
 void InteractiveProperties::addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
@@ -361,6 +379,7 @@ void InteractiveProperties::addSpinBoxAngle65536(int index, int minim, int maxim
 	prop->setSingleStep(65536 / 360);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
+	prop->done();
 }
 
 void InteractiveProperties::addColor(int r, int g, int b)
@@ -384,6 +403,7 @@ void InteractiveProperties::addWidth16(int width, int minim, int maxim, bool siz
 	propWidth->setMaximum(maxim);
 	addLabeledWidget(size ? "Size: " : "Width: ", propWidth);
 	m_CurrentProperties.push_back(propWidth);
+	propWidth->done();
 }
 
 void InteractiveProperties::addAlpha(int alpha)
@@ -1591,7 +1611,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the A coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_A");
-					addSpinBox256(0, 0x8000, 0x7FFF, "A: ", "Set transform a");
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "A: ", "Set transform a");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1605,7 +1625,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the B coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_B");
-					addSpinBox256(0, 0x8000, 0x7FFF, "B: ", "Set transform b");
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "B: ", "Set transform b");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1619,7 +1639,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the C coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_C");
-					addSpinBox256(0, 0x800000, 0x7FFFFF, "C: ", "Set transform c");
+					addSpinBox256(0, 0xFF800000, 0x7FFFFF, "C: ", "Set transform c");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1633,7 +1653,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the D coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_D");
-					addSpinBox256(0, 0x8000, 0x7FFF, "D: ", "Set transform d");
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "D: ", "Set transform d");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1647,7 +1667,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the E coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_E");
-					addSpinBox256(0, 0x8000, 0x7FFF, "E: ", "Set transform e");
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "E: ", "Set transform e");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1661,7 +1681,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Specify the F coefficient of the bitmap transform matrix."));
 					setTitle("BITMAP_TRANSFORM_F");
-					addSpinBox256(0, 0x800000, 0x7FFFFF, "F: ", "Set transform f");
+					addSpinBox256(0, 0xFF800000, 0x7FFFFF, "F: ", "Set transform f");
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
