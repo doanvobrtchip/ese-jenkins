@@ -162,6 +162,18 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primSpinner->setText(0, tr("Spinner"));
 		primSpinner->setData(1, Qt::UserRole, QVariant((uint)2));
 		primSpinner->setData(2, Qt::UserRole, QVariant((uint)CMD_SPINNER));
+		QTreeWidgetItem *primScreensaver = new QTreeWidgetItem(m_Widgets);
+		primScreensaver->setText(0, tr("Screensaver"));
+		primScreensaver->setData(1, Qt::UserRole, QVariant((uint)2));
+		primScreensaver->setData(2, Qt::UserRole, QVariant((uint)CMD_SCREENSAVER));
+		/*QTreeWidgetItem *primSketch = new QTreeWidgetItem(m_Widgets);
+		primSketch->setText(0, tr("Sketch"));
+		primSketch->setData(1, Qt::UserRole, QVariant((uint)2));
+		primSketch->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));*/
+		QTreeWidgetItem *primGradient = new QTreeWidgetItem(m_Widgets);
+		primGradient->setText(0, tr("Gradient"));
+		primGradient->setData(1, Qt::UserRole, QVariant((uint)2));
+		primGradient->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

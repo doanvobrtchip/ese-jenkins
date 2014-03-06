@@ -113,6 +113,8 @@ private:
 	bool m_WidgetWH;
 	bool m_WidgetR;
 
+	bool m_WidgetGradient;
+
 	int m_MouseMovingWidget;
 
 	// Current line

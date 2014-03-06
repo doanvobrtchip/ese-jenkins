@@ -56,13 +56,16 @@ namespace FT800EMUQT {
 #define POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_LEFT)
 #define POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT (POINTER_EDIT_WIDGET_SIZE_BOTTOM | POINTER_EDIT_WIDGET_SIZE_RIGHT)
 #define POINTER_INSERT 0x0200
+#define POINTER_EDIT_GRADIENT_MOVE_1 0x0400
+#define POINTER_EDIT_GRADIENT_MOVE_2 0x0800
+#define POINTER_EDIT_GRADIENT_MOVE (POINTER_EDIT_GRADIENT_MOVE_1 | POINTER_EDIT_GRADIENT_MOVE_2)
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false),
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
-	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false),
+	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false), m_WidgetGradient(false),
 	m_MouseMovingWidget(0)
 {
 	// m_Label->setCursor(Qt::PointingHandCursor);
@@ -302,6 +305,7 @@ void InteractiveViewport::graphics(QImage *image)
 		if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
 		{
 			m_WidgetXY = false;
+			m_WidgetGradient = false;
 			if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
 			{
 				QPen outer;
@@ -460,8 +464,69 @@ CMD_SCREENSAVER()
 			 */
 			}
 		}
+		else if (parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
+		{
+			m_WidgetXY = false;
+			m_WidgetGradient = true;
+
+			// TODO: Cleanup drawing code
+			QPen outer;
+			QPen inner;
+			outer.setWidth(3);
+			outer.setColor(QColor(Qt::black));
+			inner.setWidth(1);
+			inner.setColor(QColor(Qt::gray));
+
+			// Show first vertex
+			int x, y;
+			x = parsed.Parameter[0].I;
+			y = parsed.Parameter[1].I;
+			p.setPen(outer);
+			p.drawLine(x, y - 5, x, y - 12);
+			p.drawLine(x, y + 5, x, y + 12);
+			p.drawLine(x - 5, y, x - 12, y);
+			p.drawLine(x + 5, y, x + 12, y);
+			p.drawLine(x - 4, y - 4, x + 4, y - 4);
+			p.drawLine(x - 4, y + 4, x + 4, y + 4);
+			p.drawLine(x - 4, y - 4, x - 4, y + 4);
+			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			inner.setColor(QColor(Qt::red));
+			p.setPen(inner);
+			p.drawLine(x, y - 5, x, y - 12);
+			p.drawLine(x, y + 5, x, y + 12);
+			p.drawLine(x - 5, y, x - 12, y);
+			p.drawLine(x + 5, y, x + 12, y);
+			p.drawLine(x - 4, y - 4, x + 4, y - 4);
+			p.drawLine(x - 4, y + 4, x + 4, y + 4);
+			p.drawLine(x - 4, y - 4, x - 4, y + 4);
+			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+
+			// Show second vertex
+			x = parsed.Parameter[6].I;
+			y = parsed.Parameter[7].I;
+			p.setPen(outer);
+			p.drawLine(x, y - 5, x, y - 12);
+			p.drawLine(x, y + 5, x, y + 12);
+			p.drawLine(x - 5, y, x - 12, y);
+			p.drawLine(x + 5, y, x + 12, y);
+			p.drawLine(x - 4, y - 4, x + 4, y - 4);
+			p.drawLine(x - 4, y + 4, x + 4, y + 4);
+			p.drawLine(x - 4, y - 4, x - 4, y + 4);
+			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			inner.setColor(QColor(Qt::red));
+			p.setPen(inner);
+			p.drawLine(x, y - 5, x, y - 12);
+			p.drawLine(x, y + 5, x, y + 12);
+			p.drawLine(x - 5, y, x - 12, y);
+			p.drawLine(x + 5, y, x + 12, y);
+			p.drawLine(x - 4, y - 4, x + 4, y - 4);
+			p.drawLine(x - 4, y + 4, x + 4, y + 4);
+			p.drawLine(x - 4, y - 4, x - 4, y + 4);
+			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+		}
 		else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
 		{
+			m_WidgetGradient = false;
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
 				case CMD_TEXT:
@@ -581,6 +646,7 @@ CMD_SCREENSAVER()
 		else
 		{
 			m_WidgetXY = false;
+			m_WidgetGradient = false;
 		}
 	}
 	p.end();
@@ -633,6 +699,7 @@ void InteractiveViewport::editChecked()
 		POINTER_EDIT_VERTEX_MOVE // vertex movement
 		| POINTER_EDIT_STACK_SELECT // stack selection
 		| POINTER_EDIT_WIDGET_MOVE // widget movement
+		| POINTER_EDIT_GRADIENT_MOVE
 		;
 }
 
@@ -752,6 +819,34 @@ void InteractiveViewport::updatePointerMethod()
 						m_MouseOverVertexLine = m_LineNumber;
 						setCursor(Qt::SizeAllCursor);
 						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
+						return;
+					}
+				}
+			}
+		}
+		// Gradient move
+		if (m_PointerFilter & POINTER_EDIT_GRADIENT_MOVE)
+		{
+			if (m_LineEditor)
+			{
+				if (m_WidgetGradient)
+				{
+					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+					int x, y;
+					x = parsed.Parameter[0].I;
+					y = parsed.Parameter[1].I;
+					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
+					{
+						setCursor(Qt::SizeAllCursor);
+						m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_1;
+						return;
+					}
+					x = parsed.Parameter[6].I;
+					y = parsed.Parameter[7].I;
+					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
+					{
+						setCursor(Qt::SizeAllCursor);
+						m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_2;
 						return;
 					}
 				}
@@ -965,10 +1060,15 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			m_MovingLastX = e->pos().x();
 			m_MovingLastY = e->pos().y();
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
-			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE)
+			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
 			{
 				pa.Parameter[0].I += xd;
 				pa.Parameter[1].I += yd;
+			}
+			else if (m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_2)
+			{
+				pa.Parameter[6].I += xd;
+				pa.Parameter[7].I += yd;
 			}
 			else // resize, check top/bottom and left/right
 			{
@@ -1139,7 +1239,7 @@ RETURN()
 			m_Insert->setChecked(false);
 		}
 	default:
-		if (m_PointerMethod & POINTER_EDIT_WIDGET_MOVE)
+		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
 		{
 			// Works for any widget move action
 			m_MovingLastX = e->pos().x();
@@ -1415,6 +1515,29 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[2].U = 0;
 						pa.Parameter[3].U = 0;
 						pa.ExpectedParameterCount = 4;
+						break;
+					case CMD_SCREENSAVER:
+						pa.ExpectedParameterCount = 0;
+						break;
+					/*case CMD_SKETCH:
+						pa.Parameter[2].U = 120;
+						pa.Parameter[3].U = 48;
+						pa.Parameter[4].U = 0;
+						pa.Parameter[5].U = L1;
+						pa.ExpectedParameterCount = 6;
+						break;*/
+					case CMD_GRADIENT:
+						pa.Parameter[2].U = 255;
+						pa.Parameter[3].U = 0;
+						pa.Parameter[4].U = 127;
+						pa.Parameter[5].U = 255;
+						pa.Parameter[6].I = pa.Parameter[0].I + 32;
+						pa.Parameter[7].I = pa.Parameter[1].I + 32;
+						pa.Parameter[8].U = 255;
+						pa.Parameter[9].U = 127;
+						pa.Parameter[10].U = 255;
+						pa.Parameter[11].U = 0;
+						pa.ExpectedParameterCount = 12;
 						break;
 	/*
 

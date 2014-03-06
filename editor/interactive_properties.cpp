@@ -519,7 +519,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"behind gauges and sliders etc.<br>"
 						"<br>"
 						"Set the background color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_BGCOLOR");
+					addColor(0, 1, 2);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -534,7 +536,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"(\"affordances\").<br>"
 						"<br>"
 						"Set the foreground color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_FGCOLOR");
+					addColor(0, 1, 2);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -559,7 +563,14 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"three colors and the equation used is R0 + t * (R1 - R0), where t is interpolated between "
 						"0 and 1. Gradient must be used with Scissor function to get the intended gradient "
 						"display."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_GRADIENT");
+					addXY(0, 1, -1024, 1023);
+					addAlpha(2);
+					addColor(3, 4, 5);
+					addXY(6, 7, -1024, 1023);
+					addAlpha(8);
+					addColor(9, 10, 11);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1095,7 +1106,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CMD_STOP stops the update process.<br>"
 						"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 						"active at one time."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SKETCH");
+					addXY(0, 1, -1024, 1023);
+					addWH(2, 3, 0, 1023);
+					// addAddress(4); // TODO
+					// addBitmapFormat(); // TODO
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1112,7 +1128,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 				case CMD_COLDSTART:
 				{
 					m_MainWindow->propertiesEditor()->setInfo(tr(
-						"<b>CMD_LOGO</b>()<br>"
+						"<b>CMD_COLDSTART</b>()<br>"
 						"<br>"
 						"Set co-processor engine state to default values."));
 					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1127,7 +1143,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"significant 8 bits, blue is the least. So 0xffff0000 is bright red.<br>"
 						"<br>"
 						"Set the 3D button highlight color."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_GRADCOLOR");
+					addColor(0, 1, 2);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

@@ -75,6 +75,7 @@ private:
 	void addWidth16(int width, int minim, int maxim, bool size);
 	void addAlpha(int alpha);
 	void addByteFlag(int flag, const QString &undoMessage);
+	// void addAddress(int address);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
