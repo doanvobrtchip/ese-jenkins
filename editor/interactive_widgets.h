@@ -104,21 +104,21 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
 		if (m_SoftMod) return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
-		printf("bye");
+		//printf("bye");
 	}
 
 private slots:
 	void updateValue(int value)
 	{
-		printf("updateValue\n");
+		//printf("updateValue\n");
 		if (m_SoftMod) return;
 		m_SoftMod = true;
-		printf("PropertiesSpinBox::updateValue(value)\n");
+		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
 		parsed.Parameter[m_Index].I = value;
 		setLine(parsed);
