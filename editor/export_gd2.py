@@ -188,8 +188,15 @@ def run(name, document):
 	f.write("{\n")
 	for line in document["coprocessor"]:
 		if not line == "":
-			splitline = line.split('(', 1)
-			newline = "\tGD." + functionMap[splitline[0]] + "(" + splitline[1] + ";\n"
+			splitlinea = line.split('(', 1)
+			splitlineb = splitlinea[1].split(')', 1)
+			functionName = splitlinea[0]
+			functionArgs = splitlineb[0]
+			functionName = functionMap[functionName]
+			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor":
+				functionArgsSplit = eval("[ " + functionArgs + " ]")
+				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
+			newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 			f.write(newline)
 		else:
 			f.write("\t\n")
