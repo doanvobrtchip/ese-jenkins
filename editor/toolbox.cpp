@@ -356,7 +356,7 @@ void Toolbox::unsetEditorLine()
 	m_Primitives->setHidden(true);
 	m_Widgets->setHidden(true);
 	m_Graphics->setHidden(true);
-	m_Bitmaps->setHidden(true);
+	// m_Bitmaps->setHidden(true);
 	// m_Advanced->setHidden(true);
 }
 

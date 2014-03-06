@@ -369,7 +369,7 @@ void InteractiveProperties::addCheckBox(int index, const QString &label, const Q
 
 void InteractiveProperties::addWidth16(int width, int minim, int maxim, bool size)
 {
-	PropertiesSpinBox *propWidth = new PropertiesSpinBox(this, size ? "Set size" : "Set width", width);
+	PropertiesSpinBox16 *propWidth = new PropertiesSpinBox16(this, size ? "Set size" : "Set width", width);
 	propWidth->setMinimum(minim);
 	propWidth->setMaximum(maxim);
 	addLabeledWidget(size ? "Size: " : "Width: ", propWidth);
@@ -1635,7 +1635,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"it is used to selectively update only the red, green, blue or alpha channels of the "
 						"image. More often, it is used to completely disable color updates while updating the "
 						"tag and stencil buffers."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("COLOR_MASK");
+					addCheckBox(0, "R: ", "Set red mask");
+					addCheckBox(1, "G: ", "Set green mask");
+					addCheckBox(2, "B: ", "Set blue mask");
+					addCheckBox(3, "A: ", "Set alpha mask");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

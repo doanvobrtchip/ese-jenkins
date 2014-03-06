@@ -371,6 +371,8 @@ public:
 	PropertiesSlider(InteractiveProperties *parent, const QString &undoMessage, int index) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
 	{
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+		setMinimum(0x80000000);
+		setMaximum(0x7FFFFFFF);
 		modifiedEditorLine();
 	}
 
