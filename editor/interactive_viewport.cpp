@@ -1076,46 +1076,47 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 				int y = pa.Parameter[1].I;
 				if (m_WidgetWH)
 				{
+					const int minsize = 0;
 					int w = pa.Parameter[2].I;
 					int h = pa.Parameter[3].I;
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
 					{
 						y += yd;
 						h -= yd;
-						if (h < 0)
+						if (h < minsize)
 						{
-							m_MovingLastY += h;
-							y += h;
-							h = 0;
+							m_MovingLastY += (h - minsize);
+							y += (h - minsize);
+							h = minsize;
 						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
 					{
 						h += yd;
-						if (h < 0)
+						if (h < minsize)
 						{
-							m_MovingLastY -= h;
-							h = 0;
+							m_MovingLastY -= (h - minsize);
+							h = minsize;
 						}
 					}
 					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
 					{
 						x += xd;
 						w -= xd;
-						if (w < 0)
+						if (w < minsize)
 						{
-							m_MovingLastX += w;
-							x += w;
-							w = 0;
+							m_MovingLastX += (w - minsize);
+							x += (w - minsize);
+							w = minsize;
 						}
 					}
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
 					{
 						w += xd;
-						if (w < 0)
+						if (w < minsize)
 						{
-							m_MovingLastX -= w;
-							w = 0;
+							m_MovingLastX -= (w - minsize);
+							w = minsize;
 						}
 					}
 					pa.Parameter[0].I = x;
