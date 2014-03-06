@@ -302,14 +302,14 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QVBoxLayout *rawLayout = new QVBoxLayout();
 	m_PropertiesRaw->setHidden(true);
 	m_PropertiesRaw->setTitle(tr("Raw"));
-	m_PropertiesRawStart = new QSpinBox(this);
+	m_PropertiesRawStart = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawStart->setMinimum(0);
 	m_PropertiesRawStart->setMaximum(RAM_DL);
 	m_PropertiesRawStart->setSingleStep(4);
 	m_PropertiesRawStart->setKeyboardTracking(false);
 	addLabeledWidget(this, rawLayout, tr("Start: "), m_PropertiesRawStart);
 	connect(m_PropertiesRawStart, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawStartChanged(int)));
-	m_PropertiesRawLength = new QSpinBox(this);
+	m_PropertiesRawLength = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawLength->setMinimum(0);
 	m_PropertiesRawLength->setMaximum(RAM_DL);
 	m_PropertiesRawLength->setSingleStep(4);
@@ -322,7 +322,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesMemory->setHidden(true);
 	m_PropertiesMemory->setTitle(tr("Memory Options"));
 	QVBoxLayout *propMemLayout = new QVBoxLayout();
-	m_PropertiesMemoryAddress = new QSpinBox(this);
+	m_PropertiesMemoryAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesMemoryAddress->setMinimum(0);
 	m_PropertiesMemoryAddress->setMaximum(RAM_DL - 4);
 	m_PropertiesMemoryAddress->setSingleStep(4);

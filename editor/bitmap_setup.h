@@ -34,6 +34,7 @@
 
 // Project includes
 #include "content_manager.h"
+#include "undo_stack_disabler.h"
 
 class QResizeEvent;
 class QLabel;
@@ -216,15 +217,15 @@ private:
 
 	QGroupBox *m_PropLayout; // BITMAP_LAYOUT(format, linestride, height)
 	QComboBox *m_PropLayoutFormat;
-	QSpinBox *m_PropLayoutStride;
-	QSpinBox *m_PropLayoutHeight;
+	UndoStackDisabler<QSpinBox> *m_PropLayoutStride;
+	UndoStackDisabler<QSpinBox> *m_PropLayoutHeight;
 
 	QGroupBox *m_PropSize; // BITMAP_SIZE(filter, wrapx, wrapy, width, height)
 	QComboBox *m_PropSizeFilter;
 	QComboBox *m_PropSizeWrapX;
 	QComboBox *m_PropSizeWrapY;
-	QSpinBox *m_PropSizeWidth;
-	QSpinBox *m_PropSizeHeight;
+	UndoStackDisabler<QSpinBox> *m_PropSizeWidth;
+	UndoStackDisabler<QSpinBox> *m_PropSizeHeight;
 
 	QMutex m_Mutex;
 

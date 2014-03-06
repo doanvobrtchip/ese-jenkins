@@ -333,6 +333,89 @@ void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QS
 	m_CurrentProperties.push_back(prop);
 }
 
+void InteractiveProperties::addColor(int r, int g, int b)
+{
+	PropertiesColor *prop = new PropertiesColor(this, "Set color", r, g, b);
+	addLabeledWidget("Color: ", prop);
+	m_CurrentProperties.push_back(prop);
+}
+
+void InteractiveProperties::addCheckBox(int index, const QString &label, const QString &undoMessage)
+{
+	PropertiesCheckBox *prop = new PropertiesCheckBox(this, undoMessage, index, 0x01);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+}
+
+void InteractiveProperties::addWidth16(int width, int minim, int maxim, bool size)
+{
+	PropertiesSpinBox *propWidth = new PropertiesSpinBox(this, size ? "Set size" : "Set width", width);
+	propWidth->setMinimum(minim);
+	propWidth->setMaximum(maxim);
+	addLabeledWidget(size ? "Size: " : "Width: ", propWidth);
+	m_CurrentProperties.push_back(propWidth);
+}
+
+void InteractiveProperties::addAlpha(int alpha)
+{
+	addSpinBox(alpha, 0, 255, "Alpha: ", "Set alpha");
+}
+
+void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
+{
+	QHBoxLayout *hbox = new QHBoxLayout();
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x80);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x40);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x20);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x10);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x08);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x04);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x02);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	{
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, undoMessage, flag, 0x01);
+		hbox->addWidget(chb);
+		m_CurrentWidgets.push_back(chb);
+		m_CurrentProperties.push_back(chb);
+	}
+	m_CurrentLayouts.push_back(hbox);
+	((QVBoxLayout *)layout())->addLayout(hbox);
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
 	// printf("InteractiveProperties::setEditorLine(...)\n");
@@ -1085,7 +1168,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>blue</b>: Blue value used when the color buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Sets the color values used by a following CLEAR."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CLEAR_COLOR_RGB");
+					addColor(0, 1, 2);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1097,7 +1182,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Attach the tag value for the following graphics objects drawn on the screen. The initial "
 						"tag buffer value is 255."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("TAG");
+					addSpinBox(0, 0, 255, "Value: ", "Set value");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1111,7 +1198,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"Sets red, green and blue values of the FT800 color buffer which will be applied to the "
 						"following draw operation."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("COLOR_RGB");
+					addColor(0, 1, 2);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1241,7 +1330,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Sets the size of drawn points. The width is the distance from the center of the point "
 						"to the outermost drawn pixel, in units of 1/16 pixels. The valid range is from 16 to "
 						"8191 with respect to 1/16th pixel unit."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("POINT_SIZE");
+					addWidth16(0, 0, 8191, true);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1254,7 +1345,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"Sets the width of drawn lines. The width is the distance from the center of the line to "
 						"the outermost drawn pixel, in units of 1/16 pixel. The valid range is from 16 to 4095 "
 						"in terms of 1/16th pixel units."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("LINE_WIDTH");
+					addWidth16(0, 0, 8191, false);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1265,7 +1358,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>alpha</b>: Alpha value used when the color buffer is cleared. The initial value is 0.<br>"
 						"<br>"
 						"Specify clear value for the alpha channel."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CLEAR_COLOR_A");
+					addAlpha(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1276,7 +1371,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>alpha</b>: Alpha for the current color. The initial value is 255<br>"
 						"<br>"
 						"Set the current color alpha."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("COLOR_A");
+					addAlpha(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1287,7 +1384,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: Value used when the stencil buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Specify clear value for the stencil buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CLEAR_STENCIL");
+					addSpinBox(0, 0, 255, "Value: ", "Set value");
+					addByteFlag(0, "Set value");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1298,7 +1398,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>s</b>: Value used when the tag buffer is cleared. The initial value is 0<br>"
 						"<br>"
 						"Specify clear value for the tag buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CLEAR_TAG");
+					addSpinBox(0, 0, 255, "Value: ", "Set value");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1309,7 +1411,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>mask</b>: The mask used to enable writing stencil bits. The initial value is 255<br>"
 						"<br>"
 						"Control the writing of individual bits in the stencil planes."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("STENCIL_MASK");
+					addSpinBox(0, 0, 255, "Mask: ", "Set mask");
+					InteractiveProperties::addByteFlag(0, "Set mask");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1325,7 +1430,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"rather than the value given by TAG command in the display list.<br>"
 						"<br>"
 						"Control the writing of the tag buffer."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("TAG_MASK");
+					InteractiveProperties::addCheckBox(0, "Mask: ", "Set mask");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

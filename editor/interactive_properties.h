@@ -70,6 +70,11 @@ private:
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addColor(int r, int g, int b);
+	void addCheckBox(int index, const QString &label, const QString &undoMessage);
+	void addWidth16(int width, int minim, int maxim, bool size);
+	void addAlpha(int alpha);
+	void addByteFlag(int flag, const QString &undoMessage);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
@@ -85,6 +90,7 @@ private:
 	class PropertiesSliderDyn;
 	class PropertiesSliderDynSub;
 	class PropertiesSliderDynSubClip;
+	class PropertiesColor;
 
 	MainWindow *m_MainWindow;
 

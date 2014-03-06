@@ -82,6 +82,7 @@ BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_Ma
 	l->setContentsMargins(0, 0, 0, 0);
 
 	m_DefaultPalette = palette();
+	m_DefaultPalette.setColor(QPalette::WindowText, m_DefaultPalette.color(QPalette::Shadow));
 	m_SelectedPalette = m_DefaultPalette;
 	m_SelectedPalette.setColor(QPalette::WindowText, Qt::red);
 
@@ -90,7 +91,7 @@ BitmapWidget::BitmapWidget(MainWindow *parent, int index) : QFrame(parent), m_Ma
 	QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect(this);
 
 	effect->setBlurRadius(0);
-	effect->setColor(palette().color(QPalette::Background));
+	effect->setColor(m_DefaultPalette.color(QPalette::Window));
 	effect->setOffset(1,1);
 	label->setGraphicsEffect(effect);
 
@@ -109,8 +110,11 @@ BitmapWidget::~BitmapWidget()
 
 void BitmapWidget::mousePressEvent(QMouseEvent *event)
 {
-	m_MainWindow->bitmapSetup()->select(m_Index);
-	m_MouseDown = (event->button() == Qt::LeftButton);
+	if (event->button() == Qt::LeftButton)
+	{
+		m_MainWindow->bitmapSetup()->select(m_Index);
+		m_MouseDown = true;
+	}
 }
 
 void BitmapWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -163,7 +167,7 @@ void BitmapWidget::select()
 void BitmapWidget::deselect()
 {
 	setPalette(m_DefaultPalette);
-	setFrameStyle(QFrame::Panel | QFrame::Sunken);
+	setFrameStyle(QFrame::Panel | QFrame::Plain);
 }
 
 void BitmapWidget::setImage(const QString &name)
@@ -288,7 +292,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropSourceContent = new QComboBox(this);
 	sourceLayout->addWidget(m_PropSourceContent);
 	connect(m_PropSourceContent, SIGNAL(currentIndexChanged(int)), this, SLOT(propSourceContentChanged(int)));
-	/*m_PropAddress = new QSpinBox(this);
+	/*m_PropAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropAddress->setMinimum(0);
 	m_PropAddress->setMaximum(RAM_DL - 4);
 	m_PropAddress->setSingleStep(4);
@@ -312,14 +316,14 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropLayoutFormat->addItem("PALETTED");
 	addLabeledWidget(this, layoutLayout, tr("Format: "), m_PropLayoutFormat);
 	connect(m_PropLayoutFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propLayoutFormatChanged(int)));
-	m_PropLayoutStride = new QSpinBox(this);
+	m_PropLayoutStride = new UndoStackDisabler<QSpinBox>(this);
 	m_PropLayoutStride->setMinimum(0);
 	m_PropLayoutStride->setMaximum(2048);
 	m_PropLayoutStride->setSingleStep(1);
 	// m_PropLayoutStride->setKeyboardTracking(false);
 	addLabeledWidget(this, layoutLayout, tr("Stride: "), m_PropLayoutStride);
 	connect(m_PropLayoutStride, SIGNAL(valueChanged(int)), this, SLOT(propLayoutStrideChanged(int)));
-	m_PropLayoutHeight = new QSpinBox(this);
+	m_PropLayoutHeight = new UndoStackDisabler<QSpinBox>(this);
 	m_PropLayoutHeight->setMinimum(0);
 	m_PropLayoutHeight->setMaximum(512);
 	m_PropLayoutHeight->setSingleStep(1);
@@ -348,14 +352,14 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropSizeWrapY->addItem("REPEAT");
 	addLabeledWidget(this, sizeLayout, tr("Wrap Y: "), m_PropSizeWrapY);
 	connect(m_PropSizeWrapY, SIGNAL(currentIndexChanged(int)), this, SLOT(propSizeWrapYChanged(int)));
-	m_PropSizeWidth = new QSpinBox(this);
+	m_PropSizeWidth = new UndoStackDisabler<QSpinBox>(this);
 	m_PropSizeWidth->setMinimum(0);
 	m_PropSizeWidth->setMaximum(512);
 	m_PropSizeWidth->setSingleStep(1);
 	// m_PropSizeWidth->setKeyboardTracking(false);
 	addLabeledWidget(this, sizeLayout, tr("Width: "), m_PropSizeWidth);
 	connect(m_PropSizeWidth, SIGNAL(valueChanged(int)), this, SLOT(propSizeWidthChanged(int)));
-	m_PropSizeHeight = new QSpinBox(this);
+	m_PropSizeHeight = new UndoStackDisabler<QSpinBox>(this);
 	m_PropSizeHeight->setMinimum(0);
 	m_PropSizeHeight->setMaximum(512);
 	m_PropSizeHeight->setSingleStep(1);

@@ -28,6 +28,7 @@
 #include <ft800emu_inttypes.h>
 
 // Project includes
+#include "undo_stack_disabler.h"
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -196,12 +197,12 @@ private:
 	QLabel *m_PropertiesImageLabel;
 
 	QGroupBox *m_PropertiesRaw;
-	QSpinBox *m_PropertiesRawStart;
-	QSpinBox *m_PropertiesRawLength;
+	UndoStackDisabler<QSpinBox> *m_PropertiesRawStart;
+	UndoStackDisabler<QSpinBox> *m_PropertiesRawLength;
 
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
-	QSpinBox *m_PropertiesMemoryAddress;
+	UndoStackDisabler<QSpinBox> *m_PropertiesMemoryAddress;
 	QCheckBox *m_PropertiesDataCompressed;
 	QCheckBox *m_PropertiesDataEmbedded;
 
