@@ -545,7 +545,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
-						// pss << c;
+						pss << c;
 						++i;
 						goto ParseString;
 					}
@@ -641,6 +641,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 					else if (c == '"')
 					{
 						// end (post-trim)
+						pss << c;
 						++i;
 						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
 						goto ContinueParameter;
@@ -695,11 +696,11 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				if (p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
 				{
 					// CMD_TEXT(50, 119, 31, 0, "hello world")
-					if (ps.length() >= 2)
+					if (ps.length())
 					{
-						// std::string psstr = ps.substr(1, ps.size() - 2);
+						std::string psubstr = ps.substr(1, ps.size() - 2);
 						std::string psstr;
-						unescapeString(psstr, ps);
+						unescapeString(psstr, psubstr);
 						parsed.Parameter[p].U = 0;
 						parsed.StringParameter = psstr;
 						parsed.ValidParameter[pq] = true;
