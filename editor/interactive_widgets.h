@@ -85,6 +85,8 @@ public:
 		setUndoStack(parent->m_MainWindow->undoStack());
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 		setKeyboardTracking(false);
+		setMinimum(0x80000000);
+		setMaximum(0x7FFFFFFF);
 		modifiedEditorLine();
 	}
 
@@ -95,6 +97,7 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
 		if (m_SoftMod) return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
@@ -104,6 +107,7 @@ public:
 private slots:
 	void updateValue(int value)
 	{
+		//printf("updateValue\n");
 		if (m_SoftMod) return;
 		m_SoftMod = true;
 		// printf("PropertiesSpinBox::updateValue(value)\n");
@@ -118,6 +122,8 @@ private:
 	bool m_SoftMod;
 
 };
+
+////////////////////////////////////////////////////////////////////////
 
 class InteractiveProperties::PropertiesSpinBox16 : public InteractiveProperties::PropertiesSpinBox
 {
@@ -143,6 +149,62 @@ protected:
 		return (int)floorf((text.toFloat() * 16.f) + 0.5f);
 	}
 };
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBox65536 : public InteractiveProperties::PropertiesSpinBox
+{
+public:
+	PropertiesSpinBox65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	{
+
+	}
+
+	virtual ~PropertiesSpinBox65536()
+	{
+
+	}
+
+protected:
+	virtual QString textFromValue(int value) const
+	{
+		return QString::number((double)value / 65536.0);
+	}
+
+	virtual int valueFromText(const QString &text) const
+	{
+		return (int)floor((text.toDouble() * 65536.0) + 0.5);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBoxAngle65536 : public InteractiveProperties::PropertiesSpinBox
+{
+public:
+	PropertiesSpinBoxAngle65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	{
+
+	}
+
+	virtual ~PropertiesSpinBoxAngle65536()
+	{
+
+	}
+
+protected:
+	virtual QString textFromValue(int value) const
+	{
+		return QString::number((double)value / (65536.0 / 360.0));
+	}
+
+	virtual int valueFromText(const QString &text) const
+	{
+		return (int)floor((text.toDouble() * (65536.0 / 360.0)) + 0.5);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
 
 class InteractiveProperties::PropertiesCheckBox : public QCheckBox, public PropertiesWidget
 {

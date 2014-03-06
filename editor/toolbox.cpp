@@ -251,10 +251,41 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Tag Mask"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
 		item->setData(2, Qt::UserRole, QVariant((uint)FT800EMU_DL_TAG_MASK));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Load Identity"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOADIDENTITY));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Translate"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TRANSLATE));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Scale"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SCALE));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Rotate"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROTATE));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Set Current"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETMATRIX));
+		m_CoprocessorTools.push_back(item);
+		/*item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Matrix Get Current"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GETMATRIX));
+		m_CoprocessorTools.push_back(item);*/
 	}
 
-	m_Bitmaps = new QTreeWidgetItem(m_Tools);
-	m_Bitmaps->setText(0, tr("Bitmap State"));
+	// m_Bitmaps = new QTreeWidgetItem(m_Tools);
+	// m_Bitmaps->setText(0, tr("Bitmap State"));
+	// TODO
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
 	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
@@ -298,7 +329,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(false);
 			m_Widgets->setHidden(!editor->isCoprocessor());
 			m_Graphics->setHidden(false);
-			m_Bitmaps->setHidden(false);
+			// m_Bitmaps->setHidden(false);
 			// m_Advanced->setHidden(false);
 			for (int i = 0; i < m_CoprocessorTools.size(); ++i)
 			{
@@ -311,7 +342,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(true);
 			m_Widgets->setHidden(true);
 			m_Graphics->setHidden(true);
-			m_Bitmaps->setHidden(true);
+			// m_Bitmaps->setHidden(true);
 			// m_Advanced->setHidden(true);
 		}
 	}

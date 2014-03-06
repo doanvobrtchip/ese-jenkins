@@ -70,6 +70,8 @@ private:
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addColor(int r, int g, int b);
 	void addCheckBox(int index, const QString &label, const QString &undoMessage);
 	void addWidth16(int width, int minim, int maxim, bool size);
@@ -84,6 +86,8 @@ private:
 	class PropertiesWidget;
 	class PropertiesSpinBox;
 	class PropertiesSpinBox16;
+	class PropertiesSpinBox65536;
+	class PropertiesSpinBoxAngle65536;
 	class PropertiesCheckBox;
 	class PropertiesLineEdit;
 	class PropertiesLineEditChar;

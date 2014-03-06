@@ -333,6 +333,26 @@ void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QS
 	m_CurrentProperties.push_back(prop);
 }
 
+void InteractiveProperties::addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBox65536 *prop = new PropertiesSpinBox65536(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	prop->setSingleStep(65536);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+}
+
+void InteractiveProperties::addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBoxAngle65536 *prop = new PropertiesSpinBoxAngle65536(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	prop->setSingleStep(65536 / 360);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+}
+
 void InteractiveProperties::addColor(int r, int g, int b)
 {
 	PropertiesColor *prop = new PropertiesColor(this, "Set color", r, g, b);
@@ -944,7 +964,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ty</b>: y translate factor, in signed 16.16 bit fixed-point form.<br>"
 						"<br>"
 						"Apply a translation to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_TRANSLATE");
+					addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set x translation");
+					addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", "Set y translation");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -956,7 +979,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>sy</b>: y scale factor, in signed 16.16 bit fixed-point form.<br>"
 						"<br>"
 						"Apply a scale to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SCALE");
+					addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set x scale");
+					addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", "Set y scale");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -967,7 +993,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>a</b>: Clockwise rotation angle, in units of 1/65536 of a circle.<br>"
 						"<br>"
 						"Apply a rotation to the current matrix."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_ROTATE");
+					addSpinBoxAngle65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set angle");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

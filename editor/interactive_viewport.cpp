@@ -1735,6 +1735,24 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[2].U = 127;
 						pa.ExpectedParameterCount = 3;
 						break;
+					case CMD_LOADIDENTITY:
+					case CMD_SETMATRIX:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case CMD_SCALE:
+						pa.Parameter[0].I = 65536;
+						pa.Parameter[1].I = 65536;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_ROTATE:
+						pa.Parameter[0].I = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_TRANSLATE:
+						pa.Parameter[0].I = 0;
+						pa.Parameter[1].I = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
 					}
 				}
 				else
