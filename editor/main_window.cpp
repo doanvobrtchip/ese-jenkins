@@ -380,6 +380,9 @@ void loop()
 		int freespace = ((4096 - 4) - fullness);
 		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 		swrbegin(RAM_CMD + (wp & 0xFFF));
+		swr32(CMD_COLDSTART);
+		wp += 4;
+		freespace -= 4;
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
@@ -460,8 +463,9 @@ void loop()
 
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
-				wp += 4;
-				freespace -= 4;
+				swr32(CMD_COLDSTART);
+				wp += 8;
+				freespace -= 8;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
@@ -484,8 +488,9 @@ void loop()
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
-				wp += 4;
-				freespace -= 4;
+				swr32(CMD_COLDSTART);
+				wp += 8;
+				freespace -= 8;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
