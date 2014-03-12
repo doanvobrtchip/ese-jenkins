@@ -1706,7 +1706,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			}
 			else if (selectionType == 3 || selectionType == 4)
 			{
-				int line = m_MouseStackValid ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : 0;
+				int line = m_MouseStackValid ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : (m_LineNumber >= 0 ? (m_LineEditor->getLine(m_LineNumber).ValidId ? m_LineNumber + 1 : m_LineNumber) : 0);
 				m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop property");
 				DlParsed pa;
 				pa.ValidId = true;
@@ -1846,6 +1846,40 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case FT800EMU_DL_TAG_MASK:
 						pa.Parameter[0].U = 1;
 						pa.ExpectedParameterCount = 1;
+						break;
+					case FT800EMU_DL_BITMAP_TRANSFORM_A:
+					case FT800EMU_DL_BITMAP_TRANSFORM_E:
+						pa.Parameter[0].I = 256;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FT800EMU_DL_BITMAP_TRANSFORM_B:
+					case FT800EMU_DL_BITMAP_TRANSFORM_C:
+					case FT800EMU_DL_BITMAP_TRANSFORM_D:
+					case FT800EMU_DL_BITMAP_TRANSFORM_F:
+						pa.Parameter[0].I = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FT800EMU_DL_BITMAP_HANDLE:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FT800EMU_DL_BITMAP_SOURCE:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FT800EMU_DL_BITMAP_LAYOUT:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 128;
+						pa.Parameter[2].U = 64;
+						pa.ExpectedParameterCount = 3;
+						break;
+					case FT800EMU_DL_BITMAP_SIZE:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.Parameter[3].U = 64;
+						pa.Parameter[4].U = 64;
+						pa.ExpectedParameterCount = 5;
 						break;
 					}
 				}
