@@ -46,6 +46,72 @@ static bool s_CmdParamString[CMD_ID_NB];
 
 static std::string s_CmdIdList[CMD_ID_NB];
 
+const char *g_DlEnumBlend[DL_ENUM_BLEND_NB] = {
+	"ZERO",
+	"ONE",
+	"SRC_ALPHA",
+	"DST_ALPHA",
+	"ONE_MINUS_SRC_ALPHA",
+	"ONE_MINUS_DST_ALPHA",
+};
+
+const char *g_DlEnumCompare[DL_ENUM_COMPARE_NB] = {
+	"NEVER",
+	"LESS",
+	"LEQUAL",
+	"GREATER",
+	"GEQUAL",
+	"EQUAL",
+	"NOTEQUAL",
+	"ALWAYS",
+};
+
+const char *g_DlEnumStencil[DL_ENUM_STENCIL_NB] = {
+	"ZERO",
+	"KEEP",
+	"REPLACE",
+	"INCR",
+	"DECR",
+	"INVERT",
+};
+
+const char *g_DlEnumBitmapFormat[DL_ENUM_BITMAP_FORMAT_NB] = {
+	"ARGB1555",
+	"L1",
+	"L4",
+	"L8",
+	"RGB332",
+	"ARGB2",
+	"ARGB4",
+	"RGB565",
+	"PALETTED",
+	"TEXT8X8",
+	"TEXTVGA",
+	"BARGRAPH",
+};
+
+const char *g_DlEnumBitmapFilter[DL_ENUM_BITMAP_FILTER_NB] = {
+	"NEAREST",
+	"BILINEAR",
+};
+
+const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB] = {
+	"BORDER",
+	"REPEAT",
+};
+
+const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB] = {
+	"BITMAPS",
+	"POINTS",
+	"LINES",
+	"LINE_STRIP",
+	"EDGE_STRIP_R",
+	"EDGE_STRIP_L",
+	"EDGE_STRIP_A",
+	"EDGE_STRIP_B",
+	"RECTS",
+};
+
 void DlParser::init()
 {
 	if (!s_IdMap.size())
@@ -1160,38 +1226,85 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 
 static void primToString(std::stringstream &dst, uint32_t id)
 {
-	switch (id)
+	if ((uint32_t)id < DL_ENUM_PRIMITIVE_NB)
 	{
-		case BITMAPS:
-			dst << "BITMAPS";
-			break;
-		case POINTS:
-			dst << "POINTS";
-			break;
-		case LINES:
-			dst << "LINES";
-			break;
-		case LINE_STRIP:
-			dst << "LINE_STRIP";
-			break;
-		case EDGE_STRIP_R:
-			dst << "EDGE_STRIP_R";
-			break;
-		case EDGE_STRIP_L:
-			dst << "EDGE_STRIP_L";
-			break;
-		case EDGE_STRIP_A:
-			dst << "EDGE_STRIP_A";
-			break;
-		case EDGE_STRIP_B:
-			dst << "EDGE_STRIP_B";
-			break;
-		case RECTS:
-			dst << "RECTS";
-			break;
-		default:
-			dst << id;
-			break;
+		dst << g_DlEnumPrimitive[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void bitmapFormatToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_BITMAP_FORMAT_NB)
+	{
+		dst << g_DlEnumBitmapFormat[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void bitmapWrapToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_BITMAP_WRAP_NB)
+	{
+		dst << g_DlEnumBitmapWrap[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void bitmapFilterToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_BITMAP_FILTER_NB)
+	{
+		dst << g_DlEnumBitmapFilter[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void blendToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_BLEND_NB)
+	{
+		dst << g_DlEnumBlend[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void compareToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_COMPARE_NB)
+	{
+		dst << g_DlEnumCompare[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
+static void stencilToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_STENCIL_NB)
+	{
+		dst << g_DlEnumStencil[id];
+	}
+	else
+	{
+		dst << id;
 	}
 }
 
@@ -1262,7 +1375,8 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int linestride = (v >> 9) & 0x3FF;
 					int height = v & 0x1FF;
 					res << "BITMAP_LAYOUT(";
-					res << format << ", " << linestride << ", " << height << ")";
+					bitmapFormatToString(res, format);
+					res << ", " << linestride << ", " << height << ")";
 					break;
 				}
 				case FT800EMU_DL_BITMAP_SIZE:
@@ -1273,8 +1387,12 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int width = (v >> 9) & 0x1FF;
 					int height = v & 0x1FF;
 					res << "BITMAP_SIZE(";
-					res << filter << ", ";
-					res << wrapx << ", " << wrapy << ", ";
+					bitmapFilterToString(res, filter);
+					res << ", ";
+					bitmapWrapToString(res, wrapx);
+					res << ", ";
+					bitmapWrapToString(res, wrapy);
+					res << ", ";
 					res << width << ", " << height << ")";
 					break;
 				}
@@ -1283,7 +1401,8 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int func = (v >> 8) & 0x07;
 					int ref = v & 0xFF;
 					res << "ALPHA_FUNC(";
-					res << func << ", " << ref << ")";
+					compareToString(res, func);
+					res << ", " << ref << ")";
 					break;
 				}
 				case FT800EMU_DL_STENCIL_FUNC:
@@ -1292,7 +1411,8 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int ref = (v >> 8) & 0xFF;
 					int mask = v & 0xFF;
 					res << "STENCIL_FUNC(";
-					res << func << ", " << ref <<  ", " << mask << ")";
+					compareToString(res, func);
+					res << ", " << ref <<  ", " << mask << ")";
 					break;
 				}
 				case FT800EMU_DL_BLEND_FUNC:
@@ -1300,7 +1420,10 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int src = (v >> 3) & 0x7;
 					int dst = v & 0x7;
 					res << "BLEND_FUNC(";
-					res << src << ", " << dst << ")";
+					blendToString(res, src);
+					res << ", ";
+					blendToString(res, dst);
+					res << ")";
 					break;
 				}
 				case FT800EMU_DL_STENCIL_OP:
@@ -1308,7 +1431,10 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					int sfail = (v >> 3) & 0x7;
 					int spass = v & 0x7;
 					res << "STENCIL_OP(";
-					res << sfail << ", " << spass << ")";
+					stencilToString(res, sfail);
+					res << ", ";
+					stencilToString(res, spass);
+					res << ")";
 					break;
 				}
 				case FT800EMU_DL_POINT_SIZE:

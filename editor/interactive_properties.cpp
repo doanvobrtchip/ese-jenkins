@@ -466,81 +466,58 @@ void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
-void InteractiveProperties::addBlendFunction(int blend, const QString &label, const QString &undoMessage)
+void InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
 {
-	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, blend);
-	prop->addItem("ZERO");
-	prop->addItem("ONE");
-	prop->addItem("SRC_ALPHA");
-	prop->addItem("DST_ALPHA");
-	prop->addItem("ONE_MINUS_SRC_ALPHA");
-	prop->addItem("ONE_MINUS_DST_ALPHA");
+	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index);
+	for (int i = 0; i < nb; ++i)
+		prop->addItem(items[i]);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
+}
+
+void InteractiveProperties::addBlendFunction(int blend, const QString &label, const QString &undoMessage)
+{
+	addComboBox(blend, g_DlEnumBlend, DL_ENUM_BLEND_NB, label, undoMessage);
 }
 
 void InteractiveProperties::addCompareFunction(int compare)
 {
-	PropertiesComboBox *prop = new PropertiesComboBox(this, "Set func", compare);
-	prop->addItem("NEVER");
-	prop->addItem("LESS");
-	prop->addItem("LEQUAL");
-	prop->addItem("GREATER");
-	prop->addItem("GEQUAL");
-	prop->addItem("EQUAL");
-	prop->addItem("NOTEQUAL");
-	prop->addItem("ALWAYS");
-	addLabeledWidget("Func: ", prop);
-	m_CurrentProperties.push_back(prop);
-	prop->ready();
+	addComboBox(compare, g_DlEnumCompare, DL_ENUM_COMPARE_NB, "Func: ", "Set func");
 }
 
 void InteractiveProperties::addStencilOperation(int operation, const QString &label, const QString &undoMessage)
 {
-	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, operation);
-	prop->addItem("ZERO");
-	prop->addItem("KEEP");
-	prop->addItem("REPLACE");
-	prop->addItem("INCR");
-	prop->addItem("DECR");
-	prop->addItem("INVERT");
-	addLabeledWidget(label, prop);
-	m_CurrentProperties.push_back(prop);
-	prop->ready();
+	addComboBox(operation, g_DlEnumStencil, DL_ENUM_STENCIL_NB, label, undoMessage);
 }
 
-// TODO
-/*
-#define ARGB1555             0
-#define L1                   1
-#define L4                   2
-#define L8                   3
-#define RGB332               4
-#define ARGB2                5
-#define ARGB4                6
-#define RGB565               7
-#define PALETTED             8
-#define TEXT8X8              9
-#define TEXTVGA              10
-#define BARGRAPH             11
+void InteractiveProperties::addPrimitive(int primitive)
+{
+	addComboBox(primitive, g_DlEnumPrimitive, DL_ENUM_PRIMITIVE_NB, "Primitive: ", "Set primitive");
+}
 
-#define NEAREST              0
-#define BILINEAR             1
+void InteractiveProperties::addBitmapFormat(int format)
+{
+	addComboBox(format, g_DlEnumBitmapFormat, DL_ENUM_BITMAP_FORMAT_NB, "Format: ", "Set bitmap format");
+}
 
-#define BORDER               0
-#define REPEAT               1
+void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)
+{
+	addComboBox(wrap, g_DlEnumBitmapWrap, DL_ENUM_BITMAP_WRAP_NB, label, undoMessage);
+}
 
-#define BITMAPS              1
-#define POINTS               2
-#define LINES                3
-#define LINE_STRIP           4
-#define EDGE_STRIP_R         5
-#define EDGE_STRIP_L         6
-#define EDGE_STRIP_A         7
-#define EDGE_STRIP_B         8
-#define RECTS                9
-*/
+void InteractiveProperties::addBitmapFilter(int filter)
+{
+	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, "Filter: ", "Set bitmap filter");
+}
+
+void InteractiveProperties::addAddress(int address)
+{
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, "Set address", address);
+	addLabeledWidget("Address: ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
 
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
@@ -947,6 +924,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"display list and then use CMD_CALIBRATE. The co-processor engine overlays the touch "
 						"targets on the current display list, gathers the calibration input and updates "
 						"REG_TOUCH_TRANSFORM_A-F."));
+					// no properties
 					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 					ok = true;
 					break;
@@ -1000,19 +978,26 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Fill memory with a byte value."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_MEMSET");
+					addSpinBox(0, 0, 0x7FFFFFFF, "Address: ", "Set address");
+					addSpinBox(1, 0x80000000, 0x7FFFFFFF, "Value: ", "Set value");
+					addSpinBox(2, 0, 0x7FFFFFFF, "Num: ", "Set num");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
 				case CMD_MEMZERO:
 				{
 					m_MainWindow->propertiesEditor()->setInfo(tr(
-						"<b>CMD_MEMSET</b>(<i>ptr</i>, <i>num</i>)<br>"
+						"<b>CMD_MEMZERO</b>(<i>ptr</i>, <i>num</i>)<br>"
 						"<b>ptr</b>: Starting address of the memory block<br>"
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Write zero to a block of memory."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_MEMZERO");
+					addSpinBox(0, 0, 0x7FFFFFFF, "Address: ", "Set address");
+					addSpinBox(1, 0, 0x7FFFFFFF, "Num: ", "Set num");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1025,7 +1010,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes in the memory block<br>"
 						"<br>"
 						"Copy a block of memory."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_MEMCPY");
+					addSpinBox(0, 0, 0x7FFFFFFF, "Dest: ", "Set dest");
+					addSpinBox(1, 0, 0x7FFFFFFF, "Src: ", "Set src");
+					addSpinBox(2, 0, 0x7FFFFFFF, "Num: ", "Set num");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1037,7 +1026,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>num</b>: Number of bytes to copy. This must be a multiple of 4<br>"
 						"<br>"
 						"Append memory to display list."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_APPEND");
+					addAddress(0);
+					addSpinBox(1, 0, 0x7FFFFFFF, "Num: ", "Set num");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1048,7 +1040,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>ptr</b>: Snapshot destination address, in main memory<br>"
 						"<br>"
 						"Take a snapshot of the current screen."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SNAPSHOT");
+					addAddress(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1124,7 +1118,10 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"To use a custom font with the co-processor engine objects, create the font definition "
 						"data in FT800 RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_SETFONT");
+					addSpinBox(0, 0, 15, "Font: ", "Set font");
+					addAddress(1);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1155,7 +1152,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"the angle is straight down, 0x4000 left, 0x8000 up, and 0xc000 right.<br>"
 						"For a linear tracker - used for sliders and scrollbars - this value is the distance along the "
 						"tracked object, from 0 to 65535."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CMD_TRACK");
+					addXY(0, 1, 0, 512);
+					addWH(2, 3, 0, 512);
+					addSpinBox(0, 0, 255, "Tag: ", "Set tag");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1243,8 +1244,8 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					setTitle("CMD_SKETCH");
 					addXY(0, 1, -1024, 1023);
 					addWH(2, 3, 0, 1023);
-					// addAddress(4); // TODO
-					// addBitmapFormat(); // TODO
+					addAddress(4);
+					addBitmapFormat(5);
 					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
@@ -1307,7 +1308,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"source shall be aligned to 2 bytes.<br>"
 						"<br>"
 						"Specify the source address of bitmap data in FT800 graphics memory RAM_G."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_SOURCE");
+					addAddress(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1399,7 +1402,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>height</b>: Bitmap height, in lines<br>"
 						"<br>"
 						"Specify the source bitmap memory format and layout for the current handle."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_LAYOUT");
+					addBitmapFormat(0);
+					addSpinBox(1, 0, 0x7FFFFFFF, "Stride: ", "Set bitmap line stride");
+					addSpinBox(2, 0, 0x7FFFFFFF, "Height: ", "Set bitmap layout height");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1414,7 +1421,13 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>height</b>: Drawn bitmap height, in pixels<br>"
 						"<br>"
 						"Specify the screen drawing of bitmaps for the current handle."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BITMAP_SIZE");
+					addBitmapFilter(0);
+					addBitmapWrap(1, "Wrap X: ", "Set bitmap wrap x");
+					addBitmapWrap(2, "Wrap Y: ", "Set bitmap wrap y");
+					addSpinBox(3, 0, 0x7FFFFFFF, "Width: ", "Set bitmap width");
+					addSpinBox(4, 0, 0x7FFFFFFF, "Height: ", "Set bitmap height");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1728,7 +1741,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<br>"
 						"CALL and RETURN have a 4 level stack in addition to the current pointer. Any "
 						"additional CALL/RETURN done will lead to unexpected behavior."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CALL");
+					addSpinBox(0, 0, 2047, "Dest: ", "Set dest");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1739,7 +1754,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>dest</b>: Display list address to be jumped.<br>"
 						"<br>"
 						"Execute commands at another location in the display list."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("JUMP");
+					addSpinBox(0, 0, 2047, "Dest: ", "Set dest");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1750,7 +1767,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"<b>prim</b>: Graphics primitive. The valid value is defined as: BITMAPS, POINTS, LINES, LINE_STRIP, EDGE_STRIP_R, EDGE_STRIP_L, EDGE_STRIP_A, EDGE_STRIP_B, RECTS<br>"
 						"<br>"
 						"Begin drawing a graphics primitive."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("BEGIN");
+					addPrimitive(0);
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1837,7 +1856,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"is undefined.<br>"
 						"<br>"
 						"Execute a single command from a macro register."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("MACRO");
+					addSpinBox(0, 0, 1, "Macro: ", "Set macro");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}
@@ -1860,7 +1881,11 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 						"CLEAR_TAG.<br>"
 						"<br>"
 						"Clear buffers to preset values."));
-					m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+					setTitle("CLEAR");
+					addCheckBox(0, "Color: ", "Set color clear flag");
+					addCheckBox(1, "Stencil: ", "Set stencil clear flag");
+					addCheckBox(2, "Tag: ", "Set tag clear flag");
+					m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 					ok = true;
 					break;
 				}

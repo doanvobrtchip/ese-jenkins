@@ -69,6 +69,28 @@
 
 namespace FT800EMUQT {
 
+#define DL_ENUM_BLEND_NB 6
+extern const char *g_DlEnumBlend[DL_ENUM_BLEND_NB];
+
+#define DL_ENUM_COMPARE_NB 8
+extern const char *g_DlEnumCompare[DL_ENUM_COMPARE_NB];
+
+#define DL_ENUM_STENCIL_NB 6
+extern const char *g_DlEnumStencil[DL_ENUM_STENCIL_NB];
+
+#define DL_ENUM_BITMAP_FORMAT_NB 12
+#define DL_ENUM_BITMAP_FORMAT_NB_BASIC (DL_ENUM_BITMAP_FORMAT_NB - 3)
+extern const char *g_DlEnumBitmapFormat[DL_ENUM_BITMAP_FORMAT_NB];
+
+#define DL_ENUM_BITMAP_FILTER_NB 2
+extern const char *g_DlEnumBitmapFilter[DL_ENUM_BITMAP_FILTER_NB];
+
+#define DL_ENUM_BITMAP_WRAP_NB 2
+extern const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB];
+
+#define DL_ENUM_PRIMITIVE_NB 9
+extern const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB];
+
 #define DLPARSED_MAX_PARAMETER 12
 struct DlParsed
 {

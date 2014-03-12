@@ -40,6 +40,7 @@
 #include "properties_editor.h"
 #include "content_manager.h"
 #include "main_window.h"
+#include "dl_parser.h"
 
 using namespace std;
 
@@ -305,15 +306,8 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	m_PropLayout->setHidden(true);
 	m_PropLayout->setTitle(tr("Layout"));
 	m_PropLayoutFormat = new QComboBox(this);
-	m_PropLayoutFormat->addItem("ARGB1555");
-	m_PropLayoutFormat->addItem("L1");
-	m_PropLayoutFormat->addItem("L4");
-	m_PropLayoutFormat->addItem("L8");
-	m_PropLayoutFormat->addItem("RGB332");
-	m_PropLayoutFormat->addItem("ARGB2");
-	m_PropLayoutFormat->addItem("ARGB4");
-	m_PropLayoutFormat->addItem("RGB565");
-	m_PropLayoutFormat->addItem("PALETTED");
+	for (int i = 0; i < DL_ENUM_BITMAP_FORMAT_NB; ++i)
+		m_PropLayoutFormat->addItem(g_DlEnumBitmapFormat[i]);
 	addLabeledWidget(this, layoutLayout, tr("Format: "), m_PropLayoutFormat);
 	connect(m_PropLayoutFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propLayoutFormatChanged(int)));
 	m_PropLayoutStride = new UndoStackDisabler<QSpinBox>(this);

@@ -29,6 +29,7 @@
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
+#include <vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -75,6 +76,66 @@ protected:
 	QString m_UndoMessage;
 
 };
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		setUndoStack(parent->m_MainWindow->undoStack());
+		setKeyboardTracking(false);
+		setMinimum(0);
+		setMaximum(RAM_DL - 4);
+		setSingleStep(4);
+		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesSpinBoxAddress()
+	{
+
+	}
+
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setValue(getLine().Parameter[m_Index].I);
+		m_SoftMod = false;
+		//printf("bye");
+	}
+
+private slots:
+	void updateValue(int value)
+	{
+		//printf("updateValue\n");
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		//printf("PropertiesSpinBox::updateValue(value)\n");
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].I = (value & 0x7FFFFFFC);
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
 
 class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
 {

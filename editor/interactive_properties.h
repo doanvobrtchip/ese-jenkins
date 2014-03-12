@@ -79,15 +79,22 @@ private:
 	void addAlpha(int alpha);
 	void addByteFlag(int flag, const QString &undoMessage);
 	// void addAddress(int address);
+	void addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage);
 	void addBlendFunction(int blend, const QString &label, const QString &undoMessage);
 	void addCompareFunction(int compare);
 	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);
+	void addPrimitive(int primitive);
+	void addBitmapFormat(int format);
+	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
+	void addBitmapFilter(int filter);
+	void addAddress(int address);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
 
 private:
 	class PropertiesWidget;
+	class PropertiesSpinBoxAddress;
 	class PropertiesSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesSpinBox256;
