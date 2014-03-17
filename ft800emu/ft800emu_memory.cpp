@@ -257,12 +257,14 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 		{
 		case REG_PCLK:
 			// printf("Write REG_PCLK %u\n", (uint32_t)data);
-			if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+			// if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+			if (data == 0 && (s_Ram[REG_DLSWAP] == DLSWAP_FRAME || s_Ram[REG_DLSWAP] == DLSWAP_LINE))
 			{
 				// printf("Direct swap from REG_PCLK\n");
 				// Direct swap
 				System.enterSwapDL();
-				if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				// if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				if (data == 0 && (s_Ram[REG_DLSWAP] == DLSWAP_FRAME || s_Ram[REG_DLSWAP] == DLSWAP_LINE))
 				{
 					swapDisplayList();
 					s_Ram[REG_DLSWAP] = 0;
@@ -274,12 +276,14 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			break;
 		case REG_DLSWAP:
 			// printf("Write REG_DLSWAP %u\n", data);
-			if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
+			// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
+			if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
 			{
 				// printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
 				System.enterSwapDL();
-				if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
+				// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
+				if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
 				{
 					// printf("Go\n");
 					swapDisplayList();
