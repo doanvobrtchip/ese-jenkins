@@ -26,6 +26,7 @@
 
 // Emulator includes
 #include "ft800emu_inttypes.h"
+#include "ft800emu_memory.h"
 #include "vc.h"
 
 // Project includes
@@ -1152,7 +1153,6 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					break;
 				}
 				case CMD_MEMWRITE:
-				case CMD_MEMZERO:
 				case CMD_APPEND:
 				case CMD_LOADIMAGE:
 				case CMD_TRANSLATE:
@@ -1163,12 +1163,47 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(parsed.Parameter[1].U);
 					break;
 				}
+				case CMD_MEMZERO:
+				{
+					uint32_t ptr = parsed.Parameter[0].U;
+					uint32_t num = parsed.Parameter[1].U;
+					if (ptr >= FT800EMU_RAM_SIZE)
+						ptr = FT800EMU_RAM_SIZE - 1;
+					if (ptr + num >= FT800EMU_RAM_SIZE)
+						num = FT800EMU_RAM_SIZE - ptr - 1;
+					compiled.push_back(ptr);
+					compiled.push_back(num);
+					break;
+				}
 				case CMD_MEMSET:
+				{
+					uint32_t ptr = parsed.Parameter[0].U;
+					uint32_t num = parsed.Parameter[2].U;
+					if (ptr >= FT800EMU_RAM_SIZE)
+						ptr = FT800EMU_RAM_SIZE - 1;
+					if (ptr + num >= FT800EMU_RAM_SIZE)
+						num = FT800EMU_RAM_SIZE - ptr - 1;
+					compiled.push_back(ptr);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(num);
+					break;
+				}
 				case CMD_MEMCPY:
 				{
-					compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
-					compiled.push_back(parsed.Parameter[2].U);
+					uint32_t dst = parsed.Parameter[0].U;
+					uint32_t src = parsed.Parameter[1].U;
+					uint32_t num = parsed.Parameter[2].U;
+					if (dst >= FT800EMU_RAM_SIZE)
+						dst = FT800EMU_RAM_SIZE - 1;
+					if (src >= FT800EMU_RAM_SIZE)
+						src = FT800EMU_RAM_SIZE - 1;
+					if (dst + num >= FT800EMU_RAM_SIZE)
+						num = FT800EMU_RAM_SIZE - dst - 1;
+					if (src + num >= FT800EMU_RAM_SIZE)
+						num = FT800EMU_RAM_SIZE - src - 1;
+					compiled.push_back(dst);
+					compiled.push_back(src);
+					compiled.push_back(num);
 					break;
 				}
 				case CMD_TRACK:
@@ -1830,7 +1865,7 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			}
 			else
 			{
-				// Numberic parameter
+				// Numeric parameter
 				bool constantOpt = false;
 				switch (parsed.IdRight | 0xFFFFFF00)
 				{

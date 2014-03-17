@@ -30,7 +30,6 @@
 
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
 #define FT800EMU_ROM_INDEX 0xC0000 //(RAM_DL - FT800EMU_ROM_SIZE)
-#define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
 namespace FT800EMU {
 
@@ -603,7 +602,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U32 write address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U32 write address %i exceeds RAM size\n", (int)address);
 		return;
 	}
 
@@ -630,7 +629,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U32 read address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U32 read address %i exceeds RAM size\n", (int)address);
 		return 0;
 	}
 
@@ -706,7 +705,7 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U16 write address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U16 write address %i exceeds RAM size\n", (int)address);
 		return;
 	}
 
@@ -729,7 +728,7 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 
 	if ((address & ~0x1) >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U16 read address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U16 read address %i exceeds RAM size\n", (int)address);
 		return 0;
 	}
 
@@ -742,7 +741,7 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U8 write address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U8 write address %i exceeds RAM size\n", (int)address);
 		return;
 	}
 
@@ -756,7 +755,7 @@ uint8_t MemoryClass::coprocessorReadU8(size_t address)
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{
-		printf("Coprocessor U8 read address %i exceeds RAM size", (int)address);
+		printf("Coprocessor U8 read address %i exceeds RAM size\n", (int)address);
 		return 0;
 	}
 
