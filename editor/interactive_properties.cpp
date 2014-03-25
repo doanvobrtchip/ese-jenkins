@@ -1401,7 +1401,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 					m_MainWindow->propertiesEditor()->setInfo(tr(
 						"<b>BITMAP_LAYOUT</b>(<i>format</i>, <i>linestride</i>, <i>height</i>)<br>"
 						"<b>format</b>: Bitmap pixel format. The bitmap formats supported are L1, L4, L8, RGB332, ARGB2, ARGB4, ARGB1555, "
-						"RGB565 and Palette.<br>"
+						"RGB565 and PALETTED.<br>"
 						"<b>linestride</b>: Bitmap linestride, in bytes. For L1 format, the line stride must be a multiple of 8 bits; For L4 format the line "
 						"stride must be multiple of 2 nibbles. (Aligned to byte).<br>"
 						"<b>height</b>: Bitmap height, in lines<br>"
