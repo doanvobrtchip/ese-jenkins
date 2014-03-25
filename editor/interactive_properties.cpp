@@ -468,8 +468,13 @@ void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 
 void InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
 {
-	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index);
-	for (int i = 0; i < nb; ++i)
+	addComboBox(index, items, 0, nb, label, undoMessage);
+}
+
+void InteractiveProperties::addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage)
+{
+	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index, begin);
+	for (int i = begin; i < end; ++i)
 		prop->addItem(items[i]);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
@@ -493,7 +498,7 @@ void InteractiveProperties::addStencilOperation(int operation, const QString &la
 
 void InteractiveProperties::addPrimitive(int primitive)
 {
-	addComboBox(primitive, g_DlEnumPrimitive, DL_ENUM_PRIMITIVE_NB, "Primitive: ", "Set primitive");
+	addComboBox(primitive, g_DlEnumPrimitive, 1, DL_ENUM_PRIMITIVE_NB, "Primitive: ", "Set primitive");
 }
 
 void InteractiveProperties::addBitmapFormat(int format)

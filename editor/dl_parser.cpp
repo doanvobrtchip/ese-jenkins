@@ -102,6 +102,7 @@ const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB] = {
 };
 
 const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB] = {
+	"",
 	"BITMAPS",
 	"POINTS",
 	"LINES",
@@ -1261,7 +1262,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 
 static void primToString(std::stringstream &dst, uint32_t id)
 {
-	if ((uint32_t)id < DL_ENUM_PRIMITIVE_NB)
+	if ((uint32_t)id < DL_ENUM_PRIMITIVE_NB && (id >= 1))
 	{
 		dst << g_DlEnumPrimitive[id];
 	}

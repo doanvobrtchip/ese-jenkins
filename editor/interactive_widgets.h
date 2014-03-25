@@ -728,7 +728,7 @@ class InteractiveProperties::PropertiesComboBox : public QComboBox, public Prope
 	Q_OBJECT
 
 public:
-	PropertiesComboBox(InteractiveProperties *parent, const QString &undoMessage, int index) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, int begin) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_Begin(begin), m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(updateValue(int)));
@@ -749,7 +749,7 @@ public:
 	{
 		if (m_SoftMod) return;
 		m_SoftMod = true;
-		setCurrentIndex(getLine().Parameter[m_Index].U);
+		setCurrentIndex(getLine().Parameter[m_Index].U - m_Begin);
 		m_SoftMod = false;
 	}
 
@@ -761,13 +761,14 @@ private slots:
 		m_SoftMod = true;
 		//printf("PropertiesSlider::updateValue(value) %i\n", value);
 		DlParsed parsed = getLine();
-		parsed.Parameter[m_Index].U = value;
+		parsed.Parameter[m_Index].U = value + m_Begin;
 		setLine(parsed);
 		m_SoftMod = false;
 	}
 
 private:
 	int m_Index;
+	int m_Begin;
 	bool m_SoftMod;
 
 };

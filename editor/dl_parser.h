@@ -88,7 +88,7 @@ extern const char *g_DlEnumBitmapFilter[DL_ENUM_BITMAP_FILTER_NB];
 #define DL_ENUM_BITMAP_WRAP_NB 2
 extern const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB];
 
-#define DL_ENUM_PRIMITIVE_NB 9
+#define DL_ENUM_PRIMITIVE_NB 10
 extern const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB];
 
 #define DLPARSED_MAX_PARAMETER 12
