@@ -146,6 +146,9 @@ private slots:
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
 
+	void stepCmdEnabled(bool enabled);
+	void stepCmdChanged(int step);
+
 	void traceEnabledChanged(bool enabled);
 
 	void editorTabChanged(int i);
@@ -225,6 +228,8 @@ private:
 	QDockWidget *m_ControlsDock;
 	QCheckBox *m_StepEnabled;
 	QSpinBox *m_StepCount;
+	QCheckBox *m_StepCmdEnabled;
+	QSpinBox *m_StepCmdCount;
 	QCheckBox *m_TraceEnabled;
 	QSpinBox *m_TraceX;
 	QSpinBox *m_TraceY;

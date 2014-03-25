@@ -178,6 +178,9 @@ static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorComma
 
 static std::vector<uint32_t> s_CmdParamCache;
 
+int g_StepCmdLimit = 0;
+static int s_StepCmdLimitCurrent = 0;
+
 static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 // static int s_SwapCount = 0;
@@ -334,8 +337,9 @@ void loop()
 	s_CmdEditor->lockDisplayList();
 	bool dlModified = s_DlEditor->isDisplayListModified();
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadBitmapSetup)
+	if (dlModified || cmdModified || reuploadBitmapSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent))
 	{
+		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");
 		uint32_t *displayList = s_DlEditor->getDisplayList();
@@ -383,7 +387,7 @@ void loop()
 		swr32(CMD_COLDSTART);
 		wp += 4;
 		freespace -= 4;
-		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) // FIXME CMD SIZE
+		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FT800EMU_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
@@ -606,7 +610,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
 	m_ToolboxDock(NULL), m_Toolbox(NULL), m_ContentManagerDock(NULL), m_ContentManager(NULL),
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
-	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL),
+	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), m_StepCmdEnabled(NULL), m_StepCmdCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL),
 #ifdef FT800EMU_PYTHON
@@ -1196,19 +1200,36 @@ void MainWindow::createDockWindows()
 		// Step
 		{
 			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Display List Steps"));
-			QHBoxLayout *groupLayout = new QHBoxLayout();
+			group->setTitle(tr("Steps"));
+			QVBoxLayout *groupLayout = new QVBoxLayout();
 
+			QHBoxLayout *dlhbox = new QHBoxLayout();
 			m_StepEnabled = new QCheckBox(this);
 			m_StepEnabled->setChecked(false);
+			m_StepEnabled->setText("Display List");
 			connect(m_StepEnabled, SIGNAL(toggled(bool)), this, SLOT(stepEnabled(bool)));
-			groupLayout->addWidget(m_StepEnabled);
+			dlhbox->addWidget(m_StepEnabled);
 			m_StepCount = new QSpinBox(this);
 			m_StepCount->setMinimum(1);
 			m_StepCount->setMaximum(2048 * 64);
 			m_StepCount->setEnabled(false);
 			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
-			groupLayout->addWidget(m_StepCount);
+			dlhbox->addWidget(m_StepCount);
+			groupLayout->addLayout(dlhbox);
+
+			QHBoxLayout *cmdhbox = new QHBoxLayout();
+			m_StepCmdEnabled = new QCheckBox(this);
+			m_StepCmdEnabled->setChecked(false);
+			m_StepCmdEnabled->setText("Coprocessor");
+			connect(m_StepCmdEnabled, SIGNAL(toggled(bool)), this, SLOT(stepCmdEnabled(bool)));
+			cmdhbox->addWidget(m_StepCmdEnabled);
+			m_StepCmdCount = new QSpinBox(this);
+			m_StepCmdCount->setMinimum(1);
+			m_StepCmdCount->setMaximum(2048 * 64);
+			m_StepCmdCount->setEnabled(false);
+			connect(m_StepCmdCount, SIGNAL(valueChanged(int)), this, SLOT(stepCmdChanged(int)));
+			cmdhbox->addWidget(m_StepCmdCount);
+			groupLayout->addLayout(cmdhbox);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -1618,6 +1639,7 @@ void MainWindow::stepEnabled(bool enabled)
 	m_StepCount->setEnabled(enabled);
 	if (enabled)
 	{
+		m_StepCmdEnabled->setChecked(false);
 		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
 		FT800EMU::Memory.poke();
 	}
@@ -1634,6 +1656,28 @@ void MainWindow::stepChanged(int step)
 	{
 		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
 		FT800EMU::Memory.poke();
+	}
+}
+
+void MainWindow::stepCmdEnabled(bool enabled)
+{
+	m_StepCmdCount->setEnabled(enabled);
+	if (enabled)
+	{
+		m_StepEnabled->setChecked(false);
+		g_StepCmdLimit = m_StepCmdCount->value();
+	}
+	else
+	{
+		g_StepCmdLimit = 0;
+	}
+}
+
+void MainWindow::stepCmdChanged(int step)
+{
+	if (m_StepCmdEnabled->isChecked())
+	{
+		g_StepCmdLimit = m_StepCmdCount->value();
 	}
 }
 
@@ -1681,6 +1725,8 @@ void MainWindow::clearEditor()
 	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
 	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
+	m_StepCmdEnabled->setChecked(false);
+	m_StepCmdCount->setValue(1);
 	setTraceEnabled(false);
 	setTraceX(0);
 	setTraceY(0);

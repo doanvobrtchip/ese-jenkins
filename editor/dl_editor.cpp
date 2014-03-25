@@ -40,6 +40,8 @@ using namespace std;
 
 namespace FT800EMUQT {
 
+extern int g_StepCmdLimit;
+
 DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true),
 m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor)
 {
@@ -348,6 +350,10 @@ void DlEditor::frame()
 		{
 			idx = -1;
 		}
+	}
+	if (idx < 0 && m_ModeCoprocessor)
+	{
+		idx = (g_StepCmdLimit - 1);
 	}
 	m_CodeEditor->setStepHighlight(idx);
 }
