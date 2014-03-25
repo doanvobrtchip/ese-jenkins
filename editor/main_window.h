@@ -122,7 +122,7 @@ public:
 
 	QString getFileDialogPath();
 
-	QByteArray toJson(bool cleanCode = false);
+	QByteArray toJson(bool exportScript = false);
 
 private slots:
 	// void applyEmulatorConfig();

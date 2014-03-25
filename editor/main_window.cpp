@@ -839,10 +839,13 @@ void MainWindow::runScript(const QString &script)
 		if (pyUserFunc && PyCallable_Check(pyUserFunc))
 		{
 			PyObject *pyValue;
-			PyObject *pyArgs = PyTuple_New(2);
+			PyObject *pyArgs = PyTuple_New(3);
 			pyValue = PyString_FromString(outN.data());;
 			PyTuple_SetItem(pyArgs, 0, pyValue);
 			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
+			char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+			pyValue = PyByteArray_FromStringAndSize(ram, FT800EMU_RAM_SIZE);
+			PyTuple_SetItem(pyArgs, 2, pyValue);
 			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
 			Py_DECREF(pyArgs);
 			if (pyValue)
@@ -1820,13 +1823,13 @@ void MainWindow::actOpen()
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
-QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool cleanCode)
+QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
 {
 	QJsonArray result;
 	for (int i = 0; i < textDocument->blockCount(); ++i)
 	{
 		QString line = textDocument->findBlockByNumber(i).text();
-		if (cleanCode)
+		if (exportScript)
 		{
 			DlParsed parsed;
 			DlParser::parse(parsed, line, coprocessor);
@@ -1838,16 +1841,16 @@ QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocess
 	return result;
 }
 
-QByteArray MainWindow::toJson(bool cleanCode)
+QByteArray MainWindow::toJson(bool exportScript)
 {
 	QJsonObject root;
 	QJsonObject registers;
 	registers["hSize"] = s_HSize;
 	registers["vSize"] = s_VSize;
-	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, cleanCode);
+	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
 	root["registers"] = registers;
-	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, cleanCode);
-	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, cleanCode);
+	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
+	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, exportScript);
 	QJsonArray content;
 	std::vector<ContentInfo *> contentInfos;
 	m_ContentManager->getContentInfos(contentInfos);
@@ -1857,7 +1860,16 @@ QByteArray MainWindow::toJson(bool cleanCode)
 		content.push_back(info->toJson(false));
 	}
 	root["content"] = content;
-	root["handles"] = m_BitmapSetup->toJson(cleanCode);
+	root["handles"] = m_BitmapSetup->toJson(exportScript);
+	/*if (exportScript)
+	{
+		// dump of ram... this is too heavy
+		QJsonArray dump;
+		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+		for (int i = 0; i < FT800EMU_RAM_SIZE; ++i)
+			dump.push_back((int)ram[i]);
+		root["dump"] = dump;
+	}*/
 	QJsonDocument doc(root);
 
 	return doc.toJson();

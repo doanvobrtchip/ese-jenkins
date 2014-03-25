@@ -1,6 +1,6 @@
 import os, shutil, subprocess, sys
 
-def run(name, document):
+def run(name, document, ram):
 	resultText = "<b>Gameduino 2 Export</b><br>"
 	functionMap = {
 		"VERTEX2II" : "Vertex2ii",
