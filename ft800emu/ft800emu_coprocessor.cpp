@@ -65,8 +65,6 @@ void CoprocessorClass::execute()
 	if (!singleFrame)
 		s_Running = true;
 
-	uint8_t *ram = Memory.getRam();
-
     int _pc, _t, n;
     int insn;
 
