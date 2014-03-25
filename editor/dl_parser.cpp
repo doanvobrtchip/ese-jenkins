@@ -102,7 +102,7 @@ const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB] = {
 };
 
 const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB] = {
-	"",
+	"0",
 	"BITMAPS",
 	"POINTS",
 	"LINES",
