@@ -70,6 +70,8 @@ static int s_TouchScreenY2;
 static long s_TouchScreenFrameTime;
 static bool s_TouchScreenJitter = true;
 
+//static void (*s_Interrupt)());
+
 long s_LastJitteredTime;
 long s_LastDeltas[8] = { 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
 long s_LastDeltaI = 0;
@@ -244,6 +246,31 @@ int MemoryClass::getWriteOpCount()
 void MemoryClass::poke()
 {
 	++s_WriteOpCount;
+}
+
+/*void MemoryClass::setInterrupt(void (*interrupt)())
+{
+	s_Interrupt = interrupt;
+}*/
+
+bool MemoryClass::intnLow()
+{
+	uint8_t en = rawReadU8(REG_INT_EN);
+	if (en)
+	{
+		uint32_t mask = rawReadU32(REG_INT_MASK);
+		uint32_t flags = rawReadU32(REG_INT_FLAGS);
+		return (mask & flags) != 0;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool MemoryClass::intnHigh()
+{
+	return !intnLow();
 }
 
 template<typename T>
@@ -542,8 +569,16 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 
 	switch (address)
 	{
-	case REG_TOUCH_SCREEN_XY:
-		return getTouchScreenXY();
+		case REG_TOUCH_SCREEN_XY:
+		{
+			return getTouchScreenXY();
+		}
+		case REG_INT_FLAGS:
+		{
+			uint32_t result = rawReadU32(address);
+			rawWriteU32(REG_INT_FLAGS, 0);
+			return result;
+		}
 	}
 
 	return rawReadU32(address);

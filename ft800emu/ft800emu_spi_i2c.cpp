@@ -38,13 +38,13 @@ static uint32_t s_WriteStartAddr;
 
 enum SPII2CState
 {
-	SPII2CIdle, 
-	SPII2CNotImplemented, 
-	SPII2CInvalidState, 
-	SPII2CReadAddress, 
-	SPII2CWriteAddress, 
-	SPII2CRead, 
-	SPII2CWrite, 
+	SPII2CIdle,
+	SPII2CNotImplemented,
+	SPII2CInvalidState,
+	SPII2CReadAddress,
+	SPII2CWriteAddress,
+	SPII2CRead,
+	SPII2CWrite,
 };
 static SPII2CState s_State;
 static uint32_t s_Cursor;
@@ -144,7 +144,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBuffer >>= (8 * misaligned);
 				}
 				else
-				{					
+				{
 					s_RWBuffer = 0;
 				}
 			}
@@ -194,16 +194,16 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 		case SPII2CRead:
 			{
 				// printf("Read\n");
-				
+
 				if (!(s_Cursor % 4))
 				{
 					s_RWBuffer = Memory.mcuReadU32(s_Cursor);
 					// printf("Read U32 %d (%d)\n", s_Cursor, s_RWBuffer);
 				}
-				
+
 				uint8_t result = s_RWBuffer & 0xFF;
 				s_RWBuffer >>= 8;
-				
+
 				++s_Cursor;
 				return result;
 			}
@@ -211,7 +211,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 		case SPII2CWrite:
 			{
 				// Memory.mcuWrite(s_Cursor, data);
-				
+
 				s_RWBuffer |= (data << s_RWBufferStage);
 				s_RWBufferStage += 8;
 
@@ -227,7 +227,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					s_RWBufferStage = 0;
 				}
 
-				if (s_Cursor == RAM_CMD + 4095 && s_WriteStartAddr >= RAM_CMD) 
+				if (s_Cursor == RAM_CMD + 4095 && s_WriteStartAddr >= RAM_CMD)
 				{
 					// printf("Cursor wrap to RAM_CMD\n");
 					s_Cursor = RAM_CMD;
@@ -238,6 +238,16 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 		}
 	}
 	return 0;
+}
+
+bool SPII2CClass::intnLow()
+{
+	return Memory.intnLow();
+}
+
+bool SPII2CClass::intnHigh()
+{
+	return Memory.intnHigh();
 }
 
 } /* namespace FT800EMU */

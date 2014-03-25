@@ -32,33 +32,34 @@ enum EmulatorFlags
 	// enables coprocessor
 	EmulatorEnableCoprocessor = 0x04,
 	// enables mouse as touch
-	EmulatorEnableMouse = 0x08, 
+	EmulatorEnableMouse = 0x08,
 	// enable debug shortkeys
-	EmulatorEnableDebugShortkeys = 0x10, 
+	EmulatorEnableDebugShortkeys = 0x10,
 	// enable graphics processor multithreading
-	EmulatorEnableGraphicsMultithread = 0x20, 
+	EmulatorEnableGraphicsMultithread = 0x20,
 	// enable dynamic graphics quality degrading by interlacing
-	EmulatorEnableDynamicDegrade = 0x40, 
+	EmulatorEnableDynamicDegrade = 0x40,
 	// enable usage of REG_ROTATE
-	EmulatorEnableRegRotate = 0x80, 
+	EmulatorEnableRegRotate = 0x80,
 	// enable emulating REG_PWM_DUTY by fading the rendered display to black
-	EmulatorEnableRegPwmDutyEmulation = 0x100, 
+	EmulatorEnableRegPwmDutyEmulation = 0x100,
 	// enable killing the loop thread on exit
-	// EmulatorEnableKillLoopThread = 0x200, 
+	// EmulatorEnableKillLoopThread = 0x200,
 };
 
 struct EmulatorParameters
 {
 public:
-	EmulatorParameters() : 
+	EmulatorParameters() :
 		Setup(0),
-		Loop(0), 
+		Loop(0),
 		Flags(0),
-		Keyboard(0), 
-		MousePressure(0), 
-		ExternalFrequency(0), 
+		Keyboard(0),
+		MousePressure(0),
+		ExternalFrequency(0),
 		ReduceGraphicsThreads(0),
-		Graphics(0)
+		Graphics(0)//,
+		//Interrupt(0)
 	{ }
 
 	// Microcontroller function called before loop.
@@ -67,7 +68,7 @@ public:
 	void (*Loop)();
 	// See EmulatorFlags.
 	int Flags;
-	
+
 	// Called after keyboard update.
 	// Supplied function can use Keyboard.isKeyDown(FT800EMU_KEY_F3).
 	void (*Keyboard)();
@@ -76,7 +77,7 @@ public:
 	uint32_t MousePressure;
 	// External frequency. See CLK, etc.
 	uint32_t ExternalFrequency;
-	
+
 	// Reduce graphics processor threads by specified number, default 0
 	// Necessary when doing very heavy work on the MCU or Coprocessor
 	// TODO: Maybe possible to automate this based on thread info
@@ -86,11 +87,11 @@ public:
 	std::string RomFilePath;
 	// Replaces the builtin coprocessor ROM.
 	std::string CoprocessorRomFilePath;
-	
+
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
 	// rendered graphics will be automatically sent to this function.
-	// For enabling touch functionality, the functions 
+	// For enabling touch functionality, the functions
 	// Memory.setTouchScreenXY and Memory.resetTouchScreenXY must be
 	// called manually from the host application.
 	// Builtin keyboard functionality is not supported and must be
@@ -100,6 +101,9 @@ public:
 	// function returns.
 	// Return false when the application must exit.
 	bool (*Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize);
+
+	// Interrupt handler
+	//void (*Interrupt)();
 };
 
 /**

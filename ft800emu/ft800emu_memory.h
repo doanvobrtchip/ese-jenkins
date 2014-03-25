@@ -45,6 +45,10 @@ public:
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
 
+	//static void setInterrupt(void (*interrupt)());
+	static bool intnLow();
+	static bool intnHigh();
+
 	// Use separate functions for microcontroller access in case we need to put a hook on certain adresses for performance reasons.
 	static void mcuWriteU32(size_t address, uint32_t data);
 	static uint32_t mcuReadU32(size_t address);

@@ -42,10 +42,14 @@ public:
 
 	uint8_t transfer(uint8_t data);
 
+	// Interrupt
+	static bool intnLow();
+	static bool intnHigh();
+
 private:
 	SPII2CClass(const SPII2CClass &);
 	SPII2CClass &operator=(const SPII2CClass &);
-	
+
 }; /* class SPII2CClass */
 
 extern SPII2CClass SPII2C;
