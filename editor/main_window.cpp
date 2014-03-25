@@ -918,8 +918,10 @@ void MainWindow::createActions()
 
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
+	m_ImportAct->setVisible(FT_VCDUMP_VISIBLE);
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
+	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
 
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);

@@ -29,6 +29,8 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
+#define FT_VCDUMP_VISIBLE false
+
 class QTemporaryDir;
 class QTreeView;
 class QDirModel;
