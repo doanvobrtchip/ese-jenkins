@@ -62,6 +62,7 @@ public:
 	static uint16_t coprocessorReadU16(size_t address);
 	static void coprocessorWriteU8(size_t address, uint8_t data);
 	static uint8_t coprocessorReadU8(size_t address);
+	static bool coprocessorGetReset();
 
 	static FT800EMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
 	static FT800EMU_FORCE_INLINE uint32_t rawReadU32(uint8_t *buffer, size_t address);

@@ -70,6 +70,8 @@ static int s_TouchScreenY2;
 static long s_TouchScreenFrameTime;
 static bool s_TouchScreenJitter = true;
 
+static bool s_CpuReset = false;
+
 //static void (*s_Interrupt)());
 
 long s_LastJitteredTime;
@@ -256,7 +258,7 @@ void MemoryClass::poke()
 bool MemoryClass::intnLow()
 {
 	uint8_t en = rawReadU8(REG_INT_EN);
-	if (en)
+	if (en & 0x01)
 	{
 		uint32_t mask = rawReadU32(REG_INT_MASK);
 		uint32_t flags = rawReadU32(REG_INT_FLAGS);
@@ -271,6 +273,11 @@ bool MemoryClass::intnLow()
 bool MemoryClass::intnHigh()
 {
 	return !intnLow();
+}
+
+bool MemoryClass::coprocessorGetReset()
+{
+	return s_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
 }
 
 template<typename T>
@@ -343,6 +350,12 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			{
 				// printf("REG_PLAYBACK_PLAY\n");
 				AudioRender.playbackPlay();
+			}
+			break;
+		case REG_CPURESET:
+			if (data & 0x01)
+			{
+				s_CpuReset = true;
 			}
 			break;
 		}
@@ -458,6 +471,11 @@ void MemoryClass::begin(const char *romFilePath)
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
+	rawWriteU32(REG_INT_MASK, 0xFF);
+	rawWriteU32(REG_INT_EN, 0);
+	rawWriteU32(REG_INT_FLAGS, 0);
+
+	s_CpuReset = false;
 }
 
 void MemoryClass::end()
@@ -490,9 +508,6 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 	{
 	case REG_CMD_WRITE:
 		s_WaitCoprocessorReadCounter = 0;
-		break;
-	case REG_CPURESET:
-		printf("REG_CPURESET not implemented!!!\n");
 		break;
 	}
     actionWrite(address, data);
@@ -784,10 +799,10 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 		return;
 	}
 
-	if (address == REG_J1_INT && data)
+	/*if (address == REG_J1_INT && data)
 	{
 		printf("Coprocessor interrupt\n");
-	}
+	}*/
 
     actionWrite(address, data);
 	rawWriteU8(address, data);

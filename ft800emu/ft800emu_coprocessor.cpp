@@ -73,7 +73,7 @@ void CoprocessorClass::execute()
     int swapped = 0;
     int starve = 0;
     do {
-		if (Memory.rawReadU8(ram, REG_CPURESET))
+		if (Memory.coprocessorGetReset())
 		{
 			pc = 0;
 			dsp = 0;

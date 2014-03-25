@@ -159,6 +159,8 @@ void setup()
 	wr32(REG_HSIZE, 480);
 	wr32(REG_VSIZE, 272);
 	wr32(REG_PCLK, 5);
+	wr32(REG_INT_MASK, INT_CMDEMPTY);
+	wr32(REG_INT_EN, 1);
 }
 
 // Content manager
