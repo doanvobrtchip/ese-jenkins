@@ -749,6 +749,11 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 		return;
 	}
 
+	if (address == REG_J1_INT && data)
+	{
+		printf("Coprocessor interrupt\n");
+	}
+
     actionWrite(address, data);
 	rawWriteU8(address, data);
 }

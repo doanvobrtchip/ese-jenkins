@@ -46,7 +46,7 @@ void CoprocessorClass::begin(const char *romFilePath)
 			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) printf("Incomplete coprocessor ROM file\n");
 			else printf("Loaded coprocessor ROM file\n");
 			if (fclose(f)) printf("Error closing coprocessor ROM file\n");
-		} 
+		}
 	}
 	else
 	{
@@ -54,6 +54,9 @@ void CoprocessorClass::begin(const char *romFilePath)
 	}
 
     pc = 0;
+    dsp = 0;
+    rsp = 0;
+    t = 0;
 }
 
 template <bool singleFrame>
@@ -62,18 +65,29 @@ void CoprocessorClass::execute()
 	if (!singleFrame)
 		s_Running = true;
 
+	uint8_t *ram = Memory.getRam();
+
     int _pc, _t, n;
     int insn;
 
     int swapped = 0;
     int starve = 0;
     do {
+		if (Memory.rawReadU8(ram, REG_CPURESET))
+		{
+			pc = 0;
+			dsp = 0;
+			rsp = 0;
+			t = 0;
+			System.delay(1);
+			continue;
+		}
         insn = pgm[pc];
         // printf("PC=%04x %04x\n", pc, insn);
         // if (pc == 0x1BA6) printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
 		if (singleFrame)
 		{
-			if (pc == 0x0980) { // cmd.has1 
+			if (pc == 0x0980) { // cmd.has1
                 // 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
 				int rp = MemoryClass::coprocessorReadU32(0x1090f8);
 				// printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);

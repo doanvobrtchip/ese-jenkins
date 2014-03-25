@@ -33,7 +33,7 @@ public:
 
 	void executeManual();
 	void executeEmulator();
-	
+
 	void stopEmulator();
 
 private:
@@ -43,7 +43,7 @@ private:
 	CoprocessorClass(const CoprocessorClass &);
 	CoprocessorClass &operator=(const CoprocessorClass &);
 
-    uint32_t t;  
+    uint32_t t;
     uint32_t d[32]; /* data stack */
     uint32_t r[32]; /* return stack */
     uint16_t pc;    /* program counter, counts CELLS */
@@ -62,10 +62,10 @@ private:
         return v;
     }
 
-    int state;
+    /*int state;
     uint32_t acc;               // accumulator
     uint32_t cV[48], dV[48];    // code and data vectors
-    uint32_t *pcV, *pdV;
+    uint32_t *pcV, *pdV;*/
 
 }; /* class CoprocessorClass */
 
