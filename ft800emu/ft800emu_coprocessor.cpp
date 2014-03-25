@@ -76,9 +76,7 @@ void CoprocessorClass::execute()
 		if (Memory.coprocessorGetReset())
 		{
 			pc = 0;
-			dsp = 0;
-			rsp = 0;
-			t = 0;
+			printf("RESET COPROCESSOR");
 			System.delay(1);
 			continue;
 		}

@@ -159,7 +159,7 @@ void setup()
 	wr32(REG_HSIZE, 480);
 	wr32(REG_VSIZE, 272);
 	wr32(REG_PCLK, 5);
-	wr32(REG_INT_MASK, INT_CMDEMPTY);
+	wr32(REG_INT_MASK, 0xFF); // INT_CMDEMPTY);
 	wr32(REG_INT_EN, 1);
 }
 
@@ -188,6 +188,22 @@ static bool coprocessorSwapped = false;
 // static int s_SwapCount = 0;
 void loop()
 {
+	if (FT800EMU::SPII2C.intnLow())
+	{
+		uint32_t flags = rd32(REG_INT_FLAGS);
+		// printf("INTERRUPT %i\n", flags);
+		if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF)
+		{
+			printf("COPROCESSOR FAULT\n");
+			wr32(REG_CPURESET, 1);
+			wr32(REG_CMD_READ, 0);
+			wr32(REG_CMD_WRITE, 0);
+			wr32(REG_CPURESET, 0);
+			wr32(RAM_CMD, CMD_DLSTART);
+			wr32(REG_CMD_WRITE, 4);
+		}
+	}
+
 	// wait
 	if (coprocessorSwapped)
 	{
@@ -195,6 +211,7 @@ void loop()
 		while (wp != rd32(REG_CMD_READ))
 		{
 			if (!s_EmulatorRunning) return;
+			if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
 		}
 		while (rd32(REG_CMD_DL) != 0)
 		{
@@ -405,6 +422,7 @@ void loop()
 				{
 					if (!s_EmulatorRunning) return;
 					rp = rd32(REG_CMD_READ);
+					if ((rp & 0xFFF) == 0xFFF) return;
 					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				} while (fullness != 0);
 				freespace = ((4096 - 4) - fullness);
@@ -445,10 +463,13 @@ void loop()
 				s_WaitingCoprocessorAnimation = true;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
-				while (rd32(REG_CMD_READ) || rd32(REG_CMD_WRITE))
+				do
 				{
+					rp = rd32(REG_CMD_READ);
+					wp = rd32(REG_CMD_WRITE);
 					if (!s_EmulatorRunning) return;
-				}
+					if ((rp & 0xFFF) == 0xFFF) return;
+				} while (rp || wp);
 				wp = 0;
 				rp = 0;
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -477,6 +498,7 @@ void loop()
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
+					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
@@ -491,6 +513,7 @@ void loop()
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
+					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
@@ -502,6 +525,7 @@ void loop()
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
+					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
@@ -523,6 +547,7 @@ void loop()
 			{
 				rpl = rd32(REG_CMD_READ);
 				if (!s_EmulatorRunning) return;
+				if ((rpl & 0xFFF) == 0xFFF) return;
 			}
 			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
 			for (int i = 0; i < FT800EMU_DL_SIZE; ++i)

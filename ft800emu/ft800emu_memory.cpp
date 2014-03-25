@@ -277,7 +277,9 @@ bool MemoryClass::intnHigh()
 
 bool MemoryClass::coprocessorGetReset()
 {
-	return s_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
+	bool result = s_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
+	s_CpuReset = false;
+	return result;
 }
 
 template<typename T>
@@ -355,6 +357,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 		case REG_CPURESET:
 			if (data & 0x01)
 			{
+				// TODO: Perhaps this should lock until the cpu reset is actually pushed through to ensure following commands go through...
 				s_CpuReset = true;
 			}
 			break;
@@ -799,10 +802,12 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 		return;
 	}
 
-	/*if (address == REG_J1_INT && data)
+	if (address == REG_J1_INT && data)
 	{
-		printf("Coprocessor interrupt\n");
-	}*/
+		// TODO: MUTEX!!!
+		rawWriteU8(REG_INT_FLAGS, rawReadU8(REG_INT_FLAGS) | INT_CMDEMPTY);
+		return;
+	}
 
     actionWrite(address, data);
 	rawWriteU8(address, data);
