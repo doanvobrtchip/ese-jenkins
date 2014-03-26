@@ -183,6 +183,8 @@ static std::vector<uint32_t> s_CmdParamCache;
 int g_StepCmdLimit = 0;
 static int s_StepCmdLimitCurrent = 0;
 
+static bool s_CoprocessorFaultOccured = false;
+
 static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 // static int s_SwapCount = 0;
@@ -195,6 +197,7 @@ void loop()
 		if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF)
 		{
 			printf("COPROCESSOR FAULT\n");
+			s_CoprocessorFaultOccured = true;
 			wr32(REG_CPURESET, 1);
 			wr32(REG_CMD_READ, 0);
 			wr32(REG_CMD_WRITE, 0);
@@ -588,6 +591,7 @@ void loop()
 			swrend();
 			wr32(REG_CMD_WRITE, (wp & 0xFFF));
 
+			s_CoprocessorFaultOccured = false;
 			coprocessorSwapped = true;
 		}
 		else
@@ -933,6 +937,17 @@ void MainWindow::frameQt()
 	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
+
+	if (s_CoprocessorFaultOccured && m_PropertiesEditor->getEditWidgetSetter() != m_PropertiesEditorDock)
+	{
+		m_PropertiesEditor->setInfo("<b>Co-processor engine fault</b><br><br>"
+			"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
+			"- An attempt is made to write more than 2048 instructions into a display list<br><br>"
+			"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
+			"- An invalid data stream is supplied to CMD_INFLATE");
+		m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
+		focusProperties();
+	}
 }
 
 void MainWindow::createActions()
