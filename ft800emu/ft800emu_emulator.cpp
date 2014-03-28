@@ -51,6 +51,8 @@ namespace FT800EMU {
 
 EmulatorClass Emulator;
 
+void (*g_Exception)(const char *message) = NULL;
+
 namespace {
 	void debugShortkeys()
 	{
@@ -157,12 +159,12 @@ namespace {
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
 	bool s_DynamicDegrade = false;
-	
+
 	bool s_DegradeOn = false;
 	int s_DegradeStage = 0;
 
 	bool s_RotateEnabled = false;
-	
+
 	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
 
@@ -212,7 +214,7 @@ namespace {
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 			if (!s_Graphics) GraphicsDriver.setMode(reg_hsize, reg_vsize);
-			
+
 			// Render lines
 			{
 				// VBlank=0
@@ -222,9 +224,9 @@ namespace {
 				int woc = Memory.getWriteOpCount();
 				bool hasChanges = lwoc != woc;
 				s_LastWriteOpCount = woc;
-				
+
 				unsigned long procStart = System.getMicros();
-				if (reg_pclk) 
+				if (reg_pclk)
 				{
 					if (hasChanges || !s_FrameFullyDrawn)
 					{
@@ -237,8 +239,8 @@ namespace {
 						bool rotate = s_RotateEnabled && ram[REG_ROTATE];
 						if (s_DegradeOn)
 						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
-								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
+								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize, s_DegradeStage, 2);
 							++s_DegradeStage;
 							s_DegradeStage %= 2;
@@ -246,8 +248,8 @@ namespace {
 						}
 						else
 						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(), 
-								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate, 
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
+								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize);
 							s_FrameFullyDrawn = true;
 						}
@@ -391,7 +393,7 @@ namespace {
 		taskHandle = System.setThreadGamesCategory(&taskId);
 		System.disableAutomaticPriorityBoost();
 		System.makeNormalPriorityThread();
-		
+
 		Coprocessor.executeEmulator();
 
 		printf("Coprocessor thread exit\n");
@@ -415,7 +417,7 @@ namespace {
 			{
 				AudioRender.process();
 			}
-			if (s_Flags & EmulatorEnableKeyboard) 
+			if (s_Flags & EmulatorEnableKeyboard)
 			{
 				Keyboard.update();
 				if (s_Keyboard)
@@ -443,6 +445,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Flags = params.Flags;
 	s_Keyboard = params.Keyboard;
 	s_Graphics = params.Graphics;
+	g_Exception = params.Exception;
 
 	System.begin();
 	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str());
@@ -464,14 +467,14 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 	if (!s_Graphics) GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
 	Memory.enableReadDelay();
-	
+
 	if (params.Flags & EmulatorEnableGraphicsMultithread)
 	{
 		GraphicsProcessor.enableMultithread();
 		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
 	}
 	if (params.Flags & EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
-	
+
 	s_DynamicDegrade = params.Flags & EmulatorEnableDynamicDegrade;
 	s_RotateEnabled = params.Flags & EmulatorEnableRegRotate;
 

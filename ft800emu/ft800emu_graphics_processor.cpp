@@ -273,6 +273,7 @@ FT800EMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src,
 		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
 	}
 	printf("Invalid blend func (sse)\n");
+	if (g_Exception) g_Exception("Invalid blend func (sse)");
 	return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 }
 
@@ -393,6 +394,7 @@ FT800EMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uin
 	default:
 		// error
 		printf("Invalid stencil func\n");
+		if (g_Exception) g_Exception("Invalid stencil func");
 		return true;
 	}
 }
@@ -424,6 +426,7 @@ FT800EMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 	default:
 		// error
 		printf("Invalid stencil op\n");
+		if (g_Exception) g_Exception("Invalid stencil op");
 		break;
 	}
 	return result;
@@ -462,6 +465,7 @@ FT800EMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &ds
 		return true;
 	}
 	printf("Invalid alpha test func\n");
+	if (g_Exception) g_Exception("Invalid alpha test func");
 	return true;
 }
 
@@ -483,6 +487,7 @@ FT800EMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const a
 		return 255 - (dst >> 24);
 	}
 	printf("Invalid blend func\n");
+	if (g_Exception) g_Exception("Invalid blend func");
 	return 255;
 }
 
@@ -973,6 +978,7 @@ FT800EMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case BARGRAPH: return stride;
 	}
 	printf("Invalid bitmap layout\n");
+	if (g_Exception) g_Exception("Invalid bitmap layout");
 	return stride;
 }
 
@@ -1813,10 +1819,10 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 		const int x1_sc = max(x1_px, gs.ScissorX.I);
 		const int x2_sc = min(x2_px, gs.ScissorX2.I);
 
-		if (gs.DebugDisplayListIndex == 0x1b5)
+		/*if (gs.DebugDisplayListIndex == 0x1b5)
 		{
 			printf("ah");
-		}
+		}*/
 
 		if ((y1 - y2) != 0)
 		{
@@ -2689,6 +2695,7 @@ EvaluateDisplayListValue:
 					if (callstack.size() >= 1024)
 					{
 						printf("Invalid CALL() in display list\n");
+						if (g_Exception) g_Exception("Invalid CALL() in display list");
 						goto DisplayListDisplay;
 					}
 					callstack.push(c);
@@ -2729,6 +2736,7 @@ EvaluateDisplayListValue:
 					if (callstack.empty())
 					{
 						printf("Invalid RETURN() in display list\n");
+						if (g_Exception) g_Exception("Invalid RETURN() in display list");
 					}
 					else
 					{
@@ -2779,6 +2787,7 @@ EvaluateDisplayListValue:
 					break;
 				default:
 					printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
+					if (g_Exception) g_Exception("Invalid display list entry");
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:

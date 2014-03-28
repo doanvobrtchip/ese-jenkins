@@ -503,6 +503,13 @@ const uint32_t *MemoryClass::getDisplayList()
 
 void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 {
+	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
+	{
+		printf("MCU U32 write address %i exceeds RAM size\n", (int)address);
+		if (g_Exception) g_Exception("Write address exceeds RAM size");
+		return;
+	}
+
 	++s_WriteOpCount;
 
 	// s_WaitMCUReadCounter = 0;

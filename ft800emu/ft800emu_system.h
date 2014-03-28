@@ -7,7 +7,7 @@
  * \author Jan Boon (Kaetemi)
  */
 
-/* 
+/*
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -36,13 +36,13 @@ public:
 	static void begin();
 	static void update();
 	static void end();
-	
+
 	// OS Specific
 	static double getSeconds();
 	static long getMillis();
 	static long getMicros();
 	static long getFreqTick(int hz);
-	
+
 	static void delay(int ms);
 	static void delayMicros(int us);
 
@@ -60,7 +60,7 @@ public:
 	static bool isMainThread();
 	static inline bool setMainThreadSwitchable(bool value) { s_MainThreadSwitchable = value; }
 	static inline bool isMainThreadSwitchable() { return s_MainThreadSwitchable; }
-	
+
 	static void makeMCUThread();
 	static bool isMCUThread();
 	static void prioritizeMCUThread();
@@ -68,7 +68,7 @@ public:
 	static void holdMCUThread();
 	static void resumeMCUThread();
 	static void killMCUThread();
-	
+
 	static void makeCoprocessorThread();
 	static bool isCoprocessorThread();
 	static void prioritizeCoprocessorThread();
@@ -80,14 +80,14 @@ public:
 
 	static void *setThreadGamesCategory(unsigned long *);
 	static void revertThreadCategory(void *);
-	
+
 	static void enterSwapDL();
 	static void leaveSwapDL();
 
 	// MCU
 	static uint16_t getAnalogRead(uint8_t pin);
 	static void setAnalogRead(uint8_t pin, uint16_t value);
-	
+
 	// Debugging
 	static inline double getFrameTime() { return s_FrameTime; }
 	static inline double getFrameTimeDelta() { return s_FrameTimeDelta; }
@@ -110,10 +110,12 @@ private:
 private:
 	SystemClass(const SystemClass &);
 	SystemClass &operator=(const SystemClass &);
-	
+
 }; /* class SystemClass */
 
 extern SystemClass System;
+
+extern void (*g_Exception)(const char *message);
 
 } /* namespace FT800EMU */
 

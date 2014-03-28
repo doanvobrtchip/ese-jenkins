@@ -58,8 +58,9 @@ public:
 		MousePressure(0),
 		ExternalFrequency(0),
 		ReduceGraphicsThreads(0),
-		Graphics(0)//,
+		Graphics(0),
 		//Interrupt(0)
+		Exception(0)
 	{ }
 
 	// Microcontroller function called before loop.
@@ -104,6 +105,9 @@ public:
 
 	// Interrupt handler
 	//void (*Interrupt)();
+
+	// Exception callback
+	void (*Exception)(const char *message);
 };
 
 /**
