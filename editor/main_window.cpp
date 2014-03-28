@@ -1000,11 +1000,13 @@ void MainWindow::frameQt()
 void MainWindow::createActions()
 {
 	m_NewAct = new QAction(this);
+	m_NewAct->setShortcuts(QKeySequence::New);
 	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
 	m_OpenAct = new QAction(this);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
 
 	m_SaveAct = new QAction(this);
+	m_SaveAct->setShortcuts(QKeySequence::Save);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
@@ -1031,7 +1033,7 @@ void MainWindow::createActions()
 	m_UndoAct = m_UndoStack->createUndoAction(this);
 	m_UndoAct->setShortcuts(QKeySequence::Undo);
 	m_RedoAct = m_UndoStack->createRedoAction(this);
-	m_RedoAct->setShortcuts(QKeySequence::Redo);
+	m_RedoAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y));
 
 	m_DummyAct = new QAction(this);
 	connect(m_DummyAct, SIGNAL(triggered()), this, SLOT(dummyCommand()));
