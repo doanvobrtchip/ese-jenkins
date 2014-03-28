@@ -1,5 +1,8 @@
 import os, shutil, subprocess, sys
 
+def displayName():
+	return "Export GD2 Project"
+
 def run(name, document, ram):
 	resultText = "<b>Gameduino 2 Export</b><br>"
 	functionMap = {

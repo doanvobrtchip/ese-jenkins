@@ -727,6 +727,49 @@ MainWindow::~MainWindow()
 	m_TemporaryDir = NULL;
 }
 
+#ifdef FT800EMU_PYTHON
+static QString scriptDisplayName(const QString &script)
+{
+	QString scriptN = script.left(script.size() - 3);
+	QByteArray scriptNa = scriptN.toLocal8Bit();
+	char *scriptName = scriptNa.data();
+
+	PyObject *pyUserScript = PyString_FromString(scriptName); // FIXME Unicode
+	PyObject *pyUserModule = PyImport_Import(pyUserScript);
+	Py_DECREF(pyUserScript); pyUserScript = NULL;
+
+	if (!pyUserModule) return script;
+
+	PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "displayName");
+
+	if (!pyUserFunc) return script;
+
+	if (!PyCallable_Check)
+	{
+		Py_DECREF(pyUserFunc); pyUserFunc = NULL;
+		return script;
+	}
+
+	PyObject *pyValue;
+	PyObject *pyArgs = PyTuple_New(0);
+	pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
+	Py_DECREF(pyArgs); pyArgs = NULL;
+
+	Py_DECREF(pyUserFunc); pyUserFunc = NULL;
+	Py_DECREF(pyUserModule); pyUserModule = NULL;
+
+	if (pyValue)
+	{
+		char *resCStr = PyString_AsString(pyValue);
+		QString res = QString::fromLocal8Bit(resCStr);
+		Py_DECREF(pyValue); pyValue = NULL; // !
+		return res;
+	}
+
+	return script;
+}
+#endif
+
 void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
@@ -748,7 +791,7 @@ void MainWindow::refreshScriptsMenu()
 		{
 			RunScript *rs = new RunScript();
 			QAction *act = new QAction(this);
-			act->setText(scriptFiles[i]);
+			act->setText(scriptDisplayName(scriptFiles[i]));
 			act->setStatusTip(tr("Run Python script"));
 			m_ScriptsMenu->addAction(act);
 			rs->Action = act;
@@ -885,13 +928,14 @@ void MainWindow::runScript(const QString &script)
 			pyValue = PyByteArray_FromStringAndSize(ram, FT800EMU_RAM_SIZE);
 			PyTuple_SetItem(pyArgs, 2, pyValue);
 			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
-			Py_DECREF(pyArgs);
+			Py_DECREF(pyArgs); pyArgs = NULL;
 			if (pyValue)
 			{
 				printf("Ok\n");
 				PyObject *resStr = PyObject_Repr(pyValue);
 				char *resCStr = PyString_AsString(resStr);
 				QString res = QString::fromLocal8Bit(resCStr);
+				Py_DECREF(pyValue); pyValue = NULL;
 				m_PropertiesEditor->setInfo(res);
 				m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 				error = false;
