@@ -985,7 +985,7 @@ void MainWindow::frameQt()
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 
-	if (s_CoprocessorFaultOccured && m_PropertiesEditor->getEditWidgetSetter() != m_PropertiesEditorDock)
+	if (s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		m_PropertiesEditor->setInfo("<b>Co-processor engine fault</b><br><br>"
 			"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
