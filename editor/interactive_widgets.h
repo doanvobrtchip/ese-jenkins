@@ -707,11 +707,14 @@ public:
 		if (event->button() != Qt::LeftButton) return;
 		// printf("PropertiesColor::mousePressEvent(event)\n");
 		QColor c = QColorDialog::getColor(palette().color(QPalette::Window), this);
-		DlParsed parsed = getLine();
-		parsed.Parameter[m_R].I = c.red();
-		parsed.Parameter[m_G].I = c.green();
-		parsed.Parameter[m_B].I = c.blue();
-		setLine(parsed);
+		if (c.isValid())
+		{
+			DlParsed parsed = getLine();
+			parsed.Parameter[m_R].I = c.red();
+			parsed.Parameter[m_G].I = c.green();
+			parsed.Parameter[m_B].I = c.blue();
+			setLine(parsed);
+		}
 	}
 
 private:
