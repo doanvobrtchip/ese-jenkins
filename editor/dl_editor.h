@@ -79,6 +79,7 @@ public:
 	void insertLine(int line, const DlParsed &parsed);
 
 	bool isCoprocessor() { return m_ModeCoprocessor; }
+	bool isMacro() { return m_ModeMacro; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
 

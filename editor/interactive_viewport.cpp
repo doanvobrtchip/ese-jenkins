@@ -1363,9 +1363,18 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 	// TODO: Bitmaps from files, etc
 	if (acceptableSource(e))
 	{
-		if (m_LineEditor)
+		if (m_LineEditor && !m_LineEditor->isMacro())
 		{
 			e->accept();
+
+			if (m_LineEditor->isCoprocessor())
+			{
+				m_MainWindow->focusCmdEditor();
+			}
+			else
+			{
+				m_MainWindow->focusDlEditor();
+			}
 
 			uint32_t selectionType;
 			uint32_t selection;

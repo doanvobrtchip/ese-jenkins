@@ -1605,8 +1605,8 @@ void MainWindow::editorTabChanged(int i)
 	}
 	else if (!cmdTop)
 	{
-		m_EmulatorViewport->unsetEditorLine();
-		m_Toolbox->unsetEditorLine();
+		// m_EmulatorViewport->unsetEditorLine();
+		// m_Toolbox->unsetEditorLine();
 		setFocus(Qt::OtherFocusReason);
 	}
 }
