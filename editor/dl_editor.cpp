@@ -206,21 +206,47 @@ void DlEditor::editorCursorPositionChanged()
 
 void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
 {
+	//printf("contents change %i %i\n", charsRemoved, charsAdded);
+
 	if (QApplication::instance()->closingDown()) return;
 
 	if (m_Reloading)
 		return;
 
-	QTextBlock block = m_CodeEditor->document()->findBlock(position);
+	int charsEdited = max(charsRemoved, charsAdded);
+	QTextBlock firstBlock = m_CodeEditor->document()->findBlock(position);
+	int blockNb = firstBlock.blockNumber();
+	int firstPosition = firstBlock.position();
+	charsEdited += (position - firstPosition);
+
+	//int count = 0;
 
 	lockDisplayList();
-	parseLine(block);
+	while (charsEdited > 0)
+	{
+		if (blockNb < m_CodeEditor->document()->blockCount())
+		{
+			QTextBlock block = m_CodeEditor->document()->findBlockByNumber(blockNb);
+			parseLine(block);
+			charsEdited -= block.length();
+			++blockNb;
+			//++count;
+		}
+		else
+		{
+			break;
+		}
+	}
 	m_DisplayListModified = true;
 	unlockDisplayList();
+
+	//printf("parsed %i lines\n", count);
 }
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
 {
+	//printf("blockcount change\n");
+
 	if (QApplication::instance()->closingDown()) return;
 
 	if (m_Reloading)
