@@ -205,7 +205,7 @@ def run(name, document, ram):
 					continue
 				else:
 					skippedBitmaps = True
-			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor":
+			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor" or functionName == "cmd_gradcolor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
 			newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
