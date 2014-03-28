@@ -1614,7 +1614,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				}
 				else if (selectionType == 2)
 				{
-					if (!m_MouseStackValid) line = 0;
+					if (!m_MouseStackValid) line = m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop background");
 					DlParsed pa;
 					pa.ValidId = true;

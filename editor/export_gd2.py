@@ -192,6 +192,19 @@ def run(name, document, ram):
 	f.write("\n")
 	f.write("void loop()\n")
 	f.write("{\n")
+	clearFound = False
+	for line in document["coprocessor"]:
+		if not line == "":
+			splitlinea = line.split('(', 1)
+			splitlineb = splitlinea[1].split(')', 1)
+			functionName = splitlinea[0]
+			functionArgs = splitlineb[0]
+			functionName = functionMap[functionName]
+			if functionName == "Clear":
+				clearFound = True
+				break
+	if not clearFound:
+		f.write("\tGD.Clear(1, 1, 1);\n")
 	skippedBitmaps = False
 	for line in document["coprocessor"]:
 		if not line == "":

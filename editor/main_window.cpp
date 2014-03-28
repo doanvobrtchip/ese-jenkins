@@ -1924,7 +1924,7 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 
 		if (exists)
 		{
-			printf("exist %i\n", i);
+			// printf("exist %i\n", i);
 			DlParsed pa;
 			pa.ValidId = true;
 			pa.IdLeft = 0;
