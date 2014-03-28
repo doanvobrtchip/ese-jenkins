@@ -140,6 +140,8 @@ private slots:
 	void actImport();
 	void actExport();
 
+	void undoCleanChanged(bool clean);
+
 	void hsizeChanged(int hsize);
 	void vsizeChanged(int vsize);
 

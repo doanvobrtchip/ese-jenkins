@@ -662,6 +662,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	m_InitialWorkingDir = QDir::currentPath();
 	m_UndoStack = new QUndoStack(this);
+	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
 
 	QWidget *centralWidget = new QWidget(this);
 	QVBoxLayout *cvLayout = new QVBoxLayout();
@@ -1834,6 +1835,11 @@ void MainWindow::clearUndoStack()
 	m_DlEditor->clearUndoStack();
 	m_CmdEditor->clearUndoStack();
 	m_Macro->clearUndoStack();
+}
+
+void MainWindow::undoCleanChanged(bool clean)
+{
+	setWindowTitle(QString(clean ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FT800 Editor"));
 }
 
 void MainWindow::actNew()
