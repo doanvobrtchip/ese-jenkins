@@ -1872,6 +1872,67 @@ void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &array)
 	}
 }
 
+static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJsonArray &bitmaps)
+{
+	int hline = 0;
+
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+	{
+		QJsonObject j = bitmaps[i].toObject();
+
+		// Source
+		ContentInfo *contentInfo = mainWindow->contentManager()->find(j["sourceContent"].toString());
+		bool exists = (contentInfo != NULL);
+
+		if (exists)
+		{
+			printf("exist %i\n", i);
+			DlParsed pa;
+			pa.ValidId = true;
+			pa.IdLeft = 0;
+
+			pa.IdRight = FT800EMU_DL_BITMAP_HANDLE;
+			pa.Parameter[0].I = i;
+			pa.ExpectedParameterCount = 1;
+			dlEditor->insertLine(hline, pa);
+			++hline;
+
+			pa.IdRight = FT800EMU_DL_BITMAP_SOURCE;
+			pa.Parameter[0].U = contentInfo->MemoryAddress;
+			pa.ExpectedParameterCount = 1;
+			dlEditor->insertLine(hline, pa);
+			++hline;
+
+			pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT;
+			if (contentInfo->Converter == ContentInfo::Image)
+			{
+				pa.Parameter[0].U = contentInfo->ImageFormat;
+				pa.Parameter[1].U = contentInfo->CachedImageStride;
+				pa.Parameter[2].U = contentInfo->CachedImageHeight;
+			}
+			else
+			{
+				pa.Parameter[0].U = ((QJsonValue)j["layoutFormat"]).toVariant().toInt();
+				pa.Parameter[1].U = ((QJsonValue)j["layoutStride"]).toVariant().toInt();
+				pa.Parameter[2].U = ((QJsonValue)j["layoutHeight"]).toVariant().toInt();
+			}
+			pa.ExpectedParameterCount = 3;
+			dlEditor->insertLine(hline, pa);
+			++hline;
+
+			pa.IdRight = FT800EMU_DL_BITMAP_SIZE;
+			pa.Parameter[0].U = ((QJsonValue)j["sizeFilter"]).toVariant().toInt();
+			pa.Parameter[1].U = ((QJsonValue)j["sizeWrapX"]).toVariant().toInt();
+			pa.Parameter[2].U = ((QJsonValue)j["sizeWrapY"]).toVariant().toInt();
+			pa.Parameter[3].U = ((QJsonValue)j["sizeWidth"]).toVariant().toInt();
+			pa.Parameter[4].U = ((QJsonValue)j["sizeHeight"]).toVariant().toInt();
+			pa.ExpectedParameterCount = 5;
+			dlEditor->insertLine(hline, pa);
+			++hline;
+		}
+	}
+}
+
 QString MainWindow::getFileDialogPath()
 {
 	return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
@@ -1928,7 +1989,8 @@ void MainWindow::actOpen()
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 		}
-		//QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray(); // TODO: Compatibility loading BITMAP_SETUP
+		QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray(); // Compatibility loading BITMAP_SETUP
+		bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
 		//m_BitmapSetup->fromJson(bitmaps);
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;

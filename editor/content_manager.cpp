@@ -46,6 +46,8 @@
 #include "undo_stack_disabler.h"
 #include "asset_converter.h"
 #include "bitmap_setup.h"
+#include "dl_editor.h"
+#include "dl_parser.h"
 
 using namespace std;
 
@@ -1068,6 +1070,161 @@ ContentInfo *ContentManager::current()
 	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
 }
 
+int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
+{
+	int handle = -1;
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId)
+		{
+			if (parsed.IdLeft != 0)
+			{
+				handle = -1;
+				continue;
+			}
+			switch (parsed.IdRight)
+			{
+				case FT800EMU_DL_BITMAP_HANDLE:
+					handle = parsed.Parameter[0].I;
+					break;
+				case FT800EMU_DL_BITMAP_SOURCE:
+					if (parsed.Parameter[0].U == contentInfo->MemoryAddress && handle != -1)
+						return handle;
+					break;
+				case FT800EMU_DL_BITMAP_LAYOUT:
+				case FT800EMU_DL_BITMAP_SIZE:
+					break;
+				default:
+					handle = -1;
+					break;
+			}
+		}
+	}
+	return handle;
+}
+
+int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
+{
+	bool handles[BITMAP_SETUP_HANDLES_NB];
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+	{
+		handles[i] = false;
+	}
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_HANDLE && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		{
+			handles[parsed.Parameter[0].U] = true;
+		}
+	}
+	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+	{
+		if (!handles[i]) return i;
+	}
+	// todo: based on line
+	return -1;
+}
+
+// Find where to start with bitmap lines in the editor
+int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
+{
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId && parsed.IdLeft == 0)
+		{
+			switch (parsed.IdRight)
+			{
+				case FT800EMU_DL_BITMAP_HANDLE:
+				case FT800EMU_DL_BITMAP_SOURCE:
+				case FT800EMU_DL_BITMAP_LAYOUT:
+				case FT800EMU_DL_BITMAP_SIZE:
+					break;
+				default:
+					return i;
+			}
+		}
+		else
+		{
+			return i;
+		}
+	}
+	return 0;
+}
+
+void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEditor, bool updateSize)
+{
+	int handleLine = -1;
+	bool addressOk = false;
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId)
+		{
+			if (parsed.IdLeft != 0)
+			{
+				handleLine = -1;
+				addressOk = false;
+				continue;
+			}
+			switch (parsed.IdRight)
+			{
+				case FT800EMU_DL_BITMAP_HANDLE:
+					handleLine = i;
+					addressOk = false;
+					break;
+				case FT800EMU_DL_BITMAP_SOURCE:
+					if (parsed.Parameter[0].U == contentInfo->MemoryAddress && handleLine != -1 && !addressOk)
+					{
+						i = handleLine;
+						addressOk = true;
+					}
+					break;
+				case FT800EMU_DL_BITMAP_LAYOUT:
+					if (addressOk)
+					{
+						DlParsed pa = parsed;
+						pa.Parameter[0].U = contentInfo->ImageFormat;
+						pa.Parameter[1].U = contentInfo->CachedImageStride;
+						pa.Parameter[2].U = contentInfo->CachedImageHeight;
+						dlEditor->replaceLine(i, pa);
+					}
+					break;
+				case FT800EMU_DL_BITMAP_SIZE:
+					if (addressOk && updateSize)
+					{
+						DlParsed pa = parsed;
+						pa.Parameter[3].U = contentInfo->CachedImageWidth;
+						pa.Parameter[4].U = contentInfo->CachedImageHeight;
+						dlEditor->replaceLine(i, pa);
+					}
+					break;
+				default:
+					handleLine = -1;
+					addressOk = false;
+					break;
+			}
+		}
+	}
+}
+
+// Update handle adress
+void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor)
+{
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		{
+			DlParsed pa = parsed;
+			pa.Parameter[0].I = newAddr;
+			dlEditor->replaceLine(i, pa);
+		}
+	}
+}
+
 class ContentManager::ChangeSourcePath : public QUndoCommand
 {
 public:
@@ -1128,7 +1285,11 @@ void ContentManager::changeSourcePath(ContentInfo *contentInfo, const QString &v
 {
 	// Create undo/redo
 	ChangeSourcePath *changeSourcePath = new ChangeSourcePath(this, contentInfo, value);
+	m_MainWindow->undoStack()->beginMacro(tr("Change source path"));
 	m_MainWindow->undoStack()->push(changeSourcePath);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesCommonSourcePathChanged()
@@ -1403,7 +1564,11 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 {
 	// Create undo/redo
 	ChangeImageFormat *changeImageFormat = new ChangeImageFormat(this, contentInfo, value);
+	m_MainWindow->undoStack()->beginMacro(tr("Change image format"));
 	m_MainWindow->undoStack()->push(changeImageFormat);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesImageFormatChanged(int value)
@@ -1536,7 +1701,12 @@ void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value)
 {
 	// Create undo/redo
 	ChangeMemoryAddress *changeMemoryAddress = new ChangeMemoryAddress(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
+	m_MainWindow->undoStack()->beginMacro(tr("Change memory address"));
+	int oldAddr = contentInfo->MemoryAddress;
 	m_MainWindow->undoStack()->push(changeMemoryAddress);
+	editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
+	editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesMemoryAddressChanged(int value)

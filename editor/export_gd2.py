@@ -176,19 +176,6 @@ def run(name, document, ram):
 				else:
 					f.write("\tGD.cmd_memwrite(" + memoryAddress + ", sizeof(" + contentName + "));\n")
 				f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
-	bitmapHandle = 0
-	for handle in document["handles"]:
-		if "sourceContent" in handle:
-			memoryAddress = "RAM_" + handle["sourceContent"].replace("/", "_").upper();
-			f.write("\tGD.BitmapHandle(" + str(bitmapHandle) + ");\n");
-			f.write("\tGD.BitmapSource(" + memoryAddress + ");\n");
-			f.write("\tGD.BitmapLayout(" + formatList[handle["layoutFormat"]] + ", " + str(handle["layoutStride"]) + ", " + str(handle["layoutHeight"]) + ");\n");
-			f.write("\tGD.BitmapSize(" + filterList[handle["sizeFilter"]] + ", " + wrapList[handle["sizeWrapX"]] + ", " + wrapList[handle["sizeWrapY"]] + ", " + str(handle["sizeWidth"]) + ", " + str(handle["sizeHeight"]) + ");\n");
-		bitmapHandle = bitmapHandle + 1
-	f.write("}\n")
-	f.write("\n")
-	f.write("void loop()\n")
-	f.write("{\n")
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(', 1)
@@ -196,13 +183,36 @@ def run(name, document, ram):
 			functionName = splitlinea[0]
 			functionArgs = splitlineb[0]
 			functionName = functionMap[functionName]
+			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+				newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
+				f.write(newline)
+			else:
+				break
+	f.write("}\n")
+	f.write("\n")
+	f.write("void loop()\n")
+	f.write("{\n")
+	skippedBitmaps = False
+	for line in document["coprocessor"]:
+		if not line == "":
+			splitlinea = line.split('(', 1)
+			splitlineb = splitlinea[1].split(')', 1)
+			functionName = splitlinea[0]
+			functionArgs = splitlineb[0]
+			functionName = functionMap[functionName]
+			if not skippedBitmaps:
+				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+					continue
+				else:
+					skippedBitmaps = True
 			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
 			newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 			f.write(newline)
 		else:
-			f.write("\t\n")
+			if skippedBitmaps:
+				f.write("\t\n")
 	f.write("\tGD.swap();\n")
 	f.write("}\n")
 	f.write("\n")

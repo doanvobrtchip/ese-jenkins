@@ -42,7 +42,10 @@ class QCheckBox;
 
 namespace FT800EMUQT {
 
+#define BITMAP_SETUP_HANDLES_NB 16
+
 class MainWindow;
+class DlEditor;
 
 template<class T>
 class UndoStackDisabler;
@@ -127,6 +130,18 @@ public:
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
+
+	// Editor utilities
+	// Find handle related to content address, return -1 on failure // TODO: depend on current editor line
+	int editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor);
+	// Find a free handle, return -1 when no free handle available // TODO: depend on current editor line as fallback
+	int editorFindFreeHandle(DlEditor *dlEditor);
+	// Find where to start with bitmap lines in the editor
+	int editorFindNextBitmapLine(DlEditor *dlEditor);
+	// Update handle layout related to content info
+	void editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEditor, bool updateSize);
+	// Update handle adress
+	void editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 
 	// Changes
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
