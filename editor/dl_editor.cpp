@@ -43,7 +43,7 @@ namespace FT800EMUQT {
 extern int g_StepCmdLimit;
 
 DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true),
-m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor)
+m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor), m_EditingInteractive(false)
 {
 	m_DisplayListShared[0] = DISPLAY();
 
@@ -133,6 +133,8 @@ void DlEditor::unlockDisplayList()
 // reloads the entire display list from m_DisplayListShared
 void DlEditor::reloadDisplayList(bool fromEmulator)
 {
+	m_CodeEditor->setInteractiveDelete(false);
+
 	bool firstLine = true;
 	m_Reloading = true;
 	if (!fromEmulator)
@@ -183,6 +185,8 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 
 void DlEditor::editorCursorPositionChanged()
 {
+	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
+
 	if (QApplication::instance()->closingDown()) return;
 
 	QTextBlock block = m_CodeEditor->document()->findBlock(m_CodeEditor->textCursor().position());
@@ -206,6 +210,8 @@ void DlEditor::editorCursorPositionChanged()
 
 void DlEditor::documentContentsChange(int position, int charsRemoved, int charsAdded)
 {
+	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
+
 	//printf("contents change %i %i\n", charsRemoved, charsAdded);
 
 	if (QApplication::instance()->closingDown()) return;
@@ -245,6 +251,8 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
 {
+	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
+
 	//printf("blockcount change\n");
 
 	if (QApplication::instance()->closingDown()) return;
@@ -286,6 +294,7 @@ void DlEditor::parseLine(QTextBlock block)
 
 void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, const QString &message)
 {
+	m_EditingInteractive = true;
 	if (combineId >= 0) m_CodeEditor->setUndoCombine(combineId, message);
 	QString linestr = DlParser::toString(parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
@@ -296,10 +305,12 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, cons
 	c.insertText(linestr);
 	// editorCursorPositionChanged() needed? // VERIFY
 	if (combineId >= 0) m_CodeEditor->endUndoCombine();
+	m_EditingInteractive = false;
 }
 
 void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
+	m_EditingInteractive = true;
 	QString linestr = DlParser::toString(parsed);
 	if (line == 0)
 	{
@@ -315,6 +326,7 @@ void DlEditor::insertLine(int line, const DlParsed &parsed)
 		c.insertText("\n" + linestr);
 	}
 	// editorCursorPositionChanged() needed? // VERIFY
+	m_EditingInteractive = false;
 }
 
 const DlParsed &DlEditor::getLine(int line) const
@@ -324,16 +336,19 @@ const DlParsed &DlEditor::getLine(int line) const
 
 void DlEditor::selectLine(int line)
 {
+	m_EditingInteractive = true;
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	m_CodeEditor->setTextCursor(c);
 	editingLine(m_CodeEditor->document()->findBlockByNumber(line));
 	// editorCursorPositionChanged() instead of editingLine? // VERIFY
+	m_EditingInteractive = false;
 }
 
 void DlEditor::editingLine(QTextBlock block)
 {
 	// update properties editor
+	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 	if (m_PropertiesEditor->getEditWidgetSetter() != this
 		|| block.blockNumber() != m_PropLine
 		|| m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft

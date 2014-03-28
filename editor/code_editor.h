@@ -84,6 +84,8 @@ public:
 	void setStepHighlight(int index) { if (m_StepHighlight != index) { m_StepHighlight = index; highlightCurrentLine(); } }
 	void setTraceHighlights(const std::vector<int> &indices);
 
+	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; /*printf("Interactive delete %s\n", m_InteractiveDelete ? "ON" : "OFF");*/ }
+
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
 	virtual void keyPressEvent(QKeyEvent *e);
@@ -117,6 +119,7 @@ private:
 	int m_CombineId;
 	int m_LastCombineId;
 	QString m_UndoRedoMessage;
+	bool m_InteractiveDelete;
 
 };
 

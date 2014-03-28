@@ -118,6 +118,8 @@ private:
 	bool m_ModeMacro;
 	bool m_ModeCoprocessor;
 
+	bool m_EditingInteractive;
+
 private:
 	DlEditor(const DlEditor &);
 	DlEditor &operator=(const DlEditor &);

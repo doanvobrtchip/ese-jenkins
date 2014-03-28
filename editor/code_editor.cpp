@@ -199,11 +199,21 @@ default:
 		{
 			// trap
 			m_UndoStack->redo();
+		}*/
+		if (e->key() == Qt::Key_Delete && m_InteractiveDelete)
+		{
+			printf("Interactive delete\n");
+			QTextCursor c = textCursor();
+			int line = c.block().blockNumber();
+			c.setPosition(document()->findBlockByNumber(line).position());
+			c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+			c.insertText("");
+			setInteractiveDelete(true);
 		}
 		else
-		{*/
+		{
 			CodeEditorParent::keyPressEvent(e);
-		/*}*/
+		}
 	}
 
 	const bool ctrlOrShift = e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
