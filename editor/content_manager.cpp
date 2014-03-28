@@ -416,6 +416,10 @@ ContentInfo *ContentManager::add(const QString &filePath)
 
 	ContentInfo *contentInfo = new ContentInfo(filePath);
 
+	QString fileExt = QFileInfo(filePath).suffix().toLower();
+	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
+	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
+
 	add(contentInfo);
 
 	return contentInfo;
