@@ -739,6 +739,9 @@ void MainWindow::refreshScriptsMenu()
 	scriptActs.swap(m_ScriptActs);
 	for (int i = 0; i < scriptFiles.size(); ++i)
 	{
+		if (scriptFiles[i].endsWith("_cvt.py"))
+			continue; // Hide _cvt scripts
+
 		//char *fileName = scriptFiles[i].toLatin1().data();
 		//printf("Script: %s\n", fileName);
 		if (scriptActs.find(scriptFiles[i]) == scriptActs.end())
