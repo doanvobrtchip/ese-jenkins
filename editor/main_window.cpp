@@ -1842,8 +1842,38 @@ void MainWindow::undoCleanChanged(bool clean)
 	setWindowTitle(QString(clean ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FT800 Editor"));
 }
 
+bool MainWindow::maybeSave()
+{
+	if (!m_UndoStack->isClean())
+	{
+		QMessageBox::StandardButton ret;
+		ret = QMessageBox::warning(this, tr("FT800 Editor"),
+			tr("The project has been modified.\n"
+				"Do you want to save your changes?"),
+			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+		if (ret == QMessageBox::Save)
+		{
+			actSave();
+			return true;
+		}
+		else if (ret == QMessageBox::Cancel)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	if (maybeSave()) event->accept();
+	else event->ignore();
+}
+
 void MainWindow::actNew()
 {
+	if (!maybeSave()) return;
+
 	printf("** New **\n");
 
 	// reset filename
@@ -1948,6 +1978,8 @@ QString MainWindow::getFileDialogPath()
 
 void MainWindow::actOpen()
 {
+	if (!maybeSave()) return;
+
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
@@ -2175,6 +2207,8 @@ void MainWindow::actSaveAs()
 
 void MainWindow::actImport()
 {
+	if (!maybeSave()) return;
+
 	printf("*** Import ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), getFileDialogPath(),

@@ -176,6 +176,11 @@ private:
 
 	void incbLanguageCode();
 
+	bool maybeSave();
+
+protected:
+	virtual void closeEvent(QCloseEvent *event);
+
 private:
 	MainWindow(const MainWindow &);
 	MainWindow &operator=(const MainWindow &);
