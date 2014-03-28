@@ -280,25 +280,6 @@ void InteractiveViewport::graphics(QImage *image)
 	// Draw image overlays
 	QPainter p;
 	p.begin(image);
-	if (m_TraceEnabled)
-	{
-		QPen outer;
-		QPen inner;
-		outer.setWidth(3);
-		outer.setColor(QColor(Qt::black));
-		inner.setWidth(1);
-		inner.setColor(QColor(Qt::green).lighter(160));
-		p.setPen(outer);
-		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
-		p.setPen(inner);
-		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
-	}
 	if (m_LineEditor)
 	{
 		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
@@ -648,6 +629,25 @@ CMD_SCREENSAVER()
 			m_WidgetXY = false;
 			m_WidgetGradient = false;
 		}
+	}
+	if (m_TraceEnabled)
+	{
+		QPen outer;
+		QPen inner;
+		outer.setWidth(3);
+		outer.setColor(QColor(Qt::black));
+		inner.setWidth(1);
+		inner.setColor(QColor(Qt::green).lighter(160));
+		p.setPen(outer);
+		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+		p.setPen(inner);
+		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
 	}
 	p.end();
 
