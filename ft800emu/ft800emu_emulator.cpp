@@ -159,6 +159,7 @@ namespace {
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
 	bool s_DynamicDegrade = false;
+	uint32_t s_ExternalFrequency = 0;
 
 	bool s_DegradeOn = false;
 	int s_DegradeStage = 0;
@@ -197,7 +198,7 @@ namespace {
 			// Calculate the display frequency
 			if (reg_pclk)
 			{
-				double frequency = (double)Memory.rawReadU32(ram, REG_FREQUENCY);
+				double frequency = s_ExternalFrequency ? (double)s_ExternalFrequency : (double)Memory.rawReadU32(ram, REG_FREQUENCY);
 				frequency /= (double)reg_pclk;
 				frequency /= (double)Memory.rawReadU32(ram, REG_VCYCLE);
 				frequency /= (double)Memory.rawReadU32(ram, REG_HCYCLE);
@@ -446,6 +447,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Keyboard = params.Keyboard;
 	s_Graphics = params.Graphics;
 	g_Exception = params.Exception;
+	s_ExternalFrequency = params.ExternalFrequency;
 
 	System.begin();
 	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str());
