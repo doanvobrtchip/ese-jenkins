@@ -1347,7 +1347,7 @@ void InteractiveViewport::leaveEvent(QEvent *e)
 bool InteractiveViewport::acceptableSource(QDropEvent *e)
 {
 	if (e->source() == m_MainWindow->toolbox()->treeWidget()) return true;
-	if (e->source() == m_MainWindow->bitmapSetup()) return true;
+	//if (e->source() == m_MainWindow->bitmapSetup()) return true;
 	if (e->source() == m_MainWindow->contentManager()->contentList())
 	{
 		if (!m_MainWindow->contentManager()->current()->MemoryLoaded) return false;
@@ -1378,13 +1378,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				bitmapHandle = 0;
 				contentInfo = NULL;
 			}
-			else if (e->source() == m_MainWindow->bitmapSetup())
+			/*else if (e->source() == m_MainWindow->bitmapSetup())
 			{
 				selectionType = 1; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = m_MainWindow->bitmapSetup()->selected();
 				contentInfo = NULL;
-			}
+			}*/
 			else if (e->source() == m_MainWindow->contentManager()->contentList())
 			{
 				selectionType = 1; // PRIMITIVE
@@ -1631,7 +1631,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					if (contentInfo)
 					{
 						printf("Find or create handle for image content\n");
-						const ContentInfo *const *bitmapSources = m_MainWindow->bitmapSetup()->getBitmapSources();
+						/*const ContentInfo *const *bitmapSources = m_MainWindow->bitmapSetup()->getBitmapSources();
 						for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 						{
 							if (bitmapSources[i] == contentInfo)
@@ -1640,11 +1640,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								mustCreateHandle = false;
 								break;
 							}
-						}
+						}*/
 						if (mustCreateHandle)
 						{
 							mustCreateHandle = false;
-							for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
+							/*for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 							{
 								if (bitmapSources[i] == NULL)
 								{
@@ -1652,7 +1652,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 									mustCreateHandle = true;
 									break;
 								}
-							}
+							}*/ // FIXME: Scan display list editors BITMAP_SETUP
 							if (!mustCreateHandle)
 							{
 								printf("No free handle available\n");
@@ -1664,13 +1664,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 						}
 					}
-					m_MainWindow->undoStack()->beginMacro(tr("Drag and drop primitive"));
-					if (contentInfo && mustCreateHandle)
+					//m_MainWindow->undoStack()->beginMacro(tr("Drag and drop primitive"));
+					/*if (contentInfo && mustCreateHandle)
 					{
 						printf("Create handle for image content\n");
 						m_MainWindow->bitmapSetup()->changeSourceContent(bitmapHandle, contentInfo);
-					}
-					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop primitive");
+					}*/ // FIXME: Insert more lines! BITMAP_SETUP
+					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop primitive"));
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1691,7 +1691,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->insertLine(line, pa);
 					m_LineEditor->selectLine(line - 1);
 					m_LineEditor->codeEditor()->endUndoCombine();
-					m_MainWindow->undoStack()->endMacro();
+					//m_MainWindow->undoStack()->endMacro();
 					switch (selection)
 					{
 						case BITMAPS:

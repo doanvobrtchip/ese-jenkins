@@ -1046,9 +1046,9 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 
 void ContentManager::reloadExternal(ContentInfo *contentInfo)
 {
-	printf("ContentManager::reloadExternal(contentInfo)\n");
+	// printf("ContentManager::reloadExternal(contentInfo)\n");
 
-	m_MainWindow->bitmapSetup()->reloadContent(contentInfo);
+	// m_MainWindow->bitmapSetup()->reloadContent(contentInfo);
 }
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)

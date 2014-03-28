@@ -11,6 +11,7 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#if 0
 #ifndef FT800EMUQT_BITMAP_SETUP_H
 #define FT800EMUQT_BITMAP_SETUP_H
 
@@ -241,5 +242,6 @@ private:
 } /* namespace FT800EMUQT */
 
 #endif /* #ifndef FT800EMUQT_BITMAP_SETUP_H */
+#endif
 
 /* end of file */

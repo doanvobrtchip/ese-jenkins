@@ -165,7 +165,7 @@ void setup()
 
 // Content manager
 static ContentManager *s_ContentManager = NULL;
-static BitmapSetup *s_BitmapSetup = NULL;
+//static BitmapSetup *s_BitmapSetup = NULL;
 static int s_BitmapSetupModNb = 0;
 
 // Utilization
@@ -300,7 +300,7 @@ void loop()
 			}
 		}
 	}
-	bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
+	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
 	if (reuploadBitmapSetup)
 	{
 		printf("Reupload bitmap setup to RAM_DL\n");
@@ -333,7 +333,7 @@ void loop()
 		}
 		wr32(REG_PCLK, 5);
 		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
-	}
+	}*/
 	s_ContentManager->unlockContent();
 
 	// switch to next resolution
@@ -359,7 +359,7 @@ void loop()
 	s_CmdEditor->lockDisplayList();
 	bool dlModified = s_DlEditor->isDisplayListModified();
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadBitmapSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent))
+	if (dlModified || cmdModified /*|| reuploadBitmapSetup*/ || (g_StepCmdLimit != s_StepCmdLimitCurrent))
 	{
 		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
@@ -720,7 +720,7 @@ MainWindow::~MainWindow()
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
 	s_ContentManager = NULL;
-	s_BitmapSetup = NULL;
+	//s_BitmapSetup = NULL;
 
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
@@ -1447,7 +1447,7 @@ void MainWindow::createDockWindows()
 	}
 
 	// Bitmap
-	{
+	/*{
 		m_BitmapSetupDock = new QDockWidget(this);
 		m_BitmapSetupDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		m_BitmapSetupDock->setObjectName("BitmapSetup");
@@ -1462,7 +1462,7 @@ void MainWindow::createDockWindows()
 		m_BitmapSetupDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_BitmapSetupDock);
 		m_WidgetsMenu->addAction(m_BitmapSetupDock->toggleViewAction());
-	}
+	}*/
 
 	// Toolbox
 	{
@@ -1494,8 +1494,8 @@ void MainWindow::createDockWindows()
 	}*/
 
 	tabifyDockWidget(m_RegistersDock, m_ContentManagerDock);
-	tabifyDockWidget(m_ContentManagerDock, m_BitmapSetupDock);
-	tabifyDockWidget(m_BitmapSetupDock, m_ToolboxDock);
+	//tabifyDockWidget(m_ContentManagerDock, m_BitmapSetupDock);
+	tabifyDockWidget(m_ContentManagerDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
 	tabifyDockWidget(m_DeviceManagerDock, m_ControlsDock);
@@ -1536,7 +1536,7 @@ void MainWindow::translateDockWindows()
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
 	// m_BitmapSetupDock->setWindowTitle(tr("Bitmaps"));
-	m_BitmapSetupDock->setWindowTitle(tr("Handles"));
+	// m_BitmapSetupDock->setWindowTitle(tr("Handles"));
 }
 
 void MainWindow::incbLanguageCode()
@@ -1823,7 +1823,7 @@ void MainWindow::clearEditor()
 	m_CmdEditor->clear();
 	m_Macro->clear();
 	m_ContentManager->clear();
-	m_BitmapSetup->clear();
+	//m_BitmapSetup->clear();
 }
 
 void MainWindow::clearUndoStack()
@@ -1928,8 +1928,8 @@ void MainWindow::actOpen()
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 		}
-		QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray();
-		m_BitmapSetup->fromJson(bitmaps);
+		//QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray(); // TODO: Compatibility loading BITMAP_SETUP
+		//m_BitmapSetup->fromJson(bitmaps);
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;
 	}
@@ -1997,7 +1997,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 		content.push_back(info->toJson(false));
 	}
 	root["content"] = content;
-	root["handles"] = m_BitmapSetup->toJson(exportScript);
+	//root["handles"] = m_BitmapSetup->toJson(exportScript);
 	/*if (exportScript)
 	{
 		// dump of ram... this is too heavy

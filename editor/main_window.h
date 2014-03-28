@@ -51,7 +51,7 @@ class DeviceManager;
 class Inspector;
 class MainWindow;
 class ContentManager;
-class BitmapSetup;
+// class BitmapSetup;
 class InteractiveProperties;
 
 class RunScript : public QObject
@@ -97,7 +97,7 @@ public:
 	inline QUndoStack *undoStack() { return m_UndoStack; }
 	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
 	inline ContentManager *contentManager() { return m_ContentManager; }
-	inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
+	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
 
 	bool waitingCoprocessorAnimation();
@@ -199,8 +199,8 @@ private:
 	QDockWidget *m_ContentManagerDock;
 	ContentManager *m_ContentManager;
 
-	QDockWidget *m_BitmapSetupDock;
-	BitmapSetup *m_BitmapSetup;
+	//QDockWidget *m_BitmapSetupDock;
+	//BitmapSetup *m_BitmapSetup;
 
 	QDockWidget *m_ToolboxDock;
 	Toolbox *m_Toolbox;

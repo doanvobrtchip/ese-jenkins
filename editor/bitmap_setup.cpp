@@ -11,6 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#if 0
+
 #include "bitmap_setup.h"
 
 // STL includes
@@ -1457,5 +1459,7 @@ void BitmapSetup::propSizeHeightChanged(int value)
 ////////////////////////////////////////////////////////////////////////
 
 } /* namespace FT800EMUQT */
+
+#endif
 
 /* end of file */
