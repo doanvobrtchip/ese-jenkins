@@ -10,7 +10,7 @@
 /*
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
- 
+
 #include "emulator_viewport.h"
 
 // STL includes
@@ -43,7 +43,7 @@ static EmulatorViewport *s_EmulatorViewport = NULL;
 
 bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
 {
-	// TODO: Optimize using platform specific access to QImage so we 
+	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.
 	if (s_Image && s_Pixmap)
 	{
@@ -79,7 +79,7 @@ void EmulatorThread::run()
 	FT800EMU::Emulator.run(s_EmulatorParameters);
 }
 
-EmulatorViewport::EmulatorViewport(QWidget *parent) 
+EmulatorViewport::EmulatorViewport(QWidget *parent)
 	: QWidget(parent)
 {
 	s_EmulatorViewport = this;
@@ -115,14 +115,14 @@ void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
 	{
 		// Copy the params for the new thread to use
 		s_EmulatorParameters = params;
-		
+
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
-		
+
 		// Create the main thread for the emulator
 		s_EmulatorThread = new EmulatorThread();
 		s_EmulatorThread->start();
-		
+
 		// Connect the cross thread repaint event
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
 	}
@@ -144,7 +144,7 @@ void EmulatorViewport::threadRepaint()
 	s_Mutex.lock();
 	graphics(s_Image);
 	if (s_Image->width() != s_Pixmap->width()
-		|| s_Image->height() != s_Image->height())
+		|| s_Image->height() != s_Pixmap->height())
 	{
 		QPixmap *pixmap = s_Pixmap;
 		s_Pixmap = new QPixmap(s_Image->width(), s_Image->height());

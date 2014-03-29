@@ -665,16 +665,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
 
 	QWidget *centralWidget = new QWidget(this);
-	QVBoxLayout *cvLayout = new QVBoxLayout();
-	QHBoxLayout *chLayout = new QHBoxLayout();
-	chLayout->addStretch();
+	QHBoxLayout *layout = new QHBoxLayout();
 	m_EmulatorViewport = new InteractiveViewport(this);
-	chLayout->addWidget(m_EmulatorViewport);
-	chLayout->addStretch();
-	cvLayout->addStretch();
-	cvLayout->addLayout(chLayout);
-	cvLayout->addStretch();
-	centralWidget->setLayout(cvLayout);
+	layout->addWidget(m_EmulatorViewport);
+	layout->setAlignment(Qt::AlignCenter);
+	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
 
 	createActions();
