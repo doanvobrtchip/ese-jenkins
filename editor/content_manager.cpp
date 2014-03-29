@@ -1268,16 +1268,13 @@ void ContentManager::propertiesSetterChanged(QWidget *setter)
 
 ContentInfo *ContentManager::current()
 {
-	printf("Get current\n");
 	if (!m_ContentList->currentItem())
 		return NULL;
-	printf("Current exists\n");
 	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
 }
 
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
 {
-	printf("Find handle\n");
 	int handle = -1;
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
@@ -1307,7 +1304,6 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 			}
 		}
 	}
-	printf("Handle not found\n");
 	return handle;
 }
 
