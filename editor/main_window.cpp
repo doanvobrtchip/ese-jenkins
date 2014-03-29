@@ -986,6 +986,8 @@ void MainWindow::frameQt()
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 
+	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
+
 	if (s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		m_PropertiesEditor->setInfo("<b>Co-processor engine fault</b><br><br>"
@@ -1184,6 +1186,17 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 
+		QLabel *dlLabelG = new QLabel(statusBar());
+		dlLabelG->setText(tr("RAM_G: "));
+		statusBar()->addPermanentWidget(dlLabelG);
+
+		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
+		m_UtilizationGlobalStatus->setMinimum(0);
+		m_UtilizationGlobalStatus->setMaximum(RAM_DL);
+		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
+		m_UtilizationGlobalStatus->setMaximumSize(120, 19); // FIXME
+		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
+
 		/*w->setLayout(l);
 		statusBar()->addPermanentWidget(w);*/
 
@@ -1217,7 +1230,7 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidget(widget);
 		m_UtilizationDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_UtilizationDock);
-		m_WidgetsMenu->addAction(m_UtilizationDock->toggleViewAction());
+		// m_WidgetsMenu->addAction(m_UtilizationDock->toggleViewAction()); Disabled for now
 
 		m_UtilizationDock->setVisible(false);
 	}

@@ -42,6 +42,8 @@ class QCheckBox;
 
 namespace FT800EMUQT {
 
+extern int g_RamGlobalUsage;
+
 #define BITMAP_SETUP_HANDLES_NB 16
 
 class MainWindow;

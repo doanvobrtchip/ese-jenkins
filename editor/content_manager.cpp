@@ -53,6 +53,8 @@ using namespace std;
 
 namespace FT800EMUQT {
 
+int g_RamGlobalUsage = 0;
+
 std::vector<QString> ContentManager::s_FileExtensions;
 
 ContentInfo::ContentInfo(const QString &filePath)
@@ -1129,6 +1131,8 @@ void ContentManager::recalculateOverlapInternal()
 	std::set<ContentInfo *> contentOverlap;
 	m_ContentOverlap.swap(contentOverlap);
 
+	int ramGlobalUsage = 0;
+
 	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
 	{
 		ContentInfo *leftInfo = (ContentInfo *)(*left)->data(0, Qt::UserRole).value<void *>();
@@ -1148,6 +1152,7 @@ void ContentManager::recalculateOverlapInternal()
 				}
 				else
 				{
+					ramGlobalUsage += leftSize;
 					for (QTreeWidgetItemIterator right(++left); *right; ++right)
 					{
 						ContentInfo *rightInfo = (ContentInfo *)(*right)->data(0, Qt::UserRole).value<void *>();
@@ -1168,6 +1173,7 @@ void ContentManager::recalculateOverlapInternal()
 											m_ContentOverlap.insert(leftInfo);
 										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
 											m_ContentOverlap.insert(rightInfo);
+										ramGlobalUsage -= (leftAddr + leftSize - rightAddr);
 									}
 								}
 								else if (rightAddr < leftAddr)
@@ -1180,6 +1186,7 @@ void ContentManager::recalculateOverlapInternal()
 											m_ContentOverlap.insert(leftInfo);
 										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
 											m_ContentOverlap.insert(rightInfo);
+										ramGlobalUsage -= (rightAddr + rightSize - leftAddr);
 									}
 								}
 								else
@@ -1190,6 +1197,9 @@ void ContentManager::recalculateOverlapInternal()
 										m_ContentOverlap.insert(leftInfo);
 									if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
 										m_ContentOverlap.insert(rightInfo);
+									if (leftSize > rightSize)
+										ramGlobalUsage -= rightSize;
+									else ramGlobalUsage -= leftSize;
 								}
 							}
 						}
@@ -1235,6 +1245,8 @@ void ContentManager::recalculateOverlapInternal()
 			rebuildViewInternal(*it);
 		}
 	}
+
+	g_RamGlobalUsage = ramGlobalUsage;
 }
 
 void ContentManager::reloadExternal(ContentInfo *contentInfo)
