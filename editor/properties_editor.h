@@ -49,6 +49,8 @@ public:
 	void setEditWidgets(const std::vector<QWidget *> &widgets, bool own, QWidget *setter);
 	QWidget *getEditWidgetSetter() const { return m_CurrentEditWidgetSetter; }
 
+	void surpressSet(bool surpress) { m_SurpressSet = surpress; }
+
 	void translate();
 
 signals:
@@ -63,6 +65,7 @@ private:
 	std::vector<QWidget *> m_CurrentEditWidgets;
 	bool m_OwnCurrentEditWidget;
 	QWidget *m_CurrentEditWidgetSetter;
+	bool m_SurpressSet;
 
 private:
 	PropertiesEditor(const PropertiesEditor &);

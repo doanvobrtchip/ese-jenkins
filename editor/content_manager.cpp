@@ -1481,8 +1481,11 @@ void ContentManager::changeSourcePath(ContentInfo *contentInfo, const QString &v
 	ChangeSourcePath *changeSourcePath = new ChangeSourcePath(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change source path"));
 	m_MainWindow->undoStack()->push(changeSourcePath);
+	m_MainWindow->propertiesEditor()->surpressSet(true);
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
+	m_ContentList->setCurrentItem(contentInfo->View);
+	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
 }
 
@@ -1772,8 +1775,11 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	ChangeImageFormat *changeImageFormat = new ChangeImageFormat(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change image format"));
 	m_MainWindow->undoStack()->push(changeImageFormat);
+	m_MainWindow->propertiesEditor()->surpressSet(true);
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	m_ContentList->setCurrentItem(contentInfo->View);
+	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
 }
 
@@ -1919,8 +1925,11 @@ void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value, bo
 	m_MainWindow->undoStack()->push(changeMemoryAddress);
 	if (!internal)
 	{
+		m_MainWindow->propertiesEditor()->surpressSet(true);
 		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
 		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
+		m_ContentList->setCurrentItem(contentInfo->View);
+		m_MainWindow->propertiesEditor()->surpressSet(false);
 		m_MainWindow->undoStack()->endMacro();
 	}
 }

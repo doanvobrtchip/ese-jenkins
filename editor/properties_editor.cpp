@@ -30,7 +30,7 @@ using namespace std;
 
 namespace FT800EMUQT {
 
-PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false)
+PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false), m_SurpressSet(false)
 {
 	QVBoxLayout *infoLayout = new QVBoxLayout();
 	m_InfoGroupBox = new QGroupBox(this);
@@ -60,6 +60,8 @@ PropertiesEditor::~PropertiesEditor()
 
 void PropertiesEditor::setInfo(QString message)
 {
+	if (m_SurpressSet) return;
+
 	// printf("set info: %s\n", message.toLatin1().data());
 	m_InfoLabel->setText(message);
 	if (message.isEmpty() || message.isNull())
@@ -74,6 +76,8 @@ void PropertiesEditor::setInfo(QString message)
 
 void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 {
+	if (m_SurpressSet) return;
+
 	std::vector<QWidget *> widgets;
 	if (widget) widgets.push_back(widget);
 	setEditWidgets(widgets, own, setter);
@@ -81,6 +85,8 @@ void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)
 
 void PropertiesEditor::setEditWidgets(const std::vector<QWidget *> &widgets, bool own, QWidget *setter)
 {
+	if (m_SurpressSet) return;
+
 	for (std::vector<QWidget *>::iterator it(m_CurrentEditWidgets.begin()), end(m_CurrentEditWidgets.end()); it != end; ++it)
 	{
 		m_EditLayout->removeWidget((*it));
