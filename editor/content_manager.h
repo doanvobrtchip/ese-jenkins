@@ -93,6 +93,9 @@ struct ContentInfo
 	int CachedImageWidth;
 	int CachedImageHeight;
 	int CachedImageStride;
+
+	bool OverlapFlag;
+	bool WantAutoLoad;
 };
 
 /**
@@ -151,7 +154,7 @@ public:
 	void changeRawStart(ContentInfo *contentInfo, int value);
 	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
-	void changeMemoryAddress(ContentInfo *contentInfo, int value);
+	void changeMemoryAddress(ContentInfo *contentInfo, int value, bool internal = false);
 	void changeDataCompressed(ContentInfo *contentInfo, bool value);
 	void changeDataEmbedded(ContentInfo *contentInfo, bool value);
 
@@ -184,10 +187,14 @@ private:
 	bool nameExists(const QString &name);
 	QString createName(const QString &name); // Rename if already exists.
 
+	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
+	int getFreeAddress(); // Return -1 if no more space
+
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
 	void reuploadInternal(ContentInfo *contentInfo);
+	void recalculateOverlapInternal();
 	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
 
@@ -224,6 +231,7 @@ private:
 	static std::vector<QString> s_FileExtensions;
 
 	std::set<ContentInfo *> m_ContentUploadDirty;
+	std::set<ContentInfo *> m_ContentOverlap;
 
 	QMutex m_Mutex;
 

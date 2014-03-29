@@ -15,7 +15,6 @@
 #define FT800EMUQT_DEVICE_MANAGER_H
 
 #define FT800_DEVICE_MANAGER 0
-#define FT800_DEVICE_MANAGER_REALTIME 0
 
 // STL includes
 #include <map>

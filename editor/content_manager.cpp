@@ -71,6 +71,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	UploadDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
+	OverlapFlag = false;
+	WantAutoLoad = false;
 }
 
 QJsonObject ContentInfo::toJson(bool meta) const
@@ -209,8 +211,14 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	m_ContentList = new QTreeWidget(this);
 	m_ContentList->setDragEnabled(true);
-	m_ContentList->header()->close();
+	//m_ContentList->header()->close();
+	m_ContentList->setColumnCount(2);
+	QStringList headers;
+	headers.push_back(tr(""));
+	headers.push_back(tr("Name"));
+	m_ContentList->setHeaderLabels(headers);
 	layout->addWidget(m_ContentList);
+	m_ContentList->resizeColumnToContents(0);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
@@ -420,6 +428,20 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
 
+	if (contentInfo->Converter == ContentInfo::Invalid)
+	{
+		contentInfo->WantAutoLoad = true;
+	}
+	else
+	{
+		int freeAddress = getFreeAddress();
+		if (freeAddress >= 0)
+		{
+			contentInfo->MemoryLoaded = true;
+			contentInfo->MemoryAddress = freeAddress;
+		}
+	}
+
 	add(contentInfo);
 
 	return contentInfo;
@@ -488,6 +510,33 @@ void ContentManager::remove(ContentInfo *contentInfo)
 	m_MainWindow->undoStack()->push(remove);
 }
 
+int ContentManager::getFreeAddress()
+{
+	int freeAddress = 0;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		if (info->MemoryLoaded)
+		{
+			int size = getContentSize(info);
+			if (size > 0)
+			{
+				int nextAddress = info->MemoryAddress + size;
+				if (nextAddress > freeAddress)
+					freeAddress = nextAddress;
+			}
+		}
+	}
+	if (freeAddress % 4)
+	{
+		freeAddress &= 0x7FFFFFFC;
+		freeAddress += 4;
+	}
+	if (freeAddress > RAM_DL)
+		return -1;
+	return freeAddress;
+}
+
 void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
@@ -520,6 +569,18 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 
 	// Mark upload as dirty
 	contentInfo->UploadDirty = true;
+
+	// Make sure not in content
+	lockContent();
+	if (m_ContentUploadDirty.find(contentInfo) != m_ContentUploadDirty.end())
+		m_ContentUploadDirty.erase(contentInfo);
+	unlockContent();
+
+	// Recalculate overlap
+	if (m_ContentOverlap.find(contentInfo) != m_ContentUploadDirty.end())
+		m_ContentOverlap.erase(contentInfo);
+	contentInfo->OverlapFlag = false;
+	recalculateOverlapInternal();
 
 	// Reload external dependencies
 	reloadExternal(contentInfo);
@@ -694,6 +755,14 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 	return true;
 }
 
+int ContentManager::getContentSize(ContentInfo *contentInfo)
+{
+	QString fileName = contentInfo->DestName + ".raw";
+	QFileInfo binFile(fileName);
+	if (!binFile.exists()) return -1;
+	return binFile.size();
+}
+
 void ContentManager::clear()
 {
 	printf("ContentManager::clear()\n");
@@ -739,7 +808,9 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 
 void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 {
-	contentInfo->View->setText(0, contentInfo->SourcePath);
+	// contentInfo->View->setText(0, contentInfo->SourcePath);
+	contentInfo->View->setText(0, contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? "Overlap" : "Loaded") : "");
+	contentInfo->View->setText(1, contentInfo->DestName);
 }
 
 void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
@@ -1012,6 +1083,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	{
 		contentInfo->UploadDirty = false;
 		reuploadInternal(contentInfo);
+		recalculateOverlapInternal();
 	}
 
 	// Reload external if dirty
@@ -1050,6 +1122,121 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	}
 }
 
+void ContentManager::recalculateOverlapInternal()
+{
+	printf("ContentManager::recalculateOverlapInternal()\n");
+
+	std::set<ContentInfo *> contentOverlap;
+	m_ContentOverlap.swap(contentOverlap);
+
+	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
+	{
+		ContentInfo *leftInfo = (ContentInfo *)(*left)->data(0, Qt::UserRole).value<void *>();
+		if (leftInfo->Converter != ContentInfo::Invalid && leftInfo->MemoryLoaded)
+		{
+			int leftSize = getContentSize(leftInfo);
+			// printf("leftSize: %i\n", leftSize);
+			if (leftSize >= 0)
+			{
+				int leftAddr = leftInfo->MemoryAddress;
+				if (leftAddr + leftSize > RAM_DL)
+				{
+					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
+					if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
+						m_ContentOverlap.insert(leftInfo);
+					++left;
+				}
+				else
+				{
+					for (QTreeWidgetItemIterator right(++left); *right; ++right)
+					{
+						ContentInfo *rightInfo = (ContentInfo *)(*right)->data(0, Qt::UserRole).value<void *>();
+						if (rightInfo->Converter != ContentInfo::Invalid && rightInfo->MemoryLoaded)
+						{
+							int rightSize = getContentSize(rightInfo);
+							if (rightSize >= 0)
+							{
+								int rightAddr = rightInfo->MemoryAddress;
+
+								if  (leftAddr < rightAddr)
+								{
+									if (leftAddr + leftSize > rightAddr)
+									{
+										// overlap
+										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+										if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
+											m_ContentOverlap.insert(leftInfo);
+										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
+											m_ContentOverlap.insert(rightInfo);
+									}
+								}
+								else if (rightAddr < leftAddr)
+								{
+									if (rightAddr + rightSize > leftAddr)
+									{
+										// overlap
+										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+										if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
+											m_ContentOverlap.insert(leftInfo);
+										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
+											m_ContentOverlap.insert(rightInfo);
+									}
+								}
+								else
+								{
+									// overlap
+									printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+									if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
+										m_ContentOverlap.insert(leftInfo);
+									if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
+										m_ContentOverlap.insert(rightInfo);
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				++left;
+			}
+		}
+		else
+		{
+			++left;
+		}
+	}
+
+	for (std::set<ContentInfo *>::iterator it(contentOverlap.begin()), end(contentOverlap.end()); it != end; ++it)
+	{
+		if (m_ContentOverlap.find(*it) == m_ContentOverlap.end())
+		{
+			// Content no longer overlaps
+			printf("CM: Content '%s' no longer overlapping\n", (*it)->DestName.toLocal8Bit().data());
+
+			// Update overlap GUI
+			(*it)->OverlapFlag = false;
+			rebuildViewInternal(*it);
+
+			// Repuload
+			reuploadInternal(*it);
+		}
+	}
+
+	for (std::set<ContentInfo *>::iterator it(m_ContentOverlap.begin()), end(m_ContentOverlap.end()); it != end; ++it)
+	{
+		if (contentOverlap.find(*it) == contentOverlap.end())
+		{
+			// Newly overlapping content
+			printf("CM: Content '%s' is overlapping\n", (*it)->DestName.toLocal8Bit().data());
+
+			// Update overlap GUI
+			(*it)->OverlapFlag = true;
+			rebuildViewInternal(*it);
+		}
+	}
+}
+
 void ContentManager::reloadExternal(ContentInfo *contentInfo)
 {
 	// printf("ContentManager::reloadExternal(contentInfo)\n");
@@ -1069,13 +1256,16 @@ void ContentManager::propertiesSetterChanged(QWidget *setter)
 
 ContentInfo *ContentManager::current()
 {
+	printf("Get current\n");
 	if (!m_ContentList->currentItem())
 		return NULL;
+	printf("Current exists\n");
 	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
 }
 
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
 {
+	printf("Find handle\n");
 	int handle = -1;
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
@@ -1105,6 +1295,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 			}
 		}
 	}
+	printf("Handle not found\n");
 	return handle;
 }
 
@@ -1127,7 +1318,6 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 	{
 		if (!handles[i]) return i;
 	}
-	// todo: based on line
 	return -1;
 }
 
@@ -1496,8 +1686,20 @@ private:
 void ContentManager::changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value)
 {
 	// Create undo/redo
+	m_MainWindow->undoStack()->beginMacro(tr("Change converter"));
 	ChangeConverter *changeConverter = new ChangeConverter(this, contentInfo, value);
 	m_MainWindow->undoStack()->push(changeConverter);
+	if (contentInfo->WantAutoLoad && contentInfo->Converter != ContentInfo::Invalid)
+	{
+		int freeAddress = getFreeAddress();
+		if (freeAddress >= 0)
+		{
+			changeMemoryAddress(contentInfo, freeAddress, true);
+			changeMemoryLoaded(contentInfo, true);
+		}
+		contentInfo->WantAutoLoad = false;
+	}
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesCommonConverterChanged(int value)
@@ -1605,6 +1807,7 @@ public:
 	{
 		m_ContentInfo->MemoryLoaded = m_OldValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->recalculateOverlapInternal();
 		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -1614,6 +1817,7 @@ public:
 	{
 		m_ContentInfo->MemoryLoaded = m_NewValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->recalculateOverlapInternal();
 		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -1663,6 +1867,7 @@ public:
 	{
 		m_ContentInfo->MemoryAddress = m_OldValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->recalculateOverlapInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -1671,6 +1876,7 @@ public:
 	{
 		m_ContentInfo->MemoryAddress = m_NewValue;
 		m_ContentManager->reuploadInternal(m_ContentInfo);
+		m_ContentManager->recalculateOverlapInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -1701,16 +1907,22 @@ private:
 	int m_NewValue;
 };
 
-void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value)
+void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value, bool internal)
 {
 	// Create undo/redo
 	ChangeMemoryAddress *changeMemoryAddress = new ChangeMemoryAddress(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
-	m_MainWindow->undoStack()->beginMacro(tr("Change memory address"));
+	if (!internal)
+	{
+		m_MainWindow->undoStack()->beginMacro(tr("Change memory address"));
+	}
 	int oldAddr = contentInfo->MemoryAddress;
 	m_MainWindow->undoStack()->push(changeMemoryAddress);
-	editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
-	editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
-	m_MainWindow->undoStack()->endMacro();
+	if (!internal)
+	{
+		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
+		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
+		m_MainWindow->undoStack()->endMacro();
+	}
 }
 
 void ContentManager::propertiesMemoryAddressChanged(int value)

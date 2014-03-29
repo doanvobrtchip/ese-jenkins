@@ -1367,15 +1367,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 		{
 			e->accept();
 
-			if (m_LineEditor->isCoprocessor())
-			{
-				m_MainWindow->focusCmdEditor();
-			}
-			else
-			{
-				m_MainWindow->focusDlEditor();
-			}
-
 			uint32_t selectionType;
 			uint32_t selection;
 			uint32_t bitmapHandle;
@@ -1406,6 +1397,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				printf("Unknown error. This code is unreachable\n");
 				return;
 			}
+
+			if (m_LineEditor->isCoprocessor())
+			{
+				m_MainWindow->focusCmdEditor();
+			}
+			else
+			{
+				m_MainWindow->focusDlEditor();
+			}
+
 			if (selectionType == 1 || selectionType == 2)
 			{
 				int line = m_LineNumber;
