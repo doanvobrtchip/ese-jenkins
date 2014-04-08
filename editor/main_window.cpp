@@ -740,7 +740,7 @@ static QString scriptDisplayName(const QString &script)
 
 	if (!pyUserFunc) return script;
 
-	if (!PyCallable_Check)
+	if (!PyCallable_Check(pyUserFunc))
 	{
 		Py_DECREF(pyUserFunc); pyUserFunc = NULL;
 		return script;

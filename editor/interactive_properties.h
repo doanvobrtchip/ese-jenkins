@@ -29,6 +29,7 @@ namespace FT800EMUQT {
 
 class MainWindow;
 class DlEditor;
+struct DlParsed;
 
 /**
  * InteractiveProperties
@@ -49,6 +50,8 @@ public:
 	// Called by a editor when the active line changes
 	void setEditorLine(DlEditor *editor, int line);
 	void modifiedEditorLine();
+
+	void setProperties(int idLeft, int idRight, DlEditor *editor);
 
 private:
 	void addLabeledWidget(const QString &label, QWidget *widget);

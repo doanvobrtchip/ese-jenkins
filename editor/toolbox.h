@@ -56,6 +56,9 @@ public:
 	uint32_t getSelectionType();
 	uint32_t getSelectionId();
 
+private slots:
+	void currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+
 private:
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_Tools;

@@ -28,6 +28,7 @@
 // Project includes
 #include "main_window.h"
 #include "dl_editor.h"
+#include "interactive_properties.h"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_Tools->setDragEnabled(true);
 	layout->addWidget(m_Tools);
 	setLayout(layout);
+	connect(m_Tools, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(currentSelectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	m_Tools->header()->close();
 
@@ -331,6 +333,28 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
 	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
+}
+
+void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+	uint32_t selectionType = getSelectionType();
+	if (selectionType)
+	{
+		uint32_t selection = getSelectionId();
+		int idLeft;
+		int idRight;
+		if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
+		{
+			idLeft = 0xFFFFFF00;
+			idRight = selection & 0xFF;
+		}
+		else
+		{
+			idLeft = 0;
+			idRight = selection;
+		}
+		m_MainWindow->interactiveProperties()->setProperties(idLeft, idRight, NULL);
+	}
 }
 
 Toolbox::~Toolbox()
