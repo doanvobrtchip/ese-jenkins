@@ -14,7 +14,7 @@
 #ifndef FT800EMUQT_DEVICE_MANAGER_H
 #define FT800EMUQT_DEVICE_MANAGER_H
 
-#define FT800_DEVICE_MANAGER 0
+#define FT800_DEVICE_MANAGER 1
 
 // STL includes
 #include <map>
@@ -58,7 +58,8 @@ private:
 		DeviceId Id;
 		QTreeWidgetItem *View;
 		bool Connected;
-		// ...
+
+		void* handle;
 		// Add necessary device specific data here
 	};
 

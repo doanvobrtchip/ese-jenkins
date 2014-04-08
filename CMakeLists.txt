@@ -20,7 +20,7 @@ if (In_Sub_Dir)
 endif ()
 
 if (NOT Build_Dir_OK)
-  message (FATAL_ERROR "You must run cmake from a directory that is not in your source tree, or that is in a special subdirectory of the tree whose name begins with ‘build’.")
+  message (FATAL_ERROR "You must run cmake from a directory that is not in your source tree, or that is in a special subdirectory of the tree whose name begins with 'build'.")
 endif ()
 
 
@@ -50,6 +50,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/ft800emu
   ${CMAKE_SOURCE_DIR}/reference
   ${CMAKE_SOURCE_DIR}/arduino
+  ${CMAKE_SOURCE_DIR}/editor/ftlib
   )
 
 ADD_SUBDIRECTORY(ft800emu)

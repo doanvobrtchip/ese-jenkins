@@ -1,6 +1,8 @@
 
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
+FILE(GLOB SRCSFT ftlib/*.cpp)
+FILE(GLOB HDRSFT ftlib/*.h)
 
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
@@ -8,6 +10,8 @@ SET(CMAKE_AUTOMOC ON)
 ADD_EXECUTABLE(fteditor
 	${SRCS}
 	${HDRS}
+	${SRCSFT}
+	${HDRSFT}
 	)
 
 TARGET_LINK_LIBRARIES(fteditor
@@ -67,6 +71,8 @@ FIND_PACKAGE(Qt5Widgets)
 TARGET_LINK_LIBRARIES(fteditor
   Qt5::Widgets
   ${TARGET_LINK_LIBRARIES}
+  ${CMAKE_SOURCE_DIR}/editor/ftlib/ftd2xx.lib
+  ${CMAKE_SOURCE_DIR}/editor/ftlib/libMPSSE.a
 )
 
 qt5_use_modules(fteditor Widgets)
