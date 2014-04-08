@@ -2133,6 +2133,8 @@ void MainWindow::actSave()
 	QByteArray data = toJson();
 
 	out.writeRawData(data, data.size());
+
+	m_UndoStack->setClean();
 }
 
 void MainWindow::actSaveAs()
