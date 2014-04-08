@@ -7,7 +7,7 @@ FILE(GLOB HDRSFT ftlib/*.h)
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
 
-ADD_EXECUTABLE(fteditor
+ADD_EXECUTABLE(fteditor WIN32
 	${SRCS}
 	${HDRS}
 	${SRCSFT}
