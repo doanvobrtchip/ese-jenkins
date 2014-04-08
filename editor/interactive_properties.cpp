@@ -279,6 +279,7 @@ void InteractiveProperties::addText(int text)
 void InteractiveProperties::addValueSlider(int val, int maxim)
 {
 	PropertiesSlider *propVal = new PropertiesSlider(this, "Set value", val);
+	propVal->setMinimum(0);
 	propVal->setMaximum(maxim);
 	addLabeledWidget("Value: ", propVal);
 	m_CurrentProperties.push_back(propVal);
