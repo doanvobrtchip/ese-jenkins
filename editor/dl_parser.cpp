@@ -814,8 +814,20 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 							parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
 							parsed.ValidParameter[pq] = true;
 						}
+						else
+						{
+							parsed.Parameter[p].U = 0;
+						}
+					}
+					else
+					{
+						parsed.Parameter[p].U = 0;
 					}
 				}
+			}
+			else
+			{
+				parsed.Parameter[p].U = 0;
 			}
 
 			if (finalIndex >= 0)
@@ -848,7 +860,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 	// Clear unfilled to be safe
 	if (parsed.ValidId)
 	{
-		++p;
+		if (!failId) ++p;
 		for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
 		{
 			parsed.Parameter[p].U = 0;
