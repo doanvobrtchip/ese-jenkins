@@ -1907,14 +1907,14 @@ void MainWindow::actNew()
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
-void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &array)
+void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
 {
 	bool firstLine = true;
-	for (int i = 0; i < array.size(); ++i)
+	for (int i = 0; i < arr.size(); ++i)
 	{
 		if (firstLine) firstLine = false;
 		else textEditor->textCursor().insertText("\n");
-		textEditor->textCursor().insertText(array[i].toString());
+		textEditor->textCursor().insertText(arr[i].toString());
 	}
 }
 
@@ -2037,9 +2037,13 @@ void MainWindow::actOpen()
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 		}
-		QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray(); // Compatibility loading BITMAP_SETUP
-		bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
-		//m_BitmapSetup->fromJson(bitmaps);
+		if (root.contains("bitmaps") || root.contains("handles"))
+		{
+			// Compatibility loading BITMAP_SETUP
+			QJsonArray bitmaps = root[root.contains("bitmaps") ? "bitmaps" : "handles"].toArray();
+			bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
+			// m_BitmapSetup->fromJson(bitmaps);
+		}
 		statusBar()->showMessage(tr("Opened FT800 Editor project"));
 		loadOk = true;
 	}

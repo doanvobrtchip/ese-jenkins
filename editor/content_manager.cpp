@@ -579,7 +579,7 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	unlockContent();
 
 	// Recalculate overlap
-	if (m_ContentOverlap.find(contentInfo) != m_ContentUploadDirty.end())
+	if (m_ContentOverlap.find(contentInfo) != m_ContentOverlap.end())
 		m_ContentOverlap.erase(contentInfo);
 	contentInfo->OverlapFlag = false;
 	recalculateOverlapInternal();
