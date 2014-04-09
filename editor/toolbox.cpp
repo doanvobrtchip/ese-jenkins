@@ -29,6 +29,7 @@
 #include "main_window.h"
 #include "dl_editor.h"
 #include "interactive_properties.h"
+#include "properties_editor.h"
 
 using namespace std;
 
@@ -338,7 +339,53 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
 	uint32_t selectionType = getSelectionType();
-	if (selectionType)
+	if (selectionType == 1)
+	{
+		uint32_t selection = getSelectionId();
+		switch (selection)
+		{
+		case BITMAPS:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>BITMAPS</b><br>"
+				"Rectangular pixel arrays, in various color format."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		case POINTS:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>POINTS</b><br>"
+				"Anti-aliased points, point radius is 1-256 pixels."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		case LINES:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>LINES</b><br>"
+				"Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary)."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		case LINE_STRIP:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>LINE_STRIP</b><br>"
+				"Anti-aliased lines, connected head-to-tail."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		case EDGE_STRIP_R:
+		case EDGE_STRIP_L:
+		case EDGE_STRIP_A:
+		case EDGE_STRIP_B:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>EDGE STRIP A, B, L, R</b><br>"
+				"Edge strips."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		case RECTS:
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>RECTS</b><br>"
+				"Round-cornered rectangles, curvature of the corners can be adjusted using LINE_WIDTH."));
+			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
+			break;
+		}
+	}
+	else if (selectionType)
 	{
 		uint32_t selection = getSelectionId();
 		int idLeft;
