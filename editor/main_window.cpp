@@ -50,6 +50,7 @@
 #include <QJsonValue>
 #include <QTextBlock>
 #include <QPlainTextEdit>
+#include <QDesktopServices>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
@@ -651,7 +652,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL),
-	m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
+	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_TemporaryDir(NULL)
 {
@@ -1020,6 +1021,8 @@ void MainWindow::createActions()
 	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
 
+	m_ManualAct = new QAction(this);
+	connect(m_ManualAct, SIGNAL(triggered()), this, SLOT(manual()));
 	m_AboutAct = new QAction(this);
 	connect(m_AboutAct, SIGNAL(triggered()), this, SLOT(about()));
 	m_AboutQtAct = new QAction(this);
@@ -1055,6 +1058,8 @@ void MainWindow::translateActions()
 	m_ExportAct->setStatusTip(tr("Export project to file"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
+	m_ManualAct->setText(tr("Manual"));
+	m_ManualAct->setStatusTip(tr("Open the manual"));
 	m_AboutAct->setText(tr("About"));
 	m_AboutAct->setStatusTip(tr("Show information about the application"));
 	m_AboutQtAct->setText(tr("About Qt"));
@@ -1103,6 +1108,8 @@ void MainWindow::createMenus()
 	menuBar()->addSeparator();
 
 	m_HelpMenu = menuBar()->addMenu(QString::null);
+	m_HelpMenu->addAction(m_ManualAct);
+	m_HelpMenu->addSeparator();
 	m_HelpMenu->addAction(m_AboutAct);
 	m_HelpMenu->addAction(m_AboutQtAct);
 }
@@ -2393,6 +2400,11 @@ void MainWindow::dummyCommand()
 {
 	printf("!!!!!!!! dummy action !!!!!!!!!!!!!!!!\n");
 	m_UndoStack->push(new QUndoCommand());
+}
+
+void MainWindow::manual()
+{
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/FT800 Screen Editor.chm"));
 }
 
 void MainWindow::about()

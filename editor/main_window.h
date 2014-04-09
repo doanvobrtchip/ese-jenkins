@@ -129,6 +129,7 @@ public:
 private slots:
 	// void applyEmulatorConfig();
 
+	void manual();
 	void about();
 	void aboutQt();
 	void dummyCommand();
@@ -260,6 +261,7 @@ private:
 	QAction *m_SaveAsAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
+	QAction *m_ManualAct;
 	QAction *m_AboutAct;
 	QAction *m_AboutQtAct;
 	QAction *m_QuitAct;
