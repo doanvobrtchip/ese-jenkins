@@ -1282,6 +1282,8 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
+
+		m_DlEditorDock->setVisible(false);
 	}
 
 	// CmdEditor (Coprocessor)
