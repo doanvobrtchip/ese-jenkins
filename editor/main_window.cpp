@@ -188,6 +188,9 @@ static bool s_CoprocessorFaultOccured = false;
 
 static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
+
+static bool s_WantReloopCmd = false;
+
 // static int s_SwapCount = 0;
 void loop()
 {
@@ -360,8 +363,9 @@ void loop()
 	s_CmdEditor->lockDisplayList();
 	bool dlModified = s_DlEditor->isDisplayListModified();
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified /*|| reuploadBitmapSetup*/ || (g_StepCmdLimit != s_StepCmdLimitCurrent))
+	if (dlModified || cmdModified /*|| reuploadBitmapSetup*/ || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
 	{
+		s_WantReloopCmd = false;
 		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");
@@ -506,6 +510,7 @@ void loop()
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
+				s_WantReloopCmd = true;
 				printf("Finished CMD_LOGO\n");
 			}
 			else if (cmdList[i] == CMD_CALIBRATE)
@@ -533,6 +538,7 @@ void loop()
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
+				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
 			}
 		}
