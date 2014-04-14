@@ -676,7 +676,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createMenus();
 	createToolBars();
 	createStatusBar();
-	createDockWindows();
 
 	QWidget *centralWidget = new QWidget(this);
 	QHBoxLayout *layout = new QHBoxLayout();
@@ -685,6 +684,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	layout->setAlignment(Qt::AlignCenter);
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
+
+	createDockWindows();
 
 	m_InteractiveProperties = new InteractiveProperties(this);
 	m_InteractiveProperties->setVisible(false);
@@ -1171,7 +1172,6 @@ void MainWindow::createDockWindows()
 		m_DeviceManagerDock = new QDockWidget(this);
 		m_DeviceManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		m_DeviceManagerDock->setObjectName("Devices");
-		m_DeviceManagerDock->setWindowIcon(QIcon(":/icon/game-monitor.png"));
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -1286,7 +1286,6 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 		m_DlEditorDock->setObjectName("DlEditor");
-		m_DlEditorDock->setWindowIcon(QIcon(":/icons/script-text.png"));
 		m_DlEditor = new DlEditor(this, false);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
@@ -1558,7 +1557,7 @@ void MainWindow::createDockWindows()
 		m_HookedTabs.push_back(tabBar);
 	}
 
-	editorTabChanged(0);
+	editorTabChangedGo(true);
 }
 
 void MainWindow::translateDockWindows()
@@ -1607,6 +1606,11 @@ static QIcon processIcon(QTabBar *tabBar, QIcon icon)
 
 void MainWindow::editorTabChanged(int i)
 {
+	editorTabChangedGo(false);
+}
+
+void MainWindow::editorTabChangedGo(bool load)
+{
 	//printf("blip\n");
 	//m_EmulatorViewport->unsetEditorLine();
 	//m_Toolbox->unsetEditorLine();
@@ -1618,11 +1622,14 @@ void MainWindow::editorTabChanged(int i)
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		QTabBar *tabBar = tabList.at(i);
-		if (std::find(m_HookedTabs.begin(), m_HookedTabs.end(), tabBar) == m_HookedTabs.end())
+		if (!load)
 		{
-			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
-			connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
-			m_HookedTabs.push_back(tabBar);
+			if (std::find(m_HookedTabs.begin(), m_HookedTabs.end(), tabBar) == m_HookedTabs.end())
+			{
+				connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
+				connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
+				m_HookedTabs.push_back(tabBar);
+			}
 		}
 		for (int j = 0; j < tabBar->count(); ++j)
 		{

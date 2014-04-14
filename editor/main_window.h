@@ -126,6 +126,8 @@ public:
 
 	QByteArray toJson(bool exportScript = false);
 
+	void editorTabChangedGo(bool load);
+
 private slots:
 	// void applyEmulatorConfig();
 
