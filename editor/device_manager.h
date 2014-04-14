@@ -14,7 +14,11 @@
 #ifndef FT800EMUQT_DEVICE_MANAGER_H
 #define FT800EMUQT_DEVICE_MANAGER_H
 
+#ifdef WIN32
 #define FT800_DEVICE_MANAGER 1
+#else
+#define FT800_DEVICE_MANAGER 0
+#endif
 
 // STL includes
 #include <map>

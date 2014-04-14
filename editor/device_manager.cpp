@@ -30,6 +30,7 @@
 // Project includes
 #include "main_window.h"
 
+#if FT800_DEVICE_MANAGER
 //mpsse lib includes -- Windows
 #undef POINTS
 #include <Windows.h>
@@ -51,6 +52,7 @@ ft_int16_t FT_DispVSync1 = 10;
 ft_uint8_t FT_DispPCLK = 5;
 ft_char8_t FT_DispSwizzle = 0;
 ft_char8_t FT_DispPCLKPol = 1;
+#endif
 
 using namespace std;
 
@@ -110,7 +112,7 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	setLayout(layout);
 
     //Init MPSSE lib
-    Init_libMPSSE();	
+    Init_libMPSSE();
 	// Initial refresh of devices
 	refreshDevices();
 }
@@ -130,15 +132,15 @@ void DeviceManager::refreshDevices()
 
 	uint32 deviceNum;
 	SPI_GetNumChannels(&deviceNum);
-		
+
 	// For each device that is found
 	for (uint32_t i = 0;i < deviceNum;i++)
 	{
 		FT_DEVICE_LIST_INFO_NODE devListInfoNode;
 		SPI_GetChannelInfo(i,&devListInfoNode);
 
-		DeviceId devId = i; 
-		QString devName(devListInfoNode.Description); 
+		DeviceId devId = i;
+		QString devName(devListInfoNode.Description);
 
 		if (deviceInfo.find(devId) == deviceInfo.end())
 		{
@@ -205,22 +207,22 @@ void DeviceManager::connectDevice()
 	Ft_Gpu_Hal_Sleep(20);
 
 	/* Access address 0 to wake up the FT800 */
-	Ft_Gpu_HostCommand(phost,FT_GPU_ACTIVE_M);  
+	Ft_Gpu_HostCommand(phost,FT_GPU_ACTIVE_M);
 	Ft_Gpu_Hal_Sleep(20);
 
 	/* Set the clk to external clock */
-	Ft_Gpu_HostCommand(phost,FT_GPU_EXTERNAL_OSC);  
+	Ft_Gpu_HostCommand(phost,FT_GPU_EXTERNAL_OSC);
 	Ft_Gpu_Hal_Sleep(10);
-	  
+
 
 	/* Switch PLL output to 48MHz */
-	Ft_Gpu_HostCommand(phost,FT_GPU_PLL_48M);  
+	Ft_Gpu_HostCommand(phost,FT_GPU_PLL_48M);
 	Ft_Gpu_Hal_Sleep(10);
 
 	/* Do a core reset for safer side */
-	Ft_Gpu_HostCommand(phost,FT_GPU_CORE_RESET);     
+	Ft_Gpu_HostCommand(phost,FT_GPU_CORE_RESET);
 	Ft_Gpu_Hal_Sleep(10);
-    
+
 	if (0x7C == Ft_Gpu_Hal_Rd8(phost, REG_ID))
 	{
 		Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, FT_DispHCycle);
@@ -247,7 +249,7 @@ void DeviceManager::connectDevice()
 		Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
 		Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
 		Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
-		Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);		
+		Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
 
 		devInfo->Connected = true;
 	}
@@ -289,21 +291,21 @@ void DeviceManager::sendImage()
 
 	//DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
 	const uint8_t *ram = FT800EMU::Memory.getRam();
-	const uint32_t *displayList = FT800EMU::Memory.getDisplayList();	
+	const uint32_t *displayList = FT800EMU::Memory.getDisplayList();
 
 
 	// Erase devices that are gone from the list
 	//for (std::map<DeviceId, DeviceInfo *>::iterator it = m_DeviceInfo.begin(),end = m_DeviceInfo.end(); it != end; ++it)
 	{
 		//DeviceInfo *devInfo  = it->second;
-		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>(); 
+		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
 		if (devInfo->Connected)
 		{
 			Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t *)devInfo->handle;
-			
+
 			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_DL);
 			Ft_Gpu_Hal_Transfer32(phost,CLEAR(1,1,1));
-			for (uint32 i = 0;i< FT800EMU_DISPLAY_LIST_SIZE;i++){				
+			for (uint32 i = 0;i< FT800EMU_DISPLAY_LIST_SIZE;i++){
 				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
 				if (displayList[i] == DISPLAY())
 					break;

@@ -1,8 +1,10 @@
 
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
-FILE(GLOB SRCSFT ftlib/*.cpp)
-FILE(GLOB HDRSFT ftlib/*.h)
+IF (WIN32)
+	FILE(GLOB SRCSFT ftlib/*.cpp)
+	FILE(GLOB HDRSFT ftlib/*.h)
+ENDIF (WIN32)
 
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
