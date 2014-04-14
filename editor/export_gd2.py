@@ -128,7 +128,8 @@ def run(name, document, ram):
 	try:
 		os.makedirs(outDir)
 	except:
-		print "Dir already exists"
+		#print "Dir already exists"
+		pass
 	outName = outDir + "/" + name + "_gd2.ino" # os.path.basename(os.getcwd()) + ".ino"
 	if os.path.isfile(outName):
 		os.remove(outName)
@@ -238,5 +239,5 @@ def run(name, document, ram):
 		os.startfile((os.getcwd() + "/" + outName).replace("/", "\\"))
 	elif os.name == 'posix':
 		subprocess.call(('xdg-open', outName))
-	print resultText
+	#print resultText
 	return resultText
