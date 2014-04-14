@@ -216,25 +216,27 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	//m_ContentList->header()->close();
 	m_ContentList->setColumnCount(2);
 	QStringList headers;
-	headers.push_back(tr(""));
+	headers.push_back(tr("Status"));
 	headers.push_back(tr("Name"));
 	m_ContentList->setHeaderLabels(headers);
 	layout->addWidget(m_ContentList);
-	m_ContentList->resizeColumnToContents(0);
+	//m_ContentList->resizeColumnToContents(0);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
 
-	uint plusSign[2] = { 0x2795, 0 };
+	//uint plusSign[2] = { 0x2795, 0 };
 	QPushButton *addButton = new QPushButton();
-	addButton->setText(QString::fromUcs4(plusSign) + " " + tr("Add"));
+	addButton->setText(/*QString::fromUcs4(plusSign) + " " +*/ tr("Add"));
+	//addButton->setIcon(QIcon(":/icons/plus.png"));
 	connect(addButton, SIGNAL(clicked()), this, SLOT(add()));
 	buttonsLayout->addWidget(addButton);
 
-	uint minusSign[2] = { 0x2796, 0 };
+	//uint minusSign[2] = { 0x2796, 0 };
 	QPushButton *removeButton = new QPushButton();
 	m_RemoveButton = removeButton;
-	removeButton->setText(QString::fromUcs4(minusSign) + " " + tr("Remove"));
+	removeButton->setText(/*QString::fromUcs4(minusSign) + " " +*/ tr("Remove"));
+	//removeButton->setIcon(QIcon(":/icons/minus.png"));
 	connect(removeButton, SIGNAL(clicked()), this, SLOT(remove()));
 	removeButton->setEnabled(false);
 	buttonsLayout->addWidget(removeButton);
@@ -243,9 +245,10 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	QHBoxLayout *secondLayout = new QHBoxLayout();
 
-	uint refreshIcon[2] = { 0x27F2, 0 };
+	//uint refreshIcon[2] = { 0x27F2, 0 };
 	QPushButton *rebuildButton = new QPushButton();
-	rebuildButton->setText(QString::fromUcs4(refreshIcon) + " " + tr("Rebuild All"));
+	rebuildButton->setText(/*QString::fromUcs4(refreshIcon) + " " +*/ tr("Rebuild All"));
+	//rebuildButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
 	rebuildButton->setStatusTip(tr("Rebuilds all content that is out of date"));
 	connect(rebuildButton, SIGNAL(clicked()), this, SLOT(rebuildAll()));
 	secondLayout->addWidget(rebuildButton);
@@ -811,7 +814,8 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 {
 	// contentInfo->View->setText(0, contentInfo->SourcePath);
-	contentInfo->View->setText(0, contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? "Overlap" : "Loaded") : "");
+	contentInfo->View->setText(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? "Overlap" : "Loaded") : "") : "Error");
+	contentInfo->View->setIcon(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? QIcon(":/icons/exclamation-red.png") : QIcon(":/icons/tick")) : QIcon()) : QIcon(":/icons/exclamation-red.png"));
 	contentInfo->View->setText(1, contentInfo->DestName);
 }
 

@@ -5,15 +5,22 @@ IF (WIN32)
 	FILE(GLOB SRCSFT ftlib/*.cpp)
 	FILE(GLOB HDRSFT ftlib/*.h)
 ENDIF (WIN32)
+FILE(GLOB RESOURCES *.qrc)
+
+# Find the QtWidgets library
+FIND_PACKAGE(Qt5Widgets)
 
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
+
+QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
 
 ADD_EXECUTABLE(fteditor WIN32
 	${SRCS}
 	${HDRS}
 	${SRCSFT}
 	${HDRSFT}
+	${RESOURCE_ADDED}
 	)
 
 TARGET_LINK_LIBRARIES(fteditor
@@ -67,15 +74,19 @@ IF (WITH_PYTHON)
 
 ENDIF (WITH_PYTHON)
 
-# Find the QtWidgets library
-FIND_PACKAGE(Qt5Widgets)
-
-TARGET_LINK_LIBRARIES(fteditor
-  Qt5::Widgets
-  ${TARGET_LINK_LIBRARIES}
-  ${CMAKE_SOURCE_DIR}/editor/ftlib/ftd2xx.lib
-  ${CMAKE_SOURCE_DIR}/editor/ftlib/libMPSSE.a
-)
+IF (WIN32)
+  TARGET_LINK_LIBRARIES(fteditor
+    Qt5::Widgets
+    ${CMAKE_SOURCE_DIR}/editor/ftlib/ftd2xx.lib
+    ${CMAKE_SOURCE_DIR}/editor/ftlib/libMPSSE.a
+    ${TARGET_LINK_LIBRARIES}
+  )
+ELSE (WIN32)
+  TARGET_LINK_LIBRARIES(fteditor
+    Qt5::Widgets
+    ${TARGET_LINK_LIBRARIES}
+  )
+ENDIF (WIN32)
 
 qt5_use_modules(fteditor Widgets)
 

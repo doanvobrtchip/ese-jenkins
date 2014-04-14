@@ -77,8 +77,9 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	QHBoxLayout *buttons = new QHBoxLayout();
 
 	QPushButton *refreshButton = new QPushButton(this);
-	uint icon[2] = { 0x27F2, 0 };
-	refreshButton->setText(QString::fromUcs4(icon));//tr("Refresh"));
+	//uint icon[2] = { 0x27F2, 0 };
+	//refreshButton->setText(QString::fromUcs4(icon));//tr("Refresh"));
+	refreshButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
 	refreshButton->setToolTip(tr("Refresh the device list"));
 	connect(refreshButton, SIGNAL(clicked()), this, SLOT(refreshDevices()));
 	buttons->addWidget(refreshButton);

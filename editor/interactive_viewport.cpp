@@ -77,6 +77,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	QAction *automatic = new QAction(cursorGroup);
 	connect(automatic, SIGNAL(triggered()), this, SLOT(automaticChecked()));
 	automatic->setText(tr("Cursor"));
+	automatic->setIcon(QIcon(":/icons/cursor.png"));
 	automatic->setStatusTip(tr("Context dependent cursor"));
 	automatic->setCheckable(true);
 	automatic->setChecked(true);
@@ -84,23 +85,28 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	QAction *touch = new QAction(cursorGroup);
 	connect(touch, SIGNAL(triggered()), this, SLOT(touchChecked()));
 	touch->setText(tr("Touch"));
+	touch->setIcon(QIcon(":/icons/hand-point-090.png"));
 	touch->setStatusTip(tr("Use to cursor to touch the emulated display"));
 	touch->setCheckable(true);
 
 	QAction *trace = new QAction(cursorGroup);
 	connect(trace, SIGNAL(triggered()), this, SLOT(traceChecked()));
 	trace->setText(tr("Trace"));
+	trace->setIcon(QIcon(":/icons/trace.png"));
 	trace->setStatusTip(tr("Select a pixel to trace display commands"));
 	trace->setCheckable(true);
 
 	QAction *edit = new QAction(cursorGroup);
 	connect(edit, SIGNAL(triggered()), this, SLOT(editChecked()));
 	edit->setText(tr("Edit"));
+	edit->setIcon(QIcon(":/icons/arrow-move.png"));
 	edit->setStatusTip(tr("Interactive editing tools"));
 	edit->setCheckable(true);
 
 	QToolBar *cursorToolBar = m_MainWindow->addToolBar(tr("Cursor"));
+	cursorToolBar->setIconSize(QSize(16, 16));
 	cursorToolBar->addAction(automatic);
+	cursorToolBar->addSeparator();
 	cursorToolBar->addAction(touch);
 	cursorToolBar->addAction(trace);
 	cursorToolBar->addAction(edit);
@@ -110,6 +116,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	// icon something
 	m_Insert = new QAction(this);
 	m_Insert->setText(tr("Insert"));
+	m_Insert->setIcon(QIcon(":/icons/layer--plus.png"));
 	m_Insert->setStatusTip(tr("Place a new vertex or clone the selected widget directly on the screen"));
 	m_Insert->setCheckable(true);
 
@@ -128,6 +135,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	*/
 
 	QToolBar *toolBar = m_MainWindow->addToolBar(tr("Toolbar"));
+	toolBar->setIconSize(QSize(16, 16));
 	toolBar->addAction(m_Insert);
 	// toolBar->addAction(decrease);
 	// toolBar->addAction(increase);

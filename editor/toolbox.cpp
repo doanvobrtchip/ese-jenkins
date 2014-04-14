@@ -49,6 +49,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Background = new QTreeWidgetItem(m_Tools);
 	m_Background->setText(0, tr("Background"));
+	m_Background->setIcon(0, QIcon(":/icons/table-paint-can.png"));
 	{
 		QTreeWidgetItem *item;
 		item = new QTreeWidgetItem(m_Background);
@@ -75,6 +76,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Primitives = new QTreeWidgetItem(m_Tools);
 	m_Primitives->setText(0, tr("Primitives"));
+	m_Primitives->setIcon(0, QIcon(":/icons/layer.png"));
 	{
 		QTreeWidgetItem *primBitmaps = new QTreeWidgetItem(m_Primitives);
 		primBitmaps->setText(0, tr("Bitmaps"));
@@ -116,6 +118,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Widgets = new QTreeWidgetItem(m_Tools);
 	m_Widgets->setText(0, tr("Widgets"));
+	m_Widgets->setIcon(0, QIcon(":/icons/ui-buttons.png"));
 	{
 		QTreeWidgetItem *primText = new QTreeWidgetItem(m_Widgets);
 		primText->setText(0, tr("Text"));
@@ -181,6 +184,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
 	m_Graphics->setText(0, tr("Graphics State"));
+	m_Graphics->setIcon(0, QIcon(":/icons/categories.png"));
 	{
 		QTreeWidgetItem *item;
 		item = new QTreeWidgetItem(m_Graphics);
@@ -258,6 +262,7 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 
 	m_Bitmaps = new QTreeWidgetItem(m_Tools);
 	m_Bitmaps->setText(0, tr("Bitmap State"));
+	m_Bitmaps->setIcon(0, QIcon(":/icons/map-resize.png"));
 	{
 		QTreeWidgetItem *item;
 		item = new QTreeWidgetItem(m_Bitmaps);

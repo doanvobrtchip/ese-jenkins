@@ -663,6 +663,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_TemporaryDir(NULL)
 {
 	setObjectName("MainWindow");
+	setWindowIcon(QIcon(":/icons/puzzle.png"));
 
 	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
@@ -671,6 +672,12 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_UndoStack = new QUndoStack(this);
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
 
+	createActions();
+	createMenus();
+	createToolBars();
+	createStatusBar();
+	createDockWindows();
+
 	QWidget *centralWidget = new QWidget(this);
 	QHBoxLayout *layout = new QHBoxLayout();
 	m_EmulatorViewport = new InteractiveViewport(this);
@@ -678,12 +685,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	layout->setAlignment(Qt::AlignCenter);
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
-
-	createActions();
-	createMenus();
-	createToolBars();
-	createStatusBar();
-	createDockWindows();
 
 	m_InteractiveProperties = new InteractiveProperties(this);
 	m_InteractiveProperties->setVisible(false);
@@ -1052,12 +1053,16 @@ void MainWindow::translateActions()
 {
 	m_NewAct->setText(tr("New"));
 	m_NewAct->setStatusTip(tr("Create a new project"));
+	m_NewAct->setIcon(QIcon(":/icons/document.png"));
 	m_OpenAct->setText(tr("Open"));
 	m_OpenAct->setStatusTip(tr("Open an existing project"));
+	m_OpenAct->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
 	m_SaveAct->setText(tr("Save"));
 	m_SaveAct->setStatusTip(tr("Save the current project"));
+	m_SaveAct->setIcon(QIcon(":/icons/disk.png"));
 	m_SaveAsAct->setText(tr("Save As"));
-	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
+	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));;
+	m_SaveAsAct->setIcon(QIcon(":/icons/disk--pencil.png"));
 	m_ImportAct->setText(tr("Import"));
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
@@ -1068,14 +1073,16 @@ void MainWindow::translateActions()
 	m_ManualAct->setStatusTip(tr("Open the manual"));
 	m_AboutAct->setText(tr("About"));
 	m_AboutAct->setStatusTip(tr("Show information about the application"));
-	m_AboutQtAct->setText(tr("About Qt"));
-	m_AboutQtAct->setStatusTip(tr("Show information about the Qt libraries"));
+	m_AboutQtAct->setText(tr("3rd Party"));
+	m_AboutQtAct->setStatusTip(tr("Show information about the 3rd party code and content"));
 	// m_PrintDebugAct->setText(tr("ActionPrintDebug"));
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
 	m_UndoAct->setText(tr("Undo"));
 	m_UndoAct->setStatusTip(tr("Reverses the last action"));
+	m_UndoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
+	m_RedoAct->setIcon(QIcon(":/icons/arrow-circle-315.png"));
 	m_DummyAct->setText(tr("Dummy"));
 	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
@@ -1134,18 +1141,21 @@ void MainWindow::translateMenus()
 
 void MainWindow::createToolBars()
 {
-	//m_FileToolBar = addToolBar(QString::null);
-	//m_FileToolBar->addAction(m_QuitAct);
-	// m_FileToolBar->addAction(m_PrintDebugAct);
-
-	//m_EditToolBar = addToolBar(QString::null);
-	//m_EditToolBar->addAction(m_AboutAct);
+	QToolBar *mainBar = addToolBar(tr("MainBar"));
+	mainBar->setIconSize(QSize(16, 16));
+	mainBar->addAction(m_NewAct);
+	mainBar->addAction(m_OpenAct);
+	mainBar->addAction(m_SaveAct);
+	mainBar->addSeparator();
+	mainBar->addAction(m_UndoAct);
+	mainBar->addAction(m_RedoAct);
 }
 
 void MainWindow::translateToolBars()
 {
 	//m_FileToolBar->setWindowTitle(tr("File"));
 	//m_EditToolBar->setWindowTitle(tr("Edit"));
+
 }
 
 void MainWindow::createStatusBar()
@@ -1161,6 +1171,7 @@ void MainWindow::createDockWindows()
 		m_DeviceManagerDock = new QDockWidget(this);
 		m_DeviceManagerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		m_DeviceManagerDock->setObjectName("Devices");
+		m_DeviceManagerDock->setWindowIcon(QIcon(":/icon/game-monitor.png"));
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
@@ -1275,6 +1286,7 @@ void MainWindow::createDockWindows()
 		m_DlEditorDock = new QDockWidget(this);
 		m_DlEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 		m_DlEditorDock->setObjectName("DlEditor");
+		m_DlEditorDock->setWindowIcon(QIcon(":/icons/script-text.png"));
 		m_DlEditor = new DlEditor(this, false);
 		m_DlEditor->setPropertiesEditor(m_PropertiesEditor);
 		m_DlEditor->setUndoStack(m_UndoStack);
@@ -1545,6 +1557,8 @@ void MainWindow::createDockWindows()
 		// FIX-----ME: Figure out and connect when new tab bars are created... done
 		m_HookedTabs.push_back(tabBar);
 	}
+
+	editorTabChanged(0);
 }
 
 void MainWindow::translateDockWindows()
@@ -1574,6 +1588,23 @@ void MainWindow::incbLanguageCode()
 	translateDockWindows();
 }
 
+static QIcon processIcon(QTabBar *tabBar, QIcon icon)
+{
+	if (tabBar->shape() == QTabBar::RoundedEast
+		|| tabBar->shape() == QTabBar::RoundedWest)
+	{
+		QPixmap pix = icon.pixmap(16, 16);
+		QTransform trans;
+		if (tabBar->shape() == QTabBar::RoundedEast)
+			trans.rotate(-90);
+		else if (tabBar->shape() == QTabBar::RoundedWest)
+			trans.rotate(+90);
+		pix = pix.transformed(trans);
+		return QIcon(pix);
+	}
+	return icon;
+}
+
 void MainWindow::editorTabChanged(int i)
 {
 	//printf("blip\n");
@@ -1599,14 +1630,46 @@ void MainWindow::editorTabChanged(int i)
 			if (dw == m_CmdEditorDock)
 			{
 				cmdExist = true;
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/script-text.png")));
 				if (tabBar->currentIndex() != j)
 					cmdTop = false;
 			}
 			else if (dw == m_DlEditorDock)
 			{
 				dlExist = true;
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/script-text.png")));
 				if (tabBar->currentIndex() != j)
 					dlTop = false;
+			}
+			else if (dw == m_PropertiesEditorDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
+			}
+			else if (dw == m_ContentManagerDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/photo-album-blue.png")));
+			}
+			else if (dw == m_ToolboxDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/wrench-screwdriver.png")));
+			}
+			else if (dw == m_InspectorDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/node-magnifier.png")));
+			}
+#if FT800_DEVICE_MANAGER
+			else if (dw == m_DeviceManagerDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/game-monitor.png")));
+			}
+#endif /* FT800_DEVICE_MANAGER */
+			else if (dw == m_RegistersDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/cheque.png")));
+			}
+			else if (dw == m_ControlsDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/switch.png")));
 			}
 		}
 	}
@@ -2422,7 +2485,7 @@ void MainWindow::about()
 
 void MainWindow::aboutQt()
 {
-	QMessageBox::about(this, tr("About Qt"), tr(
+	QMessageBox::about(this, tr("3rd Party"), tr(
 		"The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
 		"Contact: http://www.qt-project.org/legal\n"
 		"Qt is available under the LGPL.\n"
@@ -2440,7 +2503,13 @@ void MainWindow::aboutQt()
 		"DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
 		"THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
 		"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
-		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."));
+		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+		"\n"
+		"Fugue Icons\n"
+		"(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
+		"These icons are licensed under a Creative Commons"
+		"Attribution 3.0 License.\n"
+		"<http://creativecommons.org/licenses/by/3.0/>"));
 }
 
 } /* namespace FT800EMUQT */

@@ -70,6 +70,8 @@ QMap<QString, QSize> parseCustomSizeHints(int argc, char **argv)
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int argc, char* argv[])
 {
+	Q_INIT_RESOURCE(icons);
+
 #ifdef NL_OS_WINDOWS
 	HRESULT hr;
 	hr = hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
