@@ -83,6 +83,8 @@
 #include "bitmap_setup.h"
 #include "interactive_properties.h"
 
+#define FTEDITOR_TEMP_DIR 0
+
 namespace FT800EMUQT {
 
 int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
@@ -1984,11 +1986,15 @@ void MainWindow::actNew()
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 
-	// set working directory to temporary directory // FIXME: tempPath()
+	// set working directory to temporary directory
+#if FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = new QTemporaryDir("ft800editor-");
 	QDir::setCurrent(m_TemporaryDir->path());
+#else
+	QDir::setCurrent(m_InitialWorkingDir);
+#endif
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 }
 
@@ -2143,9 +2149,13 @@ void MainWindow::actOpen()
 		// Reset editor and paths
 		clearEditor();
 		m_CurrentFile = QString();
+#if FTEDITOR_TEMP_DIR
 		QDir::setCurrent(QDir::tempPath());
 		m_TemporaryDir = new QTemporaryDir("ft800editor-");
 		QDir::setCurrent(m_TemporaryDir->path());
+#else
+		QDir::setCurrent(m_InitialWorkingDir);
+#endif
 	}
 
 	// clear undo stacks
@@ -2213,7 +2223,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 
 void MainWindow::actSave()
 {
-	if (m_TemporaryDir) { actSaveAs(); return; }
+	if (m_CurrentFile.isEmpty()) { actSaveAs(); return; }
 
 	QFile file(m_CurrentFile);
 	file.open(QIODevice::WriteOnly);
@@ -2320,11 +2330,15 @@ void MainWindow::actImport()
 	// reset editors to their default state
 	clearEditor();
 
-	// set working directory to temporary directory // FIXME: tempPath()
+	// set working directory to temporary directory
+#if FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = new QTemporaryDir("ft800editor-");
 	QDir::setCurrent(m_TemporaryDir->path());
+#else
+	QDir::setCurrent(m_InitialWorkingDir);
+#endif
 	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
 
 	// open a project
