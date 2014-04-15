@@ -25,6 +25,8 @@
 
 // Project includes
 
+#define RAM_G_MAX (256 * 1024)
+
 #define FT800EMU_DL_VERTEX2F 1
 #define FT800EMU_DL_VERTEX2II 2
 #define FT800EMU_DL_DISPLAY 0

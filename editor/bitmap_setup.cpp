@@ -297,7 +297,7 @@ BitmapSetup::BitmapSetup(MainWindow *parent) : QWidget(parent), m_MainWindow(par
 	connect(m_PropSourceContent, SIGNAL(currentIndexChanged(int)), this, SLOT(propSourceContentChanged(int)));
 	/*m_PropAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropAddress->setMinimum(0);
-	m_PropAddress->setMaximum(RAM_DL - 4);
+	m_PropAddress->setMaximum(RAM_G_MAX - 4);
 	m_PropAddress->setSingleStep(4);
 	m_PropAddress->setKeyboardTracking(false);
 	sourceLayout->addWidget(m_PropAddress);*/

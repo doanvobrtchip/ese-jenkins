@@ -90,7 +90,7 @@ public:
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
 		setMinimum(0);
-		setMaximum(RAM_DL - 4);
+		setMaximum(RAM_G_MAX - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 	}

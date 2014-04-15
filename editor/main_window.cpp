@@ -260,7 +260,7 @@ void loop()
 			continue;
 		}
 		int binSize = (int)binFile.size();
-		if (binSize + info->MemoryAddress > RAM_DL)
+		if (binSize + info->MemoryAddress > RAM_G_MAX)
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
 			continue;
@@ -1213,7 +1213,7 @@ void MainWindow::createDockWindows()
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
 		m_UtilizationGlobalStatus->setMinimum(0);
-		m_UtilizationGlobalStatus->setMaximum(RAM_DL);
+		m_UtilizationGlobalStatus->setMaximum(RAM_G_MAX);
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(120, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);

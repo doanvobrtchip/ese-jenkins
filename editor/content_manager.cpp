@@ -319,14 +319,14 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesRaw->setTitle(tr("Raw"));
 	m_PropertiesRawStart = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawStart->setMinimum(0);
-	m_PropertiesRawStart->setMaximum(RAM_DL);
+	m_PropertiesRawStart->setMaximum(0x7FFFFFFF);
 	m_PropertiesRawStart->setSingleStep(4);
 	m_PropertiesRawStart->setKeyboardTracking(false);
 	addLabeledWidget(this, rawLayout, tr("Start: "), m_PropertiesRawStart);
 	connect(m_PropertiesRawStart, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawStartChanged(int)));
 	m_PropertiesRawLength = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawLength->setMinimum(0);
-	m_PropertiesRawLength->setMaximum(RAM_DL);
+	m_PropertiesRawLength->setMaximum(RAM_G_MAX);
 	m_PropertiesRawLength->setSingleStep(4);
 	m_PropertiesRawLength->setKeyboardTracking(false);
 	addLabeledWidget(this, rawLayout, tr("Length: "), m_PropertiesRawLength);
@@ -339,7 +339,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QVBoxLayout *propMemLayout = new QVBoxLayout();
 	m_PropertiesMemoryAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesMemoryAddress->setMinimum(0);
-	m_PropertiesMemoryAddress->setMaximum(RAM_DL - 4);
+	m_PropertiesMemoryAddress->setMaximum(RAM_G_MAX - 4);
 	m_PropertiesMemoryAddress->setSingleStep(4);
 	m_PropertiesMemoryAddress->setKeyboardTracking(false);
 	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
@@ -537,7 +537,7 @@ int ContentManager::getFreeAddress()
 		freeAddress &= 0x7FFFFFFC;
 		freeAddress += 4;
 	}
-	if (freeAddress > RAM_DL)
+	if (freeAddress > RAM_G_MAX)
 		return -1;
 	return freeAddress;
 }
@@ -1147,7 +1147,7 @@ void ContentManager::recalculateOverlapInternal()
 			if (leftSize >= 0)
 			{
 				int leftAddr = leftInfo->MemoryAddress;
-				if (leftAddr + leftSize > RAM_DL)
+				if (leftAddr + leftSize > RAM_G_MAX)
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
 					if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
