@@ -285,6 +285,15 @@ void InteractiveViewport::graphics(QImage *image)
 	m_MouseY = m_NextMouseY;
 	m_MouseStackRead.swap(m_MouseStackWrite);
 
+	if (m_MouseTouch)
+	{
+		FT800EMU::Memory.setTouchScreenXY(m_MouseX, m_MouseY, 0);
+	}
+	else
+	{
+		FT800EMU::Memory.resetTouchScreenXY();
+	}
+
 	// Draw image overlays
 	QPainter p;
 	p.begin(image);
@@ -1007,7 +1016,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 
 	if (m_MouseTouch)
 	{
-		FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		// FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 	}
 	else if (m_MouseMovingVertex)
 	{
@@ -1194,7 +1203,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
-			FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+			// FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 		}
 		break;
 	case POINTER_TRACE: // trace
@@ -1309,7 +1318,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
-		FT800EMU::Memory.resetTouchScreenXY();
+		// FT800EMU::Memory.resetTouchScreenXY();
 		updatePointerMethod(); // update because update is not done while m_MouseTouch true
 	}
 	else if (m_MouseMovingVertex)

@@ -118,7 +118,7 @@ public:
 		ClearColorARGB = 0x00000000;
 		ClearStencil = 0;
 		ClearTag = 0;
-		Tag = 0;
+		Tag = 255;
 		TagMask = true;
 		StencilMask = 0xFF;
 		StencilFunc = ALWAYS;
@@ -2542,7 +2542,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 			// about loop+480 ops
 			for (uint32_t i = 0; i < hsize; ++i)
 			{
-				bt[i] = 0;
+				bt[i] = 255;
 			}
 		}
 
