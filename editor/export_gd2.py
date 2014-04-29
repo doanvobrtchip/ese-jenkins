@@ -1,7 +1,7 @@
 import os, shutil, subprocess, sys
 
 def displayName():
-	return "Export GD2 Project"
+	return "Export Gameduino2 Project"
 
 def run(name, document, ram):
 	resultText = "<b>Gameduino 2 Export</b><br>"
@@ -222,6 +222,14 @@ def run(name, document, ram):
 			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor" or functionName == "cmd_gradcolor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
+			if functionName == "cmd_gradient":
+				functionArgsSplit = eval(functionArgs)
+				color0 = str((functionArgsSplit[3] * 256 + functionArgsSplit[4])*256 + functionArgsSplit[5])
+				color1 = str((functionArgsSplit[9] * 256 + functionArgsSplit[10])*256 + functionArgsSplit[11])
+				functionArgs = str(functionArgsSplit[0]) + ", " + str(functionArgsSplit[1]) + ", "
+				functionArgs += color0 + ", "
+				functionArgs += str(functionArgsSplit[6]) + ", " + str(functionArgsSplit[7]) + ", "
+				functionArgs += color1
 			newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 			f.write(newline)
 		else:
