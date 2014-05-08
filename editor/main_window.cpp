@@ -1582,7 +1582,7 @@ void MainWindow::translateDockWindows()
 
 void MainWindow::incbLanguageCode()
 {
-	setWindowTitle(tr("FT800 Editor"));
+	setWindowTitle(tr("FTDI EVE Screen Editor"));
 	translateActions();
 	translateMenus();
 	translateToolBars();
@@ -1934,7 +1934,7 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::undoCleanChanged(bool clean)
 {
-	setWindowTitle(QString(clean ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FT800 Editor"));
+	setWindowTitle(QString(clean ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FTDI EVE Screen Editor"));
 }
 
 bool MainWindow::maybeSave()
@@ -1942,7 +1942,7 @@ bool MainWindow::maybeSave()
 	if (!m_UndoStack->isClean())
 	{
 		QMessageBox::StandardButton ret;
-		ret = QMessageBox::warning(this, tr("FT800 Editor"),
+		ret = QMessageBox::warning(this, tr("FTDI EVE Screen Editor"),
 			tr("The project has been modified.\n"
 				"Do you want to save your changes?"),
 			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
@@ -2135,7 +2135,7 @@ void MainWindow::actOpen()
 			bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
 			// m_BitmapSetup->fromJson(bitmaps);
 		}
-		statusBar()->showMessage(tr("Opened FT800 Editor project"));
+		statusBar()->showMessage(tr("Opened FTDI EVE Screen Editor project"));
 		loadOk = true;
 	}
 	else
@@ -2238,7 +2238,7 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filterft800proj = tr("FT800 Editor Project, *.ft800proj (*.ft800proj)");
+	QString filterft800proj = tr("FTDI EVE Screen Editor Project, *.ft800proj (*.ft800proj)");
 	QString filter = filterft800proj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
@@ -2501,7 +2501,7 @@ void MainWindow::manual()
 
 void MainWindow::about()
 {
-	QMessageBox::about(this, tr("About FT800 Editor"), tr("Copyright (C) 2013-2014  Future Technology Devices International Ltd"));
+	QMessageBox::about(this, tr("About FTDI EVE Screen Editor"), tr("Copyright (C) 2013-2014  Future Technology Devices International Ltd"));
 }
 
 void MainWindow::aboutQt()
