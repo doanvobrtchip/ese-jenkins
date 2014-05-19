@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 	Py_Initialize();
 	PyObject* sysPath = PySys_GetObject((char*)"path");
 	{
-		PyObject* curPath = PyString_FromString(QDir::currentPath().toUtf8().data()); // FIXME Unicode ?
+		QByteArray cpUtf8 = QDir::currentPath().toUtf8();
+		PyObject* curPath = PyUnicode_FromString(cpUtf8.data());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
@@ -93,7 +94,8 @@ int main(int argc, char* argv[])
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{
-		PyObject* curPath = PyString_FromString(QCoreApplication::applicationDirPath().toUtf8().data()); // FIXME Unicode ?
+		QByteArray apUtf8 = QCoreApplication::applicationDirPath().toUtf8();
+		PyObject* curPath = PyUnicode_FromString(apUtf8.data());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}

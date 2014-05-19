@@ -151,8 +151,8 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 	{
 		bool error = true;
 
-		QByteArray inFileU8 = inFile.toLocal8Bit(); // FIXME Unicode ?
-		QByteArray outNameU8 = outName.toLocal8Bit();
+		QByteArray inFileUtf8 = inFile.toUtf8();
+		QByteArray outNameUtf8 = outName.toUtf8();
 		std::stringstream sFormat;
 		sFormat << format;
 
@@ -161,11 +161,11 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 		PyObject *pyTuple = PyTuple_New(6);
 		pyValue = PyString_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
-		pyValue = PyString_FromString(inFileU8.data());
+		pyValue = PyUnicode_FromString(inFileUtf8.data());
 		PyTuple_SetItem(pyTuple, 1, pyValue);
 		pyValue = PyString_FromString("-o");
 		PyTuple_SetItem(pyTuple, 2, pyValue);
-		pyValue = PyString_FromString(outNameU8.data());
+		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
 		pyValue = PyString_FromString("-f");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
@@ -219,7 +219,7 @@ bool AssetConverter::getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QStrin
 	// Returns image layout
 	// /*('file properties: ', 'resolution ', 360, 'x', 238, 'format ', 'L1', 'stride ', 45, ' total size ', 10710)*/
 	QString fileName = name + ".rawh";
-	QByteArray fileNameCStr = fileName.toLocal8Bit();
+	QByteArray fileNameCStr = fileName.toLocal8Bit(); // VERIFY: UNICODE
 	FILE *f = fopen(fileNameCStr.data(), "r");
 	if (!f)
 	{
@@ -268,8 +268,8 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 	{
 		bool error = true;
 
-		QByteArray inFileU8 = inFile.toLocal8Bit(); // FIXME Unicode ?
-		QByteArray outNameU8 = outName.toLocal8Bit();
+		QByteArray inFileUtf8 = inFile.toUtf8();
+		QByteArray outNameUtf8 = outName.toUtf8();
 		std::stringstream sBegin;
 		sBegin << begin;
 		std::stringstream sLength;
@@ -280,11 +280,11 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 		PyObject *pyTuple = PyTuple_New(8);
 		pyValue = PyString_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
-		pyValue = PyString_FromString(inFileU8.data());
+		pyValue = PyUnicode_FromString(inFileUtf8.data());
 		PyTuple_SetItem(pyTuple, 1, pyValue);
 		pyValue = PyString_FromString("-o");
 		PyTuple_SetItem(pyTuple, 2, pyValue);
-		pyValue = PyString_FromString(outNameU8.data());
+		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
 		pyValue = PyString_FromString("-s");
 		PyTuple_SetItem(pyTuple, 4, pyValue);

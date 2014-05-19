@@ -738,10 +738,10 @@ MainWindow::~MainWindow()
 static QString scriptDisplayName(const QString &script)
 {
 	QString scriptN = script.left(script.size() - 3);
-	QByteArray scriptNa = scriptN.toLocal8Bit();
+	QByteArray scriptNa = scriptN.toUtf8();
 	char *scriptName = scriptNa.data();
 
-	PyObject *pyUserScript = PyString_FromString(scriptName); // FIXME Unicode
+	PyObject *pyUserScript = PyUnicode_FromString(scriptName);
 	PyObject *pyUserModule = PyImport_Import(pyUserScript);
 	Py_DECREF(pyUserScript); pyUserScript = NULL;
 
@@ -836,12 +836,12 @@ void MainWindow::runScript(const QString &script)
 {
 #ifdef FT800EMU_PYTHON
 	QString scriptN = script.left(script.size() - 3);
-	QByteArray scriptNa = scriptN.toLocal8Bit();
+	QByteArray scriptNa = scriptN.toUtf8();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
 	QString outputName = QFileInfo(m_CurrentFile).baseName();
 	if (outputName.isEmpty()) outputName = "untitled";
-	QByteArray outN = outputName.toLocal8Bit();
+	QByteArray outN = outputName.toUtf8();
 
 	////////////////////////////////////////////////////////////////////
 	// Initialize JSON
@@ -916,7 +916,7 @@ void MainWindow::runScript(const QString &script)
 
 	error = true;
 
-	PyObject *pyUserScript = PyString_FromString(scriptName); // FIXME Unicode
+	PyObject *pyUserScript = PyUnicode_FromString(scriptName);
 	PyObject *pyUserModuleOld = PyImport_Import(pyUserScript);
 	PyObject *pyUserModule = PyImport_ReloadModule(pyUserModuleOld);
 	Py_DECREF(pyUserScript); pyUserScript = NULL;
@@ -928,7 +928,7 @@ void MainWindow::runScript(const QString &script)
 		{
 			PyObject *pyValue;
 			PyObject *pyArgs = PyTuple_New(3);
-			pyValue = PyString_FromString(outN.data());;
+			pyValue = PyUnicode_FromString(outN.data());;
 			PyTuple_SetItem(pyArgs, 0, pyValue);
 			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
 			char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
@@ -1995,7 +1995,7 @@ void MainWindow::actNew()
 #else
 	QDir::setCurrent(m_InitialWorkingDir);
 #endif
-	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
+	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -2166,7 +2166,7 @@ void MainWindow::actOpen()
 	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
-	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
+	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -2258,8 +2258,8 @@ void MainWindow::actSaveAs()
 	bool wantRebuildAll = false;
 	if (dstPath != srcPath)
 	{
-		printf("From: %s\n", srcPath.toUtf8().data());
-		printf("To: %s\n", dstPath.toUtf8().data());
+		printf("From: %s\n", srcPath.toLocal8Bit().data());
+		printf("To: %s\n", dstPath.toLocal8Bit().data());
 		m_ContentManager->lockContent();
 		// Copy assets from srcPath to dstPath
 		std::vector<ContentInfo *> contentInfos;
@@ -2339,7 +2339,7 @@ void MainWindow::actImport()
 #else
 	QDir::setCurrent(m_InitialWorkingDir);
 #endif
-	printf("Current path: %s\n", QDir::currentPath().toUtf8().data());
+	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
 	// open a project
 	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
