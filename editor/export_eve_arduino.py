@@ -2,7 +2,7 @@ import os, shutil, subprocess, sys
 
 def displayName():
 	return "Export EVE Arduino Project"
-
+	
 def convertArgs(functionArgs):
 	argsMap = {
 		"ARGB1555":"FT_ARGB1555",
@@ -17,13 +17,13 @@ def convertArgs(functionArgs):
 		"TEXT8X8":"FT_TEXT8X8",
 		"TEXTVGA":"FT_TEXTVGA",
 		"BARGRAPH":"FT_BARGRAPH",
-
+		
 		"NEAREST":"FT_NEAREST",
 		"BILINEAR":"FT_BILINEAR",
-
+		
 		"BORDER":"FT_BORDER",
 		"REPEAT":"FT_REPEAT",
-
+		
 		"NEVER":"FT_NEVER",
 		"LESS":"FT_LESS",
 		"LEQUAL":"FT_LEQUAL",
@@ -31,36 +31,36 @@ def convertArgs(functionArgs):
 		"GEQUAL":"FT_GEQUAL",
 		"EQUAL":"FT_EQUAL",
 		"ALWAYS":"FT_ALWAYS",
-
+		
 		"KEEP":"FT_KEEP",
 		"REPLACE":"FT_REPLACE",
 		"INCR":"FT_INCR",
 		"DECR":"FT_DECR",
 		"INVERT":"FT_INVERT",
-
+		
 		"ZERO":"FT_ZERO",
 		"ONE":"FT_ONE",
 		"SRC_ALPHA":"FT_SRC_ALPHA",
 		"DST_ALPHA":"FT_DST_ALPHA",
 		"ONE_MINUS_SRC_ALPHA":"FT_ONE_MINUS_SRC_ALPHA",
 		"ONE_MINUS_DST_ALPHA":"FT_ONE_MINUS_DST_ALPHA",
-
+		
 		"BITMAPS":"FT_BITMAPS",
 		"POINTS":"FT_POINTS",
 		"LINES":"FT_LINES",
 		"LINE_STRIP":"FT_LINE_STRIP",
 		"EDGE_STRIP_R":"FT_EDGE_STRIP_R",
 		"EDGE_STRIP_L":"FT_EDGE_STRIP_L",
-		"EDGE_STRIP_A":"FT_EDGE_STRIP_A",
+		"EDGE_STRIP_A":"FT_EDGE_STRIP_A",		
 		"EDGE_STRIP_B":"FT_EDGE_STRIP_B",
 		"RECTS":"FT_RECTS",
-
+		
 		"OPT_MONO":"FT_OPT_MONO",
 		"OPT_NODL":"FT_OPT_NODL",
 		"OPT_FLAT":"FT_OPT_FLAT",
 		"OPT_CENTERX":"FT_OPT_CENTERX",
 		"OPT_CENTERY":"FT_OPT_CENTERY",
-		"OPT_CENTER":"FT_OPT_CENTER",
+		"OPT_CENTER":"FT_OPT_CENTER",		
 		"OPT_NOBACK":"FT_OPT_NOBACK",
 		"OPT_NOTICKS":"FT_OPT_NOTICKS",
 		"OPT_NOHM":"FT_OPT_NOHM",
@@ -75,9 +75,9 @@ def convertArgs(functionArgs):
 	functionArgsSplit = functionArgs.split(",")
 	for i,v in enumerate(functionArgsSplit):
 		if argsMap.has_key(v):
-			functionArgsSplit[i] = argsMap[v]
+			functionArgsSplit[i] = argsMap[v]		
 
-	return ",".join(functionArgsSplit)
+	return ",".join(functionArgsSplit)	
 
 def run(name, document, ram):
 	resultText = "<b>EVE Arduino Export</b><br>"
@@ -190,7 +190,7 @@ def run(name, document, ram):
 	f.write("#include <Wire.h>\n")
 	f.write("#include <FT_VM800P43_50.h>\n")
 
-
+    
 	for content in document["content"]:
 		if content["memoryLoaded"]:
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
@@ -216,7 +216,7 @@ def run(name, document, ram):
 			f.write("#\tinclude \"" + targetName + "\"\n")
 			f.write("};\n")
 	f.write("\n")
-	f.write("FT800Impl FTImpl(FT_CS_PIN,FT_PDN_PIN,FT_INT_PIN);\n")
+	f.write("FT800IMPL_SPI FTImpl(FT_CS_PIN,FT_PDN_PIN,FT_INT_PIN);\n")	
 	f.write("void setup()\n")
 	f.write("{\n")
 	f.write("\tFTImpl.Init(FT_DISPLAY_RESOLUTION);\n")
@@ -236,16 +236,16 @@ def run(name, document, ram):
 				else:
 					f.write("\tFTImpl.Cmd_Memwrite(" + memoryAddress + ", sizeof(" + contentName + "));\n")
 				f.write("\tFTImpl.WriteCmdfromflash(" + contentName + ", sizeof(" + contentName + "));\n")
-				f.write("\tFTImpl.Finish();\n")
-
-	f.write("\tFTImpl.DLStart();\n")
+				f.write("\tFTImpl.Finish();\n")	
+				
+	f.write("\tFTImpl.DLStart();\n")			
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(', 1)
 			splitlineb = splitlinea[1].split(')',1)
 			functionName = splitlinea[0]
 			functionName = functionMap[functionName]
-
+				
 			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
 				functionArgs = convertArgs(splitlineb[0])
 				newline = "\tFTImpl." + functionName + "(" + functionArgs + ");\n"
@@ -253,7 +253,7 @@ def run(name, document, ram):
 			else:
 				break
 	f.write("\tFTImpl.DLEnd();\n")
-	f.write("\tFTImpl.Finish();\n")
+	f.write("\tFTImpl.Finish();\n")				
 	f.write("}\n")
 	f.write("\n")
 	f.write("void loop()\n")
@@ -267,14 +267,14 @@ def run(name, document, ram):
 			if functionName == "Clear":
 				clearFound = True
 				break
-
+				
 	f.write("\tFTImpl.DLStart();\n")
 	if not clearFound:
 		f.write("\tFTImpl.Clear(1, 1, 1);\n")
 	skippedBitmaps = False
 	for line in document["coprocessor"]:
 		if not line == "":
-			splitlinea = line.split('(',1)
+			splitlinea = line.split('(',1)		
 			splitlineb = splitlinea[1].split(')',1)
 			functionName = splitlinea[0]
 			functionName = functionMap[functionName]
@@ -283,13 +283,13 @@ def run(name, document, ram):
 					continue
 				else:
 					skippedBitmaps = True
-
+			
 			functionArgs = convertArgs(splitlineb[0])
-
+			
 			if functionName == "Cmd_FGColor" or functionName == "Cmd_BGColor" or functionName == "Cmd_GradColor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
-
+				
 			if functionName == "Cmd_Gradient":
 				functionArgsSplit = eval(functionArgs)
 				color0 = str((functionArgsSplit[3] * 256 + functionArgsSplit[4])*256 + functionArgsSplit[5])
@@ -297,8 +297,8 @@ def run(name, document, ram):
 				functionArgs = str(functionArgsSplit[0]) + "," + str(functionArgsSplit[1]) + ","
 				functionArgs += color0 + ","
 				functionArgs += str(functionArgsSplit[6]) + "," + str(functionArgsSplit[7]) + ","
-				functionArgs += color1
-
+				functionArgs += color1				
+				
 			newline = "\tFTImpl." + functionName + "(" + functionArgs + ");\n"
 			f.write(newline)
 		else:
