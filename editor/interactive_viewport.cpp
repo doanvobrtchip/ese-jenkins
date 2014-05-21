@@ -1609,6 +1609,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[11].U = 0;
 						pa.ExpectedParameterCount = 12;
 						break;
+					case CMD_TRACK:
+						pa.Parameter[2].U = 72;
+						pa.Parameter[3].U = 48;
+						pa.Parameter[4].U = 1;
+						pa.ExpectedParameterCount = 5;
+						break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")

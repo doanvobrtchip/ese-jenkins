@@ -131,9 +131,12 @@ static const char *regNames[] = {
 	"RESERVED", // 90
 	"RESERVED",
 	"RESERVED", // 92
-	"REG_TOUCH_DIRECT_XY",
-	"REG_TOUCH_DIRECT_Z1Z2",
+	"REG_TOUCH_DIRECT_XY", // 93
+	"REG_TOUCH_DIRECT_Z1Z2", // 94
+	"REG_TRACKER" // 95 - SPECIAL CASE
 };
+
+#define REG_TRACKER_IDX 95
 
 static QString asRaw(uint32_t value)
 {
@@ -210,14 +213,24 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
         m_DisplayList->resizeColumnToContents(i);
 	m_DisplayListItems[0]->setText(0, "0");
 
-	// 102400
-	uint8_t *ram = FT800EMU::Memory.getRam();
-	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	initDisplayReg();
+
+    for (int i = 0; i < 3; ++i)
+        m_Registers->resizeColumnToContents(i);
+}
+
+Inspector::~Inspector()
+{
+
+}
+
+bool wantId(int id, bool advanced)
+{
+	if (advanced)
 	{
-		int id = (i - RAM_REG) / 4;
 		switch (id)
 		{
-			// Exclude undocumented registers
+			// Blacklist undocumented registers
 		case 5:
 		case 37:
 		case 55:
@@ -237,29 +250,80 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 		case 90:
 		case 91:
 		case 92:
-			m_RegisterCopy.push_back(0);
-			m_RegisterItems.push_back(NULL);
-			break;
+			return false;
 		default:
+			return true;
+		}
+	}
+	else
+	{
+		switch (id)
+		{
+			// Whitelist useful registers
+		case 0:
+		case 1:
+		case 12:
+		case 17:
+		case 21:
+		case 68:
+		case 69:
+		case 70:
+		case 71:
+		case 72:
+		case 73:
+		case 74:
+		case 75:
+		case 76:
+		case 57:
+		case 58:
+		case 59:
+		case 95:
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
+void Inspector::initDisplayReg()
+{
+	// 102400
+	uint8_t *ram = FT800EMU::Memory.getRam();
+	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	{
+		int id = (i - RAM_REG) / 4;
+		if (wantId(id, false))
+		{
+			int ii = id == 95 ? REG_TRACKER : i;
 			QTreeWidgetItem *item = new QTreeWidgetItem(m_Registers);
-			item->setText(0, asRaw(i));
+			item->setText(0, asRaw(ii));
 			item->setText(1, regNames[id]);
-			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, i);
+			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, ii);
 			item->setText(2, asRaw(regValue));
 			item->setText(3, asInt(regValue));
 			m_RegisterCopy.push_back(regValue);
 			m_RegisterItems.push_back(item);
-			break;
+		}
+		else
+		{
+			m_RegisterCopy.push_back(0);
+			m_RegisterItems.push_back(NULL);
 		}
 	}
-
-    for (int i = 0; i < 3; ++i)
-        m_Registers->resizeColumnToContents(i);
 }
 
-Inspector::~Inspector()
+void Inspector::releaseDisplayReg()
 {
-
+	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	{
+		int id = (i - RAM_REG) / 4;
+		if (m_RegisterItems[id])
+		{
+			delete m_RegisterItems[id];
+		}
+	}
+	m_RegisterCopy.clear();
+	m_RegisterItems.clear();
 }
 
 void Inspector::frameEmu()
@@ -291,20 +355,31 @@ void Inspector::frameQt()
 	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
 	{
 		int id = (i - RAM_REG) / 4;
-		uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, i);
-		if (m_RegisterItems[id] && m_RegisterCopy[id] != regValue)
+		if (m_RegisterItems[id])
 		{
-			m_RegisterCopy[id] = regValue;
-			m_RegisterItems[id]->setText(2, asRaw(regValue));
-			switch (i)
+			int ii = id == 95 ? REG_TRACKER : i;
+			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, ii);
+			if (m_RegisterCopy[id] != regValue)
 			{
-			case REG_MACRO_0:
-			case REG_MACRO_1:
-				m_RegisterItems[id]->setText(3, asText(regValue));
-				break;
-			default:
-				m_RegisterItems[id]->setText(3, asInt(regValue));
-				break;
+				m_RegisterCopy[id] = regValue;
+				m_RegisterItems[id]->setText(2, asRaw(regValue));
+				switch (ii)
+				{
+				case REG_MACRO_0:
+				case REG_MACRO_1:
+					m_RegisterItems[id]->setText(3, asText(regValue));
+					break;
+				case REG_TOUCH_SCREEN_XY:
+				case REG_TOUCH_TAG_XY:
+					m_RegisterItems[id]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
+					break;
+				case REG_TRACKER:
+					m_RegisterItems[id]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
+					break;
+				default:
+					m_RegisterItems[id]->setText(3, asInt(regValue));
+					break;
+				}
 			}
 		}
 	}

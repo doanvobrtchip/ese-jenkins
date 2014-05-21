@@ -1278,7 +1278,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_TRACK");
 				addXY(0, 1, 0, 512);
 				addWH(2, 3, 0, 512);
-				addSpinBox(0, 0, 255, "Tag: ", "Set tag");
+				addSpinBox(4, 0, 255, "Tag: ", "Set tag");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

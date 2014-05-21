@@ -180,6 +180,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primGradient->setText(0, tr("Gradient"));
 		primGradient->setData(1, Qt::UserRole, QVariant((uint)2));
 		primGradient->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
+		QTreeWidgetItem *primTracker = new QTreeWidgetItem(m_Widgets);
+		primTracker->setText(0, tr("Tracker"));
+		primTracker->setData(1, Qt::UserRole, QVariant((uint)2));
+		primTracker->setData(2, Qt::UserRole, QVariant((uint)CMD_TRACK));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

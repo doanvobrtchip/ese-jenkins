@@ -50,6 +50,10 @@ public:
 	void frameEmu();
 	void frameQt();
 
+private:
+	void initDisplayReg();
+	void releaseDisplayReg();
+
 	MainWindow *m_MainWindow;
 
 	QTreeWidget *m_DisplayList;
