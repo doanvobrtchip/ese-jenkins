@@ -27,6 +27,7 @@
 #endif /* FT800EMU_FREETYPE */
 
 // Qt includes
+#include <QImage>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -432,10 +433,17 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	printf("Glyph max w=%i, h=%i\n", maxw, maxh);
 	if (format == L1)
 	{
-		maxw = ((maxw + 7) % 8) & (~7); // Round up per byte
+		maxw = (maxw + 7) & (~7); // Round up per byte of 8 bits
+	}
+	else
+	{
+		maxw = (maxw + 3) & (~3); // Rount up per 4 bytes
 	}
 	// width = slot->advance.x.. bitmap_left -> always substract (add) minx (negative) // pen_x += slot->advance.x >> 6
 	// bitmap = slot->bitmap.buffer, bitmap.pitch
+	std::vector<uint8_t> bitmapBuffer;
+	bitmapBuffer.resize((format == L1) ? (maxw / 8 * maxh * (charSet.size() + 1)) : (maxw * maxh * (charSet.size() + 1)));
+	std::fill(bitmapBuffer.begin(), bitmapBuffer.end(), 0);
 	for (int i = 0; i < charSet.size(); ++i)
 	{
 		QChar c = charSet[i];
@@ -452,7 +460,64 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		int x = slot->bitmap_left - minx;
 		int y = slot->bitmap_top - miny;
 		int adv = (slot->advance.x >> 6) + minx;
+		// printf("Pixel mode: %i\n", (int)slot->bitmap.pixel_mode);
+		if (format == L1 && slot->bitmap.pixel_mode != FT_PIXEL_MODE_MONO) // Ensure proper format
+			continue;
+		else if (slot->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY)
+			continue;
+		uint8_t *buffer = slot->bitmap.buffer;
+		printf("Stride: %i\n", slot->bitmap.pitch);
+		if (slot->bitmap.pitch < 0)
+		{
+			buildError = "Negative bitmap pitch in font not supported"; // TODO
+			return;
+		}
+		int idx = 0;
+		int ci = (format == L1) ? i * maxw / 8 * maxh : i * maxw * maxh;
+		for (int by = 0; by < slot->bitmap.rows; ++by)
+		{
+			int ty = y + by;
+			for (int bx = 0; bx < slot->bitmap.pitch; ++bx) // NOTE: Stride may be longer than target, hence the + 1 on charSet.size() in the target buffer
+			{
+				int bi = idx + bx; // Current byte in source buffer
+				int tx = x + bx; // Right shift of data
+				if (format == L1)
+				{
+					int txi = tx / 8; // Right shift in bytes
+					int txb = tx % 8; // Right shift remaining bits
+					int ti = ci + (ty * maxw / 8) + txi;
+					uint8_t leftvalue = slot->bitmap.buffer[bi] >> txb;
+					uint8_t rightvalue = slot->bitmap.buffer[bi] << (8 - txb);
+					bitmapBuffer[ti] |= leftvalue;
+					bitmapBuffer[ti + 1] |= rightvalue;
+					// TODO: Test L1 generation
+				}
+				else
+				{
+					int ti = ci + (ty * maxw) + tx;
+					bitmapBuffer[ti] = slot->bitmap.buffer[bi];
+					printf("TI %i\n", ti);
+				}
+			}
+			idx += slot->bitmap.pitch;
+		}
+		// TODO: Store adv in buffer...
 	}
+	// TEST ->
+	QImage qimage(&bitmapBuffer[0], maxw, maxh * charSet.size(), (format == L1) ? QImage::Format_Mono : QImage::Format_Indexed8);
+	if (format != L1)
+	{
+		QVector<QRgb> grayTable;
+		for (int i = 0; i < 256; ++i)
+			grayTable.push_back(qRgb(i, i, i));
+		qimage.setColorTable(grayTable);
+	}
+	else
+	{
+		qimage = qimage.convertToFormat(QImage::Format_RGB32);
+	}
+	qimage.save(outName + "_converted.png", "PNG");
+	// <- TEST
 #else
 	buildError = "Freetype not available";
 #endif
