@@ -71,7 +71,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawLength = 0;
 	ImageFormat = 0;
 	FontSize = 12;
-	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	// FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // TODO: Starting point...
+	FontCharSet = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	UploadDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
@@ -897,7 +898,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesRawLength->setValue(contentInfo->RawLength);
 		break;
 	case ContentInfo::Font:
-		m_PropertiesFontFormat->setCurrentIndex(contentInfo->ImageFormat - L1);
+		m_PropertiesFontFormat->setCurrentIndex((contentInfo->ImageFormat >= L1 && contentInfo->ImageFormat <= L8) ? (contentInfo->ImageFormat - L1) : L8 - L1);
 		m_PropertiesFontSize->setValue(contentInfo->FontSize);
 		m_PropertiesFontCharSet->setText(contentInfo->FontCharSet); // NOTE: Number of characters up to 128; export depends on number of characters in charset also!
 		break;
@@ -1024,8 +1025,20 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(false);
 				m_PropertiesMemory->setHidden(false);
-				if (!propInfo.isEmpty()) propInfo += "<br>";
-				propInfo += tr("<b>Todo</b>");
+				if (contentInfo->BuildError.isEmpty())
+				{
+					if (!propInfo.isEmpty()) propInfo += "<br>";
+					QFileInfo rawInfo(contentInfo->DestName + ".raw");
+					QFileInfo binInfo(contentInfo->DestName + ".bin");
+					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+					if (cacheImageInfo(contentInfo))
+					{
+						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+					}
+				}
 				break;
 			}
 		}
@@ -1180,7 +1193,8 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	// Emulator main loop will lock the content mutex
 	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
 	{
-		if (contentInfo->Converter == ContentInfo::Image)
+		if (contentInfo->Converter == ContentInfo::Image
+			|| contentInfo->Converter == ContentInfo::Font)
 		{
 			// Bitmap setup is always updated after upload and requires cached image info
 			cacheImageInfo(contentInfo);
@@ -1361,7 +1375,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					handle = parsed.Parameter[0].I;
 					break;
 				case FT800EMU_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == contentInfo->MemoryAddress && handle != -1)
+					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
 						return handle;
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT:
@@ -1499,6 +1513,22 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 			dlEditor->replaceLine(i, pa);
 		}
 	}
+}
+
+// Update font adress
+void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor)
+{
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[1].I == oldAddr)
+		{
+			DlParsed pa = parsed;
+			pa.Parameter[1].I = newAddr;
+			dlEditor->replaceLine(i, pa);
+		}
+	}
+	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2020,8 +2050,16 @@ void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value, bo
 	if (!internal)
 	{
 		m_MainWindow->propertiesEditor()->surpressSet(true);
-		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
-		editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
+		if (contentInfo->Converter == ContentInfo::Font)
+		{
+			editorUpdateFontAddress(value, oldAddr, m_MainWindow->dlEditor());
+			editorUpdateFontAddress(value, oldAddr, m_MainWindow->cmdEditor());
+		}
+		else
+		{
+			editorUpdateHandleAddress(value, oldAddr, m_MainWindow->dlEditor());
+			editorUpdateHandleAddress(value, oldAddr, m_MainWindow->cmdEditor());
+		}
 		m_ContentList->setCurrentItem(contentInfo->View);
 		m_MainWindow->propertiesEditor()->surpressSet(false);
 		m_MainWindow->undoStack()->endMacro();
@@ -2365,8 +2403,8 @@ void ContentManager::changeFontFormat(ContentInfo *contentInfo, int value)
 	m_MainWindow->undoStack()->beginMacro(tr("Change font format"));
 	m_MainWindow->undoStack()->push(changeFontFormat);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
-	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
-	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
 	m_ContentList->setCurrentItem(contentInfo->View);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
@@ -2442,7 +2480,14 @@ void ContentManager::changeFontSize(ContentInfo *contentInfo, int value)
 {
 	// Create undo/redo
 	ChangeFontSize *changeFontSize = new ChangeFontSize(this, contentInfo, value);
+	m_MainWindow->undoStack()->beginMacro(tr("Change font size"));
 	m_MainWindow->undoStack()->push(changeFontSize);
+	m_MainWindow->propertiesEditor()->surpressSet(true);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
+	m_ContentList->setCurrentItem(contentInfo->View);
+	m_MainWindow->propertiesEditor()->surpressSet(false);
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesFontSizeChanged(int value)
@@ -2517,8 +2562,15 @@ void ContentManager::changeFontCharSet(ContentInfo *contentInfo, const QString &
 	// Create undo/redo
 	if (contentInfo->FontCharSet != value)
 	{
-		ChangeFontCharSet *changeFontCharSet = new ChangeFontCharSet(this, contentInfo, createName(value));
+		ChangeFontCharSet *changeFontCharSet = new ChangeFontCharSet(this, contentInfo, value);
+		m_MainWindow->undoStack()->beginMacro(tr("Change font charset"));
 		m_MainWindow->undoStack()->push(changeFontCharSet);
+		m_MainWindow->propertiesEditor()->surpressSet(true);
+		editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
+		editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
+		m_ContentList->setCurrentItem(contentInfo->View);
+		m_MainWindow->propertiesEditor()->surpressSet(false);
+		m_MainWindow->undoStack()->endMacro();
 	}
 }
 

@@ -28,6 +28,9 @@
 
 // Qt includes
 #include <QImage>
+#include <QByteArray>
+#include <QFile>
+#include <QTextStream>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -364,9 +367,31 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 #endif /* FT800EMU_PYTHON */
 }
 
+struct FontMetricBlock
+{
+	union
+	{
+		struct
+		{
+			uint8_t Advance[128];
+			uint32_t Format;
+			uint32_t LineStride;
+			uint32_t Width;
+			uint32_t Height;
+			uint32_t Pointer;
+		} Value;
+		uint8_t Data[148];
+	};
+};
+
 void AssetConverter::convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet)
 {
 #ifdef FT800EMU_FREETYPE
+	if (charSet.size() > 128)
+	{
+		buildError = "Charset too large";
+		return;
+	}
 	FT_Library &library = a_FreetypeLibrary;
 	if (!library)
 	{
@@ -377,7 +402,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	int error;
 	QByteArray inFileLocal8 = inFile.toLocal8Bit(); // If this does not work for unicode, we can load the font file to ram first
 	error = FT_New_Face(library, inFileLocal8.data(), 0, &face); // and use FT_New_Memory_Face instead
-	if (error == FT_Err_Unknown_File_Format) // TODO?: Replace 0 with the correct face index to support multi-face fonts
+	if (error == FT_Err_Unknown_File_Format) // TODO?: Replace 0 in FT_New_Face call with the correct face index to support multi-face fonts
 	{
 		buildError = "Font format unsuppported";
 		return;
@@ -417,15 +442,15 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		if (error)
 			continue;
 		int mx = slot->bitmap_left + slot->bitmap.width;
-		int my = slot->bitmap_top + slot->bitmap.rows;
+		int my = (-slot->bitmap_top) + slot->bitmap.rows;
 		if (mx > maxx)
 			maxx = mx;
 		if (my > maxy)
 			maxy = my;
 		if (slot->bitmap_left < minx)
 			minx = slot->bitmap_left;
-		if (slot->bitmap_top < miny)
-			miny = slot->bitmap_top;
+		if ((-slot->bitmap_top) < miny)
+			miny = (-slot->bitmap_top);
 	}
 	printf("Glyph max x=%i, y=%i; min x=%i, y=%i\n", maxx, maxy, minx, miny);
 	int maxw = maxx - minx;
@@ -435,12 +460,22 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	{
 		maxw = (maxw + 7) & (~7); // Round up per byte of 8 bits
 	}
+	else if (format == L4)
+	{
+		maxw = (maxw + 7) & (~7); // Round up per 8 bytes (downgraded to L4 afterwards)
+	}
 	else
 	{
-		maxw = (maxw + 3) & (~3); // Rount up per 4 bytes
+		maxw = (maxw + 3) & (~3); // Round up per 4 bytes
 	}
 	// width = slot->advance.x.. bitmap_left -> always substract (add) minx (negative) // pen_x += slot->advance.x >> 6
 	// bitmap = slot->bitmap.buffer, bitmap.pitch
+	FontMetricBlock fmb;
+	memset(fmb.Data, 0, 148);
+	fmb.Value.Format = format;
+	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L4) ? (maxw / 2) : (maxw));
+	fmb.Value.Width = maxw;
+	fmb.Value.Height = maxh;
 	std::vector<uint8_t> bitmapBuffer;
 	bitmapBuffer.resize((format == L1) ? (maxw / 8 * maxh * (charSet.size() + 1)) : (maxw * maxh * (charSet.size() + 1)));
 	std::fill(bitmapBuffer.begin(), bitmapBuffer.end(), 0);
@@ -458,7 +493,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		if (error)
 			continue;
 		int x = slot->bitmap_left - minx;
-		int y = slot->bitmap_top - miny;
+		int y = (-slot->bitmap_top) - miny;
 		int adv = (slot->advance.x >> 6) + minx;
 		// printf("Pixel mode: %i\n", (int)slot->bitmap.pixel_mode);
 		if (format == L1 && slot->bitmap.pixel_mode != FT_PIXEL_MODE_MONO) // Ensure proper format
@@ -466,10 +501,10 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		else if (slot->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY)
 			continue;
 		uint8_t *buffer = slot->bitmap.buffer;
-		printf("Stride: %i\n", slot->bitmap.pitch);
+		// printf("Stride: %i\n", slot->bitmap.pitch);
 		if (slot->bitmap.pitch < 0)
 		{
-			buildError = "Negative bitmap pitch in font not supported"; // TODO
+			buildError = "Negative bitmap pitch in font not supported"; // TODO?
 			return;
 		}
 		int idx = 0;
@@ -496,12 +531,12 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 				{
 					int ti = ci + (ty * maxw) + tx;
 					bitmapBuffer[ti] = slot->bitmap.buffer[bi];
-					printf("TI %i\n", ti);
+					// printf("TI %i\n", ti);
 				}
 			}
 			idx += slot->bitmap.pitch;
 		}
-		// TODO: Store adv in buffer...
+		fmb.Value.Advance[i] = adv;
 	}
 	// TEST ->
 	QImage qimage(&bitmapBuffer[0], maxw, maxh * charSet.size(), (format == L1) ? QImage::Format_Mono : QImage::Format_Indexed8);
@@ -518,6 +553,67 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	}
 	qimage.save(outName + "_converted.png", "PNG");
 	// <- TEST
+	int nbbytes = fmb.Value.LineStride * fmb.Value.Height * charSet.size();
+	if (format == L4) // Downgrade to L4
+	{
+		for (int i = 0; i < nbbytes; ++i)
+		{
+			uint8_t left = bitmapBuffer[i * 2];
+			uint8_t right = bitmapBuffer[i * 2 + 1];
+			left &= 0xF0;
+			right >>= 4;
+			bitmapBuffer[i] = left | right;
+		}
+	}
+	QByteArray ba;
+	ba.resize(148 + nbbytes);
+	for (int i = 0; i < 148; ++i)
+		ba[i] = fmb.Data[i];
+	for (int i = 0; i < nbbytes; ++i)
+		ba[148 + i] = bitmapBuffer[i];
+	QByteArray zba = qCompress(ba, 9);
+	{
+		QFile file(outName + ".raw");
+		file.open(QIODevice::WriteOnly);
+		file.write(ba);
+		file.close();
+	}
+	{
+		QFile file(outName + ".rawh");
+		file.open(QIODevice::WriteOnly | QIODevice::Text);
+		QTextStream out(&file);
+		out << "/*('file properties: ', 'resolution ', "
+			<< (int)fmb.Value.Width << ", 'x', "
+			<< (int)fmb.Value.Height << ", 'format ', '"
+			<< (format == L1 ? "L1" : (format == L4 ? "L4" : "L8"))
+			<< "', 'stride ', " << (int)fmb.Value.LineStride
+			<< ")*/\n";
+		for (int i = 0; i < ba.size(); ++i)
+		{
+			out << (int)ba[i] << ", ";
+			if (i % 32 == 0)
+				out << "\n";
+		}
+		file.close();
+	}
+	{
+		QFile file(outName + ".bin");
+		file.open(QIODevice::WriteOnly);
+		file.write(zba);
+		file.close();
+	}
+	{
+		QFile file(outName + ".binh");
+		file.open(QIODevice::WriteOnly | QIODevice::Text);
+		QTextStream out(&file);
+		for (int i = 0; i < zba.size(); ++i)
+		{
+			out << (int)zba[i] << ", ";
+			if (i % 32 == 0)
+				out << "\n";
+		}
+		file.close();
+	}
 #else
 	buildError = "Freetype not available";
 #endif

@@ -246,6 +246,7 @@ void loop()
 	s_ContentManager->lockContent();
 	std::set<ContentInfo *> contentInfo;
 	s_ContentManager->swapUploadDirty(contentInfo);
+	bool reuploadFontSetup = false;
 	for (std::set<ContentInfo *>::iterator it(contentInfo.begin()), end(contentInfo.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
@@ -302,6 +303,10 @@ void loop()
 				int s = in.readRawData(&ram[RAM_PAL], palSize);
 				FT800EMU::Memory.poke();
 			}
+		}
+		if (info->Converter == ContentInfo::Font)
+		{
+			reuploadFontSetup = true;
 		}
 	}
 	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
@@ -363,7 +368,7 @@ void loop()
 	s_CmdEditor->lockDisplayList();
 	bool dlModified = s_DlEditor->isDisplayListModified();
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified /*|| reuploadBitmapSetup*/ || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
+	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
 	{
 		s_WantReloopCmd = false;
 		s_StepCmdLimitCurrent = g_StepCmdLimit;

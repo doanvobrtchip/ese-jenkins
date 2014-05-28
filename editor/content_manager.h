@@ -151,6 +151,8 @@ public:
 	void editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEditor, bool updateSize);
 	// Update handle adress
 	void editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
+	// Update font adress
+	void editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 
 	// Changes
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);

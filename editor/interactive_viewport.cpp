@@ -1368,7 +1368,8 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 	if (e->source() == m_MainWindow->contentManager()->contentList())
 	{
 		if (!m_MainWindow->contentManager()->current()->MemoryLoaded) return false;
-		if (m_MainWindow->contentManager()->current()->Converter != ContentInfo::Image) return false;
+		if (m_MainWindow->contentManager()->current()->Converter != ContentInfo::Image
+			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::Font) return false;
 		return true;
 	}
 	return false;
@@ -1682,15 +1683,15 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 							if (!mustCreateHandle)
 							{
-								/*
-								printf("No free handle available\n");
-								PropertiesEditor *props = m_MainWindow->propertiesEditor();
-								props->setInfo(tr("<b>Error</b>: No free bitmap handle available"));
-								props->setEditWidget(NULL, false, NULL);
-								m_MainWindow->focusProperties();
-								return;
-								*/
-
+								if (contentInfo->Converter == ContentInfo::Font)
+								{
+									printf("No free handle available\n");
+									PropertiesEditor *props = m_MainWindow->propertiesEditor();
+									props->setInfo(tr("<b>Error</b>: No free bitmap handle available"));
+									props->setEditWidget(NULL, false, NULL);
+									m_MainWindow->focusProperties();
+									return;
+								}
 								// Handle 15 is disposable...
 								bitmapHandle = 15;
 								mustCreateHandle = true;
@@ -1702,6 +1703,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
+					pa.ExpectedStringParameter = false;
 					if (contentInfo && mustCreateHandle)
 					{
 						printf("Create handle for image content\n");
@@ -1716,7 +1718,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						++line;
 
 						pa.IdRight = FT800EMU_DL_BITMAP_SOURCE;
-						pa.Parameter[0].U = contentInfo->MemoryAddress;
+						pa.Parameter[0].U = contentInfo->Converter == ContentInfo::Font
+							? contentInfo->MemoryAddress + 148
+							: contentInfo->MemoryAddress;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(hline, pa);
 						++hline;
@@ -1741,26 +1745,57 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(hline, pa);
 						++hline;
 						++line;
+
+						if (contentInfo->Converter == ContentInfo::Font)
+						{
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_SETFONT & 0xFF;
+							pa.Parameter[0].U = bitmapHandle;
+							pa.Parameter[1].U = contentInfo->MemoryAddress;
+							pa.ExpectedParameterCount = 2;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+						}
 					}
-					pa.IdRight = FT800EMU_DL_BEGIN;
-					pa.Parameter[0].U = selection;
-					pa.ExpectedParameterCount = 1;
-					m_LineEditor->insertLine(line, pa);
-					++line;
-					pa.IdLeft = FT800EMU_DL_VERTEX2II;
-					pa.IdRight = 0;
-					pa.Parameter[0].I = e->pos().x();
-					pa.Parameter[1].I = e->pos().y();
-					pa.Parameter[2].I = bitmapHandle;
-					pa.Parameter[3].I = 0;
-					pa.ExpectedParameterCount = 4;
-					m_LineEditor->insertLine(line, pa);
-					++line;
-					pa.IdLeft = 0;
-					pa.IdRight = FT800EMU_DL_END;
-					pa.ExpectedParameterCount = 1;
-					m_LineEditor->insertLine(line, pa);
-					m_LineEditor->selectLine(line - 1);
+					if (contentInfo && contentInfo->Converter == ContentInfo::Font)
+					{
+						pa.IdLeft = 0xFFFFFF00;
+						pa.IdRight = CMD_TEXT & 0xFF;
+						pa.Parameter[0].I = e->pos().x();
+						pa.Parameter[1].I = e->pos().y();
+						pa.Parameter[2].I = bitmapHandle;
+						pa.Parameter[3].I = 0;
+						pa.StringParameter = "Text";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 5;
+						m_LineEditor->insertLine(line, pa);
+						m_LineEditor->selectLine(line);
+						pa.IdLeft = 0;
+						pa.ExpectedStringParameter = false;
+					}
+					else
+					{
+						pa.IdRight = FT800EMU_DL_BEGIN;
+						pa.Parameter[0].U = selection;
+						pa.ExpectedParameterCount = 1;
+						m_LineEditor->insertLine(line, pa);
+						++line;
+						pa.IdLeft = FT800EMU_DL_VERTEX2II;
+						pa.IdRight = 0;
+						pa.Parameter[0].I = e->pos().x();
+						pa.Parameter[1].I = e->pos().y();
+						pa.Parameter[2].I = bitmapHandle;
+						pa.Parameter[3].I = 0;
+						pa.ExpectedParameterCount = 4;
+						m_LineEditor->insertLine(line, pa);
+						++line;
+						pa.IdLeft = 0;
+						pa.IdRight = FT800EMU_DL_END;
+						pa.ExpectedParameterCount = 1;
+						m_LineEditor->insertLine(line, pa);
+						m_LineEditor->selectLine(line - 1);
+					}
 					m_LineEditor->codeEditor()->endUndoCombine();
 					//m_MainWindow->undoStack()->endMacro();
 					switch (selection)
