@@ -426,6 +426,23 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		return;
 	}
 	FT_GlyphSlot &slot = face->glyph;
+	int xheight = -1;
+	{
+		// to find x height
+		QChar c = QChar('X');
+		uint32_t charcode = c.unicode();
+		int glyph_index = FT_Get_Char_Index(face, charcode);
+		if (glyph_index)
+		{
+			error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+			if (!error)
+			{
+				xheight = slot->metrics.height;
+			}
+		}
+	}
+	xheight >>= 6;
+	printf("Glyph xheight=%i\n", xheight);
 	int minx = 0, miny = 0;
 	int maxx = 0, maxy = 0;
 	for (int i = 0; i < charSet.size(); ++i)
@@ -451,6 +468,21 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			minx = slot->bitmap_left;
 		if ((-slot->bitmap_top) < miny)
 			miny = (-slot->bitmap_top);
+	}
+	printf("Glyph max x=%i, y=%i; min x=%i, y=%i\n", maxx, maxy, minx, miny);
+	if (xheight >= 0)
+	{
+		int difup = -miny - xheight;
+		int difdn = maxy;
+		int dify = difdn - difup;
+		if (dify > 0) // more is down
+		{
+			miny -= dify; // add more up
+		}
+		else
+		{
+			maxy -= dify; // add more down
+		}
 	}
 	printf("Glyph max x=%i, y=%i; min x=%i, y=%i\n", maxx, maxy, minx, miny);
 	int maxw = maxx - minx;
@@ -523,9 +555,10 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 					int ti = ci + (ty * maxw / 8) + txi;
 					uint8_t leftvalue = slot->bitmap.buffer[bi] >> txb;
 					uint8_t rightvalue = slot->bitmap.buffer[bi] << (8 - txb);
-					bitmapBuffer[ti] |= leftvalue;
-					bitmapBuffer[ti + 1] |= rightvalue;
+					//bitmapBuffer[ti] |= leftvalue;
+					//bitmapBuffer[ti + 1] |= rightvalue;
 					// TODO: Test L1 generation
+					bitmapBuffer[ti] = 0xFF;
 				}
 				else
 				{
