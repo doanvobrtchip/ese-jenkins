@@ -1431,6 +1431,10 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 					return i;
 			}
 		}
+		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight == (CMD_SETFONT & 0xFF)))
+		{
+			// do nothing
+		}
 		else
 		{
 			return i;
@@ -1756,8 +1760,24 @@ public:
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
 		m_OldValue(contentInfo->Converter),
-		m_NewValue(value)
+		m_NewValue(value),
+		m_OldFontFormat(contentInfo->ImageFormat)
 	{
+		if (m_NewValue == ContentInfo::Font)
+		{
+			if (m_OldFontFormat >= L1 && m_OldFontFormat <= L8)
+			{
+				m_NewFontFormat = m_OldFontFormat;
+			}
+			else
+			{
+				m_NewFontFormat = L8;
+			}
+		}
+		else
+		{
+			m_NewFontFormat = m_OldFontFormat;
+		}
 		setText(tr("Set content converter"));
 	}
 
@@ -1769,12 +1789,14 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->Converter = m_OldValue;
+		m_ContentInfo->ImageFormat = m_OldFontFormat;
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
 		m_ContentInfo->Converter = m_NewValue;
+		m_ContentInfo->ImageFormat = m_NewFontFormat;
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
@@ -1802,6 +1824,8 @@ private:
 	ContentInfo *m_ContentInfo;
 	ContentInfo::ConverterType m_OldValue;
 	ContentInfo::ConverterType m_NewValue;
+	int m_OldFontFormat;
+	int m_NewFontFormat;
 };
 
 void ContentManager::changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value)

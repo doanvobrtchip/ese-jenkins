@@ -623,8 +623,8 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			<< ")*/\n";
 		for (int i = 0; i < ba.size(); ++i)
 		{
-			out << (int)ba[i] << ", ";
-			if (i % 32 == 0)
+			out << (unsigned int)ba[i] << ", ";
+			if (i % 32 == 31)
 				out << "\n";
 		}
 		file.close();
@@ -641,8 +641,8 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		QTextStream out(&file);
 		for (int i = 0; i < zba.size(); ++i)
 		{
-			out << (int)zba[i] << ", ";
-			if (i % 32 == 0)
+			out << (unsigned int)zba[i] << ", ";
+			if (i % 32 == 31)
 				out << "\n";
 		}
 		file.close();
