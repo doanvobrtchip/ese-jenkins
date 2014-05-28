@@ -20,6 +20,12 @@
 #include <stdio.h>
 #include <sstream>
 
+// Freetype includs
+#ifdef FT800EMU_FREETYPE
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#endif /* FT800EMU_FREETYPE */
+
 // Qt includes
 
 // Emulator includes
@@ -42,6 +48,10 @@ PyObject *a_RawConvObject = NULL;
 PyObject *a_RawConvRun = NULL;
 QString a_RawConvError;
 #endif /* FT800EMU_PYTHON */
+
+#ifdef FT800EMU_FREETYPE
+FT_Library a_FreetypeLibrary = NULL;
+#endif
 
 }
 
@@ -130,10 +140,26 @@ void AssetConverter::init()
 
 	// ...
 #endif /* FT800EMU_PYTHON */
+#ifdef FT800EMU_FREETYPE
+	int fterr;
+	fterr = FT_Init_FreeType(&a_FreetypeLibrary);
+	if (fterr)
+	{
+		printf("Freetype could not initialize\n");
+	}
+	else
+	{
+		printf("Font Converter available (freetype)\n");
+	}
+#endif /* FT800EMU_FREETYPE */
 }
 
 void AssetConverter::release()
 {
+#ifdef FT800EMU_FREETYPE
+	FT_Done_FreeType(a_FreetypeLibrary);
+	a_FreetypeLibrary = NULL;
+#endif /* FT800EMU_FREETYPE */
 #ifdef FT800EMU_PYTHON
 	Py_XDECREF(a_ImageConvRun); a_ImageConvRun = NULL;
 	Py_XDECREF(a_ImageConvObject); a_ImageConvObject = NULL;
@@ -335,6 +361,101 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 #else
 	buildError = "Python not available";
 #endif /* FT800EMU_PYTHON */
+}
+
+void AssetConverter::convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet)
+{
+#ifdef FT800EMU_FREETYPE
+	FT_Library &library = a_FreetypeLibrary;
+	if (!library)
+	{
+		buildError = "Freetype failed to initialize";
+		return;
+	}
+	FT_Face face;
+	int error;
+	QByteArray inFileLocal8 = inFile.toLocal8Bit(); // If this does not work for unicode, we can load the font file to ram first
+	error = FT_New_Face(library, inFileLocal8.data(), 0, &face); // and use FT_New_Memory_Face instead
+	if (error == FT_Err_Unknown_File_Format) // TODO?: Replace 0 with the correct face index to support multi-face fonts
+	{
+		buildError = "Font format unsuppported";
+		return;
+	}
+	else if (error)
+	{
+		buildError = "Font could not be opened";
+		return;
+	}
+	printf("Glyphs in font: %i\n", (int)face->num_glyphs);
+	error = FT_Select_Charmap(face, ft_encoding_unicode);
+	if (error)
+	{
+		buildError = "Unicode charmap not available in this font";
+		return;
+	}
+	error = FT_Set_Pixel_Sizes(face, 0, size);
+	if (error)
+	{
+		buildError = "Selected font size not available for this font";
+		return;
+	}
+	FT_GlyphSlot &slot = face->glyph;
+	int minx = 0, miny = 0;
+	int maxx = 0, maxy = 0;
+	for (int i = 0; i < charSet.size(); ++i)
+	{
+		QChar c = charSet[i];
+		uint32_t charcode = c.unicode();
+		int glyph_index = FT_Get_Char_Index(face, charcode);
+		if (!glyph_index)
+			continue; // blank
+		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+		if (error)
+			continue;
+		error = FT_Render_Glyph(slot, (format == L1) ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL);
+		if (error)
+			continue;
+		int mx = slot->bitmap_left + slot->bitmap.width;
+		int my = slot->bitmap_top + slot->bitmap.rows;
+		if (mx > maxx)
+			maxx = mx;
+		if (my > maxy)
+			maxy = my;
+		if (slot->bitmap_left < minx)
+			minx = slot->bitmap_left;
+		if (slot->bitmap_top < miny)
+			miny = slot->bitmap_top;
+	}
+	printf("Glyph max x=%i, y=%i; min x=%i, y=%i\n", maxx, maxy, minx, miny);
+	int maxw = maxx - minx;
+	int maxh = maxy - miny;
+	printf("Glyph max w=%i, h=%i\n", maxw, maxh);
+	if (format == L1)
+	{
+		maxw = ((maxw + 7) % 8) & (~7); // Round up per byte
+	}
+	// width = slot->advance.x.. bitmap_left -> always substract (add) minx (negative) // pen_x += slot->advance.x >> 6
+	// bitmap = slot->bitmap.buffer, bitmap.pitch
+	for (int i = 0; i < charSet.size(); ++i)
+	{
+		QChar c = charSet[i];
+		uint32_t charcode = c.unicode();
+		int glyph_index = FT_Get_Char_Index(face, charcode);
+		if (!glyph_index)
+			continue; // blank
+		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+		if (error)
+			continue;
+		error = FT_Render_Glyph(slot, (format == L1) ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL);
+		if (error)
+			continue;
+		int x = slot->bitmap_left - minx;
+		int y = slot->bitmap_top - miny;
+		int adv = (slot->advance.x >> 6) + minx;
+	}
+#else
+	buildError = "Freetype not available";
+#endif
 }
 
 } /* namespace FT800EMUQT */

@@ -61,6 +61,8 @@ ADD_SUBDIRECTORY(app)
 ADD_SUBDIRECTORY(dump1)
 ADD_SUBDIRECTORY(playxbu)
 
+OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" OFF)
+
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
 OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
@@ -70,5 +72,7 @@ IF (WITH_QT)
   ADD_SUBDIRECTORY(qtsample)
   ADD_SUBDIRECTORY(editor)
 ENDIF (WITH_QT)
+
+OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
 ########################################################################

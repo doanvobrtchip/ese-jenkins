@@ -44,6 +44,7 @@ public:
 	static void convertImage(QString &buildError, const QString &inFile, const QString &outName, int format);
 	static bool getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QString &name);
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
+	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet);
 	static void release();
 
 }; /* class AssetConverter */

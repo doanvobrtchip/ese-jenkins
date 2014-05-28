@@ -83,8 +83,6 @@
 #include "bitmap_setup.h"
 #include "interactive_properties.h"
 
-#define FTEDITOR_TEMP_DIR 0
-
 namespace FT800EMUQT {
 
 int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
@@ -1987,7 +1985,7 @@ void MainWindow::actNew()
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 
 	// set working directory to temporary directory
-#if FTEDITOR_TEMP_DIR
+#ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = new QTemporaryDir("ft800editor-");
@@ -2149,7 +2147,7 @@ void MainWindow::actOpen()
 		// Reset editor and paths
 		clearEditor();
 		m_CurrentFile = QString();
-#if FTEDITOR_TEMP_DIR
+#ifdef FTEDITOR_TEMP_DIR
 		QDir::setCurrent(QDir::tempPath());
 		m_TemporaryDir = new QTemporaryDir("ft800editor-");
 		QDir::setCurrent(m_TemporaryDir->path());
@@ -2331,7 +2329,7 @@ void MainWindow::actImport()
 	clearEditor();
 
 	// set working directory to temporary directory
-#if FTEDITOR_TEMP_DIR
+#ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = new QTemporaryDir("ft800editor-");

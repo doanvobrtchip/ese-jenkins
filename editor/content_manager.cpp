@@ -70,6 +70,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
+	FontSize = 12;
+	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	UploadDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
@@ -103,6 +105,12 @@ QJsonObject ContentInfo::toJson(bool meta) const
 	case RawJpeg:
 		j["converter"] = QString("RawJpeg");
 		break;
+	case Font:
+		j["converter"] = QString("Font");
+		j["imageFormat"] = ImageFormat;
+		j["fontSize"] = FontSize;
+		j["fontCharSet"] = FontCharSet;
+		break;
 	}
 	return j;
 }
@@ -134,6 +142,13 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	{
 		Converter = RawJpeg;
 	}
+	else if (converter == "Font")
+	{
+		Converter = Font;
+		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
+		FontSize = ((QJsonValue)j["fontSize"]).toVariant().toInt();
+		FontCharSet = j["fontCharSet"].toString();
+	}
 	else
 	{
 		Converter = Invalid;
@@ -143,31 +158,28 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 bool ContentInfo::equalsMeta(const ContentInfo *other) const
 {
 	if (SourcePath != other->SourcePath)
-	{
 		return false;
-	}
 	if (Converter != other->Converter)
-	{
 		return false;
-	}
 	switch (Converter)
 	{
 	case Raw:
 		if (RawStart != other->RawStart)
-		{
 			return false;
-		}
 		if (RawLength != other->RawLength)
-		{
 			return false;
-		}
 		break;
 	case Image:
 		if (ImageFormat != other->ImageFormat)
-		{
 			return false;
-		}
 		break;
+	case Font:
+		if (ImageFormat != other->ImageFormat)
+			return false;
+		if (FontSize != other->FontSize)
+			return false;
+		if (FontCharSet != other->FontCharSet)
+			return false;
 	}
 	return true;
 }
@@ -282,11 +294,13 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommonConverter->addItem("");
 	propCommonConverter->addItem(tr("Image"));
 	propCommonConverter->addItem(tr("Raw"));
+	propCommonConverter->addItem(tr("Font"));
 	// propCommonConverter->addItem(tr("Raw JPEG")); // TODO
 	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
 
+	// Image
 	m_PropertiesImage = new QGroupBox(this);
 	m_PropertiesImage->setHidden(true);
 	m_PropertiesImage->setTitle(tr("Image Settings"));
@@ -313,6 +327,30 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 
+	// Font
+	m_PropertiesFont = new QGroupBox(this);
+	m_PropertiesFont->setHidden(true);
+	m_PropertiesFont->setTitle(tr("Font"));
+	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
+	m_PropertiesFontFormat = new QComboBox(this);
+	m_PropertiesFontFormat->addItem("L1");
+	m_PropertiesFontFormat->addItem("L4");
+	m_PropertiesFontFormat->addItem("L8");
+	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
+	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
+	m_PropertiesFontSize = new UndoStackDisabler<QSpinBox>(this);
+	m_PropertiesFontSize->setMinimum(0);
+	m_PropertiesFontSize->setMaximum(512);
+	m_PropertiesFontSize->setSingleStep(1);
+	addLabeledWidget(this, fontPropsLayout, tr("Size: "), m_PropertiesFontSize);
+	connect(m_PropertiesFontSize, SIGNAL(valueChanged(int)), this, SLOT(propertiesFontSizeChanged(int)));
+	m_PropertiesFontCharSet = new UndoStackDisabler<QLineEdit>(this);
+	m_PropertiesFontCharSet->setUndoStack(m_MainWindow->undoStack());
+	addLabeledWidget(this, fontPropsLayout, tr("Charset: "), m_PropertiesFontCharSet);
+	connect(m_PropertiesFontCharSet, SIGNAL(editingFinished()), this, SLOT(propertiesFontCharSetChanged()));
+	m_PropertiesFont->setLayout(fontPropsLayout);
+
+	// Raw
 	m_PropertiesRaw = new QGroupBox(this);
 	QVBoxLayout *rawLayout = new QVBoxLayout();
 	m_PropertiesRaw->setHidden(true);
@@ -333,6 +371,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_PropertiesRawLength, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawLengthChanged(int)));
 	m_PropertiesRaw->setLayout(rawLayout);
 
+	// Common/Memory
 	m_PropertiesMemory = new QGroupBox(this);
 	m_PropertiesMemory->setHidden(true);
 	m_PropertiesMemory->setTitle(tr("Memory Options"));
@@ -838,6 +877,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		widgets.push_back(m_PropertiesImage);
 		widgets.push_back(m_PropertiesImagePreview);
 		widgets.push_back(m_PropertiesRaw);
+		widgets.push_back(m_PropertiesFont);
 		widgets.push_back(m_PropertiesMemory);
 
 		props->setEditWidgets(widgets, false, this);
@@ -851,6 +891,15 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	{
 	case ContentInfo::Image:
 		m_PropertiesImageFormat->setCurrentIndex(contentInfo->ImageFormat);
+		break;
+	case ContentInfo::Raw:
+		m_PropertiesRawStart->setValue(contentInfo->RawStart);
+		m_PropertiesRawLength->setValue(contentInfo->RawLength);
+		break;
+	case ContentInfo::Font:
+		m_PropertiesFontFormat->setCurrentIndex(contentInfo->ImageFormat - L1);
+		m_PropertiesFontSize->setValue(contentInfo->FontSize);
+		m_PropertiesFontCharSet->setText(contentInfo->FontCharSet); // NOTE: Number of characters up to 128; export depends on number of characters in charset also!
 		break;
 	}
 	if (contentInfo->Converter != ContentInfo::Invalid)
@@ -867,6 +916,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesImage->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
 		m_PropertiesRaw->setHidden(true);
+		m_PropertiesFont->setHidden(true);
 		m_PropertiesMemory->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
 	}
@@ -889,6 +939,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
 				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
 				m_PropertiesRaw->setHidden(true);
+				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
@@ -942,8 +993,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesRaw->setHidden(false);
-				m_PropertiesRawStart->setValue(contentInfo->RawStart);
-				m_PropertiesRawLength->setValue(contentInfo->RawLength);
+				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
@@ -960,10 +1010,22 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesRaw->setHidden(false);
+				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
 				if (!propInfo.isEmpty()) propInfo += "<br>";
 				propInfo += tr("<b>Not yet implemented</b>");
 				// This will show JPG size, uncompressed size, and necessary info to load the image into the handles
+				break;
+			}
+			case ContentInfo::Font:
+			{
+				m_PropertiesImage->setHidden(true);
+				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesRaw->setHidden(true);
+				m_PropertiesFont->setHidden(false);
+				m_PropertiesMemory->setHidden(false);
+				if (!propInfo.isEmpty()) propInfo += "<br>";
+				propInfo += tr("<b>Todo</b>");
 				break;
 			}
 		}
@@ -1057,6 +1119,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						break;
 					case ContentInfo::RawJpeg:
 						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+						break;
+					case ContentInfo::Font:
+						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet);
 						break;
 					default:
 						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
@@ -1382,12 +1447,17 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					addressOk = false;
 					break;
 				case FT800EMU_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == contentInfo->MemoryAddress && handleLine != -1 && !addressOk)
+				{
+					bool isAddressSame = (contentInfo->Converter == ContentInfo::Font)
+						? (parsed.Parameter[0].U == (contentInfo->MemoryAddress + 148)) // Font bitmap offset at 148
+						: (parsed.Parameter[0].U == contentInfo->MemoryAddress);
+					if (isAddressSame && handleLine != -1 && !addressOk)
 					{
 						i = handleLine;
 						addressOk = true;
 					}
 					break;
+				}
 				case FT800EMU_DL_BITMAP_LAYOUT:
 					if (addressOk)
 					{
@@ -1430,6 +1500,8 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeSourcePath : public QUndoCommand
 {
@@ -1524,6 +1596,8 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 
 	changeSourcePath(current(), fileName);
 }
+
+////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeDestName : public QUndoCommand
 {
@@ -1642,6 +1716,8 @@ void ContentManager::propertiesCommonDestNameChanged()
 		changeDestName(current(), m_PropertiesCommonName->text());
 }
 
+////////////////////////////////////////////////////////////////////////
+
 class ContentManager::ChangeConverter : public QUndoCommand
 {
 public:
@@ -1725,6 +1801,8 @@ void ContentManager::propertiesCommonConverterChanged(int value)
 		changeConverter(current(), (ContentInfo::ConverterType)value);
 }
 
+////////////////////////////////////////////////////////////////////////
+
 class ContentManager::ChangeImageFormat : public QUndoCommand
 {
 public:
@@ -1803,6 +1881,8 @@ void ContentManager::propertiesImageFormatChanged(int value)
 		changeImageFormat(current(), value);
 }
 
+////////////////////////////////////////////////////////////////////////
+
 class ContentManager::ChangeMemoryLoaded : public QUndoCommand
 {
 public:
@@ -1862,6 +1942,8 @@ void ContentManager::propertiesMemoryLoadedChanged(int value)
 	if (current() && current()->MemoryLoaded != (value == (int)Qt::Checked))
 		changeMemoryLoaded(current(), (value == (int)Qt::Checked));
 }
+
+////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeMemoryAddress : public QUndoCommand
 {
@@ -1956,6 +2038,8 @@ void ContentManager::propertiesMemoryAddressChanged(int value)
 		rebuildGUIInternal(current());
 }
 
+////////////////////////////////////////////////////////////////////////
+
 class ContentManager::ChangeDataCompressed : public QUndoCommand
 {
 public:
@@ -2009,6 +2093,8 @@ void ContentManager::propertiesDataCompressedChanged(int value)
 	if (current() && current()->DataCompressed != (value == (int)Qt::Checked))
 		changeDataCompressed(current(), (value == (int)Qt::Checked));
 }
+
+////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeDataEmbedded : public QUndoCommand
 {
@@ -2212,6 +2298,236 @@ void ContentManager::propertiesRawLengthChanged(int value)
 		changeRawLength(current(), value);
 	else if (current() && value != (value & 0x7FFFFFFC))
 		rebuildGUIInternal(current());
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeFontFormat : public QUndoCommand
+{
+public:
+	ChangeFontFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->ImageFormat),
+		m_NewValue(value)
+	{
+		setText(tr("Change font format"));
+	}
+
+	virtual ~ChangeFontFormat()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->ImageFormat = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->ImageFormat = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064413;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeFontFormat *c = static_cast<const ChangeFontFormat *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeFontFormat(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeFontFormat *changeFontFormat = new ChangeFontFormat(this, contentInfo, value);
+	m_MainWindow->undoStack()->beginMacro(tr("Change font format"));
+	m_MainWindow->undoStack()->push(changeFontFormat);
+	m_MainWindow->propertiesEditor()->surpressSet(true);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	m_ContentList->setCurrentItem(contentInfo->View);
+	m_MainWindow->propertiesEditor()->surpressSet(false);
+	m_MainWindow->undoStack()->endMacro();
+}
+
+void ContentManager::propertiesFontFormatChanged(int value)
+{
+	printf("ContentManager::propertiesFontFormatChanged(value)\n");
+
+	if (current() && current()->ImageFormat != (value + L1))
+		changeFontFormat(current(), (value + L1));
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeFontSize : public QUndoCommand
+{
+public:
+	ChangeFontSize(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->FontSize),
+		m_NewValue(value)
+	{
+		setText(tr("Change font size"));
+	}
+
+	virtual ~ChangeFontSize()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->FontSize = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->FontSize = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064414;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeFontSize *c = static_cast<const ChangeFontSize *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeFontSize(ContentInfo *contentInfo, int value)
+{
+	// Create undo/redo
+	ChangeFontSize *changeFontSize = new ChangeFontSize(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeFontSize);
+}
+
+void ContentManager::propertiesFontSizeChanged(int value)
+{
+	printf("ContentManager::propertiesFontSizeChanged(value)\n");
+
+	if (current() && current()->FontSize != value)
+		changeFontSize(current(), value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeFontCharSet : public QUndoCommand
+{
+public:
+	ChangeFontCharSet(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->FontCharSet),
+		m_NewValue(value)
+	{
+		setText(tr("Change font charset"));
+	}
+
+	virtual ~ChangeFontCharSet()
+	{
+
+	}
+
+public:
+	virtual void undo()
+	{
+		m_ContentInfo->FontCharSet = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->FontCharSet = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9064415;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeFontCharSet *c = static_cast<const ChangeFontCharSet *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	QString m_OldValue;
+	QString m_NewValue;
+};
+
+void ContentManager::changeFontCharSet(ContentInfo *contentInfo, const QString &value)
+{
+	// Create undo/redo
+	if (contentInfo->FontCharSet != value)
+	{
+		ChangeFontCharSet *changeFontCharSet = new ChangeFontCharSet(this, contentInfo, createName(value));
+		m_MainWindow->undoStack()->push(changeFontCharSet);
+	}
+}
+
+void ContentManager::propertiesFontCharSetChanged()
+{
+	printf("ContentManager::propertiesCommonFontCharSetChanged(value)\n");
+
+	if (current())
+		changeFontCharSet(current(), m_PropertiesFontCharSet->text());
 }
 
 ////////////////////////////////////////////////////////////////////////

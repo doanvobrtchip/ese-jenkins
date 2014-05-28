@@ -59,12 +59,13 @@ struct ContentInfo
 
 	QTreeWidgetItem *View;
 
-	enum ConverterType
+	enum ConverterType // Do not change order.
 	{
 		Invalid,
 		Image, // Process image
 		Raw, // Raw copy to ram
-		RawJpeg, // Load jpeg on coprocessor
+		Font, // Font
+		RawJpeg, // Load jpeg on coprocessor // TODO
 	};
 
 	QString SourcePath; // Relative source path
@@ -81,6 +82,9 @@ struct ContentInfo
 	int RawLength; // Raw length of memory
 
 	int ImageFormat;
+
+	int FontSize;
+	QString FontCharSet;
 
 	QString BuildError;
 
@@ -153,6 +157,9 @@ public:
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
+	void changeFontFormat(ContentInfo *contentInfo, int value);
+	void changeFontSize(ContentInfo *contentInfo, int value);
+	void changeFontCharSet(ContentInfo *contentInfo, const QString &value);
 	void changeRawStart(ContentInfo *contentInfo, int value);
 	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
@@ -179,6 +186,9 @@ private:
 	class ChangeDestName;
 	class ChangeConverter;
 	class ChangeImageFormat;
+	class ChangeFontFormat;
+	class ChangeFontSize;
+	class ChangeFontCharSet;
 	class ChangeRawStart;
 	class ChangeRawLength;
 	class ChangeMemoryLoaded;
@@ -224,6 +234,11 @@ private:
 	UndoStackDisabler<QSpinBox> *m_PropertiesRawStart;
 	UndoStackDisabler<QSpinBox> *m_PropertiesRawLength;
 
+	QGroupBox *m_PropertiesFont;
+	QComboBox *m_PropertiesFontFormat;
+	UndoStackDisabler<QSpinBox> *m_PropertiesFontSize;
+	UndoStackDisabler<QLineEdit> *m_PropertiesFontCharSet;
+
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
 	UndoStackDisabler<QSpinBox> *m_PropertiesMemoryAddress;
@@ -253,6 +268,9 @@ private slots:
 	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
 	void propertiesImageFormatChanged(int value);
+	void propertiesFontFormatChanged(int value);
+	void propertiesFontSizeChanged(int value);
+	void propertiesFontCharSetChanged();
 	void propertiesRawStartChanged(int value);
 	void propertiesRawLengthChanged(int value);
 	void propertiesMemoryLoadedChanged(int value);
