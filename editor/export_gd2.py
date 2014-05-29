@@ -184,7 +184,7 @@ def run(name, document, ram):
 			functionName = splitlinea[0]
 			functionArgs = splitlineb[0]
 			functionName = functionMap[functionName]
-			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
 				newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 				f.write(newline)
 			else:
@@ -215,7 +215,7 @@ def run(name, document, ram):
 			functionArgs = splitlineb[0]
 			functionName = functionMap[functionName]
 			if not skippedBitmaps:
-				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
 					continue
 				else:
 					skippedBitmaps = True

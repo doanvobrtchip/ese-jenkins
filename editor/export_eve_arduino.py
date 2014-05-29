@@ -246,7 +246,7 @@ def run(name, document, ram):
 			functionName = splitlinea[0]
 			functionName = functionMap[functionName]
 				
-			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
 				functionArgs = convertArgs(splitlineb[0])
 				newline = "\tFTImpl." + functionName + "(" + functionArgs + ");\n"
 				f.write(newline)
@@ -279,7 +279,7 @@ def run(name, document, ram):
 			functionName = splitlinea[0]
 			functionName = functionMap[functionName]
 			if not skippedBitmaps:
-				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize":
+				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
 					continue
 				else:
 					skippedBitmaps = True

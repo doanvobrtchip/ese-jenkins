@@ -308,7 +308,7 @@ def run(name, document, ram):
 			if functionMap.has_key(functionName):
 				functionName = functionMap[functionName]
 
-			if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
+			if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "Ft_Gpu_CoCmd_SetFont":
 				functionArgs = convertArgs(splitlineb[0])
 				newline = "\tFt_App_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));\n"
 				f.write(newline)
@@ -341,7 +341,7 @@ def run(name, document, ram):
 				functionName = functionMap[functionName]
 				coprocessor_cmd = True
 			if not skippedBitmaps:
-				if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
+				if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "Ft_Gpu_CoCmd_SetFont":
 					continue
 				else:
 					skippedBitmaps = True

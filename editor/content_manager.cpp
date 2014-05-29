@@ -472,6 +472,15 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	QString fileExt = QFileInfo(filePath).suffix().toLower();
 	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
+	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "otf") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfa") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfb") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "cff") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pcf") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
 
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{

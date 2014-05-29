@@ -574,7 +574,6 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 					uint8_t rightvalue = slot->bitmap.buffer[bi] << (8 - txb);
 					bitmapBuffer[ti] |= leftvalue;
 					bitmapBuffer[ti + 1] |= rightvalue;
-					// TODO: Test L1 generation
 					//printf("CI %i\n", ci);
 				}
 				else
