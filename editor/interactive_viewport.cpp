@@ -66,8 +66,14 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
 	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false), m_WidgetGradient(false),
-	m_MouseMovingWidget(0)
+	m_MouseMovingWidget(0), m_SnapHistoryCur(0)
 {
+	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
+	{
+		m_SnapHistoryX[i] = 1024;
+		m_SnapHistoryY[i] = 1024;
+	}
+
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
 	setAcceptDrops(true);
@@ -1007,6 +1013,63 @@ void InteractiveViewport::updatePointerMethod()
 // CMD_BUTTON(50, 50, 100, 40, 21, 0, "hello world")
 // CMD_SPINNER(50, 50, 0, 0)
 
+void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
+{
+/*	int xx = xref + xd;
+	int yy = yref + yd;
+	int x = xx;
+	int y = xx;
+	int xdist = 1024;
+	int ydist = 1024;
+	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
+	{
+		if (i == m_SnapHistoryCur)
+			continue;
+		int nxdist = abs(m_SnapHistoryX[i] - xx);
+		int nydist = abs(m_SnapHistoryY[i] - yy);
+		if (nxdist < xdist && nxdist < FTED_SNAP_DIST)
+		{
+			xdist = nxdist;
+			x = m_SnapHistoryX[i];
+		}
+		if (nydist < ydist && nydist < FTED_SNAP_DIST)
+		{
+			ydist = nydist;
+			y = m_SnapHistoryY[i];
+		}
+	}
+	m_SnapHistoryX[m_SnapHistoryCur] = x;
+	m_SnapHistoryY[m_SnapHistoryCur] = y;
+	xd = x - xref;
+	yd = y - yref;*/
+
+	int xsnap = xref;
+	int ysnap = yref;
+	int xdist = 1024;
+	int ydist = 1024;
+	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
+	{
+		if (i == m_SnapHistoryCur)
+			continue;
+		int nxdist = abs(m_SnapHistoryX[i] - xref);
+		int nydist = abs(m_SnapHistoryY[i] - yref);
+		if (nxdist < xdist && nxdist < FTED_SNAP_DIST)
+		{
+			xdist = nxdist;
+			xsnap = m_SnapHistoryX[i];
+		}
+		if (nydist < ydist && nydist < FTED_SNAP_DIST)
+		{
+			ydist = nydist;
+			ysnap = m_SnapHistoryY[i];
+		}
+	}
+	m_SnapHistoryX[m_SnapHistoryCur] = xref;
+	m_SnapHistoryY[m_SnapHistoryCur] = yref;
+	xd = xsnap - xref;
+	yd = ysnap - yref;
+}
+
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
@@ -1034,8 +1097,20 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			}
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
-			if (pa.IdLeft == FT800EMU_DL_VERTEX2II) // Do not allow negative values
+			if (pa.IdLeft == FT800EMU_DL_VERTEX2II)
 			{
+				// Snap ->
+				int snapx, snapy;
+				snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
+				m_MovingLastX += snapx;
+				pa.Parameter[0].I += snapx;
+				m_MovingLastY += snapy;
+				pa.Parameter[1].I += snapy;
+				//if (snapx != 0) printf("snapx: %i\n", snapx);
+				//if (snapy != 0) printf("snapy: %i\n", snapy);
+				// <- Snap
+
+				// Do not allow negative values
 				if (pa.Parameter[0].I < 0)
 				{
 					m_MovingLastX -= pa.Parameter[0].I;
@@ -1059,6 +1134,17 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					pa.Parameter[1].I -= diff;
 				}
 			}
+			else
+			{
+				// Snap ->
+				int snapx, snapy;
+				snapPos(snapx, snapy, pa.Parameter[0].I >> 4, pa.Parameter[1].I >> 4);
+				m_MovingLastX += snapx;
+				pa.Parameter[0].I += snapx << 4;
+				m_MovingLastY += snapy;
+				pa.Parameter[1].I += snapy << 4;
+				// <- Snap
+			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
 		}
 		else
@@ -1081,11 +1167,29 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			{
 				pa.Parameter[0].I += xd;
 				pa.Parameter[1].I += yd;
+
+				// Snap ->
+				int snapx, snapy;
+				snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
+				m_MovingLastX += snapx;
+				pa.Parameter[0].I += snapx;
+				m_MovingLastY += snapy;
+				pa.Parameter[1].I += snapy;
+				// <- Snap
 			}
 			else if (m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_2)
 			{
 				pa.Parameter[6].I += xd;
 				pa.Parameter[7].I += yd;
+
+				// Snap ->
+				int snapx, snapy;
+				snapPos(snapx, snapy, pa.Parameter[6].I, pa.Parameter[7].I);
+				m_MovingLastX += snapx;
+				pa.Parameter[0].I += snapx;
+				m_MovingLastY += snapy;
+				pa.Parameter[1].I += snapy;
+				// <- Snap
 			}
 			else // resize, check top/bottom and left/right
 			{
@@ -1100,6 +1204,15 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					{
 						y += yd;
 						h -= yd;
+
+						// Snap ->
+						int snapx, snapy;
+						snapPos(snapx, snapy, x, y);
+						m_MovingLastY += snapy;
+						y += snapy;
+						h -= snapy;
+						// <- Snap
+
 						if (h < minsize)
 						{
 							m_MovingLastY += (h - minsize);
@@ -1110,6 +1223,14 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
 					{
 						h += yd;
+
+						// Snap ->
+						int snapx, snapy;
+						snapPos(snapx, snapy, x + w, y + h);
+						m_MovingLastY += snapy;
+						h += snapy;
+						// <- Snap
+
 						if (h < minsize)
 						{
 							m_MovingLastY -= (h - minsize);
@@ -1120,6 +1241,15 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					{
 						x += xd;
 						w -= xd;
+
+						// Snap ->
+						int snapx, snapy;
+						snapPos(snapx, snapy, x, y);
+						m_MovingLastX += snapx;
+						x += snapx;
+						w -= snapx;
+						// <- Snap
+
 						if (w < minsize)
 						{
 							m_MovingLastX += (w - minsize);
@@ -1130,6 +1260,14 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
 					{
 						w += xd;
+
+						// Snap ->
+						int snapx, snapy;
+						snapPos(snapx, snapy, x + w, y + h);
+						m_MovingLastX += snapx;
+						w += snapx;
+						// <- Snap
+
 						if (w < minsize)
 						{
 							m_MovingLastX -= (w - minsize);
@@ -1328,6 +1466,8 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 		{
 			m_LineEditor->codeEditor()->endUndoCombine();
 		}
+		++m_SnapHistoryCur;
+		m_SnapHistoryCur %= FTED_SNAP_HISTORY;
 		updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
 	}
 	else if (m_MouseMovingWidget)
@@ -1337,6 +1477,8 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 		{
 			m_LineEditor->codeEditor()->endUndoCombine();
 		}
+		++m_SnapHistoryCur;
+		m_SnapHistoryCur %= FTED_SNAP_HISTORY;
 		updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
 	}
 

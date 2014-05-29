@@ -29,6 +29,10 @@ class QAction;
 
 namespace FT800EMUQT {
 
+#define FTED_SNAP_HISTORY 8
+#define FTED_SNAP_DIST 3
+// #define FTED_SNAP_SPACING 8
+
 class MainWindow;
 
 /**
@@ -122,6 +126,11 @@ private:
 	int m_LineNumber;
 
 	bool m_DragMoving;
+
+	int m_SnapHistoryX[FTED_SNAP_HISTORY];
+	int m_SnapHistoryY[FTED_SNAP_HISTORY];
+	int m_SnapHistoryCur;
+	void snapPos(int &xd, int &yd, int xref, int yref);
 
 private:
 	InteractiveViewport(const InteractiveViewport &);
