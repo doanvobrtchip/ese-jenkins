@@ -281,7 +281,7 @@ void DlParser::init()
 		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 3; // argb
 		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
-		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 4 + 2 + 4; // argb
+		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 3 + 2 + 3; // argb
 		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
@@ -991,18 +991,16 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t xy0 = parsed.Parameter[1].U << 16
 						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy0);
-					uint32_t rgba0 = parsed.Parameter[2].U << 24
-						| parsed.Parameter[3].U << 16
-						| parsed.Parameter[4].U << 8
-						| parsed.Parameter[5].U;
+					uint32_t rgba0 = parsed.Parameter[2].U << 16
+						| parsed.Parameter[3].U << 8
+						| parsed.Parameter[4].U;
 					compiled.push_back(rgba0);
-					uint32_t xy1 = parsed.Parameter[7].U << 16
-						| parsed.Parameter[6].U;
+					uint32_t xy1 = parsed.Parameter[6].U << 16
+						| parsed.Parameter[5].U;
 					compiled.push_back(xy1);
-					uint32_t rgba1 = parsed.Parameter[8].U << 24
-						| parsed.Parameter[9].U << 16
-						| parsed.Parameter[10].U << 8
-						| parsed.Parameter[11].U;
+					uint32_t rgba1 = parsed.Parameter[7].U << 16
+						| parsed.Parameter[8].U << 8
+						| parsed.Parameter[9].U;
 					compiled.push_back(rgba1);
 					break;
 				}

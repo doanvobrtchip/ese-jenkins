@@ -308,7 +308,7 @@ def run(name, document, ram):
 			if functionMap.has_key(functionName):
 				functionName = functionMap[functionName]
 
-			if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "Ft_Gpu_CoCmd_SetFont":
+			if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
 				functionArgs = convertArgs(splitlineb[0])
 				newline = "\tFt_App_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));\n"
 				f.write(newline)
@@ -341,7 +341,7 @@ def run(name, document, ram):
 				functionName = functionMap[functionName]
 				coprocessor_cmd = True
 			if not skippedBitmaps:
-				if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "Ft_Gpu_CoCmd_SetFont":
+				if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
 					continue
 				else:
 					skippedBitmaps = True
@@ -350,11 +350,11 @@ def run(name, document, ram):
 
 			if functionName == "Ft_Gpu_CoCmd_Gradient":
 				functionArgsSplit = eval(functionArgs)
-				color0 = str((functionArgsSplit[3] * 256 + functionArgsSplit[4])*256 + functionArgsSplit[5])
-				color1 = str((functionArgsSplit[9] * 256 + functionArgsSplit[10])*256 + functionArgsSplit[11])
+				color0 = str((functionArgsSplit[2] * 256 + functionArgsSplit[3])*256 + functionArgsSplit[4])
+				color1 = str((functionArgsSplit[7] * 256 + functionArgsSplit[8])*256 + functionArgsSplit[9])
 				functionArgs = str(functionArgsSplit[0]) + "," + str(functionArgsSplit[1]) + ","
 				functionArgs += color0 + ","
-				functionArgs += str(functionArgsSplit[6]) + "," + str(functionArgsSplit[7]) + ","
+				functionArgs += str(functionArgsSplit[5]) + "," + str(functionArgsSplit[6]) + ","
 				functionArgs += color1
 
 			if functionName == "Ft_Gpu_CoCmd_BgColor" or functionName == "Ft_Gpu_CoCmd_FgColor" or functionName == "Ft_Gpu_CoCmd_GradColor":

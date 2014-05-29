@@ -224,11 +224,11 @@ def run(name, document, ram):
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])
 			if functionName == "cmd_gradient":
 				functionArgsSplit = eval(functionArgs)
-				color0 = str((functionArgsSplit[3] * 256 + functionArgsSplit[4])*256 + functionArgsSplit[5])
-				color1 = str((functionArgsSplit[9] * 256 + functionArgsSplit[10])*256 + functionArgsSplit[11])
+				color0 = str((functionArgsSplit[2] * 256 + functionArgsSplit[3])*256 + functionArgsSplit[4])
+				color1 = str((functionArgsSplit[7] * 256 + functionArgsSplit[8])*256 + functionArgsSplit[9])
 				functionArgs = str(functionArgsSplit[0]) + ", " + str(functionArgsSplit[1]) + ", "
 				functionArgs += color0 + ", "
-				functionArgs += str(functionArgsSplit[6]) + ", " + str(functionArgsSplit[7]) + ", "
+				functionArgs += str(functionArgsSplit[5]) + ", " + str(functionArgsSplit[6]) + ", "
 				functionArgs += color1
 			newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 			f.write(newline)
