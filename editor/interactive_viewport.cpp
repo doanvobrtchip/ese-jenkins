@@ -23,6 +23,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QTreeWidget>
+#include <QApplication>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -1015,59 +1016,40 @@ void InteractiveViewport::updatePointerMethod()
 
 void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
 {
-/*	int xx = xref + xd;
-	int yy = yref + yd;
-	int x = xx;
-	int y = xx;
-	int xdist = 1024;
-	int ydist = 1024;
-	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
+	if (QApplication::keyboardModifiers() & Qt::ControlModifier)
 	{
-		if (i == m_SnapHistoryCur)
-			continue;
-		int nxdist = abs(m_SnapHistoryX[i] - xx);
-		int nydist = abs(m_SnapHistoryY[i] - yy);
-		if (nxdist < xdist && nxdist < FTED_SNAP_DIST)
-		{
-			xdist = nxdist;
-			x = m_SnapHistoryX[i];
-		}
-		if (nydist < ydist && nydist < FTED_SNAP_DIST)
-		{
-			ydist = nydist;
-			y = m_SnapHistoryY[i];
-		}
+		// Hold CTRL to disable snap
+		xd = 0;
+		yd = 0;
 	}
-	m_SnapHistoryX[m_SnapHistoryCur] = x;
-	m_SnapHistoryY[m_SnapHistoryCur] = y;
-	xd = x - xref;
-	yd = y - yref;*/
-
-	int xsnap = xref;
-	int ysnap = yref;
-	int xdist = 1024;
-	int ydist = 1024;
-	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
+	else
 	{
-		if (i == m_SnapHistoryCur)
-			continue;
-		int nxdist = abs(m_SnapHistoryX[i] - xref);
-		int nydist = abs(m_SnapHistoryY[i] - yref);
-		if (nxdist < xdist && nxdist < FTED_SNAP_DIST)
+		int xsnap = xref;
+		int ysnap = yref;
+		int xdist = 1024;
+		int ydist = 1024;
+		for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 		{
-			xdist = nxdist;
-			xsnap = m_SnapHistoryX[i];
+			if (i == m_SnapHistoryCur)
+				continue;
+			int nxdist = abs(m_SnapHistoryX[i] - xref);
+			int nydist = abs(m_SnapHistoryY[i] - yref);
+			if (nxdist < xdist && nxdist < FTED_SNAP_DIST)
+			{
+				xdist = nxdist;
+				xsnap = m_SnapHistoryX[i];
+			}
+			if (nydist < ydist && nydist < FTED_SNAP_DIST)
+			{
+				ydist = nydist;
+				ysnap = m_SnapHistoryY[i];
+			}
 		}
-		if (nydist < ydist && nydist < FTED_SNAP_DIST)
-		{
-			ydist = nydist;
-			ysnap = m_SnapHistoryY[i];
-		}
+		xd = xsnap - xref;
+		yd = ysnap - yref;
 	}
 	m_SnapHistoryX[m_SnapHistoryCur] = xref;
 	m_SnapHistoryY[m_SnapHistoryCur] = yref;
-	xd = xsnap - xref;
-	yd = ysnap - yref;
 }
 
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
