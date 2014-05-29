@@ -58,6 +58,10 @@ class QCompleter;
 class LineNumberArea;
 class UndoEditor;
 
+namespace FT800EMUQT {
+class InteractiveViewport;
+}
+
 typedef FT800EMUQT::UndoStackDisabler<QPlainTextEdit> CodeEditorParent;
 
 class CodeEditor : public CodeEditorParent
@@ -85,6 +89,8 @@ public:
 	void setTraceHighlights(const std::vector<int> &indices);
 
 	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; /*printf("Interactive delete %s\n", m_InteractiveDelete ? "ON" : "OFF");*/ }
+
+	void setKeyHandler(FT800EMUQT::InteractiveViewport *keyHandler) { m_KeyHandler = keyHandler; if (keyHandler) { m_LastKeyHandler = keyHandler; } }
 
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
@@ -120,7 +126,8 @@ private:
 	int m_LastCombineId;
 	QString m_UndoRedoMessage;
 	bool m_InteractiveDelete;
-
+	FT800EMUQT::InteractiveViewport *m_KeyHandler;
+	FT800EMUQT::InteractiveViewport *m_LastKeyHandler;
 };
 
 

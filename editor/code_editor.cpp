@@ -49,7 +49,7 @@
 #include <QScrollBar>
 
 #include "code_editor.h"
-
+#include "interactive_viewport.h"
 
 CodeEditor::CodeEditor(QWidget *parent)
 : CodeEditorParent(parent),
@@ -63,7 +63,9 @@ m_StepHighlight(-1),
 m_LastStepHighlight(-1),
 m_StepMovingCursor(false),
 m_CombineId(-1),
-m_LastCombineId(917681768)
+m_LastCombineId(917681768),
+m_KeyHandler(NULL),
+m_LastKeyHandler(NULL)
 {
 	lineNumberArea = new LineNumberArea(this);
 
@@ -183,6 +185,12 @@ default:
 		}
 	}
 
+	if (m_KeyHandler)
+	{
+		m_KeyHandler->keyPressEvent(e);
+		return;
+	}
+
 	bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E);
 
 
@@ -209,6 +217,7 @@ default:
 			c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
 			c.insertText("");
 			setInteractiveDelete(true);
+			return;
 		}
 		else
 		{

@@ -59,9 +59,12 @@ public:
 	void setEditorLine(DlEditor *editor, int line);
 	void unsetEditorLine();
 
+	virtual void keyPressEvent(QKeyEvent *e);
+
 private:
 	void updatePointerMethod();
 	bool acceptableSource(QDropEvent *e);
+	void mouseMoveEvent(int mouseX, int mouseY);
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);

@@ -1568,6 +1568,11 @@ void MainWindow::createDockWindows()
 	}
 
 	editorTabChangedGo(true);
+
+	cmdEditor()->codeEditor()->setKeyHandler(m_EmulatorViewport);
+	dlEditor()->codeEditor()->setKeyHandler(m_EmulatorViewport);
+	cmdEditor()->codeEditor()->setKeyHandler(NULL);
+	dlEditor()->codeEditor()->setKeyHandler(NULL);
 }
 
 void MainWindow::translateDockWindows()

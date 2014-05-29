@@ -1052,12 +1052,40 @@ void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
 	m_SnapHistoryY[m_SnapHistoryCur] = yref;
 }
 
-void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
+void InteractiveViewport::keyPressEvent(QKeyEvent *e)
+{
+	if (e->key() == Qt::Key_Right)
+	{
+		m_MovingLastX -= 1;
+		mouseMoveEvent(m_MovingLastX + 1, m_MovingLastY);
+	}
+	else if (e->key() == Qt::Key_Left)
+	{
+		m_MovingLastX += 1;
+		mouseMoveEvent(m_MovingLastX - 1, m_MovingLastY);
+	}
+	else if (e->key() == Qt::Key_Up)
+	{
+		m_MovingLastY += 1;
+		mouseMoveEvent(m_MovingLastX, m_MovingLastY - 1);
+	}
+	else if (e->key() == Qt::Key_Down)
+	{
+		m_MovingLastY -= 1;
+		mouseMoveEvent(m_MovingLastX, m_MovingLastY + 1);
+	}
+	else
+	{
+		printf("Surpress keyboard\n");
+	}
+}
+
+void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
 
-	m_NextMouseX = e->pos().x();
-	m_NextMouseY = e->pos().y();
+	m_NextMouseX = mouseX;
+	m_NextMouseY = mouseY;
 
 	if (m_MouseTouch)
 	{
@@ -1067,10 +1095,10 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	{
 		if (m_LineEditor)
 		{
-			int xd = e->pos().x() - m_MovingLastX;
-			int yd = e->pos().y() - m_MovingLastY;
-			m_MovingLastX = e->pos().x();
-			m_MovingLastY = e->pos().y();
+			int xd = mouseX - m_MovingLastX;
+			int yd = mouseY - m_MovingLastY;
+			m_MovingLastX = mouseX;
+			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
 			{
@@ -1140,10 +1168,10 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 		if (m_LineEditor)
 		{
 			// Apply action
-			int xd = e->pos().x() - m_MovingLastX;
-			int yd = e->pos().y() - m_MovingLastY;
-			m_MovingLastX = e->pos().x();
-			m_MovingLastY = e->pos().y();
+			int xd = mouseX - m_MovingLastX;
+			int yd = mouseY - m_MovingLastY;
+			m_MovingLastX = mouseX;
+			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
 			{
@@ -1311,12 +1339,19 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 			updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
 		}
 	}
+}
 
+void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
+{
+	mouseMoveEvent(e->pos().x(), e->pos().y());
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
 void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 {
+	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
+	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
+
 	switch (m_PointerMethod)
 	{
 	case POINTER_TOUCH: // touch
@@ -1435,6 +1470,9 @@ RETURN()
 
 void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 {
+	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(NULL);
+	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
+
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
