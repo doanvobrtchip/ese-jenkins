@@ -47,6 +47,9 @@ PyObject *a_ImageConvModule = NULL;
 PyObject *a_ImageConvObject = NULL;
 PyObject *a_ImageConvRun = NULL;
 QString a_ImageConvError;
+PyObject *a_PalettedConvModule = NULL;
+PyObject *a_PalettedConvRun = NULL;
+QString a_PalettedConvError;
 PyObject *a_RawConvModule = NULL;
 PyObject *a_RawConvObject = NULL;
 PyObject *a_RawConvRun = NULL;
@@ -55,94 +58,91 @@ QString a_RawConvError;
 
 #ifdef FT800EMU_FREETYPE
 FT_Library a_FreetypeLibrary = NULL;
-#endif
+#endif /* FT800EMU_FREETYPE */
+
+bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QString &error, const char *scriptName, const char *className, const char *funcName)
+{
+#ifdef FT800EMU_PYTHON
+	PyObject *pyScript = PyString_FromString(scriptName);
+	module = PyImport_Import(pyScript);
+	Py_DECREF(pyScript); pyScript = NULL;
+
+	if (module)
+	{
+		PyObject *pyClass = PyObject_GetAttrString(module, className);
+		if (pyClass)
+		{
+			PyObject *pyArgs = PyTuple_New(0);
+			object = PyObject_CallObject(pyClass, pyArgs);
+			Py_DECREF(pyClass); pyClass = NULL;
+			Py_DECREF(pyArgs); pyArgs = NULL;
+
+			if (object)
+			{
+				run = PyObject_GetAttrString(object, "run");
+				if (run)
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	printf("---\nPython ERROR: \n");
+	PyObject *ptype, *pvalue, *ptraceback;
+	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+	char *pStrErrorMessage = PyString_AsString(pvalue);
+	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
+	printf("%s\n", pStrErrorMessage);
+	printf("---\n");
+	return false;
+#endif /* FT800EMU_PYTHON */
+}
+
+bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const char *scriptName, const char *funcName)
+{
+#ifdef FT800EMU_PYTHON
+	PyObject *pyScript = PyString_FromString(scriptName);
+	module = PyImport_Import(pyScript);
+	Py_DECREF(pyScript); pyScript = NULL;
+
+	if (module)
+	{
+		run = PyObject_GetAttrString(module, "run");
+		if (run)
+		{
+			return true;
+		}
+	}
+
+	printf("---\nPython ERROR: \n");
+	PyObject *ptype, *pvalue, *ptraceback;
+	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+	char *pStrErrorMessage = PyString_AsString(pvalue);
+	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
+	printf("%s\n", pStrErrorMessage);
+	printf("---\n");
+	return false;
+#endif /* FT800EMU_PYTHON */
+}
 
 }
 
 void AssetConverter::init()
 {
 #ifdef FT800EMU_PYTHON
-	bool error = true;
-
-	PyObject *pyImageConvScript = PyString_FromString("img_cvt");
-	a_ImageConvModule = PyImport_Import(pyImageConvScript);
-	Py_DECREF(pyImageConvScript); pyImageConvScript = NULL;
-
-	if (a_ImageConvModule)
-	{
-		PyObject *pyImageConvClass = PyObject_GetAttrString(a_ImageConvModule, "Image_Conv");
-		if (pyImageConvClass)
-		{
-			PyObject *pyArgs = PyTuple_New(0);
-			a_ImageConvObject = PyObject_CallObject(pyImageConvClass, pyArgs);
-			Py_DECREF(pyImageConvClass); pyImageConvClass = NULL;
-			Py_DECREF(pyArgs); pyArgs = NULL;
-
-			if (a_ImageConvObject)
-			{
-				a_ImageConvRun = PyObject_GetAttrString(a_ImageConvObject, "run");
-				if (a_ImageConvRun)
-				{
-					printf("Image Converter available\n");
-					error = false;
-				}
-			}
-		}
-	}
-
-	if (error)
-	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		char *pStrErrorMessage = PyString_AsString(pvalue);
-		a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
-		printf("---\n");
-	}
-
-	error = true;
-
-	PyObject *pyRawConvScript = PyString_FromString("raw_cvt");
-	a_RawConvModule = PyImport_Import(pyRawConvScript);
-	Py_DECREF(pyRawConvScript); pyRawConvScript = NULL;
-
-	if (a_RawConvModule)
-	{
-		PyObject *pyRawConvClass = PyObject_GetAttrString(a_RawConvModule, "Raw_Conv");
-		if (pyRawConvClass)
-		{
-			PyObject *pyArgs = PyTuple_New(0);
-			a_RawConvObject = PyObject_CallObject(pyRawConvClass, pyArgs);
-			Py_DECREF(pyRawConvClass); pyRawConvClass = NULL;
-			Py_DECREF(pyArgs); pyArgs = NULL;
-
-			if (a_RawConvObject)
-			{
-				a_RawConvRun = PyObject_GetAttrString(a_RawConvObject, "run");
-				if (a_RawConvRun)
-				{
-					printf("Raw Converter available\n");
-					error = false;
-				}
-			}
-		}
-	}
-
-	if (error)
-	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		char *pStrErrorMessage = PyString_AsString(pvalue);
-		a_RawConvError = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
-		printf("---\n");
-	}
-
-	// error = true;
-
-	// ...
+	if (initPythonScript(
+		a_ImageConvModule, a_ImageConvObject, a_ImageConvRun, a_ImageConvError,
+		"img_cvt", "Image_Conv", "run"))
+		printf("Image Converter available\n");
+	if (initPythonScript(
+		a_PalettedConvModule, a_PalettedConvRun, a_PalettedConvError,
+		"pngp2pa", "run"))
+		printf("Paletted Converter available\n");
+	if (initPythonScript(
+		a_RawConvModule, a_RawConvObject, a_RawConvRun, a_RawConvError,
+		"raw_cvt", "Raw_Conv", "run"))
+		printf("Raw Converter available\n");
 #endif /* FT800EMU_PYTHON */
 #ifdef FT800EMU_FREETYPE
 	int fterr;
@@ -176,6 +176,11 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
+	if (format == PALETTED)
+	{
+		convertImagePaletted(buildError, inFile, outName);
+		return;
+	}
 #ifdef FT800EMU_PYTHON
 	if (a_ImageConvRun)
 	{
@@ -238,6 +243,77 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 	else
 	{
 		buildError = "<i>(Python)</i> " + a_ImageConvError;
+	}
+#else
+	buildError = "Python not available";
+#endif /* FT800EMU_PYTHON */
+}
+
+void AssetConverter::convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName)
+{
+#ifdef FT800EMU_PYTHON
+	if (a_PalettedConvRun)
+	{
+		bool error = true;
+
+		/*QByteArray inFileUtf8 = inFile.toUtf8();
+		QByteArray outNameUtf8 = outName.toUtf8();
+		std::stringstream sFormat;
+		sFormat << format;
+
+		PyObject *pyValue;
+		PyObject *pyArgs = PyTuple_New(1);
+		PyObject *pyTuple = PyTuple_New(6);
+		pyValue = PyString_FromString("-i");
+		PyTuple_SetItem(pyTuple, 0, pyValue);
+		pyValue = PyUnicode_FromString(inFileUtf8.data());
+		PyTuple_SetItem(pyTuple, 1, pyValue);
+		pyValue = PyString_FromString("-o");
+		PyTuple_SetItem(pyTuple, 2, pyValue);
+		pyValue = PyUnicode_FromString(outNameUtf8.data());
+		PyTuple_SetItem(pyTuple, 3, pyValue);
+		pyValue = PyString_FromString("-f");
+		PyTuple_SetItem(pyTuple, 4, pyValue);
+		pyValue = PyString_FromString(sFormat.str().c_str());
+		PyTuple_SetItem(pyTuple, 5, pyValue);
+		PyTuple_SetItem(pyArgs, 0, pyTuple);
+		PyObject *pyResult = PyObject_CallObject(a_ImageConvRun, pyArgs);
+		Py_DECREF(pyArgs); pyArgs = NULL;
+		if (pyResult)
+		{
+			printf("Image converted\n");
+			error = false;
+		}*/
+
+		if (error)
+		{
+			printf("---\nPython ERROR: \n");
+			PyObject *ptype, *pvalue, *ptraceback;
+			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+			PyObject *errStr = PyObject_Repr(pvalue);
+			char *pStrErrorMessage = PyString_AsString(errStr);
+			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			if (pStrErrorMessage)
+			{
+				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+			}
+			else
+			{
+				buildError = "<i>(Python)</i> Unknown Error";
+			}
+			QByteArray er = buildError.toLocal8Bit();
+			printf("%s\n", er.data());
+			Py_DECREF(errStr);
+			printf("---\n");
+
+			// Reinitialize Python converters
+			release();
+			init();
+		}
+	}
+	else
+	{
+		buildError = "<i>(Python)</i> " + a_PalettedConvError;
 	}
 #else
 	buildError = "Python not available";
