@@ -1016,7 +1016,7 @@ void InteractiveViewport::updatePointerMethod()
 
 void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
 {
-	if (QApplication::keyboardModifiers() & Qt::ControlModifier)
+	if (QApplication::keyboardModifiers() & (Qt::ControlModifier | Qt::ShiftModifier))
 	{
 		// Hold CTRL to disable snap
 		xd = 0;
@@ -1095,12 +1095,39 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 	{
 		if (m_LineEditor)
 		{
+			bool reEnableUndoCombine = false;
 			int xd = mouseX - m_MovingLastX;
 			int yd = mouseY - m_MovingLastY;
 			m_MovingLastX = mouseX;
 			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
-			if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+			// In case automatic expansion is necessary
+			// if (pa.IdLeft == FT800EMU_DL_VERTEX2II && shift) change to FT800EMU_DL_VERTEX2F and add the HANDLE and CELL if necessary
+			if (pa.IdLeft == FT800EMU_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
+			{
+				// Doesn't work directly due to issue with undo combining when changing IdLeft
+				reEnableUndoCombine = true;
+				m_LineEditor->codeEditor()->endUndoCombine();
+
+				pa.IdLeft = FT800EMU_DL_VERTEX2F;
+				pa.Parameter[0].I <<= 4;
+				pa.Parameter[1].I <<= 4;
+
+				DlParsed npa;
+				npa.ValidId = true;
+				npa.IdLeft = 0;
+				npa.IdRight = FT800EMU_DL_BITMAP_HANDLE;
+				npa.ExpectedStringParameter = false;
+				npa.Parameter[0].U = pa.Parameter[2].U;
+				npa.ExpectedParameterCount = 1;
+				m_LineEditor->insertLine(m_LineNumber, npa);
+
+				npa.IdRight = FT800EMU_DL_CELL;
+				npa.ExpectedStringParameter = false;
+				npa.Parameter[0].U = pa.Parameter[3].U;
+				m_LineEditor->insertLine(m_LineNumber, npa);
+			}
+			if (pa.IdLeft == FT800EMU_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				xd <<= 4;
 				yd <<= 4;
@@ -1156,6 +1183,10 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 				// <- Snap
 			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
+			if (reEnableUndoCombine)
+			{
+				m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
+			}
 		}
 		else
 		{
