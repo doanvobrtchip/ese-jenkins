@@ -219,6 +219,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 		s_FileExtensions.push_back(".lut.raw");
 		s_FileExtensions.push_back(".lut.rawh");
 		s_FileExtensions.push_back("_converted.png");
+		s_FileExtensions.push_back("_converted-fs8.png");
 		s_FileExtensions.push_back(".meta");
 	}
 
@@ -943,7 +944,8 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			{
 				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
-				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted.png");
+				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
+					pixmap.load(contentInfo->DestName + "_converted.png");
 				m_PropertiesImagePreview->setHidden(!loadSuccess);
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();

@@ -30,6 +30,7 @@
 #include <QImage>
 #include <QByteArray>
 #include <QFile>
+#include <QFileInfo>
 #include <QTextStream>
 
 // Emulator includes
@@ -168,6 +169,8 @@ void AssetConverter::release()
 	Py_XDECREF(a_ImageConvRun); a_ImageConvRun = NULL;
 	Py_XDECREF(a_ImageConvObject); a_ImageConvObject = NULL;
 	Py_XDECREF(a_ImageConvModule); a_ImageConvModule = NULL;
+	Py_XDECREF(a_PalettedConvRun); a_PalettedConvRun = NULL;
+	Py_XDECREF(a_PalettedConvModule); a_PalettedConvModule = NULL;
 	Py_XDECREF(a_RawConvRun); a_RawConvRun = NULL;
 	Py_XDECREF(a_RawConvObject); a_RawConvObject = NULL;
 	Py_XDECREF(a_RawConvModule); a_RawConvModule = NULL;
@@ -176,10 +179,16 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
+	QString quantFile = outName + "_converted-fs8.png";
+	if (QFile::exists(quantFile))
+		QFile::remove(quantFile);
+
 	if (format == PALETTED)
 	{
 		convertImagePaletted(buildError, inFile, outName);
-		return;
+		if (buildError.isEmpty())
+			return;
+		printf("Failed to export using pngquant, try PIL");
 	}
 #ifdef FT800EMU_PYTHON
 	if (a_ImageConvRun)
@@ -256,10 +265,31 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 	{
 		bool error = true;
 
-		/*QByteArray inFileUtf8 = inFile.toUtf8();
+		QString fileExt = QFileInfo(inFile).suffix().toLower();
+		QString convertedInFile = outName + "_converted.png";
+		if (QFile::exists(convertedInFile))
+			QFile::remove(convertedInFile);
+
+		if (fileExt == "png")
+		{
+			// Copy png to output
+			QFile::copy(inFile, convertedInFile);
+		}
+		else
+		{
+			// Convert image to png
+			QImage image(inFile);
+			image.save(convertedInFile, "PNG");
+		}
+
+		QByteArray inFileUtf8 = convertedInFile.toUtf8();
 		QByteArray outNameUtf8 = outName.toUtf8();
-		std::stringstream sFormat;
-		sFormat << format;
+
+#ifdef WIN32
+		const char *quantPath = QCoreApplication::applicationDirPath() + "\\pngquant.exe"; // With application distribution
+#else
+		const char *quantPath = "pngquant"; // System installed
+#endif
 
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
@@ -272,18 +302,18 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		PyTuple_SetItem(pyTuple, 2, pyValue);
 		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
-		pyValue = PyString_FromString("-f");
+		pyValue = PyString_FromString("-q");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
-		pyValue = PyString_FromString(sFormat.str().c_str());
+		pyValue = PyString_FromString(quantPath);
 		PyTuple_SetItem(pyTuple, 5, pyValue);
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
-		PyObject *pyResult = PyObject_CallObject(a_ImageConvRun, pyArgs);
+		PyObject *pyResult = PyObject_CallObject(a_PalettedConvRun, pyArgs);
 		Py_DECREF(pyArgs); pyArgs = NULL;
 		if (pyResult)
 		{
-			printf("Image converted\n");
+			printf("Paletted image converted\n");
 			error = false;
-		}*/
+		}
 
 		if (error)
 		{
