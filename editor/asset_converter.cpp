@@ -32,6 +32,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
+#include <QCoreApplication>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
@@ -188,7 +189,8 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 		convertImagePaletted(buildError, inFile, outName);
 		if (buildError.isEmpty())
 			return;
-		printf("Failed to export using pngquant, try PIL");
+		buildError.clear();
+		printf("Failed to export using pngquant, try PIL\n");
 	}
 #ifdef FT800EMU_PYTHON
 	if (a_ImageConvRun)
@@ -286,7 +288,9 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		QByteArray outNameUtf8 = outName.toUtf8();
 
 #ifdef WIN32
-		const char *quantPath = QCoreApplication::applicationDirPath() + "\\pngquant.exe"; // With application distribution
+		QString quantPathStr = QCoreApplication::applicationDirPath() + "\\pngquant.exe"; // With application distribution
+		QByteArray quantPathArr = quantPathStr.toUtf8();
+		const char *quantPath = quantPathArr.data();
 #else
 		const char *quantPath = "pngquant"; // System installed
 #endif
@@ -304,7 +308,7 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		PyTuple_SetItem(pyTuple, 3, pyValue);
 		pyValue = PyString_FromString("-q");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
-		pyValue = PyString_FromString(quantPath);
+		pyValue = PyUnicode_FromString(quantPath);
 		PyTuple_SetItem(pyTuple, 5, pyValue);
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
 		PyObject *pyResult = PyObject_CallObject(a_PalettedConvRun, pyArgs);
@@ -728,6 +732,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	for (int i = 0; i < nbbytes; ++i)
 		ba[148 + i] = bitmapBuffer[i];
 	QByteArray zba = qCompress(ba, 9);
+	zba = zba.right(zba.size() - 4);
 	{
 		QFile file(outName + ".raw");
 		file.open(QIODevice::WriteOnly);
@@ -746,7 +751,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			<< ")*/\n";
 		for (int i = 0; i < ba.size(); ++i)
 		{
-			out << (unsigned int)ba[i] << ", ";
+			out << ((unsigned int)ba[i] & 0xFF) << ", ";
 			if (i % 32 == 31)
 				out << "\n";
 		}
@@ -764,7 +769,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		QTextStream out(&file);
 		for (int i = 0; i < zba.size(); ++i)
 		{
-			out << (unsigned int)zba[i] << ", ";
+			out << ((unsigned int)zba[i] & 0xFF) << ", ";
 			if (i % 32 == 31)
 				out << "\n";
 		}

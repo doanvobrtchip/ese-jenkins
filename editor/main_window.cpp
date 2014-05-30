@@ -708,7 +708,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		// FT800EMU::EmulatorEnableKeyboard
 		/*|*/ FT800EMU::EmulatorEnableMouse
 		//| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableAudio
+		//| FT800EMU::EmulatorEnableAudio
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
