@@ -668,7 +668,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_TemporaryDir(NULL)
 {
 	setObjectName("MainWindow");
-	setWindowIcon(QIcon(":/icons/puzzle.png"));
+	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 
 	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);

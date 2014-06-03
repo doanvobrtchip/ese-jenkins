@@ -4,6 +4,7 @@ FILE(GLOB HDRS *.h)
 IF (WIN32)
 	FILE(GLOB SRCSFT ftlib/*.cpp)
 	FILE(GLOB HDRSFT ftlib/*.h)
+	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
 FILE(GLOB RESOURCES *.qrc)
 
@@ -20,6 +21,7 @@ ADD_EXECUTABLE(fteditor WIN32
 	${HDRS}
 	${SRCSFT}
 	${HDRSFT}
+	${RSRC}
 	${RESOURCE_ADDED}
 	)
 
