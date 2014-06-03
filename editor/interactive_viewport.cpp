@@ -1225,7 +1225,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 
 				// Snap ->
 				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[6].I, pa.Parameter[7].I);
+				snapPos(snapx, snapy, pa.Parameter[5].I, pa.Parameter[6].I);
 				m_MovingLastX += snapx;
 				pa.Parameter[0].I += snapx;
 				m_MovingLastY += snapy;
