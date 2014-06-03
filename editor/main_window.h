@@ -225,6 +225,7 @@ private:
 
 	QDockWidget *m_UtilizationDock;
 	QProgressBar *m_UtilizationDisplayList;
+	QProgressBar *m_UtilizationBitmapHandleStatus;
 	QProgressBar *m_UtilizationDisplayListStatus;
 	QProgressBar *m_UtilizationGlobalStatus;
 

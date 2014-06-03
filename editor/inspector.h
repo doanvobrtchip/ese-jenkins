@@ -31,6 +31,8 @@ class QTreeWidgetItem;
 
 namespace FT800EMUQT {
 
+#define FTED_NUM_HANDLES 16
+
 class MainWindow;
 
 /**
@@ -50,6 +52,8 @@ public:
 	void frameEmu();
 	void frameQt();
 
+	int countHandleUsage();
+
 private:
 	void initDisplayReg();
 	void releaseDisplayReg();
@@ -64,6 +68,8 @@ private:
 	QTreeWidget *m_Registers;
 	std::vector<QTreeWidgetItem *> m_RegisterItems;
 	std::vector<uint32_t> m_RegisterCopy;
+
+	bool m_HandleUsage[FTED_NUM_HANDLES];
 
 private:
 	Inspector(const Inspector &);

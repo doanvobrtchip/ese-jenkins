@@ -991,11 +991,13 @@ void MainWindow::runScript(const QString &script)
 
 void MainWindow::frameEmu()
 {
-
+	// ...
 }
 
 void MainWindow::frameQt()
 {
+	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
+
 	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
@@ -1203,6 +1205,17 @@ void MainWindow::createDockWindows()
 
 		QHBoxLayout *l = new QHBoxLayout();
 		l->setContentsMargins(0, 0, 0, 0);*/
+
+		QLabel *dlLabelH = new QLabel(statusBar());
+		dlLabelH->setText(tr("BITMAP_HANDLE: "));
+		statusBar()->addPermanentWidget(dlLabelH);
+
+		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
+		m_UtilizationBitmapHandleStatus->setMinimum(0);
+		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
+		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
+		m_UtilizationBitmapHandleStatus->setMaximumSize(120, 19); // FIXME
+		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 
 		QLabel *dlLabel = new QLabel(statusBar());
 		dlLabel->setText(tr("RAM_DL: "));

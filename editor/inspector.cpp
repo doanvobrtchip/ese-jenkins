@@ -328,6 +328,10 @@ void Inspector::releaseDisplayReg()
 
 void Inspector::frameEmu()
 {
+	bool handleUsage[FTED_NUM_HANDLES];
+	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
+		handleUsage[handle] = false;
+
 	const uint32_t *dl = FT800EMU::Memory.getDisplayList();
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
@@ -336,7 +340,19 @@ void Inspector::frameEmu()
 			m_DisplayListCopy[i] = dl[i];
 			m_DisplayListUpdate[i] = true;
 		}
+		if ((m_DisplayListCopy[i] >> 24) == FT800EMU_DL_BITMAP_HANDLE)
+		{
+			uint32_t handle = (m_DisplayListCopy[i] & 0x1F);
+			// printf("BITMAP_HANDLE: %i\n", handle);
+			if (handle < FTED_NUM_HANDLES)
+			{
+				handleUsage[handle] = true;
+			}
+		}
 	}
+
+	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
+		m_HandleUsage[handle] = handleUsage[handle];
 }
 
 void Inspector::frameQt()
@@ -383,6 +399,15 @@ void Inspector::frameQt()
 			}
 		}
 	}
+}
+
+int Inspector::countHandleUsage()
+{
+	int result = 0;
+	for (int i = 0; i < FTED_NUM_HANDLES; ++i)
+		if (m_HandleUsage[i])
+			++result;
+	return result;
 }
 
 } /* namespace FT800EMUQT */
