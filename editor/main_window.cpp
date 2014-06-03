@@ -1998,6 +1998,7 @@ void MainWindow::actNew()
 	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+	m_CmdEditor->selectLine(0);
 
 	// set working directory to temporary directory
 #ifdef FTEDITOR_TEMP_DIR
@@ -2179,6 +2180,7 @@ void MainWindow::actOpen()
 	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+	m_CmdEditor->selectLine(0);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 }
 
