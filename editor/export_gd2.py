@@ -133,6 +133,8 @@ def run(name, document, ram):
 	outName = outDir + "/" + name + "_gd2.ino" # os.path.basename(os.getcwd()) + ".ino"
 	if os.path.isfile(outName):
 		os.remove(outName)
+	hasDataDir = False
+	dataDir = outDir + "/data"
 	f = open(outName, "w")
 	f.write("#include <EEPROM.h>\n")
 	f.write("#include <SPI.h>\n")
@@ -142,25 +144,42 @@ def run(name, document, ram):
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
 			f.write("\n")
 			f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
-		if content["dataEmbedded"]:
 			contentName = content["destName"].replace("/", "_")
-			headerName = content["destName"];
-			if content["dataCompressed"]:
-				headerName += ".binh"
-			else:
-				headerName += ".rawh"
-			targetName = contentName + ".h"
-			targetPath = outDir + "/" + targetName
-			if os.path.isfile(targetPath):
-				os.remove(targetPath)
-			shutil.copy(headerName, targetPath)
 			content["gd2Name"] = contentName
-			f.write("\n")
-			charType = "prog_uchar"
-			#charType = "char" # For older Linux distro
-			f.write("static const PROGMEM " + charType + " " + contentName + "[] = {\n")
-			f.write("#\tinclude \"" + targetName + "\"\n")
-			f.write("};\n")
+			if content["dataEmbedded"]:
+				headerName = content["destName"];
+				if content["dataCompressed"]:
+					headerName += ".binh"
+				else:
+					headerName += ".rawh"
+				targetName = contentName + ".h"
+				targetPath = outDir + "/" + targetName
+				if os.path.isfile(targetPath):
+					os.remove(targetPath)
+				shutil.copy(headerName, targetPath)
+				f.write("\n")
+				charType = "prog_uchar"
+				#charType = "char" # For older Linux distro
+				f.write("static const PROGMEM " + charType + " " + contentName + "[] = {\n")
+				f.write("#\tinclude \"" + targetName + "\"\n")
+				f.write("};\n")
+			else:
+				fileDir = dataDir
+				if not hasDataDir:
+					try:
+						os.makedirs(dataDir)
+					except:
+						#print "Dir already exists"
+						pass
+					hasDataDir = True
+				fileName = contentName + ".gd2"
+				filePath = fileDir + "/" + fileName
+				sourceName = content["destName"]
+				if content["converter"] == "RawJpeg": # Jpg can not be compressed
+					sourceName = sourceName + ".raw"
+				else: # File is always compressed
+					sourceName = sourceName + ".bin"
+				shutil.copy(sourceName, filePath)
 	f.write("\n")
 	f.write("void setup()\n")
 	f.write("{\n")
@@ -168,15 +187,17 @@ def run(name, document, ram):
 	for content in document["content"]:
 		if content["memoryLoaded"]:
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
+			contentName = content["gd2Name"]
+			if content["converter"] == "RawJpeg": # Jpg can not be compressed
+				f.write("\tGD.cmd_loadimage(" + memoryAddress + ");\n")
+			if content["dataCompressed"] or not content["dataEmbedded"]: # File is always compressed
+				f.write("\tGD.cmd_inflate(" + memoryAddress + ");\n")
+			else:
+				f.write("\tGD.cmd_memwrite(" + memoryAddress + ", sizeof(" + contentName + "));\n")
 			if content["dataEmbedded"]:
-				contentName = content["gd2Name"]
-				if content["converter"] == "RawJpeg":
-					f.write("\tGD.cmd_loadimage(" + memoryAddress + ");\n")
-				if content["dataCompressed"]:
-					f.write("\tGD.cmd_inflate(" + memoryAddress + ");\n")
-				else:
-					f.write("\tGD.cmd_memwrite(" + memoryAddress + ", sizeof(" + contentName + "));\n")
 				f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
+			else:
+				f.write("\tGD.load(\"" + contentName + ".gd2\");\n")
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(', 1)
@@ -247,5 +268,12 @@ def run(name, document, ram):
 		os.startfile((os.getcwd() + "/" + outName).replace("/", "\\"))
 	elif os.name == 'posix':
 		subprocess.call(('xdg-open', outName))
+	if hasDataDir: # Open the data directory
+		if sys.platform.startswith('darwin'):
+			subprocess.call(('open', dataDir))
+		elif os.name == 'nt':
+			os.startfile((os.getcwd() + "/" + dataDir).replace("/", "\\"))
+		elif os.name == 'posix':
+			subprocess.call(('xdg-open', dataDir))
 	#print resultText
 	return resultText

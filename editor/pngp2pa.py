@@ -32,8 +32,8 @@ def run(argv):
 
 	for opt,arg in opts:
 		if opt  == '-h':
-			print_usage()
-			sys.exit(0)
+			#print_usage()
+			raise Exception("Option error")
 		elif opt == '-i':
 			infile_name = arg
 			if False == os.path.exists(infile_name):
@@ -188,10 +188,10 @@ def run(argv):
 		outfile_bin_h.close()
 
 	write_lutfile(lut)
-	print "convert complete!"
+	#print "convert complete!"
 
 if __name__ == '__main__':
-	print 'PNG8 to Palette conversion utility for FT800 ' + version
+	#print 'PNG8 to Palette conversion utility for FT800 ' + version
 	run(sys.argv[1:])
 
 

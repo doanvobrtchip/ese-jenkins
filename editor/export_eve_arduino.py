@@ -196,25 +196,25 @@ def run(name, document, ram):
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
 			f.write("\n")
 			f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
-		if content["dataEmbedded"]:
-			contentName = content["destName"].replace("/", "_")
-			headerName = content["destName"];
-			if content["dataCompressed"]:
-				headerName += ".binh"
-			else:
-				headerName += ".rawh"
-			targetName = contentName + ".h"
-			targetPath = outDir + "/" + targetName
-			if os.path.isfile(targetPath):
-				os.remove(targetPath)
-			shutil.copy(headerName, targetPath)
-			content["FTEVE_Name"] = contentName
-			f.write("\n")
-			charType = "prog_uchar"
-			#charType = "char" # For older Linux distro
-			f.write("static PROGMEM " + charType + " " + contentName + "[] = {\n")
-			f.write("#\tinclude \"" + targetName + "\"\n")
-			f.write("};\n")
+			if content["dataEmbedded"]:
+				contentName = content["destName"].replace("/", "_")
+				headerName = content["destName"];
+				if content["dataCompressed"]:
+					headerName += ".binh"
+				else:
+					headerName += ".rawh"
+				targetName = contentName + ".h"
+				targetPath = outDir + "/" + targetName
+				if os.path.isfile(targetPath):
+					os.remove(targetPath)
+				shutil.copy(headerName, targetPath)
+				content["FTEVE_Name"] = contentName
+				f.write("\n")
+				charType = "prog_uchar"
+				#charType = "char" # For older Linux distro
+				f.write("static PROGMEM " + charType + " " + contentName + "[] = {\n")
+				f.write("#\tinclude \"" + targetName + "\"\n")
+				f.write("};\n")
 	f.write("\n")
 	f.write("FT800IMPL_SPI FTImpl(FT_CS_PIN,FT_PDN_PIN,FT_INT_PIN);\n")
 	f.write("void setup()\n")
