@@ -164,7 +164,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	QSplitter *splitter = new QSplitter(this);
 
 	QGroupBox *dlGroup = new QGroupBox(this);
-	dlGroup->setTitle(tr("Display List"));
+	dlGroup->setTitle(tr("RAM_DL"));
 	QVBoxLayout *dlLayout = new QVBoxLayout();
 	m_DisplayList = new QTreeWidget(this);
 	m_DisplayList->setColumnCount(3);
@@ -178,7 +178,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	splitter->addWidget(dlGroup);
 
 	QGroupBox *regGroup = new QGroupBox(this);
-	regGroup->setTitle(tr("Registers"));
+	regGroup->setTitle(tr("RAM_REG"));
 	QVBoxLayout *regLayout = new QVBoxLayout();
 	m_Registers = new QTreeWidget(this);
 	m_Registers->setColumnCount(4);
