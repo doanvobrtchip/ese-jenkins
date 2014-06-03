@@ -1782,7 +1782,7 @@ public:
 			}
 			else
 			{
-				m_NewFontFormat = L8;
+				m_NewFontFormat = L4;
 			}
 		}
 		else
