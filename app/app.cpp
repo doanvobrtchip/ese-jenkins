@@ -122,6 +122,76 @@ inline uint32_t transformvalue(double d)
 	return ((uint32_t)result) & 0x1FFFF;
 }
 
+int s_Memory[64 * 1024];
+void writeMemory(int index, int value)
+{
+	s_Memory[index] = value;
+}
+
+int *s_MemoryPtr;
+void writeMemoryPtrInit()
+{
+	s_MemoryPtr = new int[64 * 1024];
+}
+
+void writeMemoryPtr(int index, int value)
+{
+	s_MemoryPtr[index] = value;
+}
+
+class MemoryWriter
+{
+public:
+	void init();
+	void write(int index, int value);
+	int *m_Memory;
+};
+class MemoryWriterDirect
+{
+public:
+	void init();
+	void write(int index, int value);
+	int m_MemoryTest[64 * 1024];
+	int m_Memory[64 * 1024];
+};
+
+void MemoryWriter::init()
+{
+	m_Memory = new int[64 * 1024];
+}
+
+void MemoryWriter::write(int index, int value)
+{
+	m_Memory[index] = value;
+}
+
+void MemoryWriterDirect::init()
+{
+
+}
+
+void MemoryWriterDirect::write(int index, int value)
+{
+	m_Memory[index] = value;
+}
+
+class MemoryWriterStatic
+{
+public:
+	static void writeMemory(int index, int value);
+	static void writeMemoryPtr(int index, int value);
+};
+
+void MemoryWriterStatic::writeMemory(int index, int value)
+{
+	s_Memory[index] = value;
+}
+
+void MemoryWriterStatic::writeMemoryPtr(int index, int value)
+{
+	s_MemoryPtr[index] = value;
+}
+
 void setup()
 {
 	// test per byte access

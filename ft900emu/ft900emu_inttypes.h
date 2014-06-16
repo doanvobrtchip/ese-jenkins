@@ -14,15 +14,11 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #include <stdlib.h>
 #endif
-#ifndef FTEMU_INTTYPES_DEFINED_COLOR
-#define FTEMU_INTTYPES_DEFINED_COLOR
-typedef uint32_t argb8888;
-#endif
-#ifndef FT800EMU_INTTYPES_DEFINED_FORCEINLINE
-#define FT800EMU_INTTYPES_DEFINED_FORCEINLINE
+#ifndef FTEMU_INTTYPES_DEFINED_FORCEINLINE
+#define FTEMU_INTTYPES_DEFINED_FORCEINLINE
 #ifdef _MSC_VER
-#	define FT800EMU_FORCE_INLINE __forceinline
+#	define FTEMU_FORCE_INLINE __forceinline
 #else
-#	define FT800EMU_FORCE_INLINE inline __attribute__((always_inline))
+#	define FTEMU_FORCE_INLINE inline __attribute__((always_inline))
 #endif
 #endif

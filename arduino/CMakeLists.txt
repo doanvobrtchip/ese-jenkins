@@ -8,4 +8,5 @@ ADD_LIBRARY(libftarduino
 	)
 
 target_link_libraries(libftarduino
+	libft800emu
 	)

@@ -75,4 +75,16 @@ ENDIF (WITH_QT)
 
 OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
+OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
+
+IF (WITH_FT900EMU)
+  INCLUDE_DIRECTORIES(
+    ${CMAKE_SOURCE_DIR}/ft900emu
+    )
+
+  ADD_SUBDIRECTORY(ft900emu)
+
+  ADD_SUBDIRECTORY(app900)
+ENDIF (WITH_FT900EMU)
+
 ########################################################################
