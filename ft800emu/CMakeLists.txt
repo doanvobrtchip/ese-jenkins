@@ -7,8 +7,13 @@ ADD_LIBRARY(libft800emu
 	${HDRS}
 	)
 
-target_link_libraries(libft800emu
-	)
+IF (MINGW)
+	target_link_libraries(libft800emu
+		gomp dinput8 dxguid)
+ELSE (MINGW)
+	target_link_libraries(libft800emu
+		)
+ENDIF (MINGW)
 
 if (WITH_SDL)
 

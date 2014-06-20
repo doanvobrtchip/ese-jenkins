@@ -277,14 +277,20 @@ void SystemClass::resumeCoprocessorThread()
 
 void *SystemClass::setThreadGamesCategory(unsigned long *refId)
 {
+#ifndef __MINGW32__
 	HANDLE h = AvSetMmThreadCharacteristics(TEXT("Games"), refId);
 	if (!h) SystemWindows.ErrorWin32();
 	return h;
+#else
+	return NULL;
+#endif
 }
 
 void SystemClass::revertThreadCategory(void *taskHandle)
 {
+#ifndef __MINGW32__
 	AvRevertMmThreadCharacteristics(taskHandle);
+#endif
 }
 
 void SystemClass::switchThread()

@@ -38,10 +38,10 @@
 #include "DummySerial.h"
 
 // Defines
-#ifdef WIN32
+#ifdef _MSC_VER
 #	define and &&
 #	define or ||
-#endif /* #ifdef WIN32 */
+#endif /* #ifdef _MSC_VER */
 
 // Functions
 int32_t random(int32_t);
