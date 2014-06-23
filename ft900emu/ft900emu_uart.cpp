@@ -36,14 +36,19 @@
 #define CKA 0x13 // Clock Alteration register
 
 // m
-#define RHR_THR_DLL 0
-#define IER_ASR_DLM 1
-#define ISR_FCR_EFR 2
-#define LCR_RFL     3
-#define MCR_TFL     4
-#define LSR_ICR     5
-#define MSR         6
-#define SPR         7
+#define R_RHR_THR_DLL  0
+#define R_IER_ASR_DLM  1
+#define R_ISR_FCR_EFR  2
+#define R_LCR_RFL      3
+#define R_MCR_XON1_TFL 4
+#define R_LSR_XON2_ICR 5
+#define R_MSR_XOFF1    6
+#define R_SPR_XOFF2    7
+
+#define ACR_950_REGISTERS (icr[ACR] & (1 << 7))
+#define ACR_ICR_REGISTERS (icr[ACR] & (1 << 6))
+#define LCR_7 (lcr & (1 << 7))
+#define EFR_650_ENHANCED_MODE (efr & (1 << 4));
 
   //      //                 R    W   650  950  lcr7
   /* 0 */ //union { uint8_t rhr, thr,           dll    ; };
@@ -59,7 +64,9 @@
 
 namespace FT900EMU {
 
-UART::UART(uint32_t id, FT32 *ft32) : m_Id(0), m_FT32(ft32),
+UART::UART(uint32_t id, FT32 *ft32) :
+	m_650(false),
+	m_Id(0), m_FT32(ft32),
 	m_Enabled(false),
 	m_ClkSel(false), m_FifoSel(false), m_IntSel(false)
 {
@@ -100,73 +107,262 @@ void UART::setOptions(bool clkSel, bool fifoSel, bool intSel)
 	printf("<--#--> UART :: Clk = %s, Fifo = %s, Int = %s\n", clkSel ? "ON" : "OFF", fifoSel ? "ON" : "OFF", intSel ? "ON" : "OFF");
 }
 
-// io_a is addr / 4 (read per 4 bytes)
-uint32_t UART::ioRd(uint32_t io_a, uint32_t io_be)
-{
-	uint32_t *mem = reinterpret_cast<uint32_t *>(m);
-	uint idx = io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id));
-	printf("<--#--> UART :: Read mem (%#x): %#x\n", io_a << 2, mem[idx]);
-	return mem[idx] & io_be;
-}
-
 void UART::ioWr(uint32_t idx, uint8_t d)
 {
 	printf("<--#--> UART :: Write mem %i = %#x\n", idx, d);
-
-	// WRITE
-	m[idx] = d;
-
-	/*switch (idx)
+	switch (idx)
 	{
-		case LCR_RFL: // 3
+		case R_RHR_THR_DLL: // 0
 		{
-			if (d == 0xBF) // LCR
+			if (LCR_7) // DLL
 			{
-				printf("<--#--> UART :: Wrote 0xBF to LCR\n");
-				// FT900EMU_DEBUG_BREAK();
+				printf("    :: DLL %u\n", (uint32_t)d);
+				dll_dlm = (dll_dlm & 0xFF00) | (uint16_t)d;
+				printf("    :: = %u\n", (uint32_t)dll_dlm);
+			}
+			else // THR
+			{
+				printf("    :: THR write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
 			}
 			break;
 		}
-		case LSR_ICR: // 5
+		case R_IER_ASR_DLM: // 1
 		{
-			if (m[LCR] == 0xBF)
+			if (LCR_7) // DLM
 			{
-				printf("<--#--> UART :: LCR is 0xBF, cannot write\n");
+				printf("    :: DLM %u\n", (uint32_t)d);
+				dll_dlm = (dll_dlm & 0x00FF) | (uint16_t)d << 8;
+				printf("    :: = %u\n", (uint32_t)dll_dlm);
+			}
+			else if (ACR_950_REGISTERS) // ASR
+			{
+				printf("    :: ASR write not implemented\n");
 				FT900EMU_DEBUG_BREAK();
 			}
-			// ICR => Write value to r address at m[SPR]
-			printf("<--#--> UART :: Reg write %i <= %#x\n", m[SPR], d);
-			r[m[SPR]] = d;
-		}
-		case SPR: // 7
-		{
-			if (r[ACR] & 1)
+			else // IER
 			{
-				// Read specified register into ICR
-				m[LSR_ICR] = r[d];
+				printf("    :: IER write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			break;
+		}
+		case R_ISR_FCR_EFR: // 2
+		{
+			if (m_650) // EFR
+			{
+				printf("    :: EFR\n");
+				if (d & 0x10)
+				{
+					printf("    :: Enhanced mode (650) is on!\n");
+				}
+				if (d & 0xEF)
+				{
+					printf("    :: Unknown bits have been set\n");
+					FT900EMU_DEBUG_BREAK();
+				}
+				efr = d;
+			}
+			else // FCR
+			{
+				printf("    :: FCR (TODO)\n");
+				if (d & 0x01) printf("        :: FIFO on (TODO)\n");
+				if (d & 0x02) printf("        :: Flush RHR (TODO)\n");
+				if (d & 0x04) printf("        :: Flush THR (TODO)\n");
+				if (d & 0xF8)
+				{
+					printf("    :: Unknown bits have been set\n");
+					FT900EMU_DEBUG_BREAK();
+				}
+				fcr = d; // TODO
+			}
+			// ISR is read
+			break;
+		}
+		case R_LCR_RFL: // 3
+		{
+			if (ACR_950_REGISTERS) // RFL
+			{
+				printf("    :: RFL write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // LCR
+			{
+				printf("    :: LCR\n");
+				if (d == 0xBF)
+				{
+					printf("    :: Enable 650 register access\n");
+					m_650 = true;
+					lcr |= 0x80; // Also enable LCR[7] (divider latch registers DLL and DLM)
+				}
+				else
+				{
+					if (m_650) printf("    :: Disable 650 register access\n");
+					m_650 = false;
+					if ((d & 0x03) == 0x03)
+					{
+						printf("    :: Set to 8 bits\n");
+					}
+					if (d & 0x80)
+					{
+						printf("    :: LCR[7] is on!\n");
+					}
+					if (d & 0x7C)
+					{
+						printf("    :: Unknown LCR bits set\n");
+						FT900EMU_DEBUG_BREAK();
+					}
+					lcr = d;
+				}
+			}
+			break;
+		}
+		case R_MCR_XON1_TFL: // 4
+		{
+			if (m_650) // XON1
+			{
+				printf("    :: XON1 write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			else if (ACR_950_REGISTERS) // TFL
+			{
+				printf("    :: TFL write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // MCR
+			{
+				printf("    :: MCR (TODO)\n");
+				if (d & 0x02)
+				{
+					printf("    :: RTS (TODO)\n");
+				}
+				if (d & 0xFD)
+				{
+					printf("    :: Unknown bits were set\n");
+					FT900EMU_DEBUG_BREAK();
+				}
+				mcr = d;
+			}
+			break;
+		}
+		case R_LSR_XON2_ICR: // 5
+		{
+			if (m_650) // XON2
+			{
+				printf("    :: XON2 write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // ICR
+			{
+				printf("    :: ICR, write %i\n", d);
+				icr[spr] = d;
+			}
+			// LSR only in read mode
+			break;
+		}
+		case R_SPR_XOFF2: // 7
+		{
+			if (m_650) // XOFF2
+			{
+				printf("    :: XOFF2 write not implemented\n");
+				FT900EMU_DEBUG_BREAK();
 			}
 			else
 			{
-				// Enable write to register address at m[SPR]
+				printf("    :: SPR, address ICR %i\n", d);
+				spr = d;
 			}
+			break;
 		}
-	}*/
+		default:
+		{
+			printf("    :: Index not implemented\n");
+			FT900EMU_DEBUG_BREAK();
+		}
+	}
+}
+
+uint8_t UART::ioRd(uint32_t idx)
+{
+	printf("<--#--> UART :: Read mem %i\n", idx);
+	switch (idx)
+	{
+		case R_ISR_FCR_EFR: // 2
+		{
+			if (m_650) // EFR
+			{
+				printf("    :: EFR\n");
+				return efr;
+			}
+			else // ISR
+			{
+				printf("    :: ISR read not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			// FCR is write
+			break;
+		}
+		case R_LCR_RFL: // 3
+		{
+			if (ACR_950_REGISTERS) // RFL
+			{
+				printf("    :: RFL read not implemented\n");
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // LCR
+			{
+				if (m_650)
+				{
+					// The actual LCR value is not overwritten
+					printf("    :: LCR 650\n");
+					return 0xBF;
+				}
+				else
+				{
+					printf("    :: LCR %#x\n", lcr);
+					return lcr;
+				}
+			}
+			break;
+		}
+		default:
+		{
+			printf("    :: Index not implemented\n");
+			FT900EMU_DEBUG_BREAK();
+		}
+	}
+	return 0;
+}
+
+// io_a is addr / 4 (read per 4 bytes)
+uint32_t UART::ioRd(uint32_t io_a, uint32_t io_be)
+{
+	const uint32_t idx = (io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id))) << 2;
+	printf("<--#--> UART :: Read mem (%#x, %#x)\n", io_a << 2, io_be);
+	uint32_t res = 0;
+	if (io_be & 0x000000FFu)
+		res |= (uint32_t)ioRd(idx);
+	if (io_be & 0x0000FF00u)
+		res |= (uint32_t)ioRd(idx + 1) << 8;
+	if (io_be & 0x00FF0000u)
+		res |= (uint32_t)ioRd(idx + 2) << 16;
+	if (io_be & 0xFF000000u)
+		res |= (uint32_t)ioRd(idx + 3) << 24;
+	printf("%#x (%#x)\n", res, io_be);
+	return res;
 }
 
 void UART::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
-	uint32_t *mem = reinterpret_cast<uint32_t *>(m);
-	const uint32_t idx = io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id));
-	const uint32_t v = (io_dout & io_be) | (mem[idx] & ~io_be);
-	const uint32_t diffmask = v ^ mem[idx];
-	if (diffmask & 0x000000FFu)
-		ioWr((idx << 2), v & 0xFFu);
-	if (diffmask & 0x0000FF00u)
-		ioWr((idx << 2) + 1, (v >> 8) & 0xFFu);
-	if (diffmask & 0x00FF0000u)
-		ioWr((idx << 2) + 2, (v >> 16) & 0xFFu);
-	if (diffmask & 0xFF000000u)
-		ioWr((idx << 2) + 3, (v >> 24) & 0xFFu);
+	const uint32_t idx = (io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id))) << 2;
+	if (io_be & 0x000000FFu)
+		ioWr(idx, io_dout & 0xFFu);
+	if (io_be & 0x0000FF00u)
+		ioWr(idx + 1, (io_dout >> 8) & 0xFFu);
+	if (io_be & 0x00FF0000u)
+		ioWr(idx + 2, (io_dout >> 16) & 0xFFu);
+	if (io_be & 0xFF000000u)
+		ioWr(idx + 3, (io_dout >> 24) & 0xFFu);
 }
 
 void UART::ioGetRange(uint32_t &from, uint32_t &to)

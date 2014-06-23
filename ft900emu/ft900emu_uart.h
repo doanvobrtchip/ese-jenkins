@@ -31,14 +31,28 @@ public:
 	void setOptions(bool clkSel, bool fifoSel, bool intSel);
 
 	void ioWr(uint32_t idx, uint8_t d);
+	uint8_t ioRd(uint32_t idx);
 
 	virtual uint32_t ioRd(uint32_t io_a, uint32_t io_be);
 	virtual void ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:
-	uint8_t m[FT900EMU_MEMORY_UART_SIZE]; // FIXME
 	uint8_t icr[FT900EMU_UART_ICR_NB]; // Indexed Control Registers
+
+	// 550
+	uint8_t lcr;
+	uint8_t spr; // ICR offset
+	uint8_t fcr;
+	uint8_t mcr;
+
+	// 650
+	uint8_t efr;
+
+	// lcr7
+	uint16_t dll_dlm;
+
+	bool m_650;
 
 	uint32_t m_Id;
 	FT32 *m_FT32;

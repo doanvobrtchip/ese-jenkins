@@ -239,7 +239,9 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 		printf("READU8: %#x\n", addr);
 		uint32_t b = addr % 4;
 		b <<= 3;
-		return (ioRd(addr >> 2, (0xFFu << b)) >> b) & 0xFFu;
+		uint8_t res = (ioRd(addr >> 2, (0xFFu << b)) >> b) & 0xFFu;
+		printf("  U8: %#x\n", res);
+		return res;
 	}
 }
 
