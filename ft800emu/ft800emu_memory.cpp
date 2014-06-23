@@ -162,10 +162,18 @@ inline uint32_t getTouchScreenXY(int x, int y)
 
 inline uint32_t getTouchScreenXY(long micros)
 {
+	uint8_t *ram = Memory.getRam();
 	if (s_TouchScreenSet)
 	{
 		int x, y;
 		getTouchScreenXY(micros, x, y);
+		// Transform (currently just check REG_ROTATE, ignoring TRANSFORM) ->
+		if (Memory.rawReadU32(ram, REG_ROTATE) & 0x01)
+		{
+			x = Memory.rawReadU32(ram, REG_HSIZE) - x - 1;
+			y = Memory.rawReadU32(ram, REG_VSIZE) - y - 1;
+		}
+		// <- Transform
 		return getTouchScreenXY(x, y);
 	}
 	else

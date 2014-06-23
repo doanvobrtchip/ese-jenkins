@@ -2874,13 +2874,15 @@ EvaluateDisplayListValue:
 		}
 DisplayListDisplay:
 		// Check tag query
-		if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
+		// if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
+		if (Memory.rawReadU32(ram, REG_TAG_Y) == (upsideDown ? vsize - y - 1 : y))
 		{
 			uint32_t tag_x = Memory.rawReadU32(ram, REG_TAG_X);
 			if (tag_x < hsize)
 			{
 				// Write tag out
-				Memory.rawWriteU32(ram, REG_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+				// Memory.rawWriteU32(ram, REG_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+				Memory.rawWriteU32(ram, REG_TAG, bt[tag_x]);
 			}
 		}
 		// Check touch
@@ -2888,13 +2890,15 @@ DisplayListDisplay:
 		{
 			uint32_t tag_xy = Memory.rawReadU32(ram, REG_TOUCH_TAG_XY);
 			uint32_t tag_y = tag_xy & 0xFFFF;
-			if (tag_y == y)
+			// if (tag_y == y)
+			if (tag_y == (upsideDown ? vsize - y - 1 : y))
 			{
 				uint32_t tag_x = tag_xy >> 16;
 				if (tag_x < hsize)
 				{
 					// Write tag out
-					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+					// Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[tag_x]);
 				}
 			}
 		}
