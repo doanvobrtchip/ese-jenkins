@@ -72,6 +72,8 @@ static bool s_TouchScreenJitter = true;
 
 static bool s_CpuReset = false;
 
+static bool s_FT801;
+
 //static void (*s_Interrupt)());
 
 long s_LastJitteredTime;
@@ -195,7 +197,14 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
-	rawWriteU32(REG_TOUCH_RAW_XY, touch_raw_xy);
+	if (s_FT801 && (Memory.rawReadU32(REG_CTOUCH_EXTEND) & 0x01))
+	{
+		// no-op
+	}
+	else
+	{
+		rawWriteU32(REG_TOUCH_RAW_XY, touch_raw_xy);
+	}
 	if (s_TouchScreenSet)
 	{
 		if (s_TouchScreenJitter)
@@ -224,8 +233,15 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	}
 	s_TouchScreenX2 = x;
 	s_TouchScreenY2 = y;
-	rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
-	rawWriteU32(REG_TOUCH_RZ, pressure);
+	if (s_FT801 && (Memory.rawReadU32(REG_CTOUCH_EXTEND) & 0x01))
+	{
+		rawWriteU32(REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
+	}
+	else
+	{
+		rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
+		rawWriteU32(REG_TOUCH_RZ, pressure);
+	}
 }
 
 void MemoryClass::setTouchScreenXYFrameTime(long micros)
@@ -237,9 +253,22 @@ void MemoryClass::resetTouchScreenXY()
 {
 	s_TouchScreenSet = 0;
 	Memory.rawWriteU32(REG_TOUCH_TAG, 0);
-	Memory.rawWriteU32(REG_TOUCH_RZ, 32767);
-	Memory.rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+	if (s_FT801 && (Memory.rawReadU32(REG_CTOUCH_EXTEND) & 0x01))
+	{
+		// No touch detected
+		rawWriteU32(REG_CTOUCH_TOUCH0_XY, 0x80008000);
+		rawWriteU32(REG_CTOUCH_TOUCH1_XY, 0x80008000);
+		rawWriteU32(REG_CTOUCH_TOUCH2_XY, 0x80008000);
+		rawWriteU32(REG_CTOUCH_TOUCH3_XY, 0x80008000);
+		rawWriteU32(REG_CTOUCH_TOUCH4_X, 0x8000);
+		rawWriteU32(REG_CTOUCH_TOUCH4_Y, 0x8000);
+	}
+	else
+	{
+		Memory.rawWriteU32(REG_TOUCH_RZ, 32767);
+		Memory.rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+		Memory.rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+	}
 	s_LastJitteredTime = System.getMicros();
 }
 
@@ -407,7 +436,7 @@ static const uint8_t rom[FT800EMU_ROM_SIZE] = {
 #include "rom.h"
 };
 
-void MemoryClass::begin(const char *romFilePath)
+void MemoryClass::begin(const char *romFilePath, bool ft801)
 {
 	if (romFilePath)
 	{
@@ -444,6 +473,8 @@ void MemoryClass::begin(const char *romFilePath)
 	s_TouchScreenSet = 0;
 	s_LastJitteredTime = System.getMicros();
 
+	s_FT801 = ft801;
+
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
 	rawWriteU32(REG_CLOCK, 0);
@@ -477,9 +508,26 @@ void MemoryClass::begin(const char *romFilePath)
 	rawWriteU32(REG_VOL_PB, 0xFF);
 	rawWriteU32(REG_VOL_SOUND, 0xFF);
 	rawWriteU32(REG_SOUND, 0);
-	rawWriteU32(REG_TOUCH_RZ, 0x7FFF);
+	if (ft801)
+	{
+		rawWriteU32(REG_CTOUCH_EXTEND, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH0_XY, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH1_XY, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH2_XY, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH3_XY, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH4_X, 0);
+		rawWriteU32(REG_CTOUCH_TOUCH4_Y, 0);
+	}
+	else
+	{
+		rawWriteU32(REG_TOUCH_ADC_MODE, 0x01);
+		rawWriteU32(REG_TOUCH_RZ, 0x7FFF);
+		rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+		rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+		rawWriteU32(REG_TOUCH_DIRECT_XY, 0);
+		rawWriteU32(REG_ANALOG, 0);
+	}
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
-	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
 	rawWriteU32(REG_INT_MASK, 0xFF);
@@ -492,6 +540,11 @@ void MemoryClass::begin(const char *romFilePath)
 void MemoryClass::end()
 {
 
+}
+
+bool MemoryClass::ft801()
+{
+	return s_FT801;
 }
 
 void MemoryClass::enableReadDelay(bool enabled)

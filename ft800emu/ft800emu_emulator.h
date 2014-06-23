@@ -45,6 +45,8 @@ enum EmulatorFlags
 	EmulatorEnableRegPwmDutyEmulation = 0x100,
 	// enable killing the loop thread on exit
 	// EmulatorEnableKillLoopThread = 0x200,
+	// mode FT801
+	EmulatorFT801 = 0x400,
 };
 
 struct EmulatorParameters

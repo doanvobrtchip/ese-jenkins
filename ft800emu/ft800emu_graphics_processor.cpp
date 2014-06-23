@@ -2886,7 +2886,9 @@ DisplayListDisplay:
 			}
 		}
 		// Check touch
-		if (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH)) // Touching harder than the threshold
+		if (Memory.ft801()
+			? (Memory.rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
+			: (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{
 			uint32_t tag_xy = Memory.rawReadU32(ram, REG_TOUCH_TAG_XY);
 			uint32_t tag_y = tag_xy & 0xFFFF;

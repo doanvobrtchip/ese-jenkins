@@ -450,7 +450,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	System.begin();
-	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str());
+	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str(), params.Flags & EmulatorFT801);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) GraphicsDriver.begin();

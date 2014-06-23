@@ -37,13 +37,15 @@ class MemoryClass
 public:
 	MemoryClass() { }
 
-	static void begin(const char *romFilePath = 0);
+	static void begin(const char *romFilePath = 0, bool ft801 = false);
 	static void end();
 
 	static void enableReadDelay(bool enabled = true);
 
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
+
+	static bool ft801();
 
 	//static void setInterrupt(void (*interrupt)());
 	static bool intnLow();
