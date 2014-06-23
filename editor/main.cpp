@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 {
 	Q_INIT_RESOURCE(icons);
 
-#ifdef NL_OS_WINDOWS
+#ifdef WIN32
 	HRESULT hr;
 	hr = hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	bool coInitOk = (hr == S_OK) || (hr == S_FALSE);
@@ -90,7 +90,9 @@ int main(int argc, char* argv[])
 	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
+#ifdef WIN32
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
+#endif
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{
@@ -108,7 +110,7 @@ int main(int argc, char* argv[])
 	FT800EMUQT::AssetConverter::release();
     Py_Finalize();
 #endif /* FT800EMU_PYTHON */
-#ifdef NL_OS_WINDOWS
+#ifdef WIN32
 	if (coInitOk) CoUninitialize();
 #endif
 	return result;
