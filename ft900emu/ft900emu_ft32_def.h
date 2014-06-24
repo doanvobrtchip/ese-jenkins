@@ -162,8 +162,8 @@ static const uint32_t FT32_DW_SIGNBIT[3] = { 0x80u, 0x8000u, 0x80000000u };
 #define FT32_CMPMASK   0x18000000u
 #define FT32_CMP(inst) (inst & FT32_CMPMASK)
 
-#define FT32_BINS_WIDTH(rimmv)    (rimmv & 0x1Fu)
-#define FT32_BINS_POSITION(rimmv) (((rimmv >> 5) & 0x0Fu) ? ((rimmv >> 5) & 0x0Fu) : 16)
+#define FT32_BINS_WIDTH(rimmv)    (((rimmv >> 5) & 0x0Fu) ? ((rimmv >> 5) & 0x0Fu) : 16)
+#define FT32_BINS_POSITION(rimmv) (rimmv & 0x1Fu)
 
 #define FT32_EFLAGS_CARRY                0x00000001u
 #define FT32_EFLAGS_CARRYSHIFT           0
