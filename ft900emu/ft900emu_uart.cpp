@@ -70,7 +70,7 @@ UART::UART(uint32_t id, FT32 *ft32) :
 	m_Enabled(false),
 	m_ClkSel(false), m_FifoSel(false), m_IntSel(false)
 {
-	printf("<--#--> UART :: Init\n");
+	printf(F9ED "<--#--> UART :: Init" F9EE);
 	ft32->io(this);
 	softReset();
 }
@@ -145,12 +145,12 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 			}
 			else if (ACR_950_REGISTERS) // ASR
 			{
-				printf("    :: ASR write not implemented\n");
+				printf(F9EW "    :: ASR write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // IER
 			{
-				printf("    :: IER write not implemented\n");
+				printf(F9EW "    :: IER write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			break;
@@ -179,7 +179,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 				// if (d & 0x04) printf("        :: Flush THR (TODO)\n");
 				if (d & 0xF8)
 				{
-					printf("    :: FCR :: Unknown bits have been set\n");
+					printf(F9EW "    :: FCR :: Unknown bits have been set" F9EE);
 					FT900EMU_DEBUG_BREAK();
 				}
 				fcr = d; // TODO
@@ -191,7 +191,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 		{
 			if (ACR_950_REGISTERS) // RFL
 			{
-				printf("    :: RFL write not implemented\n");
+				printf(F9EW "    :: RFL write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // LCR
@@ -217,7 +217,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 					}*/
 					if (d & 0x7C)
 					{
-						printf("    :: Unknown LCR bits set\n");
+						printf(F9EW "    :: Unknown LCR bits set" F9EE);
 						FT900EMU_DEBUG_BREAK();
 					}
 					lcr = d;
@@ -229,12 +229,12 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 		{
 			if (m_650) // XON1
 			{
-				printf("    :: XON1 write not implemented\n");
+				printf(F9EW "    :: XON1 write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else if (ACR_950_REGISTERS) // TFL
 			{
-				printf("    :: TFL write not implemented\n");
+				printf(F9EW "    :: TFL write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // MCR
@@ -246,7 +246,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 				}*/
 				if (d & 0xFD)
 				{
-					printf("    :: MCR :: Unknown bits were set\n");
+					printf(F9EW "    :: MCR :: Unknown bits were set" F9EE);
 					FT900EMU_DEBUG_BREAK();
 				}
 				mcr = d;
@@ -257,7 +257,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 		{
 			if (m_650) // XON2
 			{
-				printf("    :: XON2 write not implemented\n");
+				printf(F9EW "    :: XON2 write not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // ICR
@@ -284,7 +284,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 		}
 		default:
 		{
-			printf("    :: Index not implemented\n");
+			printf(F9EW "IO :: Index %i not implemented for write" F9EE, idx);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
@@ -304,7 +304,7 @@ uint8_t UART::ioRd(uint32_t idx)
 			}
 			else // ISR
 			{
-				printf("    :: ISR read not implemented\n");
+				printf(F9EW "    :: ISR read not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			// FCR is write
@@ -314,7 +314,7 @@ uint8_t UART::ioRd(uint32_t idx)
 		{
 			if (ACR_950_REGISTERS) // RFL
 			{
-				printf("    :: RFL read not implemented\n");
+				printf(F9EW "    :: RFL read not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // LCR
@@ -337,12 +337,12 @@ uint8_t UART::ioRd(uint32_t idx)
 		{
 			if (m_650) // XON2
 			{
-				printf("    :: XON2 read not implemented\n");
+				printf(F9EW "    :: XON2 read not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else if (ACR_950_REGISTERS) // ?? // ICR
 			{
-				printf("    :: ICR read not implemented\n");
+				printf(F9EW "    :: ICR read not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // LSR
@@ -357,7 +357,7 @@ uint8_t UART::ioRd(uint32_t idx)
 		}
 		default:
 		{
-			printf("    :: Index not implemented\n");
+			printf(F9EW "    :: Index not implemented" F9EE);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}

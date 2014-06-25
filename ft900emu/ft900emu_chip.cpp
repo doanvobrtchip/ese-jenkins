@@ -59,7 +59,7 @@ Chip::~Chip()
 uint32_t Chip::ioRd32(uint32_t io_a, uint32_t io_be)
 {
 	uint idx = io_a - FT900EMU_MEMORY_REGISTER_START;
-	printf("Chip :: Read register %i (%#x): %#x\n", idx, idx << 2, m_Register[idx]);
+	printf(F9ED "Chip :: Read register %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
 
@@ -68,17 +68,17 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 	const uint32_t idx = io_a - FT900EMU_MEMORY_REGISTER_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);
 	const uint32_t diffmask = v ^ m_Register[idx];
-	printf("Chip :: Write register %i (%#x): %#x [diffmask = %#x]\n", idx, idx << 2, v, diffmask);
+	printf(F9ED "Chip :: Write register %i (%#x): %#x [diffmask = %#x]" F9EE, idx, idx << 2, v, diffmask);
 
 	// PRE-WRITE HANDLING
 	switch (idx)
 	{
 		case FT900EMU_REG_CLOCK_CONFIGURATION:
 		{
-			printf("(!) REG_CLOCK_CONFIGURATION\n");
+			printf(F9ED "(!) REG_CLOCK_CONFIGURATION" F9EE);
 			if (diffmask & FT900EMU_CLOCK_UART0_ENA)
 			{
-				printf("(!) UART0 = %s\n", v & FT900EMU_CLOCK_UART0_ENA ? "ENABLED" : "DISABLED");
+				printf(F9ED "(!) UART0 = %s" F9EE, v & FT900EMU_CLOCK_UART0_ENA ? "ENABLED" : "DISABLED");
 				if (v & FT900EMU_CLOCK_UART0_ENA)
 				{
 					m_UART0 = new UART(0, m_FT32);
@@ -93,7 +93,7 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			}
 			if (diffmask & FT900EMU_CLOCK_UART1_ENA)
 			{
-				printf("(!) UART1 = %s\n", v & FT900EMU_CLOCK_UART1_ENA ? "ENABLED" : "DISABLED");
+				printf(F9ED "(!) UART1 = %s" F9EE, v & FT900EMU_CLOCK_UART1_ENA ? "ENABLED" : "DISABLED");
 				FT900EMU_DEBUG_BREAK();
 			}
 			break;
@@ -102,7 +102,7 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 		{
 			if (diffmask & FT900EMU_MISC_PERI_SOFTRESET)
 			{
-				printf("(!) SOFTRESET\n");
+				printf(F9ED "(!) SOFTRESET" F9EE);
 				v &= ~FT900EMU_MISC_PERI_SOFTRESET;
 				m_FT32->softReset();
 				m_IRQ->softReset();
@@ -153,7 +153,7 @@ void Chip::ioGetRange(uint32_t &from, uint32_t &to)
 
 void Chip::padWr(uint32_t pad_id, uint32_t pad_value) // pad_value is 8 bits
 {
-	printf("[#] PAD %i = %i (%#x)\n", pad_id, pad_value, pad_value);
+	printf(F9ED "[#] PAD %i = %i (%#x)" F9EE, pad_id, pad_value, pad_value);
 	if (pad_id >= 48 && pad_id < 56)
 		updateUART0Functionality();
 }

@@ -23,7 +23,7 @@ namespace FT900EMU {
 
 IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), m_CurrentInt(0), m_InterruptCheck(false)
 {
-	printf("+ IRQ :: Init\n");
+	printf(F9ED "+ IRQ :: Init" F9EE);
 	softReset();
 }
 
@@ -51,7 +51,7 @@ inline uint32_t IRQ::nestedDepth()
 uint32_t IRQ::ioRd32(uint32_t io_a, uint32_t io_be)
 {
 	uint idx = io_a - FT900EMU_MEMORY_IRQ_START;
-	printf("+ IRQ :: Read register %i (%#x): %#x\n", idx, idx << 2, m_Register[idx]);
+	printf(F9ED "+ IRQ :: Read register %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
 
@@ -60,7 +60,7 @@ void IRQ::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 	const uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);
 	const uint32_t diffmask = v ^ m_Register[idx];
-	printf("+ IRQ :: Write register %i (%#x): %#x [diffmask = %#x]\n", idx, idx << 2, v, diffmask);
+	printf(F9ED "+ IRQ :: Write register %i (%#x): %#x [diffmask = %#x]" F9EE, idx, idx << 2, v, diffmask);
 
 	// WRITE
 	m_Register[idx] = v;
@@ -102,7 +102,7 @@ void IRQ::interrupt(uint32_t irq)
 	}
 	else
 	{
-		printf("Interrupt requested, but global interrupt mask off\n");
+		printf(F9ED "Interrupt requested, but global interrupt mask off" F9EE);
 	}
 }
 
@@ -112,7 +112,7 @@ uint32_t IRQ::nextInterruptInternal()
 	// Don't check again until a change is notified
 	m_InterruptCheck = false;
 
-	printf("+ Check interrupt +\n");
+	printf(F9ED "+ Check interrupt +" F9EE);
 
 	// Check if depth is ok
 	if ((nestedInterrupt() && m_CurrentDepth <= nestedDepth())
@@ -139,7 +139,7 @@ void IRQ::returnInterrupt()
 {
 	if (m_CurrentDepth == 0)
 	{
-		printf("Invalid RETURNI outside interrupt\n");
+		printf(F9ED "Invalid RETURNI outside interrupt" F9EE);
 	}
 	else
 	{

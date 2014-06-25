@@ -22,3 +22,9 @@ typedef signed __int64 int64_t;
 #	define FTEMU_FORCE_INLINE inline __attribute__((always_inline))
 #endif
 #endif
+#ifndef FTEMU_DEBUG_COLORS
+#define FTEMU_DEBUG_COLORS
+#define F9ED "\033[0;34m"
+#define F9EW "\033[1;31m"
+#define F9EE "\033[0m\n"
+#endif

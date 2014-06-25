@@ -178,7 +178,7 @@ uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
 	if (io)
 		return io->ioRd32(io_a, io_be);
 
-	printf("Read IO 32 not handled: %#x (mask: %x)\n", io_a << 2, io_be);
+	printf(F9EW "Read IO 32 not handled: %#x (mask: %x)" F9EE, io_a << 2, io_be);
 	FT900EMU_DEBUG_BREAK();
 	return 0xDEADBEEF;
 }
@@ -189,7 +189,7 @@ void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 	if (io)
 		return io->ioWr32(io_a, io_be, io_dout);
 
-	printf("Write IO 32 not handled: %#x = %u (mask: %x)\n", io_a << 2, io_dout, io_be);
+	printf(F9EW "Write IO 32 not handled: %#x = %u (mask: %x)" F9EE, io_a << 2, io_dout, io_be);
 	FT900EMU_DEBUG_BREAK();
 }
 
@@ -199,7 +199,7 @@ uint8_t FT32::ioRd8(uint32_t io_a)
 	if (io)
 		return io->ioRd8(io_a);
 
-	printf("Read IO 8 not handled: %#x\n", io_a);
+	printf(F9EW "Read IO 8 not handled: %#x" F9EE, io_a);
 	FT900EMU_DEBUG_BREAK();
 	return 0xCC;
 }
@@ -210,7 +210,7 @@ void FT32::ioWr8(uint32_t io_a, uint8_t io_dout)
 	if (io)
 		return io->ioWr8(io_a, io_dout);
 
-	printf("Write IO 8 not handled: %#x = %u\n", io_a, (uint32_t)io_dout);
+	printf(F9EW "Write IO 8 not handled: %#x = %u" F9EE, io_a, (uint32_t)io_dout);
 	FT900EMU_DEBUG_BREAK();
 }
 
@@ -231,7 +231,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 		}
 		else
 		{
-			printf("Not implemented UNALIGNED READ 32\n");
+			printf(F9EW "Not implemented UNALIGNED READ 32" F9EE);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
@@ -252,7 +252,7 @@ FTEMU_FORCE_INLINE void FT32::writeMemU32(uint32_t addr, uint32_t value)
 		}
 		else
 		{
-			printf("Not implemented UNALIGNED WRITE 32 [%#x] <- %#x\n", addr, value);
+			printf(F9EW "Not implemented UNALIGNED WRITE 32 [%#x] <- %#x" F9EE, addr, value);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
@@ -274,7 +274,7 @@ FTEMU_FORCE_INLINE uint16_t FT32::readMemU16(uint32_t addr)
 		}
 		else
 		{
-			printf("Not implemented UNALIGNED READ 16\n");
+			printf(F9EW "Not implemented UNALIGNED READ 16" F9EE);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
@@ -296,7 +296,7 @@ FTEMU_FORCE_INLINE void FT32::writeMemU16(uint32_t addr, uint16_t value)
 		}
 		else
 		{
-			printf("Not implemented UNALIGNED WRITE 16\n");
+			printf(F9EW "Not implemented UNALIGNED WRITE 16" F9EE);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
@@ -408,7 +408,7 @@ void FT32::call(uint32_t pma)
 			case FT32_PATTERN_EXA:
 			case FT32_PATTERN_EXI:
 			{
-				printf("Not implemented EXA/EXI\n");
+				printf(F9EW "Not implemented EXA/EXI" F9EE);
 				FT900EMU_DEBUG_BREAK();
 				break;
 			}
@@ -438,7 +438,7 @@ void FT32::call(uint32_t pma)
 					case FT32_ALU_BEXTS: /*printf("  | BEXTS\n");*/ result = nsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTS: %i; %i -> %i\n", r1v, rimmv, result);*/ break;
 					case FT32_ALU_BEXTU: /*printf("  | BEXTU\n");*/ result = nunsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTU: %i; %i -> %u\n", r1v, rimmv, result);*/ break;
 					case FT32_ALU_FLIP: /*printf("  | FLIP\n");*/ result = flip(r1v, rimmv); break;
-					default: printf("Unknown ALU\n"); FT900EMU_DEBUG_BREAK(); break;
+					default: printf(F9EW "Unknown ALU" F9EE); FT900EMU_DEBUG_BREAK(); break;
 				}
 				//printf("  | %i = %i ; %i\n", result, r1v, rimmv);
 				if (FT32_CMP(inst))
@@ -685,7 +685,7 @@ void FT32::call(uint32_t pma)
 					}
 					case 0xBu:
 					{
-						printf("Not implemented 0xB\n");
+						printf(F9EW "Not implemented 0xB" F9EE);
 						FT900EMU_DEBUG_BREAK();
 						break;
 					}
@@ -699,7 +699,7 @@ void FT32::call(uint32_t pma)
 								writeMemU8(rdv + i, readMemU8(r1v));
 							break;
 						default:
-							printf("Not implemented STREAMIN dw: %i\n", dw);
+							printf(F9EW "Not implemented STREAMIN dw: %i" F9EE, dw);
 							FT900EMU_DEBUG_BREAK();
 							break;
 						}
@@ -715,7 +715,7 @@ void FT32::call(uint32_t pma)
 								writeMemU8(rdv, readMemU8(r1v + i));
 							break;
 						default:
-							printf("Not implemented STREAMOUT dw: %i\n", dw);
+							printf(F9EW "Not implemented STREAMOUT dw: %i" F9EE, dw);
 							FT900EMU_DEBUG_BREAK();
 							break;
 						}
@@ -723,19 +723,19 @@ void FT32::call(uint32_t pma)
 					}
 					case FT32_FFU_STREAMINI:
 					{
-						printf("Not implemented STREAMINI\n");
+						printf(F9EW "Not implemented STREAMINI" F9EE);
 						FT900EMU_DEBUG_BREAK();
 						break;
 					}
 					case FT32_FFU_STREAMOUTI:
 					{
-						printf("Not implemented STREAMOUTI\n");
+						printf(F9EW "Not implemented STREAMOUTI" F9EE);
 						FT900EMU_DEBUG_BREAK();
 						break;
 					}
 					default:
 					{
-						printf("Not implemented FFUOP\n");
+						printf(F9EW "Not implemented FFUOP" F9EE);
 						FT900EMU_DEBUG_BREAK();
 						break;
 					}
@@ -762,7 +762,7 @@ void FT32::call(uint32_t pma)
 					goto defaultlabel;
 				default:
 				defaultlabel:
-					printf("Not implemented FFUOP (%i, dw %i)\n", FT32_AL(inst), dw);
+					printf(F9EW "Not implemented FFUOP (%i, dw %i)" F9EE, FT32_AL(inst), dw);
 					FT900EMU_DEBUG_BREAK();
 					break;
 				}
@@ -771,7 +771,7 @@ void FT32::call(uint32_t pma)
 			}
 			default:
 			{
-				printf("Unknown PATTERN\n");
+				printf(F9EW "Unknown PATTERN" F9EE);
 				FT900EMU_DEBUG_BREAK();
 				break;
 			}
