@@ -306,23 +306,18 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 {
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
-		//printf("######## READ8: [%#x] <- %#x (%i) ########\n", addr, (uint32_t)m_Memory[addr], (uint32_t)m_Memory[addr]);
 		return m_Memory[addr];
 	}
 	else
 	{
 		return ioRd8(addr);
-		//printf("READU8: %#x\n", addr);
 		uint32_t b = addr % 4;
 		b <<= 3;
 		uint8_t res = (ioRd32(addr >> 2, (0xFFu << b)) >> b) & 0xFFu;
-		//printf("  U8: %#x\n", res);
 		return res;
 	}
 }
 
-static bool inprintf = false;
-static int wrc = 0;
 FTEMU_FORCE_INLINE void FT32::writeMemU8(uint32_t addr, uint8_t value)
 {
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
@@ -333,7 +328,6 @@ FTEMU_FORCE_INLINE void FT32::writeMemU8(uint32_t addr, uint8_t value)
 	{
 		uint32_t b = addr % 4;
 		b <<= 3;
-		//printf("WRITEU8: %#x = %#x\n", addr, (uint32_t)value);
 		ioWr32(addr >> 2, (0xFFu << b), (uint32_t)value << b);
 	}
 }
