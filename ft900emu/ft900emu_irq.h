@@ -40,8 +40,8 @@ public:
 	// Called by FT32 when interrupt call returns
 	void returnInterrupt();
 
-	virtual uint32_t ioRd(uint32_t io_a, uint32_t io_be);
-	virtual void ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
+	virtual uint32_t ioRd32(uint32_t io_a, uint32_t io_be);
+	virtual void ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:

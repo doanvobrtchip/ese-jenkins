@@ -16,7 +16,7 @@ namespace FT900EMU {
 
 #define FT900EMU_MEMORY_UART_START (0x10320u >> 2)
 #define FT900EMU_MEMORY_UART_COUNT 4
-#define FT900EMU_MEMORY_UART_SIZE (FT900EMU_MEMORY_UART_COUNT << 2)
+#define FT900EMU_MEMORY_UART_BYTES (FT900EMU_MEMORY_UART_COUNT << 2)
 
 #define FT900EMU_UART_ICR_NB 20
 
@@ -33,8 +33,8 @@ public:
 	void ioWr(uint32_t idx, uint8_t d);
 	uint8_t ioRd(uint32_t idx);
 
-	virtual uint32_t ioRd(uint32_t io_a, uint32_t io_be);
-	virtual void ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
+	virtual uint8_t ioRd8(uint32_t io_a);
+	virtual void ioWr8(uint32_t io_a, uint8_t io_dout);
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:

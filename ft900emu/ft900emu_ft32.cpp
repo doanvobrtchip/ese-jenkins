@@ -65,6 +65,59 @@ static FTEMU_FORCE_INLINE uint32_t flip(uint32_t x, uint32_t b)
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+// io_a is in 32bit indexed address (8bit addr >> 2)
+uint32_t FT32IO::ioRd32(uint32_t io_a, uint32_t io_be)
+{
+	// If only 8bit access is implemented
+	uint32_t io_a_b = io_a << 2;
+	uint32_t res = 0;
+	if (io_be & 0x000000FFu)
+		res |= (uint32_t)ioRd8(io_a_b);
+	if (io_be & 0x0000FF00u)
+		res |= (uint32_t)ioRd8(io_a_b + 1) << 8;
+	if (io_be & 0x00FF0000u)
+		res |= (uint32_t)ioRd8(io_a_b + 2) << 16;
+	if (io_be & 0xFF000000u)
+		res |= (uint32_t)ioRd8(io_a_b + 3) << 24;
+	return res;
+}
+
+void FT32IO::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
+{
+	// If only 8bit access is implemented
+	uint32_t io_a_b = io_a << 2;
+	if (io_be & 0x000000FFu)
+		ioWr8(io_a_b, io_dout & 0xFFu);
+	if (io_be & 0x0000FF00u)
+		ioWr8(io_a_b + 1, (io_dout >> 8) & 0xFFu);
+	if (io_be & 0x00FF0000u)
+		ioWr8(io_a_b + 2, (io_dout >> 16) & 0xFFu);
+	if (io_be & 0xFF000000u)
+		ioWr8(io_a_b + 3, (io_dout >> 24) & 0xFFu);
+}
+
+// io_a is in 8bit indexed address
+uint8_t FT32IO::ioRd8(uint32_t io_a)
+{
+	// If only 32bit access is implemented
+	uint32_t b = io_a % 4;
+	b <<= 3;
+	uint8_t res = (ioRd32(io_a >> 2, (0xFFu << b)) >> b) & 0xFFu;
+	return res;
+}
+
+void FT32IO::ioWr8(uint32_t io_a, uint8_t io_dout)
+{
+	// If only 32bit access is implemented
+	uint32_t b = io_a % 4;
+	b <<= 3;
+	ioWr32(io_a >> 2, (0xFFu << b), (uint32_t)io_dout << b);
+}
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
 FT32::FT32(IRQ *irq) : m_IRQ(irq),
 	m_IONb(0)
 {
@@ -107,40 +160,66 @@ void FT32::io(FT32IO *io)
 	m_IONb %= FT900EMU_FT32_MAX_IO_CB; // Safety
 }
 
-uint32_t FT32::ioRd(uint32_t io_a, uint32_t io_be)
+inline FT32IO *FT32::getIO(uint32_t io_a_32)
 {
 	for (int i = 0; i < m_IONb; ++i)
 	{
-		if (m_IOFrom[i] <= io_a && io_a < m_IOTo[i])
+		if (m_IOFrom[i] <= io_a_32 && io_a_32 < m_IOTo[i])
 		{
-			return m_IO[i]->ioRd(io_a, io_be);
+			return m_IO[i];
 		}
 	}
-	printf("Read not handled: %#x (mask: %x)\n", io_a << 2, io_be);
-	//FT900EMU_DEBUG_BREAK();
+	return NULL;
+}
+
+uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
+{
+	FT32IO *io = getIO(io_a);
+	if (io)
+		return io->ioRd32(io_a, io_be);
+
+	printf("Read IO 32 not handled: %#x (mask: %x)\n", io_a << 2, io_be);
+	FT900EMU_DEBUG_BREAK();
 	return 0xDEADBEEF;
 }
 
-void FT32::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
+void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
-	for (int i = 0; i < m_IONb; ++i)
-	{
-		// printf("%#x\n", m_IOFrom[i]);
-		if (m_IOFrom[i] <= io_a && io_a < m_IOTo[i])
-		{
-			m_IO[i]->ioWr(io_a, io_be, io_dout);
-			return;
-		}
-	}
-	printf("Write not handled: %#x = %u (mask: %x)\n", io_a << 2, io_dout, io_be);
-	//FT900EMU_DEBUG_BREAK();
+	FT32IO *io = getIO(io_a);
+	if (io)
+		return io->ioWr32(io_a, io_be, io_dout);
+
+	printf("Write IO 32 not handled: %#x = %u (mask: %x)\n", io_a << 2, io_dout, io_be);
+	FT900EMU_DEBUG_BREAK();
 }
+
+uint8_t FT32::ioRd8(uint32_t io_a)
+{
+	FT32IO *io = getIO(io_a >> 2);
+	if (io)
+		return io->ioRd8(io_a);
+
+	printf("Read IO 8 not handled: %#x\n", io_a);
+	FT900EMU_DEBUG_BREAK();
+	return 0xCC;
+}
+
+void FT32::ioWr8(uint32_t io_a, uint8_t io_dout)
+{
+	FT32IO *io = getIO(io_a >> 2);
+	if (io)
+		return io->ioWr8(io_a, io_dout);
+
+	printf("Write IO 8 not handled: %#x = %u\n", io_a, (uint32_t)io_dout);
+	FT900EMU_DEBUG_BREAK();
+}
+
+////////////////////////////////////////////////////////////////////////
 
 FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 {
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
-		//printf("######## READ: [%#x] <- %#x (%i) ########\n", addr, reinterpret_cast<uint32_t &>(m_Memory[addr]), reinterpret_cast<uint32_t &>(m_Memory[addr]));
 		return reinterpret_cast<uint32_t &>(m_Memory[addr]);
 	}
 	else
@@ -148,12 +227,10 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 		uint32_t b = addr % 4;
 		if (!b)
 		{
-			b <<= 3;
-			return ioRd(addr >> 2, 0xFFFFFFFFu);
+			return ioRd32(addr >> 2, 0xFFFFFFFFu);
 		}
 		else
 		{
-			// TODO: Unaligned
 			printf("Not implemented UNALIGNED READ 32\n");
 			FT900EMU_DEBUG_BREAK();
 		}
@@ -171,12 +248,10 @@ FTEMU_FORCE_INLINE void FT32::writeMemU32(uint32_t addr, uint32_t value)
 		uint32_t b = addr % 4;
 		if (!b)
 		{
-			b <<= 3;
-			ioWr(addr >> 2, 0xFFFFFFFFu, value);
+			ioWr32(addr >> 2, 0xFFFFFFFFu, value);
 		}
 		else
 		{
-			// TODO: Unaligned
 			printf("Not implemented UNALIGNED WRITE 32 [%#x] <- %#x\n", addr, value);
 			FT900EMU_DEBUG_BREAK();
 		}
@@ -195,11 +270,10 @@ FTEMU_FORCE_INLINE uint16_t FT32::readMemU16(uint32_t addr)
 		if (b != 3)
 		{
 			b <<= 3;
-			return (ioRd(addr >> 2, 0xFFFFu << b) >> b) & 0xFFFFu;
+			return (ioRd32(addr >> 2, 0xFFFFu << b) >> b) & 0xFFFFu;
 		}
 		else
 		{
-			// TODO: Unaligned
 			printf("Not implemented UNALIGNED READ 16\n");
 			FT900EMU_DEBUG_BREAK();
 		}
@@ -218,11 +292,10 @@ FTEMU_FORCE_INLINE void FT32::writeMemU16(uint32_t addr, uint16_t value)
 		if (b != 3)
 		{
 			b <<= 3;
-			ioWr(addr >> 2, (0xFFFFu << b), (uint32_t)value << b);
+			ioWr32(addr >> 2, (0xFFFFu << b), (uint32_t)value << b);
 		}
 		else
 		{
-			// TODO: Unaligned
 			printf("Not implemented UNALIGNED WRITE 16\n");
 			FT900EMU_DEBUG_BREAK();
 		}
@@ -238,10 +311,11 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 	}
 	else
 	{
+		return ioRd8(addr);
 		//printf("READU8: %#x\n", addr);
 		uint32_t b = addr % 4;
 		b <<= 3;
-		uint8_t res = (ioRd(addr >> 2, (0xFFu << b)) >> b) & 0xFFu;
+		uint8_t res = (ioRd32(addr >> 2, (0xFFu << b)) >> b) & 0xFFu;
 		//printf("  U8: %#x\n", res);
 		return res;
 	}
@@ -260,7 +334,7 @@ FTEMU_FORCE_INLINE void FT32::writeMemU8(uint32_t addr, uint8_t value)
 		uint32_t b = addr % 4;
 		b <<= 3;
 		//printf("WRITEU8: %#x = %#x\n", addr, (uint32_t)value);
-		ioWr(addr >> 2, (0xFFu << b), (uint32_t)value << b);
+		ioWr32(addr >> 2, (0xFFu << b), (uint32_t)value << b);
 	}
 }
 
@@ -622,12 +696,52 @@ void FT32::call(uint32_t pma)
 						break;
 					}
 					case FT32_FFU_STREAMIN:
-					case FT32_FFU_STREAMINI:
+					{
+						uint32_t rdv = m_Register[FT32_RD(inst)];
+						switch (dw)
+						{
+						case FT32_DW_8:
+							for (uint32_t i = 0; i < rimmv; ++i)
+								writeMemU8(rdv + i, readMemU8(r1v));
+							break;
+						default:
+							printf("Not implemented STREAMIN dw: %i\n", dw);
+							FT900EMU_DEBUG_BREAK();
+							break;
+						}
+						break;
+					}
 					case FT32_FFU_STREAMOUT:
+					{
+						uint32_t rdv = m_Register[FT32_RD(inst)];
+						switch (dw)
+						{
+						case FT32_DW_8:
+							for (uint32_t i = 0; i < rimmv; ++i)
+								writeMemU8(rdv, readMemU8(r1v + i));
+							break;
+						default:
+							printf("Not implemented STREAMOUT dw: %i\n", dw);
+							FT900EMU_DEBUG_BREAK();
+							break;
+						}
+						break;
+					}
+					case FT32_FFU_STREAMINI:
+					{
+						printf("Not implemented STREAMINI\n");
+						FT900EMU_DEBUG_BREAK();
+						break;
+					}
 					case FT32_FFU_STREAMOUTI:
+					{
+						printf("Not implemented STREAMOUTI\n");
+						FT900EMU_DEBUG_BREAK();
+						break;
+					}
 					default:
 					{
-						printf("Not implemented STREAM\n");
+						printf("Not implemented FFUOP\n");
 						FT900EMU_DEBUG_BREAK();
 						break;
 					}

@@ -48,14 +48,14 @@ inline uint32_t IRQ::nestedDepth()
 }
 
 // io_a is addr / 4 (read per 4 bytes)
-uint32_t IRQ::ioRd(uint32_t io_a, uint32_t io_be)
+uint32_t IRQ::ioRd32(uint32_t io_a, uint32_t io_be)
 {
 	uint idx = io_a - FT900EMU_MEMORY_IRQ_START;
 	printf("+ IRQ :: Read register %i (%#x): %#x\n", idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
 
-void IRQ::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
+void IRQ::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
 	const uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);

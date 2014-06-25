@@ -24,10 +24,18 @@ class IRQ;
 class FT32IO
 {
 public:
-	// io_a is addr / 4 (read per 4 bytes)
-	virtual uint32_t ioRd(uint32_t io_a, uint32_t io_be) = 0;
-	virtual void ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout) = 0;
+	// io_a is in 32bit indexed address (8bit addr >> 2)
+	// io_be is the mask used for accessing sub-bytes FF FF FF FF, 00 00 FF FF etc
+	virtual uint32_t ioRd32(uint32_t io_a, uint32_t io_be);
+	virtual void ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
+
+	// io_a is in 8bit indexed address
+	virtual uint8_t ioRd8(uint32_t io_a);
+	virtual void ioWr8(uint32_t io_a, uint8_t io_dout);
+
+	// range is in 32bit indexed address
 	virtual void ioGetRange(uint32_t &from, uint32_t &to) = 0;
+
 };
 
 /**
@@ -66,8 +74,11 @@ private:
 	void push(uint32_t v);
 	uint32_t pop();
 
-	uint32_t ioRd(uint32_t io_a, uint32_t io_be);
-	void ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
+	FT32IO *getIO(uint32_t io_a_32);
+	uint32_t ioRd32(uint32_t io_a, uint32_t io_be);
+	void ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
+	uint8_t ioRd8(uint32_t io_a);
+	void ioWr8(uint32_t io_a, uint8_t io_dout);
 
 private:
 	uint8_t m_Memory[FT900EMU_FT32_MEMORY_SIZE];

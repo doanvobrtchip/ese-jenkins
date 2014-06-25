@@ -364,35 +364,16 @@ uint8_t UART::ioRd(uint32_t idx)
 	return 0;
 }
 
-// io_a is addr / 4 (read per 4 bytes)
-uint32_t UART::ioRd(uint32_t io_a, uint32_t io_be)
+uint8_t UART::ioRd8(uint32_t io_a)
 {
-	const uint32_t idx = (io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id))) << 2;
-	// printf("<--#--> UART :: Read mem (%#x, %#x)\n", io_a << 2, io_be);
-	uint32_t res = 0;
-	if (io_be & 0x000000FFu)
-		res |= (uint32_t)ioRd(idx);
-	if (io_be & 0x0000FF00u)
-		res |= (uint32_t)ioRd(idx + 1) << 8;
-	if (io_be & 0x00FF0000u)
-		res |= (uint32_t)ioRd(idx + 2) << 16;
-	if (io_be & 0xFF000000u)
-		res |= (uint32_t)ioRd(idx + 3) << 24;
-	// printf("%#x (%#x)\n", res, io_be);
-	return res;
+	const uint32_t idx = io_a - ((FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id)) << 2);
+	return ioRd(idx);
 }
 
-void UART::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
+void UART::ioWr8(uint32_t io_a, uint8_t io_dout)
 {
-	const uint32_t idx = (io_a - (FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id))) << 2;
-	if (io_be & 0x000000FFu)
-		ioWr(idx, io_dout & 0xFFu);
-	if (io_be & 0x0000FF00u)
-		ioWr(idx + 1, (io_dout >> 8) & 0xFFu);
-	if (io_be & 0x00FF0000u)
-		ioWr(idx + 2, (io_dout >> 16) & 0xFFu);
-	if (io_be & 0xFF000000u)
-		ioWr(idx + 3, (io_dout >> 24) & 0xFFu);
+	const uint32_t idx = io_a - ((FT900EMU_MEMORY_UART_START + (FT900EMU_MEMORY_UART_COUNT * m_Id)) << 2);
+	ioWr(idx, io_dout);
 }
 
 void UART::ioGetRange(uint32_t &from, uint32_t &to)

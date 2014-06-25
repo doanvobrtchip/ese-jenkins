@@ -56,14 +56,14 @@ Chip::~Chip()
 }
 
 // io_a is addr / 4 (read per 4 bytes)
-uint32_t Chip::ioRd(uint32_t io_a, uint32_t io_be)
+uint32_t Chip::ioRd32(uint32_t io_a, uint32_t io_be)
 {
 	uint idx = io_a - FT900EMU_MEMORY_REGISTER_START;
 	printf("Chip :: Read register %i (%#x): %#x\n", idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
 
-void Chip::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
+void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
 	const uint32_t idx = io_a - FT900EMU_MEMORY_REGISTER_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);
@@ -78,7 +78,7 @@ void Chip::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			printf("(!) REG_CLOCK_CONFIGURATION\n");
 			if (diffmask & FT900EMU_CLOCK_UART0_ENA)
 			{
-				printf("(!) UART0 = %s\n", v & FT900EMU_CLOCK_UART1_ENA ? "ENABLED" : "DISABLED");
+				printf("(!) UART0 = %s\n", v & FT900EMU_CLOCK_UART0_ENA ? "ENABLED" : "DISABLED");
 				if (v & FT900EMU_CLOCK_UART0_ENA)
 				{
 					m_UART0 = new UART(0, m_FT32);
