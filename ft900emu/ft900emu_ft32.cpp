@@ -636,7 +636,7 @@ void FT32::call(uint32_t pma)
 						}
 						else
 						{
-							m_Register[FT32_RD(inst)] = (uint32_t)((int32_t)r1v / (int32_t)rimmv);
+							m_Register[FT32_RD(inst)] = (uint32_t)((int32_t)r1v % (int32_t)rimmv);
 						}
 						break;
 					} // FIXME:  :)
