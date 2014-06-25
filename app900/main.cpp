@@ -49,8 +49,10 @@ private:
 
 };
 
-static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/helloworld/helloworld.exe";
+//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/helloworld/helloworld.exe";
 //static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetest1/kaetest1.exe";
+//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/pi/pi.exe";
+static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetest2/kaetest2.exe";
 
 int main(int, char* [])
 {

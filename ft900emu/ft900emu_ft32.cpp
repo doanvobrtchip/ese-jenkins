@@ -141,7 +141,6 @@ void FT32::ioWr(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 {
 	//if (addr < 0xFE00)
-	//printf("######## READ: [%#x] ########\n", addr);
 	/*if (addr == 0x84)
 	{
 		printf("Read 0x84 %u\n", *reinterpret_cast<uint32_t *>(&m_Memory[0x84]));
@@ -159,6 +158,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 	}*/
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
+		printf("######## READ: [%#x] <- %#x (%i) ########\n", addr, reinterpret_cast<uint32_t &>(m_Memory[addr]), reinterpret_cast<uint32_t &>(m_Memory[addr]));
 		return reinterpret_cast<uint32_t &>(m_Memory[addr]);
 	}
 	else
@@ -181,7 +181,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 FTEMU_FORCE_INLINE void FT32::writeMemU32(uint32_t addr, uint32_t value)
 {
 	//if (addr < 0xFE00)
-	//printf("######## WRITE: [%#x] <- %#x (%i) ########\n", addr, value, value);
+	printf("######## WRITE: [%#x] <- %#x (%i) ########\n", addr, value, value);
 	/*if (addr == 0x84)
 	{
 		printf("Write 0x84 %u (%#x)\n", value, value);
@@ -287,6 +287,7 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 {
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
+		printf("######## READ8: [%#x] <- %#x (%i) ########\n", addr, (uint32_t)m_Memory[addr], (uint32_t)m_Memory[addr]);
 		return m_Memory[addr];
 	}
 	else
@@ -300,9 +301,33 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 	}
 }
 
+static bool inprintf = false;
+static int wrc = 0;
 FTEMU_FORCE_INLINE void FT32::writeMemU8(uint32_t addr, uint8_t value)
 {
-	//printf("######## WRITE8: [%#x] <- %#x (%i) ########\n", addr, (uint32_t)value, (uint32_t)value);
+	if (value >= 32 && value < 127)
+		printf("[U8c] '%c'\n", value);
+	if (inprintf && value == '3')
+	{
+		printf("WROTE 3\n");
+		/*++wrc;
+		if (wrc == 8)
+		{*/
+			//fflush(stdout);
+			//FT900EMU_DEBUG_BREAK();
+		//}
+	}
+	if (inprintf && value == '0')
+	{
+		printf("WROTE 0\n");
+		++wrc;
+		if (wrc == 24)
+		{
+			fflush(stdout);
+			FT900EMU_DEBUG_BREAK();
+		}
+	}
+	printf("######## WRITE8: [%#x] <- %#x (%i) ########\n", addr, (uint32_t)value, (uint32_t)value);
 	/*if (addr >= 0x84 && addr < 0x88)
 	{
 		printf("Write 0x84 %u (%#x)\n", (uint32_t)value, (uint32_t)value);
@@ -382,6 +407,7 @@ void FT32::call(uint32_t pma)
 		//		siminst,
 		//		cur << 2, cur, inst, inst_c); //,
 				//FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
+		printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);
 		//if ((cur << 2) == 0x6ec)
 		//	printf("__swsetup_r return value R0: %#x\n", m_Register[0]);
 		// if (cur << 2 == 0x2db0) FT900EMU_DEBUG_BREAK(); // end of <ft900_init>
@@ -392,7 +418,14 @@ void FT32::call(uint32_t pma)
 		// if ((cur << 2) == 0x3b4) { printf("********************* <t900_exit> ***************************\n"); FT900EMU_DEBUG_BREAK(); }
 		// if ((cur << 2) == 0x31c) { printf("***************************** <callme> *******************************\n"); }
 		// if ((cur << 2) == 0x328) { printf("***************************** <main> *******************************\n"); }
+		//if ((cur << 2) == 0x8fcc) { printf("<_write>\n");FT900EMU_DEBUG_BREAK(); }
+		//if ((cur << 2) == 0x9008) { printf("<_write> return\n");FT900EMU_DEBUG_BREAK(); }
 
+		if ((cur << 2) == 0x1910) { printf("<printf>\n"); inprintf = true; }
+		if ((cur << 2) == 0x1948) { printf("<printf> return\n"); inprintf = false; }
+
+		if ((cur << 2) == 0x863c) { printf("<memmove>\n"); printf("R0: %#x; R1: %#x; R2: %#x; R3: %#x\n", m_Register[0], m_Register[1], m_Register[2], m_Register[3]); }
+		if ((cur << 2) == 0x86b8) { printf("<memmove> return\n"); }
 
 /*
 		// helloworld
@@ -440,11 +473,11 @@ void FT32::call(uint32_t pma)
 					{
 						// printf("      CALL\n");
 
-						// printf("{CALL}");
+						printf("{CALL}\n");
 						// for (int i = 0; i < depth; ++i)
 						// 	printf(" ");
 						// printf("%#x\n", target << 2);
-						//printf(" {} R0: %#x; R1: %#x; R2: %#x; R3: %#x\n", m_Register[0], m_Register[1], m_Register[2], m_Register[3]);
+						printf("R0: %#x; R1: %#x; R2: %#x; R3: %#x\n", m_Register[0], m_Register[1], m_Register[2], m_Register[3]);
 
 						push(cur << 2);
 						call(target);
@@ -482,7 +515,7 @@ void FT32::call(uint32_t pma)
 			case FT32_PATTERN_ALUOP:
 			case FT32_PATTERN_CMPOP:
 			{
-				// printf("    ALU/CMP\n");
+				printf("> ALU/CMP\n");
 				uint32_t r1v = m_Register[FT32_R1(inst)];
 				uint32_t rimmv = FT32_RIMM(inst)
 					? FT32_RIMM_IMMEDIATE(inst)
@@ -490,25 +523,27 @@ void FT32::call(uint32_t pma)
 				uint32_t result;
 				switch (FT32_AL(inst))
 				{
-					case FT32_ALU_ADD: result = r1v + rimmv; break;
-					case FT32_ALU_ROR: result = ror(r1v, rimmv); break;
-					case FT32_ALU_SUB: result = r1v - rimmv; break;
-					case FT32_ALU_LDL: result = (r1v << 10) | (1023 & rimmv); break;
-					case FT32_ALU_AND: result = r1v & rimmv; break;
-					case FT32_ALU_OR: result = r1v | rimmv; break;
-					case FT32_ALU_XOR: result = r1v ^ rimmv; break;
-					case FT32_ALU_XNOR: result = ~(r1v ^ rimmv); break;
-					case FT32_ALU_ASHL: result = r1v << rimmv; break;
-					case FT32_ALU_LSHR: result = r1v >> rimmv; break;
-					case FT32_ALU_ASHR: result = (int32_t)r1v >> rimmv; break;
-					case FT32_ALU_BINS: result = bins(r1v, rimmv >> 10, FT32_BINS_WIDTH(rimmv), FT32_BINS_POSITION(rimmv)); break;
-					case FT32_ALU_BEXTS: result = nsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTS: %i; %i -> %i\n", r1v, rimmv, result);*/ break;
-					case FT32_ALU_BEXTU: result = nunsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTU: %i; %i -> %u\n", r1v, rimmv, result);*/ break;
-					case FT32_ALU_FLIP: result = flip(r1v, rimmv); break;
+					case FT32_ALU_ADD: printf("  | ADD\n"); result = r1v + rimmv; break;
+					case FT32_ALU_ROR: printf("  | ROR\n"); result = ror(r1v, rimmv); break;
+					case FT32_ALU_SUB: printf("  | SUB\n"); result = r1v - rimmv; break;
+					case FT32_ALU_LDL: printf("  | LDL\n"); result = (r1v << 10) | (1023 & rimmv); break;
+					case FT32_ALU_AND: printf("  | AND\n"); result = r1v & rimmv; break;
+					case FT32_ALU_OR: printf("  | OR\n"); result = r1v | rimmv; break;
+					case FT32_ALU_XOR: printf("  | XOR\n"); result = r1v ^ rimmv; break;
+					case FT32_ALU_XNOR: printf("  | XNOR\n"); result = ~(r1v ^ rimmv); break;
+					case FT32_ALU_ASHL: printf("  | ASHL\n"); result = r1v << rimmv; break;
+					case FT32_ALU_LSHR: printf("  | LSHR\n"); result = r1v >> rimmv; break;
+					case FT32_ALU_ASHR: printf("  | ASHR\n"); result = (int32_t)r1v >> rimmv; break;
+					case FT32_ALU_BINS: printf("  | BINS\n"); result = bins(r1v, rimmv >> 10, FT32_BINS_WIDTH(rimmv), FT32_BINS_POSITION(rimmv)); break;
+					case FT32_ALU_BEXTS: printf("  | BEXTS\n"); result = nsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTS: %i; %i -> %i\n", r1v, rimmv, result);*/ break;
+					case FT32_ALU_BEXTU: printf("  | BEXTU\n"); result = nunsigned(FT32_BINS_WIDTH(rimmv), r1v >> FT32_BINS_POSITION(rimmv)); /*printf("BEXTU: %i; %i -> %u\n", r1v, rimmv, result);*/ break;
+					case FT32_ALU_FLIP: printf("  | FLIP\n"); result = flip(r1v, rimmv); break;
 					default: printf("Unknown ALU\n"); FT900EMU_DEBUG_BREAK(); break;
 				}
+				printf("  | %i = %i ; %i\n", result, r1v, rimmv);
 				if (FT32_CMP(inst))
 				{
+					printf("  | CMP\n");
 					uint32_t dwmask = FT32_DW_MASK[FT32_DW(inst)];
 					uint32_t dwsiz = FT32_DW_SIZEU[FT32_DW(inst)];
 					int32_t zero = (0 == (result & dwmask));
@@ -541,6 +576,7 @@ void FT32::call(uint32_t pma)
 				}
 				else
 				{
+					printf("  | ALU\n");
 					m_Register[FT32_RD(inst)] = result;
 					// printf("      R%i <- %#x\n", FT32_RD(inst), result);
 				}
@@ -653,6 +689,7 @@ void FT32::call(uint32_t pma)
 			case FT32_PATTERN_FFUOP:
 			{
 				uint32_t dw = FT32_DW(inst);
+				printf("> FFUOP.%c\n", dw == FT32_DW_8 ? 'b' : (dw ==  FT32_DW_16 ? 's' : 'l'));
 				uint32_t r1v = m_Register[FT32_R1(inst)];// & FT32_DW_MASK[dw]; cannot mask for strlen
 				uint32_t rimmv = (FT32_RIMM(inst)
 					? FT32_RIMM_IMMEDIATE(inst)
@@ -661,18 +698,21 @@ void FT32::call(uint32_t pma)
 				{
 					case FT32_FFU_UDIV: // Unsigned division
 					{
+						printf("  | UDIV\n");
 						m_Register[FT32_RD(inst)] = FT32_DW_RES_UNSIGNED(
 							FT32_DW_UNSIGNED(r1v, dw) / FT32_DW_UNSIGNED(rimmv, dw), dw);
 						break;
 					}
 					case FT32_FFU_UMOD: // Unsigned mod
 					{
+						printf("  | UMOD\n");
 						m_Register[FT32_RD(inst)] = FT32_DW_RES_UNSIGNED(
 							FT32_DW_UNSIGNED(r1v, dw) % FT32_DW_UNSIGNED(rimmv, dw), dw);
 						break;
 					}
 					case FT32_FFU_DIV: // Signed division
 					{
+						printf("  | DIV\n");
 						if (r1v == 0x80000000u && rimmv == 0xFFFFFFFFu)
 						{
 							m_Register[FT32_RD(inst)] = 0x80000000u;
@@ -686,6 +726,7 @@ void FT32::call(uint32_t pma)
 					}
 					case FT32_FFU_MOD: // Signed mod
 					{
+						printf("  | MOD\n");
 						if (r1v == 0x80000000u && rimmv == 0xffffffffu)
 						{
 							m_Register[FT32_RD(inst)] = 0;
@@ -697,24 +738,27 @@ void FT32::call(uint32_t pma)
 						}
 						break;
 					} // FIXME: These won't work when going outside memory range :)
-					case FT32_FFU_STRCMP: m_Register[FT32_RD(inst)] = strcmp((const char *)&m_Memory[r1v], (const char *)&m_Memory[rimmv]); break;
-					case FT32_FFU_MEMCPY: memcpy(&m_Memory[m_Register[FT32_RD(inst)]], &m_Memory[r1v], rimmv); break;
-					case FT32_FFU_STRLEN: m_Register[FT32_RD(inst)] = strlen((const char *)&m_Memory[r1v]); /* printf("**** STRLEN %#x (%c): %i\n", r1v, m_Memory[r1v], m_Register[FT32_RD(inst)]); */ break;
-					case FT32_FFU_MEMSET: memset(&m_Memory[m_Register[FT32_RD(inst)]], r1v, rimmv); break;
+					case FT32_FFU_STRCMP: printf("  | STRCMP\n"); m_Register[FT32_RD(inst)] = strcmp((const char *)&m_Memory[r1v], (const char *)&m_Memory[rimmv]); break;
+					case FT32_FFU_MEMCPY: printf("  | MEMCPY\n"); memcpy(&m_Memory[m_Register[FT32_RD(inst)]], &m_Memory[r1v], rimmv); break;
+					case FT32_FFU_STRLEN: printf("  | STRLEN\n"); m_Register[FT32_RD(inst)] = strlen((const char *)&m_Memory[r1v]); /* printf("**** STRLEN %#x (%c): %i\n", r1v, m_Memory[r1v], m_Register[FT32_RD(inst)]); */ break;
+					case FT32_FFU_MEMSET: printf("  | MEMSET\n"); memset(&m_Memory[m_Register[FT32_RD(inst)]], r1v, rimmv); break;
 					case FT32_FFU_MUL: // Unsigned multiply
 					{
+						printf("  | MUL\n");
 						m_Register[FT32_RD(inst)] = FT32_DW_RES_UNSIGNED(
 							FT32_DW_UNSIGNED(r1v, dw) * FT32_DW_UNSIGNED(rimmv, dw), dw);
 						break;
 					}
 					case FT32_FFU_MULUH:
 					{
+						printf("  | MULUH\n");
 						m_Register[FT32_RD(inst)] = FT32_DW_RES_UNSIGNED(
 							(uint32_t)((uint64_t)FT32_DW_UNSIGNED(r1v, dw) * (uint64_t)FT32_DW_UNSIGNED(rimmv, dw) >> FT32_DW_SIZE[dw]), dw);
 						break;
 					}
 					case FT32_FFU_STPCPY:
 					{
+						printf("  | STPCPY\n");
 						intptr_t res = (intptr_t)stpcpy((char *)&m_Memory[FT32_RD(inst)], (const char *)&m_Memory[r1v]);
 						m_Memory[FT32_RD(inst)] = (uint32_t)(res - (intptr_t)(&m_Memory[0]));
 						break;
@@ -736,6 +780,30 @@ void FT32::call(uint32_t pma)
 						break;
 					}
 				}
+				printf("  | %i = %i ; %i\n", m_Register[FT32_RD(inst)], r1v, rimmv);
+				switch (FT32_AL(inst))
+				{
+				case FT32_FFU_MEMSET:
+				case FT32_FFU_STRLEN:
+				case FT32_FFU_STRCMP:
+				case FT32_FFU_STPCPY:
+				case FT32_FFU_MEMCPY:
+					break;
+				case FT32_FFU_UMOD:
+				case FT32_FFU_UDIV:
+				case FT32_FFU_DIV:
+				case FT32_FFU_MOD:
+				case FT32_FFU_MUL:
+				case FT32_FFU_MULUH:
+					if (dw == FT32_DW_32) break;
+					goto defaultlabel;
+				default:
+				defaultlabel:
+					if (r1v == 90000000 && rimmv == 460800) break; // uart divider calc
+					printf("Not implemented FFUOP (%i, dw %i)\n", FT32_AL(inst), dw);
+					FT900EMU_DEBUG_BREAK();
+					break;
+				}
 				break;
 			}
 			default:
@@ -745,7 +813,7 @@ void FT32::call(uint32_t pma)
 				break;
 			}
 		}
-		//printf("-> RD: R%i: %i (%#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
+		printf("-> RD: R%i: %i (%#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
 		++cur;
 	}
 
