@@ -61,6 +61,7 @@ public:
 
 	inline void pm(int pma, uint32_t pmd) { m_ProgramMemory[pma] = pmd; }
 	void io(FT32IO *io);
+	void ioRemove(FT32IO *io);
 
 private:
 	uint32_t readMemU32(uint32_t addr);

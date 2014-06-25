@@ -121,7 +121,6 @@ void FT32IO::ioWr8(uint32_t io_a, uint8_t io_dout)
 FT32::FT32(IRQ *irq) : m_IRQ(irq),
 	m_IONb(0)
 {
-	io(irq);
 	memset(m_Memory, 0, FT900EMU_FT32_MEMORY_SIZE);
 	m_ProgramMemory[FT900EMU_FT32_PROGRAM_MEMORY_COUNT - 1] = 0x00300023;
 	softReset();
@@ -154,10 +153,39 @@ void FT32::softReset()
 
 void FT32::io(FT32IO *io)
 {
+	if (m_IONb >= FT900EMU_FT32_MAX_IO_CB)
+	{
+		printf(F9EW "Maximum IO connected" F9EE);
+		FT900EMU_DEBUG_BREAK();
+	}
 	io->ioGetRange(m_IOFrom[m_IONb], m_IOTo[m_IONb]);
 	m_IO[m_IONb] = io;
 	++m_IONb;
-	m_IONb %= FT900EMU_FT32_MAX_IO_CB; // Safety
+}
+
+void FT32::ioRemove(FT32IO *io)
+{
+	if (!io) return;
+	if (m_IONb == 0)
+	{
+		printf(F9EW "Invalid IO removal" F9EE);
+		FT900EMU_DEBUG_BREAK();
+	}
+	for (int i = 0; i < m_IONb; ++i)
+	{
+		if (m_IO[i] == io)
+		{
+			if (i < (m_IONb - 1))
+			{
+				m_IOFrom[i] = m_IOFrom[m_IONb - 1];
+				m_IOTo[i] = m_IOTo[m_IONb - 1];
+				m_IO[i] = m_IO[m_IONb - 1];
+			}
+			--m_IONb;
+			return;
+		}
+	}
+	printf(F9EW "No IO removed, not found" F9EE);
 }
 
 inline FT32IO *FT32::getIO(uint32_t io_a_32)

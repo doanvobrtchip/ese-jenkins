@@ -16,6 +16,7 @@ namespace FT900EMU {
 
 class UART;
 class IRQ;
+class Timer;
 
 #define FT900EMU_MEMORY_REGISTER_START (0x10000u >> 2)
 #define FT900EMU_MEMORY_REGISTER_COUNT 47
@@ -45,6 +46,7 @@ private:
 
 	FT32 *m_FT32;
 	IRQ *m_IRQ;
+	Timer *m_Timer;
 
 	UART *m_UART0;
 

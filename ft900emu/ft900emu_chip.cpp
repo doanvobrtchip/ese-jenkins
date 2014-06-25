@@ -13,6 +13,7 @@
 #include "ft900emu_intrin.h"
 #include "ft900emu_irq.h"
 #include "ft900emu_uart.h"
+#include "ft900emu_timer.h"
 
 // using namespace ...;
 
@@ -46,13 +47,24 @@ Chip::Chip() :
 {
 	m_IRQ = new IRQ();
 	m_FT32 = new FT32(m_IRQ);
+	m_FT32->io(m_IRQ);
 	m_FT32->io(this);
+	m_Timer = new Timer(m_IRQ);
+	m_FT32->io(m_Timer);
 }
 
 Chip::~Chip()
 {
 	// TODO: Unregister io
+	m_FT32->ioRemove(m_UART0);
 	delete m_UART0; m_UART0 = NULL;
+
+	m_FT32->ioRemove(m_Timer);
+	delete m_Timer; m_Timer = NULL;
+	m_FT32->ioRemove(this);
+	m_FT32->ioRemove(m_IRQ);
+	delete m_FT32; m_FT32 = NULL;
+	delete m_IRQ; m_IRQ = NULL;
 }
 
 // io_a is addr / 4 (read per 4 bytes)
@@ -81,13 +93,21 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 				printf(F9ED "(!) UART0 = %s" F9EE, v & FT900EMU_CLOCK_UART0_ENA ? "ENABLED" : "DISABLED");
 				if (v & FT900EMU_CLOCK_UART0_ENA)
 				{
-					m_UART0 = new UART(0, m_FT32);
-					updateUART0Configuration();
+					if (!m_UART0)
+					{
+						m_UART0 = new UART(0, m_FT32);
+						m_FT32->io(m_UART0);
+						updateUART0Configuration();
+					}
 				}
 				else
 				{
-					// TODO: Unregister io
-					FT900EMU_DEBUG_BREAK();
+					if (m_UART0)
+					{
+						m_FT32->ioRemove(m_UART0);
+						delete m_UART0; m_UART0 = NULL;
+						FT900EMU_DEBUG_BREAK();
+					}
 				}
 				updateUART0Functionality();
 			}
@@ -104,9 +124,11 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			{
 				printf(F9ED "(!) SOFTRESET" F9EE);
 				v &= ~FT900EMU_MISC_PERI_SOFTRESET;
+				// todo: perhaps a beginSoftReset / endSoftReset is needed to guarantee correct dependency ordering
+				if (m_UART0) m_UART0->softReset();
+				m_Timer->softReset();
 				m_FT32->softReset();
 				m_IRQ->softReset();
-				if (m_UART0) m_UART0->softReset();
 			}
 			break;
 		}

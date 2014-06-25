@@ -71,7 +71,6 @@ UART::UART(uint32_t id, FT32 *ft32) :
 	m_ClkSel(false), m_FifoSel(false), m_IntSel(false)
 {
 	printf(F9ED "<--#--> UART :: Init" F9EE);
-	ft32->io(this);
 	softReset();
 }
 
