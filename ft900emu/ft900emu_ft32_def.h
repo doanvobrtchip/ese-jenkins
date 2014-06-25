@@ -157,7 +157,8 @@ static const uint32_t FT32_DW_SIGNBIT[3] = { 0x80u, 0x8000u, 0x80000000u };
 #define FT32_K16MASK   0x0000FFFFu
 #define FT32_K16(inst) (inst & FT32_K16MASK)
 #define FT32_K20MASK   0x000FFFFFu
-#define FT32_K20(inst) (inst & FT32_K20MASK)
+#define FT32_K20SIZE   20
+#define FT32_K20(inst) FT32_NSIGNED0(inst, FT32_K20SIZE)
 
 #define FT32_CMPMASK   0x18000000u
 #define FT32_CMP(inst) (inst & FT32_CMPMASK)
