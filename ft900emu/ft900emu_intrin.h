@@ -5,6 +5,7 @@
 #ifndef FT800EMU_INTRIN_H
 #define FT800EMU_INTRIN_H
 // #include <...>
+#include <xmmintrin.h>
 
 #ifdef _MSC_VER
 #define FT900EMU_DEBUG_BREAK __debugbreak

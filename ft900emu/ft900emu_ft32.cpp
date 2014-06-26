@@ -124,6 +124,9 @@ FT32::FT32(IRQ *irq) : m_IRQ(irq),
 	memset(m_Memory, 0, FT900EMU_FT32_MEMORY_SIZE);
 	m_ProgramMemory[FT900EMU_FT32_PROGRAM_MEMORY_COUNT - 1] = 0x00300023;
 	softReset();
+
+	for (int i = 0; i < FT900EMU_FT32_REGISTER_COUNT; ++i)
+		_mm_prefetch(&m_Register[i], _MM_HINT_T0);
 }
 
 FT32::~FT32()

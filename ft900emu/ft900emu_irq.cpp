@@ -11,6 +11,7 @@
 #include <sched.h>
 
 // Project includes
+#include "ft900emu_intrin.h"
 
 // using namespace ...;
 
@@ -25,6 +26,8 @@ IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), m_CurrentInt(0), m_InterruptCheck(fal
 {
 	printf(F9ED "+ IRQ :: Init" F9EE);
 	softReset();
+
+	_mm_prefetch(&m_InterruptCheck, _MM_HINT_T0);
 }
 
 void IRQ::softReset()
