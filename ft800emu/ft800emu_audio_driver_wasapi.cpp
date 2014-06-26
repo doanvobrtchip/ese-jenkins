@@ -12,6 +12,7 @@
  */
 
 #ifndef FT800EMU_SDL
+#ifndef FT800EMU_SDL2
 
 // #include <...>
 #include "ft800emu_audio_driver.h"
@@ -172,6 +173,7 @@ void AudioDriverClass::end()
 
 } /* namespace FT800EMU */
 
+#endif /* #ifndef FT800EMU_SDL2 */
 #endif /* #ifndef FT800EMU_SDL */
 
 /* end of file */

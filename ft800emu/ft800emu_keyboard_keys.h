@@ -7,7 +7,7 @@
  * \author Jan Boon (Kaetemi)
  */
 
-/* 
+/*
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
@@ -19,7 +19,7 @@
 
 // Project includes
 
-#ifndef FT800EMU_SDL
+#if !(defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
 #include "ft800emu_system_windows.h"
 #define FT800EMU_KEY_ESCAPE          DIK_ESCAPE

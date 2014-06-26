@@ -32,7 +32,7 @@
 #	include <emmintrin.h>
 #	include <smmintrin.h>
 #endif
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 #	include <SDL_thread.h>
 #else
 #	ifdef WIN32
@@ -91,6 +91,10 @@
 #define FT800EMU_DL_RETURN 36
 #define FT800EMU_DL_MACRO 37
 #define FT800EMU_DL_CLEAR 38
+
+#ifdef FT800EMU_SDL2
+SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data);
+#endif
 
 namespace FT800EMU {
 
@@ -2291,7 +2295,7 @@ void GraphicsProcessorClass::begin()
 struct ThreadInfo
 {
 public:
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	volatile bool Running;
 	SDL_Thread *Thread;
 	SDL_sem *StartSem;
@@ -2316,7 +2320,7 @@ public:
 
 std::vector<ThreadInfo> s_ThreadInfos;
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 int launchGraphicsProcessorThread(void *startInfo);
 #else
 #	ifdef WIN32
@@ -2356,7 +2360,7 @@ void resizeThreadInfos(int size)
 	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 		s_ThreadInfos[i].Running = true;
 		s_ThreadInfos[i].StartSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
@@ -2973,7 +2977,7 @@ DisplayListDisplay:
 
 } /* anonymous namespace */
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 int launchGraphicsProcessorThread(void *startInfo)
 {
 	unsigned long taskId = 0;
@@ -3054,7 +3058,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		li->VSize = vsize;
 		li->YIdx = (i * yInc) + yIdx;
 		li->YInc = s_ThreadCount * yInc;
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
 #else
@@ -3072,7 +3076,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
 		// Wait for threads
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 		ThreadInfo *li = &s_ThreadInfos[i - 1];
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);

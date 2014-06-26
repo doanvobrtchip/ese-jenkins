@@ -11,7 +11,7 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
 // #include <...>
 #include "ft800emu_system_sdl.h"
@@ -49,6 +49,13 @@ void SystemSdlClass::ErrorSdl()
 
 } /* namespace FT800EMU */
 
-#endif /* #ifdef FT800EMU_SDL */
+#ifdef FT800EMU_SDL2
+SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data)
+{
+	return SDL_CreateThread(fn, NULL, data);
+}
+#endif
+
+#endif /* (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2)) */
 
 /* end of file */

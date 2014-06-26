@@ -11,7 +11,7 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
 // #include <...>
 #include "ft800emu_audio_driver.h"

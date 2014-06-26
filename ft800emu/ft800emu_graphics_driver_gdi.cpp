@@ -12,6 +12,7 @@
  */
 
 #ifndef FT800EMU_SDL
+#ifndef FT800EMU_SDL2
 
 // #include <...>
 #include "ft800emu_graphics_driver.h"
@@ -270,7 +271,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 
 		DeleteObject(oldBuffer);
 #endif
-		
+
 		DWORD dw_style = WS_OVERLAPPEDWINDOW;
 		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT800EMU_WINDOW_SCALE; r.right = s_Width * FT800EMU_WINDOW_SCALE; // window size
 		AdjustWindowRect(&r, dw_style, FALSE);
@@ -421,6 +422,7 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 
 } /* namespace FT800EMU */
 
+#endif /* #ifndef FT800EMU_SDL2 */
 #endif /* #ifndef FT800EMU_SDL */
 
 /* end of file */

@@ -36,7 +36,7 @@
 #include <avrt.h>
 
 // SDL
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 #	include <SDL.h>
 #endif
 

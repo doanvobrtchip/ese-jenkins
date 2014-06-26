@@ -14,33 +14,31 @@ TARGET_LINK_LIBRARIES(ftqtsample
 	libft800emu
 	)
 
-IF (WITH_SDL)
+IF (WITH_SDL2)
+
+ELSEIF (WITH_SDL)
 
   # SDL base package
-  FIND_PACKAGE(SDL)
-  IF (NOT SDL_FOUND)
-    MESSAGE(FATAL_ERROR "SDL not found!")
-  ENDIF (NOT SDL_FOUND)
-  INCLUDE_DIRECTORIES(
+  find_package (SDL)
+  if (NOT SDL_FOUND)
+    message (FATAL_ERROR "SDL not found!")
+  endif (NOT SDL_FOUND)
+  include_directories(
     ${SDL_INCLUDE_DIR}
-    ${INCLUDE_DIRECTORIES}
     )
-  TARGET_LINK_LIBRARIES(ftqtsample
+  target_link_libraries(dump1
     ${SDL_LIBRARY}
-    ${TARGET_LINK_LIBRARIES}
     )
 
-  SET(CMAKE_C_FLAGS "-DFT800EMU_SDL ${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
-  SET(CMAKE_CXX_FLAGS "-DFT800EMU_SDL ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+  ADD_DEFINITIONS(-DFT800EMU_SDL)
 
-ENDIF (WITH_SDL)
+ENDIF ()
 
 # Find the QtWidgets library
 FIND_PACKAGE(Qt5Widgets)
 
 TARGET_LINK_LIBRARIES(ftqtsample
   Qt5::Widgets
-  ${TARGET_LINK_LIBRARIES}
 )
 
 qt5_use_modules(ftqtsample Widgets)

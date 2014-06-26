@@ -11,7 +11,7 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
 // #include <...>
 #include "ft800emu_keyboard.h"
@@ -46,22 +46,26 @@ void KeyboardClass::begin()
 
 void KeyboardClass::update()
 {
-	
+
 }
 
 void KeyboardClass::end()
 {
-	
+
 }
 
 bool KeyboardClass::isKeyDown(int key)
 {
+#ifdef FT800EMU_SDL2
+	const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+#else
 	Uint8 *keystate = SDL_GetKeyState(NULL);
+#endif
 	return (keystate[key] != 0);
 }
 
 } /* namespace FT800EMU */
 
-#endif /* #ifdef FT800EMU_SDL */
+#endif /* (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2)) */
 
 /* end of file */

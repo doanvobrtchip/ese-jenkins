@@ -53,7 +53,7 @@ static CRITICAL_SECTION s_SwapCriticalSection;
 
 void SystemClass::_begin()
 {
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	SDL_Init(0);
 #endif
 	QueryPerformanceFrequency(&s_PerformanceFrequency);
@@ -71,7 +71,7 @@ void SystemClass::_end()
 {
 	//DeleteCriticalSection(&s_CriticalSection);
 	DeleteCriticalSection(&s_SwapCriticalSection);
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	SDL_Quit();
 #endif
 }

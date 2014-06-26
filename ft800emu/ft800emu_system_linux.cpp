@@ -61,13 +61,13 @@ static time_t s_BeginTime = 0;
 
 void SystemClass::_begin()
 {
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	SDL_Init(0);
 #endif
 
 	sigemptyset(&s_SIGUSR1SigSet);
 	sigaddset(&s_SIGUSR1SigSet, SIGUSR1);
-	
+
 	timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	s_BeginTime = t.tv_sec;
@@ -80,7 +80,7 @@ void SystemClass::_update()
 
 void SystemClass::_end()
 {
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	SDL_Quit();
 #endif
 }

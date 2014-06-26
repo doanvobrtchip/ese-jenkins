@@ -15,7 +15,7 @@
 #include "ft800emu_emulator.h"
 
 // System includes
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 #include <SDL.h>
 #include <SDL_thread.h>
 #endif
@@ -40,12 +40,18 @@
 #include "vc.h"
 
 #ifndef FT800EMU_SDL
+#ifndef FT800EMU_SDL2
 #	include "omp.h"
+#endif
 #endif
 
 // using namespace ...;
 
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
+
+#ifdef FT800EMU_SDL2
+SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data);
+#endif
 
 namespace FT800EMU {
 
@@ -482,7 +488,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 	s_MasterRunning = true;
 
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
 	SDL_Thread *threadD = SDL_CreateThread(mcuThread, NULL);
 	// TODO - Error handling

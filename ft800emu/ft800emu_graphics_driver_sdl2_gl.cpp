@@ -1,18 +1,8 @@
-/**
- * GraphicsDriverClass
- * $Id$
- * \file ft800emu_graphics_driver_sdl.cpp
- * \brief GraphicsDriverClass
- * \date 2012-06-27 11:49GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
+ * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifdef FT800EMU_SDL2
 
 // #include <...>
 #include "ft800emu_graphics_driver.h"
@@ -44,10 +34,8 @@ static int s_MouseX;
 static int s_MouseY;
 static int s_MouseDown;
 
-#define FT800EMU_SDL_THREADED_FLIP 0
-
 namespace {
-
+/*
 static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 
 SDL_Surface *s_Screen = NULL;
@@ -74,16 +62,19 @@ int flipThread(void *)
 }
 
 #endif
-
+*/
 } /* anonymous namespace */
 
 argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
-	return s_BufferARGB8888;
+	// Return the next available buffer
+	return NULL;
+	//return s_BufferARGB8888;
 }
 
 void GraphicsDriverClass::begin()
 {
+	/*
 	s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
 	s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 	s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
@@ -118,10 +109,12 @@ void GraphicsDriverClass::begin()
 #endif
 
 	// TODO - Error handling
+	*/
 }
 
 bool GraphicsDriverClass::update()
 {
+	/*
 	SDL_Event event;
 
 	while ( SDL_PollEvent(&event) ) {
@@ -147,10 +140,12 @@ bool GraphicsDriverClass::update()
 	}
 
 	return true;
+	*/
 }
 
 void GraphicsDriverClass::end()
 {
+	/*
 #if FT800EMU_SDL_THREADED_FLIP
 
 	s_Running = false;
@@ -171,10 +166,12 @@ void GraphicsDriverClass::end()
 	s_Screen = NULL;
 
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	*/
 }
 
 void GraphicsDriverClass::setMode(int width, int height)
 {
+	/*
 	if (s_Width != width || s_Height != height)
 	{
 #if FT800EMU_SDL_THREADED_FLIP
@@ -214,12 +211,13 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_FlipThread = SDL_CreateThread(flipThread, NULL);
 #endif
 	}
+	*/
 }
 
 void GraphicsDriverClass::renderBuffer(bool output)
 {
 	// TODO: Allow user resize and aspect ratio
-
+	/*
 	if (output)
 	{
 		// FIXME: SDL_SoftStretch is terribly slow and does not
@@ -284,21 +282,21 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	newTitle << System.getFPS();
 	newTitle << ")]";
 	SDL_WM_SetCaption(newTitle.str().c_str(), NULL);
+	*/
 }
 
 void GraphicsDriverClass::enableMouse(bool enabled)
 {
-	s_MouseEnabled = enabled;
+	//s_MouseEnabled = enabled;
 }
 
 void GraphicsDriverClass::setMousePressure(int pressure)
 {
-	s_MousePressure = pressure;
+	//s_MousePressure = pressure;
 }
 
 } /* namespace FT800EMU */
 
 #endif /* #ifndef FT800EMU_SDL2 */
-#endif /* #ifdef FT800EMU_SDL */
 
 /* end of file */
