@@ -58,10 +58,11 @@ bool KeyboardClass::isKeyDown(int key)
 {
 #ifdef FT800EMU_SDL2
 	const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+	return (keystate[SDL_GetScancodeFromKey(key)] != 0);
 #else
 	Uint8 *keystate = SDL_GetKeyState(NULL);
-#endif
 	return (keystate[key] != 0);
+#endif
 }
 
 } /* namespace FT800EMU */

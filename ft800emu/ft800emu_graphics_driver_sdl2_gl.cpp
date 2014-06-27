@@ -8,6 +8,7 @@
 #include "ft800emu_graphics_driver.h"
 
 // System includes
+#include <GL/gl.h>
 #include "ft800emu_system.h"
 #include "ft800emu_system_sdl.h"
 #include "ft800emu_spi_i2c.h"
@@ -35,13 +36,14 @@ static int s_MouseY;
 static int s_MouseDown;
 
 namespace {
-/*
-static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 
-SDL_Surface *s_Screen = NULL;
-SDL_Surface *s_Buffer = NULL;
+SDL_Window* s_Window = NULL;
+SDL_GLContext s_GLContext = NULL;
 
-#if FT800EMU_SDL_THREADED_FLIP
+argb8888 s_BufferARGB8888[2][FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
+SDL_mutex *s_BufferMutex[2] = { NULL, NULL };
+GLuint s_BufferTexture = 0;
+int s_BufferCurrent = 0;
 
 SDL_Thread *s_FlipThread = NULL;
 
@@ -49,72 +51,125 @@ SDL_mutex *s_WaitFlipMutex = NULL;
 SDL_cond *s_WaitFlip = NULL;
 bool s_Running = false;
 
+bool s_Output = false;
+
+void drawBuffer()
+{
+	if (s_Output)
+	{
+		int buffer = (s_BufferCurrent + 1) % 2;
+		if (!SDL_LockMutex(s_BufferMutex[buffer]))
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+
+			glEnable(GL_TEXTURE_2D);
+
+			glBegin(GL_QUADS);
+
+			glTexCoord2i(0, 0);
+			glVertex3f(-1, -1, 0);
+
+			glTexCoord2i(1, 0);
+			glVertex3f(1, -1, 0);
+
+			glTexCoord2i(1, 1);
+			glVertex3f(1, 1, 0);
+
+			glTexCoord2i(0, 1);
+			glVertex3f(-1, 1, 0);
+
+			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+
+			glFinish();
+
+			SDL_UnlockMutex(s_BufferMutex[buffer]);
+		}
+	}
+	else
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
+		glFinish();
+	}
+}
+
 int flipThread(void *)
 {
+	if (SDL_GL_MakeCurrent(s_Window, s_GLContext))
+	{
+		printf("SDL_GL_MakeCurrent failed\n");
+		exit(-1);
+	}
+
 	SDL_CondWait(s_WaitFlip, s_WaitFlipMutex);
 	while (s_Running)
 	{
-		if (SDL_Flip(s_Screen) < 0)
-			SystemSdlClass::ErrorSdl();
+		drawBuffer();
 		SDL_CondWait(s_WaitFlip, s_WaitFlipMutex);
 	}
+
+	SDL_GL_MakeCurrent(s_Window, NULL);
+
 	return 0;
 }
 
-#endif
-*/
 } /* anonymous namespace */
 
 argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
 	// Return the next available buffer
-	return NULL;
-	//return s_BufferARGB8888;
+	// Wait in case it's still being rendered
+	if (!SDL_LockMutex(s_BufferMutex[s_BufferCurrent]))
+		SDL_UnlockMutex(s_BufferMutex[s_BufferCurrent]);
+	return s_BufferARGB8888[s_BufferCurrent];
 }
 
 void GraphicsDriverClass::begin()
 {
-	/*
 	s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
 	s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 	s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
-	SDL_InitSubSystem(SDL_INIT_VIDEO);
+	uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
 
-	s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
-	if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
+	SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
-	SDL_WM_SetCaption(FT800EMU_WINDOW_TITLE_A, NULL);
+	s_BufferMutex[0] = SDL_CreateMutex();
+	s_BufferMutex[1] = SDL_CreateMutex();
 
-	Uint32 bpp;
-	Uint32 rmask, gmask, bmask, amask;
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0); // We do our own double buffering, as we only render a single texture
 
-	rmask = 0x00FF0000;
-	gmask = 0x0000FF00;
-	bmask = 0x000000FF;
-	amask = 0x00000000;
+	s_Window = SDL_CreateWindow(FT800EMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, flags);
+	s_GLContext = SDL_GL_CreateContext(s_Window);
 
-	bpp = 32;
+	glGenTextures(1, &s_BufferTexture);
+	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
-	if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
+	static const GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
+	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
 
-#if FT800EMU_SDL_THREADED_FLIP
+	glClearColor( 0.5f, 0.5f, 0.5f, 0.0f );
+
+    SDL_GL_MakeCurrent(s_Window, NULL);
 
 	s_Running = true;
 	s_WaitFlip = SDL_CreateCond();
 	s_WaitFlipMutex = SDL_CreateMutex();
-	s_FlipThread = SDL_CreateThread(flipThread, NULL);
-
-#endif
-
-	// TODO - Error handling
-	*/
+	s_FlipThread = SDL_CreateThread(flipThread, NULL, NULL);
 }
 
 bool GraphicsDriverClass::update()
 {
-	/*
 	SDL_Event event;
 
 	while ( SDL_PollEvent(&event) ) {
@@ -140,14 +195,10 @@ bool GraphicsDriverClass::update()
 	}
 
 	return true;
-	*/
 }
 
 void GraphicsDriverClass::end()
 {
-	/*
-#if FT800EMU_SDL_THREADED_FLIP
-
 	s_Running = false;
 	SDL_CondBroadcast(s_WaitFlip);
 	SDL_WaitThread(s_FlipThread, NULL);
@@ -158,85 +209,38 @@ void GraphicsDriverClass::end()
 	SDL_DestroyCond(s_WaitFlip);
 	s_WaitFlip = NULL;
 
-#endif
+	SDL_GL_MakeCurrent(s_Window, s_GLContext);
 
-	SDL_FreeSurface(s_Buffer);
-	s_Buffer = NULL;
-	SDL_FreeSurface(s_Screen);
-	s_Screen = NULL;
+	glDeleteTextures(1, &s_BufferTexture);
 
-	SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	*/
+	SDL_GL_DeleteContext(s_GLContext); s_GLContext = NULL;
+	SDL_DestroyWindow(s_Window); s_Window = NULL;
+
+	SDL_DestroyMutex(s_BufferMutex[0]); s_BufferMutex[0] = NULL;
+	SDL_DestroyMutex(s_BufferMutex[1]); s_BufferMutex[1] = NULL;
+
+	SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 }
 
 void GraphicsDriverClass::setMode(int width, int height)
 {
-	/*
 	if (s_Width != width || s_Height != height)
 	{
-#if FT800EMU_SDL_THREADED_FLIP
-		// Stop the flip thread
-		s_Running = false;
-		SDL_CondBroadcast(s_WaitFlip);
-		SDL_WaitThread(s_FlipThread, NULL);
-		s_FlipThread = NULL;
-#endif
-
-		// Update values
 		s_Width = width;
 		s_Height = height;
 		s_Ratio = (float)width / (float)height;
 
-		// Change the screen mode
-		s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
-		if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
-
-		// Release the buffer
-		SDL_FreeSurface(s_Buffer);
-		s_Buffer = NULL;
-
-		// Reinitialize the buffer
-		Uint32 bpp;
-		Uint32 rmask, gmask, bmask, amask;
-		rmask = 0x00FF0000;
-		gmask = 0x0000FF00;
-		bmask = 0x000000FF;
-		amask = 0x00000000;
-		bpp = 32;
-		s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
-		if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
-
-#if FT800EMU_SDL_THREADED_FLIP
-		// Resume the flip thread
-		s_FlipThread = SDL_CreateThread(flipThread, NULL);
-#endif
+		SDL_SetWindowSize(s_Window, s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE);
 	}
-	*/
 }
 
 void GraphicsDriverClass::renderBuffer(bool output)
 {
-	// TODO: Allow user resize and aspect ratio
-	/*
-	if (output)
-	{
-		// FIXME: SDL_SoftStretch is terribly slow and does not
-                // convert pixel format!
-		if (SDL_BlitSurface(s_Buffer, NULL, s_Screen, NULL) < 0)
-			SystemSdlClass::ErrorSdl();
-	}
-	else
-	{
-		if (SDL_FillRect(s_Screen, NULL, 0xFF808080) < 0)
-			SystemSdlClass::ErrorSdl();
-	}
+	++s_BufferCurrent;
+	s_BufferCurrent %= 2;
 
-#if FT800EMU_SDL_THREADED_FLIP
+	s_Output = output;
 	SDL_CondBroadcast(s_WaitFlip);
-#else
-	if (SDL_Flip(s_Screen) < 0)
-		SystemSdlClass::ErrorSdl();
-#endif
 
 	std::stringstream newTitle;
 	newTitle << FT800EMU_WINDOW_TITLE_A;
@@ -281,18 +285,17 @@ void GraphicsDriverClass::renderBuffer(bool output)
 	newTitle << " (";
 	newTitle << System.getFPS();
 	newTitle << ")]";
-	SDL_WM_SetCaption(newTitle.str().c_str(), NULL);
-	*/
+	SDL_SetWindowTitle(s_Window, newTitle.str().c_str());
 }
 
 void GraphicsDriverClass::enableMouse(bool enabled)
 {
-	//s_MouseEnabled = enabled;
+	s_MouseEnabled = enabled;
 }
 
 void GraphicsDriverClass::setMousePressure(int pressure)
 {
-	//s_MousePressure = pressure;
+	s_MousePressure = pressure;
 }
 
 } /* namespace FT800EMU */

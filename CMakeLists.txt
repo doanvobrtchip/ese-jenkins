@@ -61,13 +61,8 @@ ENDIF (NOT DEFINED WITH_SDL)
 
 ########################################################################
 
-IF (WITH_SDL2)
-  FIND_PACKAGE(SDL2 REQUIRED)
-ENDIF (WITH_SDL2)
-
 LINK_DIRECTORIES(
   )
-
 INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/ft800emu
   ${CMAKE_SOURCE_DIR}/reference
@@ -76,7 +71,14 @@ INCLUDE_DIRECTORIES(
   )
 
 IF (WITH_SDL2)
-  INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIR})
+  FIND_PACKAGE(SDL2 REQUIRED)
+  FIND_PACKAGE(OpenGL REQUIRED)
+  LINK_DIRECTORIES(
+    )
+  INCLUDE_DIRECTORIES(
+    ${SDL2_INCLUDE_DIR}
+    ${OPENGL_INCLUDE_DIR}
+    )
 ENDIF (WITH_SDL2)
 
 ########################################################################
