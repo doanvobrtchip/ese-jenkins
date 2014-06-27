@@ -282,7 +282,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 	}
 }
 
-void GraphicsDriverClass::renderBuffer(bool output)
+void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
 	// Render bitmap to buffer
 #if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS

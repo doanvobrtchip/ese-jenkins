@@ -234,10 +234,13 @@ void GraphicsDriverClass::setMode(int width, int height)
 	}
 }
 
-void GraphicsDriverClass::renderBuffer(bool output)
+void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
-	++s_BufferCurrent;
-	s_BufferCurrent %= 2;
+	if (changed)
+	{
+		++s_BufferCurrent;
+		s_BufferCurrent %= 2;
+	}
 
 	s_Output = output;
 	SDL_CondBroadcast(s_WaitFlip);

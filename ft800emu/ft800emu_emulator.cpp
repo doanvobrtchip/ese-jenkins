@@ -222,6 +222,8 @@ namespace {
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 			if (!s_Graphics) GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
+			bool renderProcessed = false;
+
 			// Render lines
 			{
 				// VBlank=0
@@ -260,6 +262,7 @@ namespace {
 								reg_hsize, reg_vsize);
 							s_FrameFullyDrawn = true;
 						}
+						renderProcessed = true;
 					}
 					else
 					{
@@ -314,7 +317,7 @@ namespace {
 				}
 				else
 				{
-					GraphicsDriver.renderBuffer(reg_pclk != 0);
+					GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
 					if (!GraphicsDriver.update()) exit(0); // ...
 				}
 				unsigned long flipDelta = System.getMicros() - flipStart;

@@ -216,7 +216,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 	}
 }
 
-void GraphicsDriverClass::renderBuffer(bool output)
+void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
 	// TODO: Allow user resize and aspect ratio
 

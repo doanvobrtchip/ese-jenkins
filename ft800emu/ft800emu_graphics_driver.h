@@ -48,7 +48,7 @@ public:
 	static void end();
 
 	static void setMode(int width, int height);
-	static void renderBuffer(bool output);
+	static void renderBuffer(bool output, bool changed);
 
 	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()
