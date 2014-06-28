@@ -8,7 +8,7 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#include <vector>
+#include <sched.h>
 
 // Project includes
 #include "ft900emu_intrin.h"
@@ -422,6 +422,11 @@ void FT32::call(uint32_t pma)
 					else // JUMP
 					{
 						// printf("      JUMP\n");
+						if (cur == target)
+						{
+							// Infinite loop
+							sched_yield();
+						}
 						cur = target - 1;
 					}
 				}
