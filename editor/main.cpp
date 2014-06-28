@@ -73,6 +73,19 @@ int main(int argc, char* argv[])
 {
 	Q_INIT_RESOURCE(icons);
 
+#ifndef WIN32
+	char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+	if (currentDesktop)
+	{
+		printf("XDG_CURRENT_DESKTOP: %s\n",  currentDesktop);
+		if (!strcmp(currentDesktop, "X-Cinnamon"))
+		{
+			printf("Theme override for X-Cinnamon\n");
+			setenv("XDG_CURRENT_DESKTOP", "gnome", 1);
+		}
+	}
+#endif
+
 #ifdef WIN32
 	HRESULT hr;
 	hr = hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
