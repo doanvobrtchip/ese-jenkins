@@ -203,22 +203,28 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 		break;
 	case TIMER_INT:
 		// 0b10101010: Enable interrupt for timers 4, 3, 2, 1
-		// 0b01010101: Timers 4, 3, 2, 1 were fired
-		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
-			if (TIMER_INT_IS_FIRED(ti))
-				if ((io_dout & TIMER_INT_FIRED(ti)) == 0)
+		// 0b01010101: Timers 4, 3, 2, 1 were fired (read) / were handled (write)
+		if (io_dout & 0b01010101) // Interrupts were handled
 		{
-			// Timer ti was handled, check if more need to be fired
-			if (TIMER_INT_IS_ENABLED(ti))
+			uint32_t intout =
+				m_Register[TIMER_INT] & 0b01010101 // Original fired state
+				| io_dout & 0b10101010; // New enabled state
+			for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
+				if (io_dout & TIMER_INT_FIRED(ti))
 			{
-				int queue = SDL_AtomicGet(&m_TimerQueue[ti]);
-				if (queue)
+				// Timer ti was handled, check if more need to be fired
+				if (TIMER_INT_IS_ENABLED(ti))
 				{
-					io_dout |= TIMER_INT_FIRED(ti);
-					m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
-					SDL_AtomicCAS(&m_TimerQueue[ti], queue, queue - 1);
+					int queue = SDL_AtomicGet(&m_TimerQueue[ti]);
+					if (queue)
+					{
+						intout &= ~TIMER_INT_FIRED(ti);
+						m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
+						SDL_AtomicCAS(&m_TimerQueue[ti], queue, queue - 1);
+					}
 				}
 			}
+			io_dout = intout;
 		}
 		break;
 	case TIMER_WRITE_LS:

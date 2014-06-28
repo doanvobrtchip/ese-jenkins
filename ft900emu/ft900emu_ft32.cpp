@@ -271,11 +271,6 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 
 FTEMU_FORCE_INLINE void FT32::writeMemU32(uint32_t addr, uint32_t value)
 {
-	if (addr == 0x44)
-	{
-		printf("wrote %#x to int 17\n", value);
-		if (value == 1) FT900EMU_DEBUG_BREAK();
-	}
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
 		reinterpret_cast<uint32_t &>(m_Memory[addr]) = value;
@@ -378,7 +373,7 @@ FTEMU_FORCE_INLINE void FT32::push(uint32_t v)
 	uint32_t stackp = (m_Register[FT32_REG_STACK] - 4) & FT32_REG_STACK_MASK;
 	writeMemU32(stackp, v);
 	m_Register[FT32_REG_STACK] = stackp;
-	printf("push, %u\n", m_Register[FT32_REG_STACK]);
+	// printf("push, %u\n", m_Register[FT32_REG_STACK]);
 }
 
 FTEMU_FORCE_INLINE uint32_t FT32::pop()
@@ -386,7 +381,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 	uint32_t stackp = m_Register[FT32_REG_STACK];
 	uint32_t r = readMemU32(stackp);
 	m_Register[FT32_REG_STACK] = (stackp + 4) & FT32_REG_STACK_MASK;
-	printf("pop, %u\n", m_Register[FT32_REG_STACK]);
+	// printf("pop, %u\n", m_Register[FT32_REG_STACK]);
 	return r;
 }
 
