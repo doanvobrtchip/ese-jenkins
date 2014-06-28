@@ -47,6 +47,10 @@
 
 // using namespace ...;
 
+// Enable or disable debug messages
+#define FT800EMU_DEBUG 1
+
+// Reduce CPU usage when REG_PCLK is zero
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
 #ifdef FT800EMU_SDL2
@@ -270,25 +274,27 @@ namespace {
 					}
 				}
 				unsigned long procDelta = System.getMicros() - procStart;
-
 				if (s_DegradeOn)
 				{
-					if (procDelta < 4000)
+					// Note: procLowLimit must be much less than half of procHighLimit, as the render time is halved when dynamic degrade kicks in
+					unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
+					if (procDelta < procLowLimit)
 					{
 						s_DegradeOn = false;
-						printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						printf("Dynamic degrade switched OFF\n");
+						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) printf("Dynamic degrade switched OFF\n");
 					}
 				}
 				else
 				{
-					if (procDelta > 8000)
+					unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to degrade
+					if (procDelta > procHighLimit)
 					{
-						printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
 						if (s_DynamicDegrade)
 						{
 							s_DegradeOn = true;
-							printf("Dynamic degrade switched ON\n");
+							if (FT800EMU_DEBUG) printf("Dynamic degrade switched ON\n");
 						}
 					}
 				}
@@ -323,7 +329,7 @@ namespace {
 				unsigned long flipDelta = System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)
-					printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
+					if (FT800EMU_DEBUG) printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
 
 				System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
 				System.unprioritizeMCUThread();

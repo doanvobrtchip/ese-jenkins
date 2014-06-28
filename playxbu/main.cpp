@@ -263,7 +263,7 @@ int main(int, char* [])
 		| FT800EMU::EmulatorEnableDebugShortkeys
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
-		//| FT800EMU::EmulatorEnableDynamicDegrade
+		| FT800EMU::EmulatorEnableDynamicDegrade
 		;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);

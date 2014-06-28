@@ -37,7 +37,8 @@ static int s_MouseDown;
 
 // Threaded flip causes the buffer to be flipped from a separate thread.
 // It saves time for the CPU processing
-#define FT800EMU_THREADED_FLIP 1
+// Disabled because not compatible with dynamic degrade yet
+#define FT800EMU_THREADED_FLIP 0
 
 // Hardware double buffer adds an additional copy to the output.
 // It is technically redundant, as only one texture is drawn, but may improve performance in some window managers

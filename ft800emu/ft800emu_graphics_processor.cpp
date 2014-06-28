@@ -14,6 +14,9 @@
 // #include <...>
 #include "ft800emu_graphics_processor.h"
 
+// Enable or disable debug messages
+#define FT800EMU_DEBUG 0
+
 #ifndef FT800EMU_CMAKE
 #	define FT800EMU_SSE41 0
 #endif
@@ -2267,7 +2270,7 @@ void GraphicsProcessorClass::begin()
 
 	uint8_t *ram = Memory.getRam();
 	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
-	printf("Font index: %u\n", fi);
+	if (FT800EMU_DEBUG) printf("Font index: %u\n", fi);
 	for (int i = 0; i < 16; ++i)
 	{
 		int ir = i + 16;
@@ -2277,7 +2280,7 @@ void GraphicsProcessorClass::begin()
 		uint32_t width =  Memory.rawReadU32(ram, bi + 136);
 		uint32_t height =  Memory.rawReadU32(ram, bi + 140);
 		uint32_t data =  Memory.rawReadU32(ram, bi + 144);
-		printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
+		if (FT800EMU_DEBUG) printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
 		s_BitmapInfoMain[ir].Source = data;
 		s_BitmapInfoMain[ir].LayoutFormat = format;
