@@ -105,7 +105,7 @@ void Timer::softReset()
 uint8_t Timer::ioRd8(uint32_t io_a)
 {
 	uint32_t idx = io_a - FT900EMU_MEMORY_TIMER_ADDR;
-	printf(F9ED "Timer ioRd8 %#x" F9EE, idx);
+	// printf(F9ED "Timer ioRd8 %#x" F9EE, idx);
 
 	switch (idx)
 	{
@@ -126,7 +126,7 @@ uint8_t Timer::ioRd8(uint32_t io_a)
 void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 {
 	uint32_t idx = io_a - FT900EMU_MEMORY_TIMER_ADDR;
-	printf(F9ED "Timer ioWr8 %#x, %#x" F9EE, idx, (uint32_t)io_dout);
+	// printf(F9ED "Timer ioWr8 %#x, %#x" F9EE, idx, (uint32_t)io_dout);
 
 	// Pre-write hooks
 	switch (idx)

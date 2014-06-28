@@ -28,11 +28,12 @@ IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), m_CurrentInt(0), m_InterruptCheck(fal
 	softReset();
 
 	_mm_prefetch(&m_InterruptCheck, _MM_HINT_T0);
+	memset(m_Register, 0, FT900EMU_MEMORY_IRQ_COUNT * sizeof(uint32_t));
 }
 
 void IRQ::softReset()
 {
-	memset(m_Register, 0, FT900EMU_MEMORY_IRQ_COUNT * sizeof(uint32_t));
+	// no-op
 }
 
 inline bool IRQ::globalInterruptMask()
@@ -105,7 +106,7 @@ void IRQ::interrupt(uint32_t irq)
 	}
 	else
 	{
-		printf(F9ED "Interrupt requested, but global interrupt mask off" F9EE);
+		printf(F9ED "Interrupt requested, but global interrupt mask off (%#x)" F9EE, m_Register[FT900EMU_IRQ_CONTROL]);
 	}
 }
 
@@ -115,7 +116,7 @@ uint32_t IRQ::nextInterruptInternal()
 	// Don't check again until a change is notified
 	m_InterruptCheck = false;
 
-	printf(F9ED "+ Check interrupt +" F9EE);
+	// printf(F9ED "+ Check interrupt +" F9EE);
 
 	// Check if depth is ok
 	if ((nestedInterrupt() && m_CurrentDepth <= nestedDepth())
