@@ -2878,8 +2878,8 @@ EvaluateDisplayListValue:
 		}
 DisplayListDisplay:
 		// Check tag query
-		// if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
-		if (Memory.rawReadU32(ram, REG_TAG_Y) == (upsideDown ? vsize - y - 1 : y))
+		if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
+		// if (Memory.rawReadU32(ram, REG_TAG_Y) == ((Memory.rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
 		{
 			uint32_t tag_x = Memory.rawReadU32(ram, REG_TAG_X);
 			if (tag_x < hsize)
@@ -2890,14 +2890,14 @@ DisplayListDisplay:
 			}
 		}
 		// Check touch
-		if ((Memory.ft801() && (Memory.rawReadU32(ram, REG_CTOUCH_EXTEND) & 0x01))
+		if ((Memory.multiTouch())
 			? (Memory.rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
 			: (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{
 			uint32_t tag_xy = Memory.rawReadU32(ram, REG_TOUCH_TAG_XY);
 			uint32_t tag_y = tag_xy & 0xFFFF;
-			// if (tag_y == y)
-			if (tag_y == (upsideDown ? vsize - y - 1 : y))
+			if (tag_y == y)
+			// if (tag_y == ((Memory.rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
 			{
 				uint32_t tag_x = tag_xy >> 16;
 				if (tag_x < hsize)

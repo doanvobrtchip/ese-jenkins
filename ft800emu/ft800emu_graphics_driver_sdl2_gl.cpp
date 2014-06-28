@@ -93,6 +93,7 @@ void drawBuffer()
 
 			glBegin(GL_QUADS);
 
+#if FT800EMU_FLIP_SDL2
 			glTexCoord2i(0, 0);
 			glVertex3f(-1, -1, 0);
 
@@ -104,6 +105,19 @@ void drawBuffer()
 
 			glTexCoord2i(0, 1);
 			glVertex3f(-1, 1, 0);
+#else
+			glTexCoord2i(0, 1);
+			glVertex3f(-1, -1, 0);
+
+			glTexCoord2i(1, 1);
+			glVertex3f(1, -1, 0);
+
+			glTexCoord2i(1, 0);
+			glVertex3f(1, 1, 0);
+
+			glTexCoord2i(0, 0);
+			glVertex3f(-1, 1, 0);
+#endif
 
 			glEnd();
 

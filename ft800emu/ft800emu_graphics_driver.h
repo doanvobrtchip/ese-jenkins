@@ -30,6 +30,8 @@
 #define FT800EMU_WINDOW_KEEPRATIO 1
 #define FT800EMU_WINDOW_SCALE 1
 
+#define FT800EMU_FLIP_SDL2 0
+
 namespace FT800EMU {
 
 /**
@@ -53,7 +55,7 @@ public:
 	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()
 	{
-		#ifdef FT800EMU_SDL
+		#if (defined(FT800EMU_SDL) || (defined(FT800EMU_SDL2) && !FT800EMU_FLIP_SDL2))
 		return false;
 		#else
 		return true;

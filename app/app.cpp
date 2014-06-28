@@ -456,8 +456,17 @@ void setup()
 		}
 	}*/
 
+  dl(TAG(42));
+  dl(COLOR_RGB(255, 128, 0));
+  dl(BEGIN(RECTS));
+  dl(VERTEX2II(10, 10, 0, 0));
+  dl(VERTEX2II(50, 50, 0, 0));
+  dl(END());
+  dl(TAG(0));
+
 /*
 	dl(END());
+	*
 
 
 */
@@ -565,7 +574,7 @@ dl( VERTEX2II(80, 60, 0, 0) );*/
 	wr32(REG_DLSWAP, DLSWAP_FRAME);
 	wr32(REG_PCLK, 5);
 
-	wr32(REG_ROTATE, 1);
+	//wr32(REG_ROTATE, 1);
 	wr32(REG_PWM_DUTY, 64);
 
 	/*wr32(RAM_CMD, CMD_CALIBRATE);

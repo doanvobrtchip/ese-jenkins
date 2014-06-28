@@ -46,6 +46,7 @@ public:
 	static const uint32_t *getDisplayList();
 
 	static bool ft801();
+	static bool multiTouch();
 
 	//static void setInterrupt(void (*interrupt)());
 	static bool intnLow();
