@@ -74,6 +74,7 @@ int main(int argc, char* argv[])
 	Q_INIT_RESOURCE(icons);
 
 #ifndef WIN32
+	// Workaround to default -style=gtk+ on recent Cinnamon versions
 	char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
 	if (currentDesktop)
 	{
@@ -104,9 +105,8 @@ int main(int argc, char* argv[])
 	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
 	QApplication app(argc, const_cast<char **>(argv));
-#ifdef WIN32
+
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
-#endif
 
 	/*
 	QApplication::setStyle(QStyleFactory::create("Fusion"));
@@ -121,7 +121,6 @@ int main(int argc, char* argv[])
 	palette.setColor(QPalette::Button, QColor(64, 64, 64));
 	palette.setColor(QPalette::ButtonText, Qt::white);
 	palette.setColor(QPalette::BrightText, Qt::red);
-	// palette.setColor(QPalette::Highlight, QColor(64, 128, 96));
 	palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
 	palette.setColor(QPalette::HighlightedText, Qt::white);
 	app.setPalette(palette);

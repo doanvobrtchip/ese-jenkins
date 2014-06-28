@@ -87,7 +87,7 @@ Timer::~Timer()
 
 void Timer::softReset()
 {
-	printf(F9ED "Timer soft reset" F9EE);
+	// printf(F9ED "Timer soft reset" F9EE);
 
 	if (m_ThreadRunning)
 		stopTimer();

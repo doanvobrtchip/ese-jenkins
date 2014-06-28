@@ -8,6 +8,7 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 // Project includes
 #include "ft900emu_intrin.h"
@@ -270,6 +271,11 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 
 FTEMU_FORCE_INLINE void FT32::writeMemU32(uint32_t addr, uint32_t value)
 {
+	if (addr == 0x44)
+	{
+		printf("wrote %#x to int 17\n", value);
+		if (value == 1) FT900EMU_DEBUG_BREAK();
+	}
 	if (addr < FT900EMU_FT32_MEMORY_SIZE)
 	{
 		reinterpret_cast<uint32_t &>(m_Memory[addr]) = value;
@@ -372,6 +378,7 @@ FTEMU_FORCE_INLINE void FT32::push(uint32_t v)
 	uint32_t stackp = (m_Register[FT32_REG_STACK] - 4) & FT32_REG_STACK_MASK;
 	writeMemU32(stackp, v);
 	m_Register[FT32_REG_STACK] = stackp;
+	printf("push, %u\n", m_Register[FT32_REG_STACK]);
 }
 
 FTEMU_FORCE_INLINE uint32_t FT32::pop()
@@ -379,6 +386,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 	uint32_t stackp = m_Register[FT32_REG_STACK];
 	uint32_t r = readMemU32(stackp);
 	m_Register[FT32_REG_STACK] = (stackp + 4) & FT32_REG_STACK_MASK;
+	printf("pop, %u\n", m_Register[FT32_REG_STACK]);
 	return r;
 }
 
@@ -386,17 +394,22 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+std::vector<uint32_t> pushpopdebug;
+std::vector<uint32_t> pushpopdebug_height;
+
 void FT32::call(uint32_t pma)
 {
+	printf(" - call %u; %#x - ", pma, pma << 2);
 	uint32_t cur = pma;
+	push(cur << 2);
 	while (m_Running)
 	{
 		// Check for IRQ
 		uint32_t nirq = m_IRQ->nextInterrupt();
-		if (~nirq) call(nirq + 2);
+		if (~nirq) { printf(" - int %i (%#x) - ", nirq, m_ProgramMemory[nirq + 2]); call(nirq + 2); }
 
 		uint32_t inst = m_ProgramMemory[cur & FT32_PM_CUR_MASK];
-		//printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);
+		// printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);
 
 		switch (inst & FT32_PATTERNMASK)
 		{
@@ -412,8 +425,16 @@ void FT32::call(uint32_t pma)
 				{
 					if (inst & FT32_TOC_CALL) // CALL
 					{
+						if (target == 9313)
+						{
+							if (inst & FT32_TOC_INDIRECT)
+							{
+								printf("a %#x", cur << 2);
+								printf(" - indirect - ");
+							}
+
+						}
 						// printf("      CALL\n");
-						push(cur << 2);
 						call(target);
 					}
 					else // JUMP
@@ -593,14 +614,31 @@ void FT32::call(uint32_t pma)
 			}
 			case FT32_PATTERN_PUSH:
 			{
-				//printf("PUSH R%i (was %#x)\n", FT32_R1(inst), m_Register[FT32_R1(inst)]);
+				pushpopdebug.push_back(FT32_R1(inst));
+
+				printf("PUSH R%i (was %#x), at %#x\n", FT32_R1(inst), m_Register[FT32_R1(inst)], cur << 2);
 				push(m_Register[FT32_R1(inst)]);
+
+				pushpopdebug_height.push_back(m_Register[FT32_REG_STACK]);
+				printf("height is %#x\n", m_Register[FT32_REG_STACK]);
 				break;
 			}
 			case FT32_PATTERN_POP:
 			{
+				printf("pre-POP R%i\n", FT32_RD(inst));
+				printf("height is %#x\n", m_Register[FT32_REG_STACK]);
+
+				if (!pushpopdebug.size()) { printf("Too many pops\n"); FT900EMU_DEBUG_BREAK(); }
+				uint32_t popdebug = pushpopdebug.back();
+				pushpopdebug.pop_back();
+				if (popdebug != FT32_RD(inst)) { printf("Incorrect pop\n"); FT900EMU_DEBUG_BREAK(); }
+
+				uint32_t stackh = pushpopdebug_height.back();
+				pushpopdebug_height.pop_back();
+				if (stackh != m_Register[FT32_REG_STACK]) { printf("Incorrect stack height\n"); FT900EMU_DEBUG_BREAK(); }
+
 				m_Register[FT32_RD(inst)] = pop();
-				//printf("POP R%i (now %#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)]);
+				printf("POP R%i (now %#x), at %#x\n", FT32_RD(inst), m_Register[FT32_RD(inst)], cur << 2);
 				break;
 			}
 			case FT32_PATTERN_LINK:
@@ -810,6 +848,7 @@ void FT32::call(uint32_t pma)
 		//printf("-> RD: R%i: %i (%#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
 		++cur;
 	}
+	pop();
 }
 
 ////////////////////////////////////////////////////////////////////////
