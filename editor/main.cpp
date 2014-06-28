@@ -21,6 +21,7 @@
 #include <QThread>
 #include <QDir>
 #include <QString>
+#include <QStyleFactory>
 #include "main_window.h"
 #include "emulator_viewport.h"
 #include "ft800emu_emulator.h"
@@ -93,6 +94,26 @@ int main(int argc, char* argv[])
 #ifdef WIN32
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
 #endif
+
+	/*
+	QApplication::setStyle(QStyleFactory::create("Fusion"));
+	QPalette palette = app.palette();
+	palette.setColor(QPalette::Window, QColor(64, 64, 64));
+	palette.setColor(QPalette::WindowText, Qt::white);
+	palette.setColor(QPalette::Base, QColor(48, 48, 48));
+	palette.setColor(QPalette::AlternateBase, QColor(64, 64, 64));
+	palette.setColor(QPalette::ToolTipBase, Qt::white);
+	palette.setColor(QPalette::ToolTipText, Qt::white);
+	palette.setColor(QPalette::Text, Qt::white);
+	palette.setColor(QPalette::Button, QColor(64, 64, 64));
+	palette.setColor(QPalette::ButtonText, Qt::white);
+	palette.setColor(QPalette::BrightText, Qt::red);
+	// palette.setColor(QPalette::Highlight, QColor(64, 128, 96));
+	palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
+	palette.setColor(QPalette::HighlightedText, Qt::white);
+	app.setPalette(palette);
+	*/
+
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{

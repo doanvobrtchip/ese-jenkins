@@ -87,6 +87,12 @@ void UART::softReset()
 	// ASR = 0x80
 	// GDS = 0x01
 	// DMS = 0x02
+
+	lcr = 0;
+	spr = 0;
+	fcr = 0;
+	efr = 0;
+	m_650 = false;
 }
 
 void UART::enablePad(bool enabled)
@@ -156,6 +162,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 		}
 		case R_ISR_FCR_EFR: // 2
 		{
+			// printf("R_ISR_FCR_EFR\n");
 			if (m_650) // EFR
 			{
 				// printf("    :: EFR\n");
@@ -178,7 +185,7 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 				// if (d & 0x04) printf("        :: Flush THR (TODO)\n");
 				if (d & 0xF8)
 				{
-					printf(F9EW "    :: FCR :: Unknown bits have been set" F9EE);
+					// printf(F9EW "    :: FCR :: Unknown bits have been set %#x" F9EE, d & 0xF8);
 					FT900EMU_DEBUG_BREAK();
 				}
 				fcr = d; // TODO

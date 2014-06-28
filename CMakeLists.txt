@@ -49,6 +49,8 @@ OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
 OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
 
+SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
+
 ########################################################################
 
 IF (NOT DEFINED WITH_SDL)
@@ -79,6 +81,7 @@ IF (WITH_SDL2)
     ${SDL2_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
     )
+  ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
 ENDIF (WITH_SDL2)
 
 ########################################################################

@@ -11,6 +11,7 @@
 #define FT900EMU_DEBUG_BREAK __debugbreak
 #else
 #define FT900EMU_DEBUG_BREAK __builtin_trap
+// #define FT900EMU_DEBUG_BREAK abort
 #endif
 
 #endif /* #ifndef FT900EMU_INTRIN_H */

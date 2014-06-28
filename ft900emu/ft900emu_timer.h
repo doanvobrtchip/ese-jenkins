@@ -9,9 +9,14 @@
 // System includes
 #include <list>
 
+// Library includes
+#include <SDL_atomic.h>
+
 // Project includes
 #include "ft900emu_inttypes.h"
 #include "ft900emu_ft32.h"
+
+struct SDL_Thread;
 
 namespace FT900EMU {
 
@@ -28,6 +33,7 @@ class Timer : public FT32IO
 {
 public:
 	Timer(IRQ *irq);
+	~Timer();
 
 	void softReset();
 
@@ -36,7 +42,10 @@ public:
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:
-	// ...
+	void startTimer();
+	void stopTimer();
+	static int timer(void *p);
+	void timer();
 
 private:
 	uint8_t m_Register[FT900EMU_MEMORY_TIMER_BYTES];
@@ -45,7 +54,14 @@ private:
 	uint8_t m_TimerMS[FT900EMU_TIMER_NB];
 	uint32_t m_TimerValue[FT900EMU_TIMER_NB];
 
+	bool m_TimerRunning[FT900EMU_TIMER_NB];
+	uint64_t m_TimerCounter[FT900EMU_TIMER_NB];
+	SDL_atomic_t m_TimerQueue[FT900EMU_TIMER_NB];
+
 	uint32_t m_Clock; // Ticks per second
+
+	SDL_Thread *m_ThreadRunning;
+	uint64_t m_LastTick; // In native system timer ticks
 
 	IRQ *m_IRQ;
 

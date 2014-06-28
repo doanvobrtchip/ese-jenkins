@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <vc.h>
 
-#define FT800EMU_XBU_FILE "../reference/xbu/BIRDS.XBU"
+#define FT800EMU_XBU_FILE "../reference/xbu/RIVAL.XBU"
 
 void swrbegin(size_t address)
 {
@@ -264,6 +264,7 @@ int main(int, char* [])
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
+		| FT800EMU::EmulatorFT801
 		;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);

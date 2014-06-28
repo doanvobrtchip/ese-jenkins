@@ -10,6 +10,11 @@
 #include <string.h>
 #include <sched.h>
 
+// Library includes
+#include <SDL.h>
+#include <SDL_thread.h>
+#include <SDL_timer.h>
+
 // Project includes
 #include "ft900emu_intrin.h"
 #include "ft900emu_irq.h"
@@ -37,9 +42,15 @@
 #define TC0_ACTIVE          0x02
 #define TC0_IS_ACTIVE       (m_Register[TIMER_CONTROL_0] & TC0_ACTIVE)
 
+#define TC1_START(ti)      (0x01 << ti)
+#define TC1_STOP(ti)       (0x10 << ti)
+#define TC1_IS_START(ti)   (m_Register[TIMER_CONTROL_1] & TC1_START(ti))
+#define TC1_IS_STOP(ti)    (m_Register[TIMER_CONTROL_1] & TC1_STOP(ti))
+
 #define TC2_PRESCALING(ti)    (0x10 << ti)
 #define TC2_IS_PRESCALING(ti) (m_Register[TIMER_CONTROL_2] & TC2_PRESCALING(ti))
 
+#define TC4_CLEAR(ti)      (0x01 << ti)
 #define TC4_CLEAR_PRESCALER 0x10
 
 #define TIMER_SELECTED (m_Register[TIMER_SELECT])
@@ -53,17 +64,42 @@
 
 #define TIMER_INT_ENABLED(ti)    (0x02 << (2 * ti))
 #define TIMER_INT_IS_ENABLED(ti) (m_Register[TIMER_INT] & TIMER_INT_ENABLED(ti))
+#define TIMER_INT_FIRED(ti)      (0x01 << (2 * ti))
+#define TIMER_INT_IS_FIRED(ti)   (m_Register[TIMER_INT] & TIMER_INT_FIRED(ti))
+
+#define FT900EMU_TIMER_INTERRUPT 17
 
 namespace FT900EMU {
 
-Timer::Timer(IRQ *irq) : m_IRQ(irq)
+Timer::Timer(IRQ *irq) : m_IRQ(irq), m_ThreadRunning(NULL)
 {
 	softReset();
+	SDL_InitSubSystem(SDL_INIT_TIMER);
+}
+
+Timer::~Timer()
+{
+	if (m_ThreadRunning)
+		stopTimer();
+
+	SDL_QuitSubSystem(SDL_INIT_TIMER);
 }
 
 void Timer::softReset()
 {
 	printf(F9ED "Timer soft reset" F9EE);
+
+	if (m_ThreadRunning)
+		stopTimer();
+
+	memset(m_Register, 0, sizeof(m_Register));
+	memset(m_TimerLS, 0, sizeof(m_TimerLS));
+	memset(m_TimerMS, 0, sizeof(m_TimerMS));
+	memset(m_TimerValue, 0, sizeof(m_TimerValue));
+	memset(m_TimerRunning, 0, sizeof(m_TimerRunning));
+	memset(m_TimerCounter, 0, sizeof(m_TimerCounter));
+	memset(m_TimerQueue, 0, sizeof(m_TimerQueue));
+	m_Clock = FT900_SYSTEM_CLOCK;
 }
 
 uint8_t Timer::ioRd8(uint32_t io_a)
@@ -110,17 +146,24 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 			if (!TC0_IS_ACTIVE)
 			{
 				printf(F9ED "Timer activate" F9EE);
-				// no-op for now
+				startTimer();
 			}
 		}
 		else
 		{
 			if (TC0_IS_ACTIVE)
 			{
-				printf(F9EW "Timer deactivate, not implemented" F9EE);
-				FT900EMU_DEBUG_BREAK();
+				printf(F9ED "Timer deactivate" F9EE);
+				stopTimer();
 			}
 		}
+		break;
+	case TIMER_CONTROL_1:
+		// 0b11110000: Stop timers 4, 3, 2, 1
+		// 0b00001111: Start timers 4, 3, 2, 1
+		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
+			m_TimerRunning[ti] = (io_dout & TC1_START(ti)) ? true
+				: ((io_dout & TC1_STOP(ti)) ? false : m_TimerRunning[ti]);
 		break;
 	case TIMER_CONTROL_2:
 		if (io_dout & 0b00001111)
@@ -140,7 +183,13 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 			printf(F9EW "Unknown bits in TIMER_CONTROL_4" F9EE);
 			FT900EMU_DEBUG_BREAK();
 		}
-		// 0b00001111: Clear timer 4, 3, 2, 1 - TODO - Used to push the configuration?
+		// 0b00001111: Clear timer 4, 3, 2, 1
+		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
+			if (io_dout & TC4_CLEAR(ti))
+		{
+			m_TimerCounter[ti] = 0;
+			SDL_AtomicSet(&m_TimerQueue[ti], 0);
+		}
 		// 0b00010000: Global timer clock prescaler
 		if (io_dout & TC4_CLEAR_PRESCALER)
 		{
@@ -153,12 +202,24 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 		}
 		break;
 	case TIMER_INT:
-		if (io_dout & 0b01010101)
-		{
-			printf(F9EW "Unknown bits in TIMER_INT" F9EE);
-			FT900EMU_DEBUG_BREAK();
-		}
 		// 0b10101010: Enable interrupt for timers 4, 3, 2, 1
+		// 0b01010101: Timers 4, 3, 2, 1 were fired
+		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
+			if (TIMER_INT_IS_FIRED(ti))
+				if ((io_dout & TIMER_INT_FIRED(ti)) == 0)
+		{
+			// Timer ti was handled, check if more need to be fired
+			if (TIMER_INT_IS_ENABLED(ti))
+			{
+				int queue = SDL_AtomicGet(&m_TimerQueue[ti]);
+				if (queue)
+				{
+					io_dout |= TIMER_INT_FIRED(ti);
+					m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
+					SDL_AtomicCAS(&m_TimerQueue[ti], queue, queue - 1);
+				}
+			}
+		}
 		break;
 	case TIMER_WRITE_LS:
 		m_TimerLS[TIMER_SELECTED] = io_dout;
@@ -191,6 +252,87 @@ void Timer::ioGetRange(uint32_t &from, uint32_t &to)
 {
 	from = FT900EMU_MEMORY_TIMER_START;
 	to = FT900EMU_MEMORY_TIMER_END;
+}
+
+void Timer::startTimer()
+{
+	SDL_assert(!m_ThreadRunning);
+	printf(F9ED "Start timers" F9EE);
+	m_ThreadRunning = SDL_CreateThread(timer, "FT900EMU::Timer", this);
+}
+
+void Timer::stopTimer()
+{
+	SDL_assert(m_ThreadRunning);
+	printf(F9ED "Stop timers" F9EE);
+	// Wait for timer thread to end (for safety)
+	SDL_Thread *thread = m_ThreadRunning;
+	m_ThreadRunning = NULL; // This stops the thread
+	int status;
+	SDL_WaitThread(thread, &status);
+}
+
+inline void Timer::timer()
+{
+	// This loop always runs at roughly 1000Hz
+	// Higher accuracy cannot be guaranteed by the OS
+	SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+	uint64_t freq = SDL_GetPerformanceFrequency(); // Linux: 1 000 000 000
+	m_LastTick = SDL_GetPerformanceCounter();
+	SDL_Delay(1);
+	while (m_ThreadRunning)
+	{
+		uint64_t currentTick = SDL_GetPerformanceCounter();
+		uint64_t delta = currentTick - m_LastTick;
+		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
+			if (m_TimerRunning[ti])
+		{
+			// Might want to precalculate these
+			uint64_t clock = TC2_IS_PRESCALING(ti) ? m_Clock : FT900_SYSTEM_CLOCK;
+			uint64_t value = (uint64_t)m_TimerValue[ti] * freq / clock;
+
+			uint64_t counter = m_TimerCounter[ti] + delta;
+
+			// TODO: Backwards timer - what does it do???
+			uint64_t queue = counter / value; // Any previous queue is overwritten and lost, this allows ticks to be lost on longer running functions
+			counter %= value;
+
+			if (queue)
+			{
+				// printf("Timer %i tick\n", ti);
+
+				if (TIMER_INT_IS_ENABLED(ti))
+				{
+					// Call interrupt
+					m_Register[TIMER_INT] |= TIMER_INT_FIRED(ti);
+					m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
+				}
+
+				if (TC3_IS_ONESHOT(ti))
+				{
+					// Disable after one shot
+					m_TimerRunning[ti] = false;
+					counter = 0;
+					queue = 0;
+				}
+				else
+				{
+					--queue;
+				}
+			}
+
+			m_TimerCounter[ti] = counter;
+			SDL_AtomicSet(&m_TimerQueue[ti], queue);
+		}
+		m_LastTick = currentTick;
+		SDL_Delay(1);
+	}
+}
+
+int Timer::timer(void *p)
+{
+	static_cast<Timer *>(p)->timer();
+	return 0;
 }
 
 } /* namespace FT900EMU */
