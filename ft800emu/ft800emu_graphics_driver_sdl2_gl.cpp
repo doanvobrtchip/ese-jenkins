@@ -28,6 +28,15 @@ static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
 static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
+static int s_WindowWidth;
+static int s_WindowHeight;
+static bool s_WindowResized;
+
+static float s_LetterBoxX = 0.0f;
+static int s_LetterBoxXPix = 0;
+static float s_LetterBoxY = 0.0f;
+static int s_LetterBoxYPix = 0;
+
 static bool s_MouseEnabled;
 static int s_MousePressure;
 
@@ -81,6 +90,32 @@ int s_TitleFrameSkip = 0;
 
 void drawBuffer()
 {
+	if (s_WindowResized)
+	{
+		glViewport(0, 0, s_WindowWidth, s_WindowHeight);
+		s_WindowResized = false;
+		float windowRatio = (float)s_WindowWidth / (float)s_WindowHeight;
+		if (windowRatio > s_Ratio) // Window is wider
+		{
+			float box = ((windowRatio / s_Ratio) - 1.0f) * 0.5f;
+			s_LetterBoxX = box;
+			s_LetterBoxY = 0;
+		}
+		else if (windowRatio < s_Ratio)
+		{
+			float box = ((s_Ratio / windowRatio) - 1.0f) * 0.5f;
+			s_LetterBoxX = 0;
+			s_LetterBoxY = box;
+		}
+		else
+		{
+			s_LetterBoxX = 0;
+			s_LetterBoxY = 0;
+		}
+		s_LetterBoxXPix = (int)(s_LetterBoxX * (float)s_Width * ((float)s_WindowHeight / (float)s_Height));
+		s_LetterBoxYPix = (int)(s_LetterBoxY * (float)s_Height * ((float)s_WindowWidth / (float)s_Width));
+	}
+
 	if (s_Output)
 	{
 		int buffer = (s_BufferCurrent + 1) % 2;
@@ -95,28 +130,28 @@ void drawBuffer()
 			glBegin(GL_QUADS);
 
 #if FT800EMU_FLIP_SDL2
-			glTexCoord2i(0, 0);
+			glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
 			glVertex3f(-1, -1, 0);
 
-			glTexCoord2i(1, 0);
+			glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
 			glVertex3f(1, -1, 0);
 
-			glTexCoord2i(1, 1);
+			glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
 			glVertex3f(1, 1, 0);
 
-			glTexCoord2i(0, 1);
+			glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
 			glVertex3f(-1, 1, 0);
 #else
-			glTexCoord2i(0, 1);
+			glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
 			glVertex3f(-1, -1, 0);
 
-			glTexCoord2i(1, 1);
+			glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
 			glVertex3f(1, -1, 0);
 
-			glTexCoord2i(1, 0);
+			glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
 			glVertex3f(1, 1, 0);
 
-			glTexCoord2i(0, 0);
+			glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
 			glVertex3f(-1, 1, 0);
 #endif
 
@@ -186,7 +221,7 @@ void GraphicsDriverClass::begin()
 	s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
 	s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
 
-	uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+	uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
@@ -203,16 +238,19 @@ void GraphicsDriverClass::begin()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0); // We do our own double buffering, as we only render a single texture
 #endif
 
+	s_WindowWidth = s_Width * FT800EMU_WINDOW_SCALE;
+	s_WindowHeight = s_Height * FT800EMU_WINDOW_SCALE;
+
 	s_Window = SDL_CreateWindow(FT800EMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, flags);
+		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
 
 	glGenTextures(1, &s_BufferTexture);
 	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 	static const GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
@@ -233,19 +271,41 @@ bool GraphicsDriverClass::update()
 {
 	SDL_Event event;
 
-	while ( SDL_PollEvent(&event) ) {
-		switch (event.type) {
-			// don't care about other events
-			case SDL_QUIT:
-				return false;
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+		// don't care about other events
+		case SDL_QUIT:
+			return false;
+		case SDL_WINDOWEVENT:
+			switch (event.window.event)
+			{
+			case SDL_WINDOWEVENT_RESIZED:
+				s_WindowWidth = event.window.data1;
+				s_WindowHeight = event.window.data2;
+				s_WindowResized = true;
+				break;
+			}
+			break;
 		}
 	}
 
 	int mouseX, mouseY;
 	int button = SDL_GetMouseState(&mouseX, &mouseY);
 	s_MouseDown = button & 1;
-	s_MouseX = mouseX / FT800EMU_WINDOW_SCALE;
-	s_MouseY = mouseY / FT800EMU_WINDOW_SCALE;
+
+	mouseX -= s_LetterBoxXPix;
+	mouseX *= s_Width;
+	mouseX /= (s_WindowWidth - (s_LetterBoxXPix * 2));
+
+	mouseY -= s_LetterBoxYPix;
+	mouseY *= s_Height;
+	mouseY /= (s_WindowHeight - (s_LetterBoxYPix * 2));
+
+	s_MouseX = mouseX;
+	s_MouseY = mouseY;
+
 	if (s_MouseDown)
 	{
 		Memory.setTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
@@ -295,7 +355,10 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Height = height;
 		s_Ratio = (float)width / (float)height;
 
-		SDL_SetWindowSize(s_Window, s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE);
+		s_WindowWidth = s_Width * FT800EMU_WINDOW_SCALE;
+		s_WindowHeight = s_Height * FT800EMU_WINDOW_SCALE;
+
+		SDL_SetWindowSize(s_Window, s_WindowWidth, s_WindowHeight);
 	}
 }
 
