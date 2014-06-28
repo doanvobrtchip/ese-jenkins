@@ -49,6 +49,7 @@ private:
 
 private:
 	uint8_t m_Register[FT900EMU_MEMORY_TIMER_BYTES];
+	SDL_SpinLock m_RegIntLock;
 
 	uint8_t m_TimerLS[FT900EMU_TIMER_NB];
 	uint8_t m_TimerMS[FT900EMU_TIMER_NB];

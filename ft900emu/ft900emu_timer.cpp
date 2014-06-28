@@ -71,7 +71,7 @@
 
 namespace FT900EMU {
 
-Timer::Timer(IRQ *irq) : m_IRQ(irq), m_ThreadRunning(NULL)
+Timer::Timer(IRQ *irq) : m_IRQ(irq), m_RegIntLock(0), m_ThreadRunning(NULL)
 {
 	softReset();
 	SDL_InitSubSystem(SDL_INIT_TIMER);
@@ -204,8 +204,8 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 	case TIMER_INT:
 		// 0b10101010: Enable interrupt for timers 4, 3, 2, 1
 		// 0b01010101: Timers 4, 3, 2, 1 were fired (read) / were handled (write)
-		if (io_dout & 0b01010101) // Interrupts were handled
 		{
+			SDL_AtomicLock(&m_RegIntLock);
 			uint32_t intout =
 				m_Register[TIMER_INT] & 0b01010101 // Original fired state
 				| io_dout & 0b10101010; // New enabled state
@@ -224,9 +224,10 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 					}
 				}
 			}
-			io_dout = intout;
+			m_Register[idx] = intout;
+			SDL_AtomicUnlock(&m_RegIntLock);
+			return; // Already written
 		}
-		break;
 	case TIMER_WRITE_LS:
 		m_TimerLS[TIMER_SELECTED] = io_dout;
 		goto pushValue;
@@ -310,7 +311,9 @@ inline void Timer::timer()
 				if (TIMER_INT_IS_ENABLED(ti))
 				{
 					// Call interrupt
+					SDL_AtomicLock(&m_RegIntLock);
 					m_Register[TIMER_INT] |= TIMER_INT_FIRED(ti);
+					SDL_AtomicUnlock(&m_RegIntLock);
 					m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
 				}
 
