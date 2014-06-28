@@ -468,7 +468,10 @@ void EmulatorClass::run(const EmulatorParameters &params)
 		AudioProcessor.begin();
 		AudioDriver.begin();
 	}
-	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.begin(params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str());
+	if (params.Flags & EmulatorEnableCoprocessor)
+		Coprocessor.begin(
+			params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str(),
+			params.Flags & EmulatorFT801);
 	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.begin();
 
 	if (s_Graphics)

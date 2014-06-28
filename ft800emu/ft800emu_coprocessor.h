@@ -28,7 +28,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath = 0);
+	void begin(const char *romFilePath = 0, bool ft801 = false);
 	void end();
 
 	void executeManual();

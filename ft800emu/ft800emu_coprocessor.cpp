@@ -31,9 +31,12 @@ static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
 static const uint16_t pgm_rom[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "crom.h"
 };
+static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "crom_ft801.h"
+};
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-void CoprocessorClass::begin(const char *romFilePath)
+void CoprocessorClass::begin(const char *romFilePath, bool ft801)
 {
 	if (romFilePath)
 	{
@@ -50,7 +53,8 @@ void CoprocessorClass::begin(const char *romFilePath)
 	}
 	else
 	{
-		memcpy(pgm, pgm_rom, sizeof(pgm_rom));
+		if (ft801) memcpy(pgm, pgm_rom_ft801, sizeof(pgm_rom_ft801));
+		else memcpy(pgm, pgm_rom, sizeof(pgm_rom));
 	}
 
     pc = 0;

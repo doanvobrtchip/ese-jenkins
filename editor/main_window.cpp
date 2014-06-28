@@ -712,6 +712,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
+		// | FT800EMU::EmulatorFT801
 		;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;

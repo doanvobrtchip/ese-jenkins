@@ -449,6 +449,10 @@ static const uint8_t rom[FT800EMU_ROM_SIZE] = {
 #include "rom.h"
 };
 
+static const uint8_t rom_ft801[FT800EMU_ROM_SIZE] = {
+#include "rom_ft801.h"
+};
+
 void MemoryClass::begin(const char *romFilePath, bool ft801)
 {
 	if (romFilePath)
@@ -466,7 +470,8 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	}
 	else
 	{
-		memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+		if (ft801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801));
+		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
 	}
 
 	s_DirectSwapCount = 0;
