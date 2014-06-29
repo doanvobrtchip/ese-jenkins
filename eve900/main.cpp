@@ -72,7 +72,8 @@ class FT800SPISlave : public FT900EMU::SPISlave
 //static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetest2/kaetest2.exe";
 //static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetimer1/kaetimer1.exe";
 //static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetimer2/kaetimer2.exe";
-static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/demo_clock/demo_clock.exe";
+//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/demo_clock/demo_clock.exe";
+static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/demo_sketch/demo_sketch.exe";
 
 FT900EMU::Chip *s_FT900EMUSystem = NULL;
 FT32SimulatorExit *s_EmulatorExit = NULL;

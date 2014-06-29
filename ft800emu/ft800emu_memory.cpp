@@ -116,7 +116,7 @@ inline void transformTouchXY(int &x, int &y)
 	// Transform (currently just depending on REG_ROTATE, ignoring TRANSFORM)
 	if (Memory.rawReadU32(ram, REG_ROTATE) & 0x01)
 	{
-		printf("rotated\n");
+		// printf("rotated\n");
 		x = Memory.rawReadU32(ram, REG_HSIZE) - x - 1;
 		y = Memory.rawReadU32(ram, REG_VSIZE) - y - 1;
 	}
@@ -159,7 +159,7 @@ inline void getTouchScreenXY(long micros, int &x, int &y, bool jitter)
 		x += ((rand() % 2000) - 1000) / 1000;
 		y += ((rand() % 2000) - 1000) / 1000;
 	}
-	transformTouchXY(x, y);
+	// transformTouchXY(x, y);
 }
 
 inline void getTouchScreenXY(long micros, int &x, int &y)
@@ -181,6 +181,7 @@ inline uint32_t getTouchScreenXY(long micros)
 	{
 		int x, y;
 		getTouchScreenXY(micros, x, y);
+		transformTouchXY(x, y);
 		return getTouchScreenXY(x, y);
 	}
 	else
