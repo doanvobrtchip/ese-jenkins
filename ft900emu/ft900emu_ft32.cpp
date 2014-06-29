@@ -138,6 +138,7 @@ FT32::~FT32()
 void FT32::run()
 {
 	m_Running = true;
+	push(0);
 	call(0);
 }
 
@@ -392,12 +393,11 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 void FT32::call(uint32_t pma)
 {
 	uint32_t cur = pma;
-	push(cur << 2);
 	while (m_Running)
 	{
 		// Check for IRQ
 		uint32_t nirq = m_IRQ->nextInterrupt();
-		if (~nirq) call(nirq + 2);
+		if (~nirq) { push(cur << 2); call(nirq + 2); }
 
 		uint32_t inst = m_ProgramMemory[cur & FT32_PM_CUR_MASK];
 		// printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);
@@ -417,6 +417,7 @@ void FT32::call(uint32_t pma)
 					if (inst & FT32_TOC_CALL) // CALL
 					{
 						// printf("      CALL\n");
+						push(cur << 2);
 						call(target);
 					}
 					else // JUMP

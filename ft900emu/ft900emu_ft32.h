@@ -84,7 +84,7 @@ private:
 private:
 	uint8_t m_Memory[FT900EMU_FT32_MEMORY_SIZE];
 
-	uint8_t m_SafetyPadding[FT900EMU_FT32_MEMORY_SIZE * 8]; // FOR DEBUG
+	// uint8_t m_SafetyPadding[FT900EMU_FT32_MEMORY_SIZE * 8]; // FOR DEBUG
 
 	uint32_t m_Register[FT900EMU_FT32_REGISTER_COUNT];
 	uint32_t m_ProgramMemory[FT900EMU_FT32_PROGRAM_MEMORY_COUNT];
