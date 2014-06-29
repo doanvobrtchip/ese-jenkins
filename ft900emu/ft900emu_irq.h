@@ -37,13 +37,8 @@ public:
 	void interrupt(uint32_t irq);
 
 	// Called by FT32 to check if there's an interrupt, ~0 if none
-	inline uint32_t nextInterrupt()
-	{
-		// Only do function call if interrupt waiting (direct memread to pointer is fast)
-		return (m_InterruptCheck)
-			? nextInterruptInternal()
-			: ~0;
-	}
+	uint32_t nextInterrupt();
+	inline const bool *interruptCheck() { return &m_InterruptCheck; }
 
 	// Called by FT32 when interrupt call returns
 	void returnInterrupt();
@@ -55,7 +50,6 @@ public:
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:
-	uint32_t nextInterruptInternal();
 	void lock();
 	void unlock();
 

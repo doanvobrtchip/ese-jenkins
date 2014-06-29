@@ -389,6 +389,32 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+// Returns false when the running code must abort
+bool FT32::interrupt(uint32_t cur)
+{
+	const bool *interruptCheck = m_IRQ->interruptCheck();
+	do
+	{
+		uint32_t nirq = m_IRQ->nextInterrupt();
+		if (~nirq)
+		{
+			if (nirq < FT900EMU_BUILTIN_IRQ_INDEX)
+			{
+				// Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
+				push(cur << 2);
+				call(nirq + 2);
+			}
+			else switch (nirq)
+			{
+			case FT900EMU_BUILTIN_IRQ_STOP: // Stop running
+				m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_STOP); // Re-raise this interrupt
+				return false;
+			}
+		}
+	} while (*interruptCheck);
+	return true;
+}
+
 // Runs code until interrupt return or process ends
 void FT32::call(uint32_t pma)
 {
@@ -399,23 +425,17 @@ void FT32::call(uint32_t pma)
 // Return ~0 on interrupt return or requested process exit
 uint32_t FT32::exec(uint32_t pma)
 {
+	const bool *interruptCheck = m_IRQ->interruptCheck();
 	uint32_t cur = pma;
 	// printf("exec: %i\n", pma);
 	for (; ; )
 	{
 		// Check for IRQ
-		uint32_t nirq = m_IRQ->nextInterrupt();
-		if (~nirq)
+		if (*interruptCheck)
 		{
-			if (nirq < FT900EMU_BUILTIN_IRQ_INDEX)
+			if (!interrupt(cur))
 			{
-				// Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
-				push(cur << 2); /*push(~0);*/ call(nirq + 2);
-			}
-			else switch (nirq)
-			{
-			case FT900EMU_BUILTIN_IRQ_STOP: // Stop running (TODO: Replaces m_Running)
-				pop(); // Discard, we need to exit
+				pop(); // Discard, exit running code
 				return ~0;
 			}
 		}
@@ -869,6 +889,8 @@ uint32_t FT32::exec(uint32_t pma)
 		//printf("-> RD: R%i: %i (%#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
 		++cur;
 	}
+	printf(F9EW "Unreachable code" F9EE);
+	FT900EMU_DEBUG_BREAK(); // Unreachable code
 	pop(); // Discard, we need to exit
 	return ~0;
 }

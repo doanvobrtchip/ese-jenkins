@@ -71,6 +71,7 @@ private:
 	uint8_t readMemU8(uint32_t addr);
 	void writeMemU8(uint32_t addr, uint8_t value);
 
+	bool interrupt(uint32_t cur);
 	void call(uint32_t pma);
 	uint32_t exec(uint32_t pma);
 

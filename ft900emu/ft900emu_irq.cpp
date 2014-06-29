@@ -162,7 +162,7 @@ void IRQ::interrupt(uint32_t irq)
 }
 
 // Called by FT32 to check if there's an interrupt, ~0 if none
-uint32_t IRQ::nextInterruptInternal()
+uint32_t IRQ::nextInterrupt()
 {
 	// Don't check again until a change is notified
 	m_InterruptCheck = false;
@@ -182,6 +182,8 @@ uint32_t IRQ::nextInterruptInternal()
 
 			int idx = 0;
 			while (!(builtinint & (1 << idx))) ++idx;
+			builtinint &= ~(1 << idx);
+			m_BuiltinInterrupts = builtinint;
 			irq = FT900EMU_BUILTIN_IRQ_INDEX + idx;
 			m_Priority.push_back(0);
 			++m_CurrentDepth;
