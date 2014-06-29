@@ -8,6 +8,10 @@
 #include "ft800emu_graphics_driver.h"
 
 // System includes
+#ifdef WIN32
+#	define NOMINMAX
+#	include <Windows.h>
+#endif
 #include <GL/gl.h>
 #include "ft800emu_system.h"
 #include "ft800emu_system_sdl.h"
@@ -17,6 +21,14 @@
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_memory.h"
 #include "vc.h"
+
+#ifndef GL_CLAMP_TO_BORDER
+#	define GL_CLAMP_TO_BORDER 0x812D
+#endif
+
+#ifndef GL_TEXTURE_SWIZZLE_RGBA
+#	define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
+#endif
 
 using namespace std;
 
@@ -54,11 +66,15 @@ static int s_MouseDown;
 #define FT800EMU_HARDWARE_DOUBLE_BUFFER 0
 
 // Number of frames to skip for refreshing the window title
-#define FT800EMU_TITLE_FRAMESKIP 10
+#define FT800EMU_TITLE_FRAMESKIP 3
 
 // Whether to use a dynamic title
-// It seems this is very slow under SDL2
-#define FT800EMU_TITLE_DYNAMIC 0
+// It seems this is very slow under SDL2 on Linux
+#ifdef WIN32
+#	define FT800EMU_TITLE_DYNAMIC 1
+#else
+#	define FT800EMU_TITLE_DYNAMIC 0
+#endif
 
 namespace {
 
@@ -263,7 +279,7 @@ void GraphicsDriverClass::begin()
 	s_Running = true;
 	s_WaitFlip = SDL_CreateCond();
 	s_WaitFlipMutex = SDL_CreateMutex();
-	s_FlipThread = SDL_CreateThread(flipThread, NULL, NULL);
+	s_FlipThread = SDL_CreateThreadFT(flipThread, NULL, NULL);
 #endif
 }
 

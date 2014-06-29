@@ -17,20 +17,7 @@
 #include "ft800emu_system_sdl.h"
 #include "ft800emu_system.h"
 
-// Libraries
-/*#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "avrt.lib")
-#pragma comment(lib, "gdiplus.lib")
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "msimg32.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dinput8.lib")*/
-
 // System includes
-#ifdef WIN32
-#else
-#	include <sched.h>
-#endif
 #include <SDL_thread.h>
 
 // Project includes
@@ -48,13 +35,6 @@ void SystemSdlClass::ErrorSdl()
 }
 
 } /* namespace FT800EMU */
-
-#ifdef FT800EMU_SDL2
-SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data)
-{
-	return SDL_CreateThread(fn, NULL, data);
-}
-#endif
 
 #endif /* (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2)) */
 

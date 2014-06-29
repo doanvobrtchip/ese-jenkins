@@ -60,6 +60,12 @@ void AudioDriverClass::begin()
 	s_AudioFrequency = obtained.freq;
 	s_AudioChannels = obtained.channels;
 
+	if (s_AudioChannels != 1)
+	{
+		printf("Bad nb channels\n");
+		exit(EXIT_FAILURE);
+	}
+
 	SDL_PauseAudio(0);
 }
 
@@ -80,8 +86,8 @@ int AudioDriverClass::getChannels()
 
 void AudioDriverClass::beginBuffer(short **buffer, int *samples)
 {
-	buffer = NULL;
-	samples = 0;
+	*buffer = NULL;
+	*samples = 0;
 }
 
 void AudioDriverClass::endBuffer()

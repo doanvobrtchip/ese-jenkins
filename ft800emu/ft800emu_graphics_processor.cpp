@@ -95,8 +95,10 @@
 #define FT800EMU_DL_MACRO 37
 #define FT800EMU_DL_CLEAR 38
 
-#ifdef FT800EMU_SDL2
-SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data);
+#if defined(FT800EMU_SDL2)
+#define SDL_CreateThreadFT(fn, data) SDL_CreateThread(fn, NULL, data)
+#else if defined(FT800EMU_SDL)
+#define SDL_CreateThreadFT SDL_CreateThread
 #endif
 
 namespace FT800EMU {
@@ -2333,7 +2335,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo);
 
 void resizeThreadInfos(int size)
 {
-#ifdef FT800EMU_SDL
+#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	for (int i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
@@ -2367,7 +2369,7 @@ void resizeThreadInfos(int size)
 		s_ThreadInfos[i].Running = true;
 		s_ThreadInfos[i].StartSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
-		s_ThreadInfos[i].Thread = SDL_CreateThread(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
+		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
 		s_ThreadInfos[i].Running = true;
@@ -3062,7 +3064,7 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		li->YIdx = (i * yInc) + yIdx;
 		li->YInc = s_ThreadCount * yInc;
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
-		// li->Thread = SDL_CreateThread(launchThread, static_cast<void *>(li));
+		// li->Thread = SDL_CreateThreadFT(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
 #else
 #	ifdef WIN32

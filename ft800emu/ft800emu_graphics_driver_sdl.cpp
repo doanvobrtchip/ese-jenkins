@@ -113,7 +113,7 @@ void GraphicsDriverClass::begin()
 	s_Running = true;
 	s_WaitFlip = SDL_CreateCond();
 	s_WaitFlipMutex = SDL_CreateMutex();
-	s_FlipThread = SDL_CreateThread(flipThread, NULL);
+	s_FlipThread = SDL_CreateThreadFT(flipThread, NULL);
 
 #endif
 
@@ -211,7 +211,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 
 #if FT800EMU_SDL_THREADED_FLIP
 		// Resume the flip thread
-		s_FlipThread = SDL_CreateThread(flipThread, NULL);
+		s_FlipThread = SDL_CreateThreadFT(flipThread, NULL);
 #endif
 	}
 }

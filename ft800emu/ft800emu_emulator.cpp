@@ -53,8 +53,10 @@
 // Reduce CPU usage when REG_PCLK is zero
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
-#ifdef FT800EMU_SDL2
-SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, void *data);
+#if defined(FT800EMU_SDL2)
+#define SDL_CreateThreadFT(fn, data) SDL_CreateThread(fn, NULL, data)
+#else if defined(FT800EMU_SDL)
+#define SDL_CreateThreadFT SDL_CreateThread
 #endif
 
 namespace FT800EMU {
@@ -523,14 +525,14 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
-	SDL_Thread *threadD = SDL_CreateThread(mcuThread, NULL);
+	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, NULL);
 	// TODO - Error handling
 
-	SDL_Thread *threadA = SDL_CreateThread(audioThread, NULL);
+	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, NULL);
 	// TODO - Error handling
 
 	SDL_Thread *threadC = NULL;
-	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThread(coprocessorThread, NULL);
+	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThreadFT(coprocessorThread, NULL);
 	// TODO - Error handling
 
 	masterThread();
