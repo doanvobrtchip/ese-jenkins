@@ -454,6 +454,7 @@ uint32_t FT32::exec(uint32_t pma)
 						cur = target - 1;
 						// Direct jump without returning
 						// Only return at function calls or
+						// NOTE: Indirect jumps will return target in JIT'ed code
 					}
 				}
 				else

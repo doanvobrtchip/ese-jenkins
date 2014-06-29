@@ -218,9 +218,13 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 					int queue = SDL_AtomicGet(&m_TimerQueue[ti]);
 					if (queue)
 					{
-						intout &= ~TIMER_INT_FIRED(ti);
+						// printf("sub queue %i\n", queue - 1);
 						m_IRQ->interrupt(FT900EMU_TIMER_INTERRUPT);
 						SDL_AtomicCAS(&m_TimerQueue[ti], queue, queue - 1);
+					}
+					else
+					{
+						intout &= ~TIMER_INT_FIRED(ti);
 					}
 				}
 			}
@@ -291,6 +295,7 @@ inline void Timer::timer()
 	{
 		uint64_t currentTick = SDL_GetPerformanceCounter();
 		uint64_t delta = currentTick - m_LastTick;
+		// printf("%i\n", (uint32_t)delta);
 		for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
 			if (m_TimerRunning[ti])
 		{
@@ -331,7 +336,18 @@ inline void Timer::timer()
 			}
 
 			m_TimerCounter[ti] = counter;
-			SDL_AtomicSet(&m_TimerQueue[ti], queue);
+			/*int oldqueue = SDL_AtomicGet(&m_TimerQueue[ti]);
+			if (oldqueue && oldqueue < queue)
+			{
+				// Give an extra tick space as buffer
+				SDL_AtomicAdd(&m_TimerQueue[ti], queue);
+			}
+			else
+			{*/
+				// If the interrupt handler is too slow, this replaces the queue
+				// printf("queue replace %i\n", oldqueue);
+				SDL_AtomicSet(&m_TimerQueue[ti], queue);
+			/*}*/
 		}
 		m_LastTick = currentTick;
 		SDL_Delay(1);
