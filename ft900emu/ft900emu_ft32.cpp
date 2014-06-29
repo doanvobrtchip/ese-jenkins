@@ -390,7 +390,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 ////////////////////////////////////////////////////////////////////////
 
 // Returns false when the running code must abort
-bool FT32::interrupt(uint32_t cur)
+bool FT32::interrupt(uint32_t cur) // cur for both push(cur << 2) and to handle REPORT_CUR
 {
 	const bool *interruptCheck = m_IRQ->interruptCheck();
 	do
@@ -409,6 +409,9 @@ bool FT32::interrupt(uint32_t cur)
 			case FT900EMU_BUILTIN_IRQ_STOP: // Stop running
 				m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_STOP); // Re-raise this interrupt
 				return false;
+			case FT900EMU_BUILTIN_IRQ_REPORT_CUR:
+				printf(F9EW "Cursor: %#x" F9EE, cur << 2);
+				break;
 			}
 		}
 	} while (*interruptCheck);

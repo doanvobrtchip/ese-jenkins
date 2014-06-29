@@ -38,7 +38,10 @@ public:
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
 private:
+	void softResetInternal();
 	uint32_t m_Register[FT900EMU_MEMORY_SPIM_COUNT];
+
+	int m_SS;
 
 	IRQ *m_IRQ;
 	SPISlave **m_SPISlaves;

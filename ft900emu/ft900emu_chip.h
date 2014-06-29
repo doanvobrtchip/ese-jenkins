@@ -26,6 +26,7 @@ class SPIM;
 
 class SPISlave
 {
+public:
 	virtual void cs(bool cs) = 0;
 	virtual uint8_t transfer(uint8_t d) = 0;
 };
