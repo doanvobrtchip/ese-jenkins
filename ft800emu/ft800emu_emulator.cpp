@@ -166,6 +166,7 @@ namespace {
 	void (*s_Setup)() = NULL;
 	void (*s_Loop)() = NULL;
 	void (*s_Keyboard)() = NULL;
+	void (*s_Close)() = NULL;
 	int s_Flags = 0;
 	bool s_MasterRunning = false;
 	bool s_DynamicDegrade = false;
@@ -318,13 +319,32 @@ namespace {
 				{
 					if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize))
 					{
-						exit(0); // TODO: Properly exit!!!
+						if (s_Close)
+						{
+							s_Close();
+							return 0;
+						}
+						else
+						{
+							exit(0); // TODO: Properly exit!!!
+						}
 					}
 				}
 				else
 				{
 					GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
-					if (!GraphicsDriver.update()) exit(0); // ...
+					if (!GraphicsDriver.update())
+					{
+						if (s_Close)
+						{
+							s_Close();
+							return 0;
+						}
+						else
+						{
+							exit(0); // ...
+						}
+					}
 				}
 				unsigned long flipDelta = System.getMicros() - flipStart;
 
@@ -462,6 +482,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Keyboard = params.Keyboard;
 	s_Graphics = params.Graphics;
 	g_Exception = params.Exception;
+	s_Close = params.Close;
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	System.begin();
@@ -557,7 +578,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	}
 #endif /* #ifdef FT800EMU_SDL */
 
-	printf("ending\n");
+	printf("Threads finished, cleaning up\n");
 
 	delete[] s_GraphicsBuffer;
 	s_GraphicsBuffer = NULL;
@@ -575,19 +596,22 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	System.end();
 
 	s_EmulatorRunning = false;
-	printf("emulator stop running\n");
+	printf("Emulator stopped running\n");
 }
 
 void EmulatorClass::stop()
 {
 	s_MasterRunning = false;
 
-	while (s_EmulatorRunning) // TODO: Mutex?
+	if (!System.isMCUThread())
 	{
-		System.delay(1);
+		while (s_EmulatorRunning) // TODO: Mutex?
+		{
+			System.delay(1);
+		}
 	}
 
-	printf("stop ok\n");
+	printf("Stop ok\n");
 }
 
 } /* namespace FT800EMU */

@@ -14,6 +14,7 @@
 #include "ft900emu_irq.h"
 #include "ft900emu_uart.h"
 #include "ft900emu_timer.h"
+#include "ft900emu_spim.h"
 
 // using namespace ...;
 
@@ -28,6 +29,7 @@
 
 #define FT900EMU_CLOCK_UART0_ENA 0x0010
 #define FT900EMU_CLOCK_UART1_ENA 0x0008
+#define FT900EMU_CLOCK_SPIM_ENA  0x0080
 
 #define FT900EMU_MISC_PERI_SOFTRESET 0x80000000u
 #define FT900EMU_MISC_UART0          0x00380000u
@@ -43,7 +45,8 @@
 namespace FT900EMU {
 
 Chip::Chip() :
-	m_UART0(NULL)
+	m_UART0(NULL),
+	m_SPIM(NULL)
 {
 	m_IRQ = new IRQ();
 	m_FT32 = new FT32(m_IRQ);
@@ -51,11 +54,13 @@ Chip::Chip() :
 	m_FT32->io(this);
 	m_Timer = new Timer(m_IRQ);
 	m_FT32->io(m_Timer);
+	memset(m_SPISlaves, 0, sizeof(m_SPISlaves));
 }
 
 Chip::~Chip()
 {
-	// TODO: Unregister io
+	m_FT32->ioRemove(m_SPIM);
+	delete m_SPIM; m_SPIM = NULL;
 	m_FT32->ioRemove(m_UART0);
 	delete m_UART0; m_UART0 = NULL;
 
@@ -106,7 +111,6 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 					{
 						m_FT32->ioRemove(m_UART0);
 						delete m_UART0; m_UART0 = NULL;
-						FT900EMU_DEBUG_BREAK();
 					}
 				}
 				updateUART0Functionality();
@@ -115,6 +119,27 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			{
 				printf(F9ED "(!) UART1 = %s" F9EE, v & FT900EMU_CLOCK_UART1_ENA ? "ENABLED" : "DISABLED");
 				FT900EMU_DEBUG_BREAK();
+			}
+			if (diffmask & FT900EMU_CLOCK_SPIM_ENA)
+			{
+				printf(F9ED "(!) SPIM = %s" F9EE, v & FT900EMU_CLOCK_UART0_ENA ? "ENABLED" : "DISABLED");
+				if (v & FT900EMU_CLOCK_SPIM_ENA)
+				{
+					if (!m_SPIM)
+					{
+						m_SPIM = new SPIM(m_IRQ, m_SPISlaves);
+						m_FT32->io(m_SPIM);
+						updateSPIMPads();
+					}
+				}
+				else
+				{
+					if (m_SPIM)
+					{
+						m_FT32->ioRemove(m_SPIM);
+						delete m_SPIM; m_SPIM = NULL;
+					}
+				}
 			}
 			break;
 		}
@@ -198,6 +223,15 @@ void Chip::updateUART0Configuration()
 			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_CLKSEL,
 			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_FIFOSEL,
 			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_INTSEL);
+	}
+}
+
+void Chip::updateSPIMPads()
+{
+	if (m_SPIM)
+	{
+		// TODO
+		// Always on for now
 	}
 }
 

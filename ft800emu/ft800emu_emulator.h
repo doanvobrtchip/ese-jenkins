@@ -110,6 +110,9 @@ public:
 
 	// Exception callback
 	void (*Exception)(const char *message);
+
+	// Safe exit
+	void (*Close)();
 };
 
 /**

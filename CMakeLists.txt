@@ -108,6 +108,7 @@ IF (WITH_FT900EMU AND WITH_SDL2)
   ADD_SUBDIRECTORY(ft900emu)
 
   ADD_SUBDIRECTORY(app900)
+  ADD_SUBDIRECTORY(eve900)
 ENDIF (WITH_FT900EMU AND WITH_SDL2)
 
 ########################################################################
