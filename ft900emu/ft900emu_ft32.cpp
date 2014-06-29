@@ -446,10 +446,27 @@ void FT32::call(uint32_t pma)
 				return;
 			}
 			case FT32_PATTERN_EXA:
+			{
+				uint32_t addr = FT32_AA(inst);
+				uint32_t rd = m_Register[FT32_RD(inst)];
+				switch (FT32_DW(inst))
+				{
+					case FT32_DW_8: m_Register[FT32_RD(inst)] = readMemU8(addr); writeMemU8(addr, rd); break;
+					case FT32_DW_16: m_Register[FT32_RD(inst)] = readMemU16(addr); writeMemU16(addr, rd); break;
+					case FT32_DW_32: m_Register[FT32_RD(inst)] = readMemU32(addr); writeMemU32(addr, rd); break;
+				}
+				break;
+			}
 			case FT32_PATTERN_EXI:
 			{
-				printf(F9EW "Not implemented EXA/EXI" F9EE);
-				FT900EMU_DEBUG_BREAK();
+				uint32_t addr = m_Register[FT32_RD(inst)] + FT32_K8(inst);
+				uint32_t rd = m_Register[FT32_RD(inst)];
+				switch (FT32_DW(inst))
+				{
+					case FT32_DW_8: m_Register[FT32_RD(inst)] = readMemU8(addr); writeMemU8(addr, rd); break;
+					case FT32_DW_16: m_Register[FT32_RD(inst)] = readMemU16(addr); writeMemU16(addr, rd); break;
+					case FT32_DW_32: m_Register[FT32_RD(inst)] = readMemU32(addr); writeMemU32(addr, rd); break;
+				}
 				break;
 			}
 			case FT32_PATTERN_ALUOP:
