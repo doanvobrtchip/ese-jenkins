@@ -29,6 +29,8 @@ IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), m_CurrentInt(0), m_InterruptCheck(fal
 
 	_mm_prefetch(&m_InterruptCheck, _MM_HINT_T0);
 	memset(m_Register, 0, FT900EMU_MEMORY_IRQ_COUNT * sizeof(uint32_t));
+
+	m_Register[FT900EMU_IRQ_CONTROL] = 0x80000000;
 }
 
 void IRQ::softReset()
@@ -38,7 +40,7 @@ void IRQ::softReset()
 
 inline bool IRQ::globalInterruptMask()
 {
-	return m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_GLOBALINTMASK;
+	return (m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_GLOBALINTMASK) == 0;
 }
 
 inline bool IRQ::nestedInterrupt()
@@ -54,17 +56,28 @@ inline uint32_t IRQ::nestedDepth()
 // io_a is addr / 4 (read per 4 bytes)
 uint32_t IRQ::ioRd32(uint32_t io_a, uint32_t io_be)
 {
+	if (io_a < FT900EMU_MEMORY_IRQ_BEGIN32)
+	{
+		return FT32IO::ioRd32(io_a, io_be);
+	}
+
 	uint idx = io_a - FT900EMU_MEMORY_IRQ_START;
-	printf(F9ED "+ IRQ :: Read register %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
+	printf(F9ED "+ IRQ :: Read register U32 %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
 
 void IRQ::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
+	if (io_a < FT900EMU_MEMORY_IRQ_BEGIN32)
+	{
+		FT32IO::ioWr32(io_a, io_be, io_dout);
+		return;
+	}
+
 	const uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);
 	const uint32_t diffmask = v ^ m_Register[idx];
-	printf(F9ED "+ IRQ :: Write register %i (%#x): %#x [diffmask = %#x]" F9EE, idx, idx << 2, v, diffmask);
+	printf(F9ED "+ IRQ :: Write register U32 %i (%#x): %#x [diffmask = %#x]" F9EE, idx, idx << 2, v, diffmask);
 
 	// WRITE
 	m_Register[idx] = v;
@@ -80,6 +93,32 @@ void IRQ::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			m_InterruptCheck = false;
 		}
 	}
+}
+
+uint8_t IRQ::ioRd8(uint32_t io_a)
+{
+	if (io_a >= FT900EMU_MEMORY_IRQ_END8)
+	{
+		return FT32IO::ioRd8(io_a);
+	}
+
+	const uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START8;
+	printf(F9ED "+ IRQ :: Read register U8 %i (%#x): %#x" F9EE, idx, idx << 2, (uint32_t)m_Register8[idx]);
+	return m_Register8[idx];
+}
+
+void IRQ::ioWr8(uint32_t io_a, uint8_t io_dout)
+{
+	if (io_a >= FT900EMU_MEMORY_IRQ_END8)
+	{
+		FT32IO::ioWr8(io_a, io_dout);
+	}
+
+	const uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START8;
+	printf(F9ED "+ IRQ :: Write register U8 %i (%#x): %#x" F9EE, idx, idx << 2, (uint32_t)io_dout);
+
+	// WRITE
+	m_Register8[idx] = io_dout;
 }
 
 void IRQ::ioGetRange(uint32_t &from, uint32_t &to)
