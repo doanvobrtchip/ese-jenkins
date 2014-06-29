@@ -157,7 +157,7 @@ void IRQ::interrupt(uint32_t irq)
 	}
 	else
 	{
-		printf(F9ED "Interrupt requested, but global interrupt mask off (%#x)" F9EE, m_Register[FT900EMU_IRQ_CONTROL]);
+		printf(F9ED "Interrupt requested, but global interrupt mask on (%#x)" F9EE, m_Register[FT900EMU_IRQ_CONTROL]);
 	}
 }
 
@@ -195,15 +195,12 @@ uint32_t IRQ::nextInterruptInternal()
 
 				uint8_t priority = m_Priority.size() ? m_Priority.back() : INT_INTERRUPT_NB;
 				// Find highest priority interrupt
-				static const uint32_t mask16 = 0x0000FFFF;
 				uint32_t idx = 0;
 				uint8_t primax = priority; // Need higher priority than current
 				uint32_t idxmax = ~0;
-				uint32_t lim = (ints & ~mask16) ? 32 : 16;
-				if (!(ints & mask16)) // Optimize, do a quick check for first and second half
-				{
-					idx += 16;
-				}
+				uint32_t lim = (ints & 0xFFFF0000) ? 32 : 16; // Optimize away the last 16 bits
+				if (!(ints & 0x0000FFFF)) idx += 16; // Optimize away the first 16 bits
+				else if (!(ints & 0x000000FF)) idx += 8; // Or optimize away the first 8 bits
 				for (; idx < lim; ++idx)
 				{
 					if ((ints >> idx) & 1)
