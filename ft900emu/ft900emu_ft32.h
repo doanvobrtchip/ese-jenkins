@@ -72,6 +72,8 @@ private:
 	void writeMemU8(uint32_t addr, uint8_t value);
 
 	void call(uint32_t pma);
+	uint32_t exec(uint32_t pma);
+
 	void push(uint32_t v);
 	uint32_t pop();
 

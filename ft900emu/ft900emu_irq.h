@@ -74,6 +74,12 @@ private:
 	bool m_InterruptCheck;
 
 	std::list<uint32_t> m_Waiting;
+/*
+	uint32_t m_BuiltinInterrupts; // Never masked, interrupt 0 + builtin stuff (exit etc)
+
+	uint32_t m_Interrupts; // Does not contain interrupt 0
+	uint32_t m_InterruptsSorted;
+	*/
 
 }; /* class Chip */
 

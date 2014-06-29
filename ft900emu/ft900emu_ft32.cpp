@@ -390,14 +390,23 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+// Runs code until interrupt return or process ends
 void FT32::call(uint32_t pma)
 {
+	while (~(pma = exec(pma)));
+}
+
+// Returns where to continue, jit'ed code will use this prototype
+// Return ~0 on interrupt return or requested process exit
+uint32_t FT32::exec(uint32_t pma)
+{
 	uint32_t cur = pma;
+	// printf("exec: %i\n", pma);
 	while (m_Running)
 	{
 		// Check for IRQ
 		uint32_t nirq = m_IRQ->nextInterrupt();
-		if (~nirq) { push(cur << 2); call(nirq + 2); }
+		if (~nirq) { push(cur << 2); /*push(~0);*/ call(nirq + 2); } // Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
 
 		uint32_t inst = m_ProgramMemory[cur & FT32_PM_CUR_MASK];
 		// printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);
@@ -417,8 +426,10 @@ void FT32::call(uint32_t pma)
 					if (inst & FT32_TOC_CALL) // CALL
 					{
 						// printf("      CALL\n");
+						// printf("c %u\n", cur);
 						push(cur << 2);
-						call(target);
+						// call(target);
+						return target;
 					}
 					else // JUMP
 					{
@@ -429,6 +440,8 @@ void FT32::call(uint32_t pma)
 							sched_yield();
 						}
 						cur = target - 1;
+						// Direct jump without returning
+						// Only return at function calls or
 					}
 				}
 				else
@@ -440,10 +453,17 @@ void FT32::call(uint32_t pma)
 			}
 			case FT32_PATTERN_RETURN:
 			{
+				// printf("return\n");
 				if (inst & FT32_RETURN_INTMASK)
+				{
 					m_IRQ->returnInterrupt(); // RETURNI
-				pop();
-				return;
+					pop(); // Discard, return from interrupt call
+					return ~0;
+				}
+				else
+				{
+					return (pop() >> 2) + 1;
+				}
 			}
 			case FT32_PATTERN_EXA:
 			{
@@ -836,7 +856,8 @@ void FT32::call(uint32_t pma)
 		//printf("-> RD: R%i: %i (%#x)\n", FT32_RD(inst), m_Register[FT32_RD(inst)], m_Register[FT32_RD(inst)]);
 		++cur;
 	}
-	pop();
+	pop(); // Discard, we need to exit
+	return ~0;
 }
 
 ////////////////////////////////////////////////////////////////////////
