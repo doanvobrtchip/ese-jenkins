@@ -708,11 +708,12 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		// FT800EMU::EmulatorEnableKeyboard
 		/*|*/ FT800EMU::EmulatorEnableMouse
 		//| FT800EMU::EmulatorEnableDebugShortkeys
-		//| FT800EMU::EmulatorEnableAudio
+#ifdef FT800EMU_SDL2 // Cannot combine XAudio2 with Qt
+		| FT800EMU::EmulatorEnableAudio
+#endif
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
-		// | FT800EMU::EmulatorFT801
 		;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;

@@ -264,8 +264,8 @@ int main(int, char* [])
 		| FT800EMU::EmulatorEnableCoprocessor
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
-		| FT800EMU::EmulatorFT801
 		;
+	params.Mode = FT800EMU::EmulatorFT801;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;

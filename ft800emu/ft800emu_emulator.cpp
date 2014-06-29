@@ -486,7 +486,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	System.begin();
-	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str(), params.Flags & EmulatorFT801);
+	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str(), params.Mode == EmulatorFT801);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) GraphicsDriver.begin();
@@ -498,7 +498,7 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	if (params.Flags & EmulatorEnableCoprocessor)
 		Coprocessor.begin(
 			params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str(),
-			params.Flags & EmulatorFT801);
+			params.Mode == EmulatorFT801);
 	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.begin();
 
 	if (s_Graphics)

@@ -26,6 +26,9 @@
 #include "emulator_viewport.h"
 #include "ft800emu_emulator.h"
 #include "asset_converter.h"
+#ifdef WIN32
+#	include <Objbase.h>
+#endif
 
 void usage()
 {
@@ -87,11 +90,6 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-#ifdef WIN32
-	HRESULT hr;
-	hr = hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-	bool coInitOk = (hr == S_OK) || (hr == S_FALSE);
-#endif
 #ifdef FT800EMU_PYTHON
 	printf("With Python support\n");
 	Py_Initialize();
@@ -143,8 +141,5 @@ int main(int argc, char* argv[])
 	FT800EMUQT::AssetConverter::release();
     Py_Finalize();
 #endif /* FT800EMU_PYTHON */
-#ifdef WIN32
-	if (coInitOk) CoUninitialize();
-#endif
 	return result;
 }

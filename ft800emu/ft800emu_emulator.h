@@ -23,6 +23,12 @@
 
 namespace FT800EMU {
 
+enum EmulatorMode
+{
+	EmulatorFT800 = 0,
+	EmulatorFT801 = 1,
+};
+
 enum EmulatorFlags
 {
 	// enables the keyboard to be used as input
@@ -45,8 +51,6 @@ enum EmulatorFlags
 	EmulatorEnableRegPwmDutyEmulation = 0x100,
 	// enable killing the loop thread on exit
 	// EmulatorEnableKillLoopThread = 0x200,
-	// mode FT801
-	EmulatorFT801 = 0x400,
 };
 
 struct EmulatorParameters
@@ -56,13 +60,15 @@ public:
 		Setup(0),
 		Loop(0),
 		Flags(0),
+		Mode(EmulatorFT800),
 		Keyboard(0),
 		MousePressure(0),
 		ExternalFrequency(0),
 		ReduceGraphicsThreads(0),
 		Graphics(0),
 		//Interrupt(0)
-		Exception(0)
+		Exception(0),
+		Close(0)
 	{ }
 
 	// Microcontroller function called before loop.
@@ -71,6 +77,8 @@ public:
 	void (*Loop)();
 	// See EmulatorFlags.
 	int Flags;
+	// Emulator mode
+	EmulatorMode Mode;
 
 	// Called after keyboard update.
 	// Supplied function can use Keyboard.isKeyDown(FT800EMU_KEY_F3).
