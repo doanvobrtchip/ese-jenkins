@@ -137,14 +137,13 @@ FT32::~FT32()
 
 void FT32::run()
 {
-	m_Running = true;
 	push(0);
 	call(0);
 }
 
 void FT32::stop()
 {
-	m_Running = false;
+	m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_STOP);
 }
 
 void FT32::softReset()
@@ -402,11 +401,24 @@ uint32_t FT32::exec(uint32_t pma)
 {
 	uint32_t cur = pma;
 	// printf("exec: %i\n", pma);
-	while (m_Running)
+	for (; ; )
 	{
 		// Check for IRQ
 		uint32_t nirq = m_IRQ->nextInterrupt();
-		if (~nirq) { push(cur << 2); /*push(~0);*/ call(nirq + 2); } // Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
+		if (~nirq)
+		{
+			if (nirq < FT900EMU_BUILTIN_IRQ_INDEX)
+			{
+				// Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
+				push(cur << 2); /*push(~0);*/ call(nirq + 2);
+			}
+			else switch (nirq)
+			{
+			case FT900EMU_BUILTIN_IRQ_STOP: // Stop running (TODO: Replaces m_Running)
+				pop(); // Discard, we need to exit
+				return ~0;
+			}
+		}
 
 		uint32_t inst = m_ProgramMemory[cur & FT32_PM_CUR_MASK];
 		// printf("%x    CUR: %u; INST: %#010x\n", cur << 2, cur, inst);

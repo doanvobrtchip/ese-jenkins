@@ -93,8 +93,6 @@ private:
 
 	IRQ *m_IRQ;
 
-	bool m_Running;
-
 	int m_IONb;
 	uint32_t m_IOFrom[FT900EMU_FT32_MAX_IO_CB];
 	uint32_t m_IOTo[FT900EMU_FT32_MAX_IO_CB];

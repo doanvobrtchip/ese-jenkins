@@ -7,7 +7,7 @@
 // #include <...>
 
 // System includes
-#include <list>
+#include <vector>
 
 // Project includes
 #include "ft900emu_inttypes.h"
@@ -22,6 +22,9 @@ namespace FT900EMU {
 #define FT900EMU_MEMORY_IRQ_BEGIN32 (FT900EMU_MEMORY_IRQ_START + (0x20u >> 2))
 #define FT900EMU_MEMORY_IRQ_END8    (FT900EMU_MEMORY_IRQ_BEGIN32 << 2)
 #define FT900EMU_MEMORY_IRQ_START8  (FT900EMU_MEMORY_IRQ_START << 2)
+
+#define FT900EMU_BUILTIN_IRQ_INDEX 32
+#define FT900EMU_BUILTIN_IRQ_STOP (FT900EMU_BUILTIN_IRQ_INDEX + 0)
 
 class IRQ : public FT32IO
 {
@@ -56,7 +59,6 @@ private:
 	void lock();
 	void unlock();
 
-	bool globalInterruptMask();
 	bool nestedInterrupt();
 	uint32_t nestedDepth();
 
@@ -64,22 +66,20 @@ private:
 	union
 	{
 		uint32_t m_Register[FT900EMU_MEMORY_IRQ_COUNT];
-		uint32_t m_Register8[FT900EMU_MEMORY_IRQ_BYTES];
+		uint8_t m_Register8[FT900EMU_MEMORY_IRQ_BYTES];
 	};
 
 	volatile int m_Lock;
 	uint32_t m_CurrentDepth;
-	uint32_t m_CurrentInt;
+	// uint32_t m_CurrentInt;
 
 	bool m_InterruptCheck;
 
-	std::list<uint32_t> m_Waiting;
-/*
-	uint32_t m_BuiltinInterrupts; // Never masked, interrupt 0 + builtin stuff (exit etc)
+	// std::list<uint32_t> m_Waiting;
+	std::vector<uint8_t> m_Priority;
 
-	uint32_t m_Interrupts; // Does not contain interrupt 0
-	uint32_t m_InterruptsSorted;
-	*/
+	uint32_t m_BuiltinInterrupts; // Never masked
+	uint32_t m_Interrupts;
 
 }; /* class Chip */
 
