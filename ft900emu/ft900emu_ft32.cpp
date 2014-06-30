@@ -124,6 +124,11 @@ void FT32IO::ioWr8(uint32_t io_a, uint8_t io_dout)
 FT32::FT32(IRQ *irq) : m_IRQ(irq),
 	m_IONb(0)
 {
+	m_SleepCond = SDL_CreateCond();
+	m_SleepLock = SDL_CreateMutex();
+
+	irq->ft32(this);
+
 	memset(m_Memory, 0, FT900EMU_FT32_MEMORY_SIZE);
 	m_ProgramMemory[FT900EMU_FT32_PROGRAM_MEMORY_COUNT - 1] = 0x00300023;
 	softReset();
@@ -134,7 +139,8 @@ FT32::FT32(IRQ *irq) : m_IRQ(irq),
 
 FT32::~FT32()
 {
-
+	SDL_DestroyCond(m_SleepCond);
+	SDL_DestroyMutex(m_SleepLock);
 }
 
 void FT32::run()
@@ -152,6 +158,34 @@ void FT32::stop()
 void FT32::softReset()
 {
 
+}
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+void FT32::sleep(uint32_t ms)
+{
+	m_IsSleeping = true;
+	SDL_LockMutex(m_SleepLock);
+	if (m_WantWake)
+	{
+		m_IsSleeping = false;
+		m_WantWake = false;
+		SDL_UnlockMutex(m_SleepLock);
+		return;
+	}
+	SDL_CondWaitTimeout(m_SleepCond, m_SleepLock, ms);
+	// SDL_Delay(ms);
+	SDL_UnlockMutex(m_SleepLock);
+	m_IsSleeping = false;
+}
+
+void FT32::wakeInternal()
+{
+	SDL_LockMutex(m_SleepLock);
+	SDL_CondSignal(m_SleepCond);
+	SDL_UnlockMutex(m_SleepLock);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -478,8 +512,7 @@ uint32_t FT32::exec(uint32_t pma)
 						if (cur == target)
 						{
 							// Infinite loop
-							// sched_yield();
-							SDL_Delay(1); // FIXME
+							sleep(1);
 						}
 						cur = target - 1;
 						// Direct jump without returning

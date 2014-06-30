@@ -7,9 +7,12 @@
 // #include <...>
 
 // System includes
-#include "ft900emu_inttypes.h"
+
+// Library incluees
+#include <SDL_mutex.h>
 
 // Project includes
+#include "ft900emu_inttypes.h"
 
 #define FT900EMU_FT32_MEMORY_SIZE 0x10000 // 64 KiB
 #define FT900EMU_FT32_REGISTER_COUNT 32
@@ -50,16 +53,23 @@ public:
 	FT32(IRQ *irq);
 	~FT32();
 
-	// Run the FT32 processor
+	// Run the FT32 processor, this function returns when the FT32 is stopped
 	void run();
-
 	// Stop the FT32 processor
 	void stop();
 
 	// Soft reset
 	void softReset();
 
+	// Sleep the FT32 processor, can only be called from the FT32's own thread. This is for threading optimizations only
+	void sleep(uint32_t ms);
+	// Wake the FT32 processor in case it is sleeping, useful for interrupts
+	inline void wake() { m_WantWake = true; if (m_IsSleeping) { wakeInternal(); } }
+
+	// Write to program memory
 	inline void pm(int pma, uint32_t pmd) { m_ProgramMemory[pma] = pmd; }
+
+	// Attach an IO device
 	void io(FT32IO *io);
 	void ioRemove(FT32IO *io);
 
@@ -77,6 +87,8 @@ private:
 
 	void push(uint32_t v);
 	uint32_t pop();
+
+	void wakeInternal();
 
 	FT32IO *getIO(uint32_t io_a_32);
 	uint32_t ioRd32(uint32_t io_a, uint32_t io_be);
@@ -98,6 +110,11 @@ private:
 	uint32_t m_IOFrom[FT900EMU_FT32_MAX_IO_CB];
 	uint32_t m_IOTo[FT900EMU_FT32_MAX_IO_CB];
 	FT32IO *m_IO[FT900EMU_FT32_MAX_IO_CB];
+
+	volatile bool m_WantWake;
+	volatile bool m_IsSleeping;
+	SDL_mutex *m_SleepLock;
+	SDL_cond *m_SleepCond;
 
 }; /* class FT32 */
 

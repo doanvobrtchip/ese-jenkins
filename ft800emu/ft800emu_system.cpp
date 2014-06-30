@@ -39,6 +39,8 @@ static int s_FPSSmoothCount;
 
 static uint16_t s_AnalogPins[64];
 
+static void (*s_MCUDelay)(int) = 0;
+
 void SystemClass::begin()
 {
 	SystemClass::_begin();
@@ -97,6 +99,17 @@ uint16_t SystemClass::getAnalogRead(uint8_t pin)
 void SystemClass::setAnalogRead(uint8_t pin, uint16_t value)
 {
 	s_AnalogPins[pin] = value;
+}
+
+void SystemClass::overrideMCUDelay(void (*delay)(int))
+{
+	s_MCUDelay = delay;
+}
+
+void SystemClass::delayForMCU(int ms)
+{
+	if (s_MCUDelay) s_MCUDelay(ms);
+	else delay(ms);
 }
 
 } /* namespace FT800EMU */

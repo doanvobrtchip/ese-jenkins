@@ -54,7 +54,6 @@ static HANDLE s_MainThreadPseudo = NULL;
 //static CRITICAL_SECTION s_CriticalSection;
 static CRITICAL_SECTION s_SwapCriticalSection;
 
-
 void SystemClass::_begin()
 {
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))

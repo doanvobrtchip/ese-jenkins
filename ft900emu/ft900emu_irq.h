@@ -54,6 +54,8 @@ public:
 	virtual void ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout);
 	virtual void ioGetRange(uint32_t &from, uint32_t &to);
 
+	inline void ft32(FT32 *ft32) { m_FT32 = ft32; }
+
 private:
 	void lock();
 	void unlock();
@@ -78,6 +80,8 @@ private:
 
 	uint32_t m_BuiltinInterrupts; // Never masked
 	uint32_t m_Interrupts;
+
+	FT32 *m_FT32;
 
 }; /* class Chip */
 

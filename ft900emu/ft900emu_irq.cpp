@@ -26,7 +26,7 @@
 
 namespace FT900EMU {
 
-IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), /*m_CurrentInt(0),*/ m_InterruptCheck(false), m_BuiltinInterrupts(0), m_Interrupts(0)
+IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), /*m_CurrentInt(0),*/ m_InterruptCheck(false), m_BuiltinInterrupts(0), m_Interrupts(0), m_FT32(NULL)
 {
 	// printf(F9ED "+ IRQ :: Init" F9EE);
 
@@ -145,6 +145,7 @@ void IRQ::interrupt(uint32_t irq)
 		unlock();
 		// Turn on next check
 		m_InterruptCheck = true;
+		m_FT32->wake();
 	}
 	else if ((!CTRL_IS_GLOBAL_MASK) || ((m_Register8[irq] & INT_PRIORITY_MASK) == 0)) // Only allow if not masked or priority 0
 	{
@@ -153,6 +154,7 @@ void IRQ::interrupt(uint32_t irq)
 		unlock();
 		// Turn on next check
 		m_InterruptCheck = true;
+		m_FT32->wake();
 	}
 	else
 	{

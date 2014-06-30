@@ -43,6 +43,9 @@ public:
 	static long getMicros();
 	static long getFreqTick(int hz);
 
+	static void overrideMCUDelay(void (*delay)(int));
+
+	static void delayForMCU(int ms);
 	static void delay(int ms);
 	static void delayMicros(int us);
 

@@ -641,7 +641,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			{
 				// printf(" Delay MCU \n");
 				System.prioritizeCoprocessorThread();
-				System.delay(1);
+				System.delayForMCU(1);
 				System.unprioritizeCoprocessorThread();
 			}
 			break;
@@ -651,7 +651,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			{
 				// printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
-				System.delay(1);
+				System.delayForMCU(1);
 				System.unprioritizeCoprocessorThread();
 			}
 			break;
@@ -706,7 +706,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			{
 				// printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
-				System.delay(1);
+				System.delayForMCU(1);
 				System.unprioritizeCoprocessorThread();
 			}
 			break;
@@ -716,7 +716,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			{
 				// printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
-				System.delay(1);
+				System.delayForMCU(1);
 				System.unprioritizeCoprocessorThread();
 			}
 			break;

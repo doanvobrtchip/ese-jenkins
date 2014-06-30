@@ -81,6 +81,11 @@ static FT900EMU::Chip *s_FT900EMUSystem = NULL;
 static FT32SimulatorExit *s_EmulatorExit = NULL;
 static FT800SPISlave s_FT800SPISlave;
 
+void mcuSleep(int ms)
+{
+	s_FT900EMUSystem->ft32()->sleep(ms);
+}
+
 void setup()
 {
 	printf("Setup\n");
@@ -90,6 +95,8 @@ void setup()
 	FT900EMU::FT32 *ft32 = s_FT900EMUSystem->ft32();
 	s_EmulatorExit = new FT32SimulatorExit(ft32);
 	s_FT900EMUSystem->setSPISlave(0, &s_FT800SPISlave);
+
+	FT800EMU::System.overrideMCUDelay(mcuSleep);
 
 	// Load image
 	FILE *f = fopen(s_InFile, "rb");
