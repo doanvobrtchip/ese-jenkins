@@ -149,7 +149,6 @@ int main(int argc, char *argv[])
 	}
 
 	s_InFile = argv[1];
-	printf("%s\n", s_InFile);
 
 	FT800EMU::EmulatorParameters params;
 	params.Setup = setup;
@@ -165,5 +164,6 @@ int main(int argc, char *argv[])
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade;
 	FT800EMU::Emulator.run(params);
+
 	return EXIT_SUCCESS;
 }
