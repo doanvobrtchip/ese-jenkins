@@ -55,7 +55,7 @@
 
 #if defined(FT800EMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
-#else if defined(FT800EMU_SDL)
+#elif defined(FT800EMU_SDL)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 

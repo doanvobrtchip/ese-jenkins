@@ -98,7 +98,7 @@
 
 #if defined(FT800EMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
-#else if defined(FT800EMU_SDL)
+#elif defined(FT800EMU_SDL)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
@@ -2343,7 +2343,7 @@ void resizeThreadInfos(int size)
 	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
-		printf("Stop graphics thread: 1+%i\n", i);
+		printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
 		SDL_SemPost(s_ThreadInfos[i].StartSem);
 		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
 		s_ThreadInfos[i].Thread = NULL;
@@ -2376,7 +2376,7 @@ void resizeThreadInfos(int size)
 		std::stringstream threadName;
 		threadName << std::string("FT800EMU::GPU::") << i;
 		std::string threadNameStr = threadName.str();
-		printf("Start graphics thread: 1+%i\n", i);
+		printf("Start graphics thread: 1+%u\n", (uint32_t)i);
 		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
