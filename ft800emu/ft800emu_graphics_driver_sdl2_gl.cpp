@@ -35,6 +35,12 @@
 #	define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif
 
+#if defined(FT800EMU_SDL2)
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
+#elif defined(FT800EMU_SDL)
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
+#endif
+
 using namespace std;
 
 namespace FT800EMU {
@@ -75,7 +81,7 @@ static int s_MouseDown;
 
 // Whether to use a dynamic title
 // It seems this is very slow under SDL2 on Linux
-#ifdef WIN32
+#if defined(WIN32)
 #	define FT800EMU_TITLE_DYNAMIC 1
 #else
 #	define FT800EMU_TITLE_DYNAMIC 0

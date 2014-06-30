@@ -525,27 +525,32 @@ void EmulatorClass::run(const EmulatorParameters &params)
 
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
-	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
-	// TODO - Error handling
-
 	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, "FT800EMU::Audio", NULL);
 	// TODO - Error handling
 
 	SDL_Thread *threadC = NULL;
-	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
+	if (params.Flags & EmulatorEnableCoprocessor)
+		threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
+	// TODO - Error handling
+
+	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
 	// TODO - Error handling
 
 	masterThread();
 
 	s_MasterRunning = false;
-	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
+	if (params.Flags & EmulatorEnableCoprocessor)
+		Coprocessor.stopEmulator();
+
+	printf("Wait for Coprocessor\n");
+	if (params.Flags & EmulatorEnableCoprocessor)
+		SDL_WaitThread(threadC, NULL);
 
 	printf("Wait for MCU\n");
 	SDL_WaitThread(threadD, NULL);
+
 	printf("Wait for Audio\n");
 	SDL_WaitThread(threadA, NULL);
-	printf("Wait for Coprocessor\n");
-	if (params.Flags & EmulatorEnableCoprocessor) SDL_WaitThread(threadC, NULL);
 
 #else
 	#pragma omp parallel num_threads(params.Flags & EmulatorEnableCoprocessor ? 4 : 3)

@@ -30,6 +30,7 @@
 #define FT800EMU_WINDOW_KEEPRATIO 1
 #define FT800EMU_WINDOW_SCALE 1
 
+// Render SDL2 upside down (makes no difference)
 #define FT800EMU_FLIP_SDL2 0
 
 namespace FT800EMU {
