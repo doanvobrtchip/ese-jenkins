@@ -2334,13 +2334,16 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo);
 #	endif
 #endif
 
-void resizeThreadInfos(int/* size*/)
+void resizeThreadInfos(int size)
 {
+	if (s_ThreadInfos.size() == size)
+		return;
+
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
-		printf("Stop thread %i\n", i);
+		printf("Stop graphics thread: 1+%i\n", i);
 		SDL_SemPost(s_ThreadInfos[i].StartSem);
 		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
 		s_ThreadInfos[i].Thread = NULL;
@@ -2362,7 +2365,7 @@ void resizeThreadInfos(int/* size*/)
 	}
 #	endif
 #endif
-	s_ThreadInfos.resize(s_ThreadCount - 1);
+	s_ThreadInfos.resize(size);
 	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
@@ -2373,6 +2376,7 @@ void resizeThreadInfos(int/* size*/)
 		std::stringstream threadName;
 		threadName << std::string("FT800EMU::GPU::") << i;
 		std::string threadNameStr = threadName.str();
+		printf("Start graphics thread: 1+%i\n", i);
 		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
