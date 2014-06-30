@@ -54,6 +54,7 @@ Chip::Chip() :
 	m_FT32->io(this);
 	m_Timer = new Timer(m_IRQ);
 	m_FT32->io(m_Timer);
+	memset(m_Register, 0, sizeof(m_Register));
 	memset(m_SPISlaves, 0, sizeof(m_SPISlaves));
 }
 
@@ -85,7 +86,7 @@ void Chip::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 	const uint32_t idx = io_a - FT900EMU_MEMORY_REGISTER_START;
 	uint32_t v = (io_dout & io_be) | (m_Register[idx] & ~io_be);
 	const uint32_t diffmask = v ^ m_Register[idx];
-	printf(F9ED "Chip :: Write register %i (%#x): %#x [diffmask = %#x]" F9EE, idx, idx << 2, v, diffmask);
+	printf(F9ED "Chip :: Write register %i (%#x): %#x [diffmask = %#x] [be: %#x]" F9EE, idx, idx << 2, v, diffmask, io_be);
 
 	// PRE-WRITE HANDLING
 	switch (idx)

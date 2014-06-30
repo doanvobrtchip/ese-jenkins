@@ -36,6 +36,13 @@ ENDIF ()
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 ########################################################################
+# Strip binary in release mode
+
+IF (CMAKE_COMPILER_IS_GNUCXX)
+  SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
+ENDIF ()
+
+########################################################################
 
 OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" OFF)
 

@@ -15,9 +15,14 @@
 #include <GL/gl.h>
 #include "ft800emu_system.h"
 #include "ft800emu_system_sdl.h"
-#include "ft800emu_spi_i2c.h"
+
+// Library includes
+#ifdef WIN32
+#	include <SDL_syswm.h>
+#endif
 
 // Project includes
+#include "ft800emu_spi_i2c.h"
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_memory.h"
 #include "vc.h"
@@ -286,7 +291,6 @@ void GraphicsDriverClass::begin()
 bool GraphicsDriverClass::update()
 {
 	SDL_Event event;
-
 	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
