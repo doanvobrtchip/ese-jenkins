@@ -8,7 +8,6 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#include <sched.h>
 
 // Library includes
 #include <SDL.h>

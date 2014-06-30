@@ -8,7 +8,6 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#include <sched.h>
 
 // Project includes
 #include "ft900emu_intrin.h"
@@ -31,7 +30,7 @@ IRQ::IRQ() : m_Lock(0), m_CurrentDepth(0), /*m_CurrentInt(0),*/ m_InterruptCheck
 {
 	// printf(F9ED "+ IRQ :: Init" F9EE);
 
-	_mm_prefetch(&m_InterruptCheck, _MM_HINT_T0);
+	_mm_prefetch((const char *)&m_InterruptCheck, _MM_HINT_T0);
 	memset(m_Register, 0, FT900EMU_MEMORY_IRQ_COUNT * sizeof(uint32_t));
 
 	softReset();
@@ -46,12 +45,12 @@ void IRQ::softReset()
 
 inline bool IRQ::nestedInterrupt()
 {
-	return m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_NESTEDINT;
+	return (m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_NESTEDINT) == FT900EMU_IRQ_CONTROL_NESTEDINT;
 }
 
 inline uint32_t IRQ::nestedDepth()
 {
-	return m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_NESTEDDEPTH;
+	return (m_Register[FT900EMU_IRQ_CONTROL] & FT900EMU_IRQ_CONTROL_NESTEDDEPTH) == FT900EMU_IRQ_CONTROL_NESTEDDEPTH;
 }
 
 // io_a is addr / 4 (read per 4 bytes)
@@ -62,7 +61,7 @@ uint32_t IRQ::ioRd32(uint32_t io_a, uint32_t io_be)
 		return FT32IO::ioRd32(io_a, io_be);
 	}
 
-	uint idx = io_a - FT900EMU_MEMORY_IRQ_START;
+	uint32_t idx = io_a - FT900EMU_MEMORY_IRQ_START;
 	printf(F9ED "+ IRQ :: Read register U32 %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
@@ -253,12 +252,12 @@ void IRQ::returnInterrupt()
 
 void IRQ::lock()
 {
-	while (__sync_lock_test_and_set(&m_Lock, 1)) sched_yield();
+	SDL_AtomicLock(&m_Lock);
 }
 
 void IRQ::unlock()
 {
-	__sync_lock_release(&m_Lock);
+	SDL_AtomicUnlock(&m_Lock);
 }
 
 } /* namespace FT900EMU */

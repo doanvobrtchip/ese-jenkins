@@ -8,7 +8,9 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#include <sched.h>
+
+// Library includes
+#include <SDL_timer.h>
 
 // Project includes
 #include "ft900emu_intrin.h"
@@ -127,7 +129,7 @@ FT32::FT32(IRQ *irq) : m_IRQ(irq),
 	softReset();
 
 	for (int i = 0; i < FT900EMU_FT32_REGISTER_COUNT; ++i)
-		_mm_prefetch(&m_Register[i], _MM_HINT_T0);
+		_mm_prefetch((const char *)&m_Register[i], _MM_HINT_T0);
 }
 
 FT32::~FT32()
@@ -139,6 +141,7 @@ void FT32::run()
 {
 	push(0);
 	call(0);
+	printf(F9ED "FT32 End" F9EE);
 }
 
 void FT32::stop()
@@ -265,6 +268,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::readMemU32(uint32_t addr)
 		{
 			printf(F9EW "Not implemented UNALIGNED READ 32" F9EE);
 			FT900EMU_DEBUG_BREAK();
+			return 0xDEADBEEF;
 		}
 	}
 }
@@ -308,6 +312,7 @@ FTEMU_FORCE_INLINE uint16_t FT32::readMemU16(uint32_t addr)
 		{
 			printf(F9EW "Not implemented UNALIGNED READ 16" F9EE);
 			FT900EMU_DEBUG_BREAK();
+			return 0xDEAD;
 		}
 	}
 }
@@ -407,10 +412,11 @@ bool FT32::interrupt(uint32_t cur) // cur for both push(cur << 2) and to handle 
 			else switch (nirq)
 			{
 			case FT900EMU_BUILTIN_IRQ_STOP: // Stop running
+				printf(F9EW "FT32 Stop" F9EE);
 				m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_STOP); // Re-raise this interrupt
 				return false;
 			case FT900EMU_BUILTIN_IRQ_REPORT_CUR:
-				printf(F9EW "Cursor: %#x" F9EE, cur << 2);
+				printf(F9EW "FT32 Cursor: %#x" F9EE, cur << 2);
 				break;
 			}
 		}
@@ -472,7 +478,8 @@ uint32_t FT32::exec(uint32_t pma)
 						if (cur == target)
 						{
 							// Infinite loop
-							sched_yield();
+							// sched_yield();
+							SDL_Delay(1); // FIXME
 						}
 						cur = target - 1;
 						// Direct jump without returning
@@ -791,9 +798,19 @@ uint32_t FT32::exec(uint32_t pma)
 					case FT32_FFU_STPCPY:
 					{
 						//printf("  | STPCPY\n");
-						// FIXME: This won't work when going outside memory range
-						intptr_t res = (intptr_t)stpcpy((char *)&m_Memory[FT32_RD(inst)], (const char *)&m_Memory[r1v]);
-						m_Memory[FT32_RD(inst)] = (uint32_t)(res - (intptr_t)(&m_Memory[0]));
+						// intptr_t res = (intptr_t)stpcpy((char *)&m_Memory[FT32_RD(inst)], (const char *)&m_Memory[r1v]);
+						// m_Memory[FT32_RD(inst)] = (uint32_t)(res - (intptr_t)(&m_Memory[0]));
+						uint32_t dst = m_Register[FT32_RD(inst)];
+						uint32_t src = r1v;
+						for (; ; )
+						{
+							uint8_t d = readMemU8(src);
+							writeMemU8(dst, d);
+							if (!d) break;
+							++dst;
+							++src;
+						}
+						m_Memory[FT32_RD(inst)] = dst;
 						break;
 					}
 					case 0xBu:

@@ -75,7 +75,7 @@ Chip::~Chip()
 // io_a is addr / 4 (read per 4 bytes)
 uint32_t Chip::ioRd32(uint32_t io_a, uint32_t io_be)
 {
-	uint idx = io_a - FT900EMU_MEMORY_REGISTER_START;
+	uint32_t idx = io_a - FT900EMU_MEMORY_REGISTER_START;
 	printf(F9ED "Chip :: Read register %i (%#x): %#x" F9EE, idx, idx << 2, m_Register[idx]);
 	return m_Register[idx] & io_be;
 }
@@ -220,9 +220,9 @@ void Chip::updateUART0Configuration()
 	if (m_UART0)
 	{
 		m_UART0->setOptions(
-			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_CLKSEL,
-			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_FIFOSEL,
-			m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_INTSEL);
+			(m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_CLKSEL) == FT900EMU_MISC_UART0_CLKSEL,
+			(m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_FIFOSEL) == FT900EMU_MISC_UART0_FIFOSEL,
+			(m_Register[FT900EMU_REG_MISC_CONFIGURATION] & FT900EMU_MISC_UART0_INTSEL) == FT900EMU_MISC_UART0_INTSEL);
 	}
 }
 

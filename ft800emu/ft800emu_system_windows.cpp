@@ -47,6 +47,10 @@ static HANDLE s_CoprocessorThread = NULL;
 static HANDLE s_MCUThread = NULL;
 static HANDLE s_MainThread = NULL;
 
+static HANDLE s_CoprocessorThreadPseudo = NULL;
+static HANDLE s_MCUThreadPseudo = NULL;
+static HANDLE s_MainThreadPseudo = NULL;
+
 //static CRITICAL_SECTION s_CriticalSection;
 static CRITICAL_SECTION s_SwapCriticalSection;
 
@@ -135,9 +139,10 @@ void SystemClass::makeRealtimePriorityThread()
 
 void SystemClass::makeMainThread()
 {
+	s_MainThreadPseudo = GetCurrentThread();
 	if (!DuplicateHandle(
 		GetCurrentProcess(),
-		GetCurrentThread(),
+		s_MainThreadPseudo,
 		GetCurrentProcess(),
 		&s_MainThread,
 		0,
@@ -148,25 +153,16 @@ void SystemClass::makeMainThread()
 
 bool SystemClass::isMainThread()
 {
-	HANDLE currentThread;
-	if (!DuplicateHandle(
-		GetCurrentProcess(),
-		GetCurrentThread(),
-		GetCurrentProcess(),
-		&currentThread,
-		0,
-		TRUE,
-		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
-	return currentThread == s_MainThread;
+	return GetCurrentThread() == s_MainThreadPseudo;
 }
 
 // MCU thread control
 void SystemClass::makeMCUThread()
 {
+	s_MCUThreadPseudo = GetCurrentThread();
 	if (!DuplicateHandle(
 		GetCurrentProcess(),
-		GetCurrentThread(),
+		s_MCUThreadPseudo,
 		GetCurrentProcess(),
 		&s_MCUThread,
 		0,
@@ -177,17 +173,7 @@ void SystemClass::makeMCUThread()
 
 bool SystemClass::isMCUThread()
 {
-	HANDLE currentThread;
-	if (!DuplicateHandle(
-		GetCurrentProcess(),
-		GetCurrentThread(),
-		GetCurrentProcess(),
-		&currentThread,
-		0,
-		TRUE,
-		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
-	return currentThread == s_MCUThread;
+	return GetCurrentThread() == s_MCUThreadPseudo;
 }
 
 void SystemClass::prioritizeMCUThread()
@@ -225,9 +211,10 @@ void SystemClass::killMCUThread()
 // Coprocessor thread control
 void SystemClass::makeCoprocessorThread()
 {
+	s_CoprocessorThreadPseudo = GetCurrentThread();
 	if (!DuplicateHandle(
 		GetCurrentProcess(),
-		GetCurrentThread(),
+		s_CoprocessorThreadPseudo,
 		GetCurrentProcess(),
 		&s_CoprocessorThread,
 		0,
@@ -238,17 +225,7 @@ void SystemClass::makeCoprocessorThread()
 
 bool SystemClass::isCoprocessorThread()
 {
-	HANDLE currentThread;
-	if (!DuplicateHandle(
-		GetCurrentProcess(),
-		GetCurrentThread(),
-		GetCurrentProcess(),
-		&currentThread,
-		0,
-		TRUE,
-		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
-	return currentThread == s_CoprocessorThread;
+	return GetCurrentThread() == s_CoprocessorThreadPseudo;
 }
 
 void SystemClass::prioritizeCoprocessorThread()

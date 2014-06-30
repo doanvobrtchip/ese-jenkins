@@ -24,7 +24,13 @@ typedef signed __int64 int64_t;
 #endif
 #ifndef FTEMU_DEBUG_COLORS
 #define FTEMU_DEBUG_COLORS
-#define F9ED "\033[0;34m"
-#define F9EW "\033[1;31m"
-#define F9EE "\033[0m\n"
+#ifdef WIN32
+#	define F9ED ""
+#	define F9EW ""
+#	define F9EE "\n"
+#else
+#	define F9ED "\033[0;34m"
+#	define F9EW "\033[1;31m"
+#	define F9EE "\033[0m\n"
+#endif
 #endif

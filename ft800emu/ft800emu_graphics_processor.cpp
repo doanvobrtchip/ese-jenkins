@@ -30,6 +30,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stack>
+#include <sstream>
 #if FT800EMU_SSE41_INSTRUCTIONS
 #	include <xmmintrin.h>
 #	include <emmintrin.h>
@@ -96,9 +97,9 @@
 #define FT800EMU_DL_CLEAR 38
 
 #if defined(FT800EMU_SDL2)
-#define SDL_CreateThreadFT(fn, data) SDL_CreateThread(fn, NULL, data)
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
 #else if defined(FT800EMU_SDL)
-#define SDL_CreateThreadFT SDL_CreateThread
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
 namespace FT800EMU {
@@ -2333,10 +2334,10 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo);
 #	endif
 #endif
 
-void resizeThreadInfos(int size)
+void resizeThreadInfos(int/* size*/)
 {
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
-	for (int i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
 		printf("Stop thread %i\n", i);
@@ -2369,7 +2370,10 @@ void resizeThreadInfos(int size)
 		s_ThreadInfos[i].Running = true;
 		s_ThreadInfos[i].StartSem = SDL_CreateSemaphore(0);
 		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
-		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]));
+		std::stringstream threadName;
+		threadName << std::string("FT800EMU::GPU::") << i;
+		std::string threadNameStr = threadName.str();
+		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
 		s_ThreadInfos[i].Running = true;

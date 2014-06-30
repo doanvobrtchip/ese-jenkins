@@ -7,7 +7,6 @@
 // #include <...>
 
 // System includes
-#include <list>
 
 // Library includes
 #include <SDL_atomic.h>

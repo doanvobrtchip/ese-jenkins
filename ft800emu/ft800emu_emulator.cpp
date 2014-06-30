@@ -54,9 +54,9 @@
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
 #if defined(FT800EMU_SDL2)
-#define SDL_CreateThreadFT(fn, data) SDL_CreateThread(fn, NULL, data)
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
 #else if defined(FT800EMU_SDL)
-#define SDL_CreateThreadFT SDL_CreateThread
+#define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
 namespace FT800EMU {
@@ -518,21 +518,21 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	}
 	if (params.Flags & EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
 
-	s_DynamicDegrade = params.Flags & EmulatorEnableDynamicDegrade;
-	s_RotateEnabled = params.Flags & EmulatorEnableRegRotate;
+	s_DynamicDegrade = (params.Flags & EmulatorEnableDynamicDegrade) == EmulatorEnableDynamicDegrade;
+	s_RotateEnabled = (params.Flags & EmulatorEnableRegRotate) == EmulatorEnableRegRotate;
 
 	s_MasterRunning = true;
 
 #if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
 
-	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, NULL);
+	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
 	// TODO - Error handling
 
-	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, NULL);
+	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, "FT800EMU::Audio", NULL);
 	// TODO - Error handling
 
 	SDL_Thread *threadC = NULL;
-	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThreadFT(coprocessorThread, NULL);
+	if (params.Flags & EmulatorEnableCoprocessor) threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
 	// TODO - Error handling
 
 	masterThread();
@@ -540,8 +540,11 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_MasterRunning = false;
 	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
 
+	printf("Wait for MCU\n");
 	SDL_WaitThread(threadD, NULL);
+	printf("Wait for Audio\n");
 	SDL_WaitThread(threadA, NULL);
+	printf("Wait for Coprocessor\n");
 	if (params.Flags & EmulatorEnableCoprocessor) SDL_WaitThread(threadC, NULL);
 
 #else
@@ -607,6 +610,7 @@ void EmulatorClass::stop()
 
 	if (!System.isMCUThread())
 	{
+		printf("Wait for MCU thread\n");
 		while (s_EmulatorRunning) // TODO: Mutex?
 		{
 			System.delay(1);

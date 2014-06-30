@@ -9,6 +9,9 @@
 // System includes
 #include <vector>
 
+// Library includes
+#include <SDL_atomic.h>
+
 // Project includes
 #include "ft900emu_inttypes.h"
 #include "ft900emu_ft32.h"
@@ -65,14 +68,13 @@ private:
 		uint8_t m_Register8[FT900EMU_MEMORY_IRQ_BYTES];
 	};
 
-	volatile int m_Lock;
+	SDL_SpinLock m_Lock;
 	uint32_t m_CurrentDepth;
 	// uint32_t m_CurrentInt;
 
 	bool m_InterruptCheck;
 
-	// std::list<uint32_t> m_Waiting;
-	std::vector<uint8_t> m_Priority;
+	std::vector<uint8_t> m_Priority; // TODO: Static size buffer of depth 16 (plus additional depth for system interrupts)
 
 	uint32_t m_BuiltinInterrupts; // Never masked
 	uint32_t m_Interrupts;

@@ -20,7 +20,7 @@ public:
 	// io_a is addr / 4 (read per 4 bytes)
 	virtual uint32_t ioRd32(uint32_t io_a, uint32_t io_be)
 	{
-
+		return 0xDEADBEEF;
 	}
 
 	virtual void ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)

@@ -8,7 +8,6 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#include <sched.h>
 
 // Library includes
 #include <SDL.h>
@@ -132,7 +131,7 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 	switch (idx)
 	{
 	case TIMER_CONTROL_0:
-		if (io_dout & 0b11111100)
+		if (io_dout & 0xFC) // 0b11111100
 		{
 			printf(F9EW "Unknown bits in TIMER_CONTROL_0" F9EE);
 			FT900EMU_DEBUG_BREAK();
@@ -166,7 +165,7 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 				: ((io_dout & TC1_STOP(ti)) ? false : m_TimerRunning[ti]);
 		break;
 	case TIMER_CONTROL_2:
-		if (io_dout & 0b00001111)
+		if (io_dout & 0x0F) // 0b00001111
 		{
 			printf(F9EW "Unknown bits in TIMER_CONTROL_2" F9EE);
 			FT900EMU_DEBUG_BREAK();
@@ -178,7 +177,7 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 		// 0b00001111: Enable one shot for timers 4, 3, 2, 1
 		break;
 	case TIMER_CONTROL_4:
-		if (io_dout & 0b11100000)
+		if (io_dout & 0xE0) // 0b11100000
 		{
 			printf(F9EW "Unknown bits in TIMER_CONTROL_4" F9EE);
 			FT900EMU_DEBUG_BREAK();
@@ -207,8 +206,8 @@ void Timer::ioWr8(uint32_t io_a, uint8_t io_dout)
 		{
 			SDL_AtomicLock(&m_RegIntLock);
 			uint32_t intout =
-				m_Register[TIMER_INT] & 0b01010101 // Original fired state
-				| io_dout & 0b10101010; // New enabled state
+				m_Register[TIMER_INT] & 0x55 // 0b01010101 // Original fired state
+				| io_dout & 0xAA; // 0b10101010 // New enabled state
 			for (int ti = 0; ti < FT900EMU_TIMER_NB; ++ti)
 				if (io_dout & TIMER_INT_FIRED(ti))
 			{
@@ -346,7 +345,7 @@ inline void Timer::timer()
 			{*/
 				// If the interrupt handler is too slow, this replaces the queue
 				// printf("queue replace %i\n", oldqueue);
-				SDL_AtomicSet(&m_TimerQueue[ti], queue);
+				SDL_AtomicSet(&m_TimerQueue[ti], (int)queue);
 			/*}*/
 		}
 		m_LastTick = currentTick;
