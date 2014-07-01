@@ -184,6 +184,11 @@ namespace {
 
 	int s_LastWriteOpCount = 0;
 	bool s_FrameFullyDrawn = true;
+	
+#ifdef FT800EMU_SDL2
+	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
+	SDL_sem *s_InitSem = NULL;
+#endif
 
 	int masterThread(void * = NULL)
 	{
@@ -412,6 +417,11 @@ namespace {
 		taskHandle = System.setThreadGamesCategory(&taskId);
 		System.disableAutomaticPriorityBoost();
 		System.makeNormalPriorityThread();
+		
+#ifdef FT800EMU_SDL2
+		SDL_SemPost(s_InitSem);
+#endif
+		
 		s_Setup();
 		while (s_MasterRunning)
 		{
@@ -431,6 +441,10 @@ namespace {
 		taskHandle = System.setThreadGamesCategory(&taskId);
 		System.disableAutomaticPriorityBoost();
 		System.makeNormalPriorityThread();
+		
+#ifdef FT800EMU_SDL2
+		SDL_SemPost(s_InitSem);
+#endif
 
 		Coprocessor.executeEmulator();
 
@@ -528,13 +542,25 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, "FT800EMU::Audio", NULL);
 	// TODO - Error handling
 
+#ifdef FT800EMU_SDL2
+	s_InitSem = SDL_CreateSemaphore(0);
+#endif
+
 	SDL_Thread *threadC = NULL;
 	if (params.Flags & EmulatorEnableCoprocessor)
 		threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
 	// TODO - Error handling
+#ifdef FT800EMU_SDL2
+	SDL_SemWait(s_InitSem);
+#endif
 
 	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
 	// TODO - Error handling
+#ifdef FT800EMU_SDL2
+	SDL_SemWait(s_InitSem);
+	SDL_DestroySemaphore(s_InitSem);
+	s_InitSem = NULL;
+#endif
 
 	masterThread();
 
