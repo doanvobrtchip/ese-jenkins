@@ -70,6 +70,7 @@ static int s_MouseDown;
 // Threaded flip causes the buffer to be flipped from a separate thread.
 // It saves time for the CPU processing
 // Disabled because not compatible with dynamic degrade yet
+// Must be 0 or 1
 #define FT800EMU_THREADED_FLIP 0
 
 // Hardware double buffer adds an additional copy to the output.
@@ -92,12 +93,16 @@ namespace {
 SDL_Window* s_Window = NULL;
 SDL_GLContext s_GLContext = NULL;
 
-argb8888 s_BufferARGB8888[2][FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
+argb8888 s_BufferARGB8888[FT800EMU_THREADED_FLIP + 1][FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 #if FT800EMU_THREADED_FLIP
-SDL_mutex *s_BufferMutex[2] = { NULL, NULL };
+SDL_mutex *s_BufferMutex[FT800EMU_THREADED_FLIP + 1] = { NULL, NULL };
 #endif
 GLuint s_BufferTexture = 0;
+#if FT800EMU_THREADED_FLIP
 int s_BufferCurrent = 0;
+#else
+const int s_BufferCurrent = 0;
+#endif
 
 #if FT800EMU_THREADED_FLIP
 
@@ -145,9 +150,11 @@ void drawBuffer()
 
 	if (s_Output)
 	{
-		int buffer = (s_BufferCurrent + 1) % 2;
 #if FT800EMU_THREADED_FLIP
+		int buffer = (s_BufferCurrent + 1) % 2;
 		if (!SDL_LockMutex(s_BufferMutex[buffer]))
+#else
+		int buffer = s_BufferCurrent;
 #endif
 		{
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
@@ -390,11 +397,13 @@ void GraphicsDriverClass::setMode(int width, int height)
 
 void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
+#if FT800EMU_THREADED_FLIP
 	if (changed)
 	{
 		++s_BufferCurrent;
 		s_BufferCurrent %= 2;
 	}
+#endif
 
 	s_Output = output;
 #if FT800EMU_THREADED_FLIP
