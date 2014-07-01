@@ -269,6 +269,7 @@ namespace {
 						}
 						if (s_SkipOn && s_SkipStage)
 						{
+							GraphicsProcessor.processBlank();
 							s_ChangesSkipped = hasChanges;
 						}
 						else if (s_DegradeOn)
@@ -302,7 +303,7 @@ namespace {
 				{
 					if (!s_SkipStage)
 					{
-						unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
+						unsigned long procLowLimit = (unsigned long)(deltaSeconds * 500000.0); // Under 50% of allowed time, turn off frameskip
 						if (procDelta < procLowLimit)
 						{
 							s_SkipOn = false;
@@ -351,6 +352,7 @@ namespace {
 				// VBlank=1
 				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				System.prioritizeMCUThread();
+				//printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
 
 #ifndef WIN32
 				System.holdMCUThread(); // vblank'd !
