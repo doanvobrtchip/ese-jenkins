@@ -98,28 +98,21 @@ void CoprocessorClass::execute()
         if (insn & 0x8000) { // literal
             push(insn & 0x7fff);
         } else {
-            int target = insn & 0x1fff;
-            int insn_6_4 = 7 & (insn >> 4);
-            int do_T_N =     (insn_6_4 == 1);
-            int do_T_R =     (insn_6_4 == 2);
-            int do_Rinc =    (insn_6_4 == 3);
-            int do_write32 = (insn_6_4 == 4);
-            int do_write16 = (insn_6_4 == 5);
-            int do_write8 =  (insn_6_4 == 6);
-            int do_read =    (insn_6_4 == 7);
+			#define F8CP_TARGET (insn & 0x1fff)
+			#define F8CP_INSN_6_4 (7 & (insn >> 4))
 
             switch (insn >> 13) {
             case 0: // jump
-                _pc = target;
+                _pc = F8CP_TARGET;
                 break;
             case 1: // conditional jump
                 if (pop() == 0)
-                    _pc = target;
+                    _pc = F8CP_TARGET;
                 break;
             case 2: // call
                 rsp = 31 & (rsp + 1);
                 r[rsp] = _pc << 1;
-                _pc = target;
+                _pc = F8CP_TARGET;
                 break;
             case 3: // ALU
                 if (insn & (1 << 7)) /* R->PC */
@@ -164,25 +157,38 @@ void CoprocessorClass::execute()
                 }
                 dsp = 31 & (dsp + sx[insn & 3]);
                 rsp = 31 & (rsp + sx[(insn >> 2) & 3]);
-                if (do_T_N)
-                    d[dsp] = t;
-                if (do_T_R)
-                    r[rsp] = t;
-                if (do_write32) {
-                    // printf("wr[%x] <= %x\n", t, n);
+                
+                switch (F8CP_INSN_6_4)
+                {
+				case 1: // T_N
+					d[dsp] = t;
+					break;
+				case 2: // T_R
+					r[rsp] = t;
+					break;
+				case 3: // Rinc
+                    ++r[rsp];
+                    break;
+				case 4: // write32
+					// printf("wr[%x] <= %x\n", t, n);
                     MemoryClass::coprocessorWriteU32(t, n);
 					if (singleFrame)
 					{
 						if (t == REG_DLSWAP)
 							swapped = 1;
 					}
-                }
-                if (do_write16)
+					break;
+				case 5: // write16
                     MemoryClass::coprocessorWriteU16(t, n);
-                if (do_write8)
-                    MemoryClass::coprocessorWriteU8(t, n);
-                if (do_Rinc)
-                    r[rsp]++;
+                    break;
+                case 6: // write8
+					MemoryClass::coprocessorWriteU8(t, n);
+					break;
+				case 7: // read
+					// no-op
+					break;
+				}
+				
                 t = _t;
                 break;
             }
