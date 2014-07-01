@@ -378,7 +378,9 @@ namespace {
 							}
 							else
 							{
-								exit(0); // TODO: Properly exit!!!
+								printf("Kill MCU thread\n");
+								System.killMCUThread();
+								return 0;
 							}
 						}
 					}
@@ -394,7 +396,9 @@ namespace {
 							}
 							else
 							{
-								exit(0); // ...
+								printf("Kill MCU thread\n");
+								System.killMCUThread();
+								return 0;
 							}
 						}
 					}

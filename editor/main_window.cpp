@@ -155,6 +155,12 @@ static DlEditor *s_CmdEditor = NULL;
 static DlEditor *s_Macro = NULL;
 // static FILE *s_F = NULL;
 
+void closeDummy()
+{
+	// no-op
+	// NOTE: Used to avoid loop thread kill
+}
+
 void setup()
 {
 	wr32(REG_HSIZE, 480);
@@ -715,6 +721,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
 		;
+	params.Close = closeDummy;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);

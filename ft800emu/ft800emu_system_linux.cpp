@@ -187,7 +187,9 @@ void SystemClass::resumeMCUThread()
 
 void SystemClass::killMCUThread()
 {
-	// todo
+	void *retval;
+	pthread_cancel(s_MCUThread);
+	pthread_join(s_MCUThread, &retval);
 }
 
 
