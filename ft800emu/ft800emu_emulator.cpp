@@ -176,6 +176,9 @@ namespace {
 
 	bool s_DegradeOn = false;
 	int s_DegradeStage = 0;
+	
+	bool s_SkipOn = false;
+	int s_SkipStage = 0;
 
 	bool s_RotateEnabled = false;
 
@@ -184,6 +187,7 @@ namespace {
 
 	int s_LastWriteOpCount = 0;
 	bool s_FrameFullyDrawn = true;
+	bool s_ChangesSkipped = false;
 	
 #ifdef FT800EMU_SDL2
 	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
@@ -243,7 +247,7 @@ namespace {
 
 				int lwoc = s_LastWriteOpCount;
 				int woc = Memory.getWriteOpCount();
-				bool hasChanges = lwoc != woc;
+				bool hasChanges = (lwoc != woc) || s_ChangesSkipped;
 				s_LastWriteOpCount = woc;
 
 				unsigned long procStart = System.getMicros();
@@ -258,23 +262,35 @@ namespace {
 							ram[REG_DLSWAP] = DLSWAP_DONE;
 						}
 						bool rotate = s_RotateEnabled && ram[REG_ROTATE];
-						if (s_DegradeOn)
+						if (s_SkipOn)
+						{
+							++s_SkipStage;
+							s_SkipStage %= 2;
+						}
+						if (s_SkipOn && s_SkipStage)
+						{
+							s_ChangesSkipped = hasChanges;
+						}
+						else if (s_DegradeOn)
 						{
 							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
 								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize, s_DegradeStage, 2);
 							++s_DegradeStage;
 							s_DegradeStage %= 2;
+							s_ChangesSkipped = false;
 							s_FrameFullyDrawn = !hasChanges;
+							renderProcessed = true;
 						}
 						else
 						{
 							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
 								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize);
+							s_ChangesSkipped = false;
 							s_FrameFullyDrawn = true;
+							renderProcessed = true;
 						}
-						renderProcessed = true;
 					}
 					else
 					{
@@ -282,15 +298,35 @@ namespace {
 					}
 				}
 				unsigned long procDelta = System.getMicros() - procStart;
-				if (s_DegradeOn)
+				if (s_SkipOn)
+				{
+					if (!s_SkipStage)
+					{
+						unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
+						if (procDelta < procLowLimit)
+						{
+							s_SkipOn = false;
+							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) printf("Frame skip switched OFF\n");
+						}
+					}
+				}
+				else if (s_DegradeOn)
 				{
 					// Note: procLowLimit must be much less than half of procHighLimit, as the render time is halved when dynamic degrade kicks in
 					unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
+					unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to frameskip
 					if (procDelta < procLowLimit)
 					{
 						s_DegradeOn = false;
 						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
 						if (FT800EMU_DEBUG) printf("Dynamic degrade switched OFF\n");
+					}
+					else if (procDelta > procHighLimit)
+					{
+						s_SkipOn = true;
+						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) printf("Frame skip switched ON\n");
 					}
 				}
 				else
@@ -322,34 +358,42 @@ namespace {
 #endif
 
 				unsigned long flipStart = System.getMicros();
-				if (s_Graphics)
+				if (s_SkipOn && s_SkipStage)
 				{
-					if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize))
-					{
-						if (s_Close)
-						{
-							s_Close();
-							return 0;
-						}
-						else
-						{
-							exit(0); // TODO: Properly exit!!!
-						}
-					}
+					// no-op
+					// NOTE: Also skips s_Graphics
 				}
 				else
 				{
-					GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
-					if (!GraphicsDriver.update())
+					if (s_Graphics)
 					{
-						if (s_Close)
+						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize))
 						{
-							s_Close();
-							return 0;
+							if (s_Close)
+							{
+								s_Close();
+								return 0;
+							}
+							else
+							{
+								exit(0); // TODO: Properly exit!!!
+							}
 						}
-						else
+					}
+					else
+					{
+						GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
+						if (!GraphicsDriver.update())
 						{
-							exit(0); // ...
+							if (s_Close)
+							{
+								s_Close();
+								return 0;
+							}
+							else
+							{
+								exit(0); // ...
+							}
 						}
 					}
 				}
