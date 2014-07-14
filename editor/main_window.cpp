@@ -249,6 +249,9 @@ void loop()
 		FT800EMU::System.delay(10);
 	}
 
+	if (!s_EmulatorRunning)
+		return;
+
 	s_ContentManager->lockContent();
 	std::set<ContentInfo *> contentInfo;
 	s_ContentManager->swapUploadDirty(contentInfo);

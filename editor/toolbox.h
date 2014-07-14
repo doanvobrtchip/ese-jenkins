@@ -66,6 +66,7 @@ private:
 	QTreeWidgetItem *m_Background;
 	QTreeWidgetItem *m_Primitives;
 	QTreeWidgetItem *m_Widgets;
+	QTreeWidgetItem *m_Utilities;
 	QTreeWidgetItem *m_Graphics;
 	QTreeWidgetItem *m_Bitmaps;
 	// QTreeWidgetItem *m_Advanced;

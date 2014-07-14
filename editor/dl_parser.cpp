@@ -394,7 +394,10 @@ void DlParser::init()
 		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
 		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
 		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
-		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF; // hanging commands not allowed
+		/*s_CmdIdMap["CMD_CSKETCH"] = CMD_CSKETCH & 0xFF;
+		s_CmdParamCount[CMD_CSKETCH & 0xFF] = 7;
+		s_CmdParamString[CMD_CSKETCH & 0xFF] = false;*/
+		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF;
 		s_CmdParamCount[CMD_LOGO & 0xFF] = 0;
 		s_CmdParamString[CMD_LOGO & 0xFF] = false;
 		s_CmdIdMap["CMD_COLDSTART"] = CMD_COLDSTART & 0xFF;

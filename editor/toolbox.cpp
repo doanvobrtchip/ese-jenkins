@@ -172,18 +172,25 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primScreensaver->setText(0, tr("Screensaver"));
 		primScreensaver->setData(1, Qt::UserRole, QVariant((uint)2));
 		primScreensaver->setData(2, Qt::UserRole, QVariant((uint)CMD_SCREENSAVER));
-		/*QTreeWidgetItem *primSketch = new QTreeWidgetItem(m_Widgets);
-		primSketch->setText(0, tr("Sketch"));
-		primSketch->setData(1, Qt::UserRole, QVariant((uint)2));
-		primSketch->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));*/
 		QTreeWidgetItem *primGradient = new QTreeWidgetItem(m_Widgets);
 		primGradient->setText(0, tr("Gradient"));
 		primGradient->setData(1, Qt::UserRole, QVariant((uint)2));
 		primGradient->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
-		QTreeWidgetItem *primTracker = new QTreeWidgetItem(m_Widgets);
-		primTracker->setText(0, tr("Tracker"));
-		primTracker->setData(1, Qt::UserRole, QVariant((uint)2));
-		primTracker->setData(2, Qt::UserRole, QVariant((uint)CMD_TRACK));
+	}
+
+	m_Utilities = new QTreeWidgetItem(m_Tools);
+	m_Utilities->setText(0, tr("Utilities"));
+	m_Utilities->setIcon(0, QIcon(":/icons/beaker-empty.png"));
+	{
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Tracker"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TRACK));
+		/*QTreeWidgetItem *primSketch = new QTreeWidgetItem(m_Utilities);
+		primSketch->setText(0, tr("Sketch"));
+		primSketch->setData(1, Qt::UserRole, QVariant((uint)2));
+		primSketch->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));*/
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
@@ -450,6 +457,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Background->setHidden(false);
 			m_Primitives->setHidden(false);
 			m_Widgets->setHidden(!editor->isCoprocessor());
+			m_Utilities->setHidden(!editor->isCoprocessor());
 			m_Graphics->setHidden(false);
 			m_Bitmaps->setHidden(false);
 			// m_Advanced->setHidden(false);
@@ -463,6 +471,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Background->setHidden(true);
 			m_Primitives->setHidden(true);
 			m_Widgets->setHidden(true);
+			m_Utilities->setHidden(true);
 			m_Graphics->setHidden(true);
 			m_Bitmaps->setHidden(true);
 			// m_Advanced->setHidden(true);
@@ -477,6 +486,7 @@ void Toolbox::unsetEditorLine()
 	m_Background->setHidden(true);
 	m_Primitives->setHidden(true);
 	m_Widgets->setHidden(true);
+	m_Utilities->setHidden(true);
 	m_Graphics->setHidden(true);
 	m_Bitmaps->setHidden(true);
 	// m_Advanced->setHidden(true);
