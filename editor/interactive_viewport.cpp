@@ -1227,9 +1227,9 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 				int snapx, snapy;
 				snapPos(snapx, snapy, pa.Parameter[5].I, pa.Parameter[6].I);
 				m_MovingLastX += snapx;
-				pa.Parameter[0].I += snapx;
+				pa.Parameter[5].I += snapx;
 				m_MovingLastY += snapy;
-				pa.Parameter[1].I += snapy;
+				pa.Parameter[6].I += snapy;
 				// <- Snap
 			}
 			else // resize, check top/bottom and left/right
