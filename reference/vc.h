@@ -19,6 +19,7 @@
 #define CMD_CLOCK            4294967060UL
 #define CMD_COLDSTART        4294967090UL
 #define CMD_CRC              4294967043UL
+#define CMD_CSKETCH          4294967093UL
 #define CMD_DIAL             4294967085UL
 #define CMD_DLSTART          4294967040UL
 #define CMD_EXECUTE          4294967047UL

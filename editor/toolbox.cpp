@@ -187,10 +187,14 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Tracker"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TRACK));
-		/*QTreeWidgetItem *primSketch = new QTreeWidgetItem(m_Utilities);
-		primSketch->setText(0, tr("Sketch"));
-		primSketch->setData(1, Qt::UserRole, QVariant((uint)2));
-		primSketch->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));*/
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Sketch"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Capacitive Sketch"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

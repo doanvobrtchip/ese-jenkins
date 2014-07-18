@@ -1029,7 +1029,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				"the sequence within 1.25 seconds. For style 2 and 60fps, the clock hand repeats the "
 				"sequence within 2 seconds. For style 3 and 60fps, the moving dots repeat the sequence "
 				"within 1 second.<br>"
-				"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+				"Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 				"active at one time."));
 			if (editor)
 			{
@@ -1346,7 +1346,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				"REG_MACRO_0 with VERTEX2F with varying (x; y) coordinates. With an appropriate "
 				"display list, this causes a bitmap to move around the screen without any MCU work.<br>"
 				"Command CMD_STOP stops the update process.<br>"
-				"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+				"Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 				"active at one time."));
 			if (editor)
 			{
@@ -1370,7 +1370,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				"inputs and paints pixels into a bitmap, according to the touch (x; y). This means that the "
 				"user touch inputs are drawn into the bitmap without any need for MCU work.<br>Command "
 				"CMD_STOP stops the update process.<br>"
-				"Note that only one of CMD_SKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+				"Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
 				"active at one time."));
 			if (editor)
 			{
@@ -1379,6 +1379,42 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addWH(2, 3, 0, 1023);
 				addAddress(4);
 				addBitmapFormat(5);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_CSKETCH:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr(
+				"<b>CMD_CSKETCH</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ptr</i>, <i>format</i>)<br>"
+				"<b>x</b>: x-coordinate of sketch area, in pixels<br>"
+				"<b>y</b>: y-coordinate of sketch area, in pixels<br>"
+				"<b>w</b>: Width of sketch area, in pixels<br>"
+				"<b>h</b>: Height of sketch area, in pixels<br>"
+				"<b>ptr</b>: Base address of sketch bitmap<br>"
+				"<b>format</b>: Format of sketch bitmap, either L1 or L8<br>"
+				"<b>freq</b>: The oversampling frequency. The typical value is 1500 to make sure the "
+				"lines are connected smoothly. The value zero means no oversampling operation<br>"
+				"<br>"
+				"This command is only valid for FT801 silicon. FT801 co-processor will oversample "
+				"the coordinates reported by the capacitive touch panel in the frequency of ‘freq’ and "
+				"forms the lines with a smoother effect.<br>"
+				"<br>"
+				"After the sketch command, the co-processor engine continuously samples the touch "
+				"inputs and paints pixels into a bitmap, according to the touch (x; y). This means that the "
+				"user touch inputs are drawn into the bitmap without any need for MCU work.<br>Command "
+				"CMD_STOP stops the update process.<br>"
+				"Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be "
+				"active at one time."));
+			if (editor)
+			{
+				setTitle("CMD_SKETCH");
+				addXY(0, 1, -1024, 1023);
+				addWH(2, 3, 0, 1023);
+				addAddress(4);
+				addBitmapFormat(5);
+				addSpinBox(6, 0, 0xFFFF, "Freq: ", "Edit frequency");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

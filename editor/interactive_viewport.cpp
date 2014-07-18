@@ -195,6 +195,7 @@ static bool isValidInsert(const DlParsed &parsed)
 			case CMD_DIAL:
 			case CMD_NUMBER:
 			case CMD_SKETCH:
+			case CMD_CSKETCH:
 				return true;
 			}
 		}
@@ -548,6 +549,7 @@ CMD_SCREENSAVER()
 				case CMD_DIAL:
 				case CMD_NUMBER:
 				case CMD_SKETCH:
+				case CMD_CSKETCH:
 				{
 					QPen outer;
 					QPen inner;
@@ -565,6 +567,7 @@ CMD_SCREENSAVER()
 					case CMD_SCROLLBAR:
 					case CMD_TRACK:
 					case CMD_SKETCH:
+					case CMD_CSKETCH:
 						m_WidgetWH = true;
 						m_WidgetR = false;
 						break;
@@ -1783,13 +1786,21 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case CMD_SCREENSAVER:
 						pa.ExpectedParameterCount = 0;
 						break;
-					/*case CMD_SKETCH:
+					case CMD_SKETCH:
 						pa.Parameter[2].U = 120;
 						pa.Parameter[3].U = 48;
 						pa.Parameter[4].U = 0;
 						pa.Parameter[5].U = L1;
 						pa.ExpectedParameterCount = 6;
-						break;*/
+						break;
+					case CMD_CSKETCH:
+						pa.Parameter[2].U = 120;
+						pa.Parameter[3].U = 48;
+						pa.Parameter[4].U = 0;
+						pa.Parameter[5].U = L1;
+						pa.Parameter[6].U = 1500;
+						pa.ExpectedParameterCount = 7;
+						break;
 					case CMD_GRADIENT:
 						pa.Parameter[2].U = 0;
 						pa.Parameter[3].U = 127;

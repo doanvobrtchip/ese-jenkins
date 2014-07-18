@@ -724,6 +724,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		| FT800EMU::EmulatorEnableGraphicsMultithread
 		| FT800EMU::EmulatorEnableDynamicDegrade
 		;
+	params.Mode = FT800EMU::EmulatorFT801;
 	params.Close = closeDummy;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
