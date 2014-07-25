@@ -29,6 +29,8 @@
 
 // Project includes
 #include "main_window.h"
+#include "content_manager.h"
+#include "dl_parser.h"
 
 #if FT800_DEVICE_MANAGER
 //mpsse lib includes -- Windows
@@ -91,7 +93,7 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	m_SendImageButton->setText(tr("Sync With Device"));
 	m_SendImageButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
 	m_SendImageButton->setVisible(false);
-	connect(m_SendImageButton, SIGNAL(clicked()), this, SLOT(sendImage()));
+	connect(m_SendImageButton, SIGNAL(clicked()), this, SLOT(syncDevice()));
 	buttons->addWidget(m_SendImageButton);
 
 	m_ConnectButton = new QPushButton(this);
@@ -284,25 +286,46 @@ void DeviceManager::disconnectDevice()
 	updateSelection();
 }
 
-void DeviceManager::sendImage()
+static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost)
+{
+	contentManager->lockContent();
+	std::set<ContentInfo *> contentInfo;
+	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT800EMU::Memory.getRam());
+
+	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= RAM_G_MAX))
+		{
+            {
+				Ft_Gpu_Hal_WrMem(phost,RAM_G+info->MemoryAddress,&ram[RAM_G+info->MemoryAddress],info->CachedSize);
+			}
+
+	        if (info->ImageFormat == PALETTED){
+				const ft_uint32_t PALSIZE = 1024;
+				Ft_Gpu_Hal_WrMem(phost,RAM_PAL,&ram[RAM_PAL],PALSIZE);
+			}
+		}
+	}
+	contentManager->unlockContent();
+}
+
+void DeviceManager::syncDevice()
 {
 	if (!m_DeviceList->currentItem()) return;
 
-	//printf("sendImage\n");
-
-	//DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
-	const uint8_t *ram = FT800EMU::Memory.getRam();
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT800EMU::Memory.getRam());
 	const uint32_t *displayList = FT800EMU::Memory.getDisplayList();
 
-
-	// Erase devices that are gone from the list
-	//for (std::map<DeviceId, DeviceInfo *>::iterator it = m_DeviceInfo.begin(),end = m_DeviceInfo.end(); it != end; ++it)
+	//Sync with selected device
 	{
-		//DeviceInfo *devInfo  = it->second;
 		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
 		if (devInfo->Connected)
 		{
 			Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t *)devInfo->handle;
+
+			loadContent2Device(m_MainWindow->contentManager(),phost);
 
 			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_DL);
 			Ft_Gpu_Hal_Transfer32(phost,CLEAR(1,1,1));
@@ -313,22 +336,11 @@ void DeviceManager::sendImage()
 			}
 			Ft_Gpu_Hal_EndTransfer(phost);
 
-			/*
-			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_G);
-			for (uint32 i = 0;i< 256*1024/4;i++)
-				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
-			Ft_Gpu_Hal_EndTransfer(phost);
-			*/
-
 			Ft_Gpu_Hal_Wr32(phost,REG_DLSWAP,DLSWAP_FRAME);
+			Ft_Gpu_Hal_Wr32(phost,REG_HSIZE,*(ft_uint32_t*)&ram[REG_HSIZE]);
+			Ft_Gpu_Hal_Wr32(phost,REG_VSIZE,*(ft_uint32_t*)&ram[REG_VSIZE]);
 		}
 	}
-
-	// Set height, width and macro registers
-	// Copy global memory
-	// Send display list
-	// Swap frame
-	// TODO
 }
 
 void DeviceManager::updateSelection()

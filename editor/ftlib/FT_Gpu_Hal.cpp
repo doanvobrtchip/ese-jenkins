@@ -18,7 +18,7 @@ ft_bool_t  Ft_Gpu_Hal_Init(Ft_Gpu_HalInit_t *halinit)
 
 #ifdef MSVC_PLATFORM_SPI__
 	/* Initialize the libmpsse */
-    Init_libMPSSE();	
+    Init_libMPSSE();
 	SPI_GetNumChannels(&halinit->TotalChannelNum);
 	/* By default i am assuming only one mpsse cable is connected to PC and channel 0 of that mpsse cable is used for spi transactions */
 	if(halinit->TotalChannelNum > 0)
@@ -51,11 +51,11 @@ ft_bool_t    Ft_Gpu_Hal_Open(Ft_Gpu_Hal_Context_t *host)
 #endif
 #ifdef MSVC_PLATFORM_SPI
     ChannelConfig channelConf;			//channel configuration
-	FT_STATUS status;					
-		
+	FT_STATUS status;
+
 	/* configure the spi settings */
-	channelConf.ClockRate = host->hal_config.spi_clockrate_khz * 1000; 
-	channelConf.LatencyTimer= 2;       
+	channelConf.ClockRate = host->hal_config.spi_clockrate_khz * 1000;
+	channelConf.LatencyTimer= 2;
 	channelConf.configOptions = SPI_CONFIG_OPTION_MODE0 | SPI_CONFIG_OPTION_CS_DBUS3 | SPI_CONFIG_OPTION_CS_ACTIVELOW;
 	channelConf.Pin = 0x00000000;	/*FinalVal-FinalDir-InitVal-InitDir (for dir 0=in, 1=out)*/
 
@@ -71,7 +71,7 @@ ft_bool_t    Ft_Gpu_Hal_Open(Ft_Gpu_Hal_Context_t *host)
 ft_void_t  Ft_Gpu_Hal_Close(Ft_Gpu_Hal_Context_t *host)
 {
 	host->status = FT_GPU_HAL_CLOSED;
-#ifdef MSVC_PLATFORM_SPI	
+#ifdef MSVC_PLATFORM_SPI
 	/* Close the channel*/
 	SPI_CloseChannel(host->hal_handle);
 #endif
@@ -130,7 +130,7 @@ ft_void_t  Ft_Gpu_Hal_StartTransfer(Ft_Gpu_Hal_Context_t *host,FT_GPU_TRANSFERDI
 		Transfer_Array[0] = (0x80 | (addr >> 16));
 		Transfer_Array[1] = addr >> 8;
 		Transfer_Array[2] = addr;
-		SPI_Write((FT_HANDLE)host->hal_handle,Transfer_Array,3,(uint32*)&SizeTransfered,SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE);		
+		SPI_Write((FT_HANDLE)host->hal_handle,Transfer_Array,3,(uint32*)&SizeTransfered,SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE);
 #endif
 #ifdef ARDUINO_PLATFORM_SPI
 		digitalWrite(FT_ARDUINO_PRO_SPI_CS, LOW);
@@ -182,7 +182,7 @@ ft_uint8_t    Ft_Gpu_Hal_Transfer8(Ft_Gpu_Hal_Context_t *host,ft_uint8_t value)
 	if (SizeTransfered != sizeof(value))
 		host->status = FT_GPU_HAL_STATUS_ERROR;
         return value;
-#endif	
+#endif
 
 #ifdef MSVC_FT800EMU
 	return Ft_GpuEmu_SPII2C_transfer(value);
@@ -219,7 +219,7 @@ ft_uint32_t  Ft_Gpu_Hal_Transfer32(Ft_Gpu_Hal_Context_t *host,ft_uint32_t value)
 extern "C" void SPI_ToggleCS(FT_HANDLE handle, BOOL high);
 ft_void_t   Ft_Gpu_Hal_EndTransfer(Ft_Gpu_Hal_Context_t *host)
 {
-#ifdef MSVC_PLATFORM_SPI  
+#ifdef MSVC_PLATFORM_SPI
 	//just disbale the CS - send 0 bytes with CS disable
 	SPI_ToggleCS((FT_HANDLE)host->hal_handle,FALSE);
 #endif
@@ -260,7 +260,7 @@ ft_uint32_t Ft_Gpu_Hal_Rd32(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr)
 }
 
 ft_void_t Ft_Gpu_Hal_Wr8(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr, ft_uint8_t v)
-{	
+{
 	Ft_Gpu_Hal_StartTransfer(host,FT_GPU_WRITE,addr);
 	Ft_Gpu_Hal_Transfer8(host,v);
 	Ft_Gpu_Hal_EndTransfer(host);
@@ -341,10 +341,10 @@ ft_uint16_t Ft_Gpu_Cmdfifo_Freespace(Ft_Gpu_Hal_Context_t *host)
 
 ft_void_t Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host,ft_uint8_t *buffer,ft_uint16_t count)
 {
-	ft_uint32_t length =0, SizeTransfered = 0;   
+	ft_uint32_t length =0, SizeTransfered = 0;
 
-#define MAX_CMD_FIFO_TRANSFER   Ft_Gpu_Cmdfifo_Freespace(host)  
-	do {                
+#define MAX_CMD_FIFO_TRANSFER   Ft_Gpu_Cmdfifo_Freespace(host)
+	do {
 		length = count;
 		if (length > MAX_CMD_FIFO_TRANSFER){
 		    length = MAX_CMD_FIFO_TRANSFER;
@@ -364,7 +364,7 @@ ft_void_t Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host,ft_uint8_t *buffer,ft_u
 #endif
 
 #ifdef MSVC_PLATFORM_SPI
-		{   
+		{
 		    SPI_Write(host->hal_handle,buffer,length,(uint32*)&SizeTransfered,SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
                     length = SizeTransfered;
    		    buffer += SizeTransfered;
@@ -383,10 +383,10 @@ ft_void_t Ft_Gpu_Hal_WrCmdBuf(Ft_Gpu_Hal_Context_t *host,ft_uint8_t *buffer,ft_u
 #ifdef ARDUINO_PLATFORM_SPI
 ft_void_t Ft_Gpu_Hal_WrCmdBufFromFlash(Ft_Gpu_Hal_Context_t *host,FT_PROGMEM ft_prog_uchar8_t *buffer,ft_uint16_t count)
 {
-	ft_uint32_t length =0, SizeTransfered = 0;   
+	ft_uint32_t length =0, SizeTransfered = 0;
 
-#define MAX_CMD_FIFO_TRANSFER   Ft_Gpu_Cmdfifo_Freespace(host)  
-	do {                
+#define MAX_CMD_FIFO_TRANSFER   Ft_Gpu_Cmdfifo_Freespace(host)
+	do {
 		length = count;
 		if (length > MAX_CMD_FIFO_TRANSFER){
 		    length = MAX_CMD_FIFO_TRANSFER;
@@ -425,7 +425,7 @@ ft_void_t Ft_Gpu_Hal_CheckCmdBuffer(Ft_Gpu_Hal_Context_t *host,ft_uint16_t count
 ft_void_t Ft_Gpu_Hal_WaitCmdfifo_empty(Ft_Gpu_Hal_Context_t *host)
 {
    while(Ft_Gpu_Hal_Rd16(host,REG_CMD_READ) != Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE));
-   
+
    host->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(host,REG_CMD_WRITE);
 }
 
@@ -450,9 +450,9 @@ ft_void_t Ft_Gpu_Hal_ResetCmdFifo(Ft_Gpu_Hal_Context_t *host)
 ft_void_t Ft_Gpu_Hal_WrCmd32(Ft_Gpu_Hal_Context_t *host,ft_uint32_t cmd)
 {
          Ft_Gpu_Hal_CheckCmdBuffer(host,sizeof(cmd));
-      
+
          Ft_Gpu_Hal_Wr32(host,RAM_CMD + host->ft_cmd_fifo_wp,cmd);
-      
+
          Ft_Gpu_Hal_Updatecmdfifo(host,sizeof(cmd));
 }
 
@@ -473,7 +473,7 @@ ft_void_t Ft_Gpu_Hal_Powercycle(Ft_Gpu_Hal_Context_t *host, ft_bool_t up)
             FT_WriteGPIO(host->hal_handle, 0xBB, 0x88);//PDN set to 1
             Ft_Gpu_Hal_Sleep(20);
 #endif
-#ifdef ARDUINO_PLATFORM      
+#ifdef ARDUINO_PLATFORM
             digitalWrite(FT800_PD_N, LOW);
             Ft_Gpu_Hal_Sleep(20);
 
@@ -485,14 +485,14 @@ ft_void_t Ft_Gpu_Hal_Powercycle(Ft_Gpu_Hal_Context_t *host, ft_bool_t up)
 #ifdef MSVC_PLATFORM
 	        FT_WriteGPIO(host->hal_handle, 0xBB, 0x88);//PDN set to 1
             Ft_Gpu_Hal_Sleep(20);
-            
+
             FT_WriteGPIO(host->hal_handle, 0xBB, 0x08);//PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
             Ft_Gpu_Hal_Sleep(20);
 #endif
 #ifdef ARDUINO_PLATFORM
             digitalWrite(FT800_PD_N, HIGH);
             Ft_Gpu_Hal_Sleep(20);
-            
+
             digitalWrite(FT800_PD_N, LOW);
             Ft_Gpu_Hal_Sleep(20);
 #endif
@@ -500,7 +500,7 @@ ft_void_t Ft_Gpu_Hal_Powercycle(Ft_Gpu_Hal_Context_t *host, ft_bool_t up)
 }
 ft_void_t Ft_Gpu_Hal_WrMemFromFlash(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr,const ft_prog_uchar8_t *buffer, ft_uint32_t length)
 {
-	ft_uint32_t SizeTransfered = 0;      
+	ft_uint32_t SizeTransfered = 0;
 
 	Ft_Gpu_Hal_StartTransfer(host,FT_GPU_WRITE,addr);
 
@@ -523,20 +523,28 @@ ft_void_t Ft_Gpu_Hal_WrMemFromFlash(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr,
 
 ft_void_t Ft_Gpu_Hal_WrMem(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr,const ft_uint8_t *buffer, ft_uint32_t length)
 {
-	ft_uint32_t SizeTransfered = 0;      
+	ft_uint32_t SizeTransfered = 0;
 
 	Ft_Gpu_Hal_StartTransfer(host,FT_GPU_WRITE,addr);
 
 #if defined(ARDUINO_PLATFORM_SPI) || defined(MSVC_FT800EMU)
 	while (length--) {
-            Ft_Gpu_Hal_Transfer8(host,*buffer);
+        Ft_Gpu_Hal_Transfer8(host,*buffer);
 	    buffer++;
 	}
 #endif
 
 #ifdef MSVC_PLATFORM_SPI
 	{
-	    SPI_Write((FT_HANDLE)host->hal_handle,(uint8*)buffer,length,(uint32*)&SizeTransfered,SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+		while (length > 0)
+		{
+			ft_uint32_t bytes2send = length;
+			if (length > 16*1024)
+				bytes2send = 16*1024;
+			SPI_Write((FT_HANDLE)host->hal_handle,(uint8*)buffer,bytes2send,(uint32*)&SizeTransfered,SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+			length -= SizeTransfered;
+			buffer += SizeTransfered;
+		}
 	}
 #endif
 
@@ -547,7 +555,7 @@ ft_void_t Ft_Gpu_Hal_WrMem(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr,const ft_
 
 ft_void_t Ft_Gpu_Hal_RdMem(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr, ft_uint8_t *buffer, ft_uint32_t length)
 {
-	ft_uint32_t SizeTransfered = 0;      
+	ft_uint32_t SizeTransfered = 0;
 
 	Ft_Gpu_Hal_StartTransfer(host,FT_GPU_READ,addr);
 

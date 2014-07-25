@@ -78,7 +78,7 @@ private slots:
 	void refreshDevices();
 	void connectDevice();
 	void disconnectDevice();
-	void sendImage();
+	void syncDevice();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:

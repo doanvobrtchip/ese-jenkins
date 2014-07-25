@@ -100,6 +100,8 @@ struct ContentInfo
 	int CachedImageHeight;
 	int CachedImageStride;
 
+	int CachedSize; // Memory size
+
 	bool OverlapFlag;
 	bool WantAutoLoad;
 };

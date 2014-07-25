@@ -71,11 +71,11 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawLength = 0;
 	ImageFormat = 0;
 	FontSize = 12;
-	// FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // TODO: Starting point...
 	FontCharSet = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	UploadDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
+	CachedSize = 0;
 	OverlapFlag = false;
 	WantAutoLoad = false;
 }
@@ -1119,6 +1119,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					QFile::remove(metaFile); // *** FILE REMOVE ***
 				}
 				contentInfo->CachedImage = false;
+				contentInfo->CachedSize = 0;
 				contentInfo->ExternalDirty = true;
 				contentInfo->BuildError = "";
 				// Create directory if necessary
@@ -1154,6 +1155,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				}
 				if (contentInfo->BuildError.isEmpty())
 				{
+					// Cache size
+					contentInfo->CachedSize = getContentSize(contentInfo);
+
 					// Write meta file
 					QFile file(metaFile);
 					file.open(QIODevice::WriteOnly);
