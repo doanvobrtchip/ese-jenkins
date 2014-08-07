@@ -2443,9 +2443,6 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 	// run display list
 	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 	{
-		uint32_t v = displayList[c]; // (up to 2048 ops)
-EvaluateDisplayListValue:
-
 #if FT800EMU_LIMIT_JUMP_LOOP
 		if (loopCount > FT800EMU_DISPLAY_LIST_SIZE * 16)
 		{
@@ -2456,6 +2453,8 @@ EvaluateDisplayListValue:
 		++loopCount;
 #endif
 
+		uint32_t v = displayList[c]; // (up to 2048 ops)
+EvaluateDisplayListValue:
 		switch (v >> 24)
 		{
 		case FT800EMU_DL_DISPLAY:
