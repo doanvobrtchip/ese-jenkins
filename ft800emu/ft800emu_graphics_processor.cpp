@@ -2444,7 +2444,7 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 	{
 #if FT800EMU_LIMIT_JUMP_LOOP
-		if (loopCount > FT800EMU_DISPLAY_LIST_SIZE * 16)
+		if (loopCount > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 		{
 			printf("JUMP loop\n");
 			if (g_Exception) g_Exception("JUMP loop");
@@ -2599,7 +2599,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 			}
 
 #if FT800EMU_LIMIT_JUMP_LOOP
-			if (debugCounter > FT800EMU_DISPLAY_LIST_SIZE * 16)
+			if (debugCounter > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 			{
 				printf("JUMP loop\n");
 				if (g_Exception) g_Exception("JUMP loop");
