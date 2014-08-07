@@ -24,6 +24,9 @@
 #define FT800EMU_SSE41_INSTRUCTIONS_ALL 0 // Slightly slower code, no performance improvement, just for testing
 #define FT800EMU_SSE41_INSTRUCTIONS_USE FT800EMU_SSE41 // Faster code, up to 40% faster depending on the used features (slower in debug, though)
 
+#define FT800EMU_LIMIT_JUMP_LOOP 1
+#define FT800EMU_LIMIT_JUMP_LOOP_COUNT (FT800EMU_DISPLAY_LIST_SIZE * 16)
+
 // System includes
 #include <vector>
 #include <stdio.h>
@@ -2435,11 +2438,24 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 	std::stack<GraphicsState> gsstack;
 	std::stack<int> callstack;
 
+	int loopCount = 0;
+
 	// run display list
 	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 	{
 		uint32_t v = displayList[c]; // (up to 2048 ops)
 EvaluateDisplayListValue:
+
+#if FT800EMU_LIMIT_JUMP_LOOP
+		if (loopCount > FT800EMU_DISPLAY_LIST_SIZE * 16)
+		{
+			printf("JUMP loop\n");
+			if (g_Exception) g_Exception("JUMP loop");
+			break;
+		}
+		++loopCount;
+#endif
+
 		switch (v >> 24)
 		{
 		case FT800EMU_DL_DISPLAY:
@@ -2578,8 +2594,20 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 					break;
 				}
 				if (y == 0) debugLimiterIndex = c;
+#if !FT800EMU_LIMIT_JUMP_LOOP
 				++debugCounter;
+#endif
 			}
+
+#if FT800EMU_LIMIT_JUMP_LOOP
+			if (debugCounter > FT800EMU_DISPLAY_LIST_SIZE * 16)
+			{
+				printf("JUMP loop\n");
+				if (g_Exception) g_Exception("JUMP loop");
+				break;
+			}
+			++debugCounter;
+#endif
 
 			if (debugTrace)
 			{

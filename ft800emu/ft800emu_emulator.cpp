@@ -298,6 +298,11 @@ namespace {
 						// printf("no changes\n");
 					}
 				}
+				else
+				{
+					s_SkipOn = false;
+					s_DegradeOn = false;
+				}
 				unsigned long procDelta = System.getMicros() - procStart;
 				if (s_SkipOn)
 				{
