@@ -643,7 +643,9 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		}
 		const int x = slot->bitmap_left - minx;
 		const int y = (-slot->bitmap_top) - miny;
-		const int adv = (slot->advance.x >> 6) + minx;
+		int adv = (slot->advance.x >> 6);
+		adv = adv > 0 ? adv : 0;
+		// printf("Advance X: %#x, H: %#x, adv: %u\n", slot->advance.x, slot->linearHoriAdvance, adv);
 		// printf("Pixel mode: %i\n", (int)slot->bitmap.pixel_mode);
 		if (format == L1 && slot->bitmap.pixel_mode != FT_PIXEL_MODE_MONO) // Ensure proper format
 		{
