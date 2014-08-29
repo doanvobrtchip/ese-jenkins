@@ -732,7 +732,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
 
-	actNew();
+	actNew(true);
 }
 
 MainWindow::~MainWindow()
@@ -2006,6 +2006,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::actNew()
 {
+	actNew(true);
+}
+
+void MainWindow::actNew(bool addClear)
+{
 	if (!maybeSave()) return;
 
 	printf("** New **\n");
@@ -2016,6 +2021,27 @@ void MainWindow::actNew()
 	// reset editors to their default state
 	clearEditor();
 
+	// add clear
+	int editLine;
+	if (addClear)
+	{
+		DlParsed pa;
+		pa.ValidId = true;
+		pa.IdLeft = 0;
+		pa.IdRight = FT800EMU_DL_CLEAR;
+		pa.ExpectedStringParameter = false;
+		pa.Parameter[0].U = 1;
+		pa.Parameter[1].U = 1;
+		pa.Parameter[2].U = 1;
+		pa.ExpectedParameterCount = 3;
+		m_CmdEditor->insertLine(0, pa);
+		editLine = 1;
+	}
+	else
+	{
+		editLine = 0;
+	}
+
 	// clear undo stacks
 	clearUndoStack();
 
@@ -2023,8 +2049,8 @@ void MainWindow::actNew()
 	focusCmdEditor();
 	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
-	m_Toolbox->setEditorLine(m_CmdEditor, 0);
-	m_CmdEditor->selectLine(0);
+	m_Toolbox->setEditorLine(m_CmdEditor, editLine);
+	m_CmdEditor->selectLine(editLine);
 
 	// set working directory to temporary directory
 #ifdef FTEDITOR_TEMP_DIR

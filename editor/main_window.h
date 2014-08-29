@@ -128,6 +128,8 @@ public:
 
 	void editorTabChangedGo(bool load);
 
+	void actNew(bool addClear);
+
 private slots:
 	// void applyEmulatorConfig();
 
