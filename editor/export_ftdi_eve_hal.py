@@ -300,22 +300,31 @@ def run(name, document, ram):
 				f.write("\tFt_App_Flush_Co_Buffer(phost);\n")
 
 	f.write("\tFt_Gpu_CoCmd_Dlstart(phost);\n")
-	for line in document["coprocessor"]:
-		if not line == "":
-			splitlinea = line.split('(', 1)
-			splitlineb = splitlinea[1].split(')',1)
-			functionName = splitlinea[0]
-			if functionMap.has_key(functionName):
-				functionName = functionMap[functionName]
 
-			if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
-				functionArgs = convertArgs(splitlineb[0])
-				newline = "\tFt_App_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));\n"
-				f.write(newline)
-			else:
-				break
+	# optional to split off bitmaps
+	#handlesFound = False
+	#for line in document["coprocessor"]:
+	#	if not line == "":
+	#		splitlinea = line.split('(', 1)
+	#		splitlineb = splitlinea[1].split(')',1)
+	#		functionName = splitlinea[0]
+	#		if functionMap.has_key(functionName):
+	#			functionName = functionMap[functionName]
+	#
+	#		if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
+	#			functionArgs = convertArgs(splitlineb[0])
+	#			newline = "\tFt_App_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));\n"
+	#			f.write(newline)
+	#			handlesFound = True;
+	#		else:
+	#			break
+	#if handlesFound:
+	#	f.write("\tFt_App_WrCoCmd_Buffer(phost,DISPLAY());\n")
+	#	f.write("\tFt_Gpu_CoCmd_Swap(phost);\n")
+	#	f.write("\tFt_Gpu_CoCmd_Dlstart(phost);\n")
 
 
+	jumpOffset = 0
 	clearFound = False
 	for line in document["coprocessor"]:
 		if not line == "":
@@ -328,8 +337,9 @@ def run(name, document, ram):
 				break
 
 	if not clearFound:
+		jumpOffset = jumpOffset + 1
 		f.write("\tFt_App_WrCoCmd_Buffer(phost,CLEAR(1, 1, 1));\n")
-	skippedBitmaps = False
+	#skippedBitmaps = False
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(',1)
@@ -340,13 +350,18 @@ def run(name, document, ram):
 			if functionMap.has_key(functionName):
 				functionName = functionMap[functionName]
 				coprocessor_cmd = True
-			if not skippedBitmaps:
-				if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
-					continue
-				else:
-					skippedBitmaps = True
+			#if not skippedBitmaps:
+			#	if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE":
+			#		jumpOffset = jumpOffset - 1
+			#		continue
+			#	else:
+			#		skippedBitmaps = True
 
 			functionArgs = convertArgs(splitlineb[0])
+
+			if functionName == "JUMP" or functionName == "CALL":
+				functionArgsSplit = eval("[ " + functionArgs + " ]")
+				functionArgs = str(functionArgsSplit[0] + jumpOffset)
 
 			if functionName == "Ft_Gpu_CoCmd_Gradient":
 				functionArgsSplit = eval(functionArgs)

@@ -198,6 +198,7 @@ def run(name, document, ram):
 				f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
 			else:
 				f.write("\tGD.load(\"" + contentName + ".gd2\");\n")
+	handlesFound = False
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(', 1)
@@ -208,12 +209,16 @@ def run(name, document, ram):
 			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
 				newline = "\tGD." + functionName + "(" + functionArgs + ");\n"
 				f.write(newline)
+				handlesFound = True
 			else:
 				break
+	if handlesFound:
+		f.write("\tGD.swap();\n")
 	f.write("}\n")
 	f.write("\n")
 	f.write("void loop()\n")
 	f.write("{\n")
+	jumpOffset = 0
 	clearFound = False
 	for line in document["coprocessor"]:
 		if not line == "":
@@ -226,6 +231,7 @@ def run(name, document, ram):
 				clearFound = True
 				break
 	if not clearFound:
+		jumpOffset = jumpOffset + 1
 		f.write("\tGD.Clear(1, 1, 1);\n")
 	skippedBitmaps = False
 	for line in document["coprocessor"]:
@@ -237,9 +243,13 @@ def run(name, document, ram):
 			functionName = functionMap[functionName]
 			if not skippedBitmaps:
 				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
+					jumpOffset = jumpOffset - 1
 					continue
 				else:
 					skippedBitmaps = True
+			if functionName == "Jump" or functionName == "Call":
+				functionArgsSplit = eval("[ " + functionArgs + " ]")
+				functionArgs = str(functionArgsSplit[0] + jumpOffset)
 			if functionName == "cmd_fgcolor" or functionName == "cmd_bgcolor" or functionName == "cmd_gradcolor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
 				functionArgs = str(((functionArgsSplit[0] * 256) + functionArgsSplit[1]) * 256 + functionArgsSplit[2])

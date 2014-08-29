@@ -238,7 +238,7 @@ def run(name, document, ram):
 				f.write("\tFTImpl.WriteCmdfromflash(" + contentName + ", sizeof(" + contentName + "));\n")
 				f.write("\tFTImpl.Finish();\n")
 
-	f.write("\tFTImpl.DLStart();\n")
+	handlesFound = False
 	for line in document["coprocessor"]:
 		if not line == "":
 			splitlinea = line.split('(', 1)
@@ -247,17 +247,23 @@ def run(name, document, ram):
 			functionName = functionMap[functionName]
 
 			if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
+				if not handlesFound:
+					f.write("\tFTImpl.DLStart();\n")
 				functionArgs = convertArgs(splitlineb[0])
 				newline = "\tFTImpl." + functionName + "(" + functionArgs + ");\n"
 				f.write(newline)
+				handlesFound = True
 			else:
 				break
-	f.write("\tFTImpl.DLEnd();\n")
-	f.write("\tFTImpl.Finish();\n")
+	if handlesFound:
+		f.write("\tFTImpl.DLEnd();\n")
+		f.write("\tFTImpl.Finish();\n")
+
 	f.write("}\n")
 	f.write("\n")
 	f.write("void loop()\n")
 	f.write("{\n")
+	jumpOffset = 0
 	clearFound = False
 	for line in document["coprocessor"]:
 		if not line == "":
@@ -270,6 +276,7 @@ def run(name, document, ram):
 
 	f.write("\tFTImpl.DLStart();\n")
 	if not clearFound:
+		jumpOffset = jumpOffset + 1
 		f.write("\tFTImpl.Clear(1, 1, 1);\n")
 	skippedBitmaps = False
 	for line in document["coprocessor"]:
@@ -280,11 +287,16 @@ def run(name, document, ram):
 			functionName = functionMap[functionName]
 			if not skippedBitmaps:
 				if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
+					jumpOffset = jumpOffset - 1
 					continue
 				else:
 					skippedBitmaps = True
 
 			functionArgs = convertArgs(splitlineb[0])
+
+			if functionName == "Jump" or functionName == "Call":
+				functionArgsSplit = eval("[ " + functionArgs + " ]")
+				functionArgs = str(functionArgsSplit[0] + jumpOffset)
 
 			if functionName == "Cmd_FGColor" or functionName == "Cmd_BGColor" or functionName == "Cmd_GradColor":
 				functionArgsSplit = eval("[ " + functionArgs + " ]")
