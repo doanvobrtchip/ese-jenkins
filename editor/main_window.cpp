@@ -192,6 +192,9 @@ static int s_StepCmdLimitCurrent = 0;
 
 static bool s_CoprocessorFaultOccured = false;
 
+static bool s_WarnMissingClear = false;
+static bool s_WarnMissingClearActive = false;
+
 static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
@@ -379,6 +382,7 @@ void loop()
 	bool cmdModified = s_CmdEditor->isDisplayListModified();
 	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
 	{
+		bool warnMissingClear = true;
 		s_WantReloopCmd = false;
 		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
@@ -388,6 +392,8 @@ void loop()
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 		{
 			// printf("dl %i: %i\n", i, displayList[i]);
+			if ((displayList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
+				warnMissingClear = false;
 			swr32(displayList[i]);
 		}
 		swrend();
@@ -410,9 +416,12 @@ void loop()
 			cmdParamCache[i] = s_CmdParamCache.size();
 			DlParser::compile(s_CmdParamCache, cmdParsedPtr[i]);
 			cmdValid[i] = cmdParsedPtr[i].ValidId;
+			if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
+				warnMissingClear = false;
 		}
 		cmdParamCache[FT800EMU_DL_SIZE] = s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
+		s_WarnMissingClear = warnMissingClear;
 
 		bool validCmd = false;
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
@@ -1026,6 +1035,20 @@ void MainWindow::frameQt()
 			"- An invalid data stream is supplied to CMD_INFLATE");
 		m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
 		focusProperties();
+	}
+
+	// printf("msc: %s\n", s_WarnMissingClear ? "warn" : "ok");
+	if (s_WarnMissingClear != s_WarnMissingClearActive)
+	{
+		if (s_WarnMissingClear)
+		{
+			statusBar()->showMessage(tr("WARNING: Missing CLEAR instruction in display list"));
+		}
+		else
+		{
+			statusBar()->showMessage("");
+		}
+		s_WarnMissingClearActive = s_WarnMissingClear;
 	}
 }
 
