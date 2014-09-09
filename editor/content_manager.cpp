@@ -483,6 +483,11 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
 
+	if (contentInfo->Converter == ContentInfo::Font)
+	{
+		contentInfo->ImageFormat = L4;
+	}
+
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
 		contentInfo->WantAutoLoad = true;
