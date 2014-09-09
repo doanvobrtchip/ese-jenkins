@@ -566,7 +566,7 @@ void ContentManager::remove(ContentInfo *contentInfo)
 	Remove *remove = new Remove(this, contentInfo);
 	m_MainWindow->undoStack()->push(remove);
 
-	// ISSUE#133: Remove all related commands
+	// ISSUE#113: Remove all related commands
 	m_MainWindow->propertiesEditor()->surpressSet(true);
 	editorRemoveContent(contentInfo, m_MainWindow->dlEditor());
 	editorRemoveContent(contentInfo, m_MainWindow->cmdEditor());
@@ -1592,7 +1592,7 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 
 void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
 {
-	// ISSUE#133: Remove all entries related to content info
+	// ISSUE#113: Remove all entries related to content info
 	int bitmapLine;
 	int bitmapHandle = editorFindHandle(contentInfo, dlEditor, bitmapLine);
 	bool handleActive = true;
@@ -1600,14 +1600,14 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 	bool drawingBitmaps = false;
 	if (bitmapHandle >= 0)
 	{
-		printf("ISSUE#133: Purging bitmap handle %i\n", bitmapHandle);
+		printf("ISSUE#113: Purging bitmap handle %i\n", bitmapHandle);
 		dlEditor->removeLine(bitmapLine);
 		for (int i = bitmapLine; i < FT800EMU_DL_SIZE && i < dlEditor->getLineCount(); ++i)
 		{
 			const DlParsed &parsed = dlEditor->getLine(i);
 			if (parsed.ValidId)
 			{
-				if (drawingBitmaps) // ISSUE#133: NOTE: If you do not want bitmaps removed, disable this block
+				if (drawingBitmaps) // ISSUE#113: NOTE: If you do not want bitmaps removed, disable this block
 				{
 					bool removedVertex = false;
 					if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)

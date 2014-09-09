@@ -156,7 +156,7 @@ public:
 	void editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 	// Update font adress
 	void editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
-	// ISSUE#133: Remove all entries related to content info
+	// ISSUE#113: Remove all entries related to content info
 	void editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor);
 
 	// Changes
