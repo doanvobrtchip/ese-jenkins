@@ -1686,7 +1686,6 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 				{
 					// Flag if the content handle is active
 					handleActive = (parsed.Parameter[0].I == bitmapHandle);
-					continue;
 				}
 				if (parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE)
 				{
@@ -1700,6 +1699,13 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 							--i;
 							continue;
 						}
+						else if (bitmapSource == parsed.Parameter[0].I)
+						{
+							// Re-occurrence of source, not normal, but legal syntax
+							dlEditor->removeLine(i);
+							--i;
+							continue;
+						}
 						else
 						{
 							// If active, then source is being changed, and we need to stop
@@ -1707,13 +1713,17 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 						}
 					}
 				}
-				switch (parsed.IdRight)
+				if (handleActive)
 				{
+					switch (parsed.IdRight)
+					{
+					case FT800EMU_DL_BITMAP_HANDLE:
 					case FT800EMU_DL_BITMAP_LAYOUT:
 					case FT800EMU_DL_BITMAP_SIZE:
 						dlEditor->removeLine(i);
 						--i;
 						break;
+					}
 				}
 			}
 		}
