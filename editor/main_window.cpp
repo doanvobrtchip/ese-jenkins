@@ -2254,8 +2254,8 @@ void MainWindow::actOpen()
 	focusCmdEditor();
 	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
-	m_Toolbox->setEditorLine(m_CmdEditor, 0);
-	m_CmdEditor->selectLine(0);
+	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
+	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 }
 
