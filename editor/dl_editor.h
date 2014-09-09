@@ -73,10 +73,12 @@ public:
 
 	// Replace a line (creates undo stack), used for example from the interactive viewport
 	void replaceLine(int line, const DlParsed &parsed, int combineId = -1, const QString &message = QString());
+	void removeLine(int line);
 	const DlParsed &getLine(int line) const;
 	// Move cursor to line
 	void selectLine(int line);
 	void insertLine(int line, const DlParsed &parsed);
+	int getLineCount();
 
 	bool isCoprocessor() { return m_ModeCoprocessor; }
 	bool isMacro() { return m_ModeMacro; }

@@ -561,8 +561,18 @@ void ContentManager::remove(ContentInfo *contentInfo)
 {
 	printf("ContentManager::remove(contentInfo)\n");
 
+	m_MainWindow->undoStack()->beginMacro(tr("Remove content"));
+
 	Remove *remove = new Remove(this, contentInfo);
 	m_MainWindow->undoStack()->push(remove);
+
+	// ISSUE#133: Remove all related commands
+	m_MainWindow->propertiesEditor()->surpressSet(true);
+	editorRemoveContent(contentInfo, m_MainWindow->dlEditor());
+	editorRemoveContent(contentInfo, m_MainWindow->cmdEditor());
+	m_MainWindow->propertiesEditor()->surpressSet(false);
+	
+	m_MainWindow->undoStack()->endMacro();
 }
 
 int ContentManager::getFreeAddress()
@@ -1402,7 +1412,37 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 			}
 		}
 	}
-	return handle;
+	return -1;
+}
+
+int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor, int &line)
+{
+	int handle = -1;
+	line = -1;
+	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId)
+		{
+			if (parsed.IdLeft != 0)
+				continue;
+			switch (parsed.IdRight)
+			{
+				case FT800EMU_DL_BITMAP_HANDLE:
+					line = i;
+					handle = parsed.Parameter[0].I;
+					break;
+				case FT800EMU_DL_BITMAP_SOURCE:
+					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+						return handle;
+					break;
+				case FT800EMU_DL_BITMAP_LAYOUT:
+				case FT800EMU_DL_BITMAP_SIZE:
+					break;
+			}
+		}
+	}
+	return -1;
 }
 
 int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
@@ -1548,6 +1588,136 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 		}
 	}
 	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor);
+}
+
+void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
+{
+	// ISSUE#133: Remove all entries related to content info
+	int bitmapLine;
+	int bitmapHandle = editorFindHandle(contentInfo, dlEditor, bitmapLine);
+	bool handleActive = true;
+	int bitmapSource = -1;
+	bool drawingBitmaps = false;
+	if (bitmapHandle >= 0)
+	{
+		printf("ISSUE#133: Purging bitmap handle %i\n", bitmapHandle);
+		dlEditor->removeLine(bitmapLine);
+		for (int i = bitmapLine; i < FT800EMU_DL_SIZE && i < dlEditor->getLineCount(); ++i)
+		{
+			const DlParsed &parsed = dlEditor->getLine(i);
+			if (parsed.ValidId)
+			{
+				if (drawingBitmaps) // ISSUE#133: NOTE: If you do not want bitmaps removed, disable this block
+				{
+					bool removedVertex = false;
+					if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+					{
+						if (parsed.Parameter[2].I == bitmapHandle)
+						{
+							// Purge bitmaps drawn through VERTEX2II
+							dlEditor->removeLine(i);
+							--i;
+							removedVertex = true;
+						}
+					}
+					else if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+					{
+						if (handleActive)
+						{
+							// Purge bitmaps drawn through VERTEX2F
+							dlEditor->removeLine(i);
+							--i;
+							removedVertex = true;
+						}
+					}
+					if (removedVertex)
+					{
+						++i;
+						if (i < FT800EMU_DL_SIZE && i < dlEditor->getLineCount())
+						{
+							const DlParsed &beginVertex = dlEditor->getLine(i - 1);
+							const DlParsed &endVertex = dlEditor->getLine(i);
+							printf("%i - %i\n", beginVertex.IdRight, endVertex.IdRight);
+							if (beginVertex.IdLeft == 0 && beginVertex.IdRight == FT800EMU_DL_BEGIN
+								&& endVertex.IdLeft == 0 && endVertex.IdRight == FT800EMU_DL_END)
+							{
+								// Last vertex removed in BEGIN/END block, purge the block
+								dlEditor->removeLine(i);
+								--i;
+								dlEditor->removeLine(i);
+								--i;
+							}
+						}
+						--i;
+						continue;
+					}
+				}
+				if (parsed.IdLeft == 0xFFFFFF00) // CMD
+				{
+					if (parsed.IdRight == (CMD_TEXT & 0xFF) && parsed.Parameter[2].I == bitmapHandle)
+					{
+						// Change text drawn with font to use default font
+						DlParsed p = parsed;
+						p.Parameter[2].I = 28;
+						dlEditor->replaceLine(i, p);
+						continue;
+					}
+					if (parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[0].I == bitmapHandle)
+					{
+						// Purge fonts
+						dlEditor->removeLine(i);
+						--i;
+						continue;
+					}
+				}
+				if (parsed.IdLeft != 0)
+					continue;
+				if (parsed.IdRight == FT800EMU_DL_BEGIN)
+				{
+					drawingBitmaps = (parsed.Parameter[0].I == BITMAPS);
+					continue;
+				}
+				if (parsed.IdRight == FT800EMU_DL_END)
+				{
+					drawingBitmaps = false;
+					continue;
+				}
+				if (parsed.IdRight == FT800EMU_DL_BITMAP_HANDLE)
+				{
+					// Flag if the content handle is active
+					handleActive = (parsed.Parameter[0].I == bitmapHandle);
+					continue;
+				}
+				if (parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE)
+				{
+					if (handleActive)
+					{
+						if (bitmapSource == -1)
+						{
+							// First occurrence, this is the current source
+							bitmapSource = parsed.Parameter[0].I;
+							dlEditor->removeLine(i);
+							--i;
+							continue;
+						}
+						else
+						{
+							// If active, then source is being changed, and we need to stop
+							break;
+						}
+					}
+				}
+				switch (parsed.IdRight)
+				{
+					case FT800EMU_DL_BITMAP_LAYOUT:
+					case FT800EMU_DL_BITMAP_SIZE:
+						dlEditor->removeLine(i);
+						--i;
+						break;
+				}
+			}
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////

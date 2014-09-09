@@ -308,6 +308,21 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, cons
 	m_EditingInteractive = false;
 }
 
+void DlEditor::removeLine(int line)
+{
+	m_EditingInteractive = true;
+	QTextCursor c = m_CodeEditor->textCursor();
+	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
+	c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+	c.insertText("");
+	m_EditingInteractive = false;
+}
+
+int DlEditor::getLineCount()
+{
+	return m_CodeEditor->document()->blockCount();
+}
+
 void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
 	m_EditingInteractive = true;

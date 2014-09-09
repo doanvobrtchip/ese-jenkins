@@ -145,6 +145,7 @@ public:
 	// Editor utilities
 	// Find handle related to content address, return -1 on failure // TODO: depend on current editor line
 	int editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor);
+	int editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor, int &line);
 	// Find a free handle, return -1 when no free handle available // TODO: depend on current editor line as fallback
 	int editorFindFreeHandle(DlEditor *dlEditor);
 	// Find where to start with bitmap lines in the editor
@@ -155,6 +156,8 @@ public:
 	void editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 	// Update font adress
 	void editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
+	// ISSUE#133: Remove all entries related to content info
+	void editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor);
 
 	// Changes
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
