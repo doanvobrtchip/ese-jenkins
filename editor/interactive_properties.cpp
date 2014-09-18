@@ -1387,7 +1387,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		case CMD_CSKETCH:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>CMD_CSKETCH</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ptr</i>, <i>format</i>)<br>"
+				"<b>CMD_CSKETCH</b>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ptr</i>, <i>format</i>, <i>freq</i>)<br>"
 				"<b>x</b>: x-coordinate of sketch area, in pixels<br>"
 				"<b>y</b>: y-coordinate of sketch area, in pixels<br>"
 				"<b>w</b>: Width of sketch area, in pixels<br>"
