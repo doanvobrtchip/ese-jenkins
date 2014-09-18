@@ -47,6 +47,7 @@ static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
 static int s_LastCoprocessorCommandRead = -1;
 
 static int s_DirectSwapCount;
+static int s_RealSwapCount;
 static int s_WriteOpCount;
 
 // Avoid getting hammered in wait loops
@@ -476,6 +477,7 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	}
 
 	s_DirectSwapCount = 0;
+	s_RealSwapCount = 0;
 	s_WriteOpCount = 0;
 
 	s_ReadDelay = false;
@@ -627,6 +629,12 @@ void MemoryClass::swapDisplayList()
 	uint32_t *active = s_DisplayListFree;
 	s_DisplayListFree = s_DisplayListActive;
 	s_DisplayListActive = active;
+	++s_RealSwapCount;
+}
+
+int MemoryClass::getRealSwapCount()
+{
+	return s_RealSwapCount;
 }
 
 uint32_t MemoryClass::mcuReadU32(size_t address)

@@ -90,6 +90,8 @@ public:
 	static int *getDisplayListCoprocessorWrites();
 	static void clearDisplayListCoprocessorWrites();
 
+	// Gets the real swap count
+	static int getRealSwapCount();
 	// Gets a total count of write operations
 	static int getWriteOpCount();
 	// Increases the write op count

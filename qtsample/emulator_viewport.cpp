@@ -36,7 +36,7 @@ EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
 
-bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
+bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT800EMU::FrameFlags flags)
 {
 	// TODO: Optimize using platform specific access to QImage so we 
 	// don't need to copy the buffer each time.

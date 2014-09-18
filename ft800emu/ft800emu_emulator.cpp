@@ -182,10 +182,11 @@ namespace {
 
 	bool s_RotateEnabled = false;
 
-	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize) = NULL;
+	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FrameFlags flags) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
 
 	int s_LastWriteOpCount = 0;
+	int s_LastRealSwapCount = 0;
 	bool s_FrameFullyDrawn = true;
 	bool s_ChangesSkipped = false;
 	
@@ -239,6 +240,7 @@ namespace {
 			if (!s_Graphics) GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
 			bool renderProcessed = false;
+			bool hasChanged;
 
 			// Render lines
 			{
@@ -247,7 +249,8 @@ namespace {
 
 				int lwoc = s_LastWriteOpCount;
 				int woc = Memory.getWriteOpCount();
-				bool hasChanges = (lwoc != woc) || s_ChangesSkipped;
+				hasChanged = (lwoc != woc);
+				bool hasChanges = hasChanged || s_ChangesSkipped;
 				s_LastWriteOpCount = woc;
 
 				unsigned long procStart = System.getMicros();
@@ -350,6 +353,15 @@ namespace {
 				}
 			}
 
+			bool hasSwapped;
+
+			{
+				int lc = s_LastRealSwapCount;
+				int c = Memory.getRealSwapCount();
+				hasSwapped = (lc != c);
+				s_LastRealSwapCount = c;
+			}
+
 			System.leaveSwapDL();
 
 			// Flip buffer and also give a slice of time to the mcu main thread
@@ -374,7 +386,16 @@ namespace {
 				{
 					if (s_Graphics)
 					{
-						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize))
+						uint32_t frameFlags = 0;
+						if (renderProcessed)
+							frameFlags |= FrameBufferChanged;
+						if (s_FrameFullyDrawn)
+							frameFlags |= FrameBufferComplete;
+						if (hasChanged)
+							frameFlags |= FrameChanged;
+						if (hasSwapped)
+							frameFlags |= FrameSwap;
+						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (FrameFlags)frameFlags))
 						{
 							if (s_Close)
 							{

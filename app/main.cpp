@@ -20,7 +20,7 @@
 void setup();
 void loop();
 
-bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize)
+bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT800EMU::FrameFlags flags)
 {
 	static int i = 0;
 	printf("frame %i\n", i);

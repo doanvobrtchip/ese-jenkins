@@ -51,6 +51,38 @@ enum EmulatorFlags
 	EmulatorEnableRegPwmDutyEmulation = 0x100,
 };
 
+enum FrameFlags
+{
+	// frame render has changes since last render
+	FrameBufferChanged = 0x01,
+	// frame is completely rendered (without degrade)
+	FrameBufferComplete = 0x02,
+	// frame has changes since last render
+	FrameChanged = 0x04,
+	// frame rendered right after display list swap
+	FrameSwap = 0x08,
+
+	// NOTE: Difference between FrameChanged and FrameBufferChanged is that
+	// FrameChanged will only be true if the content of the frame changed,
+	// whereas FrameBufferChanged will be true if the rendered buffer changed.
+	// For example, when the emulator renders a frame incompletely due to
+	// CPU overload, it will then finish the frame in the next callback,
+	// and when this is the same frame, FrameChanged will be false,
+	// but FrameBufferChanged will be true as the buffer has changed.
+
+	// NOTE: Frames can change even though no frame was swapped, due to
+	// several parameters such as REG_MACRO or REG_ROTATE.
+
+	// NOTE: If you only want completely rendered frames, turn OFF
+	// the EmulatorEnableDynamicDegrade feature.
+
+	// NOTE: To get the accurate frame after a frame swap, wait for FrameSwap
+	// to be set, and get the first frame which has FrameBufferComplete set.
+
+	// NOTE: To get the accurate frame after any frame change, wait for
+	// FrameChanged, and get the first frame which has FrameBufferComplete set.
+};
+
 struct EmulatorParameters
 {
 public:
@@ -109,7 +141,7 @@ public:
 	// The contents of the buffer pointer are undefined after this
 	// function returns.
 	// Return false when the application must exit.
-	bool (*Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize);
+	bool (*Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FrameFlags flags);
 
 	// Interrupt handler
 	//void (*Interrupt)();
