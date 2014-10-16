@@ -350,6 +350,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				{
 					swapDisplayList();
 					s_Ram[REG_DLSWAP] = 0;
+					flagDLSwap();
 					GraphicsProcessor.processBlank();
 					++s_DirectSwapCount;
 				}
@@ -412,6 +413,21 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			{
 				resetTouchScreenXY();
 			}
+			break;
+		}
+	}
+}
+
+FT800EMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
+{
+	// switches for 1 byte regs
+	// least significant byte
+	if (address % 4 == 0)
+	{
+		switch (address)
+		{
+		case REG_DLSWAP:
+			flagDLSwap();
 			break;
 		}
 	}
@@ -597,18 +613,22 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 		return;
 	}
 
-	++s_WriteOpCount;
-
 	// s_WaitMCUReadCounter = 0;
 	// s_SwapMCUReadCounter = 0;
+
+    actionWrite(address, data);
+	rawWriteU32(address, data);
+
+	++s_WriteOpCount;
+
 	switch (address)
 	{
 	case REG_CMD_WRITE:
 		s_WaitCoprocessorReadCounter = 0;
 		break;
 	}
-    actionWrite(address, data);
-	rawWriteU32(address, data);
+
+	postWrite(address);
 }
 
 /* void MemoryClass::mcuWrite(size_t address, uint8_t data)
@@ -635,6 +655,12 @@ void MemoryClass::swapDisplayList()
 int MemoryClass::getRealSwapCount()
 {
 	return s_RealSwapCount;
+}
+
+void MemoryClass::flagDLSwap()
+{
+	s_SwapMCUReadCounter = 0;
+	s_SwapCoprocessorReadCounter = 0;
 }
 
 uint32_t MemoryClass::mcuReadU32(size_t address)
@@ -763,12 +789,6 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 		return;
 	}
 
-	if (address == REG_CMD_READ)
-	{
-		// printf("REG_CMD_READ\n");
-		s_WaitMCUReadCounter = 0;
-	}
-
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
 		int dlAddr = (address - RAM_DL) >> 2;
@@ -778,6 +798,12 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
     actionWrite(address, data);
 	rawWriteU32(address, data);
+
+	if (address == REG_CMD_READ)
+	{
+		// printf("REG_CMD_READ\n");
+		s_WaitMCUReadCounter = 0;
+	}
 }
 
 uint32_t MemoryClass::coprocessorReadU32(size_t address)

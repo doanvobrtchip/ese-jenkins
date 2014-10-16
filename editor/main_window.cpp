@@ -223,8 +223,7 @@ void loop()
 	// wait
 	if (coprocessorSwapped)
 	{
-		int wp = rd32(REG_CMD_WRITE);
-		while (wp != rd32(REG_CMD_READ))
+		while (rd32(REG_CMD_WRITE) != rd32(REG_CMD_READ))
 		{
 			if (!s_EmulatorRunning) return;
 			if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
@@ -494,6 +493,9 @@ void loop()
 				s_WaitingCoprocessorAnimation = true;
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				printf("WP = %i\n", wp);
+				FT800EMU::System.delay(100);
+
 				do
 				{
 					rp = rd32(REG_CMD_READ);
@@ -519,12 +521,14 @@ void loop()
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
+				if (wp == 0) printf("WP 0\n");
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
 				swr32(CMD_COLDSTART);
 				wp += 8;
 				freespace -= 8;
 				swrend();
+				if (wp == 8) printf("WP 8\n");
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
 				{

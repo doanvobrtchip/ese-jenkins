@@ -263,6 +263,7 @@ namespace {
 						{
 							Memory.swapDisplayList();
 							ram[REG_DLSWAP] = DLSWAP_DONE;
+							Memory.flagDLSwap();
 						}
 						bool rotate = s_RotateEnabled && ram[REG_ROTATE];
 						if (s_SkipOn)

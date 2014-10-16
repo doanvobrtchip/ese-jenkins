@@ -96,6 +96,8 @@ public:
 	static int getWriteOpCount();
 	// Increases the write op count
 	static void poke();
+	// Mark REG_DLSWAP as written
+	static void flagDLSwap();
 
 private:
 	static FT800EMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
@@ -107,6 +109,7 @@ private:
 
 	template<typename T>
     static FT800EMU_FORCE_INLINE void actionWrite(const size_t address, T &data);
+    static FT800EMU_FORCE_INLINE void postWrite(const size_t address);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
