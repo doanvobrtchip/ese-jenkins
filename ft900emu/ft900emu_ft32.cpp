@@ -381,6 +381,7 @@ FTEMU_FORCE_INLINE uint8_t FT32::readMemU8(uint32_t addr)
 	}
 	else
 	{
+		// printf(F9ED "READ IO 8 %u" F9EE, addr);
 		return ioRd8(addr);
 		uint32_t b = addr % 4;
 		b <<= 3;
@@ -412,7 +413,7 @@ FTEMU_FORCE_INLINE void FT32::push(uint32_t v)
 	uint32_t stackp = (m_Register[FT32_REG_STACK] - 4) & FT32_REG_STACK_MASK;
 	writeMemU32(stackp, v);
 	m_Register[FT32_REG_STACK] = stackp;
-	// printf("push, %u\n", m_Register[FT32_REG_STACK]);
+	// printf("push, v = 0x%x, stackp/m_Register[FT32_REG_STACK] = 0x%x\n", v, m_Register[FT32_REG_STACK]);
 }
 
 FTEMU_FORCE_INLINE uint32_t FT32::pop()
@@ -420,7 +421,7 @@ FTEMU_FORCE_INLINE uint32_t FT32::pop()
 	uint32_t stackp = m_Register[FT32_REG_STACK];
 	uint32_t r = readMemU32(stackp);
 	m_Register[FT32_REG_STACK] = (stackp + 4) & FT32_REG_STACK_MASK;
-	// printf("pop, %u\n", m_Register[FT32_REG_STACK]);
+	// printf("pop, m_Register[FT32_REG_STACK] = 0x%x, return 0x%x\n", m_Register[FT32_REG_STACK], r);
 	return r;
 }
 
@@ -440,7 +441,7 @@ bool FT32::interrupt(uint32_t cur) // cur for both push(cur << 2) and to handle 
 			if (nirq < FT900EMU_BUILTIN_IRQ_INDEX)
 			{
 				// Interrupts call, so that in JIT'ed code we can interrupt more frequently without having to jump back inside JIT'ed code (could use fibers, though...)
-				push(cur << 2);
+				push((cur + 1) << 2);
 				call(nirq + 2);
 			}
 			else switch (nirq)
@@ -470,7 +471,9 @@ uint32_t FT32::exec(uint32_t pma)
 {
 	const bool *interruptCheck = m_IRQ->interruptCheck();
 	uint32_t cur = pma;
-	// printf("exec: %i\n", pma);
+	// printf("exec: %i (%x)\n", pma, (pma << 2));
+	// printf("exec at (%x)\n", (pma << 2));
+
 	for (; ; )
 	{
 		// Check for IRQ
@@ -491,6 +494,7 @@ uint32_t FT32::exec(uint32_t pma)
 			case FT32_PATTERN_TOC:
 			case FT32_PATTERN_TOCI:
 			{
+				// printf((inst & FT32_TOC_INDIRECT) ? "TOC\n" : "TOCI\n");
 				uint32_t target = (inst & FT32_TOC_INDIRECT)
 					? (m_Register[FT32_R2(inst)] >> 2)
 					: FT32_TOC_PA(inst);
@@ -500,15 +504,16 @@ uint32_t FT32::exec(uint32_t pma)
 				{
 					if (inst & FT32_TOC_CALL) // CALL
 					{
-						// printf("      CALL\n");
-						// printf("c %u\n", cur);
-						push(cur << 2);
+						// printf("      CALL from (%x)\n", (cur << 2));
+						// printf("\n", cur, (cur << 2));
+						push((cur + 1) << 2);
 						// call(target);
 						return target;
 					}
 					else // JUMP
 					{
-						// printf("      JUMP\n");
+						// printf("      JUMP from (%x)\n", (cur << 2));
+						// printf("c %u (%x)\n", cur, (cur << 2));
 						if (cur == target)
 						{
 							// Infinite loop
@@ -518,6 +523,7 @@ uint32_t FT32::exec(uint32_t pma)
 						// Direct jump without returning
 						// Only return at function calls or
 						// NOTE: Indirect jumps will return target in JIT'ed code
+						// printf("      to (%x)\n", ((cur + 1) << 2));
 					}
 				}
 				else
@@ -538,7 +544,7 @@ uint32_t FT32::exec(uint32_t pma)
 				}
 				else
 				{
-					return (pop() >> 2) + 1;
+					return (pop() >> 2);
 				}
 			}
 			case FT32_PATTERN_EXA:
@@ -555,13 +561,14 @@ uint32_t FT32::exec(uint32_t pma)
 			}
 			case FT32_PATTERN_EXI:
 			{
-				uint32_t addr = m_Register[FT32_RD(inst)] + FT32_K8(inst);
+				//printf("> EXI\n");
+				uint32_t addr = m_Register[FT32_R1(inst)] + FT32_K8(inst);
 				uint32_t rd = m_Register[FT32_RD(inst)];
 				switch (FT32_DW(inst))
 				{
-					case FT32_DW_8: m_Register[FT32_RD(inst)] = readMemU8(addr); writeMemU8(addr, rd); break;
-					case FT32_DW_16: m_Register[FT32_RD(inst)] = readMemU16(addr); writeMemU16(addr, rd); break;
-					case FT32_DW_32: m_Register[FT32_RD(inst)] = readMemU32(addr); writeMemU32(addr, rd); break;
+					case FT32_DW_8: /*printf("  FT32_DW_8\n");*/ m_Register[FT32_RD(inst)] = readMemU8(addr); writeMemU8(addr, rd); break;
+					case FT32_DW_16: /*printf("  FT32_DW_16\n");*/ m_Register[FT32_RD(inst)] = readMemU16(addr); writeMemU16(addr, rd); break;
+					case FT32_DW_32: /*printf("  FT32_DW_32\n");*/ m_Register[FT32_RD(inst)] = readMemU32(addr); writeMemU32(addr, rd); /*printf("  addr=0x%x, read=0x%x to R%u, write=0x%x\n", addr, m_Register[FT32_RD(inst)], (uint32_t)FT32_RD(inst), rd);*/ break;
 				}
 				break;
 			}
