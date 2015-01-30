@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Future Technology Devices International Ltd
+ * Copyright (C) 2014-2015  Future Technology Devices International Ltd
  */
 
 // #include <...>
@@ -155,6 +155,11 @@ void FT32::stop()
 	m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_STOP);
 }
 
+void FT32::reportCur()
+{
+	m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_REPORT_CUR);
+}
+
 void FT32::softReset()
 {
 
@@ -243,6 +248,7 @@ inline FT32IO *FT32::getIO(uint32_t io_a_32)
 
 uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
 {
+	// printf("Read IO 32: %#x\n", io_a << 2);
 	FT32IO *io = getIO(io_a);
 	if (io)
 		return io->ioRd32(io_a, io_be);
@@ -254,6 +260,7 @@ uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
 
 void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
+	// printf("Write IO 32: %#x\n", io_a << 2);
 	FT32IO *io = getIO(io_a);
 	if (io)
 		return io->ioWr32(io_a, io_be, io_dout);
@@ -264,6 +271,7 @@ void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 
 uint8_t FT32::ioRd8(uint32_t io_a)
 {
+	// printf("Read IO 8: %#x\n", io_a);
 	FT32IO *io = getIO(io_a >> 2);
 	if (io)
 		return io->ioRd8(io_a);
@@ -275,6 +283,7 @@ uint8_t FT32::ioRd8(uint32_t io_a)
 
 void FT32::ioWr8(uint32_t io_a, uint8_t io_dout)
 {
+	// printf("Write IO 8: %#x\n", io_a);
 	FT32IO *io = getIO(io_a >> 2);
 	if (io)
 		return io->ioWr8(io_a, io_dout);
@@ -504,7 +513,7 @@ uint32_t FT32::exec(uint32_t pma)
 				{
 					if (inst & FT32_TOC_CALL) // CALL
 					{
-						// printf("      CALL from (%x)\n", (cur << 2));
+						// printf("      CALL from (%x) to (%x)\n", (cur << 2), (target << 2));
 						// printf("\n", cur, (cur << 2));
 						push((cur + 1) << 2);
 						// call(target);

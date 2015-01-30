@@ -8,6 +8,11 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
+#ifndef WIN32
+#	include <termios.h>
+#	include <unistd.h>
+#	include <fcntl.h>
+#endif
 
 // Project includes
 #include "ft900emu_intrin.h"
@@ -63,6 +68,47 @@
   // CSR = Channel Software Reset
 
 namespace FT900EMU {
+	
+namespace /* anonymous */ {
+	
+#ifdef WIN32
+	
+bool haskey()
+{
+	return kbhit() != 0;
+}
+
+#else
+
+bool haskey()
+{
+	struct termios oldt, newt;
+	int ch;
+	int oldf;
+
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+	ch = getchar();
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+	if (ch != EOF)
+	{
+		ungetc(ch, stdin);
+		return true;
+	}
+	return false;
+}
+
+#endif
+
+} /* anonymous namespace */
 
 UART::UART(uint32_t id, FT32 *ft32) :
 	m_650(false),
@@ -301,6 +347,28 @@ uint8_t UART::ioRd(uint32_t idx)
 	// printf("<--#--> UART :: Read mem %i\n", idx);
 	switch (idx)
 	{
+		case R_RHR_THR_DLL: // 0
+		{
+			if (LCR_7) // DLL
+			{
+				printf(F9EW "    :: DLL read not implemented" F9EE);
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // RHR
+			{
+				if (!haskey())
+				{
+					printf(F9EW "    :: RHR has no input" F9EE);
+					FT900EMU_DEBUG_BREAK();
+				}
+				// printf(F9EW "    :: RHR read not implemented" F9EE);
+				// FT900EMU_DEBUG_BREAK();
+				uint8_t c = getchar();
+				// printf("    :: RHR '%c'\n", c);
+				return c;
+			}
+			break;
+		}
 		case R_ISR_FCR_EFR: // 2
 		{
 			if (m_650) // EFR
@@ -339,7 +407,7 @@ uint8_t UART::ioRd(uint32_t idx)
 			}
 			break;
 		}
-		case R_LSR_XON2_ICR:
+		case R_LSR_XON2_ICR: // 5
 		{
 			if (m_650) // XON2
 			{
@@ -348,16 +416,28 @@ uint8_t UART::ioRd(uint32_t idx)
 			}
 			else if (ACR_950_REGISTERS) // ?? // ICR
 			{
-				printf(F9EW "    :: ICR read not implemented" F9EE);
+				if (ACR_ICR_REGISTERS)
+				{
+					printf(F9EW "    :: ICR read not implemented" F9EE);
+					FT900EMU_DEBUG_BREAK();
+				}
+				printf(F9EW "    :: ICR read invalid (1)" F9EE);
+				FT900EMU_DEBUG_BREAK();
+			}
+			else if (ACR_ICR_REGISTERS)
+			{
+				printf(F9EW "    :: ICR read invalid (2)" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
 			else // LSR
 			{
-				// printf("    :: LSR (Tx available)\n"); // TODO
+				// printf("    :: LSR (Tx available)\n");
 				// LSR[6] = 1: Transmitter & THR empty
 				// LSR[5] = 1: Trans FIFO empty
 				// LSR[0] = 1: Read data available
-				return 0x60; // Transmitter always available, nothing to read
+				bool dr = haskey();
+				return dr ? 0x61 : 0x60; // LSR[5] | LSR[6] Transmitter always available, nothing to read
+				// TODO: Throttle repeated read of LSR having LSR[0]=0 for CPU savings
 			}
 			break;
 		}

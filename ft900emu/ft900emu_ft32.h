@@ -57,6 +57,9 @@ public:
 	void run();
 	// Stop the FT32 processor
 	void stop();
+	
+	// Report the current cursor position into the log
+	void reportCur();
 
 	// Soft reset
 	void softReset();
