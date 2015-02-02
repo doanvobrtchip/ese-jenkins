@@ -58,6 +58,8 @@ private:
 	FT32 *m_FT32;
 	bool m_Enabled;
 	bool m_ClkSel, m_FifoSel, m_IntSel;
+	
+	int m_LsrReadThrottleCounter;
 
 }; /* class Chip */
 

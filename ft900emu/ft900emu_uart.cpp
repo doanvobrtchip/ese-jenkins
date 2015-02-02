@@ -19,6 +19,9 @@
 
 // using namespace ...;
 
+// Number of sequential reads from LSR register before throttle down
+#define FT900EMU_UART_LSR_READ_THROTTLE_LIMIT 8
+
 // r
 #define ACR 0x00 // Additional Control Register
 #define CPR 0x01 // Clock Prescaler Register
@@ -88,7 +91,7 @@ bool haskey()
 
 	tcgetattr(STDIN_FILENO, &oldt);
 	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
+	newt.c_lflag &= ~(ICANON);// | ECHO);
 	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 	oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
@@ -114,7 +117,8 @@ UART::UART(uint32_t id, FT32 *ft32) :
 	m_650(false),
 	m_Id(0), m_FT32(ft32),
 	m_Enabled(false),
-	m_ClkSel(false), m_FifoSel(false), m_IntSel(false)
+	m_ClkSel(false), m_FifoSel(false), m_IntSel(false),
+	m_LsrReadThrottleCounter(0)
 {
 	printf(F9ED "<--#--> UART :: Init" F9EE);
 	softReset();
@@ -161,6 +165,8 @@ void UART::setOptions(bool clkSel, bool fifoSel, bool intSel)
 void UART::ioWr(uint32_t idx, uint8_t d)
 {
 	// printf("<--#--> UART :: Write mem %i = %#x\n", idx, d);
+	m_LsrReadThrottleCounter = 0;
+	
 	switch (idx)
 	{
 		case R_RHR_THR_DLL: // 0
@@ -344,6 +350,9 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 
 uint8_t UART::ioRd(uint32_t idx)
 {
+	int lsrReadThrottleCounter = m_LsrReadThrottleCounter;
+	m_LsrReadThrottleCounter = 0;
+	
 	// printf("<--#--> UART :: Read mem %i\n", idx);
 	switch (idx)
 	{
@@ -435,9 +444,28 @@ uint8_t UART::ioRd(uint32_t idx)
 				// LSR[6] = 1: Transmitter & THR empty
 				// LSR[5] = 1: Trans FIFO empty
 				// LSR[0] = 1: Read data available
+				m_LsrReadThrottleCounter = lsrReadThrottleCounter + 1;
+				// if (m_LsrReadThrottleCounter == FT900EMU_UART_LSR_READ_THROTTLE_LIMIT + 1)
+				//	printf(F9ED "    :: LSR throttle on" F9EE);
+				if (m_LsrReadThrottleCounter > FT900EMU_UART_LSR_READ_THROTTLE_LIMIT)
+				{
+					// Sleep the FT32 core when looping LSR read
+					// Q: Can we wait for haskey() with timeout of 1ms 
+					//    instead?
+					// A: No. See notes.
+					// NOTE: Must use m_FT32.sleep, so the FT32 can be 
+					//       woken up (->wake()) in case of interrupts.
+					// NOTE: In case threaded input is implemented (for 
+					//       interrupts or such), we can simply wake 
+					//       the CPU as soon as new input is available.
+					m_FT32->sleep(1);
+				}
 				bool dr = haskey();
+				if (dr)
+				{
+					m_LsrReadThrottleCounter = 0;
+				}
 				return dr ? 0x61 : 0x60; // LSR[5] | LSR[6] Transmitter always available, nothing to read
-				// TODO: Throttle repeated read of LSR having LSR[0]=0 for CPU savings
 			}
 			break;
 		}
