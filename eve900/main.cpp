@@ -4,6 +4,9 @@
 
 // System includes
 #include <stdio.h>
+#ifdef WIN32
+#	include <windows.h>
+#endif
 
 // FT800EMU includes
 #include <ft800emu_emulator.h>
@@ -66,15 +69,6 @@ class FT800SPISlave : public FT900EMU::SPISlave
 	}
 };
 
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/helloworld/helloworld.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetest1/kaetest1.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/pi/pi.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/hanoi/hanoi.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetest2/kaetest2.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetimer1/kaetimer1.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/kaetimer2/kaetimer2.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/demo_clock/demo_clock.exe";
-//static const char *infile = "/mnt/fuji/sync/projects_work/ft900emu/ftp/cases/demo_sketch/demo_sketch.exe";
 static char *s_InFile = NULL;
 
 static FT900EMU::Chip *s_FT900EMUSystem = NULL;
@@ -89,6 +83,13 @@ void mcuSleep(int ms)
 void setup()
 {
 	printf("Setup\n");
+
+#ifdef WIN32
+	HANDLE stdIn = GetStdHandle(STD_INPUT_HANDLE);
+	DWORD consoleMode;
+	GetConsoleMode(stdIn, &consoleMode);
+	SetConsoleMode(stdIn, consoleMode & ~ENABLE_LINE_INPUT & ~ENABLE_WINDOW_INPUT & ~ENABLE_MOUSE_INPUT);
+#endif
 
 	// Init system
 	s_FT900EMUSystem = new FT900EMU::Chip();

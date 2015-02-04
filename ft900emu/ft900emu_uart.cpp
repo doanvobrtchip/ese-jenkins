@@ -80,7 +80,13 @@ namespace /* anonymous */ {
 	
 bool haskey()
 {
-	return kbhit() != 0;
+	return _kbhit() != 0;
+
+	/*INPUT_RECORD inputRecord;
+	DWORD eventNb = 0;
+	BOOL peeked = PeekConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &inputRecord, 1, &eventNb);
+
+	return (eventNb != 0);*/
 }
 
 #else
@@ -376,6 +382,10 @@ uint8_t UART::ioRd(uint32_t idx)
 				// FT900EMU_DEBUG_BREAK();
 				uint8_t c = getchar();
 				// printf("    :: RHR '%c'\n", c);
+#ifdef WIN32
+				// Echo // TODO: Optional?
+				putchar(c);
+#endif
 				return c;
 			}
 			break;
