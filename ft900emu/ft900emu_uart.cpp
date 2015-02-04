@@ -8,7 +8,9 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
-#ifndef WIN32
+#ifdef WIN32
+#	include <conio.h>
+#else
 #	include <termios.h>
 #	include <unistd.h>
 #	include <fcntl.h>
