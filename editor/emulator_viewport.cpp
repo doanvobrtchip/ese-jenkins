@@ -27,7 +27,7 @@
 #include <QPainter>
 
 // Emulator includes
-#include <ft800emu_graphics_driver.h>
+#include <ft8xxemu_graphics_driver.h>
 
 // Project includes
 // #include "emulator_config.h"
@@ -83,11 +83,11 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	: QWidget(parent)
 {
 	s_EmulatorViewport = this;
-	s_Image = new QImage(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
-	s_Pixmap = new QPixmap(FT800EMU_WINDOW_WIDTH_DEFAULT, FT800EMU_WINDOW_HEIGHT_DEFAULT);
+	s_Image = new QImage(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
+	s_Pixmap = new QPixmap(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
 
-	setMinimumWidth(FT800EMU_WINDOW_WIDTH_DEFAULT);
-	setMinimumHeight(FT800EMU_WINDOW_HEIGHT_DEFAULT);
+	setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
+	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
 }
 
 EmulatorViewport::~EmulatorViewport()
