@@ -19,10 +19,10 @@
 
 #include <SDL_assert.h>
 
-void (*FT8XXEMU_stop)();
-uint8_t (*FT8XXEMU_transfer)(uint8_t data);
-void (*FT8XXEMU_csLow)(int low);
-void (*FT8XXEMU_csHigh)(int high);
+void (*FT8XXEMU_stop)() = NULL;
+uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
+void (*FT8XXEMU_csLow)(int low) = NULL;
+void (*FT8XXEMU_csHigh)(int high) = NULL;
 
 FT8XXEMU_API void FT8XXEMU_run(const FT8XXEMU_EmulatorParameters *params)
 {
