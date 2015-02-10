@@ -8,7 +8,7 @@ ADD_EXECUTABLE(ftapp
 	)
 
 target_link_libraries(ftapp
-	ft8xxemuc
+	ft8xxemu_api
 	ftarduino
 	)
 

@@ -4,8 +4,19 @@
  */
 
 #include "ft8xxemu.h"
+
+// Include FT800EMU
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_emulator.h"
+
+// Include FT810EMU
+#undef FT800EMU_SPI_I2C_H
+#undef FT800EMU_EMULATOR_H
+#define FT800EMU FT810EMU
+#define FT810EMU_MODE
+#include "ft800emu_spi_i2c.h"
+#include "ft800emu_emulator.h"
+
 #include <SDL_assert.h>
 
 void (*FT8XXEMU_stop)();
@@ -26,7 +37,11 @@ FT8XXEMU_API void FT8XXEMU_run(const FT8XXEMU_EmulatorParameters *params)
 		FT800EMU::Emulator.run(*params);
 		break;
 	case FT8XXEMU_EmulatorFT810:
-		SDL_assert(false); // Not yet implemented
+		FT8XXEMU_stop = &FT810EMU::Emulator.stop;
+		FT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
+		FT8XXEMU_csLow = &FT810EMU::SPII2C.csLow;
+		FT8XXEMU_csHigh = &FT810EMU::SPII2C.csHigh;
+		FT810EMU::Emulator.run(*params);
 		break;
 	}
 }

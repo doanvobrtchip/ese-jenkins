@@ -8,18 +8,22 @@
 
 #include "ft8xxemu_inttypes.h"
 
-#ifdef FT8XXEMU_EXPORT_DYNAMIC
-#	ifdef WIN32
-#		define FT8XXEMU_API __declspec(dllexport)
+#ifndef FT8XXEMU_STATIC
+#	ifdef FT8XXEMU_EXPORT_DYNAMIC
+#		ifdef WIN32
+#			define FT8XXEMU_API __declspec(dllexport)
+#		else
+#			define FT8XXEMU_API
+#		endif
 #	else
-#		define FT8XXEMU_API
+#		ifdef WIN32
+#			define FT8XXEMU_API __declspec(dllimport)
+#		else
+#			define FT8XXEMU_API
+#		endif
 #	endif
 #else
-#	ifdef WIN32
-#		define FT8XXEMU_API __declspec(dllimport)
-#	else
-#		define FT8XXEMU_API
-#	endif
+#	define FT8XXEMU_API
 #endif
 
 typedef enum

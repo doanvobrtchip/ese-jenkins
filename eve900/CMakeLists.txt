@@ -8,7 +8,7 @@ ADD_EXECUTABLE(fteve900
 	)
 
 target_link_libraries(fteve900
-	ft8xxemuc
+	ft8xxemu_api
 	ft900emu
 	)
 
