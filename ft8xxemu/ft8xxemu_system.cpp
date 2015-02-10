@@ -1,7 +1,7 @@
 /**
  * SystemClass
  * $Id$
- * \file ft800emu_system.cpp
+ * \file ft8xxemu_system.cpp
  * \brief SystemClass
  * \date 2011-05-25 19:32GMT
  * \author Jan Boon (Kaetemi)
@@ -12,7 +12,7 @@
  */
 
 // #include <...>
-#include "ft800emu_system.h"
+#include "ft8xxemu_system.h"
 
 // System includes
 
@@ -20,10 +20,10 @@
 
 // using namespace ...;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 
-#define D_FT800EMU_FPS_SMOOTHING 36
+#define D_FT8XXEMU_FPS_SMOOTHING 36
 
 
 double SystemClass::s_FrameTime, SystemClass::s_FrameTimeDelta; //, SystemClass::s_FrameTimeOffset;
@@ -31,8 +31,10 @@ int SystemClass::s_FrameCount;
 double SystemClass::s_FPSSmooth;
 bool SystemClass::s_MainThreadSwitchable = false;
 
+void (*g_Exception)(const char *message) = 0;
 
-static double s_FPSSmoothValues[D_FT800EMU_FPS_SMOOTHING];
+
+static double s_FPSSmoothValues[D_FT8XXEMU_FPS_SMOOTHING];
 //static double s_FPSSmoothTotal;
 static int s_FPSSmoothAt;
 static int s_FPSSmoothCount;
@@ -53,7 +55,7 @@ void SystemClass::begin()
 	s_FrameTimeDelta = 0.0;
 	s_FPSSmooth = 0.0;
 	s_FPSSmoothAt = 0;
-	for (int i = 0; i < D_FT800EMU_FPS_SMOOTHING; ++i)
+	for (int i = 0; i < D_FT8XXEMU_FPS_SMOOTHING; ++i)
 		s_FPSSmoothValues[i] = 0.0;
 	//s_FPSSmoothTotal = 0.0;
 	s_FPSSmoothCount = 0;
@@ -80,7 +82,7 @@ void SystemClass::update()
 	++s_FPSSmoothAt;
 	if (s_FPSSmoothCount < s_FPSSmoothAt)
 		s_FPSSmoothCount = s_FPSSmoothAt;
-	s_FPSSmoothAt %= D_FT800EMU_FPS_SMOOTHING;
+	s_FPSSmoothAt %= D_FT8XXEMU_FPS_SMOOTHING;
 	//s_FPSSmooth = //s_FPSSmoothTotal / (double)s_FPSSmoothCount;
 }
 
@@ -112,6 +114,6 @@ void SystemClass::delayForMCU(int ms)
 	else delay(ms);
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
 /* end of file */

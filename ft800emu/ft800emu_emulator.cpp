@@ -15,17 +15,17 @@
 #include "ft800emu_emulator.h"
 
 // System includes
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 #include <SDL.h>
 #include <SDL_thread.h>
 #endif
 
 // Project includes
-#include "ft800emu_system.h"
-#include "ft800emu_keyboard.h"
-#include "ft800emu_keyboard_keys.h"
-#include "ft800emu_graphics_driver.h"
-#include "ft800emu_audio_driver.h"
+#include "ft8xxemu_system.h"
+#include "ft8xxemu_keyboard.h"
+#include "ft8xxemu_keyboard_keys.h"
+#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_audio_driver.h"
 
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
@@ -35,12 +35,12 @@
 #include "ft800emu_audio_render.h"
 #include "ft800emu_audio_processor.h"
 
-#include "ft800emu_minmax.h"
+#include "ft8xxemu_minmax.h"
 
 #include "vc.h"
 
-#ifndef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifndef FTEMU_SDL
+#ifndef FTEMU_SDL2
 #	include "omp.h"
 #endif
 #endif
@@ -53,17 +53,15 @@
 // Reduce CPU usage when REG_PCLK is zero
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
-#if defined(FT800EMU_SDL2)
+#if defined(FTEMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
-#elif defined(FT800EMU_SDL)
+#elif defined(FTEMU_SDL)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
 namespace FT800EMU {
 
 EmulatorClass Emulator;
-
-void (*g_Exception)(const char *message) = NULL;
 
 namespace {
 	void debugShortkeys()
@@ -72,9 +70,9 @@ namespace {
 			static bool setDebugMode = false;
 			if (setDebugMode)
 			{
-				setDebugMode = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3);
+				setDebugMode = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F3);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F3))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F3))
 			{
 				FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
 				setDebugMode = true;
@@ -85,9 +83,9 @@ namespace {
 			static bool incDebugMultiplier = false;
 			if (incDebugMultiplier)
 			{
-				incDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADPLUS);
+				incDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADPLUS);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADPLUS))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADPLUS))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(FT800EMU::GraphicsProcessor.getDebugMultiplier() + 1);
@@ -99,9 +97,9 @@ namespace {
 			static bool decDebugMultiplier = false;
 			if (decDebugMultiplier)
 			{
-				decDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADMINUS);
+				decDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADMINUS);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADMINUS))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADMINUS))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(max(FT800EMU::GraphicsProcessor.getDebugMultiplier() - 1, 1));
@@ -113,9 +111,9 @@ namespace {
 			static bool resetDebugMultiplier = false;
 			if (resetDebugMultiplier)
 			{
-				resetDebugMultiplier = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADSLASH);
+				resetDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADSLASH);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_NUMPADSLASH))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADSLASH))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(1);
@@ -127,9 +125,9 @@ namespace {
 			static bool incDebugLimiter = false;
 			if (incDebugLimiter)
 			{
-				incDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8);
+				incDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F8);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F8))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F8))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
 				incDebugLimiter = true;
@@ -140,9 +138,9 @@ namespace {
 			static bool decDebugLimiter = false;
 			if (decDebugLimiter)
 			{
-				decDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7);
+				decDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F7);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F7))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F7))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
 				decDebugLimiter = true;
@@ -153,9 +151,9 @@ namespace {
 			static bool resetDebugLimiter = false;
 			if (resetDebugLimiter)
 			{
-				resetDebugLimiter = FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6);
+				resetDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F6);
 			}
-			else if (FT800EMU::Keyboard.isKeyDown(FT800EMU_KEY_F6))
+			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F6))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(0);
 				resetDebugLimiter = true;
@@ -182,7 +180,7 @@ namespace {
 
 	bool s_RotateEnabled = false;
 
-	bool (*s_Graphics)(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FrameFlags flags) = NULL;
+	int (*s_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
 
 	int s_LastWriteOpCount = 0;
@@ -190,31 +188,31 @@ namespace {
 	bool s_FrameFullyDrawn = true;
 	bool s_ChangesSkipped = false;
 	
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
 	SDL_sem *s_InitSem = NULL;
 #endif
 
 	int masterThread(void * = NULL)
 	{
-		System.makeMainThread();
+		FT8XXEMU::System.makeMainThread();
 
 		unsigned long taskId = 0;
 		void *taskHandle;
-		taskHandle = System.setThreadGamesCategory(&taskId);
-		System.disableAutomaticPriorityBoost();
-		System.makeRealtimePriorityThread();
+		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
+		FT8XXEMU::System.disableAutomaticPriorityBoost();
+		FT8XXEMU::System.makeRealtimePriorityThread();
 
-		double targetSeconds = System.getSeconds();
+		double targetSeconds = FT8XXEMU::System.getSeconds();
 
 		uint8_t *ram = Memory.getRam();
 
 		while (s_MasterRunning)
 		{
 			//printf("main thread\n");
-			System.makeRealtimePriorityThread();
+			FT8XXEMU::System.makeRealtimePriorityThread();
 
-			System.enterSwapDL();
+			FT8XXEMU::System.enterSwapDL();
 
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
 			double deltaSeconds;
@@ -229,7 +227,7 @@ namespace {
 			}
 			else deltaSeconds = 1.0;
 
-			System.update();
+			FT8XXEMU::System.update();
 			targetSeconds += deltaSeconds;
 
 			Memory.setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
@@ -237,7 +235,7 @@ namespace {
 			// Update display resolution
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
-			if (!s_Graphics) GraphicsDriver.setMode(reg_hsize, reg_vsize);
+			if (!s_Graphics) FT8XXEMU::GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
 			bool renderProcessed = false;
 			bool hasChanged;
@@ -245,7 +243,7 @@ namespace {
 			// Render lines
 			{
 				// VBlank=0
-				System.switchThread();
+				FT8XXEMU::System.switchThread();
 
 				int lwoc = s_LastWriteOpCount;
 				int woc = Memory.getWriteOpCount();
@@ -253,7 +251,7 @@ namespace {
 				bool hasChanges = hasChanged || s_ChangesSkipped;
 				s_LastWriteOpCount = woc;
 
-				unsigned long procStart = System.getMicros();
+				unsigned long procStart = FT8XXEMU::System.getMicros();
 				if (reg_pclk)
 				{
 					if (hasChanges || !s_FrameFullyDrawn)
@@ -278,8 +276,8 @@ namespace {
 						}
 						else if (s_DegradeOn)
 						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
+								s_GraphicsBuffer ? rotate : (rotate ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize, s_DegradeStage, 2);
 							++s_DegradeStage;
 							s_DegradeStage %= 2;
@@ -289,8 +287,8 @@ namespace {
 						}
 						else
 						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? rotate : (rotate ? !GraphicsDriver.isUpsideDown() : GraphicsDriver.isUpsideDown()), rotate,
+							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
+								s_GraphicsBuffer ? rotate : (rotate ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), rotate,
 								reg_hsize, reg_vsize);
 							s_ChangesSkipped = false;
 							s_FrameFullyDrawn = true;
@@ -307,7 +305,7 @@ namespace {
 					s_SkipOn = false;
 					s_DegradeOn = false;
 				}
-				unsigned long procDelta = System.getMicros() - procStart;
+				unsigned long procDelta = FT8XXEMU::System.getMicros() - procStart;
 				if (s_SkipOn)
 				{
 					if (!s_SkipStage)
@@ -363,13 +361,13 @@ namespace {
 				s_LastRealSwapCount = c;
 			}
 
-			System.leaveSwapDL();
+			FT8XXEMU::System.leaveSwapDL();
 
 			// Flip buffer and also give a slice of time to the mcu main thread
 			{
 				// VBlank=1
 				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
-				System.prioritizeMCUThread();
+				FT8XXEMU::System.prioritizeMCUThread();
 				//printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
 
 #ifndef WIN32
@@ -377,7 +375,7 @@ namespace {
 				System.resumeMCUThread();
 #endif
 
-				unsigned long flipStart = System.getMicros();
+				unsigned long flipStart = FT8XXEMU::System.getMicros();
 				if (s_SkipOn && s_SkipStage)
 				{
 					// no-op
@@ -389,14 +387,14 @@ namespace {
 					{
 						uint32_t frameFlags = 0;
 						if (renderProcessed)
-							frameFlags |= FrameBufferChanged;
+							frameFlags |= FT8XXEMU_FrameBufferChanged;
 						if (s_FrameFullyDrawn)
-							frameFlags |= FrameBufferComplete;
+							frameFlags |= FT8XXEMU_FrameBufferComplete;
 						if (hasChanged)
-							frameFlags |= FrameChanged;
+							frameFlags |= FT8XXEMU_FrameChanged;
 						if (hasSwapped)
-							frameFlags |= FrameSwap;
-						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (FrameFlags)frameFlags))
+							frameFlags |= FT8XXEMU_FrameSwap;
+						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (FT8XXEMU_FrameFlags)frameFlags))
 						{
 							if (s_Close)
 							{
@@ -406,15 +404,15 @@ namespace {
 							else
 							{
 								printf("Kill MCU thread\n");
-								System.killMCUThread();
+								FT8XXEMU::System.killMCUThread();
 								return 0;
 							}
 						}
 					}
 					else
 					{
-						GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
-						if (!GraphicsDriver.update())
+						FT8XXEMU::GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
+						if (!FT8XXEMU::GraphicsDriver.update())
 						{
 							if (s_Close)
 							{
@@ -424,78 +422,78 @@ namespace {
 							else
 							{
 								printf("Kill MCU thread\n");
-								System.killMCUThread();
+								FT8XXEMU::System.killMCUThread();
 								return 0;
 							}
 						}
 					}
 				}
-				unsigned long flipDelta = System.getMicros() - flipStart;
+				unsigned long flipDelta = FT8XXEMU::System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)
 					if (FT800EMU_DEBUG) printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
 
-				System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
-				System.unprioritizeMCUThread();
+				FT8XXEMU::System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
+				FT8XXEMU::System.unprioritizeMCUThread();
 			}
 
-			System.prioritizeCoprocessorThread();
+			FT8XXEMU::System.prioritizeCoprocessorThread();
 			if (reg_pclk)
 			{
 				//long currentMillis = millis();
 				//long millisToWait = targetMillis - currentMillis;
-				double currentSeconds = System.getSeconds();
+				double currentSeconds = FT8XXEMU::System.getSeconds();
 				double secondsToWait = targetSeconds - currentSeconds;
 				//if (millisToWait < -100) targetMillis = millis();
 				if (secondsToWait < -0.25) // Skip freeze
 				{
 					//printf("skip freeze\n");
-					targetSeconds = System.getSeconds();
+					targetSeconds = FT8XXEMU::System.getSeconds();
 				}
 
 				//printf("millis to wait: %i", (int)millisToWait);
 
 				if (secondsToWait > 0.0)
 				{
-					System.delay((int)(secondsToWait * 1000.0));
+					FT8XXEMU::System.delay((int)(secondsToWait * 1000.0));
 				}
 			}
 			else
 			{
 				// REG_PCLK is 0
 #if FT800EMU_REG_PCLK_ZERO_REDUCE
-				targetSeconds = System.getSeconds() + 0.02;
-				System.delay(20);
+				targetSeconds = FT8XXEMU::System.getSeconds() + 0.02;
+				FT8XXEMU::System.delay(20);
 #else
-				targetSeconds = System.getSeconds();
-				System.switchThread();
+				targetSeconds = FT8XXEMU::System.getSeconds();
+				FT8XXEMU::System.switchThread();
 #endif
 			}
-			System.unprioritizeCoprocessorThread();
+			FT8XXEMU::System.unprioritizeCoprocessorThread();
 
 #ifdef WIN32
-			System.holdMCUThread(); // don't let the other thread hog cpu
-			System.resumeMCUThread();
-			System.holdCoprocessorThread();
-			System.resumeCoprocessorThread();
+			FT8XXEMU::System.holdMCUThread(); // don't let the other thread hog cpu
+			FT8XXEMU::System.resumeMCUThread();
+			FT8XXEMU::System.holdCoprocessorThread();
+			FT8XXEMU::System.resumeCoprocessorThread();
 #endif
 		}
 
-		System.revertThreadCategory(taskHandle);
+		FT8XXEMU::System.revertThreadCategory(taskHandle);
 		return 0;
 	}
 
 	int mcuThread(void * = NULL)
 	{
-		System.makeMCUThread();
+		FT8XXEMU::System.makeMCUThread();
 
 		unsigned long taskId = 0;
 		void *taskHandle;
-		taskHandle = System.setThreadGamesCategory(&taskId);
-		System.disableAutomaticPriorityBoost();
-		System.makeNormalPriorityThread();
+		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
+		FT8XXEMU::System.disableAutomaticPriorityBoost();
+		FT8XXEMU::System.makeNormalPriorityThread();
 		
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #endif
 		
@@ -505,21 +503,21 @@ namespace {
 			//printf("mcu thread\n");
 			s_Loop();
 		}
-		System.revertThreadCategory(taskHandle);
+		FT8XXEMU::System.revertThreadCategory(taskHandle);
 		return 0;
 	}
 
 	int coprocessorThread(void * = NULL)
 	{
-		System.makeCoprocessorThread();
+		FT8XXEMU::System.makeCoprocessorThread();
 
 		unsigned long taskId = 0;
 		void *taskHandle;
-		taskHandle = System.setThreadGamesCategory(&taskId);
-		System.disableAutomaticPriorityBoost();
-		System.makeNormalPriorityThread();
+		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
+		FT8XXEMU::System.disableAutomaticPriorityBoost();
+		FT8XXEMU::System.makeNormalPriorityThread();
 		
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #endif
 
@@ -527,7 +525,7 @@ namespace {
 
 		printf("Coprocessor thread exit\n");
 
-		System.revertThreadCategory(taskHandle);
+		FT8XXEMU::System.revertThreadCategory(taskHandle);
 		return 0;
 	}
 
@@ -536,36 +534,36 @@ namespace {
 		//printf("go sound thread");
 		unsigned long taskId = 0;
 		void *taskHandle;
-		taskHandle = System.setThreadGamesCategory(&taskId);
-		System.disableAutomaticPriorityBoost();
-		System.makeHighPriorityThread();
+		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
+		FT8XXEMU::System.disableAutomaticPriorityBoost();
+		FT8XXEMU::System.makeHighPriorityThread();
 		while (s_MasterRunning)
 		{
 			//printf("sound thread\n");
-			if (s_Flags & EmulatorEnableAudio)
+			if (s_Flags & FT8XXEMU_EmulatorEnableAudio)
 			{
 				AudioRender.process();
 			}
-			if (s_Flags & EmulatorEnableKeyboard)
+			if (s_Flags & FT8XXEMU_EmulatorEnableKeyboard)
 			{
-				Keyboard.update();
+				FT8XXEMU::Keyboard.update();
 				if (s_Keyboard)
 				{
 					s_Keyboard();
 				}
-				if (s_Flags & EmulatorEnableDebugShortkeys)
+				if (s_Flags & FT8XXEMU_EmulatorEnableDebugShortkeys)
 				{
 					debugShortkeys();
 				}
 			}
-			System.delay(10);
+			FT8XXEMU::System.delay(10);
 		}
-		System.revertThreadCategory(taskHandle);
+		FT8XXEMU::System.revertThreadCategory(taskHandle);
 		return 0;
 	}
 }
 
-void EmulatorClass::run(const EmulatorParameters &params)
+void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
 	s_EmulatorRunning = true;
 
@@ -574,66 +572,67 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	s_Flags = params.Flags;
 	s_Keyboard = params.Keyboard;
 	s_Graphics = params.Graphics;
-	g_Exception = params.Exception;
+	FT8XXEMU::g_Exception = params.Exception;
 	s_Close = params.Close;
 	s_ExternalFrequency = params.ExternalFrequency;
 
-	System.begin();
-	Memory.begin(params.RomFilePath.empty() ? NULL : params.RomFilePath.c_str(), params.Mode == EmulatorFT801);
+	FT8XXEMU::System.begin();
+	Memory.begin(params.RomFilePath ? NULL : params.RomFilePath, params.Mode == FT8XXEMU_EmulatorFT801);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
-	if (!s_Graphics) GraphicsDriver.begin();
-	if (params.Flags & EmulatorEnableAudio)
+	if (!s_Graphics) FT8XXEMU::GraphicsDriver.begin();
+	if (params.Flags & FT8XXEMU_EmulatorEnableAudio)
 	{
 		AudioProcessor.begin();
-		AudioDriver.begin();
+		AudioRender.begin();
+		FT8XXEMU::AudioDriver.begin();
 	}
-	if (params.Flags & EmulatorEnableCoprocessor)
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
-			params.CoprocessorRomFilePath.empty() ? NULL : params.CoprocessorRomFilePath.c_str(),
-			params.Mode == EmulatorFT801);
-	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.begin();
+			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
+			params.Mode == FT8XXEMU_EmulatorFT801);
+	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
 
 	if (s_Graphics)
 	{
 		s_GraphicsBuffer = new argb8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 	}
 
-	if (!s_Graphics) GraphicsDriver.enableMouse((params.Flags & EmulatorEnableMouse) == EmulatorEnableMouse);
+	if (!s_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & FT8XXEMU_EmulatorEnableMouse) == FT8XXEMU_EmulatorEnableMouse);
 	Memory.enableReadDelay();
 
-	if (params.Flags & EmulatorEnableGraphicsMultithread)
+	if (params.Flags & FT8XXEMU_EmulatorEnableGraphicsMultithread)
 	{
 		GraphicsProcessor.enableMultithread();
 		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
 	}
-	if (params.Flags & EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
+	if (params.Flags & FT8XXEMU_EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
 
-	s_DynamicDegrade = (params.Flags & EmulatorEnableDynamicDegrade) == EmulatorEnableDynamicDegrade;
-	s_RotateEnabled = (params.Flags & EmulatorEnableRegRotate) == EmulatorEnableRegRotate;
+	s_DynamicDegrade = (params.Flags & FT8XXEMU_EmulatorEnableDynamicDegrade) == FT8XXEMU_EmulatorEnableDynamicDegrade;
+	s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
 
 	s_MasterRunning = true;
 
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
 	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, "FT800EMU::Audio", NULL);
 	// TODO - Error handling
 
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 	s_InitSem = SDL_CreateSemaphore(0);
 #endif
 
 	SDL_Thread *threadC = NULL;
-	if (params.Flags & EmulatorEnableCoprocessor)
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
 	// TODO - Error handling
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 	SDL_SemWait(s_InitSem);
 #endif
 
 	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
 	// TODO - Error handling
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 	SDL_SemWait(s_InitSem);
 	SDL_DestroySemaphore(s_InitSem);
 	s_InitSem = NULL;
@@ -642,11 +641,11 @@ void EmulatorClass::run(const EmulatorParameters &params)
 	masterThread();
 
 	s_MasterRunning = false;
-	if (params.Flags & EmulatorEnableCoprocessor)
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.stopEmulator();
 
 	printf("Wait for Coprocessor\n");
-	if (params.Flags & EmulatorEnableCoprocessor)
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		SDL_WaitThread(threadC, NULL);
 
 	printf("Wait for MCU\n");
@@ -689,24 +688,25 @@ void EmulatorClass::run(const EmulatorParameters &params)
 			printf("(3) coproc thread exit\n");
 		}
 	}
-#endif /* #ifdef FT800EMU_SDL */
+#endif /* #ifdef FTEMU_SDL */
 
 	printf("Threads finished, cleaning up\n");
 
 	delete[] s_GraphicsBuffer;
 	s_GraphicsBuffer = NULL;
-	if ((!s_Graphics) && (params.Flags & EmulatorEnableKeyboard)) Keyboard.end();
-	if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.end();
-	if (params.Flags & EmulatorEnableAudio)
+	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
+	if (params.Flags & FT8XXEMU_EmulatorEnableAudio)
 	{
-		AudioDriver.end();
+		FT8XXEMU::AudioDriver.end();
+		AudioRender.end();
 		AudioProcessor.end();
 	}
-	if (!s_Graphics) GraphicsDriver.end();
+	if (!s_Graphics) FT8XXEMU::GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();
 	Memory.end();
-	System.end();
+	FT8XXEMU::System.end();
 
 	s_EmulatorRunning = false;
 	printf("Emulator stopped running\n");
@@ -716,12 +716,12 @@ void EmulatorClass::stop()
 {
 	s_MasterRunning = false;
 
-	if (!System.isMCUThread())
+	if (!FT8XXEMU::System.isMCUThread())
 	{
 		printf("Wait for MCU thread\n");
 		while (s_EmulatorRunning) // TODO: Mutex?
 		{
-			System.delay(1);
+			FT8XXEMU::System.delay(1);
 		}
 	}
 

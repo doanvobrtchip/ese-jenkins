@@ -53,18 +53,18 @@
 #include <QDesktopServices>
 
 // Emulator includes
-#include <ft800emu_inttypes.h>
+#include <ft8xxemu_inttypes.h>
 #ifdef WIN32
-#	include <ft800emu_minmax.h>
+#	include <ft8xxemu_minmax.h>
 #endif
-#include <ft800emu_keyboard_keys.h>
+#include <ft8xxemu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
-#include <ft800emu_keyboard.h>
-#include <ft800emu_system.h>
+#include <ft8xxemu_keyboard.h>
+#include <ft8xxemu_system.h>
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
-#include <ft800emu_graphics_driver.h>
+#include <ft8xxemu_graphics_driver.h>
 #include <vc.h>
 #ifdef WIN32
 #	undef min
@@ -85,8 +85,8 @@
 
 namespace FT800EMUQT {
 
-int s_HSize = FT800EMU_WINDOW_WIDTH_DEFAULT;
-int s_VSize = FT800EMU_WINDOW_HEIGHT_DEFAULT;
+int s_HSize = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+int s_VSize = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
 
 bool s_EmulatorRunning = false;
 
@@ -248,7 +248,7 @@ void loop()
 	}
 	else
 	{
-		FT800EMU::System.delay(10);
+		FT8XXEMU::System.delay(10);
 	}
 
 	if (!s_EmulatorRunning)
@@ -494,7 +494,7 @@ void loop()
 				swrend();
 				wr32(REG_CMD_WRITE, (wp & 0xFFF));
 				printf("WP = %i\n", wp);
-				FT800EMU::System.delay(100);
+				FT8XXEMU::System.delay(100);
 
 				do
 				{
@@ -723,21 +723,22 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	s_CmdEditor = m_CmdEditor;
 	s_Macro = m_Macro;
 
-	FT800EMU::EmulatorParameters params;
+	FT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Flags =
 		// FT800EMU::EmulatorEnableKeyboard
-		/*|*/ FT800EMU::EmulatorEnableMouse
+		/*|*/ FT8XXEMU_EmulatorEnableMouse
 		//| FT800EMU::EmulatorEnableDebugShortkeys
-#ifdef FT800EMU_SDL2 // Cannot combine XAudio2 with Qt
-		| FT800EMU::EmulatorEnableAudio
+#ifdef FTEMU_SDL2 // Cannot combine XAudio2 with Qt
+		| FT8XXEMU_EmulatorEnableAudio
 #endif
-		| FT800EMU::EmulatorEnableCoprocessor
-		| FT800EMU::EmulatorEnableGraphicsMultithread
-		| FT800EMU::EmulatorEnableDynamicDegrade
+		| FT8XXEMU_EmulatorEnableCoprocessor
+		| FT8XXEMU_EmulatorEnableGraphicsMultithread
+		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		;
-	params.Mode = FT800EMU::EmulatorFT801;
+	params.Mode = FT8XXEMU_EmulatorFT801;
 	params.Close = closeDummy;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
@@ -1974,8 +1975,8 @@ void MainWindow::traceEnabledChanged(bool enabled)
 
 void MainWindow::clearEditor()
 {
-	m_HSize->setValue(FT800EMU_WINDOW_WIDTH_DEFAULT);
-	m_VSize->setValue(FT800EMU_WINDOW_HEIGHT_DEFAULT);
+	m_HSize->setValue(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
+	m_VSize->setValue(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
 	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
 	m_StepCmdEnabled->setChecked(false);

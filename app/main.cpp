@@ -11,16 +11,15 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#include <ft800emu_emulator.h>
-#include <ft800emu_system.h>
-#include <ft800emu_spi_i2c.h>
+#include <ft8xxemu.h>
 #include <wiring.h>
 #include <stdio.h>
+#include <string.h>
 
 void setup();
 void loop();
 
-bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT800EMU::FrameFlags flags)
+bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags)
 {
 	static int i = 0;
 	printf("frame %i\n", i);
@@ -216,19 +215,20 @@ CLAS PTR: 3693334
 */
 
 	FT800EMU::ARDUINO::setCSPin(9);
-	FT800EMU::EmulatorParameters params;
+	FT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Flags =
-		FT800EMU::EmulatorEnableKeyboard
-		| FT800EMU::EmulatorEnableMouse
-		| FT800EMU::EmulatorEnableAudio
-		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableRegRotate
-	    | FT800EMU::EmulatorEnableCoprocessor
-		| FT800EMU::EmulatorEnableGraphicsMultithread
-		| FT800EMU::EmulatorEnableRegPwmDutyEmulation;
+		FT8XXEMU_EmulatorEnableKeyboard
+		| FT8XXEMU_EmulatorEnableMouse
+		| FT8XXEMU_EmulatorEnableAudio
+		| FT8XXEMU_EmulatorEnableDebugShortkeys
+		| FT8XXEMU_EmulatorEnableRegRotate
+	    | FT8XXEMU_EmulatorEnableCoprocessor
+		| FT8XXEMU_EmulatorEnableGraphicsMultithread
+		| FT8XXEMU_EmulatorEnableRegPwmDutyEmulation;
 	// params.Graphics = graphics;
-	FT800EMU::Emulator.run(params);
+	FT8XXEMU_run(&params);
 	return 0;
 }

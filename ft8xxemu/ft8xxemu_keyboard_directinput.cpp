@@ -1,7 +1,7 @@
 /**
  * KeyboardClass
  * $Id$
- * \file ft800emu_keyboard_directinput.cpp
+ * \file ft8xxemu_keyboard_directinput.cpp
  * \brief KeyboardClass
  * \date 2011-05-29 22:02GMT
  * \author Jan Boon (Kaetemi)
@@ -11,21 +11,21 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifndef FTEMU_SDL
+#ifndef FTEMU_SDL2
 
 // #include <...>
-#include "ft800emu_keyboard.h"
+#include "ft8xxemu_keyboard.h"
 
 // System includes
 
 // Project includes
-#include "ft800emu_system_windows.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system.h"
 
 // using namespace ...;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 KeyboardClass Keyboard;
 
@@ -102,9 +102,9 @@ bool KeyboardClass::isKeyDown(int key)
 	return ((s_BufferKeyboard[key] & 0x80) != 0);
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SDL2 */
-#endif /* #ifndef FT800EMU_SDL */
+#endif /* #ifndef FTEMU_SDL2 */
+#endif /* #ifndef FTEMU_SDL */
 
 /* end of file */

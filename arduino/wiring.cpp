@@ -29,8 +29,8 @@
 // System includes
 
 // Project includes
-#include "ft800emu_system.h"
-#include "ft800emu_spi_i2c.h"
+#include "ft8xxemu.h"
+#include "ft8xxemu_system.h"
 
 // using namespace ...;
 
@@ -56,10 +56,10 @@ static uint8_t s_csPin = 9;
 // Interrupts
 static void ft800emuCallInterrupt(uint8_t i)
 {
-	bool isdt = FT800EMU::System.isMCUThread();
-	if (!isdt) FT800EMU::System.holdMCUThread();
+	bool isdt = FT8XXEMU::System.isMCUThread();
+	if (!isdt) FT8XXEMU::System.holdMCUThread();
 	s_InterruptFunctions[i]();
-	if (!isdt) FT800EMU::System.resumeMCUThread();
+	if (!isdt) FT8XXEMU::System.resumeMCUThread();
 }
 
 static void ft800emuHandleInterrupt(uint8_t i, uint8_t val, uint8_t prev)
@@ -101,10 +101,10 @@ void detachInterrupt(uint8_t interrupt)
 
 
 // Time
-uint32_t millis(void) { return (uint32_t)FT800EMU::System.getMillis(); }
-uint32_t micros(void) { return (uint32_t)FT800EMU::System.getMicros(); }
-void delay(uint32_t ms) { FT800EMU::System.delay(ms); }
-void delayMicroseconds(uint16_t us) { FT800EMU::System.delayMicros((int)us); }
+uint32_t millis(void) { return (uint32_t)FT8XXEMU::System.getMillis(); }
+uint32_t micros(void) { return (uint32_t)FT8XXEMU::System.getMicros(); }
+void delay(uint32_t ms) { FT8XXEMU::System.delay(ms); }
+void delayMicroseconds(uint16_t us) { FT8XXEMU::System.delayMicros((int)us); }
 
 
 // Digital pins
@@ -115,7 +115,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	s_DigitalPins[pin] = val;
 	if (pin == s_csPin)
 	{
-		FT800EMU::SPII2C.csHigh(val != 0);
+		FT8XXEMU_csHigh(val);
 	}
 	else switch (pin)
 	{
@@ -137,7 +137,7 @@ uint8_t digitalRead(uint8_t pin)
 // Analog pins
 int16_t analogRead(uint8_t pin)
 {
-	return FT800EMU::System.getAnalogRead(pin);
+	return FT8XXEMU::System.getAnalogRead(pin);
 }
 
 namespace FT800EMU

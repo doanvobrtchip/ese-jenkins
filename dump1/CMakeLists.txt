@@ -8,7 +8,7 @@ ADD_EXECUTABLE(dump1
 	)
 
 target_link_libraries(dump1
-	libft800emu
+	ft800emu
 	)
 
 IF (WITH_SDL2)

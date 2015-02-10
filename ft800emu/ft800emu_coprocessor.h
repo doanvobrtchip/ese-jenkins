@@ -10,7 +10,7 @@
 #define FT800EMU_COPROCESSOR_H
 
 // System includes
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 #include <stdio.h>
 #include <assert.h>
 

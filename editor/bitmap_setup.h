@@ -30,7 +30,7 @@
 #include <QJsonArray>
 
 // Emulator includes
-#include <ft800emu_inttypes.h>
+#include <ft8xxemu_inttypes.h>
 #include <ft800emu_graphics_processor.h>
 
 // Project includes

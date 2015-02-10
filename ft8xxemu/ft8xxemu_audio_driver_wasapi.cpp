@@ -1,7 +1,7 @@
 /**
  * AudioDriverClass
  * $Id$
- * \file ft800emu_audio_driver_wasapi.cpp
+ * \file ft8xxemu_audio_driver_wasapi.cpp
  * \brief AudioDriverClass
  * \date 2011-05-29 19:38GMT
  * \author Jan Boon (Kaetemi)
@@ -11,22 +11,24 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifndef FTEMU_SDL
+#ifndef FTEMU_SDL2
 
 // #include <...>
-#include "ft800emu_audio_driver.h"
+#include "ft8xxemu_audio_driver.h"
 
 // System includes
-#include "ft800emu_system_windows.h"
+#include "ft8xxemu_system_windows.h"
 
 // Project includes
 
 // using namespace ...;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 AudioDriverClass AudioDriver;
+
+void (*g_AudioProcess)(short *audioBuffer, int samples) = NULL;
 
 #define REFTIMES_PER_SEC  10000000
 #define REFTIMES_PER_MILLISEC  10000
@@ -42,8 +44,8 @@ static unsigned int s_NumFramesAvailable = 0;
 
 static double s_TestRad;
 
-#define D_FT800EMU_AUDIOCHANNELS 2
-#define D_FT800EMU_AUDIOBITS 16
+#define D_FT8XXEMU_AUDIOCHANNELS 2
+#define D_FT8XXEMU_AUDIOBITS 16
 
 void AudioDriverClass::begin()
 {
@@ -69,11 +71,11 @@ void AudioDriverClass::begin()
 
 	WAVEFORMATEX wfx;
 	wfx.wFormatTag = 0x0001;
-	wfx.nChannels = D_FT800EMU_AUDIOCHANNELS;
+	wfx.nChannels = D_FT8XXEMU_AUDIOCHANNELS;
 	wfx.nSamplesPerSec = pwfx->nSamplesPerSec;
-	wfx.nBlockAlign = D_FT800EMU_AUDIOCHANNELS * D_FT800EMU_AUDIOBITS / 8;
+	wfx.nBlockAlign = D_FT8XXEMU_AUDIOCHANNELS * D_FT8XXEMU_AUDIOBITS / 8;
 	wfx.nAvgBytesPerSec = pwfx->nSamplesPerSec * wfx.nBlockAlign;
-	wfx.wBitsPerSample = D_FT800EMU_AUDIOBITS;
+	wfx.wBitsPerSample = D_FT8XXEMU_AUDIOBITS;
 	wfx.cbSize = 0;
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
@@ -171,9 +173,9 @@ void AudioDriverClass::end()
 	// todo*/***
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SDL2 */
-#endif /* #ifndef FT800EMU_SDL */
+#endif /* #ifndef FTEMU_SDL2 */
+#endif /* #ifndef FTEMU_SDL */
 
 /* end of file */

@@ -8,10 +8,9 @@
 #	include <windows.h>
 #endif
 
-// FT800EMU includes
-#include <ft800emu_emulator.h>
-#include <ft800emu_system.h>
-#include <ft800emu_spi_i2c.h>
+// FT8XXEMU includes
+#include <ft8xxemu.h>
+#include <ft8xxemu_system.h>
 
 // FT900EMU includes
 #include <ft900emu_ft32.h>
@@ -60,12 +59,12 @@ class FT800SPISlave : public FT900EMU::SPISlave
 {
 	virtual void cs(bool cs)
 	{
-		FT800EMU::SPII2C.csLow(cs);
+		FT8XXEMU_csLow(cs ? 1 : 0);
 	}
 
 	virtual uint8_t transfer(uint8_t d)
 	{
-		return FT800EMU::SPII2C.transfer(d);
+		return FT8XXEMU_transfer(d);
 	}
 };
 
@@ -97,7 +96,7 @@ void setup()
 	s_EmulatorExit = new FT32SimulatorExit(ft32);
 	s_FT900EMUSystem->setSPISlave(0, &s_FT800SPISlave);
 
-	FT800EMU::System.overrideMCUDelay(mcuSleep);
+	FT8XXEMU::System.overrideMCUDelay(mcuSleep);
 
 	// Load image
 	FILE *f = fopen(s_InFile, "rb");
@@ -126,7 +125,7 @@ void loop()
 	printf("Loop\n");
 
 	s_FT900EMUSystem->ft32()->run();
-	FT800EMU::Emulator.stop();
+	FT8XXEMU_stop();
 
 	printf("End\n");
 	delete s_EmulatorExit;
@@ -151,20 +150,21 @@ int main(int argc, char *argv[])
 
 	s_InFile = argv[1];
 
-	FT800EMU::EmulatorParameters params;
+	FT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Close = close;
 	params.Flags =
-		FT800EMU::EmulatorEnableKeyboard
-		| FT800EMU::EmulatorEnableMouse
-		| FT800EMU::EmulatorEnableAudio
-		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableRegRotate
-	    | FT800EMU::EmulatorEnableCoprocessor
-		| FT800EMU::EmulatorEnableGraphicsMultithread
-		| FT800EMU::EmulatorEnableDynamicDegrade;
-	FT800EMU::Emulator.run(params);
+		FT8XXEMU_EmulatorEnableKeyboard
+		| FT8XXEMU_EmulatorEnableMouse
+		| FT8XXEMU_EmulatorEnableAudio
+		| FT8XXEMU_EmulatorEnableDebugShortkeys
+		| FT8XXEMU_EmulatorEnableRegRotate
+	    | FT8XXEMU_EmulatorEnableCoprocessor
+		| FT8XXEMU_EmulatorEnableGraphicsMultithread
+		| FT8XXEMU_EmulatorEnableDynamicDegrade;
+	FT8XXEMU_run(&params);
 
 	return EXIT_SUCCESS;
 }

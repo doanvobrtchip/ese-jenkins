@@ -19,7 +19,10 @@
 #include <vector>
 
 // Project includes
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
+
+#define FT800EMU_WINDOW_WIDTH_MAX 512
+#define FT800EMU_WINDOW_HEIGHT_MAX 512
 
 #define FT800EMU_DEBUGMODE_NONE 0
 #define FT800EMU_DEBUGMODE_ALPHA 1

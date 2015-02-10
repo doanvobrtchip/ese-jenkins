@@ -1,7 +1,7 @@
 /**
  * SystemLinuxClass
  * $Id$
- * \file ft800emu_system_linux.cpp
+ * \file ft8xxemu_system_linux.cpp
  * \brief SystemLinuxClass
  * \date 2012-06-29 14:50GMT
  * \author Jan Boon (Kaetemi)
@@ -14,8 +14,8 @@
 #ifndef WIN32
 
 // #include <...>
-#include "ft800emu_system_linux.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system_linux.h"
+#include "ft8xxemu_system.h"
 
 // System includes
 #include <sys/types.h>
@@ -43,7 +43,7 @@ static void clock_gettime(int, timespec *ts)
 
 using namespace std;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 SystemClass System;
 SystemLinuxClass SystemLinux;
@@ -61,7 +61,7 @@ static time_t s_BeginTime = 0;
 
 void SystemClass::_begin()
 {
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Init(0);
 #endif
 
@@ -80,7 +80,7 @@ void SystemClass::_update()
 
 void SystemClass::_end()
 {
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Quit();
 #endif
 }
@@ -150,9 +150,9 @@ void SystemClass::makeMCUThread()
 	signal(SIGUSR1, suspendMCUWait);
 }
 
-bool SystemClass::isMCUThread()
+int SystemClass::isMCUThread()
 {
-	return pthread_self() == s_MCUThread;
+	return (pthread_self() == s_MCUThread) ? 1 : 0;
 }
 
 void SystemClass::prioritizeMCUThread()
@@ -352,7 +352,7 @@ void SystemLinuxClass::Error(const char *message)
 	exit(1);
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
 #endif /* #ifndef WIN32 */
 

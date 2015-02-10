@@ -29,7 +29,7 @@
 #ifdef WIN32
 #	include <Objbase.h>
 #endif
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 #	include <SDL.h>
 #endif
 

@@ -11,10 +11,10 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#include <ft800emu_keyboard_keys.h>
+#include <ft8xxemu_keyboard_keys.h>
 #include <ft800emu_emulator.h>
-#include <ft800emu_keyboard.h>
-#include <ft800emu_system.h>
+#include <ft8xxemu_keyboard.h>
+#include <ft8xxemu_system.h>
 #include <ft800emu_memory.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
@@ -135,7 +135,7 @@ void loop()
 {
 	if (!s_F)
 	{
-		FT800EMU::System.delay(10);
+		FT8XXEMU::System.delay(10);
 	}
 	else
 	{
@@ -254,18 +254,19 @@ void keyboard()
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT800EMU::EmulatorParameters params;
+	FT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Flags =
-		FT800EMU::EmulatorEnableKeyboard
-		| FT800EMU::EmulatorEnableMouse
-		| FT800EMU::EmulatorEnableDebugShortkeys
-		| FT800EMU::EmulatorEnableCoprocessor
-		| FT800EMU::EmulatorEnableGraphicsMultithread
-		| FT800EMU::EmulatorEnableDynamicDegrade
+		FT8XXEMU_EmulatorEnableKeyboard
+		| FT8XXEMU_EmulatorEnableMouse
+		| FT8XXEMU_EmulatorEnableDebugShortkeys
+		| FT8XXEMU_EmulatorEnableCoprocessor
+		| FT8XXEMU_EmulatorEnableGraphicsMultithread
+		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		;
-	params.Mode = FT800EMU::EmulatorFT801;
+	params.Mode = FT8XXEMU_EmulatorFT801;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;

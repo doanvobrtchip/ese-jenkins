@@ -34,14 +34,14 @@
 
 namespace FT800EMUQT {
 
-static FT800EMU::EmulatorParameters s_EmulatorParameters;
+static FT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
 static QMutex s_Mutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
-bool ftqtGraphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT800EMU::FrameFlags flags)
+int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags)
 {
 	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.
@@ -108,7 +108,7 @@ int EmulatorViewport::vsize()
 	return s_Pixmap->height();
 }
 
-void EmulatorViewport::run(const FT800EMU::EmulatorParameters &params)
+void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 {
 	// There can be only one
 	if (s_EmulatorThread == NULL)

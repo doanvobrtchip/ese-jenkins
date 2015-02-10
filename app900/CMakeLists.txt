@@ -8,6 +8,6 @@ ADD_EXECUTABLE(ftapp900
 	)
 
 target_link_libraries(ftapp900
-	libft900emu
+	ft900emu
 	)
 

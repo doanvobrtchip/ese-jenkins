@@ -2,11 +2,11 @@
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h avr/*.h)
 
-ADD_LIBRARY(libftarduino
+ADD_LIBRARY(ftarduino
 	${SRCS}
 	${HDRS}
 	)
 
-target_link_libraries(libftarduino
-	libft800emu
+target_link_libraries(ftarduino
+	ft8xxemuc
 	)

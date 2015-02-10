@@ -8,7 +8,7 @@ ADD_EXECUTABLE(ftplayxbu
 	)
 
 target_link_libraries(ftplayxbu
-	libft800emu
+	ft800emu
 	)
 
 IF (WITH_SDL2)

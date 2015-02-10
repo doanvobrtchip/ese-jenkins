@@ -1,7 +1,7 @@
 /**
  * SystemSdlClass
  * $Id$
- * \file ft800emu_system_sdl.cpp
+ * \file ft8xxemu_system_sdl.cpp
  * \brief SystemSdlClass
  * \date 2012-06-27 11:28GMT
  * \author Jan Boon (Kaetemi)
@@ -11,11 +11,11 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
 // #include <...>
-#include "ft800emu_system_sdl.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system_sdl.h"
+#include "ft8xxemu_system.h"
 
 // System includes
 #include <SDL_thread.h>
@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 SystemSdlClass SystemSdl;
 
@@ -34,8 +34,8 @@ void SystemSdlClass::ErrorSdl()
 	exit(1);
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2)) */
+#endif /* (defined(FTEMU_SDL) || defined(FTEMU_SDL2)) */
 
 /* end of file */

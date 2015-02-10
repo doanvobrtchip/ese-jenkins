@@ -1,7 +1,7 @@
 /**
  * GraphicsDriverClass
  * $Id$
- * \file ft800emu_graphics_driver_sdl.cpp
+ * \file ft8xxemu_graphics_driver_sdl.cpp
  * \brief GraphicsDriverClass
  * \date 2012-06-27 11:49GMT
  * \author Jan Boon (Kaetemi)
@@ -11,31 +11,32 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifdef FTEMU_SDL
+#ifndef FTEMU_SDL2
 
 // #include <...>
-#include "ft800emu_graphics_driver.h"
+#include "ft8xxemu_graphics_driver.h"
 
 // System includes
-#include "ft800emu_system.h"
-#include "ft800emu_system_sdl.h"
-#include "ft800emu_spi_i2c.h"
+#include "ft8xxemu_system.h"
+#include "ft8xxemu_system_sdl.h"
+#include "ft8xxemu_spi_i2c.h"
 
 // Project includes
-#include "ft800emu_graphics_processor.h"
-#include "ft800emu_memory.h"
 #include "vc.h"
 
 using namespace std;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
 
-static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
-static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
-static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
+void (*g_ResetTouchScreenXY)() = NULL;
+void (*g_SetTouchScreenXY)(int x, int y, int pressure) = NULL;
+
+static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 static bool s_MouseEnabled;
 static int s_MousePressure;
@@ -44,16 +45,16 @@ static int s_MouseX;
 static int s_MouseY;
 static int s_MouseDown;
 
-#define FT800EMU_SDL_THREADED_FLIP 0
+#define FTEMU_SDL_THREADED_FLIP 0
 
 namespace {
 
-static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
+static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
 
 SDL_Surface *s_Screen = NULL;
 SDL_Surface *s_Buffer = NULL;
 
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 
 SDL_Thread *s_FlipThread = NULL;
 
@@ -84,16 +85,16 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 
 void GraphicsDriverClass::begin()
 {
-	s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
-	s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
-	s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
+	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+	s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+	s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 
-	s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
+	s_Screen = SDL_SetVideoMode(s_Width * FT8XXEMU_WINDOW_SCALE, s_Height * FT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 	if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
-	SDL_WM_SetCaption(FT800EMU_WINDOW_TITLE_A, NULL);
+	SDL_WM_SetCaption(FT8XXEMU_WINDOW_TITLE_A, NULL);
 
 	Uint32 bpp;
 	Uint32 rmask, gmask, bmask, amask;
@@ -108,7 +109,7 @@ void GraphicsDriverClass::begin()
 	s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
 	if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
 
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 
 	s_Running = true;
 	s_WaitFlip = SDL_CreateCond();
@@ -135,15 +136,15 @@ bool GraphicsDriverClass::update()
 	int mouseX, mouseY;
 	int button = SDL_GetMouseState(&mouseX, &mouseY);
 	s_MouseDown = button & 1;
-	s_MouseX = mouseX / FT800EMU_WINDOW_SCALE;
-	s_MouseY = mouseY / FT800EMU_WINDOW_SCALE;
+	s_MouseX = mouseX / FT8XXEMU_WINDOW_SCALE;
+	s_MouseY = mouseY / FT8XXEMU_WINDOW_SCALE;
 	if (s_MouseDown)
 	{
-		Memory.setTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
+		g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
 	}
 	else
 	{
-		Memory.resetTouchScreenXY();
+		g_ResetTouchScreenXY();
 	}
 
 	return true;
@@ -151,7 +152,7 @@ bool GraphicsDriverClass::update()
 
 void GraphicsDriverClass::end()
 {
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 
 	s_Running = false;
 	SDL_CondBroadcast(s_WaitFlip);
@@ -177,7 +178,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 {
 	if (s_Width != width || s_Height != height)
 	{
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 		// Stop the flip thread
 		s_Running = false;
 		SDL_CondBroadcast(s_WaitFlip);
@@ -191,7 +192,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Ratio = (float)width / (float)height;
 
 		// Change the screen mode
-		s_Screen = SDL_SetVideoMode(s_Width * FT800EMU_WINDOW_SCALE, s_Height * FT800EMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
+		s_Screen = SDL_SetVideoMode(s_Width * FT8XXEMU_WINDOW_SCALE, s_Height * FT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 		if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
 		// Release the buffer
@@ -209,7 +210,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Buffer = SDL_CreateRGBSurfaceFrom(s_BufferARGB8888, s_Width, s_Height, bpp, 4 * s_Width, rmask, gmask, bmask, amask);
 		if (s_Buffer == NULL) SystemSdlClass::ErrorSdl();
 
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 		// Resume the flip thread
 		s_FlipThread = SDL_CreateThreadFT(flipThread, NULL);
 #endif
@@ -233,7 +234,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 			SystemSdlClass::ErrorSdl();
 	}
 
-#if FT800EMU_SDL_THREADED_FLIP
+#if FTEMU_SDL_THREADED_FLIP
 	SDL_CondBroadcast(s_WaitFlip);
 #else
 	if (SDL_Flip(s_Screen) < 0)
@@ -241,16 +242,16 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #endif
 
 	std::stringstream newTitle;
-	newTitle << FT800EMU_WINDOW_TITLE_A;
+	newTitle << FT8XXEMU_WINDOW_TITLE_A;
 	switch (GraphicsProcessor.getDebugMode())
 	{
-	case FT800EMU_DEBUGMODE_ALPHA:
+	case FT8XXEMU_DEBUGMODE_ALPHA:
 		newTitle << " [ALPHA";
 		break;
-	case FT800EMU_DEBUGMODE_TAG:
+	case FT8XXEMU_DEBUGMODE_TAG:
 		newTitle << " [TAG";
 		break;
-	case FT800EMU_DEBUGMODE_STENCIL:
+	case FT8XXEMU_DEBUGMODE_STENCIL:
 		newTitle << " [STENCIL";
 		break;
 	}
@@ -296,9 +297,9 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 	s_MousePressure = pressure;
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SDL2 */
-#endif /* #ifdef FT800EMU_SDL */
+#endif /* #ifndef FTEMU_SDL2 */
+#endif /* #ifdef FTEMU_SDL */
 
 /* end of file */

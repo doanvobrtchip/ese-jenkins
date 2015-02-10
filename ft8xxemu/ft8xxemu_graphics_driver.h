@@ -1,7 +1,7 @@
 /**
  * GraphicsDriverClass
  * $Id$
- * \file ft800emu_graphics_driver.h
+ * \file ft8xxemu_graphics_driver.h
  * \brief GraphicsDriverClass
  * \date 2011-05-26 18:14GMT
  * \author Jan Boon (Kaetemi)
@@ -11,29 +11,29 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_GRAPHICS_DRIVER_H
-#define FT800EMU_GRAPHICS_DRIVER_H
+#ifndef FT8XXEMU_GRAPHICS_DRIVER_H
+#define FT8XXEMU_GRAPHICS_DRIVER_H
 // #include <...>
 
 // System includes
 
 // Project includes
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 
-#define FT800EMU_WINDOW_TITLE_A "FT800 Emulator"
-#define FT800EMU_WINDOW_TITLE TEXT(FT800EMU_WINDOW_TITLE_A)
-#define FT800EMU_WINDOW_WIDTH_DEFAULT 480
-#define FT800EMU_WINDOW_HEIGHT_DEFAULT 272
-#define FT800EMU_WINDOW_RATIO_DEFAULT (480.0f / 272.0f)
-#define FT800EMU_WINDOW_WIDTH_MAX 512
-#define FT800EMU_WINDOW_HEIGHT_MAX 512
-#define FT800EMU_WINDOW_KEEPRATIO 1
-#define FT800EMU_WINDOW_SCALE 1
+#define FT8XXEMU_WINDOW_TITLE_A "FT8XX Emulator"
+#define FT8XXEMU_WINDOW_TITLE TEXT(FT8XXEMU_WINDOW_TITLE_A)
+#define FT8XXEMU_WINDOW_WIDTH_DEFAULT 480
+#define FT8XXEMU_WINDOW_HEIGHT_DEFAULT 272
+#define FT8XXEMU_WINDOW_RATIO_DEFAULT (480.0f / 272.0f)
+#define FT8XXEMU_WINDOW_WIDTH_MAX 2048
+#define FT8XXEMU_WINDOW_HEIGHT_MAX 2048
+#define FT8XXEMU_WINDOW_KEEPRATIO 1
+#define FT8XXEMU_WINDOW_SCALE 1
 
 // Render SDL2 upside down (makes no difference)
-#define FT800EMU_FLIP_SDL2 0
+#define FT8XXEMU_FLIP_SDL2 0
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 /**
  * GraphicsDriverClass
@@ -56,7 +56,7 @@ public:
 	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()
 	{
-		#if (defined(FT800EMU_SDL) || (defined(FT800EMU_SDL2) && !FT800EMU_FLIP_SDL2))
+		#if (defined(FTEMU_SDL) || (defined(FTEMU_SDL2) && !FT8XXEMU_FLIP_SDL2))
 		return false;
 		#else
 		return true;
@@ -74,8 +74,11 @@ private:
 
 extern GraphicsDriverClass GraphicsDriver;
 
-} /* namespace FT800EMU */
+extern void (*g_ResetTouchScreenXY)();
+extern void (*g_SetTouchScreenXY)(int x, int y, int pressure);
 
-#endif /* #ifndef FT800EMU_GRAPHICS_DRIVER_H */
+} /* namespace FT8XXEMU */
+
+#endif /* #ifndef FT8XXEMU_GRAPHICS_DRIVER_H */
 
 /* end of file */

@@ -33,7 +33,7 @@
 
 // Project includes
 
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 typedef uint8_t prog_uint8_t;
 typedef uint16_t prog_uint16_t;
 typedef uint32_t prog_uint32_t;

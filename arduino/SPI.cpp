@@ -29,7 +29,7 @@
 // System includes
 
 // Project includes
-#include "ft800emu_spi_i2c.h"
+#include "ft8xxemu.h"
 
 // using namespace ...;
 
@@ -37,8 +37,7 @@ SPIClass SPI;
 
 byte SPIClass::transfer(byte _data)
 {
-	return FT800EMU::SPII2C.transfer(_data);
-	return 0;
+	return FT8XXEMU_transfer(_data);
 }
 
 /* end of file */

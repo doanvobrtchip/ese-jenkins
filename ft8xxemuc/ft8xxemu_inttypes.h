@@ -1,6 +1,6 @@
 #ifdef _MSC_VER
-#ifndef FTEMU_INTTYPES_DEFINED_BASE
-#define FTEMU_INTTYPES_DEFINED_BASE
+#ifndef FT8XXEMU_INTTYPES_DEFINED_BASE
+#define FT8XXEMU_INTTYPES_DEFINED_BASE
 typedef unsigned __int8 uint8_t;
 typedef signed __int8 int8_t;
 typedef unsigned __int16 uint16_t;
@@ -14,15 +14,15 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #include <stdlib.h>
 #endif
-#ifndef FTEMU_INTTYPES_DEFINED_COLOR
-#define FTEMU_INTTYPES_DEFINED_COLOR
+#ifndef FT8XXEMU_INTTYPES_DEFINED_COLOR
+#define FT8XXEMU_INTTYPES_DEFINED_COLOR
 typedef uint32_t argb8888;
 #endif
-#ifndef FT800EMU_INTTYPES_DEFINED_FORCEINLINE
-#define FT800EMU_INTTYPES_DEFINED_FORCEINLINE
+#ifndef FT8XXEMU_INTTYPES_DEFINED_FORCEINLINE
+#define FT8XXEMU_INTTYPES_DEFINED_FORCEINLINE
 #ifdef _MSC_VER
-#	define FT800EMU_FORCE_INLINE __forceinline
+#	define FT8XXEMU_FORCE_INLINE __forceinline
 #else
-#	define FT800EMU_FORCE_INLINE inline __attribute__((always_inline))
+#	define FT8XXEMU_FORCE_INLINE inline __attribute__((always_inline))
 #endif
 #endif

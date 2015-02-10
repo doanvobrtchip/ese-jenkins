@@ -22,7 +22,7 @@
 #include <QStringList>
 
 // Emulator includes
-#include <ft800emu_inttypes.h>
+#include <ft8xxemu_inttypes.h>
 
 // Project includes
 #include "dl_parser.h"

@@ -1,7 +1,7 @@
 /**
  * SystemClass
  * $Id$
- * \file ft800emu_system.h
+ * \file ft8xxemu_system.h
  * \brief SystemClass
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
@@ -11,16 +11,16 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_SYSTEM_H
-#define FT800EMU_SYSTEM_H
+#ifndef FT8XXEMU_SYSTEM_H
+#define FT8XXEMU_SYSTEM_H
 // #include <...>
 
 // System includes
 
 // Project includes
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 /**
  * SystemClass
@@ -65,7 +65,7 @@ public:
 	static inline bool isMainThreadSwitchable() { return s_MainThreadSwitchable; }
 
 	static void makeMCUThread();
-	static bool isMCUThread();
+	static int isMCUThread();
 	static void prioritizeMCUThread();
 	static void unprioritizeMCUThread();
 	static void holdMCUThread();
@@ -120,8 +120,8 @@ extern SystemClass System;
 
 extern void (*g_Exception)(const char *message);
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SYSTEM_H */
+#endif /* #ifndef FT8XXEMU_SYSTEM_H */
 
 /* end of file */

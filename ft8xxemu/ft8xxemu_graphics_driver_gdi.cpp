@@ -1,7 +1,7 @@
 /**
  * GraphicsDriverClass
  * $Id$
- * \file ft800emu_graphics_driver_gdi.cpp
+ * \file ft8xxemu_graphics_driver_gdi.cpp
  * \brief GraphicsDriverClass
  * \date 2011-05-26 18:14GMT
  * \author Jan Boon (Kaetemi)
@@ -11,37 +11,35 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_SDL
-#ifndef FT800EMU_SDL2
+#ifndef FTEMU_SDL
+#ifndef FTEMU_SDL2
 
 // #include <...>
-#include "ft800emu_graphics_driver.h"
+#include "ft8xxemu_graphics_driver.h"
 
 // System includes
-#include "ft800emu_system_windows.h"
+#include "ft8xxemu_system_windows.h"
 #include <Windowsx.h>
-#include "ft800emu_system.h"
+#include "ft8xxemu_system.h"
 
 // Project includes
-// #include "ft800emu_ft800_spi_i2c.h"
-#include "ft800emu_graphics_processor.h"
-#include "ft800emu_memory.h"
 #include "vc.h"
 
 using namespace std;
 
-#define FT800EMU_WINDOW_CLASS_NAME TEXT("FT800EMUGraphicsDriver")
+#define FT8XXEMU_WINDOW_CLASS_NAME TEXT("FT8XXEMUGraphicsDriver")
 
 // Getting more CPU usage with StretchDIBits for some reason, so I don't use it.
-#define FT800EMU_GRAPHICS_USE_STRETCHDIBITS 0
+#define FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS 0
 
-namespace FT800EMU {
-
+namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
-static argb8888 s_BufferARGB8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
 
+void (*g_ResetTouchScreenXY)() = NULL;
+void (*g_SetTouchScreenXY)(int x, int y, int pressure) = NULL;
 
+static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
 
 static HINSTANCE s_HInstance = NULL;
 static HWND s_HWnd = NULL;
@@ -50,7 +48,7 @@ static HWND s_HWnd = NULL;
 //static bool s_KeepRatio;
 static std::map<UINT, WNDPROC> s_WindowProcedures;
 //static ULONG_PTR s_GdiplusToken;
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 static HBITMAP s_Buffer = NULL;
 static HDC s_HDC = NULL;//, m_WindowGraphics;
 #endif
@@ -59,9 +57,9 @@ static HDC s_HDC = NULL;//, m_WindowGraphics;
 
 
 BITMAPINFO s_BitInfo;
-static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
-static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
-static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
+static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 static bool s_MouseEnabled;
 static int s_MousePressure;
@@ -103,12 +101,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			uint8_t *const ram = Memory.getRam();
 			if (s_MouseDown && s_MouseX >= 0 && s_MouseX < s_Width && s_MouseY >= 0 && s_MouseY < s_Height)
 			{
-				Memory.setTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
+				g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
 			}
 			else
 			{
 				s_MouseDown = false;
-				Memory.resetTouchScreenXY();
+				g_ResetTouchScreenXY();
 			}
 		}
 		break;
@@ -152,7 +150,7 @@ void GraphicsDriverClass::begin()
 	WNDCLASSEX wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpszClassName = FT800EMU_WINDOW_CLASS_NAME;
+	wcex.lpszClassName = FT8XXEMU_WINDOW_CLASS_NAME;
 	wcex.lpfnWndProc = WndProc;
 	wcex.hInstance = s_HInstance;
 	wcex.cbClsExtra = 0;
@@ -168,15 +166,15 @@ void GraphicsDriverClass::begin()
 
 	// Initialize and Show Display Instance
 	DWORD dw_style = WS_OVERLAPPEDWINDOW;
-/*#if FT800EMUWIN_DISPLAY_ASPECT_RATIO
-	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)FT800EMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = FT800EMU_WINDOW_WIDTH * 2; // window size
+/*#if FT8XXEMUWIN_DISPLAY_ASPECT_RATIO
+	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)FT8XXEMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = FT8XXEMU_WINDOW_WIDTH * 2; // window size
 #else*/
-	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT800EMU_WINDOW_SCALE; r.right = s_Width * FT800EMU_WINDOW_SCALE; // window size
+	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT8XXEMU_WINDOW_SCALE; r.right = s_Width * FT8XXEMU_WINDOW_SCALE; // window size
 /*#endif*/
 	AdjustWindowRect(&r, dw_style, FALSE);
 	if (s_HWnd) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HWnd != NULL"));
-	if (!(s_HWnd = CreateWindow(FT800EMU_WINDOW_CLASS_NAME,
-		/*(LPCTSTR)title.c_str()*/FT800EMU_WINDOW_TITLE, dw_style,
+	if (!(s_HWnd = CreateWindow(FT8XXEMU_WINDOW_CLASS_NAME,
+		/*(LPCTSTR)title.c_str()*/FT8XXEMU_WINDOW_TITLE, dw_style,
 		CW_USEDEFAULT, 0, r.right - r.left, r.bottom - r.top, // x y w h
 		NULL, NULL, s_HInstance, NULL)))
 		SystemWindows.ErrorWin32();
@@ -184,7 +182,7 @@ void GraphicsDriverClass::begin()
 	if (!UpdateWindow(s_HWnd)) SystemWindows.ErrorWin32();
 
 	// Create GDI32 Buffer and Device Context
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	HDC hdc = GetDC(s_HWnd);
 	if (s_HDC) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HDC != NULL"));
 	s_HDC = CreateCompatibleDC(hdc);
@@ -236,7 +234,7 @@ void GraphicsDriverClass::end()
 		s_WindowProcedures.clear();
 	}
 
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	if (s_HDC) { DeleteDC(s_HDC); s_HDC = NULL; }
 	else SystemWindows.Debug(TEXT("GraphicsDriver.end() s_HDC == NULL"));
 	if (s_Buffer) { DeleteObject(s_Buffer); s_Buffer = NULL; }
@@ -246,7 +244,7 @@ void GraphicsDriverClass::end()
 	if (s_HWnd) { DestroyWindow(s_HWnd); s_HWnd = NULL; }
 	else SystemWindows.Debug(TEXT("GraphicsDriver.end() s_HWnd == NULL"));
 
-	UnregisterClass(FT800EMU_WINDOW_CLASS_NAME, s_HInstance);
+	UnregisterClass(FT8XXEMU_WINDOW_CLASS_NAME, s_HInstance);
 }
 
 void GraphicsDriverClass::setMode(int width, int height)
@@ -257,7 +255,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Height = height;
 		s_Ratio = (float)width / (float)height;
 
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		if (!s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.setMode(2)  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
 		HBITMAP oldBuffer = s_Buffer;
 		s_Buffer = NULL;
@@ -273,7 +271,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 #endif
 
 		DWORD dw_style = WS_OVERLAPPEDWINDOW;
-		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT800EMU_WINDOW_SCALE; r.right = s_Width * FT800EMU_WINDOW_SCALE; // window size
+		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT8XXEMU_WINDOW_SCALE; r.right = s_Width * FT8XXEMU_WINDOW_SCALE; // window size
 		AdjustWindowRect(&r, dw_style, FALSE);
 
 		SetWindowPos(s_HWnd, 0, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
@@ -285,7 +283,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
 	// Render bitmap to buffer
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	if (output)
 	{
 		if (!SetDIBitsToDevice(s_HDC, 0, 0,
@@ -299,7 +297,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	RECT r;
 	GetClientRect(s_HWnd, &r);
 	if (output)
-#if FT800EMU_WINDOW_KEEPRATIO
+#if FT8XXEMU_WINDOW_KEEPRATIO
 	{
 		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
@@ -310,7 +308,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 		int x_r = (r.right - width_r) / 2;
 		int y_r = (r.bottom - height_r) / 2;
 		HDC hdc = GetDC(s_HWnd);
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		StretchBlt(hdc, x_r, y_r, width_r, height_r, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
 		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, s_Width, s_Height, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -343,7 +341,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #else
 	{
 		HDC hdc = GetDC(s_HWnd);
-#if !FT800EMU_GRAPHICS_USE_STRETCHDIBITS
+#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		StretchBlt(hdc, 0, 0, r.right, r.bottom, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
 		StretchDIBits(hdc, 0, 0, r.right, r.bottom, 0, 0, s_Width, s_Height, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -365,16 +363,16 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 
 	// Update title
 	tstringstream newTitle;
-	newTitle << FT800EMU_WINDOW_TITLE;
+	newTitle << FT8XXEMU_WINDOW_TITLE;
 	switch (GraphicsProcessor.getDebugMode())
 	{
-	case FT800EMU_DEBUGMODE_ALPHA:
+	case FT8XXEMU_DEBUGMODE_ALPHA:
 		newTitle << " [ALPHA";
 		break;
-	case FT800EMU_DEBUGMODE_TAG:
+	case FT8XXEMU_DEBUGMODE_TAG:
 		newTitle << " [TAG";
 		break;
-	case FT800EMU_DEBUGMODE_STENCIL:
+	case FT8XXEMU_DEBUGMODE_STENCIL:
 		newTitle << " [STENCIL";
 		break;
 	}
@@ -420,9 +418,9 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 	s_MousePressure = pressure;
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SDL2 */
-#endif /* #ifndef FT800EMU_SDL */
+#endif /* #ifndef FTEMU_SDL2 */
+#endif /* #ifndef FTEMU_SDL */
 
 /* end of file */

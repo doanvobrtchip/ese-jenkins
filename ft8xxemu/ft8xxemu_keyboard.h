@@ -1,7 +1,7 @@
 /**
  * KeyboardClass
  * $Id$
- * \file ft800emu_keyboard.h
+ * \file ft8xxemu_keyboard.h
  * \brief KeyboardClass
  * \date 2011-05-29 22:02GMT
  * \author Jan Boon (Kaetemi)
@@ -11,15 +11,15 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_KEYBOARD_H
-#define FT800EMU_KEYBOARD_H
+#ifndef ft8xxemu_keyboard_H
+#define ft8xxemu_keyboard_H
 // #include <...>
 
 // System includes
 
 // Project includes
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 /**
  * KeyboardClass
@@ -47,8 +47,8 @@ private:
 
 extern KeyboardClass Keyboard;
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_KEYBOARD_H */
+#endif /* #ifndef ft8xxemu_keyboard_H */
 
 /* end of file */

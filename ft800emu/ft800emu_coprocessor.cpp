@@ -14,7 +14,7 @@
 
 // Project includes
 #include "ft800emu_memory.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system.h"
 #include "vc.h"
 
 // using namespace ...;
@@ -79,7 +79,7 @@ void CoprocessorClass::execute()
 		{
 			pc = 0;
 			//printf("RESET COPROCESSOR\n");
-			System.delay(1);
+			FT8XXEMU::System.delay(1);
 			continue;
 		}
         insn = pgm[pc];

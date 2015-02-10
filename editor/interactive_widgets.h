@@ -28,7 +28,7 @@
 #include <QComboBox>
 
 // Emulator includes
-#include <ft800emu_inttypes.h>
+#include <ft8xxemu_inttypes.h>
 #include <vc.h>
 
 // Project includes

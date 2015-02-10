@@ -13,7 +13,7 @@
 
 // #include <...>
 #include "ft800emu_memory.h"
-#include "ft800emu_system_windows.h"
+#include "ft8xxemu_system_windows.h"
 
 // System includes
 #include <stdio.h>
@@ -21,7 +21,8 @@
 
 // Project includes
 #include "vc.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system.h"
+#include "ft8xxemu_graphics_driver.h"
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_audio_processor.h"
 #include "ft800emu_audio_render.h"
@@ -193,7 +194,7 @@ inline uint32_t getTouchScreenXY(long micros)
 
 inline uint32_t getTouchScreenXY()
 {
-	long micros = System.getMicros();
+	long micros = FT8XXEMU::System.getMicros();
 	return getTouchScreenXY(micros);
 }
 
@@ -216,7 +217,7 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	{
 		if (s_TouchScreenJitter)
 		{
-			long micros = jitteredTime(System.getMicros());
+			long micros = jitteredTime(FT8XXEMU::System.getMicros());
 			getTouchScreenXY(micros, s_TouchScreenX1, s_TouchScreenY1, false);
 			//s_TouchScreenX1 = s_TouchScreenX2;
 			//s_TouchScreenY1 = s_TouchScreenY2;
@@ -224,7 +225,7 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 		}
 		else
 		{
-			long micros = System.getMicros();
+			long micros = FT8XXEMU::System.getMicros();
 			s_TouchScreenX1 = s_TouchScreenX2;
 			s_TouchScreenY1 = s_TouchScreenY2;
 			s_TouchScreenSet = micros;
@@ -232,7 +233,7 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	}
 	else
 	{
-		long micros = System.getMicros();
+		long micros = FT8XXEMU::System.getMicros();
 		s_LastJitteredTime = micros;
 		s_TouchScreenX1 = x;
 		s_TouchScreenY1 = y;
@@ -278,7 +279,7 @@ void MemoryClass::resetTouchScreenXY()
 		Memory.rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 		Memory.rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	}
-	s_LastJitteredTime = System.getMicros();
+	s_LastJitteredTime = FT8XXEMU::System.getMicros();
 }
 
 int MemoryClass::getDirectSwapCount()
@@ -329,7 +330,7 @@ bool MemoryClass::coprocessorGetReset()
 }
 
 template<typename T>
-FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -344,7 +345,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			{
 				// printf("Direct swap from REG_PCLK\n");
 				// Direct swap
-				System.enterSwapDL();
+				FT8XXEMU::System.enterSwapDL();
 				// if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
 				if (data == 0 && (s_Ram[REG_DLSWAP] == DLSWAP_FRAME || s_Ram[REG_DLSWAP] == DLSWAP_LINE))
 				{
@@ -354,7 +355,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 					GraphicsProcessor.processBlank();
 					++s_DirectSwapCount;
 				}
-				System.leaveSwapDL();
+				FT8XXEMU::System.leaveSwapDL();
 			}
 			break;
 		case REG_DLSWAP:
@@ -364,7 +365,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			{
 				// printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
-				System.enterSwapDL();
+				FT8XXEMU::System.enterSwapDL();
 				// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 				if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
 				{
@@ -378,7 +379,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				// {
 					// printf("No go\n");
 				// }
-				System.leaveSwapDL();
+				FT8XXEMU::System.leaveSwapDL();
 			}
 			break;
 		// case REG_VOL_SOUND:
@@ -418,7 +419,7 @@ FT800EMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 	}
 }
 
-FT800EMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
+FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -433,32 +434,32 @@ FT800EMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
 	}
 }
 
-FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
 {
 	rawWriteU32(s_Ram, address, data);
 }
 
-FT800EMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
+FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
 {
 	return rawReadU32(s_Ram, address);
 }
 
-FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU16(size_t address, uint16_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(size_t address, uint16_t data)
 {
 	rawWriteU16(s_Ram, address, data);
 }
 
-FT800EMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(size_t address)
+FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(size_t address)
 {
 	return rawReadU16(s_Ram, address);
 }
 
-FT800EMU_FORCE_INLINE void MemoryClass::rawWriteU8(size_t address, uint8_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(size_t address, uint8_t data)
 {
 	rawWriteU8(s_Ram, address, data);
 }
 
-FT800EMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
+FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
 {
 	return rawReadU8(s_Ram, address);
 }
@@ -473,6 +474,8 @@ static const uint8_t rom_ft801[FT800EMU_ROM_SIZE] = {
 
 void MemoryClass::begin(const char *romFilePath, bool ft801)
 {
+	FT8XXEMU::g_SetTouchScreenXY = &setTouchScreenXY;
+	FT8XXEMU::g_ResetTouchScreenXY = &resetTouchScreenXY;
 	if (romFilePath)
 	{
 		FILE *f;
@@ -508,7 +511,7 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	s_WaitMCUReadCounter = 0;
 	s_SwapMCUReadCounter = 0;
 	s_TouchScreenSet = 0;
-	s_LastJitteredTime = System.getMicros();
+	s_LastJitteredTime = FT8XXEMU::System.getMicros();
 
 	s_FT801 = ft801;
 
@@ -609,7 +612,7 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("MCU U32 write address %i exceeds RAM size\n", (int)address);
-		if (g_Exception) g_Exception("Write address exceeds RAM size");
+		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Write address exceeds RAM size");
 		return;
 	}
 
@@ -674,9 +677,9 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			if (s_WaitMCUReadCounter > 8)
 			{
 				// printf(" Delay MCU \n");
-				System.prioritizeCoprocessorThread();
-				System.delayForMCU(1);
-				System.unprioritizeCoprocessorThread();
+				FT8XXEMU::System.prioritizeCoprocessorThread();
+				FT8XXEMU::System.delayForMCU(1);
+				FT8XXEMU::System.unprioritizeCoprocessorThread();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
@@ -684,9 +687,9 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			if (s_SwapMCUReadCounter > 8)
 			{
 				// printf(" Delay MCU ");
-				System.prioritizeCoprocessorThread();
-				System.delayForMCU(1);
-				System.unprioritizeCoprocessorThread();
+				FT8XXEMU::System.prioritizeCoprocessorThread();
+				FT8XXEMU::System.delayForMCU(1);
+				FT8XXEMU::System.unprioritizeCoprocessorThread();
 			}
 			break;
 		default:
@@ -696,9 +699,9 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 				if (s_IdenticalMCUReadCounter > 8)
 				{
 					// printf(" Switch ");
-					System.prioritizeCoprocessorThread();
-					System.switchThread();
-					System.unprioritizeCoprocessorThread();
+					FT8XXEMU::System.prioritizeCoprocessorThread();
+					FT8XXEMU::System.switchThread();
+					FT8XXEMU::System.unprioritizeCoprocessorThread();
 				}
 			}
 			else
@@ -824,9 +827,9 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			++s_WaitCoprocessorReadCounter;
 			if (s_WaitCoprocessorReadCounter > 8)
 			{
-				System.prioritizeMCUThread();
-				System.delay(1);
-				System.unprioritizeMCUThread();
+				FT8XXEMU::System.prioritizeMCUThread();
+				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System.unprioritizeMCUThread();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
@@ -834,9 +837,9 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 			if (s_SwapCoprocessorReadCounter > 8)
 			{
 				// printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
-				System.prioritizeMCUThread();
-				System.delay(1);
-				System.unprioritizeMCUThread();
+				FT8XXEMU::System.prioritizeMCUThread();
+				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System.unprioritizeMCUThread();
 			}
 			break;
 		default:
@@ -851,9 +854,9 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 				if (s_IdenticalCoprocessorReadCounter > 8)
 				{
 					// printf(" Switch ");
-					System.prioritizeMCUThread();
-					System.switchThread();
-					System.unprioritizeMCUThread();
+					FT8XXEMU::System.prioritizeMCUThread();
+					FT8XXEMU::System.switchThread();
+					FT8XXEMU::System.unprioritizeMCUThread();
 				}
 			}
 			else

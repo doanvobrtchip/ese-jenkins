@@ -18,11 +18,11 @@
 #include <stdio.h>
 
 // Project includes
-#include "ft800emu_system.h"
-#include "ft800emu_audio_driver.h"
+#include "ft8xxemu_system.h"
+#include "ft8xxemu_audio_driver.h"
 #include "ft800emu_audio_processor.h"
 #include "ft800emu_memory.h"
-#include "ft800emu_minmax.h"
+#include "ft8xxemu_minmax.h"
 #include "vc.h"
 
 // using namespace ...;
@@ -43,6 +43,16 @@ static short s_PlaybackSample1 = 0;
 static bool s_ADPCMNext = false;
 
 static bool s_RequestPlayback = false;
+
+void AudioRenderClass::begin()
+{
+	FT8XXEMU::g_AudioProcess = &process;
+}
+
+void AudioRenderClass::end()
+{
+
+}
 
 void AudioRenderClass::playbackPlay()
 {
@@ -86,7 +96,7 @@ static int s_ADPCMStepsizeTable[89] = {
 	32767
 };
 
-static FT800EMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
+static FT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 	uint32_t &playbackLength, uint8_t &playbackFormat,
 	uint8_t &playbackLoop, uint8_t &playbackBusy,
 	uint32_t &playbackReadPtr, uint8_t &playbackVolume,
@@ -202,12 +212,12 @@ void AudioRenderClass::process()
 	short *audioBuffer;
 	int samples;
 
-	AudioDriver.beginBuffer(&audioBuffer, &samples);
+	FT8XXEMU::AudioDriver.beginBuffer(&audioBuffer, &samples);
 
 	if (audioBuffer != NULL)
 	{
 		process(audioBuffer, samples);
-		AudioDriver.endBuffer();
+		FT8XXEMU::AudioDriver.endBuffer();
 	}
 }
 
@@ -237,9 +247,9 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 	uint8_t &playbackVolume = ram[REG_VOL_PB];
 	bool adpcmNext = s_ADPCMNext;
 
-	int audioFrequency = AudioDriver.getFrequency();
+	int audioFrequency = FT8XXEMU::AudioDriver.getFrequency();
 	double secondsPerSample = 1.0 / (double)audioFrequency;
-	int channels = AudioDriver.getChannels();
+	int channels = FT8XXEMU::AudioDriver.getChannels();
 
 	for (int i = 0; i < samples; ++i)
 	{

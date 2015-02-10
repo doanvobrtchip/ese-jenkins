@@ -8,8 +8,8 @@ ADD_EXECUTABLE(ftsampleapp
 	)
 
 target_link_libraries(ftsampleapp
-	libft800emu
-	libftarduino
+	ft800emu
+	ftarduino
 	)
 
 IF (WITH_SDL2)

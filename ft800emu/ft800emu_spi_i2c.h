@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 // Project includes
-#include "ft800emu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 
 namespace FT800EMU {
 
@@ -37,10 +37,10 @@ public:
 	static void begin();
 	static void end();
 
-	static void csLow(bool low = true);
-	static void csHigh(bool high = true);
+	static void csLow(int low = 1);
+	static void csHigh(int high = 1);
 
-	uint8_t transfer(uint8_t data);
+	static uint8_t transfer(uint8_t data);
 
 	// Interrupt
 	static bool intnLow();

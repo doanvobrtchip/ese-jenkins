@@ -1,7 +1,7 @@
 /**
  * SystemWindowsClass
  * $Id$
- * \file ft800emu_system_windows.h
+ * \file ft8xxemu_system_windows.h
  * \brief SystemWindowsClass
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
@@ -12,8 +12,8 @@
  */
 
 #ifdef WIN32
-#ifndef FT800EMU_SYSTEM_WINDOWS_H
-#define FT800EMU_SYSTEM_WINDOWS_H
+#ifndef FT8XXEMU_SYSTEM_WINDOWS_H
+#define FT8XXEMU_SYSTEM_WINDOWS_H
 // #include <...>
 
 
@@ -36,7 +36,7 @@
 #include <avrt.h>
 
 // SDL
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 #	include <SDL.h>
 #endif
 
@@ -84,7 +84,7 @@ typedef std::stringstream tstringstream;
 #endif
 
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 /**
  * SystemWindowsClass
@@ -124,9 +124,9 @@ private:
 
 extern SystemWindowsClass SystemWindows;
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SYSTEM_WINDOWS_H */
+#endif /* #ifndef FT8XXEMU_SYSTEM_WINDOWS_H */
 #endif /* #ifdef WIN32 */
 
 /* end of file */

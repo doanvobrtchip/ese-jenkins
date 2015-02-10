@@ -1,7 +1,7 @@
 /**
  * SystemWindowsClass
  * $Id$
- * \file ft800emu_system_windows.cpp
+ * \file ft8xxemu_system_windows.cpp
  * \brief SystemWindowsClass
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
@@ -14,8 +14,8 @@
 #ifdef WIN32
 
 // #include <...>
-#include "ft800emu_system_windows.h"
-#include "ft800emu_system.h"
+#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system.h"
 
 // Libraries
 #pragma comment(lib, "winmm.lib")
@@ -32,7 +32,7 @@
 
 using namespace std;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 
 SystemClass System;
@@ -56,7 +56,7 @@ static CRITICAL_SECTION s_SwapCriticalSection;
 
 void SystemClass::_begin()
 {
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Init(0);
 #endif
 	QueryPerformanceFrequency(&s_PerformanceFrequency);
@@ -74,7 +74,7 @@ void SystemClass::_end()
 {
 	//DeleteCriticalSection(&s_CriticalSection);
 	DeleteCriticalSection(&s_SwapCriticalSection);
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Quit();
 #endif
 }
@@ -170,9 +170,9 @@ void SystemClass::makeMCUThread()
 		SystemWindows.ErrorWin32();
 }
 
-bool SystemClass::isMCUThread()
+int SystemClass::isMCUThread()
 {
-	return GetCurrentThread() == s_MCUThreadPseudo;
+	return (GetCurrentThread() == s_MCUThreadPseudo) ? 1 : 0;
 }
 
 void SystemClass::prioritizeMCUThread()
@@ -427,7 +427,7 @@ std::wstring SystemWindowsClass::ToWString(const tstring &s)
 }
 
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
 #endif /* #ifdef WIN32 */
 

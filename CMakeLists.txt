@@ -1,5 +1,6 @@
 ########################################################################
 # CMake project
+PROJECT("FTEMU")
 
 # Minimum required 2.6
 # Minimum required 2.8.11 for automatic linking to qtmain.lib
@@ -73,7 +74,9 @@ ENDIF (NOT DEFINED WITH_SDL)
 LINK_DIRECTORIES(
   )
 INCLUDE_DIRECTORIES(
+  ${CMAKE_SOURCE_DIR}/ft8xxemu
   ${CMAKE_SOURCE_DIR}/ft800emu
+  ${CMAKE_SOURCE_DIR}/ft8xxemuc
   ${CMAKE_SOURCE_DIR}/reference
   ${CMAKE_SOURCE_DIR}/arduino
   ${CMAKE_SOURCE_DIR}/editor/ftlib
@@ -89,11 +92,47 @@ IF (WITH_SDL2)
     ${OPENGL_INCLUDE_DIR}
     )
   ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
+  ADD_DEFINITIONS(-DFTEMU_SDL2)
+ELSEIF (WITH_SDL)
+  # SDL base package
+  FIND_PACKAGE(SDL REQUIRED)
+  INCLUDE_DIRECTORIES(
+    ${SDL_INCLUDE_DIR}
+    )
+  ADD_DEFINITIONS(-DFTEMU_SDL)
+ELSE ()
+  FIND_PACKAGE(OpenMP REQUIRED)
+  IF (OPENMP_FOUND)
+    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  ENDIF ()
 ENDIF (WITH_SDL2)
 
 ########################################################################
 
+option (USE_SSE_41 "Use SSE 4.1 instructions" OFF)
+
+IF (USE_SSE_41)
+  IF (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+    SET (CMAKE_C_FLAGS "-msse4.1 ${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
+    SET (CMAKE_CXX_FLAGS "-msse4.1 ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+  ENDIF (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  
+  ADD_DEFINITIONS(-DFTEMU_SSE41=1)
+ELSE (USE_SSE_41)
+  ADD_DEFINITIONS(-DFTEMU_SSE41=0)
+ENDIF (USE_SSE_41)
+
+########################################################################
+
+ADD_DEFINITIONS(-DFTEMU_CMAKE)
+
+########################################################################
+
+ADD_SUBDIRECTORY(ft8xxemu)
 ADD_SUBDIRECTORY(ft800emu)
+ADD_SUBDIRECTORY(ft8xxemuc)
 ADD_SUBDIRECTORY(arduino)
 
 ADD_SUBDIRECTORY(loaddump)
@@ -103,7 +142,6 @@ ADD_SUBDIRECTORY(playxbu)
 
 IF (WITH_QT)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
-  ADD_SUBDIRECTORY(qtsample)
   ADD_SUBDIRECTORY(editor)
 ENDIF (WITH_QT)
 

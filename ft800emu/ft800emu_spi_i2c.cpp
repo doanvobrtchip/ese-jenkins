@@ -60,9 +60,9 @@ void SPII2CClass::end()
 
 }
 
-void SPII2CClass::csLow(bool low)
+void SPII2CClass::csLow(int low)
 {
-	s_CSLow = low;
+	s_CSLow = low != 0;
 
 	if (s_RWBufferStage)
 	{
@@ -89,7 +89,7 @@ void SPII2CClass::csLow(bool low)
 	s_Stage = 0;
 }
 
-void SPII2CClass::csHigh(bool high)
+void SPII2CClass::csHigh(int high)
 {
 	csLow(!high);
 }

@@ -1,7 +1,7 @@
 /**
  * AudioDriverClass
  * $Id$
- * \file ft800emu_audio_driver.h
+ * \file ft8xxemu_audio_driver.h
  * \brief AudioDriverClass
  * \date 2011-05-29 19:38GMT
  * \author Jan Boon (Kaetemi)
@@ -11,15 +11,15 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMU_AUDIO_DRIVER_H
-#define FT800EMU_AUDIO_DRIVER_H
+#ifndef FT8XXEMU_AUDIO_DRIVER_H
+#define FT8XXEMU_AUDIO_DRIVER_H
 // #include <...>
 
 // System includes
 
 // Project includes
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 /**
  * AudioDriverClass
@@ -50,8 +50,10 @@ private:
 
 extern AudioDriverClass AudioDriver;
 
-} /* namespace FT800EMU */
+extern void (*g_AudioProcess)(short *audioBuffer, int samples);
 
-#endif /* #ifndef FT800EMU_AUDIO_DRIVER_H */
+} /* namespace FT8XXEMU */
+
+#endif /* #ifndef FT8XXEMU_AUDIO_DRIVER_H */
 
 /* end of file */

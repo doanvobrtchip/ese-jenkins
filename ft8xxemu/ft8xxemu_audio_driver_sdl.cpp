@@ -1,7 +1,7 @@
 /**
  * AudioDriverClass
  * $Id$
- * \file ft800emu_audio_driver_sdl.cpp
+ * \file ft8xxemu_audio_driver_sdl.cpp
  * \brief AudioDriverClass
  * \date 2012-06-27 11:45GMT
  * \author Jan Boon (Kaetemi)
@@ -11,22 +11,21 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#if (defined(FT800EMU_SDL) || defined(FT800EMU_SDL2))
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
 // #include <...>
-#include "ft800emu_audio_driver.h"
+#include "ft8xxemu_audio_driver.h"
 
 // System includes
-#include "ft800emu_system_sdl.h"
-
-// Project includes
-#include "ft800emu_audio_render.h"
+#include "ft8xxemu_system_sdl.h"
 
 // using namespace ...;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 AudioDriverClass AudioDriver;
+
+void (*g_AudioProcess)(short *audioBuffer, int samples) = NULL;
 
 static int s_AudioFrequency = 0;
 static int s_AudioChannels = 0;
@@ -35,7 +34,7 @@ namespace {
 
 void sdlAudioCallback(void *userdata, Uint8 *stream, int len)
 {
-	AudioRender.process((short *)stream, len / 2); // 1 channel, 2 bytes per channel (hopefully...)
+	g_AudioProcess((short *)stream, len / 2); // 1 channel, 2 bytes per channel (hopefully...)
 }
 
 } /* anonymous namespace */
@@ -101,8 +100,8 @@ void AudioDriverClass::end()
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifdef FT800EMU_SDL */
+#endif /* #ifdef FTEMU_SDL */
 
 /* end of file */

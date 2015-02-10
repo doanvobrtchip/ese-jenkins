@@ -2,10 +2,10 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifdef FT800EMU_SDL2
+#ifdef FTEMU_SDL2
 
 // #include <...>
-#include "ft800emu_graphics_driver.h"
+#include "ft8xxemu_graphics_driver.h"
 
 // System includes
 #ifdef WIN32
@@ -13,8 +13,8 @@
 #	include <Windows.h>
 #endif
 #include <GL/gl.h>
-#include "ft800emu_system.h"
-#include "ft800emu_system_sdl.h"
+#include "ft8xxemu_system.h"
+#include "ft8xxemu_system_sdl.h"
 
 // Library includes
 #ifdef WIN32
@@ -22,9 +22,6 @@
 #endif
 
 // Project includes
-#include "ft800emu_spi_i2c.h"
-#include "ft800emu_graphics_processor.h"
-#include "ft800emu_memory.h"
 #include "vc.h"
 
 #ifndef GL_CLAMP_TO_BORDER
@@ -35,21 +32,24 @@
 #	define GL_TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif
 
-#if defined(FT800EMU_SDL2)
+#if defined(FTEMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
-#elif defined(FT800EMU_SDL)
+#elif defined(FTEMU_SDL)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
 using namespace std;
 
-namespace FT800EMU {
+namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
 
-static int s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
-static int s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
-static float s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
+void (*g_ResetTouchScreenXY)() = NULL;
+void (*g_SetTouchScreenXY)(int x, int y, int pressure) = NULL;
+
+static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 static int s_WindowWidth;
 static int s_WindowHeight;
@@ -71,21 +71,21 @@ static int s_MouseDown;
 // It saves time for the CPU processing
 // Disabled because not compatible with dynamic degrade yet
 // Must be 0 or 1
-#define FT800EMU_THREADED_FLIP 0
+#define FT8XXEMU_THREADED_FLIP 0
 
 // Hardware double buffer adds an additional copy to the output.
 // It is technically redundant, as only one texture is drawn, but may improve performance in some window managers
-#define FT800EMU_HARDWARE_DOUBLE_BUFFER 0
+#define FT8XXEMU_HARDWARE_DOUBLE_BUFFER 0
 
 // Number of frames to skip for refreshing the window title
-#define FT800EMU_TITLE_FRAMESKIP 3
+#define FT8XXEMU_TITLE_FRAMESKIP 3
 
 // Whether to use a dynamic title
 // It seems this is very slow under SDL2 on Linux
 #if defined(WIN32)
-#	define FT800EMU_TITLE_DYNAMIC 1
+#	define FT8XXEMU_TITLE_DYNAMIC 0 // TEMPORARILY DISABLED DUE TO LINKAGE PRIORITIES // TODO
 #else
-#	define FT800EMU_TITLE_DYNAMIC 0
+#	define FT8XXEMU_TITLE_DYNAMIC 0
 #endif
 
 namespace {
@@ -93,18 +93,18 @@ namespace {
 SDL_Window* s_Window = NULL;
 SDL_GLContext s_GLContext = NULL;
 
-argb8888 s_BufferARGB8888[FT800EMU_THREADED_FLIP + 1][FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
-#if FT800EMU_THREADED_FLIP
-SDL_mutex *s_BufferMutex[FT800EMU_THREADED_FLIP + 1] = { NULL, NULL };
+argb8888 s_BufferARGB8888[FT8XXEMU_THREADED_FLIP + 1][FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
+#if FT8XXEMU_THREADED_FLIP
+SDL_mutex *s_BufferMutex[FT8XXEMU_THREADED_FLIP + 1] = { NULL, NULL };
 #endif
 GLuint s_BufferTexture = 0;
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 int s_BufferCurrent = 0;
 #else
 const int s_BufferCurrent = 0;
 #endif
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 
 SDL_Thread *s_FlipThread = NULL;
 
@@ -116,7 +116,7 @@ bool s_Running = false;
 
 bool s_Output = false;
 
-#if FT800EMU_TITLE_DYNAMIC
+#if FT8XXEMU_TITLE_DYNAMIC
 int s_TitleFrameSkip = 0;
 #endif
 
@@ -150,7 +150,7 @@ void drawBuffer()
 
 	if (s_Output)
 	{
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 		int buffer = (s_BufferCurrent + 1) % 2;
 		if (!SDL_LockMutex(s_BufferMutex[buffer]))
 #else
@@ -163,7 +163,7 @@ void drawBuffer()
 
 			glBegin(GL_QUADS);
 
-#if FT800EMU_FLIP_SDL2
+#if FT8XXEMU_FLIP_SDL2
 			glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
 			glVertex3f(-1, -1, 0);
 
@@ -195,7 +195,7 @@ void drawBuffer()
 
 			glFinish();
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 			SDL_UnlockMutex(s_BufferMutex[buffer]);
 #endif
 		}
@@ -205,12 +205,12 @@ void drawBuffer()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glFinish();
 	}
-#if FT800EMU_HARDWARE_DOUBLE_BUFFER
+#if FT8XXEMU_HARDWARE_DOUBLE_BUFFER
 	SDL_GL_SwapWindow(s_Window);
 #endif
 }
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 
 int flipThread(void *)
 {
@@ -242,7 +242,7 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
 	// Return the next available buffer
 	// Wait in case it's still being rendered
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	if (!SDL_LockMutex(s_BufferMutex[s_BufferCurrent]))
 		SDL_UnlockMutex(s_BufferMutex[s_BufferCurrent]);
 #endif
@@ -251,15 +251,15 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 
 void GraphicsDriverClass::begin()
 {
-	s_Width = FT800EMU_WINDOW_WIDTH_DEFAULT;
-	s_Height = FT800EMU_WINDOW_HEIGHT_DEFAULT;
-	s_Ratio = FT800EMU_WINDOW_RATIO_DEFAULT;
+	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
+	s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+	s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 	uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	s_BufferMutex[0] = SDL_CreateMutex();
 	s_BufferMutex[1] = SDL_CreateMutex();
 #endif
@@ -268,14 +268,14 @@ void GraphicsDriverClass::begin()
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-#if !FT800EMU_HARDWARE_DOUBLE_BUFFER
+#if !FT8XXEMU_HARDWARE_DOUBLE_BUFFER
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0); // We do our own double buffering, as we only render a single texture
 #endif
 
-	s_WindowWidth = s_Width * FT800EMU_WINDOW_SCALE;
-	s_WindowHeight = s_Height * FT800EMU_WINDOW_SCALE;
+	s_WindowWidth = s_Width * FT8XXEMU_WINDOW_SCALE;
+	s_WindowHeight = s_Height * FT8XXEMU_WINDOW_SCALE;
 
-	s_Window = SDL_CreateWindow(FT800EMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	s_Window = SDL_CreateWindow(FT8XXEMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
 
@@ -291,7 +291,7 @@ void GraphicsDriverClass::begin()
 
 	glClearColor( 0.5f, 0.5f, 0.5f, 0.0f );
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	SDL_GL_MakeCurrent(s_Window, NULL);
 
 	s_Running = true;
@@ -341,11 +341,11 @@ bool GraphicsDriverClass::update()
 
 	if (s_MouseDown)
 	{
-		Memory.setTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
+		g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
 	}
 	else
 	{
-		Memory.resetTouchScreenXY();
+		g_ResetTouchScreenXY();
 	}
 
 	return true;
@@ -353,7 +353,7 @@ bool GraphicsDriverClass::update()
 
 void GraphicsDriverClass::end()
 {
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	s_Running = false;
 	SDL_CondBroadcast(s_WaitFlip);
 	SDL_WaitThread(s_FlipThread, NULL);
@@ -372,7 +372,7 @@ void GraphicsDriverClass::end()
 	SDL_GL_DeleteContext(s_GLContext); s_GLContext = NULL;
 	SDL_DestroyWindow(s_Window); s_Window = NULL;
 
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	SDL_DestroyMutex(s_BufferMutex[0]); s_BufferMutex[0] = NULL;
 	SDL_DestroyMutex(s_BufferMutex[1]); s_BufferMutex[1] = NULL;
 #endif
@@ -388,8 +388,8 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Height = height;
 		s_Ratio = (float)width / (float)height;
 
-		s_WindowWidth = s_Width * FT800EMU_WINDOW_SCALE;
-		s_WindowHeight = s_Height * FT800EMU_WINDOW_SCALE;
+		s_WindowWidth = s_Width * FT8XXEMU_WINDOW_SCALE;
+		s_WindowHeight = s_Height * FT8XXEMU_WINDOW_SCALE;
 
 		SDL_SetWindowSize(s_Window, s_WindowWidth, s_WindowHeight);
 	}
@@ -397,7 +397,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 
 void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	if (changed)
 	{
 		++s_BufferCurrent;
@@ -406,26 +406,26 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #endif
 
 	s_Output = output;
-#if FT800EMU_THREADED_FLIP
+#if FT8XXEMU_THREADED_FLIP
 	SDL_CondBroadcast(s_WaitFlip);
 #else
 	drawBuffer();
 #endif
 
-#if FT800EMU_TITLE_DYNAMIC
+#if FT8XXEMU_TITLE_DYNAMIC
 	if (!s_TitleFrameSkip)
 	{
 		std::stringstream newTitle;
-		newTitle << FT800EMU_WINDOW_TITLE_A;
+		newTitle << FT8XXEMU_WINDOW_TITLE_A;
 		switch (GraphicsProcessor.getDebugMode())
 		{
-		case FT800EMU_DEBUGMODE_ALPHA:
+		case FT8XXEMU_DEBUGMODE_ALPHA:
 			newTitle << " [ALPHA";
 			break;
-		case FT800EMU_DEBUGMODE_TAG:
+		case FT8XXEMU_DEBUGMODE_TAG:
 			newTitle << " [TAG";
 			break;
-		case FT800EMU_DEBUGMODE_STENCIL:
+		case FT8XXEMU_DEBUGMODE_STENCIL:
 			newTitle << " [STENCIL";
 			break;
 		}
@@ -461,7 +461,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 		SDL_SetWindowTitle(s_Window, newTitle.str().c_str());
 	}
 	++s_TitleFrameSkip;
-	s_TitleFrameSkip %= FT800EMU_TITLE_FRAMESKIP;
+	s_TitleFrameSkip %= FT8XXEMU_TITLE_FRAMESKIP;
 #endif
 }
 
@@ -475,8 +475,8 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 	s_MousePressure = pressure;
 }
 
-} /* namespace FT800EMU */
+} /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT800EMU_SDL2 */
+#endif /* #ifndef FTEMU_SDL2 */
 
 /* end of file */
