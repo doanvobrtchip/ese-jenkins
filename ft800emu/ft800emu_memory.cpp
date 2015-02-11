@@ -536,8 +536,8 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_SNAPY, 0);
 	rawWriteU32(REG_SNAPSHOT, 0);
 	rawWriteU32(REG_CPURESET, 0);
-	rawWriteU32(REG_TAP_CRC, 0);
-	rawWriteU32(REG_TAP_MASK, ~0);
+	rawWriteU32(REG_TAP_CRC, 0); // Not used by emulator yet // TODO: CRC value of RGB signals output
+	rawWriteU32(REG_TAP_MASK, ~0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_HCYCLE, 548);
 	rawWriteU32(REG_HOFFSET, 43);
 	rawWriteU32(REG_HSIZE, 480);
@@ -550,17 +550,27 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_VSYNC1, 10);
 	rawWriteU32(REG_DLSWAP, 0);
 	rawWriteU32(REG_ROTATE, 0);
-	rawWriteU32(REG_OUTBITS, 0x1B6);
-	rawWriteU32(REG_DITHER, 1);
-	rawWriteU32(REG_SWIZZLE, 0);
-	rawWriteU32(REG_CSPREAD, 1);
-	rawWriteU32(REG_PCLK_POL, 0);
+	rawWriteU32(REG_OUTBITS, 0x1B6); // Not used by emulator
+	rawWriteU32(REG_DITHER, 1); // Not used by emulator
+	rawWriteU32(REG_SWIZZLE, 0); // Not used by emulator
+	rawWriteU32(REG_CSPREAD, 1); // Not used by emulator
+	rawWriteU32(REG_PCLK_POL, 0); // Not used by emulator
 	rawWriteU32(REG_PCLK, 0);
+	rawWriteU32(REG_TAG, 0);
 	rawWriteU32(REG_TAG_X, 0);
 	rawWriteU32(REG_TAG_Y, 0);
 	rawWriteU32(REG_VOL_PB, 0xFF);
 	rawWriteU32(REG_VOL_SOUND, 0xFF);
 	rawWriteU32(REG_SOUND, 0);
+
+	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_B, 0x00); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_C, 0x00); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_D, 0x00); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_E, 0x10000); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_F, 0x00); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TAG, 0);
+	rawWriteU32(REG_TOUCH_TAG_XY, 0);
 
 	/*
 	MAPPING:
@@ -577,10 +587,15 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000); // REG_CTOUCH_TOUCH0_XY
 	rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF); // REG_CTOUCH_TOUCHA_XY
 	rawWriteU32(REG_TOUCH_DIRECT_XY, 0); // REG_CTOUCH_TOUCHB_XY
-	rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
+	rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY // Not used by emulator
 	rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
 
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
+	rawWriteU32(REG_TOUCH_OVERSAMPLE, 7); // Not used by emulator
+	rawWriteU32(REG_TOUCH_SETTLE, 3); // Not used by emulator
+	rawWriteU32(REG_TOUCH_CHARGE, 0x1770); // Not used by emulator
+	rawWriteU32(REG_TOUCH_MODE, 3); // Not used by emulator yet // NOTE: Currently emulator always emulates continuous mode // TODO
+	
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
 	rawWriteU32(REG_INT_MASK, 0xFF);
