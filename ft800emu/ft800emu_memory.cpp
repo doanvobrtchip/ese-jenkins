@@ -206,10 +206,6 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
-#ifdef FT810EMU_MODE
-	SDL_assert(false); // TODO_FT810EMU
-	// no-op?
-#else
 	if (multiTouch())
 	{
 		// no-op
@@ -218,7 +214,6 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	{
 		rawWriteU32(REG_TOUCH_RAW_XY, touch_raw_xy);
 	}
-#endif
 	if (s_TouchScreenSet)
 	{
 		if (s_TouchScreenJitter)
@@ -249,9 +244,6 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	s_TouchScreenY2 = y;
 
 	transformTouchXY(x, y);
-#ifdef FT810EMU_MODE
-	SDL_assert(false); // TODO_FT810EMU
-#else
 	if (multiTouch())
 	{
 		rawWriteU32(REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
@@ -261,7 +253,6 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 		rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
 		rawWriteU32(REG_TOUCH_RZ, pressure);
 	}
-#endif
 }
 
 void MemoryClass::setTouchScreenXYFrameTime(long micros)
@@ -273,9 +264,6 @@ void MemoryClass::resetTouchScreenXY()
 {
 	s_TouchScreenSet = 0;
 	Memory.rawWriteU32(REG_TOUCH_TAG, 0);
-#ifdef FT810EMU_MODE
-	SDL_assert(false); // TODO_FT810EMU
-#else
 	if (multiTouch())
 	{
 		// No touch detected
@@ -292,7 +280,6 @@ void MemoryClass::resetTouchScreenXY()
 		rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
 		rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	}
-#endif
 	s_LastJitteredTime = FT8XXEMU::System.getMicros();
 }
 
