@@ -21,9 +21,6 @@
 #	include <SDL_syswm.h>
 #endif
 
-// Project includes
-#include "vc.h"
-
 #ifndef GL_CLAMP_TO_BORDER
 #	define GL_CLAMP_TO_BORDER 0x812D
 #endif

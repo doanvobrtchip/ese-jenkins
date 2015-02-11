@@ -22,9 +22,6 @@
 #include <Windowsx.h>
 #include "ft8xxemu_system.h"
 
-// Project includes
-#include "vc.h"
-
 using namespace std;
 
 #define FT8XXEMU_WINDOW_CLASS_NAME TEXT("FT8XXEMUGraphicsDriver")

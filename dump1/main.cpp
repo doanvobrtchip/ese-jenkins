@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	FILE *f = fopen(argv[1], "rb");
     int hsize, vsize;
 
-    FT800EMU::Memory.begin();
+	FT800EMU::Memory.begin(FT8XXEMU_EmulatorFT801);
     FT800EMU::GraphicsProcessor.begin();
     FT800EMU::GraphicsProcessor.enableMultithread();
 

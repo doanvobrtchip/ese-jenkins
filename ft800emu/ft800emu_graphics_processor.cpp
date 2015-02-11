@@ -41,6 +41,7 @@
 #endif
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 #	include <SDL_thread.h>
+#	include <SDL_assert.h>
 #else
 #	ifdef WIN32
 #		include "ft8xxemu_system_windows.h"
@@ -53,7 +54,7 @@
 #include "ft8xxemu_graphics_driver.h"
 #include "ft8xxemu_minmax.h"
 #include "ft800emu_memory.h"
-#include "vc.h"
+#include "ft800emu_vc.h"
 
 // using namespace ...;
 
@@ -452,7 +453,12 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 
 FT8XXEMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
+#ifdef FT810EMU_MODE
+	SDL_assert(false); // TODO_FT810EMU
+	uint32_t result = 0;
+#else
 	uint32_t result = static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
+#endif
 	return result;
 }
 

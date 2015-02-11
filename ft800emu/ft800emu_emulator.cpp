@@ -37,7 +37,7 @@
 
 #include "ft8xxemu_minmax.h"
 
-#include "vc.h"
+#include "ft800emu_vc.h"
 
 #ifndef FTEMU_SDL
 #ifndef FTEMU_SDL2
@@ -577,7 +577,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	FT8XXEMU::System.begin();
-	Memory.begin(params.RomFilePath ? NULL : params.RomFilePath, params.Mode == FT8XXEMU_EmulatorFT801);
+	Memory.begin(params.Mode, params.RomFilePath);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.begin();

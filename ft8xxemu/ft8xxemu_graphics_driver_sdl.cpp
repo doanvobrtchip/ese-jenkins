@@ -22,9 +22,6 @@
 #include "ft8xxemu_system_sdl.h"
 #include "ft8xxemu_spi_i2c.h"
 
-// Project includes
-#include "vc.h"
-
 using namespace std;
 
 namespace FT8XXEMU {

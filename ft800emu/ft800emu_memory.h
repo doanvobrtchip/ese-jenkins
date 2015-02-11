@@ -16,6 +16,7 @@
 // #include <...>
 
 // System includes
+#include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
 
 // Project includes
@@ -37,7 +38,7 @@ class MemoryClass
 public:
 	MemoryClass() { }
 
-	static void begin(const char *romFilePath = 0, bool ft801 = false);
+	static void begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath = 0);
 	static void end();
 
 	static void enableReadDelay(bool enabled = true);
@@ -45,7 +46,6 @@ public:
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
 
-	static bool ft801();
 	static bool multiTouch();
 
 	//static void setInterrupt(void (*interrupt)());

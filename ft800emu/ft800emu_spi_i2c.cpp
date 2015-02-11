@@ -19,7 +19,7 @@
 
 // Project includes
 #include "ft800emu_memory.h"
-#include "vc.h"
+#include "ft800emu_vc.h"
 
 // using namespace ...;
 

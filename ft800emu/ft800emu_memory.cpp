@@ -20,7 +20,8 @@
 #include <string.h>
 
 // Project includes
-#include "vc.h"
+#include "ft8xxemu.h"
+#include "ft800emu_vc.h"
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_graphics_driver.h"
 #include "ft800emu_graphics_processor.h"
@@ -30,7 +31,7 @@
 // using namespace ...;
 
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
-#define FT800EMU_ROM_INDEX 0xC0000 //(RAM_DL - FT800EMU_ROM_SIZE)
+#define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE) //(RAM_DL - FT800EMU_ROM_SIZE)
 
 namespace FT800EMU {
 
@@ -74,7 +75,7 @@ static bool s_TouchScreenJitter = true;
 
 static bool s_CpuReset = false;
 
-static bool s_FT801;
+static bool s_EmulatorMode;
 
 //static void (*s_Interrupt)());
 
@@ -205,6 +206,10 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
+#ifdef FT810EMU_MODE
+	SDL_assert(false); // TODO_FT810EMU
+	// no-op?
+#else
 	if (multiTouch())
 	{
 		// no-op
@@ -213,6 +218,7 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	{
 		rawWriteU32(REG_TOUCH_RAW_XY, touch_raw_xy);
 	}
+#endif
 	if (s_TouchScreenSet)
 	{
 		if (s_TouchScreenJitter)
@@ -243,6 +249,9 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 	s_TouchScreenY2 = y;
 
 	transformTouchXY(x, y);
+#ifdef FT810EMU_MODE
+	SDL_assert(false); // TODO_FT810EMU
+#else
 	if (multiTouch())
 	{
 		rawWriteU32(REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
@@ -252,6 +261,7 @@ void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
 		rawWriteU32(REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
 		rawWriteU32(REG_TOUCH_RZ, pressure);
 	}
+#endif
 }
 
 void MemoryClass::setTouchScreenXYFrameTime(long micros)
@@ -263,6 +273,9 @@ void MemoryClass::resetTouchScreenXY()
 {
 	s_TouchScreenSet = 0;
 	Memory.rawWriteU32(REG_TOUCH_TAG, 0);
+#ifdef FT810EMU_MODE
+	SDL_assert(false); // TODO_FT810EMU
+#else
 	if (multiTouch())
 	{
 		// No touch detected
@@ -275,10 +288,11 @@ void MemoryClass::resetTouchScreenXY()
 	}
 	else
 	{
-		Memory.rawWriteU32(REG_TOUCH_RZ, 32767);
-		Memory.rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-		Memory.rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
+		rawWriteU32(REG_TOUCH_RZ, 32767);
+		rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+		rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
 	}
+#endif
 	s_LastJitteredTime = FT8XXEMU::System.getMicros();
 }
 
@@ -409,12 +423,6 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				s_CpuReset = true;
 			}
 			break;
-		case REG_CTOUCH_EXTEND:
-			if (s_FT801)
-			{
-				resetTouchScreenXY();
-			}
-			break;
 		}
 	}
 }
@@ -429,6 +437,20 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
 		{
 		case REG_DLSWAP:
 			flagDLSwap();
+			break;
+		case REG_CTOUCH_EXTENDED:
+#ifndef FT810EMU_MODE
+			if (s_EmulatorMode >= FT8XXEMU_EmulatorFT801)
+#endif
+			{
+				if (!multiTouch())
+				{
+					rawWriteU32(REG_TOUCH_DIRECT_XY, 0); // REG_CTOUCH_TOUCHB_XY
+					rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
+					rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
+				}
+				resetTouchScreenXY();
+			}
 			break;
 		}
 	}
@@ -472,7 +494,7 @@ static const uint8_t rom_ft801[FT800EMU_ROM_SIZE] = {
 #include "rom_ft801.h"
 };
 
-void MemoryClass::begin(const char *romFilePath, bool ft801)
+void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath)
 {
 	FT8XXEMU::g_SetTouchScreenXY = &setTouchScreenXY;
 	FT8XXEMU::g_ResetTouchScreenXY = &resetTouchScreenXY;
@@ -491,8 +513,12 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	}
 	else
 	{
-		if (ft801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801));
+#ifdef FT810EMU_MODE
+		memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801)); // TODO_FT810EMU: Correct ROM
+#else
+		if (emulatorMode == FT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801));
 		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+#endif
 	}
 
 	s_DirectSwapCount = 0;
@@ -513,7 +539,7 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	s_TouchScreenSet = 0;
 	s_LastJitteredTime = FT8XXEMU::System.getMicros();
 
-	s_FT801 = ft801;
+	s_EmulatorMode = emulatorMode;
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
@@ -548,25 +574,25 @@ void MemoryClass::begin(const char *romFilePath, bool ft801)
 	rawWriteU32(REG_VOL_PB, 0xFF);
 	rawWriteU32(REG_VOL_SOUND, 0xFF);
 	rawWriteU32(REG_SOUND, 0);
-	if (ft801)
-	{
-		rawWriteU32(REG_CTOUCH_EXTEND, 0x01);
-		rawWriteU32(REG_CTOUCH_TOUCH0_XY, 0x00);
-		rawWriteU32(REG_CTOUCH_TOUCH1_XY, 0x00);
-		rawWriteU32(REG_CTOUCH_TOUCH2_XY, 0x00);
-		rawWriteU32(REG_CTOUCH_TOUCH3_XY, 0x00);
-		rawWriteU32(REG_CTOUCH_TOUCH4_X, 0x00);
-		rawWriteU32(REG_CTOUCH_TOUCH4_Y, 0x00);
-	}
-	else
-	{
-		rawWriteU32(REG_TOUCH_ADC_MODE, 0x01);
-		rawWriteU32(REG_TOUCH_RZ, 0x7FFF);
-		rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000);
-		rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-		rawWriteU32(REG_TOUCH_DIRECT_XY, 0);
-		rawWriteU32(REG_ANALOG, 0);
-	}
+
+	/*
+	MAPPING:
+	REG_TOUCH_ADC_MODE		REG_CTOUCH_EXTENDED
+	REG_TOUCH_SCREEN_XY		REG_CTOUCH_TOUCH0_XY
+	REG_TOUCH_RAW_XY		REG_CTOUCH_TOUCHA_XY
+	REG_TOUCH_DIRECT_XY		REG_CTOUCH_TOUCHB_XY	OLD NOT ON FT801
+	REG_TOUCH_DIRECT_Z1Z2	REG_CTOUCH_TOUCHC_XY	OLD NOT ON FT801
+	REG_ANALOG				REG_CTOUCH_TOUCH4_X		OLD NOT ON FT801
+	REG_TOUCH_RZ			REG_CTOUCH_TOUCH4_Y		OLD NOT ON FT801
+	*/
+	rawWriteU32(REG_TOUCH_ADC_MODE, 0x01); // REG_CTOUCH_EXTENDED, CTOUCH_MODE_COMPATIBILITY
+	rawWriteU32(REG_TOUCH_RZ, 0x7FFF); // REG_CTOUCH_TOUCH4_X
+	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000); // REG_CTOUCH_TOUCH0_XY
+	rawWriteU32(REG_TOUCH_RAW_XY, 0xFFFFFFFF); // REG_CTOUCH_TOUCHA_XY
+	rawWriteU32(REG_TOUCH_DIRECT_XY, 0); // REG_CTOUCH_TOUCHB_XY
+	rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
+	rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
+
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
@@ -582,14 +608,14 @@ void MemoryClass::end()
 
 }
 
-bool MemoryClass::ft801()
-{
-	return s_FT801;
-}
-
 bool MemoryClass::multiTouch()
 {
-	return s_FT801 && ((Memory.rawReadU32(REG_CTOUCH_EXTEND) & 0x01) == 0);
+#ifdef FT810EMU_MODE
+	return (Memory.rawReadU32(REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
+#else
+	return s_EmulatorMode >= FT8XXEMU_EmulatorFT801
+		&& ((Memory.rawReadU32(REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
+#endif
 }
 
 void MemoryClass::enableReadDelay(bool enabled)
