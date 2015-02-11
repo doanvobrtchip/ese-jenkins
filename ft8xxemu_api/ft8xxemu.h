@@ -28,9 +28,9 @@
 
 typedef enum
 {
-	FT8XXEMU_EmulatorFT800 =  0,
-	FT8XXEMU_EmulatorFT801 =  1,
-	FT8XXEMU_EmulatorFT810 = 10,
+	FT8XXEMU_EmulatorFT800 = 800,
+	FT8XXEMU_EmulatorFT801 = 801,
+	FT8XXEMU_EmulatorFT810 = 810,
 } FT8XXEMU_EmulatorMode;
 
 typedef enum
