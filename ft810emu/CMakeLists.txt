@@ -1,6 +1,6 @@
 
 FILE(GLOB SRCS ../ft800emu/*.cpp)
-FILE(GLOB HDRS ../ft800emu/*.h)
+FILE(GLOB HDRS ../ft800emu/*.h ../reference/*.h)
 
 ADD_LIBRARY(ft810emu
   ${SRCS}

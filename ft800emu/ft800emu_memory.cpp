@@ -75,7 +75,7 @@ static bool s_TouchScreenJitter = true;
 
 static bool s_CpuReset = false;
 
-static bool s_EmulatorMode;
+static FT8XXEMU_EmulatorMode s_EmulatorMode;
 
 //static void (*s_Interrupt)());
 

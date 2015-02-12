@@ -58,48 +58,6 @@
 
 // using namespace ...;
 
-#define FT800EMU_DL_VERTEX2F 1
-#define FT800EMU_DL_VERTEX2II 2
-#define FT800EMU_DL_DISPLAY 0
-#define FT800EMU_DL_BITMAP_SOURCE 1
-#define FT800EMU_DL_CLEAR_COLOR_RGB 2
-#define FT800EMU_DL_TAG 3
-#define FT800EMU_DL_COLOR_RGB 4
-#define FT800EMU_DL_BITMAP_HANDLE 5
-#define FT800EMU_DL_CELL 6
-#define FT800EMU_DL_BITMAP_LAYOUT 7
-#define FT800EMU_DL_BITMAP_SIZE 8
-#define FT800EMU_DL_ALPHA_FUNC 9
-#define FT800EMU_DL_STENCIL_FUNC 10
-#define FT800EMU_DL_BLEND_FUNC 11
-#define FT800EMU_DL_STENCIL_OP 12
-#define FT800EMU_DL_POINT_SIZE 13
-#define FT800EMU_DL_LINE_WIDTH 14
-#define FT800EMU_DL_CLEAR_COLOR_A 15
-#define FT800EMU_DL_COLOR_A 16
-#define FT800EMU_DL_CLEAR_STENCIL 17
-#define FT800EMU_DL_CLEAR_TAG 18
-#define FT800EMU_DL_STENCIL_MASK 19
-#define FT800EMU_DL_TAG_MASK 20
-#define FT800EMU_DL_BITMAP_TRANSFORM_A 21
-#define FT800EMU_DL_BITMAP_TRANSFORM_B 22
-#define FT800EMU_DL_BITMAP_TRANSFORM_C 23
-#define FT800EMU_DL_BITMAP_TRANSFORM_D 24
-#define FT800EMU_DL_BITMAP_TRANSFORM_E 25
-#define FT800EMU_DL_BITMAP_TRANSFORM_F 26
-#define FT800EMU_DL_SCISSOR_XY 27
-#define FT800EMU_DL_SCISSOR_SIZE 28
-#define FT800EMU_DL_CALL 29
-#define FT800EMU_DL_JUMP 30
-#define FT800EMU_DL_BEGIN 31
-#define FT800EMU_DL_COLOR_MASK 32
-#define FT800EMU_DL_END 33
-#define FT800EMU_DL_SAVE_CONTEXT 34
-#define FT800EMU_DL_RESTORE_CONTEXT 35
-#define FT800EMU_DL_RETURN 36
-#define FT800EMU_DL_MACRO 37
-#define FT800EMU_DL_CLEAR 38
-
 #if defined(FTEMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
 #elif defined(FTEMU_SDL)
@@ -2521,6 +2479,29 @@ EvaluateDisplayListValue:
 			goto EvaluateDisplayListValue;
 			break;
 		}
+#ifdef FT810EMU_MODE // TODO_FT810
+		/*case FT800EMU_DL_VERTEX_FORMAT:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_BITMAP_LAYOUT_H:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_BITMAP_SIZE_H:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_PALETTE_SOURCE:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_VERTEX_TRANSLATE_X:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+			SDL_assert(false); // TODO_FT810
+			break;
+		case FT800EMU_DL_NOP:
+			// no-op
+			break;*/
+#endif
 	}
 DisplayListDisplay:
 	;
@@ -2835,6 +2816,29 @@ EvaluateDisplayListValue:
 						}
 					}
 					break;
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_VERTEX_FORMAT:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_BITMAP_SIZE_H:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_PALETTE_SOURCE:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_VERTEX_TRANSLATE_X:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+					SDL_assert(false); // TODO_FT810
+					break;
+				case FT800EMU_DL_NOP:
+					// no-op
+					break;
+#endif
 				default:
 					printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
 					if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid display list entry");

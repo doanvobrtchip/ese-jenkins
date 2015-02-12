@@ -2187,6 +2187,15 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+#ifdef FT810EMU_MODE // TODO_FT810
+//#	define FT800EMU_DL_VERTEX_FORMAT 39
+//#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
+//#	define FT800EMU_DL_BITMAP_SIZE_H 41
+//#	define FT800EMU_DL_PALETTE_SOURCE 42
+//#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
+//#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
+//#	define FT800EMU_DL_NOP 45
+#endif
 	}
 	if (!ok)
 	{
