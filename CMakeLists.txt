@@ -74,9 +74,9 @@ ENDIF (NOT DEFINED WITH_SDL)
 LINK_DIRECTORIES(
   )
 INCLUDE_DIRECTORIES(
-  ${CMAKE_SOURCE_DIR}/ft8xxemu
+  ${CMAKE_SOURCE_DIR}/ft8xxemu_platform
   ${CMAKE_SOURCE_DIR}/ft800emu
-  ${CMAKE_SOURCE_DIR}/ft8xxemu_api
+  ${CMAKE_SOURCE_DIR}/ft8xxemu
   ${CMAKE_SOURCE_DIR}/reference
   ${CMAKE_SOURCE_DIR}/arduino
   ${CMAKE_SOURCE_DIR}/editor/ftlib
@@ -130,10 +130,10 @@ ADD_DEFINITIONS(-DFTEMU_CMAKE)
 
 ########################################################################
 
-ADD_SUBDIRECTORY(ft8xxemu)
+ADD_SUBDIRECTORY(ft8xxemu_platform)
 ADD_SUBDIRECTORY(ft800emu)
 ADD_SUBDIRECTORY(ft810emu)
-ADD_SUBDIRECTORY(ft8xxemu_api)
+ADD_SUBDIRECTORY(ft8xxemu)
 ADD_SUBDIRECTORY(ft8xxemu_static)
 ADD_SUBDIRECTORY(arduino)
 

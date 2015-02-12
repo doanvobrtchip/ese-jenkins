@@ -8,5 +8,5 @@ ADD_LIBRARY(ftarduino
 	)
 
 target_link_libraries(ftarduino
-	ft8xxemu_api
+	ft8xxemu
 	)

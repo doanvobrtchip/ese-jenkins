@@ -27,4 +27,4 @@ ELSEIF (WITH_SDL)
 ENDIF ()
 
 TARGET_LINK_LIBRARIES(ft800emu
-  ft8xxemu)
+  ft8xxemu_platform)

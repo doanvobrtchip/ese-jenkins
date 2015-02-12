@@ -1,6 +1,6 @@
 
-FILE(GLOB SRCS ../ft8xxemu_api/*.cpp)
-FILE(GLOB HDRS ../ft8xxemu_api/*.h)
+FILE(GLOB SRCS ../ft8xxemu/*.cpp)
+FILE(GLOB HDRS ../ft8xxemu/*.h)
 
 ADD_LIBRARY(ft8xxemu_static
   ${SRCS}
