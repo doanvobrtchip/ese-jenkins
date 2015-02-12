@@ -7,25 +7,6 @@ ADD_LIBRARY(ft810emu
   ${HDRS}
 )
 
-IF (MINGW)
-  TARGET_LINK_LIBRARIES(ft810emu
-    gomp dinput8 dxguid)
-ELSE (MINGW)
-  TARGET_LINK_LIBRARIES(ft810emu
-    )
-ENDIF (MINGW)
-
-IF (WITH_SDL2)
-  TARGET_LINK_LIBRARIES(ft810emu
-    ${SDL2_LIBRARY}
-    ${OPENGL_gl_LIBRARY}
-    )
-ELSEIF (WITH_SDL)
-  TARGET_LINK_LIBRARIES(ft810emu
-    ${SDL_LIBRARY}
-    )
-ENDIF ()
-
 TARGET_LINK_LIBRARIES(ft810emu
   ft8xxemu_platform)
 
