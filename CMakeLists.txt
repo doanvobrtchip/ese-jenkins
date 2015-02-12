@@ -127,6 +127,9 @@ ENDIF (USE_SSE_41)
 ########################################################################
 
 ADD_DEFINITIONS(-DFTEMU_CMAKE)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 ########################################################################
 
