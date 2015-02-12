@@ -27,7 +27,7 @@
 // Emulator includes
 #include "ft8xxemu_inttypes.h"
 #include "ft800emu_memory.h"
-#include "vc.h"
+#include "ft800emu_vc.h"
 
 // Project includes
 
@@ -394,9 +394,11 @@ void DlParser::init()
 		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
 		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
 		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
+#ifndef FT810EMU_MODE // Deprecated in FT810
 		s_CmdIdMap["CMD_CSKETCH"] = CMD_CSKETCH & 0xFF;
 		s_CmdParamCount[CMD_CSKETCH & 0xFF] = 7;
 		s_CmdParamString[CMD_CSKETCH & 0xFF] = false;
+#endif
 		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF;
 		s_CmdParamCount[CMD_LOGO & 0xFF] = 0;
 		s_CmdParamString[CMD_LOGO & 0xFF] = false;
@@ -1268,6 +1270,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(f);
 					break;
 				}
+#ifndef FT810EMU_MODE // This is deprecated in FT810
 				case CMD_CSKETCH:
 				{
 					uint32_t xy = parsed.Parameter[1].U << 16
@@ -1282,6 +1285,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					compiled.push_back(f);
 					break;
 				}
+#endif
 			}
 		}
 	}

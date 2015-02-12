@@ -24,8 +24,10 @@ uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
 void (*FT8XXEMU_csLow)(int low) = NULL;
 void (*FT8XXEMU_csHigh)(int high) = NULL;
 
-FT8XXEMU_API void FT8XXEMU_run(const FT8XXEMU_EmulatorParameters *params)
+FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)
 {
+	SDL_assert(versionApi == FT8XXEMU_VERSION_API);
+
 	switch (params->Mode)
 	{
 	case FT8XXEMU_EmulatorFT800:

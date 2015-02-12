@@ -1,6 +1,6 @@
 #include "FT_DataTypes.h"
 #include "FT_Gpu_Hal.h"
-#include "vc.h"
+#include "ft800emu_vc.h"
 #include "libMPSSE_spi.h"
 
 #define FT_DL_SIZE           (8*1024)  //8KB Display List buffer size

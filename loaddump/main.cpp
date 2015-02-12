@@ -19,7 +19,7 @@
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
 #include <stdio.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 #ifndef FT800EMU_REFERENCE_DIR
 #	define FT800EMU_REFERENCE_DIR "../reference"

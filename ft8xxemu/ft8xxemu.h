@@ -8,6 +8,9 @@
 
 #include "ft8xxemu_inttypes.h"
 
+// API version is increased whenever FT8XXEMU_EmulatorParameters format changes
+#define FT8XXEMU_VERSION_API 1
+
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
 #		ifdef WIN32
@@ -148,8 +151,13 @@ typedef struct
 extern "C" {
 #endif
 
-FT8XXEMU_API void FT8XXEMU_run(const FT8XXEMU_EmulatorParameters *params);
+// Run the emulator on the current thread. Returns when the emulator is fully stopped. Parameter versionApi must be set to FT8XXEMU_VERSION_API
+FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params);
+
+// Stop the emulator. Can be called from any thread
 FT8XXEMU_API extern void (*FT8XXEMU_stop)();
+
+// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks)
 FT8XXEMU_API extern uint8_t (*FT8XXEMU_transfer)(uint8_t data);
 FT8XXEMU_API extern void (*FT8XXEMU_csLow)(int low);
 FT8XXEMU_API extern void (*FT8XXEMU_csHigh)(int high);

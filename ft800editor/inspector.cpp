@@ -26,7 +26,7 @@
 #include <QGroupBox>
 
 // Emulator includes
-#include <vc.h>
+#include <ft800emu_vc.h>
 #include <ft800emu_memory.h>
 
 // Project includes

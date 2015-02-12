@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 void wr32(size_t address, uint32_t value)
 {
@@ -46,7 +46,11 @@ int main(int argc, char* argv[])
 	FILE *f = fopen(argv[1], "rb");
     int hsize, vsize;
 
+#ifdef FT810EMU_MODE
+	FT800EMU::Memory.begin(FT8XXEMU_EmulatorFT810);
+#else
 	FT800EMU::Memory.begin(FT8XXEMU_EmulatorFT801);
+#endif
     FT800EMU::GraphicsProcessor.begin();
     FT800EMU::GraphicsProcessor.enableMultithread();
 

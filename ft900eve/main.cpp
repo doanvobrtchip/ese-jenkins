@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 	    | FT8XXEMU_EmulatorEnableCoprocessor
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade;
-	FT8XXEMU_run(&params);
+	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);
 
 	return EXIT_SUCCESS;
 }

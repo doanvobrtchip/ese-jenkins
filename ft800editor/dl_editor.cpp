@@ -25,7 +25,7 @@
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"

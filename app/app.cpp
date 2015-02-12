@@ -12,7 +12,7 @@
  */
 
 #include <SPI.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 uint8_t s_PCM[] = {
 #include "pcm.h"

@@ -23,7 +23,7 @@
 #include <QSpinBox>
 
 // Emulator includes
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -1384,6 +1384,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+#ifndef FT810EMU_MODE // Deprecated in FT810
 		case CMD_CSKETCH:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr(
@@ -1420,6 +1421,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+#endif
 		case CMD_LOGO:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr(

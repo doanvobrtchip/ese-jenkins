@@ -229,6 +229,6 @@ CLAS PTR: 3693334
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableRegPwmDutyEmulation;
 	// params.Graphics = graphics;
-	FT8XXEMU_run(&params);
+	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);
 	return 0;
 }

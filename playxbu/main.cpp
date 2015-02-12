@@ -19,7 +19,7 @@
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
 #include <stdio.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 #define FT800EMU_XBU_FILE "../reference/xbu/RIVAL.XBU"
 
@@ -266,7 +266,11 @@ int main(int, char* [])
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		;
+#ifdef FT810EMU_MODE
+	params.Mode = FT8XXEMU_EmulatorFT810;
+#else
 	params.Mode = FT8XXEMU_EmulatorFT801;
+#endif
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;

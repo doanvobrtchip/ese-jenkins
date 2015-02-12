@@ -29,7 +29,7 @@
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"

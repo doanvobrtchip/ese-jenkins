@@ -65,7 +65,7 @@
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
 #include <ft8xxemu_graphics_driver.h>
-#include <vc.h>
+#include <ft800emu_vc.h>
 #ifdef WIN32
 #	undef min
 #	undef max
@@ -292,6 +292,7 @@ void loop()
 		}
 		if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
 		{
+#ifndef FT810EMU_MODE // FIXME_FT810
 			QString palName = info->DestName + ".lut.raw";
 			printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
 			QFile palFile(palName);
@@ -314,6 +315,7 @@ void loop()
 				int s = in.readRawData(&ram[RAM_PAL], palSize);
 				FT800EMU::Memory.poke();
 			}
+#endif
 		}
 		if (info->Converter == ContentInfo::Font)
 		{
@@ -738,7 +740,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		;
+#ifdef FT810EMU_MODE
+	params.Mode = FT8XXEMU_EmulatorFT810;
+#else
 	params.Mode = FT8XXEMU_EmulatorFT801;
+#endif
 	params.Close = closeDummy;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
@@ -2481,7 +2487,11 @@ void MainWindow::actImport()
 				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
 				else
 				{
+#ifdef FT810EMU_MODE // FIXME_FT810
+					in.skipRawData(1024); // FIXME_GUI PALETTE
+#else
 					s = in.readRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+#endif
 					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
 					else
 					{
@@ -2565,7 +2575,11 @@ void MainWindow::actExport()
 		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
 		s = out.writeRawData(&ram[RAM_G], 262144); // FIXME_GUI GLOBAL MEMORY
 		if (s != 262144) goto ExportWriteError;
+#ifdef FT810EMU_MODE // FIXME_FT810
+		s = out.writeRawData(&ram[RAM_G], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
+#else
 		s = out.writeRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+#endif
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();
 		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));

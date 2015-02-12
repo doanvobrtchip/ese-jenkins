@@ -24,7 +24,7 @@
 #include <QPushButton>
 
 // Emulator includes
-#include <vc.h>
+#include <ft800emu_vc.h>
 #include <ft800emu_memory.h>
 
 // Project includes
@@ -302,10 +302,12 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 				Ft_Gpu_Hal_WrMem(phost,RAM_G+info->MemoryAddress,&ram[RAM_G+info->MemoryAddress],info->CachedSize);
 			}
 
+#ifndef FT810EMU_MODE // FIXME_FT810
 	        if (info->ImageFormat == PALETTED){
 				const ft_uint32_t PALSIZE = 1024;
 				Ft_Gpu_Hal_WrMem(phost,RAM_PAL,&ram[RAM_PAL],PALSIZE);
 			}
+#endif
 		}
 	}
 	contentManager->unlockContent();

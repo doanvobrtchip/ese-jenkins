@@ -23,7 +23,7 @@
 #include <QHeaderView>
 
 // Emulator includes
-#include <vc.h>
+#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -192,9 +192,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));
 		item = new QTreeWidgetItem(m_Utilities);
+#ifndef FT810EMU_MODE // This is deprecated in FT810
 		item->setText(0, tr("Capacitive Sketch"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));
+#endif
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

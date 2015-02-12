@@ -565,6 +565,20 @@ namespace {
 
 void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
+#ifdef FT810EMU_MODE
+	if (params.Mode < FT8XXEMU_EmulatorFT810)
+	{
+		printf("Invalid emulator version selected, this library is built in FT810 mode\n");
+		return;
+	}
+#else
+	if (params.Mode > FT8XXEMU_EmulatorFT801)
+	{
+		printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
+		return;
+	}
+#endif
+
 	s_EmulatorRunning = true;
 
 	s_Setup = params.Setup;
