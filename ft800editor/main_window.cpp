@@ -2610,7 +2610,16 @@ void MainWindow::manual()
 
 void MainWindow::about()
 {
-	QMessageBox::about(this, tr("About FTDI EVE Screen Editor"), tr("Copyright (C) 2013-2014  Future Technology Devices International Ltd"));
+	QMessageBox msgBox(this);
+    msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor"));
+    msgBox.setTextFormat(Qt::RichText);
+    msgBox.setText(tr(
+		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
+		"Author: Jan Boon (<a href='mailto:jan.boon@kaetemi.be'>jan.boon@kaetemi.be</a>)<br>"
+		"<br>"
+		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
+		));
+    msgBox.exec();
 }
 
 void MainWindow::aboutQt()
