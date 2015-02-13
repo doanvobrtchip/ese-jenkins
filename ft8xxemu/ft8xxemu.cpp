@@ -16,6 +16,8 @@
 #define FT810EMU_MODE
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_emulator.h"
+#undef FT800EMU
+#undef FT810EMU_MODE
 
 #include <SDL_assert.h>
 

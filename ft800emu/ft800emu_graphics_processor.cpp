@@ -111,6 +111,9 @@ public:
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
 		AlphaFunc = ALWAYS;
 		AlphaFuncRef = 0;
+		VertexFormatShift = 0;
+		VertexTranslateX = 0;
+		VertexTranslateY = 0;
 	}
 
 	int DebugDisplayListIndex;
@@ -147,6 +150,9 @@ public:
 	int BlendFuncDst;
 	int AlphaFunc;
 	uint8_t AlphaFuncRef;
+	int VertexFormatShift; // = (4 - VertexFormat)
+	int VertexTranslateX;
+	int VertexTranslateY;
 };
 
 BitmapInfo s_BitmapInfoMain[32];
@@ -2434,11 +2440,19 @@ EvaluateDisplayListValue:
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
+#ifdef FT810EMU_MODE
+				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
+				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+				bi.LayoutStride = stride;
+				bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
+				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+#else
 				int stride = (v >> 9) & 0x3FF;
 				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				bi.LayoutHeight = v & 0x1FF;
 				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+#endif
 				bi.LayoutWidth = getLayoutWidth(format, stride);
 			}
 			break;
@@ -2446,10 +2460,17 @@ EvaluateDisplayListValue:
 			bitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
 			bitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
 			bitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
+#ifdef FT810EMU_MODE
+			bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x600) | ((v >> 9) & 0x1FF);
+			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
+			bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x600) | (v & 0x1FF);
+			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
+#else
 			bitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
 			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
 			bitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
-			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
+			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // verify
+#endif
 			break;
 		case FT800EMU_DL_CALL:
 			callstack.push(c);
@@ -2478,30 +2499,26 @@ EvaluateDisplayListValue:
 			// What happens when the macro macros itself? :)
 			goto EvaluateDisplayListValue;
 			break;
-		}
-#ifdef FT810EMU_MODE // TODO_FT810
-		/*case FT800EMU_DL_VERTEX_FORMAT:
-			SDL_assert(false); // TODO_FT810
-			break;
+#ifdef FT810EMU_MODE
 		case FT800EMU_DL_BITMAP_LAYOUT_H:
-			SDL_assert(false); // TODO_FT810
+			{
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
+				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+				bi.LayoutStride = stride;
+				bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
+				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				bi.LayoutWidth = getLayoutWidth(bi.LayoutFormat, stride);
+			}
 			break;
 		case FT800EMU_DL_BITMAP_SIZE_H:
-			SDL_assert(false); // TODO_FT810
+			bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
+			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
+			bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
+			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 			break;
-		case FT800EMU_DL_PALETTE_SOURCE:
-			SDL_assert(false); // TODO_FT810
-			break;
-		case FT800EMU_DL_VERTEX_TRANSLATE_X:
-			SDL_assert(false); // TODO_FT810
-			break;
-		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
-			SDL_assert(false); // TODO_FT810
-			break;
-		case FT800EMU_DL_NOP:
-			// no-op
-			break;*/
 #endif
+		}
 	}
 DisplayListDisplay:
 	;
@@ -2634,11 +2651,19 @@ EvaluateDisplayListValue:
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
+#ifdef FT810EMU_MODE
+						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
+						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+						bi.LayoutStride = stride;
+						bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
+						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+#else
 						int stride = (v >> 9) & 0x3FF;
 						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = v & 0x1FF;
 						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+#endif
 						bi.LayoutWidth = getLayoutWidth(format, stride);
 					}
 					break;
@@ -2646,10 +2671,17 @@ EvaluateDisplayListValue:
 					bitmapInfo[gs.BitmapHandle].SizeFilter = (v >> 20) & 0x1;
 					bitmapInfo[gs.BitmapHandle].SizeWrapX = (v >> 19) & 0x1;
 					bitmapInfo[gs.BitmapHandle].SizeWrapY = (v >> 18) & 0x1;
+#ifdef FT810EMU_MODE
+					bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x600) | ((v >> 9) & 0x1FF);
+					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
+					bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x600) | (v & 0x1FF);
+					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
+#else
 					bitmapInfo[gs.BitmapHandle].SizeWidth = (v >> 9) & 0x1FF;
 					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 512; // verify
 					bitmapInfo[gs.BitmapHandle].SizeHeight = v & 0x1FF;
-					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // vefiry
+					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 512; // verify
+#endif
 					break;
 				case FT800EMU_DL_ALPHA_FUNC:
 					gs.AlphaFunc = (v >> 8) & 0x07;
@@ -2818,22 +2850,33 @@ EvaluateDisplayListValue:
 					break;
 #ifdef FT810EMU_MODE
 				case FT800EMU_DL_VERTEX_FORMAT:
-					SDL_assert(false); // TODO_FT810
+					gs.VertexFormatShift = 4 - (v & 0x7);
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT_H:
-					SDL_assert(false); // TODO_FT810
+					{
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
+						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+						bi.LayoutStride = stride;
+						bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
+						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						bi.LayoutWidth = getLayoutWidth(bi.LayoutFormat, stride);
+					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE_H:
-					SDL_assert(false); // TODO_FT810
+					bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
+					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
+					bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
+					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 					break;
 				case FT800EMU_DL_PALETTE_SOURCE:
 					SDL_assert(false); // TODO_FT810
 					break;
 				case FT800EMU_DL_VERTEX_TRANSLATE_X:
-					SDL_assert(false); // TODO_FT810
+					gs.VertexTranslateX = SIGNED_N(v & 0x1FFFF, 17);
 					break;
 				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
-					SDL_assert(false); // TODO_FT810
+					gs.VertexTranslateY = SIGNED_N(v & 0x1FFFF, 17);
 					break;
 				case FT800EMU_DL_NOP:
 					// no-op
@@ -2887,8 +2930,12 @@ EvaluateDisplayListValue:
 				{
 					int px = (v >> 15) & 0x3FFF;
 					if ((v >> 15) & 0x4000) px = px - 0x4000;
-					int py = (v)  & 0x3FFF;
+					int py = (v) & 0x3FFF;
 					if ((v) & 0x4000) py = py - 0x4000;
+#ifdef FT810EMU_MODE
+					px <<= gs.VertexFormatShift;
+					py <<= gs.VertexFormatShift;
+#endif
 					switch (primitive)
 					{
 					case BITMAPS:
