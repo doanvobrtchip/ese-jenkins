@@ -209,7 +209,7 @@ namespace {
 
 		while (s_MasterRunning)
 		{
-			//printf("main thread\n");
+			// printf("main thread\n");
 			FT8XXEMU::System.makeRealtimePriorityThread();
 
 			FT8XXEMU::System.enterSwapDL();
@@ -219,7 +219,9 @@ namespace {
 			// Calculate the display frequency
 			if (reg_pclk)
 			{
-				double frequency = s_ExternalFrequency ? (double)s_ExternalFrequency : (double)Memory.rawReadU32(ram, REG_FREQUENCY);
+				uint32_t usefreq = s_ExternalFrequency ? s_ExternalFrequency : Memory.rawReadU32(ram, REG_FREQUENCY);
+				// if (!usefreq) usefreq = 48000000; // Possibility to avoid freeze in case of issues
+				double frequency = (double)usefreq;
 				frequency /= (double)reg_pclk;
 				frequency /= (double)Memory.rawReadU32(ram, REG_VCYCLE);
 				frequency /= (double)Memory.rawReadU32(ram, REG_HCYCLE);
@@ -444,11 +446,18 @@ namespace {
 				//long millisToWait = targetMillis - currentMillis;
 				double currentSeconds = FT8XXEMU::System.getSeconds();
 				double secondsToWait = targetSeconds - currentSeconds;
+				// printf("sleep %f seconds (%f current time, %f target time, %f delta seconds)\n", (float)secondsToWait, (float)currentSeconds, (float)targetSeconds, (float)deltaSeconds);
 				//if (millisToWait < -100) targetMillis = millis();
 				if (secondsToWait < -0.25) // Skip freeze
 				{
 					//printf("skip freeze\n");
 					targetSeconds = FT8XXEMU::System.getSeconds();
+				}
+				if (secondsToWait > 0.25)
+				{
+					printf("Possible problem with REG_FREQUENCY value %u\n", Memory.rawReadU32(ram, REG_FREQUENCY));
+					targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
+					secondsToWait = 0.25;
 				}
 
 				//printf("millis to wait: %i", (int)millisToWait);
@@ -565,14 +574,17 @@ namespace {
 
 void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
+	FT8XXEMU_EmulatorMode mode = params.Mode;
+	if (mode == 0) mode = FT8XXEMU_EmulatorFT800;
+
 #ifdef FT810EMU_MODE
-	if (params.Mode < FT8XXEMU_EmulatorFT810)
+	if (mode < FT8XXEMU_EmulatorFT810)
 	{
 		printf("Invalid emulator version selected, this library is built in FT810 mode\n");
 		return;
 	}
 #else
-	if (params.Mode > FT8XXEMU_EmulatorFT801)
+	if (mode > FT8XXEMU_EmulatorFT801)
 	{
 		printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
 		return;
@@ -591,7 +603,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	FT8XXEMU::System.begin();
-	Memory.begin(params.Mode, params.RomFilePath);
+	Memory.begin(mode, params.RomFilePath);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.begin();
@@ -604,7 +616,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
-			params.Mode >= FT8XXEMU_EmulatorFT801);
+			mode >= FT8XXEMU_EmulatorFT801);
 	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
 
 	if (s_Graphics)
@@ -669,7 +681,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	SDL_WaitThread(threadA, NULL);
 
 #else
-	#pragma omp parallel num_threads(params.Flags & EmulatorEnableCoprocessor ? 4 : 3)
+	#pragma omp parallel num_threads(params.Flags & FT8XXEMU_EmulatorEnableCoprocessor ? 4 : 3)
 	{
 		// graphics
 		#pragma omp master
@@ -677,7 +689,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 			masterThread();
 			s_MasterRunning = false;
 			// System.killMCUThread();
-			if (params.Flags & EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
+			if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
 			printf("(0) master thread exit\n");
 		}
 

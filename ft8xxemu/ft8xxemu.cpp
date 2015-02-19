@@ -19,7 +19,9 @@
 #undef FT800EMU
 #undef FT810EMU_MODE
 
+#ifdef FTEMU_SDL2
 #include <SDL_assert.h>
+#endif
 
 void (*FT8XXEMU_stop)() = NULL;
 uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
@@ -28,10 +30,13 @@ void (*FT8XXEMU_csHigh)(int high) = NULL;
 
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)
 {
-	SDL_assert(versionApi == FT8XXEMU_VERSION_API);
+#ifdef FTEMU_SDL2
+	SDL_assert_release((versionApi == FT8XXEMU_VERSION_API) && "Incompatible API version");
+#endif
 
 	switch (params->Mode)
 	{
+	case 0:
 	case FT8XXEMU_EmulatorFT800:
 	case FT8XXEMU_EmulatorFT801:
 		FT8XXEMU_stop = &FT800EMU::Emulator.stop;
@@ -46,6 +51,11 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		FT8XXEMU_csLow = &FT810EMU::SPII2C.csLow;
 		FT8XXEMU_csHigh = &FT810EMU::SPII2C.csHigh;
 		FT810EMU::Emulator.run(*params);
+		break;
+	default:
+#ifdef FTEMU_SDL2
+		SDL_assert_release((false) && "Invalid emulator mode selected");
+#endif
 		break;
 	}
 }

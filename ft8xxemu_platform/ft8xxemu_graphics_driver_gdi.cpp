@@ -95,7 +95,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			int y_r = (r.bottom - height_r) / 2;
 			s_MouseX = (mouseX - x_r) * s_Width / width_r;
 			s_MouseY = (mouseY - y_r) * s_Height / height_r;
-			uint8_t *const ram = Memory.getRam();
 			if (s_MouseDown && s_MouseX >= 0 && s_MouseX < s_Width && s_MouseY >= 0 && s_MouseY < s_Height)
 			{
 				g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
@@ -359,6 +358,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	}
 
 	// Update title
+	/*
 	tstringstream newTitle;
 	newTitle << FT8XXEMU_WINDOW_TITLE;
 	switch (GraphicsProcessor.getDebugMode())
@@ -403,6 +403,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	newTitle << System.getFPS();
 	newTitle << TEXT(")]");
 	SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
+	*/
 }
 
 void GraphicsDriverClass::enableMouse(bool enabled)

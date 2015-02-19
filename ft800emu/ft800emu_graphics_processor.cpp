@@ -418,7 +418,9 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 FT8XXEMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
 #ifdef FT810EMU_MODE
+#ifdef FTEMU_SDL2
 	SDL_assert(false); // TODO_FT810EMU
+#endif
 	uint32_t result = 0;
 #else
 	uint32_t result = static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
@@ -2870,7 +2872,9 @@ EvaluateDisplayListValue:
 					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 					break;
 				case FT800EMU_DL_PALETTE_SOURCE:
+#ifdef FTEMU_SDL2
 					SDL_assert(false); // TODO_FT810
+#endif
 					break;
 				case FT800EMU_DL_VERTEX_TRANSLATE_X:
 					gs.VertexTranslateX = SIGNED_N(v & 0x1FFFF, 17);
@@ -3110,9 +3114,9 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 {
 	unsigned long taskId = 0;
 	void *taskHandle;
-	taskHandle = System.setThreadGamesCategory(&taskId);
-	System.disableAutomaticPriorityBoost();
-	System.makeRealtimePriorityThread();
+	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
+	FT8XXEMU::System.disableAutomaticPriorityBoost();
+	FT8XXEMU::System.makeRealtimePriorityThread();
 
 	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
 	for (; ; )
@@ -3129,7 +3133,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 		SetEvent(li->EndEvent);
 	}
 
-	System.revertThreadCategory(taskHandle);
+	FT8XXEMU::System.revertThreadCategory(taskHandle);
 
 	return 0;
 }
