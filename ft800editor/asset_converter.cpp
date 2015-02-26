@@ -62,9 +62,9 @@ QString a_RawConvError;
 FT_Library a_FreetypeLibrary = NULL;
 #endif /* FT800EMU_FREETYPE */
 
+#ifdef FT800EMU_PYTHON
 bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QString &error, const char *scriptName, const char *className, const char *funcName)
 {
-#ifdef FT800EMU_PYTHON
 	PyObject *pyScript = PyString_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
@@ -98,12 +98,12 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
 	return false;
-#endif /* FT800EMU_PYTHON */
 }
+#endif /* FT800EMU_PYTHON */
 
+#ifdef FT800EMU_PYTHON
 bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const char *scriptName, const char *funcName)
 {
-#ifdef FT800EMU_PYTHON
 	PyObject *pyScript = PyString_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
@@ -125,8 +125,8 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
 	return false;
-#endif /* FT800EMU_PYTHON */
 }
+#endif /* FT800EMU_PYTHON */
 
 }
 

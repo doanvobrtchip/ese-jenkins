@@ -414,13 +414,13 @@ void loop()
 		{
 			cmdList[i] = cmdListPtr[i];
 			// cmdParsed[i] = cmdParsedPtr[i];
-			cmdParamCache[i] = s_CmdParamCache.size();
+			cmdParamCache[i] = (int)s_CmdParamCache.size();
 			DlParser::compile(s_CmdParamCache, cmdParsedPtr[i]);
 			cmdValid[i] = cmdParsedPtr[i].ValidId;
 			if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
 				warnMissingClear = false;
 		}
-		cmdParamCache[FT800EMU_DL_SIZE] = s_CmdParamCache.size();
+		cmdParamCache[FT800EMU_DL_SIZE] = (int)s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
 		s_WarnMissingClear = warnMissingClear;
 
@@ -1484,7 +1484,7 @@ void MainWindow::createDockWindows()
 
 			m_HSize = new QSpinBox(widget);
 			m_HSize->setMinimum(1);
-			m_HSize->setMaximum(512);
+			m_HSize->setMaximum(FT800EMU_SCREEN_WIDTH_MAX);
 			connect(m_HSize, SIGNAL(valueChanged(int)), this, SLOT(hsizeChanged(int)));
 			QHBoxLayout *hsizeLayout = new QHBoxLayout();
 			QLabel *hsizeLabel = new QLabel(widget);
@@ -1495,7 +1495,7 @@ void MainWindow::createDockWindows()
 
 			m_VSize = new QSpinBox(widget);
 			m_VSize->setMinimum(1);
-			m_VSize->setMaximum(512);
+			m_VSize->setMaximum(FT800EMU_SCREEN_HEIGHT_MAX);
 			connect(m_VSize, SIGNAL(valueChanged(int)), this, SLOT(vsizeChanged(int)));
 			QHBoxLayout *vsizeLayout = new QHBoxLayout();
 			QLabel *vsizeLabel = new QLabel(widget);

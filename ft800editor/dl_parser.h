@@ -18,6 +18,7 @@
 #include <vector>
 
 // Qt includes
+#include <QObject>
 #include <QString>
 
 // Emulator includes

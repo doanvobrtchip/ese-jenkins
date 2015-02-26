@@ -2531,8 +2531,8 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 {
 	uint8_t *const ram = Memory.getRam();
 	const uint32_t *displayList = Memory.getDisplayList();
-	uint8_t bt[FT800EMU_WINDOW_WIDTH_MAX]; // tag buffer (per thread value)
-	uint8_t bs[FT800EMU_WINDOW_WIDTH_MAX]; // stencil buffer (per-thread values!)
+	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
+	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
 
 	intptr_t lines_processed = 0;
 	bool debugLimiterEffective = false;
@@ -3208,13 +3208,13 @@ void GraphicsProcessorClass::processBlank()
 
 void GraphicsProcessorClass::processTrace(std::vector<int> &result, uint32_t x, uint32_t y, uint32_t hsize)
 {
-	argb8888 buffer[FT800EMU_WINDOW_WIDTH_MAX];
+	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
 	argb8888 *dummyBuffer = buffer - (y * hsize);
 	BitmapInfo bitmapInfo[32];
 	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 	s_DebugTraceX = x;
 	s_DebugTraceStack = &result;
-	processPart<true>(dummyBuffer, false, false, hsize, y + 1, y, FT800EMU_WINDOW_HEIGHT_MAX, bitmapInfo);
+	processPart<true>(dummyBuffer, false, false, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo);
 	s_DebugTraceStack = NULL;
 }
 

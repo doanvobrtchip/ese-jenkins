@@ -46,19 +46,19 @@ static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
 static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
-static int s_LastCoprocessorCommandRead = -1;
+static size_t s_LastCoprocessorCommandRead = -1;
 
 static int s_DirectSwapCount;
 static int s_RealSwapCount;
 static int s_WriteOpCount;
 
 // Avoid getting hammered in wait loops
-static int s_LastCoprocessorRead = -1;
+static size_t s_LastCoprocessorRead = -1;
 static int s_IdenticalCoprocessorReadCounter = 0;
 static int s_SwapCoprocessorReadCounter = 0;
 static int s_WaitCoprocessorReadCounter = 0;
 
-static int s_LastMCURead = -1;
+static size_t s_LastMCURead = -1;
 static int s_IdenticalMCUReadCounter = 0;
 static int s_WaitMCUReadCounter = 0;
 static int s_SwapMCUReadCounter = 0;
@@ -473,13 +473,18 @@ FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
 	return rawReadU8(s_Ram, address);
 }
 
-static const uint8_t rom[FT800EMU_ROM_SIZE] = {
-#include "rom.h"
-};
-
-static const uint8_t rom_ft801[FT800EMU_ROM_SIZE] = {
+#ifdef FT810EMU_MODE
+static const uint8_t s_RomFT810[FT800EMU_ROM_SIZE] = { // TODO_FT810EMU: Correct ROM
 #include "rom_ft801.h"
 };
+#else
+static const uint8_t s_RomFT800[FT800EMU_ROM_SIZE] = {
+#include "rom_ft800.h"
+};
+static const uint8_t s_RomFT801[FT800EMU_ROM_SIZE] = {
+#include "rom_ft801.h"
+};
+#endif
 
 void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath)
 {
@@ -501,10 +506,10 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	else
 	{
 #ifdef FT810EMU_MODE
-		memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801)); // TODO_FT810EMU: Correct ROM
+		memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT810, sizeof(s_RomFT810)); // TODO_FT810EMU: Correct ROM
 #else
-		if (emulatorMode == FT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom_ft801, sizeof(rom_ft801));
-		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], rom, sizeof(rom));
+		if (emulatorMode >= FT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT801, sizeof(s_RomFT801));
+		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT800, sizeof(s_RomFT800));
 #endif
 	}
 

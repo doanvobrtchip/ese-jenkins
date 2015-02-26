@@ -621,7 +621,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	if (s_Graphics)
 	{
-		s_GraphicsBuffer = new argb8888[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX];
+		s_GraphicsBuffer = new argb8888[FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX];
 	}
 
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & FT8XXEMU_EmulatorEnableMouse) == FT8XXEMU_EmulatorEnableMouse);

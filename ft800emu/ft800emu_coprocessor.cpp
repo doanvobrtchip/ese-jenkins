@@ -28,12 +28,19 @@ CoprocessorClass Coprocessor;
 static bool s_Running;
 
 static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
-static const uint16_t pgm_rom[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+
+#ifdef FT810EMU_MODE
+static const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = { // TODO_FT810EMU: Correct Coprocessor ROM
+#include "crom_ft801.h"
+};
+#else
+static const uint16_t pgm_rom_ft800[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "crom.h"
 };
 static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "crom_ft801.h"
 };
+#endif
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
 void CoprocessorClass::begin(const char *romFilePath, bool ft801)
@@ -53,8 +60,12 @@ void CoprocessorClass::begin(const char *romFilePath, bool ft801)
 	}
 	else
 	{
+#ifdef FT810EMU_MODE
+		memcpy(pgm, pgm_rom_ft810, sizeof(pgm_rom_ft810));
+#else
 		if (ft801) memcpy(pgm, pgm_rom_ft801, sizeof(pgm_rom_ft801));
-		else memcpy(pgm, pgm_rom, sizeof(pgm_rom));
+		else memcpy(pgm, pgm_rom_ft800, sizeof(pgm_rom_ft800));
+#endif
 	}
 
     pc = 0;

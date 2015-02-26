@@ -39,6 +39,7 @@ static std::map<std::string, int> s_ParamMap;
 static std::map<std::string, int> s_CmdIdMap;
 static std::map<std::string, int> s_CmdParamMap;
 
+// TODO_FT810 DL_ID_NB 46
 #define DL_ID_NB 39
 #define CMD_ID_NB 54
 static int s_ParamCount[DL_ID_NB];
@@ -677,7 +678,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 						combineParameter = true;
 						break;
 					}
-					else if ((p == 0 || parsed.ParameterLength[pq]) > 0 && c == ')')
+					else if (((p == 0) || (parsed.ParameterLength[pq] > 0)) && c == ')')
 					{
 						/* valid, last, continue */
 						finalIndex = i;
@@ -792,7 +793,7 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 				else if (ps.length() > 0 && ps[0] == '\'')
 				{
 					int vchar = 0;
-					for (int ci = ps.length() - 2; ci > 0; --ci)
+					for (int ci = (int)ps.length() - 2; ci > 0; --ci)
 					{
 						vchar <<= 8;
 						vchar |= ps[ci];

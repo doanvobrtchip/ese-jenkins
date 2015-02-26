@@ -49,6 +49,8 @@ OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" OFF)
 
 OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" OFF)
 
+OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
+
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
 OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
@@ -68,6 +70,16 @@ IF (NOT DEFINED WITH_SDL)
     SET(WITH_SDL TRUE CACHE BOOL "Build an SDL application." FORCE)
   ENDIF (WIN32)
 ENDIF (NOT DEFINED WITH_SDL)
+
+########################################################################
+
+IF(FTEDITOR_TEMP_DIR)
+  ADD_DEFINITIONS(-DFTEDITOR_TEMP_DIR)
+ENDIF(FTEDITOR_TEMP_DIR)
+
+IF(FTEDITOR_DEVICE_MANAGER)
+  ADD_DEFINITIONS(-DFTEDITOR_DEVICE_MANAGER)
+ENDIF(FTEDITOR_DEVICE_MANAGER)
 
 ########################################################################
 

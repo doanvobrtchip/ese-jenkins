@@ -38,7 +38,7 @@ void wr32(size_t address, uint32_t value)
 	FT800EMU::SPII2C.csHigh();
 }
 
-static argb8888 s_Buffer[FT800EMU_WINDOW_WIDTH_MAX * FT800EMU_WINDOW_HEIGHT_MAX + 1];
+static argb8888 s_Buffer[FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX + 1];
 
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int argc, char* argv[])
