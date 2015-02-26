@@ -35,7 +35,7 @@ static const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = { // TODO_F
 };
 #else
 static const uint16_t pgm_rom_ft800[FT800EMU_COPROCESSOR_ROM_SIZE] = {
-#include "crom.h"
+#include "crom_ft800.h"
 };
 static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "crom_ft801.h"

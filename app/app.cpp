@@ -12,6 +12,7 @@
  */
 
 #include <SPI.h>
+#define FT810EMU_MODE
 #include <ft800emu_vc.h>
 
 uint8_t s_PCM[] = {
@@ -24,6 +25,10 @@ uint8_t s_uLaw[] = {
 
 uint8_t s_ADPCM[] = {
 #include "adpcm.h"
+};
+
+uint8_t s_Crate[] = {
+#include "crate.h"
 };
 
 void wr8(size_t address, uint8_t value)
@@ -194,63 +199,64 @@ void MemoryWriterStatic::writeMemoryPtr(int index, int value)
 
 void setup()
 {
+	/*
 	// test per byte access
 	for (uint8_t i = 0; i < 32; ++i)
 	{
-		wr8(i, i);
+	wr8(i, i);
 	}
 	for (uint8_t i = 0; i < 32; ++i)
 	{
-		uint8_t v = rd8(i);
-		if (v == i) printf("OK (%i)\n", v);
-		else printf("FAIL (%i)\n", v);
+	uint8_t v = rd8(i);
+	if (v == i) printf("OK (%i)\n", v);
+	else printf("FAIL (%i)\n", v);
 	}
 	// test per byte access backwards
 	for (uint8_t i = 63; i >= 32; --i)
 	{
-		wr8(i, i);
+	wr8(i, i);
 	}
 	for (uint8_t i = 63; i >= 32; --i)
 	{
-		uint8_t v = rd8(i);
-		if (v == i) printf("OK (%i)\n", v);
-		else printf("FAIL (%i)\n", v);
+	uint8_t v = rd8(i);
+	if (v == i) printf("OK (%i)\n", v);
+	else printf("FAIL (%i)\n", v);
 	}
 	// test per byte access
 	for (uint8_t i = 0; i < 32; ++i)
 	{
-		wr8(i, i * 2);
+	wr8(i, i * 2);
 	}
 	for (uint8_t i = 0; i < 32; ++i)
 	{
-		uint8_t v = rd8(i);
-		if (v == i * 2) printf("OK (%i)\n", v);
-		else printf("FAIL (%i)\n", v);
+	uint8_t v = rd8(i);
+	if (v == i * 2) printf("OK (%i)\n", v);
+	else printf("FAIL (%i)\n", v);
 	}
 	// test per byte access backwards
 	for (uint8_t i = 63; i >= 32; --i)
 	{
-		wr8(i, i * 2);
+	wr8(i, i * 2);
 	}
 	for (uint8_t i = 63; i >= 32; --i)
 	{
-		uint8_t v = rd8(i);
-		if (v == i * 2) printf("OK (%i)\n", v);
-		else printf("FAIL (%i)\n", v);
+	uint8_t v = rd8(i);
+	if (v == i * 2) printf("OK (%i)\n", v);
+	else printf("FAIL (%i)\n", v);
 	}
 
-
+	*/
 
 
 	// AUDIO TEST
 
-	wr8(REG_VOL_SOUND, 64);
+	/*wr8(REG_VOL_SOUND, 64);
 	wr16(REG_SOUND, ((68 << 8) + 0x46));
 	wr8(REG_PLAY, 1);
 
 	for (int i = 0; i < sizeof(s_ADPCM); ++i)
 	{
-		wr8(i, s_ADPCM[i]);
+	wr8(i, s_ADPCM[i]);
 	}
 	wr32(REG_PLAYBACK_START, 0);
 	wr32(REG_PLAYBACK_LENGTH, sizeof(s_ADPCM));
@@ -258,8 +264,13 @@ void setup()
 	wr32(REG_PLAYBACK_FORMAT, 2);
 	wr32(REG_PLAYBACK_LOOP, 0);
 	wr32(REG_PLAYBACK_PLAY, 1);
-	wr32(REG_VOL_PB, 255);
+	wr32(REG_VOL_PB, 255);*/
 
+	for (int i = 0; i < sizeof(s_Crate); ++i)
+		wr8(i, s_Crate[i]);
+
+	wr32(REG_VSIZE, 2048);
+	wr32(REG_HSIZE, 2048);
 
 
 	dli = RAM_DL;
@@ -267,12 +278,34 @@ void setup()
 	dl(CLEAR_COLOR_RGB(0, 64, 128));
 	dl(CLEAR(1, 1, 1)); // clear screen
 
-	dl(TAG(200));
+	dl(BITMAP_HANDLE(0));
+	dl(BITMAP_SOURCE(0));
+	dl(BITMAP_LAYOUT(ARGB1555, 128, 64));
+	dl(BITMAP_SIZE(NEAREST, BORDER, BORDER, 64, 64));
+	dl(LINE_WIDTH(256));
+
+	dl(BEGIN(RECTS));
+	dl(VERTEX_FORMAT(0));
+	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
+	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
+	dl(BITMAP_TRANSFORM_D(transformvalue(sin(0.5))));
+	dl(BITMAP_TRANSFORM_E(transformvalue(cos(0.5))));
+	for (int y = 0; y < 2048; y += 128)
+	{
+		for (int x = 0; x < 2048; x += 128)
+		{
+			dl(VERTEX2F(x, y));
+			dl(VERTEX2F(x + 64, y + 64));
+		}
+	}
+	dl(END());
+
+	/*dl(TAG(200));
 
 	dl(BEGIN(LINES));
 	dl(LINE_WIDTH(8));
 	dl(VERTEX2F(4191, 2524));
-	dl(VERTEX2F(4185, 2548));
+	dl(VERTEX2F(4185, 2548));*/
 	//dl(VERTEX2F(2367, 58));
 	//dl(VERTEX2F(8223, 409));
 
@@ -299,9 +332,10 @@ void setup()
 +  2b2: 470a0b46   VERTEX2F x=3604 y=2886
 +  2b3: 46fe8c42   VERTEX2F x=3581 y=3138
 +  2b4: 470a8c3b   VERTEX2F x=3605 y=3131 */
-	dl(END());
+	/*dl(END());
 
-	dl(TAG(0));
+	dl(TAG(0));*/
+
 
 /*
 	dl(BEGIN(LINES));
@@ -313,6 +347,9 @@ void setup()
 
 	dl(TAG(25));
 */
+
+	/*
+	FTDI transformed
 	dl(TAG(10));
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
@@ -334,11 +371,13 @@ void setup()
 	dl(BEGIN(POINTS)); // start drawing points
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
+	*/
 
 
 
+	/*
 	dl(COLOR_A(255));
-
+	*/
 
 
 
@@ -456,13 +495,13 @@ void setup()
 		}
 	}*/
 
-  dl(TAG(42));
+  /*dl(TAG(42));
   dl(COLOR_RGB(255, 128, 0));
   dl(BEGIN(RECTS));
   dl(VERTEX2II(10, 10, 0, 0));
   dl(VERTEX2II(50, 50, 0, 0));
   dl(END());
-  dl(TAG(0));
+  dl(TAG(0));*/
 
 /*
 	dl(END());

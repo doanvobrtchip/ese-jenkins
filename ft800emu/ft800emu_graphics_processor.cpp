@@ -83,10 +83,10 @@ public:
 		LineWidth = 16;
 		ScissorX.I = 0;
 		ScissorY.I = 0;
-		ScissorWidth = 512;
-		ScissorHeight = 512;
-		ScissorX2.I = 512;
-		ScissorY2.I = 512;
+		ScissorWidth = FT800EMU_SCREEN_WIDTH_MAX;
+		ScissorHeight = FT800EMU_SCREEN_HEIGHT_MAX;
+		ScissorX2.I = FT800EMU_SCREEN_WIDTH_MAX;
+		ScissorY2.I = FT800EMU_SCREEN_HEIGHT_MAX;
 		ClearColorARGB = 0x00000000;
 		ClearStencil = 0;
 		ClearTag = 0;
@@ -2895,6 +2895,10 @@ EvaluateDisplayListValue:
 				{
 					int px = ((v >> 21) & 0x1FF) * 16;
 					int py = ((v >> 12) & 0x1FF) * 16;
+#ifdef FT810EMU_MODE
+					px += gs.VertexTranslateX;
+					py += gs.VertexTranslateY;
+#endif
 					switch (primitive)
 					{
 					case BITMAPS:
@@ -2939,6 +2943,8 @@ EvaluateDisplayListValue:
 #ifdef FT810EMU_MODE
 					px <<= gs.VertexFormatShift;
 					py <<= gs.VertexFormatShift;
+					px += gs.VertexTranslateX;
+					py += gs.VertexTranslateY;
 #endif
 					switch (primitive)
 					{

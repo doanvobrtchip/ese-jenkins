@@ -48,6 +48,9 @@ static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
 static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
 static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
+static int s_WidthCur = -1;
+static int s_HeightCur = -1;
+
 static int s_WindowWidth;
 static int s_WindowHeight;
 static bool s_WindowResized;
@@ -154,7 +157,16 @@ void drawBuffer()
 		int buffer = s_BufferCurrent;
 #endif
 		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+			if (s_Width != s_WidthCur || s_Height != s_HeightCur)
+			{
+				s_WidthCur = s_Width;
+				s_HeightCur = s_Height;
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+			}
+			else
+			{
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, s_WidthCur, s_HeightCur, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+			}
 
 			glEnable(GL_TEXTURE_2D);
 
