@@ -25,6 +25,12 @@
 #define FT800EMU_ROM_FONTINFO 0xFFFFC // (RAM_DL - 4)
 #define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
+#ifdef FT810EMU_MODE
+#define FT800EMU_ADDR_MASK (0x3FFFFF)
+#else
+#define FT800EMU_ADDR_MASK (0xFFFFF)
+#endif
+
 namespace FT800EMU {
 
 /**

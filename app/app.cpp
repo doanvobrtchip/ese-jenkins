@@ -247,7 +247,6 @@ void setup()
 
 	*/
 
-
 	// AUDIO TEST
 
 	/*wr8(REG_VOL_SOUND, 64);
@@ -272,7 +271,6 @@ void setup()
 	wr32(REG_VSIZE, 2048);
 	wr32(REG_HSIZE, 2048);
 
-
 	dli = RAM_DL;
 
 	dl(CLEAR_COLOR_RGB(0, 64, 128));
@@ -284,7 +282,7 @@ void setup()
 	dl(BITMAP_SIZE(NEAREST, BORDER, BORDER, 64, 64));
 	dl(LINE_WIDTH(256));
 
-	dl(BEGIN(RECTS));
+	dl(BEGIN(BITMAPS));
 	dl(VERTEX_FORMAT(0));
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
 	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));

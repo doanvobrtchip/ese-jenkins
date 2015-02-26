@@ -1411,7 +1411,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 				}
 				case FT800EMU_DL_BITMAP_SOURCE:
 				{
-					int addr = v & 0xFFFFF;
+					int addr = v & FT800EMU_ADDR_MASK;
 					res << "BITMAP_SOURCE(";
 					res << addr << ")";
 					break;

@@ -236,14 +236,14 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 	uint16_t &sound = *static_cast<uint16_t *>(static_cast<void *>(&ram[REG_SOUND]));
 	uint8_t &volume = ram[REG_VOL_SOUND];
 
-	uint32_t &playbackStart = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_START])); playbackStart &= 0xFFFFF;
-	uint32_t &playbackLength = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_LENGTH])); playbackLength &= 0xFFFFF;
+	uint32_t &playbackStart = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_START])); playbackStart &= FT800EMU_ADDR_MASK;
+	uint32_t &playbackLength = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_LENGTH])); playbackLength &= FT800EMU_ADDR_MASK;
 	uint16_t playbackFreq = *static_cast<uint16_t *>(static_cast<void *>(&ram[REG_PLAYBACK_FREQ]));
 	double secondsPerPlaybackSample = 1.0 / (double)playbackFreq;
 	uint8_t &playbackFormat = ram[REG_PLAYBACK_FORMAT];
 	uint8_t &playbackLoop = ram[REG_PLAYBACK_LOOP];
 	uint8_t &playbackBusy = ram[REG_PLAYBACK_PLAY];
-	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR])); playbackReadPtr &= 0xFFFFF;
+	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR])); playbackReadPtr &= FT800EMU_ADDR_MASK;
 	uint8_t &playbackVolume = ram[REG_VOL_PB];
 	bool adpcmNext = s_ADPCMNext;
 

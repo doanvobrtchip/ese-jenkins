@@ -111,9 +111,12 @@ public:
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
 		AlphaFunc = ALWAYS;
 		AlphaFuncRef = 0;
+#ifdef FT810EMU_MODE
 		VertexFormatShift = 0;
 		VertexTranslateX = 0;
 		VertexTranslateY = 0;
+		PaletteSource = 0;
+#endif
 	}
 
 	int DebugDisplayListIndex;
@@ -150,9 +153,12 @@ public:
 	int BlendFuncDst;
 	int AlphaFunc;
 	uint8_t AlphaFuncRef;
+#ifdef FT810EMU_MODE
 	int VertexFormatShift; // = (4 - VertexFormat)
 	int VertexTranslateX;
 	int VertexTranslateY;
+	int PaletteSource;
+#endif
 };
 
 BitmapInfo s_BitmapInfoMain[32];
@@ -415,18 +421,39 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 	return write ? testStencil(gs, bs, x) : testStencilNoWrite(gs, bs, x);
 }
 
+#ifdef FT810EMU_MODE
+
+FT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+{
+	return static_cast<const uint32_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
+}
+
+FT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+{
+	uint16_t val = static_cast<const uint16_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
+	return 0xFF000000 // todo opt
+		| (mul255div31(val >> 11) << 16)
+		| (mul255div63((val >> 5) & 0x3F) << 8)
+		| mul255div31(val & 0x1F);
+}
+
+FT8XXEMU_FORCE_INLINE argb8888 getPaletted4444(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+{
+	uint16_t val = static_cast<const uint16_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
+	return (mul255div15(val >> 12) << 24)
+		| (mul255div15((val >> 8) & 0xF) << 16)
+		| (mul255div15((val >> 4) & 0xF) << 8)
+		| (mul255div15(val & 0xF));
+}
+
+#else
+
 FT8XXEMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
-#ifdef FT810EMU_MODE
-#ifdef FTEMU_SDL2
-	SDL_assert(false); // TODO_FT810EMU
-#endif
-	uint32_t result = 0;
-#else
-	uint32_t result = static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
-#endif
-	return result;
+	return static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
 }
+
+#endif
 
 FT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
 {
@@ -665,18 +692,22 @@ static const argb8888 s_VGAPalette[] =
 
 FT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
 {
-	const int i = (srci + idx) & 0xFFFFF;
+	const int i = (srci + idx) & FT800EMU_ADDR_MASK;
 	return ram[i];
 }
 
 FT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
 {
-	const int i = (srci + idx) & 0xFFFFE;
+	const int i = (srci + idx) & (FT800EMU_ADDR_MASK - 1);
 	return ram[i];
 }
 
 // uses pixel units
+#if FT810EMU_MODE
+FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+#else
 FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+#endif
 {
     int xo;   // x byte offset
 	switch (format)
@@ -690,6 +721,9 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		case RGB332:
 		case ARGB2:
 		case PALETTED:
+		case PALETTED565:
+		case PALETTED4444:
+		case PALETTED8:
 		case L8:
           xo = x;
           break;
@@ -778,8 +812,13 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 		}
 	case PALETTED:
 		{
+#ifdef FT810EMU_MODE
+			printf("PALETTED is not a valid format\n");
+			return 0xFFFF00FF; // invalid format
+#else
 			uint8_t val = bmpSrc8(ram, srci, py + xo);
 			return getPaletted(ram, val);
+#endif
 		}
 	case TEXT8X8:
 		{
@@ -814,13 +853,39 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 			else
 				return 0x00FFFFFF; // a black or white transparent pixel? :)
 		}
+#ifdef FT810EMU_MODE
+	case PALETTED565:
+		{
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
+			return getPaletted565(ram, val, paletteSource);
+		}
+	case PALETTED4444:
+		{
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
+			return getPaletted4444(ram, val, paletteSource);
+		}
+	case PALETTED8:
+		{
+			uint8_t val = bmpSrc8(ram, srci, py + xo);
+			return getPaletted8(ram, val, paletteSource);
+		}
+#endif
 	}
 	return 0xFFFF00FF; // invalid format
 }
 
 // uses 1/(256*16) pixel units, w & h in pixel units
+#ifdef FT810EMU_MODE
+FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+#else
 FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+#endif
 {
+#ifdef FT810EMU_MODE
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo, paletteSource
+#else
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo
+#endif
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
 	switch (filter)
@@ -829,7 +894,7 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 		{
 			int xi = x >> 12;
 			int yi = y >> 12;
-			return sampleBitmapAt(ram, srci, xi, yi, height, format, stride, wrapx, wrapy, bitmapInfo);
+			return sampleBitmapAt(ram, srci, xi, yi, FT800_SAMPLE_AT_PARAMS);
 		}
 	case BILINEAR:
 		{
@@ -839,15 +904,15 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 			int yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
-				return sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo);
+				return sampleBitmapAt(ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
 			}
 			else if (xsep == 0)
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
 				int yb = yt + 1;
-				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo);
-				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo);
+				argb8888 top = sampleBitmapAt(ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
+				argb8888 btm = sampleBitmapAt(ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
@@ -855,8 +920,8 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				int xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
+				return mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
 			}
 			else
 			{
@@ -867,19 +932,19 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 				int xr = xl + 1;
 				int yb = yt + 1;
 #if FTEMU_SSE41_INSTRUCTIONS_USE
-				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo));
-				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo));
-				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo));
-				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy, bitmapInfo));
+				const __m128i tl = to_m128i(sampleBitmapAt(ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS));
+				const __m128i tr = to_m128i(sampleBitmapAt(ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS));
+				const __m128i bl = to_m128i(sampleBitmapAt(ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS));
+				const __m128i br = to_m128i(sampleBitmapAt(ram, srci, xr, yb, FT800_SAMPLE_AT_PARAMS));
 				const __m128i top = _mm_add_epi32(mulalpha_argb(tl, xal), mulalpha_argb(tr, xar));
 				const __m128i btm = _mm_add_epi32(mulalpha_argb(bl, xal), mulalpha_argb(br, xar));
 				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
 				return to_argb8888(result);
 #else
-				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xal)
-					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, height, format, stride, wrapx, wrapy, bitmapInfo), xar);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(ram, srci, xr, yb, FT800_SAMPLE_AT_PARAMS), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 #endif
 			}
@@ -925,6 +990,9 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int sampleWrapX = bi.SizeWrapX;
 		int sampleWrapY = bi.SizeWrapY;
 		int sampleFilter = bi.SizeFilter;
+#if FT810EMU_MODE
+		int paletteSource = gs.PaletteSource;
+#endif
 		// pretransform
 		int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
 		int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
@@ -937,7 +1005,11 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			// transform with 1/(256*16) pixel units
 			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
 			int ryt = (gs.BitmapTransformD * rx) + rytef;
+#if FT810EMU_MODE
+			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
+#else
 			const argb8888 sample = sampleBitmap(ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
+#endif
 			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
 			processPixel<debugTrace>(gs, bc, bs, bt, x, out);
@@ -961,6 +1033,9 @@ FT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case TEXT8X8: return stride << 3;
 		case TEXTVGA: return stride << 2;
 		case BARGRAPH: return stride;
+		case PALETTED565: return stride;
+		case PALETTED4444: return stride;
+		case PALETTED8: return stride;
 	}
 	printf("Invalid bitmap layout\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid bitmap layout");
@@ -2432,7 +2507,7 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_DISPLAY:
 			goto DisplayListDisplay;
 		case FT800EMU_DL_BITMAP_SOURCE:
-			bitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
+			bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
 			break;
 		case FT800EMU_DL_BITMAP_HANDLE:
 			gs.BitmapHandle = v & 0x1F;
@@ -2475,7 +2550,7 @@ EvaluateDisplayListValue:
 #endif
 			break;
 		case FT800EMU_DL_CALL:
-			callstack.push(c);
+			callstack.push((int)c);
 			c = (v & 0xFFFF) - 1;
 			break;
 		case FT800EMU_DL_JUMP:
@@ -2598,7 +2673,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 					}
 					break;
 				}
-				if (y == 0) debugLimiterIndex = c;
+				if (y == 0) debugLimiterIndex = (int)c;
 #if !FT800EMU_LIMIT_JUMP_LOOP
 				++debugCounter;
 #endif
@@ -2616,10 +2691,10 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 
 			if (debugTrace)
 			{
-				s_DebugTraceLine = c;
+				s_DebugTraceLine = (uint32_t)c;
 			}
 
-			gs.DebugDisplayListIndex = c;
+			gs.DebugDisplayListIndex = (int)c;
 
 			uint32_t v = displayList[c]; // (up to 2048 ops)
 EvaluateDisplayListValue:
@@ -2631,7 +2706,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
 				case FT800EMU_DL_BITMAP_SOURCE:
-					bitmapInfo[gs.BitmapHandle].Source = v & 0xFFFFF;
+					bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
@@ -2763,7 +2838,7 @@ EvaluateDisplayListValue:
 						if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid CALL() in display list");
 						goto DisplayListDisplay;
 					}
-					callstack.push(c);
+					callstack.push((int)c);
 					c = (v & 0xFFFF) - 1;
 					break;
 				case FT800EMU_DL_JUMP:
@@ -2873,7 +2948,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_PALETTE_SOURCE:
 #ifdef FTEMU_SDL2
-					SDL_assert(false); // TODO_FT810
+					gs.PaletteSource = v & FT800EMU_ADDR_MASK;
 #endif
 					break;
 				case FT800EMU_DL_VERTEX_TRANSLATE_X:
