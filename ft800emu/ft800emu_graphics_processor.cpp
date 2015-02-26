@@ -712,39 +712,34 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
     int xo;   // x byte offset
 	switch (format)
 	{
-		case ARGB1555:
-		case ARGB4:
-		case RGB565:
-          xo = x << 1;
-          break;
-
-		case RGB332:
-		case ARGB2:
-		case PALETTED:
-		case PALETTED565:
-		case PALETTED4444:
-		case PALETTED8:
-		case L8:
-          xo = x;
-          break;
-
-		case L1:
-		case TEXT8X8:
-          xo = x >> 3;
-          break;
-
-		case TEXTVGA:
-          xo = (x >> 3) << 1;
-          break;
-
-		case L4:
-          xo = x >> 1;
-          break;
-
-
-		case BARGRAPH:
-          xo = x;
-          break;
+	case ARGB1555:
+	case ARGB4:
+	case RGB565:
+		xo = x << 1;
+		break;
+	case RGB332:
+	case ARGB2:
+	case PALETTED:
+	case PALETTED565:
+	case PALETTED4444:
+	case PALETTED8:
+	case L8:
+	case BARGRAPH:
+		xo = x;
+		break;
+	case L1:
+	case TEXT8X8:
+		xo = x >> 3;
+		break;
+	case TEXTVGA:
+		xo = (x >> 3) << 1;
+		break;
+	case L2:
+		xo = x >> 2;
+		break;
+	case L4:
+		xo = x >> 1;
+		break;
 	}
 
 	if (!wrap(xo, stride, wrapx)) return 0x00000000;
@@ -766,11 +761,18 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF;
 		}
+#ifdef FT810EMU_MODE
+	case L2:
+		{
+			int val = (bmpSrc8(ram, srci, py + xo) >> (3 - (x % 4))) & 0x3;
+			val = mul255div3(val);
+			return (val << 24) | 0x00FFFFFF;
+		}
+#endif
 	case L4:
 		{
 			int val = (bmpSrc8(ram, srci, py + xo) >> (((x + 1) % 2) << 2)) & 0xF;
-			val *= 255;
-			val /= 15; // todo opt
+			val = mul255div15(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
 	case L8:
@@ -2820,14 +2822,22 @@ EvaluateDisplayListValue:
 					gs.BitmapTransformF = SIGNED_N(v, 24);
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
+#ifdef FT810EMU_MODE
+					gs.ScissorY.U = v & 0x7FF;
+					gs.ScissorX.U = (v >> 11) & 0x7FF;
+#else
 					gs.ScissorY.U = v & 0x1FF;
 					gs.ScissorX.U = (v >> 9) & 0x1FF;
+#endif
 					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
 					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_SCISSOR_SIZE:
-					gs.ScissorHeight = v & 0x3FF;
-					gs.ScissorWidth = (v >> 10) & 0x3FF;
+#ifdef FT810EMU_MODE
+#else
+					gs.ScissorHeight = v & 0xFFF;
+					gs.ScissorWidth = (v >> 12) & 0xFFF;
+#endif
 					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
 					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
