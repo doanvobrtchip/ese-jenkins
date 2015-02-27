@@ -268,8 +268,10 @@ void setup()
 	for (int i = 0; i < sizeof(s_Crate); ++i)
 		wr8(i, s_Crate[i]);
 
-	wr32(REG_VSIZE, 2048);
-	wr32(REG_HSIZE, 2048);
+	int size = 512;
+
+	wr32(REG_VSIZE, size);
+	wr32(REG_HSIZE, size);
 	wr8(REG_ROTATE, 2);
 
 	dli = RAM_DL;
@@ -285,13 +287,13 @@ void setup()
 
 	dl(BEGIN(BITMAPS));
 	dl(VERTEX_FORMAT(0));
-	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
-	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.5))));
-	dl(BITMAP_TRANSFORM_D(transformvalue(sin(0.5))));
-	dl(BITMAP_TRANSFORM_E(transformvalue(cos(0.5))));
-	for (int y = 0; y < 2048; y += 128)
+	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.2))));
+	dl(BITMAP_TRANSFORM_B(transformvalue(-sin(0.2))));
+	dl(BITMAP_TRANSFORM_D(transformvalue(sin(0.2))));
+	dl(BITMAP_TRANSFORM_E(transformvalue(cos(0.2))));
+	for (int y = 0; y < size; y += 128)
 	{
-		for (int x = 0; x < 2048; x += 128)
+		for (int x = 0; x < size; x += 128)
 		{
 			dl(VERTEX2F(x, y));
 			dl(VERTEX2F(x + 64, y + 64));

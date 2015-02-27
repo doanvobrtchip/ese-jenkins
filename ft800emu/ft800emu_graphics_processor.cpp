@@ -85,7 +85,11 @@ namespace {
 struct GraphicsState
 {
 public:
-	GraphicsState()
+	FT8XXEMU_FORCE_INLINE GraphicsState(
+#ifdef FT810EMU_MODE
+		const bool swapXY
+#endif
+		)
 	{
 		DebugDisplayListIndex = 0;
 		ColorARGB = 0xFFFFFFFF;
@@ -111,12 +115,26 @@ public:
 		ColorMaskARGB = 0xFFFFFFFF;
 		BitmapHandle = 0;
 		Cell = 0;
-		BitmapTransformA = 256;
-		BitmapTransformB = 0;
-		BitmapTransformC = 0;
-		BitmapTransformD = 0;
-		BitmapTransformE = 256;
-		BitmapTransformF = 0;
+#ifdef FT810EMU_MODE
+		if (swapXY)
+		{
+			BitmapTransformA = 0;
+			BitmapTransformB = 256;
+			BitmapTransformC = 0;
+			BitmapTransformD = 256;
+			BitmapTransformE = 0;
+			BitmapTransformF = 0;
+		}
+		else
+#endif
+		{
+			BitmapTransformA = 256;
+			BitmapTransformB = 0;
+			BitmapTransformC = 0;
+			BitmapTransformD = 0;
+			BitmapTransformE = 256;
+			BitmapTransformF = 0;
+		}
 		BlendFuncSrc = SRC_ALPHA;
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
 		AlphaFunc = ALWAYS;
@@ -2502,7 +2520,11 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 	uint8_t *const ram = Memory.getRam();
 	const uint32_t *displayList = Memory.getDisplayList();
 
-	GraphicsState gs = GraphicsState();
+	GraphicsState gs = GraphicsState(
+#ifdef FT810EMU_MODE
+		false
+#endif
+		);
 	std::stack<GraphicsState> gsstack;
 	std::stack<int> callstack;
 
@@ -2582,7 +2604,11 @@ EvaluateDisplayListValue:
 			break;
 		case FT800EMU_DL_RESTORE_CONTEXT:
             if (gsstack.empty()) {
-                gs = GraphicsState();
+                gs = GraphicsState(
+#ifdef FT810EMU_MODE
+					false
+#endif
+					);
             } else {
                 gs = gsstack.top();
                 gsstack.pop();
@@ -2637,7 +2663,11 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 	{
 		VertexState vs = VertexState();
 		int primitive = 0;
-		GraphicsState gs = GraphicsState();
+		GraphicsState gs = GraphicsState(
+#ifdef FT810EMU_MODE
+			swapXY
+#endif
+			);
 		std::stack<GraphicsState> gsstack;
 		std::stack<int> callstack;
 		gs.ScissorX2.I = min((int)hsize, gs.ScissorX2.I);
@@ -2823,21 +2853,45 @@ EvaluateDisplayListValue:
 					gs.TagMask = (v & 0x01) != 0;
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_A:
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformB = SIGNED_N(v, 17);
+					else
+#endif
 					gs.BitmapTransformA = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_B:
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformA = SIGNED_N(v, 17);
+					else
+#endif
 					gs.BitmapTransformB = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_C: // 15.8 signed
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformF = SIGNED_N(v, 24);
+					else
+#endif
 					gs.BitmapTransformC = SIGNED_N(v, 24);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_D:
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformE = SIGNED_N(v, 17);
+					else
+#endif
 					gs.BitmapTransformD = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_E:
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformD = SIGNED_N(v, 17);
+					else
+#endif
 					gs.BitmapTransformE = SIGNED_N(v, 17);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_F:
+#ifdef FT810EMU_MODE
+					if (swapXY) gs.BitmapTransformC = SIGNED_N(v, 24);
+					else
+#endif
 					gs.BitmapTransformF = SIGNED_N(v, 24);
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
@@ -2915,7 +2969,11 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_RESTORE_CONTEXT:
                     if (gsstack.empty()) {
-                        gs = GraphicsState();
+                        gs = GraphicsState(
+#ifdef FT810EMU_MODE
+							swapXY
+#endif							
+							);
                         gs.ScissorWidth = hsize;
                         gs.ScissorHeight = vsize;
                         gs.ScissorX2.U = hsize;
