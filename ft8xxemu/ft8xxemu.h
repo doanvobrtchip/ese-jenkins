@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2013-2015  Future Technology Devices International Ltd
- * Author: Jan Boon (jan.boon@kaetemi.be)
+ * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
 #ifndef FT8XXEMU_H
@@ -9,7 +9,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes
-#define FT8XXEMU_VERSION_API 1
+#define FT8XXEMU_VERSION_API 2
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -38,23 +38,23 @@ typedef enum
 
 typedef enum
 {
-	// enables the keyboard to be used as input
+	// enables the keyboard to be used as input (default: on)
 	FT8XXEMU_EmulatorEnableKeyboard = 0x01,
-	// enables audio
+	// enables audio (default: on)
 	FT8XXEMU_EmulatorEnableAudio = 0x02,
-	// enables coprocessor
+	// enables coprocessor (default: on)
 	FT8XXEMU_EmulatorEnableCoprocessor = 0x04,
-	// enables mouse as touch
+	// enables mouse as touch (default: on)
 	FT8XXEMU_EmulatorEnableMouse = 0x08,
-	// enable debug shortkeys
+	// enable debug shortkeys (default: on)
 	FT8XXEMU_EmulatorEnableDebugShortkeys = 0x10,
-	// enable graphics processor multithreading
+	// enable graphics processor multithreading (default: on)
 	FT8XXEMU_EmulatorEnableGraphicsMultithread = 0x20,
-	// enable dynamic graphics quality degrading by interlacing
+	// enable dynamic graphics quality degrading by interlacing (default: on)
 	FT8XXEMU_EmulatorEnableDynamicDegrade = 0x40,
-	// enable usage of REG_ROTATE
+	// enable usage of REG_ROTATE (default: off)
 	FT8XXEMU_EmulatorEnableRegRotate = 0x80,
-	// enable emulating REG_PWM_DUTY by fading the rendered display to black
+	// enable emulating REG_PWM_DUTY by fading the rendered display to black (default: off)
 	FT8XXEMU_EmulatorEnableRegPwmDutyEmulation = 0x100,
 } FT8XXEMU_EmulatorFlags;
 
@@ -151,16 +151,23 @@ typedef struct
 extern "C" {
 #endif
 
+// Initialize the default emulator parameters
+FT8XXEMU_API void FT8XXEMU_default(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode);
+
 // Run the emulator on the current thread. Returns when the emulator is fully stopped. Parameter versionApi must be set to FT8XXEMU_VERSION_API
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params);
 
-// Stop the emulator. Can be called from any thread
+// Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped
 FT8XXEMU_API extern void (*FT8XXEMU_stop)();
 
-// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks)
+// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
 FT8XXEMU_API extern uint8_t (*FT8XXEMU_transfer)(uint8_t data);
-FT8XXEMU_API extern void (*FT8XXEMU_csLow)(int low);
-FT8XXEMU_API extern void (*FT8XXEMU_csHigh)(int high);
+
+// Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+FT8XXEMU_API extern void (*FT8XXEMU_cs)(int cs);
+
+// Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
+FT8XXEMU_API extern int (*FT8XXEMU_int)();
 
 #ifdef __cplusplus 
 } /* extern "C" */

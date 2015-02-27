@@ -62,7 +62,7 @@ void SPII2CClass::end()
 
 void SPII2CClass::csLow(int low)
 {
-	s_CSLow = low != 0;
+	s_CSLow = (low != 0);
 
 	if (s_RWBufferStage)
 	{
@@ -240,14 +240,14 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 	return 0;
 }
 
-bool SPII2CClass::intnLow()
+int SPII2CClass::intnLow()
 {
-	return Memory.intnLow();
+	return Memory.intnLow() ? 1 : 0;
 }
 
-bool SPII2CClass::intnHigh()
+int SPII2CClass::intnHigh()
 {
-	return Memory.intnHigh();
+	return Memory.intnHigh() ? 1 : 0;
 }
 
 } /* namespace FT800EMU */

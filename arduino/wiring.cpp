@@ -115,7 +115,7 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	s_DigitalPins[pin] = val;
 	if (pin == s_csPin)
 	{
-		FT8XXEMU_csHigh(val);
+		FT8XXEMU_cs(val ? 0 : 1);
 	}
 	else switch (pin)
 	{

@@ -43,8 +43,8 @@ public:
 	static uint8_t transfer(uint8_t data);
 
 	// Interrupt
-	static bool intnLow();
-	static bool intnHigh();
+	static int intnLow();
+	static int intnHigh();
 
 private:
 	SPII2CClass(const SPII2CClass &);

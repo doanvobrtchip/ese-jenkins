@@ -380,8 +380,8 @@ namespace {
 				//printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
 
 #ifndef WIN32
-				System.holdMCUThread(); // vblank'd !
-				System.resumeMCUThread();
+				FT8XXEMU::System.holdMCUThread(); // vblank'd !
+				FT8XXEMU::System.resumeMCUThread();
 #endif
 
 				unsigned long flipStart = FT8XXEMU::System.getMicros();

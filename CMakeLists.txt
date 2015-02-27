@@ -53,6 +53,8 @@ OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" OFF)
 
 OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
+OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" ON)
+
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
 OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
@@ -66,6 +68,8 @@ OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 OPTION(WITH_FT900EMU "Include FT900EMU" ON)
 
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
+
+OPTION(FTEMU_PIC "Add -fPIC to libraries to build dynamic dll" OFF)
 
 ########################################################################
 

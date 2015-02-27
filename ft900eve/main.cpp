@@ -59,7 +59,7 @@ class FT800SPISlave : public FT900EMU::SPISlave
 {
 	virtual void cs(bool cs)
 	{
-		FT8XXEMU_csLow(cs ? 1 : 0);
+		FT8XXEMU_cs(cs ? 1 : 0);
 	}
 
 	virtual uint8_t transfer(uint8_t d)
@@ -151,19 +151,10 @@ int main(int argc, char *argv[])
 	s_InFile = argv[1];
 
 	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
+	FT8XXEMU_default(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT801);
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Close = close;
-	params.Flags =
-		FT8XXEMU_EmulatorEnableKeyboard
-		| FT8XXEMU_EmulatorEnableMouse
-		| FT8XXEMU_EmulatorEnableAudio
-		| FT8XXEMU_EmulatorEnableDebugShortkeys
-		| FT8XXEMU_EmulatorEnableRegRotate
-	    | FT8XXEMU_EmulatorEnableCoprocessor
-		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableDynamicDegrade;
 	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);
 
 	return EXIT_SUCCESS;
