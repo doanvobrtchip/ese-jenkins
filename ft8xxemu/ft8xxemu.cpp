@@ -6,10 +6,13 @@
 #include "ft8xxemu.h"
 
 // Include FT800EMU
+#ifdef FTEMU_HAVE_FT800EMU
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_emulator.h"
+#endif
 
 // Include FT810EMU
+#ifdef FTEMU_HAVE_FT810EMU
 #undef FT800EMU_SPI_I2C_H
 #undef FT800EMU_EMULATOR_H
 #define FT800EMU FT810EMU
@@ -18,6 +21,7 @@
 #include "ft800emu_emulator.h"
 #undef FT800EMU
 #undef FT810EMU_MODE
+#endif
 
 #ifdef FTEMU_SDL2
 #include <SDL_assert.h>
@@ -37,6 +41,7 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 	switch (params->Mode)
 	{
 	case 0:
+#ifdef FTEMU_HAVE_FT800EMU
 	case FT8XXEMU_EmulatorFT800:
 	case FT8XXEMU_EmulatorFT801:
 		FT8XXEMU_stop = &FT800EMU::Emulator.stop;
@@ -45,6 +50,8 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		FT8XXEMU_csHigh = &FT800EMU::SPII2C.csHigh;
 		FT800EMU::Emulator.run(*params);
 		break;
+#endif
+#ifdef FTEMU_HAVE_FT810EMU
 	case FT8XXEMU_EmulatorFT810:
 		FT8XXEMU_stop = &FT810EMU::Emulator.stop;
 		FT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
@@ -52,6 +59,7 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		FT8XXEMU_csHigh = &FT810EMU::SPII2C.csHigh;
 		FT810EMU::Emulator.run(*params);
 		break;
+#endif
 	default:
 #ifdef FTEMU_SDL2
 		SDL_assert_release((false) && "Invalid emulator mode selected");
