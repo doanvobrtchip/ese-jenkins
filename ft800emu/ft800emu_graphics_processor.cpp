@@ -64,6 +64,16 @@
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
+#ifdef FT810EMU_MODE
+#define FT810EMU_SWAPXY_PARAM , const bool swapXY
+#define FT810EMU_SWAPXY , swapXY
+#define FT810EMU_SWAPXY_FALSE , false
+#else
+#define FT810EMU_SWAPXY_PARAM
+#define FT810EMU_SWAPXY_PASS
+#define FT810EMU_SWAPXY_FALSE
+#endif
+
 namespace FT800EMU {
 
 GraphicsProcessorClass GraphicsProcessor;
@@ -123,7 +133,7 @@ public:
 	argb8888 ColorARGB;
 	int PointSize;
 	int LineWidth;
-	union { uint32_t U; int I; } ScissorX;
+	union { uint32_t U; int I; } ScissorX; // NOTE: Scissor already swapped during XY swapped render
 	union { uint32_t U; int I; } ScissorY;
 	uint32_t ScissorWidth;
 	uint32_t ScissorHeight;
@@ -2369,6 +2379,9 @@ public:
 	argb8888 *ScreenArgb8888;
 	bool UpsideDown;
 	bool Mirrored;
+#ifdef FT810EMU_MODE
+	bool SwapXY;
+#endif
 	uint32_t HSize;
 	uint32_t VSize;
 	uint32_t YIdx;
@@ -2604,7 +2617,7 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = Memory.getRam();
 	const uint32_t *displayList = Memory.getDisplayList();
@@ -2823,23 +2836,47 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
 #ifdef FT810EMU_MODE
-					gs.ScissorY.U = v & 0x7FF;
-					gs.ScissorX.U = (v >> 11) & 0x7FF;
+					if (swapXY)
+					{
+						gs.ScissorX.U = v & 0x7FF;
+						gs.ScissorY.U = (v >> 11) & 0x7FF;
+					}
+					else
+					{
+						gs.ScissorY.U = v & 0x7FF;
+						gs.ScissorX.U = (v >> 11) & 0x7FF;
+					}
+					goto UpdateScissorX2Y2;
 #else
 					gs.ScissorY.U = v & 0x1FF;
 					gs.ScissorX.U = (v >> 9) & 0x1FF;
+					goto UpdateScissorX2Y2;
 #endif
-					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
-					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
 					break;
 				case FT800EMU_DL_SCISSOR_SIZE:
 #ifdef FT810EMU_MODE
+					if (swapXY)
+					{
+						gs.ScissorWidth = v & 0xFFF;
+						gs.ScissorHeight = (v >> 12) & 0xFFF;
+					}
+					else
+					{
+						gs.ScissorHeight = v & 0xFFF;
+						gs.ScissorWidth = (v >> 12) & 0xFFF;
+					}
+				UpdateScissorX2Y2:
+					gs.ScissorX2.U = gs.ScissorX.I + gs.ScissorWidth;
+					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
+					if (swapXY) gs.ScissorY2.U = min(hsize, gs.ScissorY2.U);
+					else gs.ScissorX2.U = min(hsize, gs.ScissorX2.U);
 #else
-					gs.ScissorHeight = v & 0xFFF;
-					gs.ScissorWidth = (v >> 12) & 0xFFF;
-#endif
+					gs.ScissorHeight = v & 0x3FF;
+					gs.ScissorWidth = (v >> 10) & 0x3FF;
+				UpdateScissorX2Y2:
 					gs.ScissorX2.U = min(hsize, gs.ScissorX.I + gs.ScissorWidth);
 					gs.ScissorY2.U = gs.ScissorY.I + gs.ScissorHeight;
+#endif
 					break;
 				case FT800EMU_DL_CALL:
 					if (callstack.size() >= 1024)
@@ -2983,6 +3020,7 @@ EvaluateDisplayListValue:
 #ifdef FT810EMU_MODE
 					px += gs.VertexTranslateX;
 					py += gs.VertexTranslateY;
+					if (swapXY) std::swap(px, py);
 #endif
 					switch (primitive)
 					{
@@ -2999,19 +3037,35 @@ EvaluateDisplayListValue:
 						displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs,  px, py);
+						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_R:
-						displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
+							displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
-						displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
+							displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
-						displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
+							displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
-						displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
+							displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
 						displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
@@ -3030,6 +3084,7 @@ EvaluateDisplayListValue:
 					py <<= gs.VertexFormatShift;
 					px += gs.VertexTranslateX;
 					py += gs.VertexTranslateY;
+					if (swapXY) std::swap(px, py);
 #endif
 					switch (primitive)
 					{
@@ -3046,18 +3101,34 @@ EvaluateDisplayListValue:
 						displayLines<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case LINE_STRIP:
-						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs,  px, py);
+						displayLineStrip<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_R:
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
 						displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_L:
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
 						displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_A:
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripL<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
 						displayEdgeStripA<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case EDGE_STRIP_B:
+#ifdef FT810EMU_MODE
+						if (swapXY) displayEdgeStripR<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
+						else
+#endif
 						displayEdgeStripB<debugTrace>(gs, bc, bs, bt, y, hsize, vs, px, py);
 						break;
 					case RECTS:
@@ -3188,7 +3259,18 @@ int launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 
-		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart<false>(
+			li->ScreenArgb8888, 
+			li->UpsideDown, 
+			li->Mirrored, 
+#ifdef FT810EMU_MODE
+			li->SwapXY,
+#endif
+			li->HSize, 
+			li->VSize, 
+			li->YIdx, 
+			li->YInc, 
+			li->Bitmap);
 
 		// printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
@@ -3219,7 +3301,18 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 			break;
 		}
 
-		processPart<false>(li->ScreenArgb8888, li->UpsideDown, li->Mirrored, li->HSize, li->VSize, li->YIdx, li->YInc, li->Bitmap);
+		processPart<false>(
+			li->ScreenArgb8888, 
+			li->UpsideDown, 
+			li->Mirrored, 
+#ifdef FT810EMU_MODE
+			li->SwapXY,
+#endif
+			li->HSize, 
+			li->VSize, 
+			li->YIdx, 
+			li->YInc, 
+			li->Bitmap);
 
 		SetEvent(li->EndEvent);
 	}
@@ -3231,7 +3324,18 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 #	endif
 #endif
 
-void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, bool mirrored, uint32_t hsize, uint32_t vsize, uint32_t yIdx, uint32_t yInc)
+void GraphicsProcessorClass::process(
+	argb8888 *screenArgb8888, 
+	bool upsideDown, 
+	bool mirrored,
+#ifdef FT810EMU_MODE
+	bool swapXY,
+#endif
+	uint32_t hsize, 
+	uint32_t vsize, 
+	uint32_t yIdx, 
+	uint32_t yInc)
+
 {
 	uint8_t *const ram = Memory.getRam();
 
@@ -3246,6 +3350,9 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 		li->ScreenArgb8888 = screenArgb8888;
 		li->UpsideDown = upsideDown;
 		li->Mirrored = mirrored;
+#ifdef FT810EMU_MODE
+		li->SwapXY = swapXY;
+#endif
 		li->HSize = hsize;
 		li->VSize = vsize;
 		li->YIdx = (i * yInc) + yIdx;
@@ -3257,13 +3364,13 @@ void GraphicsProcessorClass::process(argb8888 *screenArgb8888, bool upsideDown, 
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart<false>(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 #	endif
 #endif
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
 
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
@@ -3305,7 +3412,7 @@ void GraphicsProcessorClass::processTrace(std::vector<int> &result, uint32_t x, 
 	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 	s_DebugTraceX = x;
 	s_DebugTraceStack = &result;
-	processPart<true>(dummyBuffer, false, false, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo);
+	processPart<true>(dummyBuffer, false, false, false, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
 	s_DebugTraceStack = NULL;
 }
 

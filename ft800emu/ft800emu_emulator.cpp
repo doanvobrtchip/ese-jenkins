@@ -265,7 +265,8 @@ namespace {
 							ram[REG_DLSWAP] = DLSWAP_DONE;
 							Memory.flagDLSwap();
 						}
-						bool rotate = s_RotateEnabled && ram[REG_ROTATE];
+						bool mirrorHorizontal = s_RotateEnabled && FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
+						bool mirrorVertical = s_RotateEnabled && FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
 						if (s_SkipOn)
 						{
 							++s_SkipStage;
@@ -279,7 +280,10 @@ namespace {
 						else if (s_DegradeOn)
 						{
 							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? rotate : (rotate ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), rotate,
+								s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+#ifdef FT810EMU_MODE
+								FT800EMU_REG_ROTATE_SWAP_XY(ram), 
+#endif
 								reg_hsize, reg_vsize, s_DegradeStage, 2);
 							++s_DegradeStage;
 							s_DegradeStage %= 2;
@@ -290,7 +294,10 @@ namespace {
 						else
 						{
 							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? rotate : (rotate ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), rotate,
+								s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+#ifdef FT810EMU_MODE
+								FT800EMU_REG_ROTATE_SWAP_XY(ram), 
+#endif
 								reg_hsize, reg_vsize);
 							s_ChangesSkipped = false;
 							s_FrameFullyDrawn = true;

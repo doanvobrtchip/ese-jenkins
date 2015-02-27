@@ -65,7 +65,17 @@ public:
 	static void begin();
 	static void end();
 
-	static void process(argb8888 *screenArgb8888, bool upsideDown, bool mirrored, uint32_t hsize, uint32_t vsize, uint32_t yIdx = 0, uint32_t yInc = 1);
+	static void process(
+		argb8888 *screenArgb8888, 
+		bool upsideDown, 
+		bool mirrored, 
+#ifdef FT810EMU_MODE
+		bool swapXY,
+#endif
+		uint32_t hsize, 
+		uint32_t vsize, 
+		uint32_t yIdx = 0, 
+		uint32_t yInc = 1);
 	static void processBlank();
 
 	static void processTrace(std::vector<int> &result, uint32_t x, uint32_t y, uint32_t hsize);
