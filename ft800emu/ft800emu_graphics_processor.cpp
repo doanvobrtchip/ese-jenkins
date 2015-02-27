@@ -70,7 +70,7 @@
 #define FT810EMU_SWAPXY_FALSE , false
 #else
 #define FT810EMU_SWAPXY_PARAM
-#define FT810EMU_SWAPXY_PASS
+#define FT810EMU_SWAPXY
 #define FT810EMU_SWAPXY_FALSE
 #endif
 
@@ -730,9 +730,11 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case RGB332:
 	case ARGB2:
 	case PALETTED:
+#ifdef FT810EMU_MODE
 	case PALETTED565:
 	case PALETTED4444:
 	case PALETTED8:
+#endif
 	case L8:
 	case BARGRAPH:
 		xo = x;
@@ -744,9 +746,11 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case TEXTVGA:
 		xo = (x >> 3) << 1;
 		break;
+#ifdef FT810EMU_MODE
 	case L2:
 		xo = x >> 2;
 		break;
+#endif
 	case L4:
 		xo = x >> 1;
 		break;
@@ -1045,9 +1049,11 @@ FT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case TEXT8X8: return stride << 3;
 		case TEXTVGA: return stride << 2;
 		case BARGRAPH: return stride;
+#ifdef FT810EMU_MODE
 		case PALETTED565: return stride;
 		case PALETTED4444: return stride;
 		case PALETTED8: return stride;
+#endif
 	}
 	printf("Invalid bitmap layout\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid bitmap layout");
@@ -2994,9 +3000,7 @@ EvaluateDisplayListValue:
 					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 					break;
 				case FT800EMU_DL_PALETTE_SOURCE:
-#ifdef FTEMU_SDL2
 					gs.PaletteSource = v & FT800EMU_ADDR_MASK;
-#endif
 					break;
 				case FT800EMU_DL_VERTEX_TRANSLATE_X:
 					gs.VertexTranslateX = SIGNED_N(v & 0x1FFFF, 17);
@@ -3412,7 +3416,7 @@ void GraphicsProcessorClass::processTrace(std::vector<int> &result, uint32_t x, 
 	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 	s_DebugTraceX = x;
 	s_DebugTraceStack = &result;
-	processPart<true>(dummyBuffer, false, false, false, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
 	s_DebugTraceStack = NULL;
 }
 

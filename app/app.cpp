@@ -270,6 +270,7 @@ void setup()
 
 	wr32(REG_VSIZE, 2048);
 	wr32(REG_HSIZE, 2048);
+	wr8(REG_ROTATE, 2);
 
 	dli = RAM_DL;
 
