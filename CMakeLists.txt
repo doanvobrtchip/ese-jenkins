@@ -45,7 +45,9 @@ ENDIF ()
 
 ########################################################################
 
-OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" OFF)
+OPTION(WITH_SDL "Use old SDL1 (deprecated)" OFF)
+
+OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" ON)
 
 OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" OFF)
 
@@ -61,19 +63,9 @@ OPTION(WITH_FT800EMU "Include FT800EMU" ON)
 
 OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 
-OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
+OPTION(WITH_FT900EMU "Include FT900EMU" ON)
 
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
-
-########################################################################
-
-IF (NOT DEFINED WITH_SDL)
-  IF (WIN32)
-    SET(WITH_SDL FALSE CACHE BOOL "Build an SDL application." FORCE)
-  ELSE (WIN32)
-    SET(WITH_SDL TRUE CACHE BOOL "Build an SDL application." FORCE)
-  ENDIF (WIN32)
-ENDIF (NOT DEFINED WITH_SDL)
 
 ########################################################################
 

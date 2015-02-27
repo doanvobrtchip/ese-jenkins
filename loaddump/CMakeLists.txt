@@ -23,7 +23,7 @@ ELSEIF (WITH_SDL)
   include_directories(
     ${SDL_INCLUDE_DIR}
     )
-  target_link_libraries(dump1
+  target_link_libraries(ftloaddump
     ${SDL_LIBRARY}
     )
 
