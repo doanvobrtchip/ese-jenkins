@@ -191,8 +191,8 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Sketch"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));
-		item = new QTreeWidgetItem(m_Utilities);
 #ifndef FT810EMU_MODE // This is deprecated in FT810
+		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Capacitive Sketch"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));

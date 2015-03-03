@@ -22,7 +22,11 @@
 // Project includes
 
 #define FT800EMU_DISPLAY_LIST_SIZE 2048
+#ifdef FT810EMU_MODE
+#define FT800EMU_ROM_FONTINFO 0x2FFFFC // (RAM_DL - 4)
+#else
 #define FT800EMU_ROM_FONTINFO 0xFFFFC // (RAM_DL - 4)
+#endif
 #define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
 #ifdef FT810EMU_MODE

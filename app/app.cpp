@@ -349,8 +349,8 @@ void setup()
 	dl(TAG(25));
 */
 
-	/*
-	FTDI transformed
+	
+	// FTDI transformed
 	dl(TAG(10));
 	dl(BEGIN(BITMAPS)); // start drawing bitmaps
 	dl(BITMAP_TRANSFORM_A(transformvalue(cos(0.5))));
@@ -372,7 +372,7 @@ void setup()
 	dl(BEGIN(POINTS)); // start drawing points
 	dl(VERTEX2II(192, 133, 0, 0)); // red point
 	dl(END());
-	*/
+	
 
 
 

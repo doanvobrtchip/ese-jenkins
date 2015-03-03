@@ -21,7 +21,11 @@
 
 namespace FT800EMU {
 
+#ifdef FT810EMU_MODE
+#define FT800EMU_COPROCESSOR_ROM_SIZE 16384
+#else
 #define FT800EMU_COPROCESSOR_ROM_SIZE 8192
+#endif
 
 CoprocessorClass Coprocessor;
 
@@ -31,7 +35,7 @@ static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
 
 #ifdef FT810EMU_MODE
 static const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = { // TODO_FT810EMU: Correct Coprocessor ROM
-#include "crom_ft801.h"
+#include "crom_ft810.h"
 };
 #else
 static const uint16_t pgm_rom_ft800[FT800EMU_COPROCESSOR_ROM_SIZE] = {

@@ -62,6 +62,15 @@ public:
 		return true;
 		#endif
 	}
+	
+	/* static inline bool hasPostProcessing()
+	{
+		#ifdef FTEMU_SDL2
+		return true;
+		#else
+		return false;
+		#endif
+	} */
 
 	static void enableMouse(bool enabled = true);
 	static void setMousePressure(int pressure = 0);

@@ -30,7 +30,11 @@
 
 // using namespace ...;
 
+#ifdef FT810EMU_MODE
+#define FT800EMU_ROM_SIZE (1024 * 1024) // 1024 KiB
+#else
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
+#endif
 #define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE) //(RAM_DL - FT800EMU_ROM_SIZE)
 
 namespace FT800EMU {
@@ -475,7 +479,7 @@ FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
 
 #ifdef FT810EMU_MODE
 static const uint8_t s_RomFT810[FT800EMU_ROM_SIZE] = { // TODO_FT810EMU: Correct ROM
-#include "rom_ft801.h"
+#include "rom_ft810.h"
 };
 #else
 static const uint8_t s_RomFT800[FT800EMU_ROM_SIZE] = {
@@ -844,7 +848,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
-	// printf("Coprocessor read U32 %i\n", address);
+	printf("Coprocessor read U32 %i\n", address);
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
@@ -934,7 +938,7 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 
 uint16_t MemoryClass::coprocessorReadU16(size_t address)
 {
-	// printf("Coprocessor read U16 %i\n", address);
+	printf("Coprocessor read U16 %i\n", address);
 
 	if (address % 4 == 0)
 	{
@@ -977,7 +981,7 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 
 uint8_t MemoryClass::coprocessorReadU8(size_t address)
 {
-	// printf("Coprocessor read U8 %i\n", address);
+	printf("Coprocessor read U8 %i\n", address);
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{
