@@ -6,10 +6,15 @@
  * \date 2013-08-03 02:10GMT
  */
 
+#ifdef FT810EMU_MODE
+#include "ft810emu_coprocessor.h"
+#endif
+#ifndef FT810EMU_MODE
 #ifndef FT800EMU_COPROCESSOR_H
 #define FT800EMU_COPROCESSOR_H
 
 // System includes
+#include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
 #include <stdio.h>
 #include <assert.h>
@@ -28,7 +33,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath = 0, bool ft801 = false);
+	void begin(const char *romFilePath = 0, FT8XXEMU_EmulatorMode mode = FT8XXEMU_EmulatorFT800);
 	void end();
 
 	void executeManual();
@@ -74,5 +79,6 @@ extern CoprocessorClass Coprocessor;
 } /* namespace FT800EMU */
 
 #endif /* #ifndef FT800EMU_COPROCESSOR_H */
+#endif /* #ifndef FT810EMU_MODE */
 
 /* end of file */

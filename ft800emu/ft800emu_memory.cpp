@@ -414,6 +414,20 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				s_CpuReset = true;
 			}
 			break;
+#ifdef FT810EMU_MODE
+		case REG_CMD_READ:
+			data &= 0xFFF;
+			break;
+		case REG_CMD_WRITE:
+			data &= 0xFFF;
+			break;
+		case REG_CMD_DL:
+			data &= 0x1FFF;
+			break;
+		case REG_RAM_FOLD:
+			data &= 0x3;
+			break;
+#endif
 		}
 	}
 }
@@ -479,14 +493,14 @@ FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
 
 #ifdef FT810EMU_MODE
 static const uint8_t s_RomFT810[FT800EMU_ROM_SIZE] = { // TODO_FT810EMU: Correct ROM
-#include "rom_ft810.h"
+#include "resources/rom_ft810.h"
 };
 #else
 static const uint8_t s_RomFT800[FT800EMU_ROM_SIZE] = {
-#include "rom_ft800.h"
+#include "resources/rom_ft800.h"
 };
 static const uint8_t s_RomFT801[FT800EMU_ROM_SIZE] = {
-#include "rom_ft801.h"
+#include "resources/rom_ft801.h"
 };
 #endif
 
@@ -821,7 +835,14 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 {
+	// printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
+
 	++s_WriteOpCount;
+
+	if (address == REG_CMD_WRITE)
+	{
+		int i = 0;
+	}
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
@@ -848,7 +869,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
-	printf("Coprocessor read U32 %i\n", address);
+	// printf("Coprocessor read U32 %i\n", (int)address);
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
@@ -938,7 +959,7 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 
 uint16_t MemoryClass::coprocessorReadU16(size_t address)
 {
-	printf("Coprocessor read U16 %i\n", address);
+	// printf("Coprocessor read U16 %i\n", address);
 
 	if (address % 4 == 0)
 	{
@@ -981,7 +1002,7 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 
 uint8_t MemoryClass::coprocessorReadU8(size_t address)
 {
-	printf("Coprocessor read U8 %i\n", address);
+	// printf("Coprocessor read U8 %i\n", address);
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{

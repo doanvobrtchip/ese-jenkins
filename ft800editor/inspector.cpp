@@ -75,7 +75,6 @@ static const char *regNames[] = {
 	"REG_PLAY", // 34
 	"REG_GPIO_DIR", // 35
 	"REG_GPIO", // 36
-	"REG_EVE_INT", // 37
 	"REG_INT_FLAGS",
 	"REG_INT_EN",
 	"REG_INT_MASK", // 40
@@ -93,7 +92,6 @@ static const char *regNames[] = {
 	"REG_CYA0",
 	"REG_CYA1",
 	"REG_BUSYBITS",
-	"RESERVED", // 55
 	"REG_ROMSUB_SEL", // 56
 	"REG_CMD_READ",
 	"REG_CMD_WRITE",
@@ -115,25 +113,92 @@ static const char *regNames[] = {
 	"REG_TOUCH_TRANSFORM_D",
 	"REG_TOUCH_TRANSFORM_E",
 	"REG_TOUCH_TRANSFORM_F",
-	"RESERVED", // 77
-	"RESERVED", // 78
 	"REG_DATESTAMP", // 79
-	"RESERVED", // 80
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED",
-	"RESERVED", // 90
-	"RESERVED",
-	"RESERVED", // 92
 	"REG_TOUCH_DIRECT_XY", // 93
 	"REG_TOUCH_DIRECT_Z1Z2", // 94
 	"REG_TRACKER" // 95 - SPECIAL CASE
+};
+
+static const uint32_t regAddresses[] = {
+	REG_ID, // 0
+	REG_FRAMES, // 1
+	REG_CLOCK, // 2
+	REG_FREQUENCY,// 3
+	REG_RENDERMODE,// 4
+	REG_SNAPY,// 5
+	REG_SNAPSHOT, // 6
+	REG_CPURESET, // 7
+	REG_TAP_CRC, // 8
+	REG_TAP_MASK, // 9
+	REG_HCYCLE, // 10
+	REG_HOFFSET, // 11
+	REG_HSIZE, // 12
+	REG_HSYNC0, // 13
+	REG_HSYNC1, // 14
+	REG_VCYCLE, // 15
+	REG_VOFFSET, // 16
+	REG_VSIZE, // 17
+	REG_VSYNC0,
+	REG_VSYNC1,
+	REG_DLSWAP, // 20
+	REG_ROTATE,
+	REG_OUTBITS,
+	REG_DITHER,
+	REG_SWIZZLE,
+	REG_CSPREAD,
+	REG_PCLK_POL,
+	REG_PCLK,
+	REG_TAG_X,
+	REG_TAG_Y,
+	REG_TAG, // 30
+	REG_VOL_PB, // 31
+	REG_VOL_SOUND, // 32
+	REG_SOUND, // 33
+	REG_PLAY, // 34
+	REG_GPIO_DIR, // 35
+	REG_GPIO, // 36
+	REG_INT_FLAGS,
+	REG_INT_EN,
+	REG_INT_MASK, // 40
+	REG_PLAYBACK_START,
+	REG_PLAYBACK_LENGTH,
+	REG_PLAYBACK_READPTR,
+	REG_PLAYBACK_FREQ,
+	REG_PLAYBACK_FORMAT,
+	REG_PLAYBACK_LOOP,
+	REG_PLAYBACK_PLAY,
+	REG_PWM_HZ,
+	REG_PWM_DUTY,
+	REG_MACRO_0, // 50
+	REG_MACRO_1,
+	REG_CYA0,
+	REG_CYA1,
+	REG_BUSYBITS,
+	REG_ROMSUB_SEL, // 56
+	REG_CMD_READ,
+	REG_CMD_WRITE,
+	REG_CMD_DL,
+	REG_TOUCH_MODE, // 60
+	REG_TOUCH_ADC_MODE,
+	REG_TOUCH_CHARGE,
+	REG_TOUCH_SETTLE,
+	REG_TOUCH_OVERSAMPLE,
+	REG_TOUCH_RZTHRESH,
+	REG_TOUCH_RAW_XY,
+	REG_TOUCH_RZ,
+	REG_TOUCH_SCREEN_XY,
+	REG_TOUCH_TAG_XY,
+	REG_TOUCH_TAG, // 70
+	REG_TOUCH_TRANSFORM_A,
+	REG_TOUCH_TRANSFORM_B,
+	REG_TOUCH_TRANSFORM_C,
+	REG_TOUCH_TRANSFORM_D,
+	REG_TOUCH_TRANSFORM_E,
+	REG_TOUCH_TRANSFORM_F,
+	REG_DATESTAMP, // 79
+	REG_TOUCH_DIRECT_XY, // 93
+	REG_TOUCH_DIRECT_Z1Z2, // 94
+	REG_TRACKER // 95 - SPECIAL CASE
 };
 
 #define REG_TRACKER_IDX 95
@@ -224,64 +289,32 @@ Inspector::~Inspector()
 
 }
 
-bool wantId(int id, bool advanced)
+bool wantRegister(uint32_t address)
 {
-	if (advanced)
+	switch (address)
 	{
-		switch (id)
-		{
-			// Blacklist undocumented registers
-		case 5:
-		case 37:
-		case 55:
-		case 56:
-		case 77:
-		case 78:
-		case 80:
-		case 81:
-		case 82:
-		case 83:
-		case 84:
-		case 85:
-		case 86:
-		case 87:
-		case 88:
-		case 89:
-		case 90:
-		case 91:
-		case 92:
-			return false;
-		default:
-			return true;
-		}
-	}
-	else
-	{
-		switch (id)
-		{
-			// Whitelist useful registers
-		case 0:
-		case 1:
-		case 12:
-		case 17:
-		case 21:
-		case 68:
-		case 69:
-		case 70:
-		case 71:
-		case 72:
-		case 73:
-		case 74:
-		case 75:
-		case 76:
-		case 57:
-		case 58:
-		case 59:
-		case 95:
-			return true;
-		default:
-			return false;
-		}
+		// Whitelist useful registers
+	case REG_ID:
+	case REG_FRAMES:
+	case REG_HSIZE:
+	case REG_VSIZE:
+	case REG_ROTATE:
+	case REG_CMD_READ:
+	case REG_CMD_WRITE:
+	case REG_CMD_DL:
+	case REG_TOUCH_SCREEN_XY:
+	case REG_TOUCH_TAG_XY:
+	case REG_TOUCH_TAG:
+	case REG_TOUCH_TRANSFORM_A:
+	case REG_TOUCH_TRANSFORM_B:
+	case REG_TOUCH_TRANSFORM_C:
+	case REG_TOUCH_TRANSFORM_D:
+	case REG_TOUCH_TRANSFORM_E:
+	case REG_TOUCH_TRANSFORM_F:
+	case REG_TRACKER:
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -289,16 +322,15 @@ void Inspector::initDisplayReg()
 {
 	// 102400
 	uint8_t *ram = FT800EMU::Memory.getRam();
-	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
 	{
-		int id = (i - RAM_REG) / 4;
-		if (wantId(id, false))
+		uint32_t addr = regAddresses[idx];
+		if (wantRegister(addr))
 		{
-			int ii = id == 95 ? REG_TRACKER : i;
 			QTreeWidgetItem *item = new QTreeWidgetItem(m_Registers);
-			item->setText(0, asRaw(ii));
-			item->setText(1, regNames[id]);
-			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, ii);
+			item->setText(0, asRaw(addr));
+			item->setText(1, regNames[idx]);
+			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, addr);
 			item->setText(2, asRaw(regValue));
 			item->setText(3, asInt(regValue));
 			m_RegisterCopy.push_back(regValue);
@@ -314,12 +346,11 @@ void Inspector::initDisplayReg()
 
 void Inspector::releaseDisplayReg()
 {
-	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
 	{
-		int id = (i - RAM_REG) / 4;
-		if (m_RegisterItems[id])
+		if (m_RegisterItems[idx])
 		{
-			delete m_RegisterItems[id];
+			delete m_RegisterItems[idx];
 		}
 	}
 	m_RegisterCopy.clear();
@@ -368,32 +399,31 @@ void Inspector::frameQt()
 	}
 
 	uint8_t *ram = FT800EMU::Memory.getRam();
-	for (int i = RAM_REG; i < RAM_REG + (sizeof(regNames) / sizeof(char *) * 4); i += 4)
+	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
 	{
-		int id = (i - RAM_REG) / 4;
-		if (m_RegisterItems[id])
+		if (m_RegisterItems[idx])
 		{
-			int ii = id == 95 ? REG_TRACKER : i;
-			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, ii);
-			if (m_RegisterCopy[id] != regValue)
+			uint32_t addr = regAddresses[idx];
+			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, addr);
+			if (m_RegisterCopy[idx] != regValue)
 			{
-				m_RegisterCopy[id] = regValue;
-				m_RegisterItems[id]->setText(2, asRaw(regValue));
-				switch (ii)
+				m_RegisterCopy[idx] = regValue;
+				m_RegisterItems[idx]->setText(2, asRaw(regValue));
+				switch (addr)
 				{
 				case REG_MACRO_0:
 				case REG_MACRO_1:
-					m_RegisterItems[id]->setText(3, asText(regValue));
+					m_RegisterItems[idx]->setText(3, asText(regValue));
 					break;
 				case REG_TOUCH_SCREEN_XY:
 				case REG_TOUCH_TAG_XY:
-					m_RegisterItems[id]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
+					m_RegisterItems[idx]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
 					break;
 				case REG_TRACKER:
-					m_RegisterItems[id]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
+					m_RegisterItems[idx]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
 					break;
 				default:
-					m_RegisterItems[id]->setText(3, asInt(regValue));
+					m_RegisterItems[idx]->setText(3, asInt(regValue));
 					break;
 				}
 			}

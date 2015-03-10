@@ -1,6 +1,11 @@
 
-FILE(GLOB SRCS ../ft800emu/*.cpp)
-FILE(GLOB HDRS ../ft800emu/*.h ../reference/*.h)
+FILE(GLOB SRCS ../ft800emu/*.cpp *.cpp)
+FILE(GLOB HDRS ../ft800emu/*.h ../reference/*.h *.h resources/*.h)
+
+FILE(GLOB FTRES ../reference/*.h resources/*.h)
+
+SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+SOURCE_GROUP("resources" FILES ${FTRES})
 
 ADD_LIBRARY(ft810emu
   ${SRCS}

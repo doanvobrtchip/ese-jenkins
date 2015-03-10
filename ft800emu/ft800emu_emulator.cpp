@@ -623,7 +623,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
-			mode >= FT8XXEMU_EmulatorFT801);
+			mode);
 	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
 
 	if (s_Graphics)
