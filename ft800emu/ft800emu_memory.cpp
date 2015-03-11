@@ -723,6 +723,9 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 	{
 		switch (address)
 		{
+#ifdef FT810EMU_MODE
+		case REG_CMDB_SPACE:
+#endif
 		case REG_CMD_READ: // wait for read advance from coprocessor thread
 			++s_WaitMCUReadCounter;
 			if (s_WaitMCUReadCounter > 8)
@@ -839,11 +842,6 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 	++s_WriteOpCount;
 
-	if (address == REG_CMD_WRITE)
-	{
-		int i = 0;
-	}
-
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U32 write address %i exceeds RAM size\n", (int)address);
@@ -860,10 +858,14 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
     actionWrite(address, data);
 	rawWriteU32(address, data);
 
-	if (address == REG_CMD_READ)
+	switch (address)
 	{
-		// printf("REG_CMD_READ\n");
+#ifdef FT810EMU_MODE
+	case REG_CMDB_SPACE:
+#endif
+	case REG_CMD_READ:
 		s_WaitMCUReadCounter = 0;
+		break;
 	}
 }
 

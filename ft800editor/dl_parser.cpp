@@ -40,8 +40,13 @@ static std::map<std::string, int> s_CmdIdMap;
 static std::map<std::string, int> s_CmdParamMap;
 
 // TODO_FT810 DL_ID_NB 46
+#ifdef FT810EMU_MODE
+#define DL_ID_NB 39
+#define CMD_ID_NB 68
+#else
 #define DL_ID_NB 39
 #define CMD_ID_NB 54
+#endif
 static int s_ParamCount[DL_ID_NB];
 static int s_CmdParamCount[CMD_ID_NB];
 static bool s_CmdParamString[CMD_ID_NB];
@@ -421,6 +426,50 @@ void DlParser::init()
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 3; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
+#ifdef FT810EMU_MODE
+		s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
+		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7
+		s_CmdParamString[CMD_SETROTATE & 0xFF] = false;
+		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
+		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
+		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
+		s_CmdIdMap["CMD_SETBASE"] = CMD_SETBASE & 0xFF;
+		s_CmdParamCount[CMD_SETBASE & 0xFF] = 1;
+		s_CmdParamString[CMD_SETBASE & 0xFF] = false;
+		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
+		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
+		s_CmdParamString[CMD_MEDIAFIFO & 0xFF] = false;
+		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF;
+		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 1;
+		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = false;
+		s_CmdIdMap["CMD_SETFONT2"] = CMD_SETFONT2 & 0xFF;
+		s_CmdParamCount[CMD_SETFONT2 & 0xFF] = 3;
+		s_CmdParamString[CMD_SETFONT2 & 0xFF] = false;
+		s_CmdIdMap["CMD_SETSCRATCH"] = CMD_SETSCRATCH & 0xFF;
+		s_CmdParamCount[CMD_SETSCRATCH & 0xFF] = 1;
+		s_CmdParamString[CMD_SETSCRATCH & 0xFF] = false;
+		/*s_CmdIdMap["CMD_INT_RAMSHARED"] = CMD_INT_RAMSHARED & 0xFF;
+		s_CmdParamCount[CMD_INT_RAMSHARED & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_INT_RAMSHARED & 0xFF] = false;*/
+		/*s_CmdIdMap["CMD_INT_SWLOADIMAGE"] = CMD_INT_SWLOADIMAGE & 0xFF;
+		s_CmdParamCount[CMD_INT_SWLOADIMAGE & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_INT_SWLOADIMAGE & 0xFF] = false;*/
+		s_CmdIdMap["CMD_ROMFONT"] = CMD_ROMFONT & 0xFF;
+		s_CmdParamCount[CMD_ROMFONT & 0xFF] = 2;
+		s_CmdParamString[CMD_ROMFONT & 0xFF] = false;
+		s_CmdIdMap["CMD_VIDEOSTART"] = CMD_VIDEOSTART & 0xFF;
+		s_CmdParamCount[CMD_VIDEOSTART & 0xFF] = 0;
+		s_CmdParamString[CMD_VIDEOSTART & 0xFF] = false;
+		s_CmdIdMap["CMD_VIDEOFRAME"] = CMD_VIDEOFRAME & 0xFF;
+		s_CmdParamCount[CMD_VIDEOFRAME & 0xFF] = 2;
+		s_CmdParamString[CMD_VIDEOFRAME & 0xFF] = false;
+		/*s_CmdIdMap["CMD_SYNC"] = CMD_SYNC & 0xFF;
+		s_CmdParamCount[CMD_SYNC & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_SYNC & 0xFF] = false;*/
+		s_CmdIdMap["CMD_SETBITMAP"] = CMD_SETBITMAP & 0xFF;
+		s_CmdParamCount[CMD_SETBITMAP & 0xFF] = 4;
+		s_CmdParamString[CMD_SETBITMAP & 0xFF] = false;
+#endif
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
 			s_CmdIdList[it->second] = it->first;
@@ -1175,6 +1224,9 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_SCREENSAVER:
 				case CMD_LOGO:
 				case CMD_COLDSTART:
+#ifdef FT810EMU_MODE
+				case CMD_VIDEOSTART:
+#endif
 				{
 					break;
 				}
@@ -1183,6 +1235,11 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_ROTATE:
 				case CMD_INTERRUPT:
 				case CMD_CALIBRATE:
+#ifdef FT810EMU_MODE
+				case CMD_SETROTATE:
+				case CMD_PLAYVIDEO:
+				case CMD_SETSCRATCH:
+#endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					break;
@@ -1193,6 +1250,11 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				case CMD_TRANSLATE:
 				case CMD_SCALE:
 				case CMD_SETFONT:
+#ifdef FT810EMU_MODE
+				case CMD_MEDIAFIFO:
+				case CMD_ROMFONT:
+				case CMD_VIDEOFRAME:
+#endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
@@ -1303,6 +1365,45 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 						| (parsed.Parameter[6].U << 16);
 					compiled.push_back(f);
 					break;
+				}
+#endif
+#ifdef FT810EMU_MODE
+				case CMD_SETBASE:
+				{
+					uint32_t b = parsed.Parameter[0].U;
+					if (b < 2) b = 10; // Otherwise freezes CP
+					compiled.push_back(b);
+					break;
+				}
+				case CMD_SETFONT2:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
+				case CMD_SNAPSHOT2:
+				{
+					uint32_t fmt = parsed.Parameter[0].U;
+					compiled.push_back(fmt);
+					uint32_t ptr = parsed.Parameter[1].U;
+					compiled.push_back(ptr);
+					uint32_t xy = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[5].U << 16
+						| parsed.Parameter[4].U & 0xFFFF;
+					compiled.push_back(wh);
+					break;
+				}
+				case CMD_SETBITMAP:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					uint32_t fmtw = parsed.Parameter[1].U & 0xFFFF
+						| parsed.Parameter[2].U << 16;
+					compiled.push_back(fmtw);
+					uint32_t h = parsed.Parameter[3].U;
+					compiled.push_back(h);
 				}
 #endif
 			}

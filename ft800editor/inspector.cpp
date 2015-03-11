@@ -116,7 +116,10 @@ static const char *regNames[] = {
 	"REG_DATESTAMP", // 79
 	"REG_TOUCH_DIRECT_XY", // 93
 	"REG_TOUCH_DIRECT_Z1Z2", // 94
-	"REG_TRACKER" // 95 - SPECIAL CASE
+	"REG_TRACKER", // 95
+#ifdef FT810EMU_MODE
+	"REG_CMDB_SPACE",
+#endif
 };
 
 static const uint32_t regAddresses[] = {
@@ -198,10 +201,11 @@ static const uint32_t regAddresses[] = {
 	REG_DATESTAMP, // 79
 	REG_TOUCH_DIRECT_XY, // 93
 	REG_TOUCH_DIRECT_Z1Z2, // 94
-	REG_TRACKER // 95 - SPECIAL CASE
+	REG_TRACKER, // 95
+#ifdef FT810EMU_MODE
+	REG_CMDB_SPACE,
+#endif
 };
-
-#define REG_TRACKER_IDX 95
 
 static QString asRaw(uint32_t value)
 {
@@ -312,6 +316,9 @@ bool wantRegister(uint32_t address)
 	case REG_TOUCH_TRANSFORM_E:
 	case REG_TOUCH_TRANSFORM_F:
 	case REG_TRACKER:
+#ifdef FT810EMU_MODE
+	case REG_CMDB_SPACE:
+#endif
 		return true;
 	default:
 		return false;
