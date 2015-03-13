@@ -160,6 +160,7 @@
 #define POINTS               2UL
 #define RAM_BIST             1572864UL
 #define RAM_CMD              1081344UL
+#define RAM_COMPOSITE        1843200UL
 #define RAM_DL               1048576UL
 #define RAM_G                0UL
 #define RAM_J1RAM            1085440UL

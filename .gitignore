@@ -127,3 +127,5 @@ external
 # build
 build/*
 install/*
+build_*
+distribution_*
