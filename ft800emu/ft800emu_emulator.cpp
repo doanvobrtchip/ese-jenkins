@@ -178,7 +178,7 @@ namespace {
 	bool s_SkipOn = false;
 	int s_SkipStage = 0;
 
-	bool s_RotateEnabled = false;
+	// bool s_RotateEnabled = false;
 
 	int (*s_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
@@ -265,8 +265,8 @@ namespace {
 							ram[REG_DLSWAP] = DLSWAP_DONE;
 							Memory.flagDLSwap();
 						}
-						bool mirrorHorizontal = s_RotateEnabled && FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
-						bool mirrorVertical = s_RotateEnabled && FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
+						bool mirrorHorizontal = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
+						bool mirrorVertical = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
 						if (s_SkipOn)
 						{
 							++s_SkipStage;
@@ -642,7 +642,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	if (params.Flags & FT8XXEMU_EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
 
 	s_DynamicDegrade = (params.Flags & FT8XXEMU_EmulatorEnableDynamicDegrade) == FT8XXEMU_EmulatorEnableDynamicDegrade;
-	s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
+	// s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
 
 	s_MasterRunning = true;
 

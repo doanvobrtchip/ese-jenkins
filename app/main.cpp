@@ -216,18 +216,9 @@ CLAS PTR: 3693334
 
 	FT800EMU::ARDUINO::setCSPin(9);
 	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
+	FT8XXEMU_default(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT810);
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags =
-		FT8XXEMU_EmulatorEnableKeyboard
-		| FT8XXEMU_EmulatorEnableMouse
-		| FT8XXEMU_EmulatorEnableAudio
-		| FT8XXEMU_EmulatorEnableDebugShortkeys
-		| FT8XXEMU_EmulatorEnableRegRotate
-	    | FT8XXEMU_EmulatorEnableCoprocessor
-		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableRegPwmDutyEmulation;
 	// params.Graphics = graphics;
 	params.Mode = FT8XXEMU_EmulatorFT810;
 	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);

@@ -25,10 +25,6 @@
 #undef FT810EMU_MODE
 #endif
 
-#ifdef FTEMU_SDL2
-#include <SDL_assert.h>
-#endif
-
 void (*FT8XXEMU_stop)() = NULL;
 uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
 void (*FT8XXEMU_cs)(int cs) = NULL;
@@ -36,9 +32,11 @@ int (*FT8XXEMU_int)() = NULL;
 
 FT8XXEMU_API void FT8XXEMU_default(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode)
 {
-#ifdef FTEMU_SDL2
-	SDL_assert_release((versionApi == FT8XXEMU_VERSION_API) && "Incompatible API version");
-#endif
+	if (versionApi != FT8XXEMU_VERSION_API)
+	{
+		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		return;
+	}
 
 	memset(params, 0, sizeof(FT8XXEMU_EmulatorParameters));
 	
@@ -49,16 +47,19 @@ FT8XXEMU_API void FT8XXEMU_default(uint32_t versionApi, FT8XXEMU_EmulatorParamet
 		| FT8XXEMU_EmulatorEnableDebugShortkeys
 		| FT8XXEMU_EmulatorEnableCoprocessor
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableDynamicDegrade;
+		| FT8XXEMU_EmulatorEnableDynamicDegrade
+		| FT8XXEMU_EmulatorEnableTouchTransformation;
 		
 	params->Mode = mode;
 }
 
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)
 {
-#ifdef FTEMU_SDL2
-	SDL_assert_release((versionApi == FT8XXEMU_VERSION_API) && "Incompatible API version");
-#endif
+	if (versionApi != FT8XXEMU_VERSION_API)
+	{
+		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		return;
+	}
 
 	switch (params->Mode)
 	{
@@ -83,9 +84,10 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		break;
 #endif
 	default:
-#ifdef FTEMU_SDL2
-		SDL_assert_release((false) && "Invalid emulator mode selected");
-#endif
+		{
+			fprintf(stderr, "Invalid ft8xxemu emulator mode selected\n");
+			return;
+		}
 		break;
 	}
 }
