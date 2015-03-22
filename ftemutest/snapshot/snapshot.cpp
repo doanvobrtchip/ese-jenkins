@@ -6,40 +6,15 @@
 #include <vc2.h>
 #include "../ftemutest.h"
 
-#define RAM_ASSETS_OSWALD_LARGE 0
-#define RAM_ASSETS_OSWALD_MEDIUM 15000
-#define RAM_ASSETS_OSWALD_REGULAR 63000
+#define RAM_SNAPSHOT_ADDR 0
 
 void setup()
 {
-	wrstart(RAM_ASSETS_OSWALD_LARGE);
-	for (uint32_t i = 0; i < SIZE_ASSETS_OSWALD_LARGE; ++i)
-		wr8(assets_oswald_large[i]);
-	wrend();
-
-	wrstart(RAM_ASSETS_OSWALD_MEDIUM);
-	for (uint32_t i = 0; i < SIZE_ASSETS_OSWALD_MEDIUM; ++i)
-		wr8(assets_oswald_medium[i]);
-	wrend();
-
-	wrstart(RAM_ASSETS_OSWALD_REGULAR);
-	for (uint32_t i = 0; i < SIZE_ASSETS_OSWALD_REGULAR; ++i)
-		wr8(assets_oswald_regular[i]);
-	wrend();
-
 	wrstart(RAM_DL);
 	wr32(BITMAP_HANDLE(0));
-	wr32(BITMAP_SOURCE(RAM_ASSETS_OSWALD_LARGE + 148));
-	wr32(BITMAP_LAYOUT(L4, 20, 56));
-	wr32(BITMAP_SIZE(NEAREST, BORDER, BORDER, 40, 56));
-	wr32(BITMAP_HANDLE(1));
-	wr32(BITMAP_SOURCE(RAM_ASSETS_OSWALD_MEDIUM + 148));
-	wr32(BITMAP_LAYOUT(L4, 12, 29));
-	wr32(BITMAP_SIZE(NEAREST, BORDER, BORDER, 24, 29));
-	wr32(BITMAP_HANDLE(2));
-	wr32(BITMAP_SOURCE(RAM_ASSETS_OSWALD_REGULAR + 148));
-	wr32(BITMAP_LAYOUT(L4, 8, 17));
-	wr32(BITMAP_SIZE(NEAREST, BORDER, BORDER, 16, 17));
+	wr32(BITMAP_SOURCE(RAM_SNAPSHOT_ADDR));
+	wr32(BITMAP_LAYOUT(ARGB4, 960, 272));
+	wr32(BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 272));
 	wrend();
 
 	wr32(REG_DLSWAP, DLSWAP_FRAME);
@@ -49,27 +24,6 @@ void setup()
 	int rp = rd32(REG_CMD_READ);
 	int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 	int freespace = ((4096 - 4) - fullness);
-
-	wrstart(RAM_CMD + (wp & 0xFFF));
-	wr32(CMD_SETFONT);
-	wr32(0);
-	wr32(RAM_ASSETS_OSWALD_LARGE);
-	wr32(CMD_SETFONT);
-	wr32(1);
-	wr32(RAM_ASSETS_OSWALD_MEDIUM);
-	wr32(CMD_SETFONT);
-	wr32(2);
-	wr32(RAM_ASSETS_OSWALD_REGULAR);
-	wr32(DISPLAY());
-	wr32(CMD_SWAP);
-	wrend();
-
-	wp += 44;
-	wr32(REG_CMD_WRITE, wp);
-	do
-	{
-		rp = rd32(REG_CMD_READ);
-	} while (wp != rp);
 
 	wrstart(RAM_CMD + (wp & 0xFFF));
 	wr32(CMD_DLSTART);
@@ -93,33 +47,28 @@ void setup()
 	wr32(COLOR_A(128));
 	wr32(CMD_TEXT);
 	wr16(242), wr16(70);
-	wr16(0), wr16(OPT_CENTERX);
-	wp += wrstr("\x01\x02\x0B\x03\n");
+	wr16(31), wr16(OPT_CENTERX);
+	wp += wrstr("12:30");
 	wr32(CMD_TEXT);
 	wr16(241), wr16(121);
-	wr16(1), wr16(OPT_CENTERX);
+	wr16(26), wr16(OPT_CENTERX);
 	wp += wrstr("Tuesday, June 3rd");
 	wr32(COLOR_RGB(255, 255, 255));
 	wr32(COLOR_A(255));
 	wr32(CMD_TEXT);
 	wr16(240), wr16(60);
-	wr16(0), wr16(OPT_CENTERX);
-	wp += wrstr("\x01\x02\x0B\x03\n");
+	wr16(31), wr16(OPT_CENTERX);
+	wp += wrstr("12:30");
 	wr32(CMD_TEXT);
 	wr16(240), wr16(116);
-	wr16(1), wr16(OPT_CENTERX);
+	wr16(26), wr16(OPT_CENTERX);
 	wp += wrstr("Tuesday, June 3rd");
 	wr32(CMD_TEXT);
 	wr16(2), wr16(1);
-	wr16(2), wr16(0);
+	wr16(26), wr16(0);
 	wp += wrstr("12:30");
 	wr32(DISPLAY());
-	wr32(CMD_SWAP); 
-	// CMD_FGCOLOR(83, 136, 154)
-	// CMD_BGCOLOR(16, 28, 33)
-	// CMD_TOGGLE(199, 220, 80, 2, OPT_FLAT, 0, "Slide to unlock\xFF")
-	// CMD_TEXT(212, 191, 2, 0, "Slide to unlock")
-	// CMD_BUTTON(333, 211, 120, 36, 2, OPT_FLAT, "Slide to unlock")* /
+	wr32(CMD_SWAP);
 	wrend();
 
 	wp += 152;
@@ -130,14 +79,39 @@ void setup()
 	} while (wp != rp);
 
 	wr32(REG_PCLK, 5);
+
+	wrstart(RAM_CMD + (wp & 0xFFF));
+	wr32(CMD_SNAPSHOT);
+	wr32(RAM_SNAPSHOT_ADDR);
+	wrend();
+
+	wp += 8;
+	wr32(REG_CMD_WRITE, wp);
+	do
+	{
+		rp = rd32(REG_CMD_READ);
+	} while (wp != rp);
+
+	wrstart(RAM_CMD + (wp & 0xFFF));
+	wr32(CMD_DLSTART);
+	wr32(BEGIN(BITMAPS));
+	wr32(VERTEX2II(0, 0, 0, 0));
+	wr32(DISPLAY());
+	wr32(CMD_SWAP);
+	wrend();
+
+	wp += 20;
+	wr32(REG_CMD_WRITE, wp);
+	do
+	{
+		rp = rd32(REG_CMD_READ);
+	} while (wp != rp);
 }
 
 void loop()
 {
 	int wp = rd32(REG_CMD_WRITE);
 	int rp = rd32(REG_CMD_READ);
-
-	// ...
 
 	do
 	{
