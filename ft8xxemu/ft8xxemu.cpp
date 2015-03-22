@@ -30,7 +30,7 @@ uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
 void (*FT8XXEMU_cs)(int cs) = NULL;
 int (*FT8XXEMU_int)() = NULL;
 
-FT8XXEMU_API void FT8XXEMU_default(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode)
+FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode)
 {
 	if (versionApi != FT8XXEMU_VERSION_API)
 	{
