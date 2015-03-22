@@ -1,0 +1,13 @@
+
+FILE(GLOB SRCS *.cpp)
+FILE(GLOB HDRS *.h)
+
+ADD_LIBRARY(ftemutest
+  ${SRCS}
+  ${HDRS}
+)
+
+TARGET_LINK_LIBRARIES(ftemutest
+	ft8xxemu)
+
+ADD_SUBDIRECTORY(snapshot)

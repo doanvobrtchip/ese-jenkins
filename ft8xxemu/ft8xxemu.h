@@ -50,7 +50,7 @@ typedef enum
 	FT8XXEMU_EmulatorEnableDebugShortkeys = 0x10,
 	// enable graphics processor multithreading (default: on)
 	FT8XXEMU_EmulatorEnableGraphicsMultithread = 0x20,
-	// enable dynamic graphics quality degrading by interlacing (default: on)
+	// enable dynamic graphics quality degrading by interlacing and dropping frames (default: on)
 	FT8XXEMU_EmulatorEnableDynamicDegrade = 0x40,
 	// enable usage of REG_ROTATE (default: off)
 	// FT8XXEMU_EmulatorEnableRegRotate = 0x80, // Now always on
