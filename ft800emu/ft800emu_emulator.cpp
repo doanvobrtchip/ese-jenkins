@@ -670,6 +670,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	FT8XXEMU::System.begin();
+	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
 	Memory.begin(mode, params.RomFilePath);
 	GraphicsProcessor.begin();
 	SPII2C.begin();

@@ -9,7 +9,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes
-#define FT8XXEMU_VERSION_API 3
+#define FT8XXEMU_VERSION_API 4
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -95,9 +95,9 @@ typedef enum
 typedef struct
 {
 	// Microcontroller function called before loop.
-	void (*Setup)();
+	void(*Setup)();
 	// Microcontroller continuous loop.
-	void (*Loop)();
+	void(*Loop)();
 	// See EmulatorFlags.
 	int Flags;
 	// Emulator mode
@@ -106,7 +106,7 @@ typedef struct
 	// Called after keyboard update.
 	// Supplied function can use Keyboard.isKeyDown(FT8XXEMU_KEY_F3)
 	// or FT8XXEMU_isKeyDown(FT8XXEMU_KEY_F3) functions.
-	void (*Keyboard)();
+	void(*Keyboard)();
 	// The default mouse pressure, default 0 (maximum).
 	// See REG_TOUCH_RZTRESH, etc.
 	uint32_t MousePressure;
@@ -116,6 +116,9 @@ typedef struct
 	// Reduce graphics processor threads by specified number, default 0
 	// Necessary when doing very heavy work on the MCU or Coprocessor
 	uint32_t ReduceGraphicsThreads;
+
+	// Sleep function for MCU thread usage throttle. Defaults to generic system sleep
+	void(*MCUSleep)(int ms);
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
@@ -136,16 +139,16 @@ typedef struct
 	// The contents of the buffer pointer are undefined after this
 	// function returns.
 	// Return false (0) when the application must exit, otherwise return true (1).
-	int (*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags);
+	int(*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags);
 
 	// Interrupt handler
 	// void (*Interrupt)();
 
 	// Exception callback
-	void (*Exception)(const char *message);
+	void(*Exception)(const char *message);
 
 	// Safe exit
-	void (*Close)();
+	void(*Close)();
 
 } FT8XXEMU_EmulatorParameters;
 

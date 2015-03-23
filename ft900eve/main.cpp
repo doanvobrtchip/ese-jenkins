@@ -10,7 +10,6 @@
 
 // FT8XXEMU includes
 #include <ft8xxemu.h>
-#include <ft8xxemu_system.h>
 
 // FT900EMU includes
 #include <ft900emu_ft32.h>
@@ -96,8 +95,6 @@ void setup()
 	s_EmulatorExit = new FT32SimulatorExit(ft32);
 	s_FT900EMUSystem->setSPISlave(0, &s_FT800SPISlave);
 
-	FT8XXEMU::System.overrideMCUDelay(mcuSleep);
-
 	// Load image
 	FILE *f = fopen(s_InFile, "rb");
 	if (f == NULL)
@@ -152,6 +149,7 @@ int main(int argc, char *argv[])
 
 	FT8XXEMU_EmulatorParameters params;
 	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT801);
+	params.MCUSleep = mcuSleep;
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Close = close;
