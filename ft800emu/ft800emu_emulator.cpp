@@ -274,7 +274,7 @@ namespace {
 						bool mirrorVertical = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
 						if (renderLineSnapshot)
 						{
-							if ((ram[REG_SNAPSHOT] & 1) && ram[REG_BUSYBITS])
+							if ((ram[REG_SNAPSHOT] & 1) && ram[REG_BUSYBITS]) // TODO_BUSYBITS
 							{
 								Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
 								// Render single line
@@ -287,13 +287,36 @@ namespace {
 #endif
 									reg_hsize, snapy + 1, snapy);
 								uint32_t ya = (reg_hsize * snapy);
+								uint32_t wa = RAM_COMPOSITE;
 								for (uint32_t x = 0; x < reg_hsize; ++x)
 								{
-									Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
-									// ram[RAM_COMPOSITE + (x * 4)] = 0xFF;
-									// ram[RAM_COMPOSITE + (x * 4) + 1] = 0xFF;
+#ifdef FT810EMU_MODE
+									switch (ram[REG_SNAPFORMAT])
+									{
+									case ARGB4:
+									{
+#endif
+										argb8888 c0 = buffer[ya + x]; ++x;
+										argb8888 c1 = buffer[ya + x];
+										uint32_t r = ((c0 >> 4) & 0xF)
+											| (((c0 >> 12) & 0xF) << 4)
+											| (((c0 >> 20) & 0xF) << 8)
+											| (((c0 >> 28) & 0xF) << 12)
+											| (((c1 >> 4) & 0xF) << 16)
+											| (((c1 >> 12) & 0xF) << 20)
+											| (((c1 >> 20) & 0xF) << 24)
+											| (((c1 >> 28) & 0xF) << 28);
+										Memory.rawWriteU32(ram, wa, r);
+										wa += 4;
+#ifdef FT810EMU_MODE
+									}
+									default:
+										Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
+										break;
+									}
+#endif
 								}
-								Memory.rawWriteU32(ram, REG_BUSYBITS, 0);
+								Memory.rawWriteU32(ram, REG_BUSYBITS, 0); // TODO_BUSYBITS
 							}
 						}
 						else
