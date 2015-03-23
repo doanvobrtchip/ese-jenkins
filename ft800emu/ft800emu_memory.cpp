@@ -136,7 +136,7 @@ inline void transformTouchXY(int &x, int &y)
 		int64_t ytf = (transformD * xe) + (transformE * ye) + transformF;
 		x = (xtf >> 16);
 		y = (ytf >> 16);
-		printf("x: %i ,y: %i\n", x, y);
+		// printf("x: %i ,y: %i\n", x, y);
 	}
 
 	/*
