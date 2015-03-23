@@ -49,6 +49,10 @@ public:
 	static void delay(int ms);
 	static void delayMicros(int us);
 
+	static void renderSleep(int ms);
+	static void renderWake();
+	static bool renderWoke();
+
 	static unsigned int getCPUCount();
 
 	static void disableAutomaticPriorityBoost();

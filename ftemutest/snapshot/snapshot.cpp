@@ -5,6 +5,7 @@
 
 #include <vc2.h>
 #include "../ftemutest.h"
+#include <stdio.h>
 
 #define RAM_SNAPSHOT_ADDR 0
 
@@ -48,25 +49,25 @@ void setup()
 	wr32(CMD_TEXT);
 	wr16(242), wr16(70);
 	wr16(31), wr16(OPT_CENTERX);
-	wp += wrstr("12:30");
+	wp += wrstr("Success");
 	wr32(CMD_TEXT);
 	wr16(241), wr16(121);
 	wr16(26), wr16(OPT_CENTERX);
-	wp += wrstr("Tuesday, June 3rd");
+	wp += wrstr("Test Snapshot");
 	wr32(COLOR_RGB(255, 255, 255));
 	wr32(COLOR_A(255));
 	wr32(CMD_TEXT);
 	wr16(240), wr16(60);
 	wr16(31), wr16(OPT_CENTERX);
-	wp += wrstr("12:30");
+	wp += wrstr("Success");
 	wr32(CMD_TEXT);
 	wr16(240), wr16(116);
 	wr16(26), wr16(OPT_CENTERX);
-	wp += wrstr("Tuesday, June 3rd");
+	wp += wrstr("Test Snapshot");
 	wr32(CMD_TEXT);
 	wr16(2), wr16(1);
 	wr16(26), wr16(0);
-	wp += wrstr("12:30");
+	wp += wrstr("FTDI");
 	wr32(DISPLAY());
 	wr32(CMD_SWAP);
 	wrend();
@@ -80,6 +81,8 @@ void setup()
 
 	wr32(REG_PCLK, 5);
 
+	printf("Begin snapshot ->\n");
+
 	wrstart(RAM_CMD + (wp & 0xFFF));
 	wr32(CMD_SNAPSHOT);
 	wr32(RAM_SNAPSHOT_ADDR);
@@ -91,6 +94,8 @@ void setup()
 	{
 		rp = rd32(REG_CMD_READ);
 	} while (wp != rp);
+
+	printf("<- End snapshot\n");
 
 	wrstart(RAM_CMD + (wp & 0xFFF));
 	wr32(CMD_DLSTART);

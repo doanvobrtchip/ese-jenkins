@@ -122,7 +122,7 @@ void FT32IO::ioWr8(uint32_t io_a, uint8_t io_dout)
 ////////////////////////////////////////////////////////////////////////
 
 FT32::FT32(IRQ *irq) : m_IRQ(irq),
-	m_IONb(0)
+m_IONb(0), m_WantWake(false), m_IsSleeping(false)
 {
 	m_SleepCond = SDL_CreateCond();
 	m_SleepLock = SDL_CreateMutex();

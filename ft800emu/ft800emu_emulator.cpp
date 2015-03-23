@@ -214,6 +214,7 @@ namespace {
 
 			FT8XXEMU::System.enterSwapDL();
 
+			bool renderLineSnapshot = (ram[REG_RENDERMODE] & 1) != 0;
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
 			double deltaSeconds;
 			// Calculate the display frequency
@@ -230,7 +231,10 @@ namespace {
 			else deltaSeconds = 1.0;
 
 			FT8XXEMU::System.update();
-			targetSeconds += deltaSeconds;
+			if (renderLineSnapshot && FT8XXEMU::System.renderWoke())
+				targetSeconds = FT8XXEMU::System.getSeconds() + deltaSeconds;
+			else
+				targetSeconds += deltaSeconds;
 
 			Memory.setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
 
@@ -238,6 +242,7 @@ namespace {
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
 			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 			if (!s_Graphics) FT8XXEMU::GraphicsDriver.setMode(reg_hsize, reg_vsize);
+
 
 			bool renderProcessed = false;
 			bool hasChanged;
@@ -254,7 +259,7 @@ namespace {
 				s_LastWriteOpCount = woc;
 
 				unsigned long procStart = FT8XXEMU::System.getMicros();
-				if (reg_pclk)
+				if (reg_pclk || renderLineSnapshot)
 				{
 					if (hasChanges || !s_FrameFullyDrawn)
 					{
@@ -267,41 +272,68 @@ namespace {
 						}
 						bool mirrorHorizontal = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
 						bool mirrorVertical = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
-						if (s_SkipOn)
+						if (renderLineSnapshot)
 						{
-							++s_SkipStage;
-							s_SkipStage %= 2;
-						}
-						if (s_SkipOn && s_SkipStage)
-						{
-							GraphicsProcessor.processBlank();
-							s_ChangesSkipped = hasChanges;
-						}
-						else if (s_DegradeOn)
-						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+							if ((ram[REG_SNAPSHOT] & 1) && ram[REG_BUSYBITS])
+							{
+								Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
+								// Render single line
+								uint32_t snapy = mirrorVertical ? (ram[REG_VSIZE] - ram[REG_SNAPY]) : (ram[REG_SNAPY]);
+								argb8888 *buffer = s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
+								GraphicsProcessor.process(buffer,
+									false, mirrorHorizontal,
 #ifdef FT810EMU_MODE
-								FT800EMU_REG_ROTATE_SWAP_XY(ram), 
+									FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, reg_vsize, s_DegradeStage, 2);
-							++s_DegradeStage;
-							s_DegradeStage %= 2;
-							s_ChangesSkipped = false;
-							s_FrameFullyDrawn = !hasChanges;
-							renderProcessed = true;
+									reg_hsize, snapy + 1, snapy);
+								uint32_t ya = (reg_hsize * snapy);
+								for (uint32_t x = 0; x < reg_hsize; ++x)
+								{
+									Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
+									// ram[RAM_COMPOSITE + (x * 4)] = 0xFF;
+									// ram[RAM_COMPOSITE + (x * 4) + 1] = 0xFF;
+								}
+								Memory.rawWriteU32(ram, REG_BUSYBITS, 0);
+							}
 						}
 						else
 						{
-							GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+							if (s_SkipOn)
+							{
+								++s_SkipStage;
+								s_SkipStage %= 2;
+							}
+							if (s_SkipOn && s_SkipStage)
+							{
+								GraphicsProcessor.processBlank();
+								s_ChangesSkipped = hasChanges;
+							}
+							else if (s_DegradeOn)
+							{
+								GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
+									s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
 #ifdef FT810EMU_MODE
-								FT800EMU_REG_ROTATE_SWAP_XY(ram), 
+									FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, reg_vsize);
-							s_ChangesSkipped = false;
-							s_FrameFullyDrawn = true;
-							renderProcessed = true;
+									reg_hsize, reg_vsize, s_DegradeStage, 2);
+								++s_DegradeStage;
+								s_DegradeStage %= 2;
+								s_ChangesSkipped = false;
+								s_FrameFullyDrawn = !hasChanges;
+								renderProcessed = true;
+							}
+							else
+							{
+								GraphicsProcessor.process(s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
+									s_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+#ifdef FT810EMU_MODE
+									FT800EMU_REG_ROTATE_SWAP_XY(ram),
+#endif
+									reg_hsize, reg_vsize);
+								s_ChangesSkipped = false;
+								s_FrameFullyDrawn = true;
+								renderProcessed = true;
+							}
 						}
 					}
 					else
@@ -315,47 +347,50 @@ namespace {
 					s_DegradeOn = false;
 				}
 				unsigned long procDelta = FT8XXEMU::System.getMicros() - procStart;
-				if (s_SkipOn)
+				if (!renderLineSnapshot)
 				{
-					if (!s_SkipStage)
+					if (s_SkipOn)
 					{
-						unsigned long procLowLimit = (unsigned long)(deltaSeconds * 500000.0); // Under 50% of allowed time, turn off frameskip
-						if (procDelta < procLowLimit)
+						if (!s_SkipStage)
 						{
-							s_SkipOn = false;
-							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-							if (FT800EMU_DEBUG) printf("Frame skip switched OFF\n");
+							unsigned long procLowLimit = (unsigned long)(deltaSeconds * 500000.0); // Under 50% of allowed time, turn off frameskip
+							if (procDelta < procLowLimit)
+							{
+								s_SkipOn = false;
+								if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+								if (FT800EMU_DEBUG) printf("Frame skip switched OFF\n");
+							}
 						}
 					}
-				}
-				else if (s_DegradeOn)
-				{
-					// Note: procLowLimit must be much less than half of procHighLimit, as the render time is halved when dynamic degrade kicks in
-					unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
-					unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to frameskip
-					if (procDelta < procLowLimit)
+					else if (s_DegradeOn)
 					{
-						s_DegradeOn = false;
-						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						if (FT800EMU_DEBUG) printf("Dynamic degrade switched OFF\n");
-					}
-					else if (procDelta > procHighLimit)
-					{
-						s_SkipOn = true;
-						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						if (FT800EMU_DEBUG) printf("Frame skip switched ON\n");
-					}
-				}
-				else
-				{
-					unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to degrade
-					if (procDelta > procHighLimit)
-					{
-						if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						if (s_DynamicDegrade)
+						// Note: procLowLimit must be much less than half of procHighLimit, as the render time is halved when dynamic degrade kicks in
+						unsigned long procLowLimit = (unsigned long)(deltaSeconds * 250000.0); // Under 25% of allowed time, turn off degrade
+						unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to frameskip
+						if (procDelta < procLowLimit)
 						{
-							s_DegradeOn = true;
-							if (FT800EMU_DEBUG) printf("Dynamic degrade switched ON\n");
+							s_DegradeOn = false;
+							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) printf("Dynamic degrade switched OFF\n");
+						}
+						else if (procDelta > procHighLimit)
+						{
+							s_SkipOn = true;
+							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) printf("Frame skip switched ON\n");
+						}
+					}
+					else
+					{
+						unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to degrade
+						if (procDelta > procHighLimit)
+						{
+							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (s_DynamicDegrade)
+							{
+								s_DegradeOn = true;
+								if (FT800EMU_DEBUG) printf("Dynamic degrade switched ON\n");
+							}
 						}
 					}
 				}
@@ -373,6 +408,7 @@ namespace {
 			FT8XXEMU::System.leaveSwapDL();
 
 			// Flip buffer and also give a slice of time to the mcu main thread
+			if (!renderLineSnapshot)
 			{
 				// VBlank=1
 				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
@@ -460,7 +496,7 @@ namespace {
 					//printf("skip freeze\n");
 					targetSeconds = FT8XXEMU::System.getSeconds();
 				}
-				if (secondsToWait > 0.25)
+				else if (secondsToWait > 0.25)
 				{
 					printf("Possible problem with REG_FREQUENCY value %u\n", Memory.rawReadU32(ram, REG_FREQUENCY));
 					targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
@@ -471,7 +507,7 @@ namespace {
 
 				if (secondsToWait > 0.0)
 				{
-					FT8XXEMU::System.delay((int)(secondsToWait * 1000.0));
+					FT8XXEMU::System.renderSleep((int)(secondsToWait * 1000.0));
 				}
 			}
 			else
@@ -479,7 +515,7 @@ namespace {
 				// REG_PCLK is 0
 #if FT800EMU_REG_PCLK_ZERO_REDUCE
 				targetSeconds = FT8XXEMU::System.getSeconds() + 0.02;
-				FT8XXEMU::System.delay(20);
+				FT8XXEMU::System.renderSleep(20);
 #else
 				targetSeconds = FT8XXEMU::System.getSeconds();
 				FT8XXEMU::System.switchThread();

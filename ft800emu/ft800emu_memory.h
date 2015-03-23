@@ -126,8 +126,9 @@ private:
 	static FT8XXEMU_FORCE_INLINE uint8_t rawReadU8(size_t address);
 
 	template<typename T>
-    static FT8XXEMU_FORCE_INLINE void actionWrite(const size_t address, T &data);
-    static FT8XXEMU_FORCE_INLINE void postWrite(const size_t address);
+	static FT8XXEMU_FORCE_INLINE void actionWrite(const size_t address, T &data);
+	template<typename T>
+    static FT8XXEMU_FORCE_INLINE void postWrite(const size_t address, T data);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);

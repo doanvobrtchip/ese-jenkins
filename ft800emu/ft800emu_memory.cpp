@@ -414,6 +414,12 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 				s_CpuReset = true;
 			}
 			break;
+		case REG_SNAPSHOT:
+			if (data & 1)
+			{
+				rawWriteU32(REG_BUSYBITS, 0xFFFFFFFF); // ?
+			}
+			break;
 #ifdef FT810EMU_MODE
 		case REG_CMD_READ:
 			data &= 0xFFF;
@@ -432,7 +438,8 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 	}
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
+template<typename T>
+FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address, const T data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -455,6 +462,12 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address)
 					rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
 				}
 				resetTouchScreenXY();
+			}
+			break;
+		case REG_SNAPSHOT:
+			if (data & 1)
+			{
+				FT8XXEMU::System.renderWake();
 			}
 			break;
 		}
@@ -682,7 +695,7 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 		break;
 	}
 
-	postWrite(address);
+	postWrite(address, data);
 }
 
 /* void MemoryClass::mcuWrite(size_t address, uint8_t data)
@@ -857,6 +870,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
     actionWrite(address, data);
 	rawWriteU32(address, data);
+	postWrite(address, data);
 
 	switch (address)
 	{
@@ -872,6 +886,11 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 	// printf("Coprocessor read U32 %i\n", (int)address);
+
+	/*if (address >= RAM_COMPOSITE)
+	{
+		printf("Coprocessor read U32 %u %u\n", (unsigned int)address, (unsigned int)rawReadU32(address));
+	}*/
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
@@ -947,6 +966,8 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 {
+	// printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
+
 	++s_WriteOpCount;
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
@@ -957,11 +978,12 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 
     actionWrite(address, data);
 	rawWriteU16(address, data);
+	postWrite(address, data);
 }
 
 uint16_t MemoryClass::coprocessorReadU16(size_t address)
 {
-	// printf("Coprocessor read U16 %i\n", address);
+	// printf("Coprocessor read U16 %i\n", (int)address);
 
 	if (address % 4 == 0)
 	{
@@ -983,6 +1005,8 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 
 void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 {
+	// printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
+
 	++s_WriteOpCount;
 
 	if (address >= FT800EMU_RAM_SIZE)
@@ -1000,11 +1024,12 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 
     actionWrite(address, data);
 	rawWriteU8(address, data);
+	postWrite(address, data);
 }
 
 uint8_t MemoryClass::coprocessorReadU8(size_t address)
 {
-	// printf("Coprocessor read U8 %i\n", address);
+	// printf("Coprocessor read U8 %i\n", (int)address);
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{

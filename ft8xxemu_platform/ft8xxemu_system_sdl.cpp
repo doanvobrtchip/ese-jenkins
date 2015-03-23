@@ -21,17 +21,38 @@
 #include <SDL_thread.h>
 
 // Project includes
+#include "sleep_wake.h"
 
 using namespace std;
 
 namespace FT8XXEMU {
 
 SystemSdlClass SystemSdl;
+static SleepWake s_RenderSleepWake;
+static bool s_RenderWoke = false;
 
 void SystemSdlClass::ErrorSdl()
 {
 	printf("ErrorSdl: %s", SDL_GetError());
 	exit(1);
+}
+
+void SystemClass::renderSleep(int ms)
+{
+	s_RenderSleepWake.sleep(ms);
+}
+
+void SystemClass::renderWake()
+{
+	s_RenderWoke = true;
+	s_RenderSleepWake.wake();
+}
+
+bool SystemClass::renderWoke()
+{
+	bool res = s_RenderWoke;
+	s_RenderWoke = false;
+	return res;
 }
 
 } /* namespace FT8XXEMU */
