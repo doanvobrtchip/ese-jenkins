@@ -278,7 +278,8 @@ namespace {
 							{
 								Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
 								// Render single line
-								uint32_t snapy = mirrorVertical ? (ram[REG_VSIZE] - ram[REG_SNAPY]) : (ram[REG_SNAPY]);
+								uint32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
+								// printf("SNAPY: %u\n", snapy);
 								argb8888 *buffer = s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
 								GraphicsProcessor.process(buffer,
 									false, mirrorHorizontal,
@@ -295,23 +296,23 @@ namespace {
 									{
 									case ARGB4:
 									{
-#endif
 										argb8888 c0 = buffer[ya + x]; ++x;
 										argb8888 c1 = buffer[ya + x];
 										uint32_t r = ((c0 >> 4) & 0xF)
 											| (((c0 >> 12) & 0xF) << 4)
 											| (((c0 >> 20) & 0xF) << 8)
-											| (((c0 >> 28) & 0xF) << 12)
+											| ((/*(c0 >> 28) &*/ 0xF) << 12)
 											| (((c1 >> 4) & 0xF) << 16)
 											| (((c1 >> 12) & 0xF) << 20)
 											| (((c1 >> 20) & 0xF) << 24)
-											| (((c1 >> 28) & 0xF) << 28);
+											| ((/*(c1 >> 28) &*/ 0xF) << 28);
 										Memory.rawWriteU32(ram, wa, r);
 										wa += 4;
-#ifdef FT810EMU_MODE
 									}
 									default:
+#endif
 										Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
+#ifdef FT810EMU_MODE
 										break;
 									}
 #endif
