@@ -11,3 +11,4 @@ TARGET_LINK_LIBRARIES(ftemutest
 	ft8xxemu)
 
 ADD_SUBDIRECTORY(snapshot)
+ADD_SUBDIRECTORY(touchtfr)

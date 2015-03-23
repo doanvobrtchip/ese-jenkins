@@ -703,6 +703,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	s_DynamicDegrade = (params.Flags & FT8XXEMU_EmulatorEnableDynamicDegrade) == FT8XXEMU_EmulatorEnableDynamicDegrade;
 	// s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
+	Memory.enableTouchMatrix((params.Flags & FT8XXEMU_EmulatorEnableTouchTransformation) == FT8XXEMU_EmulatorEnableTouchTransformation);
 
 	s_MasterRunning = true;
 

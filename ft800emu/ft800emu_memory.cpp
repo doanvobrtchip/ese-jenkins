@@ -80,6 +80,7 @@ static bool s_TouchScreenJitter = true;
 static bool s_CpuReset = false;
 
 static FT8XXEMU_EmulatorMode s_EmulatorMode;
+static bool s_EnableTouchMatrix = false;
 
 //static void (*s_Interrupt)());
 
@@ -121,12 +122,31 @@ inline void transformTouchXY(int &x, int &y)
 {
 	uint8_t *ram = Memory.getRam();
 	// Transform (currently just depending on REG_ROTATE, ignoring TRANSFORM)
+	if (s_EnableTouchMatrix) // s15.16 matrix
+	{
+		const int64_t xe = x;
+		const int64_t ye = y;
+		const int64_t transformA = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_A / sizeof(uint32_t)]);
+		const int64_t transformB = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_B / sizeof(uint32_t)]);
+		const int64_t transformC = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_C / sizeof(uint32_t)]);
+		const int64_t transformD = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_D / sizeof(uint32_t)]);
+		const int64_t transformE = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_E / sizeof(uint32_t)]);
+		const int64_t transformF = reinterpret_cast<const int32_t &>(s_RamU32[REG_TOUCH_TRANSFORM_F / sizeof(uint32_t)]);
+		int64_t xtf = (transformA * xe) + (transformB * ye) + transformC;
+		int64_t ytf = (transformD * xe) + (transformE * ye) + transformF;
+		x = (xtf >> 16);
+		y = (ytf >> 16);
+		printf("x: %i ,y: %i\n", x, y);
+	}
+
+	/*
 	if (Memory.rawReadU32(ram, REG_ROTATE) & 0x01)
 	{
 		// printf("rotated\n");
 		x = Memory.rawReadU32(ram, REG_HSIZE) - x - 1;
 		y = Memory.rawReadU32(ram, REG_VSIZE) - y - 1;
 	}
+	*/
 }
 
 inline void getTouchScreenXY(long micros, int &x, int &y, bool jitter)
@@ -332,6 +352,11 @@ bool MemoryClass::coprocessorGetReset()
 	bool result = s_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
 	s_CpuReset = false;
 	return result;
+}
+
+void MemoryClass::enableTouchMatrix(bool enabled)
+{
+	s_EnableTouchMatrix = enabled;
 }
 
 template<typename T>
@@ -599,12 +624,12 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_VOL_SOUND, 0xFF);
 	rawWriteU32(REG_SOUND, 0);
 
-	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000); // Not used by emulator
-	rawWriteU32(REG_TOUCH_TRANSFORM_B, 0x00); // Not used by emulator
-	rawWriteU32(REG_TOUCH_TRANSFORM_C, 0x00); // Not used by emulator
-	rawWriteU32(REG_TOUCH_TRANSFORM_D, 0x00); // Not used by emulator
-	rawWriteU32(REG_TOUCH_TRANSFORM_E, 0x10000); // Not used by emulator
-	rawWriteU32(REG_TOUCH_TRANSFORM_F, 0x00); // Not used by emulator
+	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000);
+	rawWriteU32(REG_TOUCH_TRANSFORM_B, 0x00);
+	rawWriteU32(REG_TOUCH_TRANSFORM_C, 0x00);
+	rawWriteU32(REG_TOUCH_TRANSFORM_D, 0x00);
+	rawWriteU32(REG_TOUCH_TRANSFORM_E, 0x10000);
+	rawWriteU32(REG_TOUCH_TRANSFORM_F, 0x00);
 	rawWriteU32(REG_TOUCH_TAG, 0);
 	rawWriteU32(REG_TOUCH_TAG_XY, 0);
 

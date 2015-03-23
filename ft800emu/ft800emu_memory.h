@@ -65,6 +65,7 @@ public:
 	static const uint32_t *getDisplayList();
 
 	static bool multiTouch();
+	static void enableTouchMatrix(bool enabled = true);
 
 	//static void setInterrupt(void (*interrupt)());
 	static bool intnLow();
