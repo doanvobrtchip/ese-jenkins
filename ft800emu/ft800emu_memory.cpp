@@ -37,6 +37,8 @@
 #endif
 #define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE) //(RAM_DL - FT800EMU_ROM_SIZE)
 
+#define FT800EMU_COPROCESSOR_MEMLOG 0
+
 namespace FT800EMU {
 
 MemoryClass Memory;
@@ -876,7 +878,9 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 {
-	// printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
+#if FT800EMU_COPROCESSOR_MEMLOG
+	printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
+#endif
 
 	++s_WriteOpCount;
 
@@ -910,7 +914,16 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
-	// printf("Coprocessor read U32 %i\n", (int)address);
+#if FT800EMU_COPROCESSOR_MEMLOG
+	printf("Coprocessor read U32 %i\n", (int)address);
+#endif
+
+#ifdef FT810EMU_MODE
+	if (address == REG_RASTERY)
+	{
+		printf("REG_RASTERY\n");
+	}
+#endif
 
 	/*if (address >= RAM_COMPOSITE)
 	{
@@ -991,7 +1004,9 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 
 void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 {
-	// printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
+#if FT800EMU_COPROCESSOR_MEMLOG
+	printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
+#endif
 
 	++s_WriteOpCount;
 
@@ -1030,7 +1045,9 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 
 void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 {
-	// printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
+#if FT800EMU_COPROCESSOR_MEMLOG
+	printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
+#endif
 
 	++s_WriteOpCount;
 
@@ -1054,7 +1071,9 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 
 uint8_t MemoryClass::coprocessorReadU8(size_t address)
 {
-	// printf("Coprocessor read U8 %i\n", (int)address);
+#if FT800EMU_COPROCESSOR_MEMLOG
+	printf("Coprocessor read U8 %i\n", (int)address);
+#endif
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{

@@ -85,7 +85,9 @@ const uint8_t bayer8x8[8][8] = {
 	11, 59, 7, 55, 10, 58, 6, 54, 
 	43, 27, 39, 23, 42, 26, 38, 22, 
 };
-#define DITHERDIV16(val, x, y) min(15, (SAFESUB((((val) * 65) + (bayer8x8[(x) % 4][(y) % 4] * 16)), /*16 * 16*/ 0) / (65 * 16)))
+#define DITHERDIV16(val, x, y) min(15, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 16)) / (65 * 16)))
+#define DITHERDIV8(val, x, y) min(31, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 8)) / (65 * 8)))
+#define DITHERDIV4(val, x, y) min(63, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 4)) / (65 * 4)))
 
 	void debugShortkeys()
 	{
@@ -332,14 +334,37 @@ const uint8_t bayer8x8[8][8] = {
 										uint32_t r = (DITHERDIV16(c0 & 0xFF, x - 1, snapy))
 											| (DITHERDIV16((c0 >> 8) & 0xFF, x - 1, snapy) << 4)
 											| (DITHERDIV16((c0 >> 16 & 0xFF), x - 1, snapy) << 8)
-											| ((/*(c0 >> 28) &*/ 0xF) << 12)
+											| (/*DITHERDIV16((c0 >> 24 & 0xFF), x - 1, snapy)*/ 0xF << 12)
 											| (DITHERDIV16(c1 & 0xFF, x, snapy) << 16)
 											| (DITHERDIV16((c1 >> 8) & 0xFF, x, snapy) << 20)
 											| (DITHERDIV16((c1 >> 16) & 0xFF, x, snapy) << 24)
-											| ((/*(c1 >> 28) &*/ 0xF) << 28);
+											| (/*DITHERDIV16((c1 >> 24 & 0xFF), x - 1, snapy)*/ 0xF << 28);
 										Memory.rawWriteU32(ram, wa, r);
 										wa += 4;
+										break;
 									}
+									/*case ARGB1555:
+									{
+										argb8888 c = buffer[ya + x];
+										uint16_t r = (DITHERDIV8(c & 0xFF, x, snapy))
+											| (DITHERDIV8((c >> 8) & 0xFF, x, snapy) << 5)
+											| (DITHERDIV8((c >> 16) & 0xFF, x, snapy) << 10)
+											| (0x1 << 15);
+										Memory.rawWriteU16(ram, wa, r);
+										wa += 2;
+										break;
+									}*/
+									case RGB565:
+									{
+										argb8888 c = buffer[ya + x];
+										uint16_t r = (DITHERDIV8(c & 0xFF, x, snapy))
+											| (DITHERDIV4((c >> 8) & 0xFF, x, snapy) << 5)
+											| (DITHERDIV8((c >> 16) & 0xFF, x, snapy) << 11);
+										Memory.rawWriteU16(ram, wa, r);
+										wa += 2;
+										break;
+									}
+									case 0x20:
 									default:
 #endif
 										Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);

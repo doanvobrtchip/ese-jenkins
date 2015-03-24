@@ -86,9 +86,16 @@ void setup()
 	wrstart(RAM_CMD + (wp & 0xFFF));
 	wr32(CMD_SNAPSHOT);
 	wr32(RAM_SNAPSHOT_ADDR);
+	/*wr32(CMD_SNAPSHOT2);
+	wr32(RGB565);
+	wr32(RAM_SNAPSHOT_ADDR);
+	wr16(0); wr16(0);
+	wr16(480); wr16(272);*/
 	wrend();
 
 	wp += 8;
+	//wp += 24;
+	wp &= 0xFFF;
 	wr32(REG_CMD_WRITE, wp);
 	do
 	{
