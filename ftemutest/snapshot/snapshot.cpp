@@ -14,7 +14,7 @@ void setup()
 	wrstart(RAM_DL);
 	wr32(BITMAP_HANDLE(0));
 	wr32(BITMAP_SOURCE(RAM_SNAPSHOT_ADDR));
-	wr32(BITMAP_LAYOUT(ARGB4, 960, 272));
+	wr32(BITMAP_LAYOUT(RGB565, 960, 272));
 	wr32(BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 272));
 	wrend();
 
@@ -84,17 +84,17 @@ void setup()
 	printf("Begin snapshot ->\n");
 
 	wrstart(RAM_CMD + (wp & 0xFFF));
-	wr32(CMD_SNAPSHOT);
-	wr32(RAM_SNAPSHOT_ADDR);
-	/*wr32(CMD_SNAPSHOT2);
+	//wr32(CMD_SNAPSHOT);
+	//wr32(RAM_SNAPSHOT_ADDR);
+	wr32(CMD_SNAPSHOT2);
 	wr32(RGB565);
 	wr32(RAM_SNAPSHOT_ADDR);
 	wr16(0); wr16(0);
-	wr16(480); wr16(272);*/
+	wr16(480); wr16(272);
 	wrend();
 
-	wp += 8;
-	//wp += 24;
+	//wp += 8;
+	wp += 20;
 	wp &= 0xFFF;
 	wr32(REG_CMD_WRITE, wp);
 	do

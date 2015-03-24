@@ -912,17 +912,12 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 	}
 }
 
+static uint32_t s_OverrideRasterY = 0;
+
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	printf("Coprocessor read U32 %i\n", (int)address);
-#endif
-
-#ifdef FT810EMU_MODE
-	if (address == REG_RASTERY)
-	{
-		printf("REG_RASTERY\n");
-	}
 #endif
 
 	/*if (address >= RAM_COMPOSITE)
@@ -997,6 +992,11 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 	{
 	case REG_TOUCH_SCREEN_XY:
 		return getTouchScreenXY();
+#ifdef FT810EMU_MODE
+	case REG_RASTERY:
+		++s_OverrideRasterY;
+		return ((s_OverrideRasterY & 1) << 11); // Override REG_RASTERY
+#endif
 	}
 
 	return rawReadU32(address);

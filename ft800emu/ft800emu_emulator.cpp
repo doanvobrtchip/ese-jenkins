@@ -243,7 +243,11 @@ const uint8_t bayer8x8[8][8] = {
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
 			double deltaSeconds;
 			// Calculate the display frequency
-			if (reg_pclk)
+			if (reg_pclk == 0xFF)
+			{
+				deltaSeconds = 0.0;
+			}
+			else if (reg_pclk)
 			{
 				uint32_t usefreq = s_ExternalFrequency ? s_ExternalFrequency : Memory.rawReadU32(ram, REG_FREQUENCY);
 				// if (!usefreq) usefreq = 48000000; // Possibility to avoid freeze in case of issues
@@ -253,10 +257,13 @@ const uint8_t bayer8x8[8][8] = {
 				frequency /= (double)Memory.rawReadU32(ram, REG_HCYCLE);
 				deltaSeconds = 1.0 / frequency;
 			}
-			else deltaSeconds = 1.0;
+			else
+			{
+				deltaSeconds = 1.0;
+			}
 
 			FT8XXEMU::System.update();
-			if (renderLineSnapshot && FT8XXEMU::System.renderWoke())
+			if ((renderLineSnapshot && FT8XXEMU::System.renderWoke()) || reg_pclk == 0xFF)
 				targetSeconds = FT8XXEMU::System.getSeconds() + deltaSeconds;
 			else
 				targetSeconds += deltaSeconds;
@@ -273,8 +280,11 @@ const uint8_t bayer8x8[8][8] = {
 			bool hasChanged;
 
 			// Render lines
+			// VBlank=0
+#ifdef FT810EMU_MODE
+			Memory.rawWriteU32(ram, REG_RASTERY, 0);
+#endif
 			{
-				// VBlank=0
 				FT8XXEMU::System.switchThread();
 
 				int lwoc = s_LastWriteOpCount;
@@ -488,9 +498,12 @@ const uint8_t bayer8x8[8][8] = {
 			FT8XXEMU::System.leaveSwapDL();
 
 			// Flip buffer and also give a slice of time to the mcu main thread
+			// VBlank=1
+#ifdef FT810EMU_MODE
+			Memory.rawWriteU32(ram, REG_RASTERY, 1 << 11);
+#endif
 			if (!renderLineSnapshot)
 			{
-				// VBlank=1
 				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				FT8XXEMU::System.prioritizeMCUThread();
 				//printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
@@ -563,7 +576,11 @@ const uint8_t bayer8x8[8][8] = {
 			}
 
 			FT8XXEMU::System.prioritizeCoprocessorThread();
-			if (reg_pclk)
+			if (reg_pclk == 0xFF)
+			{
+				FT8XXEMU::System.renderSleep(1);
+			}
+			else if (reg_pclk)
 			{
 				//long currentMillis = millis();
 				//long millisToWait = targetMillis - currentMillis;
@@ -578,7 +595,7 @@ const uint8_t bayer8x8[8][8] = {
 				}
 				else if (secondsToWait > 0.25)
 				{
-					printf("Possible problem with REG_FREQUENCY value %u\n", Memory.rawReadU32(ram, REG_FREQUENCY));
+					printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", Memory.rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
 					targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
 					secondsToWait = 0.25;
 				}
