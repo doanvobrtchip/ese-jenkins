@@ -27,20 +27,20 @@ void setup()
 	wr32(CLEAR(1, 1, 1));
 	wr32(MACRO(0));
 	wr32(MACRO(1));
-	wr32(NOP());
-	wr32(NOP());
-	wr32(NOP());
+	wr32(VERTEX_FORMAT(0));
 	wr32(COLOR_RGB(0, 0, 0));
 	wr32(COLOR_A(64));
 	wr32(BEGIN(RECTS));
-	wr32(VERTEX2II(0, 0, 0, 0));
-	wr32(VERTEX2II(511, 18, 0, 0));
+	wr32(VERTEX2F(0, 0));
+	wr32(VERTEX2F(511, 18));
 	wr32(COLOR_A(128));
-	wr32(VERTEX2II(0, 185, 0, 0));
-	wr32(VERTEX2II(511, 313, 0, 0));
+	wr32(VERTEX_FORMAT(2));
+	wr32(VERTEX2F(0 * 4, 185 * 4));
+	wr32(VERTEX2F(511 * 4, 313 * 4));
 	wr32(END());
 	wr32(COLOR_RGB(0, 0, 0));
 	wr32(COLOR_A(128));
+	wr32(VERTEX_FORMAT(4));
 	wr32(CMD_TEXT);
 	wr16(242), wr16(70);
 	wr16(31), wr16(OPT_CENTERX);
@@ -79,7 +79,7 @@ void setup()
 void loop()
 {
 	int frame = rd32(REG_FRAMES);
-	int offset = ((frame % (512 * 16)) - (256 * 16));
+	int offset = (((frame + (256 * 16)) % (512 * 16)) - (256 * 16));
 
 	wr32(REG_MACRO_0, VERTEX_TRANSLATE_X(offset));
 	wr32(REG_MACRO_1, VERTEX_TRANSLATE_Y(offset));
