@@ -64,6 +64,29 @@ namespace FT800EMU {
 EmulatorClass Emulator;
 
 namespace {
+
+// Dither for snapshot ARGB4444
+const uint8_t bayer4x4[4][4] = {
+	1, 9, 3, 11, 
+	13, 5, 15, 7, 
+	4, 12, 2, 10,
+	16, 8, 14, 6, 
+};
+#define SAFESUB(val, sub) ((val) <= (sub) ? 0 : (val) - (sub))
+//#define DITHERDIV16(val, x, y) min(15, (SAFESUB(((val) + dither4x4[(x) % 4][(y) % 4]), 7) >> 4))
+//#define DITHERDIV16(val, x, y) min(15, (SAFESUB((((val) * 17) + (bayer4x4[(x) % 4][(y) % 4] * 16)), 8 * 16) / (17 * 16)))
+const uint8_t bayer8x8[8][8] = {
+	1, 49, 13, 61, 4, 52, 16, 64, 
+	33, 17, 45, 29, 36, 20, 48, 32, 
+	9, 57, 5, 53, 12, 60, 8, 56, 
+	41, 25, 37, 21, 44, 28, 40, 24, 
+	3, 51, 15, 63, 2, 50, 14, 62, 
+	35, 19, 47, 31, 34, 18, 46, 30, 
+	11, 59, 7, 55, 10, 58, 6, 54, 
+	43, 27, 39, 23, 42, 26, 38, 22, 
+};
+#define DITHERDIV16(val, x, y) min(15, (SAFESUB((((val) * 65) + (bayer8x8[(x) % 4][(y) % 4] * 16)), /*16 * 16*/ 0) / (65 * 16)))
+
 	void debugShortkeys()
 	{
 		{
@@ -298,13 +321,21 @@ namespace {
 									{
 										argb8888 c0 = buffer[ya + x]; ++x;
 										argb8888 c1 = buffer[ya + x];
-										uint32_t r = ((c0 >> 4) & 0xF)
+										/*uint32_t r = ((c0 >> 4) & 0xF)
 											| (((c0 >> 12) & 0xF) << 4)
 											| (((c0 >> 20) & 0xF) << 8)
-											| ((/*(c0 >> 28) &*/ 0xF) << 12)
+											| ((/*(c0 >> 28) &* / 0xF) << 12)
 											| (((c1 >> 4) & 0xF) << 16)
 											| (((c1 >> 12) & 0xF) << 20)
 											| (((c1 >> 20) & 0xF) << 24)
+											| ((/*(c1 >> 28) &* / 0xF) << 28);*/
+										uint32_t r = (DITHERDIV16(c0 & 0xFF, x - 1, snapy))
+											| (DITHERDIV16((c0 >> 8) & 0xFF, x - 1, snapy) << 4)
+											| (DITHERDIV16((c0 >> 16 & 0xFF), x - 1, snapy) << 8)
+											| ((/*(c0 >> 28) &*/ 0xF) << 12)
+											| (DITHERDIV16(c1 & 0xFF, x, snapy) << 16)
+											| (DITHERDIV16((c1 >> 8) & 0xFF, x, snapy) << 20)
+											| (DITHERDIV16((c1 >> 16) & 0xFF, x, snapy) << 24)
 											| ((/*(c1 >> 28) &*/ 0xF) << 28);
 										Memory.rawWriteU32(ram, wa, r);
 										wa += 4;
