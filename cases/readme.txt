@@ -1,4 +1,12 @@
-Partial copy of FT900 cases for emulator test.
+---
+
+Misc files used for testing.
+
+---
+
+Contains a partial copy of FT900 cases for emulator test.
+
+---
 
 PATH=/opt/ft32/bin:$PATH
 
@@ -8,3 +16,4 @@ run
 
 backtrace
 
+---

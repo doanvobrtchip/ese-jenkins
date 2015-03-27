@@ -937,6 +937,7 @@ static uint32_t s_OverrideRasterY = 0;
 uint32_t MemoryClass::coprocessorReadU32(size_t address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
+	// if (address != 3182612 && address != 3182616)
 	printf("Coprocessor read U32 %i\n", (int)address);
 #endif
 

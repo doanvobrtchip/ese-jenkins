@@ -7,7 +7,7 @@
 #include "../ftemutest.h"
 #include <stdio.h>
 
-#define TEST_FILE "redglasses75.jpg"
+#define TEST_FILE "lenna256.jpg"
 static FILE *s_F = NULL;
 
 void setup()
