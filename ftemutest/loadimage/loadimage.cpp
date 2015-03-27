@@ -7,7 +7,7 @@
 #include "../ftemutest.h"
 #include <stdio.h>
 
-#define TEST_FILE "lenna256.jpg"
+#define TEST_FILE "redglasses75.jpg"
 static FILE *s_F = NULL;
 
 void setup()
@@ -50,7 +50,9 @@ void loop()
 				uint32_t buffer;
 				size_t nb = fread(&buffer, 1, 4, s_F);
 				if (nb > 0)
+				{
 					wr32(buffer);
+				}
 				if (nb != 4)
 				{
 					printf("Close file, nb = %i\n", (int)nb);
