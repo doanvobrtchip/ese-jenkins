@@ -54,6 +54,7 @@
 #include "ft8xxemu_graphics_driver.h"
 #include "ft8xxemu_minmax.h"
 #include "ft800emu_memory.h"
+#include "ft800emu_touch.h"
 #include "ft800emu_vc.h"
 
 // using namespace ...;
@@ -3215,7 +3216,7 @@ DisplayListDisplay:
 			}
 		}
 		// Check touch
-		if ((Memory.multiTouch())
+		if ((TouchClass::multiTouch())
 			? (Memory.rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
 			: (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{
@@ -3233,6 +3234,7 @@ DisplayListDisplay:
 				}
 			}
 		}
+		// TODO: MULTITOUCH 1,2,3,4
 		if (s_DebugMode)
 		{
 			switch (s_DebugMode)

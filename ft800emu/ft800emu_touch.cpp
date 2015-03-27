@@ -23,6 +23,10 @@
 namespace FT800EMU {
 
 TouchClass Touch[5];
+long TouchClass::s_TouchScreenFrameTime;
+bool TouchClass::s_TouchScreenJitter;
+bool TouchClass::s_EnableTouchMatrix;
+FT8XXEMU_EmulatorMode TouchClass::s_EmulatorMode;
 
 inline long TouchClass::jitteredTime(long micros)
 {
@@ -311,6 +315,12 @@ void TouchClass::resetXY()
 	Memory.poke();
 }
 
+// Get XY value interpolated etc
+uint32_t TouchClass::getXY()
+{
+	return getTouchScreenXY();
+}
+
 void TouchClass::enableTouchMatrix(bool enabled)
 {
 	s_EnableTouchMatrix = enabled;
@@ -362,6 +372,7 @@ void TouchClass::reset()
 	m_LastDeltas[6] = 1000;
 	m_LastDeltas[7] = 1000;
 	m_LastDeltaI = 0;
+	m_LastJitteredTime = FT8XXEMU::System.getMicros();
 	resetXY();
 }
 

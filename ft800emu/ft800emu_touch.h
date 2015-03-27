@@ -35,6 +35,8 @@ public:
 	void setXY(int x, int y, int pressure);
 	// Touch is not pressed
 	void resetXY();
+	// Get XY value interpolated etc
+	uint32_t getXY();
 	
 private:
 	inline long jitteredTime(long micros);

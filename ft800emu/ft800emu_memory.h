@@ -64,9 +64,6 @@ public:
 	static uint8_t *getRam();
 	static const uint32_t *getDisplayList();
 
-	static bool multiTouch();
-	static void enableTouchMatrix(bool enabled = true);
-
 	//static void setInterrupt(void (*interrupt)());
 	static bool intnLow();
 	static bool intnHigh();
@@ -97,13 +94,6 @@ public:
 
 	// Get nb of frames swapped without waiting for begin of frame render (when REG_PCLK == 0).
 	static int getDirectSwapCount();
-
-	// Set touch screen xy for interpolation in time when touch is pressed
-	static void setTouchScreenXY(int idx, int x, int y, int pressure);
-	// Touch is not pressed
-	static void resetTouchScreenXY(int idx);
-	// Internal call used for touch interpolation
-	static void setTouchScreenXYFrameTime(long micros);
 
 	// Tracking of coprocessor writes to display list
 	static int *getDisplayListCoprocessorWrites();

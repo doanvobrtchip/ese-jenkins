@@ -28,6 +28,7 @@
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
 #include <ft800emu_memory.h>
+#include <ft800emu_touch.h>
 #include <ft800emu_vc.h>
 
 // Project includes
@@ -297,11 +298,11 @@ void InteractiveViewport::graphics(QImage *image)
 
 	if (m_MouseTouch)
 	{
-		FT800EMU::Memory.setTouchScreenXY(0, m_MouseX, m_MouseY, 0);
+		FT800EMU::Touch[0].setXY(m_MouseX, m_MouseY, 0);
 	}
 	else
 	{
-		FT800EMU::Memory.resetTouchScreenXY(0);
+		FT800EMU::Touch[0].resetXY();
 	}
 
 	// Draw image overlays

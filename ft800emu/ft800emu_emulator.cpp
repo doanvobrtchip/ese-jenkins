@@ -29,6 +29,7 @@
 
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
+#include "ft800emu_touch.h"
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_coprocessor.h"
 
@@ -268,7 +269,7 @@ const uint8_t bayer8x8[8][8] = {
 			else
 				targetSeconds += deltaSeconds;
 
-			Memory.setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
+			TouchClass::setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
 
 			// Update display resolution
 			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
@@ -745,6 +746,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
 	Memory.begin(mode, params.RomFilePath);
+	TouchClass::begin(mode);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.begin();
@@ -777,7 +779,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	s_DynamicDegrade = (params.Flags & FT8XXEMU_EmulatorEnableDynamicDegrade) == FT8XXEMU_EmulatorEnableDynamicDegrade;
 	// s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
-	Memory.enableTouchMatrix((params.Flags & FT8XXEMU_EmulatorEnableTouchTransformation) == FT8XXEMU_EmulatorEnableTouchTransformation);
+	TouchClass::enableTouchMatrix((params.Flags & FT8XXEMU_EmulatorEnableTouchTransformation) == FT8XXEMU_EmulatorEnableTouchTransformation);
 
 	s_MasterRunning = true;
 
@@ -873,6 +875,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.end();
 	SPII2C.end();
 	GraphicsProcessor.end();
+	TouchClass::end();
 	Memory.end();
 	FT8XXEMU::System.end();
 
