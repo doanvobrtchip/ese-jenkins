@@ -225,7 +225,7 @@ inline uint32_t getTouchScreenXY()
 	return getTouchScreenXY(micros);
 }
 
-void MemoryClass::setTouchScreenXY(int x, int y, int pressure)
+void MemoryClass::setTouchScreenXY(int idx, int x, int y, int pressure)
 {
 	++s_WriteOpCount;
 
@@ -286,7 +286,7 @@ void MemoryClass::setTouchScreenXYFrameTime(long micros)
 	s_TouchScreenFrameTime = micros; // * 3 / 2;
 }
 
-void MemoryClass::resetTouchScreenXY()
+void MemoryClass::resetTouchScreenXY(int idx)
 {
 	s_TouchScreenSet = 0;
 	Memory.rawWriteU32(REG_TOUCH_TAG, 0);
@@ -497,7 +497,11 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address, const T 
 					rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
 					rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
 				}
-				resetTouchScreenXY();
+				resetTouchScreenXY(0);
+				resetTouchScreenXY(1);
+				resetTouchScreenXY(2);
+				resetTouchScreenXY(3);
+				resetTouchScreenXY(4);
 			}
 			break;
 		case REG_SNAPSHOT:

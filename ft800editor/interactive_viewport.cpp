@@ -297,11 +297,11 @@ void InteractiveViewport::graphics(QImage *image)
 
 	if (m_MouseTouch)
 	{
-		FT800EMU::Memory.setTouchScreenXY(m_MouseX, m_MouseY, 0);
+		FT800EMU::Memory.setTouchScreenXY(0, m_MouseX, m_MouseY, 0);
 	}
 	else
 	{
-		FT800EMU::Memory.resetTouchScreenXY();
+		FT800EMU::Memory.resetTouchScreenXY(0);
 	}
 
 	// Draw image overlays

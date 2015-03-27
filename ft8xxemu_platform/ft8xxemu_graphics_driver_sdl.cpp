@@ -28,8 +28,8 @@ namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
 
-void (*g_ResetTouchScreenXY)() = NULL;
-void (*g_SetTouchScreenXY)(int x, int y, int pressure) = NULL;
+void (*g_ResetTouchScreenXY)(int idx) = NULL;
+void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
 
 static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
 static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
@@ -137,11 +137,11 @@ bool GraphicsDriverClass::update()
 	s_MouseY = mouseY / FT8XXEMU_WINDOW_SCALE;
 	if (s_MouseDown)
 	{
-		g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
+		g_SetTouchScreenXY(0, s_MouseX, s_MouseY, s_MousePressure);
 	}
 	else
 	{
-		g_ResetTouchScreenXY();
+		g_ResetTouchScreenXY(0);
 	}
 
 	return true;

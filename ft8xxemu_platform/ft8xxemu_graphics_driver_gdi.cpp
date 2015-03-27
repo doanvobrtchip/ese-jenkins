@@ -33,8 +33,8 @@ namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
 
-void (*g_ResetTouchScreenXY)() = NULL;
-void (*g_SetTouchScreenXY)(int x, int y, int pressure) = NULL;
+void (*g_ResetTouchScreenXY)(int idx) = NULL;
+void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
 
 static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
 
@@ -97,12 +97,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			s_MouseY = (mouseY - y_r) * s_Height / height_r;
 			if (s_MouseDown && s_MouseX >= 0 && s_MouseX < s_Width && s_MouseY >= 0 && s_MouseY < s_Height)
 			{
-				g_SetTouchScreenXY(s_MouseX, s_MouseY, s_MousePressure);
+				g_SetTouchScreenXY(0, s_MouseX, s_MouseY, s_MousePressure);
 			}
 			else
 			{
 				s_MouseDown = false;
-				g_ResetTouchScreenXY();
+				g_ResetTouchScreenXY(0);
 			}
 		}
 		break;

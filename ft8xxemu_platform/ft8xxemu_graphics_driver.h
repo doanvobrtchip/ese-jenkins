@@ -83,8 +83,8 @@ private:
 
 extern GraphicsDriverClass GraphicsDriver;
 
-extern void (*g_ResetTouchScreenXY)();
-extern void (*g_SetTouchScreenXY)(int x, int y, int pressure);
+extern void(*g_ResetTouchScreenXY)(int idx);
+extern void(*g_SetTouchScreenXY)(int idx, int x, int y, int pressure);
 
 } /* namespace FT8XXEMU */
 
