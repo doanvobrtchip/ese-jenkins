@@ -243,14 +243,30 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 				// if (d & 0x01) printf("        :: FIFO on (TODO)\n");
 				// if (d & 0x02) printf("        :: Flush RHR (TODO)\n");
 				// if (d & 0x04) printf("        :: Flush THR (TODO)\n");
-				if (d & 0xF8)
+#if 0
+				if ((!(fcr & (1 << 7))) && (d & (1 << 5) != fcr & (1 << 5)))
 				{
-					// printf(F9EW "    :: FCR :: Unknown bits have been set %#x" F9EE, d & 0xF8);
+					// FROM UART MANUAL:
+					// "Please note, that write to FCR[5] is protected by FCR[7]."
+					// "To write FCR[5], first set the FCR[7] high, then write FCR[5], and clear FCR[7] back to activate protection"
+					d ^= (1 << 5);
+					printf(F9EW "    :: FCR :: write to FCR[5] is protected by FCR[7], change of FCR[5] is discarded" F9EE, d & 0xF8);
+				}
+#endif
+				if (d & 0x01C)
+				{
+					printf(F9EW "    :: FCR :: Unknown bits have been set %#x" F9EE, d & 0xF8);
 					FT900EMU_DEBUG_BREAK();
+
+					// DEBUG:
+					// FT_App_Gradient.exe is setting 0x60 (FCR[5] and FCR[6])
+
+					// TODO: FCR[5:4] is interrupt trigger level transmit
+					// TODO: FCR[7:6] is interrupt trigger level receive
 				}
 				fcr = d; // TODO
 			}
-			// ISR is read
+			// ISR is read-only
 			break;
 		}
 		case R_LCR_RFL: // 3
@@ -310,7 +326,8 @@ void UART::ioWr(uint32_t idx, uint8_t d)
 				{
 					printf("    :: RTS (TODO)\n");
 				}*/
-				if (d & 0xFD)
+				// 0x01 DTR (TODO)
+				if (d & 0xFC)
 				{
 					printf(F9EW "    :: MCR :: Unknown bits were set" F9EE);
 					FT900EMU_DEBUG_BREAK();
@@ -428,6 +445,24 @@ uint8_t UART::ioRd(uint32_t idx)
 			}
 			break;
 		}
+		case R_MCR_XON1_TFL: // 4
+		{
+			if (m_650) // XON1
+			{
+				printf(F9EW "    :: XON1 read not implemented" F9EE);
+				FT900EMU_DEBUG_BREAK();
+			}
+			else if (ACR_950_REGISTERS) // TFL
+			{
+				printf(F9EW "    :: TFL read not implemented" F9EE);
+				FT900EMU_DEBUG_BREAK();
+			}
+			else // MCR
+			{
+				return mcr;
+			}
+			break;
+		}
 		case R_LSR_XON2_ICR: // 5
 		{
 			if (m_650) // XON2
@@ -489,7 +524,7 @@ uint8_t UART::ioRd(uint32_t idx)
 		}
 		default:
 		{
-			printf(F9EW "    :: Index not implemented" F9EE);
+			printf(F9EW "    :: Index not implemented [%u]" F9EE, (unsigned int)idx);
 			FT900EMU_DEBUG_BREAK();
 		}
 	}
