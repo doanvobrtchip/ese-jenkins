@@ -232,6 +232,13 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					// printf("Cursor wrap to RAM_CMD\n");
 					s_Cursor = RAM_CMD;
 				}
+#ifdef FT810EMU_MODE
+				else if (s_Cursor == REG_CMDB_WRITE + 3)
+				{
+					// Cursor wrap to REG_CMDB_WRITE
+					s_Cursor = REG_CMDB_WRITE;
+				}
+#endif
 				else ++s_Cursor;
 			}
 			break;

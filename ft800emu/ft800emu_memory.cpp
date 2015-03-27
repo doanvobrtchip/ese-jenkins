@@ -460,6 +460,15 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 		case REG_RAM_FOLD:
 			data &= 0x3;
 			break;
+		case REG_CMDB_WRITE:
+		{
+			uint32_t wp = rawReadU32(REG_CMD_WRITE) & 0xFFF;
+			rawWriteU32(RAM_CMD + wp, data);
+			wp += 4;
+			wp &= 0xFFF;
+			rawWriteU32(REG_CMD_WRITE, wp);
+			break;
+		}
 #endif
 		}
 	}
@@ -717,6 +726,9 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 
 	switch (address)
 	{
+#ifdef FT810EMU_MODE
+	case REG_CMDB_WRITE:
+#endif
 	case REG_CMD_WRITE:
 		s_WaitCoprocessorReadCounter = 0;
 		break;
@@ -820,6 +832,14 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 			rawWriteU32(REG_INT_FLAGS, 0);
 			return result;
 		}
+#ifdef FT810EMU_MODE
+		case REG_CMDB_SPACE:
+		{
+			uint32_t wp = rawReadU32(REG_CMD_WRITE);
+			uint32_t rp = rawReadU32(REG_CMD_READ);
+			return 4092 - ((wp - rp) & 0xFFF);
+		}
+#endif
 	}
 
 	return rawReadU32(address);
