@@ -435,7 +435,7 @@ uint8_t UART::ioRd(uint32_t idx)
 				printf(F9EW "    :: XON2 read not implemented" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
-#if 0 // Assume LSR when only one of ACR[6] or ACR[7] is set to 1
+#if 1 // Assume LSR when only one of ACR[6] or ACR[7] is set to 1
 			if (ACR_950_REGISTERS && ACR_ICR_REGISTERS)
 			{
 				printf(F9EW "    :: ICR read not implemented" F9EE);
