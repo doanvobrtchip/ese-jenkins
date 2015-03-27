@@ -542,7 +542,14 @@ void Ejpg::run1(uint8_t *memory8,
 
 		size_t zz[64] = { 0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63 };
 		// printf("Write %04x*%02x=%04x to %02x\n", dm & 0xffff, qi, feed & 0xffff, zz[idct_i]);
-		aa[zz[idct_i++]] = feed;
+		if (idct_i >= 64)
+		{
+			printf("JPG ERROR: idct_i out of bounds (%i)\n", (int)idct_i);
+		}
+		else
+		{
+			aa[zz[idct_i++]] = feed;
+		}
 	}
 
 	if (idct_i == 64)
@@ -633,6 +640,7 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 	// memcpy(romtop, j1boot + 0x3c00, 0x800); ?
 
 	// REG(EJPG_READY) = 1;
+	Memory.rawWriteU32(Memory.getRam(), REG_EJPG_READY, 1);
 }
 
 // template <bool singleFrame>
@@ -768,7 +776,8 @@ void CoprocessorClass::execute()
 				break;
 			case 4:
 				// selfassert((t & 3) == 0, __LINE__);
-				if (t == 0x600000) {
+				if (t == 0x600000)
+				{
 				// 	printf("DEBUG: %08x\n", n);
 				// 	PyList_Append(debugs, PyLong_FromUnsignedLong(n));
 					break;
@@ -778,11 +787,14 @@ void CoprocessorClass::execute()
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
 				Memory.coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
-				if (t == REG_EJPG_FORMAT) {
+				if (t == REG_EJPG_FORMAT)
+				{
+					// printf("EJPG Begin\n");
 					ejpg.begin();
 				}
-				// assert(t != REG_EJPG_DAT);
-				if (t == REG_J1_INT) {
+				assert(t != REG_EJPG_DAT);
+				if (t == REG_J1_INT)
+				{
 					Memory.coprocessorWriteU32(REG_INT_FLAGS,
 						Memory.coprocessorReadU32(REG_INT_FLAGS) | (n << 5));
 					// REG(INT_FLAGS) |= (n << 5);
@@ -804,6 +816,7 @@ void CoprocessorClass::execute()
 				//	written[(t - RAM_J1RAM) >> 2] = 1;
 				if (t == REG_EJPG_DAT) 
 				{
+					// printf("EJPG Data memrd %u\n", (unsigned int)memrd);
 					uint8_t *memory8 = Memory.getRam();
 					uint16_t *memory16 = static_cast<uint16_t *>(static_cast<void *>(memory8));
 					uint32_t *memory32 = static_cast<uint32_t *>(static_cast<void *>(memory8));
@@ -818,8 +831,8 @@ void CoprocessorClass::execute()
 						REG(EJPG_TQ),
 						REG(EJPG_TDA),
 						&memory8[REG_EJPG_Q],
-						32,
-						memrd);
+						8,
+						n);
 				}
 				break;
 			case 7:
