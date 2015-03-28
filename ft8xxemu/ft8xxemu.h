@@ -1,4 +1,5 @@
 /*
+ * FT8XX Emulator Library
  * Copyright (C) 2013-2015  Future Technology Devices International Ltd
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
@@ -9,7 +10,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes
-#define FT8XXEMU_VERSION_API 4
+#define FT8XXEMU_VERSION_API 5
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -34,6 +35,7 @@ typedef enum
 	FT8XXEMU_EmulatorFT800 = 800,
 	FT8XXEMU_EmulatorFT801 = 801,
 	FT8XXEMU_EmulatorFT810 = 810,
+	FT8XXEMU_EmulatorFT811 = 811,
 } FT8XXEMU_EmulatorMode;
 
 typedef enum
@@ -156,6 +158,13 @@ typedef struct
 extern "C" {
 #endif
 
+//////////
+// INIT //
+//////////
+
+// Return version information
+FT8XXEMU_API const char *FT8XXEMU_version();
+
 // Initialize the default emulator parameters
 FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode);
 
@@ -163,7 +172,11 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params);
 
 // Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped
-FT8XXEMU_API extern void (*FT8XXEMU_stop)();
+FT8XXEMU_API extern void(*FT8XXEMU_stop)();
+
+/////////////
+// RUNTIME //
+/////////////
 
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
 FT8XXEMU_API extern uint8_t (*FT8XXEMU_transfer)(uint8_t data);
@@ -173,6 +186,16 @@ FT8XXEMU_API extern void (*FT8XXEMU_cs)(int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 FT8XXEMU_API extern int (*FT8XXEMU_int)();
+
+//////////////
+// ADVANCED //
+//////////////
+
+// Set touch XY. Param idx 0..4. Call on every frame during mouse down or touch when using custom graphics output
+FT8XXEMU_API void FT8XXEMU_touchSetXY(int idx, int x, int y, int pressure);
+
+// Reset touch XY. Call once no longer touching when using custom graphics output
+FT8XXEMU_API void FT8XXEMU_touchResetXY(int idx);
 
 #ifdef __cplusplus 
 } /* extern "C" */
