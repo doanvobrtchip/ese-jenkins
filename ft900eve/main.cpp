@@ -138,14 +138,41 @@ void close()
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2)
+	if (argc < 2)
 	{
 		printf("Usage:\n");
-		printf("fteve900 <binary>\n");
+		printf("fteve900 [-ft800 | -ft801 (default) | -ft810 | -ft811] <binary>\n");
 		return EXIT_FAILURE;
 	}
 
-	s_InFile = argv[1];
+	FT8XXEMU_EmulatorMode mode = FT8XXEMU_EmulatorFT801;
+
+	// Parse command line
+	for (int i = 1; i < argc - 1; ++i)
+	{
+		switch (argv[i][0])
+		{
+		case '-':
+			switch (argv[i][1])
+			{
+			case 'f':
+				switch (argv[i][2])
+				{
+				case 't':
+					switch (argv[i][3])
+					{
+					case '8':
+						mode = (FT8XXEMU_EmulatorMode)atoi(&argv[i][3]);
+						break;
+					}
+					break;
+				}
+				break;
+			}
+			break;
+		}
+	}
+	s_InFile = argv[argc - 1];
 
 	FT8XXEMU_EmulatorParameters params;
 	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT801);
