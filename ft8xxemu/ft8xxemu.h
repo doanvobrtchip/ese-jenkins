@@ -10,7 +10,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes
-#define FT8XXEMU_VERSION_API 5
+#define FT8XXEMU_VERSION_API 6
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -125,6 +125,9 @@ typedef struct
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
 	char *RomFilePath;
+	// Replaces the default builtin OTP with a custom OTP from a file.
+	// NOTE: String is copied and may be deallocated after call to run(...)
+	char *OtpFilePath;
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
 	char *CoprocessorRomFilePath;

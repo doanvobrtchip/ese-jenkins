@@ -40,6 +40,8 @@
 
 #ifdef FT810EMU_MODE
 #define FT800EMU_OTP_SIZE (2048)
+#else
+#define FT800EMU_OTP_SIZE (2048)
 #endif
 
 #define FT800EMU_COPROCESSOR_MEMLOG 0
@@ -334,7 +336,7 @@ static const uint8_t s_OTP811[FT800EMU_OTP_SIZE] = {
 };
 #endif
 
-void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath)
+void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
 {
 	if (romFilePath)
 	{
@@ -359,10 +361,26 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 #endif
 	}
 
+	if (otpFilePath)
+	{
+		FILE *f;
+		f = fopen(otpFilePath, "rb");
+		if (!f) printf("Failed to open OTP file\n");
+		else
+		{
+			size_t s = fread(&s_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
+			if (s != FT800EMU_OTP_SIZE) printf("Incomplete OTP file\n");
+			else printf("Loaded OTP file\n");
+			if (fclose(f)) printf("Error closing OTP file\n");
+		}
+	}
+	else
+	{
 #ifdef FT810EMU_MODE
-	if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
-	else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
+		if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
+		else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
 #endif
+	}
 
 	s_DirectSwapCount = 0;
 	s_RealSwapCount = 0;
@@ -685,7 +703,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
-		int dlAddr = (address - RAM_DL) >> 2;
+		int dlAddr = (int)((address - RAM_DL) >> 2);
 		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
 		// printf("Coprocessor command at %i writes to display list at %i\n", s_LastCoprocessorCommandRead, dlAddr);
 	}

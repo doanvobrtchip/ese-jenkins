@@ -745,7 +745,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
-	Memory.begin(mode, params.RomFilePath);
+	Memory.begin(mode, params.RomFilePath, params.OtpFilePath);
 	TouchClass::begin(mode);
 	GraphicsProcessor.begin();
 	SPII2C.begin();

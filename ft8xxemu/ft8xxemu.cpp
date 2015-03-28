@@ -34,7 +34,7 @@ void (*FT8XXEMU_cs)(int cs) = NULL;
 int(*FT8XXEMU_int)() = NULL;
 
 static const char *s_Version =
-	"FT8XX Emulator Library\n"
+	"FT8XX Emulator Library v2.0\n"
 	"Copyright(C) 2013 - 2015  Future Technology Devices International Ltd\n"
 	"Author: Jan Boon <jan.boon@kaetemi.be>";
 FT8XXEMU_API const char *FT8XXEMU_version()

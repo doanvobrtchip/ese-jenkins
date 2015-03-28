@@ -56,7 +56,7 @@ class MemoryClass
 public:
 	MemoryClass() { }
 
-	static void begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath = 0);
+	static void begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath = 0, const char *otpFilePath = 0);
 	static void end();
 
 	static void enableReadDelay(bool enabled = true);
