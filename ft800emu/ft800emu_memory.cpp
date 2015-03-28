@@ -353,13 +353,16 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	{
 #ifdef FT810EMU_MODE
 		memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT810, sizeof(s_RomFT810));
-		if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
-		else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
 #else
 		if (emulatorMode >= FT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT801, sizeof(s_RomFT801));
 		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT800, sizeof(s_RomFT800));
 #endif
 	}
+
+#ifdef FT810EMU_MODE
+	if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
+	else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
+#endif
 
 	s_DirectSwapCount = 0;
 	s_RealSwapCount = 0;
