@@ -4,8 +4,8 @@ FILE(GLOB HDRS *.h ../reference/*.h resources/*.h)
 
 FILE(GLOB FTRES ../reference/*.h resources/*.h)
 
-SOURCE_GROUP("" FILES ${SRC} ${HEADERS})
-SOURCE_GROUP("cdb" FILES ${FTRES})
+SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+SOURCE_GROUP("resources" FILES ${FTRES})
 
 ADD_LIBRARY(ft800emu
   ${SRCS}
