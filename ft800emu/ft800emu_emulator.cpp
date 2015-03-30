@@ -66,29 +66,25 @@ EmulatorClass Emulator;
 
 namespace {
 
-// Dither for snapshot ARGB4444
-const uint8_t bayer4x4[4][4] = {
-	1, 9, 3, 11, 
-	13, 5, 15, 7, 
-	4, 12, 2, 10,
-	16, 8, 14, 6, 
+const uint8_t bayerDiv16[4][4] = {
+	0, 8, 2, 10,
+	12, 4, 14, 6,
+	3, 11, 1, 9,
+	15, 7, 13, 5,
 };
-#define SAFESUB(val, sub) ((val) <= (sub) ? 0 : (val) - (sub))
-//#define DITHERDIV16(val, x, y) min(15, (SAFESUB(((val) + dither4x4[(x) % 4][(y) % 4]), 7) >> 4))
-//#define DITHERDIV16(val, x, y) min(15, (SAFESUB((((val) * 17) + (bayer4x4[(x) % 4][(y) % 4] * 16)), 8 * 16) / (17 * 16)))
-const uint8_t bayer8x8[8][8] = {
-	1, 49, 13, 61, 4, 52, 16, 64, 
-	33, 17, 45, 29, 36, 20, 48, 32, 
-	9, 57, 5, 53, 12, 60, 8, 56, 
-	41, 25, 37, 21, 44, 28, 40, 24, 
-	3, 51, 15, 63, 2, 50, 14, 62, 
-	35, 19, 47, 31, 34, 18, 46, 30, 
-	11, 59, 7, 55, 10, 58, 6, 54, 
-	43, 27, 39, 23, 42, 26, 38, 22, 
+#define DITHERDIV16(val, x, y) min(15, ((val) + bayerDiv16[(x) % 4][(y) % 4]) >> 4)
+const uint8_t bayerDiv8[4][4] = {
+	0, 4, 1, 5,
+	6, 2, 7, 3,
+	1, 5, 0, 4,
+	7, 3, 6, 2,
 };
-#define DITHERDIV16(val, x, y) min(15, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 16)) / (65 * 16)))
-#define DITHERDIV8(val, x, y) min(31, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 8)) / (65 * 8)))
-#define DITHERDIV4(val, x, y) min(63, ((((val) * 65) + (bayer8x8[(x) % 8][(y) % 8] * 4)) / (65 * 4)))
+#define DITHERDIV8(val, x, y) min(31, ((val) + bayerDiv8[(x) % 4][(y) % 4]) >> 3)
+const uint8_t bayerDiv4[2][2] = {
+	0, 2,
+	3, 1,
+};
+#define DITHERDIV4(val, x, y) min(63, ((val) + bayerDiv4[(x) % 2][(y) % 2]) >> 2)
 
 	void debugShortkeys()
 	{
