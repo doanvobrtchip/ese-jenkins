@@ -72,19 +72,19 @@ const uint8_t bayerDiv16[4][4] = {
 	3, 11, 1, 9,
 	15, 7, 13, 5,
 };
-#define DITHERDIV16(val, x, y) min(15, ((val) + bayerDiv16[(x) % 4][(y) % 4]) >> 4)
+#define DITHERDIV16(val, x, y) min(15, ((val) + bayerDiv16[(x) & 0x3][(y) & 0x3]) >> 4)
 const uint8_t bayerDiv8[4][4] = {
 	0, 4, 1, 5,
 	6, 2, 7, 3,
 	1, 5, 0, 4,
 	7, 3, 6, 2,
 };
-#define DITHERDIV8(val, x, y) min(31, ((val) + bayerDiv8[(x) % 4][(y) % 4]) >> 3)
+#define DITHERDIV8(val, x, y) min(31, ((val) + bayerDiv8[(x) & 0x3][(y) & 0x3]) >> 3)
 const uint8_t bayerDiv4[2][2] = {
 	0, 2,
 	3, 1,
 };
-#define DITHERDIV4(val, x, y) min(63, ((val) + bayerDiv4[(x) % 2][(y) % 2]) >> 2)
+#define DITHERDIV4(val, x, y) min(63, ((val) + bayerDiv4[(x) & 0x1][(y) & 0x1]) >> 2)
 
 	void debugShortkeys()
 	{
@@ -338,14 +338,14 @@ const uint8_t bayerDiv4[2][2] = {
 											| (((c1 >> 12) & 0xF) << 20)
 											| (((c1 >> 20) & 0xF) << 24)
 											| ((/*(c1 >> 28) &* / 0xF) << 28);*/
-										uint32_t r = (DITHERDIV16(c0 & 0xFF, x - 1, snapy))
-											| (DITHERDIV16((c0 >> 8) & 0xFF, x - 1, snapy) << 4)
-											| (DITHERDIV16((c0 >> 16 & 0xFF), x - 1, snapy) << 8)
-											| (/*DITHERDIV16((c0 >> 24 & 0xFF), x - 1, snapy)*/ 0xF << 12)
-											| (DITHERDIV16(c1 & 0xFF, x, snapy) << 16)
+										uint32_t r = (DITHERDIV16(c0 & 0xFF, (-(x - 1)), snapy))
+											| (DITHERDIV16((c0 >> 8) & 0xFF, (x - 1), snapy) << 4)
+											| (DITHERDIV16((c0 >> 16 & 0xFF), (x - 1), (-snapy)) << 8)
+											| (/*DITHERDIV16((c0 >> 24 & 0xFF), (-(x - 1)), (-(snapy)))*/ 0xF << 12)
+											| (DITHERDIV16(c1 & 0xFF, (-x), snapy) << 16)
 											| (DITHERDIV16((c1 >> 8) & 0xFF, x, snapy) << 20)
-											| (DITHERDIV16((c1 >> 16) & 0xFF, x, snapy) << 24)
-											| (/*DITHERDIV16((c1 >> 24 & 0xFF), x - 1, snapy)*/ 0xF << 28);
+											| (DITHERDIV16((c1 >> 16) & 0xFF, x, (-snapy)) << 24)
+											| (/*DITHERDIV16((c1 >> 24 & 0xFF), (-(x - 1)), (-(snapy)))*/ 0xF << 28);
 										Memory.rawWriteU32(ram, wa, r);
 										wa += 4;
 										break;
@@ -364,9 +364,9 @@ const uint8_t bayerDiv4[2][2] = {
 									case RGB565:
 									{
 										argb8888 c = buffer[ya + x];
-										uint16_t r = (DITHERDIV8(c & 0xFF, x, snapy))
+										uint16_t r = (DITHERDIV8(c & 0xFF, (-x), snapy))
 											| (DITHERDIV4((c >> 8) & 0xFF, x, snapy) << 5)
-											| (DITHERDIV8((c >> 16) & 0xFF, x, snapy) << 11);
+											| (DITHERDIV8((c >> 16) & 0xFF, x, (-snapy)) << 11);
 										Memory.rawWriteU16(ram, wa, r);
 										wa += 2;
 										break;
