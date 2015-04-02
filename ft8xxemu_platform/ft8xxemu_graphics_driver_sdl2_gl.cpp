@@ -288,6 +288,15 @@ void GraphicsDriverClass::begin()
 		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
 
+	glMatrixMode(GL_COLOR);
+	glLoadIdentity();
+	glMatrixMode(GL_TEXTURE);
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
 	glGenTextures(1, &s_BufferTexture);
 	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
