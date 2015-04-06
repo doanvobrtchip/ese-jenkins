@@ -3,7 +3,12 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
+#ifdef FTEMU_SDL2
 #include <SDL_mutex.h>
+#else
+#include <mutex>
+#include <condition_variable>
+#endif
 
 class SleepWake
 {
@@ -22,8 +27,15 @@ private:
 private:
 	volatile bool m_WantWake;
 	volatile bool m_IsSleeping;
+
+#ifdef FTEMU_SDL2
 	SDL_mutex *m_SleepLock;
 	SDL_cond *m_SleepCond;
+#else
+	std::mutex m_SleepLock;
+	std::condition_variable m_SleepCond;
+#endif
+
 };
 
 /* end of file */
