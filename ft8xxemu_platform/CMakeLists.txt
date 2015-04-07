@@ -19,6 +19,7 @@ IF (WITH_SDL2)
   TARGET_LINK_LIBRARIES(ft8xxemu_platform
     ${SDL2_LIBRARY}
     ${OPENGL_gl_LIBRARY}
+    gl3w
     )
 ELSEIF (WITH_SDL)
   TARGET_LINK_LIBRARIES(ft8xxemu_platform

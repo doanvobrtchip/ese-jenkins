@@ -13,6 +13,8 @@
 #	include <Windows.h>
 #endif
 #include <GL/gl.h>
+#undef GL_VERSION_1_1
+#include <GL/gl3w.h>
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_system_sdl.h"
 
@@ -67,6 +69,9 @@ static int s_MouseX;
 static int s_MouseY;
 static int s_MouseDown;
 
+static bool s_GL3 = false;
+static GLuint s_VBO = 0;
+
 // Threaded flip causes the buffer to be flipped from a separate thread.
 // It saves time for the CPU processing
 // Disabled because not compatible with dynamic degrade yet
@@ -89,6 +94,32 @@ static int s_MouseDown;
 #endif
 
 namespace {
+
+const char *s_VertexProgram =
+	"#version 330 \n\
+	layout (location = 0) in vec2 position; \n\
+	layout (location = 1) in vec2 texCoord0; \n\
+	out vec2 ioTexCoord0; \n\
+	void main() \n\
+	{ \n\
+		gl_Position = vec4(position.x, position.y, 1.0, 1.0); \n\
+		ioTexCoord0 = texCoord0; \n\
+	}; \n\
+	";
+
+const char *s_PixelProgram =
+	"#version 330 \n\
+	in vec2 ioTexCoord0; \n\
+	out vec4 color; \n\
+	uniform sampler2D tex0; \n\
+	void main() \n\
+	{ \n\
+		color = texture(tex0, ioTexCoord0); \n\
+	}; \n\
+	";
+
+GLuint s_VAO = 0;
+GLuint s_Program = 0;
 
 SDL_Window* s_Window = NULL;
 SDL_GLContext s_GLContext = NULL;
@@ -120,6 +151,29 @@ bool s_Output = false;
 int s_TitleFrameSkip = 0;
 #endif
 
+void genVBO()
+{
+	if (s_GL3)
+	{
+#if FT8XXEMU_FLIP_SDL2
+		float vbo[] = {
+			-1, -1, -s_LetterBoxX, -s_LetterBoxY,
+			1, -1, 1.0f + s_LetterBoxX, -s_LetterBoxY,
+			1, 1, 1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY,
+			-1, 1, -s_LetterBoxX, 1.0f + s_LetterBoxY,
+		};
+#else
+		float vbo[] = {
+			-1, -1, -s_LetterBoxX, 1.0f + s_LetterBoxY,
+			1, -1, 1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY,
+			1, 1, 1.0f + s_LetterBoxX, -s_LetterBoxY,
+			-1, 1, -s_LetterBoxX, -s_LetterBoxY,
+		};
+#endif
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vbo), vbo, GL_DYNAMIC_DRAW);
+	}
+}
+
 void drawBuffer()
 {
 	if (s_WindowResized)
@@ -146,6 +200,7 @@ void drawBuffer()
 		}
 		s_LetterBoxXPix = (int)(s_LetterBoxX * (float)s_Width * ((float)s_WindowHeight / (float)s_Height));
 		s_LetterBoxYPix = (int)(s_LetterBoxY * (float)s_Height * ((float)s_WindowWidth / (float)s_Width));
+		genVBO();
 	}
 
 	if (s_Output)
@@ -162,47 +217,55 @@ void drawBuffer()
 				s_WidthCur = s_Width;
 				s_HeightCur = s_Height;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+				genVBO();
 			}
 			else
 			{
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, s_WidthCur, s_HeightCur, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
 			}
 
-			glEnable(GL_TEXTURE_2D);
+			if (s_GL3)
+			{
+				glDrawArrays(GL_QUADS, 0, 4);
+			}
+			else
+			{
+				glEnable(GL_TEXTURE_2D);
 
-			glBegin(GL_QUADS);
+				glBegin(GL_QUADS);
 
 #if FT8XXEMU_FLIP_SDL2
-			glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
-			glVertex3f(-1, -1, 0);
+				glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
+				glVertex3f(-1, -1, 0);
 
-			glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
-			glVertex3f(1, -1, 0);
+				glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
+				glVertex3f(1, -1, 0);
 
-			glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
-			glVertex3f(1, 1, 0);
+				glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
+				glVertex3f(1, 1, 0);
 
-			glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
-			glVertex3f(-1, 1, 0);
+				glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
+				glVertex3f(-1, 1, 0);
 #else
-			glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
-			glVertex3f(-1, -1, 0);
+				glTexCoord2f(-s_LetterBoxX, 1.0f + s_LetterBoxY);
+				glVertex3f(-1, -1, 0);
 
-			glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
-			glVertex3f(1, -1, 0);
+				glTexCoord2f(1.0f + s_LetterBoxX, 1.0f + s_LetterBoxY);
+				glVertex3f(1, -1, 0);
 
-			glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
-			glVertex3f(1, 1, 0);
+				glTexCoord2f(1.0f + s_LetterBoxX, -s_LetterBoxY);
+				glVertex3f(1, 1, 0);
 
-			glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
-			glVertex3f(-1, 1, 0);
+				glTexCoord2f(-s_LetterBoxX, -s_LetterBoxY);
+				glVertex3f(-1, 1, 0);
 #endif
 
-			glEnd();
+				glEnd();
 
-			glDisable(GL_TEXTURE_2D);
+				glDisable(GL_TEXTURE_2D);
+			}
 
-			glFinish();
+			glFlush();
 
 #if FT8XXEMU_THREADED_FLIP
 			SDL_UnlockMutex(s_BufferMutex[buffer]);
@@ -212,11 +275,15 @@ void drawBuffer()
 	else
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-		glFinish();
+		glFlush();
 	}
 #if FT8XXEMU_HARDWARE_DOUBLE_BUFFER
 	SDL_GL_SwapWindow(s_Window);
 #endif
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		cerr << "OpenGL error: " << err << endl;
+	}
 }
 
 #if FT8XXEMU_THREADED_FLIP
@@ -287,15 +354,76 @@ void GraphicsDriverClass::begin()
 	s_Window = SDL_CreateWindow(FT8XXEMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
+	s_GL3 = (gl3wInit() == 0 && gl3wIsSupported(3, 3));
+	
+	if (s_GL3)
+	{
+		printf("OpenGL 3.3 mode\n");
+		glGenVertexArrays(1, &s_VAO);
+		glBindVertexArray(s_VAO);
 
-	glMatrixMode(GL_COLOR);
-	glLoadIdentity();
-	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+		glGenBuffers(1, &s_VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, s_VBO);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+		glActiveTexture(GL_TEXTURE0);
+
+		GLint vpsuccess;
+		GLuint vp = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vp, 1, &s_VertexProgram, NULL);
+		glCompileShader(vp);
+		glGetShaderiv(vp, GL_COMPILE_STATUS, &vpsuccess);
+		if (vpsuccess == GL_FALSE)
+		{
+			GLint maxLength = 0;
+			glGetShaderiv(vp, GL_INFO_LOG_LENGTH, &maxLength);
+			std::vector<GLchar> errorLog(maxLength);
+			glGetShaderInfoLog(vp, maxLength, &maxLength, &errorLog[0]);
+			printf("%s", &errorLog[0]);
+		}
+
+		GLint ppsuccess;
+		GLuint pp = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(pp, 1, &s_PixelProgram, NULL);
+		glCompileShader(pp);
+		glGetShaderiv(pp, GL_COMPILE_STATUS, &ppsuccess);
+		if (ppsuccess == GL_FALSE)
+		{
+			GLint maxLength = 0;
+			glGetShaderiv(pp, GL_INFO_LOG_LENGTH, &maxLength);
+			std::vector<GLchar> errorLog(maxLength);
+			glGetShaderInfoLog(pp, maxLength, &maxLength, &errorLog[0]);
+			printf("%s", &errorLog[0]);
+		}
+
+		s_Program = glCreateProgram();
+		glAttachShader(s_Program, vp);
+		glAttachShader(s_Program, pp);
+		glLinkProgram(s_Program);
+		GLint isLinked = 0;
+		glGetProgramiv(s_Program, GL_LINK_STATUS, (int *)&isLinked);
+		if (isLinked == GL_FALSE)
+		{
+			GLint maxLength = 0;
+			glGetProgramiv(s_Program, GL_INFO_LOG_LENGTH, &maxLength);
+			std::vector<GLchar> infoLog(maxLength);
+			glGetProgramInfoLog(s_Program, maxLength, &maxLength, &infoLog[0]);
+			printf("%s", &infoLog[0]);
+		}
+
+		glDeleteShader(vp);
+		glDeleteShader(pp);
+		
+		glUseProgram(s_Program);
+		GLint tex0 = glGetUniformLocation(s_Program, "tex0");
+		glUniform1i(tex0, 0);
+	}
+	else
+	{
+		printf("Legacy OpenGL 1.1 mode\n");
+	}
 
 	glGenTextures(1, &s_BufferTexture);
 	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
@@ -385,6 +513,12 @@ void GraphicsDriverClass::end()
 	SDL_GL_MakeCurrent(s_Window, s_GLContext);
 #endif
 
+	if (s_GL3)
+	{
+		glDeleteVertexArrays(1, &s_VAO);
+		glDeleteBuffers(1, &s_VBO);
+		glDeleteProgram(s_Program);
+	}
 	glDeleteTextures(1, &s_BufferTexture);
 
 	SDL_GL_DeleteContext(s_GLContext); s_GLContext = NULL;
