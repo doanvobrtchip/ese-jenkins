@@ -53,6 +53,10 @@ static bool s_CmdParamString[CMD_ID_NB];
 
 static std::string s_CmdIdList[CMD_ID_NB];
 
+// Sign-extend the n-bit value v
+#define SIGNED_N(v, n) \
+    (((int32_t)((v) << (32-(n)))) >> (32-(n)))
+
 const char *g_DlEnumBlend[DL_ENUM_BLEND_NB] = {
 	"ZERO",
 	"ONE",
@@ -83,18 +87,29 @@ const char *g_DlEnumStencil[DL_ENUM_STENCIL_NB] = {
 };
 
 const char *g_DlEnumBitmapFormat[DL_ENUM_BITMAP_FORMAT_NB] = {
-	"ARGB1555",
-	"L1",
-	"L4",
-	"L8",
-	"RGB332",
-	"ARGB2",
-	"ARGB4",
-	"RGB565",
-	"PALETTED",
-	"TEXT8X8",
-	"TEXTVGA",
-	"BARGRAPH",
+	"ARGB1555", // 0
+	"L1", // 1
+	"L4", // 2
+	"L8", // 3
+	"RGB332", // 4
+	"ARGB2", // 5
+	"ARGB4", // 6
+	"RGB565", // 7
+#ifdef FT810EMU_MODE
+	"8", // 8 deprecated
+#else
+	"PALETTED", // 8
+#endif
+	"TEXT8X8", // 9
+	"TEXTVGA", // 10
+	"BARGRAPH", // 11
+#ifdef FT810EMU_MODE
+	"12", // 12 does not exist
+	"13", // 13 does not exist
+	"PALETTED565", // 14
+	"PALETTED4444", // 15
+	"PALETTED8", // 16
+#endif
 };
 
 const char *g_DlEnumBitmapFilter[DL_ENUM_BITMAP_FILTER_NB] = {
@@ -202,14 +217,21 @@ void DlParser::init()
 		s_ParamCount[FT800EMU_DL_MACRO] = 1;
 		s_IdMap["CLEAR"] = FT800EMU_DL_CLEAR;
 		s_ParamCount[FT800EMU_DL_CLEAR] = 3;
-#ifdef FT810EMU_MODE // TODO_FT810
-//#	define FT800EMU_DL_VERTEX_FORMAT 39
-//#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
-//#	define FT800EMU_DL_BITMAP_SIZE_H 41
-//#	define FT800EMU_DL_PALETTE_SOURCE 42
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
-//#	define FT800EMU_DL_NOP 45
+#ifdef FT810EMU_MODE
+		s_IdMap["VERTEX_FORMAT"] = FT800EMU_DL_VERTEX_FORMAT;
+		s_ParamCount[FT800EMU_DL_VERTEX_FORMAT] = 1;
+		s_IdMap["BITMAP_LAYOUT_H"] = FT800EMU_DL_BITMAP_LAYOUT_H;
+		s_ParamCount[FT800EMU_DL_BITMAP_LAYOUT_H] = 2;
+		s_IdMap["BITMAP_SIZE_H"] = FT800EMU_DL_BITMAP_SIZE_H;
+		s_ParamCount[FT800EMU_DL_BITMAP_SIZE_H] = 2;
+		s_IdMap["PALETTE_SOURCE"] = FT800EMU_DL_PALETTE_SOURCE;
+		s_ParamCount[FT800EMU_DL_PALETTE_SOURCE] = 1;
+		s_IdMap["VERTEX_TRANSLATE_X"] = FT800EMU_DL_VERTEX_TRANSLATE_X;
+		s_ParamCount[FT800EMU_DL_VERTEX_TRANSLATE_X] = 1;
+		s_IdMap["VERTEX_TRANSLATE_Y"] = FT800EMU_DL_VERTEX_TRANSLATE_Y;
+		s_ParamCount[FT800EMU_DL_VERTEX_TRANSLATE_Y] = 1;
+		s_IdMap["NOP"] = FT800EMU_DL_NOP;
+		s_ParamCount[FT800EMU_DL_NOP] = 0;
 #endif
 	}
 	if (!s_ParamMap.size())
@@ -1033,14 +1055,21 @@ uint32_t DlParser::compile(const DlParsed &parsed)
 			return MACRO(p[0]);
 		case FT800EMU_DL_CLEAR:
 			return CLEAR(p[0], p[1], p[2]);
-#ifdef FT810EMU_MODE // TODO_FT810
-//#	define FT800EMU_DL_VERTEX_FORMAT 39
-//#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
-//#	define FT800EMU_DL_BITMAP_SIZE_H 41
-//#	define FT800EMU_DL_PALETTE_SOURCE 42
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
-//#	define FT800EMU_DL_NOP 45
+#ifdef FT810EMU_MODE
+		case FT800EMU_DL_VERTEX_FORMAT:
+			return VERTEX_FORMAT(p[0]);
+		case FT800EMU_DL_BITMAP_LAYOUT_H:
+			return BITMAP_LAYOUT_H(p[0], p[1]);
+		case FT800EMU_DL_BITMAP_SIZE_H:
+			return BITMAP_SIZE_H(p[0], p[1]);
+		case FT800EMU_DL_PALETTE_SOURCE:
+			return PALETTE_SOURCE(p[0]);
+		case FT800EMU_DL_VERTEX_TRANSLATE_X:
+			return VERTEX_TRANSLATE_X(p[0]);
+		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+			return VERTEX_TRANSLATE_Y(p[0]);
+		case FT800EMU_DL_NOP:
+			return NOP();
 #endif
 	}
 	return DISPLAY();
@@ -1730,16 +1759,26 @@ void DlParser::toString(std::string &dst, uint32_t v)
 				}
 				case FT800EMU_DL_SCISSOR_XY:
 				{
+#ifdef FT810EMU_MODE
+					int x = (v >> 11) & 0x7FF;
+					int y = v & 0x7FF;
+#else
 					int x = (v >> 9) & 0x1FF;
 					int y = v & 0x1FF;
+#endif
 					res << "SCISSOR_XY(";
 					res << x << ", " << y << ")";
 					break;
 				}
 				case FT800EMU_DL_SCISSOR_SIZE:
 				{
+#ifdef FT810EMU_MODE
+					int width = (v >> 12) & 0xFFF;
+					int height = v & 0xFFF;
+#else
 					int width = (v >> 10) & 0x3FF;
 					int height = v & 0x3FF;
+#endif
 					res << "SCISSOR_SIZE(";
 					res << width << ", " << height << ")";
 					break;
@@ -1812,14 +1851,56 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << c << ", " << s << ", " << t << ")";
 					break;
 				}
-#ifdef FT810EMU_MODE // TODO_FT810
-//#	define FT800EMU_DL_VERTEX_FORMAT 39
-//#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
-//#	define FT800EMU_DL_BITMAP_SIZE_H 41
-//#	define FT800EMU_DL_PALETTE_SOURCE 42
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
-//#	define FT800EMU_DL_NOP 45
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_VERTEX_FORMAT:
+				{
+					int frac = v & 0x7;
+					res << "VERTEX_FORMAT(";
+					res << frac << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				{
+					int linestride = (v >> 2) & 0x3;
+					int height = v & 0x3;
+					res << "BITMAP_LAYOUT_H(";
+					res << linestride << ", " << height << ")";
+					break;
+				}
+				case FT800EMU_DL_BITMAP_SIZE_H:
+				{
+					int width = (v >> 2) & 0x3;
+					int height = v & 0x3;
+					res << "BITMAP_SIZE_H(";
+					res << width << ", " << height << ")";
+					break;
+				}
+				case FT800EMU_DL_PALETTE_SOURCE:
+				{
+					int addr = v & FT800EMU_ADDR_MASK;
+					res << "PALETTE_SOURCE(";
+					res << addr << ")";
+					break;
+				}
+				case FT800EMU_DL_VERTEX_TRANSLATE_X:
+				{
+					int x = SIGNED_N(v & 0x1FFFF, 17);
+					res << "VERTEX_TRANSLATE_X(";
+					res << x << ")";
+					break;
+				}
+				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+				{
+					int y = SIGNED_N(v & 0x1FFFF, 17);
+					res << "VERTEX_TRANSLATE_Y(";
+					res << y << ")";
+					break;
+				}
+				case FT800EMU_DL_NOP:
+				{
+					res << "NOP()";
+					break;
+				}
 #endif
 			}
 			break;

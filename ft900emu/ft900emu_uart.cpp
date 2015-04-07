@@ -475,7 +475,7 @@ uint8_t UART::ioRd(uint32_t idx)
 			{
 				return icr[spr];
 			}
-#else
+#if 0
 			else if (ACR_950_REGISTERS) // ?? // ICR
 			{
 				if (ACR_ICR_REGISTERS)
@@ -485,6 +485,8 @@ uint8_t UART::ioRd(uint32_t idx)
 				printf(F9EW "    :: ICR read invalid (1) [ACR[6] must be set to 1, ACR[7] must be set to 0 to read LSR]" F9EE);
 				FT900EMU_DEBUG_BREAK();
 			}
+#endif
+#if 0
 			else if (ACR_ICR_REGISTERS)
 			{
 				printf(F9EW "    :: ICR read invalid (2) [ACR[7] must be set to 1 to read ICR, ACR[6] must be set to 0 to read LSR]" F9EE);
