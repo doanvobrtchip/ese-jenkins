@@ -79,7 +79,7 @@ void setup()
 #if TEST_FIFO
 	wr32(OPT_FULLSCREEN | OPT_MEDIAFIFO /*| OPT_NOTEAR*/);
 #else
-	wr32(0 /*OPT_FULLSCREEN*/ /*| OPT_NOTEAR*/);
+	wr32(OPT_FULLSCREEN | OPT_SOUND /*| OPT_NOTEAR*/);
 #endif
 #endif
 

@@ -22,7 +22,6 @@
 #include <QLabel>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 
 // Project includes
 

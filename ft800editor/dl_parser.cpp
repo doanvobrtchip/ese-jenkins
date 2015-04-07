@@ -491,6 +491,12 @@ void DlParser::init()
 		s_CmdParamMap["OPT_NOTICKS"] = OPT_NOTICKS;
 		s_CmdParamMap["OPT_RIGHTX"] = OPT_RIGHTX;
 		s_CmdParamMap["OPT_SIGNED"] = OPT_SIGNED;
+#ifdef FT810EMU_MODE
+		s_CmdParamMap["OPT_NOTEAR"] = OPT_NOTEAR;
+		s_CmdParamMap["OPT_FULLSCREEN"] = OPT_FULLSCREEN;
+		s_CmdParamMap["OPT_MEDIAFIFO"] = OPT_MEDIAFIFO;
+		s_CmdParamMap["OPT_SOUND"] = OPT_SOUND;
+#endif
 	}
 }
 
@@ -1878,6 +1884,32 @@ void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			combine = true;
 		}
 	}
+#ifdef FT810EMU_MODE
+	if (opt & OPT_NOTEAR)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_NOTEAR";
+		combine = true;
+	}
+	if (opt & OPT_FULLSCREEN)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_FULLSCREEN";
+		combine = true;
+	}
+	if (opt & OPT_MEDIAFIFO)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_MEDIAFIFO";
+		combine = true;
+	}
+	if (opt & OPT_SOUND)
+	{
+		if (combine) dst << " | ";
+		dst << "OPT_SOUND";
+		combine = true;
+	}
+#endif
 	if (cmd == CMD_NUMBER)
 	{
 		if (opt & OPT_SIGNED)
