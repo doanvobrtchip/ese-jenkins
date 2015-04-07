@@ -1,0 +1,8 @@
+
+FILE(GLOB SRCS *.c)
+FILE(GLOB HDRS GL/*.h)
+
+ADD_LIBRARY(gl3w
+  ${SRCS}
+  ${HDRS}
+)
