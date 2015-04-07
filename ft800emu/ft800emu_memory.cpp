@@ -400,6 +400,16 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 
 	s_EmulatorMode = emulatorMode;
 
+#ifdef FT810EMU_MODE
+	rawWriteU32(ROM_CHIPID, rawReadU32(RAM_JTBOOT + FT800EMU_OTP_SIZE - 4));
+#else
+	rawWriteU16(ROM_CHIPID, (((uint16_t)emulatorMode & 0xFF) << 8) | ((uint16_t)emulatorMode >> 8)); // endianness??
+	rawWriteU16(ROM_CHIPID + 2, 0x0001);
+#endif
+
+	printf("CHIPID: 0x%x 0x%x 0x%x 0x%x\n", (int)rawReadU8(ROM_CHIPID), (int)rawReadU8(ROM_CHIPID + 1), (int)rawReadU8(ROM_CHIPID + 2), (int)rawReadU8(ROM_CHIPID + 3));
+	printf("CHIPID: 0x%x\n", (int)rawReadU32(ROM_CHIPID));
+
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
 	rawWriteU32(REG_CLOCK, 0);

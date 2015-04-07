@@ -352,6 +352,7 @@
 #define REPLACE              2UL
 #define RGB332               4UL
 #define RGB565               7UL
+#define ROM_CHIPID           786432UL
 #define SRC_ALPHA            2UL
 #define TEXT8X8              9UL
 #define TEXTVGA              10UL
