@@ -45,6 +45,7 @@
 #endif
 
 #define FT800EMU_COPROCESSOR_MEMLOG 0
+#define FT800EMU_MCU_MEMLOG 0
 
 namespace FT800EMU {
 
@@ -509,6 +510,10 @@ const uint32_t *MemoryClass::getDisplayList()
 
 void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 {
+#if FT800EMU_MCU_MEMLOG
+	printf("MCU write U32 %i, %i\n", (int)address, (int)data);
+#endif
+
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("MCU U32 write address %i exceeds RAM size\n", (int)address);
@@ -571,6 +576,11 @@ void MemoryClass::flagDLSwap()
 
 uint32_t MemoryClass::mcuReadU32(size_t address)
 {
+#if FT800EMU_MCU_MEMLOG
+	// if (address != 3182612 && address != 3182616)
+	printf("MCU read U32 %i\n", (int)address);
+#endif
+
 	if (s_ReadDelay)
 	{
 		switch (address)
