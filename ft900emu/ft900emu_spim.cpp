@@ -31,6 +31,36 @@
 #define SPIM_STFCR    5
 #define SPIM_SPDR_BIS 6
 
+// SPSR // DSPI Status Register
+#define SSCEN 0x01UL
+#define RXFIFOFULL 0x02UL
+#define TEMT 0x04UL
+#define THRE 0x08UL
+#define MODF 0x10UL
+#define SPIFBIS 0x20UL
+#define WCOL 0x40UL
+#define SPIF 0x80UL
+
+// SFCR // FIFO Control Register
+#define FIFO_EN 0x01UL
+#define RCVR_RST 0x02UL
+#define XMIT_RST 0x04UL
+#define DMA 0x08UL
+#define TIMEOUT 0x10UL
+#define FIFO_64 0x20UL
+#define RCVR_TRIGG0 0x40UL
+#define RCVR_TRIGG1 0x80UL
+
+// STFCR // DSPI Transfer Format Control Register
+#define DUAL_SPI 0x01UL
+#define QUAD_SPI 0x02UL
+#define DIR 0x04UL
+#define TXEN 0x08UL
+#define FAST_MODE 0x10UL
+#define MULTI_REC 0x20UL
+#define BISINTEN 0x40UL
+#define FIFO_EXT 0x80UL
+
 namespace FT900EMU {
 
 SPIM::SPIM(IRQ *irq, SPISlave **spiSlaves) : m_IRQ(irq), m_SPISlaves(spiSlaves), m_SS(~0), m_LastAccessed(~0)
@@ -64,12 +94,17 @@ uint32_t SPIM::ioRd32(uint32_t io_a, uint32_t io_be)
 	uint32_t v = m_Register[idx];
 	switch (idx)
 	{
+		case SPIM_SPSR:
+		{
+			m_LastReadSPSR = v;
+			break;
+		}
 		case SPIM_SPDR:
 		{
-			m_Register[SPIM_SPSR] &= ~0x0C;
+			m_Register[SPIM_SPSR] &= ~(TEMT | THRE);
 			// m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_REPORT_CUR);
 			if (m_LastAccessed == SPIM_SPSR)
-				m_Register[SPIM_SPSR] &= ~0xC0;
+				m_Register[SPIM_SPSR] &= ~(SPIF | WCOL);
 			break;
 		}
 	}
@@ -88,6 +123,12 @@ void SPIM::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 		// Really just ignore everything that we don't care about...
 		switch (idx)
 		{
+			case SPIM_SPCR:
+			{
+				if (m_LastAccessed == SPIM_SPSR)
+					if (m_LastReadSPSR & MODF)
+						m_Register[SPIM_SPSR] &= ~MODF;
+			}
 			case SPIM_SSCR:
 			{
 				// Disable old
@@ -112,13 +153,18 @@ void SPIM::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			{
 				// Very basic
 				if (m_LastAccessed == SPIM_SPSR)
-					m_Register[SPIM_SPSR] &= ~0xC0;
+					m_Register[SPIM_SPSR] &= ~(SPIF | WCOL);
 				if (~m_SS && m_SPISlaves[m_SS])
 				{
 					v = m_SPISlaves[m_SS]->transfer(v);
 					// printf("transfer, sent %#x, received %#x\n", io_dout, v);
-					m_Register[SPIM_SPSR] |= 0x8C;
+					m_Register[SPIM_SPSR] |= (SPIF | TEMT | THRE);
 				}
+				break;
+			}
+			case SPIM_SPDR_BIS:
+			{
+				printf(F9EW "SPIDR BIS not implemented" F9EE);
 				break;
 			}
 		}

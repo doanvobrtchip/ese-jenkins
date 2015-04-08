@@ -46,6 +46,7 @@ private:
 	IRQ *m_IRQ;
 	SPISlave **m_SPISlaves;
 	uint32_t m_LastAccessed;
+	uint32_t m_LastReadSPSR;
 
 }; /* class SPIM */
 
