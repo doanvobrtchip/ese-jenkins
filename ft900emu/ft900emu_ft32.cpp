@@ -19,6 +19,8 @@
 
 // using namespace ...;
 
+#define FT900EMU_IO_LOG 0
+
 namespace FT900EMU {
 
 ////////////////////////////////////////////////////////////////////////
@@ -248,7 +250,9 @@ inline FT32IO *FT32::getIO(uint32_t io_a_32)
 
 uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
 {
-	// printf("Read IO 32: %#x\n", io_a << 2);
+#if FT900EMU_IO_LOG
+	printf("Read IO 32: %#x\n", io_a << 2);
+#endif
 	FT32IO *io = getIO(io_a);
 	if (io)
 		return io->ioRd32(io_a, io_be);
@@ -260,7 +264,9 @@ uint32_t FT32::ioRd32(uint32_t io_a, uint32_t io_be)
 
 void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 {
-	// printf("Write IO 32: %#x\n", io_a << 2);
+#if FT900EMU_IO_LOG
+	printf("Write IO 32: %#x\n", io_a << 2);
+#endif
 	FT32IO *io = getIO(io_a);
 	if (io)
 		return io->ioWr32(io_a, io_be, io_dout);
@@ -271,7 +277,9 @@ void FT32::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 
 uint8_t FT32::ioRd8(uint32_t io_a)
 {
-	// printf("Read IO 8: %#x\n", io_a);
+#if FT900EMU_IO_LOG
+	printf("Read IO 8: %#x\n", io_a);
+#endif
 	FT32IO *io = getIO(io_a >> 2);
 	if (io)
 		return io->ioRd8(io_a);
@@ -283,7 +291,9 @@ uint8_t FT32::ioRd8(uint32_t io_a)
 
 void FT32::ioWr8(uint32_t io_a, uint8_t io_dout)
 {
-	// printf("Write IO 8: %#x\n", io_a);
+#if FT900EMU_IO_LOG
+	printf("Write IO 8: %#x\n", io_a);
+#endif
 	FT32IO *io = getIO(io_a >> 2);
 	if (io)
 		return io->ioWr8(io_a, io_dout);
@@ -923,6 +933,8 @@ uint32_t FT32::exec(uint32_t pma)
 				// strict support test ->
 				switch (FT32_AL(inst))
 				{
+				case FT32_FFU_STREAMIN:
+				case FT32_FFU_STREAMOUT:
 				case FT32_FFU_MEMSET:
 				case FT32_FFU_STRLEN:
 				case FT32_FFU_STRCMP:

@@ -33,7 +33,7 @@
 
 namespace FT900EMU {
 
-SPIM::SPIM(IRQ *irq, SPISlave **spiSlaves) : m_IRQ(irq), m_SPISlaves(spiSlaves), m_SS(~0)
+SPIM::SPIM(IRQ *irq, SPISlave **spiSlaves) : m_IRQ(irq), m_SPISlaves(spiSlaves), m_SS(~0), m_LastAccessed(~0)
 {
 	printf(F9ED "SPIM Init" F9EE);
 
@@ -61,16 +61,20 @@ uint32_t SPIM::ioRd32(uint32_t io_a, uint32_t io_be)
 {
 	uint32_t idx = io_a - FT900EMU_MEMORY_SPIM_ADDR;
 	if (idx != SPIM_SSCR && idx != SPIM_SPDR && idx != SPIM_SPSR) printf(F9ED "SPIM RD 32 %i" F9EE, idx);
+	uint32_t v = m_Register[idx];
 	switch (idx)
 	{
 		case SPIM_SPDR:
 		{
 			m_Register[SPIM_SPSR] &= ~0x0C;
 			// m_IRQ->interrupt(FT900EMU_BUILTIN_IRQ_REPORT_CUR);
+			if (m_LastAccessed == SPIM_SPSR)
+				m_Register[SPIM_SPSR] &= ~0xC0;
 			break;
 		}
 	}
-	return m_Register[idx];
+	m_LastAccessed = idx;
+	return v;
 }
 
 void SPIM::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
@@ -107,16 +111,19 @@ void SPIM::ioWr32(uint32_t io_a, uint32_t io_be, uint32_t io_dout)
 			case SPIM_SPDR:
 			{
 				// Very basic
+				if (m_LastAccessed == SPIM_SPSR)
+					m_Register[SPIM_SPSR] &= ~0xC0;
 				if (~m_SS && m_SPISlaves[m_SS])
 				{
 					v = m_SPISlaves[m_SS]->transfer(v);
 					// printf("transfer, sent %#x, received %#x\n", io_dout, v);
-					m_Register[SPIM_SPSR] |= 0x0C;
+					m_Register[SPIM_SPSR] |= 0x8C;
 				}
 				break;
 			}
 		}
 
+		m_LastAccessed = idx;
 		m_Register[idx] = v;
 	}
 	else
