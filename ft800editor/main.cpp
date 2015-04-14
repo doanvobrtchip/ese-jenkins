@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QString>
 #include <QStyleFactory>
+#include <QTranslator>
 #include "main_window.h"
 #include "emulator_viewport.h"
 #include "ft800emu_emulator.h"
@@ -108,6 +109,17 @@ int main(int argc, char* argv[])
 	QApplication app(argc, const_cast<char **>(argv));
 
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
+
+	QTranslator* translator = new QTranslator();
+	if (translator->load(":/translation_en.qm"))
+	{
+		printf("Setting translation\n");
+		app.installTranslator(translator);
+	}
+	else
+	{
+		printf("Could not load translation\n");
+	}
 
 	/*
 	QApplication::setStyle(QStyleFactory::create("Fusion"));
