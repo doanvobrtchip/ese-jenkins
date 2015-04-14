@@ -572,7 +572,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 	// const uint32_t *p = m_DisplayListParsed[i].Parameter;
 	if (idLeft == FT800EMU_DL_VERTEX2F)
 	{
-		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2F"));
+		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2F."));
 		if (editor)
 		{
 			setTitle("VERTEX2F");
@@ -583,7 +583,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 	}
 	else if (idLeft == FT800EMU_DL_VERTEX2II)
 	{
-		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2II"));
+		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2II."));
 		if (editor)
 		{
 			setTitle("VERTEX2II");
@@ -598,7 +598,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 	{
 		case CMD_DLSTART:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_DLSTART"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_DLSTART."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -608,7 +608,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SWAP:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SWAP"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SWAP."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -618,7 +618,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_INTERRUPT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INTERRUPT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INTERRUPT."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -628,7 +628,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_BGCOLOR:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BGCOLOR"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BGCOLOR."));
 			if (editor)
 			{
 				setTitle("CMD_BGCOLOR");
@@ -640,7 +640,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_FGCOLOR:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FGCOLOR"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FGCOLOR."));
 			if (editor)
 			{
 				setTitle("CMD_FGCOLOR");
@@ -652,7 +652,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_GRADIENT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GRADIENT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GRADIENT."));
 			if (editor)
 			{
 				setTitle("CMD_GRADIENT");
@@ -667,7 +667,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_TEXT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TEXT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TEXT."));
 			if (editor)
 			{
 				setTitle("CMD_TEXT");
@@ -682,7 +682,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_BUTTON:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BUTTON"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BUTTON."));
 			if (editor)
 			{
 				setTitle("CMD_BUTTON");
@@ -698,7 +698,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_KEYS:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_KEYS"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_KEYS."));
 			if (editor)
 			{
 				setTitle("CMD_KEYS");
@@ -715,7 +715,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_PROGRESS:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_PROGRESS"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_PROGRESS."));
 			if (editor)
 			{
 				setTitle("CMD_PROGRESS");
@@ -731,7 +731,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SLIDER:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SLIDER"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SLIDER."));
 			if (editor)
 			{
 				setTitle("CMD_SLIDER");
@@ -747,7 +747,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SCROLLBAR:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCROLLBAR"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCROLLBAR."));
 			if (editor)
 			{
 				setTitle("CMD_SCROLLBAR");
@@ -764,7 +764,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_TOGGLE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TOGGLE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TOGGLE."));
 			if (editor)
 			{
 				setTitle("CMD_TOGGLE");
@@ -799,7 +799,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_CLOCK:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CLOCK"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CLOCK."));
 			if (editor)
 			{
 				setTitle("CMD_CLOCK");
@@ -817,7 +817,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_CALIBRATE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CALIBRATE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CALIBRATE."));
 			if (editor)
 			{
 				// no properties
@@ -828,7 +828,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SPINNER:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SPINNER"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SPINNER."));
 			if (editor)
 			{
 				setTitle("CMD_SPINNER");
@@ -842,7 +842,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_STOP:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_STOP"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_STOP."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -852,7 +852,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_MEMSET:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMSET"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMSET."));
 			if (editor)
 			{
 				setTitle("CMD_MEMSET");
@@ -866,7 +866,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_MEMZERO:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMZERO"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMZERO."));
 			if (editor)
 			{
 				setTitle("CMD_MEMZERO");
@@ -879,7 +879,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_MEMCPY:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMCPY"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMCPY."));
 			if (editor)
 			{
 				setTitle("CMD_MEMCPY");
@@ -893,7 +893,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_APPEND:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_APPEND"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_APPEND."));
 			if (editor)
 			{
 				setTitle("CMD_APPEND");
@@ -906,7 +906,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SNAPSHOT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SNAPSHOT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SNAPSHOT."));
 			if (editor)
 			{
 				setTitle("CMD_SNAPSHOT");
@@ -918,7 +918,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_LOADIDENTITY:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIDENTITY"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIDENTITY."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -928,7 +928,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_TRANSLATE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TRANSLATE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TRANSLATE."));
 			if (editor)
 			{
 				setTitle("CMD_TRANSLATE");
@@ -941,7 +941,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SCALE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCALE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCALE."));
 			if (editor)
 			{
 				setTitle("CMD_SCALE");
@@ -954,7 +954,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_ROTATE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ROTATE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ROTATE."));
 			if (editor)
 			{
 				setTitle("CMD_ROTATE");
@@ -966,7 +966,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SETMATRIX:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETMATRIX"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETMATRIX."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -976,7 +976,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SETFONT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETFONT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETFONT."));
 			if (editor)
 			{
 				setTitle("CMD_SETFONT");
@@ -989,7 +989,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_TRACK:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TRACK"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TRACK."));
 			if (editor)
 			{
 				setTitle("CMD_TRACK");
@@ -1003,7 +1003,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_DIAL:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_DIAL"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_DIAL."));
 			if (editor)
 			{
 				setTitle("CMD_DIAL");
@@ -1018,7 +1018,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_NUMBER:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_NUMBER"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_NUMBER."));
 			if (editor)
 			{
 				setTitle("CMD_TEXT");
@@ -1033,7 +1033,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SCREENSAVER:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCREENSAVER"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SCREENSAVER."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1043,7 +1043,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_SKETCH:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SKETCH"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SKETCH."));
 			if (editor)
 			{
 				setTitle("CMD_SKETCH");
@@ -1059,7 +1059,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 #ifndef FT810EMU_MODE // Deprecated in FT810
 		case CMD_CSKETCH:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CSKETCH"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CSKETCH."));
 			if (editor)
 			{
 				setTitle("CMD_SKETCH");
@@ -1076,7 +1076,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 #endif
 		case CMD_LOGO:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOGO"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOGO."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1086,7 +1086,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_COLDSTART:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_COLDSTART"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_COLDSTART."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1096,7 +1096,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_GRADCOLOR:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GRADCOLOR"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GRADCOLOR."));
 			if (editor)
 			{
 				setTitle("CMD_GRADCOLOR");
@@ -1112,7 +1112,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		// ******************************************
 		case FT800EMU_DL_DISPLAY:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_DISPLAY"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_DISPLAY."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1122,7 +1122,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_SOURCE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SOURCE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SOURCE."));
 			if (editor)
 			{
 				setTitle("BITMAP_SOURCE");
@@ -1134,7 +1134,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CLEAR_COLOR_RGB:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_RGB"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_RGB."));
 			if (editor)
 			{
 				setTitle("CLEAR_COLOR_RGB");
@@ -1146,7 +1146,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_TAG:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG."));
 			if (editor)
 			{
 				setTitle("TAG");
@@ -1158,7 +1158,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_COLOR_RGB:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_RGB"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_RGB."));
 			if (editor)
 			{
 				setTitle("COLOR_RGB");
@@ -1170,7 +1170,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_HANDLE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_HANDLE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_HANDLE."));
 			if (editor)
 			{
 				setTitle("BITMAP_HANDLE");
@@ -1182,7 +1182,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CELL:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CELL"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CELL."));
 			if (editor)
 			{
 				setTitle("CELL");
@@ -1194,7 +1194,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_LAYOUT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT."));
 			if (editor)
 			{
 				setTitle("BITMAP_LAYOUT");
@@ -1208,7 +1208,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_SIZE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SIZE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SIZE."));
 			if (editor)
 			{
 				setTitle("BITMAP_SIZE");
@@ -1224,7 +1224,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_ALPHA_FUNC:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_ALPHA_FUNC"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_ALPHA_FUNC."));
 			if (editor)
 			{
 				setTitle("ALPHA_FUNC");
@@ -1237,7 +1237,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_STENCIL_FUNC:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_FUNC"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_FUNC."));
 			if (editor)
 			{
 				setTitle("STENCIL_FUNC");
@@ -1252,7 +1252,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BLEND_FUNC:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BLEND_FUNC"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BLEND_FUNC."));
 			if (editor)
 			{
 				setTitle("BLEND_FUNC");
@@ -1265,7 +1265,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_STENCIL_OP:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_OP"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_OP."));
 			if (editor)
 			{
 				setTitle("STENCIL_OP");
@@ -1278,7 +1278,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_POINT_SIZE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_POINT_SIZE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_POINT_SIZE."));
 			if (editor)
 			{
 				setTitle("POINT_SIZE");
@@ -1290,7 +1290,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_LINE_WIDTH:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_LINE_WIDTH"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_LINE_WIDTH."));
 			if (editor)
 			{
 				setTitle("LINE_WIDTH");
@@ -1302,7 +1302,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CLEAR_COLOR_A:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_A"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_A."));
 			if (editor)
 			{
 				setTitle("CLEAR_COLOR_A");
@@ -1314,7 +1314,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_COLOR_A:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_A"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_A."));
 			if (editor)
 			{
 				setTitle("COLOR_A");
@@ -1326,7 +1326,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CLEAR_STENCIL:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_STENCIL"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_STENCIL."));
 			if (editor)
 			{
 				setTitle("CLEAR_STENCIL");
@@ -1339,7 +1339,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CLEAR_TAG:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_TAG"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_TAG."));
 			if (editor)
 			{
 				setTitle("CLEAR_TAG");
@@ -1351,7 +1351,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_STENCIL_MASK:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_MASK"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_MASK."));
 			if (editor)
 			{
 				setTitle("STENCIL_MASK");
@@ -1364,7 +1364,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_TAG_MASK:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG_MASK"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG_MASK."));
 			if (editor)
 			{
 				setTitle("TAG_MASK");
@@ -1376,7 +1376,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_A:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_A");
@@ -1388,7 +1388,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_B:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_B");
@@ -1400,7 +1400,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_C:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_C"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_C."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_C");
@@ -1412,7 +1412,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_D:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_D");
@@ -1424,7 +1424,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_E:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_E");
@@ -1436,7 +1436,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BITMAP_TRANSFORM_F:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_F"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_F."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_F");
@@ -1448,7 +1448,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_SCISSOR_XY:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_XY"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_XY."));
 			if (editor)
 			{
 				setTitle("SCISSOR_XY");
@@ -1460,7 +1460,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_SCISSOR_SIZE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_SIZE"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_SIZE."));
 			if (editor)
 			{
 				setTitle("SCISSOR_SIZE");
@@ -1472,7 +1472,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CALL:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CALL"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CALL."));
 			if (editor)
 			{
 				setTitle("CALL");
@@ -1484,7 +1484,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_JUMP:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_JUMP"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_JUMP."));
 			if (editor)
 			{
 				setTitle("JUMP");
@@ -1496,7 +1496,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_BEGIN:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BEGIN"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BEGIN."));
 			if (editor)
 			{
 				setTitle("BEGIN");
@@ -1508,7 +1508,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_COLOR_MASK:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_MASK"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_MASK."));
 			if (editor)
 			{
 				setTitle("COLOR_MASK");
@@ -1523,7 +1523,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_END:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_END"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_END."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1533,7 +1533,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_SAVE_CONTEXT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SAVE_CONTEXT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SAVE_CONTEXT."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1543,7 +1543,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_RESTORE_CONTEXT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RESTORE_CONTEXT"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RESTORE_CONTEXT."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1553,7 +1553,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_RETURN:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RETURN"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RETURN."));
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
@@ -1563,7 +1563,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_MACRO:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_MACRO"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_MACRO."));
 			if (editor)
 			{
 				setTitle("MACRO");
@@ -1575,7 +1575,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FT800EMU_DL_CLEAR:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR"));
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR."));
 			if (editor)
 			{
 				setTitle("CLEAR");
