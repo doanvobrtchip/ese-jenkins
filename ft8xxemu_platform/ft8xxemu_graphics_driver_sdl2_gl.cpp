@@ -176,7 +176,7 @@ void genVBO()
 
 void drawBuffer()
 {
-	if (s_WindowResized)
+	if (s_WindowResized || s_Width != s_WidthCur || s_Height != s_HeightCur)
 	{
 		glViewport(0, 0, s_WindowWidth, s_WindowHeight);
 		s_WindowResized = false;
@@ -217,7 +217,6 @@ void drawBuffer()
 				s_WidthCur = s_Width;
 				s_HeightCur = s_Height;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
-				genVBO();
 			}
 			else
 			{
