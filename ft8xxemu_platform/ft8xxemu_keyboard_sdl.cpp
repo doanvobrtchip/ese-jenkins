@@ -23,17 +23,8 @@
 // Project includes
 #include "ft8xxemu_system_windows.h"
 #include "ft8xxemu_system.h"
-#include "wiring.h"
 
 // using namespace ...;
-
-#define FT8XXEMU_DIGITAL_LEFT  6
-#define FT8XXEMU_DIGITAL_RIGHT 3
-#define FT8XXEMU_DIGITAL_UP    4
-#define FT8XXEMU_DIGITAL_DOWN  5
-#define FT8XXEMU_DIGITAL_SHOOT 2
-#define FT8XXEMU_ANALOG_X      0
-#define FT8XXEMU_ANALOG_Y      1
 
 namespace FT8XXEMU {
 
