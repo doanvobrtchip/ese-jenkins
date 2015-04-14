@@ -109,6 +109,7 @@ const char *g_DlEnumBitmapFormat[DL_ENUM_BITMAP_FORMAT_NB] = {
 	"PALETTED565", // 14
 	"PALETTED4444", // 15
 	"PALETTED8", // 16
+	"L2", // 17
 #endif
 };
 

@@ -12,14 +12,14 @@ V0.7-EDITOR: Add L2 support
 
 vc_ARGB1555 = 0
 vc_L1 = 1
-vc_L2 = 2
-vc_L4 = 3
-vc_L8 = 4
-vc_RGB332 = 5
-vc_ARGB2 = 6
-vc_ARGB4 = 7
-vc_RGB565 = 8
-vc_PALETTED = 9
+vc_L2 = 17
+vc_L4 = 2
+vc_L8 = 3
+vc_RGB332 = 4
+vc_ARGB2 = 5
+vc_ARGB4 = 6
+vc_RGB565 = 7
+vc_PALETTED = 8
 
 format_table = {vc_ARGB1555 : "ARGB1555",
 			vc_L1 : "L1",
@@ -37,14 +37,14 @@ help_string = " \
 		 format is as follow:\r\n \
 		 0 : ARGB1555 [default] \r\n \
 		 1 : L1\r\n \
-		 2 : L2\r\n \
-		 3 : L4\r\n \
-		 4 : L8\r\n \
-		 5 : RGB332\r\n \
-		 6 : ARGB2\r\n \
-		 7 : ARGB4\r\n \
-		 8 : RGB565\r\n \
-		 9 : PALETTED\r\n \
+		 17 : L2\r\n \
+		 2 : L4\r\n \
+		 3 : L8\r\n \
+		 4 : RGB332\r\n \
+		 5 : ARGB2\r\n \
+		 6 : ARGB4\r\n \
+		 7 : RGB565\r\n \
+		 8 : PALETTED\r\n \
 			  "
 
 version = "V0.7-EDITOR"

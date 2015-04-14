@@ -53,6 +53,87 @@ using namespace std;
 
 namespace FT800EMUQT {
 
+namespace /* anonymous */ {
+
+#ifdef FT810EMU_MODE
+static const int s_ImageFormatToUI[] = {
+	0, // 0: ARGB1555
+	1, // 1: L1
+	3, // 2: L4
+	4, // 3: L8
+	5, // 4: RGB332
+	6, // 5: ARGB2
+	7, // 6: ARGB4
+	8, // 7: RGB565
+	11, // 8: PALETTED
+	0, // 9
+	0, // 10
+	0, // 11
+	0, // 12
+	0, // 13
+	9, // 14: PALETTED565
+	10, // 15: PALETTED4444
+	11, // 16: PALETTED8
+	2, // 17: L2
+};
+#else
+static const int s_ImageFormatToUI[] = {
+	0, // ARGB1555
+	1, // L1
+	2, // L4
+	3, // L8
+	4, // RGB332
+	5, // ARGB2
+	6, // ARGB4
+	7, // RGB565
+	8, // PALETTED
+};
+#endif
+
+static const int s_ImageFormatFromUI[] = {
+	0, // ARGB1555
+	1, // L1
+#ifdef FT810EMU_MODE
+	17, // L2
+#endif
+	2, // L4
+	3, // L8
+	4, // RGB332
+	5, // ARGB2
+	6, // ARGB4
+	7, // RGB565
+#ifdef FT810EMU_MODE
+	14, // PALETTED565
+	15, // PALETTED4444
+	16, // PALETTED8
+#else
+	8, // PALETTED
+#endif
+};
+
+static const char *s_ImageFormatNames[] = {
+	"ARGB1555",
+	"L1",
+#ifdef FT810EMU_MODE
+	"L2",
+#endif
+	"L4",
+	"L8",
+	"RGB332",
+	"ARGB2",
+	"ARGB4",
+	"RGB565",
+#ifdef FT810EMU_MODE
+	"PALETTED565",
+	"PALETTED4444",
+	"PALETTED8",
+#else
+	"PALETTED",
+#endif
+};
+
+} /* anonymous namespace */
+
 int g_RamGlobalUsage = 0;
 
 std::vector<QString> ContentManager::s_FileExtensions;
@@ -308,7 +389,9 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	m_PropertiesImageFormat->addItem("ARGB1555");
+	for (int i = 0; i < sizeof(s_ImageFormatNames) / sizeof(s_ImageFormatNames[0]); ++i)
+		m_PropertiesImageFormat->addItem(s_ImageFormatNames[i]);
+	/*m_PropertiesImageFormat->addItem("ARGB1555");
 	m_PropertiesImageFormat->addItem("L1");
 	m_PropertiesImageFormat->addItem("L4");
 	m_PropertiesImageFormat->addItem("L8");
@@ -316,7 +399,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImageFormat->addItem("ARGB2");
 	m_PropertiesImageFormat->addItem("ARGB4");
 	m_PropertiesImageFormat->addItem("RGB565");
-	m_PropertiesImageFormat->addItem("PALETTED");
+	m_PropertiesImageFormat->addItem("PALETTED");*/
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
@@ -916,7 +999,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	switch (contentInfo->Converter)
 	{
 	case ContentInfo::Image:
-		m_PropertiesImageFormat->setCurrentIndex(contentInfo->ImageFormat);
+		m_PropertiesImageFormat->setCurrentIndex(s_ImageFormatToUI[contentInfo->ImageFormat % (sizeof(s_ImageFormatToUI) / sizeof(s_ImageFormatToUI[0]))]);
 		break;
 	case ContentInfo::Raw:
 		m_PropertiesRawStart->setValue(contentInfo->RawStart);
@@ -2130,6 +2213,8 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 void ContentManager::propertiesImageFormatChanged(int value)
 {
 	printf("ContentManager::propertiesImageFormatChanged(value)\n");
+
+	value = s_ImageFormatFromUI[value % (sizeof(s_ImageFormatFromUI) / sizeof(s_ImageFormatFromUI[0]))];
 
 	if (current() && current()->ImageFormat != value)
 		changeImageFormat(current(), value);

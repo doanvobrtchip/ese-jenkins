@@ -382,6 +382,9 @@ bool AssetConverter::getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QStrin
 	bitmapInfo.LayoutHeight = height;
 	if (!strcmp(format, "ARGB1555")) bitmapInfo.LayoutFormat = ARGB1555;
 	else if (!strcmp(format, "L1")) bitmapInfo.LayoutFormat = L1;
+#ifdef FT810EMU_MODE
+	else if (!strcmp(format, "L2")) bitmapInfo.LayoutFormat = L2;
+#endif
 	else if (!strcmp(format, "L4")) bitmapInfo.LayoutFormat = L4;
 	else if (!strcmp(format, "L8")) bitmapInfo.LayoutFormat = L8;
 	else if (!strcmp(format, "RGB332")) bitmapInfo.LayoutFormat = RGB332;

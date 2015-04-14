@@ -41,7 +41,7 @@ extern const char *g_DlEnumCompare[DL_ENUM_COMPARE_NB];
 extern const char *g_DlEnumStencil[DL_ENUM_STENCIL_NB];
 
 #ifdef FT810EMU_MODE
-#define DL_ENUM_BITMAP_FORMAT_NB 17
+#define DL_ENUM_BITMAP_FORMAT_NB 18
 #else
 #define DL_ENUM_BITMAP_FORMAT_NB 12
 #endif
