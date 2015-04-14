@@ -258,6 +258,9 @@ void DlParser::init()
 		s_ParamMap["INVERT"] = INVERT;
 		s_ParamMap["KEEP"] = KEEP;
 		s_ParamMap["L1"] = L1;
+#if FT810EMU_MODE
+		s_ParamMap["L2"] = L2;
+#endif
 		s_ParamMap["L4"] = L4;
 		s_ParamMap["L8"] = L8;
 		s_ParamMap["LEQUAL"] = LEQUAL;
@@ -271,7 +274,13 @@ void DlParser::init()
 		s_ParamMap["ONE"] = ONE;
 		s_ParamMap["ONE_MINUS_DST_ALPHA"] = ONE_MINUS_DST_ALPHA;
 		s_ParamMap["ONE_MINUS_SRC_ALPHA"] = ONE_MINUS_SRC_ALPHA;
+#if FT810EMU_MODE
+		s_ParamMap["PALETTED8"] = PALETTED8;
+		s_ParamMap["PALETTED4444"] = PALETTED4444;
+		s_ParamMap["PALETTED565"] = PALETTED565;
+#else
 		s_ParamMap["PALETTED"] = PALETTED;
+#endif
 		s_ParamMap["POINTS"] = POINTS;
 		s_ParamMap["RECTS"] = RECTS;
 		s_ParamMap["REPEAT"] = REPEAT;
