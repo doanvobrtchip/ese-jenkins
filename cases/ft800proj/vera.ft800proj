@@ -1,0 +1,36 @@
+{
+    "content": [
+        {
+            "converter": "Font",
+            "dataCompressed": true,
+            "dataEmbedded": true,
+            "destName": "assets/vera",
+            "fontCharSet": "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+            "fontSize": 64,
+            "imageFormat": 17,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "Vera.ttf"
+        }
+    ],
+    "coprocessor": [
+        "BITMAP_HANDLE(0)",
+        "BITMAP_SOURCE(148)",
+        "BITMAP_LAYOUT(L2, 20, 77)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 80, 77)",
+        "CMD_SETFONT(0, 0)",
+        "CLEAR(1, 1, 1)",
+        "CMD_TEXT(240, 136, 0, OPT_CENTER, \"Hello world\")",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

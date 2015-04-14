@@ -753,7 +753,8 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			b >>= 6;
 			c >>= 6;
 			d >>= 6;
-			bitmapBuffer[i] = (a << 6) | (b << 4) || (c << 2) | d;
+			uint8_t res = (a << 6) | (b << 4) | (c << 2) | d;
+			bitmapBuffer[i] = res;
 		}
 	}
 #endif
