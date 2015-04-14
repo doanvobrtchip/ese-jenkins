@@ -34,7 +34,7 @@ Revision History:
 #define FT800EMU_MAIN_H
 
 #include "FT_Platform.h"
-#include <stdint.h>
+#include <ft8xxemu_inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

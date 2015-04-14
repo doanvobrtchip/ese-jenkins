@@ -7,6 +7,7 @@
 #include "../ftemutest.h"
 #include <stdio.h>
 
+//#define TEST_FILE "sampleapp/Test/chickens-4-short.avi"
 #define TEST_FILE "c:/temp/catf.avi"
 static FILE *s_F = NULL;
 

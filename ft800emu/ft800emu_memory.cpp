@@ -715,6 +715,13 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 	++s_WriteOpCount;
 
+	if (address == REG_CMD_READ)
+	{
+		if (data & 0x1)
+		{
+			printf("WARNING: Coprocessor has flagged an error\n");
+		}
+	}
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
 		printf("Coprocessor U32 write address %i exceeds RAM size\n", (int)address);

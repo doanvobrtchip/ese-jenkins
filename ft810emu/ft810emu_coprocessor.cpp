@@ -23,6 +23,8 @@
 
 namespace FT810EMU {
 
+#define FT800EMU_COPROCESSOR_DEBUG 0
+
 #define FT800EMU_COPROCESSOR_ROM_SIZE 16384
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
 #define isFF(x) (((x) & 0xff) == 0xff)
@@ -209,6 +211,9 @@ void Ejpg::run2(uint8_t *memory8,
 	uint32_t tda,
 	uint32_t feed)
 {
+#if FT800EMU_COPROCESSOR_DEBUG
+	printf("Ejpg::run2\n");
+#endif
 
 	if (stim)
 		fprintf(stim, "%08x\n", feed);
@@ -370,6 +375,10 @@ void Ejpg::run(uint8_t *memory8,
 	int bitsize,
 	uint32_t feed)
 {
+#if FT800EMU_COPROCESSOR_DEBUG
+	printf("Ejpg::run\n");
+#endif
+
 	assert((bitsize == 8) | (bitsize == 32));
 
 	const char *btypes = NULL;
@@ -518,6 +527,10 @@ void Ejpg::run1(uint8_t *memory8,
 	uint8_t symbol,
 	int16_t dm)
 {
+#if FT800EMU_COPROCESSOR_DEBUG
+	printf("Ejpg::run1\n");
+#endif
+
 	// printf("idct_i=%d, symbol %02x\n", idct_i, symbol);
 	// printf("SYMBOL %02x,%04x,%02x\n", symbol, 0xffff & dm, idct_i);
 	uint8_t runlength = (symbol >> 4) & 15;
@@ -650,7 +663,7 @@ void CoprocessorClass::execute()
 	m_Running = true;
 
 	uint16_t _pc;
-	uint32_t  n, _t;
+	uint32_t _t;
 
 
 	do 
@@ -663,6 +676,46 @@ void CoprocessorClass::execute()
 			continue;
 		}
 
+#if FT800EMU_COPROCESSOR_DEBUG
+		//printf("pc: %i, 0x%x\n", (int)pc, (int)pc);
+		switch (pc)
+		{
+		case 0x04CB:
+			printf("COPROCESSOR: throw\n");
+			break;
+		case 0x2D5A:
+			printf("func:playvideo\n");
+			printf("\tCALL mjpeg-DHT\n");
+			break;
+		case 0x2D5B:
+			printf("\tCALL jpgavi-common\n");
+			break;
+		case 0x2D5C:
+			printf("\tCALL avi-prime\n");
+			break;
+		case 0x2D5D:
+			printf("\tCALL avi-chunk\n");
+			break;
+		case 0x2D64:
+			printf("\tJUMP avi-cleanup\n");
+			break;
+		/*case 0x2C3A:
+			printf("\t0x2C3A N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
+			break;
+		case 0x2C3C:
+			printf("\t0x2C3C\n");
+			break;
+		case 0x2C70:
+			printf("\t0x2C70\n");
+			break;
+		case 0x2C75:
+			printf("\t0x2C75 N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
+			break;
+		case 0x2C77:
+			printf("\t0x2C77\n");
+			break;*/
+		}
+#endif
 		uint16_t insn = j1boot[pc];
 		_pc = pc + 1;
 
@@ -695,7 +748,7 @@ void CoprocessorClass::execute()
 				}
 				_pc = r[rsp] >> 1;
 			}
-			n = d[dsp];
+			uint32_t n = d[dsp];
 			switch ((insn >> 8) & 0x1f) 
 			{
 			case 0x00:  _t = t; break;
@@ -705,7 +758,12 @@ void CoprocessorClass::execute()
 			case 0x04:  _t = t | n; break;
 			case 0x05:  _t = t ^ n; break;
 			case 0x06:  _t = ~t; break;
-			case 0x07:  _t = -(t == n); break;
+			case 0x07:  
+				_t = -(t == n);
+#if FT800EMU_COPROCESSOR_DEBUG
+				printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
+#endif
+				break;
 			case 0x08:  _t = -((int32_t)n < (int32_t)t); break;
 			case 0x09:  _t = ((int32_t)(n)) >> t; break;
 			case 0x0a:  _t = t - 1; break;

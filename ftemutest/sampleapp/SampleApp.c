@@ -7810,14 +7810,14 @@ while (1) {
 	//FT81xBitmapFormatAndOptions();
 	//VideoPlaybackViaCMDBuff();
 	//ScreenOrientation();
-	SAMAPP_CoPro_Snapshot();  //snapshot2()
+	//SAMAPP_CoPro_Snapshot();  //snapshot2()
 	//SAMAPP_GPU_Fonts();  //the larger fonts are not displaying
 	//SAMAPP_81X_Paletted_Bitmap(); //the converted bitmaps are not the intended ones
 	//SAMAPP_GPU_DXT1();
 	//SAMAPP_CoPro_MultiTracker();
 	//VideoPlayback();
 	//VideoPlaybackViaCMDBuff();
-	//VideoPlayBackFrameByFrame();
+	VideoPlayBackFrameByFrame();
 	//SAMAPP_GPU_Vertex_Translate();
 	//SAMAPP_81X_ChangePadDriveStrength();
 	//SAMAPP_ChangeFreq();
