@@ -39,9 +39,8 @@ static std::map<std::string, int> s_ParamMap;
 static std::map<std::string, int> s_CmdIdMap;
 static std::map<std::string, int> s_CmdParamMap;
 
-// TODO_FT810 DL_ID_NB 46
 #ifdef FT810EMU_MODE
-#define DL_ID_NB 39
+#define DL_ID_NB 46
 #define CMD_ID_NB 68
 #else
 #define DL_ID_NB 39

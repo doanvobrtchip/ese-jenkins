@@ -1944,23 +1944,53 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT;
 						pa.Parameter[0].U = contentInfo->ImageFormat;
-						pa.Parameter[1].U = contentInfo->CachedImageStride;
-						pa.Parameter[2].U = contentInfo->CachedImageHeight;
+						pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
+						pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
 						pa.ExpectedParameterCount = 3;
 						m_LineEditor->insertLine(hline, pa);
 						++hline;
 						++line;
 
+#ifdef FT810EMU_MODE
+						if ((contentInfo->CachedImageStride >> 10)
+							|| (contentInfo->CachedImageHeight >> 9))
+						{
+							// Add _H if necessary
+							pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
+							pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+							pa.ExpectedParameterCount = 2;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+						}
+#endif
+
 						pa.IdRight = FT800EMU_DL_BITMAP_SIZE;
 						pa.Parameter[0].U = 0; // size filter
 						pa.Parameter[1].U = 0; // wrap x
 						pa.Parameter[2].U = 0; // wrap y
-						pa.Parameter[3].U = contentInfo->CachedImageWidth;
-						pa.Parameter[4].U = contentInfo->CachedImageHeight;
+						pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
+						pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
 						pa.ExpectedParameterCount = 5;
 						m_LineEditor->insertLine(hline, pa);
 						++hline;
 						++line;
+
+#ifdef FT810EMU_MODE
+						if ((contentInfo->CachedImageWidth >> 9)
+							|| (contentInfo->CachedImageHeight >> 9))
+						{
+							// Add _H if necessary
+							pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
+							pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+							pa.ExpectedParameterCount = 2;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+						}
+#endif
 
 						if (contentInfo->Converter == ContentInfo::Font)
 						{

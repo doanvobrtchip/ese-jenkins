@@ -2118,6 +2118,8 @@ void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
 
 static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJsonArray &bitmaps)
 {
+	// Compatibility code updating from an old version of ft800proj format, does not need update for new features
+
 	int hline = 0;
 
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)

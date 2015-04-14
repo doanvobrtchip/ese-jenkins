@@ -1,0 +1,36 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataEmbedded": true,
+            "destName": "assets/redglasses730",
+            "imageFormat": 17,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "../redglasses730.jpg"
+        }
+    ],
+    "coprocessor": [
+        "BITMAP_HANDLE(0)",
+        "BITMAP_SOURCE(0)",
+        "BITMAP_LAYOUT(L2, 183, 483)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 220, 483)",
+        "BITMAP_SIZE_H(1, 0)",
+        "CLEAR(1, 1, 1)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0, 0, 0, 0)",
+        "END()",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 600
+    }
+}

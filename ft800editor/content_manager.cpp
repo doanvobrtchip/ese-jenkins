@@ -1550,6 +1550,10 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT:
 				case FT800EMU_DL_BITMAP_SIZE:
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FT800EMU_DL_BITMAP_SIZE_H:
+#endif
 					break;
 				default:
 					handle = -1;
@@ -1583,6 +1587,10 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT:
 				case FT800EMU_DL_BITMAP_SIZE:
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FT800EMU_DL_BITMAP_SIZE_H:
+#endif
 					break;
 			}
 		}
@@ -1626,6 +1634,10 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 				case FT800EMU_DL_BITMAP_SOURCE:
 				case FT800EMU_DL_BITMAP_LAYOUT:
 				case FT800EMU_DL_BITMAP_SIZE:
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FT800EMU_DL_BITMAP_SIZE_H:
+#endif
 					break;
 				default:
 					return i;
@@ -1647,6 +1659,12 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 {
 	int handleLine = -1;
 	bool addressOk = false;
+	int layoutLine = -1;
+	int sizeLine = -1;
+#ifdef FT810EMU_MODE
+	int layoutHLine = -1;
+	int sizeHLine = -1;
+#endif
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
@@ -1681,20 +1699,66 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					{
 						DlParsed pa = parsed;
 						pa.Parameter[0].U = contentInfo->ImageFormat;
-						pa.Parameter[1].U = contentInfo->CachedImageStride;
-						pa.Parameter[2].U = contentInfo->CachedImageHeight;
+						pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
+						pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
 						dlEditor->replaceLine(i, pa);
+						layoutLine = i;
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
 					if (addressOk && updateSize)
 					{
 						DlParsed pa = parsed;
-						pa.Parameter[3].U = contentInfo->CachedImageWidth;
-						pa.Parameter[4].U = contentInfo->CachedImageHeight;
+						pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
+						pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
 						dlEditor->replaceLine(i, pa);
+						sizeLine = i;
 					}
 					break;
+#ifdef FT810EMU_MODE
+				case FT800EMU_DL_BITMAP_LAYOUT_H:
+					if (addressOk)
+					{
+						if (!((contentInfo->CachedImageStride >> 10)
+							|| (contentInfo->CachedImageHeight >> 9)))
+						{
+							// Remove _H if not necessary
+							dlEditor->removeLine(i);
+							--i;
+						}
+						else
+						{
+							// Update _H
+							DlParsed pa = parsed;
+							pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+							dlEditor->replaceLine(i, pa);
+							layoutHLine = i;
+						}
+					}
+					break;
+				case FT800EMU_DL_BITMAP_SIZE_H:
+					if (addressOk)
+					{
+						if (!((contentInfo->CachedImageWidth >> 9)
+							|| (contentInfo->CachedImageHeight >> 9)))
+						{
+							// Remove _H if not necessary
+							dlEditor->removeLine(i);
+							--i;
+						}
+						else
+						{
+							// Update _H
+							DlParsed pa = parsed;
+							pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+							dlEditor->replaceLine(i, pa);
+							sizeHLine = i;
+						}
+					}
+					break;
+#endif
 				default:
 					handleLine = -1;
 					addressOk = false;
@@ -1702,6 +1766,48 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			}
 		}
 	}
+#ifdef FT810EMU_MODE
+	if (layoutLine >= 0 && layoutHLine < 0)
+	{
+		if ((contentInfo->CachedImageStride >> 10)
+			|| (contentInfo->CachedImageHeight >> 9))
+		{
+			// Add _H if doesn't exist and necessary
+			DlParsed pa;
+			pa.ValidId = true;
+			pa.IdLeft = 0;
+			pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
+			pa.ExpectedStringParameter = false;
+			pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+			pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+			pa.ExpectedParameterCount = 2;
+			layoutHLine = layoutLine + 1;
+			dlEditor->insertLine(layoutHLine, pa);
+			if (sizeLine > layoutLine)
+				++sizeLine;
+			if (sizeHLine > layoutLine)
+				++sizeHLine;
+		}
+	}
+	if (sizeLine >= 0 && sizeHLine < 0)
+	{
+		if ((contentInfo->CachedImageWidth >> 9)
+			|| (contentInfo->CachedImageHeight >> 9))
+		{
+			// Add _H if doesn't exist and necessary
+			DlParsed pa;
+			pa.ValidId = true;
+			pa.IdLeft = 0;
+			pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
+			pa.ExpectedStringParameter = false;
+			pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+			pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+			pa.ExpectedParameterCount = 2;
+			sizeHLine = sizeLine + 1;
+			dlEditor->insertLine(sizeHLine, pa);
+		}
+	}
+#endif
 }
 
 // Update handle adress
@@ -1865,6 +1971,10 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 					case FT800EMU_DL_BITMAP_HANDLE:
 					case FT800EMU_DL_BITMAP_LAYOUT:
 					case FT800EMU_DL_BITMAP_SIZE:
+#ifdef FT810EMU_MODE
+					case FT800EMU_DL_BITMAP_LAYOUT_H:
+					case FT800EMU_DL_BITMAP_SIZE_H:
+#endif
 						dlEditor->removeLine(i);
 						--i;
 						break;
