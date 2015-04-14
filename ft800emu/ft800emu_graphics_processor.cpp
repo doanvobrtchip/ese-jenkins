@@ -2750,6 +2750,12 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 			gs.DebugDisplayListIndex = (int)c;
 
 			uint32_t v = displayList[c]; // (up to 2048 ops)
+
+			/*if (y == 0)
+			{
+				printf("DL: %i: %x\n", c, v);
+			}*/
+
 EvaluateDisplayListValue:
 			switch (v >> 30)
 			{

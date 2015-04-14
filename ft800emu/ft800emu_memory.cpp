@@ -732,7 +732,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 	{
 		int dlAddr = (int)((address - RAM_DL) >> 2);
 		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
-		// printf("Coprocessor command at %i writes to display list at %i\n", s_LastCoprocessorCommandRead, dlAddr);
+		// printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)s_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
 	}
 
     actionWrite(address, data);

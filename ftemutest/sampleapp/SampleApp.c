@@ -6216,6 +6216,7 @@ dlPTR=0;
 Ft_Gpu_CoCmd_Dlstart(phost);
 //Ft_App_WrCoCmd_Buffer(phost,CLEAR_COLOR_RGB(255,255,255) );
 Ft_App_WrCoCmd_Buffer(phost,CLEAR(1,1,1) );
+Ft_App_Flush_Co_Buffer(phost);
 
 Ft_Gpu_Hal_WrCmd32(phost, CMD_LOADIMAGE);
 Ft_Gpu_Hal_WrCmd32(phost, RAM_G);//destination address of jpg decode
@@ -7807,7 +7808,7 @@ while (1) {
 	//testSetrotate();
 	//HigherResolutionBitmap();
 	//SAMAPP_CoPro_Widget_Keys_Interactive();
-	//FT81xBitmapFormatAndOptions();
+	FT81xBitmapFormatAndOptions();
 	//VideoPlaybackViaCMDBuff();
 	//ScreenOrientation();
 	//SAMAPP_CoPro_Snapshot();  //snapshot2()
@@ -7817,7 +7818,7 @@ while (1) {
 	//SAMAPP_CoPro_MultiTracker();
 	//VideoPlayback();
 	//VideoPlaybackViaCMDBuff();
-	VideoPlayBackFrameByFrame();
+	//VideoPlayBackFrameByFrame();
 	//SAMAPP_GPU_Vertex_Translate();
 	//SAMAPP_81X_ChangePadDriveStrength();
 	//SAMAPP_ChangeFreq();
