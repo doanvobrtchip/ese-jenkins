@@ -162,6 +162,7 @@ private slots:
 	void tabChanged(int i);
 
 	void refreshScriptsMenu();
+	void updateWindowTitle();
 
 private:
 	void updateInitialization(bool visible);
@@ -259,6 +260,8 @@ private:
 
 	QToolBar *m_FileToolBar;
 	QToolBar *m_EditToolBar;
+
+	bool m_CleanUndoStack;
 
 	QAction *m_NewAct;
 	QAction *m_OpenAct;

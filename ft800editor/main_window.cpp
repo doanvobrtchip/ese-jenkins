@@ -2005,9 +2005,15 @@ void MainWindow::clearUndoStack()
 	m_Macro->clearUndoStack();
 }
 
+void MainWindow::updateWindowTitle()
+{
+	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
+}
+
 void MainWindow::undoCleanChanged(bool clean)
 {
-	setWindowTitle(QString(clean ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FTDI EVE Screen Editor"));
+	m_CleanUndoStack = clean;
+	updateWindowTitle();
 }
 
 bool MainWindow::maybeSave()
@@ -2095,6 +2101,7 @@ void MainWindow::actNew(bool addClear)
 #else
 	QDir::setCurrent(m_InitialWorkingDir);
 #endif
+	updateWindowTitle();
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 }
 
@@ -2413,6 +2420,9 @@ void MainWindow::actSaveAs()
 	// Save the project itself
 	m_CurrentFile = fileName;
 	actSave();
+
+	// Update window title in case project folder changed
+	updateWindowTitle();
 }
 
 void MainWindow::actImport()
