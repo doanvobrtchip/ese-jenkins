@@ -797,7 +797,7 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 #ifdef FT810EMU_MODE
 	case L2:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (3 - (x % 4))) & 0x3;
+			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (x % 4)) << 1)) & 0x3;
 			val = mul255div3(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
