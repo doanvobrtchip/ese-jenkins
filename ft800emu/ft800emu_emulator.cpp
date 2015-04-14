@@ -341,11 +341,13 @@ const uint8_t bayerDiv4[2][2] = {
 										uint32_t r = (DITHERDIV16(c0 & 0xFF, (-(x - 1)), snapy))
 											| (DITHERDIV16((c0 >> 8) & 0xFF, (x - 1), snapy) << 4)
 											| (DITHERDIV16((c0 >> 16 & 0xFF), (x - 1), (-snapy)) << 8)
-											| (/*DITHERDIV16((c0 >> 24 & 0xFF), (-(x - 1)), (-(snapy)))*/ 0xF << 12)
+											| (DITHERDIV16((c0 >> 24 & 0xFF), (-(x - 1)), (-(snapy))) << 12)
+											// | (0xF << 12)
 											| (DITHERDIV16(c1 & 0xFF, (-x), snapy) << 16)
 											| (DITHERDIV16((c1 >> 8) & 0xFF, x, snapy) << 20)
 											| (DITHERDIV16((c1 >> 16) & 0xFF, x, (-snapy)) << 24)
-											| (/*DITHERDIV16((c1 >> 24 & 0xFF), (-(x - 1)), (-(snapy)))*/ 0xF << 28);
+											// | (0xF << 28);
+											| (DITHERDIV16((c1 >> 24 & 0xFF), (-x), (-(snapy))) << 28);
 										Memory.rawWriteU32(ram, wa, r);
 										wa += 4;
 										break;

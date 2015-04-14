@@ -2988,6 +2988,7 @@ ft_void_t SAMAPP_CoPro_Snapshot() {
 		Ft_App_WrCoCmd_Buffer(phost, COLOR_RGB(32, 32, 32));
 		Ft_Gpu_CoCmd_Text(phost, ((FT_DispWidth) / 6), ((FT_DispHeight) / 2) - 20, 27, 0, "RGB565");
 
+		Ft_App_WrCoCmd_Buffer(phost, COLOR_RGB(255, 255, 255)); // FIX
 		Ft_App_WrCoCmd_Buffer(phost, BEGIN(BITMAPS));
 		Ft_App_WrCoCmd_Buffer(phost, BITMAP_SOURCE(ARGB4RamOffset));
 		Ft_App_WrCoCmd_Buffer(phost, BITMAP_LAYOUT(ARGB4, bitmapWidth * 2, bitmapHeight));
@@ -7809,9 +7810,9 @@ while (1) {
 	//FT81xBitmapFormatAndOptions();
 	//VideoPlaybackViaCMDBuff();
 	//ScreenOrientation();
-	//SAMAPP_CoPro_Snapshot();  //snapshot2()
+	SAMAPP_CoPro_Snapshot();  //snapshot2()
 	//SAMAPP_GPU_Fonts();  //the larger fonts are not displaying
-	SAMAPP_81X_Paletted_Bitmap(); //the converted bitmaps are not the intended ones
+	//SAMAPP_81X_Paletted_Bitmap(); //the converted bitmaps are not the intended ones
 	//SAMAPP_GPU_DXT1();
 	//SAMAPP_CoPro_MultiTracker();
 	//VideoPlayback();
