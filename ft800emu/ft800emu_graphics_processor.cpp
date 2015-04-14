@@ -1072,6 +1072,7 @@ FT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case PALETTED565: return stride;
 		case PALETTED4444: return stride;
 		case PALETTED8: return stride;
+		case L2: return stride << 2;
 #endif
 	}
 	printf("Invalid bitmap layout\n");
