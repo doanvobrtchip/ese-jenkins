@@ -62,6 +62,12 @@ namespace FT800EMUQT {
 #define POINTER_EDIT_GRADIENT_MOVE_2 0x0800
 #define POINTER_EDIT_GRADIENT_MOVE (POINTER_EDIT_GRADIENT_MOVE_1 | POINTER_EDIT_GRADIENT_MOVE_2)
 
+#ifdef FT810EMU_MODE
+#define FTED_SNAP_HISTORY_NONE 4096
+#else
+#define FTED_SNAP_HISTORY_NONE 1024
+#endif
+
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false),
@@ -72,8 +78,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 {
 	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 	{
-		m_SnapHistoryX[i] = 1024;
-		m_SnapHistoryY[i] = 1024;
+		m_SnapHistoryX[i] = FTED_SNAP_HISTORY_NONE;
+		m_SnapHistoryY[i] = FTED_SNAP_HISTORY_NONE;
 	}
 
 	// m_Label->setCursor(Qt::PointingHandCursor);
@@ -1036,8 +1042,8 @@ void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
 	{
 		int xsnap = xref;
 		int ysnap = yref;
-		int xdist = 1024;
-		int ydist = 1024;
+		int xdist = FTED_SNAP_HISTORY_NONE;
+		int ydist = FTED_SNAP_HISTORY_NONE;
 		for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 		{
 			if (i == m_SnapHistoryCur)
