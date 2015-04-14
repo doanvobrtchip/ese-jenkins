@@ -80,7 +80,6 @@
 #include "device_manager.h"
 #include "inspector.h"
 #include "content_manager.h"
-#include "bitmap_setup.h"
 #include "interactive_properties.h"
 
 namespace FT800EMUQT {

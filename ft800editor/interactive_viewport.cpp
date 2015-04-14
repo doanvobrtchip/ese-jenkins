@@ -36,7 +36,6 @@
 #include "code_editor.h"
 #include "toolbox.h"
 #include "inspector.h"
-#include "bitmap_setup.h"
 #include "content_manager.h"
 #include "properties_editor.h"
 

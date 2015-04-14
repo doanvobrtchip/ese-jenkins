@@ -45,7 +45,6 @@
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
 #include "asset_converter.h"
-#include "bitmap_setup.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
 
