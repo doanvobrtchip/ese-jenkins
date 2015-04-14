@@ -80,7 +80,7 @@ static GLuint s_VBO = 0;
 
 // Hardware double buffer adds an additional copy to the output.
 // It is technically redundant, as only one texture is drawn, but may improve performance in some window managers
-#define FT8XXEMU_HARDWARE_DOUBLE_BUFFER 0
+#define FT8XXEMU_HARDWARE_DOUBLE_BUFFER 1
 
 // Number of frames to skip for refreshing the window title
 #define FT8XXEMU_TITLE_FRAMESKIP 3
