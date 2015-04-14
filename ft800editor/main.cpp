@@ -103,8 +103,8 @@ int main(int argc, char* argv[])
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
-	FT800EMUQT::AssetConverter::init();
 #endif /* FT800EMU_PYTHON */
+	FT800EMUQT::AssetConverter::init();
 	QApplication app(argc, const_cast<char **>(argv));
 
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
@@ -140,8 +140,8 @@ int main(int argc, char* argv[])
 	mainWin.resize(800, 600);
 	mainWin.show(); // calls isVisible(true)
 	int result = app.exec();
-#ifdef FT800EMU_PYTHON
 	FT800EMUQT::AssetConverter::release();
+#ifdef FT800EMU_PYTHON
     Py_Finalize();
 #endif /* FT800EMU_PYTHON */
 	return result;
