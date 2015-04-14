@@ -606,6 +606,12 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		// maxw = (maxw + 7) & (~7); // Round up per byte of 8 bits
 		maxw = (maxw + 31) & (~31); // Round up per 32 bits
 	}
+#ifdef FT810EMU_MODE
+	else if (format == L2)
+	{
+		maxw = (maxw + 15) & (~15); // Round up per 16 bytes (downgraded to L2 afterwards)
+	}
+#endif
 	else if (format == L4)
 	{
 		maxw = (maxw + 7) & (~7); // Round up per 8 bytes (downgraded to L4 afterwards)
@@ -619,7 +625,11 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	FontMetricBlock fmb;
 	memset(fmb.Data, 0, 148);
 	fmb.Value.Format = format;
+#ifdef FT810EMU_MODE
+	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L2) ? (maxw / 4) : ((format == L4) ? (maxw / 2) : (maxw)));
+#else
 	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L4) ? (maxw / 2) : (maxw));
+#endif
 	fmb.Value.Width = maxw;
 	fmb.Value.Height = maxh;
 	std::vector<uint8_t> bitmapBuffer;
@@ -730,6 +740,23 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			bitmapBuffer[i] = left | right;
 		}
 	}
+#ifdef FT810EMU_MODE
+	else if (format == L2)
+	{
+		for (int i = 0; i < nbbytes; ++i)
+		{
+			uint8_t a = bitmapBuffer[i * 4];
+			uint8_t b = bitmapBuffer[i * 4 + 1];
+			uint8_t c = bitmapBuffer[i * 4 + 2];
+			uint8_t d = bitmapBuffer[i * 4 + 3];
+			a >>= 6;
+			b >>= 6;
+			c >>= 6;
+			d >>= 6;
+			bitmapBuffer[i] = (a << 6) | (b << 4) || (c << 2) | d;
+		}
+	}
+#endif
 	QByteArray ba;
 	ba.resize(148 + nbbytes);
 	for (int i = 0; i < 148; ++i)
@@ -751,7 +778,11 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		out << "/*('file properties: ', 'resolution ', "
 			<< (int)fmb.Value.Width << ", 'x', "
 			<< (int)fmb.Value.Height << ", 'format ', '"
+#ifdef FT810EMU_MODE
+			<< (format == L1 ? "L1" : (format == L2 ? "L2" : (format == L4 ? "L4" : "L8")))
+#else
 			<< (format == L1 ? "L1" : (format == L4 ? "L4" : "L8"))
+#endif
 			<< "', 'stride ', " << (int)fmb.Value.LineStride
 			<< ")*/\n";
 		for (int i = 0; i < ba.size(); ++i)
