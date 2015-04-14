@@ -324,6 +324,17 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 	return s_BufferARGB8888[s_BufferCurrent];
 }
 
+#if 0
+static int eventFilter(void *, SDL_Event *e)
+{
+	if (e->type == 512 && s_Output)
+	{
+		drawBuffer();
+	}
+	return 1; // return 1 so all events are added to queue
+}
+#endif
+
 void GraphicsDriverClass::begin()
 {
 	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
@@ -331,8 +342,14 @@ void GraphicsDriverClass::begin()
 	s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 	uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-
+	
 	SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+	
+#if 0
+#ifdef WIN32
+	SDL_SetEventFilter(&eventFilter, NULL);
+#endif
+#endif
 
 #if FT8XXEMU_THREADED_FLIP
 	s_BufferMutex[0] = SDL_CreateMutex();
