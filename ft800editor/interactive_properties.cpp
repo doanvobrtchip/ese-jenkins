@@ -781,7 +781,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_GAUGE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GAUGE");
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GAUGE"));
 			if (editor)
 			{
 				setTitle("CMD_GAUGE");
