@@ -54,6 +54,8 @@ namespace FT800EMUQT {
 
 namespace /* anonymous */ {
 
+///////////////////////////////////////////////////////////////////////
+
 #ifdef FT810EMU_MODE
 static const int s_ImageFormatToUI[] = {
 	0, // 0: ARGB1555
@@ -110,26 +112,78 @@ static const int s_ImageFormatFromUI[] = {
 #endif
 };
 
-static const char *s_ImageFormatNames[] = {
+///////////////////////////////////////////////////////////////////////
+
+static const char *s_BitmapFormatNames[] = {
 	"ARGB1555",
 	"L1",
-#ifdef FT810EMU_MODE
-	"L2",
-#endif
 	"L4",
 	"L8",
 	"RGB332",
 	"ARGB2",
 	"ARGB4",
 	"RGB565",
+	"PALETTED",
 #ifdef FT810EMU_MODE
+	"9",
+	"10",
+	"11",
+	"12",
+	"13",
 	"PALETTED565",
 	"PALETTED4444",
 	"PALETTED8",
-#else
-	"PALETTED",
+	"L2",
 #endif
 };
+
+///////////////////////////////////////////////////////////////////////
+
+#ifdef FT810EMU_MODE
+static const int s_FontFormatToUI[] = {
+	1, // 0: ARGB1555
+	0, // 1: L1
+	2, // 2: L4
+	3, // 3: L8
+	1, // 4: RGB332
+	1, // 5: ARGB2
+	1, // 6: ARGB4
+	1, // 7: RGB565
+	1, // 8: PALETTED
+	1, // 9
+	1, // 10
+	1, // 11
+	1, // 12
+	1, // 13
+	1, // 14: PALETTED565
+	1, // 15: PALETTED4444
+	1, // 16: PALETTED8
+	1, // 17: L2
+};
+#else
+static const int s_FontFormatToUI[] = {
+	1, // ARGB1555
+	0, // L1
+	1, // L4
+	2, // L8
+	1, // RGB332
+	1, // ARGB2
+	1, // ARGB4
+	1, // RGB565
+	1, // PALETTED
+};
+#endif
+
+static const int s_FontFormatFromUI[] = {
+	1, // L1
+#ifdef FT810EMU_MODE
+	17, // L2
+#endif
+	2, // L4
+	3, // L8
+};
+
+///////////////////////////////////////////////////////////////////////
 
 } /* anonymous namespace */
 
@@ -388,8 +442,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	for (int i = 0; i < sizeof(s_ImageFormatNames) / sizeof(s_ImageFormatNames[0]); ++i)
-		m_PropertiesImageFormat->addItem(s_ImageFormatNames[i]);
+	for (int i = 0; i < sizeof(s_ImageFormatFromUI) / sizeof(s_ImageFormatFromUI[0]); ++i)
+		m_PropertiesImageFormat->addItem(s_BitmapFormatNames[s_ImageFormatFromUI[i]]);
 	/*m_PropertiesImageFormat->addItem("ARGB1555");
 	m_PropertiesImageFormat->addItem("L1");
 	m_PropertiesImageFormat->addItem("L4");
@@ -417,9 +471,13 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesFont->setTitle(tr("Font"));
 	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
 	m_PropertiesFontFormat = new QComboBox(this);
+	for (int i = 0; i < sizeof(s_FontFormatFromUI) / sizeof(s_FontFormatFromUI[0]); ++i)
+		m_PropertiesFontFormat->addItem(s_BitmapFormatNames[s_FontFormatFromUI[i]]);
+	/*
 	m_PropertiesFontFormat->addItem("L1");
 	m_PropertiesFontFormat->addItem("L4");
 	m_PropertiesFontFormat->addItem("L8");
+	*/
 	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
 	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
 	m_PropertiesFontSize = new UndoStackDisabler<QSpinBox>(this);
@@ -1005,7 +1063,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesRawLength->setValue(contentInfo->RawLength);
 		break;
 	case ContentInfo::Font:
-		m_PropertiesFontFormat->setCurrentIndex((contentInfo->ImageFormat >= L1 && contentInfo->ImageFormat <= L8) ? (contentInfo->ImageFormat - L1) : L8 - L1);
+		m_PropertiesFontFormat->setCurrentIndex(s_FontFormatToUI[contentInfo->ImageFormat % (sizeof(s_FontFormatToUI) / sizeof(s_FontFormatToUI[0]))]);
 		m_PropertiesFontSize->setValue(contentInfo->FontSize);
 		m_PropertiesFontCharSet->setText(contentInfo->FontCharSet); // NOTE: Number of characters up to 128; export depends on number of characters in charset also!
 		break;
@@ -2722,8 +2780,10 @@ void ContentManager::propertiesFontFormatChanged(int value)
 {
 	printf("ContentManager::propertiesFontFormatChanged(value)\n");
 
-	if (current() && current()->ImageFormat != (value + L1))
-		changeFontFormat(current(), (value + L1));
+	value = s_FontFormatFromUI[value % (sizeof(s_FontFormatFromUI) / sizeof(s_FontFormatFromUI[0]))];
+
+	if (current() && current()->ImageFormat != (value))
+		changeFontFormat(current(), (value));
 }
 
 ////////////////////////////////////////////////////////////////////////
