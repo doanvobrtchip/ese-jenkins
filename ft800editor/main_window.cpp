@@ -706,13 +706,14 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createToolBars();
 	createStatusBar();
 
-	QWidget *centralWidget = new QWidget(this);
-	QHBoxLayout *layout = new QHBoxLayout();
 	m_EmulatorViewport = new InteractiveViewport(this);
-	layout->addWidget(m_EmulatorViewport);
-	layout->setAlignment(Qt::AlignCenter);
-	centralWidget->setLayout(layout);
-	setCentralWidget(centralWidget);
+	QScrollArea *scrollArea = new QScrollArea(this);
+	scrollArea->setBackgroundRole(QPalette::Dark);
+	scrollArea->setWidget(m_EmulatorViewport);
+	scrollArea->setAlignment(Qt::AlignCenter);
+	scrollArea->ensureWidgetVisible(m_EmulatorViewport);
+	scrollArea->setMinimumSize(m_EmulatorViewport->size() + QSize(16, 16));
+	setCentralWidget(scrollArea);
 
 	createDockWindows();
 
