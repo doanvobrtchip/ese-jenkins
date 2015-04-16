@@ -46,6 +46,7 @@
 
 #define FT800EMU_COPROCESSOR_MEMLOG 0
 #define FT800EMU_MCU_MEMLOG 0
+#define FT800EMU_DL_MEMLOG 0
 
 namespace FT800EMU {
 
@@ -162,7 +163,9 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 			}
 			break;
 		case REG_DLSWAP:
-			// printf("Write REG_DLSWAP %u\n", data);
+#if FT800EMU_DL_MEMLOG
+			printf("Write REG_DLSWAP %u\n", data);
+#endif
 			// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
 			if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
 			{
@@ -732,7 +735,9 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 	{
 		int dlAddr = (int)((address - RAM_DL) >> 2);
 		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
-		// printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)s_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
+#if FT800EMU_DL_MEMLOG
+		printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)s_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
+#endif
 	}
 
     actionWrite(address, data);
