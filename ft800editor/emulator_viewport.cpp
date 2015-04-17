@@ -157,7 +157,7 @@ int EmulatorViewport::screenLeft()
 {
 	int center = width() / 2;
 	int centerFrame = s_Pixmap->width() * m_ScreenScale / 32;
-	int offset = m_Horizontal->value() / screenScale();
+	int offset = m_Horizontal->value() * screenScale() / 256;
 	return center - centerFrame - offset;
 }
 
@@ -165,7 +165,7 @@ int EmulatorViewport::screenTop()
 {
 	int center = height() / 2;
 	int centerFrame = s_Pixmap->height() * m_ScreenScale / 32;
-	int offset = m_Vertical->value() / screenScale();
+	int offset = m_Vertical->value() * screenScale() / 256;
 	return center - centerFrame - offset;
 }
 
