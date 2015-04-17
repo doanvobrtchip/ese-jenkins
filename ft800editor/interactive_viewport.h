@@ -75,6 +75,7 @@ protected:
 	virtual void mouseReleaseEvent(QMouseEvent *e);
 	virtual void enterEvent(QEvent *e);
 	virtual void leaveEvent(QEvent *e);
+	virtual void wheelEvent(QWheelEvent* e);
 
 	virtual void dropEvent(QDropEvent *e);
 	virtual void dragMoveEvent(QDragMoveEvent *e);

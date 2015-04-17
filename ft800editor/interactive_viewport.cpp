@@ -1407,6 +1407,19 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 	}
 }
 
+void InteractiveViewport::wheelEvent(QWheelEvent* e)
+{
+	if (e->delta() > 0)
+	{
+		setScreenScale(screenScale() * 2);
+	}
+	else if (e->delta() < 0)
+	{
+		setScreenScale(screenScale() / 2);
+	}
+	EmulatorViewport::wheelEvent(e);
+}
+
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
 	int mvx = screenLeft();

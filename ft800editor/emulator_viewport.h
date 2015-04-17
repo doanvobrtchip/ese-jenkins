@@ -64,6 +64,8 @@ public:
 	int screenTop();
 	int screenScale();
 
+	void setScreenScale(int screenScale);
+
 	QScrollBar *horizontalScrollbar() { return m_Horizontal; }
 	QScrollBar *verticalScrollbar() { return m_Vertical; }
 
@@ -80,6 +82,7 @@ signals:
 private:
 	QScrollBar *m_Horizontal;
 	QScrollBar *m_Vertical;
+	int m_ScreenScale;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);

@@ -80,7 +80,7 @@ void EmulatorThread::run()
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent)
-	: QWidget(parent)
+	: QWidget(parent), m_ScreenScale(16)
 {
 	s_EmulatorViewport = this;
 	s_Image = new QImage(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
@@ -146,13 +146,17 @@ void EmulatorViewport::stop()
 void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread
 {
 	QPainter painter(this);
-	painter.drawPixmap(screenLeft(), screenTop(), *s_Pixmap);
+	painter.drawPixmap(screenLeft(), screenTop(),
+		s_Pixmap->width() * screenScale() / 16, 
+		s_Pixmap->height() * screenScale() / 16, 
+		*s_Pixmap,
+		0, 0, s_Pixmap->width(), s_Pixmap->height());
 }
 
 int EmulatorViewport::screenLeft()
 {
 	int center = width() / 2;
-	int centerFrame = s_Pixmap->width() / 2;
+	int centerFrame = s_Pixmap->width() * m_ScreenScale / 32;
 	int offset = m_Horizontal->value() / screenScale();
 	return center - centerFrame - offset;
 }
@@ -160,14 +164,21 @@ int EmulatorViewport::screenLeft()
 int EmulatorViewport::screenTop()
 {
 	int center = height() / 2;
-	int centerFrame = s_Pixmap->height() / 2;
+	int centerFrame = s_Pixmap->height() * m_ScreenScale / 32;
 	int offset = m_Vertical->value() / screenScale();
 	return center - centerFrame - offset;
 }
 
 int EmulatorViewport::screenScale()
 {
-	return 16;
+	return m_ScreenScale;
+}
+
+void EmulatorViewport::setScreenScale(int screenScale)
+{
+	if (screenScale < 1) m_ScreenScale = 1;
+	else if (screenScale > 256) m_ScreenScale = 256;
+	else m_ScreenScale = screenScale;
 }
 
 void EmulatorViewport::threadRepaint() // on Qt thread

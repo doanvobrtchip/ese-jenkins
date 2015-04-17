@@ -175,8 +175,8 @@ public:
 	void changeDataEmbedded(ContentInfo *contentInfo, bool value);
 
 	// Lock to call when editing/moving content files from qt thread, when reading content from non-qt threads
-	void lockContent() { m_Mutex.lock(); }
-	void unlockContent() { m_Mutex.unlock(); }
+	void lockContent() { s_Mutex.lock(); }
+	void unlockContent() { s_Mutex.unlock(); }
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
@@ -257,7 +257,7 @@ private:
 	std::set<ContentInfo *> m_ContentUploadDirty;
 	std::set<ContentInfo *> m_ContentOverlap;
 
-	QMutex m_Mutex;
+	static QMutex s_Mutex;
 
 private slots:
 	void add();

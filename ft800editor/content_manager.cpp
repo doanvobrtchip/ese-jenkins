@@ -190,6 +190,7 @@ static const int s_FontFormatFromUI[] = {
 int g_RamGlobalUsage = 0;
 
 std::vector<QString> ContentManager::s_FileExtensions;
+QMutex ContentManager::s_Mutex;
 
 ContentInfo::ContentInfo(const QString &filePath)
 {
