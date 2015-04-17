@@ -61,6 +61,9 @@ public:
 
 	virtual void keyPressEvent(QKeyEvent *e);
 
+protected:
+	virtual void paintEvent(QPaintEvent *e);
+
 private:
 	void updatePointerMethod();
 	bool acceptableSource(QDropEvent *e);

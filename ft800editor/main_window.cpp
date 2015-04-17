@@ -51,6 +51,7 @@
 #include <QTextBlock>
 #include <QPlainTextEdit>
 #include <QDesktopServices>
+#include <QScrollBar>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -706,13 +707,16 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createStatusBar();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
-	QScrollArea *scrollArea = new QScrollArea(this);
-	scrollArea->setBackgroundRole(QPalette::Dark);
-	scrollArea->setWidget(m_EmulatorViewport);
-	scrollArea->setAlignment(Qt::AlignCenter);
-	scrollArea->ensureWidgetVisible(m_EmulatorViewport);
-	scrollArea->setMinimumSize(m_EmulatorViewport->size() + QSize(16, 16));
-	setCentralWidget(scrollArea);
+
+	QWidget *centralWidget = new QWidget(this);
+	QGridLayout *layout = new QGridLayout();
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setSpacing(0);
+	layout->addWidget(m_EmulatorViewport, 0, 0);
+	layout->addWidget(m_EmulatorViewport->verticalScrollbar(), 0, 1);
+	layout->addWidget(m_EmulatorViewport->horizontalScrollbar(), 1, 0);
+	centralWidget->setLayout(layout);
+	setCentralWidget(centralWidget);
 
 	createDockWindows();
 

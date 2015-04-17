@@ -294,12 +294,32 @@ CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 // Graphics callback synchronized to Qt thread, use to overlay graphics
 void InteractiveViewport::graphics(QImage *image)
 {
+	return; // This callback can be used to make the navview
+}
+
+void InteractiveViewport::paintEvent(QPaintEvent *e)
+{
+	EmulatorViewport::paintEvent(e);
+	QPainter p(this);
+
 	// Update frame dependent gui
 	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStackDl);
 	m_MainWindow->cmdEditor()->codeEditor()->setTraceHighlights(m_TraceStackCmd);
 	m_MouseX = m_NextMouseX;
 	m_MouseY = m_NextMouseY;
 	m_MouseStackRead.swap(m_MouseStackWrite);
+
+	int mvx = screenLeft();
+	int mvy = screenTop();
+	int scl = screenScale();
+#define TFX(x) ((((x) * scl) / 16) + mvx)
+#define TFY(y) ((((y) * scl) / 16) + mvy)
+#define SCX(x) ((((x) * scl) / 16))
+#define SCY(y) ((((y) * scl) / 16))
+#define UNTFX(x) ((((x - mvx) * 16) / scl))
+#define UNTFY(y) ((((y - mvy) * 16) / scl))
+#define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
+#define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
 
 	if (m_MouseTouch)
 	{
@@ -311,8 +331,8 @@ void InteractiveViewport::graphics(QImage *image)
 	}
 
 	// Draw image overlays
-	QPainter p;
-	p.begin(image);
+	/*QPainter p;
+	p.begin(image);*/
 	if (m_LineEditor)
 	{
 		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
@@ -365,15 +385,15 @@ void InteractiveViewport::graphics(QImage *image)
 							y = pa.Parameter[1].U;
 						}
 						p.setPen(outer);
-						p.drawLine(x - 4, y - 4, x + 4, y - 4);
-						p.drawLine(x - 4, y + 4, x + 4, y + 4);
-						p.drawLine(x - 4, y - 4, x - 4, y + 4);
-						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 						p.setPen(inner);
-						p.drawLine(x - 4, y - 4, x + 4, y - 4);
-						p.drawLine(x - 4, y + 4, x + 4, y + 4);
-						p.drawLine(x - 4, y - 4, x - 4, y + 4);
-						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 					}
 					else if (pa.IdRight == FT800EMU_DL_BEGIN
 						|| pa.IdRight == FT800EMU_DL_END
@@ -396,24 +416,24 @@ void InteractiveViewport::graphics(QImage *image)
 					y = parsed.Parameter[1].U;
 				}
 				p.setPen(outer);
-				p.drawLine(x, y - 5, x, y - 12);
-				p.drawLine(x, y + 5, x, y + 12);
-				p.drawLine(x - 5, y, x - 12, y);
-				p.drawLine(x + 5, y, x + 12, y);
-				p.drawLine(x - 4, y - 4, x + 4, y - 4);
-				p.drawLine(x - 4, y + 4, x + 4, y + 4);
-				p.drawLine(x - 4, y - 4, x - 4, y + 4);
-				p.drawLine(x + 4, y - 4, x + 4, y + 4);
+				DRAWLINE(x, y - 5, x, y - 12);
+				DRAWLINE(x, y + 5, x, y + 12);
+				DRAWLINE(x - 5, y, x - 12, y);
+				DRAWLINE(x + 5, y, x + 12, y);
+				DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+				DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+				DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+				DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 				inner.setColor(QColor(Qt::red));
 				p.setPen(inner);
-				p.drawLine(x, y - 5, x, y - 12);
-				p.drawLine(x, y + 5, x, y + 12);
-				p.drawLine(x - 5, y, x - 12, y);
-				p.drawLine(x + 5, y, x + 12, y);
-				p.drawLine(x - 4, y - 4, x + 4, y - 4);
-				p.drawLine(x - 4, y + 4, x + 4, y + 4);
-				p.drawLine(x - 4, y - 4, x - 4, y + 4);
-				p.drawLine(x + 4, y - 4, x + 4, y + 4);
+				DRAWLINE(x, y - 5, x, y - 12);
+				DRAWLINE(x, y + 5, x, y + 12);
+				DRAWLINE(x - 5, y, x - 12, y);
+				DRAWLINE(x + 5, y, x + 12, y);
+				DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+				DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+				DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+				DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 
 			/*
 
@@ -496,47 +516,47 @@ CMD_SCREENSAVER()
 			x = parsed.Parameter[0].I;
 			y = parsed.Parameter[1].I;
 			p.setPen(outer);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			DRAWLINE(x, y - 5, x, y - 12);
+			DRAWLINE(x, y + 5, x, y + 12);
+			DRAWLINE(x - 5, y, x - 12, y);
+			DRAWLINE(x + 5, y, x + 12, y);
+			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 			inner.setColor(QColor(Qt::red));
 			p.setPen(inner);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			DRAWLINE(x, y - 5, x, y - 12);
+			DRAWLINE(x, y + 5, x, y + 12);
+			DRAWLINE(x - 5, y, x - 12, y);
+			DRAWLINE(x + 5, y, x + 12, y);
+			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 
 			// Show second vertex
 			x = parsed.Parameter[5].I;
 			y = parsed.Parameter[6].I;
 			p.setPen(outer);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			DRAWLINE(x, y - 5, x, y - 12);
+			DRAWLINE(x, y + 5, x, y + 12);
+			DRAWLINE(x - 5, y, x - 12, y);
+			DRAWLINE(x + 5, y, x + 12, y);
+			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 			inner.setColor(QColor(Qt::red));
 			p.setPen(inner);
-			p.drawLine(x, y - 5, x, y - 12);
-			p.drawLine(x, y + 5, x, y + 12);
-			p.drawLine(x - 5, y, x - 12, y);
-			p.drawLine(x + 5, y, x + 12, y);
-			p.drawLine(x - 4, y - 4, x + 4, y - 4);
-			p.drawLine(x - 4, y + 4, x + 4, y + 4);
-			p.drawLine(x - 4, y - 4, x - 4, y + 4);
-			p.drawLine(x + 4, y - 4, x + 4, y + 4);
+			DRAWLINE(x, y - 5, x, y - 12);
+			DRAWLINE(x, y + 5, x, y + 12);
+			DRAWLINE(x - 5, y, x - 12, y);
+			DRAWLINE(x + 5, y, x + 12, y);
+			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 		}
 		else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
 		{
@@ -604,23 +624,23 @@ CMD_SCREENSAVER()
 					{
 						// Only have vertex control
 						p.setPen(outer);
-						p.drawLine(x, y - 5, x, y - 12);
-						p.drawLine(x, y + 5, x, y + 12);
-						p.drawLine(x - 5, y, x - 12, y);
-						p.drawLine(x + 5, y, x + 12, y);
-						p.drawLine(x - 4, y - 4, x + 4, y - 4);
-						p.drawLine(x - 4, y + 4, x + 4, y + 4);
-						p.drawLine(x - 4, y - 4, x - 4, y + 4);
-						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						DRAWLINE(x, y - 5, x, y - 12);
+						DRAWLINE(x, y + 5, x, y + 12);
+						DRAWLINE(x - 5, y, x - 12, y);
+						DRAWLINE(x + 5, y, x + 12, y);
+						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 						p.setPen(inner);
-						p.drawLine(x, y - 5, x, y - 12);
-						p.drawLine(x, y + 5, x, y + 12);
-						p.drawLine(x - 5, y, x - 12, y);
-						p.drawLine(x + 5, y, x + 12, y);
-						p.drawLine(x - 4, y - 4, x + 4, y - 4);
-						p.drawLine(x - 4, y + 4, x + 4, y + 4);
-						p.drawLine(x - 4, y - 4, x - 4, y + 4);
-						p.drawLine(x + 4, y - 4, x + 4, y + 4);
+						DRAWLINE(x, y - 5, x, y - 12);
+						DRAWLINE(x, y + 5, x, y + 12);
+						DRAWLINE(x - 5, y, x - 12, y);
+						DRAWLINE(x + 5, y, x + 12, y);
+						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 					}
 					else
 					{
@@ -642,17 +662,17 @@ CMD_SCREENSAVER()
 						int x2 = x + w;
 						int y2 = y + h;
 						p.setPen(outer);
-						p.drawRect(x, y, w, h);
-						p.drawRect(x1 - 1, y1 - 1, 2, 2);
-						p.drawRect(x1 - 1, y2 - 1, 2, 2);
-						p.drawRect(x2 - 1, y2 - 1, 2, 2);
-						p.drawRect(x2 - 1, y1 - 1, 2, 2);
+						DRAWRECT(x, y, w, h);
+						DRAWRECT(x1 - 1, y1 - 1, 2, 2);
+						DRAWRECT(x1 - 1, y2 - 1, 2, 2);
+						DRAWRECT(x2 - 1, y2 - 1, 2, 2);
+						DRAWRECT(x2 - 1, y1 - 1, 2, 2);
 						p.setPen(inner);
-						p.drawRect(x, y, w, h);
-						p.drawRect(x1 - 1, y1 - 1, 2, 2);
-						p.drawRect(x1 - 1, y2 - 1, 2, 2);
-						p.drawRect(x2 - 1, y2 - 1, 2, 2);
-						p.drawRect(x2 - 1, y1 - 1, 2, 2);
+						DRAWRECT(x, y, w, h);
+						DRAWRECT(x1 - 1, y1 - 1, 2, 2);
+						DRAWRECT(x1 - 1, y2 - 1, 2, 2);
+						DRAWRECT(x2 - 1, y2 - 1, 2, 2);
+						DRAWRECT(x2 - 1, y1 - 1, 2, 2);
 					}
 					break;
 				}
@@ -678,15 +698,15 @@ CMD_SCREENSAVER()
 		inner.setWidth(1);
 		inner.setColor(QColor(Qt::green).lighter(160));
 		p.setPen(outer);
-		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+		DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
 		p.setPen(inner);
-		p.drawLine(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		p.drawLine(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		p.drawLine(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		p.drawLine(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+		DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+		DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+		DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+		DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
 	}
 	p.end();
 
@@ -1389,7 +1409,11 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 {
-	mouseMoveEvent(e->pos().x(), e->pos().y());
+	int mvx = screenLeft();
+	int mvy = screenTop();
+	int scl = screenScale();
+
+	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()));
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1397,6 +1421,10 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 {
 	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
 	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
+
+	int mvx = screenLeft();
+	int mvy = screenTop();
+	int scl = screenScale();
 
 	switch (m_PointerMethod)
 	{
@@ -1411,8 +1439,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		switch (e->button())
 		{
 		case Qt::LeftButton:
-			m_MainWindow->setTraceX(e->pos().x());
-			m_MainWindow->setTraceY(e->pos().y());
+			m_MainWindow->setTraceX(UNTFX(e->pos().x()));
+			m_MainWindow->setTraceY(UNTFY(e->pos().y()));
 			m_MainWindow->setTraceEnabled(true);
 			break;
 		case Qt::MidButton:
@@ -1434,8 +1462,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			{
 				m_LineEditor->selectLine(m_MouseOverVertexLine);
 			}
-			m_MovingLastX = e->pos().x();
-			m_MovingLastY = e->pos().y();
+			m_MovingLastX = UNTFX(e->pos().x());
+			m_MovingLastY = UNTFY(e->pos().y());
 			m_MouseMovingVertex = true;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
 		}
@@ -1487,8 +1515,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0].I = e->pos().x();
-				pa.Parameter[1].I = e->pos().y();
+				pa.Parameter[0].I = UNTFX(e->pos().x());
+				pa.Parameter[1].I = UNTFY(e->pos().y());
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -1503,8 +1531,8 @@ RETURN()
 		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
 		{
 			// Works for any widget move action
-			m_MovingLastX = e->pos().x();
-			m_MovingLastY = e->pos().y();
+			m_MovingLastX = UNTFX(e->pos().x());
+			m_MovingLastY = UNTFY(e->pos().y());
 			m_MouseMovingWidget = m_PointerMethod;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
 		}
@@ -1691,13 +1719,17 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				// void insertLine(int line, const DlParsed &parsed);
 				if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
 				{
+					int mvx = screenLeft();
+					int mvy = screenTop();
+					int scl = screenScale();
+
 					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop coprocessor widget");
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
-					pa.Parameter[0].I = e->pos().x();
-					pa.Parameter[1].I = e->pos().y();
+					pa.Parameter[0].I = UNTFX(e->pos().x());
+					pa.Parameter[1].I = UNTFY(e->pos().y());
 					pa.ExpectedStringParameter = false;
 					switch (selection)
 					{
@@ -2006,10 +2038,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 					if (contentInfo && contentInfo->Converter == ContentInfo::Font)
 					{
+						int mvx = screenLeft();
+						int mvy = screenTop();
+						int scl = screenScale();
+
 						pa.IdLeft = 0xFFFFFF00;
 						pa.IdRight = CMD_TEXT & 0xFF;
-						pa.Parameter[0].I = e->pos().x();
-						pa.Parameter[1].I = e->pos().y();
+						pa.Parameter[0].I = UNTFX(e->pos().x());
+						pa.Parameter[1].I = UNTFY(e->pos().y());
 						pa.Parameter[2].I = bitmapHandle;
 						pa.Parameter[3].I = 0;
 						pa.StringParameter = "Text";
@@ -2022,6 +2058,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 					else
 					{
+						int mvx = screenLeft();
+						int mvy = screenTop();
+						int scl = screenScale();
+
 						pa.IdRight = FT800EMU_DL_BEGIN;
 						pa.Parameter[0].U = selection;
 						pa.ExpectedParameterCount = 1;
@@ -2029,8 +2069,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						++line;
 						pa.IdLeft = FT800EMU_DL_VERTEX2II;
 						pa.IdRight = 0;
-						pa.Parameter[0].I = e->pos().x();
-						pa.Parameter[1].I = e->pos().y();
+						pa.Parameter[0].I = UNTFX(e->pos().x());
+						pa.Parameter[1].I = UNTFY(e->pos().y());
 						pa.Parameter[2].I = bitmapHandle;
 						pa.Parameter[3].I = 0;
 						pa.ExpectedParameterCount = 4;
@@ -2254,8 +2294,12 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 	{
 		if (m_LineEditor)
 		{
-			m_NextMouseX = e->pos().x();
-			m_NextMouseY = e->pos().y();
+			int mvx = screenLeft();
+			int mvy = screenTop();
+			int scl = screenScale();
+
+			m_NextMouseX = UNTFX(e->pos().x());
+			m_NextMouseY = UNTFY(e->pos().y());
 			m_DragMoving = true;
 
 			e->acceptProposedAction();

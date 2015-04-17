@@ -41,7 +41,7 @@ static QPixmap *s_Pixmap = NULL;
 static QMutex s_Mutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
-int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags)
+int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) // on Emulator thread
 {
 	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.
@@ -86,8 +86,18 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	s_Image = new QImage(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
 	s_Pixmap = new QPixmap(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
 
-	setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
-	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
+	m_Vertical = new QScrollBar(Qt::Vertical, this);
+	m_Horizontal = new QScrollBar(Qt::Horizontal, this);
+
+	m_Vertical->setMinimum(-FT8XXEMU_WINDOW_HEIGHT_DEFAULT * 8);
+	m_Vertical->setMaximum(FT8XXEMU_WINDOW_HEIGHT_DEFAULT * 8);
+	m_Vertical->setValue(0);
+	m_Horizontal->setMinimum(-FT8XXEMU_WINDOW_WIDTH_DEFAULT * 8);
+	m_Horizontal->setMaximum(FT8XXEMU_WINDOW_WIDTH_DEFAULT * 8);
+	m_Horizontal->setValue(0);
+
+	/*setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
+	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);*/
 }
 
 EmulatorViewport::~EmulatorViewport()
@@ -133,13 +143,34 @@ void EmulatorViewport::stop()
 	FT800EMU::Emulator.stop();
 }
 
-void EmulatorViewport::paintEvent(QPaintEvent* e)
+void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread
 {
 	QPainter painter(this);
-	painter.drawPixmap(0, 0, *s_Pixmap);
+	painter.drawPixmap(screenLeft(), screenTop(), *s_Pixmap);
 }
 
-void EmulatorViewport::threadRepaint()
+int EmulatorViewport::screenLeft()
+{
+	int center = width() / 2;
+	int centerFrame = s_Pixmap->width() / 2;
+	int offset = m_Horizontal->value() / screenScale();
+	return center - centerFrame - offset;
+}
+
+int EmulatorViewport::screenTop()
+{
+	int center = height() / 2;
+	int centerFrame = s_Pixmap->height() / 2;
+	int offset = m_Vertical->value() / screenScale();
+	return center - centerFrame - offset;
+}
+
+int EmulatorViewport::screenScale()
+{
+	return 16;
+}
+
+void EmulatorViewport::threadRepaint() // on Qt thread
 {
 	s_Mutex.lock();
 	graphics(s_Image);
@@ -148,8 +179,12 @@ void EmulatorViewport::threadRepaint()
 	{
 		QPixmap *pixmap = s_Pixmap;
 		s_Pixmap = new QPixmap(s_Image->width(), s_Image->height());
-		setMinimumWidth(s_Pixmap->width());
-		setMinimumHeight(s_Image->height());
+		/*setMinimumWidth(s_Pixmap->width());
+		setMinimumHeight(s_Image->height());*/
+		m_Vertical->setMinimum(-s_Pixmap->height() * 8);
+		m_Vertical->setMaximum(s_Pixmap->height() * 8);
+		m_Horizontal->setMinimum(-s_Pixmap->width() * 8);
+		m_Horizontal->setMaximum(s_Pixmap->width() * 8);
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);

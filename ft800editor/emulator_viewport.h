@@ -19,6 +19,7 @@
 // Qt includes
 #include <QWidget>
 #include <QThread>
+#include <QScrollBar>
 
 // Emulator includes
 #include <ft800emu_emulator.h>
@@ -59,6 +60,13 @@ public:
 	int hsize();
 	int vsize();
 
+	int screenLeft();
+	int screenTop();
+	int screenScale();
+
+	QScrollBar *horizontalScrollbar() { return m_Horizontal; }
+	QScrollBar *verticalScrollbar() { return m_Vertical; }
+
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 
@@ -68,6 +76,10 @@ public slots:
 
 signals:
 	void frame();
+
+private:
+	QScrollBar *m_Horizontal;
+	QScrollBar *m_Vertical;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);
