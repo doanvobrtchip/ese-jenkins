@@ -1409,6 +1409,12 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 
 void InteractiveViewport::wheelEvent(QWheelEvent* e)
 {
+	int mvx = screenLeft();
+	int mvy = screenTop();
+	int scl = screenScale();
+	int curx = UNTFX(e->pos().x());
+	int cury = UNTFY(e->pos().y());
+
 	if (e->delta() > 0)
 	{
 		setScreenScale(screenScale() * 2);
@@ -1417,6 +1423,19 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 	{
 		setScreenScale(screenScale() / 2);
 	}
+
+	mvx = screenLeft();
+	mvy = screenTop();
+	scl = screenScale();
+	int newx = UNTFX(e->pos().x());
+	int newy = UNTFY(e->pos().y());
+
+	int nx = (curx - newx) * 16;
+	int ny = (cury - newy) * 16;
+
+	horizontalScrollbar()->setValue(horizontalScrollbar()->value() + nx);
+	verticalScrollbar()->setValue(verticalScrollbar()->value() + ny);
+
 	EmulatorViewport::wheelEvent(e);
 }
 

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2013-2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 // #include <...>
 #include "ft800emu_touch.h"

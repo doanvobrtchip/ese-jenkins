@@ -53,6 +53,7 @@ class MainWindow;
 class ContentManager;
 // class BitmapSetup;
 class InteractiveProperties;
+class EmulatorNavigator;
 
 class RunScript : public QObject
 {
@@ -202,6 +203,9 @@ private:
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
+
+	QDockWidget *m_NavigatorDock;
+	EmulatorNavigator *m_EmulatorNavigator;
 
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;

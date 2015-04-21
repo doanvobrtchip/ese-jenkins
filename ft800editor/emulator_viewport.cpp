@@ -1,15 +1,7 @@
-/**
- * emulator_viewport.cpp
- * $Id$
- * \file emulator_viewport.cpp
- * \brief emulator_viewport.cpp
- * \date 2013-10-15 13:18GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #include "emulator_viewport.h"
 
@@ -96,8 +88,8 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	m_Horizontal->setMaximum(FT8XXEMU_WINDOW_WIDTH_DEFAULT * 8);
 	m_Horizontal->setValue(0);
 
-	/*setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
-	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);*/
+	setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
+	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
 }
 
 EmulatorViewport::~EmulatorViewport()
@@ -153,11 +145,11 @@ void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread
 		0, 0, s_Pixmap->width(), s_Pixmap->height());
 }
 
-int EmulatorViewport::screenLeft()
+int EmulatorViewport::screenLeft() // offset in screenspace pixels
 {
 	int center = width() / 2;
 	int centerFrame = s_Pixmap->width() * m_ScreenScale / 32;
-	int offset = m_Horizontal->value() * screenScale() / 256;
+	int offset = m_Horizontal->value() * m_ScreenScale / 256;
 	return center - centerFrame - offset;
 }
 
@@ -165,8 +157,18 @@ int EmulatorViewport::screenTop()
 {
 	int center = height() / 2;
 	int centerFrame = s_Pixmap->height() * m_ScreenScale / 32;
-	int offset = m_Vertical->value() * screenScale() / 256;
+	int offset = m_Vertical->value() * m_ScreenScale / 256;
 	return center - centerFrame - offset;
+}
+
+int EmulatorViewport::screenBottom()
+{
+	return screenTop() + (s_Pixmap->height() * m_ScreenScale / 16);
+}
+
+int EmulatorViewport::screenRight()
+{
+	return screenLeft() + (s_Pixmap->width() * m_ScreenScale / 16);
 }
 
 int EmulatorViewport::screenScale()
@@ -202,6 +204,11 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	s_Mutex.unlock();
 	repaint();
 	frame();
+}
+
+const QPixmap &EmulatorViewport::getPixMap() const
+{
+	return *s_Pixmap;
 }
 
 } /* namespace FT800EMUQT */

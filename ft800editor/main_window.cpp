@@ -1,15 +1,7 @@
-/**
- * main_window.cpp
- * $Id$
- * \file main_window.cpp
- * \brief main_window.cpp
- * \date 2013-10-15 13:18GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
@@ -82,6 +74,7 @@
 #include "inspector.h"
 #include "content_manager.h"
 #include "interactive_properties.h"
+#include "emulator_navigator.h"
 
 namespace FT800EMUQT {
 
@@ -764,10 +757,12 @@ MainWindow::~MainWindow()
 	s_EmulatorRunning = false;
 	m_EmulatorViewport->stop();
 
+	m_ContentManager->lockContent();
 	s_DlEditor = NULL;
 	s_CmdEditor = NULL;
 	s_Macro = NULL;
 	s_ContentManager = NULL;
+	m_ContentManager->unlockContent();
 	//s_BitmapSetup = NULL;
 
 	QDir::setCurrent(QDir::tempPath());
@@ -1328,6 +1323,18 @@ void MainWindow::createDockWindows()
 		m_UtilizationDock->setVisible(false);
 	}
 
+	// Navigator
+	{
+		m_NavigatorDock = new QDockWidget(this);
+		m_NavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_NavigatorDock->setObjectName("Navigator");
+		m_EmulatorNavigator = new EmulatorNavigator(this, m_EmulatorViewport);
+		m_NavigatorDock->setWidget(m_EmulatorNavigator);
+		m_NavigatorDock->setMinimumHeight(100);
+		addDockWidget(Qt::RightDockWidgetArea, m_NavigatorDock);
+		m_WidgetsMenu->addAction(m_NavigatorDock->toggleViewAction());
+	}
+
 	// PropertiesEditor
 	{
 		m_PropertiesEditorDock = new QDockWidget(this);
@@ -1648,6 +1655,7 @@ void MainWindow::translateDockWindows()
 	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
 #endif /* FT800_DEVICE_MANAGER */
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
+	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));

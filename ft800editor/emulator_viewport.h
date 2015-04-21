@@ -1,15 +1,7 @@
-/**
- * emulator_viewport.h
- * $Id$
- * \file emulator_viewport.h
- * \brief emulator_viewport.h
- * \date 2013-10-15 13:18GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #ifndef FT800EMUQT_EMULATOR_VIEWPORT_H
 #define FT800EMUQT_EMULATOR_VIEWPORT_H
@@ -57,12 +49,18 @@ public:
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
 	virtual void graphics(QImage *image) { }
 
+	// Pixmap can be used after each frame() signal as updated source for repaint etc. It does not permanently remain valid
+	const QPixmap &getPixMap() const;
+
 	int hsize();
 	int vsize();
 
-	int screenLeft();
+	int screenLeft(); // Left in display coordinates
 	int screenTop();
-	int screenScale();
+	int screenScale(); // Scale in 1/16
+
+	int screenBottom();
+	int screenRight();
 
 	void setScreenScale(int screenScale);
 
