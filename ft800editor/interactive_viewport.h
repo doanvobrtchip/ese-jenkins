@@ -1,15 +1,7 @@
-/**
- * interactive_viewport.h
- * $Id$
- * \file interactive_viewport.h
- * \brief interactive_viewport.h
- * \date 2013-12-15 13:09GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #ifndef FT800EMUQT_INTERACTIVE_VIEWPORT_H
 #define FT800EMUQT_INTERACTIVE_VIEWPORT_H

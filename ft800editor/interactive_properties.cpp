@@ -1,15 +1,7 @@
-/**
- * interactive_properties.cpp
- * $Id$
- * \file interactive_properties.cpp
- * \brief interactive_properties.cpp
- * \date 2014-03-04 22:58GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2014  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #include "interactive_properties.h"
 
@@ -178,6 +170,12 @@ void InteractiveProperties::addCell(int cell)
 
 void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly)
 {
+	#define ADD_OPTIONS_CHECKBOX(opt) \
+		{ \
+			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set " #opt, options, opt); \
+			addLabeledWidget(#opt ": ", chb); \
+			m_CurrentProperties.push_back(chb); \
+		}
 	/*
 	#define OPT_MONO             1UL
 	#define OPT_NODL             2UL
@@ -195,79 +193,75 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_NOHANDS          49152UL ---- */
 	if (flags & OPT_MONO)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_MONO", options, OPT_MONO);
-		addLabeledWidget("OPT_MONO: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_MONO);
 	}
 	if (flags & OPT_NODL)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NODL", options, OPT_NODL);
-		addLabeledWidget("OPT_NODL: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_NODL);
 	}
+#ifdef FT810EMU_MODE
+	if (flags & OPT_NOTEAR)
+	{
+		ADD_OPTIONS_CHECKBOX(OPT_NOTEAR);
+	}
+	if (flags & OPT_FULLSCREEN)
+	{
+		ADD_OPTIONS_CHECKBOX(OPT_FULLSCREEN);
+	}
+	if (flags & OPT_MEDIAFIFO)
+	{
+		ADD_OPTIONS_CHECKBOX(OPT_MEDIAFIFO);
+	}
+	if (flags & OPT_SOUND)
+	{
+		ADD_OPTIONS_CHECKBOX(OPT_SOUND);
+	}
+#endif
 	if (flags & OPT_FLAT)
 	{
 		if (flags & OPT_NOBACK || flatOnly)
 		{
-			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, "Set OPT_FLAT", options, OPT_FLAT);
-			addLabeledWidget("OPT_FLAT: ", chb0);
-			m_CurrentProperties.push_back(chb0);
+			ADD_OPTIONS_CHECKBOX(OPT_FLAT);
+
 			if (flags & OPT_NOBACK)
 			{
-				PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, "Set OPT_NOBACK", options, OPT_NOBACK);
-				addLabeledWidget("OPT_NOBACK: ", chb1);
-				m_CurrentProperties.push_back(chb1);
+				ADD_OPTIONS_CHECKBOX(OPT_NOBACK);
 			}
 		}
 		else
 		{
-			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_SIGNED", options, OPT_SIGNED);
-			addLabeledWidget("OPT_SIGNED: ", chb);
-			m_CurrentProperties.push_back(chb);
+			ADD_OPTIONS_CHECKBOX(OPT_SIGNED);
 		}
 	}
 	if (flags & OPT_CENTERX)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_CENTERX", options, OPT_CENTERX);
-		addLabeledWidget("OPT_CENTERX: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_CENTERX);
 	}
 	if (flags & OPT_CENTERY)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_CENTERY", options, OPT_CENTERY);
-		addLabeledWidget("OPT_CENTERY: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_CENTERY);
 	}
 	if (flags & OPT_RIGHTX)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_RIGHTX", options, OPT_RIGHTX);
-		addLabeledWidget("OPT_RIGHTX: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_RIGHTX);
 	}
 	if (flags & OPT_NOTICKS)
 	{
-		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NOTICKS", options, OPT_NOTICKS);
-		addLabeledWidget("OPT_NOTICKS: ", chb);
-		m_CurrentProperties.push_back(chb);
+		ADD_OPTIONS_CHECKBOX(OPT_NOTICKS);
 	}
 	if (flags & OPT_NOHM)
 	{
 		if (flags & OPT_NOSECS)
 		{
-			PropertiesCheckBox *chb0 = new PropertiesCheckBox(this, "Set OPT_NOHM", options, OPT_NOHM);
-			addLabeledWidget("OPT_NOHM: ", chb0);
-			m_CurrentProperties.push_back(chb0);
-			PropertiesCheckBox *chb1 = new PropertiesCheckBox(this, "Set OPT_NOSECS", options, OPT_NOSECS);
-			addLabeledWidget("OPT_NOSECS: ", chb1);
-			m_CurrentProperties.push_back(chb1);
+			ADD_OPTIONS_CHECKBOX(OPT_NOHM);
+			ADD_OPTIONS_CHECKBOX(OPT_NOSECS);
 		}
 		else
 		{
-			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set OPT_NOPOINTER", options, OPT_NOPOINTER);
-			addLabeledWidget("OPT_NOPOINTER: ", chb);
-			m_CurrentProperties.push_back(chb);
+			ADD_OPTIONS_CHECKBOX(OPT_NOPOINTER);
 		}
 	}
+	#undef ADD_OPTIONS_CHECKBOX
 }
 
 void InteractiveProperties::addCharacter(int character)
@@ -351,6 +345,16 @@ void InteractiveProperties::addRadius(int radius, int minim, int maxim)
 void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
 {
 	PropertiesSpinBox *prop = new PropertiesSpinBox(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
+void InteractiveProperties::addSpinBox16(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBox16 *prop = new PropertiesSpinBox16(this, undoMessage, index);
 	prop->setMinimum(minim);
 	prop->setMaximum(maxim);
 	addLabeledWidget(label, prop);
@@ -512,6 +516,7 @@ void InteractiveProperties::addPrimitive(int primitive)
 
 void InteractiveProperties::addBitmapFormat(int format)
 {
+	// TODO: Identifier remapping, centralized combobox listings
 	addComboBox(format, g_DlEnumBitmapFormat, DL_ENUM_BITMAP_FORMAT_NB, "Format: ", "Set bitmap format");
 }
 
@@ -1588,13 +1593,90 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			break;
 		}
 #ifdef FT810EMU_MODE // TODO_FT810
-//#	define FT800EMU_DL_VERTEX_FORMAT 39
-//#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
-//#	define FT800EMU_DL_BITMAP_SIZE_H 41
-//#	define FT800EMU_DL_PALETTE_SOURCE 42
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
-//#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
-//#	define FT800EMU_DL_NOP 45
+		case FT800EMU_DL_VERTEX_FORMAT:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_FORMAT."));
+			if (editor)
+			{
+				setTitle("VERTEX_FORMAT");
+				addSpinBox(0, 0, 4, "Fractional: ", "Set the number of fractional bits");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_BITMAP_LAYOUT_H:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT_H."));
+			if (editor)
+			{
+				setTitle("BITMAP_LAYOUT_H");
+				addSpinBox(0, 0, 0x3, "Stride: ", "Set bitmap line stride high bits");
+				addSpinBox(1, 0, 0x3, "Height: ", "Set bitmap layout height high bits");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_BITMAP_SIZE_H:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SIZE_H."));
+			if (editor)
+			{
+				setTitle("BITMAP_SIZE_H");
+				addSpinBox(0, 0, 0x3, "Width: ", "Set bitmap width high bits");
+				addSpinBox(1, 0, 0x3, "Height: ", "Set bitmap height high bits");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_PALETTE_SOURCE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_PALETTE_SOURCE."));
+			if (editor)
+			{
+				setTitle("PALETTE_SOURCE");
+				addAddress(0);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_VERTEX_TRANSLATE_X:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_TRANSLATE_X."));
+			if (editor)
+			{
+				setTitle("VERTEX_TRANSLATE_X");
+				addSpinBox16(0, -32768, 32767, "X: ", "Set x translation");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_TRANSLATE_Y."));
+			if (editor)
+			{
+				setTitle("VERTEX_TRANSLATE_Y");
+				addSpinBox16(0, -32768, 32767, "Y: ", "Set y translation");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FT800EMU_DL_NOP:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_NOP."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
 #endif
 	}
 	if (!ok)

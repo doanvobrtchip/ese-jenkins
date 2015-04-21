@@ -679,7 +679,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
-	m_ImportAct(NULL), m_ExportAct(NULL),
+	m_ImportAct(NULL), m_ExportAct(NULL), m_SaveScreenshotAct(NULL),
 	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_TemporaryDir(NULL)
@@ -1083,6 +1083,9 @@ void MainWindow::createActions()
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
 	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
 
+	m_SaveScreenshotAct = new QAction(this);
+	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
+
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -1126,6 +1129,8 @@ void MainWindow::translateActions()
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
 	m_ExportAct->setStatusTip(tr("Export project to file"));
+	m_SaveScreenshotAct->setText(tr("Save Screenshot"));
+	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_ManualAct->setText(tr("Manual"));
@@ -1159,6 +1164,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_ImportAct);
 	m_FileMenu->addAction(m_ExportAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_SaveScreenshotAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
@@ -2621,6 +2628,31 @@ ExportWriteError:
 	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
 }
 
+void MainWindow::actSaveScreenshot()
+{
+	QString filterpng = tr("PNG image (*.png)");
+	QString filterjpg = tr("JPG image (*.jpg)");
+	QString filter = filterpng + ";;" + filterjpg;
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), getFileDialogPath(), filter, &filter);
+	if (fileName.isNull())
+		return;
+
+	if (filter == filterpng)
+	{
+		if (!fileName.endsWith(".png"))
+			fileName = fileName + ".png";
+	}
+	if (filter == filterjpg)
+	{
+		if (!fileName.endsWith(".jpg"))
+			fileName = fileName + ".jpg";
+	}
+
+	// Save screenshot
+	const QPixmap &pixmap = m_EmulatorViewport->getPixMap();
+	pixmap.save(fileName);
+}
+
 void MainWindow::dummyCommand()
 {
 	printf("!!!!!!!! dummy action !!!!!!!!!!!!!!!!\n");
@@ -2637,11 +2669,11 @@ void MainWindow::about()
 	QMessageBox msgBox(this);
     msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor"));
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText(tr(
+	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
-		"Author: Jan Boon (<a href='mailto:jan.boon@kaetemi.be'>jan.boon@kaetemi.be</a>)<br>"
+		"Author: Jan Boon &lt;<a href='mailto:jan.boon@kaetemi.be'>jan.boon@kaetemi.be</a>&gt;<br>"
 		"<br>"
-		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
+		"Support and updates: <a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
 		));
     msgBox.exec();
 }

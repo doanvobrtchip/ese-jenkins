@@ -1,15 +1,7 @@
-/**
- * dl_parser.cpp
- * $Id$
- * \file dl_parser.cpp
- * \brief dl_parser.cpp
- * \date 2013-11-06 08:55GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #include "dl_parser.h"
 

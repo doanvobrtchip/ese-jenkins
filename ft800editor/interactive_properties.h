@@ -73,6 +73,7 @@ private:
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBox16(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);

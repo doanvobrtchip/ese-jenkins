@@ -146,6 +146,8 @@ private slots:
 	void actImport();
 	void actExport();
 
+	void actSaveScreenshot();
+
 	void undoCleanChanged(bool clean);
 
 	void hsizeChanged(int hsize);
@@ -273,6 +275,7 @@ private:
 	QAction *m_SaveAsAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
+	QAction *m_SaveScreenshotAct;
 	QAction *m_ManualAct;
 	QAction *m_AboutAct;
 	QAction *m_AboutQtAct;
