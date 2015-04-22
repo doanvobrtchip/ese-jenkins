@@ -52,7 +52,7 @@ const char **g_BitmapFormatToString[FTEDITOR_DEVICE_NB] = {
 	g_BitmapFormatToStringVC2,
 	g_BitmapFormatToStringVC2,
 };
-int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB] {
+int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB] = {
 	12,
 	12,
 	33,

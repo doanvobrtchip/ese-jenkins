@@ -1529,6 +1529,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+#ifdef FT810EMU_MODE
 			if (parsed.IdLeft == 0xFFFFFF00)
 			{
 				switch (parsed.IdRight)
@@ -1540,6 +1541,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
 				}
 			}
+#endif
 			if (parsed.IdLeft != 0)
 			{
 				handle = -1;
@@ -1579,6 +1581,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+#ifdef FT810EMU_MODE
 			if (parsed.IdLeft == 0xFFFFFF00)
 			{
 				switch (parsed.IdRight)
@@ -1590,6 +1593,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
 				}
 			}
+#endif
 			if (parsed.IdLeft != 0)
 				continue;
 			switch (parsed.IdRight)
@@ -1713,6 +1717,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+#ifdef FT810EMU_MODE
 			if (parsed.IdLeft == 0xFFFFFF00)
 			{
 				switch (parsed.IdRight)
@@ -1741,6 +1746,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					// TODO: CMD_SETFONT2, addr is from font info ram... tricky
 				}
 			}
+#endif
 			if (parsed.IdLeft != 0)
 			{
 				handleLine = -1;
@@ -1904,12 +1910,14 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 			pa.Parameter[0].I = newAddr;
 			dlEditor->replaceLine(i, pa);
 		}
+#ifdef FT810EMU_MODE
 		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
 			dlEditor->replaceLine(i, pa);
 		}
+#endif
 	}
 }
 
