@@ -1630,6 +1630,20 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
+#ifdef FT810EMU_MODE
+		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		{
+			handles[parsed.Parameter[0].U] = true;
+		}
+		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		{
+			handles[parsed.Parameter[0].U] = true;
+		}
+		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		{
+			handles[parsed.Parameter[0].U] = true;
+		}
+#endif
 	}
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
