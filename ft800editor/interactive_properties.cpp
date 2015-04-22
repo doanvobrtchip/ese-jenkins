@@ -30,10 +30,18 @@ namespace FT800EMUQT {
 #ifdef FT810EMU_MODE
 #define FTEDITOR_COORD_MIN -4096
 #define FTEDITOR_COORD_MAX 4095
+#define FTEDITOR_SCREENCOORDWH_MIN 0
+#define FTEDITOR_SCREENCOORDWH_MAX (2048)
 #else
 #define FTEDITOR_COORD_MIN -1024
 #define FTEDITOR_COORD_MAX 1023
+#define FTEDITOR_SCREENCOORD_MIN 0
+#define FTEDITOR_SCREENCOORD_MAX 512
 #endif
+#define FTEDITOR_SCREENCOORDXY_MIN 0
+#define FTEDITOR_SCREENCOORDXY_MAX (FTEDITOR_SCREENCOORDWH_MAX - 1)
+#define FTEDITOR_BITMAPHANDLE_MAX 15
+#define FTEDITOR_FONTHANDLE_MAX 31
 
 InteractiveProperties::InteractiveProperties(MainWindow *parent) : QGroupBox(parent), m_MainWindow(parent),
 	m_LineEditor(NULL), m_LineNumber(0)
@@ -488,6 +496,16 @@ void InteractiveProperties::addComboBox(int index, const char **items, int begin
 {
 	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index, begin);
 	for (int i = begin; i < end; ++i)
+		prop->addItem(items[i]);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->ready();
+}
+
+void InteractiveProperties::addComboBox(int index, const char **items, int nb, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz, const QString &label, const QString &undoMessage)
+{
+	PropertiesRemapComboBox *prop = new PropertiesRemapComboBox(this, undoMessage, index, toIntf, toIntfSz, toEnum, toEnumSz);
+	for (int i = 0; i < nb; ++i)
 		prop->addItem(items[i]);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
@@ -985,7 +1003,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SETFONT");
-				addSpinBox(0, 0, 15, "Font: ", "Set font");
+				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, "Font: ", "Set font");
 				addAddress(1);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -998,8 +1016,8 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_TRACK");
-				addXY(0, 1, 0, 512);
-				addWH(2, 3, 0, 512);
+				addXY(0, 1, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
+				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				addSpinBox(4, 0, 255, "Tag: ", "Set tag");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1111,6 +1129,157 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+#ifdef FT810EMU_MODE
+#if 0
+		case CMD_SETROTATE:
+		{
+			static const char *rotations[] = {
+				"Landscape",
+				"Inverted Landscape",
+				"Portrait",
+				"Inverted Portrait",
+				"Mirrored Landscape",
+				"Mirrored Inverted Landscape",
+				"Mirorred Portrait",
+				"Mirrored Inverted Portrait",
+			};
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETROTATE."));
+			if (editor)
+			{
+				setTitle("CMD_SETROTATE");
+				addComboBox(0, rotations, 8, "Rotation: ", "Set rotation");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+#endif
+		case CMD_SNAPSHOT2:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SNAPSHOT2."));
+			if (editor)
+			{
+				static const char *items[] = {
+					"RGB565",
+					"ARGB4",
+					"ARGB8",
+				};
+				static const int toEnum[] = {
+					RGB565,
+					ARGB4,
+					0x20 // MAGIC NUMBER ARGB8 :(
+				};
+				static const int toIntf[] = {
+					0, 0, 0, 0, 0, 0, 1, 0,
+					0, 0, 0, 0, 0, 0, 0, 0,
+					0, 0, 0, 0, 0, 0, 0, 0,
+					0, 0, 0, 0, 0, 0, 0, 0,
+					2
+				};
+				setTitle("CMD_SNAPSHOT2");
+				addComboBox(0, items, sizeof(items) / sizeof(items[0]),
+					toIntf, sizeof(toIntf) / sizeof(toIntf[0]), toEnum, sizeof(toEnum) / sizeof(toEnum[0]),
+					tr("Format") + ": ", tr("Set snapshot format"));
+				addAddress(1);
+				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
+				addWH(4, 5, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_SETBASE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETBASE."));
+			if (editor)
+			{
+				setTitle("CMD_SETBASE");
+				addSpinBox(0, 2, 36, tr("Base") + ": ", tr("Set the base"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		/*
+		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
+		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
+		s_CmdParamString[CMD_MEDIAFIFO & 0xFF] = false;
+		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF;
+		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 1;
+		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = false;*/
+		case CMD_SETFONT2:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETFONT2."));
+			if (editor)
+			{
+				setTitle("CMD_SETFONT2");
+				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
+				addAddress(1);
+				addSpinBox(2, 0, 255, tr("First character") + ": ", tr("Set first character"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_SETSCRATCH:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETSCRATCH."));
+			if (editor)
+			{
+				setTitle("CMD_SETSCRATCH");
+				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
+				addAddress(1);
+				addSpinBox(2, 0, 255, tr("First character") + ": ", tr("Set first character"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		/*
+		/*s_CmdIdMap["CMD_INT_RAMSHARED"] = CMD_INT_RAMSHARED & 0xFF;
+		s_CmdParamCount[CMD_INT_RAMSHARED & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_INT_RAMSHARED & 0xFF] = false;*/
+		/*s_CmdIdMap["CMD_INT_SWLOADIMAGE"] = CMD_INT_SWLOADIMAGE & 0xFF;
+		s_CmdParamCount[CMD_INT_SWLOADIMAGE & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_INT_SWLOADIMAGE & 0xFF] = false;*/
+		case CMD_ROMFONT:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ROMFONT."));
+			if (editor)
+			{
+				setTitle("CMD_ROMFONT");
+				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
+				addSpinBox(1, 16, 34, tr("ROM Slot") + ": ", tr("Set ROM slot"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		/*
+		s_CmdIdMap["CMD_VIDEOSTART"] = CMD_VIDEOSTART & 0xFF;
+		s_CmdParamCount[CMD_VIDEOSTART & 0xFF] = 0;
+		s_CmdParamString[CMD_VIDEOSTART & 0xFF] = false;
+		s_CmdIdMap["CMD_VIDEOFRAME"] = CMD_VIDEOFRAME & 0xFF;
+		s_CmdParamCount[CMD_VIDEOFRAME & 0xFF] = 2;
+		s_CmdParamString[CMD_VIDEOFRAME & 0xFF] = false;*/
+		/*s_CmdIdMap["CMD_SYNC"] = CMD_SYNC & 0xFF;
+		s_CmdParamCount[CMD_SYNC & 0xFF] = 0; // undocumented
+		s_CmdParamString[CMD_SYNC & 0xFF] = false;*/
+		case CMD_SETBITMAP:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETBITMAP."));
+			if (editor)
+			{
+				setTitle("CMD_SETBITMAP");
+				addAddress(0);
+				addBitmapFormat(1);
+				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+#endif
 	}
 	else switch (idRight)
 	{
@@ -1457,7 +1626,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("SCISSOR_XY");
-				addXY(0, 1, 0, 512);
+				addXY(0, 1, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1469,7 +1638,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("SCISSOR_SIZE");
-				addWH(0, 1, 0, 512);
+				addWH(0, 1, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

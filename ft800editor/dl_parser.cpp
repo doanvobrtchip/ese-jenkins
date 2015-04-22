@@ -450,9 +450,9 @@ void DlParser::init()
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 3; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
 #ifdef FT810EMU_MODE
-		s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
+		/*s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
 		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7
-		s_CmdParamString[CMD_SETROTATE & 0xFF] = false;
+		s_CmdParamString[CMD_SETROTATE & 0xFF] = false;*/ // currently don't support because we don't remap coordinates in the editor yet
 		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
 		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
@@ -2142,6 +2142,7 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			{
 				// Numeric parameter
 				bool constantOpt = false;
+				bool paramHandled = false;
 				switch (parsed.IdRight | 0xFFFFFF00)
 				{
 				case CMD_TEXT:
@@ -2161,14 +2162,26 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 				case CMD_KEYS:
 					if (p == 5) constantOpt = true;
 					break;
+#ifdef FT810EMU_MODE
+				case CMD_SETBITMAP:
+					if (p == 1)
+					{
+						bitmapFormatToString(res, parsed.Parameter[p].U);
+						paramHandled = true;
+					}
+					break;
+#endif
 				}
-				if (constantOpt)
+				if (!paramHandled)
 				{
-					optToString(res, parsed.Parameter[p].U, parsed.IdRight | 0xFFFFFF00);
-				}
-				else
-				{
-					res << parsed.Parameter[p].I;
+					if (constantOpt)
+					{
+						optToString(res, parsed.Parameter[p].U, parsed.IdRight | 0xFFFFFF00);
+					}
+					else
+					{
+						res << parsed.Parameter[p].I;
+					}
 				}
 			}
 		}

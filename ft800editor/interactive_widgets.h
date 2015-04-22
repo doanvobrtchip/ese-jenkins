@@ -777,6 +777,61 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesRemapComboBox : public QComboBox, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesRemapComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_ToIntf(toIntf), m_ToIntfSz(toIntfSz), m_ToEnum(toEnum), m_ToEnumSz(toEnumSz), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesRemapComboBox()
+	{
+
+	}
+
+	void ready()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setCurrentIndex(m_ToIntf[getLine().Parameter[m_Index].U % m_ToIntfSz]);
+		m_SoftMod = false;
+	}
+
+	private slots:
+	void updateValue(int value)
+	{
+		if (m_SoftMod) return;
+		if (value < 0) return;
+		m_SoftMod = true;
+		//printf("PropertiesSlider::updateValue(value) %i\n", value);
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].U = m_ToEnum[value % m_ToEnumSz];
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	const int *m_ToIntf;
+	int m_ToIntfSz;
+	const int *m_ToEnum;
+	int m_ToEnumSz;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
 } /* namespace FT800EMUQT */
 
 #endif /* #ifndef FT800EMUQT_INTERACTIVE_WIDGETS_H */

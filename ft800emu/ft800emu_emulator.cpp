@@ -311,6 +311,7 @@ const uint8_t bayerDiv4[2][2] = {
 								Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
 								// Render single line
 								uint32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
+								snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 								// printf("SNAPY: %u\n", snapy);
 								argb8888 *buffer = s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
 								GraphicsProcessor.process(buffer,
