@@ -1,15 +1,7 @@
-/**
- * main.cpp
- * $Id$
- * \file main.cpp
- * \brief main.cpp
- * \date 2013-10-15 13:18GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #ifdef FT800EMU_PYTHON
 #include <Python.h>

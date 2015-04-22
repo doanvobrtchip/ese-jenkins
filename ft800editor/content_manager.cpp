@@ -1,15 +1,7 @@
-/**
- * content_manager.cpp
- * $Id$
- * \file content_manager.cpp
- * \brief content_manager.cpp
- * \date 2014-01-31 16:56GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2014  Future Technology Devices International Ltd
- */
+Copyright (C) 2014-2015  Future Technology Devices International Ltd
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #include "content_manager.h"
 
@@ -47,6 +39,8 @@
 #include "asset_converter.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
+
+#define FT810EMU_BITMAP_ALWAYS_HIGH 1
 
 using namespace std;
 
@@ -554,7 +548,7 @@ ContentManager::~ContentManager()
 	// Cleanup
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		delete info;
 	}
 }
@@ -726,7 +720,7 @@ int ContentManager::getFreeAddress()
 	int freeAddress = 0;
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->MemoryLoaded)
 		{
 			int size = getContentSize(info);
@@ -758,7 +752,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
 	contentInfo->View = view;
-	view->setData(0, Qt::UserRole, qVariantFromValue((void *)contentInfo));
+	view->setData(0, Qt::UserRole, qVariantFromValue((quintptr)(void *)contentInfo));
 	rebuildViewInternal(contentInfo);
 
 	// Reprocess to RAM
@@ -804,7 +798,7 @@ bool ContentManager::nameExists(const QString &name)
 {
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->DestName == name)
 		{
 			return true;
@@ -888,7 +882,7 @@ void ContentManager::remove()
 	if (!m_ContentList->currentItem())
 		return;
 
-	ContentInfo *info = (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
+	ContentInfo *info = (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 	remove(info);
 }
 
@@ -897,7 +891,7 @@ void ContentManager::rebuildAll()
 	// Reprocess all content if necessary
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		reprocessInternal(info);
 	}
 }
@@ -907,7 +901,7 @@ void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
 	// Iterate through the list and copy the pointer to the data
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		contentInfos.push_back(info);
 	}
 }
@@ -925,7 +919,7 @@ bool ContentManager::isValidContent(ContentInfo *info)
 	// Iterate through the list and copy the pointer to the data
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		if (info == (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>())
+		if (info == (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>())
 		{
 			// Found the content
 			return true;
@@ -943,7 +937,7 @@ ContentInfo *ContentManager::find(const QString &destName)
 
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->DestName == destName)
 			return info;
 	}
@@ -1002,7 +996,7 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		m_MainWindow->focusProperties();
 
 		// Rebuild GUI
-		rebuildGUIInternal((ContentInfo *)current->data(0, Qt::UserRole).value<void *>());
+		rebuildGUIInternal((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>());
 	}
 	else
 	{
@@ -1389,7 +1383,7 @@ void ContentManager::recalculateOverlapInternal()
 
 	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
 	{
-		ContentInfo *leftInfo = (ContentInfo *)(*left)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *leftInfo = (ContentInfo *)(void *)(*left)->data(0, Qt::UserRole).value<quintptr>();
 		if (leftInfo->Converter != ContentInfo::Invalid && leftInfo->MemoryLoaded)
 		{
 			int leftSize = getContentSize(leftInfo);
@@ -1409,7 +1403,7 @@ void ContentManager::recalculateOverlapInternal()
 					ramGlobalUsage += leftSize;
 					for (QTreeWidgetItemIterator right(++left); *right; ++right)
 					{
-						ContentInfo *rightInfo = (ContentInfo *)(*right)->data(0, Qt::UserRole).value<void *>();
+						ContentInfo *rightInfo = (ContentInfo *)(void *)(*right)->data(0, Qt::UserRole).value<quintptr>();
 						if (rightInfo->Converter != ContentInfo::Invalid && rightInfo->MemoryLoaded)
 						{
 							int rightSize = getContentSize(rightInfo);
@@ -1524,7 +1518,7 @@ ContentInfo *ContentManager::current()
 {
 	if (!m_ContentList->currentItem())
 		return NULL;
-	return (ContentInfo *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<void *>();
+	return (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 }
 
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
@@ -1535,6 +1529,17 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+			if (parsed.IdLeft == 0xFFFFFF00)
+			{
+				switch (parsed.IdRight)
+				{
+					case CMD_SETBITMAP & 0xFF:
+						if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+							return handle;
+						break;
+					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+				}
+			}
 			if (parsed.IdLeft != 0)
 			{
 				handle = -1;
@@ -1574,6 +1579,17 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+			if (parsed.IdLeft == 0xFFFFFF00)
+			{
+				switch (parsed.IdRight)
+				{
+					case CMD_SETBITMAP & 0xFF:
+						if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+							return handle;
+						break;
+					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+				}
+			}
 			if (parsed.IdLeft != 0)
 				continue;
 			switch (parsed.IdRight)
@@ -1608,6 +1624,7 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 	}
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
+		// TODO: CMD_SETFONT2, CMD_ROMFONT, CMD_SETSCRATCH
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_HANDLE && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 		{
@@ -1639,14 +1656,24 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 				case FT800EMU_DL_BITMAP_LAYOUT_H:
 				case FT800EMU_DL_BITMAP_SIZE_H:
 #endif
-					break;
+					break; // do nothing
 				default:
 					return i;
 			}
 		}
-		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight == (CMD_SETFONT & 0xFF)))
+		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00)
 		{
-			// do nothing
+			switch (parsed.IdRight)
+			{
+			case CMD_SETFONT & 0xFF:
+#ifdef FT810EMU_MODE
+			case CMD_SETFONT2 & 0xFF:
+			case CMD_SETBITMAP & 0xFF:
+#endif
+				break; // do nothing
+			default:
+				return i;
+			}
 		}
 		else
 		{
@@ -1665,12 +1692,41 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 #ifdef FT810EMU_MODE
 	int layoutHLine = -1;
 	int sizeHLine = -1;
+	bool cmdSetBitmap = false;
 #endif
 	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
+			if (parsed.IdLeft == 0xFFFFFF00)
+			{
+				switch (parsed.IdRight)
+				{
+					case CMD_SETBITMAP & 0xFF:
+					{
+						bool isAddressSame = (contentInfo->Converter == ContentInfo::Font)
+							? (parsed.Parameter[0].U == (contentInfo->MemoryAddress + 148)) // Font bitmap offset at 148
+							: (parsed.Parameter[0].U == contentInfo->MemoryAddress);
+						if (addressOk)
+						{
+							DlParsed pa = parsed;
+							pa.Parameter[1].U = contentInfo->ImageFormat;
+							pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
+							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
+							dlEditor->replaceLine(i, pa);
+							cmdSetBitmap = true;
+						}
+						if (isAddressSame && handleLine != -1 && !addressOk)
+						{
+							i = handleLine;
+							addressOk = true;
+						}
+						continue;
+					}
+					// TODO: CMD_SETFONT2, addr is from font info ram... tricky
+				}
+			}
 			if (parsed.IdLeft != 0)
 			{
 				handleLine = -1;
@@ -1720,6 +1776,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				case FT800EMU_DL_BITMAP_LAYOUT_H:
 					if (addressOk)
 					{
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
 						if (!((contentInfo->CachedImageStride >> 10)
 							|| (contentInfo->CachedImageHeight >> 9)))
 						{
@@ -1728,6 +1785,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 							--i;
 						}
 						else
+#endif
 						{
 							// Update _H
 							DlParsed pa = parsed;
@@ -1741,6 +1799,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				case FT800EMU_DL_BITMAP_SIZE_H:
 					if (addressOk)
 					{
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
 						if (!((contentInfo->CachedImageWidth >> 9)
 							|| (contentInfo->CachedImageHeight >> 9)))
 						{
@@ -1749,6 +1808,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 							--i;
 						}
 						else
+#endif
 						{
 							// Update _H
 							DlParsed pa = parsed;
@@ -1768,44 +1828,51 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 		}
 	}
 #ifdef FT810EMU_MODE
-	if (layoutLine >= 0 && layoutHLine < 0)
+	if (!cmdSetBitmap) // User friendly fixup for _H, does not work with bitmap handle reuse, but not a critical use case
 	{
-		if ((contentInfo->CachedImageStride >> 10)
-			|| (contentInfo->CachedImageHeight >> 9))
+		if (layoutLine >= 0 && layoutHLine < 0)
 		{
-			// Add _H if doesn't exist and necessary
-			DlParsed pa;
-			pa.ValidId = true;
-			pa.IdLeft = 0;
-			pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
-			pa.ExpectedStringParameter = false;
-			pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-			pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-			pa.ExpectedParameterCount = 2;
-			layoutHLine = layoutLine + 1;
-			dlEditor->insertLine(layoutHLine, pa);
-			if (sizeLine > layoutLine)
-				++sizeLine;
-			if (sizeHLine > layoutLine)
-				++sizeHLine;
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+			if ((contentInfo->CachedImageStride >> 10)
+				|| (contentInfo->CachedImageHeight >> 9))
+#endif
+			{
+				// Add _H if doesn't exist and necessary
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
+				pa.ExpectedStringParameter = false;
+				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+				pa.ExpectedParameterCount = 2;
+				layoutHLine = layoutLine + 1;
+				dlEditor->insertLine(layoutHLine, pa);
+				if (sizeLine > layoutLine)
+					++sizeLine;
+				if (sizeHLine > layoutLine)
+					++sizeHLine;
+			}
 		}
-	}
-	if (sizeLine >= 0 && sizeHLine < 0)
-	{
-		if ((contentInfo->CachedImageWidth >> 9)
-			|| (contentInfo->CachedImageHeight >> 9))
+		if (sizeLine >= 0 && sizeHLine < 0)
 		{
-			// Add _H if doesn't exist and necessary
-			DlParsed pa;
-			pa.ValidId = true;
-			pa.IdLeft = 0;
-			pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
-			pa.ExpectedStringParameter = false;
-			pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-			pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-			pa.ExpectedParameterCount = 2;
-			sizeHLine = sizeLine + 1;
-			dlEditor->insertLine(sizeHLine, pa);
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+			if ((contentInfo->CachedImageWidth >> 9)
+				|| (contentInfo->CachedImageHeight >> 9))
+#endif
+			{
+				// Add _H if doesn't exist and necessary
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
+				pa.ExpectedStringParameter = false;
+				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+				pa.ExpectedParameterCount = 2;
+				sizeHLine = sizeLine + 1;
+				dlEditor->insertLine(sizeHLine, pa);
+			}
 		}
 	}
 #endif
@@ -1818,6 +1885,12 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		{
+			DlParsed pa = parsed;
+			pa.Parameter[0].I = newAddr;
+			dlEditor->replaceLine(i, pa);
+		}
+		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -1838,6 +1911,7 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 			pa.Parameter[1].I = newAddr;
 			dlEditor->replaceLine(i, pa);
 		}
+		// TODO: CMD_SETFONT2
 	}
 	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor);
 }
@@ -1921,6 +1995,26 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 						--i;
 						continue;
 					}
+#if FT810EMU_MODE
+					if (parsed.IdRight == (CMD_SETFONT2 & 0xFF))
+					{
+						handleActive = (parsed.Parameter[0].I == bitmapHandle); // This switches handle (TODO: VERIFY)
+						if (handleActive)
+						{
+							// Purge fonts
+							dlEditor->removeLine(i);
+							--i;
+							continue;
+						}
+					}
+					if (parsed.IdRight == (CMD_SETBITMAP & 0xFF) && handleActive)
+					{
+						// Purge bitmap parameters
+						dlEditor->removeLine(i);
+						--i;
+						continue;
+					}
+#endif
 				}
 				if (parsed.IdLeft != 0)
 					continue;

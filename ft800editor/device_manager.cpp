@@ -1,15 +1,6 @@
-/**
- * device_manager.cpp
- * $Id$
- * \file device_manager.cpp
- * \brief device_manager.cpp
- * \date 2014-01-27 18:59GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2014  Future Technology Devices International Ltd
- */
+Copyright (C) 2014-2015  Future Technology Devices International Ltd
+*/
 
 #include "device_manager.h"
 
@@ -158,7 +149,7 @@ void DeviceManager::refreshDevices()
 			devInfo->View = view;
 			devInfo->Connected = false;
 			m_DeviceInfo[devId] = devInfo;
-			view->setData(0, Qt::UserRole, qVariantFromValue((void *)devInfo));
+			view->setData(0, Qt::UserRole, qVariantFromValue((quintptr)(void *)devInfo));
 		}
 		else
 		{
@@ -192,7 +183,7 @@ void DeviceManager::connectDevice()
 	printf("connectDevice\n");
 
 
-	DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
+	DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 
 	if (devInfo->Connected) return;
 
@@ -265,7 +256,7 @@ void DeviceManager::disconnectDevice()
 {
 	if (!m_DeviceList->currentItem()) return;
 
-	DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
+	DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 
 	printf("disconnectDevice\n");
 
@@ -295,7 +286,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
-		ContentInfo *info = (ContentInfo *)(*it)->data(0, Qt::UserRole).value<void *>();
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= RAM_G_MAX))
 		{
             {
@@ -322,7 +313,7 @@ void DeviceManager::syncDevice()
 
 	//Sync with selected device
 	{
-		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
+		DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 		if (devInfo->Connected)
 		{
 			Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t *)devInfo->handle;
@@ -355,7 +346,7 @@ void DeviceManager::updateSelection()
 	}
 	else
 	{
-		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
+		DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 		m_ConnectButton->setVisible(!devInfo->Connected);
 		m_DisconnectButton->setVisible(devInfo->Connected);
 		m_SendImageButton->setVisible(devInfo->Connected);
