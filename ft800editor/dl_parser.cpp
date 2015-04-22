@@ -22,6 +22,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "ft800emu_vc.h"
 
 // Project includes
+#include "constant_mapping.h"
 
 namespace FT800EMUQT {
 
@@ -75,33 +76,6 @@ const char *g_DlEnumStencil[DL_ENUM_STENCIL_NB] = {
 	"INCR",
 	"DECR",
 	"INVERT",
-};
-
-const char *g_DlEnumBitmapFormat[DL_ENUM_BITMAP_FORMAT_NB] = {
-	"ARGB1555", // 0
-	"L1", // 1
-	"L4", // 2
-	"L8", // 3
-	"RGB332", // 4
-	"ARGB2", // 5
-	"ARGB4", // 6
-	"RGB565", // 7
-#ifdef FT810EMU_MODE
-	"8", // 8 deprecated
-#else
-	"PALETTED", // 8
-#endif
-	"TEXT8X8", // 9
-	"TEXTVGA", // 10
-	"BARGRAPH", // 11
-#ifdef FT810EMU_MODE
-	"12", // 12 does not exist
-	"13", // 13 does not exist
-	"PALETTED565", // 14
-	"PALETTED4444", // 15
-	"PALETTED8", // 16
-	"L2", // 17
-#endif
 };
 
 const char *g_DlEnumBitmapFilter[DL_ENUM_BITMAP_FILTER_NB] = {
@@ -232,6 +206,9 @@ void DlParser::init()
 		s_ParamMap["ARGB1555"] = ARGB1555;
 		s_ParamMap["ARGB2"] = ARGB2;
 		s_ParamMap["ARGB4"] = ARGB4;
+#if FT810EMU_MODE
+		s_ParamMap["ARGB8"] = FTEDITOR_ARGB8;
+#endif
 		s_ParamMap["BARGRAPH"] = BARGRAPH;
 		s_ParamMap["BILINEAR"] = BILINEAR;
 		s_ParamMap["BITMAPS"] = BITMAPS;
@@ -1461,9 +1438,10 @@ static void primToString(std::stringstream &dst, uint32_t id)
 
 static void bitmapFormatToString(std::stringstream &dst, uint32_t id)
 {
-	if ((uint32_t)id < DL_ENUM_BITMAP_FORMAT_NB)
+	const char *str = FT800EMUQT::bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, id);
+	if (str[0])
 	{
-		dst << g_DlEnumBitmapFormat[id];
+		dst << str;
 	}
 	else
 	{
@@ -2141,8 +2119,9 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 			else
 			{
 				// Numeric parameter
-				bool constantOpt = false;
-				bool paramHandled = false;
+				int paramType = 0;
+				// 1: constant
+				// 2: bitmap format
 				switch (parsed.IdRight | 0xFFFFFF00)
 				{
 				case CMD_TEXT:
@@ -2150,38 +2129,38 @@ void DlParser::toString(std::string &dst, const DlParsed &parsed)
 				case CMD_CLOCK:
 				case CMD_DIAL:
 				case CMD_NUMBER:
-					if (p == 3) constantOpt = true;
+					if (p == 3) paramType = 1;
 					break;
 				case CMD_PROGRESS:
 				case CMD_SLIDER:
 				case CMD_SCROLLBAR:
 				case CMD_TOGGLE:
-					if (p == 4) constantOpt = true;
+					if (p == 4) paramType = 1;
 					break;
 				case CMD_BUTTON:
 				case CMD_KEYS:
-					if (p == 5) constantOpt = true;
+					if (p == 5) paramType = 1;
 					break;
 #ifdef FT810EMU_MODE
 				case CMD_SETBITMAP:
-					if (p == 1)
-					{
-						bitmapFormatToString(res, parsed.Parameter[p].U);
-						paramHandled = true;
-					}
+					if (p == 1) paramType = 2;
+					break;
+				case CMD_SNAPSHOT2:
+					if (p == 0) paramType = 2;
 					break;
 #endif
 				}
-				if (!paramHandled)
+				switch (paramType)
 				{
-					if (constantOpt)
-					{
-						optToString(res, parsed.Parameter[p].U, parsed.IdRight | 0xFFFFFF00);
-					}
-					else
-					{
-						res << parsed.Parameter[p].I;
-					}
+				case 1:
+					optToString(res, parsed.Parameter[p].U, parsed.IdRight | 0xFFFFFF00);
+					break;
+				case 2:
+					bitmapFormatToString(res, parsed.Parameter[p].U);
+					break;
+				default:
+					res << parsed.Parameter[p].I;
+					break;
 				}
 			}
 		}

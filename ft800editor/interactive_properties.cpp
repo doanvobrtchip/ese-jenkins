@@ -22,6 +22,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "dl_editor.h"
 #include "properties_editor.h"
 #include "interactive_widgets.h"
+#include "constant_mapping.h"
 
 using namespace std;
 
@@ -535,7 +536,7 @@ void InteractiveProperties::addPrimitive(int primitive)
 void InteractiveProperties::addBitmapFormat(int format)
 {
 	// TODO: Identifier remapping, centralized combobox listings
-	addComboBox(format, g_DlEnumBitmapFormat, DL_ENUM_BITMAP_FORMAT_NB, "Format: ", "Set bitmap format");
+	addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
 }
 
 void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)

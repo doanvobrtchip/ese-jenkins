@@ -13,7 +13,7 @@ namespace FT800EMUQT {
 ///////////////////////////////////////////////////////////////////////
 
 const char *g_BitmapFormatToStringVC1[] = {
-	"ARGB1555",
+	"ARGB1555", // 0
 	"L1",
 	"L4",
 	"L8",
@@ -22,6 +22,9 @@ const char *g_BitmapFormatToStringVC1[] = {
 	"ARGB4",
 	"RGB565",
 	"PALETTED",
+	"TEXT8X8", // 9
+	"TEXTVGA", // 10
+	"BARGRAPH", // 11
 };
 
 ///////////////////////////////////////////////////////////////////////
