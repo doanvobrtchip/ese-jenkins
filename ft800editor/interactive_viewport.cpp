@@ -2007,9 +2007,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						{
 							pa.IdLeft = 0xFFFFFF00;
 							pa.IdRight = CMD_SETBITMAP & 0xFF;
-							pa.Parameter[0].U = contentInfo->Converter == ContentInfo::Font
-								? contentInfo->MemoryAddress + 148
-								: contentInfo->MemoryAddress;
+							pa.Parameter[0].U = contentInfo->bitmapAddress();
 							pa.Parameter[1].U = contentInfo->ImageFormat;
 							pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
 							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
@@ -2023,9 +2021,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 #endif
 						{
 							pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
-							pa.Parameter[0].U = contentInfo->Converter == ContentInfo::Font
-								? contentInfo->MemoryAddress + 148
-								: contentInfo->MemoryAddress;
+							pa.Parameter[0].U = contentInfo->bitmapAddress();
 							pa.ExpectedParameterCount = 1;
 							m_LineEditor->insertLine(hline, pa);
 							++hline;

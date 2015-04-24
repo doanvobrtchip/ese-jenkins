@@ -1547,7 +1547,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 				switch (parsed.IdRight)
 				{
 					case CMD_SETBITMAP & 0xFF:
-						if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
 					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
@@ -1565,7 +1565,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					handle = parsed.Parameter[0].I;
 					break;
 				case FTEDITOR_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+					if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 						return handle;
 					break;
 				case FTEDITOR_DL_BITMAP_LAYOUT:
@@ -1599,7 +1599,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 				switch (parsed.IdRight)
 				{
 					case CMD_SETBITMAP & 0xFF:
-						if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
 					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
@@ -1615,7 +1615,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					handle = parsed.Parameter[0].I;
 					break;
 				case FTEDITOR_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
+					if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 						return handle;
 					break;
 				case FTEDITOR_DL_BITMAP_LAYOUT:
@@ -1736,9 +1736,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				{
 					case CMD_SETBITMAP & 0xFF:
 					{
-						bool isAddressSame = (contentInfo->Converter == ContentInfo::Font)
-							? (parsed.Parameter[0].U == (contentInfo->MemoryAddress + 148)) // Font bitmap offset at 148
-							: (parsed.Parameter[0].U == contentInfo->MemoryAddress);
+						bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
 						if (addressOk)
 						{
 							DlParsed pa = parsed;
@@ -1773,9 +1771,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					break;
 				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
-					bool isAddressSame = (contentInfo->Converter == ContentInfo::Font)
-						? (parsed.Parameter[0].U == (contentInfo->MemoryAddress + 148)) // Font bitmap offset at 148
-						: (parsed.Parameter[0].U == contentInfo->MemoryAddress);
+					bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
 					if (isAddressSame && handleLine != -1 && !addressOk)
 					{
 						i = handleLine;
@@ -1947,7 +1943,7 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 		}
 		// TODO: CMD_SETFONT2
 	}
-	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor);
+	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor); // TODO: Blocks count
 }
 
 void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
