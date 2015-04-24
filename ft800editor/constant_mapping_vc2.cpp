@@ -16,8 +16,18 @@ extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
 const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_G,
 	RAM_DL,
+	-1,
 	RAM_CMD,
-	RAM_REG
+	RAM_REG,
+};
+
+extern const char *g_AddrToStringVC2[FTEDITOR_RAM_NB];
+const char *g_AddrToStringVC2[FTEDITOR_RAM_NB] = {
+	"RAM_G",
+	"RAM_DL",
+	"",
+	"RAM_REG",
+	"RAM_CMD",
 };
 
 ///////////////////////////////////////////////////////////////////////

@@ -323,7 +323,7 @@ void loop()
 				palFile.open(QIODevice::ReadOnly);
 				QDataStream in(&palFile);
 				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
-				int s = in.readRawData(&ram[RAM_PAL], palSize);
+				int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
 				FT800EMU::Memory.poke();
 			}
 #endif
@@ -2545,7 +2545,7 @@ void MainWindow::actImport()
 #ifdef FT810EMU_MODE // FIXME_FT810
 					in.skipRawData(1024); // FIXME_GUI PALETTE
 #else
-					s = in.readRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+					s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
 #endif
 					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
 					else
@@ -2628,12 +2628,12 @@ void MainWindow::actExport()
 		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
 		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
 		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
-		s = out.writeRawData(&ram[FT800EMUQT::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
+		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
 		if (s != 262144) goto ExportWriteError;
 #ifdef FT810EMU_MODE // FIXME_FT810
-		s = out.writeRawData(&ram[FT800EMUQT::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
+		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
 #else
-		s = out.writeRawData(&ram[RAM_PAL], 1024); // FIXME_GUI PALETTE
+		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
 #endif
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();

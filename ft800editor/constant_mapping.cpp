@@ -46,25 +46,20 @@ const char *g_DeviceToString[4] = {
 
 extern const int32_t g_AddrVC1[FTEDITOR_RAM_NB];
 extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
-const int32_t *g_Addr[FTEDITOR_RAM_NB] = {
+const int32_t *g_Addr[FTEDITOR_DEVICE_NB] = {
 	g_AddrVC1, // FT800
 	g_AddrVC1, // FT801
 	g_AddrVC2, // FT810
 	g_AddrVC2, // FT811
 };
 
-const char *g_AddrToStringA[FTEDITOR_RAM_NB] = {
-	"RAM_G",
-	"RAM_DL",
-	"RAM_CMD",
-	"RAM_REG"
-};
-
+extern const char *g_AddrToStringVC1[FTEDITOR_RAM_NB];
+extern const char *g_AddrToStringVC2[FTEDITOR_RAM_NB];
 const char **g_AddrToString[FTEDITOR_DEVICE_NB] = {
-	g_AddrToStringA, // FT800
-	g_AddrToStringA, // FT801
-	g_AddrToStringA, // FT810
-	g_AddrToStringA, // FT811
+	g_AddrToStringVC1, // FT800
+	g_AddrToStringVC1, // FT801
+	g_AddrToStringVC2, // FT810
+	g_AddrToStringVC2, // FT811
 };
 
 ///////////////////////////////////////////////////////////////////////
