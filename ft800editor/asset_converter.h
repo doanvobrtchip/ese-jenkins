@@ -31,11 +31,6 @@ struct ImageInfo
 	int LayoutWidth;
 	int LayoutStride;
 	int LayoutHeight;
-	/*int SizeFilter;
-	int SizeWrapX;
-	int SizeWrapY;
-	int SizeWidth;
-	int SizeHeight;*/
 };
 
 /**

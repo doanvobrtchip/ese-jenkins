@@ -49,6 +49,12 @@ inline int screenHeightMaximum(int deviceIntf) { return g_ScreenHeightMaximum[de
 extern const int g_DisplayListSize[FTEDITOR_DEVICE_NB];
 inline int displayListSize(int deviceIntf) { return g_DisplayListSize[deviceIntf]; }
 
+// Memory specs
+extern const uint32_t g_AddressSpace[FTEDITOR_DEVICE_NB];
+extern const uint32_t g_AddressMask[FTEDITOR_DEVICE_NB];
+inline uint32_t addressSpace(int deviceIntf) { return g_AddressSpace[deviceIntf]; }
+inline uint32_t addressMask(int deviceIntf) { return g_AddressMask[deviceIntf]; }
+
 // RAM addresses
 #define FTEDITOR_RAM_G 0
 #define FTEDITOR_RAM_G_END 1

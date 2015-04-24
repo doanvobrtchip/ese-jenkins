@@ -79,6 +79,20 @@ const int g_DisplayListSize[FTEDITOR_DEVICE_NB] = {
 	2048, // FT811
 };
 
+const uint32_t g_AddressSpace[FTEDITOR_DEVICE_NB] = {
+	4 * 1024 * 1024, // FT800
+	4 * 1024 * 1024, // FT801
+	4 * 1024 * 1024, // FT810
+	4 * 1024 * 1024, // FT811
+};
+
+const uint32_t g_AddressMask[FTEDITOR_DEVICE_NB] = {
+	0xFFFFF, // FT800
+	0xFFFFF, // FT801
+	0x3FFFFF, // FT810
+	0x3FFFFF, // FT811
+};
+
 ///////////////////////////////////////////////////////////////////////
 
 extern const int32_t g_AddrVC1[FTEDITOR_RAM_NB];

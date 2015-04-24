@@ -984,7 +984,7 @@ void MainWindow::runScript(const QString &script)
 			PyTuple_SetItem(pyArgs, 0, pyValue);
 			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
 			char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
-			pyValue = PyByteArray_FromStringAndSize(ram, FT800EMU_RAM_SIZE);
+			pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 			PyTuple_SetItem(pyArgs, 2, pyValue);
 			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
 			Py_DECREF(pyArgs); pyArgs = NULL;
@@ -2359,7 +2359,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 		// dump of ram... this is too heavy
 		QJsonArray dump;
 		char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
-		for (int i = 0; i < FT800EMU_RAM_SIZE; ++i)
+		for (int i = 0; i < addressSpace(FTEDITOR_CURRENT_DEVICE); ++i)
 			dump.push_back((int)ram[i]);
 		root["dump"] = dump;
 	}*/

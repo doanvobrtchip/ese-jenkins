@@ -17,7 +17,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QStringList>
 
 // Emulator includes
-#include "ft800emu_memory.h"
 #include "ft800emu_vc.h"
 
 // Project includes
@@ -1276,10 +1275,10 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				{
 					uint32_t ptr = parsed.Parameter[0].U;
 					uint32_t num = parsed.Parameter[1].U;
-					if (ptr >= FT800EMU_RAM_SIZE)
-						ptr = FT800EMU_RAM_SIZE - 1;
-					if (ptr + num >= FT800EMU_RAM_SIZE)
-						num = FT800EMU_RAM_SIZE - ptr - 1;
+					if (ptr >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						ptr = addressSpace(FTEDITOR_CURRENT_DEVICE) - 1;
+					if (ptr + num >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						num = addressSpace(FTEDITOR_CURRENT_DEVICE) - ptr - 1;
 					compiled.push_back(ptr);
 					compiled.push_back(num);
 					break;
@@ -1288,10 +1287,10 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 				{
 					uint32_t ptr = parsed.Parameter[0].U;
 					uint32_t num = parsed.Parameter[2].U;
-					if (ptr >= FT800EMU_RAM_SIZE)
-						ptr = FT800EMU_RAM_SIZE - 1;
-					if (ptr + num >= FT800EMU_RAM_SIZE)
-						num = FT800EMU_RAM_SIZE - ptr - 1;
+					if (ptr >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						ptr = addressSpace(FTEDITOR_CURRENT_DEVICE) - 1;
+					if (ptr + num >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						num = addressSpace(FTEDITOR_CURRENT_DEVICE) - ptr - 1;
 					compiled.push_back(ptr);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(num);
@@ -1302,14 +1301,14 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t dst = parsed.Parameter[0].U;
 					uint32_t src = parsed.Parameter[1].U;
 					uint32_t num = parsed.Parameter[2].U;
-					if (dst >= FT800EMU_RAM_SIZE)
-						dst = FT800EMU_RAM_SIZE - 1;
-					if (src >= FT800EMU_RAM_SIZE)
-						src = FT800EMU_RAM_SIZE - 1;
-					if (dst + num >= FT800EMU_RAM_SIZE)
-						num = FT800EMU_RAM_SIZE - dst - 1;
-					if (src + num >= FT800EMU_RAM_SIZE)
-						num = FT800EMU_RAM_SIZE - src - 1;
+					if (dst >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						dst = addressSpace(FTEDITOR_CURRENT_DEVICE) - 1;
+					if (src >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						src = addressSpace(FTEDITOR_CURRENT_DEVICE) - 1;
+					if (dst + num >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						num = addressSpace(FTEDITOR_CURRENT_DEVICE) - dst - 1;
+					if (src + num >= addressSpace(FTEDITOR_CURRENT_DEVICE))
+						num = addressSpace(FTEDITOR_CURRENT_DEVICE) - src - 1;
 					compiled.push_back(dst);
 					compiled.push_back(src);
 					compiled.push_back(num);
@@ -1525,7 +1524,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
-					int addr = v & FT800EMU_ADDR_MASK;
+					int addr = v & addressMask(FTEDITOR_CURRENT_DEVICE);
 					res << "BITMAP_SOURCE(";
 					res << addr << ")";
 					break;
@@ -1855,7 +1854,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_PALETTE_SOURCE:
 				{
-					int addr = v & FT800EMU_ADDR_MASK;
+					int addr = v & addressMask(FTEDITOR_CURRENT_DEVICE);
 					res << "PALETTE_SOURCE(";
 					res << addr << ")";
 					break;
