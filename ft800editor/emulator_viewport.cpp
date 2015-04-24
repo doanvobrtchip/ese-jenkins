@@ -132,7 +132,16 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 
 void EmulatorViewport::stop()
 {
-	FT800EMU::Emulator.stop();
+	if (s_EmulatorThread != NULL)
+	{
+		FT800EMU::Emulator.stop();
+
+		printf("Wait for emulator threads\n");
+		s_EmulatorThread->wait();
+		delete s_EmulatorThread;
+		s_EmulatorThread = NULL;
+		printf("Emulator threads finished\n");
+	}
 }
 
 void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread

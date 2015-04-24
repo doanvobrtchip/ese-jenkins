@@ -145,7 +145,8 @@ private slots:
 	void actSaveAs();
 	void actImport();
 	void actExport();
-
+	
+	void actResetEmulator();
 	void actSaveScreenshot();
 
 	void undoCleanChanged(bool clean);
@@ -257,7 +258,7 @@ private:
 
 	QMenu *m_FileMenu;
 	QMenu *m_EditMenu;
-	QMenu *m_ViewportMenu;
+	QMenu *m_ToolsMenu;
 	QMenu *m_WidgetsMenu;
 #ifdef FT800EMU_PYTHON
 	QMenu *m_ScriptsMenu;
@@ -275,6 +276,7 @@ private:
 	QAction *m_SaveAsAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
+	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ManualAct;
 	QAction *m_AboutAct;

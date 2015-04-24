@@ -167,7 +167,7 @@ void setup()
 // Content manager
 static ContentManager *s_ContentManager = NULL;
 //static BitmapSetup *s_BitmapSetup = NULL;
-static int s_BitmapSetupModNb = 0;
+//static int s_BitmapSetupModNb = 0;
 
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
@@ -193,6 +193,23 @@ static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
+
+void resetemu()
+{
+	s_UtilizationDisplayListCmd = 0;
+	s_WaitingCoprocessorAnimation = false;
+	s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
+	s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
+	s_CmdParamCache.clear();
+	g_StepCmdLimit = 0;
+	s_StepCmdLimitCurrent = 0;
+	s_CoprocessorFaultOccured = false;
+	s_WarnMissingClear = false;
+	s_WarnMissingClearActive = false;
+	displayListSwapped = false;
+	coprocessorSwapped = false;
+	s_WantReloopCmd = false;
+}
 
 // static int s_SwapCount = 0;
 void loop()
@@ -673,14 +690,14 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), m_StepCmdEnabled(NULL), m_StepCmdCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ViewportMenu(NULL), m_WidgetsMenu(NULL),
+	m_FileMenu(NULL), m_EditMenu(NULL), m_ToolsMenu(NULL), m_WidgetsMenu(NULL),
 #ifdef FT800EMU_PYTHON
 	m_ScriptsMenu(NULL),
 #endif
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
-	m_ImportAct(NULL), m_ExportAct(NULL), m_SaveScreenshotAct(NULL),
+	m_ImportAct(NULL), m_ExportAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL),
 	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_TemporaryDir(NULL)
@@ -1084,6 +1101,9 @@ void MainWindow::createActions()
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
 	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
 
+	m_ResetEmulatorAct = new QAction(this);
+	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
+
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
 
@@ -1130,6 +1150,8 @@ void MainWindow::translateActions()
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
 	m_ExportAct->setStatusTip(tr("Export project to file"));
+	m_ResetEmulatorAct->setText(tr("Reset Emulator"));
+	m_ResetEmulatorAct->setStatusTip(tr("Reset the emulated device"));
 	m_SaveScreenshotAct->setText(tr("Save Screenshot"));
 	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
 	m_QuitAct->setText(tr("Quit"));
@@ -1175,8 +1197,9 @@ void MainWindow::createMenus()
 	m_EditMenu->addAction(m_RedoAct);
 	//m_EditMenu->addAction(m_DummyAct);
 
-	//m_ViewportMenu = menuBar()->addMenu(QString::null);
-	// m_ViewportMenu->addAction(m_SaveScreenshotAct);
+	m_ToolsMenu = menuBar()->addMenu(QString::null);
+	m_ToolsMenu->addAction(m_ResetEmulatorAct);
+	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
 
@@ -1198,7 +1221,7 @@ void MainWindow::translateMenus()
 {
 	m_FileMenu->setTitle(tr("File"));
 	m_EditMenu->setTitle(tr("Edit"));
-	//m_ViewportMenu->setTitle(tr("Viewport"));
+	m_ToolsMenu->setTitle(tr("Tools"));
 	m_WidgetsMenu->setTitle(tr("View"));
 #ifdef FT800EMU_PYTHON
 	m_ScriptsMenu->setTitle(tr("Scripts"));
@@ -2627,6 +2650,48 @@ void MainWindow::actExport()
 	return;
 ExportWriteError:
 	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+}
+
+void MainWindow::actResetEmulator()
+{
+	// Stop the emulator
+	printf("Stop the emulator\n");
+	s_EmulatorRunning = false;
+	m_EmulatorViewport->stop();
+
+	// Reset data
+	printf("Reset emulator parameters\n");
+	resetemu();
+	m_ContentManager->reuploadAll();
+
+	// Start the emulator
+	printf("Start the emulator\n");
+	FT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
+	params.Setup = setup;
+	params.Loop = loop;
+	params.Flags =
+		// FT800EMU::EmulatorEnableKeyboard
+		/*|*/ FT8XXEMU_EmulatorEnableMouse
+		//| FT800EMU::EmulatorEnableDebugShortkeys
+#ifdef FTEMU_SDL2 // Cannot combine XAudio2 with Qt
+		| FT8XXEMU_EmulatorEnableAudio
+#endif
+		| FT8XXEMU_EmulatorEnableCoprocessor
+		| FT8XXEMU_EmulatorEnableGraphicsMultithread
+		| FT8XXEMU_EmulatorEnableDynamicDegrade
+		;
+#ifdef FT810EMU_MODE
+	params.Mode = FT8XXEMU_EmulatorFT810;
+#else
+	params.Mode = FT8XXEMU_EmulatorFT801;
+#endif
+	params.Close = closeDummy;
+	params.Keyboard = keyboard;
+	s_EmulatorRunning = true;
+	m_EmulatorViewport->run(params);
+
+	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
 }
 
 void MainWindow::actSaveScreenshot()

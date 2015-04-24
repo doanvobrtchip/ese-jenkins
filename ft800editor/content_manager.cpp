@@ -1373,6 +1373,17 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 	}
 }
 
+void ContentManager::reuploadAll()
+{
+	printf("ContentManager::reuploadAll()\n");
+
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		reuploadInternal(info);
+	}
+}
+
 void ContentManager::recalculateOverlapInternal()
 {
 	printf("ContentManager::recalculateOverlapInternal()\n");

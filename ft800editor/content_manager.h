@@ -181,6 +181,7 @@ public:
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
 	inline void swapUploadDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadDirty.swap(contentInfo); }
+	void reuploadAll();
 
 	// Utility
 	inline const QTreeWidget *contentList() const { return m_ContentList; }
