@@ -29,7 +29,6 @@
 #include <ft800emu_graphics_processor.h>
 #include <ft800emu_memory.h>
 #include <ft800emu_touch.h>
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -39,6 +38,7 @@
 #include "content_manager.h"
 #include "properties_editor.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 namespace FT800EMUQT {
 

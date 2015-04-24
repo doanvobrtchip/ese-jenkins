@@ -21,12 +21,12 @@
 #include <QSpinBox>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
 #include "dl_editor.h"
 #include "properties_editor.h"
+#include "constant_common.h"
 
 using namespace std;
 

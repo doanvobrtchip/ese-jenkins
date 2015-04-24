@@ -15,13 +15,13 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QPushButton>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 #include <ft800emu_memory.h>
 
 // Project includes
 #include "main_window.h"
 #include "content_manager.h"
 #include "dl_parser.h"
+#include "constant_common.h"
 
 #if FT800_DEVICE_MANAGER
 //mpsse lib includes -- Windows
@@ -287,7 +287,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
+		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
 		{
             {
 				Ft_Gpu_Hal_WrMem(phost,RAM_G+info->MemoryAddress,&ram[RAM_G+info->MemoryAddress],info->CachedSize);

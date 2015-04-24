@@ -90,7 +90,7 @@ public:
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
 		setMinimum(0);
-		setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+		setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 	}

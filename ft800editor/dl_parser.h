@@ -23,7 +23,6 @@
 
 // Emulator includes
 #include "ft8xxemu_inttypes.h"
-#include "ft800emu_vc.h"
 
 // Project includes
 

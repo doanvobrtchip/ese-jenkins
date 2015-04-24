@@ -15,7 +15,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QSpinBox>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -23,6 +22,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "properties_editor.h"
 #include "interactive_widgets.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 using namespace std;
 

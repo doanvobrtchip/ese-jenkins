@@ -30,7 +30,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Emulator includes
 #include <ft800emu_graphics_processor.h>
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -40,6 +39,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "dl_editor.h"
 #include "dl_parser.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 #define FT810EMU_BITMAP_ALWAYS_HIGH 1
 
@@ -502,7 +502,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_PropertiesRawStart, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawStartChanged(int)));
 	m_PropertiesRawLength = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawLength->setMinimum(0);
-	m_PropertiesRawLength->setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
+	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 	m_PropertiesRawLength->setSingleStep(4);
 	m_PropertiesRawLength->setKeyboardTracking(false);
 	addLabeledWidget(this, rawLayout, tr("Length: "), m_PropertiesRawLength);
@@ -516,7 +516,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QVBoxLayout *propMemLayout = new QVBoxLayout();
 	m_PropertiesMemoryAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesMemoryAddress->setMinimum(0);
-	m_PropertiesMemoryAddress->setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 	m_PropertiesMemoryAddress->setSingleStep(4);
 	m_PropertiesMemoryAddress->setKeyboardTracking(false);
 	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
@@ -738,7 +738,7 @@ int ContentManager::getFreeAddress()
 		freeAddress &= 0x7FFFFFFC;
 		freeAddress += 4;
 	}
-	if (freeAddress > ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
+	if (freeAddress > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		return -1;
 	return freeAddress;
 }
@@ -1403,7 +1403,7 @@ void ContentManager::recalculateOverlapInternal()
 			if (leftSize >= 0)
 			{
 				int leftAddr = leftInfo->MemoryAddress;
-				if (leftAddr + leftSize > ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
+				if (leftAddr + leftSize > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
 					if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())

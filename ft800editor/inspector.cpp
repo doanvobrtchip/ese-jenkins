@@ -26,13 +26,14 @@
 #include <QGroupBox>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 #include <ft800emu_memory.h>
+#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
 #include "dl_parser.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 using namespace std;
 

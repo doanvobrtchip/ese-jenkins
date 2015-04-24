@@ -12,8 +12,8 @@ namespace FT800EMUQT {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_RamVC2[FTEDITOR_RAM_NB];
-const int32_t g_RamVC2[FTEDITOR_RAM_NB] = {
+extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
+const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_G,
 	RAM_DL,
 	RAM_CMD,

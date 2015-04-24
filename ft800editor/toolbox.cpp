@@ -23,7 +23,6 @@
 #include <QHeaderView>
 
 // Emulator includes
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -31,6 +30,7 @@
 #include "interactive_properties.h"
 #include "properties_editor.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 using namespace std;
 

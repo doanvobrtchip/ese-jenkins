@@ -42,10 +42,10 @@ inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR
 #define FTEDITOR_RAM_CMD 2
 #define FTEDITOR_RAM_REG 3
 #define FTEDITOR_RAM_NB 4
-extern const int32_t *g_Ram[FTEDITOR_DEVICE_NB];
-inline int32_t ram(int deviceIntf, int ramIntf) { return g_Ram[deviceIntf][ramIntf]; }
-extern const char **g_RamToString[FTEDITOR_DEVICE_NB];
-inline const char *ramToString(int deviceIntf, int ramIntf) { return g_RamToString[deviceIntf][ramIntf]; }
+extern const int32_t *g_Addr[FTEDITOR_DEVICE_NB];
+inline int32_t addr(int deviceIntf, int addrIntf) { return g_Addr[deviceIntf][addrIntf]; }
+extern const char **g_AddrToString[FTEDITOR_DEVICE_NB];
+inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToString[deviceIntf][addrIntf]; }
 
 // Register addresses
 #define FTEDITOR_REG_ID 0

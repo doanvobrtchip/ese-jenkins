@@ -44,27 +44,27 @@ const char *g_DeviceToString[4] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_RamVC1[FTEDITOR_RAM_NB];
-extern const int32_t g_RamVC2[FTEDITOR_RAM_NB];
-const int32_t *g_Ram[FTEDITOR_RAM_NB] = {
-	g_RamVC1, // FT800
-	g_RamVC1, // FT801
-	g_RamVC2, // FT810
-	g_RamVC2, // FT811
+extern const int32_t g_AddrVC1[FTEDITOR_RAM_NB];
+extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
+const int32_t *g_Addr[FTEDITOR_RAM_NB] = {
+	g_AddrVC1, // FT800
+	g_AddrVC1, // FT801
+	g_AddrVC2, // FT810
+	g_AddrVC2, // FT811
 };
 
-const char *g_RamToStringA[FTEDITOR_RAM_NB] = {
+const char *g_AddrToStringA[FTEDITOR_RAM_NB] = {
 	"RAM_G",
 	"RAM_DL",
 	"RAM_CMD",
 	"RAM_REG"
 };
 
-const char **g_RamToString[FTEDITOR_DEVICE_NB] = {
-	g_RamToStringA, // FT800
-	g_RamToStringA, // FT801
-	g_RamToStringA, // FT810
-	g_RamToStringA, // FT811
+const char **g_AddrToString[FTEDITOR_DEVICE_NB] = {
+	g_AddrToStringA, // FT800
+	g_AddrToStringA, // FT801
+	g_AddrToStringA, // FT810
+	g_AddrToStringA, // FT811
 };
 
 ///////////////////////////////////////////////////////////////////////
