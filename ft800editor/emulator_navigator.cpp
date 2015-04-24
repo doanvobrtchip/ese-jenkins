@@ -13,7 +13,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Project includes
 #include "emulator_viewport.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 EmulatorNavigator::EmulatorNavigator(QWidget *parent, EmulatorViewport *emulatorViewport) : QWidget(parent), m_EmulatorViewport(emulatorViewport)
 {
@@ -129,6 +129,6 @@ void EmulatorNavigator::paintEvent(QPaintEvent *e)
 	painter.drawLine(screenLeftLine, screenBottomLine, screenRightLine, screenBottomLine);
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

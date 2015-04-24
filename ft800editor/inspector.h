@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_INSPECTOR_H
-#define FT800EMUQT_INSPECTOR_H
+#ifndef FTEDITOR_INSPECTOR_H
+#define FTEDITOR_INSPECTOR_H
 
 // STL includes
 #include <vector>
@@ -29,7 +29,7 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #define FTED_NUM_HANDLES 16
 
@@ -77,8 +77,8 @@ private:
 
 }; /* class Inspector */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_INSPECTOR_H */
+#endif /* #ifndef FTEDITOR_INSPECTOR_H */
 
 /* end of file */

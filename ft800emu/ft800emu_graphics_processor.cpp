@@ -196,7 +196,9 @@ bool s_RegPwmDutyEmulation = false;
 
 uint32_t s_DebugTraceX = 0;
 uint32_t s_DebugTraceLine = 0;
-std::vector<int> *s_DebugTraceStack = NULL;
+int *s_DebugTraceStack = NULL;
+int s_DebugTraceStackMax = 0;
+int *s_DebugTraceStackSize = NULL;
 
 #pragma endregion
 
@@ -567,7 +569,11 @@ FT8XXEMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 				// Check the point to be traced.
 				if (x == s_DebugTraceX)
 				{
-					s_DebugTraceStack->push_back(s_DebugTraceLine);
+					if (*s_DebugTraceStackSize < s_DebugTraceStackMax)
+					{
+						s_DebugTraceStack[*s_DebugTraceStackSize] = s_DebugTraceLine;
+						++(*s_DebugTraceStackSize);
+					}
 				}
 			}
 		}
@@ -3015,7 +3021,11 @@ EvaluateDisplayListValue:
 						{
 							if (v && gs.ScissorX.U <= s_DebugTraceX && s_DebugTraceX < gs.ScissorX2.U)
 							{
-								s_DebugTraceStack->push_back(s_DebugTraceLine);
+								if (*s_DebugTraceStackSize < s_DebugTraceStackMax)
+								{
+									s_DebugTraceStack[*s_DebugTraceStackSize] = s_DebugTraceLine;
+									++(*s_DebugTraceStackSize);
+								}
 							}
 						}
 						if (v & 0x04)
@@ -3475,14 +3485,17 @@ void GraphicsProcessorClass::processBlank()
 	}
 }
 
-void GraphicsProcessorClass::processTrace(std::vector<int> &result, uint32_t x, uint32_t y, uint32_t hsize)
+void GraphicsProcessorClass::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
 	argb8888 *dummyBuffer = buffer - (y * hsize);
 	BitmapInfo bitmapInfo[32];
 	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
 	s_DebugTraceX = x;
-	s_DebugTraceStack = &result;
+	s_DebugTraceStack = result;
+	s_DebugTraceStackMax = *size;
+	*size = 0;
+	s_DebugTraceStackSize = size;
 	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
 	s_DebugTraceStack = NULL;
 }

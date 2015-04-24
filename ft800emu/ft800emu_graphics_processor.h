@@ -21,6 +21,7 @@
 // Project includes
 #include "ft8xxemu_inttypes.h"
 
+#ifndef FT8XXEMU_NODEFS
 #ifdef FT810EMU_MODE
 #define FT800EMU_SCREEN_WIDTH_MAX 2048
 #define FT800EMU_SCREEN_HEIGHT_MAX 2048
@@ -35,6 +36,7 @@
 #define FT800EMU_DEBUGMODE_TAG 2
 #define FT800EMU_DEBUGMODE_STENCIL 3
 #define FT800EMU_DEBUGMODE_COUNT 4
+#endif
 
 namespace FT800EMU {
 
@@ -79,7 +81,7 @@ public:
 		uint32_t yInc = 1);
 	static void processBlank();
 
-	static void processTrace(std::vector<int> &result, uint32_t x, uint32_t y, uint32_t hsize);
+	static void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
 
 	// Enables or disables emuating REG_PWM_DUTY by fading to black
 	static void enableRegPwmDutyEmulation(bool enabled = true);

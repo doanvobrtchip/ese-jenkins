@@ -34,7 +34,7 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_LineEditor(NULL), m_LineNumber(0)
@@ -499,6 +499,6 @@ void Toolbox::unsetEditorLine()
 	// m_Advanced->setHidden(true);
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

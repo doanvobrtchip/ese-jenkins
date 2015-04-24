@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_TOOLBOX_H
-#define FT800EMUQT_TOOLBOX_H
+#ifndef FTEDITOR_TOOLBOX_H
+#define FTEDITOR_TOOLBOX_H
 
 // STL includes
 #include <vector>
@@ -28,7 +28,7 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class MainWindow;
 class DlEditor;
@@ -82,8 +82,8 @@ private:
 
 }; /* class Toolbox */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_TOOLBOX_H */
+#endif /* #ifndef FTEDITOR_TOOLBOX_H */
 
 /* end of file */

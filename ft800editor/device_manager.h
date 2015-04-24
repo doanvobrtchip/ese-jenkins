@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_DEVICE_MANAGER_H
-#define FT800EMUQT_DEVICE_MANAGER_H
+#ifndef FTEDITOR_DEVICE_MANAGER_H
+#define FTEDITOR_DEVICE_MANAGER_H
 
 #ifdef FTEDITOR_DEVICE_MANAGER
 #define FT800_DEVICE_MANAGER 1
@@ -35,7 +35,7 @@ class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class MainWindow;
 
@@ -99,8 +99,8 @@ class DeviceManager : public QWidget
 
 #endif /* FT800_DEVICE_MANAGER */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_DEVICE_MANAGER_H */
+#endif /* #ifndef FTEDITOR_DEVICE_MANAGER_H */
 
 /* end of file */

@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_UNDO_STACK_DISABLER_H
-#define FT800EMUQT_UNDO_STACK_DISABLER_H
+#ifndef FTEDITOR_UNDO_STACK_DISABLER_H
+#define FTEDITOR_UNDO_STACK_DISABLER_H
 
 // STL includes
 
@@ -27,7 +27,7 @@
 
 // Project includes
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 /**
  * Disables local undo stack and re-routes key press events for undo and redo to global undo stack.
@@ -112,8 +112,8 @@ private:
 
 }; /* class UndoStackDisabler */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_UNDO_STACK_DISABLER_H */
+#endif /* #ifndef FTEDITOR_UNDO_STACK_DISABLER_H */
 
 /* end of file */

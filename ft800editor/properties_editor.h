@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_PROPERTIES_EDITOR_H
-#define FT800EMUQT_PROPERTIES_EDITOR_H
+#ifndef FTEDITOR_PROPERTIES_EDITOR_H
+#define FTEDITOR_PROPERTIES_EDITOR_H
 
 // STL includes
 
@@ -27,7 +27,7 @@ class QLabel;
 class QGroupBox;
 class QVBoxLayout;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 	class DlHighlighter;
 
 /**
@@ -73,8 +73,8 @@ private:
 
 }; /* class PropertiesEditor */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_PROPERTIES_EDITOR_H */
+#endif /* #ifndef FTEDITOR_PROPERTIES_EDITOR_H */
 
 /* end of file */

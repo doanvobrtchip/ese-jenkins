@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_DL_EDITOR_H
-#define FT800EMUQT_DL_EDITOR_H
+#ifndef FTEDITOR_DL_EDITOR_H
+#define FTEDITOR_DL_EDITOR_H
 
 // STL includes
 
@@ -36,7 +36,7 @@ class QStringListModel;
 #define FTEDITOR_DL_SIZE 2048
 #define FT800EMU_MACRO_SIZE 2
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class MainWindow;
 class DlHighlighter;
@@ -128,8 +128,8 @@ private:
 
 }; /* class DlEditor */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_DL_EDITOR_H */
+#endif /* #ifndef FTEDITOR_DL_EDITOR_H */
 
 /* end of file */

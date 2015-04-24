@@ -3,15 +3,15 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#ifndef FT800EMUQT_EMULATOR_NAVIGATOR_H
-#define FT800EMUQT_EMULATOR_NAVIGATOR_H
+#ifndef FTEDITOR_EMULATOR_NAVIGATOR_H
+#define FTEDITOR_EMULATOR_NAVIGATOR_H
 
 // STL includes
 
 // Qt includes
 #include <QWidget>
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class EmulatorViewport;
 
@@ -36,8 +36,8 @@ private:
 
 }; /* class EmulatorNavigator */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_EMULATOR_NAVIGATOR_H */
+#endif /* #ifndef FTEDITOR_EMULATOR_NAVIGATOR_H */
 
 /* end of file */

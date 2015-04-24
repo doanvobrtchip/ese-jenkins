@@ -40,7 +40,7 @@
 // Project includes
 #include "constant_common.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 namespace {
 
@@ -817,6 +817,6 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 #endif
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

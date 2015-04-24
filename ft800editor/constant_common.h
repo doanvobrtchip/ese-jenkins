@@ -3,10 +3,10 @@ Copyright (C) 2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#ifndef FT800EMUQT_CONSTANT_COMMON_H
-#define FT800EMUQT_CONSTANT_COMMON_H
+#ifndef FTEDITOR_CONSTANT_COMMON_H
+#define FTEDITOR_CONSTANT_COMMON_H
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #define NEAREST              0UL
 #define BILINEAR             1UL
@@ -175,8 +175,8 @@ namespace FT800EMUQT {
 #define JUMP(dest) ((30UL<<24)|(((dest)&65535UL)<<0))
 #define CLEAR(c,s,t) ((38UL<<24)|(((c)&1UL)<<2)|(((s)&1UL)<<1)|(((t)&1UL)<<0))
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_CONSTANT_COMMON_H */
+#endif /* #ifndef FTEDITOR_CONSTANT_COMMON_H */
 
 /* end of file */

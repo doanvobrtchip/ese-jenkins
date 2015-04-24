@@ -32,7 +32,7 @@ ADD_EXECUTABLE(ft810editor WIN32
 	)
 
 TARGET_LINK_LIBRARIES(ft810editor
-	ft810emu
+	ft8xxemu
 	)
 
 IF (WITH_SDL2)

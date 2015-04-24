@@ -45,7 +45,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 namespace /* anonymous */ {
 
@@ -3187,6 +3187,6 @@ void ContentManager::propertiesFontCharSetChanged()
 
 ////////////////////////////////////////////////////////////////////////
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

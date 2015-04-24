@@ -3,15 +3,15 @@ Copyright (C) 2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#ifndef FT800EMUQT_CONSTANT_MAPPING_H
-#define FT800EMUQT_CONSTANT_MAPPING_H
+#ifndef FTEDITOR_CONSTANT_MAPPING_H
+#define FTEDITOR_CONSTANT_MAPPING_H
 
 // Emulator includes
 #include <ft8xxemu.h>
 
 // STL includes
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 // ToString functions will return "" on invalid input. Simply check (result[0] == '\0') to find out if the result is invalid
 
@@ -21,9 +21,9 @@ namespace FT800EMUQT {
 #define FTEDITOR_FT810 2
 #define FTEDITOR_FT811 3
 #define FTEDITOR_DEVICE_NB 4
-extern FT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
+extern const FT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
 inline FT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
-extern int g_DeviceToIntf[256];
+extern const int g_DeviceToIntf[256];
 inline int deviceToIntf(FT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
 extern const char *g_DeviceToString[FTEDITOR_DEVICE_NB];
 inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR_DEVICE_NB ? g_DeviceToString[deviceIntf] : ""; }
@@ -34,6 +34,20 @@ inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR
 #else
 #define FTEDITOR_CURRENT_DEVICE FTEDITOR_FT801
 #endif
+
+// Screen specs
+extern const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB];
+extern const int g_ScreenWidthMaximum[FTEDITOR_DEVICE_NB];
+extern const int g_ScreenHeightDefault[FTEDITOR_DEVICE_NB];
+extern const int g_ScreenHeightMaximum[FTEDITOR_DEVICE_NB];
+inline int screenWidthDefault(int deviceIntf) { return g_ScreenWidthDefault[deviceIntf]; }
+inline int screenWidthMaximum(int deviceIntf) { return g_ScreenWidthMaximum[deviceIntf]; }
+inline int screenHeightDefault(int deviceIntf) { return g_ScreenHeightDefault[deviceIntf]; }
+inline int screenHeightMaximum(int deviceIntf) { return g_ScreenHeightMaximum[deviceIntf]; }
+
+// Display list specs
+extern const int g_DisplayListSize[FTEDITOR_DEVICE_NB];
+inline int displayListSize(int deviceIntf) { return g_DisplayListSize[deviceIntf]; }
 
 // RAM addresses
 #define FTEDITOR_RAM_G 0
@@ -231,8 +245,8 @@ extern const char **g_BitmapFormatToString[FTEDITOR_DEVICE_NB];
 extern int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB];
 inline const char *bitmapFormatToString(int deviceIntf, int bitmapFormatEnum) { return bitmapFormatEnum < g_BitmapFormatEnumNb[deviceIntf] ? g_BitmapFormatToString[deviceIntf][bitmapFormatEnum] : ""; }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_CONSTANT_MAPPING_H */
+#endif /* #ifndef FTEDITOR_CONSTANT_MAPPING_H */
 
 /* end of file */

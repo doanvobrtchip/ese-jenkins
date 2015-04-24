@@ -21,6 +21,7 @@
 
 // Project includes
 
+#ifndef FT8XXEMU_NODEFS
 #define FT800EMU_DISPLAY_LIST_SIZE 2048
 #ifdef FT810EMU_MODE
 #define FT800EMU_ROM_FONTINFO 0x2FFFFC // (RAM_DL - 4)
@@ -41,6 +42,7 @@
 #define FT800EMU_ADDR_MASK (0xFFFFF)
 #define FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram) ((ram[REG_ROTATE] & 0x1) != 0)
 #define FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram) ((ram[REG_ROTATE] & 0x1) != 0)
+#endif
 #endif
 
 namespace FT800EMU {

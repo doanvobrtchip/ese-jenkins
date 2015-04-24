@@ -26,7 +26,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #ifdef FT810EMU_MODE
 #define FTEDITOR_COORD_MIN -4096
@@ -1870,6 +1870,6 @@ void InteractiveProperties::modifiedEditorLine()
 	}
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

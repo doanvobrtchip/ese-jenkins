@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_DL_HIGHLIGHTER_H
-#define FT800EMUQT_DL_HIGHLIGHTER_H
+#ifndef FTEDITOR_DL_HIGHLIGHTER_H
+#define FTEDITOR_DL_HIGHLIGHTER_H
 
 // STL includes
 
@@ -26,7 +26,7 @@ class QTextDocument;
 // Project includes
 
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 /**
  * DlHighlighter
@@ -60,8 +60,8 @@ private:
 
 }; /* class DlHighlighter */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_DL_HIGHLIGHTER_H */
+#endif /* #ifndef FTEDITOR_DL_HIGHLIGHTER_H */
 
 /* end of file */

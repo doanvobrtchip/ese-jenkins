@@ -24,7 +24,7 @@
 #include <QAbstractItemView>
 
 // Emulator includes
-#include <ft800emu_graphics_processor.h>
+#include <ft8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -38,7 +38,7 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 extern int g_StepCmdLimit;
 
@@ -395,7 +395,7 @@ void DlEditor::frame()
 {
 	// FIXME DL/CMD Mapping
 	// update current step highlight
-	int idx = FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1;
+	int idx = FT8XXEMU_getDebugLimiterEffective() ? FT8XXEMU_getDebugLimiterIndex() : -1;
 	if (idx > 0 && m_ModeCoprocessor)
 	{
 		if (idx < FTEDITOR_DL_SIZE)
@@ -414,6 +414,6 @@ void DlEditor::frame()
 	m_CodeEditor->setStepHighlight(idx);
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

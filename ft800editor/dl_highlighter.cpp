@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 DlHighlighter::DlHighlighter(QTextDocument *parent, bool coprocessor) : QSyntaxHighlighter(parent), m_ModeCoprocessor(coprocessor)
 {
@@ -76,6 +76,6 @@ void DlHighlighter::highlightBlock(const QString &text)
 	}
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

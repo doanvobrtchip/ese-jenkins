@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_INTERACTIVE_PROPERTIES_H
-#define FT800EMUQT_INTERACTIVE_PROPERTIES_H
+#ifndef FTEDITOR_INTERACTIVE_PROPERTIES_H
+#define FTEDITOR_INTERACTIVE_PROPERTIES_H
 
 // STL includes
 #include <vector>
@@ -25,7 +25,7 @@
 
 // Project includes
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class MainWindow;
 class DlEditor;
@@ -133,8 +133,8 @@ private:
 
 }; /* class InteractiveProperties */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_INTERACTIVE_PROPERTIES_H */
+#endif /* #ifndef FTEDITOR_INTERACTIVE_PROPERTIES_H */
 
 /* end of file */

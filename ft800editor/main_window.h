@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_MAIN_WINDOW_H
-#define FT800EMUQT_MAIN_WINDOW_H
+#ifndef FTEDITOR_MAIN_WINDOW_H
+#define FTEDITOR_MAIN_WINDOW_H
 
 // STL includes
 #include <vector>
@@ -41,7 +41,7 @@ class QCheckBox;
 class QTabBar;
 class QProgressBar;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class InteractiveViewport;
 class DlEditor;
@@ -294,8 +294,8 @@ private:
 
 }; /* class MainWindow */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_MAIN_WINDOW_H */
+#endif /* #ifndef FTEDITOR_MAIN_WINDOW_H */
 
 /* end of file */

@@ -17,14 +17,13 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QStringList>
 
 // Emulator includes
-#include "ft8xxemu_inttypes.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_vc.h"
 
 // Project includes
 #include "constant_mapping.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 static std::map<std::string, int> s_IdMap;
 static std::map<std::string, int> s_ParamMap;
@@ -1438,7 +1437,7 @@ static void primToString(std::stringstream &dst, uint32_t id)
 
 static void bitmapFormatToString(std::stringstream &dst, uint32_t id)
 {
-	const char *str = FT800EMUQT::bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, id);
+	const char *str = FTEDITOR::bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, id);
 	if (str[0])
 	{
 		dst << str;
@@ -2267,6 +2266,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 	dst = res.str();
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

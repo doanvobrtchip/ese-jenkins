@@ -3,8 +3,8 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#ifndef FT800EMUQT_INTERACTIVE_VIEWPORT_H
-#define FT800EMUQT_INTERACTIVE_VIEWPORT_H
+#ifndef FTEDITOR_INTERACTIVE_VIEWPORT_H
+#define FTEDITOR_INTERACTIVE_VIEWPORT_H
 
 // STL includes
 #include <vector>
@@ -19,7 +19,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 class QAction;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #define FTED_SNAP_HISTORY 8
 #define FTED_SNAP_DIST 3
@@ -86,7 +86,9 @@ private:
 	bool m_PreferTraceCursor;
 	bool m_TraceEnabled;
 	uint32_t m_TraceX, m_TraceY;
-	std::vector<int> m_TraceStack;
+#define FTEDITOR_TRACE_STACK_SIZE 2048
+	int m_TraceStack[FTEDITOR_TRACE_STACK_SIZE];
+	int m_TraceStackSize;
 	std::vector<int> m_TraceStackDl;
 	std::vector<int> m_TraceStackCmd;
 
@@ -137,8 +139,8 @@ private:
 
 }; /* class InteractiveViewport */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_INTERACTIVE_VIEWPORT_H */
+#endif /* #ifndef FTEDITOR_INTERACTIVE_VIEWPORT_H */
 
 /* end of file */

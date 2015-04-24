@@ -4,6 +4,7 @@
  */
 
 #include "ft8xxemu.h"
+#include "ft8xxemu_diag.h"
 
 #include <string.h>
 
@@ -11,27 +12,44 @@
 #include "ft8xxemu_graphics_driver.h"
 
 // Include FT800EMU
+#define FT8XXEMU_NODEFS
 #ifdef FTEMU_HAVE_FT800EMU
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_emulator.h"
+#include "ft800emu_memory.h"
+#include "ft800emu_graphics_processor.h"
 #endif
 
 // Include FT810EMU
 #ifdef FTEMU_HAVE_FT810EMU
 #undef FT800EMU_SPI_I2C_H
 #undef FT800EMU_EMULATOR_H
+#undef FT800EMU_MEMORY_H
+#undef FT800EMU_GRAPHICS_PROCESSOR_H
 #define FT800EMU FT810EMU
 #define FT810EMU_MODE
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_emulator.h"
+#include "ft800emu_memory.h"
+#include "ft800emu_graphics_processor.h"
 #undef FT800EMU
 #undef FT810EMU_MODE
 #endif
 
-void (*FT8XXEMU_stop)() = NULL;
-uint8_t (*FT8XXEMU_transfer)(uint8_t data) = NULL;
-void (*FT8XXEMU_cs)(int cs) = NULL;
+void(*FT8XXEMU_stop)() = NULL;
+uint8_t(*FT8XXEMU_transfer)(uint8_t data) = NULL;
+void(*FT8XXEMU_cs)(int cs) = NULL;
 int(*FT8XXEMU_int)() = NULL;
+
+uint8_t *(*FT8XXEMU_getRam)() = NULL;
+const uint32_t *(*FT8XXEMU_getDisplayList)() = NULL;
+void(*FT8XXEMU_poke)() = NULL;
+int *(*FT8XXEMU_getDisplayListCoprocessorWrites)() = NULL;
+void(*FT8XXEMU_clearDisplayListCoprocessorWrites)() = NULL;
+bool(*FT8XXEMU_getDebugLimiterEffective)() = NULL;
+int(*FT8XXEMU_getDebugLimiterIndex)() = NULL;
+void(*FT8XXEMU_setDebugLimiter)(int debugLimiter) = NULL;
+void(*FT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = NULL;
 
 static const char *s_Version =
 	"FT8XX Emulator Library v2.0\n"
@@ -83,6 +101,15 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		FT8XXEMU_transfer = &FT800EMU::SPII2C.transfer;
 		FT8XXEMU_cs = &FT800EMU::SPII2C.csLow;
 		FT8XXEMU_int = &FT800EMU::SPII2C.intnLow;
+		FT8XXEMU_getRam = &FT800EMU::Memory.getRam;
+		FT8XXEMU_getDisplayList = &FT800EMU::Memory.getDisplayList;
+		FT8XXEMU_poke = &FT800EMU::Memory.poke;
+		FT8XXEMU_getDisplayListCoprocessorWrites = &FT800EMU::Memory.getDisplayListCoprocessorWrites;
+		FT8XXEMU_clearDisplayListCoprocessorWrites = &FT800EMU::Memory.clearDisplayListCoprocessorWrites;
+		FT8XXEMU_getDebugLimiterEffective = &FT800EMU::GraphicsProcessor.getDebugLimiterEffective;
+		FT8XXEMU_getDebugLimiterIndex = &FT800EMU::GraphicsProcessor.getDebugLimiterIndex;
+		FT8XXEMU_setDebugLimiter = &FT800EMU::GraphicsProcessor.setDebugLimiter;
+		FT8XXEMU_processTrace = &FT800EMU::GraphicsProcessor.processTrace;
 		FT800EMU::Emulator.run(*params);
 		break;
 #endif
@@ -92,6 +119,15 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		FT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
 		FT8XXEMU_cs = &FT810EMU::SPII2C.csLow;
 		FT8XXEMU_int = &FT810EMU::SPII2C.intnLow;
+		FT8XXEMU_getRam = &FT810EMU::Memory.getRam;
+		FT8XXEMU_getDisplayList = &FT810EMU::Memory.getDisplayList;
+		FT8XXEMU_poke = &FT810EMU::Memory.poke;
+		FT8XXEMU_getDisplayListCoprocessorWrites = &FT810EMU::Memory.getDisplayListCoprocessorWrites;
+		FT8XXEMU_clearDisplayListCoprocessorWrites = &FT810EMU::Memory.clearDisplayListCoprocessorWrites;
+		FT8XXEMU_getDebugLimiterEffective = &FT810EMU::GraphicsProcessor.getDebugLimiterEffective;
+		FT8XXEMU_getDebugLimiterIndex = &FT810EMU::GraphicsProcessor.getDebugLimiterIndex;
+		FT8XXEMU_setDebugLimiter = &FT810EMU::GraphicsProcessor.setDebugLimiter;
+		FT8XXEMU_processTrace = &FT810EMU::GraphicsProcessor.processTrace;
 		FT810EMU::Emulator.run(*params);
 		break;
 #endif

@@ -20,11 +20,12 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Emulator includes
 #include <ft8xxemu_graphics_driver.h>
+#include <ft8xxemu_diag.h>
 
 // Project includes
 // #include "emulator_config.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 static FT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
@@ -68,7 +69,7 @@ int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vs
 
 void EmulatorThread::run()
 {
-	FT800EMU::Emulator.run(s_EmulatorParameters);
+	FT8XXEMU_run(FT8XXEMU_VERSION_API, &s_EmulatorParameters);
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent)
@@ -125,6 +126,10 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 		s_EmulatorThread = new EmulatorThread();
 		s_EmulatorThread->start();
 
+		while (FT8XXEMU_processTrace == NULL)
+			QThread::sleep(1);
+		QThread::sleep(1); // TODO: Properly handle this...
+
 		// Connect the cross thread repaint event
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
 	}
@@ -134,7 +139,7 @@ void EmulatorViewport::stop()
 {
 	if (s_EmulatorThread != NULL)
 	{
-		FT800EMU::Emulator.stop();
+		FT8XXEMU_stop();
 
 		printf("Wait for emulator threads\n");
 		s_EmulatorThread->wait();
@@ -220,6 +225,6 @@ const QPixmap &EmulatorViewport::getPixMap() const
 	return *s_Pixmap;
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

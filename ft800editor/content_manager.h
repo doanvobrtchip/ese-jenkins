@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_CONTENT_MANAGER_H
-#define FT800EMUQT_CONTENT_MANAGER_H
+#ifndef FTEDITOR_CONTENT_MANAGER_H
+#define FTEDITOR_CONTENT_MANAGER_H
 
 // STL includes
 #include <vector>
@@ -40,7 +40,7 @@ class QLabel;
 class QSpinBox;
 class QCheckBox;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 extern int g_RamGlobalUsage;
 
@@ -294,8 +294,8 @@ private:
 
 }; /* class ContentManager */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_CONTENT_MANAGER_H */
+#endif /* #ifndef FTEDITOR_CONTENT_MANAGER_H */
 
 /* end of file */

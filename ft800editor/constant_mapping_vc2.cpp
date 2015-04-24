@@ -8,7 +8,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Emulator includes
 #include <vc2.h>
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -304,6 +304,6 @@ const char *g_BitmapFormatToStringVC2[] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

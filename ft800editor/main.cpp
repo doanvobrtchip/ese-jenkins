@@ -17,7 +17,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QTranslator>
 #include "main_window.h"
 #include "emulator_viewport.h"
-#include "ft800emu_emulator.h"
 #include "asset_converter.h"
 #ifdef WIN32
 #	include <Objbase.h>
@@ -97,7 +96,7 @@ int main(int argc, char* argv[])
 		Py_DECREF(curPath);
 	}
 #endif /* FT800EMU_PYTHON */
-	FT800EMUQT::AssetConverter::init();
+	FTEDITOR::AssetConverter::init();
 	QApplication app(argc, const_cast<char **>(argv));
 
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
@@ -140,11 +139,11 @@ int main(int argc, char* argv[])
 		Py_DECREF(curPath);
 	}
 #endif /* FT800EMU_PYTHON */
-	FT800EMUQT::MainWindow mainWin(customSizeHints);
+	FTEDITOR::MainWindow mainWin(customSizeHints);
 	mainWin.resize(800, 600);
 	mainWin.show(); // calls isVisible(true)
 	int result = app.exec();
-	FT800EMUQT::AssetConverter::release();
+	FTEDITOR::AssetConverter::release();
 #ifdef FT800EMU_PYTHON
     Py_Finalize();
 #endif /* FT800EMU_PYTHON */

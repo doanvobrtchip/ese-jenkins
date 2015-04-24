@@ -27,7 +27,7 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false), m_SurpressSet(false)
 {
@@ -131,6 +131,6 @@ void PropertiesEditor::translate()
 	m_InfoGroupBox->setTitle(tr("Information"));
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

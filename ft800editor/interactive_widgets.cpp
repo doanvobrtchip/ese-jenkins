@@ -30,10 +30,10 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 int g_PropertiesWidgetCombineId = 99150;
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

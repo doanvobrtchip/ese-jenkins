@@ -50,14 +50,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #ifdef WIN32
 #	include <ft8xxemu_minmax.h>
 #endif
-#include <ft8xxemu_keyboard_keys.h>
-#include <ft800emu_emulator.h>
-#include <ft8xxemu_keyboard.h>
-#include <ft8xxemu_system.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_spi_i2c.h>
-#include <ft800emu_graphics_processor.h>
-#include <ft8xxemu_graphics_driver.h>
+#include <ft8xxemu.h>
+#include <ft8xxemu_diag.h>
 #ifdef WIN32
 #	undef min
 #	undef max
@@ -77,45 +71,45 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
-int s_HSize = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
-int s_VSize = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+int s_HSize = 480;
+int s_VSize = 272;
 
 bool s_EmulatorRunning = false;
 
 void swrbegin(size_t address)
 {
-	FT800EMU::SPII2C.csLow();
+	FT8XXEMU_cs(1);
 
-	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	// FT800EMU::SPII2C.transfer(0x00);
+	FT8XXEMU_transfer((2 << 6) | ((address >> 16) & 0x3F));
+	FT8XXEMU_transfer((address >> 8) & 0xFF);
+	FT8XXEMU_transfer(address & 0xFF);
+	// FT8XXEMU_transfer(0x00);
 }
 
 void swr8(uint8_t value)
 {
-	FT800EMU::SPII2C.transfer(value);
+	FT8XXEMU_transfer(value);
 }
 
 void swr16(uint16_t value)
 {
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
+	FT8XXEMU_transfer(value & 0xFF);
+	FT8XXEMU_transfer((value >> 8) & 0xFF);
 }
 
 void swr32(uint32_t value)
 {
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 16) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 24) & 0xFF);
+	FT8XXEMU_transfer(value & 0xFF);
+	FT8XXEMU_transfer((value >> 8) & 0xFF);
+	FT8XXEMU_transfer((value >> 16) & 0xFF);
+	FT8XXEMU_transfer((value >> 24) & 0xFF);
 }
 
 void swrend()
 {
-	FT800EMU::SPII2C.csHigh();
+	FT8XXEMU_cs(0);
 }
 
 void wr32(size_t address, uint32_t value)
@@ -127,20 +121,20 @@ void wr32(size_t address, uint32_t value)
 
 uint32_t rd32(size_t address)
 {
-	FT800EMU::SPII2C.csLow();
+	FT8XXEMU_cs(1);
 
-	FT800EMU::SPII2C.transfer((address >> 16) & 0x3F);
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	FT800EMU::SPII2C.transfer(0x00);
+	FT8XXEMU_transfer((address >> 16) & 0x3F);
+	FT8XXEMU_transfer((address >> 8) & 0xFF);
+	FT8XXEMU_transfer(address & 0xFF);
+	FT8XXEMU_transfer(0x00);
 
 	uint32_t value;
-	value = FT800EMU::SPII2C.transfer(0);
-	value |= FT800EMU::SPII2C.transfer(0) << 8;
-	value |= FT800EMU::SPII2C.transfer(0) << 16;
-	value |= FT800EMU::SPII2C.transfer(0) << 24;
+	value = FT8XXEMU_transfer(0);
+	value |= FT8XXEMU_transfer(0) << 8;
+	value |= FT8XXEMU_transfer(0) << 16;
+	value |= FT8XXEMU_transfer(0) << 24;
 
-	FT800EMU::SPII2C.csHigh();
+	FT8XXEMU_cs(0);
 	return value;
 }
 
@@ -214,7 +208,7 @@ void resetemu()
 // static int s_SwapCount = 0;
 void loop()
 {
-	if (FT800EMU::SPII2C.intnLow())
+	if (FT8XXEMU_int())
 	{
 		uint32_t flags = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_FLAGS));
 		// printf("INTERRUPT %i\n", flags);
@@ -259,7 +253,7 @@ void loop()
 	}
 	else
 	{
-		FT8XXEMU::System.delay(10);
+		QThread::sleep(10);
 	}
 
 	if (!s_EmulatorRunning)
@@ -297,9 +291,9 @@ void loop()
 				swr8(b);
 			}
 			swrend();*/
-			char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
-			int s = in.readRawData(&ram[FT800EMUQT::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], binSize);
-			FT800EMU::Memory.poke();
+			char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
+			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], binSize);
+			FT8XXEMU_poke();
 		}
 		if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
 		{
@@ -322,9 +316,9 @@ void loop()
 			{
 				palFile.open(QIODevice::ReadOnly);
 				QDataStream in(&palFile);
-				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+				char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 				int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
-				FT800EMU::Memory.poke();
+				FT8XXEMU_poke();
 			}
 #endif
 		}
@@ -444,7 +438,7 @@ void loop()
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
 		int freespace = ((4096 - 4) - fullness);
-		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+		FT8XXEMU_clearDisplayListCoprocessorWrites();
 		swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 		swr32(CMD_COLDSTART);
 		wp += 4;
@@ -470,7 +464,7 @@ void loop()
 				} while (fullness != 0);
 				freespace = ((4096 - 4) - fullness);
 
-				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+				int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
 				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 				{
 					if (cpWrite[i] >= 0)
@@ -481,7 +475,7 @@ void loop()
 					}
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+				FT8XXEMU_clearDisplayListCoprocessorWrites();
 
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			}
@@ -507,7 +501,7 @@ void loop()
 				swrend();
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				printf("WP = %i\n", wp);
-				FT8XXEMU::System.delay(100);
+				QThread::sleep(100);
 
 				do
 				{
@@ -521,7 +515,7 @@ void loop()
 				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				freespace = ((4096 - 4) - fullness);
 
-				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+				int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
 				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 				{
 					if (cpWrite[i] >= 0)
@@ -532,7 +526,7 @@ void loop()
 					}
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+				FT8XXEMU_clearDisplayListCoprocessorWrites();
 
 				if (wp == 0) printf("WP 0\n");
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
@@ -599,7 +593,7 @@ void loop()
 				if (!s_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
 			}
-			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
+			int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
 			for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 			{
 				if (cpWrite[i] >= 0)
@@ -610,7 +604,7 @@ void loop()
 				}
 			}
 			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
+			FT8XXEMU_clearDisplayListCoprocessorWrites();
 
 			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
 			{
@@ -765,7 +759,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
-	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
+	FT8XXEMU_setDebugLimiter(2048 * 64);
 
 	actNew(true);
 }
@@ -989,7 +983,7 @@ void MainWindow::runScript(const QString &script)
 			pyValue = PyUnicode_FromString(outN.data());;
 			PyTuple_SetItem(pyArgs, 0, pyValue);
 			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
-			char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+			char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 			pyValue = PyByteArray_FromStringAndSize(ram, FT800EMU_RAM_SIZE);
 			PyTuple_SetItem(pyArgs, 2, pyValue);
 			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
@@ -1526,7 +1520,7 @@ void MainWindow::createDockWindows()
 
 			m_HSize = new QSpinBox(widget);
 			m_HSize->setMinimum(1);
-			m_HSize->setMaximum(FT800EMU_SCREEN_WIDTH_MAX);
+			m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
 			connect(m_HSize, SIGNAL(valueChanged(int)), this, SLOT(hsizeChanged(int)));
 			QHBoxLayout *hsizeLayout = new QHBoxLayout();
 			QLabel *hsizeLabel = new QLabel(widget);
@@ -1537,7 +1531,7 @@ void MainWindow::createDockWindows()
 
 			m_VSize = new QSpinBox(widget);
 			m_VSize->setMinimum(1);
-			m_VSize->setMaximum(FT800EMU_SCREEN_HEIGHT_MAX);
+			m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
 			connect(m_VSize, SIGNAL(valueChanged(int)), this, SLOT(vsizeChanged(int)));
 			QHBoxLayout *vsizeLayout = new QHBoxLayout();
 			QLabel *vsizeLabel = new QLabel(widget);
@@ -1943,13 +1937,13 @@ void MainWindow::stepEnabled(bool enabled)
 	if (enabled)
 	{
 		m_StepCmdEnabled->setChecked(false);
-		FT800EMU::GraphicsProcessor.setDebugLimiter(m_StepCount->value());
-		FT800EMU::Memory.poke();
+		FT8XXEMU_setDebugLimiter(m_StepCount->value());
+		FT8XXEMU_poke();
 	}
 	else
 	{
-		FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
-		FT800EMU::Memory.poke();
+		FT8XXEMU_setDebugLimiter(2048 * 64);
+		FT8XXEMU_poke();
 	}
 }
 
@@ -1957,8 +1951,8 @@ void MainWindow::stepChanged(int step)
 {
 	if (m_StepEnabled->isChecked())
 	{
-		FT800EMU::GraphicsProcessor.setDebugLimiter(step);
-		FT800EMU::Memory.poke();
+		FT8XXEMU_setDebugLimiter(step);
+		FT8XXEMU_poke();
 	}
 }
 
@@ -2020,12 +2014,12 @@ void MainWindow::traceEnabledChanged(bool enabled)
 	m_TraceY->setEnabled(enabled);
 }
 
-#define FT800EMUQT_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
+#define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
 
 void MainWindow::clearEditor()
 {
-	m_HSize->setValue(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
-	m_VSize->setValue(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
+	m_HSize->setValue(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
+	m_VSize->setValue(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
 	m_StepCmdEnabled->setChecked(false);
@@ -2130,7 +2124,7 @@ void MainWindow::actNew(bool addClear)
 
 	// be helpful
 	focusCmdEditor();
-	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
+	m_PropertiesEditor->setInfo(FTEDITOR_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, editLine);
 	m_CmdEditor->selectLine(editLine);
@@ -2315,7 +2309,7 @@ void MainWindow::actOpen()
 
 	// be helpful
 	focusCmdEditor();
-	m_PropertiesEditor->setInfo(FT800EMUQT_INITIAL_HELP);
+	m_PropertiesEditor->setInfo(FTEDITOR_INITIAL_HELP);
 	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
@@ -2364,7 +2358,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 	{
 		// dump of ram... this is too heavy
 		QJsonArray dump;
-		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+		char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 		for (int i = 0; i < FT800EMU_RAM_SIZE; ++i)
 			dump.push_back((int)ram[i]);
 		root["dump"] = dump;
@@ -2530,7 +2524,7 @@ void MainWindow::actImport()
 				m_Macro->getDisplayList()[1] = header[4];
 				m_Macro->reloadDisplayList(false);
 				m_Macro->unlockDisplayList();
-				char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+				char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 				ContentInfo *ramG = m_ContentManager->add(fileName);
 				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
 				m_ContentManager->changeMemoryAddress(ramG, 0);
@@ -2625,7 +2619,7 @@ void MainWindow::actExport()
 		header[4] = m_Macro->getDisplayList()[1];
 		m_Macro->unlockDisplayList();
 		header[5] = 0; // FIXME: CRC32
-		char *ram = static_cast<char *>(static_cast<void *>(FT800EMU::Memory.getRam()));
+		char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
 		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
 		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
@@ -2638,7 +2632,7 @@ void MainWindow::actExport()
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();
 		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(FT800EMU::Memory.getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(FT8XXEMU_getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
 		m_DlEditor->unlockDisplayList();
 		if (s != FTEDITOR_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
 		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
@@ -2691,7 +2685,7 @@ void MainWindow::actResetEmulator()
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
-	FT800EMU::GraphicsProcessor.setDebugLimiter(2048 * 64);
+	FT8XXEMU_setDebugLimiter(2048 * 64);
 }
 
 void MainWindow::actSaveScreenshot()
@@ -2773,6 +2767,6 @@ void MainWindow::aboutQt()
 		"<http://creativecommons.org/licenses/by/3.0/>"));
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

@@ -15,7 +15,6 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QPushButton>
 
 // Emulator includes
-#include <ft800emu_memory.h>
 
 // Project includes
 #include "main_window.h"
@@ -50,7 +49,7 @@ ft_char8_t FT_DispPCLKPol = 1;
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER
 
@@ -283,7 +282,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	contentManager->lockContent();
 	std::set<ContentInfo *> contentInfo;
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT800EMU::Memory.getRam());
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
 
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
@@ -309,8 +308,8 @@ void DeviceManager::syncDevice()
 {
 	if (!m_DeviceList->currentItem()) return;
 
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT800EMU::Memory.getRam());
-	const uint32_t *displayList = FT800EMU::Memory.getDisplayList();
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
+	const uint32_t *displayList = FT8XXEMU_getDisplayList();
 
 	//Sync with selected device
 	{
@@ -365,6 +364,6 @@ void DeviceManager::updateSelection()
 
 #endif /* FT800_DEVICE_MANAGER */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

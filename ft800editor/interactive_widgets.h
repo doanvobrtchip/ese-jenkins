@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_INTERACTIVE_WIDGETS_H
-#define FT800EMUQT_INTERACTIVE_WIDGETS_H
+#ifndef FTEDITOR_INTERACTIVE_WIDGETS_H
+#define FTEDITOR_INTERACTIVE_WIDGETS_H
 
 // STL includes
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include "undo_stack_disabler.h"
 #include "constant_mapping.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 class MainWindow;
 class DlEditor;
@@ -833,8 +833,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_INTERACTIVE_WIDGETS_H */
+#endif /* #ifndef FTEDITOR_INTERACTIVE_WIDGETS_H */
 
 /* end of file */

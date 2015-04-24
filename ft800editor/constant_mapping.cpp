@@ -7,17 +7,17 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // STL includes
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 ///////////////////////////////////////////////////////////////////////
 
-FT8XXEMU_EmulatorMode g_DeviceToEnum[4] = {
+const FT8XXEMU_EmulatorMode g_DeviceToEnum[4] = {
 	FT8XXEMU_EmulatorFT800,
 	FT8XXEMU_EmulatorFT801,
 	FT8XXEMU_EmulatorFT810,
 	FT8XXEMU_EmulatorFT811
 };
-int g_DeviceToIntf[256] = {
+const int g_DeviceToIntf[256] = {
 	FTEDITOR_FT800, FTEDITOR_FT801, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	FTEDITOR_FT810, FTEDITOR_FT811, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -40,6 +40,43 @@ const char *g_DeviceToString[4] = {
 	"FT801",
 	"FT810",
 	"FT811",
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB] = {
+	480, // FT800
+	480, // FT801
+	480, // FT810
+	480, // FT811
+};
+
+const int g_ScreenWidthMaximum[FTEDITOR_DEVICE_NB] = {
+	512, // FT800
+	512, // FT801
+	2048, // FT810
+	2048, // FT811
+};
+
+const int g_ScreenHeightDefault[FTEDITOR_DEVICE_NB] = {
+	272, // FT800
+	272, // FT801
+	272, // FT810
+	272, // FT811
+};
+
+const int g_ScreenHeightMaximum[FTEDITOR_DEVICE_NB] = {
+	512, // FT800
+	512, // FT801
+	2048, // FT810
+	2048, // FT811
+};
+
+const int g_DisplayListSize[FTEDITOR_DEVICE_NB] = {
+	2048, // FT800
+	2048, // FT801
+	2048, // FT810
+	2048, // FT811
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -102,6 +139,6 @@ int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

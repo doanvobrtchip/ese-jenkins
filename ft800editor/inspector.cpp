@@ -26,7 +26,7 @@
 #include <QGroupBox>
 
 // Emulator includes
-#include <ft800emu_memory.h>
+#include <ft8xxemu_diag.h>
 #include <ft800emu_vc.h>
 
 // Project includes
@@ -37,7 +37,7 @@
 
 using namespace std;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 static const char *regNames[] = {
 	"REG_ID", // 0
@@ -330,7 +330,7 @@ bool wantRegister(uint32_t address)
 void Inspector::initDisplayReg()
 {
 	// 102400
-	uint8_t *ram = FT800EMU::Memory.getRam();
+	//const uint8_t *ram = FT8XXEMU_getRam();
 	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
 	{
 		uint32_t addr = regAddresses[idx];
@@ -339,7 +339,7 @@ void Inspector::initDisplayReg()
 			QTreeWidgetItem *item = new QTreeWidgetItem(m_Registers);
 			item->setText(0, asRaw(addr));
 			item->setText(1, regNames[idx]);
-			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, addr);
+			uint32_t regValue = 0; // reinterpret_cast<const uint32_t &>(ram[addr]);
 			item->setText(2, asRaw(regValue));
 			item->setText(3, asInt(regValue));
 			m_RegisterCopy.push_back(regValue);
@@ -372,7 +372,7 @@ void Inspector::frameEmu()
 	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
 		handleUsage[handle] = false;
 
-	const uint32_t *dl = FT800EMU::Memory.getDisplayList();
+	const uint32_t *dl = FT8XXEMU_getDisplayList();
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListCopy[i] != dl[i])
@@ -407,13 +407,13 @@ void Inspector::frameQt()
 		}
 	}
 
-	uint8_t *ram = FT800EMU::Memory.getRam();
+	uint8_t *ram = FT8XXEMU_getRam();
 	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
 	{
 		if (m_RegisterItems[idx])
 		{
 			uint32_t addr = regAddresses[idx];
-			uint32_t regValue = FT800EMU::Memory.rawReadU32(ram, addr);
+			uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
 			if (m_RegisterCopy[idx] != regValue)
 			{
 				m_RegisterCopy[idx] = regValue;
@@ -449,6 +449,6 @@ int Inspector::countHandleUsage()
 	return result;
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

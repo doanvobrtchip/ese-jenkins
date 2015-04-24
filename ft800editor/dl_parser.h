@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_DL_PARSER_H
-#define FT800EMUQT_DL_PARSER_H
+#ifndef FTEDITOR_DL_PARSER_H
+#define FTEDITOR_DL_PARSER_H
 
 // STL includes
 #include <vector>
@@ -26,7 +26,7 @@
 
 // Project includes
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #define DL_ENUM_BLEND_NB 6
 extern const char *g_DlEnumBlend[DL_ENUM_BLEND_NB];
@@ -99,8 +99,8 @@ public:
 
 }; /* class DlParser */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_DL_PARSER_H */
+#endif /* #ifndef FTEDITOR_DL_PARSER_H */
 
 /* end of file */

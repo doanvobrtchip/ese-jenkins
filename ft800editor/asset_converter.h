@@ -11,8 +11,8 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
-#ifndef FT800EMUQT_ASSET_CONVERTER_H
-#define FT800EMUQT_ASSET_CONVERTER_H
+#ifndef FTEDITOR_ASSET_CONVERTER_H
+#define FTEDITOR_ASSET_CONVERTER_H
 
 // STL includes
 
@@ -29,7 +29,7 @@ struct BitmapInfo;
 
 }
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 /**
  * AssetConverter
@@ -50,8 +50,8 @@ public:
 
 }; /* class AssetConverter */
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_ASSET_CONVERTER_H */
+#endif /* #ifndef FTEDITOR_ASSET_CONVERTER_H */
 
 /* end of file */

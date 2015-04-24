@@ -26,9 +26,7 @@
 #include <QApplication>
 
 // Emulator includes
-#include <ft800emu_graphics_processor.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_touch.h>
+#include <ft8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -40,7 +38,7 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 #define POINTER_ALL 0xFFFF
 #define POINTER_TOUCH 0x0001
@@ -229,14 +227,14 @@ void InteractiveViewport::graphics()
 	m_TraceEnabled = m_MainWindow->traceEnabled();
 	m_TraceX = m_MainWindow->traceX();
 	m_TraceY = m_MainWindow->traceY();
-	m_TraceStack.clear();
 	m_TraceStackDl.clear();
 	m_TraceStackCmd.clear();
 	bool cmdLast = false;
 	if (m_TraceEnabled)
 	{
-		FT800EMU::GraphicsProcessor.processTrace(m_TraceStack, m_TraceX, m_TraceY, hsize());
-		for (size_t i = 0; i < m_TraceStack.size(); ++i)
+		m_TraceStackSize = FTEDITOR_TRACE_STACK_SIZE;
+		FT8XXEMU_processTrace(m_TraceStack, &m_TraceStackSize, m_TraceX, m_TraceY, hsize());
+		for (size_t i = 0; i < m_TraceStackSize; ++i)
 		{
 			int cmdIdx = m_MainWindow->getDlCmd()[m_TraceStack[i]];
 			if (cmdIdx >= 0)
@@ -266,7 +264,10 @@ void InteractiveViewport::graphics()
 	{
 		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 		{
-			FT800EMU::GraphicsProcessor.processTrace(m_MouseStackWrite, m_NextMouseX, m_NextMouseY, hsize());
+			int size = FTEDITOR_TRACE_STACK_SIZE;
+			m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
+			FT8XXEMU_processTrace(&m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
+			m_MouseStackWrite.resize(size);
 			if (m_MouseStackWrite.size())
 			{
 				m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
@@ -326,11 +327,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 
 	if (m_MouseTouch)
 	{
-		FT800EMU::Touch[0].setXY(m_MouseX, m_MouseY, 0);
+		FT8XXEMU_touchSetXY(0, m_MouseX, m_MouseY, 0);
 	}
 	else
 	{
-		FT800EMU::Touch[0].resetXY();
+		FT8XXEMU_touchResetXY(0);
 	}
 
 	// Draw image overlays
@@ -1127,7 +1128,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 
 	if (m_MouseTouch)
 	{
-		// FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		// FT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 	}
 	else if (m_MouseMovingVertex)
 	{
@@ -1467,7 +1468,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
-			// FT800EMU::Memory.setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+			// FT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 		}
 		break;
 	case POINTER_TRACE: // trace
@@ -1585,7 +1586,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
-		// FT800EMU::Memory.resetTouchScreenXY();
+		// FT8XXEMU_resetTouchScreenXY();
 		updatePointerMethod(); // update because update is not done while m_MouseTouch true
 	}
 	else if (m_MouseMovingVertex)
@@ -2393,6 +2394,6 @@ void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e)
 	}
 }
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
 /* end of file */

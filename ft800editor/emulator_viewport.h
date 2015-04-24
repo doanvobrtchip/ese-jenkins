@@ -3,8 +3,8 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#ifndef FT800EMUQT_EMULATOR_VIEWPORT_H
-#define FT800EMUQT_EMULATOR_VIEWPORT_H
+#ifndef FTEDITOR_EMULATOR_VIEWPORT_H
+#define FTEDITOR_EMULATOR_VIEWPORT_H
 
 // STL includes
 
@@ -14,7 +14,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QScrollBar>
 
 // Emulator includes
-#include <ft800emu_emulator.h>
+#include <ft8xxemu.h>
 
 // Project includes
 
@@ -23,7 +23,7 @@ class QImage;
 class QPixmap;
 class QLabel;
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
 /**
  * EmulatorViewport
@@ -100,8 +100,8 @@ signals:
 	
 };
 
-} /* namespace FT800EMUQT */
+} /* namespace FTEDITOR */
 
-#endif /* #ifndef FT800EMUQT_EMULATOR_VIEWPORT_H */
+#endif /* #ifndef FTEDITOR_EMULATOR_VIEWPORT_H */
 
 /* end of file */
