@@ -323,7 +323,7 @@ void DeviceManager::syncDevice()
 
 			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
 			Ft_Gpu_Hal_Transfer32(phost,CLEAR(1,1,1));
-			for (uint32 i = 0;i< FT800EMU_DISPLAY_LIST_SIZE;i++){
+			for (uint32 i = 0;i< displayListSize(FTEDITOR_CURRENT_DEVICE);i++){
 				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
 				if (displayList[i] == DISPLAY())
 					break;
