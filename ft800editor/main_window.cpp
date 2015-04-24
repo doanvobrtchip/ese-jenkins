@@ -75,6 +75,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "content_manager.h"
 #include "interactive_properties.h"
 #include "emulator_navigator.h"
+#include "constant_mapping.h"
 
 namespace FT800EMUQT {
 
@@ -156,11 +157,11 @@ void closeDummy()
 
 void setup()
 {
-	wr32(REG_HSIZE, 480);
-	wr32(REG_VSIZE, 272);
-	wr32(REG_PCLK, 5);
-	wr32(REG_INT_MASK, 0xFF); // INT_CMDEMPTY);
-	wr32(REG_INT_EN, 1);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 480);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 272);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 5);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_MASK), 0xFF); // INT_CMDEMPTY);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_EN), 1);
 }
 
 // Content manager
@@ -198,30 +199,30 @@ void loop()
 {
 	if (FT800EMU::SPII2C.intnLow())
 	{
-		uint32_t flags = rd32(REG_INT_FLAGS);
+		uint32_t flags = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_FLAGS));
 		// printf("INTERRUPT %i\n", flags);
-		if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF)
+		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF)
 		{
 			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
-			wr32(REG_CPURESET, 1);
-			wr32(REG_CMD_READ, 0);
-			wr32(REG_CMD_WRITE, 0);
-			wr32(REG_CPURESET, 0);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
 			wr32(RAM_CMD, CMD_DLSTART);
-			wr32(REG_CMD_WRITE, 4);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 		}
 	}
 
 	// wait
 	if (coprocessorSwapped)
 	{
-		while (rd32(REG_CMD_WRITE) != rd32(REG_CMD_READ))
+		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE)) != rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)))
 		{
 			if (!s_EmulatorRunning) return;
-			if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
+			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 		}
-		while (rd32(REG_CMD_DL) != 0)
+		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_DL)) != 0)
 		{
 			if (!s_EmulatorRunning) return;
 		}
@@ -231,7 +232,7 @@ void loop()
 	}
 	else if (displayListSwapped)
 	{
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
+		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP)) != DLSWAP_DONE)
 		{
 			if (!s_EmulatorRunning) return;
 		}
@@ -352,21 +353,21 @@ void loop()
 	s_ContentManager->unlockContent();
 
 	// switch to next resolution
-	if (rd32(REG_HSIZE) != s_HSize)
-		wr32(REG_HSIZE, s_HSize);
-	if (rd32(REG_VSIZE) != s_VSize)
-		wr32(REG_VSIZE, s_VSize);
+	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)) != s_HSize)
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), s_HSize);
+	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != s_VSize)
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), s_VSize);
 	// switch to next macro list
 	s_Macro->lockDisplayList();
 	bool macroModified = s_Macro->isDisplayListModified();
 	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
 	// {
 		if (s_Macro->getDisplayListParsed()[0].ValidId
-			&& rd32(REG_MACRO_0) != s_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
-			wr32(REG_MACRO_0, s_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
+			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0)) != s_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0), s_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
 		if (s_Macro->getDisplayListParsed()[1].ValidId
-			&& rd32(REG_MACRO_1) != s_Macro->getDisplayList()[1])
-			wr32(REG_MACRO_1, s_Macro->getDisplayList()[1]);
+			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1)) != s_Macro->getDisplayList()[1])
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1), s_Macro->getDisplayList()[1]);
 	// }
 	s_Macro->unlockDisplayList();
 	// switch to next display list
@@ -421,8 +422,8 @@ void loop()
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
-		int wp = rd32(REG_CMD_WRITE);
-		int rp = rd32(REG_CMD_READ);
+		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
+		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
 		int freespace = ((4096 - 4) - fullness);
@@ -442,11 +443,11 @@ void loop()
 			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
 			{
 				swrend();
-				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				do
 				{
 					if (!s_EmulatorRunning) return;
-					rp = rd32(REG_CMD_READ);
+					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 					if ((rp & 0xFFF) == 0xFFF) return;
 					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 				} while (fullness != 0);
@@ -487,14 +488,14 @@ void loop()
 				printf("Waiting for CMD_LOGO...\n");
 				s_WaitingCoprocessorAnimation = true;
 				swrend();
-				wr32(REG_CMD_WRITE, (wp & 0xFFF));
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				printf("WP = %i\n", wp);
 				FT8XXEMU::System.delay(100);
 
 				do
 				{
-					rp = rd32(REG_CMD_READ);
-					wp = rd32(REG_CMD_WRITE);
+					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+					wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
 					if (!s_EmulatorRunning) return;
 					if ((rp & 0xFFF) == 0xFFF) return;
 				} while (rp || wp);
@@ -524,11 +525,11 @@ void loop()
 				freespace -= 8;
 				swrend();
 				if (wp == 8) printf("WP 8\n");
-				wr32(REG_CMD_WRITE, (wp & 0xFFF));
-				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
-					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
@@ -540,11 +541,11 @@ void loop()
 				printf("Waiting for CMD_CALIBRATE...\n");
 				s_WaitingCoprocessorAnimation = true;
 				swrend();
-				wr32(REG_CMD_WRITE, (wp & 0xFFF));
-				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
-					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
@@ -552,11 +553,11 @@ void loop()
 				wp += 8;
 				freespace -= 8;
 				swrend();
-				wr32(REG_CMD_WRITE, (wp & 0xFFF));
-				while (rd32(REG_CMD_READ) != (wp & 0xFFF))
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
 					if (!s_EmulatorRunning) return;
-					if ((rd32(REG_CMD_READ) & 0xFFF) == 0xFFF) return;
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
 				swrbegin(RAM_CMD + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
@@ -571,13 +572,13 @@ void loop()
 			swr32(CMD_SWAP);
 			wp += 8;
 			swrend();
-			wr32(REG_CMD_WRITE, (wp & 0xFFF));
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 
 			// Finish all processing
-			int rpl = rd32(REG_CMD_READ);
+			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 			while ((wp & 0xFFF) != rpl)
 			{
-				rpl = rd32(REG_CMD_READ);
+				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 				if (!s_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
 			}
@@ -618,7 +619,7 @@ void loop()
 			swr32(CMD_DLSTART);
 			wp += 4;
 			swrend();
-			wr32(REG_CMD_WRITE, (wp & 0xFFF));
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 
 			s_CoprocessorFaultOccured = false;
 			coprocessorSwapped = true;
@@ -629,9 +630,9 @@ void loop()
 			s_UtilizationDisplayListCmd = 0;
 
 			swrend();
-			wr32(REG_CMD_WRITE, (wp & 0xFFF));
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 
-			wr32(REG_DLSWAP, DLSWAP_FRAME);
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 		}
 
 		// FIXME: Not very thread-safe, but not too critical

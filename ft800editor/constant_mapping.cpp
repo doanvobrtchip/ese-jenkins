@@ -44,13 +44,34 @@ const char *g_DeviceToString[4] = {
 
 ///////////////////////////////////////////////////////////////////////
 
+extern const int32_t g_RegVC1[FTEDITOR_REG_NB];
+extern const int32_t g_RegVC2[FTEDITOR_REG_NB];
+const int32_t *g_Reg[FTEDITOR_DEVICE_NB] = {
+	g_RegVC1, // FT800
+	g_RegVC1, // FT801
+	g_RegVC2, // FT810
+	g_RegVC2, // FT811
+};
+
+extern const char *g_RegToStringFT800[FTEDITOR_REG_NB];
+extern const char *g_RegToStringFT801[FTEDITOR_REG_NB];
+extern const char *g_RegToStringVC2[FTEDITOR_REG_NB];
+const char **g_RegToString[FTEDITOR_DEVICE_NB] = {
+	g_RegToStringFT800, // FT800
+	g_RegToStringFT801, // FT801
+	g_RegToStringVC2, // FT810
+	g_RegToStringVC2, // FT811
+};
+
+///////////////////////////////////////////////////////////////////////
+
 extern const char *g_BitmapFormatToStringVC1[];
 extern const char *g_BitmapFormatToStringVC2[];
 const char **g_BitmapFormatToString[FTEDITOR_DEVICE_NB] = {
-	g_BitmapFormatToStringVC1,
-	g_BitmapFormatToStringVC1,
-	g_BitmapFormatToStringVC2,
-	g_BitmapFormatToStringVC2,
+	g_BitmapFormatToStringVC1, // FT800
+	g_BitmapFormatToStringVC1, // FT801
+	g_BitmapFormatToStringVC2, // FT810
+	g_BitmapFormatToStringVC2, // FT811
 };
 int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB] = {
 	12,
