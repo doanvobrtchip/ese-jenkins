@@ -23,13 +23,20 @@
 
 // Project includes
 
-namespace FT800EMU {
-
-struct BitmapInfo;
-
-}
-
 namespace FTEDITOR {
+
+struct ImageInfo
+{
+	int LayoutFormat;
+	int LayoutWidth;
+	int LayoutStride;
+	int LayoutHeight;
+	/*int SizeFilter;
+	int SizeWrapX;
+	int SizeWrapY;
+	int SizeWidth;
+	int SizeHeight;*/
+};
 
 /**
  * AssetConverter
@@ -43,7 +50,7 @@ public:
 	static void init();
 	static void convertImage(QString &buildError, const QString &inFile, const QString &outName, int format);
 	static void convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName);
-	static bool getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QString &name);
+	static bool getImageInfo(ImageInfo &bitmapInfo, const QString &name);
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
 	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet);
 	static void release();

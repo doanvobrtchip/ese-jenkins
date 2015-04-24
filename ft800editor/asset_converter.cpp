@@ -35,7 +35,7 @@
 #include <QCoreApplication>
 
 // Emulator includes
-#include <ft800emu_graphics_processor.h>
+#include <ft8xxemu_inttypes.h>
 
 // Project includes
 #include "constant_common.h"
@@ -354,7 +354,7 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 #endif /* FT800EMU_PYTHON */
 }
 
-bool AssetConverter::getImageInfo(FT800EMU::BitmapInfo &bitmapInfo, const QString &name)
+bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 {
 	// Returns image layout
 	// /*('file properties: ', 'resolution ', 360, 'x', 238, 'format ', 'L1', 'stride ', 45, ' total size ', 10710)*/

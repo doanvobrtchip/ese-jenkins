@@ -29,7 +29,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDateTime>
 
 // Emulator includes
-#include <ft800emu_graphics_processor.h>
 
 // Project includes
 #include "main_window.h"
@@ -951,7 +950,7 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 {
 	if (info->CachedImage)
 		return true;
-	FT800EMU::BitmapInfo bitmapInfo;
+	ImageInfo bitmapInfo;
 	if (!AssetConverter::getImageInfo(bitmapInfo, info->DestName))
 		return false;
 	info->CachedImageWidth = bitmapInfo.LayoutWidth;

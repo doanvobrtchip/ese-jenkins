@@ -19,11 +19,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QPainter>
 
 // Emulator includes
-#include <ft8xxemu_graphics_driver.h>
 #include <ft8xxemu_diag.h>
 
 // Project includes
-// #include "emulator_config.h"
+#include "constant_mapping.h"
 
 namespace FTEDITOR {
 
@@ -76,21 +75,21 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	: QWidget(parent), m_ScreenScale(16)
 {
 	s_EmulatorViewport = this;
-	s_Image = new QImage(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT, QImage::Format_RGB32);
-	s_Pixmap = new QPixmap(FT8XXEMU_WINDOW_WIDTH_DEFAULT, FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
+	s_Image = new QImage(screenWidthDefault(FTEDITOR_CURRENT_DEVICE), screenHeightDefault(FTEDITOR_CURRENT_DEVICE), QImage::Format_RGB32);
+	s_Pixmap = new QPixmap(screenWidthDefault(FTEDITOR_CURRENT_DEVICE), screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 
 	m_Vertical = new QScrollBar(Qt::Vertical, this);
 	m_Horizontal = new QScrollBar(Qt::Horizontal, this);
 
-	m_Vertical->setMinimum(-FT8XXEMU_WINDOW_HEIGHT_DEFAULT * 8);
-	m_Vertical->setMaximum(FT8XXEMU_WINDOW_HEIGHT_DEFAULT * 8);
+	m_Vertical->setMinimum(-screenHeightDefault(FTEDITOR_CURRENT_DEVICE) * 8);
+	m_Vertical->setMaximum(screenHeightDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Vertical->setValue(0);
-	m_Horizontal->setMinimum(-FT8XXEMU_WINDOW_WIDTH_DEFAULT * 8);
-	m_Horizontal->setMaximum(FT8XXEMU_WINDOW_WIDTH_DEFAULT * 8);
+	m_Horizontal->setMinimum(-screenWidthDefault(FTEDITOR_CURRENT_DEVICE) * 8);
+	m_Horizontal->setMaximum(screenWidthDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Horizontal->setValue(0);
 
-	setMinimumWidth(FT8XXEMU_WINDOW_WIDTH_DEFAULT);
-	setMinimumHeight(FT8XXEMU_WINDOW_HEIGHT_DEFAULT);
+	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
+	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 }
 
 EmulatorViewport::~EmulatorViewport()
