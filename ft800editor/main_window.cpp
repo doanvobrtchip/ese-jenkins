@@ -226,7 +226,7 @@ void loop()
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-			wr32(RAM_CMD, CMD_DLSTART);
+			wr32(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 		}
 	}
@@ -281,7 +281,7 @@ void loop()
 			continue;
 		}
 		int binSize = (int)binFile.size();
-		if (binSize + info->MemoryAddress > RAM_G_MAX)
+		if (binSize + info->MemoryAddress > ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
 			continue;
@@ -400,7 +400,7 @@ void loop()
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");
 		uint32_t *displayList = s_DlEditor->getDisplayList();
-		swrbegin(RAM_DL);
+		swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
 		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 		{
 			// printf("dl %i: %i\n", i, displayList[i]);
@@ -445,7 +445,7 @@ void loop()
 		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
 		int freespace = ((4096 - 4) - fullness);
 		FT800EMU::Memory.clearDisplayListCoprocessorWrites();
-		swrbegin(RAM_CMD + (wp & 0xFFF));
+		swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 		swr32(CMD_COLDSTART);
 		wp += 4;
 		freespace -= 4;
@@ -483,7 +483,7 @@ void loop()
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
-				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			}
 			int wpn = 0;
 			coprocessorWrites[(wp & 0xFFF) >> 2] = i;
@@ -535,7 +535,7 @@ void loop()
 				FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
 				if (wp == 0) printf("WP 0\n");
-				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
 				swr32(CMD_COLDSTART);
 				wp += 8;
@@ -548,7 +548,7 @@ void loop()
 					if (!s_EmulatorRunning) return;
 					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
-				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
 				s_WantReloopCmd = true;
 				printf("Finished CMD_LOGO\n");
@@ -564,7 +564,7 @@ void loop()
 					if (!s_EmulatorRunning) return;
 					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
-				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
 				swr32(CMD_COLDSTART);
 				wp += 8;
@@ -576,7 +576,7 @@ void loop()
 					if (!s_EmulatorRunning) return;
 					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 				}
-				swrbegin(RAM_CMD + (wp & 0xFFF));
+				swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
 				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
@@ -632,7 +632,7 @@ void loop()
 				}
 			}*/
 
-			swrbegin(RAM_CMD + (wp & 0xFFF));
+			swrbegin(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			swr32(CMD_DLSTART);
 			wp += 4;
 			swrend();
@@ -1311,7 +1311,7 @@ void MainWindow::createDockWindows()
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
 		m_UtilizationGlobalStatus->setMinimum(0);
-		m_UtilizationGlobalStatus->setMaximum(RAM_G_MAX);
+		m_UtilizationGlobalStatus->setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(120, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);

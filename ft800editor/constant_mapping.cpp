@@ -44,6 +44,31 @@ const char *g_DeviceToString[4] = {
 
 ///////////////////////////////////////////////////////////////////////
 
+extern const int32_t g_RamVC1[FTEDITOR_RAM_NB];
+extern const int32_t g_RamVC2[FTEDITOR_RAM_NB];
+const int32_t *g_Ram[FTEDITOR_RAM_NB] = {
+	g_RamVC1, // FT800
+	g_RamVC1, // FT801
+	g_RamVC2, // FT810
+	g_RamVC2, // FT811
+};
+
+const char *g_RamToStringA[FTEDITOR_RAM_NB] = {
+	"RAM_G",
+	"RAM_DL",
+	"RAM_CMD",
+	"RAM_REG"
+};
+
+const char **g_RamToString[FTEDITOR_DEVICE_NB] = {
+	g_RamToStringA, // FT800
+	g_RamToStringA, // FT801
+	g_RamToStringA, // FT810
+	g_RamToStringA, // FT811
+};
+
+///////////////////////////////////////////////////////////////////////
+
 extern const int32_t g_RegVC1[FTEDITOR_REG_NB];
 extern const int32_t g_RegVC2[FTEDITOR_REG_NB];
 const int32_t *g_Reg[FTEDITOR_DEVICE_NB] = {

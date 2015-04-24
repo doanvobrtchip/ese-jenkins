@@ -35,6 +35,18 @@ inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR
 #define FTEDITOR_CURRENT_DEVICE FTEDITOR_FT801
 #endif
 
+// RAM addresses
+#define FTEDITOR_RAM_G 0
+#define FTEDITOR_RAM_G_END 1
+#define FTEDITOR_RAM_DL 1
+#define FTEDITOR_RAM_CMD 2
+#define FTEDITOR_RAM_REG 3
+#define FTEDITOR_RAM_NB 4
+extern const int32_t *g_Ram[FTEDITOR_DEVICE_NB];
+inline int32_t ram(int deviceIntf, int ramIntf) { return g_Ram[deviceIntf][ramIntf]; }
+extern const char **g_RamToString[FTEDITOR_DEVICE_NB];
+inline const char *ramToString(int deviceIntf, int ramIntf) { return g_RamToString[deviceIntf][ramIntf]; }
+
 // Register addresses
 #define FTEDITOR_REG_ID 0
 #define FTEDITOR_REG_FRAMES 1
@@ -162,7 +174,7 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_INSTRUCTION 0
 #define FTEDITOR_DL_VERTEX2F 1
 #define FTEDITOR_DL_VERTEX2II 2
-#define FTEDITOR_CO_COMMAND 0xFFFFFF00UL
+#define FTEDITOR_CO_COMMAND 0xFFFFFF00L
 
 // Display list commands (DlParsed.IdRight)
 #define FTEDITOR_DL_DISPLAY 0

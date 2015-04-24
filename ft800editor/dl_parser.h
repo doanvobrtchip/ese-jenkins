@@ -27,8 +27,6 @@
 
 // Project includes
 
-#define RAM_G_MAX (256 * 1024)
-
 namespace FT800EMUQT {
 
 #define DL_ENUM_BLEND_NB 6

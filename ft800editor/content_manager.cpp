@@ -502,7 +502,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_PropertiesRawStart, SIGNAL(valueChanged(int)), this, SLOT(propertiesRawStartChanged(int)));
 	m_PropertiesRawLength = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesRawLength->setMinimum(0);
-	m_PropertiesRawLength->setMaximum(RAM_G_MAX);
+	m_PropertiesRawLength->setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 	m_PropertiesRawLength->setSingleStep(4);
 	m_PropertiesRawLength->setKeyboardTracking(false);
 	addLabeledWidget(this, rawLayout, tr("Length: "), m_PropertiesRawLength);
@@ -516,7 +516,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	QVBoxLayout *propMemLayout = new QVBoxLayout();
 	m_PropertiesMemoryAddress = new UndoStackDisabler<QSpinBox>(this);
 	m_PropertiesMemoryAddress->setMinimum(0);
-	m_PropertiesMemoryAddress->setMaximum(RAM_G_MAX - 4);
+	m_PropertiesMemoryAddress->setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 	m_PropertiesMemoryAddress->setSingleStep(4);
 	m_PropertiesMemoryAddress->setKeyboardTracking(false);
 	addLabeledWidget(this, propMemLayout, tr("Address: "), m_PropertiesMemoryAddress);
@@ -738,7 +738,7 @@ int ContentManager::getFreeAddress()
 		freeAddress &= 0x7FFFFFFC;
 		freeAddress += 4;
 	}
-	if (freeAddress > RAM_G_MAX)
+	if (freeAddress > ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		return -1;
 	return freeAddress;
 }
@@ -1403,7 +1403,7 @@ void ContentManager::recalculateOverlapInternal()
 			if (leftSize >= 0)
 			{
 				int leftAddr = leftInfo->MemoryAddress;
-				if (leftAddr + leftSize > RAM_G_MAX)
+				if (leftAddr + leftSize > ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
 					if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
@@ -1542,7 +1542,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		if (parsed.ValidId)
 		{
 #ifdef FT810EMU_MODE
-			if (parsed.IdLeft == 0xFFFFFF00)
+			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 			{
 				switch (parsed.IdRight)
 				{
@@ -1594,7 +1594,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		if (parsed.ValidId)
 		{
 #ifdef FT810EMU_MODE
-			if (parsed.IdLeft == 0xFFFFFF00)
+			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 			{
 				switch (parsed.IdRight)
 				{
@@ -1647,15 +1647,15 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 			handles[parsed.Parameter[0].U] = true;
 		}
 #ifdef FT810EMU_MODE
-		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
-		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
-		else if (parsed.ValidId && parsed.IdIndex == 0xFFFFFF00 && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
@@ -1730,7 +1730,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 		if (parsed.ValidId)
 		{
 #ifdef FT810EMU_MODE
-			if (parsed.IdLeft == 0xFFFFFF00)
+			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 			{
 				switch (parsed.IdRight)
 				{
@@ -1923,7 +1923,7 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 			dlEditor->replaceLine(i, pa);
 		}
 #ifdef FT810EMU_MODE
-		else if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+		else if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -1939,7 +1939,7 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[1].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[1].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[1].I = newAddr;
@@ -2012,7 +2012,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 						continue;
 					}
 				}
-				if (parsed.IdLeft == 0xFFFFFF00) // CMD
+				if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // CMD
 				{
 					if (parsed.IdRight == (CMD_TEXT & 0xFF) && parsed.Parameter[2].I == bitmapHandle)
 					{

@@ -287,7 +287,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= RAM_G_MAX))
+		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
 		{
             {
 				Ft_Gpu_Hal_WrMem(phost,RAM_G+info->MemoryAddress,&ram[RAM_G+info->MemoryAddress],info->CachedSize);

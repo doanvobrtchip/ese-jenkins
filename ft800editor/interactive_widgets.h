@@ -36,6 +36,7 @@
 #include "dl_parser.h"
 #include "dl_editor.h"
 #include "undo_stack_disabler.h"
+#include "constant_mapping.h"
 
 namespace FT800EMUQT {
 
@@ -89,7 +90,7 @@ public:
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
 		setMinimum(0);
-		setMaximum(RAM_G_MAX - 4);
+		setMaximum(ram(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 	}

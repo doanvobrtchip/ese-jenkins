@@ -12,6 +12,16 @@ namespace FT800EMUQT {
 
 ///////////////////////////////////////////////////////////////////////
 
+extern const int32_t g_RamVC2[FTEDITOR_RAM_NB];
+const int32_t g_RamVC2[FTEDITOR_RAM_NB] = {
+	RAM_G,
+	RAM_DL,
+	RAM_CMD,
+	RAM_REG
+};
+
+///////////////////////////////////////////////////////////////////////
+
 extern const int32_t g_RegVC2[FTEDITOR_REG_NB];
 const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	REG_ID,
