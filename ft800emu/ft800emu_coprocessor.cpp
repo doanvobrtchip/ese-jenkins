@@ -72,8 +72,9 @@ void CoprocessorClass::execute()
 	if (!singleFrame)
 		s_Running = true;
 
-    int _pc, _t, n;
-    int insn;
+	uint16_t _pc;
+	uint32_t _t, n;
+	uint16_t insn;
 
     int swapped = 0;
     int starve = 0;
@@ -138,7 +139,7 @@ void CoprocessorClass::execute()
                 case 10:    _t = t - 1; break;
                 case 11:    _t = r[rsp]; break;
                 case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*printf("rd[%x] = %x\n", t, _t);*/ break;
-                case 13:    _t = product; break;
+                case 13:    _t = product & 0xFFFFFFFF; break;
                 case 14:    _t = (n << 15) | (t & 0x7fff); break;
                 case 15:    _t = -(n < t); break;
                 case 16:    assert(0);
@@ -146,7 +147,7 @@ void CoprocessorClass::execute()
                 case 18:    _t = MemoryClass::coprocessorReadU8(t); /*printf("rd8[%x] = %x\n", t, _t);*/ break;
                 case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
                 case 20:    _t = product >> 32; break;
-                case 21:    _t = product >> 16; break;
+				case 21:    _t = (product >> 16) & 0xFFFFFFFF; break;
                 case 22:    _t = t == r[rsp]; break;
                 case 23:    _t = n - t; break;
                 case 24:    _t = t + 1; break;
