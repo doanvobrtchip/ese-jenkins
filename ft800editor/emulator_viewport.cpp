@@ -127,8 +127,8 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 		s_EmulatorThread->start();
 
 		while (FT8XXEMU_processTrace == NULL)
-			QThread::sleep(1);
-		QThread::sleep(1); // TODO: Properly handle this...
+			QThread::msleep(1);
+		QThread::msleep(1); // TODO: Properly handle this...
 
 		// Connect the cross thread repaint event
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));

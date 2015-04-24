@@ -253,7 +253,7 @@ void loop()
 	}
 	else
 	{
-		QThread::sleep(10);
+		QThread::msleep(10);
 	}
 
 	if (!s_EmulatorRunning)
@@ -501,7 +501,7 @@ void loop()
 				swrend();
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				printf("WP = %i\n", wp);
-				QThread::sleep(100);
+				QThread::msleep(100);
 
 				do
 				{
