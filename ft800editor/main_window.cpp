@@ -174,8 +174,8 @@ static int s_UtilizationDisplayListCmd = 0;
 static bool s_WaitingCoprocessorAnimation = false;
 
 // Array indexed by display list index containing coprocessor line which wrote the display list command
-static int s_DisplayListCoprocessorCommandA[FT800EMU_DL_SIZE];
-static int s_DisplayListCoprocessorCommandB[FT800EMU_DL_SIZE];
+static int s_DisplayListCoprocessorCommandA[FTEDITOR_DL_SIZE];
+static int s_DisplayListCoprocessorCommandB[FTEDITOR_DL_SIZE];
 static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
 static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 
@@ -384,7 +384,7 @@ void loop()
 		// if (cmdModified) printf("cmd modified\n");
 		uint32_t *displayList = s_DlEditor->getDisplayList();
 		swrbegin(RAM_DL);
-		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 		{
 			// printf("dl %i: %i\n", i, displayList[i]);
 			if ((displayList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
@@ -396,15 +396,15 @@ void loop()
 		// displayListSwapped = true;
 		s_DlEditor->unlockDisplayList();
 
-		uint32_t cmdList[FT800EMU_DL_SIZE];
-		// DlParsed cmdParsed[FT800EMU_DL_SIZE];
+		uint32_t cmdList[FTEDITOR_DL_SIZE];
+		// DlParsed cmdParsed[FTEDITOR_DL_SIZE];
 		s_CmdParamCache.clear();
-		int cmdParamCache[FT800EMU_DL_SIZE + 1];
-		bool cmdValid[FT800EMU_DL_SIZE];
+		int cmdParamCache[FTEDITOR_DL_SIZE + 1];
+		bool cmdValid[FTEDITOR_DL_SIZE];
 		uint32_t *cmdListPtr = s_CmdEditor->getDisplayList();
 		const DlParsed *cmdParsedPtr = s_CmdEditor->getDisplayListParsed();
 		// Make local copy, necessary in case of blocking commands
-		for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 		{
 			cmdList[i] = cmdListPtr[i];
 			// cmdParsed[i] = cmdParsedPtr[i];
@@ -414,14 +414,14 @@ void loop()
 			if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
 				warnMissingClear = false;
 		}
-		cmdParamCache[FT800EMU_DL_SIZE] = (int)s_CmdParamCache.size();
+		cmdParamCache[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
 		s_WarnMissingClear = warnMissingClear;
 
 		bool validCmd = false;
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-		for (int i = 0; i < FT800EMU_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
+		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
 		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
 		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -432,7 +432,7 @@ void loop()
 		swr32(CMD_COLDSTART);
 		wp += 4;
 		freespace -= 4;
-		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FT800EMU_DL_SIZE); ++i) // FIXME CMD SIZE
+		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
@@ -454,7 +454,7 @@ void loop()
 				freespace = ((4096 - 4) - fullness);
 
 				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
-				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 				{
 					if (cpWrite[i] >= 0)
 					{
@@ -505,7 +505,7 @@ void loop()
 				freespace = ((4096 - 4) - fullness);
 
 				int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
-				for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 				{
 					if (cpWrite[i] >= 0)
 					{
@@ -583,7 +583,7 @@ void loop()
 				if ((rpl & 0xFFF) == 0xFFF) return;
 			}
 			int *cpWrite = FT800EMU::Memory.getDisplayListCoprocessorWrites();
-			for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+			for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 			{
 				if (cpWrite[i] >= 0)
 				{
@@ -595,7 +595,7 @@ void loop()
 			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 			FT800EMU::Memory.clearDisplayListCoprocessorWrites();
 
-			for (int i = FT800EMU_DL_SIZE - 1; i >= 0; --i)
+			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
 			{
 				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 				{
@@ -605,7 +605,7 @@ void loop()
 			}
 
 			// Test
-			/*for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 			{
 				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 				{
@@ -1277,7 +1277,7 @@ void MainWindow::createDockWindows()
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
 		m_UtilizationDisplayListStatus->setMinimum(0);
-		m_UtilizationDisplayListStatus->setMaximum(FT800EMU_DL_SIZE);
+		m_UtilizationDisplayListStatus->setMaximum(FTEDITOR_DL_SIZE);
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
@@ -1314,7 +1314,7 @@ void MainWindow::createDockWindows()
 
 			m_UtilizationDisplayList = new QProgressBar(this);
 			m_UtilizationDisplayList->setMinimum(0);
-			m_UtilizationDisplayList->setMaximum(FT800EMU_DL_SIZE);
+			m_UtilizationDisplayList->setMaximum(FTEDITOR_DL_SIZE);
 			groupLayout->addWidget(m_UtilizationDisplayList);
 
 			group->setLayout(groupLayout);
@@ -2088,7 +2088,7 @@ void MainWindow::actNew(bool addClear)
 		DlParsed pa;
 		pa.ValidId = true;
 		pa.IdLeft = 0;
-		pa.IdRight = FT800EMU_DL_CLEAR;
+		pa.IdRight = FTEDITOR_DL_CLEAR;
 		pa.ExpectedStringParameter = false;
 		pa.Parameter[0].U = 1;
 		pa.Parameter[1].U = 1;
@@ -2157,19 +2157,19 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 			pa.ValidId = true;
 			pa.IdLeft = 0;
 
-			pa.IdRight = FT800EMU_DL_BITMAP_HANDLE;
+			pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 			pa.Parameter[0].I = i;
 			pa.ExpectedParameterCount = 1;
 			dlEditor->insertLine(hline, pa);
 			++hline;
 
-			pa.IdRight = FT800EMU_DL_BITMAP_SOURCE;
+			pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
 			pa.Parameter[0].U = contentInfo->MemoryAddress;
 			pa.ExpectedParameterCount = 1;
 			dlEditor->insertLine(hline, pa);
 			++hline;
 
-			pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT;
+			pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
 			if (contentInfo->Converter == ContentInfo::Image)
 			{
 				pa.Parameter[0].U = contentInfo->ImageFormat;
@@ -2186,7 +2186,7 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 			dlEditor->insertLine(hline, pa);
 			++hline;
 
-			pa.IdRight = FT800EMU_DL_BITMAP_SIZE;
+			pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
 			pa.Parameter[0].U = ((QJsonValue)j["sizeFilter"]).toVariant().toInt();
 			pa.Parameter[1].U = ((QJsonValue)j["sizeWrapX"]).toVariant().toInt();
 			pa.Parameter[2].U = ((QJsonValue)j["sizeWrapY"]).toVariant().toInt();
@@ -2528,7 +2528,7 @@ void MainWindow::actImport()
 					else
 					{
 						m_DlEditor->lockDisplayList();
-						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
 						m_DlEditor->reloadDisplayList(false);
 						m_DlEditor->unlockDisplayList();
 						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
@@ -2614,10 +2614,10 @@ void MainWindow::actExport()
 #endif
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();
-		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
-		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(FT800EMU::Memory.getDisplayList())), FT800EMU_DL_SIZE * sizeof(uint32_t));
+		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(FT800EMU::Memory.getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
 		m_DlEditor->unlockDisplayList();
-		if (s != FT800EMU_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
+		if (s != FTEDITOR_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
 		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
 	}
 

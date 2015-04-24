@@ -38,6 +38,7 @@
 #include "inspector.h"
 #include "content_manager.h"
 #include "properties_editor.h"
+#include "constant_mapping.h"
 
 namespace FT800EMUQT {
 
@@ -180,8 +181,8 @@ static bool isValidInsert(const DlParsed &parsed)
 {
 	if (parsed.ValidId)
 	{
-		if (parsed.IdLeft == FT800EMU_DL_VERTEX2II
-			|| parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+		if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II
+			|| parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 		{
 			return true;
 		}
@@ -338,7 +339,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 	if (m_LineEditor)
 	{
 		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-		if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+		if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 		{
 			m_WidgetXY = false;
 			m_WidgetGradient = false;
@@ -356,10 +357,10 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				{
 					const DlParsed &pa = m_LineEditor->getLine(l);
 					if (pa.IdLeft == 0 &&
-						(pa.IdRight == FT800EMU_DL_BEGIN
-						|| pa.IdRight == FT800EMU_DL_END
-						|| pa.IdRight == FT800EMU_DL_RETURN
-						|| pa.IdRight == FT800EMU_DL_JUMP))
+						(pa.IdRight == FTEDITOR_DL_BEGIN
+						|| pa.IdRight == FTEDITOR_DL_END
+						|| pa.IdRight == FTEDITOR_DL_RETURN
+						|| pa.IdRight == FTEDITOR_DL_JUMP))
 					{
 						break;
 					}
@@ -369,14 +370,14 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 					}
 				}
 				// Iterate over neighbouring vertices
-				for (int l = firstLine; l < FT800EMU_DL_SIZE; ++l) // FIXME
+				for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
 				{
 					if (l == m_LineNumber) continue;
 					const DlParsed &pa = m_LineEditor->getLine(l);
-					if (pa.IdLeft == FT800EMU_DL_VERTEX2F || pa.IdLeft == FT800EMU_DL_VERTEX2II)
+					if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 					{
 						int x, y;
-						if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
 						{
 							x = pa.Parameter[0].I >> 4;
 							y = pa.Parameter[1].I >> 4;
@@ -397,17 +398,17 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
 						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 					}
-					else if (pa.IdRight == FT800EMU_DL_BEGIN
-						|| pa.IdRight == FT800EMU_DL_END
-						|| pa.IdRight == FT800EMU_DL_RETURN
-						|| pa.IdRight == FT800EMU_DL_JUMP)
+					else if (pa.IdRight == FTEDITOR_DL_BEGIN
+						|| pa.IdRight == FTEDITOR_DL_END
+						|| pa.IdRight == FTEDITOR_DL_RETURN
+						|| pa.IdRight == FTEDITOR_DL_JUMP)
 					{
 						break;
 					}
 				}
 				// Show central vertex
 				int x, y;
-				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 				{
 					x = parsed.Parameter[0].I >> 4;
 					y = parsed.Parameter[1].I >> 4;
@@ -810,7 +811,7 @@ void InteractiveViewport::updatePointerMethod()
 				m_MouseOverVertex = false;
 				m_MouseOverVertexLine = -1;
 				const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-				if (parsed.IdLeft == FT800EMU_DL_VERTEX2F || parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 				{
 					int firstLine = m_LineNumber;
 					int vertexType = -1;
@@ -818,12 +819,12 @@ void InteractiveViewport::updatePointerMethod()
 					{
 						const DlParsed &pa = m_LineEditor->getLine(l);
 						if (pa.IdLeft == 0 &&
-							(pa.IdRight == FT800EMU_DL_BEGIN
-							|| pa.IdRight == FT800EMU_DL_END
-							|| pa.IdRight == FT800EMU_DL_RETURN
-							|| pa.IdRight == FT800EMU_DL_JUMP))
+							(pa.IdRight == FTEDITOR_DL_BEGIN
+							|| pa.IdRight == FTEDITOR_DL_END
+							|| pa.IdRight == FTEDITOR_DL_RETURN
+							|| pa.IdRight == FTEDITOR_DL_JUMP))
 						{
-							if (pa.IdRight == FT800EMU_DL_BEGIN)
+							if (pa.IdRight == FTEDITOR_DL_BEGIN)
 								vertexType = pa.Parameter[0].I;
 							break;
 						}
@@ -833,13 +834,13 @@ void InteractiveViewport::updatePointerMethod()
 						}
 					}
 					// Iterate over neighbouring vertices
-					for (int l = firstLine; l < FT800EMU_DL_SIZE; ++l) // FIXME
+					for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
 					{
 						const DlParsed &pa = m_LineEditor->getLine(l);
-						if (pa.IdLeft == FT800EMU_DL_VERTEX2F || pa.IdLeft == FT800EMU_DL_VERTEX2II)
+						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 						{
 							int x, y;
-							if (pa.IdLeft == FT800EMU_DL_VERTEX2F)
+							if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
 							{
 								x = pa.Parameter[0].I >> 4;
 								y = pa.Parameter[1].I >> 4;
@@ -858,10 +859,10 @@ void InteractiveViewport::updatePointerMethod()
 								if (l == m_LineNumber) break; // Currently selected line always has preference
 							}
 						}
-						else if (pa.IdRight == FT800EMU_DL_BEGIN
-							|| pa.IdRight == FT800EMU_DL_END
-							|| pa.IdRight == FT800EMU_DL_RETURN
-							|| pa.IdRight == FT800EMU_DL_JUMP)
+						else if (pa.IdRight == FTEDITOR_DL_BEGIN
+							|| pa.IdRight == FTEDITOR_DL_END
+							|| pa.IdRight == FTEDITOR_DL_RETURN
+							|| pa.IdRight == FTEDITOR_DL_JUMP)
 						{
 							break;
 						}
@@ -1139,39 +1140,39 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			// In case automatic expansion is necessary
-			// if (pa.IdLeft == FT800EMU_DL_VERTEX2II && shift) change to FT800EMU_DL_VERTEX2F and add the HANDLE and CELL if necessary
-			if (pa.IdLeft == FT800EMU_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
+			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
+			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				// Doesn't work directly due to issue with undo combining when changing IdLeft
 				reEnableUndoCombine = true;
 				m_LineEditor->codeEditor()->endUndoCombine();
 
-				pa.IdLeft = FT800EMU_DL_VERTEX2F;
+				pa.IdLeft = FTEDITOR_DL_VERTEX2F;
 				pa.Parameter[0].I <<= 4;
 				pa.Parameter[1].I <<= 4;
 
 				DlParsed npa;
 				npa.ValidId = true;
 				npa.IdLeft = 0;
-				npa.IdRight = FT800EMU_DL_BITMAP_HANDLE;
+				npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 				npa.ExpectedStringParameter = false;
 				npa.Parameter[0].U = pa.Parameter[2].U;
 				npa.ExpectedParameterCount = 1;
 				m_LineEditor->insertLine(m_LineNumber, npa);
 
-				npa.IdRight = FT800EMU_DL_CELL;
+				npa.IdRight = FTEDITOR_DL_CELL;
 				npa.ExpectedStringParameter = false;
 				npa.Parameter[0].U = pa.Parameter[3].U;
 				m_LineEditor->insertLine(m_LineNumber, npa);
 			}
-			if (pa.IdLeft == FT800EMU_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
+			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				xd <<= 4;
 				yd <<= 4;
 			}
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
-			if (pa.IdLeft == FT800EMU_DL_VERTEX2II)
+			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
 				// Snap ->
 				int snapx, snapy;
@@ -1701,11 +1702,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				if (m_LineEditor->getLine(line).ValidId)
 				{
 					// printf("Valid Id\n");
-					if (m_LineEditor->getLine(line).IdLeft == FT800EMU_DL_VERTEX2II
-						|| m_LineEditor->getLine(line).IdLeft == FT800EMU_DL_VERTEX2F)
+					if (m_LineEditor->getLine(line).IdLeft == FTEDITOR_DL_VERTEX2II
+						|| m_LineEditor->getLine(line).IdLeft == FTEDITOR_DL_VERTEX2F)
 					{
 						// Search down for end of vertex set
-						for (; line < FT800EMU_DL_SIZE /*&& line < m_LineEditor->codeEditor()->document()->blockCount()*/; ++line)
+						for (; line < FTEDITOR_DL_SIZE /*&& line < m_LineEditor->codeEditor()->document()->blockCount()*/; ++line)
 						{
 							printf("line %i\n", line);
 							const DlParsed &pa = m_LineEditor->getLine(line);
@@ -1715,14 +1716,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 							if (pa.IdLeft == 0)
 							{
-								if (pa.IdRight == FT800EMU_DL_END)
+								if (pa.IdRight == FTEDITOR_DL_END)
 								{
 									++line;
 									break;
 								}
-								else if (pa.IdRight == FT800EMU_DL_BEGIN
-									|| pa.IdRight == FT800EMU_DL_RETURN
-									|| pa.IdRight == FT800EMU_DL_JUMP)
+								else if (pa.IdRight == FTEDITOR_DL_BEGIN
+									|| pa.IdRight == FTEDITOR_DL_RETURN
+									|| pa.IdRight == FTEDITOR_DL_JUMP)
 								{
 									break;
 								}
@@ -1738,11 +1739,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 				// Skip past CLEAR commands
 				while (m_LineEditor->getLine(line).ValidId && m_LineEditor->getLine(line).IdLeft == 0 && (
-					m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR
-					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_COLOR_RGB
-					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_COLOR_A
-					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_STENCIL
-					|| m_LineEditor->getLine(line).IdRight == FT800EMU_DL_CLEAR_TAG
+					m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR
+					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_COLOR_RGB
+					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_COLOR_A
+					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_STENCIL
+					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_TAG
 					))
 				{
 					++line;
@@ -1930,7 +1931,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ExpectedStringParameter = false;
 					switch (selection)
 					{
-					case FT800EMU_DL_CLEAR:
+					case FTEDITOR_DL_CLEAR:
 						pa.Parameter[0].U = 1;
 						pa.Parameter[1].U = 1;
 						pa.Parameter[2].U = 1;
@@ -1994,7 +1995,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && FT810EMU_MODE
 
-						pa.IdRight = FT800EMU_DL_BITMAP_HANDLE;
+						pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 						pa.Parameter[0].U = bitmapHandle;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(hline, pa);
@@ -2021,7 +2022,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						else
 #endif
 						{
-							pa.IdRight = FT800EMU_DL_BITMAP_SOURCE;
+							pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
 							pa.Parameter[0].U = contentInfo->Converter == ContentInfo::Font
 								? contentInfo->MemoryAddress + 148
 								: contentInfo->MemoryAddress;
@@ -2030,7 +2031,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							++hline;
 							++line;
 
-							pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT;
+							pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
 							pa.Parameter[0].U = contentInfo->ImageFormat;
 							pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
 							pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
@@ -2046,7 +2047,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 #endif
 							{
 								// Add _H if necessary
-								pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
+								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
 								pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
 								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
 								pa.ExpectedParameterCount = 2;
@@ -2056,7 +2057,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 #endif
 
-							pa.IdRight = FT800EMU_DL_BITMAP_SIZE;
+							pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
 							pa.Parameter[0].U = 0; // size filter
 							pa.Parameter[1].U = 0; // wrap x
 							pa.Parameter[2].U = 0; // wrap y
@@ -2074,7 +2075,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 #endif
 							{
 								// Add _H if necessary
-								pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
+								pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
 								pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
 								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
 								pa.ExpectedParameterCount = 2;
@@ -2124,12 +2125,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						int mvy = screenTop();
 						int scl = screenScale();
 
-						pa.IdRight = FT800EMU_DL_BEGIN;
+						pa.IdRight = FTEDITOR_DL_BEGIN;
 						pa.Parameter[0].U = selection;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(line, pa);
 						++line;
-						pa.IdLeft = FT800EMU_DL_VERTEX2II;
+						pa.IdLeft = FTEDITOR_DL_VERTEX2II;
 						pa.IdRight = 0;
 						pa.Parameter[0].I = UNTFX(e->pos().x());
 						pa.Parameter[1].I = UNTFY(e->pos().y());
@@ -2139,7 +2140,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(line, pa);
 						++line;
 						pa.IdLeft = 0;
-						pa.IdRight = FT800EMU_DL_END;
+						pa.IdRight = FTEDITOR_DL_END;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(line, pa);
 						m_LineEditor->selectLine(line - 1);
@@ -2215,119 +2216,119 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdRight = selection;
 					switch (selection)
 					{
-					case FT800EMU_DL_CLEAR_COLOR_RGB:
+					case FTEDITOR_DL_CLEAR_COLOR_RGB:
 						pa.Parameter[0].U = 31;
 						pa.Parameter[1].U = 63;
 						pa.Parameter[2].U = 127;
 						pa.ExpectedParameterCount = 3;
 						break;
-					case FT800EMU_DL_CLEAR_COLOR_A:
+					case FTEDITOR_DL_CLEAR_COLOR_A:
 						pa.Parameter[0].U = 255;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_CLEAR_STENCIL:
+					case FTEDITOR_DL_CLEAR_STENCIL:
 						pa.Parameter[0].U = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_CLEAR_TAG:
+					case FTEDITOR_DL_CLEAR_TAG:
 						pa.Parameter[0].U = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_COLOR_RGB:
+					case FTEDITOR_DL_COLOR_RGB:
 						pa.Parameter[0].U = 255;
 						pa.Parameter[1].U = 255;
 						pa.Parameter[2].U = 127;
 						pa.ExpectedParameterCount = 3;
 						break;
-					case FT800EMU_DL_COLOR_A:
+					case FTEDITOR_DL_COLOR_A:
 						pa.Parameter[0].U = 255;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_COLOR_MASK:
+					case FTEDITOR_DL_COLOR_MASK:
 						pa.Parameter[0].U = 1;
 						pa.Parameter[1].U = 1;
 						pa.Parameter[2].U = 1;
 						pa.Parameter[3].U = 1;
 						pa.ExpectedParameterCount = 4;
 						break;
-					case FT800EMU_DL_LINE_WIDTH:
+					case FTEDITOR_DL_LINE_WIDTH:
 						pa.Parameter[0].U = 64;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_POINT_SIZE:
+					case FTEDITOR_DL_POINT_SIZE:
 						pa.Parameter[0].U = 256;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BLEND_FUNC:
+					case FTEDITOR_DL_BLEND_FUNC:
 						pa.Parameter[0].U = SRC_ALPHA;
 						pa.Parameter[1].U = ONE_MINUS_SRC_ALPHA;
 						pa.ExpectedParameterCount = 2;
 						break;
-					case FT800EMU_DL_SCISSOR_SIZE:
+					case FTEDITOR_DL_SCISSOR_SIZE:
 						pa.Parameter[0].U = 512;
 						pa.Parameter[1].U = 512;
 						pa.ExpectedParameterCount = 2;
 						break;
-					case FT800EMU_DL_SCISSOR_XY:
+					case FTEDITOR_DL_SCISSOR_XY:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
-					case FT800EMU_DL_ALPHA_FUNC:
+					case FTEDITOR_DL_ALPHA_FUNC:
 						pa.Parameter[0].U = ALWAYS;
 						pa.Parameter[1].U = ZERO;
 						pa.ExpectedParameterCount = 2;
 						break;
-					case FT800EMU_DL_STENCIL_FUNC:
+					case FTEDITOR_DL_STENCIL_FUNC:
 						pa.Parameter[0].U = ALWAYS;
 						pa.Parameter[1].U = 0;
 						pa.Parameter[2].U = 255;
 						pa.ExpectedParameterCount = 3;
 						break;
-					case FT800EMU_DL_STENCIL_MASK:
+					case FTEDITOR_DL_STENCIL_MASK:
 						pa.Parameter[0].U = 255;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_STENCIL_OP:
+					case FTEDITOR_DL_STENCIL_OP:
 						pa.Parameter[0].U = KEEP;
 						pa.Parameter[1].U = KEEP;
 						pa.ExpectedParameterCount = 2;
 						break;
-					case FT800EMU_DL_TAG:
+					case FTEDITOR_DL_TAG:
 						pa.Parameter[0].U = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_TAG_MASK:
+					case FTEDITOR_DL_TAG_MASK:
 						pa.Parameter[0].U = 1;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BITMAP_TRANSFORM_A:
-					case FT800EMU_DL_BITMAP_TRANSFORM_E:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_A:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 						pa.Parameter[0].I = 256;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BITMAP_TRANSFORM_B:
-					case FT800EMU_DL_BITMAP_TRANSFORM_C:
-					case FT800EMU_DL_BITMAP_TRANSFORM_D:
-					case FT800EMU_DL_BITMAP_TRANSFORM_F:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_B:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_C:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_D:
+					case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 						pa.Parameter[0].I = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BITMAP_HANDLE:
+					case FTEDITOR_DL_BITMAP_HANDLE:
 						pa.Parameter[0].U = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BITMAP_SOURCE:
+					case FTEDITOR_DL_BITMAP_SOURCE:
 						pa.Parameter[0].U = 0;
 						pa.ExpectedParameterCount = 1;
 						break;
-					case FT800EMU_DL_BITMAP_LAYOUT:
+					case FTEDITOR_DL_BITMAP_LAYOUT:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 128;
 						pa.Parameter[2].U = 64;
 						pa.ExpectedParameterCount = 3;
 						break;
-					case FT800EMU_DL_BITMAP_SIZE:
+					case FTEDITOR_DL_BITMAP_SIZE:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.Parameter[2].U = 0;

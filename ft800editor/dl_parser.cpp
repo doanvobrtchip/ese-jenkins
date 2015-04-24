@@ -105,99 +105,99 @@ void DlParser::init()
 {
 	if (!s_IdMap.size())
 	{
-		s_IdMap["DISPLAY"] = FT800EMU_DL_DISPLAY;
-		s_ParamCount[FT800EMU_DL_DISPLAY] = 0;
-		s_IdMap["BITMAP_SOURCE"] = FT800EMU_DL_BITMAP_SOURCE;
-		s_ParamCount[FT800EMU_DL_BITMAP_SOURCE] = 1;
-		s_IdMap["CLEAR_COLOR_RGB"] = FT800EMU_DL_CLEAR_COLOR_RGB;
-		s_ParamCount[FT800EMU_DL_CLEAR_COLOR_RGB] = 3;
-		s_IdMap["TAG"] = FT800EMU_DL_TAG;
-		s_ParamCount[FT800EMU_DL_TAG] = 1;
-		s_IdMap["COLOR_RGB"] = FT800EMU_DL_COLOR_RGB;
-		s_ParamCount[FT800EMU_DL_COLOR_RGB] = 3;
-		s_IdMap["BITMAP_HANDLE"] = FT800EMU_DL_BITMAP_HANDLE;
-		s_ParamCount[FT800EMU_DL_BITMAP_HANDLE] = 1;
-		s_IdMap["CELL"] = FT800EMU_DL_CELL;
-		s_ParamCount[FT800EMU_DL_CELL] = 1;
-		s_IdMap["BITMAP_LAYOUT"] = FT800EMU_DL_BITMAP_LAYOUT;
-		s_ParamCount[FT800EMU_DL_BITMAP_LAYOUT] = 3;
-		s_IdMap["BITMAP_SIZE"] = FT800EMU_DL_BITMAP_SIZE;
-		s_ParamCount[FT800EMU_DL_BITMAP_SIZE] = 5;
-		s_IdMap["ALPHA_FUNC"] = FT800EMU_DL_ALPHA_FUNC;
-		s_ParamCount[FT800EMU_DL_ALPHA_FUNC] = 2;
-		s_IdMap["STENCIL_FUNC"] = FT800EMU_DL_STENCIL_FUNC;
-		s_ParamCount[FT800EMU_DL_STENCIL_FUNC] = 3;
-		s_IdMap["BLEND_FUNC"] = FT800EMU_DL_BLEND_FUNC;
-		s_ParamCount[FT800EMU_DL_BLEND_FUNC] = 2;
-		s_IdMap["STENCIL_OP"] = FT800EMU_DL_STENCIL_OP;
-		s_ParamCount[FT800EMU_DL_STENCIL_OP] = 2;
-		s_IdMap["POINT_SIZE"] = FT800EMU_DL_POINT_SIZE;
-		s_ParamCount[FT800EMU_DL_POINT_SIZE] = 1;
-		s_IdMap["LINE_WIDTH"] = FT800EMU_DL_LINE_WIDTH;
-		s_ParamCount[FT800EMU_DL_LINE_WIDTH] = 1;
-		s_IdMap["CLEAR_COLOR_A"] = FT800EMU_DL_CLEAR_COLOR_A;
-		s_ParamCount[FT800EMU_DL_CLEAR_COLOR_A] = 1;
-		s_IdMap["COLOR_A"] = FT800EMU_DL_COLOR_A;
-		s_ParamCount[FT800EMU_DL_COLOR_A] = 1;
-		s_IdMap["CLEAR_STENCIL"] = FT800EMU_DL_CLEAR_STENCIL;
-		s_ParamCount[FT800EMU_DL_CLEAR_STENCIL] = 1;
-		s_IdMap["CLEAR_TAG"] = FT800EMU_DL_CLEAR_TAG;
-		s_ParamCount[FT800EMU_DL_CLEAR_TAG] = 1;
-		s_IdMap["STENCIL_MASK"] = FT800EMU_DL_STENCIL_MASK;
-		s_ParamCount[FT800EMU_DL_STENCIL_MASK] = 1;
-		s_IdMap["TAG_MASK"] = FT800EMU_DL_TAG_MASK;
-		s_ParamCount[FT800EMU_DL_TAG_MASK] = 1;
-		s_IdMap["BITMAP_TRANSFORM_A"] = FT800EMU_DL_BITMAP_TRANSFORM_A;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_A] = 1;
-		s_IdMap["BITMAP_TRANSFORM_B"] = FT800EMU_DL_BITMAP_TRANSFORM_B;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_B] = 1;
-		s_IdMap["BITMAP_TRANSFORM_C"] = FT800EMU_DL_BITMAP_TRANSFORM_C;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_C] = 1;
-		s_IdMap["BITMAP_TRANSFORM_D"] = FT800EMU_DL_BITMAP_TRANSFORM_D;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_D] = 1;
-		s_IdMap["BITMAP_TRANSFORM_E"] = FT800EMU_DL_BITMAP_TRANSFORM_E;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_E] = 1;
-		s_IdMap["BITMAP_TRANSFORM_F"] = FT800EMU_DL_BITMAP_TRANSFORM_F;
-		s_ParamCount[FT800EMU_DL_BITMAP_TRANSFORM_F] = 1;
-		s_IdMap["SCISSOR_XY"] = FT800EMU_DL_SCISSOR_XY;
-		s_ParamCount[FT800EMU_DL_SCISSOR_XY] = 2;
-		s_IdMap["SCISSOR_SIZE"] = FT800EMU_DL_SCISSOR_SIZE;
-		s_ParamCount[FT800EMU_DL_SCISSOR_SIZE] = 2;
-		s_IdMap["CALL"] = FT800EMU_DL_CALL;
-		s_ParamCount[FT800EMU_DL_CALL] = 1;
-		s_IdMap["JUMP"] = FT800EMU_DL_JUMP;
-		s_ParamCount[FT800EMU_DL_JUMP] = 1;
-		s_IdMap["BEGIN"] = FT800EMU_DL_BEGIN;
-		s_ParamCount[FT800EMU_DL_BEGIN] = 1;
-		s_IdMap["COLOR_MASK"] = FT800EMU_DL_COLOR_MASK;
-		s_ParamCount[FT800EMU_DL_COLOR_MASK] = 4;
-		s_IdMap["END"] = FT800EMU_DL_END;
-		s_ParamCount[FT800EMU_DL_END] = 0;
-		s_IdMap["SAVE_CONTEXT"] = FT800EMU_DL_SAVE_CONTEXT;
-		s_ParamCount[FT800EMU_DL_SAVE_CONTEXT] = 0;
-		s_IdMap["RESTORE_CONTEXT"] = FT800EMU_DL_RESTORE_CONTEXT;
-		s_ParamCount[FT800EMU_DL_RESTORE_CONTEXT] = 0;
-		s_IdMap["RETURN"] = FT800EMU_DL_RETURN;
-		s_ParamCount[FT800EMU_DL_RETURN] = 0;
-		s_IdMap["MACRO"] = FT800EMU_DL_MACRO;
-		s_ParamCount[FT800EMU_DL_MACRO] = 1;
-		s_IdMap["CLEAR"] = FT800EMU_DL_CLEAR;
-		s_ParamCount[FT800EMU_DL_CLEAR] = 3;
+		s_IdMap["DISPLAY"] = FTEDITOR_DL_DISPLAY;
+		s_ParamCount[FTEDITOR_DL_DISPLAY] = 0;
+		s_IdMap["BITMAP_SOURCE"] = FTEDITOR_DL_BITMAP_SOURCE;
+		s_ParamCount[FTEDITOR_DL_BITMAP_SOURCE] = 1;
+		s_IdMap["CLEAR_COLOR_RGB"] = FTEDITOR_DL_CLEAR_COLOR_RGB;
+		s_ParamCount[FTEDITOR_DL_CLEAR_COLOR_RGB] = 3;
+		s_IdMap["TAG"] = FTEDITOR_DL_TAG;
+		s_ParamCount[FTEDITOR_DL_TAG] = 1;
+		s_IdMap["COLOR_RGB"] = FTEDITOR_DL_COLOR_RGB;
+		s_ParamCount[FTEDITOR_DL_COLOR_RGB] = 3;
+		s_IdMap["BITMAP_HANDLE"] = FTEDITOR_DL_BITMAP_HANDLE;
+		s_ParamCount[FTEDITOR_DL_BITMAP_HANDLE] = 1;
+		s_IdMap["CELL"] = FTEDITOR_DL_CELL;
+		s_ParamCount[FTEDITOR_DL_CELL] = 1;
+		s_IdMap["BITMAP_LAYOUT"] = FTEDITOR_DL_BITMAP_LAYOUT;
+		s_ParamCount[FTEDITOR_DL_BITMAP_LAYOUT] = 3;
+		s_IdMap["BITMAP_SIZE"] = FTEDITOR_DL_BITMAP_SIZE;
+		s_ParamCount[FTEDITOR_DL_BITMAP_SIZE] = 5;
+		s_IdMap["ALPHA_FUNC"] = FTEDITOR_DL_ALPHA_FUNC;
+		s_ParamCount[FTEDITOR_DL_ALPHA_FUNC] = 2;
+		s_IdMap["STENCIL_FUNC"] = FTEDITOR_DL_STENCIL_FUNC;
+		s_ParamCount[FTEDITOR_DL_STENCIL_FUNC] = 3;
+		s_IdMap["BLEND_FUNC"] = FTEDITOR_DL_BLEND_FUNC;
+		s_ParamCount[FTEDITOR_DL_BLEND_FUNC] = 2;
+		s_IdMap["STENCIL_OP"] = FTEDITOR_DL_STENCIL_OP;
+		s_ParamCount[FTEDITOR_DL_STENCIL_OP] = 2;
+		s_IdMap["POINT_SIZE"] = FTEDITOR_DL_POINT_SIZE;
+		s_ParamCount[FTEDITOR_DL_POINT_SIZE] = 1;
+		s_IdMap["LINE_WIDTH"] = FTEDITOR_DL_LINE_WIDTH;
+		s_ParamCount[FTEDITOR_DL_LINE_WIDTH] = 1;
+		s_IdMap["CLEAR_COLOR_A"] = FTEDITOR_DL_CLEAR_COLOR_A;
+		s_ParamCount[FTEDITOR_DL_CLEAR_COLOR_A] = 1;
+		s_IdMap["COLOR_A"] = FTEDITOR_DL_COLOR_A;
+		s_ParamCount[FTEDITOR_DL_COLOR_A] = 1;
+		s_IdMap["CLEAR_STENCIL"] = FTEDITOR_DL_CLEAR_STENCIL;
+		s_ParamCount[FTEDITOR_DL_CLEAR_STENCIL] = 1;
+		s_IdMap["CLEAR_TAG"] = FTEDITOR_DL_CLEAR_TAG;
+		s_ParamCount[FTEDITOR_DL_CLEAR_TAG] = 1;
+		s_IdMap["STENCIL_MASK"] = FTEDITOR_DL_STENCIL_MASK;
+		s_ParamCount[FTEDITOR_DL_STENCIL_MASK] = 1;
+		s_IdMap["TAG_MASK"] = FTEDITOR_DL_TAG_MASK;
+		s_ParamCount[FTEDITOR_DL_TAG_MASK] = 1;
+		s_IdMap["BITMAP_TRANSFORM_A"] = FTEDITOR_DL_BITMAP_TRANSFORM_A;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_A] = 1;
+		s_IdMap["BITMAP_TRANSFORM_B"] = FTEDITOR_DL_BITMAP_TRANSFORM_B;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_B] = 1;
+		s_IdMap["BITMAP_TRANSFORM_C"] = FTEDITOR_DL_BITMAP_TRANSFORM_C;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_C] = 1;
+		s_IdMap["BITMAP_TRANSFORM_D"] = FTEDITOR_DL_BITMAP_TRANSFORM_D;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_D] = 1;
+		s_IdMap["BITMAP_TRANSFORM_E"] = FTEDITOR_DL_BITMAP_TRANSFORM_E;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_E] = 1;
+		s_IdMap["BITMAP_TRANSFORM_F"] = FTEDITOR_DL_BITMAP_TRANSFORM_F;
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_F] = 1;
+		s_IdMap["SCISSOR_XY"] = FTEDITOR_DL_SCISSOR_XY;
+		s_ParamCount[FTEDITOR_DL_SCISSOR_XY] = 2;
+		s_IdMap["SCISSOR_SIZE"] = FTEDITOR_DL_SCISSOR_SIZE;
+		s_ParamCount[FTEDITOR_DL_SCISSOR_SIZE] = 2;
+		s_IdMap["CALL"] = FTEDITOR_DL_CALL;
+		s_ParamCount[FTEDITOR_DL_CALL] = 1;
+		s_IdMap["JUMP"] = FTEDITOR_DL_JUMP;
+		s_ParamCount[FTEDITOR_DL_JUMP] = 1;
+		s_IdMap["BEGIN"] = FTEDITOR_DL_BEGIN;
+		s_ParamCount[FTEDITOR_DL_BEGIN] = 1;
+		s_IdMap["COLOR_MASK"] = FTEDITOR_DL_COLOR_MASK;
+		s_ParamCount[FTEDITOR_DL_COLOR_MASK] = 4;
+		s_IdMap["END"] = FTEDITOR_DL_END;
+		s_ParamCount[FTEDITOR_DL_END] = 0;
+		s_IdMap["SAVE_CONTEXT"] = FTEDITOR_DL_SAVE_CONTEXT;
+		s_ParamCount[FTEDITOR_DL_SAVE_CONTEXT] = 0;
+		s_IdMap["RESTORE_CONTEXT"] = FTEDITOR_DL_RESTORE_CONTEXT;
+		s_ParamCount[FTEDITOR_DL_RESTORE_CONTEXT] = 0;
+		s_IdMap["RETURN"] = FTEDITOR_DL_RETURN;
+		s_ParamCount[FTEDITOR_DL_RETURN] = 0;
+		s_IdMap["MACRO"] = FTEDITOR_DL_MACRO;
+		s_ParamCount[FTEDITOR_DL_MACRO] = 1;
+		s_IdMap["CLEAR"] = FTEDITOR_DL_CLEAR;
+		s_ParamCount[FTEDITOR_DL_CLEAR] = 3;
 #ifdef FT810EMU_MODE
-		s_IdMap["VERTEX_FORMAT"] = FT800EMU_DL_VERTEX_FORMAT;
-		s_ParamCount[FT800EMU_DL_VERTEX_FORMAT] = 1;
-		s_IdMap["BITMAP_LAYOUT_H"] = FT800EMU_DL_BITMAP_LAYOUT_H;
-		s_ParamCount[FT800EMU_DL_BITMAP_LAYOUT_H] = 2;
-		s_IdMap["BITMAP_SIZE_H"] = FT800EMU_DL_BITMAP_SIZE_H;
-		s_ParamCount[FT800EMU_DL_BITMAP_SIZE_H] = 2;
-		s_IdMap["PALETTE_SOURCE"] = FT800EMU_DL_PALETTE_SOURCE;
-		s_ParamCount[FT800EMU_DL_PALETTE_SOURCE] = 1;
-		s_IdMap["VERTEX_TRANSLATE_X"] = FT800EMU_DL_VERTEX_TRANSLATE_X;
-		s_ParamCount[FT800EMU_DL_VERTEX_TRANSLATE_X] = 1;
-		s_IdMap["VERTEX_TRANSLATE_Y"] = FT800EMU_DL_VERTEX_TRANSLATE_Y;
-		s_ParamCount[FT800EMU_DL_VERTEX_TRANSLATE_Y] = 1;
-		s_IdMap["NOP"] = FT800EMU_DL_NOP;
-		s_ParamCount[FT800EMU_DL_NOP] = 0;
+		s_IdMap["VERTEX_FORMAT"] = FTEDITOR_DL_VERTEX_FORMAT;
+		s_ParamCount[FTEDITOR_DL_VERTEX_FORMAT] = 1;
+		s_IdMap["BITMAP_LAYOUT_H"] = FTEDITOR_DL_BITMAP_LAYOUT_H;
+		s_ParamCount[FTEDITOR_DL_BITMAP_LAYOUT_H] = 2;
+		s_IdMap["BITMAP_SIZE_H"] = FTEDITOR_DL_BITMAP_SIZE_H;
+		s_ParamCount[FTEDITOR_DL_BITMAP_SIZE_H] = 2;
+		s_IdMap["PALETTE_SOURCE"] = FTEDITOR_DL_PALETTE_SOURCE;
+		s_ParamCount[FTEDITOR_DL_PALETTE_SOURCE] = 1;
+		s_IdMap["VERTEX_TRANSLATE_X"] = FTEDITOR_DL_VERTEX_TRANSLATE_X;
+		s_ParamCount[FTEDITOR_DL_VERTEX_TRANSLATE_X] = 1;
+		s_IdMap["VERTEX_TRANSLATE_Y"] = FTEDITOR_DL_VERTEX_TRANSLATE_Y;
+		s_ParamCount[FTEDITOR_DL_VERTEX_TRANSLATE_Y] = 1;
+		s_IdMap["NOP"] = FTEDITOR_DL_NOP;
+		s_ParamCount[FTEDITOR_DL_NOP] = 0;
 #endif
 	}
 	if (!s_ParamMap.size())
@@ -617,13 +617,13 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 
 	if (parsed.IdText == "VERTEX2F")
 	{
-		parsed.IdLeft = FT800EMU_DL_VERTEX2F;
+		parsed.IdLeft = FTEDITOR_DL_VERTEX2F;
 		parsed.ValidId = true;
 		parsed.ExpectedParameterCount = 2;
 	}
 	else if (parsed.IdText == "VERTEX2II")
 	{
-		parsed.IdLeft = FT800EMU_DL_VERTEX2II;
+		parsed.IdLeft = FTEDITOR_DL_VERTEX2II;
 		parsed.ValidId = true;
 		parsed.ExpectedParameterCount = 4;
 	}
@@ -941,11 +941,11 @@ void DlParser::parse(DlParsed &parsed, const QString &line, bool coprocessor)
 uint32_t DlParser::compile(const DlParsed &parsed)
 {
 	const uint32_t *p = static_cast<const uint32_t *>(static_cast<const void *>(parsed.Parameter));
-	if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+	if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 	{
 		return VERTEX2F(p[0], p[1]);
 	}
-	else if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+	else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 	{
 		return VERTEX2II(p[0], p[1], p[2], p[3]);
 	}
@@ -955,98 +955,98 @@ uint32_t DlParser::compile(const DlParsed &parsed)
 	}
 	else switch (parsed.IdRight)
 	{
-		case FT800EMU_DL_DISPLAY:
+		case FTEDITOR_DL_DISPLAY:
 			return DISPLAY();
-		case FT800EMU_DL_BITMAP_SOURCE:
+		case FTEDITOR_DL_BITMAP_SOURCE:
 			return BITMAP_SOURCE(p[0]);
-		case FT800EMU_DL_CLEAR_COLOR_RGB:
+		case FTEDITOR_DL_CLEAR_COLOR_RGB:
 			return CLEAR_COLOR_RGB(p[0], p[1], p[2]);
-		case FT800EMU_DL_TAG:
+		case FTEDITOR_DL_TAG:
 			return TAG(p[0]);
-		case FT800EMU_DL_COLOR_RGB:
+		case FTEDITOR_DL_COLOR_RGB:
 			return COLOR_RGB(p[0], p[1], p[2]);
-		case FT800EMU_DL_BITMAP_HANDLE:
+		case FTEDITOR_DL_BITMAP_HANDLE:
 			return BITMAP_HANDLE(p[0]);
-		case FT800EMU_DL_CELL:
+		case FTEDITOR_DL_CELL:
 			return CELL(p[0]);
-		case FT800EMU_DL_BITMAP_LAYOUT:
+		case FTEDITOR_DL_BITMAP_LAYOUT:
 			return BITMAP_LAYOUT(p[0], p[1], p[2]);
-		case FT800EMU_DL_BITMAP_SIZE:
+		case FTEDITOR_DL_BITMAP_SIZE:
 			return BITMAP_SIZE(p[0], p[1], p[2], p[3], p[4]);
-		case FT800EMU_DL_ALPHA_FUNC:
+		case FTEDITOR_DL_ALPHA_FUNC:
 			return ALPHA_FUNC(p[0], p[1]);
-		case FT800EMU_DL_STENCIL_FUNC:
+		case FTEDITOR_DL_STENCIL_FUNC:
 			return STENCIL_FUNC(p[0], p[1], p[2]);
-		case FT800EMU_DL_BLEND_FUNC:
+		case FTEDITOR_DL_BLEND_FUNC:
 			return BLEND_FUNC(p[0], p[1]);
-		case FT800EMU_DL_STENCIL_OP:
+		case FTEDITOR_DL_STENCIL_OP:
 			return STENCIL_OP(p[0], p[1]);
-		case FT800EMU_DL_POINT_SIZE:
+		case FTEDITOR_DL_POINT_SIZE:
 			return POINT_SIZE(p[0]);
-		case FT800EMU_DL_LINE_WIDTH:
+		case FTEDITOR_DL_LINE_WIDTH:
 			return LINE_WIDTH(p[0]);
-		case FT800EMU_DL_CLEAR_COLOR_A:
+		case FTEDITOR_DL_CLEAR_COLOR_A:
 			return CLEAR_COLOR_A(p[0]);
-		case FT800EMU_DL_COLOR_A:
+		case FTEDITOR_DL_COLOR_A:
 			return COLOR_A(p[0]);
-		case FT800EMU_DL_CLEAR_STENCIL:
+		case FTEDITOR_DL_CLEAR_STENCIL:
 			return CLEAR_STENCIL(p[0]);
-		case FT800EMU_DL_CLEAR_TAG:
+		case FTEDITOR_DL_CLEAR_TAG:
 			return CLEAR_TAG(p[0]);
-		case FT800EMU_DL_STENCIL_MASK:
+		case FTEDITOR_DL_STENCIL_MASK:
 			return STENCIL_MASK(p[0]);
-		case FT800EMU_DL_TAG_MASK:
+		case FTEDITOR_DL_TAG_MASK:
 			return TAG_MASK(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_A:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 			return BITMAP_TRANSFORM_A(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_B:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 			return BITMAP_TRANSFORM_B(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_C:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_C:
 			return BITMAP_TRANSFORM_C(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_D:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 			return BITMAP_TRANSFORM_D(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_E:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 			return BITMAP_TRANSFORM_E(p[0]);
-		case FT800EMU_DL_BITMAP_TRANSFORM_F:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 			return BITMAP_TRANSFORM_F(p[0]);
-		case FT800EMU_DL_SCISSOR_XY:
+		case FTEDITOR_DL_SCISSOR_XY:
 			return SCISSOR_XY(p[0], p[1]);
-		case FT800EMU_DL_SCISSOR_SIZE:
+		case FTEDITOR_DL_SCISSOR_SIZE:
 			return SCISSOR_SIZE(p[0], p[1]);
-		case FT800EMU_DL_CALL:
+		case FTEDITOR_DL_CALL:
 			return CALL(p[0]);
-		case FT800EMU_DL_JUMP:
+		case FTEDITOR_DL_JUMP:
 			return JUMP(p[0]);
-		case FT800EMU_DL_BEGIN:
+		case FTEDITOR_DL_BEGIN:
 			return BEGIN(p[0]);
-		case FT800EMU_DL_COLOR_MASK:
+		case FTEDITOR_DL_COLOR_MASK:
 			return COLOR_MASK(p[0], p[1], p[2], p[3]);
-		case FT800EMU_DL_END:
+		case FTEDITOR_DL_END:
 			return END();
-		case FT800EMU_DL_SAVE_CONTEXT:
+		case FTEDITOR_DL_SAVE_CONTEXT:
 			return SAVE_CONTEXT();
-		case FT800EMU_DL_RESTORE_CONTEXT:
+		case FTEDITOR_DL_RESTORE_CONTEXT:
 			return RESTORE_CONTEXT();
-		case FT800EMU_DL_RETURN:
+		case FTEDITOR_DL_RETURN:
 			return RETURN();
-		case FT800EMU_DL_MACRO:
+		case FTEDITOR_DL_MACRO:
 			return MACRO(p[0]);
-		case FT800EMU_DL_CLEAR:
+		case FTEDITOR_DL_CLEAR:
 			return CLEAR(p[0], p[1], p[2]);
 #ifdef FT810EMU_MODE
-		case FT800EMU_DL_VERTEX_FORMAT:
+		case FTEDITOR_DL_VERTEX_FORMAT:
 			return VERTEX_FORMAT(p[0]);
-		case FT800EMU_DL_BITMAP_LAYOUT_H:
+		case FTEDITOR_DL_BITMAP_LAYOUT_H:
 			return BITMAP_LAYOUT_H(p[0], p[1]);
-		case FT800EMU_DL_BITMAP_SIZE_H:
+		case FTEDITOR_DL_BITMAP_SIZE_H:
 			return BITMAP_SIZE_H(p[0], p[1]);
-		case FT800EMU_DL_PALETTE_SOURCE:
+		case FTEDITOR_DL_PALETTE_SOURCE:
 			return PALETTE_SOURCE(p[0]);
-		case FT800EMU_DL_VERTEX_TRANSLATE_X:
+		case FTEDITOR_DL_VERTEX_TRANSLATE_X:
 			return VERTEX_TRANSLATE_X(p[0]);
-		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+		case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
 			return VERTEX_TRANSLATE_Y(p[0]);
-		case FT800EMU_DL_NOP:
+		case FTEDITOR_DL_NOP:
 			return NOP();
 #endif
 	}
@@ -1519,19 +1519,19 @@ void DlParser::toString(std::string &dst, uint32_t v)
 		{
 			switch (v >> 24)
 			{
-				case FT800EMU_DL_DISPLAY:
+				case FTEDITOR_DL_DISPLAY:
 				{
 					res << "DISPLAY()";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_SOURCE:
+				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
 					int addr = v & FT800EMU_ADDR_MASK;
 					res << "BITMAP_SOURCE(";
 					res << addr << ")";
 					break;
 				}
-				case FT800EMU_DL_CLEAR_COLOR_RGB:
+				case FTEDITOR_DL_CLEAR_COLOR_RGB:
 				{
 					int red = (v >> 16) & 0xFF;
 					int green = (v >> 8) & 0xFF;
@@ -1540,14 +1540,14 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << red << ", " << green << ", " << blue << ")";
 					break;
 				}
-				case FT800EMU_DL_TAG:
+				case FTEDITOR_DL_TAG:
 				{
 					int s = v & 0xFF;
 					res << "TAG(";
 					res << s << ")";
 					break;
 				}
-				case FT800EMU_DL_COLOR_RGB:
+				case FTEDITOR_DL_COLOR_RGB:
 				{
 					int red = (v >> 16) & 0xFF;
 					int green = (v >> 8) & 0xFF;
@@ -1556,21 +1556,21 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << red << ", " << green << ", " << blue << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_HANDLE:
+				case FTEDITOR_DL_BITMAP_HANDLE:
 				{
 					int handle = v & 0x1F;
 					res << "BITMAP_HANDLE(";
 					res << handle << ")";
 					break;
 				}
-				case FT800EMU_DL_CELL:
+				case FTEDITOR_DL_CELL:
 				{
 					int cell = v & 0x7F;
 					res << "CELL(";
 					res << cell << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_LAYOUT:
+				case FTEDITOR_DL_BITMAP_LAYOUT:
 				{
 					int format = (v >> 19) & 0x1F;
 					int linestride = (v >> 9) & 0x3FF;
@@ -1580,7 +1580,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ", " << linestride << ", " << height << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_SIZE:
+				case FTEDITOR_DL_BITMAP_SIZE:
 				{
 					int filter = (v >> 20) & 0x1;
 					int wrapx = (v >> 19) & 0x1;
@@ -1597,7 +1597,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << width << ", " << height << ")";
 					break;
 				}
-				case FT800EMU_DL_ALPHA_FUNC:
+				case FTEDITOR_DL_ALPHA_FUNC:
 				{
 					int func = (v >> 8) & 0x07;
 					int ref = v & 0xFF;
@@ -1606,7 +1606,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ", " << ref << ")";
 					break;
 				}
-				case FT800EMU_DL_STENCIL_FUNC:
+				case FTEDITOR_DL_STENCIL_FUNC:
 				{
 					int func = (v >> 16) & 0x7;
 					int ref = (v >> 8) & 0xFF;
@@ -1616,7 +1616,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ", " << ref <<  ", " << mask << ")";
 					break;
 				}
-				case FT800EMU_DL_BLEND_FUNC:
+				case FTEDITOR_DL_BLEND_FUNC:
 				{
 					int src = (v >> 3) & 0x7;
 					int dst = v & 0x7;
@@ -1627,7 +1627,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ")";
 					break;
 				}
-				case FT800EMU_DL_STENCIL_OP:
+				case FTEDITOR_DL_STENCIL_OP:
 				{
 					int sfail = (v >> 3) & 0x7;
 					int spass = v & 0x7;
@@ -1638,105 +1638,105 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ")";
 					break;
 				}
-				case FT800EMU_DL_POINT_SIZE:
+				case FTEDITOR_DL_POINT_SIZE:
 				{
 					int size = v & 0x1FFF;
 					res << "POINT_SIZE(";
 					res << size << ")";
 					break;
 				}
-				case FT800EMU_DL_LINE_WIDTH:
+				case FTEDITOR_DL_LINE_WIDTH:
 				{
 					int width = v & 0xFFF;
 					res << "LINE_WIDTH(";
 					res << width << ")";
 					break;
 				}
-				case FT800EMU_DL_CLEAR_COLOR_A:
+				case FTEDITOR_DL_CLEAR_COLOR_A:
 				{
 					int alpha = v & 0xFF;
 					res << "CLEAR_COLOR_A(";
 					res << alpha << ")";
 					break;
 				}
-				case FT800EMU_DL_COLOR_A:
+				case FTEDITOR_DL_COLOR_A:
 				{
 					int alpha = v & 0xFF;
 					res << "COLOR_A(";
 					res << alpha << ")";
 					break;
 				}
-				case FT800EMU_DL_CLEAR_STENCIL:
+				case FTEDITOR_DL_CLEAR_STENCIL:
 				{
 					int s = v & 0xFF;
 					res << "CLEAR_STENCIL(";
 					res << s << ")";
 					break;
 				}
-				case FT800EMU_DL_CLEAR_TAG:
+				case FTEDITOR_DL_CLEAR_TAG:
 				{
 					int s = v & 0xFF;
 					res << "CLEAR_TAG(";
 					res << s << ")";
 					break;
 				}
-				case FT800EMU_DL_STENCIL_MASK:
+				case FTEDITOR_DL_STENCIL_MASK:
 				{
 					int mask = v & 0xFF;
 					res << "STENCIL_MASK(";
 					res << mask << ")";
 					break;
 				}
-				case FT800EMU_DL_TAG_MASK:
+				case FTEDITOR_DL_TAG_MASK:
 				{
 					int mask = v & 0x01;
 					res << "TAG_MASK(";
 					res << mask << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_A:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 				{
 					int a = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_A(";
 					res << a << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_B:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 				{
 					int b = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_B(";
 					res << b << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_C:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_C:
 				{
 					int c = v & 0xFFFFFF;
 					res << "BITMAP_TRANSFORM_C(";
 					res << c << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_D:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 				{
 					int d = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_D(";
 					res << d << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_E:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 				{
 					int e = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_E(";
 					res << e << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_TRANSFORM_F:
+				case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 				{
 					int f = v & 0xFFFFFF;
 					res << "BITMAP_TRANSFORM_F(";
 					res << f << ")";
 					break;
 				}
-				case FT800EMU_DL_SCISSOR_XY:
+				case FTEDITOR_DL_SCISSOR_XY:
 				{
 #ifdef FT810EMU_MODE
 					int x = (v >> 11) & 0x7FF;
@@ -1749,7 +1749,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << x << ", " << y << ")";
 					break;
 				}
-				case FT800EMU_DL_SCISSOR_SIZE:
+				case FTEDITOR_DL_SCISSOR_SIZE:
 				{
 #ifdef FT810EMU_MODE
 					int width = (v >> 12) & 0xFFF;
@@ -1762,21 +1762,21 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << width << ", " << height << ")";
 					break;
 				}
-				case FT800EMU_DL_CALL:
+				case FTEDITOR_DL_CALL:
 				{
 					int dest = v & 0xFFFF;
 					res << "CALL(";
 					res << dest << ")";
 					break;
 				}
-				case FT800EMU_DL_JUMP:
+				case FTEDITOR_DL_JUMP:
 				{
 					int dest = v & 0xFFFF;
 					res << "JUMP(";
 					res << dest << ")";
 					break;
 				}
-				case FT800EMU_DL_BEGIN:
+				case FTEDITOR_DL_BEGIN:
 				{
 					int primitive = v & 0x0F;
 					res << "BEGIN(";
@@ -1784,7 +1784,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << ")";
 					break;
 				}
-				case FT800EMU_DL_COLOR_MASK:
+				case FTEDITOR_DL_COLOR_MASK:
 				{
 					int r = (v >> 3) & 0x1;
 					int g = (v >> 2) & 0x1;
@@ -1794,34 +1794,34 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << r << ", " << g << ", " << b << ", " << a << ")";
 					break;
 				}
-				case FT800EMU_DL_END:
+				case FTEDITOR_DL_END:
 				{
 					res << "END()";
 					break;
 				}
-				case FT800EMU_DL_SAVE_CONTEXT:
+				case FTEDITOR_DL_SAVE_CONTEXT:
 				{
 					res << "SAVE_CONTEXT()";
 					break;
 				}
-				case FT800EMU_DL_RESTORE_CONTEXT:
+				case FTEDITOR_DL_RESTORE_CONTEXT:
 				{
 					res << "RESTORE_CONTEXT()";
 					break;
 				}
-				case FT800EMU_DL_RETURN:
+				case FTEDITOR_DL_RETURN:
 				{
 					res << "RETURN()";
 					break;
 				}
-				case FT800EMU_DL_MACRO:
+				case FTEDITOR_DL_MACRO:
 				{
 					int m = v & 0x01;
 					res << "MACRO(";
 					res << m << ")";
 					break;
 				}
-				case FT800EMU_DL_CLEAR:
+				case FTEDITOR_DL_CLEAR:
 				{
 					int c = (v >> 2) & 0x1;
 					int s = (v >> 1) & 0x1;
@@ -1831,14 +1831,14 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					break;
 				}
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_VERTEX_FORMAT:
+				case FTEDITOR_DL_VERTEX_FORMAT:
 				{
 					int frac = v & 0x7;
 					res << "VERTEX_FORMAT(";
 					res << frac << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 				{
 					int linestride = (v >> 2) & 0x3;
 					int height = v & 0x3;
@@ -1846,7 +1846,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << linestride << ", " << height << ")";
 					break;
 				}
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FTEDITOR_DL_BITMAP_SIZE_H:
 				{
 					int width = (v >> 2) & 0x3;
 					int height = v & 0x3;
@@ -1854,28 +1854,28 @@ void DlParser::toString(std::string &dst, uint32_t v)
 					res << width << ", " << height << ")";
 					break;
 				}
-				case FT800EMU_DL_PALETTE_SOURCE:
+				case FTEDITOR_DL_PALETTE_SOURCE:
 				{
 					int addr = v & FT800EMU_ADDR_MASK;
 					res << "PALETTE_SOURCE(";
 					res << addr << ")";
 					break;
 				}
-				case FT800EMU_DL_VERTEX_TRANSLATE_X:
+				case FTEDITOR_DL_VERTEX_TRANSLATE_X:
 				{
 					int x = SIGNED_N(v & 0x1FFFF, 17);
 					res << "VERTEX_TRANSLATE_X(";
 					res << x << ")";
 					break;
 				}
-				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+				case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
 				{
 					int y = SIGNED_N(v & 0x1FFFF, 17);
 					res << "VERTEX_TRANSLATE_Y(";
 					res << y << ")";
 					break;
 				}
-				case FT800EMU_DL_NOP:
+				case FTEDITOR_DL_NOP:
 				{
 					res << "NOP()";
 					break;
@@ -1884,7 +1884,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 			}
 			break;
 		}
-		case FT800EMU_DL_VERTEX2II:
+		case FTEDITOR_DL_VERTEX2II:
 		{
 			int px = ((v >> 21) & 0x1FF);
 			int py = ((v >> 12) & 0x1FF);
@@ -1898,7 +1898,7 @@ void DlParser::toString(std::string &dst, uint32_t v)
 			res << ")";
 			break;
 		}
-		case FT800EMU_DL_VERTEX2F:
+		case FTEDITOR_DL_VERTEX2F:
 		{
 			// int px = (v >> 15) & 0x3FFF;
 			// if ((v >> 15) & 0x4000) px = px - 0x4000;

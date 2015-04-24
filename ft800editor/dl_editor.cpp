@@ -48,7 +48,7 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	m_DisplayListShared[0] = DISPLAY();
 
 	m_CodeEditor = new CodeEditor();
-	m_CodeEditor->setMaxLinesNotice(FT800EMU_DL_SIZE);
+	m_CodeEditor->setMaxLinesNotice(FTEDITOR_DL_SIZE);
 	// m_CodeEditor->setReadOnly(true);
 	// m_CodeEditor->setFocusPolicy(Qt::NoFocus);
 	// m_CommandInput = new QLineEdit();
@@ -75,7 +75,7 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	m_Completer = new QCompleter(m_CompleterModel, m_CodeEditor);
 	m_CodeEditor->setCompleter(m_Completer);
 
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		m_DisplayListParsed[i] = DlParsed();
 		m_DisplayListParsed[i].ValidId = false;
@@ -111,7 +111,7 @@ void DlEditor::clear()
 {
 	m_CodeEditor->clear();
 	lockDisplayList();
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		m_DisplayListShared[i] = DISPLAY();
 	}
@@ -142,7 +142,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 		m_DisplayListModified = true;
 	}
 	int dcount = 0;
-	for (int i = 0; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
+	for (int i = 0; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FTEDITOR_DL_SIZE); ++i)
 	{
 		if (!m_ModeMacro && m_DisplayListShared[i] == DISPLAY() && dcount > 0)
 		{
@@ -261,11 +261,11 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 		return;
 
 	lockDisplayList();
-	for (int i = 0; i < newBlockCount && i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
+	for (int i = 0; i < newBlockCount && i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FTEDITOR_DL_SIZE); ++i)
 	{
 		parseLine(m_CodeEditor->document()->findBlockByNumber(i));
 	}
-	for (int i = newBlockCount; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FT800EMU_DL_SIZE); ++i)
+	for (int i = newBlockCount; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FTEDITOR_DL_SIZE); ++i)
 	{
 		m_DisplayListParsed[i] = DlParsed();
 		m_DisplayListParsed[i].ValidId = false;
@@ -398,7 +398,7 @@ void DlEditor::frame()
 	int idx = FT800EMU::GraphicsProcessor.getDebugLimiterEffective() ? FT800EMU::GraphicsProcessor.getDebugLimiterIndex() : -1;
 	if (idx > 0 && m_ModeCoprocessor)
 	{
-		if (idx < FT800EMU_DL_SIZE)
+		if (idx < FTEDITOR_DL_SIZE)
 		{
 			idx = m_MainWindow->getDlCmd()[idx];
 		}

@@ -33,7 +33,7 @@ class QTextBlock;
 class QCompleter;
 class QStringListModel;
 
-#define FT800EMU_DL_SIZE 2048
+#define FTEDITOR_DL_SIZE 2048
 #define FT800EMU_MACRO_SIZE 2
 
 namespace FT800EMUQT {
@@ -100,8 +100,8 @@ private:
 	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
-	uint32_t m_DisplayListShared[FT800EMU_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator, todo: internal copy to compare when coprocessor changes stuff
-	DlParsed m_DisplayListParsed[FT800EMU_DL_SIZE]; // parsed version of the display list
+	uint32_t m_DisplayListShared[FTEDITOR_DL_SIZE]; // display list that is to be used by the thread forwarding to the emulator, todo: internal copy to compare when coprocessor changes stuff
+	DlParsed m_DisplayListParsed[FTEDITOR_DL_SIZE]; // parsed version of the display list
 	bool m_DisplayListModified; // flagged whenever the emulator needs to refresh the display list from m_DisplayListShared
 	QMutex m_Mutex;
 	bool m_Reloading;

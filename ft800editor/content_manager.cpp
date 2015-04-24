@@ -39,6 +39,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "asset_converter.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
+#include "constant_mapping.h"
 
 #define FT810EMU_BITMAP_ALWAYS_HIGH 1
 
@@ -1524,7 +1525,7 @@ ContentInfo *ContentManager::current()
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
 {
 	int handle = -1;
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
@@ -1549,18 +1550,18 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 			}
 			switch (parsed.IdRight)
 			{
-				case FT800EMU_DL_BITMAP_HANDLE:
+				case FTEDITOR_DL_BITMAP_HANDLE:
 					handle = parsed.Parameter[0].I;
 					break;
-				case FT800EMU_DL_BITMAP_SOURCE:
+				case FTEDITOR_DL_BITMAP_SOURCE:
 					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
 						return handle;
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT:
-				case FT800EMU_DL_BITMAP_SIZE:
+				case FTEDITOR_DL_BITMAP_LAYOUT:
+				case FTEDITOR_DL_BITMAP_SIZE:
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FTEDITOR_DL_BITMAP_LAYOUT_H:
+				case FTEDITOR_DL_BITMAP_SIZE_H:
 #endif
 					break;
 				default:
@@ -1576,7 +1577,7 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 {
 	int handle = -1;
 	line = -1;
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
@@ -1598,19 +1599,19 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 				continue;
 			switch (parsed.IdRight)
 			{
-				case FT800EMU_DL_BITMAP_HANDLE:
+				case FTEDITOR_DL_BITMAP_HANDLE:
 					line = i;
 					handle = parsed.Parameter[0].I;
 					break;
-				case FT800EMU_DL_BITMAP_SOURCE:
+				case FTEDITOR_DL_BITMAP_SOURCE:
 					if (parsed.Parameter[0].U == (contentInfo->Converter == ContentInfo::Font ? contentInfo->MemoryAddress + 148 : contentInfo->MemoryAddress) && handle != -1)
 						return handle;
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT:
-				case FT800EMU_DL_BITMAP_SIZE:
+				case FTEDITOR_DL_BITMAP_LAYOUT:
+				case FTEDITOR_DL_BITMAP_SIZE:
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FTEDITOR_DL_BITMAP_LAYOUT_H:
+				case FTEDITOR_DL_BITMAP_SIZE_H:
 #endif
 					break;
 			}
@@ -1626,11 +1627,11 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 	{
 		handles[i] = false;
 	}
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		// TODO: CMD_SETFONT2, CMD_ROMFONT, CMD_SETSCRATCH
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_HANDLE && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
@@ -1659,20 +1660,20 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 // Find where to start with bitmap lines in the editor
 int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 {
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId && parsed.IdLeft == 0)
 		{
 			switch (parsed.IdRight)
 			{
-				case FT800EMU_DL_BITMAP_HANDLE:
-				case FT800EMU_DL_BITMAP_SOURCE:
-				case FT800EMU_DL_BITMAP_LAYOUT:
-				case FT800EMU_DL_BITMAP_SIZE:
+				case FTEDITOR_DL_BITMAP_HANDLE:
+				case FTEDITOR_DL_BITMAP_SOURCE:
+				case FTEDITOR_DL_BITMAP_LAYOUT:
+				case FTEDITOR_DL_BITMAP_SIZE:
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FTEDITOR_DL_BITMAP_LAYOUT_H:
+				case FTEDITOR_DL_BITMAP_SIZE_H:
 #endif
 					break; // do nothing
 				default:
@@ -1712,7 +1713,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 	int sizeHLine = -1;
 	bool cmdSetBitmap = false;
 #endif
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
@@ -1755,11 +1756,11 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			}
 			switch (parsed.IdRight)
 			{
-				case FT800EMU_DL_BITMAP_HANDLE:
+				case FTEDITOR_DL_BITMAP_HANDLE:
 					handleLine = i;
 					addressOk = false;
 					break;
-				case FT800EMU_DL_BITMAP_SOURCE:
+				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
 					bool isAddressSame = (contentInfo->Converter == ContentInfo::Font)
 						? (parsed.Parameter[0].U == (contentInfo->MemoryAddress + 148)) // Font bitmap offset at 148
@@ -1771,7 +1772,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					}
 					break;
 				}
-				case FT800EMU_DL_BITMAP_LAYOUT:
+				case FTEDITOR_DL_BITMAP_LAYOUT:
 					if (addressOk)
 					{
 						DlParsed pa = parsed;
@@ -1782,7 +1783,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						layoutLine = i;
 					}
 					break;
-				case FT800EMU_DL_BITMAP_SIZE:
+				case FTEDITOR_DL_BITMAP_SIZE:
 					if (addressOk && updateSize)
 					{
 						DlParsed pa = parsed;
@@ -1793,7 +1794,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					}
 					break;
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 					if (addressOk)
 					{
 #if !FT810EMU_BITMAP_ALWAYS_HIGH
@@ -1816,7 +1817,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						}
 					}
 					break;
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FTEDITOR_DL_BITMAP_SIZE_H:
 					if (addressOk)
 					{
 #if !FT810EMU_BITMAP_ALWAYS_HIGH
@@ -1861,7 +1862,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.IdLeft = 0;
-				pa.IdRight = FT800EMU_DL_BITMAP_LAYOUT_H;
+				pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
 				pa.ExpectedStringParameter = false;
 				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
 				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
@@ -1885,7 +1886,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.IdLeft = 0;
-				pa.IdRight = FT800EMU_DL_BITMAP_SIZE_H;
+				pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
 				pa.ExpectedStringParameter = false;
 				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
 				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
@@ -1901,10 +1902,10 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 // Update handle adress
 void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor)
 {
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -1924,7 +1925,7 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 // Update font adress
 void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor)
 {
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId && parsed.IdLeft == 0xFFFFFF00 && parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[1].I == oldAddr)
@@ -1950,7 +1951,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 	{
 		printf("ISSUE#113: Purging bitmap handle %i\n", bitmapHandle);
 		dlEditor->removeLine(bitmapLine);
-		for (int i = bitmapLine; i < FT800EMU_DL_SIZE && i < dlEditor->getLineCount(); ++i)
+		for (int i = bitmapLine; i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount(); ++i)
 		{
 			const DlParsed &parsed = dlEditor->getLine(i);
 			if (parsed.ValidId)
@@ -1958,7 +1959,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 				if (drawingBitmaps) // ISSUE#113: NOTE: If you do not want bitmaps removed, disable this block
 				{
 					bool removedVertex = false;
-					if (parsed.IdLeft == FT800EMU_DL_VERTEX2II)
+					if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 					{
 						if (parsed.Parameter[2].I == bitmapHandle)
 						{
@@ -1968,7 +1969,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 							removedVertex = true;
 						}
 					}
-					else if (parsed.IdLeft == FT800EMU_DL_VERTEX2F)
+					else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 					{
 						if (handleActive)
 						{
@@ -1981,13 +1982,13 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 					if (removedVertex)
 					{
 						++i;
-						if (i < FT800EMU_DL_SIZE && i < dlEditor->getLineCount())
+						if (i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount())
 						{
 							const DlParsed &beginVertex = dlEditor->getLine(i - 1);
 							const DlParsed &endVertex = dlEditor->getLine(i);
 							printf("%i - %i\n", beginVertex.IdRight, endVertex.IdRight);
-							if (beginVertex.IdLeft == 0 && beginVertex.IdRight == FT800EMU_DL_BEGIN
-								&& endVertex.IdLeft == 0 && endVertex.IdRight == FT800EMU_DL_END)
+							if (beginVertex.IdLeft == 0 && beginVertex.IdRight == FTEDITOR_DL_BEGIN
+								&& endVertex.IdLeft == 0 && endVertex.IdRight == FTEDITOR_DL_END)
 							{
 								// Last vertex removed in BEGIN/END block, purge the block
 								dlEditor->removeLine(i);
@@ -2040,22 +2041,22 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 				}
 				if (parsed.IdLeft != 0)
 					continue;
-				if (parsed.IdRight == FT800EMU_DL_BEGIN)
+				if (parsed.IdRight == FTEDITOR_DL_BEGIN)
 				{
 					drawingBitmaps = (parsed.Parameter[0].I == BITMAPS);
 					continue;
 				}
-				if (parsed.IdRight == FT800EMU_DL_END)
+				if (parsed.IdRight == FTEDITOR_DL_END)
 				{
 					drawingBitmaps = false;
 					continue;
 				}
-				if (parsed.IdRight == FT800EMU_DL_BITMAP_HANDLE)
+				if (parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE)
 				{
 					// Flag if the content handle is active
 					handleActive = (parsed.Parameter[0].I == bitmapHandle);
 				}
-				if (parsed.IdRight == FT800EMU_DL_BITMAP_SOURCE)
+				if (parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE)
 				{
 					if (handleActive)
 					{
@@ -2085,12 +2086,12 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 				{
 					switch (parsed.IdRight)
 					{
-					case FT800EMU_DL_BITMAP_HANDLE:
-					case FT800EMU_DL_BITMAP_LAYOUT:
-					case FT800EMU_DL_BITMAP_SIZE:
+					case FTEDITOR_DL_BITMAP_HANDLE:
+					case FTEDITOR_DL_BITMAP_LAYOUT:
+					case FTEDITOR_DL_BITMAP_SIZE:
 #ifdef FT810EMU_MODE
-					case FT800EMU_DL_BITMAP_LAYOUT_H:
-					case FT800EMU_DL_BITMAP_SIZE_H:
+					case FTEDITOR_DL_BITMAP_LAYOUT_H:
+					case FTEDITOR_DL_BITMAP_SIZE_H:
 #endif
 						dlEditor->removeLine(i);
 						--i;

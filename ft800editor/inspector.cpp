@@ -32,6 +32,7 @@
 // Project includes
 #include "main_window.h"
 #include "dl_parser.h"
+#include "constant_mapping.h"
 
 using namespace std;
 
@@ -266,7 +267,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 
 	QString raw = asRaw(0);
 	QString text = asText(0);
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		stringstream idx;
 		idx << i;
@@ -371,14 +372,14 @@ void Inspector::frameEmu()
 		handleUsage[handle] = false;
 
 	const uint32_t *dl = FT800EMU::Memory.getDisplayList();
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListCopy[i] != dl[i])
 		{
 			m_DisplayListCopy[i] = dl[i];
 			m_DisplayListUpdate[i] = true;
 		}
-		if ((m_DisplayListCopy[i] >> 24) == FT800EMU_DL_BITMAP_HANDLE)
+		if ((m_DisplayListCopy[i] >> 24) == FTEDITOR_DL_BITMAP_HANDLE)
 		{
 			uint32_t handle = (m_DisplayListCopy[i] & 0x1F);
 			// printf("BITMAP_HANDLE: %i\n", handle);
@@ -395,7 +396,7 @@ void Inspector::frameEmu()
 
 void Inspector::frameQt()
 {
-	for (int i = 0; i < FT800EMU_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListUpdate[i])
 		{

@@ -61,9 +61,9 @@ private:
 	MainWindow *m_MainWindow;
 
 	QTreeWidget *m_DisplayList;
-	QTreeWidgetItem *m_DisplayListItems[FT800EMU_DL_SIZE];
-	uint32_t m_DisplayListCopy[FT800EMU_DL_SIZE];
-	bool m_DisplayListUpdate[FT800EMU_DL_SIZE];
+	QTreeWidgetItem *m_DisplayListItems[FTEDITOR_DL_SIZE];
+	uint32_t m_DisplayListCopy[FTEDITOR_DL_SIZE];
+	bool m_DisplayListUpdate[FTEDITOR_DL_SIZE];
 
 	QTreeWidget *m_Registers;
 	std::vector<QTreeWidgetItem *> m_RegisterItems;

@@ -594,7 +594,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 {
 	bool ok = false;
 	// const uint32_t *p = m_DisplayListParsed[i].Parameter;
-	if (idLeft == FT800EMU_DL_VERTEX2F)
+	if (idLeft == FTEDITOR_DL_VERTEX2F)
 	{
 		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2F."));
 		if (editor)
@@ -605,7 +605,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		ok = true;
 	}
-	else if (idLeft == FT800EMU_DL_VERTEX2II)
+	else if (idLeft == FTEDITOR_DL_VERTEX2II)
 	{
 		m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX2II."));
 		if (editor)
@@ -1285,7 +1285,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 	else switch (idRight)
 	{
 		// ******************************************
-		case FT800EMU_DL_DISPLAY:
+		case FTEDITOR_DL_DISPLAY:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_DISPLAY."));
 			if (editor)
@@ -1295,7 +1295,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_SOURCE:
+		case FTEDITOR_DL_BITMAP_SOURCE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SOURCE."));
 			if (editor)
@@ -1307,7 +1307,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CLEAR_COLOR_RGB:
+		case FTEDITOR_DL_CLEAR_COLOR_RGB:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_RGB."));
 			if (editor)
@@ -1319,7 +1319,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_TAG:
+		case FTEDITOR_DL_TAG:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG."));
 			if (editor)
@@ -1331,7 +1331,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_COLOR_RGB:
+		case FTEDITOR_DL_COLOR_RGB:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_RGB."));
 			if (editor)
@@ -1343,7 +1343,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_HANDLE:
+		case FTEDITOR_DL_BITMAP_HANDLE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_HANDLE."));
 			if (editor)
@@ -1355,7 +1355,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CELL:
+		case FTEDITOR_DL_CELL:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CELL."));
 			if (editor)
@@ -1367,7 +1367,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_LAYOUT:
+		case FTEDITOR_DL_BITMAP_LAYOUT:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT."));
 			if (editor)
@@ -1381,7 +1381,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_SIZE:
+		case FTEDITOR_DL_BITMAP_SIZE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SIZE."));
 			if (editor)
@@ -1397,7 +1397,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_ALPHA_FUNC:
+		case FTEDITOR_DL_ALPHA_FUNC:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_ALPHA_FUNC."));
 			if (editor)
@@ -1410,7 +1410,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_STENCIL_FUNC:
+		case FTEDITOR_DL_STENCIL_FUNC:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_FUNC."));
 			if (editor)
@@ -1425,7 +1425,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BLEND_FUNC:
+		case FTEDITOR_DL_BLEND_FUNC:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BLEND_FUNC."));
 			if (editor)
@@ -1438,7 +1438,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_STENCIL_OP:
+		case FTEDITOR_DL_STENCIL_OP:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_OP."));
 			if (editor)
@@ -1451,7 +1451,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_POINT_SIZE:
+		case FTEDITOR_DL_POINT_SIZE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_POINT_SIZE."));
 			if (editor)
@@ -1463,7 +1463,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_LINE_WIDTH:
+		case FTEDITOR_DL_LINE_WIDTH:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_LINE_WIDTH."));
 			if (editor)
@@ -1475,7 +1475,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CLEAR_COLOR_A:
+		case FTEDITOR_DL_CLEAR_COLOR_A:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_COLOR_A."));
 			if (editor)
@@ -1487,7 +1487,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_COLOR_A:
+		case FTEDITOR_DL_COLOR_A:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_A."));
 			if (editor)
@@ -1499,7 +1499,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CLEAR_STENCIL:
+		case FTEDITOR_DL_CLEAR_STENCIL:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_STENCIL."));
 			if (editor)
@@ -1512,7 +1512,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CLEAR_TAG:
+		case FTEDITOR_DL_CLEAR_TAG:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR_TAG."));
 			if (editor)
@@ -1524,7 +1524,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_STENCIL_MASK:
+		case FTEDITOR_DL_STENCIL_MASK:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_STENCIL_MASK."));
 			if (editor)
@@ -1537,7 +1537,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_TAG_MASK:
+		case FTEDITOR_DL_TAG_MASK:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_TAG_MASK."));
 			if (editor)
@@ -1549,7 +1549,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_A:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
 			if (editor)
@@ -1561,7 +1561,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_B:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
 			if (editor)
@@ -1573,7 +1573,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_C:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_C:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_C."));
 			if (editor)
@@ -1585,7 +1585,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_D:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
 			if (editor)
@@ -1597,7 +1597,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_E:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
 			if (editor)
@@ -1609,7 +1609,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_TRANSFORM_F:
+		case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_F."));
 			if (editor)
@@ -1621,7 +1621,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_SCISSOR_XY:
+		case FTEDITOR_DL_SCISSOR_XY:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_XY."));
 			if (editor)
@@ -1633,7 +1633,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_SCISSOR_SIZE:
+		case FTEDITOR_DL_SCISSOR_SIZE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SCISSOR_SIZE."));
 			if (editor)
@@ -1645,7 +1645,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CALL:
+		case FTEDITOR_DL_CALL:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CALL."));
 			if (editor)
@@ -1657,7 +1657,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_JUMP:
+		case FTEDITOR_DL_JUMP:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_JUMP."));
 			if (editor)
@@ -1669,7 +1669,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BEGIN:
+		case FTEDITOR_DL_BEGIN:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BEGIN."));
 			if (editor)
@@ -1681,7 +1681,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_COLOR_MASK:
+		case FTEDITOR_DL_COLOR_MASK:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_COLOR_MASK."));
 			if (editor)
@@ -1696,7 +1696,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_END:
+		case FTEDITOR_DL_END:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_END."));
 			if (editor)
@@ -1706,7 +1706,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_SAVE_CONTEXT:
+		case FTEDITOR_DL_SAVE_CONTEXT:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_SAVE_CONTEXT."));
 			if (editor)
@@ -1716,7 +1716,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_RESTORE_CONTEXT:
+		case FTEDITOR_DL_RESTORE_CONTEXT:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RESTORE_CONTEXT."));
 			if (editor)
@@ -1726,7 +1726,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_RETURN:
+		case FTEDITOR_DL_RETURN:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_RETURN."));
 			if (editor)
@@ -1736,7 +1736,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_MACRO:
+		case FTEDITOR_DL_MACRO:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_MACRO."));
 			if (editor)
@@ -1748,7 +1748,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_CLEAR:
+		case FTEDITOR_DL_CLEAR:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CLEAR."));
 			if (editor)
@@ -1763,7 +1763,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			break;
 		}
 #ifdef FT810EMU_MODE // TODO_FT810
-		case FT800EMU_DL_VERTEX_FORMAT:
+		case FTEDITOR_DL_VERTEX_FORMAT:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_FORMAT."));
 			if (editor)
@@ -1775,7 +1775,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_LAYOUT_H:
+		case FTEDITOR_DL_BITMAP_LAYOUT_H:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT_H."));
 			if (editor)
@@ -1788,7 +1788,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_BITMAP_SIZE_H:
+		case FTEDITOR_DL_BITMAP_SIZE_H:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SIZE_H."));
 			if (editor)
@@ -1801,7 +1801,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_PALETTE_SOURCE:
+		case FTEDITOR_DL_PALETTE_SOURCE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_PALETTE_SOURCE."));
 			if (editor)
@@ -1813,7 +1813,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_VERTEX_TRANSLATE_X:
+		case FTEDITOR_DL_VERTEX_TRANSLATE_X:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_TRANSLATE_X."));
 			if (editor)
@@ -1825,7 +1825,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+		case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_TRANSLATE_Y."));
 			if (editor)
@@ -1837,7 +1837,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		case FT800EMU_DL_NOP:
+		case FTEDITOR_DL_NOP:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_NOP."));
 			if (editor)
