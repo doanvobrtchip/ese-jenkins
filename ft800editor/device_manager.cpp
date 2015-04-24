@@ -21,6 +21,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "main_window.h"
 #include "content_manager.h"
 #include "dl_parser.h"
+#include "constant_mapping.h"
 #include "constant_common.h"
 
 #if FT800_DEVICE_MANAGER
@@ -217,30 +218,30 @@ void DeviceManager::connectDevice()
 	Ft_Gpu_HostCommand(phost,FT_GPU_CORE_RESET);
 	Ft_Gpu_Hal_Sleep(10);
 
-	if (0x7C == Ft_Gpu_Hal_Rd8(phost, REG_ID))
+	if (0x7C == Ft_Gpu_Hal_Rd8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ID)))
 	{
-		Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, FT_DispHCycle);
-		Ft_Gpu_Hal_Wr16(phost, REG_HOFFSET, FT_DispHOffset);
-		Ft_Gpu_Hal_Wr16(phost, REG_HSYNC0, FT_DispHSync0);
-		Ft_Gpu_Hal_Wr16(phost, REG_HSYNC1, FT_DispHSync1);
-		Ft_Gpu_Hal_Wr16(phost, REG_VCYCLE, FT_DispVCycle);
-		Ft_Gpu_Hal_Wr16(phost, REG_VOFFSET, FT_DispVOffset);
-		Ft_Gpu_Hal_Wr16(phost, REG_VSYNC0, FT_DispVSync0);
-		Ft_Gpu_Hal_Wr16(phost, REG_VSYNC1, FT_DispVSync1);
-		Ft_Gpu_Hal_Wr8(phost, REG_SWIZZLE, FT_DispSwizzle);
-		Ft_Gpu_Hal_Wr8(phost, REG_PCLK_POL, FT_DispPCLKPol);
-		Ft_Gpu_Hal_Wr8(phost, REG_PCLK,FT_DispPCLK);//after this display is visible on the LCD
-		Ft_Gpu_Hal_Wr16(phost, REG_HSIZE, FT_DispWidth);
-		Ft_Gpu_Hal_Wr16(phost, REG_VSIZE, FT_DispHeight);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), FT_DispHCycle);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), FT_DispHOffset);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), FT_DispHSync0);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), FT_DispHSync1);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), FT_DispVCycle);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), FT_DispVOffset);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), FT_DispVSync0);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), FT_DispVSync1);
+		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), FT_DispSwizzle);
+		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), FT_DispPCLKPol);
+		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), FT_DispPCLK);//after this display is visible on the LCD
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), FT_DispWidth);
+		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), FT_DispHeight);
 
 
 
-		Ft_Gpu_Hal_Wr8(phost, REG_GPIO_DIR,0x83 | Ft_Gpu_Hal_Rd8(phost,REG_GPIO_DIR));
-		Ft_Gpu_Hal_Wr8(phost, REG_GPIO,0x083 | Ft_Gpu_Hal_Rd8(phost,REG_GPIO));
+		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR),0x83 | Ft_Gpu_Hal_Rd8(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR)));
+		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO),0x083 | Ft_Gpu_Hal_Rd8(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO)));
 
 
 		Ft_Gpu_Hal_WrCmd32(phost, CMD_DLSTART);
-		Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
+		//Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
 		Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
 		Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
 		Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
@@ -263,7 +264,7 @@ void DeviceManager::disconnectDevice()
 	Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t*)devInfo->handle;
 
 	Ft_Gpu_Hal_WrCmd32(phost, CMD_DLSTART);
-	Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(0, 0, 0));
+	//Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(0, 0, 0));
 	Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
 	Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
 	Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
@@ -290,13 +291,13 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
 		{
             {
-				Ft_Gpu_Hal_WrMem(phost,RAM_G+info->MemoryAddress,&ram[RAM_G+info->MemoryAddress],info->CachedSize);
+				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
 #ifndef FT810EMU_MODE // FIXME_FT810
 	        if (info->ImageFormat == PALETTED){
 				const ft_uint32_t PALSIZE = 1024;
-				Ft_Gpu_Hal_WrMem(phost,RAM_PAL,&ram[RAM_PAL],PALSIZE);
+				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL),&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)],PALSIZE);
 			}
 #endif
 		}
@@ -320,7 +321,7 @@ void DeviceManager::syncDevice()
 
 			loadContent2Device(m_MainWindow->contentManager(),phost);
 
-			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_DL);
+			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
 			Ft_Gpu_Hal_Transfer32(phost,CLEAR(1,1,1));
 			for (uint32 i = 0;i< FT800EMU_DISPLAY_LIST_SIZE;i++){
 				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
@@ -329,9 +330,9 @@ void DeviceManager::syncDevice()
 			}
 			Ft_Gpu_Hal_EndTransfer(phost);
 
-			Ft_Gpu_Hal_Wr32(phost,REG_DLSWAP,DLSWAP_FRAME);
-			Ft_Gpu_Hal_Wr32(phost,REG_HSIZE,*(ft_uint32_t*)&ram[REG_HSIZE]);
-			Ft_Gpu_Hal_Wr32(phost,REG_VSIZE,*(ft_uint32_t*)&ram[REG_VSIZE]);
+			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP),DLSWAP_FRAME);
+			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE),*(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)]);
+			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE),*(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)]);
 		}
 	}
 }

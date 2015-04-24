@@ -1098,7 +1098,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t fo = parsed.Parameter[3].U << 16
 						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(fo);
-					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					for (size_t i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
 						// CMD_TEXT(50, 119, 31, 0, "hello world")
 						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
@@ -1122,7 +1122,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t fo = parsed.Parameter[5].U << 16
 						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(fo);
-					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					for (size_t i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
 						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
 						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 1] : 0;
@@ -1176,7 +1176,7 @@ void DlParser::compile(std::vector<uint32_t> &compiled, const DlParsed &parsed) 
 					uint32_t os = parsed.Parameter[5].U << 16
 						| parsed.Parameter[4].U & 0xFFFF;
 					compiled.push_back(os);
-					for (int i = 0; i < parsed.StringParameter.size() + 1; i += 4)
+					for (size_t i = 0; i < parsed.StringParameter.size() + 1; i += 4)
 					{
 						uint32_t c0 = ((i) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i] : 0;
 						uint32_t c1 = ((i + 1) < parsed.StringParameter.size()) ? (unsigned char)parsed.StringParameter[i + 1] : 0;
@@ -2207,7 +2207,7 @@ void DlParser::escapeString(std::string &dst, const std::string &src)
 void DlParser::unescapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
-	for (int i = 0; i < src.size(); ++i)
+	for (size_t i = 0; i < src.size(); ++i)
 	{
 		char c = src[i];
 		if (c == '\\')

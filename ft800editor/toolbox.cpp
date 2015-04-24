@@ -468,7 +468,7 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Graphics->setHidden(false);
 			m_Bitmaps->setHidden(false);
 			// m_Advanced->setHidden(false);
-			for (int i = 0; i < m_CoprocessorTools.size(); ++i)
+			for (size_t i = 0; i < m_CoprocessorTools.size(); ++i)
 			{
 				m_CoprocessorTools[i]->setHidden(!editor->isCoprocessor());
 			}

@@ -236,7 +236,7 @@ void InteractiveViewport::graphics()
 	if (m_TraceEnabled)
 	{
 		FT800EMU::GraphicsProcessor.processTrace(m_TraceStack, m_TraceX, m_TraceY, hsize());
-		for (int i = 0; i < m_TraceStack.size(); ++i)
+		for (size_t i = 0; i < m_TraceStack.size(); ++i)
 		{
 			int cmdIdx = m_MainWindow->getDlCmd()[m_TraceStack[i]];
 			if (cmdIdx >= 0)
