@@ -6294,7 +6294,7 @@ int16_t AudioProcessorClass::execute(uint8_t &busy, uint16_t sound, uint8_t volu
         case 768: 
             mem[acc] = *pdV;
             pdV--;
-            busy = mem[2];
+            busy = mem[2] & 0xFF;
         case 769: 
             state = *pcV;
             acc = *pdV;

@@ -111,11 +111,6 @@ public:
 	inline void setHWnd(HWND hwnd) { m_HWnd = hwnd; }
 	inline HWND getHWnd() { return m_HWnd; }
 
-	static tstring ToTString(const std::string &s);
-	static tstring ToTString(const std::wstring &s);
-	static std::wstring ToWString(const tstring &s);
-	static std::string ToAString(const tstring &s);
-
 private:
 	SystemWindowsClass(const SystemWindowsClass &);
 	SystemWindowsClass &operator=(const SystemWindowsClass &);

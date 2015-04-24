@@ -453,7 +453,7 @@ void Ejpg::run(uint8_t *memory8,
 		uint16_t b = ~0;
 		for (codesize = 1; codesize <= min(nbits, (size_t)16); codesize++, pht++)
 		{
-			b = bits >> (64 - codesize);
+			b = (bits >> (64 - codesize)) & 0xFFFF;
 			b &= (1 << codesize) - 1;
 			uint16_t hi = *pht >> 16;
 			// printf("[%d: b=%x hi=%x] ", codesize, b, hi);
@@ -481,7 +481,7 @@ void Ejpg::run(uint8_t *memory8,
 			return; // not enough bits yet
 
 		assert(dmsize < 12);
-		int16_t dm = bits >> (64 - codesize - dmsize);
+		int16_t dm = (bits >> (64 - codesize - dmsize)) & 0xFFFF;
 		dm &= (1 << dmsize) - 1;
 		if (dm < (1 << (dmsize - 1)))
 			dm = (-(1 << dmsize) ^ dm) + 1;

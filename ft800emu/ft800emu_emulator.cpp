@@ -268,8 +268,8 @@ const uint8_t bayerDiv4[2][2] = {
 			TouchClass::setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
 
 			// Update display resolution
-			uint32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
-			uint32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
+			int32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
+			int32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 			if (!s_Graphics) FT8XXEMU::GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
 
@@ -310,7 +310,7 @@ const uint8_t bayerDiv4[2][2] = {
 							{
 								Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
 								// Render single line
-								uint32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
+								int32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
 								snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 								// printf("SNAPY: %u\n", snapy);
 								argb8888 *buffer = s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
@@ -322,7 +322,7 @@ const uint8_t bayerDiv4[2][2] = {
 									reg_hsize, snapy + 1, snapy);
 								uint32_t ya = (reg_hsize * snapy);
 								uint32_t wa = RAM_COMPOSITE;
-								for (uint32_t x = 0; x < reg_hsize; ++x)
+								for (int32_t x = 0; x < reg_hsize; ++x)
 								{
 #ifdef FT810EMU_MODE
 									switch (ram[REG_SNAPFORMAT])

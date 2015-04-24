@@ -61,19 +61,19 @@ static uint32_t *s_DisplayListActive = s_DisplayListA;
 static uint32_t *s_DisplayListFree = s_DisplayListB;
 
 static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
-static size_t s_LastCoprocessorCommandRead = -1;
+static ramaddr s_LastCoprocessorCommandRead = -1;
 
 static int s_DirectSwapCount;
 static int s_RealSwapCount;
 static int s_WriteOpCount;
 
 // Avoid getting hammered in wait loops
-static size_t s_LastCoprocessorRead = -1;
+static ramaddr s_LastCoprocessorRead = -1;
 static int s_IdenticalCoprocessorReadCounter = 0;
 static int s_SwapCoprocessorReadCounter = 0;
 static int s_WaitCoprocessorReadCounter = 0;
 
-static size_t s_LastMCURead = -1;
+static ramaddr s_LastMCURead = -1;
 static int s_IdenticalMCUReadCounter = 0;
 static int s_WaitMCUReadCounter = 0;
 static int s_SwapMCUReadCounter = 0;
@@ -134,7 +134,7 @@ bool MemoryClass::coprocessorGetReset()
 }
 
 template<typename T>
-FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -249,7 +249,7 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const size_t address, T &dat
 }
 
 template<typename T>
-FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address, const T data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -288,32 +288,32 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const size_t address, const T 
 	}
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(size_t address, uint32_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(ramaddr address, uint32_t data)
 {
 	rawWriteU32(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(size_t address)
+FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(ramaddr address)
 {
 	return rawReadU32(s_Ram, address);
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(size_t address, uint16_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(ramaddr address, uint16_t data)
 {
 	rawWriteU16(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(size_t address)
+FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(ramaddr address)
 {
 	return rawReadU16(s_Ram, address);
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(size_t address, uint8_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(ramaddr address, uint8_t data)
 {
 	rawWriteU8(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(size_t address)
+FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(ramaddr address)
 {
 	return rawReadU8(s_Ram, address);
 }
@@ -511,7 +511,7 @@ const uint32_t *MemoryClass::getDisplayList()
 	return s_DisplayListActive;
 }
 
-void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
+void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 {
 #if FT800EMU_MCU_MEMLOG
 	printf("MCU write U32 %i, %i\n", (int)address, (int)data);
@@ -545,7 +545,7 @@ void MemoryClass::mcuWriteU32(size_t address, uint32_t data)
 	postWrite(address, data);
 }
 
-/* void MemoryClass::mcuWrite(size_t address, uint8_t data)
+/* void MemoryClass::mcuWrite(ramaddr address, uint8_t data)
 {
 	s_SwapMCUReadCounter = 0;
 	if (address == REG_CMD_WRITE + 3)
@@ -577,7 +577,7 @@ void MemoryClass::flagDLSwap()
 	s_SwapCoprocessorReadCounter = 0;
 }
 
-uint32_t MemoryClass::mcuReadU32(size_t address)
+uint32_t MemoryClass::mcuReadU32(ramaddr address)
 {
 #if FT800EMU_MCU_MEMLOG
 	// if (address != 3182612 && address != 3182616)
@@ -659,7 +659,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 	return rawReadU32(address);
 }
 
-/* uint8_t MemoryClass::mcuRead(size_t address)
+/* uint8_t MemoryClass::mcuRead(ramaddr address)
 {
 	if (s_ReadDelay && address % 4 == 0)
 	{
@@ -710,7 +710,7 @@ uint32_t MemoryClass::mcuReadU32(size_t address)
 	return rawReadU8(address);
 } */
 
-void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
+void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
@@ -757,7 +757,7 @@ void MemoryClass::coprocessorWriteU32(size_t address, uint32_t data)
 
 static uint32_t s_OverrideRasterY = 0;
 
-uint32_t MemoryClass::coprocessorReadU32(size_t address)
+uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	// if (address != 3182612 && address != 3182616)
@@ -847,7 +847,7 @@ uint32_t MemoryClass::coprocessorReadU32(size_t address)
 	return rawReadU32(address);
 }
 
-void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
+void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
@@ -866,7 +866,7 @@ void MemoryClass::coprocessorWriteU16(size_t address, uint16_t data)
 	postWrite(address, data);
 }
 
-uint16_t MemoryClass::coprocessorReadU16(size_t address)
+uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
 {
 	// printf("Coprocessor read U16 %i\n", (int)address);
 
@@ -888,7 +888,7 @@ uint16_t MemoryClass::coprocessorReadU16(size_t address)
 	return rawReadU16(address);
 }
 
-void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
+void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
@@ -914,7 +914,7 @@ void MemoryClass::coprocessorWriteU8(size_t address, uint8_t data)
 	postWrite(address, data);
 }
 
-uint8_t MemoryClass::coprocessorReadU8(size_t address)
+uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	printf("Coprocessor read U8 %i\n", (int)address);

@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
             int rp = FT800EMU::Memory.rawReadU32(ram, REG_CMD_READ);
             int fullness = (wp - rp) & 4095;
             if (fullness < 2048) {
-                int n = fread(&ram[RAM_CMD + wp], 1, 1024, xbu);
+                int n = fread(&ram[RAM_CMD + wp], 1, 1024, xbu) & 0xFFFFFFFF;
                 // printf("Feed %x to %x\n", n, wp);
                 wp = (wp + n) & 4095;
                 FT800EMU::Memory.rawWriteU32(ram, REG_CMD_WRITE, wp);

@@ -831,7 +831,7 @@ uint32_t FT32::exec(uint32_t pma)
 					{
 						/*printf("  | STRLEN\n");*/
 						// FIXME: This won't work when going outside memory range
-						m_Register[FT32_RD(inst)] = strlen((const char *)&m_Memory[r1v]);
+						m_Register[FT32_RD(inst)] = strlen((const char *)&m_Memory[r1v]) & 0xFFFFFFFF;
 						/* printf("**** STRLEN %#x (%c): %i\n", r1v, m_Memory[r1v], m_Register[FT32_RD(inst)]); */
 						break;
 					}

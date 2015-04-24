@@ -254,7 +254,7 @@ void SystemClass::resumeCoprocessorThread()
 void *SystemClass::setThreadGamesCategory(unsigned long *refId)
 {
 #ifndef __MINGW32__
-	HANDLE h = AvSetMmThreadCharacteristics(TEXT("Games"), refId);
+	HANDLE h = AvSetMmThreadCharacteristicsA("Games", refId);
 	if (!h) SystemWindows.ErrorWin32();
 	return h;
 #else
@@ -357,7 +357,7 @@ tstring SystemWindowsClass::GetWin32LastErrorString()
 	DWORD dwError = GetLastError();
 	tstringstream buffer;
 	buffer << GetWin32ErrorString(dwError)
-		<< TEXT(" (error: ") << dwError << ")";
+		<< TEXT(" (error: ") << dwError << TEXT(")");
 	return buffer.str();
 }
 
@@ -391,39 +391,6 @@ void SystemWindowsClass::ErrorWin32()
 void SystemWindowsClass::ErrorHResult(HRESULT hr)
 {
 	Error(TEXT("ErrorHResult")); // fixme :p
-}
-
-#ifdef _UNICODE
-tstring SystemWindowsClass::ToTString(const std::wstring &s) { return s; }
-tstring SystemWindowsClass::ToTString(const std::string &s)
-#else
-tstring SystemWindowsClass::ToTString(const std::string &s) { return s; }
-tstring SystemWindowsClass::ToTString(const std::wstring &s)
-#endif
-{
-	tstring result(s.length(), 0);
-	// copy from one to another
-	std::copy(s.begin(), s.end(), result.begin());
-	return result;
-}
-
-#ifdef _UNICODE
-std::wstring SystemWindowsClass::ToWString(const tstring &s) { return s; }
-std::string SystemWindowsClass::ToAString(const tstring &s)
-#else
-std::string SystemWindowsClass::ToAString(const tstring &s) { return s; }
-std::wstring SystemWindowsClass::ToWString(const tstring &s)
-#endif
-{
-#ifdef _UNICODE
-	string
-#else
-	wstring
-#endif
-		result(s.length(), 0);
-	// copy from one to another
-	std::copy(s.begin(), s.end(), result.begin());
-	return result;
 }
 
 

@@ -45,6 +45,8 @@
 
 namespace FT800EMU {
 
+typedef int32_t ramaddr;
+
 /**
  * MemoryClass
  * \brief MemoryClass
@@ -69,26 +71,26 @@ public:
 	static bool intnHigh();
 
 	// Use separate functions for microcontroller access in case we need to put a hook on certain adresses for performance reasons.
-	static void mcuWriteU32(size_t address, uint32_t data);
-	static uint32_t mcuReadU32(size_t address);
+	static void mcuWriteU32(ramaddr address, uint32_t data);
+	static uint32_t mcuReadU32(ramaddr address);
 	// static void mcuWrite(size_t address, uint8_t data);
 	// static uint8_t mcuRead(size_t address);
 
 	// Use separate functions for coprocessor access in case we need to put a hook on certain adresses for performance reasons.
-	static void coprocessorWriteU32(size_t address, uint32_t data);
-	static uint32_t coprocessorReadU32(size_t address);
-	static void coprocessorWriteU16(size_t address, uint16_t data);
-	static uint16_t coprocessorReadU16(size_t address);
-	static void coprocessorWriteU8(size_t address, uint8_t data);
-	static uint8_t coprocessorReadU8(size_t address);
+	static void coprocessorWriteU32(ramaddr address, uint32_t data);
+	static uint32_t coprocessorReadU32(ramaddr address);
+	static void coprocessorWriteU16(ramaddr address, uint16_t data);
+	static uint16_t coprocessorReadU16(ramaddr address);
+	static void coprocessorWriteU8(ramaddr address, uint8_t data);
+	static uint8_t coprocessorReadU8(ramaddr address);
 	static bool coprocessorGetReset();
 
-	static FT8XXEMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, size_t address, uint32_t data);
-	static FT8XXEMU_FORCE_INLINE uint32_t rawReadU32(uint8_t *buffer, size_t address);
-	static FT8XXEMU_FORCE_INLINE void rawWriteU16(uint8_t *buffer, size_t address, uint16_t data);
-	static FT8XXEMU_FORCE_INLINE uint16_t rawReadU16(uint8_t *buffer, size_t address);
-	static FT8XXEMU_FORCE_INLINE void rawWriteU8(uint8_t *buffer, size_t address, uint8_t data);
-	static FT8XXEMU_FORCE_INLINE uint8_t rawReadU8(uint8_t *buffer, size_t address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, ramaddr address, uint32_t data);
+	static FT8XXEMU_FORCE_INLINE uint32_t rawReadU32(uint8_t *buffer, ramaddr address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU16(uint8_t *buffer, ramaddr address, uint16_t data);
+	static FT8XXEMU_FORCE_INLINE uint16_t rawReadU16(uint8_t *buffer, ramaddr address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU8(uint8_t *buffer, ramaddr address, uint8_t data);
+	static FT8XXEMU_FORCE_INLINE uint8_t rawReadU8(uint8_t *buffer, ramaddr address);
 
 	static void swapDisplayList();
 
@@ -109,49 +111,49 @@ public:
 	static void flagDLSwap();
 
 private:
-	static FT8XXEMU_FORCE_INLINE void rawWriteU32(size_t address, uint32_t data);
-	static FT8XXEMU_FORCE_INLINE uint32_t rawReadU32(size_t address);
-	static FT8XXEMU_FORCE_INLINE void rawWriteU16(size_t address, uint16_t data);
-	static FT8XXEMU_FORCE_INLINE uint16_t rawReadU16(size_t address);
-	static FT8XXEMU_FORCE_INLINE void rawWriteU8(size_t address, uint8_t data);
-	static FT8XXEMU_FORCE_INLINE uint8_t rawReadU8(size_t address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU32(ramaddr address, uint32_t data);
+	static FT8XXEMU_FORCE_INLINE uint32_t rawReadU32(ramaddr address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU16(ramaddr address, uint16_t data);
+	static FT8XXEMU_FORCE_INLINE uint16_t rawReadU16(ramaddr address);
+	static FT8XXEMU_FORCE_INLINE void rawWriteU8(ramaddr address, uint8_t data);
+	static FT8XXEMU_FORCE_INLINE uint8_t rawReadU8(ramaddr address);
 
 	template<typename T>
-	static FT8XXEMU_FORCE_INLINE void actionWrite(const size_t address, T &data);
+	static FT8XXEMU_FORCE_INLINE void actionWrite(const ramaddr address, T &data);
 	template<typename T>
-    static FT8XXEMU_FORCE_INLINE void postWrite(const size_t address, T data);
+	static FT8XXEMU_FORCE_INLINE void postWrite(const ramaddr address, T data);
 
 	MemoryClass(const MemoryClass &);
 	MemoryClass &operator=(const MemoryClass &);
 
 }; /* class MemoryClass */
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(uint8_t *buffer, size_t address, uint32_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(uint8_t *buffer, ramaddr address, uint32_t data)
 {
 	*static_cast<uint32_t *>(static_cast<void *>(&buffer[address])) = data;
 }
 
-FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(uint8_t *buffer, size_t address)
+FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(uint8_t *buffer, ramaddr address)
 {
 	return *static_cast<uint32_t *>(static_cast<void *>(&buffer[address]));
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(uint8_t *buffer, size_t address, uint16_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(uint8_t *buffer, ramaddr address, uint16_t data)
 {
 	*static_cast<uint16_t *>(static_cast<void *>(&buffer[address])) = data;
 }
 
-FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(uint8_t *buffer, size_t address)
+FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(uint8_t *buffer, ramaddr address)
 {
 	return *static_cast<uint16_t *>(static_cast<void *>(&buffer[address]));
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(uint8_t *buffer, size_t address, uint8_t data)
+FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(uint8_t *buffer, ramaddr address, uint8_t data)
 {
 	buffer[address] = data;
 }
 
-FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(uint8_t *buffer, size_t address)
+FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(uint8_t *buffer, ramaddr address)
 {
 	return buffer[address];
 }

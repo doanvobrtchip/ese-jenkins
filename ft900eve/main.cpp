@@ -107,7 +107,7 @@ void setup()
 	{
 		// printf("WRITE %i\n", pma);
 		uint32_t pmd;
-		int read;
+		size_t read;
 		if ((read = fread(&pmd, sizeof(pmd), 1, f)) != 1)
 			break;
 		ft32->pm(pma, pmd);
