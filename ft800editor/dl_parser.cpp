@@ -2186,7 +2186,7 @@ QString DlParser::toString(const DlParsed &parsed)
 void DlParser::escapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
-	for (int c = 0; c < src.size(); ++c)
+	for (size_t c = 0; c < src.size(); ++c)
 	{
 		unsigned char ch = src[c];
 		if (ch == '\t') res << "\\t";

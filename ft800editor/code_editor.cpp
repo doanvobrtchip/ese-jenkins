@@ -312,7 +312,7 @@ void CodeEditor::setTraceHighlights(const std::vector<int> &indices)
 	}
 	else
 	{
-		for (int i = 0; i < indices.size(); ++i)
+		for (size_t i = 0; i < indices.size(); ++i)
 		{
 			if (indices[i] != m_TraceStack[i])
 			{
@@ -324,7 +324,7 @@ void CodeEditor::setTraceHighlights(const std::vector<int> &indices)
 	if (different)
 	{
 		m_TraceStack.clear();
-		for (int i = 0; i < indices.size(); ++i)
+		for (size_t i = 0; i < indices.size(); ++i)
 		{
 			m_TraceStack.push_back(indices[i]);
 		}
@@ -332,10 +332,10 @@ void CodeEditor::setTraceHighlights(const std::vector<int> &indices)
 		if (indices.size() > 0)
 		{
 			m_TraceHighlights.push_back(indices[indices.size() - 1]); // Give last one extra highlight
-			for (int i = 0; i < indices.size() - 1; ++i)
+			for (size_t i = 0; i < indices.size() - 1; ++i)
 			{
 				bool dupe = false;
-				for (int j = 0; j < m_TraceHighlights.size(); ++j)
+				for (size_t j = 0; j < m_TraceHighlights.size(); ++j)
 				{
 					if (indices[i] == m_TraceHighlights[j])
 					{
@@ -410,7 +410,7 @@ void CodeEditor::highlightCurrentLine()
 			selection.cursor.setPosition(document()->findBlockByNumber(m_TraceHighlights[0]).position());
 			extraSelections.append(selection);
 		}
-		for (int i = 1; i < m_TraceHighlights.size(); ++i)
+		for (size_t i = 1; i < m_TraceHighlights.size(); ++i)
 		{
 			if (m_TraceHighlights[i] != m_StepHighlight && m_TraceHighlights[i] >= 0)
 			{
