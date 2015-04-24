@@ -234,7 +234,7 @@ void InteractiveViewport::graphics()
 	{
 		m_TraceStackSize = FTEDITOR_TRACE_STACK_SIZE;
 		FT8XXEMU_processTrace(m_TraceStack, &m_TraceStackSize, m_TraceX, m_TraceY, hsize());
-		for (size_t i = 0; i < m_TraceStackSize; ++i)
+		for (int i = 0; i < m_TraceStackSize; ++i)
 		{
 			int cmdIdx = m_MainWindow->getDlCmd()[m_TraceStack[i]];
 			if (cmdIdx >= 0)

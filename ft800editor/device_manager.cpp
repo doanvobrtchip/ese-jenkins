@@ -15,6 +15,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QPushButton>
 
 // Emulator includes
+#include <ft8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
