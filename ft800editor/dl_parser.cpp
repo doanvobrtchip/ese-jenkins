@@ -205,7 +205,7 @@ void DlParser::init()
 		s_ParamMap["ARGB2"] = ARGB2;
 		s_ParamMap["ARGB4"] = ARGB4;
 #if FT810EMU_MODE
-		s_ParamMap["ARGB8"] = FTEDITOR_ARGB8;
+		s_ParamMap["ARGB8_SNAPSHOT"] = ARGB8_SNAPSHOT;
 #endif
 		s_ParamMap["BARGRAPH"] = BARGRAPH;
 		s_ParamMap["BILINEAR"] = BILINEAR;

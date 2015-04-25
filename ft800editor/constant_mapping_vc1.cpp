@@ -4,6 +4,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "constant_mapping.h"
+#include "constant_mapping_vc1.h"
 
 // Emulator includes
 #include <vc.h>
@@ -12,7 +13,6 @@ namespace FTEDITOR {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_AddrVC1[FTEDITOR_RAM_NB];
 const int32_t g_AddrVC1[FTEDITOR_RAM_NB] = {
 	RAM_G,
 	RAM_DL,
@@ -21,7 +21,6 @@ const int32_t g_AddrVC1[FTEDITOR_RAM_NB] = {
 	RAM_CMD,
 };
 
-extern const char *g_AddrToStringVC1[FTEDITOR_RAM_NB];
 const char *g_AddrToStringVC1[FTEDITOR_RAM_NB] = {
 	"RAM_G",
 	"RAM_DL",
@@ -32,7 +31,6 @@ const char *g_AddrToStringVC1[FTEDITOR_RAM_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_RegVC1[FTEDITOR_REG_NB];
 const int32_t g_RegVC1[FTEDITOR_REG_NB] = {
 	REG_ID,
 	REG_FRAMES,
@@ -148,8 +146,6 @@ const int32_t g_RegVC1[FTEDITOR_REG_NB] = {
 	-1, // REG_MEDIAFIFO_WRITE,
 };
 
-extern const char *g_RegToStringFT800[FTEDITOR_REG_NB];
-extern const char *g_RegToStringFT801[FTEDITOR_REG_NB];
 const char *g_RegToStringFT800[FTEDITOR_REG_NB] = {
 	"REG_ID",
 	"REG_FRAMES",
@@ -382,7 +378,7 @@ const char *g_RegToStringFT801[FTEDITOR_REG_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-const char *g_BitmapFormatToStringVC1[] = {
+const char *g_BitmapFormatToStringVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
 	"ARGB1555", // 0
 	"L1",
 	"L4",
@@ -395,6 +391,38 @@ const char *g_BitmapFormatToStringVC1[] = {
 	"TEXT8X8", // 9
 	"TEXTVGA", // 10
 	"BARGRAPH", // 11
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_ImageFormatFromIntfVC1[FTEDITOR_IMAGE_FORMAT_INTF_NB_VC1] = {
+	ARGB1555,
+	L1,
+	L4,
+	L8,
+	RGB332,
+	ARGB2,
+	ARGB4,
+	RGB565,
+	PALETTED,
+};
+
+const int g_ImageFormatToIntfVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
+	0, 1, 2, 3, 5, 6, 7, 8,
+	0, 0, 0, 0
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_FontFormatFromIntfVC1[FTEDITOR_FONT_FORMAT_INTF_NB_VC1] = {
+	L1,
+	L4,
+	L8,
+};
+
+const int g_FontFormatToIntfVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
+	1, 0, 1, 2, 1, 1, 1, 1,
+	1, 1, 1, 1
 };
 
 ///////////////////////////////////////////////////////////////////////

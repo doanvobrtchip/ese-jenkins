@@ -4,6 +4,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "constant_mapping.h"
+#include "constant_mapping_vc2.h"
 
 // Emulator includes
 #include <vc2.h>
@@ -12,7 +13,6 @@ namespace FTEDITOR {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
 const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_G,
 	RAM_DL,
@@ -21,7 +21,6 @@ const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_CMD,
 };
 
-extern const char *g_AddrToStringVC2[FTEDITOR_RAM_NB];
 const char *g_AddrToStringVC2[FTEDITOR_RAM_NB] = {
 	"RAM_G",
 	"RAM_DL",
@@ -32,7 +31,6 @@ const char *g_AddrToStringVC2[FTEDITOR_RAM_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-extern const int32_t g_RegVC2[FTEDITOR_REG_NB];
 const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	REG_ID,
 	REG_FRAMES,
@@ -148,7 +146,6 @@ const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	REG_MEDIAFIFO_WRITE,
 };
 
-extern const char *g_RegToStringVC2[FTEDITOR_REG_NB];
 const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
 	"REG_ID",
 	"REG_FRAMES",
@@ -266,7 +263,7 @@ const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
-const char *g_BitmapFormatToStringVC2[] = {
+const char *g_BitmapFormatToStringVC2[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC2] = {
 	"ARGB1555", // 0
 	"L1",
 	"L4",
@@ -299,7 +296,65 @@ const char *g_BitmapFormatToStringVC2[] = {
 	"", // 29
 	"", // 30
 	"", // 31
-	"ARGB8", // 32 // 0x20
+	"ARGB8_SNAPSHOT", // 32 // 0x20
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_SnapshotFormatFromIntfVC2[FTEDITOR_SNAPSHOT_FORMAT_INTF_NB_VC2] = {
+	RGB565,
+	ARGB4,
+	ARGB8_SNAPSHOT,
+};
+
+const int g_SnapshotFormatToIntfVC2[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC2] = {
+	0, 0, 0, 0, 0, 0, 1, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	2
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_ImageFormatFromIntfVC2[FTEDITOR_IMAGE_FORMAT_INTF_NB_VC2] = {
+	ARGB1555,
+	L1,
+	L2,
+	L4,
+	L8,
+	RGB332,
+	ARGB2,
+	ARGB4,
+	RGB565,
+	PALETTED565,
+	PALETTED4444,
+	PALETTED8,
+};
+
+const int g_ImageFormatToIntfVC2[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC2] = {
+	0, 1, 3, 4, 5, 6, 7, 8,
+	11, 0, 0, 0, 0, 0, 9, 10,
+	11, 2, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0
+};
+
+///////////////////////////////////////////////////////////////////////
+
+const int g_FontFormatFromIntfVC2[FTEDITOR_FONT_FORMAT_INTF_NB_VC2] = {
+	L1,
+	L2,
+	L4,
+	L8,
+};
+
+const int g_FontFormatToIntfVC2[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC2] = {
+	1, 0, 2, 3, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 
+	1, 1, 1, 1, 1, 1, 1, 1, 
+	1, 1, 1, 1, 1, 1, 1, 1, 
+	1, 
 };
 
 ///////////////////////////////////////////////////////////////////////

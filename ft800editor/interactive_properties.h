@@ -85,7 +85,7 @@ private:
 	// void addAddress(int address);
 	void addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage);
 	void addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage);
-	void addComboBox(int index, const char **items, int nb, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz, const QString &label, const QString &undoMessage);
+	void addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage);
 	void addBlendFunction(int blend, const QString &label, const QString &undoMessage);
 	void addCompareFunction(int compare);
 	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);

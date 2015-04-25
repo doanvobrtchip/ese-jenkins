@@ -503,11 +503,11 @@ void InteractiveProperties::addComboBox(int index, const char **items, int begin
 	prop->ready();
 }
 
-void InteractiveProperties::addComboBox(int index, const char **items, int nb, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz, const QString &label, const QString &undoMessage)
+void InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage)
 {
-	PropertiesRemapComboBox *prop = new PropertiesRemapComboBox(this, undoMessage, index, toIntf, toIntfSz, toEnum, toEnumSz);
-	for (int i = 0; i < nb; ++i)
-		prop->addItem(items[i]);
+	PropertiesRemapComboBox *prop = new PropertiesRemapComboBox(this, undoMessage, index, toIntf, toIntfStringSz, toEnum, toEnumSz);
+	for (int i = 0; i < toEnumSz; ++i)
+		prop->addItem(toString[toEnum[i]]);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
@@ -1160,7 +1160,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SNAPSHOT2."));
 			if (editor)
 			{
-				static const char *items[] = {
+				/*static const char *items[] = {
 					"RGB565",
 					"ARGB4",
 					"ARGB8",
@@ -1176,10 +1176,17 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 					0, 0, 0, 0, 0, 0, 0, 0,
 					0, 0, 0, 0, 0, 0, 0, 0,
 					2
-				};
+				};*/
 				setTitle("CMD_SNAPSHOT2");
-				addComboBox(0, items, sizeof(items) / sizeof(items[0]),
+				/*addComboBox(0, items, sizeof(items) / sizeof(items[0]),
 					toIntf, sizeof(toIntf) / sizeof(toIntf[0]), toEnum, sizeof(toEnum) / sizeof(toEnum[0]),
+					tr("Format") + ": ", tr("Set snapshot format"));*/
+				addComboBox(0, 
+					g_SnapshotFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+					g_SnapshotFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+					g_SnapshotFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+					g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+					g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
 					tr("Format") + ": ", tr("Set snapshot format"));
 				addAddress(1);
 				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);

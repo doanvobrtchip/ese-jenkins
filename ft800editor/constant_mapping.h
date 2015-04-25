@@ -246,10 +246,25 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_NOP 45
 
 // Mappings for bitmap formats
-#define FTEDITOR_ARGB8 0x20 // Additional bitmap format
+#define ARGB8_SNAPSHOT 0x20
 extern const char **g_BitmapFormatToString[FTEDITOR_DEVICE_NB];
-extern int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB];
+extern const int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB];
 inline const char *bitmapFormatToString(int deviceIntf, int bitmapFormatEnum) { return bitmapFormatEnum < g_BitmapFormatEnumNb[deviceIntf] ? g_BitmapFormatToString[deviceIntf][bitmapFormatEnum] : ""; }
+
+// Snapshot formats, using bitmap formats enum
+extern const int g_SnapshotFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_SnapshotFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_SnapshotFormatToIntf[FTEDITOR_DEVICE_NB];
+
+// Image formats, using bitmap formats enum
+extern const int g_ImageFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_ImageFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_ImageFormatToIntf[FTEDITOR_DEVICE_NB];
+
+// Font formats, using bitmap formats enum
+extern const int g_FontFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_FontFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_FontFormatToIntf[FTEDITOR_DEVICE_NB];
 
 } /* namespace FTEDITOR */
 

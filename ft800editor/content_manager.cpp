@@ -46,141 +46,6 @@ using namespace std;
 
 namespace FTEDITOR {
 
-namespace /* anonymous */ {
-
-///////////////////////////////////////////////////////////////////////
-
-#ifdef FT810EMU_MODE
-static const int s_ImageFormatToUI[] = {
-	0, // 0: ARGB1555
-	1, // 1: L1
-	3, // 2: L4
-	4, // 3: L8
-	5, // 4: RGB332
-	6, // 5: ARGB2
-	7, // 6: ARGB4
-	8, // 7: RGB565
-	11, // 8: PALETTED
-	0, // 9
-	0, // 10
-	0, // 11
-	0, // 12
-	0, // 13
-	9, // 14: PALETTED565
-	10, // 15: PALETTED4444
-	11, // 16: PALETTED8
-	2, // 17: L2
-};
-#else
-static const int s_ImageFormatToUI[] = {
-	0, // ARGB1555
-	1, // L1
-	2, // L4
-	3, // L8
-	4, // RGB332
-	5, // ARGB2
-	6, // ARGB4
-	7, // RGB565
-	8, // PALETTED
-};
-#endif
-
-static const int s_ImageFormatFromUI[] = {
-	0, // ARGB1555
-	1, // L1
-#ifdef FT810EMU_MODE
-	17, // L2
-#endif
-	2, // L4
-	3, // L8
-	4, // RGB332
-	5, // ARGB2
-	6, // ARGB4
-	7, // RGB565
-#ifdef FT810EMU_MODE
-	14, // PALETTED565
-	15, // PALETTED4444
-	16, // PALETTED8
-#else
-	8, // PALETTED
-#endif
-};
-
-///////////////////////////////////////////////////////////////////////
-
-static const char *s_BitmapFormatNames[] = {
-	"ARGB1555",
-	"L1",
-	"L4",
-	"L8",
-	"RGB332",
-	"ARGB2",
-	"ARGB4",
-	"RGB565",
-	"PALETTED",
-#ifdef FT810EMU_MODE
-	"9",
-	"10",
-	"11",
-	"12",
-	"13",
-	"PALETTED565",
-	"PALETTED4444",
-	"PALETTED8",
-	"L2",
-#endif
-};
-
-///////////////////////////////////////////////////////////////////////
-
-#ifdef FT810EMU_MODE
-static const int s_FontFormatToUI[] = {
-	1, // 0: ARGB1555
-	0, // 1: L1
-	2, // 2: L4
-	3, // 3: L8
-	1, // 4: RGB332
-	1, // 5: ARGB2
-	1, // 6: ARGB4
-	1, // 7: RGB565
-	1, // 8: PALETTED
-	1, // 9
-	1, // 10
-	1, // 11
-	1, // 12
-	1, // 13
-	1, // 14: PALETTED565
-	1, // 15: PALETTED4444
-	1, // 16: PALETTED8
-	1, // 17: L2
-};
-#else
-static const int s_FontFormatToUI[] = {
-	1, // ARGB1555
-	0, // L1
-	1, // L4
-	2, // L8
-	1, // RGB332
-	1, // ARGB2
-	1, // ARGB4
-	1, // RGB565
-	1, // PALETTED
-};
-#endif
-
-static const int s_FontFormatFromUI[] = {
-	1, // L1
-#ifdef FT810EMU_MODE
-	17, // L2
-#endif
-	2, // L4
-	3, // L8
-};
-
-///////////////////////////////////////////////////////////////////////
-
-} /* anonymous namespace */
-
 int g_RamGlobalUsage = 0;
 
 std::vector<QString> ContentManager::s_FileExtensions;
@@ -437,17 +302,9 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	for (int i = 0; i < sizeof(s_ImageFormatFromUI) / sizeof(s_ImageFormatFromUI[0]); ++i)
-		m_PropertiesImageFormat->addItem(s_BitmapFormatNames[s_ImageFormatFromUI[i]]);
-	/*m_PropertiesImageFormat->addItem("ARGB1555");
-	m_PropertiesImageFormat->addItem("L1");
-	m_PropertiesImageFormat->addItem("L4");
-	m_PropertiesImageFormat->addItem("L8");
-	m_PropertiesImageFormat->addItem("RGB332");
-	m_PropertiesImageFormat->addItem("ARGB2");
-	m_PropertiesImageFormat->addItem("ARGB4");
-	m_PropertiesImageFormat->addItem("RGB565");
-	m_PropertiesImageFormat->addItem("PALETTED");*/
+	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+		m_PropertiesImageFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
@@ -466,13 +323,9 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesFont->setTitle(tr("Font"));
 	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
 	m_PropertiesFontFormat = new QComboBox(this);
-	for (int i = 0; i < sizeof(s_FontFormatFromUI) / sizeof(s_FontFormatFromUI[0]); ++i)
-		m_PropertiesFontFormat->addItem(s_BitmapFormatNames[s_FontFormatFromUI[i]]);
-	/*
-	m_PropertiesFontFormat->addItem("L1");
-	m_PropertiesFontFormat->addItem("L4");
-	m_PropertiesFontFormat->addItem("L8");
-	*/
+	for (int i = 0; i < g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	
 	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
 	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
 	m_PropertiesFontSize = new UndoStackDisabler<QSpinBox>(this);
@@ -1051,14 +904,14 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	switch (contentInfo->Converter)
 	{
 	case ContentInfo::Image:
-		m_PropertiesImageFormat->setCurrentIndex(s_ImageFormatToUI[contentInfo->ImageFormat % (sizeof(s_ImageFormatToUI) / sizeof(s_ImageFormatToUI[0]))]);
+		m_PropertiesImageFormat->setCurrentIndex(g_ImageFormatToIntf[FTEDITOR_CURRENT_DEVICE][contentInfo->ImageFormat % g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE]]);
 		break;
 	case ContentInfo::Raw:
 		m_PropertiesRawStart->setValue(contentInfo->RawStart);
 		m_PropertiesRawLength->setValue(contentInfo->RawLength);
 		break;
 	case ContentInfo::Font:
-		m_PropertiesFontFormat->setCurrentIndex(s_FontFormatToUI[contentInfo->ImageFormat % (sizeof(s_FontFormatToUI) / sizeof(s_FontFormatToUI[0]))]);
+		m_PropertiesFontFormat->setCurrentIndex(g_FontFormatToIntf[FTEDITOR_CURRENT_DEVICE][contentInfo->ImageFormat % g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE]]);
 		m_PropertiesFontSize->setValue(contentInfo->FontSize);
 		m_PropertiesFontCharSet->setText(contentInfo->FontCharSet); // NOTE: Number of characters up to 128; export depends on number of characters in charset also!
 		break;
@@ -2505,7 +2358,7 @@ void ContentManager::propertiesImageFormatChanged(int value)
 {
 	printf("ContentManager::propertiesImageFormatChanged(value)\n");
 
-	value = s_ImageFormatFromUI[value % (sizeof(s_ImageFormatFromUI) / sizeof(s_ImageFormatFromUI[0]))];
+	value = g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][value % g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]];
 
 	if (current() && current()->ImageFormat != value)
 		changeImageFormat(current(), value);
@@ -3014,7 +2867,7 @@ void ContentManager::propertiesFontFormatChanged(int value)
 {
 	printf("ContentManager::propertiesFontFormatChanged(value)\n");
 
-	value = s_FontFormatFromUI[value % (sizeof(s_FontFormatFromUI) / sizeof(s_FontFormatFromUI[0]))];
+	value = g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][value % g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]];
 
 	if (current() && current()->ImageFormat != (value))
 		changeFontFormat(current(), (value));
