@@ -2756,6 +2756,10 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	// TODO:
 	// Inside ProjectDeviceCommand store the original display lists (incl macro) plus a backup of the current ContentInfo settings
 	// During ProjectDeviceCommand->redo() calculate the new display lists (incl macro) plus the new contentinfo settings for image formats etc
+	// - Coprocessor list, display list, macro list
+	// - Content info bitmap format L2, palette (plus palette addr) (font and image)
+	// - Display width and height limit
+	// Correctly set bitmap address in font header block during content upload
 }
 
 class ProjectDeviceCommand : public QUndoCommand
