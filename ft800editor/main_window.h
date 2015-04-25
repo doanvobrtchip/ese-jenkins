@@ -40,6 +40,7 @@ class QSpinBox;
 class QCheckBox;
 class QTabBar;
 class QProgressBar;
+class QComboBox;
 
 namespace FTEDITOR {
 
@@ -168,6 +169,8 @@ private slots:
 	void refreshScriptsMenu();
 	void updateWindowTitle();
 
+	void projectDeviceChanged(int i);
+
 private:
 	void updateInitialization(bool visible);
 
@@ -187,6 +190,10 @@ private:
 	void incbLanguageCode();
 
 	bool maybeSave();
+
+	void stopEmulatorInternal();
+	void startEmulatorInternal();
+	void changeEmulatorInternal(int deviceIntf);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -238,6 +245,9 @@ private:
 	QProgressBar *m_UtilizationBitmapHandleStatus;
 	QProgressBar *m_UtilizationDisplayListStatus;
 	QProgressBar *m_UtilizationGlobalStatus;
+
+	QDockWidget *m_ProjectDock;
+	QComboBox *m_ProjectDevice;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
@@ -291,6 +301,8 @@ private:
 
 	QString m_CurrentFile;
 	QTemporaryDir *m_TemporaryDir;
+
+	friend class ProjectDeviceCommand;
 
 }; /* class MainWindow */
 

@@ -44,6 +44,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QPlainTextEdit>
 #include <QDesktopServices>
 #include <QScrollBar>
+#include <QComboBox>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -734,40 +735,14 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	s_CmdEditor = m_CmdEditor;
 	s_Macro = m_Macro;
 
-	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
-	params.Setup = setup;
-	params.Loop = loop;
-	params.Flags =
-		// FT800EMU::EmulatorEnableKeyboard
-		/*|*/ FT8XXEMU_EmulatorEnableMouse
-		//| FT800EMU::EmulatorEnableDebugShortkeys
-#ifdef FTEMU_SDL2 // Cannot combine XAudio2 with Qt
-		| FT8XXEMU_EmulatorEnableAudio
-#endif
-		| FT8XXEMU_EmulatorEnableCoprocessor
-		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableDynamicDegrade
-		;
-#ifdef FT810EMU_MODE
-	params.Mode = FT8XXEMU_EmulatorFT810;
-#else
-	params.Mode = FT8XXEMU_EmulatorFT801;
-#endif
-	params.Close = closeDummy;
-	params.Keyboard = keyboard;
-	s_EmulatorRunning = true;
-	m_EmulatorViewport->run(params);
-
-	FT8XXEMU_setDebugLimiter(2048 * 64);
+	startEmulatorInternal();
 
 	actNew(true);
 }
 
 MainWindow::~MainWindow()
 {
-	s_EmulatorRunning = false;
-	m_EmulatorViewport->stop();
+	stopEmulatorInternal();
 
 	m_ContentManager->lockContent();
 	s_DlEditor = NULL;
@@ -1249,6 +1224,71 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
+	// Navigator
+	{
+		m_NavigatorDock = new QDockWidget(this);
+		m_NavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_NavigatorDock->setObjectName("Navigator");
+		m_EmulatorNavigator = new EmulatorNavigator(this, m_EmulatorViewport);
+		m_NavigatorDock->setWidget(m_EmulatorNavigator);
+		m_NavigatorDock->setMinimumHeight(100);
+		addDockWidget(Qt::RightDockWidgetArea, m_NavigatorDock);
+		m_WidgetsMenu->addAction(m_NavigatorDock->toggleViewAction());
+	}
+
+	// Project
+	{
+		m_ProjectDock = new QDockWidget(this);
+		m_ProjectDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ProjectDock->setObjectName("Project");
+		QScrollArea *scrollArea = new QScrollArea(this);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setWidgetResizable(true);
+		scrollArea->setMinimumWidth(240);
+		QWidget *widget = new QWidget(this);
+		QVBoxLayout *layout = new QVBoxLayout();
+
+		// Device
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Device"));
+			QHBoxLayout *groupLayout = new QHBoxLayout();
+
+			/*m_TraceEnabled = new QCheckBox(this);
+			m_TraceEnabled->setChecked(false);
+			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
+			groupLayout->addWidget(m_TraceEnabled);
+			m_TraceX = new QSpinBox(this);
+			m_TraceX->setMinimum(0);
+			m_TraceX->setMaximum(511);
+			m_TraceX->setEnabled(false);
+			groupLayout->addWidget(m_TraceX);
+			m_TraceY = new QSpinBox(this);
+			m_TraceY->setMinimum(0);
+			m_TraceY->setMaximum(511);
+			m_TraceY->setEnabled(false);
+			groupLayout->addWidget(m_TraceY);*/
+
+			m_ProjectDevice = new QComboBox(this);
+			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
+				m_ProjectDevice->addItem(deviceToString(i));
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
+			groupLayout->addWidget(m_ProjectDevice);
+			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+
+		layout->addStretch();
+
+		widget->setLayout(layout);
+		scrollArea->setWidget(widget);
+		m_ProjectDock->setWidget(scrollArea);
+		addDockWidget(Qt::RightDockWidgetArea, m_ProjectDock);
+		m_WidgetsMenu->addAction(m_ProjectDock->toggleViewAction());
+	}
+
 #if FT800_DEVICE_MANAGER
 	// Devices
 	{
@@ -1346,18 +1386,6 @@ void MainWindow::createDockWindows()
 		// m_WidgetsMenu->addAction(m_UtilizationDock->toggleViewAction()); Disabled for now
 
 		m_UtilizationDock->setVisible(false);
-	}
-
-	// Navigator
-	{
-		m_NavigatorDock = new QDockWidget(this);
-		m_NavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
-		m_NavigatorDock->setObjectName("Navigator");
-		m_EmulatorNavigator = new EmulatorNavigator(this, m_EmulatorViewport);
-		m_NavigatorDock->setWidget(m_EmulatorNavigator);
-		m_NavigatorDock->setMinimumHeight(100);
-		addDockWidget(Qt::RightDockWidgetArea, m_NavigatorDock);
-		m_WidgetsMenu->addAction(m_NavigatorDock->toggleViewAction());
 	}
 
 	// PropertiesEditor
@@ -1515,7 +1543,7 @@ void MainWindow::createDockWindows()
 		// Size
 		{
 			QGroupBox *sizeGroup = new QGroupBox(widget);
-			sizeGroup->setTitle(tr("Size"));
+			sizeGroup->setTitle(tr("Display Size"));
 			QVBoxLayout *sizeLayout = new QVBoxLayout();
 
 			m_HSize = new QSpinBox(widget);
@@ -1547,7 +1575,7 @@ void MainWindow::createDockWindows()
 		// Macro
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
-			macroGroup->setTitle(tr("Macro"));
+			macroGroup->setTitle(tr("Macro (REG_MACRO0, REG_MACRO1)"));
 			QVBoxLayout *macroLayout = new QVBoxLayout();
 
 			m_Macro = new DlEditor(this);
@@ -1645,7 +1673,7 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
-
+	
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
@@ -1676,6 +1704,7 @@ void MainWindow::translateDockWindows()
 	m_InspectorDock->setWindowTitle(tr("Inspector"));
 	m_DlEditorDock->setWindowTitle(tr("Display List"));
 	m_CmdEditorDock->setWindowTitle(tr("Coprocessor"));
+	m_ProjectDock->setWindowTitle(tr("Project"));
 #if FT800_DEVICE_MANAGER
 	m_DeviceManagerDock->setWindowTitle(tr("Devices"));
 #endif /* FT800_DEVICE_MANAGER */
@@ -2018,6 +2047,7 @@ void MainWindow::traceEnabledChanged(bool enabled)
 
 void MainWindow::clearEditor()
 {
+	m_ProjectDevice->setCurrentIndex(FTEDITOR_DEFAULT_DEVICE);
 	m_HSize->setValue(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	m_VSize->setValue(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 	m_StepEnabled->setChecked(false);
@@ -2649,9 +2679,7 @@ ExportWriteError:
 void MainWindow::actResetEmulator()
 {
 	// Stop the emulator
-	printf("Stop the emulator\n");
-	s_EmulatorRunning = false;
-	m_EmulatorViewport->stop();
+	stopEmulatorInternal();
 
 	// Reset data
 	printf("Reset emulator parameters\n");
@@ -2659,6 +2687,18 @@ void MainWindow::actResetEmulator()
 	m_ContentManager->reuploadAll();
 
 	// Start the emulator
+	startEmulatorInternal();
+}
+
+void MainWindow::stopEmulatorInternal()
+{
+	printf("Stop the emulator\n");
+	s_EmulatorRunning = false;
+	m_EmulatorViewport->stop();
+}
+
+void MainWindow::startEmulatorInternal()
+{
 	printf("Start the emulator\n");
 	FT8XXEMU_EmulatorParameters params;
 	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
@@ -2675,17 +2715,64 @@ void MainWindow::actResetEmulator()
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		;
-#ifdef FT810EMU_MODE
-	params.Mode = FT8XXEMU_EmulatorFT810;
-#else
-	params.Mode = FT8XXEMU_EmulatorFT801;
-#endif
+	params.Mode = deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	params.Close = closeDummy;
 	params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
 	FT8XXEMU_setDebugLimiter(2048 * 64);
+}
+
+void MainWindow::changeEmulatorInternal(int deviceIntf)
+{
+	if (deviceIntf == FTEDITOR_CURRENT_DEVICE)
+		return;
+
+	// Remove any references to the current emulator device version
+	m_Inspector->unbindCurrentDevice();
+
+	// Stop the emulator
+	stopEmulatorInternal();
+
+	// Set the new emulator version
+	FTEDITOR_CURRENT_DEVICE = deviceIntf;
+
+	// Reset emulator data
+	printf("Reset emulator parameters\n");
+	resetemu();
+	m_ContentManager->reuploadAll();
+
+	// Start the emulator
+	startEmulatorInternal();
+
+	// Re-establish the current emulator device
+	m_Inspector->bindCurrentDevice();
+}
+
+class ProjectDeviceCommand : public QUndoCommand
+{
+public:
+	ProjectDeviceCommand(int deviceIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectDevice(deviceIntf), m_OldProjectDevice(FTEDITOR_CURRENT_DEVICE), m_MainWindow(mainWindow) { }
+	virtual ~ProjectDeviceCommand() { }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual int id() const { return 98919600; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectDevice = static_cast<const ProjectDeviceCommand *>(command)->m_NewProjectDevice; return true; }
+
+private:
+	int m_NewProjectDevice;
+	int m_OldProjectDevice;
+	MainWindow *m_MainWindow;
+
+};
+
+void MainWindow::projectDeviceChanged(int deviceIntf)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	m_UndoStack->push(new ProjectDeviceCommand(deviceIntf, this));
 }
 
 void MainWindow::actSaveScreenshot()

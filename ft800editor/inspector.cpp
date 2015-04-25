@@ -27,7 +27,6 @@
 
 // Emulator includes
 #include <ft8xxemu_diag.h>
-#include <ft800emu_vc.h>
 
 // Project includes
 #include "main_window.h"
@@ -38,176 +37,6 @@
 using namespace std;
 
 namespace FTEDITOR {
-
-static const char *regNames[] = {
-	"REG_ID", // 0
-	"REG_FRAMES", // 1
-	"REG_CLOCK", // 2
-	"REG_FREQUENCY",// 3
-	"REG_RENDERMODE",// 4
-	"REG_SNAPY",// 5
-	"REG_SNAPSHOT", // 6
-	"REG_CPURESET", // 7
-	"REG_TAP_CRC", // 8
-	"REG_TAP_MASK", // 9
-	"REG_HCYCLE", // 10
-	"REG_HOFFSET", // 11
-	"REG_HSIZE", // 12
-	"REG_HSYNC0", // 13
-	"REG_HSYNC1", // 14
-	"REG_VCYCLE", // 15
-	"REG_VOFFSET", // 16
-	"REG_VSIZE", // 17
-	"REG_VSYNC0",
-	"REG_VSYNC1",
-	"REG_DLSWAP", // 20
-	"REG_ROTATE",
-	"REG_OUTBITS",
-	"REG_DITHER",
-	"REG_SWIZZLE",
-	"REG_CSPREAD",
-	"REG_PCLK_POL",
-	"REG_PCLK",
-	"REG_TAG_X",
-	"REG_TAG_Y",
-	"REG_TAG", // 30
-	"REG_VOL_PB", // 31
-	"REG_VOL_SOUND", // 32
-	"REG_SOUND", // 33
-	"REG_PLAY", // 34
-	"REG_GPIO_DIR", // 35
-	"REG_GPIO", // 36
-	"REG_INT_FLAGS",
-	"REG_INT_EN",
-	"REG_INT_MASK", // 40
-	"REG_PLAYBACK_START",
-	"REG_PLAYBACK_LENGTH",
-	"REG_PLAYBACK_READPTR",
-	"REG_PLAYBACK_FREQ",
-	"REG_PLAYBACK_FORMAT",
-	"REG_PLAYBACK_LOOP",
-	"REG_PLAYBACK_PLAY",
-	"REG_PWM_HZ",
-	"REG_PWM_DUTY",
-	"REG_MACRO_0", // 50
-	"REG_MACRO_1",
-	"REG_CYA0",
-	"REG_CYA1",
-	"REG_BUSYBITS",
-	"REG_ROMSUB_SEL", // 56
-	"REG_CMD_READ",
-	"REG_CMD_WRITE",
-	"REG_CMD_DL",
-	"REG_TOUCH_MODE", // 60
-	"REG_TOUCH_ADC_MODE",
-	"REG_TOUCH_CHARGE",
-	"REG_TOUCH_SETTLE",
-	"REG_TOUCH_OVERSAMPLE",
-	"REG_TOUCH_RZTHRESH",
-	"REG_TOUCH_RAW_XY",
-	"REG_TOUCH_RZ",
-	"REG_TOUCH_SCREEN_XY",
-	"REG_TOUCH_TAG_XY",
-	"REG_TOUCH_TAG", // 70
-	"REG_TOUCH_TRANSFORM_A",
-	"REG_TOUCH_TRANSFORM_B",
-	"REG_TOUCH_TRANSFORM_C",
-	"REG_TOUCH_TRANSFORM_D",
-	"REG_TOUCH_TRANSFORM_E",
-	"REG_TOUCH_TRANSFORM_F",
-	"REG_DATESTAMP", // 79
-	"REG_TOUCH_DIRECT_XY", // 93
-	"REG_TOUCH_DIRECT_Z1Z2", // 94
-	"REG_TRACKER", // 95
-#ifdef FT810EMU_MODE
-	"REG_CMDB_SPACE",
-#endif
-};
-
-static const uint32_t regAddresses[] = {
-	REG_ID, // 0
-	REG_FRAMES, // 1
-	REG_CLOCK, // 2
-	REG_FREQUENCY,// 3
-	REG_RENDERMODE,// 4
-	REG_SNAPY,// 5
-	REG_SNAPSHOT, // 6
-	REG_CPURESET, // 7
-	REG_TAP_CRC, // 8
-	REG_TAP_MASK, // 9
-	REG_HCYCLE, // 10
-	REG_HOFFSET, // 11
-	REG_HSIZE, // 12
-	REG_HSYNC0, // 13
-	REG_HSYNC1, // 14
-	REG_VCYCLE, // 15
-	REG_VOFFSET, // 16
-	REG_VSIZE, // 17
-	REG_VSYNC0,
-	REG_VSYNC1,
-	REG_DLSWAP, // 20
-	REG_ROTATE,
-	REG_OUTBITS,
-	REG_DITHER,
-	REG_SWIZZLE,
-	REG_CSPREAD,
-	REG_PCLK_POL,
-	REG_PCLK,
-	REG_TAG_X,
-	REG_TAG_Y,
-	REG_TAG, // 30
-	REG_VOL_PB, // 31
-	REG_VOL_SOUND, // 32
-	REG_SOUND, // 33
-	REG_PLAY, // 34
-	REG_GPIO_DIR, // 35
-	REG_GPIO, // 36
-	REG_INT_FLAGS,
-	REG_INT_EN,
-	REG_INT_MASK, // 40
-	REG_PLAYBACK_START,
-	REG_PLAYBACK_LENGTH,
-	REG_PLAYBACK_READPTR,
-	REG_PLAYBACK_FREQ,
-	REG_PLAYBACK_FORMAT,
-	REG_PLAYBACK_LOOP,
-	REG_PLAYBACK_PLAY,
-	REG_PWM_HZ,
-	REG_PWM_DUTY,
-	REG_MACRO_0, // 50
-	REG_MACRO_1,
-	REG_CYA0,
-	REG_CYA1,
-	REG_BUSYBITS,
-	REG_ROMSUB_SEL, // 56
-	REG_CMD_READ,
-	REG_CMD_WRITE,
-	REG_CMD_DL,
-	REG_TOUCH_MODE, // 60
-	REG_TOUCH_ADC_MODE,
-	REG_TOUCH_CHARGE,
-	REG_TOUCH_SETTLE,
-	REG_TOUCH_OVERSAMPLE,
-	REG_TOUCH_RZTHRESH,
-	REG_TOUCH_RAW_XY,
-	REG_TOUCH_RZ,
-	REG_TOUCH_SCREEN_XY,
-	REG_TOUCH_TAG_XY,
-	REG_TOUCH_TAG, // 70
-	REG_TOUCH_TRANSFORM_A,
-	REG_TOUCH_TRANSFORM_B,
-	REG_TOUCH_TRANSFORM_C,
-	REG_TOUCH_TRANSFORM_D,
-	REG_TOUCH_TRANSFORM_E,
-	REG_TOUCH_TRANSFORM_F,
-	REG_DATESTAMP, // 79
-	REG_TOUCH_DIRECT_XY, // 93
-	REG_TOUCH_DIRECT_Z1Z2, // 94
-	REG_TRACKER, // 95
-#ifdef FT810EMU_MODE
-	REG_CMDB_SPACE,
-#endif
-};
 
 static QString asRaw(uint32_t value)
 {
@@ -284,10 +113,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
         m_DisplayList->resizeColumnToContents(i);
 	m_DisplayListItems[0]->setText(0, "0");
 
-	initDisplayReg();
-
-    for (int i = 0; i < 3; ++i)
-        m_Registers->resizeColumnToContents(i);
+	bindCurrentDevice();
 }
 
 Inspector::~Inspector()
@@ -295,33 +121,45 @@ Inspector::~Inspector()
 
 }
 
-bool wantRegister(uint32_t address)
+void Inspector::bindCurrentDevice()
 {
-	switch (address)
+	initDisplayReg();
+
+	for (int i = 0; i < 3; ++i)
+		m_Registers->resizeColumnToContents(i);
+}
+
+void Inspector::unbindCurrentDevice()
+{
+	releaseDisplayReg();
+}
+
+bool wantRegister(int regEnum)
+{
+	switch (regEnum)
 	{
 		// Whitelist useful registers
-	case REG_ID:
-	case REG_FRAMES:
-	case REG_HSIZE:
-	case REG_VSIZE:
-	case REG_ROTATE:
-	case REG_CMD_READ:
-	case REG_CMD_WRITE:
-	case REG_CMD_DL:
-	case REG_TOUCH_SCREEN_XY:
-	case REG_TOUCH_TAG_XY:
-	case REG_TOUCH_TAG:
-	case REG_TOUCH_TRANSFORM_A:
-	case REG_TOUCH_TRANSFORM_B:
-	case REG_TOUCH_TRANSFORM_C:
-	case REG_TOUCH_TRANSFORM_D:
-	case REG_TOUCH_TRANSFORM_E:
-	case REG_TOUCH_TRANSFORM_F:
-	case REG_TRACKER:
-#ifdef FT810EMU_MODE
-	case REG_CMDB_SPACE:
-#endif
+	case FTEDITOR_REG_ID:
+	case FTEDITOR_REG_FRAMES:
+	case FTEDITOR_REG_HSIZE:
+	case FTEDITOR_REG_VSIZE:
+	case FTEDITOR_REG_ROTATE:
+	case FTEDITOR_REG_CMD_READ:
+	case FTEDITOR_REG_CMD_WRITE:
+	case FTEDITOR_REG_CMD_DL:
+	case FTEDITOR_REG_TOUCH_SCREEN_XY:
+	case FTEDITOR_REG_TOUCH_TAG_XY:
+	case FTEDITOR_REG_TOUCH_TAG:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_A:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_B:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_C:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_D:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_E:
+	case FTEDITOR_REG_TOUCH_TRANSFORM_F:
+	case FTEDITOR_REG_TRACKER:
 		return true;
+	case FTEDITOR_REG_CMDB_SPACE:
+		return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810;
 	default:
 		return false;
 	}
@@ -331,14 +169,16 @@ void Inspector::initDisplayReg()
 {
 	// 102400
 	//const uint8_t *ram = FT8XXEMU_getRam();
-	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
+	m_RegisterCopy.reserve(FTEDITOR_REG_NB);
+	m_RegisterItems.reserve(FTEDITOR_REG_NB);
+	for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum)
 	{
-		uint32_t addr = regAddresses[idx];
-		if (wantRegister(addr))
+		uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
+		if (wantRegister(regEnum))
 		{
 			QTreeWidgetItem *item = new QTreeWidgetItem(m_Registers);
 			item->setText(0, asRaw(addr));
-			item->setText(1, regNames[idx]);
+			item->setText(1, regToString(FTEDITOR_CURRENT_DEVICE, regEnum));
 			uint32_t regValue = 0; // reinterpret_cast<const uint32_t &>(ram[addr]);
 			item->setText(2, asRaw(regValue));
 			item->setText(3, asInt(regValue));
@@ -351,15 +191,17 @@ void Inspector::initDisplayReg()
 			m_RegisterItems.push_back(NULL);
 		}
 	}
+	m_RegisterCopy.resize(FTEDITOR_REG_NB);
+	m_RegisterItems.resize(FTEDITOR_REG_NB);
 }
 
 void Inspector::releaseDisplayReg()
 {
-	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
+	for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum)
 	{
-		if (m_RegisterItems[idx])
+		if (m_RegisterItems[regEnum])
 		{
-			delete m_RegisterItems[idx];
+			delete m_RegisterItems[regEnum];
 		}
 	}
 	m_RegisterCopy.clear();
@@ -407,33 +249,36 @@ void Inspector::frameQt()
 		}
 	}
 
-	uint8_t *ram = FT8XXEMU_getRam();
-	for (int idx = 0; idx < sizeof(regAddresses) / sizeof(uint32_t); ++idx)
+	if (m_RegisterItems.size() == FTEDITOR_REG_NB)
 	{
-		if (m_RegisterItems[idx])
+		uint8_t *ram = FT8XXEMU_getRam();
+		for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum)
 		{
-			uint32_t addr = regAddresses[idx];
-			uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
-			if (m_RegisterCopy[idx] != regValue)
+			if (m_RegisterItems[regEnum])
 			{
-				m_RegisterCopy[idx] = regValue;
-				m_RegisterItems[idx]->setText(2, asRaw(regValue));
-				switch (addr)
+				uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
+				uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
+				if (m_RegisterCopy[regEnum] != regValue)
 				{
-				case REG_MACRO_0:
-				case REG_MACRO_1:
-					m_RegisterItems[idx]->setText(3, asText(regValue));
-					break;
-				case REG_TOUCH_SCREEN_XY:
-				case REG_TOUCH_TAG_XY:
-					m_RegisterItems[idx]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
-					break;
-				case REG_TRACKER:
-					m_RegisterItems[idx]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
-					break;
-				default:
-					m_RegisterItems[idx]->setText(3, asInt(regValue));
-					break;
+					m_RegisterCopy[regEnum] = regValue;
+					m_RegisterItems[regEnum]->setText(2, asRaw(regValue));
+					switch (regEnum)
+					{
+					case FTEDITOR_REG_MACRO_0:
+					case FTEDITOR_REG_MACRO_1:
+						m_RegisterItems[regEnum]->setText(3, asText(regValue));
+						break;
+					case FTEDITOR_REG_TOUCH_SCREEN_XY:
+					case FTEDITOR_REG_TOUCH_TAG_XY:
+						m_RegisterItems[regEnum]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
+						break;
+					case FTEDITOR_REG_TRACKER:
+						m_RegisterItems[regEnum]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
+						break;
+					default:
+						m_RegisterItems[regEnum]->setText(3, asInt(regValue));
+						break;
+					}
 				}
 			}
 		}

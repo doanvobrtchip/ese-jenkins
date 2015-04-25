@@ -125,7 +125,7 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 		s_EmulatorThread = new EmulatorThread();
 		s_EmulatorThread->start();
 
-		while (FT8XXEMU_processTrace == NULL)
+		while (FT8XXEMU_processTrace == NULL && s_EmulatorThread->isRunning())
 			QThread::msleep(1);
 		QThread::msleep(1); // TODO: Properly handle this...
 

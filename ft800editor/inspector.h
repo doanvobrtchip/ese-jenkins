@@ -49,6 +49,9 @@ public:
 	Inspector(MainWindow *parent);
 	virtual ~Inspector();
 
+	void bindCurrentDevice();
+	void unbindCurrentDevice();
+
 	void frameEmu();
 	void frameQt();
 

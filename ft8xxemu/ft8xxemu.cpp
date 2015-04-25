@@ -115,6 +115,7 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 #endif
 #ifdef FTEMU_HAVE_FT810EMU
 	case FT8XXEMU_EmulatorFT810:
+	case FT8XXEMU_EmulatorFT811:
 		FT8XXEMU_stop = &FT810EMU::Emulator.stop;
 		FT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
 		FT8XXEMU_cs = &FT810EMU::SPII2C.csLow;
