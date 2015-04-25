@@ -28,7 +28,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 //mpsse lib includes -- Windows
 #undef POINTS
 #include <Windows.h>
-#include "LibMPSSE_spi.h"
+#include "libMPSSE_spi.h"
 
 #include "FT_DataTypes.h"
 #include "FT_Gpu_Hal.h"
