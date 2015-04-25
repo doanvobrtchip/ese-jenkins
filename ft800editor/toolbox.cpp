@@ -192,12 +192,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Sketch"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SKETCH));
-#ifndef FT810EMU_MODE // This is deprecated in FT810
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Capacitive Sketch"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));
-#endif
+		m_CoprocessorFT801Only.push_back(item);
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
@@ -452,6 +451,22 @@ uint32_t Toolbox::getSelectionId()
 	return 0;
 }
 
+void Toolbox::bindCurrentDevice()
+{
+	for (size_t i = 0; i < m_CoprocessorFT801Only.size(); ++i)
+	{
+		m_CoprocessorFT801Only[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801 && m_LineEditor->isCoprocessor()));
+	}
+	for (size_t i = 0; i < m_CoprocessorFT810Plus.size(); ++i)
+	{
+		m_CoprocessorFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor()));
+	}
+	for (size_t i = 0; i < m_DisplayListFT810Plus.size(); ++i)
+	{
+		m_DisplayListFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810));
+	}
+}
+
 void Toolbox::setEditorLine(DlEditor *editor, int line)
 {
 	m_LineNumber = line;
@@ -471,6 +486,14 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			for (size_t i = 0; i < m_CoprocessorTools.size(); ++i)
 			{
 				m_CoprocessorTools[i]->setHidden(!editor->isCoprocessor());
+			}
+			for (size_t i = 0; i < m_CoprocessorFT801Only.size(); ++i)
+			{
+				m_CoprocessorFT801Only[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801 && editor->isCoprocessor()));
+			}
+			for (size_t i = 0; i < m_CoprocessorFT810Plus.size(); ++i)
+			{
+				m_CoprocessorFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && editor->isCoprocessor()));
 			}
 		}
 		else

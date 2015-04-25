@@ -53,6 +53,8 @@ public:
 
 	QTreeWidget *treeWidget() { return m_Tools; }
 
+	void bindCurrentDevice();
+
 	uint32_t getSelectionType();
 	uint32_t getSelectionId();
 
@@ -71,6 +73,9 @@ private:
 	QTreeWidgetItem *m_Bitmaps;
 	// QTreeWidgetItem *m_Advanced;
 	std::vector<QTreeWidgetItem *> m_CoprocessorTools;
+	std::vector<QTreeWidgetItem *> m_CoprocessorFT801Only;
+	std::vector<QTreeWidgetItem *> m_CoprocessorFT810Plus;
+	std::vector<QTreeWidgetItem *> m_DisplayListFT810Plus;
 
 	// Current line
 	DlEditor *m_LineEditor;

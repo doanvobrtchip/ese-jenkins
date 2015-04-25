@@ -2736,6 +2736,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_DlEditor->bindCurrentDevice();
 	m_CmdEditor->bindCurrentDevice();
 	m_Macro->bindCurrentDevice();
+	m_Toolbox->bindCurrentDevice();
 
 	// Reconfigure emulator controls
 	stepEnabled(m_StepEnabled->isChecked());
