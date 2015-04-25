@@ -1254,21 +1254,6 @@ void MainWindow::createDockWindows()
 			group->setTitle(tr("Device"));
 			QHBoxLayout *groupLayout = new QHBoxLayout();
 
-			/*m_TraceEnabled = new QCheckBox(this);
-			m_TraceEnabled->setChecked(false);
-			connect(m_TraceEnabled, SIGNAL(toggled(bool)), this, SLOT(traceEnabledChanged(bool)));
-			groupLayout->addWidget(m_TraceEnabled);
-			m_TraceX = new QSpinBox(this);
-			m_TraceX->setMinimum(0);
-			m_TraceX->setMaximum(511);
-			m_TraceX->setEnabled(false);
-			groupLayout->addWidget(m_TraceX);
-			m_TraceY = new QSpinBox(this);
-			m_TraceY->setMinimum(0);
-			m_TraceY->setMaximum(511);
-			m_TraceY->setEnabled(false);
-			groupLayout->addWidget(m_TraceY);*/
-
 			m_ProjectDevice = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
@@ -1334,7 +1319,7 @@ void MainWindow::createDockWindows()
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
 		m_UtilizationDisplayListStatus->setMinimum(0);
-		m_UtilizationDisplayListStatus->setMaximum(FTEDITOR_DL_SIZE);
+		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
@@ -1371,7 +1356,7 @@ void MainWindow::createDockWindows()
 
 			m_UtilizationDisplayList = new QProgressBar(this);
 			m_UtilizationDisplayList->setMinimum(0);
-			m_UtilizationDisplayList->setMaximum(FTEDITOR_DL_SIZE);
+			m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 			groupLayout->addWidget(m_UtilizationDisplayList);
 
 			group->setLayout(groupLayout);
@@ -1471,7 +1456,7 @@ void MainWindow::createDockWindows()
 			dlhbox->addWidget(m_StepEnabled);
 			m_StepCount = new QSpinBox(this);
 			m_StepCount->setMinimum(1);
-			m_StepCount->setMaximum(2048 * 64);
+			m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
 			m_StepCount->setEnabled(false);
 			connect(m_StepCount, SIGNAL(valueChanged(int)), this, SLOT(stepChanged(int)));
 			dlhbox->addWidget(m_StepCount);
@@ -1485,7 +1470,7 @@ void MainWindow::createDockWindows()
 			cmdhbox->addWidget(m_StepCmdEnabled);
 			m_StepCmdCount = new QSpinBox(this);
 			m_StepCmdCount->setMinimum(1);
-			m_StepCmdCount->setMaximum(2048 * 64);
+			m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
 			m_StepCmdCount->setEnabled(false);
 			connect(m_StepCmdCount, SIGNAL(valueChanged(int)), this, SLOT(stepCmdChanged(int)));
 			cmdhbox->addWidget(m_StepCmdCount);
@@ -1507,12 +1492,12 @@ void MainWindow::createDockWindows()
 			groupLayout->addWidget(m_TraceEnabled);
 			m_TraceX = new QSpinBox(this);
 			m_TraceX->setMinimum(0);
-			m_TraceX->setMaximum(511);
+			m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
 			m_TraceX->setEnabled(false);
 			groupLayout->addWidget(m_TraceX);
 			m_TraceY = new QSpinBox(this);
 			m_TraceY->setMinimum(0);
-			m_TraceY->setMaximum(511);
+			m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
 			m_TraceY->setEnabled(false);
 			groupLayout->addWidget(m_TraceY);
 
@@ -2751,6 +2736,25 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_DlEditor->bindCurrentDevice();
 	m_CmdEditor->bindCurrentDevice();
 	m_Macro->bindCurrentDevice();
+
+	// Reconfigure emulator controls
+	stepEnabled(m_StepEnabled->isChecked());
+	stepCmdEnabled(m_StepCmdEnabled->isChecked());
+
+	// Update interface ranges
+	m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+	m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
+	m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+	m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+	m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+	m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+	m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+	m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
+	m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
+
+	// TODO:
+	// Inside ProjectDeviceCommand store the original display lists (incl macro) plus a backup of the current ContentInfo settings
+	// During ProjectDeviceCommand->redo() calculate the new display lists (incl macro) plus the new contentinfo settings for image formats etc
 }
 
 class ProjectDeviceCommand : public QUndoCommand
