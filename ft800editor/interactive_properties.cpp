@@ -536,7 +536,14 @@ void InteractiveProperties::addPrimitive(int primitive)
 void InteractiveProperties::addBitmapFormat(int format)
 {
 	// TODO: Identifier remapping, centralized combobox listings
-	addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
+	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
+	addComboBox(format, 
+		g_BitmapFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+		tr("Format") + ": ", tr("Set bitmap format"));
 }
 
 void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)

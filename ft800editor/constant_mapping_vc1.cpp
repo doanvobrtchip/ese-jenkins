@@ -395,6 +395,28 @@ const char *g_BitmapFormatToStringVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
 
 ///////////////////////////////////////////////////////////////////////
 
+const int g_BitmapFormatFromIntfVC1[FTEDITOR_BITMAP_FORMAT_INTF_NB_VC1] = {
+	ARGB1555,
+	L1,
+	L4,
+	L8,
+	RGB332,
+	ARGB2,
+	ARGB4,
+	RGB565,
+	PALETTED,
+	TEXT8X8,
+	TEXTVGA,
+	BARGRAPH
+};
+
+const int g_BitmapFormatToIntfVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
+	0, 1, 2, 3, 4, 5, 6, 7,
+	8, 9, 10, 11
+};
+
+///////////////////////////////////////////////////////////////////////
+
 const int g_ImageFormatFromIntfVC1[FTEDITOR_IMAGE_FORMAT_INTF_NB_VC1] = {
 	ARGB1555,
 	L1,
@@ -408,8 +430,8 @@ const int g_ImageFormatFromIntfVC1[FTEDITOR_IMAGE_FORMAT_INTF_NB_VC1] = {
 };
 
 const int g_ImageFormatToIntfVC1[FTEDITOR_BITMAP_FORMAT_ENUM_NB_VC1] = {
-	0, 1, 2, 3, 5, 6, 7, 8,
-	0, 0, 0, 0
+	0, 1, 2, 3, 4, 5, 6, 7,
+	8, 0, 0, 0
 };
 
 ///////////////////////////////////////////////////////////////////////

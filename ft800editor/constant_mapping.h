@@ -251,6 +251,11 @@ extern const char **g_BitmapFormatToString[FTEDITOR_DEVICE_NB];
 extern const int g_BitmapFormatEnumNb[FTEDITOR_DEVICE_NB];
 inline const char *bitmapFormatToString(int deviceIntf, int bitmapFormatEnum) { return bitmapFormatEnum < g_BitmapFormatEnumNb[deviceIntf] ? g_BitmapFormatToString[deviceIntf][bitmapFormatEnum] : ""; }
 
+// Valid bitmap formats, using bitmap formats enum
+extern const int g_BitmapFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_BitmapFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_BitmapFormatToIntf[FTEDITOR_DEVICE_NB];
+
 // Snapshot formats, using bitmap formats enum
 extern const int g_SnapshotFormatIntfNb[FTEDITOR_DEVICE_NB];
 extern const int *g_SnapshotFormatFromIntf[FTEDITOR_DEVICE_NB];
