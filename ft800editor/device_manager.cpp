@@ -294,12 +294,13 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
-#ifndef FT810EMU_MODE // FIXME_FT810
-	        if (info->ImageFormat == PALETTED){
-				const ft_uint32_t PALSIZE = 1024;
-				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL),&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)],PALSIZE);
+			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810) // FIXME_FT810
+			{
+				if (info->ImageFormat == PALETTED){
+					const ft_uint32_t PALSIZE = 1024;
+					Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL),&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)],PALSIZE);
+				}
 			}
-#endif
 		}
 	}
 	contentManager->unlockContent();

@@ -28,17 +28,31 @@ using namespace std;
 
 namespace FTEDITOR {
 
-#ifdef FT810EMU_MODE
-#define FTEDITOR_COORD_MIN -4096
-#define FTEDITOR_COORD_MAX 4095
+static int s_CoordMin[FTEDITOR_DEVICE_NB] = {
+	-1024,
+	-1024,
+	-4096,
+	-4096,
+};
+
+static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
+	1023,
+	1023,
+	4095,
+	4095,
+};
+
+static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
+	512,
+	512,
+	2048,
+	2048,
+};
+
+#define FTEDITOR_COORD_MIN s_CoordMin[FTEDITOR_CURRENT_DEVICE]
+#define FTEDITOR_COORD_MAX s_CoordMax[FTEDITOR_CURRENT_DEVICE]
 #define FTEDITOR_SCREENCOORDWH_MIN 0
-#define FTEDITOR_SCREENCOORDWH_MAX (2048)
-#else
-#define FTEDITOR_COORD_MIN -1024
-#define FTEDITOR_COORD_MAX 1023
-#define FTEDITOR_SCREENCOORDWH_MIN 0
-#define FTEDITOR_SCREENCOORDWH_MAX 512
-#endif
+#define FTEDITOR_SCREENCOORDWH_MAX s_ScreenCoordWHMax[FTEDITOR_CURRENT_DEVICE]
 #define FTEDITOR_SCREENCOORDXY_MIN 0
 #define FTEDITOR_SCREENCOORDXY_MAX (FTEDITOR_SCREENCOORDWH_MAX - 1)
 #define FTEDITOR_BITMAPHANDLE_MAX 15
@@ -208,24 +222,25 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		ADD_OPTIONS_CHECKBOX(OPT_NODL);
 	}
-#ifdef FT810EMU_MODE
-	if (flags & OPT_NOTEAR)
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
-		ADD_OPTIONS_CHECKBOX(OPT_NOTEAR);
+		if (flags & OPT_NOTEAR)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_NOTEAR);
+		}
+		if (flags & OPT_FULLSCREEN)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_FULLSCREEN);
+		}
+		if (flags & OPT_MEDIAFIFO)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_MEDIAFIFO);
+		}
+		if (flags & OPT_SOUND)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_SOUND);
+		}
 	}
-	if (flags & OPT_FULLSCREEN)
-	{
-		ADD_OPTIONS_CHECKBOX(OPT_FULLSCREEN);
-	}
-	if (flags & OPT_MEDIAFIFO)
-	{
-		ADD_OPTIONS_CHECKBOX(OPT_MEDIAFIFO);
-	}
-	if (flags & OPT_SOUND)
-	{
-		ADD_OPTIONS_CHECKBOX(OPT_SOUND);
-	}
-#endif
 	if (flags & OPT_FLAT)
 	{
 		if (flags & OPT_NOBACK || flatOnly)
@@ -1087,7 +1102,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#ifndef FT810EMU_MODE // Deprecated in FT810
 		case CMD_CSKETCH:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CSKETCH."));
@@ -1104,7 +1118,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#endif
 		case CMD_LOGO:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOGO."));
@@ -1137,7 +1150,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#ifdef FT810EMU_MODE
 #if 0
 		case CMD_SETROTATE:
 		{
@@ -1167,27 +1179,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SNAPSHOT2."));
 			if (editor)
 			{
-				/*static const char *items[] = {
-					"RGB565",
-					"ARGB4",
-					"ARGB8",
-				};
-				static const int toEnum[] = {
-					RGB565,
-					ARGB4,
-					0x20 // MAGIC NUMBER ARGB8 :(
-				};
-				static const int toIntf[] = {
-					0, 0, 0, 0, 0, 0, 1, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-					0, 0, 0, 0, 0, 0, 0, 0,
-					2
-				};*/
 				setTitle("CMD_SNAPSHOT2");
-				/*addComboBox(0, items, sizeof(items) / sizeof(items[0]),
-					toIntf, sizeof(toIntf) / sizeof(toIntf[0]), toEnum, sizeof(toEnum) / sizeof(toEnum[0]),
-					tr("Format") + ": ", tr("Set snapshot format"));*/
 				addComboBox(0, 
 					g_SnapshotFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
 					g_SnapshotFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
@@ -1294,7 +1286,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#endif
 	}
 	else switch (idRight)
 	{
@@ -1776,7 +1767,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#ifdef FT810EMU_MODE // TODO_FT810
 		case FTEDITOR_DL_VERTEX_FORMAT:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_VERTEX_FORMAT."));
@@ -1861,7 +1851,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-#endif
 	}
 	if (!ok)
 	{

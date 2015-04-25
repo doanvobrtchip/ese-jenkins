@@ -60,11 +60,8 @@ namespace FTEDITOR {
 #define POINTER_EDIT_GRADIENT_MOVE_2 0x0800
 #define POINTER_EDIT_GRADIENT_MOVE (POINTER_EDIT_GRADIENT_MOVE_1 | POINTER_EDIT_GRADIENT_MOVE_2)
 
-#ifdef FT810EMU_MODE
+// Value outside display space
 #define FTED_SNAP_HISTORY_NONE 4096
-#else
-#define FTED_SNAP_HISTORY_NONE 1024
-#endif
 
 #define FT810EMU_BITMAP_ALWAYS_HIGH 1
 
@@ -202,10 +199,9 @@ static bool isValidInsert(const DlParsed &parsed)
 			case CMD_DIAL:
 			case CMD_NUMBER:
 			case CMD_SKETCH:
-#ifndef FT810EMU_MODE // Deprecated in FT810
-			case CMD_CSKETCH:
-#endif
 				return true;
+			case CMD_CSKETCH:
+				return FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801; // Deprecated in FT810
 			}
 		}
 	}
@@ -581,9 +577,7 @@ CMD_SCREENSAVER()
 				case CMD_DIAL:
 				case CMD_NUMBER:
 				case CMD_SKETCH:
-#ifndef FT810EMU_MODE // Deprecated in FT810
 				case CMD_CSKETCH:
-#endif
 				{
 					QPen outer;
 					QPen inner;
@@ -601,9 +595,7 @@ CMD_SCREENSAVER()
 					case CMD_SCROLLBAR:
 					case CMD_TRACK:
 					case CMD_SKETCH:
-#ifndef FT810EMU_MODE // Deprecated in FT810
 					case CMD_CSKETCH:
-#endif
 						m_WidgetWH = true;
 						m_WidgetR = false;
 						break;
@@ -1873,7 +1865,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[5].U = L1;
 						pa.ExpectedParameterCount = 6;
 						break;
-#ifndef FT810EMU_MODE // Deprecated in FT810
 					case CMD_CSKETCH:
 						pa.Parameter[2].U = 120;
 						pa.Parameter[3].U = 48;
@@ -1882,7 +1873,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[6].U = 1500;
 						pa.ExpectedParameterCount = 7;
 						break;
-#endif
 					case CMD_GRADIENT:
 						pa.Parameter[2].U = 0;
 						pa.Parameter[3].U = 127;
@@ -1994,7 +1984,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						int hline = (bitmapHandle == 15) ? line : m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 
-						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && FT810EMU_MODE
+						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 
 						pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 						pa.Parameter[0].U = bitmapHandle;
@@ -2003,8 +1993,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						++hline;
 						++line;
 
-#ifdef FT810EMU_MODE
-						if (m_LineEditor->isCoprocessor())
+						if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor())
 						{
 							pa.IdLeft = 0xFFFFFF00;
 							pa.IdRight = CMD_SETBITMAP & 0xFF;
@@ -2019,7 +2008,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							pa.IdLeft = 0;
 						}
 						else
-#endif
 						{
 							pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
 							pa.Parameter[0].U = contentInfo->bitmapAddress();
@@ -2037,22 +2025,23 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							++hline;
 							++line;
 
-#ifdef FT810EMU_MODE
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-							if ((contentInfo->CachedImageStride >> 10)
-								|| (contentInfo->CachedImageHeight >> 9))
-#endif
+							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							{
-								// Add _H if necessary
-								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-								pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-								pa.ExpectedParameterCount = 2;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+								if ((contentInfo->CachedImageStride >> 10)
+									|| (contentInfo->CachedImageHeight >> 9))
 #endif
+								{
+									// Add _H if necessary
+									pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
+									pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+									pa.ExpectedParameterCount = 2;
+									m_LineEditor->insertLine(hline, pa);
+									++hline;
+									++line;
+								}
+							}
 
 							pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
 							pa.Parameter[0].U = 0; // size filter
@@ -2065,22 +2054,23 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							++hline;
 							++line;
 
-#ifdef FT810EMU_MODE
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-							if ((contentInfo->CachedImageWidth >> 9)
-								|| (contentInfo->CachedImageHeight >> 9))
-#endif
+							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							{
-								// Add _H if necessary
-								pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-								pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-								pa.ExpectedParameterCount = 2;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+								if ((contentInfo->CachedImageWidth >> 9)
+									|| (contentInfo->CachedImageHeight >> 9))
 #endif
+								{
+									// Add _H if necessary
+									pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
+									pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+									pa.ExpectedParameterCount = 2;
+									m_LineEditor->insertLine(hline, pa);
+									++hline;
+									++line;
+								}
+							}
 						}
 
 						if (contentInfo->Converter == ContentInfo::Font)

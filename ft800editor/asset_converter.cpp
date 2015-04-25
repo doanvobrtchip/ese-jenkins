@@ -382,9 +382,7 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	bitmapInfo.LayoutHeight = height;
 	if (!strcmp(format, "ARGB1555")) bitmapInfo.LayoutFormat = ARGB1555;
 	else if (!strcmp(format, "L1")) bitmapInfo.LayoutFormat = L1;
-#ifdef FT810EMU_MODE
 	else if (!strcmp(format, "L2")) bitmapInfo.LayoutFormat = L2;
-#endif
 	else if (!strcmp(format, "L4")) bitmapInfo.LayoutFormat = L4;
 	else if (!strcmp(format, "L8")) bitmapInfo.LayoutFormat = L8;
 	else if (!strcmp(format, "RGB332")) bitmapInfo.LayoutFormat = RGB332;
@@ -606,12 +604,10 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		// maxw = (maxw + 7) & (~7); // Round up per byte of 8 bits
 		maxw = (maxw + 31) & (~31); // Round up per 32 bits
 	}
-#ifdef FT810EMU_MODE
 	else if (format == L2)
 	{
 		maxw = (maxw + 15) & (~15); // Round up per 16 bytes (downgraded to L2 afterwards)
 	}
-#endif
 	else if (format == L4)
 	{
 		maxw = (maxw + 7) & (~7); // Round up per 8 bytes (downgraded to L4 afterwards)
@@ -625,11 +621,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	FontMetricBlock fmb;
 	memset(fmb.Data, 0, 148);
 	fmb.Value.Format = format;
-#ifdef FT810EMU_MODE
 	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L2) ? (maxw / 4) : ((format == L4) ? (maxw / 2) : (maxw)));
-#else
-	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L4) ? (maxw / 2) : (maxw));
-#endif
 	fmb.Value.Width = maxw;
 	fmb.Value.Height = maxh;
 	std::vector<uint8_t> bitmapBuffer;
@@ -740,7 +732,6 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			bitmapBuffer[i] = left | right;
 		}
 	}
-#ifdef FT810EMU_MODE
 	else if (format == L2)
 	{
 		for (int i = 0; i < nbbytes; ++i)
@@ -757,7 +748,6 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			bitmapBuffer[i] = res;
 		}
 	}
-#endif
 	QByteArray ba;
 	ba.resize(148 + nbbytes);
 	for (int i = 0; i < 148; ++i)
@@ -779,11 +769,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		out << "/*('file properties: ', 'resolution ', "
 			<< (int)fmb.Value.Width << ", 'x', "
 			<< (int)fmb.Value.Height << ", 'format ', '"
-#ifdef FT810EMU_MODE
 			<< (format == L1 ? "L1" : (format == L2 ? "L2" : (format == L4 ? "L4" : "L8")))
-#else
-			<< (format == L1 ? "L1" : (format == L4 ? "L4" : "L8"))
-#endif
 			<< "', 'stride ', " << (int)fmb.Value.LineStride
 			<< ")*/\n";
 		for (int i = 0; i < ba.size(); ++i)

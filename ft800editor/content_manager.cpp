@@ -1393,19 +1393,20 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
-#ifdef FT810EMU_MODE
-			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 			{
-				switch (parsed.IdRight)
+				if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 				{
+					switch (parsed.IdRight)
+					{
 					case CMD_SETBITMAP & 0xFF:
 						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
-					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+						// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+					}
 				}
 			}
-#endif
 			if (parsed.IdLeft != 0)
 			{
 				handle = -1;
@@ -1422,10 +1423,8 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					break;
 				case FTEDITOR_DL_BITMAP_LAYOUT:
 				case FTEDITOR_DL_BITMAP_SIZE:
-#ifdef FT810EMU_MODE
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 				case FTEDITOR_DL_BITMAP_SIZE_H:
-#endif
 					break;
 				default:
 					handle = -1;
@@ -1445,19 +1444,20 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
-#ifdef FT810EMU_MODE
-			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 			{
-				switch (parsed.IdRight)
+				if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 				{
+					switch (parsed.IdRight)
+					{
 					case CMD_SETBITMAP & 0xFF:
 						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
-					// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+						// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+					}
 				}
 			}
-#endif
 			if (parsed.IdLeft != 0)
 				continue;
 			switch (parsed.IdRight)
@@ -1472,10 +1472,8 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 					break;
 				case FTEDITOR_DL_BITMAP_LAYOUT:
 				case FTEDITOR_DL_BITMAP_SIZE:
-#ifdef FT810EMU_MODE
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 				case FTEDITOR_DL_BITMAP_SIZE_H:
-#endif
 					break;
 			}
 		}
@@ -1498,20 +1496,21 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 		{
 			handles[parsed.Parameter[0].U] = true;
 		}
-#ifdef FT810EMU_MODE
-		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			handles[parsed.Parameter[0].U] = true;
+			if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			{
+				handles[parsed.Parameter[0].U] = true;
+			}
+			else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			{
+				handles[parsed.Parameter[0].U] = true;
+			}
+			else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			{
+				handles[parsed.Parameter[0].U] = true;
+			}
 		}
-		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
-		{
-			handles[parsed.Parameter[0].U] = true;
-		}
-		else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
-		{
-			handles[parsed.Parameter[0].U] = true;
-		}
-#endif
 	}
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
@@ -1534,10 +1533,8 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 				case FTEDITOR_DL_BITMAP_SOURCE:
 				case FTEDITOR_DL_BITMAP_LAYOUT:
 				case FTEDITOR_DL_BITMAP_SIZE:
-#ifdef FT810EMU_MODE
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 				case FTEDITOR_DL_BITMAP_SIZE_H:
-#endif
 					break; // do nothing
 				default:
 					return i;
@@ -1548,10 +1545,8 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 			switch (parsed.IdRight)
 			{
 			case CMD_SETFONT & 0xFF:
-#ifdef FT810EMU_MODE
 			case CMD_SETFONT2 & 0xFF:
 			case CMD_SETBITMAP & 0xFF:
-#endif
 				break; // do nothing
 			default:
 				return i;
@@ -1571,21 +1566,22 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 	bool addressOk = false;
 	int layoutLine = -1;
 	int sizeLine = -1;
-#ifdef FT810EMU_MODE
+
 	int layoutHLine = -1;
 	int sizeHLine = -1;
 	bool cmdSetBitmap = false;
-#endif
+
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (parsed.ValidId)
 		{
-#ifdef FT810EMU_MODE
-			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 			{
-				switch (parsed.IdRight)
+				if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 				{
+					switch (parsed.IdRight)
+					{
 					case CMD_SETBITMAP & 0xFF:
 					{
 						bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
@@ -1606,9 +1602,9 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						continue;
 					}
 					// TODO: CMD_SETFONT2, addr is from font info ram... tricky
+					}
 				}
 			}
-#endif
 			if (parsed.IdLeft != 0)
 			{
 				handleLine = -1;
@@ -1652,7 +1648,6 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						sizeLine = i;
 					}
 					break;
-#ifdef FT810EMU_MODE
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 					if (addressOk)
 					{
@@ -1699,7 +1694,6 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						}
 					}
 					break;
-#endif
 				default:
 					handleLine = -1;
 					addressOk = false;
@@ -1707,55 +1701,56 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			}
 		}
 	}
-#ifdef FT810EMU_MODE
-	if (!cmdSetBitmap) // User friendly fixup for _H, does not work with bitmap handle reuse, but not a critical use case
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
-		if (layoutLine >= 0 && layoutHLine < 0)
+		if (!cmdSetBitmap) // User friendly fixup for _H, does not work with bitmap handle reuse, but not a critical use case
 		{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-			if ((contentInfo->CachedImageStride >> 10)
-				|| (contentInfo->CachedImageHeight >> 9))
-#endif
+			if (layoutLine >= 0 && layoutHLine < 0)
 			{
-				// Add _H if doesn't exist and necessary
-				DlParsed pa;
-				pa.ValidId = true;
-				pa.IdLeft = 0;
-				pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-				pa.ExpectedStringParameter = false;
-				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-				pa.ExpectedParameterCount = 2;
-				layoutHLine = layoutLine + 1;
-				dlEditor->insertLine(layoutHLine, pa);
-				if (sizeLine > layoutLine)
-					++sizeLine;
-				if (sizeHLine > layoutLine)
-					++sizeHLine;
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+				if ((contentInfo->CachedImageStride >> 10)
+					|| (contentInfo->CachedImageHeight >> 9))
+#endif
+				{
+					// Add _H if doesn't exist and necessary
+					DlParsed pa;
+					pa.ValidId = true;
+					pa.IdLeft = 0;
+					pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
+					pa.ExpectedStringParameter = false;
+					pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+					pa.ExpectedParameterCount = 2;
+					layoutHLine = layoutLine + 1;
+					dlEditor->insertLine(layoutHLine, pa);
+					if (sizeLine > layoutLine)
+						++sizeLine;
+					if (sizeHLine > layoutLine)
+						++sizeHLine;
+				}
 			}
-		}
-		if (sizeLine >= 0 && sizeHLine < 0)
-		{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-			if ((contentInfo->CachedImageWidth >> 9)
-				|| (contentInfo->CachedImageHeight >> 9))
-#endif
+			if (sizeLine >= 0 && sizeHLine < 0)
 			{
-				// Add _H if doesn't exist and necessary
-				DlParsed pa;
-				pa.ValidId = true;
-				pa.IdLeft = 0;
-				pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-				pa.ExpectedStringParameter = false;
-				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-				pa.ExpectedParameterCount = 2;
-				sizeHLine = sizeLine + 1;
-				dlEditor->insertLine(sizeHLine, pa);
+#if !FT810EMU_BITMAP_ALWAYS_HIGH
+				if ((contentInfo->CachedImageWidth >> 9)
+					|| (contentInfo->CachedImageHeight >> 9))
+#endif
+				{
+					// Add _H if doesn't exist and necessary
+					DlParsed pa;
+					pa.ValidId = true;
+					pa.IdLeft = 0;
+					pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
+					pa.ExpectedStringParameter = false;
+					pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+					pa.ExpectedParameterCount = 2;
+					sizeHLine = sizeLine + 1;
+					dlEditor->insertLine(sizeHLine, pa);
+				}
 			}
 		}
 	}
-#endif
 }
 
 // Update handle adress
@@ -1770,14 +1765,15 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 			pa.Parameter[0].I = newAddr;
 			dlEditor->replaceLine(i, pa);
 		}
-#ifdef FT810EMU_MODE
-		else if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			DlParsed pa = parsed;
-			pa.Parameter[0].I = newAddr;
-			dlEditor->replaceLine(i, pa);
+			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+			{
+				DlParsed pa = parsed;
+				pa.Parameter[0].I = newAddr;
+				dlEditor->replaceLine(i, pa);
+			}
 		}
-#endif
 	}
 }
 
@@ -1877,26 +1873,27 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 						--i;
 						continue;
 					}
-#if FT810EMU_MODE
-					if (parsed.IdRight == (CMD_SETFONT2 & 0xFF))
+					if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 					{
-						handleActive = (parsed.Parameter[0].I == bitmapHandle); // This switches handle (TODO: VERIFY)
-						if (handleActive)
+						if (parsed.IdRight == (CMD_SETFONT2 & 0xFF))
 						{
-							// Purge fonts
+							handleActive = (parsed.Parameter[0].I == bitmapHandle); // This switches handle (TODO: VERIFY)
+							if (handleActive)
+							{
+								// Purge fonts
+								dlEditor->removeLine(i);
+								--i;
+								continue;
+							}
+						}
+						if (parsed.IdRight == (CMD_SETBITMAP & 0xFF) && handleActive)
+						{
+							// Purge bitmap parameters
 							dlEditor->removeLine(i);
 							--i;
 							continue;
 						}
 					}
-					if (parsed.IdRight == (CMD_SETBITMAP & 0xFF) && handleActive)
-					{
-						// Purge bitmap parameters
-						dlEditor->removeLine(i);
-						--i;
-						continue;
-					}
-#endif
 				}
 				if (parsed.IdLeft != 0)
 					continue;
@@ -1948,10 +1945,8 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 					case FTEDITOR_DL_BITMAP_HANDLE:
 					case FTEDITOR_DL_BITMAP_LAYOUT:
 					case FTEDITOR_DL_BITMAP_SIZE:
-#ifdef FT810EMU_MODE
 					case FTEDITOR_DL_BITMAP_LAYOUT_H:
 					case FTEDITOR_DL_BITMAP_SIZE_H:
-#endif
 						dlEditor->removeLine(i);
 						--i;
 						break;

@@ -30,13 +30,8 @@ inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR
 
 // Tempory for mapping conversion
 extern int g_CurrentDevice;
-#ifdef FT810EMU_MODE
 #define FTEDITOR_CURRENT_DEVICE g_CurrentDevice
 #define FTEDITOR_DEFAULT_DEVICE FTEDITOR_FT811
-#else
-#define FTEDITOR_CURRENT_DEVICE g_CurrentDevice
-#define FTEDITOR_DEFAULT_DEVICE FTEDITOR_FT801
-#endif
 
 // Screen specs
 extern const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB];

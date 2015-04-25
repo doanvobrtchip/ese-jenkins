@@ -298,30 +298,31 @@ void loop()
 		}
 		if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
 		{
-#ifndef FT810EMU_MODE // FIXME_FT810
-			QString palName = info->DestName + ".lut.raw";
-			printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
-			QFile palFile(palName);
-			if (!palFile.exists())
+			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810) // FIXME_FT810
 			{
-				printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
-				continue;
+				QString palName = info->DestName + ".lut.raw";
+				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
+				QFile palFile(palName);
+				if (!palFile.exists())
+				{
+					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
+					continue;
+				}
+				int palSize = (int)palFile.size();
+				if (palSize != 1024)
+				{
+					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
+					continue;
+				}
+				// ok
+				{
+					palFile.open(QIODevice::ReadOnly);
+					QDataStream in(&palFile);
+					char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
+					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
+					FT8XXEMU_poke();
+				}
 			}
-			int palSize = (int)palFile.size();
-			if (palSize != 1024)
-			{
-				printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-				continue;
-			}
-			// ok
-			{
-				palFile.open(QIODevice::ReadOnly);
-				QDataStream in(&palFile);
-				char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
-				int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
-				FT8XXEMU_poke();
-			}
-#endif
 		}
 		if (info->Converter == ContentInfo::Font)
 		{
@@ -2532,6 +2533,7 @@ void MainWindow::actImport()
 			}
 			else
 			{
+				m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
 				m_HSize->setValue(header[1]);
 				m_VSize->setValue(header[2]);
 				m_Macro->lockDisplayList();
@@ -2551,11 +2553,7 @@ void MainWindow::actImport()
 				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
 				else
 				{
-#ifdef FT810EMU_MODE // FIXME_FT810
-					in.skipRawData(1024); // FIXME_GUI PALETTE
-#else
 					s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
-#endif
 					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
 					else
 					{
@@ -2639,11 +2637,10 @@ void MainWindow::actExport()
 		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
 		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
 		if (s != 262144) goto ExportWriteError;
-#ifdef FT810EMU_MODE // FIXME_FT810
-		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
-#else
-		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
-#endif
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) // FIXME_FT810
+			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
+		else
+			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
 		if (s != 1024) goto ExportWriteError;
 		m_DlEditor->lockDisplayList();
 		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
