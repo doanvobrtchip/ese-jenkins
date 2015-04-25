@@ -60,6 +60,8 @@ public:
 	void setPropertiesEditor(PropertiesEditor *props) { m_PropertiesEditor = props; }
 	void setModeMacro();
 
+	void bindCurrentDevice();
+
 	void clearUndoStack();
 	void clear();
 

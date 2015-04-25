@@ -66,8 +66,7 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this, SLOT(editorCursorPositionChanged()));
 
-	DlParser::getIdentifiers(FTEDITOR_CURRENT_DEVICE, m_CompleterIdentifiers, m_ModeCoprocessor);
-	DlParser::getParams(FTEDITOR_CURRENT_DEVICE, m_CompleterParams, m_ModeCoprocessor);
+	bindCurrentDevice();
 
 	m_CompleterModel = new QStringListModel(m_CodeEditor);
 	m_CompleterModel->setStringList(m_CompleterIdentifiers);
@@ -86,6 +85,25 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 DlEditor::~DlEditor()
 {
 
+}
+
+void DlEditor::bindCurrentDevice()
+{
+	m_CompleterIdentifiers.clear();
+	m_CompleterParams.clear();
+
+	DlParser::getIdentifiers(FTEDITOR_CURRENT_DEVICE, m_CompleterIdentifiers, m_ModeCoprocessor);
+	DlParser::getParams(FTEDITOR_CURRENT_DEVICE, m_CompleterParams, m_ModeCoprocessor);
+
+	lockDisplayList();
+	for (int i = 0; i < m_CodeEditor->document()->blockCount(); ++i)
+	{
+		parseLine(m_CodeEditor->document()->findBlockByNumber(i));
+	}
+	m_DisplayListModified = true;
+	unlockDisplayList();
+
+	m_DlHighlighter->rehighlight();
 }
 
 void DlEditor::setUndoStack(QUndoStack *undo_stack)

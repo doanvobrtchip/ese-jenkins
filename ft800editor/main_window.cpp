@@ -2748,6 +2748,9 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 
 	// Re-establish the current emulator device
 	m_Inspector->bindCurrentDevice();
+	m_DlEditor->bindCurrentDevice();
+	m_CmdEditor->bindCurrentDevice();
+	m_Macro->bindCurrentDevice();
 }
 
 class ProjectDeviceCommand : public QUndoCommand
