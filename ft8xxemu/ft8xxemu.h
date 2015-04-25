@@ -9,8 +9,8 @@
 
 #include "ft8xxemu_inttypes.h"
 
-// API version is increased whenever FT8XXEMU_EmulatorParameters format changes
-#define FT8XXEMU_VERSION_API 7
+// API version is increased whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
+#define FT8XXEMU_VERSION_API 8
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC

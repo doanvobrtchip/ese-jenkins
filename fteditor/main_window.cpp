@@ -209,6 +209,12 @@ void resetemu()
 // static int s_SwapCount = 0;
 void loop()
 {
+	if (!s_EmulatorRunning)
+	{
+		QThread::yieldCurrentThread();
+		return;
+	}
+
 	if (FT8XXEMU_int())
 	{
 		uint32_t flags = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_FLAGS));

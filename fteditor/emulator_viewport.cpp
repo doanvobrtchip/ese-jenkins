@@ -33,7 +33,18 @@ static QPixmap *s_Pixmap = NULL;
 static QMutex s_Mutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
-int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) // on Emulator thread
+static void(*s_Setup)() = NULL;
+static bool s_SetupReady = false;
+
+void overrideSetup()
+{
+	s_SetupReady = true;
+
+	if (s_Setup)
+		s_Setup();
+}
+
+static int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) // on Emulator thread
 {
 	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.
@@ -121,13 +132,17 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
 
+		// Override setup to set ready flag
+		s_Setup = params.Setup;
+		s_EmulatorParameters.Setup = overrideSetup;
+		s_SetupReady = false;
+
 		// Create the main thread for the emulator
 		s_EmulatorThread = new EmulatorThread();
 		s_EmulatorThread->start();
 
-		while (FT8XXEMU_processTrace == NULL && s_EmulatorThread->isRunning())
+		while (!s_SetupReady && s_EmulatorThread->isRunning())
 			QThread::msleep(1);
-		QThread::msleep(1); // TODO: Properly handle this...
 
 		// Connect the cross thread repaint event
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
