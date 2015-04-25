@@ -35,6 +35,10 @@ static std::map<std::string, int> s_CmdIdMap;
 static std::map<std::string, int> s_CmdParamMap;
 
 #if defined(FTEDITOR_PARSER_VC1)
+static std::map<std::string, int> s_CmdIdMapFT801;
+#endif
+
+#if defined(FTEDITOR_PARSER_VC1)
 #define DL_ID_NB 39
 #define CMD_ID_NB 54
 #elif defined(FTEDITOR_PARSER_VC2)
@@ -428,6 +432,11 @@ void DlParser::initVC2()
 		{
 			s_CmdIdList[it->second] = it->first;
 		}
+
+#if defined(FTEDITOR_PARSER_VC1)
+		s_CmdIdMapFT801 = s_CmdIdMap;
+		s_CmdIdMap.erase("CMD_CSKETCH");
+#endif
 	}
 	if (!s_CmdParamMap.size())
 	{
@@ -459,7 +468,7 @@ void DlParser::initVC2()
 	m_ParamMap[FTEDITOR_FT800] = &s_ParamMap;
 	m_ParamMap[FTEDITOR_FT801] = &s_ParamMap;
 	m_CmdIdMap[FTEDITOR_FT800] = &s_CmdIdMap;
-	m_CmdIdMap[FTEDITOR_FT801] = &s_CmdIdMap;
+	m_CmdIdMap[FTEDITOR_FT801] = &s_CmdIdMapFT801;
 	m_CmdParamMap[FTEDITOR_FT800] = &s_CmdParamMap;
 	m_CmdParamMap[FTEDITOR_FT801] = &s_CmdParamMap;
 	m_ParamCount[FTEDITOR_FT800] = s_ParamCount;
