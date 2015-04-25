@@ -66,8 +66,8 @@ m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m
 	connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this, SLOT(editorCursorPositionChanged()));
 
-	DlParser::getIdentifiers(m_CompleterIdentifiers, m_ModeCoprocessor);
-	DlParser::getParams(m_CompleterParams, m_ModeCoprocessor);
+	DlParser::getIdentifiers(FTEDITOR_CURRENT_DEVICE, m_CompleterIdentifiers, m_ModeCoprocessor);
+	DlParser::getParams(FTEDITOR_CURRENT_DEVICE, m_CompleterParams, m_ModeCoprocessor);
 
 	m_CompleterModel = new QStringListModel(m_CodeEditor);
 	m_CompleterModel->setStringList(m_CompleterIdentifiers);
@@ -163,11 +163,11 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 			{
 				++dcount;
 			}
-			QString line = DlParser::toString(m_DisplayListShared[i]);
+			QString line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, m_DisplayListShared[i]);
 			m_DisplayListParsed[i] = DlParsed();
 			// verify parsing ->
-			DlParser::parse(m_DisplayListParsed[i], line, m_ModeCoprocessor);
-			uint32_t compiled = DlParser::compile(m_DisplayListParsed[i]);
+			DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
+			uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i]);
 			if (compiled != m_DisplayListShared[i])
 			{
 				QByteArray chars = line.toLatin1();
@@ -282,8 +282,8 @@ void DlEditor::parseLine(QTextBlock block)
 	QString line = block.text();
 	int i = block.blockNumber();
 	m_DisplayListParsed[i] = DlParsed();
-	DlParser::parse(m_DisplayListParsed[i], line, m_ModeCoprocessor);
-	m_DisplayListShared[i] = DlParser::compile(m_DisplayListParsed[i]);
+	DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
+	m_DisplayListShared[i] = DlParser::compile(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i]);
 
 	// check for misformed lines and do a no-op (todo: mark them)
 	if (m_DisplayListShared[i] == DISPLAY() && !m_DisplayListParsed[i].ValidId)
@@ -296,7 +296,7 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, cons
 {
 	m_EditingInteractive = true;
 	if (combineId >= 0) m_CodeEditor->setUndoCombine(combineId, message);
-	QString linestr = DlParser::toString(parsed);
+	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
 	//m_CodeEditor->setTextCursor(c);
@@ -326,7 +326,7 @@ int DlEditor::getLineCount()
 void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
 	m_EditingInteractive = true;
-	QString linestr = DlParser::toString(parsed);
+	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 	if (line == 0)
 	{
 		QTextCursor c = m_CodeEditor->textCursor();

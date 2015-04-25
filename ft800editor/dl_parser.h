@@ -16,6 +16,7 @@
 
 // STL includes
 #include <vector>
+#include <map>
 
 // Qt includes
 #include <QObject>
@@ -25,6 +26,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // Project includes
+#include "constant_mapping.h"
 
 namespace FTEDITOR {
 
@@ -83,19 +85,43 @@ class DlParser
 public:
 	static void init();
 
-	static void getIdentifiers(QStringList &list, bool coprocessor = false);
-	static void getParams(QStringList &list, bool coprocessor = false);
+	static void getIdentifiers(int deviceIntf, QStringList &list, bool coprocessor = false);
+	static void getParams(int deviceIntf, QStringList &list, bool coprocessor = false);
 
-	static void parse(DlParsed &parsed, const QString &line, bool coprocessor = false);
-	static uint32_t compile(const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
-	static void compile(std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
-	static void toString(std::string &dst, uint32_t v); // DL only
-	static QString toString(uint32_t v); // DL only
-	static void toString(std::string &dst, const DlParsed &parsed); // DL and CMD
-	static QString toString(const DlParsed &parsed); // DL and CMD
+	static void parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor = false);
+	static uint32_t compile(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static void compile(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void toString(int deviceIntf, std::string &dst, uint32_t v); // DL only
+	static QString toString(int deviceIntf, uint32_t v); // DL only
+	static void toString(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+	static QString toString(int deviceIntf, const DlParsed &parsed); // DL and CMD
 
 	static void escapeString(std::string &dst, const std::string &src);
 	static void unescapeString(std::string &dst, const std::string &src);
+
+private:
+	static void initVC1();
+	static void initVC2();
+	static uint32_t compileVC1(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static uint32_t compileVC2(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static void compileVC1(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void toStringVC1(int deviceIntf, std::string &dst, uint32_t v); // DL only
+	static void toStringVC2(int deviceIntf, std::string &dst, uint32_t v); // DL only
+	static void toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+	static void toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+
+	static const std::map<std::string, int> *m_IdMap[FTEDITOR_DEVICE_NB];
+	static const std::map<std::string, int> *m_ParamMap[FTEDITOR_DEVICE_NB];
+
+	static const std::map<std::string, int> *m_CmdIdMap[FTEDITOR_DEVICE_NB];
+	static const std::map<std::string, int> *m_CmdParamMap[FTEDITOR_DEVICE_NB];
+
+	static const int *m_ParamCount[FTEDITOR_DEVICE_NB];
+	static const int *m_CmdParamCount[FTEDITOR_DEVICE_NB];
+	static const bool *m_CmdParamString[FTEDITOR_DEVICE_NB];
+
+	static const std::string *m_CmdIdList[FTEDITOR_DEVICE_NB];
 
 }; /* class DlParser */
 

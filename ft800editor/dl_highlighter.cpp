@@ -44,7 +44,7 @@ DlHighlighter::~DlHighlighter()
 void DlHighlighter::highlightBlock(const QString &text)
 {
 	DlParsed parsed;
-	DlParser::parse(parsed, text, m_ModeCoprocessor);
+	DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, text, m_ModeCoprocessor);
 	// setFormat
 	if (parsed.IdLength)
 	{

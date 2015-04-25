@@ -420,7 +420,7 @@ void loop()
 			cmdList[i] = cmdListPtr[i];
 			// cmdParsed[i] = cmdParsedPtr[i];
 			cmdParamCache[i] = (int)s_CmdParamCache.size();
-			DlParser::compile(s_CmdParamCache, cmdParsedPtr[i]);
+			DlParser::compile(FTEDITOR_CURRENT_DEVICE, s_CmdParamCache, cmdParsedPtr[i]);
 			cmdValid[i] = cmdParsedPtr[i].ValidId;
 			if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
 				warnMissingClear = false;
@@ -2325,9 +2325,9 @@ QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocess
 		if (exportScript)
 		{
 			DlParsed parsed;
-			DlParser::parse(parsed, line, coprocessor);
+			DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line, coprocessor);
 			if (!parsed.ValidId) line = "";
-			else line = DlParser::toString(parsed);
+			else line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 		}
 		result.push_back(line);
 	}

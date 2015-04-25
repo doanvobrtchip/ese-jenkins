@@ -225,7 +225,7 @@ static QString asInt(uint32_t value)
 
 static QString asText(uint32_t value)
 {
-	return DlParser::toString(value);
+	return DlParser::toString(FTEDITOR_CURRENT_DEVICE, value);
 }
 
 Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
