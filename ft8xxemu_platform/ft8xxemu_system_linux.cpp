@@ -139,7 +139,7 @@ static void suspendMCUWait(int signum)
 	}
 	else
 	{
-		SystemLinux.Error("Bad mcu suspend signal");
+		fprintf(stderr, "Bad mcu suspend signal");
 	}
 }
 
@@ -172,7 +172,7 @@ void SystemClass::holdMCUThread()
 	if (!pthread_mutex_trylock(&s_MCUSuspendMutex))
 	{
 		if (pthread_kill(s_MCUThread, SIGUSR1))
-			SystemLinux.Error("Send user signal suspend fail");
+			fprintf(stderr, "Send user signal suspend fail");
 	}
 	else
 	{
@@ -203,7 +203,7 @@ static void suspendCoprocessorWait(int signum)
 	}
 	else
 	{
-		SystemLinux.Error("Bad Coprocessor suspend signal");
+		fprintf(stderr, "Bad Coprocessor suspend signal");
 	}
 }
 
@@ -238,7 +238,7 @@ void SystemClass::holdCoprocessorThread()
 		if (!pthread_mutex_trylock(&s_CoprocessorSuspendMutex))
 		{
 			if (pthread_kill(s_CoprocessorThread, SIGUSR1))
-				SystemLinux.Error("Send user signal suspend fail");
+				fprintf(stderr, "Send user signal suspend fail");
 		}
 		else
 		{
