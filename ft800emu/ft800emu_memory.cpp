@@ -481,7 +481,7 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_TOUCH_SETTLE, 3); // Not used by emulator
 	rawWriteU32(REG_TOUCH_CHARGE, 0x1770); // Not used by emulator
 	rawWriteU32(REG_TOUCH_MODE, 3); // Not used by emulator yet // NOTE: Currently emulator always emulates continuous mode // TODO
-	
+
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
 	rawWriteU32(REG_INT_MASK, 0xFF);

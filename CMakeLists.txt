@@ -49,7 +49,7 @@ OPTION(WITH_SDL "Use old SDL1 (deprecated)" OFF)
 
 OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" ON)
 
-OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" OFF)
+OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" ON)
 
 OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
@@ -66,6 +66,8 @@ OPTION(WITH_FT800EMU "Include FT800EMU" ON)
 OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 
 OPTION(WITH_FT900EMU "Include FT900EMU" ON)
+
+OPTION(WITH_SAMPLEAPP "Include SampleApp" OFF)
 
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
 

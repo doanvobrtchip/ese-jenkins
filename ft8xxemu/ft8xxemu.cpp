@@ -7,6 +7,7 @@
 #include "ft8xxemu_diag.h"
 
 #include <string.h>
+#include <stdio.h>
 
 // Include FT8XXEMU_PLATFORM
 #include "ft8xxemu_graphics_driver.h"
@@ -69,7 +70,7 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 	}
 
 	memset(params, 0, sizeof(FT8XXEMU_EmulatorParameters));
-	
+
 	params->Flags =
 		FT8XXEMU_EmulatorEnableKeyboard
 		| FT8XXEMU_EmulatorEnableMouse
@@ -79,7 +80,7 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade
 		| FT8XXEMU_EmulatorEnableTouchTransformation;
-		
+
 	params->Mode = mode;
 }
 

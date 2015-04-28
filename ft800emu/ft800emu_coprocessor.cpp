@@ -161,7 +161,7 @@ void CoprocessorClass::execute()
                 }
                 dsp = 31 & (dsp + sx[insn & 3]);
                 rsp = 31 & (rsp + sx[(insn >> 2) & 3]);
-                
+
                 switch (F8CP_INSN_6_4)
                 {
 				case 1: // T_N
@@ -192,7 +192,7 @@ void CoprocessorClass::execute()
 					// no-op
 					break;
 				}
-				
+
                 t = _t;
                 break;
             }

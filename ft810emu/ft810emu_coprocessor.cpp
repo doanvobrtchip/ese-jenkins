@@ -24,6 +24,8 @@
 namespace FT810EMU {
 
 #define FT800EMU_COPROCESSOR_DEBUG 0
+#define FT800EMU_COPROCESSOR_TRACE 1
+#define FT800EMU_COPROCESSOR_TRACEFILE "ft810emu.log"
 
 #define FT800EMU_COPROCESSOR_ROM_SIZE 16384
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
@@ -627,6 +629,10 @@ FT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data sta
 	return v;
 }
 
+#if FT800EMU_COPROCESSOR_TRACE
+static FILE *trace = NULL;
+#endif
+
 void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode)
 {
 	if (romFilePath)
@@ -647,6 +653,11 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
 	}
 
+#if FT800EMU_COPROCESSOR_TRACE
+	trace = fopen(FT800EMU_COPROCESSOR_TRACEFILE, "w");
+	if (!trace) printf("Failed to create trace file\n");
+#endif
+
 	ejpg.reset();
 	cpureset();
 
@@ -666,7 +677,7 @@ void CoprocessorClass::execute()
 	uint32_t _t;
 
 
-	do 
+	do
 	{
 		if (Memory.coprocessorGetReset())
 		{
@@ -719,7 +730,7 @@ void CoprocessorClass::execute()
 		uint16_t insn = j1boot[pc];
 		_pc = pc + 1;
 
-		switch (insn >> 13) 
+		switch (insn >> 13)
 		{
 		case 4:
 		case 5: // literal
@@ -749,7 +760,7 @@ void CoprocessorClass::execute()
 				_pc = r[rsp] >> 1;
 			}
 			uint32_t n = d[dsp];
-			switch ((insn >> 8) & 0x1f) 
+			switch ((insn >> 8) & 0x1f)
 			{
 			case 0x00:  _t = t; break;
 			case 0x01:  _t = n; break;
@@ -758,7 +769,7 @@ void CoprocessorClass::execute()
 			case 0x04:  _t = t | n; break;
 			case 0x05:  _t = t ^ n; break;
 			case 0x06:  _t = ~t; break;
-			case 0x07:  
+			case 0x07:
 				_t = -(t == n);
 #if FT800EMU_COPROCESSOR_DEBUG
 				printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
@@ -775,16 +786,16 @@ void CoprocessorClass::execute()
 			case 0x10:  _t = t + 4;
 				Memory.coprocessorWriteU32(REG_CRC, crc32(Memory.coprocessorReadU32(REG_CRC), memrd)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = Memory.coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x12:  _t = (int8_t)Memory.coprocessorReadU8(t); /*memory8[t]*/; break;
 			case 0x13:  assert((t & 1) == 0);
-				_t = Memory.coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+				_t = (int16_t)Memory.coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
 			case 0x17:  _t = n - t; break;
 			case 0x18:  _t = t + 1; break;
 			case 0x19:  assert((t & 1) == 0);
-				_t = Memory.coprocessorReadU16(t); break;
+				_t = (int16_t)Memory.coprocessorReadU16(t); break;
 			case 0x1a:  { uint32_t sum32 = t + n; _t = ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); } break;
 			case 0x1b:  switch (t >> 12) {
 			case 0: _t = t | RAM_REG; break;
@@ -872,7 +883,7 @@ void CoprocessorClass::execute()
 				Memory.coprocessorWriteU8(t, n); // memory8[t] = n;
 				//if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				//	written[(t - RAM_J1RAM) >> 2] = 1;
-				if (t == REG_EJPG_DAT) 
+				if (t == REG_EJPG_DAT)
 				{
 					// printf("EJPG Data memrd %u\n", (unsigned int)memrd);
 					uint8_t *memory8 = Memory.getRam();
@@ -908,6 +919,10 @@ void CoprocessorClass::execute()
 		if (memory8[REG_DLSWAP] != 0) {
 			memory8[REG_DLSWAP] = 0;
 		}*/
+
+#if FT800EMU_COPROCESSOR_TRACE
+		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+#endif
 
 		//REG(CLOCK)++;
 

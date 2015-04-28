@@ -25,9 +25,9 @@ public:
 	void reset();
 
 	static bool multiTouch();
-	
+
 	static void enableTouchMatrix(bool enabled = true);
-	
+
 	// Internal call used for touch interpolation
 	static void setTouchScreenXYFrameTime(long micros);
 
@@ -37,7 +37,7 @@ public:
 	void resetXY();
 	// Get XY value interpolated etc
 	uint32_t getXY();
-	
+
 private:
 	inline long jitteredTime(long micros);
 	static inline void transformTouchXY(int &x, int &y);
@@ -45,7 +45,7 @@ private:
 	inline void getTouchScreenXY(long micros, int &x, int &y);
 	inline uint32_t getTouchScreenXY(long micros);
 	inline uint32_t getTouchScreenXY();
-	static inline uint32_t TouchClass::getTouchScreenXY(int x, int y);
+	static inline uint32_t getTouchScreenXY(int x, int y);
 
 private:
 	int m_Index;
