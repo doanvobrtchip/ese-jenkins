@@ -10,17 +10,41 @@ namespace FTEDITOR {
 
 struct DlParsed;
 
-struct DlState
+// TODO: OPTIMIZE:
+// Have function to check if a DlParsed is state changing, check it before/after a display line is parsed
+// Only invalidate the current state if a state changing DlParsed is being modified!
+
+struct DlStateGraphics
 {
-	DlState();
+	DlStateGraphics();
 
 	int Cell;
 	int BitmapHandle;
 	int VertexFormat; // Shift = (4 - VertexFormat)
 	int VertexTranslateX;
 	int VertexTranslateY;
+};
 
-	static void process(int deviceIntf, DlState &state, const int line, const DlParsed *displayList, const bool coprocessor);
+struct DlStateRendering
+{
+	DlStateRendering();
+
+	int Primitive;
+};
+
+/*struct DlStateCoprocessor
+{
+
+};*/
+
+struct DlState
+{
+	DlStateGraphics Graphics;
+	DlStateRendering Rendering;
+	// DlStateCoprocessor Coprocessor;
+
+	static void process(int deviceIntf, DlState *state, const int line, const DlParsed *displayList, const bool coprocessor);
+	static bool requiresProcessing(const DlParsed &pa);
 };
 
 } /* namespace FTEDITOR */

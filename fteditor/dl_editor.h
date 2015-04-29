@@ -87,7 +87,8 @@ public:
 	bool isMacro() const { return m_ModeMacro; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
-	const DlState &state() { if (m_InvalidState) { processState(); } return m_State; }
+
+	const DlState &getState(int line) { if (m_InvalidState) { processState(); } return m_State[line]; }
 
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
@@ -117,7 +118,7 @@ private:
 	QStringList m_CompleterParams;
 	bool m_CompleterIdentifiersActive;
 
-	DlState m_State;
+	DlState m_State[FTEDITOR_DL_SIZE];
 
 	PropertiesEditor *m_PropertiesEditor;
 	int m_PropLine;

@@ -265,8 +265,6 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	}
 	m_DisplayListModified = true;
 	unlockDisplayList();
-
-	m_InvalidState = true;
 }
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
@@ -295,13 +293,15 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	unlockDisplayList();
 
 	editorCursorPositionChanged();
-	m_InvalidState = true;
 }
 
 void DlEditor::parseLine(QTextBlock block)
 {
 	QString line = block.text();
 	int i = block.blockNumber();
+
+	if (!m_InvalidState) m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
+
 	m_DisplayListParsed[i] = DlParsed();
 	DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
 	m_DisplayListShared[i] = DlParser::compile(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i]);
@@ -311,6 +311,8 @@ void DlEditor::parseLine(QTextBlock block)
 	{
 		m_DisplayListShared[i] = JUMP(i + 1);
 	}
+
+	if (!m_InvalidState) m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
 }
 
 void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, const QString &message)

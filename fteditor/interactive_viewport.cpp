@@ -371,19 +371,22 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				{
 					if (l == m_LineNumber) continue;
 					const DlParsed &pa = m_LineEditor->getLine(l);
+					const DlState &st = m_LineEditor->getState(l);
 					if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 					{
 						int x, y;
 						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
 						{
-							x = pa.Parameter[0].I >> 4;
-							y = pa.Parameter[1].I >> 4;
+							x = pa.Parameter[0].I >> st.Graphics.VertexFormat;
+							y = pa.Parameter[1].I >> st.Graphics.VertexFormat;
 						}
 						else
 						{
 							x = pa.Parameter[0].U;
 							y = pa.Parameter[1].U;
 						}
+						x += st.Graphics.VertexTranslateX >> 4;
+						y += st.Graphics.VertexTranslateY >> 4;
 						p.setPen(outer);
 						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
 						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
@@ -403,18 +406,21 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 						break;
 					}
 				}
+				const DlState &state = m_LineEditor->getState(m_LineNumber);
 				// Show central vertex
 				int x, y;
 				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 				{
-					x = parsed.Parameter[0].I >> 4;
-					y = parsed.Parameter[1].I >> 4;
+					x = parsed.Parameter[0].I >> state.Graphics.VertexFormat;
+					y = parsed.Parameter[1].I >> state.Graphics.VertexFormat;
 				}
 				else
 				{
 					x = parsed.Parameter[0].U;
 					y = parsed.Parameter[1].U;
 				}
+				x += state.Graphics.VertexTranslateX >> 4;
+				y += state.Graphics.VertexTranslateY >> 4;
 				p.setPen(outer);
 				DRAWLINE(x, y - 5, x, y - 12);
 				DRAWLINE(x, y + 5, x, y + 12);
@@ -832,17 +838,20 @@ void InteractiveViewport::updatePointerMethod()
 						const DlParsed &pa = m_LineEditor->getLine(l);
 						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 						{
+							const DlState &state = m_LineEditor->getState(l);
 							int x, y;
 							if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
 							{
-								x = pa.Parameter[0].I >> 4;
-								y = pa.Parameter[1].I >> 4;
+								x = pa.Parameter[0].I >> state.Graphics.VertexFormat;
+								y = pa.Parameter[1].I >> state.Graphics.VertexFormat;
 							}
 							else
 							{
 								x = pa.Parameter[0].U;
 								y = pa.Parameter[1].U;
 							}
+							x += state.Graphics.VertexTranslateX >> 4;
+							y += state.Graphics.VertexTranslateY >> 4;
 
 							// Mouse over
 							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
@@ -1134,6 +1143,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			// In case automatic expansion is necessary
 			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
+			const DlState &state = m_LineEditor->getState(m_LineNumber);
 			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				// Doesn't work directly due to issue with undo combining when changing IdLeft
@@ -1141,27 +1151,32 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 				m_LineEditor->codeEditor()->endUndoCombine();
 
 				pa.IdLeft = FTEDITOR_DL_VERTEX2F;
-				pa.Parameter[0].I <<= 4;
-				pa.Parameter[1].I <<= 4;
+				pa.Parameter[0].I <<= state.Graphics.VertexFormat;
+				pa.Parameter[1].I <<= state.Graphics.VertexFormat;
 
 				DlParsed npa;
 				npa.ValidId = true;
 				npa.IdLeft = 0;
-				npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 				npa.ExpectedStringParameter = false;
-				npa.Parameter[0].U = pa.Parameter[2].U;
 				npa.ExpectedParameterCount = 1;
-				m_LineEditor->insertLine(m_LineNumber, npa);
+				if (state.Graphics.BitmapHandle != pa.Parameter[2].U) // TODO: Only do when current primitive is BITMAP
+				{
+					npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
+					npa.Parameter[0].U = pa.Parameter[2].U;
+					m_LineEditor->insertLine(m_LineNumber, npa);
+				}
 
-				npa.IdRight = FTEDITOR_DL_CELL;
-				npa.ExpectedStringParameter = false;
-				npa.Parameter[0].U = pa.Parameter[3].U;
-				m_LineEditor->insertLine(m_LineNumber, npa);
+				if (state.Graphics.Cell != pa.Parameter[3].U) // TODO: Only do when current primitive is BITMAP
+				{
+					npa.IdRight = FTEDITOR_DL_CELL;
+					npa.Parameter[0].U = pa.Parameter[3].U;
+					m_LineEditor->insertLine(m_LineNumber, npa);
+				}
 			}
 			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
-				xd <<= 4;
-				yd <<= 4;
+				xd <<= state.Graphics.VertexFormat;
+				yd <<= state.Graphics.VertexFormat;
 			}
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
