@@ -1154,23 +1154,28 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 				pa.Parameter[0].I <<= state.Graphics.VertexFormat;
 				pa.Parameter[1].I <<= state.Graphics.VertexFormat;
 
-				DlParsed npa;
-				npa.ValidId = true;
-				npa.IdLeft = 0;
-				npa.ExpectedStringParameter = false;
-				npa.ExpectedParameterCount = 1;
-				if (state.Graphics.BitmapHandle != pa.Parameter[2].U) // TODO: Only do when current primitive is BITMAP
+				switch (state.Rendering.Primitive)
 				{
-					npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
-					npa.Parameter[0].U = pa.Parameter[2].U;
-					m_LineEditor->insertLine(m_LineNumber, npa);
-				}
-
-				if (state.Graphics.Cell != pa.Parameter[3].U) // TODO: Only do when current primitive is BITMAP
-				{
-					npa.IdRight = FTEDITOR_DL_CELL;
-					npa.Parameter[0].U = pa.Parameter[3].U;
-					m_LineEditor->insertLine(m_LineNumber, npa);
+				case BITMAPS: // Only do when current primitive is BITMAP
+					DlParsed npa;
+					npa.ValidId = true;
+					npa.IdLeft = 0;
+					npa.ExpectedStringParameter = false;
+					npa.ExpectedParameterCount = 1;
+					if (state.Graphics.BitmapHandle != pa.Parameter[2].U)
+					{
+						npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
+						npa.Parameter[0].U = pa.Parameter[2].U;
+						m_LineEditor->insertLine(m_LineNumber, npa);
+					}
+					if (state.Graphics.Cell != pa.Parameter[3].U)
+					{
+						npa.IdRight = FTEDITOR_DL_CELL;
+						npa.Parameter[0].U = pa.Parameter[3].U;
+						m_LineEditor->insertLine(m_LineNumber, npa);
+					}
+					// TODO: Restore the state if necessary for in front of any following VERTEX2F!
+					break;
 				}
 			}
 			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
