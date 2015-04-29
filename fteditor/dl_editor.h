@@ -26,6 +26,7 @@
 
 // Project includes
 #include "dl_parser.h"
+#include "dl_state.h"
 
 class CodeEditor;
 class QUndoStack;
@@ -82,10 +83,11 @@ public:
 	void insertLine(int line, const DlParsed &parsed);
 	int getLineCount();
 
-	bool isCoprocessor() { return m_ModeCoprocessor; }
-	bool isMacro() { return m_ModeMacro; }
+	bool isCoprocessor() const { return m_ModeCoprocessor; }
+	bool isMacro() const { return m_ModeMacro; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
+	const DlState &state() { if (m_InvalidState) { processState(); } return m_State; }
 
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
@@ -98,6 +100,8 @@ public slots:
 private:
 	void parseLine(QTextBlock block);
 	void editingLine(QTextBlock block);
+
+	void processState();
 
 	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
@@ -113,6 +117,8 @@ private:
 	QStringList m_CompleterParams;
 	bool m_CompleterIdentifiersActive;
 
+	DlState m_State;
+
 	PropertiesEditor *m_PropertiesEditor;
 	int m_PropLine;
 	int m_PropIdLeft;
@@ -123,6 +129,8 @@ private:
 	bool m_ModeCoprocessor;
 
 	bool m_EditingInteractive;
+
+	bool m_InvalidState;
 
 private:
 	DlEditor(const DlEditor &);

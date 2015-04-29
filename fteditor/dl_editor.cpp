@@ -104,6 +104,7 @@ void DlEditor::bindCurrentDevice()
 	unlockDisplayList();
 
 	m_DlHighlighter->rehighlight();
+	m_InvalidState = true;
 }
 
 void DlEditor::setUndoStack(QUndoStack *undo_stack)
@@ -136,6 +137,7 @@ void DlEditor::clear()
 	m_DisplayListModified = true;
 	m_CodeEditor->textCursor().setPosition(0);
 	unlockDisplayList();
+	m_InvalidState = true;
 }
 
 void DlEditor::lockDisplayList()
@@ -264,7 +266,7 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	m_DisplayListModified = true;
 	unlockDisplayList();
 
-	//printf("parsed %i lines\n", count);
+	m_InvalidState = true;
 }
 
 void DlEditor::documentBlockCountChanged(int newBlockCount)
@@ -293,6 +295,7 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	unlockDisplayList();
 
 	editorCursorPositionChanged();
+	m_InvalidState = true;
 }
 
 void DlEditor::parseLine(QTextBlock block)
@@ -407,6 +410,16 @@ void DlEditor::editingLine(QTextBlock block)
 	{
 		m_MainWindow->interactiveProperties()->modifiedEditorLine();
 	}
+}
+
+void DlEditor::processState()
+{
+	if (!m_ModeMacro)
+	{
+		printf("DEBUG: Process state\n");
+		DlState::process(FTEDITOR_CURRENT_DEVICE, m_State, m_PropLine, m_DisplayListParsed, m_ModeCoprocessor);
+	}
+	m_InvalidState = false;
 }
 
 void DlEditor::frame()
