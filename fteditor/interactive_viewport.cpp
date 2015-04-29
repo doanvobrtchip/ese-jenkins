@@ -506,6 +506,8 @@ CMD_SCREENSAVER()
 		}
 		else if (parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
 		{
+			const DlState &state = m_LineEditor->getState(m_LineNumber);
+
 			m_WidgetXY = false;
 			m_WidgetGradient = true;
 
@@ -521,6 +523,8 @@ CMD_SCREENSAVER()
 			int x, y;
 			x = parsed.Parameter[0].I;
 			y = parsed.Parameter[1].I;
+			x += state.Graphics.VertexTranslateX >> 4;
+			y += state.Graphics.VertexTranslateY >> 4;
 			p.setPen(outer);
 			DRAWLINE(x, y - 5, x, y - 12);
 			DRAWLINE(x, y + 5, x, y + 12);
@@ -544,6 +548,8 @@ CMD_SCREENSAVER()
 			// Show second vertex
 			x = parsed.Parameter[5].I;
 			y = parsed.Parameter[6].I;
+			x += state.Graphics.VertexTranslateX >> 4;
+			y += state.Graphics.VertexTranslateY >> 4;
 			p.setPen(outer);
 			DRAWLINE(x, y - 5, x, y - 12);
 			DRAWLINE(x, y + 5, x, y + 12);
@@ -617,8 +623,11 @@ CMD_SCREENSAVER()
 						break;
 					}
 
+					const DlState &state = m_LineEditor->getState(m_LineNumber);
 					int x = parsed.Parameter[0].I;
 					int y = parsed.Parameter[1].I;
+					x += state.Graphics.VertexTranslateX >> 4;
+					y += state.Graphics.VertexTranslateY >> 4;
 
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 					// Draw...
@@ -896,9 +905,12 @@ void InteractiveViewport::updatePointerMethod()
 				if (m_WidgetGradient)
 				{
 					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+					const DlState &state = m_LineEditor->getState(m_LineNumber);
 					int x, y;
 					x = parsed.Parameter[0].I;
 					y = parsed.Parameter[1].I;
+					x += state.Graphics.VertexTranslateX >> 4;
+					y += state.Graphics.VertexTranslateY >> 4;
 					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
 					{
 						setCursor(Qt::SizeAllCursor);
@@ -907,6 +919,8 @@ void InteractiveViewport::updatePointerMethod()
 					}
 					x = parsed.Parameter[5].I;
 					y = parsed.Parameter[6].I;
+					x += state.Graphics.VertexTranslateX >> 4;
+					y += state.Graphics.VertexTranslateY >> 4;
 					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
 					{
 						setCursor(Qt::SizeAllCursor);
@@ -924,8 +938,11 @@ void InteractiveViewport::updatePointerMethod()
 				if (m_WidgetXY)
 				{
 					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+					const DlState &state = m_LineEditor->getState(m_LineNumber);
 					int x = parsed.Parameter[0].I;
 					int y = parsed.Parameter[1].I;
+					x += state.Graphics.VertexTranslateX >> 4;
+					y += state.Graphics.VertexTranslateY >> 4;
 					if (m_WidgetWH || m_WidgetR)
 					{
 						int w, h;
