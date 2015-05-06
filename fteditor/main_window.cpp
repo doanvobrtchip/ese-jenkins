@@ -77,6 +77,24 @@ namespace FTEDITOR {
 int s_HSize = 480;
 int s_VSize = 272;
 
+static const char *s_StandardResolutions[] = {
+	"QVGA (320x240)",
+	"WQVGA (480x272)",
+	"SVGA (800x600)",
+};
+
+static int s_StandardWidths[] = {
+	320,
+	480,
+	800,
+};
+
+static int s_StandardHeights[] = {
+	240,
+	272,
+	600,
+};
+
 bool s_EmulatorRunning = false;
 
 void swrbegin(size_t address)
@@ -1267,6 +1285,13 @@ void MainWindow::createDockWindows()
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			groupLayout->addWidget(m_ProjectDevice);
 			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
+			
+			m_ProjectDisplay = new QComboBox(this);
+			for (int i = 0; i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]); ++i)
+				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
+			m_ProjectDisplay->addItem("");
+			groupLayout->addWidget(m_ProjectDisplay);
+			connect(m_ProjectDisplay, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDisplayChanged(int)));
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -1567,7 +1592,7 @@ void MainWindow::createDockWindows()
 		// Macro
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
-			macroGroup->setTitle(tr("Macro (REG_MACRO0, REG_MACRO1)"));
+			macroGroup->setTitle(tr("Macro"));
 			QVBoxLayout *macroLayout = new QVBoxLayout();
 
 			m_Macro = new DlEditor(this);
@@ -1938,6 +1963,8 @@ private:
 
 void MainWindow::hsizeChanged(int hsize)
 {
+	updateProjectDisplay(hsize, m_VSize->value());
+	
 	if (s_UndoRedoWorking)
 		return;
 
@@ -1946,10 +1973,26 @@ void MainWindow::hsizeChanged(int hsize)
 
 void MainWindow::vsizeChanged(int vsize)
 {
+	updateProjectDisplay(m_HSize->value(), vsize);
+	
 	if (s_UndoRedoWorking)
 		return;
 
 	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
+}
+
+void MainWindow::updateProjectDisplay(int hsize, int vsize)
+{
+	for (int i = 0; i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]); ++i)
+	{
+		if (s_StandardWidths[i] == hsize && s_StandardHeights[i] == vsize)
+		{
+			m_ProjectDisplay->setCurrentIndex(i);
+			return;
+		}
+	}
+	m_ProjectDisplay->setCurrentIndex(sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]));
+	return;
 }
 
 void MainWindow::stepEnabled(bool enabled)
@@ -2788,6 +2831,20 @@ void MainWindow::projectDeviceChanged(int deviceIntf)
 		return;
 	
 	m_UndoStack->push(new ProjectDeviceCommand(deviceIntf, this));
+}
+
+void MainWindow::projectDisplayChanged(int i)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	if (i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]))
+	{
+		m_UndoStack->beginMacro(tr("Change display"));
+		m_HSize->setValue(s_StandardWidths[i]);
+		m_VSize->setValue(s_StandardHeights[i]);
+		m_UndoStack->endMacro();
+	}
 }
 
 void MainWindow::actSaveScreenshot()

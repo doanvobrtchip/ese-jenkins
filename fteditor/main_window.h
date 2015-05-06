@@ -170,6 +170,7 @@ private slots:
 	void updateWindowTitle();
 
 	void projectDeviceChanged(int i);
+	void projectDisplayChanged(int i);
 
 private:
 	void updateInitialization(bool visible);
@@ -188,6 +189,8 @@ private:
 	void translateDockWindows();
 
 	void incbLanguageCode();
+	
+	void updateProjectDisplay(int hsize, int vsize);
 
 	bool maybeSave();
 
@@ -248,6 +251,7 @@ private:
 
 	QDockWidget *m_ProjectDock;
 	QComboBox *m_ProjectDevice;
+	QComboBox *m_ProjectDisplay;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
