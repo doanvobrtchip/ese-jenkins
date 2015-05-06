@@ -44,7 +44,7 @@ class AssetConverter
 public:
 	static void init();
 	static void convertImage(QString &buildError, const QString &inFile, const QString &outName, int format);
-	static void convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName);
+	static void convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName, int format);
 	static bool getImageInfo(ImageInfo &bitmapInfo, const QString &name);
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
 	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet);

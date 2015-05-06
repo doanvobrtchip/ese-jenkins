@@ -184,9 +184,9 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 	if (QFile::exists(quantFile))
 		QFile::remove(quantFile);
 
-	if (format == PALETTED)
+	if (format == PALETTED || format == PALETTED8 || format == PALETTED565 || format == PALETTED4444)
 	{
-		convertImagePaletted(buildError, inFile, outName);
+		convertImagePaletted(buildError, inFile, outName, format);
 		if (buildError.isEmpty())
 			return;
 		buildError.clear();
@@ -260,7 +260,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 #endif /* FT800EMU_PYTHON */
 }
 
-void AssetConverter::convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName)
+void AssetConverter::convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
 #ifdef FT800EMU_PYTHON
 	if (a_PalettedConvRun)
@@ -271,6 +271,25 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		QString convertedInFile = outName + "_converted.png";
 		if (QFile::exists(convertedInFile))
 			QFile::remove(convertedInFile);
+
+		int nformat;
+		switch (format)
+		{
+		case PALETTED8:
+			nformat = 1;
+			break;
+		case PALETTED565:
+			nformat = 2;
+			break;
+		case PALETTED4444:
+			nformat = 3;
+			break;
+		default:
+			nformat = 0;
+			break;
+		}
+		std::stringstream sFormat;
+		sFormat << nformat;
 
 		if (fileExt == "png")
 		{
@@ -297,7 +316,7 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
-		PyObject *pyTuple = PyTuple_New(6);
+		PyObject *pyTuple = PyTuple_New(8);
 		pyValue = PyString_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
 		pyValue = PyUnicode_FromString(inFileUtf8.data());
@@ -310,6 +329,10 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		PyTuple_SetItem(pyTuple, 4, pyValue);
 		pyValue = PyUnicode_FromString(quantPath);
 		PyTuple_SetItem(pyTuple, 5, pyValue);
+		pyValue = PyString_FromString("-f");
+		PyTuple_SetItem(pyTuple, 6, pyValue);
+		pyValue = PyString_FromString(sFormat.str().c_str());
+		PyTuple_SetItem(pyTuple, 7, pyValue);
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
 		PyObject *pyResult = PyObject_CallObject(a_PalettedConvRun, pyArgs);
 		Py_DECREF(pyArgs); pyArgs = NULL;
@@ -393,6 +416,9 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	else if (!strcmp(format, "TEXT8X8")) bitmapInfo.LayoutFormat = TEXT8X8;
 	else if (!strcmp(format, "TEXTVGA")) bitmapInfo.LayoutFormat = TEXTVGA;
 	else if (!strcmp(format, "BARGRAPH")) bitmapInfo.LayoutFormat = BARGRAPH;
+	else if (!strcmp(format, "PALETTED8")) bitmapInfo.LayoutFormat = PALETTED8;
+	else if (!strcmp(format, "PALETTED565")) bitmapInfo.LayoutFormat = PALETTED565;
+	else if (!strcmp(format, "PALETTED4444")) bitmapInfo.LayoutFormat = PALETTED4444;
 	else
 	{
 		printf("Invalid format in RAWH: '%s'\n", format);

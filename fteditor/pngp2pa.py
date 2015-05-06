@@ -8,24 +8,35 @@ import subprocess
 import traceback
 
 '''
-V0.2-editor: Adjustments for embedding in editor
+V0.3-editor: Adjustments for embedding in editor
+V0.3: Added PALETTED8, PALETTED565, and PALETTED4444 support for FT81X
 V0.2: Add file property for rawh file, change the line after 32 char printed in binh file
 V0.1: first version to extract palette and index from PNG8
 '''
-version = "V0.2-editor"
+version = "V0.3-editor"
 help_string = ""
 def print_usage():
-	#print 'Usage: pngp2pa -i inputfile -o outputfile -q pngquant'
-	#print help_string
 	return
+
+vc_PALETTED = 0
+vc_PALETTED8 = 1
+vc_PALETTED565 = 2
+vc_PALETTED4444 = 3
+
+format_table = {
+	vc_PALETTED : "PALETTED",
+	vc_PALETTED8 : "PALETTED8",
+	vc_PALETTED565 : "PALETTED565",
+	vc_PALETTED4444 : "PALETTED4444"}
 
 def run(argv):
 	infile_name = ""
 	outfile_name = ""
+	outfile_format = vc_PALETTED
 	pngquant_exec = ""
 	infile = None
 	try:
-		opts,args = getopt.getopt(argv,"hi:o:q:")
+		opts,args = getopt.getopt(argv,"hi:o:f:q:")
 	except getopt.GetoptError:
 		#print_usage()
 		raise Exception("Option error")
@@ -42,6 +53,10 @@ def run(argv):
 			outfile_name = arg
 		elif opt == '-q':
 			pngquant_exec = arg
+		elif opt == '-f':
+			outfile_format = int(arg)
+			if outfile_format not in [0,1,2,3]:
+				raise Exception("Invalid format " + arg)
 		else:
 			#print_usage()
 			raise Exception("Bad option " + opt)
@@ -80,9 +95,15 @@ def run(argv):
 		outfile_bin_h = open(outfile_name + '.binh' , 'w')
 		imdata = []
 		index  = 0
+		stride = 0
 
-		writestring = ('file properties: ', 'resolution ', infile_Direct[0], 'x', infile_Direct[1], 'format ',
-			'PALETTED', 'stride ', infile_Direct[0], ' total size ', infile_Direct[0]*infile_Direct[1])
+		if outfile_format == vc_PALETTED:
+			stride = infile_Direct[0]
+		elif outfile_format == vc_PALETTED565 or outfile_format == vc_PALETTED4444 or outfile_format == vc_PALETTED8:
+			stride = infile_Direct[0]
+		
+		writestring = ('file properties: ', 'resolution ', infile_Direct[0], 'x', infile_Direct[1], 'format ', 
+			format_table[outfile_format], 'stride ', stride, ' total size ', infile_Direct[0]*infile_Direct[1])
 
 		outfile_h.write("/*");
 		outfile_h.write(str(writestring));
@@ -125,50 +146,112 @@ def run(argv):
 		imdata = []
 		index  = 0
 
-		if (len(lut[0]) == 3):
+		if (len(lut[0]) == 3):		
 			for (r,g,b) in lut:
-				outfile_raw.write(chr(b))
-				outfile_raw.write(chr(g))
-				outfile_raw.write(chr(r))
-				outfile_raw.write(chr(255))
+				if(outfile_format == vc_PALETTED or outfile_format == vc_PALETTED8):
+					outfile_raw.write(chr(b))
+					outfile_raw.write(chr(g))
+					outfile_raw.write(chr(r))
+					outfile_raw.write(chr(255))
 
-				imdata.append(b)
-				imdata.append(g)
-				imdata.append(r)
-				imdata.append(255)
+					imdata.append(b)
+					imdata.append(g)
+					imdata.append(r)
+					imdata.append(255)
 
-				outfile_h.write(str(b))
-				outfile_h.write(",")
-				outfile_h.write(str(g))
-				outfile_h.write(",")
-				outfile_h.write(str(r))
-				outfile_h.write(",")
-				outfile_h.write(str(255))
-				outfile_h.write(",")
-				index = index + 1
+					outfile_h.write(str(b))
+					outfile_h.write(",")
+					outfile_h.write(str(g))
+					outfile_h.write(",")
+					outfile_h.write(str(r))
+					outfile_h.write(",")
+					outfile_h.write(str(255))
+					outfile_h.write(",")
+
+				elif(outfile_format == vc_PALETTED565):
+					rgb565encoding = (((r * 31) / 255) << 11) | (((g * 63) / 255) << 5) | (((b * 31) / 255) & 31)
+					rgb565upper = rgb565encoding & 255
+					rgb565lower = (rgb565encoding >> 8) & 255
+					outfile_raw.write(chr(rgb565upper))
+					outfile_raw.write(chr(rgb565lower))
+
+					imdata.append(rgb565upper)
+					imdata.append(rgb565lower)
+
+					outfile_h.write(str(rgb565upper))
+					outfile_h.write(",")
+					outfile_h.write(str(rgb565lower))
+					outfile_h.write(",")
+
+				elif (outfile_format == vc_PALETTED4444):
+					argb4444encoding = (((a * 15) / 255) << 12) | (((r * 15) / 255) << 8) | (((g * 15) / 255) << 4) | (((b * 15) / 255) & 15)
+					argb4444upper = argb4444encoding & 255
+					argb4444lower = (argb4444encoding >> 8) & 255
+					outfile_raw.write(chr(argb4444upper))
+					outfile_raw.write(chr(argb4444lower))
+
+					imdata.append(argb4444upper)
+					imdata.append(argb4444lower)
+
+					outfile_h.write(str(argb4444upper))
+					outfile_h.write(",")
+					outfile_h.write(str(argb4444lower))
+					outfile_h.write(",")
+				index = index + 1		   
 				if (0 == index % 32):
-					outfile_h.write("\n")
+					outfile_h.write("\n") 
 		else:
 			for (r,g,b,a) in lut:
-				outfile_raw.write(chr(b))
-				outfile_raw.write(chr(g))
-				outfile_raw.write(chr(r))
-				outfile_raw.write(chr(a))
+				if(outfile_format == vc_PALETTED or outfile_format == vc_PALETTED8):
+					outfile_raw.write(chr(b))
+					outfile_raw.write(chr(g))
+					outfile_raw.write(chr(r))
+					outfile_raw.write(chr(a))
 
-				imdata.append(b)
-				imdata.append(g)
-				imdata.append(r)
-				imdata.append(a)
+					imdata.append(b)
+					imdata.append(g)
+					imdata.append(r)
+					imdata.append(a)
 
-				outfile_h.write(str(b))
-				outfile_h.write(",")
-				outfile_h.write(str(g))
-				outfile_h.write(",")
-				outfile_h.write(str(r))
-				outfile_h.write(",")
-				outfile_h.write(str(a))
-				outfile_h.write(",")
-				index = index + 1
+					outfile_h.write(str(b))
+					outfile_h.write(",")
+					outfile_h.write(str(g))
+					outfile_h.write(",")
+					outfile_h.write(str(r))
+					outfile_h.write(",")
+					outfile_h.write(str(a))
+					outfile_h.write(",")
+				elif(outfile_format == vc_PALETTED565):
+					rgb565encoding = (((r * 31) / 255) << 11) | (((g * 63) / 255) << 5) | (((b * 31) / 255) & 31)
+					rgb565upper = rgb565encoding & 255
+					rgb565lower = (rgb565encoding >> 8) & 255
+					outfile_raw.write(chr(rgb565upper))
+					outfile_raw.write(chr(rgb565lower))
+
+					imdata.append(rgb565upper)
+					imdata.append(rgb565lower)
+
+					outfile_h.write(str(rgb565upper))
+					outfile_h.write(",")
+					outfile_h.write(str(rgb565lower))
+					outfile_h.write(",")
+
+				elif (outfile_format == vc_PALETTED4444):
+					argb4444encoding = (((a * 15) / 255) << 12) | (((r * 15) / 255) << 8) | (((g * 15) / 255) << 4) | (((b * 15) / 255) & 15)
+					argb4444upper = argb4444encoding & 255
+					argb4444lower = (argb4444encoding >> 8) & 255
+					outfile_raw.write(chr(argb4444upper))
+					outfile_raw.write(chr(argb4444lower))
+
+					imdata.append(argb4444upper)
+					imdata.append(argb4444lower)
+
+					outfile_h.write(str(argb4444upper))
+					outfile_h.write(",")
+					outfile_h.write(str(argb4444lower))
+					outfile_h.write(",")
+
+				index = index + 1		   
 				if (0 == index % 32):
 					outfile_h.write("\n")
 

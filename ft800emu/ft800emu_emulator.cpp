@@ -49,7 +49,7 @@
 // using namespace ...;
 
 // Enable or disable debug messages
-#define FT800EMU_DEBUG 1
+#define FT800EMU_DEBUG 0
 
 // Reduce CPU usage when REG_PCLK is zero
 #define FT800EMU_REG_PCLK_ZERO_REDUCE 1
