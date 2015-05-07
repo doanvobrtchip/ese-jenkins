@@ -1532,15 +1532,15 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 		}
 		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT2 & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 			{
 				handles[parsed.Parameter[0].U] = true;
 			}
-			else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			else if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETSCRATCH & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 			{
 				handles[parsed.Parameter[0].U] = true;
 			}
-			else if (parsed.ValidId && parsed.IdIndex == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
+			else if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_ROMFONT & 0xFF) && parsed.Parameter[0].U < BITMAP_SETUP_HANDLES_NB)
 			{
 				handles[parsed.Parameter[0].U] = true;
 			}

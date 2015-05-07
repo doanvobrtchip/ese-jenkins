@@ -193,7 +193,7 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_INSTRUCTION 0
 #define FTEDITOR_DL_VERTEX2F 1
 #define FTEDITOR_DL_VERTEX2II 2
-#define FTEDITOR_CO_COMMAND 0xFFFFFF00L
+#define FTEDITOR_CO_COMMAND 0xFFFFFF00
 
 // Display list commands (DlParsed.IdRight)
 #define FTEDITOR_DL_DISPLAY 0
