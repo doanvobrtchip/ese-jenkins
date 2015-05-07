@@ -179,6 +179,25 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 	return true;
 }
 
+int ContentInfo::bitmapAddress() const
+{
+	if (Converter == ContentInfo::Image)
+	{
+		switch (ImageFormat)
+		{
+			// Add palette into content
+			case PALETTED8:
+				return MemoryAddress + (256 * 4);
+			case PALETTED565:
+			case PALETTED4444:
+				return MemoryAddress + (256 * 2);
+			default:
+				return MemoryAddress;
+		}
+	}
+	return Converter == ContentInfo::Font ? MemoryAddress + 148 : MemoryAddress;
+}
+
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
 {
 	QHBoxLayout *hbox = new QHBoxLayout();
@@ -473,7 +492,10 @@ ContentInfo *ContentManager::add(const QString &filePath)
 
 	if (contentInfo->Converter == ContentInfo::Font)
 	{
-		contentInfo->ImageFormat = L4;
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+			contentInfo->ImageFormat = L2;
+		else
+			contentInfo->ImageFormat = L4;
 	}
 
 	if (contentInfo->Converter == ContentInfo::Invalid)
@@ -818,7 +840,19 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 	QString fileName = contentInfo->DestName + ".raw";
 	QFileInfo binFile(fileName);
 	if (!binFile.exists()) return -1;
-	return binFile.size();
+	int contentSize = binFile.size();
+	switch (contentInfo->ImageFormat)
+	{
+		// Add palette into content
+		case PALETTED8:
+			contentSize += 256 * 4;
+			break;
+		case PALETTED565:
+		case PALETTED4444:
+			contentSize += 256 * 2;
+			break;
+	}
+	return contentSize;
 }
 
 void ContentManager::clear()
@@ -2020,8 +2054,23 @@ void ContentManager::changeSourcePath(ContentInfo *contentInfo, const QString &v
 	// Create undo/redo
 	ChangeSourcePath *changeSourcePath = new ChangeSourcePath(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change source path"));
+	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeSourcePath);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
+	int newBitmapAddr = contentInfo->bitmapAddress();
+	if (newBitmapAddr != oldBitmapAddr)
+	{
+		if (contentInfo->Converter == ContentInfo::Font)
+		{
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		}
+		else
+		{
+			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		}
+	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
 	m_ContentList->setCurrentItem(contentInfo->View);
@@ -2340,8 +2389,23 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	// Create undo/redo
 	ChangeImageFormat *changeImageFormat = new ChangeImageFormat(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change image format"));
+	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeImageFormat);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
+	int newBitmapAddr = contentInfo->bitmapAddress();
+	if (newBitmapAddr != oldBitmapAddr)
+	{
+		if (contentInfo->Converter == ContentInfo::Font)
+		{
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		}
+		else
+		{
+			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		}
+	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
 	m_ContentList->setCurrentItem(contentInfo->View);
@@ -2849,8 +2913,15 @@ void ContentManager::changeFontFormat(ContentInfo *contentInfo, int value)
 	// Create undo/redo
 	ChangeFontFormat *changeFontFormat = new ChangeFontFormat(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change font format"));
+	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeFontFormat);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
+	int newBitmapAddr = contentInfo->bitmapAddress();
+	if (newBitmapAddr != oldBitmapAddr)
+	{
+		editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+		editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
 	m_ContentList->setCurrentItem(contentInfo->View);
@@ -2931,8 +3002,15 @@ void ContentManager::changeFontSize(ContentInfo *contentInfo, int value)
 	// Create undo/redo
 	ChangeFontSize *changeFontSize = new ChangeFontSize(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change font size"));
+	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeFontSize);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
+	int newBitmapAddr = contentInfo->bitmapAddress();
+	if (newBitmapAddr != oldBitmapAddr)
+	{
+		editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+		editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
 	m_ContentList->setCurrentItem(contentInfo->View);
@@ -3014,8 +3092,15 @@ void ContentManager::changeFontCharSet(ContentInfo *contentInfo, const QString &
 	{
 		ChangeFontCharSet *changeFontCharSet = new ChangeFontCharSet(this, contentInfo, value);
 		m_MainWindow->undoStack()->beginMacro(tr("Change font charset"));
+		int oldBitmapAddr = contentInfo->bitmapAddress();
 		m_MainWindow->undoStack()->push(changeFontCharSet);
 		m_MainWindow->propertiesEditor()->surpressSet(true);
+		int newBitmapAddr = contentInfo->bitmapAddress();
+		if (newBitmapAddr != oldBitmapAddr)
+		{
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+			editorUpdateFontAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		}
 		editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), true);
 		editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), true);
 		m_ContentList->setCurrentItem(contentInfo->View);

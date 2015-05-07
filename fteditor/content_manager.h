@@ -105,7 +105,7 @@ struct ContentInfo
 	bool OverlapFlag;
 	bool WantAutoLoad;
 
-	inline int bitmapAddress() const { return Converter == ContentInfo::Font ? MemoryAddress + 148 : MemoryAddress; } // TODO: Block offset
+	int bitmapAddress() const;
 };
 
 /**

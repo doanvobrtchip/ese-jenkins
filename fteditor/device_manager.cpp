@@ -294,7 +294,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
-			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810) // FIXME_FT810
+			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
 			{
 				if (info->ImageFormat == PALETTED){
 					const ft_uint32_t PALSIZE = 1024;

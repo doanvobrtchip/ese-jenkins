@@ -291,8 +291,9 @@ void loop()
 	for (std::set<ContentInfo *>::iterator it(contentInfo.begin()), end(contentInfo.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
+		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
 		QString fileName = info->DestName + ".raw";
-		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), info->MemoryAddress);
+		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
 		QFile binFile(fileName);
 		if (!binFile.exists())
 		{
@@ -300,7 +301,7 @@ void loop()
 			continue;
 		}
 		int binSize = (int)binFile.size();
-		if (binSize + info->MemoryAddress > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
+		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
 			continue;
@@ -317,12 +318,12 @@ void loop()
 			}
 			swrend();*/
 			char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
-			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], binSize);
+			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
 			FT8XXEMU_poke();
 		}
-		if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
+		if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
 		{
-			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810) // FIXME_FT810
+			if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
 			{
 				QString palName = info->DestName + ".lut.raw";
 				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
@@ -344,6 +345,44 @@ void loop()
 					QDataStream in(&palFile);
 					char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
 					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
+					FT8XXEMU_poke();
+				}
+			}
+		}
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+		{
+			if (info->Converter == ContentInfo::Image && (info->ImageFormat == PALETTED8 || info->ImageFormat == PALETTED565 || info->ImageFormat == PALETTED4444))
+			{
+				int palSize;
+				switch (info->ImageFormat)
+				{
+				case PALETTED565:
+				case PALETTED4444:
+					palSize = 256 * 2;
+					break;
+				default:
+					palSize = 256 * 4;
+					break;
+				}
+				QString palName = info->DestName + ".lut.raw";
+				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
+				QFile palFile(palName);
+				if (!palFile.exists())
+				{
+					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
+					continue;
+				}
+				if (palSize != (int)palFile.size())
+				{
+					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
+					continue;
+				}
+				// ok
+				{
+					palFile.open(QIODevice::ReadOnly);
+					QDataStream in(&palFile);
+					char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
+					int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], palSize);
 					FT8XXEMU_poke();
 				}
 			}
