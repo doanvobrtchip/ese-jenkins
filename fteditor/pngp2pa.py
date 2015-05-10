@@ -184,7 +184,7 @@ def run(argv):
 					outfile_h.write(",")
 
 				elif (outfile_format == vc_PALETTED4444):
-					argb4444encoding = (((a * 15) / 255) << 12) | (((r * 15) / 255) << 8) | (((g * 15) / 255) << 4) | (((b * 15) / 255) & 15)
+					argb4444encoding = (((255 * 15) / 255) << 12) | (((r * 15) / 255) << 8) | (((g * 15) / 255) << 4) | (((b * 15) / 255) & 15)
 					argb4444upper = argb4444encoding & 255
 					argb4444lower = (argb4444encoding >> 8) & 255
 					outfile_raw.write(chr(argb4444upper))
