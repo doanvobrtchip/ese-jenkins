@@ -77,6 +77,7 @@ public:
 	static void killMCUThread();
 
 	static void makeCoprocessorThread();
+	static void forgetCoprocessorThread();
 	static bool isCoprocessorThread();
 	static void prioritizeCoprocessorThread();
 	static void unprioritizeCoprocessorThread();

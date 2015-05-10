@@ -811,7 +811,10 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	s_MasterRunning = false;
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	{
+		FT8XXEMU::System.forgetCoprocessorThread();
 		Coprocessor.stopEmulator();
+	}
 
 	printf("Wait for Coprocessor\n");
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)

@@ -222,6 +222,11 @@ void SystemClass::makeCoprocessorThread()
 		SystemWindows.ErrorWin32();
 }
 
+void SystemClass::forgetCoprocessorThread()
+{
+	
+}
+
 bool SystemClass::isCoprocessorThread()
 {
 	return GetCurrentThread() == s_CoprocessorThreadPseudo;

@@ -214,6 +214,15 @@ void SystemClass::makeCoprocessorThread()
 	signal(SIGUSR1, suspendCoprocessorWait);
 }
 
+void SystemClass::forgetCoprocessorThread()
+{
+	printf("Forget coprocessor thread\n");
+	pthread_mutex_lock(&s_CoprocessorSuspendMutex);
+	s_CoprocessorThread = 0;
+	pthread_mutex_unlock(&s_CoprocessorSuspendMutex);
+	printf("Coprocessor thread forgotten ok\n");
+}
+
 bool SystemClass::isCoprocessorThread()
 {
 	return pthread_self() == s_CoprocessorThread;
