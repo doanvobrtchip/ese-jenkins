@@ -193,9 +193,15 @@ static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorComman
 static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 
 static std::vector<uint32_t> s_CmdParamCache;
+static std::vector<std::string> s_CmdStrParamCache;
 
 int g_StepCmdLimit = 0;
 static int s_StepCmdLimitCurrent = 0;
+
+static int s_MediaFifoPtr = 0;
+static int s_MediaFifoSize = 0;
+static QFile *s_MediaFifoFile = NULL;
+static QDataStream *s_MediaFifoStream = NULL;
 
 static bool s_CoprocessorFaultOccured = false;
 
@@ -206,6 +212,14 @@ static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
+
+void cleanupMediaFifo()
+{
+	delete s_MediaFifoStream;
+	s_MediaFifoStream = NULL;
+	delete s_MediaFifoFile;
+	s_MediaFifoFile = NULL;
+}
 
 void resetemu()
 {
@@ -222,6 +236,19 @@ void resetemu()
 	displayListSwapped = false;
 	coprocessorSwapped = false;
 	s_WantReloopCmd = false;
+	s_MediaFifoPtr = 0;
+	s_MediaFifoSize = 0;
+	cleanupMediaFifo();
+}
+
+void resetCoprocessorFromLoop()
+{
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
+	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 }
 
 // static int s_SwapCount = 0;
@@ -241,12 +268,7 @@ void loop()
 		{
 			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-			wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
+			resetCoprocessorFromLoop();
 		}
 	}
 
@@ -475,6 +497,8 @@ void loop()
 		uint32_t cmdList[FTEDITOR_DL_SIZE];
 		// DlParsed cmdParsed[FTEDITOR_DL_SIZE];
 		s_CmdParamCache.clear();
+		s_CmdStrParamCache.clear();
+		int strParamRead = 0;
 		int cmdParamCache[FTEDITOR_DL_SIZE + 1];
 		bool cmdValid[FTEDITOR_DL_SIZE];
 		uint32_t *cmdListPtr = s_CmdEditor->getDisplayList();
@@ -487,8 +511,18 @@ void loop()
 			cmdParamCache[i] = (int)s_CmdParamCache.size();
 			DlParser::compile(FTEDITOR_CURRENT_DEVICE, s_CmdParamCache, cmdParsedPtr[i]);
 			cmdValid[i] = cmdParsedPtr[i].ValidId;
-			if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
-				warnMissingClear = false;
+			if (cmdValid[i])
+			{
+				switch (cmdList[i])
+				{
+				case CMD_LOADIMAGE:
+				case CMD_PLAYVIDEO:
+					s_CmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
+					break;
+				}
+				if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
+					warnMissingClear = false;
+			}
 		}
 		cmdParamCache[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
 		s_CmdEditor->unlockDisplayList();
@@ -513,6 +547,27 @@ void loop()
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
+			bool useMediaFifo;
+			const char *useFileStream = NULL;
+			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
+			{
+				s_MediaFifoPtr = s_CmdParamCache[cmdParamCache[i]];
+				s_MediaFifoSize = s_CmdParamCache[cmdParamCache[i] + 1];
+			}
+			else if (cmdList[i] == CMD_LOADIMAGE)
+			{
+				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				++strParamRead;
+				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+					&& ((s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+			}
+			else if (cmdList[i] == CMD_PLAYVIDEO)
+			{
+				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				++strParamRead;
+				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+			}
 			validCmd = true;
 			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
 			int cmdLen = 4 + (paramNb * 4);
@@ -640,6 +695,79 @@ void loop()
 				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
 			}
+			if (useFileStream)
+			{
+				if (useMediaFifo)
+				{
+					cleanupMediaFifo();
+					s_MediaFifoFile = new QFile(useFileStream);
+					s_MediaFifoFile->open(QIODevice::ReadOnly);
+					s_MediaFifoStream = new QDataStream(s_MediaFifoFile);
+				}
+				else
+				{
+					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
+					QFile cmdFile(useFileStream);
+					cmdFile.open(QIODevice::ReadOnly);
+					QDataStream cmdStream(&cmdFile);
+					
+					for (;;)
+					{
+						if (freespace < (4 + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
+						{
+							// COPY PASTE FROM ABOVE
+							
+							swrend();
+							wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+							do
+							{
+								if (!s_EmulatorRunning) return;
+								rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+								if ((rp & 0xFFF) == 0xFFF) return;
+								fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
+							freespace = ((4096 - 4) - fullness);
+
+							int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
+							for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+							{
+								if (cpWrite[i] >= 0)
+								{
+									// printf("A %i\n", i);
+									s_DisplayListCoprocessorCommandWrite[i]
+										= coprocessorWrites[cpWrite[i]];
+								}
+							}
+							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+							FT8XXEMU_clearDisplayListCoprocessorWrites();
+
+							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+						}
+						
+						uint32_t buffer;
+						int nb = cmdStream.readRawData(reinterpret_cast<char *>(&buffer), 4);
+						if (nb > 0)
+						{
+							// write
+							wp += 4;
+							freespace -= 4;
+							swr32(buffer);
+						}
+						if (nb != 4)
+						{
+							// done
+							break;
+						}
+						if (s_CmdEditor->isDisplayListModified())
+						{
+							s_WantReloopCmd = true;
+							resetCoprocessorFromLoop();
+							return;
+						}
+					}
+					printf("Finished streaming in file\n");
+				}
+			}
 		}
 
 		if (validCmd)
@@ -720,6 +848,15 @@ void loop()
 	{
 		s_CmdEditor->unlockDisplayList();
 		s_DlEditor->unlockDisplayList();
+	}
+	if (s_MediaFifoStream && s_MediaFifoSize)
+	{
+		// Write out to media FIFO... just return when edit detected?
+		/*bool anythingModified = s_DlEditor->isDisplayListModified()
+		 * || s_CmdEditor->isDisplayListM
+						if (s_CmdEditor->isDisplayListModified())
+						{
+							s_WantReloopCmd = true;odified();*/
 	}
 }
 

@@ -328,9 +328,9 @@ void DlParser::initVC2()
 		// s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
 		// s_CmdParamCount[CMD_GETPTR & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPTR & 0xFF] = false;
-		// s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF;  // don't support streaming data into cmd
-		// s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 2;
-		// s_CmdParamString[CMD_LOADIMAGE & 0xFF] = false;
+		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF; // STREAMING DATA
+		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 3;
+		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = true;
 		// s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
 		// s_CmdParamCount[CMD_GETPROPS & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
@@ -397,9 +397,9 @@ void DlParser::initVC2()
 		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
 		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
 		s_CmdParamString[CMD_MEDIAFIFO & 0xFF] = false;
-		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF;
-		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 1;
-		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = false;
+		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF; // STREAMING DATA
+		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 2;
+		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = true;
 		s_CmdIdMap["CMD_SETFONT2"] = CMD_SETFONT2 & 0xFF;
 		s_CmdParamCount[CMD_SETFONT2 & 0xFF] = 3;
 		s_CmdParamString[CMD_SETFONT2 & 0xFF] = false;
@@ -1509,33 +1509,33 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			dst << "OPT_NODL";
 			combine = true;
 		}
-	}
 #if defined(FTEDITOR_PARSER_VC2)
-	if (opt & OPT_NOTEAR)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_NOTEAR";
-		combine = true;
-	}
-	if (opt & OPT_FULLSCREEN)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_FULLSCREEN";
-		combine = true;
-	}
-	if (opt & OPT_MEDIAFIFO)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_MEDIAFIFO";
-		combine = true;
-	}
-	if (opt & OPT_SOUND)
-	{
-		if (combine) dst << " | ";
-		dst << "OPT_SOUND";
-		combine = true;
-	}
+		if (opt & OPT_NOTEAR)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOTEAR";
+			combine = true;
+		}
+		if (opt & OPT_FULLSCREEN)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_FULLSCREEN";
+			combine = true;
+		}
+		if (opt & OPT_MEDIAFIFO)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_MEDIAFIFO";
+			combine = true;
+		}
+		if (opt & OPT_SOUND)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_SOUND";
+			combine = true;
+		}
 #endif
+	}
 	if (cmd == CMD_NUMBER)
 	{
 		if (opt & OPT_SIGNED)
