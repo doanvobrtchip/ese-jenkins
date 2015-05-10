@@ -40,8 +40,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-#define FT810EMU_BITMAP_ALWAYS_HIGH 1
-
 using namespace std;
 
 namespace FTEDITOR {
@@ -1685,47 +1683,23 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 					if (addressOk)
 					{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-						if (!((contentInfo->CachedImageStride >> 10)
-							|| (contentInfo->CachedImageHeight >> 9)))
-						{
-							// Remove _H if not necessary
-							dlEditor->removeLine(i);
-							--i;
-						}
-						else
-#endif
-						{
-							// Update _H
-							DlParsed pa = parsed;
-							pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-							dlEditor->replaceLine(i, pa);
-							layoutHLine = i;
-						}
+						// Update _H
+						DlParsed pa = parsed;
+						pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+						pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+						dlEditor->replaceLine(i, pa);
+						layoutHLine = i;
 					}
 					break;
 				case FTEDITOR_DL_BITMAP_SIZE_H:
 					if (addressOk)
 					{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-						if (!((contentInfo->CachedImageWidth >> 9)
-							|| (contentInfo->CachedImageHeight >> 9)))
-						{
-							// Remove _H if not necessary
-							dlEditor->removeLine(i);
-							--i;
-						}
-						else
-#endif
-						{
-							// Update _H
-							DlParsed pa = parsed;
-							pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-							pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-							dlEditor->replaceLine(i, pa);
-							sizeHLine = i;
-						}
+						// Update _H
+						DlParsed pa = parsed;
+						pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+						pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+						dlEditor->replaceLine(i, pa);
+						sizeHLine = i;
 					}
 					break;
 				default:
@@ -1741,47 +1715,35 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 		{
 			if (layoutLine >= 0 && layoutHLine < 0)
 			{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-				if ((contentInfo->CachedImageStride >> 10)
-					|| (contentInfo->CachedImageHeight >> 9))
-#endif
-				{
-					// Add _H if doesn't exist and necessary
-					DlParsed pa;
-					pa.ValidId = true;
-					pa.IdLeft = 0;
-					pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-					pa.ExpectedStringParameter = false;
-					pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-					pa.ExpectedParameterCount = 2;
-					layoutHLine = layoutLine + 1;
-					dlEditor->insertLine(layoutHLine, pa);
-					if (sizeLine > layoutLine)
-						++sizeLine;
-					if (sizeHLine > layoutLine)
-						++sizeHLine;
-				}
+				// Add _H if doesn't exist
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
+				pa.ExpectedStringParameter = false;
+				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+				pa.ExpectedParameterCount = 2;
+				layoutHLine = layoutLine + 1;
+				dlEditor->insertLine(layoutHLine, pa);
+				if (sizeLine > layoutLine)
+					++sizeLine;
+				if (sizeHLine > layoutLine)
+					++sizeHLine;
 			}
 			if (sizeLine >= 0 && sizeHLine < 0)
 			{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-				if ((contentInfo->CachedImageWidth >> 9)
-					|| (contentInfo->CachedImageHeight >> 9))
-#endif
-				{
-					// Add _H if doesn't exist and necessary
-					DlParsed pa;
-					pa.ValidId = true;
-					pa.IdLeft = 0;
-					pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-					pa.ExpectedStringParameter = false;
-					pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-					pa.ExpectedParameterCount = 2;
-					sizeHLine = sizeLine + 1;
-					dlEditor->insertLine(sizeHLine, pa);
-				}
+				// Add _H if doesn't exist and necessary
+				DlParsed pa;
+				pa.ValidId = true;
+				pa.IdLeft = 0;
+				pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
+				pa.ExpectedStringParameter = false;
+				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+				pa.ExpectedParameterCount = 2;
+				sizeHLine = sizeLine + 1;
+				dlEditor->insertLine(sizeHLine, pa);
 			}
 		}
 	}
