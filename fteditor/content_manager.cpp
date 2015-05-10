@@ -2025,6 +2025,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 					case FTEDITOR_DL_BITMAP_SIZE:
 					case FTEDITOR_DL_BITMAP_LAYOUT_H:
 					case FTEDITOR_DL_BITMAP_SIZE_H:
+					case FTEDITOR_DL_PALETTE_SOURCE:
 						dlEditor->removeLine(i);
 						--i;
 						break;
