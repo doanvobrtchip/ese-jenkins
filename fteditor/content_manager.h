@@ -156,6 +156,8 @@ public:
 	void editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEditor, bool updateSize);
 	// Update handle adress
 	void editorUpdateHandleAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
+	// Update palette adress
+	void editorUpdatePaletteAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 	// Update font adress
 	void editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 	// ISSUE#113: Remove all entries related to content info

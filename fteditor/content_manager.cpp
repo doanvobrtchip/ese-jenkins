@@ -1592,6 +1592,18 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 	return 0;
 }
 
+inline bool requirePaletteAddress(ContentInfo *contentInfo)
+{
+	switch (contentInfo->ImageFormat)
+	{
+	case PALETTED4444:
+	case PALETTED565:
+	case PALETTED8:
+		return true;
+	}
+	return false;
+}
+
 void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEditor, bool updateSize)
 {
 	int handleLine = -1;
@@ -1599,8 +1611,10 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 	int layoutLine = -1;
 	int sizeLine = -1;
 
+	int insertOkLine = -1;
 	int layoutHLine = -1;
 	int sizeHLine = -1;
+	int paletteAddrLine = -1;
 	bool cmdSetBitmap = false;
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
@@ -1625,6 +1639,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
 							dlEditor->replaceLine(i, pa);
 							cmdSetBitmap = true;
+							insertOkLine = i + 1;
 						}
 						if (isAddressSame && handleLine != -1 && !addressOk)
 						{
@@ -1637,7 +1652,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 					}
 				}
 			}
-			if (parsed.IdLeft != 0)
+			if (parsed.IdLeft != FTEDITOR_DL_INSTRUCTION)
 			{
 				handleLine = -1;
 				addressOk = false;
@@ -1652,6 +1667,10 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
 					bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
+					if (addressOk)
+					{
+						insertOkLine = i + 1;
+					}
 					if (isAddressSame && handleLine != -1 && !addressOk)
 					{
 						i = handleLine;
@@ -1702,6 +1721,21 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						sizeHLine = i;
 					}
 					break;
+				case FTEDITOR_DL_PALETTE_SOURCE:
+					if (addressOk && parsed.Parameter[0].U == contentInfo->MemoryAddress)
+					{
+						if (!requirePaletteAddress(contentInfo))
+						{
+							// Remove it, as it is no longer needed
+							dlEditor->removeLine(i);
+							--i;
+						}
+						else
+						{
+							// Have it, no change
+							paletteAddrLine = i;
+						}
+					}
 				default:
 					handleLine = -1;
 					addressOk = false;
@@ -1718,7 +1752,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				// Add _H if doesn't exist
 				DlParsed pa;
 				pa.ValidId = true;
-				pa.IdLeft = 0;
+				pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
 				pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
 				pa.ExpectedStringParameter = false;
 				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
@@ -1736,7 +1770,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				// Add _H if doesn't exist and necessary
 				DlParsed pa;
 				pa.ValidId = true;
-				pa.IdLeft = 0;
+				pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
 				pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
 				pa.ExpectedStringParameter = false;
 				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
@@ -1745,6 +1779,35 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				sizeHLine = sizeLine + 1;
 				dlEditor->insertLine(sizeHLine, pa);
 			}
+		}
+		if (insertOkLine >= 0 && paletteAddrLine < 0 && requirePaletteAddress(contentInfo))
+		{
+			// Add palette source
+			DlParsed pa;
+			pa.ValidId = true;
+			pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
+			pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+			pa.ExpectedStringParameter = false;
+			pa.Parameter[0].U = contentInfo->MemoryAddress;
+			pa.ExpectedParameterCount = 1;
+			paletteAddrLine = insertOkLine;
+			++insertOkLine;
+			dlEditor->insertLine(paletteAddrLine, pa);
+		}
+	}
+}
+
+// Update palette adress
+void ContentManager::editorUpdatePaletteAddress(int newAddr, int oldAddr, DlEditor *dlEditor)
+{
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE && parsed.Parameter[0].I == oldAddr)
+		{
+			DlParsed pa = parsed;
+			pa.Parameter[0].I = newAddr;
+			dlEditor->replaceLine(i, pa);
 		}
 	}
 }
@@ -2514,11 +2577,13 @@ private:
 void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value, bool internal)
 {
 	// Create undo/redo
-	ChangeMemoryAddress *changeMemoryAddress = new ChangeMemoryAddress(this, contentInfo, value & 0x7FFFFFFC); // Force round to 4
+	value &= 0x7FFFFFFC;
+	ChangeMemoryAddress *changeMemoryAddress = new ChangeMemoryAddress(this, contentInfo, value); // Force round to 4
 	if (!internal)
 	{
 		m_MainWindow->undoStack()->beginMacro(tr("Change memory address"));
 	}
+	int oldMemoryAddr = contentInfo->MemoryAddress;
 	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeMemoryAddress);
 	if (!internal)
@@ -2532,6 +2597,11 @@ void ContentManager::changeMemoryAddress(ContentInfo *contentInfo, int value, bo
 		}
 		else
 		{
+			if (requirePaletteAddress(contentInfo))
+			{
+				editorUpdatePaletteAddress(value, oldMemoryAddr, m_MainWindow->dlEditor());
+				editorUpdatePaletteAddress(value, oldMemoryAddr, m_MainWindow->cmdEditor());
+			}
 			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
 			editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
 		}
