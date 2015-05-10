@@ -122,6 +122,8 @@ public:
 	ContentManager(MainWindow *parent);
 	virtual ~ContentManager();
 
+	void bindCurrentDevice();
+
 	// Add the file to the content (this creates the undo/redo)
 	ContentInfo *add(const QString &filePath);
 	// Add the content (this creates the undo/redo)

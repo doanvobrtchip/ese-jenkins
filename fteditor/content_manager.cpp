@@ -319,8 +319,6 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesImageFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
 	
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
@@ -340,8 +338,6 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesFont->setTitle(tr("Font"));
 	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
 	m_PropertiesFontFormat = new QComboBox(this);
-	for (int i = 0; i < g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
 	
 	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
 	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
@@ -411,6 +407,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
 	helpLayout->addWidget(m_HelpfulLabel);
 	m_ContentList->setLayout(helpLayout);
+	
+	bindCurrentDevice();
 }
 
 ContentManager::~ContentManager()
@@ -421,6 +419,27 @@ ContentManager::~ContentManager()
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		delete info;
 	}
+}
+
+void ContentManager::bindCurrentDevice()
+{
+	ContentInfo *info = current();
+	m_ContentList->setCurrentItem(NULL);
+	
+	m_PropertiesImageFormat->clear();
+	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+		m_PropertiesImageFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+
+	m_PropertiesFontFormat->clear();
+	for (int i = 0; i < g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	
+	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
+	
+	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+	
+	if (info)
+		m_ContentList->setCurrentItem(info->View);
 }
 
 class ContentManager::Add : public QUndoCommand
