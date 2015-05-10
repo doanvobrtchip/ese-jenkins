@@ -63,8 +63,6 @@ namespace FTEDITOR {
 // Value outside display space
 #define FTED_SNAP_HISTORY_NONE 4096
 
-#define FT810EMU_BITMAP_ALWAYS_HIGH 1
-
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false),
@@ -1676,6 +1674,18 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 	return false;
 }
 
+inline bool requirePaletteAddress(ContentInfo *contentInfo)
+{
+	switch (contentInfo->ImageFormat)
+	{
+	case PALETTED4444:
+	case PALETTED565:
+	case PALETTED8:
+		return true;
+	}
+	return false;
+}
+
 void InteractiveViewport::dropEvent(QDropEvent *e)
 {
 	// Should probably lock the display list at this point ... ?
@@ -2029,8 +2039,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(hline, pa);
 						++hline;
 						++line;
+						
+						bool useSetBitmap = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor());
 
-						if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor())
+						if (useSetBitmap)
 						{
 							pa.IdLeft = 0xFFFFFF00;
 							pa.IdRight = CMD_SETBITMAP & 0xFF;
@@ -2052,7 +2064,20 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							m_LineEditor->insertLine(hline, pa);
 							++hline;
 							++line;
-
+						}
+						
+						if (requirePaletteAddress(contentInfo))
+						{
+							pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+							pa.Parameter[0].U = contentInfo->MemoryAddress;
+							pa.ExpectedParameterCount = 1;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+						}
+						
+						if (!useSetBitmap)
+						{
 							pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
 							pa.Parameter[0].U = contentInfo->ImageFormat;
 							pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
@@ -2064,20 +2089,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-								if ((contentInfo->CachedImageStride >> 10)
-									|| (contentInfo->CachedImageHeight >> 9))
-#endif
-								{
-									// Add _H if necessary
-									pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-									pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-									pa.ExpectedParameterCount = 2;
-									m_LineEditor->insertLine(hline, pa);
-									++hline;
-									++line;
-								}
+								// Add _H if necessary
+								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
+								pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+								pa.ExpectedParameterCount = 2;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
 							}
 
 							pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
@@ -2093,20 +2112,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							{
-#if !FT810EMU_BITMAP_ALWAYS_HIGH
-								if ((contentInfo->CachedImageWidth >> 9)
-									|| (contentInfo->CachedImageHeight >> 9))
-#endif
-								{
-									// Add _H if necessary
-									pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-									pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-									pa.ExpectedParameterCount = 2;
-									m_LineEditor->insertLine(hline, pa);
-									++hline;
-									++line;
-								}
+								// Add _H if necessary
+								pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
+								pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+								pa.ExpectedParameterCount = 2;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
 							}
 						}
 
