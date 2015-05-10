@@ -121,7 +121,7 @@ private:
 	CoprocessorClass(const CoprocessorClass &);
 	CoprocessorClass &operator=(const CoprocessorClass &);
 
-	bool m_Running;
+	volatile bool m_Running;
 
 	uint32_t t;
 	uint32_t d[32]; /* data stack */

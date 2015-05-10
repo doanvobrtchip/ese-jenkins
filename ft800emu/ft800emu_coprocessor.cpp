@@ -26,7 +26,7 @@ namespace FT800EMU {
 
 CoprocessorClass Coprocessor;
 
-static bool s_Running;
+static volatile bool s_Running;
 
 static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
 

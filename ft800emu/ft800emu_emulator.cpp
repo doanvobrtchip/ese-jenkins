@@ -183,14 +183,14 @@ const uint8_t bayerDiv4[2][2] = {
 		}
 	}
 
-	bool s_EmulatorRunning = false;
+	volatile bool s_EmulatorRunning = false;
 
 	void (*s_Setup)() = NULL;
 	void (*s_Loop)() = NULL;
 	void (*s_Keyboard)() = NULL;
 	void (*s_Close)() = NULL;
 	int s_Flags = 0;
-	bool s_MasterRunning = false;
+	volatile bool s_MasterRunning = false;
 	bool s_DynamicDegrade = false;
 	uint32_t s_ExternalFrequency = 0;
 
