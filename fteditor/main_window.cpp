@@ -280,7 +280,13 @@ void resetCoprocessorFromLoop()
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	// HACK ->
+	QThread::msleep(1);
+	// <- HACK
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
+	// HACK ->
+	QThread::msleep(1);
+	// <- HACK
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 }
@@ -576,6 +582,8 @@ void loop()
 		swr32(CMD_COLDSTART);
 		wp += 4;
 		freespace -= 4;
+		s_MediaFifoPtr = 0;
+		s_MediaFifoSize = 0;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
@@ -689,6 +697,8 @@ void loop()
 				swr32(CMD_COLDSTART);
 				wp += 8;
 				freespace -= 8;
+				s_MediaFifoPtr = 0;
+				s_MediaFifoSize = 0;
 				swrend();
 				if (wp == 8) printf("WP 8\n");
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
@@ -719,6 +729,8 @@ void loop()
 				swr32(CMD_COLDSTART);
 				wp += 8;
 				freespace -= 8;
+				s_MediaFifoPtr = 0;
+				s_MediaFifoSize = 0;
 				swrend();
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
@@ -733,45 +745,174 @@ void loop()
 			}
 			if (useFileStream)
 			{
+				printf("Flush before stream\n");
+				if (true) // Flush first
+				{
+					swrend();
+					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+					do
+					{
+						if (!s_EmulatorRunning) return;
+						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+						if ((rp & 0xFFF) == 0xFFF) return;
+						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+
+						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+						{
+							printf("Abort coprocessor flush\n");
+							s_WantReloopCmd = true;
+							resetCoprocessorFromLoop();
+							return;
+						}
+					} while (fullness > cmdLen); // Ok to keep streaming command in
+					freespace = ((4096 - 4) - fullness);
+
+					int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
+					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+					{
+						if (cpWrite[i] >= 0)
+						{
+							// printf("A %i\n", i);
+							s_DisplayListCoprocessorCommandWrite[i]
+								= coprocessorWrites[cpWrite[i]];
+						}
+					}
+					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+					FT8XXEMU_clearDisplayListCoprocessorWrites();
+
+					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				}
+
 				if (useMediaFifo)
 				{
-					cleanupMediaFifo();
-					s_MediaFifoFile = new QFile(useFileStream);
-					s_MediaFifoFile->open(QIODevice::ReadOnly);
-					s_MediaFifoStream = new QDataStream(s_MediaFifoFile);
-				}
-				else
-				{
-					printf("Flush before stream\n");
-					if (true) // Flush first
+					if (s_MediaFifoSize)
 					{
 						swrend();
-						wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-						do
-						{
-							if (!s_EmulatorRunning) return;
-							rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-							if ((rp & 0xFFF) == 0xFFF) return;
-							fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-						} while (fullness > cmdLen); // Ok to keep streaming command in
-						freespace = ((4096 - 4) - fullness);
 
-						int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
-						for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+						cleanupMediaFifo();
+						s_MediaFifoFile = new QFile(useFileStream);
+						s_MediaFifoFile->open(QIODevice::ReadOnly);
+						s_MediaFifoStream = new QDataStream(s_MediaFifoFile);
+
+						s_StreamingData = true;
+						printf("Streaming into media fifo\n");
+						int writeCount = 0;
+						QDataStream &mfstream = *s_MediaFifoStream;
+						ramaddr mfptr = s_MediaFifoPtr;
+						ramaddr mfsz = s_MediaFifoSize;
+						ramaddr mfwp;
+						ramaddr mfrp;
+						ramaddr mffree;
+#define mfwprd() mfwp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE)) /*- mfptr*/) % mfsz;
+#define mfwpinc(v) { mfwp += v; mffree -= v; mfwp %= mfsz; }
+#define mfwpwr() wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE), mfwp /*+ mfptr*/);
+#define mffreespace ((mfrp > mfwp) ? (mfrp - mfwp - 4) : (mfrp + s_MediaFifoSize - mfwp - 4))
+#define mfrprd() { mfrp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_READ)) /*- mfptr*/) % mfsz; mffree = mffreespace; }
+						mfwprd();
+						mfrprd();
+
+						printf("Media fifo write start at %x (%i)\n", mfptr + mfwp, mfwp);
+						printf("Media fifo read start at %x (%i)\n", mfptr + mfrp, mfrp);
+						printf("Media fifo freespace start at %i\n", mffree);
+
+						swrbegin(mfptr + mfwp);
+						for (;;)
 						{
-							if (cpWrite[i] >= 0)
+							if (mffree < 4)
 							{
-								// printf("A %i\n", i);
-								s_DisplayListCoprocessorCommandWrite[i]
-									= coprocessorWrites[cpWrite[i]];
+								swrend();
+
+								printf("Media fifo stream: %i bytes\n", (int)writeCount);
+
+								mfwpwr();
+								printf("Media fifo write at %x (%i)\n", mfptr + mfwp, mfwp);
+								printf("Media fifo read at %x (%i)\n", mfptr + mfrp, mfrp);
+								printf("Media fifo freespace at %i\n", mffree);
+								do
+								{
+									if (!s_EmulatorRunning) return;
+									ramaddr rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+									if ((rp & 0xFFF) == 0xFFF) return;
+									mfrprd();
+
+									if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+									{
+										printf("Abort media fifo flush\n");
+										s_WantReloopCmd = true;
+										resetCoprocessorFromLoop();
+										return;
+									}
+								} while (mffree < (mfsz >> 1));
+
+								swrbegin(mfptr + mfwp);
+							}
+
+							uint32_t buffer;
+							int nb = mfstream.readRawData(reinterpret_cast<char *>(&buffer), 4);
+							if (nb > 0)
+							{
+								// write
+								swr32(buffer);
+								writeCount += nb;
+								mfwpinc(4);
+
+								if (mfwp == 0)
+								{
+									swrend();
+									swrbegin(mfptr + mfwp);
+								}
+							}
+							if (nb != 4)
+							{
+								// done
+								swrend();
+								mfrprd();
+								mfwpwr();
+								printf("Media fifo stream finished: %i bytes\n", (int)writeCount);
+								printf("Media fifo write end at %x (%i)\n", mfptr + mfwp, mfwp);
+								printf("Media fifo read end at %x (%i)\n", mfptr + mfrp, mfrp);
+								printf("Media fifo freespace end at %i\n", mffree);
+								if (writeCount == 0)
+								{
+									resetCoprocessorFromLoop();
+									return;
+								}
+								break;
+							}
+							if (!s_EmulatorRunning)
+							{
+								swrend();
+								return;
+							}
+							if (s_CmdEditor->isDisplayListModified())
+							{
+								s_WantReloopCmd = true;
+								resetCoprocessorFromLoop();
+								swrend();
+								return;
 							}
 						}
-						for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-						FT8XXEMU_clearDisplayListCoprocessorWrites();
+						s_StreamingData = false;
+						printf("Media fifo finished\n");
+
+#undef mfrprd
+#undef mfwprd
+#undef mfwpinc
+#undef mfwpwr
+#undef mffreespace
 
 						swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 					}
-
+					else
+					{
+						printf("Media fifo not setup\n");
+						resetCoprocessorFromLoop();
+						swrend();
+						return;
+					}
+				}
+				else
+				{
 					s_StreamingData = true;
 					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
 					QFile cmdFile(useFileStream);
@@ -798,6 +939,14 @@ void loop()
 									return; // DIFFER FROM ABOVE HERE
 								}
 								fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+
+								if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+								{
+									printf("Abort streaming flush\n");
+									s_WantReloopCmd = true;
+									resetCoprocessorFromLoop();
+									return;
+								}
 							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
 							freespace = ((4096 - 4) - fullness);
 
@@ -858,6 +1007,44 @@ void loop()
 					printf("Finished streaming in file\n");
 					s_StreamingData = false;
 				}
+
+				printf("Flush after stream\n");
+				if (true) // Flush after
+				{
+					swrend();
+					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+					do
+					{
+						if (!s_EmulatorRunning) return;
+						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+						if ((rp & 0xFFF) == 0xFFF) return;
+						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+
+						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+						{
+							printf("Abort coprocessor flush\n");
+							s_WantReloopCmd = true;
+							resetCoprocessorFromLoop();
+							return;
+						}
+					} while (fullness > 0); // Want completely empty
+					freespace = ((4096 - 4) - fullness);
+
+					int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
+					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+					{
+						if (cpWrite[i] >= 0)
+						{
+							// printf("A %i\n", i);
+							s_DisplayListCoprocessorCommandWrite[i]
+								= coprocessorWrites[cpWrite[i]];
+						}
+					}
+					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+					FT8XXEMU_clearDisplayListCoprocessorWrites();
+
+					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				}
 			}
 		}
 
@@ -876,6 +1063,14 @@ void loop()
 				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 				if (!s_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
+
+				if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+				{
+					printf("Abort coprocessor flush\n");
+					s_WantReloopCmd = true;
+					resetCoprocessorFromLoop();
+					return;
+				}
 			}
 			int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
 			for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
@@ -941,14 +1136,12 @@ void loop()
 		s_CmdEditor->unlockDisplayList();
 		s_DlEditor->unlockDisplayList();
 	}
-	if (s_MediaFifoStream && s_MediaFifoSize)
+
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && s_MediaFifoStream && s_MediaFifoSize)
 	{
-		// Write out to media FIFO... just return when edit detected?
-		/*bool anythingModified = s_DlEditor->isDisplayListModified()
-		 * || s_CmdEditor->isDisplayListM
-						if (s_CmdEditor->isDisplayListModified())
-						{
-							s_WantReloopCmd = true;odified();*/
+		// Write out to media FIFO
+
+
 	}
 }
 
@@ -2994,6 +3187,7 @@ void MainWindow::stopEmulatorInternal()
 	printf("Stop the emulator\n");
 	s_EmulatorRunning = false;
 	m_EmulatorViewport->stop();
+	cleanupMediaFifo();
 }
 
 void MainWindow::startEmulatorInternal()
