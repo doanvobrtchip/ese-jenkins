@@ -761,7 +761,7 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	// if (address != 3182612 && address != 3182616)
-	printf("Coprocessor read U32 %i\n", (int)address);
+	printf("Coprocessor read U32 %i (cmd %i)\n", (int)address, (int)((address - RAM_CMD) / 4));
 #endif
 
 	/*if (address >= RAM_COMPOSITE)

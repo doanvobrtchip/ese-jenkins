@@ -786,9 +786,9 @@ void CoprocessorClass::execute()
 			case 0x10:  _t = t + 4;
 				Memory.coprocessorWriteU32(REG_CRC, crc32(Memory.coprocessorReadU32(REG_CRC), memrd)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = (int8_t)Memory.coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x12:  _t = /*(int8_t)*/Memory.coprocessorReadU8(t); /*memory8[t]*/; break;
 			case 0x13:  assert((t & 1) == 0);
-				_t = (int16_t)Memory.coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+				_t = /*(int16_t)*/Memory.coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
