@@ -74,6 +74,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 namespace FTEDITOR {
 
+#define FTEDITOR_DEBUG_EMUWRITE 0
+
+typedef int32_t ramaddr;
+
 int s_HSize = 480;
 int s_VSize = 272;
 
@@ -97,8 +101,12 @@ static int s_StandardHeights[] = {
 
 bool s_EmulatorRunning = false;
 
-void swrbegin(size_t address)
+void swrbegin(ramaddr address)
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("swrbegin(%i)\n", (int)address);
+#endif
+
 	FT8XXEMU_cs(1);
 
 	FT8XXEMU_transfer((2 << 6) | ((address >> 16) & 0x3F));
@@ -109,17 +117,29 @@ void swrbegin(size_t address)
 
 void swr8(uint8_t value)
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("swr8(%i)\n", (int)value);
+#endif
+
 	FT8XXEMU_transfer(value);
 }
 
 void swr16(uint16_t value)
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("swr16(%i)\n", (int)value);
+#endif
+
 	FT8XXEMU_transfer(value & 0xFF);
 	FT8XXEMU_transfer((value >> 8) & 0xFF);
 }
 
 void swr32(uint32_t value)
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("swr32(%i)\n", (int)value);
+#endif
+
 	FT8XXEMU_transfer(value & 0xFF);
 	FT8XXEMU_transfer((value >> 8) & 0xFF);
 	FT8XXEMU_transfer((value >> 16) & 0xFF);
@@ -128,11 +148,19 @@ void swr32(uint32_t value)
 
 void swrend()
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("swrend()\n");
+#endif
+
 	FT8XXEMU_cs(0);
 }
 
-void wr32(size_t address, uint32_t value)
+void wr32(ramaddr address, uint32_t value)
 {
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("wr32(%i, %i)\n", (int)address, (int)value);
+#endif
+
 	swrbegin(address);
 	swr32(value);
 	swrend();
@@ -140,6 +168,7 @@ void wr32(size_t address, uint32_t value)
 
 uint32_t rd32(size_t address)
 {
+
 	FT8XXEMU_cs(1);
 
 	FT8XXEMU_transfer((address >> 16) & 0x3F);
@@ -152,6 +181,10 @@ uint32_t rd32(size_t address)
 	value |= FT8XXEMU_transfer(0) << 8;
 	value |= FT8XXEMU_transfer(0) << 16;
 	value |= FT8XXEMU_transfer(0) << 24;
+
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("rd32(%i), %i\n", (int)address, (int)value);
+#endif
 
 	FT8XXEMU_cs(0);
 	return value;
@@ -708,12 +741,14 @@ void loop()
 				{
 					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
 					QFile cmdFile(useFileStream);
+					printf("File size: %i\n", (int)cmdFile.size());
 					cmdFile.open(QIODevice::ReadOnly);
 					QDataStream cmdStream(&cmdFile);
+					int writeCount = 0;
 					
 					for (;;)
 					{
-						if (freespace < (4 + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
+						if (freespace < (4 + 8) || writeCount < 128) // Wait for coprocessor free space, + 4 for swap and display afterwards
 						{
 							// COPY PASTE FROM ABOVE
 							
@@ -723,7 +758,11 @@ void loop()
 							{
 								if (!s_EmulatorRunning) return;
 								rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-								if ((rp & 0xFFF) == 0xFFF) return;
+								if ((rp & 0xFFF) == 0xFFF)
+								{
+									printf("Error during stream at %i bytes\n", (int)writeCount);
+									return; // DIFFER FROM ABOVE HERE
+								}
 								fullness = ((wp & 0xFFF) - rp) & 0xFFF;
 							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
 							freespace = ((4096 - 4) - fullness);
@@ -741,6 +780,8 @@ void loop()
 							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 							FT8XXEMU_clearDisplayListCoprocessorWrites();
 
+							printf("Stream: %i bytes\n", (int)writeCount);
+
 							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 						}
 						
@@ -749,6 +790,8 @@ void loop()
 						if (nb > 0)
 						{
 							// write
+							coprocessorWrites[(wp >> 2) & 0x3FF] = i;
+							writeCount += nb;
 							wp += 4;
 							freespace -= 4;
 							swr32(buffer);
@@ -756,12 +799,19 @@ void loop()
 						if (nb != 4)
 						{
 							// done
+							printf("Stream finished: %i bytes\n", (int)writeCount);
 							break;
+						}
+						if (!s_EmulatorRunning)
+						{
+							swrend();
+							return;
 						}
 						if (s_CmdEditor->isDisplayListModified())
 						{
 							s_WantReloopCmd = true;
 							resetCoprocessorFromLoop();
+							swrend();
 							return;
 						}
 					}
