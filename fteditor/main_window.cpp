@@ -237,6 +237,7 @@ static QFile *s_MediaFifoFile = NULL;
 static QDataStream *s_MediaFifoStream = NULL;
 
 static bool s_CoprocessorFaultOccured = false;
+static bool s_StreamingData = false;
 
 static bool s_WarnMissingClear = false;
 static bool s_WarnMissingClearActive = false;
@@ -771,6 +772,7 @@ void loop()
 						swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 					}
 
+					s_StreamingData = true;
 					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
 					QFile cmdFile(useFileStream);
 					printf("File size: %i\n", (int)cmdFile.size());
@@ -854,6 +856,7 @@ void loop()
 						}
 					}
 					printf("Finished streaming in file\n");
+					s_StreamingData = false;
 				}
 			}
 		}
@@ -914,6 +917,7 @@ void loop()
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 
 			s_CoprocessorFaultOccured = false;
+			s_StreamingData = false;
 			coprocessorSwapped = true;
 		}
 		else
@@ -1312,7 +1316,7 @@ void MainWindow::frameQt()
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (!s_StreamingData && s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		m_PropertiesEditor->setInfo("<b>Co-processor engine fault</b><br><br>"
 			"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
