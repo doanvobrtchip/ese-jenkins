@@ -72,11 +72,17 @@ static ramaddr s_LastCoprocessorRead = -1;
 static int s_IdenticalCoprocessorReadCounter = 0;
 static int s_SwapCoprocessorReadCounter = 0;
 static int s_WaitCoprocessorReadCounter = 0;
+#ifdef FT810EMU_MODE
+static int s_FifoCoprocessorReadCounter = 0;
+#endif
 
 static ramaddr s_LastMCURead = -1;
 static int s_IdenticalMCUReadCounter = 0;
 static int s_WaitMCUReadCounter = 0;
 static int s_SwapMCUReadCounter = 0;
+#ifdef FT810EMU_MODE
+static int s_FifoMCUReadCounter = 0;
+#endif
 
 static bool s_ReadDelay;
 
@@ -396,11 +402,17 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	s_IdenticalCoprocessorReadCounter = 0;
 	s_SwapCoprocessorReadCounter = 0;
 	s_WaitCoprocessorReadCounter = 0;
+#ifdef FT810EMU_MODE
+	s_FifoCoprocessorReadCounter = 0;
+#endif
 
 	s_LastMCURead = -1;
 	s_IdenticalMCUReadCounter = 0;
 	s_WaitMCUReadCounter = 0;
 	s_SwapMCUReadCounter = 0;
+#ifdef FT810EMU_MODE
+	s_FifoMCUReadCounter = 0;
+#endif
 
 	s_EmulatorMode = emulatorMode;
 
@@ -488,6 +500,10 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_INT_EN, 0);
 	rawWriteU32(REG_INT_FLAGS, 0);
 
+	rawWriteU32(REG_CMD_WRITE, 0);
+	rawWriteU32(REG_CMD_READ, 0);
+	rawWriteU32(REG_CMD_DL, 0);
+
 	s_CpuReset = false;
 }
 
@@ -535,6 +551,9 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 	switch (address)
 	{
 #ifdef FT810EMU_MODE
+	case REG_MEDIAFIFO_WRITE:
+		s_FifoCoprocessorCounter = 0;
+		break;
 	case REG_CMDB_WRITE:
 #endif
 	case REG_CMD_WRITE:
@@ -589,6 +608,16 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 		switch (address)
 		{
 #ifdef FT810EMU_MODE
+		case REG_MEDIAFIFO_READ:
+			++s_FifoMCUReadCounter;
+			if (s_FifoMCUReadCounter > 8)
+			{
+				// printf(" Delay MCU \n");
+				FT8XXEMU::System.prioritizeCoprocessorThread();
+				FT8XXEMU::System.delayForMCU(1);
+				FT8XXEMU::System.unprioritizeCoprocessorThread();
+			}
+			break;
 		case REG_CMDB_SPACE:
 #endif
 		case REG_CMD_READ: // wait for read advance from coprocessor thread
@@ -747,6 +776,9 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 	switch (address)
 	{
 #ifdef FT810EMU_MODE
+	case REG_MEDIAFIFO_READ:
+		s_FifoMCUReadCounter = 0;
+		break;
 	case REG_CMDB_SPACE:
 #endif
 	case REG_CMD_READ:
@@ -779,6 +811,17 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 	{
 		switch (address)
 		{
+#ifdef FT810EMU_MODE
+		case REG_MEDIAFIFO_WRITE:
+			++s_FifoCoprocessorReadCounter;
+			if (s_FifoCoprocessorReadCounter > 8)
+			{
+				FT8XXEMU::System.prioritizeMCUThread();
+				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System.unprioritizeMCUThread();
+			}
+			break;
+#endif
 		case REG_CMD_WRITE: // wait for writes from mcu thread
 			++s_WaitCoprocessorReadCounter;
 			if (s_WaitCoprocessorReadCounter > 8)
@@ -830,6 +873,12 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		{
 			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
+#ifdef FT810EMU_MODE
+		else if (address < RAM_DL)
+		{
+			s_FifoCoprocessorReadCounter = 0;
+		}
+#endif
 	}
 
 	switch (address)
@@ -877,6 +926,12 @@ uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
 			s_WaitCoprocessorReadCounter = 0;
 			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
+#ifdef FT810EMU_MODE
+		else if (address < RAM_DL)
+		{
+			s_FifoCoprocessorReadCounter = 0;
+		}
+#endif
 	}
 
 	if ((address & ~0x1) >= FT800EMU_RAM_SIZE)
@@ -933,6 +988,12 @@ uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
 			s_WaitCoprocessorReadCounter = 0;
 			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
+#ifdef FT810EMU_MODE
+		else if (address < RAM_DL)
+		{
+			s_FifoCoprocessorReadCounter = 0;
+		}
+#endif
 	}
 
 	return rawReadU8(address);
