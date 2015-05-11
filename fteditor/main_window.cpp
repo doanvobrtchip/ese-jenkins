@@ -660,8 +660,9 @@ void loop()
 				{
 					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 					wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-					if (!s_EmulatorRunning) return;
-					if ((rp & 0xFFF) == 0xFFF) return;
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rp & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
 				} while (rp || wp);
 				wp = 0;
 				rp = 0;
@@ -692,8 +693,8 @@ void loop()
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
-					if (!s_EmulatorRunning) return;
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
 				}
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
@@ -708,8 +709,9 @@ void loop()
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
-					if (!s_EmulatorRunning) return;
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
 				}
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				swr32(CMD_DLSTART);
@@ -720,8 +722,8 @@ void loop()
 				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
 				{
-					if (!s_EmulatorRunning) return;
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
 				}
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				s_WaitingCoprocessorAnimation = false;
