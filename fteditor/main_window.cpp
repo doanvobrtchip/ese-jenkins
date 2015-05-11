@@ -2558,6 +2558,7 @@ void MainWindow::clearEditor()
 	m_Macro->clear();
 	m_ContentManager->clear();
 	//m_BitmapSetup->clear();
+	m_ProjectDock->setVisible(true);
 }
 
 void MainWindow::clearUndoStack()
