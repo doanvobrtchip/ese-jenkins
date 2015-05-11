@@ -681,6 +681,7 @@ void CoprocessorClass::execute()
 	{
 		if (Memory.coprocessorGetReset())
 		{
+			ejpg.reset();
 			cpureset();
 			//printf("RESET COPROCESSOR\n");
 			FT8XXEMU::System.delay(1);
