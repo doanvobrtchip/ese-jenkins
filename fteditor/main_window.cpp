@@ -741,6 +741,36 @@ void loop()
 				}
 				else
 				{
+					printf("Flush before stream\n");
+					if (true) // Flush first
+					{
+						swrend();
+						wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+						do
+						{
+							if (!s_EmulatorRunning) return;
+							rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+							if ((rp & 0xFFF) == 0xFFF) return;
+							fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+						} while (fullness > cmdLen); // Ok to keep streaming command in
+						freespace = ((4096 - 4) - fullness);
+
+						int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
+						for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+						{
+							if (cpWrite[i] >= 0)
+							{
+								// printf("A %i\n", i);
+								s_DisplayListCoprocessorCommandWrite[i]
+									= coprocessorWrites[cpWrite[i]];
+							}
+						}
+						for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+						FT8XXEMU_clearDisplayListCoprocessorWrites();
+
+						swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+					}
+
 					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
 					QFile cmdFile(useFileStream);
 					printf("File size: %i\n", (int)cmdFile.size());
