@@ -832,6 +832,12 @@ void loop()
 						{
 							// done
 							printf("Stream finished: %i bytes\n", (int)writeCount);
+							if (writeCount == 0)
+							{
+								resetCoprocessorFromLoop();
+								swrend();
+								return;
+							}
 							break;
 						}
 						if (!s_EmulatorRunning)
