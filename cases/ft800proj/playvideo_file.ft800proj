@@ -1,0 +1,18 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND, \"c:/temp/small.avi\")",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}
