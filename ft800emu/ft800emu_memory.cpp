@@ -552,7 +552,7 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 	{
 #ifdef FT810EMU_MODE
 	case REG_MEDIAFIFO_WRITE:
-		s_FifoCoprocessorCounter = 0;
+		s_FifoCoprocessorReadCounter = 0;
 		break;
 	case REG_CMDB_WRITE:
 #endif
