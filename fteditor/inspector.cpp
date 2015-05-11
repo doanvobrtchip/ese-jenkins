@@ -159,6 +159,8 @@ bool wantRegister(int regEnum)
 	case FTEDITOR_REG_TRACKER:
 		return true;
 	case FTEDITOR_REG_CMDB_SPACE:
+	case FTEDITOR_REG_MEDIAFIFO_READ:
+	case FTEDITOR_REG_MEDIAFIFO_WRITE:
 		return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810;
 	default:
 		return false;
@@ -256,8 +258,28 @@ void Inspector::frameQt()
 		{
 			if (m_RegisterItems[regEnum])
 			{
-				uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
-				uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
+				uint32_t regValue;
+				switch (regEnum)
+				{
+					case FTEDITOR_REG_CMDB_SPACE:
+					{
+						/*uint32_t wp = rawReadU32(REG_CMD_WRITE);
+						uint32_t rp = rawReadU32(REG_CMD_READ);
+						return 4092 - ((wp - rp) & 0xFFF);*/
+						uint32_t wpaddr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE);
+						uint32_t rpaddr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ);
+						uint32_t wp = reinterpret_cast<uint32_t &>(ram[wpaddr]);
+						uint32_t rp = reinterpret_cast<uint32_t &>(ram[rpaddr]);
+						regValue = 4092 - ((wp - rp) & 0xFFF);
+						break;
+					}
+					default:
+					{
+						uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
+						regValue = reinterpret_cast<uint32_t &>(ram[addr]);
+						break;
+					}
+				}
 				if (m_RegisterCopy[regEnum] != regValue)
 				{
 					m_RegisterCopy[regEnum] = regValue;
