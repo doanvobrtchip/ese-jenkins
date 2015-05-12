@@ -3,7 +3,7 @@
     ],
     "coprocessor": [
         "CMD_MEDIAFIFO(983040, 65536)",
-        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO, \"c:/temp/small.avi\")",
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO, \"../small.avi\")",
         ""
     ],
     "displayList": [

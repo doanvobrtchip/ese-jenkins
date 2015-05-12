@@ -2,7 +2,7 @@
     "content": [
     ],
     "coprocessor": [
-        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND, \"c:/temp/small.avi\")",
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND, \"../small.avi\")",
         "CMD_DLSTART()",
         "CMD_BUTTON(348, 53, 120, 36, 27, 0, \"Button\")",
         ""
