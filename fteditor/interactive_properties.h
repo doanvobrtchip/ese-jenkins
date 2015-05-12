@@ -97,6 +97,7 @@ private:
 	void addAddress(int address);
 	void addSize(int address);
 	void addMemorySize(int size);
+	void addCaptureButton(const QString &text, const QString &undoMessage);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
@@ -119,6 +120,7 @@ private:
 	class PropertiesColor;
 	class PropertiesComboBox;
 	class PropertiesRemapComboBox;
+	class PropertiesCaptureButton;
 
 	MainWindow *m_MainWindow;
 

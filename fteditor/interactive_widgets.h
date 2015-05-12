@@ -26,9 +26,12 @@
 #include <QFrame>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QPushButton>
+#include <QFileDialog>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
+#include <ft8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -37,6 +40,7 @@
 #include "dl_editor.h"
 #include "undo_stack_disabler.h"
 #include "constant_mapping.h"
+#include "constant_common.h"
 
 namespace FTEDITOR {
 
@@ -828,6 +832,245 @@ private:
 	const int *m_ToEnum;
 	int m_ToEnumSz;
 	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
+FT8XXEMU_FORCE_INLINE unsigned int mul255div63(const int &value)
+{
+	return ((value * 16575) + 65) >> 12;
+}
+
+FT8XXEMU_FORCE_INLINE unsigned int mul255div31(const int &value)
+{
+	return ((value * 8415) + 33) >> 10;
+}
+
+FT8XXEMU_FORCE_INLINE unsigned int mul255div15(const int &value)
+{
+	return ((value * 4335) + 17) >> 8;
+}
+
+class InteractiveProperties::PropertiesCaptureButton : public QPushButton, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesCaptureButton(InteractiveProperties *parent, const QString &text, const QString &undoMessage) : QPushButton(parent), PropertiesWidget(parent, undoMessage)
+	{
+		setText(text);
+		connect(this, SIGNAL(clicked()), this, SLOT(actCapture()));
+	}
+
+	virtual ~PropertiesCaptureButton()
+	{
+
+	}
+
+	virtual void modifiedEditorLine()
+	{
+
+	}
+
+private slots:
+	void actCapture()
+	{
+		const DlParsed &parsed = getLine();
+
+		QString filterpng = tr("PNG image (*.png)");
+		QString filterjpg = tr("JPG image (*.jpg)");
+		QString filterargb4 = tr("Raw ARGB4 image (*.argb4)");
+		QString filterargb8 = tr("Raw ARGB8 image (*.argb8)");
+		QString filterrgb565 = tr("Raw RGB565 image (*.rgb565)");
+
+		QString filter; // = filterpng + ";;" + filterjpg;
+
+		uint8_t *ram = FT8XXEMU_getRam();
+		uint16_t *ram16 = reinterpret_cast<uint16_t *>(ram);
+		int *ram32 = reinterpret_cast<int *>(ram);
+		int sourceFormat;
+		int memAddress;
+		int imageWidth;
+		int imageHeight;
+		switch (parsed.IdLeft)
+		{
+		case FTEDITOR_CO_COMMAND:
+			switch (parsed.IdRight | FTEDITOR_CO_COMMAND)
+			{
+			case CMD_SNAPSHOT:
+				sourceFormat = ARGB4;
+				filter = filterargb4 + ";;" + filterpng + ";; " + filterjpg;
+				memAddress = parsed.Parameter[0].I;
+				imageWidth = ram32[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE) >> 2];
+				imageHeight = ram32[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE) >> 2];
+				break;
+			case CMD_SNAPSHOT2:
+				sourceFormat = parsed.Parameter[0].I;
+				memAddress = parsed.Parameter[1].I;
+				imageWidth = parsed.Parameter[4].I;
+				imageHeight = parsed.Parameter[5].I;
+				switch (parsed.Parameter[0].I)
+				{
+				case RGB565:
+					filter = filterrgb565 + ";;" + filterpng + ";; " + filterjpg;
+					break;
+				case ARGB4:
+					filter = filterargb4 + ";;" + filterpng + ";; " + filterjpg;
+					break;
+				case ARGB8_SNAPSHOT:
+					filter = filterargb8 + ";;" + filterpng + ";; " + filterjpg;
+					break;
+				default:
+					return;
+				}
+				break;
+			default:
+				return;
+			}
+			break;
+		default:
+			return;
+		}
+
+		int bpp;
+		switch (sourceFormat)
+		{
+		case ARGB4:
+		case RGB565:
+			bpp = 8 * 2;
+			break;
+		case ARGB8_SNAPSHOT:
+			bpp = 8 * 4;
+			break;
+		default:
+			return;
+		}
+
+		bool alpha;
+		switch (sourceFormat)
+		{
+		case ARGB4:
+		case ARGB8_SNAPSHOT:
+			alpha = true;
+			break;
+		default:
+			alpha = false;
+		}
+
+		int memSize = (imageWidth * imageHeight * bpp) / 8;
+
+		if (memSize <= 0)
+			return;
+
+		if (memSize > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - memAddress)
+			return;
+
+		QString fileName = QFileDialog::getSaveFileName(this, text(), m_InteractiveProperties->m_MainWindow->getFileDialogPath(), filter, &filter);
+		if (fileName.isNull())
+			return;
+
+		int targetFormat;
+		// 0: no conversion
+		// 1: to png
+		// 2: to jpg
+		if (filter == filterpng)
+		{
+			targetFormat = 1;
+			if (!fileName.endsWith(".png"))
+				fileName = fileName + ".png";
+		}
+		else if (filter == filterjpg)
+		{
+			targetFormat = 2;
+			if (!fileName.endsWith(".jpg"))
+				fileName = fileName + ".jpg";
+		}
+		else if (filter == filterargb4)
+		{
+			targetFormat = 0;
+			if (!fileName.endsWith(".argb4"))
+				fileName = fileName + ".argb4";
+		}
+		else if (filter == filterargb8)
+		{
+			targetFormat = 0;
+			if (!fileName.endsWith(".argb8"))
+				fileName = fileName + ".argb8";
+		}
+		else if (filter == filterrgb565)
+		{
+			targetFormat = 0;
+			if (!fileName.endsWith(".rgb565"))
+				fileName = fileName + ".rgb565";
+		}
+		else
+		{
+			targetFormat = 0;
+		}
+
+		switch (targetFormat)
+		{
+			case 0:
+			{
+				QFile file(fileName);
+				file.open(QIODevice::WriteOnly);
+				QDataStream out(&file);
+				out.writeRawData((const char *)(void *)&ram[memAddress], memSize);
+			}
+			case 1:
+			case 2:
+			{
+				QImage image(imageWidth, imageHeight, QImage::Format_RGB32);
+				argb8888 *buffer = (argb8888 *)(void *)&ram[memAddress];
+				switch (sourceFormat)
+				{
+				case ARGB4:
+					for (int y = 0; y < imageHeight; ++y)
+					{
+						argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
+						uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
+						for (int x = 0; x < imageWidth; ++x)
+						{
+							uint16_t val = input[x];
+							scanline[x] = (mul255div15(val >> 12) << 24)
+								| (mul255div15((val >> 8) & 0xF) << 16)
+								| (mul255div15((val >> 4) & 0xF) << 8)
+								| (mul255div15(val & 0xF));
+						}
+					}
+					break;
+				case RGB565:
+					for (int y = 0; y < imageHeight; ++y)
+					{
+						argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
+						uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
+						for (int x = 0; x < imageWidth; ++x)
+						{
+							uint16_t val = input[x];
+							scanline[x] = 0xFF000000 // todo opt
+								| (mul255div31(val >> 11) << 16)
+								| (mul255div63((val >> 5) & 0x3F) << 8)
+								| mul255div31(val & 0x1F);
+						}
+					}
+					break;
+				case ARGB8_SNAPSHOT:
+					for (int y = 0; y < imageHeight; ++y)
+						memcpy(image.scanLine(y), &buffer[y * imageWidth], sizeof(argb8888) * imageWidth);
+					break;
+				}
+				image.save(fileName);
+				break;
+			}
+		}
+
+		// Save screenshot
+		/*const QPixmap &pixmap = m_EmulatorViewport->getPixMap();
+		pixmap.save(fileName);*/
+
+		// TODO: Automatically add to content manager
+	}
 
 };
 

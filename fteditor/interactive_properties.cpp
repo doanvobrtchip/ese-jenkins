@@ -595,6 +595,14 @@ void InteractiveProperties::addMemorySize(int size)
 	prop->done();
 }
 
+void InteractiveProperties::addCaptureButton(const QString &text, const QString &undoMessage)
+{
+	PropertiesCaptureButton *prop = new PropertiesCaptureButton(this, text, undoMessage);
+	((QVBoxLayout *)layout())->addWidget(prop);
+	m_CurrentWidgets.push_back(prop);
+	m_CurrentProperties.push_back(prop);
+}
+
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 {
 	// printf("InteractiveProperties::setEditorLine(...)\n");
@@ -973,7 +981,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_SNAPSHOT");
 				addAddress(0);
-				// TODO: SNAPSHOT CAPTURE TO CONTENT BUTTON
+				addCaptureButton(tr("Capture Snapshot"), tr("Capture snapshot"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1221,7 +1229,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addAddress(1);
 				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
 				addWH(4, 5, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
-				// TODO: SNAPSHOT CAPTURE TO CONTENT BUTTON
+				addCaptureButton(tr("Capture Snapshot"), tr("Capture snapshot"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
