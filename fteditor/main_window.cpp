@@ -1178,7 +1178,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
-	m_ImportAct(NULL), m_ExportAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL),
+	m_ImportAct(NULL), m_ExportAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL), 
 	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_TemporaryDir(NULL)
@@ -1562,6 +1562,9 @@ void MainWindow::createActions()
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
 
+	m_ImportDisplayListAct = new QAction(this);
+	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
+
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -1609,6 +1612,8 @@ void MainWindow::translateActions()
 	m_ResetEmulatorAct->setStatusTip(tr("Reset the emulated device"));
 	m_SaveScreenshotAct->setText(tr("Save Screenshot"));
 	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
+	m_ImportDisplayListAct->setText(tr("Import Display List"));
+	m_ImportDisplayListAct->setStatusTip(tr("Import active display list from emulator to editor"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_ManualAct->setText(tr("Manual"));
@@ -1655,6 +1660,7 @@ void MainWindow::createMenus()
 	m_ToolsMenu = menuBar()->addMenu(QString::null);
 	m_ToolsMenu->addAction(m_ResetEmulatorAct);
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
+	m_ToolsMenu->addAction(m_ImportDisplayListAct);
 
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
 
@@ -3352,6 +3358,19 @@ void MainWindow::actSaveScreenshot()
 	// Save screenshot
 	const QPixmap &pixmap = m_EmulatorViewport->getPixMap();
 	pixmap.save(fileName);
+}
+
+void MainWindow::actImportDisplayList()
+{
+	m_UndoStack->beginMacro(tr("Import display list"));
+	m_DlEditor->lockDisplayList();
+	memcpy(m_DlEditor->getDisplayList(), FT8XXEMU_getDisplayList(), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	m_CmdEditor->clear();
+	m_UndoStack->endMacro();
+	m_DlEditorDock->setVisible(true);
+	focusDlEditor();
 }
 
 void MainWindow::dummyCommand()

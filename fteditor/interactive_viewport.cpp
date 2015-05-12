@@ -1071,6 +1071,11 @@ void InteractiveViewport::updatePointerMethod()
 
 void InteractiveViewport::snapPos(int &xd, int &yd, int xref, int yref)
 {
+	// Disabled
+	xd = 0;
+	yd = 0;
+	return;
+
 	if (QApplication::keyboardModifiers() & (Qt::ControlModifier | Qt::ShiftModifier))
 	{
 		// Hold CTRL to disable snap
