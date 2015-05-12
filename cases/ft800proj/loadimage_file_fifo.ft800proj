@@ -15,6 +15,9 @@
     "displayList": [
         ""
     ],
+    "project": {
+        "device": 2065
+    },
     "registers": {
         "hSize": 480,
         "macro": [

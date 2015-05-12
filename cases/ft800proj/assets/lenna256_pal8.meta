@@ -1,0 +1,5 @@
+{
+    "converter": "Image",
+    "imageFormat": 16,
+    "sourcePath": "../lenna256.png"
+}

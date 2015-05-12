@@ -2787,6 +2787,15 @@ void MainWindow::actOpen()
 	if (parseError.error == QJsonParseError::NoError)
 	{
 		QJsonObject root = doc.object();
+		if (root.contains("project"))
+		{
+			QJsonObject project = root["project"].toObject();
+			m_ProjectDevice->setCurrentIndex(deviceToIntf((FT8XXEMU_EmulatorMode)((QJsonValue)project["device"]).toVariant().toInt()));
+		}
+		else
+		{
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT801);
+		}
 		QJsonObject registers = root["registers"].toObject();
 		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
 		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
@@ -2864,6 +2873,9 @@ QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocess
 QByteArray MainWindow::toJson(bool exportScript)
 {
 	QJsonObject root;
+	QJsonObject project;
+	project["device"] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
+	root["project"] = project;
 	QJsonObject registers;
 	registers["hSize"] = s_HSize;
 	registers["vSize"] = s_VSize;
@@ -3178,6 +3190,9 @@ void MainWindow::actResetEmulator()
 	printf("Reset emulator parameters\n");
 	resetemu();
 	m_ContentManager->reuploadAll();
+	m_DlEditor->poke();
+	m_CmdEditor->poke();
+	m_Macro->poke();
 
 	// Start the emulator
 	startEmulatorInternal();
@@ -3236,6 +3251,9 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	printf("Reset emulator parameters\n");
 	resetemu();
 	m_ContentManager->reuploadAll();
+	m_DlEditor->poke();
+	m_CmdEditor->poke();
+	m_Macro->poke();
 
 	// Start the emulator
 	startEmulatorInternal();

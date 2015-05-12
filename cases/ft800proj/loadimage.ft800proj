@@ -6,24 +6,27 @@
             "dataEmbedded": true,
             "destName": "assets/lenna256jpg",
             "memoryAddress": 0,
-            "memoryLoaded": true,
+            "memoryLoaded": false,
             "rawLength": 0,
             "rawStart": 0,
-            "sourcePath": "/home/kaetemi/sync/source/ft800emu/cases/lenna256.jpg"
+            "sourcePath": "../lenna256.jpg"
         }
     ],
     "coprocessor": [
         "CLEAR(1, 1, 1)",
         "CMD_BUTTON(37, 26, 120, 36, 27, 0, \"Button\")",
-        "CMD_LOADIMAGE(0, 0, \"../lenna256.jpg\")",
+        "CMD_LOADIMAGE(0, 0, \"assets/lenna256jpg.raw\")",
         "BEGIN(BITMAPS)",
-        "VERTEX2II(173, 115, 0, 0)",
+        "VERTEX2II(207, 11, 0, 0)",
         "END()",
         ""
     ],
     "displayList": [
         ""
     ],
+    "project": {
+        "device": 2064
+    },
     "registers": {
         "hSize": 480,
         "macro": [

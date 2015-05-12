@@ -4,7 +4,7 @@
             "converter": "Font",
             "dataCompressed": true,
             "dataEmbedded": true,
-            "destName": "assets/vera",
+            "destName": "assets/vera_l2",
             "fontCharSet": "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
             "fontSize": 64,
             "imageFormat": 17,
@@ -23,6 +23,9 @@
     "displayList": [
         ""
     ],
+    "project": {
+        "device": 2064
+    },
     "registers": {
         "hSize": 480,
         "macro": [

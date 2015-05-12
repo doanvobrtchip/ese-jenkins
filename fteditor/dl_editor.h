@@ -62,6 +62,7 @@ public:
 	void setModeMacro();
 
 	void bindCurrentDevice();
+	void poke() { m_DisplayListModified = true; }
 
 	void clearUndoStack();
 	void clear();
