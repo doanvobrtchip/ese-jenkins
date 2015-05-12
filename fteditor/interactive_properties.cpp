@@ -302,6 +302,14 @@ void InteractiveProperties::addText(int text)
 	m_CurrentProperties.push_back(propText);
 }
 
+void InteractiveProperties::addStream(int stream)
+{
+	// TODO: More appropriate GUI
+	PropertiesLineEdit *propText = new PropertiesLineEdit(this, "Set stream", stream);
+	addLabeledWidget("Stream: ", propText);
+	m_CurrentProperties.push_back(propText);
+}
+
 void InteractiveProperties::addValueSlider(int val, int maxim)
 {
 	PropertiesSlider *propVal = new PropertiesSlider(this, "Set value", val);
@@ -568,13 +576,21 @@ void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const 
 
 void InteractiveProperties::addBitmapFilter(int filter)
 {
-	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, "Filter: ", "Set bitmap filter");
+	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, tr("Filter") + ": ", tr("Set bitmap filter"));
 }
 
 void InteractiveProperties::addAddress(int address)
 {
-	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, "Set address", address);
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), address);
 	addLabeledWidget("Address: ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
+void InteractiveProperties::addMemorySize(int size)
+{
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set size"), size);
+	addLabeledWidget("Size: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
 }
@@ -957,6 +973,21 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_SNAPSHOT");
 				addAddress(0);
+				// TODO: SNAPSHOT CAPTURE TO CONTENT BUTTON
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_LOADIMAGE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIMAGE."));
+			if (editor)
+			{
+				setTitle("CMD_LOADIMAGE");
+				addAddress(0);
+				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO);
+				addStream(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1067,7 +1098,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_NUMBER."));
 			if (editor)
 			{
-				setTitle("CMD_TEXT");
+				setTitle("CMD_NUMBER");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addHandle(2, true);
 				addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_SIGNED);
@@ -1190,6 +1221,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addAddress(1);
 				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
 				addWH(4, 5, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
+				// TODO: SNAPSHOT CAPTURE TO CONTENT BUTTON
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1207,13 +1239,32 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		/*
-		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
-		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
-		s_CmdParamString[CMD_MEDIAFIFO & 0xFF] = false;
-		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF;
-		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 1;
-		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = false;*/
+		case CMD_MEDIAFIFO:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEDIAFIFO."));
+			if (editor)
+			{
+				setTitle("CMD_MEDIAFIFO");
+				addAddress(0);
+				addMemorySize(1);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_PLAYVIDEO:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_PLAYVIDEO."));
+			if (editor)
+			{
+				setTitle("CMD_PLAYVIDEO");
+				addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_MONO | OPT_SOUND);
+				addStream(1);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		case CMD_SETFONT2:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETFONT2."));
@@ -1262,6 +1313,18 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+		/*case CMD_VIDEOSTART:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOSTART."));
+			if (editor)
+			{
+				setTitle("CMD_VIDEOSTART");
+				// ...
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}*/
 		/*
 		s_CmdIdMap["CMD_VIDEOSTART"] = CMD_VIDEOSTART & 0xFF;
 		s_CmdParamCount[CMD_VIDEOSTART & 0xFF] = 0;

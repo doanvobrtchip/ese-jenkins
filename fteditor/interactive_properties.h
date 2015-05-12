@@ -65,6 +65,7 @@ private:
 	void addOptions(int options, uint32_t flags, bool flatOnly = false);
 	void addCharacter(int character);
 	void addText(int text);
+	void addStream(int stream);
 	void addValueSlider(int val, int maxim);
 	void addValueSliderDyn(int val, int maxim);
 	void addValueSliderDynSub(int val, int sub, int maxim);
@@ -94,6 +95,8 @@ private:
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
 	void addAddress(int address);
+	void addSize(int address);
+	void addMemorySize(int size);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);

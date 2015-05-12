@@ -298,9 +298,9 @@ void DlParser::initVC2()
 		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		// s_CmdParamString[CMD_REGREAD & 0xFF] = false;
-		// s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // don't support streaming data into cmd
-		// s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 2;
-		// s_CmdParamString[CMD_MEMWRITE & 0xFF] = false;
+		/*s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
+		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;*/
 		s_CmdIdMap["CMD_MEMSET"] = CMD_MEMSET & 0xFF;
 		s_CmdParamCount[CMD_MEMSET & 0xFF] = 3;
 		s_CmdParamString[CMD_MEMSET & 0xFF] = false;
@@ -322,9 +322,9 @@ void DlParser::initVC2()
 		// s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
 		// s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
-		// s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF; // don't support streaming data into cmd
-		// s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
-		// s_CmdParamString[CMD_INFLATE & 0xFF] = false;
+		/*s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF; // STREAMING DATA
+		s_CmdParamCount[CMD_INFLATE & 0xFF] = 2;
+		s_CmdParamString[CMD_INFLATE & 0xFF] = true;*/
 		// s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
 		// s_CmdParamCount[CMD_GETPTR & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPTR & 0xFF] = false;
@@ -1709,12 +1709,18 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, const DlParsed &par
 			case CMD_KEYS:
 				if (p == 5) paramType = 1;
 				break;
+			case CMD_LOADIMAGE:
+				if (p == 1) paramType = 1;
+				break;
 #if defined(FTEDITOR_PARSER_VC2)
 			case CMD_SETBITMAP:
 				if (p == 1) paramType = 2;
 				break;
 			case CMD_SNAPSHOT2:
 				if (p == 0) paramType = 2;
+				break;
+			case CMD_PLAYVIDEO:
+				if (p == 0) paramType = 1;
 				break;
 #endif
 			}
