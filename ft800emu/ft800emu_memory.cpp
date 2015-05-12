@@ -460,6 +460,14 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_VOL_PB, 0xFF);
 	rawWriteU32(REG_VOL_SOUND, 0xFF);
 	rawWriteU32(REG_SOUND, 0);
+	
+	rawWriteU32(REG_PLAYBACK_PLAY, 0);
+	rawWriteU32(REG_PLAYBACK_LOOP, 0);
+	rawWriteU32(REG_PLAYBACK_FORMAT, 0);
+	rawWriteU32(REG_PLAYBACK_FREQ, 8000);
+	rawWriteU32(REG_PLAYBACK_READPTR, 0);
+	rawWriteU32(REG_PLAYBACK_LENGTH, 0);
+	rawWriteU32(REG_PLAYBACK_START, 0);
 
 	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000);
 	rawWriteU32(REG_TOUCH_TRANSFORM_B, 0x00);
