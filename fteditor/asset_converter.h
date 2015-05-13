@@ -47,7 +47,7 @@ public:
 	static void convertImagePaletted(QString &buildError, const QString &inFile, const QString &outName, int format);
 	static bool getImageInfo(ImageInfo &bitmapInfo, const QString &name);
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
-	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet);
+	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet, int offset);
 	static void release();
 
 }; /* class AssetConverter */

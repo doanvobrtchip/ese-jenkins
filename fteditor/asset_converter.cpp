@@ -521,7 +521,7 @@ struct FontMetricBlock
 	};
 };
 
-void AssetConverter::convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet)
+void AssetConverter::convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet, int offset)
 {
 #ifdef FT800EMU_FREETYPE
 	if (charSet.size() > 128)
@@ -729,7 +729,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 			}
 			idx += slot->bitmap.pitch;
 		}
-		fmb.Value.Advance[i] = adv;
+		fmb.Value.Advance[(i + offset) & 0x7F] = adv;
 	}
 	// TEST ->
 	QImage qimage(&bitmapBuffer[0], maxw, maxh * charSet.size(), (format == L1) ? QImage::Format_Mono : QImage::Format_Indexed8);

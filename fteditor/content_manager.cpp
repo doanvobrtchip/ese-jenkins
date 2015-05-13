@@ -1204,7 +1204,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
 						break;
 					case ContentInfo::Font:
-						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet);
+						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
 						break;
 					default:
 						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
