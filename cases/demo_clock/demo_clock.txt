@@ -1,0 +1,1811 @@
+
+a.out:     file format elf32-v3
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+_start():
+       0:	ff ff 30 00 	0030ffff jmp 3fffc <EXITEXIT+0x20000>
+       4:	52 03 30 00 	00300352 jmp d48 <ft900_watchdog>
+       8:	3f 00 30 00 	0030003f jmp fc <interrupt_0>
+       c:	42 00 30 00 	00300042 jmp 108 <interrupt_1>
+      10:	45 00 30 00 	00300045 jmp 114 <interrupt_2>
+      14:	48 00 30 00 	00300048 jmp 120 <interrupt_3>
+      18:	4b 00 30 00 	0030004b jmp 12c <interrupt_4>
+      1c:	4e 00 30 00 	0030004e jmp 138 <interrupt_5>
+      20:	51 00 30 00 	00300051 jmp 144 <interrupt_6>
+      24:	54 00 30 00 	00300054 jmp 150 <interrupt_7>
+      28:	57 00 30 00 	00300057 jmp 15c <interrupt_8>
+      2c:	5a 00 30 00 	0030005a jmp 168 <interrupt_9>
+      30:	5d 00 30 00 	0030005d jmp 174 <interrupt_10>
+      34:	60 00 30 00 	00300060 jmp 180 <interrupt_11>
+      38:	63 00 30 00 	00300063 jmp 18c <interrupt_12>
+      3c:	66 00 30 00 	00300066 jmp 198 <interrupt_13>
+      40:	69 00 30 00 	00300069 jmp 1a4 <interrupt_14>
+      44:	6c 00 30 00 	0030006c jmp 1b0 <interrupt_15>
+      48:	6f 00 30 00 	0030006f jmp 1bc <interrupt_16>
+      4c:	72 00 30 00 	00300072 jmp 1c8 <interrupt_17>
+      50:	75 00 30 00 	00300075 jmp 1d4 <interrupt_18>
+      54:	78 00 30 00 	00300078 jmp 1e0 <interrupt_19>
+      58:	7b 00 30 00 	0030007b jmp 1ec <interrupt_20>
+      5c:	7e 00 30 00 	0030007e jmp 1f8 <interrupt_21>
+      60:	81 00 30 00 	00300081 jmp 204 <interrupt_22>
+      64:	84 00 30 00 	00300084 jmp 210 <interrupt_23>
+      68:	87 00 30 00 	00300087 jmp 21c <interrupt_24>
+      6c:	8a 00 30 00 	0030008a jmp 228 <interrupt_25>
+      70:	8d 00 30 00 	0030008d jmp 234 <interrupt_26>
+      74:	90 00 30 00 	00300090 jmp 240 <interrupt_27>
+      78:	93 00 30 00 	00300093 jmp 24c <interrupt_28>
+      7c:	96 00 30 00 	00300096 jmp 258 <interrupt_29>
+      80:	99 00 30 00 	00300099 jmp 264 <interrupt_30>
+      84:	9c 00 30 00 	0030009c jmp 270 <interrupt_31>
+      88:	fe ff 30 00 	0030fffe jmp 3fff8 <EXITEXIT+0x1fffc>
+
+0000008c <codestart>:
+codestart():
+      8c:	25 00 30 00 	00300025 jmp 94 <init>
+
+00000090 <_exithook>:
+_exithook():
+      90:	00 00 00 a0 	a0000000 return 
+
+00000094 <init>:
+init():
+      94:	80 00 00 64 	64000080 ldk.l $r0,80 <_start+0x80>
+      98:	e3 00 01 b8 	b80100e3 sta.b 100e3 <UART+0xdf>,$r0
+      9c:	a4 16 00 64 	640016a4 ldk.l $r0,16a4 <_etext>
+      a0:	50 17 10 64 	64101750 ldk.l $r1,1750 <__data_load_end>
+      a4:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+      a8:	2f 00 30 00 	0030002f jmp bc <.dscopy>
+
+000000ac <.dsloop>:
+.dsloop():
+      ac:	00 00 30 cc 	cc300000 lpmi.l $r3,$r0,0 <_start>
+      b0:	40 40 00 44 	44004040 add.l $r0,$r0,4 <_start+0x4>
+      b4:	00 80 21 b4 	b4218000 sti.l $r2,0 <_start>,$r3
+      b8:	40 40 21 44 	44214040 add.l $r2,$r2,4 <_start+0x4>
+
+000000bc <.dscopy>:
+.dscopy():
+      bc:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+      c0:	2b 00 20 01 	0120002b jmpc 4,$r30,0,ac <.dsloop>
+      c4:	ac 00 00 64 	640000ac ldk.l $r0,ac <.dsloop>
+      c8:	18 01 20 64 	64200118 ldk.l $r2,118 <interrupt_2+0x4>
+      cc:	02 00 21 44 	44210002 sub.l $r2,$r2,$r0
+      d0:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+      d4:	27 80 00 f4 	f4008027 memset.l $r0,$r1,$r2
+      d8:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+      dc:	39 03 34 00 	00340339 call ce4 <ft900_init>
+      e0:	18 01 34 00 	00340118 call 460 <main>
+
+000000e4 <_exit>:
+_exit():
+      e4:	fc ff 01 bc 	bc01fffc sta.l 1fffc <EXITEXIT>,$r0
+      e8:	44 03 34 00 	00340344 call d10 <ft900_exit>
+
+000000ec <forever>:
+forever():
+      ec:	3b 00 30 00 	0030003b jmp ec <forever>
+
+000000f0 <streamout>:
+streamout():
+      f0:	04 00 21 64 	64210004 ldk.l $r2,10004 <UART>
+      f4:	1e 00 20 f0 	f020001e streamout.b $r2,$r0,$r1
+      f8:	00 00 00 a0 	a0000000 return 
+
+000000fc <interrupt_0>:
+interrupt_0():
+      fc:	00 00 00 84 	84000000 push.l $r0
+     100:	00 00 00 c4 	c4000000 lda.l $r0,0 <_start>
+     104:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000108 <interrupt_1>:
+interrupt_1():
+     108:	00 00 00 84 	84000000 push.l $r0
+     10c:	04 00 00 c4 	c4000004 lda.l $r0,4 <_start+0x4>
+     110:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000114 <interrupt_2>:
+interrupt_2():
+     114:	00 00 00 84 	84000000 push.l $r0
+     118:	08 00 00 c4 	c4000008 lda.l $r0,8 <_start+0x8>
+     11c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000120 <interrupt_3>:
+interrupt_3():
+     120:	00 00 00 84 	84000000 push.l $r0
+     124:	0c 00 00 c4 	c400000c lda.l $r0,c <_start+0xc>
+     128:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000012c <interrupt_4>:
+interrupt_4():
+     12c:	00 00 00 84 	84000000 push.l $r0
+     130:	10 00 00 c4 	c4000010 lda.l $r0,10 <_start+0x10>
+     134:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000138 <interrupt_5>:
+interrupt_5():
+     138:	00 00 00 84 	84000000 push.l $r0
+     13c:	14 00 00 c4 	c4000014 lda.l $r0,14 <_start+0x14>
+     140:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000144 <interrupt_6>:
+interrupt_6():
+     144:	00 00 00 84 	84000000 push.l $r0
+     148:	18 00 00 c4 	c4000018 lda.l $r0,18 <_start+0x18>
+     14c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000150 <interrupt_7>:
+interrupt_7():
+     150:	00 00 00 84 	84000000 push.l $r0
+     154:	1c 00 00 c4 	c400001c lda.l $r0,1c <_start+0x1c>
+     158:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000015c <interrupt_8>:
+interrupt_8():
+     15c:	00 00 00 84 	84000000 push.l $r0
+     160:	20 00 00 c4 	c4000020 lda.l $r0,20 <_start+0x20>
+     164:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000168 <interrupt_9>:
+interrupt_9():
+     168:	00 00 00 84 	84000000 push.l $r0
+     16c:	24 00 00 c4 	c4000024 lda.l $r0,24 <_start+0x24>
+     170:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000174 <interrupt_10>:
+interrupt_10():
+     174:	00 00 00 84 	84000000 push.l $r0
+     178:	28 00 00 c4 	c4000028 lda.l $r0,28 <_start+0x28>
+     17c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000180 <interrupt_11>:
+interrupt_11():
+     180:	00 00 00 84 	84000000 push.l $r0
+     184:	2c 00 00 c4 	c400002c lda.l $r0,2c <_start+0x2c>
+     188:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000018c <interrupt_12>:
+interrupt_12():
+     18c:	00 00 00 84 	84000000 push.l $r0
+     190:	30 00 00 c4 	c4000030 lda.l $r0,30 <_start+0x30>
+     194:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000198 <interrupt_13>:
+interrupt_13():
+     198:	00 00 00 84 	84000000 push.l $r0
+     19c:	34 00 00 c4 	c4000034 lda.l $r0,34 <_start+0x34>
+     1a0:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001a4 <interrupt_14>:
+interrupt_14():
+     1a4:	00 00 00 84 	84000000 push.l $r0
+     1a8:	38 00 00 c4 	c4000038 lda.l $r0,38 <_start+0x38>
+     1ac:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001b0 <interrupt_15>:
+interrupt_15():
+     1b0:	00 00 00 84 	84000000 push.l $r0
+     1b4:	3c 00 00 c4 	c400003c lda.l $r0,3c <_start+0x3c>
+     1b8:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001bc <interrupt_16>:
+interrupt_16():
+     1bc:	00 00 00 84 	84000000 push.l $r0
+     1c0:	40 00 00 c4 	c4000040 lda.l $r0,40 <_start+0x40>
+     1c4:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001c8 <interrupt_17>:
+interrupt_17():
+     1c8:	00 00 00 84 	84000000 push.l $r0
+     1cc:	44 00 00 c4 	c4000044 lda.l $r0,44 <_start+0x44>
+     1d0:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001d4 <interrupt_18>:
+interrupt_18():
+     1d4:	00 00 00 84 	84000000 push.l $r0
+     1d8:	48 00 00 c4 	c4000048 lda.l $r0,48 <_start+0x48>
+     1dc:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001e0 <interrupt_19>:
+interrupt_19():
+     1e0:	00 00 00 84 	84000000 push.l $r0
+     1e4:	4c 00 00 c4 	c400004c lda.l $r0,4c <_start+0x4c>
+     1e8:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001ec <interrupt_20>:
+interrupt_20():
+     1ec:	00 00 00 84 	84000000 push.l $r0
+     1f0:	50 00 00 c4 	c4000050 lda.l $r0,50 <_start+0x50>
+     1f4:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001f8 <interrupt_21>:
+interrupt_21():
+     1f8:	00 00 00 84 	84000000 push.l $r0
+     1fc:	54 00 00 c4 	c4000054 lda.l $r0,54 <_start+0x54>
+     200:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000204 <interrupt_22>:
+interrupt_22():
+     204:	00 00 00 84 	84000000 push.l $r0
+     208:	58 00 00 c4 	c4000058 lda.l $r0,58 <_start+0x58>
+     20c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000210 <interrupt_23>:
+interrupt_23():
+     210:	00 00 00 84 	84000000 push.l $r0
+     214:	5c 00 00 c4 	c400005c lda.l $r0,5c <_start+0x5c>
+     218:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000021c <interrupt_24>:
+interrupt_24():
+     21c:	00 00 00 84 	84000000 push.l $r0
+     220:	60 00 00 c4 	c4000060 lda.l $r0,60 <_start+0x60>
+     224:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000228 <interrupt_25>:
+interrupt_25():
+     228:	00 00 00 84 	84000000 push.l $r0
+     22c:	64 00 00 c4 	c4000064 lda.l $r0,64 <_start+0x64>
+     230:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000234 <interrupt_26>:
+interrupt_26():
+     234:	00 00 00 84 	84000000 push.l $r0
+     238:	68 00 00 c4 	c4000068 lda.l $r0,68 <_start+0x68>
+     23c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000240 <interrupt_27>:
+interrupt_27():
+     240:	00 00 00 84 	84000000 push.l $r0
+     244:	6c 00 00 c4 	c400006c lda.l $r0,6c <_start+0x6c>
+     248:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000024c <interrupt_28>:
+interrupt_28():
+     24c:	00 00 00 84 	84000000 push.l $r0
+     250:	70 00 00 c4 	c4000070 lda.l $r0,70 <_start+0x70>
+     254:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000258 <interrupt_29>:
+interrupt_29():
+     258:	00 00 00 84 	84000000 push.l $r0
+     25c:	74 00 00 c4 	c4000074 lda.l $r0,74 <_start+0x74>
+     260:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000264 <interrupt_30>:
+interrupt_30():
+     264:	00 00 00 84 	84000000 push.l $r0
+     268:	78 00 00 c4 	c4000078 lda.l $r0,78 <_start+0x78>
+     26c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000270 <interrupt_31>:
+interrupt_31():
+     270:	00 00 00 84 	84000000 push.l $r0
+     274:	7c 00 00 c4 	c400007c lda.l $r0,7c <_start+0x7c>
+     278:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000027c <interrupt_32>:
+interrupt_32():
+     27c:	00 00 00 84 	84000000 push.l $r0
+     280:	80 00 00 c4 	c4000080 lda.l $r0,80 <_start+0x80>
+     284:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000288 <interrupt_common>:
+interrupt_common():
+     288:	00 80 00 84 	84008000 push.l $r1
+     28c:	00 00 01 84 	84010000 push.l $r2
+     290:	00 80 01 84 	84018000 push.l $r3
+     294:	00 00 02 84 	84020000 push.l $r4
+     298:	00 80 02 84 	84028000 push.l $r5
+     29c:	00 00 03 84 	84030000 push.l $r6
+     2a0:	00 80 03 84 	84038000 push.l $r7
+     2a4:	00 00 04 84 	84040000 push.l $r8
+     2a8:	00 80 04 84 	84048000 push.l $r9
+     2ac:	00 00 05 84 	84050000 push.l $r10
+     2b0:	00 80 05 84 	84058000 push.l $r11
+     2b4:	00 00 06 84 	84060000 push.l $r12
+     2b8:	00 00 0f 84 	840f0000 push.l $r30
+     2bc:	00 00 34 08 	08340000 calli $r0
+     2c0:	00 00 e0 8d 	8de00000 pop.l $r30
+     2c4:	00 00 c0 8c 	8cc00000 pop.l $r12
+     2c8:	00 00 b0 8c 	8cb00000 pop.l $r11
+     2cc:	00 00 a0 8c 	8ca00000 pop.l $r10
+     2d0:	00 00 90 8c 	8c900000 pop.l $r9
+     2d4:	00 00 80 8c 	8c800000 pop.l $r8
+     2d8:	00 00 70 8c 	8c700000 pop.l $r7
+     2dc:	00 00 60 8c 	8c600000 pop.l $r6
+     2e0:	00 00 50 8c 	8c500000 pop.l $r5
+     2e4:	00 00 40 8c 	8c400000 pop.l $r4
+     2e8:	00 00 30 8c 	8c300000 pop.l $r3
+     2ec:	00 00 20 8c 	8c200000 pop.l $r2
+     2f0:	00 00 10 8c 	8c100000 pop.l $r1
+     2f4:	00 00 00 8c 	8c000000 pop.l $r0
+     2f8:	00 00 00 a4 	a4000000 reti 
+
+000002fc <nullvector>:
+nullvector():
+     2fc:	00 00 00 a0 	a0000000 return 
+
+00000300 <__gxx_personality_sj0>:
+_times():
+     300:	f4 ff 11 c4 	c411fff4 lda.l $r1,1fff4 <MICROSECONDS>
+     304:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+     308:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+     30c:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+     310:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+     314:	0c 80 00 b4 	b400800c sti.l $r0,c <_start+0xc>,$r1
+     318:	00 00 00 a0 	a0000000 return 
+
+0000031c <_ZL4showiiPKcm>:
+_ZL4showiiPKcm():
+     31c:	00 80 06 84 	84068000 push.l $r13
+     320:	00 00 07 84 	84070000 push.l $r14
+     324:	00 80 07 84 	84078000 push.l $r15
+     328:	00 00 08 84 	84080000 push.l $r16
+     32c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     330:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     334:	00 c0 e0 44 	44e0c000 move.l $r14,$r1
+     338:	00 40 01 45 	45014000 move.l $r16,$r2
+     33c:	00 c0 f1 44 	44f1c000 move.l $r15,$r3
+     340:	3c 3c 11 64 	64113c3c ldk.l $r1,13c3c <UART+0x3c38>
+     344:	f3 cf 10 44 	4410cff3 ldl.l $r1,$r1,ff <interrupt_0+0x3>
+     348:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     34c:	5c 02 34 00 	0034025c call 970 <_ZN7VCClass7commandEm>
+     350:	0c c0 d6 44 	44d6c00c bexts.l $r13,$r13,0 <_start>
+     354:	00 40 58 44 	44584000 move.l $r5,$r16
+     358:	00 06 40 64 	64400600 ldk.l $r4,600 <main+0x1a0>
+     35c:	1b 00 30 64 	6430001b ldk.l $r3,1b <_start+0x1b>
+     360:	0c 40 27 44 	4427400c bexts.l $r2,$r14,0 <_start>
+     364:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     368:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     36c:	6d 02 34 00 	0034026d call 9b4 <_ZN7VCClass8cmd_textEssstPKc>
+     370:	ff 3f 11 64 	64113fff ldk.l $r1,13fff <UART+0x3ffb>
+     374:	f3 ff 10 44 	4410fff3 ldl.l $r1,$r1,1ff <interrupt_21+0x7>
+     378:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     37c:	5c 02 34 00 	0034025c call 970 <_ZN7VCClass7commandEm>
+     380:	80 41 27 44 	44274180 add.l $r2,$r14,18 <_start+0x18>
+     384:	00 c0 57 44 	4457c000 move.l $r5,$r15
+     388:	00 06 40 64 	64400600 ldk.l $r4,600 <main+0x1a0>
+     38c:	1e 00 30 64 	6430001e ldk.l $r3,1e <_start+0x1e>
+     390:	0c 40 21 44 	4421400c bexts.l $r2,$r2,0 <_start>
+     394:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     398:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     39c:	97 02 34 00 	00340297 call a5c <_ZN7VCClass10cmd_numberEssstl>
+     3a0:	00 00 d0 99 	99d00000 unlink $r29
+     3a4:	00 00 00 8d 	8d000000 pop.l $r16
+     3a8:	00 00 f0 8c 	8cf00000 pop.l $r15
+     3ac:	00 00 e0 8c 	8ce00000 pop.l $r14
+     3b0:	00 00 d0 8c 	8cd00000 pop.l $r13
+     3b4:	00 00 00 a0 	a0000000 return 
+
+000003b8 <_ZL6tickerv>:
+_ZL6tickerv():
+     3b8:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+     3bc:	b4 00 00 c2 	c20000b4 lda.s $r0,b4 <.dsloop+0x8>
+     3c0:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     3c4:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     3c8:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     3cc:	b4 00 00 ba 	ba0000b4 sta.s b4 <.dsloop+0x8>,$r0
+     3d0:	e8 03 10 64 	641003e8 ldk.l $r1,3e8 <_ZL6tickerv+0x30>
+     3d4:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+     3d8:	16 01 20 00 	00200116 jmpc 0,$r30,0,458 <_ZL6tickerv+0xa0>
+     3dc:	00 00 10 62 	62100000 ldk.s $r1,0 <_start>
+     3e0:	b4 00 10 ba 	ba1000b4 sta.s b4 <.dsloop+0x8>,$r1
+     3e4:	b2 00 00 c2 	c20000b2 lda.s $r0,b2 <.dsloop+0x6>
+     3e8:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     3ec:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     3f0:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     3f4:	b2 00 00 ba 	ba0000b2 sta.s b2 <.dsloop+0x6>,$r0
+     3f8:	c2 43 e0 5d 	5de043c2 cmp.l $r0,3c <_start+0x3c>
+     3fc:	16 01 20 00 	00200116 jmpc 0,$r30,0,458 <_ZL6tickerv+0xa0>
+     400:	b2 00 10 ba 	ba1000b2 sta.s b2 <.dsloop+0x6>,$r1
+     404:	b0 00 00 c2 	c20000b0 lda.s $r0,b0 <.dsloop+0x4>
+     408:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     40c:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     410:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     414:	b0 00 00 ba 	ba0000b0 sta.s b0 <.dsloop+0x4>,$r0
+     418:	c2 43 e0 5d 	5de043c2 cmp.l $r0,3c <_start+0x3c>
+     41c:	16 01 20 00 	00200116 jmpc 0,$r30,0,458 <_ZL6tickerv+0xa0>
+     420:	b0 00 10 ba 	ba1000b0 sta.s b0 <.dsloop+0x4>,$r1
+     424:	ae 00 00 c2 	c20000ae lda.s $r0,ae <.dsloop+0x2>
+     428:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     42c:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     430:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     434:	ae 00 00 ba 	ba0000ae sta.s ae <.dsloop+0x2>,$r0
+     438:	82 41 e0 5d 	5de04182 cmp.l $r0,18 <_start+0x18>
+     43c:	16 01 20 00 	00200116 jmpc 0,$r30,0,458 <_ZL6tickerv+0xa0>
+     440:	ae 00 10 ba 	ba1000ae sta.s ae <.dsloop+0x2>,$r1
+     444:	ac 00 00 c2 	c20000ac lda.s $r0,ac <.dsloop>
+     448:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     44c:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     450:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     454:	ac 00 00 ba 	ba0000ac sta.s ac <.dsloop>,$r0
+     458:	00 00 d0 99 	99d00000 unlink $r29
+     45c:	00 00 00 a0 	a0000000 return 
+
+00000460 <main>:
+main():
+     460:	00 80 06 84 	84068000 push.l $r13
+     464:	00 00 07 84 	84070000 push.l $r14
+     468:	00 80 07 84 	84078000 push.l $r15
+     46c:	00 00 08 84 	84080000 push.l $r16
+     470:	00 80 08 84 	84088000 push.l $r17
+     474:	00 00 09 84 	84090000 push.l $r18
+     478:	24 00 d0 95 	95d00024 link $r29,24 <_start+0x24>
+     47c:	60 04 34 00 	00340460 call 1180 <ft900_timer_activate>
+     480:	5a 00 00 64 	6400005a ldk.l $r0,5a <_start+0x5a>
+     484:	6b 04 34 00 	0034046b call 11ac <ft900_timer_set_prescaler>
+     488:	01 00 10 64 	64100001 ldk.l $r1,1 <_start+0x1>
+     48c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     490:	7b 04 34 00 	0034047b call 11ec <ft900_timer_set_prescaling>
+     494:	e8 03 10 64 	641003e8 ldk.l $r1,3e8 <_ZL6tickerv+0x30>
+     498:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     49c:	73 04 34 00 	00340473 call 11cc <ft900_timer_set_value>
+     4a0:	10 00 10 64 	64100010 ldk.l $r1,10 <_start+0x10>
+     4a4:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     4a8:	89 04 34 00 	00340489 call 1224 <ft900_timer_set_mode>
+     4ac:	b8 03 10 64 	641003b8 ldk.l $r1,3b8 <_ZL6tickerv>
+     4b0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     4b4:	96 04 34 00 	00340496 call 1258 <ft900_timer_set_interrupt>
+     4b8:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     4bc:	ab 04 34 00 	003404ab call 12ac <ft900_timer_start>
+     4c0:	65 05 34 00 	00340565 call 1594 <ft900_enable_interrupts>
+     4c4:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     4c8:	ae 01 34 00 	003401ae call 6b8 <_ZN7VCClass5beginEv>
+     4cc:	01 00 10 64 	64100001 ldk.l $r1,1 <_start+0x1>
+     4d0:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     4d4:	83 46 00 44 	44004683 ldl.l $r0,$r0,68 <_start+0x68>
+     4d8:	dd 01 34 00 	003401dd call 774 <_ZN7VCClass2wrEmh>
+     4dc:	05 00 10 64 	64100005 ldk.l $r1,5 <_start+0x5>
+     4e0:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     4e4:	c3 46 00 44 	440046c3 ldl.l $r0,$r0,6c <_start+0x6c>
+     4e8:	dd 01 34 00 	003401dd call 774 <_ZN7VCClass2wrEmh>
+     4ec:	ff 00 10 64 	641000ff ldk.l $r1,ff <interrupt_0+0x3>
+     4f0:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     4f4:	03 49 00 44 	44004903 ldl.l $r0,$r0,90 <_exithook>
+     4f8:	dd 01 34 00 	003401dd call 774 <_ZN7VCClass2wrEmh>
+     4fc:	01 00 d0 64 	64d00001 ldk.l $r13,1 <_start+0x1>
+     500:	95 2a 20 65 	65202a95 ldk.l $r18,2a95 <__data_load_end+0x1345>
+     504:	03 50 29 45 	45295003 ldl.l $r18,$r18,100 <interrupt_0+0x4>
+     508:	80 c1 ef 44 	44efc180 add.l $r14,$r31,18 <_start+0x18>
+     50c:	00 c2 1f 45 	451fc200 add.l $r17,$r31,20 <_start+0x20>
+     510:	c0 c1 0f 45 	450fc1c0 add.l $r16,$r31,1c <_start+0x1c>
+     514:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     518:	2b 03 34 00 	0034032b call cac <_ZN7VCClass11cmd_dlstartEv>
+     51c:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     520:	13 02 34 00 	00340213 call 84c <_ZN7VCClass8waitidleEv>
+     524:	00 00 e9 b4 	b4e90000 sti.l $r14,0 <_start>,$r18
+     528:	ff 00 50 64 	645000ff ldk.l $r5,ff <interrupt_0+0x3>
+     52c:	00 00 40 64 	64400000 ldk.l $r4,0 <_start>
+     530:	00 40 32 44 	44324000 move.l $r3,$r4
+     534:	00 40 22 44 	44224000 move.l $r2,$r4
+     538:	00 40 12 44 	44124000 move.l $r1,$r4
+     53c:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     540:	02 03 34 00 	00340302 call c08 <_ZN7VCClass12cmd_gradientEssmssm>
+     544:	ae 00 50 c2 	c25000ae lda.s $r5,ae <.dsloop+0x2>
+     548:	b0 00 00 c2 	c20000b0 lda.s $r0,b0 <.dsloop+0x4>
+     54c:	b2 00 10 c2 	c21000b2 lda.s $r1,b2 <.dsloop+0x6>
+     550:	b4 00 20 c2 	c22000b4 lda.s $r2,b4 <.dsloop+0x8>
+     554:	0d 40 21 44 	4421400d bextu.l $r2,$r2,0 <_start>
+     558:	00 00 11 b5 	b5110000 sti.l $r17,0 <_start>,$r2
+     55c:	0d c0 10 44 	4410c00d bextu.l $r1,$r1,0 <_start>
+     560:	00 80 00 b5 	b5008000 sti.l $r16,0 <_start>,$r1
+     564:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+     568:	00 00 e0 b4 	b4e00000 sti.l $r14,0 <_start>,$r0
+     56c:	0d c0 52 44 	4452c00d bextu.l $r5,$r5,0 <_start>
+     570:	00 00 40 64 	64400000 ldk.l $r4,0 <_start>
+     574:	84 00 30 64 	64300084 ldk.l $r3,84 <_start+0x84>
+     578:	88 00 20 64 	64200088 ldk.l $r2,88 <_start+0x88>
+     57c:	00 40 11 44 	44114000 move.l $r1,$r2
+     580:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     584:	cc 02 34 00 	003402cc call b30 <_ZN7VCClass9cmd_clockEsssttttt>
+     588:	10 c0 f6 44 	44f6c010 add.l $r15,$r13,1 <_start+0x1>
+     58c:	00 c0 36 44 	4436c000 move.l $r3,$r13
+     590:	84 00 20 64 	64200084 ldk.l $r2,84 <_start+0x84>
+     594:	28 00 10 64 	64100028 ldk.l $r1,28 <_start+0x28>
+     598:	68 01 00 64 	64000168 ldk.l $r0,168 <interrupt_9>
+     59c:	c7 00 34 00 	003400c7 call 31c <_ZL4showiiPKcm>
+     5a0:	ac 00 30 c2 	c23000ac lda.s $r3,ac <.dsloop>
+     5a4:	0d c0 31 44 	4431c00d bextu.l $r3,$r3,0 <_start>
+     5a8:	8c 00 20 64 	6420008c ldk.l $r2,8c <codestart>
+     5ac:	96 00 10 64 	64100096 ldk.l $r1,96 <init+0x2>
+     5b0:	40 01 00 64 	64000140 ldk.l $r0,140 <interrupt_5+0x8>
+     5b4:	c7 00 34 00 	003400c7 call 31c <_ZL4showiiPKcm>
+     5b8:	ae 00 30 c2 	c23000ae lda.s $r3,ae <.dsloop+0x2>
+     5bc:	0d c0 31 44 	4431c00d bextu.l $r3,$r3,0 <_start>
+     5c0:	94 00 20 64 	64200094 ldk.l $r2,94 <init>
+     5c4:	96 00 10 64 	64100096 ldk.l $r1,96 <init+0x2>
+     5c8:	90 01 00 64 	64000190 ldk.l $r0,190 <interrupt_12+0x4>
+     5cc:	c7 00 34 00 	003400c7 call 31c <_ZL4showiiPKcm>
+     5d0:	b0 00 30 c2 	c23000b0 lda.s $r3,b0 <.dsloop+0x4>
+     5d4:	0d c0 31 44 	4431c00d bextu.l $r3,$r3,0 <_start>
+     5d8:	9c 00 20 64 	6420009c ldk.l $r2,9c <init+0x8>
+     5dc:	dc 00 10 64 	641000dc ldk.l $r1,dc <.dscopy+0x20>
+     5e0:	40 01 00 64 	64000140 ldk.l $r0,140 <interrupt_5+0x8>
+     5e4:	c7 00 34 00 	003400c7 call 31c <_ZL4showiiPKcm>
+     5e8:	b2 00 30 c2 	c23000b2 lda.s $r3,b2 <.dsloop+0x6>
+     5ec:	0d c0 31 44 	4431c00d bextu.l $r3,$r3,0 <_start>
+     5f0:	a4 00 20 64 	642000a4 ldk.l $r2,a4 <init+0x10>
+     5f4:	dc 00 10 64 	641000dc ldk.l $r1,dc <.dscopy+0x20>
+     5f8:	90 01 00 64 	64000190 ldk.l $r0,190 <interrupt_12+0x4>
+     5fc:	c7 00 34 00 	003400c7 call 31c <_ZL4showiiPKcm>
+     600:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+     604:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     608:	5c 02 34 00 	0034025c call 970 <_ZN7VCClass7commandEm>
+     60c:	b6 00 00 64 	640000b6 ldk.l $r0,b6 <.dsloop+0xa>
+     610:	be 02 34 00 	003402be call af8 <_ZN7VCClass8cmd_swapEv>
+     614:	00 c0 d7 44 	44d7c000 move.l $r13,$r15
+     618:	45 01 30 00 	00300145 jmp 514 <main+0xb4>
+
+0000061c <_ZL5spi16i>:
+_ZL5spi16i():
+     61c:	00 80 06 84 	84068000 push.l $r13
+     620:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     624:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     628:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+     62c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     630:	8d d0 06 44 	4406d08d bextu.l $r0,$r13,108 <interrupt_1>
+     634:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     638:	00 00 d0 99 	99d00000 unlink $r29
+     63c:	00 00 d0 8c 	8cd00000 pop.l $r13
+     640:	00 00 00 a0 	a0000000 return 
+
+00000644 <_ZL4spisPKc>:
+_ZL4spisPKc():
+     644:	00 80 06 84 	84068000 push.l $r13
+     648:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     64c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     650:	00 80 06 a8 	a8068000 ldi.b $r0,$r13,0 <_start>
+     654:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     658:	10 c0 d6 44 	44d6c010 add.l $r13,$r13,1 <_start+0x1>
+     65c:	ff 80 06 a8 	a80680ff ldi.b $r0,$r13,ff <interrupt_0+0x3>
+     660:	02 40 e0 59 	59e04002 cmp.b $r0,0 <_start>
+     664:	94 01 20 00 	00200194 jmpc 0,$r30,0,650 <_ZL4spisPKc+0xc>
+     668:	00 00 d0 99 	99d00000 unlink $r29
+     66c:	00 00 d0 8c 	8cd00000 pop.l $r13
+     670:	00 00 00 a0 	a0000000 return 
+
+00000674 <_ZL3scuhhh.constprop.0>:
+_ZL3scuhhh.constprop.0():
+     674:	00 80 06 84 	84068000 push.l $r13
+     678:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     67c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     680:	fe 00 00 64 	640000fe ldk.l $r0,fe <interrupt_0+0x2>
+     684:	18 04 34 00 	00340418 call 1060 <ft900_spim_sel>
+     688:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     68c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     690:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     694:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     698:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     69c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     6a0:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     6a4:	a0 86 01 64 	640186a0 ldk.l $r0,186a0 <UART+0x869c>
+     6a8:	77 03 34 00 	00340377 call ddc <usleep>
+     6ac:	00 00 d0 99 	99d00000 unlink $r29
+     6b0:	00 00 d0 8c 	8cd00000 pop.l $r13
+     6b4:	00 00 00 a0 	a0000000 return 
+
+000006b8 <_ZN7VCClass5beginEv>:
+_ZN7VCClass5beginEv():
+     6b8:	00 80 06 84 	84068000 push.l $r13
+     6bc:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     6c0:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     6c4:	2d 04 34 00 	0034042d call 10b4 <ft900_spim_activate>
+     6c8:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     6cc:	00 00 00 62 	62000000 ldk.s $r0,0 <_start>
+     6d0:	00 00 d0 b2 	b2d00000 sti.s $r13,0 <_start>,$r0
+     6d4:	fc 0f 00 62 	62000ffc ldk.s $r0,ffc <ticker+0xf0>
+     6d8:	02 00 d0 b2 	b2d00002 sti.s $r13,2 <_start+0x2>,$r0
+     6dc:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     6e0:	9d 01 34 00 	0034019d call 674 <_ZL3scuhhh.constprop.0>
+     6e4:	44 00 00 64 	64000044 ldk.l $r0,44 <_start+0x44>
+     6e8:	9d 01 34 00 	0034019d call 674 <_ZL3scuhhh.constprop.0>
+     6ec:	68 00 00 64 	64000068 ldk.l $r0,68 <_start+0x68>
+     6f0:	9d 01 34 00 	0034019d call 674 <_ZL3scuhhh.constprop.0>
+     6f4:	00 00 d0 99 	99d00000 unlink $r29
+     6f8:	00 00 d0 8c 	8cd00000 pop.l $r13
+     6fc:	00 00 00 a0 	a0000000 return 
+
+00000700 <_ZN7VCClass7__startEm>:
+_ZN7VCClass7__startEm():
+     700:	00 80 06 84 	84068000 push.l $r13
+     704:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     708:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     70c:	fe 00 00 64 	640000fe ldk.l $r0,fe <interrupt_0+0x2>
+     710:	18 04 34 00 	00340418 call 1060 <ft900_spim_sel>
+     714:	0d d1 06 44 	4406d10d bextu.l $r0,$r13,110 <interrupt_1+0x8>
+     718:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     71c:	8d d0 06 44 	4406d08d bextu.l $r0,$r13,108 <interrupt_1>
+     720:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     724:	f4 cf 06 44 	4406cff4 and.l $r0,$r13,ff <interrupt_0+0x3>
+     728:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     72c:	00 00 d0 99 	99d00000 unlink $r29
+     730:	00 00 d0 8c 	8cd00000 pop.l $r13
+     734:	00 00 00 a0 	a0000000 return 
+
+00000738 <_ZN7VCClass8__wstartEm>:
+_ZN7VCClass8__wstartEm():
+     738:	00 80 06 84 	84068000 push.l $r13
+     73c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     740:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     744:	fe 00 00 64 	640000fe ldk.l $r0,fe <interrupt_0+0x2>
+     748:	18 04 34 00 	00340418 call 1060 <ft900_spim_sel>
+     74c:	0d cf 06 44 	4406cf0d bextu.l $r0,$r13,f0 <streamout>
+     750:	05 48 00 44 	44004805 or.l $r0,$r0,80 <_start+0x80>
+     754:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     758:	8d d0 06 44 	4406d08d bextu.l $r0,$r13,108 <interrupt_1>
+     75c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     760:	f4 cf 06 44 	4406cff4 and.l $r0,$r13,ff <interrupt_0+0x3>
+     764:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     768:	00 00 d0 99 	99d00000 unlink $r29
+     76c:	00 00 d0 8c 	8cd00000 pop.l $r13
+     770:	00 00 00 a0 	a0000000 return 
+
+00000774 <_ZN7VCClass2wrEmh>:
+_ZN7VCClass2wrEmh():
+     774:	00 80 06 84 	84068000 push.l $r13
+     778:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     77c:	f4 cf d0 44 	44d0cff4 and.l $r13,$r1,ff <interrupt_0+0x3>
+     780:	ce 01 34 00 	003401ce call 738 <_ZN7VCClass8__wstartEm>
+     784:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     788:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     78c:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     790:	00 00 d0 99 	99d00000 unlink $r29
+     794:	00 00 d0 8c 	8cd00000 pop.l $r13
+     798:	00 00 00 a0 	a0000000 return 
+
+0000079c <_ZN7VCClass4rd16Em>:
+_ZN7VCClass4rd16Em():
+     79c:	00 80 06 84 	84068000 push.l $r13
+     7a0:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     7a4:	c0 01 34 00 	003401c0 call 700 <_ZN7VCClass7__startEm>
+     7a8:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     7ac:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     7b0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     7b4:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     7b8:	f4 4f d0 44 	44d04ff4 and.l $r13,$r0,ff <interrupt_0+0x3>
+     7bc:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     7c0:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     7c4:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+     7c8:	88 40 10 44 	44104088 ashl.l $r1,$r0,8 <_start+0x8>
+     7cc:	d5 80 d0 44 	44d080d5 or.l $r13,$r1,$r13
+     7d0:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     7d4:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     7d8:	00 00 d0 99 	99d00000 unlink $r29
+     7dc:	00 00 d0 8c 	8cd00000 pop.l $r13
+     7e0:	00 00 00 a0 	a0000000 return 
+
+000007e4 <_ZN7VCClass4wr16Emj>:
+_ZN7VCClass4wr16Emj():
+     7e4:	00 80 06 84 	84068000 push.l $r13
+     7e8:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     7ec:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+     7f0:	ce 01 34 00 	003401ce call 738 <_ZN7VCClass8__wstartEm>
+     7f4:	f4 cf 06 44 	4406cff4 and.l $r0,$r13,ff <interrupt_0+0x3>
+     7f8:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     7fc:	8d d0 06 44 	4406d08d bextu.l $r0,$r13,108 <interrupt_1>
+     800:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     804:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     808:	00 00 d0 99 	99d00000 unlink $r29
+     80c:	00 00 d0 8c 	8cd00000 pop.l $r13
+     810:	00 00 00 a0 	a0000000 return 
+
+00000814 <_ZN7VCClass5spi32Em>:
+_ZN7VCClass5spi32Em():
+     814:	00 80 06 84 	84068000 push.l $r13
+     818:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     81c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     820:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+     824:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     828:	8d d0 06 44 	4406d08d bextu.l $r0,$r13,108 <interrupt_1>
+     82c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     830:	0d d1 06 44 	4406d10d bextu.l $r0,$r13,110 <interrupt_1+0x8>
+     834:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     838:	89 c1 06 44 	4406c189 lshr.l $r0,$r13,18 <_start+0x18>
+     83c:	1e 04 34 00 	0034041e call 1078 <ft900_spim_transfer>
+     840:	00 00 d0 99 	99d00000 unlink $r29
+     844:	00 00 d0 8c 	8cd00000 pop.l $r13
+     848:	00 00 00 a0 	a0000000 return 
+
+0000084c <_ZN7VCClass8waitidleEv>:
+_ZN7VCClass8waitidleEv():
+     84c:	00 80 06 84 	84068000 push.l $r13
+     850:	00 00 07 84 	84070000 push.l $r14
+     854:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     858:	00 40 e0 44 	44e04000 move.l $r14,$r0
+     85c:	00 00 d7 aa 	aad70000 ldi.s $r13,$r14,0 <_start>
+     860:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     864:	43 4e 00 44 	44004e43 ldl.l $r0,$r0,e4 <_exit>
+     868:	e7 01 34 00 	003401e7 call 79c <_ZN7VCClass4rd16Em>
+     86c:	02 80 e6 5d 	5de68002 cmp.l $r13,$r0
+     870:	17 02 20 00 	00200217 jmpc 0,$r30,0,85c <_ZN7VCClass8waitidleEv+0x10>
+     874:	00 00 d0 99 	99d00000 unlink $r29
+     878:	00 00 e0 8c 	8ce00000 pop.l $r14
+     87c:	00 00 d0 8c 	8cd00000 pop.l $r13
+     880:	00 00 00 a0 	a0000000 return 
+
+00000884 <_ZN7VCClass7getfreeEv>:
+_ZN7VCClass7getfreeEv():
+     884:	00 80 06 84 	84068000 push.l $r13
+     888:	00 00 07 84 	84070000 push.l $r14
+     88c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     890:	00 40 e0 44 	44e04000 move.l $r14,$r0
+     894:	00 00 d0 aa 	aad00000 ldi.s $r13,$r0,0 <_start>
+     898:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     89c:	43 4e 00 44 	44004e43 ldl.l $r0,$r0,e4 <_exit>
+     8a0:	e7 01 34 00 	003401e7 call 79c <_ZN7VCClass4rd16Em>
+     8a4:	02 80 d6 44 	44d68002 sub.l $r13,$r13,$r0
+     8a8:	ff 0f 00 64 	64000fff ldk.l $r0,fff <ticker+0xf3>
+     8ac:	04 80 d6 44 	44d68004 and.l $r13,$r13,$r0
+     8b0:	fc 0f 10 64 	64100ffc ldk.l $r1,ffc <ticker+0xf0>
+     8b4:	d2 80 d0 44 	44d080d2 sub.l $r13,$r1,$r13
+     8b8:	02 80 e6 b2 	b2e68002 sti.s $r14,2 <_start+0x2>,$r13
+     8bc:	00 00 d0 99 	99d00000 unlink $r29
+     8c0:	00 00 e0 8c 	8ce00000 pop.l $r14
+     8c4:	00 00 d0 8c 	8cd00000 pop.l $r13
+     8c8:	00 00 00 a0 	a0000000 return 
+
+000008cc <_ZN7VCClass7wpstartEj>:
+_ZN7VCClass7wpstartEj():
+     8cc:	00 80 06 84 	84068000 push.l $r13
+     8d0:	00 00 07 84 	84070000 push.l $r14
+     8d4:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     8d8:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     8dc:	00 c0 e0 44 	44e0c000 move.l $r14,$r1
+     8e0:	02 80 06 aa 	aa068002 ldi.s $r0,$r13,2 <_start+0x2>
+     8e4:	e2 00 e0 5d 	5de000e2 cmp.l $r0,$r14
+     8e8:	3e 02 60 00 	0060023e jmpc 1,$r30,0,8f8 <_ZN7VCClass7wpstartEj+0x2c>
+     8ec:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     8f0:	21 02 34 00 	00340221 call 884 <_ZN7VCClass7getfreeEv>
+     8f4:	38 02 30 00 	00300238 jmp 8e0 <_ZN7VCClass7wpstartEj+0x14>
+     8f8:	00 80 16 aa 	aa168000 ldi.s $r1,$r13,0 <_start>
+     8fc:	20 04 00 64 	64000420 ldk.l $r0,420 <_ZL6tickerv+0x68>
+     900:	03 40 00 44 	44004003 ldl.l $r0,$r0,0 <_start>
+     904:	00 80 00 44 	44008000 add.l $r0,$r1,$r0
+     908:	ce 01 34 00 	003401ce call 738 <_ZN7VCClass8__wstartEm>
+     90c:	00 00 d0 99 	99d00000 unlink $r29
+     910:	00 00 e0 8c 	8ce00000 pop.l $r14
+     914:	00 00 d0 8c 	8cd00000 pop.l $r13
+     918:	00 00 00 a0 	a0000000 return 
+
+0000091c <_ZN7VCClass6wpbumpEt>:
+_ZN7VCClass6wpbumpEt():
+     91c:	00 80 06 84 	84068000 push.l $r13
+     920:	00 00 07 84 	84070000 push.l $r14
+     924:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     928:	00 40 e0 44 	44e04000 move.l $r14,$r0
+     92c:	0d c0 d0 44 	44d0c00d bextu.l $r13,$r1,0 <_start>
+     930:	00 00 10 aa 	aa100000 ldi.s $r1,$r0,0 <_start>
+     934:	10 80 16 44 	44168010 add.l $r1,$r13,$r1
+     938:	fc 0f 00 64 	64000ffc ldk.l $r0,ffc <ticker+0xf0>
+     93c:	04 80 10 44 	44108004 and.l $r1,$r1,$r0
+     940:	00 80 e0 b2 	b2e08000 sti.s $r14,0 <_start>,$r1
+     944:	09 04 00 64 	64000409 ldk.l $r0,409 <_ZL6tickerv+0x51>
+     948:	83 4e 00 44 	44004e83 ldl.l $r0,$r0,e8 <_exit+0x4>
+     94c:	f9 01 34 00 	003401f9 call 7e4 <_ZN7VCClass4wr16Emj>
+     950:	c4 ff d6 44 	44d6ffc4 and.l $r13,$r13,1fc <interrupt_21+0x4>
+     954:	02 00 07 aa 	aa070002 ldi.s $r0,$r14,2 <_start+0x2>
+     958:	d2 00 d0 44 	44d000d2 sub.l $r13,$r0,$r13
+     95c:	02 80 e6 b2 	b2e68002 sti.s $r14,2 <_start+0x2>,$r13
+     960:	00 00 d0 99 	99d00000 unlink $r29
+     964:	00 00 e0 8c 	8ce00000 pop.l $r14
+     968:	00 00 d0 8c 	8cd00000 pop.l $r13
+     96c:	00 00 00 a0 	a0000000 return 
+
+00000970 <_ZN7VCClass7commandEm>:
+_ZN7VCClass7commandEm():
+     970:	00 80 06 84 	84068000 push.l $r13
+     974:	00 00 07 84 	84070000 push.l $r14
+     978:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     97c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     980:	00 c0 e0 44 	44e0c000 move.l $r14,$r1
+     984:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+     988:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     98c:	00 40 07 44 	44074000 move.l $r0,$r14
+     990:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     994:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     998:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+     99c:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     9a0:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     9a4:	00 00 d0 99 	99d00000 unlink $r29
+     9a8:	00 00 e0 8c 	8ce00000 pop.l $r14
+     9ac:	00 00 d0 8c 	8cd00000 pop.l $r13
+     9b0:	00 00 00 a0 	a0000000 return 
+
+000009b4 <_ZN7VCClass8cmd_textEssstPKc>:
+_ZN7VCClass8cmd_textEssstPKc():
+     9b4:	00 80 06 84 	84068000 push.l $r13
+     9b8:	00 00 07 84 	84070000 push.l $r14
+     9bc:	00 80 07 84 	84078000 push.l $r15
+     9c0:	00 00 08 84 	84080000 push.l $r16
+     9c4:	00 80 08 84 	84088000 push.l $r17
+     9c8:	00 00 09 84 	84090000 push.l $r18
+     9cc:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     9d0:	00 40 e0 44 	44e04000 move.l $r14,$r0
+     9d4:	00 c0 d2 44 	44d2c000 move.l $r13,$r5
+     9d8:	0c c0 20 45 	4520c00c bexts.l $r18,$r1,0 <_start>
+     9dc:	0c 40 11 45 	4511400c bexts.l $r17,$r2,0 <_start>
+     9e0:	0c c0 01 45 	4501c00c bexts.l $r16,$r3,0 <_start>
+     9e4:	0d 40 f2 44 	44f2400d bextu.l $r15,$r4,0 <_start>
+     9e8:	06 c0 12 f0 	f012c006 strlen.b $r1,$r5
+     9ec:	d0 c0 10 44 	4410c0d0 add.l $r1,$r1,d <_start+0xd>
+     9f0:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     9f4:	0c ff 0f 64 	640fff0c ldk.l $r0,fff0c <EXITEXIT+0xdff10>
+     9f8:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     9fc:	00 40 09 44 	44094000 move.l $r0,$r18
+     a00:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     a04:	00 c0 08 44 	4408c000 move.l $r0,$r17
+     a08:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     a0c:	00 40 08 44 	44084000 move.l $r0,$r16
+     a10:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     a14:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     a18:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     a1c:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     a20:	91 01 34 00 	00340191 call 644 <_ZL4spisPKc>
+     a24:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     a28:	06 c0 16 f0 	f016c006 strlen.b $r1,$r13
+     a2c:	00 c1 10 44 	4410c100 add.l $r1,$r1,10 <_start+0x10>
+     a30:	0d c0 10 44 	4410c00d bextu.l $r1,$r1,0 <_start>
+     a34:	00 40 07 44 	44074000 move.l $r0,$r14
+     a38:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     a3c:	00 00 d0 99 	99d00000 unlink $r29
+     a40:	00 00 20 8d 	8d200000 pop.l $r18
+     a44:	00 00 10 8d 	8d100000 pop.l $r17
+     a48:	00 00 00 8d 	8d000000 pop.l $r16
+     a4c:	00 00 f0 8c 	8cf00000 pop.l $r15
+     a50:	00 00 e0 8c 	8ce00000 pop.l $r14
+     a54:	00 00 d0 8c 	8cd00000 pop.l $r13
+     a58:	00 00 00 a0 	a0000000 return 
+
+00000a5c <_ZN7VCClass10cmd_numberEssstl>:
+_ZN7VCClass10cmd_numberEssstl():
+     a5c:	00 80 06 84 	84068000 push.l $r13
+     a60:	00 00 07 84 	84070000 push.l $r14
+     a64:	00 80 07 84 	84078000 push.l $r15
+     a68:	00 00 08 84 	84080000 push.l $r16
+     a6c:	00 80 08 84 	84088000 push.l $r17
+     a70:	00 00 09 84 	84090000 push.l $r18
+     a74:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     a78:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     a7c:	00 c0 e2 44 	44e2c000 move.l $r14,$r5
+     a80:	0c c0 20 45 	4520c00c bexts.l $r18,$r1,0 <_start>
+     a84:	0c 40 11 45 	4511400c bexts.l $r17,$r2,0 <_start>
+     a88:	0c c0 01 45 	4501c00c bexts.l $r16,$r3,0 <_start>
+     a8c:	0d 40 f2 44 	44f2400d bextu.l $r15,$r4,0 <_start>
+     a90:	10 00 10 64 	64100010 ldk.l $r1,10 <_start+0x10>
+     a94:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     a98:	2e ff 0f 64 	640fff2e ldk.l $r0,fff2e <EXITEXIT+0xdff32>
+     a9c:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     aa0:	00 40 09 44 	44094000 move.l $r0,$r18
+     aa4:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     aa8:	00 c0 08 44 	4408c000 move.l $r0,$r17
+     aac:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     ab0:	00 40 08 44 	44084000 move.l $r0,$r16
+     ab4:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     ab8:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     abc:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     ac0:	00 40 07 44 	44074000 move.l $r0,$r14
+     ac4:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     ac8:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     acc:	13 00 10 64 	64100013 ldk.l $r1,13 <_start+0x13>
+     ad0:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     ad4:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     ad8:	00 00 d0 99 	99d00000 unlink $r29
+     adc:	00 00 20 8d 	8d200000 pop.l $r18
+     ae0:	00 00 10 8d 	8d100000 pop.l $r17
+     ae4:	00 00 00 8d 	8d000000 pop.l $r16
+     ae8:	00 00 f0 8c 	8cf00000 pop.l $r15
+     aec:	00 00 e0 8c 	8ce00000 pop.l $r14
+     af0:	00 00 d0 8c 	8cd00000 pop.l $r13
+     af4:	00 00 00 a0 	a0000000 return 
+
+00000af8 <_ZN7VCClass8cmd_swapEv>:
+_ZN7VCClass8cmd_swapEv():
+     af8:	00 80 06 84 	84068000 push.l $r13
+     afc:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     b00:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     b04:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+     b08:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     b0c:	01 ff 0f 64 	640fff01 ldk.l $r0,fff01 <EXITEXIT+0xdff05>
+     b10:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     b14:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     b18:	07 00 10 64 	64100007 ldk.l $r1,7 <_start+0x7>
+     b1c:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     b20:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     b24:	00 00 d0 99 	99d00000 unlink $r29
+     b28:	00 00 d0 8c 	8cd00000 pop.l $r13
+     b2c:	00 00 00 a0 	a0000000 return 
+
+00000b30 <_ZN7VCClass9cmd_clockEsssttttt>:
+_ZN7VCClass9cmd_clockEsssttttt():
+     b30:	00 80 06 84 	84068000 push.l $r13
+     b34:	00 00 07 84 	84070000 push.l $r14
+     b38:	00 80 07 84 	84078000 push.l $r15
+     b3c:	00 00 08 84 	84080000 push.l $r16
+     b40:	00 80 08 84 	84088000 push.l $r17
+     b44:	00 00 09 84 	84090000 push.l $r18
+     b48:	00 80 09 84 	84098000 push.l $r19
+     b4c:	00 00 0a 84 	840a0000 push.l $r20
+     b50:	00 80 0a 84 	840a8000 push.l $r21
+     b54:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     b58:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     b5c:	0c c0 50 45 	4550c00c bexts.l $r21,$r1,0 <_start>
+     b60:	0c 40 41 45 	4541400c bexts.l $r20,$r2,0 <_start>
+     b64:	0c c0 31 45 	4531c00c bexts.l $r19,$r3,0 <_start>
+     b68:	0d 40 22 45 	4522400d bextu.l $r18,$r4,0 <_start>
+     b6c:	0d c0 12 45 	4512c00d bextu.l $r17,$r5,0 <_start>
+     b70:	44 80 0e ab 	ab0e8044 ldi.s $r16,$r29,44 <_start+0x44>
+     b74:	48 80 fe aa 	aafe8048 ldi.s $r15,$r29,48 <_start+0x48>
+     b78:	4c 80 ee aa 	aaee804c ldi.s $r14,$r29,4c <_start+0x4c>
+     b7c:	14 00 10 64 	64100014 ldk.l $r1,14 <_start+0x14>
+     b80:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     b84:	14 ff 0f 64 	640fff14 ldk.l $r0,fff14 <EXITEXIT+0xdff18>
+     b88:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     b8c:	00 c0 0a 44 	440ac000 move.l $r0,$r21
+     b90:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     b94:	00 40 0a 44 	440a4000 move.l $r0,$r20
+     b98:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     b9c:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     ba0:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     ba4:	00 40 09 44 	44094000 move.l $r0,$r18
+     ba8:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     bac:	00 c0 08 44 	4408c000 move.l $r0,$r17
+     bb0:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     bb4:	00 40 08 44 	44084000 move.l $r0,$r16
+     bb8:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     bbc:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     bc0:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     bc4:	00 40 07 44 	44074000 move.l $r0,$r14
+     bc8:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     bcc:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     bd0:	17 00 10 64 	64100017 ldk.l $r1,17 <_start+0x17>
+     bd4:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     bd8:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     bdc:	00 00 d0 99 	99d00000 unlink $r29
+     be0:	00 00 50 8d 	8d500000 pop.l $r21
+     be4:	00 00 40 8d 	8d400000 pop.l $r20
+     be8:	00 00 30 8d 	8d300000 pop.l $r19
+     bec:	00 00 20 8d 	8d200000 pop.l $r18
+     bf0:	00 00 10 8d 	8d100000 pop.l $r17
+     bf4:	00 00 00 8d 	8d000000 pop.l $r16
+     bf8:	00 00 f0 8c 	8cf00000 pop.l $r15
+     bfc:	00 00 e0 8c 	8ce00000 pop.l $r14
+     c00:	00 00 d0 8c 	8cd00000 pop.l $r13
+     c04:	00 00 00 a0 	a0000000 return 
+
+00000c08 <_ZN7VCClass12cmd_gradientEssmssm>:
+_ZN7VCClass12cmd_gradientEssmssm():
+     c08:	00 80 06 84 	84068000 push.l $r13
+     c0c:	00 00 07 84 	84070000 push.l $r14
+     c10:	00 80 07 84 	84078000 push.l $r15
+     c14:	00 00 08 84 	84080000 push.l $r16
+     c18:	00 80 08 84 	84088000 push.l $r17
+     c1c:	00 00 09 84 	84090000 push.l $r18
+     c20:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     c24:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     c28:	00 c0 01 45 	4501c000 move.l $r16,$r3
+     c2c:	0c c0 20 45 	4520c00c bexts.l $r18,$r1,0 <_start>
+     c30:	0c 40 11 45 	4511400c bexts.l $r17,$r2,0 <_start>
+     c34:	0c 40 f2 44 	44f2400c bexts.l $r15,$r4,0 <_start>
+     c38:	0c c0 e2 44 	44e2c00c bexts.l $r14,$r5,0 <_start>
+     c3c:	14 00 10 64 	64100014 ldk.l $r1,14 <_start+0x14>
+     c40:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     c44:	0b ff 0f 64 	640fff0b ldk.l $r0,fff0b <EXITEXIT+0xdff0f>
+     c48:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     c4c:	00 40 09 44 	44094000 move.l $r0,$r18
+     c50:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     c54:	00 c0 08 44 	4408c000 move.l $r0,$r17
+     c58:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     c5c:	00 40 08 44 	44084000 move.l $r0,$r16
+     c60:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     c64:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     c68:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     c6c:	00 40 07 44 	44074000 move.l $r0,$r14
+     c70:	87 01 34 00 	00340187 call 61c <_ZL5spi16i>
+     c74:	38 80 0e ac 	ac0e8038 ldi.l $r0,$r29,38 <_start+0x38>
+     c78:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     c7c:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     c80:	17 00 10 64 	64100017 ldk.l $r1,17 <_start+0x17>
+     c84:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     c88:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     c8c:	00 00 d0 99 	99d00000 unlink $r29
+     c90:	00 00 20 8d 	8d200000 pop.l $r18
+     c94:	00 00 10 8d 	8d100000 pop.l $r17
+     c98:	00 00 00 8d 	8d000000 pop.l $r16
+     c9c:	00 00 f0 8c 	8cf00000 pop.l $r15
+     ca0:	00 00 e0 8c 	8ce00000 pop.l $r14
+     ca4:	00 00 d0 8c 	8cd00000 pop.l $r13
+     ca8:	00 00 00 a0 	a0000000 return 
+
+00000cac <_ZN7VCClass11cmd_dlstartEv>:
+_ZN7VCClass11cmd_dlstartEv():
+     cac:	00 80 06 84 	84068000 push.l $r13
+     cb0:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     cb4:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     cb8:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+     cbc:	33 02 34 00 	00340233 call 8cc <_ZN7VCClass7wpstartEj>
+     cc0:	00 ff 0f 64 	640fff00 ldk.l $r0,fff00 <EXITEXIT+0xdff04>
+     cc4:	05 02 34 00 	00340205 call 814 <_ZN7VCClass5spi32Em>
+     cc8:	1b 04 34 00 	0034041b call 106c <ft900_spim_unsel>
+     ccc:	07 00 10 64 	64100007 ldk.l $r1,7 <_start+0x7>
+     cd0:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     cd4:	47 02 34 00 	00340247 call 91c <_ZN7VCClass6wpbumpEt>
+     cd8:	00 00 d0 99 	99d00000 unlink $r29
+     cdc:	00 00 d0 8c 	8cd00000 pop.l $r13
+     ce0:	00 00 00 a0 	a0000000 return 
+
+00000ce4 <ft900_init>:
+ft900_init():
+     ce4:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     ce8:	1b 00 11 64 	6411001b ldk.l $r1,1001b <UART+0x17>
+     cec:	00 80 00 a8 	a8008000 ldi.b $r0,$r1,0 <_start>
+     cf0:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+     cf4:	05 48 20 44 	44204805 or.l $r2,$r0,80 <_start+0x80>
+     cf8:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+     cfc:	00 00 10 b0 	b0100000 sti.b $r1,0 <_start>,$r0
+     d00:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     d04:	1a 05 34 00 	0034051a call 1468 <ft900_uart_activate>
+     d08:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+     d0c:	00 00 00 a0 	a0000000 return 
+
+00000d10 <ft900_exit>:
+ft900_exit():
+     d10:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     d14:	24 00 34 00 	00340024 call 90 <_exithook>
+     d18:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+     d1c:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d20:	48 00 00 64 	64000048 ldk.l $r0,48 <_start+0x48>
+     d24:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d28:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+     d2c:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d30:	0a 00 00 64 	6400000a ldk.l $r0,a <_start+0xa>
+     d34:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d38:	71 03 34 00 	00340371 call dc4 <uart_rx>
+     d3c:	00 00 30 00 	00300000 jmp 0 <_start>
+     d40:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+     d44:	00 00 00 a0 	a0000000 return 
+
+00000d48 <ft900_watchdog>:
+ft900_watchdog():
+     d48:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     d4c:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+     d50:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d54:	57 00 00 64 	64000057 ldk.l $r0,57 <_start+0x57>
+     d58:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d5c:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+     d60:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d64:	0a 00 00 64 	6400000a ldk.l $r0,a <_start+0xa>
+     d68:	66 03 34 00 	00340366 call d98 <uart_tx>
+     d6c:	71 03 34 00 	00340371 call dc4 <uart_rx>
+     d70:	00 00 30 00 	00300000 jmp 0 <_start>
+     d74:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+     d78:	00 00 00 a0 	a0000000 return 
+
+00000d7c <uart_raw_tx>:
+uart_raw_tx():
+     d7c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+     d80:	25 03 11 c0 	c0110325 lda.b $r1,10325 <UART+0x321>
+     d84:	04 c2 10 44 	4410c204 and.l $r1,$r1,20 <_start+0x20>
+     d88:	02 c0 e0 59 	59e0c002 cmp.b $r1,0 <_start>
+     d8c:	60 03 28 00 	00280360 jmpc 0,$r30,1,d80 <uart_raw_tx+0x4>
+     d90:	20 03 01 b8 	b8010320 sta.b 10320 <UART+0x31c>,$r0
+     d94:	00 00 00 a0 	a0000000 return 
+
+00000d98 <uart_tx>:
+uart_tx():
+     d98:	00 80 06 84 	84068000 push.l $r13
+     d9c:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     da0:	f4 4f d0 44 	44d04ff4 and.l $r13,$r0,ff <interrupt_0+0x3>
+     da4:	a2 c0 e6 59 	59e6c0a2 cmp.b $r13,a <_start+0xa>
+     da8:	6d 03 20 00 	0020036d jmpc 0,$r30,0,db4 <uart_tx+0x1c>
+     dac:	0d 00 00 64 	6400000d ldk.l $r0,d <_start+0xd>
+     db0:	5f 03 34 00 	0034035f call d7c <uart_raw_tx>
+     db4:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     db8:	5f 03 34 00 	0034035f call d7c <uart_raw_tx>
+     dbc:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+     dc0:	a1 05 30 00 	003005a1 jmp 1684 <__epilog_$r13>
+
+00000dc4 <uart_rx>:
+uart_rx():
+     dc4:	25 03 01 c0 	c0010325 lda.b $r0,10325 <UART+0x321>
+     dc8:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+     dcc:	02 40 e0 59 	59e04002 cmp.b $r0,0 <_start>
+     dd0:	71 03 28 00 	00280371 jmpc 0,$r30,1,dc4 <uart_rx>
+     dd4:	20 03 01 c0 	c0010320 lda.b $r0,10320 <UART+0x31c>
+     dd8:	00 00 00 a0 	a0000000 return 
+
+00000ddc <usleep>:
+usleep():
+     ddc:	a8 45 00 f4 	f40045a8 mul.l $r0,$r0,5a <_start+0x5a>
+     de0:	7a 03 30 00 	0030037a jmp de8 <csleep>
+
+00000de4 <sleep>:
+sleep():
+     de4:	32 40 00 44 	44004032 sub.l $r0,$r0,3 <_start+0x3>
+
+00000de8 <csleep>:
+csleep():
+     de8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     dec:	79 03 68 01 	01680379 jmpc 5,$r30,1,de4 <sleep>
+     df0:	00 00 00 a0 	a0000000 return 
+
+00000df4 <recv>:
+recv():
+     df4:	00 80 06 84 	84068000 push.l $r13
+     df8:	00 00 07 84 	84070000 push.l $r14
+     dfc:	00 80 07 84 	84078000 push.l $r15
+     e00:	00 00 08 84 	84080000 push.l $r16
+     e04:	00 80 08 84 	84088000 push.l $r17
+     e08:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     e0c:	bc 00 e0 64 	64e000bc ldk.l $r14,bc <.dscopy>
+     e10:	08 00 27 ac 	ac270008 ldi.l $r2,$r14,8 <_start+0x8>
+     e14:	0c 00 11 ac 	ac11000c ldi.l $r1,$r2,c <_start+0xc>
+     e18:	0c 00 47 ac 	ac47000c ldi.l $r4,$r14,c <_start+0xc>
+     e1c:	40 00 30 44 	44300040 add.l $r3,$r0,$r4
+     e20:	04 00 61 ac 	ac610004 ldi.l $r6,$r2,4 <_start+0x4>
+     e24:	62 80 e1 5d 	5de18062 cmp.l $r3,$r6
+     e28:	9e 03 60 00 	0060039e jmpc 1,$r30,0,e78 <recv+0x84>
+     e2c:	24 c0 10 44 	4410c024 and.l $r1,$r1,2 <_start+0x2>
+     e30:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     e34:	93 03 28 00 	00280393 jmpc 0,$r30,1,e4c <recv+0x58>
+     e38:	00 00 11 ac 	ac110000 ldi.l $r1,$r2,0 <_start>
+     e3c:	40 80 10 44 	44108040 add.l $r1,$r1,$r4
+     e40:	a8 02 21 64 	642102a8 ldk.l $r2,102a8 <UART+0x2a4>
+     e44:	0c 00 11 f0 	f011000c streamin.b $r1,$r2,$r0
+     e48:	98 03 30 00 	00300398 jmp e60 <recv+0x6c>
+     e4c:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+     e50:	98 03 28 00 	00280398 jmpc 0,$r30,1,e60 <recv+0x6c>
+     e54:	a8 02 21 c4 	c42102a8 lda.l $r2,102a8 <UART+0x2a4>
+     e58:	10 c0 10 44 	4410c010 add.l $r1,$r1,1 <_start+0x1>
+     e5c:	93 03 30 00 	00300393 jmp e4c <recv+0x58>
+     e60:	c8 00 10 64 	641000c8 ldk.l $r1,c8 <.dscopy+0xc>
+     e64:	00 80 11 b4 	b4118000 sti.l $r1,0 <_start>,$r3
+     e68:	14 00 e7 a8 	a8e70014 ldi.b $r14,$r14,14 <_start+0x14>
+     e6c:	02 00 07 44 	44070002 sub.l $r0,$r14,$r0
+     e70:	08 00 10 b0 	b0100008 sti.b $r1,8 <_start+0x8>,$r0
+     e74:	c1 03 30 00 	003003c1 jmp f04 <recv+0x110>
+     e78:	14 00 27 a8 	a8270014 ldi.b $r2,$r14,14 <_start+0x14>
+     e7c:	02 00 11 44 	44110002 sub.l $r1,$r2,$r0
+     e80:	14 80 e0 b0 	b0e08014 sti.b $r14,14 <_start+0x14>,$r1
+     e84:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     e88:	c0 40 f7 44 	44f740c0 add.l $r15,$r14,c <_start+0xc>
+     e8c:	00 00 00 65 	65000000 ldk.l $r16,0 <_start>
+     e90:	80 40 17 45 	45174080 add.l $r17,$r14,8 <_start+0x8>
+     e94:	02 c0 e6 5d 	5de6c002 cmp.l $r13,0 <_start>
+     e98:	c1 03 28 00 	002803c1 jmpc 0,$r30,1,f04 <recv+0x110>
+     e9c:	a8 02 21 c4 	c42102a8 lda.l $r2,102a8 <UART+0x2a4>
+     ea0:	08 00 17 ac 	ac170008 ldi.l $r1,$r14,8 <_start+0x8>
+     ea4:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+     ea8:	0c 00 37 ac 	ac37000c ldi.l $r3,$r14,c <_start+0xc>
+     eac:	0c 80 10 ac 	ac10800c ldi.l $r1,$r1,c <_start+0xc>
+     eb0:	24 c0 10 44 	4410c024 and.l $r1,$r1,2 <_start+0x2>
+     eb4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     eb8:	b1 03 28 00 	002803b1 jmpc 0,$r30,1,ec4 <recv+0xd0>
+     ebc:	30 00 00 44 	44000030 add.l $r0,$r0,$r3
+     ec0:	00 00 01 b0 	b0010000 sti.b $r0,0 <_start>,$r2
+     ec4:	0c 00 17 ac 	ac17000c ldi.l $r1,$r14,c <_start+0xc>
+     ec8:	10 c0 10 44 	4410c010 add.l $r1,$r1,1 <_start+0x1>
+     ecc:	00 80 f0 b4 	b4f08000 sti.l $r15,0 <_start>,$r1
+     ed0:	08 00 07 ac 	ac070008 ldi.l $r0,$r14,8 <_start+0x8>
+     ed4:	04 00 20 ac 	ac200004 ldi.l $r2,$r0,4 <_start+0x4>
+     ed8:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+     edc:	bf 03 20 00 	002003bf jmpc 0,$r30,0,efc <recv+0x108>
+     ee0:	00 00 f8 b4 	b4f80000 sti.l $r15,0 <_start>,$r16
+     ee4:	10 00 10 ac 	ac100010 ldi.l $r1,$r0,10 <_start+0x10>
+     ee8:	00 80 10 b5 	b5108000 sti.l $r17,0 <_start>,$r1
+     eec:	08 00 10 ac 	ac100008 ldi.l $r1,$r0,8 <_start+0x8>
+     ef0:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     ef4:	bf 03 28 00 	002803bf jmpc 0,$r30,1,efc <recv+0x108>
+     ef8:	10 00 34 08 	08340010 calli $r1
+     efc:	f0 ff d6 44 	44d6fff0 add.l $r13,$r13,1ff <interrupt_21+0x7>
+     f00:	a5 03 30 00 	003003a5 jmp e94 <recv+0xa0>
+     f04:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+     f08:	9d 05 30 00 	0030059d jmp 1674 <__epilog_$r17>
+
+00000f0c <ticker>:
+ticker():
+     f0c:	00 80 06 84 	84068000 push.l $r13
+     f10:	00 00 07 84 	84070000 push.l $r14
+     f14:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     f18:	a4 02 01 c4 	c40102a4 lda.l $r0,102a4 <UART+0x2a0>
+     f1c:	04 48 00 44 	44004804 and.l $r0,$r0,80 <_start+0x80>
+     f20:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     f24:	cc 03 28 00 	002803cc jmpc 0,$r30,1,f30 <ticker+0x24>
+     f28:	20 00 00 64 	64000020 ldk.l $r0,20 <_start+0x20>
+     f2c:	7d 03 34 00 	0034037d call df4 <recv>
+     f30:	bc 00 e0 64 	64e000bc ldk.l $r14,bc <.dscopy>
+     f34:	14 00 17 a8 	a8170014 ldi.b $r1,$r14,14 <_start+0x14>
+     f38:	0c d0 00 44 	4400d00c bexts.l $r0,$r1,100 <interrupt_0+0x4>
+     f3c:	f2 43 e0 59 	59e043f2 cmp.b $r0,3f <_start+0x3f>
+     f40:	02 04 68 01 	01680402 jmpc 5,$r30,1,1008 <ticker+0xfc>
+     f44:	bc 00 10 c4 	c41000bc lda.l $r1,bc <.dscopy>
+     f48:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     f4c:	02 04 28 00 	00280402 jmpc 0,$r30,1,1008 <ticker+0xfc>
+     f50:	04 00 37 ac 	ac370004 ldi.l $r3,$r14,4 <_start+0x4>
+     f54:	04 80 20 ac 	ac208004 ldi.l $r2,$r1,4 <_start+0x4>
+     f58:	32 00 21 44 	44210032 sub.l $r2,$r2,$r3
+     f5c:	40 00 d0 64 	64d00040 ldk.l $r13,40 <_start+0x40>
+     f60:	02 80 d6 44 	44d68002 sub.l $r13,$r13,$r0
+     f64:	22 80 e6 5d 	5de68022 cmp.l $r13,$r2
+     f68:	dc 03 a0 01 	01a003dc jmpc 6,$r30,0,f70 <ticker+0x64>
+     f6c:	00 40 d1 44 	44d14000 move.l $r13,$r2
+     f70:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+     f74:	d0 00 20 64 	642000d0 ldk.l $r2,d0 <.dscopy+0x14>
+     f78:	00 00 20 b0 	b0200000 sti.b $r2,0 <_start>,$r0
+     f7c:	0c 80 00 ac 	ac00800c ldi.l $r0,$r1,c <_start+0xc>
+     f80:	44 40 20 44 	44204044 and.l $r2,$r0,4 <_start+0x4>
+     f84:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+     f88:	e8 03 28 00 	002803e8 jmpc 0,$r30,1,fa0 <ticker+0x94>
+     f8c:	00 c0 26 44 	4426c000 move.l $r2,$r13
+     f90:	bc 00 10 64 	641000bc ldk.l $r1,bc <.dscopy>
+     f94:	a8 02 01 64 	640102a8 ldk.l $r0,102a8 <UART+0x2a4>
+     f98:	7a 05 34 00 	0034057a call 15e8 <streamout_pm_b>
+     f9c:	f6 03 30 00 	003003f6 jmp fd8 <ticker+0xcc>
+     fa0:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+     fa4:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     fa8:	f0 03 28 00 	002803f0 jmpc 0,$r30,1,fc0 <ticker+0xb4>
+     fac:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+     fb0:	30 00 00 44 	44000030 add.l $r0,$r0,$r3
+     fb4:	a8 02 11 64 	641102a8 ldk.l $r1,102a8 <UART+0x2a4>
+     fb8:	de 00 10 f0 	f01000de streamout.b $r1,$r0,$r13
+     fbc:	f6 03 30 00 	003003f6 jmp fd8 <ticker+0xcc>
+     fc0:	ff 00 10 64 	641000ff ldk.l $r1,ff <interrupt_0+0x3>
+     fc4:	d2 00 e0 5d 	5de000d2 cmp.l $r0,$r13
+     fc8:	f6 03 28 00 	002803f6 jmpc 0,$r30,1,fd8 <ticker+0xcc>
+     fcc:	a8 02 11 bc 	bc1102a8 sta.l 102a8 <UART+0x2a4>,$r1
+     fd0:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     fd4:	f1 03 30 00 	003003f1 jmp fc4 <ticker+0xb8>
+     fd8:	04 00 07 ac 	ac070004 ldi.l $r0,$r14,4 <_start+0x4>
+     fdc:	00 80 d6 44 	44d68000 add.l $r13,$r13,$r0
+     fe0:	c0 00 10 64 	641000c0 ldk.l $r1,c0 <.dscopy+0x4>
+     fe4:	00 80 16 b4 	b4168000 sti.l $r1,0 <_start>,$r13
+     fe8:	bc 00 00 c4 	c40000bc lda.l $r0,bc <.dscopy>
+     fec:	04 00 20 ac 	ac200004 ldi.l $r2,$r0,4 <_start+0x4>
+     ff0:	22 80 e6 5d 	5de68022 cmp.l $r13,$r2
+     ff4:	02 04 20 00 	00200402 jmpc 0,$r30,0,1008 <ticker+0xfc>
+     ff8:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+     ffc:	00 00 11 b4 	b4110000 sti.l $r1,0 <_start>,$r2
+    1000:	10 00 00 ac 	ac000010 ldi.l $r0,$r0,10 <_start+0x10>
+    1004:	bc 00 00 bc 	bc0000bc sta.l bc <.dscopy>,$r0
+    1008:	a4 02 01 c4 	c40102a4 lda.l $r0,102a4 <UART+0x2a0>
+    100c:	c4 40 00 44 	440040c4 and.l $r0,$r0,c <_start+0xc>
+    1010:	c2 40 e0 5d 	5de040c2 cmp.l $r0,c <_start+0xc>
+    1014:	16 04 20 00 	00200416 jmpc 0,$r30,0,1058 <ticker+0x14c>
+    1018:	bc 00 00 c4 	c40000bc lda.l $r0,bc <.dscopy>
+    101c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1020:	16 04 20 00 	00200416 jmpc 0,$r30,0,1058 <ticker+0x14c>
+    1024:	bc 00 00 64 	640000bc ldk.l $r0,bc <.dscopy>
+    1028:	14 00 00 a8 	a8000014 ldi.b $r0,$r0,14 <_start+0x14>
+    102c:	0c 50 00 44 	4400500c bexts.l $r0,$r0,100 <interrupt_0+0x4>
+    1030:	02 40 e0 59 	59e04002 cmp.b $r0,0 <_start>
+    1034:	0f 04 60 01 	0160040f jmpc 5,$r30,0,103c <ticker+0x130>
+    1038:	7d 03 34 00 	0034037d call df4 <recv>
+    103c:	cc 00 00 64 	640000cc ldk.l $r0,cc <.dscopy+0x10>
+    1040:	00 00 07 b4 	b4070000 sti.l $r0,0 <_start>,$r14
+    1044:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    1048:	d4 00 00 bc 	bc0000d4 sta.l d4 <.dscopy+0x18>,$r0
+    104c:	b4 02 01 c4 	c40102b4 lda.l $r0,102b4 <UART+0x2b0>
+    1050:	74 7f 00 44 	44007f74 and.l $r0,$r0,1f7 <interrupt_20+0xb>
+    1054:	b4 02 01 bc 	bc0102b4 sta.l 102b4 <UART+0x2b0>,$r0
+    1058:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    105c:	a0 05 30 00 	003005a0 jmp 1680 <__epilog_$r14>
+
+00001060 <ft900_spim_sel>:
+ft900_spim_sel():
+    1060:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1064:	ac 02 01 bc 	bc0102ac sta.l 102ac <UART+0x2a8>,$r0
+    1068:	00 00 00 a0 	a0000000 return 
+
+0000106c <ft900_spim_unsel>:
+ft900_spim_unsel():
+    106c:	ff 00 00 64 	640000ff ldk.l $r0,ff <interrupt_0+0x3>
+    1070:	ac 02 01 bc 	bc0102ac sta.l 102ac <UART+0x2a8>,$r0
+    1074:	00 00 00 a0 	a0000000 return 
+
+00001078 <ft900_spim_transfer>:
+ft900_spim_transfer():
+    1078:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    107c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1080:	d4 00 10 c4 	c41000d4 lda.l $r1,d4 <.dscopy+0x18>
+    1084:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1088:	20 04 28 00 	00280420 jmpc 0,$r30,1,1080 <ft900_spim_transfer+0x8>
+    108c:	a8 02 01 bc 	bc0102a8 sta.l 102a8 <UART+0x2a4>,$r0
+    1090:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1094:	77 03 34 00 	00340377 call ddc <usleep>
+    1098:	a4 02 01 c4 	c40102a4 lda.l $r0,102a4 <UART+0x2a0>
+    109c:	c4 40 00 44 	440040c4 and.l $r0,$r0,c <_start+0xc>
+    10a0:	c2 40 e0 5d 	5de040c2 cmp.l $r0,c <_start+0xc>
+    10a4:	26 04 20 00 	00200426 jmpc 0,$r30,0,1098 <ft900_spim_transfer+0x20>
+    10a8:	a8 02 01 c4 	c40102a8 lda.l $r0,102a8 <UART+0x2a4>
+    10ac:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    10b0:	00 00 00 a0 	a0000000 return 
+
+000010b4 <ft900_spim_activate>:
+ft900_spim_activate():
+    10b4:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    10b8:	08 00 11 64 	64110008 ldk.l $r1,10008 <UART+0x4>
+    10bc:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+    10c0:	05 48 00 44 	44004805 or.l $r0,$r0,80 <_start+0x80>
+    10c4:	00 00 10 b4 	b4100000 sti.l $r1,0 <_start>,$r0
+    10c8:	bc 00 00 64 	640000bc ldk.l $r0,bc <.dscopy>
+    10cc:	10 00 00 b4 	b4000010 sti.l $r0,10 <_start+0x10>,$r0
+    10d0:	d1 00 00 64 	640000d1 ldk.l $r0,d1 <.dscopy+0x15>
+    10d4:	a0 02 01 bc 	bc0102a0 sta.l 102a0 <UART+0x29c>,$r0
+    10d8:	b0 02 11 64 	641102b0 ldk.l $r1,102b0 <UART+0x2ac>
+    10dc:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+    10e0:	75 4a 00 44 	44004a75 or.l $r0,$r0,a7 <init+0x13>
+    10e4:	00 00 10 b4 	b4100000 sti.l $r1,0 <_start>,$r0
+    10e8:	40 00 20 64 	64200040 ldk.l $r2,40 <_start+0x40>
+    10ec:	06 00 10 64 	64100006 ldk.l $r1,6 <_start+0x6>
+    10f0:	8c 16 00 64 	6400168c ldk.l $r0,168c <pads.3415>
+    10f4:	69 05 34 00 	00340569 call 15a4 <pad_setter>
+    10f8:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    10fc:	d4 00 00 bc 	bc0000d4 sta.l d4 <.dscopy+0x18>,$r0
+    1100:	0c 0f 10 64 	64100f0c ldk.l $r1,f0c <ticker>
+    1104:	08 00 00 64 	64000008 ldk.l $r0,8 <_start+0x8>
+    1108:	88 05 34 00 	00340588 call 1620 <attach_interrupt>
+    110c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    1110:	00 00 00 a0 	a0000000 return 
+
+00001114 <timer_handler>:
+timer_handler():
+    1114:	00 80 06 84 	84068000 push.l $r13
+    1118:	00 00 07 84 	84070000 push.l $r14
+    111c:	00 80 07 84 	84078000 push.l $r15
+    1120:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    1124:	45 03 d1 c0 	c0d10345 lda.b $r13,10345 <UART+0x341>
+    1128:	54 c5 d6 44 	44d6c554 and.l $r13,$r13,55 <_start+0x55>
+    112c:	00 00 e0 64 	64e00000 ldk.l $r14,0 <_start>
+    1130:	d8 00 f0 64 	64f000d8 ldk.l $r15,d8 <.dscopy+0x1c>
+    1134:	ea 80 06 44 	440680ea ashr.l $r0,$r13,$r14
+    1138:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+    113c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1140:	57 04 28 00 	00280457 jmpc 0,$r30,1,115c <timer_handler+0x48>
+    1144:	e0 00 07 44 	440700e0 add.l $r0,$r14,$r14
+    1148:	f0 00 00 44 	440000f0 add.l $r0,$r0,$r15
+    114c:	00 00 00 ac 	ac000000 ldi.l $r0,$r0,0 <_start>
+    1150:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1154:	57 04 28 00 	00280457 jmpc 0,$r30,1,115c <timer_handler+0x48>
+    1158:	00 00 34 08 	08340000 calli $r0
+    115c:	20 40 e7 44 	44e74020 add.l $r14,$r14,2 <_start+0x2>
+    1160:	82 40 e7 5d 	5de74082 cmp.l $r14,8 <_start+0x8>
+    1164:	4d 04 20 00 	0020044d jmpc 0,$r30,0,1134 <timer_handler+0x20>
+    1168:	45 03 01 c0 	c0010345 lda.b $r0,10345 <UART+0x341>
+    116c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1170:	05 80 d6 44 	44d68005 or.l $r13,$r13,$r0
+    1174:	45 03 d1 b8 	b8d10345 sta.b 10345 <UART+0x341>,$r13
+    1178:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    117c:	9f 05 30 00 	0030059f jmp 167c <__epilog_$r15>
+
+00001180 <ft900_timer_activate>:
+ft900_timer_activate():
+    1180:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    1184:	14 11 10 64 	64101114 ldk.l $r1,1114 <timer_handler>
+    1188:	11 00 00 64 	64000011 ldk.l $r0,11 <_start+0x11>
+    118c:	88 05 34 00 	00340588 call 1620 <attach_interrupt>
+    1190:	40 03 01 64 	64010340 ldk.l $r0,10340 <UART+0x33c>
+    1194:	03 00 10 60 	60100003 ldk.b $r1,3 <_start+0x3>
+    1198:	00 80 00 b0 	b0008000 sti.b $r0,0 <_start>,$r1
+    119c:	02 00 10 60 	60100002 ldk.b $r1,2 <_start+0x2>
+    11a0:	00 80 00 b0 	b0008000 sti.b $r0,0 <_start>,$r1
+    11a4:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    11a8:	00 00 00 a0 	a0000000 return 
+
+000011ac <ft900_timer_set_prescaler>:
+ft900_timer_set_prescaler():
+    11ac:	f0 7f 00 44 	44007ff0 add.l $r0,$r0,1ff <interrupt_21+0x7>
+    11b0:	f4 4f 10 44 	44104ff4 and.l $r1,$r0,ff <interrupt_0+0x3>
+    11b4:	4a 03 11 b8 	b811034a sta.b 1034a <UART+0x346>,$r1
+    11b8:	8d 50 00 44 	4400508d bextu.l $r0,$r0,108 <interrupt_1>
+    11bc:	4b 03 01 b8 	b801034b sta.b 1034b <UART+0x347>,$r0
+    11c0:	10 00 00 60 	60000010 ldk.b $r0,10 <_start+0x10>
+    11c4:	44 03 01 b8 	b8010344 sta.b 10344 <UART+0x340>,$r0
+    11c8:	00 00 00 a0 	a0000000 return 
+
+000011cc <ft900_timer_set_value>:
+ft900_timer_set_value():
+    11cc:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    11d0:	46 03 01 b8 	b8010346 sta.b 10346 <UART+0x342>,$r0
+    11d4:	f0 ff 10 44 	4410fff0 add.l $r1,$r1,1ff <interrupt_21+0x7>
+    11d8:	f4 cf 00 44 	4400cff4 and.l $r0,$r1,ff <interrupt_0+0x3>
+    11dc:	48 03 01 b8 	b8010348 sta.b 10348 <UART+0x344>,$r0
+    11e0:	8d d0 10 44 	4410d08d bextu.l $r1,$r1,108 <interrupt_1>
+    11e4:	49 03 11 b8 	b8110349 sta.b 10349 <UART+0x345>,$r1
+    11e8:	00 00 00 a0 	a0000000 return 
+
+000011ec <ft900_timer_set_prescaling>:
+ft900_timer_set_prescaling():
+    11ec:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    11f0:	10 00 20 64 	64200010 ldk.l $r2,10 <_start+0x10>
+    11f4:	08 00 01 44 	44010008 ashl.l $r0,$r2,$r0
+    11f8:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    11fc:	42 03 11 c0 	c0110342 lda.b $r1,10342 <UART+0x33e>
+    1200:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    1204:	85 04 28 00 	00280485 jmpc 0,$r30,1,1214 <ft900_timer_set_prescaling+0x28>
+    1208:	05 80 00 44 	44008005 or.l $r0,$r1,$r0
+    120c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1210:	87 04 30 00 	00300487 jmp 121c <ft900_timer_set_prescaling+0x30>
+    1214:	f6 7f 00 44 	44007ff6 xor.l $r0,$r0,1ff <interrupt_21+0x7>
+    1218:	14 00 00 44 	44000014 and.l $r0,$r0,$r1
+    121c:	42 03 01 b8 	b8010342 sta.b 10342 <UART+0x33e>,$r0
+    1220:	00 00 00 a0 	a0000000 return 
+
+00001224 <ft900_timer_set_mode>:
+ft900_timer_set_mode():
+    1224:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1228:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    122c:	08 80 30 44 	44308008 ashl.l $r3,$r1,$r0
+    1230:	43 03 41 64 	64410343 ldk.l $r4,10343 <UART+0x33f>
+    1234:	00 00 22 a8 	a8220000 ldi.b $r2,$r4,0 <_start>
+    1238:	f4 4f 21 44 	44214ff4 and.l $r2,$r2,ff <interrupt_0+0x3>
+    123c:	11 00 10 64 	64100011 ldk.l $r1,11 <_start+0x11>
+    1240:	08 80 10 44 	44108008 ashl.l $r1,$r1,$r0
+    1244:	14 00 01 44 	44010014 and.l $r0,$r2,$r1
+    1248:	35 00 10 44 	44100035 or.l $r1,$r0,$r3
+    124c:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    1250:	00 80 40 b0 	b0408000 sti.b $r4,0 <_start>,$r1
+    1254:	00 00 00 a0 	a0000000 return 
+
+00001258 <ft900_timer_set_interrupt>:
+ft900_timer_set_interrupt():
+    1258:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    125c:	00 00 30 44 	44300000 add.l $r3,$r0,$r0
+    1260:	02 00 20 64 	64200002 ldk.l $r2,2 <_start+0x2>
+    1264:	38 00 21 44 	44210038 ashl.l $r2,$r2,$r3
+    1268:	f4 4f 31 44 	44314ff4 and.l $r3,$r2,ff <interrupt_0+0x3>
+    126c:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1270:	a1 04 28 00 	002804a1 jmpc 0,$r30,1,1284 <ft900_timer_set_interrupt+0x2c>
+    1274:	45 03 21 c0 	c0210345 lda.b $r2,10345 <UART+0x341>
+    1278:	f4 4f 21 44 	44214ff4 and.l $r2,$r2,ff <interrupt_0+0x3>
+    127c:	25 80 21 44 	44218025 or.l $r2,$r3,$r2
+    1280:	a5 04 30 00 	003004a5 jmp 1294 <ft900_timer_set_interrupt+0x3c>
+    1284:	45 03 31 c0 	c0310345 lda.b $r3,10345 <UART+0x341>
+    1288:	f4 cf 31 44 	4431cff4 and.l $r3,$r3,ff <interrupt_0+0x3>
+    128c:	f6 7f 21 44 	44217ff6 xor.l $r2,$r2,1ff <interrupt_21+0x7>
+    1290:	34 00 21 44 	44210034 and.l $r2,$r2,$r3
+    1294:	45 03 21 b8 	b8210345 sta.b 10345 <UART+0x341>,$r2
+    1298:	28 40 00 44 	44004028 ashl.l $r0,$r0,2 <_start+0x2>
+    129c:	d8 00 20 64 	642000d8 ldk.l $r2,d8 <.dscopy+0x1c>
+    12a0:	00 00 01 44 	44010000 add.l $r0,$r2,$r0
+    12a4:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    12a8:	00 00 00 a0 	a0000000 return 
+
+000012ac <ft900_timer_start>:
+ft900_timer_start():
+    12ac:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    12b0:	01 00 10 64 	64100001 ldk.l $r1,1 <_start+0x1>
+    12b4:	08 80 00 44 	44008008 ashl.l $r0,$r1,$r0
+    12b8:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    12bc:	44 03 01 b8 	b8010344 sta.b 10344 <UART+0x340>,$r0
+    12c0:	41 03 01 b8 	b8010341 sta.b 10341 <UART+0x33d>,$r0
+    12c4:	00 00 00 a0 	a0000000 return 
+
+000012c8 <handler.part.0>:
+handler.part.0():
+    12c8:	00 80 06 84 	84068000 push.l $r13
+    12cc:	00 00 07 84 	84070000 push.l $r14
+    12d0:	00 80 07 84 	84078000 push.l $r15
+    12d4:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    12d8:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    12dc:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    12e0:	00 80 10 ac 	ac108000 ldi.l $r1,$r1,0 <_start>
+    12e4:	04 80 26 ac 	ac268004 ldi.l $r2,$r13,4 <_start+0x4>
+    12e8:	04 80 e0 ac 	ace08004 ldi.l $r14,$r1,4 <_start+0x4>
+    12ec:	22 00 e7 44 	44e70022 sub.l $r14,$r14,$r2
+    12f0:	02 46 e7 5d 	5de74602 cmp.l $r14,60 <_start+0x60>
+    12f4:	bf 04 a0 01 	01a004bf jmpc 6,$r30,0,12fc <handler.part.0+0x34>
+    12f8:	60 00 e0 64 	64e00060 ldk.l $r14,60 <_start+0x60>
+    12fc:	0c 80 00 ac 	ac00800c ldi.l $r0,$r1,c <_start+0xc>
+    1300:	44 40 30 44 	44304044 and.l $r3,$r0,4 <_start+0x4>
+    1304:	02 c0 e1 5d 	5de1c002 cmp.l $r3,0 <_start>
+    1308:	c8 04 28 00 	002804c8 jmpc 0,$r30,1,1320 <handler.part.0+0x58>
+    130c:	00 40 27 44 	44274000 move.l $r2,$r14
+    1310:	00 c0 16 44 	4416c000 move.l $r1,$r13
+    1314:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1318:	7a 05 34 00 	0034057a call 15e8 <streamout_pm_b>
+    131c:	ce 04 30 00 	003004ce jmp 1338 <handler.part.0+0x70>
+    1320:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+    1324:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1328:	ce 04 28 00 	002804ce jmpc 0,$r30,1,1338 <handler.part.0+0x70>
+    132c:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+    1330:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    1334:	ee 00 f0 f0 	f0f000ee streamout.b $r15,$r0,$r14
+    1338:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+    133c:	00 00 e7 44 	44e70000 add.l $r14,$r14,$r0
+    1340:	40 c0 16 44 	4416c040 add.l $r1,$r13,4 <_start+0x4>
+    1344:	00 00 17 b4 	b4170000 sti.l $r1,0 <_start>,$r14
+    1348:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+    134c:	04 00 20 ac 	ac200004 ldi.l $r2,$r0,4 <_start+0x4>
+    1350:	22 00 e7 5d 	5de70022 cmp.l $r14,$r2
+    1354:	da 04 20 00 	002004da jmpc 0,$r30,0,1368 <handler.part.0+0xa0>
+    1358:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    135c:	00 00 11 b4 	b4110000 sti.l $r1,0 <_start>,$r2
+    1360:	10 00 00 ac 	ac000010 ldi.l $r0,$r0,10 <_start+0x10>
+    1364:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+    1368:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+    136c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1370:	e1 04 20 00 	002004e1 jmpc 0,$r30,0,1384 <handler.part.0+0xbc>
+    1374:	01 80 07 a8 	a8078001 ldi.b $r0,$r15,1 <_start+0x1>
+    1378:	d4 4f 00 44 	44004fd4 and.l $r0,$r0,fd <interrupt_0+0x1>
+    137c:	01 00 f0 b0 	b0f00001 sti.b $r15,1 <_start+0x1>,$r0
+    1380:	10 80 d6 b4 	b4d68010 sti.l $r13,10 <_start+0x10>,$r13
+    1384:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    1388:	9f 05 30 00 	0030059f jmp 167c <__epilog_$r15>
+
+0000138c <handler1>:
+handler1():
+    138c:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    1390:	32 03 01 c0 	c0010332 lda.b $r0,10332 <UART+0x32e>
+    1394:	f4 43 00 44 	440043f4 and.l $r0,$r0,3f <_start+0x3f>
+    1398:	22 40 e0 59 	59e04022 cmp.b $r0,2 <_start+0x2>
+    139c:	eb 04 20 00 	002004eb jmpc 0,$r30,0,13ac <handler1+0x20>
+    13a0:	00 01 10 64 	64100100 ldk.l $r1,100 <interrupt_0+0x4>
+    13a4:	30 03 01 64 	64010330 ldk.l $r0,10330 <UART+0x32c>
+    13a8:	b2 04 34 00 	003404b2 call 12c8 <handler.part.0>
+    13ac:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    13b0:	00 00 00 a0 	a0000000 return 
+
+000013b4 <handler0>:
+handler0():
+    13b4:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    13b8:	22 03 01 c0 	c0010322 lda.b $r0,10322 <UART+0x31e>
+    13bc:	f4 43 00 44 	440043f4 and.l $r0,$r0,3f <_start+0x3f>
+    13c0:	22 40 e0 59 	59e04022 cmp.b $r0,2 <_start+0x2>
+    13c4:	f5 04 20 00 	002004f5 jmpc 0,$r30,0,13d4 <handler0+0x20>
+    13c8:	e8 00 10 64 	641000e8 ldk.l $r1,e8 <_exit+0x4>
+    13cc:	20 03 01 64 	64010320 ldk.l $r0,10320 <UART+0x31c>
+    13d0:	b2 04 34 00 	003404b2 call 12c8 <handler.part.0>
+    13d4:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    13d8:	00 00 00 a0 	a0000000 return 
+
+000013dc <ft900_uart_set_baud>:
+ft900_uart_set_baud():
+    13dc:	48 40 00 44 	44004048 ashl.l $r0,$r0,4 <_start+0x4>
+    13e0:	20 03 21 64 	64210320 ldk.l $r2,10320 <UART+0x31c>
+    13e4:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    13e8:	70 40 40 44 	44404070 add.l $r4,$r0,7 <_start+0x7>
+    13ec:	01 00 20 60 	60200001 ldk.b $r2,1 <_start+0x1>
+    13f0:	00 00 41 b0 	b0410000 sti.b $r4,0 <_start>,$r2
+    13f4:	50 40 30 44 	44304050 add.l $r3,$r0,5 <_start+0x5>
+    13f8:	08 00 20 60 	60200008 ldk.b $r2,8 <_start+0x8>
+    13fc:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    1400:	28 c0 10 44 	4410c028 ashl.l $r1,$r1,2 <_start+0x2>
+    1404:	52 57 21 64 	64215752 ldk.l $r2,15752 <UART+0x574e>
+    1408:	03 68 21 44 	44216803 ldl.l $r2,$r2,80 <_start+0x80>
+    140c:	10 00 11 f4 	f4110010 udiv.l $r1,$r2,$r1
+    1410:	ff ff 20 64 	6420ffff ldk.l $r2,ffff <__data_load_end+0xe8af>
+    1414:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    1418:	02 00 20 60 	60200002 ldk.b $r2,2 <_start+0x2>
+    141c:	00 00 41 b0 	b0410000 sti.b $r4,0 <_start>,$r2
+    1420:	0c 05 a8 01 	01a8050c jmpc 6,$r30,1,1430 <ft900_uart_set_baud+0x54>
+    1424:	04 00 20 60 	60200004 ldk.b $r2,4 <_start+0x4>
+    1428:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    142c:	0f 05 30 00 	0030050f jmp 143c <ft900_uart_set_baud+0x60>
+    1430:	00 00 20 60 	60200000 ldk.b $r2,0 <_start>
+    1434:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    1438:	29 c0 10 44 	4410c029 lshr.l $r1,$r1,2 <_start+0x2>
+    143c:	03 00 20 a8 	a8200003 ldi.b $r2,$r0,3 <_start+0x3>
+    1440:	f4 4f 21 44 	44214ff4 and.l $r2,$r2,ff <interrupt_0+0x3>
+    1444:	30 40 30 44 	44304030 add.l $r3,$r0,3 <_start+0x3>
+    1448:	80 ff 4f 60 	604fff80 ldk.b $r4,fff80 <EXITEXIT+0xdff84>
+    144c:	00 00 32 b0 	b0320000 sti.b $r3,0 <_start>,$r4
+    1450:	f4 cf 40 44 	4440cff4 and.l $r4,$r1,ff <interrupt_0+0x3>
+    1454:	00 00 02 b0 	b0020000 sti.b $r0,0 <_start>,$r4
+    1458:	8d d0 10 44 	4410d08d bextu.l $r1,$r1,108 <interrupt_1>
+    145c:	01 80 00 b0 	b0008001 sti.b $r0,1 <_start+0x1>,$r1
+    1460:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    1464:	00 00 00 a0 	a0000000 return 
+
+00001468 <ft900_uart_activate>:
+ft900_uart_activate():
+    1468:	00 80 06 84 	84068000 push.l $r13
+    146c:	00 00 07 84 	84070000 push.l $r14
+    1470:	00 80 07 84 	84078000 push.l $r15
+    1474:	00 00 08 84 	84080000 push.l $r16
+    1478:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    147c:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    1480:	08 00 11 c4 	c4110008 lda.l $r1,10008 <UART+0x4>
+    1484:	08 00 00 64 	64000008 ldk.l $r0,8 <_start+0x8>
+    1488:	02 40 e7 5d 	5de74002 cmp.l $r14,0 <_start>
+    148c:	25 05 20 00 	00200525 jmpc 0,$r30,0,1494 <ft900_uart_activate+0x2c>
+    1490:	10 00 00 64 	64000010 ldk.l $r0,10 <_start+0x10>
+    1494:	15 00 00 44 	44000015 or.l $r0,$r0,$r1
+    1498:	08 00 01 bc 	bc010008 sta.l 10008 <UART+0x4>,$r0
+    149c:	c0 00 20 64 	642000c0 ldk.l $r2,c0 <.dscopy+0x4>
+    14a0:	08 00 10 64 	64100008 ldk.l $r1,8 <_start+0x8>
+    14a4:	9c 16 00 64 	6400169c ldk.l $r0,169c <pads.2822>
+    14a8:	69 05 34 00 	00340569 call 15a4 <pad_setter>
+    14ac:	00 00 00 61 	61000000 ldk.b $r16,0 <_start>
+    14b0:	1a 00 01 b9 	b901001a sta.b 1001a <UART+0x16>,$r16
+    14b4:	1a 00 01 c0 	c001001a lda.b $r0,1001a <UART+0x16>
+    14b8:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    14bc:	85 42 00 44 	44004285 or.l $r0,$r0,28 <_start+0x28>
+    14c0:	1a 00 01 b8 	b801001a sta.b 1001a <UART+0x16>,$r0
+    14c4:	48 40 17 44 	44174048 ashl.l $r1,$r14,4 <_start+0x4>
+    14c8:	20 03 d1 64 	64d10320 ldk.l $r13,10320 <UART+0x31c>
+    14cc:	d0 80 d0 44 	44d080d0 add.l $r13,$r1,$r13
+    14d0:	30 c0 f6 44 	44f6c030 add.l $r15,$r13,3 <_start+0x3>
+    14d4:	03 00 00 60 	60000003 ldk.b $r0,3 <_start+0x3>
+    14d8:	00 00 f0 b0 	b0f00000 sti.b $r15,0 <_start>,$r0
+    14dc:	00 c2 11 64 	6411c200 ldk.l $r1,1c200 <MAGIC+0x2d90>
+    14e0:	00 40 07 44 	44074000 move.l $r0,$r14
+    14e4:	f7 04 34 00 	003404f7 call 13dc <ft900_uart_set_baud>
+    14e8:	03 80 16 a8 	a8168003 ldi.b $r1,$r13,3 <_start+0x3>
+    14ec:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    14f0:	bf ff 0f 60 	600fffbf ldk.b $r0,fffbf <EXITEXIT+0xdffc3>
+    14f4:	00 00 f0 b0 	b0f00000 sti.b $r15,0 <_start>,$r0
+    14f8:	02 80 06 a8 	a8068002 ldi.b $r0,$r13,2 <_start+0x2>
+    14fc:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1500:	05 41 00 44 	44004105 or.l $r0,$r0,10 <_start+0x10>
+    1504:	20 c0 26 44 	4426c020 add.l $r2,$r13,2 <_start+0x2>
+    1508:	00 00 20 b0 	b0200000 sti.b $r2,0 <_start>,$r0
+    150c:	00 80 f0 b0 	b0f08000 sti.b $r15,0 <_start>,$r1
+    1510:	07 00 00 60 	60000007 ldk.b $r0,7 <_start+0x7>
+    1514:	00 00 20 b0 	b0200000 sti.b $r2,0 <_start>,$r0
+    1518:	02 00 00 60 	60000002 ldk.b $r0,2 <_start+0x2>
+    151c:	04 00 d0 b0 	b0d00004 sti.b $r13,4 <_start+0x4>,$r0
+    1520:	70 c0 16 44 	4416c070 add.l $r1,$r13,7 <_start+0x7>
+    1524:	00 00 18 b0 	b0180000 sti.b $r1,0 <_start>,$r16
+    1528:	20 00 00 60 	60000020 ldk.b $r0,20 <_start+0x20>
+    152c:	50 c0 d6 44 	44d6c050 add.l $r13,$r13,5 <_start+0x5>
+    1530:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    1534:	04 00 20 60 	60200004 ldk.b $r2,4 <_start+0x4>
+    1538:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+    153c:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    1540:	05 00 20 60 	60200005 ldk.b $r2,5 <_start+0x5>
+    1544:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+    1548:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    154c:	e0 00 07 44 	440700e0 add.l $r0,$r14,$r14
+    1550:	e0 00 00 44 	440000e0 add.l $r0,$r0,$r14
+    1554:	38 40 10 44 	44104038 ashl.l $r1,$r0,3 <_start+0x3>
+    1558:	e8 00 00 64 	640000e8 ldk.l $r0,e8 <_exit+0x4>
+    155c:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+    1560:	10 00 00 b4 	b4000010 sti.l $r0,10 <_start+0x10>,$r0
+    1564:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    1568:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    156c:	40 40 00 44 	44004040 add.l $r0,$r0,4 <_start+0x4>
+    1570:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1574:	28 40 17 44 	44174028 ashl.l $r1,$r14,2 <_start+0x2>
+    1578:	94 16 00 64 	64001694 ldk.l $r0,1694 <handlers.2828>
+    157c:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+    1580:	00 00 10 cc 	cc100000 lpmi.l $r1,$r0,0 <_start>
+    1584:	d0 40 07 44 	440740d0 add.l $r0,$r14,d <_start+0xd>
+    1588:	88 05 34 00 	00340588 call 1620 <attach_interrupt>
+    158c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    1590:	9e 05 30 00 	0030059e jmp 1678 <__epilog_$r16>
+
+00001594 <ft900_enable_interrupts>:
+ft900_enable_interrupts():
+    1594:	00 00 00 60 	60000000 ldk.b $r0,0 <_start>
+    1598:	e3 00 01 38 	380100e3 exa.b $r0,100e3 <UART+0xdf>
+    159c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    15a0:	00 00 00 a0 	a0000000 return 
+
+000015a4 <pad_setter>:
+pad_setter():
+    15a4:	00 80 06 84 	84068000 push.l $r13
+    15a8:	00 00 07 84 	84070000 push.l $r14
+    15ac:	00 80 07 84 	84078000 push.l $r15
+    15b0:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    15b4:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    15b8:	10 00 e0 44 	44e00010 add.l $r14,$r0,$r1
+    15bc:	f4 4f f1 44 	44f14ff4 and.l $r15,$r2,ff <interrupt_0+0x3>
+    15c0:	e2 80 e6 5d 	5de680e2 cmp.l $r13,$r14
+    15c4:	78 05 28 00 	00280578 jmpc 0,$r30,1,15e0 <pad_setter+0x3c>
+    15c8:	00 c0 17 44 	4417c000 move.l $r1,$r15
+    15cc:	00 80 26 c8 	c8268000 lpmi.b $r2,$r13,0 <_start>
+    15d0:	f4 4f 01 44 	44014ff4 and.l $r0,$r2,ff <interrupt_0+0x3>
+    15d4:	8d 05 34 00 	0034058d call 1634 <ft900_pad_set_function>
+    15d8:	10 c0 d6 44 	44d6c010 add.l $r13,$r13,1 <_start+0x1>
+    15dc:	70 05 30 00 	00300570 jmp 15c0 <pad_setter+0x1c>
+    15e0:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    15e4:	9f 05 30 00 	0030059f jmp 167c <__epilog_$r15>
+
+000015e8 <streamout_pm_b>:
+streamout_pm_b():
+    15e8:	00 80 30 ac 	ac308000 ldi.l $r3,$r1,0 <_start>
+    15ec:	00 80 41 ac 	ac418000 ldi.l $r4,$r3,0 <_start>
+    15f0:	04 80 60 ac 	ac608004 ldi.l $r6,$r1,4 <_start+0x4>
+    15f4:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    15f8:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    15fc:	87 05 28 00 	00280587 jmpc 0,$r30,1,161c <streamout_pm_b+0x34>
+    1600:	60 80 30 44 	44308060 add.l $r3,$r1,$r6
+    1604:	30 00 32 44 	44320030 add.l $r3,$r4,$r3
+    1608:	00 80 31 c8 	c8318000 lpmi.b $r3,$r3,0 <_start>
+    160c:	f4 cf 31 44 	4431cff4 and.l $r3,$r3,ff <interrupt_0+0x3>
+    1610:	00 80 01 b0 	b0018000 sti.b $r0,0 <_start>,$r3
+    1614:	10 c0 10 44 	4410c010 add.l $r1,$r1,1 <_start+0x1>
+    1618:	7e 05 30 00 	0030057e jmp 15f8 <streamout_pm_b+0x10>
+    161c:	00 00 00 a0 	a0000000 return 
+
+00001620 <attach_interrupt>:
+attach_interrupt():
+    1620:	28 40 00 44 	44004028 ashl.l $r0,$r0,2 <_start+0x2>
+    1624:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    1628:	00 00 01 44 	44010000 add.l $r0,$r2,$r0
+    162c:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1630:	00 00 00 a0 	a0000000 return 
+
+00001634 <ft900_pad_set_function>:
+ft900_pad_set_function():
+    1634:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    1638:	1c 00 21 64 	6421001c ldk.l $r2,1001c <UART+0x18>
+    163c:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    1640:	00 80 00 b0 	b0008000 sti.b $r0,0 <_start>,$r1
+    1644:	00 00 00 a0 	a0000000 return 
+
+00001648 <__epilog_$r28>:
+__epilog_$r28():
+    1648:	00 00 c0 8d 	8dc00000 pop.l $r28
+
+0000164c <__epilog_$r27>:
+__epilog_$r27():
+    164c:	00 00 b0 8d 	8db00000 pop.l $r27
+
+00001650 <__epilog_$r26>:
+__epilog_$r26():
+    1650:	00 00 a0 8d 	8da00000 pop.l $r26
+
+00001654 <__epilog_$r25>:
+__epilog_$r25():
+    1654:	00 00 90 8d 	8d900000 pop.l $r25
+
+00001658 <__epilog_$r24>:
+__epilog_$r24():
+    1658:	00 00 80 8d 	8d800000 pop.l $r24
+
+0000165c <__epilog_$r23>:
+__epilog_$r23():
+    165c:	00 00 70 8d 	8d700000 pop.l $r23
+
+00001660 <__epilog_$r22>:
+__epilog_$r22():
+    1660:	00 00 60 8d 	8d600000 pop.l $r22
+
+00001664 <__epilog_$r21>:
+__epilog_$r21():
+    1664:	00 00 50 8d 	8d500000 pop.l $r21
+
+00001668 <__epilog_$r20>:
+__epilog_$r20():
+    1668:	00 00 40 8d 	8d400000 pop.l $r20
+
+0000166c <__epilog_$r19>:
+__epilog_$r19():
+    166c:	00 00 30 8d 	8d300000 pop.l $r19
+
+00001670 <__epilog_$r18>:
+__epilog_$r18():
+    1670:	00 00 20 8d 	8d200000 pop.l $r18
+
+00001674 <__epilog_$r17>:
+__epilog_$r17():
+    1674:	00 00 10 8d 	8d100000 pop.l $r17
+
+00001678 <__epilog_$r16>:
+__epilog_$r16():
+    1678:	00 00 00 8d 	8d000000 pop.l $r16
+
+0000167c <__epilog_$r15>:
+__epilog_$r15():
+    167c:	00 00 f0 8c 	8cf00000 pop.l $r15
+
+00001680 <__epilog_$r14>:
+__epilog_$r14():
+    1680:	00 00 e0 8c 	8ce00000 pop.l $r14
+
+00001684 <__epilog_$r13>:
+__epilog_$r13():
+    1684:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1688:	00 00 00 a0 	a0000000 return 
+
+0000168c <pads.3415>:
+    168c:	1b 1c 1d 1e 21 22 00 00                             ....!"..
+
+00001694 <handlers.2828>:
+    1694:	b4 13 00 00 8c 13 00 00                             ........
+
+0000169c <pads.2822>:
+    169c:	30 31 32 33 34 35 36 37                             01234567

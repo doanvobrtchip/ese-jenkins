@@ -1,0 +1,6 @@
+make -C ../libft900 || exit
+make -C ../libft800 || exit
+make clean
+make || exit
+# python ../../src/tools/bl.py -v -h $PORT demo_clock.exe
+../../src/onewire.py loadpm *.exe

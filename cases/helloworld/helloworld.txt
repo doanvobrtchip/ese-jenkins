@@ -1,0 +1,3618 @@
+
+a.out:     file format elf32-ft32
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+       0:	ff ff 30 00 	0030ffff jmp 3fffc <EXITEXIT+0x20000>
+       4:	eb 0a 30 00 	00300aeb jmp 2bac <ft900_watchdog>
+       8:	3f 00 30 00 	0030003f jmp fc <interrupt_0>
+       c:	42 00 30 00 	00300042 jmp 108 <interrupt_1>
+      10:	45 00 30 00 	00300045 jmp 114 <interrupt_2>
+      14:	48 00 30 00 	00300048 jmp 120 <interrupt_3>
+      18:	4b 00 30 00 	0030004b jmp 12c <interrupt_4>
+      1c:	4e 00 30 00 	0030004e jmp 138 <interrupt_5>
+      20:	51 00 30 00 	00300051 jmp 144 <interrupt_6>
+      24:	54 00 30 00 	00300054 jmp 150 <interrupt_7>
+      28:	57 00 30 00 	00300057 jmp 15c <interrupt_8>
+      2c:	5a 00 30 00 	0030005a jmp 168 <interrupt_9>
+      30:	5d 00 30 00 	0030005d jmp 174 <interrupt_10>
+      34:	60 00 30 00 	00300060 jmp 180 <interrupt_11>
+      38:	63 00 30 00 	00300063 jmp 18c <interrupt_12>
+      3c:	66 00 30 00 	00300066 jmp 198 <interrupt_13>
+      40:	69 00 30 00 	00300069 jmp 1a4 <interrupt_14>
+      44:	6c 00 30 00 	0030006c jmp 1b0 <interrupt_15>
+      48:	6f 00 30 00 	0030006f jmp 1bc <interrupt_16>
+      4c:	72 00 30 00 	00300072 jmp 1c8 <interrupt_17>
+      50:	75 00 30 00 	00300075 jmp 1d4 <interrupt_18>
+      54:	78 00 30 00 	00300078 jmp 1e0 <interrupt_19>
+      58:	7b 00 30 00 	0030007b jmp 1ec <interrupt_20>
+      5c:	7e 00 30 00 	0030007e jmp 1f8 <interrupt_21>
+      60:	81 00 30 00 	00300081 jmp 204 <interrupt_22>
+      64:	84 00 30 00 	00300084 jmp 210 <interrupt_23>
+      68:	87 00 30 00 	00300087 jmp 21c <interrupt_24>
+      6c:	8a 00 30 00 	0030008a jmp 228 <interrupt_25>
+      70:	8d 00 30 00 	0030008d jmp 234 <interrupt_26>
+      74:	90 00 30 00 	00300090 jmp 240 <interrupt_27>
+      78:	93 00 30 00 	00300093 jmp 24c <interrupt_28>
+      7c:	96 00 30 00 	00300096 jmp 258 <interrupt_29>
+      80:	99 00 30 00 	00300099 jmp 264 <interrupt_30>
+      84:	9c 00 30 00 	0030009c jmp 270 <interrupt_31>
+      88:	fe ff 30 00 	0030fffe jmp 3fff8 <EXITEXIT+0x1fffc>
+
+0000008c <codestart>:
+      8c:	25 00 30 00 	00300025 jmp 94 <init>
+
+00000090 <_exithook>:
+      90:	00 00 00 a0 	a0000000 return 
+
+00000094 <init>:
+      94:	80 00 00 64 	64000080 ldk.l $r0,80 <_start+0x80>
+      98:	e3 00 01 b8 	b80100e3 sta.b 100e3 <UART+0xdf>,$r0
+      9c:	2c 33 00 64 	6400332c ldk.l $r0,332c <_etext>
+      a0:	04 3c 10 64 	64103c04 ldk.l $r1,3c04 <__data_load_end>
+      a4:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+      a8:	2f 00 30 00 	0030002f jmp bc <.dscopy>
+
+000000ac <.dsloop>:
+      ac:	00 00 30 cc 	cc300000 lpmi.l $r3,$r0,0 <_start>
+      b0:	40 40 00 44 	44004040 add.l $r0,$r0,4 <_start+0x4>
+      b4:	00 80 21 b4 	b4218000 sti.l $r2,0 <_start>,$r3
+      b8:	40 40 21 44 	44214040 add.l $r2,$r2,4 <_start+0x4>
+
+000000bc <.dscopy>:
+      bc:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+      c0:	2b 00 20 01 	0120002b jmpc lt,ac <.dsloop>
+      c4:	d8 08 00 64 	640008d8 ldk.l $r0,8d8 <__sfvwrite_r+0x4e8>
+      c8:	40 09 20 64 	64200940 ldk.l $r2,940 <_malloc_r>
+      cc:	02 00 21 44 	44210002 sub.l $r2,$r2,$r0
+      d0:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+      d4:	27 80 00 f4 	f4008027 memset.l $r0,$r1,$r2
+      d8:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+      dc:	d4 0a 34 00 	00340ad4 call 2b50 <ft900_init>
+      e0:	c7 00 34 00 	003400c7 call 31c <main>
+
+000000e4 <_exit>:
+      e4:	fc ff 01 bc 	bc01fffc sta.l 1fffc <EXITEXIT>,$r0
+      e8:	de 0a 34 00 	00340ade call 2b78 <ft900_exit>
+
+000000ec <forever>:
+      ec:	3b 00 30 00 	0030003b jmp ec <forever>
+
+000000f0 <streamout>:
+      f0:	04 00 21 64 	64210004 ldk.l $r2,10004 <UART>
+      f4:	1e 00 20 f0 	f020001e streamout.b $r2,$r0,$r1
+      f8:	00 00 00 a0 	a0000000 return 
+
+000000fc <interrupt_0>:
+      fc:	00 00 00 84 	84000000 push.l $r0
+     100:	00 00 00 c4 	c4000000 lda.l $r0,0 <_start>
+     104:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000108 <interrupt_1>:
+     108:	00 00 00 84 	84000000 push.l $r0
+     10c:	04 00 00 c4 	c4000004 lda.l $r0,4 <_start+0x4>
+     110:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000114 <interrupt_2>:
+     114:	00 00 00 84 	84000000 push.l $r0
+     118:	08 00 00 c4 	c4000008 lda.l $r0,8 <_start+0x8>
+     11c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000120 <interrupt_3>:
+     120:	00 00 00 84 	84000000 push.l $r0
+     124:	0c 00 00 c4 	c400000c lda.l $r0,c <_start+0xc>
+     128:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000012c <interrupt_4>:
+     12c:	00 00 00 84 	84000000 push.l $r0
+     130:	10 00 00 c4 	c4000010 lda.l $r0,10 <_start+0x10>
+     134:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000138 <interrupt_5>:
+     138:	00 00 00 84 	84000000 push.l $r0
+     13c:	14 00 00 c4 	c4000014 lda.l $r0,14 <_start+0x14>
+     140:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000144 <interrupt_6>:
+     144:	00 00 00 84 	84000000 push.l $r0
+     148:	18 00 00 c4 	c4000018 lda.l $r0,18 <_start+0x18>
+     14c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000150 <interrupt_7>:
+     150:	00 00 00 84 	84000000 push.l $r0
+     154:	1c 00 00 c4 	c400001c lda.l $r0,1c <_start+0x1c>
+     158:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000015c <interrupt_8>:
+     15c:	00 00 00 84 	84000000 push.l $r0
+     160:	20 00 00 c4 	c4000020 lda.l $r0,20 <_start+0x20>
+     164:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000168 <interrupt_9>:
+     168:	00 00 00 84 	84000000 push.l $r0
+     16c:	24 00 00 c4 	c4000024 lda.l $r0,24 <_start+0x24>
+     170:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000174 <interrupt_10>:
+     174:	00 00 00 84 	84000000 push.l $r0
+     178:	28 00 00 c4 	c4000028 lda.l $r0,28 <_start+0x28>
+     17c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000180 <interrupt_11>:
+     180:	00 00 00 84 	84000000 push.l $r0
+     184:	2c 00 00 c4 	c400002c lda.l $r0,2c <_start+0x2c>
+     188:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000018c <interrupt_12>:
+     18c:	00 00 00 84 	84000000 push.l $r0
+     190:	30 00 00 c4 	c4000030 lda.l $r0,30 <_start+0x30>
+     194:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000198 <interrupt_13>:
+     198:	00 00 00 84 	84000000 push.l $r0
+     19c:	34 00 00 c4 	c4000034 lda.l $r0,34 <_start+0x34>
+     1a0:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001a4 <interrupt_14>:
+     1a4:	00 00 00 84 	84000000 push.l $r0
+     1a8:	38 00 00 c4 	c4000038 lda.l $r0,38 <_start+0x38>
+     1ac:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001b0 <interrupt_15>:
+     1b0:	00 00 00 84 	84000000 push.l $r0
+     1b4:	3c 00 00 c4 	c400003c lda.l $r0,3c <_start+0x3c>
+     1b8:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001bc <interrupt_16>:
+     1bc:	00 00 00 84 	84000000 push.l $r0
+     1c0:	40 00 00 c4 	c4000040 lda.l $r0,40 <_start+0x40>
+     1c4:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001c8 <interrupt_17>:
+     1c8:	00 00 00 84 	84000000 push.l $r0
+     1cc:	44 00 00 c4 	c4000044 lda.l $r0,44 <_start+0x44>
+     1d0:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001d4 <interrupt_18>:
+     1d4:	00 00 00 84 	84000000 push.l $r0
+     1d8:	48 00 00 c4 	c4000048 lda.l $r0,48 <_start+0x48>
+     1dc:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001e0 <interrupt_19>:
+     1e0:	00 00 00 84 	84000000 push.l $r0
+     1e4:	4c 00 00 c4 	c400004c lda.l $r0,4c <_start+0x4c>
+     1e8:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001ec <interrupt_20>:
+     1ec:	00 00 00 84 	84000000 push.l $r0
+     1f0:	50 00 00 c4 	c4000050 lda.l $r0,50 <_start+0x50>
+     1f4:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+000001f8 <interrupt_21>:
+     1f8:	00 00 00 84 	84000000 push.l $r0
+     1fc:	54 00 00 c4 	c4000054 lda.l $r0,54 <_start+0x54>
+     200:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000204 <interrupt_22>:
+     204:	00 00 00 84 	84000000 push.l $r0
+     208:	58 00 00 c4 	c4000058 lda.l $r0,58 <_start+0x58>
+     20c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000210 <interrupt_23>:
+     210:	00 00 00 84 	84000000 push.l $r0
+     214:	5c 00 00 c4 	c400005c lda.l $r0,5c <_start+0x5c>
+     218:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000021c <interrupt_24>:
+     21c:	00 00 00 84 	84000000 push.l $r0
+     220:	60 00 00 c4 	c4000060 lda.l $r0,60 <_start+0x60>
+     224:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000228 <interrupt_25>:
+     228:	00 00 00 84 	84000000 push.l $r0
+     22c:	64 00 00 c4 	c4000064 lda.l $r0,64 <_start+0x64>
+     230:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000234 <interrupt_26>:
+     234:	00 00 00 84 	84000000 push.l $r0
+     238:	68 00 00 c4 	c4000068 lda.l $r0,68 <_start+0x68>
+     23c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000240 <interrupt_27>:
+     240:	00 00 00 84 	84000000 push.l $r0
+     244:	6c 00 00 c4 	c400006c lda.l $r0,6c <_start+0x6c>
+     248:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000024c <interrupt_28>:
+     24c:	00 00 00 84 	84000000 push.l $r0
+     250:	70 00 00 c4 	c4000070 lda.l $r0,70 <_start+0x70>
+     254:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000258 <interrupt_29>:
+     258:	00 00 00 84 	84000000 push.l $r0
+     25c:	74 00 00 c4 	c4000074 lda.l $r0,74 <_start+0x74>
+     260:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000264 <interrupt_30>:
+     264:	00 00 00 84 	84000000 push.l $r0
+     268:	78 00 00 c4 	c4000078 lda.l $r0,78 <_start+0x78>
+     26c:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000270 <interrupt_31>:
+     270:	00 00 00 84 	84000000 push.l $r0
+     274:	7c 00 00 c4 	c400007c lda.l $r0,7c <_start+0x7c>
+     278:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+0000027c <interrupt_32>:
+     27c:	00 00 00 84 	84000000 push.l $r0
+     280:	80 00 00 c4 	c4000080 lda.l $r0,80 <_start+0x80>
+     284:	a2 00 30 00 	003000a2 jmp 288 <interrupt_common>
+
+00000288 <interrupt_common>:
+     288:	00 80 00 84 	84008000 push.l $r1
+     28c:	00 00 01 84 	84010000 push.l $r2
+     290:	00 80 01 84 	84018000 push.l $r3
+     294:	00 00 02 84 	84020000 push.l $r4
+     298:	00 80 02 84 	84028000 push.l $r5
+     29c:	00 00 03 84 	84030000 push.l $r6
+     2a0:	00 80 03 84 	84038000 push.l $r7
+     2a4:	00 00 04 84 	84040000 push.l $r8
+     2a8:	00 80 04 84 	84048000 push.l $r9
+     2ac:	00 00 05 84 	84050000 push.l $r10
+     2b0:	00 80 05 84 	84058000 push.l $r11
+     2b4:	00 00 06 84 	84060000 push.l $r12
+     2b8:	00 00 0f 84 	840f0000 push.l $r30
+     2bc:	00 00 34 08 	08340000 calli $r0
+     2c0:	00 00 e0 8d 	8de00000 pop.l $r30
+     2c4:	00 00 c0 8c 	8cc00000 pop.l $r12
+     2c8:	00 00 b0 8c 	8cb00000 pop.l $r11
+     2cc:	00 00 a0 8c 	8ca00000 pop.l $r10
+     2d0:	00 00 90 8c 	8c900000 pop.l $r9
+     2d4:	00 00 80 8c 	8c800000 pop.l $r8
+     2d8:	00 00 70 8c 	8c700000 pop.l $r7
+     2dc:	00 00 60 8c 	8c600000 pop.l $r6
+     2e0:	00 00 50 8c 	8c500000 pop.l $r5
+     2e4:	00 00 40 8c 	8c400000 pop.l $r4
+     2e8:	00 00 30 8c 	8c300000 pop.l $r3
+     2ec:	00 00 20 8c 	8c200000 pop.l $r2
+     2f0:	00 00 10 8c 	8c100000 pop.l $r1
+     2f4:	00 00 00 8c 	8c000000 pop.l $r0
+     2f8:	00 00 00 a4 	a4000000 reti 
+
+000002fc <nullvector>:
+     2fc:	00 00 00 a0 	a0000000 return 
+
+00000300 <__gxx_personality_sj0>:
+     300:	f4 ff 11 c4 	c411fff4 lda.l $r1,1fff4 <MICROSECONDS>
+     304:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+     308:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+     30c:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+     310:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+     314:	0c 80 00 b4 	b400800c sti.l $r0,c <_start+0xc>,$r1
+     318:	00 00 00 a0 	a0000000 return 
+
+0000031c <main>:
+     31c:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+     320:	c0 08 00 64 	640008c0 ldk.l $r0,8c0 <__sfvwrite_r+0x4d0>
+     324:	f4 00 34 00 	003400f4 call 3d0 <puts>
+     328:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     32c:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00000330 <_puts_r>:
+     330:	00 80 06 84 	84068000 push.l $r13
+     334:	00 00 07 84 	84070000 push.l $r14
+     338:	34 00 d0 95 	95d00034 link $r29,34 <_start+0x34>
+     33c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+     340:	00 c0 e0 44 	44e0c000 move.l $r14,$r1
+     344:	00 c0 00 44 	4400c000 move.l $r0,$r1
+     348:	fa 00 34 00 	003400fa call 3e8 <strlen>
+     34c:	00 ff 2e 44 	442eff00 add.l $r2,$r29,1f0 <interrupt_20+0x4>
+     350:	00 00 27 b4 	b4270000 sti.l $r2,0 <_start>,$r14
+     354:	f4 00 d0 b5 	b5d000f4 sti.l $r29,f4 <streamout+0x4>,$r0
+     358:	d0 08 10 64 	641008d0 ldk.l $r1,8d0 <__sfvwrite_r+0x4e0>
+     35c:	f8 80 d0 b5 	b5d080f8 sti.l $r29,f8 <streamout+0x8>,$r1
+     360:	01 00 10 64 	64100001 ldk.l $r1,1 <_start+0x1>
+     364:	fc 80 d0 b5 	b5d080fc sti.l $r29,fc <interrupt_0>,$r1
+     368:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+     36c:	ec 00 d0 b5 	b5d000ec sti.l $r29,ec <forever>,$r0
+     370:	e4 00 d1 b5 	b5d100e4 sti.l $r29,e4 <_exit>,$r2
+     374:	02 00 00 64 	64000002 ldk.l $r0,2 <_start+0x2>
+     378:	e8 00 d0 b5 	b5d000e8 sti.l $r29,e8 <_exit+0x4>,$r0
+     37c:	08 80 16 ac 	ac168008 ldi.l $r1,$r13,8 <_start+0x8>
+     380:	0c 80 20 aa 	aa20800c ldi.s $r2,$r1,c <_start+0xc>
+     384:	0c 40 01 44 	4401400c bexts.l $r0,$r2,0 <_start>
+     388:	dc 42 e0 5d 	5de042dc btst.l $r0,2d <_start+0x2d>
+     38c:	e9 00 20 00 	002000e9 jmpc nz,3a4 <_puts_r+0x74>
+     390:	64 80 20 ac 	ac208064 ldi.l $r2,$r1,64 <_start+0x64>
+     394:	db 62 00 44 	440062db bins.l $r0,$r0,2d <_start+0x2d>
+     398:	0c 00 10 b2 	b210000c sti.s $r1,c <_start+0xc>,$r0
+     39c:	db 42 01 44 	440142db bins.l $r0,$r2,2d <_start+0x2d>
+     3a0:	64 00 10 b4 	b4100064 sti.l $r1,64 <_start+0x64>,$r0
+     3a4:	40 fe 2e 44 	442efe40 add.l $r2,$r29,1e4 <interrupt_19+0x4>
+     3a8:	00 c0 06 44 	4406c000 move.l $r0,$r13
+     3ac:	fc 00 34 00 	003400fc call 3f0 <__sfvwrite_r>
+     3b0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     3b4:	0d 42 0f 44 	440f420d bextu.l $r0,$r30,20 <_start+0x20>
+     3b8:	f0 7f 00 44 	44007ff0 add.l $r0,$r0,1ff <interrupt_21+0x7>
+     3bc:	a5 40 00 44 	440040a5 or.l $r0,$r0,a <_start+0xa>
+     3c0:	00 00 d0 99 	99d00000 unlink $r29
+     3c4:	00 00 e0 8c 	8ce00000 pop.l $r14
+     3c8:	00 00 d0 8c 	8cd00000 pop.l $r13
+     3cc:	00 00 00 a0 	a0000000 return 
+
+000003d0 <puts>:
+     3d0:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     3d4:	00 40 10 44 	44104000 move.l $r1,$r0
+     3d8:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+     3dc:	cc 00 34 00 	003400cc call 330 <_puts_r>
+     3e0:	00 00 d0 99 	99d00000 unlink $r29
+     3e4:	00 00 00 a0 	a0000000 return 
+
+000003e8 <strlen>:
+     3e8:	06 40 00 f0 	f0004006 strlen.b $r0,$r0
+     3ec:	00 00 00 a0 	a0000000 return 
+
+000003f0 <__sfvwrite_r>:
+     3f0:	00 80 06 84 	84068000 push.l $r13
+     3f4:	00 00 07 84 	84070000 push.l $r14
+     3f8:	00 80 07 84 	84078000 push.l $r15
+     3fc:	00 00 08 84 	84080000 push.l $r16
+     400:	00 80 08 84 	84088000 push.l $r17
+     404:	00 00 09 84 	84090000 push.l $r18
+     408:	00 80 09 84 	84098000 push.l $r19
+     40c:	00 00 0a 84 	840a0000 push.l $r20
+     410:	00 80 0a 84 	840a8000 push.l $r21
+     414:	00 00 0b 84 	840b0000 push.l $r22
+     418:	00 80 0b 84 	840b8000 push.l $r23
+     41c:	00 00 0c 84 	840c0000 push.l $r24
+     420:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     424:	00 40 30 45 	45304000 move.l $r19,$r0
+     428:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+     42c:	00 40 11 45 	45114000 move.l $r17,$r2
+     430:	08 00 01 ac 	ac010008 ldi.l $r0,$r2,8 <_start+0x8>
+     434:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     438:	33 01 28 00 	00280133 jmpc z,4cc <__sfvwrite_r+0xdc>
+     43c:	0c 80 30 aa 	aa30800c ldi.s $r3,$r1,c <_start+0xc>
+     440:	3c c2 e1 5d 	5de1c23c btst.l $r3,23 <_start+0x23>
+     444:	42 01 28 00 	00280142 jmpc z,508 <__sfvwrite_r+0x118>
+     448:	10 80 00 ac 	ac008010 ldi.l $r0,$r1,10 <_start+0x10>
+     44c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     450:	42 01 28 00 	00280142 jmpc z,508 <__sfvwrite_r+0x118>
+     454:	00 80 e8 ac 	ace88000 ldi.l $r14,$r17,0 <_start>
+     458:	24 c0 01 45 	4501c024 and.l $r16,$r3,2 <_start+0x2>
+     45c:	0d 40 08 45 	4508400d bextu.l $r16,$r16,0 <_start>
+     460:	02 40 e8 5d 	5de84002 cmp.l $r16,0 <_start>
+     464:	4d 01 28 00 	0028014d jmpc z,534 <__sfvwrite_r+0x144>
+     468:	00 00 00 65 	65000000 ldk.l $r16,0 <_start>
+     46c:	00 40 f8 44 	44f84000 move.l $r15,$r16
+     470:	00 f8 2f 65 	652ff800 ldk.l $r18,ff800 <EXITEXIT+0xdf804>
+     474:	11 40 29 45 	45294011 ror.l $r18,$r18,1 <_start+0x1>
+     478:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+     47c:	80 01 28 00 	00280180 jmpc z,600 <__sfvwrite_r+0x210>
+     480:	00 c0 37 44 	4437c000 move.l $r3,$r15
+     484:	22 81 e7 5d 	5de78122 cmp.l $r15,$r18
+     488:	25 01 a0 01 	01a00125 jmpc be,494 <__sfvwrite_r+0xa4>
+     48c:	00 f8 3f 64 	643ff800 ldk.l $r3,ff800 <EXITEXIT+0xdf804>
+     490:	11 c0 31 44 	4431c011 ror.l $r3,$r3,1 <_start+0x1>
+     494:	24 80 46 ac 	ac468024 ldi.l $r4,$r13,24 <_start+0x24>
+     498:	00 40 28 44 	44284000 move.l $r2,$r16
+     49c:	1c 80 16 ac 	ac16801c ldi.l $r1,$r13,1c <_start+0x1c>
+     4a0:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     4a4:	40 00 34 08 	08340040 calli $r4
+     4a8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     4ac:	92 01 60 01 	01600192 jmpc lte,648 <__sfvwrite_r+0x258>
+     4b0:	00 00 08 45 	45080000 add.l $r16,$r16,$r0
+     4b4:	02 80 f7 44 	44f78002 sub.l $r15,$r15,$r0
+     4b8:	08 80 18 ac 	ac188008 ldi.l $r1,$r17,8 <_start+0x8>
+     4bc:	02 80 00 44 	44008002 sub.l $r0,$r1,$r0
+     4c0:	08 00 10 b5 	b5100008 sti.l $r17,8 <_start+0x8>,$r0
+     4c4:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     4c8:	1e 01 20 00 	0020011e jmpc nz,478 <__sfvwrite_r+0x88>
+     4cc:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     4d0:	00 00 d0 99 	99d00000 unlink $r29
+     4d4:	00 00 80 8d 	8d800000 pop.l $r24
+     4d8:	00 00 70 8d 	8d700000 pop.l $r23
+     4dc:	00 00 60 8d 	8d600000 pop.l $r22
+     4e0:	00 00 50 8d 	8d500000 pop.l $r21
+     4e4:	00 00 40 8d 	8d400000 pop.l $r20
+     4e8:	00 00 30 8d 	8d300000 pop.l $r19
+     4ec:	00 00 20 8d 	8d200000 pop.l $r18
+     4f0:	00 00 10 8d 	8d100000 pop.l $r17
+     4f4:	00 00 00 8d 	8d000000 pop.l $r16
+     4f8:	00 00 f0 8c 	8cf00000 pop.l $r15
+     4fc:	00 00 e0 8c 	8ce00000 pop.l $r14
+     500:	00 00 d0 8c 	8cd00000 pop.l $r13
+     504:	00 00 00 a0 	a0000000 return 
+     508:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     50c:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     510:	d3 05 34 00 	003405d3 call 174c <__swsetup_r>
+     514:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     518:	49 02 20 00 	00200249 jmpc nz,924 <__sfvwrite_r+0x534>
+     51c:	0c 80 36 aa 	aa36800c ldi.s $r3,$r13,c <_start+0xc>
+     520:	00 80 e8 ac 	ace88000 ldi.l $r14,$r17,0 <_start>
+     524:	24 c0 01 45 	4501c024 and.l $r16,$r3,2 <_start+0x2>
+     528:	0d 40 08 45 	4508400d bextu.l $r16,$r16,0 <_start>
+     52c:	02 40 e8 5d 	5de84002 cmp.l $r16,0 <_start>
+     530:	1a 01 20 00 	0020011a jmpc nz,468 <__sfvwrite_r+0x78>
+     534:	14 c0 21 45 	4521c014 and.l $r18,$r3,1 <_start+0x1>
+     538:	0c c2 e1 5d 	5de1c20c btst.l $r3,20 <_start+0x20>
+     53c:	98 01 28 00 	00280198 jmpc z,660 <__sfvwrite_r+0x270>
+     540:	00 40 68 45 	45684000 move.l $r22,$r16
+     544:	00 40 78 45 	45784000 move.l $r23,$r16
+     548:	00 40 f8 44 	44f84000 move.l $r15,$r16
+     54c:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+     550:	7b 01 28 00 	0028017b jmpc z,5ec <__sfvwrite_r+0x1fc>
+     554:	02 40 eb 5d 	5deb4002 cmp.l $r22,0 <_start>
+     558:	f8 01 28 00 	002801f8 jmpc z,7e0 <__sfvwrite_r+0x3f0>
+     55c:	00 c0 47 45 	4547c000 move.l $r20,$r15
+     560:	02 81 e7 5d 	5de78102 cmp.l $r15,$r16
+     564:	5b 01 a0 01 	01a0015b jmpc be,56c <__sfvwrite_r+0x17c>
+     568:	00 40 48 45 	45484000 move.l $r20,$r16
+     56c:	00 40 2a 45 	452a4000 move.l $r18,$r20
+     570:	14 80 36 ac 	ac368014 ldi.l $r3,$r13,14 <_start+0x14>
+     574:	08 80 56 ad 	ad568008 ldi.l $r21,$r13,8 <_start+0x8>
+     578:	50 81 51 45 	45518150 add.l $r21,$r3,$r21
+     57c:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     580:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+     584:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+     588:	65 01 a0 01 	01a00165 jmpc be,594 <__sfvwrite_r+0x1a4>
+     58c:	52 01 ea 5d 	5dea0152 cmp.l $r20,$r21
+     590:	2b 02 68 01 	0168022b jmpc gt,8ac <__sfvwrite_r+0x4bc>
+     594:	32 00 ea 5d 	5dea0032 cmp.l $r20,$r3
+     598:	e1 01 20 01 	012001e1 jmpc lt,784 <__sfvwrite_r+0x394>
+     59c:	24 80 46 ac 	ac468024 ldi.l $r4,$r13,24 <_start+0x24>
+     5a0:	00 c0 2b 44 	442bc000 move.l $r2,$r23
+     5a4:	1c 80 16 ac 	ac16801c ldi.l $r1,$r13,1c <_start+0x1c>
+     5a8:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     5ac:	40 00 34 08 	08340040 calli $r4
+     5b0:	00 40 20 45 	45204000 move.l $r18,$r0
+     5b4:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     5b8:	92 01 60 01 	01600192 jmpc lte,648 <__sfvwrite_r+0x258>
+     5bc:	22 01 08 45 	45080122 sub.l $r16,$r16,$r18
+     5c0:	02 40 e8 5d 	5de84002 cmp.l $r16,0 <_start>
+     5c4:	ed 01 28 00 	002801ed jmpc z,7b4 <__sfvwrite_r+0x3c4>
+     5c8:	20 81 7b 45 	457b8120 add.l $r23,$r23,$r18
+     5cc:	22 81 f7 44 	44f78122 sub.l $r15,$r15,$r18
+     5d0:	08 80 08 ac 	ac088008 ldi.l $r0,$r17,8 <_start+0x8>
+     5d4:	22 01 20 45 	45200122 sub.l $r18,$r0,$r18
+     5d8:	08 00 19 b5 	b5190008 sti.l $r17,8 <_start+0x8>,$r18
+     5dc:	02 40 e9 5d 	5de94002 cmp.l $r18,0 <_start>
+     5e0:	33 01 28 00 	00280133 jmpc z,4cc <__sfvwrite_r+0xdc>
+     5e4:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+     5e8:	55 01 20 00 	00200155 jmpc nz,554 <__sfvwrite_r+0x164>
+     5ec:	00 00 77 ad 	ad770000 ldi.l $r23,$r14,0 <_start>
+     5f0:	04 00 f7 ac 	acf70004 ldi.l $r15,$r14,4 <_start+0x4>
+     5f4:	80 40 e7 44 	44e74080 add.l $r14,$r14,8 <_start+0x8>
+     5f8:	00 00 60 65 	65600000 ldk.l $r22,0 <_start>
+     5fc:	53 01 30 00 	00300153 jmp 54c <__sfvwrite_r+0x15c>
+     600:	00 00 07 ad 	ad070000 ldi.l $r16,$r14,0 <_start>
+     604:	04 00 f7 ac 	acf70004 ldi.l $r15,$r14,4 <_start+0x4>
+     608:	80 40 e7 44 	44e74080 add.l $r14,$r14,8 <_start+0x8>
+     60c:	1e 01 30 00 	0030011e jmp 478 <__sfvwrite_r+0x88>
+     610:	00 c0 37 44 	4437c000 move.l $r3,$r15
+     614:	52 81 e7 5d 	5de78152 cmp.l $r15,$r21
+     618:	89 01 a0 01 	01a00189 jmpc be,624 <__sfvwrite_r+0x234>
+     61c:	fe ff 3f 64 	643ffffe ldk.l $r3,ffffe <EXITEXIT+0xe0002>
+     620:	11 c0 31 44 	4431c011 ror.l $r3,$r3,1 <_start+0x1>
+     624:	12 80 31 f4 	f4318012 div.l $r3,$r3,$r1
+     628:	24 80 46 ac 	ac468024 ldi.l $r4,$r13,24 <_start+0x24>
+     62c:	38 80 30 f4 	f4308038 mul.l $r3,$r1,$r3
+     630:	00 40 29 44 	44294000 move.l $r2,$r18
+     634:	1c 80 16 ac 	ac16801c ldi.l $r1,$r13,1c <_start+0x1c>
+     638:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     63c:	40 00 34 08 	08340040 calli $r4
+     640:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     644:	b3 01 68 01 	016801b3 jmpc gt,6cc <__sfvwrite_r+0x2dc>
+     648:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+     64c:	0c c0 00 44 	4400c00c bexts.l $r0,$r1,0 <_start>
+     650:	6b 62 00 44 	4400626b bins.l $r0,$r0,26 <_start+0x26>
+     654:	0c 00 d0 b2 	b2d0000c sti.s $r13,c <_start+0xc>,$r0
+     658:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+     65c:	34 01 30 00 	00300134 jmp 4d0 <__sfvwrite_r+0xe0>
+     660:	00 40 f9 44 	44f94000 move.l $r15,$r18
+     664:	fe ff 5f 65 	655ffffe ldk.l $r21,ffffe <EXITEXIT+0xe0002>
+     668:	11 c0 5a 45 	455ac011 ror.l $r21,$r21,1 <_start+0x1>
+     66c:	c0 c0 66 45 	4566c0c0 add.l $r22,$r13,c <_start+0xc>
+     670:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+     674:	bd 01 28 00 	002801bd jmpc z,6f4 <__sfvwrite_r+0x304>
+     678:	08 80 46 ad 	ad468008 ldi.l $r20,$r13,8 <_start+0x8>
+     67c:	9c c2 e1 5d 	5de1c29c btst.l $r3,29 <_start+0x29>
+     680:	c1 01 28 00 	002801c1 jmpc z,704 <__sfvwrite_r+0x314>
+     684:	00 40 0a 45 	450a4000 move.l $r16,$r20
+     688:	42 81 e7 5d 	5de78142 cmp.l $r15,$r20
+     68c:	f4 01 68 00 	006801f4 jmpc b,7d0 <__sfvwrite_r+0x3e0>
+     690:	80 04 10 64 	64100480 ldk.l $r1,480 <__sfvwrite_r+0x90>
+     694:	14 80 01 44 	44018014 and.l $r0,$r3,$r1
+     698:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     69c:	02 02 20 00 	00200202 jmpc nz,808 <__sfvwrite_r+0x418>
+     6a0:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     6a4:	00 40 28 44 	44284000 move.l $r2,$r16
+     6a8:	00 40 19 44 	44194000 move.l $r1,$r18
+     6ac:	4f 04 34 00 	0034044f call 113c <memmove>
+     6b0:	08 80 06 ac 	ac068008 ldi.l $r0,$r13,8 <_start+0x8>
+     6b4:	42 01 40 45 	45400142 sub.l $r20,$r0,$r20
+     6b8:	08 00 da b4 	b4da0008 sti.l $r13,8 <_start+0x8>,$r20
+     6bc:	00 80 26 ac 	ac268000 ldi.l $r2,$r13,0 <_start>
+     6c0:	00 01 21 44 	44210100 add.l $r2,$r2,$r16
+     6c4:	00 00 d1 b4 	b4d10000 sti.l $r13,0 <_start>,$r2
+     6c8:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     6cc:	00 00 29 45 	45290000 add.l $r18,$r18,$r0
+     6d0:	02 80 f7 44 	44f78002 sub.l $r15,$r15,$r0
+     6d4:	08 80 18 ac 	ac188008 ldi.l $r1,$r17,8 <_start+0x8>
+     6d8:	02 80 00 44 	44008002 sub.l $r0,$r1,$r0
+     6dc:	08 00 10 b5 	b5100008 sti.l $r17,8 <_start+0x8>,$r0
+     6e0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     6e4:	33 01 28 00 	00280133 jmpc z,4cc <__sfvwrite_r+0xdc>
+     6e8:	0c 80 36 aa 	aa36800c ldi.s $r3,$r13,c <_start+0xc>
+     6ec:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+     6f0:	9e 01 20 00 	0020019e jmpc nz,678 <__sfvwrite_r+0x288>
+     6f4:	00 00 27 ad 	ad270000 ldi.l $r18,$r14,0 <_start>
+     6f8:	04 00 f7 ac 	acf70004 ldi.l $r15,$r14,4 <_start+0x4>
+     6fc:	80 40 e7 44 	44e74080 add.l $r14,$r14,8 <_start+0x8>
+     700:	9c 01 30 00 	0030019c jmp 670 <__sfvwrite_r+0x280>
+     704:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     708:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+     70c:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+     710:	c8 01 a8 01 	01a801c8 jmpc a,720 <__sfvwrite_r+0x330>
+     714:	14 80 16 ac 	ac168014 ldi.l $r1,$r13,14 <_start+0x14>
+     718:	12 80 e7 5d 	5de78012 cmp.l $r15,$r1
+     71c:	84 01 60 00 	00600184 jmpc ae,610 <__sfvwrite_r+0x220>
+     720:	00 c0 07 45 	4507c000 move.l $r16,$r15
+     724:	42 81 e7 5d 	5de78142 cmp.l $r15,$r20
+     728:	cc 01 a0 01 	01a001cc jmpc be,730 <__sfvwrite_r+0x340>
+     72c:	00 40 0a 45 	450a4000 move.l $r16,$r20
+     730:	00 40 28 44 	44284000 move.l $r2,$r16
+     734:	00 40 19 44 	44194000 move.l $r1,$r18
+     738:	4f 04 34 00 	0034044f call 113c <memmove>
+     73c:	08 80 06 ac 	ac068008 ldi.l $r0,$r13,8 <_start+0x8>
+     740:	02 01 00 44 	44000102 sub.l $r0,$r0,$r16
+     744:	08 00 d0 b4 	b4d00008 sti.l $r13,8 <_start+0x8>,$r0
+     748:	00 80 16 ac 	ac168000 ldi.l $r1,$r13,0 <_start>
+     74c:	00 81 10 44 	44108100 add.l $r1,$r1,$r16
+     750:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+     754:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     758:	d9 01 28 00 	002801d9 jmpc z,764 <__sfvwrite_r+0x374>
+     75c:	00 40 08 44 	44084000 move.l $r0,$r16
+     760:	b3 01 30 00 	003001b3 jmp 6cc <__sfvwrite_r+0x2dc>
+     764:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     768:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     76c:	df 06 34 00 	003406df call 1b7c <_fflush_r>
+     770:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     774:	d7 01 28 00 	002801d7 jmpc z,75c <__sfvwrite_r+0x36c>
+     778:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+     77c:	0c 40 01 44 	4401400c bexts.l $r0,$r2,0 <_start>
+     780:	94 01 30 00 	00300194 jmp 650 <__sfvwrite_r+0x260>
+     784:	00 40 2a 44 	442a4000 move.l $r2,$r20
+     788:	00 c0 1b 44 	441bc000 move.l $r1,$r23
+     78c:	4f 04 34 00 	0034044f call 113c <memmove>
+     790:	08 80 06 ac 	ac068008 ldi.l $r0,$r13,8 <_start+0x8>
+     794:	42 01 00 44 	44000142 sub.l $r0,$r0,$r20
+     798:	08 00 d0 b4 	b4d00008 sti.l $r13,8 <_start+0x8>,$r0
+     79c:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     7a0:	40 01 40 45 	45400140 add.l $r20,$r0,$r20
+     7a4:	00 00 da b4 	b4da0000 sti.l $r13,0 <_start>,$r20
+     7a8:	22 01 08 45 	45080122 sub.l $r16,$r16,$r18
+     7ac:	02 40 e8 5d 	5de84002 cmp.l $r16,0 <_start>
+     7b0:	72 01 20 00 	00200172 jmpc nz,5c8 <__sfvwrite_r+0x1d8>
+     7b4:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     7b8:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     7bc:	df 06 34 00 	003406df call 1b7c <_fflush_r>
+     7c0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     7c4:	de 01 20 00 	002001de jmpc nz,778 <__sfvwrite_r+0x388>
+     7c8:	00 40 68 45 	45684000 move.l $r22,$r16
+     7cc:	72 01 30 00 	00300172 jmp 5c8 <__sfvwrite_r+0x1d8>
+     7d0:	00 c0 47 45 	4547c000 move.l $r20,$r15
+     7d4:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     7d8:	00 c0 07 45 	4507c000 move.l $r16,$r15
+     7dc:	a9 01 30 00 	003001a9 jmp 6a4 <__sfvwrite_r+0x2b4>
+     7e0:	00 c0 27 44 	4427c000 move.l $r2,$r15
+     7e4:	0a 00 10 64 	6410000a ldk.l $r1,a <_start+0xa>
+     7e8:	00 c0 0b 44 	440bc000 move.l $r0,$r23
+     7ec:	37 04 34 00 	00340437 call 10dc <memchr>
+     7f0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     7f4:	46 02 28 00 	00280246 jmpc z,918 <__sfvwrite_r+0x528>
+     7f8:	10 40 00 44 	44004010 add.l $r0,$r0,1 <_start+0x1>
+     7fc:	72 01 00 45 	45000172 sub.l $r16,$r0,$r23
+     800:	01 00 60 65 	65600001 ldk.l $r22,1 <_start+0x1>
+     804:	57 01 30 00 	00300157 jmp 55c <__sfvwrite_r+0x16c>
+     808:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+     80c:	00 80 76 ad 	ad768000 ldi.l $r23,$r13,0 <_start>
+     810:	12 80 8b 45 	458b8012 sub.l $r24,$r23,$r1
+     814:	14 80 76 ad 	ad768014 ldi.l $r23,$r13,14 <_start+0x14>
+     818:	70 81 0b 44 	440b8170 add.l $r0,$r23,$r23
+     81c:	70 01 70 45 	45700170 add.l $r23,$r0,$r23
+     820:	f9 c1 0b 44 	440bc1f9 lshr.l $r0,$r23,1f <_start+0x1f>
+     824:	70 01 70 45 	45700170 add.l $r23,$r0,$r23
+     828:	1a c0 7b 45 	457bc01a ashr.l $r23,$r23,1 <_start+0x1>
+     82c:	10 40 0c 44 	440c4010 add.l $r0,$r24,1 <_start+0x1>
+     830:	00 80 07 44 	44078000 add.l $r0,$r15,$r0
+     834:	00 c0 2b 44 	442bc000 move.l $r2,$r23
+     838:	72 01 e0 5d 	5de00172 cmp.l $r0,$r23
+     83c:	12 02 a0 01 	01a00212 jmpc be,848 <__sfvwrite_r+0x458>
+     840:	00 40 70 45 	45704000 move.l $r23,$r0
+     844:	00 40 20 44 	44204000 move.l $r2,$r0
+     848:	ac c2 e1 5d 	5de1c2ac btst.l $r3,2a <_start+0x2a>
+     84c:	38 02 28 00 	00280238 jmpc z,8e0 <__sfvwrite_r+0x4f0>
+     850:	00 40 11 44 	44114000 move.l $r1,$r2
+     854:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     858:	50 02 34 00 	00340250 call 940 <_malloc_r>
+     85c:	00 40 00 45 	45004000 move.l $r16,$r0
+     860:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     864:	4b 02 28 00 	0028024b jmpc z,92c <__sfvwrite_r+0x53c>
+     868:	00 40 2c 44 	442c4000 move.l $r2,$r24
+     86c:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+     870:	4d 04 34 00 	0034044d call 1134 <memcpy>
+     874:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+     878:	7f fb 2f 64 	642ffb7f ldk.l $r2,ffb7f <EXITEXIT+0xdfb83>
+     87c:	24 80 00 44 	44008024 and.l $r0,$r1,$r2
+     880:	7b 62 00 44 	4400627b bins.l $r0,$r0,27 <_start+0x27>
+     884:	00 00 60 b3 	b3600000 sti.s $r22,0 <_start>,$r0
+     888:	10 00 d8 b4 	b4d80010 sti.l $r13,10 <_start+0x10>,$r16
+     88c:	80 01 08 44 	44080180 add.l $r0,$r16,$r24
+     890:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+     894:	14 80 db b4 	b4db8014 sti.l $r13,14 <_start+0x14>,$r23
+     898:	00 c0 47 45 	4547c000 move.l $r20,$r15
+     89c:	82 81 7b 45 	457b8182 sub.l $r23,$r23,$r24
+     8a0:	08 80 db b4 	b4db8008 sti.l $r13,8 <_start+0x8>,$r23
+     8a4:	00 c0 07 45 	4507c000 move.l $r16,$r15
+     8a8:	a9 01 30 00 	003001a9 jmp 6a4 <__sfvwrite_r+0x2b4>
+     8ac:	00 c0 2a 44 	442ac000 move.l $r2,$r21
+     8b0:	00 c0 1b 44 	441bc000 move.l $r1,$r23
+     8b4:	4f 04 34 00 	0034044f call 113c <memmove>
+     8b8:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+     8bc:	50 01 00 44 	44000150 add.l $r0,$r0,$r21
+     8c0:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+     8c4:	00 c0 16 44 	4416c000 move.l $r1,$r13
+     8c8:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     8cc:	df 06 34 00 	003406df call 1b7c <_fflush_r>
+     8d0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     8d4:	de 01 20 00 	002001de jmpc nz,778 <__sfvwrite_r+0x388>
+     8d8:	00 c0 2a 45 	452ac000 move.l $r18,$r21
+     8dc:	6f 01 30 00 	0030016f jmp 5bc <__sfvwrite_r+0x1cc>
+     8e0:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     8e4:	75 04 34 00 	00340475 call 11d4 <_realloc_r>
+     8e8:	00 40 00 45 	45004000 move.l $r16,$r0
+     8ec:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     8f0:	22 02 20 00 	00200222 jmpc nz,888 <__sfvwrite_r+0x498>
+     8f4:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+     8f8:	00 c0 09 44 	4409c000 move.l $r0,$r19
+     8fc:	20 08 34 00 	00340820 call 2080 <_free_r>
+     900:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+     904:	7b c2 00 44 	4400c27b bins.l $r0,$r1,27 <_start+0x27>
+     908:	0c 40 00 44 	4400400c bexts.l $r0,$r0,0 <_start>
+     90c:	0c 00 10 64 	6410000c ldk.l $r1,c <_start+0xc>
+     910:	00 80 30 b5 	b5308000 sti.l $r19,0 <_start>,$r1
+     914:	94 01 30 00 	00300194 jmp 650 <__sfvwrite_r+0x260>
+     918:	10 c0 07 45 	4507c010 add.l $r16,$r15,1 <_start+0x1>
+     91c:	01 00 60 65 	65600001 ldk.l $r22,1 <_start+0x1>
+     920:	57 01 30 00 	00300157 jmp 55c <__sfvwrite_r+0x16c>
+     924:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+     928:	34 01 30 00 	00300134 jmp 4d0 <__sfvwrite_r+0xe0>
+     92c:	0c 00 00 64 	6400000c ldk.l $r0,c <_start+0xc>
+     930:	00 00 30 b5 	b5300000 sti.l $r19,0 <_start>,$r0
+     934:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+     938:	0c 40 01 44 	4401400c bexts.l $r0,$r2,0 <_start>
+     93c:	94 01 30 00 	00300194 jmp 650 <__sfvwrite_r+0x260>
+
+00000940 <_malloc_r>:
+     940:	00 80 06 84 	84068000 push.l $r13
+     944:	00 00 07 84 	84070000 push.l $r14
+     948:	00 80 07 84 	84078000 push.l $r15
+     94c:	00 00 08 84 	84080000 push.l $r16
+     950:	00 80 08 84 	84088000 push.l $r17
+     954:	00 00 09 84 	84090000 push.l $r18
+     958:	00 80 09 84 	84098000 push.l $r19
+     95c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+     960:	00 40 f0 44 	44f04000 move.l $r15,$r0
+     964:	b0 c0 20 44 	4420c0b0 add.l $r2,$r1,b <_start+0xb>
+     968:	62 41 e1 5d 	5de14162 cmp.l $r2,16 <_start+0x16>
+     96c:	d6 02 a0 01 	01a002d6 jmpc be,b58 <_malloc_r+0x218>
+     970:	0b 46 e1 44 	44e1460b bins.l $r14,$r2,60 <_start+0x60>
+     974:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+     978:	f9 02 20 01 	012002f9 jmpc lt,be4 <_malloc_r+0x2a4>
+     97c:	e2 80 e0 5d 	5de080e2 cmp.l $r1,$r14
+     980:	f9 02 a8 01 	01a802f9 jmpc a,be4 <_malloc_r+0x2a4>
+     984:	6f 04 34 00 	0034046f call 11bc <__malloc_lock>
+     988:	72 5f e7 5d 	5de75f72 cmp.l $r14,1f7 <interrupt_20+0xb>
+     98c:	33 04 a0 01 	01a00433 jmpc be,10cc <_malloc_r+0x78c>
+     990:	99 40 07 44 	44074099 lshr.l $r0,$r14,9 <_start+0x9>
+     994:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     998:	fd 02 28 00 	002802fd jmpc z,bf4 <_malloc_r+0x2b4>
+     99c:	42 40 e0 5d 	5de04042 cmp.l $r0,4 <_start+0x4>
+     9a0:	13 03 a8 01 	01a80313 jmpc a,c4c <_malloc_r+0x30c>
+     9a4:	69 40 07 44 	44074069 lshr.l $r0,$r14,6 <_start+0x6>
+     9a8:	80 43 40 44 	44404380 add.l $r4,$r0,38 <_start+0x38>
+     9ac:	90 43 30 44 	44304390 add.l $r3,$r0,39 <_start+0x39>
+     9b0:	30 80 21 44 	44218030 add.l $r2,$r3,$r3
+     9b4:	28 40 21 44 	44214028 ashl.l $r2,$r2,2 <_start+0x2>
+     9b8:	b4 04 00 65 	650004b4 ldk.l $r16,4b4 <__sfvwrite_r+0xc4>
+     9bc:	20 00 28 44 	44280020 add.l $r2,$r16,$r2
+     9c0:	80 7f 21 44 	44217f80 add.l $r2,$r2,1f8 <interrupt_21>
+     9c4:	0c 00 d1 ac 	acd1000c ldi.l $r13,$r2,c <_start+0xc>
+     9c8:	d2 00 e1 5d 	5de100d2 cmp.l $r2,$r13
+     9cc:	7a 02 20 00 	0020027a jmpc nz,9e8 <_malloc_r+0xa8>
+     9d0:	80 02 30 00 	00300280 jmp a00 <_malloc_r+0xc0>
+     9d4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     9d8:	e5 02 28 01 	012802e5 jmpc gte,b94 <_malloc_r+0x254>
+     9dc:	0c 80 d6 ac 	acd6800c ldi.l $r13,$r13,c <_start+0xc>
+     9e0:	d2 00 e1 5d 	5de100d2 cmp.l $r2,$r13
+     9e4:	80 02 28 00 	00280280 jmpc z,a00 <_malloc_r+0xc0>
+     9e8:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+     9ec:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+     9f0:	e2 00 10 44 	441000e2 sub.l $r1,$r0,$r14
+     9f4:	f2 c0 e0 5d 	5de0c0f2 cmp.l $r1,f <_start+0xf>
+     9f8:	75 02 60 01 	01600275 jmpc lte,9d4 <_malloc_r+0x94>
+     9fc:	00 40 32 44 	44324000 move.l $r3,$r4
+     a00:	b4 04 10 64 	641004b4 ldk.l $r1,4b4 <__sfvwrite_r+0xc4>
+     a04:	10 00 d8 ac 	acd80010 ldi.l $r13,$r16,10 <_start+0x10>
+     a08:	80 c0 60 44 	4460c080 add.l $r6,$r1,8 <_start+0x8>
+     a0c:	62 80 e6 5d 	5de68062 cmp.l $r13,$r6
+     a10:	68 03 28 00 	00280368 jmpc z,da0 <_malloc_r+0x460>
+     a14:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+     a18:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+     a1c:	e2 00 20 44 	442000e2 sub.l $r2,$r0,$r14
+     a20:	f2 40 e1 5d 	5de140f2 cmp.l $r2,f <_start+0xf>
+     a24:	39 03 68 01 	01680339 jmpc gt,ce4 <_malloc_r+0x3a4>
+     a28:	14 00 13 b4 	b4130014 sti.l $r1,14 <_start+0x14>,$r6
+     a2c:	10 00 13 b4 	b4130010 sti.l $r1,10 <_start+0x10>,$r6
+     a30:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+     a34:	e9 02 28 01 	012802e9 jmpc gte,ba4 <_malloc_r+0x264>
+     a38:	f2 5f e0 5d 	5de05ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+     a3c:	1c 03 a8 01 	01a8031c jmpc a,c70 <_malloc_r+0x330>
+     a40:	39 40 40 44 	44404039 lshr.l $r4,$r0,3 <_start+0x3>
+     a44:	2a 40 02 44 	4402402a ashr.l $r0,$r4,2 <_start+0x2>
+     a48:	01 00 20 64 	64200001 ldk.l $r2,1 <_start+0x1>
+     a4c:	08 00 01 44 	44010008 ashl.l $r0,$r2,$r0
+     a50:	04 80 20 ac 	ac208004 ldi.l $r2,$r1,4 <_start+0x4>
+     a54:	25 00 00 44 	44000025 or.l $r0,$r0,$r2
+     a58:	04 00 10 b4 	b4100004 sti.l $r1,4 <_start+0x4>,$r0
+     a5c:	38 40 42 44 	44424038 ashl.l $r4,$r4,3 <_start+0x3>
+     a60:	80 40 42 44 	44424080 add.l $r4,$r4,8 <_start+0x8>
+     a64:	10 00 12 44 	44120010 add.l $r1,$r4,$r1
+     a68:	80 ff 40 44 	4440ff80 add.l $r4,$r1,1f8 <interrupt_21>
+     a6c:	00 80 20 ac 	ac208000 ldi.l $r2,$r1,0 <_start>
+     a70:	0c 00 d2 b4 	b4d2000c sti.l $r13,c <_start+0xc>,$r4
+     a74:	08 00 d1 b4 	b4d10008 sti.l $r13,8 <_start+0x8>,$r2
+     a78:	00 80 16 b4 	b4168000 sti.l $r1,0 <_start>,$r13
+     a7c:	0c 80 26 b4 	b426800c sti.l $r2,c <_start+0xc>,$r13
+     a80:	2a c0 11 44 	4411c02a ashr.l $r1,$r3,2 <_start+0x2>
+     a84:	01 00 20 64 	64200001 ldk.l $r2,1 <_start+0x1>
+     a88:	18 00 21 44 	44210018 ashl.l $r2,$r2,$r1
+     a8c:	02 00 e1 5d 	5de10002 cmp.l $r2,$r0
+     a90:	01 03 a8 01 	01a80301 jmpc a,c04 <_malloc_r+0x2c4>
+     a94:	04 00 11 44 	44110004 and.l $r1,$r2,$r0
+     a98:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     a9c:	ae 02 20 00 	002002ae jmpc nz,ab8 <_malloc_r+0x178>
+     aa0:	0b c4 31 44 	4431c40b bins.l $r3,$r3,40 <_start+0x40>
+     aa4:	40 c0 31 44 	4431c040 add.l $r3,$r3,4 <_start+0x4>
+     aa8:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+     aac:	04 00 11 44 	44110004 and.l $r1,$r2,$r0
+     ab0:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     ab4:	a9 02 28 00 	002802a9 jmpc z,aa4 <_malloc_r+0x164>
+     ab8:	38 c0 51 44 	4451c038 ashl.l $r5,$r3,3 <_start+0x3>
+     abc:	80 c0 52 44 	4452c080 add.l $r5,$r5,8 <_start+0x8>
+     ac0:	50 00 58 44 	44580050 add.l $r5,$r16,$r5
+     ac4:	80 ff 82 44 	4482ff80 add.l $r8,$r5,1f8 <interrupt_21>
+     ac8:	40 c0 52 44 	4452c040 add.l $r5,$r5,4 <_start+0x4>
+     acc:	00 c0 71 44 	4471c000 move.l $r7,$r3
+     ad0:	40 ff 42 44 	4442ff40 add.l $r4,$r5,1f4 <interrupt_20+0x8>
+     ad4:	00 80 d2 ac 	acd28000 ldi.l $r13,$r5,0 <_start>
+     ad8:	42 80 e6 5d 	5de68042 cmp.l $r13,$r4
+     adc:	be 02 20 00 	002002be jmpc nz,af8 <_malloc_r+0x1b8>
+     ae0:	6a 03 30 00 	0030036a jmp da8 <_malloc_r+0x468>
+     ae4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     ae8:	75 03 28 01 	01280375 jmpc gte,dd4 <_malloc_r+0x494>
+     aec:	0c 80 d6 ac 	acd6800c ldi.l $r13,$r13,c <_start+0xc>
+     af0:	42 80 e6 5d 	5de68042 cmp.l $r13,$r4
+     af4:	6a 03 28 00 	0028036a jmpc z,da8 <_malloc_r+0x468>
+     af8:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+     afc:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+     b00:	e2 00 10 44 	441000e2 sub.l $r1,$r0,$r14
+     b04:	f2 c0 e0 5d 	5de0c0f2 cmp.l $r1,f <_start+0xf>
+     b08:	b9 02 60 01 	016002b9 jmpc lte,ae4 <_malloc_r+0x1a4>
+     b0c:	e0 80 06 44 	440680e0 add.l $r0,$r13,$r14
+     b10:	0b 62 e7 44 	44e7620b bins.l $r14,$r14,20 <_start+0x20>
+     b14:	04 00 d7 b4 	b4d70004 sti.l $r13,4 <_start+0x4>,$r14
+     b18:	0c 80 26 ac 	ac26800c ldi.l $r2,$r13,c <_start+0xc>
+     b1c:	08 80 36 ac 	ac368008 ldi.l $r3,$r13,8 <_start+0x8>
+     b20:	0c 00 31 b4 	b431000c sti.l $r3,c <_start+0xc>,$r2
+     b24:	08 80 21 b4 	b4218008 sti.l $r2,8 <_start+0x8>,$r3
+     b28:	14 00 00 b5 	b5000014 sti.l $r16,14 <_start+0x14>,$r0
+     b2c:	10 00 00 b5 	b5000010 sti.l $r16,10 <_start+0x10>,$r0
+     b30:	0c 00 03 b4 	b403000c sti.l $r0,c <_start+0xc>,$r6
+     b34:	08 00 03 b4 	b4030008 sti.l $r0,8 <_start+0x8>,$r6
+     b38:	0b e2 20 44 	4420e20b bins.l $r2,$r1,20 <_start+0x20>
+     b3c:	04 00 01 b4 	b4010004 sti.l $r0,4 <_start+0x4>,$r2
+     b40:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+     b44:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+     b48:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     b4c:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     b50:	80 c0 06 44 	4406c080 add.l $r0,$r13,8 <_start+0x8>
+     b54:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     b58:	02 c1 e0 5d 	5de0c102 cmp.l $r1,10 <_start+0x10>
+     b5c:	f9 02 a8 01 	01a802f9 jmpc a,be4 <_malloc_r+0x2a4>
+     b60:	6f 04 34 00 	0034046f call 11bc <__malloc_lock>
+     b64:	06 00 00 64 	64000006 ldk.l $r0,6 <_start+0x6>
+     b68:	02 00 30 64 	64300002 ldk.l $r3,2 <_start+0x2>
+     b6c:	10 00 e0 64 	64e00010 ldk.l $r14,10 <_start+0x10>
+     b70:	28 40 00 44 	44004028 ashl.l $r0,$r0,2 <_start+0x2>
+     b74:	b4 04 00 65 	650004b4 ldk.l $r16,4b4 <__sfvwrite_r+0xc4>
+     b78:	00 00 08 44 	44080000 add.l $r0,$r16,$r0
+     b7c:	80 7f 10 44 	44107f80 add.l $r1,$r0,1f8 <interrupt_21>
+     b80:	04 00 d0 ac 	acd00004 ldi.l $r13,$r0,4 <_start+0x4>
+     b84:	12 80 e6 5d 	5de68012 cmp.l $r13,$r1
+     b88:	70 03 28 00 	00280370 jmpc z,dc0 <_malloc_r+0x480>
+     b8c:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+     b90:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+     b94:	0c 80 16 ac 	ac16800c ldi.l $r1,$r13,c <_start+0xc>
+     b98:	08 80 26 ac 	ac268008 ldi.l $r2,$r13,8 <_start+0x8>
+     b9c:	0c 80 20 b4 	b420800c sti.l $r2,c <_start+0xc>,$r1
+     ba0:	08 00 11 b4 	b4110008 sti.l $r1,8 <_start+0x8>,$r2
+     ba4:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+     ba8:	04 00 10 ac 	ac100004 ldi.l $r1,$r0,4 <_start+0x4>
+     bac:	0b e2 10 44 	4410e20b bins.l $r1,$r1,20 <_start+0x20>
+     bb0:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+     bb4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     bb8:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     bbc:	80 c0 06 44 	4406c080 add.l $r0,$r13,8 <_start+0x8>
+     bc0:	00 00 d0 99 	99d00000 unlink $r29
+     bc4:	00 00 30 8d 	8d300000 pop.l $r19
+     bc8:	00 00 20 8d 	8d200000 pop.l $r18
+     bcc:	00 00 10 8d 	8d100000 pop.l $r17
+     bd0:	00 00 00 8d 	8d000000 pop.l $r16
+     bd4:	00 00 f0 8c 	8cf00000 pop.l $r15
+     bd8:	00 00 e0 8c 	8ce00000 pop.l $r14
+     bdc:	00 00 d0 8c 	8cd00000 pop.l $r13
+     be0:	00 00 00 a0 	a0000000 return 
+     be4:	0c 00 00 64 	6400000c ldk.l $r0,c <_start+0xc>
+     be8:	00 00 f0 b4 	b4f00000 sti.l $r15,0 <_start>,$r0
+     bec:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     bf0:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     bf4:	80 00 20 64 	64200080 ldk.l $r2,80 <_start+0x80>
+     bf8:	40 00 30 64 	64300040 ldk.l $r3,40 <_start+0x40>
+     bfc:	3f 00 40 64 	6440003f ldk.l $r4,3f <_start+0x3f>
+     c00:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+     c04:	08 00 d8 ac 	acd80008 ldi.l $r13,$r16,8 <_start+0x8>
+     c08:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+     c0c:	0b 44 30 45 	4530440b bins.l $r19,$r0,40 <_start+0x40>
+     c10:	e2 80 09 44 	440980e2 sub.l $r0,$r19,$r14
+     c14:	e2 80 e9 5d 	5de980e2 cmp.l $r19,$r14
+     c18:	48 03 68 00 	00680348 jmpc b,d20 <_malloc_r+0x3e0>
+     c1c:	f2 40 e0 5d 	5de040f2 cmp.l $r0,f <_start+0xf>
+     c20:	48 03 60 01 	01600348 jmpc lte,d20 <_malloc_r+0x3e0>
+     c24:	0b 62 17 44 	4417620b bins.l $r1,$r14,20 <_start+0x20>
+     c28:	04 80 d0 b4 	b4d08004 sti.l $r13,4 <_start+0x4>,$r1
+     c2c:	e0 80 e6 44 	44e680e0 add.l $r14,$r13,$r14
+     c30:	08 00 07 b5 	b5070008 sti.l $r16,8 <_start+0x8>,$r14
+     c34:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+     c38:	04 00 e0 b4 	b4e00004 sti.l $r14,4 <_start+0x4>,$r0
+     c3c:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     c40:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     c44:	80 c0 06 44 	4406c080 add.l $r0,$r13,8 <_start+0x8>
+     c48:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     c4c:	42 41 e0 5d 	5de04142 cmp.l $r0,14 <_start+0x14>
+     c50:	81 03 a0 01 	01a00381 jmpc be,e04 <_malloc_r+0x4c4>
+     c54:	42 45 e0 5d 	5de04542 cmp.l $r0,54 <_start+0x54>
+     c58:	e5 03 a8 01 	01a803e5 jmpc a,f94 <_malloc_r+0x654>
+     c5c:	c9 40 07 44 	440740c9 lshr.l $r0,$r14,c <_start+0xc>
+     c60:	e0 46 40 44 	444046e0 add.l $r4,$r0,6e <_start+0x6e>
+     c64:	f0 46 30 44 	443046f0 add.l $r3,$r0,6f <_start+0x6f>
+     c68:	30 80 21 44 	44218030 add.l $r2,$r3,$r3
+     c6c:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+     c70:	99 40 10 44 	44104099 lshr.l $r1,$r0,9 <_start+0x9>
+     c74:	42 c0 e0 5d 	5de0c042 cmp.l $r1,4 <_start+0x4>
+     c78:	85 03 a0 01 	01a00385 jmpc be,e14 <_malloc_r+0x4d4>
+     c7c:	42 c1 e0 5d 	5de0c142 cmp.l $r1,14 <_start+0x14>
+     c80:	01 04 a8 01 	01a80401 jmpc a,1004 <_malloc_r+0x6c4>
+     c84:	b0 c5 50 44 	4450c5b0 add.l $r5,$r1,5b <_start+0x5b>
+     c88:	c0 c5 10 44 	4410c5c0 add.l $r1,$r1,5c <_start+0x5c>
+     c8c:	10 80 10 44 	44108010 add.l $r1,$r1,$r1
+     c90:	28 c0 10 44 	4410c028 ashl.l $r1,$r1,2 <_start+0x2>
+     c94:	b4 04 20 64 	642004b4 ldk.l $r2,4b4 <__sfvwrite_r+0xc4>
+     c98:	10 00 18 44 	44180010 add.l $r1,$r16,$r1
+     c9c:	80 ff 40 44 	4440ff80 add.l $r4,$r1,1f8 <interrupt_21>
+     ca0:	00 80 10 ac 	ac108000 ldi.l $r1,$r1,0 <_start>
+     ca4:	12 00 e2 5d 	5de20012 cmp.l $r4,$r1
+     ca8:	ef 03 28 00 	002803ef jmpc z,fbc <_malloc_r+0x67c>
+     cac:	04 80 20 ac 	ac208004 ldi.l $r2,$r1,4 <_start+0x4>
+     cb0:	0b 44 21 44 	4421440b bins.l $r2,$r2,40 <_start+0x40>
+     cb4:	22 00 e0 5d 	5de00022 cmp.l $r0,$r2
+     cb8:	32 03 60 00 	00600332 jmpc ae,cc8 <_malloc_r+0x388>
+     cbc:	08 80 10 ac 	ac108008 ldi.l $r1,$r1,8 <_start+0x8>
+     cc0:	12 00 e2 5d 	5de20012 cmp.l $r4,$r1
+     cc4:	2b 03 20 00 	0020032b jmpc nz,cac <_malloc_r+0x36c>
+     cc8:	0c 80 40 ac 	ac40800c ldi.l $r4,$r1,c <_start+0xc>
+     ccc:	04 00 08 ac 	ac080004 ldi.l $r0,$r16,4 <_start+0x4>
+     cd0:	0c 00 d2 b4 	b4d2000c sti.l $r13,c <_start+0xc>,$r4
+     cd4:	08 80 d0 b4 	b4d08008 sti.l $r13,8 <_start+0x8>,$r1
+     cd8:	08 80 46 b4 	b4468008 sti.l $r4,8 <_start+0x8>,$r13
+     cdc:	0c 80 16 b4 	b416800c sti.l $r1,c <_start+0xc>,$r13
+     ce0:	a0 02 30 00 	003002a0 jmp a80 <_malloc_r+0x140>
+     ce4:	e0 80 06 44 	440680e0 add.l $r0,$r13,$r14
+     ce8:	0b 62 e7 44 	44e7620b bins.l $r14,$r14,20 <_start+0x20>
+     cec:	04 00 d7 b4 	b4d70004 sti.l $r13,4 <_start+0x4>,$r14
+     cf0:	14 00 10 b4 	b4100014 sti.l $r1,14 <_start+0x14>,$r0
+     cf4:	10 00 10 b4 	b4100010 sti.l $r1,10 <_start+0x10>,$r0
+     cf8:	0c 00 03 b4 	b403000c sti.l $r0,c <_start+0xc>,$r6
+     cfc:	08 00 03 b4 	b4030008 sti.l $r0,8 <_start+0x8>,$r6
+     d00:	0b 62 11 44 	4411620b bins.l $r1,$r2,20 <_start+0x20>
+     d04:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+     d08:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+     d0c:	00 00 01 b4 	b4010000 sti.l $r0,0 <_start>,$r2
+     d10:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     d14:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     d18:	80 c0 06 44 	4406c080 add.l $r0,$r13,8 <_start+0x8>
+     d1c:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     d20:	08 09 10 c5 	c5100908 lda.l $r17,908 <__sfvwrite_r+0x518>
+     d24:	10 01 17 45 	45170110 add.l $r17,$r14,$r17
+     d28:	ac 04 00 c4 	c40004ac lda.l $r0,4ac <__sfvwrite_r+0xbc>
+     d2c:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+     d30:	ff 03 28 00 	002803ff jmpc z,ffc <_malloc_r+0x6bc>
+     d34:	0f 10 00 64 	6400100f ldk.l $r0,100f <_malloc_r+0x6cf>
+     d38:	00 80 18 45 	45188000 add.l $r17,$r17,$r0
+     d3c:	0b d8 18 45 	4518d80b bins.l $r17,$r17,180 <interrupt_11>
+     d40:	00 c0 18 44 	4418c000 move.l $r1,$r17
+     d44:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     d48:	c0 05 34 00 	003405c0 call 1700 <_sbrk_r>
+     d4c:	00 40 20 45 	45204000 move.l $r18,$r0
+     d50:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+     d54:	e1 03 28 00 	002803e1 jmpc z,f84 <_malloc_r+0x644>
+     d58:	30 81 06 44 	44068130 add.l $r0,$r13,$r19
+     d5c:	02 81 e6 5d 	5de68102 cmp.l $r13,$r16
+     d60:	a5 03 28 00 	002803a5 jmpc z,e94 <_malloc_r+0x554>
+     d64:	22 01 e0 5d 	5de00122 cmp.l $r0,$r18
+     d68:	a5 03 a0 01 	01a003a5 jmpc be,e94 <_malloc_r+0x554>
+     d6c:	b4 04 00 64 	640004b4 ldk.l $r0,4b4 <__sfvwrite_r+0xc4>
+     d70:	08 00 d0 ac 	acd00008 ldi.l $r13,$r0,8 <_start+0x8>
+     d74:	04 80 16 ac 	ac168004 ldi.l $r1,$r13,4 <_start+0x4>
+     d78:	0b c4 10 44 	4410c40b bins.l $r1,$r1,40 <_start+0x40>
+     d7c:	e2 80 00 44 	440080e2 sub.l $r0,$r1,$r14
+     d80:	f2 40 e0 5d 	5de040f2 cmp.l $r0,f <_start+0xf>
+     d84:	64 03 60 01 	01600364 jmpc lte,d90 <_malloc_r+0x450>
+     d88:	12 00 e7 5d 	5de70012 cmp.l $r14,$r1
+     d8c:	09 03 a0 01 	01a00309 jmpc be,c24 <_malloc_r+0x2e4>
+     d90:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     d94:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     d98:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+     d9c:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     da0:	04 80 00 ac 	ac008004 ldi.l $r0,$r1,4 <_start+0x4>
+     da4:	a0 02 30 00 	003002a0 jmp a80 <_malloc_r+0x140>
+     da8:	10 c0 73 44 	4473c010 add.l $r7,$r7,1 <_start+0x1>
+     dac:	80 c0 52 44 	4452c080 add.l $r5,$r5,8 <_start+0x8>
+     db0:	34 c0 03 44 	4403c034 and.l $r0,$r7,3 <_start+0x3>
+     db4:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     db8:	b4 02 20 00 	002002b4 jmpc nz,ad0 <_malloc_r+0x190>
+     dbc:	8f 03 30 00 	0030038f jmp e3c <_malloc_r+0x4fc>
+     dc0:	0c 00 d0 ac 	acd0000c ldi.l $r13,$r0,c <_start+0xc>
+     dc4:	20 c0 31 44 	4431c020 add.l $r3,$r3,2 <_start+0x2>
+     dc8:	d2 00 e0 5d 	5de000d2 cmp.l $r0,$r13
+     dcc:	80 02 28 00 	00280280 jmpc z,a00 <_malloc_r+0xc0>
+     dd0:	e3 02 30 00 	003002e3 jmp b8c <_malloc_r+0x24c>
+     dd4:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+     dd8:	04 00 10 ac 	ac100004 ldi.l $r1,$r0,4 <_start+0x4>
+     ddc:	0b e2 10 44 	4410e20b bins.l $r1,$r1,20 <_start+0x20>
+     de0:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+     de4:	0c 80 06 ac 	ac06800c ldi.l $r0,$r13,c <_start+0xc>
+     de8:	08 80 16 ac 	ac168008 ldi.l $r1,$r13,8 <_start+0x8>
+     dec:	0c 00 10 b4 	b410000c sti.l $r1,c <_start+0xc>,$r0
+     df0:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+     df4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     df8:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+     dfc:	80 c0 06 44 	4406c080 add.l $r0,$r13,8 <_start+0x8>
+     e00:	f0 02 30 00 	003002f0 jmp bc0 <_malloc_r+0x280>
+     e04:	b0 45 40 44 	444045b0 add.l $r4,$r0,5b <_start+0x5b>
+     e08:	c0 45 30 44 	443045c0 add.l $r3,$r0,5c <_start+0x5c>
+     e0c:	30 80 21 44 	44218030 add.l $r2,$r3,$r3
+     e10:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+     e14:	69 40 10 44 	44104069 lshr.l $r1,$r0,6 <_start+0x6>
+     e18:	80 c3 50 44 	4450c380 add.l $r5,$r1,38 <_start+0x38>
+     e1c:	90 c3 10 44 	4410c390 add.l $r1,$r1,39 <_start+0x39>
+     e20:	10 80 10 44 	44108010 add.l $r1,$r1,$r1
+     e24:	24 03 30 00 	00300324 jmp c90 <_malloc_r+0x350>
+     e28:	f0 ff 31 44 	4431fff0 add.l $r3,$r3,1ff <interrupt_21+0x7>
+     e2c:	80 7f 84 44 	44847f80 add.l $r8,$r8,1f8 <interrupt_21>
+     e30:	08 00 04 ac 	ac040008 ldi.l $r0,$r8,8 <_start+0x8>
+     e34:	82 00 e0 5d 	5de00082 cmp.l $r0,$r8
+     e38:	31 04 20 00 	00200431 jmpc nz,10c4 <_malloc_r+0x784>
+     e3c:	34 c0 01 44 	4401c034 and.l $r0,$r3,3 <_start+0x3>
+     e40:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     e44:	8a 03 20 00 	0020038a jmpc nz,e28 <_malloc_r+0x4e8>
+     e48:	f6 7f 01 44 	44017ff6 xor.l $r0,$r2,1ff <interrupt_21+0x7>
+     e4c:	04 00 38 ac 	ac380004 ldi.l $r3,$r16,4 <_start+0x4>
+     e50:	34 00 00 44 	44000034 and.l $r0,$r0,$r3
+     e54:	04 00 00 b5 	b5000004 sti.l $r16,4 <_start+0x4>,$r0
+     e58:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+     e5c:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+     e60:	01 03 28 00 	00280301 jmpc z,c04 <_malloc_r+0x2c4>
+     e64:	02 00 e1 5d 	5de10002 cmp.l $r2,$r0
+     e68:	01 03 a8 01 	01a80301 jmpc a,c04 <_malloc_r+0x2c4>
+     e6c:	04 00 11 44 	44110004 and.l $r1,$r2,$r0
+     e70:	00 c0 33 44 	4433c000 move.l $r3,$r7
+     e74:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     e78:	ae 02 20 00 	002002ae jmpc nz,ab8 <_malloc_r+0x178>
+     e7c:	40 c0 31 44 	4431c040 add.l $r3,$r3,4 <_start+0x4>
+     e80:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+     e84:	04 00 11 44 	44110004 and.l $r1,$r2,$r0
+     e88:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+     e8c:	9f 03 28 00 	0028039f jmpc z,e7c <_malloc_r+0x53c>
+     e90:	ae 02 30 00 	003002ae jmp ab8 <_malloc_r+0x178>
+     e94:	d8 08 10 c4 	c41008d8 lda.l $r1,8d8 <__sfvwrite_r+0x4e8>
+     e98:	10 80 18 44 	44188010 add.l $r1,$r17,$r1
+     e9c:	d8 08 10 bc 	bc1008d8 sta.l 8d8 <__sfvwrite_r+0x4e8>,$r1
+     ea0:	22 01 e0 5d 	5de00122 cmp.l $r0,$r18
+     ea4:	08 04 28 00 	00280408 jmpc z,1020 <_malloc_r+0x6e0>
+     ea8:	ac 04 20 c4 	c42004ac lda.l $r2,4ac <__sfvwrite_r+0xbc>
+     eac:	f2 7f e1 5d 	5de17ff2 cmp.l $r2,1ff <interrupt_21+0x7>
+     eb0:	15 04 28 00 	00280415 jmpc z,1054 <_malloc_r+0x714>
+     eb4:	02 00 09 44 	44090002 sub.l $r0,$r18,$r0
+     eb8:	00 80 10 44 	44108000 add.l $r1,$r1,$r0
+     ebc:	d8 08 10 bc 	bc1008d8 sta.l 8d8 <__sfvwrite_r+0x4e8>,$r1
+     ec0:	74 40 09 44 	44094074 and.l $r0,$r18,7 <_start+0x7>
+     ec4:	00 10 10 64 	64101000 ldk.l $r1,1000 <_malloc_r+0x6c0>
+     ec8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+     ecc:	b8 03 28 00 	002803b8 jmpc z,ee0 <_malloc_r+0x5a0>
+     ed0:	02 00 29 45 	45290002 sub.l $r18,$r18,$r0
+     ed4:	80 40 29 45 	45294080 add.l $r18,$r18,8 <_start+0x8>
+     ed8:	08 10 10 64 	64101008 ldk.l $r1,1008 <_malloc_r+0x6c8>
+     edc:	02 80 10 44 	44108002 sub.l $r1,$r1,$r0
+     ee0:	10 01 09 44 	44090110 add.l $r0,$r18,$r17
+     ee4:	ff 0f 20 64 	64200fff ldk.l $r2,fff <_malloc_r+0x6bf>
+     ee8:	24 00 00 44 	44000024 and.l $r0,$r0,$r2
+     eec:	02 80 10 45 	45108002 sub.l $r17,$r1,$r0
+     ef0:	00 c0 18 44 	4418c000 move.l $r1,$r17
+     ef4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+     ef8:	c0 05 34 00 	003405c0 call 1700 <_sbrk_r>
+     efc:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+     f00:	1c 04 28 00 	0028041c jmpc z,1070 <_malloc_r+0x730>
+     f04:	22 01 00 44 	44000122 sub.l $r0,$r0,$r18
+     f08:	00 80 08 44 	44088000 add.l $r0,$r17,$r0
+     f0c:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+     f10:	d8 08 10 c4 	c41008d8 lda.l $r1,8d8 <__sfvwrite_r+0x4e8>
+     f14:	10 80 18 44 	44188010 add.l $r1,$r17,$r1
+     f18:	d8 08 10 bc 	bc1008d8 sta.l 8d8 <__sfvwrite_r+0x4e8>,$r1
+     f1c:	08 00 09 b5 	b5090008 sti.l $r16,8 <_start+0x8>,$r18
+     f20:	04 00 20 b5 	b5200004 sti.l $r18,4 <_start+0x4>,$r0
+     f24:	02 81 e6 5d 	5de68102 cmp.l $r13,$r16
+     f28:	d9 03 28 00 	002803d9 jmpc z,f64 <_malloc_r+0x624>
+     f2c:	f2 c0 e9 5d 	5de9c0f2 cmp.l $r19,f <_start+0xf>
+     f30:	ec 03 a0 01 	01a003ec jmpc be,fb0 <_malloc_r+0x670>
+     f34:	40 ff 09 44 	4409ff40 add.l $r0,$r19,1f4 <interrupt_20+0x8>
+     f38:	0b 46 00 44 	4400460b bins.l $r0,$r0,60 <_start+0x60>
+     f3c:	04 80 26 ac 	ac268004 ldi.l $r2,$r13,4 <_start+0x4>
+     f40:	14 40 21 44 	44214014 and.l $r2,$r2,1 <_start+0x1>
+     f44:	25 00 20 44 	44200025 or.l $r2,$r0,$r2
+     f48:	04 00 d1 b4 	b4d10004 sti.l $r13,4 <_start+0x4>,$r2
+     f4c:	00 80 26 44 	44268000 add.l $r2,$r13,$r0
+     f50:	05 00 30 64 	64300005 ldk.l $r3,5 <_start+0x5>
+     f54:	04 80 21 b4 	b4218004 sti.l $r2,4 <_start+0x4>,$r3
+     f58:	08 80 21 b4 	b4218008 sti.l $r2,8 <_start+0x8>,$r3
+     f5c:	f2 40 e0 5d 	5de040f2 cmp.l $r0,f <_start+0xf>
+     f60:	17 04 a8 01 	01a80417 jmpc a,105c <_malloc_r+0x71c>
+     f64:	04 09 00 c4 	c4000904 lda.l $r0,904 <__sfvwrite_r+0x514>
+     f68:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+     f6c:	dd 03 a0 01 	01a003dd jmpc be,f74 <_malloc_r+0x634>
+     f70:	04 09 10 bc 	bc100904 sta.l 904 <__sfvwrite_r+0x514>,$r1
+     f74:	00 09 00 c4 	c4000900 lda.l $r0,900 <__sfvwrite_r+0x510>
+     f78:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+     f7c:	e1 03 a0 01 	01a003e1 jmpc be,f84 <_malloc_r+0x644>
+     f80:	00 09 10 bc 	bc100900 sta.l 900 <__sfvwrite_r+0x510>,$r1
+     f84:	08 00 d8 ac 	acd80008 ldi.l $r13,$r16,8 <_start+0x8>
+     f88:	04 80 16 ac 	ac168004 ldi.l $r1,$r13,4 <_start+0x4>
+     f8c:	0b c4 10 44 	4410c40b bins.l $r1,$r1,40 <_start+0x40>
+     f90:	5f 03 30 00 	0030035f jmp d7c <_malloc_r+0x43c>
+     f94:	42 55 e0 5d 	5de05542 cmp.l $r0,154 <interrupt_7+0x4>
+     f98:	f7 03 a8 01 	01a803f7 jmpc a,fdc <_malloc_r+0x69c>
+     f9c:	f9 40 07 44 	440740f9 lshr.l $r0,$r14,f <_start+0xf>
+     fa0:	70 47 40 44 	44404770 add.l $r4,$r0,77 <_start+0x77>
+     fa4:	80 47 30 44 	44304780 add.l $r3,$r0,78 <_start+0x78>
+     fa8:	30 80 21 44 	44218030 add.l $r2,$r3,$r3
+     fac:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+     fb0:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+     fb4:	04 00 20 b5 	b5200004 sti.l $r18,4 <_start+0x4>,$r0
+     fb8:	64 03 30 00 	00300364 jmp d90 <_malloc_r+0x450>
+     fbc:	2a c0 52 44 	4452c02a ashr.l $r5,$r5,2 <_start+0x2>
+     fc0:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+     fc4:	58 00 00 44 	44000058 ashl.l $r0,$r0,$r5
+     fc8:	04 00 11 ac 	ac110004 ldi.l $r1,$r2,4 <_start+0x4>
+     fcc:	15 00 00 44 	44000015 or.l $r0,$r0,$r1
+     fd0:	04 00 20 b4 	b4200004 sti.l $r2,4 <_start+0x4>,$r0
+     fd4:	00 40 12 44 	44124000 move.l $r1,$r4
+     fd8:	34 03 30 00 	00300334 jmp cd0 <_malloc_r+0x390>
+     fdc:	54 05 10 64 	64100554 ldk.l $r1,554 <__sfvwrite_r+0x164>
+     fe0:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+     fe4:	11 04 a8 01 	01a80411 jmpc a,1044 <_malloc_r+0x704>
+     fe8:	29 41 07 44 	44074129 lshr.l $r0,$r14,12 <_start+0x12>
+     fec:	c0 47 40 44 	444047c0 add.l $r4,$r0,7c <_start+0x7c>
+     ff0:	d0 47 30 44 	443047d0 add.l $r3,$r0,7d <_start+0x7d>
+     ff4:	30 80 21 44 	44218030 add.l $r2,$r3,$r3
+     ff8:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+     ffc:	00 c1 18 45 	4518c100 add.l $r17,$r17,10 <_start+0x10>
+    1000:	50 03 30 00 	00300350 jmp d40 <_malloc_r+0x400>
+    1004:	42 c5 e0 5d 	5de0c542 cmp.l $r1,54 <_start+0x54>
+    1008:	1f 04 a8 01 	01a8041f jmpc a,107c <_malloc_r+0x73c>
+    100c:	c9 40 10 44 	441040c9 lshr.l $r1,$r0,c <_start+0xc>
+    1010:	e0 c6 50 44 	4450c6e0 add.l $r5,$r1,6e <_start+0x6e>
+    1014:	f0 c6 10 44 	4410c6f0 add.l $r1,$r1,6f <_start+0x6f>
+    1018:	10 80 10 44 	44108010 add.l $r1,$r1,$r1
+    101c:	24 03 30 00 	00300324 jmp c90 <_malloc_r+0x350>
+    1020:	ff 0f 30 64 	64300fff ldk.l $r3,fff <_malloc_r+0x6bf>
+    1024:	34 00 20 44 	44200034 and.l $r2,$r0,$r3
+    1028:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    102c:	aa 03 20 00 	002003aa jmpc nz,ea8 <_malloc_r+0x568>
+    1030:	08 00 28 ac 	ac280008 ldi.l $r2,$r16,8 <_start+0x8>
+    1034:	10 81 09 44 	44098110 add.l $r0,$r19,$r17
+    1038:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+    103c:	04 00 20 b4 	b4200004 sti.l $r2,4 <_start+0x4>,$r0
+    1040:	d9 03 30 00 	003003d9 jmp f64 <_malloc_r+0x624>
+    1044:	fe 00 20 64 	642000fe ldk.l $r2,fe <interrupt_0+0x2>
+    1048:	7f 00 30 64 	6430007f ldk.l $r3,7f <_start+0x7f>
+    104c:	7e 00 40 64 	6440007e ldk.l $r4,7e <_start+0x7e>
+    1050:	6d 02 30 00 	0030026d jmp 9b4 <_malloc_r+0x74>
+    1054:	ac 04 20 bd 	bd2004ac sta.l 4ac <__sfvwrite_r+0xbc>,$r18
+    1058:	b0 03 30 00 	003003b0 jmp ec0 <_malloc_r+0x580>
+    105c:	80 c0 16 44 	4416c080 add.l $r1,$r13,8 <_start+0x8>
+    1060:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1064:	20 08 34 00 	00340820 call 2080 <_free_r>
+    1068:	d8 08 10 c4 	c41008d8 lda.l $r1,8d8 <__sfvwrite_r+0x4e8>
+    106c:	d9 03 30 00 	003003d9 jmp f64 <_malloc_r+0x624>
+    1070:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    1074:	00 00 10 65 	65100000 ldk.l $r17,0 <_start>
+    1078:	c4 03 30 00 	003003c4 jmp f10 <_malloc_r+0x5d0>
+    107c:	42 d5 e0 5d 	5de0d542 cmp.l $r1,154 <interrupt_7+0x4>
+    1080:	26 04 a8 01 	01a80426 jmpc a,1098 <_malloc_r+0x758>
+    1084:	f9 40 10 44 	441040f9 lshr.l $r1,$r0,f <_start+0xf>
+    1088:	70 c7 50 44 	4450c770 add.l $r5,$r1,77 <_start+0x77>
+    108c:	80 c7 10 44 	4410c780 add.l $r1,$r1,78 <_start+0x78>
+    1090:	10 80 10 44 	44108010 add.l $r1,$r1,$r1
+    1094:	24 03 30 00 	00300324 jmp c90 <_malloc_r+0x350>
+    1098:	54 05 20 64 	64200554 ldk.l $r2,554 <__sfvwrite_r+0x164>
+    109c:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    10a0:	2e 04 a8 01 	01a8042e jmpc a,10b8 <_malloc_r+0x778>
+    10a4:	29 41 10 44 	44104129 lshr.l $r1,$r0,12 <_start+0x12>
+    10a8:	c0 c7 50 44 	4450c7c0 add.l $r5,$r1,7c <_start+0x7c>
+    10ac:	d0 c7 10 44 	4410c7d0 add.l $r1,$r1,7d <_start+0x7d>
+    10b0:	10 80 10 44 	44108010 add.l $r1,$r1,$r1
+    10b4:	24 03 30 00 	00300324 jmp c90 <_malloc_r+0x350>
+    10b8:	fe 00 10 64 	641000fe ldk.l $r1,fe <interrupt_0+0x2>
+    10bc:	7e 00 50 64 	6450007e ldk.l $r5,7e <_start+0x7e>
+    10c0:	24 03 30 00 	00300324 jmp c90 <_malloc_r+0x350>
+    10c4:	04 00 08 ac 	ac080004 ldi.l $r0,$r16,4 <_start+0x4>
+    10c8:	96 03 30 00 	00300396 jmp e58 <_malloc_r+0x518>
+    10cc:	39 40 37 44 	44374039 lshr.l $r3,$r14,3 <_start+0x3>
+    10d0:	10 c0 01 44 	4401c010 add.l $r0,$r3,1 <_start+0x1>
+    10d4:	00 00 00 44 	44000000 add.l $r0,$r0,$r0
+    10d8:	dc 02 30 00 	003002dc jmp b70 <_malloc_r+0x230>
+
+000010dc <memchr>:
+    10dc:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    10e0:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    10e4:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    10e8:	4b 04 28 00 	0028044b jmpc z,112c <memchr+0x50>
+    10ec:	00 00 40 a8 	a8400000 ldi.b $r4,$r0,0 <_start>
+    10f0:	12 00 e2 59 	59e20012 cmp.b $r4,$r1
+    10f4:	49 04 28 00 	00280449 jmpc z,1124 <memchr+0x48>
+    10f8:	10 40 30 44 	44304010 add.l $r3,$r0,1 <_start+0x1>
+    10fc:	20 00 20 44 	44200020 add.l $r2,$r0,$r2
+    1100:	45 04 30 00 	00300445 jmp 1114 <memchr+0x38>
+    1104:	10 c0 31 44 	4431c010 add.l $r3,$r3,1 <_start+0x1>
+    1108:	ff 80 41 a8 	a84180ff ldi.b $r4,$r3,ff <interrupt_0+0x3>
+    110c:	12 00 e2 59 	59e20012 cmp.b $r4,$r1
+    1110:	49 04 28 00 	00280449 jmpc z,1124 <memchr+0x48>
+    1114:	00 c0 01 44 	4401c000 move.l $r0,$r3
+    1118:	22 80 e1 5d 	5de18022 cmp.l $r3,$r2
+    111c:	41 04 20 00 	00200441 jmpc nz,1104 <memchr+0x28>
+    1120:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1124:	00 00 d0 99 	99d00000 unlink $r29
+    1128:	00 00 00 a0 	a0000000 return 
+    112c:	00 40 01 44 	44014000 move.l $r0,$r2
+    1130:	49 04 30 00 	00300449 jmp 1124 <memchr+0x48>
+
+00001134 <memcpy>:
+    1134:	25 80 00 f0 	f0008025 memcpy.b $r0,$r1,$r2
+    1138:	00 00 00 a0 	a0000000 return 
+
+0000113c <memmove>:
+    113c:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1140:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+    1144:	62 04 a0 01 	01a00462 jmpc be,1188 <memmove+0x4c>
+    1148:	20 80 30 44 	44308020 add.l $r3,$r1,$r2
+    114c:	32 00 e0 5d 	5de00032 cmp.l $r0,$r3
+    1150:	62 04 60 00 	00600462 jmpc ae,1188 <memmove+0x4c>
+    1154:	20 00 10 44 	44100020 add.l $r1,$r0,$r2
+    1158:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    115c:	60 04 28 00 	00280460 jmpc z,1180 <memmove+0x44>
+    1160:	22 80 20 44 	44208022 sub.l $r2,$r1,$r2
+    1164:	f0 ff 10 44 	4410fff0 add.l $r1,$r1,1ff <interrupt_21+0x7>
+    1168:	f0 ff 31 44 	4431fff0 add.l $r3,$r3,1ff <interrupt_21+0x7>
+    116c:	00 80 61 a8 	a8618000 ldi.b $r6,$r3,0 <_start>
+    1170:	0c 50 43 44 	4443500c bexts.l $r4,$r6,100 <interrupt_0+0x4>
+    1174:	00 00 12 b0 	b0120000 sti.b $r1,0 <_start>,$r4
+    1178:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    117c:	59 04 20 00 	00200459 jmpc nz,1164 <memmove+0x28>
+    1180:	00 00 d0 99 	99d00000 unlink $r29
+    1184:	00 00 00 a0 	a0000000 return 
+    1188:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    118c:	60 04 28 00 	00280460 jmpc z,1180 <memmove+0x44>
+    1190:	00 40 30 44 	44304000 move.l $r3,$r0
+    1194:	20 00 20 44 	44200020 add.l $r2,$r0,$r2
+    1198:	00 80 60 a8 	a8608000 ldi.b $r6,$r1,0 <_start>
+    119c:	0c 50 43 44 	4443500c bexts.l $r4,$r6,100 <interrupt_0+0x4>
+    11a0:	00 00 32 b0 	b0320000 sti.b $r3,0 <_start>,$r4
+    11a4:	10 c0 31 44 	4431c010 add.l $r3,$r3,1 <_start+0x1>
+    11a8:	10 c0 10 44 	4410c010 add.l $r1,$r1,1 <_start+0x1>
+    11ac:	22 80 e1 5d 	5de18022 cmp.l $r3,$r2
+    11b0:	66 04 20 00 	00200466 jmpc nz,1198 <memmove+0x5c>
+    11b4:	00 00 d0 99 	99d00000 unlink $r29
+    11b8:	00 00 00 a0 	a0000000 return 
+
+000011bc <__malloc_lock>:
+    11bc:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    11c0:	00 00 d0 99 	99d00000 unlink $r29
+    11c4:	00 00 00 a0 	a0000000 return 
+
+000011c8 <__malloc_unlock>:
+    11c8:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    11cc:	00 00 d0 99 	99d00000 unlink $r29
+    11d0:	00 00 00 a0 	a0000000 return 
+
+000011d4 <_realloc_r>:
+    11d4:	00 80 06 84 	84068000 push.l $r13
+    11d8:	00 00 07 84 	84070000 push.l $r14
+    11dc:	00 80 07 84 	84078000 push.l $r15
+    11e0:	00 00 08 84 	84080000 push.l $r16
+    11e4:	00 80 08 84 	84088000 push.l $r17
+    11e8:	00 00 09 84 	84090000 push.l $r18
+    11ec:	00 80 09 84 	84098000 push.l $r19
+    11f0:	00 00 0a 84 	840a0000 push.l $r20
+    11f4:	00 80 0a 84 	840a8000 push.l $r21
+    11f8:	00 00 0b 84 	840b0000 push.l $r22
+    11fc:	00 80 0b 84 	840b8000 push.l $r23
+    1200:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1204:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    1208:	00 c0 10 45 	4510c000 move.l $r17,$r1
+    120c:	00 40 61 45 	45614000 move.l $r22,$r2
+    1210:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1214:	f8 04 28 00 	002804f8 jmpc z,13e0 <_realloc_r+0x20c>
+    1218:	6f 04 34 00 	0034046f call 11bc <__malloc_lock>
+    121c:	80 ff 28 45 	4528ff80 add.l $r18,$r17,1f8 <interrupt_21>
+    1220:	00 40 39 45 	45394000 move.l $r19,$r18
+    1224:	04 00 39 ac 	ac390004 ldi.l $r3,$r18,4 <_start+0x4>
+    1228:	0b c4 01 45 	4501c40b bins.l $r16,$r3,40 <_start+0x40>
+    122c:	b0 40 db 44 	44db40b0 add.l $r13,$r22,b <_start+0xb>
+    1230:	62 c1 e6 5d 	5de6c162 cmp.l $r13,16 <_start+0x16>
+    1234:	c3 04 a8 01 	01a804c3 jmpc a,130c <_realloc_r+0x138>
+    1238:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    123c:	10 00 40 64 	64400010 ldk.l $r4,10 <_start+0x10>
+    1240:	00 40 d2 44 	44d24000 move.l $r13,$r4
+    1244:	62 81 e6 5d 	5de68162 cmp.l $r13,$r22
+    1248:	2e 05 68 00 	0068052e jmpc b,14b8 <_realloc_r+0x2e4>
+    124c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1250:	2e 05 20 00 	0020052e jmpc nz,14b8 <_realloc_r+0x2e4>
+    1254:	42 00 e8 5d 	5de80042 cmp.l $r16,$r4
+    1258:	d0 04 28 01 	012804d0 jmpc gte,1340 <_realloc_r+0x16c>
+    125c:	00 01 69 44 	44690100 add.l $r6,$r18,$r16
+    1260:	b4 04 50 65 	655004b4 ldk.l $r21,4b4 <__sfvwrite_r+0xc4>
+    1264:	08 80 0a ac 	ac0a8008 ldi.l $r0,$r21,8 <_start+0x8>
+    1268:	02 00 e3 5d 	5de30002 cmp.l $r6,$r0
+    126c:	32 05 28 00 	00280532 jmpc z,14c8 <_realloc_r+0x2f4>
+    1270:	04 00 53 ac 	ac530004 ldi.l $r5,$r6,4 <_start+0x4>
+    1274:	0b c2 02 44 	4402c20b bins.l $r0,$r5,20 <_start+0x20>
+    1278:	00 00 03 44 	44030000 add.l $r0,$r6,$r0
+    127c:	04 00 00 ac 	ac000004 ldi.l $r0,$r0,4 <_start+0x4>
+    1280:	0c 42 e0 5d 	5de0420c btst.l $r0,20 <_start+0x20>
+    1284:	c7 04 28 00 	002804c7 jmpc z,131c <_realloc_r+0x148>
+    1288:	0c c2 e1 5d 	5de1c20c btst.l $r3,20 <_start+0x20>
+    128c:	26 05 28 00 	00280526 jmpc z,1498 <_realloc_r+0x2c4>
+    1290:	00 40 1b 44 	441b4000 move.l $r1,$r22
+    1294:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1298:	50 02 34 00 	00340250 call 940 <_malloc_r>
+    129c:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    12a0:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    12a4:	bf 04 28 00 	002804bf jmpc z,12fc <_realloc_r+0x128>
+    12a8:	04 00 39 ac 	ac390004 ldi.l $r3,$r18,4 <_start+0x4>
+    12ac:	80 7f 20 44 	44207f80 add.l $r2,$r0,1f8 <interrupt_21>
+    12b0:	0b c2 11 44 	4411c20b bins.l $r1,$r3,20 <_start+0x20>
+    12b4:	10 00 29 45 	45290010 add.l $r18,$r18,$r1
+    12b8:	22 01 e1 5d 	5de10122 cmp.l $r2,$r18
+    12bc:	91 05 28 00 	00280591 jmpc z,1644 <_realloc_r+0x470>
+    12c0:	c0 7f 28 44 	44287fc0 add.l $r2,$r16,1fc <interrupt_21+0x4>
+    12c4:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    12c8:	7d 05 a8 01 	01a8057d jmpc a,15f4 <_realloc_r+0x420>
+    12cc:	32 41 e1 5d 	5de14132 cmp.l $r2,13 <_start+0x13>
+    12d0:	67 05 a8 01 	01a80567 jmpc a,159c <_realloc_r+0x3c8>
+    12d4:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    12d8:	00 80 20 ac 	ac208000 ldi.l $r2,$r1,0 <_start>
+    12dc:	00 00 01 b4 	b4010000 sti.l $r0,0 <_start>,$r2
+    12e0:	04 80 20 ac 	ac208004 ldi.l $r2,$r1,4 <_start+0x4>
+    12e4:	04 00 01 b4 	b4010004 sti.l $r0,4 <_start+0x4>,$r2
+    12e8:	08 80 10 ac 	ac108008 ldi.l $r1,$r1,8 <_start+0x8>
+    12ec:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    12f0:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    12f4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    12f8:	20 08 34 00 	00340820 call 2080 <_free_r>
+    12fc:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1300:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    1304:	00 40 07 44 	44074000 move.l $r0,$r14
+    1308:	dd 04 30 00 	003004dd jmp 1374 <_realloc_r+0x1a0>
+    130c:	0b c6 d6 44 	44d6c60b bins.l $r13,$r13,60 <_start+0x60>
+    1310:	00 c0 46 44 	4446c000 move.l $r4,$r13
+    1314:	f9 c1 06 44 	4406c1f9 lshr.l $r0,$r13,1f <_start+0x1f>
+    1318:	91 04 30 00 	00300491 jmp 1244 <_realloc_r+0x70>
+    131c:	0b c4 52 44 	4452c40b bins.l $r5,$r5,40 <_start+0x40>
+    1320:	50 00 58 44 	44580050 add.l $r5,$r16,$r5
+    1324:	42 80 e2 5d 	5de28042 cmp.l $r5,$r4
+    1328:	fb 04 20 01 	012004fb jmpc lt,13ec <_realloc_r+0x218>
+    132c:	0c 00 03 ac 	ac03000c ldi.l $r0,$r6,c <_start+0xc>
+    1330:	08 00 13 ac 	ac130008 ldi.l $r1,$r6,8 <_start+0x8>
+    1334:	0c 00 10 b4 	b410000c sti.l $r1,c <_start+0xc>,$r0
+    1338:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    133c:	00 c0 02 45 	4502c000 move.l $r16,$r5
+    1340:	d2 00 48 44 	444800d2 sub.l $r4,$r16,$r13
+    1344:	f2 40 e2 5d 	5de240f2 cmp.l $r4,f <_start+0xf>
+    1348:	ea 04 a8 01 	01a804ea jmpc a,13a8 <_realloc_r+0x1d4>
+    134c:	14 c0 31 44 	4431c014 and.l $r3,$r3,1 <_start+0x1>
+    1350:	35 00 38 44 	44380035 or.l $r3,$r16,$r3
+    1354:	04 80 31 b5 	b5318004 sti.l $r19,4 <_start+0x4>,$r3
+    1358:	00 81 09 45 	45098100 add.l $r16,$r19,$r16
+    135c:	04 00 38 ac 	ac380004 ldi.l $r3,$r16,4 <_start+0x4>
+    1360:	0b e2 31 44 	4431e20b bins.l $r3,$r3,20 <_start+0x20>
+    1364:	04 80 01 b5 	b5018004 sti.l $r16,4 <_start+0x4>,$r3
+    1368:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    136c:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    1370:	00 c0 08 44 	4408c000 move.l $r0,$r17
+    1374:	00 00 d0 99 	99d00000 unlink $r29
+    1378:	00 00 70 8d 	8d700000 pop.l $r23
+    137c:	00 00 60 8d 	8d600000 pop.l $r22
+    1380:	00 00 50 8d 	8d500000 pop.l $r21
+    1384:	00 00 40 8d 	8d400000 pop.l $r20
+    1388:	00 00 30 8d 	8d300000 pop.l $r19
+    138c:	00 00 20 8d 	8d200000 pop.l $r18
+    1390:	00 00 10 8d 	8d100000 pop.l $r17
+    1394:	00 00 00 8d 	8d000000 pop.l $r16
+    1398:	00 00 f0 8c 	8cf00000 pop.l $r15
+    139c:	00 00 e0 8c 	8ce00000 pop.l $r14
+    13a0:	00 00 d0 8c 	8cd00000 pop.l $r13
+    13a4:	00 00 00 a0 	a0000000 return 
+    13a8:	d0 80 19 44 	441980d0 add.l $r1,$r19,$r13
+    13ac:	14 c0 31 44 	4431c014 and.l $r3,$r3,1 <_start+0x1>
+    13b0:	35 80 d6 44 	44d68035 or.l $r13,$r13,$r3
+    13b4:	04 80 36 b5 	b5368004 sti.l $r19,4 <_start+0x4>,$r13
+    13b8:	0b 62 02 44 	4402620b bins.l $r0,$r4,20 <_start+0x20>
+    13bc:	04 00 10 b4 	b4100004 sti.l $r1,4 <_start+0x4>,$r0
+    13c0:	40 80 40 44 	44408040 add.l $r4,$r1,$r4
+    13c4:	04 00 02 ac 	ac020004 ldi.l $r0,$r4,4 <_start+0x4>
+    13c8:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+    13cc:	04 00 40 b4 	b4400004 sti.l $r4,4 <_start+0x4>,$r0
+    13d0:	80 c0 10 44 	4410c080 add.l $r1,$r1,8 <_start+0x8>
+    13d4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    13d8:	20 08 34 00 	00340820 call 2080 <_free_r>
+    13dc:	da 04 30 00 	003004da jmp 1368 <_realloc_r+0x194>
+    13e0:	00 40 11 44 	44114000 move.l $r1,$r2
+    13e4:	50 02 34 00 	00340250 call 940 <_malloc_r>
+    13e8:	dd 04 30 00 	003004dd jmp 1374 <_realloc_r+0x1a0>
+    13ec:	0c c2 e1 5d 	5de1c20c btst.l $r3,20 <_start+0x20>
+    13f0:	a4 04 20 00 	002004a4 jmpc nz,1290 <_realloc_r+0xbc>
+    13f4:	00 00 49 ad 	ad490000 ldi.l $r20,$r18,0 <_start>
+    13f8:	42 01 49 45 	45490142 sub.l $r20,$r18,$r20
+    13fc:	04 00 0a ac 	ac0a0004 ldi.l $r0,$r20,4 <_start+0x4>
+    1400:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+    1404:	00 80 e2 44 	44e28000 add.l $r14,$r5,$r0
+    1408:	42 00 e7 5d 	5de70042 cmp.l $r14,$r4
+    140c:	2a 05 20 01 	0120052a jmpc lt,14a8 <_realloc_r+0x2d4>
+    1410:	0c 00 03 ac 	ac03000c ldi.l $r0,$r6,c <_start+0xc>
+    1414:	08 00 13 ac 	ac130008 ldi.l $r1,$r6,8 <_start+0x8>
+    1418:	0c 00 10 b4 	b410000c sti.l $r1,c <_start+0xc>,$r0
+    141c:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    1420:	0c 00 0a ac 	ac0a000c ldi.l $r0,$r20,c <_start+0xc>
+    1424:	08 00 1a ac 	ac1a0008 ldi.l $r1,$r20,8 <_start+0x8>
+    1428:	0c 00 10 b4 	b410000c sti.l $r1,c <_start+0xc>,$r0
+    142c:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    1430:	80 40 2a 45 	452a4080 add.l $r18,$r20,8 <_start+0x8>
+    1434:	c0 7f 28 44 	44287fc0 add.l $r2,$r16,1fc <interrupt_21+0x4>
+    1438:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    143c:	80 05 a8 01 	01a80580 jmpc a,1600 <_realloc_r+0x42c>
+    1440:	00 40 09 44 	44094000 move.l $r0,$r18
+    1444:	32 41 e1 5d 	5de14132 cmp.l $r2,13 <_start+0x13>
+    1448:	1b 05 a0 01 	01a0051b jmpc be,146c <_realloc_r+0x298>
+    144c:	00 80 08 ac 	ac088000 ldi.l $r0,$r17,0 <_start>
+    1450:	08 00 40 b5 	b5400008 sti.l $r20,8 <_start+0x8>,$r0
+    1454:	04 80 08 ac 	ac088004 ldi.l $r0,$r17,4 <_start+0x4>
+    1458:	0c 00 40 b5 	b540000c sti.l $r20,c <_start+0xc>,$r0
+    145c:	b2 41 e1 5d 	5de141b2 cmp.l $r2,1b <_start+0x1b>
+    1460:	95 05 a8 01 	01a80595 jmpc a,1654 <_realloc_r+0x480>
+    1464:	00 41 0a 44 	440a4100 add.l $r0,$r20,10 <_start+0x10>
+    1468:	80 c0 18 45 	4518c080 add.l $r17,$r17,8 <_start+0x8>
+    146c:	00 80 18 ac 	ac188000 ldi.l $r1,$r17,0 <_start>
+    1470:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1474:	04 80 18 ac 	ac188004 ldi.l $r1,$r17,4 <_start+0x4>
+    1478:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+    147c:	08 80 18 ac 	ac188008 ldi.l $r1,$r17,8 <_start+0x8>
+    1480:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    1484:	04 00 3a ac 	ac3a0004 ldi.l $r3,$r20,4 <_start+0x4>
+    1488:	00 40 19 45 	45194000 move.l $r17,$r18
+    148c:	00 40 07 45 	45074000 move.l $r16,$r14
+    1490:	00 40 3a 45 	453a4000 move.l $r19,$r20
+    1494:	d0 04 30 00 	003004d0 jmp 1340 <_realloc_r+0x16c>
+    1498:	00 00 49 ad 	ad490000 ldi.l $r20,$r18,0 <_start>
+    149c:	42 01 49 45 	45490142 sub.l $r20,$r18,$r20
+    14a0:	04 00 0a ac 	ac0a0004 ldi.l $r0,$r20,4 <_start+0x4>
+    14a4:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+    14a8:	00 00 e8 44 	44e80000 add.l $r14,$r16,$r0
+    14ac:	42 00 e7 5d 	5de70042 cmp.l $r14,$r4
+    14b0:	a4 04 20 01 	012004a4 jmpc lt,1290 <_realloc_r+0xbc>
+    14b4:	08 05 30 00 	00300508 jmp 1420 <_realloc_r+0x24c>
+    14b8:	0c 00 00 64 	6400000c ldk.l $r0,c <_start+0xc>
+    14bc:	00 00 f0 b4 	b4f00000 sti.l $r15,0 <_start>,$r0
+    14c0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    14c4:	dd 04 30 00 	003004dd jmp 1374 <_realloc_r+0x1a0>
+    14c8:	04 00 13 ac 	ac130004 ldi.l $r1,$r6,4 <_start+0x4>
+    14cc:	0b c4 10 44 	4410c40b bins.l $r1,$r1,40 <_start+0x40>
+    14d0:	10 00 18 44 	44180010 add.l $r1,$r16,$r1
+    14d4:	00 c1 26 44 	4426c100 add.l $r2,$r13,10 <_start+0x10>
+    14d8:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    14dc:	70 05 28 01 	01280570 jmpc gte,15c0 <_realloc_r+0x3ec>
+    14e0:	0c c2 e1 5d 	5de1c20c btst.l $r3,20 <_start+0x20>
+    14e4:	a4 04 20 00 	002004a4 jmpc nz,1290 <_realloc_r+0xbc>
+    14e8:	00 00 49 ad 	ad490000 ldi.l $r20,$r18,0 <_start>
+    14ec:	42 01 49 45 	45490142 sub.l $r20,$r18,$r20
+    14f0:	04 00 0a ac 	ac0a0004 ldi.l $r0,$r20,4 <_start+0x4>
+    14f4:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+    14f8:	10 00 70 45 	45700010 add.l $r23,$r0,$r1
+    14fc:	72 01 e1 5d 	5de10172 cmp.l $r2,$r23
+    1500:	2a 05 68 01 	0168052a jmpc gt,14a8 <_realloc_r+0x2d4>
+    1504:	0c 00 0a ac 	ac0a000c ldi.l $r0,$r20,c <_start+0xc>
+    1508:	08 00 1a ac 	ac1a0008 ldi.l $r1,$r20,8 <_start+0x8>
+    150c:	0c 00 10 b4 	b410000c sti.l $r1,c <_start+0xc>,$r0
+    1510:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    1514:	80 40 ea 44 	44ea4080 add.l $r14,$r20,8 <_start+0x8>
+    1518:	c0 7f 28 44 	44287fc0 add.l $r2,$r16,1fc <interrupt_21+0x4>
+    151c:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    1520:	ac 05 a8 01 	01a805ac jmpc a,16b0 <_realloc_r+0x4dc>
+    1524:	00 40 07 44 	44074000 move.l $r0,$r14
+    1528:	32 41 e1 5d 	5de14132 cmp.l $r2,13 <_start+0x13>
+    152c:	54 05 a0 01 	01a00554 jmpc be,1550 <_realloc_r+0x37c>
+    1530:	00 80 08 ac 	ac088000 ldi.l $r0,$r17,0 <_start>
+    1534:	08 00 40 b5 	b5400008 sti.l $r20,8 <_start+0x8>,$r0
+    1538:	04 80 08 ac 	ac088004 ldi.l $r0,$r17,4 <_start+0x4>
+    153c:	0c 00 40 b5 	b540000c sti.l $r20,c <_start+0xc>,$r0
+    1540:	b2 41 e1 5d 	5de141b2 cmp.l $r2,1b <_start+0x1b>
+    1544:	b0 05 a8 01 	01a805b0 jmpc a,16c0 <_realloc_r+0x4ec>
+    1548:	00 41 0a 44 	440a4100 add.l $r0,$r20,10 <_start+0x10>
+    154c:	80 c0 18 45 	4518c080 add.l $r17,$r17,8 <_start+0x8>
+    1550:	00 80 18 ac 	ac188000 ldi.l $r1,$r17,0 <_start>
+    1554:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1558:	04 80 18 ac 	ac188004 ldi.l $r1,$r17,4 <_start+0x4>
+    155c:	04 80 00 b4 	b4008004 sti.l $r0,4 <_start+0x4>,$r1
+    1560:	08 80 18 ac 	ac188008 ldi.l $r1,$r17,8 <_start+0x8>
+    1564:	08 80 00 b4 	b4008008 sti.l $r0,8 <_start+0x8>,$r1
+    1568:	d0 00 1a 44 	441a00d0 add.l $r1,$r20,$r13
+    156c:	08 80 50 b5 	b5508008 sti.l $r21,8 <_start+0x8>,$r1
+    1570:	d2 80 0b 44 	440b80d2 sub.l $r0,$r23,$r13
+    1574:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+    1578:	04 00 10 b4 	b4100004 sti.l $r1,4 <_start+0x4>,$r0
+    157c:	04 00 0a ac 	ac0a0004 ldi.l $r0,$r20,4 <_start+0x4>
+    1580:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+    1584:	05 80 d6 44 	44d68005 or.l $r13,$r13,$r0
+    1588:	04 80 46 b5 	b5468004 sti.l $r20,4 <_start+0x4>,$r13
+    158c:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1590:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    1594:	00 40 07 44 	44074000 move.l $r0,$r14
+    1598:	dd 04 30 00 	003004dd jmp 1374 <_realloc_r+0x1a0>
+    159c:	00 80 08 ac 	ac088000 ldi.l $r0,$r17,0 <_start>
+    15a0:	00 00 e0 b4 	b4e00000 sti.l $r14,0 <_start>,$r0
+    15a4:	04 80 08 ac 	ac088004 ldi.l $r0,$r17,4 <_start+0x4>
+    15a8:	04 00 e0 b4 	b4e00004 sti.l $r14,4 <_start+0x4>,$r0
+    15ac:	b2 41 e1 5d 	5de141b2 cmp.l $r2,1b <_start+0x1b>
+    15b0:	88 05 a8 01 	01a80588 jmpc a,1620 <_realloc_r+0x44c>
+    15b4:	80 40 07 44 	44074080 add.l $r0,$r14,8 <_start+0x8>
+    15b8:	80 c0 18 44 	4418c080 add.l $r1,$r17,8 <_start+0x8>
+    15bc:	b6 04 30 00 	003004b6 jmp 12d8 <_realloc_r+0x104>
+    15c0:	d0 00 29 44 	442900d0 add.l $r2,$r18,$r13
+    15c4:	08 00 51 b5 	b5510008 sti.l $r21,8 <_start+0x8>,$r2
+    15c8:	d2 80 00 44 	440080d2 sub.l $r0,$r1,$r13
+    15cc:	0b 62 00 44 	4400620b bins.l $r0,$r0,20 <_start+0x20>
+    15d0:	04 00 20 b4 	b4200004 sti.l $r2,4 <_start+0x4>,$r0
+    15d4:	04 00 09 ac 	ac090004 ldi.l $r0,$r18,4 <_start+0x4>
+    15d8:	14 40 00 44 	44004014 and.l $r0,$r0,1 <_start+0x1>
+    15dc:	05 80 d6 44 	44d68005 or.l $r13,$r13,$r0
+    15e0:	04 80 26 b5 	b5268004 sti.l $r18,4 <_start+0x4>,$r13
+    15e4:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    15e8:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    15ec:	00 c0 08 44 	4408c000 move.l $r0,$r17
+    15f0:	dd 04 30 00 	003004dd jmp 1374 <_realloc_r+0x1a0>
+    15f4:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    15f8:	4f 04 34 00 	0034044f call 113c <memmove>
+    15fc:	bc 04 30 00 	003004bc jmp 12f0 <_realloc_r+0x11c>
+    1600:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    1604:	00 40 09 44 	44094000 move.l $r0,$r18
+    1608:	4f 04 34 00 	0034044f call 113c <memmove>
+    160c:	04 00 3a ac 	ac3a0004 ldi.l $r3,$r20,4 <_start+0x4>
+    1610:	00 40 19 45 	45194000 move.l $r17,$r18
+    1614:	00 40 07 45 	45074000 move.l $r16,$r14
+    1618:	00 40 3a 45 	453a4000 move.l $r19,$r20
+    161c:	d0 04 30 00 	003004d0 jmp 1340 <_realloc_r+0x16c>
+    1620:	08 80 08 ac 	ac088008 ldi.l $r0,$r17,8 <_start+0x8>
+    1624:	08 00 e0 b4 	b4e00008 sti.l $r14,8 <_start+0x8>,$r0
+    1628:	0c 80 08 ac 	ac08800c ldi.l $r0,$r17,c <_start+0xc>
+    162c:	0c 00 e0 b4 	b4e0000c sti.l $r14,c <_start+0xc>,$r0
+    1630:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    1634:	9e 05 28 00 	0028059e jmpc z,1678 <_realloc_r+0x4a4>
+    1638:	00 41 07 44 	44074100 add.l $r0,$r14,10 <_start+0x10>
+    163c:	00 c1 18 44 	4418c100 add.l $r1,$r17,10 <_start+0x10>
+    1640:	b6 04 30 00 	003004b6 jmp 12d8 <_realloc_r+0x104>
+    1644:	fc 00 00 ac 	ac0000fc ldi.l $r0,$r0,fc <interrupt_0>
+    1648:	0b 44 00 44 	4400440b bins.l $r0,$r0,40 <_start+0x40>
+    164c:	00 00 08 45 	45080000 add.l $r16,$r16,$r0
+    1650:	d0 04 30 00 	003004d0 jmp 1340 <_realloc_r+0x16c>
+    1654:	08 80 08 ac 	ac088008 ldi.l $r0,$r17,8 <_start+0x8>
+    1658:	10 00 40 b5 	b5400010 sti.l $r20,10 <_start+0x10>,$r0
+    165c:	0c 80 08 ac 	ac08800c ldi.l $r0,$r17,c <_start+0xc>
+    1660:	14 00 40 b5 	b5400014 sti.l $r20,14 <_start+0x14>,$r0
+    1664:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    1668:	a5 05 28 00 	002805a5 jmpc z,1694 <_realloc_r+0x4c0>
+    166c:	80 41 0a 44 	440a4180 add.l $r0,$r20,18 <_start+0x18>
+    1670:	00 c1 18 45 	4518c100 add.l $r17,$r17,10 <_start+0x10>
+    1674:	1b 05 30 00 	0030051b jmp 146c <_realloc_r+0x298>
+    1678:	10 80 08 ac 	ac088010 ldi.l $r0,$r17,10 <_start+0x10>
+    167c:	10 00 e0 b4 	b4e00010 sti.l $r14,10 <_start+0x10>,$r0
+    1680:	80 41 07 44 	44074180 add.l $r0,$r14,18 <_start+0x18>
+    1684:	80 c1 18 44 	4418c180 add.l $r1,$r17,18 <_start+0x18>
+    1688:	14 80 28 ac 	ac288014 ldi.l $r2,$r17,14 <_start+0x14>
+    168c:	14 00 e1 b4 	b4e10014 sti.l $r14,14 <_start+0x14>,$r2
+    1690:	b6 04 30 00 	003004b6 jmp 12d8 <_realloc_r+0x104>
+    1694:	10 80 08 ac 	ac088010 ldi.l $r0,$r17,10 <_start+0x10>
+    1698:	18 00 40 b5 	b5400018 sti.l $r20,18 <_start+0x18>,$r0
+    169c:	00 42 0a 44 	440a4200 add.l $r0,$r20,20 <_start+0x20>
+    16a0:	14 80 18 ac 	ac188014 ldi.l $r1,$r17,14 <_start+0x14>
+    16a4:	1c 80 40 b5 	b540801c sti.l $r20,1c <_start+0x1c>,$r1
+    16a8:	80 c1 18 45 	4518c180 add.l $r17,$r17,18 <_start+0x18>
+    16ac:	1b 05 30 00 	0030051b jmp 146c <_realloc_r+0x298>
+    16b0:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    16b4:	00 40 07 44 	44074000 move.l $r0,$r14
+    16b8:	4f 04 34 00 	0034044f call 113c <memmove>
+    16bc:	5a 05 30 00 	0030055a jmp 1568 <_realloc_r+0x394>
+    16c0:	08 80 08 ac 	ac088008 ldi.l $r0,$r17,8 <_start+0x8>
+    16c4:	10 00 40 b5 	b5400010 sti.l $r20,10 <_start+0x10>,$r0
+    16c8:	0c 80 08 ac 	ac08800c ldi.l $r0,$r17,c <_start+0xc>
+    16cc:	14 00 40 b5 	b5400014 sti.l $r20,14 <_start+0x14>,$r0
+    16d0:	42 42 e1 5d 	5de14242 cmp.l $r2,24 <_start+0x24>
+    16d4:	b9 05 28 00 	002805b9 jmpc z,16e4 <_realloc_r+0x510>
+    16d8:	80 41 0a 44 	440a4180 add.l $r0,$r20,18 <_start+0x18>
+    16dc:	00 c1 18 45 	4518c100 add.l $r17,$r17,10 <_start+0x10>
+    16e0:	54 05 30 00 	00300554 jmp 1550 <_realloc_r+0x37c>
+    16e4:	10 80 08 ac 	ac088010 ldi.l $r0,$r17,10 <_start+0x10>
+    16e8:	18 00 40 b5 	b5400018 sti.l $r20,18 <_start+0x18>,$r0
+    16ec:	00 42 0a 44 	440a4200 add.l $r0,$r20,20 <_start+0x20>
+    16f0:	14 80 18 ac 	ac188014 ldi.l $r1,$r17,14 <_start+0x14>
+    16f4:	1c 80 40 b5 	b540801c sti.l $r20,1c <_start+0x1c>,$r1
+    16f8:	80 c1 18 45 	4518c180 add.l $r17,$r17,18 <_start+0x18>
+    16fc:	54 05 30 00 	00300554 jmp 1550 <_realloc_r+0x37c>
+
+00001700 <_sbrk_r>:
+    1700:	00 80 06 84 	84068000 push.l $r13
+    1704:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1708:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    170c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1710:	3c 09 00 bc 	bc00093c sta.l 93c <__sfvwrite_r+0x54c>,$r0
+    1714:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    1718:	1e 0b 34 00 	00340b1e call 2c78 <_sbrk>
+    171c:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    1720:	cc 05 28 00 	002805cc jmpc z,1730 <_sbrk_r+0x30>
+    1724:	00 00 d0 99 	99d00000 unlink $r29
+    1728:	00 00 d0 8c 	8cd00000 pop.l $r13
+    172c:	00 00 00 a0 	a0000000 return 
+    1730:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    1734:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1738:	c9 05 28 00 	002805c9 jmpc z,1724 <_sbrk_r+0x24>
+    173c:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    1740:	00 00 d0 99 	99d00000 unlink $r29
+    1744:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1748:	00 00 00 a0 	a0000000 return 
+
+0000174c <__swsetup_r>:
+    174c:	00 80 06 84 	84068000 push.l $r13
+    1750:	00 00 07 84 	84070000 push.l $r14
+    1754:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1758:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    175c:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    1760:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+    1764:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1768:	de 05 28 00 	002805de jmpc z,1778 <__swsetup_r+0x2c>
+    176c:	38 00 10 ac 	ac100038 ldi.l $r1,$r0,38 <_start+0x38>
+    1770:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1774:	19 06 28 00 	00280619 jmpc z,1864 <__swsetup_r+0x118>
+    1778:	0c 80 06 aa 	aa06800c ldi.s $r0,$r13,c <_start+0xc>
+    177c:	0c 40 20 44 	4420400c bexts.l $r2,$r0,0 <_start>
+    1780:	0d 40 01 44 	4401400d bextu.l $r0,$r2,0 <_start>
+    1784:	3c 42 e0 5d 	5de0423c btst.l $r0,23 <_start+0x23>
+    1788:	f5 05 28 00 	002805f5 jmpc z,17d4 <__swsetup_r+0x88>
+    178c:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+    1790:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1794:	ff 05 28 00 	002805ff jmpc z,17fc <__swsetup_r+0xb0>
+    1798:	14 40 20 44 	44204014 and.l $r2,$r0,1 <_start+0x1>
+    179c:	0c 42 e0 5d 	5de0420c btst.l $r0,20 <_start+0x20>
+    17a0:	0a 06 28 00 	0028060a jmpc z,1828 <__swsetup_r+0xdc>
+    17a4:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    17a8:	08 00 d0 b4 	b4d00008 sti.l $r13,8 <_start+0x8>,$r0
+    17ac:	14 80 26 ac 	ac268014 ldi.l $r2,$r13,14 <_start+0x14>
+    17b0:	22 00 00 44 	44000022 sub.l $r0,$r0,$r2
+    17b4:	18 00 d0 b4 	b4d00018 sti.l $r13,18 <_start+0x18>,$r0
+    17b8:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    17bc:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    17c0:	11 06 28 00 	00280611 jmpc z,1844 <__swsetup_r+0xf8>
+    17c4:	00 00 d0 99 	99d00000 unlink $r29
+    17c8:	00 00 e0 8c 	8ce00000 pop.l $r14
+    17cc:	00 00 d0 8c 	8cd00000 pop.l $r13
+    17d0:	00 00 00 a0 	a0000000 return 
+    17d4:	4c 42 e0 5d 	5de0424c btst.l $r0,24 <_start+0x24>
+    17d8:	2d 06 28 00 	0028062d jmpc z,18b4 <__swsetup_r+0x168>
+    17dc:	2c 42 e0 5d 	5de0422c btst.l $r0,22 <_start+0x22>
+    17e0:	1b 06 20 00 	0020061b jmpc nz,186c <__swsetup_r+0x120>
+    17e4:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+    17e8:	3b 62 01 44 	4401623b bins.l $r0,$r2,23 <_start+0x23>
+    17ec:	0c 00 d0 b2 	b2d0000c sti.s $r13,c <_start+0xc>,$r0
+    17f0:	0d 40 00 44 	4400400d bextu.l $r0,$r0,0 <_start>
+    17f4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    17f8:	e6 05 20 00 	002005e6 jmpc nz,1798 <__swsetup_r+0x4c>
+    17fc:	80 02 20 64 	64200280 ldk.l $r2,280 <interrupt_32+0x4>
+    1800:	24 00 30 44 	44300024 and.l $r3,$r0,$r2
+    1804:	00 02 20 64 	64200200 ldk.l $r2,200 <interrupt_21+0x8>
+    1808:	22 80 e1 5d 	5de18022 cmp.l $r3,$r2
+    180c:	e6 05 28 00 	002805e6 jmpc z,1798 <__swsetup_r+0x4c>
+    1810:	00 c0 16 44 	4416c000 move.l $r1,$r13
+    1814:	00 40 07 44 	44074000 move.l $r0,$r14
+    1818:	46 09 34 00 	00340946 call 2518 <__smakebuf_r>
+    181c:	0c 80 06 aa 	aa06800c ldi.s $r0,$r13,c <_start+0xc>
+    1820:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+    1824:	e6 05 30 00 	003005e6 jmp 1798 <__swsetup_r+0x4c>
+    1828:	1c 42 e0 5d 	5de0421c btst.l $r0,21 <_start+0x21>
+    182c:	0d 06 20 00 	0020060d jmpc nz,1834 <__swsetup_r+0xe8>
+    1830:	14 80 26 ac 	ac268014 ldi.l $r2,$r13,14 <_start+0x14>
+    1834:	08 00 d1 b4 	b4d10008 sti.l $r13,8 <_start+0x8>,$r2
+    1838:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    183c:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    1840:	f1 05 20 00 	002005f1 jmpc nz,17c4 <__swsetup_r+0x78>
+    1844:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+    1848:	0c 40 11 44 	4411400c bexts.l $r1,$r2,0 <_start>
+    184c:	7c c2 e0 5d 	5de0c27c btst.l $r1,27 <_start+0x27>
+    1850:	f1 05 28 00 	002805f1 jmpc z,17c4 <__swsetup_r+0x78>
+    1854:	6b e2 10 44 	4410e26b bins.l $r1,$r1,26 <_start+0x26>
+    1858:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    185c:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    1860:	f1 05 30 00 	003005f1 jmp 17c4 <__swsetup_r+0x78>
+    1864:	b6 07 34 00 	003407b6 call 1ed8 <__sinit>
+    1868:	de 05 30 00 	003005de jmp 1778 <__swsetup_r+0x2c>
+    186c:	30 80 16 ac 	ac168030 ldi.l $r1,$r13,30 <_start+0x30>
+    1870:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1874:	27 06 28 00 	00280627 jmpc z,189c <__swsetup_r+0x150>
+    1878:	00 c4 06 44 	4406c400 add.l $r0,$r13,40 <_start+0x40>
+    187c:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    1880:	25 06 28 00 	00280625 jmpc z,1894 <__swsetup_r+0x148>
+    1884:	00 40 07 44 	44074000 move.l $r0,$r14
+    1888:	20 08 34 00 	00340820 call 2080 <_free_r>
+    188c:	0c 80 06 aa 	aa06800c ldi.s $r0,$r13,c <_start+0xc>
+    1890:	0c 40 20 44 	4420400c bexts.l $r2,$r0,0 <_start>
+    1894:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1898:	30 00 d0 b4 	b4d00030 sti.l $r13,30 <_start+0x30>,$r0
+    189c:	b4 7d 21 44 	44217db4 and.l $r2,$r2,1db <interrupt_18+0x7>
+    18a0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    18a4:	04 00 d0 b4 	b4d00004 sti.l $r13,4 <_start+0x4>,$r0
+    18a8:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+    18ac:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    18b0:	fa 05 30 00 	003005fa jmp 17e8 <__swsetup_r+0x9c>
+    18b4:	09 00 00 64 	64000009 ldk.l $r0,9 <_start+0x9>
+    18b8:	00 00 e0 b4 	b4e00000 sti.l $r14,0 <_start>,$r0
+    18bc:	6b 62 21 44 	4421626b bins.l $r2,$r2,26 <_start+0x26>
+    18c0:	0c 00 d1 b2 	b2d1000c sti.s $r13,c <_start+0xc>,$r2
+    18c4:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    18c8:	f1 05 30 00 	003005f1 jmp 17c4 <__swsetup_r+0x78>
+
+000018cc <__sflush_r>:
+    18cc:	00 80 06 84 	84068000 push.l $r13
+    18d0:	00 00 07 84 	84070000 push.l $r14
+    18d4:	00 80 07 84 	84078000 push.l $r15
+    18d8:	00 00 08 84 	84080000 push.l $r16
+    18dc:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    18e0:	00 40 00 45 	45004000 move.l $r16,$r0
+    18e4:	00 c0 e0 44 	44e0c000 move.l $r14,$r1
+    18e8:	0c 80 10 aa 	aa10800c ldi.s $r1,$r1,c <_start+0xc>
+    18ec:	0c c0 00 44 	4400c00c bexts.l $r0,$r1,0 <_start>
+    18f0:	0d 40 10 44 	4410400d bextu.l $r1,$r0,0 <_start>
+    18f4:	3c c2 e0 5d 	5de0c23c btst.l $r1,23 <_start+0x23>
+    18f8:	7c 06 20 00 	0020067c jmpc nz,19f0 <__sflush_r+0x124>
+    18fc:	bb 62 00 44 	440062bb bins.l $r0,$r0,2b <_start+0x2b>
+    1900:	c0 40 d7 44 	44d740c0 add.l $r13,$r14,c <_start+0xc>
+    1904:	00 00 d0 b2 	b2d00000 sti.s $r13,0 <_start>,$r0
+    1908:	04 00 17 ac 	ac170004 ldi.l $r1,$r14,4 <_start+0x4>
+    190c:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1910:	c3 06 60 01 	016006c3 jmpc lte,1b0c <__sflush_r+0x240>
+    1914:	28 00 47 ac 	ac470028 ldi.l $r4,$r14,28 <_start+0x28>
+    1918:	02 40 e2 5d 	5de24002 cmp.l $r4,0 <_start>
+    191c:	a9 06 28 00 	002806a9 jmpc z,1aa4 <__sflush_r+0x1d8>
+    1920:	00 00 f8 ac 	acf80000 ldi.l $r15,$r16,0 <_start>
+    1924:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    1928:	00 80 00 b5 	b5008000 sti.l $r16,0 <_start>,$r1
+    192c:	0d 40 10 44 	4410400d bextu.l $r1,$r0,0 <_start>
+    1930:	00 10 30 64 	64301000 ldk.l $r3,1000 <_malloc_r+0x6c0>
+    1934:	34 80 20 44 	44208034 and.l $r2,$r1,$r3
+    1938:	0d 40 21 44 	4421400d bextu.l $r2,$r2,0 <_start>
+    193c:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    1940:	c8 06 28 00 	002806c8 jmpc z,1b20 <__sflush_r+0x254>
+    1944:	50 00 27 ac 	ac270050 ldi.l $r2,$r14,50 <_start+0x50>
+    1948:	2c c2 e0 5d 	5de0c22c btst.l $r1,22 <_start+0x22>
+    194c:	5b 06 28 00 	0028065b jmpc z,196c <__sflush_r+0xa0>
+    1950:	04 00 07 ac 	ac070004 ldi.l $r0,$r14,4 <_start+0x4>
+    1954:	02 00 21 44 	44210002 sub.l $r2,$r2,$r0
+    1958:	30 00 07 ac 	ac070030 ldi.l $r0,$r14,30 <_start+0x30>
+    195c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1960:	5b 06 28 00 	0028065b jmpc z,196c <__sflush_r+0xa0>
+    1964:	3c 00 07 ac 	ac07003c ldi.l $r0,$r14,3c <_start+0x3c>
+    1968:	02 00 21 44 	44210002 sub.l $r2,$r2,$r0
+    196c:	00 00 30 64 	64300000 ldk.l $r3,0 <_start>
+    1970:	1c 00 17 ac 	ac17001c ldi.l $r1,$r14,1c <_start+0x1c>
+    1974:	00 40 08 44 	44084000 move.l $r0,$r16
+    1978:	40 00 34 08 	08340040 calli $r4
+    197c:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    1980:	d2 06 28 00 	002806d2 jmpc z,1b48 <__sflush_r+0x27c>
+    1984:	0c 00 27 aa 	aa27000c ldi.s $r2,$r14,c <_start+0xc>
+    1988:	bb 42 11 44 	441142bb bins.l $r1,$r2,2b <_start+0x2b>
+    198c:	0c c0 10 44 	4410c00c bexts.l $r1,$r1,0 <_start>
+    1990:	00 80 d0 b2 	b2d08000 sti.s $r13,0 <_start>,$r1
+    1994:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    1998:	04 00 e1 b4 	b4e10004 sti.l $r14,4 <_start+0x4>,$r2
+    199c:	10 00 27 ac 	ac270010 ldi.l $r2,$r14,10 <_start+0x10>
+    19a0:	00 00 e1 b4 	b4e10000 sti.l $r14,0 <_start>,$r2
+    19a4:	cc c2 e0 5d 	5de0c2cc btst.l $r1,2c <_start+0x2c>
+    19a8:	c1 06 20 00 	002006c1 jmpc nz,1b04 <__sflush_r+0x238>
+    19ac:	00 80 07 b5 	b5078000 sti.l $r16,0 <_start>,$r15
+    19b0:	30 00 17 ac 	ac170030 ldi.l $r1,$r14,30 <_start+0x30>
+    19b4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    19b8:	a9 06 28 00 	002806a9 jmpc z,1aa4 <__sflush_r+0x1d8>
+    19bc:	00 44 07 44 	44074400 add.l $r0,$r14,40 <_start+0x40>
+    19c0:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    19c4:	74 06 28 00 	00280674 jmpc z,19d0 <__sflush_r+0x104>
+    19c8:	00 40 08 44 	44084000 move.l $r0,$r16
+    19cc:	20 08 34 00 	00340820 call 2080 <_free_r>
+    19d0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    19d4:	30 00 e0 b4 	b4e00030 sti.l $r14,30 <_start+0x30>,$r0
+    19d8:	00 00 d0 99 	99d00000 unlink $r29
+    19dc:	00 00 00 8d 	8d000000 pop.l $r16
+    19e0:	00 00 f0 8c 	8cf00000 pop.l $r15
+    19e4:	00 00 e0 8c 	8ce00000 pop.l $r14
+    19e8:	00 00 d0 8c 	8cd00000 pop.l $r13
+    19ec:	00 00 00 a0 	a0000000 return 
+    19f0:	10 00 f7 ac 	acf70010 ldi.l $r15,$r14,10 <_start+0x10>
+    19f4:	02 c0 e7 5d 	5de7c002 cmp.l $r15,0 <_start>
+    19f8:	a9 06 28 00 	002806a9 jmpc z,1aa4 <__sflush_r+0x1d8>
+    19fc:	00 00 d7 ac 	acd70000 ldi.l $r13,$r14,0 <_start>
+    1a00:	f2 80 d6 44 	44d680f2 sub.l $r13,$r13,$r15
+    1a04:	00 80 e7 b4 	b4e78000 sti.l $r14,0 <_start>,$r15
+    1a08:	34 c0 10 44 	4410c034 and.l $r1,$r1,3 <_start+0x3>
+    1a0c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1a10:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    1a14:	87 06 20 00 	00200687 jmpc nz,1a1c <__sflush_r+0x150>
+    1a18:	14 00 07 ac 	ac070014 ldi.l $r0,$r14,14 <_start+0x14>
+    1a1c:	08 00 e0 b4 	b4e00008 sti.l $r14,8 <_start+0x8>,$r0
+    1a20:	02 c0 e6 5d 	5de6c002 cmp.l $r13,0 <_start>
+    1a24:	8f 06 68 01 	0168068f jmpc gt,1a3c <__sflush_r+0x170>
+    1a28:	a9 06 30 00 	003006a9 jmp 1aa4 <__sflush_r+0x1d8>
+    1a2c:	00 80 f7 44 	44f78000 add.l $r15,$r15,$r0
+    1a30:	02 80 d6 44 	44d68002 sub.l $r13,$r13,$r0
+    1a34:	02 c0 e6 5d 	5de6c002 cmp.l $r13,0 <_start>
+    1a38:	a9 06 60 01 	016006a9 jmpc lte,1aa4 <__sflush_r+0x1d8>
+    1a3c:	24 00 47 ac 	ac470024 ldi.l $r4,$r14,24 <_start+0x24>
+    1a40:	00 c0 36 44 	4436c000 move.l $r3,$r13
+    1a44:	00 c0 27 44 	4427c000 move.l $r2,$r15
+    1a48:	1c 00 17 ac 	ac17001c ldi.l $r1,$r14,1c <_start+0x1c>
+    1a4c:	00 40 08 44 	44084000 move.l $r0,$r16
+    1a50:	40 00 34 08 	08340040 calli $r4
+    1a54:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1a58:	8b 06 68 01 	0168068b jmpc gt,1a2c <__sflush_r+0x160>
+    1a5c:	0c 00 17 aa 	aa17000c ldi.s $r1,$r14,c <_start+0xc>
+    1a60:	6b e2 00 44 	4400e26b bins.l $r0,$r1,26 <_start+0x26>
+    1a64:	0c 00 e0 b2 	b2e0000c sti.s $r14,c <_start+0xc>,$r0
+    1a68:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    1a6c:	00 00 d0 99 	99d00000 unlink $r29
+    1a70:	00 00 00 8d 	8d000000 pop.l $r16
+    1a74:	00 00 f0 8c 	8cf00000 pop.l $r15
+    1a78:	00 00 e0 8c 	8ce00000 pop.l $r14
+    1a7c:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1a80:	00 00 00 a0 	a0000000 return 
+    1a84:	00 00 08 ac 	ac080000 ldi.l $r0,$r16,0 <_start>
+    1a88:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1a8c:	cf 06 28 00 	002806cf jmpc z,1b3c <__sflush_r+0x270>
+    1a90:	d2 41 e0 5d 	5de041d2 cmp.l $r0,1d <_start+0x1d>
+    1a94:	a8 06 28 00 	002806a8 jmpc z,1aa0 <__sflush_r+0x1d4>
+    1a98:	62 41 e0 5d 	5de04162 cmp.l $r0,16 <_start+0x16>
+    1a9c:	da 06 20 00 	002006da jmpc nz,1b68 <__sflush_r+0x29c>
+    1aa0:	00 80 07 b5 	b5078000 sti.l $r16,0 <_start>,$r15
+    1aa4:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1aa8:	00 00 d0 99 	99d00000 unlink $r29
+    1aac:	00 00 00 8d 	8d000000 pop.l $r16
+    1ab0:	00 00 f0 8c 	8cf00000 pop.l $r15
+    1ab4:	00 00 e0 8c 	8ce00000 pop.l $r14
+    1ab8:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1abc:	00 00 00 a0 	a0000000 return 
+    1ac0:	81 04 10 64 	64100481 ldk.l $r1,481 <__sfvwrite_r+0x91>
+    1ac4:	a1 c0 10 44 	4410c0a1 ror.l $r1,$r1,a <_start+0xa>
+    1ac8:	29 80 10 44 	44108029 lshr.l $r1,$r1,$r2
+    1acc:	0c c2 e0 5d 	5de0c20c btst.l $r1,20 <_start+0x20>
+    1ad0:	d5 06 28 00 	002806d5 jmpc z,1b54 <__sflush_r+0x288>
+    1ad4:	0c 00 37 aa 	aa37000c ldi.s $r3,$r14,c <_start+0xc>
+    1ad8:	bb c2 11 44 	4411c2bb bins.l $r1,$r3,2b <_start+0x2b>
+    1adc:	0c c0 10 44 	4410c00c bexts.l $r1,$r1,0 <_start>
+    1ae0:	00 80 d0 b2 	b2d08000 sti.s $r13,0 <_start>,$r1
+    1ae4:	00 00 30 64 	64300000 ldk.l $r3,0 <_start>
+    1ae8:	04 80 e1 b4 	b4e18004 sti.l $r14,4 <_start+0x4>,$r3
+    1aec:	10 00 37 ac 	ac370010 ldi.l $r3,$r14,10 <_start+0x10>
+    1af0:	00 80 e1 b4 	b4e18000 sti.l $r14,0 <_start>,$r3
+    1af4:	cc c2 e0 5d 	5de0c2cc btst.l $r1,2c <_start+0x2c>
+    1af8:	6b 06 28 00 	0028066b jmpc z,19ac <__sflush_r+0xe0>
+    1afc:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    1b00:	6b 06 20 00 	0020066b jmpc nz,19ac <__sflush_r+0xe0>
+    1b04:	50 00 e0 b4 	b4e00050 sti.l $r14,50 <_start+0x50>,$r0
+    1b08:	6b 06 30 00 	0030066b jmp 19ac <__sflush_r+0xe0>
+    1b0c:	3c 00 17 ac 	ac17003c ldi.l $r1,$r14,3c <_start+0x3c>
+    1b10:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1b14:	45 06 68 01 	01680645 jmpc gt,1914 <__sflush_r+0x48>
+    1b18:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1b1c:	aa 06 30 00 	003006aa jmp 1aa8 <__sflush_r+0x1dc>
+    1b20:	01 00 30 64 	64300001 ldk.l $r3,1 <_start+0x1>
+    1b24:	1c 00 17 ac 	ac17001c ldi.l $r1,$r14,1c <_start+0x1c>
+    1b28:	00 40 08 44 	44084000 move.l $r0,$r16
+    1b2c:	40 00 34 08 	08340040 calli $r4
+    1b30:	00 40 20 44 	44204000 move.l $r2,$r0
+    1b34:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    1b38:	a1 06 28 00 	002806a1 jmpc z,1a84 <__sflush_r+0x1b8>
+    1b3c:	0c 00 17 aa 	aa17000c ldi.s $r1,$r14,c <_start+0xc>
+    1b40:	28 00 47 ac 	ac470028 ldi.l $r4,$r14,28 <_start+0x28>
+    1b44:	52 06 30 00 	00300652 jmp 1948 <__sflush_r+0x7c>
+    1b48:	00 00 28 ac 	ac280000 ldi.l $r2,$r16,0 <_start>
+    1b4c:	d2 41 e1 5d 	5de141d2 cmp.l $r2,1d <_start+0x1d>
+    1b50:	b0 06 a0 01 	01a006b0 jmpc be,1ac0 <__sflush_r+0x1f4>
+    1b54:	0c 00 e7 aa 	aae7000c ldi.s $r14,$r14,c <_start+0xc>
+    1b58:	6b 62 07 44 	4407626b bins.l $r0,$r14,26 <_start+0x26>
+    1b5c:	00 00 d0 b2 	b2d00000 sti.s $r13,0 <_start>,$r0
+    1b60:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    1b64:	9b 06 30 00 	0030069b jmp 1a6c <__sflush_r+0x1a0>
+    1b68:	0c 00 e7 aa 	aae7000c ldi.s $r14,$r14,c <_start+0xc>
+    1b6c:	6b 62 07 44 	4407626b bins.l $r0,$r14,26 <_start+0x26>
+    1b70:	00 00 d0 b2 	b2d00000 sti.s $r13,0 <_start>,$r0
+    1b74:	00 40 01 44 	44014000 move.l $r0,$r2
+    1b78:	9b 06 30 00 	0030069b jmp 1a6c <__sflush_r+0x1a0>
+
+00001b7c <_fflush_r>:
+    1b7c:	00 80 06 84 	84068000 push.l $r13
+    1b80:	1c 00 d0 95 	95d0001c link $r29,1c <_start+0x1c>
+    1b84:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    1b88:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1b8c:	e7 06 28 00 	002806e7 jmpc z,1b9c <_fflush_r+0x20>
+    1b90:	38 00 20 ac 	ac200038 ldi.l $r2,$r0,38 <_start+0x38>
+    1b94:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    1b98:	f1 06 28 00 	002806f1 jmpc z,1bc4 <_fflush_r+0x48>
+    1b9c:	0c 80 00 aa 	aa00800c ldi.s $r0,$r1,c <_start+0xc>
+    1ba0:	0c 40 20 44 	4420400c bexts.l $r2,$r0,0 <_start>
+    1ba4:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1ba8:	02 00 e1 5d 	5de10002 cmp.l $r2,$r0
+    1bac:	ee 06 28 00 	002806ee jmpc z,1bb8 <_fflush_r+0x3c>
+    1bb0:	00 c0 06 44 	4406c000 move.l $r0,$r13
+    1bb4:	33 06 34 00 	00340633 call 18cc <__sflush_r>
+    1bb8:	00 00 d0 99 	99d00000 unlink $r29
+    1bbc:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1bc0:	00 00 00 a0 	a0000000 return 
+    1bc4:	fc 80 d0 b5 	b5d080fc sti.l $r29,fc <interrupt_0>,$r1
+    1bc8:	b6 07 34 00 	003407b6 call 1ed8 <__sinit>
+    1bcc:	fc 80 1e ac 	ac1e80fc ldi.l $r1,$r29,fc <interrupt_0>
+    1bd0:	e7 06 30 00 	003006e7 jmp 1b9c <_fflush_r+0x20>
+
+00001bd4 <fflush>:
+    1bd4:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1bd8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1bdc:	fd 06 28 00 	002806fd jmpc z,1bf4 <fflush+0x20>
+    1be0:	00 40 10 44 	44104000 move.l $r1,$r0
+    1be4:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+    1be8:	df 06 34 00 	003406df call 1b7c <_fflush_r>
+    1bec:	00 00 d0 99 	99d00000 unlink $r29
+    1bf0:	00 00 00 a0 	a0000000 return 
+    1bf4:	7c 1b 10 64 	64101b7c ldk.l $r1,1b7c <_fflush_r>
+    1bf8:	cc 08 00 c4 	c40008cc lda.l $r0,8cc <__sfvwrite_r+0x4dc>
+    1bfc:	11 09 34 00 	00340911 call 2444 <_fwalk_reent>
+    1c00:	00 00 d0 99 	99d00000 unlink $r29
+    1c04:	00 00 00 a0 	a0000000 return 
+
+00001c08 <__fp_lock>:
+    1c08:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1c0c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1c10:	00 00 d0 99 	99d00000 unlink $r29
+    1c14:	00 00 00 a0 	a0000000 return 
+
+00001c18 <__fp_unlock>:
+    1c18:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1c1c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1c20:	00 00 d0 99 	99d00000 unlink $r29
+    1c24:	00 00 00 a0 	a0000000 return 
+
+00001c28 <_cleanup_r>:
+    1c28:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1c2c:	c8 28 10 64 	641028c8 ldk.l $r1,28c8 <_fclose_r>
+    1c30:	11 09 34 00 	00340911 call 2444 <_fwalk_reent>
+    1c34:	00 00 d0 99 	99d00000 unlink $r29
+    1c38:	00 00 00 a0 	a0000000 return 
+
+00001c3c <std.isra.0>:
+    1c3c:	00 80 06 84 	84068000 push.l $r13
+    1c40:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1c44:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    1c48:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1c4c:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+    1c50:	04 00 d0 b4 	b4d00004 sti.l $r13,4 <_start+0x4>,$r0
+    1c54:	08 00 d0 b4 	b4d00008 sti.l $r13,8 <_start+0x8>,$r0
+    1c58:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    1c5c:	64 00 d0 b4 	b4d00064 sti.l $r13,64 <_start+0x64>,$r0
+    1c60:	0e 00 d1 b2 	b2d1000e sti.s $r13,e <_start+0xe>,$r2
+    1c64:	10 00 d0 b4 	b4d00010 sti.l $r13,10 <_start+0x10>,$r0
+    1c68:	14 00 d0 b4 	b4d00014 sti.l $r13,14 <_start+0x14>,$r0
+    1c6c:	18 00 d0 b4 	b4d00018 sti.l $r13,18 <_start+0x18>,$r0
+    1c70:	08 00 20 64 	64200008 ldk.l $r2,8 <_start+0x8>
+    1c74:	00 40 10 44 	44104000 move.l $r1,$r0
+    1c78:	c0 c5 06 44 	4406c5c0 add.l $r0,$r13,5c <_start+0x5c>
+    1c7c:	b3 09 34 00 	003409b3 call 26cc <memset>
+    1c80:	1c 80 d6 b4 	b4d6801c sti.l $r13,1c <_start+0x1c>,$r13
+    1c84:	d4 26 00 64 	640026d4 ldk.l $r0,26d4 <__sread>
+    1c88:	20 00 d0 b4 	b4d00020 sti.l $r13,20 <_start+0x20>,$r0
+    1c8c:	34 27 00 64 	64002734 ldk.l $r0,2734 <__swrite>
+    1c90:	24 00 d0 b4 	b4d00024 sti.l $r13,24 <_start+0x24>,$r0
+    1c94:	bc 27 00 64 	640027bc ldk.l $r0,27bc <__sseek>
+    1c98:	28 00 d0 b4 	b4d00028 sti.l $r13,28 <_start+0x28>,$r0
+    1c9c:	10 28 00 64 	64002810 ldk.l $r0,2810 <__sclose>
+    1ca0:	2c 00 d0 b4 	b4d0002c sti.l $r13,2c <_start+0x2c>,$r0
+    1ca4:	00 00 d0 99 	99d00000 unlink $r29
+    1ca8:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1cac:	00 00 00 a0 	a0000000 return 
+
+00001cb0 <__sinit.part.1>:
+    1cb0:	00 80 06 84 	84068000 push.l $r13
+    1cb4:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1cb8:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    1cbc:	28 1c 00 64 	64001c28 ldk.l $r0,1c28 <_cleanup_r>
+    1cc0:	3c 00 d0 b4 	b4d0003c sti.l $r13,3c <_start+0x3c>,$r0
+    1cc4:	e0 02 00 64 	640002e0 ldk.l $r0,2e0 <interrupt_common+0x58>
+    1cc8:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+    1ccc:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    1cd0:	00 00 01 b4 	b4010000 sti.l $r0,0 <_start>,$r2
+    1cd4:	e4 02 00 64 	640002e4 ldk.l $r0,2e4 <interrupt_common+0x5c>
+    1cd8:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+    1cdc:	03 00 10 64 	64100003 ldk.l $r1,3 <_start+0x3>
+    1ce0:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1ce4:	e8 02 00 64 	640002e8 ldk.l $r0,2e8 <interrupt_common+0x60>
+    1ce8:	00 80 06 44 	44068000 add.l $r0,$r13,$r0
+    1cec:	ec 02 10 64 	641002ec ldk.l $r1,2ec <interrupt_common+0x64>
+    1cf0:	10 80 16 44 	44168010 add.l $r1,$r13,$r1
+    1cf4:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1cf8:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+    1cfc:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+    1d00:	0f 07 34 00 	0034070f call 1c3c <std.isra.0>
+    1d04:	01 00 20 64 	64200001 ldk.l $r2,1 <_start+0x1>
+    1d08:	09 00 10 64 	64100009 ldk.l $r1,9 <_start+0x9>
+    1d0c:	08 80 06 ac 	ac068008 ldi.l $r0,$r13,8 <_start+0x8>
+    1d10:	0f 07 34 00 	0034070f call 1c3c <std.isra.0>
+    1d14:	02 00 20 64 	64200002 ldk.l $r2,2 <_start+0x2>
+    1d18:	12 00 10 64 	64100012 ldk.l $r1,12 <_start+0x12>
+    1d1c:	0c 80 06 ac 	ac06800c ldi.l $r0,$r13,c <_start+0xc>
+    1d20:	0f 07 34 00 	0034070f call 1c3c <std.isra.0>
+    1d24:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    1d28:	38 00 d0 b4 	b4d00038 sti.l $r13,38 <_start+0x38>,$r0
+    1d2c:	00 00 d0 99 	99d00000 unlink $r29
+    1d30:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1d34:	00 00 00 a0 	a0000000 return 
+
+00001d38 <__sfmoreglue>:
+    1d38:	00 80 06 84 	84068000 push.l $r13
+    1d3c:	00 00 07 84 	84070000 push.l $r14
+    1d40:	00 80 07 84 	84078000 push.l $r15
+    1d44:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1d48:	00 c0 f0 44 	44f0c000 move.l $r15,$r1
+    1d4c:	f0 ff e0 44 	44e0fff0 add.l $r14,$r1,1ff <interrupt_21+0x7>
+    1d50:	88 46 e7 f4 	f4e74688 mul.l $r14,$r14,68 <_start+0x68>
+    1d54:	40 47 17 44 	44174740 add.l $r1,$r14,74 <_start+0x74>
+    1d58:	50 02 34 00 	00340250 call 940 <_malloc_r>
+    1d5c:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    1d60:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1d64:	61 07 28 00 	00280761 jmpc z,1d84 <__sfmoreglue+0x4c>
+    1d68:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    1d6c:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    1d70:	04 80 07 b4 	b4078004 sti.l $r0,4 <_start+0x4>,$r15
+    1d74:	c0 40 00 44 	440040c0 add.l $r0,$r0,c <_start+0xc>
+    1d78:	08 00 d0 b4 	b4d00008 sti.l $r13,8 <_start+0x8>,$r0
+    1d7c:	80 46 27 44 	44274680 add.l $r2,$r14,68 <_start+0x68>
+    1d80:	b3 09 34 00 	003409b3 call 26cc <memset>
+    1d84:	00 c0 06 44 	4406c000 move.l $r0,$r13
+    1d88:	00 00 d0 99 	99d00000 unlink $r29
+    1d8c:	00 00 f0 8c 	8cf00000 pop.l $r15
+    1d90:	00 00 e0 8c 	8ce00000 pop.l $r14
+    1d94:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1d98:	00 00 00 a0 	a0000000 return 
+
+00001d9c <__sfp>:
+    1d9c:	00 80 06 84 	84068000 push.l $r13
+    1da0:	00 00 07 84 	84070000 push.l $r14
+    1da4:	00 80 07 84 	84078000 push.l $r15
+    1da8:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1dac:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    1db0:	cc 08 d0 c4 	c4d008cc lda.l $r13,8cc <__sfvwrite_r+0x4dc>
+    1db4:	38 80 06 ac 	ac068038 ldi.l $r0,$r13,38 <_start+0x38>
+    1db8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1dbc:	72 07 20 00 	00200772 jmpc nz,1dc8 <__sfp+0x2c>
+    1dc0:	00 c0 06 44 	4406c000 move.l $r0,$r13
+    1dc4:	2c 07 34 00 	0034072c call 1cb0 <__sinit.part.1>
+    1dc8:	e0 02 e0 64 	64e002e0 ldk.l $r14,2e0 <interrupt_common+0x58>
+    1dcc:	e0 80 e6 44 	44e680e0 add.l $r14,$r13,$r14
+    1dd0:	08 00 d7 ac 	acd70008 ldi.l $r13,$r14,8 <_start+0x8>
+    1dd4:	04 00 27 ac 	ac270004 ldi.l $r2,$r14,4 <_start+0x4>
+    1dd8:	f0 7f 21 44 	44217ff0 add.l $r2,$r2,1ff <interrupt_21+0x7>
+    1ddc:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    1de0:	88 07 20 01 	01200788 jmpc lt,1e20 <__sfp+0x84>
+    1de4:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+    1de8:	0c c0 00 44 	4400c00c bexts.l $r0,$r1,0 <_start>
+    1dec:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1df0:	8d 07 28 00 	0028078d jmpc z,1e34 <__sfp+0x98>
+    1df4:	40 c7 16 44 	4416c740 add.l $r1,$r13,74 <_start+0x74>
+    1df8:	84 07 30 00 	00300784 jmp 1e10 <__sfp+0x74>
+    1dfc:	80 c6 10 44 	4410c680 add.l $r1,$r1,68 <_start+0x68>
+    1e00:	98 80 30 aa 	aa308098 ldi.s $r3,$r1,98 <init+0x4>
+    1e04:	0c c0 01 44 	4401c00c bexts.l $r0,$r3,0 <_start>
+    1e08:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1e0c:	8d 07 28 00 	0028078d jmpc z,1e34 <__sfp+0x98>
+    1e10:	40 ff d0 44 	44d0ff40 add.l $r13,$r1,1f4 <interrupt_20+0x8>
+    1e14:	f0 7f 21 44 	44217ff0 add.l $r2,$r2,1ff <interrupt_21+0x7>
+    1e18:	f2 7f e1 5d 	5de17ff2 cmp.l $r2,1ff <interrupt_21+0x7>
+    1e1c:	7f 07 20 00 	0020077f jmpc nz,1dfc <__sfp+0x60>
+    1e20:	00 00 07 ac 	ac070000 ldi.l $r0,$r14,0 <_start>
+    1e24:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1e28:	a7 07 28 00 	002807a7 jmpc z,1e9c <__sfp+0x100>
+    1e2c:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    1e30:	74 07 30 00 	00300774 jmp 1dd0 <__sfp+0x34>
+    1e34:	ff ff 0f 62 	620fffff ldk.s $r0,fffff <EXITEXIT+0xe0003>
+    1e38:	0e 00 d0 b2 	b2d0000e sti.s $r13,e <_start+0xe>,$r0
+    1e3c:	01 00 00 62 	62000001 ldk.s $r0,1 <_start+0x1>
+    1e40:	0c 00 d0 b2 	b2d0000c sti.s $r13,c <_start+0xc>,$r0
+    1e44:	00 00 e0 64 	64e00000 ldk.l $r14,0 <_start>
+    1e48:	64 00 d7 b4 	b4d70064 sti.l $r13,64 <_start+0x64>,$r14
+    1e4c:	00 00 d7 b4 	b4d70000 sti.l $r13,0 <_start>,$r14
+    1e50:	08 00 d7 b4 	b4d70008 sti.l $r13,8 <_start+0x8>,$r14
+    1e54:	04 00 d7 b4 	b4d70004 sti.l $r13,4 <_start+0x4>,$r14
+    1e58:	10 00 d7 b4 	b4d70010 sti.l $r13,10 <_start+0x10>,$r14
+    1e5c:	14 00 d7 b4 	b4d70014 sti.l $r13,14 <_start+0x14>,$r14
+    1e60:	18 00 d7 b4 	b4d70018 sti.l $r13,18 <_start+0x18>,$r14
+    1e64:	08 00 20 64 	64200008 ldk.l $r2,8 <_start+0x8>
+    1e68:	00 40 17 44 	44174000 move.l $r1,$r14
+    1e6c:	c0 c5 06 44 	4406c5c0 add.l $r0,$r13,5c <_start+0x5c>
+    1e70:	b3 09 34 00 	003409b3 call 26cc <memset>
+    1e74:	30 00 d7 b4 	b4d70030 sti.l $r13,30 <_start+0x30>,$r14
+    1e78:	34 00 d7 b4 	b4d70034 sti.l $r13,34 <_start+0x34>,$r14
+    1e7c:	44 00 d7 b4 	b4d70044 sti.l $r13,44 <_start+0x44>,$r14
+    1e80:	48 00 d7 b4 	b4d70048 sti.l $r13,48 <_start+0x48>,$r14
+    1e84:	00 c0 06 44 	4406c000 move.l $r0,$r13
+    1e88:	00 00 d0 99 	99d00000 unlink $r29
+    1e8c:	00 00 f0 8c 	8cf00000 pop.l $r15
+    1e90:	00 00 e0 8c 	8ce00000 pop.l $r14
+    1e94:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1e98:	00 00 00 a0 	a0000000 return 
+    1e9c:	04 00 10 64 	64100004 ldk.l $r1,4 <_start+0x4>
+    1ea0:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1ea4:	4e 07 34 00 	0034074e call 1d38 <__sfmoreglue>
+    1ea8:	00 00 e0 b4 	b4e00000 sti.l $r14,0 <_start>,$r0
+    1eac:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    1eb0:	8b 07 20 00 	0020078b jmpc nz,1e2c <__sfp+0x90>
+    1eb4:	0c 00 10 64 	6410000c ldk.l $r1,c <_start+0xc>
+    1eb8:	00 80 f0 b4 	b4f08000 sti.l $r15,0 <_start>,$r1
+    1ebc:	a2 07 30 00 	003007a2 jmp 1e88 <__sfp+0xec>
+
+00001ec0 <_cleanup>:
+    1ec0:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1ec4:	c8 28 10 64 	641028c8 ldk.l $r1,28c8 <_fclose_r>
+    1ec8:	cc 08 00 c4 	c40008cc lda.l $r0,8cc <__sfvwrite_r+0x4dc>
+    1ecc:	11 09 34 00 	00340911 call 2444 <_fwalk_reent>
+    1ed0:	00 00 d0 99 	99d00000 unlink $r29
+    1ed4:	00 00 00 a0 	a0000000 return 
+
+00001ed8 <__sinit>:
+    1ed8:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1edc:	38 00 10 ac 	ac100038 ldi.l $r1,$r0,38 <_start+0x38>
+    1ee0:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    1ee4:	bb 07 20 00 	002007bb jmpc nz,1eec <__sinit+0x14>
+    1ee8:	2c 07 34 00 	0034072c call 1cb0 <__sinit.part.1>
+    1eec:	00 00 d0 99 	99d00000 unlink $r29
+    1ef0:	00 00 00 a0 	a0000000 return 
+
+00001ef4 <__sfp_lock_acquire>:
+    1ef4:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1ef8:	00 00 d0 99 	99d00000 unlink $r29
+    1efc:	00 00 00 a0 	a0000000 return 
+
+00001f00 <__sfp_lock_release>:
+    1f00:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1f04:	00 00 d0 99 	99d00000 unlink $r29
+    1f08:	00 00 00 a0 	a0000000 return 
+
+00001f0c <__sinit_lock_acquire>:
+    1f0c:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1f10:	00 00 d0 99 	99d00000 unlink $r29
+    1f14:	00 00 00 a0 	a0000000 return 
+
+00001f18 <__sinit_lock_release>:
+    1f18:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    1f1c:	00 00 d0 99 	99d00000 unlink $r29
+    1f20:	00 00 00 a0 	a0000000 return 
+
+00001f24 <__fp_lock_all>:
+    1f24:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1f28:	08 1c 10 64 	64101c08 ldk.l $r1,1c08 <__fp_lock>
+    1f2c:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+    1f30:	e0 08 34 00 	003408e0 call 2380 <_fwalk>
+    1f34:	00 00 d0 99 	99d00000 unlink $r29
+    1f38:	00 00 00 a0 	a0000000 return 
+
+00001f3c <__fp_unlock_all>:
+    1f3c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1f40:	18 1c 10 64 	64101c18 ldk.l $r1,1c18 <__fp_unlock>
+    1f44:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+    1f48:	e0 08 34 00 	003408e0 call 2380 <_fwalk>
+    1f4c:	00 00 d0 99 	99d00000 unlink $r29
+    1f50:	00 00 00 a0 	a0000000 return 
+
+00001f54 <_malloc_trim_r>:
+    1f54:	00 80 06 84 	84068000 push.l $r13
+    1f58:	00 00 07 84 	84070000 push.l $r14
+    1f5c:	00 80 07 84 	84078000 push.l $r15
+    1f60:	00 00 08 84 	84080000 push.l $r16
+    1f64:	00 80 08 84 	84088000 push.l $r17
+    1f68:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    1f6c:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    1f70:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    1f74:	6f 04 34 00 	0034046f call 11bc <__malloc_lock>
+    1f78:	b4 04 00 65 	650004b4 ldk.l $r16,4b4 <__sfvwrite_r+0xc4>
+    1f7c:	08 00 08 ac 	ac080008 ldi.l $r0,$r16,8 <_start+0x8>
+    1f80:	04 00 e0 ac 	ace00004 ldi.l $r14,$r0,4 <_start+0x4>
+    1f84:	0b 44 e7 44 	44e7440b bins.l $r14,$r14,40 <_start+0x40>
+    1f88:	d2 00 d7 44 	44d700d2 sub.l $r13,$r14,$r13
+    1f8c:	ef 0f 10 64 	64100fef ldk.l $r1,fef <_malloc_r+0x6af>
+    1f90:	10 80 d6 44 	44d68010 add.l $r13,$r13,$r1
+    1f94:	c9 c0 d6 44 	44d6c0c9 lshr.l $r13,$r13,c <_start+0xc>
+    1f98:	f0 ff d6 44 	44d6fff0 add.l $r13,$r13,1ff <interrupt_21+0x7>
+    1f9c:	c8 c0 d6 44 	44d6c0c8 ashl.l $r13,$r13,c <_start+0xc>
+    1fa0:	ff 0f 00 64 	64000fff ldk.l $r0,fff <_malloc_r+0x6bf>
+    1fa4:	02 80 e6 5d 	5de68002 cmp.l $r13,$r0
+    1fa8:	f2 07 60 01 	016007f2 jmpc lte,1fc8 <_malloc_trim_r+0x74>
+    1fac:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    1fb0:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1fb4:	c0 05 34 00 	003405c0 call 1700 <_sbrk_r>
+    1fb8:	08 00 18 ac 	ac180008 ldi.l $r1,$r16,8 <_start+0x8>
+    1fbc:	e0 80 10 44 	441080e0 add.l $r1,$r1,$r14
+    1fc0:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+    1fc4:	fc 07 28 00 	002807fc jmpc z,1ff0 <_malloc_trim_r+0x9c>
+    1fc8:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1fcc:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    1fd0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    1fd4:	00 00 d0 99 	99d00000 unlink $r29
+    1fd8:	00 00 10 8d 	8d100000 pop.l $r17
+    1fdc:	00 00 00 8d 	8d000000 pop.l $r16
+    1fe0:	00 00 f0 8c 	8cf00000 pop.l $r15
+    1fe4:	00 00 e0 8c 	8ce00000 pop.l $r14
+    1fe8:	00 00 d0 8c 	8cd00000 pop.l $r13
+    1fec:	00 00 00 a0 	a0000000 return 
+    1ff0:	00 00 10 65 	65100000 ldk.l $r17,0 <_start>
+    1ff4:	d2 80 18 44 	441880d2 sub.l $r1,$r17,$r13
+    1ff8:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    1ffc:	c0 05 34 00 	003405c0 call 1700 <_sbrk_r>
+    2000:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2004:	13 08 28 00 	00280813 jmpc z,204c <_malloc_trim_r+0xf8>
+    2008:	08 00 08 ac 	ac080008 ldi.l $r0,$r16,8 <_start+0x8>
+    200c:	d2 00 e7 44 	44e700d2 sub.l $r14,$r14,$r13
+    2010:	0b 62 e7 44 	44e7620b bins.l $r14,$r14,20 <_start+0x20>
+    2014:	04 00 07 b4 	b4070004 sti.l $r0,4 <_start+0x4>,$r14
+    2018:	d8 08 00 c4 	c40008d8 lda.l $r0,8d8 <__sfvwrite_r+0x4e8>
+    201c:	d2 00 d0 44 	44d000d2 sub.l $r13,$r0,$r13
+    2020:	d8 08 d0 bc 	bcd008d8 sta.l 8d8 <__sfvwrite_r+0x4e8>,$r13
+    2024:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    2028:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    202c:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    2030:	00 00 d0 99 	99d00000 unlink $r29
+    2034:	00 00 10 8d 	8d100000 pop.l $r17
+    2038:	00 00 00 8d 	8d000000 pop.l $r16
+    203c:	00 00 f0 8c 	8cf00000 pop.l $r15
+    2040:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2044:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2048:	00 00 00 a0 	a0000000 return 
+    204c:	00 c0 18 44 	4418c000 move.l $r1,$r17
+    2050:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    2054:	c0 05 34 00 	003405c0 call 1700 <_sbrk_r>
+    2058:	08 00 28 ac 	ac280008 ldi.l $r2,$r16,8 <_start+0x8>
+    205c:	22 00 10 44 	44100022 sub.l $r1,$r0,$r2
+    2060:	f2 c0 e0 5d 	5de0c0f2 cmp.l $r1,f <_start+0xf>
+    2064:	f2 07 60 01 	016007f2 jmpc lte,1fc8 <_malloc_trim_r+0x74>
+    2068:	ac 04 30 c4 	c43004ac lda.l $r3,4ac <__sfvwrite_r+0xbc>
+    206c:	32 00 00 44 	44000032 sub.l $r0,$r0,$r3
+    2070:	d8 08 00 bc 	bc0008d8 sta.l 8d8 <__sfvwrite_r+0x4e8>,$r0
+    2074:	0b e2 10 44 	4410e20b bins.l $r1,$r1,20 <_start+0x20>
+    2078:	04 80 20 b4 	b4208004 sti.l $r2,4 <_start+0x4>,$r1
+    207c:	f2 07 30 00 	003007f2 jmp 1fc8 <_malloc_trim_r+0x74>
+
+00002080 <_free_r>:
+    2080:	00 80 06 84 	84068000 push.l $r13
+    2084:	00 00 07 84 	84070000 push.l $r14
+    2088:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    208c:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    2090:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2094:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2098:	5b 08 28 00 	0028085b jmpc z,216c <_free_r+0xec>
+    209c:	6f 04 34 00 	0034046f call 11bc <__malloc_lock>
+    20a0:	80 ff 16 44 	4416ff80 add.l $r1,$r13,1f8 <interrupt_21>
+    20a4:	04 80 50 ac 	ac508004 ldi.l $r5,$r1,4 <_start+0x4>
+    20a8:	0b c2 02 44 	4402c20b bins.l $r0,$r5,20 <_start+0x20>
+    20ac:	00 80 30 44 	44308000 add.l $r3,$r1,$r0
+    20b0:	04 80 21 ac 	ac218004 ldi.l $r2,$r3,4 <_start+0x4>
+    20b4:	0b 44 21 44 	4421440b bins.l $r2,$r2,40 <_start+0x40>
+    20b8:	b4 04 40 64 	644004b4 ldk.l $r4,4b4 <__sfvwrite_r+0xc4>
+    20bc:	08 00 62 ac 	ac620008 ldi.l $r6,$r4,8 <_start+0x8>
+    20c0:	62 80 e1 5d 	5de18062 cmp.l $r3,$r6
+    20c4:	89 08 28 00 	00280889 jmpc z,2224 <_free_r+0x1a4>
+    20c8:	04 00 31 b4 	b4310004 sti.l $r3,4 <_start+0x4>,$r2
+    20cc:	0c c2 e2 5d 	5de2c20c btst.l $r5,20 <_start+0x20>
+    20d0:	3f 08 20 00 	0020083f jmpc nz,20fc <_free_r+0x7c>
+    20d4:	00 80 50 ac 	ac508000 ldi.l $r5,$r1,0 <_start>
+    20d8:	52 80 10 44 	44108052 sub.l $r1,$r1,$r5
+    20dc:	50 00 00 44 	44000050 add.l $r0,$r0,$r5
+    20e0:	08 80 50 ac 	ac508008 ldi.l $r5,$r1,8 <_start+0x8>
+    20e4:	80 40 62 44 	44624080 add.l $r6,$r4,8 <_start+0x8>
+    20e8:	62 80 e2 5d 	5de28062 cmp.l $r5,$r6
+    20ec:	9d 08 28 00 	0028089d jmpc z,2274 <_free_r+0x1f4>
+    20f0:	0c 80 60 ac 	ac60800c ldi.l $r6,$r1,c <_start+0xc>
+    20f4:	0c 00 53 b4 	b453000c sti.l $r5,c <_start+0xc>,$r6
+    20f8:	08 80 62 b4 	b4628008 sti.l $r6,8 <_start+0x8>,$r5
+    20fc:	20 80 51 44 	44518020 add.l $r5,$r3,$r2
+    2100:	04 80 52 ac 	ac528004 ldi.l $r5,$r5,4 <_start+0x4>
+    2104:	0c c2 e2 5d 	5de2c20c btst.l $r5,20 <_start+0x20>
+    2108:	7a 08 28 00 	0028087a jmpc z,21e8 <_free_r+0x168>
+    210c:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    2110:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    2114:	00 80 20 44 	44208000 add.l $r2,$r1,$r0
+    2118:	00 00 20 b4 	b4200000 sti.l $r2,0 <_start>,$r0
+    211c:	f2 5f e0 5d 	5de05ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2120:	5f 08 a8 01 	01a8085f jmpc a,217c <_free_r+0xfc>
+    2124:	39 40 00 44 	44004039 lshr.l $r0,$r0,3 <_start+0x3>
+    2128:	2a 40 30 44 	4430402a ashr.l $r3,$r0,2 <_start+0x2>
+    212c:	01 00 20 64 	64200001 ldk.l $r2,1 <_start+0x1>
+    2130:	38 00 21 44 	44210038 ashl.l $r2,$r2,$r3
+    2134:	04 00 32 ac 	ac320004 ldi.l $r3,$r4,4 <_start+0x4>
+    2138:	35 00 21 44 	44210035 or.l $r2,$r2,$r3
+    213c:	04 00 41 b4 	b4410004 sti.l $r4,4 <_start+0x4>,$r2
+    2140:	38 40 00 44 	44004038 ashl.l $r0,$r0,3 <_start+0x3>
+    2144:	80 40 00 44 	44004080 add.l $r0,$r0,8 <_start+0x8>
+    2148:	00 00 42 44 	44420000 add.l $r4,$r4,$r0
+    214c:	80 7f 22 44 	44227f80 add.l $r2,$r4,1f8 <interrupt_21>
+    2150:	00 00 02 ac 	ac020000 ldi.l $r0,$r4,0 <_start>
+    2154:	0c 00 11 b4 	b411000c sti.l $r1,c <_start+0xc>,$r2
+    2158:	08 00 10 b4 	b4100008 sti.l $r1,8 <_start+0x8>,$r0
+    215c:	00 80 40 b4 	b4408000 sti.l $r4,0 <_start>,$r1
+    2160:	0c 80 00 b4 	b400800c sti.l $r0,c <_start+0xc>,$r1
+    2164:	00 40 07 44 	44074000 move.l $r0,$r14
+    2168:	72 04 34 00 	00340472 call 11c8 <__malloc_unlock>
+    216c:	00 00 d0 99 	99d00000 unlink $r29
+    2170:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2174:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2178:	00 00 00 a0 	a0000000 return 
+    217c:	99 40 20 44 	44204099 lshr.l $r2,$r0,9 <_start+0x9>
+    2180:	42 40 e1 5d 	5de14042 cmp.l $r2,4 <_start+0x4>
+    2184:	ab 08 a8 01 	01a808ab jmpc a,22ac <_free_r+0x22c>
+    2188:	69 40 20 44 	44204069 lshr.l $r2,$r0,6 <_start+0x6>
+    218c:	80 43 61 44 	44614380 add.l $r6,$r2,38 <_start+0x38>
+    2190:	90 43 21 44 	44214390 add.l $r2,$r2,39 <_start+0x39>
+    2194:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+    2198:	28 40 21 44 	44214028 ashl.l $r2,$r2,2 <_start+0x2>
+    219c:	b4 04 30 64 	643004b4 ldk.l $r3,4b4 <__sfvwrite_r+0xc4>
+    21a0:	20 00 42 44 	44420020 add.l $r4,$r4,$r2
+    21a4:	80 7f 52 44 	44527f80 add.l $r5,$r4,1f8 <interrupt_21>
+    21a8:	00 00 22 ac 	ac220000 ldi.l $r2,$r4,0 <_start>
+    21ac:	22 80 e2 5d 	5de28022 cmp.l $r5,$r2
+    21b0:	b1 08 28 00 	002808b1 jmpc z,22c4 <_free_r+0x244>
+    21b4:	04 00 31 ac 	ac310004 ldi.l $r3,$r2,4 <_start+0x4>
+    21b8:	0b c4 31 44 	4431c40b bins.l $r3,$r3,40 <_start+0x40>
+    21bc:	32 00 e0 5d 	5de00032 cmp.l $r0,$r3
+    21c0:	74 08 60 00 	00600874 jmpc ae,21d0 <_free_r+0x150>
+    21c4:	08 00 21 ac 	ac210008 ldi.l $r2,$r2,8 <_start+0x8>
+    21c8:	22 80 e2 5d 	5de28022 cmp.l $r5,$r2
+    21cc:	6d 08 20 00 	0020086d jmpc nz,21b4 <_free_r+0x134>
+    21d0:	0c 00 51 ac 	ac51000c ldi.l $r5,$r2,c <_start+0xc>
+    21d4:	0c 80 12 b4 	b412800c sti.l $r1,c <_start+0xc>,$r5
+    21d8:	08 00 11 b4 	b4110008 sti.l $r1,8 <_start+0x8>,$r2
+    21dc:	08 80 50 b4 	b4508008 sti.l $r5,8 <_start+0x8>,$r1
+    21e0:	0c 80 20 b4 	b420800c sti.l $r2,c <_start+0xc>,$r1
+    21e4:	59 08 30 00 	00300859 jmp 2164 <_free_r+0xe4>
+    21e8:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    21ec:	08 80 21 ac 	ac218008 ldi.l $r2,$r3,8 <_start+0x8>
+    21f0:	bc 04 50 64 	645004bc ldk.l $r5,4bc <__sfvwrite_r+0xcc>
+    21f4:	52 00 e1 5d 	5de10052 cmp.l $r2,$r5
+    21f8:	b9 08 28 00 	002808b9 jmpc z,22e4 <_free_r+0x264>
+    21fc:	0c 80 31 ac 	ac31800c ldi.l $r3,$r3,c <_start+0xc>
+    2200:	0c 80 21 b4 	b421800c sti.l $r2,c <_start+0xc>,$r3
+    2204:	08 00 31 b4 	b4310008 sti.l $r3,8 <_start+0x8>,$r2
+    2208:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    220c:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    2210:	00 80 20 44 	44208000 add.l $r2,$r1,$r0
+    2214:	00 00 20 b4 	b4200000 sti.l $r2,0 <_start>,$r0
+    2218:	f2 5f e0 5d 	5de05ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    221c:	5f 08 a8 01 	01a8085f jmpc a,217c <_free_r+0xfc>
+    2220:	49 08 30 00 	00300849 jmp 2124 <_free_r+0xa4>
+    2224:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    2228:	0c c2 e2 5d 	5de2c20c btst.l $r5,20 <_start+0x20>
+    222c:	93 08 20 00 	00200893 jmpc nz,224c <_free_r+0x1cc>
+    2230:	00 80 20 ac 	ac208000 ldi.l $r2,$r1,0 <_start>
+    2234:	22 80 10 44 	44108022 sub.l $r1,$r1,$r2
+    2238:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    223c:	0c 80 20 ac 	ac20800c ldi.l $r2,$r1,c <_start+0xc>
+    2240:	08 80 30 ac 	ac308008 ldi.l $r3,$r1,8 <_start+0x8>
+    2244:	0c 00 31 b4 	b431000c sti.l $r3,c <_start+0xc>,$r2
+    2248:	08 80 21 b4 	b4218008 sti.l $r2,8 <_start+0x8>,$r3
+    224c:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    2250:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    2254:	08 80 40 b4 	b4408008 sti.l $r4,8 <_start+0x8>,$r1
+    2258:	b0 04 10 c4 	c41004b0 lda.l $r1,4b0 <__sfvwrite_r+0xc0>
+    225c:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+    2260:	59 08 68 00 	00680859 jmpc b,2164 <_free_r+0xe4>
+    2264:	08 09 10 c4 	c4100908 lda.l $r1,908 <__sfvwrite_r+0x518>
+    2268:	00 40 07 44 	44074000 move.l $r0,$r14
+    226c:	d5 07 34 00 	003407d5 call 1f54 <_malloc_trim_r>
+    2270:	59 08 30 00 	00300859 jmp 2164 <_free_r+0xe4>
+    2274:	20 80 41 44 	44418020 add.l $r4,$r3,$r2
+    2278:	04 00 42 ac 	ac420004 ldi.l $r4,$r4,4 <_start+0x4>
+    227c:	0c 42 e2 5d 	5de2420c btst.l $r4,20 <_start+0x20>
+    2280:	db 08 20 00 	002008db jmpc nz,236c <_free_r+0x2ec>
+    2284:	00 00 01 44 	44010000 add.l $r0,$r2,$r0
+    2288:	08 80 41 ac 	ac418008 ldi.l $r4,$r3,8 <_start+0x8>
+    228c:	0c 80 21 ac 	ac21800c ldi.l $r2,$r3,c <_start+0xc>
+    2290:	0c 00 41 b4 	b441000c sti.l $r4,c <_start+0xc>,$r2
+    2294:	08 00 22 b4 	b4220008 sti.l $r2,8 <_start+0x8>,$r4
+    2298:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    229c:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    22a0:	00 80 10 44 	44108000 add.l $r1,$r1,$r0
+    22a4:	00 00 10 b4 	b4100000 sti.l $r1,0 <_start>,$r0
+    22a8:	59 08 30 00 	00300859 jmp 2164 <_free_r+0xe4>
+    22ac:	42 41 e1 5d 	5de14142 cmp.l $r2,14 <_start+0x14>
+    22b0:	c2 08 a8 01 	01a808c2 jmpc a,2308 <_free_r+0x288>
+    22b4:	b0 45 61 44 	446145b0 add.l $r6,$r2,5b <_start+0x5b>
+    22b8:	c0 45 21 44 	442145c0 add.l $r2,$r2,5c <_start+0x5c>
+    22bc:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+    22c0:	66 08 30 00 	00300866 jmp 2198 <_free_r+0x118>
+    22c4:	2a 40 63 44 	4463402a ashr.l $r6,$r6,2 <_start+0x2>
+    22c8:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    22cc:	68 00 60 44 	44600068 ashl.l $r6,$r0,$r6
+    22d0:	04 80 21 ac 	ac218004 ldi.l $r2,$r3,4 <_start+0x4>
+    22d4:	25 00 03 44 	44030025 or.l $r0,$r6,$r2
+    22d8:	04 00 30 b4 	b4300004 sti.l $r3,4 <_start+0x4>,$r0
+    22dc:	00 c0 22 44 	4422c000 move.l $r2,$r5
+    22e0:	75 08 30 00 	00300875 jmp 21d4 <_free_r+0x154>
+    22e4:	14 80 40 b4 	b4408014 sti.l $r4,14 <_start+0x14>,$r1
+    22e8:	10 80 40 b4 	b4408010 sti.l $r4,10 <_start+0x10>,$r1
+    22ec:	0c 00 11 b4 	b411000c sti.l $r1,c <_start+0xc>,$r2
+    22f0:	08 00 11 b4 	b4110008 sti.l $r1,8 <_start+0x8>,$r2
+    22f4:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    22f8:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    22fc:	00 80 10 44 	44108000 add.l $r1,$r1,$r0
+    2300:	00 00 10 b4 	b4100000 sti.l $r1,0 <_start>,$r0
+    2304:	59 08 30 00 	00300859 jmp 2164 <_free_r+0xe4>
+    2308:	42 45 e1 5d 	5de14542 cmp.l $r2,54 <_start+0x54>
+    230c:	c9 08 a8 01 	01a808c9 jmpc a,2324 <_free_r+0x2a4>
+    2310:	c9 40 20 44 	442040c9 lshr.l $r2,$r0,c <_start+0xc>
+    2314:	e0 46 61 44 	446146e0 add.l $r6,$r2,6e <_start+0x6e>
+    2318:	f0 46 21 44 	442146f0 add.l $r2,$r2,6f <_start+0x6f>
+    231c:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+    2320:	66 08 30 00 	00300866 jmp 2198 <_free_r+0x118>
+    2324:	42 55 e1 5d 	5de15542 cmp.l $r2,154 <interrupt_7+0x4>
+    2328:	d0 08 a8 01 	01a808d0 jmpc a,2340 <_free_r+0x2c0>
+    232c:	f9 40 20 44 	442040f9 lshr.l $r2,$r0,f <_start+0xf>
+    2330:	70 47 61 44 	44614770 add.l $r6,$r2,77 <_start+0x77>
+    2334:	80 47 21 44 	44214780 add.l $r2,$r2,78 <_start+0x78>
+    2338:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+    233c:	66 08 30 00 	00300866 jmp 2198 <_free_r+0x118>
+    2340:	54 05 30 64 	64300554 ldk.l $r3,554 <__sfvwrite_r+0x164>
+    2344:	32 00 e1 5d 	5de10032 cmp.l $r2,$r3
+    2348:	d8 08 a8 01 	01a808d8 jmpc a,2360 <_free_r+0x2e0>
+    234c:	29 41 20 44 	44204129 lshr.l $r2,$r0,12 <_start+0x12>
+    2350:	c0 47 61 44 	446147c0 add.l $r6,$r2,7c <_start+0x7c>
+    2354:	d0 47 21 44 	442147d0 add.l $r2,$r2,7d <_start+0x7d>
+    2358:	20 00 21 44 	44210020 add.l $r2,$r2,$r2
+    235c:	66 08 30 00 	00300866 jmp 2198 <_free_r+0x118>
+    2360:	fe 00 20 64 	642000fe ldk.l $r2,fe <interrupt_0+0x2>
+    2364:	7e 00 60 64 	6460007e ldk.l $r6,7e <_start+0x7e>
+    2368:	66 08 30 00 	00300866 jmp 2198 <_free_r+0x118>
+    236c:	0b 62 20 44 	4420620b bins.l $r2,$r0,20 <_start+0x20>
+    2370:	04 00 11 b4 	b4110004 sti.l $r1,4 <_start+0x4>,$r2
+    2374:	00 80 10 44 	44108000 add.l $r1,$r1,$r0
+    2378:	00 00 10 b4 	b4100000 sti.l $r1,0 <_start>,$r0
+    237c:	59 08 30 00 	00300859 jmp 2164 <_free_r+0xe4>
+
+00002380 <_fwalk>:
+    2380:	00 80 06 84 	84068000 push.l $r13
+    2384:	00 00 07 84 	84070000 push.l $r14
+    2388:	00 80 07 84 	84078000 push.l $r15
+    238c:	00 00 08 84 	84080000 push.l $r16
+    2390:	00 80 08 84 	84088000 push.l $r17
+    2394:	00 00 09 84 	84090000 push.l $r18
+    2398:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    239c:	00 c0 20 45 	4520c000 move.l $r18,$r1
+    23a0:	e0 02 10 65 	651002e0 ldk.l $r17,2e0 <interrupt_common+0x58>
+    23a4:	10 01 10 45 	45100110 add.l $r17,$r0,$r17
+    23a8:	02 c0 e8 5d 	5de8c002 cmp.l $r17,0 <_start>
+    23ac:	0f 09 28 00 	0028090f jmpc z,243c <_fwalk+0xbc>
+    23b0:	00 00 00 65 	65000000 ldk.l $r16,0 <_start>
+    23b4:	08 80 f8 ac 	acf88008 ldi.l $r15,$r17,8 <_start+0x8>
+    23b8:	04 80 e8 ac 	ace88004 ldi.l $r14,$r17,4 <_start+0x4>
+    23bc:	f0 7f e7 44 	44e77ff0 add.l $r14,$r14,1ff <interrupt_21+0x7>
+    23c0:	02 40 e7 5d 	5de74002 cmp.l $r14,0 <_start>
+    23c4:	03 09 20 01 	01200903 jmpc lt,240c <_fwalk+0x8c>
+    23c8:	c0 c0 d7 44 	44d7c0c0 add.l $r13,$r15,c <_start+0xc>
+    23cc:	e0 c0 f7 44 	44f7c0e0 add.l $r15,$r15,e <_start+0xe>
+    23d0:	40 ff 06 44 	4406ff40 add.l $r0,$r13,1f4 <interrupt_20+0x8>
+    23d4:	00 80 16 aa 	aa168000 ldi.s $r1,$r13,0 <_start>
+    23d8:	12 c0 e0 5d 	5de0c012 cmp.l $r1,1 <_start+0x1>
+    23dc:	fe 08 a0 01 	01a008fe jmpc be,23f8 <_fwalk+0x78>
+    23e0:	00 80 27 aa 	aa278000 ldi.s $r2,$r15,0 <_start>
+    23e4:	0c 40 11 44 	4411400c bexts.l $r1,$r2,0 <_start>
+    23e8:	f2 ff e0 5d 	5de0fff2 cmp.l $r1,1ff <interrupt_21+0x7>
+    23ec:	fe 08 28 00 	002808fe jmpc z,23f8 <_fwalk+0x78>
+    23f0:	20 01 34 08 	08340120 calli $r18
+    23f4:	05 00 08 45 	45080005 or.l $r16,$r16,$r0
+    23f8:	f0 7f e7 44 	44e77ff0 add.l $r14,$r14,1ff <interrupt_21+0x7>
+    23fc:	80 c6 d6 44 	44d6c680 add.l $r13,$r13,68 <_start+0x68>
+    2400:	80 c6 f7 44 	44f7c680 add.l $r15,$r15,68 <_start+0x68>
+    2404:	f2 7f e7 5d 	5de77ff2 cmp.l $r14,1ff <interrupt_21+0x7>
+    2408:	f4 08 20 00 	002008f4 jmpc nz,23d0 <_fwalk+0x50>
+    240c:	00 80 18 ad 	ad188000 ldi.l $r17,$r17,0 <_start>
+    2410:	02 c0 e8 5d 	5de8c002 cmp.l $r17,0 <_start>
+    2414:	ed 08 20 00 	002008ed jmpc nz,23b4 <_fwalk+0x34>
+    2418:	00 40 08 44 	44084000 move.l $r0,$r16
+    241c:	00 00 d0 99 	99d00000 unlink $r29
+    2420:	00 00 20 8d 	8d200000 pop.l $r18
+    2424:	00 00 10 8d 	8d100000 pop.l $r17
+    2428:	00 00 00 8d 	8d000000 pop.l $r16
+    242c:	00 00 f0 8c 	8cf00000 pop.l $r15
+    2430:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2434:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2438:	00 00 00 a0 	a0000000 return 
+    243c:	00 c0 08 45 	4508c000 move.l $r16,$r17
+    2440:	06 09 30 00 	00300906 jmp 2418 <_fwalk+0x98>
+
+00002444 <_fwalk_reent>:
+    2444:	00 80 06 84 	84068000 push.l $r13
+    2448:	00 00 07 84 	84070000 push.l $r14
+    244c:	00 80 07 84 	84078000 push.l $r15
+    2450:	00 00 08 84 	84080000 push.l $r16
+    2454:	00 80 08 84 	84088000 push.l $r17
+    2458:	00 00 09 84 	84090000 push.l $r18
+    245c:	00 80 09 84 	84098000 push.l $r19
+    2460:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2464:	00 40 20 45 	45204000 move.l $r18,$r0
+    2468:	00 c0 30 45 	4530c000 move.l $r19,$r1
+    246c:	e0 02 10 65 	651002e0 ldk.l $r17,2e0 <interrupt_common+0x58>
+    2470:	10 01 10 45 	45100110 add.l $r17,$r0,$r17
+    2474:	02 c0 e8 5d 	5de8c002 cmp.l $r17,0 <_start>
+    2478:	44 09 28 00 	00280944 jmpc z,2510 <_fwalk_reent+0xcc>
+    247c:	00 00 00 65 	65000000 ldk.l $r16,0 <_start>
+    2480:	08 80 f8 ac 	acf88008 ldi.l $r15,$r17,8 <_start+0x8>
+    2484:	04 80 e8 ac 	ace88004 ldi.l $r14,$r17,4 <_start+0x4>
+    2488:	f0 7f e7 44 	44e77ff0 add.l $r14,$r14,1ff <interrupt_21+0x7>
+    248c:	02 40 e7 5d 	5de74002 cmp.l $r14,0 <_start>
+    2490:	37 09 20 01 	01200937 jmpc lt,24dc <_fwalk_reent+0x98>
+    2494:	c0 c0 d7 44 	44d7c0c0 add.l $r13,$r15,c <_start+0xc>
+    2498:	e0 c0 f7 44 	44f7c0e0 add.l $r15,$r15,e <_start+0xe>
+    249c:	40 ff 16 44 	4416ff40 add.l $r1,$r13,1f4 <interrupt_20+0x8>
+    24a0:	00 80 06 aa 	aa068000 ldi.s $r0,$r13,0 <_start>
+    24a4:	12 40 e0 5d 	5de04012 cmp.l $r0,1 <_start+0x1>
+    24a8:	32 09 a0 01 	01a00932 jmpc be,24c8 <_fwalk_reent+0x84>
+    24ac:	00 80 27 aa 	aa278000 ldi.s $r2,$r15,0 <_start>
+    24b0:	0c 40 01 44 	4401400c bexts.l $r0,$r2,0 <_start>
+    24b4:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    24b8:	32 09 28 00 	00280932 jmpc z,24c8 <_fwalk_reent+0x84>
+    24bc:	00 40 09 44 	44094000 move.l $r0,$r18
+    24c0:	30 01 34 08 	08340130 calli $r19
+    24c4:	05 00 08 45 	45080005 or.l $r16,$r16,$r0
+    24c8:	f0 7f e7 44 	44e77ff0 add.l $r14,$r14,1ff <interrupt_21+0x7>
+    24cc:	80 c6 d6 44 	44d6c680 add.l $r13,$r13,68 <_start+0x68>
+    24d0:	80 c6 f7 44 	44f7c680 add.l $r15,$r15,68 <_start+0x68>
+    24d4:	f2 7f e7 5d 	5de77ff2 cmp.l $r14,1ff <interrupt_21+0x7>
+    24d8:	27 09 20 00 	00200927 jmpc nz,249c <_fwalk_reent+0x58>
+    24dc:	00 80 18 ad 	ad188000 ldi.l $r17,$r17,0 <_start>
+    24e0:	02 c0 e8 5d 	5de8c002 cmp.l $r17,0 <_start>
+    24e4:	20 09 20 00 	00200920 jmpc nz,2480 <_fwalk_reent+0x3c>
+    24e8:	00 40 08 44 	44084000 move.l $r0,$r16
+    24ec:	00 00 d0 99 	99d00000 unlink $r29
+    24f0:	00 00 30 8d 	8d300000 pop.l $r19
+    24f4:	00 00 20 8d 	8d200000 pop.l $r18
+    24f8:	00 00 10 8d 	8d100000 pop.l $r17
+    24fc:	00 00 00 8d 	8d000000 pop.l $r16
+    2500:	00 00 f0 8c 	8cf00000 pop.l $r15
+    2504:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2508:	00 00 d0 8c 	8cd00000 pop.l $r13
+    250c:	00 00 00 a0 	a0000000 return 
+    2510:	00 c0 08 45 	4508c000 move.l $r16,$r17
+    2514:	3a 09 30 00 	0030093a jmp 24e8 <_fwalk_reent+0xa4>
+
+00002518 <__smakebuf_r>:
+    2518:	00 80 06 84 	84068000 push.l $r13
+    251c:	00 00 07 84 	84070000 push.l $r14
+    2520:	00 80 07 84 	84078000 push.l $r15
+    2524:	00 00 08 84 	84080000 push.l $r16
+    2528:	00 80 08 84 	84088000 push.l $r17
+    252c:	54 00 d0 95 	95d00054 link $r29,54 <_start+0x54>
+    2530:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    2534:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2538:	0c 80 10 aa 	aa10800c ldi.s $r1,$r1,c <_start+0xc>
+    253c:	0c c0 20 44 	4420c00c bexts.l $r2,$r1,0 <_start>
+    2540:	0d 40 31 44 	4431400d bextu.l $r3,$r2,0 <_start>
+    2544:	1c c2 e1 5d 	5de1c21c btst.l $r3,21 <_start+0x21>
+    2548:	90 09 20 00 	00200990 jmpc nz,2640 <__smakebuf_r+0x128>
+    254c:	0e 80 46 aa 	aa46800e ldi.s $r4,$r13,e <_start+0xe>
+    2550:	0c 40 12 44 	4412400c bexts.l $r1,$r4,0 <_start>
+    2554:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2558:	6d 09 20 01 	0120096d jmpc lt,25b4 <__smakebuf_r+0x9c>
+    255c:	40 fc 2e 44 	442efc40 add.l $r2,$r29,1c4 <interrupt_16+0x8>
+    2560:	83 0a 34 00 	00340a83 call 2a0c <_fstat_r>
+    2564:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    2568:	6a 09 20 01 	0120096a jmpc lt,25a8 <__smakebuf_r+0x90>
+    256c:	c8 80 0e ac 	ac0e80c8 ldi.l $r0,$r29,c8 <.dscopy+0xc>
+    2570:	00 f0 10 64 	6410f000 ldk.l $r1,f000 <__data_load_end+0xb3fc>
+    2574:	14 00 00 44 	44000014 and.l $r0,$r0,$r1
+    2578:	00 20 10 64 	64102000 ldk.l $r1,2000 <_malloc_trim_r+0xac>
+    257c:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+    2580:	0d 42 1f 45 	451f420d bextu.l $r17,$r30,20 <_start+0x20>
+    2584:	00 80 10 64 	64108000 ldk.l $r1,8000 <__data_load_end+0x43fc>
+    2588:	12 00 e0 5d 	5de00012 cmp.l $r0,$r1
+    258c:	9e 09 28 00 	0028099e jmpc z,2678 <__smakebuf_r+0x160>
+    2590:	0c 80 46 aa 	aa46800c ldi.s $r4,$r13,c <_start+0xc>
+    2594:	bb 62 02 44 	440262bb bins.l $r0,$r4,2b <_start+0x2b>
+    2598:	c0 c0 06 45 	4506c0c0 add.l $r16,$r13,c <_start+0xc>
+    259c:	00 00 00 b3 	b3000000 sti.s $r16,0 <_start>,$r0
+    25a0:	00 04 f0 64 	64f00400 ldk.l $r15,400 <__sfvwrite_r+0x10>
+    25a4:	74 09 30 00 	00300974 jmp 25d0 <__smakebuf_r+0xb8>
+    25a8:	0c 80 06 aa 	aa06800c ldi.s $r0,$r13,c <_start+0xc>
+    25ac:	0c 40 20 44 	4420400c bexts.l $r2,$r0,0 <_start>
+    25b0:	0d 40 31 44 	4431400d bextu.l $r3,$r2,0 <_start>
+    25b4:	40 00 f0 64 	64f00040 ldk.l $r15,40 <_start+0x40>
+    25b8:	7c c2 e1 5d 	5de1c27c btst.l $r3,27 <_start+0x27>
+    25bc:	9c 09 28 00 	0028099c jmpc z,2670 <__smakebuf_r+0x158>
+    25c0:	bb 62 21 44 	442162bb bins.l $r2,$r2,2b <_start+0x2b>
+    25c4:	c0 c0 06 45 	4506c0c0 add.l $r16,$r13,c <_start+0xc>
+    25c8:	00 00 01 b3 	b3010000 sti.s $r16,0 <_start>,$r2
+    25cc:	00 00 10 65 	65100000 ldk.l $r17,0 <_start>
+    25d0:	00 c0 17 44 	4417c000 move.l $r1,$r15
+    25d4:	00 40 07 44 	44074000 move.l $r0,$r14
+    25d8:	50 02 34 00 	00340250 call 940 <_malloc_r>
+    25dc:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    25e0:	8a 09 28 00 	0028098a jmpc z,2628 <__smakebuf_r+0x110>
+    25e4:	28 1c 10 64 	64101c28 ldk.l $r1,1c28 <_cleanup_r>
+    25e8:	3c 80 e0 b4 	b4e0803c sti.l $r14,3c <_start+0x3c>,$r1
+    25ec:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+    25f0:	7b 62 11 44 	4411627b bins.l $r1,$r2,27 <_start+0x27>
+    25f4:	00 80 00 b3 	b3008000 sti.s $r16,0 <_start>,$r1
+    25f8:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+    25fc:	10 00 d0 b4 	b4d00010 sti.l $r13,10 <_start+0x10>,$r0
+    2600:	14 80 d7 b4 	b4d78014 sti.l $r13,14 <_start+0x14>,$r15
+    2604:	02 c0 e8 5d 	5de8c002 cmp.l $r17,0 <_start>
+    2608:	a9 09 20 00 	002009a9 jmpc nz,26a4 <__smakebuf_r+0x18c>
+    260c:	00 00 d0 99 	99d00000 unlink $r29
+    2610:	00 00 10 8d 	8d100000 pop.l $r17
+    2614:	00 00 00 8d 	8d000000 pop.l $r16
+    2618:	00 00 f0 8c 	8cf00000 pop.l $r15
+    261c:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2620:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2624:	00 00 00 a0 	a0000000 return 
+    2628:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+    262c:	0c c0 00 44 	4400c00c bexts.l $r0,$r1,0 <_start>
+    2630:	9c 42 e0 5d 	5de0429c btst.l $r0,29 <_start+0x29>
+    2634:	83 09 20 00 	00200983 jmpc nz,260c <__smakebuf_r+0xf4>
+    2638:	1b 62 00 44 	4400621b bins.l $r0,$r0,21 <_start+0x21>
+    263c:	00 00 00 b3 	b3000000 sti.s $r16,0 <_start>,$r0
+    2640:	30 c4 06 44 	4406c430 add.l $r0,$r13,43 <_start+0x43>
+    2644:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+    2648:	10 00 d0 b4 	b4d00010 sti.l $r13,10 <_start+0x10>,$r0
+    264c:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    2650:	14 00 d0 b4 	b4d00014 sti.l $r13,14 <_start+0x14>,$r0
+    2654:	00 00 d0 99 	99d00000 unlink $r29
+    2658:	00 00 10 8d 	8d100000 pop.l $r17
+    265c:	00 00 00 8d 	8d000000 pop.l $r16
+    2660:	00 00 f0 8c 	8cf00000 pop.l $r15
+    2664:	00 00 e0 8c 	8ce00000 pop.l $r14
+    2668:	00 00 d0 8c 	8cd00000 pop.l $r13
+    266c:	00 00 00 a0 	a0000000 return 
+    2670:	00 04 f0 64 	64f00400 ldk.l $r15,400 <__sfvwrite_r+0x10>
+    2674:	70 09 30 00 	00300970 jmp 25c0 <__smakebuf_r+0xa8>
+    2678:	28 80 16 ac 	ac168028 ldi.l $r1,$r13,28 <_start+0x28>
+    267c:	bc 27 00 64 	640027bc ldk.l $r0,27bc <__sseek>
+    2680:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    2684:	64 09 20 00 	00200964 jmpc nz,2590 <__smakebuf_r+0x78>
+    2688:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+    268c:	ab 62 01 44 	440162ab bins.l $r0,$r2,2a <_start+0x2a>
+    2690:	c0 c0 06 45 	4506c0c0 add.l $r16,$r13,c <_start+0xc>
+    2694:	00 00 00 b3 	b3000000 sti.s $r16,0 <_start>,$r0
+    2698:	00 04 f0 64 	64f00400 ldk.l $r15,400 <__sfvwrite_r+0x10>
+    269c:	4c 80 d7 b4 	b4d7804c sti.l $r13,4c <_start+0x4c>,$r15
+    26a0:	74 09 30 00 	00300974 jmp 25d0 <__smakebuf_r+0xb8>
+    26a4:	0e 80 46 aa 	aa46800e ldi.s $r4,$r13,e <_start+0xe>
+    26a8:	0c 40 12 44 	4412400c bexts.l $r1,$r4,0 <_start>
+    26ac:	00 40 07 44 	44074000 move.l $r0,$r14
+    26b0:	97 0a 34 00 	00340a97 call 2a5c <_isatty_r>
+    26b4:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    26b8:	83 09 28 00 	00280983 jmpc z,260c <__smakebuf_r+0xf4>
+    26bc:	0c 80 d6 aa 	aad6800c ldi.s $r13,$r13,c <_start+0xc>
+    26c0:	0b e2 06 44 	4406e20b bins.l $r0,$r13,20 <_start+0x20>
+    26c4:	00 00 00 b3 	b3000000 sti.s $r16,0 <_start>,$r0
+    26c8:	83 09 30 00 	00300983 jmp 260c <__smakebuf_r+0xf4>
+
+000026cc <memset>:
+    26cc:	27 80 00 f0 	f0008027 memset.b $r0,$r1,$r2
+    26d0:	00 00 00 a0 	a0000000 return 
+
+000026d4 <__sread>:
+    26d4:	00 80 06 84 	84068000 push.l $r13
+    26d8:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    26dc:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    26e0:	0e 80 40 aa 	aa40800e ldi.s $r4,$r1,e <_start+0xe>
+    26e4:	0c 40 12 44 	4412400c bexts.l $r1,$r4,0 <_start>
+    26e8:	bf 0a 34 00 	00340abf call 2afc <_read_r>
+    26ec:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    26f0:	c3 09 20 01 	012009c3 jmpc lt,270c <__sread+0x38>
+    26f4:	50 80 16 ac 	ac168050 ldi.l $r1,$r13,50 <_start+0x50>
+    26f8:	00 80 10 44 	44108000 add.l $r1,$r1,$r0
+    26fc:	50 80 d0 b4 	b4d08050 sti.l $r13,50 <_start+0x50>,$r1
+    2700:	00 00 d0 99 	99d00000 unlink $r29
+    2704:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2708:	00 00 00 a0 	a0000000 return 
+    270c:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+    2710:	cb 42 11 44 	441142cb bins.l $r1,$r2,2c <_start+0x2c>
+    2714:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    2718:	00 00 d0 99 	99d00000 unlink $r29
+    271c:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2720:	00 00 00 a0 	a0000000 return 
+
+00002724 <__seofread>:
+    2724:	00 00 d0 95 	95d00000 link $r29,0 <_start>
+    2728:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    272c:	00 00 d0 99 	99d00000 unlink $r29
+    2730:	00 00 00 a0 	a0000000 return 
+
+00002734 <__swrite>:
+    2734:	00 80 06 84 	84068000 push.l $r13
+    2738:	00 00 07 84 	84070000 push.l $r14
+    273c:	00 80 07 84 	84078000 push.l $r15
+    2740:	00 00 08 84 	84080000 push.l $r16
+    2744:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2748:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    274c:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2750:	00 40 f1 44 	44f14000 move.l $r15,$r2
+    2754:	00 c0 01 45 	4501c000 move.l $r16,$r3
+    2758:	0c 80 20 aa 	aa20800c ldi.s $r2,$r1,c <_start+0xc>
+    275c:	0c 40 11 44 	4411400c bexts.l $r1,$r2,0 <_start>
+    2760:	8c c2 e0 5d 	5de0c28c btst.l $r1,28 <_start+0x28>
+    2764:	e1 09 28 00 	002809e1 jmpc z,2784 <__swrite+0x50>
+    2768:	02 00 30 64 	64300002 ldk.l $r3,2 <_start+0x2>
+    276c:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    2770:	0e 80 46 aa 	aa46800e ldi.s $r4,$r13,e <_start+0xe>
+    2774:	0c 40 12 44 	4412400c bexts.l $r1,$r4,0 <_start>
+    2778:	aa 0a 34 00 	00340aaa call 2aa8 <_lseek_r>
+    277c:	0c 80 06 aa 	aa06800c ldi.s $r0,$r13,c <_start+0xc>
+    2780:	0c 40 10 44 	4410400c bexts.l $r1,$r0,0 <_start>
+    2784:	cb c2 10 44 	4410c2cb bins.l $r1,$r1,2c <_start+0x2c>
+    2788:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    278c:	00 40 38 44 	44384000 move.l $r3,$r16
+    2790:	00 c0 27 44 	4427c000 move.l $r2,$r15
+    2794:	0e 80 d6 aa 	aad6800e ldi.s $r13,$r13,e <_start+0xe>
+    2798:	0c c0 16 44 	4416c00c bexts.l $r1,$r13,0 <_start>
+    279c:	00 40 07 44 	44074000 move.l $r0,$r14
+    27a0:	0a 0a 34 00 	00340a0a call 2828 <_write_r>
+    27a4:	00 00 d0 99 	99d00000 unlink $r29
+    27a8:	00 00 00 8d 	8d000000 pop.l $r16
+    27ac:	00 00 f0 8c 	8cf00000 pop.l $r15
+    27b0:	00 00 e0 8c 	8ce00000 pop.l $r14
+    27b4:	00 00 d0 8c 	8cd00000 pop.l $r13
+    27b8:	00 00 00 a0 	a0000000 return 
+
+000027bc <__sseek>:
+    27bc:	00 80 06 84 	84068000 push.l $r13
+    27c0:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    27c4:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    27c8:	0e 80 40 aa 	aa40800e ldi.s $r4,$r1,e <_start+0xe>
+    27cc:	0c 40 12 44 	4412400c bexts.l $r1,$r4,0 <_start>
+    27d0:	aa 0a 34 00 	00340aaa call 2aa8 <_lseek_r>
+    27d4:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    27d8:	fe 09 28 00 	002809fe jmpc z,27f8 <__sseek+0x3c>
+    27dc:	0c 80 46 aa 	aa46800c ldi.s $r4,$r13,c <_start+0xc>
+    27e0:	cb 62 12 44 	441262cb bins.l $r1,$r4,2c <_start+0x2c>
+    27e4:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    27e8:	50 00 d0 b4 	b4d00050 sti.l $r13,50 <_start+0x50>,$r0
+    27ec:	00 00 d0 99 	99d00000 unlink $r29
+    27f0:	00 00 d0 8c 	8cd00000 pop.l $r13
+    27f4:	00 00 00 a0 	a0000000 return 
+    27f8:	0c 80 26 aa 	aa26800c ldi.s $r2,$r13,c <_start+0xc>
+    27fc:	cb 42 11 44 	441142cb bins.l $r1,$r2,2c <_start+0x2c>
+    2800:	0c 80 d0 b2 	b2d0800c sti.s $r13,c <_start+0xc>,$r1
+    2804:	00 00 d0 99 	99d00000 unlink $r29
+    2808:	00 00 d0 8c 	8cd00000 pop.l $r13
+    280c:	00 00 00 a0 	a0000000 return 
+
+00002810 <__sclose>:
+    2810:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2814:	0e 80 20 aa 	aa20800e ldi.s $r2,$r1,e <_start+0xe>
+    2818:	0c 40 11 44 	4411400c bexts.l $r1,$r2,0 <_start>
+    281c:	1f 0a 34 00 	00340a1f call 287c <_close_r>
+    2820:	00 00 d0 99 	99d00000 unlink $r29
+    2824:	00 00 00 a0 	a0000000 return 
+
+00002828 <_write_r>:
+    2828:	00 80 06 84 	84068000 push.l $r13
+    282c:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2830:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2834:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2838:	00 40 11 44 	44114000 move.l $r1,$r2
+    283c:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    2840:	3c 09 20 bc 	bc20093c sta.l 93c <__sfvwrite_r+0x54c>,$r2
+    2844:	00 c0 21 44 	4421c000 move.l $r2,$r3
+    2848:	0b 0b 34 00 	00340b0b call 2c2c <_write>
+    284c:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2850:	18 0a 28 00 	00280a18 jmpc z,2860 <_write_r+0x38>
+    2854:	00 00 d0 99 	99d00000 unlink $r29
+    2858:	00 00 d0 8c 	8cd00000 pop.l $r13
+    285c:	00 00 00 a0 	a0000000 return 
+    2860:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    2864:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2868:	15 0a 28 00 	00280a15 jmpc z,2854 <_write_r+0x2c>
+    286c:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    2870:	00 00 d0 99 	99d00000 unlink $r29
+    2874:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2878:	00 00 00 a0 	a0000000 return 
+
+0000287c <_close_r>:
+    287c:	00 80 06 84 	84068000 push.l $r13
+    2880:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2884:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2888:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    288c:	3c 09 00 bc 	bc00093c sta.l 93c <__sfvwrite_r+0x54c>,$r0
+    2890:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2894:	28 0b 34 00 	00340b28 call 2ca0 <_close>
+    2898:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    289c:	2b 0a 28 00 	00280a2b jmpc z,28ac <_close_r+0x30>
+    28a0:	00 00 d0 99 	99d00000 unlink $r29
+    28a4:	00 00 d0 8c 	8cd00000 pop.l $r13
+    28a8:	00 00 00 a0 	a0000000 return 
+    28ac:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    28b0:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    28b4:	28 0a 28 00 	00280a28 jmpc z,28a0 <_close_r+0x24>
+    28b8:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    28bc:	00 00 d0 99 	99d00000 unlink $r29
+    28c0:	00 00 d0 8c 	8cd00000 pop.l $r13
+    28c4:	00 00 00 a0 	a0000000 return 
+
+000028c8 <_fclose_r>:
+    28c8:	00 80 06 84 	84068000 push.l $r13
+    28cc:	00 00 07 84 	84070000 push.l $r14
+    28d0:	00 80 07 84 	84078000 push.l $r15
+    28d4:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    28d8:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    28dc:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    28e0:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    28e4:	43 0a 28 00 	00280a43 jmpc z,290c <_fclose_r+0x44>
+    28e8:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    28ec:	3f 0a 28 00 	00280a3f jmpc z,28fc <_fclose_r+0x34>
+    28f0:	38 00 10 ac 	ac100038 ldi.l $r1,$r0,38 <_start+0x38>
+    28f4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    28f8:	75 0a 28 00 	00280a75 jmpc z,29d4 <_fclose_r+0x10c>
+    28fc:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+    2900:	0c c0 00 44 	4400c00c bexts.l $r0,$r1,0 <_start>
+    2904:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    2908:	49 0a 20 00 	00200a49 jmpc nz,2924 <_fclose_r+0x5c>
+    290c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2910:	00 00 d0 99 	99d00000 unlink $r29
+    2914:	00 00 f0 8c 	8cf00000 pop.l $r15
+    2918:	00 00 e0 8c 	8ce00000 pop.l $r14
+    291c:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2920:	00 00 00 a0 	a0000000 return 
+    2924:	00 c0 16 44 	4416c000 move.l $r1,$r13
+    2928:	00 40 07 44 	44074000 move.l $r0,$r14
+    292c:	33 06 34 00 	00340633 call 18cc <__sflush_r>
+    2930:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    2934:	2c 80 26 ac 	ac26802c ldi.l $r2,$r13,2c <_start+0x2c>
+    2938:	02 40 e1 5d 	5de14002 cmp.l $r2,0 <_start>
+    293c:	55 0a 28 00 	00280a55 jmpc z,2954 <_fclose_r+0x8c>
+    2940:	1c 80 16 ac 	ac16801c ldi.l $r1,$r13,1c <_start+0x1c>
+    2944:	00 40 07 44 	44074000 move.l $r0,$r14
+    2948:	20 00 34 08 	08340020 calli $r2
+    294c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    2950:	77 0a 20 01 	01200a77 jmpc lt,29dc <_fclose_r+0x114>
+    2954:	0c 80 16 aa 	aa16800c ldi.s $r1,$r13,c <_start+0xc>
+    2958:	04 c8 00 44 	4400c804 and.l $r0,$r1,80 <_start+0x80>
+    295c:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    2960:	79 0a 20 00 	00200a79 jmpc nz,29e4 <_fclose_r+0x11c>
+    2964:	30 80 16 ac 	ac168030 ldi.l $r1,$r13,30 <_start+0x30>
+    2968:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    296c:	63 0a 28 00 	00280a63 jmpc z,298c <_fclose_r+0xc4>
+    2970:	00 c4 06 44 	4406c400 add.l $r0,$r13,40 <_start+0x40>
+    2974:	02 80 e0 5d 	5de08002 cmp.l $r1,$r0
+    2978:	61 0a 28 00 	00280a61 jmpc z,2984 <_fclose_r+0xbc>
+    297c:	00 40 07 44 	44074000 move.l $r0,$r14
+    2980:	20 08 34 00 	00340820 call 2080 <_free_r>
+    2984:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2988:	30 00 d0 b4 	b4d00030 sti.l $r13,30 <_start+0x30>,$r0
+    298c:	44 80 16 ac 	ac168044 ldi.l $r1,$r13,44 <_start+0x44>
+    2990:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2994:	6a 0a 28 00 	00280a6a jmpc z,29a8 <_fclose_r+0xe0>
+    2998:	00 40 07 44 	44074000 move.l $r0,$r14
+    299c:	20 08 34 00 	00340820 call 2080 <_free_r>
+    29a0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    29a4:	44 00 d0 b4 	b4d00044 sti.l $r13,44 <_start+0x44>,$r0
+    29a8:	bd 07 34 00 	003407bd call 1ef4 <__sfp_lock_acquire>
+    29ac:	c0 c0 d6 44 	44d6c0c0 add.l $r13,$r13,c <_start+0xc>
+    29b0:	00 00 00 62 	62000000 ldk.s $r0,0 <_start>
+    29b4:	00 00 d0 b2 	b2d00000 sti.s $r13,0 <_start>,$r0
+    29b8:	c0 07 34 00 	003407c0 call 1f00 <__sfp_lock_release>
+    29bc:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    29c0:	00 00 d0 99 	99d00000 unlink $r29
+    29c4:	00 00 f0 8c 	8cf00000 pop.l $r15
+    29c8:	00 00 e0 8c 	8ce00000 pop.l $r14
+    29cc:	00 00 d0 8c 	8cd00000 pop.l $r13
+    29d0:	00 00 00 a0 	a0000000 return 
+    29d4:	b6 07 34 00 	003407b6 call 1ed8 <__sinit>
+    29d8:	3f 0a 30 00 	00300a3f jmp 28fc <_fclose_r+0x34>
+    29dc:	ff ff ff 64 	64ffffff ldk.l $r15,fffff <EXITEXIT+0xe0003>
+    29e0:	55 0a 30 00 	00300a55 jmp 2954 <_fclose_r+0x8c>
+    29e4:	10 80 16 ac 	ac168010 ldi.l $r1,$r13,10 <_start+0x10>
+    29e8:	00 40 07 44 	44074000 move.l $r0,$r14
+    29ec:	20 08 34 00 	00340820 call 2080 <_free_r>
+    29f0:	59 0a 30 00 	00300a59 jmp 2964 <_fclose_r+0x9c>
+
+000029f4 <fclose>:
+    29f4:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    29f8:	00 40 10 44 	44104000 move.l $r1,$r0
+    29fc:	84 00 00 c4 	c4000084 lda.l $r0,84 <_start+0x84>
+    2a00:	32 0a 34 00 	00340a32 call 28c8 <_fclose_r>
+    2a04:	00 00 d0 99 	99d00000 unlink $r29
+    2a08:	00 00 00 a0 	a0000000 return 
+
+00002a0c <_fstat_r>:
+    2a0c:	00 80 06 84 	84068000 push.l $r13
+    2a10:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2a14:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2a18:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2a1c:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    2a20:	3c 09 10 bc 	bc10093c sta.l 93c <__sfvwrite_r+0x54c>,$r1
+    2a24:	00 40 11 44 	44114000 move.l $r1,$r2
+    2a28:	2a 0b 34 00 	00340b2a call 2ca8 <_fstat>
+    2a2c:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2a30:	90 0a 28 00 	00280a90 jmpc z,2a40 <_fstat_r+0x34>
+    2a34:	00 00 d0 99 	99d00000 unlink $r29
+    2a38:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2a3c:	00 00 00 a0 	a0000000 return 
+    2a40:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    2a44:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2a48:	8d 0a 28 00 	00280a8d jmpc z,2a34 <_fstat_r+0x28>
+    2a4c:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    2a50:	00 00 d0 99 	99d00000 unlink $r29
+    2a54:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2a58:	00 00 00 a0 	a0000000 return 
+
+00002a5c <_isatty_r>:
+    2a5c:	00 80 06 84 	84068000 push.l $r13
+    2a60:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2a64:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2a68:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2a6c:	3c 09 00 bc 	bc00093c sta.l 93c <__sfvwrite_r+0x54c>,$r0
+    2a70:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2a74:	2c 0b 34 00 	00340b2c call 2cb0 <_isatty>
+    2a78:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2a7c:	a3 0a 28 00 	00280aa3 jmpc z,2a8c <_isatty_r+0x30>
+    2a80:	00 00 d0 99 	99d00000 unlink $r29
+    2a84:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2a88:	00 00 00 a0 	a0000000 return 
+    2a8c:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    2a90:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2a94:	a0 0a 28 00 	00280aa0 jmpc z,2a80 <_isatty_r+0x24>
+    2a98:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    2a9c:	00 00 d0 99 	99d00000 unlink $r29
+    2aa0:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2aa4:	00 00 00 a0 	a0000000 return 
+
+00002aa8 <_lseek_r>:
+    2aa8:	00 80 06 84 	84068000 push.l $r13
+    2aac:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2ab0:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2ab4:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2ab8:	00 40 11 44 	44114000 move.l $r1,$r2
+    2abc:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    2ac0:	3c 09 20 bc 	bc20093c sta.l 93c <__sfvwrite_r+0x54c>,$r2
+    2ac4:	00 c0 21 44 	4421c000 move.l $r2,$r3
+    2ac8:	2e 0b 34 00 	00340b2e call 2cb8 <_lseek>
+    2acc:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2ad0:	b8 0a 28 00 	00280ab8 jmpc z,2ae0 <_lseek_r+0x38>
+    2ad4:	00 00 d0 99 	99d00000 unlink $r29
+    2ad8:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2adc:	00 00 00 a0 	a0000000 return 
+    2ae0:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    2ae4:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2ae8:	b5 0a 28 00 	00280ab5 jmpc z,2ad4 <_lseek_r+0x2c>
+    2aec:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    2af0:	00 00 d0 99 	99d00000 unlink $r29
+    2af4:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2af8:	00 00 00 a0 	a0000000 return 
+
+00002afc <_read_r>:
+    2afc:	00 80 06 84 	84068000 push.l $r13
+    2b00:	18 00 d0 95 	95d00018 link $r29,18 <_start+0x18>
+    2b04:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2b08:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2b0c:	00 40 11 44 	44114000 move.l $r1,$r2
+    2b10:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    2b14:	3c 09 20 bc 	bc20093c sta.l 93c <__sfvwrite_r+0x54c>,$r2
+    2b18:	00 c0 21 44 	4421c000 move.l $r2,$r3
+    2b1c:	18 0b 34 00 	00340b18 call 2c60 <_read>
+    2b20:	f2 7f e0 5d 	5de07ff2 cmp.l $r0,1ff <interrupt_21+0x7>
+    2b24:	cd 0a 28 00 	00280acd jmpc z,2b34 <_read_r+0x38>
+    2b28:	00 00 d0 99 	99d00000 unlink $r29
+    2b2c:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2b30:	00 00 00 a0 	a0000000 return 
+    2b34:	3c 09 10 c4 	c410093c lda.l $r1,93c <__sfvwrite_r+0x54c>
+    2b38:	02 c0 e0 5d 	5de0c002 cmp.l $r1,0 <_start>
+    2b3c:	ca 0a 28 00 	00280aca jmpc z,2b28 <_read_r+0x2c>
+    2b40:	00 80 d0 b4 	b4d08000 sti.l $r13,0 <_start>,$r1
+    2b44:	00 00 d0 99 	99d00000 unlink $r29
+    2b48:	00 00 d0 8c 	8cd00000 pop.l $r13
+    2b4c:	00 00 00 a0 	a0000000 return 
+
+00002b50 <ft900_init>:
+    2b50:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2b54:	1b 00 11 64 	6411001b ldk.l $r1,1001b <UART+0x17>
+    2b58:	00 80 00 a8 	a8008000 ldi.b $r0,$r1,0 <_start>
+    2b5c:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    2b60:	7b 62 20 44 	4420627b bins.l $r2,$r0,27 <_start+0x27>
+    2b64:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+    2b68:	00 00 10 b0 	b0100000 sti.b $r1,0 <_start>,$r0
+    2b6c:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2b70:	90 0b 34 00 	00340b90 call 2e40 <ft900_uart_activate>
+    2b74:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00002b78 <ft900_exit>:
+    2b78:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2b7c:	24 00 34 00 	00340024 call 90 <_exithook>
+    2b80:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+    2b84:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2b88:	48 00 00 64 	64000048 ldk.l $r0,48 <_start+0x48>
+    2b8c:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2b90:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+    2b94:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2b98:	0a 00 00 64 	6400000a ldk.l $r0,a <_start+0xa>
+    2b9c:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2ba0:	06 0b 34 00 	00340b06 call 2c18 <uart_rx>
+    2ba4:	00 00 30 00 	00300000 jmp 0 <_start>
+    2ba8:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00002bac <ft900_watchdog>:
+    2bac:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2bb0:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+    2bb4:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2bb8:	57 00 00 64 	64000057 ldk.l $r0,57 <_start+0x57>
+    2bbc:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2bc0:	25 00 00 64 	64000025 ldk.l $r0,25 <_start+0x25>
+    2bc4:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2bc8:	0a 00 00 64 	6400000a ldk.l $r0,a <_start+0xa>
+    2bcc:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2bd0:	06 0b 34 00 	00340b06 call 2c18 <uart_rx>
+    2bd4:	00 00 30 00 	00300000 jmp 0 <_start>
+    2bd8:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00002bdc <uart_raw_tx>:
+    2bdc:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    2be0:	25 03 11 c0 	c0110325 lda.b $r1,10325 <UART+0x321>
+    2be4:	5c c2 e0 5d 	5de0c25c btst.l $r1,25 <_start+0x25>
+    2be8:	f8 0a 28 00 	00280af8 jmpc z,2be0 <uart_raw_tx+0x4>
+    2bec:	20 03 01 b8 	b8010320 sta.b 10320 <UART+0x31c>,$r0
+    2bf0:	00 00 00 a0 	a0000000 return 
+
+00002bf4 <uart_tx>:
+    2bf4:	18 00 d0 94 	94d00018 link $r13,18 <_start+0x18>
+    2bf8:	f4 4f d0 44 	44d04ff4 and.l $r13,$r0,ff <interrupt_0+0x3>
+    2bfc:	a2 c0 e6 59 	59e6c0a2 cmp.b $r13,a <_start+0xa>
+    2c00:	03 0b 20 00 	00200b03 jmpc nz,2c0c <uart_tx+0x18>
+    2c04:	0d 00 00 64 	6400000d ldk.l $r0,d <_start+0xd>
+    2c08:	f7 0a 34 00 	00340af7 call 2bdc <uart_raw_tx>
+    2c0c:	00 c0 06 44 	4406c000 move.l $r0,$r13
+    2c10:	f7 0a 34 00 	00340af7 call 2bdc <uart_raw_tx>
+    2c14:	0f 0c 30 00 	00300c0f jmp 303c <__epilog24_$r13>
+
+00002c18 <uart_rx>:
+    2c18:	25 03 01 c0 	c0010325 lda.b $r0,10325 <UART+0x321>
+    2c1c:	0c 42 e0 5d 	5de0420c btst.l $r0,20 <_start+0x20>
+    2c20:	06 0b 28 00 	00280b06 jmpc z,2c18 <uart_rx>
+    2c24:	20 03 01 c0 	c0010320 lda.b $r0,10320 <UART+0x31c>
+    2c28:	00 00 00 a0 	a0000000 return 
+
+00002c2c <_write>:
+    2c2c:	34 0c 34 00 	00340c34 call 30d0 <__prolog_$r15>
+    2c30:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2c34:	00 40 e1 44 	44e14000 move.l $r14,$r2
+    2c38:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2c3c:	20 80 f0 44 	44f08020 add.l $r15,$r1,$r2
+    2c40:	f2 80 e6 5d 	5de680f2 cmp.l $r13,$r15
+    2c44:	16 0b 28 00 	00280b16 jmpc z,2c58 <_write+0x2c>
+    2c48:	00 80 06 a8 	a8068000 ldi.b $r0,$r13,0 <_start>
+    2c4c:	fd 0a 34 00 	00340afd call 2bf4 <uart_tx>
+    2c50:	10 c0 d6 44 	44d6c010 add.l $r13,$r13,1 <_start+0x1>
+    2c54:	10 0b 30 00 	00300b10 jmp 2c40 <_write+0x14>
+    2c58:	00 40 07 44 	44074000 move.l $r0,$r14
+    2c5c:	13 0c 30 00 	00300c13 jmp 304c <__epilog24_$r15>
+
+00002c60 <_read>:
+    2c60:	18 00 d0 94 	94d00018 link $r13,18 <_start+0x18>
+    2c64:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2c68:	06 0b 34 00 	00340b06 call 2c18 <uart_rx>
+    2c6c:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    2c70:	01 00 00 64 	64000001 ldk.l $r0,1 <_start+0x1>
+    2c74:	0f 0c 30 00 	00300c0f jmp 303c <__epilog24_$r13>
+
+00002c78 <_sbrk>:
+    2c78:	bc 08 10 c4 	c41008bc lda.l $r1,8bc <__sfvwrite_r+0x4cc>
+    2c7c:	00 80 20 44 	44208000 add.l $r2,$r1,$r0
+    2c80:	82 fe 3f 44 	443ffe82 sub.l $r3,$r31,1e8 <interrupt_19+0x8>
+    2c84:	32 00 e1 5d 	5de10032 cmp.l $r2,$r3
+    2c88:	25 0b 20 01 	01200b25 jmpc lt,2c94 <sbrkok>
+    2c8c:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    2c90:	00 00 00 a0 	a0000000 return 
+
+00002c94 <sbrkok>:
+    2c94:	bc 08 20 bc 	bc2008bc sta.l 8bc <__sfvwrite_r+0x4cc>,$r2
+    2c98:	00 c0 00 44 	4400c000 move.l $r0,$r1
+    2c9c:	00 00 00 a0 	a0000000 return 
+
+00002ca0 <_close>:
+    2ca0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2ca4:	00 00 00 a0 	a0000000 return 
+
+00002ca8 <_fstat>:
+    2ca8:	ff ff 0f 64 	640fffff ldk.l $r0,fffff <EXITEXIT+0xe0003>
+    2cac:	00 00 00 a0 	a0000000 return 
+
+00002cb0 <_isatty>:
+    2cb0:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2cb4:	00 00 00 a0 	a0000000 return 
+
+00002cb8 <_lseek>:
+    2cb8:	00 00 00 64 	64000000 ldk.l $r0,0 <_start>
+    2cbc:	00 00 00 a0 	a0000000 return 
+
+00002cc0 <handler.part.0>:
+    2cc0:	34 0c 34 00 	00340c34 call 30d0 <__prolog_$r15>
+    2cc4:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2cc8:	00 40 f0 44 	44f04000 move.l $r15,$r0
+    2ccc:	00 c0 d0 44 	44d0c000 move.l $r13,$r1
+    2cd0:	00 80 10 ac 	ac108000 ldi.l $r1,$r1,0 <_start>
+    2cd4:	04 80 26 ac 	ac268004 ldi.l $r2,$r13,4 <_start+0x4>
+    2cd8:	04 80 e0 ac 	ace08004 ldi.l $r14,$r1,4 <_start+0x4>
+    2cdc:	22 00 e7 44 	44e70022 sub.l $r14,$r14,$r2
+    2ce0:	02 46 e7 5d 	5de74602 cmp.l $r14,60 <_start+0x60>
+    2ce4:	3b 0b a0 01 	01a00b3b jmpc be,2cec <handler.part.0+0x2c>
+    2ce8:	60 00 e0 64 	64e00060 ldk.l $r14,60 <_start+0x60>
+    2cec:	0c 80 00 ac 	ac00800c ldi.l $r0,$r1,c <_start+0xc>
+    2cf0:	2c 42 e0 5d 	5de0422c btst.l $r0,22 <_start+0x22>
+    2cf4:	43 0b 28 00 	00280b43 jmpc z,2d0c <handler.part.0+0x4c>
+    2cf8:	00 40 27 44 	44274000 move.l $r2,$r14
+    2cfc:	00 c0 16 44 	4416c000 move.l $r1,$r13
+    2d00:	00 c0 07 44 	4407c000 move.l $r0,$r15
+    2d04:	e5 0b 34 00 	00340be5 call 2f94 <streamout_pm_b>
+    2d08:	48 0b 30 00 	00300b48 jmp 2d20 <handler.part.0+0x60>
+    2d0c:	0c 42 e0 5d 	5de0420c btst.l $r0,20 <_start+0x20>
+    2d10:	48 0b 28 00 	00280b48 jmpc z,2d20 <handler.part.0+0x60>
+    2d14:	00 80 00 ac 	ac008000 ldi.l $r0,$r1,0 <_start>
+    2d18:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    2d1c:	ee 00 f0 f0 	f0f000ee streamout.b $r15,$r0,$r14
+    2d20:	04 80 06 ac 	ac068004 ldi.l $r0,$r13,4 <_start+0x4>
+    2d24:	00 00 e7 44 	44e70000 add.l $r14,$r14,$r0
+    2d28:	04 00 d7 b4 	b4d70004 sti.l $r13,4 <_start+0x4>,$r14
+    2d2c:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+    2d30:	04 00 10 ac 	ac100004 ldi.l $r1,$r0,4 <_start+0x4>
+    2d34:	12 00 e7 5d 	5de70012 cmp.l $r14,$r1
+    2d38:	53 0b 20 00 	00200b53 jmpc nz,2d4c <handler.part.0+0x8c>
+    2d3c:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    2d40:	04 80 d0 b4 	b4d08004 sti.l $r13,4 <_start+0x4>,$r1
+    2d44:	10 00 00 ac 	ac000010 ldi.l $r0,$r0,10 <_start+0x10>
+    2d48:	00 00 d0 b4 	b4d00000 sti.l $r13,0 <_start>,$r0
+    2d4c:	00 80 06 ac 	ac068000 ldi.l $r0,$r13,0 <_start>
+    2d50:	02 40 e0 5d 	5de04002 cmp.l $r0,0 <_start>
+    2d54:	5a 0b 20 00 	00200b5a jmpc nz,2d68 <handler.part.0+0xa8>
+    2d58:	01 80 07 a8 	a8078001 ldi.b $r0,$r15,1 <_start+0x1>
+    2d5c:	1b 42 00 40 	4000421b bins.b $r0,$r0,21 <_start+0x21>
+    2d60:	01 00 f0 b0 	b0f00001 sti.b $r15,1 <_start+0x1>,$r0
+    2d64:	10 80 d6 b4 	b4d68010 sti.l $r13,10 <_start+0x10>,$r13
+    2d68:	13 0c 30 00 	00300c13 jmp 304c <__epilog24_$r15>
+
+00002d6c <handler0>:
+    2d6c:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2d70:	22 03 01 c0 	c0010322 lda.b $r0,10322 <UART+0x31e>
+    2d74:	f4 43 00 40 	400043f4 and.b $r0,$r0,3f <_start+0x3f>
+    2d78:	22 40 e0 59 	59e04022 cmp.b $r0,2 <_start+0x2>
+    2d7c:	63 0b 20 00 	00200b63 jmpc nz,2d8c <handler0+0x20>
+    2d80:	0c 09 10 64 	6410090c ldk.l $r1,90c <__sfvwrite_r+0x51c>
+    2d84:	20 03 01 64 	64010320 ldk.l $r0,10320 <UART+0x31c>
+    2d88:	30 0b 34 00 	00340b30 call 2cc0 <handler.part.0>
+    2d8c:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00002d90 <handler1>:
+    2d90:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2d94:	32 03 01 c0 	c0010332 lda.b $r0,10332 <UART+0x32e>
+    2d98:	f4 43 00 40 	400043f4 and.b $r0,$r0,3f <_start+0x3f>
+    2d9c:	22 40 e0 59 	59e04022 cmp.b $r0,2 <_start+0x2>
+    2da0:	6c 0b 20 00 	00200b6c jmpc nz,2db0 <handler1+0x20>
+    2da4:	24 09 10 64 	64100924 ldk.l $r1,924 <__sfvwrite_r+0x534>
+    2da8:	30 03 01 64 	64010330 ldk.l $r0,10330 <UART+0x32c>
+    2dac:	30 0b 34 00 	00340b30 call 2cc0 <handler.part.0>
+    2db0:	0d 0c 30 00 	00300c0d jmp 3034 <__epilog24>
+
+00002db4 <ft900_uart_set_baud>:
+    2db4:	48 40 00 44 	44004048 ashl.l $r0,$r0,4 <_start+0x4>
+    2db8:	20 03 21 64 	64210320 ldk.l $r2,10320 <UART+0x31c>
+    2dbc:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    2dc0:	70 40 40 44 	44404070 add.l $r4,$r0,7 <_start+0x7>
+    2dc4:	01 00 20 60 	60200001 ldk.b $r2,1 <_start+0x1>
+    2dc8:	00 00 41 b0 	b0410000 sti.b $r4,0 <_start>,$r2
+    2dcc:	50 40 30 44 	44304050 add.l $r3,$r0,5 <_start+0x5>
+    2dd0:	08 00 20 60 	60200008 ldk.b $r2,8 <_start+0x8>
+    2dd4:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    2dd8:	28 c0 10 44 	4410c028 ashl.l $r1,$r1,2 <_start+0x2>
+    2ddc:	52 57 21 64 	64215752 ldk.l $r2,15752 <UART+0x574e>
+    2de0:	03 68 21 44 	44216803 ldl.l $r2,$r2,80 <_start+0x80>
+    2de4:	10 00 11 f4 	f4110010 udiv.l $r1,$r2,$r1
+    2de8:	ff ff 20 64 	6420ffff ldk.l $r2,ffff <__data_load_end+0xc3fb>
+    2dec:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    2df0:	02 00 20 60 	60200002 ldk.b $r2,2 <_start+0x2>
+    2df4:	00 00 41 b0 	b0410000 sti.b $r4,0 <_start>,$r2
+    2df8:	82 0b a8 01 	01a80b82 jmpc a,2e08 <ft900_uart_set_baud+0x54>
+    2dfc:	04 00 20 60 	60200004 ldk.b $r2,4 <_start+0x4>
+    2e00:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    2e04:	85 0b 30 00 	00300b85 jmp 2e14 <ft900_uart_set_baud+0x60>
+    2e08:	00 00 20 60 	60200000 ldk.b $r2,0 <_start>
+    2e0c:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    2e10:	29 c0 10 44 	4410c029 lshr.l $r1,$r1,2 <_start+0x2>
+    2e14:	03 00 20 a8 	a8200003 ldi.b $r2,$r0,3 <_start+0x3>
+    2e18:	f4 4f 21 44 	44214ff4 and.l $r2,$r2,ff <interrupt_0+0x3>
+    2e1c:	30 40 30 44 	44304030 add.l $r3,$r0,3 <_start+0x3>
+    2e20:	80 ff 4f 60 	604fff80 ldk.b $r4,fff80 <EXITEXIT+0xdff84>
+    2e24:	00 00 32 b0 	b0320000 sti.b $r3,0 <_start>,$r4
+    2e28:	f4 cf 40 44 	4440cff4 and.l $r4,$r1,ff <interrupt_0+0x3>
+    2e2c:	00 00 02 b0 	b0020000 sti.b $r0,0 <_start>,$r4
+    2e30:	8d d0 10 44 	4410d08d bextu.l $r1,$r1,108 <interrupt_1>
+    2e34:	01 80 00 b0 	b0008001 sti.b $r0,1 <_start+0x1>,$r1
+    2e38:	00 00 31 b0 	b0310000 sti.b $r3,0 <_start>,$r2
+    2e3c:	00 00 00 a0 	a0000000 return 
+
+00002e40 <ft900_uart_activate>:
+    2e40:	38 0c 34 00 	00340c38 call 30e0 <__prolog_$r16>
+    2e44:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2e48:	00 40 e0 44 	44e04000 move.l $r14,$r0
+    2e4c:	08 00 11 c4 	c4110008 lda.l $r1,10008 <UART+0x4>
+    2e50:	08 00 00 64 	64000008 ldk.l $r0,8 <_start+0x8>
+    2e54:	02 40 e7 5d 	5de74002 cmp.l $r14,0 <_start>
+    2e58:	98 0b 20 00 	00200b98 jmpc nz,2e60 <ft900_uart_activate+0x20>
+    2e5c:	10 00 00 64 	64000010 ldk.l $r0,10 <_start+0x10>
+    2e60:	15 00 00 44 	44000015 or.l $r0,$r0,$r1
+    2e64:	08 00 01 bc 	bc010008 sta.l 10008 <UART+0x4>,$r0
+    2e68:	c0 00 20 64 	642000c0 ldk.l $r2,c0 <.dscopy+0x4>
+    2e6c:	08 00 10 64 	64100008 ldk.l $r1,8 <_start+0x8>
+    2e70:	24 33 00 64 	64003324 ldk.l $r0,3324 <pads.2966>
+    2e74:	d7 0b 34 00 	00340bd7 call 2f5c <pad_setter>
+    2e78:	00 00 00 61 	61000000 ldk.b $r16,0 <_start>
+    2e7c:	1a 00 01 b9 	b901001a sta.b 1001a <UART+0x16>,$r16
+    2e80:	1a 00 01 c0 	c001001a lda.b $r0,1001a <UART+0x16>
+    2e84:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    2e88:	85 42 00 44 	44004285 or.l $r0,$r0,28 <_start+0x28>
+    2e8c:	1a 00 01 b8 	b801001a sta.b 1001a <UART+0x16>,$r0
+    2e90:	48 40 07 44 	44074048 ashl.l $r0,$r14,4 <_start+0x4>
+    2e94:	20 03 d1 64 	64d10320 ldk.l $r13,10320 <UART+0x31c>
+    2e98:	d0 00 d0 44 	44d000d0 add.l $r13,$r0,$r13
+    2e9c:	30 c0 f6 44 	44f6c030 add.l $r15,$r13,3 <_start+0x3>
+    2ea0:	03 00 00 60 	60000003 ldk.b $r0,3 <_start+0x3>
+    2ea4:	00 00 f0 b0 	b0f00000 sti.b $r15,0 <_start>,$r0
+    2ea8:	00 c2 11 64 	6411c200 ldk.l $r1,1c200 <MAGIC+0x2d90>
+    2eac:	00 40 07 44 	44074000 move.l $r0,$r14
+    2eb0:	6d 0b 34 00 	00340b6d call 2db4 <ft900_uart_set_baud>
+    2eb4:	03 80 16 a8 	a8168003 ldi.b $r1,$r13,3 <_start+0x3>
+    2eb8:	f4 cf 10 44 	4410cff4 and.l $r1,$r1,ff <interrupt_0+0x3>
+    2ebc:	bf ff 0f 60 	600fffbf ldk.b $r0,fffbf <EXITEXIT+0xdffc3>
+    2ec0:	00 00 f0 b0 	b0f00000 sti.b $r15,0 <_start>,$r0
+    2ec4:	02 80 06 a8 	a8068002 ldi.b $r0,$r13,2 <_start+0x2>
+    2ec8:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    2ecc:	4b 62 00 44 	4400624b bins.l $r0,$r0,24 <_start+0x24>
+    2ed0:	20 c0 26 44 	4426c020 add.l $r2,$r13,2 <_start+0x2>
+    2ed4:	00 00 20 b0 	b0200000 sti.b $r2,0 <_start>,$r0
+    2ed8:	00 80 f0 b0 	b0f08000 sti.b $r15,0 <_start>,$r1
+    2edc:	07 00 00 60 	60000007 ldk.b $r0,7 <_start+0x7>
+    2ee0:	00 00 20 b0 	b0200000 sti.b $r2,0 <_start>,$r0
+    2ee4:	02 00 00 60 	60000002 ldk.b $r0,2 <_start+0x2>
+    2ee8:	04 00 d0 b0 	b0d00004 sti.b $r13,4 <_start+0x4>,$r0
+    2eec:	70 c0 16 44 	4416c070 add.l $r1,$r13,7 <_start+0x7>
+    2ef0:	00 00 18 b0 	b0180000 sti.b $r1,0 <_start>,$r16
+    2ef4:	20 00 00 60 	60000020 ldk.b $r0,20 <_start+0x20>
+    2ef8:	50 c0 d6 44 	44d6c050 add.l $r13,$r13,5 <_start+0x5>
+    2efc:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    2f00:	04 00 20 60 	60200004 ldk.b $r2,4 <_start+0x4>
+    2f04:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+    2f08:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    2f0c:	05 00 20 60 	60200005 ldk.b $r2,5 <_start+0x5>
+    2f10:	00 00 11 b0 	b0110000 sti.b $r1,0 <_start>,$r2
+    2f14:	00 00 d0 b0 	b0d00000 sti.b $r13,0 <_start>,$r0
+    2f18:	e0 00 07 44 	440700e0 add.l $r0,$r14,$r14
+    2f1c:	e0 00 00 44 	440000e0 add.l $r0,$r0,$r14
+    2f20:	38 40 10 44 	44104038 ashl.l $r1,$r0,3 <_start+0x3>
+    2f24:	0c 09 00 64 	6400090c ldk.l $r0,90c <__sfvwrite_r+0x51c>
+    2f28:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+    2f2c:	10 00 00 b4 	b4000010 sti.l $r0,10 <_start+0x10>,$r0
+    2f30:	00 00 10 64 	64100000 ldk.l $r1,0 <_start>
+    2f34:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    2f38:	40 40 00 44 	44004040 add.l $r0,$r0,4 <_start+0x4>
+    2f3c:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    2f40:	28 40 17 44 	44174028 ashl.l $r1,$r14,2 <_start+0x2>
+    2f44:	1c 33 00 64 	6400331c ldk.l $r0,331c <handlers.2972>
+    2f48:	10 00 00 44 	44000010 add.l $r0,$r0,$r1
+    2f4c:	00 00 10 cc 	cc100000 lpmi.l $r1,$r0,0 <_start>
+    2f50:	d0 40 07 44 	440740d0 add.l $r0,$r14,d <_start+0xd>
+    2f54:	f2 0b 34 00 	00340bf2 call 2fc8 <attach_interrupt>
+    2f58:	15 0c 30 00 	00300c15 jmp 3054 <__epilog24_$r16>
+
+00002f5c <pad_setter>:
+    2f5c:	34 0c 34 00 	00340c34 call 30d0 <__prolog_$r15>
+    2f60:	82 c1 ff 45 	45ffc182 sub.l $r31,$r31,18 <_start+0x18>
+    2f64:	00 40 d0 44 	44d04000 move.l $r13,$r0
+    2f68:	10 00 e0 44 	44e00010 add.l $r14,$r0,$r1
+    2f6c:	f4 4f f1 44 	44f14ff4 and.l $r15,$r2,ff <interrupt_0+0x3>
+    2f70:	e2 80 e6 5d 	5de680e2 cmp.l $r13,$r14
+    2f74:	e4 0b 28 00 	00280be4 jmpc z,2f90 <pad_setter+0x34>
+    2f78:	00 c0 17 44 	4417c000 move.l $r1,$r15
+    2f7c:	00 80 26 c8 	c8268000 lpmi.b $r2,$r13,0 <_start>
+    2f80:	f4 4f 01 44 	44014ff4 and.l $r0,$r2,ff <interrupt_0+0x3>
+    2f84:	f7 0b 34 00 	00340bf7 call 2fdc <ft900_pad_set_function>
+    2f88:	10 c0 d6 44 	44d6c010 add.l $r13,$r13,1 <_start+0x1>
+    2f8c:	dc 0b 30 00 	00300bdc jmp 2f70 <pad_setter+0x14>
+    2f90:	13 0c 30 00 	00300c13 jmp 304c <__epilog24_$r15>
+
+00002f94 <streamout_pm_b>:
+    2f94:	00 80 30 ac 	ac308000 ldi.l $r3,$r1,0 <_start>
+    2f98:	00 80 31 ac 	ac318000 ldi.l $r3,$r3,0 <_start>
+    2f9c:	04 80 10 ac 	ac108004 ldi.l $r1,$r1,4 <_start+0x4>
+    2fa0:	10 80 11 44 	44118010 add.l $r1,$r3,$r1
+    2fa4:	20 80 20 44 	44208020 add.l $r2,$r1,$r2
+    2fa8:	22 80 e0 5d 	5de08022 cmp.l $r1,$r2
+    2fac:	f1 0b 28 00 	00280bf1 jmpc z,2fc4 <streamout_pm_b+0x30>
+    2fb0:	00 80 40 c8 	c8408000 lpmi.b $r4,$r1,0 <_start>
+    2fb4:	f4 4f 32 44 	44324ff4 and.l $r3,$r4,ff <interrupt_0+0x3>
+    2fb8:	00 80 01 b0 	b0018000 sti.b $r0,0 <_start>,$r3
+    2fbc:	10 c0 10 44 	4410c010 add.l $r1,$r1,1 <_start+0x1>
+    2fc0:	ea 0b 30 00 	00300bea jmp 2fa8 <streamout_pm_b+0x14>
+    2fc4:	00 00 00 a0 	a0000000 return 
+
+00002fc8 <attach_interrupt>:
+    2fc8:	28 40 00 44 	44004028 ashl.l $r0,$r0,2 <_start+0x2>
+    2fcc:	00 00 20 64 	64200000 ldk.l $r2,0 <_start>
+    2fd0:	00 00 01 44 	44010000 add.l $r0,$r2,$r0
+    2fd4:	00 80 00 b4 	b4008000 sti.l $r0,0 <_start>,$r1
+    2fd8:	00 00 00 a0 	a0000000 return 
+
+00002fdc <ft900_pad_set_function>:
+    2fdc:	f4 4f 00 44 	44004ff4 and.l $r0,$r0,ff <interrupt_0+0x3>
+    2fe0:	1c 00 21 64 	6421001c ldk.l $r2,1001c <UART+0x18>
+    2fe4:	20 00 00 44 	44000020 add.l $r0,$r0,$r2
+    2fe8:	00 80 00 b0 	b0008000 sti.b $r0,0 <_start>,$r1
+    2fec:	00 00 00 a0 	a0000000 return 
+
+00002ff0 <__epilog_$r28>:
+    2ff0:	00 00 c0 8d 	8dc00000 pop.l $r28
+
+00002ff4 <__epilog_$r27>:
+    2ff4:	00 00 b0 8d 	8db00000 pop.l $r27
+
+00002ff8 <__epilog_$r26>:
+    2ff8:	00 00 a0 8d 	8da00000 pop.l $r26
+
+00002ffc <__epilog_$r25>:
+    2ffc:	00 00 90 8d 	8d900000 pop.l $r25
+
+00003000 <__epilog_$r24>:
+    3000:	00 00 80 8d 	8d800000 pop.l $r24
+
+00003004 <__epilog_$r23>:
+    3004:	00 00 70 8d 	8d700000 pop.l $r23
+
+00003008 <__epilog_$r22>:
+    3008:	00 00 60 8d 	8d600000 pop.l $r22
+
+0000300c <__epilog_$r21>:
+    300c:	00 00 50 8d 	8d500000 pop.l $r21
+
+00003010 <__epilog_$r20>:
+    3010:	00 00 40 8d 	8d400000 pop.l $r20
+
+00003014 <__epilog_$r19>:
+    3014:	00 00 30 8d 	8d300000 pop.l $r19
+
+00003018 <__epilog_$r18>:
+    3018:	00 00 20 8d 	8d200000 pop.l $r18
+
+0000301c <__epilog_$r17>:
+    301c:	00 00 10 8d 	8d100000 pop.l $r17
+
+00003020 <__epilog_$r16>:
+    3020:	00 00 00 8d 	8d000000 pop.l $r16
+
+00003024 <__epilog_$r15>:
+    3024:	00 00 f0 8c 	8cf00000 pop.l $r15
+
+00003028 <__epilog_$r14>:
+    3028:	00 00 e0 8c 	8ce00000 pop.l $r14
+
+0000302c <__epilog_$r13>:
+    302c:	00 00 d0 8c 	8cd00000 pop.l $r13
+    3030:	00 00 00 a0 	a0000000 return 
+
+00003034 <__epilog24>:
+    3034:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3038:	00 00 00 a0 	a0000000 return 
+
+0000303c <__epilog24_$r13>:
+    303c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3040:	0b 0c 30 00 	00300c0b jmp 302c <__epilog_$r13>
+
+00003044 <__epilog24_$r14>:
+    3044:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3048:	0a 0c 30 00 	00300c0a jmp 3028 <__epilog_$r14>
+
+0000304c <__epilog24_$r15>:
+    304c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3050:	09 0c 30 00 	00300c09 jmp 3024 <__epilog_$r15>
+
+00003054 <__epilog24_$r16>:
+    3054:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3058:	08 0c 30 00 	00300c08 jmp 3020 <__epilog_$r16>
+
+0000305c <__epilog24_$r17>:
+    305c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3060:	07 0c 30 00 	00300c07 jmp 301c <__epilog_$r17>
+
+00003064 <__epilog24_$r18>:
+    3064:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3068:	06 0c 30 00 	00300c06 jmp 3018 <__epilog_$r18>
+
+0000306c <__epilog24_$r19>:
+    306c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3070:	05 0c 30 00 	00300c05 jmp 3014 <__epilog_$r19>
+
+00003074 <__epilog24_$r20>:
+    3074:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3078:	04 0c 30 00 	00300c04 jmp 3010 <__epilog_$r20>
+
+0000307c <__epilog24_$r21>:
+    307c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3080:	03 0c 30 00 	00300c03 jmp 300c <__epilog_$r21>
+
+00003084 <__epilog24_$r22>:
+    3084:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3088:	02 0c 30 00 	00300c02 jmp 3008 <__epilog_$r22>
+
+0000308c <__epilog24_$r23>:
+    308c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3090:	01 0c 30 00 	00300c01 jmp 3004 <__epilog_$r23>
+
+00003094 <__epilog24_$r24>:
+    3094:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    3098:	00 0c 30 00 	00300c00 jmp 3000 <__epilog_$r24>
+
+0000309c <__epilog24_$r25>:
+    309c:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    30a0:	ff 0b 30 00 	00300bff jmp 2ffc <__epilog_$r25>
+
+000030a4 <__epilog24_$r26>:
+    30a4:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    30a8:	fe 0b 30 00 	00300bfe jmp 2ff8 <__epilog_$r26>
+
+000030ac <__epilog24_$r27>:
+    30ac:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    30b0:	fd 0b 30 00 	00300bfd jmp 2ff4 <__epilog_$r27>
+
+000030b4 <__epilog24_$r28>:
+    30b4:	80 c1 ff 45 	45ffc180 add.l $r31,$r31,18 <_start+0x18>
+    30b8:	fc 0b 30 00 	00300bfc jmp 2ff0 <__epilog_$r28>
+
+000030bc <__prolog_$r13>:
+    30bc:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    30c0:	d0 00 30 08 	083000d0 jmpi $r13
+
+000030c4 <__prolog_$r14>:
+    30c4:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    30c8:	00 00 07 84 	84070000 push.l $r14
+    30cc:	d0 00 30 08 	083000d0 jmpi $r13
+
+000030d0 <__prolog_$r15>:
+    30d0:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    30d4:	00 00 07 84 	84070000 push.l $r14
+    30d8:	00 80 07 84 	84078000 push.l $r15
+    30dc:	d0 00 30 08 	083000d0 jmpi $r13
+
+000030e0 <__prolog_$r16>:
+    30e0:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    30e4:	00 00 07 84 	84070000 push.l $r14
+    30e8:	00 80 07 84 	84078000 push.l $r15
+    30ec:	00 00 08 84 	84080000 push.l $r16
+    30f0:	d0 00 30 08 	083000d0 jmpi $r13
+
+000030f4 <__prolog_$r17>:
+    30f4:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    30f8:	00 00 07 84 	84070000 push.l $r14
+    30fc:	00 80 07 84 	84078000 push.l $r15
+    3100:	00 00 08 84 	84080000 push.l $r16
+    3104:	00 80 08 84 	84088000 push.l $r17
+    3108:	d0 00 30 08 	083000d0 jmpi $r13
+
+0000310c <__prolog_$r18>:
+    310c:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    3110:	00 00 07 84 	84070000 push.l $r14
+    3114:	00 80 07 84 	84078000 push.l $r15
+    3118:	00 00 08 84 	84080000 push.l $r16
+    311c:	00 80 08 84 	84088000 push.l $r17
+    3120:	00 00 09 84 	84090000 push.l $r18
+    3124:	d0 00 30 08 	083000d0 jmpi $r13
+
+00003128 <__prolog_$r19>:
+    3128:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    312c:	00 00 07 84 	84070000 push.l $r14
+    3130:	00 80 07 84 	84078000 push.l $r15
+    3134:	00 00 08 84 	84080000 push.l $r16
+    3138:	00 80 08 84 	84088000 push.l $r17
+    313c:	00 00 09 84 	84090000 push.l $r18
+    3140:	00 80 09 84 	84098000 push.l $r19
+    3144:	d0 00 30 08 	083000d0 jmpi $r13
+
+00003148 <__prolog_$r20>:
+    3148:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    314c:	00 00 07 84 	84070000 push.l $r14
+    3150:	00 80 07 84 	84078000 push.l $r15
+    3154:	00 00 08 84 	84080000 push.l $r16
+    3158:	00 80 08 84 	84088000 push.l $r17
+    315c:	00 00 09 84 	84090000 push.l $r18
+    3160:	00 80 09 84 	84098000 push.l $r19
+    3164:	00 00 0a 84 	840a0000 push.l $r20
+    3168:	d0 00 30 08 	083000d0 jmpi $r13
+
+0000316c <__prolog_$r21>:
+    316c:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    3170:	00 00 07 84 	84070000 push.l $r14
+    3174:	00 80 07 84 	84078000 push.l $r15
+    3178:	00 00 08 84 	84080000 push.l $r16
+    317c:	00 80 08 84 	84088000 push.l $r17
+    3180:	00 00 09 84 	84090000 push.l $r18
+    3184:	00 80 09 84 	84098000 push.l $r19
+    3188:	00 00 0a 84 	840a0000 push.l $r20
+    318c:	00 80 0a 84 	840a8000 push.l $r21
+    3190:	d0 00 30 08 	083000d0 jmpi $r13
+
+00003194 <__prolog_$r22>:
+    3194:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    3198:	00 00 07 84 	84070000 push.l $r14
+    319c:	00 80 07 84 	84078000 push.l $r15
+    31a0:	00 00 08 84 	84080000 push.l $r16
+    31a4:	00 80 08 84 	84088000 push.l $r17
+    31a8:	00 00 09 84 	84090000 push.l $r18
+    31ac:	00 80 09 84 	84098000 push.l $r19
+    31b0:	00 00 0a 84 	840a0000 push.l $r20
+    31b4:	00 80 0a 84 	840a8000 push.l $r21
+    31b8:	00 00 0b 84 	840b0000 push.l $r22
+    31bc:	d0 00 30 08 	083000d0 jmpi $r13
+
+000031c0 <__prolog_$r23>:
+    31c0:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    31c4:	00 00 07 84 	84070000 push.l $r14
+    31c8:	00 80 07 84 	84078000 push.l $r15
+    31cc:	00 00 08 84 	84080000 push.l $r16
+    31d0:	00 80 08 84 	84088000 push.l $r17
+    31d4:	00 00 09 84 	84090000 push.l $r18
+    31d8:	00 80 09 84 	84098000 push.l $r19
+    31dc:	00 00 0a 84 	840a0000 push.l $r20
+    31e0:	00 80 0a 84 	840a8000 push.l $r21
+    31e4:	00 00 0b 84 	840b0000 push.l $r22
+    31e8:	00 80 0b 84 	840b8000 push.l $r23
+    31ec:	d0 00 30 08 	083000d0 jmpi $r13
+
+000031f0 <__prolog_$r24>:
+    31f0:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    31f4:	00 00 07 84 	84070000 push.l $r14
+    31f8:	00 80 07 84 	84078000 push.l $r15
+    31fc:	00 00 08 84 	84080000 push.l $r16
+    3200:	00 80 08 84 	84088000 push.l $r17
+    3204:	00 00 09 84 	84090000 push.l $r18
+    3208:	00 80 09 84 	84098000 push.l $r19
+    320c:	00 00 0a 84 	840a0000 push.l $r20
+    3210:	00 80 0a 84 	840a8000 push.l $r21
+    3214:	00 00 0b 84 	840b0000 push.l $r22
+    3218:	00 80 0b 84 	840b8000 push.l $r23
+    321c:	00 00 0c 84 	840c0000 push.l $r24
+    3220:	d0 00 30 08 	083000d0 jmpi $r13
+
+00003224 <__prolog_$r25>:
+    3224:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    3228:	00 00 07 84 	84070000 push.l $r14
+    322c:	00 80 07 84 	84078000 push.l $r15
+    3230:	00 00 08 84 	84080000 push.l $r16
+    3234:	00 80 08 84 	84088000 push.l $r17
+    3238:	00 00 09 84 	84090000 push.l $r18
+    323c:	00 80 09 84 	84098000 push.l $r19
+    3240:	00 00 0a 84 	840a0000 push.l $r20
+    3244:	00 80 0a 84 	840a8000 push.l $r21
+    3248:	00 00 0b 84 	840b0000 push.l $r22
+    324c:	00 80 0b 84 	840b8000 push.l $r23
+    3250:	00 00 0c 84 	840c0000 push.l $r24
+    3254:	00 80 0c 84 	840c8000 push.l $r25
+    3258:	d0 00 30 08 	083000d0 jmpi $r13
+
+0000325c <__prolog_$r26>:
+    325c:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    3260:	00 00 07 84 	84070000 push.l $r14
+    3264:	00 80 07 84 	84078000 push.l $r15
+    3268:	00 00 08 84 	84080000 push.l $r16
+    326c:	00 80 08 84 	84088000 push.l $r17
+    3270:	00 00 09 84 	84090000 push.l $r18
+    3274:	00 80 09 84 	84098000 push.l $r19
+    3278:	00 00 0a 84 	840a0000 push.l $r20
+    327c:	00 80 0a 84 	840a8000 push.l $r21
+    3280:	00 00 0b 84 	840b0000 push.l $r22
+    3284:	00 80 0b 84 	840b8000 push.l $r23
+    3288:	00 00 0c 84 	840c0000 push.l $r24
+    328c:	00 80 0c 84 	840c8000 push.l $r25
+    3290:	00 00 0d 84 	840d0000 push.l $r26
+    3294:	d0 00 30 08 	083000d0 jmpi $r13
+
+00003298 <__prolog_$r27>:
+    3298:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    329c:	00 00 07 84 	84070000 push.l $r14
+    32a0:	00 80 07 84 	84078000 push.l $r15
+    32a4:	00 00 08 84 	84080000 push.l $r16
+    32a8:	00 80 08 84 	84088000 push.l $r17
+    32ac:	00 00 09 84 	84090000 push.l $r18
+    32b0:	00 80 09 84 	84098000 push.l $r19
+    32b4:	00 00 0a 84 	840a0000 push.l $r20
+    32b8:	00 80 0a 84 	840a8000 push.l $r21
+    32bc:	00 00 0b 84 	840b0000 push.l $r22
+    32c0:	00 80 0b 84 	840b8000 push.l $r23
+    32c4:	00 00 0c 84 	840c0000 push.l $r24
+    32c8:	00 80 0c 84 	840c8000 push.l $r25
+    32cc:	00 00 0d 84 	840d0000 push.l $r26
+    32d0:	00 80 0d 84 	840d8000 push.l $r27
+    32d4:	d0 00 30 08 	083000d0 jmpi $r13
+
+000032d8 <__prolog_$r28>:
+    32d8:	00 80 df ec 	ecdf8000 exi.l $r13,$r31,0 <_start>
+    32dc:	00 00 07 84 	84070000 push.l $r14
+    32e0:	00 80 07 84 	84078000 push.l $r15
+    32e4:	00 00 08 84 	84080000 push.l $r16
+    32e8:	00 80 08 84 	84088000 push.l $r17
+    32ec:	00 00 09 84 	84090000 push.l $r18
+    32f0:	00 80 09 84 	84098000 push.l $r19
+    32f4:	00 00 0a 84 	840a0000 push.l $r20
+    32f8:	00 80 0a 84 	840a8000 push.l $r21
+    32fc:	00 00 0b 84 	840b0000 push.l $r22
+    3300:	00 80 0b 84 	840b8000 push.l $r23
+    3304:	00 00 0c 84 	840c0000 push.l $r24
+    3308:	00 80 0c 84 	840c8000 push.l $r25
+    330c:	00 00 0d 84 	840d0000 push.l $r26
+    3310:	00 80 0d 84 	840d8000 push.l $r27
+    3314:	00 00 0e 84 	840e0000 push.l $r28
+    3318:	d0 00 30 08 	083000d0 jmpi $r13
+
+0000331c <handlers.2972>:
+    331c:	6c 2d 00 00 90 2d 00 00                             l-...-..
+
+00003324 <pads.2966>:
+    3324:	30 31 32 33 34 35 36 37                             01234567
