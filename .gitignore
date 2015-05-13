@@ -33,6 +33,9 @@ Temp
 core
 *.pc
 *.gch
+a.out
+*.sim
+.depend
 
 # Mac OS X compile
 *.dylib
