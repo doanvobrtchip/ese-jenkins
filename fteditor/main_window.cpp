@@ -385,6 +385,11 @@ void loop()
 			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
 			FT8XXEMU_poke();
 		}
+		if (info->Converter == ContentInfo::Font)
+		{
+			// Write bitmap address
+			wr32(loadAddr + 144, loadAddr + 148);
+		}
 		if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
 		{
 			if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)

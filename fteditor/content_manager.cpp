@@ -1454,7 +1454,10 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
-						// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+					case CMD_SETFONT2 & 0xFF:
+						if (parsed.Parameter[1].I == contentInfo->MemoryAddress)
+							return parsed.Parameter[0].I;
+						break;
 					}
 				}
 			}
@@ -1505,7 +1508,13 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 						if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
 							return handle;
 						break;
-						// TODO: CMD_SETFONT2: Address is in RAM (can be calculated too)
+					case CMD_SETFONT2 & 0xFF:
+						if (parsed.Parameter[1].I == contentInfo->MemoryAddress)
+						{
+							line = i;
+							return parsed.Parameter[0].I;
+						}
+						break;
 					}
 				}
 			}
@@ -1647,27 +1656,35 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				{
 					switch (parsed.IdRight)
 					{
-					case CMD_SETBITMAP & 0xFF:
-					{
-						bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
-						if (addressOk)
+						case CMD_SETBITMAP & 0xFF:
 						{
-							DlParsed pa = parsed;
-							pa.Parameter[1].U = contentInfo->ImageFormat;
-							pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
-							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
-							dlEditor->replaceLine(i, pa);
-							cmdSetBitmap = true;
-							insertOkLine = i + 1;
+							bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
+							if (addressOk)
+							{
+								DlParsed pa = parsed;
+								pa.Parameter[1].U = contentInfo->ImageFormat;
+								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
+								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
+								dlEditor->replaceLine(i, pa);
+								cmdSetBitmap = true;
+								insertOkLine = i + 1;
+							}
+							if (isAddressSame && handleLine != -1 && !addressOk)
+							{
+								i = handleLine;
+								addressOk = true;
+							}
+							continue;
 						}
-						if (isAddressSame && handleLine != -1 && !addressOk)
+						case CMD_SETFONT2 & 0xFF:
 						{
-							i = handleLine;
-							addressOk = true;
+							// This is really not a useful case, but it can happen, so support it...
+							handleLine = i;
+							addressOk = (parsed.Parameter[1].I == contentInfo->MemoryAddress);
+							if (addressOk)
+								printf("Unusual CMD_SETFONT2 usage detected in the editor\n");
+							continue;
 						}
-						continue;
-					}
-					// TODO: CMD_SETFONT2, addr is from font info ram... tricky
 					}
 				}
 			}
@@ -1861,15 +1878,14 @@ void ContentManager::editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETFONT & 0xFF) && parsed.Parameter[1].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && (parsed.IdRight == (CMD_SETFONT & 0xFF) || parsed.IdRight == (CMD_SETFONT2 & 0xFF)) && parsed.Parameter[1].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[1].I = newAddr;
 			dlEditor->replaceLine(i, pa);
 		}
-		// TODO: CMD_SETFONT2
 	}
-	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor); // TODO: Blocks count
+	editorUpdateHandleAddress(newAddr + 148, oldAddr + 148, dlEditor); // TODO: Blocks count FONTOFFSET
 }
 
 void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
@@ -1955,7 +1971,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 					{
 						if (parsed.IdRight == (CMD_SETFONT2 & 0xFF))
 						{
-							handleActive = (parsed.Parameter[0].I == bitmapHandle); // This switches handle (TODO: VERIFY)
+							handleActive = (parsed.Parameter[0].I == bitmapHandle); // This switches handle
 							if (handleActive)
 							{
 								// Purge fonts
