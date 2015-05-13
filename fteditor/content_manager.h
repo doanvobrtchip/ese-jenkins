@@ -29,6 +29,7 @@
 
 // Project includes
 #include "undo_stack_disabler.h"
+#include "constant_mapping.h"
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -106,7 +107,7 @@ struct ContentInfo
 	bool OverlapFlag;
 	bool WantAutoLoad;
 
-	int bitmapAddress() const;
+	int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
 };
 
 /**
@@ -163,6 +164,8 @@ public:
 	void editorUpdatePaletteAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
 	// Update font adress
 	void editorUpdateFontAddress(int newAddr, int oldAddr, DlEditor *dlEditor);
+	// Update font adress
+	void editorUpdateFontOffset(ContentInfo *contentInfo, DlEditor *dlEditor);
 	// ISSUE#113: Remove all entries related to content info
 	void editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor);
 
@@ -174,6 +177,7 @@ public:
 	void changeFontFormat(ContentInfo *contentInfo, int value);
 	void changeFontSize(ContentInfo *contentInfo, int value);
 	void changeFontCharSet(ContentInfo *contentInfo, const QString &value);
+	void changeFontOffset(ContentInfo *contentInfo, int value);
 	void changeRawStart(ContentInfo *contentInfo, int value);
 	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
@@ -204,6 +208,7 @@ private:
 	class ChangeFontFormat;
 	class ChangeFontSize;
 	class ChangeFontCharSet;
+	class ChangeFontOffset;
 	class ChangeRawStart;
 	class ChangeRawLength;
 	class ChangeMemoryLoaded;
@@ -253,6 +258,7 @@ private:
 	QComboBox *m_PropertiesFontFormat;
 	UndoStackDisabler<QSpinBox> *m_PropertiesFontSize;
 	UndoStackDisabler<QLineEdit> *m_PropertiesFontCharSet;
+	UndoStackDisabler<QSpinBox> *m_PropertiesFontOffset;
 
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
@@ -286,6 +292,7 @@ private slots:
 	void propertiesFontFormatChanged(int value);
 	void propertiesFontSizeChanged(int value);
 	void propertiesFontCharSetChanged();
+	void propertiesFontOffsetChanged(int value);
 	void propertiesRawStartChanged(int value);
 	void propertiesRawLengthChanged(int value);
 	void propertiesMemoryLoadedChanged(int value);

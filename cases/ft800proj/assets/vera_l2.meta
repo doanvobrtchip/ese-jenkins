@@ -1,6 +1,7 @@
 {
     "converter": "Font",
     "fontCharSet": "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    "fontOffset": 0,
     "fontSize": 64,
     "imageFormat": 17,
     "sourcePath": "Vera.ttf"

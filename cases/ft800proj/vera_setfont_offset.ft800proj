@@ -1,0 +1,41 @@
+{
+    "content": [
+        {
+            "converter": "Font",
+            "dataCompressed": true,
+            "dataEmbedded": true,
+            "destName": "assets/vera_l2_offset",
+            "fontCharSet": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+            "fontOffset": 32,
+            "fontSize": 64,
+            "imageFormat": 17,
+            "memoryAddress": 68,
+            "memoryLoaded": true,
+            "sourcePath": "Vera.ttf"
+        }
+    ],
+    "coprocessor": [
+        "BITMAP_HANDLE(0)",
+        "BITMAP_SOURCE(4145240)",
+        "BITMAP_LAYOUT(L2, 20, 77)",
+        "BITMAP_LAYOUT_H(0, 0)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 80, 77)",
+        "BITMAP_SIZE_H(0, 0)",
+        "CMD_SETFONT(0, 68)",
+        "CMD_TEXT(65, 51, 0, 0, \"Text\")",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

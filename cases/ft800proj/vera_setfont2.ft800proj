@@ -4,28 +4,28 @@
             "converter": "Font",
             "dataCompressed": true,
             "dataEmbedded": true,
-            "destName": "assets/vera_l2",
-            "fontCharSet": "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-            "fontOffset": 0,
+            "destName": "assets/vera_l2_offset",
+            "fontCharSet": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+            "fontOffset": 32,
             "fontSize": 64,
             "imageFormat": 17,
-            "memoryAddress": 0,
+            "memoryAddress": 68,
             "memoryLoaded": true,
             "sourcePath": "Vera.ttf"
         }
     ],
     "coprocessor": [
-        "BITMAP_HANDLE(0)",
-        "CMD_SETBITMAP(148, L2, 80, 77)",
-        "CMD_SETFONT(0, 0)",
-        "CMD_TEXT(129, 70, 0, 0, \"Text\")",
+        "CMD_SETFONT2(0, 68, 32)",
+        "CMD_KEYS(11, 68, 172, 38, 0, 0, \"keys\")",
+        "CMD_BUTTON(221, 93, 239, 117, 0, 0, \"Button\")",
+        "CMD_TEXT(75, 121, 0, 0, \"Text\")",
         ""
     ],
     "displayList": [
         ""
     ],
     "project": {
-        "device": 2064
+        "device": 2065
     },
     "registers": {
         "hSize": 480,
