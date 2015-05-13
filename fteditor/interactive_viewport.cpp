@@ -2038,24 +2038,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 
-						pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
-						pa.Parameter[0].U = bitmapHandle;
-						pa.ExpectedParameterCount = 1;
-						m_LineEditor->insertLine(hline, pa);
-						++hline;
-						++line;
-						
-						bool useSetBitmap = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor());
-
-						if (useSetBitmap)
+						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+							&& m_LineEditor->isCoprocessor()
+							&& (contentInfo->Converter == ContentInfo::Font))
 						{
 							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_SETBITMAP & 0xFF;
-							pa.Parameter[0].U = contentInfo->bitmapAddress();
-							pa.Parameter[1].U = contentInfo->ImageFormat;
-							pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
-							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
-							pa.ExpectedParameterCount = 4;
+							pa.IdRight = CMD_SETFONT2 & 0xFF;
+							pa.Parameter[0].U = bitmapHandle;
+							pa.Parameter[1].U = contentInfo->MemoryAddress;
+							pa.Parameter[2].U = contentInfo->FontOffset;
+							pa.ExpectedParameterCount = 3;
 							m_LineEditor->insertLine(hline, pa);
 							++hline;
 							++line;
@@ -2063,82 +2055,109 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						}
 						else
 						{
-							pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
-							pa.Parameter[0].U = contentInfo->bitmapAddress();
-							pa.ExpectedParameterCount = 1;
-							m_LineEditor->insertLine(hline, pa);
-							++hline;
-							++line;
-						}
-						
-						if (requirePaletteAddress(contentInfo))
-						{
-							pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-							pa.Parameter[0].U = contentInfo->MemoryAddress;
-							pa.ExpectedParameterCount = 1;
-							m_LineEditor->insertLine(hline, pa);
-							++hline;
-							++line;
-						}
-						
-						if (!useSetBitmap)
-						{
-							pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
-							pa.Parameter[0].U = contentInfo->ImageFormat;
-							pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
-							pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(hline, pa);
-							++hline;
-							++line;
 
-							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-							{
-								// Add _H if necessary
-								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-								pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-								pa.ExpectedParameterCount = 2;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}
-
-							pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
-							pa.Parameter[0].U = 0; // size filter
-							pa.Parameter[1].U = 0; // wrap x
-							pa.Parameter[2].U = 0; // wrap y
-							pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
-							pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
-							pa.ExpectedParameterCount = 5;
-							m_LineEditor->insertLine(hline, pa);
-							++hline;
-							++line;
-
-							if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-							{
-								// Add _H if necessary
-								pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-								pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-								pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-								pa.ExpectedParameterCount = 2;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}
-						}
-
-						if (contentInfo->Converter == ContentInfo::Font)
-						{
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_SETFONT & 0xFF;
+							pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 							pa.Parameter[0].U = bitmapHandle;
-							pa.Parameter[1].U = contentInfo->MemoryAddress;
-							pa.ExpectedParameterCount = 2;
+							pa.ExpectedParameterCount = 1;
 							m_LineEditor->insertLine(hline, pa);
 							++hline;
 							++line;
-							pa.IdLeft = 0;
+
+							bool useSetBitmap = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor());
+
+							if (useSetBitmap)
+							{
+								pa.IdLeft = 0xFFFFFF00;
+								pa.IdRight = CMD_SETBITMAP & 0xFF;
+								pa.Parameter[0].U = contentInfo->bitmapAddress();
+								pa.Parameter[1].U = contentInfo->ImageFormat;
+								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
+								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
+								pa.ExpectedParameterCount = 4;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+								pa.IdLeft = 0;
+							}
+							else
+							{
+								pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
+								pa.Parameter[0].U = contentInfo->bitmapAddress();
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+							}
+
+							if (requirePaletteAddress(contentInfo))
+							{
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress;
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+							}
+
+							if (!useSetBitmap)
+							{
+								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
+								pa.Parameter[0].U = contentInfo->ImageFormat;
+								pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
+								pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
+								pa.ExpectedParameterCount = 3;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+
+								if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+								{
+									// Add _H if necessary
+									pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
+									pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+									pa.ExpectedParameterCount = 2;
+									m_LineEditor->insertLine(hline, pa);
+									++hline;
+									++line;
+								}
+
+								pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
+								pa.Parameter[0].U = 0; // size filter
+								pa.Parameter[1].U = 0; // wrap x
+								pa.Parameter[2].U = 0; // wrap y
+								pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
+								pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
+								pa.ExpectedParameterCount = 5;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+
+								if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+								{
+									// Add _H if necessary
+									pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
+									pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+									pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+									pa.ExpectedParameterCount = 2;
+									m_LineEditor->insertLine(hline, pa);
+									++hline;
+									++line;
+								}
+							}
+
+							if (contentInfo->Converter == ContentInfo::Font)
+							{
+								pa.IdLeft = 0xFFFFFF00;
+								pa.IdRight = CMD_SETFONT & 0xFF;
+								pa.Parameter[0].U = bitmapHandle;
+								pa.Parameter[1].U = contentInfo->MemoryAddress;
+								pa.ExpectedParameterCount = 2;
+								m_LineEditor->insertLine(hline, pa);
+								++hline;
+								++line;
+								pa.IdLeft = 0;
+							}
 						}
 					}
 					if (contentInfo && contentInfo->Converter == ContentInfo::Font)

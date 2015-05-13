@@ -85,6 +85,7 @@ struct ContentInfo
 
 	int FontSize;
 	QString FontCharSet;
+	int FontOffset;
 
 	QString BuildError;
 

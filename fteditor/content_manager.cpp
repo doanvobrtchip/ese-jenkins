@@ -63,7 +63,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawLength = 0;
 	ImageFormat = 0;
 	FontSize = 12;
-	FontCharSet = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	FontOffset = 32;
 	UploadDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
@@ -103,6 +104,7 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		j["imageFormat"] = ImageFormat;
 		j["fontSize"] = FontSize;
 		j["fontCharSet"] = FontCharSet;
+		j["fontOffset"] = FontOffset;
 		break;
 	}
 	return j;
@@ -141,6 +143,8 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
 		FontSize = ((QJsonValue)j["fontSize"]).toVariant().toInt();
 		FontCharSet = j["fontCharSet"].toString();
+		if (j.contains("fontOffset")) FontOffset = ((QJsonValue)j["fontOffset"]).toVariant().toInt();
+		else FontOffset = 0;
 	}
 	else
 	{
