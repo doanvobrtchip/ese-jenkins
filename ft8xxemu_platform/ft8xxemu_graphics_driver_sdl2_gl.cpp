@@ -105,7 +105,7 @@ const char *s_VertexProgram =
 	{ \n\
 		gl_Position = vec4(position.x, position.y, 1.0, 1.0); \n\
 		ioTexCoord0 = texCoord0; \n\
-	}; \n\
+	} \n\
 	";
 
 const char *s_PixelProgram =
@@ -116,7 +116,7 @@ const char *s_PixelProgram =
 	void main() \n\
 	{ \n\
 		color = texture(tex0, ioTexCoord0); \n\
-	}; \n\
+	} \n\
 	";
 
 GLuint s_VAO = 0;
