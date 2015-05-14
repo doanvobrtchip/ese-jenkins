@@ -69,6 +69,7 @@ static int s_MouseX;
 static int s_MouseY;
 static int s_MouseDown;
 
+static bool s_AllowGL3 = true;
 static bool s_GL3 = false;
 static GLuint s_VBO = 0;
 
@@ -370,21 +371,11 @@ void GraphicsDriverClass::begin()
 	s_Window = SDL_CreateWindow(FT8XXEMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
-	s_GL3 = (gl3wInit() == 0 && gl3wIsSupported(3, 3));
+	s_GL3 = (gl3wInit() == 0 && gl3wIsSupported(3, 3)) && s_AllowGL3;
 	
-	if (s_GL3)
+	if (s_GL3) switch (1) default:
 	{
 		printf("OpenGL 3.3 mode\n");
-		glGenVertexArrays(1, &s_VAO);
-		glBindVertexArray(s_VAO);
-
-		glGenBuffers(1, &s_VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, s_VBO);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
-		glActiveTexture(GL_TEXTURE0);
 
 		GLint vpsuccess;
 		GLuint vp = glCreateShader(GL_VERTEX_SHADER);
@@ -398,6 +389,11 @@ void GraphicsDriverClass::begin()
 			std::vector<GLchar> errorLog(maxLength);
 			glGetShaderInfoLog(vp, maxLength, &maxLength, &errorLog[0]);
 			printf("%s", &errorLog[0]);
+
+			printf("Revert to OpenGL 1.1 mode\n");
+			glDeleteShader(vp);
+			s_GL3 = false;
+			s_AllowGL3 = false;
 		}
 
 		GLint ppsuccess;
@@ -412,6 +408,12 @@ void GraphicsDriverClass::begin()
 			std::vector<GLchar> errorLog(maxLength);
 			glGetShaderInfoLog(pp, maxLength, &maxLength, &errorLog[0]);
 			printf("%s", &errorLog[0]);
+
+			printf("Revert to OpenGL 1.1 mode\n");
+			glDeleteShader(vp);
+			glDeleteShader(pp);
+			s_GL3 = false;
+			s_AllowGL3 = false;
 		}
 
 		s_Program = glCreateProgram();
@@ -420,6 +422,8 @@ void GraphicsDriverClass::begin()
 		glLinkProgram(s_Program);
 		GLint isLinked = 0;
 		glGetProgramiv(s_Program, GL_LINK_STATUS, (int *)&isLinked);
+		glDeleteShader(vp);
+		glDeleteShader(pp);
 		if (isLinked == GL_FALSE)
 		{
 			GLint maxLength = 0;
@@ -427,10 +431,23 @@ void GraphicsDriverClass::begin()
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(s_Program, maxLength, &maxLength, &infoLog[0]);
 			printf("%s", &infoLog[0]);
+
+			printf("Revert to OpenGL 1.1 mode\n");
+			glDeleteProgram(s_Program);
+			s_GL3 = false;
+			s_AllowGL3 = false;
 		}
 
-		glDeleteShader(vp);
-		glDeleteShader(pp);
+		glGenVertexArrays(1, &s_VAO);
+		glBindVertexArray(s_VAO);
+
+		glGenBuffers(1, &s_VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, s_VBO);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+		glActiveTexture(GL_TEXTURE0);
 		
 		glUseProgram(s_Program);
 		GLint tex0 = glGetUniformLocation(s_Program, "tex0");
