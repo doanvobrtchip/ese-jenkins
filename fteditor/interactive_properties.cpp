@@ -1293,9 +1293,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SETSCRATCH");
-				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
-				addAddress(1);
-				addSpinBox(2, 0, 255, tr("First character") + ": ", tr("Set first character"));
+				addSpinBox(0, 0, 31, tr("Handle") + ": ", tr("Set handle"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
