@@ -1017,6 +1017,7 @@ private slots:
 				file.open(QIODevice::WriteOnly);
 				QDataStream out(&file);
 				out.writeRawData((const char *)(void *)&ram[memAddress], memSize);
+				break;
 			}
 			case 1:
 			case 2:
