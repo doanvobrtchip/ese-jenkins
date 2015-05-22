@@ -95,9 +95,13 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	m_Vertical->setMinimum(-screenHeightDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Vertical->setMaximum(screenHeightDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Vertical->setValue(0);
+	m_Vertical->setSingleStep(16);
+	m_Vertical->setPageStep(16 * 16);
 	m_Horizontal->setMinimum(-screenWidthDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Horizontal->setMaximum(screenWidthDefault(FTEDITOR_CURRENT_DEVICE) * 8);
 	m_Horizontal->setValue(0);
+	m_Horizontal->setSingleStep(16);
+	m_Horizontal->setPageStep(16 * 16);
 
 	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
