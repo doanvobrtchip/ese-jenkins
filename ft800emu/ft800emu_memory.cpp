@@ -348,6 +348,10 @@ static const uint8_t s_OTP811[FT800EMU_OTP_SIZE] = {
 
 void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
 {
+	memset(s_Ram, 0, FT800EMU_RAM_SIZE);
+	memset(s_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
+	memset(s_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
+	
 	if (romFilePath)
 	{
 		FILE *f;
