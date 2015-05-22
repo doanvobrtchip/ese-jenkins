@@ -1343,7 +1343,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		s_CmdParamString[CMD_SYNC & 0xFF] = false;*/
 		case CMD_SETBITMAP:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETBITMAP."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETBITMAP_FT810."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_SETBITMAP."));
 			if (editor)
 			{
 				setTitle("CMD_SETBITMAP");
@@ -1443,7 +1446,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_LAYOUT:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT_FT810."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_LAYOUT."));
 			if (editor)
 			{
 				setTitle("BITMAP_LAYOUT");
