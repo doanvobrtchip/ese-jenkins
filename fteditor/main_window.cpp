@@ -1225,6 +1225,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
 
+	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 	createDockWindows();
 
 	m_InteractiveProperties = new InteractiveProperties(this);
@@ -1755,10 +1756,11 @@ void MainWindow::createDockWindows()
 	// Project
 	{
 		m_ProjectDock = new QDockWidget(this);
-		m_ProjectDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_ProjectDock->setAllowedAreas(Qt::RightDockWidgetArea);
 		m_ProjectDock->setObjectName("Project");
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		QWidget *widget = new QWidget(this);
@@ -1776,7 +1778,7 @@ void MainWindow::createDockWindows()
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			groupLayout->addWidget(m_ProjectDevice);
 			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
-			
+
 			m_ProjectDisplay = new QComboBox(this);
 			for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
@@ -1795,6 +1797,13 @@ void MainWindow::createDockWindows()
 		m_ProjectDock->setWidget(scrollArea);
 		addDockWidget(Qt::RightDockWidgetArea, m_ProjectDock);
 		m_WidgetsMenu->addAction(m_ProjectDock->toggleViewAction());
+
+		// Force proper size
+		int h = widget->height();
+		scrollArea->setMaximumHeight(h);
+
+		// Only allow closable because otherwise it can tab into other docks which will badly resize
+		m_ProjectDock->setFeatures(QDockWidget::DockWidgetClosable);
 	}
 
 #if FT800_DEVICE_MANAGER
