@@ -307,6 +307,7 @@ private:
 
 	QString m_CurrentFile;
 	QTemporaryDir *m_TemporaryDir;
+	QString m_LastProjectDir;
 
 	friend class ProjectDeviceCommand;
 

@@ -45,6 +45,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDesktopServices>
 #include <QScrollBar>
 #include <QComboBox>
+#include <QStandardPaths>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -2766,7 +2767,17 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 
 QString MainWindow::getFileDialogPath()
 {
-	return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
+	if (m_LastProjectDir.isEmpty())
+	{
+		return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+	}
+	else
+	{
+		QDir dir(m_LastProjectDir);
+		dir.cdUp();
+		return dir.path();
+	}
+	// return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
 }
 
 void MainWindow::actOpen()
@@ -2796,6 +2807,7 @@ void MainWindow::actOpen()
 	dir.cdUp();
 	QString dstPath = dir.path();
 	QDir::setCurrent(dstPath);
+	m_LastProjectDir = QDir::currentPath();
 
 	// Load the data
 	bool loadOk = false;
@@ -2859,6 +2871,7 @@ void MainWindow::actOpen()
 #else
 		QDir::setCurrent(m_InitialWorkingDir);
 #endif
+		m_LastProjectDir = QDir::currentPath();
 	}
 
 	// clear undo stacks
