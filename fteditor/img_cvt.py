@@ -295,7 +295,7 @@ class Image_Conv:
 			elif opt == '-f':
 				output_format = int(arg)
 				if output_format not in [0,1,2,3,4,5,6,7,8,17]:
-					raise Exception("Output format is not supported")
+					raise Exception("Input image format can not be converted to the specified output format")
 			elif opt == '-o':
 				outname = arg
 			else:
