@@ -41,6 +41,7 @@ class QCheckBox;
 class QTabBar;
 class QProgressBar;
 class QComboBox;
+class QLabel;
 
 namespace FTEDITOR {
 
@@ -217,6 +218,8 @@ private:
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
+
+	QLabel *m_CursorPosition;
 
 	QDockWidget *m_NavigatorDock;
 	EmulatorNavigator *m_EmulatorNavigator;

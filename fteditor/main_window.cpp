@@ -1548,6 +1548,15 @@ void MainWindow::frameQt()
 		}
 		s_WarnMissingClearActive = s_WarnMissingClear;
 	}
+
+	// m_CursorPosition
+	uint8_t *ram = FT8XXEMU_getRam();
+	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
+	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
+	if (m_EmulatorViewport->mouseOver())
+		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
+	else
+		m_CursorPosition->setText("");
 }
 
 void MainWindow::createActions()
@@ -1805,6 +1814,22 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
 	}
 #endif /* FT800_DEVICE_MANAGER */
+
+	// Cursor position
+	{
+		m_CursorPosition = new QLabel(statusBar());
+		m_CursorPosition->setText("");
+		statusBar()->addPermanentWidget(m_CursorPosition);
+
+		/*QFrame *line = new QFrame(statusBar());
+		line->setFrameShape(QFrame::HLine);
+		line->setFrameShadow(QFrame::Sunken);
+		statusBar()->addPermanentWidget(line);*/
+
+		QLabel *label = new QLabel(statusBar());
+		label->setText("    ");
+		statusBar()->addPermanentWidget(label);
+	}
 
 	// Utilization
 	{

@@ -53,6 +53,10 @@ public:
 
 	virtual void keyPressEvent(QKeyEvent *e);
 
+	int mouseX() const { return m_MouseX; }
+	int mouseY() const { return m_MouseY; }
+	bool mouseOver() const { return m_MouseOver; }
+
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 
