@@ -551,6 +551,22 @@ ContentInfo *ContentManager::add(const QString &filePath)
 		}
 	}
 
+	switch (contentInfo->Converter)
+	{
+	case ContentInfo::RawJpeg:
+		contentInfo->DestName = "jpegs/" + contentInfo->DestName;
+		break;
+	case ContentInfo::Image:
+		contentInfo->DestName = "images/" + contentInfo->DestName;
+		break;
+	case ContentInfo::Font:
+		contentInfo->DestName = "fonts/" + contentInfo->DestName;
+		break;
+	default:
+		contentInfo->DestName = "content/" + contentInfo->DestName;
+		break;
+	}
+
 	add(contentInfo);
 
 	return contentInfo;
