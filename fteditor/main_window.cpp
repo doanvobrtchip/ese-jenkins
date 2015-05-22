@@ -81,19 +81,26 @@ typedef int32_t ramaddr;
 int s_HSize = 480;
 int s_VSize = 272;
 
+static const int s_StandardResolutionNb[] = {
+	2, // FT800
+	2, // FT801
+	3, // FT810
+	3, // FT811
+};
+
 static const char *s_StandardResolutions[] = {
 	"QVGA (320x240)",
 	"WQVGA (480x272)",
 	"SVGA (800x600)",
 };
 
-static int s_StandardWidths[] = {
+static const int s_StandardWidths[] = {
 	320,
 	480,
 	800,
 };
 
-static int s_StandardHeights[] = {
+static const int s_StandardHeights[] = {
 	240,
 	272,
 	600,
@@ -1761,7 +1768,7 @@ void MainWindow::createDockWindows()
 			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
 			
 			m_ProjectDisplay = new QComboBox(this);
-			for (int i = 0; i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]); ++i)
+			for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
 			m_ProjectDisplay->addItem("");
 			groupLayout->addWidget(m_ProjectDisplay);
@@ -2457,7 +2464,8 @@ void MainWindow::vsizeChanged(int vsize)
 
 void MainWindow::updateProjectDisplay(int hsize, int vsize)
 {
-	for (int i = 0; i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]); ++i)
+	m_ProjectDisplay->setItemText(s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE], tr("Custom") + " (" + QString::number(hsize) + "x" + QString::number(vsize) + ")");
+	for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 	{
 		if (s_StandardWidths[i] == hsize && s_StandardHeights[i] == vsize)
 		{
@@ -2465,7 +2473,7 @@ void MainWindow::updateProjectDisplay(int hsize, int vsize)
 			return;
 		}
 	}
-	m_ProjectDisplay->setCurrentIndex(sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]));
+	m_ProjectDisplay->setCurrentIndex(s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]);
 	return;
 }
 
@@ -3279,6 +3287,15 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_Toolbox->bindCurrentDevice();
 	m_ContentManager->bindCurrentDevice();
 
+	// Update resolution list
+	s_UndoRedoWorking = true;
+	m_ProjectDisplay->clear();
+	for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+		m_ProjectDisplay->addItem(s_StandardResolutions[i]);
+	m_ProjectDisplay->addItem("");
+	updateProjectDisplay(m_HSize->value(), m_VSize->value());
+	s_UndoRedoWorking = false;
+
 	// Reconfigure emulator controls
 	stepEnabled(m_StepEnabled->isChecked());
 	stepCmdEnabled(m_StepCmdEnabled->isChecked());
@@ -3333,7 +3350,7 @@ void MainWindow::projectDisplayChanged(int i)
 	if (s_UndoRedoWorking)
 		return;
 	
-	if (i < sizeof(s_StandardResolutions) / sizeof(s_StandardResolutions[0]))
+	if (i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE])
 	{
 		m_UndoStack->beginMacro(tr("Change display"));
 		m_HSize->setValue(s_StandardWidths[i]);
