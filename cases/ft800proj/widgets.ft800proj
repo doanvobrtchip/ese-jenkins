@@ -1,0 +1,33 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_GRADIENT(74, 149, 0, 127, 255, 179, 293, 127, 255, 0)",
+        "CMD_TEXT(59, 24, 28, 0, \"Text\")",
+        "CMD_BUTTON(293, 41, 120, 36, 27, 0, \"Button\")",
+        "CMD_KEYS(283, 177, 160, 36, 31, 0, \"keys\")",
+        "CMD_PROGRESS(116, 122, 180, 12, 0, 20, 100)",
+        "CMD_SLIDER(107, 170, 80, 8, 0, 30, 100)",
+        "CMD_SCROLLBAR(29, 65, 16, 160, 0, 120, 60, 480)",
+        "CMD_TOGGLE(158, 232, 40, 27, 0, 0, \"on\\xFFoff\")",
+        "CMD_GAUGE(237, 63, 36, 0, 4, 8, 40, 100)",
+        "CMD_CLOCK(424, 122, 36, 0, 13, 51, 17, 0)",
+        "CMD_DIAL(233, 190, 36, 0, 6144)",
+        "CMD_NUMBER(159, 29, 28, 0, 42)",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2064
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}
