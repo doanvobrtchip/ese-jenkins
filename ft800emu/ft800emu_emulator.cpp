@@ -269,7 +269,9 @@ const uint8_t bayerDiv4[2][2] = {
 
 			// Update display resolution
 			int32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
+			if (reg_vsize > FT800EMU_SCREEN_HEIGHT_MAX) reg_vsize = FT800EMU_SCREEN_HEIGHT_MAX;
 			int32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
+			if (reg_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsize = FT800EMU_SCREEN_WIDTH_MAX;
 			if (!s_Graphics) FT8XXEMU::GraphicsDriver.setMode(reg_hsize, reg_vsize);
 
 
