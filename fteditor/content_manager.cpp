@@ -52,7 +52,7 @@ QMutex ContentManager::s_Mutex;
 ContentInfo::ContentInfo(const QString &filePath)
 {
 	SourcePath = filePath;
-	DestName = QFileInfo(filePath).baseName();
+	DestName = QFileInfo(filePath).completeBaseName();
 	View = NULL;
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
