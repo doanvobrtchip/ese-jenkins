@@ -43,7 +43,8 @@ namespace FTEDITOR {
 extern int g_StepCmdLimit;
 
 DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true),
-m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor), m_EditingInteractive(false)
+m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor), m_EditingInteractive(false),
+m_CompleterModel(NULL)
 {
 	m_DisplayListShared[0] = DISPLAY();
 
@@ -94,6 +95,15 @@ void DlEditor::bindCurrentDevice()
 
 	DlParser::getIdentifiers(FTEDITOR_CURRENT_DEVICE, m_CompleterIdentifiers, m_ModeCoprocessor);
 	DlParser::getParams(FTEDITOR_CURRENT_DEVICE, m_CompleterParams, m_ModeCoprocessor);
+
+	if (m_CompleterModel)
+	{
+		if (m_CompleterIdentifiersActive)
+			m_CompleterModel->setStringList(m_CompleterIdentifiers);
+		else
+			m_CompleterModel->setStringList(m_CompleterParams);
+		m_Completer->popup()->hide();
+	}
 
 	lockDisplayList();
 	for (int i = 0; i < m_CodeEditor->document()->blockCount(); ++i)
