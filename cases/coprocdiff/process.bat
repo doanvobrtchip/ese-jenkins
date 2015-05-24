@@ -17,3 +17,5 @@ ftemutest_coprocdiff.exe -ft801 STREET
 ftemutest_coprocdiff.exe -ft811 STREET
 ftemutest_coprocdiff.exe -ft801 FONTS
 ftemutest_coprocdiff.exe -ft811 FONTS
+cd cases
+cd coprocdiff
