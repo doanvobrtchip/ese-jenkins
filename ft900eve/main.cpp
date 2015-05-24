@@ -162,7 +162,31 @@ int main(int argc, char *argv[])
 					switch (argv[i][3])
 					{
 					case '8':
-						mode = (FT8XXEMU_EmulatorMode)atoi(&argv[i][3]);
+						switch (argv[i][4])
+						{
+						case '0':
+							switch (argv[i][5])
+							{
+							case '0':
+								mode = FT8XXEMU_EmulatorFT800;
+								break;
+							case '1':
+								mode = FT8XXEMU_EmulatorFT801;
+								break;
+							}
+							break;
+						case '1':
+							switch (argv[i][5])
+							{
+							case '0':
+								mode = FT8XXEMU_EmulatorFT810;
+								break;
+							case '1':
+								mode = FT8XXEMU_EmulatorFT811;
+								break;
+							}
+							break;
+						}
 						break;
 					}
 					break;
@@ -175,7 +199,7 @@ int main(int argc, char *argv[])
 	s_InFile = argv[argc - 1];
 
 	FT8XXEMU_EmulatorParameters params;
-	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT801);
+	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, mode);
 	params.MCUSleep = mcuSleep;
 	params.Setup = setup;
 	params.Loop = loop;
