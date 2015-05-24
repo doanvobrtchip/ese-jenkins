@@ -17,5 +17,14 @@ ftemutest_coprocdiff.exe -ft801 STREET
 ftemutest_coprocdiff.exe -ft811 STREET
 ftemutest_coprocdiff.exe -ft801 FONTS
 ftemutest_coprocdiff.exe -ft811 FONTS
+ftemutest_coprocdiff.exe -ft801 KB2
+ftemutest_coprocdiff.exe -ft811 KB2
+ftemutest_coprocdiff.exe -ft801 POWER
+ftemutest_coprocdiff.exe -ft811 POWER
+ftemutest_coprocdiff.exe -ft801 SCATTER
+ftemutest_coprocdiff.exe -ft811 SCATTER
+ftemutest_coprocdiff.exe -ft801 TILTED
+ftemutest_coprocdiff.exe -ft811 TILTED
 cd cases
 cd coprocdiff
+diff_ft801_ft811.py
