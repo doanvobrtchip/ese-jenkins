@@ -46,7 +46,9 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define CMD_ID_NB 68
 #endif
 static int s_ParamCount[DL_ID_NB];
+static int s_ParamDefault[DL_ID_NB][DLPARSED_MAX_PARAMETER];
 static int s_CmdParamCount[CMD_ID_NB];
+static int s_CmdParamDefault[DL_ID_NB][DLPARSED_MAX_PARAMETER];
 static bool s_CmdParamString[CMD_ID_NB];
 
 static std::string s_CmdIdList[CMD_ID_NB];
@@ -56,6 +58,24 @@ static std::string s_CmdIdList[CMD_ID_NB];
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
 
 #if defined(FTEDITOR_PARSER_VC1)
+std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultParamVC1()
+#elif defined(FTEDITOR_PARSER_VC2)
+std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultParamVC2()
+#endif
+{
+	return (std::array<int, DLPARSED_MAX_PARAMETER> *)(void *)s_ParamDefault;
+}
+
+#if defined(FTEDITOR_PARSER_VC1)
+std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultCmdParamVC1()
+#elif defined(FTEDITOR_PARSER_VC2)
+std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultCmdParamVC2()
+#endif
+{
+	return (std::array<int, DLPARSED_MAX_PARAMETER> *)(void *)s_CmdParamDefault;
+}
+
+#if defined(FTEDITOR_PARSER_VC1)
 void DlParser::initVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
 void DlParser::initVC2()
@@ -63,6 +83,7 @@ void DlParser::initVC2()
 {
 	if (!s_IdMap.size())
 	{
+		memset(s_ParamDefault, 0, sizeof(s_ParamDefault));
 		s_IdMap["DISPLAY"] = FTEDITOR_DL_DISPLAY;
 		s_ParamCount[FTEDITOR_DL_DISPLAY] = 0;
 		s_IdMap["BITMAP_SOURCE"] = FTEDITOR_DL_BITMAP_SOURCE;
@@ -144,6 +165,7 @@ void DlParser::initVC2()
 #if defined(FTEDITOR_PARSER_VC2)
 		s_IdMap["VERTEX_FORMAT"] = FTEDITOR_DL_VERTEX_FORMAT;
 		s_ParamCount[FTEDITOR_DL_VERTEX_FORMAT] = 1;
+		s_ParamDefault[FTEDITOR_DL_VERTEX_FORMAT][0] = 4;
 		s_IdMap["BITMAP_LAYOUT_H"] = FTEDITOR_DL_BITMAP_LAYOUT_H;
 		s_ParamCount[FTEDITOR_DL_BITMAP_LAYOUT_H] = 2;
 		s_IdMap["BITMAP_SIZE_H"] = FTEDITOR_DL_BITMAP_SIZE_H;
@@ -160,6 +182,7 @@ void DlParser::initVC2()
 	}
 	if (!s_ParamMap.size())
 	{
+		memset(s_CmdParamDefault, 0, sizeof(s_CmdParamDefault));
 		s_ParamMap["ALWAYS"] = ALWAYS;
 		s_ParamMap["ARGB1555"] = ARGB1555;
 		s_ParamMap["ARGB2"] = ARGB2;
@@ -393,6 +416,7 @@ void DlParser::initVC2()
 		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
 		s_CmdIdMap["CMD_SETBASE"] = CMD_SETBASE & 0xFF;
 		s_CmdParamCount[CMD_SETBASE & 0xFF] = 1;
+		s_CmdParamDefault[CMD_SETBASE & 0xFF][0] = 10;
 		s_CmdParamString[CMD_SETBASE & 0xFF] = false;
 		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
 		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;

@@ -246,6 +246,23 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		}
 	}
 
+	std::array<int, DLPARSED_MAX_PARAMETER> *defaultParam;
+	if (parsed.ValidId)
+	{
+		switch (parsed.IdLeft)
+		{
+		case FTEDITOR_DL_INSTRUCTION:
+			defaultParam = (deviceIntf >= FTEDITOR_FT810) ? defaultParamVC2() : defaultParamVC1();
+			break;
+		case FTEDITOR_CO_COMMAND:
+			defaultParam = (deviceIntf >= FTEDITOR_FT810) ? defaultCmdParamVC2() : defaultCmdParamVC1();
+			break;
+		default:
+			defaultParam = NULL;
+			break;
+		}
+	}
+
 	int p = 0;
 	if (!failId)
 	{
@@ -482,18 +499,18 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						}
 						else
 						{
-							parsed.Parameter[p].U = 0;
+							parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight][p] : 0;
 						}
 					}
 					else
 					{
-						parsed.Parameter[p].U = 0;
+						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight][p] : 0;
 					}
 				}
 			}
 			else
 			{
-				parsed.Parameter[p].U = 0;
+				parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight][p] : 0;
 			}
 
 			if (finalIndex >= 0)
@@ -522,14 +539,20 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			}
 		}
 	}
-
+	
 	// Clear unfilled to be safe
 	if (parsed.ValidId)
 	{
 		if (!failId) ++p;
-		for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+		if (defaultParam)
 		{
-			parsed.Parameter[p].U = 0;
+			for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+				parsed.Parameter[p].I = defaultParam[parsed.IdRight][p];
+		}
+		else
+		{
+			for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+				parsed.Parameter[p].U = 0;
 		}
 	}
 }

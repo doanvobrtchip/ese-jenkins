@@ -17,6 +17,7 @@
 // STL includes
 #include <vector>
 #include <map>
+#include <array>
 
 // Qt includes
 #include <QObject>
@@ -110,6 +111,10 @@ private:
 	static void toStringVC2(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static void toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+	static std::array<int, DLPARSED_MAX_PARAMETER> *defaultParamVC1();
+	static std::array<int, DLPARSED_MAX_PARAMETER> *defaultParamVC2();
+	static std::array<int, DLPARSED_MAX_PARAMETER> *defaultCmdParamVC1();
+	static std::array<int, DLPARSED_MAX_PARAMETER> *defaultCmdParamVC2();
 
 	static const std::map<std::string, int> *m_IdMap[FTEDITOR_DEVICE_NB];
 	static const std::map<std::string, int> *m_ParamMap[FTEDITOR_DEVICE_NB];
