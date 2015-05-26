@@ -193,36 +193,36 @@ void genVBO()
 
 void drawBuffer()
 {
-	if (s_WindowResized || s_Width != s_WidthCur || s_Height != s_HeightCur)
-	{
-		glViewport(0, 0, s_WindowWidth, s_WindowHeight);
-		debugGL("drawBuffer() 1: glViewport");
-		s_WindowResized = false;
-		float windowRatio = (float)s_WindowWidth / (float)s_WindowHeight;
-		if (windowRatio > s_Ratio) // Window is wider
-		{
-			float box = ((windowRatio / s_Ratio) - 1.0f) * 0.5f;
-			s_LetterBoxX = box;
-			s_LetterBoxY = 0;
-		}
-		else if (windowRatio < s_Ratio)
-		{
-			float box = ((s_Ratio / windowRatio) - 1.0f) * 0.5f;
-			s_LetterBoxX = 0;
-			s_LetterBoxY = box;
-		}
-		else
-		{
-			s_LetterBoxX = 0;
-			s_LetterBoxY = 0;
-		}
-		s_LetterBoxXPix = (int)(s_LetterBoxX * (float)s_Width * ((float)s_WindowHeight / (float)s_Height));
-		s_LetterBoxYPix = (int)(s_LetterBoxY * (float)s_Height * ((float)s_WindowWidth / (float)s_Width));
-		genVBO();
-	}
-
 	if (s_Output)
 	{
+		if (s_WindowResized || s_Width != s_WidthCur || s_Height != s_HeightCur)
+		{
+			glViewport(0, 0, s_WindowWidth, s_WindowHeight);
+			debugGL("drawBuffer() 1: glViewport");
+			s_WindowResized = false;
+			float windowRatio = (float)s_WindowWidth / (float)s_WindowHeight;
+			if (windowRatio > s_Ratio) // Window is wider
+			{
+				float box = ((windowRatio / s_Ratio) - 1.0f) * 0.5f;
+				s_LetterBoxX = box;
+				s_LetterBoxY = 0;
+			}
+			else if (windowRatio < s_Ratio)
+			{
+				float box = ((s_Ratio / windowRatio) - 1.0f) * 0.5f;
+				s_LetterBoxX = 0;
+				s_LetterBoxY = box;
+			}
+			else
+			{
+				s_LetterBoxX = 0;
+				s_LetterBoxY = 0;
+			}
+			s_LetterBoxXPix = (int)(s_LetterBoxX * (float)s_Width * ((float)s_WindowHeight / (float)s_Height));
+			s_LetterBoxYPix = (int)(s_LetterBoxY * (float)s_Height * ((float)s_WindowWidth / (float)s_Width));
+			genVBO();
+		}
+
 #if FT8XXEMU_THREADED_FLIP
 		int buffer = (s_BufferCurrent + 1) % 2;
 		if (!SDL_LockMutex(s_BufferMutex[buffer]))
