@@ -7797,7 +7797,7 @@ Ft_Gpu_Hal_Sleep(1000); //Show the booting up screen.
 //fontTesting();
 //SAMAPP_CoPro_Widget_Calibrate();
 
-while (1) {
+while (0) {
 	/*
 	Ft_Gpu_Hal_Wr8(phost, REG_GPIO,0x083 | Ft_Gpu_Hal_Rd8(phost,REG_GPIO));
 	Ft_Gpu_Hal_Wr8(phost, REG_VOL_SOUND,255);

@@ -33,6 +33,57 @@ Revision History:
 #ifdef MSVC_FT800EMU
 #include <ft8xxemu.h>
 
+#ifdef WIN32
+#include <Windows.h>
+#include <dbghelp.h>
+#include <crtdbg.h>
+#endif
+
+
+#ifdef WIN32
+// enable memory leak checks, trick to get _CrtSetBreakAlloc in before main
+#define DEBUG_ALLOC_HOOK
+#if defined(DEBUG_ALLOC_HOOK)
+int debugAllocHook(int allocType, void *userData, size_t size, int
+	blockType, long requestNumber, const unsigned char *filename, int
+	lineNumber);
+#endif
+class CEnableCrtDebug
+{
+public:
+	CEnableCrtDebug()
+	{
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		_CrtSetBreakAlloc(0);
+#if defined(DEBUG_ALLOC_HOOK)
+		LastSize = 0;
+		_CrtSetAllocHook(debugAllocHook);
+#endif
+	}
+#if defined(DEBUG_ALLOC_HOOK)
+	size_t LastSize;
+#endif
+};
+static CEnableCrtDebug _EnableCrtDebug;
+#if defined(DEBUG_ALLOC_HOOK)
+int debugAllocHook(int allocType, void *userData, size_t size, int
+	blockType, long requestNumber, const unsigned char *filename, int
+	lineNumber)
+{
+	if (allocType == _HOOK_ALLOC)
+	{
+		//if (requestNumber == 14806)
+		//	_CrtSetBreakAlloc(14809);
+		//if (_EnableCrtDebug.LastSize == 4 && size == 40 && requestNumber > 291000 && requestNumber < 292000)
+		//	_CrtDbgBreak();
+		//if (_EnableCrtDebug.LastSize == 36 && size == 112 && requestNumber > 300000)
+		//	_CrtDbgBreak();
+		_EnableCrtDebug.LastSize = size;
+	}
+	return TRUE;
+}
+#endif
+#endif
 
 
 
