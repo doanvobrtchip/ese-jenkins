@@ -78,6 +78,7 @@ public:
 	// Replace a line (creates undo stack), used for example from the interactive viewport
 	void replaceLine(int line, const DlParsed &parsed, int combineId = -1, const QString &message = QString());
 	void removeLine(int line);
+	void removeAll();
 	const DlParsed &getLine(int line) const;
 	// Move cursor to line
 	void selectLine(int line);

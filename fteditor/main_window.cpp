@@ -3438,7 +3438,7 @@ void MainWindow::actImportDisplayList()
 	memcpy(m_DlEditor->getDisplayList(), FT8XXEMU_getDisplayList(), FTEDITOR_DL_SIZE * sizeof(uint32_t));
 	m_DlEditor->reloadDisplayList(false);
 	m_DlEditor->unlockDisplayList();
-	m_CmdEditor->clear();
+	m_CmdEditor->removeAll();
 	m_UndoStack->endMacro();
 	m_DlEditorDock->setVisible(true);
 	focusDlEditor();

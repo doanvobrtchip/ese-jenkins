@@ -351,6 +351,16 @@ void DlEditor::removeLine(int line)
 	m_EditingInteractive = false;
 }
 
+void DlEditor::removeAll()
+{
+	m_EditingInteractive = true;
+	QTextCursor c = m_CodeEditor->textCursor();
+	c.setPosition(0);
+	c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+	c.insertText("");
+	m_EditingInteractive = false;
+}
+
 int DlEditor::getLineCount()
 {
 	return m_CodeEditor->document()->blockCount();
