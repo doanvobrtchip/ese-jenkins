@@ -73,6 +73,9 @@ static bool s_AllowGL3 = true;
 static bool s_GL3 = false;
 static GLuint s_VBO = 0;
 
+// Print detailed GL debug info
+#define FT8XXEMU_GL_DEBUG_DETAIL 1
+
 // Threaded flip causes the buffer to be flipped from a separate thread.
 // It saves time for the CPU processing
 // Disabled because not compatible with dynamic degrade yet
@@ -152,6 +155,18 @@ bool s_Output = false;
 int s_TitleFrameSkip = 0;
 #endif
 
+#if FT8XXEMU_GL_DEBUG_DETAIL
+FT8XXEMU_FORCE_INLINE void debugGL(const char *message)
+{
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		cerr << "OpenGL error (" << message << "): " << err << endl;
+	}
+}
+#else
+FT8XXEMU_FORCE_INLINE void debugGL(const char *message) { }
+#endif
+
 void genVBO()
 {
 	if (s_GL3)
@@ -172,6 +187,7 @@ void genVBO()
 		};
 #endif
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vbo), vbo, GL_DYNAMIC_DRAW);
+		debugGL("genVBO() glBufferData");
 	}
 }
 
@@ -180,6 +196,7 @@ void drawBuffer()
 	if (s_WindowResized || s_Width != s_WidthCur || s_Height != s_HeightCur)
 	{
 		glViewport(0, 0, s_WindowWidth, s_WindowHeight);
+		debugGL("drawBuffer() 1: glViewport");
 		s_WindowResized = false;
 		float windowRatio = (float)s_WindowWidth / (float)s_WindowHeight;
 		if (windowRatio > s_Ratio) // Window is wider
@@ -218,19 +235,23 @@ void drawBuffer()
 				s_WidthCur = s_Width;
 				s_HeightCur = s_Height;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s_Width, s_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+				debugGL("drawBuffer() 2: glTexImage2D");
 			}
 			else
 			{
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, s_WidthCur, s_HeightCur, GL_RGBA, GL_UNSIGNED_BYTE, s_BufferARGB8888[buffer]);
+				debugGL("drawBuffer() 3: glTexSubImage2D");
 			}
 
 			if (s_GL3)
 			{
 				glDrawArrays(GL_QUADS, 0, 4);
+				debugGL("drawBuffer() 4: glDrawArrays");
 			}
 			else
 			{
 				glEnable(GL_TEXTURE_2D);
+				debugGL("drawBuffer() 5: glEnable");
 
 				glBegin(GL_QUADS);
 
@@ -261,11 +282,14 @@ void drawBuffer()
 #endif
 
 				glEnd();
+				debugGL("drawBuffer() 6: glEnd");
 
 				glDisable(GL_TEXTURE_2D);
+				debugGL("drawBuffer() 7: glDisable");
 			}
 
 			glFlush();
+			debugGL("drawBuffer() 8: glFlush");
 
 #if FT8XXEMU_THREADED_FLIP
 			SDL_UnlockMutex(s_BufferMutex[buffer]);
@@ -275,10 +299,13 @@ void drawBuffer()
 	else
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
+		debugGL("drawBuffer() 9: glClear");
 		glFlush();
+		debugGL("drawBuffer() 10: glFlush");
 	}
 #if FT8XXEMU_HARDWARE_DOUBLE_BUFFER
 	SDL_GL_SwapWindow(s_Window);
+	debugGL("drawBuffer() 11: SDL_GL_SwapWindow");
 #endif
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
@@ -459,16 +486,21 @@ void GraphicsDriverClass::begin()
 	}
 
 	glGenTextures(1, &s_BufferTexture);
+	debugGL("begin() 1: glGenTextures");
 	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
+	debugGL("begin() 2: glBindTexture");
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	debugGL("begin() 3: glTexParameteri");
 
 	static const GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+	debugGL("begin() 4: glTexParameteriv");
 
-	glClearColor( 0.5f, 0.5f, 0.5f, 0.0f );
+	glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+	debugGL("begin() 5: glClearColor");
 
 #if FT8XXEMU_THREADED_FLIP
 	SDL_GL_MakeCurrent(s_Window, NULL);
@@ -478,6 +510,11 @@ void GraphicsDriverClass::begin()
 	s_WaitFlipMutex = SDL_CreateMutex();
 	s_FlipThread = SDL_CreateThreadFT(flipThread, NULL, NULL);
 #endif
+
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		cerr << "OpenGL error: " << err << endl;
+	}
 }
 
 bool GraphicsDriverClass::update()
