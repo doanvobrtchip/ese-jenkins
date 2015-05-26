@@ -1368,7 +1368,7 @@ void MainWindow::runScript(const QString &script)
 	QByteArray scriptNa = scriptN.toUtf8();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
-	QString outputName = QFileInfo(m_CurrentFile).baseName();
+	QString outputName = QFileInfo(m_CurrentFile).completeBaseName();
 	if (outputName.isEmpty()) outputName = "untitled";
 	QByteArray outN = outputName.toUtf8();
 
@@ -2627,7 +2627,7 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
+	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
 }
 
 void MainWindow::undoCleanChanged(bool clean)
