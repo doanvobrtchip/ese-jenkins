@@ -2817,7 +2817,6 @@ QString MainWindow::getFileDialogPath()
 	else
 	{
 		QDir dir(m_LastProjectDir);
-		dir.cdUp();
 		return dir.path();
 	}
 	// return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
