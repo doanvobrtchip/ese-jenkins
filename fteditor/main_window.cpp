@@ -1304,43 +1304,51 @@ static QString scriptDisplayName(const QString &script)
 void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
-	//printf("Refresh scripts menu\n");
-	QDir currentDir = m_InitialWorkingDir; //QDir::currentPath(); //currentDir(QCoreApplication::applicationDirPath());
+	m_ExportScriptDir = QString("ExportScripts.") + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "FT81X." : "FT80X.");
+
+	QDir currentDir(QCoreApplication::applicationDirPath() + "\\ExportScripts" + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "\\FT81X" : "\\FT80X"));
+
 	QStringList filters;
+
 	filters.push_back("*.py");
 	QStringList scriptFiles = currentDir.entryList(filters);
+
 	std::map<QString, RunScript *> scriptActs;
 	scriptActs.swap(m_ScriptActs);
+
+
+	//Fill up empty m_ScriptActs from previous values in scriptActs
 	for (int i = 0; i < scriptFiles.size(); ++i)
 	{
-		if (scriptFiles[i].endsWith("_cvt.py"))
-			continue; // Hide _cvt scripts
-		if (scriptFiles[i] == "pngp2pa.py")
-			continue;
-		if (scriptFiles[i] == "png.py")
-			continue;
 
-		//char *fileName = scriptFiles[i].toLatin1().data();
-		//printf("Script: %s\n", fileName);
 		if (scriptActs.find(scriptFiles[i]) == scriptActs.end())
 		{
 			RunScript *rs = new RunScript();
 			QAction *act = new QAction(this);
-			act->setText(scriptDisplayName(scriptFiles[i]));
+
+			//package.subpackage.module
+			QString full_scriptName = m_ExportScriptDir + scriptFiles[i];
+
+			act->setText(scriptDisplayName(full_scriptName));
 			act->setStatusTip(tr("Run Python script"));
 			m_ScriptsMenu->addAction(act);
+
 			rs->Action = act;
-			rs->Script = scriptFiles[i];
+
+			rs->Script = full_scriptName;
 			rs->Window = this,
 			connect(act, SIGNAL(triggered()), rs, SLOT(runScript()));
 			m_ScriptActs[scriptFiles[i]] = rs;
 		}
 		else
 		{
+			//find existing script and add it to m_ScriptActs		
 			m_ScriptActs[scriptFiles[i]] = scriptActs[scriptFiles[i]];
 			scriptActs.erase(scriptFiles[i]);
 		}
 	}
+
+	//delete non-existing run scripts
 	for (std::map<QString, RunScript *>::iterator it = scriptActs.begin(), end = scriptActs.end(); it != end; ++it)
 	{
 		delete it->second;
@@ -1364,6 +1372,7 @@ void MainWindow::runScript(const QString &script)
 {
 #ifdef FT800EMU_PYTHON
 	QString scriptN = script.left(script.size() - 3);
+
 	QByteArray scriptNa = scriptN.toUtf8();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
@@ -1709,7 +1718,7 @@ void MainWindow::translateMenus()
 	m_ToolsMenu->setTitle(tr("Tools"));
 	m_WidgetsMenu->setTitle(tr("View"));
 #ifdef FT800EMU_PYTHON
-	m_ScriptsMenu->setTitle(tr("Scripts"));
+	m_ScriptsMenu->setTitle(tr("Export"));
 #endif /* FT800EMU_PYTHON */
 	m_HelpMenu->setTitle(tr("Help"));
 }
@@ -2618,7 +2627,7 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).baseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
+	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
 }
 
 void MainWindow::undoCleanChanged(bool clean)
@@ -2812,7 +2821,7 @@ void MainWindow::actOpen()
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-		tr("FT800 Editor Project, *.ft800proj (*.ft800proj)"));
+		tr("EVE Screen Editor Project (*.ft800proj  *.ft8xxproj)"));
 	if (fileName.isNull())
 		return;
 
@@ -2983,16 +2992,18 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filterft800proj = tr("FTDI EVE Screen Editor Project, *.ft800proj (*.ft800proj)");
-	QString filter = filterft800proj;
+	QString filterft8xxproj = tr("ESE Project (*.ft8xxproj)");
+
+	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
 
-	if (filter == filterft800proj)
+
+	if (filter == filterft8xxproj)
 	{
-		if (!fileName.endsWith(".ft800proj"))
-			fileName = fileName + ".ft800proj";
+		if (!fileName.endsWith(".ft8xxproj"))
+			fileName = fileName + ".ft8xxproj";
 	}
 
 	// Copy asset files, abort if already exists (check first)
@@ -3443,17 +3454,16 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/FT800 Screen Editor.chm"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/FT8XX Screen Editor.chm"));
 }
 
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-    msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor"));
+    msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor 2.0.2"));
     msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
-		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
-		"Author: Jan Boon &lt;<a href='mailto:jan.boon@kaetemi.be'>jan.boon@kaetemi.be</a>&gt;<br>"
+		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
 		"Support and updates: <a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
 		));

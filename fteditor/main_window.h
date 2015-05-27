@@ -280,6 +280,7 @@ private:
 	QMenu *m_WidgetsMenu;
 #ifdef FT800EMU_PYTHON
 	QMenu *m_ScriptsMenu;
+	QString m_ExportScriptDir;
 #endif
 	QMenu *m_HelpMenu;
 
