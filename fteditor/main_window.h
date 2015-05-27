@@ -148,6 +148,7 @@ private slots:
 	void actImport();
 	void actExport();
 	
+	void actProjectFolder();
 	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
@@ -296,6 +297,7 @@ private:
 	QAction *m_SaveAsAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
+	QAction *m_ProjectFolderAct;
 	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;

@@ -1201,7 +1201,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
-	m_ImportAct(NULL), m_ExportAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL), 
+	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
@@ -1602,6 +1602,9 @@ void MainWindow::createActions()
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
 	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
 
+	m_ProjectFolderAct = new QAction(this);
+	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
+
 	m_ResetEmulatorAct = new QAction(this);
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
 
@@ -1654,6 +1657,8 @@ void MainWindow::translateActions()
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
 	m_ExportAct->setStatusTip(tr("Export project to file"));
+	m_ProjectFolderAct->setText(tr("Browse Project Folder"));
+	m_ProjectFolderAct->setStatusTip(tr("Open the project folder in the default system file browser"));
 	m_ResetEmulatorAct->setText(tr("Reset Emulator"));
 	m_ResetEmulatorAct->setStatusTip(tr("Reset the emulated device"));
 	m_SaveScreenshotAct->setText(tr("Save Screenshot"));
@@ -1690,6 +1695,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveAct);
 	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_ProjectFolderAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_ImportAct);
 	m_FileMenu->addAction(m_ExportAct);
@@ -3282,6 +3289,11 @@ void MainWindow::actExport()
 	return;
 ExportWriteError:
 	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+}
+
+void MainWindow::actProjectFolder()
+{
+	QDesktopServices::openUrl(QUrl::fromLocalFile(QDir::currentPath()));
 }
 
 void MainWindow::actResetEmulator()
