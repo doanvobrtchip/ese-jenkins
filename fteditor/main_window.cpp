@@ -46,6 +46,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QScrollBar>
 #include <QComboBox>
 #include <QStandardPaths>
+#include <QMovie>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -225,7 +226,7 @@ static ContentManager *s_ContentManager = NULL;
 
 // Utilization
 static int s_UtilizationDisplayListCmd = 0;
-static bool s_WaitingCoprocessorAnimation = false;
+static volatile bool s_WaitingCoprocessorAnimation = false;
 
 // Array indexed by display list index containing coprocessor line which wrote the display list command
 static int s_DisplayListCoprocessorCommandA[FTEDITOR_DL_SIZE];
@@ -254,6 +255,8 @@ static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
+
+static volatile bool s_ShowCoprocessorBusy = true;
 
 void cleanupMediaFifo()
 {
@@ -321,6 +324,8 @@ void loop()
 			resetCoprocessorFromLoop();
 		}
 	}
+
+	s_ShowCoprocessorBusy = false;
 
 	// wait
 	if (coprocessorSwapped)
@@ -583,6 +588,7 @@ void loop()
 		s_CmdEditor->unlockDisplayList();
 		s_WarnMissingClear = warnMissingClear;
 
+		s_ShowCoprocessorBusy = true;
 		bool validCmd = false;
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
@@ -1141,6 +1147,8 @@ void loop()
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 		}
 
+		s_ShowCoprocessorBusy = false;
+
 		// FIXME: Not very thread-safe, but not too critical
 		int *nextWrite = s_DisplayListCoprocessorCommandRead;
 		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
@@ -1196,6 +1204,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL), 
 	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
+	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
 {
 	setObjectName("MainWindow");
@@ -1567,6 +1576,9 @@ void MainWindow::frameQt()
 		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
 	else
 		m_CursorPosition->setText("");
+
+	// Busy loader
+	m_CoprocessorBusy->setVisible(s_ShowCoprocessorBusy && !s_WaitingCoprocessorAnimation);
 }
 
 void MainWindow::createActions()
@@ -1845,7 +1857,20 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(line);*/
 
 		QLabel *label = new QLabel(statusBar());
-		label->setText("    ");
+		label->setText("  ");
+		statusBar()->addPermanentWidget(label);
+	}
+
+	// Coprocessor busy
+	{
+		m_CoprocessorBusy = new QLabel(statusBar());
+		QMovie *movie = new QMovie(":/icons/loader.gif");
+		m_CoprocessorBusy->setMovie(movie);
+		movie->start();
+		statusBar()->addPermanentWidget(m_CoprocessorBusy);
+
+		QLabel *label = new QLabel(statusBar());
+		label->setText("  ");
 		statusBar()->addPermanentWidget(label);
 	}
 

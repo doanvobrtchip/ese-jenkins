@@ -66,5 +66,6 @@
     <file>icons/arrow-circle-315.png</file>
     <file>icons/eve-puzzle-16.png</file>
     <file>icons/beaker-empty.png</file>
+    <file>icons/loader.gif</file>
   </qresource>
 </RCC>

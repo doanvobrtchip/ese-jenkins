@@ -220,6 +220,7 @@ private:
 	QDockWidget *m_CmdEditorDock;
 
 	QLabel *m_CursorPosition;
+	QLabel *m_CoprocessorBusy;
 
 	QDockWidget *m_NavigatorDock;
 	EmulatorNavigator *m_EmulatorNavigator;
