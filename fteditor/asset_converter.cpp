@@ -65,6 +65,8 @@ FT_Library a_FreetypeLibrary = NULL;
 #ifdef FT800EMU_PYTHON
 bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QString &error, const char *scriptName, const char *className, const char *funcName)
 {
+	PyErr_Clear();
+
 	PyObject *pyScript = PyString_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
@@ -104,6 +106,8 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 #ifdef FT800EMU_PYTHON
 bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const char *scriptName, const char *funcName)
 {
+	PyErr_Clear();
+
 	PyObject *pyScript = PyString_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
@@ -195,6 +199,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 #ifdef FT800EMU_PYTHON
 	if (a_ImageConvRun)
 	{
+		PyErr_Clear();
 		bool error = true;
 
 		QByteArray inFileUtf8 = inFile.toUtf8();
@@ -265,6 +270,7 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 #ifdef FT800EMU_PYTHON
 	if (a_PalettedConvRun)
 	{
+		PyErr_Clear();
 		bool error = true;
 
 		QString fileExt = QFileInfo(inFile).suffix().toLower();
@@ -433,6 +439,7 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 #ifdef FT800EMU_PYTHON
 	if (a_RawConvRun)
 	{
+		PyErr_Clear();
 		bool error = true;
 
 		QByteArray inFileUtf8 = inFile.toUtf8();
