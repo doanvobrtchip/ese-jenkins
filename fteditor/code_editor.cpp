@@ -216,6 +216,19 @@ default:
 			c.setPosition(document()->findBlockByNumber(line).position());
 			c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
 			c.insertText("");
+			// cleanup BEGIN/END ->
+			{
+				QString begin = document()->findBlockByNumber(line - 1).text();
+				QString end = document()->findBlockByNumber(line).text();
+				if (begin.toUpper().trimmed().startsWith("BEGIN") && end.toUpper().trimmed().startsWith("END"))
+				{
+					c.setPosition(document()->findBlockByNumber(line - 1).position());
+					c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+					c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+					c.insertText("");
+				}
+			}
+			// <- cleanup BEGIN/END
 			setInteractiveDelete(true);
 			return;
 		}
