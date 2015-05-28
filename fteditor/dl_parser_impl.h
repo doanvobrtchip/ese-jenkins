@@ -58,21 +58,21 @@ static std::string s_CmdIdList[CMD_ID_NB];
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
 
 #if defined(FTEDITOR_PARSER_VC1)
-std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultParamVC1()
+ParameterArray *DlParser::defaultParamVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
-std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultParamVC2()
+ParameterArray *DlParser::defaultParamVC2()
 #endif
 {
-	return (std::array<int, DLPARSED_MAX_PARAMETER> *)(void *)s_ParamDefault;
+	return (ParameterArray *)(void *)s_ParamDefault;
 }
 
 #if defined(FTEDITOR_PARSER_VC1)
-std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultCmdParamVC1()
+ParameterArray *DlParser::defaultCmdParamVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
-std::array<int, DLPARSED_MAX_PARAMETER> *DlParser::defaultCmdParamVC2()
+ParameterArray *DlParser::defaultCmdParamVC2()
 #endif
 {
-	return (std::array<int, DLPARSED_MAX_PARAMETER> *)(void *)s_CmdParamDefault;
+	return (ParameterArray *)(void *)s_CmdParamDefault;
 }
 
 #if defined(FTEDITOR_PARSER_VC1)
