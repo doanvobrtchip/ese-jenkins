@@ -13,6 +13,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSpinBox>
+#include <QLabel>
 
 // Emulator includes
 
@@ -308,6 +309,10 @@ void InteractiveProperties::addStream(int stream)
 	PropertiesLineEdit *propText = new PropertiesLineEdit(this, "Set stream", stream);
 	addLabeledWidget("Stream: ", propText);
 	m_CurrentProperties.push_back(propText);
+
+	// Help message
+	addHelp(tr("<p><i>Direct filepath</i>:<br>Enter a relative or absolute filepath. String formatted in backslash escape format, use \\\\ for regular backslash.</p>"
+		"<p><i>Content Manager</i>:<br>Enter the full content name suffixed with .raw or .bin (eg. content/catvideo.raw) for raw or compressed format respectively.</p>"));
 }
 
 void InteractiveProperties::addValueSlider(int val, int maxim)
@@ -601,6 +606,16 @@ void InteractiveProperties::addCaptureButton(const QString &text, const QString 
 	((QVBoxLayout *)layout())->addWidget(prop);
 	m_CurrentWidgets.push_back(prop);
 	m_CurrentProperties.push_back(prop);
+}
+
+void InteractiveProperties::addHelp(const QString &text)
+{
+	QLabel *prop = new QLabel();
+	prop->setTextFormat(Qt::RichText);
+	prop->setWordWrap(true);
+	prop->setText(text);
+	((QVBoxLayout *)layout())->addWidget(prop);
+	m_CurrentWidgets.push_back(prop);
 }
 
 void InteractiveProperties::setEditorLine(DlEditor *editor, int line)

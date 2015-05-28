@@ -98,6 +98,7 @@ private:
 	void addSize(int address);
 	void addMemorySize(int size);
 	void addCaptureButton(const QString &text, const QString &undoMessage);
+	void addHelp(const QString &text);
 
 private slots:
 	void propertiesSetterChanged(QWidget *setter);
