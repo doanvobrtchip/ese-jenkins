@@ -1269,25 +1269,38 @@ MainWindow::~MainWindow()
 }
 
 #ifdef FT800EMU_PYTHON
+void pythonError()
+{
+	printf("---\nPython ERROR: \n");
+	PyObject *ptype, *pvalue, *ptraceback;
+	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+	PyObject *errStr = PyObject_Repr(pvalue);
+	char *pStrErrorMessage = PyString_AsString(errStr);
+	QString error = QString::fromLocal8Bit(pStrErrorMessage);
+	printf("%s\n", pStrErrorMessage);
+	Py_DECREF(errStr);
+	printf("---\n");
+}
+
 static QString scriptDisplayName(const QString &script)
 {
-	QString scriptN = script.left(script.size() - 3);
-	QByteArray scriptNa = scriptN.toUtf8();
+	QByteArray scriptNa = script.toUtf8();
 	char *scriptName = scriptNa.data();
 
 	PyObject *pyUserScript = PyUnicode_FromString(scriptName);
 	PyObject *pyUserModule = PyImport_Import(pyUserScript);
 	Py_DECREF(pyUserScript); pyUserScript = NULL;
 
-	if (!pyUserModule) return script;
+	if (!pyUserModule) { pythonError(); return script; }
 
 	PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "displayName");
 
-	if (!pyUserFunc) return script;
+	if (!pyUserFunc) { pythonError(); return script; }
 
 	if (!PyCallable_Check(pyUserFunc))
 	{
 		Py_DECREF(pyUserFunc); pyUserFunc = NULL;
+		pythonError();
 		return script;
 	}
 
@@ -1307,16 +1320,34 @@ static QString scriptDisplayName(const QString &script)
 		return res;
 	}
 
+	pythonError();
 	return script;
+}
+#endif
+
+#ifdef FT800EMU_PYTHON
+QString MainWindow::scriptModule()
+{
+	return QString("export_scripts.")
+		+ ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
+			? "ft81x"
+			: "ft80x");
+}
+
+QString MainWindow::scriptDir()
+{
+	return m_InitialWorkingDir + "/export_scripts/" 
+		+ ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
+			? "ft81x"
+			: "ft80x");
 }
 #endif
 
 void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
-	m_ExportScriptDir = QString("export_scripts.") + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "ft81x." : "ft80x.");
-
-	QDir currentDir(QCoreApplication::applicationDirPath() + "\\export_scripts" + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "\\ft81x" : "\\ft80x"));
+	QDir currentDir = scriptDir();
+	// printf("Look in %s\n", currentDir.absolutePath().toUtf8().data());
 
 	QStringList filters;
 
@@ -1330,31 +1361,41 @@ void MainWindow::refreshScriptsMenu()
 	//Fill up empty m_ScriptActs from previous values in scriptActs
 	for (int i = 0; i < scriptFiles.size(); ++i)
 	{
+		if (scriptFiles[i] == "__init__.py")
+			continue;
+
+		// char *fileName = scriptFiles[i].toLocal8Bit().data();
+		// printf("Script: %s\n", fileName);
+
+		//package.subpackage.module
+		QString scriptN = scriptFiles[i].left(scriptFiles[i].size() - 3);
+		QString scriptMod = scriptModule() + "." + scriptN;
+		// printf("Module: %s\n", scriptMod.toLocal8Bit().data());
 
 		if (scriptActs.find(scriptFiles[i]) == scriptActs.end())
 		{
+			printf("script: %s\n", scriptFiles[i].toUtf8().data());
+
 			RunScript *rs = new RunScript();
 			QAction *act = new QAction(this);
 
-			//package.subpackage.module
-			QString full_scriptName = m_ExportScriptDir + scriptFiles[i];
 
-			act->setText(scriptDisplayName(full_scriptName));
+			act->setText(scriptDisplayName(scriptMod));
 			act->setStatusTip(tr("Run Python script"));
 			m_ScriptsMenu->addAction(act);
 
 			rs->Action = act;
 
-			rs->Script = full_scriptName;
+			rs->Script = scriptMod;
 			rs->Window = this,
 			connect(act, SIGNAL(triggered()), rs, SLOT(runScript()));
-			m_ScriptActs[scriptFiles[i]] = rs;
+			m_ScriptActs[scriptMod] = rs;
 		}
 		else
 		{
 			//find existing script and add it to m_ScriptActs		
-			m_ScriptActs[scriptFiles[i]] = scriptActs[scriptFiles[i]];
-			scriptActs.erase(scriptFiles[i]);
+			m_ScriptActs[scriptMod] = scriptActs[scriptMod];
+			scriptActs.erase(scriptMod);
 		}
 	}
 
@@ -1381,9 +1422,7 @@ void RunScript::runScript()
 void MainWindow::runScript(const QString &script)
 {
 #ifdef FT800EMU_PYTHON
-	QString scriptN = script.left(script.size() - 3);
-
-	QByteArray scriptNa = scriptN.toUtf8();
+	QByteArray scriptNa = script.toUtf8();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
 	QString outputName = QFileInfo(m_CurrentFile).completeBaseName();
@@ -1465,48 +1504,51 @@ void MainWindow::runScript(const QString &script)
 
 	PyObject *pyUserScript = PyUnicode_FromString(scriptName);
 	PyObject *pyUserModuleOld = PyImport_Import(pyUserScript);
-	PyObject *pyUserModule = PyImport_ReloadModule(pyUserModuleOld);
-	Py_DECREF(pyUserScript); pyUserScript = NULL;
-
-	if (pyUserModule != NULL)
+	if (pyUserModuleOld != NULL)
 	{
-		PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "run");
-		if (pyUserFunc && PyCallable_Check(pyUserFunc))
+		PyObject *pyUserModule = PyImport_ReloadModule(pyUserModuleOld);
+		Py_DECREF(pyUserScript); pyUserScript = NULL;
+
+		if (pyUserModule != NULL)
 		{
-			PyObject *pyValue;
-			PyObject *pyArgs = PyTuple_New(3);
-			pyValue = PyUnicode_FromString(outN.data());;
-			PyTuple_SetItem(pyArgs, 0, pyValue);
-			PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
-			char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
-			pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
-			PyTuple_SetItem(pyArgs, 2, pyValue);
-			pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
-			Py_DECREF(pyArgs); pyArgs = NULL;
-			if (pyValue)
+			PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "run");
+			if (pyUserFunc && PyCallable_Check(pyUserFunc))
 			{
-				printf("Ok\n");
-				PyObject *resStr = PyObject_Repr(pyValue);
-				char *resCStr = PyString_AsString(resStr);
-				QString res = QString::fromLocal8Bit(resCStr);
-				Py_DECREF(pyValue); pyValue = NULL;
-				m_PropertiesEditor->setInfo(res);
-				m_PropertiesEditor->setEditWidget(NULL, false, NULL);
-				error = false;
+				PyObject *pyValue;
+				PyObject *pyArgs = PyTuple_New(3);
+				pyValue = PyUnicode_FromString(outN.data());;
+				PyTuple_SetItem(pyArgs, 0, pyValue);
+				PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
+				char *ram = static_cast<char *>(static_cast<void *>(FT8XXEMU_getRam()));
+				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
+				PyTuple_SetItem(pyArgs, 2, pyValue);
+				pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
+				Py_DECREF(pyArgs); pyArgs = NULL;
+				if (pyValue)
+				{
+					printf("Ok\n");
+					PyObject *resStr = PyObject_Repr(pyValue);
+					char *resCStr = PyString_AsString(resStr);
+					QString res = QString::fromLocal8Bit(resCStr);
+					Py_DECREF(pyValue); pyValue = NULL;
+					m_PropertiesEditor->setInfo(res);
+					m_PropertiesEditor->setEditWidget(NULL, false, NULL);
+					error = false;
+				}
+				else
+				{
+					printf("Not ok\n");
+				}
 			}
 			else
 			{
-				printf("Not ok\n");
+				printf("Missing run function\n");
 			}
-		}
-		else
-		{
-			printf("Missing run function\n");
-		}
 
-		Py_XDECREF(pyUserFunc); pyUserFunc = NULL;
+			Py_XDECREF(pyUserFunc); pyUserFunc = NULL;
+			Py_XDECREF(pyUserModule); pyUserModule = NULL;
+		}
 		Py_XDECREF(pyUserModuleOld); pyUserModuleOld = NULL;
-		Py_XDECREF(pyUserModule); pyUserModule = NULL;
 	}
 
 	Py_XDECREF(pyDocument); pyDocument = NULL;
@@ -3513,14 +3555,14 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-    msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor 2.0.4"));
-    msgBox.setTextFormat(Qt::RichText);
+	msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor 2.0.4"));
+	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
 		"Support and updates: <a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
 		));
-    msgBox.exec();
+	msgBox.exec();
 }
 
 void MainWindow::aboutQt()

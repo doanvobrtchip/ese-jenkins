@@ -199,6 +199,11 @@ private:
 
 	bool maybeSave();
 
+#ifdef FT800EMU_PYTHON
+	QString scriptModule();
+	QString scriptDir();
+#endif
+
 	void stopEmulatorInternal();
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf);
@@ -284,7 +289,6 @@ private:
 	QMenu *m_WidgetsMenu;
 #ifdef FT800EMU_PYTHON
 	QMenu *m_ScriptsMenu;
-	QString m_ExportScriptDir;
 #endif
 	QMenu *m_HelpMenu;
 
