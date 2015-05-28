@@ -25,10 +25,12 @@
 
 // Qt includes
 #include <QWidget>
+#include <qmap.h>
 
 // Emulator includes
 #include <ft800emu_inttypes.h>
 
+//#include <deviceDisplaySettingsDialog.h>
 // Project includes
 
 class QTreeWidget;
@@ -38,6 +40,7 @@ class QPushButton;
 namespace FT800EMUQT {
 
 class MainWindow;
+class DeviceDisplaySettingsDialog;
 
 #if FT800_DEVICE_MANAGER
 
@@ -54,6 +57,13 @@ class DeviceManager : public QWidget
 public:
 	DeviceManager(MainWindow *parent);
 	virtual ~DeviceManager();
+	void setDeviceandScreenSize(QString displaySize, QString syncDevice);
+
+	QString getCurrentDisplaySize();
+	void setCurrentDisplaySize(QString displaySize);
+	QString getSyncDeviceName();
+	void setSyncDeviceName(QString deviceName);
+	
 
 private:
 	typedef uint32_t DeviceId; // Change type to whatever needed
@@ -62,19 +72,23 @@ private:
 		DeviceId Id;
 		QTreeWidgetItem *View;
 		bool Connected;
-
 		void* handle;
 		// Add necessary device specific data here
 	};
 
+	QString currScreenSize = "480x272";
+	QString selectedSyncDevice = "VM800B43A";
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_DeviceList;
 	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
 	QPushButton *m_ConnectButton;
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
+	DeviceDisplaySettingsDialog *displaySettingsDialog = NULL;
+
 
 private slots:
+	void deviceDisplaySettings();
 	void refreshDevices();
 	void connectDevice();
 	void disconnectDevice();
@@ -87,6 +101,8 @@ private:
 private:
 	DeviceManager(const DeviceManager &);
 	DeviceManager &operator=(const DeviceManager &);
+	
+	
 
 }; /* class DeviceManager */
 
