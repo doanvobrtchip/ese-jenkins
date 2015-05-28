@@ -24,7 +24,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-#include "deviceDisplaySettingsDialog.h"
+#include "device_display_settings_dialog.h"
 
 #if FT800_DEVICE_MANAGER
 //mpsse lib includes -- Windows
@@ -58,7 +58,8 @@ namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER
 
-DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
+DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
+currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), displaySettingsDialog(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -140,7 +141,7 @@ void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevi
 	}
 	currScreenSize = displaySize;
 	selectedSyncDevice = syncDevice;
-	m_MainWindow->updateScreenSizeRegisters(pieces[0].toUInt(),pieces[1].toUInt());
+	m_MainWindow->userChangeResolution(pieces[0].toUInt(),pieces[1].toUInt());
 }
 
 void DeviceManager::deviceDisplaySettings(){
@@ -254,34 +255,34 @@ void DeviceManager::connectDevice()
 	if (0x7C == Ft_Gpu_Hal_Rd8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ID)))
 	{
 		if (currScreenSize == "480x272"){
-			Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, 548);
-			Ft_Gpu_Hal_Wr16(phost, REG_HOFFSET, 43);
-			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC0, 0);
-			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC1, 41);
-			Ft_Gpu_Hal_Wr16(phost, REG_VCYCLE, 292);
-			Ft_Gpu_Hal_Wr16(phost, REG_VOFFSET, 12);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC0, 0);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC1, 10);
-			Ft_Gpu_Hal_Wr8(phost, REG_SWIZZLE, 0);
-			Ft_Gpu_Hal_Wr8(phost, REG_PCLK_POL, 1);
-			Ft_Gpu_Hal_Wr8(phost, REG_PCLK, 5);//after this display is visible on the LCD
-			Ft_Gpu_Hal_Wr16(phost, REG_HSIZE, 480);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSIZE, 272);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), 548);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), 43);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), 41);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), 292);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), 12);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), 10);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), 0);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), 1);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 5);//after this display is visible on the LCD
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 480);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 272);
 		}
 		else if (currScreenSize == "320x240"){
-			Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, 408);
-			Ft_Gpu_Hal_Wr16(phost, REG_HOFFSET, 70);
-			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC0, 0);
-			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC1, 10);
-			Ft_Gpu_Hal_Wr16(phost, REG_VCYCLE, 263);
-			Ft_Gpu_Hal_Wr16(phost, REG_VOFFSET, 13);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC0, 0);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC1, 2);
-			Ft_Gpu_Hal_Wr8(phost, REG_SWIZZLE, 2);
-			Ft_Gpu_Hal_Wr8(phost, REG_PCLK_POL, 0);
-			Ft_Gpu_Hal_Wr8(phost, REG_PCLK, 8);//after this display is visible on the LCD
-			Ft_Gpu_Hal_Wr16(phost, REG_HSIZE, 320);
-			Ft_Gpu_Hal_Wr16(phost, REG_VSIZE, 240);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), 408);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), 70);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), 10);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), 263);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), 13);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), 2);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), 2);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), 0);
+			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 8);//after this display is visible on the LCD
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 320);
+			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 240);
 		}
 
 
@@ -290,7 +291,7 @@ void DeviceManager::connectDevice()
 
 
 		Ft_Gpu_Hal_WrCmd32(phost, CMD_DLSTART);
-		//Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
+		Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
 		Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
 		Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
 		Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
@@ -393,16 +394,16 @@ void DeviceManager::syncDevice()
 
 			loadContent2Device(m_MainWindow->contentManager(), phost);
 
-			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_DL);
+			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
 
-			for (uint32 i = 0; i< FT800EMU_DISPLAY_LIST_SIZE; i++){
+			for (int i = 0; i< displayListSize(FTEDITOR_CURRENT_DEVICE); i++){
 				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
 			}
 			Ft_Gpu_Hal_EndTransfer(phost);
 
-			Ft_Gpu_Hal_Wr32(phost, REG_DLSWAP, DLSWAP_FRAME);
-			Ft_Gpu_Hal_Wr32(phost, REG_HSIZE, *(ft_uint32_t*)&ram[REG_HSIZE]);
-			Ft_Gpu_Hal_Wr32(phost, REG_VSIZE, *(ft_uint32_t*)&ram[REG_VSIZE]);
+			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
+			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), *(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)]);
+			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), *(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)]);
 		}
 	}
 }

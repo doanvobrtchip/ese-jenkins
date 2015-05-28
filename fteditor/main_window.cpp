@@ -2518,6 +2518,14 @@ private:
 
 };
 
+void MainWindow::userChangeResolution(int hsize, int vsize)
+{
+	m_UndoStack->beginMacro("Change resolution");
+	m_HSize->setValue(hsize);
+	m_VSize->setValue(vsize);
+	m_UndoStack->endMacro();
+}
+
 void MainWindow::hsizeChanged(int hsize)
 {
 	updateProjectDisplay(hsize, m_VSize->value());

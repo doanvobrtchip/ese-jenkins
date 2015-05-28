@@ -76,15 +76,15 @@ private:
 		// Add necessary device specific data here
 	};
 
-	QString currScreenSize = "480x272";
-	QString selectedSyncDevice = "VM800B43A";
+	QString currScreenSize;
+	QString selectedSyncDevice;
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_DeviceList;
 	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
 	QPushButton *m_ConnectButton;
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
-	DeviceDisplaySettingsDialog *displaySettingsDialog = NULL;
+	DeviceDisplaySettingsDialog *displaySettingsDialog;
 
 
 private slots:

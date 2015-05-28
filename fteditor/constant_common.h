@@ -174,6 +174,7 @@ namespace FTEDITOR {
 #define DISPLAY() ((0UL<<24))
 #define JUMP(dest) ((30UL<<24)|(((dest)&65535UL)<<0))
 #define CLEAR(c,s,t) ((38UL<<24)|(((c)&1UL)<<2)|(((s)&1UL)<<1)|(((t)&1UL)<<0))
+#define CLEAR_COLOR_RGB(red,green,blue) ((2UL<<24)|(((red)&255UL)<<16)|(((green)&255UL)<<8)|(((blue)&255UL)<<0))
 
 } /* namespace FTEDITOR */
 

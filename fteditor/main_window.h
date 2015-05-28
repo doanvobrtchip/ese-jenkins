@@ -133,6 +133,8 @@ public:
 
 	void actNew(bool addClear);
 
+	void userChangeResolution(int hsize, int vsize);
+
 private slots:
 	// void applyEmulatorConfig();
 
