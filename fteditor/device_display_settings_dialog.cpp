@@ -1,14 +1,15 @@
-#include "DeviceDisplaySettingsDialog.h"
+#include "device_display_settings_dialog.h"
 #include "device_manager.h"
 
 using namespace std;
 
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
 
+#if FT800_DEVICE_MANAGER
 
 	DeviceDisplaySettingsDialog::DeviceDisplaySettingsDialog(DeviceManager *parent) :
-		QDialog(parent), pParent(parent)
+		QDialog(parent), pParent(parent), inputSpinboxMin(-32767), inputSpinboxMax(32767)
 	{
 		gridLayout = new QGridLayout(this);
 		buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
@@ -138,6 +139,9 @@ namespace FT800EMUQT {
 
 		this->accept();
 	}
+
+#endif
+
 }
 
 

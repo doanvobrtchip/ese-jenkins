@@ -14,7 +14,9 @@
 #include "device_manager.h"
 
 
-namespace FT800EMUQT {
+namespace FTEDITOR {
+
+#if FT800_DEVICE_MANAGER
 
 	class DeviceManager;
 
@@ -37,8 +39,8 @@ namespace FT800EMUQT {
 
 		qint32 maxScreenWidth;
 		qint32 maxScreenHeight;
-		qint16 inputSpinboxMin = -32767;
-		qint16 inputSpinboxMax = 32767;
+		qint16 inputSpinboxMin;
+		qint16 inputSpinboxMax;
 
 		QGridLayout* gridLayout;
 		QDialogButtonBox* buttonBox;
@@ -60,6 +62,8 @@ namespace FT800EMUQT {
 		void updateSyncDeviceSelection();
 
 	};
+
+#endif
 
 }
 #endif // COPTIONDIALOG_H
