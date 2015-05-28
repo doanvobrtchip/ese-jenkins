@@ -1497,12 +1497,14 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, uint32_t v)
 		}
 		case FTEDITOR_DL_VERTEX2F:
 		{
-			// int px = (v >> 15) & 0x3FFF;
-			// if ((v >> 15) & 0x4000) px = px - 0x4000;
-			// int py = (v) & 0x3FFF;
-			// if ((v) & 0x4000) py = py - 0x4000;
-			int px = (v >> 15) & 0x7FFF;
+			int px = (v >> 15) & 0x3FFF;
+			if ((v >> 15) & 0x4000) px = px - 0x4000;
+			int py = (v) & 0x3FFF;
+			if ((v) & 0x4000) py = py - 0x4000;
+			/*int px = (v >> 15) & 0x7FFF;
+			if ((v >> 15) & 0x4000) px = px - 0x8000;
 			int py = (v) & 0x7FFF;
+			if ((v) & 0x4000) py = py - 0x8000;*/
 			res << "VERTEX2F(";
 			res << px << ", " << py << ")";
 			break;
