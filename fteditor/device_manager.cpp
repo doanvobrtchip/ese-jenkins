@@ -24,6 +24,8 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "constant_mapping.h"
 #include "constant_common.h"
 
+#include "deviceDisplaySettingsDialog.h"
+
 #if FT800_DEVICE_MANAGER
 //mpsse lib includes -- Windows
 #undef POINTS
@@ -33,6 +35,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "FT_DataTypes.h"
 #include "FT_Gpu_Hal.h"
 
+/*
 ft_int16_t FT_DispWidth = 480;
 ft_int16_t FT_DispHeight = 272;
 ft_int16_t FT_DispHCycle =  548;
@@ -46,6 +49,7 @@ ft_int16_t FT_DispVSync1 = 10;
 ft_uint8_t FT_DispPCLK = 5;
 ft_char8_t FT_DispSwizzle = 0;
 ft_char8_t FT_DispPCLKPol = 1;
+*/
 #endif
 
 using namespace std;
@@ -68,6 +72,7 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	m_DeviceList->resizeColumnToContents(0);
 	connect(m_DeviceList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
+
 	QHBoxLayout *buttons = new QHBoxLayout();
 
 	QPushButton *refreshButton = new QPushButton(this);
@@ -78,6 +83,15 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
 	connect(refreshButton, SIGNAL(clicked()), this, SLOT(refreshDevices()));
 	buttons->addWidget(refreshButton);
 	refreshButton->setMaximumWidth(refreshButton->height());
+
+
+	QPushButton *deviceDisplayButton = new QPushButton(this);
+	deviceDisplayButton->setIcon(QIcon(":/icons/wrench-screwdriver.png"));
+	deviceDisplayButton->setToolTip(tr("Device display settings"));
+	connect(deviceDisplayButton, SIGNAL(clicked()), this, SLOT(deviceDisplaySettings()));
+	buttons->addWidget(deviceDisplayButton);
+	deviceDisplayButton->setMaximumWidth(deviceDisplayButton->height());
+
 
 	buttons->addStretch();
 
@@ -110,11 +124,31 @@ DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow
     Init_libMPSSE();
 	// Initial refresh of devices
 	refreshDevices();
+
+	displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 }
 
 DeviceManager::~DeviceManager()
 {
 
+}
+
+void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice){
+	QStringList pieces = displaySize.split("x");
+	if ((currScreenSize != displaySize) && m_DisconnectButton->isVisible()){
+		disconnectDevice();
+	}
+	currScreenSize = displaySize;
+	selectedSyncDevice = syncDevice;
+	m_MainWindow->updateScreenSizeRegisters(pieces[0].toUInt(),pieces[1].toUInt());
+}
+
+void DeviceManager::deviceDisplaySettings(){
+	if (displaySettingsDialog == NULL){
+		displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+	}
+	//displaySettingsDialog->exec();
+	displaySettingsDialog->execute();
 }
 
 void DeviceManager::refreshDevices()
@@ -124,7 +158,6 @@ void DeviceManager::refreshDevices()
 	// Swap device list to local
 	std::map<DeviceId, DeviceInfo *> deviceInfo;
 	deviceInfo.swap(m_DeviceInfo);
-
 	uint32 deviceNum;
 	SPI_GetNumChannels(&deviceNum);
 
@@ -220,20 +253,36 @@ void DeviceManager::connectDevice()
 
 	if (0x7C == Ft_Gpu_Hal_Rd8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ID)))
 	{
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), FT_DispHCycle);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), FT_DispHOffset);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), FT_DispHSync0);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), FT_DispHSync1);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), FT_DispVCycle);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), FT_DispVOffset);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), FT_DispVSync0);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), FT_DispVSync1);
-		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), FT_DispSwizzle);
-		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), FT_DispPCLKPol);
-		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), FT_DispPCLK);//after this display is visible on the LCD
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), FT_DispWidth);
-		Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), FT_DispHeight);
-
+		if (currScreenSize == "480x272"){
+			Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, 548);
+			Ft_Gpu_Hal_Wr16(phost, REG_HOFFSET, 43);
+			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC0, 0);
+			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC1, 41);
+			Ft_Gpu_Hal_Wr16(phost, REG_VCYCLE, 292);
+			Ft_Gpu_Hal_Wr16(phost, REG_VOFFSET, 12);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC0, 0);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC1, 10);
+			Ft_Gpu_Hal_Wr8(phost, REG_SWIZZLE, 0);
+			Ft_Gpu_Hal_Wr8(phost, REG_PCLK_POL, 1);
+			Ft_Gpu_Hal_Wr8(phost, REG_PCLK, 5);//after this display is visible on the LCD
+			Ft_Gpu_Hal_Wr16(phost, REG_HSIZE, 480);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSIZE, 272);
+		}
+		else if (currScreenSize == "320x240"){
+			Ft_Gpu_Hal_Wr16(phost, REG_HCYCLE, 408);
+			Ft_Gpu_Hal_Wr16(phost, REG_HOFFSET, 70);
+			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC0, 0);
+			Ft_Gpu_Hal_Wr16(phost, REG_HSYNC1, 10);
+			Ft_Gpu_Hal_Wr16(phost, REG_VCYCLE, 263);
+			Ft_Gpu_Hal_Wr16(phost, REG_VOFFSET, 13);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC0, 0);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSYNC1, 2);
+			Ft_Gpu_Hal_Wr8(phost, REG_SWIZZLE, 2);
+			Ft_Gpu_Hal_Wr8(phost, REG_PCLK_POL, 0);
+			Ft_Gpu_Hal_Wr8(phost, REG_PCLK, 8);//after this display is visible on the LCD
+			Ft_Gpu_Hal_Wr16(phost, REG_HSIZE, 320);
+			Ft_Gpu_Hal_Wr16(phost, REG_VSIZE, 240);
+		}
 
 
 		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR),0x83 | Ft_Gpu_Hal_Rd8(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR)));
@@ -248,6 +297,8 @@ void DeviceManager::connectDevice()
 
 		devInfo->Connected = true;
 	}
+
+
 
 	devInfo->handle = (void*)phost;
 	updateSelection();
@@ -278,6 +329,22 @@ void DeviceManager::disconnectDevice()
 	updateSelection();
 }
 
+QString DeviceManager::getCurrentDisplaySize(){
+	return currScreenSize;
+}
+
+QString DeviceManager::getSyncDeviceName(){
+	return selectedSyncDevice;
+}
+
+void DeviceManager::setCurrentDisplaySize(QString displaySize){
+	currScreenSize = displaySize;
+}
+
+void DeviceManager::setSyncDeviceName(QString deviceName){
+	selectedSyncDevice = deviceName;
+}
+
 static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost)
 {
 	contentManager->lockContent();
@@ -285,6 +352,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
 	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
 
+	
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
@@ -292,6 +360,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 		{
             {
 				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
+				
 			}
 
 			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
@@ -308,11 +377,13 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 
 void DeviceManager::syncDevice()
 {
-	if (!m_DeviceList->currentItem()) return;
+	if (!m_DeviceList->currentItem()){
+		//QMessageBox::question(this, "General confirmation", "No Content in the command list.",QMessageBox::Yes | QMessageBox::No);
+		return;
+	}
 
 	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
 	const uint32_t *displayList = FT8XXEMU_getDisplayList();
-
 	//Sync with selected device
 	{
 		DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
@@ -320,23 +391,23 @@ void DeviceManager::syncDevice()
 		{
 			Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t *)devInfo->handle;
 
-			loadContent2Device(m_MainWindow->contentManager(),phost);
+			loadContent2Device(m_MainWindow->contentManager(), phost);
 
-			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
-			Ft_Gpu_Hal_Transfer32(phost,CLEAR(1,1,1));
-			for (int i = 0;i< displayListSize(FTEDITOR_CURRENT_DEVICE);i++){
+			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, RAM_DL);
+
+			for (uint32 i = 0; i< FT800EMU_DISPLAY_LIST_SIZE; i++){
 				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
-				if (displayList[i] == DISPLAY())
-					break;
 			}
 			Ft_Gpu_Hal_EndTransfer(phost);
 
-			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP),DLSWAP_FRAME);
-			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE),*(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)]);
-			Ft_Gpu_Hal_Wr32(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE),*(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)]);
+			Ft_Gpu_Hal_Wr32(phost, REG_DLSWAP, DLSWAP_FRAME);
+			Ft_Gpu_Hal_Wr32(phost, REG_HSIZE, *(ft_uint32_t*)&ram[REG_HSIZE]);
+			Ft_Gpu_Hal_Wr32(phost, REG_VSIZE, *(ft_uint32_t*)&ram[REG_VSIZE]);
 		}
 	}
 }
+
+
 
 void DeviceManager::updateSelection()
 {
@@ -348,7 +419,7 @@ void DeviceManager::updateSelection()
 	}
 	else
 	{
-		DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
 		m_ConnectButton->setVisible(!devInfo->Connected);
 		m_DisconnectButton->setVisible(devInfo->Connected);
 		m_SendImageButton->setVisible(devInfo->Connected);
