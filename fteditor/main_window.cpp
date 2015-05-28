@@ -1314,9 +1314,9 @@ static QString scriptDisplayName(const QString &script)
 void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
-	m_ExportScriptDir = QString("ExportScripts.") + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "FT81X." : "FT80X.");
+	m_ExportScriptDir = QString("export_scripts.") + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "ft81x." : "ft80x.");
 
-	QDir currentDir(QCoreApplication::applicationDirPath() + "\\ExportScripts" + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "\\FT81X" : "\\FT80X"));
+	QDir currentDir(QCoreApplication::applicationDirPath() + "\\export_scripts" + ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) ? "\\ft81x" : "\\ft80x"));
 
 	QStringList filters;
 
