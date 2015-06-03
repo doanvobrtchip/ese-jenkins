@@ -546,7 +546,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="992"/>
         <source>DESCRIPTION_CMD_LOADIMAGE.</source>
-        <translation>&lt;b&gt;CMD_LOADIMAGE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the loaded bitmap is in RGB565 format. Option OPT_MONO causes the bitmap to be monochrome, in L8 format. Option OPT_FULLSCREEN causes the bitmap to be scaled so that it fills as much of the screen as possible. If option OPT_MEDIAFIFO is given, the media FIFO is used for the image data (see below). The command appends display list commands to set the source, layout and size of the resulting image. Option OPT_NODL prevents this - nothing is written to the display list.&lt;br&gt;If OPT_MEDIAFIFO is not given, then the byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command.&lt;br&gt;These padding bytes can have any value. If OPT_MEDIAFIFO is given, then the data should be present in the media FIFO.&lt;br&gt;&lt;br&gt;Decompress the following JPEG or PNG image data into an FT81X bitmap, in RAM_G. The image data should be in the following formats: Regular baseline JPEG (JFIF); PNG, no interlace.</translation>
+        <translation>&lt;b&gt;CMD_LOADIMAGE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;, &lt;i&gt;stream&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the loaded bitmap is in RGB565 format. Option OPT_MONO causes the bitmap to be monochrome, in L8 format. Option OPT_FULLSCREEN causes the bitmap to be scaled so that it fills as much of the screen as possible. If option OPT_MEDIAFIFO is given, the media FIFO is used for the image data (see below). The command appends display list commands to set the source, layout and size of the resulting image. Option OPT_NODL prevents this - nothing is written to the display list.&lt;br&gt;If OPT_MEDIAFIFO is not given, then the byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command.&lt;br&gt;These padding bytes can have any value. If OPT_MEDIAFIFO is given, then the data should be present in the media FIFO.&lt;br&gt;&lt;br&gt;Decompress the following JPEG or PNG image data into an FT81X bitmap, in RAM_G. The image data should be in the following formats: Regular baseline JPEG (JFIF); PNG, no interlace.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1006"/>
@@ -646,7 +646,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="1265"/>
         <source>DESCRIPTION_CMD_PLAYVIDEO.</source>
-        <translation>&lt;b&gt;CMD_PLAYVIDEO&lt;/b&gt;(&lt;i&gt;opts&lt;/i&gt;, &lt;i&gt;data&lt;/i&gt;)&lt;br&gt;&lt;b&gt;opts&lt;/b&gt;: OPT_FULLSCREEN: zoom the video so that it fills as much of the screen as possible.&lt;br&gt;OPT_MEDIAFIFO: instead of sourcing the AVI video data from the command buffer, source it from the media FIFO.&lt;br&gt;OPT_NOTEAR: Synchronize video updates to the display blanking interval, avoiding horizontal ”tearing” artifacts.&lt;br&gt;&lt;b&gt;data&lt;/b&gt;: The video data to be played. Optional when opts has OPT_MEDIAFIFO enabled.&lt;br&gt;&lt;br&gt;Plays back MJPEG-encoded AVI video.</translation>
+        <translation>&lt;b&gt;CMD_PLAYVIDEO&lt;/b&gt;(&lt;i&gt;opts&lt;/i&gt;, &lt;i&gt;stream&lt;/i&gt;)&lt;br&gt;&lt;b&gt;opts&lt;/b&gt;: OPT_FULLSCREEN: zoom the video so that it fills as much of the screen as possible.&lt;br&gt;OPT_MEDIAFIFO: instead of sourcing the AVI video data from the command buffer, source it from the media FIFO.&lt;br&gt;OPT_NOTEAR: Synchronize video updates to the display blanking interval, avoiding horizontal ”tearing” artifacts.&lt;br&gt;&lt;b&gt;stream&lt;/b&gt;: The video data to be played. Optional when opts has OPT_MEDIAFIFO enabled.&lt;br&gt;&lt;br&gt;Plays back MJPEG-encoded AVI video.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1296"/>
@@ -998,7 +998,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="1311"/>
         <source>DESCRIPTION_CMD_ROMFONT.</source>
-        <translation>&lt;b&gt;CMD_ROMFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;romslot&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: bitmap handle number , 0~31.&lt;br&gt;&lt;b&gt;romslot&lt;/b&gt;: ROM font number, 16~34&lt;br&gt;&lt;br&gt;By default ROM fonts 16-31 are loaded into bitmap handles 16-31. This command allows any ROM font 16-34 to be loaded into any bitmap handle.</translation>
+        <translation>&lt;b&gt;CMD_ROMFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;romslot&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: bitmap handle number , 0~31.&lt;br&gt;&lt;b&gt;romslot&lt;/b&gt;: ROM font number, 16~34&lt;br&gt;&lt;br&gt;By default ROM fonts 16-31 are loaded into bitmap handles 0-31. This command allows any ROM font 16-34 to be loaded into any bitmap handle.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1316"/>
@@ -1013,7 +1013,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="1346"/>
         <source>DESCRIPTION_CMD_SETBITMAP.</source>
-        <translation>&lt;b&gt;CMD_SETBITMAP&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;, &lt;i&gt;fmt&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: bitmap handle number , 0~31.&lt;br&gt;&lt;b&gt;fmt&lt;/b&gt;: Bitmap format, see the definition in BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: bitmap width, in pixels.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: bitmap height, in pixels&lt;br&gt;&lt;br&gt;This command will generate the corresponding display list for given bitmap information, sparing the effort of writing display list manually.</translation>
+        <translation>&lt;b&gt;CMD_SETBITMAP&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;, &lt;i&gt;fmt&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in RAM.&lt;br&gt;&lt;b&gt;fmt&lt;/b&gt;: Bitmap format, see the definition in BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: bitmap width, in pixels.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: bitmap height, in pixels&lt;br&gt;&lt;br&gt;This command will generate the corresponding display list for given bitmap information, sparing the effort of writing display list manually.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1844"/>
