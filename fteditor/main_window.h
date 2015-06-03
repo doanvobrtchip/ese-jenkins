@@ -135,6 +135,8 @@ public:
 
 	void userChangeResolution(int hsize, int vsize);
 
+	void openFile(const QString &fileName);
+
 private slots:
 	// void applyEmulatorConfig();
 

@@ -2915,6 +2915,14 @@ void MainWindow::actOpen()
 	if (fileName.isNull())
 		return;
 
+	openFile(fileName);
+}
+
+
+void MainWindow::openFile(const QString &fileName)
+{
+	printf("*** Open file ***\n");
+
 	// Reset editors to their default state
 	clearEditor();
 

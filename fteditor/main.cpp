@@ -142,6 +142,11 @@ int main(int argc, char* argv[])
 	FTEDITOR::MainWindow mainWin(customSizeHints);
 	mainWin.resize(800, 600);
 	mainWin.show(); // calls isVisible(true)
+
+	const QStringList arguments = app.arguments();
+	if (arguments.size() > 1 && QFile::exists(arguments.last()))
+		mainWin.openFile(arguments.last());
+
 	int result = app.exec();
 	FTEDITOR::AssetConverter::release();
 #ifdef FT800EMU_PYTHON
