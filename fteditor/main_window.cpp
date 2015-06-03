@@ -1705,8 +1705,8 @@ void MainWindow::translateActions()
 	m_ResetEmulatorAct->setStatusTip(tr("Reset the emulated device"));
 	m_SaveScreenshotAct->setText(tr("Save Screenshot"));
 	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
-	m_ImportDisplayListAct->setText(tr("Import Display List"));
-	m_ImportDisplayListAct->setStatusTip(tr("Import active display list from emulator to editor"));
+	m_ImportDisplayListAct->setText(tr("Capture Display List"));
+	m_ImportDisplayListAct->setStatusTip(tr("Capture the active display list from the emulator into the editor"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_ManualAct->setText(tr("Manual"));
