@@ -2222,7 +2222,35 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			}
 			else if (selectionType == 3 || selectionType == 4)
 			{
-				int line = m_MouseStackValid ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : (m_LineNumber >= 0 ? (m_LineEditor->getLine(m_LineNumber).ValidId ? m_LineNumber + 1 : m_LineNumber) : 0);
+				bool useMouseStack;
+				int lineOverride = -1;
+				if (selectionType == 3 && (
+					selection == FTEDITOR_DL_CLEAR_COLOR_RGB
+					|| selection == FTEDITOR_DL_CLEAR_COLOR_A
+					|| selection == FTEDITOR_DL_CLEAR_STENCIL
+					|| selection == FTEDITOR_DL_CLEAR_TAG
+					))
+				{
+					// Try to find CLEAR command backward from current pos
+					int l = m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop;
+					for (int i = l; i >= 0; --i)
+					{
+						DlParsed pai = m_LineEditor->getLine(i);
+						if (pai.ValidId && (pai.IdLeft == FTEDITOR_DL_INSTRUCTION) && (pai.IdRight == FTEDITOR_DL_CLEAR))
+						{
+							lineOverride = i;
+							break;
+						}
+					}
+					useMouseStack = m_MouseStackValid;
+				}
+				else
+				{
+					// Only use primitive under cursor if it's not the CLEAR primitive
+					DlParsed pac = m_LineEditor->getLine(m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop);
+					useMouseStack = m_MouseStackValid && !(pac.ValidId && (pac.IdLeft == FTEDITOR_DL_INSTRUCTION) && (pac.IdRight == FTEDITOR_DL_CLEAR));
+				}
+				int line = lineOverride >= 0 ? lineOverride : (useMouseStack ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : (m_LineNumber >= 0 ? (m_LineEditor->getLine(m_LineNumber).ValidId ? m_LineNumber + 1 : m_LineNumber) : 0));
 				m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop property");
 				DlParsed pa;
 				pa.ValidId = true;
