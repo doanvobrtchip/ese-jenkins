@@ -3430,6 +3430,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_Macro->bindCurrentDevice();
 	m_Toolbox->bindCurrentDevice();
 	m_ContentManager->bindCurrentDevice();
+	m_InteractiveProperties->bindCurrentDevice();
 
 	// Update resolution list
 	s_UndoRedoWorking = true;

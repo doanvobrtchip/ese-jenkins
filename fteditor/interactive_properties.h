@@ -47,6 +47,8 @@ public:
 
 	void clear();
 
+	void bindCurrentDevice();
+
 	// Called by a editor when the active line changes
 	void setEditorLine(DlEditor *editor, int line);
 	void modifiedEditorLine();

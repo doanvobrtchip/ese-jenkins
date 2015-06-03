@@ -651,6 +651,12 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 	}
 }
 
+void InteractiveProperties::bindCurrentDevice()
+{ 
+	if (m_MainWindow->propertiesEditor()->getEditWidgetSetter() == m_LineEditor)
+		setEditorLine(m_LineEditor, m_LineNumber); 
+}
+
 void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *editor)
 {
 	bool ok = false;
