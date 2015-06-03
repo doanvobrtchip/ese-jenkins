@@ -27,6 +27,9 @@ EmulatorNavigator::~EmulatorNavigator()
 
 static void calcpos(EmulatorNavigator &me, int &x, int &y, int &w, int &h, const QPixmap &pixmap)
 {
+	if (!pixmap.width() || !pixmap.height())
+		return;
+
 	int hforw = pixmap.height() * me.width() / pixmap.width();
 	if (hforw > me.height())
 	{
@@ -92,6 +95,9 @@ void EmulatorNavigator::paintEvent(QPaintEvent *e)
 	calcpos(*this, x, y, w, h, pixmap);
 	painter.drawPixmap(x, y, w, h, pixmap,
 		0, 0, pixmap.width(), pixmap.height());
+
+	if (!pixmap.width() || !pixmap.height())
+		return;
 
 	const int screenScale = m_EmulatorViewport->screenScale();
 

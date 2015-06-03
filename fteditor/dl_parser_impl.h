@@ -997,8 +997,8 @@ void DlParser::compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const
 					uint32_t xy = parsed.Parameter[3].U << 16
 						| parsed.Parameter[2].U & 0xFFFF;
 					compiled.push_back(xy);
-					uint32_t wh = parsed.Parameter[5].U << 16
-						| parsed.Parameter[4].U & 0xFFFF;
+					uint32_t wh = (parsed.Parameter[5].U ? parsed.Parameter[5].U : 1) << 16
+						| (parsed.Parameter[4].U ? parsed.Parameter[4].U : 1) & 0xFFFF;
 					compiled.push_back(wh);
 					break;
 				}
