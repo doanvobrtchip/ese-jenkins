@@ -1010,7 +1010,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case CMD_LOADIMAGE:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIMAGE."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIMAGE_FT810."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_LOADIMAGE."));
 			if (editor)
 			{
 				setTitle("CMD_LOADIMAGE");
