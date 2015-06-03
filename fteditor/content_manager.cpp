@@ -1810,6 +1810,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 							paletteAddrLine = i;
 						}
 					}
+					break;
 				default:
 					handleLine = -1;
 					addressOk = false;
