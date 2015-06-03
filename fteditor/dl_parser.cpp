@@ -262,6 +262,10 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			break;
 		}
 	}
+	else
+	{
+		defaultParam = NULL;
+	}
 
 	int p = 0;
 	if (!failId)
