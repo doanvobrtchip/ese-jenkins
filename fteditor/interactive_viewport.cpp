@@ -1833,7 +1833,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[2].U = 160;
 						pa.Parameter[3].U = 36;
 						pa.Parameter[4].U = 29;
-						pa.Parameter[5].U = 0;
+						pa.Parameter[5].U = 'y';
 						pa.StringParameter = "keys";
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 7;
