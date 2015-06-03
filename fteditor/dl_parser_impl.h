@@ -1004,7 +1004,7 @@ void DlParser::compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const
 				}
 				case CMD_SETBITMAP:
 				{
-					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[0].I & addressMask(FTEDITOR_CURRENT_DEVICE));
 					uint32_t fmtw = parsed.Parameter[1].U & 0xFFFF
 						| parsed.Parameter[2].U << 16;
 					compiled.push_back(fmtw);
@@ -1123,7 +1123,7 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_SOURCE:
 				{
-					int addr = v & addressMask(FTEDITOR_CURRENT_DEVICE);
+					int addr = addressSigned(FTEDITOR_CURRENT_DEVICE, v);
 					res << "BITMAP_SOURCE(";
 					res << addr << ")";
 					break;

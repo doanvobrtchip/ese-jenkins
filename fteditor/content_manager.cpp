@@ -205,8 +205,8 @@ int ContentInfo::bitmapAddress(int deviceIntf) const
 		int res = MemoryAddress + 148;
 		int offset = FontOffset * CachedImageStride * CachedImageHeight;
 		res -= offset;
-		if (res < 0)
-			res += addressMask(deviceIntf) + 1;
+		/*if (res < 0)
+			res += addressMask(deviceIntf) + 1;*/
 		return res;
 	}
 	return MemoryAddress;

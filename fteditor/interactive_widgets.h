@@ -93,7 +93,7 @@ public:
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
-		setMinimum(0);
+		setMinimum(-addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4);
 		setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -128,7 +128,7 @@ private slots:
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
-		parsed.Parameter[m_Index].I = (value & 0x7FFFFFFC);
+		parsed.Parameter[m_Index].I = value; // (value & 0x7FFFFFFC);
 		setLine(parsed);
 		m_SoftMod = false;
 	}

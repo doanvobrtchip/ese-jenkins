@@ -52,6 +52,7 @@ extern const uint32_t g_AddressSpace[FTEDITOR_DEVICE_NB];
 extern const uint32_t g_AddressMask[FTEDITOR_DEVICE_NB];
 inline uint32_t addressSpace(int deviceIntf) { return g_AddressSpace[deviceIntf]; }
 inline uint32_t addressMask(int deviceIntf) { return g_AddressMask[deviceIntf]; }
+inline int addressSigned(int deviceIntf, int address) { int masked = (address & g_AddressMask[deviceIntf]); int negmask = ~(g_AddressMask[deviceIntf] >> 1); int neg = masked & negmask; return neg ? masked | negmask : masked; }
 
 // RAM addresses
 #define FTEDITOR_RAM_G 0
