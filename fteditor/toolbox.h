@@ -71,6 +71,8 @@ private:
 	QTreeWidgetItem *m_Utilities;
 	QTreeWidgetItem *m_Graphics;
 	QTreeWidgetItem *m_Bitmaps;
+	QTreeWidgetItem *m_Drawing;
+	QTreeWidgetItem *m_Execution;
 	// QTreeWidgetItem *m_Advanced;
 	std::vector<QTreeWidgetItem *> m_CoprocessorTools;
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT801Only;

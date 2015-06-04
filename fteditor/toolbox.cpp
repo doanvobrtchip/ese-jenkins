@@ -354,6 +354,39 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		m_CoprocessorTools.push_back(item);*/
 	}
 
+	m_Drawing = new QTreeWidgetItem(m_Tools);
+	m_Drawing->setText(0, tr("Drawing Actions"));
+	m_Drawing->setIcon(0, QIcon(":/icons/pencil-field.png"));
+	{
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Drawing);
+		item->setText(0, tr("Begin"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BEGIN));
+		item = new QTreeWidgetItem(m_Drawing);
+		item->setText(0, tr("End"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_END));
+		item = new QTreeWidgetItem(m_Drawing);
+		item->setText(0, tr("Vertex Float"));
+		item->setData(1, Qt::UserRole, QVariant((uint)5));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX2F));
+		item = new QTreeWidgetItem(m_Drawing);
+		item->setText(0, tr("Vertex Integer"));
+		item->setData(1, Qt::UserRole, QVariant((uint)5));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX2II));
+	}
+	//m_CoprocessorFT810Plus.push_back(item);
+	//m_DisplayListFT810Plus.push_back(item);
+	//m_CoprocessorTools
+
+	m_Execution = new QTreeWidgetItem(m_Tools);
+	m_Execution->setText(0, tr("Execution Control"));
+	m_Execution->setIcon(0, QIcon(":/icons/task--arrow.png"));
+	{
+		QTreeWidgetItem *item;
+	}
+
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
 	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
 }

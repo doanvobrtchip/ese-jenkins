@@ -1741,7 +1741,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				m_MainWindow->focusDlEditor();
 			}
 
-			if (selectionType == 1 || selectionType == 2)
+			if (selectionType == 1 || selectionType == 2 || selectionType == 5)
 			{
 				int line = m_LineNumber;
 				if (m_LineEditor->getLine(line).ValidId)
@@ -1797,7 +1797,38 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				// printf("Dropped item from toolbox, type %i\n", selection);
 
 				// void insertLine(int line, const DlParsed &parsed);
-				if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
+				if (selectionType == 5)
+				{
+					int mvx = screenLeft();
+					int mvy = screenTop();
+					int scl = screenScale();
+
+					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop vertex");
+					DlParsed pa;
+					pa.ValidId = true;
+					pa.IdLeft = selection;
+					pa.IdRight = 0;
+					switch (selection)
+					{
+					case FTEDITOR_DL_VERTEX2F:
+						pa.Parameter[0].I = UNTFX(e->pos().x()) << 4;
+						pa.Parameter[1].I = UNTFY(e->pos().y()) << 4;
+						pa.ExpectedParameterCount = 2;
+						break;
+					default:
+						pa.Parameter[0].I = UNTFX(e->pos().x());
+						pa.Parameter[1].I = UNTFY(e->pos().y());
+						pa.Parameter[2].I = 0;
+						pa.Parameter[3].I = 0;
+						pa.ExpectedParameterCount = 4;
+						break;
+					}
+					pa.ExpectedStringParameter = false;
+					m_LineEditor->insertLine(line, pa);
+					m_LineEditor->selectLine(line);
+					m_LineEditor->codeEditor()->endUndoCombine();
+				}
+				else if ((selection & 0xFFFFFF00) == 0xFFFFFF00) // Coprocessor
 				{
 					int mvx = screenLeft();
 					int mvy = screenTop();
@@ -1966,7 +1997,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				else if (selectionType == 2)
 				{
 					if (!m_MouseStackValid) line = m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
-					m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop background");
+					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop drawing action"));
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -1979,6 +2010,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].U = 1;
 						pa.Parameter[2].U = 1;
 						pa.ExpectedParameterCount = 3;
+						break;
+					case FTEDITOR_DL_BEGIN:
+						pa.Parameter[0].U = 1;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_END:
+						pa.ExpectedParameterCount = 0;
 						break;
 					}
 					m_LineEditor->insertLine(line, pa);

@@ -67,5 +67,7 @@
     <file>icons/eve-puzzle-16.png</file>
     <file>icons/beaker-empty.png</file>
     <file>icons/loader.gif</file>
+    <file>icons/task--arrow.png</file>
+    <file>icons/pencil-field.png</file>
   </qresource>
 </RCC>
