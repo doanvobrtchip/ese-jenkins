@@ -2480,6 +2480,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[2].U = 64;
 						pa.ExpectedParameterCount = 3;
 						break;
+					case FTEDITOR_DL_BITMAP_LAYOUT_H:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
 					case FTEDITOR_DL_BITMAP_SIZE:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
@@ -2487,6 +2492,19 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[3].U = 64;
 						pa.Parameter[4].U = 64;
 						pa.ExpectedParameterCount = 5;
+						break;
+					case FTEDITOR_DL_BITMAP_SIZE_H:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case FTEDITOR_DL_PALETTE_SOURCE:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_CELL:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
 						break;
 					}
 				}

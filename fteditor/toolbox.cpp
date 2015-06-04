@@ -295,9 +295,28 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_LAYOUT));
 		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Bitmap Layout H"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_LAYOUT_H));
+		m_DisplayListFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Bitmap Size"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SIZE));
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Bitmap Size H"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SIZE_H));
+		m_DisplayListFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Cell"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_CELL));
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Palette Source"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_PALETTE_SOURCE));
+		m_DisplayListFT810Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Transform A"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
@@ -474,6 +493,13 @@ void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		}
+	}
+	else if (selectionType == 5)
+	{
+		uint32_t selection = getSelectionId();
+		int idLeft = (int)selection;
+		int idRight = 0;
+		m_MainWindow->interactiveProperties()->setProperties(idLeft, idRight, NULL);
 	}
 	else if (selectionType)
 	{
