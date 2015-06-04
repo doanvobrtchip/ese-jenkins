@@ -2360,6 +2360,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].I = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
+					case CMD_SETSCRATCH:
+						pa.Parameter[0].I = 15;
+						pa.ExpectedParameterCount = 1;
+						break;
 					}
 				}
 				else

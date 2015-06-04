@@ -69,5 +69,6 @@
     <file>icons/loader.gif</file>
     <file>icons/task--arrow.png</file>
     <file>icons/pencil-field.png</file>
+    <file>icons/database.png</file>
   </qresource>
 </RCC>

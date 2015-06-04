@@ -373,6 +373,21 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		m_CoprocessorTools.push_back(item);*/
 	}
 
+	m_Coprocessor = new QTreeWidgetItem(m_Tools);
+	m_Coprocessor->setText(0, tr("Coprocessor State"));
+	m_Coprocessor->setIcon(0, QIcon(":/icons/database.png"));
+	{
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Coprocessor);
+		item->setText(0, tr("Cold Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_COLDSTART));
+		item = new QTreeWidgetItem(m_Coprocessor);
+		item->setText(0, tr("Set Scratch"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETSCRATCH));
+	}
+
 	m_Drawing = new QTreeWidgetItem(m_Tools);
 	m_Drawing->setText(0, tr("Drawing Actions"));
 	m_Drawing->setIcon(0, QIcon(":/icons/pencil-field.png"));
@@ -424,11 +439,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Return"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RETURN));
-		item = new QTreeWidgetItem(m_Execution);
-		item->setText(0, tr("Cold Start"));
-		item->setData(1, Qt::UserRole, QVariant((uint)2));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_COLDSTART));
-		m_CoprocessorTools.push_back(item);
 		item = new QTreeWidgetItem(m_Execution);
 		item->setText(0, tr("Interrupt"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
@@ -574,9 +584,12 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(false);
 			m_Widgets->setHidden(!editor->isCoprocessor());
 			m_Utilities->setHidden(!editor->isCoprocessor());
+			m_Coprocessor->setHidden(!editor->isCoprocessor());
 			m_Graphics->setHidden(false);
 			m_Bitmaps->setHidden(false);
 			// m_Advanced->setHidden(false);
+			m_Drawing->setHidden(false);
+			m_Execution->setHidden(false);
 			for (size_t i = 0; i < m_CoprocessorTools.size(); ++i)
 			{
 				m_CoprocessorTools[i]->setHidden(!editor->isCoprocessor());
@@ -596,9 +609,12 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(true);
 			m_Widgets->setHidden(true);
 			m_Utilities->setHidden(true);
+			m_Coprocessor->setHidden(true);
 			m_Graphics->setHidden(true);
 			m_Bitmaps->setHidden(true);
 			// m_Advanced->setHidden(true);
+			m_Drawing->setHidden(true);
+			m_Execution->setHidden(true);
 		}
 	}
 }
