@@ -1980,6 +1980,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case CMD_COLDSTART:
 						pa.ExpectedParameterCount = 0;
 						break;
+					case CMD_MEDIAFIFO:
+						pa.Parameter[0].I = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - (64 * 1024);
+						pa.Parameter[1].I = 64 * 1024;
+						pa.ExpectedParameterCount = 2;
+						break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
@@ -2364,6 +2369,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].I = 15;
 						pa.ExpectedParameterCount = 1;
 						break;
+					case CMD_SETBASE:
+						pa.Parameter[0].I = 10;
+						pa.ExpectedParameterCount = 1;
+						break;
 					}
 				}
 				else
@@ -2508,6 +2517,19 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						break;
 					case FTEDITOR_DL_CELL:
 						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_RESTORE_CONTEXT:
+					case FTEDITOR_DL_SAVE_CONTEXT:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case FTEDITOR_DL_VERTEX_FORMAT:
+						pa.Parameter[0].U = 4;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_VERTEX_TRANSLATE_X:
+					case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
+						pa.Parameter[0].U = 256;
 						pa.ExpectedParameterCount = 1;
 						break;
 					}

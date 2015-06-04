@@ -71,7 +71,6 @@ private:
 	QTreeWidgetItem *m_Utilities;
 	QTreeWidgetItem *m_Graphics;
 	QTreeWidgetItem *m_Bitmaps;
-	QTreeWidgetItem *m_Coprocessor;
 	QTreeWidgetItem *m_Drawing;
 	QTreeWidgetItem *m_Execution;
 	// QTreeWidgetItem *m_Advanced;

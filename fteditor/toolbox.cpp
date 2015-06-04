@@ -197,6 +197,16 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));
 		m_CoprocessorFT801Only.push_back(item);
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Interrupt"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INTERRUPT));
+		m_CoprocessorTools.push_back(item);
+		/*item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Video Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
+		m_CoprocessorTools.push_back(item);*/
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
@@ -204,6 +214,14 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_Graphics->setIcon(0, QIcon(":/icons/categories.png"));
 	{
 		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Save Context"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_SAVE_CONTEXT));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Restore Context"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RESTORE_CONTEXT));
 		item = new QTreeWidgetItem(m_Graphics);
 		item->setText(0, tr("Color RGB"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
@@ -275,6 +293,41 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Tag Mask"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_TAG_MASK));
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Vertex Format"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX_FORMAT));
+		m_DisplayListFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Vertex Translate X"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX_TRANSLATE_X));
+		m_DisplayListFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Vertex Translate Y"));
+		item->setData(1, Qt::UserRole, QVariant((uint)3));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX_TRANSLATE_Y));
+		m_DisplayListFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Cold Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_COLDSTART));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Media FIFO"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEDIAFIFO));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Set Scratch"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETSCRATCH));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Set Base"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETBASE));
+		m_CoprocessorFT810Plus.push_back(item);
 	}
 
 	m_Bitmaps = new QTreeWidgetItem(m_Tools);
@@ -373,21 +426,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		m_CoprocessorTools.push_back(item);*/
 	}
 
-	m_Coprocessor = new QTreeWidgetItem(m_Tools);
-	m_Coprocessor->setText(0, tr("Coprocessor State"));
-	m_Coprocessor->setIcon(0, QIcon(":/icons/database.png"));
-	{
-		QTreeWidgetItem *item;
-		item = new QTreeWidgetItem(m_Coprocessor);
-		item->setText(0, tr("Cold Start"));
-		item->setData(1, Qt::UserRole, QVariant((uint)2));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_COLDSTART));
-		item = new QTreeWidgetItem(m_Coprocessor);
-		item->setText(0, tr("Set Scratch"));
-		item->setData(1, Qt::UserRole, QVariant((uint)4));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETSCRATCH));
-	}
-
 	m_Drawing = new QTreeWidgetItem(m_Tools);
 	m_Drawing->setText(0, tr("Drawing Actions"));
 	m_Drawing->setIcon(0, QIcon(":/icons/pencil-field.png"));
@@ -439,16 +477,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Return"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RETURN));
-		item = new QTreeWidgetItem(m_Execution);
-		item->setText(0, tr("Interrupt"));
-		item->setData(1, Qt::UserRole, QVariant((uint)2));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INTERRUPT));
-		m_CoprocessorTools.push_back(item);
-		/*item = new QTreeWidgetItem(m_Execution);
-		item->setText(0, tr("Video Start"));
-		item->setData(1, Qt::UserRole, QVariant((uint)2));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
-		m_CoprocessorTools.push_back(item);*/
 	}
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
@@ -584,7 +612,6 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(false);
 			m_Widgets->setHidden(!editor->isCoprocessor());
 			m_Utilities->setHidden(!editor->isCoprocessor());
-			m_Coprocessor->setHidden(!editor->isCoprocessor());
 			m_Graphics->setHidden(false);
 			m_Bitmaps->setHidden(false);
 			// m_Advanced->setHidden(false);
@@ -609,7 +636,6 @@ void Toolbox::setEditorLine(DlEditor *editor, int line)
 			m_Primitives->setHidden(true);
 			m_Widgets->setHidden(true);
 			m_Utilities->setHidden(true);
-			m_Coprocessor->setHidden(true);
 			m_Graphics->setHidden(true);
 			m_Bitmaps->setHidden(true);
 			// m_Advanced->setHidden(true);
