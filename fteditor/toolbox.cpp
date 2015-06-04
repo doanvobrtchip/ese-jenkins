@@ -385,6 +385,41 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_Execution->setIcon(0, QIcon(":/icons/task--arrow.png"));
 	{
 		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Macro"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_MACRO));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Display"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_DISPLAY));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Jump"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_JUMP));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Call"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_CALL));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Return"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RETURN));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Cold Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_COLDSTART));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Interrupt"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INTERRUPT));
+		m_CoprocessorTools.push_back(item);
+		/*item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Video Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
+		m_CoprocessorTools.push_back(item);*/
 	}
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);

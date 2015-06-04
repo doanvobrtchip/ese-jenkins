@@ -1973,6 +1973,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[4].U = 1;
 						pa.ExpectedParameterCount = 5;
 						break;
+					case CMD_INTERRUPT:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_COLDSTART:
+						pa.ExpectedParameterCount = 0;
+						break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
@@ -1997,7 +2004,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				else if (selectionType == 2)
 				{
 					if (!m_MouseStackValid) line = m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
-					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop drawing action"));
+					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop from toolbox"));
 					DlParsed pa;
 					pa.ValidId = true;
 					pa.IdLeft = 0;
@@ -2016,6 +2023,24 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 1;
 						break;
 					case FTEDITOR_DL_END:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case FTEDITOR_DL_CALL:
+						pa.Parameter[0].U = line + 1;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_DISPLAY:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case FTEDITOR_DL_JUMP:
+						pa.Parameter[0].U = line + 1;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_MACRO:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_RETURN:
 						pa.ExpectedParameterCount = 0;
 						break;
 					}
