@@ -2373,6 +2373,30 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].I = 10;
 						pa.ExpectedParameterCount = 1;
 						break;
+					case CMD_ROMFONT:
+						pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
+						if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
+						pa.Parameter[1].I = 34;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_SETFONT:
+						pa.Parameter[0].I = 0;
+						pa.Parameter[1].I = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_SETFONT2:
+						pa.Parameter[0].I = 0;
+						pa.Parameter[1].I = 0;
+						pa.Parameter[2].I = 32;
+						pa.ExpectedParameterCount = 3;
+						break;
+					case CMD_SETBITMAP:
+						pa.Parameter[0].I = 0;
+						pa.Parameter[1].I = 0;
+						pa.Parameter[2].I = 64;
+						pa.Parameter[3].I = 64;
+						pa.ExpectedParameterCount = 4;
+						break;
 					}
 				}
 				else

@@ -362,6 +362,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SIZE_H));
 		m_DisplayListFT810Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Set Bitmap"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETBITMAP));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Cell"));
 		item->setData(1, Qt::UserRole, QVariant((uint)3));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_CELL));
@@ -424,6 +429,21 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)4));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GETMATRIX));
 		m_CoprocessorTools.push_back(item);*/
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Set Font"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETFONT));
+		m_CoprocessorTools.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Set Font 2"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETFONT2));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("ROM Font"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROMFONT));
+		m_CoprocessorFT810Plus.push_back(item);
 	}
 
 	m_Drawing = new QTreeWidgetItem(m_Tools);
