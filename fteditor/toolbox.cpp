@@ -201,12 +201,41 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Interrupt"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INTERRUPT));
-		m_CoprocessorTools.push_back(item);
 		/*item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Video Start"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
 		m_CoprocessorTools.push_back(item);*/
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Snapshot"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SNAPSHOT));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Snapshot 2"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SNAPSHOT2));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Load Image"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOADIMAGE));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Play Video"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_PLAYVIDEO));
+		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Append"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_APPEND));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Memory Set"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMSET));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Memory Zero"));
+		item->setData(1, Qt::UserRole, QVariant((uint)2));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMZERO));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

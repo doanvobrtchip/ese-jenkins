@@ -1985,6 +1985,48 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].I = 64 * 1024;
 						pa.ExpectedParameterCount = 2;
 						break;
+					case CMD_SNAPSHOT:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_SNAPSHOT2:
+						pa.Parameter[0].U = RGB565;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.Parameter[3].U = 0;
+						pa.Parameter[4].U = m_MainWindow->viewport()->hsize();
+						pa.Parameter[5].U = m_MainWindow->viewport()->vsize();
+						pa.ExpectedParameterCount = 6;
+						break;
+					case CMD_LOADIMAGE:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = OPT_NODL;
+						pa.StringParameter = "";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 3;
+						break;
+					case CMD_APPEND:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_PLAYVIDEO:
+						pa.Parameter[0].U = OPT_FULLSCREEN | OPT_SOUND;
+						pa.StringParameter = "";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_MEMSET:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.ExpectedParameterCount = 3;
+						break;
+					case CMD_MEMZERO:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedParameterCount = 2;
+						break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
