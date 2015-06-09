@@ -34,22 +34,6 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 
 #include "FT_DataTypes.h"
 #include "FT_Gpu_Hal.h"
-
-/*
-ft_int16_t FT_DispWidth = 480;
-ft_int16_t FT_DispHeight = 272;
-ft_int16_t FT_DispHCycle =  548;
-ft_int16_t FT_DispHOffset = 43;
-ft_int16_t FT_DispHSync0 = 0;
-ft_int16_t FT_DispHSync1 = 41;
-ft_int16_t FT_DispVCycle = 292;
-ft_int16_t FT_DispVOffset = 12;
-ft_int16_t FT_DispVSync0 = 0;
-ft_int16_t FT_DispVSync1 = 10;
-ft_uint8_t FT_DispPCLK = 5;
-ft_char8_t FT_DispSwizzle = 0;
-ft_char8_t FT_DispPCLKPol = 1;
-*/
 #endif
 
 using namespace std;
@@ -59,7 +43,7 @@ namespace FTEDITOR {
 #if FT800_DEVICE_MANAGER
 
 DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
-currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), displaySettingsDialog(NULL)
+currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDialog(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -71,14 +55,12 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), displaySettingsDialo
 	m_DeviceList->setHeaderLabels(headers);
 	layout->addWidget(m_DeviceList);
 	m_DeviceList->resizeColumnToContents(0);
-	connect(m_DeviceList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
+	connect(m_DeviceList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	QHBoxLayout *buttons = new QHBoxLayout();
 
 	QPushButton *refreshButton = new QPushButton(this);
-	//uint icon[2] = { 0x27F2, 0 };
-	//refreshButton->setText(QString::fromUcs4(icon));//tr("Refresh"));
 	refreshButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
 	refreshButton->setToolTip(tr("Refresh the device list"));
 	connect(refreshButton, SIGNAL(clicked()), this, SLOT(refreshDevices()));
@@ -112,7 +94,7 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), displaySettingsDialo
 
 	m_DisconnectButton = new QPushButton(this);
 	m_DisconnectButton->setText(tr("Disconnect"));
-	m_DisconnectButton->setToolTip(tr("Disconnect from the selected device"));
+	m_DisconnectButton->setToolTip(tr("Disconnect from the selected device"));	
 	m_DisconnectButton->setVisible(false);
 	connect(m_DisconnectButton, SIGNAL(clicked()), this, SLOT(disconnectDevice()));
 	buttons->addWidget(m_DisconnectButton);
@@ -126,7 +108,7 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), displaySettingsDialo
 	// Initial refresh of devices
 	refreshDevices();
 
-	displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+	m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 }
 
 DeviceManager::~DeviceManager()
@@ -145,11 +127,12 @@ void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevi
 }
 
 void DeviceManager::deviceDisplaySettings(){
-	if (displaySettingsDialog == NULL){
-		displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+	if (m_displaySettingsDialog == NULL){
+		m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 	}
-	//displaySettingsDialog->exec();
-	displaySettingsDialog->execute();
+
+	m_displaySettingsDialog->execute();
+	
 }
 
 void DeviceManager::refreshDevices()
@@ -175,7 +158,7 @@ void DeviceManager::refreshDevices()
 		{
 			// The device was not added yet, create the gui
 			QTreeWidgetItem *view = new QTreeWidgetItem(m_DeviceList);
-			view->setText(0, "");
+			view->setText(0, "No");
 			view->setText(1, devName);
 
 			// Store this device
@@ -184,7 +167,7 @@ void DeviceManager::refreshDevices()
 			devInfo->View = view;
 			devInfo->Connected = false;
 			m_DeviceInfo[devId] = devInfo;
-			view->setData(0, Qt::UserRole, qVariantFromValue((quintptr)(void *)devInfo));
+			view->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(devInfo));	
 		}
 		else
 		{
@@ -199,8 +182,8 @@ void DeviceManager::refreshDevices()
 	{
 		// Delete anything in the DeviceInfo that needs to be deleted
 		delete it->second->View;
-		// TODO ...
 		delete it->second;
+		
 	}
 }
 
@@ -213,12 +196,20 @@ void DeviceManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *
 
 void DeviceManager::connectDevice()
 {
-	if (!m_DeviceList->currentItem()) return;
+	if (!m_DeviceList->currentItem()) {
+		QMessageBox::warning(this, "select device first\n", "Please Select the device in the list", QMessageBox::Ok);
+		return;
+	}
+
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) {
+		QMessageBox::warning(this, "Project Type Not correct\n", "Only FT80X project supported", QMessageBox::Ok);
+		return;
+	}
 
 	printf("connectDevice\n");
 
 
-	DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 
 	if (devInfo->Connected) return;
 
@@ -226,8 +217,6 @@ void DeviceManager::connectDevice()
 
 	phost->hal_config.channel_no = devInfo->Id;
 	phost->hal_config.spi_clockrate_khz = 12000; //in KHz
-
-
 
 	Ft_Gpu_Hal_Open(phost);
 
@@ -299,8 +288,6 @@ void DeviceManager::connectDevice()
 		devInfo->Connected = true;
 	}
 
-
-
 	devInfo->handle = (void*)phost;
 	updateSelection();
 }
@@ -309,7 +296,7 @@ void DeviceManager::disconnectDevice()
 {
 	if (!m_DeviceList->currentItem()) return;
 
-	DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 
 	printf("disconnectDevice\n");
 
@@ -320,7 +307,6 @@ void DeviceManager::disconnectDevice()
 	Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
 	Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
 	Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
-
 
 	Ft_Gpu_Hal_Close(phost);
 
@@ -352,7 +338,6 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	std::set<ContentInfo *> contentInfo;
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
 	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
-
 	
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
@@ -360,8 +345,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
 		{
             {
-				Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
-				
+			Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
 			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
@@ -387,7 +371,8 @@ void DeviceManager::syncDevice()
 	const uint32_t *displayList = FT8XXEMU_getDisplayList();
 	//Sync with selected device
 	{
-		DeviceInfo *devInfo = (DeviceInfo *)(void *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+
+		DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 		if (devInfo->Connected)
 		{
 			Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t *)devInfo->handle;
@@ -420,18 +405,17 @@ void DeviceManager::updateSelection()
 	}
 	else
 	{
-		DeviceInfo *devInfo = (DeviceInfo *)m_DeviceList->currentItem()->data(0, Qt::UserRole).value<void *>();
+		DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 		m_ConnectButton->setVisible(!devInfo->Connected);
 		m_DisconnectButton->setVisible(devInfo->Connected);
 		m_SendImageButton->setVisible(devInfo->Connected);
 		if (devInfo->Connected)
 		{
-			uint icon[2] = { 0x2714, 0 };
-			devInfo->View->setText(0, QString::fromUcs4(icon));
+			devInfo->View->setText(0, "Yes");
 		}
 		else
 		{
-			devInfo->View->setText(0, "");
+			devInfo->View->setText(0, "No");
 		}
 	}
 }

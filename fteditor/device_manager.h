@@ -63,10 +63,9 @@ public:
 	void setCurrentDisplaySize(QString displaySize);
 	QString getSyncDeviceName();
 	void setSyncDeviceName(QString deviceName);
-	
 
-private:
 	typedef uint32_t DeviceId; // Change type to whatever needed
+
 	struct DeviceInfo
 	{
 		DeviceId Id;
@@ -76,6 +75,11 @@ private:
 		// Add necessary device specific data here
 	};
 
+	typedef DeviceInfo * EveModuleDeviceInforPtr;
+
+private:
+
+
 	QString currScreenSize;
 	QString selectedSyncDevice;
 	MainWindow *m_MainWindow;
@@ -84,7 +88,7 @@ private:
 	QPushButton *m_ConnectButton;
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
-	DeviceDisplaySettingsDialog *displaySettingsDialog;
+	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
 
 
 private slots:
@@ -115,7 +119,11 @@ class DeviceManager : public QWidget
 
 #endif /* FT800_DEVICE_MANAGER */
 
+
+
 } /* namespace FTEDITOR */
+
+Q_DECLARE_METATYPE(FTEDITOR::DeviceManager::DeviceInfo *)
 
 #endif /* #ifndef FTEDITOR_DEVICE_MANAGER_H */
 
