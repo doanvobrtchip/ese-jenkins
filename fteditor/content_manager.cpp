@@ -1204,6 +1204,12 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 			if (equalMeta)
 			{
 				printf("Equal meta, skip convert\n");
+				
+				// Cache size
+				if (!contentInfo->CachedSize)
+				{
+					contentInfo->CachedSize = getContentSize(contentInfo);
+				}
 			}
 			else
 			{
