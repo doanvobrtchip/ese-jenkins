@@ -162,6 +162,7 @@ private slots:
 
 	void hsizeChanged(int hsize);
 	void vsizeChanged(int vsize);
+	void rotateChanged(int rotate);
 
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
@@ -273,6 +274,7 @@ private:
 	DlEditor *m_Macro;
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
+	QSpinBox *m_Rotate;
 
 	std::vector<QTabBar *> m_HookedTabs;
 

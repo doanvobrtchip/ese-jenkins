@@ -80,8 +80,9 @@ namespace FTEDITOR {
 
 typedef int32_t ramaddr;
 
-int s_HSize = 480;
-int s_VSize = 272;
+volatile int s_HSize = 480;
+volatile int s_VSize = 272;
+volatile int s_Rotate = 0;
 
 static const int s_StandardResolutionNb[] = {
 	2, // FT800
@@ -515,6 +516,9 @@ void loop()
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), s_HSize);
 	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != s_VSize)
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), s_VSize);
+	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != s_Rotate)
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), s_Rotate);
 	// switch to next macro list
 	s_Macro->lockDisplayList();
 	bool macroModified = s_Macro->isDisplayListModified();
@@ -1191,7 +1195,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
 	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
 	m_ToolboxDock(NULL), m_Toolbox(NULL), m_ContentManagerDock(NULL), m_ContentManager(NULL),
-	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL),
+	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), m_Rotate(NULL), 
 	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), m_StepCmdEnabled(NULL), m_StepCmdCount(NULL),
 	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
 	m_FileMenu(NULL), m_EditMenu(NULL), m_ToolsMenu(NULL), m_WidgetsMenu(NULL),
@@ -2196,6 +2200,36 @@ void MainWindow::createDockWindows()
 			layout->addWidget(sizeGroup);
 		}
 
+		// Rotate
+		{
+			QLabel *label;
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Rotate (debug mode only)"));
+			QVBoxLayout *groupLayout = new QVBoxLayout();
+			QHBoxLayout *hboxLayout;
+
+			m_Rotate = new QSpinBox(widget);
+			m_Rotate->setMinimum(0);
+			m_Rotate->setMaximum(7);
+			connect(m_Rotate, SIGNAL(valueChanged(int)), this, SLOT(rotateChanged(int)));
+			hboxLayout = new QHBoxLayout();
+			label = new QLabel(widget);
+			label->setText(tr("Rotate"));
+			hboxLayout->addWidget(label);
+			hboxLayout->addWidget(m_Rotate);
+			groupLayout->addLayout(hboxLayout);
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+
+			// NOTE: This widget does not save to project yet
+			// NOTE: This widget does not downgrade rotate between device versions
+
+#if !_DEBUG
+			group->setVisible(false);
+#endif
+		}
+
 		// Macro
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
@@ -2594,6 +2628,31 @@ void MainWindow::vsizeChanged(int vsize)
 		return;
 
 	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
+}
+
+class RotateCommand : public QUndoCommand
+{
+public:
+	RotateCommand(int rotate, QSpinBox *spinbox) : QUndoCommand(), m_NewRotate(rotate), m_OldRotate(s_Rotate), m_SpinBox(spinbox) { }
+	virtual ~RotateCommand() { }
+	virtual void undo() { s_Rotate = m_OldRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
+	virtual void redo() { s_Rotate = m_NewRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
+	virtual int id() const { return 78994352; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewRotate = static_cast<const RotateCommand *>(command)->m_NewRotate; return true; }
+
+private:
+	int m_NewRotate;
+	int m_OldRotate;
+	QSpinBox *m_SpinBox;
+
+};
+
+void MainWindow::rotateChanged(int rotate)
+{
+	if (s_UndoRedoWorking)
+		return;
+
+	m_UndoStack->push(new RotateCommand(rotate, m_Rotate));
 }
 
 void MainWindow::updateProjectDisplay(int hsize, int vsize)
@@ -3471,6 +3530,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
 	m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
 	m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
+	m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
 
 	// TODO:
 	// Inside ProjectDeviceCommand store the original display lists (incl macro) plus a backup of the current ContentInfo settings
@@ -3574,7 +3634,7 @@ void MainWindow::actDisplayListFromIntegers()
 			m_DlEditor->replaceLine(i, pa);
 		}
 	}
-
+	m_UndoStack->endMacro();
 }
 
 void MainWindow::dummyCommand()
