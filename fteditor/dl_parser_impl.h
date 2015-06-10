@@ -19,8 +19,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Emulator includes
 #if defined(FTEDITOR_PARSER_VC1)
 #include <vc.h>
+#define FTEDITOR_DEVICE_IMPL FTEDITOR_FT800
 #elif defined(FTEDITOR_PARSER_VC2)
 #include <vc2.h>
+#define FTEDITOR_DEVICE_IMPL FTEDITOR_FT810
 #endif
 
 // Project includes
@@ -144,6 +146,8 @@ void DlParser::initVC2()
 		s_ParamCount[FTEDITOR_DL_SCISSOR_XY] = 2;
 		s_IdMap["SCISSOR_SIZE"] = FTEDITOR_DL_SCISSOR_SIZE;
 		s_ParamCount[FTEDITOR_DL_SCISSOR_SIZE] = 2;
+		s_ParamDefault[FTEDITOR_DL_SCISSOR_SIZE][0] = screenWidthMaximum(FTEDITOR_DEVICE_IMPL);
+		s_ParamDefault[FTEDITOR_DL_SCISSOR_SIZE][1] = screenHeightMaximum(FTEDITOR_DEVICE_IMPL);
 		s_IdMap["CALL"] = FTEDITOR_DL_CALL;
 		s_ParamCount[FTEDITOR_DL_CALL] = 1;
 		s_IdMap["JUMP"] = FTEDITOR_DL_JUMP;
