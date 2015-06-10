@@ -584,9 +584,9 @@ void InteractiveProperties::addBitmapFilter(int filter)
 	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, tr("Filter") + ": ", tr("Set bitmap filter"));
 }
 
-void InteractiveProperties::addAddress(int address)
+void InteractiveProperties::addAddress(int address, bool negative)
 {
-	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), address);
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), address, negative);
 	addLabeledWidget("Address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -594,7 +594,7 @@ void InteractiveProperties::addAddress(int address)
 
 void InteractiveProperties::addMemorySize(int size)
 {
-	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set size"), size);
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set size"), size, false);
 	addLabeledWidget("Size: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -988,7 +988,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_APPEND");
-				addAddress(0);
+				addAddress(0, false);
 				addSpinBox(1, 0, 0x7FFFFFFF, "Num: ", "Set num");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1001,7 +1001,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SNAPSHOT");
-				addAddress(0);
+				addAddress(0, false);
 				addCaptureButton(tr("Capture Snapshot"), tr("Capture snapshot"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1017,7 +1017,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_LOADIMAGE");
-				addAddress(0);
+				addAddress(0, false);
 				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO);
 				addStream(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
@@ -1090,7 +1090,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_SETFONT");
 				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, "Font: ", "Set font");
-				addAddress(1);
+				addAddress(1, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1158,7 +1158,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_SKETCH");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
-				addAddress(4);
+				addAddress(4, false);
 				addBitmapFormat(5);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1173,7 +1173,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_SKETCH");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
-				addAddress(4);
+				addAddress(4, false);
 				addBitmapFormat(5);
 				addSpinBox(6, 0, 0xFFFF, "Freq: ", "Edit frequency");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
@@ -1250,7 +1250,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 					g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
 					g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
 					tr("Format") + ": ", tr("Set snapshot format"));
-				addAddress(1);
+				addAddress(1, false);
 				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
 				addWH(4, 5, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				addCaptureButton(tr("Capture Snapshot"), tr("Capture snapshot"));
@@ -1277,7 +1277,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_MEDIAFIFO");
-				addAddress(0);
+				addAddress(0, false);
 				addMemorySize(1);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1304,7 +1304,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_SETFONT2");
 				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
-				addAddress(1);
+				addAddress(1, true);
 				addSpinBox(2, 0, 255, tr("First character") + ": ", tr("Set first character"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1371,7 +1371,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SETBITMAP");
-				addAddress(0);
+				addAddress(0, true);
 				addBitmapFormat(1);
 				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
@@ -1399,7 +1399,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("BITMAP_SOURCE");
-				addAddress(0);
+				addAddress(0, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1907,7 +1907,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("PALETTE_SOURCE");
-				addAddress(0);
+				addAddress(0, false);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

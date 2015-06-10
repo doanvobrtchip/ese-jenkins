@@ -96,7 +96,7 @@ private:
 	void addBitmapFormat(int format);
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
-	void addAddress(int address);
+	void addAddress(int address, bool negative);
 	void addSize(int address);
 	void addMemorySize(int size);
 	void addCaptureButton(const QString &text, const QString &undoMessage);

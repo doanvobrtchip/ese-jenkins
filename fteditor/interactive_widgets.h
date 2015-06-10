@@ -88,12 +88,12 @@ class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
-		setMinimum(-addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4);
+		setMinimum(negative ? -addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4 : 0);
 		setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
