@@ -42,6 +42,7 @@ class QTabBar;
 class QProgressBar;
 class QComboBox;
 class QLabel;
+class QMenu;
 
 namespace FTEDITOR {
 
@@ -323,6 +324,7 @@ private:
 	QAction *m_DummyAct;
 	// QAction *m_SaveScreenshotAct;
 	std::map<QString, RunScript *> m_ScriptActs;
+	std::map<QString, QMenu *> m_ScriptFolderMenus;
 
 	QString m_CurrentFile;
 	QTemporaryDir *m_TemporaryDir;

@@ -47,6 +47,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QComboBox>
 #include <QStandardPaths>
 #include <QMovie>
+#include <QDirIterator>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -1330,20 +1331,28 @@ static QString scriptDisplayName(const QString &script)
 #endif
 
 #ifdef FT800EMU_PYTHON
+
+char *scriptFolder = "export_scripts";
+
+char *scriptDeviceFolder[] = {
+	"ft80x",
+	"ft80x",
+	"ft81x",
+	"ft81x",
+};
+
 QString MainWindow::scriptModule()
 {
-	return QString("export_scripts.")
-		+ ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-			? "ft81x"
-			: "ft80x");
+	return QString(scriptFolder) 
+		+ QString(".") 
+		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
 
 QString MainWindow::scriptDir()
 {
-	return m_InitialWorkingDir + "/export_scripts/" 
-		+ ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-			? "ft81x"
-			: "ft80x");
+	return m_InitialWorkingDir + "/"
+		+ scriptFolder + "/"
+		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
 #endif
 
@@ -1356,37 +1365,86 @@ void MainWindow::refreshScriptsMenu()
 	QStringList filters;
 
 	filters.push_back("*.py");
-	QStringList scriptFiles = currentDir.entryList(filters);
+	// QStringList scriptFiles = currentDir.entryList(filters);
 
 	std::map<QString, RunScript *> scriptActs;
 	scriptActs.swap(m_ScriptActs);
+	std::map<QString, QMenu *> scriptFolderMenus;
+	scriptFolderMenus.swap(m_ScriptFolderMenus);
 
+	m_ScriptFolderMenus["."] = m_ScriptsMenu;
+	scriptFolderMenus.erase(".");
 
 	//Fill up empty m_ScriptActs from previous values in scriptActs
-	for (int i = 0; i < scriptFiles.size(); ++i)
+	// for (int i = 0; i < scriptFiles.size(); ++i)
+	QDirIterator it(currentDir.absolutePath(), filters, QDir::Files, QDirIterator::Subdirectories);
+	while (it.hasNext())
 	{
-		if (scriptFiles[i] == "__init__.py")
+		QString scriptFile = it.next();
+		// printf("script: %s\n", scriptFile.toLocal8Bit().data());
+		scriptFile = currentDir.relativeFilePath(scriptFile);
+
+		// Ignore root __init__.py
+		if (scriptFile == "__init__.py")
 			continue;
+
+		QString scriptMod = scriptModule() + "." + scriptFile.left(scriptFile.size() - 3).replace('/', '.');
+		// printf("module: %s\n", scriptMod.toLocal8Bit().data());
+		QString scriptDir = QFileInfo(scriptFile).dir().path();
+		// printf("dir: %s\n", scriptDir.toLocal8Bit().data());
+
+		std::map<QString, QMenu *>::iterator menuIt = m_ScriptFolderMenus.find(scriptDir);
+		QMenu *menu;
+		if (menuIt == m_ScriptFolderMenus.end())
+		{
+			menuIt = scriptFolderMenus.find(scriptDir);
+			if (menuIt == scriptFolderMenus.end())
+			{
+				menu = new QMenu(scriptDir, this);
+				m_ScriptsMenu->addMenu(menu);
+				m_ScriptFolderMenus[scriptDir] = menu;
+				scriptFolderMenus.erase(scriptDir);
+			}
+			else
+			{
+				menu = menuIt->second;
+				m_ScriptFolderMenus[scriptDir] = menu;
+				scriptFolderMenus.erase(scriptDir);
+			}
+		}
+		else
+		{
+			menu = menuIt->second;
+		}
+
+		if (QFileInfo(scriptFile).fileName() == "__init__.py")
+		{
+			// Set folder title
+
+			menu->setTitle(scriptDisplayName(scriptMod));
+
+			continue;
+		}
 
 		// char *fileName = scriptFiles[i].toLocal8Bit().data();
 		// printf("Script: %s\n", fileName);
 
 		//package.subpackage.module
-		QString scriptN = scriptFiles[i].left(scriptFiles[i].size() - 3);
-		QString scriptMod = scriptModule() + "." + scriptN;
 		// printf("Module: %s\n", scriptMod.toLocal8Bit().data());
 
-		if (scriptActs.find(scriptFiles[i]) == scriptActs.end())
+		if (scriptActs.find(scriptMod) == scriptActs.end())
 		{
-			printf("script: %s\n", scriptFiles[i].toUtf8().data());
+			// printf("new script: %s\n", scriptFile.toLocal8Bit().data());
 
 			RunScript *rs = new RunScript();
 			QAction *act = new QAction(this);
 
-
 			act->setText(scriptDisplayName(scriptMod));
 			act->setStatusTip(tr("Run Python script"));
-			m_ScriptsMenu->addAction(act);
+			menu->addAction(act);
+
+			if (act->text() == "")
+				act->setVisible(false);
 
 			rs->Action = act;
 
@@ -1405,9 +1463,9 @@ void MainWindow::refreshScriptsMenu()
 
 	//delete non-existing run scripts
 	for (std::map<QString, RunScript *>::iterator it = scriptActs.begin(), end = scriptActs.end(); it != end; ++it)
-	{
 		delete it->second;
-	}
+	for (std::map<QString, QMenu *>::iterator it = scriptFolderMenus.begin(), end = scriptFolderMenus.end(); it != end; ++it)
+		delete it->second;
 #endif
 }
 
