@@ -123,7 +123,11 @@ class DeviceManager : public QWidget
 
 } /* namespace FTEDITOR */
 
+#if FT800_DEVICE_MANAGER
+
 Q_DECLARE_METATYPE(FTEDITOR::DeviceManager::DeviceInfo *)
+
+#endif /* FT800_DEVICE_MANAGER */
 
 #endif /* #ifndef FTEDITOR_DEVICE_MANAGER_H */
 
