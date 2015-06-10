@@ -48,7 +48,7 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 static int s_ParamCount[DL_ID_NB];
 static int s_ParamDefault[DL_ID_NB][DLPARSED_MAX_PARAMETER];
 static int s_CmdParamCount[CMD_ID_NB];
-static int s_CmdParamDefault[DL_ID_NB][DLPARSED_MAX_PARAMETER];
+static int s_CmdParamDefault[CMD_ID_NB][DLPARSED_MAX_PARAMETER];
 static bool s_CmdParamString[CMD_ID_NB];
 
 static std::string s_CmdIdList[CMD_ID_NB];
@@ -414,6 +414,7 @@ void DlParser::initVC2()
 		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
 		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
+		s_CmdParamDefault[CMD_SNAPSHOT2 & 0xFF][0] = RGB565;
 		s_CmdIdMap["CMD_SETBASE"] = CMD_SETBASE & 0xFF;
 		s_CmdParamCount[CMD_SETBASE & 0xFF] = 1;
 		s_CmdParamDefault[CMD_SETBASE & 0xFF][0] = 10;
