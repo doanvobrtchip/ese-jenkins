@@ -48,6 +48,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QStandardPaths>
 #include <QMovie>
 #include <QDirIterator>
+#include <QElapsedTimer>
 
 // Emulator includes
 #include <ft8xxemu_inttypes.h>
@@ -257,6 +258,8 @@ static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
+
+QElapsedTimer s_AbortTimer;
 
 static volatile bool s_ShowCoprocessorBusy = true;
 
@@ -790,7 +793,7 @@ void loop()
 
 						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
 						{
-							printf("Abort coprocessor flush\n");
+							printf("Abort coprocessor flush (793)\n");
 							s_WantReloopCmd = true;
 							resetCoprocessorFromLoop();
 							return;
@@ -868,7 +871,7 @@ void loop()
 
 									if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
 									{
-										printf("Abort media fifo flush\n");
+										printf("Abort media fifo flush (871)\n");
 										s_WantReloopCmd = true;
 										resetCoprocessorFromLoop();
 										return;
@@ -973,7 +976,7 @@ void loop()
 
 								if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
 								{
-									printf("Abort streaming flush\n");
+									printf("Abort streaming flush (976)\n");
 									s_WantReloopCmd = true;
 									resetCoprocessorFromLoop();
 									return;
@@ -1053,7 +1056,7 @@ void loop()
 
 						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
 						{
-							printf("Abort coprocessor flush\n");
+							printf("Abort coprocessor flush (1056)\n");
 							s_WantReloopCmd = true;
 							resetCoprocessorFromLoop();
 							return;
@@ -1089,18 +1092,22 @@ void loop()
 
 			// Finish all processing
 			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+			s_AbortTimer.start();
 			while ((wp & 0xFFF) != rpl)
 			{
 				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 				if (!s_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
 
-				if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
+				if (s_CmdEditor->isDisplayListModified() || s_WantReloopCmd) // Trap to avoid infinite flush on errors
 				{
-					printf("Abort coprocessor flush\n");
 					s_WantReloopCmd = true;
-					resetCoprocessorFromLoop();
-					return;
+					if (s_AbortTimer.elapsed() > 1000)
+					{
+						printf("Abort coprocessor flush (1100)\n");
+						resetCoprocessorFromLoop();
+						return;
+					}
 				}
 			}
 			int *cpWrite = FT8XXEMU_getDisplayListCoprocessorWrites();
