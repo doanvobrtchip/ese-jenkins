@@ -1202,7 +1202,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
-	m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
+	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
@@ -1656,6 +1656,9 @@ void MainWindow::createActions()
 	m_ImportDisplayListAct = new QAction(this);
 	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
+	m_DisplayListFromIntegers = new QAction(this);
+	connect(m_DisplayListFromIntegers, SIGNAL(triggered()), this, SLOT(actDisplayListFromIntegers()));
+
 	m_QuitAct = new QAction(this);
 	m_QuitAct->setShortcuts(QKeySequence::Quit);
 	connect(m_QuitAct, SIGNAL(triggered()), this, SLOT(close()));
@@ -1707,6 +1710,8 @@ void MainWindow::translateActions()
 	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
 	m_ImportDisplayListAct->setText(tr("Capture Display List"));
 	m_ImportDisplayListAct->setStatusTip(tr("Capture the active display list from the emulator into the editor"));
+	m_DisplayListFromIntegers->setText(tr("Display List from Integers (debug mode only)"));
+	m_DisplayListFromIntegers->setStatusTip(tr("Developer tool (debug mode only)"));
 	m_QuitAct->setText(tr("Quit"));
 	m_QuitAct->setStatusTip(tr("Exit the application"));
 	m_ManualAct->setText(tr("Manual"));
@@ -1756,6 +1761,9 @@ void MainWindow::createMenus()
 	m_ToolsMenu->addAction(m_ResetEmulatorAct);
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 	m_ToolsMenu->addAction(m_ImportDisplayListAct);
+#if _DEBUG
+	m_ToolsMenu->addAction(m_DisplayListFromIntegers);
+#endif
 
 	m_WidgetsMenu = menuBar()->addMenu(QString::null);
 
@@ -3548,6 +3556,25 @@ void MainWindow::actImportDisplayList()
 	m_UndoStack->endMacro();
 	m_DlEditorDock->setVisible(true);
 	focusDlEditor();
+}
+
+void MainWindow::actDisplayListFromIntegers()
+{
+	m_UndoStack->beginMacro(tr("Display list from integers"));
+	int bc = m_DlEditor->codeEditor()->document()->blockCount();
+	for (int i = 0; i < bc; ++i)
+	{
+		QTextBlock block = m_DlEditor->codeEditor()->document()->findBlockByNumber(i);
+		uint32_t v = (uint32_t)block.text().toUInt();
+		if (v)
+		{
+			QString str = DlParser::toString(FTEDITOR_CURRENT_DEVICE, v);
+			DlParsed pa;
+			DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, str, false, false);
+			m_DlEditor->replaceLine(i, pa);
+		}
+	}
+
 }
 
 void MainWindow::dummyCommand()

@@ -156,6 +156,7 @@ private slots:
 	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
+	void actDisplayListFromIntegers();
 
 	void undoCleanChanged(bool clean);
 
@@ -309,6 +310,7 @@ private:
 	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;
+	QAction *m_DisplayListFromIntegers;
 	QAction *m_ManualAct;
 	QAction *m_AboutAct;
 	QAction *m_AboutQtAct;
