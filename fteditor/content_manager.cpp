@@ -959,6 +959,8 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 	contentInfo->View->setText(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? "Overlap" : "Loaded") : "") : "Error");
 	contentInfo->View->setIcon(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? QIcon(":/icons/exclamation-red.png") : QIcon(":/icons/tick")) : QIcon()) : QIcon(":/icons/exclamation-red.png"));
 	contentInfo->View->setText(1, contentInfo->DestName);
+
+	m_ContentList->resizeColumnToContents(1);
 }
 
 void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
