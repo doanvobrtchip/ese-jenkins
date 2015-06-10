@@ -995,23 +995,39 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t s
 }
 
 template <bool debugTrace>
-void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, BitmapInfo *const bitmapInfo)
+void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, 
+#ifdef FT810EMU_MODE
+	bool swapXY, // Used to swap width and height from bitmapinfo
+#endif
+	BitmapInfo *const bitmapInfo)
 {
     // if (y != 22) return;
 	// printf("bitmap\n");
 	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *ram = Memory.getRam();
 
+#ifdef FT810EMU_MODE
+	int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
+#else
+	int sizeHeight = bi.SizeHeight;
+#endif
+
 	int pytop = py; // incl pixel*16 top
-	int pybtm = py + (bi.SizeHeight << 4) - 16; // incl pixel*16 btm
+	int pybtm = py + (sizeHeight << 4) - 16; // incl pixel*16 btm
 
 	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
 	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
 
 	if (max(pytopi, gs.ScissorY.I) <= y && y <= min(pybtmi, gs.ScissorY2.I - 1)) // Scissor Y
 	{
+#ifdef FT810EMU_MODE
+		int sizeWidth = swapXY ? bi.SizeHeight : bi.SizeWidth;
+#else
+		int sizeWidth = bi.SizeWidth;
+#endif
+
 		int pxlef = px;
-		int pxrig = px + (bi.SizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
+		int pxrig = px + (sizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
 
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
@@ -3108,6 +3124,9 @@ EvaluateDisplayListValue:
 						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py,
 							((v >> 7) & 0x1F),
 							v & 0x7F,
+#ifdef FT810EMU_MODE
+							swapXY,
+#endif
 							bitmapInfo);
 						break;
 					case POINTS:
@@ -3172,6 +3191,9 @@ EvaluateDisplayListValue:
 						displayBitmap<debugTrace>(gs, bc, bs, bt, y, hsize, px, py,
 							gs.BitmapHandle,
 							gs.Cell,
+#ifdef FT810EMU_MODE
+							swapXY,
+#endif
 							bitmapInfo);
 						break;
 					case POINTS:
