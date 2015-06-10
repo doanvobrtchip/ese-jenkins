@@ -94,7 +94,7 @@ public:
 	static void getIdentifiers(int deviceIntf, QStringList &list, bool coprocessor = false);
 	static void getParams(int deviceIntf, QStringList &list, bool coprocessor = false);
 
-	static void parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor = false);
+	static void parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor = false, bool dynamic = false);
 	static uint32_t compile(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static void compile(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void toString(int deviceIntf, std::string &dst, uint32_t v); // DL only

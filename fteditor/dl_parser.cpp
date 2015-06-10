@@ -135,7 +135,7 @@ void DlParser::getParams(int deviceIntf, QStringList &list, bool coprocessor)
 	}
 }
 
-void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor)
+void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor, bool dynamic)
 {
 	init();
 
@@ -297,14 +297,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						++parsed.ParameterIndex[pq]; /* pre-trim */
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
 						pss << c;
 						++i;
 						goto ParseString;
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '\'') && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					else if (parsed.ParameterLength[pq] == 0 && (c == '\'') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
 						++i;
@@ -315,19 +315,19 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						pss << c;
 						++parsed.ParameterLength[pq];
 					}
-					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
 						++parsed.ParameterLength[pq];
 					}
-					else if (parsed.ParameterLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					else if (parsed.ParameterLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss.clear();
 						hexadecimal = true;
 						++parsed.ParameterLength[pq];
 						pss << std::hex;
 					}
-					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && (!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)))
+					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						parsed.NumericParameter[pq] = false;
 						pss << c;
@@ -445,10 +445,10 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		ValidateNamed:
 
 			// validate named parameter
-			if (p < parsed.ExpectedParameterCount || !parsed.ValidId)
+			if ((p < parsed.ExpectedParameterCount || dynamic) || !parsed.ValidId)
 			{
 				std::string ps = pss.str();
-				if (p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)
+				if ((p == (parsed.ExpectedParameterCount - 1) || dynamic) && parsed.ExpectedStringParameter)
 				{
 					// CMD_TEXT(50, 119, 31, 0, "hello world")
 					if (ps.length())
@@ -521,7 +521,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			{
 				if (parsed.BadCharacterIndex == -1)
 				{
-					if (p + 1 < parsed.ExpectedParameterCount)
+					if ((p + 1 < parsed.ExpectedParameterCount) && !dynamic)
 					{
 						// not enough params
 						parsed.BadCharacterIndex = finalIndex;
@@ -548,15 +548,22 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 	if (parsed.ValidId)
 	{
 		if (!failId) ++p;
-		if (defaultParam)
+		if (dynamic)
 		{
-			for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
-				parsed.Parameter[p].I = defaultParam[parsed.IdRight].Values[p];
+			parsed.ExpectedParameterCount = p;
 		}
 		else
 		{
-			for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
-				parsed.Parameter[p].U = 0;
+			if (defaultParam)
+			{
+				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+					parsed.Parameter[p].I = defaultParam[parsed.IdRight].Values[p];
+			}
+			else
+			{
+				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+					parsed.Parameter[p].U = 0;
+			}
 		}
 	}
 }
