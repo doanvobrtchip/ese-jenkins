@@ -636,6 +636,11 @@ void loop()
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
 			}
+			if (useFileStream)
+			{
+				if (!QFileInfo(useFileStream).exists())
+					continue;
+			}
 			validCmd = true;
 			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
 			int cmdLen = 4 + (paramNb * 4);
