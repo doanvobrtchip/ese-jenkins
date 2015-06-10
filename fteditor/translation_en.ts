@@ -12,7 +12,7 @@
 <context>
     <name>FTEDITOR</name>
     <message>
-        <location filename="main_window.cpp" line="2689"/>
+        <location filename="main_window.cpp" line="2756"/>
         <source>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</source>
         <translation>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</translation>
     </message>
@@ -170,13 +170,13 @@
     </message>
     <message>
         <location filename="content_manager.cpp" line="798"/>
-        <location filename="content_manager.cpp" line="2201"/>
+        <location filename="content_manager.cpp" line="2207"/>
         <source>Load Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="content_manager.cpp" line="800"/>
-        <location filename="content_manager.cpp" line="2203"/>
+        <location filename="content_manager.cpp" line="2209"/>
         <source>All files (*.*)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -238,91 +238,91 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2120"/>
+        <location filename="content_manager.cpp" line="2126"/>
         <source>Change content source path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2170"/>
+        <location filename="content_manager.cpp" line="2176"/>
         <source>Change source path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2223"/>
+        <location filename="content_manager.cpp" line="2229"/>
         <source>Change content destination name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2358"/>
+        <location filename="content_manager.cpp" line="2364"/>
         <source>Set content converter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2411"/>
+        <location filename="content_manager.cpp" line="2417"/>
         <source>Change converter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2447"/>
-        <location filename="content_manager.cpp" line="2497"/>
+        <location filename="content_manager.cpp" line="2453"/>
+        <location filename="content_manager.cpp" line="2503"/>
         <source>Change image format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2536"/>
+        <location filename="content_manager.cpp" line="2542"/>
         <source>Load content to memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2536"/>
+        <location filename="content_manager.cpp" line="2542"/>
         <source>Unload content from memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2598"/>
-        <location filename="content_manager.cpp" line="2657"/>
-        <location filename="content_manager.cpp" line="2818"/>
-        <location filename="content_manager.cpp" line="2893"/>
+        <location filename="content_manager.cpp" line="2604"/>
+        <location filename="content_manager.cpp" line="2663"/>
+        <location filename="content_manager.cpp" line="2824"/>
+        <location filename="content_manager.cpp" line="2899"/>
         <source>Change memory address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2706"/>
+        <location filename="content_manager.cpp" line="2712"/>
         <source>Store data compressed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2706"/>
+        <location filename="content_manager.cpp" line="2712"/>
         <source>Store data uncompressed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2762"/>
+        <location filename="content_manager.cpp" line="2768"/>
         <source>Store data in header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2762"/>
+        <location filename="content_manager.cpp" line="2768"/>
         <source>Store data as file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="2968"/>
-        <location filename="content_manager.cpp" line="3018"/>
+        <location filename="content_manager.cpp" line="2974"/>
+        <location filename="content_manager.cpp" line="3024"/>
         <source>Change font format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="3057"/>
-        <location filename="content_manager.cpp" line="3107"/>
-        <location filename="content_manager.cpp" line="3235"/>
-        <location filename="content_manager.cpp" line="3285"/>
+        <location filename="content_manager.cpp" line="3063"/>
+        <location filename="content_manager.cpp" line="3113"/>
+        <location filename="content_manager.cpp" line="3241"/>
+        <location filename="content_manager.cpp" line="3291"/>
         <source>Change font size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="content_manager.cpp" line="3144"/>
-        <location filename="content_manager.cpp" line="3197"/>
+        <location filename="content_manager.cpp" line="3150"/>
+        <location filename="content_manager.cpp" line="3203"/>
         <source>Change font charset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -330,52 +330,52 @@
 <context>
     <name>FTEDITOR::DeviceManager</name>
     <message>
-        <location filename="device_manager.cpp" line="69"/>
+        <location filename="device_manager.cpp" line="53"/>
         <source>Connected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="70"/>
+        <location filename="device_manager.cpp" line="54"/>
         <source>Device Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="83"/>
+        <location filename="device_manager.cpp" line="65"/>
         <source>Refresh the device list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="91"/>
+        <location filename="device_manager.cpp" line="73"/>
         <source>Device display settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="100"/>
+        <location filename="device_manager.cpp" line="82"/>
         <source>Sync With Device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="101"/>
+        <location filename="device_manager.cpp" line="83"/>
         <source>Sends the current memory and display list to the selected device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="107"/>
+        <location filename="device_manager.cpp" line="89"/>
         <source>Connect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="108"/>
+        <location filename="device_manager.cpp" line="90"/>
         <source>Connect the selected device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="114"/>
+        <location filename="device_manager.cpp" line="96"/>
         <source>Disconnect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="115"/>
+        <location filename="device_manager.cpp" line="97"/>
         <source>Disconnect from the selected device</source>
         <translation type="unfinished"></translation>
     </message>
@@ -397,7 +397,7 @@
         <location filename="interactive_properties.cpp" line="677"/>
         <source>DESCRIPTION_VERTEX2II.</source>
         <oldsource>DESCRIPTION_VERTEX2II</oldsource>
-        <translation>&lt;b&gt;VERTEX2II&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;handle&lt;/i&gt;, &lt;/i&gt;cell&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate in pixels&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The valid range is from 0 to 31. From 16 to 31, the bitmap handle is dedicated to the FT800 built-in font.&lt;br&gt;&lt;b&gt;cell&lt;/b&gt;: Cell number. Cell number is the index of bitmap with same bitmap layout and format. For example, for handle 31, the cell 65 means the character &quot;A&quot; in the largest built in font.&lt;br&gt;&lt;br&gt;Start the operation of graphics primitive at the specified coordinates. The handle and cell parameters will be ignored unless the graphics primitive is specified as bitmap by command BEGIN, prior to this command.</translation>
+        <translation>&lt;b&gt;VERTEX2II&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;handle&lt;/i&gt;, &lt;/i&gt;cell&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate in pixels&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The valid range is from 0 to 31. From 16 to 31, the bitmap handle is dedicated to the FT8XX built-in font.&lt;br&gt;&lt;b&gt;cell&lt;/b&gt;: Cell number. Cell number is the index of bitmap with same bitmap layout and format. For example, for handle 31, the cell 65 means the character &quot;A&quot; in the largest built in font.&lt;br&gt;&lt;br&gt;Start the operation of graphics primitive at the specified coordinates. The handle and cell parameters will be ignored unless the graphics primitive is specified as bitmap by command BEGIN, prior to this command.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="692"/>
@@ -592,7 +592,7 @@
         <location filename="interactive_properties.cpp" line="1088"/>
         <source>DESCRIPTION_CMD_SETFONT.</source>
         <oldsource>DESCRIPTION_CMD_SETFONT</oldsource>
-        <translation>&lt;b&gt;CMD_SETFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: font&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: ptr&lt;br&gt;&lt;br&gt;To use a custom font with the co-processor engine objects, create the font definition data in FT800 RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts.</translation>
+        <translation>&lt;b&gt;CMD_SETFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: font&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: ptr&lt;br&gt;&lt;br&gt;To use a custom font with the co-processor engine objects, create the font definition data in FT8XX RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1101"/>
@@ -672,13 +672,13 @@
         <location filename="interactive_properties.cpp" line="1388"/>
         <source>DESCRIPTION_DISPLAY.</source>
         <oldsource>DESCRIPTION_DISPLAY</oldsource>
-        <translation>&lt;b&gt;DISPLAY&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End the display list. FT800 will ignore all the commands following this command.</translation>
+        <translation>&lt;b&gt;DISPLAY&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End the display list. FT8XX will ignore all the commands following this command.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1398"/>
         <source>DESCRIPTION_BITMAP_SOURCE.</source>
         <oldsource>DESCRIPTION_BITMAP_SOURCE</oldsource>
-        <translation>&lt;b&gt;BITMAP_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in graphics SRAM FT800, aligned with respect to the bitmap format.&lt;br&gt;For example, if the bitmap format is RGB565/ARGB4/ARGB1555, the bitmap source shall be aligned to 2 bytes.&lt;br&gt;&lt;br&gt;Specify the source address of bitmap data in FT800 graphics memory RAM_G.</translation>
+        <translation>&lt;b&gt;BITMAP_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in graphics SRAM FT8XX, aligned with respect to the bitmap format.&lt;br&gt;For example, if the bitmap format is RGB565/ARGB4/ARGB1555, the bitmap source shall be aligned to 2 bytes.&lt;br&gt;&lt;br&gt;Specify the source address of bitmap data in FT8XX graphics memory RAM_G.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1410"/>
@@ -696,13 +696,13 @@
         <location filename="interactive_properties.cpp" line="1434"/>
         <source>DESCRIPTION_COLOR_RGB.</source>
         <oldsource>DESCRIPTION_COLOR_RGB</oldsource>
-        <translation>&lt;b&gt;COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Sets red, green and blue values of the FT800 color buffer which will be applied to the following draw operation.</translation>
+        <translation>&lt;b&gt;COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Sets red, green and blue values of the FT8XX color buffer which will be applied to the following draw operation.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1446"/>
         <source>DESCRIPTION_BITMAP_HANDLE.</source>
         <oldsource>DESCRIPTION_BITMAP_HANDLE</oldsource>
-        <translation>&lt;b&gt;BITMAP_HANDLE&lt;/b&gt;(&lt;i&gt;handle&lt;/i&gt;)&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The initial value is 0. The valid value range is from 0 to 31.&lt;br&gt;&lt;br&gt;Specify the bitmap handle.&lt;br&gt;&lt;br&gt;Handles 16 to 31 are defined by the FT800 for built-in font and handle 15 is defined in the co-processor engine commands CMD_GRADIENT, CMD_BUTTON and CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in the current display list, users can even define a bitmap using handle 15.</translation>
+        <translation>&lt;b&gt;BITMAP_HANDLE&lt;/b&gt;(&lt;i&gt;handle&lt;/i&gt;)&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The initial value is 0. The valid value range is from 0 to 31.&lt;br&gt;&lt;br&gt;Specify the bitmap handle.&lt;br&gt;&lt;br&gt;Handles 16 to 31 are defined by the FT8XX for built-in font and handle 15 is defined in the co-processor engine commands CMD_GRADIENT, CMD_BUTTON and CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in the current display list, users can even define a bitmap using handle 15.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1458"/>
@@ -797,7 +797,7 @@
         <location filename="interactive_properties.cpp" line="1643"/>
         <source>DESCRIPTION_TAG_MASK.</source>
         <oldsource>DESCRIPTION_TAG_MASK</oldsource>
-        <translation>&lt;b&gt;TAG_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Allow updates to the tag buffer. The initial value is one and it means the tag buffer of the FT800 is updated with the value given by the TAG command. Therefore, the following graphics objects will be attached to the tag value given by the TAG command.&lt;br&gt;The value zero means the tag buffer of the FT800 is set as the default value,rather than the value given by TAG command in the display list.&lt;br&gt;&lt;br&gt;Control the writing of the tag buffer.</translation>
+        <translation>&lt;b&gt;TAG_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Allow updates to the tag buffer. The initial value is one and it means the tag buffer of the FT8XX is updated with the value given by the TAG command. Therefore, the following graphics objects will be attached to the tag value given by the TAG command.&lt;br&gt;The value zero means the tag buffer of the FT8XX is set as the default value,rather than the value given by TAG command in the display list.&lt;br&gt;&lt;br&gt;Control the writing of the tag buffer.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1655"/>
@@ -851,7 +851,7 @@
         <location filename="interactive_properties.cpp" line="1751"/>
         <source>DESCRIPTION_CALL.</source>
         <oldsource>DESCRIPTION_CALL</oldsource>
-        <translation>&lt;b&gt;CALL&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: The destination address in RAM_DL which the display command is to be switched. FT800 has the stack to store the return address. To come back to the next command of source address, the RETURN command can help.&lt;br&gt;&lt;br&gt;Execute a sequence of commands at another location in the display list&lt;br&gt;&lt;br&gt;CALL and RETURN have a 4 level stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
+        <translation>&lt;b&gt;CALL&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: The destination address in RAM_DL which the display command is to be switched. FT8XX has the stack to store the return address. To come back to the next command of source address, the RETURN command can help.&lt;br&gt;&lt;br&gt;Execute a sequence of commands at another location in the display list&lt;br&gt;&lt;br&gt;CALL and RETURN have a 4 level stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1763"/>
@@ -869,7 +869,7 @@
         <location filename="interactive_properties.cpp" line="1787"/>
         <source>DESCRIPTION_COLOR_MASK.</source>
         <oldsource>DESCRIPTION_COLOR_MASK</oldsource>
-        <translation>&lt;b&gt;COLOR_MASK&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: Enable or disable the red channel update of the FT800 color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: Enable or disable the green channel update of the FT800 color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Enable or disable the blue channel update of the FT800 color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Enable or disable the alpha channel update of the FT800 color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;br&gt;The color mask controls whether the color values of a pixel are updated. Sometimes it is used to selectively update only the red, green, blue or alpha channels of the image. More often, it is used to completely disable color updates while updating the tag and stencil buffers.</translation>
+        <translation>&lt;b&gt;COLOR_MASK&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: Enable or disable the red channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: Enable or disable the green channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Enable or disable the blue channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Enable or disable the alpha channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;br&gt;The color mask controls whether the color values of a pixel are updated. Sometimes it is used to selectively update only the red, green, blue or alpha channels of the image. More often, it is used to completely disable color updates while updating the tag and stencil buffers.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1802"/>
@@ -899,13 +899,13 @@
         <location filename="interactive_properties.cpp" line="1842"/>
         <source>DESCRIPTION_MACRO.</source>
         <oldsource>DESCRIPTION_MACRO</oldsource>
-        <translation>&lt;b&gt;MACRO&lt;/b&gt;(&lt;i&gt;m&lt;/i&gt;)&lt;br&gt;&lt;b&gt;m&lt;/b&gt;: Macro register to read. Value 0 means the FT800 will fetch the command from REG_MACRO_0 to execute. Value 1 means the FT800 will fetch the command from REG_MACRO_1 to execute. The content of REG_MACRO_0 or REG_MACRO_1 shall be a valid display list command, otherwise the behavior is undefined.&lt;br&gt;&lt;br&gt;Execute a single command from a macro register.</translation>
+        <translation>&lt;b&gt;MACRO&lt;/b&gt;(&lt;i&gt;m&lt;/i&gt;)&lt;br&gt;&lt;b&gt;m&lt;/b&gt;: Macro register to read. Value 0 means the FT8XX will fetch the command from REG_MACRO_0 to execute. Value 1 means the FT8XX will fetch the command from REG_MACRO_1 to execute. The content of REG_MACRO_0 or REG_MACRO_1 shall be a valid display list command, otherwise the behavior is undefined.&lt;br&gt;&lt;br&gt;Execute a single command from a macro register.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1854"/>
         <source>DESCRIPTION_CLEAR.</source>
         <oldsource>DESCRIPTION_CLEAR</oldsource>
-        <translation>&lt;b&gt;CLEAR&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;, &lt;i&gt;t&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Clear color buffer. Setting this bit to 1 will clear the color buffer of the FT800 to the preset value. Setting this bit to 0 will maintain the color buffer of the FT800 with an unchanged value. The preset value is defined in command CLEAR_COLOR_RGB for RGB channel and CLEAR_COLOR_A for alpha channel.&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Clear stencil buffer. Setting this bit to 1 will clear the stencil buffer of the FT800 to the preset value. Setting this bit to 0 will maintain the stencil buffer of the FT800 with an unchanged value. The preset value is defined in command CLEAR_STENCIL.&lt;br&gt;&lt;b&gt;t&lt;/b&gt;: Clear tag buffer. Setting this bit to 1 will clear the tag buffer of the FT800 to the preset value. Setting this bit to 0 will maintain the tag buffer of the FT800 with an unchanged value. The preset value is defined in command CLEAR_TAG.&lt;br&gt;&lt;br&gt;Clear buffers to preset values.</translation>
+        <translation>&lt;b&gt;CLEAR&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;, &lt;i&gt;t&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Clear color buffer. Setting this bit to 1 will clear the color buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the color buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_COLOR_RGB for RGB channel and CLEAR_COLOR_A for alpha channel.&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Clear stencil buffer. Setting this bit to 1 will clear the stencil buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the stencil buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_STENCIL.&lt;br&gt;&lt;b&gt;t&lt;/b&gt;: Clear tag buffer. Setting this bit to 1 will clear the tag buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the tag buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_TAG.&lt;br&gt;&lt;br&gt;Clear buffers to preset values.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1953"/>
@@ -1136,12 +1136,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2016"/>
+        <location filename="interactive_viewport.cpp" line="2054"/>
+        <source>Drag and drop from toolbox</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="interactive_viewport.cpp" line="2126"/>
         <source>&lt;b&gt;Error&lt;/b&gt;: No free bitmap handle available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2028"/>
+        <location filename="interactive_viewport.cpp" line="2138"/>
         <source>Drag and drop primitive</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1149,482 +1154,507 @@
 <context>
     <name>FTEDITOR::MainWindow</name>
     <message>
-        <location filename="main_window.cpp" line="1384"/>
+        <location filename="main_window.cpp" line="1388"/>
         <source>Run Python script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1427"/>
+        <location filename="main_window.cpp" line="1431"/>
         <source>Executed Python script &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1604"/>
+        <location filename="main_window.cpp" line="1608"/>
         <source>WARNING: Missing CLEAR instruction in display list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1686"/>
+        <location filename="main_window.cpp" line="1693"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1687"/>
+        <location filename="main_window.cpp" line="1694"/>
         <source>Create a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1689"/>
+        <location filename="main_window.cpp" line="1696"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1690"/>
+        <location filename="main_window.cpp" line="1697"/>
         <source>Open an existing project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1692"/>
+        <location filename="main_window.cpp" line="1699"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1693"/>
+        <location filename="main_window.cpp" line="1700"/>
         <source>Save the current project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1695"/>
+        <location filename="main_window.cpp" line="1702"/>
         <source>Save As</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1696"/>
+        <location filename="main_window.cpp" line="1703"/>
         <source>Save the current project to a new file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1698"/>
-        <location filename="main_window.cpp" line="3180"/>
+        <location filename="main_window.cpp" line="1705"/>
+        <location filename="main_window.cpp" line="3247"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1699"/>
+        <location filename="main_window.cpp" line="1706"/>
         <source>Import file to a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1700"/>
-        <location filename="main_window.cpp" line="1783"/>
-        <location filename="main_window.cpp" line="3300"/>
-        <location filename="main_window.cpp" line="3349"/>
+        <location filename="main_window.cpp" line="1707"/>
+        <location filename="main_window.cpp" line="1795"/>
+        <location filename="main_window.cpp" line="3367"/>
+        <location filename="main_window.cpp" line="3416"/>
         <source>Export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1701"/>
+        <location filename="main_window.cpp" line="1708"/>
         <source>Export project to file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1702"/>
+        <location filename="main_window.cpp" line="1709"/>
         <source>Browse Project Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1703"/>
+        <location filename="main_window.cpp" line="1710"/>
         <source>Open the project folder in the default system file browser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1704"/>
+        <location filename="main_window.cpp" line="1711"/>
         <source>Reset Emulator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1705"/>
+        <location filename="main_window.cpp" line="1712"/>
         <source>Reset the emulated device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1706"/>
-        <location filename="main_window.cpp" line="3520"/>
+        <location filename="main_window.cpp" line="1713"/>
+        <location filename="main_window.cpp" line="3588"/>
         <source>Save Screenshot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1707"/>
+        <location filename="main_window.cpp" line="1714"/>
         <source>Save a screenshot of the emulator output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1710"/>
+        <location filename="main_window.cpp" line="1717"/>
+        <source>Display List from Integers (debug mode only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="1718"/>
+        <source>Developer tool (debug mode only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="1719"/>
         <source>Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1711"/>
+        <location filename="main_window.cpp" line="1720"/>
         <source>Exit the application</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1712"/>
+        <location filename="main_window.cpp" line="1721"/>
         <source>Manual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1713"/>
+        <location filename="main_window.cpp" line="1722"/>
         <source>Open the manual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1714"/>
+        <location filename="main_window.cpp" line="1723"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1715"/>
+        <location filename="main_window.cpp" line="1724"/>
         <source>Show information about the application</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1716"/>
-        <location filename="main_window.cpp" line="3579"/>
+        <location filename="main_window.cpp" line="1725"/>
+        <location filename="main_window.cpp" line="3666"/>
         <source>3rd Party</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1717"/>
+        <location filename="main_window.cpp" line="1726"/>
         <source>Show information about the 3rd party code and content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1720"/>
+        <location filename="main_window.cpp" line="1729"/>
         <source>Undo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1721"/>
+        <location filename="main_window.cpp" line="1730"/>
         <source>Reverses the last action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1723"/>
+        <location filename="main_window.cpp" line="1732"/>
         <source>Redo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1724"/>
+        <location filename="main_window.cpp" line="1733"/>
         <source>Reapply the action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1726"/>
+        <location filename="main_window.cpp" line="1735"/>
         <source>Dummy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1727"/>
+        <location filename="main_window.cpp" line="1736"/>
         <source>Does nothing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1778"/>
+        <location filename="main_window.cpp" line="1790"/>
         <source>File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1779"/>
+        <location filename="main_window.cpp" line="1791"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1780"/>
+        <location filename="main_window.cpp" line="1792"/>
         <source>Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1781"/>
+        <location filename="main_window.cpp" line="1793"/>
         <source>View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1708"/>
+        <location filename="main_window.cpp" line="1715"/>
         <source>Capture Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1709"/>
+        <location filename="main_window.cpp" line="1716"/>
         <source>Capture the active display list from the emulator into the editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1785"/>
+        <location filename="main_window.cpp" line="1797"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1790"/>
+        <location filename="main_window.cpp" line="1802"/>
         <source>MainBar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1809"/>
+        <location filename="main_window.cpp" line="1821"/>
         <source>Ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1842"/>
+        <location filename="main_window.cpp" line="1854"/>
         <source>Device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1937"/>
+        <location filename="main_window.cpp" line="1949"/>
         <source>BITMAP_HANDLE: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1948"/>
+        <location filename="main_window.cpp" line="1960"/>
         <source>RAM_DL: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1959"/>
+        <location filename="main_window.cpp" line="1971"/>
         <source>RAM_G: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1985"/>
-        <location filename="main_window.cpp" line="2321"/>
+        <location filename="main_window.cpp" line="1997"/>
+        <location filename="main_window.cpp" line="2363"/>
         <source>Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2079"/>
+        <location filename="main_window.cpp" line="2091"/>
         <source>Steps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2117"/>
+        <location filename="main_window.cpp" line="2129"/>
         <source>Trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2162"/>
+        <location filename="main_window.cpp" line="2174"/>
         <source>Display Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2171"/>
+        <location filename="main_window.cpp" line="2183"/>
         <source>Horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2182"/>
+        <location filename="main_window.cpp" line="2194"/>
         <source>Vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2194"/>
+        <location filename="main_window.cpp" line="2207"/>
+        <source>Rotate (debug mode only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="2217"/>
+        <source>Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="2236"/>
         <source>Macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2320"/>
+        <location filename="main_window.cpp" line="2362"/>
         <source>Inspector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2322"/>
+        <location filename="main_window.cpp" line="2364"/>
         <source>Coprocessor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2323"/>
+        <location filename="main_window.cpp" line="2365"/>
         <source>Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2325"/>
+        <location filename="main_window.cpp" line="2367"/>
         <source>Devices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2327"/>
+        <location filename="main_window.cpp" line="2369"/>
         <source>Utilization</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2328"/>
+        <location filename="main_window.cpp" line="2370"/>
         <source>Navigator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2329"/>
+        <location filename="main_window.cpp" line="2371"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2330"/>
+        <location filename="main_window.cpp" line="2372"/>
         <source>Toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2331"/>
+        <location filename="main_window.cpp" line="2373"/>
         <source>Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2332"/>
+        <location filename="main_window.cpp" line="2374"/>
         <source>Registers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2333"/>
+        <location filename="main_window.cpp" line="2375"/>
         <source>Controls</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2340"/>
-        <location filename="main_window.cpp" line="2721"/>
-        <location filename="main_window.cpp" line="2735"/>
+        <location filename="main_window.cpp" line="2382"/>
+        <location filename="main_window.cpp" line="2788"/>
+        <location filename="main_window.cpp" line="2802"/>
         <source>FTDI EVE Screen Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2593"/>
+        <location filename="main_window.cpp" line="2660"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2736"/>
+        <location filename="main_window.cpp" line="2803"/>
         <source>The project has been modified.
 Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2913"/>
+        <location filename="main_window.cpp" line="2980"/>
         <source>Open Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2914"/>
+        <location filename="main_window.cpp" line="2981"/>
         <source>EVE Screen Editor Project (*.ft800proj  *.ft8xxproj)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3093"/>
+        <location filename="main_window.cpp" line="3160"/>
         <source>ESE Project (*.ft8xxproj)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3567"/>
-        <source>About FTDI EVE Screen Editor 2.0.4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="main_window.cpp" line="3569"/>
+        <location filename="main_window.cpp" line="3656"/>
         <source>Copyright (C) 2013-2015  Future Technology Devices International Ltd&lt;br&gt;&lt;br&gt;Support and updates: &lt;a href=&apos;http://www.ftdichip.com/Support/Utilities.htm&apos;&gt;http://www.ftdichip.com/Support/Utilities.htm&lt;/a&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2985"/>
+        <location filename="main_window.cpp" line="3052"/>
         <source>Opened FTDI EVE Screen Editor project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3096"/>
+        <location filename="main_window.cpp" line="3163"/>
         <source>Save Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3181"/>
-        <location filename="main_window.cpp" line="3298"/>
+        <location filename="main_window.cpp" line="3248"/>
+        <location filename="main_window.cpp" line="3365"/>
         <source>Memory dump, *.vc1dump (*.vc1dump)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3216"/>
+        <location filename="main_window.cpp" line="3283"/>
         <source>Invalid header version: %i</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3217"/>
-        <location filename="main_window.cpp" line="3223"/>
-        <location filename="main_window.cpp" line="3244"/>
-        <location filename="main_window.cpp" line="3248"/>
-        <location filename="main_window.cpp" line="3255"/>
+        <location filename="main_window.cpp" line="3284"/>
+        <location filename="main_window.cpp" line="3290"/>
+        <location filename="main_window.cpp" line="3311"/>
+        <location filename="main_window.cpp" line="3315"/>
+        <location filename="main_window.cpp" line="3322"/>
         <source>Import .vc1dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3223"/>
+        <location filename="main_window.cpp" line="3290"/>
         <source>Incomplete header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3244"/>
+        <location filename="main_window.cpp" line="3311"/>
         <source>Incomplete RAM_G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3248"/>
+        <location filename="main_window.cpp" line="3315"/>
         <source>Incomplete RAM_PAL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3255"/>
+        <location filename="main_window.cpp" line="3322"/>
         <source>Incomplete RAM_DL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3272"/>
+        <location filename="main_window.cpp" line="3339"/>
         <source>Imported project from .vc1dump file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3291"/>
+        <location filename="main_window.cpp" line="3358"/>
         <source>Imported project from .vc1dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3341"/>
+        <location filename="main_window.cpp" line="3408"/>
         <source>Exported project to .vc1dump file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3344"/>
+        <location filename="main_window.cpp" line="3411"/>
         <source>Exported project to .vc1dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3349"/>
+        <location filename="main_window.cpp" line="3416"/>
         <source>Failed to write file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3508"/>
+        <location filename="main_window.cpp" line="3576"/>
         <source>Change display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3517"/>
+        <location filename="main_window.cpp" line="3585"/>
         <source>PNG image (*.png)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3518"/>
+        <location filename="main_window.cpp" line="3586"/>
         <source>JPG image (*.jpg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3542"/>
+        <location filename="main_window.cpp" line="3610"/>
         <source>Import display list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3579"/>
+        <location filename="main_window.cpp" line="3623"/>
+        <source>Display list from integers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="3654"/>
+        <source>About FTDI EVE Screen Editor 2.0.5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="3666"/>
         <source>The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 Contact: http://www.qt-project.org/legal
 Qt is available under the LGPL.
@@ -1827,202 +1857,377 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="203"/>
+        <location filename="toolbox.cpp" line="201"/>
+        <source>Interrupt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="210"/>
+        <source>Snapshot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="214"/>
+        <source>Snapshot 2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="219"/>
+        <source>Load Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="223"/>
+        <source>Play Video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="228"/>
+        <source>Append</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="232"/>
+        <source>Memory Set</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="236"/>
+        <source>Memory Zero</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="242"/>
         <source>Graphics State</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="208"/>
-        <source>Color RGB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="212"/>
-        <source>Color A</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="216"/>
-        <source>Color Mask</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="220"/>
-        <source>Foreground Color</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="225"/>
-        <source>Background Color</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="230"/>
-        <source>Gradient Color</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="235"/>
-        <source>Line Width</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="239"/>
-        <source>Point Size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="243"/>
-        <source>Blend Func</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="toolbox.cpp" line="247"/>
-        <source>Scissor Size</source>
+        <source>Save Context</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="251"/>
-        <source>Scissor XY</source>
+        <source>Restore Context</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="255"/>
-        <source>Alpha Func</source>
+        <source>Color RGB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="259"/>
-        <source>Stencil Func</source>
+        <source>Color A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="263"/>
-        <source>Stencil Mask</source>
+        <source>Color Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="267"/>
-        <source>Stencil Op</source>
+        <source>Foreground Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="271"/>
-        <source>Tag</source>
+        <location filename="toolbox.cpp" line="272"/>
+        <source>Background Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="275"/>
-        <source>Tag Mask</source>
+        <location filename="toolbox.cpp" line="277"/>
+        <source>Gradient Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="281"/>
-        <source>Bitmap State</source>
+        <location filename="toolbox.cpp" line="282"/>
+        <source>Line Width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="286"/>
-        <source>Bitmap Handle</source>
+        <source>Point Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="290"/>
-        <source>Bitmap Source</source>
+        <source>Blend Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="294"/>
-        <source>Bitmap Layout</source>
+        <source>Scissor Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="298"/>
-        <source>Bitmap Size</source>
+        <source>Scissor XY</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="302"/>
-        <source>Transform A</source>
+        <source>Alpha Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="306"/>
-        <source>Transform B</source>
+        <source>Stencil Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="310"/>
-        <source>Transform C</source>
+        <source>Stencil Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="314"/>
-        <source>Transform D</source>
+        <source>Stencil Op</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="318"/>
-        <source>Transform E</source>
+        <source>Tag</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="322"/>
-        <source>Transform F</source>
+        <source>Tag Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="326"/>
-        <source>Matrix Load Identity</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="toolbox.cpp" line="331"/>
-        <source>Matrix Translate</source>
+        <source>Vertex Format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="336"/>
-        <source>Matrix Scale</source>
+        <source>Vertex Translate Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="341"/>
-        <source>Matrix Rotate</source>
+        <source>Cold Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="346"/>
-        <source>Matrix Set Current</source>
+        <source>Media FIFO</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="370"/>
-        <source>&lt;b&gt;BITMAPS&lt;/b&gt;&lt;br&gt;Rectangular pixel arrays, in various color format.</source>
+        <location filename="toolbox.cpp" line="351"/>
+        <source>Set Scratch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="356"/>
+        <source>Set Base</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="363"/>
+        <source>Bitmap State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="368"/>
+        <source>Bitmap Handle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="372"/>
+        <source>Bitmap Source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="376"/>
-        <source>&lt;b&gt;POINTS&lt;/b&gt;&lt;br&gt;Anti-aliased points, point radius is 1-256 pixels.</source>
+        <source>Bitmap Layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="382"/>
-        <source>&lt;b&gt;LINES&lt;/b&gt;&lt;br&gt;Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary).</source>
+        <location filename="toolbox.cpp" line="380"/>
+        <source>Bitmap Layout H</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="388"/>
-        <source>&lt;b&gt;LINE_STRIP&lt;/b&gt;&lt;br&gt;Anti-aliased lines, connected head-to-tail.</source>
+        <location filename="toolbox.cpp" line="385"/>
+        <source>Bitmap Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="397"/>
-        <source>&lt;b&gt;EDGE STRIP A, B, L, R&lt;/b&gt;&lt;br&gt;Edge strips.</source>
+        <location filename="toolbox.cpp" line="389"/>
+        <source>Bitmap Size H</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="394"/>
+        <source>Set Bitmap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="399"/>
+        <source>Cell</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="toolbox.cpp" line="403"/>
+        <source>Palette Source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="408"/>
+        <source>Transform A</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="412"/>
+        <source>Transform B</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="416"/>
+        <source>Transform C</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="420"/>
+        <source>Transform D</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="424"/>
+        <source>Transform E</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="428"/>
+        <source>Transform F</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="432"/>
+        <source>Matrix Load Identity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="437"/>
+        <source>Matrix Translate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="442"/>
+        <source>Matrix Scale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="447"/>
+        <source>Matrix Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="452"/>
+        <source>Matrix Set Current</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="462"/>
+        <source>Set Font</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="467"/>
+        <source>Set Font 2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="472"/>
+        <source>ROM Font</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="479"/>
+        <source>Drawing Actions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="484"/>
+        <source>Begin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="488"/>
+        <source>End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="492"/>
+        <source>Vertex Float</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="496"/>
+        <source>Vertex Integer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="505"/>
+        <source>Execution Control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="510"/>
+        <source>Macro</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="514"/>
+        <source>Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="518"/>
+        <source>Jump</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="522"/>
+        <source>Call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="526"/>
+        <source>Return</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="544"/>
+        <source>&lt;b&gt;BITMAPS&lt;/b&gt;&lt;br&gt;Rectangular pixel arrays, in various color format.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="550"/>
+        <source>&lt;b&gt;POINTS&lt;/b&gt;&lt;br&gt;Anti-aliased points, point radius is 1-256 pixels.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="556"/>
+        <source>&lt;b&gt;LINES&lt;/b&gt;&lt;br&gt;Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="562"/>
+        <source>&lt;b&gt;LINE_STRIP&lt;/b&gt;&lt;br&gt;Anti-aliased lines, connected head-to-tail.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="571"/>
+        <source>&lt;b&gt;EDGE STRIP A, B, L, R&lt;/b&gt;&lt;br&gt;Edge strips.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="577"/>
         <source>&lt;b&gt;RECTS&lt;/b&gt;&lt;br&gt;Round-cornered rectangles, curvature of the corners can be adjusted using LINE_WIDTH.</source>
         <translation type="unfinished"></translation>
     </message>
