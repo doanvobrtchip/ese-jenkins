@@ -544,8 +544,8 @@ CMD_SCREENSAVER()
 			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 
 			// Show second vertex
-			x = parsed.Parameter[5].I;
-			y = parsed.Parameter[6].I;
+			x = parsed.Parameter[3].I;
+			y = parsed.Parameter[4].I;
 			x += state.Graphics.VertexTranslateX >> 4;
 			y += state.Graphics.VertexTranslateY >> 4;
 			p.setPen(outer);
@@ -915,8 +915,8 @@ void InteractiveViewport::updatePointerMethod()
 						m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_1;
 						return;
 					}
-					x = parsed.Parameter[5].I;
-					y = parsed.Parameter[6].I;
+					x = parsed.Parameter[3].I;
+					y = parsed.Parameter[4].I;
 					x += state.Graphics.VertexTranslateX >> 4;
 					y += state.Graphics.VertexTranslateY >> 4;
 					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
@@ -1291,16 +1291,16 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			}
 			else if (m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_2)
 			{
-				pa.Parameter[5].I += xd;
-				pa.Parameter[6].I += yd;
+				pa.Parameter[3].I += xd;
+				pa.Parameter[4].I += yd;
 
 				// Snap ->
 				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[5].I, pa.Parameter[6].I);
+				snapPos(snapx, snapy, pa.Parameter[3].I, pa.Parameter[4].I);
 				m_MovingLastX += snapx;
-				pa.Parameter[5].I += snapx;
+				pa.Parameter[3].I += snapx;
 				m_MovingLastY += snapy;
-				pa.Parameter[6].I += snapy;
+				pa.Parameter[4].I += snapy;
 				// <- Snap
 			}
 			else // resize, check top/bottom and left/right
@@ -1957,15 +1957,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 7;
 						break;
 					case CMD_GRADIENT:
-						pa.Parameter[2].U = 0;
-						pa.Parameter[3].U = 127;
-						pa.Parameter[4].U = 255;
-						pa.Parameter[5].I = pa.Parameter[0].I + 32;
-						pa.Parameter[6].I = pa.Parameter[1].I + 32;
-						pa.Parameter[7].U = 127;
-						pa.Parameter[8].U = 255;
-						pa.Parameter[9].U = 0;
-						pa.ExpectedParameterCount = 10;
+						pa.Parameter[2].U = 0x007FFF;
+						pa.Parameter[3].I = pa.Parameter[0].I + 32;
+						pa.Parameter[4].I = pa.Parameter[1].I + 32;
+						pa.Parameter[5].U = 0x7FFF00;
+						pa.ExpectedParameterCount = 6;
 						break;
 					case CMD_TRACK:
 						pa.Parameter[2].U = 72;
@@ -2372,22 +2368,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					switch (selection)
 					{
 					case CMD_BGCOLOR:
-						pa.Parameter[0].U = 127;
-						pa.Parameter[1].U = 63;
-						pa.Parameter[2].U = 31;
-						pa.ExpectedParameterCount = 3;
+						pa.Parameter[0].U = 0x7F3F1F;
+						pa.ExpectedParameterCount = 1;
 						break;
 					case CMD_FGCOLOR:
-						pa.Parameter[0].U = 255;
-						pa.Parameter[1].U = 127;
-						pa.Parameter[2].U = 63;
-						pa.ExpectedParameterCount = 3;
+						pa.Parameter[0].U = 0xFF7F3F;
+						pa.ExpectedParameterCount = 1;
 						break;
 					case CMD_GRADCOLOR:
-						pa.Parameter[0].U = 255;
-						pa.Parameter[1].U = 255;
-						pa.Parameter[2].U = 127;
-						pa.ExpectedParameterCount = 3;
+						pa.Parameter[0].U = 0xFFFF7F;
+						pa.ExpectedParameterCount = 1;
 						break;
 					case CMD_LOADIDENTITY:
 					case CMD_SETMATRIX:

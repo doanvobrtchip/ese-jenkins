@@ -81,6 +81,7 @@ private:
 	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addColor(int r, int g, int b);
+	void addColorHex(int rgb);
 	void addCheckBox(int index, const QString &label, const QString &undoMessage);
 	void addWidth16(int width, int minim, int maxim, bool size);
 	void addAlpha(int alpha);
@@ -121,6 +122,7 @@ private:
 	class PropertiesSliderDynSub;
 	class PropertiesSliderDynSubClip;
 	class PropertiesColor;
+	class PropertiesColorHex;
 	class PropertiesComboBox;
 	class PropertiesRemapComboBox;
 	class PropertiesCaptureButton;

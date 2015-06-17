@@ -277,13 +277,13 @@ void DlParser::initVC2()
 		// s_CmdParamCount[CMD_GETPOINT & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPOINT & 0xFF] = false;
 		s_CmdIdMap["CMD_BGCOLOR"] = CMD_BGCOLOR & 0xFF;
-		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 3; // argb
+		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 1; // argb
 		s_CmdParamString[CMD_BGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_FGCOLOR"] = CMD_FGCOLOR & 0xFF;
-		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 3; // argb
+		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 1; // argb
 		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
-		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 3 + 2 + 3; // argb
+		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 1 + 2 + 1; // argb
 		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
@@ -411,7 +411,7 @@ void DlParser::initVC2()
 		// s_CmdParamCount[CMD_GETMATRIX & 0xFF] = 6;
 		// s_CmdParamString[CMD_GETMATRIX & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
-		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 3; // rgb
+		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 1; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
 #if defined(FTEDITOR_PARSER_VC2)
 		/*s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
@@ -665,11 +665,7 @@ void DlParser::compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_FGCOLOR:
 				case CMD_GRADCOLOR:
 				{
-					uint32_t rgb =
-						parsed.Parameter[0].U << 16
-						| parsed.Parameter[1].U << 8
-						| parsed.Parameter[2].U;
-					compiled.push_back(rgb);
+					compiled.push_back(parsed.Parameter[0].U);
 					break;
 				}
 				case CMD_GRADIENT:
@@ -677,16 +673,12 @@ void DlParser::compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const
 					uint32_t xy0 = parsed.Parameter[1].U << 16
 						| parsed.Parameter[0].U & 0xFFFF;
 					compiled.push_back(xy0);
-					uint32_t rgba0 = parsed.Parameter[2].U << 16
-						| parsed.Parameter[3].U << 8
-						| parsed.Parameter[4].U;
+					uint32_t rgba0 = parsed.Parameter[2].U;
 					compiled.push_back(rgba0);
-					uint32_t xy1 = parsed.Parameter[6].U << 16
-						| parsed.Parameter[5].U;
+					uint32_t xy1 = parsed.Parameter[4].U << 16
+						| parsed.Parameter[3].U;
 					compiled.push_back(xy1);
-					uint32_t rgba1 = parsed.Parameter[7].U << 16
-						| parsed.Parameter[8].U << 8
-						| parsed.Parameter[9].U;
+					uint32_t rgba1 = parsed.Parameter[5].U;
 					compiled.push_back(rgba1);
 					break;
 				}
@@ -1723,8 +1715,18 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, const DlParsed &par
 			int paramType = 0;
 			// 1: constant
 			// 2: bitmap format
+			// 3: hex value
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
+			case CMD_FGCOLOR:
+			case CMD_BGCOLOR:
+			case CMD_GRADCOLOR:
+				if (p == 0) paramType = 3;
+				break;
+			case CMD_GRADIENT:
+				if (p == 2) paramType = 3;
+				else if (p == 5) paramType = 3;
+				break;
 			case CMD_TEXT:
 			case CMD_GAUGE:
 			case CMD_CLOCK:
@@ -1765,6 +1767,11 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, const DlParsed &par
 			case 2:
 				bitmapFormatToString(res, parsed.Parameter[p].U);
 				break;
+			case 3: {
+				std::stringstream tmp;
+				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(6) << (unsigned int)(parsed.Parameter[p].U & 0xFFFFFF);
+				res << tmp.str();
+				} break;
 			default:
 				res << parsed.Parameter[p].I;
 				break;

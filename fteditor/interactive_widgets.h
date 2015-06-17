@@ -730,6 +730,64 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesColorHex : public QFrame, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesColorHex(InteractiveProperties *parent, const QString &undoMessage, int rgb) : QFrame(parent), PropertiesWidget(parent, undoMessage), m_RGB(rgb)
+	{
+		//setWidth(48);
+		//setHeight(26);
+		QPalette p = palette();
+		p.setColor(QPalette::WindowText, p.color(QPalette::Shadow));
+		p.setColor(QPalette::Window, Qt::black);
+		setPalette(p);
+		setAutoFillBackground(true);
+		setFrameStyle(QFrame::Panel | QFrame::Plain);
+		modifiedEditorLine();
+	}
+
+	virtual ~PropertiesColorHex()
+	{
+
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		QPalette p = palette();
+		const DlParsed &parsed = getLine();
+		int r = (parsed.Parameter[m_RGB].I >> 16) & 0xFF;
+		int g = (parsed.Parameter[m_RGB].I >> 8) & 0xFF;
+		int b = parsed.Parameter[m_RGB].I & 0xFF;
+		p.setColor(QPalette::Window, QColor(r, g, b));
+		setPalette(p);
+	}
+
+	virtual void mousePressEvent(QMouseEvent *event)
+	{
+		if (event->button() != Qt::LeftButton) return;
+		// printf("PropertiesColor::mousePressEvent(event)\n");
+		QColor c = QColorDialog::getColor(palette().color(QPalette::Window), this);
+		if (c.isValid())
+		{
+			DlParsed parsed = getLine();
+			int rgb = 
+				c.red() << 16
+				| c.green() << 8
+				| c.blue();
+			parsed.Parameter[m_RGB].I = rgb;
+			setLine(parsed);
+		}
+	}
+
+private:
+	int m_RGB;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
 class InteractiveProperties::PropertiesComboBox : public QComboBox, public PropertiesWidget
 {
 	Q_OBJECT

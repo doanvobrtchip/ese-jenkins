@@ -439,6 +439,13 @@ void InteractiveProperties::addColor(int r, int g, int b)
 	m_CurrentProperties.push_back(prop);
 }
 
+void InteractiveProperties::addColorHex(int rgb)
+{
+	PropertiesColorHex *prop = new PropertiesColorHex(this, "Set color", rgb);
+	addLabeledWidget("Color: ", prop);
+	m_CurrentProperties.push_back(prop);
+}
+
 void InteractiveProperties::addCheckBox(int index, const QString &label, const QString &undoMessage)
 {
 	PropertiesCheckBox *prop = new PropertiesCheckBox(this, undoMessage, index, 0x01);
@@ -723,7 +730,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_BGCOLOR");
-				addColor(0, 1, 2);
+				addColorHex(0);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -735,7 +742,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_FGCOLOR");
-				addColor(0, 1, 2);
+				addColorHex(0);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -748,9 +755,9 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_GRADIENT");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
-				addColor(2, 3, 4);
-				addXY(5, 6, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
-				addColor(7, 8, 9);
+				addColorHex(2);
+				addXY(3, 4, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addColorHex(5);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1207,7 +1214,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_GRADCOLOR");
-				addColor(0, 1, 2);
+				addColorHex(0);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
