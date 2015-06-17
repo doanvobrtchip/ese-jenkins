@@ -172,6 +172,21 @@ void InteractiveProperties::addXY16(int x, int y, int minim, int maxim)
 	propY->done();
 }
 
+void InteractiveProperties::addXYVertexFormat(int x, int y, int minim, int maxim)
+{
+	PropertiesSpinBoxVertexFormat *propX = new PropertiesSpinBoxVertexFormat(this, "Set x position", x);
+	propX->setMinimum(minim);
+	propX->setMaximum(maxim);
+	PropertiesSpinBoxVertexFormat *propY = new PropertiesSpinBoxVertexFormat(this, "Set y position", y);
+	propY->setMinimum(minim);
+	propY->setMaximum(maxim);
+	addLabeledWidget("XY: ", propX, propY);
+	m_CurrentProperties.push_back(propX);
+	m_CurrentProperties.push_back(propY);
+	propX->done();
+	propY->done();
+}
+
 void InteractiveProperties::addHandle(int handle, bool font)
 {
 	PropertiesSpinBox *propHandle = new PropertiesSpinBox(this, font ? "Set font" : "Set handle", handle); // TODO: Handle combobox
@@ -432,6 +447,16 @@ void InteractiveProperties::addSpinBoxAngle65536(int index, int minim, int maxim
 	prop->done();
 }
 
+void InteractiveProperties::addSpinBoxVertexFormat(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBoxVertexFormat *prop = new PropertiesSpinBoxVertexFormat(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
 void InteractiveProperties::addColor(int r, int g, int b)
 {
 	PropertiesColor *prop = new PropertiesColor(this, "Set color", r, g, b);
@@ -674,7 +699,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		if (editor)
 		{
 			setTitle("VERTEX2F");
-			addXY16(0, 1, -16384, 16383);
+			addXYVertexFormat(0, 1, -16384, 16383);
 			m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 		}
 		ok = true;
@@ -1926,7 +1951,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_X");
-				addSpinBox16(0, -32768, 32767, "X: ", "Set x translation");
+				addSpinBoxVertexFormat(0, -32768, 32767, "X: ", "Set x translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1938,7 +1963,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_Y");
-				addSpinBox16(0, -32768, 32767, "Y: ", "Set y translation");
+				addSpinBoxVertexFormat(0, -32768, 32767, "Y: ", "Set y translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

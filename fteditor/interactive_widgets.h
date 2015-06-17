@@ -306,6 +306,37 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesSpinBoxVertexFormat : public InteractiveProperties::PropertiesSpinBox
+{
+public:
+	PropertiesSpinBoxVertexFormat(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	{
+
+	}
+
+	virtual ~PropertiesSpinBoxVertexFormat()
+	{
+
+	}
+
+protected:
+	virtual QString textFromValue(int value) const
+	{
+		const DlState &state = m_InteractiveProperties->m_LineEditor->getState(m_InteractiveProperties->m_LineNumber);
+		float factor = (float)(1 << state.Graphics.VertexFormat);
+		return QString::number((float)value / factor);
+	}
+
+	virtual int valueFromText(const QString &text) const
+	{
+		const DlState &state = m_InteractiveProperties->m_LineEditor->getState(m_InteractiveProperties->m_LineNumber);
+		float factor = (float)(1 << state.Graphics.VertexFormat);
+		return (int)floorf((text.toFloat() * factor) + 0.5f);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
+
 class InteractiveProperties::PropertiesCheckBox : public QCheckBox, public PropertiesWidget
 {
 	Q_OBJECT

@@ -639,6 +639,18 @@ void loop()
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
 			}
+			else if (cmdList[i] == CMD_SNAPSHOT)
+			{
+				// Validate snapshot address range
+				uint32_t addr = s_CmdParamCache[cmdParamCache[i]];
+				uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
+				uint32_t imgSize = (s_VSize * s_HSize) * 2;
+				if (addr + imgSize > ramGEnd)
+				{
+					printf("Dropping CMD_SNAPSHOT, out of memory range\n");
+					continue;
+				}
+			}
 			if (useFileStream)
 			{
 				if (!QFileInfo(useFileStream).exists())

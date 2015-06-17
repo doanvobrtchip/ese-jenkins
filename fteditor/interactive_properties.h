@@ -62,6 +62,7 @@ private:
 	void addXY(int x, int y, int minim, int maxim);
 	void addWH(int w, int h, int minim, int maxim);
 	void addXY16(int x, int y, int minim, int maxim);
+	void addXYVertexFormat(int x, int y, int minim, int maxim);
 	void addHandle(int handle, bool font = false);
 	void addCell(int cell);
 	void addOptions(int options, uint32_t flags, bool flatOnly = false);
@@ -80,6 +81,7 @@ private:
 	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBoxVertexFormat(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addColor(int r, int g, int b);
 	void addColorHex(int rgb);
 	void addCheckBox(int index, const QString &label, const QString &undoMessage);
@@ -114,6 +116,7 @@ private:
 	class PropertiesSpinBox256;
 	class PropertiesSpinBox65536;
 	class PropertiesSpinBoxAngle65536;
+	class PropertiesSpinBoxVertexFormat;
 	class PropertiesCheckBox;
 	class PropertiesLineEdit;
 	class PropertiesLineEditChar;
