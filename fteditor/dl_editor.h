@@ -80,6 +80,7 @@ public:
 	void removeLine(int line);
 	void removeAll();
 	const DlParsed &getLine(int line) const;
+	QString getLineText(int line) const;
 	// Move cursor to line
 	void selectLine(int line);
 	void insertLine(int line, const DlParsed &parsed);

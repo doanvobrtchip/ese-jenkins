@@ -392,6 +392,11 @@ const DlParsed &DlEditor::getLine(int line) const
 	return m_DisplayListParsed[line];
 }
 
+QString DlEditor::getLineText(int line) const
+{
+	return m_CodeEditor->document()->findBlockByNumber(line).text();
+}
+
 void DlEditor::selectLine(int line)
 {
 	m_EditingInteractive = true;

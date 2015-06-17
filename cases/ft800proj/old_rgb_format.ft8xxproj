@@ -1,0 +1,27 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_GRADIENT(68, 111, 0, 127, 255, 100, 143, 127, 255, 0)",
+        "CMD_FGCOLOR(255, 127, 63)",
+        "CMD_BGCOLOR(127, 63, 31)",
+        "CMD_GRADCOLOR(255, 255, 127)",
+        "CMD_SLIDER(222, 219, 165, 22, 0, 30, 100)",
+        "CMD_BUTTON(278, 148, 120, 36, 27, 0, \"Button\")",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

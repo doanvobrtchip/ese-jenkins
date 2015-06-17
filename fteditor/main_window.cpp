@@ -3027,6 +3027,61 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 	}
 }
 
+void postProcessEditor(DlEditor *editor)
+{
+	DlParsed pa;
+	for (int i = 0; i < editor->getLineCount(); ++i)
+	{
+		const DlParsed &parsed = editor->getLine(i);
+		if (parsed.ValidId)
+		{
+			switch (parsed.IdLeft)
+			{
+			case FTEDITOR_CO_COMMAND:
+				switch (parsed.IdRight | FTEDITOR_CO_COMMAND)
+				{
+				case CMD_BGCOLOR:
+				case CMD_FGCOLOR: 
+				case CMD_GRADCOLOR: {
+					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
+					if (pa.ExpectedParameterCount == 3) // Old RGB, upgrade
+					{
+						uint32_t rgb =
+							pa.Parameter[0].U << 16
+							| pa.Parameter[1].U << 8
+							| pa.Parameter[2].U;
+						pa.Parameter[0].U = rgb;
+						pa.ExpectedParameterCount = 1;
+						editor->replaceLine(i, pa);
+					}
+					} break;
+				case CMD_GRADIENT: {
+					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
+					if (pa.ExpectedParameterCount == 10) // Old RGB, upgrade
+					{
+						uint32_t rgb0 =
+							pa.Parameter[2].U << 16
+							| pa.Parameter[3].U << 8
+							| pa.Parameter[4].U;
+						pa.Parameter[2].U = rgb0;
+						pa.Parameter[3].U = pa.Parameter[5].U;
+						pa.Parameter[4].U = pa.Parameter[6].U;
+						uint32_t rgb1 =
+							pa.Parameter[7].U << 16
+							| pa.Parameter[8].U << 8
+							| pa.Parameter[9].U;
+						pa.Parameter[5].U = rgb1;
+						pa.ExpectedParameterCount = 6;
+						editor->replaceLine(i, pa);
+					}
+					} break;
+				}
+				break;
+			}
+		}
+	}
+}
+
 QString MainWindow::getFileDialogPath()
 {
 	if (m_LastProjectDir.isEmpty())
@@ -3119,6 +3174,9 @@ void MainWindow::openFile(const QString &fileName)
 			bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
 			// m_BitmapSetup->fromJson(bitmaps);
 		}
+		postProcessEditor(m_Macro);
+		postProcessEditor(m_DlEditor);
+		postProcessEditor(m_CmdEditor);
 		statusBar()->showMessage(tr("Opened FTDI EVE Screen Editor project"));
 		loadOk = true;
 	}
