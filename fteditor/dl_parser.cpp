@@ -464,11 +464,13 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 				}
 				else if (ps.length() > 0 && ps[0] == '\'')
 				{
+					std::string psstr;
+					unescapeString(psstr, ps);
 					int vchar = 0;
-					for (int ci = (int)ps.length() - 2; ci > 0; --ci)
+					for (int ci = (int)psstr.length() - 2; ci > 0; --ci)
 					{
 						vchar <<= 8;
-						vchar |= ps[ci];
+						vchar |= psstr[ci];
 					}
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
 					parsed.ValidParameter[pq] = true;

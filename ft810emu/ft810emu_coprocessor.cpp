@@ -609,7 +609,7 @@ void Ejpg::run1(uint8_t *memory8,
 
 FT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
 {
-	pc = 0;
+	pc = 0x3fff;
 	dsp = rsp = 0;
 	t = 0;
 }

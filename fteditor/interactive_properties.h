@@ -112,6 +112,7 @@ private:
 	class PropertiesWidget;
 	class PropertiesSpinBoxAddress;
 	class PropertiesSpinBox;
+	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesSpinBox256;
 	class PropertiesSpinBox65536;

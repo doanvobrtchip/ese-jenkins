@@ -98,6 +98,7 @@ int main(int argc, char* argv[])
 #endif /* FT800EMU_PYTHON */
 	FTEDITOR::AssetConverter::init();
 	QApplication app(argc, const_cast<char **>(argv));
+	QLocale::setDefault(QLocale::c());
 
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
 

@@ -198,10 +198,67 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBox16 : public InteractiveProperties::PropertiesSpinBox
+class InteractiveProperties::PropertiesDoubleSpinBox : public UndoStackDisabler<QDoubleSpinBox>, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesDoubleSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QDoubleSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		setUndoStack(parent->m_MainWindow->undoStack());
+		setKeyboardTracking(false);
+		setMinimum(0x80000000);
+		setMaximum(0x7FFFFFFF);
+		connect(this, SIGNAL(valueChanged(double)), this, SLOT(updateValue(double)));
+	}
+
+	virtual ~PropertiesDoubleSpinBox()
+	{
+
+	}
+
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setValue(getLine().Parameter[m_Index].I);
+		m_SoftMod = false;
+		//printf("bye");
+	}
+
+	private slots:
+	void updateValue(double value)
+	{
+		//printf("updateValue\n");
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		//printf("PropertiesSpinBox::updateValue(value)\n");
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].I = value;
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBox16 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox16(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox16(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
 
 	}
@@ -212,12 +269,12 @@ public:
 	}
 
 protected:
-	virtual QString textFromValue(int value) const
+	virtual QString textFromValue(double value) const
 	{
 		return QString::number((float)value / 16.f);
 	}
 
-	virtual int valueFromText(const QString &text) const
+	virtual double valueFromText(const QString &text) const
 	{
 		return (int)floorf((text.toFloat() * 16.f) + 0.5f);
 	}
@@ -225,10 +282,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBox256 : public InteractiveProperties::PropertiesSpinBox
+class InteractiveProperties::PropertiesSpinBox256 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox256(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox256(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
 
 	}
@@ -239,12 +296,12 @@ public:
 	}
 
 protected:
-	virtual QString textFromValue(int value) const
+	virtual QString textFromValue(double value) const
 	{
 		return QString::number((double)value / 256.0);
 	}
 
-	virtual int valueFromText(const QString &text) const
+	virtual double valueFromText(const QString &text) const
 	{
 		return (int)floor((text.toDouble() * 256.0) + 0.5);
 	}
@@ -252,10 +309,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBox65536 : public InteractiveProperties::PropertiesSpinBox
+class InteractiveProperties::PropertiesSpinBox65536 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
 
 	}
@@ -266,12 +323,12 @@ public:
 	}
 
 protected:
-	virtual QString textFromValue(int value) const
+	virtual QString textFromValue(double value) const
 	{
 		return QString::number((double)value / 65536.0);
 	}
 
-	virtual int valueFromText(const QString &text) const
+	virtual double valueFromText(const QString &text) const
 	{
 		return (int)floor((text.toDouble() * 65536.0) + 0.5);
 	}
@@ -279,10 +336,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxAngle65536 : public InteractiveProperties::PropertiesSpinBox
+class InteractiveProperties::PropertiesSpinBoxAngle65536 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBoxAngle65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	PropertiesSpinBoxAngle65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
 
 	}
@@ -293,12 +350,12 @@ public:
 	}
 
 protected:
-	virtual QString textFromValue(int value) const
+	virtual QString textFromValue(double value) const
 	{
 		return QString::number((double)value / (65536.0 / 360.0));
 	}
 
-	virtual int valueFromText(const QString &text) const
+	virtual double valueFromText(const QString &text) const
 	{
 		return (int)floor((text.toDouble() * (65536.0 / 360.0)) + 0.5);
 	}
@@ -306,12 +363,12 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxVertexFormat : public InteractiveProperties::PropertiesSpinBox
+class InteractiveProperties::PropertiesSpinBoxVertexFormat : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBoxVertexFormat(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesSpinBox(parent, undoMessage, index)
+	PropertiesSpinBoxVertexFormat(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-
+		
 	}
 
 	virtual ~PropertiesSpinBoxVertexFormat()
@@ -320,14 +377,14 @@ public:
 	}
 
 protected:
-	virtual QString textFromValue(int value) const
+	virtual QString textFromValue(double value) const
 	{
 		const DlState &state = m_InteractiveProperties->m_LineEditor->getState(m_InteractiveProperties->m_LineNumber);
 		float factor = (float)(1 << state.Graphics.VertexFormat);
 		return QString::number((float)value / factor);
 	}
 
-	virtual int valueFromText(const QString &text) const
+	virtual double valueFromText(const QString &text) const
 	{
 		const DlState &state = m_InteractiveProperties->m_LineEditor->getState(m_InteractiveProperties->m_LineNumber);
 		float factor = (float)(1 << state.Graphics.VertexFormat);
