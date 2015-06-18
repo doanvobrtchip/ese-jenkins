@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdio.h>
 
+// Version
+#define FT8XXEMU_VERSION_STRING "2.0.5"
+
 // Include FT8XXEMU_PLATFORM
 #include "ft8xxemu_graphics_driver.h"
 
@@ -53,7 +56,7 @@ void(*FT8XXEMU_setDebugLimiter)(int debugLimiter) = NULL;
 void(*FT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = NULL;
 
 static const char *s_Version =
-	"FT8XX Emulator Library v2.0.4\n"
+	"FT8XX Emulator Library v" FT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013 - 2015  Future Technology Devices International Ltd\n"
 	"Author: Jan Boon <jan.boon@kaetemi.be>";
 FT8XXEMU_API const char *FT8XXEMU_version()
