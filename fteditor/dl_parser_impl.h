@@ -1677,7 +1677,11 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			if (combine) dst << " | ";
 			if ((opt & 0xFF) >= 32 && (opt & 0xFF) <= 126)
 			{
-				dst << "'" << (char)(opt & 0xFF) << "'";
+				dst << "'";
+				std::string escstr;
+				DlParser::escapeString(escstr, std::string(1, (char)(opt & 0xFF)));
+				dst << escstr;
+				dst << "'";
 			}
 			else
 			{
