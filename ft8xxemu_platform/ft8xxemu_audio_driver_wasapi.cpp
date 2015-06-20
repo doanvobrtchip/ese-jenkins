@@ -47,7 +47,7 @@ static double s_TestRad;
 #define D_FT8XXEMU_AUDIOCHANNELS 2
 #define D_FT8XXEMU_AUDIOBITS 16
 
-void AudioDriverClass::begin()
+bool AudioDriverClass::begin()
 {
 	const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 	const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);

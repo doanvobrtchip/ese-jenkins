@@ -32,7 +32,7 @@ class AudioDriverClass
 public:
 	AudioDriverClass() { }
 
-	static void begin();
+	static bool begin();
 	static bool update();
 	static void end();
 

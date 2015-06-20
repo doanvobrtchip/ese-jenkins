@@ -56,6 +56,7 @@ public:
 	SystemSdlClass() { }
 
 	static void ErrorSdl();
+	static void IgnoreErrorSdl();
 
 private:
 	SystemSdlClass(const SystemSdlClass &);

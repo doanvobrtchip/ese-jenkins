@@ -39,7 +39,7 @@ void sdlAudioCallback(void *userdata, Uint8 *stream, int len)
 
 } /* anonymous namespace */
 
-void AudioDriverClass::begin()
+bool AudioDriverClass::begin()
 {
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
@@ -54,7 +54,9 @@ void AudioDriverClass::begin()
 	desired.userdata = NULL;
 
 	if (SDL_OpenAudio(&desired, &obtained) < 0)
-		SystemSdl.ErrorSdl();
+	{
+		SystemSdl.IgnoreErrorSdl();
+	}
 
 	s_AudioFrequency = obtained.freq;
 	s_AudioChannels = obtained.channels;

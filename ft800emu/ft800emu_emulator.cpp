@@ -755,7 +755,12 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	{
 		AudioProcessor.begin();
 		AudioRender.begin();
-		FT8XXEMU::AudioDriver.begin();
+		if (!FT8XXEMU::AudioDriver.begin())
+		{
+			AudioRender.end();
+			AudioProcessor.end();
+			s_Flags &= ~FT8XXEMU_EmulatorEnableAudio;
+		}
 	}
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
@@ -871,7 +876,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_GraphicsBuffer = NULL;
 	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
-	if (params.Flags & FT8XXEMU_EmulatorEnableAudio)
+	if (s_Flags & FT8XXEMU_EmulatorEnableAudio)
 	{
 		FT8XXEMU::AudioDriver.end();
 		AudioRender.end();

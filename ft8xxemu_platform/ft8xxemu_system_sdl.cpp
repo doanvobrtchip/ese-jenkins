@@ -18,6 +18,11 @@
 #include "ft8xxemu_system.h"
 
 // System includes
+#ifdef WIN32
+#	include <ObjBase.h>
+#endif
+
+// System includes
 #include <SDL_thread.h>
 
 // Project includes
@@ -33,8 +38,31 @@ static bool s_RenderWoke = false;
 
 void SystemSdlClass::ErrorSdl()
 {
-	printf("ErrorSdl: %s", SDL_GetError());
+	const char *sdlError = SDL_GetError();
+	printf("ErrorSdl: %s", sdlError);
+#ifdef WIN32
+	if (GetConsoleWindow() == NULL)
+		SDL_ShowSimpleMessageBox(
+			SDL_MESSAGEBOX_ERROR,
+			"FT8XXEMU Error (SDL)",
+			sdlError,
+			NULL);
+#endif
 	exit(1);
+}
+
+void SystemSdlClass::IgnoreErrorSdl()
+{
+	const char *sdlError = SDL_GetError();
+	printf("ErrorSdl: %s", sdlError);
+#ifdef WIN32
+	if (GetConsoleWindow() == NULL)
+		SDL_ShowSimpleMessageBox(
+			SDL_MESSAGEBOX_ERROR,
+			"FT8XXEMU Error (SDL)",
+			sdlError,
+			NULL);
+#endif
 }
 
 void SystemClass::renderSleep(int ms)
