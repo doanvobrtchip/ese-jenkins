@@ -80,7 +80,7 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 	return s_BufferARGB8888;
 }
 
-void GraphicsDriverClass::begin()
+bool GraphicsDriverClass::begin()
 {
 	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
 	s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
@@ -116,6 +116,7 @@ void GraphicsDriverClass::begin()
 #endif
 
 	// TODO - Error handling
+	return true;
 }
 
 bool GraphicsDriverClass::update()

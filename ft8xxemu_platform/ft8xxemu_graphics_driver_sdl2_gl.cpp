@@ -73,6 +73,10 @@ static bool s_AllowGL3 = true;
 static bool s_GL3 = false;
 static GLuint s_VBO = 0;
 
+#if WIN32
+static bool s_GDIRevert = false;
+#endif
+
 // Print detailed GL debug info
 #define FT8XXEMU_GL_DEBUG_DETAIL 1
 
@@ -156,15 +160,18 @@ int s_TitleFrameSkip = 0;
 #endif
 
 #if FT8XXEMU_GL_DEBUG_DETAIL
-FT8XXEMU_FORCE_INLINE void debugGL(const char *message)
+FT8XXEMU_FORCE_INLINE bool debugGL(const char *message)
 {
+	bool errb = false;
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
 		cerr << "OpenGL error (" << message << "): " << err << endl;
+		errb = true;
 	}
+	return errb;
 }
 #else
-FT8XXEMU_FORCE_INLINE void debugGL(const char *message) { }
+FT8XXEMU_FORCE_INLINE bool debugGL(const char *message) { return false; }
 #endif
 
 void genVBO()
@@ -343,6 +350,11 @@ int flipThread(void *)
 
 argb8888 *GraphicsDriverClass::getBufferARGB8888()
 {
+#if WIN32
+	if (s_GDIRevert)
+		return GraphicsDriverGDI.getBufferARGB8888();
+#endif
+
 	// Return the next available buffer
 	// Wait in case it's still being rendered
 #if FT8XXEMU_THREADED_FLIP
@@ -363,8 +375,13 @@ static int eventFilter(void *, SDL_Event *e)
 }
 #endif
 
-void GraphicsDriverClass::begin()
+bool GraphicsDriverClass::begin()
 {
+#ifdef WIN32
+	if (s_GDIRevert)
+		return GraphicsDriverGDI.begin();
+#endif
+
 	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
 	s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
 	s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
@@ -398,9 +415,12 @@ void GraphicsDriverClass::begin()
 	s_Window = SDL_CreateWindow(FT8XXEMU_WINDOW_TITLE_A, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		s_WindowWidth, s_WindowHeight, flags);
 	s_GLContext = SDL_GL_CreateContext(s_Window);
+
+	s_GDIRevert = false;
 	s_GL3 = (gl3wInit() == 0 && gl3wIsSupported(3, 3)) && s_AllowGL3;
+	debugGL("gl3wInit()");
 	
-	if (s_GL3) switch (1) default:
+	if (s_GL3) switch (1) case 1:
 	{
 		printf("OpenGL 3.3 mode\n");
 
@@ -487,13 +507,40 @@ void GraphicsDriverClass::begin()
 
 	glGenTextures(1, &s_BufferTexture);
 	debugGL("begin() 1: glGenTextures");
+
 	glBindTexture(GL_TEXTURE_2D, s_BufferTexture);
 	debugGL("begin() 2: glBindTexture");
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	debugGL("begin() 3: glTexParameteri");
+
+	if (!s_GL3 && debugGL("begin() 3: glTexParameteri"))
+	{
+#if WIN32
+		printf("Reverting to GDI mode\n");
+#else
+		SystemSdl.ErrorSdl();
+#endif
+
+		glDeleteTextures(1, &s_BufferTexture);
+		SDL_GL_DeleteContext(s_GLContext); s_GLContext = NULL;
+		SDL_DestroyWindow(s_Window); s_Window = NULL;
+
+#if FT8XXEMU_THREADED_FLIP
+		SDL_DestroyMutex(s_BufferMutex[0]); s_BufferMutex[0] = NULL;
+		SDL_DestroyMutex(s_BufferMutex[1]); s_BufferMutex[1] = NULL;
+#endif
+
+		SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+
+#if WIN32
+		s_GDIRevert = true;
+		return GraphicsDriverGDI.begin();
+#else
+		return false;
+#endif
+	}
 
 	static const GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
@@ -515,10 +562,17 @@ void GraphicsDriverClass::begin()
 	while ((err = glGetError()) != GL_NO_ERROR) {
 		cerr << "OpenGL error: " << err << endl;
 	}
+
+	return true;
 }
 
 bool GraphicsDriverClass::update()
 {
+#if WIN32
+	if (s_GDIRevert)
+		return GraphicsDriverGDI.update();
+#endif
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -569,6 +623,14 @@ bool GraphicsDriverClass::update()
 
 void GraphicsDriverClass::end()
 {
+#if WIN32
+	if (s_GDIRevert)
+	{
+		GraphicsDriverGDI.end();
+		return;
+	}
+#endif
+
 #if FT8XXEMU_THREADED_FLIP
 	s_Running = false;
 	SDL_CondBroadcast(s_WaitFlip);
@@ -604,6 +666,14 @@ void GraphicsDriverClass::end()
 
 void GraphicsDriverClass::setMode(int width, int height)
 {
+#ifdef WIN32
+	if (s_GDIRevert)
+	{
+		GraphicsDriverGDI.setMode(width, height);
+		return;
+	}
+#endif
+
 	if (s_Width != width || s_Height != height)
 	{
 		s_Width = width;
@@ -619,6 +689,14 @@ void GraphicsDriverClass::setMode(int width, int height)
 
 void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
+#ifdef WIN32
+	if (s_GDIRevert)
+	{
+		GraphicsDriverGDI.renderBuffer(output, changed);
+		return;
+	}
+#endif
+
 #if FT8XXEMU_THREADED_FLIP
 	if (changed)
 	{
@@ -689,11 +767,27 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 
 void GraphicsDriverClass::enableMouse(bool enabled)
 {
+#ifdef WIN32
+	if (s_GDIRevert)
+	{
+		GraphicsDriverGDI.enableMouse(enabled);
+		return;
+	}
+#endif
+
 	s_MouseEnabled = enabled;
 }
 
 void GraphicsDriverClass::setMousePressure(int pressure)
 {
+#ifdef WIN32
+	if (s_GDIRevert)
+	{
+		GraphicsDriverGDI.setMousePressure(pressure);
+		return;
+	}
+#endif
+
 	s_MousePressure = pressure;
 }
 

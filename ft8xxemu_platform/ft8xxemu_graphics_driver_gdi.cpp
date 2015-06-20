@@ -12,10 +12,15 @@
  */
 
 #ifndef FTEMU_SDL
-#ifndef FTEMU_SDL2
+#ifdef WIN32
 
 // #include <...>
 #include "ft8xxemu_graphics_driver.h"
+
+#ifdef FTEMU_SDL2
+#define GraphicsDriverClass GraphicsDriverClassGDI
+#define GraphicsDriver GraphicsDriverGDI
+#endif
 
 // System includes
 #include "ft8xxemu_system_windows.h"
@@ -33,8 +38,10 @@ namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
 
+#ifndef FTEMU_SDL2
 void (*g_ResetTouchScreenXY)(int idx) = NULL;
 void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
+#endif
 
 static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
 
@@ -130,7 +137,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return (LRESULT)0;
 }
 
-void GraphicsDriverClass::begin()
+bool GraphicsDriverClass::begin()
 {
 	// Defaults
 	s_MouseEnabled = false;
@@ -205,6 +212,8 @@ void GraphicsDriverClass::begin()
 
 	// Meh
 	SystemWindows.setHWnd(s_HWnd);
+
+	return true;
 }
 
 bool GraphicsDriverClass::update()
@@ -418,7 +427,7 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FTEMU_SDL2 */
+#endif /* #ifdef WIN32 */
 #endif /* #ifndef FTEMU_SDL */
 
 /* end of file */

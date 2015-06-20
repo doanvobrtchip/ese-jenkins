@@ -20,6 +20,7 @@
 // Project includes
 #include "ft8xxemu_inttypes.h"
 
+#ifndef FT8XXEMU_GRAPHICS_DRIVER_GDI_H
 #define FT8XXEMU_WINDOW_TITLE_A "FT8XX Emulator"
 #define FT8XXEMU_WINDOW_TITLE TEXT(FT8XXEMU_WINDOW_TITLE_A)
 #define FT8XXEMU_WINDOW_WIDTH_DEFAULT 480
@@ -32,6 +33,7 @@
 
 // Render SDL2 upside down (makes no difference)
 #define FT8XXEMU_FLIP_SDL2 0
+#endif
 
 namespace FT8XXEMU {
 
@@ -46,7 +48,7 @@ class GraphicsDriverClass
 public:
 	GraphicsDriverClass() { }
 
-	static void begin();
+	static bool begin();
 	static bool update();
 	static void end();
 
@@ -87,6 +89,24 @@ extern void(*g_ResetTouchScreenXY)(int idx);
 extern void(*g_SetTouchScreenXY)(int idx, int x, int y, int pressure);
 
 } /* namespace FT8XXEMU */
+
+#ifdef WIN32
+#ifdef FTEMU_SDL2
+#ifndef FT8XXEMU_GRAPHICS_DRIVER_GDI_H
+#define FT8XXEMU_GRAPHICS_DRIVER_GDI_H
+#define GraphicsDriverClass GraphicsDriverClassGDI
+#define GraphicsDriver GraphicsDriverGDI
+#undef FT8XXEMU_GRAPHICS_DRIVER_H
+#undef FT8XXEMU_FLIP_SDL2
+#define FT8XXEMU_FLIP_SDL2 0
+#include <ft8xxemu_graphics_driver.h>
+#undef FT8XXEMU_FLIP_SDL2
+#define FT8XXEMU_GRAPHICS_DRIVER_H
+#undef GraphicsDriver
+#undef GraphicsDriverClass
+#endif
+#endif
+#endif
 
 #endif /* #ifndef FT8XXEMU_GRAPHICS_DRIVER_H */
 
