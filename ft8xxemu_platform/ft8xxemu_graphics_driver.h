@@ -98,7 +98,7 @@ extern void(*g_SetTouchScreenXY)(int idx, int x, int y, int pressure);
 #define GraphicsDriver GraphicsDriverGDI
 #undef FT8XXEMU_GRAPHICS_DRIVER_H
 #undef FT8XXEMU_FLIP_SDL2
-#define FT8XXEMU_FLIP_SDL2 0
+#define FT8XXEMU_FLIP_SDL2 1
 #include <ft8xxemu_graphics_driver.h>
 #undef FT8XXEMU_FLIP_SDL2
 #define FT8XXEMU_GRAPHICS_DRIVER_H
