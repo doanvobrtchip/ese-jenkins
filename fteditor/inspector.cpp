@@ -34,8 +34,6 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-using namespace std;
-
 namespace FTEDITOR {
 
 static QString asRaw(uint32_t value)
@@ -99,7 +97,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	QString text = asText(0);
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
-		stringstream idx;
+		std::stringstream idx;
 		idx << i;
 		QTreeWidgetItem *item = new QTreeWidgetItem(m_DisplayList);
 		item->setText(0, idx.str().c_str());

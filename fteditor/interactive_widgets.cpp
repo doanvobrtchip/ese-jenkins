@@ -28,8 +28,6 @@
 #include "properties_editor.h"
 #include "constant_common.h"
 
-using namespace std;
-
 namespace FTEDITOR {
 
 int g_PropertiesWidgetCombineId = 99150;

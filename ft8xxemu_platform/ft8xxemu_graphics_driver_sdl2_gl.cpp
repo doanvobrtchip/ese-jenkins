@@ -37,8 +37,6 @@
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
-using namespace std;
-
 namespace FT8XXEMU {
 
 GraphicsDriverClass GraphicsDriver;
@@ -165,7 +163,7 @@ FT8XXEMU_FORCE_INLINE bool debugGL(const char *message)
 	bool errb = false;
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
-		cerr << "OpenGL error (" << message << "): " << err << endl;
+		std::cerr << "OpenGL error (" << message << "): " << err << std::endl;
 		errb = true;
 	}
 	return errb;
@@ -316,7 +314,7 @@ void drawBuffer()
 #endif
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
-		cerr << "OpenGL error: " << err << endl;
+		std::cerr << "OpenGL error: " << err << std::endl;
 	}
 }
 
@@ -560,7 +558,7 @@ bool GraphicsDriverClass::begin()
 
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
-		cerr << "OpenGL error: " << err << endl;
+		std::cerr << "OpenGL error: " << err << std::endl;
 	}
 
 	return true;

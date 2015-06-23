@@ -41,8 +41,6 @@ static void clock_gettime(int, timespec *ts)
 
 // Project includes
 
-using namespace std;
-
 namespace FT8XXEMU {
 
 SystemClass System;

@@ -22,8 +22,6 @@
 // Project includes
 #include "dl_parser.h"
 
-using namespace std;
-
 namespace FTEDITOR {
 
 DlHighlighter::DlHighlighter(QTextDocument *parent, bool coprocessor) : QSyntaxHighlighter(parent), m_ModeCoprocessor(coprocessor)

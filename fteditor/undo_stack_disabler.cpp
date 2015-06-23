@@ -21,8 +21,6 @@
 
 // Project includes
 
-using namespace std;
-
 namespace FTEDITOR {
 
 void dummy_undo_stack_disabler_cpp() { }

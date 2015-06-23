@@ -1,9 +1,6 @@
 #include "device_display_settings_dialog.h"
 #include "device_manager.h"
 
-using namespace std;
-
-
 namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER

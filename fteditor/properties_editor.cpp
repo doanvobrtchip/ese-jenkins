@@ -25,8 +25,6 @@
 
 // Project includes
 
-using namespace std;
-
 namespace FTEDITOR {
 
 PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurrentEditWidget(false), m_SurpressSet(false)

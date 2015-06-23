@@ -28,8 +28,6 @@
 // Project includes
 #include "sleep_wake.h"
 
-using namespace std;
-
 namespace FT8XXEMU {
 
 SystemSdlClass SystemSdl;

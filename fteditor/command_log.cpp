@@ -22,8 +22,6 @@
 
 // Project includes
 
-using namespace std;
-
 namespace FTEDITOR {
 
 CommandLog::CommandLog(QWidget *parent) : QWidget(parent)

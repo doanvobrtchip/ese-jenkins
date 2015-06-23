@@ -25,8 +25,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-using namespace std;
-
 namespace FTEDITOR {
 
 static int s_CoordMin[FTEDITOR_DEVICE_NB] = {

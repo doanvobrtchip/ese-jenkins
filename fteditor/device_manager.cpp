@@ -36,8 +36,6 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "FT_Gpu_Hal.h"
 #endif
 
-using namespace std;
-
 namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER

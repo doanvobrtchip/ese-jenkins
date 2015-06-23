@@ -32,8 +32,6 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-using namespace std;
-
 namespace FTEDITOR {
 
 Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),

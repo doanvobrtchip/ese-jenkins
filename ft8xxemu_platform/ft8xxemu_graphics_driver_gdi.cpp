@@ -27,8 +27,6 @@
 #include <Windowsx.h>
 #include "ft8xxemu_system.h"
 
-using namespace std;
-
 #define FT8XXEMU_WINDOW_CLASS_NAME TEXT("FT8XXEMUGraphicsDriver")
 
 // Getting more CPU usage with StretchDIBits for some reason, so I don't use it.
@@ -129,7 +127,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		if (wParam == SC_KEYMENU) return 0;
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	default:
-		map<UINT, WNDPROC>::iterator it = s_WindowProcedures.find(message);
+		std::map<UINT, WNDPROC>::iterator it = s_WindowProcedures.find(message);
 		if (it != s_WindowProcedures.end())
 			return it->second(hWnd, message, wParam, lParam);
 		return DefWindowProc(hWnd, message, wParam, lParam);

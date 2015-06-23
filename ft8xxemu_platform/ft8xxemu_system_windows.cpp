@@ -30,8 +30,6 @@
 
 // Project includes
 
-using namespace std;
-
 namespace FT8XXEMU {
 
 
@@ -370,7 +368,7 @@ void SystemWindowsClass::Error(const tstring &message)
 {
 	// exit with message
 	MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Error"), MB_OK | MB_ICONERROR);
-	tcout << TEXT("Error: ") << message << endl;
+	tcout << TEXT("Error: ") << message << std::endl;
 	exit(EXIT_FAILURE);
 }
 
@@ -378,13 +376,13 @@ void SystemWindowsClass::Warning(const tstring &message)
 {
 	// show a warning box and send to output
 	MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Warning"), MB_OK | MB_ICONWARNING);
-	tcout << TEXT("Warning: ") << message << endl;
+	tcout << TEXT("Warning: ") << message << std::endl;
 }
 
 void SystemWindowsClass::Debug(const tstring &message)
 {
 	// send a debug to output
-	tcout << TEXT("Debug: ") << message << endl;
+	tcout << TEXT("Debug: ") << message << std::endl;
 }
 
 void SystemWindowsClass::ErrorWin32()

@@ -25,6 +25,7 @@
 
 // Emulator includes
 #include <ft8xxemu_diag.h>
+#include <ft8xxemu_minmax.h>
 
 // Project includes
 #include "main_window.h"
@@ -35,8 +36,6 @@
 #include "toolbox.h"
 #include "interactive_properties.h"
 #include "constant_common.h"
-
-using namespace std;
 
 namespace FTEDITOR {
 
