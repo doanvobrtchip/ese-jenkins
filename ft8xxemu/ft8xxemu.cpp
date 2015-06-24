@@ -85,6 +85,11 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 		| FT8XXEMU_EmulatorEnableTouchTransformation;
 
 	params->Mode = mode;
+
+	// TEMPORARY:
+	// https://github.com/jamesbowman/ft800emu/issues/204
+	if (mode == FT8XXEMU_EmulatorFT800)
+		params->Flags &= ~FT8XXEMU_EmulatorEnableTouchTransformation;
 }
 
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)
