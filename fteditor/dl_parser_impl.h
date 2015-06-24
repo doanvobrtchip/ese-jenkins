@@ -176,6 +176,12 @@ void DlParser::initVC2()
 		s_ParamCount[FTEDITOR_DL_MACRO] = 1;
 		s_IdMap["CLEAR"] = FTEDITOR_DL_CLEAR;
 		s_ParamCount[FTEDITOR_DL_CLEAR] = 3;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[0] = 0;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[1] = 0;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[2] = 0;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[0] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[1] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[2] = 1;
 #if defined(FTEDITOR_PARSER_VC2)
 		s_IdMap["VERTEX_FORMAT"] = FTEDITOR_DL_VERTEX_FORMAT;
 		s_ParamCount[FTEDITOR_DL_VERTEX_FORMAT] = 1;

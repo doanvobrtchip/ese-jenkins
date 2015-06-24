@@ -447,6 +447,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			// validate named parameter
 			if ((p < parsed.ExpectedParameterCount || dynamic) || !parsed.ValidId)
 			{
+				bool validateInt = false;
 				std::string ps = pss.str();
 				if ((p == (parsed.ExpectedParameterCount - 1) || dynamic) && parsed.ExpectedStringParameter)
 				{
@@ -474,6 +475,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					}
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
 					parsed.ValidParameter[pq] = true;
+					validateInt = true;
 				}
 				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
 				{
@@ -481,11 +483,13 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					pss >> vhex;
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vhex;
 					parsed.ValidParameter[pq] = true;
+					validateInt = true;
 				}
 				else if (parsed.NumericParameter[pq] && ps.length() > 0)
 				{
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | atoi(ps.c_str());
 					parsed.ValidParameter[pq] = true;
+					validateInt = true;
 				}
 				else
 				{
@@ -512,6 +516,12 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
+				}
+				if (validateInt)
+				{
+					parsed.ValidParameter[pq] =
+						(parsed.Parameter[p].I >= defaultParam[parsed.IdRight].Min[p]
+						&& parsed.Parameter[p].I <= defaultParam[parsed.IdRight].Max[p]);
 				}
 			}
 			else
