@@ -319,7 +319,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 #define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
 #define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
 
-	if (m_MouseTouch)
+	if (m_MouseTouch && m_MouseX >= 0 && m_MouseX < getPixMap().width() && m_MouseY >= 0 && m_MouseY < getPixMap().height())
 	{
 		FT8XXEMU_touchSetXY(0, m_MouseX, m_MouseY, 0);
 	}
