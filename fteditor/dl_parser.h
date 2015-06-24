@@ -75,9 +75,11 @@ struct DlParsed
 	int StringParameterAt; // temporary pq
 };
 
-struct ParameterArray
+struct ParameterOptions
 {
-	int Values[DLPARSED_MAX_PARAMETER];
+	int Default[DLPARSED_MAX_PARAMETER];
+	int Min[DLPARSED_MAX_PARAMETER];
+	int Max[DLPARSED_MAX_PARAMETER];
 };
 
 /**
@@ -116,10 +118,10 @@ private:
 	static void toStringVC2(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static void toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
-	static ParameterArray *defaultParamVC1();
-	static ParameterArray *defaultParamVC2();
-	static ParameterArray *defaultCmdParamVC1();
-	static ParameterArray *defaultCmdParamVC2();
+	static ParameterOptions *defaultParamVC1();
+	static ParameterOptions *defaultParamVC2();
+	static ParameterOptions *defaultCmdParamVC1();
+	static ParameterOptions *defaultCmdParamVC2();
 
 	static const std::map<std::string, int> *m_IdMap[FTEDITOR_DEVICE_NB];
 	static const std::map<std::string, int> *m_ParamMap[FTEDITOR_DEVICE_NB];

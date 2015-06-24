@@ -246,7 +246,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		}
 	}
 
-	ParameterArray *defaultParam;
+	ParameterOptions *defaultParam;
 	if (parsed.ValidId)
 	{
 		switch (parsed.IdLeft)
@@ -505,18 +505,18 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						}
 						else
 						{
-							parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Values[p] : 0;
+							parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 						}
 					}
 					else
 					{
-						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Values[p] : 0;
+						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
 				}
 			}
 			else
 			{
-				parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Values[p] : 0;
+				parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 			}
 
 			if (finalIndex >= 0)
@@ -559,7 +559,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			if (defaultParam)
 			{
 				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
-					parsed.Parameter[p].I = defaultParam[parsed.IdRight].Values[p];
+					parsed.Parameter[p].I = defaultParam[parsed.IdRight].Default[p];
 			}
 			else
 			{
