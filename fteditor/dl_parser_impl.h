@@ -313,6 +313,8 @@ void DlParser::initVC2()
 		s_CmdIdMap["CMD_BUTTON"] = CMD_BUTTON & 0xFF;
 		s_CmdParamCount[CMD_BUTTON & 0xFF] = 7;
 		s_CmdParamString[CMD_BUTTON & 0xFF] = true;
+		s_CmdParamOptions[CMD_BUTTON & 0xFF].Min[4] = 0;
+		s_CmdParamOptions[CMD_BUTTON & 0xFF].Max[4] = 31;
 		s_CmdIdMap["CMD_KEYS"] = CMD_KEYS & 0xFF;
 		s_CmdParamCount[CMD_KEYS & 0xFF] = 7;
 		s_CmdParamString[CMD_KEYS & 0xFF] = true;
