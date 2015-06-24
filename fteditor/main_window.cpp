@@ -382,14 +382,89 @@ void loop()
 			printf("[RAM_G] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
 			continue;
 		}
-		int binSize = (int)binFile.size();
+		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
+		int binSize = imageCoprocessor ? info->CachedSize : (int)binFile.size();
 		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
 			continue;
 		}
-		// ok
+		if (imageCoprocessor) // Load image through coprocessor
 		{
+			int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
+			int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+			int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+			int freespace = ((4096 - 4) - fullness);
+			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+			swr32(CMD_LOADIMAGE);
+			swr32(loadAddr);
+			swr32(OPT_NODL | (info->ImageMono ? OPT_MONO : 0));
+			swrend();
+			fullness += 12;
+			freespace -= 12;
+			wp += 12;
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+
+			int fileSize = binFile.size();
+			binFile.open(QIODevice::ReadOnly);
+			QDataStream in(&binFile);
+			int writeCount = 0;
+			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+			for (;;)
+			{
+				if (freespace < (4 + 8) || writeCount < 128)
+				{
+					swrend();
+					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+					do
+					{
+						if (!s_EmulatorRunning) return;
+						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+						if ((rp & 0xFFF) == 0xFFF)
+						{
+							printf("Error during stream at %i bytes\n", (int)writeCount);
+							return;
+						}
+						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+					} while (fullness > 1024);
+					freespace = ((4096 - 4) - fullness);
+					printf("Stream: %i bytes\n", (int)writeCount);
+					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				}
+				uint32_t buffer;
+				int nb = in.readRawData(reinterpret_cast<char *>(&buffer), 4);
+				if (nb > 0)
+				{
+					// write
+					writeCount += nb;
+					wp += 4;
+					freespace -= 4;
+					swr32(buffer);
+				}
+				if (nb != 4)
+				{
+					// done
+					printf("Stream finished: %i bytes\n", (int)writeCount);
+					if (writeCount == 0)
+					{
+						swrend();
+						resetCoprocessorFromLoop();
+						return;
+					}
+					break;
+				}
+				if (!s_EmulatorRunning)
+				{
+					swrend();
+					return;
+				}
+			}
+			swrend();
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+			continue;
+		}
+		// ok
+		; {
 			binFile.open(QIODevice::ReadOnly);
 			QDataStream in(&binFile);
 			/*swrbegin(info->MemoryAddress);
@@ -933,8 +1008,8 @@ void loop()
 							if (s_CmdEditor->isDisplayListModified())
 							{
 								s_WantReloopCmd = true;
-								resetCoprocessorFromLoop();
 								swrend();
+								resetCoprocessorFromLoop();
 								return;
 							}
 						}
@@ -952,8 +1027,8 @@ void loop()
 					else
 					{
 						printf("Media fifo not setup\n");
-						resetCoprocessorFromLoop();
 						swrend();
+						resetCoprocessorFromLoop();
 						return;
 					}
 				}
@@ -1031,8 +1106,8 @@ void loop()
 							printf("Stream finished: %i bytes\n", (int)writeCount);
 							if (writeCount == 0)
 							{
-								resetCoprocessorFromLoop();
 								swrend();
+								resetCoprocessorFromLoop();
 								return;
 							}
 							break;
@@ -1045,8 +1120,8 @@ void loop()
 						if (s_CmdEditor->isDisplayListModified())
 						{
 							s_WantReloopCmd = true;
-							resetCoprocessorFromLoop();
 							swrend();
+							resetCoprocessorFromLoop();
 							return;
 						}
 					}

@@ -66,7 +66,7 @@ struct ContentInfo
 		Image, // Process image
 		Raw, // Raw copy to ram
 		Font, // Font
-		RawJpeg, // Load jpeg on coprocessor // TODO
+		ImageCoprocessor, // Load jpeg on coprocessor
 	};
 
 	QString SourcePath; // Relative source path
@@ -83,6 +83,8 @@ struct ContentInfo
 	int RawLength; // Raw length of memory
 
 	int ImageFormat;
+	
+	bool ImageMono;
 
 	int FontSize;
 	QString FontCharSet;
@@ -174,6 +176,7 @@ public:
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
+	void changeImageMono(ContentInfo *contentInfo, bool value);
 	void changeFontFormat(ContentInfo *contentInfo, int value);
 	void changeFontSize(ContentInfo *contentInfo, int value);
 	void changeFontCharSet(ContentInfo *contentInfo, const QString &value);
@@ -205,6 +208,7 @@ private:
 	class ChangeDestName;
 	class ChangeConverter;
 	class ChangeImageFormat;
+	class ChangeImageMono;
 	class ChangeFontFormat;
 	class ChangeFontSize;
 	class ChangeFontCharSet;
@@ -246,6 +250,9 @@ private:
 
 	QGroupBox *m_PropertiesImage;
 	QComboBox *m_PropertiesImageFormat;
+
+	QGroupBox *m_PropertiesImageCoprocessor;
+	QCheckBox *m_PropertiesImageMono;
 
 	QGroupBox *m_PropertiesImagePreview;
 	QLabel *m_PropertiesImageLabel;
@@ -289,6 +296,7 @@ private slots:
 	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
 	void propertiesImageFormatChanged(int value);
+	void propertiesImageMonoChanged(int value);
 	void propertiesFontFormatChanged(int value);
 	void propertiesFontSizeChanged(int value);
 	void propertiesFontCharSetChanged();

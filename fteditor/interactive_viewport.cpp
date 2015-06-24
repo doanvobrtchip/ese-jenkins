@@ -1673,7 +1673,8 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 	{
 		if (!m_MainWindow->contentManager()->current()->MemoryLoaded) return false;
 		if (m_MainWindow->contentManager()->current()->Converter != ContentInfo::Image
-			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::Font) return false;
+			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::Font
+			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::ImageCoprocessor) return false;
 		return true;
 	}
 	return false;

@@ -836,6 +836,114 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 #endif
 }
 
+// Doesn't actually do anything in terms of conversion.
+// Exports only the .raw and .rawh unmodified.
+// Places calculated meta information about image size in the header.
+void AssetConverter::convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG)
+{
+	QFile file(inFile);
+	if (!file.open(QIODevice::ReadOnly))
+	{
+		buildError = "Could not read file";
+		return;
+	}
+
+	bool isPNG;
+	// Validate input format by file header
+	; {
+		QDataStream in(&file);
+		char header[4];
+		memset(header, 0, 4);
+		in.readRawData(header, 4);
+		if (supportJpeg && (header[0] == '\xFF') && (header[1] == '\xD8'))
+		{ 
+			isPNG = false;
+		}
+		else if (supportPNG && (header[0] == '\x89') && (header[1] == '\x50'))
+		{ 
+			isPNG = true; 
+		}
+		else
+		{
+			buildError = "Unsupported input file format";
+			return;
+		}
+	}
+	file.close();
+	
+	int w, h;
+	bool a;
+	// Have to load entire image to get Width and Height for now...
+	; {
+		QImage image;
+		if (!image.load(inFile))
+		{
+			buildError = "Could not load image";
+			return;
+		}
+		w = image.width();
+		h = image.height();
+		a = image.hasAlphaChannel();
+	}
+
+	int format;
+	// JPG: RGB565 or L8 when mono
+	// PNG: RGB565 or ARGB4 when alpha, no mono support
+	if (isPNG) format = a ? ARGB4 : RGB565;
+	else format = mono ? L8 : RGB565;
+
+	int bpp = (format == L8) ? 1 : 2;
+	int stride = w * bpp;
+
+	// Output the raw binary
+	file.copy(outName + ".raw");
+
+	// Output the raw header
+	; {
+		if (!file.open(QIODevice::ReadOnly))
+		{
+			buildError = "Could not read file";
+			return;
+		}
+		QDataStream in(&file);
+		QFile fo(outName + ".rawh");
+		fo.open(QIODevice::WriteOnly | QIODevice::Text);
+		QTextStream out(&fo);
+		out << "/*('file properties: ', 'resolution ', "
+			<< w << ", 'x', "
+			<< h << ", 'format ', '"
+			<< (format == L8 ? "L8" : (format == ARGB4 ? "ARGB4" : "RGB565"))
+			<< "', 'stride ', " << stride
+			<< ")*/\n";
+		int i = 0;
+		char c[4096];
+		int jm;
+		while ((jm = in.readRawData(c, 4096)) > 0)
+		{
+			for (int j = 0; j < jm; ++j)
+			{
+				out << ((unsigned int)c[j] & 0xFF) << ", ";
+				if (i % 32 == 31)
+					out << "\n";
+				++i;
+			}
+		}
+		fo.close();
+		file.close();
+	}
+
+	// Compression not supported because it makes no sense
+	// Need files for meta check, though
+	; {
+		QFile fo(outName + ".bin");
+		fo.open(QIODevice::WriteOnly);
+	}
+	; {
+		QFile fo(outName + ".binh");
+		fo.open(QIODevice::WriteOnly);
+	}
+}
+
 } /* namespace FTEDITOR */
 
 /* end of file */

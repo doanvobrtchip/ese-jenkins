@@ -60,6 +60,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
+	ImageMono = false;
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
@@ -94,8 +95,9 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		j["converter"] = QString("Image");
 		j["imageFormat"] = ImageFormat;
 		break;
-	case RawJpeg:
-		j["converter"] = QString("RawJpeg");
+	case ImageCoprocessor:
+		j["converter"] = QString("ImageCoprocessor");
+		j["imageMono"] = ImageMono;
 		break;
 	case Font:
 		j["converter"] = QString("Font");
@@ -131,9 +133,10 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		Converter = Image;
 		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
 	}
-	else if (converter == "RawJpeg")
+	else if (converter == "ImageCoprocessor")
 	{
-		Converter = RawJpeg;
+		Converter = ImageCoprocessor;
+		ImageMono = ((QJsonValue)j["imageMono"]).toVariant().toBool();
 	}
 	else if (converter == "Font")
 	{
@@ -166,6 +169,10 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 		break;
 	case Image:
 		if (ImageFormat != other->ImageFormat)
+			return false;
+		break;
+	case ImageCoprocessor:
+		if (ImageMono != other->ImageMono)
 			return false;
 		break;
 	case Font:
@@ -322,7 +329,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommonConverter->addItem(tr("Image"));
 	propCommonConverter->addItem(tr("Raw"));
 	propCommonConverter->addItem(tr("Font"));
-	// propCommonConverter->addItem(tr("Raw JPEG")); // TODO
+	propCommonConverter->addItem(tr("Image Coprocessor"));
 	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
@@ -338,6 +345,18 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
 
+	// Image Coprocessor
+	m_PropertiesImageCoprocessor = new QGroupBox(this);
+	m_PropertiesImageCoprocessor->setHidden(true);
+	m_PropertiesImageCoprocessor->setTitle(tr("Image Settings"));
+	QVBoxLayout *imageCoprocessorPropsLayout = new QVBoxLayout();
+	m_PropertiesImageMono = new QCheckBox(this);
+
+	addLabeledWidget(this, imageCoprocessorPropsLayout, tr("Mono (Jpeg only): "), m_PropertiesImageMono);
+	connect(m_PropertiesImageMono, SIGNAL(stateChanged(int)), this, SLOT(propertiesImageMonoChanged(int)));
+	m_PropertiesImageCoprocessor->setLayout(imageCoprocessorPropsLayout);
+
+	// Image Preview
 	m_PropertiesImagePreview = new QGroupBox(this);
 	QVBoxLayout *imagePreviewLayout = new QVBoxLayout();
 	m_PropertiesImagePreview->setHidden(true);
@@ -551,8 +570,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 
 	switch (contentInfo->Converter)
 	{
-	case ContentInfo::RawJpeg:
-		contentInfo->DestName = "jpegs/" + contentInfo->DestName;
+	case ContentInfo::ImageCoprocessor:
+		contentInfo->DestName = "images/" + contentInfo->DestName;
 		break;
 	case ContentInfo::Image:
 		contentInfo->DestName = "images/" + contentInfo->DestName;
@@ -881,6 +900,8 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 	ImageInfo bitmapInfo;
 	if (!AssetConverter::getImageInfo(bitmapInfo, info->DestName))
 		return false;
+	if (info->Converter == ContentInfo::ImageCoprocessor)
+		info->ImageFormat = bitmapInfo.LayoutFormat;
 	info->CachedImageWidth = bitmapInfo.LayoutWidth;
 	info->CachedImageHeight = bitmapInfo.LayoutHeight;
 	info->CachedImageStride = bitmapInfo.LayoutStride;
@@ -890,6 +911,14 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 
 int ContentManager::getContentSize(ContentInfo *contentInfo)
 {
+	if (contentInfo->Converter == ContentInfo::ImageCoprocessor)
+	{
+		ImageInfo bitmapInfo;
+		if (!AssetConverter::getImageInfo(bitmapInfo, contentInfo->DestName))
+			return -1;
+		return bitmapInfo.LayoutHeight * bitmapInfo.LayoutStride;
+	}
+
 	QString fileName = contentInfo->DestName + ".raw";
 	QFileInfo binFile(fileName);
 	if (!binFile.exists()) return -1;
@@ -978,6 +1007,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 
 		widgets.push_back(m_PropertiesCommon);
 		widgets.push_back(m_PropertiesImage);
+		widgets.push_back(m_PropertiesImageCoprocessor);
 		widgets.push_back(m_PropertiesImagePreview);
 		widgets.push_back(m_PropertiesRaw);
 		widgets.push_back(m_PropertiesFont);
@@ -1005,6 +1035,9 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesFontCharSet->setText(contentInfo->FontCharSet); // NOTE: Number of characters up to 128; export depends on number of characters in charset also!
 		m_PropertiesFontOffset->setValue(contentInfo->FontOffset);
 		break;
+	case ContentInfo::ImageCoprocessor:
+		m_PropertiesImageMono->setCheckState(contentInfo->ImageMono ? Qt::Checked : Qt::Unchecked);
+		break;
 	}
 	if (contentInfo->Converter != ContentInfo::Invalid)
 	{
@@ -1018,6 +1051,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
 		m_PropertiesImage->setHidden(true);
+		m_PropertiesImageCoprocessor->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
 		m_PropertiesRaw->setHidden(true);
 		m_PropertiesFont->setHidden(true);
@@ -1031,6 +1065,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		{
 			propInfo = tr("<b>Error</b>: ") + contentInfo->BuildError;
 		}
+		m_PropertiesDataCompressed->setDisabled(contentInfo->Converter == ContentInfo::ImageCoprocessor);
 		switch (contentInfo->Converter)
 		{
 			case ContentInfo::Image:
@@ -1043,6 +1078,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
 				if (loadSuccess) m_PropertiesImageLabel->repaint();
 				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
+				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
@@ -1096,6 +1132,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			case ContentInfo::Raw:
 			{
 				m_PropertiesImage->setHidden(true);
+				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesRaw->setHidden(false);
 				m_PropertiesFont->setHidden(true);
@@ -1110,16 +1147,29 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				}
 				break;
 			}
-			case ContentInfo::RawJpeg:
+			case ContentInfo::ImageCoprocessor:
 			{
 				m_PropertiesImage->setHidden(true);
-				m_PropertiesImagePreview->setHidden(true);
-				m_PropertiesRaw->setHidden(false);
+				m_PropertiesImageCoprocessor->setHidden(false);
+				QPixmap pixmap;
+				bool loadSuccess = pixmap.load(contentInfo->DestName + ".raw");
+				m_PropertiesImagePreview->setHidden(!loadSuccess);
+				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
+				if (loadSuccess) m_PropertiesImageLabel->repaint();
+				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
+				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
-				if (!propInfo.isEmpty()) propInfo += "<br>";
-				propInfo += tr("<b>Not yet implemented</b>");
-				// This will show JPG size, uncompressed size, and necessary info to load the image into the handles
+				if (contentInfo->BuildError.isEmpty())
+				{
+					if (cacheImageInfo(contentInfo))
+					{
+						propInfo += tr("<br><b>Format: </b> ") + bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, contentInfo->ImageFormat);
+						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+					}
+				}
 				break;
 			}
 			case ContentInfo::Font:
@@ -1241,8 +1291,8 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					case ContentInfo::Raw:
 						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
 						break;
-					case ContentInfo::RawJpeg:
-						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, 0, 0);
+					case ContentInfo::ImageCoprocessor:
+						AssetConverter::convertImageCoprocessor(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageMono, true, FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810);
 						break;
 					case ContentInfo::Font:
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
@@ -2525,6 +2575,60 @@ void ContentManager::propertiesImageFormatChanged(int value)
 
 	if (current() && current()->ImageFormat != value)
 		changeImageFormat(current(), value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeImageMono : public QUndoCommand
+{
+public:
+	ChangeImageMono(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->ImageMono),
+		m_NewValue(value)
+	{
+		setText(value ? tr("Mono image") : tr("Color image"));
+	}
+
+	virtual ~ChangeImageMono()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->ImageMono = m_OldValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->ImageMono = m_NewValue;
+		m_ContentManager->reprocessInternal(m_ContentInfo);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	bool m_OldValue;
+	bool m_NewValue;
+};
+
+void ContentManager::changeImageMono(ContentInfo *contentInfo, bool value)
+{
+	// Create undo/redo
+	ChangeImageMono *changeImageMono = new ChangeImageMono(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeImageMono);
+}
+
+void ContentManager::propertiesImageMonoChanged(int value)
+{
+	printf("ContentManager::propertiesImageMonoChanged(value)\n");
+
+	if (current() && current()->ImageMono != (value == (int)Qt::Checked))
+		changeImageMono(current(), (value == (int)Qt::Checked));
 }
 
 ////////////////////////////////////////////////////////////////////////
