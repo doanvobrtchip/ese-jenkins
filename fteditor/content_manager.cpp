@@ -2620,7 +2620,13 @@ void ContentManager::changeImageMono(ContentInfo *contentInfo, bool value)
 {
 	// Create undo/redo
 	ChangeImageMono *changeImageMono = new ChangeImageMono(this, contentInfo, value);
+	m_MainWindow->undoStack()->beginMacro(tr("Change mono"));
 	m_MainWindow->undoStack()->push(changeImageMono);
+	m_MainWindow->propertiesEditor()->surpressSet(true);
+	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
+	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	m_MainWindow->propertiesEditor()->surpressSet(false);
+	m_MainWindow->undoStack()->endMacro();
 }
 
 void ContentManager::propertiesImageMonoChanged(int value)
