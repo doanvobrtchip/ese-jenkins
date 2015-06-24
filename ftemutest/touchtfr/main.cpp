@@ -19,7 +19,7 @@ bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsiz
 int main(int, char* [])
 {
 	FT8XXEMU_EmulatorParameters params;
-	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT810);
+	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT800);
 	params.Setup = setup;
 	params.Loop = loop;
 	// params.Graphics = graphics;

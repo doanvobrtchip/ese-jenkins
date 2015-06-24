@@ -3,7 +3,7 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
-#include <vc2.h>
+#include <vc.h>
 #include "../ftemutest.h"
 #include <stdio.h>
 
@@ -33,6 +33,8 @@ void setup()
 
 	////////////////////////
 
+	/*
+	
 	wrstart(RAM_CMD + (wp & 0xFFF));
 	wr32(CMD_SETROTATE);
 	wr32(3);
@@ -45,6 +47,8 @@ void setup()
 	{
 		rp = rd32(REG_CMD_READ);
 	} while (wp != rp);
+	
+	*/
 }
 
 int frame = 0;
@@ -67,11 +71,11 @@ void loop()
 	wr32(CMD_DLSTART);
 	wr32(CLEAR_COLOR_RGB(59, 149, 217));
 	wr32(CLEAR(1, 1, 1));
-	/*wr32(CMD_GRADIENT);
+	wr32(CMD_GRADIENT);
 	wr16(203), wr16(375);
 	wr8(220), wr8(200), wr8(132), wr8(0);
 	wr16(148), wr16(-108);
-	wr8(54), wr8(37), wr8(7), wr8(0);*/wr32(NOP()); wr32(NOP()); wr32(NOP()); wr32(NOP()); wr32(NOP());
+	wr8(54), wr8(37), wr8(7), wr8(0);//*/wr32(NOP()); wr32(NOP()); wr32(NOP()); wr32(NOP()); wr32(NOP());
 	wr32(COLOR_RGB(0, 0, 0));
 	wr32(COLOR_A(64));
 	wr32(BEGIN(RECTS));

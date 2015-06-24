@@ -43,6 +43,22 @@ static QString asRaw(uint32_t value)
 	return raw.str().c_str();
 }
 
+static QString asSignedInt16F(uint32_t value)
+{
+	std::stringstream res;
+	res << (int32_t)value;
+	double fl = (double)(int32_t)value / 65536.0;
+	res << " (" << fl << ")";
+	return res.str().c_str();
+}
+
+static QString asSignedInt(uint32_t value)
+{
+	std::stringstream res;
+	res << (int32_t)value;
+	return res.str().c_str();
+}
+
 static QString asInt(uint32_t value)
 {
 	std::stringstream res;
@@ -146,6 +162,7 @@ bool wantRegister(int regEnum)
 	case FTEDITOR_REG_CMD_READ:
 	case FTEDITOR_REG_CMD_WRITE:
 	case FTEDITOR_REG_CMD_DL:
+	case FTEDITOR_REG_TOUCH_RAW_XY:
 	case FTEDITOR_REG_TOUCH_SCREEN_XY:
 	case FTEDITOR_REG_TOUCH_TAG_XY:
 	case FTEDITOR_REG_TOUCH_TAG:
@@ -291,12 +308,21 @@ void Inspector::frameQt()
 					case FTEDITOR_REG_MACRO_1:
 						m_RegisterItems[regEnum]->setText(3, asText(regValue));
 						break;
+					case FTEDITOR_REG_TOUCH_RAW_XY:
 					case FTEDITOR_REG_TOUCH_SCREEN_XY:
 					case FTEDITOR_REG_TOUCH_TAG_XY:
 						m_RegisterItems[regEnum]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFFFF));
 						break;
 					case FTEDITOR_REG_TRACKER:
 						m_RegisterItems[regEnum]->setText(3, asInt(regValue >> 16) + ", " + asInt(regValue & 0xFF));
+						break;
+					case FTEDITOR_REG_TOUCH_TRANSFORM_A:
+					case FTEDITOR_REG_TOUCH_TRANSFORM_B:
+					case FTEDITOR_REG_TOUCH_TRANSFORM_C:
+					case FTEDITOR_REG_TOUCH_TRANSFORM_D:
+					case FTEDITOR_REG_TOUCH_TRANSFORM_E:
+					case FTEDITOR_REG_TOUCH_TRANSFORM_F:
+						m_RegisterItems[regEnum]->setText(3, asSignedInt16F(regValue));
 						break;
 					default:
 						m_RegisterItems[regEnum]->setText(3, asInt(regValue));
