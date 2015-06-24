@@ -433,7 +433,11 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
 	rawWriteU32(REG_CLOCK, 0);
+#ifdef FT810EMU_MODE
+	rawWriteU32(REG_FREQUENCY, 60000000);
+#else
 	rawWriteU32(REG_FREQUENCY, 48000000);
+#endif
 	rawWriteU32(REG_RENDERMODE, 0);
 	rawWriteU32(REG_SNAPY, 0);
 	rawWriteU32(REG_SNAPSHOT, 0);

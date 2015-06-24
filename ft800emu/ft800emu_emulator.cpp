@@ -228,6 +228,7 @@ const uint8_t bayerDiv4[2][2] = {
 		double targetSeconds = FT8XXEMU::System.getSeconds();
 
 		uint8_t *ram = Memory.getRam();
+		int lastMicros = FT8XXEMU::System.getMicros();
 
 		while (s_MasterRunning)
 		{
@@ -235,6 +236,14 @@ const uint8_t bayerDiv4[2][2] = {
 			FT8XXEMU::System.makeRealtimePriorityThread();
 
 			FT8XXEMU::System.enterSwapDL();
+
+			uint32_t usefreq = s_ExternalFrequency ? s_ExternalFrequency : Memory.rawReadU32(ram, REG_FREQUENCY);
+			int curMicros = FT8XXEMU::System.getMicros();
+			int diffMicros = curMicros - lastMicros;
+			lastMicros = curMicros;
+			int32_t diffClock = (int32_t)(((int64_t)usefreq * (int64_t)diffMicros) / (int64_t)1000000LL);
+			uint32_t curClock = (uint32_t)((int32_t)Memory.rawReadU32(ram, REG_CLOCK) + diffClock);
+			Memory.rawWriteU32(ram, REG_CLOCK, curClock);
 
 			bool renderLineSnapshot = (ram[REG_RENDERMODE] & 1) != 0;
 			uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
@@ -246,7 +255,6 @@ const uint8_t bayerDiv4[2][2] = {
 			}
 			else if (reg_pclk)
 			{
-				uint32_t usefreq = s_ExternalFrequency ? s_ExternalFrequency : Memory.rawReadU32(ram, REG_FREQUENCY);
 				// if (!usefreq) usefreq = 48000000; // Possibility to avoid freeze in case of issues
 				double frequency = (double)usefreq;
 				frequency /= (double)reg_pclk;

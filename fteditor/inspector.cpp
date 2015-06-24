@@ -139,6 +139,7 @@ bool wantRegister(int regEnum)
 		// Whitelist useful registers
 	case FTEDITOR_REG_ID:
 	case FTEDITOR_REG_FRAMES:
+	case FTEDITOR_REG_CLOCK:
 	case FTEDITOR_REG_HSIZE:
 	case FTEDITOR_REG_VSIZE:
 	case FTEDITOR_REG_ROTATE:
