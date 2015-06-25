@@ -65,7 +65,7 @@ ParameterOptions *DlParser::defaultParamVC1()
 ParameterOptions *DlParser::defaultParamVC2()
 #endif
 {
-	return (ParameterOptions *)(void *)s_ParamOptions;
+	return s_ParamOptions;
 }
 
 #if defined(FTEDITOR_PARSER_VC1)
@@ -74,7 +74,7 @@ ParameterOptions *DlParser::defaultCmdParamVC1()
 ParameterOptions *DlParser::defaultCmdParamVC2()
 #endif
 {
-	return (ParameterOptions *)(void *)s_CmdParamOptions;
+	return s_CmdParamOptions;
 }
 
 #if defined(FTEDITOR_PARSER_VC1)
@@ -90,6 +90,7 @@ void DlParser::initVC2()
 			for (int j = 0; j < DLPARSED_MAX_PARAMETER; ++j)
 			{
 				s_ParamOptions[i].Default[j] = 0;
+				s_ParamOptions[i].Mask[j] = -1;
 				s_ParamOptions[i].Min[j] = (1 << 31);
 				s_ParamOptions[i].Max[j] = (1 << 31) - 1;
 			}
@@ -102,10 +103,12 @@ void DlParser::initVC2()
 		s_ParamCount[FTEDITOR_DL_CLEAR_COLOR_RGB] = 3;
 		s_IdMap["TAG"] = FTEDITOR_DL_TAG;
 		s_ParamCount[FTEDITOR_DL_TAG] = 1;
+		s_ParamOptions[FTEDITOR_DL_TAG].Mask[0] = 0xFF;
 		s_IdMap["COLOR_RGB"] = FTEDITOR_DL_COLOR_RGB;
 		s_ParamCount[FTEDITOR_DL_COLOR_RGB] = 3;
 		s_IdMap["BITMAP_HANDLE"] = FTEDITOR_DL_BITMAP_HANDLE;
 		s_ParamCount[FTEDITOR_DL_BITMAP_HANDLE] = 1;
+		s_ParamOptions[FTEDITOR_DL_BITMAP_HANDLE].Mask[0] = 0x1F;
 		s_IdMap["CELL"] = FTEDITOR_DL_CELL;
 		s_ParamCount[FTEDITOR_DL_CELL] = 1;
 		s_IdMap["BITMAP_LAYOUT"] = FTEDITOR_DL_BITMAP_LAYOUT;
@@ -124,20 +127,28 @@ void DlParser::initVC2()
 		s_ParamOptions[FTEDITOR_DL_STENCIL_OP].Default[1] = KEEP;
 		s_IdMap["POINT_SIZE"] = FTEDITOR_DL_POINT_SIZE;
 		s_ParamCount[FTEDITOR_DL_POINT_SIZE] = 1;
+		s_ParamOptions[FTEDITOR_DL_POINT_SIZE].Mask[0] = 0x1FFF;
 		s_IdMap["LINE_WIDTH"] = FTEDITOR_DL_LINE_WIDTH;
 		s_ParamCount[FTEDITOR_DL_LINE_WIDTH] = 1;
+		s_ParamOptions[FTEDITOR_DL_LINE_WIDTH].Mask[0] = 0xFFF;
 		s_IdMap["CLEAR_COLOR_A"] = FTEDITOR_DL_CLEAR_COLOR_A;
 		s_ParamCount[FTEDITOR_DL_CLEAR_COLOR_A] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR_COLOR_A].Mask[0] = 0xFF;
 		s_IdMap["COLOR_A"] = FTEDITOR_DL_COLOR_A;
 		s_ParamCount[FTEDITOR_DL_COLOR_A] = 1;
+		s_ParamOptions[FTEDITOR_DL_COLOR_A].Mask[0] = 0xFF;
 		s_IdMap["CLEAR_STENCIL"] = FTEDITOR_DL_CLEAR_STENCIL;
 		s_ParamCount[FTEDITOR_DL_CLEAR_STENCIL] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR_STENCIL].Mask[0] = 0xFF;
 		s_IdMap["CLEAR_TAG"] = FTEDITOR_DL_CLEAR_TAG;
 		s_ParamCount[FTEDITOR_DL_CLEAR_TAG] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR_TAG].Mask[0] = 0xFF;
 		s_IdMap["STENCIL_MASK"] = FTEDITOR_DL_STENCIL_MASK;
 		s_ParamCount[FTEDITOR_DL_STENCIL_MASK] = 1;
+		s_ParamOptions[FTEDITOR_DL_STENCIL_MASK].Mask[0] = 0xFF;
 		s_IdMap["TAG_MASK"] = FTEDITOR_DL_TAG_MASK;
 		s_ParamCount[FTEDITOR_DL_TAG_MASK] = 1;
+		s_ParamOptions[FTEDITOR_DL_STENCIL_MASK].Mask[0] = 0x1;
 		s_IdMap["BITMAP_TRANSFORM_A"] = FTEDITOR_DL_BITMAP_TRANSFORM_A;
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_A] = 1;
 		s_IdMap["BITMAP_TRANSFORM_B"] = FTEDITOR_DL_BITMAP_TRANSFORM_B;
@@ -158,12 +169,18 @@ void DlParser::initVC2()
 		s_ParamOptions[FTEDITOR_DL_SCISSOR_SIZE].Default[1] = screenHeightMaximum(FTEDITOR_DEVICE_IMPL);
 		s_IdMap["CALL"] = FTEDITOR_DL_CALL;
 		s_ParamCount[FTEDITOR_DL_CALL] = 1;
+		s_ParamOptions[FTEDITOR_DL_CALL].Mask[0] = 0x7FF;
 		s_IdMap["JUMP"] = FTEDITOR_DL_JUMP;
 		s_ParamCount[FTEDITOR_DL_JUMP] = 1;
+		s_ParamOptions[FTEDITOR_DL_JUMP].Mask[0] = 0x7FF;
 		s_IdMap["BEGIN"] = FTEDITOR_DL_BEGIN;
 		s_ParamCount[FTEDITOR_DL_BEGIN] = 1;
 		s_IdMap["COLOR_MASK"] = FTEDITOR_DL_COLOR_MASK;
 		s_ParamCount[FTEDITOR_DL_COLOR_MASK] = 4;
+		s_ParamOptions[FTEDITOR_DL_COLOR_MASK].Mask[0] = 0x1;
+		s_ParamOptions[FTEDITOR_DL_COLOR_MASK].Mask[1] = 0x1;
+		s_ParamOptions[FTEDITOR_DL_COLOR_MASK].Mask[2] = 0x1;
+		s_ParamOptions[FTEDITOR_DL_COLOR_MASK].Mask[3] = 0x1;
 		s_IdMap["END"] = FTEDITOR_DL_END;
 		s_ParamCount[FTEDITOR_DL_END] = 0;
 		s_IdMap["SAVE_CONTEXT"] = FTEDITOR_DL_SAVE_CONTEXT;
@@ -174,18 +191,18 @@ void DlParser::initVC2()
 		s_ParamCount[FTEDITOR_DL_RETURN] = 0;
 		s_IdMap["MACRO"] = FTEDITOR_DL_MACRO;
 		s_ParamCount[FTEDITOR_DL_MACRO] = 1;
+		s_ParamOptions[FTEDITOR_DL_MACRO].Mask[0] = 0x1;
 		s_IdMap["CLEAR"] = FTEDITOR_DL_CLEAR;
 		s_ParamCount[FTEDITOR_DL_CLEAR] = 3;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[0] = 0;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[1] = 0;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Min[2] = 0;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[0] = 1;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[1] = 1;
-		s_ParamOptions[FTEDITOR_DL_CLEAR].Max[2] = 1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[0] = 0x1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[1] = 0x1;
+		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[2] = 0x1;
 #if defined(FTEDITOR_PARSER_VC2)
 		s_IdMap["VERTEX_FORMAT"] = FTEDITOR_DL_VERTEX_FORMAT;
 		s_ParamCount[FTEDITOR_DL_VERTEX_FORMAT] = 1;
 		s_ParamOptions[FTEDITOR_DL_VERTEX_FORMAT].Default[0] = 4;
+		s_ParamOptions[FTEDITOR_DL_VERTEX_FORMAT].Min[0] = 0;
+		s_ParamOptions[FTEDITOR_DL_VERTEX_FORMAT].Max[0] = 4;
 		s_IdMap["BITMAP_LAYOUT_H"] = FTEDITOR_DL_BITMAP_LAYOUT_H;
 		s_ParamCount[FTEDITOR_DL_BITMAP_LAYOUT_H] = 2;
 		s_IdMap["BITMAP_SIZE_H"] = FTEDITOR_DL_BITMAP_SIZE_H;

@@ -78,6 +78,7 @@ struct DlParsed
 struct ParameterOptions
 {
 	int Default[DLPARSED_MAX_PARAMETER];
+	int Mask[DLPARSED_MAX_PARAMETER];
 	int Min[DLPARSED_MAX_PARAMETER];
 	int Max[DLPARSED_MAX_PARAMETER]; // Min/Max inclusive
 };
