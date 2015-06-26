@@ -224,6 +224,7 @@ void DlParser::initVC2()
 			for (int j = 0; j < DLPARSED_MAX_PARAMETER; ++j)
 			{
 				s_CmdParamOptions[i].Default[j] = 0;
+				s_CmdParamOptions[i].Mask[j] = -1;
 				s_CmdParamOptions[i].Min[j] = (1 << 31);
 				s_CmdParamOptions[i].Max[j] = (1 << 31) - 1;
 			}

@@ -517,7 +517,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
 				}
-				if (validateInt && parsed.ValidParameter[pq])
+				if (validateInt && parsed.ValidParameter[pq] && defaultParam)
 				{
 					parsed.ValidParameter[pq] =
 						((parsed.Parameter[p].I & defaultParam[parsed.IdRight].Mask[p]) == parsed.Parameter[p].I)
