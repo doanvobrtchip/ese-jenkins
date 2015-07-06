@@ -896,7 +896,10 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 	int stride = w * bpp;
 
 	// Output the raw binary
-	file.copy(outName + ".raw");
+	QString outRawName = outName + ".raw";
+	if (QFile::exists(outRawName))
+		QFile::remove(outRawName);
+	file.copy(outRawName);
 
 	// Output the raw header
 	; {
@@ -907,7 +910,7 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 		}
 		QDataStream in(&file);
 		QFile fo(outName + ".rawh");
-		fo.open(QIODevice::WriteOnly | QIODevice::Text);
+		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
 		QTextStream out(&fo);
 		out << "/*('file properties: ', 'resolution ', "
 			<< w << ", 'x', "
@@ -936,11 +939,11 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 	// Need files for meta check, though
 	; {
 		QFile fo(outName + ".bin");
-		fo.open(QIODevice::WriteOnly);
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
 	}
 	; {
 		QFile fo(outName + ".binh");
-		fo.open(QIODevice::WriteOnly);
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
 	}
 }
 
