@@ -804,6 +804,10 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 }
 
 static uint32_t s_OverrideRasterY = 0;
+#ifndef FT810EMU_MODE
+static int s_HasCachedTouchRawXY = 0;
+static uint32_t s_CachedTouchRawXY = 0xFFFFFFFF;
+#endif
 
 uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 {
@@ -815,6 +819,18 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 	/*if (address >= RAM_COMPOSITE)
 	{
 		printf("Coprocessor read U32 %u %u\n", (unsigned int)address, (unsigned int)rawReadU32(address));
+	}*/
+
+	/*static bool showOneMore = true;
+	if (address == REG_TOUCH_RAW_XY && (rawReadU32(address) != 0xFFFFFFFF || showOneMore))
+	{
+		printf("Coprocessor read REG_TOUCH_RAW_XY %x\n", (unsigned int)rawReadU32(address));
+		showOneMore = rawReadU32(address) != 0xFFFFFFFF;
+	}
+
+	if (address == REG_TOUCH_RZ)
+	{
+		printf("Coprocessor read REG_TOUCH_RZ %x\n", (unsigned int)rawReadU32(address));
 	}*/
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
@@ -902,6 +918,33 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 	case REG_TOUCH_SCREEN_XY:
 		return Touch[0].getXY();
 		// TODO: MULTITOUCH 1,2,3,4
+#ifndef FT810EMU_MODE
+	case REG_TOUCH_RZ:
+		if (s_EmulatorMode == FT8XXEMU_EmulatorFT800)
+		{
+			s_CachedTouchRawXY = rawReadU32(REG_TOUCH_RAW_XY);
+			if (s_CachedTouchRawXY != 0xFFFFFFFF)
+			{
+				s_HasCachedTouchRawXY = 2;
+			}
+			else
+			{
+				s_HasCachedTouchRawXY = 0;
+				return 32767;
+			}
+		}
+		break;
+	case REG_TOUCH_RAW_XY:
+		if (s_EmulatorMode == FT8XXEMU_EmulatorFT800)
+		{
+			if (s_HasCachedTouchRawXY)
+			{
+				--s_HasCachedTouchRawXY;
+				return s_CachedTouchRawXY;
+			}
+		}
+		break;
+#endif
 #ifdef FT810EMU_MODE
 	case REG_RASTERY:
 		++s_OverrideRasterY;
