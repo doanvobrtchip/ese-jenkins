@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 // Version
-#define FT8XXEMU_VERSION_STRING "2.0.6"
+#define FT8XXEMU_VERSION_STRING "2.0.7"
 
 // Include FT8XXEMU_PLATFORM
 #include "ft8xxemu_graphics_driver.h"
@@ -85,11 +85,6 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 		| FT8XXEMU_EmulatorEnableTouchTransformation;
 
 	params->Mode = mode;
-
-	// TEMPORARY:
-	// https://github.com/jamesbowman/ft800emu/issues/204
-	if (mode == FT8XXEMU_EmulatorFT800)
-		params->Flags &= ~FT8XXEMU_EmulatorEnableTouchTransformation;
 }
 
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)

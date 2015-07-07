@@ -1048,7 +1048,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_LOADIMAGE");
 				addAddress(0, false);
-				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO);
+				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
 				addStream(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
