@@ -142,7 +142,7 @@ typedef struct
 	// implemented manually when using this mode.
 	// The output parameter is false (0) when the display is turned off.
 	// The contents of the buffer pointer are undefined after this
-	// function returns.
+	// function returns. Create a copy to use it on another thread.
 	// Return false (0) when the application must exit, otherwise return true (1).
 	int(*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags);
 
