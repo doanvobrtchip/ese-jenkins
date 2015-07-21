@@ -57,11 +57,11 @@ inline int addressSigned(int deviceIntf, int address) { int masked = (address & 
 // RAM addresses
 #define FTEDITOR_RAM_G 0
 #define FTEDITOR_RAM_G_END 1
-#define FTEDITOR_RAM_DL 1
-#define FTEDITOR_RAM_PAL 2
-#define FTEDITOR_RAM_REG 3
-#define FTEDITOR_RAM_CMD 4
-#define FTEDITOR_RAM_NB 5
+#define FTEDITOR_RAM_DL 2
+#define FTEDITOR_RAM_PAL 3
+#define FTEDITOR_RAM_REG 4
+#define FTEDITOR_RAM_CMD 5
+#define FTEDITOR_RAM_NB 6
 extern const int32_t *g_Addr[FTEDITOR_DEVICE_NB];
 inline int32_t addr(int deviceIntf, int addrIntf) { return g_Addr[deviceIntf][addrIntf]; }
 extern const char **g_AddrToString[FTEDITOR_DEVICE_NB];

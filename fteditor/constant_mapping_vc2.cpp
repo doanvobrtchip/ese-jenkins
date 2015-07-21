@@ -15,6 +15,7 @@ namespace FTEDITOR {
 
 const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_G,
+	1024 * 1024,
 	RAM_DL,
 	-1,
 	RAM_REG,
@@ -23,6 +24,7 @@ const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 
 const char *g_AddrToStringVC2[FTEDITOR_RAM_NB] = {
 	"RAM_G",
+	"",
 	"RAM_DL",
 	"",
 	"RAM_REG",
