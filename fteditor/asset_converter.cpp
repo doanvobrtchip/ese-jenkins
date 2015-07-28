@@ -841,6 +841,14 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 // Places calculated meta information about image size in the header.
 void AssetConverter::convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG)
 {
+	// Remove old output
+	QString outRawName = outName + ".raw";
+	if (QFile::exists(outRawName))
+		QFile::remove(outRawName);
+	QString outBinName = outName + ".bin";
+	if (QFile::exists(outBinName))
+		QFile::remove(outBinName);
+
 	QFile file(inFile);
 	if (!file.open(QIODevice::ReadOnly))
 	{
@@ -896,9 +904,6 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 	int stride = w * bpp;
 
 	// Output the raw binary
-	QString outRawName = outName + ".raw";
-	if (QFile::exists(outRawName))
-		QFile::remove(outRawName);
 	file.copy(outRawName);
 
 	// Output the raw header
