@@ -74,7 +74,8 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, scree
     EmulatorProject = EmulatorSolutionName + ".vcxproj"
     EmulatorFilter = EmulatorSolutionName + ".vcxproj.filters"
 
-    #if os.path.isdir(os.getcwd() + os.path.sep + globalValue['skeletonProjectName']):
+
+    #if os.path.isdir(globalValue['skeletonProjectName']):
     scriptDir = os.path.abspath(__file__).split("export_scripts")
     defaultSkeletonProjectDir = scriptDir[0] + globalValue['skeletonProjectName']
     if os.path.isdir(defaultSkeletonProjectDir):
@@ -90,34 +91,34 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, scree
     ##except Exception as exc:
     #except:
     #	return
-
-    #try:
-    shutil.copy(srcFile, skeletonProjectDir + os.path.sep + "Src" + os.path.sep + projectName + ".c") #copy source file
-    #rename Msvc_win32 project files
-    os.rename(skeletonProjectDir + "/Project/Msvc_win32/untitled", skeletonProjectDir + "/Project/Msvc_win32/" + projectName)
-    os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.sln", MSVCSolution) #rename project solution
-    os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj", MSVCProject) #rename project
-    os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj.filters", MSVCFilter) #rename project filter
-    #rename MSVC_Emulator project files
-    os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/untitled", skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName)
-    os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.sln", EmulatorSolution) #rename project solution
-    os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj", EmulatorProject) #rename project
-    os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj.filters", EmulatorFilter) #rename project filter
-    #rename MSVC project files
-    renameStringInFile(MSVCSolution, globalValue['skeletonProjectName'], projectName)
-    renameStringInFile(MSVCProject, globalValue['skeletonProjectName'], projectName)
-    renameStringInFile(MSVCFilter, globalValue['skeletonProjectName'], projectName)
-    #rename emulator project files
-    renameStringInFile(EmulatorSolution, globalValue['skeletonProjectName'], projectName)
-    renameStringInFile(EmulatorProject, globalValue['skeletonProjectName'], projectName)
-    renameStringInFile(EmulatorFilter, globalValue['skeletonProjectName'], projectName)
-    #rename readme.txt
-    renameStringInFile(skeletonProjectDir + os.path.sep + "ReadMe.txt", globalValue['skeletonProjectName'], projectName)
-
-    #except Exception as e:
-    #    raise Exception("Error while renaming project files: " + str(e))
-
     try:
+        shutil.copy(srcFile, skeletonProjectDir + os.path.sep + "Src" + os.path.sep + projectName + ".c") #copy source file
+
+        #rename Msvc_win32 project files
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/untitled", skeletonProjectDir + "/Project/Msvc_win32/" + projectName)
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.sln", MSVCSolution) #rename project solution
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj", MSVCProject) #rename project
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj.filters", MSVCFilter) #rename project filter
+
+        #rename MSVC_Emulator project files
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/untitled", skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName)
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.sln", EmulatorSolution) #rename project solution
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj", EmulatorProject) #rename project
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj.filters", EmulatorFilter) #rename project filter
+
+        #rename MSVC project files
+        renameStringInFile(MSVCSolution, globalValue['skeletonProjectName'], projectName)
+        renameStringInFile(MSVCProject, globalValue['skeletonProjectName'], projectName)
+        renameStringInFile(MSVCFilter, globalValue['skeletonProjectName'], projectName)
+
+        #rename emulator project files
+        renameStringInFile(EmulatorSolution, globalValue['skeletonProjectName'], projectName)
+        renameStringInFile(EmulatorProject, globalValue['skeletonProjectName'], projectName)
+        renameStringInFile(EmulatorFilter, globalValue['skeletonProjectName'], projectName)
+
+        #rename readme.txt
+        renameStringInFile(skeletonProjectDir + os.path.sep + "ReadMe.txt", globalValue['skeletonProjectName'], projectName)
+
         if(screenSize == "320x240"):
             renameStringInFile(MSVCPlatformHeader, "//#define DISPLAY_RESOLUTION_QVGA", "#define DISPLAY_RESOLUTION_QVGA")
             renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_QVGA", "#define DISPLAY_RESOLUTION_QVGA")
@@ -142,14 +143,12 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, scree
             renameStringInFile(MSVCPlatformHeader, "//#define FT_800_ENABLE", "#define FT_800_ENABLE")
             renameStringInFile(EmulatorPlatformHeader, "//#define FT_800_ENABLE", "#define FT_800_ENABLE")
 
-    except Exception as e:
-        raise Exception("Error while renaming configure project files: " + str(e))
-
+    except:
+        raise Exception("Error while renaming project files")
 
     for content in filesToTestFolder:
         destinationName = ""
         content = content.strip()
-        #raise Exception(content)
         if '/' in content:
             destinationName = content.rsplit('/', 1)[1]
         elif '\\' in content:
@@ -157,8 +156,8 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, scree
         #raise Exception(content)
         try:
             shutil.copy(content, destDir + os.path.sep + projectName + os.path.sep + globalValue['assetsFolder'] + os.path.sep + destinationName)
-        except Exception as e:
-            raise Exception("Error copying assets to project folder: " + e)
+        except:
+            raise Exception("Error copying assets to project folder: ")
 
 def convertArgs(functionArgs):
     argsMap = {
@@ -175,7 +174,6 @@ def convertArgs(functionArgs):
         if argument.replace(" ", "") in argsMap:
             functionArgs = functionArgs.replace(argument.replace(" ", ""), argsMap[argument.replace(" ", "")])
     return functionArgs
-
 
 functionMap = {
     "CMD_DLSTART" : "Ft_Gpu_CoCmd_Dlstart",
@@ -225,8 +223,19 @@ functionMap = {
     "CMD_LOGO" : "Ft_Gpu_CoCmd_Logo",
     "CMD_COLDSTART" : "Ft_Gpu_CoCmd_ColdStart",
     "CMD_GETMATRIX" : "Ft_Gpu_CoCmd_GetMatrix",
-    "CMD_GRADCOLOR" : "Ft_Gpu_CoCmd_GradColor"
+    "CMD_GRADCOLOR" : "Ft_Gpu_CoCmd_GradColor",
+    "CMD_SNAPSHOT2" : "Ft_Gpu_CoCmd_Snapshot2",
+    "CMD_SETBASE" : "Ft_Gpu_CoCmd_SetBase",
+    "CMD_MEDIAFIFO" : "Ft_Gpu_CoCmd_MediaFifo",
+    "CMD_PLAYVIDEO" : "Ft_Gpu_CoCmd_PlayVideo",
+    "CMD_SETFONT2" : "Ft_Gpu_CoCmd_SetFont2",
+    "CMD_SETSCRATCH" : "Ft_Gpu_CoCmd_SetScratch",
+    "CMD_ROMFONT" : "Ft_Gpu_CoCmd_RomFont",
+    #"CMD_VIDEOFRAME" : "Ft_Gpu_CoCmd_VideoFrame"
+    #"CMD_VIDEOSTART" : "Ft_Gpu_CoCmd_VideoStart"
+    "CMD_SETBITMAP" : "Ft_Gpu_CoCmd_SetBitmap",
 }
+
 
 FT8xxInitialConfig = """
 /*
@@ -608,6 +617,85 @@ phost->ft_cmd_fifo_wp = Ft_Gpu_Hal_Rd16(phost,REG_CMD_WRITE);
 
 """
 
+FT8xxMainFunctionEnd = """
+
+    /* Close all the opened handles */
+    Ft_Gpu_Hal_Close(phost);
+    Ft_Gpu_Hal_DeInit();
+#ifdef MSVC_PLATFORM || defined FT900_PLATFORM
+    return 0;
+#endif
+}
+
+void loop()
+{
+}
+
+
+
+/* Nothing beyond this */
+"""
+
+FT8xxMainFunctionSetup = """
+
+#if defined MSVC_PLATFORM || defined FT900_PLATFORM
+/* Main entry point */
+ft_int32_t main(ft_int32_t argc,ft_char8_t *argv[])
+#endif
+#if defined(ARDUINO_PLATFORM)||defined(MSVC_FT800EMU)
+ft_void_t setup()
+#endif
+{
+
+     ft_uint8_t chipid;
+#ifdef FT900_PLATFORM
+    FT900_Config();
+#endif
+    Ft_Gpu_HalInit_t halinit;
+
+    halinit.TotalChannelNum = 1;
+
+
+    Ft_Gpu_Hal_Init(&halinit);
+    host.hal_config.channel_no = 0;
+    host.hal_config.pdn_pin_no = FT800_PD_N;
+    host.hal_config.spi_cs_pin_no = FT800_SEL_PIN;
+#ifdef MSVC_PLATFORM_SPI
+    host.hal_config.spi_clockrate_khz = 12000; //in KHz
+#endif
+#ifdef ARDUINO_PLATFORM_SPI
+    host.hal_config.spi_clockrate_khz = 4000; //in KHz
+#endif
+    Ft_Gpu_Hal_Open(&host);
+
+    //printf("Ft_Gpu_Hal_Open done \\n");
+    phost = &host;
+
+    Ft_BootupConfig();
+
+#ifdef FT900_PLATFORM
+    Ft_Gpu_ClockTrimming(phost,LOW_FREQ_BOUND);
+    /* Change clock freuency to 25mhz */
+    spi_init(SPIM, spi_dir_master, spi_mode_0, 4);
+    spi_option(SPIM,spi_option_bus_width,1);
+    spi_option(SPIM,spi_option_fifo_size,64);
+    spi_option(SPIM,spi_option_fifo,1);
+    spi_option(SPIM,spi_option_fifo_receive_trigger,1);
+#endif
+
+#if ((defined FT900_PLATFORM) || defined(MSVC_PLATFORM)) ||defined(MSVC_FT800EMU)
+    printf("\\n reg_touch_rz =0x%x ", Ft_Gpu_Hal_Rd16(phost, REG_TOUCH_RZ));
+    printf("\\n reg_touch_rzthresh =0x%x ", Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_RZTHRESH));
+    printf("\\n reg_touch_tag_xy=0x%x",Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_TAG_XY));
+    printf("\\n reg_touch_tag=0x%x",Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_TAG));
+#endif
+
+    /*It is optional to clear the screen here*/
+    Ft_Gpu_Hal_WrMem(phost, RAM_DL,(ft_uint8_t *)FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
+    Ft_Gpu_Hal_Wr8(phost, REG_DLSWAP,DLSWAP_FRAME);
+
+    Ft_Gpu_Hal_Sleep(1000);//Show the booting up screen.
+"""
 
 FT8xxHelperAPI = """
 
@@ -680,6 +768,179 @@ FT8xxHelperAPI = """
 """
 
 
+
+
+
+loadDataToCoprocessorMediafifo = '''
+ft_void_t loadDataToCoprocessorMediafifo(ft_char8_t* fileName, ft_uint32_t mediaFIFOAddr, ft_uint32_t mediaFIOFLen){
+    ft_uint8_t g_scratch[SCRATCH_BUFF_SZ];
+    Ft_Fifo_t stFifo;
+    ft_uint32_t i;
+    ft_uint32_t filesz, currchunk, bytesread, cmdrd, cmdwr;
+    #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+    FILE *pFile;
+    #endif
+
+    #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+    pFile = fopen(fileName,"rb");
+    if (pFile == NULL)
+    #elif defined(FT900_PLATFORM)
+    fResult = f_open(&CurFile, filename, FA_READ | FA_OPEN_EXISTING);
+    if (fResult != FR_OK)
+    #endif
+    {
+        while(1){
+            Ft_Gpu_CoCmd_Dlstart(phost);
+            Ft_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));
+            Ft_Gpu_CoCmd_Text(phost, (FT_DispWidth / 2), FT_DispHeight / 2, 29,	OPT_CENTER, "Unable to open file.");
+            Ft_App_WrCoCmd_Buffer(phost, DISPLAY());
+            Ft_Gpu_CoCmd_Swap(phost);
+            Ft_App_Flush_Co_Buffer(phost);
+            Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
+        }
+    } else {
+
+        Ft_Fifo_Init(&stFifo, mediaFIFOAddr, mediaFIOFLen, REG_MEDIAFIFO_READ,REG_MEDIAFIFO_WRITE); //initialize application media fifo structure
+        #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+        fseek(pFile,0,SEEK_END);
+        filesz = ftell(pFile);
+        fseek(pFile,0,SEEK_SET);
+        #elif defined(FT900_PLATFORM)
+        fResult = f_lseek(&CurFile, 0);
+        filesz = f_size(&CurFile);
+        #endif
+
+        /* fill the complete fifo buffer before entering into steady state */
+        #if defined(FT900_PLATFORM)
+        fResult = f_lseek(&CurFile, 0);
+        #endif
+
+        filesz -= stFifo.fifo_wp;
+        cmdrd = Ft_Gpu_Hal_Rd16(phost, REG_CMD_READ);
+        cmdwr = Ft_Gpu_Hal_Rd16(phost, REG_CMD_WRITE);
+        while ((cmdrd != cmdwr) || (filesz > 0))  //loop till end of the file
+        {
+            if (filesz > 0) {
+                if (filesz > SCRATCH_BUFF_SZ) {
+                    currchunk = SCRATCH_BUFF_SZ;
+                } else {
+                    currchunk = filesz;
+                }
+                #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+                bytesread = fread(g_scratch, 1, currchunk, pFile);
+                #elif defined(FT900_PLATFORM)
+                fResult = f_read(&CurFile, g_scratch, currchunk, &bytesread);
+                #endif
+                Ft_Fifo_WriteWait(phost, &stFifo, g_scratch, bytesread); //download the whole chunk into ring buffer - blocking call
+
+                filesz -= currchunk;
+            }
+
+            cmdrd = Ft_Gpu_Hal_Rd16(phost, REG_CMD_READ);
+            cmdwr = Ft_Gpu_Hal_Rd16(phost, REG_CMD_WRITE);
+        }
+        fclose(pFile);
+    }
+}
+'''
+
+loadDataToCoprocessorCMDfifo_nowait = """
+ft_void_t loadDataToCoprocessorCMDfifo_nowait(ft_char8_t* fileName){
+        ft_uint8_t g_scratch[SCRATCH_BUFF_SZ];
+        ft_uint32_t filesz, currchunk, bytesread, cmdrd, cmdwr;
+#if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+        FILE *pFile;
+#endif
+
+#if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+        pFile = fopen(fileName, "rb");
+        if (pFile != NULL)
+        {
+            printf("\\nFopen success!\\n");
+        }
+        else{
+            printf("\\nFailed to open file.\\n");
+            return;
+        }
+#elif defined(FT900_PLATFORM)
+        fResult = f_open(&CurFile, fileName, FA_READ | FA_OPEN_EXISTING);
+        if (fResult == FR_OK)
+        {
+            printf("\\nFopen success!\\n");
+            fResult = f_lseek(&CurFile, 0);
+        }
+        else
+        {
+            printf("\\nFailed to open file %d\\n", fResult);
+            return;
+        }
+#endif
+
+
+#if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+        fseek(pFile, 0, SEEK_END);
+        filesz = ftell(pFile);
+        fseek(pFile, 0, SEEK_SET);
+#elif defined(FT900_PLATFORM)
+        filesz = f_size(&CurFile);
+#endif
+        {
+            ft_int32_t availfreesz = 0, freadbufffill = 0, chunkfilled = 0;
+            ft_uint8_t *pbuff = g_scratch;
+            while (filesz > 0)
+            {
+                availfreesz = Ft_Gpu_Hal_Rd32(phost, REG_CMDB_SPACE);
+                if (availfreesz > 0)
+                {
+                    if (0 == freadbufffill)
+                    {
+                        if (filesz > SCRATCH_BUFF_SZ)
+                        {
+                            freadbufffill = SCRATCH_BUFF_SZ;
+                        }
+                        else
+                        {
+                            freadbufffill = filesz;
+                        }
+#if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+                        bytesread = fread(g_scratch, 1, freadbufffill, pFile);
+#elif defined(FT900_PLATFORM)
+                        fResult = f_read(&CurFile, g_scratch, freadbufffill, &bytesread);
+#endif
+                        pbuff = g_scratch;
+                        filesz -= bytesread;
+                    }
+
+                    if (availfreesz > freadbufffill)
+                    {
+                        availfreesz = freadbufffill;
+                    }
+
+                    if (availfreesz > 0)
+                    {
+
+
+#if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
+                        Ft_Gpu_Hal_WrMem(phost, REG_CMDB_WRITE, pbuff, availfreesz);
+#elif defined(FT900_PLATFORM)
+                        Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, REG_CMDB_WRITE);
+                        dqspiWritePool(SPIM, pbuff, availfreesz, DQSPI_M_DISCARD_INCOMING_DATA);
+                        Ft_Gpu_Hal_EndTransfer(phost);
+#endif
+
+                    }
+                    pbuff += availfreesz;
+                    freadbufffill -= availfreesz;
+                }
+            }
+        }
+
+    fclose(pFile);
+}
+
+"""
+
+
 loadDataToCoprocessorCMDfifo = '''
 ft_void_t loadDataToCoprocessorCMDfifo(ft_char8_t* fileName){
     FILE *fp;
@@ -707,75 +968,6 @@ ft_void_t loadDataToCoprocessorCMDfifo(ft_char8_t* fileName){
 }
 '''
 
-
-FT8xxMainFunctionSetup = """
-
-#if defined MSVC_PLATFORM || defined FT900_PLATFORM
-/* Main entry point */
-ft_int32_t main(ft_int32_t argc,ft_char8_t *argv[])
-#endif
-#if defined(ARDUINO_PLATFORM)||defined(MSVC_FT800EMU)
-ft_void_t setup()
-#endif
-{
-
-     ft_uint8_t chipid;
-#ifdef FT900_PLATFORM
-    FT900_Config();
-#endif
-    Ft_Gpu_HalInit_t halinit;
-
-    halinit.TotalChannelNum = 1;
-
-
-    Ft_Gpu_Hal_Init(&halinit);
-    host.hal_config.channel_no = 0;
-    host.hal_config.pdn_pin_no = FT800_PD_N;
-    host.hal_config.spi_cs_pin_no = FT800_SEL_PIN;
-#ifdef MSVC_PLATFORM_SPI
-    host.hal_config.spi_clockrate_khz = 12000; //in KHz
-#endif
-#ifdef ARDUINO_PLATFORM_SPI
-    host.hal_config.spi_clockrate_khz = 4000; //in KHz
-#endif
-    Ft_Gpu_Hal_Open(&host);
-
-    //printf("Ft_Gpu_Hal_Open done \\n");
-    phost = &host;
-
-    Ft_BootupConfig();
-
-#ifdef FT900_PLATFORM
-    Ft_Gpu_ClockTrimming(phost,LOW_FREQ_BOUND);
-    /* Change clock freuency to 25mhz */
-    spi_init(SPIM, spi_dir_master, spi_mode_0, 4);
-    spi_option(SPIM,spi_option_bus_width,1);
-    spi_option(SPIM,spi_option_fifo_size,64);
-    spi_option(SPIM,spi_option_fifo,1);
-    spi_option(SPIM,spi_option_fifo_receive_trigger,1);
-#endif
-
-#if ((defined FT900_PLATFORM) || defined(MSVC_PLATFORM)) ||defined(MSVC_FT800EMU)
-    printf("\\n reg_touch_rz =0x%x ", Ft_Gpu_Hal_Rd16(phost, REG_TOUCH_RZ));
-    printf("\\n reg_touch_rzthresh =0x%x ", Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_RZTHRESH));
-    printf("\\n reg_touch_tag_xy=0x%x",Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_TAG_XY));
-    printf("\\n reg_touch_tag=0x%x",Ft_Gpu_Hal_Rd32(phost, REG_TOUCH_TAG));
-#endif
-
-    /*It is optional to clear the screen here*/
-    Ft_Gpu_Hal_WrMem(phost, RAM_DL,(ft_uint8_t *)FT_DLCODE_BOOTUP,sizeof(FT_DLCODE_BOOTUP));
-    Ft_Gpu_Hal_Wr8(phost, REG_DLSWAP,DLSWAP_FRAME);
-
-    Ft_Gpu_Hal_Sleep(1000);//Show the booting up screen.
-"""
-
-endOfDisplayListSequence = """
-    Ft_App_WrCoCmd_Buffer(phost, DISPLAY());
-    Ft_Gpu_CoCmd_Swap(phost);
-    Ft_App_Flush_Co_Buffer(phost);
-    Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
-"""
-
 screenCalibrationSequence = """
         Ft_Gpu_CoCmd_Dlstart(phost);
         Ft_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));
@@ -791,24 +983,24 @@ screenCalibrationSequence = """
         Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
 """
 
-FT8xxMainFunctionEnd = """
-
-    /* Close all the opened handles */
-    Ft_Gpu_Hal_Close(phost);
-    Ft_Gpu_Hal_DeInit();
-#ifdef MSVC_PLATFORM || defined FT900_PLATFORM
-    return 0;
-#endif
-}
-
-void loop()
-{
-}
-
-
-
-/* Nothing beyond this */
+endOfDisplayListSequence = """
+    Ft_App_WrCoCmd_Buffer(phost, DISPLAY());
+    Ft_Gpu_CoCmd_Swap(phost);
+    Ft_App_Flush_Co_Buffer(phost);
+    Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
 """
+
+startingOfDisplayListSequence = """
+    Ft_Gpu_CoCmd_Dlstart(phost);
+    Ft_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));
+"""
+
+globalContext = {
+    'mediaFIFOEnabled': "False",
+    'mediaFIFOAddress':  "",
+    'mediaFIFOLength': "",
+}
+
 
 globalValue = {
     'skeletonProjectName': "untitled",
@@ -832,40 +1024,38 @@ def run(name, document, ram):
     except UnicodeDecodeError:
         raiseUnicodeError("Project Name")
 
-    #outDir = os.getcwd() + os.path.sep + "FT80X_" + name + "_FTEVE_HAL"
-    outDir = "FT80X_" + name + "_FTEVE_HAL"  #output files are relative to the current project folder
-    #outDir = outDir.encode("UTF-8")
+    outDir = "FT81X_" + name + "_FTEVE_HAL"
 
     try:
         if os.path.isdir(outDir):
-            try:
-                shutil.rmtree(outDir)
-            except IOError:
-                raise Exception("Unable to generate a complete MSVC project. Please make sure the previously generated project files and folder are not currently being accessed.")
+            #for (dirpath, dirnames, filenames) in os.walk(outDir):# Windows does not allow the removal of read-only files
+            #    for filename in filenames:
+            #        os.chmod(os.path.join(dirpath, filename),stat.S_IWRITE)
+            shutil.rmtree(outDir)
         os.makedirs(outDir)
     except:
-        raise Exception("Unable to generate a MSVC project files.")
+        raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed.")
 
     outName = outDir + os.path.sep + name + HALProjectName + ".c"
-
+    #if os.path.isfile(outName):
+    #	os.remove(outName)
     f = open(outName, "w+")
+
     f.write(FT8xxInitialConfig)
     for content in document["content"]:
         try:
             if content["memoryLoaded"]:
-                memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
+                memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
                 f.write("\n")
                 f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
             if content["dataEmbedded"]:
                 data = ""
-                contentName = re.sub(r'[-/. ]', '_', content["destName"])
-                #headerName = os.getcwd() + os.path.sep + content["destName"].replace('/', os.path.sep)
+                contentName = re.sub(r'[/. ]', '_', content["destName"])
                 headerName = content["destName"].replace('/', os.path.sep)
 
                 #load raw files
                 if content["converter"] == "Raw":
                     fcontent = ""
-                    #with open(os.getcwd() + os.path.sep + content["destName"].replace('/',os.path.sep) + '.raw', 'rb') as rawf:
                     with open(content["destName"].replace('/',os.path.sep) + '.raw', 'rb') as rawf:
                         fcontent = rawf.read()
                     targetName = contentName + ".h"
@@ -903,7 +1093,11 @@ def run(name, document, ram):
     f.write("\n")
     f.write(FT8xxHelperAPI)
     f.write("\n")
+    f.write(loadDataToCoprocessorMediafifo)
+    f.write("\n")
     f.write(loadDataToCoprocessorCMDfifo)
+    f.write("\n")
+    f.write(loadDataToCoprocessorCMDfifo_nowait)
     f.write("\n")
     f.write(FT8xxMainFunctionSetup)
     f.write("\tFt_Gpu_CoCmd_Dlstart(phost);\n")
@@ -971,6 +1165,7 @@ def run(name, document, ram):
 
     if not clearFound:
         f.write("\tFt_App_WrCoCmd_Buffer(phost,CLEAR(1, 1, 1));\n")
+
     skippedBitmaps = False
     specialParameter = ""
     specialCommandType = ""
@@ -986,8 +1181,7 @@ def run(name, document, ram):
                 functionName = splitlinea[0]
                 commentsRegex = re.compile("//.*$")
                 coprocessor_cmd = False
-                #if functionMap.has_key(functionName):
-                if functionName in functionMap:
+                if functionMap.has_key(functionName):
                     functionName = functionMap[functionName]
                     coprocessor_cmd = True
                 if not skippedBitmaps:
@@ -1031,13 +1225,12 @@ def run(name, document, ram):
                 #    f.write("\tFt_Gpu_CoCmd_Dlstart(phost);\n")
                 #    f.write("\tFt_App_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n")
                 #    f.write("\tFt_App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n")
-                #    f.write("\tFt_App_WrCoCmd_Buffer(phost, COLOR_RGB(255, 255, 255));\n")
+                #    f.write("\tFt_App_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n")
                 #
                 #    functionName = ""
 
                 if functionName == "Ft_Gpu_CoCmd_LoadImage":
                     functionArgsSplit = functionArgs.split(',')
-                    #raise Exception(functionArgsSplit)
                     f.write("\tFt_App_Flush_Co_Buffer(phost);\n")
                     f.write("\tFt_Gpu_Hal_WaitCmdfifo_empty(phost);\n")
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_LOADIMAGE);\n")
@@ -1050,25 +1243,55 @@ def run(name, document, ram):
                     except UnicodeDecodeError:
                         f.close()
                         raiseUnicodeError("Input file path")
+
+                    if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
+                        globalContext['mediaFIFOEnabled'] = 'True'
                     functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
-                    #functionArgsSplit[2] = re.sub(r'[:]', '.', functionArgsSplit[2])
                     if '/' in functionArgsSplit[2]:
                         specialParameter = functionArgsSplit[2].rsplit('/',1)[1]
-                        #f.close()
-                        #raise Exception(specialParameter)
                     elif '\\' in functionArgsSplit[2]:
                         specialParameter = functionArgsSplit[2].rsplit('\\',1)[1]
                     else:
                         specialParameter = functionArgsSplit[2]
-                    #f.close()
-                    #raise Exception("loadimage error: " + specialParameter)
-                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
                     filesToTestFolder.append(functionArgsSplit[2])
-                    f.write("\tloadDataToCoprocessorCMDfifo(\"" + specialParameter + "\");\n")
+                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialCommandType = "Ft_Gpu_CoCmd_LoadImage"
                     functionName = ""
-                    #f.close()
-                    #raise Exception(functionArgsSplit[2])
-                    #specialCommandType = "Ft_Gpu_CoCmd_LoadImage"
+
+                if functionName == "Ft_Gpu_CoCmd_MediaFifo":
+                    functionArgsSplit = functionArgs.split(',')
+                    functionArgs = functionArgsSplit[0] + ","
+                    functionArgs += functionArgsSplit[1]
+                    specialCommandType = "Ft_Gpu_CoCmd_MediaFifo"
+                    globalContext['mediaFIFOAddress'] = functionArgsSplit[0]
+                    globalContext['mediaFIFOLength'] = functionArgsSplit[1]
+
+                if functionName == "Ft_Gpu_CoCmd_Dlstart":
+                    f.write(startingOfDisplayListSequence)
+                    functionName = ""
+
+                if functionName == "Ft_Gpu_CoCmd_PlayVideo":
+                    f.write("\n")
+                    functionArgsSplit =functionArgs.split(',')
+                    functionArgs = functionArgsSplit[0]
+                    if 'OPT_MEDIAFIFO' in functionArgsSplit[0]:
+                        globalContext['mediaFIFOEnabled'] = 'True'
+                    functionArgsSplit[1] = re.sub(r'["]', "", functionArgsSplit[1])
+                    if '/' in functionArgsSplit[1]:
+                        specialParameter = functionArgsSplit[1].rsplit('/',1)[1]
+                    elif '\\' in functionArgsSplit[1]:
+                        specialParameter = functionArgsSplit[1].rsplit('\\',1)[1]
+                    else:
+                        specialParameter = functionArgsSplit[1]
+                    filesToTestFolder.append(functionArgsSplit[1])
+                    f.write("\tFt_App_Flush_Co_Buffer(phost);\n")
+                    f.write("\tFt_Gpu_Hal_WaitCmdfifo_empty(phost);\n")
+                    f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_PLAYVIDEO);\n")
+                    f.write("\tFt_Gpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n")
+                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialCommandType = "Ft_Gpu_CoCmd_PlayVideo"
+                    functionName = ""
+
                 #The following commands don't take any parameters so there shouldn't be a comma after the phost
                 parameterComma = ","
                 if functionName == "Ft_Gpu_CoCmd_LoadIdentity" or functionName == "Ft_Gpu_CoCmd_Swap" or functionName == "Ft_Gpu_CoCmd_Stop" or functionName == "Ft_Gpu_CoCmd_SetMatrix" or functionName == "Ft_Gpu_CoCmd_ColdStart" or functionName == "Ft_Gpu_CoCmd_Dlstart" or functionName == "Ft_Gpu_CoCmd_ScreenSaver":
@@ -1085,6 +1308,27 @@ def run(name, document, ram):
                             newline = "\tFt_App_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
                     f.write(newline)
 
+                if specialCommandType == "Ft_Gpu_CoCmd_LoadImage":
+                    if globalContext['mediaFIFOEnabled'] == "True":
+                        f.write("\tloadDataToCoprocessorMediafifo(\"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n")
+                        globalContext['mediaFIFOEnabled'] = "False"
+                    else:
+                        f.write("\tloadDataToCoprocessorCMDfifo(\"" + specialParameter + "\");\n")
+                        f.write("\tFt_Gpu_Hal_WaitCmdfifo_empty(phost);\n")
+                    specialCommandType = ""
+                elif specialCommandType == "Ft_Gpu_CoCmd_PlayVideo":
+                    if globalContext['mediaFIFOEnabled'] == 'True':
+                        f.write("\tloadDataToCoprocessorMediafifo(\"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n")
+                        globalContext['mediaFIFOEnabled'] = "False"
+                    else:
+                        f.write("\tloadDataToCoprocessorCMDfifo_nowait(\"" + specialParameter + "\");\n")
+                    #f.write(endOfDisplayListSequence)
+                    #f.write(startingOfDisplayListSequence)
+                    f.write("\tFt_Gpu_Hal_WaitCmdfifo_empty(phost);\n")
+                    specialCommandType = ""
+                else:
+                    specialCommandType = ""
+
             except:
                 pass
         else:
@@ -1094,18 +1338,15 @@ def run(name, document, ram):
     f.write(endOfDisplayListSequence)
     f.write("\n")
     f.write(FT8xxMainFunctionEnd)
+    f.write("/* end of file */\n")
     f.close()
 
 
     #screenSize = document["ScreenSize"];
-    generateProjectFiles(outDir, outName, name, filesToTestFolder, "480x272", document["project"]["device"])
-
-
+    generateProjectFiles(outDir, outName, name, filesToTestFolder,  "480x272", document["project"]["device"])
 
     resultText += "<b>Output</b>:<p>Output files: " + outDir + "</p> <p>Project files: " + outDir + os.path.sep + name + "</p><p>\"" + name + HALProjectName + os.path.sep + "ReadMe.txt\" details the project folder structure.</p>"
-
     #outDir = outDir + "/" + name
-
     if sys.platform.startswith('darwin'):
         subprocess.call(('open', outName))
     elif os.name == 'nt':
@@ -1114,3 +1355,4 @@ def run(name, document, ram):
         subprocess.call(('xdg-open', outName))
     #print resultText
     return resultText
+
