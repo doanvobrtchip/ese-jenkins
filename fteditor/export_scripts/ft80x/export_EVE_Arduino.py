@@ -74,16 +74,19 @@ def convertArgs(functionArgs):
     "OPT_SIGNED": "FT_OPT_SIGNED",
     }
 
+    convertedArgsList = []
+
     functionArgsSplit = functionArgs.split(",")
     for argument in functionArgsSplit:
         if '|' in argument:
             argumentOptions = argument.split('|')
             for argumentOption in argumentOptions:
-                if argumentOption.replace(" ", "") in argsMap:
+                if (argumentOption.replace(" ", "") in argsMap) and (argumentOption.replace(" ", "") not in convertedArgsList):
                     functionArgs = functionArgs.replace(argumentOption.replace(" ", ""), argsMap[argumentOption.replace(" ", "")])
-        if argument.replace(" ", "") in argsMap:
+                    convertedArgsList.append(argumentOption.replace(" ", ""))
+        if (argument.replace(" ", "") in argsMap) and (argument.replace(" ", "") not in convertedArgsList):
             functionArgs = functionArgs.replace(argument.replace(" ", ""), argsMap[argument.replace(" ", "")])
-
+            convertedArgsList.append(argument.replace(" ", ""))
     #return ",".join(functionArgsSplit)
     return functionArgs
 
