@@ -57,13 +57,13 @@ bool AudioDriverClass::begin()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&s_MMDeviceEnumerator);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	hr = s_MMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &s_MMDevice);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	hr = s_MMDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&s_AudioClient);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	WAVEFORMATEX *pwfx;
 	hr = s_AudioClient->GetMixFormat(&pwfx);
@@ -80,16 +80,16 @@ bool AudioDriverClass::begin()
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
 	hr = s_AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, hnsRequestedDuration, 0, &wfx, NULL);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	hr = s_AudioClient->GetBufferSize(&s_BufferFrameCount);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	hr = s_AudioClient->GetService(IID_IAudioRenderClient, (void **)&s_AudioRenderClient);
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	hr = s_AudioClient->Start();
-	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
+	if (hr) { SystemWindows.ErrorHResult(TEXT("WASAPI Initialisation"), hr); return false; }
 
 	// done
 	return true;
@@ -145,7 +145,7 @@ void AudioDriverClass::beginBuffer(short **buffer, int *samples)
 	unsigned int numFramesPadding;
 
 	hr = s_AudioClient->GetCurrentPadding(&numFramesPadding);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
 
 	s_NumFramesAvailable = s_BufferFrameCount - numFramesPadding;
 	*samples = s_NumFramesAvailable;
@@ -157,7 +157,7 @@ void AudioDriverClass::beginBuffer(short **buffer, int *samples)
 	else
 	{
 		hr = s_AudioRenderClient->GetBuffer(s_NumFramesAvailable, (BYTE **)buffer);
-		if (hr) SystemWindows.ErrorHResult(hr);
+		if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
 	}
 }
 
@@ -166,7 +166,7 @@ void AudioDriverClass::endBuffer()
 	HRESULT hr;
 
 	hr = s_AudioRenderClient->ReleaseBuffer(s_NumFramesAvailable, 0);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
 }
 
 void AudioDriverClass::end()

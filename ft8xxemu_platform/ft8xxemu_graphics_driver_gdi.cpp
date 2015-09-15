@@ -163,7 +163,7 @@ bool GraphicsDriverClass::begin()
 	//wcex.hIconSm = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_SMALL));
 	wcex.hIcon = NULL;
 	wcex.hIconSm = NULL;
-	if (!RegisterClassEx(&wcex)) SystemWindows.ErrorWin32();
+	if (!RegisterClassEx(&wcex)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
 
 	// Initialize and Show Display Instance
 	DWORD dw_style = WS_OVERLAPPEDWINDOW;
@@ -178,9 +178,9 @@ bool GraphicsDriverClass::begin()
 		/*(LPCTSTR)title.c_str()*/FT8XXEMU_WINDOW_TITLE, dw_style,
 		CW_USEDEFAULT, 0, r.right - r.left, r.bottom - r.top, // x y w h
 		NULL, NULL, s_HInstance, NULL)))
-		SystemWindows.ErrorWin32();
+		SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
 	ShowWindow(s_HWnd, /*nCmdShow*/ true); // If the window was previously visible, the return value is nonzero.
-	if (!UpdateWindow(s_HWnd)) SystemWindows.ErrorWin32();
+	if (!UpdateWindow(s_HWnd)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
 
 	// Create GDI32 Buffer and Device Context
 #if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
@@ -304,7 +304,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	{
 		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
-		if (bgBrush == NULL) SystemWindows.ErrorWin32();
+		if (bgBrush == NULL) SystemWindows.ErrorWin32(TEXT("GDI Render"));
 		int width_r = (int)((float)r.bottom * s_Ratio); int height_r;
 		if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / s_Ratio); }
 		else height_r = r.bottom;
@@ -339,7 +339,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 			FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
 		}
 		ReleaseDC(s_HWnd, hdc);
-		if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32();
+		if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32(TEXT("GDI Render"));
 	}
 #else
 	{
@@ -358,9 +358,9 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 		HDC hdc = GetDC(s_HWnd);
 		COLORREF bgC32 = RGB(128, 128, 128); // bg off render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
-		if (bgBrush == NULL) SystemWindows.ErrorWin32();
+		if (bgBrush == NULL) SystemWindows.ErrorWin32(TEXT("GDI Render"));
 		FillRect(hdc, &r, bgBrush);
-		if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32();
+		if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32(TEXT("GDI Render"));
 		ReleaseDC(s_HWnd, hdc);
 	}
 

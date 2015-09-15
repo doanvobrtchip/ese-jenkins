@@ -145,7 +145,7 @@ void SystemClass::makeMainThread()
 		0,
 		TRUE,
 		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
+		SystemWindows.ErrorWin32(TEXT("Main Thread"));
 }
 
 bool SystemClass::isMainThread()
@@ -165,7 +165,7 @@ void SystemClass::makeMCUThread()
 		0,
 		TRUE,
 		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
+		SystemWindows.ErrorWin32(TEXT("MCU Thread"));
 }
 
 int SystemClass::isMCUThread()
@@ -217,7 +217,7 @@ void SystemClass::makeCoprocessorThread()
 		0,
 		TRUE,
 		DUPLICATE_SAME_ACCESS))
-		SystemWindows.ErrorWin32();
+		SystemWindows.ErrorWin32(TEXT("Coprocessor Thread"));
 }
 
 void SystemClass::forgetCoprocessorThread()
@@ -258,7 +258,7 @@ void *SystemClass::setThreadGamesCategory(unsigned long *refId)
 {
 #ifndef __MINGW32__
 	HANDLE h = AvSetMmThreadCharacteristicsA("Games", refId);
-	if (!h) SystemWindows.ErrorWin32();
+	if (!h) SystemWindows.ErrorWin32(TEXT("Setting thread category"));
 	return h;
 #else
 	return NULL;
@@ -402,13 +402,13 @@ void SystemWindowsClass::Debug(const tstring &message)
 	tcout << TEXT("Debug: ") << message << std::endl;
 }
 
-void SystemWindowsClass::ErrorWin32()
+void SystemWindowsClass::ErrorWin32(const tstring &message)
 {
 	// crash with last win32 error string
 	Error(GetWin32LastErrorString());
 }
 
-void SystemWindowsClass::ErrorHResult(HRESULT hr)
+void SystemWindowsClass::ErrorHResult(const tstring &message, HRESULT hr)
 {
 	Error(GetWin32ErrorString(Win32FromHResult(hr)));
 }

@@ -3672,9 +3672,9 @@ void MainWindow::startEmulatorInternal()
 		// FT800EMU::EmulatorEnableKeyboard
 		/*|*/ FT8XXEMU_EmulatorEnableMouse
 		//| FT800EMU::EmulatorEnableDebugShortkeys
-#ifdef FTEMU_SDL2 // Cannot combine XAudio2 with Qt
+//#ifdef FTEMU_SDL2 // Cannot combine WASAPI with Qt
 		| FT8XXEMU_EmulatorEnableAudio
-#endif
+//#endif
 		| FT8XXEMU_EmulatorEnableCoprocessor
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		| FT8XXEMU_EmulatorEnableDynamicDegrade

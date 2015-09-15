@@ -724,6 +724,12 @@ const uint8_t bayerDiv4[2][2] = {
 
 void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
+#ifdef WIN32
+#ifndef FTEMU_SDL2
+	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+#endif
+#endif
+
 	FT8XXEMU_EmulatorMode mode = params.Mode;
 	if (mode == 0) mode = FT8XXEMU_EmulatorFT800;
 
@@ -899,6 +905,13 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	s_EmulatorRunning = false;
 	printf("Emulator stopped running\n");
+
+#ifdef WIN32
+#ifndef SDL2
+	if (coInitHR == S_OK)
+		CoUninitialize();
+#endif
+#endif
 }
 
 void EmulatorClass::stop()

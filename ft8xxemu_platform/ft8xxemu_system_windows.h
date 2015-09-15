@@ -105,8 +105,8 @@ public:
 	static void Error(const tstring &message);
 	static void Warning(const tstring &message);
 	static void Debug(const tstring &message);
-	static void ErrorWin32();
-	static void ErrorHResult(HRESULT hr);
+	static void ErrorWin32(const tstring &message);
+	static void ErrorHResult(const tstring &message, HRESULT hr);
 
 	inline void setHWnd(HWND hwnd) { m_HWnd = hwnd; }
 	inline HWND getHWnd() { return m_HWnd; }
