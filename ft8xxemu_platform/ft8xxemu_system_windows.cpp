@@ -364,6 +364,23 @@ tstring SystemWindowsClass::GetWin32LastErrorString()
 	return buffer.str();
 }
 
+// http://stackoverflow.com/questions/22233527/how-to-convert-hresult-into-an-error-description
+DWORD Win32FromHResult(HRESULT hr)
+{
+	if ((hr & 0xFFFF0000) == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, 0))
+	{
+		return HRESULT_CODE(hr);
+	}
+
+	if (hr == S_OK)
+	{
+		return ERROR_SUCCESS;
+	}
+
+	// Not a Win32 HRESULT so return a generic error code.
+	return ERROR_CAN_NOT_COMPLETE;
+}
+
 void SystemWindowsClass::Error(const tstring &message)
 {
 	// exit with message
@@ -393,7 +410,7 @@ void SystemWindowsClass::ErrorWin32()
 
 void SystemWindowsClass::ErrorHResult(HRESULT hr)
 {
-	Error(TEXT("ErrorHResult")); // fixme :p
+	Error(GetWin32ErrorString(Win32FromHResult(hr)));
 }
 
 

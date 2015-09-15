@@ -17,6 +17,7 @@
 // System includes
 
 // Project includes
+#include "sleep_wake.h"
 
 // using namespace ...;
 
@@ -30,6 +31,9 @@ double SystemClass::s_FrameTime, SystemClass::s_FrameTimeDelta; //, SystemClass:
 int SystemClass::s_FrameCount;
 double SystemClass::s_FPSSmooth;
 bool SystemClass::s_MainThreadSwitchable = false;
+
+static SleepWake *s_RenderSleepWake = NULL;
+static bool s_RenderWoke = false;
 
 void (*g_Exception)(const char *message) = 0;
 
@@ -60,6 +64,8 @@ void SystemClass::begin()
 	//s_FPSSmoothTotal = 0.0;
 	s_FPSSmoothCount = 0;
 	//s_FrameTimeOffset = SystemClass::getSeconds() * -1.0;
+
+	s_RenderSleepWake = new SleepWake();
 }
 
 void SystemClass::update()
@@ -88,6 +94,9 @@ void SystemClass::update()
 
 void SystemClass::end()
 {
+	delete s_RenderSleepWake;
+	s_RenderSleepWake = NULL;
+
 	// ...
 
 	SystemClass::_end();
@@ -112,6 +121,24 @@ void SystemClass::delayForMCU(int ms)
 {
 	if (s_MCUDelay) s_MCUDelay(ms);
 	else delay(ms);
+}
+
+void SystemClass::renderSleep(int ms)
+{
+	s_RenderSleepWake->sleep(ms);
+}
+
+void SystemClass::renderWake()
+{
+	s_RenderWoke = true;
+	s_RenderSleepWake->wake();
+}
+
+bool SystemClass::renderWoke()
+{
+	bool res = s_RenderWoke;
+	s_RenderWoke = false;
+	return res;
 }
 
 } /* namespace FT8XXEMU */

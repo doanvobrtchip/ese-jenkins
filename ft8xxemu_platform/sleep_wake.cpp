@@ -15,6 +15,7 @@ SleepWake::SleepWake() : m_WantWake(false), m_IsSleeping(false)
 
 SleepWake::~SleepWake()
 {
+	wakeInternal();
 #ifdef FTEMU_SDL2
 	SDL_DestroyCond(m_SleepCond);
 	SDL_DestroyMutex(m_SleepLock);
@@ -41,7 +42,7 @@ void SleepWake::sleep(uint32_t ms)
 	{
 		m_IsSleeping = false;
 		m_WantWake = false;
-		m_SleepLock.unlock();
+		lock.unlock();
 		return;
 	}
 	m_SleepCond.wait_for(lock, std::chrono::milliseconds(ms));

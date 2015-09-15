@@ -57,13 +57,13 @@ bool AudioDriverClass::begin()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&s_MMDeviceEnumerator);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	hr = s_MMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &s_MMDevice);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	hr = s_MMDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&s_AudioClient);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	WAVEFORMATEX *pwfx;
 	hr = s_AudioClient->GetMixFormat(&pwfx);
@@ -80,18 +80,19 @@ bool AudioDriverClass::begin()
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
 	hr = s_AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, hnsRequestedDuration, 0, &wfx, NULL);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	hr = s_AudioClient->GetBufferSize(&s_BufferFrameCount);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	hr = s_AudioClient->GetService(IID_IAudioRenderClient, (void **)&s_AudioRenderClient);
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	hr = s_AudioClient->Start();
-	if (hr) SystemWindows.ErrorHResult(hr);
+	if (hr) { SystemWindows.ErrorHResult(hr); return false; }
 
 	// done
+	return true;
 }
 
 bool AudioDriverClass::update()
