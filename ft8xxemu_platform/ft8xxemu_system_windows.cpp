@@ -405,12 +405,16 @@ void SystemWindowsClass::Debug(const tstring &message)
 void SystemWindowsClass::ErrorWin32(const tstring &message)
 {
 	// crash with last win32 error string
-	Error(GetWin32LastErrorString());
+	tstringstream buffer;
+	buffer << message << TEXT("\n") << GetWin32LastErrorString();
+	Error(buffer.str());
 }
 
 void SystemWindowsClass::ErrorHResult(const tstring &message, HRESULT hr)
 {
-	Error(GetWin32ErrorString(Win32FromHResult(hr)));
+	tstringstream buffer;
+	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));
+	Error(buffer.str());
 }
 
 
