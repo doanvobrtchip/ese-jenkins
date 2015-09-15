@@ -726,7 +726,7 @@ const uint8_t bayerDiv4[2][2] = {
 		FT8XXEMU::System.revertThreadCategory(taskHandle);
 
 #ifdef WIN32
-#ifndef SDL2
+#ifndef FTEMU_SDL2
 		if (coInitHR == S_OK)
 			CoUninitialize();
 #endif
@@ -921,7 +921,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	printf("Emulator stopped running\n");
 
 #ifdef WIN32
-#ifndef SDL2
+#ifndef FTEMU_SDL2
 	if (coInitHR == S_OK)
 		CoUninitialize();
 #endif
