@@ -690,6 +690,12 @@ const uint8_t bayerDiv4[2][2] = {
 
 	int audioThread(void * = NULL)
 	{
+#ifdef WIN32
+#ifndef FTEMU_SDL2
+		HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+#endif
+#endif
+
 		//printf("go sound thread");
 		unsigned long taskId = 0;
 		void *taskHandle;
@@ -718,6 +724,14 @@ const uint8_t bayerDiv4[2][2] = {
 			FT8XXEMU::System.delay(10);
 		}
 		FT8XXEMU::System.revertThreadCategory(taskHandle);
+
+#ifdef WIN32
+#ifndef SDL2
+		if (coInitHR == S_OK)
+			CoUninitialize();
+#endif
+#endif
+
 		return 0;
 	}
 }
@@ -726,7 +740,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
 #ifdef WIN32
 #ifndef FTEMU_SDL2
-	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	HRESULT coInitHR = CoInitializeEx(NULL, params.Graphics ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
 #endif
 #endif
 
