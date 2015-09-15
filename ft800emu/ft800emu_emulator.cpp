@@ -14,10 +14,16 @@
 // #include <...>
 #include "ft800emu_emulator.h"
 
+#define FTEMU_STDTHREAD
+
 // System includes
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 #include <SDL.h>
 #include <SDL_thread.h>
+#elif defined(FTEMU_STDTHREAD)
+#include <thread>
+#include <condition_variable>
+#include <mutex>
 #endif
 
 // Project includes
@@ -42,7 +48,9 @@
 
 #ifndef FTEMU_SDL
 #ifndef FTEMU_SDL2
+#ifndef FTEMU_STDTHREAD
 #	include "omp.h"
+#endif
 #endif
 #endif
 
@@ -213,6 +221,9 @@ const uint8_t bayerDiv4[2][2] = {
 #ifdef FTEMU_SDL2
 	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
 	SDL_sem *s_InitSem = NULL;
+#elif defined(FTEMU_STDTHREAD)
+	std::condition_variable *s_InitCond = NULL;
+	std::mutex *s_InitMutex = NULL;
 #endif
 
 	int masterThread(void * = NULL)
@@ -654,6 +665,11 @@ const uint8_t bayerDiv4[2][2] = {
 		
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
+#elif defined(FTEMU_STDTHREAD)
+		; {
+			std::unique_lock<std::mutex> lock(*s_InitMutex);
+			s_InitCond->notify_one();
+		}
 #endif
 		
 		s_Setup();
@@ -678,6 +694,11 @@ const uint8_t bayerDiv4[2][2] = {
 		
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
+#elif defined(FTEMU_STDTHREAD)
+		; {
+			std::unique_lock<std::mutex> lock(*s_InitMutex);
+			s_InitCond->notify_one();
+		}
 #endif
 
 		Coprocessor.executeEmulator();
@@ -861,6 +882,49 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	printf("Wait for Audio\n");
 	SDL_WaitThread(threadA, NULL);
+
+#elif defined(FTEMU_STDTHREAD)
+
+	std::thread threadA = std::thread(audioThread, nullptr);
+
+	s_InitMutex = new std::mutex();
+	s_InitCond = new std::condition_variable();
+
+	std::thread threadC = std::thread(audioThread, nullptr);
+
+	; {
+		std::unique_lock<std::mutex> lock(*s_InitMutex);
+		s_InitCond->wait(lock);
+	}
+
+	std::thread threadD = std::thread(mcuThread, nullptr);
+
+	; {
+		std::unique_lock<std::mutex> lock(*s_InitMutex);
+		s_InitCond->wait(lock);
+	}
+
+	delete s_InitCond; s_InitCond = NULL;
+	delete s_InitMutex; s_InitMutex = NULL;
+
+	masterThread();
+
+	s_MasterRunning = false;
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	{
+		FT8XXEMU::System.forgetCoprocessorThread();
+		Coprocessor.stopEmulator();
+	}
+
+	printf("Wait for Coprocessor\n");
+	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+		threadC.join();
+
+	printf("Wait for MCU\n");
+	threadD.join();
+
+	printf("Wait for Audio\n");
+	threadA.join();
 
 #else
 	#pragma omp parallel num_threads(params.Flags & FT8XXEMU_EmulatorEnableCoprocessor ? 4 : 3)
