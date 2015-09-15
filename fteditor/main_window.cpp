@@ -87,29 +87,35 @@ volatile int s_VSize = 272;
 volatile int s_Rotate = 0;
 
 static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
-	2, // FT800
-	2, // FT801
-	3, // FT810
-	3, // FT811
-	3, // FT812
-	3, // FT813
+	3, // FT800
+	3, // FT801
+	5, // FT810
+	5, // FT811
+	5, // FT812
+	5, // FT813
 };
 
 static const char *s_StandardResolutions[] = {
 	"QVGA (320x240)",
 	"WQVGA (480x272)",
+	"HVGA Portrait (320x480)",
+	"WVGA (800x480)",
 	"SVGA (800x600)",
 };
 
 static const int s_StandardWidths[] = {
 	320,
 	480,
+	320,
+	800,
 	800,
 };
 
 static const int s_StandardHeights[] = {
 	240,
 	272,
+	480,
+	480,
 	600,
 };
 
