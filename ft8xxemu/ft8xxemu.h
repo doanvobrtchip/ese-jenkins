@@ -10,7 +10,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
-#define FT8XXEMU_VERSION_API 8
+#define FT8XXEMU_VERSION_API 9
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -36,6 +36,8 @@ typedef enum
 	FT8XXEMU_EmulatorFT801 = 0x0801,
 	FT8XXEMU_EmulatorFT810 = 0x0810,
 	FT8XXEMU_EmulatorFT811 = 0x0811,
+	FT8XXEMU_EmulatorFT812 = 0x0812,
+	FT8XXEMU_EmulatorFT813 = 0x0813,
 } FT8XXEMU_EmulatorMode;
 
 typedef enum
