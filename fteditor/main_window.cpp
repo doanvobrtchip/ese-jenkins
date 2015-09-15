@@ -86,11 +86,13 @@ volatile int s_HSize = 480;
 volatile int s_VSize = 272;
 volatile int s_Rotate = 0;
 
-static const int s_StandardResolutionNb[] = {
+static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	2, // FT800
 	2, // FT801
 	3, // FT810
 	3, // FT811
+	3, // FT812
+	3, // FT813
 };
 
 static const char *s_StandardResolutions[] = {

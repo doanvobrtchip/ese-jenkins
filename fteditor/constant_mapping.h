@@ -20,7 +20,9 @@ namespace FTEDITOR {
 #define FTEDITOR_FT801 1
 #define FTEDITOR_FT810 2
 #define FTEDITOR_FT811 3
-#define FTEDITOR_DEVICE_NB 4
+#define FTEDITOR_FT812 4
+#define FTEDITOR_FT813 5
+#define FTEDITOR_DEVICE_NB 6
 extern const FT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
 inline FT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
 extern const int g_DeviceToIntf[256];

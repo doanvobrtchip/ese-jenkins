@@ -537,38 +537,54 @@ void DlParser::initVC2()
 
 #if defined(FTEDITOR_PARSER_VC1)
 	m_IdMap[FTEDITOR_FT800] = &s_IdMap;
-	m_IdMap[FTEDITOR_FT801] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT800] = &s_ParamMap;
-	m_ParamMap[FTEDITOR_FT801] = &s_ParamMap;
 	m_CmdIdMap[FTEDITOR_FT800] = &s_CmdIdMap;
-	m_CmdIdMap[FTEDITOR_FT801] = &s_CmdIdMapFT801;
 	m_CmdParamMap[FTEDITOR_FT800] = &s_CmdParamMap;
-	m_CmdParamMap[FTEDITOR_FT801] = &s_CmdParamMap;
 	m_ParamCount[FTEDITOR_FT800] = s_ParamCount;
-	m_ParamCount[FTEDITOR_FT801] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT800] = s_CmdParamCount;
-	m_CmdParamCount[FTEDITOR_FT801] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT800] = s_CmdParamString;
-	m_CmdParamString[FTEDITOR_FT801] = s_CmdParamString;
 	m_CmdIdList[FTEDITOR_FT800] = s_CmdIdList;
+	m_IdMap[FTEDITOR_FT801] = &s_IdMap;
+	m_ParamMap[FTEDITOR_FT801] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_FT801] = &s_CmdIdMapFT801;
+	m_CmdParamMap[FTEDITOR_FT801] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_FT801] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_FT801] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_FT801] = s_CmdParamString;
 	m_CmdIdList[FTEDITOR_FT801] = s_CmdIdList;
 #elif defined(FTEDITOR_PARSER_VC2)
 	m_IdMap[FTEDITOR_FT810] = &s_IdMap;
-	m_IdMap[FTEDITOR_FT811] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT810] = &s_ParamMap;
-	m_ParamMap[FTEDITOR_FT811] = &s_ParamMap;
 	m_CmdIdMap[FTEDITOR_FT810] = &s_CmdIdMap;
-	m_CmdIdMap[FTEDITOR_FT811] = &s_CmdIdMap;
 	m_CmdParamMap[FTEDITOR_FT810] = &s_CmdParamMap;
-	m_CmdParamMap[FTEDITOR_FT811] = &s_CmdParamMap;
 	m_ParamCount[FTEDITOR_FT810] = s_ParamCount;
-	m_ParamCount[FTEDITOR_FT811] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT810] = s_CmdParamCount;
-	m_CmdParamCount[FTEDITOR_FT811] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT810] = s_CmdParamString;
-	m_CmdParamString[FTEDITOR_FT811] = s_CmdParamString;
 	m_CmdIdList[FTEDITOR_FT810] = s_CmdIdList;
+	m_IdMap[FTEDITOR_FT811] = &s_IdMap;
+	m_ParamMap[FTEDITOR_FT811] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_FT811] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_FT811] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_FT811] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_FT811] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_FT811] = s_CmdParamString;
 	m_CmdIdList[FTEDITOR_FT811] = s_CmdIdList;
+	m_IdMap[FTEDITOR_FT812] = &s_IdMap;
+	m_ParamMap[FTEDITOR_FT812] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_FT812] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_FT812] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_FT812] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_FT812] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_FT812] = s_CmdParamString;
+	m_CmdIdList[FTEDITOR_FT812] = s_CmdIdList;
+	m_IdMap[FTEDITOR_FT813] = &s_IdMap;
+	m_ParamMap[FTEDITOR_FT813] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_FT813] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_FT813] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_FT813] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_FT813] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_FT813] = s_CmdParamString;
+	m_CmdIdList[FTEDITOR_FT813] = s_CmdIdList;
 #endif
 }
 
