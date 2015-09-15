@@ -37,16 +37,18 @@ void SleepWake::sleep(uint32_t ms)
 	SDL_CondWaitTimeout(m_SleepCond, m_SleepLock, ms);
 	SDL_UnlockMutex(m_SleepLock);
 #else
-	std::unique_lock<std::mutex> lock(m_SleepLock);
-	if (m_WantWake)
-	{
-		m_IsSleeping = false;
-		m_WantWake = false;
-		lock.unlock();
-		return;
+	; {
+		std::unique_lock<std::mutex> lock(m_SleepLock);
+		if (m_WantWake)
+		{
+			m_IsSleeping = false;
+			m_WantWake = false;
+			// lock.unlock(); in destructor
+			return;
+		}
+		m_SleepCond.wait_for(lock, std::chrono::milliseconds(ms));
+		// lock.unlock(); in destructor
 	}
-	m_SleepCond.wait_for(lock, std::chrono::milliseconds(ms));
-	lock.unlock();
 #endif
 	m_IsSleeping = false;
 	m_WantWake = false;
@@ -59,6 +61,7 @@ void SleepWake::wakeInternal()
 	SDL_CondSignal(m_SleepCond);
 	SDL_UnlockMutex(m_SleepLock);
 #else
+	std::unique_lock<std::mutex> lock(m_SleepLock);
 	m_SleepCond.notify_one();
 #endif
 }
