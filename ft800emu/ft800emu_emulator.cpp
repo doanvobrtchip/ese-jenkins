@@ -890,7 +890,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_InitMutex = new std::mutex();
 	s_InitCond = new std::condition_variable();
 
-	std::thread threadC = std::thread(audioThread, nullptr);
+	std::thread threadC = std::thread(coprocessorThread, nullptr);
 
 	; {
 		std::unique_lock<std::mutex> lock(*s_InitMutex);
