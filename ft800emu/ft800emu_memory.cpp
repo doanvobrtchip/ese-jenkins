@@ -344,6 +344,12 @@ static const uint8_t s_OTP810[FT800EMU_OTP_SIZE] = {
 static const uint8_t s_OTP811[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_811.h"
 };
+static const uint8_t s_OTP812[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_812.h"
+};
+static const uint8_t s_OTP813[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_813.h"
+};
 #endif
 
 void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
@@ -391,7 +397,9 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	else
 	{
 #ifdef FT810EMU_MODE
-		if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
+		if (emulatorMode >= FT8XXEMU_EmulatorFT813) memcpy(&s_Ram[RAM_JTBOOT], s_OTP813, sizeof(s_OTP813));
+		else if (emulatorMode >= FT8XXEMU_EmulatorFT812) memcpy(&s_Ram[RAM_JTBOOT], s_OTP812, sizeof(s_OTP812));
+		else if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
 		else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
 #endif
 	}
