@@ -713,7 +713,7 @@ const uint8_t bayerDiv4[2][2] = {
 	{
 #ifdef WIN32
 #ifndef FTEMU_SDL2
-		HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+		HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 #endif
 #endif
 
@@ -761,7 +761,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 {
 #ifdef WIN32
 #ifndef FTEMU_SDL2
-	HRESULT coInitHR = CoInitializeEx(NULL, params.Graphics ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
+	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 #endif
 #endif
 

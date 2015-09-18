@@ -174,11 +174,6 @@ FT8XXEMU_API const char *FT8XXEMU_version();
 FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParameters *params, FT8XXEMU_EmulatorMode mode);
 
 // Run the emulator on the current thread. Returns when the emulator is fully stopped. Parameter versionApi must be set to FT8XXEMU_VERSION_API
-// IMPORTANT: On Windows this will call CoInitializeEx(NULL, COINIT_MULTITHREADED).
-//            If you are embedding this within a GUI application, you may need to
-//            call CoInitializeEx(NULL, COINIT_APARTMENTTHREADED) on your GUI thread
-//            at the start of your application, preferably within the main function.
-//            This is required to be called when embedding within Qt.
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params);
 
 // Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped
