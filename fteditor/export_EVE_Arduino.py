@@ -150,7 +150,7 @@ def raiseUnicodeError(errorArea):
 
 
 # name: the input file name,
-def run(name, document, ram):
+def run(name, document, ram, moduleName):
     try:
         name.decode('ascii')
     except UnicodeDecodeError:
@@ -283,15 +283,21 @@ def run(name, document, ram):
     f.write("#include <EEPROM.h>\n")
     f.write("#include <SPI.h>\n")
     f.write("#include <Wire.h>\n")
-    #if document["ScreenSize"] == "320x240":
-    #	f.write("#include <FT_VM800P35.h>\n")
-    #else:
-    if document["project"]["device"] == 2048:
+
+    if moduleName == "ADAM_4DLCD_FT843":
+        f.write("#include <FT_ADAM_4DLCD_FT843.h>\n")
+    elif moduleName == "Breakout_4DLCD_FT843":
+        f.write("#include <FT_Breakout_4DLCD_FT843.h>\n")
+    elif moduleName == "VM800B35":
+        f.write("#include <FT_VM800B35.h>\n")
+    elif moduleName == "VM800P35":
+        f.write("#include <FT_VM800P35.h>\n")
+    elif moduleName == "VM800P43_50":
         f.write("#include <FT_VM800P43_50.h>\n")
-    elif document["project"]["device"] == 2049:
+    elif moduleName == "VM801B43":
+        f.write("#include <FT_VM801B43.h>\n")
+    elif moduleName == "VM801P43_50":
         f.write("#include <FT_VM801P43_50.h>\n")
-    else:
-        f.write("#include <FT_VM800P43_50.h>\n")
 
     for content in document["content"]:
         try:
