@@ -609,7 +609,8 @@ void Ejpg::run1(uint8_t *memory8,
 
 FT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
 {
-	pc = 0x3fff;
+	uint32_t regRomsubSel = Memory.rawReadU32(Memory.getRam(), REG_ROMSUB_SEL); // FIXME: Hack?
+	pc = regRomsubSel == 3 ? 0x3fff : 0; // 0x3fff;
 	dsp = rsp = 0;
 	t = 0;
 }
@@ -687,6 +688,8 @@ void CoprocessorClass::execute()
 			FT8XXEMU::System.delay(1);
 			continue;
 		}
+		uint32_t regRomsubSel = Memory.rawReadU32(Memory.getRam(), REG_ROMSUB_SEL);
+		// uint32_t regJ1Cold = Memory.rawReadU32(Memory.getRam(), REG_J1_COLD);
 
 #if FT800EMU_COPROCESSOR_DEBUG
 		//printf("pc: %i, 0x%x\n", (int)pc, (int)pc);
@@ -728,7 +731,9 @@ void CoprocessorClass::execute()
 			break;*/
 		}
 #endif
-		uint16_t insn = j1boot[pc];
+		uint16_t insn = ((regRomsubSel == 3) && (pc >= 0x3c00))
+			? Memory.rawReadU16(Memory.getRam(), RAM_ROMSUB + ((pc - 0x3c00) * 2))
+			: j1boot[pc];
 		_pc = pc + 1;
 
 		switch (insn >> 13)
@@ -856,7 +861,8 @@ void CoprocessorClass::execute()
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
-				Memory.coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
+				// FIXME: Workaround pc != 0xd1f ? n : 3
+				Memory.coprocessorWriteU32(t, pc != 0xd1f ? n : 3); // memory32[t >> 2] = n;
 				if (t == REG_EJPG_FORMAT)
 				{
 					// printf("EJPG Begin\n");

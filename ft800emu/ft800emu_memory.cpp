@@ -249,6 +249,9 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 			rawWriteU32(REG_CMD_WRITE, wp);
 			break;
 		}
+		case REG_ROMSUB_SEL:
+			data &= 0x3;
+			break;
 #endif
 		}
 	}
@@ -527,6 +530,10 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_CMD_WRITE, 0);
 	rawWriteU32(REG_CMD_READ, 0);
 	rawWriteU32(REG_CMD_DL, 0);
+
+#ifdef FT810EMU_MODE
+	rawWriteU32(REG_J1_COLD, 1);
+#endif
 
 	s_CpuReset = false;
 }
@@ -923,6 +930,14 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 
 	switch (address)
 	{
+#ifdef FT810EMU_MODE
+	case REG_J1_COLD:
+		; {
+			uint32_t v = rawReadU32(address);
+			rawWriteU32(address, 0); // FIXME
+			return v;
+		}
+#endif
 	case REG_TOUCH_SCREEN_XY:
 		return Touch[0].getXY();
 		// TODO: MULTITOUCH 1,2,3,4
