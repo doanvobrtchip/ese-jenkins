@@ -456,7 +456,8 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 
 FT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
-	return static_cast<const uint32_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
+	uint8_t val = reinterpret_cast<const uint8_t *>(&reinterpret_cast<const uint32_t *>(&ram[paletteSource])[value])[0];
+	return val | val << 8 | val << 16 | val << 24;
 }
 
 FT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
