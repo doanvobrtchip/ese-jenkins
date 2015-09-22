@@ -609,8 +609,7 @@ void Ejpg::run1(uint8_t *memory8,
 
 FT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
 {
-	uint32_t regRomsubSel = Memory.rawReadU32(Memory.getRam(), REG_ROMSUB_SEL); // FIXME: Hack?
-	pc = regRomsubSel == 3 ? 0x3fff : 0; // 0x3fff;
+	pc = 0;
 	dsp = rsp = 0;
 	t = 0;
 }
@@ -736,6 +735,11 @@ void CoprocessorClass::execute()
 			: j1boot[pc];
 		_pc = pc + 1;
 
+#if FT800EMU_COPROCESSOR_DEBUG
+		if (pc == 0x3fff)
+			printf("NEW ENTRYPOINT\n");
+#endif
+
 		switch (insn >> 13)
 		{
 		case 4:
@@ -754,6 +758,9 @@ void CoprocessorClass::execute()
 		case 3:
 			rsp = 31 & (rsp + 1);
 			r[rsp] = _pc << 1;
+#if FT800EMU_COPROCESSOR_DEBUG
+			printf("(call) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+#endif
 			_pc = insn & 0x3fff;
 			break;
 		case 6: // ALU
@@ -846,6 +853,9 @@ void CoprocessorClass::execute()
 				break;
 			case 2:
 				r[rsp] = t;
+#if FT800EMU_COPROCESSOR_DEBUG
+				printf("(r[rsp] = t) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+#endif
 				break;
 			case 3:
 				break;
@@ -929,6 +939,9 @@ void CoprocessorClass::execute()
 
 #if FT800EMU_COPROCESSOR_TRACE
 		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+#if FT800EMU_COPROCESSOR_DEBUG
+		printf("pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+#endif
 #endif
 
 		//REG(CLOCK)++;

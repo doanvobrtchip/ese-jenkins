@@ -305,14 +305,21 @@ void resetCoprocessorFromLoop()
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+	{
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
-	// HACK ->
-	QThread::msleep(1);
-	// <- HACK
+	}
+	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	// HACK ->
-	QThread::msleep(1);
-	// <- HACK
+	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+	{
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
+		QThread::msleep(1); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	}
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 

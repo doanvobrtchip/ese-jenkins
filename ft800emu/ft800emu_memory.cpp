@@ -230,9 +230,11 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 #ifdef FT810EMU_MODE
 		case REG_CMD_READ:
 			data &= 0xFFF;
+			// printf("REG_CMD_READ %u\n", data);
 			break;
 		case REG_CMD_WRITE:
 			data &= 0xFFF;
+			// printf("REG_CMD_WRITE %u\n", data);
 			break;
 		case REG_CMD_DL:
 			data &= 0x1FFF;
