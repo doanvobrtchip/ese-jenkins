@@ -301,29 +301,35 @@ void resetemu()
 
 void resetCoprocessorFromLoop()
 {
+	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
+		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
 	}
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	// Leave reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	// Stop playing audio in case video with audio was playing during reset
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
+		// Go back into the patched coprocessor main loop
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
 		QThread::msleep(1); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
+		// Need to manually stop previous command from repeating infinitely
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 	}
+	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
-
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
 }
 
 // static int s_SwapCount = 0;
