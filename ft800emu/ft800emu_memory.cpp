@@ -932,14 +932,6 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 
 	switch (address)
 	{
-#ifdef FT810EMU_MODE
-	case REG_J1_COLD:
-		; {
-			uint32_t v = rawReadU32(address);
-			rawWriteU32(address, 0); // FIXME
-			return v;
-		}
-#endif
 	case REG_TOUCH_SCREEN_XY:
 		return Touch[0].getXY();
 		// TODO: MULTITOUCH 1,2,3,4
