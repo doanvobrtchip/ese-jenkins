@@ -666,10 +666,7 @@ const uint8_t bayerDiv4[2][2] = {
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #elif defined(FTEMU_STDTHREAD)
-		; {
-			std::unique_lock<std::mutex> lock(*s_InitMutex);
-			s_InitCond->notify_one();
-		}
+		s_InitCond->notify_one();
 #endif
 		
 		s_Setup();
@@ -686,6 +683,8 @@ const uint8_t bayerDiv4[2][2] = {
 	{
 		FT8XXEMU::System.makeCoprocessorThread();
 
+		printf("Coprocessor thread begin\n");
+
 		unsigned long taskId = 0;
 		void *taskHandle;
 		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
@@ -695,10 +694,7 @@ const uint8_t bayerDiv4[2][2] = {
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #elif defined(FTEMU_STDTHREAD)
-		; {
-			std::unique_lock<std::mutex> lock(*s_InitMutex);
-			s_InitCond->notify_one();
-		}
+		s_InitCond->notify_one();
 #endif
 
 		Coprocessor.executeEmulator();
@@ -994,6 +990,14 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 void EmulatorClass::stop()
 {
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
+#elif defined(FTEMU_STDTHREAD)
+	while (s_InitCond) // Some basic protection against calling stop too quickly
+	{
+		FT8XXEMU::System.delay(1);
+	}
+#endif
+
 	s_MasterRunning = false;
 
 	if (!FT8XXEMU::System.isMCUThread())
