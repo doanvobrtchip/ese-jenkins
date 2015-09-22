@@ -871,8 +871,7 @@ void CoprocessorClass::execute()
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
-				// FIXME: Workaround pc != 0xd1f ? n : 3
-				Memory.coprocessorWriteU32(t, pc != 0xd1f ? n : 3); // memory32[t >> 2] = n;
+				Memory.coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
 				if (t == REG_EJPG_FORMAT)
 				{
 					// printf("EJPG Begin\n");
