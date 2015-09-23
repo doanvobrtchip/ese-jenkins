@@ -101,6 +101,7 @@ private:
 	int m_MouseX, m_MouseY;
 	std::vector<int> m_MouseStackWrite;
 	std::vector<int> m_MouseStackRead;
+	volatile bool m_MouseStackWritten;
 	int m_MouseStackDlTop;
 	int m_MouseStackCmdTop;
 	bool m_MouseStackValid;

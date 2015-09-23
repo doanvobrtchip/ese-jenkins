@@ -3520,6 +3520,9 @@ void GraphicsProcessorClass::processTrace(int *result, int *size, uint32_t x, ui
 	*size = 0;
 	s_DebugTraceStackSize = size;
 	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	s_DebugTraceX = ~0;
+	s_DebugTraceStackMax = 0;
+	s_DebugTraceStackSize = &s_DebugTraceStackMax;
 	s_DebugTraceStack = NULL;
 }
 

@@ -65,7 +65,7 @@ namespace FTEDITOR {
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	: EmulatorViewport(parent), m_MainWindow(parent),
-	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false),
+	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false), m_MouseStackWritten(false), 
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
 	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false), m_WidgetGradient(false),
@@ -256,19 +256,23 @@ void InteractiveViewport::graphics()
 	m_MouseStackWrite.clear();
 	if (m_MouseOver || m_DragMoving)
 	{
-		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
+		if (!m_MouseStackWritten)
 		{
-			int size = FTEDITOR_TRACE_STACK_SIZE;
-			m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
-			FT8XXEMU_processTrace(&m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
-			m_MouseStackWrite.resize(size);
-			if (m_MouseStackWrite.size())
+			if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 			{
-				m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
-				m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
-				m_MouseStackValid = true;
+				int size = FTEDITOR_TRACE_STACK_SIZE;
+				m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
+				FT8XXEMU_processTrace(&m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
+				m_MouseStackWrite.resize(size);
+				if (m_MouseStackWrite.size())
+				{
+					m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
+					m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
+					m_MouseStackValid = true;
+				}
+				else m_MouseStackValid = false;
+				m_MouseStackWritten = true;
 			}
-			else m_MouseStackValid = false;
 		}
 		m_DragMoving = false;
 	}
@@ -305,7 +309,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 	m_MainWindow->cmdEditor()->codeEditor()->setTraceHighlights(m_TraceStackCmd);
 	m_MouseX = m_NextMouseX;
 	m_MouseY = m_NextMouseY;
-	m_MouseStackRead.swap(m_MouseStackWrite);
+	if (m_MouseStackWritten)
+	{
+		m_MouseStackRead.swap(m_MouseStackWrite);
+		m_MouseStackWritten = false;
+	}
 
 	int mvx = screenLeft();
 	int mvy = screenTop();
