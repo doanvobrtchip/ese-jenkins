@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 // Version
-#define FT8XXEMU_VERSION_STRING "2.0.15"
+#define FT8XXEMU_VERSION_STRING "2.0.17"
 
 // Include FT8XXEMU_PLATFORM
 #include "ft8xxemu_graphics_driver.h"
