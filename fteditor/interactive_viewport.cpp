@@ -2204,7 +2204,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								++line;
 							}
 
-							if (requirePaletteAddress(contentInfo))
+							/*if (requirePaletteAddress(contentInfo))
 							{
 								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
 								pa.Parameter[0].U = contentInfo->MemoryAddress;
@@ -2212,7 +2212,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								m_LineEditor->insertLine(hline, pa);
 								++hline;
 								++line;
-							}
+							}*/ // Not the correct location
 
 							if (!useSetBitmap)
 							{
@@ -2301,25 +2301,131 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						int mvy = screenTop();
 						int scl = screenScale();
 
+						DlParsed pav;
+						pav.ValidId = true;
+						pav.IdLeft = FTEDITOR_DL_VERTEX2II; // FIXME: Drag-drop outside 512px does not work??
+						pav.IdRight = 0;
+						pav.Parameter[0].I = UNTFX(e->pos().x());
+						pav.Parameter[1].I = UNTFY(e->pos().y());
+						pav.Parameter[2].I = bitmapHandle;
+						pav.Parameter[3].I = 0;
+						pav.ExpectedParameterCount = 4;
+						pav.ExpectedStringParameter = false;
 						pa.IdRight = FTEDITOR_DL_BEGIN;
 						pa.Parameter[0].U = selection;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(line, pa);
 						++line;
-						pa.IdLeft = FTEDITOR_DL_VERTEX2II;
-						pa.IdRight = 0;
-						pa.Parameter[0].I = UNTFX(e->pos().x());
-						pa.Parameter[1].I = UNTFY(e->pos().y());
-						pa.Parameter[2].I = bitmapHandle;
-						pa.Parameter[3].I = 0;
-						pa.ExpectedParameterCount = 4;
-						m_LineEditor->insertLine(line, pa);
-						++line;
+						int lastVertex;
+						if (selection == BITMAPS && contentInfo && contentInfo->Converter == ContentInfo::Image
+							&& requirePaletteAddress(contentInfo))
+						{
+							if (contentInfo->ImageFormat == PALETTED8)
+							{
+								pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
+								pa.ExpectedParameterCount = 0;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
+								pa.Parameter[0].U = ONE;
+								pa.Parameter[1].U = ZERO;
+								pa.ExpectedParameterCount = 2;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+								pa.Parameter[0].U = 0;
+								pa.Parameter[1].U = 0;
+								pa.Parameter[2].U = 0;
+								pa.Parameter[3].U = 1;
+								pa.ExpectedParameterCount = 4;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress + 3;
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								m_LineEditor->insertLine(line, pav);
+								++line;
+								pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
+								pa.Parameter[0].U = DST_ALPHA;
+								pa.Parameter[1].U = ONE_MINUS_DST_ALPHA;
+								pa.ExpectedParameterCount = 2;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+								pa.Parameter[0].U = 1;
+								pa.Parameter[1].U = 0;
+								pa.Parameter[2].U = 0;
+								pa.Parameter[3].U = 0;
+								pa.ExpectedParameterCount = 4;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress + 2;
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								m_LineEditor->insertLine(line, pav);
+								++line;
+								pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+								pa.Parameter[0].U = 0;
+								pa.Parameter[1].U = 1;
+								pa.Parameter[2].U = 0;
+								pa.Parameter[3].U = 0;
+								pa.ExpectedParameterCount = 4;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress + 1;
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								m_LineEditor->insertLine(line, pav);
+								++line;
+								pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+								pa.Parameter[0].U = 0;
+								pa.Parameter[1].U = 0;
+								pa.Parameter[2].U = 1;
+								pa.Parameter[3].U = 0;
+								pa.ExpectedParameterCount = 4;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress;
+								pa.ExpectedParameterCount = 1;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								m_LineEditor->insertLine(line, pav);
+								++line;
+								pa.IdRight = FTEDITOR_DL_RESTORE_CONTEXT;
+								pa.ExpectedParameterCount = 0;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								lastVertex = -2;
+							}
+							else
+							{
+								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+								pa.Parameter[0].U = contentInfo->MemoryAddress;
+								m_LineEditor->insertLine(line, pa);
+								++line;
+								m_LineEditor->insertLine(line, pav);
+								++line;
+								lastVertex = -1;
+							}
+						}
+						else
+						{
+							m_LineEditor->insertLine(line, pav);
+							++line;
+							lastVertex = -1;
+						}
 						pa.IdLeft = 0;
 						pa.IdRight = FTEDITOR_DL_END;
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(line, pa);
-						m_LineEditor->selectLine(line - 1);
+						m_LineEditor->selectLine(line + lastVertex);
 					}
 					m_LineEditor->codeEditor()->endUndoCombine();
 					//m_MainWindow->undoStack()->endMacro();
