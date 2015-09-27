@@ -1934,10 +1934,10 @@ void ContentManager::editorUpdatePaletteAddress(int newAddr, int oldAddr, DlEdit
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE && parsed.Parameter[0].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE && (parsed.Parameter[0].I & ~3) == oldAddr)
 		{
 			DlParsed pa = parsed;
-			pa.Parameter[0].I = newAddr;
+			pa.Parameter[0].I = newAddr + (parsed.Parameter[0].I % 4);
 			dlEditor->replaceLine(i, pa);
 		}
 	}
@@ -1995,6 +1995,86 @@ void ContentManager::editorUpdateFontOffset(ContentInfo *contentInfo, DlEditor *
 		}
 	}
 
+}
+
+void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
+{
+	bool bitmapHandle[32];
+	for (int i = 0; i < 32; ++i) bitmapHandle[0] = false;
+	int memoryAddress = contentInfo->bitmapAddress();
+	int paletteAddress = contentInfo->MemoryAddress;
+	int curBitmapHandle = 0;
+	bool drawingBitmaps = false;
+
+	DlParsed paPaletteSource;
+	paPaletteSource.ValidId = true;
+	paPaletteSource.IdLeft = 0;
+	paPaletteSource.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+	paPaletteSource.ExpectedParameterCount = 1;
+	paPaletteSource.ExpectedStringParameter = false;
+	paPaletteSource.Parameter[0].I = paletteAddress;
+
+	for (int i = 0; i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount(); ++i)
+	{
+		const DlParsed &parsed = dlEditor->getLine(i);
+		if (!parsed.ValidId)
+			continue;
+
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+		{
+			if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
+			{
+				switch (parsed.IdRight)
+				{
+				case CMD_SETBITMAP & 0xFF:
+					bitmapHandle[curBitmapHandle]
+						= parsed.Parameter[0].U == memoryAddress;
+					break;
+				case CMD_SETFONT2 & 0xFF:
+					bitmapHandle[parsed.Parameter[0].I]
+						= parsed.Parameter[1].I == memoryAddress;
+					break;
+				}
+			}
+		}
+		if (parsed.IdLeft != 0)
+		{
+			if (drawingBitmaps)
+			{
+				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+				{
+					if (bitmapHandle[parsed.Parameter[2].I])
+					{
+						dlEditor->insertLine(i, paPaletteSource);
+					}
+				}
+				else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
+				{
+					if (bitmapHandle[curBitmapHandle])
+					{
+						dlEditor->insertLine(i, paPaletteSource);
+					}
+				}
+			}
+			continue;
+		}
+		switch (parsed.IdRight)
+		{
+		case FTEDITOR_DL_BITMAP_HANDLE:
+			curBitmapHandle = parsed.Parameter[0].I;
+			break;
+		case FTEDITOR_DL_BITMAP_SOURCE:
+			bitmapHandle[curBitmapHandle]
+				= parsed.Parameter[0].U == contentInfo->bitmapAddress();
+			break;
+		case FTEDITOR_DL_BEGIN:
+			drawingBitmaps = (parsed.Parameter[0].I == BITMAPS);
+			break;
+		case FTEDITOR_DL_END:
+			drawingBitmaps = false;
+			break;
+		}
+	}
 }
 
 void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
