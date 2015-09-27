@@ -2031,8 +2031,9 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 						= parsed.Parameter[0].U == memoryAddress;
 					break;
 				case CMD_SETFONT2 & 0xFF:
-					bitmapHandle[parsed.Parameter[0].I]
-						= parsed.Parameter[1].I == memoryAddress;
+					if (parsed.Parameter[0].I < 32)
+						bitmapHandle[parsed.Parameter[0].I]
+							= parsed.Parameter[1].I == memoryAddress;
 					break;
 				}
 			}
@@ -2046,6 +2047,7 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 					if (bitmapHandle[parsed.Parameter[2].I])
 					{
 						dlEditor->insertLine(i, paPaletteSource);
+						++i;
 					}
 				}
 				else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
@@ -2053,6 +2055,7 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 					if (bitmapHandle[curBitmapHandle])
 					{
 						dlEditor->insertLine(i, paPaletteSource);
+						++i;
 					}
 				}
 			}
@@ -2061,7 +2064,8 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 		switch (parsed.IdRight)
 		{
 		case FTEDITOR_DL_BITMAP_HANDLE:
-			curBitmapHandle = parsed.Parameter[0].I;
+			if (parsed.Parameter[0].I < 32)
+				curBitmapHandle = parsed.Parameter[0].I;
 			break;
 		case FTEDITOR_DL_BITMAP_SOURCE:
 			bitmapHandle[curBitmapHandle]
@@ -2631,9 +2635,16 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	// Create undo/redo
 	ChangeImageFormat *changeImageFormat = new ChangeImageFormat(this, contentInfo, value);
 	m_MainWindow->undoStack()->beginMacro(tr("Change image format"));
+	int oldImageFormat = contentInfo->ImageFormat;
+	bool oldPaletteSource = requirePaletteAddress(contentInfo) && oldImageFormat != PALETTED8;
 	int oldBitmapAddr = contentInfo->bitmapAddress();
 	m_MainWindow->undoStack()->push(changeImageFormat);
 	m_MainWindow->propertiesEditor()->surpressSet(true);
+	bool paletteSource = requirePaletteAddress(contentInfo) && contentInfo->ImageFormat != PALETTED8;
+	if (oldImageFormat == PALETTED8)
+		; // editorRemovePaletteSource8(contentInfo);
+	else if (oldPaletteSource != paletteSource && oldPaletteSource)
+		; // editorRemovePaletteSource(contentInfo);
 	int newBitmapAddr = contentInfo->bitmapAddress();
 	if (newBitmapAddr != oldBitmapAddr)
 	{
@@ -2642,6 +2653,12 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
+	// add new palette entries
+	if (contentInfo->ImageFormat == PALETTED8)
+		; // editorInsertPaletteSource8(contentInfo);
+	else if (oldPaletteSource != paletteSource && paletteSource)
+		editorInsertPaletteSource(contentInfo, m_MainWindow->dlEditor()),
+		editorInsertPaletteSource(contentInfo, m_MainWindow->cmdEditor());
 	m_ContentList->setCurrentItem(contentInfo->View);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
