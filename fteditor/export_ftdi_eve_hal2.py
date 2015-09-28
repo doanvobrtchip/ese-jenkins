@@ -1101,7 +1101,7 @@ def run(name, document, ram, moduleName):
     except UnicodeDecodeError:
         raiseUnicodeError("Project Name")
 
-    if deviceType == 2064 or deviceType == 2065:
+    if deviceType == 2064 or deviceType == 2065 or deviceType == 2066 or deviceType == 2067:
         outDir = "FT81X_" + name + "_FTEVE_HAL"
         functionMap["CMD_SNAPSHOT2"] = "Ft_Gpu_CoCmd_Snapshot2"
         functionMap["CMD_SETBASE"] = "Ft_Gpu_CoCmd_SetBase"
@@ -1186,7 +1186,7 @@ def run(name, document, ram, moduleName):
     f.write(FT8xxHelperAPI)
     f.write("\n")
 
-    if deviceType == 2064 or deviceType == 2065:
+    if deviceType == 2064 or deviceType == 2065 or deviceType == 2066 or deviceType == 2067:
         f.write(loadDataToCoprocessorMediafifo)
         f.write("\n")
         f.write(loadDataToCoprocessorCMDfifo_nowait)

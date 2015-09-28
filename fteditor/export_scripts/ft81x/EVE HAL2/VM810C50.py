@@ -1,8 +1,8 @@
 import os,shutil, subprocess, sys, re, imp
 
-supportedPlatforms = [2049]
-exportModuleName = "export_EVE_Arduino"
-deviceModuleName = "VM801P43_50"
+supportedPlatforms = [2064, 2065, 2066, 2067]
+exportModuleName = "export_ftdi_eve_hal2"
+deviceModuleName = "VM810C50"
 
 missingFileMessage = 'Unable to locate the required export file in the installation directory.'
 wrongPlatformMessage = 'The project can not be exported to the selected platform.  The selected platform is incompatible with the current project device type.'
