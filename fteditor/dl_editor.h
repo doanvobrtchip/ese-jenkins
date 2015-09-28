@@ -90,6 +90,7 @@ public:
 	bool isMacro() const { return m_ModeMacro; }
 
 	CodeEditor *codeEditor() { return m_CodeEditor; }
+	MainWindow *mainWindow() { return m_MainWindow; }
 
 	const DlState &getState(int line) { if (m_InvalidState) { processState(); } return m_State[line]; }
 

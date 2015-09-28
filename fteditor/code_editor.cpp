@@ -168,6 +168,12 @@ void CodeEditor::undoIndexChanged(int idx)
 	}
 }
 
+namespace FTEDITOR {
+	void tempBeginIdel(CodeEditor *dlEditor);
+	void tempEndIdel(CodeEditor *dlEditor);
+	void editorPurgePalette8(CodeEditor *dlEditor, int &line);
+}
+
 void CodeEditor::keyPressEvent(QKeyEvent *e)
 {
 	if (m_Completer && m_Completer->popup()->isVisible()) {
@@ -211,8 +217,10 @@ default:
 		if (e->key() == Qt::Key_Delete && m_InteractiveDelete)
 		{
 			printf("Interactive delete\n");
+			FTEDITOR::tempBeginIdel(this);
 			QTextCursor c = textCursor();
 			int line = c.block().blockNumber();
+			FTEDITOR::editorPurgePalette8(this, line);
 			c.setPosition(document()->findBlockByNumber(line).position());
 			c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
 			c.insertText("");
@@ -228,6 +236,7 @@ default:
 					c.insertText("");
 				}
 			}
+			FTEDITOR::tempEndIdel(this);
 			// <- cleanup BEGIN/END
 			setInteractiveDelete(true);
 			return;

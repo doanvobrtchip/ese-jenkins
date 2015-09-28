@@ -39,6 +39,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "dl_parser.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
+#include "code_editor.h"
 
 namespace FTEDITOR {
 
@@ -1999,17 +2000,35 @@ void ContentManager::editorUpdateFontOffset(ContentInfo *contentInfo, DlEditor *
 
 void editorPurgePalette8(DlEditor *dlEditor, int &line)
 {
-	printf("purge p8\n");
+	//printf("purge p8\n");
+	//printf("start line %i\n", line);
+	const DlParsed pav = dlEditor->getLine(line);
 	if (line > 0)
 	{
 		--line;
 		for (; line >= 0; --line)
 		{
-			printf("line %i\n", line);
+			//printf("line %i\n", line);
 
 			const DlParsed &parsed = dlEditor->getLine(line);
 			if (!parsed.ValidId)
-				continue;
+				break;
+
+			if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F
+				|| parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+			{
+				if (parsed.Parameter[0].I == pav.Parameter[0].I
+					&& parsed.Parameter[1].I == pav.Parameter[1].I)
+				{
+					dlEditor->removeLine(line);
+					--line;
+					continue;
+				}
+				else
+				{
+					break;
+				}
+			}
 
 			if (parsed.IdLeft != FTEDITOR_DL_INSTRUCTION)
 				break;
@@ -2025,19 +2044,17 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 	}
 	if (line + 1 < FTEDITOR_DL_SIZE && line + 1 < dlEditor->getLineCount())
 	{
-		const DlParsed &pav = dlEditor->getLine(line);
 		++line; // keep one vertex
 		for (; line < FTEDITOR_DL_SIZE && line < dlEditor->getLineCount(); ++line)
 		{
-			printf("at+ %i\n", line);
+			//printf("at+ %i\n", line);
 			const DlParsed &parsed = dlEditor->getLine(line);
 			if (!parsed.ValidId)
-				continue;
+				break;
 
 			if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F
 				|| parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
-				printf("vertex at %i (%i %i %i %i)\n", line, parsed.Parameter[0].I, pav.Parameter[0].I, parsed.Parameter[1].I, pav.Parameter[1].I);
 				if (parsed.Parameter[0].I == pav.Parameter[0].I
 					&& parsed.Parameter[1].I == pav.Parameter[1].I)
 				{
@@ -2064,8 +2081,10 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 			else
 				break;
 		}
+		//printf("x line %i\n", line);
 		--line; // return to vertex
 	}
+	//printf("pre line %i\n", line);
 	// strip save/restore context
 	if (line > 0 && line + 1 < FTEDITOR_DL_SIZE && line + 1 < dlEditor->getLineCount())
 	{
@@ -2079,6 +2098,22 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 			--line;
 		}
 	}
+	//printf("end line %i\n", line);
+}
+
+void tempBeginIdel(CodeEditor *dlEditor)
+{
+	static_cast<DlEditor *>(dlEditor->parent())->mainWindow()->undoStack()->beginMacro("Interactive Delete");
+}
+
+void tempEndIdel(CodeEditor *dlEditor)
+{
+	static_cast<DlEditor *>(dlEditor->parent())->mainWindow()->undoStack()->endMacro();
+}
+
+void editorPurgePalette8(CodeEditor *dlEditor, int &line)
+{
+	editorPurgePalette8(static_cast<DlEditor *>(dlEditor->parent()), line);
 }
 
 void editorInsertPallette8(int paletteAddress, DlEditor *dlEditor, int &line)
@@ -2179,8 +2214,8 @@ void editorInsertPallette8(int paletteAddress, DlEditor *dlEditor, int &line)
 template <int process>
 void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor *dlEditor)
 {
-	if (process == FTEDITOR_PURGE_PALETTE_SOURCE_8)
-		printf("yes purge8\n");
+	//if (process == FTEDITOR_PURGE_PALETTE_SOURCE_8)
+	//	printf("yes purge8\n");
 
 	bool bitmapHandle[32];
 	for (int i = 0; i < 32; ++i) bitmapHandle[0] = false;
@@ -2197,7 +2232,7 @@ void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor 
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount(); ++i)
 	{
-		printf("at %i\n", i);
+		//printf("at %i\n", i);
 
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (!parsed.ValidId)
