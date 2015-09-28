@@ -1736,7 +1736,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 	int insertOkLine = -1;
 	int layoutHLine = -1;
 	int sizeHLine = -1;
-	int paletteAddrLine = -1;
+	// int paletteAddrLine = -1;
 	bool cmdSetBitmap = false;
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
@@ -1851,7 +1851,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						sizeHLine = i;
 					}
 					break;
-				case FTEDITOR_DL_PALETTE_SOURCE:
+				/* case FTEDITOR_DL_PALETTE_SOURCE:
 					if (addressOk && parsed.Parameter[0].U == contentInfo->MemoryAddress)
 					{
 						if (!requirePaletteAddress(contentInfo))
@@ -1866,7 +1866,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 							paletteAddrLine = i;
 						}
 					}
-					break;
+					break; */
 				default:
 					handleLine = -1;
 					addressOk = false;
@@ -1911,7 +1911,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				dlEditor->insertLine(sizeHLine, pa);
 			}
 		}
-		if (insertOkLine >= 0 && paletteAddrLine < 0 && requirePaletteAddress(contentInfo))
+		/* if (insertOkLine >= 0 && paletteAddrLine < 0 && requirePaletteAddress(contentInfo))
 		{
 			// Add palette source
 			DlParsed pa;
@@ -1924,7 +1924,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			paletteAddrLine = insertOkLine;
 			++insertOkLine;
 			dlEditor->insertLine(paletteAddrLine, pa);
-		}
+		} */
 	}
 }
 
@@ -1997,12 +1997,193 @@ void ContentManager::editorUpdateFontOffset(ContentInfo *contentInfo, DlEditor *
 
 }
 
-void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
+void editorPurgePalette8(DlEditor *dlEditor, int &line)
 {
+	printf("purge p8\n");
+	if (line > 0)
+	{
+		--line;
+		for (; line >= 0; --line)
+		{
+			printf("line %i\n", line);
+
+			const DlParsed &parsed = dlEditor->getLine(line);
+			if (!parsed.ValidId)
+				continue;
+
+			if (parsed.IdLeft != FTEDITOR_DL_INSTRUCTION)
+				break;
+
+			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
+				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
+				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC)
+				dlEditor->removeLine(line);
+			else
+				break;
+		}
+		++line;
+	}
+	if (line + 1 < FTEDITOR_DL_SIZE && line + 1 < dlEditor->getLineCount())
+	{
+		const DlParsed &pav = dlEditor->getLine(line);
+		++line; // keep one vertex
+		for (; line < FTEDITOR_DL_SIZE && line < dlEditor->getLineCount(); ++line)
+		{
+			printf("at+ %i\n", line);
+			const DlParsed &parsed = dlEditor->getLine(line);
+			if (!parsed.ValidId)
+				continue;
+
+			if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F
+				|| parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+			{
+				printf("vertex at %i (%i %i %i %i)\n", line, parsed.Parameter[0].I, pav.Parameter[0].I, parsed.Parameter[1].I, pav.Parameter[1].I);
+				if (parsed.Parameter[0].I == pav.Parameter[0].I
+					&& parsed.Parameter[1].I == pav.Parameter[1].I)
+				{
+					dlEditor->removeLine(line);
+					--line;
+					continue;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (parsed.IdLeft != FTEDITOR_DL_INSTRUCTION)
+				break;
+
+			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
+				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
+				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC)
+			{
+				dlEditor->removeLine(line);
+				--line;
+			}
+			else
+				break;
+		}
+		--line; // return to vertex
+	}
+	// strip save/restore context
+	if (line > 0 && line + 1 < FTEDITOR_DL_SIZE && line + 1 < dlEditor->getLineCount())
+	{
+		const DlParsed &prev = dlEditor->getLine(line - 1);
+		const DlParsed &next = dlEditor->getLine(line + 1);
+		if (prev.ValidId && prev.IdLeft == FTEDITOR_DL_INSTRUCTION && prev.IdRight == FTEDITOR_DL_SAVE_CONTEXT
+			&& next.ValidId && next.IdLeft == FTEDITOR_DL_INSTRUCTION && next.IdRight == FTEDITOR_DL_RESTORE_CONTEXT)
+		{
+			dlEditor->removeLine(line - 1);
+			dlEditor->removeLine(line);
+			--line;
+		}
+	}
+}
+
+void editorInsertPallette8(int paletteAddress, DlEditor *dlEditor, int &line)
+{
+	DlParsed pav = dlEditor->getLine(line);
+
+	DlParsed pa;
+	pa.ValidId = true;
+	pa.IdLeft = 0;
+	pa.ExpectedStringParameter = false;
+	
+	pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
+	pa.ExpectedParameterCount = 0;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
+	pa.Parameter[0].U = ONE;
+	pa.Parameter[1].U = ZERO;
+	pa.ExpectedParameterCount = 2;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+	pa.Parameter[0].U = 0;
+	pa.Parameter[1].U = 0;
+	pa.Parameter[2].U = 0;
+	pa.Parameter[3].U = 1;
+	pa.ExpectedParameterCount = 4;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+	pa.Parameter[0].U = paletteAddress + 3;
+	pa.ExpectedParameterCount = 1;
+	dlEditor->insertLine(line, pa);
+	++line;
+	dlEditor->insertLine(line, pav);
+	++line;
+	pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
+	pa.Parameter[0].U = DST_ALPHA;
+	pa.Parameter[1].U = ONE_MINUS_DST_ALPHA;
+	pa.ExpectedParameterCount = 2;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+	pa.Parameter[0].U = 1;
+	pa.Parameter[1].U = 0;
+	pa.Parameter[2].U = 0;
+	pa.Parameter[3].U = 0;
+	pa.ExpectedParameterCount = 4;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+	pa.Parameter[0].U = paletteAddress + 2;
+	pa.ExpectedParameterCount = 1;
+	dlEditor->insertLine(line, pa);
+	++line;
+	dlEditor->insertLine(line, pav);
+	++line;
+	pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+	pa.Parameter[0].U = 0;
+	pa.Parameter[1].U = 1;
+	pa.Parameter[2].U = 0;
+	pa.Parameter[3].U = 0;
+	pa.ExpectedParameterCount = 4;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+	pa.Parameter[0].U = paletteAddress + 1;
+	pa.ExpectedParameterCount = 1;
+	dlEditor->insertLine(line, pa);
+	++line;
+	dlEditor->insertLine(line, pav);
+	++line;
+	pa.IdRight = FTEDITOR_DL_COLOR_MASK;
+	pa.Parameter[0].U = 0;
+	pa.Parameter[1].U = 0;
+	pa.Parameter[2].U = 1;
+	pa.Parameter[3].U = 0;
+	pa.ExpectedParameterCount = 4;
+	dlEditor->insertLine(line, pa);
+	++line;
+	pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+	pa.Parameter[0].U = paletteAddress;
+	pa.ExpectedParameterCount = 1;
+	dlEditor->insertLine(line, pa);
+	++line;
+	// Use existing line // dlEditor->insertLine(line, pav);
+	++line;
+	pa.IdRight = FTEDITOR_DL_RESTORE_CONTEXT;
+	pa.ExpectedParameterCount = 0;
+	dlEditor->insertLine(line, pa);
+	// ++line;
+}
+
+#define FTEDITOR_INSERT_PALETTE_SOURCE 1
+#define FTEDITOR_INSERT_PALETTE_SOURCE_8 2
+#define FTEDITOR_PURGE_PALETTE_SOURCE 3
+#define FTEDITOR_PURGE_PALETTE_SOURCE_8 4
+template <int process>
+void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor *dlEditor)
+{
+	if (process == FTEDITOR_PURGE_PALETTE_SOURCE_8)
+		printf("yes purge8\n");
+
 	bool bitmapHandle[32];
 	for (int i = 0; i < 32; ++i) bitmapHandle[0] = false;
-	int memoryAddress = contentInfo->bitmapAddress();
-	int paletteAddress = contentInfo->MemoryAddress;
 	int curBitmapHandle = 0;
 	bool drawingBitmaps = false;
 
@@ -2016,6 +2197,8 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount(); ++i)
 	{
+		printf("at %i\n", i);
+
 		const DlParsed &parsed = dlEditor->getLine(i);
 		if (!parsed.ValidId)
 			continue;
@@ -2028,12 +2211,12 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 				{
 				case CMD_SETBITMAP & 0xFF:
 					bitmapHandle[curBitmapHandle]
-						= parsed.Parameter[0].U == memoryAddress;
+						= parsed.Parameter[0].U == bitmapAddress;
 					break;
 				case CMD_SETFONT2 & 0xFF:
 					if (parsed.Parameter[0].I < 32)
 						bitmapHandle[parsed.Parameter[0].I]
-							= parsed.Parameter[1].I == memoryAddress;
+							= parsed.Parameter[1].I == bitmapAddress;
 					break;
 				}
 			}
@@ -2046,16 +2229,38 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 				{
 					if (bitmapHandle[parsed.Parameter[2].I])
 					{
-						dlEditor->insertLine(i, paPaletteSource);
-						++i;
+						if (process == FTEDITOR_INSERT_PALETTE_SOURCE)
+						{
+							dlEditor->insertLine(i, paPaletteSource);
+							++i;
+						}
+						if (process == FTEDITOR_INSERT_PALETTE_SOURCE_8)
+						{
+							editorInsertPallette8(paletteAddress, dlEditor, i);
+						}
+						if (process == FTEDITOR_PURGE_PALETTE_SOURCE_8)
+						{
+							editorPurgePalette8(dlEditor, i);
+						}
 					}
 				}
 				else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 				{
 					if (bitmapHandle[curBitmapHandle])
 					{
-						dlEditor->insertLine(i, paPaletteSource);
-						++i;
+						if (process == FTEDITOR_INSERT_PALETTE_SOURCE)
+						{
+							dlEditor->insertLine(i, paPaletteSource);
+							++i;
+						}
+						if (process == FTEDITOR_INSERT_PALETTE_SOURCE_8)
+						{
+							editorInsertPallette8(paletteAddress, dlEditor, i);
+						}
+						if (process == FTEDITOR_PURGE_PALETTE_SOURCE_8)
+						{
+							editorPurgePalette8(dlEditor, i);
+						}
 					}
 				}
 			}
@@ -2063,13 +2268,23 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 		}
 		switch (parsed.IdRight)
 		{
+		case FTEDITOR_DL_PALETTE_SOURCE:
+			if ((parsed.Parameter[0].I & ~3) == paletteAddress)
+			{
+				if (process == FTEDITOR_PURGE_PALETTE_SOURCE) // BUG: May remove too many
+				{
+					dlEditor->removeLine(i);
+					--i;
+				}
+			}
+			break;
 		case FTEDITOR_DL_BITMAP_HANDLE:
 			if (parsed.Parameter[0].I < 32)
 				curBitmapHandle = parsed.Parameter[0].I;
 			break;
 		case FTEDITOR_DL_BITMAP_SOURCE:
 			bitmapHandle[curBitmapHandle]
-				= parsed.Parameter[0].U == contentInfo->bitmapAddress();
+				= parsed.Parameter[0].U == bitmapAddress;
 			break;
 		case FTEDITOR_DL_BEGIN:
 			drawingBitmaps = (parsed.Parameter[0].I == BITMAPS);
@@ -2083,6 +2298,16 @@ void editorInsertPaletteSource(ContentInfo *contentInfo, DlEditor *dlEditor)
 
 void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor)
 {
+	if (requirePaletteAddress(contentInfo))
+	{
+		if (contentInfo->ImageFormat == PALETTED8)
+				editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+				editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+		else
+			editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+			editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+	}
+
 	// ISSUE#113: Remove all entries related to content info
 	int bitmapLine;
 	int bitmapHandle = editorFindHandle(contentInfo, dlEditor, bitmapLine);
@@ -2642,23 +2867,24 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	m_MainWindow->propertiesEditor()->surpressSet(true);
 	bool paletteSource = requirePaletteAddress(contentInfo) && contentInfo->ImageFormat != PALETTED8;
 	if (oldImageFormat == PALETTED8)
-		; // editorRemovePaletteSource8(contentInfo);
+		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	else if (oldPaletteSource != paletteSource && oldPaletteSource)
-		; // editorRemovePaletteSource(contentInfo);
+		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	int newBitmapAddr = contentInfo->bitmapAddress();
 	if (newBitmapAddr != oldBitmapAddr)
-	{
-		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor()),
 		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
-	}
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
 	// add new palette entries
 	if (contentInfo->ImageFormat == PALETTED8)
-		; // editorInsertPaletteSource8(contentInfo);
+		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE_8>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE_8>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	else if (oldPaletteSource != paletteSource && paletteSource)
-		editorInsertPaletteSource(contentInfo, m_MainWindow->dlEditor()),
-		editorInsertPaletteSource(contentInfo, m_MainWindow->cmdEditor());
+		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	m_ContentList->setCurrentItem(contentInfo->View);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
