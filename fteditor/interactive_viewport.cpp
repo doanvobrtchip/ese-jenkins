@@ -1169,6 +1169,59 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			m_MovingLastX = mouseX;
 			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
+			int otherVertices[4];
+			int numOtherV = 0;
+			if (m_LineNumber > 0
+				&& m_LineEditor->getLine(m_LineNumber - 1).ValidId
+				&& m_LineEditor->getLine(m_LineNumber - 1).IdLeft == 0
+				&& m_LineEditor->getLine(m_LineNumber - 1).IdRight == FTEDITOR_DL_PALETTE_SOURCE)
+			{
+				int firstLine = m_LineNumber;
+				for (int l = firstLine - 1; l > 0; --l)
+				{
+					const DlParsed &parsed = m_LineEditor->getLine(l);
+					if (parsed.IdLeft == 0 &&
+						(parsed.IdRight == FTEDITOR_DL_BEGIN
+						|| parsed.IdRight == FTEDITOR_DL_END
+						|| parsed.IdRight == FTEDITOR_DL_RETURN
+						|| parsed.IdRight == FTEDITOR_DL_JUMP))
+					{
+						break;
+					}
+					else
+					{
+						firstLine = l;
+					}
+				}
+				for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
+				{
+					if (l == m_LineNumber) continue;
+					const DlParsed &parsed = m_LineEditor->getLine(l);
+
+					if (!parsed.ValidId)
+						continue;
+
+					if (parsed.IdLeft == pa.IdLeft
+						&& parsed.Parameter[0].I == pa.Parameter[0].I
+						&& parsed.Parameter[1].I == pa.Parameter[1].I)
+					{
+						if (l != m_LineNumber)
+						{
+							otherVertices[numOtherV] = l;
+							++numOtherV;
+							if (numOtherV >= 4)
+								break;
+						}
+					}
+					else if (pa.IdRight == FTEDITOR_DL_BEGIN
+						|| pa.IdRight == FTEDITOR_DL_END
+						|| pa.IdRight == FTEDITOR_DL_RETURN
+						|| pa.IdRight == FTEDITOR_DL_JUMP)
+					{
+						break;
+					}
+				}
+			}
 			// In case automatic expansion is necessary
 			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
 			const DlState &state = m_LineEditor->getState(m_LineNumber);
@@ -1194,13 +1247,17 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 					{
 						npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 						npa.Parameter[0].U = pa.Parameter[2].U;
-						m_LineEditor->insertLine(m_LineNumber, npa);
+						m_LineEditor->insertLine(numOtherV && otherVertices[0] < m_LineNumber ? otherVertices[0] : m_LineNumber, npa);
+						for (int i = 0; i < numOtherV; ++i)
+							++otherVertices[i];
 					}
 					if (state.Graphics.Cell != pa.Parameter[3].U)
 					{
 						npa.IdRight = FTEDITOR_DL_CELL;
 						npa.Parameter[0].U = pa.Parameter[3].U;
-						m_LineEditor->insertLine(m_LineNumber, npa);
+						m_LineEditor->insertLine(numOtherV && otherVertices[0] < m_LineNumber ? otherVertices[0] : m_LineNumber, npa);
+						for (int i = 0; i < numOtherV; ++i)
+							++otherVertices[i];
 					}
 					// TODO: Restore the state if necessary for in front of any following VERTEX2F!
 					break;
@@ -1262,6 +1319,8 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 				// <- Snap
 			}
 			m_LineEditor->replaceLine(m_LineNumber, pa);
+			for (int i = 0; i < numOtherV; ++i)
+				m_LineEditor->replaceLine(otherVertices[i], pa);
 			if (reEnableUndoCombine)
 			{
 				m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));

@@ -2035,7 +2035,9 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 
 			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
 				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
-				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC)
+				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
+				|| parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
+				|| parsed.IdRight == FTEDITOR_DL_CELL)
 				dlEditor->removeLine(line);
 			else
 				break;
@@ -2073,7 +2075,9 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 
 			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
 				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
-				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC)
+				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
+				|| parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
+				|| parsed.IdRight == FTEDITOR_DL_CELL)
 			{
 				dlEditor->removeLine(line);
 				--line;

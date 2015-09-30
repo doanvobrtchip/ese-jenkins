@@ -3889,7 +3889,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor v2.3.1"));
+	msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor v2.3.3"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
