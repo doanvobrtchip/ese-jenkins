@@ -105,7 +105,5 @@ ELSE (WIN32)
   )
 ENDIF (WIN32)
 
-qt5_use_modules(fteditor Widgets)
-
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 

@@ -16,5 +16,3 @@ target_link_libraries(ftemutest_coprocdiff
 	Qt5::Gui
 	ftemutest
 	)
-
-qt5_use_modules(ftemutest_coprocdiff Gui)

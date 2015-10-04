@@ -7,6 +7,10 @@ PROJECT("FTEMU")
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 # set (CMAKE_VERBOSE_MAKEFILE ON)
 
+IF (POLICY CMP0020)
+	CMAKE_POLICY(SET CMP0020 NEW)
+ENDIF ()
+
 
 ########################################################################
 # Ensure that we are not building in our source directories.
