@@ -29,6 +29,10 @@ Comments = """
     */
 """
 
+lutSize = 1024
+paletted_format = 8
+palettedFormats = [paletted_format]
+
 
 def run(name, document, ram):
     resultText = "<b>Gameduino 2 Export</b><br>"
@@ -187,21 +191,55 @@ def run(name, document, ram):
     for content in document["content"]:
         try:
             if content["memoryLoaded"]:
-                memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
-                f.write("\n")
-                f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
+                if content["imageFormat"] in palettedFormats:
+                    ramOffset = int(content["memoryAddress"])
+                    memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
+                    lutAddress = memoryAddress + "_LUT"
+                    f.write("\n")
+
+                    if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
+                        f.write("#define " + lutAddress + " RAM_PAL" + "\n")
+                        f.write("#define " + memoryAddress + " " + str(ramOffset) + "\n")
+                    else:
+                        f.write("#define " + lutAddress + " " + str(ramOffset) + "\n")
+                        f.write("#define " + memoryAddress + " " + str(ramOffset + lutSize) + "\n")
+                else:
+                    memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
+                    f.write("\n")
+                    f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
             if content["dataEmbedded"]:
-                contentName = re.sub(r'[/. ]', '_', content["destName"])
-                headerName = os.getcwd() + os.path.sep + content["destName"].replace('/', os.path.sep)
+                contentName = re.sub(r'[-/. ]', '_', content["destName"]).upper()
+                headerName = content["destName"].replace('/', os.path.sep)
+                lutContentName = contentName + "_lut"
+                lutHeaderName = headerName + ".lut"
                 #load raw files
                 if content["converter"] == "Raw":
                     fcontent = ""
-                    with open(os.getcwd() + os.path.sep + content["destName"].replace('/',os.path.sep) + '.raw', 'rb') as rawf:
+                    lutContent = ""
+                    with open(headerName + '.raw', 'rb') as rawf:
                         fcontent = rawf.read()
+
+                    if content["imageFormat"] in palettedFormats:
+                        with open(lutHeaderName + '.raw', 'rb') as rawf:
+                            lutContent = rawf.read()
+
                     targetName = contentName + ".h"
                     targetPath = outDir + os.path.sep + targetName
+                    lutTargetName = lutContentName + ".h"
+                    lutTargetPath = outDir + os.path.sep + lutTargetName
+
                     if os.path.isfile(targetPath):
                         os.remove(targetPath)
+
+                    if content["imageFormat"] in palettedFormats:
+                        if os.path.isfile(lutTargetPath):
+                            os.remove(lutTargetPath)
+                        foutput = open(lutTargetPath, 'w+')
+                        for i in range(0, len(lutContent)):
+                            foutput.write(str(ord(lutContent[i])))
+                            foutput.write(",")
+                        foutput.close()
+
                     foutput = open(targetPath, 'w+')
                     for i in range(0,len(fcontent)):
                         foutput.write(str(ord(fcontent[i])))
@@ -210,10 +248,20 @@ def run(name, document, ram):
                 else:
                     if content["dataCompressed"]:
                         headerName += ".binh"
+                        lutHeaderName += ".binh"
                     else:
                         headerName += ".rawh"
+                        lutHeaderName += ".rawh"
                     targetName = contentName + ".h"
+                    lutTargetName = lutContentName + ".h"
                     targetPath = outDir + os.path.sep + targetName
+                    lutTargetPath = outDir + os.path.sep + lutTargetName
+
+                    if content["imageFormat"] in palettedFormats:
+                        if os.path.isfile(lutTargetPath):
+                            os.remove(lutTargetPath)
+                        shutil.copy(lutHeaderName, lutTargetPath)
+
                     if os.path.isfile(targetPath):
                         os.remove(targetPath)
                     shutil.copy(headerName, targetPath)
@@ -221,6 +269,10 @@ def run(name, document, ram):
                 f.write("\n")
                 charType = "prog_uchar"
                 #charType = "char" # For older Linux distro
+                if content["imageFormat"] in palettedFormats:
+                    f.write("static const PROGMEM " + charType + " " + lutContentName + "[] = {\n")
+                    f.write("\t#include \"" + lutTargetName + "\"\n")
+                    f.write("};\n")
                 f.write("static const PROGMEM " + charType + " " + contentName + "[] = {\n")
                 f.write("\t#include \"" + targetName + "\"\n")
                 f.write("};\n")
@@ -248,21 +300,39 @@ def run(name, document, ram):
     for content in document["content"]:
         if content["memoryLoaded"]:
             memoryAddress = "RAM_" + re.sub(r'[/. ]', '_' , content["destName"]).upper()
+            lutMemoryAddress = memoryAddress + "_LUT"
             if content["dataEmbedded"]:
                 contentName = content["gd2Name"]
-
+                lutContentName = contentName + "_lut"
                 if content["converter"] == "RawJpeg":
                     f.write("\tGD.cmd_loadimage(" + memoryAddress + ");\n")
                     f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
                 if content["converter"] == "Raw":
-                    f.write("\tWriteMemfromflash(" + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n")
+                    if content["imageFormat"] in palettedFormats:
+                        if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
+                            f.write("\tWriteMemfromflash( RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                        else:
+                            f.write("\tWriteMemfromflash(" + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                    else:
+                        f.write("\tWriteMemfromflash(" + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n")
                     showMemWriteFunction = True
                 else:
                     if content["dataCompressed"]:
                         f.write("\tGD.cmd_inflate(" + memoryAddress + ");\n")
                         f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
+                        if content["imageFormat"] in palettedFormats:
+                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
+                                f.write("\tGD.cmd_inflate( RAM_PAL );\n")
+                            else:
+                                f.write("\tGD.cmd_inflate(" + lutMemoryAddress + ");\n")
+                            f.write("\tGD.copy(" + lutContentName + ", sizeof(" + lutContentName + "));\n")
                     else:
                         f.write("\tWriteMemfromflash(" + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n")
+                        if content["imageFormat"] in palettedFormats:
+                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
+                                f.write("\tWriteMemfromflash( RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                            else:
+                                f.write("\tWriteMemfromflash(" + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")
                         showMemWriteFunction = True
     for line in document["coprocessor"]:
         if not line == "":
