@@ -178,7 +178,10 @@ void DlState::process(int deviceIntf, DlState *state, const int line, const DlPa
 			{
 				cSet = true;
 			}
-			state[c] = gs;
+			if (c < dlSize)
+			{
+				state[c] = gs;
+			}
 		}
 		if (cSet)
 		{
