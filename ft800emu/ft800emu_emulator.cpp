@@ -812,6 +812,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
 	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
+	if (s_Graphics) s_Flags &= ~FT8XXEMU_EmulatorEnableKeyboard;
 
 	if (s_Graphics)
 	{
@@ -820,6 +821,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	}
 
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & FT8XXEMU_EmulatorEnableMouse) == FT8XXEMU_EmulatorEnableMouse);
+	if (s_Graphics) s_Flags &= ~FT8XXEMU_EmulatorEnableMouse;
 	Memory.enableReadDelay();
 
 	if (params.Flags & FT8XXEMU_EmulatorEnableGraphicsMultithread)
