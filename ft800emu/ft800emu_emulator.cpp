@@ -207,6 +207,7 @@ const uint8_t bayerDiv4[2][2] = {
 	
 	bool s_SkipOn = false;
 	int s_SkipStage = 0;
+	volatile bool s_CloseCalled = false;
 
 	// bool s_RotateEnabled = false;
 
@@ -555,6 +556,7 @@ const uint8_t bayerDiv4[2][2] = {
 							frameFlags |= FT8XXEMU_FrameSwap;
 						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (FT8XXEMU_FrameFlags)frameFlags))
 						{
+							s_CloseCalled = true;
 							if (s_Close)
 							{
 								s_Close();
@@ -573,6 +575,7 @@ const uint8_t bayerDiv4[2][2] = {
 						FT8XXEMU::GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
 						if (!FT8XXEMU::GraphicsDriver.update())
 						{
+							s_CloseCalled = true;
 							if (s_Close)
 							{
 								s_Close();
@@ -787,6 +790,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_Graphics = params.Graphics;
 	FT8XXEMU::g_Exception = params.Exception;
 	s_Close = params.Close;
+	s_CloseCalled = false;
 	s_ExternalFrequency = params.ExternalFrequency;
 
 	FT8XXEMU::System.begin();
@@ -917,6 +921,20 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	printf("Wait for Coprocessor\n");
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		threadC.join();
+
+	if (!s_CloseCalled && threadD.joinable())
+	{
+		printf("Late kill MCU thread\n");
+		if (s_Close)
+		{
+			s_Close();
+		}
+		else
+		{
+			printf("Kill MCU thread\n");
+			FT8XXEMU::System.killMCUThread();
+		}
+	}
 
 	printf("Wait for MCU\n");
 	threadD.join();
