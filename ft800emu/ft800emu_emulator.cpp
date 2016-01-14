@@ -669,7 +669,10 @@ const uint8_t bayerDiv4[2][2] = {
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #elif defined(FTEMU_STDTHREAD)
-		s_InitCond->notify_one();
+		; {
+			std::unique_lock<std::mutex> lock(*s_InitMutex);
+			s_InitCond->notify_one();
+		}
 #endif
 		
 		s_Setup();
@@ -697,7 +700,10 @@ const uint8_t bayerDiv4[2][2] = {
 #ifdef FTEMU_SDL2
 		SDL_SemPost(s_InitSem);
 #elif defined(FTEMU_STDTHREAD)
-		s_InitCond->notify_one();
+		; {
+			std::unique_lock<std::mutex> lock(*s_InitMutex);
+			s_InitCond->notify_one();
+		}
 #endif
 
 		Coprocessor.executeEmulator();
@@ -892,17 +898,17 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_InitMutex = new std::mutex();
 	s_InitCond = new std::condition_variable();
 
-	std::thread threadC = std::thread(coprocessorThread, nullptr);
-
+	std::thread threadC;
 	; {
 		std::unique_lock<std::mutex> lock(*s_InitMutex);
+		threadC = std::thread(coprocessorThread, nullptr);
 		s_InitCond->wait(lock);
 	}
 
-	std::thread threadD = std::thread(mcuThread, nullptr);
-
+	std::thread threadD;
 	; {
 		std::unique_lock<std::mutex> lock(*s_InitMutex);
+		threadD = std::thread(mcuThread, nullptr);
 		s_InitCond->wait(lock);
 	}
 
