@@ -10,7 +10,7 @@
 #include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
-#define FT8XXEMU_VERSION_API 9
+#define FT8XXEMU_VERSION_API 10
 
 #ifndef FT8XXEMU_STATIC
 #	ifdef FT8XXEMU_EXPORT_DYNAMIC
@@ -62,6 +62,8 @@ typedef enum
 	FT8XXEMU_EmulatorEnableRegPwmDutyEmulation = 0x100,
 	// enable usage of touch transformation matrix (default: on) (should be disabled in editor)
 	FT8XXEMU_EmulatorEnableTouchTransformation = 0x200,
+	// enable output to stdout from the emulator (default: off) (note: stdout is is some cases not thread safe)
+	FT8XXEMU_EmulatorEnableStdOut = 0x400,
 } FT8XXEMU_EmulatorFlags;
 
 typedef enum

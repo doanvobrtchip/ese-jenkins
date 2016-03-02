@@ -35,8 +35,8 @@ bool SystemClass::s_MainThreadSwitchable = false;
 static SleepWake *s_RenderSleepWake = NULL;
 static bool s_RenderWoke = false;
 
-void (*g_Exception)(const char *message) = 0;
-
+void(*g_Exception)(const char *message) = NULL;
+bool g_PrintStd = false;
 
 static double s_FPSSmoothValues[D_FT8XXEMU_FPS_SMOOTHING];
 //static double s_FPSSmoothTotal;

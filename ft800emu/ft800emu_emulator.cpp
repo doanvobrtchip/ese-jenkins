@@ -244,7 +244,7 @@ const uint8_t bayerDiv4[2][2] = {
 
 		while (s_MasterRunning)
 		{
-			// printf("main thread\n");
+			// FTEMU_printf("main thread\n");
 			FT8XXEMU::System.makeRealtimePriorityThread();
 
 			FT8XXEMU::System.enterSwapDL();
@@ -317,7 +317,7 @@ const uint8_t bayerDiv4[2][2] = {
 				{
 					if (hasChanges || !s_FrameFullyDrawn)
 					{
-						// printf("%i != %i\n", lwoc, woc);
+						// FTEMU_printf("%i != %i\n", lwoc, woc);
 						if (ram[REG_DLSWAP] == DLSWAP_FRAME)
 						{
 							Memory.swapDisplayList();
@@ -334,7 +334,7 @@ const uint8_t bayerDiv4[2][2] = {
 								// Render single line
 								int32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
 								snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
-								// printf("SNAPY: %u\n", snapy);
+								// FTEMU_printf("SNAPY: %u\n", snapy);
 								argb8888 *buffer = s_GraphicsBuffer ? s_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
 								GraphicsProcessor.process(buffer,
 									false, mirrorHorizontal,
@@ -450,7 +450,7 @@ const uint8_t bayerDiv4[2][2] = {
 					}
 					else
 					{
-						// printf("no changes\n");
+						// FTEMU_printf("no changes\n");
 					}
 				}
 				else
@@ -469,8 +469,8 @@ const uint8_t bayerDiv4[2][2] = {
 							if (procDelta < procLowLimit)
 							{
 								s_SkipOn = false;
-								if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-								if (FT800EMU_DEBUG) printf("Frame skip switched OFF\n");
+								if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+								if (FT800EMU_DEBUG) FTEMU_printf("Frame skip switched OFF\n");
 							}
 						}
 					}
@@ -482,14 +482,14 @@ const uint8_t bayerDiv4[2][2] = {
 						if (procDelta < procLowLimit)
 						{
 							s_DegradeOn = false;
-							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-							if (FT800EMU_DEBUG) printf("Dynamic degrade switched OFF\n");
+							if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) FTEMU_printf("Dynamic degrade switched OFF\n");
 						}
 						else if (procDelta > procHighLimit)
 						{
 							s_SkipOn = true;
-							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-							if (FT800EMU_DEBUG) printf("Frame skip switched ON\n");
+							if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) FTEMU_printf("Frame skip switched ON\n");
 						}
 					}
 					else
@@ -497,11 +497,11 @@ const uint8_t bayerDiv4[2][2] = {
 						unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to degrade
 						if (procDelta > procHighLimit)
 						{
-							if (FT800EMU_DEBUG) printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
 							if (s_DynamicDegrade)
 							{
 								s_DegradeOn = true;
-								if (FT800EMU_DEBUG) printf("Dynamic degrade switched ON\n");
+								if (FT800EMU_DEBUG) FTEMU_printf("Dynamic degrade switched ON\n");
 							}
 						}
 					}
@@ -528,7 +528,7 @@ const uint8_t bayerDiv4[2][2] = {
 			{
 				if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 				FT8XXEMU::System.prioritizeMCUThread();
-				//printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
+				//FTEMU_printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
 
 #ifndef WIN32
 				FT8XXEMU::System.holdMCUThread(); // vblank'd !
@@ -564,7 +564,7 @@ const uint8_t bayerDiv4[2][2] = {
 							}
 							else
 							{
-								printf("Kill MCU thread\n");
+								FTEMU_printf("Kill MCU thread\n");
 								FT8XXEMU::System.killMCUThread();
 								return 0;
 							}
@@ -583,7 +583,7 @@ const uint8_t bayerDiv4[2][2] = {
 							}
 							else
 							{
-								printf("Kill MCU thread\n");
+								FTEMU_printf("Kill MCU thread\n");
 								FT8XXEMU::System.killMCUThread();
 								return 0;
 							}
@@ -593,7 +593,7 @@ const uint8_t bayerDiv4[2][2] = {
 				unsigned long flipDelta = FT8XXEMU::System.getMicros() - flipStart;
 
 				if (flipDelta > 8000)
-					if (FT800EMU_DEBUG) printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
+					if (FT800EMU_DEBUG) FTEMU_printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
 
 				FT8XXEMU::System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
 				FT8XXEMU::System.unprioritizeMCUThread();
@@ -610,21 +610,21 @@ const uint8_t bayerDiv4[2][2] = {
 				//long millisToWait = targetMillis - currentMillis;
 				double currentSeconds = FT8XXEMU::System.getSeconds();
 				double secondsToWait = targetSeconds - currentSeconds;
-				// printf("sleep %f seconds (%f current time, %f target time, %f delta seconds)\n", (float)secondsToWait, (float)currentSeconds, (float)targetSeconds, (float)deltaSeconds);
+				// FTEMU_printf("sleep %f seconds (%f current time, %f target time, %f delta seconds)\n", (float)secondsToWait, (float)currentSeconds, (float)targetSeconds, (float)deltaSeconds);
 				//if (millisToWait < -100) targetMillis = millis();
 				if (secondsToWait < -0.25) // Skip freeze
 				{
-					//printf("skip freeze\n");
+					//FTEMU_printf("skip freeze\n");
 					targetSeconds = FT8XXEMU::System.getSeconds();
 				}
 				else if (secondsToWait > 0.25)
 				{
-					printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", Memory.rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
+					FTEMU_printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", Memory.rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
 					targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
 					secondsToWait = 0.25;
 				}
 
-				//printf("millis to wait: %i", (int)millisToWait);
+				//FTEMU_printf("millis to wait: %i", (int)millisToWait);
 
 				if (secondsToWait > 0.0)
 				{
@@ -678,7 +678,7 @@ const uint8_t bayerDiv4[2][2] = {
 		s_Setup();
 		while (s_MasterRunning)
 		{
-			//printf("mcu thread\n");
+			//FTEMU_printf("mcu thread\n");
 			s_Loop();
 		}
 		FT8XXEMU::System.revertThreadCategory(taskHandle);
@@ -689,7 +689,7 @@ const uint8_t bayerDiv4[2][2] = {
 	{
 		FT8XXEMU::System.makeCoprocessorThread();
 
-		printf("Coprocessor thread begin\n");
+		FTEMU_printf("Coprocessor thread begin\n");
 
 		unsigned long taskId = 0;
 		void *taskHandle;
@@ -708,7 +708,7 @@ const uint8_t bayerDiv4[2][2] = {
 
 		Coprocessor.executeEmulator();
 
-		printf("Coprocessor thread exit\n");
+		FTEMU_printf("Coprocessor thread exit\n");
 
 		FT8XXEMU::System.revertThreadCategory(taskHandle);
 		return 0;
@@ -722,7 +722,7 @@ const uint8_t bayerDiv4[2][2] = {
 #endif
 #endif
 
-		//printf("go sound thread");
+		//FTEMU_printf("go sound thread");
 		unsigned long taskId = 0;
 		void *taskHandle;
 		taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
@@ -730,7 +730,7 @@ const uint8_t bayerDiv4[2][2] = {
 		FT8XXEMU::System.makeHighPriorityThread();
 		while (s_MasterRunning)
 		{
-			//printf("sound thread\n");
+			//FTEMU_printf("sound thread\n");
 			if (s_Flags & FT8XXEMU_EmulatorEnableAudio)
 			{
 				AudioRender.process();
@@ -776,13 +776,13 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 #ifdef FT810EMU_MODE
 	if (mode < FT8XXEMU_EmulatorFT810)
 	{
-		printf("Invalid emulator version selected, this library is built in FT810 mode\n");
+		FTEMU_printf("Invalid emulator version selected, this library is built in FT810 mode\n");
 		return;
 	}
 #else
 	if (mode > FT8XXEMU_EmulatorFT801)
 	{
-		printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
+		FTEMU_printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
 		return;
 	}
 #endif
@@ -798,6 +798,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_Close = params.Close;
 	s_CloseCalled = false;
 	s_ExternalFrequency = params.ExternalFrequency;
+	FT8XXEMU::g_PrintStd = (params.Flags & FT8XXEMU_EmulatorEnableStdOut) == FT8XXEMU_EmulatorEnableStdOut;
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
@@ -881,14 +882,14 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 		Coprocessor.stopEmulator();
 	}
 
-	printf("Wait for Coprocessor\n");
+	FTEMU_printf("Wait for Coprocessor\n");
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		SDL_WaitThread(threadC, NULL);
 
-	printf("Wait for MCU\n");
+	FTEMU_printf("Wait for MCU\n");
 	SDL_WaitThread(threadD, NULL);
 
-	printf("Wait for Audio\n");
+	FTEMU_printf("Wait for Audio\n");
 	SDL_WaitThread(threadA, NULL);
 
 #elif defined(FTEMU_STDTHREAD)
@@ -924,28 +925,28 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 		Coprocessor.stopEmulator();
 	}
 
-	printf("Wait for Coprocessor\n");
+	FTEMU_printf("Wait for Coprocessor\n");
 	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
 		threadC.join();
 
 	if (!s_CloseCalled && threadD.joinable())
 	{
-		printf("Late kill MCU thread\n");
+		FTEMU_printf("Late kill MCU thread\n");
 		if (s_Close)
 		{
 			s_Close();
 		}
 		else
 		{
-			printf("Kill MCU thread\n");
+			FTEMU_printf("Kill MCU thread\n");
 			FT8XXEMU::System.killMCUThread();
 		}
 	}
 
-	printf("Wait for MCU\n");
+	FTEMU_printf("Wait for MCU\n");
 	threadD.join();
 
-	printf("Wait for Audio\n");
+	FTEMU_printf("Wait for Audio\n");
 	threadA.join();
 
 #else
@@ -958,33 +959,33 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 			s_MasterRunning = false;
 			// System.killMCUThread();
 			if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
-			printf("(0) master thread exit\n");
+			FTEMU_printf("(0) master thread exit\n");
 		}
 
 		// arduino
 		if (omp_get_thread_num() == 1)
 		{
 			mcuThread();
-			printf("(1) mcu thread exit\n");
+			FTEMU_printf("(1) mcu thread exit\n");
 		}
 
 		// sound
 		if (omp_get_thread_num() == 2)
 		{
 			audioThread();
-			printf("(2) sound thread exit\n");
+			FTEMU_printf("(2) sound thread exit\n");
 		}
 
 		// Coprocessor
 		if (omp_get_thread_num() == 3)
 		{
 			coprocessorThread();
-			printf("(3) coproc thread exit\n");
+			FTEMU_printf("(3) coproc thread exit\n");
 		}
 	}
 #endif /* #ifdef FTEMU_SDL */
 
-	printf("Threads finished, cleaning up\n");
+	FTEMU_printf("Threads finished, cleaning up\n");
 
 	delete[] s_GraphicsBuffer;
 	s_GraphicsBuffer = NULL;
@@ -1004,7 +1005,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	FT8XXEMU::System.end();
 
 	s_EmulatorRunning = false;
-	printf("Emulator stopped running\n");
+	FTEMU_printf("Emulator stopped running\n");
 
 #ifdef WIN32
 #ifndef FTEMU_SDL2
@@ -1028,14 +1029,14 @@ void EmulatorClass::stop()
 
 	if (!FT8XXEMU::System.isMCUThread())
 	{
-		printf("Wait for MCU thread\n");
+		FTEMU_printf("Wait for MCU thread\n");
 		while (s_EmulatorRunning) // TODO: Mutex?
 		{
 			FT8XXEMU::System.delay(1);
 		}
 	}
 
-	printf("Stop ok\n");
+	FTEMU_printf("Stop ok\n");
 }
 
 } /* namespace FT800EMU */

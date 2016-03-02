@@ -287,7 +287,7 @@ FT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src,
 	case ONE_MINUS_DST_ALPHA:
 		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
 	}
-	printf("Invalid blend func (sse)\n");
+	FTEMU_printf("Invalid blend func (sse)\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid blend func (sse)");
 	return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 }
@@ -408,7 +408,7 @@ FT8XXEMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uin
 		return true;
 	default:
 		// error
-		printf("Invalid stencil func\n");
+		FTEMU_printf("Invalid stencil func\n");
 		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid stencil func");
 		return true;
 	}
@@ -440,7 +440,7 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 		break;
 	default:
 		// error
-		printf("Invalid stencil op\n");
+		FTEMU_printf("Invalid stencil op\n");
 		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid stencil op");
 		break;
 	}
@@ -508,7 +508,7 @@ FT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &ds
 	case ALWAYS:
 		return true;
 	}
-	printf("Invalid alpha test func\n");
+	FTEMU_printf("Invalid alpha test func\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid alpha test func");
 	return true;
 }
@@ -530,7 +530,7 @@ FT8XXEMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const a
 	case ONE_MINUS_DST_ALPHA:
 		return 255 - (dst >> 24);
 	}
-	printf("Invalid blend func\n");
+	FTEMU_printf("Invalid blend func\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid blend func");
 	return 255;
 }
@@ -855,7 +855,7 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case PALETTED:
 		{
 #ifdef FT810EMU_MODE
-			printf("PALETTED is not a valid format\n");
+			FTEMU_printf("PALETTED is not a valid format\n");
 			return 0xFFFF00FF; // invalid format
 #else
 			uint8_t val = bmpSrc8(ram, srci, py + xo);
@@ -1003,7 +1003,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	BitmapInfo *const bitmapInfo)
 {
     // if (y != 22) return;
-	// printf("bitmap\n");
+	// FTEMU_printf("bitmap\n");
 	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *ram = Memory.getRam();
 
@@ -1098,7 +1098,7 @@ FT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case L2: return stride << 2;
 #endif
 	}
-	printf("Invalid bitmap layout\n");
+	FTEMU_printf("Invalid bitmap layout\n");
 	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid bitmap layout");
 	return stride;
 }
@@ -1165,8 +1165,8 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					const int dyb_ = y2lw - (y1lw_px << 4); // Bottom
 					const int dxs_ = dxr_ - dxl_; // Width in 1/16 pixel
 					const int dys_ = dyb_ - dyt_; // Height in 1/16 pixel
-					if (dxs_ != dxs) printf("Rect 11 width error\n");
-					if (dys_ != dys) printf("Rect 11 height error\n");
+					if (dxs_ != dxs) FTEMU_printf("Rect 11 width error\n");
+					if (dys_ != dys) FTEMU_printf("Rect 11 height error\n");
 				}
 #endif
 				const int surf = dxs * dys; // Surface of the rectangle in scale 256
@@ -1185,10 +1185,10 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int dyb = y2lw - ((y2lw_px - 1) << 4); // Bottom coordinate in 1/16 relative to bottom pixel // Todo: Can be moved inside y condition in some way
 #if FT800EMU_DEBUG_RECTS_MATH
 				{
-					if (dyb < 1) printf("Rect pixelwidth dyb < 1\n");
-					if (dyb > 16) printf("Rect pixelwidth dyb > 16\n");
-					if (dxs < 1) printf("Rect pixelwidth dxs < 1\n");
-					if (dxs > 16) printf("Rect pixelwidth dxs > 16\n");
+					if (dyb < 1) FTEMU_printf("Rect pixelwidth dyb < 1\n");
+					if (dyb > 16) FTEMU_printf("Rect pixelwidth dyb > 16\n");
+					if (dxs < 1) FTEMU_printf("Rect pixelwidth dxs < 1\n");
+					if (dxs > 16) FTEMU_printf("Rect pixelwidth dxs > 16\n");
 				}
 #endif
 				int alpha; // Alpha 0-255
@@ -1219,10 +1219,10 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			const int dxr = x2lw - ((x2lw_px - 1) << 4); // Right coordinate in 1/16 relative to bottom pixel
 #if FT800EMU_DEBUG_RECTS_MATH
 			{
-				if (dxr < 1) printf("Rect pixelheight dxr < 1\n");
-				if (dxr > 16) printf("Rect pixelheight dxr > 16\n");
-				if (dys < 1) printf("Rect pixelheight dys < 1\n");
-				if (dys > 16) printf("Rect pixelheight dys > 16\n");
+				if (dxr < 1) FTEMU_printf("Rect pixelheight dxr < 1\n");
+				if (dxr > 16) FTEMU_printf("Rect pixelheight dxr > 16\n");
+				if (dys < 1) FTEMU_printf("Rect pixelheight dys < 1\n");
+				if (dys > 16) FTEMU_printf("Rect pixelheight dys > 16\n");
 			}
 #endif
 			if (x1lw_px_sc < x2lw_px_sc)
@@ -1371,7 +1371,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 					blendbottom = by2 - ((by2_px - 1) << 4);
 					blendbottom = 16 - blendbottom;
 #if FT800EMU_DEBUG_RECTS_MATH
-					if (blendtop + blendbottom >= 16) printf("Full rect shared blend bad math (blendtop + blendbottom >= 16)\n");
+					if (blendtop + blendbottom >= 16) FTEMU_printf("Full rect shared blend bad math (blendtop + blendbottom >= 16)\n");
 #endif
 				}
 				else // Shared boundary between top and center
@@ -1633,7 +1633,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 
 	#if FT800EMU_DEBUG_RECTS_MATH
 						{
-							if (x1lw_px_sc == x2lw_px_sc) printf("Full rect lr blend x1lw_px_sc == x2lw_px_sc\n");
+							if (x1lw_px_sc == x2lw_px_sc) FTEMU_printf("Full rect lr blend x1lw_px_sc == x2lw_px_sc\n");
 						}
 	#endif
 						const int blendc = (16 - blendtop - blendbottom) * 16;
@@ -1942,7 +1942,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 
 		/*if (gs.DebugDisplayListIndex == 0x1b5)
 		{
-			printf("ah");
+			FTEMU_printf("ah");
 		}*/
 
 		if ((y1 - y2) != 0)
@@ -2006,7 +2006,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 		if (x1 - x2 == 0 || y1 - y2 == 0) // Horizontal or vertical lines
 		{
 			// Just use the rects optimized codepath for this
-			// printf("Not implemented horizontal or vertical line\n");
+			// FTEMU_printf("Not implemented horizontal or vertical line\n");
 			displayRects<debugTrace>(gs, bc, bs, bt, y, hsize, rs, min(x1, x2) + 8, y1 + 8, max(x1, x2) + 8, y2 + 8);
 		}
 		else
@@ -2045,8 +2045,8 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				const int qwdo = ((int64_t)(qlw + 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
 				const int qwdi = ((int64_t)(qlw - 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
 	#if FT800EMU_LINE_DEBUG_MATH
-				if (qwdo <= 0) printf("qwdo <= 0\n");
-				if (qwdi <= 0) printf("qwdi <= 0\n");
+				if (qwdo <= 0) FTEMU_printf("qwdo <= 0\n");
+				if (qwdi <= 0) FTEMU_printf("qwdi <= 0\n");
 	#endif
 				const int qw1o = qx - qwdo; // Left outer linewidth boundary in 256 scale
 				const int qw1i = qx - qwdi; // Left inner linewidth boundary in 256 scale
@@ -2238,7 +2238,7 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				// Line width boundaries in 256 scale
 				const int qwdo = ((int64_t)(256) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
 #if FT800EMU_LINE_DEBUG_MATH
-				if (qwdo <= 0) printf("qwdo <= 0\n");
+				if (qwdo <= 0) FTEMU_printf("qwdo <= 0\n");
 #endif
 				const int qw1o = qx - qwdo; // Left outer linewidth boundary in 256 scale
 				const int qwi = qx; // Inner linewidth boundary in 256 scale
@@ -2384,7 +2384,7 @@ void GraphicsProcessorClass::begin()
 
 	uint8_t *ram = Memory.getRam();
 	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
-	if (FT800EMU_DEBUG) printf("Font index: %u\n", fi);
+	if (FT800EMU_DEBUG) FTEMU_printf("Font index: %u\n", fi);
 	for (int i = 0; i < 16; ++i)
 	{
 		int ir = i + 16;
@@ -2394,7 +2394,7 @@ void GraphicsProcessorClass::begin()
 		uint32_t width =  Memory.rawReadU32(ram, bi + 136);
 		uint32_t height =  Memory.rawReadU32(ram, bi + 140);
 		uint32_t data =  Memory.rawReadU32(ram, bi + 144);
-		if (FT800EMU_DEBUG) printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
+		if (FT800EMU_DEBUG) FTEMU_printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
 		s_BitmapInfoMain[ir].Source = data;
 		s_BitmapInfoMain[ir].LayoutFormat = format;
@@ -2457,7 +2457,7 @@ void resizeThreadInfos(int size)
 	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
 	{
 		s_ThreadInfos[i].Running = false;
-		printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
+		FTEMU_printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
 		SDL_SemPost(s_ThreadInfos[i].StartSem);
 		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
 		s_ThreadInfos[i].Thread = NULL;
@@ -2490,7 +2490,7 @@ void resizeThreadInfos(int size)
 		std::stringstream threadName;
 		threadName << std::string("FT800EMU::GPU::") << i;
 		std::string threadNameStr = threadName.str();
-		printf("Start graphics thread: 1+%u\n", (uint32_t)i);
+		FTEMU_printf("Start graphics thread: 1+%u\n", (uint32_t)i);
 		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
@@ -2523,14 +2523,14 @@ void GraphicsProcessorClass::enableMultithread(bool enabled)
 	{
 		s_ThreadCount = 1;
 	}
-	printf("Graphics processor threads: %i\n", s_ThreadCount);
+	FTEMU_printf("Graphics processor threads: %i\n", s_ThreadCount);
 	resizeThreadInfos(s_ThreadCount - 1);
 }
 
 void GraphicsProcessorClass::reduceThreads(int nb)
 {
 	s_ThreadCount = max(1, s_ThreadCount - nb);
-	printf("Graphics processor threads: %i\n", s_ThreadCount);
+	FTEMU_printf("Graphics processor threads: %i\n", s_ThreadCount);
 	resizeThreadInfos(s_ThreadCount - 1);
 }
 
@@ -2561,7 +2561,7 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 #if FT800EMU_LIMIT_JUMP_LOOP
 		if (loopCount > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 		{
-			printf("JUMP loop\n");
+			FTEMU_printf("JUMP loop\n");
 			if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("JUMP loop");
 			break;
 		}
@@ -2587,16 +2587,16 @@ EvaluateDisplayListValue:
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
 #else
 				int stride = (v >> 9) & 0x3FF;
-				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
+				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				bi.LayoutHeight = v & 0x1FF;
-				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
 #endif
 				bi.LayoutWidth = getLayoutWidth(format, stride);
 			}
@@ -2653,10 +2653,10 @@ EvaluateDisplayListValue:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-				if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
 				bi.LayoutWidth = getLayoutWidth(bi.LayoutFormat, stride);
 			}
 			break;
@@ -2758,7 +2758,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 #if FT800EMU_LIMIT_JUMP_LOOP
 			if (debugCounter > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 			{
-				printf("JUMP loop\n");
+				FTEMU_printf("JUMP loop\n");
 				if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("JUMP loop");
 				break;
 			}
@@ -2776,7 +2776,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 
 			/*if (y == 0)
 			{
-				printf("DL: %i: %x\n", c, v);
+				FTEMU_printf("DL: %i: %x\n", c, v);
 			}*/
 
 EvaluateDisplayListValue:
@@ -2812,16 +2812,16 @@ EvaluateDisplayListValue:
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
 #else
 						int stride = (v >> 9) & 0x3FF;
-						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
+						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = v & 0x1FF;
-						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
 #endif
 						bi.LayoutWidth = getLayoutWidth(format, stride);
 					}
@@ -2972,7 +2972,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_CALL:
 					if (callstack.size() >= 1024)
 					{
-						printf("Invalid CALL() in display list\n");
+						FTEMU_printf("Invalid CALL() in display list\n");
 						if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid CALL() in display list");
 						goto DisplayListDisplay;
 					}
@@ -3017,7 +3017,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_RETURN:
 					if (callstack.empty())
 					{
-						printf("Invalid RETURN() in display list\n");
+						FTEMU_printf("Invalid RETURN() in display list\n");
 						if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid RETURN() in display list");
 					}
 					else
@@ -3079,10 +3079,10 @@ EvaluateDisplayListValue:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-						if (stride == 0) { /*if (y == 0) printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
+						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
 						bi.LayoutWidth = getLayoutWidth(bi.LayoutFormat, stride);
 					}
 					break;
@@ -3106,7 +3106,7 @@ EvaluateDisplayListValue:
 					break;
 #endif
 				default:
-					printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
+					FTEMU_printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
 					if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid display list entry");
 				}
 				break;
@@ -3376,9 +3376,9 @@ int launchGraphicsProcessorThread(void *startInfo)
 			li->YInc, 
 			li->Bitmap);
 
-		// printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
-		// printf("%i: sem post (%i) <-\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem post (%i) <-\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 	}
 
 	FT8XXEMU::System.revertThreadCategory(taskHandle);
@@ -3484,9 +3484,9 @@ void GraphicsProcessorClass::process(
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);
 		// SDL_mutexV(li->StartMutex);
-		// printf("%i: sem wait %i (%i)->\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 		SDL_SemWait(li->EndSem);
-		// printf("%i: sem wait %i (%i)<-\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 #else
 #	ifdef WIN32
 		ThreadInfo *li = &s_ThreadInfos[i - 1];

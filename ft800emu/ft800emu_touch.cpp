@@ -77,13 +77,13 @@ inline void TouchClass::transformTouchXY(int &x, int &y)
 		int64_t ytf = (transformD * xe) + (transformE * ye) + transformF;
 		x = (int)(xtf >> 16);
 		y = (int)(ytf >> 16);
-		// printf("x: %i ,y: %i\n", x, y);
+		// FTEMU_printf("x: %i ,y: %i\n", x, y);
 	}
 
 	/*
 	if (Touch.rawReadU32(ram, REG_ROTATE) & 0x01)
 	{
-		// printf("rotated\n");
+		// FTEMU_printf("rotated\n");
 		x = Touch.rawReadU32(ram, REG_HSIZE) - x - 1;
 		y = Touch.rawReadU32(ram, REG_VSIZE) - y - 1;
 	}

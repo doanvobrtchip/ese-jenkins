@@ -124,6 +124,9 @@ private:
 extern SystemClass System;
 
 extern void (*g_Exception)(const char *message);
+extern bool g_PrintStd;
+
+#define FTEMU_printf(s, ...) do { if (::FT8XXEMU::g_PrintStd) { printf(s, __VA_ARGS__); } } while (false)
 
 } /* namespace FT8XXEMU */
 

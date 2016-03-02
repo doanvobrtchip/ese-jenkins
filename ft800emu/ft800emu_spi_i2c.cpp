@@ -18,6 +18,7 @@
 #include <stdio.h>
 
 // Project includes
+#include "ft8xxemu_system.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_vc.h"
 
@@ -66,7 +67,7 @@ void SPII2CClass::csLow(int low)
 
 	if (s_RWBufferStage)
 	{
-		// printf("Non-32bit write size, cursor %i\n", s_Cursor);
+		// FTEMU_printf("Non-32bit write size, cursor %i\n", s_Cursor);
 
 		while (s_RWBufferStage != 32)
 		{
@@ -76,7 +77,7 @@ void SPII2CClass::csLow(int low)
 			++s_Cursor;
 		}
 
-		// printf("Write to %i, %i\n", (s_Cursor - 4), s_RWBuffer);
+		// FTEMU_printf("Write to %i, %i\n", (s_Cursor - 4), s_RWBuffer);
 		Memory.mcuWriteU32(s_Cursor - 4, s_RWBuffer);
 
 		s_RWBuffer = 0;
@@ -106,20 +107,20 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			case 0: // READ
 				s_State = SPII2CReadAddress;
 				s_Cursor = (data & 0x3F);
-				// printf("SPI/I2C: Begin read\n");
+				// FTEMU_printf("SPI/I2C: Begin read\n");
 				break;
 			case 1: // COMMAND
 				s_State = SPII2CNotImplemented;
-				// printf("SPI/I2C: Command received\n");
+				// FTEMU_printf("SPI/I2C: Command received\n");
 				break;
 			case 2: // WRITE
 				s_State = SPII2CWriteAddress;
 				s_Cursor = (data & 0x3F);
-				// printf("SPI/I2C: Begin write\n");
+				// FTEMU_printf("SPI/I2C: Begin write\n");
 				break;
 			case 3: // INVALID
 				s_State = SPII2CInvalidState;
-				// printf("SPI/I2C: Invalid request\n");
+				// FTEMU_printf("SPI/I2C: Invalid request\n");
 				break;
 			}
 			break;
@@ -134,11 +135,11 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			{
 				// Dummy byte
 				s_State = SPII2CRead;
-				// printf("SPI/I2C: Address %d\n", s_Cursor);
+				// FTEMU_printf("SPI/I2C: Address %d\n", s_Cursor);
 				uint32_t aligned = s_Cursor & ~0x3;
 				if (aligned != s_Cursor)
 				{
-					// printf("Non-aligned read\n");
+					// FTEMU_printf("Non-aligned read\n");
 					s_RWBuffer = Memory.mcuReadU32(aligned);
 					uint32_t misaligned = s_Cursor - aligned;
 					s_RWBuffer >>= (8 * misaligned);
@@ -160,25 +161,25 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			{
 				// Dummy byte
 				s_State = SPII2CWrite;
-				// printf("SPI/I2C: Address %d\n", s_Cursor);
+				// FTEMU_printf("SPI/I2C: Address %d\n", s_Cursor);
 				if (s_Cursor % 4)
 				{
-					// printf("Non-aligned write address %d\n", s_Cursor);
+					// FTEMU_printf("Non-aligned write address %d\n", s_Cursor);
 					s_RWBufferStage = s_Cursor % 4;
-					// printf("align to address %d\n", s_Cursor - (s_Cursor % 4));
+					// FTEMU_printf("align to address %d\n", s_Cursor - (s_Cursor % 4));
 					s_RWBuffer = Memory.rawReadU32(Memory.getRam(), s_Cursor - (s_Cursor % 4));
-					// printf("rwbuffer %d\n", s_RWBuffer);
+					// FTEMU_printf("rwbuffer %d\n", s_RWBuffer);
 					s_RWBufferStage *= 8;
 					// mask away bytes that will be written
-					// printf("> %i", s_Cursor);
+					// FTEMU_printf("> %i", s_Cursor);
 					for (int i = s_RWBufferStage; i < (4 * 8); i += 8)
 					{
 						uint32_t mask = ~(0xFF << i);
-						// printf(" | %#010x & %#010x (%i)", s_RWBuffer, mask, i);
+						// FTEMU_printf(" | %#010x & %#010x (%i)", s_RWBuffer, mask, i);
 						s_RWBuffer = s_RWBuffer & mask;
 					}
-					// printf("\n");
-					// printf(">>> %#010x\n", s_RWBuffer);
+					// FTEMU_printf("\n");
+					// FTEMU_printf(">>> %#010x\n", s_RWBuffer);
 				}
 				else
 				{
@@ -193,12 +194,12 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			break;
 		case SPII2CRead:
 			{
-				// printf("Read\n");
+				// FTEMU_printf("Read\n");
 
 				if (!(s_Cursor % 4))
 				{
 					s_RWBuffer = Memory.mcuReadU32(s_Cursor);
-					// printf("Read U32 %d (%d)\n", s_Cursor, s_RWBuffer);
+					// FTEMU_printf("Read U32 %d (%d)\n", s_Cursor, s_RWBuffer);
 				}
 
 				uint8_t result = s_RWBuffer & 0xFF;
@@ -217,10 +218,10 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 
 				if (s_RWBufferStage == 32)
 				{
-					// printf("write %i\n", (s_Cursor - 3));
+					// FTEMU_printf("write %i\n", (s_Cursor - 3));
 
 					if ((s_Cursor - 3) % 4)
-						printf("Non-aligned write %d\n", s_Cursor);
+						FTEMU_printf("Non-aligned write %d\n", s_Cursor);
 
 					Memory.mcuWriteU32(s_Cursor - 3, s_RWBuffer);
 					s_RWBuffer = 0;
@@ -229,7 +230,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 
 				if (s_Cursor == RAM_CMD + 4095 && s_WriteStartAddr >= RAM_CMD)
 				{
-					// printf("Cursor wrap to RAM_CMD\n");
+					// FTEMU_printf("Cursor wrap to RAM_CMD\n");
 					s_Cursor = RAM_CMD;
 				}
 #ifdef FT810EMU_MODE

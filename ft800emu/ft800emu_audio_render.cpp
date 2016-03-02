@@ -223,7 +223,7 @@ void AudioRenderClass::process()
 
 void AudioRenderClass::process(short *audioBuffer, int samples)
 {
-	// printf("process audio\n");
+	// FTEMU_printf("process audio\n");
 	uint8_t *ram = Memory.getRam();
 
 	int16_t synthSample0 = s_SynthSample0;

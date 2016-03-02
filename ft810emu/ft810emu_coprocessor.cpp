@@ -172,10 +172,10 @@ uint16_t Ejpg::rgb565(uint8_t y, int8_t Cb, int8_t Cr)
 void Ejpg::reset()
 {
 	state = 0;
-	// printf("%08x\n", G(1.772));
-	// printf("%08x\n", G(-0.34414));
-	// printf("%08x\n", G(-0.71414));
-	// printf("%08x\n", G(1.402   ));
+	// FTEMU_printf("%08x\n", G(1.772));
+	// FTEMU_printf("%08x\n", G(-0.34414));
+	// FTEMU_printf("%08x\n", G(-0.71414));
+	// FTEMU_printf("%08x\n", G(1.402   ));
 	stim = NULL;
 	// stim = fopen("stim", "w");
 
@@ -199,7 +199,7 @@ void Ejpg::begin()
 	expect_ff = 0;
 	startblock();
 	memset(prevdc, 0, sizeof(prevdc));
-	// printf("----------------------\n");
+	// FTEMU_printf("----------------------\n");
 }
 void Ejpg::run2(uint8_t *memory8,
 	uint16_t *memory16,
@@ -214,7 +214,7 @@ void Ejpg::run2(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	printf("Ejpg::run2\n");
+	FTEMU_printf("Ejpg::run2\n");
 #endif
 
 	if (stim)
@@ -231,7 +231,7 @@ void Ejpg::run2(uint8_t *memory8,
 		bs = 1 * 64;
 	else
 		assert(0);
-	// printf("format=%08x state=%d bs=%d\n", format, state, bs);
+	// FTEMU_printf("format=%08x state=%d bs=%d\n", format, state, bs);
 
 	int sfeed = (int32_t)feed >> 3;
 	if (sfeed < -128)
@@ -341,11 +341,11 @@ void Ejpg::run2(uint8_t *memory8,
 			by++;
 			if (by == ((h + (bh - 1)) / bh))
 			{
-				// printf("--- finished ---\n");
+				// FTEMU_printf("--- finished ---\n");
 				// memory8[REG_EJPG_DAT] = 1;
 			}
 		}
-		// printf("bx=%d by=%d\n", bx, by);
+		// FTEMU_printf("bx=%d by=%d\n", bx, by);
 	}
 }
 
@@ -378,7 +378,7 @@ void Ejpg::run(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	printf("Ejpg::run\n");
+	FTEMU_printf("Ejpg::run\n");
 #endif
 
 	assert((bitsize == 8) | (bitsize == 32));
@@ -409,7 +409,7 @@ void Ejpg::run(uint8_t *memory8,
 				feed = 0xff;
 			else {
 				// restart marker, next segment, etc. So ignore
-				// printf("DISCARD %x\n", feed & 0xff);
+				// FTEMU_printf("DISCARD %x\n", feed & 0xff);
 				return;
 			}
 		}
@@ -439,17 +439,17 @@ void Ejpg::run(uint8_t *memory8,
 	{
 		blk_type = btypes[block] - '0';
 
-		// printf("\n%2d: bits=%016llx\n", nbits, bits);
+		// FTEMU_printf("\n%2d: bits=%016llx\n", nbits, bits);
 
 		uint8_t da8 = tda >> (8 * blk_type);  // DC in bit 4, AC in bit 0
-		// printf("blk_type = %d %08x %02x\n", blk_type, tda, da8);
+		// FTEMU_printf("blk_type = %d %08x %02x\n", blk_type, tda, da8);
 		size_t ht;
 		int isdc = idct_i == 0;
 		if (isdc)
 			ht = REG_EJPG_HT + 64 * (da8 >> 4);
 		else
 			ht = REG_EJPG_HT + 64 * (2 | (da8 & 1));
-		// printf("ht = %x\n", ht);
+		// FTEMU_printf("ht = %x\n", ht);
 		uint32_t *pht = (uint32_t*)&memory8[ht];
 		size_t codesize;
 		uint16_t b = ~0;
@@ -458,8 +458,8 @@ void Ejpg::run(uint8_t *memory8,
 			b = (bits >> (64 - codesize)) & 0xFFFF;
 			b &= (1 << codesize) - 1;
 			uint16_t hi = *pht >> 16;
-			// printf("[%d: b=%x hi=%x] ", codesize, b, hi);
-			// printf("%2lu: %08x %d\n", codesize, *pht, b);
+			// FTEMU_printf("[%d: b=%x hi=%x] ", codesize, b, hi);
+			// FTEMU_printf("%2lu: %08x %d\n", codesize, *pht, b);
 			if (b < hi)
 				break;
 		}
@@ -467,8 +467,8 @@ void Ejpg::run(uint8_t *memory8,
 			return; // not enough bits yet
 
 		// have CODESIZE bits in B
-		// printf("codesize %lu\n", codesize);
-		// printf("symbol at %u\n", 0xff & (b + *pht));
+		// FTEMU_printf("codesize %lu\n", codesize);
+		// FTEMU_printf("symbol at %u\n", 0xff & (b + *pht));
 		uint8_t sym_pos = 0xff & (b + *pht);
 		size_t symbols;
 		if (isdc)
@@ -476,7 +476,7 @@ void Ejpg::run(uint8_t *memory8,
 		else
 			symbols = REG_EJPG_ACC + 256 * (da8 & 1);
 		uint8_t symbol = memory8[symbols + sym_pos];
-		// printf("symbol %02x\n", symbol);
+		// FTEMU_printf("symbol %02x\n", symbol);
 
 		size_t dmsize = symbol & 0xf;
 		if (nbits < (codesize + dmsize))
@@ -490,11 +490,11 @@ void Ejpg::run(uint8_t *memory8,
 
 		// uint32_t consume = bits >> (64 - (codesize + dmsize));
 #if 0
-		printf("DEBUG: %08x\n", 0x80000000 | symbol);
+		FTEMU_printf("DEBUG: %08x\n", 0x80000000 | symbol);
 		if (symbol)
-			printf("DEBUG: %08x\n", dm);
+			FTEMU_printf("DEBUG: %08x\n", dm);
 #endif
-		// printf("%02x,%04x,%02x\n", symbol, 0xffff & dm);
+		// FTEMU_printf("%02x,%04x,%02x\n", symbol, 0xffff & dm);
 
 		nbits -= (codesize + dmsize);
 		bits <<= (codesize + dmsize);
@@ -530,11 +530,11 @@ void Ejpg::run1(uint8_t *memory8,
 	int16_t dm)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	printf("Ejpg::run1\n");
+	FTEMU_printf("Ejpg::run1\n");
 #endif
 
-	// printf("idct_i=%d, symbol %02x\n", idct_i, symbol);
-	// printf("SYMBOL %02x,%04x,%02x\n", symbol, 0xffff & dm, idct_i);
+	// FTEMU_printf("idct_i=%d, symbol %02x\n", idct_i, symbol);
+	// FTEMU_printf("SYMBOL %02x,%04x,%02x\n", symbol, 0xffff & dm, idct_i);
 	uint8_t runlength = (symbol >> 4) & 15;
 	if ((idct_i > 0) && (symbol & 255) == 0)
 	{
@@ -545,21 +545,21 @@ void Ejpg::run1(uint8_t *memory8,
 		idct_i += runlength;
 		size_t qtab = 1 & (qt >> (8 * blk_type));
 		uint8_t qi = q[64 * qtab + idct_i];
-		// printf("--> %x (q=%d)\n", feed, q[64 * qtab + idct_i]);
+		// FTEMU_printf("--> %x (q=%d)\n", feed, q[64 * qtab + idct_i]);
 		int16_t f = dm;
 		if (idct_i == 0)
 		{
-			// printf("DC %04x+%04x=%04x\n", 0xffff & prevdc[blk_type], 0xffff & f, 0xffff & (f + prevdc[blk_type]));
+			// FTEMU_printf("DC %04x+%04x=%04x\n", 0xffff & prevdc[blk_type], 0xffff & f, 0xffff & (f + prevdc[blk_type]));
 			f += prevdc[blk_type];
 			prevdc[blk_type] = f;
 		}
 		int16_t feed = f * qi;
 
 		size_t zz[64] = { 0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63 };
-		// printf("Write %04x*%02x=%04x to %02x\n", dm & 0xffff, qi, feed & 0xffff, zz[idct_i]);
+		// FTEMU_printf("Write %04x*%02x=%04x to %02x\n", dm & 0xffff, qi, feed & 0xffff, zz[idct_i]);
 		if (idct_i >= 64)
 		{
-			printf("JPG ERROR: idct_i out of bounds (%i)\n", (int)idct_i);
+			FTEMU_printf("JPG ERROR: idct_i out of bounds (%i)\n", (int)idct_i);
 		}
 		else
 		{
@@ -569,8 +569,8 @@ void Ejpg::run1(uint8_t *memory8,
 
 	if (idct_i == 64)
 	{
-		// printf("BLOCK\n");
-		// printf("%d    %x %s %x %d\n", blk_type, format, btypes, qt, qtab);
+		// FTEMU_printf("BLOCK\n");
+		// FTEMU_printf("%d    %x %s %x %d\n", blk_type, format, btypes, qt, qtab);
 		block = (block + 1) % strlen(btypes);
 		idct();
 		for (size_t i = 0; i < 64; i++)
@@ -590,14 +590,14 @@ void Ejpg::run1(uint8_t *memory8,
 		{
 			if (++restart_i == ri)
 			{
-				// printf("RESTART %d\n", ri);
+				// FTEMU_printf("RESTART %d\n", ri);
 				restart_i = 0;
 				memset(prevdc, 0, sizeof(prevdc));
 
-				// printf("gulp %d\n", nbits & 7);
+				// FTEMU_printf("gulp %d\n", nbits & 7);
 				while (nbits & 7)
 				{
-					// printf("\n%2d: bits=%016llx\n", nbits, bits);
+					// FTEMU_printf("\n%2d: bits=%016llx\n", nbits, bits);
 					assert(1 & (bits >> 63));
 					nbits--;
 					bits <<= 1;
@@ -639,13 +639,13 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) printf("Failed to open coprocessor ROM file\n");
+		if (!f) FTEMU_printf("Failed to open coprocessor ROM file\n");
 		else
 		{
 			size_t s = fread(j1boot, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) printf("Incomplete coprocessor ROM file\n");
-			else printf("Loaded coprocessor ROM file\n");
-			if (fclose(f)) printf("Error closing coprocessor ROM file\n");
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_printf("Incomplete coprocessor ROM file\n");
+			else FTEMU_printf("Loaded coprocessor ROM file\n");
+			if (fclose(f)) FTEMU_printf("Error closing coprocessor ROM file\n");
 		}
 	}
 	else
@@ -655,7 +655,7 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 
 #if FT800EMU_COPROCESSOR_TRACE
 	trace = fopen(FT800EMU_COPROCESSOR_TRACEFILE, "w");
-	if (!trace) printf("Failed to create trace file\n");
+	if (!trace) FTEMU_printf("Failed to create trace file\n");
 #endif
 
 	ejpg.reset();
@@ -683,7 +683,7 @@ void CoprocessorClass::execute()
 		{
 			ejpg.reset();
 			cpureset();
-			//printf("RESET COPROCESSOR\n");
+			//FTEMU_printf("RESET COPROCESSOR\n");
 			FT8XXEMU::System.delay(1);
 			continue;
 		}
@@ -691,42 +691,42 @@ void CoprocessorClass::execute()
 		// uint32_t regJ1Cold = Memory.rawReadU32(Memory.getRam(), REG_J1_COLD);
 
 #if FT800EMU_COPROCESSOR_DEBUG
-		//printf("pc: %i, 0x%x\n", (int)pc, (int)pc);
+		//FTEMU_printf("pc: %i, 0x%x\n", (int)pc, (int)pc);
 		switch (pc)
 		{
 		case 0x04CB:
-			printf("COPROCESSOR: throw\n");
+			FTEMU_printf("COPROCESSOR: throw\n");
 			break;
 		case 0x2D5A:
-			printf("func:playvideo\n");
-			printf("\tCALL mjpeg-DHT\n");
+			FTEMU_printf("func:playvideo\n");
+			FTEMU_printf("\tCALL mjpeg-DHT\n");
 			break;
 		case 0x2D5B:
-			printf("\tCALL jpgavi-common\n");
+			FTEMU_printf("\tCALL jpgavi-common\n");
 			break;
 		case 0x2D5C:
-			printf("\tCALL avi-prime\n");
+			FTEMU_printf("\tCALL avi-prime\n");
 			break;
 		case 0x2D5D:
-			printf("\tCALL avi-chunk\n");
+			FTEMU_printf("\tCALL avi-chunk\n");
 			break;
 		case 0x2D64:
-			printf("\tJUMP avi-cleanup\n");
+			FTEMU_printf("\tJUMP avi-cleanup\n");
 			break;
 		/*case 0x2C3A:
-			printf("\t0x2C3A N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
+			FTEMU_printf("\t0x2C3A N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
 			break;
 		case 0x2C3C:
-			printf("\t0x2C3C\n");
+			FTEMU_printf("\t0x2C3C\n");
 			break;
 		case 0x2C70:
-			printf("\t0x2C70\n");
+			FTEMU_printf("\t0x2C70\n");
 			break;
 		case 0x2C75:
-			printf("\t0x2C75 N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
+			FTEMU_printf("\t0x2C75 N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
 			break;
 		case 0x2C77:
-			printf("\t0x2C77\n");
+			FTEMU_printf("\t0x2C77\n");
 			break;*/
 		}
 #endif
@@ -737,7 +737,7 @@ void CoprocessorClass::execute()
 
 #if FT800EMU_COPROCESSOR_DEBUG
 		if (pc == 0x3fff)
-			printf("NEW ENTRYPOINT\n");
+			FTEMU_printf("NEW ENTRYPOINT\n");
 #endif
 
 		switch (insn >> 13)
@@ -759,7 +759,7 @@ void CoprocessorClass::execute()
 			rsp = 31 & (rsp + 1);
 			r[rsp] = _pc << 1;
 #if FT800EMU_COPROCESSOR_DEBUG
-			printf("(call) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+			FTEMU_printf("(call) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 			_pc = insn & 0x3fff;
 			break;
@@ -768,7 +768,7 @@ void CoprocessorClass::execute()
 			{ /* R->PC */
 				if ((r[rsp] & 1) || (r[rsp] > 32767))
 				{
-					printf("Warning: invalid return address [%d] %08x\n", rsp, r[rsp]);
+					FTEMU_printf("Warning: invalid return address [%d] %08x\n", rsp, r[rsp]);
 				}
 				_pc = r[rsp] >> 1;
 			}
@@ -785,7 +785,7 @@ void CoprocessorClass::execute()
 			case 0x07:
 				_t = -(t == n);
 #if FT800EMU_COPROCESSOR_DEBUG
-				printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
+				FTEMU_printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
 #endif
 				break;
 			case 0x08:  _t = -((int32_t)n < (int32_t)t); break;
@@ -821,7 +821,7 @@ void CoprocessorClass::execute()
 			case 0x1d:  _t = t << 1; break;
 			case 0x1e:  _t = t + 4; break;
 			case 0x1f:  _t = !(isFF(memrd) | isFF(memrd >> 8) | isFF(memrd >> 16) | isFF(memrd >> 24));
-				// printf("xmit %08x\n", memrd);
+				// FTEMU_printf("xmit %08x\n", memrd);
 				if (_t)
 				{
 					uint8_t *memory8 = Memory.getRam();
@@ -854,7 +854,7 @@ void CoprocessorClass::execute()
 			case 2:
 				r[rsp] = t;
 #if FT800EMU_COPROCESSOR_DEBUG
-				printf("(r[rsp] = t) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+				FTEMU_printf("(r[rsp] = t) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 				break;
 			case 3:
@@ -863,7 +863,7 @@ void CoprocessorClass::execute()
 				// selfassert((t & 3) == 0, __LINE__);
 				if (t == 0x600000)
 				{
-				// 	printf("DEBUG: %08x\n", n);
+				// 	FTEMU_printf("DEBUG: %08x\n", n);
 				// 	PyList_Append(debugs, PyLong_FromUnsignedLong(n));
 					break;
 				}
@@ -874,7 +874,7 @@ void CoprocessorClass::execute()
 				Memory.coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
 				if (t == REG_EJPG_FORMAT)
 				{
-					// printf("EJPG Begin\n");
+					// FTEMU_printf("EJPG Begin\n");
 					ejpg.begin();
 				}
 				assert(t != REG_EJPG_DAT);
@@ -901,7 +901,7 @@ void CoprocessorClass::execute()
 				//	written[(t - RAM_J1RAM) >> 2] = 1;
 				if (t == REG_EJPG_DAT)
 				{
-					// printf("EJPG Data memrd %u\n", (unsigned int)memrd);
+					// FTEMU_printf("EJPG Data memrd %u\n", (unsigned int)memrd);
 					uint8_t *memory8 = Memory.getRam();
 					uint16_t *memory16 = static_cast<uint16_t *>(static_cast<void *>(memory8));
 					uint32_t *memory32 = static_cast<uint32_t *>(static_cast<void *>(memory8));
@@ -939,7 +939,7 @@ void CoprocessorClass::execute()
 #if FT800EMU_COPROCESSOR_TRACE
 		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);
 #if FT800EMU_COPROCESSOR_DEBUG
-		printf("pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+		FTEMU_printf("pc=%04x t=%08x insn=%04x\n", pc, t, insn);
 #endif
 #endif
 
@@ -966,10 +966,10 @@ void CoprocessorClass::execute()
 		history[t0].pc = pc;
 		history[t0].rsp = rsp;
 		if (pc > 16383) {
-			printf("PC escape\n");
+			FTEMU_printf("PC escape\n");
 			for (size_t i = ((t0 + 1) & HMASK); i != t0; i = (i + 1) & HMASK)
-				printf("%04X rsp=%d\n", history[i].pc, history[i].rsp);
-			printf("Final PC %04X rsp=%d\n", pc, rsp);
+				FTEMU_printf("%04X rsp=%d\n", history[i].pc, history[i].rsp);
+			FTEMU_printf("Final PC %04X rsp=%d\n", pc, rsp);
 		}
 		assert(pc < 16384);*/
 
@@ -988,19 +988,19 @@ void CoprocessorClass::execute()
 		if (Memory.coprocessorGetReset())
 		{
 		pc = 0;
-		//printf("RESET COPROCESSOR\n");
+		//FTEMU_printf("RESET COPROCESSOR\n");
 		FT8XXEMU::System.delay(1);
 		continue;
 		}
 		insn = pgm[pc];
-		// printf("PC=%04x %04x\n", pc, insn);
-		// if (pc == 0x1BA6) printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+		// FTEMU_printf("PC=%04x %04x\n", pc, insn);
+		// if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
 		if (singleFrame)
 		{
 		if (pc == 0x0980) { // cmd.has1
 		// 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
 		int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-		// printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
+		// FTEMU_printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
 		starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
 		}
 		}
@@ -1044,13 +1044,13 @@ void CoprocessorClass::execute()
 		case 9:     _t = n >> t; break;
 		case 10:    _t = t - 1; break;
 		case 11:    _t = r[rsp]; break;
-		case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*printf("rd[%x] = %x\n", t, _t);* / break;
+		case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);* / break;
 		case 13:    _t = product; break;
 		case 14:    _t = (n << 15) | (t & 0x7fff); break;
 		case 15:    _t = -(n < t); break;
 		case 16:    assert(0);
 		case 17:    _t = n << t; break;
-		case 18:    _t = MemoryClass::coprocessorReadU8(t); /*printf("rd8[%x] = %x\n", t, _t);* / break;
+		case 18:    _t = MemoryClass::coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);* / break;
 		case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
 		case 20:    _t = product >> 32; break;
 		case 21:    _t = product >> 16; break;
@@ -1080,7 +1080,7 @@ void CoprocessorClass::execute()
 		++r[rsp];
 		break;
 		case 4: // write32
-		// printf("wr[%x] <= %x\n", t, n);
+		// FTEMU_printf("wr[%x] <= %x\n", t, n);
 		MemoryClass::coprocessorWriteU32(t, n);
 		if (singleFrame)
 		{
@@ -1106,7 +1106,7 @@ void CoprocessorClass::execute()
 		pc = _pc;
 		// fflush(stdout);
 		} while (singleFrame ? (!swapped && !starve) : s_Running);
-		// printf("coprocessor done\n");*/
+		// FTEMU_printf("coprocessor done\n");*/
 }
 
 void CoprocessorClass::executeManual()

@@ -45,13 +45,13 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) printf("Failed to open coprocessor ROM file\n");
+		if (!f) FTEMU_printf("Failed to open coprocessor ROM file\n");
 		else
 		{
 			size_t s = fread(pgm, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) printf("Incomplete coprocessor ROM file\n");
-			else printf("Loaded coprocessor ROM file\n");
-			if (fclose(f)) printf("Error closing coprocessor ROM file\n");
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_printf("Incomplete coprocessor ROM file\n");
+			else FTEMU_printf("Loaded coprocessor ROM file\n");
+			if (fclose(f)) FTEMU_printf("Error closing coprocessor ROM file\n");
 		}
 	}
 	else
@@ -82,19 +82,19 @@ void CoprocessorClass::execute()
 		if (Memory.coprocessorGetReset())
 		{
 			pc = 0;
-			//printf("RESET COPROCESSOR\n");
+			//FTEMU_printf("RESET COPROCESSOR\n");
 			FT8XXEMU::System.delay(1);
 			continue;
 		}
         insn = pgm[pc];
-        // printf("PC=%04x %04x\n", pc, insn);
-        // if (pc == 0x1BA6) printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+        // FTEMU_printf("PC=%04x %04x\n", pc, insn);
+        // if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
 		if (singleFrame)
 		{
 			if (pc == 0x0980) { // cmd.has1
                 // 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
 				int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-				// printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
+				// FTEMU_printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
 				starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
 			}
 		}
@@ -138,13 +138,13 @@ void CoprocessorClass::execute()
                 case 9:     _t = n >> t; break;
                 case 10:    _t = t - 1; break;
                 case 11:    _t = r[rsp]; break;
-                case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*printf("rd[%x] = %x\n", t, _t);*/ break;
+                case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);*/ break;
                 case 13:    _t = product & 0xFFFFFFFF; break;
                 case 14:    _t = (n << 15) | (t & 0x7fff); break;
                 case 15:    _t = -(n < t); break;
                 case 16:    assert(0);
                 case 17:    _t = n << t; break;
-                case 18:    _t = MemoryClass::coprocessorReadU8(t); /*printf("rd8[%x] = %x\n", t, _t);*/ break;
+                case 18:    _t = MemoryClass::coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);*/ break;
                 case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
                 case 20:    _t = product >> 32; break;
 				case 21:    _t = (product >> 16) & 0xFFFFFFFF; break;
@@ -174,7 +174,7 @@ void CoprocessorClass::execute()
                     ++r[rsp];
                     break;
 				case 4: // write32
-					// printf("wr[%x] <= %x\n", t, n);
+					// FTEMU_printf("wr[%x] <= %x\n", t, n);
                     MemoryClass::coprocessorWriteU32(t, n);
 					if (singleFrame)
 					{
@@ -200,7 +200,7 @@ void CoprocessorClass::execute()
         pc = _pc;
         // fflush(stdout);
 	} while (singleFrame ? (!swapped && !starve) : s_Running);
-    // printf("coprocessor done\n");
+    // FTEMU_printf("coprocessor done\n");
 }
 
 void CoprocessorClass::executeManual()
