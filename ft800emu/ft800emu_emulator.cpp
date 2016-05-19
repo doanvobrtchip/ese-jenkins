@@ -315,15 +315,15 @@ const uint8_t bayerDiv4[2][2] = {
 				unsigned long procStart = FT8XXEMU::System.getMicros();
 				if (reg_pclk || renderLineSnapshot)
 				{
+					// FTEMU_printf("%i != %i\n", lwoc, woc);
+					if (ram[REG_DLSWAP] == DLSWAP_FRAME)
+					{
+						Memory.swapDisplayList();
+						ram[REG_DLSWAP] = DLSWAP_DONE;
+						Memory.flagDLSwap();
+					}
 					if (hasChanges || !s_FrameFullyDrawn)
 					{
-						// FTEMU_printf("%i != %i\n", lwoc, woc);
-						if (ram[REG_DLSWAP] == DLSWAP_FRAME)
-						{
-							Memory.swapDisplayList();
-							ram[REG_DLSWAP] = DLSWAP_DONE;
-							Memory.flagDLSwap();
-						}
 						bool mirrorHorizontal = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
 						bool mirrorVertical = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram);
 						if (renderLineSnapshot)

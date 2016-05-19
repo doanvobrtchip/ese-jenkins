@@ -66,6 +66,7 @@ static ramaddr s_LastCoprocessorCommandRead = -1;
 static int s_DirectSwapCount;
 static int s_RealSwapCount;
 static int s_WriteOpCount;
+//static bool s_CoprocessorWritesDL;
 
 // Avoid getting hammered in wait loops
 static ramaddr s_LastCoprocessorRead = -1;
@@ -412,6 +413,7 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	s_DirectSwapCount = 0;
 	s_RealSwapCount = 0;
 	s_WriteOpCount = 0;
+	//s_CoprocessorWritesDL = false;
 
 	s_ReadDelay = false;
 
@@ -579,7 +581,14 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
     actionWrite(address, data);
 	rawWriteU32(address, data);
 
-	++s_WriteOpCount;
+	if (address != REG_CMD_WRITE
+#ifdef FT810EMU_MODE
+		&& address != REG_CMDB_WRITE
+#endif
+		&& address < RAM_CMD)
+	{
+		++s_WriteOpCount;
+	}
 
 	switch (address)
 	{
@@ -616,6 +625,30 @@ void MemoryClass::swapDisplayList()
 	s_DisplayListFree = s_DisplayListActive;
 	s_DisplayListActive = active;
 	++s_RealSwapCount;
+	//if (s_CoprocessorWritesDL)
+	//{
+		for (int c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+		{
+			uint32_t v = s_DisplayListActive[c];
+			switch (v >> 24)
+			{
+			case FT800EMU_DL_DISPLAY:
+				goto BreakLoop;
+			case FT800EMU_DL_JUMP:
+			case FT800EMU_DL_CALL:
+			case FT800EMU_DL_RETURN:
+				++s_WriteOpCount; // Not optimized
+				goto BreakLoop;
+			}
+			if (v != s_DisplayListFree[c])
+			{
+				++s_WriteOpCount; // Display list changed
+				goto BreakLoop;
+			}
+		}
+	BreakLoop:;
+	//	s_CoprocessorWritesDL = false;
+	//}
 }
 
 int MemoryClass::getRealSwapCount()
@@ -778,8 +811,6 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 	FTEMU_printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
 #endif
 
-	++s_WriteOpCount;
-
 	if (address == REG_CMD_READ)
 	{
 		if (data & 0x1)
@@ -795,11 +826,19 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
+		//s_CoprocessorWritesDL = true;
 		int dlAddr = (int)((address - RAM_DL) >> 2);
 		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
 #if FT800EMU_DL_MEMLOG
 		FTEMU_printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)s_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
 #endif
+	}
+	else if (address != REG_DLSWAP
+		&& address != REG_CMD_READ && address != REG_CMD_DL 
+		&& address != REG_J1_INT && address != REG_INT_FLAGS
+		&& address < RAM_J1RAM)
+	{
+		++s_WriteOpCount;
 	}
 
     actionWrite(address, data);
@@ -978,7 +1017,10 @@ void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
 	FTEMU_printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
 #endif
 
-	++s_WriteOpCount;
+	if (address < RAM_J1RAM)
+	{
+		++s_WriteOpCount;
+	}
 
 	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
 	{
@@ -1025,7 +1067,10 @@ void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
 	FTEMU_printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
 #endif
 
-	++s_WriteOpCount;
+	if (address < RAM_J1RAM)
+	{
+		++s_WriteOpCount;
+	}
 
 	if (address >= FT800EMU_RAM_SIZE)
 	{

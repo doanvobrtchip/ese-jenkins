@@ -255,6 +255,7 @@ void TouchClass::setTouchScreenXYFrameTime(long micros)
 
 void TouchClass::resetXY()
 {
+	bool doPoke = m_TouchScreenSet != 0;
 	m_TouchScreenSet = 0;
 	uint8_t *ram = Memory.getRam();
 	switch (m_Index)
@@ -312,7 +313,8 @@ void TouchClass::resetXY()
 		}
 	}
 	m_LastJitteredTime = FT8XXEMU::System.getMicros();
-	Memory.poke();
+	if (doPoke)
+		Memory.poke();
 }
 
 // Get XY value interpolated etc
