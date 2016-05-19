@@ -201,7 +201,7 @@ void SystemClass::killMCUThread()
 {
 	if (TerminateThread(s_MCUThread, 0) == FALSE)
 		SystemWindows.Error(TEXT("ExitThread  FAILED"));
-	printf("(1) mcu thread killed\n");
+	FTEMU_printf("(1) mcu thread killed\n");
 }
 
 
