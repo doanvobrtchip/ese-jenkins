@@ -630,6 +630,11 @@ void MemoryClass::swapDisplayList()
 		for (int c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			uint32_t v = s_DisplayListActive[c];
+			if (v != s_DisplayListFree[c])
+			{
+				++s_WriteOpCount; // Display list changed
+				goto BreakLoop;
+			}
 			switch (v >> 24)
 			{
 			case FT800EMU_DL_DISPLAY:
@@ -638,11 +643,6 @@ void MemoryClass::swapDisplayList()
 			case FT800EMU_DL_CALL:
 			case FT800EMU_DL_RETURN:
 				++s_WriteOpCount; // Not optimized
-				goto BreakLoop;
-			}
-			if (v != s_DisplayListFree[c])
-			{
-				++s_WriteOpCount; // Display list changed
 				goto BreakLoop;
 			}
 		}
