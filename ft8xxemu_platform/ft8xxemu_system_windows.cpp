@@ -384,22 +384,31 @@ DWORD Win32FromHResult(HRESULT hr)
 void SystemWindowsClass::Error(const tstring &message)
 {
 	// exit with message
-	MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Error"), MB_OK | MB_ICONERROR);
-	tcout << TEXT("Error: ") << message << std::endl;
+	if (::FT8XXEMU::g_PrintStd)
+	{
+		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Error"), MB_OK | MB_ICONERROR);
+		tcout << TEXT("Error: ") << message << std::endl;
+	}
 	exit(EXIT_FAILURE);
 }
 
 void SystemWindowsClass::Warning(const tstring &message)
 {
 	// show a warning box and send to output
-	MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Warning"), MB_OK | MB_ICONWARNING);
-	tcout << TEXT("Warning: ") << message << std::endl;
+	if (::FT8XXEMU::g_PrintStd)
+	{
+		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Warning"), MB_OK | MB_ICONWARNING);
+		tcout << TEXT("Warning: ") << message << std::endl;
+	}
 }
 
 void SystemWindowsClass::Debug(const tstring &message)
 {
 	// send a debug to output
-	tcout << TEXT("Debug: ") << message << std::endl;
+	if (::FT8XXEMU::g_PrintStd)
+	{
+		tcout << TEXT("Debug: ") << message << std::endl;
+	}
 }
 
 void SystemWindowsClass::ErrorWin32(const tstring &message)
