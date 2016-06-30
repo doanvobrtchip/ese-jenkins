@@ -426,6 +426,13 @@ void SystemWindowsClass::ErrorHResult(const tstring &message, HRESULT hr)
 	Error(buffer.str());
 }
 
+void SystemWindowsClass::WarningHResult(const tstring &message, HRESULT hr)
+{
+	tstringstream buffer;
+	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));
+	Warning(buffer.str());
+}
+
 
 } /* namespace FT8XXEMU */
 
