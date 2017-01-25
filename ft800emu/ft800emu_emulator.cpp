@@ -306,12 +306,6 @@ const uint8_t bayerDiv4[2][2] = {
 			{
 				FT8XXEMU::System.switchThread();
 
-				int lwoc = s_LastWriteOpCount;
-				int woc = Memory.getWriteOpCount();
-				hasChanged = (lwoc != woc);
-				bool hasChanges = hasChanged || s_ChangesSkipped;
-				s_LastWriteOpCount = woc;
-
 				unsigned long procStart = FT8XXEMU::System.getMicros();
 				if (reg_pclk || renderLineSnapshot)
 				{
@@ -322,6 +316,13 @@ const uint8_t bayerDiv4[2][2] = {
 						ram[REG_DLSWAP] = DLSWAP_DONE;
 						Memory.flagDLSwap();
 					}
+
+					int lwoc = s_LastWriteOpCount;
+					int woc = Memory.getWriteOpCount();
+					hasChanged = (lwoc != woc);
+					bool hasChanges = hasChanged || s_ChangesSkipped;
+					s_LastWriteOpCount = woc;
+
 					if (hasChanges || !s_FrameFullyDrawn)
 					{
 						bool mirrorHorizontal = /*s_RotateEnabled &&*/ FT800EMU_REG_ROTATE_MIRROR_HORIZONTAL(ram);
@@ -450,7 +451,7 @@ const uint8_t bayerDiv4[2][2] = {
 					}
 					else
 					{
-						GraphicsProcessor.processBlank();
+						// GraphicsProcessor.processBlank();
 						// FTEMU_printf("no changes\n");
 					}
 				}
