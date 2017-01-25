@@ -450,6 +450,7 @@ const uint8_t bayerDiv4[2][2] = {
 					}
 					else
 					{
+						GraphicsProcessor.processBlank();
 						// FTEMU_printf("no changes\n");
 					}
 				}
