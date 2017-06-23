@@ -323,11 +323,21 @@ void Ejpg::run2(uint8_t *memory8,
 					if (options & OPT_MONO)
 					{
 						uint32_t a = dst + (ey * w + ex);
+						if (a < 0 || a >= (FT800EMU_RAM_SIZE))
+						{
+							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							return;
+						}
 						memory8[a] = y;
 					}
 					else
 					{
 						uint32_t a = dst + 2 * (ey * w + ex);
+						if ((a >> 1) < 0 || (a >> 1) >= (FT800EMU_RAM_SIZE >> 1))
+						{
+							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							return;
+						}
 						memory16[a >> 1] = rgb565(y, Cb, Cr);
 					}
 				}
@@ -381,7 +391,12 @@ void Ejpg::run(uint8_t *memory8,
 	FTEMU_printf("Ejpg::run\n");
 #endif
 
-	assert((bitsize == 8) | (bitsize == 32));
+	// assert((bitsize == 8) | (bitsize == 32));
+	if (!((bitsize == 8) | (bitsize == 32)))
+	{
+		FTEMU_printf("JPG ERROR: bitsize invalid (%i)\n", (int)bitsize);
+		return;
+	}
 
 	const char *btypes = NULL;
 	if (format == 0x11112200)
@@ -392,7 +407,12 @@ void Ejpg::run(uint8_t *memory8,
 		btypes = "1123";
 	else if (format == 0x00001100)
 		btypes = "1";
-	assert(btypes != NULL);
+	// assert(btypes != NULL);
+	if (!btypes)
+	{
+		FTEMU_printf("JPG ERROR: btypes invalid (NULL)\n");
+		return;
+	}
 
 	memory8[REG_EJPG_DAT] = 0;  // not finished yet
 	if (bitsize == 8)
@@ -450,6 +470,11 @@ void Ejpg::run(uint8_t *memory8,
 		else
 			ht = REG_EJPG_HT + 64 * (2 | (da8 & 1));
 		// FTEMU_printf("ht = %x\n", ht);
+		if (ht < 0 || ht >= (FT800EMU_RAM_SIZE))
+		{
+			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			return;
+		}
 		uint32_t *pht = (uint32_t*)&memory8[ht];
 		size_t codesize;
 		uint16_t b = ~0;
@@ -475,6 +500,11 @@ void Ejpg::run(uint8_t *memory8,
 			symbols = REG_EJPG_DCC + 12 * (da8 >> 4);
 		else
 			symbols = REG_EJPG_ACC + 256 * (da8 & 1);
+		if ((symbols + sym_pos) < 0 || (symbols + sym_pos) >= (FT800EMU_RAM_SIZE))
+		{
+			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			return;
+		}
 		uint8_t symbol = memory8[symbols + sym_pos];
 		// FTEMU_printf("symbol %02x\n", symbol);
 

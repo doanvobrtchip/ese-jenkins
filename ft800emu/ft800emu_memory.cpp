@@ -568,7 +568,7 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 	FTEMU_printf("MCU write U32 %i, %i\n", (int)address, (int)data);
 #endif
 
-	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("MCU U32 write address %i exceeds RAM size\n", (int)address);
 		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Write address exceeds RAM size");
@@ -668,6 +668,13 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 	// if (address != 3182612 && address != 3182616)
 	FTEMU_printf("MCU read U32 %i\n", (int)address);
 #endif
+
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
+	{
+		FTEMU_printf("MCU U32 read address %i exceeds RAM size\n", (int)address);
+		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Read address exceeds RAM size");
+		return 0;
+	}
 
 	if (s_ReadDelay)
 	{
@@ -818,7 +825,7 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 			FTEMU_printf("WARNING: Coprocessor has flagged an error\n");
 		}
 	}
-	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U32 write address %i exceeds RAM size\n", (int)address);
 		return;
@@ -889,7 +896,7 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		FTEMU_printf("Coprocessor read REG_TOUCH_RZ %x\n", (unsigned int)rawReadU32(address));
 	}*/
 
-	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U32 read address %i exceeds RAM size\n", (int)address);
 		return 0;
@@ -1022,7 +1029,7 @@ void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
 		++s_WriteOpCount;
 	}
 
-	if ((address & ~0x3) >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U16 write address %i exceeds RAM size\n", (int)address);
 		return;
@@ -1052,7 +1059,7 @@ uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
 #endif
 	}
 
-	if ((address & ~0x1) >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U16 read address %i exceeds RAM size\n", (int)address);
 		return 0;
@@ -1072,7 +1079,7 @@ void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
 		++s_WriteOpCount;
 	}
 
-	if (address >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U8 write address %i exceeds RAM size\n", (int)address);
 		return;
@@ -1096,7 +1103,7 @@ uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
 	FTEMU_printf("Coprocessor read U8 %i\n", (int)address);
 #endif
 
-	if (address >= FT800EMU_RAM_SIZE)
+	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
 		FTEMU_printf("Coprocessor U8 read address %i exceeds RAM size\n", (int)address);
 		return 0;
