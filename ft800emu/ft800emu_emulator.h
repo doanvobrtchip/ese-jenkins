@@ -32,7 +32,7 @@ namespace BT8XXEMU {
 */
 class IEmulator
 {
-	virtual void run(const BT8XXEMU_EmulatorParameters &params) = 0;
+
 	virtual void stop() = 0;
 };
 
