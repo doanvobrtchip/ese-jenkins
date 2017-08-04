@@ -180,7 +180,7 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParameters *params);
 
 // Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped
-BT8XXEMU_API extern void(*BT8XXEMU_stop)();
+BT8XXEMU_API void BT8XXEMU_stop();
 
 /////////////
 // RUNTIME //

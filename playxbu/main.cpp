@@ -272,6 +272,7 @@ int main(int, char* [])
 	params.Mode = BT8XXEMU_EmulatorFT801;
 #endif
 	params.Keyboard = keyboard;
-	FT800EMU::Emulator.run(params);
+	FT800EMU::Emulator emulator;
+	emulator.run(params);
 	return 0;
 }

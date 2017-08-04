@@ -172,6 +172,7 @@ int main(int, char* [])
 	params.Loop = loop;
 	params.Flags = BT8XXEMU_EmulatorEnableKeyboard | BT8XXEMU_EmulatorEnableMouse | BT8XXEMU_EmulatorEnableDebugShortkeys;
 	params.Keyboard = keyboard;
-	FT800EMU::Emulator.run(params);
+	FT800EMU::Emulator emulator;
+	emulator.run(params);
 	return 0;
 }

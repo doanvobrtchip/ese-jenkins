@@ -1,8 +1,8 @@
 /**
- * EmulatorClass
+ * Emulator
  * $Id$
  * \file ft800emu_emulator.h
- * \brief EmulatorClass
+ * \brief Emulator
  * \date 2013-06-20 23:17GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -22,6 +22,8 @@
 #include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
 
+#ifndef BT8XXEMU_EMULATOR_H
+#define BT8XXEMU_EMULATOR_H
 namespace BT8XXEMU {
 
 /**
@@ -32,11 +34,33 @@ namespace BT8XXEMU {
 */
 class IEmulator
 {
-
+public:
 	virtual void stop() = 0;
+	/*
+	virtual uint8_t transfer(uint8_t data) = 0;
+	virtual void cs(bool cs) = 0;
+	virtual bool interrupt() = 0;
+
+	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
+	virtual void touchResetXY(int idx) = 0;
+
+
+	virtual uint8_t *getRam() = 0;
+	// virtual uint8_t *getFlash() = 0;
+	virtual const uint32_t *getDisplayList() = 0;
+	virtual void poke() = 0;
+	virtual int getDisplayListCoprocessorWrites() = 0;
+	virtual void clearDisplayListCoprocessorWrites() = 0;
+	virtual bool getDebugLimiterEffective() = 0;
+	virtual int getDebugLimiterIndex() = 0;
+	virtual void setDebugLimiter(int debugLimiter);
+	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = 0;
+	*/
+
 };
 
 }
+#endif
 
 namespace FT800EMU {
 
@@ -46,14 +70,14 @@ namespace FT800EMU {
  * \date 2011-05-29 19:54GMT
  * \author Jan Boon (Kaetemi)
  */
-class Emulator
+class Emulator : public BT8XXEMU::IEmulator
 {
 public:
 	Emulator() { }
 	~Emulator() { }
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
-	void stop();
+	virtual void stop();
 
 private:
 	Emulator(const Emulator &) = delete;

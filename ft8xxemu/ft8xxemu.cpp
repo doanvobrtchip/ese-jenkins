@@ -40,7 +40,6 @@
 #undef FT810EMU_MODE
 #endif
 
-void(*BT8XXEMU_stop)() = NULL;
 uint8_t(*BT8XXEMU_transfer)(uint8_t data) = NULL;
 void(*BT8XXEMU_cs)(int cs) = NULL;
 int(*BT8XXEMU_int)() = NULL;
@@ -54,6 +53,8 @@ bool(*BT8XXEMU_getDebugLimiterEffective)() = NULL;
 int(*BT8XXEMU_getDebugLimiterIndex)() = NULL;
 void(*BT8XXEMU_setDebugLimiter)(int debugLimiter) = NULL;
 void(*BT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = NULL;
+
+static BT8XXEMU::IEmulator *s_Emulator = 0;
 
 static const char *s_Version =
 	"FT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
@@ -101,7 +102,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 #ifdef FTEMU_HAVE_FT800EMU
 	case BT8XXEMU_EmulatorFT800:
 	case BT8XXEMU_EmulatorFT801:
-		BT8XXEMU_stop = &FT800EMU::Emulator.stop;
+		s_Emulator = new FT800EMU::Emulator();
 		BT8XXEMU_transfer = &FT800EMU::SPII2C.transfer;
 		BT8XXEMU_cs = &FT800EMU::SPII2C.csLow;
 		BT8XXEMU_int = &FT800EMU::SPII2C.intnLow;
@@ -114,7 +115,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 		BT8XXEMU_getDebugLimiterIndex = &FT800EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT800EMU::GraphicsProcessor.setDebugLimiter;
 		BT8XXEMU_processTrace = &FT800EMU::GraphicsProcessor.processTrace;
-		FT800EMU::Emulator.run(*params);
+		static_cast<FT800EMU::Emulator *>(s_Emulator)->run(*params);
 		break;
 #endif
 #ifdef FTEMU_HAVE_FT810EMU
@@ -122,7 +123,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 	case BT8XXEMU_EmulatorFT811:
 	case BT8XXEMU_EmulatorFT812:
 	case BT8XXEMU_EmulatorFT813:
-		BT8XXEMU_stop = &FT810EMU::Emulator.stop;
+		s_Emulator = new FT810EMU::Emulator();
 		BT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
 		BT8XXEMU_cs = &FT810EMU::SPII2C.csLow;
 		BT8XXEMU_int = &FT810EMU::SPII2C.intnLow;
@@ -135,7 +136,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 		BT8XXEMU_getDebugLimiterIndex = &FT810EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT810EMU::GraphicsProcessor.setDebugLimiter;
 		BT8XXEMU_processTrace = &FT810EMU::GraphicsProcessor.processTrace;
-		FT810EMU::Emulator.run(*params);
+		static_cast<FT810EMU::Emulator *>(s_Emulator)->run(*params);
 		break;
 #endif
 	default:
@@ -145,6 +146,11 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 		}
 		break;
 	}
+}
+
+BT8XXEMU_API void BT8XXEMU_stop()
+{
+	s_Emulator->stop();
 }
 
 // Set touch XY. Call on every frame when using custom graphics output

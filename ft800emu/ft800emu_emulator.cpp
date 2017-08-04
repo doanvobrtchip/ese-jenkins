@@ -1,8 +1,8 @@
 /**
- * EmulatorClass
+ * Emulator
  * $Id$
  * \file ft800emu_emulator.cpp
- * \brief EmulatorClass
+ * \brief Emulator
  * \date 2013-06-20 23:17GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -69,8 +69,6 @@
 #endif
 
 namespace FT800EMU {
-
-EmulatorClass Emulator;
 
 namespace {
 
@@ -764,7 +762,7 @@ const uint8_t bayerDiv4[2][2] = {
 	}
 }
 
-void EmulatorClass::run(const BT8XXEMU_EmulatorParameters &params)
+void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 {
 #ifdef WIN32
 #ifndef FTEMU_SDL2
@@ -1017,7 +1015,7 @@ void EmulatorClass::run(const BT8XXEMU_EmulatorParameters &params)
 #endif
 }
 
-void EmulatorClass::stop()
+void Emulator::stop()
 {
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 #elif defined(FTEMU_STDTHREAD)
