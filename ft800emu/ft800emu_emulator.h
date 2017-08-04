@@ -15,8 +15,17 @@
 #define FT800EMU_EMULATOR_H
 // #include <...>
 
+#define FTEMU_STDTHREAD
+
 // System includes
 #include <string>
+#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
+#include <SDL.h>
+#include <SDL_thread.h>
+#elif defined(FTEMU_STDTHREAD)
+#include <condition_variable>
+#include <mutex>
+#endif
 
 // Project includes (include standard stuff for user)
 #include "ft8xxemu.h"
@@ -78,6 +87,53 @@ public:
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop();
+
+private:
+	int masterThread();
+	friend int masterThread(Emulator *emulator);
+	int mcuThread();
+	friend int mcuThread(Emulator *emulator);
+	int coprocessorThread();
+	friend int coprocessorThread(Emulator *emulator);
+	int audioThread();
+	friend int audioThread(Emulator *emulator);
+
+private:
+	volatile bool m_EmulatorRunning = false;
+
+	void(*m_Setup)() = NULL;
+	void(*m_Loop)() = NULL;
+	void(*m_Keyboard)() = NULL;
+	void(*m_Close)() = NULL;
+	int m_Flags = 0;
+	volatile bool m_MasterRunning = false;
+	bool m_DynamicDegrade = false;
+	uint32_t m_ExternalFrequency = 0;
+
+	bool m_DegradeOn = false;
+	int m_DegradeStage = 0;
+
+	bool m_SkipOn = false;
+	int m_SkipStage = 0;
+	volatile bool m_CloseCalled = false;
+
+	// bool s_RotateEnabled = false;
+
+	int(*m_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) = NULL;
+	argb8888 *m_GraphicsBuffer = NULL;
+
+	int m_LastWriteOpCount = 0;
+	int m_LastRealSwapCount = 0;
+	bool m_FrameFullyDrawn = true;
+	bool m_ChangesSkipped = false;
+
+#ifdef FTEMU_SDL2
+	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
+	SDL_sem *m_InitSem = NULL;
+#elif defined(FTEMU_STDTHREAD)
+	std::condition_variable *m_InitCond = NULL;
+	std::mutex *m_InitMutex = NULL;
+#endif
 
 private:
 	Emulator(const Emulator &) = delete;
