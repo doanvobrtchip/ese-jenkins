@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT8XXEMU_AUDIO_DRIVER_H
-#define FT8XXEMU_AUDIO_DRIVER_H
+#ifndef BT8XXEMU_AUDIO_DRIVER_H
+#define BT8XXEMU_AUDIO_DRIVER_H
 // #include <...>
 
 // System includes
@@ -54,6 +54,6 @@ extern void (*g_AudioProcess)(short *audioBuffer, int samples);
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_AUDIO_DRIVER_H */
+#endif /* #ifndef BT8XXEMU_AUDIO_DRIVER_H */
 
 /* end of file */

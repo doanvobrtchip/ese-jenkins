@@ -44,8 +44,8 @@ static unsigned int s_NumFramesAvailable = 0;
 
 static double s_TestRad;
 
-#define D_FT8XXEMU_AUDIOCHANNELS 2
-#define D_FT8XXEMU_AUDIOBITS 16
+#define D_BT8XXEMU_AUDIOCHANNELS 2
+#define D_BT8XXEMU_AUDIOBITS 16
 
 bool AudioDriverClass::begin()
 {
@@ -71,11 +71,11 @@ bool AudioDriverClass::begin()
 
 	WAVEFORMATEX wfx;
 	wfx.wFormatTag = 0x0001;
-	wfx.nChannels = D_FT8XXEMU_AUDIOCHANNELS;
+	wfx.nChannels = D_BT8XXEMU_AUDIOCHANNELS;
 	wfx.nSamplesPerSec = pwfx->nSamplesPerSec;
-	wfx.nBlockAlign = D_FT8XXEMU_AUDIOCHANNELS * D_FT8XXEMU_AUDIOBITS / 8;
+	wfx.nBlockAlign = D_BT8XXEMU_AUDIOCHANNELS * D_BT8XXEMU_AUDIOBITS / 8;
 	wfx.nAvgBytesPerSec = pwfx->nSamplesPerSec * wfx.nBlockAlign;
-	wfx.wBitsPerSample = D_FT8XXEMU_AUDIOBITS;
+	wfx.wBitsPerSample = D_BT8XXEMU_AUDIOBITS;
 	wfx.cbSize = 0;
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;

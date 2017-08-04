@@ -29,9 +29,9 @@ GraphicsDriverClass GraphicsDriver;
 void (*g_ResetTouchScreenXY)(int idx) = NULL;
 void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
 
-static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
-static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
-static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
+static int s_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = BT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = BT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 static bool s_MouseEnabled;
 static int s_MousePressure;
@@ -44,7 +44,7 @@ static int s_MouseDown;
 
 namespace {
 
-static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
+static argb8888 s_BufferARGB8888[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
 
 SDL_Surface *s_Screen = NULL;
 SDL_Surface *s_Buffer = NULL;
@@ -80,16 +80,16 @@ argb8888 *GraphicsDriverClass::getBufferARGB8888()
 
 bool GraphicsDriverClass::begin()
 {
-	s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
-	s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
-	s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
+	s_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
+	s_Height = BT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+	s_Ratio = BT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 
-	s_Screen = SDL_SetVideoMode(s_Width * FT8XXEMU_WINDOW_SCALE, s_Height * FT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
+	s_Screen = SDL_SetVideoMode(s_Width * BT8XXEMU_WINDOW_SCALE, s_Height * BT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 	if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
-	SDL_WM_SetCaption(FT8XXEMU_WINDOW_TITLE_A, NULL);
+	SDL_WM_SetCaption(BT8XXEMU_WINDOW_TITLE_A, NULL);
 
 	Uint32 bpp;
 	Uint32 rmask, gmask, bmask, amask;
@@ -132,8 +132,8 @@ bool GraphicsDriverClass::update()
 	int mouseX, mouseY;
 	int button = SDL_GetMouseState(&mouseX, &mouseY);
 	s_MouseDown = button & 1;
-	s_MouseX = mouseX / FT8XXEMU_WINDOW_SCALE;
-	s_MouseY = mouseY / FT8XXEMU_WINDOW_SCALE;
+	s_MouseX = mouseX / BT8XXEMU_WINDOW_SCALE;
+	s_MouseY = mouseY / BT8XXEMU_WINDOW_SCALE;
 	if (s_MouseDown)
 	{
 		g_SetTouchScreenXY(0, s_MouseX, s_MouseY, s_MousePressure);
@@ -188,7 +188,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Ratio = (float)width / (float)height;
 
 		// Change the screen mode
-		s_Screen = SDL_SetVideoMode(s_Width * FT8XXEMU_WINDOW_SCALE, s_Height * FT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
+		s_Screen = SDL_SetVideoMode(s_Width * BT8XXEMU_WINDOW_SCALE, s_Height * BT8XXEMU_WINDOW_SCALE, 32, SDL_SWSURFACE | SDL_ASYNCBLIT);
 		if (s_Screen == NULL) SystemSdlClass::ErrorSdl();
 
 		// Release the buffer
@@ -238,16 +238,16 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #endif
 
 	std::stringstream newTitle;
-	newTitle << FT8XXEMU_WINDOW_TITLE_A;
+	newTitle << BT8XXEMU_WINDOW_TITLE_A;
 	switch (GraphicsProcessor.getDebugMode())
 	{
-	case FT8XXEMU_DEBUGMODE_ALPHA:
+	case BT8XXEMU_DEBUGMODE_ALPHA:
 		newTitle << " [ALPHA";
 		break;
-	case FT8XXEMU_DEBUGMODE_TAG:
+	case BT8XXEMU_DEBUGMODE_TAG:
 		newTitle << " [TAG";
 		break;
-	case FT8XXEMU_DEBUGMODE_STENCIL:
+	case BT8XXEMU_DEBUGMODE_STENCIL:
 		newTitle << " [STENCIL";
 		break;
 	}

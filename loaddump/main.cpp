@@ -166,11 +166,11 @@ void keyboard()
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
+	BT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
-	params.Flags = FT8XXEMU_EmulatorEnableKeyboard | FT8XXEMU_EmulatorEnableMouse | FT8XXEMU_EmulatorEnableDebugShortkeys;
+	params.Flags = BT8XXEMU_EmulatorEnableKeyboard | BT8XXEMU_EmulatorEnableMouse | BT8XXEMU_EmulatorEnableDebugShortkeys;
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);
 	return 0;

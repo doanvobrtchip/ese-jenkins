@@ -86,7 +86,7 @@ namespace {
 struct GraphicsState
 {
 public:
-	FT8XXEMU_FORCE_INLINE GraphicsState(
+	BT8XXEMU_FORCE_INLINE GraphicsState(
 #ifdef FT810EMU_MODE
 		const bool swapXY
 #endif
@@ -217,7 +217,7 @@ int *s_DebugTraceStackSize = NULL;
 // Here's a nice reference table with all the intrinsics listed:
 // http://www.taffysoft.com/pages/20120418-01.html
 
-FT8XXEMU_FORCE_INLINE __m128i to_m128i(const argb8888 &value)
+BT8XXEMU_FORCE_INLINE __m128i to_m128i(const argb8888 &value)
 {
 	const register __m128i mzero = _mm_setzero_si128();
 	register __m128i result = _mm_set1_epi32(value);
@@ -226,14 +226,14 @@ FT8XXEMU_FORCE_INLINE __m128i to_m128i(const argb8888 &value)
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 to_argb8888(const __m128i &value)
+BT8XXEMU_FORCE_INLINE argb8888 to_argb8888(const __m128i &value)
 {
 	register __m128i result = _mm_packus_epi16(value, value);
 	result = _mm_packus_epi16(result, result);
 	return _mm_cvtsi128_si32(result);
 }
 
-FT8XXEMU_FORCE_INLINE __m128i div255(const __m128i &value)
+BT8XXEMU_FORCE_INLINE __m128i div255(const __m128i &value)
 {
 	// There exists no integer division in SSE so we have to use these division tricks anyways.
 	FT800EMU_STATIC_M128I(cm257) = { 1,1,0,0, 1,1,0,0, 1,1,0,0, 1,1,0,0 };
@@ -244,7 +244,7 @@ FT8XXEMU_FORCE_INLINE __m128i div255(const __m128i &value)
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE __m128i mulalpha_argb(const __m128i &value, const int &alpha)
+BT8XXEMU_FORCE_INLINE __m128i mulalpha_argb(const __m128i &value, const int &alpha)
 {
 	const register __m128i malpha = _mm_set1_epi32(alpha);
 	register __m128i result = _mm_mullo_epi32(value, malpha);
@@ -252,14 +252,14 @@ FT8XXEMU_FORCE_INLINE __m128i mulalpha_argb(const __m128i &value, const int &alp
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE __m128i mul_argb(const __m128i &left, const __m128i &right)
+BT8XXEMU_FORCE_INLINE __m128i mul_argb(const __m128i &left, const __m128i &right)
 {
 	register __m128i result = _mm_mullo_epi32(left, right);
 	result = div255(result);
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &right)
+BT8XXEMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &right)
 {
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
 	const register __m128i mmax = _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax));
@@ -268,7 +268,7 @@ FT8XXEMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
+BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
 {
 	FT800EMU_STATIC_M128I(cmone) = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
@@ -295,38 +295,38 @@ FT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src,
 
 #endif
 
-FT8XXEMU_FORCE_INLINE unsigned int div255(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int div255(const int &value)
 {
 	return (value * 257 + 257) >> 16;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div63(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div63(const int &value)
 {
 	return ((value * 16575) + 65) >> 12;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div31(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div31(const int &value)
 {
 	return ((value * 8415) + 33) >> 10;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div15(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div15(const int &value)
 {
 	return ((value * 4335) + 17) >> 8;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div7(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div7(const int &value)
 {
 	// Slightly noticeable loss of accuracy but also noticably faster.
 	return ((value * 2295) + 9) >> 6;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div3(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div3(const int &value)
 {
 	return value * 85;
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 mulalpha128_argb(const argb8888 &value, const int &alpha)
+BT8XXEMU_FORCE_INLINE argb8888 mulalpha128_argb(const argb8888 &value, const int &alpha)
 {
 	const argb8888 result = (((((value & 0xFF000000) >> 24) * alpha) >> 7) << 24)
 		| (((((value & 0x00FF0000) >> 16) * alpha) >> 7) << 16)
@@ -335,7 +335,7 @@ FT8XXEMU_FORCE_INLINE argb8888 mulalpha128_argb(const argb8888 &value, const int
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
+BT8XXEMU_FORCE_INLINE argb8888 mulalpha_argb(const argb8888 &value, const int &alpha)
 {
 #if FTEMU_SSE41_INSTRUCTIONS_ALL
 	return to_argb8888(mulalpha_argb(to_m128i(value), alpha));
@@ -348,7 +348,7 @@ FT8XXEMU_FORCE_INLINE argb8888 mulalpha_argb(const argb8888 &value, const int &a
 #endif
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
+BT8XXEMU_FORCE_INLINE argb8888 mul_argb(const argb8888 &left, const argb8888 &right)
 {
 #if FTEMU_SSE41_INSTRUCTIONS_ALL
 	return to_argb8888(mul_argb(to_m128i(left), to_m128i(right)));
@@ -361,7 +361,7 @@ FT8XXEMU_FORCE_INLINE argb8888 mul_argb(const argb8888 &left, const argb8888 &ri
 #endif
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right)
+BT8XXEMU_FORCE_INLINE argb8888 add_argb_safe(const argb8888 &left, const argb8888 &right)
 {
 #if FTEMU_SSE41_INSTRUCTIONS_ALL
 	return to_argb8888(add_argb_safe(to_m128i(left), to_m128i(right)));
@@ -381,12 +381,12 @@ FT8XXEMU_FORCE_INLINE argb8888 add_argb_safe(const argb8888 &left, const argb888
 
 #pragma region Write Buffer
 
-FT8XXEMU_FORCE_INLINE void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
+BT8XXEMU_FORCE_INLINE void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
 }
 
-FT8XXEMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs, const int &x)
+BT8XXEMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uint8_t *bs, const int &x)
 {
 	switch (gs.StencilFunc)
 	{
@@ -414,7 +414,7 @@ FT8XXEMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uin
 	}
 }
 
-FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
+BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x)
 {
 	bool result = testStencilNoWrite(gs, bs, x);
 	switch (result ? gs.StencilOpPass : gs.StencilOpFail)
@@ -447,20 +447,20 @@ FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 	return result;
 }
 
-FT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x, const bool &write)
+BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, const int &x, const bool &write)
 {
 	return write ? testStencil(gs, bs, x) : testStencilNoWrite(gs, bs, x);
 }
 
 #ifdef FT810EMU_MODE
 
-FT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint8_t val = reinterpret_cast<const uint8_t *>(&reinterpret_cast<const uint32_t *>(&ram[paletteSource])[value])[0];
 	return val << ((paletteSource & 3) << 3);
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint16_t val = static_cast<const uint16_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
 	return 0xFF000000 // todo opt
@@ -469,7 +469,7 @@ FT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t 
 		| mul255div31(val & 0x1F);
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 getPaletted4444(const uint8_t *ram, const uint8_t &value, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 getPaletted4444(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint16_t val = static_cast<const uint16_t *>(static_cast<const void *>(&ram[paletteSource]))[value];
 	return (mul255div15(val >> 12) << 24)
@@ -480,14 +480,14 @@ FT8XXEMU_FORCE_INLINE argb8888 getPaletted4444(const uint8_t *ram, const uint8_t
 
 #else
 
-FT8XXEMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
+BT8XXEMU_FORCE_INLINE argb8888 getPaletted(const uint8_t *ram, const uint8_t &value)
 {
 	return static_cast<const uint32_t *>(static_cast<const void *>(&ram[RAM_PAL]))[value];
 }
 
 #endif
 
-FT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
+BT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &dst)
 {
 	switch (gs.AlphaFunc)
 	{
@@ -513,7 +513,7 @@ FT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &ds
 	return true;
 }
 
-FT8XXEMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
+BT8XXEMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const argb8888 &dst)
 {
 	switch (func)
 	{
@@ -535,7 +535,7 @@ FT8XXEMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const a
 	return 255;
 }
 
-FT8XXEMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
+BT8XXEMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
 #if FTEMU_SSE41_INSTRUCTIONS_USE // > 10% faster
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
@@ -555,7 +555,7 @@ FT8XXEMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &sr
 }
 
 template <bool debugTrace>
-FT8XXEMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int x, const argb8888 out)
+BT8XXEMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int x, const argb8888 out)
 {
 	if (testAlpha(gs, out))
 	{
@@ -681,7 +681,7 @@ void displayPoint(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 // Only used for 4 pixels at most in a primitive.
 // Only used with point size of 16 or larger.
 // Only used on the AA border itself.
-FT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int y, const int px, const int py)
+BT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int y, const int px, const int py)
 {
 	const int pssq = ps * ps; // Point size 1/16 squared
 	const int psin = ps - 8; // Inner point size 1/16
@@ -706,7 +706,7 @@ FT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int 
 
 #pragma region Primitive: Bitmap
 
-FT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
+BT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 {
 	switch (type)
 	{
@@ -726,13 +726,13 @@ static const argb8888 s_VGAPalette[] =
 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF,
 };
 
-FT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
+BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc8(const uint8_t *ram, const uint32_t srci, const int idx)
 {
 	const int i = (srci + idx) & FT800EMU_ADDR_MASK;
 	return ram[i];
 }
 
-FT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
+BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t srci, const int idx)
 {
 	const int i = (srci + idx) & (FT800EMU_ADDR_MASK - 1);
 	return ram[i];
@@ -740,9 +740,9 @@ FT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 
 // uses pixel units
 #if FT810EMU_MODE
-FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
     int xo;   // x byte offset
@@ -918,9 +918,9 @@ FT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-FT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
@@ -1075,7 +1075,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
-FT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
+BT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 {
 	switch (format)
 	{
@@ -1709,7 +1709,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 // Only works for L and R
 #define FT800EMU_EDGE_STRIP_CLIPPING_BEHAVIOUR 0
 
-FT8XXEMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
+BT8XXEMU_FORCE_INLINE int findx(const int &x1, const int &x2, const int &y1, const int &y2, const int &y)
 {
 	const int xd = x2 - x1;
 	const int yd = y2 - y1;
@@ -1978,7 +1978,7 @@ void displayEdgeStripB(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8
 #define FT800EMU_LINE_DEBUG_DRAW_SPECIAL 0
 #define FT800EMU_LINE_DEBUG_MATH 0
 
-FT8XXEMU_FORCE_INLINE int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
+BT8XXEMU_FORCE_INLINE int findxrel(const int &x1, const int &xd, const int &y1, const int &yd, const int &y)
 {
 	const int yr = y - y1;
 	return x1 + ((int64_t)xd * (int64_t)yr / (int64_t)yd);

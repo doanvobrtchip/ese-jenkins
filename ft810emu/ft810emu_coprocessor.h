@@ -101,7 +101,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode);
+	void begin(const char *romFilePath, BT8XXEMU_EmulatorMode mode);
 	void end();
 
 	void executeManual();

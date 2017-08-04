@@ -96,7 +96,7 @@ static int s_ADPCMStepsizeTable[89] = {
 	32767
 };
 
-static FT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
+static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 	uint32_t &playbackLength, uint8_t &playbackFormat,
 	uint8_t &playbackLoop, uint8_t &playbackBusy,
 	uint32_t &playbackReadPtr, uint8_t &playbackVolume,

@@ -100,9 +100,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool setDebugMode = false;
 			if (setDebugMode)
 			{
-				setDebugMode = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F3);
+				setDebugMode = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F3);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F3))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F3))
 			{
 				FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
 				setDebugMode = true;
@@ -113,9 +113,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool incDebugMultiplier = false;
 			if (incDebugMultiplier)
 			{
-				incDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADPLUS);
+				incDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADPLUS);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADPLUS))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADPLUS))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(FT800EMU::GraphicsProcessor.getDebugMultiplier() + 1);
@@ -127,9 +127,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool decDebugMultiplier = false;
 			if (decDebugMultiplier)
 			{
-				decDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADMINUS);
+				decDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADMINUS);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADMINUS))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(max(FT800EMU::GraphicsProcessor.getDebugMultiplier() - 1, 1));
@@ -141,9 +141,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool resetDebugMultiplier = false;
 			if (resetDebugMultiplier)
 			{
-				resetDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADSLASH);
+				resetDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADSLASH);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_NUMPADSLASH))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADSLASH))
 			{
 				if (FT800EMU::GraphicsProcessor.getDebugMode())
 					FT800EMU::GraphicsProcessor.setDebugMultiplier(1);
@@ -155,9 +155,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool incDebugLimiter = false;
 			if (incDebugLimiter)
 			{
-				incDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F8);
+				incDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F8);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F8))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F8))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
 				incDebugLimiter = true;
@@ -168,9 +168,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool decDebugLimiter = false;
 			if (decDebugLimiter)
 			{
-				decDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F7);
+				decDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F7);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F7))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F7))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
 				decDebugLimiter = true;
@@ -181,9 +181,9 @@ const uint8_t bayerDiv4[2][2] = {
 			static bool resetDebugLimiter = false;
 			if (resetDebugLimiter)
 			{
-				resetDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F6);
+				resetDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F6);
 			}
-			else if (FT8XXEMU::Keyboard.isKeyDown(FT8XXEMU_KEY_F6))
+			else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F6))
 			{
 				FT800EMU::GraphicsProcessor.setDebugLimiter(0);
 				resetDebugLimiter = true;
@@ -211,7 +211,7 @@ const uint8_t bayerDiv4[2][2] = {
 
 	// bool s_RotateEnabled = false;
 
-	int (*s_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) = NULL;
+	int (*s_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) = NULL;
 	argb8888 *s_GraphicsBuffer = NULL;
 
 	int s_LastWriteOpCount = 0;
@@ -549,14 +549,14 @@ const uint8_t bayerDiv4[2][2] = {
 					{
 						uint32_t frameFlags = 0;
 						if (renderProcessed)
-							frameFlags |= FT8XXEMU_FrameBufferChanged;
+							frameFlags |= BT8XXEMU_FrameBufferChanged;
 						if (s_FrameFullyDrawn)
-							frameFlags |= FT8XXEMU_FrameBufferComplete;
+							frameFlags |= BT8XXEMU_FrameBufferComplete;
 						if (hasChanged)
-							frameFlags |= FT8XXEMU_FrameChanged;
+							frameFlags |= BT8XXEMU_FrameChanged;
 						if (hasSwapped)
-							frameFlags |= FT8XXEMU_FrameSwap;
-						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (FT8XXEMU_FrameFlags)frameFlags))
+							frameFlags |= BT8XXEMU_FrameSwap;
+						if (!s_Graphics(reg_pclk != 0, s_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
 						{
 							s_CloseCalled = true;
 							if (s_Close)
@@ -733,18 +733,18 @@ const uint8_t bayerDiv4[2][2] = {
 		while (s_MasterRunning)
 		{
 			//FTEMU_printf("sound thread\n");
-			if (s_Flags & FT8XXEMU_EmulatorEnableAudio)
+			if (s_Flags & BT8XXEMU_EmulatorEnableAudio)
 			{
 				AudioRender.process();
 			}
-			if (s_Flags & FT8XXEMU_EmulatorEnableKeyboard)
+			if (s_Flags & BT8XXEMU_EmulatorEnableKeyboard)
 			{
 				FT8XXEMU::Keyboard.update();
 				if (s_Keyboard)
 				{
 					s_Keyboard();
 				}
-				if (s_Flags & FT8XXEMU_EmulatorEnableDebugShortkeys)
+				if (s_Flags & BT8XXEMU_EmulatorEnableDebugShortkeys)
 				{
 					debugShortkeys();
 				}
@@ -764,7 +764,7 @@ const uint8_t bayerDiv4[2][2] = {
 	}
 }
 
-void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
+void EmulatorClass::run(const BT8XXEMU_EmulatorParameters &params)
 {
 #ifdef WIN32
 #ifndef FTEMU_SDL2
@@ -772,17 +772,17 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 #endif
 #endif
 
-	FT8XXEMU_EmulatorMode mode = params.Mode;
-	if (mode == 0) mode = FT8XXEMU_EmulatorFT800;
+	BT8XXEMU_EmulatorMode mode = params.Mode;
+	if (mode == 0) mode = BT8XXEMU_EmulatorFT800;
 
 #ifdef FT810EMU_MODE
-	if (mode < FT8XXEMU_EmulatorFT810)
+	if (mode < BT8XXEMU_EmulatorFT810)
 	{
 		FTEMU_printf("Invalid emulator version selected, this library is built in FT810 mode\n");
 		return;
 	}
 #else
-	if (mode > FT8XXEMU_EmulatorFT801)
+	if (mode > BT8XXEMU_EmulatorFT801)
 	{
 		FTEMU_printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
 		return;
@@ -800,7 +800,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	s_Close = params.Close;
 	s_CloseCalled = false;
 	s_ExternalFrequency = params.ExternalFrequency;
-	FT8XXEMU::g_PrintStd = (params.Flags & FT8XXEMU_EmulatorEnableStdOut) == FT8XXEMU_EmulatorEnableStdOut;
+	FT8XXEMU::g_PrintStd = (params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut;
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
@@ -809,7 +809,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	GraphicsProcessor.begin();
 	SPII2C.begin();
 	if (!s_Graphics) FT8XXEMU::GraphicsDriver.begin();
-	if (params.Flags & FT8XXEMU_EmulatorEnableAudio)
+	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		AudioProcessor.begin();
 		AudioRender.begin();
@@ -817,15 +817,15 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 		{
 			AudioRender.end();
 			AudioProcessor.end();
-			s_Flags &= ~FT8XXEMU_EmulatorEnableAudio;
+			s_Flags &= ~BT8XXEMU_EmulatorEnableAudio;
 		}
 	}
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
-	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
-	if (s_Graphics) s_Flags &= ~FT8XXEMU_EmulatorEnableKeyboard;
+	if ((!s_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
+	if (s_Graphics) s_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 
 	if (s_Graphics)
 	{
@@ -833,20 +833,20 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 		memset(s_GraphicsBuffer, 0, FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX * sizeof(argb8888));
 	}
 
-	if (!s_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & FT8XXEMU_EmulatorEnableMouse) == FT8XXEMU_EmulatorEnableMouse);
-	if (s_Graphics) s_Flags &= ~FT8XXEMU_EmulatorEnableMouse;
+	if (!s_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
+	if (s_Graphics) s_Flags &= ~BT8XXEMU_EmulatorEnableMouse;
 	Memory.enableReadDelay();
 
-	if (params.Flags & FT8XXEMU_EmulatorEnableGraphicsMultithread)
+	if (params.Flags & BT8XXEMU_EmulatorEnableGraphicsMultithread)
 	{
 		GraphicsProcessor.enableMultithread();
 		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
 	}
-	if (params.Flags & FT8XXEMU_EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
+	if (params.Flags & BT8XXEMU_EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
 
-	s_DynamicDegrade = (params.Flags & FT8XXEMU_EmulatorEnableDynamicDegrade) == FT8XXEMU_EmulatorEnableDynamicDegrade;
-	// s_RotateEnabled = (params.Flags & FT8XXEMU_EmulatorEnableRegRotate) == FT8XXEMU_EmulatorEnableRegRotate;
-	TouchClass::enableTouchMatrix((params.Flags & FT8XXEMU_EmulatorEnableTouchTransformation) == FT8XXEMU_EmulatorEnableTouchTransformation);
+	s_DynamicDegrade = (params.Flags & BT8XXEMU_EmulatorEnableDynamicDegrade) == BT8XXEMU_EmulatorEnableDynamicDegrade;
+	// s_RotateEnabled = (params.Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
+	TouchClass::enableTouchMatrix((params.Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
 
 	s_MasterRunning = true;
 
@@ -860,7 +860,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 #endif
 
 	SDL_Thread *threadC = NULL;
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
 	// TODO - Error handling
 #ifdef FTEMU_SDL2
@@ -878,14 +878,14 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	masterThread();
 
 	s_MasterRunning = false;
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		FT8XXEMU::System.forgetCoprocessorThread();
 		Coprocessor.stopEmulator();
 	}
 
 	FTEMU_printf("Wait for Coprocessor\n");
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		SDL_WaitThread(threadC, NULL);
 
 	FTEMU_printf("Wait for MCU\n");
@@ -921,14 +921,14 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	masterThread();
 
 	s_MasterRunning = false;
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		FT8XXEMU::System.forgetCoprocessorThread();
 		Coprocessor.stopEmulator();
 	}
 
 	FTEMU_printf("Wait for Coprocessor\n");
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		threadC.join();
 
 	if (!s_CloseCalled && threadD.joinable())
@@ -952,7 +952,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 	threadA.join();
 
 #else
-	#pragma omp parallel num_threads(params.Flags & FT8XXEMU_EmulatorEnableCoprocessor ? 4 : 3)
+	#pragma omp parallel num_threads(params.Flags & BT8XXEMU_EmulatorEnableCoprocessor ? 4 : 3)
 	{
 		// graphics
 		#pragma omp master
@@ -960,7 +960,7 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 			masterThread();
 			s_MasterRunning = false;
 			// System.killMCUThread();
-			if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
+			if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
 			FTEMU_printf("(0) master thread exit\n");
 		}
 
@@ -991,9 +991,9 @@ void EmulatorClass::run(const FT8XXEMU_EmulatorParameters &params)
 
 	delete[] s_GraphicsBuffer;
 	s_GraphicsBuffer = NULL;
-	if ((!s_Graphics) && (params.Flags & FT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
-	if (params.Flags & FT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
-	if (s_Flags & FT8XXEMU_EmulatorEnableAudio)
+	if ((!s_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
+	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
+	if (s_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		FT8XXEMU::AudioDriver.end();
 		AudioRender.end();

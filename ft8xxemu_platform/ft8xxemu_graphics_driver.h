@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT8XXEMU_GRAPHICS_DRIVER_H
-#define FT8XXEMU_GRAPHICS_DRIVER_H
+#ifndef BT8XXEMU_GRAPHICS_DRIVER_H
+#define BT8XXEMU_GRAPHICS_DRIVER_H
 // #include <...>
 
 // System includes
@@ -20,19 +20,19 @@
 // Project includes
 #include "ft8xxemu_inttypes.h"
 
-#ifndef FT8XXEMU_GRAPHICS_DRIVER_GDI_H
-#define FT8XXEMU_WINDOW_TITLE_A "FT8XX Emulator"
-#define FT8XXEMU_WINDOW_TITLE TEXT(FT8XXEMU_WINDOW_TITLE_A)
-#define FT8XXEMU_WINDOW_WIDTH_DEFAULT 480
-#define FT8XXEMU_WINDOW_HEIGHT_DEFAULT 272
-#define FT8XXEMU_WINDOW_RATIO_DEFAULT (480.0f / 272.0f)
-#define FT8XXEMU_WINDOW_WIDTH_MAX 2048
-#define FT8XXEMU_WINDOW_HEIGHT_MAX 2048
-#define FT8XXEMU_WINDOW_KEEPRATIO 1
-#define FT8XXEMU_WINDOW_SCALE 1
+#ifndef BT8XXEMU_GRAPHICS_DRIVER_GDI_H
+#define BT8XXEMU_WINDOW_TITLE_A "FT8XX Emulator"
+#define BT8XXEMU_WINDOW_TITLE TEXT(BT8XXEMU_WINDOW_TITLE_A)
+#define BT8XXEMU_WINDOW_WIDTH_DEFAULT 480
+#define BT8XXEMU_WINDOW_HEIGHT_DEFAULT 272
+#define BT8XXEMU_WINDOW_RATIO_DEFAULT (480.0f / 272.0f)
+#define BT8XXEMU_WINDOW_WIDTH_MAX 2048
+#define BT8XXEMU_WINDOW_HEIGHT_MAX 2048
+#define BT8XXEMU_WINDOW_KEEPRATIO 1
+#define BT8XXEMU_WINDOW_SCALE 1
 
 // Render SDL2 upside down (makes no difference)
-#define FT8XXEMU_FLIP_SDL2 1
+#define BT8XXEMU_FLIP_SDL2 1
 #endif
 
 namespace FT8XXEMU {
@@ -58,7 +58,7 @@ public:
 	static argb8888 *getBufferARGB8888();
 	static inline bool isUpsideDown()
 	{
-		#if (defined(FTEMU_SDL) || (defined(FTEMU_SDL2) && !FT8XXEMU_FLIP_SDL2))
+		#if (defined(FTEMU_SDL) || (defined(FTEMU_SDL2) && !BT8XXEMU_FLIP_SDL2))
 		return false;
 		#else
 		return true;
@@ -92,19 +92,19 @@ extern void(*g_SetTouchScreenXY)(int idx, int x, int y, int pressure);
 
 #ifdef WIN32
 #ifdef FTEMU_SDL2
-#ifndef FT8XXEMU_GRAPHICS_DRIVER_GDI_H
-#define FT8XXEMU_GRAPHICS_DRIVER_GDI_H
+#ifndef BT8XXEMU_GRAPHICS_DRIVER_GDI_H
+#define BT8XXEMU_GRAPHICS_DRIVER_GDI_H
 #define GraphicsDriverClass GraphicsDriverClassGDI
 #define GraphicsDriver GraphicsDriverGDI
-#undef FT8XXEMU_GRAPHICS_DRIVER_H
+#undef BT8XXEMU_GRAPHICS_DRIVER_H
 #include <ft8xxemu_graphics_driver.h>
-#define FT8XXEMU_GRAPHICS_DRIVER_H
+#define BT8XXEMU_GRAPHICS_DRIVER_H
 #undef GraphicsDriver
 #undef GraphicsDriverClass
 #endif
 #endif
 #endif
 
-#endif /* #ifndef FT8XXEMU_GRAPHICS_DRIVER_H */
+#endif /* #ifndef BT8XXEMU_GRAPHICS_DRIVER_H */
 
 /* end of file */

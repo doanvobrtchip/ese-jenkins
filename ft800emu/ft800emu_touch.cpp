@@ -26,7 +26,7 @@ TouchClass Touch[5];
 long TouchClass::s_TouchScreenFrameTime;
 bool TouchClass::s_TouchScreenJitter;
 bool TouchClass::s_EnableTouchMatrix;
-FT8XXEMU_EmulatorMode TouchClass::s_EmulatorMode;
+BT8XXEMU_EmulatorMode TouchClass::s_EmulatorMode;
 
 inline long TouchClass::jitteredTime(long micros)
 {
@@ -338,7 +338,7 @@ void resetTouchScreenXY(int idx)
 	Touch[idx].resetXY();
 }
 
-void TouchClass::begin(FT8XXEMU_EmulatorMode emulatorMode)
+void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode)
 {
 	s_EmulatorMode = emulatorMode;
 	s_TouchScreenFrameTime = 0;
@@ -389,7 +389,7 @@ bool TouchClass::multiTouch()
 #ifdef FT810EMU_MODE
 	return (Memory.rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
 #else
-	return s_EmulatorMode >= FT8XXEMU_EmulatorFT801
+	return s_EmulatorMode >= BT8XXEMU_EmulatorFT801
 		&& ((Memory.rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
 #endif
 }

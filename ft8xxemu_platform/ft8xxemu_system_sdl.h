@@ -12,8 +12,8 @@
  */
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-#ifndef FT8XXEMU_SYSTEM_SDL_H
-#define FT8XXEMU_SYSTEM_SDL_H
+#ifndef BT8XXEMU_SYSTEM_SDL_H
+#define BT8XXEMU_SYSTEM_SDL_H
 // #include <...>
 
 // Sdl Headers
@@ -68,7 +68,7 @@ extern SystemSdlClass SystemSdl;
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_SYSTEM_SDL_H */
+#endif /* #ifndef BT8XXEMU_SYSTEM_SDL_H */
 #endif /* #ifdef FTEMU_SDL */
 
 /* end of file */

@@ -12,8 +12,8 @@
  */
 
 #ifdef WIN32
-#ifndef FT8XXEMU_SYSTEM_WINDOWS_H
-#define FT8XXEMU_SYSTEM_WINDOWS_H
+#ifndef BT8XXEMU_SYSTEM_WINDOWS_H
+#define BT8XXEMU_SYSTEM_WINDOWS_H
 // #include <...>
 
 
@@ -122,7 +122,7 @@ extern SystemWindowsClass SystemWindows;
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_SYSTEM_WINDOWS_H */
+#endif /* #ifndef BT8XXEMU_SYSTEM_WINDOWS_H */
 #endif /* #ifdef WIN32 */
 
 /* end of file */

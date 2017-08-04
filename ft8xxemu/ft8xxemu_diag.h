@@ -4,8 +4,8 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
-#ifndef FT8XXEMU_DIAG_H
-#define FT8XXEMU_DIAG_H
+#ifndef BT8XXEMU_DIAG_H
+#define BT8XXEMU_DIAG_H
 
 #include "ft8xxemu.h"
 
@@ -13,24 +13,24 @@
 extern "C" {
 #endif
 
-FT8XXEMU_API extern uint8_t *(*FT8XXEMU_getRam)();
-FT8XXEMU_API extern const uint32_t *(*FT8XXEMU_getDisplayList)();
+BT8XXEMU_API extern uint8_t *(*BT8XXEMU_getRam)();
+BT8XXEMU_API extern const uint32_t *(*BT8XXEMU_getDisplayList)();
 
-FT8XXEMU_API extern void(*FT8XXEMU_poke)();
+BT8XXEMU_API extern void(*BT8XXEMU_poke)();
 
-FT8XXEMU_API extern int *(*FT8XXEMU_getDisplayListCoprocessorWrites)();
-FT8XXEMU_API extern void(*FT8XXEMU_clearDisplayListCoprocessorWrites)();
+BT8XXEMU_API extern int *(*BT8XXEMU_getDisplayListCoprocessorWrites)();
+BT8XXEMU_API extern void(*BT8XXEMU_clearDisplayListCoprocessorWrites)();
 
-FT8XXEMU_API extern bool(*FT8XXEMU_getDebugLimiterEffective)();
-FT8XXEMU_API extern int(*FT8XXEMU_getDebugLimiterIndex)();
-FT8XXEMU_API extern void(*FT8XXEMU_setDebugLimiter)(int debugLimiter);
+BT8XXEMU_API extern bool(*BT8XXEMU_getDebugLimiterEffective)();
+BT8XXEMU_API extern int(*BT8XXEMU_getDebugLimiterIndex)();
+BT8XXEMU_API extern void(*BT8XXEMU_setDebugLimiter)(int debugLimiter);
 
-FT8XXEMU_API extern void(*FT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
+BT8XXEMU_API extern void(*BT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
 
 #ifdef __cplusplus 
 } /* extern "C" */
 #endif
 
-#endif /* #ifndef FT8XXEMU_DIAG_H */
+#endif /* #ifndef BT8XXEMU_DIAG_H */
 
 /* end of file */

@@ -11,8 +11,8 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FT8XXEMU_SYSTEM_H
-#define FT8XXEMU_SYSTEM_H
+#ifndef BT8XXEMU_SYSTEM_H
+#define BT8XXEMU_SYSTEM_H
 // #include <...>
 
 // System includes
@@ -130,6 +130,6 @@ extern bool g_PrintStd;
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_SYSTEM_H */
+#endif /* #ifndef BT8XXEMU_SYSTEM_H */
 
 /* end of file */

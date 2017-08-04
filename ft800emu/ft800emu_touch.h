@@ -20,7 +20,7 @@ class TouchClass
 public:
 	TouchClass() { }
 
-	static void begin(FT8XXEMU_EmulatorMode emulatorMode);
+	static void begin(BT8XXEMU_EmulatorMode emulatorMode);
 	static void end();
 	void reset();
 
@@ -60,7 +60,7 @@ private:
 	long m_LastJitteredTime;
 	long m_LastDeltas[8];
 	long m_LastDeltaI;
-	static FT8XXEMU_EmulatorMode s_EmulatorMode;
+	static BT8XXEMU_EmulatorMode s_EmulatorMode;
 
 	TouchClass(const TouchClass &);
 	TouchClass &operator=(const TouchClass &);

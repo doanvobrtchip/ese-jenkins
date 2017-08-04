@@ -73,6 +73,8 @@ OPTION(WITH_FT900EMU "Include FT900EMU" ON)
 
 OPTION(WITH_SAMPLEAPP "Include SampleApp" OFF)
 
+OPTION(WITH_EMUTEST "Include emulator test projects" ON)
+
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
 
 OPTION(FTEMU_PIC "Add -fPIC to libraries to build dynamic dll" OFF)
@@ -174,7 +176,9 @@ ENDIF (WITH_FT810EMU)
 ADD_SUBDIRECTORY(ft8xxemu)
 ADD_SUBDIRECTORY(ft8xxemu_static)
 
-ADD_SUBDIRECTORY(ftemutest)
+IF (WITH_EMUTEST)
+  ADD_SUBDIRECTORY(ftemutest)
+ENDIF (WITH_EMUTEST)
 
 IF (WITH_FT800EMU)
   ADD_SUBDIRECTORY(loaddump)

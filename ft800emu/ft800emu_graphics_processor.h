@@ -21,7 +21,7 @@
 // Project includes
 #include "ft8xxemu_inttypes.h"
 
-#ifndef FT8XXEMU_NODEFS
+#ifndef BT8XXEMU_NODEFS
 #ifdef FT810EMU_MODE
 #define FT800EMU_SCREEN_WIDTH_MAX 2048
 #define FT800EMU_SCREEN_HEIGHT_MAX 2048

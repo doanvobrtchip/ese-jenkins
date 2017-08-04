@@ -254,22 +254,22 @@ void keyboard()
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
+	BT8XXEMU_EmulatorParameters params;
+	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Flags =
-		FT8XXEMU_EmulatorEnableKeyboard
-		| FT8XXEMU_EmulatorEnableMouse
-		| FT8XXEMU_EmulatorEnableDebugShortkeys
-		| FT8XXEMU_EmulatorEnableCoprocessor
-		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableDynamicDegrade
+		BT8XXEMU_EmulatorEnableKeyboard
+		| BT8XXEMU_EmulatorEnableMouse
+		| BT8XXEMU_EmulatorEnableDebugShortkeys
+		| BT8XXEMU_EmulatorEnableCoprocessor
+		| BT8XXEMU_EmulatorEnableGraphicsMultithread
+		| BT8XXEMU_EmulatorEnableDynamicDegrade
 		;
 #ifdef FT810EMU_MODE
-	params.Mode = FT8XXEMU_EmulatorFT810;
+	params.Mode = BT8XXEMU_EmulatorFT810;
 #else
-	params.Mode = FT8XXEMU_EmulatorFT801;
+	params.Mode = BT8XXEMU_EmulatorFT801;
 #endif
 	params.Keyboard = keyboard;
 	FT800EMU::Emulator.run(params);

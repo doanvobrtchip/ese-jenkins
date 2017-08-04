@@ -47,9 +47,9 @@ int main(int argc, char* argv[])
     int hsize, vsize;
 
 #ifdef FT810EMU_MODE
-	FT800EMU::Memory.begin(FT8XXEMU_EmulatorFT810);
+	FT800EMU::Memory.begin(BT8XXEMU_EmulatorFT810);
 #else
-	FT800EMU::Memory.begin(FT8XXEMU_EmulatorFT801);
+	FT800EMU::Memory.begin(BT8XXEMU_EmulatorFT801);
 #endif
     FT800EMU::GraphicsProcessor.begin();
     FT800EMU::GraphicsProcessor.enableMultithread();

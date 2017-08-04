@@ -33,7 +33,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath = 0, FT8XXEMU_EmulatorMode mode = FT8XXEMU_EmulatorFT800);
+	void begin(const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
 	void end();
 
 	void executeManual();

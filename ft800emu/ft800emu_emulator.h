@@ -22,29 +22,44 @@
 #include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
 
+namespace BT8XXEMU {
+
+/**
+* IEmulator
+* \brief IEmulator
+* \date 2011-08-04
+* \author Jan Boon (Kaetemi)
+*/
+class IEmulator
+{
+	virtual void run(const BT8XXEMU_EmulatorParameters &params) = 0;
+	virtual void stop() = 0;
+};
+
+}
+
 namespace FT800EMU {
 
 /**
- * EmulatorClass
- * \brief EmulatorClass
+ * Emulator
+ * \brief Emulator
  * \date 2011-05-29 19:54GMT
  * \author Jan Boon (Kaetemi)
  */
-class EmulatorClass
+class Emulator
 {
 public:
-	EmulatorClass() { }
+	Emulator() { }
+	~Emulator() { }
 
-	static void run(const FT8XXEMU_EmulatorParameters &params);
-	static void stop();
+	void run(const BT8XXEMU_EmulatorParameters &params);
+	void stop();
 
 private:
-	EmulatorClass(const EmulatorClass &);
-	EmulatorClass &operator=(const EmulatorClass &);
+	Emulator(const Emulator &) = delete;
+	Emulator &operator=(const Emulator &) = delete;
 
-}; /* class EmulatorClass */
-
-extern EmulatorClass Emulator;
+}; /* class Emulator */
 
 } /* namespace FT800EMU */
 

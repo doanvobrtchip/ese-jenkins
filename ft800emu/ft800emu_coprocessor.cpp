@@ -38,9 +38,9 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 };
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode)
+void CoprocessorClass::begin(const char *romFilePath, BT8XXEMU_EmulatorMode mode)
 {
-	bool ft801 = (mode == FT8XXEMU_EmulatorFT801);
+	bool ft801 = (mode == BT8XXEMU_EmulatorFT801);
 	if (romFilePath)
 	{
 		FILE *f;

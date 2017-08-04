@@ -89,7 +89,7 @@ static bool s_ReadDelay;
 
 static bool s_CpuReset = false;
 
-static FT8XXEMU_EmulatorMode s_EmulatorMode;
+static BT8XXEMU_EmulatorMode s_EmulatorMode;
 
 //static void (*s_Interrupt)());
 
@@ -141,7 +141,7 @@ bool MemoryClass::coprocessorGetReset()
 }
 
 template<typename T>
-FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &data)
+BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -261,7 +261,7 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 }
 
 template<typename T>
-FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T data)
+BT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -274,7 +274,7 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T
 			break;
 		case REG_CTOUCH_EXTENDED:
 #ifndef FT810EMU_MODE
-			if (s_EmulatorMode >= FT8XXEMU_EmulatorFT801)
+			if (s_EmulatorMode >= BT8XXEMU_EmulatorFT801)
 #endif
 			{
 				if (!TouchClass::multiTouch())
@@ -300,32 +300,32 @@ FT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T
 	}
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(ramaddr address, uint32_t data)
+BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(ramaddr address, uint32_t data)
 {
 	rawWriteU32(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(ramaddr address)
 {
 	return rawReadU32(s_Ram, address);
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(ramaddr address, uint16_t data)
+BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(ramaddr address, uint16_t data)
 {
 	rawWriteU16(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(ramaddr address)
 {
 	return rawReadU16(s_Ram, address);
 }
 
-FT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(ramaddr address, uint8_t data)
+BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(ramaddr address, uint8_t data)
 {
 	rawWriteU8(s_Ram, address, data);
 }
 
-FT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(ramaddr address)
 {
 	return rawReadU8(s_Ram, address);
 }
@@ -358,7 +358,7 @@ static const uint8_t s_OTP813[FT800EMU_OTP_SIZE] = {
 };
 #endif
 
-void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
+void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
 {
 	memset(s_Ram, 0, FT800EMU_RAM_SIZE);
 	memset(s_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
@@ -382,7 +382,7 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 #ifdef FT810EMU_MODE
 		memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT810, sizeof(s_RomFT810));
 #else
-		if (emulatorMode >= FT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT801, sizeof(s_RomFT801));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT801, sizeof(s_RomFT801));
 		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT800, sizeof(s_RomFT800));
 #endif
 	}
@@ -403,9 +403,9 @@ void MemoryClass::begin(FT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	else
 	{
 #ifdef FT810EMU_MODE
-		if (emulatorMode >= FT8XXEMU_EmulatorFT813) memcpy(&s_Ram[RAM_JTBOOT], s_OTP813, sizeof(s_OTP813));
-		else if (emulatorMode >= FT8XXEMU_EmulatorFT812) memcpy(&s_Ram[RAM_JTBOOT], s_OTP812, sizeof(s_OTP812));
-		else if (emulatorMode >= FT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&s_Ram[RAM_JTBOOT], s_OTP813, sizeof(s_OTP813));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&s_Ram[RAM_JTBOOT], s_OTP812, sizeof(s_OTP812));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
 		else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
 #endif
 	}
@@ -983,7 +983,7 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		// TODO: MULTITOUCH 1,2,3,4
 #ifndef FT810EMU_MODE
 	case REG_TOUCH_RZ:
-		if (s_EmulatorMode == FT8XXEMU_EmulatorFT800)
+		if (s_EmulatorMode == BT8XXEMU_EmulatorFT800)
 		{
 			s_CachedTouchRawXY = rawReadU32(REG_TOUCH_RAW_XY);
 			if (s_CachedTouchRawXY != 0xFFFFFFFF)
@@ -998,7 +998,7 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		}
 		break;
 	case REG_TOUCH_RAW_XY:
-		if (s_EmulatorMode == FT8XXEMU_EmulatorFT800)
+		if (s_EmulatorMode == BT8XXEMU_EmulatorFT800)
 		{
 			if (s_HasCachedTouchRawXY)
 			{

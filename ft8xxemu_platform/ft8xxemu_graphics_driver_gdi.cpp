@@ -27,10 +27,10 @@
 #include <Windowsx.h>
 #include "ft8xxemu_system.h"
 
-#define FT8XXEMU_WINDOW_CLASS_NAME TEXT("FT8XXEMUGraphicsDriver")
+#define BT8XXEMU_WINDOW_CLASS_NAME TEXT("FT8XXEMUGraphicsDriver")
 
 // Getting more CPU usage with StretchDIBits for some reason, so I don't use it.
-#define FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS 0
+#define BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS 0
 
 namespace FT8XXEMU {
 
@@ -41,7 +41,7 @@ void (*g_ResetTouchScreenXY)(int idx) = NULL;
 void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
 #endif
 
-static argb8888 s_BufferARGB8888[FT8XXEMU_WINDOW_WIDTH_MAX * FT8XXEMU_WINDOW_HEIGHT_MAX];
+static argb8888 s_BufferARGB8888[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
 
 static HINSTANCE s_HInstance = NULL;
 static HWND s_HWnd = NULL;
@@ -50,7 +50,7 @@ static HWND s_HWnd = NULL;
 //static bool s_KeepRatio;
 static std::map<UINT, WNDPROC> s_WindowProcedures;
 //static ULONG_PTR s_GdiplusToken;
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 static HBITMAP s_Buffer = NULL;
 static HDC s_HDC = NULL;//, m_WindowGraphics;
 #endif
@@ -59,9 +59,9 @@ static HDC s_HDC = NULL;//, m_WindowGraphics;
 
 
 BITMAPINFO s_BitInfo;
-static int s_Width = FT8XXEMU_WINDOW_WIDTH_DEFAULT;
-static int s_Height = FT8XXEMU_WINDOW_HEIGHT_DEFAULT;
-static float s_Ratio = FT8XXEMU_WINDOW_RATIO_DEFAULT;
+static int s_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
+static int s_Height = BT8XXEMU_WINDOW_HEIGHT_DEFAULT;
+static float s_Ratio = BT8XXEMU_WINDOW_RATIO_DEFAULT;
 
 static bool s_MouseEnabled;
 static int s_MousePressure;
@@ -151,7 +151,7 @@ bool GraphicsDriverClass::begin()
 	WNDCLASSEX wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpszClassName = FT8XXEMU_WINDOW_CLASS_NAME;
+	wcex.lpszClassName = BT8XXEMU_WINDOW_CLASS_NAME;
 	wcex.lpfnWndProc = WndProc;
 	wcex.hInstance = s_HInstance;
 	wcex.cbClsExtra = 0;
@@ -168,14 +168,14 @@ bool GraphicsDriverClass::begin()
 	// Initialize and Show Display Instance
 	DWORD dw_style = WS_OVERLAPPEDWINDOW;
 /*#if FT8XXEMUWIN_DISPLAY_ASPECT_RATIO
-	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)FT8XXEMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = FT8XXEMU_WINDOW_WIDTH * 2; // window size
+	RECT r; r.top = 0; r.left = 0; r.bottom = (LONG)(((float)BT8XXEMU_WINDOW_WIDTH / aspectRatio) * 2); r.right = BT8XXEMU_WINDOW_WIDTH * 2; // window size
 #else*/
-	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT8XXEMU_WINDOW_SCALE; r.right = s_Width * FT8XXEMU_WINDOW_SCALE; // window size
+	RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * BT8XXEMU_WINDOW_SCALE; r.right = s_Width * BT8XXEMU_WINDOW_SCALE; // window size
 /*#endif*/
 	AdjustWindowRect(&r, dw_style, FALSE);
 	if (s_HWnd) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HWnd != NULL"));
-	if (!(s_HWnd = CreateWindow(FT8XXEMU_WINDOW_CLASS_NAME,
-		/*(LPCTSTR)title.c_str()*/FT8XXEMU_WINDOW_TITLE, dw_style,
+	if (!(s_HWnd = CreateWindow(BT8XXEMU_WINDOW_CLASS_NAME,
+		/*(LPCTSTR)title.c_str()*/BT8XXEMU_WINDOW_TITLE, dw_style,
 		CW_USEDEFAULT, 0, r.right - r.left, r.bottom - r.top, // x y w h
 		NULL, NULL, s_HInstance, NULL)))
 		SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
@@ -183,7 +183,7 @@ bool GraphicsDriverClass::begin()
 	if (!UpdateWindow(s_HWnd)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
 
 	// Create GDI32 Buffer and Device Context
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	HDC hdc = GetDC(s_HWnd);
 	if (s_HDC) SystemWindows.Error(TEXT("GraphicsDriver.begin()  s_HDC != NULL"));
 	s_HDC = CreateCompatibleDC(hdc);
@@ -237,7 +237,7 @@ void GraphicsDriverClass::end()
 		s_WindowProcedures.clear();
 	}
 
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	if (s_HDC) { DeleteDC(s_HDC); s_HDC = NULL; }
 	else SystemWindows.Debug(TEXT("GraphicsDriver.end() s_HDC == NULL"));
 	if (s_Buffer) { DeleteObject(s_Buffer); s_Buffer = NULL; }
@@ -247,7 +247,7 @@ void GraphicsDriverClass::end()
 	if (s_HWnd) { DestroyWindow(s_HWnd); s_HWnd = NULL; }
 	else SystemWindows.Debug(TEXT("GraphicsDriver.end() s_HWnd == NULL"));
 
-	UnregisterClass(FT8XXEMU_WINDOW_CLASS_NAME, s_HInstance);
+	UnregisterClass(BT8XXEMU_WINDOW_CLASS_NAME, s_HInstance);
 }
 
 void GraphicsDriverClass::setMode(int width, int height)
@@ -258,7 +258,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 		s_Height = height;
 		s_Ratio = (float)width / (float)height;
 
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		if (!s_Buffer) SystemWindows.Error(TEXT("GraphicsDriver.setMode(2)  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
 		HBITMAP oldBuffer = s_Buffer;
 		s_Buffer = NULL;
@@ -274,7 +274,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 #endif
 
 		DWORD dw_style = WS_OVERLAPPEDWINDOW;
-		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * FT8XXEMU_WINDOW_SCALE; r.right = s_Width * FT8XXEMU_WINDOW_SCALE; // window size
+		RECT r; r.top = 0; r.left = 0; r.bottom = s_Height * BT8XXEMU_WINDOW_SCALE; r.right = s_Width * BT8XXEMU_WINDOW_SCALE; // window size
 		AdjustWindowRect(&r, dw_style, FALSE);
 
 		SetWindowPos(s_HWnd, 0, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
@@ -286,7 +286,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 {
 	// Render bitmap to buffer
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	if (output)
 	{
 		if (!SetDIBitsToDevice(s_HDC, 0, 0,
@@ -300,7 +300,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	RECT r;
 	GetClientRect(s_HWnd, &r);
 	if (output)
-#if FT8XXEMU_WINDOW_KEEPRATIO
+#if BT8XXEMU_WINDOW_KEEPRATIO
 	{
 		COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 		HBRUSH bgBrush = CreateSolidBrush(bgC32);
@@ -311,7 +311,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 		int x_r = (r.right - width_r) / 2;
 		int y_r = (r.bottom - height_r) / 2;
 		HDC hdc = GetDC(s_HWnd);
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		StretchBlt(hdc, x_r, y_r, width_r, height_r, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
 		StretchDIBits(hdc, x_r, y_r, width_r, height_r,	0, 0, s_Width, s_Height, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -344,7 +344,7 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #else
 	{
 		HDC hdc = GetDC(s_HWnd);
-#if !FT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
+#if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		StretchBlt(hdc, 0, 0, r.right, r.bottom, s_HDC, 0, 0, s_Width, s_Height, SRCCOPY);
 #else
 		StretchDIBits(hdc, 0, 0, r.right, r.bottom, 0, 0, s_Width, s_Height, s_BufferARGB1555, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -367,16 +367,16 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	// Update title
 	/*
 	tstringstream newTitle;
-	newTitle << FT8XXEMU_WINDOW_TITLE;
+	newTitle << BT8XXEMU_WINDOW_TITLE;
 	switch (GraphicsProcessor.getDebugMode())
 	{
-	case FT8XXEMU_DEBUGMODE_ALPHA:
+	case BT8XXEMU_DEBUGMODE_ALPHA:
 		newTitle << " [ALPHA";
 		break;
-	case FT8XXEMU_DEBUGMODE_TAG:
+	case BT8XXEMU_DEBUGMODE_TAG:
 		newTitle << " [TAG";
 		break;
-	case FT8XXEMU_DEBUGMODE_STENCIL:
+	case BT8XXEMU_DEBUGMODE_STENCIL:
 		newTitle << " [STENCIL";
 		break;
 	}

@@ -12,8 +12,8 @@
  */
 
 #ifndef WIN32
-#ifndef FT8XXEMU_SYSTEM_LINUX_H
-#define FT8XXEMU_SYSTEM_LINUX_H
+#ifndef BT8XXEMU_SYSTEM_LINUX_H
+#define BT8XXEMU_SYSTEM_LINUX_H
 // #include <...>
 
 // Linux Headers
@@ -59,7 +59,7 @@ extern SystemLinuxClass SystemLinux;
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_SYSTEM_LINUX_H */
+#endif /* #ifndef BT8XXEMU_SYSTEM_LINUX_H */
 #endif /* #ifndef WIN32 */
 
 /* end of file */

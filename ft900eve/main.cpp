@@ -58,12 +58,12 @@ class FT800SPISlave : public FT900EMU::SPISlave
 {
 	virtual void cs(bool cs)
 	{
-		FT8XXEMU_cs(cs ? 1 : 0);
+		BT8XXEMU_cs(cs ? 1 : 0);
 	}
 
 	virtual uint8_t transfer(uint8_t d)
 	{
-		return FT8XXEMU_transfer(d);
+		return BT8XXEMU_transfer(d);
 	}
 };
 
@@ -122,7 +122,7 @@ void loop()
 	printf("Loop\n");
 
 	s_FT900EMUSystem->ft32()->run();
-	FT8XXEMU_stop();
+	BT8XXEMU_stop();
 
 	printf("End\n");
 	delete s_EmulatorExit;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	FT8XXEMU_EmulatorMode mode = FT8XXEMU_EmulatorFT801;
+	BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT801;
 
 	// Parse command line
 	for (int i = 1; i < argc - 1; ++i)
@@ -168,10 +168,10 @@ int main(int argc, char *argv[])
 							switch (argv[i][5])
 							{
 							case '0':
-								mode = FT8XXEMU_EmulatorFT800;
+								mode = BT8XXEMU_EmulatorFT800;
 								break;
 							case '1':
-								mode = FT8XXEMU_EmulatorFT801;
+								mode = BT8XXEMU_EmulatorFT801;
 								break;
 							}
 							break;
@@ -179,10 +179,10 @@ int main(int argc, char *argv[])
 							switch (argv[i][5])
 							{
 							case '0':
-								mode = FT8XXEMU_EmulatorFT810;
+								mode = BT8XXEMU_EmulatorFT810;
 								break;
 							case '1':
-								mode = FT8XXEMU_EmulatorFT811;
+								mode = BT8XXEMU_EmulatorFT811;
 								break;
 							}
 							break;
@@ -198,13 +198,13 @@ int main(int argc, char *argv[])
 	}
 	s_InFile = argv[argc - 1];
 
-	FT8XXEMU_EmulatorParameters params;
-	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, mode);
+	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, mode);
 	params.MCUSleep = mcuSleep;
 	params.Setup = setup;
 	params.Loop = loop;
 	params.Close = close;
-	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &params);
 
 	return EXIT_SUCCESS;
 }

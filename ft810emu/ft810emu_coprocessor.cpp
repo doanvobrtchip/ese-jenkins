@@ -637,21 +637,21 @@ void Ejpg::run1(uint8_t *memory8,
 	}
 }
 
-FT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
+BT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
 {
 	pc = 0;
 	dsp = rsp = 0;
 	t = 0;
 }
 
-FT8XXEMU_FORCE_INLINE void CoprocessorClass::push(int v) // push v on the data stack
+BT8XXEMU_FORCE_INLINE void CoprocessorClass::push(int v) // push v on the data stack
 {
 	dsp = 31 & (dsp + 1);
 	d[dsp] = t;
 	t = v;
 }
 
-FT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data stack and return it
+BT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data stack and return it
 {
 	int v = t;
 	t = d[dsp];
@@ -663,7 +663,7 @@ FT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data sta
 static FILE *trace = NULL;
 #endif
 
-void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode)
+void CoprocessorClass::begin(const char *romFilePath, BT8XXEMU_EmulatorMode mode)
 {
 	if (romFilePath)
 	{

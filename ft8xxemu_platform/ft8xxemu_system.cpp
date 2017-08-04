@@ -24,7 +24,7 @@
 namespace FT8XXEMU {
 
 
-#define D_FT8XXEMU_FPS_SMOOTHING 36
+#define D_BT8XXEMU_FPS_SMOOTHING 36
 
 
 double SystemClass::s_FrameTime, SystemClass::s_FrameTimeDelta; //, SystemClass::s_FrameTimeOffset;
@@ -38,7 +38,7 @@ static bool s_RenderWoke = false;
 void(*g_Exception)(const char *message) = NULL;
 bool g_PrintStd = false;
 
-static double s_FPSSmoothValues[D_FT8XXEMU_FPS_SMOOTHING];
+static double s_FPSSmoothValues[D_BT8XXEMU_FPS_SMOOTHING];
 //static double s_FPSSmoothTotal;
 static int s_FPSSmoothAt;
 static int s_FPSSmoothCount;
@@ -59,7 +59,7 @@ void SystemClass::begin()
 	s_FrameTimeDelta = 0.0;
 	s_FPSSmooth = 0.0;
 	s_FPSSmoothAt = 0;
-	for (int i = 0; i < D_FT8XXEMU_FPS_SMOOTHING; ++i)
+	for (int i = 0; i < D_BT8XXEMU_FPS_SMOOTHING; ++i)
 		s_FPSSmoothValues[i] = 0.0;
 	//s_FPSSmoothTotal = 0.0;
 	s_FPSSmoothCount = 0;
@@ -88,7 +88,7 @@ void SystemClass::update()
 	++s_FPSSmoothAt;
 	if (s_FPSSmoothCount < s_FPSSmoothAt)
 		s_FPSSmoothCount = s_FPSSmoothAt;
-	s_FPSSmoothAt %= D_FT8XXEMU_FPS_SMOOTHING;
+	s_FPSSmoothAt %= D_BT8XXEMU_FPS_SMOOTHING;
 	//s_FPSSmooth = //s_FPSSmoothTotal / (double)s_FPSSmoothCount;
 }
 
