@@ -1,10 +1,12 @@
 
 FILE(GLOB SRCS *.cpp *.c)
 FILE(GLOB HDRS *.h)
+FILE(GLOB RSCS *.rc)
 
 ADD_LIBRARY(ft8xxemu SHARED
   ${SRCS}
   ${HDRS}
+  ${RSCS}
 )
 
 IF (WITH_FT800EMU)

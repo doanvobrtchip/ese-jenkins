@@ -1,0 +1,36 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,0,19,0
+ PRODUCTVERSION 2,0,19,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Bridgetek Pte Ltd"
+            VALUE "FileDescription", "FT8XX Emulator Library"
+            VALUE "FileVersion", "2.0.19"
+            VALUE "InternalName", "objc4"
+            VALUE "LegalCopyright", "Copyright (C) 2013-2016  Future Technology Devices International Ltd\r\nCopyright (C) 2016-2017  Bridgetek Pte Lte"
+            VALUE "OriginalFilename", "ft8xxemu.dll"
+            VALUE "ProductName", "FT8XXEMU"
+            VALUE "ProductVersion", "2.0.19"
+        END
+    END
+END
