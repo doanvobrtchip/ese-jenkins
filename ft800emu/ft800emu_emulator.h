@@ -117,7 +117,7 @@ private:
 	int m_SkipStage = 0;
 	volatile bool m_CloseCalled = false;
 
-	// bool s_RotateEnabled = false;
+	// bool m_RotateEnabled = false;
 
 	int(*m_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) = NULL;
 	argb8888 *m_GraphicsBuffer = NULL;
@@ -127,13 +127,8 @@ private:
 	bool m_FrameFullyDrawn = true;
 	bool m_ChangesSkipped = false;
 
-#ifdef FTEMU_SDL2
-	// Make the master thread wait for MCU and Coprocessor threads to properly set themselves up
-	SDL_sem *m_InitSem = NULL;
-#elif defined(FTEMU_STDTHREAD)
 	std::condition_variable *m_InitCond = NULL;
 	std::mutex *m_InitMutex = NULL;
-#endif
 
 private:
 	Emulator(const Emulator &) = delete;

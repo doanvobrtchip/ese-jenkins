@@ -84,27 +84,23 @@ bool ThreadEx::unprioritize()
 
 bool ThreadEx::hold()
 {
-	return m_Handle && SuspendThread(m_Handle);
+	return m_Handle && (SuspendThread(m_Handle) > 0);
 }
 
 bool ThreadEx::resume()
 {
-	return m_Handle && ResumeThread(m_Handle);
+	return m_Handle && (ResumeThread(m_Handle) > 0);
 }
 
 bool ThreadEx::poke()
 {
-	if (m_Handle && SuspendThread(m_Handle))
-	{
-		while (!ResumeThread(m_Handle));
-		return true;
-	}
-	return false;
+	return m_Handle && (SuspendThread(m_Handle) > 0) && (ResumeThread(m_Handle) > 0); 
 }
 
 bool ThreadEx::kill()
 {
-	return m_Handle && TerminateThread(m_Handle);
+	return m_Handle && TerminateThread(m_Handle, 0);
+	// return m_Handle && (TerminateThread(m_Handle), true);
 }
 
 bool ThreadEx::current()

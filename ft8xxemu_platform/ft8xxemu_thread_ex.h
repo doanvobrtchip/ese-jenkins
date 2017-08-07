@@ -15,6 +15,13 @@
 // #include <...>
 
 // System includes
+#ifdef WIN32
+// ...
+#else
+#include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
+#endif
 
 // Project includes
 
@@ -60,8 +67,8 @@ private:
 	DWORD m_Id = 0;
 	HANDLE m_AvHandle = NULL;
 	DWORD m_AvTask = 0;
-
 #else
+	// ...
 #endif
 	
 private:

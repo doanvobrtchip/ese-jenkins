@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
-#define FT800EMU_XBU_FILE "../reference/xbu/RIVAL.XBU"
+#define FT800EMU_XBU_FILE "../../../reference/xbu/SCATTER.XBU"
 
 void swrbegin(size_t address)
 {

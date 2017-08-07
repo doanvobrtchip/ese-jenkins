@@ -874,7 +874,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 #elif defined(FTEMU_STDTHREAD)
 
 	std::thread threadA = std::thread(&Emulator::audioThread, this);
-
+	
 	m_InitMutex = new std::mutex();
 	m_InitCond = new std::condition_variable();
 
