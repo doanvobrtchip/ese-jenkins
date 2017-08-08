@@ -15,10 +15,7 @@
 #include "ft800emu_emulator.h"
 
 // System includes
-#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-#elif defined(FTEMU_STDTHREAD)
 #include <thread>
-#endif
 
 // Project includes
 #include "ft8xxemu_system.h"
@@ -39,14 +36,6 @@
 #include "ft8xxemu_minmax.h"
 
 #include "ft800emu_vc.h"
-
-#ifndef FTEMU_SDL
-#ifndef FTEMU_SDL2
-#ifndef FTEMU_STDTHREAD
-#	include "omp.h"
-#endif
-#endif
-#endif
 
 // using namespace ...;
 
@@ -424,6 +413,24 @@ int Emulator::masterThread()
 				m_DegradeOn = false;
 			}
 			unsigned long procDelta = FT8XXEMU::System.getMicros() - procStart;
+#ifdef BT8XXEMU_PROFILE_FRAMEDELTA
+			if (m_ProfileFrameDeltaIndex < BT8XXEMU_PROFILE_FRAMEDELTA)
+			{
+				m_ProfileFrameDelta[m_ProfileFrameDeltaIndex] = procDelta;
+				++m_ProfileFrameDeltaIndex;
+				if (m_ProfileFrameDeltaIndex >= BT8XXEMU_PROFILE_FRAMEDELTA)
+				{
+					FILE *f = fopen("framedelta.csv", "a");
+					for (int i = 0; i < BT8XXEMU_PROFILE_FRAMEDELTA; ++i)
+						fprintf(f, "%u,", m_ProfileFrameDelta[i]);
+					fprintf(f, "\n");
+					fflush(f);
+					fclose(f);
+					printf("Frame delta saved\n");
+				}
+			}
+
+#endif
 			if (!renderLineSnapshot)
 			{
 				if (m_SkipOn)
@@ -635,15 +642,11 @@ int Emulator::mcuThread()
 	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
 	FT8XXEMU::System.disableAutomaticPriorityBoost();
 	FT8XXEMU::System.makeNormalPriorityThread();
-		
-#ifdef FTEMU_SDL2
-	SDL_SemPost(m_InitSem);
-#elif defined(FTEMU_STDTHREAD)
+
 	; {
-		std::unique_lock<std::mutex> lock(*m_InitMutex);
-		m_InitCond->notify_one();
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_InitCond.notify_one();
 	}
-#endif
 		
 	m_Setup();
 	while (m_MasterRunning)
@@ -671,15 +674,11 @@ int Emulator::coprocessorThread()
 	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
 	FT8XXEMU::System.disableAutomaticPriorityBoost();
 	FT8XXEMU::System.makeNormalPriorityThread();
-		
-#ifdef FTEMU_SDL2
-	SDL_SemPost(m_InitSem);
-#elif defined(FTEMU_STDTHREAD)
+	
 	; {
-		std::unique_lock<std::mutex> lock(*m_InitMutex);
-		m_InitCond->notify_one();
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_InitCond.notify_one();
 	}
-#endif
 
 	Coprocessor.executeEmulator();
 
@@ -743,10 +742,10 @@ int Emulator::audioThread()
 
 void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 {
+	m_InitMutexGlobal.lock();
+
 #ifdef WIN32
-#ifndef FTEMU_SDL2
 	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-#endif
 #endif
 
 	BT8XXEMU_EmulatorMode mode = params.Mode;
@@ -756,12 +755,14 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	if (mode < BT8XXEMU_EmulatorFT810)
 	{
 		FTEMU_printf("Invalid emulator version selected, this library is built in FT810 mode\n");
+		m_InitMutexGlobal.unlock();
 		return;
 	}
 #else
 	if (mode > BT8XXEMU_EmulatorFT801)
 	{
 		FTEMU_printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
+		m_InitMutexGlobal.unlock();
 		return;
 	}
 #endif
@@ -827,73 +828,23 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	m_MasterRunning = true;
 
-#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-
-	SDL_Thread *threadA = SDL_CreateThreadFT(audioThread, "FT800EMU::Audio", NULL);
-	// TODO - Error handling
-
-#ifdef FTEMU_SDL2
-	m_InitSem = SDL_CreateSemaphore(0);
-#endif
-
-	SDL_Thread *threadC = NULL;
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-		threadC = SDL_CreateThreadFT(coprocessorThread, "FT800EMU::Coprocessor", NULL);
-	// TODO - Error handling
-#ifdef FTEMU_SDL2
-	SDL_SemWait(m_InitSem);
-#endif
-
-	SDL_Thread *threadD = SDL_CreateThreadFT(mcuThread, "FT800EMU::MCU", NULL);
-	// TODO - Error handling
-#ifdef FTEMU_SDL2
-	SDL_SemWait(m_InitSem);
-	SDL_DestroySemaphore(m_InitSem);
-	m_InitSem = NULL;
-#endif
-
-	masterThread();
-
-	m_MasterRunning = false;
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-	{
-		FT8XXEMU::System.forgetCoprocessorThread();
-		Coprocessor.stopEmulator();
-	}
-
-	FTEMU_printf("Wait for Coprocessor\n");
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-		SDL_WaitThread(threadC, NULL);
-
-	FTEMU_printf("Wait for MCU\n");
-	SDL_WaitThread(threadD, NULL);
-
-	FTEMU_printf("Wait for Audio\n");
-	SDL_WaitThread(threadA, NULL);
-
-#elif defined(FTEMU_STDTHREAD)
-
 	std::thread threadA = std::thread(&Emulator::audioThread, this);
-	
-	m_InitMutex = new std::mutex();
-	m_InitCond = new std::condition_variable();
 
 	std::thread threadC;
 	; {
-		std::unique_lock<std::mutex> lock(*m_InitMutex);
+		std::unique_lock<std::mutex> lock(m_InitMutex);
 		threadC = std::thread(&Emulator::coprocessorThread, this);
-		m_InitCond->wait(lock);
+		m_InitCond.wait(lock);
 	}
 
 	std::thread threadD;
 	; {
-		std::unique_lock<std::mutex> lock(*m_InitMutex);
+		std::unique_lock<std::mutex> lock(m_InitMutex);
 		threadD = std::thread(&Emulator::mcuThread, this);
-		m_InitCond->wait(lock);
+		m_InitCond.wait(lock);
 	}
 
-	delete m_InitCond; m_InitCond = NULL;
-	delete m_InitMutex; m_InitMutex = NULL;
+	m_InitMutexGlobal.unlock();
 
 	masterThread();
 
@@ -928,42 +879,6 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	FTEMU_printf("Wait for Audio\n");
 	threadA.join();
 
-#else
-	#pragma omp parallel num_threads(params.Flags & BT8XXEMU_EmulatorEnableCoprocessor ? 4 : 3)
-	{
-		// graphics
-		#pragma omp master
-		{
-			masterThread();
-			m_MasterRunning = false;
-			// System.killMCUThread();
-			if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.stopEmulator();
-			FTEMU_printf("(0) master thread exit\n");
-		}
-
-		// arduino
-		if (omp_get_thread_num() == 1)
-		{
-			mcuThread();
-			FTEMU_printf("(1) mcu thread exit\n");
-		}
-
-		// sound
-		if (omp_get_thread_num() == 2)
-		{
-			audioThread();
-			FTEMU_printf("(2) sound thread exit\n");
-		}
-
-		// Coprocessor
-		if (omp_get_thread_num() == 3)
-		{
-			coprocessorThread();
-			FTEMU_printf("(3) coproc thread exit\n");
-		}
-	}
-#endif /* #ifdef FTEMU_SDL */
-
 	FTEMU_printf("Threads finished, cleaning up\n");
 
 	delete[] m_GraphicsBuffer;
@@ -987,24 +902,18 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	FTEMU_printf("Emulator stopped running\n");
 
 #ifdef WIN32
-#ifndef FTEMU_SDL2
 	if (coInitHR == S_OK)
 		CoUninitialize();
-#endif
 #endif
 }
 
 void Emulator::stop()
 {
-#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-#elif defined(FTEMU_STDTHREAD)
-	while (m_InitCond) // Some basic protection against calling stop too quickly
-	{
-		FT8XXEMU::System.delay(1);
-	}
-#endif
+	m_InitMutexGlobal.lock();
 
 	m_MasterRunning = false;
+
+	m_InitMutexGlobal.unlock();
 
 	if (!FT8XXEMU::System.isMCUThread())
 	{

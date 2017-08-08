@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
-#define FT800EMU_XBU_FILE "../../../reference/xbu/SCATTER.XBU"
+#define FT800EMU_XBU_FILE "xbu/SCATTER.XBU"
 
 void swrbegin(size_t address)
 {
@@ -264,7 +264,6 @@ int main(int, char* [])
 		| BT8XXEMU_EmulatorEnableDebugShortkeys
 		| BT8XXEMU_EmulatorEnableCoprocessor
 		| BT8XXEMU_EmulatorEnableGraphicsMultithread
-		| BT8XXEMU_EmulatorEnableDynamicDegrade
 		;
 #ifdef FT810EMU_MODE
 	params.Mode = BT8XXEMU_EmulatorFT810;

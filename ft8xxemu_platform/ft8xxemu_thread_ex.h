@@ -16,7 +16,7 @@
 
 // System includes
 #ifdef WIN32
-// ...
+#include "ft8xxemu_system_windows.h"
 #else
 #include <sys/types.h>
 #include <signal.h>
@@ -24,6 +24,7 @@
 #endif
 
 // Project includes
+#include "ft8xxemu_system.h"
 
 namespace FT8XXEMU {
 

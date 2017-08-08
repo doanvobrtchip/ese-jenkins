@@ -15,17 +15,12 @@
 #define FT800EMU_EMULATOR_H
 // #include <...>
 
-#define FTEMU_STDTHREAD
+#define BT8XXEMU_PROFILE_FRAMEDELTA (60 * 20)
 
 // System includes
 #include <string>
-#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-#include <SDL.h>
-#include <SDL_thread.h>
-#elif defined(FTEMU_STDTHREAD)
 #include <condition_variable>
 #include <mutex>
-#endif
 
 // Project includes (include standard stuff for user)
 #include "ft8xxemu.h"
@@ -127,8 +122,14 @@ private:
 	bool m_FrameFullyDrawn = true;
 	bool m_ChangesSkipped = false;
 
-	std::condition_variable *m_InitCond = NULL;
-	std::mutex *m_InitMutex = NULL;
+	std::condition_variable m_InitCond;
+	std::mutex m_InitMutex;
+	std::mutex m_InitMutexGlobal;
+
+#ifdef BT8XXEMU_PROFILE_FRAMEDELTA
+	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };
+	int m_ProfileFrameDeltaIndex = 0;
+#endif
 
 private:
 	Emulator(const Emulator &) = delete;
