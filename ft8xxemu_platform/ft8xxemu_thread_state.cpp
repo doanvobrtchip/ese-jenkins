@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (C) 2011-2017  Future Technology Devices International Ltd
+ * Copyright (C) 2013-2017  Future Technology Devices International Ltd
  */
 
 // #include <...>

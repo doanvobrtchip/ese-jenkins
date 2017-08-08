@@ -40,15 +40,6 @@ SystemWindowsClass SystemWindows;
 static LARGE_INTEGER s_PerformanceFrequency = { 0 };
 static LARGE_INTEGER s_PerformanceCounterBegin = { 0 };
 
-
-static HANDLE s_CoprocessorThread = NULL;
-static HANDLE s_MCUThread = NULL;
-static HANDLE s_MainThread = NULL;
-
-static HANDLE s_CoprocessorThreadPseudo = NULL;
-static HANDLE s_MCUThreadPseudo = NULL;
-static HANDLE s_MainThreadPseudo = NULL;
-
 //static CRITICAL_SECTION s_CriticalSection;
 static CRITICAL_SECTION s_SwapCriticalSection;
 
