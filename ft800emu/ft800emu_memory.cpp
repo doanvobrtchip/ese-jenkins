@@ -48,6 +48,8 @@
 #define FT800EMU_MCU_MEMLOG 0
 #define FT800EMU_DL_MEMLOG 0
 
+using namespace FT8XXEMU;
+
 namespace FT800EMU {
 
 MemoryClass Memory;
@@ -90,6 +92,9 @@ static bool s_ReadDelay;
 static bool s_CpuReset = false;
 
 static BT8XXEMU_EmulatorMode s_EmulatorMode;
+
+static ThreadState *s_ThreadMCU = NULL;
+static ThreadState *s_ThreadCoprocessor = NULL;
 
 //static void (*s_Interrupt)());
 
@@ -617,6 +622,12 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 	rawWriteU8(address, data);
 } */
 
+void MemoryClass::setThreadState(FT8XXEMU::ThreadState *mcuThread, FT8XXEMU::ThreadState *coprocessorThread)
+{
+	s_ThreadMCU = mcuThread;
+	s_ThreadCoprocessor = coprocessorThread;
+}
+
 void MemoryClass::swapDisplayList()
 {
 	memcpy(static_cast<void *>(s_DisplayListFree), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayListA));
@@ -686,9 +697,9 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			if (s_FifoMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
-				FT8XXEMU::System.prioritizeCoprocessorThread();
+				s_ThreadCoprocessor->prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				FT8XXEMU::System.unprioritizeCoprocessorThread();
+				s_ThreadCoprocessor->unprioritize();
 			}
 			break;
 		case REG_CMDB_SPACE:
@@ -698,9 +709,9 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			if (s_WaitMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
-				FT8XXEMU::System.prioritizeCoprocessorThread();
+				s_ThreadCoprocessor->prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				FT8XXEMU::System.unprioritizeCoprocessorThread();
+				s_ThreadCoprocessor->unprioritize();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
@@ -708,9 +719,9 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			if (s_SwapMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
-				FT8XXEMU::System.prioritizeCoprocessorThread();
+				s_ThreadCoprocessor->prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				FT8XXEMU::System.unprioritizeCoprocessorThread();
+				s_ThreadCoprocessor->unprioritize();
 			}
 			break;
 		default:
@@ -720,9 +731,9 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 				if (s_IdenticalMCUReadCounter > 8)
 				{
 					// FTEMU_printf(" Switch ");
-					FT8XXEMU::System.prioritizeCoprocessorThread();
+					s_ThreadCoprocessor->prioritize();
 					FT8XXEMU::System.switchThread();
-					FT8XXEMU::System.unprioritizeCoprocessorThread();
+					s_ThreadCoprocessor->unprioritize();
 				}
 			}
 			else
@@ -911,9 +922,9 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 			++s_FifoCoprocessorReadCounter;
 			if (s_FifoCoprocessorReadCounter > 8)
 			{
-				FT8XXEMU::System.prioritizeMCUThread();
+				s_ThreadMCU->prioritize();
 				FT8XXEMU::System.delay(1);
-				FT8XXEMU::System.unprioritizeMCUThread();
+				s_ThreadMCU->unprioritize();
 			}
 			break;
 #endif
@@ -921,9 +932,9 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 			++s_WaitCoprocessorReadCounter;
 			if (s_WaitCoprocessorReadCounter > 8)
 			{
-				FT8XXEMU::System.prioritizeMCUThread();
+				s_ThreadMCU->prioritize();
 				FT8XXEMU::System.delay(1);
-				FT8XXEMU::System.unprioritizeMCUThread();
+				s_ThreadMCU->unprioritize();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
@@ -931,9 +942,9 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 			if (s_SwapCoprocessorReadCounter > 8)
 			{
 				// FTEMU_printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
-				FT8XXEMU::System.prioritizeMCUThread();
+				s_ThreadMCU->prioritize();
 				FT8XXEMU::System.delay(1);
-				FT8XXEMU::System.unprioritizeMCUThread();
+				s_ThreadMCU->unprioritize();
 			}
 			break;
 		default:
@@ -948,9 +959,9 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 				if (s_IdenticalCoprocessorReadCounter > 8)
 				{
 					// FTEMU_printf(" Switch ");
-					FT8XXEMU::System.prioritizeMCUThread();
+					s_ThreadMCU->prioritize();
 					FT8XXEMU::System.switchThread();
-					FT8XXEMU::System.unprioritizeMCUThread();
+					s_ThreadMCU->unprioritize();
 				}
 			}
 			else

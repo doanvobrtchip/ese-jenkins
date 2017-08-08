@@ -18,6 +18,7 @@
 // System includes
 #include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
+#include "ft8xxemu_thread_state.h"
 
 // Project includes
 
@@ -60,6 +61,7 @@ class MemoryClass
 public:
 	MemoryClass() { }
 
+	static void setThreadState(FT8XXEMU::ThreadState *mcuThread, FT8XXEMU::ThreadState *coprocessorThread);
 	static void begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath = 0, const char *otpFilePath = 0);
 	static void end();
 

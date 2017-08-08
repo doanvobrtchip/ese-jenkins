@@ -55,46 +55,10 @@ public:
 
 	static unsigned int getCPUCount();
 
-	static void disableAutomaticPriorityBoost();
-
-	static void makeLowPriorityThread();
-	static void makeNormalPriorityThread();
-	static void makeHighPriorityThread();
-	static void makeHighestPriorityThread();
-	static void makeRealtimePriorityThread();
-
-	static void makeMainThread();
-	static bool isMainThread();
-	static inline bool setMainThreadSwitchable(bool value) { s_MainThreadSwitchable = value; }
-	static inline bool isMainThreadSwitchable() { return s_MainThreadSwitchable; }
-
-	static void makeMCUThread();
-	static int isMCUThread();
-	static void prioritizeMCUThread();
-	static void unprioritizeMCUThread();
-	static void holdMCUThread();
-	static void resumeMCUThread();
-	static void killMCUThread();
-
-	static void makeCoprocessorThread();
-	static void forgetCoprocessorThread();
-	static bool isCoprocessorThread();
-	static void prioritizeCoprocessorThread();
-	static void unprioritizeCoprocessorThread();
-	static void holdCoprocessorThread();
-	static void resumeCoprocessorThread();
-
 	static void switchThread();
-
-	static void *setThreadGamesCategory(unsigned long *);
-	static void revertThreadCategory(void *);
 
 	static void enterSwapDL();
 	static void leaveSwapDL();
-
-	// MCU
-	static uint16_t getAnalogRead(uint8_t pin);
-	static void setAnalogRead(uint8_t pin, uint16_t value);
 
 	// Debugging
 	static inline double getFrameTime() { return s_FrameTime; }

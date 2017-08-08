@@ -51,6 +51,7 @@
 // Project includes
 #include "ft8xxemu_inttypes.h"
 #include "ft8xxemu_system.h"
+#include "ft8xxemu_thread_state.h"
 #include "ft8xxemu_graphics_driver.h"
 #include "ft8xxemu_minmax.h"
 #include "ft800emu_memory.h"
@@ -199,6 +200,8 @@ uint32_t s_DebugTraceLine = 0;
 int *s_DebugTraceStack = NULL;
 int s_DebugTraceStackMax = 0;
 int *s_DebugTraceStackSize = NULL;
+
+bool s_ThreadPriorityRealtime = true;
 
 #pragma endregion
 
@@ -3389,11 +3392,11 @@ int launchGraphicsProcessorThread(void *startInfo)
 #	ifdef WIN32
 DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 {
-	unsigned long taskId = 0;
-	void *taskHandle;
-	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
-	FT8XXEMU::System.disableAutomaticPriorityBoost();
-	FT8XXEMU::System.makeRealtimePriorityThread();
+	FT8XXEMU::ThreadState threadEx;
+	threadEx.foreground();
+	threadEx.noboost();
+	threadEx.realtime();
+	bool realtime = true;
 
 	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
 	for (; ; )
@@ -3403,6 +3406,14 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 		if (!li->Running)
 		{
 			break;
+		}
+
+		// Adjust thread priority
+		if (s_ThreadPriorityRealtime != realtime)
+		{
+			realtime = s_ThreadPriorityRealtime;
+			if (realtime) threadEx.realtime();
+			else threadEx.prioritize();
 		}
 
 		processPart<false>(
@@ -3421,12 +3432,17 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 		SetEvent(li->EndEvent);
 	}
 
-	FT8XXEMU::System.revertThreadCategory(taskHandle);
+	threadEx.reset();
 
 	return 0;
 }
 #	endif
 #endif
+
+void GraphicsProcessorClass::setThreadPriority(bool realtime)
+{
+	s_ThreadPriorityRealtime = realtime;
+}
 
 void GraphicsProcessorClass::process(
 	argb8888 *screenArgb8888, 

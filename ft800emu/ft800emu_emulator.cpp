@@ -174,20 +174,12 @@ void debugShortkeys()
 	}
 }
 
-int masterThread(Emulator *emulator)
-{
-	return emulator->masterThread();
-}
-
 int Emulator::masterThread()
 {
-	FT8XXEMU::System.makeMainThread();
-
-	unsigned long taskId = 0;
-	void *taskHandle;
-	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
-	FT8XXEMU::System.disableAutomaticPriorityBoost();
-	FT8XXEMU::System.makeRealtimePriorityThread();
+	m_ThreadMaster.init();
+	m_ThreadMaster.foreground();
+	m_ThreadMaster.noboost();
+	m_ThreadMaster.realtime();
 
 	double targetSeconds = FT8XXEMU::System.getSeconds();
 
@@ -197,7 +189,6 @@ int Emulator::masterThread()
 	while (m_MasterRunning)
 	{
 		// FTEMU_printf("main thread\n");
-		FT8XXEMU::System.makeRealtimePriorityThread();
 
 		FT8XXEMU::System.enterSwapDL();
 
@@ -475,8 +466,24 @@ int Emulator::masterThread()
 							m_DegradeOn = true;
 							if (FT800EMU_DEBUG) FTEMU_printf("Dynamic degrade switched ON\n");
 						}
+						else
+						{
+							m_ThreadMaster.prioritize();
+							GraphicsProcessor.setThreadPriority(false);
+						}
+					}
+					else
+					{
+
+						m_ThreadMaster.realtime();
+						GraphicsProcessor.setThreadPriority(true);
 					}
 				}
+			}
+			else
+			{
+				m_ThreadMaster.realtime();
+				GraphicsProcessor.setThreadPriority(true);
 			}
 		}
 
@@ -499,13 +506,8 @@ int Emulator::masterThread()
 		if (!renderLineSnapshot)
 		{
 			if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
-			FT8XXEMU::System.prioritizeMCUThread();
-			//FTEMU_printf("fr %u\n",  Memory.rawReadU32(ram, REG_FRAMES));
-
-#ifndef WIN32
-			FT8XXEMU::System.holdMCUThread(); // vblank'd !
-			FT8XXEMU::System.resumeMCUThread();
-#endif
+			m_ThreadMCU.prioritize();
+			m_ThreadMCU.boost(); // Swapped!
 
 			unsigned long flipStart = FT8XXEMU::System.getMicros();
 			if (m_SkipOn && m_SkipStage)
@@ -537,7 +539,7 @@ int Emulator::masterThread()
 						else
 						{
 							FTEMU_printf("Kill MCU thread\n");
-							FT8XXEMU::System.killMCUThread();
+							m_ThreadMCU.kill();
 							return 0;
 						}
 					}
@@ -556,7 +558,7 @@ int Emulator::masterThread()
 						else
 						{
 							FTEMU_printf("Kill MCU thread\n");
-							FT8XXEMU::System.killMCUThread();
+							m_ThreadMCU.kill();
 							return 0;
 						}
 					}
@@ -568,10 +570,10 @@ int Emulator::masterThread()
 				if (FT800EMU_DEBUG) FTEMU_printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
 
 			FT8XXEMU::System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
-			FT8XXEMU::System.unprioritizeMCUThread();
+			m_ThreadMCU.unprioritize();
 		}
 
-		FT8XXEMU::System.prioritizeCoprocessorThread();
+		m_ThreadCoprocessor.prioritize();
 		if (reg_pclk == 0xFF)
 		{
 			FT8XXEMU::System.renderSleep(1);
@@ -614,34 +616,22 @@ int Emulator::masterThread()
 			FT8XXEMU::System.switchThread();
 #endif
 		}
-		FT8XXEMU::System.unprioritizeCoprocessorThread();
+		m_ThreadCoprocessor.unprioritize();
 
-#ifdef WIN32
-		FT8XXEMU::System.holdMCUThread(); // don't let the other thread hog cpu
-		FT8XXEMU::System.resumeMCUThread();
-		FT8XXEMU::System.holdCoprocessorThread();
-		FT8XXEMU::System.resumeCoprocessorThread();
-#endif
+		m_ThreadMCU.yield(); // don't let the other thread hog cpu
+		m_ThreadCoprocessor.yield();
 	}
 
-	FT8XXEMU::System.revertThreadCategory(taskHandle);
+	m_ThreadMaster.reset();
 	return 0;
-}
-
-int mcuThread(Emulator *emulator)
-{
-	return emulator->mcuThread();
 }
 
 int Emulator::mcuThread()
 {
-	FT8XXEMU::System.makeMCUThread();
-
-	unsigned long taskId = 0;
-	void *taskHandle;
-	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
-	FT8XXEMU::System.disableAutomaticPriorityBoost();
-	FT8XXEMU::System.makeNormalPriorityThread();
+	m_ThreadMCU.init();
+	m_ThreadMCU.foreground();
+	m_ThreadMCU.noboost();
+	m_ThreadMCU.unprioritize();
 
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -651,29 +641,22 @@ int Emulator::mcuThread()
 	m_Setup();
 	while (m_MasterRunning)
 	{
-		//FTEMU_printf("mcu thread\n");
+		// FTEMU_printf("mcu thread\n");
 		m_Loop();
 	}
-	FT8XXEMU::System.revertThreadCategory(taskHandle);
-	return 0;
-}
 
-int coprocessorThread(Emulator *emulator)
-{
-	return emulator->coprocessorThread();
+	m_ThreadMCU.reset();
+	return 0;
 }
 
 int Emulator::coprocessorThread()
 {
-	FT8XXEMU::System.makeCoprocessorThread();
+	m_ThreadCoprocessor.init();
+	m_ThreadCoprocessor.foreground();
+	m_ThreadCoprocessor.noboost();
+	m_ThreadCoprocessor.unprioritize();
 
 	FTEMU_printf("Coprocessor thread begin\n");
-
-	unsigned long taskId = 0;
-	void *taskHandle;
-	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
-	FT8XXEMU::System.disableAutomaticPriorityBoost();
-	FT8XXEMU::System.makeNormalPriorityThread();
 	
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -684,13 +667,8 @@ int Emulator::coprocessorThread()
 
 	FTEMU_printf("Coprocessor thread exit\n");
 
-	FT8XXEMU::System.revertThreadCategory(taskHandle);
+	m_ThreadCoprocessor.reset();
 	return 0;
-}
-
-int audioThread(Emulator *emulator)
-{
-	return emulator->audioThread();
 }
 
 int Emulator::audioThread()
@@ -702,11 +680,11 @@ int Emulator::audioThread()
 #endif
 
 	//FTEMU_printf("go sound thread");
-	unsigned long taskId = 0;
-	void *taskHandle;
-	taskHandle = FT8XXEMU::System.setThreadGamesCategory(&taskId);
-	FT8XXEMU::System.disableAutomaticPriorityBoost();
-	FT8XXEMU::System.makeHighPriorityThread();
+	m_ThreadAudio.init();
+	m_ThreadAudio.foreground();
+	m_ThreadAudio.noboost();
+	m_ThreadAudio.realtime();
+
 	while (m_MasterRunning)
 	{
 		//FTEMU_printf("sound thread\n");
@@ -728,7 +706,8 @@ int Emulator::audioThread()
 		}
 		FT8XXEMU::System.delay(10);
 	}
-	FT8XXEMU::System.revertThreadCategory(taskHandle);
+
+	m_ThreadAudio.reset();
 
 #ifdef WIN32
 #ifndef FTEMU_SDL2
@@ -782,6 +761,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
+	Memory.setThreadState(&m_ThreadMCU, &m_ThreadCoprocessor);
 	Memory.begin(mode, params.RomFilePath, params.OtpFilePath);
 	TouchClass::begin(mode);
 	GraphicsProcessor.begin();
@@ -851,7 +831,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_MasterRunning = false;
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
-		FT8XXEMU::System.forgetCoprocessorThread();
+		m_ThreadCoprocessor.reset();
 		Coprocessor.stopEmulator();
 	}
 
@@ -869,7 +849,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		else
 		{
 			FTEMU_printf("Kill MCU thread\n");
-			FT8XXEMU::System.killMCUThread();
+			m_ThreadMCU.kill();
 		}
 	}
 
@@ -915,7 +895,7 @@ void Emulator::stop()
 
 	m_InitMutexGlobal.unlock();
 
-	if (!FT8XXEMU::System.isMCUThread())
+	if (!m_ThreadMCU.current())
 	{
 		FTEMU_printf("Wait for MCU thread\n");
 		while (m_EmulatorRunning) // TODO: Mutex?

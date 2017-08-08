@@ -1,7 +1,7 @@
 /**
- * ThreadEx
- * \file ft8xxemu_thread_ex.h
- * \brief ThreadEx
+ * ThreadState
+ * \file ft8xxemu_thread_state.h
+ * \brief ThreadState
  * \date 2017-08-04 10:57GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -10,8 +10,8 @@
  * Copyright (C) 2011-2017  Future Technology Devices International Ltd
  */
 
-#ifndef BT8XXEMU_THREAD_EX_H
-#define BT8XXEMU_THREAD_EX_H
+#ifndef BT8XXEMU_THREAD_STATE_H
+#define BT8XXEMU_THREAD_STATE_H
 // #include <...>
 
 // System includes
@@ -29,38 +29,38 @@
 namespace FT8XXEMU {
 
 /**
- * ThreadEx
- * \brief ThreadEx
+ * ThreadState
+ * \brief ThreadState
  * \date 2017-08-04 19:38GMT
  * \author Jan Boon (Kaetemi)
  */
-class ThreadEx
+class ThreadState
 {
 public:
-	ThreadEx();
-	~ThreadEx();
+	ThreadState();
+	~ThreadState();
 
-	// Initialize for the current thread
+	//! Initialize for the current thread
 	bool init();
+	void reset();
 
-	// Optimize the thread for foreground applications
+	//! Optimize the thread for foreground applications
+	//! Should only be called when the process containing the emulator is managing the window
 	bool foreground();
+	bool noboost();
 
 	// Set the priority for this thread
+	bool realtime();
 	bool prioritize();
 	bool unprioritize();
 
 	// Control this thread
-	bool hold();
-	bool resume();
-	bool poke();
+	bool boost(); //< Bring the thread to the top of the scheduler queue temporarily
+	bool yield(); //< Cause the thread to switch away and go to the end of the scheduler queue
 	bool kill();
 
 	// Is this the current thread
 	bool current();
-
-private:
-	void reset();
 
 private:
 #ifdef WIN32
@@ -69,17 +69,17 @@ private:
 	HANDLE m_AvHandle = NULL;
 	DWORD m_AvTask = 0;
 #else
-	// ...
+	pthread_t m_PThread = 0;
 #endif
 	
 private:
-	ThreadEx(const ThreadEx &) = delete;
-	ThreadEx &operator=(const ThreadEx &) = delete;
+	ThreadState(const ThreadState &) = delete;
+	ThreadState &operator=(const ThreadState &) = delete;
 
-}; /* class ThreadEx */
+}; /* class ThreadState */
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef BT8XXEMU_THREAD_EX_H */
+#endif /* #ifndef BT8XXEMU_THREAD_STATE_H */
 
 /* end of file */

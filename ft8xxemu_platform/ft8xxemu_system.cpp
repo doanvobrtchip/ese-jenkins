@@ -43,8 +43,6 @@ static double s_FPSSmoothValues[D_BT8XXEMU_FPS_SMOOTHING];
 static int s_FPSSmoothAt;
 static int s_FPSSmoothCount;
 
-static uint16_t s_AnalogPins[64];
-
 static void (*s_MCUDelay)(int) = 0;
 
 void SystemClass::begin()
@@ -100,16 +98,6 @@ void SystemClass::end()
 	// ...
 
 	SystemClass::_end();
-}
-
-uint16_t SystemClass::getAnalogRead(uint8_t pin)
-{
-	return s_AnalogPins[pin];
-}
-
-void SystemClass::setAnalogRead(uint8_t pin, uint16_t value)
-{
-	s_AnalogPins[pin] = value;
 }
 
 void SystemClass::overrideMCUDelay(void (*delay)(int))

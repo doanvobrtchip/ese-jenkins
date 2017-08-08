@@ -25,6 +25,7 @@
 // Project includes (include standard stuff for user)
 #include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
+#include "ft8xxemu_thread_state.h"
 
 #ifndef BT8XXEMU_EMULATOR_H
 #define BT8XXEMU_EMULATOR_H
@@ -85,13 +86,9 @@ public:
 
 private:
 	int masterThread();
-	friend int masterThread(Emulator *emulator);
 	int mcuThread();
-	friend int mcuThread(Emulator *emulator);
 	int coprocessorThread();
-	friend int coprocessorThread(Emulator *emulator);
 	int audioThread();
-	friend int audioThread(Emulator *emulator);
 
 private:
 	volatile bool m_EmulatorRunning = false;
@@ -125,6 +122,11 @@ private:
 	std::condition_variable m_InitCond;
 	std::mutex m_InitMutex;
 	std::mutex m_InitMutexGlobal;
+
+	FT8XXEMU::ThreadState m_ThreadMaster; //< Graphics master thread
+	FT8XXEMU::ThreadState m_ThreadMCU; //< User MCU thread (optional)
+	FT8XXEMU::ThreadState m_ThreadCoprocessor; //< Coprocessor thread
+	FT8XXEMU::ThreadState m_ThreadAudio; //< Audio thread
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

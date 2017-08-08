@@ -68,6 +68,8 @@ public:
 	static void begin();
 	static void end();
 
+	static void setThreadPriority(bool realtime);
+
 	static void process(
 		argb8888 *screenArgb8888, 
 		bool upsideDown, 
