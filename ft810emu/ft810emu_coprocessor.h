@@ -21,6 +21,7 @@
 #define FT810EMU_COPROCESSOR_ROM_SIZE 16384
 
 namespace FT810EMU {
+	class Memory;
 
 typedef int16_t idct_t;
 
@@ -101,7 +102,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	void begin(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
 	void end();
 
 	void executeManual();
@@ -120,6 +121,8 @@ private:
 
 	CoprocessorClass(const CoprocessorClass &);
 	CoprocessorClass &operator=(const CoprocessorClass &);
+
+	Memory *m_Memory;
 
 	volatile bool m_Running;
 

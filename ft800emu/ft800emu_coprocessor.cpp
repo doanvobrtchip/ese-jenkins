@@ -38,8 +38,10 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 };
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-void CoprocessorClass::begin(const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+void CoprocessorClass::begin(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
 {
+	m_Memory = memory;
+
 	bool ft801 = (mode == BT8XXEMU_EmulatorFT801);
 	if (romFilePath)
 	{
@@ -79,7 +81,7 @@ void CoprocessorClass::execute()
     int swapped = 0;
     int starve = 0;
     do {
-		if (Memory.coprocessorGetReset())
+		if (m_Memory->coprocessorGetReset())
 		{
 			pc = 0;
 			//FTEMU_printf("RESET COPROCESSOR\n");
@@ -88,14 +90,14 @@ void CoprocessorClass::execute()
 		}
         insn = pgm[pc];
         // FTEMU_printf("PC=%04x %04x\n", pc, insn);
-        // if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+        // if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", m_Memory->coprocessorReadU32(REG_CMD_READ), t);
 		if (singleFrame)
 		{
 			if (pc == 0x0980) { // cmd.has1
                 // 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
-				int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-				// FTEMU_printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
-				starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
+				int rp = m_Memory->coprocessorReadU32(0x1090f8);
+				// FTEMU_printf("cmd.has1 %x %x\n", m_Memory->coprocessorReadU32(REG_CMD_WRITE), rp);
+				starve = m_Memory->coprocessorReadU32(REG_CMD_WRITE) == rp;
 			}
 		}
         _pc = pc + 1;
@@ -138,20 +140,20 @@ void CoprocessorClass::execute()
                 case 9:     _t = n >> t; break;
                 case 10:    _t = t - 1; break;
                 case 11:    _t = r[rsp]; break;
-                case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);*/ break;
+                case 12:    _t = m_Memory->coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);*/ break;
                 case 13:    _t = product & 0xFFFFFFFF; break;
                 case 14:    _t = (n << 15) | (t & 0x7fff); break;
                 case 15:    _t = -(n < t); break;
                 case 16:    assert(0);
                 case 17:    _t = n << t; break;
-                case 18:    _t = MemoryClass::coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);*/ break;
-                case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
+                case 18:    _t = m_Memory->coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);*/ break;
+                case 19:    _t = m_Memory->coprocessorReadU16(t & ~1); break;
                 case 20:    _t = product >> 32; break;
 				case 21:    _t = (product >> 16) & 0xFFFFFFFF; break;
                 case 22:    _t = t == r[rsp]; break;
                 case 23:    _t = n - t; break;
                 case 24:    _t = t + 1; break;
-                case 25:    _t = (int16_t)MemoryClass::coprocessorReadU16(t); break;
+                case 25:    _t = (int16_t)m_Memory->coprocessorReadU16(t); break;
                 case 26:    _t = (sum32 & 0x80000000) ? 0 : ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); break;
                 case 27:    _t = (0x00109 << 12) | (t & 0xfff); break;
                 case 28:    _t = t + 2; break;
@@ -175,7 +177,7 @@ void CoprocessorClass::execute()
                     break;
 				case 4: // write32
 					// FTEMU_printf("wr[%x] <= %x\n", t, n);
-                    MemoryClass::coprocessorWriteU32(t, n);
+                    m_Memory->coprocessorWriteU32(t, n);
 					if (singleFrame)
 					{
 						if (t == REG_DLSWAP)
@@ -183,10 +185,10 @@ void CoprocessorClass::execute()
 					}
 					break;
 				case 5: // write16
-                    MemoryClass::coprocessorWriteU16(t, n);
+                    m_Memory->coprocessorWriteU16(t, n);
                     break;
                 case 6: // write8
-					MemoryClass::coprocessorWriteU8(t, n);
+					m_Memory->coprocessorWriteU8(t, n);
 					break;
 				case 7: // read
 					// no-op

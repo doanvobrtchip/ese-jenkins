@@ -13,13 +13,13 @@
 extern "C" {
 #endif
 
-BT8XXEMU_API extern uint8_t *(*BT8XXEMU_getRam)();
-BT8XXEMU_API extern const uint32_t *(*BT8XXEMU_getDisplayList)();
+BT8XXEMU_API extern uint8_t *BT8XXEMU_getRam();
+BT8XXEMU_API extern const uint32_t *BT8XXEMU_getDisplayList();
 
-BT8XXEMU_API extern void(*BT8XXEMU_poke)();
+BT8XXEMU_API extern void BT8XXEMU_poke();
 
-BT8XXEMU_API extern int *(*BT8XXEMU_getDisplayListCoprocessorWrites)();
-BT8XXEMU_API extern void(*BT8XXEMU_clearDisplayListCoprocessorWrites)();
+BT8XXEMU_API extern int *BT8XXEMU_getDisplayListCoprocessorWrites();
+BT8XXEMU_API extern void BT8XXEMU_clearDisplayListCoprocessorWrites();
 
 BT8XXEMU_API extern bool(*BT8XXEMU_getDebugLimiterEffective)();
 BT8XXEMU_API extern int(*BT8XXEMU_getDebugLimiterIndex)();

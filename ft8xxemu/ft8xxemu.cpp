@@ -44,11 +44,6 @@ uint8_t(*BT8XXEMU_transfer)(uint8_t data) = NULL;
 void(*BT8XXEMU_cs)(int cs) = NULL;
 int(*BT8XXEMU_int)() = NULL;
 
-uint8_t *(*BT8XXEMU_getRam)() = NULL;
-const uint32_t *(*BT8XXEMU_getDisplayList)() = NULL;
-void(*BT8XXEMU_poke)() = NULL;
-int *(*BT8XXEMU_getDisplayListCoprocessorWrites)() = NULL;
-void(*BT8XXEMU_clearDisplayListCoprocessorWrites)() = NULL;
 bool(*BT8XXEMU_getDebugLimiterEffective)() = NULL;
 int(*BT8XXEMU_getDebugLimiterIndex)() = NULL;
 void(*BT8XXEMU_setDebugLimiter)(int debugLimiter) = NULL;
@@ -106,11 +101,6 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 		BT8XXEMU_transfer = &FT800EMU::SPII2C.transfer;
 		BT8XXEMU_cs = &FT800EMU::SPII2C.csLow;
 		BT8XXEMU_int = &FT800EMU::SPII2C.intnLow;
-		BT8XXEMU_getRam = &FT800EMU::Memory.getRam;
-		BT8XXEMU_getDisplayList = &FT800EMU::Memory.getDisplayList;
-		BT8XXEMU_poke = &FT800EMU::Memory.poke;
-		BT8XXEMU_getDisplayListCoprocessorWrites = &FT800EMU::Memory.getDisplayListCoprocessorWrites;
-		BT8XXEMU_clearDisplayListCoprocessorWrites = &FT800EMU::Memory.clearDisplayListCoprocessorWrites;
 		BT8XXEMU_getDebugLimiterEffective = &FT800EMU::GraphicsProcessor.getDebugLimiterEffective;
 		BT8XXEMU_getDebugLimiterIndex = &FT800EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT800EMU::GraphicsProcessor.setDebugLimiter;
@@ -127,11 +117,6 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 		BT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
 		BT8XXEMU_cs = &FT810EMU::SPII2C.csLow;
 		BT8XXEMU_int = &FT810EMU::SPII2C.intnLow;
-		BT8XXEMU_getRam = &FT810EMU::Memory.getRam;
-		BT8XXEMU_getDisplayList = &FT810EMU::Memory.getDisplayList;
-		BT8XXEMU_poke = &FT810EMU::Memory.poke;
-		BT8XXEMU_getDisplayListCoprocessorWrites = &FT810EMU::Memory.getDisplayListCoprocessorWrites;
-		BT8XXEMU_clearDisplayListCoprocessorWrites = &FT810EMU::Memory.clearDisplayListCoprocessorWrites;
 		BT8XXEMU_getDebugLimiterEffective = &FT810EMU::GraphicsProcessor.getDebugLimiterEffective;
 		BT8XXEMU_getDebugLimiterIndex = &FT810EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT810EMU::GraphicsProcessor.setDebugLimiter;
@@ -151,6 +136,31 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 BT8XXEMU_API void BT8XXEMU_stop()
 {
 	s_Emulator->stop();
+}
+
+BT8XXEMU_API uint8_t *BT8XXEMU_getRam()
+{
+	return s_Emulator->getRam();
+}
+
+BT8XXEMU_API const uint32_t *BT8XXEMU_getDisplayList()
+{
+	return s_Emulator->getDisplayList();
+}
+
+BT8XXEMU_API void BT8XXEMU_poke()
+{
+	s_Emulator->poke();
+}
+
+BT8XXEMU_API int *BT8XXEMU_getDisplayListCoprocessorWrites()
+{
+	return s_Emulator->getDisplayListCoprocessorWrites();
+}
+
+BT8XXEMU_API void BT8XXEMU_clearDisplayListCoprocessorWrites()
+{
+	return s_Emulator->clearDisplayListCoprocessorWrites();
 }
 
 // Set touch XY. Call on every frame when using custom graphics output

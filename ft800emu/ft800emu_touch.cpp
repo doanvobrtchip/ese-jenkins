@@ -27,6 +27,7 @@ long TouchClass::s_TouchScreenFrameTime;
 bool TouchClass::s_TouchScreenJitter;
 bool TouchClass::s_EnableTouchMatrix;
 BT8XXEMU_EmulatorMode TouchClass::s_EmulatorMode;
+static Memory *s_Memory;
 
 inline long TouchClass::jitteredTime(long micros)
 {
@@ -61,7 +62,7 @@ inline long TouchClass::jitteredTime(long micros)
 
 inline void TouchClass::transformTouchXY(int &x, int &y)
 {
-	uint8_t *ram = Memory.getRam();
+	uint8_t *ram = s_Memory->getRam();
 	// Transform (currently just depending on REG_ROTATE, ignoring TRANSFORM)
 	if (s_EnableTouchMatrix) // s15.16 matrix
 	{
@@ -166,7 +167,7 @@ inline uint32_t TouchClass::getTouchScreenXY()
 
 void TouchClass::setXY(int x, int y, int pressure)
 {
-	uint8_t *ram = Memory.getRam();
+	uint8_t *ram = s_Memory->getRam();
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
@@ -179,7 +180,7 @@ void TouchClass::setXY(int x, int y, int pressure)
 		switch (m_Index)
 		{
 		case 0:
-			Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
+			s_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
 			break;
 		}
 	}
@@ -218,20 +219,20 @@ void TouchClass::setXY(int x, int y, int pressure)
 		switch (m_Index)
 		{
 		case 0:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
 			break;
 		case 1:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, getTouchScreenXY(x, y));
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, getTouchScreenXY(x, y));
 			break;
 		case 2:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, getTouchScreenXY(x, y));
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, getTouchScreenXY(x, y));
 			break;
 		case 3:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, getTouchScreenXY(x, y));
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, getTouchScreenXY(x, y));
 			break;
 		case 4:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, x & 0xFFFF);
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, y & 0xFFFF);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, x & 0xFFFF);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, y & 0xFFFF);
 			break;
 		}
 	}
@@ -240,12 +241,12 @@ void TouchClass::setXY(int x, int y, int pressure)
 		switch (m_Index)
 		{
 		case 0:
-			Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
-			Memory.rawWriteU32(ram, REG_TOUCH_RZ, pressure);
+			s_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
+			s_Memory->rawWriteU32(ram, REG_TOUCH_RZ, pressure);
 			break;
 		}
 	}
-	Memory.poke();
+	s_Memory->poke();
 }
 
 void TouchClass::setTouchScreenXYFrameTime(long micros)
@@ -257,24 +258,24 @@ void TouchClass::resetXY()
 {
 	bool doPoke = m_TouchScreenSet != 0;
 	m_TouchScreenSet = 0;
-	uint8_t *ram = Memory.getRam();
+	uint8_t *ram = s_Memory->getRam();
 	switch (m_Index)
 	{
 	case 0:
-		Memory.rawWriteU32(ram, REG_TOUCH_TAG, 0);
+		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG, 0);
 		break;
 #ifdef FT810EMU_MODE
 	case 1:
-		Memory.rawWriteU32(ram, REG_TOUCH_TAG1, 0);
+		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG1, 0);
 		break;
 	case 2:
-		Memory.rawWriteU32(ram, REG_TOUCH_TAG2, 0);
+		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG2, 0);
 		break;
 	case 3:
-		Memory.rawWriteU32(ram, REG_TOUCH_TAG3, 0);
+		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG3, 0);
 		break;
 	case 4:
-		Memory.rawWriteU32(ram, REG_TOUCH_TAG4, 0);
+		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG4, 0);
 		break;
 #endif
 	}
@@ -284,20 +285,20 @@ void TouchClass::resetXY()
 		switch (m_Index)
 		{
 		case 0:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, 0x80008000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, 0x80008000);
 			break;
 		case 1:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, 0x80008000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, 0x80008000);
 			break;
 		case 2:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, 0x80008000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, 0x80008000);
 			break;
 		case 3:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, 0x80008000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, 0x80008000);
 			break;
 		case 4:
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, 0x8000);
-			Memory.rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, 0x8000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, 0x8000);
+			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, 0x8000);
 			break;
 		}
 	}
@@ -306,15 +307,15 @@ void TouchClass::resetXY()
 		switch (m_Index)
 		{
 		case 0:
-			Memory.rawWriteU32(ram, REG_TOUCH_RZ, 32767);
-			Memory.rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-			Memory.rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
+			s_Memory->rawWriteU32(ram, REG_TOUCH_RZ, 32767);
+			s_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+			s_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 			break;
 		}
 	}
 	m_LastJitteredTime = FT8XXEMU::System.getMicros();
 	if (doPoke)
-		Memory.poke();
+		s_Memory->poke();
 }
 
 // Get XY value interpolated etc
@@ -338,8 +339,9 @@ void resetTouchScreenXY(int idx)
 	Touch[idx].resetXY();
 }
 
-void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode)
+void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode, Memory *memory)
 {
+	s_Memory = memory;
 	s_EmulatorMode = emulatorMode;
 	s_TouchScreenFrameTime = 0;
 	s_TouchScreenJitter = true;
@@ -385,12 +387,12 @@ void TouchClass::end()
 
 bool TouchClass::multiTouch()
 {
-	uint8_t *ram = Memory.getRam();
+	uint8_t *ram = s_Memory->getRam();
 #ifdef FT810EMU_MODE
-	return (Memory.rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
+	return (s_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
 #else
 	return s_EmulatorMode >= BT8XXEMU_EmulatorFT801
-		&& ((Memory.rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
+		&& ((s_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
 #endif
 }
 

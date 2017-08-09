@@ -1,8 +1,8 @@
 /**
- * MemoryClass
+ * Memory
  * $Id$
  * \file ft800emu_memory.cpp
- * \brief MemoryClass
+ * \brief Memory
  * \date 2013-06-21 21:53GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -31,19 +31,6 @@
 
 // using namespace ...;
 
-#ifdef FT810EMU_MODE
-#define FT800EMU_ROM_SIZE (1024 * 1024) // 1024 KiB
-#else
-#define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
-#endif
-#define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE) //(RAM_DL - FT800EMU_ROM_SIZE)
-
-#ifdef FT810EMU_MODE
-#define FT800EMU_OTP_SIZE (2048)
-#else
-#define FT800EMU_OTP_SIZE (2048)
-#endif
-
 #define FT800EMU_COPROCESSOR_MEMLOG 0
 #define FT800EMU_MCU_MEMLOG 0
 #define FT800EMU_DL_MEMLOG 0
@@ -52,73 +39,33 @@ using namespace FT8XXEMU;
 
 namespace FT800EMU {
 
-MemoryClass Memory;
 
-// RAM
-static uint32_t s_RamU32[FT800EMU_RAM_SIZE / sizeof(uint32_t)];
-static uint8_t *s_Ram = static_cast<uint8_t *>(static_cast<void *>(s_RamU32));
-static uint32_t s_DisplayListA[FT800EMU_DISPLAY_LIST_SIZE];
-static uint32_t s_DisplayListB[FT800EMU_DISPLAY_LIST_SIZE];
-static uint32_t *s_DisplayListActive = s_DisplayListA;
-static uint32_t *s_DisplayListFree = s_DisplayListB;
 
-static int s_DisplayListCoprocessorWrites[FT800EMU_DISPLAY_LIST_SIZE];
-static ramaddr s_LastCoprocessorCommandRead = -1;
 
-static int s_DirectSwapCount;
-static int s_RealSwapCount;
-static int s_WriteOpCount;
-//static bool s_CoprocessorWritesDL;
 
-// Avoid getting hammered in wait loops
-static ramaddr s_LastCoprocessorRead = -1;
-static int s_IdenticalCoprocessorReadCounter = 0;
-static int s_SwapCoprocessorReadCounter = 0;
-static int s_WaitCoprocessorReadCounter = 0;
-#ifdef FT810EMU_MODE
-static int s_FifoCoprocessorReadCounter = 0;
-#endif
+//static void (*m_Interrupt)());
 
-static ramaddr s_LastMCURead = -1;
-static int s_IdenticalMCUReadCounter = 0;
-static int s_WaitMCUReadCounter = 0;
-static int s_SwapMCUReadCounter = 0;
-#ifdef FT810EMU_MODE
-static int s_FifoMCUReadCounter = 0;
-#endif
-
-static bool s_ReadDelay;
-
-static bool s_CpuReset = false;
-
-static BT8XXEMU_EmulatorMode s_EmulatorMode;
-
-static ThreadState *s_ThreadMCU = NULL;
-static ThreadState *s_ThreadCoprocessor = NULL;
-
-//static void (*s_Interrupt)());
-
-int MemoryClass::getDirectSwapCount()
+int Memory::getDirectSwapCount()
 {
-	return s_DirectSwapCount;
+	return m_DirectSwapCount;
 }
 
-int MemoryClass::getWriteOpCount()
+int Memory::getWriteOpCount()
 {
-	return s_WriteOpCount;
+	return m_WriteOpCount;
 }
 
-void MemoryClass::poke()
+void Memory::poke()
 {
-	++s_WriteOpCount;
+	++m_WriteOpCount;
 }
 
-/*void MemoryClass::setInterrupt(void (*interrupt)())
+/*void Memory::setInterrupt(void (*interrupt)())
 {
-	s_Interrupt = interrupt;
+	m_Interrupt = interrupt;
 }*/
 
-bool MemoryClass::intnLow()
+bool Memory::intnLow()
 {
 	uint8_t en = rawReadU8(REG_INT_EN);
 	if (en & 0x01)
@@ -133,20 +80,20 @@ bool MemoryClass::intnLow()
 	}
 }
 
-bool MemoryClass::intnHigh()
+bool Memory::intnHigh()
 {
 	return !intnLow();
 }
 
-bool MemoryClass::coprocessorGetReset()
+bool Memory::coprocessorGetReset()
 {
-	bool result = s_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
-	s_CpuReset = false;
+	bool result = m_CpuReset || (rawReadU8(REG_CPURESET) & 0x01);
+	m_CpuReset = false;
 	return result;
 }
 
 template<typename T>
-BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &data)
+BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -156,20 +103,20 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 		{
 		case REG_PCLK:
 			// FTEMU_printf("Write REG_PCLK %u\n", (uint32_t)data);
-			// if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
-			if (data == 0 && (s_Ram[REG_DLSWAP] == DLSWAP_FRAME || s_Ram[REG_DLSWAP] == DLSWAP_LINE))
+			// if (data == 0 && m_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+			if (data == 0 && (m_Ram[REG_DLSWAP] == DLSWAP_FRAME || m_Ram[REG_DLSWAP] == DLSWAP_LINE))
 			{
 				// FTEMU_printf("Direct swap from REG_PCLK\n");
 				// Direct swap
 				FT8XXEMU::System.enterSwapDL();
-				// if (data == 0 && s_Ram[REG_DLSWAP] == DLSWAP_FRAME)
-				if (data == 0 && (s_Ram[REG_DLSWAP] == DLSWAP_FRAME || s_Ram[REG_DLSWAP] == DLSWAP_LINE))
+				// if (data == 0 && m_Ram[REG_DLSWAP] == DLSWAP_FRAME)
+				if (data == 0 && (m_Ram[REG_DLSWAP] == DLSWAP_FRAME || m_Ram[REG_DLSWAP] == DLSWAP_LINE))
 				{
 					swapDisplayList();
-					s_Ram[REG_DLSWAP] = 0;
+					m_Ram[REG_DLSWAP] = 0;
 					flagDLSwap();
 					GraphicsProcessor.processBlank();
-					++s_DirectSwapCount;
+					++m_DirectSwapCount;
 				}
 				FT8XXEMU::System.leaveSwapDL();
 			}
@@ -178,20 +125,20 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 #if FT800EMU_DL_MEMLOG
 			FTEMU_printf("Write REG_DLSWAP %u\n", data);
 #endif
-			// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
-			if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
+			// if (data == DLSWAP_FRAME && m_Ram[REG_PCLK] == 0)
+			if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && m_Ram[REG_PCLK] == 0)
 			{
 				// FTEMU_printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
 				FT8XXEMU::System.enterSwapDL();
-				// if (data == DLSWAP_FRAME && s_Ram[REG_PCLK] == 0)
-				if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && s_Ram[REG_PCLK] == 0)
+				// if (data == DLSWAP_FRAME && m_Ram[REG_PCLK] == 0)
+				if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && m_Ram[REG_PCLK] == 0)
 				{
 					// FTEMU_printf("Go\n");
 					swapDisplayList();
 					data = 0;
 					GraphicsProcessor.processBlank();
-					++s_DirectSwapCount;
+					++m_DirectSwapCount;
 				}
 				// else
 				// {
@@ -224,7 +171,7 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 			if (data & 0x01)
 			{
 				// TODO: Perhaps this should lock until the cpu reset is actually pushed through to ensure following commands go through...
-				s_CpuReset = true;
+				m_CpuReset = true;
 			}
 			break;
 		case REG_SNAPSHOT:
@@ -266,7 +213,7 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::actionWrite(const ramaddr address, T &da
 }
 
 template<typename T>
-BT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T data)
+BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data)
 {
 	// switches for 1 byte regs
 	// least significant byte
@@ -279,7 +226,7 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T
 			break;
 		case REG_CTOUCH_EXTENDED:
 #ifndef FT810EMU_MODE
-			if (s_EmulatorMode >= BT8XXEMU_EmulatorFT801)
+			if (m_EmulatorMode >= BT8XXEMU_EmulatorFT801)
 #endif
 			{
 				if (!TouchClass::multiTouch())
@@ -305,69 +252,72 @@ BT8XXEMU_FORCE_INLINE void MemoryClass::postWrite(const ramaddr address, const T
 	}
 }
 
-BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU32(ramaddr address, uint32_t data)
+BT8XXEMU_FORCE_INLINE void Memory::rawWriteU32(ramaddr address, uint32_t data)
 {
-	rawWriteU32(s_Ram, address, data);
+	rawWriteU32(m_Ram, address, data);
 }
 
-BT8XXEMU_FORCE_INLINE uint32_t MemoryClass::rawReadU32(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint32_t Memory::rawReadU32(ramaddr address)
 {
-	return rawReadU32(s_Ram, address);
+	return rawReadU32(m_Ram, address);
 }
 
-BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU16(ramaddr address, uint16_t data)
+BT8XXEMU_FORCE_INLINE void Memory::rawWriteU16(ramaddr address, uint16_t data)
 {
-	rawWriteU16(s_Ram, address, data);
+	rawWriteU16(m_Ram, address, data);
 }
 
-BT8XXEMU_FORCE_INLINE uint16_t MemoryClass::rawReadU16(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint16_t Memory::rawReadU16(ramaddr address)
 {
-	return rawReadU16(s_Ram, address);
+	return rawReadU16(m_Ram, address);
 }
 
-BT8XXEMU_FORCE_INLINE void MemoryClass::rawWriteU8(ramaddr address, uint8_t data)
+BT8XXEMU_FORCE_INLINE void Memory::rawWriteU8(ramaddr address, uint8_t data)
 {
-	rawWriteU8(s_Ram, address, data);
+	rawWriteU8(m_Ram, address, data);
 }
 
-BT8XXEMU_FORCE_INLINE uint8_t MemoryClass::rawReadU8(ramaddr address)
+BT8XXEMU_FORCE_INLINE uint8_t Memory::rawReadU8(ramaddr address)
 {
-	return rawReadU8(s_Ram, address);
+	return rawReadU8(m_Ram, address);
 }
 
 #ifdef FT810EMU_MODE
-static const uint8_t s_RomFT810[FT800EMU_ROM_SIZE] = {
+static const uint8_t m_RomFT810[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft810.h"
 };
 #else
-static const uint8_t s_RomFT800[FT800EMU_ROM_SIZE] = {
+static const uint8_t m_RomFT800[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft800.h"
 };
-static const uint8_t s_RomFT801[FT800EMU_ROM_SIZE] = {
+static const uint8_t m_RomFT801[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft801.h"
 };
 #endif
 
 #ifdef FT800EMU_OTP_SIZE
-static const uint8_t s_OTP810[FT800EMU_OTP_SIZE] = {
+static const uint8_t m_OTP810[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_810.h"
 };
-static const uint8_t s_OTP811[FT800EMU_OTP_SIZE] = {
+static const uint8_t m_OTP811[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_811.h"
 };
-static const uint8_t s_OTP812[FT800EMU_OTP_SIZE] = {
+static const uint8_t m_OTP812[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_812.h"
 };
-static const uint8_t s_OTP813[FT800EMU_OTP_SIZE] = {
+static const uint8_t m_OTP813[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_813.h"
 };
 #endif
 
-void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFilePath, const char *otpFilePath)
+Memory::Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
+	FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
+	const char *romFilePath, const char *otpFilePath)
+	: m_SwapDLMutex(swapDLMutex), m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 {
-	memset(s_Ram, 0, FT800EMU_RAM_SIZE);
-	memset(s_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
-	memset(s_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
+	// memset(m_Ram, 0, FT800EMU_RAM_SIZE);
+	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
+	// memset(m_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	
 	if (romFilePath)
 	{
@@ -376,7 +326,7 @@ void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 		if (!f) FTEMU_printf("Failed to open ROM file\n");
 		else
 		{
-			size_t s = fread(&s_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
+			size_t s = fread(&m_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
 			if (s != FT800EMU_ROM_SIZE) FTEMU_printf("Incomplete ROM file\n");
 			else FTEMU_printf("Loaded ROM file\n");
 			if (fclose(f)) FTEMU_printf("Error closing ROM file\n");
@@ -385,10 +335,10 @@ void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	else
 	{
 #ifdef FT810EMU_MODE
-		memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT810, sizeof(s_RomFT810));
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT810, sizeof(m_RomFT810));
 #else
-		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT801, sizeof(s_RomFT801));
-		else memcpy(&s_Ram[FT800EMU_ROM_INDEX], s_RomFT800, sizeof(s_RomFT800));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT801, sizeof(m_RomFT801));
+		else memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT800, sizeof(m_RomFT800));
 #endif
 	}
 
@@ -399,7 +349,7 @@ void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 		if (!f) FTEMU_printf("Failed to open OTP file\n");
 		else
 		{
-			size_t s = fread(&s_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
+			size_t s = fread(&m_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
 			if (s != FT800EMU_OTP_SIZE) FTEMU_printf("Incomplete OTP file\n");
 			else FTEMU_printf("Loaded OTP file\n");
 			if (fclose(f)) FTEMU_printf("Error closing OTP file\n");
@@ -408,37 +358,37 @@ void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	else
 	{
 #ifdef FT810EMU_MODE
-		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&s_Ram[RAM_JTBOOT], s_OTP813, sizeof(s_OTP813));
-		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&s_Ram[RAM_JTBOOT], s_OTP812, sizeof(s_OTP812));
-		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&s_Ram[RAM_JTBOOT], s_OTP811, sizeof(s_OTP811));
-		else memcpy(&s_Ram[RAM_JTBOOT], s_OTP810, sizeof(s_OTP810));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], m_OTP813, sizeof(m_OTP813));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], m_OTP812, sizeof(m_OTP812));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&m_Ram[RAM_JTBOOT], m_OTP811, sizeof(m_OTP811));
+		else memcpy(&m_Ram[RAM_JTBOOT], m_OTP810, sizeof(m_OTP810));
 #endif
 	}
 
-	s_DirectSwapCount = 0;
-	s_RealSwapCount = 0;
-	s_WriteOpCount = 0;
-	//s_CoprocessorWritesDL = false;
+	m_DirectSwapCount = 0;
+	m_RealSwapCount = 0;
+	m_WriteOpCount = 0;
+	//m_CoprocessorWritesDL = false;
 
-	s_ReadDelay = false;
+	m_ReadDelay = false;
 
-	s_LastCoprocessorRead = -1;
-	s_IdenticalCoprocessorReadCounter = 0;
-	s_SwapCoprocessorReadCounter = 0;
-	s_WaitCoprocessorReadCounter = 0;
+	m_LastCoprocessorRead = -1;
+	m_IdenticalCoprocessorReadCounter = 0;
+	m_SwapCoprocessorReadCounter = 0;
+	m_WaitCoprocessorReadCounter = 0;
 #ifdef FT810EMU_MODE
-	s_FifoCoprocessorReadCounter = 0;
+	m_FifoCoprocessorReadCounter = 0;
 #endif
 
-	s_LastMCURead = -1;
-	s_IdenticalMCUReadCounter = 0;
-	s_WaitMCUReadCounter = 0;
-	s_SwapMCUReadCounter = 0;
+	m_LastMCURead = -1;
+	m_IdenticalMCUReadCounter = 0;
+	m_WaitMCUReadCounter = 0;
+	m_SwapMCUReadCounter = 0;
 #ifdef FT810EMU_MODE
-	s_FifoMCUReadCounter = 0;
+	m_FifoMCUReadCounter = 0;
 #endif
 
-	s_EmulatorMode = emulatorMode;
+	m_EmulatorMode = emulatorMode;
 
 #ifdef FT810EMU_MODE
 	rawWriteU32(ROM_CHIPID, rawReadU32(RAM_JTBOOT + FT800EMU_OTP_SIZE - 4));
@@ -544,30 +494,20 @@ void MemoryClass::begin(BT8XXEMU_EmulatorMode emulatorMode, const char *romFileP
 	rawWriteU32(REG_J1_COLD, 1);
 #endif
 
-	s_CpuReset = false;
+	m_CpuReset = false;
 }
 
-void MemoryClass::end()
+Memory::~Memory()
 {
-
+	// ...
 }
 
-void MemoryClass::enableReadDelay(bool enabled)
+void Memory::enableReadDelay(bool enabled)
 {
-	s_ReadDelay = enabled;
+	m_ReadDelay = enabled;
 }
 
-uint8_t *MemoryClass::getRam()
-{
-	return s_Ram;
-}
-
-const uint32_t *MemoryClass::getDisplayList()
-{
-	return s_DisplayListActive;
-}
-
-void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
+void Memory::mcuWriteU32(ramaddr address, uint32_t data)
 {
 #if FT800EMU_MCU_MEMLOG
 	FTEMU_printf("MCU write U32 %i, %i\n", (int)address, (int)data);
@@ -580,8 +520,8 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 		return;
 	}
 
-	// s_WaitMCUReadCounter = 0;
-	// s_SwapMCUReadCounter = 0;
+	// m_WaitMCUReadCounter = 0;
+	// m_SwapMCUReadCounter = 0;
 
     actionWrite(address, data);
 	rawWriteU32(address, data);
@@ -592,58 +532,52 @@ void MemoryClass::mcuWriteU32(ramaddr address, uint32_t data)
 #endif
 		&& address < RAM_CMD)
 	{
-		++s_WriteOpCount;
+		++m_WriteOpCount;
 	}
 
 	switch (address)
 	{
 #ifdef FT810EMU_MODE
 	case REG_MEDIAFIFO_WRITE:
-		s_FifoCoprocessorReadCounter = 0;
+		m_FifoCoprocessorReadCounter = 0;
 		break;
 	case REG_CMDB_WRITE:
 #endif
 	case REG_CMD_WRITE:
-		s_WaitCoprocessorReadCounter = 0;
+		m_WaitCoprocessorReadCounter = 0;
 		break;
 	}
 
 	postWrite(address, data);
 }
 
-/* void MemoryClass::mcuWrite(ramaddr address, uint8_t data)
+/* void Memory::mcuWrite(ramaddr address, uint8_t data)
 {
-	s_SwapMCUReadCounter = 0;
+	m_SwapMCUReadCounter = 0;
 	if (address == REG_CMD_WRITE + 3)
 	{
-		s_WaitCoprocessorReadCounter = 0;
+		m_WaitCoprocessorReadCounter = 0;
 	}
     actionWrite(address, data);
 	rawWriteU8(address, data);
 } */
 
-void MemoryClass::setThreadState(FT8XXEMU::ThreadState *mcuThread, FT8XXEMU::ThreadState *coprocessorThread)
+void Memory::swapDisplayList()
 {
-	s_ThreadMCU = mcuThread;
-	s_ThreadCoprocessor = coprocessorThread;
-}
-
-void MemoryClass::swapDisplayList()
-{
-	memcpy(static_cast<void *>(s_DisplayListFree), static_cast<void *>(&s_Ram[RAM_DL]), sizeof(s_DisplayListA));
-	memcpy(static_cast<void *>(&s_Ram[RAM_DL]), static_cast<void *>(s_DisplayListActive), sizeof(s_DisplayListA));
-	uint32_t *active = s_DisplayListFree;
-	s_DisplayListFree = s_DisplayListActive;
-	s_DisplayListActive = active;
-	++s_RealSwapCount;
-	//if (s_CoprocessorWritesDL)
+	memcpy(static_cast<void *>(m_DisplayListFree), static_cast<void *>(&m_Ram[RAM_DL]), sizeof(m_DisplayListA));
+	memcpy(static_cast<void *>(&m_Ram[RAM_DL]), static_cast<void *>(m_DisplayListActive), sizeof(m_DisplayListA));
+	uint32_t *active = m_DisplayListFree;
+	m_DisplayListFree = m_DisplayListActive;
+	m_DisplayListActive = active;
+	++m_RealSwapCount;
+	//if (m_CoprocessorWritesDL)
 	//{
 		for (int c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
-			uint32_t v = s_DisplayListActive[c];
-			if (v != s_DisplayListFree[c])
+			uint32_t v = m_DisplayListActive[c];
+			if (v != m_DisplayListFree[c])
 			{
-				++s_WriteOpCount; // Display list changed
+				++m_WriteOpCount; // Display list changed
 				goto BreakLoop;
 			}
 			switch (v >> 24)
@@ -653,27 +587,27 @@ void MemoryClass::swapDisplayList()
 			case FT800EMU_DL_JUMP:
 			case FT800EMU_DL_CALL:
 			case FT800EMU_DL_RETURN:
-				++s_WriteOpCount; // Not optimized
+				++m_WriteOpCount; // Not optimized
 				goto BreakLoop;
 			}
 		}
 	BreakLoop:;
-	//	s_CoprocessorWritesDL = false;
+	//	m_CoprocessorWritesDL = false;
 	//}
 }
 
-int MemoryClass::getRealSwapCount()
+int Memory::getRealSwapCount()
 {
-	return s_RealSwapCount;
+	return m_RealSwapCount;
 }
 
-void MemoryClass::flagDLSwap()
+void Memory::flagDLSwap()
 {
-	s_SwapMCUReadCounter = 0;
-	s_SwapCoprocessorReadCounter = 0;
+	m_SwapMCUReadCounter = 0;
+	m_SwapCoprocessorReadCounter = 0;
 }
 
-uint32_t MemoryClass::mcuReadU32(ramaddr address)
+uint32_t Memory::mcuReadU32(ramaddr address)
 {
 #if FT800EMU_MCU_MEMLOG
 	// if (address != 3182612 && address != 3182616)
@@ -687,60 +621,60 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 		return 0;
 	}
 
-	if (s_ReadDelay)
+	if (m_ReadDelay)
 	{
 		switch (address)
 		{
 #ifdef FT810EMU_MODE
 		case REG_MEDIAFIFO_READ:
-			++s_FifoMCUReadCounter;
-			if (s_FifoMCUReadCounter > 8)
+			++m_FifoMCUReadCounter;
+			if (m_FifoMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
-				s_ThreadCoprocessor->prioritize();
+				m_ThreadCoprocessor.prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				s_ThreadCoprocessor->unprioritize();
+				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
 		case REG_CMDB_SPACE:
 #endif
 		case REG_CMD_READ: // wait for read advance from coprocessor thread
-			++s_WaitMCUReadCounter;
-			if (s_WaitMCUReadCounter > 8)
+			++m_WaitMCUReadCounter;
+			if (m_WaitMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
-				s_ThreadCoprocessor->prioritize();
+				m_ThreadCoprocessor.prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				s_ThreadCoprocessor->unprioritize();
+				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
-			++s_SwapMCUReadCounter;
-			if (s_SwapMCUReadCounter > 8)
+			++m_SwapMCUReadCounter;
+			if (m_SwapMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
-				s_ThreadCoprocessor->prioritize();
+				m_ThreadCoprocessor.prioritize();
 				FT8XXEMU::System.delayForMCU(1);
-				s_ThreadCoprocessor->unprioritize();
+				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
 		default:
-			if (s_LastMCURead == address)
+			if (m_LastMCURead == address)
 			{
-				++s_IdenticalMCUReadCounter;
-				if (s_IdenticalMCUReadCounter > 8)
+				++m_IdenticalMCUReadCounter;
+				if (m_IdenticalMCUReadCounter > 8)
 				{
 					// FTEMU_printf(" Switch ");
-					s_ThreadCoprocessor->prioritize();
+					m_ThreadCoprocessor.prioritize();
 					FT8XXEMU::System.switchThread();
-					s_ThreadCoprocessor->unprioritize();
+					m_ThreadCoprocessor.unprioritize();
 				}
 			}
 			else
 			{
 				// FTEMU_printf("Reset %i\n", address);
-				s_LastMCURead = address;
-				s_IdenticalMCUReadCounter = 0;
+				m_LastMCURead = address;
+				m_IdenticalMCUReadCounter = 0;
 			}
 			break;
 		}
@@ -772,15 +706,15 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 	return rawReadU32(address);
 }
 
-/* uint8_t MemoryClass::mcuRead(ramaddr address)
+/* uint8_t Memory::mcuRead(ramaddr address)
 {
-	if (s_ReadDelay && address % 4 == 0)
+	if (m_ReadDelay && address % 4 == 0)
 	{
 		switch (address)
 		{
 		case REG_CMD_READ: // wait for read advance from coprocessor thread
-			++s_SwapMCUReadCounter;
-			if (s_SwapMCUReadCounter > 8)
+			++m_SwapMCUReadCounter;
+			if (m_SwapMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
@@ -789,8 +723,8 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
-			++s_WaitMCUReadCounter;
-			if (s_WaitMCUReadCounter > 8)
+			++m_WaitMCUReadCounter;
+			if (m_WaitMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
 				System.prioritizeCoprocessorThread();
@@ -799,10 +733,10 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			}
 			break;
 		default:
-			if (s_LastMCURead == address)
+			if (m_LastMCURead == address)
 			{
-				++s_IdenticalMCUReadCounter;
-				if (s_IdenticalMCUReadCounter > 8)
+				++m_IdenticalMCUReadCounter;
+				if (m_IdenticalMCUReadCounter > 8)
 				{
 					// FTEMU_printf(" Switch ");
 					System.prioritizeCoprocessorThread();
@@ -813,8 +747,8 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 			else
 			{
 				// FTEMU_printf("Reset %i\n", address);
-				s_LastMCURead = address;
-				s_IdenticalMCUReadCounter = 0;
+				m_LastMCURead = address;
+				m_IdenticalMCUReadCounter = 0;
 			}
 			break;
 		}
@@ -823,7 +757,7 @@ uint32_t MemoryClass::mcuReadU32(ramaddr address)
 	return rawReadU8(address);
 } */
 
-void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
+void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	FTEMU_printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
@@ -844,11 +778,11 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
-		//s_CoprocessorWritesDL = true;
+		//m_CoprocessorWritesDL = true;
 		int dlAddr = (int)((address - RAM_DL) >> 2);
-		s_DisplayListCoprocessorWrites[dlAddr] = s_LastCoprocessorCommandRead;
+		m_DisplayListCoprocessorWrites[dlAddr] = m_LastCoprocessorCommandRead;
 #if FT800EMU_DL_MEMLOG
-		FTEMU_printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)s_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
+		FTEMU_printf("Coprocessor command at %i writes value 0x%x to display list at %i\n", (int)m_LastCoprocessorCommandRead, (unsigned int)data, (int)dlAddr);
 #endif
 	}
 	else if (address != REG_DLSWAP
@@ -856,7 +790,7 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 		&& address != REG_J1_INT && address != REG_INT_FLAGS
 		&& address < RAM_J1RAM)
 	{
-		++s_WriteOpCount;
+		++m_WriteOpCount;
 	}
 
     actionWrite(address, data);
@@ -867,23 +801,23 @@ void MemoryClass::coprocessorWriteU32(ramaddr address, uint32_t data)
 	{
 #ifdef FT810EMU_MODE
 	case REG_MEDIAFIFO_READ:
-		s_FifoMCUReadCounter = 0;
+		m_FifoMCUReadCounter = 0;
 		break;
 	case REG_CMDB_SPACE:
 #endif
 	case REG_CMD_READ:
-		s_WaitMCUReadCounter = 0;
+		m_WaitMCUReadCounter = 0;
 		break;
 	}
 }
 
-static uint32_t s_OverrideRasterY = 0;
+static uint32_t m_OverrideRasterY = 0;
 #ifndef FT810EMU_MODE
-static int s_HasCachedTouchRawXY = 0;
-static uint32_t s_CachedTouchRawXY = 0xFFFFFFFF;
+static int m_HasCachedTouchRawXY = 0;
+static uint32_t m_CachedTouchRawXY = 0xFFFFFFFF;
 #endif
 
-uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
+uint32_t Memory::coprocessorReadU32(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	// if (address != 3182612 && address != 3182616)
@@ -913,62 +847,62 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		return 0;
 	}
 
-	if (s_ReadDelay && address < RAM_J1RAM)
+	if (m_ReadDelay && address < RAM_J1RAM)
 	{
 		switch (address)
 		{
 #ifdef FT810EMU_MODE
 		case REG_MEDIAFIFO_WRITE:
-			++s_FifoCoprocessorReadCounter;
-			if (s_FifoCoprocessorReadCounter > 8)
+			++m_FifoCoprocessorReadCounter;
+			if (m_FifoCoprocessorReadCounter > 8)
 			{
-				s_ThreadMCU->prioritize();
+				m_ThreadMCU.prioritize();
 				FT8XXEMU::System.delay(1);
-				s_ThreadMCU->unprioritize();
+				m_ThreadMCU.unprioritize();
 			}
 			break;
 #endif
 		case REG_CMD_WRITE: // wait for writes from mcu thread
-			++s_WaitCoprocessorReadCounter;
-			if (s_WaitCoprocessorReadCounter > 8)
+			++m_WaitCoprocessorReadCounter;
+			if (m_WaitCoprocessorReadCounter > 8)
 			{
-				s_ThreadMCU->prioritize();
+				m_ThreadMCU.prioritize();
 				FT8XXEMU::System.delay(1);
-				s_ThreadMCU->unprioritize();
+				m_ThreadMCU.unprioritize();
 			}
 			break;
 		case REG_DLSWAP: // wait for frame swap from main thread
-			++s_SwapCoprocessorReadCounter;
-			if (s_SwapCoprocessorReadCounter > 8)
+			++m_SwapCoprocessorReadCounter;
+			if (m_SwapCoprocessorReadCounter > 8)
 			{
 				// FTEMU_printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
-				s_ThreadMCU->prioritize();
+				m_ThreadMCU.prioritize();
 				FT8XXEMU::System.delay(1);
-				s_ThreadMCU->unprioritize();
+				m_ThreadMCU.unprioritize();
 			}
 			break;
 		default:
 			if (address >= RAM_CMD && address < RAM_CMD + 4096)
 			{
-				s_WaitCoprocessorReadCounter = 0;
-				s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
+				m_WaitCoprocessorReadCounter = 0;
+				m_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 			}
-			if (s_LastCoprocessorRead == address || (address == REG_TOUCH_RAW_XY && s_LastCoprocessorRead == REG_TOUCH_RZ))
+			if (m_LastCoprocessorRead == address || (address == REG_TOUCH_RAW_XY && m_LastCoprocessorRead == REG_TOUCH_RZ))
 			{
-				++s_IdenticalCoprocessorReadCounter;
-				if (s_IdenticalCoprocessorReadCounter > 8)
+				++m_IdenticalCoprocessorReadCounter;
+				if (m_IdenticalCoprocessorReadCounter > 8)
 				{
 					// FTEMU_printf(" Switch ");
-					s_ThreadMCU->prioritize();
+					m_ThreadMCU.prioritize();
 					FT8XXEMU::System.switchThread();
-					s_ThreadMCU->unprioritize();
+					m_ThreadMCU.unprioritize();
 				}
 			}
 			else
 			{
 				// FTEMU_printf("Reset %i\n", address);
-				s_LastCoprocessorRead = address;
-				s_IdenticalCoprocessorReadCounter = 0;
+				m_LastCoprocessorRead = address;
+				m_IdenticalCoprocessorReadCounter = 0;
 			}
 			break;
 		}
@@ -977,12 +911,12 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
-			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
+			m_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 #ifdef FT810EMU_MODE
 		else if (address < RAM_DL)
 		{
-			s_FifoCoprocessorReadCounter = 0;
+			m_FifoCoprocessorReadCounter = 0;
 		}
 #endif
 	}
@@ -994,42 +928,42 @@ uint32_t MemoryClass::coprocessorReadU32(ramaddr address)
 		// TODO: MULTITOUCH 1,2,3,4
 #ifndef FT810EMU_MODE
 	case REG_TOUCH_RZ:
-		if (s_EmulatorMode == BT8XXEMU_EmulatorFT800)
+		if (m_EmulatorMode == BT8XXEMU_EmulatorFT800)
 		{
-			s_CachedTouchRawXY = rawReadU32(REG_TOUCH_RAW_XY);
-			if (s_CachedTouchRawXY != 0xFFFFFFFF)
+			m_CachedTouchRawXY = rawReadU32(REG_TOUCH_RAW_XY);
+			if (m_CachedTouchRawXY != 0xFFFFFFFF)
 			{
-				s_HasCachedTouchRawXY = 2;
+				m_HasCachedTouchRawXY = 2;
 			}
 			else
 			{
-				s_HasCachedTouchRawXY = 0;
+				m_HasCachedTouchRawXY = 0;
 				return 32767;
 			}
 		}
 		break;
 	case REG_TOUCH_RAW_XY:
-		if (s_EmulatorMode == BT8XXEMU_EmulatorFT800)
+		if (m_EmulatorMode == BT8XXEMU_EmulatorFT800)
 		{
-			if (s_HasCachedTouchRawXY)
+			if (m_HasCachedTouchRawXY)
 			{
-				--s_HasCachedTouchRawXY;
-				return s_CachedTouchRawXY;
+				--m_HasCachedTouchRawXY;
+				return m_CachedTouchRawXY;
 			}
 		}
 		break;
 #endif
 #ifdef FT810EMU_MODE
 	case REG_RASTERY:
-		++s_OverrideRasterY;
-		return ((s_OverrideRasterY & 1) << 11); // Override REG_RASTERY
+		++m_OverrideRasterY;
+		return ((m_OverrideRasterY & 1) << 11); // Override REG_RASTERY
 #endif
 	}
 
 	return rawReadU32(address);
 }
 
-void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
+void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	FTEMU_printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
@@ -1037,7 +971,7 @@ void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
 
 	if (address < RAM_J1RAM)
 	{
-		++s_WriteOpCount;
+		++m_WriteOpCount;
 	}
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
@@ -1051,7 +985,7 @@ void MemoryClass::coprocessorWriteU16(ramaddr address, uint16_t data)
 	postWrite(address, data);
 }
 
-uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
+uint16_t Memory::coprocessorReadU16(ramaddr address)
 {
 	// FTEMU_printf("Coprocessor read U16 %i\n", (int)address);
 
@@ -1059,13 +993,13 @@ uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
-			s_WaitCoprocessorReadCounter = 0;
-			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
+			m_WaitCoprocessorReadCounter = 0;
+			m_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 #ifdef FT810EMU_MODE
 		else if (address < RAM_DL)
 		{
-			s_FifoCoprocessorReadCounter = 0;
+			m_FifoCoprocessorReadCounter = 0;
 		}
 #endif
 	}
@@ -1079,7 +1013,7 @@ uint16_t MemoryClass::coprocessorReadU16(ramaddr address)
 	return rawReadU16(address);
 }
 
-void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
+void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	FTEMU_printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
@@ -1087,7 +1021,7 @@ void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
 
 	if (address < RAM_J1RAM)
 	{
-		++s_WriteOpCount;
+		++m_WriteOpCount;
 	}
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
@@ -1108,7 +1042,7 @@ void MemoryClass::coprocessorWriteU8(ramaddr address, uint8_t data)
 	postWrite(address, data);
 }
 
-uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
+uint8_t Memory::coprocessorReadU8(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	FTEMU_printf("Coprocessor read U8 %i\n", (int)address);
@@ -1124,13 +1058,13 @@ uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
 	{
 		if (address >= RAM_CMD && address < RAM_CMD + 4096)
 		{
-			s_WaitCoprocessorReadCounter = 0;
-			s_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
+			m_WaitCoprocessorReadCounter = 0;
+			m_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
 		}
 #ifdef FT810EMU_MODE
 		else if (address < RAM_DL)
 		{
-			s_FifoCoprocessorReadCounter = 0;
+			m_FifoCoprocessorReadCounter = 0;
 		}
 #endif
 	}
@@ -1138,16 +1072,16 @@ uint8_t MemoryClass::coprocessorReadU8(ramaddr address)
 	return rawReadU8(address);
 }
 
-int *MemoryClass::getDisplayListCoprocessorWrites()
+int *Memory::getDisplayListCoprocessorWrites()
 {
-	return s_DisplayListCoprocessorWrites;
+	return m_DisplayListCoprocessorWrites;
 }
 
-void MemoryClass::clearDisplayListCoprocessorWrites()
+void Memory::clearDisplayListCoprocessorWrites()
 {
 	for (int i = 0; i < FT800EMU_DISPLAY_LIST_SIZE; ++i)
 	{
-		s_DisplayListCoprocessorWrites[i] = -1;
+		m_DisplayListCoprocessorWrites[i] = -1;
 	}
 }
 

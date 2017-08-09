@@ -27,9 +27,6 @@
 #include "ft8xxemu_inttypes.h"
 #include "ft8xxemu_thread_state.h"
 
-#include "ft8xxemu_window_output.h"
-#include "ft8xxemu_audio_output.h"
-
 #ifndef BT8XXEMU_EMULATOR_H
 #define BT8XXEMU_EMULATOR_H
 namespace BT8XXEMU {
@@ -51,14 +48,16 @@ public:
 
 	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
 	virtual void touchResetXY(int idx) = 0;
-
+	*/
 
 	virtual uint8_t *getRam() = 0;
 	// virtual uint8_t *getFlash() = 0;
 	virtual const uint32_t *getDisplayList() = 0;
 	virtual void poke() = 0;
-	virtual int getDisplayListCoprocessorWrites() = 0;
+	virtual int *getDisplayListCoprocessorWrites() = 0;
 	virtual void clearDisplayListCoprocessorWrites() = 0;
+
+	/*
 	virtual bool getDebugLimiterEffective() = 0;
 	virtual int getDebugLimiterIndex() = 0;
 	virtual void setDebugLimiter(int debugLimiter);
@@ -70,7 +69,13 @@ public:
 }
 #endif
 
+namespace FT8XXEMU {
+	class WindowOutput;
+	class AudioOutput;
+}
+
 namespace FT800EMU {
+	class Memory;
 
 /**
  * Emulator
@@ -85,7 +90,14 @@ public:
 	~Emulator() { }
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
-	virtual void stop();
+	virtual void stop() override;
+
+	virtual uint8_t *getRam() override;
+	// virtual uint8_t *getFlash() override;
+	virtual const uint32_t *getDisplayList() override;
+	virtual void poke() override;
+	virtual int *getDisplayListCoprocessorWrites() override;
+	virtual void clearDisplayListCoprocessorWrites() override;
 
 private:
 	int masterThread();
@@ -131,8 +143,12 @@ private:
 	FT8XXEMU::ThreadState m_ThreadCoprocessor; //< Coprocessor thread
 	FT8XXEMU::ThreadState m_ThreadAudio; //< Audio thread
 
+	std::mutex m_SwapDLMutex;
+
 	FT8XXEMU::WindowOutput *m_WindowOutput = NULL;
 	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
+
+	Memory *m_Memory = NULL;
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

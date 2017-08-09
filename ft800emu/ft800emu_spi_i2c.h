@@ -22,6 +22,7 @@
 #include "ft8xxemu_inttypes.h"
 
 namespace FT800EMU {
+	class Memory;
 
 /**
  * SPII2CClass
@@ -34,7 +35,7 @@ class SPII2CClass
 public:
 	SPII2CClass() { }
 
-	static void begin();
+	static void begin(Memory *memory);
 	static void end();
 
 	static void csLow(int low = 1);

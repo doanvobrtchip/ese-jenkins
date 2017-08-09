@@ -24,6 +24,7 @@ namespace FT8XXEMU {
 }
 
 namespace FT800EMU {
+	class Memory;
 
 /**
  * AudioRenderClass
@@ -36,7 +37,7 @@ class AudioRenderClass
 public:
 	AudioRenderClass() { }
 
-	static void begin(FT8XXEMU::AudioOutput *audioOutput);
+	static void begin(FT8XXEMU::AudioOutput *audioOutput, Memory *memory);
 	static void end();
 
 	static void playbackPlay();

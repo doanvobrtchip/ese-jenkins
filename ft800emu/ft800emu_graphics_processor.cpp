@@ -82,6 +82,8 @@ GraphicsProcessorClass GraphicsProcessor;
 
 namespace {
 
+Memory *s_Memory;
+
 #pragma region Graphics State
 
 struct GraphicsState
@@ -1008,7 +1010,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
 	const BitmapInfo &bi = bitmapInfo[handle];
-	const uint8_t *ram = Memory.getRam();
+	const uint8_t *ram = s_Memory->getRam();
 
 #ifdef FT810EMU_MODE
 	int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
@@ -1043,7 +1045,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int vy = y * 16;
 		int ry = vy - py;
 		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
-		// uint8_t *sampleSrc = &Memory.getRam()[sampleSrcPos];
+		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
 		int sampleFormat = bi.LayoutFormat;
 		int sampleWidth = bi.LayoutWidth;
 		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
@@ -2374,8 +2376,9 @@ static int s_DebugLimiterIndex;
 
 static int s_ThreadCount;
 
-void GraphicsProcessorClass::begin()
+void GraphicsProcessorClass::begin(Memory *memory)
 {
+	s_Memory = memory;
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	s_DebugMultiplier = 1;
 	s_DebugLimiter = 0;
@@ -2385,18 +2388,18 @@ void GraphicsProcessorClass::begin()
 	s_RegPwmDutyEmulation = false;
 	s_ThreadCount = 1;
 
-	uint8_t *ram = Memory.getRam();
-	uint32_t fi = Memory.rawReadU32(ram, FT800EMU_ROM_FONTINFO);
+	uint8_t *ram = s_Memory->getRam();
+	uint32_t fi = s_Memory->rawReadU32(ram, FT800EMU_ROM_FONTINFO);
 	if (FT800EMU_DEBUG) FTEMU_printf("Font index: %u\n", fi);
 	for (int i = 0; i < 16; ++i)
 	{
 		int ir = i + 16;
 		uint32_t bi = (i * 148) + fi;
-		uint32_t format =  Memory.rawReadU32(ram, bi + 128);
-		uint32_t stride =  Memory.rawReadU32(ram, bi + 132);
-		uint32_t width =  Memory.rawReadU32(ram, bi + 136);
-		uint32_t height =  Memory.rawReadU32(ram, bi + 140);
-		uint32_t data =  Memory.rawReadU32(ram, bi + 144);
+		uint32_t format =  s_Memory->rawReadU32(ram, bi + 128);
+		uint32_t stride =  s_Memory->rawReadU32(ram, bi + 132);
+		uint32_t width =  s_Memory->rawReadU32(ram, bi + 136);
+		uint32_t height =  s_Memory->rawReadU32(ram, bi + 140);
+		uint32_t data =  s_Memory->rawReadU32(ram, bi + 144);
 		if (FT800EMU_DEBUG) FTEMU_printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
 		s_BitmapInfoMain[ir].Source = data;
@@ -2545,8 +2548,8 @@ namespace {
 
 void processBlankDL(BitmapInfo *const bitmapInfo)
 {
-	uint8_t *const ram = Memory.getRam();
-	const uint32_t *displayList = Memory.getDisplayList();
+	uint8_t *const ram = s_Memory->getRam();
+	const uint32_t *displayList = s_Memory->getDisplayList();
 
 	GraphicsState gs = GraphicsState(
 #ifdef FT810EMU_MODE
@@ -2647,7 +2650,7 @@ EvaluateDisplayListValue:
 			callstack.pop();
 			break;
 		case FT800EMU_DL_MACRO:
-			v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
+			v = s_Memory->rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
 			// What happens when the macro macros itself? :)
 			goto EvaluateDisplayListValue;
 			break;
@@ -2679,8 +2682,8 @@ DisplayListDisplay:
 template <bool debugTrace>
 void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
-	uint8_t *const ram = Memory.getRam();
-	const uint32_t *displayList = Memory.getDisplayList();
+	uint8_t *const ram = s_Memory->getRam();
+	const uint32_t *displayList = s_Memory->getDisplayList();
 	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
 
@@ -3030,7 +3033,7 @@ EvaluateDisplayListValue:
 					}
 					break;
 				case FT800EMU_DL_MACRO:
-					v = Memory.rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
+					v = s_Memory->rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
 					// What happens when the macro macros itself? :)
 					goto EvaluateDisplayListValue;
 					break;
@@ -3247,33 +3250,33 @@ EvaluateDisplayListValue:
 		}
 DisplayListDisplay:
 		// Check tag query
-		if (Memory.rawReadU32(ram, REG_TAG_Y) == y)
-		// if (Memory.rawReadU32(ram, REG_TAG_Y) == ((Memory.rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
+		if (s_Memory->rawReadU32(ram, REG_TAG_Y) == y)
+		// if (s_Memory->rawReadU32(ram, REG_TAG_Y) == ((s_Memory->rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
 		{
-			uint32_t tag_x = Memory.rawReadU32(ram, REG_TAG_X);
+			uint32_t tag_x = s_Memory->rawReadU32(ram, REG_TAG_X);
 			if (tag_x < hsize)
 			{
 				// Write tag out
-				// Memory.rawWriteU32(ram, REG_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
-				Memory.rawWriteU32(ram, REG_TAG, bt[tag_x]);
+				// s_Memory->rawWriteU32(ram, REG_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+				s_Memory->rawWriteU32(ram, REG_TAG, bt[tag_x]);
 			}
 		}
 		// Check touch
 		if ((TouchClass::multiTouch())
-			? (Memory.rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
-			: (Memory.rawReadU32(ram, REG_TOUCH_RZ) <= Memory.rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
+			? (s_Memory->rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
+			: (s_Memory->rawReadU32(ram, REG_TOUCH_RZ) <= s_Memory->rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{
-			uint32_t tag_xy = Memory.rawReadU32(ram, REG_TOUCH_TAG_XY);
+			uint32_t tag_xy = s_Memory->rawReadU32(ram, REG_TOUCH_TAG_XY);
 			uint32_t tag_y = tag_xy & 0xFFFF;
 			if (tag_y == y)
-			// if (tag_y == ((Memory.rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
+			// if (tag_y == ((s_Memory->rawReadU32(ram, REG_ROTATE) & 0x01) ? vsize - y - 1 : y))
 			{
 				uint32_t tag_x = tag_xy >> 16;
 				if (tag_x < hsize)
 				{
 					// Write tag out
-					// Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
-					Memory.rawWriteU32(ram, REG_TOUCH_TAG, bt[tag_x]);
+					// s_Memory->rawWriteU32(ram, REG_TOUCH_TAG, bt[mirrored ? hsize - tag_x - 1 : tag_x]);
+					s_Memory->rawWriteU32(ram, REG_TOUCH_TAG, bt[tag_x]);
 				}
 			}
 		}
@@ -3311,7 +3314,7 @@ DisplayListDisplay:
 		// backlight emulation
 		else if (s_RegPwmDutyEmulation)
 		{
-			uint32_t pwmduty = Memory.rawReadU32(ram, REG_PWM_DUTY);
+			uint32_t pwmduty = s_Memory->rawReadU32(ram, REG_PWM_DUTY);
 			if (pwmduty < 128)
 			{
 				for (uint32_t x = 0; x < hsize; ++x)
@@ -3379,9 +3382,9 @@ int launchGraphicsProcessorThread(void *startInfo)
 			li->YInc, 
 			li->Bitmap);
 
-		// FTEMU_printf("%i: sem post (%i) ->\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem post (%i) ->\n", s_Memory->rawReadU32(s_Memory->getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 		SDL_SemPost(li->EndSem);
-		// FTEMU_printf("%i: sem post (%i) <-\n", Memory.rawReadU32(Memory.getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem post (%i) <-\n", s_Memory->rawReadU32(s_Memory->getRam(), REG_FRAMES), SDL_SemValue(li->EndSem));
 	}
 
 	FT8XXEMU::System.revertThreadCategory(taskHandle);
@@ -3458,10 +3461,10 @@ void GraphicsProcessorClass::process(
 	uint32_t yInc)
 
 {
-	uint8_t *const ram = Memory.getRam();
+	uint8_t *const ram = s_Memory->getRam();
 
 	// Store the touch tag xy used for lookup
-	Memory.rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory.rawReadU32(ram, REG_TOUCH_SCREEN_XY));
+	s_Memory->rawWriteU32(ram, REG_TOUCH_TAG_XY, s_Memory->rawReadU32(ram, REG_TOUCH_SCREEN_XY));
 
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
@@ -3501,9 +3504,9 @@ void GraphicsProcessorClass::process(
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);
 		// SDL_mutexV(li->StartMutex);
-		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)->\n", s_Memory->rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 		SDL_SemWait(li->EndSem);
-		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory.rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)<-\n", s_Memory->rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 #else
 #	ifdef WIN32
 		ThreadInfo *li = &s_ThreadInfos[i - 1];

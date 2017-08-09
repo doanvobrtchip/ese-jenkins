@@ -22,6 +22,7 @@
 // Project includes
 
 namespace FT800EMU {
+	class Memory;
 
 /**
  * CoprocessorClass
@@ -33,7 +34,7 @@ class CoprocessorClass
 public:
 	CoprocessorClass() { }
 
-	void begin(const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
+	void begin(Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
 	void end();
 
 	void executeManual();
@@ -42,6 +43,8 @@ public:
 	void stopEmulator();
 
 private:
+	Memory *m_Memory;
+
 	template <bool singleFrame>
 	void execute();
 

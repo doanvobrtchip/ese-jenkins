@@ -14,6 +14,10 @@
 // #include <...>
 #include "ft800emu_emulator.h"
 
+#ifdef FT800EMU_DEFS_H
+#pragma message(" : Error: Not allowed to include ft800emu_defs.h from ft800emu_emulator.h")
+#endif
+
 // System includes
 #include <thread>
 
@@ -184,7 +188,7 @@ int Emulator::masterThread()
 
 	double targetSeconds = FT8XXEMU::System.getSeconds();
 
-	uint8_t *ram = Memory.getRam();
+	uint8_t *ram = m_Memory->getRam();
 	int lastMicros = FT8XXEMU::System.getMicros();
 
 	while (m_MasterRunning)
@@ -193,16 +197,16 @@ int Emulator::masterThread()
 
 		FT8XXEMU::System.enterSwapDL();
 
-		uint32_t usefreq = m_ExternalFrequency ? m_ExternalFrequency : Memory.rawReadU32(ram, REG_FREQUENCY);
+		uint32_t usefreq = m_ExternalFrequency ? m_ExternalFrequency : m_Memory->rawReadU32(ram, REG_FREQUENCY);
 		int curMicros = FT8XXEMU::System.getMicros();
 		int diffMicros = curMicros - lastMicros;
 		lastMicros = curMicros;
 		int32_t diffClock = (int32_t)(((int64_t)usefreq * (int64_t)diffMicros) / (int64_t)1000000LL);
-		uint32_t curClock = (uint32_t)((int32_t)Memory.rawReadU32(ram, REG_CLOCK) + diffClock);
-		Memory.rawWriteU32(ram, REG_CLOCK, curClock);
+		uint32_t curClock = (uint32_t)((int32_t)m_Memory->rawReadU32(ram, REG_CLOCK) + diffClock);
+		m_Memory->rawWriteU32(ram, REG_CLOCK, curClock);
 
 		bool renderLineSnapshot = (ram[REG_RENDERMODE] & 1) != 0;
-		uint32_t reg_pclk = Memory.rawReadU32(ram, REG_PCLK);
+		uint32_t reg_pclk = m_Memory->rawReadU32(ram, REG_PCLK);
 		double deltaSeconds;
 		// Calculate the display frequency
 		if (reg_pclk == 0xFF)
@@ -214,8 +218,8 @@ int Emulator::masterThread()
 			// if (!usefreq) usefreq = 48000000; // Possibility to avoid freeze in case of issues
 			double frequency = (double)usefreq;
 			frequency /= (double)reg_pclk;
-			frequency /= (double)Memory.rawReadU32(ram, REG_VCYCLE);
-			frequency /= (double)Memory.rawReadU32(ram, REG_HCYCLE);
+			frequency /= (double)m_Memory->rawReadU32(ram, REG_VCYCLE);
+			frequency /= (double)m_Memory->rawReadU32(ram, REG_HCYCLE);
 			deltaSeconds = 1.0 / frequency;
 		}
 		else
@@ -232,9 +236,9 @@ int Emulator::masterThread()
 		TouchClass::setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
 
 		// Update display resolution
-		int32_t reg_vsize = Memory.rawReadU32(ram, REG_VSIZE);
+		int32_t reg_vsize = m_Memory->rawReadU32(ram, REG_VSIZE);
 		if (reg_vsize > FT800EMU_SCREEN_HEIGHT_MAX) reg_vsize = FT800EMU_SCREEN_HEIGHT_MAX;
-		int32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
+		int32_t reg_hsize = m_Memory->rawReadU32(ram, REG_HSIZE);
 		if (reg_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsize = FT800EMU_SCREEN_WIDTH_MAX;
 		if (!m_Graphics) m_WindowOutput->setMode(reg_hsize, reg_vsize);
 
@@ -245,7 +249,7 @@ int Emulator::masterThread()
 		// Render lines
 		// VBlank=0
 #ifdef FT810EMU_MODE
-		Memory.rawWriteU32(ram, REG_RASTERY, 0);
+		m_Memory->rawWriteU32(ram, REG_RASTERY, 0);
 #endif
 		{
 			FT8XXEMU::System.switchThread();
@@ -256,13 +260,13 @@ int Emulator::masterThread()
 				// FTEMU_printf("%i != %i\n", lwoc, woc);
 				if (ram[REG_DLSWAP] == DLSWAP_FRAME)
 				{
-					Memory.swapDisplayList();
+					m_Memory->swapDisplayList();
 					ram[REG_DLSWAP] = DLSWAP_DONE;
-					Memory.flagDLSwap();
+					m_Memory->flagDLSwap();
 				}
 
 				int lwoc = m_LastWriteOpCount;
-				int woc = Memory.getWriteOpCount();
+				int woc = m_Memory->getWriteOpCount();
 				hasChanged = (lwoc != woc);
 				bool hasChanges = hasChanged || m_ChangesSkipped;
 				m_LastWriteOpCount = woc;
@@ -275,9 +279,9 @@ int Emulator::masterThread()
 					{
 						if ((ram[REG_SNAPSHOT] & 1) && ram[REG_BUSYBITS]) // TODO_BUSYBITS
 						{
-							Memory.rawWriteU32(ram, REG_SNAPSHOT, 0);
+							m_Memory->rawWriteU32(ram, REG_SNAPSHOT, 0);
 							// Render single line
-							int32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
+							int32_t snapy = mirrorVertical ? (reg_vsize - m_Memory->rawReadU32(ram, REG_SNAPY)) : (m_Memory->rawReadU32(ram, REG_SNAPY));
 							snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 							// FTEMU_printf("SNAPY: %u\n", snapy);
 							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888();
@@ -316,7 +320,7 @@ int Emulator::masterThread()
 										| (DITHERDIV16((c1 >> 16) & 0xFF, x, (-snapy)) << 24)
 										// | (0xF << 28);
 										| (DITHERDIV16((c1 >> 24 & 0xFF), (-x), (-(snapy))) << 28);
-									Memory.rawWriteU32(ram, wa, r);
+									m_Memory->rawWriteU32(ram, wa, r);
 									wa += 4;
 									break;
 								}
@@ -327,7 +331,7 @@ int Emulator::masterThread()
 										| (DITHERDIV8((c >> 8) & 0xFF, x, snapy) << 5)
 										| (DITHERDIV8((c >> 16) & 0xFF, x, snapy) << 10)
 										| (0x1 << 15);
-									Memory.rawWriteU16(ram, wa, r);
+									m_Memory->rawWriteU16(ram, wa, r);
 									wa += 2;
 									break;
 								}*/
@@ -337,20 +341,20 @@ int Emulator::masterThread()
 									uint16_t r = (DITHERDIV8(c & 0xFF, (-x), snapy))
 										| (DITHERDIV4((c >> 8) & 0xFF, x, snapy) << 5)
 										| (DITHERDIV8((c >> 16) & 0xFF, x, (-snapy)) << 11);
-									Memory.rawWriteU16(ram, wa, r);
+									m_Memory->rawWriteU16(ram, wa, r);
 									wa += 2;
 									break;
 								}
 								case 0x20:
 								default:
 #endif
-									Memory.rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
+									m_Memory->rawWriteU32(ram, RAM_COMPOSITE + (x * 4), buffer[ya + x]);
 #ifdef FT810EMU_MODE
 									break;
 								}
 #endif
 							}
-							Memory.rawWriteU32(ram, REG_BUSYBITS, 0); // TODO_BUSYBITS
+							m_Memory->rawWriteU32(ram, REG_BUSYBITS, 0); // TODO_BUSYBITS
 						}
 					}
 					else
@@ -492,7 +496,7 @@ int Emulator::masterThread()
 
 		{
 			int lc = m_LastRealSwapCount;
-			int c = Memory.getRealSwapCount();
+			int c = m_Memory->getRealSwapCount();
 			hasSwapped = (lc != c);
 			m_LastRealSwapCount = c;
 		}
@@ -502,11 +506,11 @@ int Emulator::masterThread()
 		// Flip buffer and also give a slice of time to the mcu main thread
 		// VBlank=1
 #ifdef FT810EMU_MODE
-		Memory.rawWriteU32(ram, REG_RASTERY, 1 << 11);
+		m_Memory->rawWriteU32(ram, REG_RASTERY, 1 << 11);
 #endif
 		if (!renderLineSnapshot)
 		{
-			if (reg_pclk) Memory.rawWriteU32(ram, REG_FRAMES, Memory.rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
+			if (reg_pclk) m_Memory->rawWriteU32(ram, REG_FRAMES, m_Memory->rawReadU32(ram, REG_FRAMES) + 1); // Increase REG_FRAMES
 			m_ThreadMCU.prioritize();
 			m_ThreadMCU.boost(); // Swapped!
 
@@ -597,7 +601,7 @@ int Emulator::masterThread()
 			}
 			else if (secondsToWait > 0.25)
 			{
-				FTEMU_printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", Memory.rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
+				FTEMU_printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", m_Memory->rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
 				targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
 				secondsToWait = 0.25;
 			}
@@ -768,11 +772,10 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
-	Memory.setThreadState(&m_ThreadMCU, &m_ThreadCoprocessor);
-	Memory.begin(mode, params.RomFilePath, params.OtpFilePath);
-	TouchClass::begin(mode);
-	GraphicsProcessor.begin();
-	SPII2C.begin();
+	m_Memory = new Memory(mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
+	TouchClass::begin(mode, m_Memory);
+	GraphicsProcessor.begin(m_Memory);
+	SPII2C.begin(m_Memory);
 	if (!m_Graphics)
 	{
 		m_WindowOutput = FT8XXEMU::WindowOutput::create();
@@ -787,7 +790,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	{
 		m_AudioOutput = FT8XXEMU::AudioOutput::create();
 		AudioProcessor.begin();
-		AudioRender.begin(m_AudioOutput);
+		AudioRender.begin(m_AudioOutput, m_Memory);
 		/*
 		// TODO: 2017-08-09: Output creation failure manage
 		if (!FT8XXEMU::AudioOutput.begin())
@@ -799,7 +802,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		*/
 	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-		Coprocessor.begin(
+		Coprocessor.begin(m_Memory,
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
 	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
@@ -813,7 +816,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	if (!m_Graphics) m_WindowOutput->enableMouse((params.Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableMouse;
-	Memory.enableReadDelay();
+	m_Memory->enableReadDelay();
 
 	if (params.Flags & BT8XXEMU_EmulatorEnableGraphicsMultithread)
 	{
@@ -897,7 +900,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	SPII2C.end();
 	GraphicsProcessor.end();
 	TouchClass::end();
-	Memory.end();
+	delete m_Memory; m_Memory = NULL;
 	FT8XXEMU::System.end();
 
 	m_EmulatorRunning = false;
@@ -927,6 +930,33 @@ void Emulator::stop()
 	}
 
 	FTEMU_printf("Stop ok\n");
+}
+
+uint8_t *Emulator::getRam()
+{
+	return m_Memory->getRam();
+}
+
+// uint8_t *Emulator::getFlash();
+
+const uint32_t *Emulator::getDisplayList()
+{
+	return m_Memory->getDisplayList();
+}
+
+void Emulator::poke()
+{
+	m_Memory->poke();
+}
+
+int *Emulator::getDisplayListCoprocessorWrites()
+{
+	return m_Memory->getDisplayListCoprocessorWrites();
+}
+
+void Emulator::clearDisplayListCoprocessorWrites()
+{
+	m_Memory->clearDisplayListCoprocessorWrites();
 }
 
 } /* namespace FT800EMU */

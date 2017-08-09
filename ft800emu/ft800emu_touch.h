@@ -14,13 +14,14 @@
 // Project includes
 
 namespace FT800EMU {
+	class Memory;
 
 class TouchClass
 {
 public:
 	TouchClass() { }
 
-	static void begin(BT8XXEMU_EmulatorMode emulatorMode);
+	static void begin(BT8XXEMU_EmulatorMode emulatorMode, Memory *memory);
 	static void end();
 	void reset();
 

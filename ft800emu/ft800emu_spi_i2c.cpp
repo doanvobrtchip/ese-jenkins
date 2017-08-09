@@ -37,6 +37,8 @@ static uint32_t s_RWBufferStage;
 
 static uint32_t s_WriteStartAddr;
 
+static Memory *s_Memory;
+
 enum SPII2CState
 {
 	SPII2CIdle,
@@ -51,8 +53,9 @@ static SPII2CState s_State;
 static uint32_t s_Cursor;
 static int s_Stage = 0;
 
-void SPII2CClass::begin()
+void SPII2CClass::begin(Memory *memory)
 {
+	s_Memory = memory;
 	s_State = SPII2CIdle;
 }
 
@@ -71,14 +74,14 @@ void SPII2CClass::csLow(int low)
 
 		while (s_RWBufferStage != 32)
 		{
-			uint8_t data = Memory.rawReadU8(Memory.getRam(), s_Cursor);
+			uint8_t data = s_Memory->rawReadU8(s_Memory->getRam(), s_Cursor);
 			s_RWBuffer |= (data << s_RWBufferStage);
 			s_RWBufferStage += 8;
 			++s_Cursor;
 		}
 
 		// FTEMU_printf("Write to %i, %i\n", (s_Cursor - 4), s_RWBuffer);
-		Memory.mcuWriteU32(s_Cursor - 4, s_RWBuffer);
+		s_Memory->mcuWriteU32(s_Cursor - 4, s_RWBuffer);
 
 		s_RWBuffer = 0;
 		s_RWBufferStage = 0;
@@ -140,7 +143,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 				if (aligned != s_Cursor)
 				{
 					// FTEMU_printf("Non-aligned read\n");
-					s_RWBuffer = Memory.mcuReadU32(aligned);
+					s_RWBuffer = s_Memory->mcuReadU32(aligned);
 					uint32_t misaligned = s_Cursor - aligned;
 					s_RWBuffer >>= (8 * misaligned);
 				}
@@ -167,7 +170,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					// FTEMU_printf("Non-aligned write address %d\n", s_Cursor);
 					s_RWBufferStage = s_Cursor % 4;
 					// FTEMU_printf("align to address %d\n", s_Cursor - (s_Cursor % 4));
-					s_RWBuffer = Memory.rawReadU32(Memory.getRam(), s_Cursor - (s_Cursor % 4));
+					s_RWBuffer = s_Memory->rawReadU32(s_Memory->getRam(), s_Cursor - (s_Cursor % 4));
 					// FTEMU_printf("rwbuffer %d\n", s_RWBuffer);
 					s_RWBufferStage *= 8;
 					// mask away bytes that will be written
@@ -198,7 +201,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 
 				if (!(s_Cursor % 4))
 				{
-					s_RWBuffer = Memory.mcuReadU32(s_Cursor);
+					s_RWBuffer = s_Memory->mcuReadU32(s_Cursor);
 					// FTEMU_printf("Read U32 %d (%d)\n", s_Cursor, s_RWBuffer);
 				}
 
@@ -211,7 +214,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 			break;
 		case SPII2CWrite:
 			{
-				// Memory.mcuWrite(s_Cursor, data);
+				// s_Memory->mcuWrite(s_Cursor, data);
 
 				s_RWBuffer |= (data << s_RWBufferStage);
 				s_RWBufferStage += 8;
@@ -223,7 +226,7 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 					if ((s_Cursor - 3) % 4)
 						FTEMU_printf("Non-aligned write %d\n", s_Cursor);
 
-					Memory.mcuWriteU32(s_Cursor - 3, s_RWBuffer);
+					s_Memory->mcuWriteU32(s_Cursor - 3, s_RWBuffer);
 					s_RWBuffer = 0;
 					s_RWBufferStage = 0;
 				}
@@ -250,12 +253,12 @@ uint8_t SPII2CClass::transfer(uint8_t data)
 
 int SPII2CClass::intnLow()
 {
-	return Memory.intnLow() ? 1 : 0;
+	return s_Memory->intnLow() ? 1 : 0;
 }
 
 int SPII2CClass::intnHigh()
 {
-	return Memory.intnHigh() ? 1 : 0;
+	return s_Memory->intnHigh() ? 1 : 0;
 }
 
 } /* namespace FT800EMU */

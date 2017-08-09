@@ -39,6 +39,7 @@
 #endif
 
 namespace FT800EMU {
+	class Memory;
 
 struct BitmapInfo
 {
@@ -65,7 +66,7 @@ class GraphicsProcessorClass
 public:
 	GraphicsProcessorClass() { }
 
-	static void begin();
+	static void begin(Memory *memory);
 	static void end();
 
 	static void setThreadPriority(bool realtime);
