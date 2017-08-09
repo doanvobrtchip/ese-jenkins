@@ -374,11 +374,12 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 #if BT8XXEMU_GDI_DOUBLE_BUFFER
 	bool bufferSwitched = m_BufferSwitched ^ !changed;
 	bool bufferFlipping = m_BufferFlipping;
+	m_BufferSwitched = !bufferSwitched;
 #else
 	bool bufferSwitched = false;
 	bool bufferFlipping = true;
+	m_BufferSwitched = false;
 #endif
-	m_BufferSwitched = !bufferSwitched;
 	m_BufferFlipping = true;
 	(bufferFlipping ? immediateSync : immediate)([=]() -> void {
 		// Render bitmap to buffer
