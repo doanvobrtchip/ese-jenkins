@@ -19,6 +19,7 @@
 
 // System includes
 #include <functional>
+#include <mutex>
 #include "ft8xxemu_system_windows.h"
 
 // Project includes
@@ -87,8 +88,10 @@ private:
 	LRESULT wndProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
-	argb8888 m_BufferARGB8888A[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
-	argb8888 m_BufferARGB8888B[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
+	argb8888 m_BufferA[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
+	argb8888 m_BufferB[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
+	bool m_BufferSwitched = false;
+	volatile bool m_BufferFlipping = false;
 
 	std::function<void(int idx)> m_ResetTouchScreenXY = [](int) -> void { };
 	std::function<void(int idx, int x, int y, int pressure)> m_SetTouchScreenXY = [](int, int, int, int) -> void { };

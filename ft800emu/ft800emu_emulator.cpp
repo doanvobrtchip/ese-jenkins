@@ -834,7 +834,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
 		threadC = std::thread(&Emulator::coprocessorThread, this);
-		m_InitCond.wait(lock);
+		m_InitCond.wait(lock); // FIXME: 2017-08-09: conditional_variable are subject to random wake-ups...
 	}
 
 	std::thread threadD;

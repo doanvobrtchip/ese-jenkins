@@ -28,6 +28,8 @@
 // Project includes
 #include "ft8xxemu_thread_state.h"
 
+#define BT8XXEMU_GDI_DOUBLE_BUFFER (1)
+
 #define BT8XXEMU_WINDOW_CLASS_NAME TEXT("BT8XXEMUWindowOutput")
 
 #define BT8XXEMU_WM_FUNCTION (WM_APP + 42)
@@ -268,7 +270,7 @@ HWND WindowOutput::getHandle()
 
 argb8888 *WindowOutput::getBufferARGB8888()
 {
-	return m_BufferARGB8888A;
+	return m_BufferSwitched ? m_BufferB : m_BufferA;
 }
 
 LRESULT WindowOutput::wndProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -369,14 +371,23 @@ void WindowOutput::setMode(int width, int height)
 
 void WindowOutput::renderBuffer(bool output, bool changed)
 {
-	immediateSync([&]() -> void {
+#if BT8XXEMU_GDI_DOUBLE_BUFFER
+	bool bufferSwitched = m_BufferSwitched ^ !changed;
+	bool bufferFlipping = m_BufferFlipping;
+#else
+	bool bufferSwitched = false;
+	bool bufferFlipping = true;
+#endif
+	m_BufferSwitched = !bufferSwitched;
+	m_BufferFlipping = true;
+	(bufferFlipping ? immediateSync : immediate)([=]() -> void {
 		// Render bitmap to buffer
 #if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		if (output)
 		{
 			if (!SetDIBitsToDevice(m_HDC, 0, 0,
 				m_Width, m_Height,
-				0, 0, 0, m_Height, m_BufferARGB8888A, &m_BitInfo, DIB_RGB_COLORS))
+				0, 0, 0, m_Height, bufferSwitched ? m_BufferB : m_BufferA, &m_BitInfo, DIB_RGB_COLORS))
 				SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
 		}
 #endif
@@ -448,6 +459,8 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 			if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32(TEXT("GDI Render"));
 			ReleaseDC(m_HWnd, hdc);
 		}
+
+		m_BufferFlipping = false;
 
 		// Update title
 		/*
