@@ -3392,10 +3392,11 @@ int launchGraphicsProcessorThread(void *startInfo)
 #	ifdef WIN32
 DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 {
-	FT8XXEMU::ThreadState threadEx;
-	threadEx.foreground();
-	threadEx.noboost();
-	threadEx.realtime();
+	FT8XXEMU::ThreadState threadState;
+	threadState.foreground();
+	threadState.noboost();
+	threadState.realtime();
+	threadState.setName("FT8XXEMU Graphics Slave");
 	bool realtime = true;
 
 	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
@@ -3412,8 +3413,8 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 		if (s_ThreadPriorityRealtime != realtime)
 		{
 			realtime = s_ThreadPriorityRealtime;
-			if (realtime) threadEx.realtime();
-			else threadEx.prioritize();
+			if (realtime) threadState.realtime();
+			else threadState.prioritize();
 		}
 
 		processPart<false>(
@@ -3432,7 +3433,7 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 		SetEvent(li->EndEvent);
 	}
 
-	threadEx.reset();
+	threadState.reset();
 
 	return 0;
 }

@@ -254,7 +254,7 @@ void keyboard()
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	SetProcessAffinityMask(GetCurrentProcess(), 1);
+	SetProcessAffinityMask(GetCurrentProcess(), 3);
 	BT8XXEMU_EmulatorParameters params;
 	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
 	params.Setup = setup;
@@ -265,6 +265,7 @@ int main(int, char* [])
 		| BT8XXEMU_EmulatorEnableDebugShortkeys
 		| BT8XXEMU_EmulatorEnableCoprocessor
 		| BT8XXEMU_EmulatorEnableGraphicsMultithread
+		| BT8XXEMU_EmulatorEnableStdOut
 		;
 #ifdef FT810EMU_MODE
 	params.Mode = BT8XXEMU_EmulatorFT810;
@@ -272,7 +273,7 @@ int main(int, char* [])
 	params.Mode = BT8XXEMU_EmulatorFT801;
 #endif
 	params.Keyboard = keyboard;
-	params.ReduceGraphicsThreads = 3;
+	params.ReduceGraphicsThreads = 2;
 	FT800EMU::Emulator emulator;
 	emulator.run(params);
 	return 0;

@@ -25,6 +25,9 @@
 #include <concurrent_queue.h>
 #include <assert.h>
 
+// Project includes
+#include "ft8xxemu_thread_state.h"
+
 #define BT8XXEMU_WINDOW_CLASS_NAME TEXT("BT8XXEMUWindowOutput")
 
 #define BT8XXEMU_WM_FUNCTION (WM_APP + 42)
@@ -44,7 +47,8 @@ std::map<HWND, WindowOutput *> s_WindowMap;
 void immediate(std::function<void()> f)
 {
 	s_LoopQueue.push(f);
-	PostThreadMessage(s_LoopThreadId, BT8XXEMU_WM_FUNCTION, 0, 0);
+	while (!PostThreadMessage(s_LoopThreadId, BT8XXEMU_WM_FUNCTION, 0, 0))
+		SwitchToThread();
 }
 
 void joinQueue()
@@ -76,6 +80,11 @@ void immediateSync(std::function<void()> f)
 
 void loopFunction()
 {
+	ThreadState threadState;
+	threadState.init();
+	threadState.foreground();
+	threadState.setName("FT8XXEMU Win32 Loop");
+
 	s_LoopThreadId = GetCurrentThreadId();
 	MSG msg;
 	while (BOOL bRet = GetMessage(&msg, NULL, 0, 0))
@@ -86,16 +95,13 @@ void loopFunction()
 		}
 		else
 		{
+			std::function<void()> f;
+			while (s_LoopQueue.try_pop(f))
+				f();
 			switch (msg.message)
 			{
 			case BT8XXEMU_WM_FUNCTION:
-			{
-				assert(!m_LoopQueue.empty());
-				std::function<void()> f;
-				if (s_LoopQueue.try_pop(f))
-					f();
 				break;
-			}
 			case BT8XXEMU_WM_STOP:
 				return;
 			default:
@@ -270,6 +276,10 @@ LRESULT WindowOutput::wndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	//int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
+
+	std::function<void()> f;
+	while (s_LoopQueue.try_pop(f))
+		f();
 
 	switch (message)
 	{

@@ -180,6 +180,7 @@ int Emulator::masterThread()
 	m_ThreadMaster.foreground();
 	m_ThreadMaster.noboost();
 	m_ThreadMaster.realtime();
+	m_ThreadMaster.setName("FT8XXEMU Graphics Master");
 
 	double targetSeconds = FT8XXEMU::System.getSeconds();
 
@@ -635,6 +636,7 @@ int Emulator::mcuThread()
 	m_ThreadMCU.foreground();
 	m_ThreadMCU.noboost();
 	m_ThreadMCU.unprioritize();
+	m_ThreadMCU.setName("FT8XXEMU MCU");
 
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -658,6 +660,7 @@ int Emulator::coprocessorThread()
 	m_ThreadCoprocessor.foreground();
 	m_ThreadCoprocessor.noboost();
 	m_ThreadCoprocessor.unprioritize();
+	m_ThreadCoprocessor.setName("FT8XXEMU Coprocessor");
 
 	FTEMU_printf("Coprocessor thread begin\n");
 	
@@ -687,6 +690,7 @@ int Emulator::audioThread()
 	m_ThreadAudio.foreground();
 	m_ThreadAudio.noboost();
 	m_ThreadAudio.realtime();
+	m_ThreadAudio.setName("FT8XXEMU Audio");
 
 	while (m_MasterRunning)
 	{

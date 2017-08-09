@@ -44,6 +44,9 @@ public:
 	bool init();
 	void reset();
 
+	//! Set thread name
+	void setName(const char *name);
+
 	//! Optimize the thread for foreground applications
 	//! Should only be called when the process containing the emulator is managing the window
 	bool foreground();
