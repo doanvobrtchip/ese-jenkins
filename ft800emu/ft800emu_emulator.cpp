@@ -21,8 +21,8 @@
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_keyboard.h"
 #include "ft8xxemu_keyboard_keys.h"
-#include "ft8xxemu_graphics_driver.h"
-#include "ft8xxemu_audio_driver.h"
+#include "ft8xxemu_window_output.h"
+#include "ft8xxemu_audio_output.h"
 
 #include "ft800emu_spi_i2c.h"
 #include "ft800emu_memory.h"
@@ -235,7 +235,7 @@ int Emulator::masterThread()
 		if (reg_vsize > FT800EMU_SCREEN_HEIGHT_MAX) reg_vsize = FT800EMU_SCREEN_HEIGHT_MAX;
 		int32_t reg_hsize = Memory.rawReadU32(ram, REG_HSIZE);
 		if (reg_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsize = FT800EMU_SCREEN_WIDTH_MAX;
-		if (!m_Graphics) FT8XXEMU::GraphicsDriver.setMode(reg_hsize, reg_vsize);
+		if (!m_Graphics) m_WindowOutput->setMode(reg_hsize, reg_vsize);
 
 
 		bool renderProcessed = false;
@@ -279,7 +279,7 @@ int Emulator::masterThread()
 							int32_t snapy = mirrorVertical ? (reg_vsize - Memory.rawReadU32(ram, REG_SNAPY)) : (Memory.rawReadU32(ram, REG_SNAPY));
 							snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 							// FTEMU_printf("SNAPY: %u\n", snapy);
-							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888();
+							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888();
 							GraphicsProcessor.process(buffer,
 								false, mirrorHorizontal,
 #ifdef FT810EMU_MODE
@@ -366,8 +366,8 @@ int Emulator::masterThread()
 						}
 						else if (m_DegradeOn)
 						{
-							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
+								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !m_WindowOutput->isUpsideDown() : m_WindowOutput->isUpsideDown()), mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
@@ -380,8 +380,8 @@ int Emulator::masterThread()
 						}
 						else
 						{
-							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : FT8XXEMU::GraphicsDriver.getBufferARGB8888(),
-								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !FT8XXEMU::GraphicsDriver.isUpsideDown() : FT8XXEMU::GraphicsDriver.isUpsideDown()), mirrorHorizontal,
+							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
+								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !m_WindowOutput->isUpsideDown() : m_WindowOutput->isUpsideDown()), mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
@@ -546,9 +546,11 @@ int Emulator::masterThread()
 				}
 				else
 				{
-					FT8XXEMU::GraphicsDriver.renderBuffer(reg_pclk != 0, renderProcessed);
-					if (!FT8XXEMU::GraphicsDriver.update())
+					m_WindowOutput->renderBuffer(reg_pclk != 0, renderProcessed);
+					/*
+					if (!m_WindowOutput->update())
 					{
+						// FIXME: 2017-08-09: Need to update mechanism for detecting window close!
 						m_CloseCalled = true;
 						if (m_Close)
 						{
@@ -562,6 +564,7 @@ int Emulator::masterThread()
 							return 0;
 						}
 					}
+					*/
 				}
 			}
 			unsigned long flipDelta = FT8XXEMU::System.getMicros() - flipStart;
@@ -766,17 +769,30 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	TouchClass::begin(mode);
 	GraphicsProcessor.begin();
 	SPII2C.begin();
-	if (!m_Graphics) FT8XXEMU::GraphicsDriver.begin();
+	if (!m_Graphics)
+	{
+		m_WindowOutput = FT8XXEMU::WindowOutput::create();
+		m_WindowOutput->onSetTouchScreenXY([this](int idx, int x, int y, int pressure) -> void {
+			Touch[idx].setXY(x, y, pressure);
+		});
+		m_WindowOutput->onResetTouchScreenXY([this](int idx) -> void {
+			Touch[idx].resetXY();
+		});
+	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
+		m_AudioOutput = FT8XXEMU::AudioOutput::create();
 		AudioProcessor.begin();
-		AudioRender.begin();
-		if (!FT8XXEMU::AudioDriver.begin())
+		AudioRender.begin(m_AudioOutput);
+		/*
+		// TODO: 2017-08-09: Output creation failure manage
+		if (!FT8XXEMU::AudioOutput.begin())
 		{
 			AudioRender.end();
 			AudioProcessor.end();
 			m_Flags &= ~BT8XXEMU_EmulatorEnableAudio;
 		}
+		*/
 	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		Coprocessor.begin(
@@ -791,7 +807,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		memset(m_GraphicsBuffer, 0, FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX * sizeof(argb8888));
 	}
 
-	if (!m_Graphics) FT8XXEMU::GraphicsDriver.enableMouse((params.Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
+	if (!m_Graphics) m_WindowOutput->enableMouse((params.Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableMouse;
 	Memory.enableReadDelay();
 
@@ -867,11 +883,13 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
 	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
-		FT8XXEMU::AudioDriver.end();
 		AudioRender.end();
 		AudioProcessor.end();
+		m_AudioOutput->destroy();
+		m_AudioOutput = NULL;
 	}
-	if (!m_Graphics) FT8XXEMU::GraphicsDriver.end();
+	if (!m_Graphics) m_WindowOutput->destroy();
+	m_WindowOutput = NULL;
 	SPII2C.end();
 	GraphicsProcessor.end();
 	TouchClass::end();

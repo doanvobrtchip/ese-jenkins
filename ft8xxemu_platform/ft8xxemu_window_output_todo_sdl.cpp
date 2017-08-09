@@ -1,8 +1,8 @@
 /**
- * GraphicsDriverClass
+ * WindowOutput
  * $Id$
- * \file ft8xxemu_graphics_driver_sdl.cpp
- * \brief GraphicsDriverClass
+ * \file ft8xxemu_window_output_sdl.cpp
+ * \brief WindowOutput
  * \date 2012-06-27 11:49GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -11,11 +11,13 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#if 0
+
 #ifdef FTEMU_SDL
 #ifndef FTEMU_SDL2
 
 // #include <...>
-#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_window_output.h"
 
 // System includes
 #include "ft8xxemu_system.h"
@@ -24,7 +26,7 @@
 
 namespace FT8XXEMU {
 
-GraphicsDriverClass GraphicsDriver;
+WindowOutput WindowOutput;
 
 void (*g_ResetTouchScreenXY)(int idx) = NULL;
 void (*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
@@ -73,12 +75,12 @@ int flipThread(void *)
 
 } /* anonymous namespace */
 
-argb8888 *GraphicsDriverClass::getBufferARGB8888()
+argb8888 *WindowOutput::getBufferARGB8888()
 {
 	return s_BufferARGB8888;
 }
 
-bool GraphicsDriverClass::begin()
+bool WindowOutput::begin()
 {
 	s_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
 	s_Height = BT8XXEMU_WINDOW_HEIGHT_DEFAULT;
@@ -117,7 +119,7 @@ bool GraphicsDriverClass::begin()
 	return true;
 }
 
-bool GraphicsDriverClass::update()
+bool WindowOutput::update()
 {
 	SDL_Event event;
 
@@ -146,7 +148,7 @@ bool GraphicsDriverClass::update()
 	return true;
 }
 
-void GraphicsDriverClass::end()
+void WindowOutput::end()
 {
 #if FTEMU_SDL_THREADED_FLIP
 
@@ -170,7 +172,7 @@ void GraphicsDriverClass::end()
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-void GraphicsDriverClass::setMode(int width, int height)
+void WindowOutput::setMode(int width, int height)
 {
 	if (s_Width != width || s_Height != height)
 	{
@@ -213,7 +215,7 @@ void GraphicsDriverClass::setMode(int width, int height)
 	}
 }
 
-void GraphicsDriverClass::renderBuffer(bool output, bool changed)
+void WindowOutput::renderBuffer(bool output, bool changed)
 {
 	// TODO: Allow user resize and aspect ratio
 
@@ -283,12 +285,12 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 	SDL_WM_SetCaption(newTitle.str().c_str(), NULL);
 }
 
-void GraphicsDriverClass::enableMouse(bool enabled)
+void WindowOutput::enableMouse(bool enabled)
 {
 	s_MouseEnabled = enabled;
 }
 
-void GraphicsDriverClass::setMousePressure(int pressure)
+void WindowOutput::setMousePressure(int pressure)
 {
 	s_MousePressure = pressure;
 }
@@ -297,5 +299,7 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 
 #endif /* #ifndef FTEMU_SDL2 */
 #endif /* #ifdef FTEMU_SDL */
+
+#endif
 
 /* end of file */

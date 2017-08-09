@@ -27,6 +27,9 @@
 #include "ft8xxemu_inttypes.h"
 #include "ft8xxemu_thread_state.h"
 
+#include "ft8xxemu_window_output.h"
+#include "ft8xxemu_audio_output.h"
+
 #ifndef BT8XXEMU_EMULATOR_H
 #define BT8XXEMU_EMULATOR_H
 namespace BT8XXEMU {
@@ -127,6 +130,9 @@ private:
 	FT8XXEMU::ThreadState m_ThreadMCU; //< User MCU thread (optional)
 	FT8XXEMU::ThreadState m_ThreadCoprocessor; //< Coprocessor thread
 	FT8XXEMU::ThreadState m_ThreadAudio; //< Audio thread
+
+	FT8XXEMU::WindowOutput *m_WindowOutput = NULL;
+	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

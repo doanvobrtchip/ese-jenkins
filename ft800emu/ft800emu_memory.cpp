@@ -24,7 +24,7 @@
 #include "ft800emu_vc.h"
 #include "ft8xxemu_system.h"
 #include "ft800emu_touch.h"
-#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_window_output.h"
 #include "ft800emu_graphics_processor.h"
 #include "ft800emu_audio_processor.h"
 #include "ft800emu_audio_render.h"

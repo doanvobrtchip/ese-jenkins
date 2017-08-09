@@ -16,7 +16,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "ft800emu_vc.h"
 #include "ft8xxemu_system.h"
 #include "ft800emu_memory.h"
-#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_window_output.h"
 
 // using namespace ...;
 
@@ -355,8 +355,8 @@ void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode)
 	Touch[4].m_Index = 4;
 	Touch[4].reset();
 
-	FT8XXEMU::g_SetTouchScreenXY = &setTouchScreenXY;
-	FT8XXEMU::g_ResetTouchScreenXY = &resetTouchScreenXY; // FIXME
+	// FT8XXEMU::g_SetTouchScreenXY = &setTouchScreenXY;
+	// FT8XXEMU::g_ResetTouchScreenXY = &resetTouchScreenXY; // FIXME
 
 	/*s_TouchScreenSet = 0;
 	s_LastJitteredTime = FT8XXEMU::System.getMicros();*/

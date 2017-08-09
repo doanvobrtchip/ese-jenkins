@@ -16,7 +16,7 @@
 #include <ft800emu_coprocessor.h>
 #include <ft800emu_spi_i2c.h>
 #include <ft800emu_graphics_processor.h>
-#include <ft8xxemu_graphics_driver.h>
+#include <ft8xxemu_window_output.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

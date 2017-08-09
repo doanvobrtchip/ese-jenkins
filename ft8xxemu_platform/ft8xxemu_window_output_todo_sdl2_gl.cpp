@@ -2,10 +2,11 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#if 0
 #ifdef FTEMU_SDL2
 
 // #include <...>
-#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_window_output.h"
 
 // System includes
 #ifdef WIN32
@@ -39,7 +40,7 @@
 
 namespace FT8XXEMU {
 
-GraphicsDriverClass GraphicsDriver;
+WindowOutput WindowOutput;
 
 void(*g_ResetTouchScreenXY)(int idx) = NULL;
 void(*g_SetTouchScreenXY)(int idx, int x, int y, int pressure) = NULL;
@@ -346,11 +347,11 @@ int flipThread(void *)
 
 } /* anonymous namespace */
 
-argb8888 *GraphicsDriverClass::getBufferARGB8888()
+argb8888 *WindowOutput::getBufferARGB8888()
 {
 #if WIN32
 	if (s_GDIRevert)
-		return GraphicsDriverGDI.getBufferARGB8888();
+		return WindowOutputGDI.getBufferARGB8888();
 #endif
 
 	// Return the next available buffer
@@ -373,11 +374,11 @@ static int eventFilter(void *, SDL_Event *e)
 }
 #endif
 
-bool GraphicsDriverClass::begin()
+bool WindowOutput::begin()
 {
 #ifdef WIN32
 	if (s_GDIRevert)
-		return GraphicsDriverGDI.begin();
+		return WindowOutputGDI.begin();
 #endif
 
 	s_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
@@ -534,7 +535,7 @@ bool GraphicsDriverClass::begin()
 
 #if WIN32
 		s_GDIRevert = true;
-		return GraphicsDriverGDI.begin();
+		return WindowOutputGDI.begin();
 #else
 		return false;
 #endif
@@ -564,11 +565,11 @@ bool GraphicsDriverClass::begin()
 	return true;
 }
 
-bool GraphicsDriverClass::update()
+bool WindowOutput::update()
 {
 #if WIN32
 	if (s_GDIRevert)
-		return GraphicsDriverGDI.update();
+		return WindowOutputGDI.update();
 #endif
 
 	SDL_Event event;
@@ -619,12 +620,12 @@ bool GraphicsDriverClass::update()
 	return true;
 }
 
-void GraphicsDriverClass::end()
+void WindowOutput::end()
 {
 #if WIN32
 	if (s_GDIRevert)
 	{
-		GraphicsDriverGDI.end();
+		WindowOutputGDI.end();
 		return;
 	}
 #endif
@@ -662,12 +663,12 @@ void GraphicsDriverClass::end()
 	SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 }
 
-void GraphicsDriverClass::setMode(int width, int height)
+void WindowOutput::setMode(int width, int height)
 {
 #ifdef WIN32
 	if (s_GDIRevert)
 	{
-		GraphicsDriverGDI.setMode(width, height);
+		WindowOutputGDI.setMode(width, height);
 		return;
 	}
 #endif
@@ -685,12 +686,12 @@ void GraphicsDriverClass::setMode(int width, int height)
 	}
 }
 
-void GraphicsDriverClass::renderBuffer(bool output, bool changed)
+void WindowOutput::renderBuffer(bool output, bool changed)
 {
 #ifdef WIN32
 	if (s_GDIRevert)
 	{
-		GraphicsDriverGDI.renderBuffer(output, changed);
+		WindowOutputGDI.renderBuffer(output, changed);
 		return;
 	}
 #endif
@@ -763,12 +764,12 @@ void GraphicsDriverClass::renderBuffer(bool output, bool changed)
 #endif
 }
 
-void GraphicsDriverClass::enableMouse(bool enabled)
+void WindowOutput::enableMouse(bool enabled)
 {
 #ifdef WIN32
 	if (s_GDIRevert)
 	{
-		GraphicsDriverGDI.enableMouse(enabled);
+		WindowOutputGDI.enableMouse(enabled);
 		return;
 	}
 #endif
@@ -776,12 +777,12 @@ void GraphicsDriverClass::enableMouse(bool enabled)
 	s_MouseEnabled = enabled;
 }
 
-void GraphicsDriverClass::setMousePressure(int pressure)
+void WindowOutput::setMousePressure(int pressure)
 {
 #ifdef WIN32
 	if (s_GDIRevert)
 	{
-		GraphicsDriverGDI.setMousePressure(pressure);
+		WindowOutputGDI.setMousePressure(pressure);
 		return;
 	}
 #endif
@@ -792,5 +793,7 @@ void GraphicsDriverClass::setMousePressure(int pressure)
 } /* namespace FT8XXEMU */
 
 #endif /* #ifndef FTEMU_SDL2 */
+
+#endif
 
 /* end of file */

@@ -1,8 +1,8 @@
 /**
- * AudioDriverClass
+ * AudioOutput
  * $Id$
- * \file ft8xxemu_audio_driver_sdl.cpp
- * \brief AudioDriverClass
+ * \file ft8xxemu_audio_output_sdl.cpp
+ * \brief AudioOutput
  * \date 2012-06-27 11:45GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -11,10 +11,12 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#if 0
+
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
 // #include <...>
-#include "ft8xxemu_audio_driver.h"
+#include "ft8xxemu_audio_output.h"
 
 // System includes
 #include "ft8xxemu_system_sdl.h"
@@ -23,7 +25,7 @@
 
 namespace FT8XXEMU {
 
-AudioDriverClass AudioDriver;
+AudioOutput AudioOutput;
 
 void (*g_AudioProcess)(short *audioBuffer, int samples) = NULL;
 
@@ -39,7 +41,7 @@ void sdlAudioCallback(void *userdata, Uint8 *stream, int len)
 
 } /* anonymous namespace */
 
-bool AudioDriverClass::begin()
+bool AudioOutput::begin()
 {
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
@@ -70,33 +72,33 @@ bool AudioDriverClass::begin()
 	SDL_PauseAudio(0);
 }
 
-bool AudioDriverClass::update()
+bool AudioOutput::update()
 {
 	return true;
 }
 
-int AudioDriverClass::getFrequency()
+int AudioOutput::getFrequency()
 {
 	return s_AudioFrequency;
 }
 
-int AudioDriverClass::getChannels()
+int AudioOutput::getChannels()
 {
 	return s_AudioChannels;
 }
 
-void AudioDriverClass::beginBuffer(short **buffer, int *samples)
+void AudioOutput::beginBuffer(short **buffer, int *samples)
 {
 	*buffer = NULL;
 	*samples = 0;
 }
 
-void AudioDriverClass::endBuffer()
+void AudioOutput::endBuffer()
 {
 
 }
 
-void AudioDriverClass::end()
+void AudioOutput::end()
 {
 	SDL_CloseAudio();
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
@@ -105,5 +107,7 @@ void AudioDriverClass::end()
 } /* namespace FT8XXEMU */
 
 #endif /* #ifdef FTEMU_SDL */
+
+#endif
 
 /* end of file */

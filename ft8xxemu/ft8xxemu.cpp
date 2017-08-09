@@ -13,7 +13,7 @@
 #define BT8XXEMU_VERSION_STRING "3.0.0"
 
 // Include BT8XXEMU_PLATFORM
-#include "ft8xxemu_graphics_driver.h"
+#include "ft8xxemu_window_output.h"
 
 // Include FT800EMU
 #define BT8XXEMU_NODEFS
@@ -156,13 +156,13 @@ BT8XXEMU_API void BT8XXEMU_stop()
 // Set touch XY. Call on every frame when using custom graphics output
 BT8XXEMU_API void BT8XXEMU_touchSetXY(int idx, int x, int y, int pressure)
 {
-	FT8XXEMU::g_SetTouchScreenXY(idx, x, y, pressure);
+	//FT8XXEMU::g_SetTouchScreenXY(idx, x, y, pressure);
 }
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
 BT8XXEMU_API void BT8XXEMU_touchResetXY(int idx)
 {
-	FT8XXEMU::g_ResetTouchScreenXY(idx);
+	//FT8XXEMU::g_ResetTouchScreenXY(idx);
 }
 
 /* end of file */

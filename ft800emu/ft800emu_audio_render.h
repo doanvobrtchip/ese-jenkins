@@ -19,6 +19,10 @@
 
 // Project includes
 
+namespace FT8XXEMU {
+	class AudioOutput;
+}
+
 namespace FT800EMU {
 
 /**
@@ -32,7 +36,7 @@ class AudioRenderClass
 public:
 	AudioRenderClass() { }
 
-	static void begin();
+	static void begin(FT8XXEMU::AudioOutput *audioOutput);
 	static void end();
 
 	static void playbackPlay();
