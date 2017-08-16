@@ -51,15 +51,15 @@ private:
 private:
 	bool m_CS = false;
 
-	uint32_t m_RWBuffer;
-	uint32_t m_RWBufferStage;
+	uint32_t m_RWBuffer = 0;
+	uint32_t m_RWBufferStage = 0;
 
-	uint32_t m_WriteStartAddr;
+	uint32_t m_WriteStartAddr = 0;
 
 	Memory *m_Memory;
 
-	BusSlaveState m_State;
-	uint32_t m_Cursor;
+	BusSlaveState m_State = BusSlaveIdle;
+	uint32_t m_Cursor = 0;
 	int m_Stage = 0;
 
 private:

@@ -31,7 +31,6 @@ namespace FT800EMU {
 BusSlave::BusSlave(Memory *memory)
 {
 	m_Memory = memory;
-	m_State = BusSlaveIdle;
 }
 
 BusSlave::~BusSlave()
