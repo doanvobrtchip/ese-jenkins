@@ -178,18 +178,24 @@ void debugShortkeys()
 	}
 }
 
-int Emulator::masterThread()
+int Emulator::masterThread(bool sync)
 {
 	m_ThreadMaster.init();
 	m_ThreadMaster.foreground();
 	m_ThreadMaster.noboost();
 	m_ThreadMaster.realtime();
-	m_ThreadMaster.setName("FT8XXEMU Graphics Master");
+	m_ThreadMaster.setName(sync ? "FT8XXEMU Graphics Master" : "FT8XXEMU Graphics Master Async");
 
 	double targetSeconds = FT8XXEMU::System.getSeconds();
 
 	uint8_t *ram = m_Memory->getRam();
 	int lastMicros = FT8XXEMU::System.getMicros();
+
+	if (!sync)
+	{
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_InitCond.notify_one();
+	}
 
 	while (m_MasterRunning)
 	{
@@ -637,8 +643,14 @@ int Emulator::masterThread()
 int Emulator::mcuThread()
 {
 	m_ThreadMCU.init();
-	m_ThreadMCU.foreground();
-	m_ThreadMCU.noboost();
+	if (m_MainPerformance)
+	{
+		if (!m_BackgroundPerformance)
+		{
+			m_ThreadMCU.foreground();
+		}
+		m_ThreadMCU.noboost();
+	}
 	m_ThreadMCU.unprioritize();
 	m_ThreadMCU.setName("FT8XXEMU MCU");
 
@@ -646,13 +658,8 @@ int Emulator::mcuThread()
 		std::unique_lock<std::mutex> lock(m_InitMutex);
 		m_InitCond.notify_one();
 	}
-		
-	m_Setup();
-	while (m_MasterRunning)
-	{
-		// FTEMU_printf("mcu thread\n");
-		m_Loop();
-	}
+	
+	m_Main();
 
 	m_ThreadMCU.reset();
 	return 0;
@@ -661,7 +668,10 @@ int Emulator::mcuThread()
 int Emulator::coprocessorThread()
 {
 	m_ThreadCoprocessor.init();
-	m_ThreadCoprocessor.foreground();
+	if (!m_BackgroundPerformance)
+	{
+		m_ThreadCoprocessor.foreground();
+	}
 	m_ThreadCoprocessor.noboost();
 	m_ThreadCoprocessor.unprioritize();
 	m_ThreadCoprocessor.setName("FT8XXEMU Coprocessor");
@@ -691,7 +701,10 @@ int Emulator::audioThread()
 
 	//FTEMU_printf("go sound thread");
 	m_ThreadAudio.init();
-	m_ThreadAudio.foreground();
+	if (!m_BackgroundPerformance)
+	{
+		m_ThreadAudio.foreground();
+	}
 	m_ThreadAudio.noboost();
 	m_ThreadAudio.realtime();
 	m_ThreadAudio.setName("FT8XXEMU Audio");
@@ -706,10 +719,6 @@ int Emulator::audioThread()
 		if (m_Flags & BT8XXEMU_EmulatorEnableKeyboard)
 		{
 			FT8XXEMU::Keyboard.update();
-			if (m_Keyboard)
-			{
-				m_Keyboard();
-			}
 			if (m_Flags & BT8XXEMU_EmulatorEnableDebugShortkeys)
 			{
 				debugShortkeys();
@@ -730,12 +739,77 @@ int Emulator::audioThread()
 	return 0;
 }
 
+void Emulator::finalMasterThread(bool sync, int flags)
+{
+	masterThread(sync);
+
+	m_MasterRunning = false;
+	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
+	{
+		m_ThreadCoprocessor.reset();
+		Coprocessor.stopEmulator();
+	}
+
+	FTEMU_printf("Wait for Coprocessor\n");
+	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
+		m_StdThreadCoprocessor.join();
+
+	if (!m_CloseCalled && m_StdThreadMCU.joinable())
+	{
+		FTEMU_printf("Late kill MCU thread\n");
+		if (m_Close)
+		{
+			m_Close();
+		}
+		else
+		{
+			FTEMU_printf("Kill MCU thread\n");
+			m_ThreadMCU.kill();
+		}
+	}
+
+	FTEMU_printf("Wait for MCU\n");
+	m_StdThreadMCU.join();
+
+	FTEMU_printf("Wait for Audio\n");
+	m_StdThreadAudio.join();
+
+	FTEMU_printf("Threads finished, cleaning up\n");
+
+	delete[] m_GraphicsBuffer;
+	m_GraphicsBuffer = NULL;
+	if ((!m_Graphics) && (flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
+	if (flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
+	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
+	{
+		AudioRender.end();
+		AudioProcessor.end();
+		m_AudioOutput->destroy();
+		m_AudioOutput = NULL;
+	}
+	if (!m_Graphics) m_WindowOutput->destroy();
+	m_WindowOutput = NULL;
+	SPII2C.end();
+	GraphicsProcessor.end();
+	TouchClass::end();
+	delete m_Memory; m_Memory = NULL;
+	FT8XXEMU::System.end();
+
+	m_EmulatorRunning = false;
+	FTEMU_printf("Emulator stopped running\n");
+
+#ifdef WIN32
+	if (m_CoInit)
+		CoUninitialize();
+#endif
+}
+
 void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 {
 	m_InitMutexGlobal.lock();
 
 #ifdef WIN32
-	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	m_CoInit = (CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
 #endif
 
 	BT8XXEMU_EmulatorMode mode = params.Mode;
@@ -759,22 +833,22 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	m_EmulatorRunning = true;
 
-	m_Setup = params.Setup;
-	m_Loop = params.Loop;
+	m_Main = params.Main;
 	m_Flags = params.Flags;
-	m_Keyboard = params.Keyboard;
 	m_Graphics = params.Graphics;
 	FT8XXEMU::g_Exception = params.Exception;
 	m_Close = params.Close;
 	m_CloseCalled = false;
 	m_ExternalFrequency = params.ExternalFrequency;
 	FT8XXEMU::g_PrintStd = (params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut;
+	m_BackgroundPerformance = (params.Flags & BT8XXEMU_EmulatorEnableBackgroundPerformance) == BT8XXEMU_EmulatorEnableBackgroundPerformance;
+	m_MainPerformance = (params.Flags & BT8XXEMU_EmulatorEnableMainPerformance) == BT8XXEMU_EmulatorEnableMainPerformance;
 
 	FT8XXEMU::System.begin();
 	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
 	m_Memory = new Memory(mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
 	TouchClass::begin(mode, m_Memory);
-	GraphicsProcessor.begin(m_Memory);
+	GraphicsProcessor.begin(m_Memory, m_BackgroundPerformance);
 	SPII2C.begin(m_Memory);
 	if (!m_Graphics)
 	{
@@ -831,85 +905,43 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	m_MasterRunning = true;
 
-	std::thread threadA = std::thread(&Emulator::audioThread, this);
+	m_StdThreadAudio = std::thread(&Emulator::audioThread, this);
 
-	std::thread threadC;
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
-		threadC = std::thread(&Emulator::coprocessorThread, this);
+		m_StdThreadCoprocessor = std::thread(&Emulator::coprocessorThread, this);
 		m_InitCond.wait(lock); // FIXME: 2017-08-09: conditional_variable are subject to random wake-ups...
 	}
 
-	std::thread threadD;
-	; {
+	if (params.Main)
+	{
 		std::unique_lock<std::mutex> lock(m_InitMutex);
-		threadD = std::thread(&Emulator::mcuThread, this);
+		m_StdThreadMCU = std::thread(&Emulator::mcuThread, this);
+		m_InitCond.wait(lock);
+	}
+	else
+	{
+		// Asynchronous run function, calling thread is MCU
+		if (m_MainPerformance && !m_BackgroundPerformance)
+		{
+			// Different behaviour for MainPerformance option from when MCU is threaded
+			m_ThreadMCU.init();
+			m_ThreadMCU.foreground();
+			m_ThreadMCU.noboost();
+			m_ThreadMCU.unprioritize();
+		}
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_StdThreadMaster = std::thread(&Emulator::finalMasterThread, this, false, params.Flags);
 		m_InitCond.wait(lock);
 	}
 
 	m_InitMutexGlobal.unlock();
 
-	masterThread();
-
-	m_MasterRunning = false;
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
+	if (params.Main)
 	{
-		m_ThreadCoprocessor.reset();
-		Coprocessor.stopEmulator();
+		// Synchronous run function, calling thread is graphics
+		finalMasterThread(true, params.Flags);
 	}
-
-	FTEMU_printf("Wait for Coprocessor\n");
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-		threadC.join();
-
-	if (!m_CloseCalled && threadD.joinable())
-	{
-		FTEMU_printf("Late kill MCU thread\n");
-		if (m_Close)
-		{
-			m_Close();
-		}
-		else
-		{
-			FTEMU_printf("Kill MCU thread\n");
-			m_ThreadMCU.kill();
-		}
-	}
-
-	FTEMU_printf("Wait for MCU\n");
-	threadD.join();
-
-	FTEMU_printf("Wait for Audio\n");
-	threadA.join();
-
-	FTEMU_printf("Threads finished, cleaning up\n");
-
-	delete[] m_GraphicsBuffer;
-	m_GraphicsBuffer = NULL;
-	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
-	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
-	{
-		AudioRender.end();
-		AudioProcessor.end();
-		m_AudioOutput->destroy();
-		m_AudioOutput = NULL;
-	}
-	if (!m_Graphics) m_WindowOutput->destroy();
-	m_WindowOutput = NULL;
-	SPII2C.end();
-	GraphicsProcessor.end();
-	TouchClass::end();
-	delete m_Memory; m_Memory = NULL;
-	FT8XXEMU::System.end();
-
-	m_EmulatorRunning = false;
-	FTEMU_printf("Emulator stopped running\n");
-
-#ifdef WIN32
-	if (coInitHR == S_OK)
-		CoUninitialize();
-#endif
 }
 
 void Emulator::stop()
@@ -927,6 +959,11 @@ void Emulator::stop()
 		{
 			FT8XXEMU::System.delay(1);
 		}
+	}
+
+	if (m_MainPerformance && !m_BackgroundPerformance && !m_Main && m_ThreadMCU.current())
+	{
+		m_ThreadMCU.reset();
 	}
 
 	FTEMU_printf("Stop ok\n");

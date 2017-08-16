@@ -100,16 +100,17 @@ public:
 	virtual void clearDisplayListCoprocessorWrites() override;
 
 private:
-	int masterThread();
+	int masterThread(bool sync);
 	int mcuThread();
 	int coprocessorThread();
 	int audioThread();
 
+	void finalMasterThread(bool sync, int flags);
+
 private:
 	volatile bool m_EmulatorRunning = false;
 
-	void(*m_Setup)() = NULL;
-	void(*m_Loop)() = NULL;
+	void(*m_Main)() = NULL;
 	void(*m_Keyboard)() = NULL;
 	void(*m_Close)() = NULL;
 	int m_Flags = 0;
@@ -142,6 +143,18 @@ private:
 	FT8XXEMU::ThreadState m_ThreadMCU; //< User MCU thread (optional)
 	FT8XXEMU::ThreadState m_ThreadCoprocessor; //< Coprocessor thread
 	FT8XXEMU::ThreadState m_ThreadAudio; //< Audio thread
+
+	std::thread m_StdThreadMaster;
+	std::thread m_StdThreadMCU;
+	std::thread m_StdThreadCoprocessor;
+	std::thread m_StdThreadAudio;
+
+	bool m_BackgroundPerformance;
+	bool m_MainPerformance;
+
+#ifdef WIN32
+	bool m_CoInit = false;
+#endif
 
 	std::mutex m_SwapDLMutex;
 

@@ -55,7 +55,7 @@ typedef enum
 	BT8XXEMU_EmulatorEnableDebugShortkeys = 0x10,
 	// enable graphics processor multithreading (default: on)
 	BT8XXEMU_EmulatorEnableGraphicsMultithread = 0x20,
-	// enable dynamic graphics quality degrading by interlacing and dropping frames (default: on)
+	// enable dynamic graphics quality degrading by reducing resolution and dropping frames (default: on)
 	BT8XXEMU_EmulatorEnableDynamicDegrade = 0x40,
 	// enable usage of REG_ROTATE (default: off)
 	// BT8XXEMU_EmulatorEnableRegRotate = 0x80, // Now always on
@@ -65,6 +65,11 @@ typedef enum
 	BT8XXEMU_EmulatorEnableTouchTransformation = 0x200,
 	// enable output to stdout from the emulator (default: off) (note: stdout is is some cases not thread safe)
 	BT8XXEMU_EmulatorEnableStdOut = 0x400,
+	// enable performance adjustments for running the emulator as a background process without window (default: off)
+	BT8XXEMU_EmulatorEnableBackgroundPerformance = 0x800,
+	// enable performance adjustments for the main MCU thread (default: on)
+	BT8XXEMU_EmulatorEnableMainPerformance = 0x1000,
+
 } BT8XXEMU_EmulatorFlags;
 
 typedef enum
@@ -97,23 +102,18 @@ typedef enum
 
 	// NOTE: To get the accurate frame after any frame change, wait for
 	// FrameChanged, and get the first frame which has FrameBufferComplete set.
+
 } BT8XXEMU_FrameFlags;
 
 typedef struct
 {
-	// Microcontroller function called before loop.
-	void(*Setup)();
-	// Microcontroller continuous loop.
-	void(*Loop)();
+	// Microcontroller main function. When not provided the calling thread is assumed to be the MCU thread
+	void(*Main)();
 	// See EmulatorFlags.
 	int Flags;
 	// Emulator mode
 	BT8XXEMU_EmulatorMode Mode;
 
-	// Called after keyboard update.
-	// Supplied function can use Keyboard.isKeyDown(BT8XXEMU_KEY_F3)
-	// or BT8XXEMU_isKeyDown(BT8XXEMU_KEY_F3) functions.
-	void(*Keyboard)();
 	// The default mouse pressure, default 0 (maximum).
 	// See REG_TOUCH_RZTRESH, etc.
 	uint32_t MousePressure;
@@ -157,7 +157,7 @@ typedef struct
 	// Exception callback
 	void(*Exception)(const char *message);
 
-	// Safe exit
+	// Safe exit. Called when the emulator window is closed
 	void(*Close)();
 
 } BT8XXEMU_EmulatorParameters;

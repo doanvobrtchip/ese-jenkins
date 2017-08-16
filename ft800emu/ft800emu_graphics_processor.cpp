@@ -2376,9 +2376,13 @@ static int s_DebugLimiterIndex;
 
 static int s_ThreadCount;
 
-void GraphicsProcessorClass::begin(Memory *memory)
+static bool s_BackgroundPerformance;
+
+void GraphicsProcessorClass::begin(Memory *memory, bool backgroundPerformance)
 {
 	s_Memory = memory;
+	s_BackgroundPerformance = backgroundPerformance;
+
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	s_DebugMultiplier = 1;
 	s_DebugLimiter = 0;
@@ -3396,7 +3400,10 @@ int launchGraphicsProcessorThread(void *startInfo)
 DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 {
 	FT8XXEMU::ThreadState threadState;
-	threadState.foreground();
+	if (!s_BackgroundPerformance)
+	{
+		threadState.foreground();
+	}
 	threadState.noboost();
 	threadState.realtime();
 	threadState.setName("FT8XXEMU Graphics Slave");

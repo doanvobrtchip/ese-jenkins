@@ -66,7 +66,7 @@ class GraphicsProcessorClass
 public:
 	GraphicsProcessorClass() { }
 
-	static void begin(Memory *memory);
+	static void begin(Memory *memory, bool backgroundPerformance);
 	static void end();
 
 	static void setThreadPriority(bool realtime);

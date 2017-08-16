@@ -11,50 +11,47 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#include <ft8xxemu_keyboard_keys.h>
-#include <ft800emu_emulator.h>
-#include <ft8xxemu_keyboard.h>
-#include <ft8xxemu_system.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_spi_i2c.h>
-#include <ft800emu_graphics_processor.h>
+#include <Windows.h>
+
+#include <ft8xxemu.h>
 #include <stdio.h>
 #include <ft800emu_vc.h>
+
 
 #define FT800EMU_XBU_FILE "xbu/SCATTER.XBU"
 
 void swrbegin(size_t address)
 {
-	FT800EMU::SPII2C.csLow();
+	BT8XXEMU_cs(1);
 
-	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	// FT800EMU::SPII2C.transfer(0x00);
+	BT8XXEMU_transfer((2 << 6) | ((address >> 16) & 0x3F));
+	BT8XXEMU_transfer((address >> 8) & 0xFF);
+	BT8XXEMU_transfer(address & 0xFF);
+	// BT8XXEMU_transfer(0x00);
 }
 
 void swr8(uint8_t value)
 {
-	FT800EMU::SPII2C.transfer(value);
+	BT8XXEMU_transfer(value);
 }
 
 void swr16(uint16_t value)
 {
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
+	BT8XXEMU_transfer(value & 0xFF);
+	BT8XXEMU_transfer((value >> 8) & 0xFF);
 }
 
 void swr32(uint32_t value)
 {
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 16) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 24) & 0xFF);
+	BT8XXEMU_transfer(value & 0xFF);
+	BT8XXEMU_transfer((value >> 8) & 0xFF);
+	BT8XXEMU_transfer((value >> 16) & 0xFF);
+	BT8XXEMU_transfer((value >> 24) & 0xFF);
 }
 
 void swrend()
 {
-	FT800EMU::SPII2C.csHigh();
+	BT8XXEMU_cs(0);
 }
 
 void wr32(size_t address, uint32_t value)
@@ -66,20 +63,20 @@ void wr32(size_t address, uint32_t value)
 
 uint32_t rd32(size_t address)
 {
-	FT800EMU::SPII2C.csLow();
+	BT8XXEMU_cs(1);
 
-	FT800EMU::SPII2C.transfer((address >> 16) & 0x3F);
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	FT800EMU::SPII2C.transfer(0x00);
+	BT8XXEMU_transfer((address >> 16) & 0x3F);
+	BT8XXEMU_transfer((address >> 8) & 0xFF);
+	BT8XXEMU_transfer(address & 0xFF);
+	BT8XXEMU_transfer(0x00);
 
 	uint32_t value;
-	value = FT800EMU::SPII2C.transfer(0);
-	value |= FT800EMU::SPII2C.transfer(0) << 8;
-	value |= FT800EMU::SPII2C.transfer(0) << 16;
-	value |= FT800EMU::SPII2C.transfer(0) << 24;
+	value = BT8XXEMU_transfer(0);
+	value |= BT8XXEMU_transfer(0) << 8;
+	value |= BT8XXEMU_transfer(0) << 16;
+	value |= BT8XXEMU_transfer(0) << 24;
 
-	FT800EMU::SPII2C.csHigh();
+	BT8XXEMU_cs(0);
 	return value;
 }
 
@@ -135,7 +132,7 @@ void loop()
 {
 	if (!s_F)
 	{
-		FT8XXEMU::System.delay(10);
+		Sleep(10);
 	}
 	else
 	{
@@ -251,14 +248,26 @@ void keyboard()
 
 }
 
+static bool s_Closed = false;
+void close()
+{
+	s_Closed = true;
+}
+
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
+#ifdef FT810EMU_MODE
+		BT8XXEMU_EmulatorFT810
+#else
+		BT8XXEMU_EmulatorFT801
+#endif
+	);
 	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
-	params.Setup = setup;
-	params.Loop = loop;
+	params.Close = close;
 	params.Flags =
 		BT8XXEMU_EmulatorEnableKeyboard
 		| BT8XXEMU_EmulatorEnableMouse
@@ -266,15 +275,12 @@ int main(int, char* [])
 		| BT8XXEMU_EmulatorEnableCoprocessor
 		| BT8XXEMU_EmulatorEnableGraphicsMultithread
 		| BT8XXEMU_EmulatorEnableStdOut
+		| BT8XXEMU_EmulatorEnableMainPerformance
 		;
-#ifdef FT810EMU_MODE
-	params.Mode = BT8XXEMU_EmulatorFT810;
-#else
-	params.Mode = BT8XXEMU_EmulatorFT801;
-#endif
-	params.Keyboard = keyboard;
 	params.ReduceGraphicsThreads = 2;
-	FT800EMU::Emulator emulator;
-	emulator.run(params);
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &params);
+	setup();
+	while (!s_Closed)
+		loop();
 	return 0;
 }
