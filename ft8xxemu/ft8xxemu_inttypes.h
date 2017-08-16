@@ -14,6 +14,14 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #include <stdlib.h>
 #endif
+#if defined(_MSC_VER) && (MSC_VER >= 1900)
+#ifdef __cplusplus
+#ifdef NULL
+#undef NULL
+#endif
+#define NULL nullptr
+#endif
+#endif
 #ifndef BT8XXEMU_INTTYPES_DEFINED_COLOR
 #define BT8XXEMU_INTTYPES_DEFINED_COLOR
 typedef uint32_t argb8888;

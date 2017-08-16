@@ -1,8 +1,8 @@
 /**
- * AudioRenderClass
+ * AudioRender
  * $Id$
  * \file ft800emu_audio_render.cpp
- * \brief AudioRenderClass
+ * \brief AudioRender
  * \date 2013-10-17 23:44GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -29,47 +29,28 @@
 
 namespace FT800EMU {
 
-AudioRenderClass AudioRender;
-
-// Simple linear resampling
-#define FT800EMU_SYNTH_RATE 48000
-static double s_SecondsPerSynthSample = 1.0 / (double)FT800EMU_SYNTH_RATE;
-static double s_SecondsPassedForSynthSample = 0.0;
-static short s_SynthSample0 = 0;
-static short s_SynthSample1 = 0;
-static double s_SecondsPassedForPlaybackSample = 0.0;
-static short s_PlaybackSample0 = 0;
-static short s_PlaybackSample1 = 0;
-static bool s_ADPCMNext = false;
-
-static bool s_RequestPlayback = false;
-
-static FT8XXEMU::AudioOutput *s_AudioOutput = NULL;
-static Memory *s_Memory = NULL;
-static AudioProcessor *s_AudioProcessor = NULL;
-
-void AudioRenderClass::begin(FT8XXEMU::AudioOutput *audioOutput, Memory *memory, AudioProcessor *audioProcessor)
+AudioRender::AudioRender(FT8XXEMU::AudioOutput *audioOutput, Memory *memory, AudioProcessor *audioProcessor)
 {
-	s_AudioOutput = audioOutput;
-	s_Memory = memory;
-	s_AudioProcessor = audioProcessor;
+	m_AudioOutput = audioOutput;
+	m_Memory = memory;
+	m_AudioProcessor = audioProcessor;
 
-	s_AudioOutput->onAudioProcess([](short *audioBuffer, int samples) -> void {
+	m_AudioOutput->onAudioProcess([this](short *audioBuffer, int samples) -> void {
 		process(audioBuffer, samples);
 	});
 }
 
-void AudioRenderClass::end()
+AudioRender::~AudioRender()
 {
 
 }
 
-void AudioRenderClass::playbackPlay()
+void AudioRender::playbackPlay()
 {
-	s_RequestPlayback = true;
+	m_RequestPlayback = true;
 }
 
-static int16_t ulawranges[] = {
+static const int16_t c_ULawRanges[] = {
 	-8159,
 	-4063,
 	-2015,
@@ -88,13 +69,11 @@ static int16_t ulawranges[] = {
 	30
 };
 
-static int s_ADPCMPredictedSample = 0;
-static int s_ADPCMIndex = 0;
-static int s_ADPCMIndexTable[16] = {
+static const int c_ADPCMIndexTable[16] = {
 	-1, -1, -1, -1, 2, 4, 6, 8,
 	-1, -1, -1, -1, 2, 4, 6, 8
 };
-static int s_ADPCMStepsizeTable[89] = {
+static const int c_ADPCMStepsizeTable[89] = {
 	7, 8, 9, 10, 11, 12, 13, 14,
 	16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60,
 	66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209,
@@ -106,20 +85,20 @@ static int s_ADPCMStepsizeTable[89] = {
 	32767
 };
 
-static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
+BT8XXEMU_FORCE_INLINE int16_t AudioRender::playback(uint32_t &playbackStart,
 	uint32_t &playbackLength, uint8_t &playbackFormat,
 	uint8_t &playbackLoop, uint8_t &playbackBusy,
 	uint32_t &playbackReadPtr, uint8_t &playbackVolume,
 	bool &adpcmNext, uint8_t *ram)
 {
-	if (s_RequestPlayback)
+	if (m_RequestPlayback)
 	{
-		s_RequestPlayback = false;
+		m_RequestPlayback = false;
 		playbackBusy = 1;
 		playbackReadPtr = playbackStart;
 		adpcmNext = false;
-		s_ADPCMPredictedSample = 0;
-		s_ADPCMIndex = 0;
+		m_ADPCMPredictedSample = 0;
+		m_ADPCMIndex = 0;
 	}
 	if (playbackBusy)
 	{
@@ -161,7 +140,7 @@ static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 				int16_t range = (int16_t)(uint8_t)((value & (0x70)) >> 4);
 				int16_t step = (int16_t)(uint8_t)(value & (0x0F));
 				int16_t stepm = step << (8 - range); // 0 becomes 256, 7=2
-				int16_t rangem = ulawranges[(value & (0xF0)) >> 4];
+				int16_t rangem = c_ULawRanges[(value & (0xF0)) >> 4];
 				if (sign) stepm = -stepm;
 				int16_t result = rangem + stepm;
 				int32_t resultv = (int32_t)result * (int32_t)playbackVolume;
@@ -179,7 +158,7 @@ static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 
 				/* compute predicted sample estimate newSample */
 				/* calculate difference = (originalSample + 1⁄2) * stepsize/4: */
-				int stepSize = s_ADPCMStepsizeTable[s_ADPCMIndex];
+				int stepSize = c_ADPCMStepsizeTable[m_ADPCMIndex];
 				int difference = 0;
 				if (originalSample & 4) /* perform multiplication through repetitive addition */
 					difference += stepSize;
@@ -195,15 +174,15 @@ static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 					difference = -difference;
 
 				/* adjust predicted sample based on calculated difference: */
-				s_ADPCMPredictedSample += difference;
-				s_ADPCMPredictedSample = min(max(-32768, s_ADPCMPredictedSample), 32767); /* check for overflow */
+				m_ADPCMPredictedSample += difference;
+				m_ADPCMPredictedSample = min(max(-32768, m_ADPCMPredictedSample), 32767); /* check for overflow */
 
 				/* compute new stepsize */
 				/*adjust index into stepsize lookup table using originalSample: */
-				s_ADPCMIndex += s_ADPCMIndexTable[originalSample];
-				s_ADPCMIndex = min(max(0, s_ADPCMIndex), 88); /* check for overflow */
+				m_ADPCMIndex += c_ADPCMIndexTable[originalSample];
+				m_ADPCMIndex = min(max(0, m_ADPCMIndex), 88); /* check for overflow */
 
-				return (int16_t)((s_ADPCMPredictedSample * (int32_t)playbackVolume) >> 8);
+				return (int16_t)((m_ADPCMPredictedSample * (int32_t)playbackVolume) >> 8);
 			}
 			default:
 			{
@@ -217,30 +196,30 @@ static BT8XXEMU_FORCE_INLINE int16_t playback(uint32_t &playbackStart,
 	}
 }
 
-void AudioRenderClass::process()
+void AudioRender::process()
 {
 	short *audioBuffer;
 	int samples;
 
-	s_AudioOutput->beginBuffer(&audioBuffer, &samples);
+	m_AudioOutput->beginBuffer(&audioBuffer, &samples);
 
 	if (audioBuffer != NULL)
 	{
 		process(audioBuffer, samples);
-		s_AudioOutput->endBuffer();
+		m_AudioOutput->endBuffer();
 	}
 }
 
-void AudioRenderClass::process(short *audioBuffer, int samples)
+void AudioRender::process(short *audioBuffer, int samples)
 {
 	// FTEMU_printf("process audio\n");
-	uint8_t *ram = s_Memory->getRam();
+	uint8_t *ram = m_Memory->getRam();
 
-	int16_t synthSample0 = s_SynthSample0;
-	int16_t synthSample1 = s_SynthSample1;
+	int16_t synthSample0 = m_SynthSample0;
+	int16_t synthSample1 = m_SynthSample1;
 
-	int16_t playbackSample0 = s_PlaybackSample0;
-	int16_t playbackSample1 = s_PlaybackSample1;
+	int16_t playbackSample0 = m_PlaybackSample0;
+	int16_t playbackSample1 = m_PlaybackSample1;
 
 	uint8_t &busy = ram[REG_PLAY];
 	uint16_t &sound = *static_cast<uint16_t *>(static_cast<void *>(&ram[REG_SOUND]));
@@ -255,50 +234,50 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 	uint8_t &playbackBusy = ram[REG_PLAYBACK_PLAY];
 	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR])); playbackReadPtr &= FT800EMU_ADDR_MASK;
 	uint8_t &playbackVolume = ram[REG_VOL_PB];
-	bool adpcmNext = s_ADPCMNext;
+	bool adpcmNext = m_ADPCMNext;
 
-	int audioFrequency = s_AudioOutput->getFrequency();
+	int audioFrequency = m_AudioOutput->getFrequency();
 	double secondsPerSample = 1.0 / (double)audioFrequency;
-	int channels = s_AudioOutput->getChannels();
+	int channels = m_AudioOutput->getChannels();
 
 	for (int i = 0; i < samples; ++i)
 	{
 		int16_t synth;
 		if (audioFrequency != FT800EMU_SYNTH_RATE)
 		{
-			while (s_SecondsPassedForSynthSample > s_SecondsPerSynthSample)
+			while (m_SecondsPassedForSynthSample > m_SecondsPerSynthSample)
 			{
-				s_SecondsPassedForSynthSample -= s_SecondsPerSynthSample;
+				m_SecondsPassedForSynthSample -= m_SecondsPerSynthSample;
 				synthSample0 = synthSample1;
-				synthSample1 = s_AudioProcessor->execute(busy, sound, volume);
+				synthSample1 = m_AudioProcessor->execute(busy, sound, volume);
 			}
-			s_SecondsPassedForSynthSample += secondsPerSample;
+			m_SecondsPassedForSynthSample += secondsPerSample;
 			synth = (int16_t)(
 				(
-					((double)synthSample0 * (s_SecondsPerSynthSample - s_SecondsPassedForSynthSample))
-					+ ((double)synthSample1 * s_SecondsPassedForSynthSample)
+					((double)synthSample0 * (m_SecondsPerSynthSample - m_SecondsPassedForSynthSample))
+					+ ((double)synthSample1 * m_SecondsPassedForSynthSample)
 				)
-				/ s_SecondsPerSynthSample);
+				/ m_SecondsPerSynthSample);
 		}
 		else
 		{
-			synth = s_AudioProcessor->execute(busy, sound, volume);
+			synth = m_AudioProcessor->execute(busy, sound, volume);
 		}
 
 		int16_t pb;
 		if (audioFrequency != playbackFreq && playbackFreq >= 8000 && playbackFreq <= 48000)
 		{
-			while (s_SecondsPassedForPlaybackSample > secondsPerPlaybackSample)
+			while (m_SecondsPassedForPlaybackSample > secondsPerPlaybackSample)
 			{
-				s_SecondsPassedForPlaybackSample -= secondsPerPlaybackSample;
+				m_SecondsPassedForPlaybackSample -= secondsPerPlaybackSample;
 				playbackSample0 = playbackSample1;
 				playbackSample1 = playback(playbackStart, playbackLength, playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, adpcmNext, ram);
 			}
-			s_SecondsPassedForPlaybackSample += secondsPerSample;
+			m_SecondsPassedForPlaybackSample += secondsPerSample;
 			pb = (int16_t)(
 				(
-					((double)playbackSample0 * (secondsPerPlaybackSample - s_SecondsPassedForPlaybackSample))
-					+ ((double)playbackSample1 * s_SecondsPassedForPlaybackSample)
+					((double)playbackSample0 * (secondsPerPlaybackSample - m_SecondsPassedForPlaybackSample))
+					+ ((double)playbackSample1 * m_SecondsPassedForPlaybackSample)
 				)
 				/ secondsPerPlaybackSample);
 		}
@@ -317,11 +296,11 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 			audioBuffer[(i * channels) + j] = 0;
 		}
 	}
-	s_SynthSample0 = synthSample0;
-	s_SynthSample1 = synthSample1;
-	s_PlaybackSample0 = playbackSample0;
-	s_PlaybackSample1 = playbackSample1;
-	s_ADPCMNext = adpcmNext;
+	m_SynthSample0 = synthSample0;
+	m_SynthSample1 = synthSample1;
+	m_PlaybackSample0 = playbackSample0;
+	m_PlaybackSample1 = playbackSample1;
+	m_ADPCMNext = adpcmNext;
 }
 
 } /* namespace FT800EMU */

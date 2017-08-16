@@ -714,7 +714,7 @@ int Emulator::audioThread()
 		//FTEMU_printf("sound thread\n");
 		if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 		{
-			AudioRender.process();
+			m_AudioRender->process();
 		}
 		if (m_Flags & BT8XXEMU_EmulatorEnableKeyboard)
 		{
@@ -782,7 +782,10 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	if (flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
 	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
-		AudioRender.end();
+		m_Memory->setAudioRender(NULL);
+		delete m_AudioRender;
+		m_AudioRender = NULL;
+		m_Memory->setAudioProcessor(NULL);
 		delete m_AudioProcessor;
 		m_AudioProcessor = NULL;
 		m_AudioOutput->destroy();
@@ -868,7 +871,8 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		assert(!m_AudioProcessor);
 		m_AudioProcessor = new AudioProcessor();
 		m_Memory->setAudioProcessor(m_AudioProcessor);
-		AudioRender.begin(m_AudioOutput, m_Memory, m_AudioProcessor);
+		m_AudioRender = new AudioRender(m_AudioOutput, m_Memory, m_AudioProcessor);
+		m_Memory->setAudioRender(m_AudioRender);
 		/*
 		// TODO: 2017-08-09: Output creation failure manage
 		if (!FT8XXEMU::AudioOutput.begin())

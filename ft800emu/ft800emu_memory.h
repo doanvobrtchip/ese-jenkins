@@ -26,6 +26,7 @@
 namespace FT800EMU {
 	class Emulator;
 	class AudioProcessor;
+	class AudioRender;
 
 typedef int32_t ramaddr;
 
@@ -44,6 +45,7 @@ public:
 	~Memory();
 
 	inline void setAudioProcessor(AudioProcessor *audioProcessor) { m_AudioProcessor = audioProcessor; }
+	inline void setAudioRender(AudioRender *audioRender) { m_AudioRender = audioRender; }
 
 	void enableReadDelay(bool enabled = true);
 
@@ -121,6 +123,7 @@ private:
 
 	// Dependencies
 	AudioProcessor *m_AudioProcessor;
+	AudioRender *m_AudioRender;
 
 	// Avoid getting hammered in wait loops
 	ramaddr m_LastCoprocessorRead = -1;
