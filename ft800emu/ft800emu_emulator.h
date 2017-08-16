@@ -41,11 +41,12 @@ class IEmulator
 {
 public:
 	virtual void stop() = 0;
-	/*
+
 	virtual uint8_t transfer(uint8_t data) = 0;
 	virtual void cs(bool cs) = 0;
-	virtual bool interrupt() = 0;
+	virtual bool hasInterrupt() = 0;
 
+	/*
 	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
 	virtual void touchResetXY(int idx) = 0;
 	*/
@@ -79,6 +80,7 @@ namespace FT800EMU {
 	class AudioProcessor;
 	class AudioRender;
 	class Coprocessor;
+	class BusSlave;
 
 /**
  * Emulator
@@ -94,6 +96,10 @@ public:
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
+
+	virtual uint8_t transfer(uint8_t data) override;
+	virtual void cs(bool cs) override;
+	virtual bool hasInterrupt() override;
 
 	virtual uint8_t *getRam() override;
 	// virtual uint8_t *getFlash() override;
@@ -168,6 +174,7 @@ private:
 	AudioRender *m_AudioRender = NULL;
 	Memory *m_Memory = NULL;
 	Coprocessor *m_Coprocessor = NULL;
+	BusSlave *m_BusSlave = NULL;
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

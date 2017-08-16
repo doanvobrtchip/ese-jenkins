@@ -65,7 +65,7 @@ void Memory::poke()
 	m_Interrupt = interrupt;
 }*/
 
-bool Memory::intnLow()
+bool Memory::hasInterrupt()
 {
 	uint8_t en = rawReadU8(REG_INT_EN);
 	if (en & 0x01)
@@ -78,11 +78,6 @@ bool Memory::intnLow()
 	{
 		return false;
 	}
-}
-
-bool Memory::intnHigh()
-{
-	return !intnLow();
 }
 
 bool Memory::coprocessorGetReset()

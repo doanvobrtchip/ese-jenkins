@@ -53,8 +53,7 @@ public:
 	inline const uint32_t *getDisplayList() { return m_DisplayListActive; }
 
 	//static void setInterrupt(void (*interrupt)());
-	bool intnLow();
-	bool intnHigh();
+	bool hasInterrupt();
 
 	// Use separate functions for microcontroller access in case we need to put a hook on certain adresses for performance reasons.
 	void mcuWriteU32(ramaddr address, uint32_t data);

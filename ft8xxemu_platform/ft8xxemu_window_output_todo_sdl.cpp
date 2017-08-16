@@ -22,7 +22,7 @@
 // System includes
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_system_sdl.h"
-#include "ft8xxemu_spi_i2c.h"
+#include "ft8xxemu_bus_slave.h"
 
 namespace FT8XXEMU {
 

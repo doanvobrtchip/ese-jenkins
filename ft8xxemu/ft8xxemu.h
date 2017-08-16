@@ -187,13 +187,13 @@ BT8XXEMU_API void BT8XXEMU_stop();
 /////////////
 
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
-BT8XXEMU_API extern uint8_t (*BT8XXEMU_transfer)(uint8_t data);
+BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(uint8_t data);
 
 // Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-BT8XXEMU_API extern void (*BT8XXEMU_cs)(int cs);
+BT8XXEMU_API extern void BT8XXEMU_cs(int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
-BT8XXEMU_API extern int (*BT8XXEMU_int)();
+BT8XXEMU_API extern int BT8XXEMU_hasInterrupt();
 
 //////////////
 // ADVANCED //

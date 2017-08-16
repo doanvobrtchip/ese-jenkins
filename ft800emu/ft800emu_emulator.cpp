@@ -28,7 +28,7 @@
 #include "ft8xxemu_window_output.h"
 #include "ft8xxemu_audio_output.h"
 
-#include "ft800emu_spi_i2c.h"
+#include "ft800emu_bus_slave.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_touch.h"
 #include "ft800emu_graphics_processor.h"
@@ -798,7 +798,8 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	}
 	if (!m_Graphics) m_WindowOutput->destroy();
 	m_WindowOutput = NULL;
-	SPII2C.end();
+	delete m_BusSlave;
+	m_BusSlave = NULL;
 	GraphicsProcessor.end();
 	TouchClass::end();
 	delete m_Memory; m_Memory = NULL;
@@ -858,7 +859,8 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_Memory = new Memory(mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
 	TouchClass::begin(mode, m_Memory);
 	GraphicsProcessor.begin(m_Memory, m_BackgroundPerformance);
-	SPII2C.begin(m_Memory);
+	assert(!m_BusSlave);
+	m_BusSlave = new BusSlave(m_Memory);
 	if (!m_Graphics)
 	{
 		m_WindowOutput = FT8XXEMU::WindowOutput::create();
@@ -983,6 +985,22 @@ void Emulator::stop()
 	}
 
 	FTEMU_printf("Stop ok\n");
+}
+
+
+uint8_t Emulator::transfer(uint8_t data)
+{
+	return m_BusSlave->transfer(data);
+}
+
+void Emulator::cs(bool cs)
+{
+	m_BusSlave->cs(cs);
+}
+
+bool Emulator::hasInterrupt()
+{
+	return m_Memory->hasInterrupt();
 }
 
 uint8_t *Emulator::getRam()

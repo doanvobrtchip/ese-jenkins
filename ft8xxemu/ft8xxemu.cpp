@@ -18,7 +18,7 @@
 // Include FT800EMU
 #define BT8XXEMU_NODEFS
 #ifdef FTEMU_HAVE_FT800EMU
-#include "ft800emu_spi_i2c.h"
+#include "ft800emu_bus_slave.h"
 #include "ft800emu_emulator.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_processor.h"
@@ -26,23 +26,19 @@
 
 // Include FT810EMU
 #ifdef FTEMU_HAVE_FT810EMU
-#undef FT800EMU_SPI_I2C_H
+#undef FT800EMU_BUS_SLAVE_H
 #undef FT800EMU_EMULATOR_H
 #undef FT800EMU_MEMORY_H
 #undef FT800EMU_GRAPHICS_PROCESSOR_H
 #define FT800EMU FT810EMU
 #define FT810EMU_MODE
-#include "ft800emu_spi_i2c.h"
+#include "ft800emu_bus_slave.h"
 #include "ft800emu_emulator.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_graphics_processor.h"
 #undef FT800EMU
 #undef FT810EMU_MODE
 #endif
-
-uint8_t(*BT8XXEMU_transfer)(uint8_t data) = NULL;
-void(*BT8XXEMU_cs)(int cs) = NULL;
-int(*BT8XXEMU_int)() = NULL;
 
 bool(*BT8XXEMU_getDebugLimiterEffective)() = NULL;
 int(*BT8XXEMU_getDebugLimiterIndex)() = NULL;
@@ -99,9 +95,6 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 	case BT8XXEMU_EmulatorFT800:
 	case BT8XXEMU_EmulatorFT801:
 		s_Emulator = new FT800EMU::Emulator();
-		BT8XXEMU_transfer = &FT800EMU::SPII2C.transfer;
-		BT8XXEMU_cs = &FT800EMU::SPII2C.csLow;
-		BT8XXEMU_int = &FT800EMU::SPII2C.intnLow;
 		BT8XXEMU_getDebugLimiterEffective = &FT800EMU::GraphicsProcessor.getDebugLimiterEffective;
 		BT8XXEMU_getDebugLimiterIndex = &FT800EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT800EMU::GraphicsProcessor.setDebugLimiter;
@@ -115,9 +108,6 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 	case BT8XXEMU_EmulatorFT812:
 	case BT8XXEMU_EmulatorFT813:
 		s_Emulator = new FT810EMU::Emulator();
-		BT8XXEMU_transfer = &FT810EMU::SPII2C.transfer;
-		BT8XXEMU_cs = &FT810EMU::SPII2C.csLow;
-		BT8XXEMU_int = &FT810EMU::SPII2C.intnLow;
 		BT8XXEMU_getDebugLimiterEffective = &FT810EMU::GraphicsProcessor.getDebugLimiterEffective;
 		BT8XXEMU_getDebugLimiterIndex = &FT810EMU::GraphicsProcessor.getDebugLimiterIndex;
 		BT8XXEMU_setDebugLimiter = &FT810EMU::GraphicsProcessor.setDebugLimiter;
@@ -137,6 +127,21 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 BT8XXEMU_API void BT8XXEMU_stop()
 {
 	s_Emulator->stop();
+}
+
+BT8XXEMU_API uint8_t BT8XXEMU_transfer(uint8_t data)
+{
+	return s_Emulator->transfer(data);
+}
+
+BT8XXEMU_API void BT8XXEMU_cs(int cs)
+{
+	s_Emulator->cs(cs);
+}
+
+BT8XXEMU_API int BT8XXEMU_hasInterrupt()
+{
+	return s_Emulator->hasInterrupt();
 }
 
 BT8XXEMU_API uint8_t *BT8XXEMU_getRam()
