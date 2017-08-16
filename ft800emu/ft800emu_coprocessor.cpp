@@ -24,10 +24,6 @@ namespace FT800EMU {
 
 #define FT800EMU_COPROCESSOR_ROM_SIZE 8192
 
-CoprocessorClass Coprocessor;
-
-static volatile bool s_Running;
-
 static const int sx[4] = { 0, 1, -2, -1 }; /* 2-bit sign extension */
 
 static const uint16_t pgm_rom_ft800[FT800EMU_COPROCESSOR_ROM_SIZE] = {
@@ -38,7 +34,7 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 };
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-void CoprocessorClass::begin(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
 {
 	m_Memory = memory;
 
@@ -69,10 +65,10 @@ void CoprocessorClass::begin(Memory *memory, const char *romFilePath, BT8XXEMU_E
 }
 
 template <bool singleFrame>
-void CoprocessorClass::execute()
+void Coprocessor::execute()
 {
 	if (!singleFrame)
-		s_Running = true;
+		m_Running = true;
 
 	uint16_t _pc;
 	uint32_t _t, n;
@@ -201,26 +197,26 @@ void CoprocessorClass::execute()
         }
         pc = _pc;
         // fflush(stdout);
-	} while (singleFrame ? (!swapped && !starve) : s_Running);
+	} while (singleFrame ? (!swapped && !starve) : m_Running);
     // FTEMU_printf("coprocessor done\n");
 }
 
-void CoprocessorClass::executeManual()
+void Coprocessor::executeManual()
 {
 	execute<true>();
 }
 
-void CoprocessorClass::executeEmulator()
+void Coprocessor::executeEmulator()
 {
 	execute<false>();
 }
 
-void CoprocessorClass::stopEmulator()
+void Coprocessor::stopEmulator()
 {
-	s_Running = false;
+	m_Running = false;
 }
 
-void CoprocessorClass::end()
+Coprocessor::~Coprocessor()
 {
 
 }

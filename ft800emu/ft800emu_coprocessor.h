@@ -6,10 +6,9 @@
  * \date 2013-08-03 02:10GMT
  */
 
-#ifdef FT810EMU_MODE
+#if defined(FT810EMU_MODE)
 #include "ft810emu_coprocessor.h"
-#endif
-#ifndef FT810EMU_MODE
+#else
 #ifndef FT800EMU_COPROCESSOR_H
 #define FT800EMU_COPROCESSOR_H
 
@@ -25,17 +24,15 @@ namespace FT800EMU {
 	class Memory;
 
 /**
- * CoprocessorClass
- * \brief CoprocessorClass
+ * Coprocessor
+ * \brief Coprocessor
  * \date 2013-08-03 02:10GMT
  */
-class CoprocessorClass
+class Coprocessor
 {
 public:
-	CoprocessorClass() { }
-
-	void begin(Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
-	void end();
+	Coprocessor(Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
+	~Coprocessor();
 
 	void executeManual();
 	void executeEmulator();
@@ -43,15 +40,15 @@ public:
 	void stopEmulator();
 
 private:
-	Memory *m_Memory;
-
 	template <bool singleFrame>
 	void execute();
 
-	CoprocessorClass(const CoprocessorClass &);
-	CoprocessorClass &operator=(const CoprocessorClass &);
+private:
+	Memory *m_Memory;
 
-    uint32_t t;
+	volatile bool m_Running;
+
+	uint32_t t;
     uint32_t d[32]; /* data stack */
     uint32_t r[32]; /* return stack */
     uint16_t pc;    /* program counter, counts CELLS */
@@ -70,14 +67,16 @@ private:
         return v;
     }
 
+private:
+	Coprocessor(const Coprocessor &) = delete;
+	Coprocessor &operator=(const Coprocessor &) = delete;
+
     /*int state;
     uint32_t acc;               // accumulator
     uint32_t cV[48], dV[48];    // code and data vectors
     uint32_t *pcV, *pdV;*/
 
-}; /* class CoprocessorClass */
-
-extern CoprocessorClass Coprocessor;
+}; /* class Coprocessor */
 
 } /* namespace FT800EMU */
 

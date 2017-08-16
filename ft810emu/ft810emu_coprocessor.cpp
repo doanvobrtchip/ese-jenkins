@@ -32,8 +32,6 @@ namespace FT810EMU {
 #define isFF(x) (((x) & 0xff) == 0xff)
 #define REG(N)    memory32[REG_##N >> 2]
 
-CoprocessorClass Coprocessor;
-
 namespace /* anonymous */ {
 
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
@@ -637,21 +635,21 @@ void Ejpg::run1(uint8_t *memory8,
 	}
 }
 
-BT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
+BT8XXEMU_FORCE_INLINE void Coprocessor::cpureset()
 {
 	pc = 0;
 	dsp = rsp = 0;
 	t = 0;
 }
 
-BT8XXEMU_FORCE_INLINE void CoprocessorClass::push(int v) // push v on the data stack
+BT8XXEMU_FORCE_INLINE void Coprocessor::push(int v) // push v on the data stack
 {
 	dsp = 31 & (dsp + 1);
 	d[dsp] = t;
 	t = v;
 }
 
-BT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data stack and return it
+BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack and return it
 {
 	int v = t;
 	t = d[dsp];
@@ -663,7 +661,7 @@ BT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data sta
 static FILE *trace = NULL;
 #endif
 
-void CoprocessorClass::begin(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
 {
 	m_Memory = memory;
 
@@ -700,7 +698,7 @@ void CoprocessorClass::begin(Memory *memory, const char *romFilePath, BT8XXEMU_E
 }
 
 // template <bool singleFrame>
-void CoprocessorClass::execute()
+void Coprocessor::execute()
 {
 	// if (!singleFrame)
 	m_Running = true;
@@ -1141,23 +1139,23 @@ void CoprocessorClass::execute()
 		// FTEMU_printf("coprocessor done\n");*/
 }
 
-void CoprocessorClass::executeManual()
+void Coprocessor::executeManual()
 {
 	// execute<true>();
 }
 
-void CoprocessorClass::executeEmulator()
+void Coprocessor::executeEmulator()
 {
 	// execute<false>();
 	execute();
 }
 
-void CoprocessorClass::stopEmulator()
+void Coprocessor::stopEmulator()
 {
 	m_Running = false;
 }
 
-void CoprocessorClass::end()
+Coprocessor::~Coprocessor()
 {
 
 }

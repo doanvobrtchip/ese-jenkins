@@ -16,6 +16,10 @@
 #define BT8XXEMU_SYSTEM_WINDOWS_H
 // #include <...>
 
+#ifdef BT8XXEMU_INTTYPES_DEFINED_NULL
+#undef NULL
+#define NULL 0
+#endif
 
 #ifndef WINVER                  // Specifies that the minimum required platform is Windows XP.
 #define WINVER 0x0510           // Change this to the appropriate value to target other versions of Windows.
@@ -82,6 +86,10 @@ typedef std::stringstream tstringstream;
 #define tcout std::cout
 #define tcin std::cin
 #endif
+
+
+// Types
+#include "ft8xxemu_inttypes.h"
 
 
 namespace FT8XXEMU {

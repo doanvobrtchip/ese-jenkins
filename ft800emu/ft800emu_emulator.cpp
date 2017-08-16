@@ -683,7 +683,7 @@ int Emulator::coprocessorThread()
 		m_InitCond.notify_one();
 	}
 
-	Coprocessor.executeEmulator();
+	m_Coprocessor->executeEmulator();
 
 	FTEMU_printf("Coprocessor thread exit\n");
 
@@ -747,7 +747,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		m_ThreadCoprocessor.reset();
-		Coprocessor.stopEmulator();
+		m_Coprocessor->stopEmulator();
 	}
 
 	FTEMU_printf("Wait for Coprocessor\n");
@@ -779,7 +779,12 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	delete[] m_GraphicsBuffer;
 	m_GraphicsBuffer = NULL;
 	if ((!m_Graphics) && (flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
-	if (flags & BT8XXEMU_EmulatorEnableCoprocessor) Coprocessor.end();
+	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
+	{
+		delete m_Coprocessor;
+		m_Coprocessor = NULL;
+	}
+	assert(!m_Coprocessor);
 	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		m_Memory->setAudioRender(NULL);
@@ -884,9 +889,12 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		*/
 	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
-		Coprocessor.begin(m_Memory,
+	{
+		assert(!m_Coprocessor);
+		m_Coprocessor = new Coprocessor(m_Memory,
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
+	}
 	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 

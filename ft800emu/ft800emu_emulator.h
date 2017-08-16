@@ -78,6 +78,7 @@ namespace FT800EMU {
 	class Memory;
 	class AudioProcessor;
 	class AudioRender;
+	class Coprocessor;
 
 /**
  * Emulator
@@ -166,6 +167,7 @@ private:
 	AudioProcessor *m_AudioProcessor = NULL;
 	AudioRender *m_AudioRender = NULL;
 	Memory *m_Memory = NULL;
+	Coprocessor *m_Coprocessor = NULL;
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

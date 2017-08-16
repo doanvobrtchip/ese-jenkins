@@ -12,20 +12,23 @@
  */
 
 #ifdef WIN32
-
-// #include <...>
 #include "ft8xxemu_window_output.h"
 
 // System includes
+#ifdef BT8XXEMU_INTTYPES_DEFINED_NULL
+#undef NULL
+#define NULL 0
+#endif
+#include <Windowsx.h>
 #include <thread>
 #include <mutex>
-#include "ft8xxemu_system_windows.h"
-#include <Windowsx.h>
-#include "ft8xxemu_system.h"
 #include <concurrent_queue.h>
 #include <assert.h>
 
 // Project includes
+#include "ft8xxemu_inttypes.h"
+#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system.h"
 #include "ft8xxemu_thread_state.h"
 
 #define BT8XXEMU_GDI_DOUBLE_BUFFER (1)

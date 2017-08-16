@@ -14,11 +14,12 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #include <stdlib.h>
 #endif
-#if defined(_MSC_VER) && (MSC_VER >= 1900)
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
 #ifdef __cplusplus
 #ifdef NULL
 #undef NULL
 #endif
+#define BT8XXEMU_INTTYPES_DEFINED_NULL
 #define NULL nullptr
 #endif
 #endif

@@ -93,17 +93,15 @@ public:
 }; /* class EJpg */
 
 /**
- * CoprocessorClass
- * \brief CoprocessorClass
+ * Coprocessor
+ * \brief Coprocessor
  * \date 2013-08-03 02:10GMT
  */
-class CoprocessorClass
+class Coprocessor
 {
 public:
-	CoprocessorClass() { }
-
-	void begin(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
-	void end();
+	Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	~Coprocessor();
 
 	void executeManual();
 	void executeEmulator();
@@ -119,9 +117,7 @@ private:
 	void push(int v);
 	int pop();
 
-	CoprocessorClass(const CoprocessorClass &);
-	CoprocessorClass &operator=(const CoprocessorClass &);
-
+private:
 	Memory *m_Memory;
 
 	volatile bool m_Running;
@@ -136,9 +132,11 @@ private:
 
 	Ejpg ejpg;
 
-}; /* class CoprocessorClass */
+private:
+	Coprocessor(const Coprocessor &) = delete;
+	Coprocessor &operator=(const Coprocessor &) = delete;
 
-extern CoprocessorClass Coprocessor;
+}; /* class Coprocessor */
 
 } /* namespace FT810EMU */
 
