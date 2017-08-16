@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
 #ifndef BT8XXEMU_INTTYPES_DEFINED_BASE
 #define BT8XXEMU_INTTYPES_DEFINED_BASE
 typedef unsigned __int8 uint8_t;

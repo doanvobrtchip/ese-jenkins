@@ -25,6 +25,7 @@
 
 namespace FT800EMU {
 	class Emulator;
+	class AudioProcessor;
 
 typedef int32_t ramaddr;
 
@@ -41,6 +42,8 @@ public:
 		FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
 		const char *romFilePath = 0, const char *otpFilePath = 0);
 	~Memory();
+
+	inline void setAudioProcessor(AudioProcessor *audioProcessor) { m_AudioProcessor = audioProcessor; }
 
 	void enableReadDelay(bool enabled = true);
 
@@ -115,6 +118,9 @@ private:
 	std::mutex &m_SwapDLMutex;
 	FT8XXEMU::ThreadState &m_ThreadMCU;
 	FT8XXEMU::ThreadState &m_ThreadCoprocessor;
+
+	// Dependencies
+	AudioProcessor *m_AudioProcessor;
 
 	// Avoid getting hammered in wait loops
 	ramaddr m_LastCoprocessorRead = -1;

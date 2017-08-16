@@ -1,11 +1,20 @@
-
+/**
+* FT800EMU Audio Processor
+* $Id$
+* \file ft800emu_audio_processor.cpp
+* \brief FT800EMU Audio Processor
+* \date 2013-11-03 09:45GMT
+*/
 #include "ft800emu_audio_processor.h"
+
+// System includes
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
 
 namespace FT800EMU {
 
-AudioProcessorClass AudioProcessor;
-
-static uint16_t mem[] = {
+static const uint16_t s_AudioRom[] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 65259, 8320, 49023,
 65535, 65535, 64511, 65427, 16385, 8480, 61135, 0, 8194, 23668, 63484,
 39640, 11163, 58823, 65535, 1, 0, 61307, 64750, 2312, 65535, 33416,
@@ -3756,24 +3765,25 @@ static int16_t isin(uint16_t th)
 }
 
 
-void AudioProcessorClass::begin()
+AudioProcessor::AudioProcessor()
 {
+	memcpy(mem, s_AudioRom, sizeof(mem));
     state = 0;
     pcV = cV;
     pdV = dV;
 }
 
-void AudioProcessorClass::end()
+AudioProcessor::~AudioProcessor()
 {
     
 }
 
-void AudioProcessorClass::play()
+void AudioProcessor::play()
 {
     mem[13] = 1;
 }
 
-int16_t AudioProcessorClass::execute(uint8_t &busy, uint16_t sound, uint8_t volume)
+int16_t AudioProcessor::execute(uint8_t &busy, uint16_t sound, uint8_t volume)
 {
     int Xreg;
 

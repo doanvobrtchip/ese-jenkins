@@ -157,7 +157,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			if (data & 0x01)
 			{
 				// FTEMU_printf("REG_PLAY\n");
-				AudioProcessor.play();
+				m_AudioProcessor->play();
 			}
 			break;
 		case REG_PLAYBACK_PLAY:

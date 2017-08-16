@@ -783,7 +783,8 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		AudioRender.end();
-		AudioProcessor.end();
+		delete m_AudioProcessor;
+		m_AudioProcessor = NULL;
 		m_AudioOutput->destroy();
 		m_AudioOutput = NULL;
 	}
@@ -862,9 +863,12 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
+		assert(!m_AudioOutput);
 		m_AudioOutput = FT8XXEMU::AudioOutput::create();
-		AudioProcessor.begin();
-		AudioRender.begin(m_AudioOutput, m_Memory);
+		assert(!m_AudioProcessor);
+		m_AudioProcessor = new AudioProcessor();
+		m_Memory->setAudioProcessor(m_AudioProcessor);
+		AudioRender.begin(m_AudioOutput, m_Memory, m_AudioProcessor);
 		/*
 		// TODO: 2017-08-09: Output creation failure manage
 		if (!FT8XXEMU::AudioOutput.begin())

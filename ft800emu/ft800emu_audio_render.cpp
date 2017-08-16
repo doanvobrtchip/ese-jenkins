@@ -46,14 +46,17 @@ static bool s_RequestPlayback = false;
 
 static FT8XXEMU::AudioOutput *s_AudioOutput = NULL;
 static Memory *s_Memory = NULL;
+static AudioProcessor *s_AudioProcessor = NULL;
 
-void AudioRenderClass::begin(FT8XXEMU::AudioOutput *audioOutput, Memory *memory)
+void AudioRenderClass::begin(FT8XXEMU::AudioOutput *audioOutput, Memory *memory, AudioProcessor *audioProcessor)
 {
 	s_AudioOutput = audioOutput;
+	s_Memory = memory;
+	s_AudioProcessor = audioProcessor;
+
 	s_AudioOutput->onAudioProcess([](short *audioBuffer, int samples) -> void {
 		process(audioBuffer, samples);
 	});
-	s_Memory = memory;
 }
 
 void AudioRenderClass::end()
@@ -267,7 +270,7 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 			{
 				s_SecondsPassedForSynthSample -= s_SecondsPerSynthSample;
 				synthSample0 = synthSample1;
-				synthSample1 = AudioProcessor.execute(busy, sound, volume);
+				synthSample1 = s_AudioProcessor->execute(busy, sound, volume);
 			}
 			s_SecondsPassedForSynthSample += secondsPerSample;
 			synth = (int16_t)(
@@ -279,7 +282,7 @@ void AudioRenderClass::process(short *audioBuffer, int samples)
 		}
 		else
 		{
-			synth = AudioProcessor.execute(busy, sound, volume);
+			synth = s_AudioProcessor->execute(busy, sound, volume);
 		}
 
 		int16_t pb;

@@ -76,6 +76,7 @@ namespace FT8XXEMU {
 
 namespace FT800EMU {
 	class Memory;
+	class AudioProcessor;
 
 /**
  * Emulator
@@ -160,6 +161,7 @@ private:
 
 	FT8XXEMU::WindowOutput *m_WindowOutput = NULL;
 	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
+	AudioProcessor *m_AudioProcessor = NULL;
 
 	Memory *m_Memory = NULL;
 
