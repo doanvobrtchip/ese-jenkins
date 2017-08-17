@@ -16,7 +16,7 @@
 
 // System includes
 #ifdef WIN32
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 #else
 #include <sys/types.h>
 #include <signal.h>

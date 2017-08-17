@@ -43,7 +43,7 @@ static void clock_gettime(int, timespec *ts)
 
 namespace FT8XXEMU {
 
-SystemClass System;
+System System;
 SystemLinuxClass SystemLinux;
 
 static pthread_t s_MCUThread = 0;
@@ -57,7 +57,7 @@ static pthread_mutex_t s_SwapMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static time_t s_BeginTime = 0;
 
-void SystemClass::_begin()
+void System::_begin()
 {
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Init(0);
@@ -71,58 +71,58 @@ void SystemClass::_begin()
 	s_BeginTime = t.tv_sec;
 }
 
-void SystemClass::_update()
+void System::_update()
 {
 
 }
 
-void SystemClass::_end()
+void System::_end()
 {
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Quit();
 #endif
 }
 
-unsigned int SystemClass::getCPUCount()
+unsigned int System::getCPUCount()
 {
 	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-void SystemClass::disableAutomaticPriorityBoost()
+void System::disableAutomaticPriorityBoost()
 {
 	//SetThreadPriorityBoost(GetCurrentThread(), TRUE);
 }
-void SystemClass::makeLowPriorityThread()
+void System::makeLowPriorityThread()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 }
-void SystemClass::makeNormalPriorityThread()
+void System::makeNormalPriorityThread()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 }
 
-void SystemClass::makeHighPriorityThread()
+void System::makeHighPriorityThread()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 }
 
-void SystemClass::makeHighestPriorityThread()
+void System::makeHighestPriorityThread()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 }
 
-void SystemClass::makeRealtimePriorityThread()
+void System::makeRealtimePriorityThread()
 {
 	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 }
 
-void SystemClass::makeMainThread()
+void System::makeMainThread()
 {
 	s_MainThread = pthread_self();
 	sigprocmask(SIG_BLOCK, &s_SIGUSR1SigSet, NULL);
 }
 
-bool SystemClass::isMainThread()
+bool System::isMainThread()
 {
 	return pthread_self() == s_MainThread;
 }
@@ -142,30 +142,30 @@ static void suspendMCUWait(int signum)
 }
 
 // MCU thread control
-void SystemClass::makeMCUThread()
+void System::makeMCUThread()
 {
 	s_MCUThread = pthread_self();
 	signal(SIGUSR1, suspendMCUWait);
 }
 
-int SystemClass::isMCUThread()
+int System::isMCUThread()
 {
 	return (pthread_self() == s_MCUThread) ? 1 : 0;
 }
 
-void SystemClass::prioritizeMCUThread()
+void System::prioritizeMCUThread()
 {
 	//if (s_MCUThread != NULL)
 	//	SetThreadPriority(s_MCUThread, THREAD_PRIORITY_HIGHEST);
 }
 
-void SystemClass::unprioritizeMCUThread()
+void System::unprioritizeMCUThread()
 {
 	//if (s_MCUThread != NULL)
 	//	SetThreadPriority(s_MCUThread, THREAD_PRIORITY_NORMAL);
 }
 
-void SystemClass::holdMCUThread()
+void System::holdMCUThread()
 {
 	if (!pthread_mutex_trylock(&s_MCUSuspendMutex))
 	{
@@ -178,12 +178,12 @@ void SystemClass::holdMCUThread()
 	}
 }
 
-void SystemClass::resumeMCUThread()
+void System::resumeMCUThread()
 {
 	pthread_mutex_unlock(&s_MCUSuspendMutex);
 }
 
-void SystemClass::killMCUThread()
+void System::killMCUThread()
 {
 	void *retval;
 	pthread_cancel(s_MCUThread);
@@ -206,13 +206,13 @@ static void suspendCoprocessorWait(int signum)
 }
 
 // Coprocessor thread control
-void SystemClass::makeCoprocessorThread()
+void System::makeCoprocessorThread()
 {
 	s_CoprocessorThread = pthread_self();
 	signal(SIGUSR1, suspendCoprocessorWait);
 }
 
-void SystemClass::forgetCoprocessorThread()
+void System::forgetCoprocessorThread()
 {
 	printf("Forget coprocessor thread\n");
 	pthread_mutex_lock(&s_CoprocessorSuspendMutex);
@@ -221,24 +221,24 @@ void SystemClass::forgetCoprocessorThread()
 	printf("Coprocessor thread forgotten ok\n");
 }
 
-bool SystemClass::isCoprocessorThread()
+bool System::isCoprocessorThread()
 {
 	return pthread_self() == s_CoprocessorThread;
 }
 
-void SystemClass::prioritizeCoprocessorThread()
+void System::prioritizeCoprocessorThread()
 {
 	//if (s_CoprocessorThread != NULL)
 	//	SetThreadPriority(s_CoprocessorThread, THREAD_PRIORITY_HIGHEST);
 }
 
-void SystemClass::unprioritizeCoprocessorThread()
+void System::unprioritizeCoprocessorThread()
 {
 	//if (s_CoprocessorThread != NULL)
 	//	SetThreadPriority(s_CoprocessorThread, THREAD_PRIORITY_NORMAL);
 }
 
-void SystemClass::holdCoprocessorThread()
+void System::holdCoprocessorThread()
 {
 	if (s_CoprocessorThread)
 	{
@@ -254,7 +254,7 @@ void SystemClass::holdCoprocessorThread()
 	}
 }
 
-void SystemClass::resumeCoprocessorThread()
+void System::resumeCoprocessorThread()
 {
 	if (s_CoprocessorThread)
 	{
@@ -262,17 +262,17 @@ void SystemClass::resumeCoprocessorThread()
 	}
 }
 
-void SystemClass::enterSwapDL()
+void System::enterSwapDL()
 {
 	pthread_mutex_lock(&s_SwapMutex);
 }
 
-void SystemClass::leaveSwapDL()
+void System::leaveSwapDL()
 {
 	pthread_mutex_unlock(&s_SwapMutex);
 }
 
-void *SystemClass::setThreadGamesCategory(unsigned long *refId)
+void *System::setThreadGamesCategory(unsigned long *refId)
 {
 	//HANDLE h = AvSetMmThreadCharacteristics(TEXT("Games"), refId);
 	//if (!h) SystemLinux.ErrorWin32();
@@ -280,43 +280,43 @@ void *SystemClass::setThreadGamesCategory(unsigned long *refId)
 	return NULL;
 }
 
-void SystemClass::revertThreadCategory(void *taskHandle)
+void System::revertThreadCategory(void *taskHandle)
 {
 	//AvRevertMmThreadCharacteristics(taskHandle);
 }
 
-void SystemClass::switchThread()
+void System::switchThread()
 {
 	sched_yield();
 }
 
-double SystemClass::getSeconds()
+double System::getSeconds()
 {
 	timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	return (double)(t.tv_sec - s_BeginTime) + (double)t.tv_nsec * 0.000000001;
 }
 
-long SystemClass::getMillis()
+long System::getMillis()
 {
 	timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	return t.tv_nsec / 1000000 + (t.tv_sec - s_BeginTime) * 1000;
 }
 
-long SystemClass::getMicros()
+long System::getMicros()
 {
 	timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	return (t.tv_nsec / 1000) + (t.tv_sec - s_BeginTime) * 1000000;
 }
 
-long SystemClass::getFreqTick(int hz)
+long System::getFreqTick(int hz)
 {
 	return getMicros() * (long)hz / 1000000; // FIXME - Higher Resolution
 }
 
-void SystemClass::delay(int ms)
+void System::delay(int ms)
 {
 	long endMillis = getMillis() + (long)ms;
 	int sleepMillis = endMillis - getMillis();
@@ -328,7 +328,7 @@ void SystemClass::delay(int ms)
 	} while (sleepMillis > 0);
 }
 
-void SystemClass::delayMicros(int us)
+void System::delayMicros(int us)
 {
 	long endMicros = getMicros() + (long)us;
 	int sleepMicros = (long)us;

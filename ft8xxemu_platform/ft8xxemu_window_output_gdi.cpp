@@ -27,7 +27,7 @@
 
 // Project includes
 #include "ft8xxemu_inttypes.h"
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_thread_state.h"
 
@@ -152,9 +152,9 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-WindowOutput *WindowOutput::create()
+WindowOutput *WindowOutput::create(System *system)
 {
-	return new WindowOutput();
+	return new WindowOutput(system);
 }
 
 void WindowOutput::destroy()
@@ -162,7 +162,7 @@ void WindowOutput::destroy()
 	delete this;
 }
 
-WindowOutput::WindowOutput()
+WindowOutput::WindowOutput(System *system) : m_System(system)
 {
 	incLoop();
 	immediateSync([&]() -> void {
@@ -188,7 +188,7 @@ WindowOutput::WindowOutput()
 			//wcex.hIconSm = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_SMALL));
 			wcex.hIcon = NULL;
 			wcex.hIconSm = NULL;
-			if (!RegisterClassEx(&wcex)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
+			if (!RegisterClassEx(&wcex)) m_System->win32()->ErrorWin32(TEXT("GDI Initialisation"));
 		}
 		++s_ClassRegCount;
 
@@ -200,24 +200,24 @@ WindowOutput::WindowOutput()
 		RECT r; r.top = 0; r.left = 0; r.bottom = m_Height * BT8XXEMU_WINDOW_SCALE; r.right = m_Width * BT8XXEMU_WINDOW_SCALE; // window size
 																															   /*#endif*/
 		AdjustWindowRect(&r, dw_style, FALSE);
-		if (m_HWnd) SystemWindows.Error(TEXT("WindowOutput.begin()  s_HWnd != NULL"));
+		if (m_HWnd) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_HWnd != NULL"));
 		if (!(m_HWnd = CreateWindow(BT8XXEMU_WINDOW_CLASS_NAME,
 			/*(LPCTSTR)title.c_str()*/BT8XXEMU_WINDOW_TITLE, dw_style,
 			CW_USEDEFAULT, 0, r.right - r.left, r.bottom - r.top, // x y w h
 			NULL, NULL, m_HInstance, NULL)))
-			SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
+			m_System->win32()->ErrorWin32(TEXT("GDI Initialisation"));
 		ShowWindow(m_HWnd, /*nCmdShow*/ true); // If the window was previously visible, the return value is nonzero.
-		if (!UpdateWindow(m_HWnd)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
+		if (!UpdateWindow(m_HWnd)) m_System->win32()->ErrorWin32(TEXT("GDI Initialisation"));
 
 		// Create GDI32 Buffer and Device Context
 #if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		HDC hdc = GetDC(m_HWnd);
-		if (m_HDC) SystemWindows.Error(TEXT("WindowOutput.begin()  s_HDC != NULL"));
+		if (m_HDC) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_HDC != NULL"));
 		m_HDC = CreateCompatibleDC(hdc);
-		if (!m_HDC) SystemWindows.Error(TEXT("WindowOutput.begin()  s_HDC == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
-		if (m_Buffer) SystemWindows.Error(TEXT("WindowOutput.begin()  s_Buffer != NULL"));
+		if (!m_HDC) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_HDC == NULL\r\n") + m_System->win32()->GetWin32LastErrorString());
+		if (m_Buffer) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_Buffer != NULL"));
 		m_Buffer = CreateCompatibleBitmap(hdc, m_Width, m_Height);
-		if (!m_Buffer) SystemWindows.Error(TEXT("WindowOutput.begin()  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
+		if (!m_Buffer) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_Buffer == NULL\r\n") + m_System->win32()->GetWin32LastErrorString());
 		SelectObject(m_HDC, m_Buffer);
 		ReleaseDC(m_HWnd, hdc);
 #endif
@@ -232,7 +232,6 @@ WindowOutput::WindowOutput()
 
 		// Map HWND to WindowOutput
 		s_WindowMap[m_HWnd] = this;
-		FT8XXEMU::SystemWindows.setHWnd(m_HWnd);
 	});
 }
 
@@ -259,13 +258,13 @@ WindowOutput::~WindowOutput()
 
 #if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 		if (m_HDC) { DeleteDC(m_HDC); m_HDC = NULL; }
-		else SystemWindows.Debug(TEXT("WindowOutput.end() m_HDC == NULL"));
+		else m_System->win32()->Debug(TEXT("WindowOutput.end() m_HDC == NULL"));
 		if (m_Buffer) { DeleteObject(m_Buffer); m_Buffer = NULL; }
-		else SystemWindows.Debug(TEXT("WindowOutput.end() m_Buffer == NULL"));
+		else m_System->win32()->Debug(TEXT("WindowOutput.end() m_Buffer == NULL"));
 #endif
 
 		if (m_HWnd) { DestroyWindow(m_HWnd); m_HWnd = NULL; }
-		else SystemWindows.Debug(TEXT("WindowOutput.end() m_HWnd == NULL"));
+		else m_System->win32()->Debug(TEXT("WindowOutput.end() m_HWnd == NULL"));
 
 		--s_ClassRegCount;
 		if (!s_ClassRegCount)
@@ -358,14 +357,14 @@ void WindowOutput::setMode(int width, int height)
 			m_Ratio = (float)width / (float)height;
 
 #if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
-			if (!m_Buffer) SystemWindows.Error(TEXT("WindowOutput.setMode(2)  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
+			if (!m_Buffer) m_System->win32()->Error(TEXT("WindowOutput.setMode(2)  s_Buffer == NULL\r\n") + m_System->win32()->GetWin32LastErrorString());
 			HBITMAP oldBuffer = m_Buffer;
 			m_Buffer = NULL;
 
 			HDC hdc = GetDC(m_HWnd);
-			if (m_Buffer) SystemWindows.Error(TEXT("WindowOutput.begin()  s_Buffer != NULL"));
+			if (m_Buffer) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_Buffer != NULL"));
 			m_Buffer = CreateCompatibleBitmap(hdc, m_Width, m_Height);
-			if (!m_Buffer) SystemWindows.Error(TEXT("WindowOutput.begin()  s_Buffer == NULL\r\n") + SystemWindows.GetWin32LastErrorString());
+			if (!m_Buffer) m_System->win32()->Error(TEXT("WindowOutput.begin()  s_Buffer == NULL\r\n") + m_System->win32()->GetWin32LastErrorString());
 			SelectObject(m_HDC, m_Buffer);
 			ReleaseDC(m_HWnd, hdc);
 
@@ -403,7 +402,7 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 			if (!SetDIBitsToDevice(m_HDC, 0, 0,
 				m_Width, m_Height,
 				0, 0, 0, m_Height, bufferSwitched ? m_BufferB : m_BufferA, &m_BitInfo, DIB_RGB_COLORS))
-				SystemWindows.Error(TEXT("SetDIBitsToDevice  FAILED"));
+				m_System->win32()->Error(TEXT("SetDIBitsToDevice  FAILED"));
 		}
 #endif
 
@@ -415,7 +414,7 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 		{
 			COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 			HBRUSH bgBrush = CreateSolidBrush(bgC32);
-			if (bgBrush == NULL) SystemWindows.ErrorWin32(TEXT("GDI Render"));
+			if (bgBrush == NULL) m_System->win32()->ErrorWin32(TEXT("GDI Render"));
 			int width_r = (int)((float)r.bottom * m_Ratio); int height_r;
 			if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / m_Ratio); }
 			else height_r = r.bottom;
@@ -450,7 +449,7 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 				FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
 			}
 			ReleaseDC(m_HWnd, hdc);
-			if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32(TEXT("GDI Render"));
+			if (!DeleteObject(bgBrush)) m_System->win32()->ErrorWin32(TEXT("GDI Render"));
 		}
 #else
 		{
@@ -469,9 +468,9 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 			HDC hdc = GetDC(m_HWnd);
 			COLORREF bgC32 = RGB(128, 128, 128); // bg off render
 			HBRUSH bgBrush = CreateSolidBrush(bgC32);
-			if (bgBrush == NULL) SystemWindows.ErrorWin32(TEXT("GDI Render"));
+			if (bgBrush == NULL) m_System->win32()->ErrorWin32(TEXT("GDI Render"));
 			FillRect(hdc, &r, bgBrush);
-			if (!DeleteObject(bgBrush)) SystemWindows.ErrorWin32(TEXT("GDI Render"));
+			if (!DeleteObject(bgBrush)) m_System->win32()->ErrorWin32(TEXT("GDI Render"));
 			ReleaseDC(m_HWnd, hdc);
 		}
 

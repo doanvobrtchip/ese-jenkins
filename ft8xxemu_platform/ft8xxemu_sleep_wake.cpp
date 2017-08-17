@@ -3,7 +3,9 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
-#include "sleep_wake.h"
+#include "ft8xxemu_sleep_wake.h"
+
+namespace FT8XXEMU {
 
 SleepWake::SleepWake() : m_WantWake(false), m_IsSleeping(false)
 {
@@ -65,5 +67,7 @@ void SleepWake::wakeInternal()
 	m_SleepCond.notify_one();
 #endif
 }
+
+} /* namespace FT8XXEMU */
 
 /* end of file */

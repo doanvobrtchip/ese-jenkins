@@ -17,7 +17,7 @@
 #include "ft8xxemu_audio_output.h"
 
 // System includes
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 
 // Project includes
 
@@ -31,9 +31,9 @@ namespace FT8XXEMU {
 #define D_BT8XXEMU_AUDIOCHANNELS 2
 #define D_BT8XXEMU_AUDIOBITS 16
 
-AudioOutput *AudioOutput::create()
+AudioOutput *AudioOutput::create(System *system)
 {
-	return new AudioOutput();
+	return new AudioOutput(system);
 }
 
 void AudioOutput::destroy()
@@ -41,7 +41,7 @@ void AudioOutput::destroy()
 	delete this;
 }
 
-AudioOutput::AudioOutput()
+AudioOutput::AudioOutput(System *system) : m_System(system)
 {
 	const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 	const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
@@ -51,13 +51,13 @@ AudioOutput::AudioOutput()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&m_MMDeviceEnumerator);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	hr = m_MMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_MMDevice);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	hr = m_MMDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&m_AudioClient);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	WAVEFORMATEX *pwfx;
 	hr = m_AudioClient->GetMixFormat(&pwfx);
@@ -74,16 +74,16 @@ AudioOutput::AudioOutput()
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
 	hr = m_AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, hnsRequestedDuration, 0, &wfx, NULL);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	hr = m_AudioClient->GetBufferSize(&m_BufferFrameCount);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	hr = m_AudioClient->GetService(IID_IAudioRenderClient, (void **)&m_AudioRenderClient);
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 
 	hr = m_AudioClient->Start();
-	if (hr) { SystemWindows.WarningHResult(TEXT("WASAPI Initialisation"), hr); }
+	if (hr) { m_System->win32()->WarningHResult(TEXT("WASAPI Initialisation"), hr); }
 }
 
 AudioOutput::~AudioOutput()
@@ -108,7 +108,7 @@ void AudioOutput::beginBuffer(short **buffer, int *samples)
 	unsigned int numFramesPadding;
 
 	hr = m_AudioClient->GetCurrentPadding(&numFramesPadding);
-	if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
+	if (hr) m_System->win32()->ErrorHResult(TEXT("WASAPI Buffer"), hr);
 
 	m_NumFramesAvailable = m_BufferFrameCount - numFramesPadding;
 	*samples = m_NumFramesAvailable;
@@ -120,7 +120,7 @@ void AudioOutput::beginBuffer(short **buffer, int *samples)
 	else
 	{
 		hr = m_AudioRenderClient->GetBuffer(m_NumFramesAvailable, (BYTE **)buffer);
-		if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
+		if (hr) m_System->win32()->ErrorHResult(TEXT("WASAPI Buffer"), hr);
 	}
 }
 
@@ -129,7 +129,7 @@ void AudioOutput::endBuffer()
 	HRESULT hr;
 
 	hr = m_AudioRenderClient->ReleaseBuffer(m_NumFramesAvailable, 0);
-	if (hr) SystemWindows.ErrorHResult(TEXT("WASAPI Buffer"), hr);
+	if (hr) m_System->win32()->ErrorHResult(TEXT("WASAPI Buffer"), hr);
 }
 
 } /* namespace FT8XXEMU */

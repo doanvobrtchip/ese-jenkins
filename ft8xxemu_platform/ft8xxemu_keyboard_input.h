@@ -16,9 +16,9 @@
 // #include <...>
 
 // System includes
-#include "ft8xxemu_system_windows.h"
 
 // Project includes
+#include "ft8xxemu_system.h"
 
 namespace FT8XXEMU {
 	class WindowOutput;
@@ -32,11 +32,11 @@ namespace FT8XXEMU {
 class KeyboardInput
 {
 public:
-	static KeyboardInput *create(WindowOutput *windowOutput);
+	static KeyboardInput *create(System *system, WindowOutput *windowOutput);
 	void destroy();
 
 private:
-	KeyboardInput(WindowOutput *windowOutput);
+	KeyboardInput(System *system, WindowOutput *windowOutput);
 	virtual ~KeyboardInput();
 
 public:
@@ -47,6 +47,7 @@ private:
 	void release();
 
 private:
+	System *m_System;
 	WindowOutput *m_WindowOutput;
 	LPDIRECTINPUT8 m_lpDI = NULL;
 	LPDIRECTINPUTDEVICE8 m_lpDIKeyboard = NULL;

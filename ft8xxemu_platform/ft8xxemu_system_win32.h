@@ -1,8 +1,8 @@
 /**
- * SystemWindowsClass
+ * SystemWin32
  * $Id$
- * \file ft8xxemu_system_windows.h
- * \brief SystemWindowsClass
+ * \file ft8xxemu_system_win32.h
+ * \brief SystemWin32
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -93,40 +93,36 @@ typedef std::stringstream tstringstream;
 
 
 namespace FT8XXEMU {
+	class System;
 
 /**
- * SystemWindowsClass
- * \brief SystemWindowsClass
+ * SystemWin32
+ * \brief SystemWin32
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
  */
-class SystemWindowsClass
+class SystemWin32
 {
-private:
-	HWND m_HWnd;
-
 public:
-	SystemWindowsClass() : m_HWnd(NULL) { }
+	SystemWin32(System *system) : m_System(system) { }
 
-	static tstring GetWin32ErrorString(DWORD dwError);
-	static tstring GetWin32LastErrorString();
-	static void Error(const tstring &message);
-	static void Warning(const tstring &message);
-	static void Debug(const tstring &message);
-	static void ErrorWin32(const tstring &message);
-	static void ErrorHResult(const tstring &message, HRESULT hr);
-	static void WarningHResult(const tstring &message, HRESULT hr);
-
-	inline void setHWnd(HWND hwnd) { m_HWnd = hwnd; }
-	inline HWND getHWnd() { return m_HWnd; }
+	tstring GetWin32ErrorString(DWORD dwError);
+	tstring GetWin32LastErrorString();
+	void Error(const tstring &message);
+	void Warning(const tstring &message);
+	void Debug(const tstring &message);
+	void ErrorWin32(const tstring &message);
+	void ErrorHResult(const tstring &message, HRESULT hr);
+	void WarningHResult(const tstring &message, HRESULT hr);
 
 private:
-	SystemWindowsClass(const SystemWindowsClass &);
-	SystemWindowsClass &operator=(const SystemWindowsClass &);
+	System *m_System = NULL;
 
-}; /* class SystemWindowsClass */
+private:
+	SystemWin32(const SystemWin32 &) = delete;
+	SystemWin32 &operator=(const SystemWin32 &) = delete;
 
-extern SystemWindowsClass SystemWindows;
+}; /* class SystemWin32 */
 
 } /* namespace FT8XXEMU */
 

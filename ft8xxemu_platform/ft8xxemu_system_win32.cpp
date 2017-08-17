@@ -1,8 +1,8 @@
 /**
- * SystemWindowsClass
+ * SystemWin32
  * $Id$
- * \file ft8xxemu_system_windows.cpp
- * \brief SystemWindowsClass
+ * \file ft8xxemu_system_win32.cpp
+ * \brief SystemWin32
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -14,7 +14,7 @@
 #ifdef WIN32
 
 // #include <...>
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 #include "ft8xxemu_system.h"
 
 // Libraries
@@ -32,119 +32,77 @@
 
 namespace FT8XXEMU {
 
-
-SystemClass System;
-SystemWindowsClass SystemWindows;
-
-
-static LARGE_INTEGER s_PerformanceFrequency = { 0 };
-static LARGE_INTEGER s_PerformanceCounterBegin = { 0 };
-
-//static CRITICAL_SECTION s_CriticalSection;
-static CRITICAL_SECTION s_SwapCriticalSection;
-
-void SystemClass::_begin()
+void System::initWindows()
 {
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Init(0);
 #endif
-	QueryPerformanceFrequency(&s_PerformanceFrequency);
-	QueryPerformanceCounter(&s_PerformanceCounterBegin);
-	//InitializeCriticalSection(&s_CriticalSection);
-	InitializeCriticalSection(&s_SwapCriticalSection);
+	QueryPerformanceFrequency(&m_PerformanceFrequency);
+	QueryPerformanceCounter(&m_PerformanceCounterBegin);
 }
 
-void SystemClass::_update()
+void System::releaseWindows()
 {
-
-}
-
-void SystemClass::_end()
-{
-	//DeleteCriticalSection(&s_CriticalSection);
-	DeleteCriticalSection(&s_SwapCriticalSection);
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 	SDL_Quit();
 #endif
 }
 
-unsigned int SystemClass::getCPUCount()
+unsigned int System::getCPUCount()
 {
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
 	return sysinfo.dwNumberOfProcessors;
 }
 
-/*
-void SystemClass::enterCriticalSection()
-{
-	//EnterCriticalSection(&s_CriticalSection);
-}
-
-void SystemClass::leaveCriticalSection()
-{
-	//LeaveCriticalSection(&s_CriticalSection);
-}
-*/
-
-void SystemClass::enterSwapDL()
-{
-	EnterCriticalSection(&s_SwapCriticalSection);
-}
-
-void SystemClass::leaveSwapDL()
-{
-	LeaveCriticalSection(&s_SwapCriticalSection);
-}
-
-void SystemClass::switchThread()
+void System::switchThread()
 {
 	SwitchToThread();
 }
 
-double SystemClass::getSeconds()
+double System::getSeconds()
 {
 	LARGE_INTEGER counter;
 	QueryPerformanceCounter(&counter);
-	return (double)(counter.QuadPart - s_PerformanceCounterBegin.QuadPart) / (double)s_PerformanceFrequency.QuadPart;
+	return (double)(counter.QuadPart - m_PerformanceCounterBegin.QuadPart) / (double)m_PerformanceFrequency.QuadPart;
 }
 
-long SystemClass::getMillis()
+long System::getMillis()
 {
 	LARGE_INTEGER c;
 	QueryPerformanceCounter(&c);
-	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
+	c.QuadPart -= m_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)1000;
-	c.QuadPart /= s_PerformanceFrequency.QuadPart;
+	c.QuadPart /= m_PerformanceFrequency.QuadPart;
 	return (long)c.QuadPart;
 }
 
-long SystemClass::getMicros()
+long System::getMicros()
 {
 	LARGE_INTEGER c;
 	QueryPerformanceCounter(&c);
-	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
+	c.QuadPart -= m_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)1000000;
-	c.QuadPart /= s_PerformanceFrequency.QuadPart;
+	c.QuadPart /= m_PerformanceFrequency.QuadPart;
 	return (long)c.QuadPart;
 }
 
-long SystemClass::getFreqTick(int hz)
+long System::getFreqTick(int hz)
 {
 	LARGE_INTEGER c;
 	QueryPerformanceCounter(&c);
-	c.QuadPart -= s_PerformanceCounterBegin.QuadPart;
+	c.QuadPart -= m_PerformanceCounterBegin.QuadPart;
 	c.QuadPart *= (LONGLONG)hz;
-	c.QuadPart /= s_PerformanceFrequency.QuadPart;
+	c.QuadPart /= m_PerformanceFrequency.QuadPart;
 	return (long)c.QuadPart;
 }
 
-void SystemClass::delay(int ms)
+void System::delay(int ms)
 {
 	Sleep(ms);
 }
 
-void SystemClass::delayMicros(int us)
+void System::delayMicros(int us)
 {
 	long endMicros = getMicros() + (long)us;;
 	do
@@ -156,7 +114,7 @@ void SystemClass::delayMicros(int us)
 
 
 
-tstring SystemWindowsClass::GetWin32ErrorString(DWORD dwError)
+tstring SystemWin32::GetWin32ErrorString(DWORD dwError)
 {
 	// convert win32 error number to string
 
@@ -179,7 +137,7 @@ tstring SystemWindowsClass::GetWin32ErrorString(DWORD dwError)
 	return result;
 }
 
-tstring SystemWindowsClass::GetWin32LastErrorString()
+tstring SystemWin32::GetWin32LastErrorString()
 {
 	// put the last win32 error in a string and add the error number too
 	DWORD dwError = GetLastError();
@@ -206,10 +164,10 @@ DWORD Win32FromHResult(HRESULT hr)
 	return ERROR_CAN_NOT_COMPLETE;
 }
 
-void SystemWindowsClass::Error(const tstring &message)
+void SystemWin32::Error(const tstring &message)
 {
 	// exit with message
-	if (::FT8XXEMU::g_PrintStd)
+	if (m_System->getPrintStd())
 	{
 		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Error"), MB_OK | MB_ICONERROR);
 		tcout << TEXT("Error: ") << message << std::endl;
@@ -217,26 +175,26 @@ void SystemWindowsClass::Error(const tstring &message)
 	exit(EXIT_FAILURE);
 }
 
-void SystemWindowsClass::Warning(const tstring &message)
+void SystemWin32::Warning(const tstring &message)
 {
 	// show a warning box and send to output
-	if (::FT8XXEMU::g_PrintStd)
+	if (m_System->getPrintStd())
 	{
 		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Warning"), MB_OK | MB_ICONWARNING);
 		tcout << TEXT("Warning: ") << message << std::endl;
 	}
 }
 
-void SystemWindowsClass::Debug(const tstring &message)
+void SystemWin32::Debug(const tstring &message)
 {
 	// send a debug to output
-	if (::FT8XXEMU::g_PrintStd)
+	if (m_System->getPrintStd())
 	{
 		tcout << TEXT("Debug: ") << message << std::endl;
 	}
 }
 
-void SystemWindowsClass::ErrorWin32(const tstring &message)
+void SystemWin32::ErrorWin32(const tstring &message)
 {
 	// crash with last win32 error string
 	tstringstream buffer;
@@ -244,14 +202,14 @@ void SystemWindowsClass::ErrorWin32(const tstring &message)
 	Error(buffer.str());
 }
 
-void SystemWindowsClass::ErrorHResult(const tstring &message, HRESULT hr)
+void SystemWin32::ErrorHResult(const tstring &message, HRESULT hr)
 {
 	tstringstream buffer;
 	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));
 	Error(buffer.str());
 }
 
-void SystemWindowsClass::WarningHResult(const tstring &message, HRESULT hr)
+void SystemWin32::WarningHResult(const tstring &message, HRESULT hr)
 {
 	tstringstream buffer;
 	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));

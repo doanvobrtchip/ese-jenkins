@@ -10,6 +10,8 @@
 #include <condition_variable>
 #endif
 
+namespace FT8XXEMU {
+
 class SleepWake
 {
 public:
@@ -37,5 +39,7 @@ private:
 #endif
 
 };
+
+} /* namespace FT8XXEMU */
 
 /* end of file */

@@ -16,7 +16,7 @@
 #include "ft8xxemu_thread_state.h"
 
 // System includes
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 
 // Project includes
 

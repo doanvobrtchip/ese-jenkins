@@ -17,9 +17,9 @@
 
 // System includes
 #include <functional>
-#include "ft8xxemu_system_windows.h"
 
 // Project includes
+#include "ft8xxemu_system.h"
 
 namespace FT8XXEMU {
 
@@ -32,11 +32,11 @@ namespace FT8XXEMU {
 class AudioOutput
 {
 public:
-	static AudioOutput *create();
+	static AudioOutput *create(System *system);
 	void destroy();
 
 private:
-	AudioOutput();
+	AudioOutput(System *system);
 	virtual ~AudioOutput();
 
 public:
@@ -51,6 +51,8 @@ public:
 
 private:
 	std::function<void(short *audioBuffer, int samples)> m_AudioProcess; // TODO: 2017-08-09: SDL2: Empty default handler to blank audioBuffer
+
+	System *m_System;
 
 #ifdef WIN32
 	IMMDeviceEnumerator *m_MMDeviceEnumerator = NULL;

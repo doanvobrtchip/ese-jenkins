@@ -20,9 +20,9 @@
 // System includes
 #include <functional>
 #include <mutex>
-#include "ft8xxemu_system_windows.h"
 
 // Project includes
+#include "ft8xxemu_system.h"
 
 #define BT8XXEMU_WINDOW_TITLE_A "BT8XX Emulator"
 #define BT8XXEMU_WINDOW_TITLE TEXT(BT8XXEMU_WINDOW_TITLE_A)
@@ -53,11 +53,11 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 class WindowOutput
 {
 public:
-	static WindowOutput *create();
+	static WindowOutput *create(System *system);
 	void destroy();
 
 private:
-	WindowOutput();
+	WindowOutput(System *system);
 	virtual ~WindowOutput();
 
 public:
@@ -92,6 +92,8 @@ private:
 	argb8888 m_BufferB[BT8XXEMU_WINDOW_WIDTH_MAX * BT8XXEMU_WINDOW_HEIGHT_MAX];
 	bool m_BufferSwitched = false;
 	volatile bool m_BufferFlipping = false;
+
+	System *m_System;
 
 	std::function<void(int idx)> m_ResetTouchScreenXY = [](int) -> void { };
 	std::function<void(int idx, int x, int y, int pressure)> m_SetTouchScreenXY = [](int, int, int, int) -> void { };

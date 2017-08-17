@@ -21,7 +21,7 @@
 
 #if !(defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 #define BT8XXEMU_KEY_ESCAPE          DIK_ESCAPE
 #define BT8XXEMU_KEY_1               DIK_1
 #define BT8XXEMU_KEY_2               DIK_2

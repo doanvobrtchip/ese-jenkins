@@ -1,8 +1,8 @@
 /**
- * SystemClass
+ * System
  * $Id$
  * \file ft8xxemu_system.cpp
- * \brief SystemClass
+ * \brief System
  * \date 2011-05-25 19:32GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -17,115 +17,87 @@
 // System includes
 
 // Project includes
-#include "sleep_wake.h"
+#include "ft8xxemu_sleep_wake.h"
 
 // using namespace ...;
 
 namespace FT8XXEMU {
 
-
-#define D_BT8XXEMU_FPS_SMOOTHING 36
-
-
-double SystemClass::s_FrameTime, SystemClass::s_FrameTimeDelta; //, SystemClass::s_FrameTimeOffset;
-int SystemClass::s_FrameCount;
-double SystemClass::s_FPSSmooth;
-bool SystemClass::s_MainThreadSwitchable = false;
-
-static SleepWake *s_RenderSleepWake = NULL;
-static bool s_RenderWoke = false;
-
-void(*g_Exception)(const char *message) = NULL;
-bool g_PrintStd = false;
-
-static double s_FPSSmoothValues[D_BT8XXEMU_FPS_SMOOTHING];
-//static double s_FPSSmoothTotal;
-static int s_FPSSmoothAt;
-static int s_FPSSmoothCount;
-
-static void (*s_MCUDelay)(int) = 0;
-
-void SystemClass::begin()
+System::System()
 {
-	SystemClass::_begin();
+#ifdef WIN32
+	m_Win32 = new SystemWin32(this);
+	initWindows();
+#endif
 
 	// Initialize Frame Count
-	s_FrameCount = 0;
+	m_FrameCount = 0;
 
 	// Initialize Frame Timing Information
-	s_FrameTime = 0.0;
-	s_FrameTimeDelta = 0.0;
-	s_FPSSmooth = 0.0;
-	s_FPSSmoothAt = 0;
-	for (int i = 0; i < D_BT8XXEMU_FPS_SMOOTHING; ++i)
-		s_FPSSmoothValues[i] = 0.0;
-	//s_FPSSmoothTotal = 0.0;
-	s_FPSSmoothCount = 0;
-	//s_FrameTimeOffset = SystemClass::getSeconds() * -1.0;
+	m_FrameTime = 0.0;
+	m_FrameTimeDelta = 0.0;
+	m_FPSSmooth = 0.0;
+	m_FPSSmoothAt = 0;
+	for (int i = 0; i < BT8XXEMU_FPS_SMOOTHING; ++i)
+		m_FPSSmoothValues[i] = 0.0;
+	//m_FPSSmoothTotal = 0.0;
+	m_FPSSmoothCount = 0;
+	//m_FrameTimeOffset = System::getSeconds() * -1.0;
 
-	s_RenderSleepWake = new SleepWake();
+	m_RenderSleepWake = std::make_unique<SleepWake>();
 }
 
-void SystemClass::update()
+void System::update()
 {
-	SystemClass::_update();
-
 	// Update Frame Count
-	++s_FrameCount;
+	++m_FrameCount;
 	
 	// Update Frame Timing Information
 	double frameTime = getSeconds();
-	s_FrameTimeDelta = frameTime - s_FrameTime;
-	s_FrameTime = frameTime;
+	m_FrameTimeDelta = frameTime - m_FrameTime;
+	m_FrameTime = frameTime;
 
-	//s_FPSSmoothTotal -= s_FPSSmoothValues[s_FPSSmoothAt];
-	s_FPSSmoothValues[s_FPSSmoothAt] = frameTime; //getFPS();
-	//s_FPSSmoothTotal += s_FPSSmoothValues[s_FPSSmoothAt];
-	if (s_FPSSmoothCount > 0)
-		s_FPSSmooth = (double)(s_FPSSmoothCount - 1) / (s_FPSSmoothValues[s_FPSSmoothAt] - s_FPSSmoothValues[(s_FPSSmoothAt + 1) % s_FPSSmoothCount]);
-	++s_FPSSmoothAt;
-	if (s_FPSSmoothCount < s_FPSSmoothAt)
-		s_FPSSmoothCount = s_FPSSmoothAt;
-	s_FPSSmoothAt %= D_BT8XXEMU_FPS_SMOOTHING;
-	//s_FPSSmooth = //s_FPSSmoothTotal / (double)s_FPSSmoothCount;
+	//m_FPSSmoothTotal -= m_FPSSmoothValues[m_FPSSmoothAt];
+	m_FPSSmoothValues[m_FPSSmoothAt] = frameTime; //getFPS();
+	//m_FPSSmoothTotal += m_FPSSmoothValues[m_FPSSmoothAt];
+	if (m_FPSSmoothCount > 0)
+		m_FPSSmooth = (double)(m_FPSSmoothCount - 1) / (m_FPSSmoothValues[m_FPSSmoothAt] - m_FPSSmoothValues[(m_FPSSmoothAt + 1) % m_FPSSmoothCount]);
+	++m_FPSSmoothAt;
+	if (m_FPSSmoothCount < m_FPSSmoothAt)
+		m_FPSSmoothCount = m_FPSSmoothAt;
+	m_FPSSmoothAt %= BT8XXEMU_FPS_SMOOTHING;
+	//m_FPSSmooth = //m_FPSSmoothTotal / (double)m_FPSSmoothCount;
 }
 
-void SystemClass::end()
+System::~System()
 {
-	delete s_RenderSleepWake;
-	s_RenderSleepWake = NULL;
-
-	// ...
-
-	SystemClass::_end();
+#ifdef WIN32
+	releaseWindows();
+	delete m_Win32;
+#endif
 }
 
-void SystemClass::overrideMCUDelay(void (*delay)(int))
+void System::delayForMCU(int ms)
 {
-	s_MCUDelay = delay;
-}
-
-void SystemClass::delayForMCU(int ms)
-{
-	if (s_MCUDelay) s_MCUDelay(ms);
+	if (m_MCUDelay) m_MCUDelay(m_Sender, m_UserContext, ms);
 	else delay(ms);
 }
 
-void SystemClass::renderSleep(int ms)
+void System::renderSleep(int ms)
 {
-	s_RenderSleepWake->sleep(ms);
+	m_RenderSleepWake->sleep(ms);
 }
 
-void SystemClass::renderWake()
+void System::renderWake()
 {
-	s_RenderWoke = true;
-	s_RenderSleepWake->wake();
+	m_RenderWoke = true;
+	m_RenderSleepWake->wake();
 }
 
-bool SystemClass::renderWoke()
+bool System::renderWoke()
 {
-	bool res = s_RenderWoke;
-	s_RenderWoke = false;
+	bool res = m_RenderWoke;
+	m_RenderWoke = false;
 	return res;
 }
 

@@ -22,7 +22,7 @@
 #include <SDL.h>
 
 // Project includes
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 #include "ft8xxemu_system.h"
 
 // using namespace ...;
