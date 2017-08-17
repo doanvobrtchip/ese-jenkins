@@ -94,6 +94,8 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 #ifdef FTEMU_HAVE_FT800EMU
 	case BT8XXEMU_EmulatorFT800:
 	case BT8XXEMU_EmulatorFT801:
+		(new FT800EMU::Emulator())->run(*params);
+		(new FT800EMU::Emulator())->run(*params);
 		s_Emulator = new FT800EMU::Emulator();
 		BT8XXEMU_getDebugLimiterEffective = &FT800EMU::GraphicsProcessor.getDebugLimiterEffective;
 		BT8XXEMU_getDebugLimiterIndex = &FT800EMU::GraphicsProcessor.getDebugLimiterIndex;

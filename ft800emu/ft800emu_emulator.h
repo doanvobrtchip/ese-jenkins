@@ -73,6 +73,7 @@ public:
 namespace FT8XXEMU {
 	class WindowOutput;
 	class AudioOutput;
+	class KeyboardInput;
 }
 
 namespace FT800EMU {
@@ -115,6 +116,9 @@ private:
 	int audioThread();
 
 	void finalMasterThread(bool sync, int flags);
+
+private:
+	void debugShortkeys();
 
 private:
 	volatile bool m_EmulatorRunning = false;
@@ -169,6 +173,7 @@ private:
 
 	FT8XXEMU::WindowOutput *m_WindowOutput = NULL;
 	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
+	FT8XXEMU::KeyboardInput *m_KeyboardInput = NULL;
 
 	AudioProcessor *m_AudioProcessor = NULL;
 	AudioRender *m_AudioRender = NULL;

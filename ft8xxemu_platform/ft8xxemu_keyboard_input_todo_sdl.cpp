@@ -1,8 +1,8 @@
 /**
- * KeyboardClass
+ * KeyboardInput
  * $Id$
  * \file ft8xxemu_keyboard_sdl.cpp
- * \brief KeyboardClass
+ * \brief KeyboardInput
  * \date 2012-06-27 11:48GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -11,10 +11,11 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#if 0
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
 // #include <...>
-#include "ft8xxemu_keyboard.h"
+#include "ft8xxemu_keyboard_input.h"
 
 // System includes
 #include <vector>
@@ -28,24 +29,24 @@
 
 namespace FT8XXEMU {
 
-KeyboardClass Keyboard;
+KeyboardInput Keyboard;
 
-void KeyboardClass::begin()
+void KeyboardInput::begin()
 {
 
 }
 
-void KeyboardClass::update()
+void KeyboardInput::update()
 {
 
 }
 
-void KeyboardClass::end()
+void KeyboardInput::end()
 {
 
 }
 
-bool KeyboardClass::isKeyDown(int key)
+bool KeyboardInput::isKeyDown(int key)
 {
 #ifdef FTEMU_SDL2
 	const Uint8 *keystate = SDL_GetKeyboardState(NULL);
@@ -59,5 +60,6 @@ bool KeyboardClass::isKeyDown(int key)
 } /* namespace FT8XXEMU */
 
 #endif /* (defined(FTEMU_SDL) || defined(FTEMU_SDL2)) */
+#endif
 
 /* end of file */

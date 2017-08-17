@@ -23,7 +23,7 @@
 
 // Project includes
 #include "ft8xxemu_system.h"
-#include "ft8xxemu_keyboard.h"
+#include "ft8xxemu_keyboard_input.h"
 #include "ft8xxemu_keyboard_keys.h"
 #include "ft8xxemu_window_output.h"
 #include "ft8xxemu_audio_output.h"
@@ -81,15 +81,15 @@ const uint8_t bayerDiv4[2][2] = {
 
 }
 
-void debugShortkeys()
+void Emulator::debugShortkeys()
 {
 	{
 		static bool setDebugMode = false;
 		if (setDebugMode)
 		{
-			setDebugMode = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F3);
+			setDebugMode = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F3))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3))
 		{
 			FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
 			setDebugMode = true;
@@ -100,9 +100,9 @@ void debugShortkeys()
 		static bool incDebugMultiplier = false;
 		if (incDebugMultiplier)
 		{
-			incDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADPLUS);
+			incDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADPLUS))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS))
 		{
 			if (FT800EMU::GraphicsProcessor.getDebugMode())
 				FT800EMU::GraphicsProcessor.setDebugMultiplier(FT800EMU::GraphicsProcessor.getDebugMultiplier() + 1);
@@ -114,9 +114,9 @@ void debugShortkeys()
 		static bool decDebugMultiplier = false;
 		if (decDebugMultiplier)
 		{
-			decDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADMINUS);
+			decDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
 		{
 			if (FT800EMU::GraphicsProcessor.getDebugMode())
 				FT800EMU::GraphicsProcessor.setDebugMultiplier(max(FT800EMU::GraphicsProcessor.getDebugMultiplier() - 1, 1));
@@ -128,9 +128,9 @@ void debugShortkeys()
 		static bool resetDebugMultiplier = false;
 		if (resetDebugMultiplier)
 		{
-			resetDebugMultiplier = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADSLASH);
+			resetDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_NUMPADSLASH))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH))
 		{
 			if (FT800EMU::GraphicsProcessor.getDebugMode())
 				FT800EMU::GraphicsProcessor.setDebugMultiplier(1);
@@ -142,9 +142,9 @@ void debugShortkeys()
 		static bool incDebugLimiter = false;
 		if (incDebugLimiter)
 		{
-			incDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F8);
+			incDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F8))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8))
 		{
 			FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
 			incDebugLimiter = true;
@@ -155,9 +155,9 @@ void debugShortkeys()
 		static bool decDebugLimiter = false;
 		if (decDebugLimiter)
 		{
-			decDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F7);
+			decDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F7))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7))
 		{
 			FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
 			decDebugLimiter = true;
@@ -168,9 +168,9 @@ void debugShortkeys()
 		static bool resetDebugLimiter = false;
 		if (resetDebugLimiter)
 		{
-			resetDebugLimiter = FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F6);
+			resetDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6);
 		}
-		else if (FT8XXEMU::Keyboard.isKeyDown(BT8XXEMU_KEY_F6))
+		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6))
 		{
 			FT800EMU::GraphicsProcessor.setDebugLimiter(0);
 			resetDebugLimiter = true;
@@ -718,7 +718,7 @@ int Emulator::audioThread()
 		}
 		if (m_Flags & BT8XXEMU_EmulatorEnableKeyboard)
 		{
-			FT8XXEMU::Keyboard.update();
+			m_KeyboardInput->update();
 			if (m_Flags & BT8XXEMU_EmulatorEnableDebugShortkeys)
 			{
 				debugShortkeys();
@@ -778,7 +778,11 @@ void Emulator::finalMasterThread(bool sync, int flags)
 
 	delete[] m_GraphicsBuffer;
 	m_GraphicsBuffer = NULL;
-	if ((!m_Graphics) && (flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.end();
+	if ((!m_Graphics) && (flags & BT8XXEMU_EmulatorEnableKeyboard))
+	{
+		m_KeyboardInput->destroy();
+		m_KeyboardInput = NULL;
+	}
 	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		delete m_Coprocessor;
@@ -897,7 +901,10 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
 	}
-	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)) FT8XXEMU::Keyboard.begin();
+	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard))
+	{
+		m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_WindowOutput);
+	}
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 
 	if (m_Graphics)

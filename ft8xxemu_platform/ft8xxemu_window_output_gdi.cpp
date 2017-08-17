@@ -48,6 +48,7 @@ int s_LoopActive = 0;
 concurrency::concurrent_queue<std::function<void()>> s_LoopQueue;
 DWORD s_LoopThreadId = 0;
 std::map<HWND, WindowOutput *> s_WindowMap;
+int s_ClassRegCount = 0;
 
 void immediate(std::function<void()> f)
 {
@@ -168,23 +169,28 @@ WindowOutput::WindowOutput()
 		// Save params
 		m_HInstance = GetModuleHandle(NULL);
 
-		// Register Display Class
-		WNDCLASSEX wcex;
-		wcex.cbSize = sizeof(WNDCLASSEX);
-		wcex.style = CS_HREDRAW | CS_VREDRAW;
-		wcex.lpszClassName = BT8XXEMU_WINDOW_CLASS_NAME;
-		wcex.lpfnWndProc = FT8XXEMU::wndProc;
-		wcex.hInstance = m_HInstance;
-		wcex.cbClsExtra = 0;
-		wcex.cbWndExtra = 0;
-		wcex.lpszMenuName = NULL;
-		wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-		//wcex.hIcon = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_JAZZ));
-		//wcex.hIconSm = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_SMALL));
-		wcex.hIcon = NULL;
-		wcex.hIconSm = NULL;
-		if (!RegisterClassEx(&wcex)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
+		assert(s_ClassRegCount >= 0);
+		if (!s_ClassRegCount)
+		{
+			// Register Display Class
+			WNDCLASSEX wcex;
+			wcex.cbSize = sizeof(WNDCLASSEX);
+			wcex.style = CS_HREDRAW | CS_VREDRAW;
+			wcex.lpszClassName = BT8XXEMU_WINDOW_CLASS_NAME;
+			wcex.lpfnWndProc = FT8XXEMU::wndProc;
+			wcex.hInstance = m_HInstance;
+			wcex.cbClsExtra = 0;
+			wcex.cbWndExtra = 0;
+			wcex.lpszMenuName = NULL;
+			wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+			wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+			//wcex.hIcon = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_JAZZ));
+			//wcex.hIconSm = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_SMALL));
+			wcex.hIcon = NULL;
+			wcex.hIconSm = NULL;
+			if (!RegisterClassEx(&wcex)) SystemWindows.ErrorWin32(TEXT("GDI Initialisation"));
+		}
+		++s_ClassRegCount;
 
 		// Initialize and Show Display Instance
 		DWORD dw_style = WS_OVERLAPPEDWINDOW;
@@ -261,7 +267,12 @@ WindowOutput::~WindowOutput()
 		if (m_HWnd) { DestroyWindow(m_HWnd); m_HWnd = NULL; }
 		else SystemWindows.Debug(TEXT("WindowOutput.end() m_HWnd == NULL"));
 
-		//UnregisterClass(BT8XXEMU_WINDOW_CLASS_NAME, m_HInstance);
+		--s_ClassRegCount;
+		if (!s_ClassRegCount)
+		{
+			UnregisterClass(BT8XXEMU_WINDOW_CLASS_NAME, m_HInstance);
+		}
+		assert(s_ClassRegCount >= 0);
 	});
 	decLoop();
 }

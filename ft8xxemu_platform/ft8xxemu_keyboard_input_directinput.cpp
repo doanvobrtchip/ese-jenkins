@@ -1,8 +1,8 @@
 /**
- * KeyboardClass
+ * KeyboardInput
  * $Id$
  * \file ft8xxemu_keyboard_directinput.cpp
- * \brief KeyboardClass
+ * \brief KeyboardInput
  * \date 2011-05-29 22:02GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -11,100 +11,107 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
-#ifndef FTEMU_SDL
-#ifndef FTEMU_SDL2
+#ifdef WIN32
 
-// #include <...>
-#include "ft8xxemu_keyboard.h"
+#include "ft8xxemu_keyboard_input.h"
 
 // System includes
 
 // Project includes
 #include "ft8xxemu_system_windows.h"
 #include "ft8xxemu_system.h"
+#include "ft8xxemu_window_output.h"
 
 // using namespace ...;
 
 namespace FT8XXEMU {
 
-KeyboardClass Keyboard;
-
-static LPDIRECTINPUT8 s_lpDI = NULL;
-static LPDIRECTINPUTDEVICE8 s_lpDIKeyboard = NULL;
-static unsigned char s_BufferKeyboard[256];
-
-void KeyboardClass::begin()
+KeyboardInput *KeyboardInput::create(WindowOutput *windowOutput)
 {
-	HRESULT hr;
-
-	if (s_lpDI) SystemWindows.Error(TEXT("KeyboardClass::begin()  s_lpDI != NULL"));
-	hr = DirectInput8Create((HINSTANCE)GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&s_lpDI, NULL);
-	if FAILED(hr) { end(); SystemWindows.Error(TEXT("DirectInput not available")); }
-
-	// Retrieve interface to an IDirectInputDevice8
-	if (s_lpDIKeyboard) SystemWindows.Error(TEXT("KeyboardClass::begin()  m_lpDIKeyboard != NULL"));
-    hr = s_lpDI->CreateDevice(GUID_SysKeyboard, &s_lpDIKeyboard, NULL);
-	if FAILED(hr) { end(); SystemWindows.Error(TEXT("Keyboard not available (1)")); }
-
-	// Set keyboard data format
-	hr = s_lpDIKeyboard->SetDataFormat(&c_dfDIKeyboard);
-	if FAILED(hr) { end(); SystemWindows.Error(TEXT("Keyboard not available (2)")); }
-
-	// Set cooperative level
-	hr = s_lpDIKeyboard->SetCooperativeLevel(SystemWindows.getHWnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-	if FAILED(hr) { end(); SystemWindows.Error(TEXT("Keyboard not available (3)")); }
-
-	// Get access to the input device, may fail the first time round
-    hr = s_lpDIKeyboard->Acquire();
-    //if FAILED(hr) { Input::Release(); Utilities::Error(TEXT("Keyboard not available (4)")); } // doesn't matter
+	return new KeyboardInput(windowOutput);
 }
 
-void KeyboardClass::update()
+void KeyboardInput::destroy()
+{
+	delete this;
+}
+
+KeyboardInput::KeyboardInput(WindowOutput *windowOutput) : m_WindowOutput(windowOutput)
 {
 	HRESULT hr;
 
-    hr = s_lpDIKeyboard->GetDeviceState(sizeof(s_BufferKeyboard),(LPVOID)&s_BufferKeyboard);
+	if (m_lpDI) SystemWindows.Error(TEXT("KeyboardInput::begin()  m_lpDI != NULL"));
+	hr = DirectInput8Create((HINSTANCE)GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDI, NULL);
+	if FAILED(hr) { release(); SystemWindows.Error(TEXT("DirectInput not available")); }
+
+	// Retrieve interface to an IDirectInputDevice8
+	if (m_lpDIKeyboard) SystemWindows.Error(TEXT("KeyboardInput::begin()  m_lpDIKeyboard != NULL"));
+    hr = m_lpDI->CreateDevice(GUID_SysKeyboard, &m_lpDIKeyboard, NULL);
+	if FAILED(hr) { release(); SystemWindows.Error(TEXT("Keyboard not available (1)")); }
+
+	// Set keyboard data format
+	hr = m_lpDIKeyboard->SetDataFormat(&c_dfDIKeyboard);
+	if FAILED(hr) { release(); SystemWindows.Error(TEXT("Keyboard not available (2)")); }
+
+	// Set cooperative level
+	hr = m_lpDIKeyboard->SetCooperativeLevel(windowOutput->getHandle(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+	if FAILED(hr) { release(); SystemWindows.Error(TEXT("Keyboard not available (3)")); }
+
+	// Get access to the input device, may fail the first time round
+    hr = m_lpDIKeyboard->Acquire();
+    // if FAILED(hr) { Input::Release(); Utilities::Error(TEXT("Keyboard not available (4)")); } // doesn't matter
+}
+
+KeyboardInput::~KeyboardInput()
+{
+	release();
+}
+
+void KeyboardInput::update()
+{
+	HRESULT hr;
+
+    hr = m_lpDIKeyboard->GetDeviceState(sizeof(m_BufferKeyboard), (LPVOID)&m_BufferKeyboard);
 	if FAILED(hr)
 	{
 		// Reacquire access to the input device
-		memset(s_BufferKeyboard, 0, sizeof(s_BufferKeyboard));
+		memset(m_BufferKeyboard, 0, sizeof(m_BufferKeyboard));
 		if (hr == DIERR_INPUTLOST || hr == DIERR_NOTACQUIRED)
 		{
-			s_lpDIKeyboard->Acquire();
+			m_lpDIKeyboard->Acquire();
 		}
 		else
 		{
-			end();
+			release();
 			SystemWindows.Error(TEXT("Keyboard not available (5)"));
 		}
 	}
 }
 
-void KeyboardClass::end()
+void KeyboardInput::release()
 {
-	if (s_lpDIKeyboard)
+	if (m_lpDIKeyboard)
 	{
-		s_lpDIKeyboard->Unacquire();
-		s_lpDIKeyboard->Release();
-		s_lpDIKeyboard = NULL;
+		m_lpDIKeyboard->Unacquire();
+		m_lpDIKeyboard->Release();
+		m_lpDIKeyboard = NULL;
 	}
-	else SystemWindows.Debug(TEXT("KeyboardClass::end()  s_lpDIKeyboard == NULL"));
-	if (s_lpDI)
+	else SystemWindows.Debug(TEXT("KeyboardInput::end()  m_lpDIKeyboard == NULL"));
+	if (m_lpDI)
 	{
-		s_lpDI->Release();
-		s_lpDI = NULL;
+		m_lpDI->Release();
+		m_lpDI = NULL;
 	}
-	else SystemWindows.Debug(TEXT("KeyboardClass::end()  s_lpDI == NULL"));
+	else SystemWindows.Debug(TEXT("KeyboardInput::end()  m_lpDI == NULL"));
 }
 
-bool KeyboardClass::isKeyDown(int key)
+bool KeyboardInput::isKeyDown(int key)
 {
-	return ((s_BufferKeyboard[key] & 0x80) != 0);
+	return ((m_BufferKeyboard[key] & 0x80) != 0);
 }
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FTEMU_SDL2 */
-#endif /* #ifndef FTEMU_SDL */
+#endif /* #ifdef WIN32 */
 
 /* end of file */
