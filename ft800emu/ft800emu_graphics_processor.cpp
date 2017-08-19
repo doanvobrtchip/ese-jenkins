@@ -102,10 +102,11 @@ struct GraphicsState
 {
 public:
 	BT8XXEMU_FORCE_INLINE GraphicsState(
+		GraphicsProcessor *processor
 #ifdef FT810EMU_MODE
-		const bool swapXY
+		, const bool swapXY
 #endif
-		)
+		) : Processor(processor)
 	{
 		DebugDisplayListIndex = 0;
 		ColorARGB = 0xFFFFFFFF;
@@ -162,6 +163,8 @@ public:
 		PaletteSource = 0;
 #endif
 	}
+	
+	const GraphicsProcessor *Processor;
 
 	int DebugDisplayListIndex;
 	argb8888 ColorARGB;
@@ -2535,16 +2538,15 @@ void GraphicsProcessor::reduceThreads(int nb)
 #define SIGNED_N(v, n) \
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
 
-namespace {
-
-void processBlankDL(BitmapInfo *const bitmapInfo)
+void processBlankDL(GraphicsProcessor *graphicsProcessor, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = s_Memory->getRam();
 	const uint32_t *displayList = s_Memory->getDisplayList();
 
 	GraphicsState gs = GraphicsState(
+		graphicsProcessor
 #ifdef FT810EMU_MODE
-		false
+		, false
 #endif
 		);
 	std::stack<GraphicsState> gsstack;
@@ -2626,8 +2628,9 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_RESTORE_CONTEXT:
             if (gsstack.empty()) {
                 gs = GraphicsState(
+					graphicsProcessor
 #ifdef FT810EMU_MODE
-					false
+					, false
 #endif
 					);
             } else {
@@ -2670,7 +2673,7 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void processPart(GraphicsProcessor *graphicsProcessor, argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
 	uint8_t *const ram = s_Memory->getRam();
 	const uint32_t *displayList = s_Memory->getDisplayList();
@@ -2685,8 +2688,9 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState(
+			graphicsProcessor
 #ifdef FT810EMU_MODE
-			swapXY
+			, swapXY
 #endif
 			);
 		std::stack<GraphicsState> gsstack;
@@ -2995,8 +2999,9 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_RESTORE_CONTEXT:
                     if (gsstack.empty()) {
                         gs = GraphicsState(
+							graphicsProcessor
 #ifdef FT810EMU_MODE
-							swapXY
+							, swapXY
 #endif							
 							);
                         gs.ScissorWidth = hsize;
@@ -3330,11 +3335,9 @@ DisplayListDisplay:
 
 	if (!lines_processed)
 	{
-		processBlankDL(bitmapInfo);
+		processBlankDL(graphicsProcessor, bitmapInfo);
 	}
 }
-
-} /* anonymous namespace */
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 int launchGraphicsProcessorThread(void *startInfo)
@@ -3409,6 +3412,7 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 		}
 
 		processPart<false>(
+			this,
 			li->ScreenArgb8888, 
 			li->UpsideDown, 
 			li->Mirrored, 
@@ -3480,7 +3484,7 @@ void GraphicsProcessor::process(
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
+	processPart<false>(this, screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
 
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
@@ -3505,7 +3509,7 @@ void GraphicsProcessor::process(
 
 void GraphicsProcessor::processBlank()
 {
-	processBlankDL(s_BitmapInfoMaster);
+	processBlankDL(this, s_BitmapInfoMaster);
 
 	// Copy bitmap infos to thread local
 	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
@@ -3525,7 +3529,7 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	s_DebugTraceStackMax = *size;
 	*size = 0;
 	s_DebugTraceStackSize = size;
-	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(this, dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
 	s_DebugTraceX = ~0;
 	s_DebugTraceStackMax = 0;
 	s_DebugTraceStackSize = &s_DebugTraceStackMax;

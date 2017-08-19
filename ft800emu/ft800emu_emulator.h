@@ -46,10 +46,8 @@ public:
 	virtual void cs(bool cs) = 0;
 	virtual bool hasInterrupt() = 0;
 
-	/*
 	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
 	virtual void touchResetXY(int idx) = 0;
-	*/
 
 	virtual uint8_t *getRam() = 0;
 	// virtual uint8_t *getFlash() = 0;
@@ -101,6 +99,9 @@ public:
 	virtual uint8_t transfer(uint8_t data) override;
 	virtual void cs(bool cs) override;
 	virtual bool hasInterrupt() override;
+
+	virtual void touchSetXY(int idx, int x, int y, int pressure);
+	virtual void touchResetXY(int idx);
 
 	virtual uint8_t *getRam() override;
 	// virtual uint8_t *getFlash() override;

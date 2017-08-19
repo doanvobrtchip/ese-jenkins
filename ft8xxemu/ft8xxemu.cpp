@@ -133,6 +133,16 @@ BT8XXEMU_API int BT8XXEMU_hasInterrupt()
 	return s_Emulator->hasInterrupt();
 }
 
+BT8XXEMU_API void BT8XXEMU_touchSetXY(int idx, int x, int y, int pressure)
+{
+	s_Emulator->touchSetXY(idx, x, y, pressure);
+}
+
+BT8XXEMU_API void BT8XXEMU_touchResetXY(int idx)
+{
+	s_Emulator->touchResetXY(idx);
+}
+
 BT8XXEMU_API uint8_t *BT8XXEMU_getRam()
 {
 	return s_Emulator->getRam();
@@ -176,18 +186,6 @@ BT8XXEMU_API void BT8XXEMU_setDebugLimiter(int debugLimiter)
 BT8XXEMU_API void BT8XXEMU_processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	s_Emulator->processTrace(result, size, x, y, hsize);
-}
-
-// Set touch XY. Call on every frame when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchSetXY(int idx, int x, int y, int pressure)
-{
-	//FT8XXEMU::g_SetTouchScreenXY(idx, x, y, pressure);
-}
-
-// Reset touch XY. Call once no longer touching when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchResetXY(int idx)
-{
-	//FT8XXEMU::g_ResetTouchScreenXY(idx);
 }
 
 /* end of file */

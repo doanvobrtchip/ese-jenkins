@@ -1029,6 +1029,16 @@ bool Emulator::hasInterrupt()
 	return m_Memory->hasInterrupt();
 }
 
+void Emulator::touchSetXY(int idx, int x, int y, int pressure)
+{
+	m_Touch->touch(idx).setXY(x, y, pressure);
+}
+
+void Emulator::touchResetXY(int idx)
+{
+	m_Touch->touch(idx).resetXY();
+}
+
 uint8_t *Emulator::getRam()
 {
 	return m_Memory->getRam();
