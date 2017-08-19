@@ -38,8 +38,13 @@
 #define FT800EMU_DEBUGMODE_COUNT 4
 #endif
 
+namespace FT8XXEMU {
+	class System;
+}
+
 namespace FT800EMU {
 	class Memory;
+	class Touch;
 
 struct BitmapInfo
 {
@@ -66,7 +71,7 @@ class GraphicsProcessorClass
 public:
 	GraphicsProcessorClass() { }
 
-	static void begin(Memory *memory, bool backgroundPerformance);
+	static void begin(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance);
 	static void end();
 
 	static void setThreadPriority(bool realtime);

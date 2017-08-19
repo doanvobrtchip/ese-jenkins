@@ -875,7 +875,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
 	assert(!m_Touch);
 	m_Touch = new Touch(m_System, mode, m_Memory);
-	GraphicsProcessor.begin(m_Memory, m_BackgroundPerformance);
+	GraphicsProcessor.begin(m_System, m_Memory, m_Touch, m_BackgroundPerformance);
 	assert(!m_BusSlave);
 	m_BusSlave = new BusSlave(m_System, m_Memory);
 	if (!m_Graphics)

@@ -60,8 +60,8 @@ public:
 
 	void setSender(void *sender) { m_Sender = sender; }
 	void setUserContext(void *context) { m_UserContext = context; }
-	void onLog(void(*delay)(void *sender, void *context, BT8XXEMU_LogType type, const char *message));
-	void overrideMCUDelay(void (*delay)(void *sender, void *context, int ms));
+	void onLog(void(*log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message)) { m_Log = log; }
+	void overrideMCUDelay(void(*delay)(void *sender, void *context, int ms)) { m_MCUDelay = delay; }
 
 	void delayForMCU(int ms);
 	static void delay(int ms);

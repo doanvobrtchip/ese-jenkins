@@ -398,7 +398,7 @@ bool Touch::multiTouch()
 {
 	uint8_t *ram = m_Memory->getRam();
 #ifdef FT810EMU_MODE
-	return (s_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
+	return (m_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
 #else
 	return m_EmulatorMode >= BT8XXEMU_EmulatorFT801
 		&& ((m_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);

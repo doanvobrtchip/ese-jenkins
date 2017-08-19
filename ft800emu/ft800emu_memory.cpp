@@ -222,17 +222,17 @@ BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data
 			if (m_EmulatorMode >= BT8XXEMU_EmulatorFT801)
 #endif
 			{
-				if (!TouchPoint::multiTouch())
+				if (!m_Touch->multiTouch())
 				{
 					rawWriteU32(REG_TOUCH_DIRECT_XY, 0); // REG_CTOUCH_TOUCHB_XY
 					rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
 					rawWriteU32(REG_ANALOG, 0); // REG_CTOUCH_TOUCH4_X
 				}
-				Touch[0].resetXY();
-				Touch[1].resetXY();
-				Touch[2].resetXY();
-				Touch[3].resetXY();
-				Touch[4].resetXY();
+				m_Touch->touch(0).resetXY();
+				m_Touch->touch(1).resetXY();
+				m_Touch->touch(2).resetXY();
+				m_Touch->touch(3).resetXY();
+				m_Touch->touch(4).resetXY();
 			}
 			break;
 		case REG_SNAPSHOT:
@@ -624,7 +624,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			{
 				// FTEMU_printf(" Delay MCU \n");
 				m_ThreadCoprocessor.prioritize();
-				FT8XXEMU::System.delayForMCU(1);
+				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
@@ -676,7 +676,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 	{
 		case REG_TOUCH_SCREEN_XY:
 		{
-			return Touch[0].getXY();
+			return m_Touch->touch(0).getXY();
 			// TODO MULTITOUCH
 		}
 		case REG_INT_FLAGS:
@@ -849,7 +849,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			if (m_FifoCoprocessorReadCounter > 8)
 			{
 				m_ThreadMCU.prioritize();
-				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
 			}
 			break;
@@ -916,7 +916,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 	switch (address)
 	{
 	case REG_TOUCH_SCREEN_XY:
-		return Touch[0].getXY();
+		return m_Touch->touch(0).getXY();
 		// TODO: MULTITOUCH 1,2,3,4
 #ifndef FT810EMU_MODE
 	case REG_TOUCH_RZ:

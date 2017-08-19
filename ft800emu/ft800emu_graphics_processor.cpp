@@ -82,7 +82,9 @@ GraphicsProcessorClass GraphicsProcessor;
 
 namespace {
 
+FT8XXEMU::System *s_System;
 Memory *s_Memory;
+Touch *s_Touch;
 
 #pragma region Graphics State
 
@@ -413,8 +415,7 @@ BT8XXEMU_FORCE_INLINE bool testStencilNoWrite(const GraphicsState &gs, const uin
 		return true;
 	default:
 		// error
-		FTEMU_printf("Invalid stencil func\n");
-		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid stencil func");
+		s_System->log(BT8XXEMU_LogError, "Invalid stencil func");
 		return true;
 	}
 }
@@ -445,8 +446,7 @@ BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 		break;
 	default:
 		// error
-		FTEMU_printf("Invalid stencil op\n");
-		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid stencil op");
+		s_System->log(BT8XXEMU_LogError, "Invalid stencil op");
 		break;
 	}
 	return result;
@@ -513,8 +513,7 @@ BT8XXEMU_FORCE_INLINE bool testAlpha(const GraphicsState &gs, const argb8888 &ds
 	case ALWAYS:
 		return true;
 	}
-	FTEMU_printf("Invalid alpha test func\n");
-	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid alpha test func");
+	s_System->log(BT8XXEMU_LogError, "Invalid alpha test func");
 	return true;
 }
 
@@ -535,8 +534,7 @@ BT8XXEMU_FORCE_INLINE int getAlpha(const int &func, const argb8888 &src, const a
 	case ONE_MINUS_DST_ALPHA:
 		return 255 - (dst >> 24);
 	}
-	FTEMU_printf("Invalid blend func\n");
-	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid blend func");
+	s_System->log(BT8XXEMU_LogError, "Invalid blend func");
 	return 255;
 }
 
@@ -860,7 +858,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(const uint8_t *ram, const uint32_t
 	case PALETTED:
 		{
 #ifdef FT810EMU_MODE
-			FTEMU_printf("PALETTED is not a valid format\n");
+			s_System->log(BT8XXEMU_LogError, "PALETTED is not a valid format");
 			return 0xFFFF00FF; // invalid format
 #else
 			uint8_t val = bmpSrc8(ram, srci, py + xo);
@@ -1103,8 +1101,7 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(const int &format, const int &stride)
 		case L2: return stride << 2;
 #endif
 	}
-	FTEMU_printf("Invalid bitmap layout\n");
-	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid bitmap layout");
+	s_System->log(BT8XXEMU_LogError, "Invalid bitmap layout");
 	return stride;
 }
 
@@ -2378,9 +2375,11 @@ static int s_ThreadCount;
 
 static bool s_BackgroundPerformance;
 
-void GraphicsProcessorClass::begin(Memory *memory, bool backgroundPerformance)
+void GraphicsProcessorClass::begin(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
+	s_System = system;
 	s_Memory = memory;
+	s_Touch = touch;
 	s_BackgroundPerformance = backgroundPerformance;
 
 	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
@@ -2394,7 +2393,7 @@ void GraphicsProcessorClass::begin(Memory *memory, bool backgroundPerformance)
 
 	uint8_t *ram = s_Memory->getRam();
 	uint32_t fi = s_Memory->rawReadU32(ram, FT800EMU_ROM_FONTINFO);
-	if (FT800EMU_DEBUG) FTEMU_printf("Font index: %u\n", fi);
+	s_System->log(BT8XXEMU_LogMessage, "Font index : %u", fi);
 	for (int i = 0; i < 16; ++i)
 	{
 		int ir = i + 16;
@@ -2404,7 +2403,7 @@ void GraphicsProcessorClass::begin(Memory *memory, bool backgroundPerformance)
 		uint32_t width =  s_Memory->rawReadU32(ram, bi + 136);
 		uint32_t height =  s_Memory->rawReadU32(ram, bi + 140);
 		uint32_t data =  s_Memory->rawReadU32(ram, bi + 144);
-		if (FT800EMU_DEBUG) FTEMU_printf("Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
+		if (FT800EMU_DEBUG) s_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
 		s_BitmapInfoMain[ir].Source = data;
 		s_BitmapInfoMain[ir].LayoutFormat = format;
@@ -2527,20 +2526,20 @@ void GraphicsProcessorClass::enableMultithread(bool enabled)
 {
 	if (enabled)
 	{
-		s_ThreadCount = FT8XXEMU::System.getCPUCount();
+		s_ThreadCount = FT8XXEMU::System::getCPUCount();
 	}
 	else
 	{
 		s_ThreadCount = 1;
 	}
-	FTEMU_printf("Graphics processor threads: %i\n", s_ThreadCount);
+	s_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", s_ThreadCount);
 	resizeThreadInfos(s_ThreadCount - 1);
 }
 
 void GraphicsProcessorClass::reduceThreads(int nb)
 {
 	s_ThreadCount = max(1, s_ThreadCount - nb);
-	FTEMU_printf("Graphics processor threads: %i\n", s_ThreadCount);
+	s_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", s_ThreadCount);
 	resizeThreadInfos(s_ThreadCount - 1);
 }
 
@@ -2571,8 +2570,7 @@ void processBlankDL(BitmapInfo *const bitmapInfo)
 #if FT800EMU_LIMIT_JUMP_LOOP
 		if (loopCount > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 		{
-			FTEMU_printf("JUMP loop\n");
-			if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("JUMP loop");
+			s_System->log(BT8XXEMU_LogError, "JUMP loop");
 			break;
 		}
 		++loopCount;
@@ -2768,8 +2766,7 @@ void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bo
 #if FT800EMU_LIMIT_JUMP_LOOP
 			if (debugCounter > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
 			{
-				FTEMU_printf("JUMP loop\n");
-				if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("JUMP loop");
+				s_System->log(BT8XXEMU_LogError, "JUMP loop");
 				break;
 			}
 			++debugCounter;
@@ -2982,8 +2979,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_CALL:
 					if (callstack.size() >= 1024)
 					{
-						FTEMU_printf("Invalid CALL() in display list\n");
-						if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid CALL() in display list");
+						s_System->log(BT8XXEMU_LogError, "Invalid CALL() in display list");
 						goto DisplayListDisplay;
 					}
 					callstack.push((int)c);
@@ -3027,8 +3023,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_RETURN:
 					if (callstack.empty())
 					{
-						FTEMU_printf("Invalid RETURN() in display list\n");
-						if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid RETURN() in display list");
+						s_System->log(BT8XXEMU_LogError, "Invalid RETURN() in display list");
 					}
 					else
 					{
@@ -3116,8 +3111,7 @@ EvaluateDisplayListValue:
 					break;
 #endif
 				default:
-					FTEMU_printf("%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
-					if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid display list entry");
+					s_System->log(BT8XXEMU_LogError, "%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:
@@ -3266,7 +3260,7 @@ DisplayListDisplay:
 			}
 		}
 		// Check touch
-		if ((TouchPoint::multiTouch())
+		if ((s_Touch->multiTouch())
 			? (s_Memory->rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
 			: (s_Memory->rawReadU32(ram, REG_TOUCH_RZ) <= s_Memory->rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{
