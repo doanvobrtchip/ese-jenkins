@@ -110,7 +110,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 					swapDisplayList();
 					m_Ram[REG_DLSWAP] = 0;
 					flagDLSwap();
-					GraphicsProcessor.processBlank();
+					m_GraphicsProcessor->processBlank();
 					++m_DirectSwapCount;
 				}
 			}
@@ -131,7 +131,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 					// FTEMU_printf("Go\n");
 					swapDisplayList();
 					data = 0;
-					GraphicsProcessor.processBlank();
+					m_GraphicsProcessor->processBlank();
 					++m_DirectSwapCount;
 				}
 				// else

@@ -1,8 +1,8 @@
 /**
- * GraphicsProcessorClass
+ * GraphicsProcessor
  * $Id$
  * \file ft800emu_graphics_processor.cpp
- * \brief GraphicsProcessorClass
+ * \brief GraphicsProcessor
  * \date 2013-06-22 09:29GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -78,13 +78,23 @@
 
 namespace FT800EMU {
 
-GraphicsProcessorClass GraphicsProcessor;
+namespace /* anonymous */ {
 
-namespace {
+	FT8XXEMU::System *s_System;
+	Memory *s_Memory;
+	Touch *s_Touch;
 
-FT8XXEMU::System *s_System;
-Memory *s_Memory;
-Touch *s_Touch;
+	BitmapInfo s_BitmapInfoMaster[32];
+
+	bool s_RegPwmDutyEmulation = false;
+
+	uint32_t s_DebugTraceX = 0;
+	uint32_t s_DebugTraceLine = 0;
+	int *s_DebugTraceStack = NULL;
+	int s_DebugTraceStackMax = 0;
+	int *s_DebugTraceStackSize = NULL;
+
+	bool s_ThreadPriorityRealtime = true;
 
 #pragma region Graphics State
 
@@ -194,18 +204,6 @@ public:
 	int PaletteSource;
 #endif
 };
-
-BitmapInfo s_BitmapInfoMain[32];
-
-bool s_RegPwmDutyEmulation = false;
-
-uint32_t s_DebugTraceX = 0;
-uint32_t s_DebugTraceLine = 0;
-int *s_DebugTraceStack = NULL;
-int s_DebugTraceStackMax = 0;
-int *s_DebugTraceStackSize = NULL;
-
-bool s_ThreadPriorityRealtime = true;
 
 #pragma endregion
 
@@ -2375,7 +2373,7 @@ static int s_ThreadCount;
 
 static bool s_BackgroundPerformance;
 
-void GraphicsProcessorClass::begin(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
+GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
 	s_System = system;
 	s_Memory = memory;
@@ -2405,20 +2403,20 @@ void GraphicsProcessorClass::begin(FT8XXEMU::System *system, Memory *memory, Tou
 		uint32_t data =  s_Memory->rawReadU32(ram, bi + 144);
 		if (FT800EMU_DEBUG) s_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
-		s_BitmapInfoMain[ir].Source = data;
-		s_BitmapInfoMain[ir].LayoutFormat = format;
-		s_BitmapInfoMain[ir].LayoutStride = stride;
-		s_BitmapInfoMain[ir].LayoutHeight = height;
-		s_BitmapInfoMain[ir].LayoutWidth = getLayoutWidth(format, stride);
-		s_BitmapInfoMain[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
-		s_BitmapInfoMain[ir].SizeWrapX = BORDER;
-		s_BitmapInfoMain[ir].SizeWrapY = BORDER;
-		s_BitmapInfoMain[ir].SizeWidth = width;
-		s_BitmapInfoMain[ir].SizeHeight = height;
+		s_BitmapInfoMaster[ir].Source = data;
+		s_BitmapInfoMaster[ir].LayoutFormat = format;
+		s_BitmapInfoMaster[ir].LayoutStride = stride;
+		s_BitmapInfoMaster[ir].LayoutHeight = height;
+		s_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(format, stride);
+		s_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+		s_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+		s_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+		s_BitmapInfoMaster[ir].SizeWidth = width;
+		s_BitmapInfoMaster[ir].SizeHeight = height;
 	}
 }
 
-struct ThreadInfo
+struct GraphicsProcessor::ThreadInfo
 {
 public:
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -2429,7 +2427,7 @@ public:
 #else
 #	ifdef WIN32
 	volatile bool Running;
-	HANDLE Thread;
+	std::thread Thread;
 	HANDLE StartEvent;
 	HANDLE EndEvent;
 #	endif
@@ -2447,82 +2445,72 @@ public:
 	BitmapInfo Bitmap[32];
 };
 
-std::vector<ThreadInfo> s_ThreadInfos;
-
-#if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-int launchGraphicsProcessorThread(void *startInfo);
-#else
-#	ifdef WIN32
-DWORD WINAPI launchGraphicsProcessorThread(void *startInfo);
-#	endif
-#endif
-
-void resizeThreadInfos(int size)
+void GraphicsProcessor::resizeThreadInfos(int size)
 {
-	if (s_ThreadInfos.size() == size)
+	if (m_ThreadInfos.size() == size)
 		return;
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
-		s_ThreadInfos[i].Running = false;
+		m_ThreadInfos[i]->Running = false;
 		FTEMU_printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
-		SDL_SemPost(s_ThreadInfos[i].StartSem);
-		SDL_WaitThread(s_ThreadInfos[i].Thread, NULL);
-		s_ThreadInfos[i].Thread = NULL;
-		SDL_DestroySemaphore(s_ThreadInfos[i].StartSem);
-		s_ThreadInfos[i].StartSem = NULL;
-		SDL_DestroySemaphore(s_ThreadInfos[i].EndSem);
-		s_ThreadInfos[i].EndSem = NULL;
+		SDL_SemPost(s_ThreadInfos[i]->StartSem);
+		SDL_WaitThread(s_ThreadInfos[i]->Thread, NULL);
+		m_ThreadInfos[i]->Thread = NULL;
+		SDL_DestroySemaphore(s_ThreadInfos[i]->StartSem);
+		m_ThreadInfos[i]->StartSem = NULL;
+		SDL_DestroySemaphore(s_ThreadInfos[i]->EndSem);
+		m_ThreadInfos[i]->EndSem = NULL;
 	}
 #else
 #	ifdef WIN32
-	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
-		s_ThreadInfos[i].Running = false;
-		SetEvent(s_ThreadInfos[i].StartEvent);
-		WaitForSingleObject(s_ThreadInfos[i].Thread, INFINITE);
-		CloseHandle(s_ThreadInfos[i].Thread);
-		CloseHandle(s_ThreadInfos[i].StartEvent);
-		CloseHandle(s_ThreadInfos[i].EndEvent);
+		m_ThreadInfos[i]->Running = false;
+		SetEvent(m_ThreadInfos[i]->StartEvent);
+		m_ThreadInfos[i]->Thread.join();
+		CloseHandle(m_ThreadInfos[i]->StartEvent);
+		CloseHandle(m_ThreadInfos[i]->EndEvent);
 	}
 #	endif
 #endif
-	s_ThreadInfos.resize(size);
-	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
+	m_ThreadInfos.resize(size);
+	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
-		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+		if (!m_ThreadInfos[i]) m_ThreadInfos[i] = std::make_unique<ThreadInfo>();
+		memcpy(&m_ThreadInfos[i]->Bitmap, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-		s_ThreadInfos[i].Running = true;
-		s_ThreadInfos[i].StartSem = SDL_CreateSemaphore(0);
-		s_ThreadInfos[i].EndSem = SDL_CreateSemaphore(0);
+		m_ThreadInfos[i]->Running = true;
+		m_ThreadInfos[i]->StartSem = SDL_CreateSemaphore(0);
+		m_ThreadInfos[i]->EndSem = SDL_CreateSemaphore(0);
 		std::stringstream threadName;
 		threadName << std::string("FT800EMU::GPU::") << i;
 		std::string threadNameStr = threadName.str();
 		FTEMU_printf("Start graphics thread: 1+%u\n", (uint32_t)i);
-		s_ThreadInfos[i].Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
+		m_ThreadInfos[i]->Thread = SDL_CreateThreadFT(launchGraphicsProcessorThread, threadNameStr.c_str(), static_cast<void *>(&s_ThreadInfos[i]));
 #else
 #	ifdef WIN32
-		s_ThreadInfos[i].Running = true;
-		s_ThreadInfos[i].StartEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-		s_ThreadInfos[i].EndEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		s_ThreadInfos[i].Thread = CreateThread(NULL, 0, launchGraphicsProcessorThread, static_cast<void *>(&s_ThreadInfos[i]), 0, NULL);
+		m_ThreadInfos[i]->Running = true;
+		m_ThreadInfos[i]->StartEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		m_ThreadInfos[i]->EndEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		m_ThreadInfos[i]->Thread = std::thread(&GraphicsProcessor::launchGraphicsProcessorThread, this, m_ThreadInfos[i].get());
 #	endif
 #endif
 	}
 }
 
-void GraphicsProcessorClass::end()
+GraphicsProcessor::~GraphicsProcessor()
 {
 	resizeThreadInfos(0);
 }
 
-void GraphicsProcessorClass::enableRegPwmDutyEmulation(bool enabled)
+void GraphicsProcessor::enableRegPwmDutyEmulation(bool enabled)
 {
 	s_RegPwmDutyEmulation = enabled;
 }
 
-void GraphicsProcessorClass::enableMultithread(bool enabled)
+void GraphicsProcessor::enableMultithread(bool enabled)
 {
 	if (enabled)
 	{
@@ -2536,7 +2524,7 @@ void GraphicsProcessorClass::enableMultithread(bool enabled)
 	resizeThreadInfos(s_ThreadCount - 1);
 }
 
-void GraphicsProcessorClass::reduceThreads(int nb)
+void GraphicsProcessor::reduceThreads(int nb)
 {
 	s_ThreadCount = max(1, s_ThreadCount - nb);
 	s_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", s_ThreadCount);
@@ -3391,7 +3379,7 @@ int launchGraphicsProcessorThread(void *startInfo)
 }
 #else
 #	ifdef WIN32
-DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
+void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 {
 	FT8XXEMU::ThreadState threadState;
 	if (!s_BackgroundPerformance)
@@ -3403,7 +3391,6 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 	threadState.setName("FT8XXEMU Graphics Slave");
 	bool realtime = true;
 
-	ThreadInfo *li = static_cast<ThreadInfo *>(startInfo);
 	for (; ; )
 	{
 		WaitForSingleObject(li->StartEvent, INFINITE);
@@ -3438,18 +3425,16 @@ DWORD WINAPI launchGraphicsProcessorThread(void *startInfo)
 	}
 
 	threadState.reset();
-
-	return 0;
 }
 #	endif
 #endif
 
-void GraphicsProcessorClass::setThreadPriority(bool realtime)
+void GraphicsProcessor::setThreadPriority(bool realtime)
 {
 	s_ThreadPriorityRealtime = realtime;
 }
 
-void GraphicsProcessorClass::process(
+void GraphicsProcessor::process(
 	argb8888 *screenArgb8888, 
 	bool upsideDown, 
 	bool mirrored,
@@ -3471,7 +3456,7 @@ void GraphicsProcessorClass::process(
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
-		ThreadInfo *li = &s_ThreadInfos[i - 1];
+		ThreadInfo *li = m_ThreadInfos[i - 1].get();
 		li->ScreenArgb8888 = screenArgb8888;
 		li->UpsideDown = upsideDown;
 		li->Mirrored = mirrored;
@@ -3489,13 +3474,13 @@ void GraphicsProcessorClass::process(
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
 #	endif
 #endif
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMain);
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
 
 	for (int i = 1; i < s_ThreadCount; ++i)
 	{
@@ -3510,7 +3495,7 @@ void GraphicsProcessorClass::process(
 		// FTEMU_printf("%i: sem wait %i (%i)<-\n", s_Memory->rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
 #else
 #	ifdef WIN32
-		ThreadInfo *li = &s_ThreadInfos[i - 1];
+		ThreadInfo *li = m_ThreadInfos[i - 1].get();
 		WaitForSingleObject(li->EndEvent, INFINITE);
 		ResetEvent(li->EndEvent);
 #	endif
@@ -3518,23 +3503,23 @@ void GraphicsProcessorClass::process(
 	}
 }
 
-void GraphicsProcessorClass::processBlank()
+void GraphicsProcessor::processBlank()
 {
-	processBlankDL(s_BitmapInfoMain);
+	processBlankDL(s_BitmapInfoMaster);
 
 	// Copy bitmap infos to thread local
-	for (size_t i = 0; i < s_ThreadInfos.size(); ++i)
+	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
-		memcpy(&s_ThreadInfos[i].Bitmap, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+		memcpy(&m_ThreadInfos[i]->Bitmap, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
 	}
 }
 
-void GraphicsProcessorClass::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
+void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
 	argb8888 *dummyBuffer = buffer - (y * hsize);
 	BitmapInfo bitmapInfo[32];
-	memcpy(&bitmapInfo, &s_BitmapInfoMain, sizeof(s_BitmapInfoMain));
+	memcpy(&bitmapInfo, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
 	s_DebugTraceX = x;
 	s_DebugTraceStack = result;
 	s_DebugTraceStackMax = *size;
@@ -3547,62 +3532,62 @@ void GraphicsProcessorClass::processTrace(int *result, int *size, uint32_t x, ui
 	s_DebugTraceStack = NULL;
 }
 
-void GraphicsProcessorClass::setDebugMode(int debugMode)
+void GraphicsProcessor::setDebugMode(int debugMode)
 {
 	s_DebugMode = debugMode;
 }
 
-int GraphicsProcessorClass::getDebugMode()
+int GraphicsProcessor::getDebugMode()
 {
 	return s_DebugMode;
 }
 
-void GraphicsProcessorClass::setDebugMultiplier(int debugMultiplier)
+void GraphicsProcessor::setDebugMultiplier(int debugMultiplier)
 {
 	s_DebugMultiplier = debugMultiplier;
 }
 
-int GraphicsProcessorClass::getDebugMultiplier()
+int GraphicsProcessor::getDebugMultiplier()
 {
 	return s_DebugMultiplier;
 }
 
-void GraphicsProcessorClass::setDebugLimiter(int debugLimiter)
+void GraphicsProcessor::setDebugLimiter(int debugLimiter)
 {
 	s_DebugLimiter = debugLimiter;
 }
 
-int GraphicsProcessorClass::getDebugLimiter()
+int GraphicsProcessor::getDebugLimiter()
 {
 	return s_DebugLimiter;
 }
 
-bool GraphicsProcessorClass::getDebugLimiterEffective()
+bool GraphicsProcessor::getDebugLimiterEffective()
 {
 	return s_DebugLimiterEffective;
 }
 
-int GraphicsProcessorClass::getDebugLimiterIndex()
+int GraphicsProcessor::getDebugLimiterIndex()
 {
 	return s_DebugLimiterIndex;
 }
 
 /*
 // Sets operation trace on specified point
-void GraphicsProcessorClass::setDebugTrace(uint32_t x, uint32_t y)
+void GraphicsProcessor::setDebugTrace(uint32_t x, uint32_t y)
 {
 	s_DebugTraceX = x;
 	s_DebugTraceY = y;
 }
 
 // Disables or enables tracing
-void GraphicsProcessorClass::setDebugTrace(bool enabled)
+void GraphicsProcessor::setDebugTrace(bool enabled)
 {
 	s_DebugTraceEnabled = enabled;
 }
 
 // Returns the debug tracing state
-void GraphicsProcessorClass::getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y)
+void GraphicsProcessor::getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y)
 {
 	enabled = s_DebugTraceEnabled;
 	x = s_DebugTraceX;
@@ -3610,7 +3595,7 @@ void GraphicsProcessorClass::getDebugTrace(bool &enabled, uint32_t &x, uint32_t 
 }
 
 // Returns a *copy* of the debug trace
-void GraphicsProcessorClass::getDebugTrace(std::vector<int> &result)
+void GraphicsProcessor::getDebugTrace(std::vector<int> &result)
 {
 	for (int i = 0; i < s_DebugTraceStackData.size(); ++i)
 	{

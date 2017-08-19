@@ -1,8 +1,8 @@
 /**
- * GraphicsProcessorClass
+ * GraphicsProcessor
  * $Id$
  * \file ft800emu_graphics_processor.h
- * \brief GraphicsProcessorClass
+ * \brief GraphicsProcessor
  * \date 2013-06-22 09:29GMT
  * \author Jan Boon (Kaetemi)
  */
@@ -17,6 +17,7 @@
 
 // System includes
 #include <vector>
+#include <memory>
 
 // Project includes
 #include "ft8xxemu_inttypes.h"
@@ -61,22 +62,20 @@ struct BitmapInfo
 };
 
 /**
- * GraphicsProcessorClass
- * \brief GraphicsProcessorClass
+ * GraphicsProcessor
+ * \brief GraphicsProcessor
  * \date 2013-06-22 09:29GMT
  * \author Jan Boon (Kaetemi)
  */
-class GraphicsProcessorClass
+class GraphicsProcessor
 {
 public:
-	GraphicsProcessorClass() { }
+	GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance);
+	~GraphicsProcessor();
 
-	static void begin(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance);
-	static void end();
+	void setThreadPriority(bool realtime);
 
-	static void setThreadPriority(bool realtime);
-
-	static void process(
+	void process(
 		argb8888 *screenArgb8888, 
 		bool upsideDown, 
 		bool mirrored, 
@@ -87,46 +86,40 @@ public:
 		uint32_t vsize, 
 		uint32_t yIdx = 0, 
 		uint32_t yInc = 1);
-	static void processBlank();
+	void processBlank();
 
-	static void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
+	void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
 
 	// Enables or disables emuating REG_PWM_DUTY by fading to black
-	static void enableRegPwmDutyEmulation(bool enabled = true);
+	void enableRegPwmDutyEmulation(bool enabled = true);
 
 	// Enables multithreaded rendering, sets thread count to number of available CPU cores
-	static void enableMultithread(bool enabled = true);
+	void enableMultithread(bool enabled = true);
 	// Reduces the number of used threads with the specified amount
-	static void reduceThreads(int nb);
+	void reduceThreads(int nb);
 
-	static void setDebugMode(int debugMode);
-	static int getDebugMode();
-	static void setDebugMultiplier(int debugMultiplier);
-	static int getDebugMultiplier();
-	static void setDebugLimiter(int debugLimiter);
-	static int getDebugLimiter();
+	void setDebugMode(int debugMode);
+	int getDebugMode();
+	void setDebugMultiplier(int debugMultiplier);
+	int getDebugMultiplier();
+	void setDebugLimiter(int debugLimiter);
+	int getDebugLimiter();
 
-	static bool getDebugLimiterEffective();
-	static int getDebugLimiterIndex();
-
-	/*
-	// Sets operation trace on specified point
-	static void setDebugTrace(uint32_t x, uint32_t y);
-	// Disables or enables tracing
-	static void setDebugTrace(bool enabled);
-	// Returns the debug tracing state
-	static void getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y);
-	// Returns a *copy* of the debug trace
-	static void getDebugTrace(std::vector<int> &result);
-	*/
+	bool getDebugLimiterEffective();
+	int getDebugLimiterIndex();
 
 private:
-	GraphicsProcessorClass(const GraphicsProcessorClass &);
-	GraphicsProcessorClass &operator=(const GraphicsProcessorClass &);
+	struct ThreadInfo;
+	std::vector<std::unique_ptr<ThreadInfo> > m_ThreadInfos;
 
-}; /* class GraphicsProcessorClass */
+	void resizeThreadInfos(int size);
+	void launchGraphicsProcessorThread(ThreadInfo *li);
 
-extern GraphicsProcessorClass GraphicsProcessor;
+private:
+	GraphicsProcessor(const GraphicsProcessor &) = delete;
+	GraphicsProcessor &operator=(const GraphicsProcessor &) = delete;
+
+}; /* class GraphicsProcessor */
 
 } /* namespace FT800EMU */
 

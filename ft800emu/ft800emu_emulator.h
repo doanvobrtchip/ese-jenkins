@@ -58,12 +58,10 @@ public:
 	virtual int *getDisplayListCoprocessorWrites() = 0;
 	virtual void clearDisplayListCoprocessorWrites() = 0;
 
-	/*
 	virtual bool getDebugLimiterEffective() = 0;
 	virtual int getDebugLimiterIndex() = 0;
-	virtual void setDebugLimiter(int debugLimiter);
+	virtual void setDebugLimiter(int debugLimiter) = 0;
 	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = 0;
-	*/
 
 };
 
@@ -78,11 +76,12 @@ namespace FT8XXEMU {
 
 namespace FT800EMU {
 	class Memory;
+	class Touch;
+	class GraphicsProcessor;
+	class BusSlave;
 	class AudioProcessor;
 	class AudioRender;
 	class Coprocessor;
-	class BusSlave;
-	class Touch;
 
 /**
  * Emulator
@@ -109,6 +108,11 @@ public:
 	virtual void poke() override;
 	virtual int *getDisplayListCoprocessorWrites() override;
 	virtual void clearDisplayListCoprocessorWrites() override;
+
+	virtual bool getDebugLimiterEffective() override;
+	virtual int getDebugLimiterIndex() override;
+	virtual void setDebugLimiter(int debugLimiter)override;
+	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) override;
 
 private:
 	int masterThread(bool sync);
@@ -177,12 +181,13 @@ private:
 	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
 	FT8XXEMU::KeyboardInput *m_KeyboardInput = NULL;
 
-	AudioProcessor *m_AudioProcessor = NULL;
-	AudioRender *m_AudioRender = NULL;
 	Memory *m_Memory = NULL;
 	Touch *m_Touch = NULL;
-	Coprocessor *m_Coprocessor = NULL;
+	GraphicsProcessor *m_GraphicsProcessor = NULL;
 	BusSlave *m_BusSlave = NULL;
+	AudioProcessor *m_AudioProcessor = NULL;
+	AudioRender *m_AudioRender = NULL;
+	Coprocessor *m_Coprocessor = NULL;
 
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 	uint32_t m_ProfileFrameDelta[BT8XXEMU_PROFILE_FRAMEDELTA] = { 0 };

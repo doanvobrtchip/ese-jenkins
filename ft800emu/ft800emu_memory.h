@@ -28,9 +28,10 @@ namespace FT8XXEMU {
 
 namespace FT800EMU {
 	class Emulator;
+	class Touch;
+	class GraphicsProcessor;
 	class AudioProcessor;
 	class AudioRender;
-	class Touch;
 
 typedef int32_t ramaddr;
 
@@ -48,9 +49,10 @@ public:
 		const char *romFilePath = 0, const char *otpFilePath = 0);
 	~Memory();
 
+	inline void setTouch(Touch *touch) { m_Touch = touch; }
+	inline void setGraphicsProcessor(GraphicsProcessor *graphicsProcessor) { m_GraphicsProcessor = graphicsProcessor; }
 	inline void setAudioProcessor(AudioProcessor *audioProcessor) { m_AudioProcessor = audioProcessor; }
 	inline void setAudioRender(AudioRender *audioRender) { m_AudioRender = audioRender; }
-	inline void setTouch(Touch *touch) { m_Touch = touch; }
 
 	void enableReadDelay(bool enabled = true);
 
@@ -127,9 +129,10 @@ private:
 
 	// Dependencies
 	FT8XXEMU::System *m_System;
+	Touch *m_Touch = NULL;
+	GraphicsProcessor *m_GraphicsProcessor = NULL;
 	AudioProcessor *m_AudioProcessor = NULL;
 	AudioRender *m_AudioRender = NULL;
-	Touch *m_Touch = NULL;
 
 	// Avoid getting hammered in wait loops
 	ramaddr m_LastCoprocessorRead = -1;

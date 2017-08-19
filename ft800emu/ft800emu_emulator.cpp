@@ -91,7 +91,7 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3))
 		{
-			FT800EMU::GraphicsProcessor.setDebugMode((FT800EMU::GraphicsProcessor.getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
+			m_GraphicsProcessor->setDebugMode((m_GraphicsProcessor->getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
 			setDebugMode = true;
 		}
 	}
@@ -104,8 +104,8 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS))
 		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(FT800EMU::GraphicsProcessor.getDebugMultiplier() + 1);
+			if (m_GraphicsProcessor->getDebugMode())
+				m_GraphicsProcessor->setDebugMultiplier(m_GraphicsProcessor->getDebugMultiplier() + 1);
 			incDebugMultiplier = true;
 		}
 	}
@@ -118,8 +118,8 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
 		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(max(FT800EMU::GraphicsProcessor.getDebugMultiplier() - 1, 1));
+			if (m_GraphicsProcessor->getDebugMode())
+				m_GraphicsProcessor->setDebugMultiplier(max(m_GraphicsProcessor->getDebugMultiplier() - 1, 1));
 			decDebugMultiplier = true;
 		}
 	}
@@ -132,8 +132,8 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH))
 		{
-			if (FT800EMU::GraphicsProcessor.getDebugMode())
-				FT800EMU::GraphicsProcessor.setDebugMultiplier(1);
+			if (m_GraphicsProcessor->getDebugMode())
+				m_GraphicsProcessor->setDebugMultiplier(1);
 			resetDebugMultiplier = true;
 		}
 	}
@@ -146,7 +146,7 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8))
 		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(FT800EMU::GraphicsProcessor.getDebugLimiter() + 1);
+			m_GraphicsProcessor->setDebugLimiter(m_GraphicsProcessor->getDebugLimiter() + 1);
 			incDebugLimiter = true;
 		}
 	}
@@ -159,7 +159,7 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7))
 		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(max(FT800EMU::GraphicsProcessor.getDebugLimiter() - 1, 0));
+			m_GraphicsProcessor->setDebugLimiter(max(m_GraphicsProcessor->getDebugLimiter() - 1, 0));
 			decDebugLimiter = true;
 		}
 	}
@@ -172,7 +172,7 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6))
 		{
-			FT800EMU::GraphicsProcessor.setDebugLimiter(0);
+			m_GraphicsProcessor->setDebugLimiter(0);
 			resetDebugLimiter = true;
 		}
 	}
@@ -291,7 +291,7 @@ int Emulator::masterThread(bool sync)
 							snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 							// FTEMU_printf("SNAPY: %u\n", snapy);
 							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888();
-							GraphicsProcessor.process(buffer,
+							m_GraphicsProcessor->process(buffer,
 								false, mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
@@ -372,12 +372,12 @@ int Emulator::masterThread(bool sync)
 						}
 						if (m_SkipOn && m_SkipStage)
 						{
-							GraphicsProcessor.processBlank();
+							m_GraphicsProcessor->processBlank();
 							m_ChangesSkipped = hasChanges;
 						}
 						else if (m_DegradeOn)
 						{
-							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
+							m_GraphicsProcessor->process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
 								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !m_WindowOutput->isUpsideDown() : m_WindowOutput->isUpsideDown()), mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
@@ -391,7 +391,7 @@ int Emulator::masterThread(bool sync)
 						}
 						else
 						{
-							GraphicsProcessor.process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
+							m_GraphicsProcessor->process(m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888(),
 								m_GraphicsBuffer ? mirrorVertical : (mirrorVertical ? !m_WindowOutput->isUpsideDown() : m_WindowOutput->isUpsideDown()), mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
@@ -405,7 +405,7 @@ int Emulator::masterThread(bool sync)
 				}
 				else
 				{
-					// GraphicsProcessor.processBlank();
+					// m_GraphicsProcessor->processBlank();
 					// FTEMU_printf("no changes\n");
 				}
 			}
@@ -480,21 +480,21 @@ int Emulator::masterThread(bool sync)
 						else
 						{
 							m_ThreadMaster.prioritize();
-							GraphicsProcessor.setThreadPriority(false);
+							m_GraphicsProcessor->setThreadPriority(false);
 						}
 					}
 					else
 					{
 
 						m_ThreadMaster.realtime();
-						GraphicsProcessor.setThreadPriority(true);
+						m_GraphicsProcessor->setThreadPriority(true);
 					}
 				}
 			}
 			else
 			{
 				m_ThreadMaster.realtime();
-				GraphicsProcessor.setThreadPriority(true);
+				m_GraphicsProcessor->setThreadPriority(true);
 			}
 		}
 
@@ -805,7 +805,10 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	m_WindowOutput = NULL;
 	delete m_BusSlave;
 	m_BusSlave = NULL;
-	GraphicsProcessor.end();
+	m_Memory->setGraphicsProcessor(NULL);
+	delete m_GraphicsProcessor;
+	m_GraphicsProcessor = NULL;
+	m_Memory->setTouch(NULL);
 	delete m_Touch;
 	m_Touch = NULL;
 	delete m_Memory;
@@ -875,7 +878,10 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
 	assert(!m_Touch);
 	m_Touch = new Touch(m_System, mode, m_Memory);
-	GraphicsProcessor.begin(m_System, m_Memory, m_Touch, m_BackgroundPerformance);
+	m_Memory->setTouch(m_Touch);
+	assert(!m_GraphicsProcessor);
+	m_GraphicsProcessor = new GraphicsProcessor(m_System, m_Memory, m_Touch, m_BackgroundPerformance);
+	m_Memory->setGraphicsProcessor(m_GraphicsProcessor);
 	assert(!m_BusSlave);
 	m_BusSlave = new BusSlave(m_System, m_Memory);
 	if (!m_Graphics)
@@ -932,10 +938,10 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	if (params.Flags & BT8XXEMU_EmulatorEnableGraphicsMultithread)
 	{
-		GraphicsProcessor.enableMultithread();
-		GraphicsProcessor.reduceThreads(params.ReduceGraphicsThreads);
+		m_GraphicsProcessor->enableMultithread();
+		m_GraphicsProcessor->reduceThreads(params.ReduceGraphicsThreads);
 	}
-	if (params.Flags & BT8XXEMU_EmulatorEnableRegPwmDutyEmulation) GraphicsProcessor.enableRegPwmDutyEmulation();
+	if (params.Flags & BT8XXEMU_EmulatorEnableRegPwmDutyEmulation) m_GraphicsProcessor->enableRegPwmDutyEmulation();
 
 	m_DynamicDegrade = (params.Flags & BT8XXEMU_EmulatorEnableDynamicDegrade) == BT8XXEMU_EmulatorEnableDynamicDegrade;
 	// m_RotateEnabled = (params.Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
@@ -1048,6 +1054,26 @@ int *Emulator::getDisplayListCoprocessorWrites()
 void Emulator::clearDisplayListCoprocessorWrites()
 {
 	m_Memory->clearDisplayListCoprocessorWrites();
+}
+
+bool Emulator::getDebugLimiterEffective()
+{
+	return m_GraphicsProcessor->getDebugLimiterEffective();
+}
+
+int Emulator::getDebugLimiterIndex()
+{
+	return m_GraphicsProcessor->getDebugLimiterIndex();
+}
+
+void Emulator::setDebugLimiter(int debugLimiter)
+{
+	m_GraphicsProcessor->setDebugLimiter(debugLimiter);
+}
+
+void Emulator::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
+{
+	m_GraphicsProcessor->processTrace(result, size, x, y, hsize);
 }
 
 } /* namespace FT800EMU */
