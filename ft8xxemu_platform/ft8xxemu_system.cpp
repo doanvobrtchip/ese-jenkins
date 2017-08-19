@@ -15,6 +15,7 @@
 #include "ft8xxemu_system.h"
 
 // System includes
+#include <mutex>
 
 // Project includes
 #include "ft8xxemu_sleep_wake.h"
@@ -22,6 +23,12 @@
 // using namespace ...;
 
 namespace FT8XXEMU {
+
+namespace /* anonymous */ {
+
+std::mutex s_LogMutex;
+
+} /* anonymous namespace */
 
 System::System()
 {
@@ -75,6 +82,25 @@ System::~System()
 	releaseWindows();
 	delete m_Win32;
 #endif
+}
+
+void System::log(BT8XXEMU_LogType type, const char *message, ...)
+{
+	char buffer[2048];
+	va_list args;
+	va_start(args, message);
+	vsnprintf(buffer, 2047, message, args);
+	; {
+		std::unique_lock<std::mutex> lock(s_LogMutex);
+		m_Log && (m_Log(m_Sender, m_UserContext, type, buffer), true);
+		const char *level =
+			(type == BT8XXEMU_LogMessage
+				? "Message"
+				: (type == BT8XXEMU_LogWarning
+					? "Warning" : "Error"));
+		m_PrintStd && (printf("[%s] %s\n", level, buffer));
+	}
+	va_end(args);
 }
 
 void System::delayForMCU(int ms)

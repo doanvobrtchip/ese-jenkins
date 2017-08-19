@@ -5,7 +5,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // #include <...>
 #include "ft800emu_touch.h"
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 
 // System includes
 #include <stdio.h>
@@ -22,14 +22,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 namespace FT800EMU {
 
-TouchClass Touch[5];
-long TouchClass::s_TouchScreenFrameTime;
-bool TouchClass::s_TouchScreenJitter;
-bool TouchClass::s_EnableTouchMatrix;
-BT8XXEMU_EmulatorMode TouchClass::s_EmulatorMode;
-static Memory *s_Memory;
-
-inline long TouchClass::jitteredTime(long micros)
+inline long TouchPoint::jitteredTime(long micros)
 {
 	long delta = micros - m_LastJitteredTime;
 	if (delta > 0)
@@ -60,11 +53,11 @@ inline long TouchClass::jitteredTime(long micros)
 	return m_LastJitteredTime;
 }
 
-inline void TouchClass::transformTouchXY(int &x, int &y)
+inline void Touch::transformTouchXY(int &x, int &y)
 {
-	uint8_t *ram = s_Memory->getRam();
+	uint8_t *ram = m_Memory->getRam();
 	// Transform (currently just depending on REG_ROTATE, ignoring TRANSFORM)
-	if (s_EnableTouchMatrix) // s15.16 matrix
+	if (m_EnableTouchMatrix) // s15.16 matrix
 	{
 		const int64_t xe = x;
 		const int64_t ye = y;
@@ -91,7 +84,7 @@ inline void TouchClass::transformTouchXY(int &x, int &y)
 	*/
 }
 
-inline void TouchClass::getTouchScreenXY(long micros, int &x, int &y, bool jitter)
+inline void TouchPoint::getTouchScreenXY(long micros, int &x, int &y, bool jitter)
 {
 	long delta;//
 	if (jitter)
@@ -111,7 +104,7 @@ inline void TouchClass::getTouchScreenXY(long micros, int &x, int &y, bool jitte
 		x = m_TouchScreenX1;
 		y = m_TouchScreenY1;
 	}
-	else if (delta >= s_TouchScreenFrameTime)
+	else if (delta >= m_Touch->m_TouchScreenFrameTime)
 	{
 		x = m_TouchScreenX2;
 		y = m_TouchScreenY2;
@@ -120,8 +113,8 @@ inline void TouchClass::getTouchScreenXY(long micros, int &x, int &y, bool jitte
 	{
 		long xdelta = m_TouchScreenX2 - m_TouchScreenX1;
 		long ydelta = m_TouchScreenY2 - m_TouchScreenY1;
-		x = m_TouchScreenX1 + (int)(xdelta * delta / s_TouchScreenFrameTime);
-		y = m_TouchScreenY1 + (int)(ydelta * delta / s_TouchScreenFrameTime);
+		x = m_TouchScreenX1 + (int)(xdelta * delta / m_Touch->m_TouchScreenFrameTime);
+		y = m_TouchScreenY1 + (int)(ydelta * delta / m_Touch->m_TouchScreenFrameTime);
 	}
 	if (jitter)
 	{
@@ -131,12 +124,12 @@ inline void TouchClass::getTouchScreenXY(long micros, int &x, int &y, bool jitte
 	// transformTouchXY(x, y);
 }
 
-inline void TouchClass::getTouchScreenXY(long micros, int &x, int &y)
+inline void TouchPoint::getTouchScreenXY(long micros, int &x, int &y)
 {
-	getTouchScreenXY(micros, x, y, s_TouchScreenJitter);
+	getTouchScreenXY(micros, x, y, m_Touch->m_TouchScreenJitter);
 }
 
-inline uint32_t TouchClass::getTouchScreenXY(int x, int y)
+inline uint32_t Touch::getTouchScreenXY(int x, int y)
 {
 	uint16_t const touch_screen_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_screen_y = ((uint32_t &)y) & 0xFFFF;
@@ -144,14 +137,14 @@ inline uint32_t TouchClass::getTouchScreenXY(int x, int y)
 	return touch_screen_xy;
 }
 
-inline uint32_t TouchClass::getTouchScreenXY(long micros)
+inline uint32_t TouchPoint::getTouchScreenXY(long micros)
 {
 	if (m_TouchScreenSet)
 	{
 		int x, y;
 		getTouchScreenXY(micros, x, y);
-		transformTouchXY(x, y);
-		return getTouchScreenXY(x, y);
+		m_Touch->transformTouchXY(x, y);
+		return Touch::getTouchScreenXY(x, y);
 	}
 	else
 	{
@@ -159,19 +152,19 @@ inline uint32_t TouchClass::getTouchScreenXY(long micros)
 	}
 }
 
-inline uint32_t TouchClass::getTouchScreenXY()
+inline uint32_t TouchPoint::getTouchScreenXY()
 {
-	long micros = FT8XXEMU::System.getMicros();
+	long micros = m_Touch->m_System->getMicros();
 	return getTouchScreenXY(micros);
 }
 
-void TouchClass::setXY(int x, int y, int pressure)
+void TouchPoint::setXY(int x, int y, int pressure)
 {
-	uint8_t *ram = s_Memory->getRam();
+	uint8_t *ram = m_Touch->m_Memory->getRam();
 	uint16_t const touch_raw_x = ((uint32_t &)x) & 0xFFFF;
 	uint16_t const touch_raw_y = ((uint32_t &)y) & 0xFFFF;
 	uint32_t const touch_raw_xy = (uint32_t)touch_raw_x << 16 | touch_raw_y;
-	if (multiTouch())
+	if (m_Touch->multiTouch())
 	{
 		// no-op
 	}
@@ -180,15 +173,15 @@ void TouchClass::setXY(int x, int y, int pressure)
 		switch (m_Index)
 		{
 		case 0:
-			s_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, touch_raw_xy);
 			break;
 		}
 	}
 	if (m_TouchScreenSet)
 	{
-		if (s_TouchScreenJitter)
+		if (m_Touch->m_TouchScreenJitter)
 		{
-			long micros = jitteredTime(FT8XXEMU::System.getMicros());
+			long micros = jitteredTime(m_Touch->m_System->getMicros());
 			getTouchScreenXY(micros, m_TouchScreenX1, m_TouchScreenY1, false);
 			//s_TouchScreenX1 = s_TouchScreenX2;
 			//s_TouchScreenY1 = s_TouchScreenY2;
@@ -196,7 +189,7 @@ void TouchClass::setXY(int x, int y, int pressure)
 		}
 		else
 		{
-			long micros = FT8XXEMU::System.getMicros();
+			long micros = m_Touch->m_System->getMicros();
 			m_TouchScreenX1 = m_TouchScreenX2;
 			m_TouchScreenY1 = m_TouchScreenY2;
 			m_TouchScreenSet = micros;
@@ -204,7 +197,7 @@ void TouchClass::setXY(int x, int y, int pressure)
 	}
 	else
 	{
-		long micros = FT8XXEMU::System.getMicros();
+		long micros = m_Touch->m_System->getMicros();
 		m_LastJitteredTime = micros;
 		m_TouchScreenX1 = x;
 		m_TouchScreenY1 = y;
@@ -213,26 +206,26 @@ void TouchClass::setXY(int x, int y, int pressure)
 	m_TouchScreenX2 = x;
 	m_TouchScreenY2 = y;
 
-	transformTouchXY(x, y);
-	if (multiTouch())
+	m_Touch->transformTouchXY(x, y);
+	if (m_Touch->multiTouch())
 	{
 		switch (m_Index)
 		{
 		case 0:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, getTouchScreenXY(x, y));
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, Touch::getTouchScreenXY(x, y));
 			break;
 		case 1:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, getTouchScreenXY(x, y));
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, Touch::getTouchScreenXY(x, y));
 			break;
 		case 2:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, getTouchScreenXY(x, y));
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, Touch::getTouchScreenXY(x, y));
 			break;
 		case 3:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, getTouchScreenXY(x, y));
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, Touch::getTouchScreenXY(x, y));
 			break;
 		case 4:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, x & 0xFFFF);
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, y & 0xFFFF);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, x & 0xFFFF);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, y & 0xFFFF);
 			break;
 		}
 	}
@@ -241,64 +234,64 @@ void TouchClass::setXY(int x, int y, int pressure)
 		switch (m_Index)
 		{
 		case 0:
-			s_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, getTouchScreenXY(x, y));
-			s_Memory->rawWriteU32(ram, REG_TOUCH_RZ, pressure);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, Touch::getTouchScreenXY(x, y));
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_RZ, pressure);
 			break;
 		}
 	}
-	s_Memory->poke();
+	m_Touch->m_Memory->poke();
 }
 
-void TouchClass::setTouchScreenXYFrameTime(long micros)
+void Touch::setTouchScreenXYFrameTime(long micros)
 {
-	s_TouchScreenFrameTime = micros; // * 3 / 2;
+	m_TouchScreenFrameTime = micros; // * 3 / 2;
 }
 
-void TouchClass::resetXY()
+void TouchPoint::resetXY()
 {
 	bool doPoke = m_TouchScreenSet != 0;
 	m_TouchScreenSet = 0;
-	uint8_t *ram = s_Memory->getRam();
+	uint8_t *ram = m_Touch->m_Memory->getRam();
 	switch (m_Index)
 	{
 	case 0:
-		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG, 0);
+		m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_TAG, 0);
 		break;
 #ifdef FT810EMU_MODE
 	case 1:
-		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG1, 0);
+		m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_TAG1, 0);
 		break;
 	case 2:
-		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG2, 0);
+		m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_TAG2, 0);
 		break;
 	case 3:
-		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG3, 0);
+		m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_TAG3, 0);
 		break;
 	case 4:
-		s_Memory->rawWriteU32(ram, REG_TOUCH_TAG4, 0);
+		m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_TAG4, 0);
 		break;
 #endif
 	}
-	if (multiTouch())
+	if (m_Touch->multiTouch())
 	{
 		// No touch detected
 		switch (m_Index)
 		{
 		case 0:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, 0x80008000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH0_XY, 0x80008000);
 			break;
 		case 1:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, 0x80008000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH1_XY, 0x80008000);
 			break;
 		case 2:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, 0x80008000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH2_XY, 0x80008000);
 			break;
 		case 3:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, 0x80008000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH3_XY, 0x80008000);
 			break;
 		case 4:
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, 0x8000);
-			s_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, 0x8000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_X, 0x8000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_CTOUCH_TOUCH4_Y, 0x8000);
 			break;
 		}
 	}
@@ -307,56 +300,72 @@ void TouchClass::resetXY()
 		switch (m_Index)
 		{
 		case 0:
-			s_Memory->rawWriteU32(ram, REG_TOUCH_RZ, 32767);
-			s_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
-			s_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_RZ, 32767);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_RAW_XY, 0xFFFFFFFF);
+			m_Touch->m_Memory->rawWriteU32(ram, REG_TOUCH_SCREEN_XY, 0x80008000);
 			break;
 		}
 	}
-	m_LastJitteredTime = FT8XXEMU::System.getMicros();
+	m_LastJitteredTime = m_Touch->m_System->getMicros();
 	if (doPoke)
-		s_Memory->poke();
+		m_Touch->m_Memory->poke();
 }
 
 // Get XY value interpolated etc
-uint32_t TouchClass::getXY()
+uint32_t TouchPoint::getXY()
 {
 	return getTouchScreenXY();
 }
 
-void TouchClass::enableTouchMatrix(bool enabled)
+void Touch::enableTouchMatrix(bool enabled)
 {
-	s_EnableTouchMatrix = enabled;
+	m_EnableTouchMatrix = enabled;
 }
 
+/*
 void setTouchScreenXY(int idx, int x, int y, int pressure)
 {
-	Touch[idx].setXY(x, y, pressure);
+	m_Touch[idx].setXY(x, y, pressure);
 }
 
 void resetTouchScreenXY(int idx)
 {
 	Touch[idx].resetXY();
 }
+*/
 
-void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode, Memory *memory)
+Touch::Touch(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, Memory *memory)
 {
-	s_Memory = memory;
-	s_EmulatorMode = emulatorMode;
-	s_TouchScreenFrameTime = 0;
-	s_TouchScreenJitter = true;
-	s_EnableTouchMatrix = false;
-	Touch[0].m_Index = 0;
-	Touch[0].reset();
-	Touch[1].m_Index = 1;
-	Touch[1].reset();
-	Touch[2].m_Index = 2;
-	Touch[2].reset();
-	Touch[3].m_Index = 3;
-	Touch[3].reset();
-	Touch[4].m_Index = 4;
-	Touch[4].reset();
+	m_System = system;
+	m_Memory = memory;
+	m_EmulatorMode = emulatorMode;
+	m_TouchScreenFrameTime = 0;
+	m_TouchScreenJitter = true;
+	m_EnableTouchMatrix = false;
+	m_Touch[0].m_Touch = this;
+	m_Touch[0].m_Index = 0;
+	m_Touch[0].reset();
+	m_Touch[1].m_Touch = this;
+	m_Touch[1].m_Index = 1;
+	m_Touch[1].reset();
+	m_Touch[2].m_Touch = this;
+	m_Touch[2].m_Index = 2;
+	m_Touch[2].reset();
+	m_Touch[3].m_Touch = this;
+	m_Touch[3].m_Index = 3;
+	m_Touch[3].reset();
+	m_Touch[4].m_Touch = this;
+	m_Touch[4].m_Index = 4;
+	m_Touch[4].reset();
+}
 
+Touch::~Touch()
+{
+
+}
+
+TouchPoint::TouchPoint()
+{
 	// FT8XXEMU::g_SetTouchScreenXY = &setTouchScreenXY;
 	// FT8XXEMU::g_ResetTouchScreenXY = &resetTouchScreenXY; // FIXME
 
@@ -364,7 +373,7 @@ void TouchClass::begin(BT8XXEMU_EmulatorMode emulatorMode, Memory *memory)
 	s_LastJitteredTime = FT8XXEMU::System.getMicros();*/
 }
 
-void TouchClass::reset()
+void TouchPoint::reset()
 {
 	m_TouchScreenSet = 0;
 	m_LastDeltas[0] = 1000;
@@ -376,23 +385,23 @@ void TouchClass::reset()
 	m_LastDeltas[6] = 1000;
 	m_LastDeltas[7] = 1000;
 	m_LastDeltaI = 0;
-	m_LastJitteredTime = FT8XXEMU::System.getMicros();
+	m_LastJitteredTime = m_Touch->m_System->getMicros();
 	resetXY();
 }
 
-void TouchClass::end()
+TouchPoint::~TouchPoint()
 {
 
 }
 
-bool TouchClass::multiTouch()
+bool Touch::multiTouch()
 {
-	uint8_t *ram = s_Memory->getRam();
+	uint8_t *ram = m_Memory->getRam();
 #ifdef FT810EMU_MODE
 	return (s_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
 #else
-	return s_EmulatorMode >= BT8XXEMU_EmulatorFT801
-		&& ((s_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
+	return m_EmulatorMode >= BT8XXEMU_EmulatorFT801
+		&& ((m_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
 #endif
 }
 

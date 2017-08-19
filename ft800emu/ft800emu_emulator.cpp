@@ -186,10 +186,10 @@ int Emulator::masterThread(bool sync)
 	m_ThreadMaster.realtime();
 	m_ThreadMaster.setName(sync ? "FT8XXEMU Graphics Master" : "FT8XXEMU Graphics Master Async");
 
-	double targetSeconds = FT8XXEMU::System.getSeconds();
+	double targetSeconds = m_System->getSeconds();
 
 	uint8_t *ram = m_Memory->getRam();
-	int lastMicros = FT8XXEMU::System.getMicros();
+	int lastMicros = m_System->getMicros();
 
 	if (!sync)
 	{
@@ -201,10 +201,10 @@ int Emulator::masterThread(bool sync)
 	{
 		// FTEMU_printf("main thread\n");
 
-		FT8XXEMU::System.enterSwapDL();
+		m_SwapDLMutex.lock();
 
 		uint32_t usefreq = m_ExternalFrequency ? m_ExternalFrequency : m_Memory->rawReadU32(ram, REG_FREQUENCY);
-		int curMicros = FT8XXEMU::System.getMicros();
+		int curMicros = m_System->getMicros();
 		int diffMicros = curMicros - lastMicros;
 		lastMicros = curMicros;
 		int32_t diffClock = (int32_t)(((int64_t)usefreq * (int64_t)diffMicros) / (int64_t)1000000LL);
@@ -233,13 +233,13 @@ int Emulator::masterThread(bool sync)
 			deltaSeconds = 1.0;
 		}
 
-		FT8XXEMU::System.update();
-		if ((renderLineSnapshot && FT8XXEMU::System.renderWoke()) || reg_pclk == 0xFF)
-			targetSeconds = FT8XXEMU::System.getSeconds() + deltaSeconds;
+		m_System->update();
+		if ((renderLineSnapshot && m_System->renderWoke()) || reg_pclk == 0xFF)
+			targetSeconds = m_System->getSeconds() + deltaSeconds;
 		else
 			targetSeconds += deltaSeconds;
 
-		TouchClass::setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
+		m_Touch->setTouchScreenXYFrameTime((long)(deltaSeconds * 1000 * 1000));
 
 		// Update display resolution
 		int32_t reg_vsize = m_Memory->rawReadU32(ram, REG_VSIZE);
@@ -258,9 +258,9 @@ int Emulator::masterThread(bool sync)
 		m_Memory->rawWriteU32(ram, REG_RASTERY, 0);
 #endif
 		{
-			FT8XXEMU::System.switchThread();
+			FT8XXEMU::System::switchThread();
 
-			unsigned long procStart = FT8XXEMU::System.getMicros();
+			unsigned long procStart = m_System->getMicros();
 			if (reg_pclk || renderLineSnapshot)
 			{
 				// FTEMU_printf("%i != %i\n", lwoc, woc);
@@ -414,7 +414,7 @@ int Emulator::masterThread(bool sync)
 				m_SkipOn = false;
 				m_DegradeOn = false;
 			}
-			unsigned long procDelta = FT8XXEMU::System.getMicros() - procStart;
+			unsigned long procDelta = m_System->getMicros() - procStart;
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA
 			if (m_ProfileFrameDeltaIndex < BT8XXEMU_PROFILE_FRAMEDELTA)
 			{
@@ -443,8 +443,8 @@ int Emulator::masterThread(bool sync)
 						if (procDelta < procLowLimit)
 						{
 							m_SkipOn = false;
-							if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-							if (FT800EMU_DEBUG) FTEMU_printf("Frame skip switched OFF\n");
+							if (FT800EMU_DEBUG) FTEMU_message("process: %i micros (%i ms)", (int)procDelta, (int)procDelta / 1000);
+							if (FT800EMU_DEBUG) FTEMU_message("Frame skip switched OFF");
 						}
 					}
 				}
@@ -456,14 +456,14 @@ int Emulator::masterThread(bool sync)
 					if (procDelta < procLowLimit)
 					{
 						m_DegradeOn = false;
-						if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						if (FT800EMU_DEBUG) FTEMU_printf("Dynamic degrade switched OFF\n");
+						if (FT800EMU_DEBUG) FTEMU_message("process: %i micros (%i ms)", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) FTEMU_message("Dynamic degrade switched OFF");
 					}
 					else if (procDelta > procHighLimit)
 					{
 						m_SkipOn = true;
-						if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
-						if (FT800EMU_DEBUG) FTEMU_printf("Frame skip switched ON\n");
+						if (FT800EMU_DEBUG) FTEMU_message("process: %i micros (%i ms)", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) FTEMU_message("Frame skip switched ON");
 					}
 				}
 				else
@@ -471,11 +471,11 @@ int Emulator::masterThread(bool sync)
 					unsigned long procHighLimit = (unsigned long)(deltaSeconds * 800000.0); // Over 80% of allowed time, switch to degrade
 					if (procDelta > procHighLimit)
 					{
-						if (FT800EMU_DEBUG) FTEMU_printf("process: %i micros (%i ms)\n", (int)procDelta, (int)procDelta / 1000);
+						if (FT800EMU_DEBUG) FTEMU_message("process: %i micros (%i ms)", (int)procDelta, (int)procDelta / 1000);
 						if (m_DynamicDegrade)
 						{
 							m_DegradeOn = true;
-							if (FT800EMU_DEBUG) FTEMU_printf("Dynamic degrade switched ON\n");
+							if (FT800EMU_DEBUG) FTEMU_message("Dynamic degrade switched ON");
 						}
 						else
 						{
@@ -507,7 +507,7 @@ int Emulator::masterThread(bool sync)
 			m_LastRealSwapCount = c;
 		}
 
-		FT8XXEMU::System.leaveSwapDL();
+		m_SwapDLMutex.unlock();
 
 		// Flip buffer and also give a slice of time to the mcu main thread
 		// VBlank=1
@@ -520,7 +520,7 @@ int Emulator::masterThread(bool sync)
 			m_ThreadMCU.prioritize();
 			m_ThreadMCU.boost(); // Swapped!
 
-			unsigned long flipStart = FT8XXEMU::System.getMicros();
+			unsigned long flipStart = m_System->getMicros();
 			if (m_SkipOn && m_SkipStage)
 			{
 				// no-op
@@ -549,7 +549,7 @@ int Emulator::masterThread(bool sync)
 						}
 						else
 						{
-							FTEMU_printf("Kill MCU thread\n");
+							FTEMU_warning("Kill MCU thread");
 							m_ThreadMCU.kill();
 							return 0;
 						}
@@ -578,37 +578,38 @@ int Emulator::masterThread(bool sync)
 					*/
 				}
 			}
-			unsigned long flipDelta = FT8XXEMU::System.getMicros() - flipStart;
+			unsigned long flipDelta = m_System->getMicros() - flipStart;
 
 			if (flipDelta > 8000)
-				if (FT800EMU_DEBUG) FTEMU_printf("flip: %i micros (%i ms)\r\n", (int)flipDelta, (int)flipDelta / 1000);
+				if (FT800EMU_DEBUG) 
+					FTEMU_message("flip: %i micros (%i ms)", (int)flipDelta, (int)flipDelta / 1000);
 
-			FT8XXEMU::System.switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
+			FT8XXEMU::System::switchThread(); // ensure slice of time to mcu thread at cost of coprocessor cycles
 			m_ThreadMCU.unprioritize();
 		}
 
 		m_ThreadCoprocessor.prioritize();
 		if (reg_pclk == 0xFF)
 		{
-			FT8XXEMU::System.renderSleep(1);
+			m_System->renderSleep(1);
 		}
 		else if (reg_pclk)
 		{
 			//long currentMillis = millis();
 			//long millisToWait = targetMillis - currentMillis;
-			double currentSeconds = FT8XXEMU::System.getSeconds();
+			double currentSeconds = m_System->getSeconds();
 			double secondsToWait = targetSeconds - currentSeconds;
 			// FTEMU_printf("sleep %f seconds (%f current time, %f target time, %f delta seconds)\n", (float)secondsToWait, (float)currentSeconds, (float)targetSeconds, (float)deltaSeconds);
 			//if (millisToWait < -100) targetMillis = millis();
 			if (secondsToWait < -0.25) // Skip freeze
 			{
 				//FTEMU_printf("skip freeze\n");
-				targetSeconds = FT8XXEMU::System.getSeconds();
+				targetSeconds = m_System->getSeconds();
 			}
 			else if (secondsToWait > 0.25)
 			{
-				FTEMU_printf("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f\n", m_Memory->rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
-				targetSeconds = FT8XXEMU::System.getSeconds() + 0.25;
+				FTEMU_warning("Possible problem with REG_FREQUENCY value %u, sw %f, cs %f -> ts %f", m_Memory->rawReadU32(ram, REG_FREQUENCY), (float)secondsToWait, (float)currentSeconds, (float)targetSeconds);
+				targetSeconds = m_System->getSeconds() + 0.25;
 				secondsToWait = 0.25;
 			}
 
@@ -616,15 +617,15 @@ int Emulator::masterThread(bool sync)
 
 			if (secondsToWait > 0.0)
 			{
-				FT8XXEMU::System.renderSleep((int)(secondsToWait * 1000.0));
+				m_System->renderSleep((int)(secondsToWait * 1000.0));
 			}
 		}
 		else
 		{
 			// REG_PCLK is 0
 #if FT800EMU_REG_PCLK_ZERO_REDUCE
-			targetSeconds = FT8XXEMU::System.getSeconds() + 0.02;
-			FT8XXEMU::System.renderSleep(20);
+			targetSeconds = m_System->getSeconds() + 0.02;
+			m_System->renderSleep(20);
 #else
 			targetSeconds = FT8XXEMU::System.getSeconds();
 			FT8XXEMU::System.switchThread();
@@ -676,7 +677,7 @@ int Emulator::coprocessorThread()
 	m_ThreadCoprocessor.unprioritize();
 	m_ThreadCoprocessor.setName("FT8XXEMU Coprocessor");
 
-	FTEMU_printf("Coprocessor thread begin\n");
+	FTEMU_message("Coprocessor thread begin");
 	
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -685,7 +686,7 @@ int Emulator::coprocessorThread()
 
 	m_Coprocessor->executeEmulator();
 
-	FTEMU_printf("Coprocessor thread exit\n");
+	FTEMU_message("Coprocessor thread exit");
 
 	m_ThreadCoprocessor.reset();
 	return 0;
@@ -724,7 +725,7 @@ int Emulator::audioThread()
 				debugShortkeys();
 			}
 		}
-		FT8XXEMU::System.delay(10);
+		FT8XXEMU::System::delay(10);
 	}
 
 	m_ThreadAudio.reset();
@@ -750,31 +751,31 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		m_Coprocessor->stopEmulator();
 	}
 
-	FTEMU_printf("Wait for Coprocessor\n");
+	FTEMU_message("Wait for Coprocessor");
 	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
 		m_StdThreadCoprocessor.join();
 
 	if (!m_CloseCalled && m_StdThreadMCU.joinable())
 	{
-		FTEMU_printf("Late kill MCU thread\n");
+		FTEMU_message("Late kill MCU thread");
 		if (m_Close)
 		{
 			m_Close();
 		}
 		else
 		{
-			FTEMU_printf("Kill MCU thread\n");
+			FTEMU_warning("Kill MCU thread");
 			m_ThreadMCU.kill();
 		}
 	}
 
-	FTEMU_printf("Wait for MCU\n");
+	FTEMU_message("Wait for MCU");
 	m_StdThreadMCU.join();
 
-	FTEMU_printf("Wait for Audio\n");
+	FTEMU_message("Wait for Audio");
 	m_StdThreadAudio.join();
 
-	FTEMU_printf("Threads finished, cleaning up\n");
+	FTEMU_message("Threads finished, cleaning up");
 
 	delete[] m_GraphicsBuffer;
 	m_GraphicsBuffer = NULL;
@@ -805,17 +806,29 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	delete m_BusSlave;
 	m_BusSlave = NULL;
 	GraphicsProcessor.end();
-	TouchClass::end();
-	delete m_Memory; m_Memory = NULL;
-	FT8XXEMU::System.end();
+	delete m_Touch;
+	m_Touch = NULL;
+	delete m_Memory;
+	m_Memory = NULL;
 
 	m_EmulatorRunning = false;
-	FTEMU_printf("Emulator stopped running\n");
+	FTEMU_message("Emulator stopped running\n");
 
 #ifdef WIN32
 	if (m_CoInit)
 		CoUninitialize();
 #endif
+}
+
+Emulator::Emulator()
+{
+	m_System = new FT8XXEMU::System();
+}
+
+Emulator::~Emulator()
+{
+	delete m_System;
+	m_System = NULL;
 }
 
 void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
@@ -832,14 +845,14 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 #ifdef FT810EMU_MODE
 	if (mode < BT8XXEMU_EmulatorFT810)
 	{
-		FTEMU_printf("Invalid emulator version selected, this library is built in FT810 mode\n");
+		FTEMU_error("Invalid emulator version selected, this library is built in FT810 mode");
 		m_InitMutexGlobal.unlock();
 		return;
 	}
 #else
 	if (mode > BT8XXEMU_EmulatorFT801)
 	{
-		FTEMU_printf("Invalid emulator version selected, this library is built in FT800/FT800 mode\n");
+		FTEMU_error("Invalid emulator version selected, this library is built in FT800/FT800 mode");
 		m_InitMutexGlobal.unlock();
 		return;
 	}
@@ -850,35 +863,35 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_Main = params.Main;
 	m_Flags = params.Flags;
 	m_Graphics = params.Graphics;
-	FT8XXEMU::g_Exception = params.Exception;
 	m_Close = params.Close;
 	m_CloseCalled = false;
 	m_ExternalFrequency = params.ExternalFrequency;
-	FT8XXEMU::g_PrintStd = (params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut;
 	m_BackgroundPerformance = (params.Flags & BT8XXEMU_EmulatorEnableBackgroundPerformance) == BT8XXEMU_EmulatorEnableBackgroundPerformance;
 	m_MainPerformance = (params.Flags & BT8XXEMU_EmulatorEnableMainPerformance) == BT8XXEMU_EmulatorEnableMainPerformance;
 
-	FT8XXEMU::System.begin();
-	FT8XXEMU::System.overrideMCUDelay(params.MCUSleep);
-	m_Memory = new Memory(mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
-	TouchClass::begin(mode, m_Memory);
+	m_System->onLog(params.Log);
+	m_System->setPrintStd((params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut);
+	m_System->overrideMCUDelay(params.MCUSleep);
+	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
+	assert(!m_Touch);
+	m_Touch = new Touch(m_System, mode, m_Memory);
 	GraphicsProcessor.begin(m_Memory, m_BackgroundPerformance);
 	assert(!m_BusSlave);
-	m_BusSlave = new BusSlave(m_Memory);
+	m_BusSlave = new BusSlave(m_System, m_Memory);
 	if (!m_Graphics)
 	{
-		m_WindowOutput = FT8XXEMU::WindowOutput::create();
+		m_WindowOutput = FT8XXEMU::WindowOutput::create(m_System);
 		m_WindowOutput->onSetTouchScreenXY([this](int idx, int x, int y, int pressure) -> void {
-			Touch[idx].setXY(x, y, pressure);
+			m_Touch->touch(idx).setXY(x, y, pressure);
 		});
 		m_WindowOutput->onResetTouchScreenXY([this](int idx) -> void {
-			Touch[idx].resetXY();
+			m_Touch->touch(idx).resetXY();
 		});
 	}
 	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		assert(!m_AudioOutput);
-		m_AudioOutput = FT8XXEMU::AudioOutput::create();
+		m_AudioOutput = FT8XXEMU::AudioOutput::create(m_System);
 		assert(!m_AudioProcessor);
 		m_AudioProcessor = new AudioProcessor();
 		m_Memory->setAudioProcessor(m_AudioProcessor);
@@ -897,13 +910,13 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		assert(!m_Coprocessor);
-		m_Coprocessor = new Coprocessor(m_Memory,
+		m_Coprocessor = new Coprocessor(m_System, m_Memory,
 			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
 			mode);
 	}
 	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard))
 	{
-		m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_WindowOutput);
+		m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_System, m_WindowOutput);
 	}
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 
@@ -926,7 +939,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 	m_DynamicDegrade = (params.Flags & BT8XXEMU_EmulatorEnableDynamicDegrade) == BT8XXEMU_EmulatorEnableDynamicDegrade;
 	// m_RotateEnabled = (params.Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
-	TouchClass::enableTouchMatrix((params.Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
+	m_Touch->enableTouchMatrix((params.Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
 
 	m_MasterRunning = true;
 
@@ -979,10 +992,10 @@ void Emulator::stop()
 
 	if (!m_ThreadMCU.current())
 	{
-		FTEMU_printf("Wait for MCU thread\n");
+		FTEMU_message("Wait for MCU thread");
 		while (m_EmulatorRunning) // TODO: Mutex?
 		{
-			FT8XXEMU::System.delay(1);
+			FT8XXEMU::System::delay(1);
 		}
 	}
 
@@ -991,7 +1004,7 @@ void Emulator::stop()
 		m_ThreadMCU.reset();
 	}
 
-	FTEMU_printf("Stop ok\n");
+	FTEMU_message("Stop ok\n");
 }
 
 

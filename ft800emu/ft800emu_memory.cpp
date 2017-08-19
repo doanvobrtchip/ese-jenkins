@@ -13,7 +13,7 @@
 
 // #include <...>
 #include "ft800emu_memory.h"
-#include "ft8xxemu_system_windows.h"
+#include "ft8xxemu_system_win32.h"
 
 // System includes
 #include <stdio.h>
@@ -103,7 +103,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			{
 				// FTEMU_printf("Direct swap from REG_PCLK\n");
 				// Direct swap
-				FT8XXEMU::System.enterSwapDL();
+				std::unique_lock<std::mutex> lock(m_SwapDLMutex);
 				// if (data == 0 && m_Ram[REG_DLSWAP] == DLSWAP_FRAME)
 				if (data == 0 && (m_Ram[REG_DLSWAP] == DLSWAP_FRAME || m_Ram[REG_DLSWAP] == DLSWAP_LINE))
 				{
@@ -113,7 +113,6 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 					GraphicsProcessor.processBlank();
 					++m_DirectSwapCount;
 				}
-				FT8XXEMU::System.leaveSwapDL();
 			}
 			break;
 		case REG_DLSWAP:
@@ -125,7 +124,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			{
 				// FTEMU_printf("Direct swap from DLSWAP_FRAME\n");
 				// Direct swap
-				FT8XXEMU::System.enterSwapDL();
+				std::unique_lock<std::mutex> lock(m_SwapDLMutex);
 				// if (data == DLSWAP_FRAME && m_Ram[REG_PCLK] == 0)
 				if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && m_Ram[REG_PCLK] == 0)
 				{
@@ -139,7 +138,6 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 				// {
 					// FTEMU_printf("No go\n");
 				// }
-				FT8XXEMU::System.leaveSwapDL();
 			}
 			break;
 		// case REG_VOL_SOUND:
@@ -224,7 +222,7 @@ BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data
 			if (m_EmulatorMode >= BT8XXEMU_EmulatorFT801)
 #endif
 			{
-				if (!TouchClass::multiTouch())
+				if (!TouchPoint::multiTouch())
 				{
 					rawWriteU32(REG_TOUCH_DIRECT_XY, 0); // REG_CTOUCH_TOUCHB_XY
 					rawWriteU32(REG_TOUCH_DIRECT_Z1Z2, 0); // REG_CTOUCH_TOUCHC_XY
@@ -240,7 +238,7 @@ BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data
 		case REG_SNAPSHOT:
 			if (data & 1)
 			{
-				FT8XXEMU::System.renderWake();
+				m_System->renderWake();
 			}
 			break;
 		}
@@ -305,10 +303,11 @@ static const uint8_t m_OTP813[FT800EMU_OTP_SIZE] = {
 };
 #endif
 
-Memory::Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
+Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
 	const char *romFilePath, const char *otpFilePath)
-	: m_SwapDLMutex(swapDLMutex), m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
+	: m_System(system), m_SwapDLMutex(swapDLMutex), 
+	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 {
 	// memset(m_Ram, 0, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
@@ -318,13 +317,13 @@ Memory::Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) FTEMU_printf("Failed to open ROM file\n");
+		if (!f) FTEMU_error("Failed to open ROM file");
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
-			if (s != FT800EMU_ROM_SIZE) FTEMU_printf("Incomplete ROM file\n");
-			else FTEMU_printf("Loaded ROM file\n");
-			if (fclose(f)) FTEMU_printf("Error closing ROM file\n");
+			if (s != FT800EMU_ROM_SIZE) FTEMU_error("Incomplete ROM file");
+			else FTEMU_message("Loaded ROM file");
+			if (fclose(f)) FTEMU_error("Error closing ROM file");
 		}
 	}
 	else
@@ -341,13 +340,13 @@ Memory::Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	{
 		FILE *f;
 		f = fopen(otpFilePath, "rb");
-		if (!f) FTEMU_printf("Failed to open OTP file\n");
+		if (!f) FTEMU_error("Failed to open OTP file");
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
-			if (s != FT800EMU_OTP_SIZE) FTEMU_printf("Incomplete OTP file\n");
-			else FTEMU_printf("Loaded OTP file\n");
-			if (fclose(f)) FTEMU_printf("Error closing OTP file\n");
+			if (s != FT800EMU_OTP_SIZE) FTEMU_error("Incomplete OTP file");
+			else FTEMU_message("Loaded OTP file");
+			if (fclose(f)) FTEMU_error("Error closing OTP file");
 		}
 	}
 	else
@@ -392,8 +391,8 @@ Memory::Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	rawWriteU16(ROM_CHIPID + 2, 0x0001);
 #endif
 
-	FTEMU_printf("CHIPID: 0x%x 0x%x 0x%x 0x%x\n", (int)rawReadU8(ROM_CHIPID), (int)rawReadU8(ROM_CHIPID + 1), (int)rawReadU8(ROM_CHIPID + 2), (int)rawReadU8(ROM_CHIPID + 3));
-	FTEMU_printf("CHIPID: 0x%x\n", (int)rawReadU32(ROM_CHIPID));
+	FTEMU_message("CHIPID: 0x%x 0x%x 0x%x 0x%x", (int)rawReadU8(ROM_CHIPID), (int)rawReadU8(ROM_CHIPID + 1), (int)rawReadU8(ROM_CHIPID + 2), (int)rawReadU8(ROM_CHIPID + 3));
+	FTEMU_message("CHIPID: 0x%x", (int)rawReadU32(ROM_CHIPID));
 
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
@@ -510,8 +509,7 @@ void Memory::mcuWriteU32(ramaddr address, uint32_t data)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("MCU U32 write address %i exceeds RAM size\n", (int)address);
-		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Write address exceeds RAM size");
+		FTEMU_error("MCU U32 write address %i exceeds RAM size", (int)address);
 		return;
 	}
 
@@ -611,8 +609,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("MCU U32 read address %i exceeds RAM size\n", (int)address);
-		if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Read address exceeds RAM size");
+		FTEMU_error("MCU U32 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
 
@@ -639,7 +636,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			{
 				// FTEMU_printf(" Delay MCU \n");
 				m_ThreadCoprocessor.prioritize();
-				FT8XXEMU::System.delayForMCU(1);
+				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
@@ -649,7 +646,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			{
 				// FTEMU_printf(" Delay MCU ");
 				m_ThreadCoprocessor.prioritize();
-				FT8XXEMU::System.delayForMCU(1);
+				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
 			}
 			break;
@@ -661,7 +658,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 				{
 					// FTEMU_printf(" Switch ");
 					m_ThreadCoprocessor.prioritize();
-					FT8XXEMU::System.switchThread();
+					FT8XXEMU::System::switchThread();
 					m_ThreadCoprocessor.unprioritize();
 				}
 			}
@@ -762,12 +759,12 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 	{
 		if (data & 0x1)
 		{
-			FTEMU_printf("WARNING: Coprocessor has flagged an error\n");
+			FTEMU_warning("Coprocessor has flagged an error");
 		}
 	}
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U32 write address %i exceeds RAM size\n", (int)address);
+		FTEMU_error("Coprocessor U32 write address %i exceeds RAM size", (int)address);
 		return;
 	}
 
@@ -838,7 +835,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U32 read address %i exceeds RAM size\n", (int)address);
+		FTEMU_error("Coprocessor U32 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
 
@@ -862,7 +859,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			if (m_WaitCoprocessorReadCounter > 8)
 			{
 				m_ThreadMCU.prioritize();
-				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
 			}
 			break;
@@ -872,7 +869,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			{
 				// FTEMU_printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
 				m_ThreadMCU.prioritize();
-				FT8XXEMU::System.delay(1);
+				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
 			}
 			break;
@@ -889,7 +886,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 				{
 					// FTEMU_printf(" Switch ");
 					m_ThreadMCU.prioritize();
-					FT8XXEMU::System.switchThread();
+					FT8XXEMU::System::switchThread();
 					m_ThreadMCU.unprioritize();
 				}
 			}
@@ -971,7 +968,7 @@ void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U16 write address %i exceeds RAM size\n", (int)address);
+		FTEMU_error("Coprocessor U16 write address %i exceeds RAM size", (int)address);
 		return;
 	}
 
@@ -1001,7 +998,7 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U16 read address %i exceeds RAM size\n", (int)address);
+		FTEMU_error("Coprocessor U16 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
 
@@ -1021,7 +1018,7 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U8 write address %i exceeds RAM size\n", (int)address);
+		("Coprocessor U8 write address %i exceeds RAM size", (int)address);
 		return;
 	}
 
@@ -1045,7 +1042,7 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
 	{
-		FTEMU_printf("Coprocessor U8 read address %i exceeds RAM size\n", (int)address);
+		FTEMU_error("Coprocessor U8 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
 

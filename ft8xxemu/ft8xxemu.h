@@ -32,6 +32,13 @@
 
 typedef enum
 {
+	BT8XXEMU_LogError = 0,
+	BT8XXEMU_LogWarning = 1,
+	BT8XXEMU_LogMessage = 2,
+} BT8XXEMU_LogType;
+
+typedef enum
+{
 	BT8XXEMU_EmulatorFT800 = 0x0800,
 	BT8XXEMU_EmulatorFT801 = 0x0801,
 	BT8XXEMU_EmulatorFT810 = 0x0810,
@@ -125,7 +132,7 @@ typedef struct
 	uint32_t ReduceGraphicsThreads;
 
 	// Sleep function for MCU thread usage throttle. Defaults to generic system sleep
-	void(*MCUSleep)(int ms);
+	void(*MCUSleep)(void *sender, void *context, int ms);
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
@@ -154,8 +161,8 @@ typedef struct
 	// Interrupt handler
 	// void (*Interrupt)();
 
-	// Exception callback
-	void(*Exception)(const char *message);
+	// Log callback
+	void(*Log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message);
 
 	// Safe exit. Called when the emulator window is closed
 	void(*Close)();

@@ -19,6 +19,7 @@
 #include <memory>
 
 // Project includes
+#include "ft8xxemu.h"
 #include "ft8xxemu_inttypes.h"
 
 // Platform includes
@@ -55,9 +56,11 @@ public:
 	long getMicros();
 	long getFreqTick(int hz);
 
+	void log(BT8XXEMU_LogType type, const char *message, ...);
+
 	void setSender(void *sender) { m_Sender = sender; }
 	void setUserContext(void *context) { m_UserContext = context; }
-	void onException(void(*delay)(void *sender, void *context, const char *message));
+	void onLog(void(*delay)(void *sender, void *context, BT8XXEMU_LogType type, const char *message));
 	void overrideMCUDelay(void (*delay)(void *sender, void *context, int ms));
 
 	void delayForMCU(int ms);
@@ -84,7 +87,7 @@ public:
 	inline double getFPSSmooth() { return m_FPSSmooth; }
 	inline int getFrameCount() { return m_FrameCount; }
 
-	inline bool setPrintStd(bool printStd) { m_PrintStd = printStd; }
+	inline void setPrintStd(bool printStd) { m_PrintStd = printStd; }
 	inline bool getPrintStd() { return m_PrintStd; }
 
 private:
@@ -109,7 +112,7 @@ private:
 	int m_FPSSmoothAt;
 	int m_FPSSmoothCount;
 
-	void(*m_Exception)(void *sender, void *context, const char *message) = NULL;
+	void(*m_Log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message) = NULL;
 	void(*m_MCUDelay)(void *sender, void *context, int ms) = NULL;
 	void *m_Sender = NULL;
 	void *m_UserContext = NULL;
@@ -126,7 +129,10 @@ private:
 
 }; /* class System */
 
-#define FTEMU_printf(s, ...) do { if (m_System->getPrintStd()) { printf(s, __VA_ARGS__); } } while (false)
+// #define FTEMU_printf(s, ...) do { if (m_System->getPrintStd()) { printf(s, __VA_ARGS__); } } while (false)
+#define FTEMU_error(s, ...) m_System->log(BT8XXEMU_LogError, s, __VA_ARGS__)
+#define FTEMU_warning(s, ...) m_System->log(BT8XXEMU_LogWarning, s, __VA_ARGS__)
+#define FTEMU_message(s, ...) m_System->log(BT8XXEMU_LogMessage, s, __VA_ARGS__)
 
 } /* namespace FT8XXEMU */
 

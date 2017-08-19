@@ -18,6 +18,10 @@
 
 // Project includes
 
+namespace FT8XXEMU {
+	class System;
+}
+
 #define FT810EMU_COPROCESSOR_ROM_SIZE 16384
 
 namespace FT810EMU {
@@ -46,7 +50,11 @@ private:
 
 	uint16_t rgb565(uint8_t y, int8_t Cb, int8_t Cr);
 
+	FT8XXEMU::System *m_System;
+
 public:
+	inline void setSystem(FT8XXEMU::System *system) { m_System = system; }
+
 	void reset();
 	void startblock();
 	void begin();
@@ -100,7 +108,7 @@ public:
 class Coprocessor
 {
 public:
-	Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
 	~Coprocessor();
 
 	void executeManual();
@@ -118,6 +126,7 @@ private:
 	int pop();
 
 private:
+	FT8XXEMU::System *m_System;
 	Memory *m_Memory;
 
 	volatile bool m_Running;

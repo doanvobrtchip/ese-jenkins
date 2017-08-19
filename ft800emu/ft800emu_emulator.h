@@ -82,6 +82,7 @@ namespace FT800EMU {
 	class AudioRender;
 	class Coprocessor;
 	class BusSlave;
+	class Touch;
 
 /**
  * Emulator
@@ -92,8 +93,8 @@ namespace FT800EMU {
 class Emulator : public BT8XXEMU::IEmulator
 {
 public:
-	Emulator() { }
-	~Emulator() { }
+	Emulator();
+	~Emulator();
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
@@ -171,6 +172,7 @@ private:
 
 	std::mutex m_SwapDLMutex;
 
+	FT8XXEMU::System *m_System = NULL;
 	FT8XXEMU::WindowOutput *m_WindowOutput = NULL;
 	FT8XXEMU::AudioOutput *m_AudioOutput = NULL;
 	FT8XXEMU::KeyboardInput *m_KeyboardInput = NULL;
@@ -178,6 +180,7 @@ private:
 	AudioProcessor *m_AudioProcessor = NULL;
 	AudioRender *m_AudioRender = NULL;
 	Memory *m_Memory = NULL;
+	Touch *m_Touch = NULL;
 	Coprocessor *m_Coprocessor = NULL;
 	BusSlave *m_BusSlave = NULL;
 

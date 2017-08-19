@@ -323,7 +323,7 @@ void Ejpg::run2(uint8_t *memory8,
 						uint32_t a = dst + (ey * w + ex);
 						if (a < 0 || a >= (FT800EMU_RAM_SIZE))
 						{
-							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							FTEMU_error("Jpeg illegal memory access");
 							return;
 						}
 						memory8[a] = y;
@@ -333,7 +333,7 @@ void Ejpg::run2(uint8_t *memory8,
 						uint32_t a = dst + 2 * (ey * w + ex);
 						if ((a >> 1) < 0 || (a >> 1) >= (FT800EMU_RAM_SIZE >> 1))
 						{
-							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							FTEMU_error("Jpeg illegal memory access");
 							return;
 						}
 						memory16[a >> 1] = rgb565(y, Cb, Cr);
@@ -392,7 +392,7 @@ void Ejpg::run(uint8_t *memory8,
 	// assert((bitsize == 8) | (bitsize == 32));
 	if (!((bitsize == 8) | (bitsize == 32)))
 	{
-		FTEMU_printf("JPG ERROR: bitsize invalid (%i)\n", (int)bitsize);
+		FTEMU_error("Jpeg bitsize invalid (%i)", (int)bitsize);
 		return;
 	}
 
@@ -408,7 +408,7 @@ void Ejpg::run(uint8_t *memory8,
 	// assert(btypes != NULL);
 	if (!btypes)
 	{
-		FTEMU_printf("JPG ERROR: btypes invalid (NULL)\n");
+		FTEMU_error("Jpeg btypes invalid (NULL)");
 		return;
 	}
 
@@ -470,7 +470,7 @@ void Ejpg::run(uint8_t *memory8,
 		// FTEMU_printf("ht = %x\n", ht);
 		if (ht < 0 || ht >= (FT800EMU_RAM_SIZE))
 		{
-			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			FTEMU_error("Jpeg illegal memory access");
 			return;
 		}
 		uint32_t *pht = (uint32_t*)&memory8[ht];
@@ -500,7 +500,7 @@ void Ejpg::run(uint8_t *memory8,
 			symbols = REG_EJPG_ACC + 256 * (da8 & 1);
 		if ((symbols + sym_pos) < 0 || (symbols + sym_pos) >= (FT800EMU_RAM_SIZE))
 		{
-			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			FTEMU_error("Jpeg illegal memory access");
 			return;
 		}
 		uint8_t symbol = memory8[symbols + sym_pos];
@@ -587,7 +587,7 @@ void Ejpg::run1(uint8_t *memory8,
 		// FTEMU_printf("Write %04x*%02x=%04x to %02x\n", dm & 0xffff, qi, feed & 0xffff, zz[idct_i]);
 		if (idct_i >= 64)
 		{
-			FTEMU_printf("JPG ERROR: idct_i out of bounds (%i)\n", (int)idct_i);
+			FTEMU_error("Jpeg idct_i out of bounds (%i)", (int)idct_i);
 		}
 		else
 		{
@@ -661,21 +661,21 @@ BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack an
 static FILE *trace = NULL;
 #endif
 
-Coprocessor::Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+	: m_System(system), m_Memory(memory)
 {
-	m_Memory = memory;
-
+	ejpg.setSystem(system);
 	if (romFilePath)
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) FTEMU_printf("Failed to open coprocessor ROM file\n");
+		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{
 			size_t s = fread(j1boot, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_printf("Incomplete coprocessor ROM file\n");
-			else FTEMU_printf("Loaded coprocessor ROM file\n");
-			if (fclose(f)) FTEMU_printf("Error closing coprocessor ROM file\n");
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_error("Incomplete coprocessor ROM file");
+			else FTEMU_message("Loaded coprocessor ROM file");
+			if (fclose(f)) FTEMU_error("Error closing coprocessor ROM file");
 		}
 	}
 	else
@@ -714,7 +714,7 @@ void Coprocessor::execute()
 			ejpg.reset();
 			cpureset();
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System.delay(1);
+			FT8XXEMU::System::delay(1);
 			continue;
 		}
 		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL);
@@ -798,7 +798,7 @@ void Coprocessor::execute()
 			{ /* R->PC */
 				if ((r[rsp] & 1) || (r[rsp] > 32767))
 				{
-					FTEMU_printf("Warning: invalid return address [%d] %08x\n", rsp, r[rsp]);
+					FTEMU_warning("Coprocessor invalid return address [%d] %08x", rsp, r[rsp]);
 				}
 				_pc = r[rsp] >> 1;
 			}

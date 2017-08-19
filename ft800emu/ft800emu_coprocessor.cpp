@@ -34,22 +34,21 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 };
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-Coprocessor::Coprocessor(Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+	: m_System(system), m_Memory(memory)
 {
-	m_Memory = memory;
-
 	bool ft801 = (mode == BT8XXEMU_EmulatorFT801);
 	if (romFilePath)
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) FTEMU_printf("Failed to open coprocessor ROM file\n");
+		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{
 			size_t s = fread(pgm, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_printf("Incomplete coprocessor ROM file\n");
-			else FTEMU_printf("Loaded coprocessor ROM file\n");
-			if (fclose(f)) FTEMU_printf("Error closing coprocessor ROM file\n");
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_error("Incomplete coprocessor ROM file");
+			else FTEMU_message("Loaded coprocessor ROM file");
+			if (fclose(f)) FTEMU_error("Error closing coprocessor ROM file");
 		}
 	}
 	else
@@ -81,7 +80,7 @@ void Coprocessor::execute()
 		{
 			pc = 0;
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System.delay(1);
+			FT8XXEMU::System::delay(1);
 			continue;
 		}
         insn = pgm[pc];

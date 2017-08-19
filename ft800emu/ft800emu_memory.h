@@ -22,6 +22,9 @@
 // Project includes
 #include "ft800emu_defs.h"
 
+namespace FT8XXEMU {
+	class System;
+}
 
 namespace FT800EMU {
 	class Emulator;
@@ -39,7 +42,7 @@ typedef int32_t ramaddr;
 class Memory
 {
 public:
-	Memory(BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
+	Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 		FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
 		const char *romFilePath = 0, const char *otpFilePath = 0);
 	~Memory();
@@ -121,6 +124,7 @@ private:
 	FT8XXEMU::ThreadState &m_ThreadCoprocessor;
 
 	// Dependencies
+	FT8XXEMU::System *m_System;
 	AudioProcessor *m_AudioProcessor;
 	AudioRender *m_AudioRender;
 

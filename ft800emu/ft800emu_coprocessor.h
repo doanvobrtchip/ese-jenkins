@@ -20,6 +20,10 @@
 
 // Project includes
 
+namespace FT8XXEMU {
+	class System;
+}
+
 namespace FT800EMU {
 	class Memory;
 
@@ -31,7 +35,7 @@ namespace FT800EMU {
 class Coprocessor
 {
 public:
-	Coprocessor(Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
 	~Coprocessor();
 
 	void executeManual();
@@ -44,6 +48,7 @@ private:
 	void execute();
 
 private:
+	FT8XXEMU::System *m_System;
 	Memory *m_Memory;
 
 	volatile bool m_Running;

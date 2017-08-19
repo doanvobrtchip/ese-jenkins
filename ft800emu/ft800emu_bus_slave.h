@@ -18,6 +18,10 @@
 // System includes
 #include <stdlib.h>
 
+namespace FT8XXEMU {
+	class System;
+}
+
 namespace FT800EMU {
 	class Memory;
 
@@ -30,7 +34,7 @@ namespace FT800EMU {
 class BusSlave
 {
 public:
-	BusSlave(Memory *memory);
+	BusSlave(FT8XXEMU::System *system, Memory *memory);
 	~BusSlave();
 
 	void cs(bool cs);
@@ -56,6 +60,7 @@ private:
 
 	uint32_t m_WriteStartAddr = 0;
 
+	FT8XXEMU::System *m_System;
 	Memory *m_Memory;
 
 	BusSlaveState m_State = BusSlaveIdle;

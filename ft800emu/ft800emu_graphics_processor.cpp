@@ -44,7 +44,7 @@
 #	include <SDL_assert.h>
 #else
 #	ifdef WIN32
-#		include "ft8xxemu_system_windows.h"
+#		include "ft8xxemu_system_win32.h"
 #	endif
 #endif
 
@@ -3266,7 +3266,7 @@ DisplayListDisplay:
 			}
 		}
 		// Check touch
-		if ((TouchClass::multiTouch())
+		if ((TouchPoint::multiTouch())
 			? (s_Memory->rawReadU32(ram, REG_CTOUCH_TOUCH0_XY) != 0x80008000)
 			: (s_Memory->rawReadU32(ram, REG_TOUCH_RZ) <= s_Memory->rawReadU32(ram, REG_TOUCH_RZTHRESH))) // Touching harder than the threshold
 		{

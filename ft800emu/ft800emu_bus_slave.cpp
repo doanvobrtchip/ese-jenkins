@@ -28,9 +28,9 @@ namespace FT800EMU {
 
 #define FT800EMU_DUMMY_WRITE 0
 
-BusSlave::BusSlave(Memory *memory)
+BusSlave::BusSlave(FT8XXEMU::System *system, Memory *memory) : m_System(system), m_Memory(memory)
 {
-	m_Memory = memory;
+	
 }
 
 BusSlave::~BusSlave()
@@ -196,7 +196,7 @@ uint8_t BusSlave::transfer(uint8_t data)
 					// FTEMU_printf("write %i\n", (m_Cursor - 3));
 
 					if ((m_Cursor - 3) % 4)
-						FTEMU_printf("Non-aligned write %d\n", m_Cursor);
+						FTEMU_warning("Non-aligned write %d", m_Cursor);
 
 					m_Memory->mcuWriteU32(m_Cursor - 3, m_RWBuffer);
 					m_RWBuffer = 0;
