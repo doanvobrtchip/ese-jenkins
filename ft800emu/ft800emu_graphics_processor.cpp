@@ -12,6 +12,7 @@
  */
 
 // #include <...>
+#define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE public
 #include "ft800emu_graphics_processor.h"
 
 // Enable or disable debug messages
@@ -69,14 +70,6 @@
 namespace FT800EMU {
 
 namespace /* anonymous */ {
-
-	uint32_t s_DebugTraceX = 0;
-	uint32_t s_DebugTraceLine = 0;
-	int *s_DebugTraceStack = NULL;
-	int s_DebugTraceStackMax = 0;
-	int *s_DebugTraceStackSize = NULL;
-
-
 
 #pragma region Graphics State
 
@@ -554,13 +547,14 @@ BT8XXEMU_FORCE_INLINE void processPixel(const GraphicsState &gs, argb8888 *bc, u
 			// Conditionally compiled debug functionality, will only be called on the line that is being debugged.
 			if (debugTrace)
 			{
+				GraphicsProcessor *const gp = gs.Processor;
 				// Check the point to be traced.
-				if (x == s_DebugTraceX)
+				if (x == gp->m_DebugTraceX)
 				{
-					if (*s_DebugTraceStackSize < s_DebugTraceStackMax)
+					if (*gp->m_DebugTraceStackSize < gp->m_DebugTraceStackMax)
 					{
-						s_DebugTraceStack[*s_DebugTraceStackSize] = s_DebugTraceLine;
-						++(*s_DebugTraceStackSize);
+						gp->m_DebugTraceStack[*gp->m_DebugTraceStackSize] = gp->m_DebugTraceLine;
+						++(*gp->m_DebugTraceStackSize);
 					}
 				}
 			}
@@ -708,7 +702,7 @@ BT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 	return true;
 }
 
-static const argb8888 s_VGAPalette[] =
+static const argb8888 c_VGAPalette[] =
 {
 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA, 0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF,
 };
@@ -872,7 +866,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
 			const int vishift = ((1 - val) << 2);
 			const int colidx = (ca >> vishift) & 0xF; // Index in 16-color palette
-			return (val * 0xFF000000) | s_VGAPalette[colidx];
+			return (val * 0xFF000000) | c_VGAPalette[colidx];
 		}
 	case BARGRAPH:
 		{
@@ -2745,7 +2739,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 
 			if (debugTrace)
 			{
-				s_DebugTraceLine = (uint32_t)c;
+				m_DebugTraceLine = (uint32_t)c;
 			}
 
 			gs.DebugDisplayListIndex = (int)c;
@@ -3013,12 +3007,12 @@ EvaluateDisplayListValue:
 					{
 						if (debugTrace)
 						{
-							if (v && gs.ScissorX.U <= s_DebugTraceX && s_DebugTraceX < gs.ScissorX2.U)
+							if (v && gs.ScissorX.U <= m_DebugTraceX && m_DebugTraceX < gs.ScissorX2.U)
 							{
-								if (*s_DebugTraceStackSize < s_DebugTraceStackMax)
+								if (*m_DebugTraceStackSize < m_DebugTraceStackMax)
 								{
-									s_DebugTraceStack[*s_DebugTraceStackSize] = s_DebugTraceLine;
-									++(*s_DebugTraceStackSize);
+									m_DebugTraceStack[*m_DebugTraceStackSize] = m_DebugTraceLine;
+									++(*m_DebugTraceStackSize);
 								}
 							}
 						}
@@ -3502,16 +3496,16 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	argb8888 *dummyBuffer = buffer - (y * hsize);
 	BitmapInfo bitmapInfo[32];
 	memcpy(&bitmapInfo, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
-	s_DebugTraceX = x;
-	s_DebugTraceStack = result;
-	s_DebugTraceStackMax = *size;
+	m_DebugTraceX = x;
+	m_DebugTraceStack = result;
+	m_DebugTraceStackMax = *size;
 	*size = 0;
-	s_DebugTraceStackSize = size;
+	m_DebugTraceStackSize = size;
 	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
-	s_DebugTraceX = ~0;
-	s_DebugTraceStackMax = 0;
-	s_DebugTraceStackSize = &s_DebugTraceStackMax;
-	s_DebugTraceStack = NULL;
+	m_DebugTraceX = ~0;
+	m_DebugTraceStackMax = 0;
+	m_DebugTraceStackSize = &m_DebugTraceStackMax;
+	m_DebugTraceStack = NULL;
 }
 
 void GraphicsProcessor::setDebugMode(int debugMode)
@@ -3533,30 +3527,30 @@ void GraphicsProcessor::setDebugLimiter(int debugLimiter)
 // Sets operation trace on specified point
 void GraphicsProcessor::setDebugTrace(uint32_t x, uint32_t y)
 {
-	s_DebugTraceX = x;
-	s_DebugTraceY = y;
+	m_DebugTraceX = x;
+	m_DebugTraceY = y;
 }
 
 // Disables or enables tracing
 void GraphicsProcessor::setDebugTrace(bool enabled)
 {
-	s_DebugTraceEnabled = enabled;
+	m_DebugTraceEnabled = enabled;
 }
 
 // Returns the debug tracing state
 void GraphicsProcessor::getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y)
 {
-	enabled = s_DebugTraceEnabled;
-	x = s_DebugTraceX;
-	y = s_DebugTraceY;
+	enabled = m_DebugTraceEnabled;
+	x = m_DebugTraceX;
+	y = m_DebugTraceY;
 }
 
 // Returns a *copy* of the debug trace
 void GraphicsProcessor::getDebugTrace(std::vector<int> &result)
 {
-	for (int i = 0; i < s_DebugTraceStackData.size(); ++i)
+	for (int i = 0; i < m_DebugTraceStackData.size(); ++i)
 	{
-		result.push_back(s_DebugTraceStackData[i]);
+		result.push_back(m_DebugTraceStackData[i]);
 	}
 }
 */

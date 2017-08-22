@@ -71,6 +71,10 @@ struct BitmapInfo
 #define FT810EMU_SWAPXY_FALSE
 #endif
 
+#ifndef FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE
+#define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE private
+#endif
+
 /**
  * GraphicsProcessor
  * \brief GraphicsProcessor
@@ -139,19 +143,30 @@ private:
 	Memory *m_Memory = 0;
 	Touch *m_Touch = 0;
 
+	// Master copy of bitmap
 	BitmapInfo m_BitmapInfoMaster[32];
 
 	bool m_RegPwmDutyEmulation;
 
+	// Threading options
 	int m_ThreadCount;
 	bool m_ThreadPriorityRealtime = true;
 	bool m_BackgroundPerformance;
 
+	// Visual debugging options
 	int m_DebugMode;
 	int m_DebugMultiplier;
 	int m_DebugLimiter;
 	bool m_DebugLimiterEffective;
 	int m_DebugLimiterIndex;
+
+FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
+	// Cursor tracing
+	uint32_t m_DebugTraceX = 0;
+	uint32_t m_DebugTraceLine = 0;
+	int *m_DebugTraceStack = NULL;
+	int m_DebugTraceStackMax = 0;
+	int *m_DebugTraceStackSize = NULL;
 
 private:
 	template <bool bugTrace>
