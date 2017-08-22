@@ -89,8 +89,6 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParam
 #ifdef FTEMU_HAVE_FT800EMU
 	case BT8XXEMU_EmulatorFT800:
 	case BT8XXEMU_EmulatorFT801:
-		(new FT800EMU::Emulator())->run(*params);
-		(new FT800EMU::Emulator())->run(*params);
 		s_Emulator = new FT800EMU::Emulator();
 		static_cast<FT800EMU::Emulator *>(s_Emulator)->run(*params);
 		break;

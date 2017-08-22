@@ -386,7 +386,7 @@ BT8XXEMU_FORCE_INLINE argb8888 add_argb_safe(const argb8888 &left, const argb888
 
 #pragma region Write Buffer
 
-BT8XXEMU_FORCE_INLINE void writeTag(const GraphicsState &gs, uint8_t *bt, int x)
+BT8XXEMU_FORCE_INLINE void writeTag(const GraphicsState &gs, uint8_t *bt, const int x)
 {
 	if (gs.TagMask) bt[x] = gs.Tag;
 }
@@ -741,9 +741,9 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 
 // uses pixel units
 #if FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
     int xo;   // x byte offset
@@ -919,9 +919,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *system, const ui
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
@@ -1005,7 +1005,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 {
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
-	FT8XXEMU::System *system = gs.Processor->system();
+	FT8XXEMU::System *const system = gs.Processor->system();
 	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *ram = gs.Processor->memory()->getRam();
 
@@ -2536,10 +2536,10 @@ void GraphicsProcessor::reduceThreads(int nb)
 #define SIGNED_N(v, n) \
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
 
-void processBlankDL(GraphicsProcessor *graphicsProcessor, BitmapInfo *const bitmapInfo)
+void processBlankDL(GraphicsProcessor *const graphicsProcessor, BitmapInfo *const bitmapInfo)
 {
-	FT8XXEMU::System *system = graphicsProcessor->system();
-	Memory *memory = graphicsProcessor->memory();
+	FT8XXEMU::System *const system = graphicsProcessor->system();
+	Memory *const memory = graphicsProcessor->memory();
 	uint8_t *const ram = memory->getRam();
 	const uint32_t *displayList = memory->getDisplayList();
 
@@ -2675,9 +2675,9 @@ DisplayListDisplay:
 template <bool debugTrace>
 void processPart(GraphicsProcessor *graphicsProcessor, argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
-	FT8XXEMU::System *system = graphicsProcessor->system();
-	Memory *memory = graphicsProcessor->memory();
-	Touch *touch = graphicsProcessor->touch();
+	FT8XXEMU::System *const system = graphicsProcessor->system();
+	Memory *const memory = graphicsProcessor->memory();
+	Touch *const touch = graphicsProcessor->touch();
 	uint8_t *const ram = memory->getRam();
 	const uint32_t *displayList = memory->getDisplayList();
 	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
