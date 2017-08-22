@@ -61,6 +61,16 @@ struct BitmapInfo
 	int SizeHeight;
 };
 
+#ifdef FT810EMU_MODE
+#define FT810EMU_SWAPXY_PARAM , const bool swapXY
+#define FT810EMU_SWAPXY , swapXY
+#define FT810EMU_SWAPXY_FALSE , false
+#else
+#define FT810EMU_SWAPXY_PARAM
+#define FT810EMU_SWAPXY
+#define FT810EMU_SWAPXY_FALSE
+#endif
+
 /**
  * GraphicsProcessor
  * \brief GraphicsProcessor
@@ -98,15 +108,19 @@ public:
 	// Reduces the number of used threads with the specified amount
 	void reduceThreads(int nb);
 
+public:
 	void setDebugMode(int debugMode);
-	int getDebugMode();
+	inline int getDebugMode() { return m_DebugMode; }
 	void setDebugMultiplier(int debugMultiplier);
-	int getDebugMultiplier();
+	inline int getDebugMultiplier() { return m_DebugMultiplier; }
 	void setDebugLimiter(int debugLimiter);
-	int getDebugLimiter();
+	inline int getDebugLimiter() { return m_DebugLimiter; }
 
-	bool getDebugLimiterEffective();
-	int getDebugLimiterIndex();
+	inline bool getDebugLimiterEffective() { return m_DebugLimiterEffective; }
+	inline int getDebugLimiterIndex() { return m_DebugLimiterIndex; }
+
+public:
+	inline bool getRegPwmDutyEmulation() { return m_RegPwmDutyEmulation; }
 
 public:
 	inline FT8XXEMU::System *system() { return m_System; }
@@ -124,6 +138,25 @@ private:
 	FT8XXEMU::System *m_System = 0;
 	Memory *m_Memory = 0;
 	Touch *m_Touch = 0;
+
+	BitmapInfo m_BitmapInfoMaster[32];
+
+	bool m_RegPwmDutyEmulation;
+
+	int m_ThreadCount;
+	bool m_ThreadPriorityRealtime = true;
+	bool m_BackgroundPerformance;
+
+	int m_DebugMode;
+	int m_DebugMultiplier;
+	int m_DebugLimiter;
+	bool m_DebugLimiterEffective;
+	int m_DebugLimiterIndex;
+
+private:
+	template <bool bugTrace>
+	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo);
+	void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo);
 
 private:
 	GraphicsProcessor(const GraphicsProcessor &) = delete;

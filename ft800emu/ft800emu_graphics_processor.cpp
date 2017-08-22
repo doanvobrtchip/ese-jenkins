@@ -66,23 +66,9 @@
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, data)
 #endif
 
-#ifdef FT810EMU_MODE
-#define FT810EMU_SWAPXY_PARAM , const bool swapXY
-#define FT810EMU_SWAPXY , swapXY
-#define FT810EMU_SWAPXY_FALSE , false
-#else
-#define FT810EMU_SWAPXY_PARAM
-#define FT810EMU_SWAPXY
-#define FT810EMU_SWAPXY_FALSE
-#endif
-
 namespace FT800EMU {
 
 namespace /* anonymous */ {
-
-	BitmapInfo s_BitmapInfoMaster[32];
-
-	bool s_RegPwmDutyEmulation = false;
 
 	uint32_t s_DebugTraceX = 0;
 	uint32_t s_DebugTraceLine = 0;
@@ -90,7 +76,7 @@ namespace /* anonymous */ {
 	int s_DebugTraceStackMax = 0;
 	int *s_DebugTraceStackSize = NULL;
 
-	bool s_ThreadPriorityRealtime = true;
+
 
 #pragma region Graphics State
 
@@ -2364,31 +2350,21 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 
 }
 
-static int s_DebugMode;
-static int s_DebugMultiplier;
-static int s_DebugLimiter;
-static bool s_DebugLimiterEffective;
-static int s_DebugLimiterIndex;
-
-static int s_ThreadCount;
-
-static bool s_BackgroundPerformance;
-
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
 	m_System = system;
 	m_Memory = memory;
 	m_Touch = touch;
-	s_BackgroundPerformance = backgroundPerformance;
+	m_BackgroundPerformance = backgroundPerformance;
 
-	s_DebugMode = FT800EMU_DEBUGMODE_NONE;
-	s_DebugMultiplier = 1;
-	s_DebugLimiter = 0;
-	s_DebugLimiterEffective = false;
-	s_DebugLimiterIndex = 0;
+	m_DebugMode = FT800EMU_DEBUGMODE_NONE;
+	m_DebugMultiplier = 1;
+	m_DebugLimiter = 0;
+	m_DebugLimiterEffective = false;
+	m_DebugLimiterIndex = 0;
 
-	s_RegPwmDutyEmulation = false;
-	s_ThreadCount = 1;
+	m_RegPwmDutyEmulation = false;
+	m_ThreadCount = 1;
 
 	uint8_t *ram = m_Memory->getRam();
 	uint32_t fi = Memory::rawReadU32(ram, FT800EMU_ROM_FONTINFO);
@@ -2404,16 +2380,16 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		uint32_t data =  Memory::rawReadU32(ram, bi + 144);
 		if (FT800EMU_DEBUG) m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
 
-		s_BitmapInfoMaster[ir].Source = data;
-		s_BitmapInfoMaster[ir].LayoutFormat = format;
-		s_BitmapInfoMaster[ir].LayoutStride = stride;
-		s_BitmapInfoMaster[ir].LayoutHeight = height;
-		s_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
-		s_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
-		s_BitmapInfoMaster[ir].SizeWrapX = BORDER;
-		s_BitmapInfoMaster[ir].SizeWrapY = BORDER;
-		s_BitmapInfoMaster[ir].SizeWidth = width;
-		s_BitmapInfoMaster[ir].SizeHeight = height;
+		m_BitmapInfoMaster[ir].Source = data;
+		m_BitmapInfoMaster[ir].LayoutFormat = format;
+		m_BitmapInfoMaster[ir].LayoutStride = stride;
+		m_BitmapInfoMaster[ir].LayoutHeight = height;
+		m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+		m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+		m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+		m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+		m_BitmapInfoMaster[ir].SizeWidth = width;
+		m_BitmapInfoMaster[ir].SizeHeight = height;
 	}
 }
 
@@ -2480,7 +2456,7 @@ void GraphicsProcessor::resizeThreadInfos(int size)
 	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
 		if (!m_ThreadInfos[i]) m_ThreadInfos[i] = std::make_unique<ThreadInfo>();
-		memcpy(&m_ThreadInfos[i]->Bitmap, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
+		memcpy(&m_ThreadInfos[i]->Bitmap, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 		m_ThreadInfos[i]->Running = true;
 		m_ThreadInfos[i]->StartSem = SDL_CreateSemaphore(0);
@@ -2508,43 +2484,43 @@ GraphicsProcessor::~GraphicsProcessor()
 
 void GraphicsProcessor::enableRegPwmDutyEmulation(bool enabled)
 {
-	s_RegPwmDutyEmulation = enabled;
+	m_RegPwmDutyEmulation = enabled;
 }
 
 void GraphicsProcessor::enableMultithread(bool enabled)
 {
 	if (enabled)
 	{
-		s_ThreadCount = FT8XXEMU::System::getCPUCount();
+		m_ThreadCount = FT8XXEMU::System::getCPUCount();
 	}
 	else
 	{
-		s_ThreadCount = 1;
+		m_ThreadCount = 1;
 	}
-	m_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", s_ThreadCount);
-	resizeThreadInfos(s_ThreadCount - 1);
+	m_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", m_ThreadCount);
+	resizeThreadInfos(m_ThreadCount - 1);
 }
 
 void GraphicsProcessor::reduceThreads(int nb)
 {
-	s_ThreadCount = max(1, s_ThreadCount - nb);
-	m_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", s_ThreadCount);
-	resizeThreadInfos(s_ThreadCount - 1);
+	m_ThreadCount = max(1, m_ThreadCount - nb);
+	m_System->log(BT8XXEMU_LogMessage, "Graphics processor threads: %i", m_ThreadCount);
+	resizeThreadInfos(m_ThreadCount - 1);
 }
 
 // Sign-extend the n-bit value v
 #define SIGNED_N(v, n) \
     (((int32_t)((v) << (32-(n)))) >> (32-(n)))
 
-void processBlankDL(GraphicsProcessor *const graphicsProcessor, BitmapInfo *const bitmapInfo)
+void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo)
 {
-	FT8XXEMU::System *const system = graphicsProcessor->system();
-	Memory *const memory = graphicsProcessor->memory();
+	FT8XXEMU::System *const system = m_System;
+	Memory *const memory = m_Memory;
 	uint8_t *const ram = memory->getRam();
 	const uint32_t *displayList = memory->getDisplayList();
 
 	GraphicsState gs = GraphicsState(
-		graphicsProcessor
+		this
 #ifdef FT810EMU_MODE
 		, false
 #endif
@@ -2628,7 +2604,7 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_RESTORE_CONTEXT:
             if (gsstack.empty()) {
                 gs = GraphicsState(
-					graphicsProcessor
+					this
 #ifdef FT810EMU_MODE
 					, false
 #endif
@@ -2673,11 +2649,11 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void processPart(GraphicsProcessor *graphicsProcessor, argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
 {
-	FT8XXEMU::System *const system = graphicsProcessor->system();
-	Memory *const memory = graphicsProcessor->memory();
-	Touch *const touch = graphicsProcessor->touch();
+	FT8XXEMU::System *const system = m_System;
+	Memory *const memory = m_Memory;
+	Touch *const touch = m_Touch;
 	uint8_t *const ram = memory->getRam();
 	const uint32_t *displayList = memory->getDisplayList();
 	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
@@ -2691,7 +2667,7 @@ void processPart(GraphicsProcessor *graphicsProcessor, argb8888 *const screenArg
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState(
-			graphicsProcessor
+			this
 #ifdef FT810EMU_MODE
 			, swapXY
 #endif
@@ -2742,9 +2718,9 @@ void processPart(GraphicsProcessor *graphicsProcessor, argb8888 *const screenArg
 		int debugCounter = 0;
 		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
-			if (s_DebugLimiter)
+			if (m_DebugLimiter)
 			{
-				if (debugCounter >= s_DebugLimiter)
+				if (debugCounter >= m_DebugLimiter)
 				{
 					if (y == 0)
 					{
@@ -3002,7 +2978,7 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_RESTORE_CONTEXT:
                     if (gsstack.empty()) {
                         gs = GraphicsState(
-							graphicsProcessor
+							this
 #ifdef FT810EMU_MODE
 							, swapXY
 #endif							
@@ -3275,15 +3251,15 @@ DisplayListDisplay:
 			}
 		}
 		// TODO: MULTITOUCH 1,2,3,4
-		if (s_DebugMode)
+		if (m_DebugMode)
 		{
-			switch (s_DebugMode)
+			switch (m_DebugMode)
 			{
 			case FT800EMU_DEBUGMODE_ALPHA:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bc[x] >> 24;
-					v *= s_DebugMultiplier;
+					v *= m_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
@@ -3291,7 +3267,7 @@ DisplayListDisplay:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bt[x];
-					v *= s_DebugMultiplier;
+					v *= m_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
@@ -3299,14 +3275,14 @@ DisplayListDisplay:
 				for (uint32_t x = 0; x < hsize; ++x)
 				{
 					int v = bs[x];
-					v *= s_DebugMultiplier;
+					v *= m_DebugMultiplier;
 					bc[x] = 0xFF000000 | (v << 16) | (v << 8) | (v);
 				}
 				break;
 			}
 		}
 		// backlight emulation
-		else if (s_RegPwmDutyEmulation)
+		else if (m_RegPwmDutyEmulation)
 		{
 			uint32_t pwmduty = Memory::rawReadU32(ram, REG_PWM_DUTY);
 			if (pwmduty < 128)
@@ -3331,14 +3307,14 @@ DisplayListDisplay:
 
 	if (yIdx == 0)
 	{
-		s_DebugLimiterEffective = false;
-		s_DebugLimiterIndex = debugLimiterIndex;
-		s_DebugLimiterEffective = debugLimiterEffective;
+		m_DebugLimiterEffective = false;
+		m_DebugLimiterIndex = debugLimiterIndex;
+		m_DebugLimiterEffective = debugLimiterEffective;
 	}
 
 	if (!lines_processed)
 	{
-		processBlankDL(graphicsProcessor, bitmapInfo);
+		processBlankDL(bitmapInfo);
 	}
 }
 
@@ -3388,7 +3364,7 @@ int launchGraphicsProcessorThread(void *startInfo)
 void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 {
 	FT8XXEMU::ThreadState threadState;
-	if (!s_BackgroundPerformance)
+	if (!m_BackgroundPerformance)
 	{
 		threadState.foreground();
 	}
@@ -3407,15 +3383,14 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 		}
 
 		// Adjust thread priority
-		if (s_ThreadPriorityRealtime != realtime)
+		if (m_ThreadPriorityRealtime != realtime)
 		{
-			realtime = s_ThreadPriorityRealtime;
+			realtime = m_ThreadPriorityRealtime;
 			if (realtime) threadState.realtime();
 			else threadState.prioritize();
 		}
 
 		processPart<false>(
-			this,
 			li->ScreenArgb8888, 
 			li->UpsideDown, 
 			li->Mirrored, 
@@ -3438,7 +3413,7 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 
 void GraphicsProcessor::setThreadPriority(bool realtime)
 {
-	s_ThreadPriorityRealtime = realtime;
+	m_ThreadPriorityRealtime = realtime;
 }
 
 void GraphicsProcessor::process(
@@ -3459,7 +3434,7 @@ void GraphicsProcessor::process(
 	// Store the touch tag xy used for lookup
 	Memory::rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory::rawReadU32(ram, REG_TOUCH_SCREEN_XY));
 
-	for (int i = 1; i < s_ThreadCount; ++i)
+	for (int i = 1; i < m_ThreadCount; ++i)
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
@@ -3473,7 +3448,7 @@ void GraphicsProcessor::process(
 		li->HSize = hsize;
 		li->VSize = vsize;
 		li->YIdx = (i * yInc) + yIdx;
-		li->YInc = s_ThreadCount * yInc;
+		li->YInc = m_ThreadCount * yInc;
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 		// li->Thread = SDL_CreateThreadFT(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
@@ -3481,15 +3456,15 @@ void GraphicsProcessor::process(
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
+		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
 #	endif
 #endif
 	}
 
 	// Run part on this thread
-	processPart<false>(this, screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, s_ThreadCount * yInc, s_BitmapInfoMaster);
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
 
-	for (int i = 1; i < s_ThreadCount; ++i)
+	for (int i = 1; i < m_ThreadCount; ++i)
 	{
 		// Wait for threads
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -3512,12 +3487,12 @@ void GraphicsProcessor::process(
 
 void GraphicsProcessor::processBlank()
 {
-	processBlankDL(this, s_BitmapInfoMaster);
+	processBlankDL(m_BitmapInfoMaster);
 
 	// Copy bitmap infos to thread local
 	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
-		memcpy(&m_ThreadInfos[i]->Bitmap, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
+		memcpy(&m_ThreadInfos[i]->Bitmap, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
 	}
 }
 
@@ -3526,13 +3501,13 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
 	argb8888 *dummyBuffer = buffer - (y * hsize);
 	BitmapInfo bitmapInfo[32];
-	memcpy(&bitmapInfo, &s_BitmapInfoMaster, sizeof(s_BitmapInfoMaster));
+	memcpy(&bitmapInfo, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
 	s_DebugTraceX = x;
 	s_DebugTraceStack = result;
 	s_DebugTraceStackMax = *size;
 	*size = 0;
 	s_DebugTraceStackSize = size;
-	processPart<true>(this, dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
 	s_DebugTraceX = ~0;
 	s_DebugTraceStackMax = 0;
 	s_DebugTraceStackSize = &s_DebugTraceStackMax;
@@ -3541,42 +3516,17 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 
 void GraphicsProcessor::setDebugMode(int debugMode)
 {
-	s_DebugMode = debugMode;
-}
-
-int GraphicsProcessor::getDebugMode()
-{
-	return s_DebugMode;
+	m_DebugMode = debugMode;
 }
 
 void GraphicsProcessor::setDebugMultiplier(int debugMultiplier)
 {
-	s_DebugMultiplier = debugMultiplier;
-}
-
-int GraphicsProcessor::getDebugMultiplier()
-{
-	return s_DebugMultiplier;
+	m_DebugMultiplier = debugMultiplier;
 }
 
 void GraphicsProcessor::setDebugLimiter(int debugLimiter)
 {
-	s_DebugLimiter = debugLimiter;
-}
-
-int GraphicsProcessor::getDebugLimiter()
-{
-	return s_DebugLimiter;
-}
-
-bool GraphicsProcessor::getDebugLimiterEffective()
-{
-	return s_DebugLimiterEffective;
-}
-
-int GraphicsProcessor::getDebugLimiterIndex()
-{
-	return s_DebugLimiterIndex;
+	m_DebugLimiter = debugLimiter;
 }
 
 /*
