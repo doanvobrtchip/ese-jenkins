@@ -26,8 +26,7 @@
 #include <mutex>
 
 // Project includes (include standard stuff for user)
-#include "bt8xxemu.h"
-#include "bt8xxemu_inttypes.h"
+#include "bt8xxemu_pp.h"
 #include "ft8xxemu_thread_state.h"
 
 #ifndef BT8XXEMU_EMULATOR_H

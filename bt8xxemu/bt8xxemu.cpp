@@ -5,6 +5,7 @@
 
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
+#include "bt8xxemu_pp.h"
 
 #include <string.h>
 #include <stdio.h>

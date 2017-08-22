@@ -172,34 +172,7 @@ typedef struct
 #ifdef __cplusplus
 
 namespace BT8XXEMU {
-
-class Emulator
-{
-public:
-	virtual void stop() = 0;
-	virtual bool isRunning() = 0;
-
-	virtual uint8_t transfer(uint8_t data) = 0;
-	virtual void cs(bool cs) = 0;
-	virtual bool hasInterrupt() = 0;
-
-	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
-	virtual void touchResetXY(int idx) = 0;
-
-	virtual uint8_t *getRam() = 0;
-	// virtual uint8_t *getFlash() = 0;
-	virtual const uint32_t *getDisplayList() = 0;
-	virtual void poke() = 0;
-	virtual int *getDisplayListCoprocessorWrites() = 0;
-	virtual void clearDisplayListCoprocessorWrites() = 0;
-
-	virtual bool getDebugLimiterEffective() = 0;
-	virtual int getDebugLimiterIndex() = 0;
-	virtual void setDebugLimiter(int debugLimiter) = 0;
-	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = 0;
-
-};
-
+	class Emulator;
 }
 
 typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
@@ -265,43 +238,6 @@ BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
 #ifdef __cplusplus 
 } /* extern "C" */
 #endif
-
-#define FT8XXEMU_VERSION_API BT8XXEMU_VERSION_API
-#define FT8XXEMU_VERSION_API BT8XXEMU_VERSION_API
-#define FT8XXEMU_EmulatorFT800 BT8XXEMU_EmulatorFT800
-#define FT8XXEMU_EmulatorFT801 BT8XXEMU_EmulatorFT801
-#define FT8XXEMU_EmulatorFT810 BT8XXEMU_EmulatorFT810
-#define FT8XXEMU_EmulatorFT811 BT8XXEMU_EmulatorFT811
-#define FT8XXEMU_EmulatorFT812 BT8XXEMU_EmulatorFT812
-#define FT8XXEMU_EmulatorFT813 BT8XXEMU_EmulatorFT813
-#define FT8XXEMU_EmulatorEnableKeyboard BT8XXEMU_EmulatorEnableKeyboard
-#define FT8XXEMU_EmulatorEnableAudio BT8XXEMU_EmulatorEnableAudio
-#define FT8XXEMU_EmulatorEnableCoprocessor BT8XXEMU_EmulatorEnableCoprocessor
-#define FT8XXEMU_EmulatorEnableMouse BT8XXEMU_EmulatorEnableMouse
-#define FT8XXEMU_EmulatorEnableDebugShortkeys BT8XXEMU_EmulatorEnableDebugShortkeys
-#define FT8XXEMU_EmulatorEnableGraphicsMultithread BT8XXEMU_EmulatorEnableGraphicsMultithread
-#define FT8XXEMU_EmulatorEnableDynamicDegrade BT8XXEMU_EmulatorEnableDynamicDegrade
-// #define FT8XXEMU_EmulatorEnableRegRotate BT8XXEMU_EmulatorEnableRegRotate
-#define FT8XXEMU_EmulatorEnableRegPwmDutyEmulation BT8XXEMU_EmulatorEnableRegPwmDutyEmulation
-#define FT8XXEMU_EmulatorEnableTouchTransformation BT8XXEMU_EmulatorEnableTouchTransformation
-#define FT8XXEMU_EmulatorEnableTouchTransformation BT8XXEMU_EmulatorEnableTouchTransformation
-#define FT8XXEMU_EmulatorEnableStdOut BT8XXEMU_EmulatorEnableStdOut
-#define FT8XXEMU_EmulatorFlags BT8XXEMU_EmulatorFlags
-#define FT8XXEMU_FrameBufferChanged BT8XXEMU_FrameBufferChanged
-#define FT8XXEMU_FrameBufferComplete BT8XXEMU_FrameBufferComplete
-#define FT8XXEMU_FrameChanged BT8XXEMU_FrameChanged
-#define FT8XXEMU_FrameSwap BT8XXEMU_FrameSwap
-#define FT8XXEMU_FrameFlags BT8XXEMU_FrameFlags
-#define FT8XXEMU_EmulatorParameters BT8XXEMU_EmulatorParameters
-#define FT8XXEMU_version BT8XXEMU_version
-#define FT8XXEMU_defaults BT8XXEMU_defaults
-#define FT8XXEMU_run BT8XXEMU_run
-#define FT8XXEMU_stop BT8XXEMU_stop
-#define FT8XXEMU_transfer BT8XXEMU_transfer
-#define FT8XXEMU_cs BT8XXEMU_cs
-#define FT8XXEMU_int BT8XXEMU_int
-#define FT8XXEMU_touchSetXY BT8XXEMU_touchSetXY
-#define FT8XXEMU_touchResetXY BT8XXEMU_touchResetXY
 
 #endif /* #ifndef BT8XXEMU_H */
 
