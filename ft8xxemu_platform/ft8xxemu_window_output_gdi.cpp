@@ -331,10 +331,11 @@ LRESULT WindowOutput::wndProc(UINT message, WPARAM wParam, LPARAM lParam)
 		EndPaint(m_HWnd, &ps);
 		break;
 	case WM_DESTROY:
-		PostQuitMessage(0);
+		// PostQuitMessage(0);
 		break;
 	case WM_CLOSE:
-		m_HWnd = NULL;
+		// m_HWnd = NULL;
+		m_Close = true;
 		break;
 	case WM_ERASEBKGND:
 		return (LRESULT)1; // Say we handled it.
@@ -382,8 +383,11 @@ void WindowOutput::setMode(int width, int height)
 	}
 }
 
-void WindowOutput::renderBuffer(bool output, bool changed)
+bool WindowOutput::renderBuffer(bool output, bool changed)
 {
+	if (m_Close)
+		return false;
+
 #if BT8XXEMU_GDI_DOUBLE_BUFFER
 	bool bufferSwitched = m_BufferSwitched ^ !changed;
 	bool bufferFlipping = m_BufferFlipping;
@@ -524,6 +528,8 @@ void WindowOutput::renderBuffer(bool output, bool changed)
 		SetWindowText(s_HWnd, (LPCTSTR)newTitle.str().c_str());
 		*/
 	});
+
+	return true;
 }
 
 void WindowOutput::enableMouse(bool enabled)

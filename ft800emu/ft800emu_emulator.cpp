@@ -96,9 +96,7 @@ int Emulator::coprocessorThread()
 int Emulator::audioThread()
 {
 #ifdef WIN32
-#ifndef FTEMU_SDL2
-	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
-#endif
+	bool coInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
 #endif
 
 	//FTEMU_printf("go sound thread");
@@ -132,10 +130,8 @@ int Emulator::audioThread()
 	m_ThreadAudio.reset();
 
 #ifdef WIN32
-#ifndef FTEMU_SDL2
-	if (coInitHR == S_OK)
+	if (coInit)
 		CoUninitialize();
-#endif
 #endif
 
 	return 0;
@@ -146,6 +142,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	masterThread(sync);
 
 	m_MasterRunning = false;
+
 	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		m_ThreadCoprocessor.reset();
@@ -169,9 +166,12 @@ void Emulator::finalMasterThread(bool sync, int flags)
 			m_ThreadMCU.kill();
 		}
 	}
-
-	FTEMU_message("Wait for MCU");
-	m_StdThreadMCU.join();
+	
+	if (sync)
+	{
+		FTEMU_message("Wait for MCU");
+		m_StdThreadMCU.join();
+	}
 
 	FTEMU_message("Wait for Audio");
 	m_StdThreadAudio.join();
@@ -215,13 +215,14 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	delete m_Memory;
 	m_Memory = NULL;
 
-	m_EmulatorRunning = false;
 	FTEMU_message("Emulator stopped running\n");
 
 #ifdef WIN32
 	if (m_CoInit)
 		CoUninitialize();
 #endif
+
+	m_EmulatorRunning = false;
 }
 
 Emulator::Emulator()
@@ -240,7 +241,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_InitMutexGlobal.lock();
 
 #ifdef WIN32
-	m_CoInit = (CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
+	m_CoInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
 #endif
 
 	BT8XXEMU_EmulatorMode mode = params.Mode;
@@ -397,15 +398,17 @@ void Emulator::stop()
 
 	m_InitMutexGlobal.unlock();
 
-	if (!m_ThreadMCU.current())
+	// Wait for emulator threads thread to finish if async run or if not called from the MCU thread
+	if (!m_Main || !m_ThreadMCU.current())
 	{
-		FTEMU_message("Wait for MCU thread");
+		FTEMU_message("Wait for emulator threads");
 		while (m_EmulatorRunning) // TODO: Mutex?
 		{
 			FT8XXEMU::System::delay(1);
 		}
 	}
 
+	// Calling thread is MCU thread, reset link
 	if (m_MainPerformance && !m_BackgroundPerformance && !m_Main && m_ThreadMCU.current())
 	{
 		m_ThreadMCU.reset();
@@ -414,6 +417,10 @@ void Emulator::stop()
 	FTEMU_message("Stop ok\n");
 }
 
+bool Emulator::isRunning()
+{
+	return m_MasterRunning;
+}
 
 uint8_t Emulator::transfer(uint8_t data)
 {

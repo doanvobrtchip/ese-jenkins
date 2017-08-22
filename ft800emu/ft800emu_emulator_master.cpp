@@ -426,6 +426,7 @@ int Emulator::masterThread(bool sync)
 						frameFlags |= BT8XXEMU_FrameSwap;
 					if (!m_Graphics(reg_pclk != 0, m_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
 					{
+						FTEMU_message("Window closed");
 						m_CloseCalled = true;
 						if (m_Close)
 						{
@@ -442,11 +443,8 @@ int Emulator::masterThread(bool sync)
 				}
 				else
 				{
-					m_WindowOutput->renderBuffer(reg_pclk != 0, renderProcessed);
-					/*
-					if (!m_WindowOutput->update())
+					if (!m_WindowOutput->renderBuffer(reg_pclk != 0, renderProcessed))
 					{
-						// FIXME: 2017-08-09: Need to update mechanism for detecting window close!
 						m_CloseCalled = true;
 						if (m_Close)
 						{
@@ -455,12 +453,11 @@ int Emulator::masterThread(bool sync)
 						}
 						else
 						{
-							FTEMU_printf("Kill MCU thread\n");
+							FTEMU_warning("Kill MCU thread");
 							m_ThreadMCU.kill();
 							return 0;
 						}
 					}
-					*/
 				}
 			}
 			unsigned long flipDelta = m_System->getMicros() - flipStart;

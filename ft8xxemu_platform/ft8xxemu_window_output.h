@@ -66,8 +66,11 @@ public:
 	void onResetTouchScreenXY(std::function<void(int)> f) { m_ResetTouchScreenXY = f; }
 	void onSetTouchScreenXY(std::function<void(int, int, int, int)> f) { m_SetTouchScreenXY = f; }
 
+	// Update window output dimensions
 	void setMode(int width, int height);
-	void renderBuffer(bool output, bool changed);
+
+	// Render current buffer, return false if window is already closed
+	bool renderBuffer(bool output, bool changed);
 
 
 	argb8888 *getBufferARGB8888();
@@ -100,6 +103,8 @@ private:
 
 	HINSTANCE m_HInstance = NULL;
 	HWND m_HWnd = NULL;
+
+	bool m_Close = false;
 
 #if !BT8XXEMU_GRAPHICS_USE_STRETCHDIBITS
 	HBITMAP m_Buffer = NULL;

@@ -45,6 +45,7 @@ class IEmulator
 {
 public:
 	virtual void stop() = 0;
+	virtual bool isRunning() = 0;
 
 	virtual uint8_t transfer(uint8_t data) = 0;
 	virtual void cs(bool cs) = 0;
@@ -99,6 +100,7 @@ public:
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
+	virtual bool isRunning() override;
 
 	virtual uint8_t transfer(uint8_t data) override;
 	virtual void cs(bool cs) override;
