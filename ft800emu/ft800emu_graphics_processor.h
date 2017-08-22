@@ -108,12 +108,22 @@ public:
 	bool getDebugLimiterEffective();
 	int getDebugLimiterIndex();
 
+public:
+	inline FT8XXEMU::System *system() { return m_System; }
+	inline Memory *memory() { return m_Memory; }
+	inline Touch *touch() { return m_Touch; }
+
 private:
 	struct ThreadInfo;
 	std::vector<std::unique_ptr<ThreadInfo> > m_ThreadInfos;
 
 	void resizeThreadInfos(int size);
 	void launchGraphicsProcessorThread(ThreadInfo *li);
+
+private:
+	FT8XXEMU::System *m_System = 0;
+	Memory *m_Memory = 0;
+	Touch *m_Touch = 0;
 
 private:
 	GraphicsProcessor(const GraphicsProcessor &) = delete;
