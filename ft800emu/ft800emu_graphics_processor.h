@@ -169,7 +169,7 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 	int *m_DebugTraceStackSize = NULL;
 
 private:
-	template <bool bugTrace>
+	template <bool debugTrace>
 	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo);
 	void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo);
 
