@@ -14,7 +14,7 @@
 
 namespace FT800EMU {
 
-static const uint16_t s_AudioRom[] = {
+static const uint16_t c_AudioRom[] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 65259, 8320, 49023,
 65535, 65535, 64511, 65427, 16385, 8480, 61135, 0, 8194, 23668, 63484,
 39640, 11163, 58823, 65535, 1, 0, 61307, 64750, 2312, 65535, 33416,
@@ -3767,7 +3767,7 @@ static int16_t isin(uint16_t th)
 
 AudioProcessor::AudioProcessor()
 {
-	memcpy(mem, s_AudioRom, sizeof(mem));
+	memcpy(mem, c_AudioRom, sizeof(mem));
     state = 0;
     pcV = cV;
     pdV = dV;

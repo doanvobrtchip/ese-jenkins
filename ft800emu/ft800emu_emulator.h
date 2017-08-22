@@ -195,6 +195,14 @@ private:
 	int m_ProfileFrameDeltaIndex = 0;
 #endif
 
+	bool m_KeySetDebugMode = false;
+	bool m_KeyIncDebugMultiplier = false;
+	bool m_KeyDecDebugMultiplier = false;
+	bool m_KeyResetDebugMultiplier = false;
+	bool m_KeyIncDebugLimiter = false;
+	bool m_KeyDecDebugLimiter = false;
+	bool m_KeyResetDebugLimiter = false;
+
 private:
 	Emulator(const Emulator &) = delete;
 	Emulator &operator=(const Emulator &) = delete;

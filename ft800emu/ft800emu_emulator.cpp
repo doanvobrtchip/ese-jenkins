@@ -84,96 +84,91 @@ const uint8_t bayerDiv4[2][2] = {
 void Emulator::debugShortkeys()
 {
 	{
-		static bool setDebugMode = false;
-		if (setDebugMode)
+		if (m_KeySetDebugMode)
 		{
-			setDebugMode = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3);
+			m_KeySetDebugMode = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F3))
 		{
 			m_GraphicsProcessor->setDebugMode((m_GraphicsProcessor->getDebugMode() + 1) % FT800EMU_DEBUGMODE_COUNT);
-			setDebugMode = true;
+			m_KeySetDebugMode = true;
 		}
 	}
 
 	{
-		static bool incDebugMultiplier = false;
-		if (incDebugMultiplier)
+		if (m_KeyIncDebugMultiplier)
 		{
-			incDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS);
+			m_KeyIncDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADPLUS))
 		{
 			if (m_GraphicsProcessor->getDebugMode())
 				m_GraphicsProcessor->setDebugMultiplier(m_GraphicsProcessor->getDebugMultiplier() + 1);
-			incDebugMultiplier = true;
+			m_KeyIncDebugMultiplier = true;
 		}
 	}
 
 	{
-		static bool decDebugMultiplier = false;
-		if (decDebugMultiplier)
+		static bool m_KeyDecDebugMultiplier = false;
+		if (m_KeyDecDebugMultiplier)
 		{
-			decDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS);
+			m_KeyDecDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
 		{
 			if (m_GraphicsProcessor->getDebugMode())
 				m_GraphicsProcessor->setDebugMultiplier(max(m_GraphicsProcessor->getDebugMultiplier() - 1, 1));
-			decDebugMultiplier = true;
+			m_KeyDecDebugMultiplier = true;
 		}
 	}
 
 	{
-		static bool resetDebugMultiplier = false;
-		if (resetDebugMultiplier)
+		static bool m_KeyResetDebugMultiplier = false;
+		if (m_KeyResetDebugMultiplier)
 		{
-			resetDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH);
+			m_KeyResetDebugMultiplier = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADSLASH))
 		{
 			if (m_GraphicsProcessor->getDebugMode())
 				m_GraphicsProcessor->setDebugMultiplier(1);
-			resetDebugMultiplier = true;
+			m_KeyResetDebugMultiplier = true;
 		}
 	}
 
 	{
-		static bool incDebugLimiter = false;
-		if (incDebugLimiter)
+		if (m_KeyIncDebugLimiter)
 		{
-			incDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8);
+			m_KeyIncDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F8))
 		{
 			m_GraphicsProcessor->setDebugLimiter(m_GraphicsProcessor->getDebugLimiter() + 1);
-			incDebugLimiter = true;
+			m_KeyIncDebugLimiter = true;
 		}
 	}
 
 	{
-		static bool decDebugLimiter = false;
-		if (decDebugLimiter)
+		if (m_KeyDecDebugLimiter)
 		{
-			decDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7);
+			m_KeyDecDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7))
 		{
 			m_GraphicsProcessor->setDebugLimiter(max(m_GraphicsProcessor->getDebugLimiter() - 1, 0));
-			decDebugLimiter = true;
+			m_KeyDecDebugLimiter = true;
 		}
 	}
 
 	{
-		static bool resetDebugLimiter = false;
-		if (resetDebugLimiter)
+		if (m_KeyResetDebugLimiter)
 		{
-			resetDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6);
+			m_KeyResetDebugLimiter = m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6);
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F6))
 		{
 			m_GraphicsProcessor->setDebugLimiter(0);
-			resetDebugLimiter = true;
+			m_KeyResetDebugLimiter = true;
 		}
 	}
 }

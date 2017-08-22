@@ -276,29 +276,29 @@ BT8XXEMU_FORCE_INLINE uint8_t Memory::rawReadU8(ramaddr address)
 }
 
 #ifdef FT810EMU_MODE
-static const uint8_t m_RomFT810[FT800EMU_ROM_SIZE] = {
+static const uint8_t c_RomFT810[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft810.h"
 };
 #else
-static const uint8_t m_RomFT800[FT800EMU_ROM_SIZE] = {
+static const uint8_t c_RomFT800[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft800.h"
 };
-static const uint8_t m_RomFT801[FT800EMU_ROM_SIZE] = {
+static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft801.h"
 };
 #endif
 
 #ifdef FT800EMU_OTP_SIZE
-static const uint8_t m_OTP810[FT800EMU_OTP_SIZE] = {
+static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_810.h"
 };
-static const uint8_t m_OTP811[FT800EMU_OTP_SIZE] = {
+static const uint8_t c_OTP811[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_811.h"
 };
-static const uint8_t m_OTP812[FT800EMU_OTP_SIZE] = {
+static const uint8_t c_OTP812[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_812.h"
 };
-static const uint8_t m_OTP813[FT800EMU_OTP_SIZE] = {
+static const uint8_t c_OTP813[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_813.h"
 };
 #endif
@@ -329,10 +329,10 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #ifdef FT810EMU_MODE
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT810, sizeof(m_RomFT810));
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT810, sizeof(c_RomFT810));
 #else
-		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT801, sizeof(m_RomFT801));
-		else memcpy(&m_Ram[FT800EMU_ROM_INDEX], m_RomFT800, sizeof(m_RomFT800));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT801, sizeof(c_RomFT801));
+		else memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT800, sizeof(c_RomFT800));
 #endif
 	}
 
@@ -352,10 +352,10 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #ifdef FT810EMU_MODE
-		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], m_OTP813, sizeof(m_OTP813));
-		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], m_OTP812, sizeof(m_OTP812));
-		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&m_Ram[RAM_JTBOOT], m_OTP811, sizeof(m_OTP811));
-		else memcpy(&m_Ram[RAM_JTBOOT], m_OTP810, sizeof(m_OTP810));
+		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], c_OTP813, sizeof(c_OTP813));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], c_OTP812, sizeof(c_OTP812));
+		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&m_Ram[RAM_JTBOOT], c_OTP811, sizeof(c_OTP811));
+		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP810, sizeof(c_OTP810));
 #endif
 	}
 
@@ -802,12 +802,6 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 		break;
 	}
 }
-
-static uint32_t m_OverrideRasterY = 0;
-#ifndef FT810EMU_MODE
-static int m_HasCachedTouchRawXY = 0;
-static uint32_t m_CachedTouchRawXY = 0xFFFFFFFF;
-#endif
 
 uint32_t Memory::coprocessorReadU32(ramaddr address)
 {

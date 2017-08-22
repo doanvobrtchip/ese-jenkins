@@ -151,6 +151,12 @@ private:
 	int m_FifoMCUReadCounter = 0;
 #endif
 
+	uint32_t m_OverrideRasterY = 0;
+#ifndef FT810EMU_MODE
+	int m_HasCachedTouchRawXY = 0;
+	uint32_t m_CachedTouchRawXY = 0xFFFFFFFF;
+#endif
+
 	bool m_ReadDelay = false;
 
 	bool m_CpuReset = false;

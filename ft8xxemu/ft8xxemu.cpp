@@ -42,13 +42,13 @@
 
 static BT8XXEMU::IEmulator *s_Emulator = 0;
 
-static const char *s_Version =
+static const char *c_Version =
 	"FT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013 - 2015  Future Technology Devices International Ltd\n"
 	"Author: Jan Boon <jan.boon@kaetemi.be>";
 BT8XXEMU_API const char *BT8XXEMU_version()
 {
-	return s_Version;
+	return c_Version;
 }
 
 BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode)
