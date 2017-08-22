@@ -89,7 +89,7 @@ typedef std::stringstream tstringstream;
 
 
 // Types
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 
 namespace FT8XXEMU {

@@ -36,6 +36,9 @@
 
 #include "ft800emu_vc.h"
 
+// Reduce CPU usage when REG_PCLK is zero
+#define FT800EMU_REG_PCLK_ZERO_REDUCE 1
+
 namespace FT800EMU {
 
 namespace {

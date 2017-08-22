@@ -7,7 +7,7 @@
 #ifndef BT8XXEMU_H
 #define BT8XXEMU_H
 
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
 #define BT8XXEMU_VERSION_API 11
@@ -169,7 +169,48 @@ typedef struct
 
 } BT8XXEMU_EmulatorParameters;
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
+
+namespace BT8XXEMU {
+
+class Emulator
+{
+public:
+	virtual void stop() = 0;
+	virtual bool isRunning() = 0;
+
+	virtual uint8_t transfer(uint8_t data) = 0;
+	virtual void cs(bool cs) = 0;
+	virtual bool hasInterrupt() = 0;
+
+	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
+	virtual void touchResetXY(int idx) = 0;
+
+	virtual uint8_t *getRam() = 0;
+	// virtual uint8_t *getFlash() = 0;
+	virtual const uint32_t *getDisplayList() = 0;
+	virtual void poke() = 0;
+	virtual int *getDisplayListCoprocessorWrites() = 0;
+	virtual void clearDisplayListCoprocessorWrites() = 0;
+
+	virtual bool getDebugLimiterEffective() = 0;
+	virtual int getDebugLimiterIndex() = 0;
+	virtual void setDebugLimiter(int debugLimiter) = 0;
+	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = 0;
+
+};
+
+}
+
+typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
+
+#else
+
+typedef void BT8XXEMU_Emulator;
+
+#endif /* #ifdef __cplusplus */
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -184,33 +225,42 @@ BT8XXEMU_API const char *BT8XXEMU_version();
 BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
 
 // Run the emulator on the current thread. Returns when the emulator is fully stopped when a Main function is supplied, returns when the emulator is fully started otherwise. Parameter versionApi must be set to BT8XXEMU_VERSION_API
-BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParameters *params);
+BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params);
 
-// Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped. Must be called by the MCU thread if no Main callback is supplied to ensure the application exit waits until all threads have finished processing.
-BT8XXEMU_API void BT8XXEMU_stop();
+// Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped. Safe to call multiple times.
+BT8XXEMU_API void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator);
+
+// Destroy the emulator. Calls BT8XXEMU_stop implicitly. Emulator must be destroyed before process exits.
+BT8XXEMU_API void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator);
+
+// Poll if the emulator is still running. Returns 0 when the output window has been closed, or when the emulator has been stopped.
+BT8XXEMU_API int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
 
 /////////////
 // RUNTIME //
 /////////////
 
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
-BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(uint8_t data);
+BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data);
+
+// Identical to BT8XXEMU_transfer. Transfer data to the last emulator selected by BT8XXEMU_cs. Supports only a single MCU thread
+BT8XXEMU_API extern uint8_t BT8XXEMU_transferSelect(uint8_t data);
 
 // Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-BT8XXEMU_API extern void BT8XXEMU_cs(int cs);
+BT8XXEMU_API extern void BT8XXEMU_cs(BT8XXEMU_Emulator *, int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
-BT8XXEMU_API extern int BT8XXEMU_hasInterrupt();
+BT8XXEMU_API extern int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator);
 
 //////////////
 // ADVANCED //
 //////////////
 
 // Set touch XY. Param idx 0..4. Call on every frame during mouse down or touch when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchSetXY(int idx, int x, int y, int pressure);
+BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int x, int y, int pressure);
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchResetXY(int idx);
+BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
 
 #ifdef __cplusplus 
 } /* extern "C" */

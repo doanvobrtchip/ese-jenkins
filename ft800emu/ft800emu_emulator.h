@@ -16,10 +16,9 @@
 // #include <...>
 
 // Number of frame times to include in profiling log
+#ifndef BT8XXEMU_PROFILE_FRAMEDELTA
 #define BT8XXEMU_PROFILE_FRAMEDELTA (60 * 20)
-
-// Reduce CPU usage when REG_PCLK is zero
-#define FT800EMU_REG_PCLK_ZERO_REDUCE 1
+#endif
 
 // System includes
 #include <string>
@@ -27,48 +26,13 @@
 #include <mutex>
 
 // Project includes (include standard stuff for user)
-#include "ft8xxemu.h"
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_inttypes.h"
 #include "ft8xxemu_thread_state.h"
 
 #ifndef BT8XXEMU_EMULATOR_H
 #define BT8XXEMU_EMULATOR_H
-namespace BT8XXEMU {
 
-/**
-* IEmulator
-* \brief IEmulator
-* \date 2011-08-04
-* \author Jan Boon (Kaetemi)
-*/
-class IEmulator
-{
-public:
-	virtual void stop() = 0;
-	virtual bool isRunning() = 0;
-
-	virtual uint8_t transfer(uint8_t data) = 0;
-	virtual void cs(bool cs) = 0;
-	virtual bool hasInterrupt() = 0;
-
-	virtual void touchSetXY(int idx, int x, int y, int pressure) = 0;
-	virtual void touchResetXY(int idx) = 0;
-
-	virtual uint8_t *getRam() = 0;
-	// virtual uint8_t *getFlash() = 0;
-	virtual const uint32_t *getDisplayList() = 0;
-	virtual void poke() = 0;
-	virtual int *getDisplayListCoprocessorWrites() = 0;
-	virtual void clearDisplayListCoprocessorWrites() = 0;
-
-	virtual bool getDebugLimiterEffective() = 0;
-	virtual int getDebugLimiterIndex() = 0;
-	virtual void setDebugLimiter(int debugLimiter) = 0;
-	virtual void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = 0;
-
-};
-
-}
 #endif
 
 namespace FT8XXEMU {
@@ -92,7 +56,7 @@ namespace FT800EMU {
  * \date 2011-05-29 19:54GMT
  * \author Jan Boon (Kaetemi)
  */
-class Emulator : public BT8XXEMU::IEmulator
+class Emulator : public BT8XXEMU::Emulator
 {
 public:
 	Emulator();

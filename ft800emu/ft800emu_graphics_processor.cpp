@@ -50,7 +50,7 @@
 #endif
 
 // Project includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_thread_state.h"
 #include "ft8xxemu_window_output.h"

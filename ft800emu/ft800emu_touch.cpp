@@ -12,7 +12,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <string.h>
 
 // Project includes
-#include "ft8xxemu.h"
+#include "bt8xxemu.h"
 #include "ft800emu_vc.h"
 #include "ft8xxemu_system.h"
 #include "ft800emu_memory.h"

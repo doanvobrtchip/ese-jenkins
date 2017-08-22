@@ -20,7 +20,7 @@
 #include <memory>
 
 // Project includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 #ifndef BT8XXEMU_NODEFS
 #ifdef FT810EMU_MODE

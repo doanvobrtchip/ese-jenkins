@@ -26,7 +26,7 @@
 #include <assert.h>
 
 // Project includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 #include "ft8xxemu_system_win32.h"
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_thread_state.h"
@@ -43,7 +43,9 @@ namespace FT8XXEMU {
 namespace /* anonymous */ {
 
 std::mutex s_LoopMutex;
-std::thread s_LoopThread;
+struct AutoDetach { ~AutoDetach() { if (Thread.joinable()) Thread.detach(); } std::thread Thread; };
+AutoDetach s_AutoDetach;
+std::thread &s_LoopThread = s_AutoDetach.Thread;
 int s_LoopActive = 0;
 concurrency::concurrent_queue<std::function<void()>> s_LoopQueue;
 DWORD s_LoopThreadId = 0;

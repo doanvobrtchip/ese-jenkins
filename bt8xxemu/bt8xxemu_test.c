@@ -3,6 +3,7 @@
  * Author: Jan Boon (jan.boon@kaetemi.be)
  */
 
-#include "ft8xxemu.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_diag.h"
 
 /* end of file */

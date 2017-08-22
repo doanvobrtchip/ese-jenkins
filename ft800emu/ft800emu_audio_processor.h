@@ -10,7 +10,7 @@
 #define FT800EMU_AUDIO_PROCESSOR_H
 
 // System includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 // Project includes
 

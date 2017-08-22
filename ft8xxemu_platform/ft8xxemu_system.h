@@ -19,8 +19,8 @@
 #include <memory>
 
 // Project includes
-#include "ft8xxemu.h"
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_inttypes.h"
 
 // Platform includes
 #ifdef WIN32

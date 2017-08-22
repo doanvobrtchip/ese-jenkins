@@ -1,0 +1,23 @@
+
+FILE(GLOB SRCS ../bt8xxemu/*.cpp)
+FILE(GLOB HDRS ../bt8xxemu/*.h)
+
+ADD_LIBRARY(bt8xxemu_static
+  ${SRCS}
+  ${HDRS}
+)
+
+IF (WITH_FT800EMU)
+  TARGET_LINK_LIBRARIES(bt8xxemu_static
+    ft800emu
+  )
+ENDIF (WITH_FT800EMU)
+
+IF (WITH_FT810EMU)
+  TARGET_LINK_LIBRARIES(bt8xxemu_static
+    ft810emu
+  )
+ENDIF (WITH_FT810EMU)
+
+SET_TARGET_PROPERTIES(bt8xxemu_static PROPERTIES
+  COMPILE_DEFINITIONS "BT8XXEMU_STATIC")

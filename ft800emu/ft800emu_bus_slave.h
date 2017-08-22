@@ -13,7 +13,7 @@
 
 #ifndef FT800EMU_BUS_SLAVE_H
 #define FT800EMU_BUS_SLAVE_H
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 // System includes
 #include <stdlib.h>

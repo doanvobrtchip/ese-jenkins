@@ -13,8 +13,8 @@
 
 #ifndef FT800EMU_DEFS_H
 #define FT800EMU_DEFS_H
-#include "ft8xxemu.h"
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_inttypes.h"
 
 
 //! Display list size

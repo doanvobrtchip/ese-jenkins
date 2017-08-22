@@ -13,45 +13,47 @@
 
 #include <Windows.h>
 
-#include <ft8xxemu.h>
+#include <bt8xxemu.h>
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
 
 #define FT800EMU_XBU_FILE "xbu/SCATTER.XBU"
 
+BT8XXEMU_Emulator *s_Emulator;
+
 void swrbegin(size_t address)
 {
-	BT8XXEMU_cs(1);
+	BT8XXEMU_cs(s_Emulator, 1);
 
-	BT8XXEMU_transfer((2 << 6) | ((address >> 16) & 0x3F));
-	BT8XXEMU_transfer((address >> 8) & 0xFF);
-	BT8XXEMU_transfer(address & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, (2 << 6) | ((address >> 16) & 0x3F));
+	BT8XXEMU_transfer(s_Emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, address & 0xFF);
 	// BT8XXEMU_transfer(0x00);
 }
 
 void swr8(uint8_t value)
 {
-	BT8XXEMU_transfer(value);
+	BT8XXEMU_transfer(s_Emulator, value);
 }
 
 void swr16(uint16_t value)
 {
-	BT8XXEMU_transfer(value & 0xFF);
-	BT8XXEMU_transfer((value >> 8) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, value & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, (value >> 8) & 0xFF);
 }
 
 void swr32(uint32_t value)
 {
-	BT8XXEMU_transfer(value & 0xFF);
-	BT8XXEMU_transfer((value >> 8) & 0xFF);
-	BT8XXEMU_transfer((value >> 16) & 0xFF);
-	BT8XXEMU_transfer((value >> 24) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, value & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, (value >> 8) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, (value >> 16) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, (value >> 24) & 0xFF);
 }
 
 void swrend()
 {
-	BT8XXEMU_cs(0);
+	BT8XXEMU_cs(s_Emulator, 0);
 }
 
 void wr32(size_t address, uint32_t value)
@@ -63,20 +65,20 @@ void wr32(size_t address, uint32_t value)
 
 uint32_t rd32(size_t address)
 {
-	BT8XXEMU_cs(1);
+	BT8XXEMU_cs(s_Emulator, 1);
 
-	BT8XXEMU_transfer((address >> 16) & 0x3F);
-	BT8XXEMU_transfer((address >> 8) & 0xFF);
-	BT8XXEMU_transfer(address & 0xFF);
-	BT8XXEMU_transfer(0x00);
+	BT8XXEMU_transfer(s_Emulator, (address >> 16) & 0x3F);
+	BT8XXEMU_transfer(s_Emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, address & 0xFF);
+	BT8XXEMU_transfer(s_Emulator, 0x00);
 
 	uint32_t value;
-	value = BT8XXEMU_transfer(0);
-	value |= BT8XXEMU_transfer(0) << 8;
-	value |= BT8XXEMU_transfer(0) << 16;
-	value |= BT8XXEMU_transfer(0) << 24;
+	value = BT8XXEMU_transfer(s_Emulator, 0);
+	value |= BT8XXEMU_transfer(s_Emulator, 0) << 8;
+	value |= BT8XXEMU_transfer(s_Emulator, 0) << 16;
+	value |= BT8XXEMU_transfer(s_Emulator, 0) << 24;
 
-	BT8XXEMU_cs(0);
+	BT8XXEMU_cs(s_Emulator, 0);
 	return value;
 }
 
@@ -128,11 +130,12 @@ static bool okwrite = false;
 
 static int lastround = 0;
 
-void loop()
+bool loop()
 {
 	if (!s_F)
 	{
 		Sleep(10);
+		return false;
 	}
 	else
 	{
@@ -241,6 +244,8 @@ void loop()
 			FT800EMU::System.delay(3000);*/
 		//}
 	}
+
+	return s_F != NULL;
 }
 
 void keyboard()
@@ -278,10 +283,11 @@ int main(int, char* [])
 		| BT8XXEMU_EmulatorEnableMainPerformance
 		;
 	params.ReduceGraphicsThreads = 2;
-	BT8XXEMU_run(BT8XXEMU_VERSION_API, &params);
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &s_Emulator, &params);
 	setup();
 	while (!s_Closed)
 		loop();
-	BT8XXEMU_stop();
+	BT8XXEMU_destroy(s_Emulator);
+	s_Emulator = NULL;
 	return 0;
 }
