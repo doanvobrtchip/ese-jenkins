@@ -15,7 +15,11 @@
 #define FT800EMU_EMULATOR_H
 // #include <...>
 
+// Number of frame times to include in profiling log
 #define BT8XXEMU_PROFILE_FRAMEDELTA (60 * 20)
+
+// Reduce CPU usage when REG_PCLK is zero
+#define FT800EMU_REG_PCLK_ZERO_REDUCE 1
 
 // System includes
 #include <string>

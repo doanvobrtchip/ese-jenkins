@@ -123,7 +123,7 @@ BT8XXEMU_API uint8_t BT8XXEMU_transfer(uint8_t data)
 
 BT8XXEMU_API void BT8XXEMU_cs(int cs)
 {
-	s_Emulator->cs(cs);
+	s_Emulator->cs(cs != 0);
 }
 
 BT8XXEMU_API int BT8XXEMU_hasInterrupt()
