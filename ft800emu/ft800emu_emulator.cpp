@@ -37,10 +37,6 @@
 #include "ft800emu_audio_render.h"
 #include "ft800emu_audio_processor.h"
 
-#include "ft8xxemu_minmax.h"
-
-#include "ft800emu_vc.h"
-
 // Enable or disable debug messages
 #define FT800EMU_DEBUG 0
 

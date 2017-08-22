@@ -29,15 +29,10 @@
 #include "ft8xxemu_keyboard_input.h"
 #include "ft8xxemu_keyboard_keys.h"
 #include "ft8xxemu_window_output.h"
-#include "ft8xxemu_audio_output.h"
 
-#include "ft800emu_bus_slave.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_touch.h"
 #include "ft800emu_graphics_processor.h"
-#include "ft800emu_coprocessor.h"
-
-#include "ft8xxemu_minmax.h"
 
 #include "ft800emu_vc.h"
 
@@ -302,6 +297,7 @@ int Emulator::masterThread(bool sync)
 			{
 				m_SkipOn = false;
 				m_DegradeOn = false;
+				hasChanged = false; // Inaccurate
 			}
 			unsigned long procDelta = m_System->getMicros() - procStart;
 #ifdef BT8XXEMU_PROFILE_FRAMEDELTA

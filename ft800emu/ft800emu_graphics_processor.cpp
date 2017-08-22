@@ -1621,6 +1621,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Left
 						if (x1lw_px == x1lw_px_sc) // Check scissor
 						{
+							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomleft'
 							const int x = x1lw_px_sc;
 							const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
@@ -1631,6 +1632,7 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Right
 						if (x2lw_px == x2lw_px_sc) // Check scissor
 						{
+							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomright'
 							const int x = x2lw_px_sc - 1;
 							const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
