@@ -282,5 +282,6 @@ int main(int, char* [])
 	setup();
 	while (!s_Closed)
 		loop();
+	BT8XXEMU_stop();
 	return 0;
 }

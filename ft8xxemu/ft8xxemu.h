@@ -183,10 +183,10 @@ BT8XXEMU_API const char *BT8XXEMU_version();
 // Initialize the default emulator parameters
 BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
 
-// Run the emulator on the current thread. Returns when the emulator is fully stopped. Parameter versionApi must be set to BT8XXEMU_VERSION_API
+// Run the emulator on the current thread. Returns when the emulator is fully stopped when a Main function is supplied, returns when the emulator is fully started otherwise. Parameter versionApi must be set to BT8XXEMU_VERSION_API
 BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, const BT8XXEMU_EmulatorParameters *params);
 
-// Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped
+// Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped. Must be called by the MCU thread if no Main callback is supplied to ensure the application exit waits until all threads have finished processing.
 BT8XXEMU_API void BT8XXEMU_stop();
 
 /////////////

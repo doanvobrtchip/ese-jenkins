@@ -426,17 +426,21 @@ int Emulator::masterThread(bool sync)
 						frameFlags |= BT8XXEMU_FrameSwap;
 					if (!m_Graphics(reg_pclk != 0, m_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
 					{
-						FTEMU_message("Window closed");
+						FTEMU_message("Graphics output closed");
 						m_CloseCalled = true;
 						if (m_Close)
 						{
 							m_Close();
 							return 0;
 						}
+						else if (sync)
+						{
+							FTEMU_warning("Kill controlled MCU thread, no Close callback");
+							m_ThreadMCU.kill();
+							return 0;
+						}
 						else
 						{
-							FTEMU_warning("Kill MCU thread");
-							m_ThreadMCU.kill();
 							return 0;
 						}
 					}
@@ -445,16 +449,21 @@ int Emulator::masterThread(bool sync)
 				{
 					if (!m_WindowOutput->renderBuffer(reg_pclk != 0, renderProcessed))
 					{
+						FTEMU_message("Window output closed");
 						m_CloseCalled = true;
 						if (m_Close)
 						{
 							m_Close();
 							return 0;
 						}
+						else if (sync)
+						{
+							FTEMU_warning("Kill controlled MCU thread, no Close callback");
+							m_ThreadMCU.kill();
+							return 0;
+						}
 						else
 						{
-							FTEMU_warning("Kill MCU thread");
-							m_ThreadMCU.kill();
 							return 0;
 						}
 					}

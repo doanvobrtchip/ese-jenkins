@@ -252,6 +252,8 @@ bool WindowOutput::update()
 
 WindowOutput::~WindowOutput()
 {
+	FTEMU_message("Destroy GDI window output");
+
 	immediateSync([&]() -> void {
 
 		s_WindowMap.erase(m_HWnd);

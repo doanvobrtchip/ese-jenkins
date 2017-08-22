@@ -160,7 +160,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		{
 			m_Close();
 		}
-		else
+		else if (sync)
 		{
 			FTEMU_warning("Kill MCU thread");
 			m_ThreadMCU.kill();
@@ -215,7 +215,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	delete m_Memory;
 	m_Memory = NULL;
 
-	FTEMU_message("Emulator stopped running\n");
+	FTEMU_message("Emulator stopped running");
 
 #ifdef WIN32
 	if (m_CoInit)
@@ -408,10 +408,16 @@ void Emulator::stop()
 		}
 	}
 
-	// Calling thread is MCU thread, reset link
+	// Calling thread is MCU thread, reset association
 	if (m_MainPerformance && !m_BackgroundPerformance && !m_Main && m_ThreadMCU.current())
 	{
 		m_ThreadMCU.reset();
+	}
+
+	// Join master thread to the finish when async run
+	if (!m_Main && m_StdThreadMaster.joinable())
+	{
+		m_StdThreadMaster.join();
 	}
 
 	FTEMU_message("Stop ok\n");
