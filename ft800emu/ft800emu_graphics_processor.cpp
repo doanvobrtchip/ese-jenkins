@@ -2374,7 +2374,7 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		uint32_t width =  Memory::rawReadU32(ram, bi + 136);
 		uint32_t height =  Memory::rawReadU32(ram, bi + 140);
 		uint32_t data =  Memory::rawReadU32(ram, bi + 144);
-		if (FT800EMU_DEBUG) m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u\n", ir, format, stride, width, height, data);
+		if (FT800EMU_DEBUG) m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
 
 		m_BitmapInfoMaster[ir].Source = data;
 		m_BitmapInfoMaster[ir].LayoutFormat = format;

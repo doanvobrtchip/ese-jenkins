@@ -17,7 +17,7 @@
 
 // Number of frame times to include in profiling log
 #ifndef BT8XXEMU_PROFILE_FRAMEDELTA
-#define BT8XXEMU_PROFILE_FRAMEDELTA (60 * 20)
+// #define BT8XXEMU_PROFILE_FRAMEDELTA (60 * 20)
 #endif
 
 // System includes
@@ -98,13 +98,14 @@ private:
 private:
 	volatile bool m_EmulatorRunning = false;
 
-	void(*m_Main)() = NULL;
-	void(*m_Keyboard)() = NULL;
-	void(*m_Close)() = NULL;
+	void(*m_Main)(void *sender, void *context) = NULL;
+	void(*m_Keyboard)(void *sender, void *context) = NULL;
+	void(*m_Close)(void *sender, void *context) = NULL;
 	int m_Flags = 0;
 	volatile bool m_MasterRunning = false;
 	bool m_DynamicDegrade = false;
 	uint32_t m_ExternalFrequency = 0;
+	void *m_UserContext;
 
 	bool m_DegradeOn = false;
 	int m_DegradeStage = 0;

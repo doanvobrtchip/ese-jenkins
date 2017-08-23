@@ -114,8 +114,8 @@ typedef enum
 
 typedef struct
 {
-	// Microcontroller main function. When not provided the calling thread is assumed to be the MCU thread
-	void(*Main)();
+	// Microcontroller main function. This will be run on a new thread managed by the emulator. When not provided the calling thread is assumed to be the MCU thread
+	void(*Main)(void *sender, void *context);
 	// See EmulatorFlags.
 	int Flags;
 	// Emulator mode
@@ -159,13 +159,16 @@ typedef struct
 	int(*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
 
 	// Interrupt handler
-	// void (*Interrupt)();
+	// void (*Interrupt)(void *sender, void *context);
 
 	// Log callback
 	void(*Log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message);
 
 	// Safe exit. Called when the emulator window is closed
-	void(*Close)();
+	void(*Close)(void *sender, void *context);
+
+	// User context that will be passed along to callbacks
+	void *UserContext;
 
 } BT8XXEMU_EmulatorParameters;
 

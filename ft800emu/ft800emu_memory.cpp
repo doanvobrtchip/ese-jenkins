@@ -117,7 +117,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 		case REG_DLSWAP:
 #if FT800EMU_DL_MEMLOG
-			FTEMU_printf("Write REG_DLSWAP %u\n", data);
+			FTEMU_message("Write REG_DLSWAP %u", data);
 #endif
 			// if (data == DLSWAP_FRAME && m_Ram[REG_PCLK] == 0)
 			if ((data == DLSWAP_FRAME || data == DLSWAP_LINE) && m_Ram[REG_PCLK] == 0)

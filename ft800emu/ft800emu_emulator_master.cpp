@@ -433,7 +433,7 @@ int Emulator::masterThread(bool sync)
 						m_CloseCalled = true;
 						if (m_Close)
 						{
-							m_Close();
+							m_Close(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext);
 							return 0;
 						}
 						else if (sync)
@@ -456,7 +456,7 @@ int Emulator::masterThread(bool sync)
 						m_CloseCalled = true;
 						if (m_Close)
 						{
-							m_Close();
+							m_Close(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext);
 							return 0;
 						}
 						else if (sync)

@@ -61,7 +61,7 @@ int Emulator::mcuThread()
 		m_InitCond.notify_one();
 	}
 	
-	m_Main();
+	m_Main(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext);
 
 	m_ThreadMCU.reset();
 	return 0;
@@ -158,7 +158,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		FTEMU_message("Late kill MCU thread");
 		if (m_Close)
 		{
-			m_Close();
+			m_Close(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext);
 		}
 		else if (sync)
 		{
@@ -273,10 +273,13 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_ExternalFrequency = params.ExternalFrequency;
 	m_BackgroundPerformance = (params.Flags & BT8XXEMU_EmulatorEnableBackgroundPerformance) == BT8XXEMU_EmulatorEnableBackgroundPerformance;
 	m_MainPerformance = (params.Flags & BT8XXEMU_EmulatorEnableMainPerformance) == BT8XXEMU_EmulatorEnableMainPerformance;
+	m_UserContext = params.UserContext;
 
 	m_System->onLog(params.Log);
 	m_System->setPrintStd((params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut);
 	m_System->overrideMCUDelay(params.MCUSleep);
+	m_System->setSender(static_cast<BT8XXEMU_Emulator *>(this));
+	m_System->setUserContext(params.UserContext);
 	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
 	assert(!m_Touch);
 	m_Touch = new Touch(m_System, mode, m_Memory);
@@ -420,7 +423,7 @@ void Emulator::stop()
 		m_StdThreadMaster.join();
 	}
 
-	FTEMU_message("Stop ok\n");
+	FTEMU_message("Stop ok");
 }
 
 bool Emulator::isRunning()
