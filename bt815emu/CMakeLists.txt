@@ -1,0 +1,23 @@
+
+FILE(GLOB SRCS ../ft800emu/*.cpp ../ft810emu/*.cpp *.cpp)
+FILE(GLOB HDRS ../ft800emu/*.h ../ft810emu/*.h ../reference/*.h *.h ../ft810emu/resources/*.h)
+
+FILE(GLOB FTRES ../reference/*.h resources/*.h)
+
+SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+SOURCE_GROUP("resources" FILES ${FTRES})
+
+ADD_LIBRARY(bt815emu
+  ${SRCS}
+  ${HDRS}
+)
+
+TARGET_LINK_LIBRARIES(bt815emu
+  ft8xxemu_platform)
+
+SET_TARGET_PROPERTIES(bt815emu PROPERTIES
+  COMPILE_DEFINITIONS "FT800EMU=BT815EMU;FT810EMU=BT815EMU;FT810EMU_MODE;BT815EMU_MODE")
+
+IF (FTEMU_PIC)
+  SET_TARGET_PROPERTIES(bt815emu PROPERTIES COMPILE_FLAGS -fPIC)
+ENDIF (FTEMU_PIC)

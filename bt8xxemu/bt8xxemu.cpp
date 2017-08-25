@@ -34,6 +34,20 @@ Author: Jan Boon <jan@no-break.space>
 #undef FT810EMU_MODE
 #endif
 
+// Include BT815EMU
+#ifdef FTEMU_HAVE_BT815EMU
+#undef FT800EMU_EMULATOR_H
+#define FT800EMU BT815EMU
+#define FT810EMU BT815EMU
+#define FT810EMU_MODE
+#define BT815EMU_MODE
+#include "ft800emu_emulator.h"
+#undef FT800EMU
+#undef FT810EMU
+#undef FT810EMU_MODE
+#undef BT815EMU_MODE
+#endif
+
 static BT8XXEMU_Emulator *s_EmulatorSelect = NULL;
 
 static const char *c_Version =
@@ -100,6 +114,15 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 		FT810EMU::Emulator *ft810emu = new FT810EMU::Emulator();
 		*emulator = ft810emu;
 		ft810emu->run(*params);
+		break;
+	}
+#endif
+#ifdef FTEMU_HAVE_BT815EMU
+	case BT8XXEMU_EmulatorBT815:
+	{
+		BT815EMU::Emulator *bt815emu = new BT815EMU::Emulator();
+		*emulator = bt815emu;
+		bt815emu->run(*params);
 		break;
 	}
 #endif
