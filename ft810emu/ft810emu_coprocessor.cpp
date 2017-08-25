@@ -12,12 +12,12 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 // Project includes
 #include "ft800emu_memory.h"
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
-#include "ft8xxemu_minmax.h"
 
 // using namespace ...;
 
@@ -476,7 +476,7 @@ void Ejpg::run(uint8_t *memory8,
 		uint32_t *pht = (uint32_t*)&memory8[ht];
 		size_t codesize;
 		uint16_t b = ~0;
-		for (codesize = 1; codesize <= min(nbits, (size_t)16); codesize++, pht++)
+		for (codesize = 1; codesize <= std::min(nbits, (size_t)16); codesize++, pht++)
 		{
 			b = (bits >> (64 - codesize)) & 0xFFFF;
 			b &= (1 << codesize) - 1;

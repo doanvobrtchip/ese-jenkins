@@ -23,6 +23,7 @@
 
 // System includes
 #include <thread>
+#include <algorithm>
 
 // Project includes
 #include "ft8xxemu_system.h"
@@ -49,19 +50,19 @@ const uint8_t bayerDiv16[4][4] = {
 	3, 11, 1, 9,
 	15, 7, 13, 5,
 };
-#define DITHERDIV16(val, x, y) min(15, ((val) + bayerDiv16[(x) & 0x3][(y) & 0x3]) >> 4)
+#define DITHERDIV16(val, x, y) std::min<uint8_t>(15, ((val) + bayerDiv16[(x) & 0x3][(y) & 0x3]) >> 4)
 const uint8_t bayerDiv8[4][4] = {
 	0, 4, 1, 5,
 	6, 2, 7, 3,
 	1, 5, 0, 4,
 	7, 3, 6, 2,
 };
-#define DITHERDIV8(val, x, y) min(31, ((val) + bayerDiv8[(x) & 0x3][(y) & 0x3]) >> 3)
+#define DITHERDIV8(val, x, y) std::min<uint8_t>(31, ((val) + bayerDiv8[(x) & 0x3][(y) & 0x3]) >> 3)
 const uint8_t bayerDiv4[2][2] = {
 	0, 2,
 	3, 1,
 };
-#define DITHERDIV4(val, x, y) min(63, ((val) + bayerDiv4[(x) & 0x1][(y) & 0x1]) >> 2)
+#define DITHERDIV4(val, x, y) std::min<uint8_t>(3, ((val) + bayerDiv4[(x) & 0x1][(y) & 0x1]) >> 2)
 
 }
 
@@ -572,7 +573,7 @@ void Emulator::debugShortkeys()
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_NUMPADMINUS))
 		{
 			if (m_GraphicsProcessor->getDebugMode())
-				m_GraphicsProcessor->setDebugMultiplier(max(m_GraphicsProcessor->getDebugMultiplier() - 1, 1));
+				m_GraphicsProcessor->setDebugMultiplier(std::max(m_GraphicsProcessor->getDebugMultiplier() - 1, 1));
 			m_KeyDecDebugMultiplier = true;
 		}
 	}
@@ -610,7 +611,7 @@ void Emulator::debugShortkeys()
 		}
 		else if (m_KeyboardInput->isKeyDown(BT8XXEMU_KEY_F7))
 		{
-			m_GraphicsProcessor->setDebugLimiter(max(m_GraphicsProcessor->getDebugLimiter() - 1, 0));
+			m_GraphicsProcessor->setDebugLimiter(std::max(m_GraphicsProcessor->getDebugLimiter() - 1, 0));
 			m_KeyDecDebugLimiter = true;
 		}
 	}

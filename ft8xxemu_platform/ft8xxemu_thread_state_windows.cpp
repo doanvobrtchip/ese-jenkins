@@ -17,6 +17,7 @@
 
 // System includes
 #include "ft8xxemu_system_win32.h"
+#include <avrt.h>
 
 // Project includes
 

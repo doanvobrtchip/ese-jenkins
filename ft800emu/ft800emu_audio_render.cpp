@@ -15,14 +15,13 @@
 #include "ft800emu_audio_render.h"
 
 // System includes
-#include <stdio.h>
+#include <algorithm>
 
 // Project includes
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_audio_output.h"
 #include "ft800emu_audio_processor.h"
 #include "ft800emu_memory.h"
-#include "ft8xxemu_minmax.h"
 #include "ft800emu_vc.h"
 
 // using namespace ...;
@@ -175,12 +174,12 @@ BT8XXEMU_FORCE_INLINE int16_t AudioRender::playback(uint32_t &playbackStart,
 
 				/* adjust predicted sample based on calculated difference: */
 				m_ADPCMPredictedSample += difference;
-				m_ADPCMPredictedSample = min(max(-32768, m_ADPCMPredictedSample), 32767); /* check for overflow */
+				m_ADPCMPredictedSample = std::min(std::max(-32768, m_ADPCMPredictedSample), 32767); /* check for overflow */
 
 				/* compute new stepsize */
 				/*adjust index into stepsize lookup table using originalSample: */
 				m_ADPCMIndex += c_ADPCMIndexTable[originalSample];
-				m_ADPCMIndex = min(max(0, m_ADPCMIndex), 88); /* check for overflow */
+				m_ADPCMIndex = std::min(std::max(0, m_ADPCMIndex), 88); /* check for overflow */
 
 				return (int16_t)((m_ADPCMPredictedSample * (int32_t)playbackVolume) >> 8);
 			}

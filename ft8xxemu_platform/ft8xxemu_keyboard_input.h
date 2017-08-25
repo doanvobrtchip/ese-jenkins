@@ -20,6 +20,9 @@
 // Project includes
 #include "ft8xxemu_system.h"
 
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+
 namespace FT8XXEMU {
 	class WindowOutput;
 

@@ -27,6 +27,7 @@
 #pragma comment(lib, "dinput8.lib")
 
 // System includes
+#include <sstream>
 
 // Project includes
 
@@ -112,43 +113,38 @@ void System::delayMicros(int us)
 	//Sleep(us / 1000);
 }
 
-
-
-tstring SystemWin32::GetWin32ErrorString(DWORD dwError)
+std::string SystemWin32::getWin32ErrorString(DWORD dwError)
 {
-	// convert win32 error number to string
-
 	LPTSTR lpMsgBuf;
 
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dwError,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL );
+	FormatMessageA(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		dwError,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,
+		0, NULL);
 
-	tstring result = tstring(lpMsgBuf);
+	std::string result = lpMsgBuf;
 
-    LocalFree(lpMsgBuf);
+	LocalFree(lpMsgBuf);
 
 	return result;
 }
 
-tstring SystemWin32::GetWin32LastErrorString()
+std::string SystemWin32::getWin32LastErrorString()
 {
-	// put the last win32 error in a string and add the error number too
 	DWORD dwError = GetLastError();
-	tstringstream buffer;
-	buffer << GetWin32ErrorString(dwError)
-		<< TEXT(" (error: ") << dwError << TEXT(")");
+	std::stringstream buffer;
+	buffer << getWin32ErrorString(dwError)
+		<< " (DWORD: " << dwError << ")";
 	return buffer.str();
 }
 
 // http://stackoverflow.com/questions/22233527/how-to-convert-hresult-into-an-error-description
-DWORD Win32FromHResult(HRESULT hr)
+static DWORD Win32FromHResult(HRESULT hr)
 {
 	if ((hr & 0xFFFF0000) == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, 0))
 	{
@@ -164,58 +160,15 @@ DWORD Win32FromHResult(HRESULT hr)
 	return ERROR_CAN_NOT_COMPLETE;
 }
 
-void SystemWin32::Error(const tstring &message)
+std::string SystemWin32::getHResultErrorString(HRESULT hr)
 {
-	// exit with message
-	if (m_System->getPrintStd())
-	{
-		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Error"), MB_OK | MB_ICONERROR);
-		tcout << TEXT("Error: ") << message << std::endl;
-	}
-	exit(EXIT_FAILURE);
+	DWORD dwError = Win32FromHResult(hr);
+	std::stringstream buffer;
+	buffer << getWin32ErrorString(dwError)
+		<< " (DWORD: " << dwError << ")"
+		<< " (HRESULT: " << hr << ")";
+	return buffer.str();
 }
-
-void SystemWin32::Warning(const tstring &message)
-{
-	// show a warning box and send to output
-	if (m_System->getPrintStd())
-	{
-		MessageBox(NULL, (LPCTSTR)message.c_str(), TEXT("Warning"), MB_OK | MB_ICONWARNING);
-		tcout << TEXT("Warning: ") << message << std::endl;
-	}
-}
-
-void SystemWin32::Debug(const tstring &message)
-{
-	// send a debug to output
-	if (m_System->getPrintStd())
-	{
-		tcout << TEXT("Debug: ") << message << std::endl;
-	}
-}
-
-void SystemWin32::ErrorWin32(const tstring &message)
-{
-	// crash with last win32 error string
-	tstringstream buffer;
-	buffer << message << TEXT("\n") << GetWin32LastErrorString();
-	Error(buffer.str());
-}
-
-void SystemWin32::ErrorHResult(const tstring &message, HRESULT hr)
-{
-	tstringstream buffer;
-	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));
-	Error(buffer.str());
-}
-
-void SystemWin32::WarningHResult(const tstring &message, HRESULT hr)
-{
-	tstringstream buffer;
-	buffer << message << TEXT("\n") << GetWin32ErrorString(Win32FromHResult(hr));
-	Warning(buffer.str());
-}
-
 
 } /* namespace FT8XXEMU */
 

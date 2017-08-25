@@ -15,16 +15,15 @@
 // #include <...>
 
 // System includes
-#ifdef WIN32
-#include "ft8xxemu_system_win32.h"
-#else
+#include "ft8xxemu_system.h"
+
+#ifndef WIN32
 #include <sys/types.h>
 #include <signal.h>
 #include <unistd.h>
 #endif
 
 // Project includes
-#include "ft8xxemu_system.h"
 
 namespace FT8XXEMU {
 

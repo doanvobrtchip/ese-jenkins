@@ -15,11 +15,18 @@
 #define BT8XXEMU_AUDIO_OUTPUT_H
 // #include <...>
 
+// Project includes
+#include "ft8xxemu_system.h"
+
 // System includes
 #include <functional>
 
-// Project includes
-#include "ft8xxemu_system.h"
+// WASAPI
+#include <objbase.h>
+#include <mmreg.h>
+#include <mmdeviceapi.h>
+#include <audioclient.h>
+#include <audiopolicy.h>
 
 namespace FT8XXEMU {
 

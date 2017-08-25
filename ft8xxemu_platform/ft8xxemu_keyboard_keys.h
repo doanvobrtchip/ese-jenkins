@@ -21,7 +21,11 @@
 
 #if !(defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 
-#include "ft8xxemu_system_win32.h"
+#include "ft8xxemu_system.h"
+
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+
 #define BT8XXEMU_KEY_ESCAPE          DIK_ESCAPE
 #define BT8XXEMU_KEY_1               DIK_1
 #define BT8XXEMU_KEY_2               DIK_2
@@ -186,6 +190,7 @@
 #else
 
 #include <SDL.h>
+
 #define BT8XXEMU_KEY_UNKNOWN         SDLK_UNKNOWN
 #define BT8XXEMU_KEY_FIRST           SDLK_FIRST
 #define BT8XXEMU_KEY_BACKSPACE       SDLK_BACKSPACE

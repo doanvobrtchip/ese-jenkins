@@ -30,6 +30,7 @@
 
 // System includes
 #include <vector>
+#include <algorithm>
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
@@ -54,12 +55,12 @@
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_thread_state.h"
 #include "ft8xxemu_window_output.h"
-#include "ft8xxemu_minmax.h"
 #include "ft800emu_memory.h"
 #include "ft800emu_touch.h"
 #include "ft800emu_vc.h"
 
-// using namespace ...;
+using std::min;
+using std::max;
 
 #if defined(FTEMU_SDL2)
 #define SDL_CreateThreadFT(fn, name, data) SDL_CreateThread(fn, name, data)
@@ -636,7 +637,7 @@ void displayPoint(const GraphicsState &gs, const int ps, const int scx1, const i
 				const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
 				const double dist256d = sqrt(dist256sqd); // sqrt..
 				const long dist256 = (long)dist256d;
-				const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
+				const int alpha = 256 - max(min<int>(dist256 - psin256, 256), 0);
 				const int outalpha = ((gs.ColorARGB >> 24) * alpha) >> 8;
 				const argb8888 out = gs.ColorARGB & 0x00FFFFFF | (outalpha << 24);
 				processPixel<debugTrace>(gs, bc, bs, bt, x, out);
@@ -679,7 +680,7 @@ BT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int 
 	const double dist256sqd = (double)distsq * 256.0; // double.. distsq is 1/16 squared, multiply twice by 16
 	const double dist256d = sqrt(dist256sqd); // sqrt..
 	const long dist256 = (long)dist256d;
-	const int alpha = 256 - max(min(dist256 - psin256, 256), 0);
+	const int alpha = 256 - max(min<int>(dist256 - psin256, 256), 0);
 	return alpha;
 }
 
@@ -3079,7 +3080,7 @@ EvaluateDisplayListValue:
 					break;
 #endif
 				default:
-					system->log(BT8XXEMU_LogError, "%i: Invalid display list entry %i\n", (int)c, (int)(v >> 24));
+					system->log(BT8XXEMU_LogError, "%i: Invalid display list entry %i", (int)c, (int)(v >> 24));
 				}
 				break;
 			case FT800EMU_DL_VERTEX2II:

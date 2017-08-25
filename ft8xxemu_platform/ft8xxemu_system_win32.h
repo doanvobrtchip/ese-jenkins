@@ -14,26 +14,15 @@
 #ifdef WIN32
 #ifndef BT8XXEMU_SYSTEM_WINDOWS_H
 #define BT8XXEMU_SYSTEM_WINDOWS_H
-// #include <...>
+
+#include "ft8xxemu_system.h"
+
+/*
 
 #ifdef BT8XXEMU_INTTYPES_DEFINED_NULL
 #undef NULL
 #define NULL 0
 #endif
-
-#ifndef WINVER                  // Specifies that the minimum required platform is Windows XP.
-#define WINVER 0x0510           // Change this to the appropriate value to target other versions of Windows.
-#endif
-#ifndef _WIN32_WINNT            // Specifies that the minimum required platform is Windows XP.
-#define _WIN32_WINNT 0x0510     // Change this to the appropriate value to target other versions of Windows.
-#endif
-#ifndef _WIN32_WINDOWS          // Specifies that the minimum required platform is Windows 98.
-#define _WIN32_WINDOWS 0x0410   // Change this to the appropriate value to target Windows Me or later.
-#endif
-#ifndef _WIN32_IE               // Specifies that the minimum required platform is Internet Explorer 6.0.
-#define _WIN32_IE 0x0600        // Change this to the appropriate value to target other versions of IE.
-#endif
-
 
 // Windows Headers
 #include <windows.h>
@@ -72,25 +61,12 @@
 #include "dinput.h"
 
 
-// TString
-#ifdef _UNICODE
-typedef std::wstring tstring;
-typedef std::wstringbuf tstringbuf;
-typedef std::wstringstream tstringstream;
-#define tcout std::wcout
-#define tcin std::wcin
-#else
-typedef std::string tstring;
-typedef std::stringbuf tstringbuf;
-typedef std::stringstream tstringstream;
-#define tcout std::cout
-#define tcin std::cin
-#endif
-
-
 // Types
 #include "bt8xxemu_inttypes.h"
 
+*/
+
+#include <string>
 
 namespace FT8XXEMU {
 	class System;
@@ -106,14 +82,9 @@ class SystemWin32
 public:
 	SystemWin32(System *system) : m_System(system) { }
 
-	tstring GetWin32ErrorString(DWORD dwError);
-	tstring GetWin32LastErrorString();
-	void Error(const tstring &message);
-	void Warning(const tstring &message);
-	void Debug(const tstring &message);
-	void ErrorWin32(const tstring &message);
-	void ErrorHResult(const tstring &message, HRESULT hr);
-	void WarningHResult(const tstring &message, HRESULT hr);
+	static std::string getWin32ErrorString(DWORD hr);
+	static std::string getWin32LastErrorString();
+	static std::string getHResultErrorString(HRESULT hResult);
 
 private:
 	System *m_System = NULL;

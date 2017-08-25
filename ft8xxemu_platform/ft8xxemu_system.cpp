@@ -13,6 +13,7 @@
 
 // #include <...>
 #include "ft8xxemu_system.h"
+#include "ft8xxemu_system_win32.h"
 
 // System includes
 #include <mutex>

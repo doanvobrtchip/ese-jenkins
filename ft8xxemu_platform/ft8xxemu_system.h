@@ -20,11 +20,20 @@
 
 // Project includes
 #include "bt8xxemu.h"
-#include "bt8xxemu_inttypes.h"
 
-// Platform includes
 #ifdef WIN32
-#include "ft8xxemu_system_win32.h"
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
+#		define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
+#		define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
+#		define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
+#	endif
+#	ifndef WIN32_LEAN_AND_MEAN
+#		define WIN32_LEAN_AND_MEAN
+#	endif
+#	include <Windows.h>
 #endif
 
 namespace FT8XXEMU {
