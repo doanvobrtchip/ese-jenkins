@@ -1,10 +1,11 @@
-
 /*
- * Copyright (C) 2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+BT8XX Emulator Samples
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
-#include <ft8xxemu.h>
+#include <bt8xxemu.h>
 #include <stdio.h>
 
 #ifdef WIN32
@@ -15,6 +16,8 @@
 
 void setup();
 void loop();
+
+extern BT8XXEMU_Emulator *g_Emulator;
 
 #ifdef WIN32
 // enable memory leak checks, trick to get _CrtSetBreakAlloc in before main
@@ -61,20 +64,20 @@ int debugAllocHook(int allocType, void *userData, size_t size, int
 #endif
 #endif
 
-bool graphics(bool output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags)
+void mcu(BT8XXEMU_Emulator *sender, void *context)
 {
-	return true;
+	setup();
+	while (BT8XXEMU_isRunning(g_Emulator))
+		loop();
 }
 
 // int __stdcall WinMain(void *, void *, void *, int)
-int main(int, char* [])
+int main(int, char*[])
 {
-	FT8XXEMU_EmulatorParameters params;
-	FT8XXEMU_defaults(FT8XXEMU_VERSION_API, &params, FT8XXEMU_EmulatorFT810);
-	params.Setup = setup;
-	params.Loop = loop;
-	// params.Graphics = graphics;
-	FT8XXEMU_run(FT8XXEMU_VERSION_API, &params);
+	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorFT810);
+	params.Main = mcu;
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &params);
 	return 0;
 }
 

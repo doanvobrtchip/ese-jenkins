@@ -1,10 +1,9 @@
-/**
- * graphics coprocessor
- * $Id$
- * \file ft800emu_coprocessor.cpp
- * \brief graphics coprocessor
- * \date 2013-08-03 02:10GMT
- */
+/*
+FT810 Emulator Library
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
+*/
 
 #ifdef FT810EMU_MODE
 #include "ft810emu_coprocessor.h"
@@ -12,12 +11,12 @@
 // System includes
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 // Project includes
 #include "ft800emu_memory.h"
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
-#include "ft8xxemu_minmax.h"
 
 // using namespace ...;
 
@@ -31,8 +30,6 @@ namespace FT810EMU {
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
 #define isFF(x) (((x) & 0xff) == 0xff)
 #define REG(N)    memory32[REG_##N >> 2]
-
-CoprocessorClass Coprocessor;
 
 namespace /* anonymous */ {
 
@@ -325,7 +322,7 @@ void Ejpg::run2(uint8_t *memory8,
 						uint32_t a = dst + (ey * w + ex);
 						if (a < 0 || a >= (FT800EMU_RAM_SIZE))
 						{
-							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							FTEMU_error("Jpeg illegal memory access");
 							return;
 						}
 						memory8[a] = y;
@@ -335,7 +332,7 @@ void Ejpg::run2(uint8_t *memory8,
 						uint32_t a = dst + 2 * (ey * w + ex);
 						if ((a >> 1) < 0 || (a >> 1) >= (FT800EMU_RAM_SIZE >> 1))
 						{
-							FTEMU_printf("JPG ERROR: illegal memory access\n");
+							FTEMU_error("Jpeg illegal memory access");
 							return;
 						}
 						memory16[a >> 1] = rgb565(y, Cb, Cr);
@@ -394,7 +391,7 @@ void Ejpg::run(uint8_t *memory8,
 	// assert((bitsize == 8) | (bitsize == 32));
 	if (!((bitsize == 8) | (bitsize == 32)))
 	{
-		FTEMU_printf("JPG ERROR: bitsize invalid (%i)\n", (int)bitsize);
+		FTEMU_error("Jpeg bitsize invalid (%i)", (int)bitsize);
 		return;
 	}
 
@@ -410,7 +407,7 @@ void Ejpg::run(uint8_t *memory8,
 	// assert(btypes != NULL);
 	if (!btypes)
 	{
-		FTEMU_printf("JPG ERROR: btypes invalid (NULL)\n");
+		FTEMU_error("Jpeg btypes invalid (NULL)");
 		return;
 	}
 
@@ -472,13 +469,13 @@ void Ejpg::run(uint8_t *memory8,
 		// FTEMU_printf("ht = %x\n", ht);
 		if (ht < 0 || ht >= (FT800EMU_RAM_SIZE))
 		{
-			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			FTEMU_error("Jpeg illegal memory access");
 			return;
 		}
 		uint32_t *pht = (uint32_t*)&memory8[ht];
 		size_t codesize;
 		uint16_t b = ~0;
-		for (codesize = 1; codesize <= min(nbits, (size_t)16); codesize++, pht++)
+		for (codesize = 1; codesize <= std::min(nbits, (size_t)16); codesize++, pht++)
 		{
 			b = (bits >> (64 - codesize)) & 0xFFFF;
 			b &= (1 << codesize) - 1;
@@ -502,7 +499,7 @@ void Ejpg::run(uint8_t *memory8,
 			symbols = REG_EJPG_ACC + 256 * (da8 & 1);
 		if ((symbols + sym_pos) < 0 || (symbols + sym_pos) >= (FT800EMU_RAM_SIZE))
 		{
-			FTEMU_printf("JPG ERROR: illegal memory access\n");
+			FTEMU_error("Jpeg illegal memory access");
 			return;
 		}
 		uint8_t symbol = memory8[symbols + sym_pos];
@@ -589,7 +586,7 @@ void Ejpg::run1(uint8_t *memory8,
 		// FTEMU_printf("Write %04x*%02x=%04x to %02x\n", dm & 0xffff, qi, feed & 0xffff, zz[idct_i]);
 		if (idct_i >= 64)
 		{
-			FTEMU_printf("JPG ERROR: idct_i out of bounds (%i)\n", (int)idct_i);
+			FTEMU_error("Jpeg idct_i out of bounds (%i)", (int)idct_i);
 		}
 		else
 		{
@@ -637,21 +634,21 @@ void Ejpg::run1(uint8_t *memory8,
 	}
 }
 
-FT8XXEMU_FORCE_INLINE void CoprocessorClass::cpureset()
+BT8XXEMU_FORCE_INLINE void Coprocessor::cpureset()
 {
 	pc = 0;
 	dsp = rsp = 0;
 	t = 0;
 }
 
-FT8XXEMU_FORCE_INLINE void CoprocessorClass::push(int v) // push v on the data stack
+BT8XXEMU_FORCE_INLINE void Coprocessor::push(int v) // push v on the data stack
 {
 	dsp = 31 & (dsp + 1);
 	d[dsp] = t;
 	t = v;
 }
 
-FT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data stack and return it
+BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack and return it
 {
 	int v = t;
 	t = d[dsp];
@@ -663,19 +660,21 @@ FT8XXEMU_FORCE_INLINE int CoprocessorClass::pop() // pop value from the data sta
 static FILE *trace = NULL;
 #endif
 
-void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+	: m_System(system), m_Memory(memory)
 {
+	ejpg.setSystem(system);
 	if (romFilePath)
 	{
 		FILE *f;
 		f = fopen(romFilePath, "rb");
-		if (!f) FTEMU_printf("Failed to open coprocessor ROM file\n");
+		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{
 			size_t s = fread(j1boot, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_printf("Incomplete coprocessor ROM file\n");
-			else FTEMU_printf("Loaded coprocessor ROM file\n");
-			if (fclose(f)) FTEMU_printf("Error closing coprocessor ROM file\n");
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_error("Incomplete coprocessor ROM file");
+			else FTEMU_message("Loaded coprocessor ROM file");
+			if (fclose(f)) FTEMU_error("Error closing coprocessor ROM file");
 		}
 	}
 	else
@@ -694,11 +693,11 @@ void CoprocessorClass::begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode
 	// memcpy(romtop, j1boot + 0x3c00, 0x800); ?
 
 	// REG(EJPG_READY) = 1;
-	Memory.rawWriteU32(Memory.getRam(), REG_EJPG_READY, 1);
+	m_Memory->rawWriteU32(m_Memory->getRam(), REG_EJPG_READY, 1);
 }
 
 // template <bool singleFrame>
-void CoprocessorClass::execute()
+void Coprocessor::execute()
 {
 	// if (!singleFrame)
 	m_Running = true;
@@ -709,16 +708,16 @@ void CoprocessorClass::execute()
 
 	do
 	{
-		if (Memory.coprocessorGetReset())
+		if (m_Memory->coprocessorGetReset())
 		{
 			ejpg.reset();
 			cpureset();
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System.delay(1);
+			FT8XXEMU::System::delay(1);
 			continue;
 		}
-		uint32_t regRomsubSel = Memory.rawReadU32(Memory.getRam(), REG_ROMSUB_SEL);
-		// uint32_t regJ1Cold = Memory.rawReadU32(Memory.getRam(), REG_J1_COLD);
+		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL);
+		// uint32_t regJ1Cold = m_Memory->rawReadU32(m_Memory->getRam(), REG_J1_COLD);
 
 #if FT800EMU_COPROCESSOR_DEBUG
 		//FTEMU_printf("pc: %i, 0x%x\n", (int)pc, (int)pc);
@@ -761,7 +760,7 @@ void CoprocessorClass::execute()
 		}
 #endif
 		uint16_t insn = ((regRomsubSel == 3) && (pc >= 0x3c00))
-			? Memory.rawReadU16(Memory.getRam(), RAM_ROMSUB + ((pc - 0x3c00) * 2))
+			? m_Memory->rawReadU16(m_Memory->getRam(), RAM_ROMSUB + ((pc - 0x3c00) * 2))
 			: j1boot[pc];
 		_pc = pc + 1;
 
@@ -798,7 +797,7 @@ void CoprocessorClass::execute()
 			{ /* R->PC */
 				if ((r[rsp] & 1) || (r[rsp] > 32767))
 				{
-					FTEMU_printf("Warning: invalid return address [%d] %08x\n", rsp, r[rsp]);
+					FTEMU_warning("Coprocessor invalid return address [%d] %08x", rsp, r[rsp]);
 				}
 				_pc = r[rsp] >> 1;
 			}
@@ -827,18 +826,18 @@ void CoprocessorClass::execute()
 			case 0x0e:  _t = (n << 14) | (t & 0x3fff); break;
 			case 0x0f:  _t = -(n < t); break;
 			case 0x10:  _t = t + 4;
-				Memory.coprocessorWriteU32(REG_CRC, crc32(Memory.coprocessorReadU32(REG_CRC), memrd)); break;
+				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = /*(int8_t)*/Memory.coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x12:  _t = /*(int8_t)*/m_Memory->coprocessorReadU8(t); /*memory8[t]*/; break;
 			case 0x13:  assert((t & 1) == 0);
-				_t = /*(int16_t)*/Memory.coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+				_t = /*(int16_t)*/m_Memory->coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
 			case 0x17:  _t = n - t; break;
 			case 0x18:  _t = t + 1; break;
 			case 0x19:  assert((t & 1) == 0);
-				_t = (int16_t)Memory.coprocessorReadU16(t); break;
+				_t = (int16_t)m_Memory->coprocessorReadU16(t); break;
 			case 0x1a:  { uint32_t sum32 = t + n; _t = ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); } break;
 			case 0x1b:  switch (t >> 12) {
 			case 0: _t = t | RAM_REG; break;
@@ -854,7 +853,7 @@ void CoprocessorClass::execute()
 				// FTEMU_printf("xmit %08x\n", memrd);
 				if (_t)
 				{
-					uint8_t *memory8 = Memory.getRam();
+					uint8_t *memory8 = m_Memory->getRam();
 					uint16_t *memory16 = static_cast<uint16_t *>(static_cast<void *>(memory8));
 					uint32_t *memory32 = static_cast<uint32_t *>(static_cast<void *>(memory8));
 					ejpg.run(memory8,
@@ -901,7 +900,7 @@ void CoprocessorClass::execute()
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
-				Memory.coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
+				m_Memory->coprocessorWriteU32(t, n); // memory32[t >> 2] = n;
 				if (t == REG_EJPG_FORMAT)
 				{
 					// FTEMU_printf("EJPG Begin\n");
@@ -910,8 +909,8 @@ void CoprocessorClass::execute()
 				assert(t != REG_EJPG_DAT);
 				if (t == REG_J1_INT)
 				{
-					Memory.coprocessorWriteU32(REG_INT_FLAGS,
-						Memory.coprocessorReadU32(REG_INT_FLAGS) | (n << 5));
+					m_Memory->coprocessorWriteU32(REG_INT_FLAGS,
+						m_Memory->coprocessorReadU32(REG_INT_FLAGS) | (n << 5));
 					// REG(INT_FLAGS) |= (n << 5);
 				}
 				break;
@@ -921,18 +920,18 @@ void CoprocessorClass::execute()
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
-				Memory.coprocessorWriteU16(t, n); // memory16[t >> 1] = n;
+				m_Memory->coprocessorWriteU16(t, n); // memory16[t >> 1] = n;
 				break;
 			case 6:
 				// selfassert(t < MEMSIZE, __LINE__);
 				// selfassert((t < (1024 * 1024)) | (t >= RAM_DL), __LINE__);
-				Memory.coprocessorWriteU8(t, n); // memory8[t] = n;
+				m_Memory->coprocessorWriteU8(t, n); // memory8[t] = n;
 				//if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				//	written[(t - RAM_J1RAM) >> 2] = 1;
 				if (t == REG_EJPG_DAT)
 				{
 					// FTEMU_printf("EJPG Data memrd %u\n", (unsigned int)memrd);
-					uint8_t *memory8 = Memory.getRam();
+					uint8_t *memory8 = m_Memory->getRam();
 					uint16_t *memory16 = static_cast<uint16_t *>(static_cast<void *>(memory8));
 					uint32_t *memory32 = static_cast<uint32_t *>(static_cast<void *>(memory8));
 					ejpg.run(memory8,
@@ -954,7 +953,7 @@ void CoprocessorClass::execute()
 				// selfassert(t < MEMSIZE, __LINE__);
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	selfassert(written[(t - RAM_J1RAM) >> 2], __LINE__);
-				memrd = Memory.coprocessorReadU32(t);
+				memrd = m_Memory->coprocessorReadU32(t);
 				break;
 			}
 			t = _t;
@@ -1015,7 +1014,7 @@ void CoprocessorClass::execute()
 		int swapped = 0;
 		int starve = 0;
 		do {
-		if (Memory.coprocessorGetReset())
+		if (m_Memory->coprocessorGetReset())
 		{
 		pc = 0;
 		//FTEMU_printf("RESET COPROCESSOR\n");
@@ -1024,14 +1023,14 @@ void CoprocessorClass::execute()
 		}
 		insn = pgm[pc];
 		// FTEMU_printf("PC=%04x %04x\n", pc, insn);
-		// if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", MemoryClass::coprocessorReadU32(REG_CMD_READ), t);
+		// if (pc == 0x1BA6) FTEMU_printf("COMMAND [%03x] %08x\n", m_Memory->coprocessorReadU32(REG_CMD_READ), t);
 		if (singleFrame)
 		{
 		if (pc == 0x0980) { // cmd.has1
 		// 0x1090f8 is the location in coprocessor private RAM where the read pointer is cached.
-		int rp = MemoryClass::coprocessorReadU32(0x1090f8);
-		// FTEMU_printf("cmd.has1 %x %x\n", MemoryClass::coprocessorReadU32(REG_CMD_WRITE), rp);
-		starve = MemoryClass::coprocessorReadU32(REG_CMD_WRITE) == rp;
+		int rp = m_Memory->coprocessorReadU32(0x1090f8);
+		// FTEMU_printf("cmd.has1 %x %x\n", m_Memory->coprocessorReadU32(REG_CMD_WRITE), rp);
+		starve = m_Memory->coprocessorReadU32(REG_CMD_WRITE) == rp;
 		}
 		}
 		_pc = pc + 1;
@@ -1074,20 +1073,20 @@ void CoprocessorClass::execute()
 		case 9:     _t = n >> t; break;
 		case 10:    _t = t - 1; break;
 		case 11:    _t = r[rsp]; break;
-		case 12:    _t = MemoryClass::coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);* / break;
+		case 12:    _t = m_Memory->coprocessorReadU32(t & ~3); /*FTEMU_printf("rd[%x] = %x\n", t, _t);* / break;
 		case 13:    _t = product; break;
 		case 14:    _t = (n << 15) | (t & 0x7fff); break;
 		case 15:    _t = -(n < t); break;
 		case 16:    assert(0);
 		case 17:    _t = n << t; break;
-		case 18:    _t = MemoryClass::coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);* / break;
-		case 19:    _t = MemoryClass::coprocessorReadU16(t & ~1); break;
+		case 18:    _t = m_Memory->coprocessorReadU8(t); /*FTEMU_printf("rd8[%x] = %x\n", t, _t);* / break;
+		case 19:    _t = m_Memory->coprocessorReadU16(t & ~1); break;
 		case 20:    _t = product >> 32; break;
 		case 21:    _t = product >> 16; break;
 		case 22:    _t = t == r[rsp]; break;
 		case 23:    _t = n - t; break;
 		case 24:    _t = t + 1; break;
-		case 25:    _t = (int16_t)MemoryClass::coprocessorReadU16(t); break;
+		case 25:    _t = (int16_t)m_Memory->coprocessorReadU16(t); break;
 		case 26:    _t = (sum32 & 0x80000000) ? 0 : ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); break;
 		case 27:    _t = (0x00109 << 12) | (t & 0xfff); break;
 		case 28:    _t = t + 2; break;
@@ -1111,7 +1110,7 @@ void CoprocessorClass::execute()
 		break;
 		case 4: // write32
 		// FTEMU_printf("wr[%x] <= %x\n", t, n);
-		MemoryClass::coprocessorWriteU32(t, n);
+		m_Memory->coprocessorWriteU32(t, n);
 		if (singleFrame)
 		{
 		if (t == REG_DLSWAP)
@@ -1119,10 +1118,10 @@ void CoprocessorClass::execute()
 		}
 		break;
 		case 5: // write16
-		MemoryClass::coprocessorWriteU16(t, n);
+		m_Memory->coprocessorWriteU16(t, n);
 		break;
 		case 6: // write8
-		MemoryClass::coprocessorWriteU8(t, n);
+		m_Memory->coprocessorWriteU8(t, n);
 		break;
 		case 7: // read
 		// no-op
@@ -1139,23 +1138,23 @@ void CoprocessorClass::execute()
 		// FTEMU_printf("coprocessor done\n");*/
 }
 
-void CoprocessorClass::executeManual()
+void Coprocessor::executeManual()
 {
 	// execute<true>();
 }
 
-void CoprocessorClass::executeEmulator()
+void Coprocessor::executeEmulator()
 {
 	// execute<false>();
 	execute();
 }
 
-void CoprocessorClass::stopEmulator()
+void Coprocessor::stopEmulator()
 {
 	m_Running = false;
 }
 
-void CoprocessorClass::end()
+Coprocessor::~Coprocessor()
 {
 
 }

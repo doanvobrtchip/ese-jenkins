@@ -1,277 +1,260 @@
-/**
- * main.cpp
- * $Id$
- * \file main.cpp
- * \brief main.cpp
- * \date 2013-07-09 07:57GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+BT8XX Emulator Samples
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+*/
 
-#include <ft8xxemu_keyboard_keys.h>
-#include <ft800emu_emulator.h>
-#include <ft8xxemu_keyboard.h>
-#include <ft8xxemu_system.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_spi_i2c.h>
-#include <ft800emu_graphics_processor.h>
+#include <Windows.h>
+
+#include <bt8xxemu.h>
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
-#define FT800EMU_XBU_FILE "../reference/xbu/RIVAL.XBU"
+#define TEST_THREAD_REDUCE
 
-void swrbegin(size_t address)
+class PlayXBU
 {
-	FT800EMU::SPII2C.csLow();
-
-	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	// FT800EMU::SPII2C.transfer(0x00);
-}
-
-void swr8(uint8_t value)
-{
-	FT800EMU::SPII2C.transfer(value);
-}
-
-void swr16(uint16_t value)
-{
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
-}
-
-void swr32(uint32_t value)
-{
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 16) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 24) & 0xFF);
-}
-
-void swrend()
-{
-	FT800EMU::SPII2C.csHigh();
-}
-
-void wr32(size_t address, uint32_t value)
-{
-	swrbegin(address);
-	swr32(value);
-	swrend();
-}
-
-uint32_t rd32(size_t address)
-{
-	FT800EMU::SPII2C.csLow();
-
-	FT800EMU::SPII2C.transfer((address >> 16) & 0x3F);
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-	FT800EMU::SPII2C.transfer(0x00);
-
-	uint32_t value;
-	value = FT800EMU::SPII2C.transfer(0);
-	value |= FT800EMU::SPII2C.transfer(0) << 8;
-	value |= FT800EMU::SPII2C.transfer(0) << 16;
-	value |= FT800EMU::SPII2C.transfer(0) << 24;
-
-	FT800EMU::SPII2C.csHigh();
-	return value;
-}
-
-static FILE *s_F = NULL;
-
-void setup()
-{
-	s_F = fopen(FT800EMU_XBU_FILE, "rb");
-	if (!s_F) printf("Failed to open XBU file\n");
-	else
+public:
+	PlayXBU(const char *file)
 	{
-		printf("Load XBU\n");
+		BT8XXEMU_EmulatorParameters params;
+		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
+#ifdef FT810EMU_MODE
+			BT8XXEMU_EmulatorFT810
+#else
+			BT8XXEMU_EmulatorFT801
+#endif
+		);
 
-		wr32(REG_HSIZE, 480);
-		wr32(REG_VSIZE, 272);
-		wr32(REG_PCLK, 5);
-		// if (fclose(s_F)) printf("Error closing vc1dump file\n");
+		params.Flags =
+			BT8XXEMU_EmulatorEnableKeyboard
+			| BT8XXEMU_EmulatorEnableMouse
+			| BT8XXEMU_EmulatorEnableDebugShortkeys
+			| BT8XXEMU_EmulatorEnableCoprocessor
+			| BT8XXEMU_EmulatorEnableGraphicsMultithread
+			| BT8XXEMU_EmulatorEnableStdOut
+			| BT8XXEMU_EmulatorEnableMainPerformance
+			;
+		params.UserContext = this;
 
-		/*
-		swrbegin(RAM_CMD);
-		swr32(CMD_DLSTART);
-		swr32(CMD_SWAP);
-		swr32(CMD_DLSTART);
-		swr32(CLEAR_COLOR_RGB(0, 32, 64));
-		swr32(CLEAR(1, 1, 1));
-		swr32(TAG(1));
-		swr32(CMD_BUTTON);
-		swr16(10);
-		swr16(10);
-		swr16(160);
-		swr16(24);
-		swr16(26);
-		swr16(0);
-		swr8('B');
-		swr8('a');
-		swr8('r');
-		swr8(0);
-		swr32(CMD_SWAP);
-		swrend();
+#ifdef TEST_THREAD_REDUCE
+		params.ReduceGraphicsThreads = 2;
+#endif
 
-		wr32(REG_CMD_WRITE, (6 * 4) + (4 * 4) + 4 + 4);*/
-	}
-}
+		BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
 
-static int wp = 0;
-static int wpr = 0;
-
-static bool okwrite = false;
-
-static int lastround = 0;
-
-void loop()
-{
-	if (!s_F)
-	{
-		FT8XXEMU::System.delay(10);
-	}
-	else
-	{
-		int regwp = rd32(REG_CMD_WRITE);
-		int rp = rd32(REG_CMD_READ);
-		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-		int freespace = ((4096 - 4) - fullness);
-
-		// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
-		if (rp == -1)
+		fh = fopen(file, "rb");
+		if (!fh) printf("Failed to open XBU file\n");
+		else
 		{
-			printf("rp < 0, error\n");
-			printf("Close XBU\n");
-			if (fclose(s_F)) printf("Error closing vc1dump file\n");
-			s_F = NULL;
+			printf("Load XBU '%s'\n", file);
+
+			wr32(REG_HSIZE, 480);
+			wr32(REG_VSIZE, 272);
+			wr32(REG_PCLK, 5);
+		}
+	}
+
+	~PlayXBU()
+	{
+		BT8XXEMU_destroy(emulator);
+		emulator = NULL;
+	}
+
+	BT8XXEMU_Emulator *emulator;
+
+	void swrbegin(size_t address)
+	{
+		BT8XXEMU_cs(emulator, 1);
+
+		BT8XXEMU_transfer(emulator, (2 << 6) | ((address >> 16) & 0x3F));
+		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+		BT8XXEMU_transfer(emulator, address & 0xFF);
+		// BT8XXEMU_transfer(0x00);
+	}
+
+	void swr8(uint8_t value)
+	{
+		BT8XXEMU_transfer(emulator, value);
+	}
+
+	void swr16(uint16_t value)
+	{
+		BT8XXEMU_transfer(emulator, value & 0xFF);
+		BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+	}
+
+	void swr32(uint32_t value)
+	{
+		BT8XXEMU_transfer(emulator, value & 0xFF);
+		BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+		BT8XXEMU_transfer(emulator, (value >> 16) & 0xFF);
+		BT8XXEMU_transfer(emulator, (value >> 24) & 0xFF);
+	}
+
+	void swrend()
+	{
+		BT8XXEMU_cs(emulator, 0);
+	}
+
+	void wr32(size_t address, uint32_t value)
+	{
+		swrbegin(address);
+		swr32(value);
+		swrend();
+	}
+
+	uint32_t rd32(size_t address)
+	{
+		BT8XXEMU_cs(emulator, 1);
+
+		BT8XXEMU_transfer(emulator, (address >> 16) & 0x3F);
+		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+		BT8XXEMU_transfer(emulator, address & 0xFF);
+		BT8XXEMU_transfer(emulator, 0x00);
+
+		uint32_t value;
+		value = BT8XXEMU_transfer(emulator, 0);
+		value |= BT8XXEMU_transfer(emulator, 0) << 8;
+		value |= BT8XXEMU_transfer(emulator, 0) << 16;
+		value |= BT8XXEMU_transfer(emulator, 0) << 24;
+
+		BT8XXEMU_cs(emulator, 0);
+		return value;
+	}
+
+	FILE *fh = NULL;
+
+	int wp = 0;
+	int wpr = 0;
+
+	bool okwrite = false;
+
+	int lastround = 0;
+
+	bool loop()
+	{
+		if (!fh)
+		{
+			Sleep(10);
+			return false;
 		}
 		else
 		{
-			if (freespace)
-			// if (freespace >= 2048)
+			int regwp = rd32(REG_CMD_WRITE);
+			int rp = rd32(REG_CMD_READ);
+			int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+			int freespace = ((4096 - 4) - fullness);
+
+			// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
+			if (rp == -1)
 			{
-				int freespacediv = freespace >> 2;
-
-				swrbegin(RAM_CMD + (wp & 0xFFF));
-				for (int i = 0; i < freespacediv; ++i)
+				printf("rp < 0, error\n");
+				printf("Close XBU\n");
+				if (fclose(fh)) printf("Error closing vc1dump file\n");
+				fh = NULL;
+			}
+			else
+			{
+				if (freespace)
+					// if (freespace >= 2048)
 				{
-					uint32_t buffer;
-					size_t nb = fread(&buffer, 4, 1, s_F);
-					if (nb == 1)
-					{
-						/*if (buffer == CMD_DLSTART) okwrite = true;
+					int freespacediv = freespace >> 2;
 
-						if (okwrite)
-						{*/
+					swrbegin(RAM_CMD + (wp & 0xFFF));
+					for (int i = 0; i < freespacediv; ++i)
+					{
+						uint32_t buffer;
+						size_t nb = fread(&buffer, 4, 1, fh);
+						if (nb == 1)
+						{
+							/*if (buffer == CMD_DLSTART) okwrite = true;
+
+							if (okwrite)
+							{*/
 							swr32(buffer);
 							wp += 4;
-						//}
+							//}
 
-						if (buffer == CMD_SWAP)
+							if (buffer == CMD_SWAP)
+							{
+								wpr = wp;
+								swrend();
+								wr32(REG_CMD_WRITE, (wpr & 0xFFF));
+								swrbegin(RAM_CMD + (wp & 0xFFF));
+							}
+						}
+						else
 						{
-							wpr = wp;
-							swrend();
+							printf("Close XBU, nb = %i\n", (int)nb);
+							if (fclose(fh)) printf("Error closing vc1dump file\n");
+							fh = NULL;
+							break;
+						}
+					}
+					swrend();
+
+					if (fh)
+					{
+						int wprn = (wp - 128);
+						if (wprn > wpr)
+						{
+							wpr = wprn;
 							wr32(REG_CMD_WRITE, (wpr & 0xFFF));
-							swrbegin(RAM_CMD + (wp & 0xFFF));
 						}
 					}
 					else
 					{
-						printf("Close XBU, nb = %i\n", (int)nb);
-						if (fclose(s_F)) printf("Error closing vc1dump file\n");
-						s_F = NULL;
-						break;
-					}
-				}
-				swrend();
-
-				if (s_F)
-				{
-					int wprn = (wp - 128);
-					if (wprn > wpr)
-					{
-						wpr = wprn;
+						wpr = wp;
 						wr32(REG_CMD_WRITE, (wpr & 0xFFF));
 					}
 				}
 				else
 				{
-					wpr = wp;
-					wr32(REG_CMD_WRITE, (wpr & 0xFFF));
+					// FT800EMU::System.delay(1000);
 				}
-			}
-			else
-			{
-				// FT800EMU::System.delay(1000);
-			}
-			int newround = wpr / 4096;
-			if (lastround != newround)
-			{
-				// printf("new round\n");
-				lastround = newround;
+				int newround = wpr / 4096;
+				if (lastround != newround)
+				{
+					// printf("new round\n");
+					lastround = newround;
+				}
 			}
 		}
 
-
-		/*
-		int tag = rd32(REG_TOUCH_TAG);
-		if (tag == 1)
-		{
-			swrbegin(RAM_CMD + wp);
-			swr32(CMD_DLSTART);
-			swr32(CMD_SPINNER);
-			swr16(80);
-			swr16(60);
-			swr16(0);
-			swr16(0);
-			swrend();
-
-			wr32(REG_CMD_WRITE, (wp + 4 + 4 + (2 * 4)) & 0xFFF);
-
-			/*swrbegin(RAM_CMD + wp);
-			swr32(CMD_LOGO);
-			swrend();
-
-			wr32(REG_CMD_WRITE, (wp + 4) & 0xFFF);
-
-			FT800EMU::System.delay(3000);*/
-		//}
+		return fh != NULL;
 	}
-}
+};
 
-void keyboard()
-{
 
-}
 
 // int __stdcall WinMain(void *, void *, void *, int)
 int main(int, char* [])
 {
-	FT8XXEMU_EmulatorParameters params;
-	memset(&params, 0, sizeof(FT8XXEMU_EmulatorParameters));
-	params.Setup = setup;
-	params.Loop = loop;
-	params.Flags =
-		FT8XXEMU_EmulatorEnableKeyboard
-		| FT8XXEMU_EmulatorEnableMouse
-		| FT8XXEMU_EmulatorEnableDebugShortkeys
-		| FT8XXEMU_EmulatorEnableCoprocessor
-		| FT8XXEMU_EmulatorEnableGraphicsMultithread
-		| FT8XXEMU_EmulatorEnableDynamicDegrade
-		;
-#ifdef FT810EMU_MODE
-	params.Mode = FT8XXEMU_EmulatorFT810;
-#else
-	params.Mode = FT8XXEMU_EmulatorFT801;
+#ifdef TEST_THREAD_REDUCE
+	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
-	params.Keyboard = keyboard;
-	FT800EMU::Emulator.run(params);
+	
+	const int nb = 2;
+	char *xbu[nb] = {
+		"xbu/SCATTER.XBU",
+		"xbu/STARS.XBU"
+	};
+	PlayXBU *app[nb];
+	for (int i = 0; i < nb; ++i)
+		app[i] = new PlayXBU(xbu[i]);
+	for (;;)
+	{
+		bool isRunning = false;
+		for (int i = 0; i < nb; ++i)
+		{
+			app[i]->loop();
+			isRunning = isRunning || BT8XXEMU_isRunning(app[i]->emulator);
+		}
+		if (!isRunning)
+			break;
+	}
+	for (int i = 0; i < nb; ++i)
+		delete app[i];
 	return 0;
 }

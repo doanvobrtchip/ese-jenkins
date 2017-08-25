@@ -1,26 +1,30 @@
-/**
- * graphics coprocessor
- * $Id$
- * \file ft800emu_coprocessor.h
- * \brief graphics coprocessor
- * \date 2013-08-03 02:10GMT
- */
+/*
+FT810 Emulator Library
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
+*/
 
 #ifdef FT810EMU_MODE
 #ifndef FT800EMU_COPROCESSOR_H
 #define FT800EMU_COPROCESSOR_H
 
 // System includes
-#include "ft8xxemu.h"
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_inttypes.h"
 #include <stdio.h>
 #include <assert.h>
 
 // Project includes
 
+namespace FT8XXEMU {
+	class System;
+}
+
 #define FT810EMU_COPROCESSOR_ROM_SIZE 16384
 
 namespace FT810EMU {
+	class Memory;
 
 typedef int16_t idct_t;
 
@@ -45,7 +49,11 @@ private:
 
 	uint16_t rgb565(uint8_t y, int8_t Cb, int8_t Cr);
 
+	FT8XXEMU::System *m_System;
+
 public:
+	inline void setSystem(FT8XXEMU::System *system) { m_System = system; }
+
 	void reset();
 	void startblock();
 	void begin();
@@ -92,17 +100,15 @@ public:
 }; /* class EJpg */
 
 /**
- * CoprocessorClass
- * \brief CoprocessorClass
+ * Coprocessor
+ * \brief Coprocessor
  * \date 2013-08-03 02:10GMT
  */
-class CoprocessorClass
+class Coprocessor
 {
 public:
-	CoprocessorClass() { }
-
-	void begin(const char *romFilePath, FT8XXEMU_EmulatorMode mode);
-	void end();
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	~Coprocessor();
 
 	void executeManual();
 	void executeEmulator();
@@ -118,8 +124,9 @@ private:
 	void push(int v);
 	int pop();
 
-	CoprocessorClass(const CoprocessorClass &);
-	CoprocessorClass &operator=(const CoprocessorClass &);
+private:
+	FT8XXEMU::System *m_System;
+	Memory *m_Memory;
 
 	volatile bool m_Running;
 
@@ -133,9 +140,11 @@ private:
 
 	Ejpg ejpg;
 
-}; /* class CoprocessorClass */
+private:
+	Coprocessor(const Coprocessor &) = delete;
+	Coprocessor &operator=(const Coprocessor &) = delete;
 
-extern CoprocessorClass Coprocessor;
+}; /* class Coprocessor */
 
 } /* namespace FT810EMU */
 

@@ -2,6 +2,8 @@
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
 
+SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+
 ADD_LIBRARY(ft8xxemu_platform
   ${SRCS}
   ${HDRS}

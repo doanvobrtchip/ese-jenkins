@@ -1,15 +1,10 @@
-/**
- * GraphicsProcessorClass
- * $Id$
- * \file ft800emu_graphics_processor.h
- * \brief GraphicsProcessorClass
- * \date 2013-06-22 09:29GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #ifndef FT800EMU_GRAPHICS_PROCESSOR_H
 #define FT800EMU_GRAPHICS_PROCESSOR_H
@@ -17,11 +12,12 @@
 
 // System includes
 #include <vector>
+#include <memory>
 
 // Project includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
-#ifndef FT8XXEMU_NODEFS
+#ifndef BT8XXEMU_NODEFS
 #ifdef FT810EMU_MODE
 #define FT800EMU_SCREEN_WIDTH_MAX 2048
 #define FT800EMU_SCREEN_HEIGHT_MAX 2048
@@ -38,7 +34,13 @@
 #define FT800EMU_DEBUGMODE_COUNT 4
 #endif
 
+namespace FT8XXEMU {
+	class System;
+}
+
 namespace FT800EMU {
+	class Memory;
+	class Touch;
 
 struct BitmapInfo
 {
@@ -54,21 +56,35 @@ struct BitmapInfo
 	int SizeHeight;
 };
 
+#ifdef FT810EMU_MODE
+#define FT810EMU_SWAPXY_PARAM , const bool swapXY
+#define FT810EMU_SWAPXY , swapXY
+#define FT810EMU_SWAPXY_FALSE , false
+#else
+#define FT810EMU_SWAPXY_PARAM
+#define FT810EMU_SWAPXY
+#define FT810EMU_SWAPXY_FALSE
+#endif
+
+#ifndef FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE
+#define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE private
+#endif
+
 /**
- * GraphicsProcessorClass
- * \brief GraphicsProcessorClass
+ * GraphicsProcessor
+ * \brief GraphicsProcessor
  * \date 2013-06-22 09:29GMT
  * \author Jan Boon (Kaetemi)
  */
-class GraphicsProcessorClass
+class GraphicsProcessor
 {
 public:
-	GraphicsProcessorClass() { }
+	GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance);
+	~GraphicsProcessor();
 
-	static void begin();
-	static void end();
+	void setThreadPriority(bool realtime);
 
-	static void process(
+	void process(
 		argb8888 *screenArgb8888, 
 		bool upsideDown, 
 		bool mirrored, 
@@ -79,46 +95,84 @@ public:
 		uint32_t vsize, 
 		uint32_t yIdx = 0, 
 		uint32_t yInc = 1);
-	static void processBlank();
+	void processBlank();
 
-	static void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
+	void processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize);
 
 	// Enables or disables emuating REG_PWM_DUTY by fading to black
-	static void enableRegPwmDutyEmulation(bool enabled = true);
+	void enableRegPwmDutyEmulation(bool enabled = true);
 
 	// Enables multithreaded rendering, sets thread count to number of available CPU cores
-	static void enableMultithread(bool enabled = true);
+	void enableMultithread(bool enabled = true);
 	// Reduces the number of used threads with the specified amount
-	static void reduceThreads(int nb);
+	void reduceThreads(int nb);
 
-	static void setDebugMode(int debugMode);
-	static int getDebugMode();
-	static void setDebugMultiplier(int debugMultiplier);
-	static int getDebugMultiplier();
-	static void setDebugLimiter(int debugLimiter);
-	static int getDebugLimiter();
+public:
+	void setDebugMode(int debugMode);
+	inline int getDebugMode() { return m_DebugMode; }
+	void setDebugMultiplier(int debugMultiplier);
+	inline int getDebugMultiplier() { return m_DebugMultiplier; }
+	void setDebugLimiter(int debugLimiter);
+	inline int getDebugLimiter() { return m_DebugLimiter; }
 
-	static bool getDebugLimiterEffective();
-	static int getDebugLimiterIndex();
+	inline bool getDebugLimiterEffective() { return m_DebugLimiterEffective; }
+	inline int getDebugLimiterIndex() { return m_DebugLimiterIndex; }
 
-	/*
-	// Sets operation trace on specified point
-	static void setDebugTrace(uint32_t x, uint32_t y);
-	// Disables or enables tracing
-	static void setDebugTrace(bool enabled);
-	// Returns the debug tracing state
-	static void getDebugTrace(bool &enabled, uint32_t &x, uint32_t &y);
-	// Returns a *copy* of the debug trace
-	static void getDebugTrace(std::vector<int> &result);
-	*/
+public:
+	inline bool getRegPwmDutyEmulation() { return m_RegPwmDutyEmulation; }
+
+public:
+	inline FT8XXEMU::System *system() { return m_System; }
+	inline Memory *memory() { return m_Memory; }
+	inline Touch *touch() { return m_Touch; }
 
 private:
-	GraphicsProcessorClass(const GraphicsProcessorClass &);
-	GraphicsProcessorClass &operator=(const GraphicsProcessorClass &);
+	struct ThreadInfo;
+	std::vector<std::unique_ptr<ThreadInfo> > m_ThreadInfos;
 
-}; /* class GraphicsProcessorClass */
+	void resizeThreadInfos(int size);
+	void launchGraphicsProcessorThread(ThreadInfo *li);
 
-extern GraphicsProcessorClass GraphicsProcessor;
+private:
+	FT8XXEMU::System *m_System = 0;
+	Memory *m_Memory = 0;
+	Touch *m_Touch = 0;
+
+	// Master copy of bitmap
+	BitmapInfo m_BitmapInfoMaster[32];
+
+	bool m_RegPwmDutyEmulation;
+
+	// Threading options
+	int m_ThreadCount;
+	bool m_ThreadPriorityRealtime = true;
+	bool m_BackgroundPerformance;
+
+	// Visual debugging options
+	int m_DebugMode;
+	int m_DebugMultiplier;
+	int m_DebugLimiter;
+	bool m_DebugLimiterEffective;
+	int m_DebugLimiterIndex;
+
+FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
+	// Cursor tracing
+	uint32_t m_DebugTraceX = 0;
+	uint32_t m_DebugTraceLine = 0;
+	int *m_DebugTraceStack = NULL;
+	int m_DebugTraceStackMax = 0;
+	int *m_DebugTraceStackSize = NULL;
+
+private:
+	template <bool debugTrace>
+	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo);
+	void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo);
+
+private:
+	GraphicsProcessor(const GraphicsProcessor &) = delete;
+	GraphicsProcessor &operator=(const GraphicsProcessor &) = delete;
+
+}; /* class GraphicsProcessor */
 
 } /* namespace FT800EMU */
 

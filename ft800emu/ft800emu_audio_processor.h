@@ -1,47 +1,45 @@
-/**
- * audio processor
- * $Id$
- * \file ft800emu_coprocessor.h
- * \brief graphics coprocessor
- * \date 2013-11-03 09:45GMT
- */
+/*
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
+*/
 
 #ifndef FT800EMU_AUDIO_PROCESSOR_H
 #define FT800EMU_AUDIO_PROCESSOR_H
 
 // System includes
-#include "ft8xxemu_inttypes.h"
-#include <stdio.h>
-#include <assert.h>
+#include "bt8xxemu_inttypes.h"
 
 // Project includes
+
+#define FT800EMU_AUDIO_MEMSIZE 40458
 
 namespace FT800EMU {
 
 /**
- * AudioProcessorClass
- * \brief AudioProcessorClass
+ * AudioProcessor
+ * \brief AudioProcessor
  * \date 2013-11-03 09:45GMT
  */
-class AudioProcessorClass
+class AudioProcessor
 {
 public:
-  AudioProcessorClass() { }
+	AudioProcessor();
+	~AudioProcessor();
 
-  void begin();
-  void end();
-
-  int16_t execute(uint8_t &busy, uint16_t sound, uint8_t volume);
-  void play();
+	int16_t execute(uint8_t &busy, uint16_t sound, uint8_t volume);
+	void play();
 	
 private:
-  int state;
-  uint16_t acc;               // accumulator
-  uint16_t cV[48], dV[48];    // code and data vectors
-  uint16_t *pcV, *pdV;
-}; /* class AudioProcessorClass */
+	uint16_t mem[FT800EMU_AUDIO_MEMSIZE];
+	int state;
+	uint16_t acc;               // accumulator
+	uint16_t cV[48], dV[48];    // code and data vectors
+	uint16_t *pcV, *pdV;
 
-extern AudioProcessorClass AudioProcessor;
+}; /* class AudioProcessor */
 
 } /* namespace FT800EMU */
 

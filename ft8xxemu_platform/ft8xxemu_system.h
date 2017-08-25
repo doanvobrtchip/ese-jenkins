@@ -1,135 +1,144 @@
-/**
- * SystemClass
- * $Id$
- * \file ft8xxemu_system.h
- * \brief SystemClass
- * \date 2011-05-25 19:28GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
-#ifndef FT8XXEMU_SYSTEM_H
-#define FT8XXEMU_SYSTEM_H
+#ifndef BT8XXEMU_SYSTEM_H
+#define BT8XXEMU_SYSTEM_H
 // #include <...>
 
 // System includes
+#include <memory>
 
 // Project includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+
+#ifdef WIN32
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
+#		define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
+#		define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
+#		define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
+#	endif
+#	ifndef WIN32_LEAN_AND_MEAN
+#		define WIN32_LEAN_AND_MEAN
+#	endif
+#	include <Windows.h>
+#endif
 
 namespace FT8XXEMU {
+	class SleepWake;
+
+#ifdef WIN32
+	class SystemWin32;
+#endif
+
+#define BT8XXEMU_FPS_SMOOTHING 36
 
 /**
- * SystemClass
- * \brief SystemClass
+ * System
+ * \brief System
  * \date 2011-05-25 19:28GMT
  * \author Jan Boon (Kaetemi)
  */
-class SystemClass
+class System
 {
 public:
-	SystemClass() { }
+	System();
+	~System();
 
-	static void begin();
-	static void update();
-	static void end();
+	void update();
 
 	// OS Specific
-	static double getSeconds();
-	static long getMillis();
-	static long getMicros();
-	static long getFreqTick(int hz);
+	double getSeconds();
+	long getMillis();
+	long getMicros();
+	long getFreqTick(int hz);
 
-	static void overrideMCUDelay(void (*delay)(int));
+	void log(BT8XXEMU_LogType type, const char *message, ...);
 
-	static void delayForMCU(int ms);
+	void setSender(BT8XXEMU_Emulator *sender) { m_Sender = sender; }
+	void setUserContext(void *context) { m_UserContext = context; }
+	void onLog(void(*log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message)) { m_Log = log; }
+	void overrideMCUDelay(void(*delay)(BT8XXEMU_Emulator *sender, void *context, int ms)) { m_MCUDelay = delay; }
+
+	void delayForMCU(int ms);
 	static void delay(int ms);
-	static void delayMicros(int us);
+	void delayMicros(int us);
 
-	static void renderSleep(int ms);
-	static void renderWake();
-	static bool renderWoke();
+	void renderSleep(int ms);
+	void renderWake();
+	bool renderWoke();
 
 	static unsigned int getCPUCount();
 
-	static void disableAutomaticPriorityBoost();
-
-	static void makeLowPriorityThread();
-	static void makeNormalPriorityThread();
-	static void makeHighPriorityThread();
-	static void makeHighestPriorityThread();
-	static void makeRealtimePriorityThread();
-
-	static void makeMainThread();
-	static bool isMainThread();
-	static inline bool setMainThreadSwitchable(bool value) { s_MainThreadSwitchable = value; }
-	static inline bool isMainThreadSwitchable() { return s_MainThreadSwitchable; }
-
-	static void makeMCUThread();
-	static int isMCUThread();
-	static void prioritizeMCUThread();
-	static void unprioritizeMCUThread();
-	static void holdMCUThread();
-	static void resumeMCUThread();
-	static void killMCUThread();
-
-	static void makeCoprocessorThread();
-	static void forgetCoprocessorThread();
-	static bool isCoprocessorThread();
-	static void prioritizeCoprocessorThread();
-	static void unprioritizeCoprocessorThread();
-	static void holdCoprocessorThread();
-	static void resumeCoprocessorThread();
-
 	static void switchThread();
 
-	static void *setThreadGamesCategory(unsigned long *);
-	static void revertThreadCategory(void *);
-
-	static void enterSwapDL();
-	static void leaveSwapDL();
-
-	// MCU
-	static uint16_t getAnalogRead(uint8_t pin);
-	static void setAnalogRead(uint8_t pin, uint16_t value);
+#ifdef WIN32
+	inline SystemWin32 *win32() { return m_Win32; }
+#endif
 
 	// Debugging
-	static inline double getFrameTime() { return s_FrameTime; }
-	static inline double getFrameTimeDelta() { return s_FrameTimeDelta; }
+	inline double getFrameTime() { return m_FrameTime; }
+	inline double getFrameTimeDelta() { return m_FrameTimeDelta; }
 
-	static inline double getFPS() { return 1.0 / s_FrameTimeDelta; }
-	static inline double getFPSSmooth() { return s_FPSSmooth; }
-	static inline int getFrameCount() { return s_FrameCount; }
+	inline double getFPS() { return 1.0 / m_FrameTimeDelta; }
+	inline double getFPSSmooth() { return m_FPSSmooth; }
+	inline int getFrameCount() { return m_FrameCount; }
 
-private:
-	static void _begin();
-	static void _update();
-	static void _end();
+	inline void setPrintStd(bool printStd) { m_PrintStd = printStd; }
+	inline bool getPrintStd() { return m_PrintStd; }
 
 private:
-	static double s_FrameTime, s_FrameTimeDelta;
-	static int s_FrameCount;
-	static double s_FPSSmooth;
-	static bool s_MainThreadSwitchable;
+#ifdef WIN32
+	void initWindows();
+	void releaseWindows();
+#endif
 
 private:
-	SystemClass(const SystemClass &);
-	SystemClass &operator=(const SystemClass &);
+	double m_FrameTime, m_FrameTimeDelta;
+	int m_FrameCount;
+	double m_FPSSmooth;
+	// bool m_MainThreadSwitchable = false;
 
-}; /* class SystemClass */
+	std::unique_ptr<SleepWake> m_RenderSleepWake;
+	bool m_RenderWoke = false;
 
-extern SystemClass System;
+	bool m_PrintStd = false;
 
-extern void (*g_Exception)(const char *message);
-extern bool g_PrintStd;
+	double m_FPSSmoothValues[BT8XXEMU_FPS_SMOOTHING];
+	//static double m_FPSSmoothTotal;
+	int m_FPSSmoothAt;
+	int m_FPSSmoothCount;
 
-#define FTEMU_printf(s, ...) do { if (::FT8XXEMU::g_PrintStd) { printf(s, __VA_ARGS__); } } while (false)
+	void(*m_Log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message) = NULL;
+	void(*m_MCUDelay)(BT8XXEMU_Emulator *sender, void *context, int ms) = NULL;
+	BT8XXEMU_Emulator *m_Sender = NULL;
+	void *m_UserContext = NULL;
+
+#ifdef WIN32
+	SystemWin32 *m_Win32 = NULL;
+	LARGE_INTEGER m_PerformanceFrequency = { 0 };
+	LARGE_INTEGER m_PerformanceCounterBegin = { 0 };
+#endif
+
+private:
+	System(const System &);
+	System &operator=(const System &);
+
+}; /* class System */
+
+// #define FTEMU_printf(s, ...) do { if (m_System->getPrintStd()) { printf(s, __VA_ARGS__); } } while (false)
+#define FTEMU_error(s, ...) m_System->log(BT8XXEMU_LogError, s, __VA_ARGS__)
+#define FTEMU_warning(s, ...) m_System->log(BT8XXEMU_LogWarning, s, __VA_ARGS__)
+#define FTEMU_message(s, ...) m_System->log(BT8XXEMU_LogMessage, s, __VA_ARGS__)
 
 } /* namespace FT8XXEMU */
 
-#endif /* #ifndef FT8XXEMU_SYSTEM_H */
+#endif /* #ifndef BT8XXEMU_SYSTEM_H */
 
 /* end of file */

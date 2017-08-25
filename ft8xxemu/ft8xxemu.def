@@ -1,6 +1,0 @@
-EXPORTS
-	FT8XXEMU_run
-	FT8XXEMU_stop
-	FT8XXEMU_transfer
-	FT8XXEMU_csLow
-	FT8XXEMU_csHigh

@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+BT8XX Emulator Samples
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #include <vc2.h>
 #include "../ftemutest.h"

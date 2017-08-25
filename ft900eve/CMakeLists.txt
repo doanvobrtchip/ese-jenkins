@@ -8,7 +8,7 @@ ADD_EXECUTABLE(ft900eve
 	)
 
 target_link_libraries(ft900eve
-	ft8xxemu
+	bt8xxemu
 	ft900emu
 	)
 

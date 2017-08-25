@@ -1,40 +1,41 @@
-/**
- * graphics coprocessor
- * $Id$
- * \file ft800emu_coprocessor.h
- * \brief graphics coprocessor
- * \date 2013-08-03 02:10GMT
- */
+/*
+FT800 Emulator Library
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
+*/
 
-#ifdef FT810EMU_MODE
+#if defined(FT810EMU_MODE)
 #include "ft810emu_coprocessor.h"
-#endif
-#ifndef FT810EMU_MODE
+#else
 #ifndef FT800EMU_COPROCESSOR_H
 #define FT800EMU_COPROCESSOR_H
 
 // System includes
-#include "ft8xxemu.h"
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu.h"
+#include "bt8xxemu_inttypes.h"
 #include <stdio.h>
 #include <assert.h>
 
 // Project includes
 
+namespace FT8XXEMU {
+	class System;
+}
+
 namespace FT800EMU {
+	class Memory;
 
 /**
- * CoprocessorClass
- * \brief CoprocessorClass
+ * Coprocessor
+ * \brief Coprocessor
  * \date 2013-08-03 02:10GMT
  */
-class CoprocessorClass
+class Coprocessor
 {
 public:
-	CoprocessorClass() { }
-
-	void begin(const char *romFilePath = 0, FT8XXEMU_EmulatorMode mode = FT8XXEMU_EmulatorFT800);
-	void end();
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
+	~Coprocessor();
 
 	void executeManual();
 	void executeEmulator();
@@ -45,10 +46,13 @@ private:
 	template <bool singleFrame>
 	void execute();
 
-	CoprocessorClass(const CoprocessorClass &);
-	CoprocessorClass &operator=(const CoprocessorClass &);
+private:
+	FT8XXEMU::System *m_System;
+	Memory *m_Memory;
 
-    uint32_t t;
+	volatile bool m_Running;
+
+	uint32_t t;
     uint32_t d[32]; /* data stack */
     uint32_t r[32]; /* return stack */
     uint16_t pc;    /* program counter, counts CELLS */
@@ -67,14 +71,16 @@ private:
         return v;
     }
 
+private:
+	Coprocessor(const Coprocessor &) = delete;
+	Coprocessor &operator=(const Coprocessor &) = delete;
+
     /*int state;
     uint32_t acc;               // accumulator
     uint32_t cV[48], dV[48];    // code and data vectors
     uint32_t *pcV, *pdV;*/
 
-}; /* class CoprocessorClass */
-
-extern CoprocessorClass Coprocessor;
+}; /* class Coprocessor */
 
 } /* namespace FT800EMU */
 
