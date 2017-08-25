@@ -61,10 +61,10 @@ public:
 
 	void log(BT8XXEMU_LogType type, const char *message, ...);
 
-	void setSender(void *sender) { m_Sender = sender; }
+	void setSender(BT8XXEMU_Emulator *sender) { m_Sender = sender; }
 	void setUserContext(void *context) { m_UserContext = context; }
-	void onLog(void(*log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message)) { m_Log = log; }
-	void overrideMCUDelay(void(*delay)(void *sender, void *context, int ms)) { m_MCUDelay = delay; }
+	void onLog(void(*log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message)) { m_Log = log; }
+	void overrideMCUDelay(void(*delay)(BT8XXEMU_Emulator *sender, void *context, int ms)) { m_MCUDelay = delay; }
 
 	void delayForMCU(int ms);
 	static void delay(int ms);
@@ -115,9 +115,9 @@ private:
 	int m_FPSSmoothAt;
 	int m_FPSSmoothCount;
 
-	void(*m_Log)(void *sender, void *context, BT8XXEMU_LogType type, const char *message) = NULL;
-	void(*m_MCUDelay)(void *sender, void *context, int ms) = NULL;
-	void *m_Sender = NULL;
+	void(*m_Log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message) = NULL;
+	void(*m_MCUDelay)(BT8XXEMU_Emulator *sender, void *context, int ms) = NULL;
+	BT8XXEMU_Emulator *m_Sender = NULL;
 	void *m_UserContext = NULL;
 
 #ifdef WIN32

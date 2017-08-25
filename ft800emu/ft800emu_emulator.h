@@ -93,9 +93,9 @@ private:
 private:
 	volatile bool m_EmulatorRunning = false;
 
-	void(*m_Main)(void *sender, void *context) = NULL;
-	void(*m_Keyboard)(void *sender, void *context) = NULL;
-	void(*m_Close)(void *sender, void *context) = NULL;
+	void(*m_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
+	void(*m_Keyboard)(BT8XXEMU_Emulator *sender, void *context) = NULL;
+	void(*m_Close)(BT8XXEMU_Emulator *sender, void *context) = NULL;
 	int m_Flags = 0;
 	volatile bool m_MasterRunning = false;
 	bool m_DynamicDegrade = false;

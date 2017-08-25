@@ -32,7 +32,7 @@ ADD_EXECUTABLE(fteditor WIN32
 	)
 
 TARGET_LINK_LIBRARIES(fteditor
-	ft8xxemu
+	bt8xxemu
 	)
 
 IF (WITH_SDL2)

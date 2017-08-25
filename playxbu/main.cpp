@@ -1,5 +1,5 @@
 /*
-BT8XX Emulator Sample
+BT8XX Emulator Samples
 Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */

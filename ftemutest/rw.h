@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+BT8XX Emulator Samples
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 uint8_t rd8(uint32_t address);
 uint16_t rd16(uint32_t address);
