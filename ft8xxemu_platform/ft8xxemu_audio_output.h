@@ -1,15 +1,9 @@
-/**
- * AudioOutput
- * $Id$
- * \file ft8xxemu_audio_output.h
- * \brief AudioOutput
- * \date 2011-05-29 19:38GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013-2017  Future Technology Devices International Ltd
- */
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #ifndef BT8XXEMU_AUDIO_OUTPUT_H
 #define BT8XXEMU_AUDIO_OUTPUT_H

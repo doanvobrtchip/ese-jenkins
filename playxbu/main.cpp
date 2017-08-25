@@ -1,15 +1,8 @@
-/**
- * main.cpp
- * $Id$
- * \file main.cpp
- * \brief main.cpp
- * \date 2013-07-09 07:57GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+BT8XX Emulator Sample
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+*/
 
 #include <Windows.h>
 

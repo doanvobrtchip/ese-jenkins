@@ -1,15 +1,10 @@
-/**
- * BusSlave
- * $Id$
- * \file ft800emu_bum_slave.cpp
- * \brief BusSlave
- * \date 2013-06-21 21:56GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 // #include <...>
 #include "ft800emu_bus_slave.h"

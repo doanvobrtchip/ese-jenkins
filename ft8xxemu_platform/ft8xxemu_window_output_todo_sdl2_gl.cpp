@@ -1,6 +1,9 @@
 /*
- * Copyright (C) 2014  Future Technology Devices International Ltd
- */
+BT8XX Emulator Library
+Copyright (C) 2014-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #if 0
 #ifdef FTEMU_SDL2

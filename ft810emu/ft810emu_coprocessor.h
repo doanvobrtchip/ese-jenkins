@@ -1,10 +1,9 @@
-/**
- * graphics coprocessor
- * $Id$
- * \file ft800emu_coprocessor.h
- * \brief graphics coprocessor
- * \date 2013-08-03 02:10GMT
- */
+/*
+FT810 Emulator Library
+Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
+*/
 
 #ifdef FT810EMU_MODE
 #ifndef FT800EMU_COPROCESSOR_H

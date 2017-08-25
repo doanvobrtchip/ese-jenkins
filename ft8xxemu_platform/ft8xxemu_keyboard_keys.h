@@ -1,15 +1,9 @@
-/**
- * Key defines
- * $Id$
- * \file ft8xxemu_keyboard_keys.h
- * \brief Key defines
- * \date 2013-07-18 20:16GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #ifndef ft8xxemu_keyboard_KEYS_H
 #define ft8xxemu_keyboard_KEYS_H

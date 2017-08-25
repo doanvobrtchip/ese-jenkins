@@ -1,15 +1,10 @@
-/**
- * AudioRender
- * $Id$
- * \file ft800emu_audio_render.cpp
- * \brief AudioRender
- * \date 2013-10-17 23:44GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 // #include <...>
 #include "ft800emu_audio_render.h"

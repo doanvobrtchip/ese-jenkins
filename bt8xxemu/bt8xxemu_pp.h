@@ -1,8 +1,9 @@
 /*
- * FT8XX Emulator Library
- * Copyright (C) 2013-2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #ifndef BT8XXEMU_PP_H
 #define BT8XXEMU_PP_H

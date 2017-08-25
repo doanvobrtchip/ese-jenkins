@@ -1,10 +1,11 @@
-/**
-* FT800EMU Audio Processor
-* $Id$
-* \file ft800emu_audio_processor.cpp
-* \brief FT800EMU Audio Processor
-* \date 2013-11-03 09:45GMT
+/*
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+Author: James Bowman <jamesb@excamera.com>
 */
+
 #include "ft800emu_audio_processor.h"
 
 // System includes

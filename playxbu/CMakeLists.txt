@@ -2,12 +2,12 @@
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
 
-ADD_EXECUTABLE(ftplayxbu
+ADD_EXECUTABLE(btplayxbu
 	${SRCS}
 	${HDRS}
 	)
 
-target_link_libraries(ftplayxbu
+target_link_libraries(btplayxbu
 	bt8xxemu
 	)
 
@@ -23,7 +23,7 @@ ELSEIF (WITH_SDL)
   include_directories(
     ${SDL_INCLUDE_DIR}
     )
-  target_link_libraries(ftplayxbu
+  target_link_libraries(btplayxbu
     ${SDL_LIBRARY}
     )
 

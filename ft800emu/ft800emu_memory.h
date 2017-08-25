@@ -1,15 +1,10 @@
-/**
- * Memory
- * $Id$
- * \file ft800emu_memory.h
- * \brief Memory
- * \date 2013-06-21 21:53GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 #ifndef FT800EMU_MEMORY_H
 #define FT800EMU_MEMORY_H

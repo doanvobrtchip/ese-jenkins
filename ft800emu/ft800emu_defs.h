@@ -1,15 +1,8 @@
-/**
- * Defs
- * $Id$
- * \file ft800emu_defs.h
- * \brief Defs
- * \date 2017-08-09 14:12GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013-2017  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2017  Bridgetek Pte Lte
+*/
 
 #ifndef FT800EMU_DEFS_H
 #define FT800EMU_DEFS_H

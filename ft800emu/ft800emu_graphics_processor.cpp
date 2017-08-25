@@ -1,15 +1,10 @@
-/**
- * GraphicsProcessor
- * $Id$
- * \file ft800emu_graphics_processor.cpp
- * \brief GraphicsProcessor
- * \date 2013-06-22 09:29GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 // #include <...>
 #define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE public

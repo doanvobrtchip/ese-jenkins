@@ -1,15 +1,10 @@
-/**
- * Emulator
- * $Id$
- * \file ft800emu_emulator.cpp
- * \brief Emulator
- * \date 2013-06-20 23:17GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+FT800 Emulator Library
+FT810 Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2017  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
 // #include <...>
 #include "ft800emu_emulator.h"
