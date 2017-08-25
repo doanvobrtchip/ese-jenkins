@@ -12,6 +12,7 @@ typedef signed __int64 int64_t;
 #endif
 #else
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #endif
 #if defined(_MSC_VER) && (_MSC_VER >= 1900)
