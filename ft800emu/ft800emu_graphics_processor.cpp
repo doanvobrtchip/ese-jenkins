@@ -973,6 +973,35 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 	return 0xFFFFFF00; // invalid filter
 }
 
+#ifdef BT815EMU_MODE
+BT8XXEMU_FORCE_INLINE argb8888 swizzleSelect(const argb8888 sample, const uint8_t select)
+{
+	switch (select)
+	{
+	case ZERO:
+		return 0;
+	case ONE:
+		return 255;
+	case ALPHA:
+		return sample >> 24;
+	default:
+		return (sample >> ((BLUE - select) << 3)) & 0xFF;
+	}
+}
+
+BT8XXEMU_FORCE_INLINE argb8888 swizzleSample(const argb8888 sample, const BitmapInfo &bi)
+{
+	static const uint32_t swizzleNone =
+		(BLUE) | (GREEN << 8) | (RED << 16) | (ALPHA << 24);
+	if (bi.Swizzle.U == swizzleNone)
+		return sample; // Early exit for common case
+	return swizzleSelect(sample, bi.Swizzle.B)
+		| (swizzleSelect(sample, bi.Swizzle.G) << 8)
+		| (swizzleSelect(sample, bi.Swizzle.R) << 16)
+		| (swizzleSelect(sample, bi.Swizzle.A) << 24);
+}
+#endif
+
 template <bool debugTrace>
 void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, 
 #ifdef FT810EMU_MODE
@@ -985,18 +1014,18 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	FT8XXEMU::System *const system = gs.Processor->system();
 	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *ram = gs.Processor->memory()->getRam();
-
+	
 #ifdef FT810EMU_MODE
-	int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
+	const int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
 #else
-	int sizeHeight = bi.SizeHeight;
+	const int sizeHeight = bi.SizeHeight;
 #endif
 
-	int pytop = py; // incl pixel*16 top
-	int pybtm = py + (sizeHeight << 4) - 16; // incl pixel*16 btm
+	const int pytop = py; // incl pixel*16 top
+	const int pybtm = py + (sizeHeight << 4) - 16; // incl pixel*16 btm
 
-	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
-	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
+	const int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
+	const int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
 
 	if (max(pytopi, gs.ScissorY.I) <= y && y <= min(pybtmi, gs.ScissorY2.I - 1)) // Scissor Y
 	{
@@ -1006,8 +1035,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		int sizeWidth = bi.SizeWidth;
 #endif
 
-		int pxlef = px;
-		int pxrig = px + (sizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
+		const int pxlef = px;
+		const int pxrig = px + (sizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
 
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
@@ -1016,39 +1045,47 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
 
 		//if (bi.
-		int vy = y * 16;
-		int ry = vy - py;
-		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
+		const int vy = y * 16;
+		const int ry = vy - py;
+		const uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
 		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
-		int sampleFormat = bi.LayoutFormat;
-		int sampleWidth = bi.LayoutWidth;
-		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
-		int sampleStride = bi.LayoutStride;
-		int sampleWrapX = bi.SizeWrapX;
-		int sampleWrapY = bi.SizeWrapY;
-		int sampleFilter = bi.SizeFilter;
-#if FT810EMU_MODE
-		int paletteSource = gs.PaletteSource;
+#ifdef BT815EMU_MODE
+		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
+		const int sampleFormat = extFormat ? bi.ExtFormat : bi.LayoutFormat;
+#else
+		const int sampleFormat = bi.LayoutFormat;
+#endif
+		const int sampleWidth = bi.LayoutWidth;
+		const int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
+		const int sampleStride = bi.LayoutStride;
+		const int sampleWrapX = bi.SizeWrapX;
+		const int sampleWrapY = bi.SizeWrapY;
+		const int sampleFilter = bi.SizeFilter;
+#ifdef FT810EMU_MODE
+		const int paletteSource = gs.PaletteSource;
 #endif
 		// pretransform
-		int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
-		int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
+		const int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
+		const int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
 		//int sample
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
 			// relative at 1/16 pixel units
-			int vx = x * 16;
-			int rx = vx - px;
+			const int vx = x * 16;
+			const int rx = vx - px;
 			// transform with 1/(256*16) pixel units
-			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
-			int ryt = (gs.BitmapTransformD * rx) + rytef;
-#if FT810EMU_MODE
+			const int rxt = (gs.BitmapTransformA * rx) + rxtbc;
+			const int ryt = (gs.BitmapTransformD * rx) + rytef;
+#ifdef FT810EMU_MODE
 			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
 #else
 			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 #endif
-			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
+#ifdef BT815EMU_MODE
+			const argb8888 out = mul_argb(extFormat ? swizzleSample(sample, bi) : sample, gs.ColorARGB);
+#else
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
+#endif
 			processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 		}
 	}
@@ -2651,14 +2688,14 @@ EvaluateDisplayListValue:
 #endif
 #ifdef BT815EMU_MODE
 		case BT815EMU_DL_BITMAP_EXT_FORMAT:
-			// TODO: BT815
+			bitmapInfo[gs.BitmapHandle].ExtFormat = (v & 0xFFFF);
 			break;
 		case BT815EMU_DL_BITMAP_SWIZZLE:
 			bitmapInfo[gs.BitmapHandle].Swizzle.U =
-				  (/* b = */ ((v >> 3) & 0x7) << 24)
-				| (/* g = */ ((v >> 6) & 0x7) << 16)
-				| (/* r = */ ((v >> 9) & 0x7) << 8)
-				| (/* a = */ v & 0x7);
+				  (/* b = */ ((v >> 3) & 0x7))
+				| (/* g = */ ((v >> 6) & 0x7) << 8)
+				| (/* r = */ ((v >> 9) & 0x7) << 16)
+				| (/* a = */ ((v) & 0x7) << 24);
 			break;
 #endif
 		}
@@ -3103,14 +3140,14 @@ EvaluateDisplayListValue:
 #endif
 #ifdef BT815EMU_MODE
 				case BT815EMU_DL_BITMAP_EXT_FORMAT:
-					// TODO: BT815
+					bitmapInfo[gs.BitmapHandle].ExtFormat = (v & 0xFFFF);
 					break;
 				case BT815EMU_DL_BITMAP_SWIZZLE:
 					bitmapInfo[gs.BitmapHandle].Swizzle.U =
-						  (/* b = */ ((v >> 3) & 0x7) << 24)
-						| (/* g = */ ((v >> 6) & 0x7) << 16)
-						| (/* r = */ ((v >> 9) & 0x7) << 8)
-						| (/* a = */ v & 0x7);
+						  (/* b = */ ((v >> 3) & 0x7))
+						| (/* g = */ ((v >> 6) & 0x7) << 8)
+						| (/* r = */ ((v >> 9) & 0x7) << 16)
+						| (/* a = */ ((v) & 0x7) << 24);
 					break;
 				case BT815EMU_DL_INT_FRR:
 					// TODO: BT815

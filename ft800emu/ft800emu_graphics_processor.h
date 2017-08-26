@@ -56,14 +56,15 @@ struct BitmapInfo
 	int SizeWidth;
 	int SizeHeight;
 #ifdef BT815EMU_MODE
+	int ExtFormat;
 	union
 	{
 		uint32_t U;
 		struct {
-			uint8_t A;
-			uint8_t R;
-			uint8_t G;
 			uint8_t B;
+			uint8_t G;
+			uint8_t R;
+			uint8_t A;
 		};
 	} Swizzle;
 #endif
