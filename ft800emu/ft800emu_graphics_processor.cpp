@@ -2,6 +2,7 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
@@ -2358,6 +2359,20 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	m_RegPwmDutyEmulation = false;
 	m_ThreadCount = 1;
 
+#ifdef BT815EMU_MODE
+	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB - 1; ++i)
+	{
+		m_BitmapInfoMaster[i].Swizzle.A = ALPHA;
+		m_BitmapInfoMaster[i].Swizzle.R = BLUE;
+		m_BitmapInfoMaster[i].Swizzle.G = GREEN;
+		m_BitmapInfoMaster[i].Swizzle.B = RED;
+	}
+	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.A = RED;
+	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.R = ONE;
+	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.G = ONE;
+	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.B = ONE;
+#endif
+
 	uint8_t *ram = m_Memory->getRam();
 	uint32_t fi = Memory::rawReadU32(ram, FT800EMU_ROM_FONTINFO);
 	m_System->log(BT8XXEMU_LogMessage, "Font index : %u", fi);
@@ -2616,7 +2631,7 @@ EvaluateDisplayListValue:
 			goto EvaluateDisplayListValue;
 			break;
 #ifdef FT810EMU_MODE
-		case FT800EMU_DL_BITMAP_LAYOUT_H:
+		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
@@ -2627,11 +2642,23 @@ EvaluateDisplayListValue:
 				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
 			}
 			break;
-		case FT800EMU_DL_BITMAP_SIZE_H:
+		case FT810EMU_DL_BITMAP_SIZE_H:
 			bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
 			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
 			bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
 			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
+			break;
+#endif
+#ifdef BT815EMU_MODE
+		case BT815EMU_DL_BITMAP_EXT_FORMAT:
+			// TODO: BT815
+			break;
+		case BT815EMU_DL_BITMAP_SWIZZLE:
+			bitmapInfo[gs.BitmapHandle].Swizzle.U =
+				  (/* b = */ ((v >> 3) & 0x7) << 24)
+				| (/* g = */ ((v >> 6) & 0x7) << 16)
+				| (/* r = */ ((v >> 9) & 0x7) << 8)
+				| (/* a = */ v & 0x7);
 			break;
 #endif
 		}
@@ -3041,10 +3068,10 @@ EvaluateDisplayListValue:
 					}
 					break;
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_VERTEX_FORMAT:
+				case FT810EMU_DL_VERTEX_FORMAT:
 					gs.VertexFormatShift = 4 - (v & 0x7);
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
@@ -3055,23 +3082,38 @@ EvaluateDisplayListValue:
 						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
 					}
 					break;
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FT810EMU_DL_BITMAP_SIZE_H:
 					bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
 					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
 					bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
 					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 					break;
-				case FT800EMU_DL_PALETTE_SOURCE:
+				case FT810EMU_DL_PALETTE_SOURCE:
 					gs.PaletteSource = v & FT800EMU_ADDR_MASK;
 					break;
-				case FT800EMU_DL_VERTEX_TRANSLATE_X:
+				case FT810EMU_DL_VERTEX_TRANSLATE_X:
 					gs.VertexTranslateX = SIGNED_N(v & 0x1FFFF, 17);
 					break;
-				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+				case FT810EMU_DL_VERTEX_TRANSLATE_Y:
 					gs.VertexTranslateY = SIGNED_N(v & 0x1FFFF, 17);
 					break;
-				case FT800EMU_DL_NOP:
+				case FT810EMU_DL_NOP:
 					// no-op
+					break;
+#endif
+#ifdef BT815EMU_MODE
+				case BT815EMU_DL_BITMAP_EXT_FORMAT:
+					// TODO: BT815
+					break;
+				case BT815EMU_DL_BITMAP_SWIZZLE:
+					bitmapInfo[gs.BitmapHandle].Swizzle.U =
+						  (/* b = */ ((v >> 3) & 0x7) << 24)
+						| (/* g = */ ((v >> 6) & 0x7) << 16)
+						| (/* r = */ ((v >> 9) & 0x7) << 8)
+						| (/* a = */ v & 0x7);
+					break;
+				case BT815EMU_DL_INT_FRR:
+					// TODO: BT815
 					break;
 #endif
 				default:

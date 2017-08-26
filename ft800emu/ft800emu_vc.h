@@ -2,13 +2,16 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 */
 
 #ifndef FT800EMU_VC_H
 #define FT800EMU_VC_H
 
-#ifdef FT810EMU_MODE
+#ifdef BT815EMU_MODE
+#	include "vc3.h"
+#elif defined(FT810EMU_MODE)
 #	include "vc2.h"
 #else
 #	include "vc.h"
@@ -56,13 +59,18 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 #define FT800EMU_DL_MACRO 37
 #define FT800EMU_DL_CLEAR 38
 #ifdef FT810EMU_MODE
-#	define FT800EMU_DL_VERTEX_FORMAT 39
-#	define FT800EMU_DL_BITMAP_LAYOUT_H 40
-#	define FT800EMU_DL_BITMAP_SIZE_H 41
-#	define FT800EMU_DL_PALETTE_SOURCE 42
-#	define FT800EMU_DL_VERTEX_TRANSLATE_X 43
-#	define FT800EMU_DL_VERTEX_TRANSLATE_Y 44
-#	define FT800EMU_DL_NOP 45
+#	define FT810EMU_DL_VERTEX_FORMAT 39
+#	define FT810EMU_DL_BITMAP_LAYOUT_H 40
+#	define FT810EMU_DL_BITMAP_SIZE_H 41
+#	define FT810EMU_DL_PALETTE_SOURCE 42
+#	define FT810EMU_DL_VERTEX_TRANSLATE_X 43
+#	define FT810EMU_DL_VERTEX_TRANSLATE_Y 44
+#	define FT810EMU_DL_NOP 45
+#endif
+#ifdef BT815EMU_MODE
+#	define BT815EMU_DL_BITMAP_EXT_FORMAT 46
+#	define BT815EMU_DL_BITMAP_SWIZZLE 47
+#	define BT815EMU_DL_INT_FRR 48
 #endif
 
 #endif /* #ifndef FT800EMU_VC_H */
