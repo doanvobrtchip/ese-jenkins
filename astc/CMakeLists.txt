@@ -1,0 +1,10 @@
+
+FILE(GLOB SRCS *.cpp *.c)
+FILE(GLOB HDRS *.h)
+
+SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+
+ADD_LIBRARY(astc
+	${SRCS}
+	${HDRS}
+	)
