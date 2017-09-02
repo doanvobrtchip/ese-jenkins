@@ -805,7 +805,7 @@ void decompress_symbolic_block(astc_decode_mode decode_mode,
 
 physical_compressed_block symbolic_to_physical(int xdim, int ydim, int zdim, const symbolic_compressed_block * sc);
 
-void physical_to_symbolic(int xdim, int ydim, int zdim, physical_compressed_block pb, symbolic_compressed_block * res);
+void physical_to_symbolic(int xdim, int ydim, int zdim, const physical_compressed_block * pb, symbolic_compressed_block * res);
 
 
 uint16_t unorm16_to_sf16(uint16_t p);

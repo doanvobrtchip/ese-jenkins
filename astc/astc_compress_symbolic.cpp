@@ -1399,7 +1399,7 @@ float compress_symbolic_block(const astc_codec_image * input_image,
 			printf("0\n");
 
 		physical_compressed_block psb = symbolic_to_physical(xdim, ydim, zdim, scb);
-		physical_to_symbolic(xdim, ydim, zdim, psb, scb);
+		physical_to_symbolic(xdim, ydim, zdim, &psb, scb);
 
 		return 0.0f;
 	}
@@ -1780,7 +1780,7 @@ float compress_symbolic_block(const astc_codec_image * input_image,
 	
 	// compress/decompress to a physical block
 	physical_compressed_block psb = symbolic_to_physical(xdim, ydim, zdim, scb);
-	physical_to_symbolic(xdim, ydim, zdim, psb, scb);
+	physical_to_symbolic(xdim, ydim, zdim, &psb, scb);
 
 
 	if (print_tile_errors)
