@@ -802,6 +802,9 @@ void decompress_symbolic_block(astc_decode_mode decode_mode,
 							   // position of block
 							   int xpos, int ypos, int zpos, const symbolic_compressed_block * scb, imageblock * blk);
 
+void decompress_symbolic_block_no_pos(astc_decode_mode decode_mode,
+	int xdim, int ydim, int zdim,   // dimensions of block
+	const symbolic_compressed_block * scb, imageblock * blk);
 
 physical_compressed_block symbolic_to_physical(int xdim, int ydim, int zdim, const symbolic_compressed_block * sc);
 

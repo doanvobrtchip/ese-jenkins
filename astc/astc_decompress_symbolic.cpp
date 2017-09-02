@@ -74,7 +74,6 @@ ushort4 lerp_color_int(astc_decode_mode decode_mode, ushort4 color0, ushort4 col
 	return rcolor;
 }
 
-
 void decompress_symbolic_block(astc_decode_mode decode_mode,
 							   int xdim, int ydim, int zdim,   // dimensions of block
 							   int xpos, int ypos, int zpos,   // position of block
@@ -84,6 +83,14 @@ void decompress_symbolic_block(astc_decode_mode decode_mode,
 	blk->ypos = ypos;
 	blk->zpos = zpos;
 
+	decompress_symbolic_block_no_pos(decode_mode, xdim, ydim, zdim, scb, blk);
+}
+
+
+void decompress_symbolic_block_no_pos(astc_decode_mode decode_mode,
+	int xdim, int ydim, int zdim,   // dimensions of block
+	const symbolic_compressed_block * scb, imageblock * blk)
+{
 	int i;
 
 	// if we detected an error-block, blow up immediately.
