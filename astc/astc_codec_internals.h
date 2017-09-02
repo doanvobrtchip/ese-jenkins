@@ -190,9 +190,9 @@ struct imageblock
 	float work_data[MAX_TEXELS_PER_BLOCK * 4];	// the data that we will compress, either linear or LNS (0..65535 in both cases)
 	float deriv_data[MAX_TEXELS_PER_BLOCK * 4];	// derivative of the conversion function used, used ot modify error weighting
 
-	uint8_t rgb_lns[MAX_TEXELS_PER_BLOCK * 4];	// 1 if RGB data are being trated as LNS
-	uint8_t alpha_lns[MAX_TEXELS_PER_BLOCK * 4];	// 1 if Alpha data are being trated as LNS
-	uint8_t nan_texel[MAX_TEXELS_PER_BLOCK * 4];	// 1 if the texel is a NaN-texel.
+	uint8_t rgb_lns[MAX_TEXELS_PER_BLOCK];	// 1 if RGB data are being trated as LNS
+	uint8_t alpha_lns[MAX_TEXELS_PER_BLOCK];	// 1 if Alpha data are being trated as LNS
+	uint8_t nan_texel[MAX_TEXELS_PER_BLOCK];	// 1 if the texel is a NaN-texel.
 
 	float red_min, red_max;
 	float green_min, green_max;
