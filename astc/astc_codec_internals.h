@@ -49,7 +49,8 @@
 #define MAX_WEIGHT_MODES 2048
 
 // error reporting for codec internal errors.
-#define ASTC_CODEC_INTERNAL_ERROR astc_codec_internal_error(__FILE__, __LINE__)
+#define ASTC_CODEC_INTERNAL_ERROR
+// #define ASTC_CODEC_INTERNAL_ERROR astc_codec_internal_error(__FILE__, __LINE__)
 
 void astc_codec_internal_error(const char *filename, int linenumber);
 
