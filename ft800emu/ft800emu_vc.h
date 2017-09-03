@@ -73,6 +73,10 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 #	define BT815EMU_DL_INT_FRR 48
 #endif
 
+#ifdef BT815EMU_MODE
+#	define BT815EMU_IS_FORMAT_ASTC(format) ((format & 0xFFF0) == 0x93B0)
+#endif
+
 #endif /* #ifndef FT800EMU_VC_H */
 
 /* end of file */

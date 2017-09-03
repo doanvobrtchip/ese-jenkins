@@ -46,6 +46,11 @@ Author: Jan Boon <jan@no-break.space>
 #	endif
 #endif
 
+// Library includes
+#ifdef BT815EMU_MODE
+#	include <astc_codec_internals.h>
+#endif
+
 // Project includes
 #include "bt8xxemu_inttypes.h"
 #include "ft8xxemu_system.h"
@@ -716,6 +721,16 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 	return ram[i];
 }
 
+#ifdef BT815EMU_MODE
+static const int c_AstcBlockWidth[] = {
+	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
+};
+
+static const int c_AstcBlockHeight[] = {
+	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
+};
+#endif
+
 // uses pixel units
 #if FT810EMU_MODE
 BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
@@ -891,6 +906,27 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		}
 #endif
 	}
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockWidth = c_AstcBlockWidth[format & 0xF];
+		const int blockHeight = c_AstcBlockHeight[format & 0xF];
+		const ptrdiff_t blockOffset = ((y / blockHeight) * stride) + ((x / blockWidth) * 16);
+		const physical_compressed_block *physicalBlock = 
+			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+		symbolic_compressed_block symbolicBlock;
+		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
+		imageblock imageBlock;
+		decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+		const int index = (((y % blockHeight) * blockWidth) + (x % blockWidth));
+		if (imageBlock.nan_texel[index]) return 0xFFFF00FF;
+		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
+		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		return (a << 24) | (r << 16) | (g << 8) | (b);
+	}
+#endif
 	return 0xFFFF00FF; // invalid format
 }
 
