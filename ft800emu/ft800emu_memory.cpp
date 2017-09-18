@@ -270,7 +270,11 @@ BT8XXEMU_FORCE_INLINE uint8_t Memory::rawReadU8(ramaddr address)
 	return rawReadU8(m_Ram, address);
 }
 
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+static const uint8_t c_RomBT815[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_bt815.h"
+};
+#elif defined(FT810EMU_MODE)
 static const uint8_t c_RomFT810[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft810.h"
 };
@@ -323,7 +327,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	}
 	else
 	{
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT815, sizeof(c_RomBT815));
+#elif defined(FT810EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT810, sizeof(c_RomFT810));
 #else
 		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT801, sizeof(c_RomFT801));

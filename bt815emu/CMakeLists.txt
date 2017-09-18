@@ -1,15 +1,16 @@
 
 FILE(GLOB SRCS ../ft800emu/*.cpp ../ft810emu/*.cpp *.cpp)
-FILE(GLOB HDRS ../ft800emu/*.h ../ft810emu/*.h ../reference/*.h *.h ../ft810emu/resources/*.h)
+FILE(GLOB HDRS ../ft800emu/*.h ../ft810emu/*.h *.h)
 
-FILE(GLOB FTRES ../reference/*.h resources/*.h)
+FILE(GLOB HRES ../reference/*.h resources/*.h)
 
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
-SOURCE_GROUP("resources" FILES ${FTRES})
+SOURCE_GROUP("resources" FILES ${HRES})
 
 ADD_LIBRARY(bt815emu
   ${SRCS}
   ${HDRS}
+  ${HRES}
 )
 
 TARGET_LINK_LIBRARIES(bt815emu

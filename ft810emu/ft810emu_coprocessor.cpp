@@ -33,9 +33,15 @@ namespace FT810EMU {
 
 namespace /* anonymous */ {
 
+#ifdef BT815EMU_MODE
+const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt815.h"
+};
+#else
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_ft810.h"
 };
+#endif
 
 const uint32_t crc_table[16] = {
 	0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
@@ -679,7 +685,11 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *r
 	}
 	else
 	{
+#ifdef BT815EMU_MODE
+		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
+#else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
+#endif
 	}
 
 #if FT800EMU_COPROCESSOR_TRACE
