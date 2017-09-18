@@ -1150,6 +1150,13 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 		case L2: return stride << 2;
 #endif
 	}
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockWidth = c_AstcBlockWidth[format & 0xF];
+		return (stride >> 4) * blockWidth;
+	}
+#endif
 	system->log(BT8XXEMU_LogError, "Invalid bitmap layout format", format);
 	return stride;
 }
@@ -2462,29 +2469,60 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	{
 		int ir = i + 16;
 		uint32_t bi = (i * 148) + fi;
-		uint32_t format =  Memory::rawReadU32(ram, bi + 128);
-		uint32_t stride =  Memory::rawReadU32(ram, bi + 132);
-		uint32_t width =  Memory::rawReadU32(ram, bi + 136);
-		uint32_t height =  Memory::rawReadU32(ram, bi + 140);
-		uint32_t data =  Memory::rawReadU32(ram, bi + 144);
-		if (FT800EMU_DEBUG) m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
-
-		m_BitmapInfoMaster[ir].Source = data;
-		m_BitmapInfoMaster[ir].LayoutFormat = format;
-		m_BitmapInfoMaster[ir].LayoutStride = stride;
-		m_BitmapInfoMaster[ir].LayoutHeight = height;
 #ifdef BT815EMU_MODE
-		// TODO
-		// m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
-		m_BitmapInfoMaster[ir].LayoutWidth = 0;
-#else
-		m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+		uint32_t signature = Memory::rawReadU32(ram, bi);
+		if (signature == 0x0100aaff)
+		{
+			// NOTE: For future reference only, not currently used
+
+			const uint32_t format = Memory::rawReadU32(ram, bi + 8);
+			const uint32_t swizzle = Memory::rawReadU32(ram, bi + 12);
+			const uint32_t layoutStride = Memory::rawReadU32(ram, bi + 16);
+			const uint32_t layoutHeight = Memory::rawReadU32(ram, bi + 20);
+			const uint32_t sizeWidth = Memory::rawReadU32(ram, bi + 24);
+			const uint32_t sizeHeight = Memory::rawReadU32(ram, bi + 28);
+			const uint32_t data = Memory::rawReadU32(ram, bi + 32);
+			m_System->log(BT8XXEMU_LogMessage,
+				"Extended Font[%i] -> Format: %u, Swizzle: %u, "
+				"Layout Stride: %u, Size Width: %u, "
+				"Layout Height: %u, Size Height: %u, Data: %u", 
+				ir, format, swizzle, layoutStride, sizeWidth, layoutHeight, sizeHeight, data);
+
+			m_BitmapInfoMaster[ir].Source = data;
+			m_BitmapInfoMaster[ir].LayoutFormat = GLFORMAT;
+			m_BitmapInfoMaster[ir].LayoutStride = layoutStride;
+			m_BitmapInfoMaster[ir].LayoutHeight = layoutHeight;
+			m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, layoutStride);
+			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+			m_BitmapInfoMaster[ir].SizeWidth = sizeWidth;
+			m_BitmapInfoMaster[ir].SizeHeight = sizeHeight;
+			m_BitmapInfoMaster[ir].ExtFormat = format;
+		}
+		else
+		{
 #endif
-		m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
-		m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
-		m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
-		m_BitmapInfoMaster[ir].SizeWidth = width;
-		m_BitmapInfoMaster[ir].SizeHeight = height;
+			const uint32_t format = Memory::rawReadU32(ram, bi + 128);
+			const uint32_t stride = Memory::rawReadU32(ram, bi + 132);
+			const uint32_t width = Memory::rawReadU32(ram, bi + 136);
+			const uint32_t height = Memory::rawReadU32(ram, bi + 140);
+			const uint32_t data = Memory::rawReadU32(ram, bi + 144);
+			m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
+
+			m_BitmapInfoMaster[ir].Source = data;
+			m_BitmapInfoMaster[ir].LayoutFormat = format;
+			m_BitmapInfoMaster[ir].LayoutStride = stride;
+			m_BitmapInfoMaster[ir].LayoutHeight = height;
+			m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+			m_BitmapInfoMaster[ir].SizeWidth = width;
+			m_BitmapInfoMaster[ir].SizeHeight = height;
+#ifdef BT815EMU_MODE
+		}
+#endif
 	}
 }
 
