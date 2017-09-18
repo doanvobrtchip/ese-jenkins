@@ -773,12 +773,14 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	case L4:
 		xo = x >> 1;
 		break;
+#ifdef BT815EMU_MODE
 	default:
 		if (BT815EMU_IS_FORMAT_ASTC(format))
 		{
 			xo = x; // TODO
 			break;
 		}
+#endif
 	}
 
 	if (!wrap(xo, stride, wrapx)) return 0x00000000;
@@ -2471,11 +2473,14 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 
 }
 
+#ifdef BT815EMU_MODE
 static std::mutex s_ASTCInitMutex;
 static bool s_ASTCInitOk = false;
+#endif
 
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
+#ifdef BT815EMU_MODE
 	; {
 		std::unique_lock<std::mutex> lock(s_ASTCInitMutex);
 		if (!s_ASTCInitOk)
@@ -2484,6 +2489,7 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			build_quantization_mode_table();
 		}
 	}
+#endif
 
 	m_System = system;
 	m_Memory = memory;
@@ -3033,7 +3039,7 @@ EvaluateDisplayListValue:
 #else
 						bi.LayoutWidth = getLayoutWidth(system, format, stride);
 #endif
-						FTEMU_message("DL_BITMAP_LAYOUT format %u, stride %u, height %u", format, stride, bi.LayoutHeight);
+						// FTEMU_message("DL_BITMAP_LAYOUT format %u, stride %u, height %u", format, stride, bi.LayoutHeight);
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:

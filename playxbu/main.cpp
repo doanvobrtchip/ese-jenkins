@@ -239,10 +239,10 @@ int main(int, char* [])
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
 	
-	const int nb = 1;
+	const int nb = 2;
 	char *xbu[nb] = {
 		"xbu/SCATTER.XBU",
-		// "xbu/STARS.XBU"
+		"xbu/BIRDS.XBU"
 	};
 	PlayXBU *app[nb];
 	for (int i = 0; i < nb; ++i)

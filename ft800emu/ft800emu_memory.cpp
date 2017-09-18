@@ -2,6 +2,7 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
@@ -196,6 +197,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 		case REG_ROMSUB_SEL:
 			data &= 0x3;
 			break;
+#ifdef BT815EMU_MODE
 		case REG_FLASH_STATUS:
 			FTEMU_warning("Read REG_FLASH_STATUS");
 			break;
@@ -235,6 +237,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 		case REG_GPIO_DIR:
 			FTEMU_warning("Read REG_GPIO_DIR");
 			break;
+#endif
 #endif
 		}
 	}
@@ -328,7 +331,7 @@ static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 #endif
 
 #if defined(BT815EMU_MODE)
-#elif defined(FT815EMU_MODE)
+#elif defined(FT810EMU_MODE)
 static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_810.h"
 };
