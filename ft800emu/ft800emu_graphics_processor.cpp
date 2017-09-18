@@ -773,6 +773,12 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	case L4:
 		xo = x >> 1;
 		break;
+	default:
+		if (BT815EMU_IS_FORMAT_ASTC(format))
+		{
+			xo = x; // TODO
+			break;
+		}
 	}
 
 	if (!wrap(xo, stride, wrapx)) return 0x00000000;
@@ -1048,8 +1054,10 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
 	FT8XXEMU::System *const system = gs.Processor->system();
-	const BitmapInfo &const bi = bitmapInfo[handle];
+	const BitmapInfo &bi = bitmapInfo[handle];
 	const uint8_t *const ram = gs.Processor->memory()->getRam();
+
+	// system->log(BT8XXEMU_LogMessage, "Bitmap Vertex: handle %u, cell %u", handle, cell);
 	
 #ifdef FT810EMU_MODE
 	const int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
@@ -1100,6 +1108,13 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 #ifdef FT810EMU_MODE
 		const int paletteSource = gs.PaletteSource;
 #endif
+#ifdef BT815EMU_MODE
+		if (extFormat)
+		{
+			system->log(BT8XXEMU_LogMessage, "Ext format %u: width: %u, height: %u, stride: %u, l: %u, r: %u", bi.ExtFormat,
+				sampleWidth, sampleHeight, sampleStride, pxlefi, pxrigi);
+		}
+#endif
 		// pretransform
 		const int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
 		const int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
@@ -1118,7 +1133,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 #endif
 #ifdef BT815EMU_MODE
-			const argb8888 out = mul_argb(extFormat ? swizzleSample(sample, bi) : sample, gs.ColorARGB);
+			const argb8888 swizzled = extFormat ? swizzleSample(sample, bi) : sample;
+			const argb8888 out = mul_argb(swizzled, gs.ColorARGB);
 #else
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
 #endif
@@ -2449,17 +2465,13 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	m_ThreadCount = 1;
 
 #ifdef BT815EMU_MODE
-	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB - 1; ++i)
+	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)
 	{
 		m_BitmapInfoMaster[i].Swizzle.A = ALPHA;
 		m_BitmapInfoMaster[i].Swizzle.R = BLUE;
 		m_BitmapInfoMaster[i].Swizzle.G = GREEN;
 		m_BitmapInfoMaster[i].Swizzle.B = RED;
 	}
-	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.A = RED;
-	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.R = ONE;
-	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.G = ONE;
-	m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB - 1].Swizzle.B = ONE;
 #endif
 
 	uint8_t *ram = m_Memory->getRam();
@@ -2474,6 +2486,8 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		if (signature == 0x0100aaff)
 		{
 			// NOTE: For future reference only, not currently used
+
+			m_System->log(BT8XXEMU_LogError, "Extended font format not allowed in ROM");
 
 			const uint32_t format = Memory::rawReadU32(ram, bi + 8);
 			const uint32_t swizzle = Memory::rawReadU32(ram, bi + 12);
@@ -2499,6 +2513,10 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			m_BitmapInfoMaster[ir].SizeWidth = sizeWidth;
 			m_BitmapInfoMaster[ir].SizeHeight = sizeHeight;
 			m_BitmapInfoMaster[ir].ExtFormat = format;
+			m_BitmapInfoMaster[ir].Swizzle.A = RED;
+			m_BitmapInfoMaster[ir].Swizzle.R = ONE;
+			m_BitmapInfoMaster[ir].Swizzle.G = ONE;
+			m_BitmapInfoMaster[ir].Swizzle.B = ONE;
 		}
 		else
 		{
@@ -2511,7 +2529,23 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
 
 			m_BitmapInfoMaster[ir].Source = data;
+#ifdef BT815EMU_MODE
+			if (BT815EMU_IS_FORMAT_ASTC(format))
+			{
+				m_BitmapInfoMaster[ir].LayoutFormat = GLFORMAT;
+				m_BitmapInfoMaster[ir].ExtFormat = format;
+				m_BitmapInfoMaster[ir].Swizzle.A = RED;
+				m_BitmapInfoMaster[ir].Swizzle.R = ONE;
+				m_BitmapInfoMaster[ir].Swizzle.G = ONE;
+				m_BitmapInfoMaster[ir].Swizzle.B = ONE;
+			}
+			else
+			{
+				m_BitmapInfoMaster[ir].LayoutFormat = format;
+			}
+#else
 			m_BitmapInfoMaster[ir].LayoutFormat = format;
+#endif
 			m_BitmapInfoMaster[ir].LayoutStride = stride;
 			m_BitmapInfoMaster[ir].LayoutHeight = height;
 			m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
@@ -2689,7 +2723,7 @@ EvaluateDisplayListValue:
 			break;
 		case FT800EMU_DL_BITMAP_LAYOUT:
 			{
-				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
@@ -2763,7 +2797,7 @@ EvaluateDisplayListValue:
 #ifdef FT810EMU_MODE
 		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
-				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
@@ -2786,7 +2820,7 @@ EvaluateDisplayListValue:
 #ifdef BT815EMU_MODE
 		case BT815EMU_DL_BITMAP_EXT_FORMAT:
 			; {
-				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				const int extFormat = (v & 0xFFFF);
 				bi.ExtFormat = extFormat;
 				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
@@ -2943,7 +2977,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT:
 					{
-						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
@@ -2964,6 +2998,7 @@ EvaluateDisplayListValue:
 #else
 						bi.LayoutWidth = getLayoutWidth(system, format, stride);
 #endif
+						FTEMU_message("DL_BITMAP_LAYOUT format %u, stride %u, height %u", format, stride, bi.LayoutHeight);
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
@@ -3216,7 +3251,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
-						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
@@ -3251,7 +3286,7 @@ EvaluateDisplayListValue:
 #ifdef BT815EMU_MODE
 				case BT815EMU_DL_BITMAP_EXT_FORMAT:
 					; {
-						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int extFormat = (v & 0xFFFF);
 						bi.ExtFormat = extFormat;
 						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
