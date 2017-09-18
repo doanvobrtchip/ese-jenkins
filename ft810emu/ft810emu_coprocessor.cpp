@@ -24,7 +24,11 @@ namespace FT810EMU {
 
 #define FT800EMU_COPROCESSOR_DEBUG 0
 #define FT800EMU_COPROCESSOR_TRACE 0
+#ifdef BT815EMU_MODE
+#define FT800EMU_COPROCESSOR_TRACEFILE "bt815emu.log"
+#else
 #define FT800EMU_COPROCESSOR_TRACEFILE "ft810emu.log"
+#endif
 
 #define FT800EMU_COPROCESSOR_ROM_SIZE 16384
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
@@ -217,7 +221,7 @@ void Ejpg::run2(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run2\n");
+	FTEMU_message("Ejpg::run2");
 #endif
 
 	if (stim)
@@ -391,7 +395,7 @@ void Ejpg::run(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run\n");
+	FTEMU_message("Ejpg::run");
 #endif
 
 	// assert((bitsize == 8) | (bitsize == 32));
@@ -563,7 +567,7 @@ void Ejpg::run1(uint8_t *memory8,
 	int16_t dm)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run1\n");
+	FTEMU_message("Ejpg::run1");
 #endif
 
 	// FTEMU_printf("idct_i=%d, symbol %02x\n", idct_i, symbol);
@@ -694,7 +698,7 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *r
 
 #if FT800EMU_COPROCESSOR_TRACE
 	trace = fopen(FT800EMU_COPROCESSOR_TRACEFILE, "w");
-	if (!trace) FTEMU_printf("Failed to create trace file\n");
+	if (!trace) FTEMU_warning("Failed to create trace file");
 #endif
 
 	ejpg.reset();
@@ -734,23 +738,23 @@ void Coprocessor::execute()
 		switch (pc)
 		{
 		case 0x04CB:
-			FTEMU_printf("COPROCESSOR: throw\n");
+			// FTEMU_printf("COPROCESSOR: throw\n");
 			break;
 		case 0x2D5A:
-			FTEMU_printf("func:playvideo\n");
-			FTEMU_printf("\tCALL mjpeg-DHT\n");
+			// FTEMU_printf("func:playvideo\n");
+			// FTEMU_printf("\tCALL mjpeg-DHT\n");
 			break;
 		case 0x2D5B:
-			FTEMU_printf("\tCALL jpgavi-common\n");
+			// FTEMU_printf("\tCALL jpgavi-common\n");
 			break;
 		case 0x2D5C:
-			FTEMU_printf("\tCALL avi-prime\n");
+			// FTEMU_printf("\tCALL avi-prime\n");
 			break;
 		case 0x2D5D:
-			FTEMU_printf("\tCALL avi-chunk\n");
+			// FTEMU_printf("\tCALL avi-chunk\n");
 			break;
 		case 0x2D64:
-			FTEMU_printf("\tJUMP avi-cleanup\n");
+			// FTEMU_printf("\tJUMP avi-cleanup\n");
 			break;
 		/*case 0x2C3A:
 			FTEMU_printf("\t0x2C3A N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
@@ -776,7 +780,7 @@ void Coprocessor::execute()
 
 #if FT800EMU_COPROCESSOR_DEBUG
 		if (pc == 0x3fff)
-			FTEMU_printf("NEW ENTRYPOINT\n");
+			FTEMU_message("NEW ENTRYPOINT");
 #endif
 
 		switch (insn >> 13)
@@ -798,7 +802,7 @@ void Coprocessor::execute()
 			rsp = 31 & (rsp + 1);
 			r[rsp] = _pc << 1;
 #if FT800EMU_COPROCESSOR_DEBUG
-			FTEMU_printf("(call) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+			FTEMU_message("(call) r[rsp] = r[%i] = %i", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 			_pc = insn & 0x3fff;
 			break;
@@ -824,7 +828,7 @@ void Coprocessor::execute()
 			case 0x07:
 				_t = -(t == n);
 #if FT800EMU_COPROCESSOR_DEBUG
-				FTEMU_printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
+				FTEMU_message("\tN==T (N: 0x%x, T: 0x%x)", (unsigned int)n, (unsigned int)t);
 #endif
 				break;
 			case 0x08:  _t = -((int32_t)n < (int32_t)t); break;
@@ -893,7 +897,7 @@ void Coprocessor::execute()
 			case 2:
 				r[rsp] = t;
 #if FT800EMU_COPROCESSOR_DEBUG
-				FTEMU_printf("(r[rsp] = t) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+				FTEMU_message("(r[rsp] = t) r[rsp] = r[%i] = %i", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 				break;
 			case 3:
@@ -978,7 +982,7 @@ void Coprocessor::execute()
 #if FT800EMU_COPROCESSOR_TRACE
 		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);
 #if FT800EMU_COPROCESSOR_DEBUG
-		FTEMU_printf("pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+		FTEMU_message("pc=%04x t=%08x insn=%04x", pc, t, insn);
 #endif
 #endif
 
