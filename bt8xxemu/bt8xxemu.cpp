@@ -77,7 +77,7 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 		| BT8XXEMU_EmulatorEnableDebugShortkeys
 		| BT8XXEMU_EmulatorEnableCoprocessor
 		| BT8XXEMU_EmulatorEnableGraphicsMultithread
-		| BT8XXEMU_EmulatorEnableDynamicDegrade
+		// | BT8XXEMU_EmulatorEnableDynamicDegrade
 		| BT8XXEMU_EmulatorEnableTouchTransformation
 		| BT8XXEMU_EmulatorEnableMainPerformance;
 
