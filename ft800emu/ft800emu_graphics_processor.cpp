@@ -917,15 +917,27 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	{
 		const int blockWidth = c_AstcBlockWidth[format & 0xF];
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
-		const ptrdiff_t blockOffset = ((y / blockHeight) * stride) + ((x / blockWidth) * 16);
+		const int numBlocksWidth = stride / 16;
+		const int numBlocksHeight = height / blockHeight;
+		const int blockX = x / blockWidth;
+		const int blockY = y / blockWidth;
+		const int tileX = blockX / 2;
+		const int tileY = blockY / 2;
+		const int tileWidth = (blockX == (blockWidth - 1)) ? 1 : 2;
+		const int tileHeight = (blockY == (blockHeight - 1)) ? 1 : 2;
+		const int tileIdxVertical = blockY & 1; // % tileHeight
+		const int tileIdxReverse = blockX & 1;
+		const int tileIdx = tileIdxReverse ? (tileHeight * tileWidth) - 1 - tileIdxVertical : tileIdxVertical;
+		const ptrdiff_t blockOffset = (tileY * stride * 2) + (tileX * 64) + (tileIdx * 16);
 		const physical_compressed_block *physicalBlock = 
 			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
-		symbolic_compressed_block symbolicBlock;
+		symbolic_compressed_block symbolicBlock = { 0 };
 		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
-		imageblock imageBlock;
+		imageblock imageBlock = { 0 };
 		decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
 		const int index = (((y % blockHeight) * blockWidth) + (x % blockWidth));
-		if (imageBlock.nan_texel[index]) return 0xFFFF00FF;
+		if (imageBlock.nan_texel[index])
+			return 0xFFFF00FF;
 		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
 		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
 		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
@@ -1116,6 +1128,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 #ifdef FT810EMU_MODE
 		const int paletteSource = gs.PaletteSource;
 #endif
+		/*
 #ifdef BT815EMU_MODE
 		if (extFormat)
 		{
@@ -1123,6 +1136,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 				sampleWidth, sampleHeight, sampleStride, pxlefi, pxrigi);
 		}
 #endif
+		*/
+
 		// pretransform
 		const int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
 		const int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
