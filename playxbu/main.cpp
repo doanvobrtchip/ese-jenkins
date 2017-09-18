@@ -4,6 +4,8 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
+#define BT815EMU_MODE
+
 #include <Windows.h>
 
 #include <bt8xxemu.h>
@@ -19,7 +21,9 @@ public:
 	{
 		BT8XXEMU_EmulatorParameters params;
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+			BT8XXEMU_EmulatorBT815
+#elif defined(FT810EMU_MODE)
 			BT8XXEMU_EmulatorFT810
 #else
 			BT8XXEMU_EmulatorFT801
@@ -235,10 +239,10 @@ int main(int, char* [])
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
 	
-	const int nb = 2;
+	const int nb = 1;
 	char *xbu[nb] = {
 		"xbu/SCATTER.XBU",
-		"xbu/STARS.XBU"
+		// "xbu/STARS.XBU"
 	};
 	PlayXBU *app[nb];
 	for (int i = 0; i < nb; ++i)
