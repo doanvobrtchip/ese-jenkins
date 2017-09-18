@@ -398,7 +398,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_ID, 0x7C);
 	rawWriteU32(REG_FRAMES, 0); // Frame counter - is this updated before or after frame render?
 	rawWriteU32(REG_CLOCK, 0);
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_FREQUENCY, 48000000);
+#elif defined(FT810EMU_MODE)
 	rawWriteU32(REG_FREQUENCY, 60000000);
 #else
 	rawWriteU32(REG_FREQUENCY, 48000000);
@@ -406,6 +408,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_RENDERMODE, 0);
 	rawWriteU32(REG_SNAPY, 0);
 	rawWriteU32(REG_SNAPSHOT, 0);
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_SNAPFORMAT, 32);
+#endif
 	rawWriteU32(REG_CPURESET, 0);
 	rawWriteU32(REG_TAP_CRC, 0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_TAP_MASK, ~0); // Not used by emulator yet // TODO: CRC value of RGB signals output
@@ -441,6 +446,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_PLAYBACK_READPTR, 0);
 	rawWriteU32(REG_PLAYBACK_LENGTH, 0);
 	rawWriteU32(REG_PLAYBACK_START, 0);
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_PLAYBACK_PAUSE, 0);
+#endif
 
 	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000);
 	rawWriteU32(REG_TOUCH_TRANSFORM_B, 0x00);
@@ -461,6 +469,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	REG_ANALOG				REG_CTOUCH_TOUCH4_X
 	REG_TOUCH_RZ			REG_CTOUCH_TOUCH4_Y
 	*/
+	
 	rawWriteU32(REG_TOUCH_ADC_MODE, 0x01); // REG_CTOUCH_EXTENDED, CTOUCH_MODE_COMPATIBILITY
 	rawWriteU32(REG_TOUCH_RZ, 0x7FFF); // REG_CTOUCH_TOUCH4_X
 	rawWriteU32(REG_TOUCH_SCREEN_XY, 0x80008000); // REG_CTOUCH_TOUCH0_XY
@@ -472,8 +481,15 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_TOUCH_RZTHRESH, 0xFFFF);
 	rawWriteU32(REG_TOUCH_OVERSAMPLE, 7); // Not used by emulator
 	rawWriteU32(REG_TOUCH_SETTLE, 3); // Not used by emulator
-	rawWriteU32(REG_TOUCH_CHARGE, 0x1770); // Not used by emulator
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_TOUCH_CHARGE, 9000); // Not used by emulator
+#else
+	rawWriteU32(REG_TOUCH_CHARGE, 6000); // Not used by emulator
+#endif
 	rawWriteU32(REG_TOUCH_MODE, 3); // Not used by emulator yet // NOTE: Currently emulator always emulates continuous mode // TODO
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_CYA_TOUCH, 0x381);
+#endif
 
 	rawWriteU32(REG_PWM_HZ, 250);
 	rawWriteU32(REG_PWM_DUTY, 128);
@@ -486,7 +502,22 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_CMD_DL, 0);
 
 #ifdef FT810EMU_MODE
+	rawWriteU32(REG_EJPG_SCALE, 256);
 	rawWriteU32(REG_J1_COLD, 1);
+#endif
+
+#if defined(BT815EMU_MODE)
+	rawWriteU32(REG_ADAPTIVE_FRAMERATE, 1);
+	rawWriteU32(REG_SPIM_DIR, 0);
+	rawWriteU32(REG_SPIM, 0);
+	rawWriteU32(REG_ESPIM_READSTART, 22);
+	rawWriteU32(REG_ESPIM_SEQ, 0);
+	rawWriteU32(REG_ESPIM_ADD, 0);
+	rawWriteU32(REG_ESPIM_COUNT, 0);
+	rawWriteU32(REG_ESPIM_WINDOW, 0);
+	rawWriteU32(REG_ESPIM_DUMMY, 0);
+	rawWriteU32(REG_ESPIM_TRIG, 0);
+	rawWriteU32(REG_FLASH_STATUS, 0);
 #endif
 
 	m_CpuReset = false;
