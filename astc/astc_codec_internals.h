@@ -31,6 +31,11 @@
 
 // Macro to silence warnings on ignored parameters.
 // The presence of this macro should be a signal to look at refactoring.
+#ifdef IGNORE
+#if IGNORE == 0
+#undef IGNORE
+#endif
+#endif
 #define IGNORE(param) ((void)&param)
 
 #define astc_isnan(p) ((p)!=(p))

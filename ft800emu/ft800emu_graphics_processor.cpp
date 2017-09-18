@@ -2448,8 +2448,20 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 
 }
 
+static std::mutex s_ASTCInitMutex;
+static bool s_ASTCInitOk = false;
+
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
+	; {
+		std::unique_lock<std::mutex> lock(s_ASTCInitMutex);
+		if (!s_ASTCInitOk)
+		{
+			prepare_angular_tables();
+			build_quantization_mode_table();
+		}
+	}
+
 	m_System = system;
 	m_Memory = memory;
 	m_Touch = touch;
