@@ -5,7 +5,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
-#include <vc2.h>
+#include <vc3.h>
 #include "../ftemutest.h"
 #include <stdio.h>
 
@@ -19,7 +19,7 @@ void setup()
 	wr16(0); wr16(0);
 	wr16(480); wr16(480);
 	wr32(0);
-	wr32(1);
+	wr32(L1);
 	wr32(BITMAP_HANDLE(0));
 	wr32(BITMAP_SOURCE(0));
 	wr32(BITMAP_LAYOUT(L1, 60, 272));
