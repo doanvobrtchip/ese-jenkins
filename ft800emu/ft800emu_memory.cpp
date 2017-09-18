@@ -190,10 +190,50 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			wp += 4;
 			wp &= 0xFFF;
 			rawWriteU32(REG_CMD_WRITE, wp);
+			// FTEMU_message("MCU Write REG_CMDB_WRITE, %u (%u)", data, wp);
 			break;
 		}
 		case REG_ROMSUB_SEL:
 			data &= 0x3;
+			break;
+		case REG_FLASH_STATUS:
+			FTEMU_warning("Read REG_FLASH_STATUS");
+			break;
+		case REG_FLASH_SIZE:
+			FTEMU_warning("Read REG_FLASH_SIZE");
+			break;
+		case REG_ESPIM_ADD:
+			FTEMU_warning("Read REG_ESPIM_ADD");
+			break;
+		case REG_ESPIM_COUNT:
+			FTEMU_warning("Read REG_ESPIM_COUNT");
+			break;
+		case REG_ESPIM_DUMMY:
+			FTEMU_warning("Read REG_ESPIM_DUMMY");
+			break;
+		case REG_ESPIM_READSTART:
+			FTEMU_warning("Read REG_ESPIM_READSTART");
+			break;
+		case REG_ESPIM_SEQ:
+			FTEMU_warning("Read REG_ESPIM_SEQ");
+			break;
+		case REG_ESPIM_TRIG:
+			FTEMU_warning("Read REG_ESPIM_TRIG");
+			break;
+		case REG_ESPIM_WINDOW:
+			FTEMU_warning("Read REG_ESPIM_WINDOW");
+			break;
+		case REG_GPIO:
+			FTEMU_warning("Read REG_GPIO");
+			break;
+		case REG_GPIOX:
+			FTEMU_warning("Read REG_GPIOX");
+			break;
+		case REG_GPIOX_DIR:
+			FTEMU_warning("Read REG_GPIOX_DIR");
+			break;
+		case REG_GPIO_DIR:
+			FTEMU_warning("Read REG_GPIO_DIR");
 			break;
 #endif
 		}
@@ -287,7 +327,8 @@ static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 };
 #endif
 
-#ifdef FT800EMU_OTP_SIZE
+#if defined(BT815EMU_MODE)
+#elif defined(FT815EMU_MODE)
 static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_810.h"
 };
@@ -352,7 +393,8 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	}
 	else
 	{
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+#elif defined(FT810EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], c_OTP813, sizeof(c_OTP813));
 		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], c_OTP812, sizeof(c_OTP812));
 		else if (emulatorMode >= BT8XXEMU_EmulatorFT811) memcpy(&m_Ram[RAM_JTBOOT], c_OTP811, sizeof(c_OTP811));
@@ -570,6 +612,7 @@ void Memory::mcuWriteU32(ramaddr address, uint32_t data)
 #endif
 	case REG_CMD_WRITE:
 		m_WaitCoprocessorReadCounter = 0;
+		// FTEMU_message("MCU Write REG_CMD_WRITE, %u", data);
 		break;
 	}
 
@@ -784,7 +827,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
-	FTEMU_printf("Coprocessor write U32 %i, %i\n", (int)address, (int)data);
+	FTEMU_message("Coprocessor write U32 %i, %i", (int)address, (int)data);
 #endif
 
 	if (address == REG_CMD_READ)
@@ -831,6 +874,7 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 #endif
 	case REG_CMD_READ:
 		m_WaitMCUReadCounter = 0;
+		// FTEMU_message("Coprocessor Write REG_CMD_READ, %u", data);
 		break;
 	}
 }
@@ -839,7 +883,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
 	// if (address != 3182612 && address != 3182616)
-	FTEMU_printf("Coprocessor read U32 %i (cmd %i)\n", (int)address, (int)((address - RAM_CMD) / 4));
+	FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
 #endif
 
 	/*if (address >= RAM_COMPOSITE)
@@ -904,6 +948,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			{
 				m_WaitCoprocessorReadCounter = 0;
 				m_LastCoprocessorCommandRead = (address - RAM_CMD) >> 2;
+				// FTEMU_message("Read RAM_CMD, %u", address - RAM_CMD);
 			}
 			if (m_LastCoprocessorRead == address || (address == REG_TOUCH_RAW_XY && m_LastCoprocessorRead == REG_TOUCH_RZ))
 			{
@@ -984,7 +1029,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
-	FTEMU_printf("Coprocessor write U16 %i, %i\n", (int)address, (int)data);
+	FTEMU_message("Coprocessor write U16 %i, %i", (int)address, (int)data);
 #endif
 
 	if (address < RAM_J1RAM)
@@ -1034,7 +1079,7 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
-	FTEMU_printf("Coprocessor write U8 %i, %i\n", (int)address, (int)data);
+	FTEMU_message("Coprocessor write U8 %i, %i", (int)address, (int)data);
 #endif
 
 	if (address < RAM_J1RAM)
@@ -1063,7 +1108,7 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 uint8_t Memory::coprocessorReadU8(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
-	FTEMU_printf("Coprocessor read U8 %i\n", (int)address);
+	FTEMU_message("Coprocessor read U8 %i", (int)address);
 #endif
 
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)
