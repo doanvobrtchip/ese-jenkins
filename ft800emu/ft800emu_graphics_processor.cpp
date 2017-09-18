@@ -1048,8 +1048,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
 	FT8XXEMU::System *const system = gs.Processor->system();
-	const BitmapInfo &bi = bitmapInfo[handle];
-	const uint8_t *ram = gs.Processor->memory()->getRam();
+	const BitmapInfo &const bi = bitmapInfo[handle];
+	const uint8_t *const ram = gs.Processor->memory()->getRam();
 	
 #ifdef FT810EMU_MODE
 	const int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
@@ -1127,7 +1127,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
-BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int &format, const int &stride)
+BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int format, const int stride)
 {
 	switch (format)
 	{
@@ -1150,9 +1150,18 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 		case L2: return stride << 2;
 #endif
 	}
-	system->log(BT8XXEMU_LogError, "Invalid bitmap layout");
+	system->log(BT8XXEMU_LogError, "Invalid bitmap layout format", format);
 	return stride;
 }
+
+#ifdef BT815EMU_MODE
+BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int stride)
+{
+	const bool usingExtFormat = layoutFormat == GLFORMAT;
+	const int sampleFormat = usingExtFormat ? extFormat : layoutFormat;
+	return getLayoutWidth(system, sampleFormat, stride);
+}
+#endif
 
 #pragma endregion
 
@@ -2464,7 +2473,13 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		m_BitmapInfoMaster[ir].LayoutFormat = format;
 		m_BitmapInfoMaster[ir].LayoutStride = stride;
 		m_BitmapInfoMaster[ir].LayoutHeight = height;
+#ifdef BT815EMU_MODE
+		// TODO
+		// m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+		m_BitmapInfoMaster[ir].LayoutWidth = 0;
+#else
 		m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+#endif
 		m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
 		m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
 		m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
@@ -2636,7 +2651,7 @@ EvaluateDisplayListValue:
 			break;
 		case FT800EMU_DL_BITMAP_LAYOUT:
 			{
-				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
@@ -2652,7 +2667,11 @@ EvaluateDisplayListValue:
 				bi.LayoutHeight = v & 0x1FF;
 				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
 #endif
+#ifdef BT815EMU_MODE
+				bi.LayoutWidth = getLayoutWidth(system, format, bi.ExtFormat, stride);
+#else
 				bi.LayoutWidth = getLayoutWidth(system, format, stride);
+#endif
 			}
 			break;
 		case FT800EMU_DL_BITMAP_SIZE:
@@ -2706,13 +2725,17 @@ EvaluateDisplayListValue:
 #ifdef FT810EMU_MODE
 		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
-				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
 				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+#ifdef BT815EMU_MODE
+				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+#else
 				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+#endif
 			}
 			break;
 		case FT810EMU_DL_BITMAP_SIZE_H:
@@ -2724,7 +2747,12 @@ EvaluateDisplayListValue:
 #endif
 #ifdef BT815EMU_MODE
 		case BT815EMU_DL_BITMAP_EXT_FORMAT:
-			bitmapInfo[gs.BitmapHandle].ExtFormat = (v & 0xFFFF);
+			; {
+				BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+				const int extFormat = (v & 0xFFFF);
+				bi.ExtFormat = extFormat;
+				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+			}
 			break;
 		case BT815EMU_DL_BITMAP_SWIZZLE:
 			bitmapInfo[gs.BitmapHandle].Swizzle.U =
@@ -2877,7 +2905,7 @@ EvaluateDisplayListValue:
 					break;
 				case FT800EMU_DL_BITMAP_LAYOUT:
 					{
-						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
@@ -2893,7 +2921,11 @@ EvaluateDisplayListValue:
 						bi.LayoutHeight = v & 0x1FF;
 						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
 #endif
+#ifdef BT815EMU_MODE
+						bi.LayoutWidth = getLayoutWidth(system, format, bi.ExtFormat, stride);
+#else
 						bi.LayoutWidth = getLayoutWidth(system, format, stride);
+#endif
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
@@ -3146,13 +3178,17 @@ EvaluateDisplayListValue:
 					break;
 				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
-						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
 						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+#ifdef BT815EMU_MODE
+						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+#else
 						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+#endif
 					}
 					break;
 				case FT810EMU_DL_BITMAP_SIZE_H:
@@ -3176,7 +3212,12 @@ EvaluateDisplayListValue:
 #endif
 #ifdef BT815EMU_MODE
 				case BT815EMU_DL_BITMAP_EXT_FORMAT:
-					bitmapInfo[gs.BitmapHandle].ExtFormat = (v & 0xFFFF);
+					; {
+						BitmapInfo &const bi = bitmapInfo[gs.BitmapHandle];
+						const int extFormat = (v & 0xFFFF);
+						bi.ExtFormat = extFormat;
+						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+					}
 					break;
 				case BT815EMU_DL_BITMAP_SWIZZLE:
 					bitmapInfo[gs.BitmapHandle].Swizzle.U =
