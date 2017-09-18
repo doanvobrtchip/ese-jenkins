@@ -1091,14 +1091,22 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		//if (bi.
 		const int vy = y * 16;
 		const int ry = vy - py;
-		const uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
 		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
 #ifdef BT815EMU_MODE
 		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
 		const int sampleFormat = extFormat ? bi.ExtFormat : bi.LayoutFormat;
+		
+		const ramaddr cellOffset = (cell * bi.LayoutStride * 
+			(BT815EMU_IS_FORMAT_ASTC(sampleFormat) 
+				? ((bi.LayoutHeight + c_AstcBlockHeight[sampleFormat & 0xF] - 1) / c_AstcBlockHeight[sampleFormat & 0xF])
+				: (bi.LayoutHeight)));
+				
+		// const ramaddr cellOffset = 0;
 #else
 		const int sampleFormat = bi.LayoutFormat;
+		const ramaddr cellOffset = (cell * bi.LayoutStride * bi.LayoutHeight);
 #endif
+		const uint32_t sampleSrcPos = bi.Source + cellOffset;
 		const int sampleWidth = bi.LayoutWidth;
 		const int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
 		const int sampleStride = bi.LayoutStride;
