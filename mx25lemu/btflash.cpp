@@ -162,13 +162,25 @@ public:
 					goto ProcessCmdRes;
 				case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
 				case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
+					Flash_debug("Read Electronic Manufacturer and Device ID");
+					goto ProcessCmdRems;
 				case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_ENSO)");
+					break;
 				case BTFLASH_CMD_EXSO: /* Exit Secured OTP */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_EXSO)");
+					break;
 				case BTFLASH_CMD_RDSCUR: /* Read Security Register */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDSCUR)");
+					break;
 				case BTFLASH_CMD_WRSCUR: /* Write Security Register */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_WRSCUR)");
+					break;
 				case BTFLASH_CMD_ESRY: /* Enable SO to output RY/BY# */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_ESRY)");
+					break;
 				case BTFLASH_CMD_DSRY: /* Disable SO to output RY/BY# */
-					log(BT8XXEMU_LogError, "Flash command not implemented (%x)", data);
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_DSRY)");
 					break;
 				default:
 					log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", data);
@@ -205,7 +217,18 @@ public:
 					log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
 					break;
 				}
-				break;
+			case BTFLASH_CMD_REMS:
+			case BTFLASH_CMD_REMS2:
+			ProcessCmdRems:
+				// Repeatedly keeps returning the same values
+				if (m_TransferNb % 1)
+				{
+					goto ProcessCmdRes;
+				}
+				else
+				{
+					return 0xC2;
+				}
 			default:
 				log(BT8XXEMU_LogError, "Flash command (%x) exceeded transfer length", m_TransferCmd);
 				break;
