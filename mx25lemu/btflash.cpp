@@ -14,6 +14,9 @@ Author: Jan Boon <jan@no-break.space>
 
 #include <mutex>
 
+#define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)
+// #define Flash_debug(message, ...)
+
 extern BT8XXEMU_FlashVTable g_FlashVTable;
 static std::mutex s_LogMutex;
 
@@ -28,6 +31,8 @@ public:
 		m_Log = params->Log;
 		m_UserContext = params->UserContext;
 		m_PrintStd = true;
+
+		m_StatusRegister = 0;
 	}
 
 	~Flash()
@@ -39,6 +44,7 @@ public:
 	{
 		m_ChipSelect = cs;
 		m_TransferCmd = 0;
+		m_TransferNb = -1;
 	}
 
 	void writeProtect(bool wp)
@@ -60,9 +66,11 @@ public:
 				if (data == BTFLASH_CMD_RDP) /* Release from Deep Power Down ¨*/
 				{
 					m_DeepPowerDown = false;
+					m_TransferCmd = BTFLASH_CMD_DP;
 				}
 				return 0;
 			}
+			++m_TransferNb;
 			switch (m_TransferCmd)
 			{
 			case 0:
@@ -70,9 +78,19 @@ public:
 				switch (data)
 				{
 				case BTFLASH_CMD_WREN: /* Write Enable */
+					Flash_debug("Write Enable");
+					m_StatusRegister |= BTFLASH_STATUS_WEL_FLAG;
+					return 0;
 				case BTFLASH_CMD_WRDI: /* Write Disable */
+					Flash_debug("Write Disable");
+					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
+					return 0;
 				case BTFLASH_CMD_RDID: /* Read Identification */
+					Flash_debug("Read Identification");
+					return 0xC2;
 				case BTFLASH_CMD_RDSR: /* Read Status Register */
+					Flash_debug("Read Status Register");
+					return m_StatusRegister;
 				case BTFLASH_CMD_WRSR: /* Write Status Register */
 				case BTFLASH_CMD_READ: /* Read Data */
 				case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
@@ -100,6 +118,28 @@ public:
 					break;
 				}
 				break;
+			case BTFLASH_CMD_RDID:
+				switch (m_TransferNb)
+				{
+				case 1:
+					return 0x20;
+				case 2:
+					if (Size >= 8 * 1024 * 2014) return 0x17;
+					else if (Size >= 4 * 1024 * 2014) return 0x16;
+					else if (Size >= 2 * 1024 * 2014) return 0x15;
+					else
+					{
+						log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
+						break;
+					}
+				default:
+					log(BT8XXEMU_LogWarning, "Read Identification exceeded transfer length");
+					break;
+				}
+				break;
+			default:
+				log(BT8XXEMU_LogError, "Flash command (%x) exceeded transfer length", m_TransferCmd);
+				break;
 			}
 		}
 		return 0;
@@ -113,10 +153,13 @@ private:
 
 	bool m_ChipSelect;
 	uint8_t m_TransferCmd;
+	int m_TransferNb;
 
 	void(*m_Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
 	void *m_UserContext;
 	bool m_PrintStd;
+
+	uint8_t m_StatusRegister;
 
 private:
 	void log(BT8XXEMU_LogType type, const char *message, ...)
