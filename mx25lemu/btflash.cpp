@@ -33,6 +33,8 @@ public:
 		m_PrintStd = true;
 
 		m_StatusRegister = 0;
+
+		m_WriteProtect = false;
 	}
 
 	~Flash()
@@ -49,7 +51,7 @@ public:
 
 	void writeProtect(bool wp)
 	{
-
+		m_WriteProtect = wp;
 	}
 
 	void hold(bool hold)
@@ -61,16 +63,20 @@ public:
 	{
 		if (m_ChipSelect)
 		{
+			++m_TransferNb;
 			if (m_DeepPowerDown)
 			{
-				if (data == BTFLASH_CMD_RDP) /* Release from Deep Power Down ¨*/
+				if (!m_TransferNb && data == BTFLASH_CMD_RDP) /* Release from Deep Power Down */
 				{
+					Flash_debug("Release from Deep Power Down");
 					m_DeepPowerDown = false;
-					m_TransferCmd = BTFLASH_CMD_DP;
 				}
-				return 0;
+				else
+				{
+					log(BT8XXEMU_LogWarning, "Not processing flash commands while in Deep Power Down");
+					return 0;
+				}
 			}
-			++m_TransferNb;
 			switch (m_TransferCmd)
 			{
 			case 0:
@@ -92,17 +98,68 @@ public:
 					Flash_debug("Read Status Register");
 					return m_StatusRegister;
 				case BTFLASH_CMD_WRSR: /* Write Status Register */
+					Flash_debug("Write Status Register");
+					; {
+						if ((m_StatusRegister & BTFLASH_STATUS_SRWD_FLAG)
+							&& m_WriteProtect)
+						{
+							log(BT8XXEMU_LogError, "Cannot write while in Hardware Protection Mode");
+							return 0;
+						}
+
+						static const uint8_t mask =
+							BTFLASH_STATUS_BP0_FLAG
+							| BTFLASH_STATUS_BP0_FLAG
+							| BTFLASH_STATUS_BP0_FLAG
+							| BTFLASH_STATUS_BP0_FLAG
+							| BTFLASH_STATUS_SRWD_FLAG;
+						static const uint8_t invMask = ~mask;
+						const uint8_t maskedWrite = data & mask;
+						const uint8_t maskedReg = m_StatusRegister & invMask;
+						m_StatusRegister = maskedWrite | maskedReg;
+					}
+					return 0;
 				case BTFLASH_CMD_READ: /* Read Data */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_READ)");
+					break;
 				case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FAST_READ)");
+					break;
 				case BTFLASH_CMD_2READ: /* 2x IO Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2READ)");
+					break;
 				case BTFLASH_CMD_SE: /* Sector Erase */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SE)");
+					break;
 				case BTFLASH_CMD_BE: /* Block Erase */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE)");
+					break;
 				case BTFLASH_CMD_CE_60: /* Chip Erase */
 				case BTFLASH_CMD_CE_C7: /* Chip Erase */
+					Flash_debug("Chip Erase");
+					if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
+					{
+						memset(Data, 0xFF, Size);
+						return 0;
+					}
+					else
+					{
+						log(BT8XXEMU_LogError, "Chip Erase requires Write Enable Latch to be set");
+						break;
+					}
 				case BTFLASH_CMD_PP: /* Page Program */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_PP)");
+					break;
 				case BTFLASH_CMD_CP: /* Continuously Program mode */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_CP)");
+					break;
 				case BTFLASH_CMD_DP: /* Deep Power Down */
+					Flash_debug("Deep Power Down");
+					m_DeepPowerDown = true;
+					return 0;
 				case BTFLASH_CMD_RES: /* Read Electronic ID */
+					Flash_debug("Read Electronic ID");
+					goto ProcessCmdRes;
 				case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
 				case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
 				case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
@@ -137,6 +194,18 @@ public:
 					break;
 				}
 				break;
+			case BTFLASH_CMD_RES:
+			ProcessCmdRes:
+				// Repeatedly keeps returning the same value
+				if (Size >= 8 * 1024 * 2014) return 0x16;
+				else if (Size >= 4 * 1024 * 2014) return 0x15;
+				else if (Size >= 2 * 1024 * 2014) return 0x14;
+				else
+				{
+					log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
+					break;
+				}
+				break;
 			default:
 				log(BT8XXEMU_LogError, "Flash command (%x) exceeded transfer length", m_TransferCmd);
 				break;
@@ -154,6 +223,8 @@ private:
 	bool m_ChipSelect;
 	uint8_t m_TransferCmd;
 	int m_TransferNb;
+
+	bool m_WriteProtect; // WP# low, 0 -> WriteProtect true
 
 	void(*m_Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
 	void *m_UserContext;
