@@ -154,13 +154,13 @@ typedef struct
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t *RomFilePath;
+	const wchar_t *RomFilePath;
 	// Replaces the default builtin OTP with a custom OTP from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t *OtpFilePath;
+	const wchar_t *OtpFilePath;
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t *CoprocessorRomFilePath;
+	const wchar_t *CoprocessorRomFilePath;
 
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
@@ -193,16 +193,16 @@ typedef struct
 typedef struct
 {
 	// Device type, by library name, default "mx25lemu"
-	wchar_t *DeviceType;
+	const wchar_t *DeviceType;
 
 	// Size of the flash memory in bytes, default 8MB
-	uint32_t SizeBytes;
+	size_t SizeBytes;
 
 	// Data file to load onto the flash, default NULL
-	wchar_t *DataFilePath;
+	const wchar_t *DataFilePath;
 
 	// Internal flash status file, device specific, default NULL
-	wchar_t *StatusFilePath;
+	const wchar_t *StatusFilePath;
 
 	// Write actions to the flash are persisted to the used file.
 	// This is accomplished by memory mapping the file, instead of
@@ -213,7 +213,7 @@ typedef struct
 	// overriding any existing contents that may have been
 	// loaded from a flash file already, default NULL and 0
 	void *Data;
-	size_t DataSize;
+	size_t DataSizeBytes;
 
 	// Log callback
 	void(*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);

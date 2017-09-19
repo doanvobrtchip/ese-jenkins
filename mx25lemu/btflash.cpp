@@ -9,9 +9,27 @@ Author: Jan Boon <jan@no-break.space>
 
 #include "btflash_defs.h"
 
+#ifdef WIN32
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
+#		define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
+#		define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
+#		define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
+#	endif
+#	ifndef WIN32_LEAN_AND_MEAN
+#		define WIN32_LEAN_AND_MEAN
+#	endif
+#	include <Windows.h>
+#	include <Shlwapi.h>
+#	pragma comment(lib, "Shlwapi.lib")
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <algorithm>
 #include <mutex>
 
 #define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)
@@ -20,11 +38,14 @@ Author: Jan Boon <jan@no-break.space>
 extern BT8XXEMU_FlashVTable g_FlashVTable;
 static std::mutex s_LogMutex;
 
+int64_t getFileSize(const wchar_t* name);
+
 class Flash : public BT8XXEMU::Flash
 {
 public:
 	Flash(const BT8XXEMU_FlashParameters *params) : BT8XXEMU::Flash(&g_FlashVTable),
-		m_DeepPowerDown(false), m_ChipSelect(false), m_TransferCmd(0)
+		m_DeepPowerDown(false), m_FileHandle(NULL), m_FileMapping(NULL), 
+		m_ChipSelect(false), m_TransferCmd(0)
 	{
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
 
@@ -35,11 +56,123 @@ public:
 		m_StatusRegister = 0;
 
 		m_WriteProtect = false;
+
+		const wchar_t *const dataFilePath = params->DataFilePath;
+		const size_t sizeBytes = params->SizeBytes;
+
+		if (dataFilePath)
+		{
+			if (params->Persistent)
+			{
+				HANDLE fileHandle = CreateFileW(dataFilePath,
+					GENERIC_WRITE | GENERIC_READ,
+					FILE_SHARE_READ | FILE_SHARE_WRITE,
+					NULL,
+					OPEN_ALWAYS,
+					FILE_ATTRIBUTE_NORMAL,
+					NULL);
+				if (fileHandle == INVALID_HANDLE_VALUE)
+				{
+					log(BT8XXEMU_LogError, "Unable to access file '%ls'", dataFilePath);
+				}
+				else
+				{
+					LARGE_INTEGER size;
+					size.QuadPart = sizeBytes;
+					HANDLE fileMapping = CreateFileMappingW(fileHandle,
+						NULL,
+						PAGE_READWRITE,
+						size.HighPart,
+						size.LowPart,
+						NULL);
+					if (fileMapping == INVALID_HANDLE_VALUE)
+					{
+						log(BT8XXEMU_LogError, "Unable to map file '%ls'", dataFilePath);
+						CloseHandle(fileHandle);
+					}
+					else
+					{
+						Data = (uint8_t *)(void *)MapViewOfFile(fileMapping,
+							FILE_MAP_READ | FILE_MAP_WRITE,
+							0, 0, 0);
+						if (!Data)
+						{
+							log(BT8XXEMU_LogError, "Unable to map view of file '%ls'", dataFilePath);
+							CloseHandle(fileMapping);
+							CloseHandle(fileHandle);
+						}
+						else
+						{
+							Size = sizeBytes;
+							m_FileHandle = fileHandle;
+							m_FileMapping = fileMapping;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (!PathFileExistsW(dataFilePath))
+				{
+					log(BT8XXEMU_LogError, "Path to flash data does not exist '%ls'", dataFilePath);
+				}
+				else
+				{
+					int64_t fileSize = ::getFileSize(dataFilePath);
+					if (fileSize == -1LL)
+					{
+						log(BT8XXEMU_LogError, "Unable to get flash data file size '%ls'", dataFilePath);
+					}
+					else
+					{
+					
+						Data = new uint8_t[sizeBytes];
+						Size = sizeBytes;
+						size_t copySize = std::min((size_t)fileSize, sizeBytes);
+						FILE *f = _wfopen(dataFilePath, L"rb");
+						if (!f) log(BT8XXEMU_LogError, "Failed to open flash data file");
+						else
+						{
+							size_t s = fread(Data, 1, copySize, f);
+							if (s != copySize) log(BT8XXEMU_LogError, "Incomplete flash data file");
+							else  log(BT8XXEMU_LogMessage, "Loaded flash data file '%ls'", dataFilePath);
+							if (fclose(f)) log(BT8XXEMU_LogError, "Error closing flash data file");
+						}
+					}
+				}
+			}
+		}
+
+		if (!Data)
+		{
+			// Initialize regular empty RAM based flash device
+			Data = new uint8_t[sizeBytes];
+			Size = sizeBytes;
+		}
+
+		if (params->Data)
+		{
+			// Copy user-provided data to flash
+			size_t copySize = std::min(params->DataSizeBytes, sizeBytes);
+			memcpy(Data, params->Data, copySize);
+		}
 	}
 
 	~Flash()
 	{
-
+		if (m_FileHandle)
+		{
+			// FlushViewOfFile(Data, Size);
+			UnmapViewOfFile(Data);
+			CloseHandle(m_FileMapping);
+			CloseHandle(m_FileHandle);
+		}
+		else
+		{
+			delete Data;
+		}
+		Data = NULL;
+		Size = 0;
 	}
 
 	void chipSelect(bool cs)
@@ -238,10 +371,13 @@ public:
 	}
 
 	uint8_t *Data;
-	uint32_t Size;
+	size_t Size;
 
 private:
 	bool m_DeepPowerDown;
+
+	HANDLE m_FileHandle;
+	HANDLE m_FileMapping;
 
 	bool m_ChipSelect;
 	uint8_t m_TransferCmd;
@@ -307,7 +443,7 @@ uint8_t *Flash_data(Flash *flash)
 	return flash->Data;
 }
 
-uint32_t Flash_size(Flash *flash)
+size_t Flash_size(Flash *flash)
 {
 	return flash->Size;
 }
@@ -321,7 +457,7 @@ BT8XXEMU_FlashVTable g_FlashVTable = {
 	(uint8_t(*)(BT8XXEMU::Flash *, uint8_t))Flash_transfer,
 
 	(uint8_t *(*)(BT8XXEMU::Flash *))Flash_data,
-	(uint32_t(*)(BT8XXEMU::Flash *))Flash_size
+	(size_t(*)(BT8XXEMU::Flash *))Flash_size
 };
 
 BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
@@ -333,6 +469,27 @@ BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const
 	}
 
 	return new Flash(params);
+}
+
+int64_t getFileSize(const wchar_t* name)
+{
+	// https://stackoverflow.com/questions/8991192/check-filesize-without-opening-file-in-c
+
+	HANDLE hFile = CreateFileW(name, GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return -1LL; // error condition, could call GetLastError to find out more
+
+	LARGE_INTEGER size;
+	if (!GetFileSizeEx(hFile, &size))
+	{
+		CloseHandle(hFile);
+		return -1LL; // error condition, could call GetLastError to find out more
+	}
+
+	CloseHandle(hFile);
+	return size.QuadPart;
 }
 
 /* end of file */

@@ -23,7 +23,7 @@ typedef struct
 	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t data);
 
 	uint8_t *(*Data)(BT8XXEMU::Flash *flash);
-	uint32_t(*Size)(BT8XXEMU::Flash *flash);
+	size_t(*Size)(BT8XXEMU::Flash *flash);
 
 } BT8XXEMU_FlashVTable;
 

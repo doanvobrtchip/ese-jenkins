@@ -318,7 +318,7 @@ BT8XXEMU_API uint8_t *BT8XXEMU_Flash_data(BT8XXEMU_Flash *flash)
 	return flash->vTable()->Data(flash);
 }
 
-BT8XXEMU_API uint32_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
+BT8XXEMU_API size_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
 {
 	return flash->vTable()->Size(flash);
 }
