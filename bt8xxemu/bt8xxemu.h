@@ -229,22 +229,22 @@ extern "C" {
 //////////
 
 // Return version information
-BT8XXEMU_API const char *BT8XXEMU_version();
+BT8XXEMU_API extern const char *BT8XXEMU_version();
 
 // Initialize the default emulator parameters
-BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
+BT8XXEMU_API extern void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
 
 // Run the emulator on the current thread. Returns when the emulator is fully stopped when a Main function is supplied, returns when the emulator is fully started otherwise. Parameter versionApi must be set to BT8XXEMU_VERSION_API
-BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params);
+BT8XXEMU_API extern void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params);
 
 // Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped. Safe to call multiple times.
-BT8XXEMU_API void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator);
 
 // Destroy the emulator. Calls BT8XXEMU_stop implicitly. Emulator must be destroyed before process exits.
-BT8XXEMU_API void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator);
 
 // Poll if the emulator is still running. Returns 0 when the output window has been closed, or when the emulator has been stopped.
-BT8XXEMU_API int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
 
 /////////////
 // RUNTIME //
@@ -267,10 +267,10 @@ BT8XXEMU_API extern int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator);
 //////////////
 
 // Set touch XY. Param idx 0..4. Call on every frame during mouse down or touch when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int x, int y, int pressure);
+BT8XXEMU_API extern void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int x, int y, int pressure);
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
+BT8XXEMU_API extern void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
 
 #ifndef BT8XXEMU_FLASH_LIB
 
@@ -279,13 +279,13 @@ BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
 ///////////
 
 // Initialize the default flash emulator parameters
-BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params);
+BT8XXEMU_API extern void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params);
 
 // Create flash emulator instance
-BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
+BT8XXEMU_API extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
 
 // Destroy flash emulator instance
-BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
+BT8XXEMU_API extern void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
 
 #endif
 

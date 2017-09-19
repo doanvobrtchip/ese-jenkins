@@ -20,6 +20,7 @@ typedef struct
 	int(*Size)(BT8XXEMU::Flash *flash);
 	void(*Cs)(BT8XXEMU::Flash *flash, bool cs);
 	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t transfer);
+	uint8_t *(*Data)(BT8XXEMU::Flash *flash);
 
 } BT8XXEMU_FlashVTable;
 
@@ -48,7 +49,7 @@ protected:
 extern "C" 
 {
 
-BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
+BT8XXEMU_EXPORT extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
 
 }
 
