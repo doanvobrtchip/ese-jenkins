@@ -199,43 +199,49 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 #ifdef BT815EMU_MODE
 		case REG_FLASH_STATUS:
-			FTEMU_warning("Read REG_FLASH_STATUS");
+			FTEMU_warning("Write REG_FLASH_STATUS %i", (int)data);
 			break;
 		case REG_FLASH_SIZE:
-			FTEMU_warning("Read REG_FLASH_SIZE");
+			FTEMU_warning("Write REG_FLASH_SIZE %i", (int)data);
+			break;
+		case REG_SPIM_DIR:
+			FTEMU_warning("Write REG_SPIM_DIR 0x%x", (int)data);
+			break;
+		case REG_SPIM:
+			FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			break;
 		case REG_ESPIM_ADD:
-			FTEMU_warning("Read REG_ESPIM_ADD");
+			FTEMU_warning("Write REG_ESPIM_ADD %i", (int)data);
 			break;
 		case REG_ESPIM_COUNT:
-			FTEMU_warning("Read REG_ESPIM_COUNT");
+			FTEMU_warning("Write REG_ESPIM_COUNT %i", (int)data);
 			break;
 		case REG_ESPIM_DUMMY:
-			FTEMU_warning("Read REG_ESPIM_DUMMY");
+			FTEMU_warning("Write REG_ESPIM_DUMMY %i", (int)data);
 			break;
 		case REG_ESPIM_READSTART:
-			FTEMU_warning("Read REG_ESPIM_READSTART");
+			FTEMU_warning("Write REG_ESPIM_READSTART %i", (int)data);
 			break;
 		case REG_ESPIM_SEQ:
-			FTEMU_warning("Read REG_ESPIM_SEQ");
+			FTEMU_warning("Write REG_ESPIM_SEQ %i", (int)data);
 			break;
 		case REG_ESPIM_TRIG:
-			FTEMU_warning("Read REG_ESPIM_TRIG");
+			FTEMU_warning("Write REG_ESPIM_TRIG %i", (int)data);
 			break;
 		case REG_ESPIM_WINDOW:
-			FTEMU_warning("Read REG_ESPIM_WINDOW");
+			FTEMU_warning("Write REG_ESPIM_WINDOW %i", (int)data);
 			break;
 		case REG_GPIO:
-			FTEMU_warning("Read REG_GPIO");
+			FTEMU_warning("Write REG_GPIO %i", (int)data);
 			break;
 		case REG_GPIOX:
-			FTEMU_warning("Read REG_GPIOX");
+			FTEMU_warning("Write REG_GPIOX %i", (int)data);
 			break;
 		case REG_GPIOX_DIR:
-			FTEMU_warning("Read REG_GPIOX_DIR");
+			FTEMU_warning("Write REG_GPIOX_DIR %i", (int)data);
 			break;
 		case REG_GPIO_DIR:
-			FTEMU_warning("Read REG_GPIO_DIR");
+			FTEMU_warning("Write REG_GPIO_DIR %i", (int)data);
 			break;
 #endif
 #endif
@@ -888,6 +894,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 	// if (address != 3182612 && address != 3182616)
 	FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
 #endif
+	FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
 
 	/*if (address >= RAM_COMPOSITE)
 	{
@@ -1024,6 +1031,53 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		++m_OverrideRasterY;
 		return ((m_OverrideRasterY & 1) << 11); // Override REG_RASTERY
 #endif
+#ifdef BT815EMU_MODE
+	case REG_FLASH_STATUS:
+		FTEMU_warning("Read Co U32 REG_FLASH_STATUS");
+		break;
+	case REG_FLASH_SIZE:
+		FTEMU_warning("Read Co U32 REG_FLASH_SIZE");
+		break;
+	case REG_SPIM_DIR:
+		FTEMU_warning("Read Co U32 REG_SPIM_DIR");
+		break;
+	case REG_SPIM:
+		FTEMU_warning("Read Co U32 REG_SPIM");
+		break;
+	case REG_ESPIM_ADD:
+		FTEMU_warning("Read Co U32 REG_ESPIM_ADD");
+		break;
+	case REG_ESPIM_COUNT:
+		FTEMU_warning("Read Co U32 REG_ESPIM_COUNT");
+		break;
+	case REG_ESPIM_DUMMY:
+		FTEMU_warning("Read Co U32 REG_ESPIM_DUMMY");
+		break;
+	case REG_ESPIM_READSTART:
+		FTEMU_warning("Read Co U32 REG_ESPIM_READSTART");
+		break;
+	case REG_ESPIM_SEQ:
+		FTEMU_warning("Read Co U32 REG_ESPIM_SEQ");
+		break;
+	case REG_ESPIM_TRIG:
+		FTEMU_warning("Read Co U32 REG_ESPIM_TRIG");
+		break;
+	case REG_ESPIM_WINDOW:
+		FTEMU_warning("Read Co U32 REG_ESPIM_WINDOW");
+		break;
+	case REG_GPIO:
+		FTEMU_warning("Read Co U32 REG_GPIO");
+		break;
+	case REG_GPIOX:
+		FTEMU_warning("Read Co U32 REG_GPIOX");
+		break;
+	case REG_GPIOX_DIR:
+		FTEMU_warning("Read Co U32 REG_GPIOX_DIR");
+		break;
+	case REG_GPIO_DIR:
+		FTEMU_warning("Read Co U32 REG_GPIO_DIR");
+		break;
+#endif
 	}
 
 	return rawReadU32(address);
@@ -1075,6 +1129,58 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 		FTEMU_error("Coprocessor U16 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+
+#ifdef BT815EMU_MODE
+	switch (address)
+	{
+	case REG_FLASH_STATUS:
+		FTEMU_warning("Read Co U16 REG_FLASH_STATUS");
+		break;
+	case REG_FLASH_SIZE:
+		FTEMU_warning("Read Co U16 REG_FLASH_SIZE");
+		break;
+	case REG_SPIM_DIR:
+		FTEMU_warning("Read Co U16 REG_SPIM_DIR");
+		break;
+	case REG_SPIM:
+		FTEMU_warning("Read Co U16 REG_SPIM");
+		break;
+	case REG_ESPIM_ADD:
+		FTEMU_warning("Read Co U16 REG_ESPIM_ADD");
+		break;
+	case REG_ESPIM_COUNT:
+		FTEMU_warning("Read Co U16 REG_ESPIM_COUNT");
+		break;
+	case REG_ESPIM_DUMMY:
+		FTEMU_warning("Read Co U16 REG_ESPIM_DUMMY");
+		break;
+	case REG_ESPIM_READSTART:
+		FTEMU_warning("Read Co U16 REG_ESPIM_READSTART");
+		break;
+	case REG_ESPIM_SEQ:
+		FTEMU_warning("Read Co U16 REG_ESPIM_SEQ");
+		break;
+	case REG_ESPIM_TRIG:
+		FTEMU_warning("Read Co U16 REG_ESPIM_TRIG");
+		break;
+	case REG_ESPIM_WINDOW:
+		FTEMU_warning("Read Co U16 REG_ESPIM_WINDOW");
+		break;
+	case REG_GPIO:
+		FTEMU_warning("Read Co U16 REG_GPIO");
+		break;
+	case REG_GPIOX:
+		FTEMU_warning("Read Co U16 REG_GPIOX");
+		break;
+	case REG_GPIOX_DIR:
+		FTEMU_warning("Read Co U16 REG_GPIOX_DIR");
+		break;
+	case REG_GPIO_DIR:
+		FTEMU_warning("Read Co U16 REG_GPIO_DIR");
+		break;
+	}
+#endif
 
 	return rawReadU16(address);
 }
@@ -1134,6 +1240,56 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 		}
 #endif
 	}
+#ifdef BT815EMU_MODE
+	switch (address)
+	{
+	case REG_FLASH_STATUS:
+		FTEMU_warning("Read Co U8 REG_FLASH_STATUS");
+		break;
+	case REG_FLASH_SIZE:
+		FTEMU_warning("Read Co U8 REG_FLASH_SIZE");
+		break;
+	case REG_SPIM_DIR:
+		FTEMU_warning("Read Co U8 REG_SPIM_DIR");
+		break;
+	case REG_SPIM:
+		FTEMU_warning("Read Co U8 REG_SPIM");
+		break;
+	case REG_ESPIM_ADD:
+		FTEMU_warning("Read Co U8 REG_ESPIM_ADD");
+		break;
+	case REG_ESPIM_COUNT:
+		FTEMU_warning("Read Co U8 REG_ESPIM_COUNT");
+		break;
+	case REG_ESPIM_DUMMY:
+		FTEMU_warning("Read Co U8 REG_ESPIM_DUMMY");
+		break;
+	case REG_ESPIM_READSTART:
+		FTEMU_warning("Read Co U8 REG_ESPIM_READSTART");
+		break;
+	case REG_ESPIM_SEQ:
+		FTEMU_warning("Read Co U8 REG_ESPIM_SEQ");
+		break;
+	case REG_ESPIM_TRIG:
+		FTEMU_warning("Read Co U8 REG_ESPIM_TRIG");
+		break;
+	case REG_ESPIM_WINDOW:
+		FTEMU_warning("Read Co U8 REG_ESPIM_WINDOW");
+		break;
+	case REG_GPIO:
+		FTEMU_warning("Read Co U8 REG_GPIO");
+		break;
+	case REG_GPIOX:
+		FTEMU_warning("Read Co U8 REG_GPIOX");
+		break;
+	case REG_GPIOX_DIR:
+		FTEMU_warning("Read Co U8 REG_GPIOX_DIR");
+		break;
+	case REG_GPIO_DIR:
+		FTEMU_warning("Read Co U8 REG_GPIO_DIR");
+		break;
+	}
+#endif
 
 	return rawReadU8(address);
 }

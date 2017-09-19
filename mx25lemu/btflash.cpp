@@ -79,6 +79,9 @@ public:
 				}
 				else
 				{
+					LARGE_INTEGER fileSize;
+					if (!GetFileSizeEx(fileHandle, &fileSize))
+						fileSize.QuadPart = 0;
 					LARGE_INTEGER size;
 					size.QuadPart = sizeBytes;
 					HANDLE fileMapping = CreateFileMappingW(fileHandle,
@@ -108,6 +111,9 @@ public:
 							Size = sizeBytes;
 							m_FileHandle = fileHandle;
 							m_FileMapping = fileMapping;
+							fileSize.QuadPart = std::max(0LL, fileSize.QuadPart);
+							if ((long long)sizeBytes > fileSize.QuadPart)
+								memset(&Data[fileSize.QuadPart], 0xFF, sizeBytes - fileSize.QuadPart);
 						}
 					}
 				}
@@ -149,6 +155,7 @@ public:
 		{
 			// Initialize regular empty RAM based flash device
 			Data = new uint8_t[sizeBytes];
+			memset(Data, 0xFF, sizeBytes);
 			Size = sizeBytes;
 		}
 
@@ -245,9 +252,9 @@ public:
 
 						static const uint8_t mask =
 							BTFLASH_STATUS_BP0_FLAG
-							| BTFLASH_STATUS_BP0_FLAG
-							| BTFLASH_STATUS_BP0_FLAG
-							| BTFLASH_STATUS_BP0_FLAG
+							| BTFLASH_STATUS_BP1_FLAG
+							| BTFLASH_STATUS_BP2_FLAG
+							| BTFLASH_STATUS_BP3_FLAG
 							| BTFLASH_STATUS_SRWD_FLAG;
 						static const uint8_t invMask = ~mask;
 						const uint8_t maskedWrite = data & mask;

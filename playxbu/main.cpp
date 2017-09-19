@@ -147,6 +147,15 @@ public:
 
 	bool loop()
 	{
+		/*
+		wr32(REG_CMDB_WRITE, CMD_FLASHATTACH);
+		Sleep(1500);
+		wr32(REG_CMDB_WRITE, CMD_FLASHDETACH);
+		Sleep(3000);
+		*/
+
+		Sleep(5000);
+
 		if (!fh)
 		{
 			Sleep(10);
