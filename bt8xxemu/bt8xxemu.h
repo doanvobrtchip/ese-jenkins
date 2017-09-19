@@ -259,7 +259,7 @@ BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8
 // Identical to BT8XXEMU_transfer. Transfer data to the last emulator selected by BT8XXEMU_cs. Supports only a single MCU thread
 BT8XXEMU_API extern uint8_t BT8XXEMU_transferSelect(uint8_t data);
 
-// Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+// Set chip select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
 BT8XXEMU_API extern void BT8XXEMU_cs(BT8XXEMU_Emulator *, int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
@@ -289,6 +289,18 @@ BT8XXEMU_API extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, c
 
 // Destroy flash emulator instance
 BT8XXEMU_API extern void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
+
+// Set chip select. Must be set to true to start data transfer, false to end
+BT8XXEMU_API extern void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs);
+
+// Set write protect pin WP# to low, see flash documentation
+BT8XXEMU_API extern void BT8XXEMU_Flash_writeProtect(BT8XXEMU_Flash *flash, bool wp);
+
+// Set hold pin, see flash documentation
+BT8XXEMU_API extern void BT8XXEMU_Flash_hold(BT8XXEMU_Flash *flash, bool hold);
+
+// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks)
+BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data);
 
 #endif
 

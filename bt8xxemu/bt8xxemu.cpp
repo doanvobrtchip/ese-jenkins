@@ -291,9 +291,36 @@ BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	flash->vTable()->Destroy(flash);
 }
 
+BT8XXEMU_API void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs)
+{
+	flash->vTable()->ChipSelect(flash, cs);
+}
+
+// Set write protect pin WP# to low, see flash documentation
+BT8XXEMU_API void BT8XXEMU_Flash_writeProtect(BT8XXEMU_Flash *flash, bool wp)
+{
+	flash->vTable()->WriteProtect(flash, wp);
+}
+
+// Set hold pin, see flash documentation
+BT8XXEMU_API void BT8XXEMU_Flash_hold(BT8XXEMU_Flash *flash, bool hold)
+{
+	flash->vTable()->Hold(flash, hold);
+}
+
+BT8XXEMU_API uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data)
+{
+	return flash->vTable()->Transfer(flash, data);
+}
+
 BT8XXEMU_API uint8_t *BT8XXEMU_Flash_data(BT8XXEMU_Flash *flash)
 {
 	return flash->vTable()->Data(flash);
+}
+
+BT8XXEMU_API uint32_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
+{
+	return flash->vTable()->Size(flash);
 }
 
 /* end of file */
