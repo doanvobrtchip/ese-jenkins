@@ -198,12 +198,15 @@ typedef struct
 	// Size of the flash memory in bytes, default 8MB
 	uint32_t SizeBytes;
 
-	// Image file to load onto the flash, default NULL
-	wchar_t *FlashFilePath;
+	// Data file to load onto the flash, default NULL
+	wchar_t *DataFilePath;
+
+	// Internal flash status file, device specific, default NULL
+	wchar_t *StatusFilePath;
 
 	// Write actions to the flash are persisted to the used file.
-	// This is accomplished by memory mapping the file,
-	// instead ofthe file being copied to memory. Default false
+	// This is accomplished by memory mapping the file, instead of
+	// the file being copied to memory. Default false
 	bool Persistent;
 
 	// Data buffer that is written to the flash initially,
@@ -272,11 +275,11 @@ BT8XXEMU_API extern void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int id
 // Reset touch XY. Call once no longer touching when using custom graphics output
 BT8XXEMU_API extern void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
 
-#ifndef BT8XXEMU_FLASH_LIB
-
 ///////////
 // FLASH //
 ///////////
+
+#ifndef BT8XXEMU_FLASH_LIBRARY
 
 // Initialize the default flash emulator parameters
 BT8XXEMU_API extern void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params);

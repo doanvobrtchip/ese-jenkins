@@ -17,10 +17,13 @@ typedef struct
 {
 	void(*Destroy)(BT8XXEMU::Flash *flash);
 
-	int(*Size)(BT8XXEMU::Flash *flash);
-	void(*Cs)(BT8XXEMU::Flash *flash, bool cs);
-	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t transfer);
+	void(*ChipSelect)(BT8XXEMU::Flash *flash, bool cs);
+	void(*WriteProtect)(BT8XXEMU::Flash *flash, bool wp);
+	void(*Hold)(BT8XXEMU::Flash *flash, bool hold);
+	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t data);
+
 	uint8_t *(*Data)(BT8XXEMU::Flash *flash);
+	uint32_t(*Size)(BT8XXEMU::Flash *flash);
 
 } BT8XXEMU_FlashVTable;
 
@@ -29,6 +32,8 @@ namespace BT8XXEMU {
 class Flash
 {
 public:
+	Flash(BT8XXEMU_FlashVTable *vTable) : m_VTable(vTable) { static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI"); }
+
 	const BT8XXEMU_FlashVTable *vTable() const { return m_VTable; }
 
 protected:
@@ -38,7 +43,7 @@ protected:
 
 }
 
-#ifdef BT8XXEMU_FLASH_LIB
+#ifdef BT8XXEMU_FLASH_LIBRARY
 
 #ifdef WIN32
 #	define BT8XXEMU_EXPORT __declspec(dllexport)
