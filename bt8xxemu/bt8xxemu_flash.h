@@ -54,7 +54,7 @@ protected:
 extern "C" 
 {
 
-BT8XXEMU_EXPORT extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
+BT8XXEMU_EXPORT extern BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
 
 }
 

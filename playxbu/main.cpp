@@ -19,6 +19,10 @@ class PlayXBU
 public:
 	PlayXBU(const char *file)
 	{
+		BT8XXEMU_FlashParameters flashParams;
+		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+		flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+
 		BT8XXEMU_EmulatorParameters params;
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
 #if defined(BT815EMU_MODE)
@@ -40,6 +44,8 @@ public:
 			| BT8XXEMU_EmulatorEnableMainPerformance
 			;
 		params.UserContext = this;
+
+		params.Flash = flash;
 
 #ifdef TEST_THREAD_REDUCE
 		params.ReduceGraphicsThreads = 2;
@@ -63,9 +69,12 @@ public:
 	{
 		BT8XXEMU_destroy(emulator);
 		emulator = NULL;
+		BT8XXEMU_Flash_destroy(flash);
+		flash = NULL;
 	}
 
 	BT8XXEMU_Emulator *emulator;
+	BT8XXEMU_Flash *flash;
 
 	void swrbegin(size_t address)
 	{
@@ -239,10 +248,10 @@ int main(int, char* [])
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
 	
-	const int nb = 2;
+	const int nb = 1;
 	char *xbu[nb] = {
 		"xbu/SCATTER.XBU",
-		"xbu/BIRDS.XBU"
+		// "xbu/BIRDS.XBU"
 	};
 	PlayXBU *app[nb];
 	for (int i = 0; i < nb; ++i)

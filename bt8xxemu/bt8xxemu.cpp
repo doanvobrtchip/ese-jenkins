@@ -261,8 +261,8 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 		return NULL;
 	}
 
-	BT8XXEMU_Flash *(*create)(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
-		= static_cast<BT8XXEMU_Flash *(*)(uint32_t, const BT8XXEMU_FlashParameters *)>(
+	BT8XXEMU_Flash *(__stdcall *create)(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
+		= static_cast<BT8XXEMU_Flash *(__stdcall *)(uint32_t, const BT8XXEMU_FlashParameters *)>(
 			(void *)GetProcAddress(module, "BT8XXEMU_Flash_create"));
 
 	if (!create)

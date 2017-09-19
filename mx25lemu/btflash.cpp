@@ -53,6 +53,8 @@ public:
 		m_UserContext = params->UserContext;
 		m_PrintStd = true;
 
+		Flash_debug("Create flash");
+
 		m_StatusRegister = 0;
 
 		m_WriteProtect = false;
@@ -160,6 +162,7 @@ public:
 
 	~Flash()
 	{
+		Flash_debug("Destroy flash");
 		if (m_FileHandle)
 		{
 			// FlushViewOfFile(Data, Size);
@@ -460,7 +463,7 @@ BT8XXEMU_FlashVTable g_FlashVTable = {
 	(size_t(*)(BT8XXEMU::Flash *))Flash_size
 };
 
-BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
+BT8XXEMU_EXPORT BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{

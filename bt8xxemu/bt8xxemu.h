@@ -188,6 +188,9 @@ typedef struct
 	// User context that will be passed along to callbacks
 	void *UserContext;
 
+	// Flash device to connect with, default NULL
+	BT8XXEMU_Flash *Flash;
+
 } BT8XXEMU_EmulatorParameters;
 
 typedef struct
