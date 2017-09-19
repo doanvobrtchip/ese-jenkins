@@ -671,14 +671,14 @@ BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack an
 static FILE *trace = NULL;
 #endif
 
-Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
 {
 	ejpg.setSystem(system);
 	if (romFilePath)
 	{
 		FILE *f;
-		f = fopen(romFilePath, "rb");
+		f = _wfopen(romFilePath, L"rb");
 		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{

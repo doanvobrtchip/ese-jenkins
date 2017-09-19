@@ -348,7 +348,7 @@ static const uint8_t c_OTP813[FT800EMU_OTP_SIZE] = {
 
 Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
-	const char *romFilePath, const char *otpFilePath)
+	const wchar_t *romFilePath, const wchar_t *otpFilePath)
 	: m_System(system), m_SwapDLMutex(swapDLMutex), 
 	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 {
@@ -359,7 +359,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	if (romFilePath)
 	{
 		FILE *f;
-		f = fopen(romFilePath, "rb");
+		f = _wfopen(romFilePath, L"rb");
 		if (!f) FTEMU_error("Failed to open ROM file");
 		else
 		{
@@ -384,7 +384,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	if (otpFilePath)
 	{
 		FILE *f;
-		f = fopen(otpFilePath, "rb");
+		f = _wfopen(otpFilePath, L"rb");
 		if (!f) FTEMU_error("Failed to open OTP file");
 		else
 		{

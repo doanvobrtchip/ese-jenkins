@@ -41,7 +41,7 @@ class Memory
 public:
 	Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 		FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
-		const char *romFilePath = 0, const char *otpFilePath = 0);
+		const wchar_t *romFilePath = 0, const wchar_t *otpFilePath = 0);
 	~Memory();
 
 	inline void setTouch(Touch *touch) { m_Touch = touch; }

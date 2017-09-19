@@ -107,7 +107,7 @@ public:
 class Coprocessor
 {
 public:
-	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode);
 	~Coprocessor();
 
 	void executeManual();

@@ -8,6 +8,7 @@ Author: Jan Boon <jan@no-break.space>
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
 #include "bt8xxemu_pp.h"
+#include "bt8xxemu_flash.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -225,6 +226,69 @@ BT8XXEMU_API void BT8XXEMU_setDebugLimiter(BT8XXEMU_Emulator *emulator, int debu
 BT8XXEMU_API void BT8XXEMU_processTrace(BT8XXEMU_Emulator *emulator, int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	emulator->processTrace(result, size, x, y, hsize);
+}
+
+BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params)
+{
+	if (versionApi != BT8XXEMU_VERSION_API)
+	{
+		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		return;
+	}
+
+	memset(params, 0, sizeof(BT8XXEMU_FlashParameters));
+
+	params->DeviceType = L"mx25lemu";
+	params->SizeBytes = 8 * 1024 * 1024;
+}
+
+// Create flash emulator instance
+BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
+{
+	if (versionApi != BT8XXEMU_VERSION_API)
+	{
+		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		return NULL;
+	}
+
+	static const std::wstring libraryExt = L".dll";
+	std::wstring libraryName = params->DeviceType + libraryExt;
+	HMODULE module = LoadLibraryW(libraryName.c_str());
+
+	if (!module)
+	{
+		fprintf(stderr, "Failed to load flash library\n");
+		return NULL;
+	}
+
+	BT8XXEMU_Flash *(*create)(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
+		= static_cast<BT8XXEMU_Flash *(*)(uint32_t, const BT8XXEMU_FlashParameters *)>(
+			(void *)GetProcAddress(module, "BT8XXEMU_Flash_create"));
+
+	if (!create)
+	{
+		fprintf(stderr, "Library does not contain BT8XXEMU_Flash_create procedure\n");
+		return NULL;
+	}
+
+	BT8XXEMU_Flash *flash = create(versionApi, params);
+
+	if (!flash)
+	{
+		fprintf(stderr, "Unable to create flash emulator instance\n");
+		return NULL;
+	}
+
+	return flash;
+}
+
+// Destroy flash emulator instance
+BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
+{
+	if (!flash)
+		return;
+
+	flash->vTable()->Destroy(flash);
 }
 
 /* end of file */

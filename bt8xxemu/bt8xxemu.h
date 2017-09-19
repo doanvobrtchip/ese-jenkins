@@ -35,13 +35,16 @@ Author: Jan Boon <jan@no-break.space>
 
 namespace BT8XXEMU {
 	class Emulator;
+	class Flash;
 }
 
 typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
+typedef BT8XXEMU::Flash BT8XXEMU_Flash;
 
 #else
 
 typedef void BT8XXEMU_Emulator;
+typedef void BT8XXEMU_Flash;
 
 #endif /* #ifdef __cplusplus */
 
@@ -151,13 +154,13 @@ typedef struct
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *RomFilePath;
+	wchar_t *RomFilePath;
 	// Replaces the default builtin OTP with a custom OTP from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *OtpFilePath;
+	wchar_t *OtpFilePath;
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *CoprocessorRomFilePath;
+	wchar_t *CoprocessorRomFilePath;
 
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
@@ -186,6 +189,36 @@ typedef struct
 	void *UserContext;
 
 } BT8XXEMU_EmulatorParameters;
+
+typedef struct
+{
+	// Device type, by library name, default "mx25lemu"
+	wchar_t *DeviceType;
+
+	// Size of the flash memory in bytes, default 8MB
+	uint32_t SizeBytes;
+
+	// Image file to load onto the flash, default NULL
+	wchar_t *FlashFilePath;
+
+	// Write actions to the flash are persisted to the used file.
+	// This is accomplished by memory mapping the file,
+	// instead ofthe file being copied to memory. Default false
+	bool Persistent;
+
+	// Data buffer that is written to the flash initially,
+	// overriding any existing contents that may have been
+	// loaded from a flash file already, default NULL and 0
+	void *Data;
+	size_t DataSize;
+
+	// Log callback
+	void(*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
+
+	// User context that will be passed along to callbacks
+	void *UserContext;
+
+} BT8XXEMU_FlashParameters;
 
 #ifdef __cplusplus
 extern "C" {
@@ -238,6 +271,23 @@ BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int 
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
 BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
+
+#ifndef BT8XXEMU_FLASH_LIB
+
+///////////
+// FLASH //
+///////////
+
+// Initialize the default flash emulator parameters
+BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params);
+
+// Create flash emulator instance
+BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
+
+// Destroy flash emulator instance
+BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
+
+#endif
 
 #ifdef __cplusplus 
 } /* extern "C" */

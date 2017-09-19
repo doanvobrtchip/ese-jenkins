@@ -254,7 +254,7 @@ BT8XXEMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &
 	return result;
 }
 
-BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
+BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const GraphicsState &gs, const int &func, const __m128i &src, const __m128i &dst)
 {
 	FT800EMU_STATIC_M128I(cmone) = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
@@ -273,8 +273,7 @@ BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src,
 	case ONE_MINUS_DST_ALPHA:
 		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
 	}
-	FTEMU_printf("Invalid blend func (sse)\n");
-	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid blend func (sse)");
+	gs.Processor->system()->log(BT8XXEMU_LogError, "Invalid blend func (sse)");
 	return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 }
 
@@ -519,13 +518,13 @@ BT8XXEMU_FORCE_INLINE int getAlpha(const GraphicsState &gs, const int &func, con
 
 BT8XXEMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
-#if FTEMU_SSE41_INSTRUCTIONS_USE // > 10% faster
+#if 0 // Broken // FTEMU_SSE41_INSTRUCTIONS_USE // > 10% faster
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
 	const register __m128i mmax = _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax));
 	const register __m128i msrc = to_m128i(src);
 	const register __m128i mdst = to_m128i(dst);
-	const register __m128i srca = getAlphaSplat(gs.BlendFuncSrc, msrc, mdst);
-	const register __m128i dsta = getAlphaSplat(gs.BlendFuncDst, msrc, mdst);
+	const register __m128i srca = getAlphaSplat(gs, gs.BlendFuncSrc, msrc, mdst);
+	const register __m128i dsta = getAlphaSplat(gs, gs.BlendFuncDst, msrc, mdst);
 	register __m128i result = div255(_mm_add_epi32(_mm_mullo_epi32(msrc, srca), _mm_mullo_epi32(mdst, dsta)));
 	result = _mm_min_epi32(result, mmax);
 	return (to_argb8888(result) & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
