@@ -7,16 +7,27 @@ Author: Jan Boon <jan@no-break.space>
 #include "bt8xxemu.h"
 #include "bt8xxemu_flash.h"
 
+#include "btflash_defs.h"
+
 #include <stdio.h>
+#include <stdarg.h>
+
+#include <mutex>
 
 extern BT8XXEMU_FlashVTable g_FlashVTable;
+static std::mutex s_LogMutex;
 
 class Flash : public BT8XXEMU::Flash
 {
 public:
-	Flash(const BT8XXEMU_FlashParameters *params) : BT8XXEMU::Flash(&g_FlashVTable)
+	Flash(const BT8XXEMU_FlashParameters *params) : BT8XXEMU::Flash(&g_FlashVTable),
+		m_DeepPowerDown(false), m_ChipSelect(false), m_TransferCmd(0)
 	{
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
+
+		m_Log = params->Log;
+		m_UserContext = params->UserContext;
+		m_PrintStd = true;
 	}
 
 	~Flash()
@@ -26,7 +37,8 @@ public:
 
 	void chipSelect(bool cs)
 	{
-
+		m_ChipSelect = cs;
+		m_TransferCmd = 0;
 	}
 
 	void writeProtect(bool wp)
@@ -41,6 +53,55 @@ public:
 
 	uint8_t transfer(uint8_t data)
 	{
+		if (m_ChipSelect)
+		{
+			if (m_DeepPowerDown)
+			{
+				if (data == BTFLASH_CMD_RDP) /* Release from Deep Power Down ¨*/
+				{
+					m_DeepPowerDown = false;
+				}
+				return 0;
+			}
+			switch (m_TransferCmd)
+			{
+			case 0:
+				m_TransferCmd = data;
+				switch (data)
+				{
+				case BTFLASH_CMD_WREN: /* Write Enable */
+				case BTFLASH_CMD_WRDI: /* Write Disable */
+				case BTFLASH_CMD_RDID: /* Read Identification */
+				case BTFLASH_CMD_RDSR: /* Read Status Register */
+				case BTFLASH_CMD_WRSR: /* Write Status Register */
+				case BTFLASH_CMD_READ: /* Read Data */
+				case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
+				case BTFLASH_CMD_2READ: /* 2x IO Read */
+				case BTFLASH_CMD_SE: /* Sector Erase */
+				case BTFLASH_CMD_BE: /* Block Erase */
+				case BTFLASH_CMD_CE_60: /* Chip Erase */
+				case BTFLASH_CMD_CE_C7: /* Chip Erase */
+				case BTFLASH_CMD_PP: /* Page Program */
+				case BTFLASH_CMD_CP: /* Continuously Program mode */
+				case BTFLASH_CMD_DP: /* Deep Power Down */
+				case BTFLASH_CMD_RES: /* Read Electronic ID */
+				case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
+				case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
+				case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
+				case BTFLASH_CMD_EXSO: /* Exit Secured OTP */
+				case BTFLASH_CMD_RDSCUR: /* Read Security Register */
+				case BTFLASH_CMD_WRSCUR: /* Write Security Register */
+				case BTFLASH_CMD_ESRY: /* Enable SO to output RY/BY# */
+				case BTFLASH_CMD_DSRY: /* Disable SO to output RY/BY# */
+					log(BT8XXEMU_LogError, "Flash command not implemented (%x)", data);
+					break;
+				default:
+					log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", data);
+					break;
+				}
+				break;
+			}
+		}
 		return 0;
 	}
 
@@ -48,6 +109,34 @@ public:
 	uint32_t Size;
 
 private:
+	bool m_DeepPowerDown;
+
+	bool m_ChipSelect;
+	uint8_t m_TransferCmd;
+
+	void(*m_Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
+	void *m_UserContext;
+	bool m_PrintStd;
+
+private:
+	void log(BT8XXEMU_LogType type, const char *message, ...)
+	{
+		char buffer[2048];
+		va_list args;
+		va_start(args, message);
+		vsnprintf(buffer, 2047, message, args);
+		; {
+			std::unique_lock<std::mutex> lock(s_LogMutex);
+			m_Log && (m_Log(this, m_UserContext, type, buffer), true);
+			const char *level =
+				(type == BT8XXEMU_LogMessage
+					? "Message"
+					: (type == BT8XXEMU_LogWarning
+						? "Warning" : "Error"));
+			m_PrintStd && (printf("[%s] %s\n", level, buffer));
+		}
+		va_end(args);
+	}
 
 };
 
