@@ -27,6 +27,7 @@ Author: Jan Boon <jan@no-break.space>
 #ifdef BT815EMU_MODE
 #define BT815EMU_ADDR_IS_FLASH(addr) (addr & (1 << 23))
 #define BT815EMU_ADDR_TO_FLASH(addr) ((addr & ((1 << 23) - 1)) * 32)
+#define BT815EMU_ADDR_MASK_WITH_FLASH ((1 << 24) - 1)
 #endif
 
 // System includes
@@ -2779,7 +2780,12 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_DISPLAY:
 			goto DisplayListDisplay;
 		case FT800EMU_DL_BITMAP_SOURCE:
+#ifdef BT815EMU_MODE
+			bitmapInfo[gs.BitmapHandle].Source = v & (BT815EMU_ADDR_IS_FLASH(v)
+				? BT815EMU_ADDR_MASK_WITH_FLASH : FT800EMU_ADDR_MASK);
+#else
 			bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
+#endif
 			break;
 		case FT800EMU_DL_BITMAP_HANDLE:
 			gs.BitmapHandle = v & 0x1F;
@@ -3021,7 +3027,12 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
 				case FT800EMU_DL_BITMAP_SOURCE:
+#ifdef BT815EMU_MODE
+					bitmapInfo[gs.BitmapHandle].Source = v & (BT815EMU_ADDR_IS_FLASH(v)
+						? BT815EMU_ADDR_MASK_WITH_FLASH : FT800EMU_ADDR_MASK);
+#else
 					bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
+#endif
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
