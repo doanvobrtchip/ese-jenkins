@@ -83,6 +83,9 @@ BT8XXEMU_FORCE_INLINE int16_t AudioRender::playback(uint32_t &playbackStart,
 	uint32_t &playbackLength, uint8_t &playbackFormat,
 	uint8_t &playbackLoop, uint8_t &playbackBusy,
 	uint32_t &playbackReadPtr, uint8_t &playbackVolume,
+#if defined(BT815EMU_MODE)
+	uint8_t &playbackPause,
+#endif
 	bool &adpcmNext, uint8_t *ram)
 {
 	if (m_RequestPlayback)
@@ -94,7 +97,11 @@ BT8XXEMU_FORCE_INLINE int16_t AudioRender::playback(uint32_t &playbackStart,
 		m_ADPCMPredictedSample = 0;
 		m_ADPCMIndex = 0;
 	}
-	if (playbackBusy)
+	if (playbackBusy
+#if defined(BT815EMU_MODE)
+		&& !playbackPause
+#endif
+		)
 	{
 		if (!adpcmNext) // don't increase on second half of adpcm byte
 		{
@@ -227,6 +234,9 @@ void AudioRender::process(short *audioBuffer, int samples)
 	uint8_t &playbackLoop = ram[REG_PLAYBACK_LOOP];
 	uint8_t &playbackBusy = ram[REG_PLAYBACK_PLAY];
 	uint32_t &playbackReadPtr = *static_cast<uint32_t *>(static_cast<void *>(&ram[REG_PLAYBACK_READPTR])); playbackReadPtr &= FT800EMU_ADDR_MASK;
+#if defined(BT815EMU_MODE)
+	uint8_t &playbackPause = ram[REG_PLAYBACK_PAUSE];
+#endif
 	uint8_t &playbackVolume = ram[REG_VOL_PB];
 	bool adpcmNext = m_ADPCMNext;
 
@@ -265,7 +275,12 @@ void AudioRender::process(short *audioBuffer, int samples)
 			{
 				m_SecondsPassedForPlaybackSample -= secondsPerPlaybackSample;
 				playbackSample0 = playbackSample1;
-				playbackSample1 = playback(playbackStart, playbackLength, playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, adpcmNext, ram);
+				playbackSample1 = playback(playbackStart, playbackLength, 
+					playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, 
+#if defined(BT815EMU_MODE)
+					playbackPause,
+#endif
+					adpcmNext, ram);
 			}
 			m_SecondsPassedForPlaybackSample += secondsPerSample;
 			pb = (int16_t)(
@@ -277,7 +292,12 @@ void AudioRender::process(short *audioBuffer, int samples)
 		}
 		else
 		{
-			pb = playback(playbackStart, playbackLength, playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, adpcmNext, ram);
+			pb = playback(playbackStart, playbackLength, 
+				playbackFormat, playbackLoop, playbackBusy, playbackReadPtr, playbackVolume, 
+#if defined(BT815EMU_MODE)
+				playbackPause,
+#endif
+				adpcmNext, ram);
 		}
 
 		uint16_t sample = synth + pb;

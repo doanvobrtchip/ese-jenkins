@@ -47,6 +47,9 @@ private:
 		uint32_t &playbackLength, uint8_t &playbackFormat,
 		uint8_t &playbackLoop, uint8_t &playbackBusy,
 		uint32_t &playbackReadPtr, uint8_t &playbackVolume,
+#if defined(BT815EMU_MODE)
+		uint8_t &playbackPause,
+#endif
 		bool &adpcmNext, uint8_t *ram);
 
 private:
