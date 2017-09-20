@@ -209,6 +209,13 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 		case REG_SPIM:
 			FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
+			if (m_Flash)
+			{
+				// BT8XXEMU_Flash_chipSelect(m_Flash, true);
+				// uint8_t res = BT8XXEMU_Flash_transfer(m_Flash, value);
+				// data = ... // set new register value
+				// ... = rawReadU32(REG_SPIM); // read existing register value
+			}
 			break;
 		case REG_ESPIM_ADD:
 			FTEMU_warning("Write REG_ESPIM_ADD %i", (int)data);
@@ -354,9 +361,11 @@ static const uint8_t c_OTP813[FT800EMU_OTP_SIZE] = {
 
 Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 	FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
+	BT8XXEMU_Flash *flash,
 	const wchar_t *romFilePath, const wchar_t *otpFilePath)
 	: m_System(system), m_SwapDLMutex(swapDLMutex), 
-	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
+	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor),
+	m_Flash(flash)
 {
 	// memset(m_Ram, 0, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
@@ -1043,6 +1052,11 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		break;
 	case REG_SPIM:
 		FTEMU_warning("Read Co U32 REG_SPIM");
+		if (m_Flash)
+		{
+			// BT8XXEMU_Flash_chipSelect(m_Flash, true);
+			// uint8_t res = BT8XXEMU_Flash_transfer(m_Flash, value);
+		}
 		break;
 	case REG_ESPIM_ADD:
 		FTEMU_warning("Read Co U32 REG_ESPIM_ADD");
@@ -1145,6 +1159,11 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 		break;
 	case REG_SPIM:
 		FTEMU_warning("Read Co U16 REG_SPIM");
+		if (m_Flash)
+		{
+			// BT8XXEMU_Flash_chipSelect(m_Flash, true);
+			// uint8_t res = BT8XXEMU_Flash_transfer(m_Flash, value);
+		}
 		break;
 	case REG_ESPIM_ADD:
 		FTEMU_warning("Read Co U16 REG_ESPIM_ADD");
@@ -1254,6 +1273,11 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 		break;
 	case REG_SPIM:
 		FTEMU_warning("Read Co U8 REG_SPIM");
+		if (m_Flash)
+		{
+			// BT8XXEMU_Flash_chipSelect(m_Flash, true);
+			// uint8_t res = BT8XXEMU_Flash_transfer(m_Flash, value);
+		}
 		break;
 	case REG_ESPIM_ADD:
 		FTEMU_warning("Read Co U8 REG_ESPIM_ADD");

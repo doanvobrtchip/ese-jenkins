@@ -41,6 +41,7 @@ class Memory
 public:
 	Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 		FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
+		BT8XXEMU_Flash *flash,
 		const wchar_t *romFilePath = 0, const wchar_t *otpFilePath = 0);
 	~Memory();
 
@@ -157,6 +158,8 @@ private:
 	bool m_CpuReset = false;
 
 	BT8XXEMU_EmulatorMode m_EmulatorMode;
+
+	BT8XXEMU_Flash *m_Flash;
 
 private:
 	BT8XXEMU_FORCE_INLINE void rawWriteU32(ramaddr address, uint32_t data);

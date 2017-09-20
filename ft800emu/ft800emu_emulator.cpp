@@ -276,7 +276,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_System->overrideMCUDelay(params.MCUSleep);
 	m_System->setSender(static_cast<BT8XXEMU_Emulator *>(this));
 	m_System->setUserContext(params.UserContext);
-	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.RomFilePath, params.OtpFilePath);
+	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, params.Flash, params.RomFilePath, params.OtpFilePath);
 	assert(!m_Touch);
 	m_Touch = new Touch(m_System, mode, m_Memory);
 	m_Memory->setTouch(m_Touch);

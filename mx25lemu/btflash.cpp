@@ -143,8 +143,10 @@ public:
 						{
 							size_t s = fread(Data, 1, copySize, f);
 							if (s != copySize) log(BT8XXEMU_LogError, "Incomplete flash data file");
-							else  log(BT8XXEMU_LogMessage, "Loaded flash data file '%ls'", dataFilePath);
+							else log(BT8XXEMU_LogMessage, "Loaded flash data file '%ls'", dataFilePath);
 							if (fclose(f)) log(BT8XXEMU_LogError, "Error closing flash data file");
+							if (sizeBytes > copySize)
+								memset(&Data[copySize], 0xFF, sizeBytes - copySize);
 						}
 					}
 				}
