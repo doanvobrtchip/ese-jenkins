@@ -16,6 +16,7 @@ Author: Jan Boon <jan@no-break.space>
 
 // Project includes
 #include "ft800emu_defs.h"
+#include "bt8xxemu_flash.h"
 
 namespace FT8XXEMU {
 	class System;
@@ -41,7 +42,9 @@ class Memory
 public:
 	Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
 		FT8XXEMU::ThreadState &threadMCU, FT8XXEMU::ThreadState &threadCoprocessor,
+#ifdef BT815EMU_MODE
 		BT8XXEMU_Flash *flash,
+#endif
 		const wchar_t *romFilePath = 0, const wchar_t *otpFilePath = 0);
 	~Memory();
 
@@ -54,6 +57,12 @@ public:
 
 	inline uint8_t *getRam() { return m_Ram; }
 	inline const uint32_t *getDisplayList() { return m_DisplayListActive; }
+
+#ifdef BT815EMU_MODE
+	inline uint8_t *getFlash() { return m_Flash ? m_Flash->vTable()->Data(m_Flash) : NULL; }
+	// Voodoo magic...
+	// static inline uint8_t *getFlashFromRamPtr(uint8_t *ram) { return (reinterpret_cast<Memory *>(ram) - offsetof(Memory, m_Ram))->getFlash(); }
+#endif
 
 	//static void setInterrupt(void (*interrupt)());
 	bool hasInterrupt();
@@ -159,7 +168,9 @@ private:
 
 	BT8XXEMU_EmulatorMode m_EmulatorMode;
 
+#ifdef BT815EMU_MODE
 	BT8XXEMU_Flash *m_Flash;
+#endif
 
 private:
 	BT8XXEMU_FORCE_INLINE void rawWriteU32(ramaddr address, uint32_t data);

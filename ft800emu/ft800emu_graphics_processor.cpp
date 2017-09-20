@@ -24,6 +24,11 @@ Author: Jan Boon <jan@no-break.space>
 #define FT800EMU_LIMIT_JUMP_LOOP 1
 #define FT800EMU_LIMIT_JUMP_LOOP_COUNT (FT800EMU_DISPLAY_LIST_SIZE * 16)
 
+#ifdef BT815EMU_MODE
+#define BT815EMU_ADDR_IS_FLASH(addr) (addr & (1 << 23))
+#define BT815EMU_ADDR_TO_FLASH(addr) ((addr & ((1 << 23) - 1)) * 32)
+#endif
+
 // System includes
 #include <vector>
 #include <algorithm>
@@ -1068,7 +1073,6 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	// FTEMU_printf("bitmap\n");
 	FT8XXEMU::System *const system = gs.Processor->system();
 	const BitmapInfo &bi = bitmapInfo[handle];
-	const uint8_t *const ram = gs.Processor->memory()->getRam();
 
 	// system->log(BT8XXEMU_LogMessage, "Bitmap Vertex: handle %u, cell %u", handle, cell);
 	
@@ -1086,6 +1090,25 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 
 	if (max(pytopi, gs.ScissorY.I) <= y && y <= min(pybtmi, gs.ScissorY2.I - 1)) // Scissor Y
 	{
+#ifdef BT815EMU_MODE
+		const uint32_t origSource = bi.Source;
+		const uint8_t *const ram = BT815EMU_ADDR_IS_FLASH(origSource)
+			? gs.Processor->memory()->getFlash()
+			: gs.Processor->memory()->getRam();
+
+		if (!ram)
+		{
+			gs.Processor->system()->log(BT8XXEMU_LogError, "Bitmap source in flash, but no flash exists");
+			return;
+		}
+
+		const uint32_t sourceAddr = BT815EMU_ADDR_IS_FLASH(origSource)
+			? BT815EMU_ADDR_TO_FLASH(origSource) : origSource;
+#else
+		const uint32_t sourceAddr = bi.Source;
+		const uint8_t *const ram = gs.Processor->memory()->getRam();
+#endif
+
 #ifdef FT810EMU_MODE
 		int sizeWidth = swapXY ? bi.SizeHeight : bi.SizeWidth;
 #else
@@ -1119,7 +1142,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		const int sampleFormat = bi.LayoutFormat;
 		const ramaddr cellOffset = (cell * bi.LayoutStride * bi.LayoutHeight);
 #endif
-		const uint32_t sampleSrcPos = bi.Source + cellOffset;
+		const uint32_t sampleSrcPos = sourceAddr + cellOffset;
 		const int sampleWidth = bi.LayoutWidth;
 		const int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
 		const int sampleStride = bi.LayoutStride;
