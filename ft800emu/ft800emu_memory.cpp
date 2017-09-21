@@ -911,7 +911,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 	// if (address != 3182612 && address != 3182616)
 	FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
 #endif
-	FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
+	// FTEMU_message("Coprocessor read U32 %i (cmd %i)", (int)address, (int)((address - RAM_CMD) / 4));
 
 	/*if (address >= RAM_COMPOSITE)
 	{

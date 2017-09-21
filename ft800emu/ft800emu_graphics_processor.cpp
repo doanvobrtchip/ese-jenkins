@@ -25,8 +25,8 @@ Author: Jan Boon <jan@no-break.space>
 #define FT800EMU_LIMIT_JUMP_LOOP_COUNT (FT800EMU_DISPLAY_LIST_SIZE * 16)
 
 #ifdef BT815EMU_MODE
-#define BT815EMU_ADDR_IS_FLASH(addr) (addr & (1 << 23))
-#define BT815EMU_ADDR_TO_FLASH(addr) ((addr & ((1 << 23) - 1)) * 32)
+#define BT815EMU_ADDR_IS_FLASH(addr) ((addr) & (1 << 23))
+#define BT815EMU_ADDR_TO_FLASH(addr) (((addr) & ((1 << 23) - 1)) * 32)
 #define BT815EMU_ADDR_MASK_WITH_FLASH ((1 << 24) - 1)
 #endif
 
@@ -115,25 +115,30 @@ public:
 		ColorMaskARGB = 0xFFFFFFFF;
 		BitmapHandle = 0;
 		Cell = 0;
+#ifdef BT815EMU_MODE
+#define BT815EMU_IDENTITY_UNIT (1 << 15)
+#else
+#define BT815EMU_IDENTITY_UNIT (1 << 8)
+#endif
 #ifdef FT810EMU_MODE
 		if (swapXY)
 		{
 			BitmapTransformA = 0;
-			BitmapTransformB = 256;
-			BitmapTransformC = 0;
-			BitmapTransformD = 256;
+			BitmapTransformB = BT815EMU_IDENTITY_UNIT; // .8 ft800, .15 bt815
+			BitmapTransformC = 0; // .12 ft800, .19 bt815 
+			BitmapTransformD = BT815EMU_IDENTITY_UNIT;
 			BitmapTransformE = 0;
-			BitmapTransformF = 0;
+			BitmapTransformF = 0; // .12 ft800, .19 bt815
 		}
 		else
 #endif
 		{
-			BitmapTransformA = 256;
+			BitmapTransformA = BT815EMU_IDENTITY_UNIT;
 			BitmapTransformB = 0;
-			BitmapTransformC = 0;
+			BitmapTransformC = 0; // .12 ft800, .19 bt815
 			BitmapTransformD = 0;
-			BitmapTransformE = 256;
-			BitmapTransformF = 0;
+			BitmapTransformE = BT815EMU_IDENTITY_UNIT;
+			BitmapTransformF = 0; // .12 ft800, .19 bt815
 		}
 		BlendFuncSrc = SRC_ALPHA;
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
@@ -694,7 +699,13 @@ BT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int 
 
 #pragma region Primitive: Bitmap
 
-BT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
+#ifdef FT810EMU_MODE
+typedef int_fast64_t btxf_t;
+#else
+typedef int_fast32_t btxf_t;
+#endif
+
+BT8XXEMU_FORCE_INLINE bool wrap(btxf_t &value, const int &max, const int &type)
 {
 	switch (type)
 	{
@@ -738,18 +749,18 @@ static const int c_AstcBlockHeight[] = {
 
 // uses pixel units
 #if FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
-    int xo;   // x byte offset
+	btxf_t xol;   // x byte offset
 	switch (format)
 	{
 	case ARGB1555:
 	case ARGB4:
 	case RGB565:
-		xo = x << 1;
+		xol = xl << 1;
 		break;
 	case RGB332:
 	case ARGB2:
@@ -761,36 +772,38 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 #endif
 	case L8:
 	case BARGRAPH:
-		xo = x;
+		xol = xl;
 		break;
 	case L1:
 	case TEXT8X8:
-		xo = x >> 3;
+		xol = xl >> 3;
 		break;
 	case TEXTVGA:
-		xo = (x >> 3) << 1;
+		xol = (xl >> 3) << 1;
 		break;
 #ifdef FT810EMU_MODE
 	case L2:
-		xo = x >> 2;
+		xol = xl >> 2;
 		break;
 #endif
 	case L4:
-		xo = x >> 1;
+		xol = xl >> 1;
 		break;
 #ifdef BT815EMU_MODE
 	default:
 		if (BT815EMU_IS_FORMAT_ASTC(format))
 		{
-			xo = x; // TODO
+			xol = xl; // TODO
 			break;
 		}
 #endif
 	}
 
-	if (!wrap(xo, stride, wrapx)) return 0x00000000;
-	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
-	int py = y * stride;
+	if (!wrap(xol, stride, wrapx)) return 0x00000000;
+	const int xo = (int)xol;
+	if (format != BARGRAPH) if (!wrap(yl, height, wrapy)) return 0x00000000;
+	const int y = (int)yl;
+	const int py = y * stride;
 	switch (format)
 	{
 	case ARGB1555:
@@ -803,21 +816,21 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		}
 	case L1:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (x % 8))) & 0x1;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (xl % 8))) & 0x1;
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF;
 		}
 #ifdef FT810EMU_MODE
 	case L2:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (x % 4)) << 1)) & 0x3;
+			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (xl % 4)) << 1)) & 0x3;
 			val = mul255div3(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
 #endif
 	case L4:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (((x + 1) % 2) << 2)) & 0xF;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (((xl + 1) % 2) << 2)) & 0xF;
 			val = mul255div15(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
@@ -871,23 +884,23 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	case TEXT8X8:
 		{
 			const int yn = y >> 3;
-			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + xo);
+			const int pys = yn * stride;
+			uint8_t c = bmpSrc8(ram, srci, pys + xo);
 			const uint8_t *nsrc = &ram[bitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
-			const int xc = x & 0x7;
+			const int xc = xl & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1;
 			return (val * 0xFF000000) | 0x00FFFFFF;
 		}
 	case TEXTVGA:
 		{
 			const int yn = y >> 4;
-			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + xo); // Character
-			uint8_t ca = bmpSrc8(ram, srci, py + xo + 1); // Attribute
+			const int pys = yn * stride;
+			uint8_t c = bmpSrc8(ram, srci, pys + xo); // Character
+			uint8_t ca = bmpSrc8(ram, srci, pys + xo + 1); // Attribute
 			const uint8_t *nsrc = &ram[bitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
 			const int pyc = y & 0xF;
-			const int xc = x & 0x7;
+			const int xc = xl & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
 			const int vishift = ((1 - val) << 2);
 			const int colidx = (ca >> vishift) & 0xF; // Index in 16-color palette
@@ -926,8 +939,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
 		const int numBlocksWidth = stride / 16;
 		const int numBlocksHeight = height / blockHeight;
-		const int blockX = x / blockWidth;
-		const int blockY = y / blockWidth;
+		const int blockX = (int)xl / blockWidth;
+		const int blockY = (int)yl / blockWidth;
 		const int tileX = blockX / 2;
 		const int tileY = blockY / 2;
 		const int tileWidth = (blockX == (blockWidth - 1)) ? 1 : 2;
@@ -942,7 +955,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 		imageblock imageBlock = { 0 };
 		decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
-		const int index = (((y % blockHeight) * blockWidth) + (x % blockWidth));
+		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth));
 		if (imageBlock.nan_texel[index])
 			return 0xFFFF00FF;
 		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
@@ -957,9 +970,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
@@ -973,16 +986,16 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 	{
 	case NEAREST:
 		{
-			int xi = x >> 12;
-			int yi = y >> 12;
+			btxf_t xi = x >> 12;
+			btxf_t yi = y >> 12;
 			return sampleBitmapAt(system, ram, srci, xi, yi, FT800_SAMPLE_AT_PARAMS);
 		}
 	case BILINEAR:
 		{
 			int xsep = x & 0xFFF;
 			int ysep = y & 0xFFF;
-			int xl = x >> 12;
-			int yt = y >> 12;
+			btxf_t xl = x >> 12;
+			btxf_t yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
 				return sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
@@ -991,7 +1004,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
-				int yb = yt + 1;
+				btxf_t yb = yt + 1;
 				argb8888 top = sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
 				argb8888 btm = sampleBitmapAt(system, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
@@ -1000,7 +1013,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 			{
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
-				int xr = xl + 1;
+				btxf_t xr = xl + 1;
 				return mulalpha_argb(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
 					+ mulalpha_argb(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
 			}
@@ -1010,8 +1023,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 				int xal = 255 - xar;
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
-				int xr = xl + 1;
-				int yb = yt + 1;
+				btxf_t xr = xl + 1;
+				btxf_t yb = yt + 1;
 #if FTEMU_SSE41_INSTRUCTIONS_USE
 				const __m128i tl = to_m128i(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS));
 				const __m128i tr = to_m128i(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS));
@@ -1070,6 +1083,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 #endif
 	BitmapInfo *const bitmapInfo)
 {
+	// px, py => 15.4i, 19+1b
+
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
 	FT8XXEMU::System *const system = gs.Processor->system();
@@ -1126,8 +1141,8 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
 
 		//if (bi.
-		const int vy = y * 16;
-		const int ry = vy - py;
+		const int vy = y * 16; // x.4u
+		const int ry = vy - py; // ~15.4i, 19 + 1b
 		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
 #ifdef BT815EMU_MODE
 		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
@@ -1164,8 +1179,19 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		*/
 
 		// pretransform
-		const int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
-		const int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
+		// rot transform 8.8i  * 15.4i => 23.12i, 35+1b (ft810+)
+		// rot transform 1.15i * 15.4i => 16.19i, 35+1b (bt815 precise)
+		// plus 15.8i translate => 24.12i or 17.19i, 36+1b (31+1b on ft800...)
+#ifdef BT815EMU_MODE
+#define BT815EMU_TRANSLATE_SHIFT(v) ((v) << 11) /* From 15.8 to .19 */
+#define BT815EMU_ROTATE_SHIFT(v) ((v) << 11) /* From 8.8 to 8.15, not applicable for ft800 */
+#else
+#define BT815EMU_TRANSLATE_SHIFT(v) ((v) << 4) /* From 15.8 to .12 */
+#endif
+		const btxf_t rxtbc = ((btxf_t)gs.BitmapTransformB * (btxf_t)ry) + ((btxf_t)gs.BitmapTransformC);
+		const btxf_t rytef = ((btxf_t)gs.BitmapTransformE * (btxf_t)ry) + ((btxf_t)gs.BitmapTransformF);
+		const btxf_t btfa = gs.BitmapTransformA;
+		const btxf_t btfd = gs.BitmapTransformD;
 		//int sample
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
@@ -1173,8 +1199,17 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			const int vx = x * 16;
 			const int rx = vx - px;
 			// transform with 1/(256*16) pixel units
-			const int rxt = (gs.BitmapTransformA * rx) + rxtbc;
-			const int ryt = (gs.BitmapTransformD * rx) + rytef;
+#ifdef BT815EMU_MODE
+#define BT815EMU_TRANSFORM_SHIFT(v) ((v) >> 7)
+#else
+#define BT815EMU_TRANSFORM_SHIFT(v) ((v))
+#endif
+			const btxf_t rxt = BT815EMU_TRANSFORM_SHIFT((btfa * (btxf_t)rx) + rxtbc); // 37+1b to  on ft810+
+			const btxf_t ryt = BT815EMU_TRANSFORM_SHIFT((btfd * (btxf_t)rx) + rytef);
+			// on ft800-ft81x rxt and ryt are (20-25).12i fixed point
+			// on bt815 precision can be increased, so end up at 25.19i, precision only affects multiplication
+			// because maximum visual precision after calculation is only 1/16 subpixel with 1/256 gradation, 
+			// we shift the transform back down to .12
 #ifdef FT810EMU_MODE
 			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
 #else
@@ -3132,47 +3167,52 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_TAG_MASK:
 					gs.TagMask = (v & 0x01) != 0;
 					break;
+#ifdef BT815EMU_MODE
+#define BT815EMU_ROTATE_SHIFTED(v) (((v) & (1 << 17)) ? SIGNED_N((v), 17) : (SIGNED_N((v), 17) << 7))
+#else
+#define BT815EMU_ROTATE_SHIFTED(v) (SIGNED_N((v), 17))
+#endif
 				case FT800EMU_DL_BITMAP_TRANSFORM_A:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformB = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformB = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformA = SIGNED_N(v, 17);
+						gs.BitmapTransformA = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_B:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformA = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformA = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformB = SIGNED_N(v, 17);
+						gs.BitmapTransformB = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_C: // 15.8 signed
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformF = SIGNED_N(v, 24);
+					if (swapXY) gs.BitmapTransformF = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					else
 #endif
-					gs.BitmapTransformC = SIGNED_N(v, 24);
+						gs.BitmapTransformC = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_D:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformE = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformE = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformD = SIGNED_N(v, 17);
+						gs.BitmapTransformD = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_E:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformD = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformD = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformE = SIGNED_N(v, 17);
+						gs.BitmapTransformE = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_F:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformC = SIGNED_N(v, 24);
+					if (swapXY) gs.BitmapTransformC = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					else
 #endif
-					gs.BitmapTransformF = SIGNED_N(v, 24);
+						gs.BitmapTransformF = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
 #ifdef FT810EMU_MODE
@@ -3383,10 +3423,10 @@ EvaluateDisplayListValue:
 				break;
 			case FT800EMU_DL_VERTEX2II:
 				{
-					int px = ((v >> 21) & 0x1FF) * 16;
+					int px = ((v >> 21) & 0x1FF) * 16; // => 9.4u, 14b
 					int py = ((v >> 12) & 0x1FF) * 16;
 #ifdef FT810EMU_MODE
-					px += gs.VertexTranslateX;
+					px += gs.VertexTranslateX; // (translate = 12.4i, 16+1b) (max + 1) => 13.4i, 17+1b
 					py += gs.VertexTranslateY;
 					if (swapXY) std::swap(px, py);
 #endif
@@ -3447,13 +3487,13 @@ EvaluateDisplayListValue:
 			case FT800EMU_DL_VERTEX2F:
 				{
 					int px = (v >> 15) & 0x3FFF;
-					if ((v >> 15) & 0x4000) px = px - 0x4000;
+					if ((v >> 15) & 0x4000) px = px - 0x4000; // 10.4i -> 14.0i, 14+1b
 					int py = (v) & 0x3FFF;
 					if ((v) & 0x4000) py = py - 0x4000;
 #ifdef FT810EMU_MODE
-					px <<= gs.VertexFormatShift;
+					px <<= gs.VertexFormatShift; // 14.4i, 18+1b
 					py <<= gs.VertexFormatShift;
-					px += gs.VertexTranslateX;
+					px += gs.VertexTranslateX; // (translate = 12.4i, 16+1b) (max + 1) => 15.4i, 19+1b
 					py += gs.VertexTranslateY;
 					if (swapXY) std::swap(px, py);
 #endif
