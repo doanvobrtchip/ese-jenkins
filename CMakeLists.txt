@@ -77,6 +77,8 @@ OPTION(WITH_SAMPLEAPP "Include SampleApp" OFF)
 
 OPTION(WITH_EMUTEST "Include emulator test projects" ON)
 
+OPTION(WITH_EMUSERVICE "Include emulator service" ON)
+
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
 
 OPTION(FTEMU_PIC "Add -fPIC to libraries to build dynamic dll" OFF)
@@ -188,6 +190,10 @@ ADD_SUBDIRECTORY(bt8xxemu_static)
 IF (WITH_EMUTEST)
   ADD_SUBDIRECTORY(ftemutest)
 ENDIF (WITH_EMUTEST)
+
+IF (WITH_EMUSERVICE)
+  ADD_SUBDIRECTORY(bt8xxemus)
+ENDIF (WITH_EMUSERVICE)
 
 #ADD_SUBDIRECTORY(loaddump)
 #ADD_SUBDIRECTORY(dump1)
