@@ -32,6 +32,9 @@ static int s_CoordMin[FTEDITOR_DEVICE_NB] = {
 	-1024,
 	-4096,
 	-4096,
+	-4096,
+	-4096,
+	-4096,
 };
 
 static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
@@ -39,11 +42,17 @@ static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
 	1023,
 	4095,
 	4095,
+	4095,
+	4095,
+	4095,
 };
 
 static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
 	512,
 	512,
+	2048,
+	2048,
+	2048,
 	2048,
 	2048,
 };
@@ -1682,11 +1691,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_A");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "A: ", "Set transform a");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision A");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1694,11 +1714,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_B");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "B: ", "Set transform b");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision B");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1718,11 +1749,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_D");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "D: ", "Set transform d");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision D");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1730,11 +1772,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_E");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "E: ", "Set transform e");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision E");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
