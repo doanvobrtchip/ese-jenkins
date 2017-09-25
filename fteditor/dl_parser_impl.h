@@ -16,6 +16,14 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Qt includes
 #include <QStringList>
 
+#if !defined(FTEDITOR_PARSER_VC1)
+#if !defined(FTEDITOR_PARSER_VC2)
+#if !defined(FTEDITOR_PARSER_VC3)
+#define FTEDITOR_PARSER_VC3 /* Fallback for VS autocompletion */
+#endif
+#endif
+#endif
+
 // Emulator includes
 #if defined(FTEDITOR_PARSER_VC1)
 #include <vc.h>
@@ -23,6 +31,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #elif defined(FTEDITOR_PARSER_VC2)
 #include <vc2.h>
 #define FTEDITOR_DEVICE_IMPL FTEDITOR_FT810
+#elif defined(FTEDITOR_PARSER_VC3)
+#include <vc3.h>
+#define FTEDITOR_DEVICE_IMPL FTEDITOR_BT815
 #endif
 
 // Project includes
@@ -46,6 +57,9 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #elif defined(FTEDITOR_PARSER_VC2)
 #define DL_ID_NB 46
 #define CMD_ID_NB 68
+#elif defined(FTEDITOR_PARSER_VC3)
+#define DL_ID_NB 46
+#define CMD_ID_NB 68
 #endif
 static int s_ParamCount[DL_ID_NB];
 static ParameterOptions s_ParamOptions[DL_ID_NB];
@@ -63,6 +77,8 @@ static std::string s_CmdIdList[CMD_ID_NB];
 ParameterOptions *DlParser::defaultParamVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
 ParameterOptions *DlParser::defaultParamVC2()
+#elif defined(FTEDITOR_PARSER_VC3)
+ParameterOptions *DlParser::defaultParamVC3()
 #endif
 {
 	return s_ParamOptions;
@@ -72,6 +88,8 @@ ParameterOptions *DlParser::defaultParamVC2()
 ParameterOptions *DlParser::defaultCmdParamVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
 ParameterOptions *DlParser::defaultCmdParamVC2()
+#elif defined(FTEDITOR_PARSER_VC3)
+ParameterOptions *DlParser::defaultCmdParamVC3()
 #endif
 {
 	return s_CmdParamOptions;
@@ -81,6 +99,8 @@ ParameterOptions *DlParser::defaultCmdParamVC2()
 void DlParser::initVC1()
 #elif defined(FTEDITOR_PARSER_VC2)
 void DlParser::initVC2()
+#elif defined(FTEDITOR_PARSER_VC3)
+void DlParser::initVC3()
 #endif
 {
 	if (!s_IdMap.size())
@@ -92,7 +112,7 @@ void DlParser::initVC2()
 				s_ParamOptions[i].Default[j] = 0;
 				s_ParamOptions[i].Mask[j] = -1;
 				s_ParamOptions[i].Min[j] = (1 << 31);
-				s_ParamOptions[i].Max[j] = (1 << 31) - 1;
+				s_ParamOptions[i].Max[j] = ~(1 << 31);
 			}
 		}
 		s_IdMap["DISPLAY"] = FTEDITOR_DL_DISPLAY;
@@ -150,15 +170,35 @@ void DlParser::initVC2()
 		s_ParamCount[FTEDITOR_DL_TAG_MASK] = 1;
 		s_ParamOptions[FTEDITOR_DL_STENCIL_MASK].Mask[0] = 0x1;
 		s_IdMap["BITMAP_TRANSFORM_A"] = FTEDITOR_DL_BITMAP_TRANSFORM_A;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_A] = 2;
+		s_ParamOptions[FTEDITOR_DL_BITMAP_TRANSFORM_A].Mask[0] = 0x1;
+#else
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_A] = 1;
+#endif
 		s_IdMap["BITMAP_TRANSFORM_B"] = FTEDITOR_DL_BITMAP_TRANSFORM_B;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_B] = 2;
+		s_ParamOptions[FTEDITOR_DL_BITMAP_TRANSFORM_B].Mask[0] = 0x1;
+#else
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_B] = 1;
+#endif
 		s_IdMap["BITMAP_TRANSFORM_C"] = FTEDITOR_DL_BITMAP_TRANSFORM_C;
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_C] = 1;
 		s_IdMap["BITMAP_TRANSFORM_D"] = FTEDITOR_DL_BITMAP_TRANSFORM_D;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_D] = 2;
+		s_ParamOptions[FTEDITOR_DL_BITMAP_TRANSFORM_D].Mask[0] = 0x1;
+#else
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_D] = 1;
+#endif
 		s_IdMap["BITMAP_TRANSFORM_E"] = FTEDITOR_DL_BITMAP_TRANSFORM_E;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_E] = 2;
+		s_ParamOptions[FTEDITOR_DL_BITMAP_TRANSFORM_E].Mask[0] = 0x1;
+#else
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_E] = 1;
+#endif
 		s_IdMap["BITMAP_TRANSFORM_F"] = FTEDITOR_DL_BITMAP_TRANSFORM_F;
 		s_ParamCount[FTEDITOR_DL_BITMAP_TRANSFORM_F] = 1;
 		s_IdMap["SCISSOR_XY"] = FTEDITOR_DL_SCISSOR_XY;
@@ -226,7 +266,7 @@ void DlParser::initVC2()
 				s_CmdParamOptions[i].Default[j] = 0;
 				s_CmdParamOptions[i].Mask[j] = -1;
 				s_CmdParamOptions[i].Min[j] = (1 << 31);
-				s_CmdParamOptions[i].Max[j] = (1 << 31) - 1;
+				s_CmdParamOptions[i].Max[j] = ~(1 << 31);
 			}
 		}
 		s_ParamMap["ALWAYS"] = ALWAYS;
@@ -585,6 +625,15 @@ void DlParser::initVC2()
 	m_CmdParamCount[FTEDITOR_FT813] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT813] = s_CmdParamString;
 	m_CmdIdList[FTEDITOR_FT813] = s_CmdIdList;
+#elif defined(FTEDITOR_PARSER_VC3)
+	m_IdMap[FTEDITOR_BT815] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT815] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT815] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT815] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT815] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT815] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT815] = s_CmdParamString;
+	m_CmdIdList[FTEDITOR_BT815] = s_CmdIdList;
 #endif
 }
 
@@ -592,6 +641,8 @@ void DlParser::initVC2()
 uint32_t DlParser::compileVC1(int deviceIntf, const DlParsed &parsed)
 #elif defined(FTEDITOR_PARSER_VC2)
 uint32_t DlParser::compileVC2(int deviceIntf, const DlParsed &parsed)
+#elif defined(FTEDITOR_PARSER_VC3)
+uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 #endif
 {
 	const uint32_t *p = static_cast<const uint32_t *>(static_cast<const void *>(parsed.Parameter));
@@ -652,15 +703,31 @@ uint32_t DlParser::compileVC2(int deviceIntf, const DlParsed &parsed)
 		case FTEDITOR_DL_TAG_MASK:
 			return TAG_MASK(p[0]);
 		case FTEDITOR_DL_BITMAP_TRANSFORM_A:
+#if defined(FTEDITOR_PARSER_VC3)
+			return BITMAP_TRANSFORM_A(p[0], p[1]);
+#else
 			return BITMAP_TRANSFORM_A(p[0]);
+#endif
 		case FTEDITOR_DL_BITMAP_TRANSFORM_B:
+#if defined(FTEDITOR_PARSER_VC3)
+			return BITMAP_TRANSFORM_B(p[0], p[1]);
+#else
 			return BITMAP_TRANSFORM_B(p[0]);
+#endif
 		case FTEDITOR_DL_BITMAP_TRANSFORM_C:
 			return BITMAP_TRANSFORM_C(p[0]);
 		case FTEDITOR_DL_BITMAP_TRANSFORM_D:
+#if defined(FTEDITOR_PARSER_VC3)
+			return BITMAP_TRANSFORM_D(p[0], p[1]);
+#else
 			return BITMAP_TRANSFORM_D(p[0]);
+#endif
 		case FTEDITOR_DL_BITMAP_TRANSFORM_E:
+#if defined(FTEDITOR_PARSER_VC3)
+			return BITMAP_TRANSFORM_E(p[0], p[1]);
+#else
 			return BITMAP_TRANSFORM_E(p[0]);
+#endif
 		case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 			return BITMAP_TRANSFORM_F(p[0]);
 		case FTEDITOR_DL_SCISSOR_XY:
@@ -711,6 +778,8 @@ uint32_t DlParser::compileVC2(int deviceIntf, const DlParsed &parsed)
 void DlParser::compileVC1(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed) // compile CMD parameters
 #elif defined(FTEDITOR_PARSER_VC2)
 void DlParser::compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed) // compile CMD parameters
+#elif defined(FTEDITOR_PARSER_VC3)
+void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed) // compile CMD parameters
 #endif
 {
 	if (parsed.ValidId)
@@ -1174,6 +1243,8 @@ static void stencilToString(std::stringstream &dst, uint32_t id)
 void DlParser::toStringVC1(int deviceIntf, std::string &dst, uint32_t v)
 #elif defined(FTEDITOR_PARSER_VC2)
 void DlParser::toStringVC2(int deviceIntf, std::string &dst, uint32_t v)
+#elif defined(FTEDITOR_PARSER_VC3)
+void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 #endif
 {
 	std::stringstream res;
@@ -1361,15 +1432,27 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 				{
+#if defined(FTEDITOR_PARSER_VC3)
+					int p = (v >> 17) & 0x1;
+#endif
 					int a = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_A(";
+#if defined(FTEDITOR_PARSER_VC3)
+					res << p << ",";
+#endif
 					res << a << ")";
 					break;
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 				{
+#if defined(FTEDITOR_PARSER_VC3)
+					int p = (v >> 17) & 0x1;
+#endif
 					int b = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_B(";
+#if defined(FTEDITOR_PARSER_VC3)
+					res << p << ",";
+#endif
 					res << b << ")";
 					break;
 				}
@@ -1382,15 +1465,27 @@ void DlParser::toStringVC2(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 				{
+#if defined(FTEDITOR_PARSER_VC3)
+					int p = (v >> 17) & 0x1;
+#endif
 					int d = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_D(";
+#if defined(FTEDITOR_PARSER_VC3)
+					res << p << ",";
+#endif
 					res << d << ")";
 					break;
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 				{
+#if defined(FTEDITOR_PARSER_VC3)
+					int p = (v >> 17) & 0x1;
+#endif
 					int e = v & 0x1FFFF;
 					res << "BITMAP_TRANSFORM_E(";
+#if defined(FTEDITOR_PARSER_VC3)
+					res << p << ",";
+#endif
 					res << e << ")";
 					break;
 				}
@@ -1763,6 +1858,8 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 void DlParser::toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed)
 #elif defined(FTEDITOR_PARSER_VC2)
 void DlParser::toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed)
+#elif defined(FTEDITOR_PARSER_VC3)
+void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &parsed)
 #endif
 {
 	std::stringstream res;
