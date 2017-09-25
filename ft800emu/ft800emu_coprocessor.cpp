@@ -33,14 +33,14 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 };
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
-Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
 {
 	bool ft801 = (mode == BT8XXEMU_EmulatorFT801);
 	if (romFilePath)
 	{
 		FILE *f;
-		f = fopen(romFilePath, "rb");
+		f = _wfopen(romFilePath, L"rb");
 		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{
