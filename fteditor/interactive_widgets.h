@@ -30,8 +30,8 @@
 #include <QFileDialog>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
-#include <ft8xxemu_diag.h>
+#include <bt8xxemu_inttypes.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -43,6 +43,9 @@
 #include "constant_common.h"
 
 namespace FTEDITOR {
+
+extern BT8XXEMU_Emulator *g_Emulator;
+extern BT8XXEMU_Flash *g_Flash;
 
 class MainWindow;
 class DlEditor;
@@ -983,17 +986,17 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div63(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div63(const int &value)
 {
 	return ((value * 16575) + 65) >> 12;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div31(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div31(const int &value)
 {
 	return ((value * 8415) + 33) >> 10;
 }
 
-FT8XXEMU_FORCE_INLINE unsigned int mul255div15(const int &value)
+BT8XXEMU_FORCE_INLINE unsigned int mul255div15(const int &value)
 {
 	return ((value * 4335) + 17) >> 8;
 }
@@ -1032,7 +1035,7 @@ private slots:
 
 		QString filter; // = filterpng + ";;" + filterjpg;
 
-		uint8_t *ram = FT8XXEMU_getRam();
+		uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 		uint16_t *ram16 = reinterpret_cast<uint16_t *>(ram);
 		int *ram32 = reinterpret_cast<int *>(ram);
 		int sourceFormat;

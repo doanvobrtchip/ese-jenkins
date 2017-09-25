@@ -19,32 +19,35 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QPainter>
 
 // Emulator includes
-#include <ft8xxemu_diag.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "constant_mapping.h"
 
 namespace FTEDITOR {
 
-static FT8XXEMU_EmulatorParameters s_EmulatorParameters;
+BT8XXEMU_Emulator *g_Emulator = NULL;
+BT8XXEMU_Flash *g_Flash = NULL;
+
+static BT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
 static QMutex s_Mutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
-static void(*s_Setup)() = NULL;
-static bool s_SetupReady = false;
+static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
+static bool s_MainReady = false;
 
-void overrideSetup()
+void overrideMain(BT8XXEMU_Emulator *sender, void *context)
 {
-	s_SetupReady = true;
+	s_MainReady = true;
 
-	if (s_Setup)
-		s_Setup();
+	if (s_Main)
+		s_Main(sender, context);
 }
 
-static int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, FT8XXEMU_FrameFlags flags) // on Emulator thread
+static int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) // on Emulator thread
 {
 	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.
@@ -79,7 +82,7 @@ static int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint
 
 void EmulatorThread::run()
 {
-	FT8XXEMU_run(FT8XXEMU_VERSION_API, &s_EmulatorParameters);
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &s_EmulatorParameters);
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent)
@@ -125,7 +128,7 @@ int EmulatorViewport::vsize()
 	return s_Pixmap->height();
 }
 
-void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
+void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 {
 	// There can be only one
 	if (s_EmulatorThread == NULL)
@@ -137,15 +140,15 @@ void EmulatorViewport::run(const FT8XXEMU_EmulatorParameters &params)
 		s_EmulatorParameters.Graphics = ftqtGraphics;
 
 		// Override setup to set ready flag
-		s_Setup = params.Setup;
-		s_EmulatorParameters.Setup = overrideSetup;
-		s_SetupReady = false;
+		s_Main = params.Main;
+		s_EmulatorParameters.Main = overrideMain;
+		s_MainReady = false;
 
 		// Create the main thread for the emulator
 		s_EmulatorThread = new EmulatorThread();
 		s_EmulatorThread->start();
 
-		while (!s_SetupReady && s_EmulatorThread->isRunning())
+		while (!s_MainReady && s_EmulatorThread->isRunning())
 			QThread::msleep(1);
 
 		// Connect the cross thread repaint event
@@ -157,13 +160,16 @@ void EmulatorViewport::stop()
 {
 	if (s_EmulatorThread != NULL)
 	{
-		FT8XXEMU_stop();
+		BT8XXEMU_stop(g_Emulator);
 
 		printf("Wait for emulator threads\n");
 		s_EmulatorThread->wait();
 		delete s_EmulatorThread;
 		s_EmulatorThread = NULL;
 		printf("Emulator threads finished\n");
+
+		BT8XXEMU_destroy(g_Emulator);
+		g_Emulator = NULL;
 	}
 }
 

@@ -35,7 +35,7 @@
 #include <QCoreApplication>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 // Project includes
 #include "constant_common.h"

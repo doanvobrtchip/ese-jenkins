@@ -7,7 +7,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #define FTEDITOR_CONSTANT_MAPPING_H
 
 // Emulator includes
-#include <ft8xxemu.h>
+#include <bt8xxemu.h>
 
 // STL includes
 
@@ -22,18 +22,19 @@ namespace FTEDITOR {
 #define FTEDITOR_FT811 3
 #define FTEDITOR_FT812 4
 #define FTEDITOR_FT813 5
-#define FTEDITOR_DEVICE_NB 6
-extern const FT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
-inline FT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
+#define FTEDITOR_BT815 6
+#define FTEDITOR_DEVICE_NB 7
+extern const BT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
+inline BT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
 extern const int g_DeviceToIntf[256];
-inline int deviceToIntf(FT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
+inline int deviceToIntf(BT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
 extern const char *g_DeviceToString[FTEDITOR_DEVICE_NB];
 inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR_DEVICE_NB ? g_DeviceToString[deviceIntf] : ""; }
 
 // Tempory for mapping conversion
 extern int g_CurrentDevice;
 #define FTEDITOR_CURRENT_DEVICE FTEDITOR::g_CurrentDevice
-#define FTEDITOR_DEFAULT_DEVICE FTEDITOR_FT811
+#define FTEDITOR_DEFAULT_DEVICE FTEDITOR_BT815
 
 // Screen specs
 extern const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB];

@@ -21,7 +21,7 @@
 #include <QWidget>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 // Project includes
 

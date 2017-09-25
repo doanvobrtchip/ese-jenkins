@@ -15,7 +15,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QPushButton>
 
 // Emulator includes
-#include <ft8xxemu_diag.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -335,7 +335,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	contentManager->lockContent();
 	std::set<ContentInfo *> contentInfo;
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam());
 	
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
@@ -365,8 +365,8 @@ void DeviceManager::syncDevice()
 		return;
 	}
 
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(FT8XXEMU_getRam());
-	const uint32_t *displayList = FT8XXEMU_getDisplayList();
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam());
+	const uint32_t *displayList = BT8XXEMU_getDisplayList();
 	//Sync with selected device
 	{
 

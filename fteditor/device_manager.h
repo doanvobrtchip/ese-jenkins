@@ -28,7 +28,7 @@
 #include <qmap.h>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 //#include <deviceDisplaySettingsDialog.h>
 // Project includes

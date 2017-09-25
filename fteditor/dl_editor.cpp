@@ -14,6 +14,7 @@
 #include "dl_editor.h"
 
 // STL includes
+#include <algorithm>
 
 // Qt includes
 #include <QApplication>
@@ -24,8 +25,7 @@
 #include <QAbstractItemView>
 
 // Emulator includes
-#include <ft8xxemu_diag.h>
-#include <ft8xxemu_minmax.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -38,6 +38,9 @@
 #include "constant_common.h"
 
 namespace FTEDITOR {
+
+extern BT8XXEMU_Emulator *g_Emulator;
+extern BT8XXEMU_Flash *g_Flash;
 
 extern int g_StepCmdLimit;
 
@@ -248,7 +251,7 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	if (m_Reloading)
 		return;
 
-	int charsEdited = max(charsRemoved, charsAdded);
+	int charsEdited = std::max(charsRemoved, charsAdded);
 	QTextBlock firstBlock = m_CodeEditor->document()->findBlock(position);
 	int blockNb = firstBlock.blockNumber();
 	int firstPosition = firstBlock.position();
@@ -452,7 +455,7 @@ void DlEditor::frame()
 {
 	// FIXME DL/CMD Mapping
 	// update current step highlight
-	int idx = FT8XXEMU_getDebugLimiterEffective() ? FT8XXEMU_getDebugLimiterIndex() : -1;
+	int idx = BT8XXEMU_getDebugLimiterEffective(g_Emulator) ? BT8XXEMU_getDebugLimiterIndex(g_Emulator) : -1;
 	if (idx > 0 && m_ModeCoprocessor)
 	{
 		if (idx < FTEDITOR_DL_SIZE)
