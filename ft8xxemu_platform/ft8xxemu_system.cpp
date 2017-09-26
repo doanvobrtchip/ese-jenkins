@@ -19,14 +19,23 @@ Author: Jan Boon <jan@no-break.space>
 
 namespace FT8XXEMU {
 
-namespace /* anonymous */ {
-
-std::mutex s_LogMutex;
-
-} /* anonymous namespace */
+std::mutex g_LogMutex;
+struct AutoUnlockLogMutex
+{ 
+	~AutoUnlockLogMutex()
+	{
+		if (!g_LogMutex.try_lock()) new(&g_LogMutex) std::mutex(); // Force unlock during forced process termination
+		else g_LogMutex.unlock();
+	}
+};
+AutoUnlockLogMutex g_AutoUnlockLogMutex;
 
 System::System()
 {
+	; {
+		std::unique_lock<std::mutex> lock(g_LogMutex);
+	}
+
 #ifdef WIN32
 	m_Win32 = new SystemWin32(this);
 	initWindows();
@@ -73,6 +82,10 @@ void System::update()
 
 System::~System()
 {
+	; {
+		std::unique_lock<std::mutex> lock(g_LogMutex);
+	}
+
 #ifdef WIN32
 	releaseWindows();
 	delete m_Win32;
@@ -86,7 +99,7 @@ void System::log(BT8XXEMU_LogType type, const char *message, ...)
 	va_start(args, message);
 	vsnprintf(buffer, 2047, message, args);
 	; {
-		std::unique_lock<std::mutex> lock(s_LogMutex);
+		std::unique_lock<std::mutex> lock(g_LogMutex);
 		m_Log && (m_Log(m_Sender, m_UserContext, type, buffer), true);
 		const char *level =
 			(type == BT8XXEMU_LogMessage

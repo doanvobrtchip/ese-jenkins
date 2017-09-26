@@ -93,7 +93,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 #pragma pack(pop)
 
 #define MESSAGE_SIZE(param) (DWORD)((ptrdiff_t)(void *)(&(param)) + (ptrdiff_t)sizeof(param) - (ptrdiff_t)(void *)(&buffer[0]))
-#define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&str[0]) + (ptrdiff_t)strlen(&str[0]) - (ptrdiff_t)(void *)(&buffer[0]))
+#define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&str[0]) + (ptrdiff_t)strlen(&str[0]) + 1 - (ptrdiff_t)(void *)(&buffer[0]))
 #define EMULATOR s_Emulators[emulator]
 #define FLASH s_Flashes[flash]
 
@@ -108,7 +108,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 	);
 	if (pipe == INVALID_HANDLE_VALUE)
 	{
-		std::cerr << "Invalid pipe\n";
+		std::cerr << "Invalid pipe '" << pipeName << "'\n";
 		return EXIT_FAILURE;
 	}
 	DWORD pipeMode = PIPE_READMODE_MESSAGE;
@@ -119,6 +119,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 		NULL))// don't set maximum time 
 	{
 		std::cerr << "Unable to set message mode\n";
+		CloseHandle(pipe);
 		return EXIT_FAILURE;
 	}
 	for (;;)
@@ -126,6 +127,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 		if (!ReadFile(pipe, buffer, BUFSIZE, &nb, NULL))
 		{
 			std::cerr << "Cannot read from pipe\n";
+			CloseHandle(pipe);
 			return EXIT_SUCCESS;
 		}
 		switch (messageType)
@@ -136,26 +138,30 @@ DWORD WINAPI runPipe(const char *pipeName)
 			{
 				s_Mutex.unlock();
 				std::cerr << "Cannot create during exit\n";
+				CloseHandle(pipe);
 				return EXIT_FAILURE;
 			}
-			s_ThreadPipes.push_back(str);
+			s_ThreadPipes.push_back(std::string(str));
 			s_Threads.push_back(CreateThread(NULL, 0,
 				(LPTHREAD_START_ROUTINE)runPipe,
-				&s_ThreadPipes[s_ThreadPipes.size() - 1], 
+				(LPVOID)&s_ThreadPipes[s_ThreadPipes.size() - 1][0], 
 				0, NULL));
 			if (!s_Threads[s_Threads.size() - 1])
 			{
 				s_Mutex.unlock();
 				std::cerr << "Cannot create pipe thread\n";
+				CloseHandle(pipe);
 				return EXIT_FAILURE;
 			}
+			len = MESSAGE_SIZE(messageType);
 			s_Mutex.unlock();
 			break;
 		case BT8XXEMU_PIPE_CLOSE:
+			CloseHandle(pipe);
 			return EXIT_SUCCESS;
-			break;
 		case BT8XXEMU_PIPE_ECHO:
 			std::cout << str << std::endl;
+			len = MESSAGE_SIZE(messageType);
 			break;
 		case BT8XXEMU_CALL_VERSION:
 			strcpy(str, BT8XXEMU_version());
@@ -167,13 +173,19 @@ DWORD WINAPI runPipe(const char *pipeName)
 			len = MESSAGE_SIZE(params);
 			break;
 		case BT8XXEMU_CALL_RUN:
+			if (params.Close) std::cerr << "Close callback is not permitted in service mode\n";
+			if (params.Graphics) std::cerr << "Graphics callback is not permitted in service mode\n";
+			if (params.Log) std::cerr << "Log callback is not permitted in service mode\n";
+			if (params.Main) std::cerr << "Main callback is not permitted in service mode\n";
+			if (params.MCUSleep) std::cerr << "MCUSleep callback is not permitted in service mode\n";
 			if (params.Close
 				|| params.Graphics
 				|| params.Log
 				|| params.Main
 				|| params.MCUSleep)
 			{
-				std::cerr << "Callbacks are not permitted in service mode\n";
+				if (params.Close) std::cerr << "Callbacks are not permitted in service mode\n";
+				CloseHandle(pipe);
 				return EXIT_FAILURE;
 			}
 			s_Mutex.lock();
@@ -233,18 +245,25 @@ DWORD WINAPI runPipe(const char *pipeName)
 			BT8XXEMU_Flash_chipSelect(FLASH, !!chipSelect);
 			len = MESSAGE_SIZE(emulator);
 			break;
+		default:
+			std::cerr << "Unknown message\n";
+			CloseHandle(pipe);
+			return EXIT_FAILURE;
 		}
 		if (!WriteFile(pipe, buffer, len, &nb, NULL))
 		{
 			std::cerr << "Cannot write to pipe\n";
+			CloseHandle(pipe);
 			return EXIT_SUCCESS;
 		}
 		if (len != nb)
 		{
 			std::cerr << "Write incomplete\n";
+			CloseHandle(pipe);
 			return EXIT_FAILURE;
 		}
 	}
+	CloseHandle(pipe);
 	return EXIT_SUCCESS;
 }
 
@@ -268,7 +287,7 @@ int main(int argc, char* argv[])
 	s_Mutex.unlock();
 
 	WaitForMultipleObjects(
-		s_Threads.size(),
+		(DWORD)s_Threads.size(),
 		&s_Threads[0], 
 		TRUE, INFINITE);
 

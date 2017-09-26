@@ -56,13 +56,8 @@ Single threaded support only.
 #define BT8XXEMU_CALL_FLASH_TRANSFER 0x0106
 #define BT8XXEMU_CALL_FLASH_CHIP_SELECT 0x0107
 
-static LONG s_AtomicLock = 0;
-static LONG s_RefCount = 0;
-static CRITICAL_SECTION s_CriticalSection = { 0 };
-static HANDLE s_Process = INVALID_HANDLE_VALUE;
-static HANDLE s_Pipe = INVALID_HANDLE_VALUE;
-
 struct BT8XXEMU_Emulator {
+	LONG atomicLock;
 	HANDLE pipe;
 	uint32_t emulator;
 };
@@ -99,29 +94,43 @@ typedef union
 #pragma pack(pop)
 
 #define MESSAGE_SIZE(param) (DWORD)((ptrdiff_t)(void *)(&(data.param)) + (ptrdiff_t)sizeof(data.param) - (ptrdiff_t)(void *)(&data.buffer[0]))
-#define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&data.str[0]) + (ptrdiff_t)strlen(&data.str[0]) - (ptrdiff_t)(void *)(&data.buffer[0]))
+#define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&data.str[0]) + (ptrdiff_t)strlen(&data.str[0]) + 1 - (ptrdiff_t)(void *)(&data.buffer[0]))
 
+static LONG s_AtomicLock = 0;
+static LONG s_RefCount = 0;
+static HANDLE s_Process = INVALID_HANDLE_VALUE;
+static HANDLE s_Pipe = INVALID_HANDLE_VALUE;
 static BT8XXEMUC_Data s_VersionData;
+static int s_PipeNb = 0;
 
-bool BT8XXEMUC_openProcess()
+static void BT8XXEMUC_lockPipe()
 {
 	while (InterlockedExchange(&s_AtomicLock, 1))
 		SwitchToThread();
+}
+
+static void BT8XXEMUC_unlockPipe()
+{
+	InterlockedExchange(&s_AtomicLock, 0);
+}
+
+// Open a new process if it has not been opened yet, uses reference counting
+static bool BT8XXEMUC_openProcess()
+{
+	BT8XXEMUC_lockPipe();
 
 	if (!s_RefCount)
 	{
-		InitializeCriticalSection(&s_CriticalSection);
-
 		char pipeHandle[MAX_PATH];
-		sprintf(pipeHandle, "\\\\.\\pipe\\bt8xxemus_%i", (int)GetProcessId(NULL));
+		sprintf(pipeHandle, "\\\\.\\pipe\\bt8xxemus_%i", (int)GetCurrentProcessId());
 
-		s_Pipe = CreateNamedPipeA(pipeHandle, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		s_Pipe = CreateNamedPipeA(pipeHandle, PIPE_ACCESS_DUPLEX, 
+			PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
 			1, BUFSIZE, BUFSIZE, 1000, NULL);
 
 		if (s_Pipe == INVALID_HANDLE_VALUE)
 		{
-			DeleteCriticalSection(&s_CriticalSection);
-			InterlockedExchange(&s_AtomicLock, 0);
+			BT8XXEMUC_unlockPipe();
 			return false;
 		}
 
@@ -133,8 +142,7 @@ bool BT8XXEMUC_openProcess()
 		{
 			CloseHandle(s_Pipe);
 			s_Pipe = INVALID_HANDLE_VALUE;
-			DeleteCriticalSection(&s_CriticalSection);
-			InterlockedExchange(&s_AtomicLock, 0);
+			BT8XXEMUC_unlockPipe();
 			return false;
 		}
 
@@ -146,27 +154,24 @@ bool BT8XXEMUC_openProcess()
 			s_Pipe = INVALID_HANDLE_VALUE;
 			TerminateProcess(s_Process, EXIT_FAILURE);
 			s_Process = INVALID_HANDLE_VALUE;
-			DeleteCriticalSection(&s_CriticalSection);
-			InterlockedExchange(&s_AtomicLock, 0);
+			BT8XXEMUC_unlockPipe();
 			return false;
 		}
 	}
 	++s_RefCount;
 
-	InterlockedExchange(&s_AtomicLock, 0);
+	BT8XXEMUC_unlockPipe();
 	return true;
 }
 
-void BT8XXEMUC_closeProcess()
+// Reduce the reference count of the process, and closes it when done
+static void BT8XXEMUC_closeProcess()
 {
-	while (InterlockedExchange(&s_AtomicLock, 1))
-		SwitchToThread();
+	BT8XXEMUC_lockPipe();
 
 	--s_RefCount;
 	if (!s_RefCount)
 	{
-		DeleteCriticalSection(&s_CriticalSection);
-
 		DWORD nb;
 		DWORD len;
 		BT8XXEMUC_Data data;
@@ -180,7 +185,7 @@ void BT8XXEMUC_closeProcess()
 			s_Pipe = INVALID_HANDLE_VALUE;
 			TerminateProcess(s_Process, EXIT_FAILURE);
 			s_Process = INVALID_HANDLE_VALUE;
-			InterlockedExchange(&s_AtomicLock, 0);
+			BT8XXEMUC_unlockPipe();
 			return;
 		}
 
@@ -190,14 +195,77 @@ void BT8XXEMUC_closeProcess()
 		WaitForSingleObject(s_Process, INFINITE);
 	}
 
-	InterlockedExchange(&s_AtomicLock, 0);
+	BT8XXEMUC_unlockPipe();
+}
+
+// Open an additional pipe on the open process. Must be closed
+// before closing the process
+static HANDLE BT8XXEMUC_openPipe()
+{
+	BT8XXEMUC_lockPipe();
+
+	++s_PipeNb;
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_PIPE_OPEN;
+	data.versionApi = BT8XXEMU_VERSION_API;
+	sprintf(data.str, "\\\\.\\pipe\\bt8xxemus_%i_%i", (int)GetCurrentProcessId(), s_PipeNb);
+	len = STRING_MESSAGE_SIZE();
+
+	HANDLE pipe = CreateNamedPipeA(data.str, PIPE_ACCESS_DUPLEX, 
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		1, BUFSIZE, BUFSIZE, 1000, NULL);
+
+	if (pipe == INVALID_HANDLE_VALUE
+		|| !WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL)
+		|| !ConnectNamedPipe(pipe, NULL))
+	{
+		BT8XXEMUC_unlockPipe();
+		return INVALID_HANDLE_VALUE;
+	}
+
+	BT8XXEMUC_unlockPipe();
+	return pipe;
+}
+
+static void BT8XXEMUC_emulatorLock(BT8XXEMU_Emulator *emulator)
+{
+	while (InterlockedExchange(&emulator->atomicLock, 1))
+		SwitchToThread();
+}
+
+static void BT8XXEMUC_emulatorUnlock(BT8XXEMU_Emulator *emulator)
+{
+	InterlockedExchange(&emulator->atomicLock, 0);
+}
+
+// Close a pipe
+static void BT8XXEMUC_closePipe(BT8XXEMU_Emulator *emulator)
+{
+	BT8XXEMUC_emulatorLock(emulator);
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_PIPE_CLOSE;
+	len = MESSAGE_SIZE(messageType);
+	WriteFile(emulator->pipe, data.buffer, len, &nb, NULL);
+	CloseHandle(emulator->pipe);
+	emulator->pipe = INVALID_HANDLE_VALUE;
+
+	BT8XXEMUC_emulatorUnlock(emulator);
 }
 
 const char *BT8XXEMU_version()
 {
 	if (BT8XXEMUC_openProcess())
 	{
-		EnterCriticalSection(&s_CriticalSection);
+		BT8XXEMUC_lockPipe();
 
 		DWORD nb;
 		DWORD len;
@@ -213,12 +281,12 @@ const char *BT8XXEMU_version()
 		if (!WriteFile(s_Pipe, s_VersionData.buffer, len, &nb, NULL) || len != nb
 			|| !ReadFile(s_Pipe, s_VersionData.buffer, BUFSIZE, &nb, NULL))
 		{
-			LeaveCriticalSection(&s_CriticalSection);
+			BT8XXEMUC_unlockPipe();
 			BT8XXEMUC_closeProcess();
 			return "BT8XX Emulator Library\nNot Responding";
 		}
 
-		LeaveCriticalSection(&s_CriticalSection);
+		BT8XXEMUC_unlockPipe();
 		BT8XXEMUC_closeProcess();
 
 		return s_VersionData.str;
@@ -231,31 +299,32 @@ void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params,
 {
 	if (BT8XXEMUC_openProcess())
 	{
-		EnterCriticalSection(&s_CriticalSection);
+		BT8XXEMUC_lockPipe();
 
 		DWORD nb;
 		DWORD len;
 		BT8XXEMUC_Data data;
 
-		data.messageType = BT8XXEMU_CALL_VERSION;
+		data.messageType = BT8XXEMU_CALL_DEFAULTS;
 		data.versionApi = BT8XXEMU_VERSION_API;
-		data.mode = mode;
 		memcpy(&data.params, params, sizeof(BT8XXEMU_EmulatorParameters));
+		data.mode = mode;
 		len = MESSAGE_SIZE(mode);
 
 		if (!WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
 			|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
-			LeaveCriticalSection(&s_CriticalSection);
+			BT8XXEMUC_unlockPipe();
 			BT8XXEMUC_closeProcess();
 			memset(params, 0, sizeof(BT8XXEMU_EmulatorParameters));
 			return;
 		}
 
-		LeaveCriticalSection(&s_CriticalSection);
+		BT8XXEMUC_unlockPipe();
 		BT8XXEMUC_closeProcess();
 
 		memcpy(params, &data.params, sizeof(BT8XXEMU_EmulatorParameters));
+		return;
 	}
 
 	memset(params, 0, sizeof(BT8XXEMU_EmulatorParameters));
@@ -265,7 +334,17 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 {
 	if (BT8XXEMUC_openProcess())
 	{
-		EnterCriticalSection(&s_CriticalSection);
+		*emulator = malloc(sizeof(BT8XXEMU_Emulator));
+		memset(*emulator, 0, sizeof(BT8XXEMU_Emulator));
+		(*emulator)->pipe = BT8XXEMUC_openPipe(); // Create a separate pipe for each emulator instance
+
+		if ((*emulator)->pipe == INVALID_HANDLE_VALUE)
+		{
+			BT8XXEMUC_closeProcess();
+			free(*emulator);
+			*emulator = NULL;
+			return;
+		}
 
 		DWORD nb;
 		DWORD len;
@@ -276,24 +355,27 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 		memcpy(&data.params, params, sizeof(BT8XXEMU_EmulatorParameters));
 		len = MESSAGE_SIZE(params);
 
-		if (!WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
+		data.params.Main = NULL;
+		data.params.Close = NULL; // Temporary
+
+		if (!WriteFile((*emulator)->pipe, data.buffer, len, &nb, NULL) || len != nb
+			|| !ReadFile((*emulator)->pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
-			LeaveCriticalSection(&s_CriticalSection);
+			BT8XXEMUC_closePipe(*emulator);
 			BT8XXEMUC_closeProcess();
+			free(*emulator);
 			*emulator = NULL;
 			return;
 		}
 
-		uint32_t data_emulator = data.emulator;
+		(*emulator)->emulator = data.emulator;
 
-		// TODO: Create new pipe for this emulator
-		// ...
+		if (params->Main)
+		{
+			params->Main((*emulator), params->UserContext);
+		}
 
-		*emulator = malloc(sizeof(BT8XXEMU_Emulator));
-		(*emulator)->emulator = data_emulator;
-
-		LeaveCriticalSection(&s_CriticalSection);
+		return;
 	}
 	
 	*emulator = NULL;
@@ -306,6 +388,8 @@ void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator)
 
 void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator)
 {
+	// TODO
+
 	BT8XXEMUC_closeProcess();
 }
 

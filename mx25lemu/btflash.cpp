@@ -37,6 +37,15 @@ Author: Jan Boon <jan@no-break.space>
 
 extern BT8XXEMU_FlashVTable g_FlashVTable;
 static std::mutex s_LogMutex;
+struct AutoUnlockLogMutex
+{
+	~AutoUnlockLogMutex()
+	{
+		if (!s_LogMutex.try_lock()) new(&s_LogMutex) std::mutex(); // Force unlock during forced process termination
+		else s_LogMutex.unlock();
+	}
+};
+static AutoUnlockLogMutex g_AutoUnlockLogMutex;
 
 int64_t getFileSize(const wchar_t* name);
 
@@ -172,6 +181,8 @@ public:
 	~Flash()
 	{
 		Flash_debug("Destroy flash");
+		std::unique_lock<std::mutex> lock(s_LogMutex);
+
 		if (m_FileHandle)
 		{
 			// FlushViewOfFile(Data, Size);
