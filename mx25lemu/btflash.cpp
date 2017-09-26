@@ -53,6 +53,7 @@ class Flash : public BT8XXEMU::Flash
 {
 public:
 	Flash(const BT8XXEMU_FlashParameters *params) : BT8XXEMU::Flash(&g_FlashVTable),
+		Data(NULL), Size(0),
 		m_DeepPowerDown(false), m_FileHandle(NULL), m_FileMapping(NULL), 
 		m_ChipSelect(false), m_TransferCmd(0)
 	{
@@ -474,10 +475,10 @@ size_t Flash_size(Flash *flash)
 BT8XXEMU_FlashVTable g_FlashVTable = {
 	(void(*)(BT8XXEMU::Flash *))Flash_destroy,
 
+	(uint8_t(*)(BT8XXEMU::Flash *, uint8_t))Flash_transfer,
 	(void(*)(BT8XXEMU::Flash *, bool))Flash_chipSelect,
 	(void(*)(BT8XXEMU::Flash *, bool))Flash_writeProtect,
 	(void(*)(BT8XXEMU::Flash *, bool))Flash_hold,
-	(uint8_t(*)(BT8XXEMU::Flash *, uint8_t))Flash_transfer,
 
 	(uint8_t *(*)(BT8XXEMU::Flash *))Flash_data,
 	(size_t(*)(BT8XXEMU::Flash *))Flash_size
@@ -491,7 +492,7 @@ BT8XXEMU_EXPORT BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t version
 		return NULL;
 	}
 
-	return new Flash(params);
+	return new ::Flash(params);
 }
 
 int64_t getFileSize(const wchar_t* name)
