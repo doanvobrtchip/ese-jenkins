@@ -52,9 +52,10 @@ Author: Jan Boon <jan@no-break.space>
 static BT8XXEMU_Emulator *s_EmulatorSelect = NULL;
 
 static const char *c_Version =
-	"FT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
-	"Copyright(C) 2013 - 2015  Future Technology Devices International Ltd\n"
-	"Author: Jan Boon <jan.boon@kaetemi.be>";
+	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
+	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
+	"Copyright(C) 2016-2017  Bridgetek Pte Lte\n"
+	"Author: Jan Boon <jan@no-break.space>";
 
 BT8XXEMU_API const char *BT8XXEMU_version()
 {
@@ -162,7 +163,7 @@ BT8XXEMU_API uint8_t BT8XXEMU_transferSelect(uint8_t data)
 	return s_EmulatorSelect ? s_EmulatorSelect->transfer(data) : 0;
 }
 
-BT8XXEMU_API void BT8XXEMU_cs(BT8XXEMU_Emulator *emulator, int cs)
+BT8XXEMU_API void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *emulator, int cs)
 {
 	s_EmulatorSelect = cs ? emulator : NULL;
 	emulator->cs(cs != 0);

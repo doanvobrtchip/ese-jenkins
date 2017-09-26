@@ -78,7 +78,7 @@ public:
 
 	void swrbegin(size_t address)
 	{
-		BT8XXEMU_cs(emulator, 1);
+		BT8XXEMU_chipSelect(emulator, 1);
 
 		BT8XXEMU_transfer(emulator, (2 << 6) | ((address >> 16) & 0x3F));
 		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
@@ -107,7 +107,7 @@ public:
 
 	void swrend()
 	{
-		BT8XXEMU_cs(emulator, 0);
+		BT8XXEMU_chipSelect(emulator, 0);
 	}
 
 	void wr32(size_t address, uint32_t value)
@@ -119,7 +119,7 @@ public:
 
 	uint32_t rd32(size_t address)
 	{
-		BT8XXEMU_cs(emulator, 1);
+		BT8XXEMU_chipSelect(emulator, 1);
 
 		BT8XXEMU_transfer(emulator, (address >> 16) & 0x3F);
 		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
@@ -132,7 +132,7 @@ public:
 		value |= BT8XXEMU_transfer(emulator, 0) << 16;
 		value |= BT8XXEMU_transfer(emulator, 0) << 24;
 
-		BT8XXEMU_cs(emulator, 0);
+		BT8XXEMU_chipSelect(emulator, 0);
 		return value;
 	}
 
@@ -257,6 +257,8 @@ int main(int, char* [])
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
 	
+	printf("%s\n\n", BT8XXEMU_version());
+
 	const int nb = 1;
 	char *xbu[nb] = {
 		// "xbu/SCATTER.XBU",

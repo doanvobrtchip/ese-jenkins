@@ -129,7 +129,7 @@ void swrbegin(ramaddr address)
 	printf("swrbegin(%i)\n", (int)address);
 #endif
 
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0x3F));
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -174,7 +174,7 @@ void swrend()
 	printf("swrend()\n");
 #endif
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
 void wr32(ramaddr address, uint32_t value)
@@ -191,7 +191,7 @@ void wr32(ramaddr address, uint32_t value)
 uint32_t rd32(size_t address)
 {
 
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -208,7 +208,7 @@ uint32_t rd32(size_t address)
 	printf("rd32(%i), %i\n", (int)address, (int)value);
 #endif
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 	return value;
 }
 

@@ -13,6 +13,14 @@ Author: Jan Boon <jan@no-break.space>
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
 #define BT8XXEMU_VERSION_API 11
 
+#ifdef BT8XXEMU_REMOTE
+#	ifndef WIN32
+#		undef BT8XXEMU_REMOTE /* Not yet supported */
+#	else
+#		define BT8XXEMU_STATIC
+#	endif
+#endif
+
 #ifndef BT8XXEMU_STATIC
 #	ifdef BT8XXEMU_EXPORT_DYNAMIC
 #		ifdef WIN32
@@ -43,8 +51,8 @@ typedef BT8XXEMU::Flash BT8XXEMU_Flash;
 
 #else
 
-typedef void BT8XXEMU_Emulator;
-typedef void BT8XXEMU_Flash;
+typedef struct BT8XXEMU_Emulator BT8XXEMU_Emulator;
+typedef struct BT8XXEMU_Flash BT8XXEMU_Flash;
 
 #endif /* #ifdef __cplusplus */
 
@@ -259,11 +267,11 @@ BT8XXEMU_API extern int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
 BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data);
 
-// Identical to BT8XXEMU_transfer. Transfer data to the last emulator selected by BT8XXEMU_cs. Supports only a single MCU thread
+// Identical to BT8XXEMU_transfer. Transfer data to the last emulator selected by BT8XXEMU_chipSelect. Supports only a single MCU thread
 BT8XXEMU_API extern uint8_t BT8XXEMU_transferSelect(uint8_t data);
 
 // Set chip select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-BT8XXEMU_API extern void BT8XXEMU_cs(BT8XXEMU_Emulator *, int cs);
+BT8XXEMU_API extern void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *, int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 BT8XXEMU_API extern int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator);

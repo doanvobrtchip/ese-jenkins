@@ -4,13 +4,32 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
-#include <Windows.h>
 #include <bt8xxemu.h>
+
+#ifdef WIN32
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
+#		define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
+#		define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
+#		define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
+#	endif
+#	ifndef WIN32_LEAN_AND_MEAN
+#		define WIN32_LEAN_AND_MEAN
+#	endif
+#	include <Windows.h>
+#endif
 
 #include <iostream>
 #include <vector>
+#include <mutex>
 
 #define BUFSIZE 64 * 1024
+
+#define BT8XXEMU_PIPE_OPEN 0xFF02
+#define BT8XXEMU_PIPE_CLOSE 0xFF04
+#define BT8XXEMU_PIPE_ECHO 0xFF10
 
 #define BT8XXEMU_CALL_VERSION 0x00
 #define BT8XXEMU_CALL_DEFAULTS 0x01
@@ -28,22 +47,25 @@ Author: Jan Boon <jan@no-break.space>
 #define BT8XXEMU_CALL_FLASH_TRANSFER 0x0106
 #define BT8XXEMU_CALL_FLASH_CHIP_SELECT 0x0107
 
-int main(int argc, char* argv[])
+volatile bool s_Running = true;
+std::mutex s_Mutex;
+
+std::vector<BT8XXEMU_Emulator *> s_Emulators;
+std::vector<BT8XXEMU_Flash *> s_Flashes;
+
+std::vector<HANDLE> s_Threads;
+std::vector<std::string> s_ThreadPipes;
+
+DWORD WINAPI runPipe(const char *pipeName)
 {
 	DWORD nb;
 	DWORD len;
-
-	std::vector<BT8XXEMU_Emulator *> emulators;
-	emulators.push_back(NULL);
-
-	std::vector<BT8XXEMU_Flash *> flashes;
-	flashes.push_back(NULL);
 
 #pragma pack(push, 1)
 	union
 	{
 		char buffer[BUFSIZE];
-		struct 
+		struct
 		{
 			uint32_t messageType;
 			union
@@ -56,8 +78,8 @@ int main(int argc, char* argv[])
 			{
 				struct
 				{
-					BT8XXEMU_EmulatorMode mode;
 					BT8XXEMU_EmulatorParameters params;
+					BT8XXEMU_EmulatorMode mode;
 				};
 				BT8XXEMU_FlashParameters flashParams;
 				char str[1024];
@@ -72,16 +94,11 @@ int main(int argc, char* argv[])
 
 #define MESSAGE_SIZE(param) (DWORD)((ptrdiff_t)(void *)(&(param)) + (ptrdiff_t)sizeof(param) - (ptrdiff_t)(void *)(&buffer[0]))
 #define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&str[0]) + (ptrdiff_t)strlen(&str[0]) - (ptrdiff_t)(void *)(&buffer[0]))
-#define EMULATOR emulators[emulator]
-#define FLASH flashes[flash]
+#define EMULATOR s_Emulators[emulator]
+#define FLASH s_Flashes[flash]
 
-	if (argc < 2)
-	{
-		std::cerr << "Not enough arguments supplied\n";
-		return EXIT_FAILURE;
-	}
 	HANDLE pipe = CreateFileA(
-		argv[1], // // "\\\\.\\pipe\\name",
+		pipeName,
 		GENERIC_READ | GENERIC_WRITE,
 		0,
 		NULL,
@@ -113,6 +130,33 @@ int main(int argc, char* argv[])
 		}
 		switch (messageType)
 		{
+		case BT8XXEMU_PIPE_OPEN:
+			s_Mutex.lock();
+			if (!s_Running)
+			{
+				s_Mutex.unlock();
+				std::cerr << "Cannot create during exit\n";
+				return EXIT_FAILURE;
+			}
+			s_ThreadPipes.push_back(str);
+			s_Threads.push_back(CreateThread(NULL, 0,
+				(LPTHREAD_START_ROUTINE)runPipe,
+				&s_ThreadPipes[s_ThreadPipes.size() - 1], 
+				0, NULL));
+			if (!s_Threads[s_Threads.size() - 1])
+			{
+				s_Mutex.unlock();
+				std::cerr << "Cannot create pipe thread\n";
+				return EXIT_FAILURE;
+			}
+			s_Mutex.unlock();
+			break;
+		case BT8XXEMU_PIPE_CLOSE:
+			return EXIT_SUCCESS;
+			break;
+		case BT8XXEMU_PIPE_ECHO:
+			std::cout << str << std::endl;
+			break;
 		case BT8XXEMU_CALL_VERSION:
 			strcpy(str, BT8XXEMU_version());
 			versionApi = BT8XXEMU_VERSION_API;
@@ -132,10 +176,12 @@ int main(int argc, char* argv[])
 				std::cerr << "Callbacks are not permitted in service mode\n";
 				return EXIT_FAILURE;
 			}
-			emulators.push_back(NULL);
-			BT8XXEMU_run(versionApi, &emulators[emulators.size() - 1], &params);
-			emulator = (uint32_t)emulators.size() - 1;
+			s_Mutex.lock();
+			s_Emulators.push_back(NULL);
+			BT8XXEMU_run(versionApi, &s_Emulators[s_Emulators.size() - 1], &params);
+			emulator = (uint32_t)s_Emulators.size() - 1;
 			len = MESSAGE_SIZE(emulator);
+			s_Mutex.unlock();
 			break;
 		case BT8XXEMU_CALL_STOP:
 			BT8XXEMU_stop(EMULATOR);
@@ -155,7 +201,7 @@ int main(int argc, char* argv[])
 			len = MESSAGE_SIZE(data);
 			break;
 		case BT8XXEMU_CALL_CHIP_SELECT:
-			BT8XXEMU_cs(EMULATOR, chipSelect);
+			BT8XXEMU_chipSelect(EMULATOR, chipSelect);
 			len = MESSAGE_SIZE(emulator);
 			break;
 		case BT8XXEMU_CALL_HAS_INTERRUPT:
@@ -167,10 +213,12 @@ int main(int argc, char* argv[])
 			len = MESSAGE_SIZE(flashParams);
 			break;
 		case BT8XXEMU_CALL_FLASH_CREATE:
-			flashes.push_back(NULL);
-			BT8XXEMU_Flash_create(versionApi, &flashParams);
-			flash = (uint32_t)flashes.size() - 1;
+			s_Mutex.lock();
+			s_Flashes.push_back(NULL);
+			s_Flashes[s_Flashes.size() - 1] = BT8XXEMU_Flash_create(versionApi, &flashParams);
+			flash = (uint32_t)s_Flashes.size() - 1;
 			len = MESSAGE_SIZE(flash);
+			s_Mutex.unlock();
 			break;
 		case BT8XXEMU_CALL_FLASH_DESTROY:
 			BT8XXEMU_Flash_destroy(FLASH);
@@ -199,3 +247,35 @@ int main(int argc, char* argv[])
 	}
 	return EXIT_SUCCESS;
 }
+
+int main(int argc, char* argv[])
+{
+	if (argc < 2)
+	{
+		std::cerr << "Not enough arguments supplied\n";
+		return EXIT_FAILURE;
+	}
+
+	s_Emulators.push_back(NULL);
+	s_Flashes.push_back(NULL);
+	s_Threads.push_back(NULL);
+	s_ThreadPipes.push_back(std::string());
+
+	int res = runPipe(argv[1]);
+
+	s_Mutex.lock();
+	s_Running = false;
+	s_Mutex.unlock();
+
+	WaitForMultipleObjects(
+		s_Threads.size(),
+		&s_Threads[0], 
+		TRUE, INFINITE);
+
+	for (ptrdiff_t i = 0; i < s_Threads.size(); ++i)
+		CloseHandle(s_Threads[i]);
+
+	return res;
+}
+
+/* end of file */
