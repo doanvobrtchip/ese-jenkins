@@ -291,8 +291,16 @@ int main(int argc, char* argv[])
 		&s_Threads[0], 
 		TRUE, INFINITE);
 
-	for (ptrdiff_t i = 0; i < s_Threads.size(); ++i)
+	for (size_t i = 0; i < s_Threads.size(); ++i)
 		CloseHandle(s_Threads[i]);
+
+	for (BT8XXEMU_Emulator *emulator : s_Emulators)
+		if (emulator) BT8XXEMU_destroy(emulator);
+	s_Emulators.clear();
+
+	for (BT8XXEMU_Flash *flash : s_Flashes)
+		if (flash) BT8XXEMU_Flash_destroy(flash);
+	s_Flashes.clear();
 
 	return res;
 }

@@ -56,10 +56,14 @@ Single threaded support only.
 #define BT8XXEMU_CALL_FLASH_TRANSFER 0x0106
 #define BT8XXEMU_CALL_FLASH_CHIP_SELECT 0x0107
 
-struct BT8XXEMU_Emulator {
+typedef struct BT8XXEMUC_Remote BT8XXEMUC_Remote;
+struct BT8XXEMUC_Remote {
 	LONG atomicLock;
 	HANDLE pipe;
-	uint32_t emulator;
+	union {
+		uint32_t flash;
+		uint32_t emulator;
+	};
 };
 
 #pragma pack(push, 1)
@@ -232,19 +236,19 @@ static HANDLE BT8XXEMUC_openPipe()
 	return pipe;
 }
 
-static void BT8XXEMUC_emulatorLock(BT8XXEMU_Emulator *emulator)
+static void BT8XXEMUC_emulatorLock(BT8XXEMUC_Remote *emulator)
 {
 	while (InterlockedExchange(&emulator->atomicLock, 1))
 		SwitchToThread();
 }
 
-static void BT8XXEMUC_emulatorUnlock(BT8XXEMU_Emulator *emulator)
+static void BT8XXEMUC_emulatorUnlock(BT8XXEMUC_Remote *emulator)
 {
 	InterlockedExchange(&emulator->atomicLock, 0);
 }
 
 // Close a pipe
-static void BT8XXEMUC_closePipe(BT8XXEMU_Emulator *emulator)
+static void BT8XXEMUC_closePipe(BT8XXEMUC_Remote *emulator)
 {
 	BT8XXEMUC_emulatorLock(emulator);
 
@@ -383,39 +387,140 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 
 void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator)
 {
+	BT8XXEMUC_emulatorLock(emulator);
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_STOP;
+	data.emulator = emulator->emulator;
+	len = MESSAGE_SIZE(emulator);
 	
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		// ...
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
 }
 
 void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator)
 {
-	// TODO
+	BT8XXEMUC_emulatorLock(emulator);
 
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_DESTROY;
+	data.emulator = emulator->emulator;
+	len = MESSAGE_SIZE(emulator);
+
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		// ...
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
+
+	BT8XXEMUC_closePipe(emulator);
 	BT8XXEMUC_closeProcess();
+	free(emulator);
 }
 
 int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator)
 {
-	return 0;
+	BT8XXEMUC_emulatorLock(emulator);
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_IS_RUNNING;
+	data.emulator = emulator->emulator;
+	len = MESSAGE_SIZE(emulator);
+
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		BT8XXEMUC_emulatorUnlock(emulator);
+		return 0;
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
+	return data.isRunning;
 }
 
-uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data)
+uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t value)
 {
-	return 0;
-}
+	BT8XXEMUC_emulatorLock(emulator);
 
-uint8_t BT8XXEMU_transferSelect(uint8_t data)
-{
-	return 0;
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_TRANSFER;
+	data.emulator = emulator->emulator;
+	data.data = value;
+	len = MESSAGE_SIZE(data);
+
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		BT8XXEMUC_emulatorUnlock(emulator);
+		return 0;
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
+	return data.data;
 }
 
 void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *emulator, int cs)
 {
-	
+	BT8XXEMUC_emulatorLock(emulator);
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_CHIP_SELECT;
+	data.emulator = emulator->emulator;
+	data.chipSelect = cs;
+	len = MESSAGE_SIZE(chipSelect);
+
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		// ...
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
 }
 
 int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator)
 {
-	return 0;
+	BT8XXEMUC_emulatorLock(emulator);
+
+	DWORD nb;
+	DWORD len;
+	BT8XXEMUC_Data data;
+
+	data.messageType = BT8XXEMU_CALL_HAS_INTERRUPT;
+	data.emulator = emulator->emulator;
+	len = MESSAGE_SIZE(emulator);
+
+	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
+		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	{
+		BT8XXEMUC_emulatorUnlock(emulator);
+		return 0;
+	}
+
+	BT8XXEMUC_emulatorUnlock(emulator);
+	return data.hasInterrupt;
 }
 
 void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params)

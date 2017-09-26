@@ -49,10 +49,15 @@ namespace BT8XXEMU {
 typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
 typedef BT8XXEMU::Flash BT8XXEMU_Flash;
 
+#elif defined(BT8XXEMU_REMOTE)
+
+typedef struct BT8XXEMUC_Remote BT8XXEMU_Emulator;
+typedef struct BT8XXEMUC_Remote BT8XXEMU_Flash;
+
 #else
 
-typedef struct BT8XXEMU_Emulator BT8XXEMU_Emulator;
-typedef struct BT8XXEMU_Flash BT8XXEMU_Flash;
+typedef void BT8XXEMU_Emulator;
+typedef void BT8XXEMU_Flash;
 
 #endif /* #ifdef __cplusplus */
 

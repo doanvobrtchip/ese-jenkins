@@ -261,9 +261,9 @@ int main(int, char* [])
 
 	const int nb = 1;
 	char *xbu[nb] = {
-		// "xbu/SCATTER.XBU",
+		"xbu/SCATTER.XBU",
 		// "xbu/BIRDS.XBU",
-		"xbu/STARS.XBU",
+		// "xbu/STARS.XBU",
 	};
 	PlayXBU *app[nb];
 	for (int i = 0; i < nb; ++i)
