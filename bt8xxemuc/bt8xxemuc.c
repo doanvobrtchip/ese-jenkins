@@ -128,7 +128,7 @@ bool BT8XXEMUC_openProcess()
 		STARTUPINFO si = { 0 };
 		PROCESS_INFORMATION pi = { 0 };
 		char processCommand[MAX_PATH];
-		sprintf(pipeHandle, "bt8xxemus.exe %s", pipeHandle);
+		sprintf(processCommand, "bt8xxemus.exe %s", pipeHandle);
 		if (!CreateProcessA(NULL, processCommand, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 		{
 			CloseHandle(s_Pipe);
