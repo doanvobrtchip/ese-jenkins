@@ -75,7 +75,7 @@ struct FlashSfpd
 					uint8_t JedecParamTabLength : 8;
 
 					uint32_t JedecParamTabPointer : 24;
-					uint8_t JedecUnused_FFh : 8;
+					uint32_t JedecUnused_FFh : 8;
 
 
 					uint8_t IdMacronix : 8;
@@ -84,7 +84,7 @@ struct FlashSfpd
 					uint8_t MacronixParamTabLength : 8;
 
 					uint32_t MacronixParamTabPointer : 24;
-					uint8_t MacronixUnused_FFh : 8;
+					uint32_t MacronixUnused_FFh : 8;
 
 				};
 				uint8_t Header[0x30];
@@ -138,15 +138,16 @@ struct FlashSfpd
 					uint8_t FastReadOpCode122 : 8;
 
 
-					uint8_t FastRead222 : 1;
-					uint8_t Unused2_111b : 3;
-					uint8_t FastRead444 : 1;
-					uint8_t Unused3_111b : 3;
+					uint32_t FastRead222 : 1;
+					uint32_t Unused2_111b : 3;
+					uint32_t FastRead444 : 1;
+					uint32_t Unused3_111b : 3;
 
 					uint32_t Unused1_FFFFFFh : 24;
 
 
-					uint16_t Unused1_FFFFh : 16;
+					uint8_t Unused10_FFh : 8;
+					uint8_t Unused11_FFh : 8;
 
 					uint8_t FastReadWaitStates222 : 5;
 					uint8_t FastReadModeBits222 : 3;
@@ -154,7 +155,8 @@ struct FlashSfpd
 					uint8_t FastReadOpCode222 : 8;
 
 
-					uint16_t Unused2_FFFFh : 16;
+					uint8_t Unused12_FFh : 8;
+					uint8_t Unused13_FFh : 8;
 
 					uint8_t FastReadWaitStates444 : 5;
 					uint8_t FastReadModeBits444 : 3;
@@ -183,30 +185,30 @@ struct FlashSfpd
 					uint16_t VccSupplyMin : 16;
 
 
-					uint8_t HwResetPin : 1;
-					uint8_t HwHoldPin : 1;
-					uint8_t DeepPowerDownMode : 1;
-					uint8_t SwReset : 1;
-					uint8_t SwResetOpcode : 8;
-					uint8_t ProgramSuspendResume : 1;
-					uint8_t EraseSuspendResume : 1;
-					uint8_t Unused2_1b : 1;
-					uint8_t WrapAroundReadMode : 1;
+					uint16_t HwResetPin : 1;
+					uint16_t HwHoldPin : 1;
+					uint16_t DeepPowerDownMode : 1;
+					uint16_t SwReset : 1;
+					uint16_t SwResetOpcode : 8;
+					uint16_t ProgramSuspendResume : 1;
+					uint16_t EraseSuspendResume : 1;
+					uint16_t Unused2_1b : 1;
+					uint16_t WrapAroundReadMode : 1;
 
-					uint8_t WrapAroundReadModeOpCode : 8;
-					uint8_t WrapAroundReadDataLength : 8;
+					uint16_t WrapAroundReadModeOpCode : 8;
+					uint16_t WrapAroundReadDataLength : 8;
 
 
-					uint8_t IndividualBlockLock : 1;
-					uint8_t IndividualBlockLockBit : 1;
-					uint8_t IndividualBlockLockOpCode : 8;
-					uint8_t IndividualBlockLockVolatile : 1;
-					uint8_t SecuredOTP : 1;
-					uint8_t ReadLock : 1;
-					uint8_t PermanentLock : 1;
-					uint8_t Unused1_11b : 2;
+					uint16_t IndividualBlockLock : 1;
+					uint16_t IndividualBlockLockBit : 1;
+					uint16_t IndividualBlockLockOpCode : 8;
+					uint16_t IndividualBlockLockVolatile : 1;
+					uint16_t SecuredOTP : 1;
+					uint16_t ReadLock : 1;
+					uint16_t PermanentLock : 1;
+					uint16_t Unused1_11b : 2;
 
-					uint16_t Unused2_FFFFh : 16;
+					uint16_t Unused1_FFFFh : 16;
 
 
 					uint32_t Unused1_FFFFFFFFh : 32;
@@ -243,6 +245,8 @@ public:
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
 		assert(s_SfpdMX25L256.Format.Unused2_1b == 1);
 		assert(s_SfpdMX25L64.Format.Unused2_1b == 1);
+		assert(s_SfpdMX25L256.Format.Unused1_11b == 3);
+		assert(s_SfpdMX25L64.Format.Unused1_11b == 3);
 		assert(s_SfpdMX25L256.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
 		assert(s_SfpdMX25L64.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
 
