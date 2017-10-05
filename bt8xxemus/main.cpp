@@ -83,7 +83,11 @@ DWORD WINAPI runPipe(const char *pipeName)
 				};
 				BT8XXEMU_FlashParameters flashParams;
 				char str[1024];
-				uint8_t data;
+				struct
+				{
+					uint8_t data;
+					uint8_t bytes;
+				};
 				uint8_t chipSelect;
 				uint8_t isRunning;
 				uint8_t hasInterrupt;
@@ -238,7 +242,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 			len = MESSAGE_SIZE(flash);
 			break;
 		case BT8XXEMU_CALL_FLASH_TRANSFER:
-			data = BT8XXEMU_Flash_transfer(FLASH, data);
+			data = BT8XXEMU_Flash_transfer(FLASH, data, bytes);
 			len = MESSAGE_SIZE(data);
 			break;
 		case BT8XXEMU_CALL_FLASH_CHIP_SELECT:

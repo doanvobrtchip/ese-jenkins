@@ -17,10 +17,8 @@ typedef struct
 {
 	void(*Destroy)(BT8XXEMU::Flash *flash);
 
-	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t data);
+	uint8_t(*Transfer)(BT8XXEMU::Flash *flash, uint8_t data, uint8_t bytes);
 	void(*ChipSelect)(BT8XXEMU::Flash *flash, bool cs);
-	void(*WriteProtect)(BT8XXEMU::Flash *flash, bool wp);
-	void(*Hold)(BT8XXEMU::Flash *flash, bool hold);
 
 	uint8_t *(*Data)(BT8XXEMU::Flash *flash);
 	size_t(*Size)(BT8XXEMU::Flash *flash);

@@ -51,7 +51,7 @@ static AutoUnlockLogMutex g_AutoUnlockLogMutex;
 int64_t getFileSize(const wchar_t* name);
 
 #pragma pack(push, 1)
-struct FlashSfpd
+struct FlashSfdp
 {
 	union
 	{
@@ -62,11 +62,11 @@ struct FlashSfpd
 			{
 				struct
 				{
-					uint32_t SfpdSignature : 32;
-					uint8_t SfpdMinorRev : 8;
-					uint8_t SfpdMajorRev : 8;
+					uint32_t SfdpSignature : 32;
+					uint8_t SfdpMinorRev : 8;
+					uint8_t SfdpMajorRev : 8;
 					uint8_t NbParamHeaders : 8;
-					uint8_t SfpdUnused_FFh : 8;
+					uint8_t SfdpUnused_FFh : 8;
 
 
 					uint8_t IdJedec : 8;
@@ -224,15 +224,15 @@ struct FlashSfpd
 
 static const union
 {
-	FlashSfpd Format;
+	FlashSfdp Format;
 	uint8_t Data[256] = { 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 184, 255, 255, 255, 255, 3, 68, 235, 0, 255, 0, 255, 4, 187, 238, 255, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 244, 79, 255, 255, 217, 200, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 184, 255, 255, 255, 255, 3, 68, 235, 0, 255, 0, 255, 4, 187, 238, 255, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 244, 79, 255, 255, 217, 200, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
-} s_SfpdMX25L64;
+} s_SfdpMX25L64;
 
 static const union
 {
-	FlashSfpd Format;
+	FlashSfdp Format;
 	uint8_t Data[256] = { 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 243, 255, 255, 255, 255, 15, 68, 235, 8, 107, 8, 59, 4, 187, 254, 255, 255, 255, 255, 255, 0, 255, 255, 255, 68, 235, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 157, 249, 192, 100, 133, 203, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 194, 245, 8, 11, 5, 2, 5, 7, 0, 0, 15, 24, 44, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
-} s_SfpdMX25L256;
+} s_SfdpMX25L256;
 
 class Flash : public BT8XXEMU::Flash
 {
@@ -243,12 +243,12 @@ public:
 		m_ChipSelect(false), m_TransferCmd(0)
 	{
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
-		assert(s_SfpdMX25L256.Format.Unused2_1b == 1);
-		assert(s_SfpdMX25L64.Format.Unused2_1b == 1);
-		assert(s_SfpdMX25L256.Format.Unused1_11b == 3);
-		assert(s_SfpdMX25L64.Format.Unused1_11b == 3);
-		assert(s_SfpdMX25L256.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
-		assert(s_SfpdMX25L64.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
+		assert(s_SfdpMX25L256.Format.Unused2_1b == 1);
+		assert(s_SfdpMX25L64.Format.Unused2_1b == 1);
+		assert(s_SfdpMX25L256.Format.Unused1_11b == 3);
+		assert(s_SfdpMX25L64.Format.Unused1_11b == 3);
+		assert(s_SfdpMX25L256.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
+		assert(s_SfdpMX25L64.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
 
 		m_Log = params->Log;
 		m_UserContext = params->UserContext;
@@ -369,8 +369,8 @@ public:
 			memcpy(Data, params->Data, copySize);
 		}
 
-		if (Size >= 32 * 1024 * 1024) m_Sfpd = &s_SfpdMX25L256.Format;
-		else m_Sfpd = &s_SfpdMX25L64.Format;
+		if (Size >= 32 * 1024 * 1024) m_Sfdp = &s_SfdpMX25L256.Format;
+		else m_Sfdp = &s_SfdpMX25L64.Format;
 	}
 
 	~Flash()
@@ -405,12 +405,7 @@ public:
 		m_WriteProtect = wp;
 	}
 
-	void hold(bool hold)
-	{
-
-	}
-
-	uint8_t transfer(uint8_t data)
+	uint8_t transfer(uint8_t data, uint8_t bytes)
 	{
 		if (m_ChipSelect)
 		{
@@ -660,7 +655,7 @@ private:
 
 	uint8_t m_StatusRegister;
 
-	const FlashSfpd *m_Sfpd;
+	const FlashSfdp *m_Sfdp;
 
 private:
 	void log(BT8XXEMU_LogType type, const char *message, ...)
@@ -694,19 +689,9 @@ void Flash_chipSelect(Flash *flash, bool cs)
 	flash->chipSelect(cs);
 }
 
-void Flash_writeProtect(Flash *flash, bool wp)
+uint8_t Flash_transfer(Flash *flash, uint8_t data, uint8_t bytes)
 {
-	flash->writeProtect(wp);
-}
-
-void Flash_hold(Flash *flash, bool hold)
-{
-	flash->hold(hold);
-}
-
-uint8_t Flash_transfer(Flash *flash, uint8_t data)
-{
-	return flash->transfer(data);
+	return flash->transfer(data, bytes);
 }
 
 uint8_t *Flash_data(Flash *flash)
@@ -722,10 +707,8 @@ size_t Flash_size(Flash *flash)
 BT8XXEMU_FlashVTable g_FlashVTable = {
 	(void(*)(BT8XXEMU::Flash *))Flash_destroy,
 
-	(uint8_t(*)(BT8XXEMU::Flash *, uint8_t))Flash_transfer,
+	(uint8_t(*)(BT8XXEMU::Flash *, uint8_t, uint8_t))Flash_transfer,
 	(void(*)(BT8XXEMU::Flash *, bool))Flash_chipSelect,
-	(void(*)(BT8XXEMU::Flash *, bool))Flash_writeProtect,
-	(void(*)(BT8XXEMU::Flash *, bool))Flash_hold,
 
 	(uint8_t *(*)(BT8XXEMU::Flash *))Flash_data,
 	(size_t(*)(BT8XXEMU::Flash *))Flash_size

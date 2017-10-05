@@ -87,7 +87,11 @@ typedef union
 			};
 			BT8XXEMU_FlashParameters flashParams;
 			char str[1024];
-			uint8_t data;
+			struct
+			{
+				uint8_t data;
+				uint8_t bytes;
+			};
 			uint8_t chipSelect;
 			uint8_t isRunning;
 			uint8_t hasInterrupt;
@@ -622,7 +626,7 @@ void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	free(flash);
 }
 
-uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value)
+uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value, uint8_t bytes)
 {
 	BT8XXEMUC_lockPipe(flash);
 
@@ -633,6 +637,7 @@ uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value)
 	data.messageType = BT8XXEMU_CALL_FLASH_TRANSFER;
 	data.flash = flash->flash;
 	data.data = value;
+	data.bytes = bytes;
 	len = MESSAGE_SIZE(data);
 
 	if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb

@@ -304,16 +304,10 @@ BT8XXEMU_API extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, c
 BT8XXEMU_API extern void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
 
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks)
-BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data);
+BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data, uint8_t bytes);
 
 // Set chip select. Must be set to true to start data transfer, false to end
 BT8XXEMU_API extern void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs);
-
-// Set write protect pin WP# to low, see flash documentation
-// BT8XXEMU_API extern void BT8XXEMU_Flash_writeProtect(BT8XXEMU_Flash *flash, bool wp);
-
-// Set hold pin, see flash documentation
-// BT8XXEMU_API extern void BT8XXEMU_Flash_hold(BT8XXEMU_Flash *flash, bool hold);
 
 #endif
 
