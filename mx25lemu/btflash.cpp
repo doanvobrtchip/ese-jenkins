@@ -28,6 +28,7 @@ Author: Jan Boon <jan@no-break.space>
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include <algorithm>
 #include <mutex>
@@ -49,6 +50,188 @@ static AutoUnlockLogMutex g_AutoUnlockLogMutex;
 
 int64_t getFileSize(const wchar_t* name);
 
+#pragma pack(push, 1)
+struct FlashSfpd
+{
+	union
+	{
+		uint8_t Data[0x70];
+		struct 
+		{
+			union
+			{
+				struct
+				{
+					uint32_t SfpdSignature : 32;
+					uint8_t SfpdMinorRev : 8;
+					uint8_t SfpdMajorRev : 8;
+					uint8_t NbParamHeaders : 8;
+					uint8_t SfpdUnused_FFh : 8;
+
+
+					uint8_t IdJedec : 8;
+					uint8_t JedecParamTabMinorRev : 8;
+					uint8_t JedecParamTabMajorRev : 8;
+					uint8_t JedecParamTabLength : 8;
+
+					uint32_t JedecParamTabPointer : 24;
+					uint8_t JedecUnused_FFh : 8;
+
+
+					uint8_t IdMacronix : 8;
+					uint8_t MacronixParamTabMinorRev : 8;
+					uint8_t MacronixParamTabMajorRev : 8;
+					uint8_t MacronixParamTabLength : 8;
+
+					uint32_t MacronixParamTabPointer : 24;
+					uint8_t MacronixUnused_FFh : 8;
+
+				};
+				uint8_t Header[0x30];
+
+			};
+			union
+			{
+				struct
+				{
+					uint8_t BlockSectorEraseSizes : 2;
+					uint8_t WriteGranularity : 1;
+					uint8_t WriteEnableInstruction : 1;
+					uint8_t WriteEnableOpCode : 1;
+					uint8_t Unused1_111b : 3;
+
+					uint8_t FourKbEraseOpCode : 8;
+
+					uint8_t FastRead112 : 1;
+					uint8_t AddressBytesArray : 2;
+					uint8_t DoubleTransferRate : 1;
+					uint8_t FastRead122 : 1;
+					uint8_t FastRead144 : 1;
+					uint8_t FastRead114 : 1;
+					uint8_t Unused1_1b : 1;
+
+					uint8_t Unused1_FFh : 8;
+
+
+					uint32_t FlashMemoryDensity : 32;
+
+
+					uint8_t FastReadWaitStates144 : 5;
+					uint8_t FastReadModeBits144 : 3;
+
+					uint8_t FastReadOpCode144 : 8;
+
+					uint8_t FastReadWaitStates114 : 5;
+					uint8_t FastReadModeBits114 : 3;
+
+					uint8_t FastReadOpCode114 : 8;
+
+
+					uint8_t FastReadWaitStates112 : 5;
+					uint8_t FastReadModeBits112 : 3;
+
+					uint8_t FastReadOpCode112 : 8;
+
+					uint8_t FastReadWaitStates122 : 5;
+					uint8_t FastReadModeBits122 : 3;
+
+					uint8_t FastReadOpCode122 : 8;
+
+
+					uint8_t FastRead222 : 1;
+					uint8_t Unused2_111b : 3;
+					uint8_t FastRead444 : 1;
+					uint8_t Unused3_111b : 3;
+
+					uint32_t Unused1_FFFFFFh : 24;
+
+
+					uint16_t Unused1_FFFFh : 16;
+
+					uint8_t FastReadWaitStates222 : 5;
+					uint8_t FastReadModeBits222 : 3;
+
+					uint8_t FastReadOpCode222 : 8;
+
+
+					uint16_t Unused2_FFFFh : 16;
+
+					uint8_t FastReadWaitStates444 : 5;
+					uint8_t FastReadModeBits444 : 3;
+
+					uint8_t FastReadOpCode444 : 8;
+
+
+					uint8_t SectorType1Size : 8;
+					uint8_t SectorType1EraseOpCode : 8;
+					uint8_t SectorType2Size : 8;
+					uint8_t SectorType2EraseOpCode : 8;
+					uint8_t SectorType3Size : 8;
+					uint8_t SectorType3EraseOpCode : 8;
+					uint8_t SectorType4Size : 8;
+					uint8_t SectorType4EraseOpCode : 8;
+
+				};
+				uint8_t JedecTable[0x60 - 0x30];
+
+			};
+			union
+			{
+				struct
+				{
+					uint16_t VccSupplyMax : 16;
+					uint16_t VccSupplyMin : 16;
+
+
+					uint8_t HwResetPin : 1;
+					uint8_t HwHoldPin : 1;
+					uint8_t DeepPowerDownMode : 1;
+					uint8_t SwReset : 1;
+					uint8_t SwResetOpcode : 8;
+					uint8_t ProgramSuspendResume : 1;
+					uint8_t EraseSuspendResume : 1;
+					uint8_t Unused2_1b : 1;
+					uint8_t WrapAroundReadMode : 1;
+
+					uint8_t WrapAroundReadModeOpCode : 8;
+					uint8_t WrapAroundReadDataLength : 8;
+
+
+					uint8_t IndividualBlockLock : 1;
+					uint8_t IndividualBlockLockBit : 1;
+					uint8_t IndividualBlockLockOpCode : 8;
+					uint8_t IndividualBlockLockVolatile : 1;
+					uint8_t SecuredOTP : 1;
+					uint8_t ReadLock : 1;
+					uint8_t PermanentLock : 1;
+					uint8_t Unused1_11b : 2;
+
+					uint16_t Unused2_FFFFh : 16;
+
+
+					uint32_t Unused1_FFFFFFFFh : 32;
+
+				};
+				uint8_t MacronixTable[0x70 - 0x60];
+
+			};
+		};
+	};
+};
+#pragma pack(pop)
+
+static const union
+{
+	FlashSfpd Format;
+	uint8_t Data[256] = { 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 184, 255, 255, 255, 255, 3, 68, 235, 0, 255, 0, 255, 4, 187, 238, 255, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 244, 79, 255, 255, 217, 200, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 184, 255, 255, 255, 255, 3, 68, 235, 0, 255, 0, 255, 4, 187, 238, 255, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 244, 79, 255, 255, 217, 200, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+} s_SfpdMX25L64;
+
+static const union
+{
+	FlashSfpd Format;
+	uint8_t Data[256] = { 83, 70, 68, 80, 0, 1, 1, 255, 0, 0, 1, 9, 48, 0, 0, 255, 194, 0, 1, 4, 96, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 229, 32, 243, 255, 255, 255, 255, 15, 68, 235, 8, 107, 8, 59, 4, 187, 254, 255, 255, 255, 255, 255, 0, 255, 255, 255, 68, 235, 12, 32, 15, 82, 16, 216, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 54, 0, 39, 157, 249, 192, 100, 133, 203, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 194, 245, 8, 11, 5, 2, 5, 7, 0, 0, 15, 24, 44, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+} s_SfpdMX25L256;
+
 class Flash : public BT8XXEMU::Flash
 {
 public:
@@ -58,6 +241,10 @@ public:
 		m_ChipSelect(false), m_TransferCmd(0)
 	{
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
+		assert(s_SfpdMX25L256.Format.Unused2_1b == 1);
+		assert(s_SfpdMX25L64.Format.Unused2_1b == 1);
+		assert(s_SfpdMX25L256.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
+		assert(s_SfpdMX25L64.Format.Unused1_FFFFFFFFh == 0xFFFFFFFF);
 
 		m_Log = params->Log;
 		m_UserContext = params->UserContext;
@@ -177,6 +364,9 @@ public:
 			size_t copySize = std::min(params->DataSizeBytes, sizeBytes);
 			memcpy(Data, params->Data, copySize);
 		}
+
+		if (Size >= 32 * 1024 * 1024) m_Sfpd = &s_SfpdMX25L256.Format;
+		else m_Sfpd = &s_SfpdMX25L64.Format;
 	}
 
 	~Flash()
@@ -276,20 +466,41 @@ public:
 						m_StatusRegister = maskedWrite | maskedReg;
 					}
 					return 0;
+				case BTFLASH_CMD_FASTDTRD: /* Fast DT Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FASTDTRD)");
+					break;
+				case BTFLASH_CMD_2DTRD: /* Dual I/O DT Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2DTRD)");
+					break;
+				case BTFLASH_CMD_4DTRD: /* Quad I/O DT Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
+					break;
 				case BTFLASH_CMD_READ: /* Read Data */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_READ)");
 					break;
 				case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FAST_READ)");
 					break;
+				case BTFLASH_CMD_RDSFDP: /* Read SFDP */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDSFDP)");
+					break;
 				case BTFLASH_CMD_2READ: /* 2x IO Read */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2READ)");
+					break;
+				case BTFLASH_CMD_4READ: /* 4x IO Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4READ)");
+					break;
+				case BTFLASH_CMD_4PP: /* Quad Page Program */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4PP)");
 					break;
 				case BTFLASH_CMD_SE: /* Sector Erase */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SE)");
 					break;
 				case BTFLASH_CMD_BE: /* Block Erase */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE)");
+					break;
+				case BTFLASH_CMD_BE32K: /* Block Erase 32kB */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE32K)");
 					break;
 				case BTFLASH_CMD_CE_60: /* Chip Erase */
 				case BTFLASH_CMD_CE_C7: /* Chip Erase */
@@ -319,6 +530,8 @@ public:
 					goto ProcessCmdRes;
 				case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
 				case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
+				case BTFLASH_CMD_REMS4: /* Read ID for 4x IO Mode */
+				case BTFLASH_CMD_REMS4D: /* Read ID for 4x IO DT Mode */
 					Flash_debug("Read Electronic Manufacturer and Device ID");
 					goto ProcessCmdRems;
 				case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
@@ -338,6 +551,34 @@ public:
 					break;
 				case BTFLASH_CMD_DSRY: /* Disable SO to output RY/BY# */
 					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_DSRY)");
+					break;
+				case BTFLASH_CMD_CLSR: /* Clear SR Fail Flags */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_CLSR)");
+					break;
+				case BTFLASH_CMD_HPM: /* High Performance Enable Mode */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_HPM)");
+					break;
+				case BTFLASH_CMD_WPSEL: /* Write Protection Selection */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_WPSEL)");
+					break;
+				case BTFLASH_CMD_SBLK: /* Single Block Lock */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SBLK)");
+					break;
+				case BTFLASH_CMD_SBULK: /* Single Block Unlock */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SBULK)");
+					break;
+				case BTFLASH_CMD_RDBLOCK: /* Block Protect Read */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDBLOCK)");
+					break;
+				case BTFLASH_CMD_GBLK: /* Gang Block Lock */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBLK)");
+					break;
+				case BTFLASH_CMD_GBULK: /* Gang Block Unlock */
+					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBULK)");
+					break;
+				case BTFLASH_CMD_NOOP_66:
+				case BTFLASH_CMD_NOOP_FF:
+					Flash_debug("No-op");
 					break;
 				default:
 					log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", data);
@@ -414,6 +655,8 @@ private:
 	bool m_PrintStd;
 
 	uint8_t m_StatusRegister;
+
+	const FlashSfpd *m_Sfpd;
 
 private:
 	void log(BT8XXEMU_LogType type, const char *message, ...)

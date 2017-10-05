@@ -13,11 +13,18 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_RDID (0x9F) /* Read Identification */
 #define BTFLASH_CMD_RDSR (0x05) /* Read Status Register */
 #define BTFLASH_CMD_WRSR (0x01) /* Write Status Register */
+#define BTFLASH_CMD_FASTDTRD (0x0D) /* Fast DT Read */
+#define BTFLASH_CMD_2DTRD (0xBD) /* Dual I/O DT Read */
+#define BTFLASH_CMD_4DTRD (0xED) /* Quad I/O DT Read */
 #define BTFLASH_CMD_READ (0x03) /* Read Data */
 #define BTFLASH_CMD_FAST_READ (0x0B) /* Fast Read Data */
+#define BTFLASH_CMD_RDSFDP (0x5A) /* Read SFDP */
 #define BTFLASH_CMD_2READ (0xBB) /* 2x IO Read */
+#define BTFLASH_CMD_4READ (0xEB) /* 4x IO Read */
+#define BTFLASH_CMD_4PP (0x38) /* Quad Page Program */
 #define BTFLASH_CMD_SE (0x20) /* Sector Erase */
 #define BTFLASH_CMD_BE (0xD8) /* Block Erase */
+#define BTFLASH_CMD_BE32K (0x52) /* Block Erase 32kB */
 #define BTFLASH_CMD_CE_60 (0x60) /* Chip Erase */
 #define BTFLASH_CMD_CE_C7 (0xC7) /* Chip Erase */
 #define BTFLASH_CMD_PP (0x02) /* Page Program */
@@ -27,12 +34,25 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_RES (0xAB) /* Read Electronic ID */
 #define BTFLASH_CMD_REMS (0x90) /* Read Electronic Manufacturer and Device ID */
 #define BTFLASH_CMD_REMS2 (0xEF) /* Read ID for 2x IO Mode */
+#define BTFLASH_CMD_REMS4 (0xDF) /* Read ID for 4x IO Mode */
+#define BTFLASH_CMD_REMS4D (0xCF) /* Read ID for 4x IO DT Mode */
 #define BTFLASH_CMD_ENSO (0xB1) /* Enter Secured OTP */
 #define BTFLASH_CMD_EXSO (0xC1) /* Exit Secured OTP */
 #define BTFLASH_CMD_RDSCUR (0x2B) /* Read Security Register */
 #define BTFLASH_CMD_WRSCUR (0x2F) /* Write Security Register */
 #define BTFLASH_CMD_ESRY (0x70) /* Enable SO to output RY/BY# */
 #define BTFLASH_CMD_DSRY (0x80) /* Disable SO to output RY/BY# */
+#define BTFLASH_CMD_CLSR (0x30) /* Clear SR Fail Flags */
+#define BTFLASH_CMD_HPM (0xA3) /* High Performance Enable Mode */
+#define BTFLASH_CMD_WPSEL (0x68) /* Write Protection Selection */
+#define BTFLASH_CMD_SBLK (0x36) /* Single Block Lock */
+#define BTFLASH_CMD_SBULK (0x39) /* Single Block Unlock */
+#define BTFLASH_CMD_RDBLOCK (0x3C) /* Block Protect Read */
+#define BTFLASH_CMD_GBLK (0x7E) /* Gang Block Lock */
+#define BTFLASH_CMD_GBULK (0x98) /* Gang Block Unlock */
+
+#define BTFLASH_CMD_NOOP_66 (0x66)
+#define BTFLASH_CMD_NOOP_FF (0xFF)
 
 // Status Registers
 #define BTFLASH_STATUS_WIP_FLAG (1 << 0) /* Write In Progress */
