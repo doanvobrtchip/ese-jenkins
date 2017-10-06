@@ -20,6 +20,7 @@ Author: Jan Boon <jan@no-break.space>
 // SPI Data Masks
 #define BTFLASH_SPI4_MASK_SI (BTFLASH_SPI4_MOSI)
 #define BTFLASH_SPI4_MASK_SO (BTFLASH_SPI4_MISO)
+#define BTFLASH_SPI4_MASK_D2 (0x3)
 #define BTFLASH_SPI4_MASK_D4 (0xF)
 
 // SPI Signals to Data
@@ -71,8 +72,9 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_GBLK (0x7E) /* Gang Block Lock */
 #define BTFLASH_CMD_GBULK (0x98) /* Gang Block Unlock */
 
-#define BTFLASH_CMD_NOOP_66 (0x66)
-#define BTFLASH_CMD_NOOP_FF (0xFF)
+#define BTFLASH_CMD_NOOP_ENRESET (0x66) /* Reset Enable */
+#define BTFLASH_CMD_NOOP_RESET (0x99) /* Reset */
+#define BTFLASH_CMD_NOOP_EXITQPI (0xFF) /* Exit QPI Mode */
 
 // Status Registers
 #define BTFLASH_STATUS_WIP_FLAG (1 << 0) /* Write In Progress */
@@ -99,6 +101,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATE_OUT_U24 6
 #define BTFLASH_STATE_OUT_U32 7
 #define BTFLASH_STATE_WRSR 12
+#define BTFLASH_STATE_REMS_ADDR 13
 
 #endif /* #ifndef MX25LEMU_BTFLASH_DEFS_H */
 

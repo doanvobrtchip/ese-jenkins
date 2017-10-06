@@ -211,10 +211,20 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			if (m_Flash)
 			{
-				// m_Flash->vTable()->ChipSelect(m_Flash, true);
-				// uint8_t res = m_Flash->vTable()->Transfer(m_Flash, value);
-				// data = ... // set new register value
-				// ... = rawReadU32(REG_SPIM); // read existing register value
+				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR);
+				if (regSpimDir & 0x10) regSpimDir |= 0x20;
+				uint8_t transferRes = m_Flash->vTable()->TransferSpi4(m_Flash, data & 0xFF);
+				bool cs = (regSpimDir & 0x10) && (data & 0x10);
+				if (cs)
+				{
+					data = (regSpimDir & data)
+						| ((~regSpimDir) & transferRes);
+				}
+				else
+				{
+					data &= regSpimDir;
+				}
+				data &= 0xF;
 			}
 			break;
 		case REG_ESPIM_ADD:

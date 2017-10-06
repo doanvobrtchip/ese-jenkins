@@ -402,6 +402,7 @@ public:
 		// <- old
 
 		m_RunState = BTFLASH_STATE_COMMAND;
+		m_NextState = BTFLASH_STATE_BLANK;
 		// m_ClockEdge = BTFLASH_CLOCK_RISING;
 		m_SignalOutMask = cs ? BTFLASH_SPI4_MASK_SO : 0;
 		m_BufferBits = 0;
@@ -415,6 +416,7 @@ public:
 
 private:
 	int m_RunState;
+	int m_NextState;
 	uint8_t m_LastSignal;
 	uint8_t m_SignalOutMask;
 
@@ -431,6 +433,17 @@ private:
 		uint8_t m_OutBufferU8;
 		uint32_t m_OutBufferU32;
 		uint64_t m_OutBufferU64;
+		struct
+		{
+			uint8_t m_OutBufferU8A;
+			uint8_t m_OutBufferU8B; // 24 0
+			uint8_t m_OutBufferU8C; // 24 1
+			uint8_t m_OutBufferU8D; // 24 2
+			uint8_t m_OutBufferU8E;
+			uint8_t m_OutBufferU8F;
+			uint8_t m_OutBufferU8G;
+			uint8_t m_OutBufferU8H;
+		};
 	};
 	int m_OutBufferBits;
 
@@ -482,6 +495,8 @@ public:
 			return stateCommand(signal);
 		case BTFLASH_STATE_WRSR:
 			return stateWRSR(signal);
+		case BTFLASH_STATE_REMS_ADDR:
+			return stateREMSAddr(signal);
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_BLANK:
 		case BTFLASH_STATE_OUT_U8:
@@ -512,7 +527,42 @@ public:
 				uint8_t res = writeOutU8();
 				if (!isWritingOutBuffer())
 				{
-					m_RunState = BTFLASH_STATE_BLANK;
+					if (m_NextState == BTFLASH_STATE_OUT_U8)
+					{
+						m_OutBufferBits = 8;
+					}
+					else
+					{
+						m_RunState = m_NextState;
+						m_NextState = BTFLASH_STATE_BLANK;
+					}
+				}
+			}
+			else
+			{
+				log(BT8XXEMU_LogError, "Output state invalid without buffer");
+			}
+			break;
+		case BTFLASH_STATE_OUT_U24:
+		case BTFLASH_STATE_OUT_U32:
+			if (isWritingOutBuffer())
+			{
+				uint8_t res = writeOutU32();
+				if (!isWritingOutBuffer())
+				{
+					if (m_NextState == BTFLASH_STATE_OUT_U24)
+					{
+						m_OutBufferBits = 24;
+					}
+					else if(m_NextState == BTFLASH_STATE_OUT_U32)
+					{
+						m_OutBufferBits = 32;
+					}
+					else
+					{
+						m_RunState = m_NextState;
+						m_NextState = BTFLASH_STATE_BLANK;
+					}
 				}
 			}
 			else
@@ -522,6 +572,7 @@ public:
 			break;
 		case BTFLASH_STATE_COMMAND:
 		case BTFLASH_STATE_WRSR:
+		case BTFLASH_STATE_REMS_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
 			// Silent no-op
 			break;
@@ -544,20 +595,54 @@ public:
 		m_OutBufferBits = 8;
 	}
 
+	void startWrite2U8AsU16(uint8_t a, uint8_t b)
+	{
+		m_OutBufferU8A = b;
+		m_OutBufferU8B = a;
+		m_OutBufferBits = 16;
+	}
+
+	void startWrite3U8AsU32(uint8_t a, uint8_t b, uint8_t c)
+	{
+		m_OutBufferU8B = c;
+		m_OutBufferU8C = b;
+		m_OutBufferU8D = a;
+		m_OutBufferBits = 24;
+	}
+
 	uint8_t writeOutU8()
 	{
 		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
 		{
-			uint8_t res = (m_OutBufferU8 >> 6) & BTFLASH_SPI4_MASK_SO;
+			uint8_t res = (m_OutBufferU8 >> (6 - (8 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_SO;
 			--m_OutBufferBits;
-			m_OutBufferU8 <<= 1;
 			return res;
 		}
 		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D4)
 		{
-			uint8_t res = (m_OutBufferU8 >> 4) & BTFLASH_SPI4_MASK_D4;
+			uint8_t res = (m_OutBufferU8 >> (4 - (8 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_D4;
+			m_OutBufferBits -= 4;
+			return res;
+		}
+		else
+		{
+			log(BT8XXEMU_LogError, "Invalid signal output directions");
+			return m_LastSignal;
+		}
+	}
+
+	uint8_t writeOutU32()
+	{
+		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
+		{
+			uint8_t res = (m_OutBufferU32 >> (30 - (32 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_SO;
 			--m_OutBufferBits;
-			m_OutBufferU8 <<= 4;
+			return res;
+		}
+		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D4)
+		{
+			uint8_t res = (m_OutBufferU32 >> (28 - (32 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_D4;
+			m_OutBufferBits -= 4;
 			return res;
 		}
 		else
@@ -583,6 +668,32 @@ public:
 			| (BTFLASH_SPI4_GET_D4(signal));
 		++m_BufferBits;
 		return m_BufferBits == 8;
+	}
+
+	bool readU24Spi1AsU32(uint8_t signal)
+	{
+		// Read 1 bit at a time until a U24 is read
+		m_BufferU32 = (m_BufferU8 << 1)
+			| (BTFLASH_SPI4_GET_SI(signal));
+		++m_BufferBits;
+		return m_BufferBits == 24;
+	}
+
+	uint8_t manufacturerId()
+	{
+		return 0xc2;
+	}
+
+	uint8_t deviceId()
+	{
+		if (Size >= 8 * 1024 * 2014) return 0x16;
+		else if (Size >= 4 * 1024 * 2014) return 0x15;
+		else if (Size >= 2 * 1024 * 2014) return 0x14;
+		else
+		{
+			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
+			return 0xFF;
+		}
 	}
 
 	uint8_t stateCommand(uint8_t signal)
@@ -723,17 +834,37 @@ public:
 				return m_LastSignal;
 			case BTFLASH_CMD_RES: /* Read Electronic ID */
 				Flash_debug("Read Electronic ID");
-				//goto ProcessCmdRes;
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				m_RunState = BTFLASH_STATE_OUT_U8;
+				m_NextState = BTFLASH_STATE_OUT_U8;
+				startWriteU8(deviceId());
 				return m_LastSignal;
 			case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
-			case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
-			case BTFLASH_CMD_REMS4: /* Read ID for 4x IO Mode */
-			case BTFLASH_CMD_REMS4D: /* Read ID for 4x IO DT Mode */
+			// CmdRems:
 				Flash_debug("Read Electronic Manufacturer and Device ID");
-				//goto ProcessCmdRems;
+				// m_RunState = BTFLASH_STATE_OUT_U16;
+				// m_NextState = BTFLASH_STATE_OUT_U16;
+				// startWrite2U8AsU16(manufacturerId(), deviceId());
+				m_RunState = BTFLASH_STATE_REMS_ADDR;
+				return m_LastSignal;
+			case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
+				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_REMS2)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
+				// m_SignalOutMask = BTFLASH_SPI4_MASK_D2;
+				// goto CmdRems;
+			case BTFLASH_CMD_REMS4: /* Read ID for 4x IO Mode */
+				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_REMS4)");
+				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				return m_LastSignal;
+				// m_SignalOutMask = BTFLASH_SPI4_MASK_D4;
+				// goto CmdRems;
+			case BTFLASH_CMD_REMS4D: /* Read ID for 4x IO DT Mode */
+				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_REMS4D)");
+				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				return m_LastSignal;
+				// Flash_debug("Read Electronic Manufacturer and Device ID 4x DT");
+				// m_RunState = BTFLASH_STATE_BLANK;
+				// return m_LastSignal;
 			case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_ENSO)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
@@ -790,10 +921,11 @@ public:
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBULK)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
-			case BTFLASH_CMD_NOOP_66:
-			case BTFLASH_CMD_NOOP_FF:
+			case BTFLASH_CMD_NOOP_ENRESET:
+			case BTFLASH_CMD_NOOP_RESET:
+			case BTFLASH_CMD_NOOP_EXITQPI:
 				Flash_debug("No-op");
-				return 0xFF;
+				return m_LastSignal;
 			default:
 				log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", command);
 				break;
@@ -821,6 +953,20 @@ public:
 			m_StatusRegister = maskedWrite | maskedReg;
 
 			m_RunState = BTFLASH_STATE_BLANK;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t stateREMSAddr(uint8_t signal)
+	{
+		if (readU24Spi1AsU32(signal))
+		{
+			uint8_t addr = m_BufferU8;
+			if (addr == 0x01) startWrite2U8AsU16(deviceId(), manufacturerId());
+			else startWrite2U8AsU16(manufacturerId(), deviceId());
+			m_RunState = BTFLASH_STATE_OUT_U16;
+			m_NextState = BTFLASH_STATE_OUT_U16;
 		}
 
 		return m_LastSignal;
