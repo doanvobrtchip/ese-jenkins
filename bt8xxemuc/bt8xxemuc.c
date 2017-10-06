@@ -52,8 +52,7 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #define BT8XXEMU_CALL_FLASH_DEFAULTS 0x0101
 #define BT8XXEMU_CALL_FLASH_CREATE 0x0102
 #define BT8XXEMU_CALL_FLASH_DESTROY 0x0104
-#define BT8XXEMU_CALL_FLASH_TRANSFER 0x0106
-#define BT8XXEMU_CALL_FLASH_CHIP_SELECT 0x0107
+#define BT8XXEMU_CALL_FLASH_TRANSFER_SPI4 0x0109
 
 typedef struct BT8XXEMUC_Remote BT8XXEMUC_Remote;
 struct BT8XXEMUC_Remote {
@@ -87,11 +86,8 @@ typedef union
 			};
 			BT8XXEMU_FlashParameters flashParams;
 			char str[1024];
-			struct
-			{
-				uint8_t data;
-				uint8_t bytes;
-			};
+			uint8_t data;
+			uint8_t signal;
 			uint8_t chipSelect;
 			uint8_t isRunning;
 			uint8_t hasInterrupt;
@@ -626,7 +622,7 @@ void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	free(flash);
 }
 
-uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value, uint8_t bytes)
+uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal)
 {
 	BT8XXEMUC_lockPipe(flash);
 
@@ -634,11 +630,10 @@ uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value, uint8_t by
 	DWORD len;
 	BT8XXEMUC_Data data;
 
-	data.messageType = BT8XXEMU_CALL_FLASH_TRANSFER;
+	data.messageType = BT8XXEMU_CALL_FLASH_TRANSFER_SPI4;
 	data.flash = flash->flash;
-	data.data = value;
-	data.bytes = bytes;
-	len = MESSAGE_SIZE(data);
+	data.signal = signal;
+	len = MESSAGE_SIZE(signal);
 
 	if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
 		|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
@@ -649,28 +644,6 @@ uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t value, uint8_t by
 
 	BT8XXEMUC_unlockPipe(flash);
 	return data.data;
-}
-
-void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs)
-{
-	BT8XXEMUC_lockPipe(flash);
-
-	DWORD nb;
-	DWORD len;
-	BT8XXEMUC_Data data;
-
-	data.messageType = BT8XXEMU_CALL_FLASH_CHIP_SELECT;
-	data.flash = flash->flash;
-	data.chipSelect = cs;
-	len = MESSAGE_SIZE(chipSelect);
-
-	if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
-	{
-		// ...
-	}
-
-	BT8XXEMUC_unlockPipe(flash);
 }
 
 #endif

@@ -292,14 +292,9 @@ BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	flash->vTable()->Destroy(flash);
 }
 
-BT8XXEMU_API uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data, uint8_t bytes)
+BT8XXEMU_API uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal)
 {
-	return flash->vTable()->Transfer(flash, data, bytes);
-}
-
-BT8XXEMU_API void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs)
-{
-	flash->vTable()->ChipSelect(flash, cs);
+	return flash->vTable()->TransferSpi4(flash, signal);
 }
 
 BT8XXEMU_API uint8_t *BT8XXEMU_Flash_data(BT8XXEMU_Flash *flash)

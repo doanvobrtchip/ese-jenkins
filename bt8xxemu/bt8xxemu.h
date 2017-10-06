@@ -303,11 +303,8 @@ BT8XXEMU_API extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, c
 // Destroy flash emulator instance
 BT8XXEMU_API extern void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
 
-// Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks)
-BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transfer(BT8XXEMU_Flash *flash, uint8_t data, uint8_t bytes);
-
-// Set chip select. Must be set to true to start data transfer, false to end
-BT8XXEMU_API extern void BT8XXEMU_Flash_chipSelect(BT8XXEMU_Flash *flash, bool cs);
+// Transfer data using SPI or Quad SPI protocol. Bit 0:3 are data, bit 4 is cable select (0 active), SCK is clock. In single mode bit 0 is MOSI and bit 1 is MISO
+BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal);
 
 #endif
 

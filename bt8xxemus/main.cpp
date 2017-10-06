@@ -44,8 +44,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BT8XXEMU_CALL_FLASH_DEFAULTS 0x0101
 #define BT8XXEMU_CALL_FLASH_CREATE 0x0102
 #define BT8XXEMU_CALL_FLASH_DESTROY 0x0104
-#define BT8XXEMU_CALL_FLASH_TRANSFER 0x0106
-#define BT8XXEMU_CALL_FLASH_CHIP_SELECT 0x0107
+#define BT8XXEMU_CALL_FLASH_TRANSFER_SPI4 0x0109
 
 volatile bool s_Running = true;
 std::mutex s_Mutex;
@@ -83,11 +82,8 @@ DWORD WINAPI runPipe(const char *pipeName)
 				};
 				BT8XXEMU_FlashParameters flashParams;
 				char str[1024];
-				struct
-				{
-					uint8_t data;
-					uint8_t bytes;
-				};
+				uint8_t data;
+				uint8_t signal;
 				uint8_t chipSelect;
 				uint8_t isRunning;
 				uint8_t hasInterrupt;
@@ -241,13 +237,9 @@ DWORD WINAPI runPipe(const char *pipeName)
 			FLASH = NULL;
 			len = MESSAGE_SIZE(flash);
 			break;
-		case BT8XXEMU_CALL_FLASH_TRANSFER:
-			data = BT8XXEMU_Flash_transfer(FLASH, data, bytes);
-			len = MESSAGE_SIZE(data);
-			break;
-		case BT8XXEMU_CALL_FLASH_CHIP_SELECT:
-			BT8XXEMU_Flash_chipSelect(FLASH, !!chipSelect);
-			len = MESSAGE_SIZE(emulator);
+		case BT8XXEMU_CALL_FLASH_TRANSFER_SPI4:
+			signal = BT8XXEMU_Flash_transferSpi4(FLASH, signal);
+			len = MESSAGE_SIZE(signal);
 			break;
 		default:
 			std::cerr << "Unknown message\n";

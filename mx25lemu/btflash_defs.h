@@ -7,6 +7,26 @@ Author: Jan Boon <jan@no-break.space>
 #ifndef MX25LEMU_BTFLASH_DEFS_H
 #define MX25LEMU_BTFLASH_DEFS_H
 
+// SPI Signals
+#define BTFLASH_SPI4_MOSI (1 << 0)
+#define BTFLASH_SPI4_MISO (1 << 1)
+#define BTFLASH_SPI4_D0 (1 << 0)
+#define BTFLASH_SPI4_D1 (1 << 1)
+#define BTFLASH_SPI4_D2 (1 << 2)
+#define BTFLASH_SPI4_D3 (1 << 3)
+#define BTFLASH_SPI4_CS (1 << 4)
+#define BTFLASH_SPI4_SCK (1 << 5)
+
+// SPI Data Masks
+#define BTFLASH_SPI4_MASK_SI (BTFLASH_SPI4_MOSI)
+#define BTFLASH_SPI4_MASK_SO (BTFLASH_SPI4_MISO)
+#define BTFLASH_SPI4_MASK_D4 (0xF)
+
+// SPI Signals to Data
+#define BTFLASH_SPI4_GET_SI(signal) ((signal) & BTFLASH_SPI4_MASK_SI)
+#define BTFLASH_SPI4_GET_SO(signal) (((signal) & BTFLASH_SPI4_MASK_SO) >> 1)
+#define BTFLASH_SPI4_GET_D4(signal) ((signal) & BTFLASH_SPI4_MASK_D4)
+
 // Commands
 #define BTFLASH_CMD_WREN (0x06) /* Write Enable */
 #define BTFLASH_CMD_WRDI (0x04) /* Write Disable */
@@ -63,6 +83,22 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATUS_BP3_FLAG (1 << 5) /* Block Protect */
 #define BTFLASH_STATUS_CP_FLAG (1 << 6) /* Continuously Program Mode */
 #define BTFLASH_STATUS_SRWD_FLAG (1 << 7) /* Status Register Write Protect */
+
+// Clock edge select
+#define BTFLASH_CLOCK_RISING 1
+#define BTFLASH_CLOCK_FALLING 2
+
+// Run state
+#define BTFLASH_STATE_UNKNOWN 0
+#define BTFLASH_STATE_COMMAND 1
+#define BTFLASH_STATE_IGNORE 2
+#define BTFLASH_STATE_UNSUPPORTED 2
+#define BTFLASH_STATE_BLANK 3
+#define BTFLASH_STATE_OUT_U8 4
+#define BTFLASH_STATE_OUT_U16 5
+#define BTFLASH_STATE_OUT_U24 6
+#define BTFLASH_STATE_OUT_U32 7
+#define BTFLASH_STATE_WRSR 12
 
 #endif /* #ifndef MX25LEMU_BTFLASH_DEFS_H */
 
