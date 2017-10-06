@@ -211,14 +211,18 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			if (m_Flash)
 			{
-				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR);
+				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR); // SPI signal directions
 				if (regSpimDir & 0x10) regSpimDir |= 0x20;
-				uint8_t transferRes = m_Flash->vTable()->TransferSpi4(m_Flash, data & 0xFF);
-				bool cs = (regSpimDir & 0x10) && (data & 0x10);
+				uint8_t dataOut = (data & regSpimDir)
+					| (rawReadU8(REG_SPIM) & (~regSpimDir));
+				if (!(regSpimDir & 0x10)) dataOut |= 0x10; // CS high if not out
+				uint8_t dataIn = m_Flash->vTable()->TransferSpi4(m_Flash, dataOut & 0xFF);
+				bool cs = (regSpimDir & 0x10) && !(data & 0x10); // CS set when out and low
 				if (cs)
 				{
+					// Transfer output relevant when CS is set
 					data = (regSpimDir & data)
-						| ((~regSpimDir) & transferRes);
+						| ((~regSpimDir) & dataIn);
 				}
 				else
 				{
