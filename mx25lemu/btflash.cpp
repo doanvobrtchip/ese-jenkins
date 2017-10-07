@@ -9,6 +9,20 @@ Author: Jan Boon <jan@no-break.space>
 
 #include "btflash_defs.h"
 
+/*
+READ4  EBh  
+EN4B   B7h  Todo (256)
+PP
+WRSR        Ok
+READ        Test
+RDSR        Ok
+WREN        Ok
+RDSFDP 5Ah  Ok
+RDID        Ok
+CE     C7h  Ok
+RESET  99h  Ok (No-op) / Todo (256)
+*/
+
 #ifdef WIN32
 #	ifndef NOMINMAX
 #		define NOMINMAX
@@ -449,6 +463,11 @@ private:
 	};
 	int m_OutBufferBits;
 
+	const uint8_t *m_OutArray = NULL;
+	size_t m_OutArraySize;
+	size_t m_OutArrayAt;
+	bool m_OutArrayLoop;
+
 public:
 	inline uint8_t maskOutSignal(uint8_t signal, uint8_t signalOut)
 	{
@@ -499,12 +518,27 @@ public:
 			return stateWRSR(signal);
 		case BTFLASH_STATE_REMS_ADDR:
 			return stateREMSAddr(signal);
+		case BTFLASH_STATE_RDSFDP_ADDR:
+			return stateRDSFDPAddr(signal);
+		case BTFLASH_STATE_READ_ADDR:
+			return stateREADAddr(signal);
+		case BTFLASH_STATE_FAST_READ_ADDR:
+			return stateFAST_READAddr(signal);
+		case BTFLASH_STATE_FASTDTRD_ADDR:
+			return stateFASTDTRDAddr(signal);
+		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
+			return stateWriteOutU8Array();
+		case BTFLASH_STATE_NEXT:
+			m_RunState = m_NextState;
+			m_NextState = BTFLASH_STATE_BLANK;
+			break;
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_BLANK:
 		case BTFLASH_STATE_OUT_U8:
 		case BTFLASH_STATE_OUT_U16:
 		case BTFLASH_STATE_OUT_U24:
 		case BTFLASH_STATE_OUT_U32:
+		case BTFLASH_STATE_OUT_U8_ARRAY:
 			// Silent no-op
 			break;
 		case BTFLASH_STATE_UNKNOWN:
@@ -572,9 +606,21 @@ public:
 				log(BT8XXEMU_LogError, "Output state invalid without buffer");
 			}
 			break;
+		case BTFLASH_STATE_OUT_U8_ARRAY:
+		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
+			return stateWriteOutU8Array();
+		case BTFLASH_STATE_NEXT:
+			m_RunState = m_NextState;
+			m_NextState = BTFLASH_STATE_BLANK;
+			break;
+		case BTFLASH_STATE_FASTDTRD_ADDR:
+			return stateFASTDTRDAddr(signal);
 		case BTFLASH_STATE_COMMAND:
 		case BTFLASH_STATE_WRSR:
 		case BTFLASH_STATE_REMS_ADDR:
+		case BTFLASH_STATE_RDSFDP_ADDR:
+		case BTFLASH_STATE_READ_ADDR:
+		case BTFLASH_STATE_FAST_READ_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
 			// Silent no-op
 			break;
@@ -584,6 +630,38 @@ public:
 			break;
 		}
 		return m_LastSignal;
+	}
+
+	uint8_t stateWriteOutU8Array()
+	{
+		if (!isWritingOutBuffer())
+		{
+			if (m_OutArrayAt >= m_OutArraySize)
+			{
+				if (m_OutArrayLoop)
+				{
+					// Continue loop
+					m_OutArrayAt -= m_OutArraySize;
+				}
+				else
+				{
+					// End
+					m_RunState = m_NextState;
+					return m_LastSignal;
+				}
+			}
+
+			// Start next byte
+			Flash_debug("Data[%i]: 0x%x (%i)",
+				(int)m_OutArrayAt,
+				(int)m_OutArray[m_OutArrayAt],
+				(int)m_OutArray[m_OutArrayAt]);
+			startWriteU8(m_OutArray[m_OutArrayAt]);
+			++m_OutArrayAt;
+		}
+
+		// Send bits
+		return writeOutU8();
 	}
 	
 	bool isWritingOutBuffer()
@@ -616,14 +694,20 @@ public:
 	{
 		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
 		{
-			uint8_t res = (m_OutBufferU8 >> (6 - (8 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_SO;
+			uint8_t res = ((m_OutBufferU8 >> (m_OutBufferBits - 1)) << 1) & BTFLASH_SPI4_MASK_SO;
 			--m_OutBufferBits;
 			return res;
 		}
 		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D4)
 		{
-			uint8_t res = (m_OutBufferU8 >> (4 - (8 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_D4;
+			uint8_t res = (m_OutBufferU8 >> (m_OutBufferBits - 4)) & BTFLASH_SPI4_MASK_D4;
 			m_OutBufferBits -= 4;
+			return res;
+		}
+		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D2)
+		{
+			uint8_t res = (m_OutBufferU8 >> (m_OutBufferBits - 2)) & BTFLASH_SPI4_MASK_D2;
+			m_OutBufferBits -= 2;
 			return res;
 		}
 		else
@@ -637,14 +721,20 @@ public:
 	{
 		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
 		{
-			uint8_t res = (m_OutBufferU32 >> (30 - (32 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_SO;
+			uint8_t res = ((m_OutBufferU32 >> (m_OutBufferBits - 1)) << 1) & BTFLASH_SPI4_MASK_SO;
 			--m_OutBufferBits;
 			return res;
 		}
 		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D4)
 		{
-			uint8_t res = (m_OutBufferU32 >> (28 - (32 - m_OutBufferBits))) & BTFLASH_SPI4_MASK_D4;
+			uint8_t res = (m_OutBufferU32 >> (m_OutBufferBits - 4)) & BTFLASH_SPI4_MASK_D4;
 			m_OutBufferBits -= 4;
+			return res;
+		}
+		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D2)
+		{
+			uint8_t res = (m_OutBufferU32 >> (m_OutBufferBits - 2)) & BTFLASH_SPI4_MASK_D2;
+			m_OutBufferBits -= 2;
 			return res;
 		}
 		else
@@ -675,10 +765,30 @@ public:
 	bool readU24Spi1AsU32(uint8_t signal)
 	{
 		// Read 1 bit at a time until a U24 is read
-		m_BufferU32 = (m_BufferU8 << 1)
+		m_BufferU32 = (m_BufferU32 << 1)
 			| (BTFLASH_SPI4_GET_SI(signal));
 		++m_BufferBits;
 		return m_BufferBits == 24;
+	}
+
+	inline bool readU24Spi1AsU32Skip8Lsb(uint8_t signal)
+	{
+		// Read 1 bit at a time until a U24 is read
+		// Skip 8 bits after the U24
+		readU24Spi1AsU32SkipLsb(signal, 8);
+	}
+
+	bool readU24Spi1AsU32SkipLsb(uint8_t signal, int dummyBits)
+	{
+		// Read 1 bit at a time until a U24 is read
+		// Skip dummy bits bits after the U24
+		if (m_BufferBits < 24)
+		{
+			m_BufferU32 = (m_BufferU32 << 1)
+				| (BTFLASH_SPI4_GET_SI(signal));
+		}
+		++m_BufferBits;
+		return m_BufferBits == 24 + dummyBits;
 	}
 
 	inline uint8_t manufacturerId()
@@ -721,6 +831,7 @@ public:
 		{
 			// Check command and switch to next state
 			uint8_t command = m_BufferU8;
+			m_BufferBits = 0;
 			if (m_DeepPowerDown)
 			{
 				if (command == BTFLASH_CMD_RDP) /* Release from Deep Power Down */
@@ -776,8 +887,9 @@ public:
 				m_RunState = BTFLASH_STATE_WRSR;
 				return m_LastSignal;
 			case BTFLASH_CMD_FASTDTRD: /* Fast DT Read */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FASTDTRD)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				Flash_debug("Read Data");
+				m_RunState = BTFLASH_STATE_NEXT;
+				m_NextState = BTFLASH_STATE_FASTDTRD_ADDR;
 				return m_LastSignal;
 			case BTFLASH_CMD_2DTRD: /* Dual I/O DT Read */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2DTRD)");
@@ -788,16 +900,16 @@ public:
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
 			case BTFLASH_CMD_READ: /* Read Data */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_READ)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				Flash_debug("Read Data");
+				m_RunState = BTFLASH_STATE_READ_ADDR;
 				return m_LastSignal;
 			case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FAST_READ)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				Flash_debug("Fast Read Data");
+				m_RunState = BTFLASH_STATE_FAST_READ_ADDR;
 				return m_LastSignal;
 			case BTFLASH_CMD_RDSFDP: /* Read SFDP */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDSFDP)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				Flash_debug("Read SFDP");
+				m_RunState = BTFLASH_STATE_RDSFDP_ADDR;
 				return m_LastSignal;
 			case BTFLASH_CMD_2READ: /* 2x IO Read */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2READ)");
@@ -949,6 +1061,7 @@ public:
 		if (readU8Spi1(signal))
 		{
 			uint8_t data = m_BufferU8;
+			m_BufferBits = 0;
 
 			static const uint8_t mask =
 				BTFLASH_STATUS_BP0_FLAG
@@ -972,6 +1085,7 @@ public:
 		if (readU24Spi1AsU32(signal))
 		{
 			uint8_t addr = m_BufferU8;
+			m_BufferBits = 0;
 			if (addr == 0x01) startWrite2U8AsU16(deviceId(), manufacturerId());
 			else startWrite2U8AsU16(manufacturerId(), deviceId());
 			m_RunState = BTFLASH_STATE_OUT_U16;
@@ -981,245 +1095,73 @@ public:
 		return m_LastSignal;
 	}
 
-#if 0
-
-	uint8_t transfer(uint8_t data, uint8_t bytes)
+	uint8_t stateRDSFDPAddr(uint8_t signal)
 	{
-		if (!(m_LastSignal & BTFLASH_SPI4_CS))
+		if (readU24Spi1AsU32Skip8Lsb(signal))
 		{
-			++m_TransferNb;
-			if (m_DeepPowerDown)
-			{
-				if (!m_TransferNb && data == BTFLASH_CMD_RDP) /* Release from Deep Power Down */
-				{
-					Flash_debug("Release from Deep Power Down");
-					m_DeepPowerDown = false;
-				}
-				else
-				{
-					log(BT8XXEMU_LogWarning, "Not processing flash commands while in Deep Power Down");
-					return 0;
-				}
-			}
-			switch (m_TransferCmd)
-			{
-			case 0:
-				m_TransferCmd = data;
-				switch (data)
-				{
-				case BTFLASH_CMD_WREN: /* Write Enable */
-					Flash_debug("Write Enable");
-					m_StatusRegister |= BTFLASH_STATUS_WEL_FLAG;
-					return 0;
-				case BTFLASH_CMD_WRDI: /* Write Disable */
-					Flash_debug("Write Disable");
-					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
-					return 0;
-				case BTFLASH_CMD_RDID: /* Read Identification */
-					Flash_debug("Read Identification");
-					return 0xC2;
-				case BTFLASH_CMD_RDSR: /* Read Status Register */
-					Flash_debug("Read Status Register");
-					return m_StatusRegister;
-				case BTFLASH_CMD_WRSR: /* Write Status Register */
-					Flash_debug("Write Status Register");
-					; {
-						if (!(m_StatusRegister & BTFLASH_STATUS_WEL_FLAG))
-						{
-							log(BT8XXEMU_LogError, "Write Enable Latch must be set before writing Status Register");
-							return 0;
-						}
-
-						if ((m_StatusRegister & BTFLASH_STATUS_SRWD_FLAG)
-							&& m_WriteProtect)
-						{
-							log(BT8XXEMU_LogError, "Cannot write Status Register while in Hardware Protection Mode");
-							return 0;
-						}
-
-						static const uint8_t mask =
-							BTFLASH_STATUS_BP0_FLAG
-							| BTFLASH_STATUS_BP1_FLAG
-							| BTFLASH_STATUS_BP2_FLAG
-							| BTFLASH_STATUS_BP3_FLAG
-							| BTFLASH_STATUS_SRWD_FLAG;
-						static const uint8_t invMask = (~mask) & (~BTFLASH_STATUS_WEL_FLAG);
-						const uint8_t maskedWrite = data & mask;
-						const uint8_t maskedReg = m_StatusRegister & invMask;
-						m_StatusRegister = maskedWrite | maskedReg;
-					}
-					return 0;
-				case BTFLASH_CMD_FASTDTRD: /* Fast DT Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FASTDTRD)");
-					break;
-				case BTFLASH_CMD_2DTRD: /* Dual I/O DT Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2DTRD)");
-					break;
-				case BTFLASH_CMD_4DTRD: /* Quad I/O DT Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
-					break;
-				case BTFLASH_CMD_READ: /* Read Data */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_READ)");
-					break;
-				case BTFLASH_CMD_FAST_READ: /* Fast Read Data */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_FAST_READ)");
-					break;
-				case BTFLASH_CMD_RDSFDP: /* Read SFDP */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDSFDP)");
-					break;
-				case BTFLASH_CMD_2READ: /* 2x IO Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2READ)");
-					break;
-				case BTFLASH_CMD_4READ: /* 4x IO Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4READ)");
-					break;
-				case BTFLASH_CMD_4PP: /* Quad Page Program */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4PP)");
-					break;
-				case BTFLASH_CMD_SE: /* Sector Erase */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SE)");
-					break;
-				case BTFLASH_CMD_BE: /* Block Erase */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE)");
-					break;
-				case BTFLASH_CMD_BE32K: /* Block Erase 32kB */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE32K)");
-					break;
-				case BTFLASH_CMD_CE_60: /* Chip Erase */
-				case BTFLASH_CMD_CE_C7: /* Chip Erase */
-					Flash_debug("Chip Erase");
-					if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
-					{
-						m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
-						memset(Data, 0xFF, Size);
-						return 0;
-					}
-					else
-					{
-						log(BT8XXEMU_LogError, "Chip Erase requires Write Enable Latch to be set");
-						break;
-					}
-				case BTFLASH_CMD_PP: /* Page Program */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_PP)");
-					break;
-				case BTFLASH_CMD_CP: /* Continuously Program mode */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_CP)");
-					break;
-				case BTFLASH_CMD_DP: /* Deep Power Down */
-					Flash_debug("Deep Power Down");
-					m_DeepPowerDown = true;
-					return 0;
-				case BTFLASH_CMD_RES: /* Read Electronic ID */
-					Flash_debug("Read Electronic ID");
-					goto ProcessCmdRes;
-				case BTFLASH_CMD_REMS: /* Read Electronic Manufacturer and Device ID */
-				case BTFLASH_CMD_REMS2: /* Read ID for 2x IO Mode */
-				case BTFLASH_CMD_REMS4: /* Read ID for 4x IO Mode */
-				case BTFLASH_CMD_REMS4D: /* Read ID for 4x IO DT Mode */
-					Flash_debug("Read Electronic Manufacturer and Device ID");
-					goto ProcessCmdRems;
-				case BTFLASH_CMD_ENSO: /* Enter Secured OTP */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_ENSO)");
-					break;
-				case BTFLASH_CMD_EXSO: /* Exit Secured OTP */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_EXSO)");
-					break;
-				case BTFLASH_CMD_RDSCUR: /* Read Security Register */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDSCUR)");
-					break;
-				case BTFLASH_CMD_WRSCUR: /* Write Security Register */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_WRSCUR)");
-					break;
-				case BTFLASH_CMD_ESRY: /* Enable SO to output RY/BY# */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_ESRY)");
-					break;
-				case BTFLASH_CMD_DSRY: /* Disable SO to output RY/BY# */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_DSRY)");
-					break;
-				case BTFLASH_CMD_CLSR: /* Clear SR Fail Flags */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_CLSR)");
-					break;
-				case BTFLASH_CMD_HPM: /* High Performance Enable Mode */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_HPM)");
-					break;
-				case BTFLASH_CMD_WPSEL: /* Write Protection Selection */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_WPSEL)");
-					break;
-				case BTFLASH_CMD_SBLK: /* Single Block Lock */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SBLK)");
-					break;
-				case BTFLASH_CMD_SBULK: /* Single Block Unlock */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SBULK)");
-					break;
-				case BTFLASH_CMD_RDBLOCK: /* Block Protect Read */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_RDBLOCK)");
-					break;
-				case BTFLASH_CMD_GBLK: /* Gang Block Lock */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBLK)");
-					break;
-				case BTFLASH_CMD_GBULK: /* Gang Block Unlock */
-					log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBULK)");
-					break;
-				case BTFLASH_CMD_NOOP_66:
-				case BTFLASH_CMD_NOOP_FF:
-					Flash_debug("No-op");
-					return 0xFF;
-				default:
-					log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", data);
-					break;
-				}
-				break;
-			case BTFLASH_CMD_RDID:
-				switch (m_TransferNb)
-				{
-				case 1:
-					return 0x20;
-				case 2:
-					if (Size >= 8 * 1024 * 2014) return 0x17;
-					else if (Size >= 4 * 1024 * 2014) return 0x16;
-					else if (Size >= 2 * 1024 * 2014) return 0x15;
-					else
-					{
-						log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
-						break;
-					}
-				default:
-					log(BT8XXEMU_LogWarning, "Read Identification exceeded transfer length");
-					break;
-				}
-				break;
-			case BTFLASH_CMD_RES:
-			ProcessCmdRes:
-				// Repeatedly keeps returning the same value
-				if (Size >= 8 * 1024 * 2014) return 0x16;
-				else if (Size >= 4 * 1024 * 2014) return 0x15;
-				else if (Size >= 2 * 1024 * 2014) return 0x14;
-				else
-				{
-					log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
-					break;
-				}
-			case BTFLASH_CMD_REMS:
-			case BTFLASH_CMD_REMS2:
-			ProcessCmdRems:
-				// Repeatedly keeps returning the same values
-				if (m_TransferNb % 1)
-				{
-					goto ProcessCmdRes;
-				}
-				else
-				{
-					return 0xC2;
-				}
-			default:
-				log(BT8XXEMU_LogError, "Flash command (%x) exceeded transfer length", m_TransferCmd);
-				break;
-			}
+			uint8_t addr = m_BufferU8;
+			m_BufferBits = 0;
+			Flash_debug("Read SFDP addr %i", (int)addr);
+			m_OutArray = &m_Sfdp->Data[0];
+			m_OutArraySize = 256;
+			m_OutArrayAt = addr;
+			m_OutArrayLoop = true; // VERIFY: Does this loop or not?
+			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
-		return 0;
+
+		return m_LastSignal;
 	}
 
-#endif
+	uint8_t stateREADAddr(uint8_t signal)
+	{
+		if (readU24Spi1AsU32(signal))
+		{
+			size_t addr = m_BufferU32 & 0xFFFFFF;
+			m_BufferBits = 0;
+			Flash_debug("Read READ addr %i", (int)addr);
+			m_OutArray = Data;
+			m_OutArraySize = Size;
+			m_OutArrayAt = addr;
+			m_OutArrayLoop = true;
+			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t stateFAST_READAddr(uint8_t signal)
+	{
+		if (readU24Spi1AsU32Skip8Lsb(signal))
+		{
+			size_t addr = m_BufferU32 & 0xFFFFFF;
+			m_BufferBits = 0;
+			Flash_debug("Read FAST_READ addr %i", (int)addr);
+			m_OutArray = Data;
+			m_OutArraySize = Size;
+			m_OutArrayAt = addr;
+			m_OutArrayLoop = true;
+			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t stateFASTDTRDAddr(uint8_t signal)
+	{
+		if (readU24Spi1AsU32SkipLsb(signal, 11))
+		{
+			size_t addr = m_BufferU32 & 0xFFFFFF;
+			m_BufferBits = 0;
+			Flash_debug("Read FASTDTRD addr %i", (int)addr);
+			m_OutArray = Data;
+			m_OutArraySize = Size;
+			m_OutArrayAt = addr;
+			m_OutArrayLoop = true;
+			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY_DT;
+		}
+
+		return m_LastSignal;
+	}
 
 	uint8_t *Data;
 	size_t Size;

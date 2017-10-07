@@ -1073,7 +1073,8 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		FTEMU_warning("Read Co U32 REG_SPIM_DIR");
 		break;
 	case REG_SPIM:
-		FTEMU_warning("Read Co U32 REG_SPIM");
+		FTEMU_warning("Read Co U32 REG_SPIM %x (miso: %i)",
+			(int)rawReadU8(REG_SPIM), (int)(rawReadU8(REG_SPIM) >> 1) & 1);
 		if (m_Flash)
 		{
 			// m_Flash->vTable()->ChipSelect(m_Flash, true);
