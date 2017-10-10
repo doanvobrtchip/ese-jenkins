@@ -114,6 +114,10 @@ int main(int, char* [])
 	cableSelect(flash, false);
 	cableSelect(flash, true);
 
+	/////////////////////////////////////////////////////////////////
+	//// Read Identification Data
+	/////////////////////////////////////////////////////////////////
+
 	; {
 		transferU8(flash, BTFLASH_CMD_RES);
 		uint8_t electronicID = transferU8(flash, 0xFF);
@@ -189,7 +193,7 @@ int main(int, char* [])
 		assert(memoryDensity == BTFLASH_MEMORY_DENSITY);
 
 		// Can not be read continuously
-		printf("Start of expected errors\n");
+		printf("Start of expected errors, reading beyond RDID\n");
 		manufacturerID = transferU8(flash, rand() & 0xFF);
 		// memoryType = transferU8(flash, rand() & 0xFF);
 		// memoryDensity = transferU8(flash, rand() & 0xFF);
@@ -197,6 +201,91 @@ int main(int, char* [])
 		// assert(memoryType != BTFLASH_MEMORY_TYPE);
 		// assert(memoryDensity != BTFLASH_MEMORY_DENSITY);
 		printf("End of expected errors\n");
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_RDSFDP);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		uint8_t sfdp0 = transferU8(flash, 0xFF);
+		uint8_t sfdp1 = transferU8(flash, 0xFF);
+		uint8_t sfdp2 = transferU8(flash, 0xFF);
+		printf("SFDP: %x-%x-%x-...\n", (int)sfdp0, (int)sfdp1, (int)sfdp2);
+		assert(sfdp0 == 83);
+		assert(sfdp1 == 70);
+		assert(sfdp2 == 68);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_RDSFDP);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		transferU8(flash, 3);
+		transferU8(flash, 0);
+		uint8_t sfdp3 = transferU8(flash, 0xFF);
+		uint8_t sfdp4 = transferU8(flash, 0xFF);
+		uint8_t sfdp5 = transferU8(flash, 0xFF);
+		printf("SFDP (03h): %x-%x-%x-...\n", (int)sfdp3, (int)sfdp4, (int)sfdp5);
+		assert(sfdp3 == 80);
+		assert(sfdp4 == 0);
+		assert(sfdp5 == 1);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Chip Erase
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		printf("Start of expected errors, sending invalid Chip Erase 60h\n");
+		transferU8(flash, BTFLASH_CMD_CE_60);
+		printf("End of expected errors\n");
+		assert(data[0] == 0x70);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		printf("Start of expected errors, sending invalid Chip Erase C7h\n");
+		transferU8(flash, BTFLASH_CMD_CE_C7);
+		printf("End of expected errors\n");
+		assert(data[0] == 0x70);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+	transferU8(flash, BTFLASH_CMD_WREN);
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		printf("Chip Erase\n");
+		transferU8(flash, BTFLASH_CMD_CE_C7);
+		// assert(data[0] == 0x70); // FIXME: Chip Erase only when CS goes high
+		cableSelect(flash, false);
+		for (int i = 0; i < size; ++i)
+			assert(data[i] == 0xFF);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		printf("Start of expected errors, sending invalid Chip Erase C7h\n");
+		transferU8(flash, BTFLASH_CMD_CE_C7);
+		printf("End of expected errors\n");
+		assert(data[0] == 0xFF);
 	}
 
 	cableSelect(flash, false);

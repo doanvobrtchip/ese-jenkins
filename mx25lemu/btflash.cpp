@@ -14,16 +14,16 @@ Name   Cmd  Implementation  Test
 RES         Ok              Ok
 REMS        Ok              Ok
 RDID        Ok              Ok
-RDSFDP 5Ah  Ok
-READ4  EBh  
-EN4B   B7h  Todo (256)
+RDSFDP 5Ah  Ok              Ok
+READ        Ok
 PP          
 WRSR        Ok
-READ        Test
 RDSR        Ok
-WREN        Ok
-CE     C7h  Ok
+WREN        Ok              Ok
+CE     C7h  Ok              Ok (Does not validate execution to be done only once CS goes high)
 RESET  99h  Ok (No-op) / Todo (256)
+READ4  EBh  
+EN4B   B7h  Todo (256)
 */
 
 #ifdef WIN32
