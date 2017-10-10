@@ -508,9 +508,22 @@ int main(int, char* [])
 	cableSelect(flash, true);
 
 	; {
+		printf("Start of expected errors, transfering excess data to Chip Erase\n");
+		transferU8(flash, BTFLASH_CMD_CE_C7);
+		transferU8(flash, rand() & 0xFF);
+		printf("End of expected errors\n");
+		assert(data[0] == 0x70);
+		cableSelect(flash, false);
+		assert(data[0] == 0x70);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
 		printf("Chip Erase\n");
 		transferU8(flash, BTFLASH_CMD_CE_C7);
-		// assert(data[0] == 0x70); // FIXME: Chip Erase only when CS goes high
+		assert(data[0] == 0x70); // Chip Erase only when CS goes high
 		cableSelect(flash, false);
 		for (int i = 0; i < size; ++i)
 			assert(data[i] == 0xFF);

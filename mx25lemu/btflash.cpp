@@ -23,7 +23,7 @@ PP
 WRSR        Ok
 RDSR        Ok
 WREN        Ok              Ok
-CE     C7h  Ok              Ok (Does not validate execution to be done only once CS goes high)
+CE     C7h  Ok              Ok
 > (From 256Mbit) (bottom 128Mbits are lowest address range)
 ENRESET66h  Ok (No-op) / Todo (256)
 RESET  99h  Ok (No-op) / Todo (256)
@@ -265,7 +265,7 @@ public:
 	Flash(const BT8XXEMU_FlashParameters *params) : BT8XXEMU::Flash(&g_FlashVTable),
 		Data(NULL), Size(0),
 		m_DeepPowerDown(false), m_FileHandle(NULL), m_FileMapping(NULL), 
-		m_LastSignal(0xFF), m_TransferCmd(0)
+		m_LastSignal(0xFF)
 	{
 		static_assert(offsetof(Flash, m_VTable) == 0, "Incompatible C++ ABI");
 		assert(s_SfdpMX25L256.Format.Unused2_1b == 1);
@@ -424,20 +424,6 @@ public:
 
 	void chipSelect(bool cs)
 	{
-		// -> old
-		// m_ChipSelect = cs;
-		m_TransferCmd = 0;
-		m_TransferNb = -1;
-		// <- old
-
-		m_RunState = BTFLASH_STATE_COMMAND;
-		m_NextState = BTFLASH_STATE_BLANK;
-		// m_ClockEdge = BTFLASH_CLOCK_RISING;
-		m_SignalInMask = cs ? BTFLASH_SPI4_MASK_SI : 0;
-		m_SignalOutMask = cs ? BTFLASH_SPI4_MASK_SO : 0;
-		m_BufferBits = 0;
-		m_OutBufferBits = 0;
-
 		if (cs == false)
 		{
 			if (m_RunState == BTFLASH_STATE_CS_HIGH_COMMAND)
@@ -450,21 +436,32 @@ public:
 				switch (m_DelayedCommand)
 				{
 				case BTFLASH_CMD_CE_C7:
+					Flash_debug("Chip Erase (Execute)");
 					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
 					memset(Data, 0xFF, Size);
 					break;
 				case BTFLASH_CMD_EN4B:
+					Flash_debug("Enter 4-byte mode (Execute)");
 					m_ConfigurationRegister |= BTFLASH_CONFIGURATION_4BYTE;
 					break;
 				case BTFLASH_CMD_EX4B:
+					Flash_debug("Exit 4-byte mode (Execute)");
 					m_ConfigurationRegister &= ~BTFLASH_CONFIGURATION_4BYTE;
 					break;
 				default:
-					log(BT8XXEMU_LogError, "Unknown delayed command");
+					log(BT8XXEMU_LogError, "Unknown instruction on CS high");
 					break;
 				}
 			}
 		}
+
+		m_RunState = BTFLASH_STATE_COMMAND;
+		m_NextState = BTFLASH_STATE_BLANK;
+		// m_ClockEdge = BTFLASH_CLOCK_RISING;
+		m_SignalInMask = cs ? BTFLASH_SPI4_MASK_SI : 0;
+		m_SignalOutMask = cs ? BTFLASH_SPI4_MASK_SO : 0;
+		m_BufferBits = 0;
+		m_OutBufferBits = 0;
 	}
 
 	void writeProtect(bool wp)
@@ -593,6 +590,7 @@ public:
 			m_NextState = BTFLASH_STATE_BLANK;
 			break;
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
+			log(BT8XXEMU_LogWarning, "CS must go high exactly on the command byte boundary, instruction rejected");
 			m_RunState = BTFLASH_STATE_BLANK;
 			break;
 		case BTFLASH_STATE_UNSUPPORTED:
@@ -701,9 +699,6 @@ public:
 			m_RunState = m_NextState;
 			m_NextState = BTFLASH_STATE_BLANK;
 			break;
-		case BTFLASH_STATE_CS_HIGH_COMMAND:
-			m_RunState = BTFLASH_STATE_BLANK;
-			break;
 		case BTFLASH_STATE_FASTDTRD_ADDR:
 			return stateFASTDTRDAddr(signal);
 		case BTFLASH_STATE_COMMAND:
@@ -713,6 +708,7 @@ public:
 		case BTFLASH_STATE_READ_ADDR:
 		case BTFLASH_STATE_FAST_READ_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
+		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
 			break;
 		case BTFLASH_STATE_UNKNOWN:
@@ -1335,9 +1331,6 @@ private:
 
 	HANDLE m_FileHandle;
 	HANDLE m_FileMapping;
-
-	uint8_t m_TransferCmd;
-	int m_TransferNb;
 
 	bool m_WriteProtect; // WP# low, 0 -> WriteProtect true
 
