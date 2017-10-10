@@ -5,6 +5,10 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+/*
+Header only used by the emulator implementation. Not for redistribution. Not documented
+*/
+
 #ifndef BT8XXEMU_PP_H
 #define BT8XXEMU_PP_H
 

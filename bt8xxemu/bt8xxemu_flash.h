@@ -4,6 +4,10 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+/*
+Header required only for implementing a flash emulation module for the BT8XX Emulator Library. Not documented
+*/
+
 #ifndef BT8XXEMU_FLASH_H
 #define BT8XXEMU_FLASH_H
 

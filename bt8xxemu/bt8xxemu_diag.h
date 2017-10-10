@@ -5,6 +5,10 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+/*
+Header required only for testing, diagnostic, and development tools. Not documented
+*/
+
 #ifndef BT8XXEMU_DIAG_H
 #define BT8XXEMU_DIAG_H
 

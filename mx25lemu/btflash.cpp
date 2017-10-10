@@ -25,12 +25,15 @@ WRSR        Ok
 RDSR        Ok
 WREN        Ok              Ok
 CE     C7h  Ok              Ok
+SE
+BE
 > (From 256Mbit) (bottom 128Mbits are lowest address range)
 RSTEN  66h  Ok
 RST    99h  Ok
-EXITQPIFFh  Ok (No-op)
 EN4B   B7h  Ok              Ok
 EX4B        Ok              Ok
+> Other
+EXITQPIFFh  Ok (No-op)
 */
 
 #ifdef WIN32
