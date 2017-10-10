@@ -10,6 +10,11 @@ Author: Jan Boon <jan@no-break.space>
 #include "btflash_defs.h"
 
 /*
+Name   Cmd  Implementation  Test
+RES         Ok              Ok
+REMS        Ok              Ok
+RDID        Ok              Ok
+RDSFDP 5Ah  Ok
 READ4  EBh  
 EN4B   B7h  Todo (256)
 PP          
@@ -17,8 +22,6 @@ WRSR        Ok
 READ        Test
 RDSR        Ok
 WREN        Ok
-RDSFDP 5Ah  Ok
-RDID        Ok
 CE     C7h  Ok
 RESET  99h  Ok (No-op) / Todo (256)
 */
@@ -919,7 +922,7 @@ public:
 			case BTFLASH_CMD_RDID: /* Read Identification */
 				Flash_debug("Read Identification");
 				m_RunState = BTFLASH_STATE_OUT_U24;
-				// m_NextState = BTFLASH_STATE_OUT_U24; // VERIFY: Is this one repeating or not?
+				// m_NextState = BTFLASH_STATE_OUT_U24; // Does not repeat continuously
 				startWrite3U8AsU32(manufacturerId(), memoryType(), memoryDensity());
 				return m_LastSignal;
 			case BTFLASH_CMD_RDSR: /* Read Status Register */

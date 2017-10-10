@@ -58,6 +58,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_ELECTRONIC_ID 0x16
 #define BTFLASH_MANUFACTURER_ID 0xC2
 #define BTFLASH_DEVICE_ID 0x16
+#define BTFLASH_MEMORY_TYPE 0x20
+#define BTFLASH_MEMORY_DENSITY 0x17
 
 static uint8_t lastValue = 0xFF;
 
@@ -160,17 +162,41 @@ int main(int, char* [])
 		uint8_t manufacturerID = transferU8(flash, 0xFF);
 		printf("REMS (01h): %x %x\n", (int)deviceID, (int)manufacturerID);
 		assert(deviceID == BTFLASH_DEVICE_ID);
-		assert(manufacturerID = BTFLASH_MANUFACTURER_ID);
+		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 
 		// Can be read continuously
 		deviceID = transferU8(flash, 0xFF);
 		manufacturerID = transferU8(flash, 0xFF);
 		assert(deviceID == BTFLASH_DEVICE_ID);
-		assert(manufacturerID = BTFLASH_MANUFACTURER_ID);
+		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 		deviceID = transferU8(flash, 0xFF);
 		manufacturerID = transferU8(flash, 0xFF);
 		assert(deviceID == BTFLASH_DEVICE_ID);
-		assert(manufacturerID = BTFLASH_MANUFACTURER_ID);
+		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_RDID);
+		uint8_t manufacturerID = transferU8(flash, rand() & 0xFF);
+		uint8_t memoryType = transferU8(flash, rand() & 0xFF);
+		uint8_t memoryDensity = transferU8(flash, rand() & 0xFF);
+		printf("RDID: %x %x %x\n", (int)manufacturerID, (int)memoryType, (int)memoryDensity);
+		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
+		assert(memoryType == BTFLASH_MEMORY_TYPE);
+		assert(memoryDensity == BTFLASH_MEMORY_DENSITY);
+
+		// Can not be read continuously
+		printf("Start of expected errors\n");
+		manufacturerID = transferU8(flash, rand() & 0xFF);
+		// memoryType = transferU8(flash, rand() & 0xFF);
+		// memoryDensity = transferU8(flash, rand() & 0xFF);
+		assert(manufacturerID != BTFLASH_MANUFACTURER_ID);
+		// assert(memoryType != BTFLASH_MEMORY_TYPE);
+		// assert(memoryDensity != BTFLASH_MEMORY_DENSITY);
+		printf("End of expected errors\n");
 	}
 
 	cableSelect(flash, false);
