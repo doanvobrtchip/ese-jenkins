@@ -53,9 +53,11 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_CMD_GBULK (0x98) /* Gang Block Unlock */
 
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
-#define BTFLASH_DATA_SIZE (8 * 1024 * 1024)
+#define BTFLASH_SIZE (8 * 1024 * 1024)
+#define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 #define BTFLASH_ELECTRONIC_ID 0x16
+#define BTFLASH_ELECTRONIC_ID_EXTENDED (BTFLASH_ELECTRONIC_ID + 2)
 #define BTFLASH_MANUFACTURER_ID 0xC2
 #define BTFLASH_DEVICE_ID 0x16
 #define BTFLASH_MEMORY_TYPE 0x20
@@ -165,14 +167,14 @@ int main(int, char* [])
 	BT8XXEMU_FlashParameters flashParams;
 	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
 	flashParams.DeviceType = BTFLASH_DEVICE_TYPE;
-	flashParams.DataSizeBytes = BTFLASH_DATA_SIZE;
+	flashParams.SizeBytes = BTFLASH_SIZE;
 	flashParams.DataFilePath = BTFLASH_DATA_FILE;
 	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 
 	uint8_t *data = BT8XXEMU_Flash_data(flash);
 	assert(data[0] == 0x70);
 	int size = BT8XXEMU_Flash_size(flash);
-	assert(size == BTFLASH_DATA_SIZE);
+	assert(size == BTFLASH_SIZE);
 
 	cableSelect(flash, false);
 	cableSelect(flash, true);
@@ -542,8 +544,48 @@ int main(int, char* [])
 	cableSelect(flash, false);
 	cableSelect(flash, true);
 
+	/////////////////////////////////////////////////////////////////
+
 	BT8XXEMU_Flash_destroy(flash);
 	flash = NULL;
+	data = NULL;
+
+	/////////////////////////////////////////////////////////////////
+	//// 256
+	/////////////////////////////////////////////////////////////////
+
+	flashParams.SizeBytes = BTFLASH_SIZE_EXTENDED;
+	flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+
+	data = BT8XXEMU_Flash_data(flash);
+	assert(data[0] == 0x70);
+	size = BT8XXEMU_Flash_size(flash);
+	assert(size == BTFLASH_SIZE_EXTENDED);
+
+	/////////////////////////////////////////////////////////////////
+	//// Read Identification Data
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_RES);
+		uint8_t electronicID = transferU8(flash, rand() & 0xFF);
+		printf("RES: %x\n", (int)electronicID);
+		assert(electronicID == BTFLASH_ELECTRONIC_ID_EXTENDED);
+
+		// Can be read continuously
+		electronicID = transferU8(flash, rand() & 0xFF);
+		assert(electronicID == BTFLASH_ELECTRONIC_ID_EXTENDED);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+
+	BT8XXEMU_Flash_destroy(flash);
+	flash = NULL;
+	data = NULL;
+
 	char c;
 	printf("Press key to exit");
 	scanf("%c", &c);
