@@ -934,9 +934,32 @@ public:
 
 	inline uint8_t deviceId()
 	{
-		if (Size >= 8 * 1024 * 1024) return 0x16;
+		if (Size >= 2 * 1024 * 1024 * 1024)
+		{
+			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
+			return 0xFF;
+		}
+		else if (Size >= 1024 * 1024 * 1024) return 0x1D;
+		else if (Size >= 512 * 1024 * 1024) return 0x1C;
+		else if (Size >= 256 * 1024 * 1024) return 0x1B;
+		else if (Size >= 128 * 1024 * 1024) return 0x1A;
+		else if (Size >= 64 * 1024 * 1024) return 0x19;
+		else if (Size >= 32 * 1024 * 1024) return 0x18; // 256 Mbit
+		else if (Size >= 16 * 1024 * 1024) return 0x17;
+		else if (Size >= 8 * 1024 * 1024) return 0x16; // 64 Mbit
 		else if (Size >= 4 * 1024 * 1024) return 0x15;
 		else if (Size >= 2 * 1024 * 1024) return 0x14;
+		else if (Size >= 1024 * 1024) return 0x13;
+		else if (Size >= 512 * 1024) return 0x12;
+		else if (Size >= 256 * 1024) return 0x11;
+		else if (Size >= 128 * 1024) return 0x10;
+		else if (Size >= 64 * 1024) return 0x0F;
+		else if (Size >= 32 * 1024) return 0x0E;
+		else if (Size >= 16 * 1024) return 0x0D;
+		else if (Size >= 8 * 1024) return 0x0C;
+		else if (Size >= 4 * 1024) return 0x0B;
+		else if (Size >= 2 * 1024) return 0x0A;
+		else if (Size >= 1024) return 0x09;
 		else
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
@@ -951,9 +974,32 @@ public:
 
 	inline uint8_t memoryDensity()
 	{
-		if (Size >= 8 * 1024 * 1024) return 0x17;
+		if (Size >= 2 * 1024 * 1024 * 1024)
+		{
+			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
+			return 0xFF;
+		}
+		else if (Size >= 1024 * 1024 * 1024) return 0x1E;
+		else if (Size >= 512 * 1024 * 1024) return 0x1D;
+		else if (Size >= 256 * 1024 * 1024) return 0x1C;
+		else if (Size >= 128 * 1024 * 1024) return 0x1B;
+		else if (Size >= 64 * 1024 * 1024) return 0x1A;
+		else if (Size >= 32 * 1024 * 1024) return 0x19; // 256 Mbit
+		else if (Size >= 16 * 1024 * 1024) return 0x18;
+		else if (Size >= 8 * 1024 * 1024) return 0x17; // 64 Mbit
 		else if (Size >= 4 * 1024 * 1024) return 0x16;
 		else if (Size >= 2 * 1024 * 1024) return 0x15;
+		else if (Size >= 1024 * 1024) return 0x14;
+		else if (Size >= 512 * 1024) return 0x13;
+		else if (Size >= 256 * 1024) return 0x12;
+		else if (Size >= 128 * 1024) return 0x11;
+		else if (Size >= 64 * 1024) return 0x10;
+		else if (Size >= 32 * 1024) return 0x0F;
+		else if (Size >= 16 * 1024) return 0x0E;
+		else if (Size >= 8 * 1024) return 0x0D;
+		else if (Size >= 4 * 1024) return 0x0C;
+		else if (Size >= 2 * 1024) return 0x0B;
+		else if (Size >= 1024) return 0x0A;
 		else
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
