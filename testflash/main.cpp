@@ -95,6 +95,27 @@ uint8_t transferU8(BT8XXEMU_Flash *flash, uint8_t u8)
 	return res;
 }
 
+uint32_t transferU24(BT8XXEMU_Flash *flash, uint32_t u24)
+{
+	uint32_t res = 0xFFFFFF00;
+	uint8_t signal;
+	for (int i = 0; i < 24; ++i)
+	{
+		res <<= 1;
+		res |= (lastValue & 0x2) >> 1;
+		// printf("%i\n", lastValue & 0x2);
+		signal = (lastValue & ~outMask1 & 0xF) | ((u24 >> 23) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | clkMask | ((u24 >> 23) & 0x1);
+		// printf("%i\n", signal & 1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | ((u24 >> 23) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u24 <<= 1;
+	}
+	return res;
+}
+
 int main(int, char* [])
 {
 	printf("%s\n\n", BT8XXEMU_version());
@@ -120,12 +141,12 @@ int main(int, char* [])
 
 	; {
 		transferU8(flash, BTFLASH_CMD_RES);
-		uint8_t electronicID = transferU8(flash, 0xFF);
+		uint8_t electronicID = transferU8(flash, rand() & 0xFF);
 		printf("RES: %x\n", (int)electronicID);
 		assert(electronicID == BTFLASH_ELECTRONIC_ID);
 
 		// Can be read continuously
-		electronicID = transferU8(flash, 0xFF);
+		electronicID = transferU8(flash, rand() & 0xFF);
 		assert(electronicID == BTFLASH_ELECTRONIC_ID);
 	}
 
@@ -137,19 +158,19 @@ int main(int, char* [])
 		transferU8(flash, 0);
 		transferU8(flash, 0);
 		transferU8(flash, 0);
-		uint8_t manufacturerID = transferU8(flash, 0xFF);
-		uint8_t deviceID = transferU8(flash, 0xFF);
+		uint8_t manufacturerID = transferU8(flash, rand() & 0xFF);
+		uint8_t deviceID = transferU8(flash, rand() & 0xFF);
 		printf("REMS: %x %x\n", (int)manufacturerID, (int)deviceID);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 		assert(deviceID == BTFLASH_DEVICE_ID);
 
 		// Can be read continuously
-		manufacturerID = transferU8(flash, 0xFF);
-		deviceID = transferU8(flash, 0xFF);
+		manufacturerID = transferU8(flash, rand() & 0xFF);
+		deviceID = transferU8(flash, rand() & 0xFF);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 		assert(deviceID == BTFLASH_DEVICE_ID);
-		manufacturerID = transferU8(flash, 0xFF);
-		deviceID = transferU8(flash, 0xFF);
+		manufacturerID = transferU8(flash, rand() & 0xFF);
+		deviceID = transferU8(flash, rand() & 0xFF);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 		assert(deviceID == BTFLASH_DEVICE_ID);
 	}
@@ -162,19 +183,19 @@ int main(int, char* [])
 		transferU8(flash, 0);
 		transferU8(flash, 0);
 		transferU8(flash, 1);
-		uint8_t deviceID = transferU8(flash, 0xFF);
-		uint8_t manufacturerID = transferU8(flash, 0xFF);
+		uint8_t deviceID = transferU8(flash, rand() & 0xFF);
+		uint8_t manufacturerID = transferU8(flash, rand() & 0xFF);
 		printf("REMS (01h): %x %x\n", (int)deviceID, (int)manufacturerID);
 		assert(deviceID == BTFLASH_DEVICE_ID);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 
 		// Can be read continuously
-		deviceID = transferU8(flash, 0xFF);
-		manufacturerID = transferU8(flash, 0xFF);
+		deviceID = transferU8(flash, rand() & 0xFF);
+		manufacturerID = transferU8(flash, rand() & 0xFF);
 		assert(deviceID == BTFLASH_DEVICE_ID);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
-		deviceID = transferU8(flash, 0xFF);
-		manufacturerID = transferU8(flash, 0xFF);
+		deviceID = transferU8(flash, rand() & 0xFF);
+		manufacturerID = transferU8(flash, rand() & 0xFF);
 		assert(deviceID == BTFLASH_DEVICE_ID);
 		assert(manufacturerID == BTFLASH_MANUFACTURER_ID);
 	}
@@ -212,9 +233,9 @@ int main(int, char* [])
 		transferU8(flash, 0);
 		transferU8(flash, 0);
 		transferU8(flash, 0);
-		uint8_t sfdp0 = transferU8(flash, 0xFF);
-		uint8_t sfdp1 = transferU8(flash, 0xFF);
-		uint8_t sfdp2 = transferU8(flash, 0xFF);
+		uint8_t sfdp0 = transferU8(flash, rand() & 0xFF);
+		uint8_t sfdp1 = transferU8(flash, rand() & 0xFF);
+		uint8_t sfdp2 = transferU8(flash, rand() & 0xFF);
 		printf("SFDP: %x-%x-%x-...\n", (int)sfdp0, (int)sfdp1, (int)sfdp2);
 		assert(sfdp0 == 83);
 		assert(sfdp1 == 70);
@@ -230,13 +251,68 @@ int main(int, char* [])
 		transferU8(flash, 0);
 		transferU8(flash, 3);
 		transferU8(flash, 0);
-		uint8_t sfdp3 = transferU8(flash, 0xFF);
-		uint8_t sfdp4 = transferU8(flash, 0xFF);
-		uint8_t sfdp5 = transferU8(flash, 0xFF);
+		uint8_t sfdp3 = transferU8(flash, rand() & 0xFF);
+		uint8_t sfdp4 = transferU8(flash, rand() & 0xFF);
+		uint8_t sfdp5 = transferU8(flash, rand() & 0xFF);
 		printf("SFDP (03h): %x-%x-%x-...\n", (int)sfdp3, (int)sfdp4, (int)sfdp5);
 		assert(sfdp3 == 80);
 		assert(sfdp4 == 0);
 		assert(sfdp5 == 1);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_READ);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("READ: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_READ);
+		transferU8(flash, 0);
+		transferU8(flash, 0);
+		transferU8(flash, 3);
+		uint8_t reqd3 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd4 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
+		printf("READ (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		assert(reqd3 == 0x92);
+		assert(reqd4 == 0x6C);
+		assert(reqd5 == 0x00);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_READ);
+		transferU24(flash, size - 1);
+		uint8_t reqdF = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("READ (-1): ...-%x %x-%x-%x-...\n", (int)reqdF, (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqdF == 0xFF);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
 	}
 
 	cableSelect(flash, false);

@@ -15,7 +15,7 @@ RES         Ok              Ok
 REMS        Ok              Ok
 RDID        Ok              Ok
 RDSFDP 5Ah  Ok              Ok
-READ        Ok
+READ        Ok              Ok
 PP          
 WRSR        Ok
 RDSR        Ok
