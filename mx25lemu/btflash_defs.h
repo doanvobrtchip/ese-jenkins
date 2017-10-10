@@ -72,12 +72,13 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_GBLK (0x7E) /* Gang Block Lock */
 #define BTFLASH_CMD_GBULK (0x98) /* Gang Block Unlock */
 
-#define BTFLASH_CMD_NOOP_ENRESET (0x66) /* Reset Enable */
-#define BTFLASH_CMD_NOOP_RESET (0x99) /* Reset */
-#define BTFLASH_CMD_NOOP_EXITQPI (0xFF) /* Exit QPI Mode */
-
+#define BTFLASH_CMD_RSTEN (0x66) /* Reset Enable */
+#define BTFLASH_CMD_RST (0x99) /* Reset */
 #define BTFLASH_CMD_EN4B (0xB7) /* Enter 4-byte mode */
 #define BTFLASH_CMD_EX4B (0xE9) /* Exit 4-byte mode */
+#define BTFLASH_CMD_4READ_TOP (0xEA) /* 4x IO Read, top 128 Mbit */
+
+#define BTFLASH_CMD_NOOP_EXITQPI (0xFF) /* Exit QPI Mode */
 
 // Status Registers
 #define BTFLASH_STATUS_WIP_FLAG (1 << 0) /* Write In Progress */

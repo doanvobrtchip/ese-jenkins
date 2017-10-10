@@ -19,19 +19,18 @@ RDSFDP 5Ah  Ok              Ok
 READ        Ok              Ok
 FAST_READ   Ok              Ok
 FASTDTRD    Ok              Ok
+4READ  EBh  Todo
 PP          
 WRSR        Ok
 RDSR        Ok
 WREN        Ok              Ok
 CE     C7h  Ok              Ok
 > (From 256Mbit) (bottom 128Mbits are lowest address range)
-ENRESET66h  Ok (No-op) / Todo (256)
-RESET  99h  Ok (No-op) / Todo (256)
-EXITQPIFFh  Ok (No-op) / Todo (256)
-READ4  EAh  Todo
-READ4  EBh  Todo
-EN4B   B7h  Ok
-EX4B        Ok 
+RSTEN  66h  Ok
+RST    99h  Ok
+EXITQPIFFh  Ok (No-op)
+EN4B   B7h  Ok              Ok
+EX4B        Ok              Ok
 */
 
 #ifdef WIN32
@@ -284,6 +283,7 @@ public:
 		m_StatusRegister = 0;
 		m_ConfigurationRegister = 0;
 		m_ExtendedAddressRegister = 0;
+		m_ResetEnable = false;
 
 		m_WriteProtect = false;
 
@@ -447,6 +447,17 @@ public:
 				case BTFLASH_CMD_EX4B:
 					Flash_debug("Exit 4-byte mode (Execute)");
 					m_ConfigurationRegister &= ~BTFLASH_CONFIGURATION_4BYTE;
+					break;
+				case BTFLASH_CMD_RSTEN:
+					Flash_debug("Reset Enable (Execute)");
+					m_ResetEnable = true;
+					break;
+				case BTFLASH_CMD_RST:
+					Flash_debug("Reset (Execute)");
+					m_StatusRegister = 0;
+					m_ConfigurationRegister = 0;
+					m_ExtendedAddressRegister = 0;
+					m_ResetEnable = false;
 					break;
 				default:
 					log(BT8XXEMU_LogError, "Unknown instruction on CS high");
@@ -1232,12 +1243,32 @@ public:
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_GBULK)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
-			case BTFLASH_CMD_NOOP_ENRESET:
-			case BTFLASH_CMD_NOOP_RESET:
-			case BTFLASH_CMD_NOOP_EXITQPI:
-				Flash_debug("No-op");
-				m_RunState = BTFLASH_STATE_BLANK;
-				return m_LastSignal;
+			case BTFLASH_CMD_RSTEN:
+				if (m_Sfdp->SwReset)
+				{
+					Flash_debug("Reset Enable");
+					m_DelayedCommand = BTFLASH_CMD_RSTEN;
+					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+				}
+				else
+				{
+					Flash_debug("Reset Enable (No-op)");
+					m_RunState = BTFLASH_STATE_IGNORE;
+				}
+				break;
+			case BTFLASH_CMD_RST:
+				if (m_Sfdp->SwReset)
+				{
+					Flash_debug("Reset");
+					m_DelayedCommand = BTFLASH_CMD_RST;
+					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+				}
+				else
+				{
+					Flash_debug("Reset (No-op)");
+					m_RunState = BTFLASH_STATE_IGNORE;
+				}
+				break;
 			case BTFLASH_CMD_EN4B: /* Enter 4-byte mode */
 				Flash_debug("Enter 4-byte mode");
 				if (!m_ExtendedAddressing)
@@ -1261,6 +1292,14 @@ public:
 					m_DelayedCommand = BTFLASH_CMD_EX4B;
 					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
 				}
+				return m_LastSignal;
+			case BTFLASH_CMD_4READ_TOP: /* 4x I/O Read Mode (Top) */
+				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4READ_TOP)");
+				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				return m_LastSignal;
+			case BTFLASH_CMD_NOOP_EXITQPI:
+				Flash_debug("No-op");
+				m_RunState = BTFLASH_STATE_IGNORE;
 				return m_LastSignal;
 			default:
 				log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", command);
@@ -1388,6 +1427,7 @@ private:
 	HANDLE m_FileMapping;
 
 	bool m_WriteProtect; // WP# low, 0 -> WriteProtect true
+	bool m_ResetEnable;
 
 	void(*m_Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
 	void *m_UserContext;
