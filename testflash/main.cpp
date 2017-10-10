@@ -319,6 +319,60 @@ int main(int, char* [])
 	cableSelect(flash, true);
 
 	/////////////////////////////////////////////////////////////////
+	//// Fast Read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FAST_READ);
+		transferU24(flash, 0);
+		transferU8(flash, rand() & 0xFF);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("FAST_READ: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FAST_READ);
+		transferU24(flash, 3);
+		transferU8(flash, rand() & 0xFF);
+		uint8_t reqd3 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd4 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
+		printf("FAST_READ (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		assert(reqd3 == 0x92);
+		assert(reqd4 == 0x6C);
+		assert(reqd5 == 0x00);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FAST_READ);
+		transferU24(flash, size - 1);
+		transferU8(flash, rand() & 0xFF);
+		uint8_t reqdF = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("FAST_READ (-1): ...-%x %x-%x-%x-...\n", (int)reqdF, (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqdF == 0xFF);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
 	//// Chip Erase
 	/////////////////////////////////////////////////////////////////
 
