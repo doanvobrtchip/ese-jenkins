@@ -76,6 +76,9 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_NOOP_RESET (0x99) /* Reset */
 #define BTFLASH_CMD_NOOP_EXITQPI (0xFF) /* Exit QPI Mode */
 
+#define BTFLASH_CMD_EN4B (0xB7) /* Enter 4-byte mode */
+#define BTFLASH_CMD_EX4B (0xE9) /* Exit 4-byte mode */
+
 // Status Registers
 #define BTFLASH_STATUS_WIP_FLAG (1 << 0) /* Write In Progress */
 #define BTFLASH_STATUS_WEL_FLAG (1 << 1) /* Write Enable Latch */
@@ -85,6 +88,9 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATUS_BP3_FLAG (1 << 5) /* Block Protect */
 #define BTFLASH_STATUS_CP_FLAG (1 << 6) /* Continuously Program Mode */
 #define BTFLASH_STATUS_SRWD_FLAG (1 << 7) /* Status Register Write Protect */
+
+// Configuration Registers
+#define BTFLASH_CONFIGURATION_4BYTE (1 << 5) /* 4BYTE Indicator bit */
 
 // Clock edge select
 #define BTFLASH_CLOCK_RISING 1
@@ -109,6 +115,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATE_READ_ADDR 15
 #define BTFLASH_STATE_FAST_READ_ADDR 16
 #define BTFLASH_STATE_FASTDTRD_ADDR 17
+#define BTFLASH_STATE_CS_HIGH_COMMAND 18 /* Execute specified command exactly when CS goes high */
 
 #endif /* #ifndef MX25LEMU_BTFLASH_DEFS_H */
 

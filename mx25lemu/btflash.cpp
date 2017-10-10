@@ -11,6 +11,7 @@ Author: Jan Boon <jan@no-break.space>
 
 /*
 Name   Cmd  Implementation  Test
+> (Up to 128Mbit)
 RES         Ok              Ok
 REMS        Ok              Ok
 RDID        Ok              Ok
@@ -23,9 +24,14 @@ WRSR        Ok
 RDSR        Ok
 WREN        Ok              Ok
 CE     C7h  Ok              Ok (Does not validate execution to be done only once CS goes high)
+> (From 256Mbit) (bottom 128Mbits are lowest address range)
+ENRESET66h  Ok (No-op) / Todo (256)
 RESET  99h  Ok (No-op) / Todo (256)
-READ4  EBh  
-EN4B   B7h  Todo (256)
+EXITQPIFFh  Ok (No-op) / Todo (256)
+READ4  EAh  Todo
+READ4  EBh  Todo
+EN4B   B7h  Ok
+EX4B        Ok 
 */
 
 #ifdef WIN32
@@ -276,6 +282,8 @@ public:
 		Flash_debug("Create flash");
 
 		m_StatusRegister = 0;
+		m_ConfigurationRegister = 0;
+		m_ExtendedAddressRegister = 0;
 
 		m_WriteProtect = false;
 
@@ -388,7 +396,9 @@ public:
 			memcpy(Data, params->Data, copySize);
 		}
 
-		if (Size >= 32 * 1024 * 1024) m_Sfdp = &s_SfdpMX25L256.Format;
+		m_ExtendedAddressing = Size > (1 << 24);
+
+		if (m_ExtendedAddressing) m_Sfdp = &s_SfdpMX25L256.Format;
 		else m_Sfdp = &s_SfdpMX25L64.Format;
 	}
 
@@ -427,11 +437,50 @@ public:
 		m_SignalOutMask = cs ? BTFLASH_SPI4_MASK_SO : 0;
 		m_BufferBits = 0;
 		m_OutBufferBits = 0;
+
+		if (cs == false)
+		{
+			if (m_RunState == BTFLASH_STATE_CS_HIGH_COMMAND)
+			{
+				/*
+				WREN, WRDI, WRSR, SE/SE4B, BE32K/BE32K4B, BE/BE4B, CE, PP/PP4B, 4PP/4PP4B, DP,
+				ENSO, EXSO, WRSCUR, EN4B, EX4B, WPSEL, GBLK, GBULK, SPBLK, SUSPEND, RESUME, NOP, RSTEN,
+				RST, EQIO, RSTQIO
+				*/
+				switch (m_DelayedCommand)
+				{
+				case BTFLASH_CMD_CE_C7:
+					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
+					memset(Data, 0xFF, Size);
+					break;
+				case BTFLASH_CMD_EN4B:
+					m_ConfigurationRegister |= BTFLASH_CONFIGURATION_4BYTE;
+					break;
+				case BTFLASH_CMD_EX4B:
+					m_ConfigurationRegister &= ~BTFLASH_CONFIGURATION_4BYTE;
+					break;
+				default:
+					log(BT8XXEMU_LogError, "Unknown delayed command");
+					break;
+				}
+			}
+		}
 	}
 
 	void writeProtect(bool wp)
 	{
 		m_WriteProtect = wp;
+	}
+
+private:
+	inline bool using4ByteAddress()
+	{
+		return (m_ExtendedAddressing && (m_ConfigurationRegister & BTFLASH_CONFIGURATION_4BYTE));
+	}
+
+	inline bool usingExtendedAddressRegister()
+	{
+		return (m_ExtendedAddressing && !(m_ConfigurationRegister & BTFLASH_CONFIGURATION_4BYTE));
 	}
 
 private:
@@ -473,6 +522,8 @@ private:
 	size_t m_OutArraySize;
 	size_t m_OutArrayAt;
 	bool m_OutArrayLoop;
+
+	bool m_ExtendedAddressing;
 
 public:
 	inline uint8_t maskOutSignal(uint8_t signal, uint8_t signalOut)
@@ -540,6 +591,9 @@ public:
 		case BTFLASH_STATE_NEXT:
 			m_RunState = m_NextState;
 			m_NextState = BTFLASH_STATE_BLANK;
+			break;
+		case BTFLASH_STATE_CS_HIGH_COMMAND:
+			m_RunState = BTFLASH_STATE_BLANK;
 			break;
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_BLANK:
@@ -646,6 +700,9 @@ public:
 		case BTFLASH_STATE_NEXT:
 			m_RunState = m_NextState;
 			m_NextState = BTFLASH_STATE_BLANK;
+			break;
+		case BTFLASH_STATE_CS_HIGH_COMMAND:
+			m_RunState = BTFLASH_STATE_BLANK;
 			break;
 		case BTFLASH_STATE_FASTDTRD_ADDR:
 			return stateFASTDTRDAddr(signal);
@@ -854,6 +911,26 @@ public:
 		return m_BufferBits == 24 + dummyBits;
 	}
 
+	bool readAddressSpi1AsU32SkipLsb(uint8_t signal, int dummyBits)
+	{
+		int addressBits = using4ByteAddress() ? 32 : 24;
+		if (m_BufferBits < addressBits)
+		{
+			m_BufferU32 = (m_BufferU32 << 1)
+				| (BTFLASH_SPI4_GET_SI(signal));
+		}
+		++m_BufferBits;
+		if (m_BufferBits == addressBits + dummyBits)
+		{
+			if (usingExtendedAddressRegister())
+				m_BufferU32 = (m_BufferU32 & 0xFFFFFF) | (((uint32_t)m_ExtendedAddressRegister) << 24);
+			else
+				m_BufferU32 = (m_BufferU32 & 0xFFFFFF);
+			return true;
+		}
+		return false;
+	}
+
 	inline uint8_t manufacturerId()
 	{
 		return 0xc2;
@@ -1003,9 +1080,8 @@ public:
 				Flash_debug("Chip Erase");
 				if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
 				{
-					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
-					memset(Data, 0xFF, Size);
-					m_RunState = BTFLASH_STATE_BLANK;
+					m_DelayedCommand = BTFLASH_CMD_CE_C7;
+					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
 					return m_LastSignal;
 				}
 				else
@@ -1111,6 +1187,30 @@ public:
 				Flash_debug("No-op");
 				m_RunState = BTFLASH_STATE_BLANK;
 				return m_LastSignal;
+			case BTFLASH_CMD_EN4B: /* Enter 4-byte mode */
+				Flash_debug("Enter 4-byte mode");
+				if (!m_ExtendedAddressing)
+				{
+					log(BT8XXEMU_LogError, "Can only enter 4-byte mode when extended addressing is available");
+				}
+				else
+				{
+					m_DelayedCommand = BTFLASH_CMD_EN4B;
+					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+				}
+				return m_LastSignal;
+			case BTFLASH_CMD_EX4B: /* Exit 4-byte mode */
+				Flash_debug("Exit 4-byte mode");
+				if (!m_ExtendedAddressing)
+				{
+					log(BT8XXEMU_LogError, "Can only exit 4-byte mode when extended addressing is available");
+				}
+				else
+				{
+					m_DelayedCommand = BTFLASH_CMD_EX4B;
+					m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+				}
+				return m_LastSignal;
 			default:
 				log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", command);
 				break;
@@ -1146,7 +1246,7 @@ public:
 
 	uint8_t stateREMSAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32(signal))
+		if (readU24Spi1AsU32(signal)) // No 4BYTE
 		{
 			uint8_t addr = m_BufferU8;
 			m_BufferBits = 0;
@@ -1161,7 +1261,7 @@ public:
 
 	uint8_t stateRDSFDPAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32Skip8Lsb(signal))
+		if (readU24Spi1AsU32Skip8Lsb(signal)) // No 4BYTE
 		{
 			uint8_t addr = m_BufferU8;
 			m_BufferBits = 0;
@@ -1178,9 +1278,9 @@ public:
 
 	uint8_t stateREADAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32(signal))
+		if (readAddressSpi1AsU32SkipLsb(signal, 0))
 		{
-			size_t addr = m_BufferU32 & 0xFFFFFF;
+			size_t addr = m_BufferU32;
 			m_BufferBits = 0;
 			Flash_debug("Read READ addr %i", (int)addr);
 			m_OutArray = Data;
@@ -1195,7 +1295,7 @@ public:
 
 	uint8_t stateFAST_READAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32Skip8Lsb(signal))
+		if (readAddressSpi1AsU32SkipLsb(signal, 8))
 		{
 			size_t addr = m_BufferU32 & 0xFFFFFF;
 			m_BufferBits = 0;
@@ -1212,7 +1312,7 @@ public:
 
 	uint8_t stateFASTDTRDAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32SkipLsb(signal, 11))
+		if (readAddressSpi1AsU32SkipLsb(signal, 11))
 		{
 			size_t addr = m_BufferU32 & 0xFFFFFF;
 			m_BufferBits = 0;
@@ -1246,6 +1346,11 @@ private:
 	bool m_PrintStd;
 
 	uint8_t m_StatusRegister;
+	uint8_t m_ConfigurationRegister;
+	uint8_t m_ExtendedAddressRegister;
+
+	uint8_t m_DelayedCommand;
+	uint32_t m_DelayedCommandAddr;
 
 	const FlashSfdp *m_Sfdp;
 
