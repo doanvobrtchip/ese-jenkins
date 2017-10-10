@@ -920,7 +920,7 @@ public:
 		{
 			if (usingExtendedAddressRegister())
 				m_BufferU32 = (m_BufferU32 & 0xFFFFFF) | (((uint32_t)m_ExtendedAddressRegister) << 24);
-			else
+			else if (!using4ByteAddress())
 				m_BufferU32 = (m_BufferU32 & 0xFFFFFF);
 			return true;
 		}
@@ -1070,8 +1070,17 @@ public:
 				return m_LastSignal;
 			case BTFLASH_CMD_FASTDTRD: /* Fast DT Read */
 				Flash_debug("Read Data");
-				m_RunState = BTFLASH_STATE_NEXT;
-				m_NextState = BTFLASH_STATE_FASTDTRD_ADDR;
+				if (m_ExtendedAddressing)
+				{
+					log(BT8XXEMU_LogError, "Fast DT Read not supported with extended addressing");
+					m_RunState = BTFLASH_STATE_BLANK;
+					return m_LastSignal;
+				}
+				else
+				{
+					m_RunState = BTFLASH_STATE_NEXT;
+					m_NextState = BTFLASH_STATE_FASTDTRD_ADDR;
+				}
 				return m_LastSignal;
 			case BTFLASH_CMD_2DTRD: /* Dual I/O DT Read */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2DTRD)");
@@ -1339,7 +1348,7 @@ public:
 	{
 		if (readAddressSpi1AsU32SkipLsb(signal, 8))
 		{
-			size_t addr = m_BufferU32 & 0xFFFFFF;
+			size_t addr = m_BufferU32;
 			m_BufferBits = 0;
 			Flash_debug("Read FAST_READ addr %i", (int)addr);
 			m_OutArray = Data;
@@ -1356,7 +1365,7 @@ public:
 	{
 		if (readAddressSpi1AsU32SkipLsb(signal, 11))
 		{
-			size_t addr = m_BufferU32 & 0xFFFFFF;
+			size_t addr = m_BufferU32;
 			m_BufferBits = 0;
 			Flash_debug("Read FASTDTRD addr %i", (int)addr);
 			m_OutArray = Data;

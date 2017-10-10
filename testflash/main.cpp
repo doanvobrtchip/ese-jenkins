@@ -52,6 +52,9 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_CMD_GBLK (0x7E) /* Gang Block Lock */
 #define BTFLASH_CMD_GBULK (0x98) /* Gang Block Unlock */
 
+#define BTFLASH_CMD_EN4B (0xB7) /* Enter 4-byte mode */
+#define BTFLASH_CMD_EX4B (0xE9) /* Exit 4-byte mode */
+
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
 #define BTFLASH_SIZE (8 * 1024 * 1024)
 #define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
@@ -118,6 +121,27 @@ uint32_t transferU24(BT8XXEMU_Flash *flash, uint32_t u24)
 	return res;
 }
 
+uint32_t transferU32(BT8XXEMU_Flash *flash, uint32_t u32)
+{
+	uint32_t res = 0xFFFFFF00;
+	uint8_t signal;
+	for (int i = 0; i < 32; ++i)
+	{
+		res <<= 1;
+		res |= (lastValue & 0x2) >> 1;
+		// printf("%i\n", lastValue & 0x2);
+		signal = (lastValue & ~outMask1 & 0xF) | ((u32 >> 31) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | clkMask | ((u32 >> 31) & 0x1);
+		// printf("%i\n", signal & 1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | ((u32 >> 31) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u32 <<= 1;
+	}
+	return res;
+}
+
 uint8_t transferDTU8(BT8XXEMU_Flash *flash, uint8_t u8)
 {
 	uint8_t res = 0xFF;
@@ -156,6 +180,27 @@ uint32_t transferDTU24(BT8XXEMU_Flash *flash, uint32_t u24)
 		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u24 >> 23) & 0x1);
 		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
 		u24 <<= 1;
+	}
+	return res;
+}
+
+uint32_t transferDTU32(BT8XXEMU_Flash *flash, uint32_t u32)
+{
+	uint32_t res = 0xFFFFFF00;
+	uint8_t signal;
+	for (int i = 0; i < 32; ++i)
+	{
+		res <<= 1;
+		res |= (lastValue & 0x2) >> 1;
+		// printf("%i\n", lastValue & 0x2);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u32 >> 31) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & ~lastValue) | ((u32 >> 31) & 0x1);
+		// printf("%i\n", signal & 1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u32 >> 31) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u32 <<= 1;
 	}
 	return res;
 }
@@ -575,6 +620,84 @@ int main(int, char* [])
 		// Can be read continuously
 		electronicID = transferU8(flash, rand() & 0xFF);
 		assert(electronicID == BTFLASH_ELECTRONIC_ID_EXTENDED);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Enter 4-byte read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_EN4B);
+		printf("EN4B\n");
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Read
+	/////////////////////////////////////////////////////////////////
+
+	data[BTFLASH_SIZE_EXTENDED / 2] = 0xAB;
+	data[BTFLASH_SIZE_EXTENDED / 2 + 1] = 0xCD;
+	data[BTFLASH_SIZE_EXTENDED / 2 + 2] = 0xEF;
+
+	; {
+		transferU8(flash, BTFLASH_CMD_READ);
+		transferU32(flash, BTFLASH_SIZE_EXTENDED / 2);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("READ: ...-%x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0xAB);
+		assert(reqd1 == 0xCD);
+		assert(reqd2 == 0xEF);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FAST_READ);
+		transferU32(flash, BTFLASH_SIZE_EXTENDED / 2);
+		transferU8(flash, rand() & 0xFF);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("FAST_READ: ...-%x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0xAB);
+		assert(reqd1 == 0xCD);
+		assert(reqd2 == 0xEF);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Exit 4-byte read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_EX4B);
+		printf("EX4B\n");
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_READ);
+		transferU24(flash, 0);
+		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
+		printf("READ: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
 	}
 
 	cableSelect(flash, false);
