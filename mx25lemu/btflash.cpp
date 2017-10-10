@@ -12,7 +12,7 @@ Author: Jan Boon <jan@no-break.space>
 /*
 READ4  EBh  
 EN4B   B7h  Todo (256)
-PP
+PP          
 WRSR        Ok
 READ        Test
 RDSR        Ok
@@ -447,6 +447,7 @@ private:
 	union
 	{
 		uint8_t m_OutBufferU8;
+		uint16_t m_OutBufferU16;
 		uint32_t m_OutBufferU32;
 		uint64_t m_OutBufferU64;
 		struct
@@ -494,17 +495,20 @@ public:
 				if (signal & BTFLASH_SPI4_SCK)
 				{
 					m_LastSignal = maskOutSignal(signal, clockRising(signal));
+					// printf("> %i\n", (m_LastSignal & 2));
 					return m_LastSignal;
 				}
 				else
 				{
 					m_LastSignal = maskOutSignal(signal, clockFalling(signal));
+					// printf("> %i\n", (m_LastSignal & 2));
 					return m_LastSignal;
 				}
 			}
 		}
 
 		m_LastSignal = maskOutSignal(signal, m_LastSignal);
+		// printf("> %i\n", (m_LastSignal & 2));
 		return m_LastSignal;
 	}
 
@@ -573,6 +577,30 @@ public:
 						m_NextState = BTFLASH_STATE_BLANK;
 					}
 				}
+				return res;
+			}
+			else
+			{
+				log(BT8XXEMU_LogError, "Output state invalid without buffer");
+			}
+			break;
+		case BTFLASH_STATE_OUT_U16:
+			if (isWritingOutBuffer())
+			{
+				uint8_t res = writeOutU16();
+				if (!isWritingOutBuffer())
+				{
+					if (m_NextState == BTFLASH_STATE_OUT_U16)
+					{
+						m_OutBufferBits = 16;
+					}
+					else
+					{
+						m_RunState = m_NextState;
+						m_NextState = BTFLASH_STATE_BLANK;
+					}
+				}
+				return res;
 			}
 			else
 			{
@@ -600,6 +628,7 @@ public:
 						m_NextState = BTFLASH_STATE_BLANK;
 					}
 				}
+				return res;
 			}
 			else
 			{
@@ -695,6 +724,7 @@ public:
 		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
 		{
 			uint8_t res = ((m_OutBufferU8 >> (m_OutBufferBits - 1)) << 1) & BTFLASH_SPI4_MASK_SO;
+			// printf("> SO %i\n", res & 2);
 			--m_OutBufferBits;
 			return res;
 		}
@@ -707,6 +737,34 @@ public:
 		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D2)
 		{
 			uint8_t res = (m_OutBufferU8 >> (m_OutBufferBits - 2)) & BTFLASH_SPI4_MASK_D2;
+			m_OutBufferBits -= 2;
+			return res;
+		}
+		else
+		{
+			log(BT8XXEMU_LogError, "Invalid signal output directions");
+			return m_LastSignal;
+		}
+	}
+
+	uint8_t writeOutU16()
+	{
+		if (m_SignalOutMask == BTFLASH_SPI4_MASK_SO)
+		{
+			uint8_t res = ((m_OutBufferU16 >> (m_OutBufferBits - 1)) << 1) & BTFLASH_SPI4_MASK_SO;
+			// printf("> SO %i\n", res & 2);
+			--m_OutBufferBits;
+			return res;
+		}
+		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D4)
+		{
+			uint8_t res = (m_OutBufferU16 >> (m_OutBufferBits - 4)) & BTFLASH_SPI4_MASK_D4;
+			m_OutBufferBits -= 4;
+			return res;
+		}
+		else if (m_SignalOutMask == BTFLASH_SPI4_MASK_D2)
+		{
+			uint8_t res = (m_OutBufferU16 >> (m_OutBufferBits - 2)) & BTFLASH_SPI4_MASK_D2;
 			m_OutBufferBits -= 2;
 			return res;
 		}
@@ -775,7 +833,7 @@ public:
 	{
 		// Read 1 bit at a time until a U24 is read
 		// Skip 8 bits after the U24
-		readU24Spi1AsU32SkipLsb(signal, 8);
+		return readU24Spi1AsU32SkipLsb(signal, 8);
 	}
 
 	bool readU24Spi1AsU32SkipLsb(uint8_t signal, int dummyBits)
@@ -798,9 +856,9 @@ public:
 
 	inline uint8_t deviceId()
 	{
-		if (Size >= 8 * 1024 * 2014) return 0x16;
-		else if (Size >= 4 * 1024 * 2014) return 0x15;
-		else if (Size >= 2 * 1024 * 2014) return 0x14;
+		if (Size >= 8 * 1024 * 1024) return 0x16;
+		else if (Size >= 4 * 1024 * 1024) return 0x15;
+		else if (Size >= 2 * 1024 * 1024) return 0x14;
 		else
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
@@ -815,9 +873,9 @@ public:
 
 	inline uint8_t memoryDensity()
 	{
-		if (Size >= 8 * 1024 * 2014) return 0x17;
-		else if (Size >= 4 * 1024 * 2014) return 0x16;
-		else if (Size >= 2 * 1024 * 2014) return 0x15;
+		if (Size >= 8 * 1024 * 1024) return 0x17;
+		else if (Size >= 4 * 1024 * 1024) return 0x16;
+		else if (Size >= 2 * 1024 * 1024) return 0x15;
 		else
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
@@ -1046,6 +1104,7 @@ public:
 			case BTFLASH_CMD_NOOP_RESET:
 			case BTFLASH_CMD_NOOP_EXITQPI:
 				Flash_debug("No-op");
+				m_RunState = BTFLASH_STATE_BLANK;
 				return m_LastSignal;
 			default:
 				log(BT8XXEMU_LogError, "Flash command unrecognized (%x)", command);
