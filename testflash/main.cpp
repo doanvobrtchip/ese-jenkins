@@ -116,6 +116,48 @@ uint32_t transferU24(BT8XXEMU_Flash *flash, uint32_t u24)
 	return res;
 }
 
+uint8_t transferDTU8(BT8XXEMU_Flash *flash, uint8_t u8)
+{
+	uint8_t res = 0xFF;
+	uint8_t signal;
+	for (int i = 0; i < 8; ++i)
+	{
+		res <<= 1;
+		res |= (lastValue & 0x2) >> 1;
+		// printf("%i\n", lastValue & 0x2);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u8 >> 7) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & ~lastValue) | ((u8 >> 7) & 0x1);
+		// printf("%i\n", signal & 1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u8 >> 7) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u8 <<= 1;
+	}
+	return res;
+}
+
+uint32_t transferDTU24(BT8XXEMU_Flash *flash, uint32_t u24)
+{
+	uint32_t res = 0xFFFFFF00;
+	uint8_t signal;
+	for (int i = 0; i < 24; ++i)
+	{
+		res <<= 1;
+		res |= (lastValue & 0x2) >> 1;
+		// printf("%i\n", lastValue & 0x2);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u24 >> 23) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & ~lastValue) | ((u24 >> 23) & 0x1);
+		// printf("%i\n", signal & 1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMask1 & 0xF) | (clkMask & lastValue) | ((u24 >> 23) & 0x1);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u24 <<= 1;
+	}
+	return res;
+}
+
 int main(int, char* [])
 {
 	printf("%s\n\n", BT8XXEMU_version());
@@ -363,6 +405,72 @@ int main(int, char* [])
 		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
 		printf("FAST_READ (-1): ...-%x %x-%x-%x-...\n", (int)reqdF, (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqdF == 0xFF);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// Fast DT Read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FASTDTRD);
+		transferDTU24(flash, 0);
+		for (int i = 0; i < 6; ++i)
+		{
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF) | clkMask);
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF));
+		}
+		uint8_t reqd0 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferDTU8(flash, rand() & 0xFF);
+		printf("FASTDTRD: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FASTDTRD);
+		transferDTU24(flash, 3);
+		for (int i = 0; i < 6; ++i)
+		{
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF) | clkMask);
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF));
+		}
+		uint8_t reqd3 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd4 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd5 = transferDTU8(flash, rand() & 0xFF);
+		printf("FASTDTRD (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		assert(reqd3 == 0x92);
+		assert(reqd4 == 0x6C);
+		assert(reqd5 == 0x00);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_FASTDTRD);
+		transferDTU24(flash, size - 1);
+		for (int i = 0; i < 6; ++i)
+		{
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF) | clkMask);
+			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF));
+		}
+		uint8_t reqdF = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd0 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd1 = transferDTU8(flash, rand() & 0xFF);
+		uint8_t reqd2 = transferDTU8(flash, rand() & 0xFF);
+		printf("FASTDTRD (-1): ...-%x %x-%x-%x-...\n", (int)reqdF, (int)reqd0, (int)reqd1, (int)reqd2);
 		assert(reqdF == 0xFF);
 		assert(reqd0 == 0x70);
 		assert(reqd1 == 0xDF);

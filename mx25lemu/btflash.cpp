@@ -17,6 +17,7 @@ RDID        Ok              Ok
 RDSFDP 5Ah  Ok              Ok
 READ        Ok              Ok
 FAST_READ   Ok              Ok
+FASTDTRD    Ok              Ok
 PP          
 WRSR        Ok
 RDSR        Ok
