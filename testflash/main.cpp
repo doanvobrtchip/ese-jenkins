@@ -55,6 +55,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_CMD_EN4B (0xB7) /* Enter 4-byte mode */
 #define BTFLASH_CMD_EX4B (0xE9) /* Exit 4-byte mode */
 
+#define BTFLASH_STATUS_QE_FLAG (1 << 6) /* Quad Enable */
+
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
 #define BTFLASH_SIZE (8 * 1024 * 1024)
 #define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
@@ -69,6 +71,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 static uint8_t lastValue = 0xFF;
 
 static const uint8_t outMask1 = 0x31;
+static const uint8_t outMaskRead4 = 0x30;
 
 static const uint8_t csMask = 0x10;
 static const uint8_t clkMask = 0x20;
@@ -205,6 +208,69 @@ uint32_t transferDTU32(BT8XXEMU_Flash *flash, uint32_t u32)
 	return res;
 }
 
+void write4U8(BT8XXEMU_Flash *flash, uint8_t u8)
+{
+	uint8_t signal;
+	for (int i = 0; i < 2; ++i)
+	{
+		signal = (u8 >> 4);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = clkMask | (u8 >> 4);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (u8 >> 4);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u8 <<= 4;
+	}
+}
+
+void write4U24(BT8XXEMU_Flash *flash, uint32_t u24)
+{
+	uint32_t signal;
+	for (int i = 0; i < 6; ++i)
+	{
+		signal = ((u24 >> 20) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = clkMask | ((u24 >> 20) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = ((u24 >> 20) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u24 <<= 4;
+	}
+}
+
+void write4U32(BT8XXEMU_Flash *flash, uint32_t u32)
+{
+	uint32_t signal;
+	for (int i = 0; i < 8; ++i)
+	{
+		signal = ((u32 >> 28) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = clkMask | ((u32 >> 28) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = ((u32 >> 28) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u32 <<= 4;
+	}
+}
+
+uint8_t read4U8(BT8XXEMU_Flash *flash)
+{
+	uint8_t res = 0xFF;
+	uint8_t signal;
+	for (int i = 0; i < 2; ++i)
+	{
+		res <<= 4;
+		res |= (lastValue & 0xF);
+		signal = (lastValue & ~outMaskRead4 & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMaskRead4 & 0xF) | clkMask;
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = (lastValue & ~outMaskRead4 & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	}
+	return res;
+}
+
 int main(int, char* [])
 {
 	printf("%s\n\n", BT8XXEMU_version());
@@ -218,7 +284,7 @@ int main(int, char* [])
 
 	uint8_t *data = BT8XXEMU_Flash_data(flash);
 	assert(data[0] == 0x70);
-	int size = BT8XXEMU_Flash_size(flash);
+	size_t size = BT8XXEMU_Flash_size(flash);
 	assert(size == BTFLASH_SIZE);
 
 	cableSelect(flash, false);
@@ -381,7 +447,7 @@ int main(int, char* [])
 		uint8_t reqd3 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd4 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
-		printf("READ (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		printf("READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
 		assert(reqd4 == 0x6C);
 		assert(reqd5 == 0x00);
@@ -392,7 +458,7 @@ int main(int, char* [])
 
 	; {
 		transferU8(flash, BTFLASH_CMD_READ);
-		transferU24(flash, size - 1);
+		transferU24(flash, (uint32_t)size - 1);
 		uint8_t reqdF = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
@@ -434,7 +500,7 @@ int main(int, char* [])
 		uint8_t reqd3 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd4 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
-		printf("FAST_READ (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		printf("FAST_READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
 		assert(reqd4 == 0x6C);
 		assert(reqd5 == 0x00);
@@ -445,7 +511,7 @@ int main(int, char* [])
 
 	; {
 		transferU8(flash, BTFLASH_CMD_FAST_READ);
-		transferU24(flash, size - 1);
+		transferU24(flash, (uint32_t)size - 1);
 		transferU8(flash, rand() & 0xFF);
 		uint8_t reqdF = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd0 = transferU8(flash, rand() & 0xFF);
@@ -496,7 +562,7 @@ int main(int, char* [])
 		uint8_t reqd3 = transferDTU8(flash, rand() & 0xFF);
 		uint8_t reqd4 = transferDTU8(flash, rand() & 0xFF);
 		uint8_t reqd5 = transferDTU8(flash, rand() & 0xFF);
-		printf("FASTDTRD (03h): %x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		printf("FASTDTRD (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
 		assert(reqd4 == 0x6C);
 		assert(reqd5 == 0x00);
@@ -507,7 +573,7 @@ int main(int, char* [])
 
 	; {
 		transferU8(flash, BTFLASH_CMD_FASTDTRD);
-		transferDTU24(flash, size - 1);
+		transferDTU24(flash, (uint32_t)size - 1);
 		for (int i = 0; i < 6; ++i)
 		{
 			lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF) | clkMask);
@@ -522,6 +588,109 @@ int main(int, char* [])
 		assert(reqd0 == 0x70);
 		assert(reqd1 == 0xDF);
 		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// 4x IO Read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		// Enable QE
+		printf("Enable QE\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_RDSR);
+		uint8_t sr = transferU8(flash, rand() & 0xFF);
+		sr |= BTFLASH_STATUS_QE_FLAG;
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_WRSR);
+		transferU8(flash, sr);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_4READ);
+		write4U24(flash, 0);
+		write4U8(flash, 0x0F); // Enable PE
+		write4U8(flash, rand() & 0xFF);
+		write4U8(flash, rand() & 0xFF);
+		uint8_t reqd0 = read4U8(flash);
+		uint8_t reqd1 = read4U8(flash);
+		uint8_t reqd2 = read4U8(flash);
+		printf("4READ: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Skip 4READ instruction under PË
+		write4U24(flash, 3); // 03h
+		write4U8(flash, 0x12); // Disable PE
+		write4U8(flash, rand() & 0xFF);
+		write4U8(flash, rand() & 0xFF);
+		uint8_t reqd3 = read4U8(flash);
+		uint8_t reqd4 = read4U8(flash);
+		uint8_t reqd5 = read4U8(flash);
+		printf("4READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		assert(reqd3 == 0x92);
+		assert(reqd4 == 0x6C);
+		assert(reqd5 == 0x00);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Verify that PE is off now
+		transferU8(flash, BTFLASH_CMD_RES);
+		uint8_t electronicID = transferU8(flash, rand() & 0xFF);
+		printf("RES: %x\n", (int)electronicID);
+		assert(electronicID == BTFLASH_ELECTRONIC_ID);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Disable QE
+		printf("Disable QE\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_RDSR);
+		uint8_t sr = transferU8(flash, rand() & 0xFF);
+		sr &= ~BTFLASH_STATUS_QE_FLAG;
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_WRSR);
+		transferU8(flash, sr);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		printf("Start of expected errors, sending invalid 4x IO Read\n");
+		transferU8(flash, BTFLASH_CMD_4READ);
+		write4U24(flash, 0);
+		write4U8(flash, 0x0F); // Enable PE
+		write4U8(flash, rand() & 0xFF);
+		write4U8(flash, rand() & 0xFF);
+		uint8_t reqd0 = read4U8(flash);
+		printf("4READ: %x--...\n", (int)reqd0);
+		printf("End of expected errors\n");
+		assert(reqd0 != 0x70);
 	}
 
 	cableSelect(flash, false);
@@ -668,6 +837,42 @@ int main(int, char* [])
 		uint8_t reqd1 = transferU8(flash, rand() & 0xFF);
 		uint8_t reqd2 = transferU8(flash, rand() & 0xFF);
 		printf("FAST_READ: ...-%x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0xAB);
+		assert(reqd1 == 0xCD);
+		assert(reqd2 == 0xEF);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Enable QE
+		printf("Enable QE\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_RDSR);
+		uint8_t sr = transferU8(flash, rand() & 0xFF);
+		sr |= BTFLASH_STATUS_QE_FLAG;
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_WRSR);
+		transferU8(flash, sr);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_4READ);
+		write4U32(flash, BTFLASH_SIZE_EXTENDED / 2);
+		write4U8(flash, 0x00); // No PE
+		write4U8(flash, rand() & 0xFF);
+		write4U8(flash, rand() & 0xFF);
+		uint8_t reqd0 = read4U8(flash);
+		uint8_t reqd1 = read4U8(flash);
+		uint8_t reqd2 = read4U8(flash);
+		printf("4READ: ...-%x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
 		assert(reqd0 == 0xAB);
 		assert(reqd1 == 0xCD);
 		assert(reqd2 == 0xEF);

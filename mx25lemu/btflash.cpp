@@ -19,7 +19,7 @@ RDSFDP 5Ah  Ok              Ok
 READ        Ok              Ok
 FAST_READ   Ok              Ok
 FASTDTRD    Ok              Ok
-4READ  EBh  Ok
+4READ  EBh  Ok              Ok
 PP          
 WRSR        Ok
 RDSR        Ok
@@ -1497,7 +1497,7 @@ public:
 			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
 		{
 			uint8_t p = m_BufferU8;
-			bool pe = ((p & 0xF) == ~(p >> 4));
+			bool pe = ((p & 0xF) == ((~(p >> 4)) & 0xF));
 			if (pe) m_SelectState = BTFLASH_STATE_4READ_ADDR;
 			else m_SelectState = BTFLASH_STATE_COMMAND;
 			m_BufferBits = 0;
