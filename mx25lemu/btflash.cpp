@@ -19,7 +19,7 @@ RDSFDP 5Ah  Ok              Ok
 READ        Ok              Ok
 FAST_READ   Ok              Ok
 FASTDTRD    Ok              Ok
-4READ  EBh  Todo
+4READ  EBh  Ok
 PP          
 WRSR        Ok
 RDSR        Ok
@@ -457,8 +457,8 @@ public:
 					break;
 				case BTFLASH_CMD_RST:
 					Flash_debug("Reset (Execute)");
-					m_StatusRegister = 0;
-					m_ConfigurationRegister = 0;
+					m_StatusRegister &= 0xFC; // Only WIP and WEL are volatile
+					m_ConfigurationRegister &= 0x08; // TB is non-volatile, OTP
 					m_ExtendedAddressRegister = 0;
 					m_ResetEnable = false;
 					break;
@@ -597,6 +597,8 @@ public:
 			return stateFAST_READAddr(signal);
 		case BTFLASH_STATE_FASTDTRD_ADDR:
 			return stateFASTDTRDAddr(signal);
+		case BTFLASH_STATE_4READ_ADDR:
+			return state4READAddr(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -721,6 +723,7 @@ public:
 		case BTFLASH_STATE_RDSFDP_ADDR:
 		case BTFLASH_STATE_READ_ADDR:
 		case BTFLASH_STATE_FAST_READ_ADDR:
+		case BTFLASH_STATE_4READ_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -901,13 +904,6 @@ public:
 		return m_BufferBits == 24;
 	}
 
-	inline bool readU24Spi1AsU32Skip8Lsb(uint8_t signal)
-	{
-		// Read 1 bit at a time until a U24 is read
-		// Skip 8 bits after the U24
-		return readU24Spi1AsU32SkipLsb(signal, 8);
-	}
-
 	bool readU24Spi1AsU32SkipLsb(uint8_t signal, int dummyBits)
 	{
 		// Read 1 bit at a time until a U24 is read
@@ -930,6 +926,26 @@ public:
 				| (BTFLASH_SPI4_GET_SI(signal));
 		}
 		++m_BufferBits;
+		if (m_BufferBits == addressBits + dummyBits)
+		{
+			if (usingExtendedAddressRegister())
+				m_BufferU32 = (m_BufferU32 & 0xFFFFFF) | (((uint32_t)m_ExtendedAddressRegister) << 24);
+			else if (!using4ByteAddress())
+				m_BufferU32 = (m_BufferU32 & 0xFFFFFF);
+			return true;
+		}
+		return false;
+	}
+
+	bool readAddressSpi4AsU32SkipLsb(uint8_t signal, int dummyBits)
+	{
+		int addressBits = using4ByteAddress() ? 32 : 24;
+		if (m_BufferBits < addressBits)
+		{
+			m_BufferU32 = (m_BufferU32 << 4)
+				| (BTFLASH_SPI4_GET_D4(signal));
+		}
+		m_BufferBits += 4;
 		if (m_BufferBits == addressBits + dummyBits)
 		{
 			if (usingExtendedAddressRegister())
@@ -1087,7 +1103,7 @@ public:
 				if (m_ExtendedAddressing)
 				{
 					log(BT8XXEMU_LogError, "Fast DT Read not supported with extended addressing");
-					m_RunState = BTFLASH_STATE_BLANK;
+					m_RunState = BTFLASH_STATE_UNSUPPORTED;
 					return m_LastSignal;
 				}
 				else
@@ -1121,8 +1137,17 @@ public:
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
 			case BTFLASH_CMD_4READ: /* 4x IO Read */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4READ)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				Flash_debug("4x IO Read");
+				if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO Read");
+					m_RunState = BTFLASH_STATE_IGNORE;
+				}
+				else
+				{
+					m_SignalOutMask = BTFLASH_SPI4_MASK_NONE;
+					m_RunState = BTFLASH_STATE_4READ_ADDR;
+				}
 				return m_LastSignal;
 			case BTFLASH_CMD_4PP: /* Quad Page Program */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4PP)");
@@ -1354,7 +1379,7 @@ public:
 
 	uint8_t stateRDSFDPAddr(uint8_t signal)
 	{
-		if (readU24Spi1AsU32Skip8Lsb(signal)) // No 4BYTE
+		if (readU24Spi1AsU32SkipLsb(signal, 8)) // No 4BYTE
 		{
 			uint8_t addr = m_BufferU8;
 			m_BufferBits = 0;
@@ -1388,7 +1413,9 @@ public:
 
 	uint8_t stateFAST_READAddr(uint8_t signal)
 	{
-		if (readAddressSpi1AsU32SkipLsb(signal, 8))
+		static const int dummyCycles[] = { 8, 6, 8, 10 };
+		if (readAddressSpi1AsU32SkipLsb(signal,
+			dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)]))
 		{
 			size_t addr = m_BufferU32;
 			m_BufferBits = 0;
@@ -1415,6 +1442,26 @@ public:
 			m_OutArrayAt = addr;
 			m_OutArrayLoop = true;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY_DT;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4READAddr(uint8_t signal)
+	{
+		static const int dummyCycles[] = { 6, 4, 8, 10 };
+		if (readAddressSpi4AsU32SkipLsb(signal,
+			dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] * 4))
+		{
+			size_t addr = m_BufferU32;
+			m_BufferBits = 0;
+			Flash_debug("Read 4READ addr %i", (int)addr);
+			m_OutArray = Data;
+			m_OutArraySize = Size;
+			m_OutArrayAt = addr;
+			m_OutArrayLoop = true;
+			m_SignalOutMask = BTFLASH_SPI4_MASK_D4;
+			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
 
 		return m_LastSignal;

@@ -22,6 +22,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_SPI4_MASK_SO (BTFLASH_SPI4_MISO)
 #define BTFLASH_SPI4_MASK_D2 (0x3)
 #define BTFLASH_SPI4_MASK_D4 (0xF)
+#define BTFLASH_SPI4_MASK_NONE (0)
 
 // SPI Signals to Data
 #define BTFLASH_SPI4_GET_SI(signal) ((signal) & BTFLASH_SPI4_MASK_SI)
@@ -87,11 +88,19 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATUS_BP1_FLAG (1 << 3) /* Block Protect */
 #define BTFLASH_STATUS_BP2_FLAG (1 << 4) /* Block Protect */
 #define BTFLASH_STATUS_BP3_FLAG (1 << 5) /* Block Protect */
-#define BTFLASH_STATUS_CP_FLAG (1 << 6) /* Continuously Program Mode */
+#define BTFLASH_STATUS_QE_FLAG (1 << 6) /* Quad Enable */
 #define BTFLASH_STATUS_SRWD_FLAG (1 << 7) /* Status Register Write Protect */
 
 // Configuration Registers
+#define BTFLASH_CONFIGURATION_ODS0 (1 << 0) /* Output Driver Strength 0 */
+#define BTFLASH_CONFIGURATION_ODS1 (1 << 1) /* Output Driver Strength 1 */
+#define BTFLASH_CONFIGURATION_ODS2 (1 << 2) /* Output Driver Strength 2 */
+#define BTFLASH_CONFIGURATION_TB (1 << 3) /* Top/Bottom Selected */
 #define BTFLASH_CONFIGURATION_4BYTE (1 << 5) /* 4BYTE Indicator bit */
+#define BTFLASH_CONFIGURATION_DC0 (1 << 6) /* Dummy Cycle 0 */
+#define BTFLASH_CONFIGURATION_DC1 (1 << 7) /* Dummy Cycle 1 */
+
+#define BTFLASH_CONFIGRATION_GET_DC(v) ((v >> 6) & 0x03)
 
 // Clock edge select
 #define BTFLASH_CLOCK_RISING 1
@@ -117,6 +126,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATE_FAST_READ_ADDR 16
 #define BTFLASH_STATE_FASTDTRD_ADDR 17
 #define BTFLASH_STATE_CS_HIGH_COMMAND 18 /* Execute specified command exactly when CS goes high */
+#define BTFLASH_STATE_4READ_ADDR 19
 
 #endif /* #ifndef MX25LEMU_BTFLASH_DEFS_H */
 
