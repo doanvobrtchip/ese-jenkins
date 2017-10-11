@@ -288,6 +288,9 @@ public:
 		m_ExtendedAddressRegister = 0;
 		m_ResetEnable = false;
 
+		// m_StatusRegister = BTFLASH_STATUS_QE_FLAG; // TEST
+		// m_SelectState = BTFLASH_STATE_4READ_ADDR; // TEST: The 0xFF signals at BT815 boot-up will cause this state to reset
+
 		m_WriteProtect = false;
 
 		const wchar_t *const dataFilePath = params->DataFilePath;
