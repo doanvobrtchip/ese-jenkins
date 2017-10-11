@@ -356,6 +356,7 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 		data.messageType = BT8XXEMU_CALL_RUN;
 		data.versionApi = BT8XXEMU_VERSION_API;
 		memcpy(&data.params, params, sizeof(BT8XXEMU_EmulatorParameters));
+		data.params.Flash = (void *)(ptrdiff_t)data.params.Flash->flash;
 		len = MESSAGE_SIZE(params);
 
 		data.params.Main = NULL;

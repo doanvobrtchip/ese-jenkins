@@ -188,6 +188,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 				CloseHandle(pipe);
 				return EXIT_FAILURE;
 			}
+			params.Flash = s_Flashes[(int)(ptrdiff_t)(void *)params.Flash];
 			s_Mutex.lock();
 			s_Emulators.push_back(NULL);
 			BT8XXEMU_run(versionApi, &s_Emulators[s_Emulators.size() - 1], &params);
