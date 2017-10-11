@@ -552,6 +552,13 @@ public:
 			chipSelect(cs);
 		}
 
+		// Detect write protect changes
+		bool wp = (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG)) && !(signal & BTFLASH_SPI4_WP);
+		if (wp != m_WriteProtect)
+		{
+			writeProtect(wp);
+		}
+
 		// Process when selected
 		if (cs)
 		{
@@ -1350,11 +1357,17 @@ public:
 				| BTFLASH_STATUS_BP1_FLAG
 				| BTFLASH_STATUS_BP2_FLAG
 				| BTFLASH_STATUS_BP3_FLAG
+				| BTFLASH_STATUS_QE_FLAG
 				| BTFLASH_STATUS_SRWD_FLAG;
 			static const uint8_t invMask = (~mask) & (~BTFLASH_STATUS_WEL_FLAG);
 			const uint8_t maskedWrite = data & mask;
 			const uint8_t maskedReg = m_StatusRegister & invMask;
 			m_StatusRegister = maskedWrite | maskedReg;
+
+			if (data & BTFLASH_STATUS_QE_FLAG)
+				writeProtect(false);
+			else
+				writeProtect(!(signal & BTFLASH_SPI4_WP));
 
 			m_RunState = BTFLASH_STATE_BLANK;
 		}

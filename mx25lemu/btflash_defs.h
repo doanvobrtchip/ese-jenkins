@@ -13,6 +13,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_SPI4_D0 (1 << 0)
 #define BTFLASH_SPI4_D1 (1 << 1)
 #define BTFLASH_SPI4_D2 (1 << 2)
+#define BTFLASH_SPI4_WP (1 << 2)
 #define BTFLASH_SPI4_D3 (1 << 3)
 #define BTFLASH_SPI4_CS (1 << 4)
 #define BTFLASH_SPI4_SCK (1 << 5)
