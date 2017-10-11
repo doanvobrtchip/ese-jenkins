@@ -208,7 +208,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			FTEMU_warning("Write REG_SPIM_DIR 0x%x", (int)data);
 			break;
 		case REG_SPIM:
-			FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
+			// FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			if (m_Flash)
 			{
 				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR); // SPI signal directions
@@ -1073,13 +1073,13 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		FTEMU_warning("Read Co U32 REG_SPIM_DIR");
 		break;
 	case REG_SPIM:
-		FTEMU_warning("Read Co U32 REG_SPIM %x (miso: %i)",
-			(int)rawReadU8(REG_SPIM), (int)(rawReadU8(REG_SPIM) >> 1) & 1);
-		if (m_Flash)
-		{
+		// FTEMU_warning("Read Co U32 REG_SPIM %x (miso: %i)",
+		// 	(int)rawReadU8(REG_SPIM), (int)(rawReadU8(REG_SPIM) >> 1) & 1);
+		// if (m_Flash)
+		// {
 			// m_Flash->vTable()->ChipSelect(m_Flash, true);
 			// uint8_t res = m_Flash->vTable()->Transfer(m_Flash, value);
-		}
+		// }
 		break;
 	case REG_ESPIM_ADD:
 		FTEMU_warning("Read Co U32 REG_ESPIM_ADD");
