@@ -457,6 +457,7 @@ public:
 					break;
 				case BTFLASH_CMD_RST:
 					Flash_debug("Reset (Execute)");
+					m_SelectState = BTFLASH_STATE_COMMAND;
 					m_StatusRegister &= 0xFC; // Only WIP and WEL are volatile
 					m_ConfigurationRegister &= 0x08; // TB is non-volatile, OTP
 					m_ExtendedAddressRegister = 0;
@@ -469,7 +470,7 @@ public:
 			}
 		}
 
-		m_RunState = BTFLASH_STATE_COMMAND;
+		m_RunState = m_SelectState; // COMMAND
 		m_NextState = BTFLASH_STATE_BLANK;
 		// m_ClockEdge = BTFLASH_CLOCK_RISING;
 		m_SignalInMask = cs ? BTFLASH_SPI4_MASK_SI : 0;
@@ -495,6 +496,7 @@ private:
 	}
 
 private:
+	int m_SelectState = BTFLASH_STATE_COMMAND;
 	int m_RunState;
 	int m_NextState;
 	uint8_t m_LastSignal;
@@ -606,6 +608,8 @@ public:
 			return stateFASTDTRDAddr(signal);
 		case BTFLASH_STATE_4READ_ADDR:
 			return state4READAddr(signal);
+		case BTFLASH_STATE_4READ_PE:
+			return state4READPerfEnh(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -731,6 +735,7 @@ public:
 		case BTFLASH_STATE_READ_ADDR:
 		case BTFLASH_STATE_FAST_READ_ADDR:
 		case BTFLASH_STATE_4READ_ADDR:
+		case BTFLASH_STATE_4READ_PE:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -953,7 +958,7 @@ public:
 				| (BTFLASH_SPI4_GET_D4(signal));
 		}
 		m_BufferBits += 4;
-		if (m_BufferBits == addressBits + dummyBits)
+		if (m_BufferBits == (addressBits + dummyBits))
 		{
 			if (usingExtendedAddressRegister())
 				m_BufferU32 = (m_BufferU32 & 0xFFFFFF) | (((uint32_t)m_ExtendedAddressRegister) << 24);
@@ -964,6 +969,17 @@ public:
 		return false;
 	}
 
+	bool readU8Spi4SkipLsb(uint8_t signal, int dummyBits)
+	{
+		if (m_BufferBits < 8)
+		{
+			m_BufferU8 = (m_BufferU32 << 4)
+				| (BTFLASH_SPI4_GET_D4(signal));
+		}
+		m_BufferBits += 4;
+		return (m_BufferBits == (8 + dummyBits));
+	}
+
 	inline uint8_t manufacturerId()
 	{
 		return 0xc2;
@@ -971,7 +987,7 @@ public:
 
 	inline uint8_t deviceId()
 	{
-		if (Size >= 2 * 1024 * 1024 * 1024)
+		if (Size >= 2UL * 1024UL * 1024UL * 1024UL)
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
 			return 0xFF;
@@ -1011,7 +1027,7 @@ public:
 
 	inline uint8_t memoryDensity()
 	{
-		if (Size >= 2 * 1024 * 1024 * 1024)
+		if (Size >= 2UL * 1024UL * 1024UL * 1024UL)
 		{
 			log(BT8XXEMU_LogError, "Unavailable device size %u", Size);
 			return 0xFF;
@@ -1462,16 +1478,33 @@ public:
 
 	uint8_t state4READAddr(uint8_t signal)
 	{
-		static const int dummyCycles[] = { 6, 4, 8, 10 };
-		if (readAddressSpi4AsU32SkipLsb(signal,
-			dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] * 4))
+		if (readAddressSpi4AsU32SkipLsb(signal, 0))
 		{
-			size_t addr = m_BufferU32;
+			uint32_t addr = m_BufferU32;
 			m_BufferBits = 0;
-			Flash_debug("Read 4READ addr %i", (int)addr);
+			// Flash_debug("Read 4READ addr %i", (int)addr);
+			m_DelayedCommandAddr = addr;
+			m_RunState = BTFLASH_STATE_4READ_PE;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4READPerfEnh(uint8_t signal)
+	{
+		static const int dummyCycles[] = { 6, 4, 8, 10 };
+		if (readU8Spi4SkipLsb(signal,
+			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
+		{
+			uint8_t p = m_BufferU8;
+			bool pe = ((p & 0xF) == ~(p >> 4));
+			if (pe) m_SelectState = BTFLASH_STATE_4READ_ADDR;
+			else m_SelectState = BTFLASH_STATE_COMMAND;
+			m_BufferBits = 0;
+			Flash_debug("Read 4READ addr %i, p %x, pe %i", (int)m_DelayedCommandAddr, (int)p, (int)pe);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
-			m_OutArrayAt = addr;
+			m_OutArrayAt = m_DelayedCommandAddr;
 			m_OutArrayLoop = true;
 			m_SignalOutMask = BTFLASH_SPI4_MASK_D4;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
