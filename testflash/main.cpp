@@ -759,6 +759,77 @@ int main(int, char* [])
 	cableSelect(flash, true);
 
 	/////////////////////////////////////////////////////////////////
+	//// Page Program
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		printf("PP (3)\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_PP);
+		transferU24(flash, 3);
+		transferU8(flash, 0xAB);
+		transferU8(flash, 0xCD);
+		transferU8(flash, 0xEF);
+		assert(data[3] != 0xAB);
+		assert(data[4] != 0xCD);
+		assert(data[5] != 0xEF);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	assert(data[3] == 0xAB);
+	assert(data[4] == 0xCD);
+	assert(data[5] == 0xEF);
+
+	; {
+		printf("PP (31)\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_PP);
+		transferU24(flash, 31);
+		transferU8(flash, 0xAB);
+		transferU8(flash, 0xCD);
+		transferU8(flash, 0xEF);
+		assert(data[31] != 0xAB);
+		assert(data[32] != 0xCD);
+		assert(data[33] != 0xEF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF) | clkMask);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, (lastValue & ~outMask1 & 0xF));
+		printf("Start of expected errors, not deselecting chip at byte boundary\n");
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		printf("End of expected errors\n");
+		assert(data[31] != 0xAB);
+		assert(data[32] != 0xCD);
+		assert(data[33] != 0xEF);
+		// transferU8(flash, BTFLASH_CMD_WRDI);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		printf("PP (256 + 31)\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_PP);
+		transferU24(flash, 256 + 31);
+		for (int i = 0; i < 256 + 128; ++i)
+			transferU8(flash, i / 2);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	assert(data[256 + 31] == 128);
+	assert(data[256 + 31 + 128] == 64);
+
+	/////////////////////////////////////////////////////////////////
 
 	BT8XXEMU_Flash_destroy(flash);
 	flash = NULL;

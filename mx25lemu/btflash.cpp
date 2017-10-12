@@ -20,10 +20,11 @@ READ        Ok              Ok
 FAST_READ   Ok              Ok
 FASTDTRD    Ok              Ok
 4READ  EBh  Ok              Ok
-PP          
+PP          Ok              Ok
 WRSR        Ok
 RDSR        Ok
 WREN        Ok              Ok
+WRDI        Ok
 CE     C7h  Ok              Ok
 SE
 BE
