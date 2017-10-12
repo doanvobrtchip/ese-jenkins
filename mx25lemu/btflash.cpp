@@ -432,8 +432,9 @@ public:
 	{
 		if (cs == false)
 		{
-			if (m_RunState == BTFLASH_STATE_CS_HIGH_COMMAND)
+			switch (m_RunState)
 			{
+			case BTFLASH_STATE_CS_HIGH_COMMAND:
 				/*
 				WREN, WRDI, WRSR, SE/SE4B, BE32K/BE32K4B, BE/BE4B, CE, PP/PP4B, 4PP/4PP4B, DP,
 				ENSO, EXSO, WRSCUR, EN4B, EX4B, WPSEL, GBLK, GBULK, SPBLK, SUSPEND, RESUME, NOP, RSTEN,
@@ -470,6 +471,27 @@ public:
 					log(BT8XXEMU_LogError, "Unknown instruction on CS high");
 					break;
 				}
+				break;
+			case BTFLASH_STATE_PP_READ:
+				if (m_BufferBits)
+				{
+					log(BT8XXEMU_LogError, "CS must go high on byte boundary, PP instruction rejected");
+				}
+				else
+				{
+					Flash_debug("Page Program (Execute)");
+					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
+					const size_t addr = m_DelayedCommandAddr;
+					size_t at = addr & 0xFF;
+					const size_t page = addr - at;
+					for (int i = 0; i < m_PageProgramSize; ++i)
+					{
+						Data[page + at] &= m_PageProgramData[i]; // Set only the 0s using &
+						++at;
+						at &= 0xFF;
+					}
+				}
+				break;
 			}
 		}
 
@@ -613,6 +635,10 @@ public:
 			return state4READAddr(signal);
 		case BTFLASH_STATE_4READ_PE:
 			return state4READPerfEnh(signal);
+		case BTFLASH_STATE_PP_ADDR:
+			return statePPAddr(signal);
+		case BTFLASH_STATE_PP_READ:
+			return statePPRead(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -739,6 +765,8 @@ public:
 		case BTFLASH_STATE_FAST_READ_ADDR:
 		case BTFLASH_STATE_4READ_ADDR:
 		case BTFLASH_STATE_4READ_PE:
+		case BTFLASH_STATE_PP_ADDR:
+		case BTFLASH_STATE_PP_READ:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -1203,13 +1231,23 @@ public:
 				else
 				{
 					log(BT8XXEMU_LogError, "Chip Erase requires Write Enable Latch to be set");
-					m_RunState = BTFLASH_STATE_BLANK;
+					m_RunState = BTFLASH_STATE_IGNORE;
 					return m_LastSignal;
 				}
 			case BTFLASH_CMD_PP: /* Page Program */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_PP)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				return m_LastSignal;
+				Flash_debug("Page Program");
+				if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
+				{
+					m_DelayedCommand = BTFLASH_CMD_PP;
+					m_RunState = BTFLASH_STATE_PP_ADDR;
+					return m_LastSignal;
+				}
+				else
+				{
+					log(BT8XXEMU_LogError, "Chip Erase requires Write Enable Latch to be set");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
 			case BTFLASH_CMD_CP: /* Continuously Program mode */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_CP)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
@@ -1516,6 +1554,40 @@ public:
 		return m_LastSignal;
 	}
 
+	uint8_t statePPAddr(uint8_t signal)
+	{
+		if (readAddressSpi1AsU32SkipLsb(signal, 0))
+		{
+			uint32_t addr = m_BufferU32;
+			m_BufferBits = 0;
+			Flash_debug("PP addr %i", (int)addr);
+			m_DelayedCommandAddr = addr;
+			m_PageProgramIdx = 0;
+			m_PageProgramSize = 0;
+			m_RunState = BTFLASH_STATE_PP_READ;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t statePPRead(uint8_t signal)
+	{
+		if (readU8Spi1(signal))
+		{
+			m_PageProgramData[m_PageProgramIdx] = m_BufferU8;
+			m_BufferBits = 0;
+
+			++m_PageProgramIdx;
+			m_PageProgramIdx &= 0xFF;
+			++m_PageProgramSize;
+			m_PageProgramSize = std::min(m_PageProgramSize, 256);
+
+			Flash_debug("PP data %x", (int)m_BufferU8);
+		}
+
+		return m_LastSignal;
+	}
+
 	uint8_t *Data;
 	size_t Size;
 
@@ -1538,6 +1610,10 @@ private:
 
 	uint8_t m_DelayedCommand;
 	uint32_t m_DelayedCommandAddr;
+
+	uint8_t m_PageProgramData[256];
+	int m_PageProgramIdx;
+	int m_PageProgramSize;
 
 	const FlashSfdp *m_Sfdp;
 
