@@ -1240,6 +1240,21 @@ int main(int, char*[])
 			assert(data[i] == 0xFF);
 	}
 
+	; {
+		assert(ram[0] == 0x70);
+		assert(data[0] != 0x70);
+		printf("CMD_FLASHWRITE\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHWRITE);
+		wr32(emulator, REG_CMDB_WRITE, 0);
+		wr32(emulator, REG_CMDB_WRITE, 2048);
+		for (int i = 0; i < 512; ++i)
+			wr32(emulator, REG_CMDB_WRITE, ((uint32_t *)ram)[i]);
+		flush(emulator);
+		for (int i = 0; i < 2048; ++i)
+			assert(data[i] == ram[i]);
+		assert(data[0] == 0x70);
+	}
+
 	/////////////////////////////////////////////////////////////////
 
 	/*
@@ -1248,8 +1263,8 @@ int main(int, char*[])
 	#define CMD_FLASHDETACH      4294967112UL -        Ok    ?
 	#define CMD_FLASHFAST        4294967114UL -        Ok-ish-    // Seeing only one test read on 0xFC0 and two on 0x00
 	#define CMD_FLASHREAD        4294967110UL -        Ok    Ok
-	#define CMD_FLASHERASE       4294967108UL -        /     ???
-	#define CMD_FLASHWRITE       4294967109UL -        /     ???
+	#define CMD_FLASHERASE       4294967108UL -        Ok    Fail // In fast mode it's resetting and not setting the QE flag back
+	#define CMD_FLASHWRITE       4294967109UL -        Ok    ???
 	#define CMD_FLASHSPIDESEL    4294967115UL Ok       -     -
 	#define CMD_FLASHSPIRX       4294967117UL Ok       -     -
 	#define CMD_FLASHSPITX       4294967116UL Ok       -     -
