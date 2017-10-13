@@ -1081,6 +1081,7 @@ int main(int, char*[])
 
 	BT8XXEMU_Emulator *emulator = NULL;
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
+	uint8_t *ram = BT8XXEMU_getRam(emulator);
 
 	wr32(emulator, REG_HSIZE, 480);
 	wr32(emulator, REG_VSIZE, 272);
@@ -1101,13 +1102,91 @@ int main(int, char*[])
 		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
 		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
 		flush(emulator);
-		while (rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
 		assert(rd32(emulator, resAddr) == 0);
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 	}
 	*/
 
 	/////////////////////////////////////////////////////////////////
+	//// Detach, attach, direct access
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		printf("CMD_FLASHDETACH\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHDETACH);
+		flush(emulator);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_DETACHED);
+	}
+
+	; {
+		printf("CMD_FLASHSPIDESEL\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHSPIDESEL);
+		flush(emulator);
+		printf("CMD_FLASHSPITX\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHSPITX);
+		wr32(emulator, REG_CMDB_WRITE, 1);
+		wr32(emulator, REG_CMDB_WRITE, BTFLASH_CMD_RES);
+		flush(emulator);
+		printf("CMD_FLASHSPIRX\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHSPIRX);
+		wr32(emulator, REG_CMDB_WRITE, 0);
+		wr32(emulator, REG_CMDB_WRITE, 4);
+		flush(emulator);
+		printf("CMD_FLASHSPIDESEL\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHSPIDESEL);
+		flush(emulator);
+		assert(ram[0] == BTFLASH_ELECTRONIC_ID);
+		assert(ram[1] == BTFLASH_ELECTRONIC_ID);
+		assert(ram[2] == BTFLASH_ELECTRONIC_ID);
+		assert(ram[3] == BTFLASH_ELECTRONIC_ID);
+	}
+
+	; {
+		printf("CMD_FLASHATTACH\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHATTACH);
+		flush(emulator);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+	}
+
+	/////////////////////////////////////////////////////////////////
+	//// Regular read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		printf("CMD_FLASHREAD\n");
+		for (int i = 0; i < 40; ++i)
+			ram[i] = 0x55;
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+		wr32(emulator, REG_CMDB_WRITE, 0); // dest
+		wr32(emulator, REG_CMDB_WRITE, 0); // src
+		wr32(emulator, REG_CMDB_WRITE, 40); // num
+		flush(emulator);
+		assert(ram[0] == 0x70);
+		for (int i = 0; i < 40; ++i)
+			assert(ram[i] == data[i]);
+	}
+
+	/////////////////////////////////////////////////////////////////
+	//// 
+	/////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////
+
+	/*
+
+	#define CMD_FLASHATTACH      4294967113UL Ok
+	#define CMD_FLASHDETACH      4294967112UL Ok
+	#define CMD_FLASHERASE       4294967108UL
+	#define CMD_FLASHFAST        4294967114UL
+	#define CMD_FLASHREAD        4294967110UL Ok
+	#define CMD_FLASHSOURCE      4294967118UL
+	#define CMD_FLASHSPIDESEL    4294967115UL
+	#define CMD_FLASHSPIRX       4294967117UL
+	#define CMD_FLASHSPITX       4294967116UL
+	#define CMD_FLASHUPDATE      4294967111UL
+	#define CMD_FLASHWRITE       4294967109UL
+	
+	*/
 
 	BT8XXEMU_stop(emulator);
 	BT8XXEMU_destroy(emulator);
