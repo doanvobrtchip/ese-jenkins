@@ -19,6 +19,10 @@ Author: James Bowman <jamesb@excamera.com>
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
 
+#ifdef BT815EMU_MODE
+#	include "bt815emu_espim.h"
+#endif
+
 // using namespace ...;
 
 namespace FT810EMU {
@@ -674,6 +678,9 @@ static FILE *trace = NULL;
 Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
 {
+#ifdef BT815EMU_MODE
+	m_Espim = new Espim(memory);
+#endif
 	ejpg.setSystem(system);
 	if (romFilePath)
 	{
@@ -928,6 +935,12 @@ void Coprocessor::execute()
 						m_Memory->coprocessorReadU32(REG_INT_FLAGS) | (n << 5));
 					// REG(INT_FLAGS) |= (n << 5);
 				}
+#ifdef BT815EMU_MODE
+				if (t == REG_ESPIM_TRIG)
+				{
+					m_Espim->trigger();
+				}
+#endif
 				break;
 			case 5:
 				// assert((t & 1) == 0);
@@ -979,6 +992,11 @@ void Coprocessor::execute()
 		if (memory8[REG_DLSWAP] != 0) {
 			memory8[REG_DLSWAP] = 0;
 		}*/
+
+#ifdef BT815EMU_MODE
+		if (m_Espim->running())
+			m_Espim->drive();
+#endif
 
 #if FT800EMU_COPROCESSOR_TRACE
 		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);

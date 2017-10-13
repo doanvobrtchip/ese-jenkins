@@ -1097,8 +1097,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		FTEMU_warning("Read Co U32 REG_ESPIM_SEQ");
 		break;
 	case REG_ESPIM_TRIG:
-		FTEMU_warning("Read Co U32 REG_ESPIM_TRIG");
-		break;
+		// FTEMU_warning("Read Co U32 REG_ESPIM_TRIG");
+		; {
+			uint32_t regEspimTrig = rawReadU32(REG_ESPIM_TRIG);
+			rawWriteU32(REG_ESPIM_TRIG, 0);
+			return regEspimTrig;
+		}
 	case REG_ESPIM_WINDOW:
 		FTEMU_warning("Read Co U32 REG_ESPIM_WINDOW");
 		break;

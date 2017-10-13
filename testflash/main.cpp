@@ -1096,7 +1096,7 @@ int main(int, char*[])
 	//// Enter full speed mode
 	/////////////////////////////////////////////////////////////////
 
-	/* Requires ESPIM
+	///* Requires ESPIM
 	; {
 		printf("CMD_FLASHFAST\n");
 		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
@@ -1106,7 +1106,7 @@ int main(int, char*[])
 		assert(rd32(emulator, resAddr) == 0);
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 	}
-	*/
+	//*/
 
 	/////////////////////////////////////////////////////////////////
 	//// Detach, attach, direct access
@@ -1198,14 +1198,14 @@ int main(int, char*[])
 	                                          Detached Basic Full
 	#define CMD_FLASHATTACH      4294967113UL Ok       -     -
 	#define CMD_FLASHDETACH      4294967112UL -        Ok    ?
-	#define CMD_FLASHFAST        4294967114UL -        ???   ???
+	#define CMD_FLASHFAST        4294967114UL -        Ok-ish-    // Seeing only one test read on 0xFC0 and two on 0x00
 	#define CMD_FLASHREAD        4294967110UL -        Ok    ???
-	#define CMD_FLASHERASE       4294967108UL -        ???   ???
-	#define CMD_FLASHWRITE       4294967109UL -        ???   ???
+	#define CMD_FLASHERASE       4294967108UL -        /     ???
+	#define CMD_FLASHWRITE       4294967109UL -        /     ???
 	#define CMD_FLASHSPIDESEL    4294967115UL Ok       -     -
 	#define CMD_FLASHSPIRX       4294967117UL Ok       -     -
 	#define CMD_FLASHSPITX       4294967116UL Ok       -     -
-	#define CMD_FLASHUPDATE      4294967111UL -        ???   /
+	#define CMD_FLASHUPDATE      4294967111UL -        Ok    /
 	#define CMD_FLASHSOURCE      4294967118UL /        /     /
 	
 	*/
