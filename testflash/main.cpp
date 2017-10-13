@@ -1096,7 +1096,6 @@ int main(int, char*[])
 	//// Enter full speed mode
 	/////////////////////////////////////////////////////////////////
 
-	///* Requires ESPIM
 	; {
 		printf("CMD_FLASHFAST\n");
 		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
@@ -1106,7 +1105,38 @@ int main(int, char*[])
 		assert(rd32(emulator, resAddr) == 0);
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 	}
-	//*/
+
+	for (int i = 0; i < 4096; ++i)
+	{
+		ram[i] = 0x55;
+	}
+
+	; {
+		printf("CMD_FLASHREAD (FLASH_STATUS_FULL)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+		wr32(emulator, REG_CMDB_WRITE, 128); // dest
+		wr32(emulator, REG_CMDB_WRITE, 128); // src
+		wr32(emulator, REG_CMDB_WRITE, 512); // num
+		flush(emulator);
+		for (int i = 128; i < 128 + 512; ++i)
+			assert(ram[i] == data[i]);
+	}
+
+	/* // QE is dropped during FLASHERASE causing subsequent 4READ instructions to fail
+	for (int i = 0; i < 4096; ++i)
+	{
+		ram[i] = data[i];
+	}
+
+	; {
+		assert(data[0] == 0x70);
+		printf("CMD_FLASHERASE (FLASH_STATUS_FULL)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHERASE);
+		flush(emulator);
+		for (int i = 0; i < 32 * 4096; ++i)
+			assert(data[i] == 0xFF);
+	}
+	*/
 
 	/////////////////////////////////////////////////////////////////
 	//// Detach, attach, direct access
@@ -1193,13 +1223,31 @@ int main(int, char*[])
 	}
 
 	/////////////////////////////////////////////////////////////////
+	//// Erase, write
+	/////////////////////////////////////////////////////////////////
+
+	for (int i = 0; i < 4096; ++i)
+	{
+		ram[i] = data[i];
+	}
+
+	; {
+		assert(data[0] == 0x70);
+		printf("CMD_FLASHERASE\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHERASE);
+		flush(emulator);
+		for (int i = 0; i < 32 * 4096; ++i)
+			assert(data[i] == 0xFF);
+	}
+
+	/////////////////////////////////////////////////////////////////
 
 	/*
 	                                          Detached Basic Full
 	#define CMD_FLASHATTACH      4294967113UL Ok       -     -
 	#define CMD_FLASHDETACH      4294967112UL -        Ok    ?
 	#define CMD_FLASHFAST        4294967114UL -        Ok-ish-    // Seeing only one test read on 0xFC0 and two on 0x00
-	#define CMD_FLASHREAD        4294967110UL -        Ok    ???
+	#define CMD_FLASHREAD        4294967110UL -        Ok    Ok
 	#define CMD_FLASHERASE       4294967108UL -        /     ???
 	#define CMD_FLASHWRITE       4294967109UL -        /     ???
 	#define CMD_FLASHSPIDESEL    4294967115UL Ok       -     -

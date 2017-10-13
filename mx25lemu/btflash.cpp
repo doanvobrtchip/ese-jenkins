@@ -1157,6 +1157,7 @@ public:
 				Flash_debug("Read Status Register");
 				m_RunState = BTFLASH_STATE_OUT_U8;
 				startWriteU8(m_StatusRegister);
+				Flash_debug("RDSR 0x%x", m_StatusRegister);
 				return m_LastSignal;
 			case BTFLASH_CMD_WRSR: /* Write Status Register */
 				Flash_debug("Write Status Register");
@@ -1458,6 +1459,10 @@ public:
 				writeProtect(false);
 			else
 				writeProtect(!(signal & BTFLASH_SPI4_WP));
+
+			Flash_debug("WRSR 0x%x %s %s", (int)data,
+				(m_StatusRegister & BTFLASH_STATUS_QE_FLAG) ? "QE" : "",
+				(m_StatusRegister & BTFLASH_STATUS_SRWD_FLAG) ? "SRWD" : "");
 
 			m_RunState = BTFLASH_STATE_BLANK;
 		}

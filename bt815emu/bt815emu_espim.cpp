@@ -66,13 +66,13 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 	}
 	if (spim_clken)
 	{
-		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x0 | spimo);
+		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x0 | spimo); // Not really needed for the emulator
 		m_Memory->coprocessorWriteU32(REG_SPIM, 0x20 | spimo);
 		m_Memory->coprocessorWriteU32(REG_SPIM, 0x0 | spimo);
 	}
 	else
 	{
-		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x10 | spimo); // VERIFY
+		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x10 | spimo); // VERIFY: What's the usage of SS_PAUSE?
 	}
 
 	uint8_t *window = &ram[REG_ESPIM_WINDOW];
@@ -97,7 +97,8 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 		else
 		{
 			state = 0;
-			m_Memory->coprocessorWriteU32(REG_SPIM, 0x10 | spimo); // CS high
+			m_Memory->coprocessorWriteU32(REG_SPIM, 0x10); // CS high
+			m_Memory->coprocessorWriteU32(REG_SPIM_DIR, 0x11);
 		}
 	}
 	assert(state < 256);
