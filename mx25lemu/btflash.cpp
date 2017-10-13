@@ -26,7 +26,7 @@ RDSR        Ok
 WREN        Ok              Ok
 WRDI        Ok
 CE     C7h  Ok              Ok
-SE
+SE          Ok              Ok
 BE
 > (From 256Mbit) (bottom 128Mbits are lowest address range)
 RSTEN  66h  Ok
@@ -295,7 +295,7 @@ public:
 		m_WriteProtect = false;
 
 		const wchar_t *const dataFilePath = params->DataFilePath;
-		const size_t sizeBytes = params->SizeBytes;
+		const size_t sizeBytes = (params->SizeBytes + 65535) & (~(size_t)0xFFFF);
 
 		if (dataFilePath)
 		{
@@ -497,11 +497,18 @@ public:
 					const size_t addr = m_DelayedCommandAddr;
 					size_t at = addr & 0xFF;
 					const size_t page = addr - at;
-					for (int i = 0; i < m_PageProgramSize; ++i)
+					if ((page + 256) > Size)
 					{
-						Data[page + at] &= m_PageProgramData[i]; // Set only the 0s using &
-						++at;
-						at &= 0xFF;
+						log(BT8XXEMU_LogError, "Program address exceeds address space");
+					}
+					else
+					{
+						for (int i = 0; i < m_PageProgramSize; ++i)
+						{
+							Data[page + at] &= m_PageProgramData[i]; // Set only the 0s using &
+							++at;
+							at &= 0xFF;
+						}
 					}
 				}
 				break;
