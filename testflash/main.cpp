@@ -4,8 +4,11 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
+#define BT815EMU_MODE
+
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
+#include <ft800emu_vc.h>
 
 #include <stdio.h>
 #include <assert.h>
@@ -271,7 +274,80 @@ uint8_t read4U8(BT8XXEMU_Flash *flash)
 	return res;
 }
 
-int main(int, char* [])
+///////////////////////////////////////////////////////////////////////
+// Emulator utility
+///////////////////////////////////////////////////////////////////////
+
+void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
+{
+	BT8XXEMU_chipSelect(emulator, 1);
+
+	BT8XXEMU_transfer(emulator, (2 << 6) | ((address >> 16) & 0x3F));
+	BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, address & 0xFF);
+	// BT8XXEMU_transfer(0x00);
+}
+
+void swr8(BT8XXEMU_Emulator *emulator, uint8_t value)
+{
+	BT8XXEMU_transfer(emulator, value);
+}
+
+void swr16(BT8XXEMU_Emulator *emulator, uint16_t value)
+{
+	BT8XXEMU_transfer(emulator, value & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+}
+
+void swr32(BT8XXEMU_Emulator *emulator, uint32_t value)
+{
+	BT8XXEMU_transfer(emulator, value & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 16) & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 24) & 0xFF);
+}
+
+void swrend(BT8XXEMU_Emulator *emulator)
+{
+	BT8XXEMU_chipSelect(emulator, 0);
+}
+
+void wr32(BT8XXEMU_Emulator *emulator, size_t address, uint32_t value)
+{
+	swrbegin(emulator, address);
+	swr32(emulator, value);
+	swrend(emulator);
+}
+
+uint32_t rd32(BT8XXEMU_Emulator *emulator, size_t address)
+{
+	BT8XXEMU_chipSelect(emulator, 1);
+
+	BT8XXEMU_transfer(emulator, (address >> 16) & 0x3F);
+	BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, address & 0xFF);
+	BT8XXEMU_transfer(emulator, 0x00);
+
+	uint32_t value;
+	value = BT8XXEMU_transfer(emulator, rand() & 0xFF);
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 8;
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 16;
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 24;
+
+	BT8XXEMU_chipSelect(emulator, 0);
+	return value;
+}
+
+void flush(BT8XXEMU_Emulator *emulator)
+{
+	while (rd32(emulator, REG_CMD_READ) != rd32(emulator, REG_CMD_WRITE));
+}
+
+///////////////////////////////////////////////////////////////////////
+// Main
+///////////////////////////////////////////////////////////////////////
+
+int main(int, char*[])
 {
 	printf("%s\n\n", BT8XXEMU_version());
 
@@ -984,6 +1060,65 @@ int main(int, char* [])
 	BT8XXEMU_Flash_destroy(flash);
 	flash = NULL;
 	data = NULL;
+
+	/////////////////////////////////////////////////////////////////
+	//// Emulator Coprocessor
+	/////////////////////////////////////////////////////////////////
+
+	flashParams.SizeBytes = BTFLASH_SIZE; // BTFLASH_SIZE_EXTENDED;
+	flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+
+	data = BT8XXEMU_Flash_data(flash);
+	assert(data[0] == 0x70);
+	size = BT8XXEMU_Flash_size(flash);
+	assert(size == BTFLASH_SIZE);
+
+	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
+
+	params.Flash = flash;
+
+	BT8XXEMU_Emulator *emulator = NULL;
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
+
+	wr32(emulator, REG_HSIZE, 480);
+	wr32(emulator, REG_VSIZE, 272);
+	wr32(emulator, REG_PCLK, 5);
+
+	flush(emulator);
+	while (!rd32(emulator, REG_FLASH_STATUS));
+	assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+
+	/////////////////////////////////////////////////////////////////
+	//// Enter full speed mode
+	/////////////////////////////////////////////////////////////////
+
+	/* Requires ESPIM
+	; {
+		printf("CMD_FLASHFAST\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
+		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
+		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
+		flush(emulator);
+		while (rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+		assert(rd32(emulator, resAddr) == 0);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+	}
+	*/
+
+	/////////////////////////////////////////////////////////////////
+
+	BT8XXEMU_stop(emulator);
+	BT8XXEMU_destroy(emulator);
+	emulator = NULL;
+	BT8XXEMU_Flash_destroy(flash);
+	flash = NULL;
+	data = NULL;
+
+	/////////////////////////////////////////////////////////////////
+	//// Read Identification Data
+	/////////////////////////////////////////////////////////////////
 
 	char c;
 	printf("Press key to exit");
