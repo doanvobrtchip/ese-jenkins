@@ -1167,24 +1167,40 @@ int main(int, char*[])
 	}
 
 	/////////////////////////////////////////////////////////////////
-	//// 
+	//// Update
 	/////////////////////////////////////////////////////////////////
+
+	for (int i = 0; i < 4096; ++i)
+	{
+		ram[i] = data[i];
+		data[i + 4096] = 0x55;
+	}
+
+	; {
+		assert(data[4096] != 0x70);
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHUPDATE);
+		wr32(emulator, REG_CMDB_WRITE, 4096); // dest
+		wr32(emulator, REG_CMDB_WRITE, 0); // src
+		wr32(emulator, REG_CMDB_WRITE, 4096); // num
+		flush(emulator);
+		assert(data[4096] == 0x70);
+	}
 
 	/////////////////////////////////////////////////////////////////
 
 	/*
-
-	#define CMD_FLASHATTACH      4294967113UL Ok
-	#define CMD_FLASHDETACH      4294967112UL Ok
-	#define CMD_FLASHERASE       4294967108UL
-	#define CMD_FLASHFAST        4294967114UL
-	#define CMD_FLASHREAD        4294967110UL Ok
-	#define CMD_FLASHSOURCE      4294967118UL
-	#define CMD_FLASHSPIDESEL    4294967115UL
-	#define CMD_FLASHSPIRX       4294967117UL
-	#define CMD_FLASHSPITX       4294967116UL
-	#define CMD_FLASHUPDATE      4294967111UL
-	#define CMD_FLASHWRITE       4294967109UL
+	                                          Detached Basic Full
+	#define CMD_FLASHATTACH      4294967113UL Ok       -     -
+	#define CMD_FLASHDETACH      4294967112UL -        Ok    ?
+	#define CMD_FLASHFAST        4294967114UL -        ???   ???
+	#define CMD_FLASHREAD        4294967110UL -        Ok    ???
+	#define CMD_FLASHERASE       4294967108UL -        ???   ???
+	#define CMD_FLASHWRITE       4294967109UL -        ???   ???
+	#define CMD_FLASHSPIDESEL    4294967115UL Ok       -     -
+	#define CMD_FLASHSPIRX       4294967117UL Ok       -     -
+	#define CMD_FLASHSPITX       4294967116UL Ok       -     -
+	#define CMD_FLASHUPDATE      4294967111UL -        ???   /
+	#define CMD_FLASHSOURCE      4294967118UL /        /     /
 	
 	*/
 
