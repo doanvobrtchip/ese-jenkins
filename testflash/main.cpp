@@ -356,6 +356,7 @@ int main(int, char*[])
 	flashParams.DeviceType = BTFLASH_DEVICE_TYPE;
 	flashParams.SizeBytes = BTFLASH_SIZE;
 	flashParams.DataFilePath = BTFLASH_DATA_FILE;
+	flashParams.StdOut = true;
 	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 
 	uint8_t *data = BT8XXEMU_Flash_data(flash);
@@ -1184,6 +1185,11 @@ int main(int, char*[])
 		wr32(emulator, REG_CMDB_WRITE, 4096); // num
 		flush(emulator);
 		assert(data[4096] == 0x70);
+		for (int i = 0; i < 4096; ++i)
+		{
+			assert(ram[i] == data[i]);
+			assert(ram[i] == data[i + 4096]);
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////

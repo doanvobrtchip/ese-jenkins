@@ -225,6 +225,9 @@ typedef struct
 	// the file being copied to memory. Default false
 	bool Persistent;
 
+	// Print log to standard output. Default false
+	bool StdOut;
+
 	// Data buffer that is written to the flash initially,
 	// overriding any existing contents that may have been
 	// loaded from a flash file already, default NULL and 0

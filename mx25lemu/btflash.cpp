@@ -468,6 +468,18 @@ public:
 					m_ExtendedAddressRegister = 0;
 					m_ResetEnable = false;
 					break;
+				case BTFLASH_CMD_SE:
+					Flash_debug("Sector Erase (Execute)");
+					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
+					if (((m_DelayedCommandAddr & ~0xFFF) + 4096) > Size)
+					{
+						log(BT8XXEMU_LogError, "Erase address exceeds address space");
+					}
+					else
+					{
+						memset(&Data[m_DelayedCommandAddr & ~0xFFF], 0xFF, 4096);
+					}
+					break;
 				default:
 					log(BT8XXEMU_LogError, "Unknown instruction on CS high");
 					break;
@@ -640,6 +652,8 @@ public:
 			return statePPAddr(signal);
 		case BTFLASH_STATE_PP_READ:
 			return statePPRead(signal);
+		case BTFLASH_STATE_SE_ADDR:
+			return stateSEAddr(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -768,6 +782,7 @@ public:
 		case BTFLASH_STATE_4READ_PE:
 		case BTFLASH_STATE_PP_ADDR:
 		case BTFLASH_STATE_PP_READ:
+		case BTFLASH_STATE_SE_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -1209,9 +1224,19 @@ public:
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
 			case BTFLASH_CMD_SE: /* Sector Erase */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_SE)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				return m_LastSignal;
+				Flash_debug("Sector Erase");
+				if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
+				{
+					m_DelayedCommand = BTFLASH_CMD_SE;
+					m_RunState = BTFLASH_STATE_SE_ADDR;
+					return m_LastSignal;
+				}
+				else
+				{
+					log(BT8XXEMU_LogError, "Sector Erase requires Write Enable Latch to be set");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
 			case BTFLASH_CMD_BE: /* Block Erase */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_BE)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
@@ -1245,7 +1270,7 @@ public:
 				}
 				else
 				{
-					log(BT8XXEMU_LogError, "Chip Erase requires Write Enable Latch to be set");
+					log(BT8XXEMU_LogError, "Page Program requires Write Enable Latch to be set");
 					m_RunState = BTFLASH_STATE_IGNORE;
 					return m_LastSignal;
 				}
@@ -1584,6 +1609,20 @@ public:
 			m_PageProgramSize = std::min(m_PageProgramSize, 256);
 
 			Flash_debug("PP data %x", (int)m_BufferU8);
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t stateSEAddr(uint8_t signal)
+	{
+		if (readAddressSpi1AsU32SkipLsb(signal, 0))
+		{
+			uint32_t addr = m_BufferU32;
+			m_BufferBits = 0;
+			Flash_debug("SE addr %i", (int)addr);
+			m_DelayedCommandAddr = addr;
+			m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
 		}
 
 		return m_LastSignal;
