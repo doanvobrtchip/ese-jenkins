@@ -1,0 +1,12 @@
+
+FILE(GLOB SRCS *.cpp)
+FILE(GLOB HDRS *.h)
+
+ADD_EXECUTABLE(btdump3
+	${SRCS}
+	${HDRS}
+)
+
+TARGET_LINK_LIBRARIES(btdump3
+	bt8xxemu
+)
