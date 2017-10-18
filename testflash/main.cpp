@@ -526,7 +526,7 @@ int main(int, char*[])
 		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
 		printf("READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
-		assert(reqd4 == 0x6C);
+		assert(reqd4 == 0x8E);
 		assert(reqd5 == 0x00);
 	}
 
@@ -579,7 +579,7 @@ int main(int, char*[])
 		uint8_t reqd5 = transferU8(flash, rand() & 0xFF);
 		printf("FAST_READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
-		assert(reqd4 == 0x6C);
+		assert(reqd4 == 0x8E);
 		assert(reqd5 == 0x00);
 	}
 
@@ -641,7 +641,7 @@ int main(int, char*[])
 		uint8_t reqd5 = transferDTU8(flash, rand() & 0xFF);
 		printf("FASTDTRD (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
-		assert(reqd4 == 0x6C);
+		assert(reqd4 == 0x8E);
 		assert(reqd5 == 0x00);
 	}
 
@@ -721,7 +721,7 @@ int main(int, char*[])
 		uint8_t reqd5 = read4U8(flash);
 		printf("4READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
 		assert(reqd3 == 0x92);
-		assert(reqd4 == 0x6C);
+		assert(reqd4 == 0x8E);
 		assert(reqd5 == 0x00);
 	}
 
@@ -1122,7 +1122,6 @@ int main(int, char*[])
 			assert(ram[i] == data[i]);
 	}
 
-	/* // QE is dropped during FLASHERASE causing subsequent 4READ instructions to fail
 	for (int i = 0; i < 4096; ++i)
 	{
 		ram[i] = data[i];
@@ -1136,7 +1135,38 @@ int main(int, char*[])
 		for (int i = 0; i < 32 * 4096; ++i)
 			assert(data[i] == 0xFF);
 	}
-	*/
+
+	; {
+		assert(ram[0] == 0x70);
+		assert(data[0] != 0x70);
+		printf("CMD_FLASHWRITE (FLASH_STATUS_FULL\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHWRITE);
+		wr32(emulator, REG_CMDB_WRITE, 0);
+		wr32(emulator, REG_CMDB_WRITE, 2048);
+		for (int i = 0; i < 512; ++i)
+			wr32(emulator, REG_CMDB_WRITE, ((uint32_t *)ram)[i]);
+		flush(emulator);
+		for (int i = 0; i < 2048; ++i)
+			assert(data[i] == ram[i]);
+		assert(data[0] == 0x70);
+	}
+
+	for (int i = 0; i < 4096; ++i)
+	{
+		ram[i] = 0x55;
+	}
+
+	; {
+		assert(ram[128] != data[128]);
+		printf("CMD_FLASHREAD (FLASH_STATUS_FULL)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+		wr32(emulator, REG_CMDB_WRITE, 128); // dest
+		wr32(emulator, REG_CMDB_WRITE, 128); // src
+		wr32(emulator, REG_CMDB_WRITE, 512); // num
+		flush(emulator);
+		for (int i = 128; i < 128 + 512; ++i)
+			assert(ram[i] == data[i]);
+	}
 
 	/////////////////////////////////////////////////////////////////
 	//// Detach, attach, direct access
