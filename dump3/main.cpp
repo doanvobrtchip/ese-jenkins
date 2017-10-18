@@ -82,15 +82,28 @@ void flush(BT8XXEMU_Emulator *emulator)
 	while (rd32(emulator, REG_CMD_READ) != rd32(emulator, REG_CMD_WRITE));
 }
 
-int graphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
+static int32_t s_HSize, s_VSize;
+static volatile bool s_DlSwapDone = false;
+static volatile bool s_GraphicsDone = false;
+static const char *s_OutFileName = NULL;
+
+int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
 {
+	if (s_DlSwapDone)
+	{
+		int bsize = hsize * vsize;
+		FILE *f = fopen(s_OutFileName, "wb");
+		fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f);
+		fclose(f);
+		s_GraphicsDone = true;
+	}
 	return 1;
 }
 
 int main(int argc, char* argv[])
 {
+	s_OutFileName = argc > 2 ? argv[2] : NULL;
 	FILE *f = fopen(BTDUMP_FILE, "rb");
-    int32_t hsize, vsize;
 
 	printf("%s\n\n", BT8XXEMU_version());
 
@@ -105,6 +118,11 @@ int main(int argc, char* argv[])
 	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
 
 	params.Flash = flash;
+
+	if (s_OutFileName)
+	{
+		params.Graphics = graphics;
+	}
 
 	BT8XXEMU_Emulator *emulator = NULL;
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
@@ -167,10 +185,10 @@ int main(int argc, char* argv[])
 			if (header[0] != 110) printf("Invalid header version %i\n", header[0]);
 			else
 			{
-				hsize = header[1];
-				vsize = header[2];
-				wr32(emulator, REG_HSIZE, hsize);
-				wr32(emulator, REG_VSIZE, vsize);
+				s_HSize = header[1];
+				s_VSize = header[2];
+				wr32(emulator, REG_HSIZE, s_HSize);
+				wr32(emulator, REG_VSIZE, s_VSize);
 				wr32(emulator, REG_PCLK, 5);
 				wr32(emulator, REG_MACRO_0, header[3]);
 				wr32(emulator, REG_MACRO_1, header[4]);
@@ -179,7 +197,7 @@ int main(int argc, char* argv[])
 				{
 					// 0
 					// 24
-					// 1048600 ?1048576
+					// 1048600 +1048576
 					// 1056792 +8192
 
 					// todo set regs
@@ -198,7 +216,9 @@ int main(int argc, char* argv[])
 		BT8XXEMU_poke(emulator);
 		wr32(emulator, REG_DLSWAP, DLSWAP_FRAME);
 
-		for (;; ) { _sleep(1); }
+		while ((rd32(emulator, REG_DLSWAP) != DLSWAP_DONE) && BT8XXEMU_isRunning(emulator));
+		s_DlSwapDone = true;
+		while (!s_GraphicsDone && BT8XXEMU_isRunning(emulator)) flush(emulator);
 
 		/*
 		int bsize = hsize * vsize;
