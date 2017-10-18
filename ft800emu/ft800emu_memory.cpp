@@ -610,6 +610,16 @@ Memory::~Memory()
 	// ...
 }
 
+void Memory::done()
+{
+	// Set register states to a finished value to end any blocking waits
+	rawWriteU32(REG_DLSWAP, DLSWAP_DONE);
+	rawWriteU32(REG_CMD_READ, rawReadU32(REG_CMD_WRITE));
+#ifdef FT810EMU_MODE
+	rawWriteU32(REG_MEDIAFIFO_READ, rawReadU32(REG_MEDIAFIFO_WRITE));
+#endif
+}
+
 void Memory::enableReadDelay(bool enabled)
 {
 	m_ReadDelay = enabled;

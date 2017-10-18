@@ -172,51 +172,9 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	FTEMU_message("Wait for Audio");
 	m_StdThreadAudio.join();
 
-	FTEMU_message("Threads finished, cleaning up");
+	FTEMU_message("Threads finished, emulator stopped running");
 
-	delete[] m_GraphicsBuffer;
-	m_GraphicsBuffer = NULL;
-	if ((!m_Graphics) && (flags & BT8XXEMU_EmulatorEnableKeyboard))
-	{
-		m_KeyboardInput->destroy();
-		m_KeyboardInput = NULL;
-	}
-	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
-	{
-		delete m_Coprocessor;
-		m_Coprocessor = NULL;
-	}
-	assert(!m_Coprocessor);
-	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
-	{
-		m_Memory->setAudioRender(NULL);
-		delete m_AudioRender;
-		m_AudioRender = NULL;
-		m_Memory->setAudioProcessor(NULL);
-		delete m_AudioProcessor;
-		m_AudioProcessor = NULL;
-		m_AudioOutput->destroy();
-		m_AudioOutput = NULL;
-	}
-	if (!m_Graphics) m_WindowOutput->destroy();
-	m_WindowOutput = NULL;
-	delete m_BusSlave;
-	m_BusSlave = NULL;
-	m_Memory->setGraphicsProcessor(NULL);
-	delete m_GraphicsProcessor;
-	m_GraphicsProcessor = NULL;
-	m_Memory->setTouch(NULL);
-	delete m_Touch;
-	m_Touch = NULL;
-	delete m_Memory;
-	m_Memory = NULL;
-
-	FTEMU_message("Emulator stopped running");
-
-#ifdef WIN32
-	if (m_CoInit)
-		CoUninitialize();
-#endif
+	m_Memory->done();
 
 	m_EmulatorRunning = false;
 }
@@ -228,12 +186,75 @@ Emulator::Emulator()
 
 Emulator::~Emulator()
 {
+	destroy();
 	delete m_System;
 	m_System = NULL;
 }
 
+void Emulator::destroy()
+{
+	int runningError = 0;
+	while (m_EmulatorRunning)
+	{
+		if (runningError == 0)
+		{
+			FTEMU_error("Destroying emulator while it is still running, waiting for it to stop");
+		}
+		runningError = (runningError >= 1000) ? 0 : (runningError + 1);
+		Sleep(1);
+	}
+	if (m_Memory)
+	{
+		delete[] m_GraphicsBuffer;
+		m_GraphicsBuffer = NULL;
+		if (m_KeyboardInput)
+		{
+			m_KeyboardInput->destroy();
+			m_KeyboardInput = NULL;
+		}
+		delete m_Coprocessor;
+		m_Coprocessor = NULL;
+		if (m_AudioRender)
+		{
+			m_Memory->setAudioRender(NULL);
+			delete m_AudioRender;
+			m_AudioRender = NULL;
+		}
+		if (m_AudioProcessor)
+		{
+			m_Memory->setAudioProcessor(NULL);
+			delete m_AudioProcessor;
+			m_AudioProcessor = NULL;
+		}
+		if (m_AudioOutput)
+		{
+			m_AudioOutput->destroy();
+			m_AudioOutput = NULL;
+		}
+		if (!m_Graphics) m_WindowOutput->destroy();
+		m_WindowOutput = NULL;
+		delete m_BusSlave;
+		m_BusSlave = NULL;
+		m_Memory->setGraphicsProcessor(NULL);
+		delete m_GraphicsProcessor;
+		m_GraphicsProcessor = NULL;
+		m_Memory->setTouch(NULL);
+		delete m_Touch;
+		m_Touch = NULL;
+		delete m_Memory;
+		m_Memory = NULL;
+
+#ifdef WIN32
+		if (m_CoInit)
+			CoUninitialize();
+#endif
+	}
+}
+
 void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 {
+	destroy();
+
 	m_InitMutexGlobal.lock();
 
 #ifdef WIN32

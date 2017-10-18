@@ -56,6 +56,8 @@ public:
 	Emulator();
 	~Emulator();
 
+	void destroy();
+
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
 	virtual bool isRunning() override;

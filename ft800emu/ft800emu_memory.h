@@ -48,6 +48,8 @@ public:
 		const wchar_t *romFilePath = 0, const wchar_t *otpFilePath = 0);
 	~Memory();
 
+	void done();
+
 	inline void setTouch(Touch *touch) { m_Touch = touch; }
 	inline void setGraphicsProcessor(GraphicsProcessor *graphicsProcessor) { m_GraphicsProcessor = graphicsProcessor; }
 	inline void setAudioProcessor(AudioProcessor *audioProcessor) { m_AudioProcessor = audioProcessor; }
