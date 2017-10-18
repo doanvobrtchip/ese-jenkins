@@ -47,7 +47,7 @@ void overrideMain(BT8XXEMU_Emulator *sender, void *context)
 		s_Main(sender, context);
 }
 
-static int ftqtGraphics(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) // on Emulator thread
+static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) // on Emulator thread
 {
 	// TODO: Optimize using platform specific access to QImage so we
 	// don't need to copy the buffer each time.

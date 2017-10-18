@@ -187,7 +187,7 @@ typedef struct
 	// The contents of the buffer pointer are undefined after this
 	// function returns. Create a copy to use it on another thread.
 	// Return false (0) when the application must exit, otherwise return true (1).
-	int(*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
+	int(*Graphics)(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
 
 	// Interrupt handler
 	// void (*Interrupt)(void *sender, void *context);

@@ -423,7 +423,7 @@ int Emulator::masterThread(bool sync)
 						frameFlags |= BT8XXEMU_FrameChanged;
 					if (hasSwapped)
 						frameFlags |= BT8XXEMU_FrameSwap;
-					if (!m_Graphics(reg_pclk != 0, m_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
+					if (!m_Graphics(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext, reg_pclk != 0, m_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
 					{
 						FTEMU_message("Graphics output closed");
 						m_CloseCalled = true;
