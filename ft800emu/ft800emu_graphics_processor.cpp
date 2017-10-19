@@ -714,7 +714,7 @@ BT8XXEMU_FORCE_INLINE bool wrap(btxf_t &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
-		value = value & (max - 1);
+		value = value & (max - 1); // Only support REPEAT for power-of-2 sizes
 		break;
 	}
 	return true;
@@ -820,21 +820,21 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		}
 	case L1:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (xl % 8))) & 0x1;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (xl & 7))) & 0x1;
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF;
 		}
 #ifdef FT810EMU_MODE
 	case L2:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (xl % 4)) << 1)) & 0x3;
+			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (xl & 3)) << 1)) & 0x3;
 			val = mul255div3(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
 #endif
 	case L4:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (((xl + 1) % 2) << 2)) & 0xF;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (((xl + 1) & 1) << 2)) & 0xF;
 			val = mul255div15(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
