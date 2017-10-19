@@ -749,9 +749,9 @@ static const int c_AstcBlockHeight[] = {
 
 // uses pixel units
 #if FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
 	btxf_t xol;   // x byte offset
@@ -814,7 +814,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	}
 	const int xo = (int)xol;
 #ifdef BT815EMU_MODE
-	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height * c_AstcBlockHeight[format & 0xF], wrapy)) return 0x00000000; }
+	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
 	else
 #endif
 		if (format != BARGRAPH) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
@@ -954,7 +954,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		const int blockWidth = c_AstcBlockWidth[format & 0xF];
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
 		const int numBlocksWidth = stride >> 4;
-		const int numBlocksHeight = height;
+		const int numBlocksHeight = lines;
 		const int blockX = (int)xl / blockWidth; // can we avoid divide... :(
 		const int blockY = (int)yl / blockHeight; // can we avoid divide... :(
 		const int tileX = blockX >> 1;
@@ -991,15 +991,15 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
-#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo, paletteSource
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, lines, wrapx, wrapy, bitmapInfo, paletteSource
 #else
-#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, lines, wrapx, wrapy, bitmapInfo
 #endif
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
@@ -1164,21 +1164,28 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		//if (bi.
 		const int vy = y * 16; // x.4u
 		const int ry = vy - py; // ~15.4i, 19 + 1b
-		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
 #ifdef BT815EMU_MODE
 		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
 		const int sampleFormat = extFormat ? bi.ExtFormat : bi.LayoutFormat;
 #else
 		const int sampleFormat = bi.LayoutFormat;
 #endif
-		const ramaddr cellOffset = (cell * bi.LayoutStride * bi.LayoutHeight);
-		const uint32_t sampleSrcPos = sourceAddr + cellOffset;
-		const int sampleWidth = bi.LayoutWidth;
-		const int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
 		const int sampleStride = bi.LayoutStride;
+		const int sampleLines = bi.LayoutLines;
+		const int samplePixelWidth = bi.LayoutPixelWidth;
+		const int samplePixelHeight = bi.LayoutPixelHeight;
+#ifdef sfdfsd // BT815EMU_MODE
+		const ramaddr cellOffset = (cell * sampleStride *
+		(BT815EMU_IS_FORMAT_ASTC(sampleFormat)
+			? ((sampleHeight + c_AstcBlockHeight[sampleFormat & 0xF] - 1) / c_AstcBlockHeight[sampleFormat & 0xF])
+			: sampleHeight));
+#else
+		const ramaddr cellOffset = (cell * sampleStride * sampleLines);
+#endif
 		const int sampleWrapX = bi.SizeWrapX;
 		const int sampleWrapY = bi.SizeWrapY;
 		const int sampleFilter = bi.SizeFilter;
+		const uint32_t sampleSrcPos = sourceAddr + cellOffset;
 #ifdef FT810EMU_MODE
 		const int paletteSource = gs.PaletteSource;
 #endif
@@ -1225,9 +1232,9 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			// because maximum visual precision after calculation is only 1/16 subpixel with 1/256 gradation, 
 			// we shift the transform back down to .12
 #ifdef FT810EMU_MODE
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
+			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
 #else
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
+			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 #endif
 #ifdef BT815EMU_MODE
 			const argb8888 swizzled = extFormat ? swizzleSample(sample, bi) : sample;
@@ -1240,7 +1247,7 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 	}
 }
 
-BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int format, const int stride)
+BT8XXEMU_FORCE_INLINE int getLayoutPixelWidth(FT8XXEMU::System *const system, const int format, const int stride)
 {
 	switch (format)
 	{
@@ -1274,12 +1281,37 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 	return stride;
 }
 
+BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, const int format, const int lines)
+{
+	switch (format)
+	{
+		case TEXT8X8:
+			return lines << 3;
+		case TEXTVGA:
+			return lines << 4;
+	}
 #ifdef BT815EMU_MODE
-BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int stride)
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockHeight = c_AstcBlockHeight[format & 0xF];
+		return blockHeight * lines;
+	}
+#endif
+	return lines;
+}
+
+#ifdef BT815EMU_MODE
+BT8XXEMU_FORCE_INLINE int getLayoutPixelWidth(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int stride)
 {
 	const bool usingExtFormat = layoutFormat == GLFORMAT;
 	const int sampleFormat = usingExtFormat ? extFormat : layoutFormat;
-	return getLayoutWidth(system, sampleFormat, stride);
+	return getLayoutPixelWidth(system, sampleFormat, stride);
+}
+BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int lines)
+{
+	const bool usingExtFormat = layoutFormat == GLFORMAT;
+	const int sampleFormat = usingExtFormat ? extFormat : layoutFormat;
+	return getLayoutPixelHeight(system, sampleFormat, lines);
 }
 #endif
 
@@ -2625,7 +2657,7 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			const uint32_t format = Memory::rawReadU32(ram, bi + 8);
 			const uint32_t swizzle = Memory::rawReadU32(ram, bi + 12);
 			const uint32_t layoutStride = Memory::rawReadU32(ram, bi + 16);
-			const uint32_t layoutHeight = Memory::rawReadU32(ram, bi + 20);
+			const uint32_t layoutLines = Memory::rawReadU32(ram, bi + 20);
 			const uint32_t sizeWidth = Memory::rawReadU32(ram, bi + 24);
 			const uint32_t sizeHeight = Memory::rawReadU32(ram, bi + 28);
 			const uint32_t data = Memory::rawReadU32(ram, bi + 32);
@@ -2633,13 +2665,14 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 				"Extended Font[%i] -> Format: %u, Swizzle: %u, "
 				"Layout Stride: %u, Size Width: %u, "
 				"Layout Height: %u, Size Height: %u, Data: %u", 
-				ir, format, swizzle, layoutStride, sizeWidth, layoutHeight, sizeHeight, data);
+				ir, format, swizzle, layoutStride, sizeWidth, layoutLines, sizeHeight, data);
 
 			m_BitmapInfoMaster[ir].Source = data;
 			m_BitmapInfoMaster[ir].LayoutFormat = GLFORMAT;
 			m_BitmapInfoMaster[ir].LayoutStride = layoutStride;
-			m_BitmapInfoMaster[ir].LayoutHeight = layoutHeight;
-			m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, layoutStride);
+			m_BitmapInfoMaster[ir].LayoutLines = layoutLines;
+			m_BitmapInfoMaster[ir].LayoutPixelWidth = getLayoutPixelWidth(system, format, layoutStride);
+			m_BitmapInfoMaster[ir].LayoutPixelHeight = getLayoutPixelHeight(system, format, layoutLines);
 			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
 			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
 			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
@@ -2658,8 +2691,10 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			const uint32_t stride = Memory::rawReadU32(ram, bi + 132);
 			const uint32_t width = Memory::rawReadU32(ram, bi + 136);
 			const uint32_t height = Memory::rawReadU32(ram, bi + 140);
+			const uint32_t linesFactor = getLayoutPixelHeight(system, format, 1);
+			const uint32_t lines = (height + linesFactor - 1) / linesFactor;
 			const uint32_t data = Memory::rawReadU32(ram, bi + 144);
-			m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
+			m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Lines: %u, Data: %u", ir, format, stride, width, lines, data);
 
 			m_BitmapInfoMaster[ir].Source = data;
 #ifdef BT815EMU_MODE
@@ -2680,13 +2715,14 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 			m_BitmapInfoMaster[ir].LayoutFormat = format;
 #endif
 			m_BitmapInfoMaster[ir].LayoutStride = stride;
-			m_BitmapInfoMaster[ir].LayoutHeight = height;
-			m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
+			m_BitmapInfoMaster[ir].LayoutLines = lines;
+			m_BitmapInfoMaster[ir].LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+			m_BitmapInfoMaster[ir].LayoutPixelHeight = height;
 			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
 			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
 			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
 			m_BitmapInfoMaster[ir].SizeWidth = width;
-			m_BitmapInfoMaster[ir].SizeHeight = height;
+			m_BitmapInfoMaster[ir].SizeHeight = m_BitmapInfoMaster[ir].LayoutPixelHeight;
 #ifdef BT815EMU_MODE
 		}
 #endif
@@ -2868,19 +2904,23 @@ EvaluateDisplayListValue:
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
 #else
 				int stride = (v >> 9) & 0x3FF;
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = v & 0x1FF;
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+				int lines = v & 0x1FF;
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 512; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
 #endif
 #ifdef BT815EMU_MODE
-				bi.LayoutWidth = getLayoutWidth(system, format, bi.ExtFormat, stride);
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, bi.ExtFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, bi.ExtFormat, lines);
 #else
-				bi.LayoutWidth = getLayoutWidth(system, format, stride);
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, lines);
 #endif
 			}
 			break;
@@ -2946,12 +2986,15 @@ EvaluateDisplayListValue:
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
 #ifdef BT815EMU_MODE
-				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, bi.ExtFormat, lines);
 #else
-				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, lines);
 #endif
 			}
 			break;
@@ -2968,7 +3011,8 @@ EvaluateDisplayListValue:
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				const int extFormat = (v & 0xFFFF);
 				bi.ExtFormat = extFormat;
-				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, extFormat, bi.LayoutLines);
 			}
 			break;
 		case BT815EMU_DL_BITMAP_SWIZZLE:
@@ -3134,19 +3178,23 @@ EvaluateDisplayListValue:
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
 #else
 						int stride = (v >> 9) & 0x3FF;
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = v & 0x1FF;
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+						int lines = v & 0x1FF;
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 512; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
 #endif
 #ifdef BT815EMU_MODE
-						bi.LayoutWidth = getLayoutWidth(system, format, bi.ExtFormat, stride);
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, bi.ExtFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, bi.ExtFormat, lines);
 #else
-						bi.LayoutWidth = getLayoutWidth(system, format, stride);
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, lines);
 #endif
 						// FTEMU_message("DL_BITMAP_LAYOUT format %u, stride %u, height %u", format, stride, bi.LayoutHeight);
 					}
@@ -3410,12 +3458,17 @@ EvaluateDisplayListValue:
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
 #ifdef BT815EMU_MODE
-						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, bi.ExtFormat, lines);
 #else
-						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, lines);
+#endif
+#ifdef BT815EMU_MODE
 #endif
 					}
 					break;
@@ -3444,7 +3497,8 @@ EvaluateDisplayListValue:
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						const int extFormat = (v & 0xFFFF);
 						bi.ExtFormat = extFormat;
-						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, extFormat, bi.LayoutLines);
 					}
 					break;
 				case BT815EMU_DL_BITMAP_SWIZZLE:

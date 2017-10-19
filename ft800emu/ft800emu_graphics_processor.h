@@ -47,9 +47,10 @@ struct BitmapInfo
 {
 	uint32_t Source;
 	int LayoutFormat;
-	int LayoutWidth;
+	int LayoutPixelWidth;
+	int LayoutPixelHeight;
 	int LayoutStride;
-	int LayoutHeight;
+	int LayoutLines;
 	int SizeFilter;
 	int SizeWrapX;
 	int SizeWrapY;
