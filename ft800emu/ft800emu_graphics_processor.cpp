@@ -955,16 +955,21 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
 		const int numBlocksWidth = stride >> 4;
 		const int numBlocksHeight = height;
-		const int blockX = (int)xl / blockWidth;
-		const int blockY = (int)yl / blockHeight;
-		const int tileX = blockX / 2;
-		const int tileY = blockY / 2;
-		const int tileWidth = (blockX == (blockWidth - 1)) ? 1 : 2;
-		const int tileHeight = (blockY == (blockHeight - 1)) ? 1 : 2;
-		const int tileIdxVertical = blockY & 1; // % tileHeight
+		const int blockX = (int)xl / blockWidth; // can we avoid divide... :(
+		const int blockY = (int)yl / blockHeight; // can we avoid divide... :(
+		const int tileX = blockX >> 1;
+		const int tileY = blockY >> 1;
+		const int tileWidth = (numBlocksWidth & 1) && (blockX == (numBlocksWidth - 1)) ? 1 : 2;
+		const int tileHeight = (numBlocksHeight & 1) && (blockY == (numBlocksHeight - 1)) ? 1 : 2;
+		// if (tileWidth == 1) return 0xFFFF00FF;
+		const int tileIdxVertical = blockY & 1;
 		const int tileIdxReverse = blockX & 1;
-		const int tileIdx = tileIdxReverse ? (tileHeight * tileWidth) - 1 - tileIdxVertical : tileIdxVertical;
-		const ptrdiff_t blockOffset = (tileY * stride * 2) + (tileX * 64) + (tileIdx * 16);
+		const int tileIdx = tileIdxReverse 
+			? (tileHeight * tileWidth) - 1 - tileIdxVertical // 0-3 index within tile
+			: tileIdxVertical; // 0-1 index within tile
+		const ptrdiff_t blockOffset = (tileHeight == 1) 
+			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
+			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
 		const physical_compressed_block *physicalBlock = 
 			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
 		symbolic_compressed_block symbolicBlock = { 0 };
@@ -1163,17 +1168,10 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 #ifdef BT815EMU_MODE
 		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
 		const int sampleFormat = extFormat ? bi.ExtFormat : bi.LayoutFormat;
-		
-		const ramaddr cellOffset = (cell * bi.LayoutStride * 
-			(BT815EMU_IS_FORMAT_ASTC(sampleFormat) 
-				? ((bi.LayoutHeight + c_AstcBlockHeight[sampleFormat & 0xF] - 1) / c_AstcBlockHeight[sampleFormat & 0xF])
-				: (bi.LayoutHeight)));
-				
-		// const ramaddr cellOffset = 0;
 #else
 		const int sampleFormat = bi.LayoutFormat;
-		const ramaddr cellOffset = (cell * bi.LayoutStride * bi.LayoutHeight);
 #endif
+		const ramaddr cellOffset = (cell * bi.LayoutStride * bi.LayoutHeight);
 		const uint32_t sampleSrcPos = sourceAddr + cellOffset;
 		const int sampleWidth = bi.LayoutWidth;
 		const int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
