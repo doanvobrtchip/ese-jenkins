@@ -2701,8 +2701,13 @@ void MainWindow::tabChanged(int i)
 	// setFocus(Qt::OtherFocusReason);
 }
 
-void MainWindow::focusDlEditor()
+void MainWindow::focusDlEditor(bool forceOnly)
 {
+	if (forceOnly)
+	{
+		m_DlEditorDock->setVisible(true);
+		m_CmdEditorDock->setVisible(false);
+	}
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
@@ -3527,19 +3532,13 @@ void MainWindow::actImport()
 		const size_t headersz = 6;
 		uint32_t header[headersz];
 		int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (header[0] != 100)
+		if (s != sizeof(uint32_t) * headersz)
 		{
-			QString message;
-			message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
-			QMessageBox::critical(this, tr("Import .vc1dump"), message);
+			QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
 		}
 		else
 		{
-			if (s != sizeof(uint32_t) * headersz)
-			{
-				QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
-			}
-			else
+			if (header[0] == 100)
 			{
 				m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
 				m_HSize->setValue(header[1]);
@@ -3556,12 +3555,14 @@ void MainWindow::actImport()
 				m_ContentManager->changeMemoryLoaded(ramG, true);
 				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
 				m_ContentManager->changeRawLength(ramG, 262144);
-				s = in.skipRawData(262144);
-				// s = in.readRawData(&ram[RAM_G], 262144);
+				// s = in.skipRawData(262144);
+				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144);
 				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
 				else
 				{
-					s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
+					ramaddr ramPal = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL);
+					if (ramPal < 0) ramPal = 262144;
+					s = in.readRawData(&ram[ramPal], 1024); // FIXME_GUI PALETTE
 					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
 					else
 					{
@@ -3587,10 +3588,51 @@ void MainWindow::actImport()
 							*/
 							loadOk = true;
 							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
-							focusDlEditor();
+							focusDlEditor(true);
 						}
 					}
 				}
+			}
+			else if (header[0] == 110)
+			{
+				m_ProjectDevice->setCurrentIndex(FTEDITOR_BT815);
+				m_HSize->setValue(header[1]);
+				m_VSize->setValue(header[2]);
+				m_Macro->lockDisplayList();
+				m_Macro->getDisplayList()[0] = header[3];
+				m_Macro->getDisplayList()[1] = header[4];
+				m_Macro->reloadDisplayList(false);
+				m_Macro->unlockDisplayList();
+				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+				ContentInfo *ramG = m_ContentManager->add(fileName);
+				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
+				m_ContentManager->changeMemoryAddress(ramG, 0);
+				m_ContentManager->changeMemoryLoaded(ramG, true);
+				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
+				m_ContentManager->changeRawLength(ramG, 1048576);
+				// s = in.skipRawData(1048576);
+				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1048576);
+				if (s != 1048576) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+				else
+				{
+					m_DlEditor->lockDisplayList();
+					s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+					m_DlEditor->reloadDisplayList(false);
+					m_DlEditor->unlockDisplayList();
+					if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+					else
+					{
+						loadOk = true;
+						statusBar()->showMessage(tr("Imported project from .vc1dump file"));
+						focusDlEditor(true);
+					}
+				}
+			}
+			else
+			{
+				QString message;
+				message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
+				QMessageBox::critical(this, tr("Import .vc1dump"), message);
 			}
 		}
 	}

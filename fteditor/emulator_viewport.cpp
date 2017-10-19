@@ -26,6 +26,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 namespace FTEDITOR {
 
+#define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+
 BT8XXEMU_Emulator *g_Emulator = NULL;
 BT8XXEMU_Flash *g_Flash = NULL;
 
@@ -136,6 +138,13 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 		// Copy the params for the new thread to use
 		s_EmulatorParameters = params;
 
+#ifdef FTEDITOR_STDFLASH
+		BT8XXEMU_FlashParameters flashParams;
+		flashParams.DataFilePath = FTEDITOR_STDFLASH;
+		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+		g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+#endif
+
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
 
@@ -170,6 +179,11 @@ void EmulatorViewport::stop()
 
 		BT8XXEMU_destroy(g_Emulator);
 		g_Emulator = NULL;
+
+#ifdef FTEDITOR_STDFLASH
+		BT8XXEMU_Flash_destroy(g_Flash);
+		g_Flash = NULL;
+#endif
 	}
 }
 
