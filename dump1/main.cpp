@@ -1,80 +1,156 @@
-/**
- * main.cpp
- * $Id$
- * \file main.cpp
- * \brief main.cpp
- * \date 2013-07-09 07:57GMT
- * \author Jan Boon (Kaetemi)
- */
-
 /*
- * Copyright (C) 2013  Future Technology Devices International Ltd
- */
+BT8XX Emulator Samples
+Copyright (C) 2013  Future Technology Devices International Ltd
+Copyright (C) 2017  Bridgetek Pte Lte
+*/
 
-#include <ft800emu_emulator.h>
-#include <ft800emu_memory.h>
-#include <ft800emu_coprocessor.h>
-#include <ft800emu_spi_i2c.h>
-#include <ft800emu_graphics_processor.h>
-#include <ft8xxemu_window_output.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include <bt8xxemu.h>
+#include <bt8xxemu_diag.h>
 #include <ft800emu_vc.h>
 
-void wr32(size_t address, uint32_t value)
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+
+#define BTDUMP_FILE argv[1] /* "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump" */
+#define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+
+void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
 {
-	FT800EMU::SPII2C.csLow();
+	BT8XXEMU_chipSelect(emulator, 1);
 
-	FT800EMU::SPII2C.transfer((2 << 6) | ((address >> 16) & 0x3F));
-	FT800EMU::SPII2C.transfer((address >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer(address & 0xFF);
-
-	FT800EMU::SPII2C.transfer(value & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 8) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 16) & 0xFF);
-	FT800EMU::SPII2C.transfer((value >> 24) & 0xFF);
-
-	FT800EMU::SPII2C.csHigh();
+	BT8XXEMU_transfer(emulator, (2 << 6) | ((address >> 16) & 0x3F));
+	BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, address & 0xFF);
+	// BT8XXEMU_transfer(0x00);
 }
 
-static argb8888 s_Buffer[FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX + 1];
+void swr8(BT8XXEMU_Emulator *emulator, uint8_t value)
+{
+	BT8XXEMU_transfer(emulator, value);
+}
 
-// int __stdcall WinMain(void *, void *, void *, int)
+void swr16(BT8XXEMU_Emulator *emulator, uint16_t value)
+{
+	BT8XXEMU_transfer(emulator, value & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+}
+
+void swr32(BT8XXEMU_Emulator *emulator, uint32_t value)
+{
+	BT8XXEMU_transfer(emulator, value & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 16) & 0xFF);
+	BT8XXEMU_transfer(emulator, (value >> 24) & 0xFF);
+}
+
+void swrend(BT8XXEMU_Emulator *emulator)
+{
+	BT8XXEMU_chipSelect(emulator, 0);
+}
+
+void wr32(BT8XXEMU_Emulator *emulator, size_t address, uint32_t value)
+{
+	swrbegin(emulator, address);
+	swr32(emulator, value);
+	swrend(emulator);
+}
+
+uint32_t rd32(BT8XXEMU_Emulator *emulator, size_t address)
+{
+	BT8XXEMU_chipSelect(emulator, 1);
+
+	BT8XXEMU_transfer(emulator, (address >> 16) & 0x3F);
+	BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(emulator, address & 0xFF);
+	BT8XXEMU_transfer(emulator, 0x00);
+
+	uint32_t value;
+	value = BT8XXEMU_transfer(emulator, rand() & 0xFF);
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 8;
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 16;
+	value |= BT8XXEMU_transfer(emulator, rand() & 0xFF) << 24;
+
+	BT8XXEMU_chipSelect(emulator, 0);
+	return value;
+}
+
+void flush(BT8XXEMU_Emulator *emulator)
+{
+	while (rd32(emulator, REG_CMD_READ) != rd32(emulator, REG_CMD_WRITE));
+}
+
+static int32_t s_HSize, s_VSize;
+static volatile bool s_DlSwapDone = false;
+static bool s_DlSkippedOne = false;
+static volatile bool s_GraphicsDone = false;
+static const char *s_OutFileName = NULL;
+
+int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags)
+{
+	if (s_DlSwapDone && hsize && vsize && hsize == s_HSize && vsize == s_VSize)
+	{
+		s_DlSkippedOne = true;
+	}
+	if (s_DlSkippedOne && hsize && vsize && (flags == BT8XXEMU_FrameBufferComplete))
+	{
+		int bsize = hsize * vsize;
+		FILE *f = NULL;
+		while (!(f = fopen(s_OutFileName, "wb"))) _sleep(1);
+		while (!fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f)) _sleep(1);
+		fflush(f);
+		fclose(f);
+		s_GraphicsDone = true;
+	}
+	return 1;
+}
+
 int main(int argc, char* argv[])
 {
-	FILE *f = fopen(argv[1], "rb");
-    int hsize, vsize;
+	s_OutFileName = argc > 2 ? argv[2] : NULL;
+	FILE *f = fopen(BTDUMP_FILE, "rb");
 
-#ifdef FT810EMU_MODE
-	FT800EMU::Memory.begin(BT8XXEMU_EmulatorFT810);
-#else
-	FT800EMU::Memory.begin(BT8XXEMU_EmulatorFT801);
-#endif
-    FT800EMU::GraphicsProcessor.begin();
-    FT800EMU::GraphicsProcessor.enableMultithread();
+	printf("%s\n\n", BT8XXEMU_version());
 
-    uint8_t *ram = FT800EMU::Memory.getRam();
-	argb8888 *buffer = s_Buffer;
+	BT8XXEMU_FlashParameters flashParams;
+	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+	flashParams.DataFilePath = BTFLASH_DATA_FILE;
+	flashParams.StdOut = true;
+	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 
-    char *a0 = argv[1];
+	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorFT800);
+	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
+
+	params.Flash = flash;
+
+	if (s_OutFileName)
+	{
+		params.Graphics = graphics;
+	}
+
+	BT8XXEMU_Emulator *emulator = NULL;
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
+	uint8_t *ram = BT8XXEMU_getRam(emulator);
+
+    char *a0 = BTDUMP_FILE;
     if (strcmp(a0 + strlen(a0) - 4, ".XBU") == 0) {
+		/*
         hsize = 480;
         vsize = 272;
 
-        FILE *xbu = fopen(argv[1], "rb");
+        FILE *xbu = fopen(BTDUMP_FILE, "rb");
         f = fopen(argv[2], "wb");
 
-        wr32(REG_HSIZE, hsize);
-        wr32(REG_VSIZE, vsize);
+        wr32(emulator, REG_HSIZE, hsize);
+        wr32(emulator, REG_VSIZE, vsize);
 
-        FT800EMU::Coprocessor.begin();
         int i = 0;
         buffer[hsize * vsize] = 1234567;
 
         while (1) {
-            int wp = FT800EMU::Memory.rawReadU32(ram, REG_CMD_WRITE);
-            int rp = FT800EMU::Memory.rawReadU32(ram, REG_CMD_READ);
+            int wp = rd32(emulator, REG_CMD_WRITE);
+            int rp = rd32(emulator, REG_CMD_READ);
             int fullness = (wp - rp) & 4095;
             if (fullness < 2048) {
                 int n = fread(&ram[RAM_CMD + wp], 1, 1024, xbu) & 0xFFFFFFFF;
@@ -102,51 +178,56 @@ int main(int argc, char* argv[])
             assert(buffer[hsize * vsize] == 1234567);
         }
         fclose(f);
-    } else {
-        if (!f) printf("Failed to open vc1dump file\n");
-        else
-        {
-            const size_t headersz = 6;
-            uint32_t header[headersz];
-            size_t s = fread(header, sizeof(uint32_t), headersz, f);
-            if (header[0] != 100) printf("Invalid header version %i\n", header[0]);
-            else
-            {
-                hsize = header[1];
-                vsize = header[2];
-                wr32(REG_HSIZE, hsize);
-                wr32(REG_VSIZE, vsize);
-                wr32(REG_MACRO_0, header[3]);
-                wr32(REG_MACRO_1, header[4]);
-                if (s != headersz) printf("Incomplete vc1dump header\n");
-                else
-                {
-                    // todo set regs
-                    uint8_t *ram = FT800EMU::Memory.getRam();
-                    s = fread(&ram[RAM_G], 1, 262144, f);
-                    if (s != 262144) printf("Incomplete vc1dump RAM_G\n");
-                    else
-                    {
-                        s = fread(&ram[RAM_PAL], 1, 1024, f);
-                        if (s != 1024) printf("Incomplete vc1dump RAM_PAL\n");
-                        else
-                        {
-                            s = fread(&ram[RAM_DL], 1, 8192, f);
-                            if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
-                            else printf("Loaded vc1dump file\n");
-                        }
-                    }
-                }
-            }
-            if (fclose(f)) printf("Error closing vc1dump file\n");
-        }
-        wr32(REG_DLSWAP, DLSWAP_FRAME);
+		*/
+	}
+	else
+	{
+		if (!f) printf("Failed to open vc1dump file\n");
+		else
+		{
+			const size_t headersz = 6;
+			uint32_t header[headersz];
+			size_t s = fread(header, sizeof(uint32_t), headersz, f);
+			if (s != headersz) printf("Incomplete vc1dump header\n");
+			else if (header[0] == 100)
+			{
+				s_HSize = header[1];
+				s_VSize = header[2];
+				wr32(emulator, REG_HSIZE, s_HSize);
+				wr32(emulator, REG_VSIZE, s_VSize);
+				wr32(emulator, REG_PCLK, 5);
+				wr32(emulator, REG_MACRO_0, header[3]);
+				wr32(emulator, REG_MACRO_1, header[4]);;
 
-		int bsize = hsize * vsize;
-        FT800EMU::GraphicsProcessor.process(buffer, false, false, hsize, vsize);
-        f = fopen(argv[2], "wb");
-        fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f);
-        fclose(f);
+				s = fread(&ram[RAM_G], 1, 262144, f);
+				if (s != 262144) printf("Incomplete vc1dump RAM_G\n");
+				else
+				{
+					s = fread(&ram[RAM_PAL], 1, 1024, f);
+					if (s != 1024) printf("Incomplete vc1dump RAM_PAL\n");
+					else
+					{
+						s = fread(&ram[RAM_DL], 1, 8192, f);
+						if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
+						else printf("Loaded vc1dump file\n");
+					}
+				}
+			}
+			else
+			{
+				printf("Invalid header version %i\n", header[0]);
+			}
+			if (fclose(f)) printf("Error closing vc1dump file\n");
+		}
+		wr32(emulator, REG_DLSWAP, DLSWAP_FRAME);
+
+		while ((rd32(emulator, REG_DLSWAP) != DLSWAP_DONE) && BT8XXEMU_isRunning(emulator));
+		s_DlSwapDone = true;
+		while (!s_GraphicsDone && BT8XXEMU_isRunning(emulator)) flush(emulator);
     }
+
+	BT8XXEMU_stop(emulator);
+	BT8XXEMU_destroy(emulator);
+
 	return 0;
 }

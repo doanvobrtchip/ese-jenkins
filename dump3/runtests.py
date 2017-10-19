@@ -7,8 +7,10 @@ import tempfile
 import numpy as np
 
 def main(dump1, ref_dir, quiet, only = None):
-    dump_dir = os.path.join(ref_dir, "dumps")
-    alltraces = set([fn.replace(".vc1dump", "") for fn in os.listdir(dump_dir) if fn.endswith(".vc1dump")])
+    dump_dir = os.path.join(ref_dir, "vc3test")
+    traces_dir = os.path.join(dump_dir, "traces")
+    tstout_dir = os.path.join(dump_dir, "tstout")
+    alltraces = set([fn.replace(".vc1dump", "") for fn in os.listdir(traces_dir) if fn.endswith(".vc1dump")])
 
     # This is a list of tests to exclude.
     # Please remove passing tests from this list to prevent regressions
@@ -58,19 +60,14 @@ def main(dump1, ref_dir, quiet, only = None):
     ])
 
     def run1(t):
-        expected = Image.open(os.path.join(dump_dir, t + ".png"))
+        expected = Image.open(os.path.join(tstout_dir, t + ".png"))
         w,h = expected.size
-        bgra = None
+
         try:
-            subprocess.check_call([dump1, os.path.join(dump_dir, t + ".vc1dump"), "out"], stdout = open("0", "w"))
+            subprocess.check_call([dump1, os.path.join(traces_dir, t + ".vc1dump"), "out"], stdout = open("0", "w"))
         except subprocess.CalledProcessError:
             return 'CRASH'
-        try:
-            fi = open("out", mode='rb')
-            bgra = Image.fromstring("RGBA", (w, h), fi.read())
-            fi.close()
-        except ValueError:
-            return 'incorrect size %d, expect %d' % (os.path.getsize("out"), w*h*4)
+        bgra = Image.fromstring("RGBA", (w, h), open("out").read())
         (b,g,r,a) = bgra.split()
         actual = Image.merge("RGBA", (r,g,b,a))
         error4 = abs(np.array(actual).astype(int) - np.array(expected).astype(int))
@@ -124,7 +121,7 @@ if __name__ == "__main__":
     optdict = dict(optlist)
 
     ref_dir = optdict.get('-r', "../reference")
-    dump1 = optdict.get('-d', "dump1/dump1")
+    dump1 = optdict.get('-d', "btdump3.exe")
     only = optdict.get('-o', None)
     r = main(dump1, ref_dir, quiet = '-q' in optdict, only = only) 
     if not r:
