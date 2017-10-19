@@ -953,10 +953,10 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	{
 		const int blockWidth = c_AstcBlockWidth[format & 0xF];
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
-		const int numBlocksWidth = stride / 16;
-		const int numBlocksHeight = height; //  / blockHeight;
+		const int numBlocksWidth = stride >> 4;
+		const int numBlocksHeight = height;
 		const int blockX = (int)xl / blockWidth;
-		const int blockY = (int)yl / blockWidth;
+		const int blockY = (int)yl / blockHeight;
 		const int tileX = blockX / 2;
 		const int tileY = blockY / 2;
 		const int tileWidth = (blockX == (blockWidth - 1)) ? 1 : 2;
