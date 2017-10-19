@@ -237,7 +237,7 @@ void DlParser::initVC3()
 		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[0] = 0x1;
 		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[1] = 0x1;
 		s_ParamOptions[FTEDITOR_DL_CLEAR].Mask[2] = 0x1;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		s_IdMap["VERTEX_FORMAT"] = FTEDITOR_DL_VERTEX_FORMAT;
 		s_ParamCount[FTEDITOR_DL_VERTEX_FORMAT] = 1;
 		s_ParamOptions[FTEDITOR_DL_VERTEX_FORMAT].Default[0] = 4;
@@ -273,7 +273,7 @@ void DlParser::initVC3()
 		s_ParamMap["ARGB1555"] = ARGB1555;
 		s_ParamMap["ARGB2"] = ARGB2;
 		s_ParamMap["ARGB4"] = ARGB4;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		s_ParamMap["ARGB8_SNAPSHOT"] = ARGB8_SNAPSHOT;
 #endif
 		s_ParamMap["BARGRAPH"] = BARGRAPH;
@@ -293,7 +293,7 @@ void DlParser::initVC3()
 		s_ParamMap["INVERT"] = INVERT;
 		s_ParamMap["KEEP"] = KEEP;
 		s_ParamMap["L1"] = L1;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		s_ParamMap["L2"] = L2;
 #endif
 		s_ParamMap["L4"] = L4;
@@ -309,7 +309,7 @@ void DlParser::initVC3()
 		s_ParamMap["ONE"] = ONE;
 		s_ParamMap["ONE_MINUS_DST_ALPHA"] = ONE_MINUS_DST_ALPHA;
 		s_ParamMap["ONE_MINUS_SRC_ALPHA"] = ONE_MINUS_SRC_ALPHA;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		s_ParamMap["PALETTED8"] = PALETTED8;
 		s_ParamMap["PALETTED4444"] = PALETTED4444;
 		s_ParamMap["PALETTED565"] = PALETTED565;
@@ -495,7 +495,7 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 1; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		/*s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
 		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7
 		s_CmdParamString[CMD_SETROTATE & 0xFF] = false;*/ // currently don't support because we don't remap coordinates in the editor yet
@@ -567,7 +567,7 @@ void DlParser::initVC3()
 		s_CmdParamMap["OPT_NOTICKS"] = OPT_NOTICKS;
 		s_CmdParamMap["OPT_RIGHTX"] = OPT_RIGHTX;
 		s_CmdParamMap["OPT_SIGNED"] = OPT_SIGNED;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		s_CmdParamMap["OPT_NOTEAR"] = OPT_NOTEAR;
 		s_CmdParamMap["OPT_FULLSCREEN"] = OPT_FULLSCREEN;
 		s_CmdParamMap["OPT_MEDIAFIFO"] = OPT_MEDIAFIFO;
@@ -754,7 +754,7 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 			return MACRO(p[0]);
 		case FTEDITOR_DL_CLEAR:
 			return CLEAR(p[0], p[1], p[2]);
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		case FTEDITOR_DL_VERTEX_FORMAT:
 			return VERTEX_FORMAT(p[0]);
 		case FTEDITOR_DL_BITMAP_LAYOUT_H:
@@ -956,7 +956,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_SCREENSAVER:
 				case CMD_LOGO:
 				case CMD_COLDSTART:
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case CMD_VIDEOSTART:
 #endif
 				{
@@ -967,7 +967,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_ROTATE:
 				case CMD_INTERRUPT:
 				case CMD_CALIBRATE:
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case CMD_SETROTATE:
 				case CMD_PLAYVIDEO:
 				case CMD_SETSCRATCH:
@@ -982,7 +982,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_TRANSLATE:
 				case CMD_SCALE:
 				case CMD_SETFONT:
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case CMD_MEDIAFIFO:
 				case CMD_ROMFONT:
 				case CMD_VIDEOFRAME:
@@ -1099,7 +1099,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 					break;
 				}
 #endif
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case CMD_SETBASE:
 				{
 					uint32_t b = parsed.Parameter[0].U;
@@ -1498,7 +1498,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_SCISSOR_XY:
 				{
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 					int x = (v >> 11) & 0x7FF;
 					int y = v & 0x7FF;
 #else
@@ -1511,7 +1511,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_SCISSOR_SIZE:
 				{
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 					int width = (v >> 12) & 0xFFF;
 					int height = v & 0xFFF;
 #else
@@ -1590,7 +1590,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 					res << c << ", " << s << ", " << t << ")";
 					break;
 				}
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case FTEDITOR_DL_VERTEX_FORMAT:
 				{
 					int frac = v & 0x7;
@@ -1698,7 +1698,7 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			dst << "OPT_NODL";
 			combine = true;
 		}
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 		if (opt & OPT_NOTEAR)
 		{
 			if (combine) dst << " | ";
@@ -1917,7 +1917,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 			case CMD_LOADIMAGE:
 				if (p == 1) paramType = 1;
 				break;
-#if defined(FTEDITOR_PARSER_VC2)
+#if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 			case CMD_SETBITMAP:
 				if (p == 1) paramType = 2;
 				break;
