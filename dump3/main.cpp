@@ -14,7 +14,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <assert.h>
 #include <string.h>
 
-#define BTDUMP_FILE argv[1] /* "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump" */
+#define BTDUMP_FILE argv[1]
+#define BTDUMP_FALLBACK "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump"
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
 void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
@@ -110,7 +111,8 @@ int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb888
 int main(int argc, char* argv[])
 {
 	s_OutFileName = argc > 2 ? argv[2] : NULL;
-	FILE *f = fopen(BTDUMP_FILE, "rb");
+	FILE *f = fopen(argc > 1 ? BTDUMP_FILE : BTDUMP_FALLBACK, "rb");
+	bool wait = false;
 
 	printf("%s\n\n", BT8XXEMU_version());
 
@@ -135,7 +137,7 @@ int main(int argc, char* argv[])
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
 	uint8_t *ram = BT8XXEMU_getRam(emulator);
 
-    char *a0 = BTDUMP_FILE;
+    char *a0 = argc > 1 ? BTDUMP_FILE : BTDUMP_FALLBACK;
     if (strcmp(a0 + strlen(a0) - 4, ".XBU") == 0) {
 		/*
         hsize = 480;
@@ -218,7 +220,7 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
-			else if (header[0] != 110)
+			else if (header[0] == 110)
 			{
 				s_HSize = header[1];
 				s_VSize = header[2];
@@ -228,13 +230,24 @@ int main(int argc, char* argv[])
 				wr32(emulator, REG_MACRO_0, header[3]);
 				wr32(emulator, REG_MACRO_1, header[4]);;
 
-				s = fread(&ram[RAM_G], 1, 1048576, f);
-				if (s != 1048576) printf("Incomplete vc1dump RAM_G\n");
+				if (!s_HSize || !s_VSize)
+				{
+					printf("Invalid size\n");
+				}
 				else
 				{
-					s = fread(&ram[RAM_DL], 1, 8192, f);
-					if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
-					else printf("Loaded vc1dump file\n");
+					s = fread(&ram[RAM_G], 1, 1048576, f);
+					if (s != 1048576) printf("Incomplete vc1dump RAM_G\n");
+					else
+					{
+						s = fread(&ram[RAM_DL], 1, 8192, f);
+						if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
+						else
+						{
+							printf("Loaded vc1dump file\n");
+							wait = true;
+						}
+					}
 				}
 			}
 			else
@@ -245,9 +258,12 @@ int main(int argc, char* argv[])
 		}
 		wr32(emulator, REG_DLSWAP, DLSWAP_FRAME);
 
-		while ((rd32(emulator, REG_DLSWAP) != DLSWAP_DONE) && BT8XXEMU_isRunning(emulator));
-		s_DlSwapDone = true;
-		while (!s_GraphicsDone && BT8XXEMU_isRunning(emulator)) flush(emulator);
+		if (wait)
+		{
+			while ((rd32(emulator, REG_DLSWAP) != DLSWAP_DONE) && BT8XXEMU_isRunning(emulator));
+			s_DlSwapDone = true;
+			while (!s_GraphicsDone && BT8XXEMU_isRunning(emulator)) flush(emulator);
+		}
     }
 
 	BT8XXEMU_stop(emulator);
