@@ -1280,6 +1280,9 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 #define FT800EMU_DEBUG_RECTS_MATH 0
 #define FT800EMU_RECTS_FT800_COORDINATES 1
 
+// Mimic hardware alpha behaviour with line width lower than 16
+#define FT800EMU_LINE_WIDTH_BEHAVIOUR 1
+
 struct VertexState
 {
 public:
@@ -1452,7 +1455,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int x = x1lw_px_sc;
 					const int surf = (16 - dxl) * rowfill;
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+					const int alpha = ((gs.ColorARGB >> 24) * surf * lw) >> 12;
+#else
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+#endif
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
@@ -1461,7 +1468,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int x = x2lw_px_sc - 1;
 					const int surf = dxr * rowfill;
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+					const int alpha = ((gs.ColorARGB >> 24) * surf * lw) >> 12;
+#else
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+#endif
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
@@ -1470,7 +1481,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+						const int alpha = ((gs.ColorARGB >> 24) * rowfill * lw) >> 8;
+#else
 						const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
+#endif
 						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
@@ -1479,7 +1494,12 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+						const int alpha = ((gs.ColorARGB >> 24) * lw) >> 4;
+						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+#else
 						const argb8888 out = gs.ColorARGB;
+#endif
 						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
