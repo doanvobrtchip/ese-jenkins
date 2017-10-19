@@ -801,7 +801,11 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 
 	if (!wrap(xol, stride, wrapx)) return 0x00000000;
 	const int xo = (int)xol;
-	if (format != BARGRAPH) if (!wrap(yl, height, wrapy)) return 0x00000000;
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height *  c_AstcBlockHeight[format & 0xF], wrapy)) return 0x00000000; }
+	else
+#endif
+		if (format != BARGRAPH) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
 	const int y = (int)yl;
 	const int py = y * stride;
 	switch (format)
@@ -938,7 +942,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		const int blockWidth = c_AstcBlockWidth[format & 0xF];
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
 		const int numBlocksWidth = stride / 16;
-		const int numBlocksHeight = height / blockHeight;
+		const int numBlocksHeight = height; //  / blockHeight;
 		const int blockX = (int)xl / blockWidth;
 		const int blockY = (int)yl / blockWidth;
 		const int tileX = blockX / 2;
@@ -959,9 +963,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		if (imageBlock.nan_texel[index])
 			return 0xFFFF00FF;
 		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
-		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
 		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
-		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
 		return (a << 24) | (r << 16) | (g << 8) | (b);
 	}
 #endif
