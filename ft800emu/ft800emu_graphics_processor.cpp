@@ -799,10 +799,22 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 #endif
 	}
 
-	if (!wrap(xol, stride, wrapx)) return 0x00000000;
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		if (!wrap(xol, (stride * c_AstcBlockWidth[format & 0xF]) >> 4, wrapx))
+		{
+			return 0x00000000;
+		}
+	}
+	else
+#endif
+	{
+		if (!wrap(xol, stride, wrapx)) return 0x00000000;
+	}
 	const int xo = (int)xol;
 #ifdef BT815EMU_MODE
-	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height *  c_AstcBlockHeight[format & 0xF], wrapy)) return 0x00000000; }
+	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height * c_AstcBlockHeight[format & 0xF], wrapy)) return 0x00000000; }
 	else
 #endif
 		if (format != BARGRAPH) { if (!wrap(yl, height, wrapy)) return 0x00000000; }

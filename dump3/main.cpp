@@ -15,7 +15,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <string.h>
 
 #define BTDUMP_FILE argv[1]
-#define BTDUMP_FALLBACK "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump"
+#define BTDUMP_FALLBACK "C:/source/ft800emu/reference/vc3test/traces/test_astc_layout_0.vc1dump"
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
 void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
