@@ -29,7 +29,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_line_scatter.1',
         'test_line_scatter.2',
         'test_line_scatter.3',
-        'test_lines_offscreen.0',
         'test_lines_parse.0',
         'test_lines_subpixel.0',
         'test_lines_xy.0',
@@ -52,7 +51,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_scissor_overlap.0',
         'test_shortlines.0',
         'test_state_saverestore.0',
-        'test_stencil_ops.0',
         'test_textvga_1.0',
         'test_uiscape.0',
     ])
