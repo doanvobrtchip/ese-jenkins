@@ -1,0 +1,301 @@
+
+C:\source\ft800emu\dump3>runtests.py -d C:/source/ft800emu/build_airwin_vs2015_x64/bin/Debug/btdump3.exe 
+               test_2k_bitmaps_0: pass
+                test_2k_clears_0: pass
+                test_2k_edge_l_0: 1 pixels differ, differences in error_test_2k_edge_l_0.png
+                 test_2k_edges_0: pass
+                 test_2k_lines_0: 1009 pixels differ, differences in error_test_2k_lines_0.png
+                test_2k_points_0: 202 pixels differ, differences in error_test_2k_points_0.png
+                 test_2k_rects_0: pass
+             test_8x8_bilinear_0: pass
+              test_8x8_rotated_0: pass
+               test_aa_stencil_0: 16 pixels differ, differences in error_test_aa_stencil_0.png
+        test_alpha_comparisons_0: pass
+             test_alpha_killed_0: pass
+                test_astc_1010_0: pass
+              test_astc_1010_b_0: pass
+                 test_astc_105_0: pass
+               test_astc_105_b_0: pass
+                 test_astc_106_0: pass
+               test_astc_106_b_0: pass
+                 test_astc_108_0: pass
+               test_astc_108_b_0: pass
+                test_astc_1210_0: pass
+              test_astc_1210_b_0: pass
+                test_astc_1212_0: pass
+              test_astc_1212_b_0: pass
+                  test_astc_44_0: pass
+                test_astc_44_b_0: pass
+                  test_astc_54_0: pass
+                test_astc_54_b_0: pass
+                  test_astc_55_0: pass
+                test_astc_55_b_0: pass
+                  test_astc_65_0: pass
+                test_astc_65_b_0: pass
+                  test_astc_66_0: pass
+                test_astc_66_b_0: pass
+                  test_astc_85_0: pass
+                test_astc_85_b_0: pass
+                  test_astc_86_0: pass
+                test_astc_86_b_0: pass
+                  test_astc_88_0: pass
+                test_astc_88_b_0: pass
+           test_astc_dashboard_0: pass
+              test_astc_layout_0: pass
+               test_astc_noise_0: pass
+                test_astc_xf_b_0: pass
+                test_astc_xf_n_0: 43 pixels differ, differences in error_test_astc_xf_n_0.png
+             test_astczoo_1010_0: pass
+              test_astczoo_105_0: pass
+              test_astczoo_106_0: pass
+              test_astczoo_108_0: pass
+             test_astczoo_1210_0: pass
+             test_astczoo_1212_0: pass
+               test_astczoo_44_0: pass
+               test_astczoo_54_0: pass
+               test_astczoo_55_0: pass
+               test_astczoo_65_0: pass
+               test_astczoo_66_0: pass
+               test_astczoo_85_0: pass
+               test_astczoo_86_0: pass
+               test_astczoo_88_0: pass
+               test_astczoo_bm_0: pass
+             test_astczoo_cem1_0: pass
+             test_astczoo_cem2_0: pass
+             test_astczoo_cem3_0: pass
+            test_astczoo_clamp_0: pass
+               test_astczoo_p1_0: pass
+               test_astczoo_p2_0: pass
+               test_astczoo_p3_0: pass
+            test_bilinear_fine_0: pass
+            test_bilinear_fmts_0: pass
+          test_bilinear_simple_0: pass
+            test_blend_illegal_0: pass
+                 test_blending_0: pass
+           test_bm_cell_handle_0: pass
+         test_bm_draw_source_1_0: pass
+         test_bm_draw_source_2_0: pass
+               test_bm_draw_wh_0: pass
+                test_bm_height_0: pass
+                 test_bm_large_0: pass
+            test_bm_largecell1_0: pass
+            test_bm_largecell2_0: 2097 pixels differ, differences in error_test_bm_largecell2_0.png
+            test_bm_linestride_0: pass
+               test_bm_maxsize_0: pass
+                   test_bm_odd_0: pass
+             test_bm_offscreen_0: pass
+                test_bm_params_0: 16 pixels differ, differences in error_test_bm_params_0.png
+                test_bm_params_1: 16 pixels differ, differences in error_test_bm_params_1.png
+              test_bm_sideways_0: pass
+                  test_bm_size_0: pass
+                  test_bm_size_1: pass
+              test_bm_subpixel_0: pass
+           test_bm_swizzle_all_0: pass
+         test_bm_swizzle_basic_0: pass
+               test_bm_textmax_0: pass
+                  test_bm_wrap_0: pass
+             test_bm_xform_rot_0: 104 pixels differ, differences in error_test_bm_xform_rot_0.png
+           test_bm_xform_terms_0: pass
+            test_bm_xform_zoom_0: pass
+                    test_bm_xy_0: pass
+                    test_bm_xy_1: pass
+                     test_call_0: 67 pixels differ, differences in error_test_call_0.png
+               test_call_depth_0: pass
+             test_clear_simple_0: 6 pixels differ, differences in error_test_clear_simple_0.png
+                   test_clears_0: pass
+                   test_clears_1: pass
+                  test_clears_10: pass
+                  test_clears_11: pass
+                  test_clears_12: pass
+                  test_clears_13: pass
+                  test_clears_14: pass
+                  test_clears_15: pass
+                  test_clears_16: pass
+                  test_clears_17: pass
+                  test_clears_18: pass
+                  test_clears_19: pass
+                   test_clears_2: pass
+                   test_clears_3: pass
+                   test_clears_4: pass
+                   test_clears_5: pass
+                   test_clears_6: pass
+                   test_clears_7: pass
+                   test_clears_8: pass
+                   test_clears_9: pass
+                 test_cleartag_0: pass
+              test_coordinates_0: pass
+            test_distant_edges_0: 23852 pixels differ, differences in error_test_distant_edges_0.png
+            test_distant_lines_0: 2087 pixels differ, differences in error_test_distant_lines_0.png
+           test_distant_points_0: pass
+               test_dl_illegal_0: pass
+               test_dl_illegal_1: pass
+         test_dl_loc_invariant_0: pass
+         test_dl_loc_invariant_1: pass
+         test_dl_loc_invariant_2: pass
+         test_dl_loc_invariant_3: pass
+         test_dl_loc_invariant_4: pass
+                test_dl_minmax_0: pass
+                test_dl_minmax_1: pass
+          test_edge_complement_0: pass
+                test_edge_null_0: pass
+           test_edge_offscreen_0: pass
+             test_edge_polygon_0: 228 pixels differ, differences in error_test_edge_polygon_0.png
+                test_edge_side_0: pass
+               test_edge_strip_0: 21 pixels differ, differences in error_test_edge_strip_0.png
+            test_edge_subpixel_0: 15 pixels differ, differences in error_test_edge_subpixel_0.png
+          test_empty_begin_end_0: pass
+          test_empty_begin_end_1: pass
+                   test_flash0_0: pass
+                   test_flash1_0: pass
+                   test_flash2_0: pass
+               test_flash_font_0: pass
+              test_flash_prims_0: 126 pixels differ, differences in error_test_flash_prims_0.png
+                  test_font_aa_0: pass
+               test_font_fixed_0: pass
+               test_font_fixed_1: pass
+               test_font_fixed_2: pass
+               test_font_fixed_3: pass
+                test_font_prop_0: pass
+               test_font_sheet_0: pass
+               test_font_sheet_1: pass
+               test_font_sheet_2: pass
+               test_font_sheet_3: pass
+               test_font_sheet_4: pass
+               test_font_sheet_5: pass
+               test_font_sheet_6: pass
+               test_font_sheet_7: pass
+               test_font_sheet_8: pass
+               test_font_width_0: pass
+               test_font_width_1: pass
+               test_font_width_2: pass
+               test_font_width_3: pass
+               test_font_width_4: pass
+               test_font_width_5: pass
+               test_font_width_6: pass
+               test_font_width_7: pass
+               test_font_width_8: pass
+          test_format_bargraph_0: pass
+           test_format_text8x8_0: pass
+           test_format_textvga_0: 75456 pixels differ, differences in error_test_format_textvga_0.png
+                  test_formats_0: pass
+               test_formats_16_0: pass
+                test_formats_8_0: pass
+             test_frag_overlap_0: pass
+                  test_handles_0: pass
+                     test_jump_0: 67 pixels differ, differences in error_test_jump_0.png
+              test_kitchensink_0: 67 pixels differ, differences in error_test_kitchensink_0.png
+             test_line_extreme_0: 362 pixels differ, differences in error_test_line_extreme_0.png
+           test_line_gradients_0: 14874 pixels differ, differences in error_test_line_gradients_0.png
+                test_line_mini_0: 3 pixels differ, differences in error_test_line_mini_0.png
+      test_line_offscreen_flat_0: pass
+             test_line_scatter_0: 3438 pixels differ, differences in error_test_line_scatter_0.png
+             test_line_scatter_1: 3439 pixels differ, differences in error_test_line_scatter_1.png
+             test_line_scatter_2: 3804 pixels differ, differences in error_test_line_scatter_2.png
+             test_line_scatter_3: 3531 pixels differ, differences in error_test_line_scatter_3.png
+               test_line_steep_0: 2400 pixels differ, differences in error_test_line_steep_0.png
+      test_line_wide_offscreen_0: 6 pixels differ, differences in error_test_line_wide_offscreen_0.png
+               test_line_width_0: 1018 pixels differ, differences in error_test_line_width_0.png
+            test_lines_culling_0: pass
+          test_lines_offscreen_0: pass
+              test_lines_parse_0: 72 pixels differ, differences in error_test_lines_parse_0.png
+            test_lines_shallow_0: pass
+           test_lines_subpixel_0: 306 pixels differ, differences in error_test_lines_subpixel_0.png
+                 test_lines_xy_0: 1024 pixels differ, differences in error_test_lines_xy_0.png
+         test_matrix_precision_0: pass
+                     test_maxh_0: 885 pixels differ, differences in error_test_maxh_0.png
+           test_mem_exhaustive_0: pass
+         test_mem_exhaustive_b_0: pass
+         test_mem_exhaustive_b_1: pass
+         test_mem_exhaustive_b_2: pass
+         test_mem_exhaustive_b_3: pass
+               test_merge_argb_0: pass
+                     test_mini_0: pass
+                 test_modulate_0: pass
+             test_modulate_256_0: pass
+                  test_nonpow2_0: pass
+                     test_null_0: pass
+          test_offscreen_edges_0: pass
+         test_outside_beginend_0: 2 pixels differ, differences in error_test_outside_beginend_0.png
+                 test_overdraw_0: pass
+              test_paletted565_0: pass
+              test_paletted565_1: pass
+              test_paletted_im_0: pass
+             test_paletted_l8o_0: pass
+             test_paletted_l8t_0: 47 pixels differ, differences in error_test_paletted_l8t_0.png
+            test_perf_dupstate_0: pass
+               test_perf_maxdl_0: pass
+          test_points_increase_0: 130 pixels differ, differences in error_test_points_increase_0.png
+             test_points_large_0: 16 pixels differ, differences in error_test_points_large_0.png
+          test_points_modulate_0: pass
+         test_points_offscreen_0: 5 pixels differ, differences in error_test_points_offscreen_0.png
+          test_points_subpixel_0: 64 pixels differ, differences in error_test_points_subpixel_0.png
+             test_points_visit_0: 184 pixels differ, differences in error_test_points_visit_0.png
+                test_points_xy_0: pass
+             test_prim_scissor_0: 1 pixels differ, differences in error_test_prim_scissor_0.png
+             test_prim_stencil_0: pass
+                 test_prim_tag_0: pass
+                 test_prim_tag_1: 8 pixels differ, differences in error_test_prim_tag_1.png
+                 test_prim_tag_2: 4 pixels differ, differences in error_test_prim_tag_2.png
+                 test_prim_tag_3: pass
+                 test_prim_tag_4: pass
+                 test_prim_tag_5: pass
+                 test_prim_tag_6: pass
+                 test_prim_tag_7: pass
+                 test_prim_tag_8: pass
+                      test_ram_0: pass
+                    test_rects_0: 12 pixels differ, differences in error_test_rects_0.png
+          test_rects_offscreen_0: pass
+           test_restore_handle_0: pass
+                 test_restores_0: pass
+                      test_rom_0: pass
+                      test_rom_1: pass
+                    test_rr_00_0: pass
+                    test_rr_01_0: 439 pixels differ, differences in error_test_rr_01_0.png
+                    test_rr_02_0: pass
+                    test_rr_03_0: pass
+                    test_rr_04_0: pass
+                    test_rr_06_0: 24 pixels differ, differences in error_test_rr_06_0.png
+                    test_rr_07_0: pass
+                    test_rr_08_0: 185 pixels differ, differences in error_test_rr_08_0.png
+                    test_rr_09_0: pass
+                    test_rr_10_0: pass
+                    test_rr_11_0: 2 pixels differ, differences in error_test_rr_11_0.png
+                    test_rr_12_0: pass
+                    test_rr_13_0: pass
+                    test_rr_14_0: pass
+                    test_rr_15_0: pass
+                    test_rr_16_0: pass
+                    test_rr_17_0: 85 pixels differ, differences in error_test_rr_17_0.png
+                    test_rr_18_0: pass
+                    test_rr_19_0: 22 pixels differ, differences in error_test_rr_19_0.png
+                    test_rr_20_0: pass
+                  test_scissor_0: 7 pixels differ, differences in error_test_scissor_0.png
+               test_scissor_2k_0: pass
+             test_scissor_bm_x_0: pass
+        test_scissor_connected_0: 21 pixels differ, differences in error_test_scissor_connected_0.png
+              test_scissor_max_0: 36 pixels differ, differences in error_test_scissor_max_0.png
+          test_scissor_overlap_0: 9 pixels differ, differences in error_test_scissor_overlap_0.png
+           test_scissor_points_0: pass
+             test_scissor_zero_0: pass
+               test_shortlines_0: 161 pixels differ, differences in error_test_shortlines_0.png
+        test_state_saverestore_0: 1 pixels differ, differences in error_test_state_saverestore_0.png
+              test_state_stack_0: 18 pixels differ, differences in error_test_state_stack_0.png
+           test_stencil_clears_0: pass
+      test_stencil_comparisons_0: pass
+              test_stencil_ops_0: pass
+          test_stencil_overlap_0: pass
+             test_stencil_wrap_0: pass
+                      test_tag_0: pass
+                  test_tag_p2x_0: pass
+                test_textvga_1_0: 240 pixels differ, differences in error_test_textvga_1_0.png
+              test_textvga_max_0: 132 pixels differ, differences in error_test_textvga_max_0.png
+                test_translate_0: 209 pixels differ, differences in error_test_translate_0.png
+           test_translate_fine_0: 4 pixels differ, differences in error_test_translate_fine_0.png
+          test_uidemo_expanded_0: 1287 pixels differ, differences in error_test_uidemo_expanded_0.png
+            test_vertex_format_0: 12 pixels differ, differences in error_test_vertex_format_0.png
+                     test_wvga_0: 108 pixels differ, differences in error_test_wvga_0.png
+                   test_xfonts_0: pass
+                     test_zero_0: pass
+               test_zero_lines_0: 1212 pixels differ, differences in error_test_zero_lines_0.png
+ran 297 tests, 66 failed
+The following tests failed: test_2k_edge_l_0, test_2k_lines_0, test_2k_points_0, test_aa_stencil_0, test_astc_xf_n_0, test_bm_largecell2_0, test_bm_params_0, test_bm_params_1, test_bm_xform_rot_0, test_call_0, test_clear_simple_0, test_distant_edges_0, test_distant_lines_0, test_edge_polygon_0, test_edge_strip_0, test_edge_subpixel_0, test_flash_prims_0, test_format_textvga_0, test_jump_0, test_kitchensink_0, test_line_extreme_0, test_line_gradients_0, test_line_mini_0, test_line_scatter_0, test_line_scatter_1, test_line_scatter_2, test_line_scatter_3, test_line_steep_0, test_line_wide_offscreen_0, test_line_width_0, test_lines_parse_0, test_lines_subpixel_0, test_lines_xy_0, test_maxh_0, test_outside_beginend_0, test_paletted_l8t_0, test_points_increase_0, test_points_large_0, test_points_offscreen_0, test_points_subpixel_0, test_points_visit_0, test_prim_scissor_0, test_prim_tag_1, test_prim_tag_2, test_rects_0, test_rr_01_0, test_rr_06_0, test_rr_08_0, test_rr_11_0, test_rr_17_0, test_rr_19_0, test_scissor_0, test_scissor_connected_0, test_scissor_max_0, test_scissor_overlap_0, test_shortlines_0, test_state_saverestore_0, test_state_stack_0, test_textvga_1_0, test_textvga_max_0, test_translate_0, test_translate_fine_0, test_uidemo_expanded_0, test_vertex_format_0, test_wvga_0, test_zero_lines_0
