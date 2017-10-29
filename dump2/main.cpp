@@ -4,7 +4,7 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
-#define BT815EMU_MODE
+#define FT810EMU_MODE
 
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
@@ -16,7 +16,6 @@ Copyright (C) 2017  Bridgetek Pte Lte
 
 #define BTDUMP_FILE argv[1]
 #define BTDUMP_FALLBACK "C:/source/ft800emu/reference/vc3test/traces/test_astc_layout_0.vc1dump"
-#define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
 void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
 {
@@ -116,17 +115,9 @@ int main(int argc, char* argv[])
 
 	printf("%s\n\n", BT8XXEMU_version());
 
-	BT8XXEMU_FlashParameters flashParams;
-	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-	flashParams.DataFilePath = BTFLASH_DATA_FILE;
-	flashParams.StdOut = true;
-	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
-
 	BT8XXEMU_EmulatorParameters params;
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorFT810);
 	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
-
-	params.Flash = flash;
 
 	if (s_OutFileName)
 	{
@@ -268,8 +259,6 @@ int main(int argc, char* argv[])
 
 	BT8XXEMU_stop(emulator);
 	BT8XXEMU_destroy(emulator);
-	
-	BT8XXEMU_Flash_destroy(flash);
 
 	return 0;
 }
