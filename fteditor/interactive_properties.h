@@ -97,6 +97,7 @@ private:
 	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);
 	void addPrimitive(int primitive);
 	void addBitmapFormat(int format);
+	void addExtFormat(int format);
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
 	void addAddress(int address, bool negative);

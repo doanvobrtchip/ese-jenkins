@@ -496,6 +496,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 				}
 				else
 				{
+					// Non-uppercase constant workaround ->
+					// (COMPRESSED_RGBA_ASTC_4x4_KHR)
+					if (ps.length() > 23)
+					{
+						if (ps[22] == 'X') ps[22] = 'x';
+						else if (ps[23] == 'X') ps[23] = 'x';
+					}
+					// <-
 					std::map<std::string, int>::const_iterator it = m_ParamMap[deviceIntf]->find(ps);
 					if (it != m_ParamMap[deviceIntf]->end())
 					{

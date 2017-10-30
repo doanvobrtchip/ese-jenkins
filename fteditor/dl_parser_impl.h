@@ -58,7 +58,7 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define DL_ID_NB 46
 #define CMD_ID_NB 68
 #elif defined(FTEDITOR_PARSER_VC3)
-#define DL_ID_NB 46
+#define DL_ID_NB 48
 #define CMD_ID_NB 68
 #endif
 static int s_ParamCount[DL_ID_NB];
@@ -256,6 +256,12 @@ void DlParser::initVC3()
 		s_IdMap["NOP"] = FTEDITOR_DL_NOP;
 		s_ParamCount[FTEDITOR_DL_NOP] = 0;
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+		s_IdMap["BITMAP_EXT_FORMAT"] = FTEDITOR_DL_BITMAP_EXT_FORMAT;
+		s_ParamCount[FTEDITOR_DL_BITMAP_EXT_FORMAT] = 1;
+		s_IdMap["BITMAP_SWIZZLE"] = FTEDITOR_DL_BITMAP_SWIZZLE;
+		s_ParamCount[FTEDITOR_DL_BITMAP_SWIZZLE] = 4;
+#endif
 	}
 	if (!s_ParamMap.size())
 	{
@@ -326,6 +332,23 @@ void DlParser::initVC3()
 		s_ParamMap["TEXT8X8"] = TEXT8X8;
 		s_ParamMap["TEXTVGA"] = TEXTVGA;
 		s_ParamMap["ZERO"] = ZERO;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_ParamMap["GLFORMAT"] = GLFORMAT;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_4x4_KHR"] = COMPRESSED_RGBA_ASTC_4x4_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_5x4_KHR"] = COMPRESSED_RGBA_ASTC_5x4_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_5x5_KHR"] = COMPRESSED_RGBA_ASTC_5x5_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_6x5_KHR"] = COMPRESSED_RGBA_ASTC_6x5_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_6x6_KHR"] = COMPRESSED_RGBA_ASTC_6x6_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_8x5_KHR"] = COMPRESSED_RGBA_ASTC_8x5_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_8x6_KHR"] = COMPRESSED_RGBA_ASTC_8x6_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_8x8_KHR"] = COMPRESSED_RGBA_ASTC_8x8_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_10x5_KHR"] = COMPRESSED_RGBA_ASTC_10x5_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_10x6_KHR"] = COMPRESSED_RGBA_ASTC_10x6_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_10x8_KHR"] = COMPRESSED_RGBA_ASTC_10x8_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_10x10_KHR"] = COMPRESSED_RGBA_ASTC_10x10_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_12x10_KHR"] = COMPRESSED_RGBA_ASTC_12x10_KHR;
+		s_ParamMap["COMPRESSED_RGBA_ASTC_12x12_KHR"] = COMPRESSED_RGBA_ASTC_12x12_KHR;
+#endif
 	}
 	if (!s_CmdIdMap.size())
 	{
@@ -769,6 +792,12 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 			return VERTEX_TRANSLATE_Y(p[0]);
 		case FTEDITOR_DL_NOP:
 			return NOP();
+#endif
+#if defined(FTEDITOR_PARSER_VC3)
+		case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+			return BITMAP_EXT_FORMAT(p[0]);
+		case FTEDITOR_DL_BITMAP_SWIZZLE:
+			return BITMAP_SWIZZLE(p[0], p[1], p[2], p[3]);
 #endif
 	}
 	return DISPLAY();

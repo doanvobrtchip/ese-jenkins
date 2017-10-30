@@ -613,6 +613,21 @@ void InteractiveProperties::addBitmapFormat(int format)
 		tr("Format") + ": ", tr("Set bitmap format"));
 }
 
+void InteractiveProperties::addExtFormat(int format)
+{
+	// TODO: Identifier remapping, centralized combobox listings
+	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
+	if (!g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE])
+		return;
+	addComboBox(format,
+		g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+		g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+		g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+		tr("Format") + ": ", tr("Set extended bitmap format"));
+}
+
 void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)
 {
 	addComboBox(wrap, g_DlEnumBitmapWrap, DL_ENUM_BITMAP_WRAP_NB, label, undoMessage);
@@ -2026,6 +2041,18 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_EXT_FORMAT."));
+			if (editor)
+			{
+				setTitle("BITMAP_EXT_FORMAT");
+				addExtFormat(0);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;

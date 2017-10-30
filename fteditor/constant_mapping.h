@@ -246,6 +246,8 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_VERTEX_TRANSLATE_X 43
 #define FTEDITOR_DL_VERTEX_TRANSLATE_Y 44
 #define FTEDITOR_DL_NOP 45
+#define FTEDITOR_DL_BITMAP_EXT_FORMAT 46
+#define FTEDITOR_DL_BITMAP_SWIZZLE 47
 
 // Mappings for bitmap formats
 #define ARGB8_SNAPSHOT 0x20
@@ -257,6 +259,11 @@ inline const char *bitmapFormatToString(int deviceIntf, int bitmapFormatEnum) { 
 extern const int g_BitmapFormatIntfNb[FTEDITOR_DEVICE_NB];
 extern const int *g_BitmapFormatFromIntf[FTEDITOR_DEVICE_NB];
 extern const int *g_BitmapFormatToIntf[FTEDITOR_DEVICE_NB];
+
+// Valid extended bitmap formats, using bitmap formats enum
+extern const int g_ExtFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_ExtFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_ExtFormatToIntf[FTEDITOR_DEVICE_NB];
 
 // Snapshot formats, using bitmap formats enum
 extern const int g_SnapshotFormatIntfNb[FTEDITOR_DEVICE_NB];

@@ -233,6 +233,38 @@ const int *g_BitmapFormatToIntf[FTEDITOR_DEVICE_NB] = {
 
 ///////////////////////////////////////////////////////////////////////
 
+const int g_ExtFormatIntfNb[FTEDITOR_DEVICE_NB] = {
+	0, // FT800
+	0, // FT801
+	0, // FT810
+	0, // FT811
+	0, // FT812
+	0, // FT813
+	FTEDITOR_EXT_FORMAT_INTF_NB_VC3, // BT815
+};
+
+const int *g_ExtFormatFromIntf[FTEDITOR_DEVICE_NB] = {
+	NULL, // FT800
+	NULL, // FT801
+	NULL, // FT810
+	NULL, // FT811
+	NULL, // FT812
+	NULL, // FT813
+	g_ExtFormatFromIntfVC3, // BT815
+};
+
+const int *g_ExtFormatToIntf[FTEDITOR_DEVICE_NB] = {
+	NULL, // FT800
+	NULL, // FT801
+	NULL, // FT810
+	NULL, // FT811
+	NULL, // FT812
+	NULL, // FT813
+	g_ExtFormatToIntfVC3, // BT815
+};
+
+///////////////////////////////////////////////////////////////////////
+
 const int g_SnapshotFormatIntfNb[FTEDITOR_DEVICE_NB] = {
 	0,
 	0,
