@@ -628,6 +628,11 @@ void InteractiveProperties::addExtFormat(int format)
 		tr("Format") + ": ", tr("Set extended bitmap format"));
 }
 
+void InteractiveProperties::addSwizzle(int swizzle, const QString &label, const QString &undoMessage)
+{
+	addComboBox(swizzle, g_DlEnumSwizzle, DL_ENUM_SWIZZLE_NB, label, undoMessage);
+}
+
 void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)
 {
 	addComboBox(wrap, g_DlEnumBitmapWrap, DL_ENUM_BITMAP_WRAP_NB, label, undoMessage);
@@ -2052,6 +2057,21 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("BITMAP_EXT_FORMAT");
 				addExtFormat(0);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FTEDITOR_DL_BITMAP_SWIZZLE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SWIZZLE_FORMAT."));
+			if (editor)
+			{
+				setTitle("BITMAP_SWIZZLE");
+				addSwizzle(0, "R: ", tr("Set swizzle R"));
+				addSwizzle(1, "G: ", tr("Set swizzle G"));
+				addSwizzle(2, "B: ", tr("Set swizzle B"));
+				addSwizzle(3, "A: ", tr("Set swizzle A"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

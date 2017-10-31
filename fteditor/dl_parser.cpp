@@ -90,6 +90,15 @@ const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB] = {
 	"RECTS",
 };
 
+const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB] = {
+	"ZERO", 
+	"ONE", 
+	"RED",
+	"GREEN",
+	"BLUE",
+	"ALPHA",
+};
+
 void DlParser::init()
 {
 	initVC1();

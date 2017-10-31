@@ -98,6 +98,7 @@ private:
 	void addPrimitive(int primitive);
 	void addBitmapFormat(int format);
 	void addExtFormat(int format);
+	void addSwizzle(int swizzle, const QString &label, const QString &undoMessage);
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
 	void addAddress(int address, bool negative);

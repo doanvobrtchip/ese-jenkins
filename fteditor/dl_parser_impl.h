@@ -348,6 +348,10 @@ void DlParser::initVC3()
 		s_ParamMap["COMPRESSED_RGBA_ASTC_10x10_KHR"] = COMPRESSED_RGBA_ASTC_10x10_KHR;
 		s_ParamMap["COMPRESSED_RGBA_ASTC_12x10_KHR"] = COMPRESSED_RGBA_ASTC_12x10_KHR;
 		s_ParamMap["COMPRESSED_RGBA_ASTC_12x12_KHR"] = COMPRESSED_RGBA_ASTC_12x12_KHR;
+		s_ParamMap["RED"] = RED;
+		s_ParamMap["GREEN"] = GREEN;
+		s_ParamMap["BLUE"] = BLUE;
+		s_ParamMap["ALPHA"] = ALPHA;
 #endif
 	}
 	if (!s_CmdIdMap.size())
@@ -1268,6 +1272,18 @@ static void stencilToString(std::stringstream &dst, uint32_t id)
 	}
 }
 
+static void swizzleToString(std::stringstream &dst, uint32_t id)
+{
+	if ((uint32_t)id < DL_ENUM_SWIZZLE_NB)
+	{
+		dst << g_DlEnumSwizzle[id];
+	}
+	else
+	{
+		dst << id;
+	}
+}
+
 #if defined(FTEDITOR_PARSER_VC1)
 void DlParser::toStringVC1(int deviceIntf, std::string &dst, uint32_t v)
 #elif defined(FTEDITOR_PARSER_VC2)
@@ -1667,6 +1683,34 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				case FTEDITOR_DL_NOP:
 				{
 					res << "NOP()";
+					break;
+				}
+#endif
+#if defined(FTEDITOR_PARSER_VC3)
+				case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+				{
+					int format = v & 0xFFFF;
+					res << "BITMAP_EXT_FORMAT(";
+					bitmapFormatToString(res, format);
+					res << ")";
+					break;
+				}
+				case FTEDITOR_DL_BITMAP_SWIZZLE:
+				{
+					int r = (v >> 9) & 0x7;
+					int g = (v >> 6) & 0x7;
+					int b = (v >> 3) & 0x7;
+					int a = v & 0x7;
+					int format = v & 0xFFFF;
+					res << "BITMAP_SWIZZLE(";
+					swizzleToString(res, r);
+					res << ", ";
+					swizzleToString(res, g);
+					res << ", ";
+					swizzleToString(res, b);
+					res << ", ";
+					swizzleToString(res, a);
+					res << ")";
 					break;
 				}
 #endif

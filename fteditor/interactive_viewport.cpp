@@ -2765,6 +2765,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].U = 256;
 						pa.ExpectedParameterCount = 1;
 						break;
+					case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_BITMAP_SWIZZLE:
+						pa.Parameter[0].U = 2;
+						pa.Parameter[1].U = 3;
+						pa.Parameter[2].U = 4;
+						pa.Parameter[3].U = 5;
+						pa.ExpectedParameterCount = 4;
 					}
 				}
 				m_LineEditor->insertLine(line, pa);
