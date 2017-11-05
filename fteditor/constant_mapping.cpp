@@ -244,22 +244,22 @@ const int g_ExtFormatIntfNb[FTEDITOR_DEVICE_NB] = {
 };
 
 const int *g_ExtFormatFromIntf[FTEDITOR_DEVICE_NB] = {
-	NULL, // FT800
-	NULL, // FT801
-	NULL, // FT810
-	NULL, // FT811
-	NULL, // FT812
-	NULL, // FT813
+	g_IntEmpty, // FT800
+	g_IntEmpty, // FT801
+	g_IntEmpty, // FT810
+	g_IntEmpty, // FT811
+	g_IntEmpty, // FT812
+	g_IntEmpty, // FT813
 	g_ExtFormatFromIntfVC3, // BT815
 };
 
 const int *g_ExtFormatToIntf[FTEDITOR_DEVICE_NB] = {
-	NULL, // FT800
-	NULL, // FT801
-	NULL, // FT810
-	NULL, // FT811
-	NULL, // FT812
-	NULL, // FT813
+	g_IntEmpty, // FT800
+	g_IntEmpty, // FT801
+	g_IntEmpty, // FT810
+	g_IntEmpty, // FT811
+	g_IntEmpty, // FT812
+	g_IntEmpty, // FT813
 	g_ExtFormatToIntfVC3, // BT815
 };
 

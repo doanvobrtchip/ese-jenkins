@@ -600,6 +600,15 @@ void DlParser::initVC3()
 		s_CmdParamMap["OPT_MEDIAFIFO"] = OPT_MEDIAFIFO;
 		s_CmdParamMap["OPT_SOUND"] = OPT_SOUND;
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+		s_CmdParamMap["ANIM_ONCE"] = ANIM_ONCE;
+		s_CmdParamMap["ANIM_LOOP"] = ANIM_LOOP;
+		s_CmdParamMap["ANIM_HOLD"] = ANIM_HOLD;
+		s_CmdParamMap["OPT_FLASH"] = OPT_FLASH;
+		s_CmdParamMap["OPT_OVERLAY"] = OPT_OVERLAY;
+		s_CmdParamMap["OPT_FORMAT"] = OPT_FORMAT;
+		s_CmdParamMap["OPT_FILL"] = OPT_FILL;
+#endif
 	}
 
 #if defined(FTEDITOR_PARSER_VC1)
@@ -1797,6 +1806,20 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			combine = true;
 		}
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+		if (opt & OPT_FLASH)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_FLASH";
+			combine = true;
+		}
+		if (opt & OPT_OVERLAY)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_OVERLAY";
+			combine = true;
+		}
+#endif
 	}
 	if (cmd == CMD_NUMBER)
 	{
@@ -1840,18 +1863,41 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 		dst << "OPT_RIGHTX";
 		combine = true;
 	}
-	if (opt & OPT_NOBACK)
+#if defined(FTEDITOR_PARSER_VC3)
+	if (cmd == CMD_GAUGE
+		|| cmd == CMD_CLOCK)
 	{
-		if (combine) dst << " | ";
-		dst << "OPT_NOBACK";
-		combine = true;
+#endif
+		if (opt & OPT_NOBACK)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOBACK";
+			combine = true;
+		}
+		if (opt & OPT_NOTICKS)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_NOTICKS";
+			combine = true;
+		}
+#if defined(FTEDITOR_PARSER_VC3)
 	}
-	if (opt & OPT_NOTICKS)
+	else
 	{
-		if (combine) dst << " | ";
-		dst << "OPT_NOTICKS";
-		combine = true;
+		if (opt & OPT_FORMAT)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_FORMAT";
+			combine = true;
+		}
+		if (opt & OPT_FILL)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_FILL";
+			combine = true;
+		}
 	}
+#endif
 	if (cmd == CMD_GAUGE)
 	{
 		if (opt & OPT_NOPOINTER)
@@ -1914,13 +1960,17 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 /*
 #define OPT_MONO             1UL
 #define OPT_NODL             2UL
+#define OPT_FLASH            64UL
+#define OPT_OVERLAY          128UL
 #define OPT_SIGNED           256UL <- special case
 #define OPT_FLAT             256UL
 #define OPT_CENTERX          512UL
 #define OPT_CENTERY          1024UL
 #define OPT_CENTER           1536UL ----
 #define OPT_RIGHTX           2048UL
+#define OPT_FORMAT           4096UL <- bt815
 #define OPT_NOBACK           4096UL
+#define OPT_FILL             8192UL <- bt815
 #define OPT_NOTICKS          8192UL
 #define OPT_NOHM             16384UL
 #define OPT_NOPOINTER        16384UL <- special case
