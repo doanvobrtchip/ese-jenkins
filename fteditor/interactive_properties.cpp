@@ -1445,7 +1445,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SETBITMAP");
-				addAddress(0, true);
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addAddressFlashOpt(0, true);
+				else
+					addAddress(0, true);
 				addBitmapFormat(1);
 				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
@@ -1473,7 +1476,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("BITMAP_SOURCE");
-
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 					addAddressFlashOpt(0, true);
 				else

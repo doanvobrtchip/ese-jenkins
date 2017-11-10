@@ -2017,6 +2017,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 			// 1: constant
 			// 2: bitmap format
 			// 3: hex value
+			// 4: signed addr (with flash bit)
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
 			case CMD_FGCOLOR:
@@ -2050,7 +2051,8 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				break;
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 			case CMD_SETBITMAP:
-				if (p == 1) paramType = 2;
+				if (p == 0) paramType = 4;
+				else if (p == 1) paramType = 2;
 				break;
 			case CMD_SNAPSHOT2:
 				if (p == 0) paramType = 2;
@@ -2073,6 +2075,17 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(6) << (unsigned int)(parsed.Parameter[p].U & 0xFFFFFF);
 				res << tmp.str();
 				} break;
+			case 4: {
+				int addr = addressSigned(FTEDITOR_CURRENT_DEVICE, parsed.Parameter[p].U);
+#if defined(FTEDITOR_PARSER_VC3)
+				if ((addr >> 23) & 0x1)
+				{
+					res << "0x800000 | ";
+					addr &= 0x7FFFFF;
+				}
+#endif
+				res << addr;
+			} break;
 			default:
 				res << parsed.Parameter[p].I;
 				break;
