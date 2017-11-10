@@ -1318,6 +1318,14 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				{
 					int addr = addressSigned(FTEDITOR_CURRENT_DEVICE, v);
 					res << "BITMAP_SOURCE(";
+#if defined(FTEDITOR_PARSER_VC3)
+					if ((addr >> 24) & 0x1)
+					{
+						res << "0x1000000 | ";
+						addr &= 0xFFFFFF;
+					}
+#endif
+
 					res << addr << ")";
 					break;
 				}
