@@ -144,6 +144,69 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesSpinBoxAddressFlashOpt : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		setUndoStack(parent->m_MainWindow->undoStack());
+		setKeyboardTracking(false);
+		setMinimum(negative ? -addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4 : 0);
+		setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+		setSingleStep(4);
+		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesSpinBoxAddressFlashOpt()
+	{
+
+	}
+
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		int addr = getLine().Parameter[m_Index].I;
+		setValue((addr & 0x800000) ? (addr & 0x7FFFFF) * 32 : (addr & 0x7FFFFF));
+		setSingleStep((addr & 0x800000) ? 128 : 4);
+		m_SoftMod = false;
+		//printf("bye");
+	}
+
+private slots:
+	void updateValue(int value)
+	{
+		//printf("updateValue\n");
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		//printf("PropertiesSpinBox::updateValue(value)\n");
+		DlParsed parsed = getLine();
+		int addr = getLine().Parameter[m_Index].I;
+		addr = (addr & 0x800000) ? 0x800000 | (value) / 32 : (value & 0x7FFFFF);
+		parsed.Parameter[m_Index].I = addr;
+		setLine(parsed);
+		setSingleStep((addr & 0x800000) ? 128 : 4);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
 class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT

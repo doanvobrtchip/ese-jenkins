@@ -643,6 +643,21 @@ void InteractiveProperties::addBitmapFilter(int filter)
 	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, tr("Filter") + ": ", tr("Set bitmap filter"));
 }
 
+void InteractiveProperties::addAddressFlashOpt(int address, bool negative)
+{
+	; {
+		PropertiesSpinBoxAddressFlashOpt *prop = new PropertiesSpinBoxAddressFlashOpt(this, tr("Set address"), address, negative);
+		addLabeledWidget("Address: ", prop);
+		m_CurrentProperties.push_back(prop);
+		prop->done();
+	}
+	; {
+		PropertiesCheckBox *prop = new PropertiesCheckBox(this, tr("Set flash"), address, 0x800000);
+		addLabeledWidget("Flash: ", prop);
+		m_CurrentProperties.push_back(prop);
+	}
+}
+
 void InteractiveProperties::addAddress(int address, bool negative)
 {
 	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), address, negative);
@@ -1458,7 +1473,11 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("BITMAP_SOURCE");
-				addAddress(0, true);
+
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addAddressFlashOpt(0, true);
+				else
+					addAddress(0, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

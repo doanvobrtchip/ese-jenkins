@@ -101,6 +101,7 @@ private:
 	void addSwizzle(int swizzle, const QString &label, const QString &undoMessage);
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
+	void addAddressFlashOpt(int address, bool negative);
 	void addAddress(int address, bool negative);
 	void addSize(int address);
 	void addMemorySize(int size);
@@ -113,6 +114,7 @@ private slots:
 private:
 	class PropertiesWidget;
 	class PropertiesSpinBoxAddress;
+	class PropertiesSpinBoxAddressFlashOpt;
 	class PropertiesSpinBox;
 	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;

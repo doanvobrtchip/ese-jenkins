@@ -58,7 +58,7 @@ inline uint32_t addressMask(int deviceIntf) { return g_AddressMask[deviceIntf]; 
 inline int addressSigned(int deviceIntf, int address)
 {
 	if (deviceIntf >= FTEDITOR_BT815 
-		&& ((address >> 24) & 0x1))
+		&& ((address >> 23) & 0x1))
 	{
 		// Flash address / 32
 		return address & 0x1FFFFFF;
