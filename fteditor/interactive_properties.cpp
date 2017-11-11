@@ -1707,14 +1707,59 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			break;
 		}
 		case CMD_FILLWIDTH:
-		case CMD_APPENDF:
-		case CMD_ANIMFRAME:
-		case CMD_NOP:
-		case CMD_SHA1:
-		case CMD_HMAC:
-		case CMD_LAST_:
-		case CMD_VIDEOSTARTF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FILLWIDTH."));
+			if (editor)
+			{
+				setTitle("CMD_FILLWIDTH");
+				addWidth(0, 0, FTEDITOR_COORD_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
 			break;
+		}
+		case CMD_APPENDF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_APPENDF."));
+			if (editor)
+			{
+				setTitle("CMD_APPENDF");
+				addAddressFlash(0);
+				addMemorySize(1);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMFRAME:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMFRAME."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMFRAME");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addAddressFlash(2);
+				addSpinBox(3, 0, 0x7FFFFFFF, tr("Frame") + ": ", tr("Set frame"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		// case CMD_NOP:
+		// case CMD_SHA1:
+		// case CMD_HMAC:
+		// case CMD_LAST_:
+		case CMD_VIDEOSTARTF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOSTARTF."));
+			if (editor)
+			{
+				setTitle("CMD_VIDEOSTARTF");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 	}
 	else switch (idRight)
 	{
