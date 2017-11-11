@@ -58,7 +58,7 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define DL_ID_NB 46
 #define CMD_ID_NB 68
 #elif defined(FTEDITOR_PARSER_VC3)
-#define DL_ID_NB 48 // 49
+#define DL_ID_NB 49
 #define CMD_ID_NB 96
 #endif
 static int s_ParamCount[DL_ID_NB];
@@ -261,6 +261,8 @@ void DlParser::initVC3()
 		s_ParamCount[FTEDITOR_DL_BITMAP_EXT_FORMAT] = 1;
 		s_IdMap["BITMAP_SWIZZLE"] = FTEDITOR_DL_BITMAP_SWIZZLE;
 		s_ParamCount[FTEDITOR_DL_BITMAP_SWIZZLE] = 4;
+		s_IdMap["INT_FRR"] = FTEDITOR_DL_INT_FRR;
+		s_ParamCount[FTEDITOR_DL_INT_FRR] = 0;
 #endif
 	}
 	if (!s_ParamMap.size())
@@ -897,6 +899,8 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 			return BITMAP_EXT_FORMAT(p[0]);
 		case FTEDITOR_DL_BITMAP_SWIZZLE:
 			return BITMAP_SWIZZLE(p[0], p[1], p[2], p[3]);
+		case FTEDITOR_DL_INT_FRR:
+			return INT_FRR();
 #endif
 	}
 	return DISPLAY();
@@ -1878,6 +1882,11 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 					res << ", ";
 					swizzleToString(res, a);
 					res << ")";
+					break;
+				}
+				case FTEDITOR_DL_INT_FRR :
+				{
+					res << "INT_FRR()";
 					break;
 				}
 #endif

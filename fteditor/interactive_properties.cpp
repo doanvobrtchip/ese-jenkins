@@ -2098,6 +2098,17 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+		case FTEDITOR_DL_INT_FRR:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_INT_FRR."));
+			if (editor)
+			{
+				setTitle("INT_FRR");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 	}
 	if (!ok)
 	{

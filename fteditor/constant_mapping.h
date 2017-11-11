@@ -260,6 +260,7 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_NOP 45
 #define FTEDITOR_DL_BITMAP_EXT_FORMAT 46
 #define FTEDITOR_DL_BITMAP_SWIZZLE 47
+#define FTEDITOR_DL_INT_FRR 48
 
 // Mappings for bitmap formats
 #define ARGB8_SNAPSHOT 0x20
