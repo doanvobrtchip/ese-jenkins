@@ -1783,11 +1783,30 @@ void MainWindow::frameQt()
 
 	if (!s_StreamingData && s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
-		m_PropertiesEditor->setInfo("<b>Co-processor engine fault</b><br><br>"
-			"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
-			"- An attempt is made to write more than 2048 instructions into a display list<br><br>"
-			"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
-			"- An invalid data stream is supplied to CMD_INFLATE");
+		QString info;
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+		{
+			uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
+			if (ram)
+			{
+				info = "<b>Co-processor engine fault</b><br><br>";
+				info += QString::fromLatin1((char *)&ram[0x309800]);
+			}
+			else
+			{
+				info = "<b>Co-processor engine fault</b><br><br>"
+					"Emulator not initialized";
+			}
+		}
+		else
+		{
+			info = "<b>Co-processor engine fault</b><br><br>"
+				"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
+				"- An attempt is made to write more than 2048 instructions into a display list<br><br>"
+				"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
+				"- An invalid data stream is supplied to CMD_INFLATE";
+		}
+		m_PropertiesEditor->setInfo(info);
 		m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
 		focusProperties();
 	}
