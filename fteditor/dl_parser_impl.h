@@ -58,8 +58,8 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define DL_ID_NB 46
 #define CMD_ID_NB 68
 #elif defined(FTEDITOR_PARSER_VC3)
-#define DL_ID_NB 48
-#define CMD_ID_NB 68
+#define DL_ID_NB 48 // 49
+#define CMD_ID_NB 96
 #endif
 static int s_ParamCount[DL_ID_NB];
 static ParameterOptions s_ParamOptions[DL_ID_NB];
@@ -568,6 +568,92 @@ void DlParser::initVC3()
 		s_CmdParamCount[CMD_SETBITMAP & 0xFF] = 4;
 		s_CmdParamString[CMD_SETBITMAP & 0xFF] = false;
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+		s_CmdIdMap["CMD_FLASHERASE"] = CMD_FLASHERASE & 0xFF;
+		s_CmdParamCount[CMD_FLASHERASE & 0xFF] = 0;
+		s_CmdParamString[CMD_FLASHERASE & 0xFF] = false;
+		// s_CmdIdMap["CMD_FLASHWRITE"] = CMD_FLASHWRITE & 0xFF; // Stream
+		// s_CmdParamCount[CMD_FLASHWRITE & 0xFF] = 2;
+		// s_CmdParamString[CMD_FLASHWRITE & 0xFF] = true;
+		s_CmdIdMap["CMD_FLASHREAD"] = CMD_FLASHREAD & 0xFF;
+		s_CmdParamCount[CMD_FLASHREAD & 0xFF] = 3;
+		s_CmdParamString[CMD_FLASHREAD & 0xFF] = false;
+		s_CmdIdMap["CMD_FLASHUPDATE"] = CMD_FLASHUPDATE & 0xFF;
+		s_CmdParamCount[CMD_FLASHUPDATE & 0xFF] = 3;
+		s_CmdParamString[CMD_FLASHUPDATE & 0xFF] = false;
+		s_CmdIdMap["CMD_FLASHDETACH"] = CMD_FLASHDETACH & 0xFF;
+		s_CmdParamCount[CMD_FLASHDETACH & 0xFF] = 0;
+		s_CmdParamString[CMD_FLASHDETACH & 0xFF] = false;
+		s_CmdIdMap["CMD_FLASHATTACH"] = CMD_FLASHATTACH & 0xFF;
+		s_CmdParamCount[CMD_FLASHATTACH & 0xFF] = 0;
+		s_CmdParamString[CMD_FLASHATTACH & 0xFF] = false;
+		s_CmdIdMap["CMD_FLASHFAST"] = CMD_FLASHFAST & 0xFF;
+		s_CmdParamCount[CMD_FLASHFAST & 0xFF] = 0;
+		s_CmdParamString[CMD_FLASHFAST & 0xFF] = false;
+		// s_CmdIdMap["CMD_FLASHSPIDESEL"] = CMD_FLASHSPIDESEL & 0xFF; // Too low-level for FTEDITOR scope,
+		// s_CmdParamCount[CMD_FLASHSPIDESEL & 0xFF] = 0;              // not recommended for user
+		// s_CmdParamString[CMD_FLASHSPIDESEL & 0xFF] = false;
+		// s_CmdIdMap["CMD_FLASHSPITX"] = CMD_FLASHSPITX & 0xFF; // Too low-level for FTEDITOR scope
+		// s_CmdParamCount[CMD_FLASHSPITX & 0xFF] = 1;           // not recommended for user
+		// s_CmdParamString[CMD_FLASHSPITX & 0xFF] = false;
+		// s_CmdIdMap["CMD_FLASHSPIRX"] = CMD_FLASHSPIRX & 0xFF; // Too low-level for FTEDITOR scope
+		// s_CmdParamCount[CMD_FLASHSPIRX & 0xFF] = 2;           // not recommended for user
+		// s_CmdParamString[CMD_FLASHSPIRX & 0xFF] = false;
+		s_CmdIdMap["CMD_FLASHSOURCE"] = CMD_FLASHSOURCE & 0xFF;
+		s_CmdParamCount[CMD_FLASHSOURCE & 0xFF] = 1;
+		s_CmdParamString[CMD_FLASHSOURCE & 0xFF] = false;
+		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
+		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
+		s_CmdParamString[CMD_CLEARCACHE & 0xFF] = false;
+		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
+		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
+		s_CmdParamString[CMD_INFLATE2 & 0xFF] = false;
+		s_CmdIdMap["CMD_ROTATEAROUND"] = CMD_ROTATEAROUND & 0xFF;
+		s_CmdParamCount[CMD_ROTATEAROUND & 0xFF] = 4;
+		s_CmdParamString[CMD_ROTATEAROUND & 0xFF] = false;
+		s_CmdIdMap["CMD_RESETFONTS"] = CMD_RESETFONTS & 0xFF;
+		s_CmdParamCount[CMD_RESETFONTS & 0xFF] = 0;
+		s_CmdParamString[CMD_RESETFONTS & 0xFF] = false;
+		s_CmdIdMap["CMD_ANIMSTART"] = CMD_ANIMSTART & 0xFF;
+		s_CmdParamCount[CMD_ANIMSTART & 0xFF] = 3;
+		s_CmdParamString[CMD_ANIMSTART & 0xFF] = false;
+		s_CmdIdMap["CMD_ANIMSTOP"] = CMD_ANIMSTOP & 0xFF;
+		s_CmdParamCount[CMD_ANIMSTOP & 0xFF] = 1;
+		s_CmdParamString[CMD_ANIMSTOP & 0xFF] = false;
+		s_CmdIdMap["CMD_ANIMXY"] = CMD_ANIMXY & 0xFF;
+		s_CmdParamCount[CMD_ANIMXY & 0xFF] = 3;
+		s_CmdParamString[CMD_ANIMXY & 0xFF] = false;
+		s_CmdIdMap["CMD_ANIMDRAW"] = CMD_ANIMDRAW & 0xFF;
+		s_CmdParamCount[CMD_ANIMDRAW & 0xFF] = 1;
+		s_CmdParamString[CMD_ANIMDRAW & 0xFF] = false;
+		s_CmdIdMap["CMD_GRADIENTA"] = CMD_GRADIENTA & 0xFF;
+		s_CmdParamCount[CMD_GRADIENTA & 0xFF] = 6;
+		s_CmdParamString[CMD_GRADIENTA & 0xFF] = false;
+		s_CmdIdMap["CMD_FILLWIDTH"] = CMD_FILLWIDTH & 0xFF;
+		s_CmdParamCount[CMD_FILLWIDTH & 0xFF] = 1;
+		s_CmdParamString[CMD_FILLWIDTH & 0xFF] = false;
+		s_CmdIdMap["CMD_APPENDF"] = CMD_APPENDF & 0xFF;
+		s_CmdParamCount[CMD_APPENDF & 0xFF] = 2;
+		s_CmdParamString[CMD_APPENDF & 0xFF] = false;
+		s_CmdIdMap["CMD_ANIMFRAME"] = CMD_ANIMFRAME & 0xFF;
+		s_CmdParamCount[CMD_ANIMFRAME & 0xFF] = 4;
+		s_CmdParamString[CMD_ANIMFRAME & 0xFF] = false;
+		s_CmdIdMap["CMD_NOP"] = CMD_NOP & 0xFF; // Not documented
+		s_CmdParamCount[CMD_NOP & 0xFF] = 0;
+		s_CmdParamString[CMD_NOP & 0xFF] = false;
+		// s_CmdIdMap["CMD_SHA1"] = CMD_SHA1 & 0xFF; // Not documented
+		// s_CmdParamCount[CMD_SHA1 & 0xFF] = 0;
+		// s_CmdParamString[CMD_SHA1 & 0xFF] = false;
+		// s_CmdIdMap["CMD_HMAC"] = CMD_HMAC & 0xFF; // Not documented
+		// s_CmdParamCount[CMD_HMAC & 0xFF] = 0;
+		// s_CmdParamString[CMD_HMAC & 0xFF] = false;
+		// s_CmdIdMap["CMD_LAST_"] = CMD_LAST_ & 0xFF; // Not documented
+		// s_CmdParamCount[CMD_LAST_ & 0xFF] = 0;
+		// s_CmdParamString[CMD_LAST_ & 0xFF] = false;
+		s_CmdIdMap["CMD_VIDEOSTARTF"] = CMD_VIDEOSTARTF & 0xFF;
+		s_CmdParamCount[CMD_VIDEOSTARTF & 0xFF] = 0;
+		s_CmdParamString[CMD_VIDEOSTARTF & 0xFF] = false;
+#endif
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
 			s_CmdIdList[it->second] = it->first;
@@ -838,6 +924,9 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 					break;
 				}
 				case CMD_GRADIENT:
+#if defined(FTEDITOR_PARSER_VC3)
+				case CMD_GRADIENTA:
+#endif
 				{
 					uint32_t xy0 = parsed.Parameter[1].U << 16
 						| parsed.Parameter[0].U & 0xFFFF;
@@ -1001,6 +1090,19 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
 				case CMD_VIDEOSTART:
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+				case CMD_FLASHERASE:
+				case CMD_FLASHDETACH:
+				case CMD_FLASHATTACH:
+				case CMD_FLASHSPIDESEL:
+				case CMD_CLEARCACHE:
+				case CMD_RESETFONTS:
+				case CMD_NOP:
+				case CMD_SHA1:
+				case CMD_HMAC:
+				case CMD_LAST_:
+				case CMD_VIDEOSTARTF:
+#endif
 				{
 					break;
 				}
@@ -1013,6 +1115,13 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_SETROTATE:
 				case CMD_PLAYVIDEO:
 				case CMD_SETSCRATCH:
+#endif
+#if defined(FTEDITOR_PARSER_VC3)
+				case CMD_FLASHSPITX:
+				case CMD_FLASHSOURCE:
+				case CMD_ANIMSTOP:
+				case CMD_ANIMDRAW:
+				case CMD_FILLWIDTH:
 #endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
@@ -1028,6 +1137,12 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_MEDIAFIFO:
 				case CMD_ROMFONT:
 				case CMD_VIDEOFRAME:
+#endif
+#if defined(FTEDITOR_PARSER_VC3)
+				case CMD_FLASHWRITE:
+				case CMD_FLASHSPIRX:
+				case CMD_INFLATE2:
+				case CMD_APPENDF:
 #endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
@@ -1189,6 +1304,41 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(fmtw);
 					uint32_t h = parsed.Parameter[3].U;
 					compiled.push_back(h);
+					break;
+				}
+#endif
+#if defined(FTEDITOR_PARSER_VC3)
+				case CMD_FLASHREAD:
+				case CMD_FLASHUPDATE:
+				case CMD_ANIMSTART:
+				case CMD_ANIMXY:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
+				case CMD_FLASHFAST:
+				{
+					compiled.push_back(~0UL);
+					break;
+				}
+				case CMD_ROTATEAROUND:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[2].U);
+					compiled.push_back(parsed.Parameter[3].U);
+					break;
+				}
+				case CMD_ANIMFRAME:
+				{
+					uint32_t xy = parsed.Parameter[0].U & 0xFFFF
+						| parsed.Parameter[1].U << 16;
+					compiled.push_back(xy);
+					compiled.push_back(parsed.Parameter[2].U);
+					compiled.push_back(parsed.Parameter[3].U);
+					break;
 				}
 #endif
 			}
