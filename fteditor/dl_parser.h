@@ -52,6 +52,9 @@ extern const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB];
 #define DL_ENUM_SWIZZLE_NB 6
 extern const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB];
 
+#define DL_ENUM_ANIM_LOOP_NB 3
+extern const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB];
+
 #define DLPARSED_MAX_PARAMETER 12
 struct DlParsed
 {

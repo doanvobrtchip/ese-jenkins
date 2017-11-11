@@ -392,7 +392,7 @@ void DlParser::initVC3()
 		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 1; // argb
 		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
-		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 1 + 2 + 1; // argb
+		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 1 + 2 + 1; // rgb
 		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
@@ -2175,8 +2175,9 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 			int paramType = 0;
 			// 1: constant
 			// 2: bitmap format
-			// 3: hex value
+			// 3: hex value (6)
 			// 4: signed addr (with flash bit)
+			// 5: hex value (8)
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
 			case CMD_FGCOLOR:
@@ -2220,6 +2221,12 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				if (p == 0) paramType = 1;
 				break;
 #endif
+#if defined(FTEDITOR_PARSER_VC3)
+			case CMD_GRADIENTA:
+				if (p == 2) paramType = 5;
+				else if (p == 5) paramType = 5;
+				break;
+#endif
 			}
 			switch (paramType)
 			{
@@ -2244,6 +2251,11 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				}
 #endif
 				res << addr;
+			} break;
+			case 5: {
+				std::stringstream tmp;
+				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << (unsigned int)(parsed.Parameter[p].U);
+				res << tmp.str();
 			} break;
 			default:
 				res << parsed.Parameter[p].I;

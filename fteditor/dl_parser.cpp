@@ -99,6 +99,12 @@ const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB] = {
 	"ALPHA",
 };
 
+const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB] = {
+	"ANIM_ONCE",
+	"ANIM_LOOP",
+	"ANIM_HOLD",
+};
+
 void DlParser::init()
 {
 	initVC1();
@@ -491,9 +497,9 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 				}
 				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
 				{
-					int vhex;
+					unsigned int vhex;
 					pss >> vhex;
-					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vhex;
+					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vhex;
 					parsed.ValidParameter[pq] = true;
 					validateInt = true;
 				}

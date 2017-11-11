@@ -86,6 +86,64 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesSpinBoxAlphaHex : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesSpinBoxAlphaHex(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		setUndoStack(parent->m_MainWindow->undoStack());
+		setKeyboardTracking(false);
+		setMinimum(0);
+		setMaximum(255);
+		setSingleStep(1);
+		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesSpinBoxAlphaHex()
+	{
+
+	}
+
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setValue(getLine().Parameter[m_Index].U >> 24);
+		m_SoftMod = false;
+		//printf("bye");
+	}
+
+	private slots:
+	void updateValue(int value)
+	{
+		//printf("updateValue\n");
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		//printf("PropertiesSpinBox::updateValue(value)\n");
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].U = (parsed.Parameter[m_Index].U & 0xFFFFFF) | (value << 24);
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
 class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
@@ -123,7 +181,64 @@ public:
 		//printf("bye");
 	}
 
-private slots:
+	private slots:
+	void updateValue(int value)
+	{
+		//printf("updateValue\n");
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		//printf("PropertiesSpinBox::updateValue(value)\n");
+		DlParsed parsed = getLine();
+		parsed.Parameter[m_Index].I = value; // (value & 0x7FFFFFFC);
+		setLine(parsed);
+		m_SoftMod = false;
+	}
+
+private:
+	int m_Index;
+	bool m_SoftMod;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class InteractiveProperties::PropertiesSpinBoxAddressFlash : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+{
+	Q_OBJECT
+
+public:
+	PropertiesSpinBoxAddressFlash(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	{
+		m_SoftMod = true;
+		setUndoStack(parent->m_MainWindow->undoStack());
+		setKeyboardTracking(false);
+		setMaximum(g_Flash ? BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
+		setSingleStep(64);
+		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
+	}
+
+	virtual ~PropertiesSpinBoxAddressFlash()
+	{
+
+	}
+
+	void done()
+	{
+		m_SoftMod = false;
+		modifiedEditorLine();
+	}
+
+	virtual void modifiedEditorLine()
+	{
+		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
+		if (m_SoftMod) return;
+		m_SoftMod = true;
+		setValue(getLine().Parameter[m_Index].I);
+		m_SoftMod = false;
+		//printf("bye");
+	}
+
+	private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
@@ -149,7 +264,7 @@ class InteractiveProperties::PropertiesSpinBoxAddressFlashOpt : public UndoStack
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Negative(negative)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -178,7 +293,18 @@ public:
 		m_SoftMod = true;
 		int addr = getLine().Parameter[m_Index].I;
 		setValue((addr & 0x800000) ? (addr & 0x7FFFFF) * 32 : (addr & 0x7FFFFF));
-		setSingleStep((addr & 0x800000) ? 128 : 4);
+		if (addr & 0x800000)
+		{
+			setMinimum(0);
+			setMaximum(g_Flash ? BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
+			setSingleStep(64);
+		}
+		else
+		{
+			setMinimum(m_Negative ? -FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4 : 0);
+			setMaximum(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+			setSingleStep(4);
+		}
 		m_SoftMod = false;
 		//printf("bye");
 	}
@@ -195,13 +321,13 @@ private slots:
 		addr = (addr & 0x800000) ? 0x800000 | (value) / 32 : (value & 0x7FFFFF);
 		parsed.Parameter[m_Index].I = addr;
 		setLine(parsed);
-		setSingleStep((addr & 0x800000) ? 128 : 4);
 		m_SoftMod = false;
 	}
 
 private:
 	int m_Index;
 	bool m_SoftMod;
+	bool m_Negative;
 
 };
 
@@ -930,7 +1056,7 @@ public:
 				c.red() << 16
 				| c.green() << 8
 				| c.blue();
-			parsed.Parameter[m_RGB].I = rgb;
+			parsed.Parameter[m_RGB].U = (parsed.Parameter[m_RGB].U & 0xFF000000) | (rgb & 0xFFFFFF);
 			setLine(parsed);
 		}
 	}

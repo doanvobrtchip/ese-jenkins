@@ -77,6 +77,7 @@ private:
 	std::vector<QTreeWidgetItem *> m_CoprocessorTools;
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT801Only;
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT810Plus;
+	std::vector<QTreeWidgetItem *> m_CoprocessorBT815Plus;
 	std::vector<QTreeWidgetItem *> m_DisplayListFT810Plus;
 
 	// Current line

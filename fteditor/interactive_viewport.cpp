@@ -513,7 +513,9 @@ CMD_SCREENSAVER()
 			 */
 			}
 		}
-		else if (parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
+		else if (parsed.IdLeft == 0xFFFFFF00 
+			&& (((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
+			|| ((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENTA)))
 		{
 			const DlState &state = m_LineEditor->getState(m_LineNumber);
 
@@ -2093,6 +2095,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_GRADIENTA:
+						pa.Parameter[2].U = 0xFF007FFF;
+						pa.Parameter[3].I = pa.Parameter[0].I + 32;
+						pa.Parameter[4].I = pa.Parameter[1].I + 32;
+						pa.Parameter[5].U = 0x7FFF00;
+						pa.ExpectedParameterCount = 6;
 						break;
 	/*
 
