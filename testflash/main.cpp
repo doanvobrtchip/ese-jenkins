@@ -34,7 +34,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_CMD_PP (0x02) /* Page Program */
 #define BTFLASH_CMD_CP (0xAD) /* Continuously Program mode */
 #define BTFLASH_CMD_DP (0xB9) /* Deep Power Down */
-#define BTFLASH_CMD_RDP (0xAB) /* Release from Deep Power Down ¨*/
+#define BTFLASH_CMD_RDP (0xAB) /* Release from Deep Power Down */
 #define BTFLASH_CMD_RES (0xAB) /* Read Electronic ID */
 #define BTFLASH_CMD_REMS (0x90) /* Read Electronic Manufacturer and Device ID */
 #define BTFLASH_CMD_REMS2 (0xEF) /* Read ID for 2x IO Mode */
@@ -63,7 +63,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
 #define BTFLASH_SIZE (8 * 1024 * 1024)
 #define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
-#define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+//#define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+#define BTFLASH_DATA_FILE L"C:/Users/paul.jiao/Source/Repos/FT8XXEMU_FTDISG/FT8XXEMU/reference/vc3roms/stdflash.bin"
 #define BTFLASH_ELECTRONIC_ID 0x16
 #define BTFLASH_ELECTRONIC_ID_EXTENDED (BTFLASH_ELECTRONIC_ID + 2)
 #define BTFLASH_MANUFACTURER_ID 0xC2
@@ -711,7 +712,7 @@ int main(int, char*[])
 	cableSelect(flash, true);
 
 	; {
-		// Skip 4READ instruction under PË
+		// Skip 4READ instruction under P?
 		write4U24(flash, 3); // 03h
 		write4U8(flash, 0x12); // Disable PE
 		write4U8(flash, rand() & 0xFF);
