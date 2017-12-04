@@ -1720,6 +1720,8 @@ BT8XXEMU_FlashVTable g_FlashVTable = {
 	(size_t(*)(BT8XXEMU::Flash *))Flash_size
 };
 
+extern "C" {
+
 BT8XXEMU_EXPORT BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
@@ -1729,6 +1731,8 @@ BT8XXEMU_EXPORT BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t version
 	}
 
 	return new ::Flash(params);
+}
+
 }
 
 int64_t getFileSize(const wchar_t* name)
