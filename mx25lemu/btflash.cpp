@@ -1722,7 +1722,7 @@ BT8XXEMU_FlashVTable g_FlashVTable = {
 
 extern "C" {
 
-BT8XXEMU_EXPORT BT8XXEMU_Flash *__stdcall BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
+BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params)
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
