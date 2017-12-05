@@ -4,7 +4,7 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
-#define BT815EMU_MODE
+// #define BT815EMU_MODE
 
 #include <Windows.h>
 
@@ -12,16 +12,18 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
-#define TEST_THREAD_REDUCE
+// #define TEST_THREAD_REDUCE
 
 class PlayXBU
 {
 public:
 	PlayXBU(const char *file)
 	{
+#if defined(BT815EMU_MODE)
 		BT8XXEMU_FlashParameters flashParams;
 		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
 		flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+#endif
 
 		BT8XXEMU_EmulatorParameters params;
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
@@ -37,6 +39,7 @@ public:
 		params.Flags =
 			BT8XXEMU_EmulatorEnableKeyboard
 			| BT8XXEMU_EmulatorEnableMouse
+			| BT8XXEMU_EmulatorEnableAudio
 			| BT8XXEMU_EmulatorEnableDebugShortkeys
 			| BT8XXEMU_EmulatorEnableCoprocessor
 			| BT8XXEMU_EmulatorEnableGraphicsMultithread
@@ -45,7 +48,9 @@ public:
 			;
 		params.UserContext = this;
 
+#if defined(BT815EMU_MODE)
 		params.Flash = flash;
+#endif
 
 #ifdef TEST_THREAD_REDUCE
 		params.ReduceGraphicsThreads = 2;
@@ -69,12 +74,17 @@ public:
 	{
 		BT8XXEMU_destroy(emulator);
 		emulator = NULL;
+#if defined(BT815EMU_MODE)
 		BT8XXEMU_Flash_destroy(flash);
 		flash = NULL;
+#endif
 	}
 
 	BT8XXEMU_Emulator *emulator;
+
+#if defined(BT815EMU_MODE)
 	BT8XXEMU_Flash *flash;
+#endif
 
 	void swrbegin(size_t address)
 	{
