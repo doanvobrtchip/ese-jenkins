@@ -38,6 +38,8 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 
 namespace FTEDITOR {
 
+extern BT8XXEMU_Emulator *g_Emulator;
+
 #if FT800_DEVICE_MANAGER
 
 DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
@@ -101,8 +103,8 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDia
 
 	setLayout(layout);
 
-    //Init MPSSE lib
-    Init_libMPSSE();
+	//Init MPSSE lib
+	Init_libMPSSE();
 	// Initial refresh of devices
 	refreshDevices();
 
@@ -335,14 +337,14 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 	contentManager->lockContent();
 	std::set<ContentInfo *> contentInfo;
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam());
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam(g_Emulator));
 	
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
 		{
-            {
+			{
 			Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
@@ -365,8 +367,8 @@ void DeviceManager::syncDevice()
 		return;
 	}
 
-	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam());
-	const uint32_t *displayList = BT8XXEMU_getDisplayList();
+	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam(g_Emulator));
+	const uint32_t *displayList = BT8XXEMU_getDisplayList(g_Emulator);
 	//Sync with selected device
 	{
 
