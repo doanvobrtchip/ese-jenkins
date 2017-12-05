@@ -53,7 +53,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_CMD_PP (0x02) /* Page Program */
 #define BTFLASH_CMD_CP (0xAD) /* Continuously Program mode */
 #define BTFLASH_CMD_DP (0xB9) /* Deep Power Down */
-#define BTFLASH_CMD_RDP (0xAB) /* Release from Deep Power Down ¨*/
+#define BTFLASH_CMD_RDP (0xAB) /* Release from Deep Power Down */
 #define BTFLASH_CMD_RES (0xAB) /* Read Electronic ID */
 #define BTFLASH_CMD_REMS (0x90) /* Read Electronic Manufacturer and Device ID */
 #define BTFLASH_CMD_REMS2 (0xEF) /* Read ID for 2x IO Mode */

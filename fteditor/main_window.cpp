@@ -1715,7 +1715,7 @@ void MainWindow::runScript(const QString &script)
 				pyValue = PyUnicode_FromString(outN.data());;
 				PyTuple_SetItem(pyArgs, 0, pyValue);
 				PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam()));
+				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 				PyTuple_SetItem(pyArgs, 2, pyValue);
 				pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
