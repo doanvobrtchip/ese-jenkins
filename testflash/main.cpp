@@ -365,6 +365,13 @@ int main(int, char*[])
 	size_t size = BT8XXEMU_Flash_size(flash);
 	assert(size == BTFLASH_SIZE);
 
+	// Depend on specific version of flash data
+	assert(data[1] == 0xDF);
+	assert(data[2] == 0xFB);
+	assert(data[3] == 0x92);
+	assert(data[4] == 0x8E);
+	assert(data[5] == 0x00);
+
 	cableSelect(flash, false);
 	cableSelect(flash, true);
 
