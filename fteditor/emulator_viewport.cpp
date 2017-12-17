@@ -142,7 +142,7 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 		// Attach standard flash image (for testing)
 		BT8XXEMU_FlashParameters flashParams;
 		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-		flashParams.DataFilePath = FTEDITOR_STDFLASH;
+		wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH);
 		g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 		s_EmulatorParameters.Flash = g_Flash;
 #endif

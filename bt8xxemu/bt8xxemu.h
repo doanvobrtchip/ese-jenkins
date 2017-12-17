@@ -167,13 +167,13 @@ typedef struct
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	const wchar_t *RomFilePath;
+	wchar_t RomFilePath[260];
 	// Replaces the default builtin OTP with a custom OTP from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	const wchar_t *OtpFilePath;
+	wchar_t OtpFilePath[260];
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	const wchar_t *CoprocessorRomFilePath;
+	wchar_t CoprocessorRomFilePath[260];
 
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
@@ -209,16 +209,16 @@ typedef struct
 typedef struct
 {
 	// Device type, by library name, default "mx25lemu"
-	const wchar_t *DeviceType;
+	wchar_t DeviceType[26];
 
 	// Size of the flash memory in bytes, default 8MB
 	size_t SizeBytes;
 
 	// Data file to load onto the flash, default NULL
-	const wchar_t *DataFilePath;
+	wchar_t DataFilePath[260];
 
 	// Internal flash status file, device specific, default NULL
-	const wchar_t *StatusFilePath;
+	wchar_t StatusFilePath[260];
 
 	// Write actions to the flash are persisted to the used file.
 	// This is accomplished by memory mapping the file, instead of

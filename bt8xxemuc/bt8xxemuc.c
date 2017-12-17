@@ -17,6 +17,7 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #ifdef BT8XXEMU_REMOTE
 
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef WIN32
 #	ifndef NOMINMAX
@@ -65,6 +66,29 @@ struct BT8XXEMUC_Remote {
 };
 
 #pragma pack(push, 1)
+typedef struct
+{
+	int32_t flags;
+	BT8XXEMU_EmulatorMode mode;
+	uint32_t mousePressure;
+	uint32_t externalFrequency;
+	uint32_t reduceGraphicsThreads;
+	wchar_t romFilePath[260];
+	wchar_t otpFilePath[260];
+	wchar_t coprocessorRomFilePath[260];
+	int64_t userContext;
+	int32_t flash;
+} BT8XXEMUC_RemoteEmulatorParameters;
+typedef struct
+{
+	wchar_t deviceType[26];
+	uint64_t sizeBytes;
+	wchar_t dataFilePath[260];
+	wchar_t statusFilePath[260];
+	bool persistent;
+	bool stdOut;
+	int64_t userContext;
+} BT8XXEMUC_RemoteFlashParameters;
 typedef union
 {
 	char buffer[BUFSIZE];
@@ -81,10 +105,11 @@ typedef union
 		{
 			struct
 			{
-				BT8XXEMU_EmulatorParameters params;
+				BT8XXEMUC_RemoteEmulatorParameters remoteParams;
 				BT8XXEMU_EmulatorMode mode;
 			};
-			BT8XXEMU_FlashParameters flashParams;
+			// BT8XXEMU_FlashParameters flashParams;
+			BT8XXEMUC_RemoteFlashParameters remoteFlashParams;
 			char str[1024];
 			uint8_t data;
 			uint8_t signal;
@@ -98,6 +123,55 @@ typedef union
 
 #define MESSAGE_SIZE(param) (DWORD)((ptrdiff_t)(void *)(&(data.param)) + (ptrdiff_t)sizeof(data.param) - (ptrdiff_t)(void *)(&data.buffer[0]))
 #define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&data.str[0]) + (ptrdiff_t)strlen(&data.str[0]) + 1 - (ptrdiff_t)(void *)(&data.buffer[0]))
+
+static void BT8XXEMUC_readParams(BT8XXEMU_EmulatorParameters *params, const BT8XXEMUC_RemoteEmulatorParameters *remoteParams)
+{
+	memset(params, 0, sizeof(BT8XXEMU_EmulatorParameters));
+	params->Flags = remoteParams->flags;
+	params->Mode = remoteParams->mode;
+	params->MousePressure = remoteParams->mousePressure;
+	params->ReduceGraphicsThreads = remoteParams->reduceGraphicsThreads;
+	wcscpy(params->RomFilePath, remoteParams->romFilePath);
+	wcscpy(params->OtpFilePath, remoteParams->otpFilePath);
+	wcscpy(params->CoprocessorRomFilePath, remoteParams->coprocessorRomFilePath);
+	params->UserContext = (void *)(intptr_t)remoteParams->userContext;
+	assert(remoteParams->flash == 0);
+	// params->Flash = 0;
+}
+
+static void BT8XXEMUC_writeParams(BT8XXEMUC_RemoteEmulatorParameters *remoteParams, const BT8XXEMU_EmulatorParameters *params)
+{
+	remoteParams->flags = params->Flags;
+	remoteParams->mode = params->Mode;
+	remoteParams->mousePressure = params->MousePressure;
+	remoteParams->reduceGraphicsThreads = params->ReduceGraphicsThreads;
+	wcscpy(remoteParams->romFilePath, params->RomFilePath);
+	wcscpy(remoteParams->otpFilePath, params->OtpFilePath);
+	wcscpy(remoteParams->coprocessorRomFilePath, params->CoprocessorRomFilePath);
+	remoteParams->userContext = (int64_t)(intptr_t)params->UserContext;
+	remoteParams->flash = (params->Flash) ? params->Flash->flash : 0;
+}
+
+static void BT8XXEMUC_readFlashParams(BT8XXEMU_FlashParameters *flashParams, const BT8XXEMUC_RemoteFlashParameters *remoteFlashParams)
+{
+	wcscpy(flashParams->DeviceType, remoteFlashParams->deviceType);
+	flashParams->SizeBytes = remoteFlashParams->sizeBytes;
+	wcscpy(flashParams->DataFilePath, remoteFlashParams->dataFilePath);
+	wcscpy(flashParams->StatusFilePath, remoteFlashParams->statusFilePath);
+	flashParams->Persistent = remoteFlashParams->persistent;
+	flashParams->StdOut = remoteFlashParams->stdOut;
+}
+
+static void BT8XXEMUC_writeFlashParams(BT8XXEMUC_RemoteFlashParameters *remoteFlashParams, const BT8XXEMU_FlashParameters *flashParams)
+{
+	wcscpy(remoteFlashParams->deviceType, flashParams->DeviceType);
+	remoteFlashParams->sizeBytes = flashParams->SizeBytes;
+	wcscpy(remoteFlashParams->dataFilePath, flashParams->DataFilePath);
+	wcscpy(remoteFlashParams->statusFilePath, flashParams->StatusFilePath);
+	remoteFlashParams->persistent = flashParams->Persistent;
+	remoteFlashParams->stdOut = flashParams->StdOut;
+	remoteFlashParams->userContext = (int64_t)(intptr_t)flashParams->UserContext;
+}
 
 static LONG s_AtomicLock = 0;
 static LONG s_RefCount = 0;
@@ -310,7 +384,8 @@ void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params,
 
 		data.messageType = BT8XXEMU_CALL_DEFAULTS;
 		data.versionApi = BT8XXEMU_VERSION_API;
-		memcpy(&data.params, params, sizeof(BT8XXEMU_EmulatorParameters));
+		// BT8XXEMUC_writeParams(&data.remoteParams, params);
+		memset(&data.remoteParams, 0, sizeof(BT8XXEMUC_RemoteEmulatorParameters));
 		data.mode = mode;
 		len = MESSAGE_SIZE(mode);
 
@@ -326,7 +401,7 @@ void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params,
 		BT8XXEMUC_unlockProcessPipe();
 		BT8XXEMUC_closeProcess();
 
-		memcpy(params, &data.params, sizeof(BT8XXEMU_EmulatorParameters));
+		BT8XXEMUC_readParams(params, &data.remoteParams);
 		return;
 	}
 
@@ -335,6 +410,24 @@ void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params,
 
 void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params)
 {
+	/*
+	if (params->Close) printf("Close callback is not permitted in service mode\n");
+	if (params->Graphics) printf("Graphics callback is not permitted in service mode\n");
+	if (params->Log) printf("Log callback is not permitted in service mode\n");
+	// if (params.Main) printf("Main callback is not permitted in service mode\n");
+	if (params->MCUSleep) printf("MCUSleep callback is not permitted in service mode\n");
+	*/
+
+	if (params->Close
+		|| params->Graphics
+		|| params->Log
+		|| params->MCUSleep)
+	{
+		// TODO: Callback handling
+		*emulator = NULL;
+		return;
+	}
+
 	if (BT8XXEMUC_openProcess())
 	{
 		*emulator = malloc(sizeof(BT8XXEMU_Emulator));
@@ -355,12 +448,11 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 
 		data.messageType = BT8XXEMU_CALL_RUN;
 		data.versionApi = BT8XXEMU_VERSION_API;
-		memcpy(&data.params, params, sizeof(BT8XXEMU_EmulatorParameters));
-		data.params.Flash = (void *)(ptrdiff_t)data.params.Flash->flash;
-		len = MESSAGE_SIZE(params);
+		BT8XXEMUC_writeParams(&data.remoteParams, params);
+		len = MESSAGE_SIZE(remoteParams);
 
-		data.params.Main = NULL;
-		data.params.Close = NULL; // Temporary
+		// data.params.Main = NULL;
+		// data.params.Close = NULL; // Temporary
 
 		if (!WriteFile((*emulator)->pipe, data.buffer, len, &nb, NULL) || len != nb
 			|| !ReadFile((*emulator)->pipe, data.buffer, BUFSIZE, &nb, NULL))
@@ -535,8 +627,9 @@ void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *para
 
 		data.messageType = BT8XXEMU_CALL_FLASH_DEFAULTS;
 		data.versionApi = BT8XXEMU_VERSION_API;
-		memcpy(&data.flashParams, params, sizeof(BT8XXEMU_FlashParameters));
-		len = MESSAGE_SIZE(flashParams);
+		// BT8XXEMUC_writeFlashParams(&data.remoteFlashParams, params);
+		memset(&data.remoteFlashParams, 0, sizeof(BT8XXEMUC_RemoteFlashParameters));
+		len = MESSAGE_SIZE(remoteFlashParams);
 
 		if (!WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
 			|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
@@ -550,7 +643,7 @@ void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *para
 		BT8XXEMUC_unlockProcessPipe();
 		BT8XXEMUC_closeProcess();
 
-		memcpy(params, &data.flashParams, sizeof(BT8XXEMU_FlashParameters));
+		BT8XXEMUC_readFlashParams(params, &data.remoteFlashParams);
 		return;
 	}
 
@@ -578,8 +671,8 @@ BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashP
 
 		data.messageType = BT8XXEMU_CALL_FLASH_CREATE;
 		data.versionApi = BT8XXEMU_VERSION_API;
-		memcpy(&data.flashParams, params, sizeof(BT8XXEMU_FlashParameters));
-		len = MESSAGE_SIZE(flashParams);
+		BT8XXEMUC_writeFlashParams(&data.remoteFlashParams, params);
+		len = MESSAGE_SIZE(remoteFlashParams);
 
 		if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
 			|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))

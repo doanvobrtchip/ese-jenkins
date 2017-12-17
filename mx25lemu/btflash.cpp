@@ -294,7 +294,7 @@ public:
 
 		m_WriteProtect = false;
 
-		const wchar_t *const dataFilePath = params->DataFilePath;
+		const wchar_t *const dataFilePath = params->DataFilePath[0] ? params->DataFilePath : NULL;
 		const size_t sizeBytes = (params->SizeBytes + 65535) & (~(size_t)0xFFFF);
 
 		if (dataFilePath)

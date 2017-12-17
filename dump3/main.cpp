@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
 	BT8XXEMU_FlashParameters flashParams;
 	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-	flashParams.DataFilePath = BTFLASH_DATA_FILE;
+	wcscpy(flashParams.DataFilePath, BTFLASH_DATA_FILE);
 	flashParams.StdOut = true;
 	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 

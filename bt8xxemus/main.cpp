@@ -21,8 +21,10 @@ Author: Jan Boon <jan@no-break.space>
 #	include <Windows.h>
 #endif
 
+#include <assert.h>
 #include <iostream>
 #include <vector>
+#include <map>
 #include <mutex>
 
 #define BUFSIZE 64 * 1024
@@ -46,11 +48,19 @@ Author: Jan Boon <jan@no-break.space>
 #define BT8XXEMU_CALL_FLASH_DESTROY 0x0104
 #define BT8XXEMU_CALL_FLASH_TRANSFER_SPI4 0x0109
 
+#ifndef _M_X64
+#define BT8XXEMUS_32BIT
+#endif
+
 volatile bool s_Running = true;
 std::mutex s_Mutex;
 
 std::vector<BT8XXEMU_Emulator *> s_Emulators;
 std::vector<BT8XXEMU_Flash *> s_Flashes;
+#ifdef BT8XXEMUS_32BIT
+std::vector<uint64_t> s_UserContexts;
+std::map<uint64_t, void *> s_UserContextMap;
+#endif
 
 std::vector<HANDLE> s_Threads;
 std::vector<std::string> s_ThreadPipes;
@@ -77,10 +87,33 @@ DWORD WINAPI runPipe(const char *pipeName)
 			{
 				struct
 				{
-					BT8XXEMU_EmulatorParameters params;
+					// BT8XXEMU_EmulatorParameters params;
+					struct
+					{
+						int32_t flags;
+						BT8XXEMU_EmulatorMode mode;
+						uint32_t mousePressure;
+						uint32_t externalFrequency;
+						uint32_t reduceGraphicsThreads;
+						wchar_t romFilePath[260];
+						wchar_t otpFilePath[260];
+						wchar_t coprocessorRomFilePath[260];
+						int64_t userContext;
+						int32_t flash;
+					} remoteParams;
 					BT8XXEMU_EmulatorMode mode;
 				};
-				BT8XXEMU_FlashParameters flashParams;
+				// BT8XXEMU_FlashParameters flashParams;
+				struct
+				{
+					wchar_t deviceType[26];
+					uint64_t sizeBytes;
+					wchar_t dataFilePath[260];
+					wchar_t statusFilePath[260];
+					bool persistent;
+					bool stdOut;
+					int64_t userContext;
+				} remoteFlashParams;
 				char str[1024];
 				uint8_t data;
 				uint8_t signal;
@@ -91,6 +124,11 @@ DWORD WINAPI runPipe(const char *pipeName)
 		};
 	};
 #pragma pack(pop)
+
+	BT8XXEMU_EmulatorParameters params = { 0 };
+	BT8XXEMU_FlashParameters flashParams = { 0 };
+
+	std::map<uint64_t, void *>::iterator userContext;
 
 #define MESSAGE_SIZE(param) (DWORD)((ptrdiff_t)(void *)(&(param)) + (ptrdiff_t)sizeof(param) - (ptrdiff_t)(void *)(&buffer[0]))
 #define STRING_MESSAGE_SIZE() (DWORD)((ptrdiff_t)(void *)(&str[0]) + (ptrdiff_t)strlen(&str[0]) + 1 - (ptrdiff_t)(void *)(&buffer[0]))
@@ -170,26 +208,50 @@ DWORD WINAPI runPipe(const char *pipeName)
 			break;
 		case BT8XXEMU_CALL_DEFAULTS:
 			BT8XXEMU_defaults(versionApi, &params, mode);
-			len = MESSAGE_SIZE(params);
+			remoteParams.flags = params.Flags;
+			remoteParams.mode = params.Mode;
+			remoteParams.mousePressure = params.MousePressure;
+			remoteParams.reduceGraphicsThreads = params.ReduceGraphicsThreads;
+			wcscpy(remoteParams.romFilePath, params.RomFilePath);
+			wcscpy(remoteParams.otpFilePath, params.OtpFilePath);
+			wcscpy(remoteParams.coprocessorRomFilePath, params.CoprocessorRomFilePath);
+			assert(params.UserContext == NULL);
+#ifdef BT8XXEMUS_32BIT
+			remoteParams.userContext = s_UserContexts[(intptr_t)params.UserContext];
+#else
+			remoteParams.userContext = (uint64_t)params.UserContext;
+#endif
+			assert(params.Flash == NULL);
+			remoteParams.flash = 0;
+			len = MESSAGE_SIZE(remoteParams);
 			break;
 		case BT8XXEMU_CALL_RUN:
-			if (params.Close) std::cerr << "Close callback is not permitted in service mode\n";
-			if (params.Graphics) std::cerr << "Graphics callback is not permitted in service mode\n";
-			if (params.Log) std::cerr << "Log callback is not permitted in service mode\n";
-			if (params.Main) std::cerr << "Main callback is not permitted in service mode\n";
-			if (params.MCUSleep) std::cerr << "MCUSleep callback is not permitted in service mode\n";
-			if (params.Close
-				|| params.Graphics
-				|| params.Log
-				|| params.Main
-				|| params.MCUSleep)
-			{
-				if (params.Close) std::cerr << "Callbacks are not permitted in service mode\n";
-				CloseHandle(pipe);
-				return EXIT_FAILURE;
-			}
-			params.Flash = s_Flashes[(int)(ptrdiff_t)(void *)params.Flash];
+			params.Flags = remoteParams.flags;
+			params.Mode = remoteParams.mode;
+			params.MousePressure = remoteParams.mousePressure;
+			params.ReduceGraphicsThreads = remoteParams.reduceGraphicsThreads;
+			wcscpy(params.RomFilePath, remoteParams.romFilePath);
+			wcscpy(params.OtpFilePath, remoteParams.otpFilePath);
+			wcscpy(params.CoprocessorRomFilePath, remoteParams.coprocessorRomFilePath);
+			// params.UserContext = ...;
+			params.Flash = s_Flashes[remoteParams.flash];
 			s_Mutex.lock();
+#ifdef BT8XXEMUS_32BIT
+			userContext = s_UserContextMap.find(remoteParams.userContext);
+			if (userContext != s_UserContextMap.end())
+			{
+				params.UserContext = userContext->second;
+				assert(s_UserContexts[(intptr_t)params.UserContext] == remoteParams.userContext);
+			}
+			else
+			{
+				s_UserContexts.push_back(remoteParams.userContext);
+				params.UserContext = (void *)(s_UserContexts.size() - 1);
+				s_UserContextMap[(intptr_t)params.UserContext] = params.UserContext;
+			}
+#else
+			params.UserContext = (void *)remoteParams.userContext;
+#endif
 			s_Emulators.push_back(NULL);
 			BT8XXEMU_run(versionApi, &s_Emulators[s_Emulators.size() - 1], &params);
 			emulator = (uint32_t)s_Emulators.size() - 1;
@@ -223,11 +285,45 @@ DWORD WINAPI runPipe(const char *pipeName)
 			break;
 		case BT8XXEMU_CALL_FLASH_DEFAULTS:
 			BT8XXEMU_Flash_defaults(versionApi, &flashParams);
-			len = MESSAGE_SIZE(flashParams);
+			wcscpy(remoteFlashParams.deviceType, flashParams.DeviceType);
+			remoteFlashParams.sizeBytes = flashParams.SizeBytes;
+			wcscpy(remoteFlashParams.dataFilePath, flashParams.DataFilePath);
+			wcscpy(remoteFlashParams.statusFilePath, flashParams.StatusFilePath);
+			remoteFlashParams.persistent = flashParams.Persistent;
+			remoteFlashParams.stdOut = flashParams.StdOut;
+			assert(flashParams.UserContext == NULL);
+#ifdef BT8XXEMUS_32BIT
+			remoteFlashParams.userContext = s_UserContexts[(intptr_t)flashParams.UserContext];
+#else
+			remoteFlashParams.userContext = (int64_t)flashParams.UserContext;
+#endif
+			len = MESSAGE_SIZE(remoteFlashParams);
 			break;
 		case BT8XXEMU_CALL_FLASH_CREATE:
 			s_Mutex.lock();
 			s_Flashes.push_back(NULL);
+			wcscpy(flashParams.DeviceType, remoteFlashParams.deviceType);
+			flashParams.SizeBytes = remoteFlashParams.sizeBytes;
+			wcscpy(flashParams.DataFilePath, remoteFlashParams.dataFilePath);
+			wcscpy(flashParams.StatusFilePath, remoteFlashParams.statusFilePath);
+			flashParams.Persistent = remoteFlashParams.persistent;
+			flashParams.StdOut = remoteFlashParams.stdOut;
+#ifdef BT8XXEMUS_32BIT
+			userContext = s_UserContextMap.find(remoteFlashParams.userContext);
+			if (userContext != s_UserContextMap.end())
+			{
+				flashParams.UserContext = userContext->second;
+				assert(s_UserContexts[(intptr_t)flashParams.UserContext] == remoteFlashParams.userContext);
+			}
+			else
+			{
+				s_UserContexts.push_back(remoteFlashParams.userContext);
+				flashParams.UserContext = (void *)(s_UserContexts.size() - 1);
+				s_UserContextMap[(intptr_t)flashParams.UserContext] = flashParams.UserContext;
+			}
+#else
+			flashParams.UserContext = (void *)remoteFlashParams.userContext;
+#endif
 			s_Flashes[s_Flashes.size() - 1] = BT8XXEMU_Flash_create(versionApi, &flashParams);
 			flash = (uint32_t)s_Flashes.size() - 1;
 			len = MESSAGE_SIZE(flash);
@@ -274,6 +370,12 @@ int main(int argc, char* argv[])
 
 	s_Emulators.push_back(NULL);
 	s_Flashes.push_back(NULL);
+
+#ifdef BT8XXEMUS_32BIT
+	s_UserContexts.push_back(0);
+	s_UserContextMap[0] = NULL;
+#endif
+
 	s_Threads.push_back(NULL);
 	s_ThreadPipes.push_back(std::string());
 

@@ -239,7 +239,7 @@ BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashPar
 
 	memset(params, 0, sizeof(BT8XXEMU_FlashParameters));
 
-	params->DeviceType = L"mx25lemu";
+	wcscpy(params->DeviceType, L"mx25lemu");
 	params->SizeBytes = 8 * 1024 * 1024;
 }
 

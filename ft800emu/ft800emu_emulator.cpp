@@ -305,7 +305,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 #ifdef BT815EMU_MODE
 		params.Flash, 
 #endif
-		params.RomFilePath, params.OtpFilePath);
+		params.RomFilePath[0] ? params.RomFilePath : NULL, params.OtpFilePath[0] ? params.OtpFilePath : NULL);
 	assert(!m_Touch);
 	m_Touch = new Touch(m_System, mode, m_Memory);
 	m_Memory->setTouch(m_Touch);
@@ -347,7 +347,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	{
 		assert(!m_Coprocessor);
 		m_Coprocessor = new Coprocessor(m_System, m_Memory,
-			params.CoprocessorRomFilePath ? NULL : params.CoprocessorRomFilePath,
+			params.CoprocessorRomFilePath[0] ? params.CoprocessorRomFilePath : NULL,
 			mode);
 	}
 	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard))

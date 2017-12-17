@@ -11,6 +11,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <ft800emu_vc.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #define BTFLASH_CMD_WREN (0x06) /* Write Enable */
 #define BTFLASH_CMD_WRDI (0x04) /* Write Disable */
@@ -354,9 +355,9 @@ int main(int, char*[])
 
 	BT8XXEMU_FlashParameters flashParams;
 	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-	flashParams.DeviceType = BTFLASH_DEVICE_TYPE;
+	wcscpy(flashParams.DeviceType, BTFLASH_DEVICE_TYPE);
 	flashParams.SizeBytes = BTFLASH_SIZE;
-	flashParams.DataFilePath = BTFLASH_DATA_FILE;
+	wcscpy(flashParams.DataFilePath, BTFLASH_DATA_FILE);
 	flashParams.StdOut = true;
 	BT8XXEMU_Flash *flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 
