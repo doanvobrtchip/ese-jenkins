@@ -19,6 +19,8 @@ namespace BT8XXEMU {
 class Emulator
 {
 public:
+	virtual ~Emulator() { }
+
 	virtual void stop() = 0;
 	virtual bool isRunning() = 0;
 

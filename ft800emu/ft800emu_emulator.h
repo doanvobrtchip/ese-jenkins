@@ -54,7 +54,7 @@ class Emulator : public BT8XXEMU::Emulator
 {
 public:
 	Emulator();
-	~Emulator();
+	virtual ~Emulator();
 
 	void destroy();
 

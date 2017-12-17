@@ -231,8 +231,12 @@ void Emulator::destroy()
 			m_AudioOutput->destroy();
 			m_AudioOutput = NULL;
 		}
-		if (!m_Graphics) m_WindowOutput->destroy();
-		m_WindowOutput = NULL;
+		if (m_WindowOutput)
+		{
+			assert(!m_Graphics);
+			m_WindowOutput->destroy();
+			m_WindowOutput = NULL;
+		}
 		delete m_BusSlave;
 		m_BusSlave = NULL;
 		m_Memory->setGraphicsProcessor(NULL);
