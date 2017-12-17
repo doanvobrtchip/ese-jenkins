@@ -11,7 +11,7 @@ BT8XXEMU_Emulator *g_Emulator = NULL;
 
 uint8_t rd8(uint32_t address)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0xFF);
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -21,14 +21,14 @@ uint8_t rd8(uint32_t address)
 	uint8_t value;
 	value = BT8XXEMU_transfer(g_Emulator, 0);
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 
 	return value;
 }
 
 uint16_t rd16(uint32_t address)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0xFF);
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -39,13 +39,13 @@ uint16_t rd16(uint32_t address)
 	value = BT8XXEMU_transfer(g_Emulator, 0);
 	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 	return value;
 }
 
 uint32_t rd32(uint32_t address)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0xFF);
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -58,13 +58,13 @@ uint32_t rd32(uint32_t address)
 	value |= BT8XXEMU_transfer(g_Emulator, 0) << 16;
 	value |= BT8XXEMU_transfer(g_Emulator, 0) << 24;
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 	return value;
 }
 
 void wr8(uint32_t address, uint8_t value)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0xFF));
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -72,12 +72,12 @@ void wr8(uint32_t address, uint8_t value)
 
 	BT8XXEMU_transfer(g_Emulator, value);
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
 void wr16(uint32_t address, uint16_t value)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0xFF));
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -86,12 +86,12 @@ void wr16(uint32_t address, uint16_t value)
 	BT8XXEMU_transfer(g_Emulator, value & 0xFF);
 	BT8XXEMU_transfer(g_Emulator, (value >> 8) & 0xFF);
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
 void wr32(uint32_t address, uint32_t value)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0xFF));
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -102,12 +102,12 @@ void wr32(uint32_t address, uint32_t value)
 	BT8XXEMU_transfer(g_Emulator, (value >> 16) & 0xFF);
 	BT8XXEMU_transfer(g_Emulator, (value >> 24) & 0xFF);
 
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
 void wrstart(uint32_t address)
 {
-	BT8XXEMU_cs(g_Emulator, 1);
+	BT8XXEMU_chipSelect(g_Emulator, 1);
 
 	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0xFF));
 	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
@@ -157,7 +157,7 @@ int wrstr(const char *str)
 
 void wrend()
 {
-	BT8XXEMU_cs(g_Emulator, 0);
+	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
 /* end of file */
