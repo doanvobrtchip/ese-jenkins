@@ -1,8 +1,8 @@
 import os, sys, re, shutil, subprocess, errno, stat
 
-paletted_format = 8
-paletted8_format = 16
-paletted565_format = 14
+paletted_format = 8		
+paletted8_format = 16		
+paletted565_format = 14		
 paletted4444_format = 15
 
 def displayName():
@@ -152,14 +152,71 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
             renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
             renameStringInFile(Ft90xPlatformHeader, "//#define ME810A_HV35R", "#define ME810A_HV35R")
             renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
-        elif moduleName == "ME813A_WV7C":
-            renameStringInFile(MSVCPlatformHeader, "//#define VM810C50", "#define VM810C50")
+        
+        ### Newly added here after ESE 2.4.0    
+        ### ME81XA modules support -- for MSVC_Win32 platform 
+        elif moduleName == "ME811A_WH70C":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME811A_WH70C", "#define ME811A_WH70C")
             renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
             renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
             renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
-            renameStringInFile(Ft90xPlatformHeader, "//#define ME813A_WV7C", "#define ME813A_WV7C")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME811A_WH70C", "#define ME811A_WH70C")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")            
+        elif moduleName == "ME810A_WH70R":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME810A_WH70R", "#define ME810A_WH70R")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME810A_WH70R", "#define ME810A_WH70R")
             renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
+        elif moduleName == "ME812A_WH50R":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME812A_WH50R", "#define ME812A_WH50R")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME812A_WH50R", "#define ME812A_WH50R")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
+        elif moduleName == "ME813A_WH50C":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME813A_WH50C", "#define ME813A_WH50C")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME813A_WH50C", "#define ME813A_WH50C")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
+            
+        ###ME81XAU Modules support, only for FT90X platform            
+        elif moduleName == "ME810AU_WH70R":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME810AU_WH70R", "#define ME810AU_WH70R")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME810AU_WH70R", "#define ME810AU_WH70R")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")            
 
+        elif moduleName == "ME811AU_WH70C":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME811AU_WH70C", "#define ME811AU_WH70C")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_813_ENABLE", "#define FT_813_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME811AU_WH70C", "#define ME811AU_WH70C")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")              
+            
+        elif moduleName == "ME812AU_WH50R":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME812AU_WH50R", "#define ME812AU_WH50R")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_812_ENABLE", "#define FT_812_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME812AU_WH50R", "#define ME812AU_WH50R")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
+        elif moduleName == "ME813AU_WH50C":
+            renameStringInFile(MSVCPlatformHeader, "//#define ME813AU_WH50C", "#define ME813AU_WH50C")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WVGA", "#define DISPLAY_RESOLUTION_WVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_813_ENABLE", "#define FT_813_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ME813AU_WH50C", "#define ME813AU_WH50C")
+            renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")  
+
+          
     except Exception as e:
         raise Exception("Error while renaming project platform files: " + str(e))
 
@@ -192,9 +249,10 @@ def convertArgs(functionArgs):
             functionArgs = functionArgs.replace(argument.replace(" ", ""), argsMap[argument.replace(" ", "")])
     return functionArgs
 
-lutSize = 1024
-palettedFormats = [paletted_format, paletted8_format, paletted565_format, paletted4444_format]
 
+lutSize = 256*4		
+palettedFormats = [paletted_format, paletted8_format, paletted565_format, paletted4444_format]    
+    
 functionMap = {
     "CMD_DLSTART" : "Ft_Gpu_CoCmd_Dlstart",
     "CMD_SWAP" : "Ft_Gpu_CoCmd_Swap",
@@ -1089,7 +1147,6 @@ globalValue = {
     'assetsFolder': "Test",
 }
 
-
 def raiseUnicodeError(errorArea):
     raise Exception("Unable to export project: unicode characters are currently unsupported.  Please check: " + errorArea)
 
@@ -1147,61 +1204,70 @@ def run(name, document, ram, moduleName):
                 if content["imageFormat"] in palettedFormats:
                     ramOffset = int(content["memoryAddress"])
                     lutAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper() + "_LUT"
-                    memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
-                    f.write("\n")
-
-                    if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
-                        f.write("#define " + lutAddress + " RAM_PAL" + "\n")
-                        f.write("#define " + memoryAddress + " " + str(ramOffset) + "\n")
+                    memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()		
+                    f.write("\n")		
+		
+                    if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:		
+                        f.write("#define " + lutAddress + " RAM_PAL" + "\n")		
+                        f.write("#define " + memoryAddress + " " + str(ramOffset) + "\n")		
                     else:
-                        f.write("#define " + lutAddress + " " + str(ramOffset) + "\n")
-                        f.write("#define " + memoryAddress + " " + str(ramOffset + lutSize) + "\n")
-                else:
-                    memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
-                    f.write("\n")
+                        if ((content["imageFormat"] == paletted565_format) or 
+                            (content["imageFormat"] == paletted4444_format)):
+                            lutSize = 256*2
+                            
+                        f.write("#define " + lutAddress + " " + str(ramOffset) + "\n")		
+                        f.write("#define " + memoryAddress + " " + str(ramOffset + lutSize) + "\n")		
+                else:		
+                    memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()		
+                    f.write("\n")		
                     f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
             if content["dataEmbedded"]:
                 data = ""
                 contentName = re.sub(r'[-/. ]', '_', content["destName"])
                 headerName = content["destName"].replace('/', os.path.sep)
-                lutContentName = contentName + "_lut"
-                lutHeaderName = headerName + ".lut"
 
+                lutContentName = contentName + "_lut"		
+                lutHeaderName = headerName + ".lut"                
+                
                 #load raw files
                 if content["converter"] == "Raw":
                     fcontent = ""
-                    lutContent = ""
-                    with open(headerName + '.raw', 'rb') as rawf:
+                    lutContent = ""		 
+                    with open(content["destName"].replace('/',os.path.sep) + '.raw', 'rb') as rawf:                   
                         fcontent = rawf.read()
-
-                    if content["imageFormat"] in palettedFormats:
-                        with open(lutHeaderName + '.raw', 'rb') as rawf:
-                            lutContent = rawf.read()
-
+	
+                    if content["imageFormat"] in palettedFormats:		
+                        with open(lutHeaderName + '.raw', 'rb') as rawf:		
+                            lutContent = rawf.read()		
+                        
+                    
                     targetName = contentName + ".h"
                     targetPath = outDir + os.path.sep + targetName
-                    lutTargetName = lutContentName + ".h"
-                    lutTargetPath = outDir + os.path.sep + lutTargetName
 
+                    lutTargetName = lutContentName + ".h"		
+                    lutTargetPath = outDir + os.path.sep + lutTargetName		
+                    
+                    
                     if os.path.isfile(targetPath):
                         os.remove(targetPath)
-                    if content["imageFormat"] in palettedFormats:
-                        if os.path.isfile(lutTargetPath):
-                            os.remove(lutTargetPath)
 
-                        foutput = open(lutTargetPath, 'w+')
-                        for i in range(0, len(lutContent)):
-                            foutput.write(str(ord(lutContent[i])))
-                            foutput.write(",")
-                        foutput.close()
+                    if content["imageFormat"] in palettedFormats:		
+                        if os.path.isfile(lutTargetPath):		
+                            os.remove(lutTargetPath)		
+		
+                        foutput = open(lutTargetPath, 'w+')		
+                        for i in range(0, len(lutContent)):		
+                            foutput.write(str(ord(lutContent[i])))		
+                            foutput.write(",")		
+                        foutput.close()		
 
+                        
+                        
                     foutput = open(targetPath, 'w+')
                     for i in range(0,len(fcontent)):
                         foutput.write(str(ord(fcontent[i])))
                         foutput.write(",")
                     foutput.close()
-
-
                 else:
                     if content["dataCompressed"]:
                         headerName += ".binh"
@@ -1212,28 +1278,31 @@ def run(name, document, ram, moduleName):
                     targetName = contentName + ".h"
                     lutTargetName = lutContentName + ".h"
                     targetPath = outDir + os.path.sep + targetName
-                    lutTargetPath = outDir + os.path.sep + lutTargetName
-                    if content["imageFormat"] in palettedFormats:
-                        if os.path.isfile(lutTargetPath):
-                            os.remove(lutTargetPath)
-                        shutil.copy(lutHeaderName, lutTargetPath)
 
+                    lutTargetPath = outDir + os.path.sep + lutTargetName		
+                    if content["imageFormat"] in palettedFormats:		
+                        if os.path.isfile(lutTargetPath):		
+                            os.remove(lutTargetPath)		
+                        shutil.copy(lutHeaderName, lutTargetPath)		
+                    
+                    
                     if os.path.isfile(targetPath):
                         os.remove(targetPath)
                     shutil.copy(headerName, targetPath)
-
                 content["FTEVE_Name"] = contentName
                 f.write("\n")
                 charType = "ft_uchar8_t"
                 #charType = "char" # For older Linux distro
-
-                if content["imageFormat"] in palettedFormats:
-                    with open (lutTargetPath, "r") as resourceFile:
-                        data = resourceFile.read().replace('\n','')
-                    f.write("static " + charType + " " + lutContentName + "[] = {\n")
-                    #f.write("\t#include \"" + targetName + "\"\n")
-                    f.write("\t" + data + "\n")
-                    f.write("};\n")
+             
+	
+                if content["imageFormat"] in palettedFormats:		
+                    with open (lutTargetPath, "r") as resourceFile:		
+                        data = resourceFile.read().replace('\n','')		
+                    f.write("static " + charType + " " + lutContentName + "[] = {\n")		
+                    #f.write("\t#include \"" + targetName + "\"\n")		
+                    f.write("\t" + data + "\n")		
+                    f.write("};\n")                
+                
                 with open (targetPath, "r") as resourceFile:
                     data = resourceFile.read().replace('\n','')
                 f.write("static " + charType + " " + contentName + "[] = {\n")
@@ -1273,31 +1342,31 @@ def run(name, document, ram, moduleName):
                 if content["converter"] == "Raw":
                     f.write("\tFt_Gpu_Hal_WrMem(phost," + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n")
                     if content["imageFormat"] in palettedFormats:
-                        if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
-                            f.write("\tFt_Gpu_Hal_WrMem(phost, RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")
-                        else:
-                            f.write("\tFt_Gpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                        if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:		
+                            f.write("\tFt_Gpu_Hal_WrMem(phost, RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")		
+                        else:		
+                            f.write("\tFt_Gpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")                    
                 else:
                     if content["dataCompressed"]:
-                        f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")
+                        f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")                        
                         f.write("\tFt_Gpu_Hal_WrCmd32(phost," + memoryAddress + ");\n")
                         f.write("\tFt_Gpu_Hal_WrCmdBuf(phost," + contentName + ", sizeof(" + contentName + "));\n")
-                        if content["imageFormat"] in palettedFormats:
-                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
-                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")
-                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, RAM_PAL );\n")
-                                f.write("\tFt_Gpu_Hal_WrCmdBuf(phost," + lutContentName + ", sizeof(" + lutContentName + "));\n")
-                            else:
-                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")
-                                f.write("\tFt_Gpu_Hal_WrCmd32(phost," + lutMemoryAddress + " );\n")
-                                f.write("\tFt_Gpu_Hal_WrCmdBuf(phost," + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                        if content["imageFormat"] in palettedFormats:		
+                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:		
+                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")		
+                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, RAM_PAL );\n")		
+                                f.write("\tFt_Gpu_Hal_WrCmdBuf(phost," + lutContentName + ", sizeof(" + lutContentName + "));\n")		
+                            else:		
+                                f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_INFLATE);\n")		
+                                f.write("\tFt_Gpu_Hal_WrCmd32(phost," + lutMemoryAddress + " );\n")		
+                                f.write("\tFt_Gpu_Hal_WrCmdBuf(phost," + lutContentName + ", sizeof(" + lutContentName + "));\n")                        
                     else:
                         f.write("\tFt_Gpu_Hal_WrMem(phost," + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n")
-                        if content["imageFormat"] in palettedFormats:
-                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:
-                                f.write("\tFt_Gpu_Hal_WrMem(phost, RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")
-                            else:
-                                f.write("\tFt_Gpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")
+                        if content["imageFormat"] in palettedFormats:		
+                            if document["project"]["device"] == 2048 or document["project"]["device"] == 2049:		
+                                f.write("\tFt_Gpu_Hal_WrMem(phost, RAM_PAL , " + lutContentName + ", sizeof(" + lutContentName + "));\n")		
+                            else:		
+                                f.write("\tFt_Gpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")                        
     for line in document["coprocessor"]:
         if not line == "":
             try:
@@ -1426,7 +1495,8 @@ def run(name, document, ram, moduleName):
                     elif moduleName == "VM800B35" or moduleName == "VM800BU35" or moduleName == "VM800C35":
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_HSIZE,320);\n")
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_VSIZE,240);\n")
-                    elif moduleName == "VM810C50" or moduleName == "ME813A_WV7C":
+                    elif (moduleName == "VM810C50" or moduleName == "ME810AU_WH70R" or moduleName == "ME811AU_WH70C" or moduleName == "ME812AU_WH50R" or moduleName == "ME813AU_WH50C"
+                          or moduleName == "ME810A_WH70R" or moduleName == "ME811A_WH70C" or moduleName == "ME812A_WH50R" or moduleName == "ME813A_WH50C"):
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_HSIZE,800);\n")
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_VSIZE,480);\n")
                     elif moduleName == "ME810A_HV35R":

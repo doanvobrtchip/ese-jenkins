@@ -1,20 +1,38 @@
-/*!
- * \file libMPSSE_spi.h
- *
- * \author FTDI
- * \date 20110527
- *
- * Copyright ?2011 Future Technology Devices International Limited
- * Company Confidential
- *
- * Project: libMPSSE
- * Module: SPI
- *
- * Rivision History:
- * 0.1 - initial version
- * 0.2 - 20110708 - added FT_ReadGPIO, FT_WriteGPIO & SPI_ChangeCS
- * 0.3 - 20111025 - modified for supporting 64bit linux
- */
+/*
+
+Copyright (c) Future Technology Devices International 2014
+
+THIS SOFTWARE IS PROVIDED BY FUTURE TECHNOLOGY DEVICES INTERNATIONAL LIMITED "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+FUTURE TECHNOLOGY DEVICES INTERNATIONAL LIMITED BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES LOSS OF USE, DATA, OR PROFITS OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+FTDI DRIVERS MAY BE USED ONLY IN CONJUNCTION WITH PRODUCTS BASED ON FTDI PARTS.
+
+FTDI DRIVERS MAY BE DISTRIBUTED IN ANY FORM AS LONG AS LICENSE INFORMATION IS NOT MODIFIED.
+
+IF A CUSTOM VENDOR ID AND/OR PRODUCT ID OR DESCRIPTION STRING ARE USED, IT IS THE
+RESPONSIBILITY OF THE PRODUCT MANUFACTURER TO MAINTAIN ANY CHANGES AND SUBSEQUENT WHQL
+RE-CERTIFICATION AS A RESULT OF MAKING THESE CHANGES.
+
+Author : FTDI 
+
+Project: libMPSSE
+Module: SPI
+
+Revision History:
+0.1 - initial version
+0.2 - 2011.07.08 - added FT_ReadGPIO, FT_WriteGPIO & SPI_ChangeCS
+0.3 - 2011.10.25 - modified for supporting 64bit linux
+
+*/
+ 
+ 
 
 #ifndef LIBMPSSE_SPI_H
 #define LIBMPSSE_SPI_H
@@ -27,7 +45,7 @@
 /******************************************************************************/
 
 #ifdef _MSC_VER
-#define FTDI_API extern "C"
+#define FTDI_API 
 #else
 #define FTDI_API
 #endif
@@ -75,7 +93,7 @@ typedef signed char   int8;
 typedef signed short  int16;
 typedef signed long long int64;
 
-#ifndef _MSC_VER
+#if 1//ndef _MSC_VER
 typedef unsigned char	bool;
 #endif
 
@@ -84,8 +102,8 @@ typedef unsigned char	bool;
 	typedef unsigned int   uint32;
 	typedef signed int   int32;
 #else
-    typedef UINT32  uint32;
-    typedef INT32   int32;
+	typedef unsigned long   uint32;
+	typedef signed long   int32;
 #endif
 
 typedef enum I2C_ClockRate_t{
@@ -141,6 +159,7 @@ FTDI_API FT_STATUS SPI_GetChannelInfo(uint32 index,
 FTDI_API FT_STATUS SPI_OpenChannel(uint32 index, FT_HANDLE *handle);
 FTDI_API FT_STATUS SPI_InitChannel(FT_HANDLE handle, ChannelConfig *config);
 FTDI_API FT_STATUS SPI_CloseChannel(FT_HANDLE handle);
+FTDI_API FT_STATUS SPI_ToggleCS(FT_HANDLE handle,uint8 high);
 FTDI_API FT_STATUS SPI_Read(FT_HANDLE handle, uint8 *buffer, 
 	uint32 sizeToTransfer, uint32 *sizeTransfered, uint32 options);
 FTDI_API FT_STATUS SPI_Write(FT_HANDLE handle, uint8 *buffer, 
@@ -154,6 +173,7 @@ FTDI_API void Cleanup_libMPSSE(void);
 FTDI_API FT_STATUS SPI_ChangeCS(FT_HANDLE handle, uint32 configOptions);
 FTDI_API FT_STATUS FT_WriteGPIO(FT_HANDLE handle, uint8 dir, uint8 value);
 FTDI_API FT_STATUS FT_ReadGPIO(FT_HANDLE handle,uint8 *value);
+
 
 
 /******************************************************************************/

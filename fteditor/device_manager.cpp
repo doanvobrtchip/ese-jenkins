@@ -26,15 +26,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 
 #include "device_display_settings_dialog.h"
 
-#if FT800_DEVICE_MANAGER
-//mpsse lib includes -- Windows
-#undef POINTS
-#include <Windows.h>
-#include "libMPSSE_spi.h"
 
-#include "FT_DataTypes.h"
-#include "FT_Gpu_Hal.h"
-#endif
 
 namespace FTEDITOR {
 
@@ -99,6 +91,8 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDia
 	connect(m_DisconnectButton, SIGNAL(clicked()), this, SLOT(disconnectDevice()));
 	buttons->addWidget(m_DisconnectButton);
 
+    syncDeviceEVEType = FTEDITOR_FT800;
+
 	layout->addLayout(buttons);
 
 	setLayout(layout);
@@ -121,8 +115,10 @@ void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevi
 	if ((currScreenSize != displaySize) && m_DisconnectButton->isVisible()){
 		disconnectDevice();
 	}
-	currScreenSize = displaySize;
-	selectedSyncDevice = syncDevice;
+
+    setCurrentDisplaySize(displaySize);
+
+    setSyncDeviceName(syncDevice);
 	m_MainWindow->userChangeResolution(pieces[0].toUInt(),pieces[1].toUInt());
 }
 
@@ -139,41 +135,81 @@ void DeviceManager::refreshDevices()
 {
 	printf("Refresh devices\n");
 
+	FT_STATUS ftstatus = FT_OTHER_ERROR;
+	DWORD num_devs = 0;		
+    DWORD library_ver;
+
+
+    if(FT_OK == FT_GetLibraryVersion(&library_ver))
+        printf("FTGetLibraryVersion = 0x%x\n",library_ver);
+
+    FT_STATUS status = FT_ListDevices(&num_devs, NULL, FT_LIST_NUMBER_ONLY);
+    if (FT_OK != status)
+    {
+        printf("FT_ListDevices failed");
+        //ret = FALSE;
+    }
+
+	if ( FT_OK != (ftstatus = FT_CreateDeviceInfoList(&num_devs)))
+		printf("FT_CreateDeviceInfoList failed , status %d\n", ftstatus);
+
 	// Swap device list to local
 	std::map<DeviceId, DeviceInfo *> deviceInfo;
 	deviceInfo.swap(m_DeviceInfo);
-	uint32 deviceNum;
-	SPI_GetNumChannels(&deviceNum);
-
+	
 	// For each device that is found
-	for (uint32_t i = 0;i < deviceNum;i++)
+	for (uint32_t i = 0; i < num_devs; i++)
 	{
-		FT_DEVICE_LIST_INFO_NODE devListInfoNode;
-		SPI_GetChannelInfo(i,&devListInfoNode);
+		FT_DEVICE_LIST_INFO_NODE devNodeInfo;
+		ftstatus = FT_GetDeviceInfoDetail(
+											i,
+											&devNodeInfo.Flags,
+											&devNodeInfo.Type,
+											&devNodeInfo.ID,
+											&devNodeInfo.LocId,
+											devNodeInfo.SerialNumber,
+											devNodeInfo.Description,
+											&devNodeInfo.ftHandle
+										);
+		if (FT_OK != ftstatus)
+			printf("FT_GetDeviceInfoDetail failed , status %d\n", ftstatus);
 
-		DeviceId devId = i;
-		QString devName(devListInfoNode.Description);
-
-		if (deviceInfo.find(devId) == deviceInfo.end())
+		if (!strstr(devNodeInfo.Description,"FT4222 B"))
 		{
-			// The device was not added yet, create the gui
-			QTreeWidgetItem *view = new QTreeWidgetItem(m_DeviceList);
-			view->setText(0, "No");
-			view->setText(1, devName);
+			DeviceId devId = i;
+			QString devName(devNodeInfo.Description);
 
-			// Store this device
-			DeviceInfo *devInfo = new DeviceInfo();
-			devInfo->Id = devId;
-			devInfo->View = view;
-			devInfo->Connected = false;
-			m_DeviceInfo[devId] = devInfo;
-			view->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(devInfo));	
-		}
-		else
-		{
-			// Already know this device, store back into list
-			m_DeviceInfo[devId] = deviceInfo[devId];
-			deviceInfo.erase(devId);
+			bool IsDeviceFound = FALSE;
+			for (std::map<DeviceId, DeviceInfo *>::iterator index = deviceInfo.begin(); index != deviceInfo.end(); ++index)
+			{
+				if (strcmp(index->second->description, devNodeInfo.Description))
+					continue;
+				else
+				{
+					//device description match
+					IsDeviceFound = TRUE;
+					m_DeviceInfo[devId] = deviceInfo[index->first];
+					m_DeviceInfo[devId]->Id = devId;
+					deviceInfo.erase(index);
+					break;
+				}
+			}
+			if (IsDeviceFound == FALSE)
+			{
+				// The device was not added yet, create the gui
+				QTreeWidgetItem *view = new QTreeWidgetItem(m_DeviceList);
+				view->setText(0, "No");
+				view->setText(1, devName);
+
+				// Store this device
+				DeviceInfo *devInfo = new DeviceInfo();
+				devInfo->Id = devId;
+				devInfo->View = view;
+				strcpy(devInfo->description, devNodeInfo.Description);
+				devInfo->Connected = false;
+				m_DeviceInfo[devId] = devInfo;
+				view->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(devInfo));
+			}
 		}
 	}
 
@@ -182,9 +218,9 @@ void DeviceManager::refreshDevices()
 	{
 		// Delete anything in the DeviceInfo that needs to be deleted
 		delete it->second->View;
-		delete it->second;
-		
+		delete it->second;		
 	}
+
 }
 
 void DeviceManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -201,7 +237,8 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) {
+	if (syncDeviceEVEType >= FTEDITOR_DEVICE_NB)
+	{
 		QMessageBox::warning(this, "Project Type Not correct\n", "Only FT80X project supported", QMessageBox::Ok);
 		return;
 	}
@@ -213,12 +250,40 @@ void DeviceManager::connectDevice()
 
 	if (devInfo->Connected) return;
 
+
 	Ft_Gpu_Hal_Context_t *phost = new Ft_Gpu_Hal_Context_t;
 
-	phost->hal_config.channel_no = devInfo->Id;
-	phost->hal_config.spi_clockrate_khz = 12000; //in KHz
+    QString deviceDescription = QString(devInfo->description);
 
-	Ft_Gpu_Hal_Open(phost);
+    if (deviceDescription == "FT4222 A")
+    {
+        qDebug("It is FT4222A device\n");
+        qDebug("current EVE type: %d",syncDeviceEVEType);
+
+        phost->spi_host = SPIHOST_FT4222_SPI;
+
+        phost->hal_config.channel_no = devInfo->Id;
+        phost->hal_config.spi_clockrate_khz = 20000; //in KHz
+        phost->hal_config.pdn_pin_no = GPIO_PORT0;
+        phost->hal_config.spi_cs_pin_no = 1;
+
+        Ft_Gpu_Hal_Open_FT4222Dev(phost);
+    }else
+    {
+        qDebug("It is MPSSE device\n");
+        qDebug("current EVE type: %d",syncDeviceEVEType);
+
+        phost->spi_host = SPIHOST_MPSSE_VA800A_SPI;
+
+        phost->hal_config.channel_no = 0;
+        phost->hal_config.pdn_pin_no = 7;
+        phost->hal_config.spi_cs_pin_no = 0;
+        phost->hal_config.spi_clockrate_khz = 12000; //in KHz
+
+        Ft_Gpu_Hal_Open_MPSSEDev(phost);
+    }
+
+
 
 	/* Do a power cycle for safer side */
 	Ft_Gpu_Hal_Powercycle(phost,FT_TRUE);
@@ -228,64 +293,104 @@ void DeviceManager::connectDevice()
 	Ft_Gpu_HostCommand(phost,FT_GPU_ACTIVE_M);
 	Ft_Gpu_Hal_Sleep(20);
 
-	/* Set the clk to external clock */
-	Ft_Gpu_HostCommand(phost,FT_GPU_EXTERNAL_OSC);
-	Ft_Gpu_Hal_Sleep(10);
+    if (phost->spi_host == SPIHOST_MPSSE_VA800A_SPI){
+        /* Set the clk to external clock */
+        Ft_Gpu_HostCommand(phost,FT_GPU_EXTERNAL_OSC);
+        Ft_Gpu_Hal_Sleep(10);
+    }
 
+	ft_uint8_t chipid = 0x99;
+	chipid = Ft_Gpu_Hal_Rd8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_ID));	
 
-	/* Switch PLL output to 48MHz */
-	Ft_Gpu_HostCommand(phost,FT_GPU_PLL_48M);
-	Ft_Gpu_Hal_Sleep(10);
+    int timeout_count = 0; const int MAX_READCOUNT = 200;
+	while (0x7C != chipid)
+	{
+		Ft_Gpu_Hal_Sleep(10);
+		chipid = Ft_Gpu_Hal_Rd8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_ID));
 
-	/* Do a core reset for safer side */
-	Ft_Gpu_HostCommand(phost,FT_GPU_CORE_RESET);
-	Ft_Gpu_Hal_Sleep(10);
+        timeout_count ++;
+        if (timeout_count > MAX_READCOUNT){
+            qDebug("cannot connect to device\n");
+            QMessageBox::warning(this,"Failed to connect device!","cannot read chipID");
 
-	if (0x7C == Ft_Gpu_Hal_Rd8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ID)))
+            Ft_Gpu_Hal_Close(phost);
+            delete(phost);
+            return;
+        }
+	}
+	
+	printf("REG_ID detected as  %x\n", chipid);
 	{
 		if (currScreenSize == "480x272"){
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), 548);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), 43);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), 0);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), 41);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), 292);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), 12);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), 0);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), 10);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), 0);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), 1);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 5);//after this display is visible on the LCD
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 480);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 272);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HCYCLE), 548);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HOFFSET), 43);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC1), 41);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VCYCLE), 292);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VOFFSET), 12);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC1), 10);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_SWIZZLE), 0);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK_POL), 1);
+
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSIZE), 480);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSIZE), 272);
+            Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK), 5);//after this display is visible on the LCD
+		}
+		else if (currScreenSize == "800x480"){
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HCYCLE), 928);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HOFFSET), 88);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC1), 48);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VCYCLE), 525);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VOFFSET), 32);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC1), 3);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_SWIZZLE), 0);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK_POL), 1);			
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSIZE), 800);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSIZE), 480);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_CSPREAD), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_DITHER), 1);
+            Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK), 2);//after this display is visible on the LCD
 		}
 		else if (currScreenSize == "320x240"){
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HCYCLE), 408);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HOFFSET), 70);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC0), 0);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSYNC1), 10);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VCYCLE), 263);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VOFFSET), 13);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC0), 0);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSYNC1), 2);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_SWIZZLE), 2);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK_POL), 0);
-			Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 8);//after this display is visible on the LCD
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 320);
-			Ft_Gpu_Hal_Wr16(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 240);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HCYCLE), 408);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HOFFSET), 70);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC1), 10);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VCYCLE), 263);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VOFFSET), 13);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC0), 0);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC1), 2);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_SWIZZLE), 2);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK_POL), 0);
+			Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK), 8);//after this display is visible on the LCD
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSIZE), 320);
+			Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSIZE), 240);
 		}
 
 
-		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR),0x83 | Ft_Gpu_Hal_Rd8(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO_DIR)));
-		Ft_Gpu_Hal_Wr8(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO),0x083 | Ft_Gpu_Hal_Rd8(phost,reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_GPIO)));
+        Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_GPIO_DIR),0x83 | Ft_Gpu_Hal_Rd8(phost,reg(syncDeviceEVEType, FTEDITOR_REG_GPIO_DIR)));
+        Ft_Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_GPIO),0x083 | Ft_Gpu_Hal_Rd8(phost,reg(syncDeviceEVEType, FTEDITOR_REG_GPIO)));
+        //Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_GPIOX_DIR), 0xffff);
+        //Ft_Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_GPIOX), 0xffff);
 
 
-		Ft_Gpu_Hal_WrCmd32(phost, CMD_DLSTART);
-		Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(31, 63, 127));
-		Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
-		Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
-		Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
+        const ft_uint32_t CONNECTED_SCREEN_CMDS [] =
+        {
+            CMD_DLSTART,
+            CLEAR_COLOR_RGB(31, 63, 0),
+            CLEAR(1,1,1),
+            DISPLAY(),
+            CMD_SWAP
+        };
 
-		devInfo->Connected = true;
+        Ft_Gpu_Hal_WrMem(phost, addr(syncDeviceEVEType,FTEDITOR_RAM_CMD),(ft_uint8_t *)CONNECTED_SCREEN_CMDS,sizeof(CONNECTED_SCREEN_CMDS));
+
+        Ft_Gpu_Hal_Wr16(phost,reg(syncDeviceEVEType,FTEDITOR_REG_CMD_WRITE),sizeof(CONNECTED_SCREEN_CMDS));
+
+        devInfo->Connected = true;
 	}
 
 	devInfo->handle = (void*)phost;
@@ -298,19 +403,29 @@ void DeviceManager::disconnectDevice()
 
 	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 
-	printf("disconnectDevice\n");
+    if (devInfo){
+        Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t*)devInfo->handle;
 
-	Ft_Gpu_Hal_Context_t *phost = (Ft_Gpu_Hal_Context_t*)devInfo->handle;
+        if (phost){
 
-	Ft_Gpu_Hal_WrCmd32(phost, CMD_DLSTART);
-	//Ft_Gpu_Hal_WrCmd32(phost,CLEAR_COLOR_RGB(0, 0, 0));
-	Ft_Gpu_Hal_WrCmd32(phost,CLEAR(1,1,1));
-	Ft_Gpu_Hal_WrCmd32(phost,DISPLAY());
-	Ft_Gpu_Hal_WrCmd32(phost, CMD_SWAP);
+            const ft_uint32_t CONNECTED_SCREEN_CMDS [] =
+            {
+                CMD_DLSTART,
+                CLEAR_COLOR_RGB(31, 63, 0),
+                CLEAR(1,1,1),
+                DISPLAY(),
+                CMD_SWAP
+            };
 
-	Ft_Gpu_Hal_Close(phost);
+            Ft_Gpu_Hal_WrMem(phost, addr(syncDeviceEVEType,FTEDITOR_RAM_CMD),(ft_uint8_t *)CONNECTED_SCREEN_CMDS,sizeof(CONNECTED_SCREEN_CMDS));
 
-	delete (phost);
+            Ft_Gpu_Hal_Wr16(phost,reg(syncDeviceEVEType,FTEDITOR_REG_CMD_WRITE),sizeof(CONNECTED_SCREEN_CMDS));
+
+			Ft_Gpu_Hal_Close(phost);
+
+            delete (phost);
+        }
+    }
 
 	devInfo->Connected = false;
 	updateSelection();
@@ -330,29 +445,40 @@ void DeviceManager::setCurrentDisplaySize(QString displaySize){
 
 void DeviceManager::setSyncDeviceName(QString deviceName){
 	selectedSyncDevice = deviceName;
+
+    if (selectedSyncDevice == "ME813AU_WH50C(800x480)")
+    {
+        syncDeviceEVEType = FTEDITOR_FT813;
+    }else if (selectedSyncDevice == "VM800BU50A")
+    {
+        syncDeviceEVEType = FTEDITOR_FT800;
+    }else
+    {
+        syncDeviceEVEType = FTEDITOR_FT800;
+    }
 }
 
-static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost)
+void DeviceManager::loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost)
 {
 	contentManager->lockContent();
-	std::set<ContentInfo *> contentInfo;
+
 	QTreeWidget *contentList = (QTreeWidget*)contentManager->contentList();
 	ft_uint8_t *ram = static_cast<ft_uint8_t *>(BT8XXEMU_getRam(g_Emulator));
 	
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END)))
+		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(syncDeviceEVEType, FTEDITOR_RAM_G_END)))
 		{
-			{
-			Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
+            {
+			Ft_Gpu_Hal_WrMem(phost,addr(syncDeviceEVEType, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(syncDeviceEVEType, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
 			}
 
-			if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
+			if (syncDeviceEVEType < FTEDITOR_FT810)
 			{
 				if (info->ImageFormat == PALETTED){
 					const ft_uint32_t PALSIZE = 1024;
-					Ft_Gpu_Hal_WrMem(phost,addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL),&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)],PALSIZE);
+					Ft_Gpu_Hal_WrMem(phost,addr(syncDeviceEVEType, FTEDITOR_RAM_PAL),&ram[addr(syncDeviceEVEType, FTEDITOR_RAM_PAL)],PALSIZE);
 				}
 			}
 		}
@@ -363,7 +489,7 @@ static void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Contex
 void DeviceManager::syncDevice()
 {
 	if (!m_DeviceList->currentItem()){
-		//QMessageBox::question(this, "General confirmation", "No Content in the command list.",QMessageBox::Yes | QMessageBox::No);
+		QMessageBox::question(this, "General confirmation", "No Content in the command list.",QMessageBox::Yes | QMessageBox::No);
 		return;
 	}
 
@@ -379,16 +505,9 @@ void DeviceManager::syncDevice()
 
 			loadContent2Device(m_MainWindow->contentManager(), phost);
 
-			Ft_Gpu_Hal_StartTransfer(phost, FT_GPU_WRITE, addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
+            Ft_Gpu_Hal_WrMem(phost,addr(syncDeviceEVEType, FTEDITOR_RAM_DL),static_cast<const uint8_t *>(static_cast<const void *> (displayList)), 4 * displayListSize(syncDeviceEVEType));
 
-			for (int i = 0; i< displayListSize(FTEDITOR_CURRENT_DEVICE); i++){
-				Ft_Gpu_Hal_Transfer32(phost, displayList[i]);
-			}
-			Ft_Gpu_Hal_EndTransfer(phost);
-
-			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
-			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), *(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)]);
-			Ft_Gpu_Hal_Wr32(phost, reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), *(ft_uint32_t*)&ram[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)]);
+			Ft_Gpu_Hal_Wr32(phost, reg(syncDeviceEVEType, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 		}
 	}
 }

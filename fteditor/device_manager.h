@@ -30,8 +30,16 @@
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
 
-//#include <deviceDisplaySettingsDialog.h>
-// Project includes
+#if FT800_DEVICE_MANAGER
+//mpsse lib includes -- Windows
+#undef POINTS
+#include <Windows.h>
+#include "libMPSSE_spi.h"
+
+#include "FT_DataTypes.h"
+#include "FT_Gpu_Hal.h"
+#endif
+
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -41,6 +49,8 @@ namespace FTEDITOR {
 
 class MainWindow;
 class DeviceDisplaySettingsDialog;
+
+class ContentManager;
 
 #if FT800_DEVICE_MANAGER
 
@@ -70,6 +80,7 @@ public:
 	{
 		DeviceId Id;
 		QTreeWidgetItem *View;
+		char description[65];
 		bool Connected;
 		void* handle;
 		// Add necessary device specific data here
@@ -89,6 +100,7 @@ private:
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
+    int    syncDeviceEVEType;
 
 
 private slots:
@@ -97,17 +109,15 @@ private slots:
 	void connectDevice();
 	void disconnectDevice();
 	void syncDevice();
+    void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost);
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
 	void updateSelection();
 
 private:
-	DeviceManager(const DeviceManager &);
-	DeviceManager &operator=(const DeviceManager &);
-	
-	
-
+	DeviceManager(const DeviceManager &) {};
+	DeviceManager &operator=(const DeviceManager &) {};	
 }; /* class DeviceManager */
 
 #else /* FT800_DEVICE_MANAGER */

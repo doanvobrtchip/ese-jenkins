@@ -17,6 +17,8 @@
 #ifndef FT_GPU_HAL_H
 #define FT_GPU_HAL_H
 
+#include "FT_DataTypes.h"
+#include "LibFT4222.h"
 
 
 typedef enum {
@@ -46,7 +48,8 @@ typedef struct {
 		ft_uint16_t spi_clockrate_khz;  //In KHz
 		ft_uint16_t i2c_clockrate_khz;  //In KHz
 	};
-	ft_uint8_t channel_no;
+	ft_uint8_t channel_no;				//mpsse channel number
+	ft_uint8_t pdn_pin_no;				//ft8xx power down pin number
 }Ft_Gpu_Hal_Config_t;
 
 typedef struct {
@@ -70,20 +73,37 @@ typedef struct {
 	ft_uint8_t  *buffer;
 }Ft_Gpu_App_Transfer_t;
 
+typedef enum {
+     SPIHOST_TYPE_INVALID = 0,
+     SPIHOST_MPSSE_VA800A_SPI,
+     SPIHOST_FT4222_SPI,
+     SPIHOST_ARDUINO_SPIHOST,
+     SPIHOST_FT8XXEMU_SPIHOST,
+     SPIHOST_FT900_PLATFORM_SPIHOST
+}Ft_Gpu_SPIHost_t;
+
 typedef struct {
+    Ft_Gpu_SPIHost_t            spi_host;
 	Ft_Gpu_App_Context_t        app_header;         
 	Ft_Gpu_Hal_Config_t         hal_config;
 
-        ft_uint16_t ft_cmd_fifo_wp; //coprocessor fifo write pointer
-        ft_uint16_t ft_dl_buff_wp;  //display command memory write pointer
+    ft_uint16_t ft_cmd_fifo_wp; //coprocessor fifo write pointer
+    ft_uint16_t ft_dl_buff_wp;  //display command memory write pointer
 
-	FT_GPU_HAL_STATUS_E        status;        //OUT
-	ft_void_t*                 hal_handle;        //IN/OUT
+	FT_GPU_HAL_STATUS_E 	status;        //OUT
+	ft_void_t*          	hal_handle;    //IN/OUT
+    ft_void_t*          	hal_handle2;   //IN/OUT LibFT4222 uses this member to store GPIO handle	
+	/* Additions specific to ft81x */
+	ft_uint8_t				spichannel;			//variable to contain single/dual/quad channels
+	ft_uint8_t				spinumdummy;		//number of dummy bytes as 1 or 2 for spi read
+    ft_uint8_t *            spiwrbuf_ptr;
 }Ft_Gpu_Hal_Context_t;
 
-/*The basic APIs Level 1*/
-ft_bool_t              Ft_Gpu_Hal_Init(Ft_Gpu_HalInit_t *halinit);
+
 ft_bool_t              Ft_Gpu_Hal_Open(Ft_Gpu_Hal_Context_t *host);
+ft_bool_t              Ft_Gpu_Hal_Open_FT4222Dev(Ft_Gpu_Hal_Context_t *host);
+ft_bool_t              Ft_Gpu_Hal_Open_MPSSEDev(Ft_Gpu_Hal_Context_t *host);
+
 
 /*The APIs for reading/writing transfer continuously only with small buffer system*/
 ft_void_t               Ft_Gpu_Hal_StartTransfer(Ft_Gpu_Hal_Context_t *host,FT_GPU_TRANSFERDIR_T rw,ft_uint32_t addr);
@@ -97,7 +117,7 @@ ft_void_t              Ft_Gpu_Hal_Read(Ft_Gpu_Hal_Context_t *host, Ft_Gpu_App_Tr
 ft_void_t              Ft_Gpu_Hal_Write(Ft_Gpu_Hal_Context_t *host,Ft_Gpu_App_Transfer_t *transfer);
 
 ft_void_t              Ft_Gpu_Hal_Close(Ft_Gpu_Hal_Context_t *host);
-ft_void_t              Ft_Gpu_Hal_DeInit();
+
 
 /*Helper function APIs Read*/
 ft_uint8_t  Ft_Gpu_Hal_Rd8(Ft_Gpu_Hal_Context_t *host,ft_uint32_t addr);
@@ -148,6 +168,24 @@ typedef enum {
 
 #define FT_GPU_CORE_RESET  (0x68)
 
+/* Enums for number of SPI dummy bytes and number of channels */
+typedef enum {
+	FT_GPU_SPI_SINGLE_CHANNEL = 0,
+	FT_GPU_SPI_DUAL_CHANNEL = 1,
+	FT_GPU_SPI_QUAD_CHANNEL = 2,
+}FT_GPU_SPI_NUMCHANNELS_T;
+typedef enum {
+	FT_GPU_SPI_ONEDUMMY = 1,
+	FT_GPU_SPI_TWODUMMY = 2,
+}FT_GPU_SPI_NUMDUMMYBYTES;
+
+#define FT_SPI_ONE_DUMMY_BYTE	(0x00)
+#define FT_SPI_TWO_DUMMY_BYTE	(0x04)
+#define FT_SPI_SINGLE_CHANNEL	(0x00)
+#define FT_SPI_DUAL_CHANNEL		(0x01)
+#define FT_SPI_QUAD_CHANNEL		(0x02)
+
+
 ft_int32_t hal_strlen(const ft_char8_t *s);
 ft_void_t Ft_Gpu_Hal_Sleep(ft_uint16_t ms);
 ft_void_t Ft_Gpu_ClockSelect(Ft_Gpu_Hal_Context_t *host,FT_GPU_PLL_SOURCE_T pllsource);
@@ -164,4 +202,29 @@ ft_uint8_t    Ft_Gpu_Hal_TransferString(Ft_Gpu_Hal_Context_t *host,const ft_char
 ft_void_t Ft_Gpu_HostCommand(Ft_Gpu_Hal_Context_t *host,ft_uint8_t cmd);
 ft_int32_t Ft_Gpu_Hal_Dec2Ascii(ft_char8_t *pSrc,ft_int32_t value);
 
-#endif  /*FT_GPU_HAL_H*/
+
+
+
+
+ft_bool_t     Ft_Gpu_Hal_SlaveSelect(Ft_Gpu_Hal_Context_t *host, ft_bool_t sel);
+ft_bool_t     Ft_Gpu_Hal_FT4222_ComputeCLK(Ft_Gpu_Hal_Context_t *host, FT4222_ClockRate *sysclk, FT4222_SPIClock *divisor);
+ft_uint8_t    Ft_Gpu_Hal_FT4222_Rd(Ft_Gpu_Hal_Context_t *host, ft_uint32_t hrdcmd, ft_uint8_t * rdbufptr, ft_uint32_t exprdbytes);
+ft_uint8_t    Ft_Gpu_Hal_FT4222_Wr(Ft_Gpu_Hal_Context_t *host, ft_uint32_t hwraddr, const ft_uint8_t * wrbufptr, ft_uint32_t bytestowr);
+
+#define FT4222_DYNAMIC_ALLOCATE_SIZE	             65535  //Temporary context buffer used only for Ft4222 write. Size limited because of uint16 bytestowrite parameter 
+
+#define FT4222_MAX_RD_BYTES_PER_CALL_IN_SINGLE_CH    65535
+#define FT4222_MAX_WR_BYTES_PER_CALL_IN_SINGLE_CH    65535
+
+#define FT4222_MAX_RD_BYTES_PER_CALL_IN_MULTI_CH     65535 //Lib (ver:0x1020122) or FT4222 firmware has a bug in handling more than 65 bytes read 
+#define FT4222_MAX_WR_BYTES_PER_CALL_IN_MULTI_CH     65532 //3 bytes for FT81x memory address to which data to be written
+
+
+#define FT4222_ReadTimeout                           5000
+#define FT4222_WriteTimeout                          5000
+
+#define FT4222_LatencyTime                           2
+
+
+
+#endif  /* FT_GPU_HAL_H */

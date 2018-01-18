@@ -1473,6 +1473,9 @@ char *scriptDeviceFolder[] = {
 	"ft80x",
 	"ft81x",
 	"ft81x",
+	"ft81x",
+	"ft81x",
+	"bt81x"
 };
 
 QString MainWindow::scriptModule()
@@ -2590,7 +2593,7 @@ void MainWindow::translateDockWindows()
 
 void MainWindow::incbLanguageCode()
 {
-	setWindowTitle(tr("FTDI EVE Screen Editor"));
+	setWindowTitle(tr("EVE Screen Editor"));
 	translateActions();
 	translateMenus();
 	translateToolBars();
@@ -3001,7 +3004,7 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName()) + " - " + tr("FTDI EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
+	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName()) + " - " + tr("EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
 }
 
 void MainWindow::undoCleanChanged(bool clean)
@@ -3015,7 +3018,7 @@ bool MainWindow::maybeSave()
 	if (!m_UndoStack->isClean())
 	{
 		QMessageBox::StandardButton ret;
-		ret = QMessageBox::warning(this, tr("FTDI EVE Screen Editor"),
+		ret = QMessageBox::warning(this, tr("EVE Screen Editor"),
 			tr("The project has been modified.\n"
 				"Do you want to save your changes?"),
 			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
@@ -3323,7 +3326,7 @@ void MainWindow::openFile(const QString &fileName)
 		postProcessEditor(m_Macro);
 		postProcessEditor(m_DlEditor);
 		postProcessEditor(m_CmdEditor);
-		statusBar()->showMessage(tr("Opened FTDI EVE Screen Editor project"));
+		statusBar()->showMessage(tr("Opened EVE Screen Editor project"));
 		loadOk = true;
 	}
 	else
@@ -3962,12 +3965,17 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About FTDI EVE Screen Editor v2.3.3"));
+	msgBox.setWindowTitle(tr("About EVE Screen Editor v2.5.0"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
-		"Support and updates: <a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a>"
+		"Copyright (C) 2016-2017  Bridgetek Pte Ltd<br>"
+		"<br>"
+		"Support and updates:<br>"
+		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
+		"<br>"
+		"<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>"
 		));
 	msgBox.exec();
 }

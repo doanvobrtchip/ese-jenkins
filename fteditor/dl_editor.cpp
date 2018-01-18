@@ -11,6 +11,7 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#define NOMINMAX
 #include "dl_editor.h"
 
 // STL includes
