@@ -13,12 +13,15 @@ Author: Jan Boon <jan@no-break.space>
 // System includes
 #include "ft8xxemu_system_win32.h"
 #include <avrt.h>
+#include <mutex>
 
 // Project includes
 
 // using namespace ...;
 
 namespace FT8XXEMU {
+
+extern std::mutex g_LogMutex;
 
 bool ThreadState::init()
 {
@@ -126,6 +129,7 @@ bool ThreadState::yield()
 
 bool ThreadState::kill()
 {
+	std::unique_lock<std::mutex> lock(g_LogMutex);
 	return m_Handle && TerminateThread(m_Handle, 0);
 	// return m_Handle && (TerminateThread(m_Handle), true);
 }

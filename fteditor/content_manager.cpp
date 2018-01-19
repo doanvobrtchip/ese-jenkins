@@ -1177,6 +1177,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			{
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(false);
 				m_PropertiesMemory->setHidden(false);

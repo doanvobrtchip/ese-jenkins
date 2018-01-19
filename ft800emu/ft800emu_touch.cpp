@@ -2,6 +2,7 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
@@ -22,6 +23,12 @@ Author: Jan Boon <jan@no-break.space>
 #include "ft8xxemu_window_output.h"
 
 // using namespace ...;
+
+#ifdef BT815EMU_MODE
+#define REG_CTOUCH_TOUCH1_XY REG_CTOUCH_TOUCHA_XY
+#define REG_CTOUCH_TOUCH2_XY REG_CTOUCH_TOUCHB_XY
+#define REG_CTOUCH_TOUCH3_XY REG_CTOUCH_TOUCHC_XY
+#endif
 
 namespace FT800EMU {
 

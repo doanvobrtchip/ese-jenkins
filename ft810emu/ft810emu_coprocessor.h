@@ -1,6 +1,7 @@
 /*
 FT810 Emulator Library
 Copyright (C) 2015  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2017  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
 */
@@ -25,6 +26,9 @@ namespace FT8XXEMU {
 
 namespace FT810EMU {
 	class Memory;
+#ifdef BT815EMU_MODE
+	class Espim;
+#endif
 
 typedef int16_t idct_t;
 
@@ -107,7 +111,7 @@ public:
 class Coprocessor
 {
 public:
-	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode);
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode);
 	~Coprocessor();
 
 	void executeManual();
@@ -139,6 +143,9 @@ private:
 	uint16_t j1boot[FT810EMU_COPROCESSOR_ROM_SIZE];
 
 	Ejpg ejpg;
+#ifdef BT815EMU_MODE
+	Espim *m_Espim;
+#endif
 
 private:
 	Coprocessor(const Coprocessor &) = delete;

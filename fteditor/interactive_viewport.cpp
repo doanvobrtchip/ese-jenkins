@@ -26,7 +26,7 @@
 #include <QApplication>
 
 // Emulator includes
-#include <ft8xxemu_diag.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -39,6 +39,9 @@
 #include "constant_common.h"
 
 namespace FTEDITOR {
+
+extern BT8XXEMU_Emulator *g_Emulator;
+extern BT8XXEMU_Flash *g_Flash;
 
 #define POINTER_ALL 0xFFFF
 #define POINTER_TOUCH 0x0001
@@ -227,7 +230,7 @@ void InteractiveViewport::graphics()
 	if (m_TraceEnabled)
 	{
 		m_TraceStackSize = FTEDITOR_TRACE_STACK_SIZE;
-		FT8XXEMU_processTrace(m_TraceStack, &m_TraceStackSize, m_TraceX, m_TraceY, hsize());
+		BT8XXEMU_processTrace(g_Emulator, m_TraceStack, &m_TraceStackSize, m_TraceX, m_TraceY, hsize());
 		for (int i = 0; i < m_TraceStackSize; ++i)
 		{
 			int cmdIdx = m_MainWindow->getDlCmd()[m_TraceStack[i]];
@@ -262,7 +265,7 @@ void InteractiveViewport::graphics()
 			{
 				int size = FTEDITOR_TRACE_STACK_SIZE;
 				m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
-				FT8XXEMU_processTrace(&m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
+				BT8XXEMU_processTrace(g_Emulator, &m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
 				m_MouseStackWrite.resize(size);
 				if (m_MouseStackWrite.size())
 				{
@@ -329,11 +332,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 
 	if (m_MouseTouch && m_MouseX >= 0 && m_MouseX < getPixMap().width() && m_MouseY >= 0 && m_MouseY < getPixMap().height())
 	{
-		FT8XXEMU_touchSetXY(0, m_MouseX, m_MouseY, 0);
+		BT8XXEMU_touchSetXY(g_Emulator, 0, m_MouseX, m_MouseY, 0);
 	}
 	else
 	{
-		FT8XXEMU_touchResetXY(0);
+		BT8XXEMU_touchResetXY(g_Emulator, 0);
 	}
 
 	// Draw image overlays
@@ -510,7 +513,9 @@ CMD_SCREENSAVER()
 			 */
 			}
 		}
-		else if (parsed.IdLeft == 0xFFFFFF00 && (parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
+		else if (parsed.IdLeft == 0xFFFFFF00 
+			&& (((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
+			|| ((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENTA)))
 		{
 			const DlState &state = m_LineEditor->getState(m_LineNumber);
 
@@ -1157,7 +1162,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 
 	if (m_MouseTouch)
 	{
-		// FT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		// BT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 	}
 	else if (m_MouseMovingVertex)
 	{
@@ -1567,7 +1572,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
-			// FT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+			// BT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
 		}
 		break;
 	case POINTER_TRACE: // trace
@@ -1685,7 +1690,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
-		// FT8XXEMU_resetTouchScreenXY();
+		// BT8XXEMU_resetTouchScreenXY();
 		updatePointerMethod(); // update because update is not done while m_MouseTouch true
 	}
 	else if (m_MouseMovingVertex)
@@ -2090,6 +2095,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
+						break;
+					case CMD_GRADIENTA:
+						pa.Parameter[2].U = 0xFF007FFF;
+						pa.Parameter[3].I = pa.Parameter[0].I + 32;
+						pa.Parameter[4].I = pa.Parameter[1].I + 32;
+						pa.Parameter[5].U = 0x7FFF00;
+						pa.ExpectedParameterCount = 6;
 						break;
 	/*
 
@@ -2762,6 +2774,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[0].U = 256;
 						pa.ExpectedParameterCount = 1;
 						break;
+					case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case FTEDITOR_DL_BITMAP_SWIZZLE:
+						pa.Parameter[0].U = 2;
+						pa.Parameter[1].U = 3;
+						pa.Parameter[2].U = 4;
+						pa.Parameter[3].U = 5;
+						pa.ExpectedParameterCount = 4;
 					}
 				}
 				m_LineEditor->insertLine(line, pa);

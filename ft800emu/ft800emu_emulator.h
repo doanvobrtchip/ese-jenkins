@@ -54,7 +54,9 @@ class Emulator : public BT8XXEMU::Emulator
 {
 public:
 	Emulator();
-	~Emulator();
+	virtual ~Emulator();
+
+	void destroy();
 
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
@@ -111,7 +113,7 @@ private:
 
 	// bool m_RotateEnabled = false;
 
-	int(*m_Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) = NULL;
+	int(*m_Graphics)(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags) = NULL;
 	argb8888 *m_GraphicsBuffer = NULL;
 
 	int m_LastWriteOpCount = 0;

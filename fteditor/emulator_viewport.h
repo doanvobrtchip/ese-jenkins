@@ -14,7 +14,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QScrollBar>
 
 // Emulator includes
-#include <ft8xxemu.h>
+#include <bt8xxemu.h>
 
 // Project includes
 
@@ -40,7 +40,7 @@ public:
 	virtual ~EmulatorViewport();
 	
 	// Runs the emulator on a new thread and connects it with this viewport
-	void run(const FT8XXEMU_EmulatorParameters &params);
+	void run(const BT8XXEMU_EmulatorParameters &params);
 	void stop();
 
 	// Graphics callback synchronized to the emulator thread, use to get debug information for a frame

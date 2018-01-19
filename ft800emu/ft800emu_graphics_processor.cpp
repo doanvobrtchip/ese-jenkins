@@ -2,6 +2,7 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
@@ -23,6 +24,12 @@ Author: Jan Boon <jan@no-break.space>
 #define FT800EMU_LIMIT_JUMP_LOOP 1
 #define FT800EMU_LIMIT_JUMP_LOOP_COUNT (FT800EMU_DISPLAY_LIST_SIZE * 16)
 
+#ifdef BT815EMU_MODE
+#define BT815EMU_ADDR_IS_FLASH(addr) ((addr) & (1 << 23))
+#define BT815EMU_ADDR_TO_FLASH(addr) (((addr) & ((1 << 23) - 1)) * 32)
+#define BT815EMU_ADDR_MASK_WITH_FLASH ((1 << 24) - 1)
+#endif
+
 // System includes
 #include <vector>
 #include <algorithm>
@@ -43,6 +50,11 @@ Author: Jan Boon <jan@no-break.space>
 #	ifdef WIN32
 #		include "ft8xxemu_system_win32.h"
 #	endif
+#endif
+
+// Library includes
+#ifdef BT815EMU_MODE
+#	include <astc_codec_internals.h>
 #endif
 
 // Project includes
@@ -103,25 +115,30 @@ public:
 		ColorMaskARGB = 0xFFFFFFFF;
 		BitmapHandle = 0;
 		Cell = 0;
+#ifdef BT815EMU_MODE
+#define BT815EMU_IDENTITY_UNIT (1 << 15)
+#else
+#define BT815EMU_IDENTITY_UNIT (1 << 8)
+#endif
 #ifdef FT810EMU_MODE
 		if (swapXY)
 		{
 			BitmapTransformA = 0;
-			BitmapTransformB = 256;
-			BitmapTransformC = 0;
-			BitmapTransformD = 256;
+			BitmapTransformB = BT815EMU_IDENTITY_UNIT; // .8 ft800, .15 bt815
+			BitmapTransformC = 0; // .12 ft800, .19 bt815 
+			BitmapTransformD = BT815EMU_IDENTITY_UNIT;
 			BitmapTransformE = 0;
-			BitmapTransformF = 0;
+			BitmapTransformF = 0; // .12 ft800, .19 bt815
 		}
 		else
 #endif
 		{
-			BitmapTransformA = 256;
+			BitmapTransformA = BT815EMU_IDENTITY_UNIT;
 			BitmapTransformB = 0;
-			BitmapTransformC = 0;
+			BitmapTransformC = 0; // .12 ft800, .19 bt815
 			BitmapTransformD = 0;
-			BitmapTransformE = 256;
-			BitmapTransformF = 0;
+			BitmapTransformE = BT815EMU_IDENTITY_UNIT;
+			BitmapTransformF = 0; // .12 ft800, .19 bt815
 		}
 		BlendFuncSrc = SRC_ALPHA;
 		BlendFuncDst = ONE_MINUS_SRC_ALPHA;
@@ -248,7 +265,7 @@ BT8XXEMU_FORCE_INLINE __m128i add_argb_safe(const __m128i &left, const __m128i &
 	return result;
 }
 
-BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src, const __m128i &dst)
+BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const GraphicsState &gs, const int &func, const __m128i &src, const __m128i &dst)
 {
 	FT800EMU_STATIC_M128I(cmone) = { 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0 };
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
@@ -267,8 +284,7 @@ BT8XXEMU_FORCE_INLINE __m128i getAlphaSplat(const int &func, const __m128i &src,
 	case ONE_MINUS_DST_ALPHA:
 		return _mm_sub_epi32(_mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax)), _mm_shuffle_epi32(dst, _MM_SHUFFLE(3, 3, 3, 3)));
 	}
-	FTEMU_printf("Invalid blend func (sse)\n");
-	if (FT8XXEMU::g_Exception) FT8XXEMU::g_Exception("Invalid blend func (sse)");
+	gs.Processor->system()->log(BT8XXEMU_LogError, "Invalid blend func (sse)");
 	return _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmone));
 }
 
@@ -435,7 +451,11 @@ BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint8_t val = reinterpret_cast<const uint8_t *>(&reinterpret_cast<const uint32_t *>(&ram[paletteSource])[value])[0];
+#ifdef BT815EMU_MODE
+	return (val << 24) | (val << 16) | (val << 8) | val;
+#else
 	return val << ((paletteSource & 3) << 3);
+#endif
 }
 
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
@@ -513,13 +533,13 @@ BT8XXEMU_FORCE_INLINE int getAlpha(const GraphicsState &gs, const int &func, con
 
 BT8XXEMU_FORCE_INLINE argb8888 blend(const GraphicsState &gs, const argb8888 &src, const argb8888 &dst)
 {
-#if FTEMU_SSE41_INSTRUCTIONS_USE // > 10% faster
+#if 0 // Broken // FTEMU_SSE41_INSTRUCTIONS_USE // > 10% faster
 	FT800EMU_STATIC_M128I(cmmax) = { ~0,0,0,0, ~0,0,0,0, ~0,0,0,0, ~0,0,0,0 };
 	const register __m128i mmax = _mm_load_si128(FT800EMU_STATIC_M128I_CAST(cmmax));
 	const register __m128i msrc = to_m128i(src);
 	const register __m128i mdst = to_m128i(dst);
-	const register __m128i srca = getAlphaSplat(gs.BlendFuncSrc, msrc, mdst);
-	const register __m128i dsta = getAlphaSplat(gs.BlendFuncDst, msrc, mdst);
+	const register __m128i srca = getAlphaSplat(gs, gs.BlendFuncSrc, msrc, mdst);
+	const register __m128i dsta = getAlphaSplat(gs, gs.BlendFuncDst, msrc, mdst);
 	register __m128i result = div255(_mm_add_epi32(_mm_mullo_epi32(msrc, srca), _mm_mullo_epi32(mdst, dsta)));
 	result = _mm_min_epi32(result, mmax);
 	return (to_argb8888(result) & gs.ColorMaskARGB) | (dst & ~gs.ColorMaskARGB);
@@ -683,7 +703,13 @@ BT8XXEMU_FORCE_INLINE int getPointAlpha256(const int ps, const int x, const int 
 
 #pragma region Primitive: Bitmap
 
-BT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
+#ifdef FT810EMU_MODE
+typedef int_fast64_t btxf_t;
+#else
+typedef int_fast32_t btxf_t;
+#endif
+
+BT8XXEMU_FORCE_INLINE bool wrap(btxf_t &value, const int &max, const int &type)
 {
 	switch (type)
 	{
@@ -692,7 +718,7 @@ BT8XXEMU_FORCE_INLINE bool wrap(int &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
-		value = value & (max - 1);
+		value = value & (max - 1); // Only support REPEAT for power-of-2 sizes
 		break;
 	}
 	return true;
@@ -715,20 +741,30 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 	return ram[i];
 }
 
+#ifdef BT815EMU_MODE
+static const int c_AstcBlockWidth[] = {
+	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
+};
+
+static const int c_AstcBlockHeight[] = {
+	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
+};
+#endif
+
 // uses pixel units
 #if FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, int x, int y, const int height, const int format, const int stride, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
-    int xo;   // x byte offset
+	btxf_t xol;   // x byte offset
 	switch (format)
 	{
 	case ARGB1555:
 	case ARGB4:
 	case RGB565:
-		xo = x << 1;
+		xol = xl << 1;
 		break;
 	case RGB332:
 	case ARGB2:
@@ -740,28 +776,54 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 #endif
 	case L8:
 	case BARGRAPH:
-		xo = x;
+		xol = xl;
 		break;
 	case L1:
 	case TEXT8X8:
-		xo = x >> 3;
+		xol = xl >> 3;
 		break;
 	case TEXTVGA:
-		xo = (x >> 3) << 1;
+		xol = (xl >> 3) << 1;
 		break;
 #ifdef FT810EMU_MODE
 	case L2:
-		xo = x >> 2;
+		xol = xl >> 2;
 		break;
 #endif
 	case L4:
-		xo = x >> 1;
+		xol = xl >> 1;
 		break;
+#ifdef BT815EMU_MODE
+	default:
+		if (BT815EMU_IS_FORMAT_ASTC(format))
+		{
+			xol = xl; // TODO
+			break;
+		}
+#endif
 	}
 
-	if (!wrap(xo, stride, wrapx)) return 0x00000000;
-	if (format != BARGRAPH) if (!wrap(y, height, wrapy)) return 0x00000000;
-	int py = y * stride;
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		if (!wrap(xol, (stride * c_AstcBlockWidth[format & 0xF]) >> 4, wrapx))
+		{
+			return 0x00000000;
+		}
+	}
+	else
+#endif
+	{
+		if (!wrap(xol, stride, wrapx)) return 0x00000000;
+	}
+	const int xo = (int)xol;
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format)) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
+	else
+#endif
+		if (format != BARGRAPH) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
+	const int y = (int)yl;
+	const int py = y * stride;
 	switch (format)
 	{
 	case ARGB1555:
@@ -774,21 +836,21 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		}
 	case L1:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (x % 8))) & 0x1;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (7 - (xl & 7))) & 0x1;
 			val *= 255;
 			return (val << 24) | 0x00FFFFFF;
 		}
 #ifdef FT810EMU_MODE
 	case L2:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (x % 4)) << 1)) & 0x3;
+			int val = (bmpSrc8(ram, srci, py + xo) >> ((3 - (xl & 3)) << 1)) & 0x3;
 			val = mul255div3(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
 #endif
 	case L4:
 		{
-			int val = (bmpSrc8(ram, srci, py + xo) >> (((x + 1) % 2) << 2)) & 0xF;
+			int val = (bmpSrc8(ram, srci, py + xo) >> (((xl + 1) & 1) << 2)) & 0xF;
 			val = mul255div15(val);
 			return (val << 24) | 0x00FFFFFF;
 		}
@@ -842,23 +904,23 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	case TEXT8X8:
 		{
 			const int yn = y >> 3;
-			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + xo);
+			const int pys = yn * stride;
+			uint8_t c = bmpSrc8(ram, srci, pys + xo);
 			const uint8_t *nsrc = &ram[bitmapInfo[16 + ((c & 0x80) >> 7)].Source + (8 * (c & 0x7F))];
 			const int pyc = y & 0x7;
-			const int xc = x & 0x7;
+			const int xc = xl & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1;
 			return (val * 0xFF000000) | 0x00FFFFFF;
 		}
 	case TEXTVGA:
 		{
 			const int yn = y >> 4;
-			py = yn * stride;
-			uint8_t c = bmpSrc8(ram, srci, py + xo); // Character
-			uint8_t ca = bmpSrc8(ram, srci, py + xo + 1); // Attribute
+			const int pys = yn * stride;
+			uint8_t c = bmpSrc8(ram, srci, pys + xo); // Character
+			uint8_t ca = bmpSrc8(ram, srci, pys + xo + 1); // Attribute
 			const uint8_t *nsrc = &ram[bitmapInfo[18 + ((c & 0x80) >> 7)].Source + (16 * (c & 0x7F))]; // PG says it uses 16 and 17, but reference uses 18 and 19
 			const int pyc = y & 0xF;
-			const int xc = x & 0x7;
+			const int xc = xl & 0x7;
 			const uint32_t val = (nsrc[pyc] >> (7 - xc)) & 0x1; // Foreground or background, 1 or 0
 			const int vishift = ((1 - val) << 2);
 			const int colidx = (ca >> vishift) & 0xF; // Index in 16-color palette
@@ -890,20 +952,58 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		}
 #endif
 	}
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockWidth = c_AstcBlockWidth[format & 0xF];
+		const int blockHeight = c_AstcBlockHeight[format & 0xF];
+		const int numBlocksWidth = stride >> 4;
+		const int numBlocksHeight = lines;
+		const int blockX = (int)xl / blockWidth; // can we avoid divide... :(
+		const int blockY = (int)yl / blockHeight; // can we avoid divide... :(
+		const int tileX = blockX >> 1;
+		const int tileY = blockY >> 1;
+		const int tileWidth = (numBlocksWidth & 1) && (blockX == (numBlocksWidth - 1)) ? 1 : 2;
+		const int tileHeight = (numBlocksHeight & 1) && (blockY == (numBlocksHeight - 1)) ? 1 : 2;
+		// if (tileWidth == 1) return 0xFFFF00FF;
+		const int tileIdxVertical = blockY & 1;
+		const int tileIdxReverse = blockX & 1;
+		const int tileIdx = tileIdxReverse 
+			? (tileHeight * tileWidth) - 1 - tileIdxVertical // 0-3 index within tile
+			: tileIdxVertical; // 0-1 index within tile
+		const ptrdiff_t blockOffset = (tileHeight == 1) 
+			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
+			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
+		const physical_compressed_block *physicalBlock = 
+			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+		symbolic_compressed_block symbolicBlock = { 0 };
+		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
+		imageblock imageBlock = { 0 };
+		decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth));
+		if (imageBlock.nan_texel[index])
+			return 0xFFFF00FF;
+		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
+		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		return (a << 24) | (r << 16) | (g << 8) | (b);
+	}
+#endif
 	return 0xFFFF00FF; // invalid format
 }
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const int x, const int y, const int width, const int height, const int format, const int stride, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
-#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo, paletteSource
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, lines, wrapx, wrapy, bitmapInfo, paletteSource
 #else
-#define FT800_SAMPLE_AT_PARAMS height, format, stride, wrapx, wrapy, bitmapInfo
+#define FT800_SAMPLE_AT_PARAMS height, format, stride, lines, wrapx, wrapy, bitmapInfo
 #endif
 	//return 0xFFFFFF00;
 	//switch (filter) NEAREST
@@ -911,16 +1011,16 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 	{
 	case NEAREST:
 		{
-			int xi = x >> 12;
-			int yi = y >> 12;
+			btxf_t xi = x >> 12;
+			btxf_t yi = y >> 12;
 			return sampleBitmapAt(system, ram, srci, xi, yi, FT800_SAMPLE_AT_PARAMS);
 		}
 	case BILINEAR:
 		{
 			int xsep = x & 0xFFF;
 			int ysep = y & 0xFFF;
-			int xl = x >> 12;
-			int yt = y >> 12;
+			btxf_t xl = x >> 12;
+			btxf_t yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
 				return sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
@@ -929,7 +1029,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
-				int yb = yt + 1;
+				btxf_t yb = yt + 1;
 				argb8888 top = sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
 				argb8888 btm = sampleBitmapAt(system, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
@@ -938,7 +1038,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 			{
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
-				int xr = xl + 1;
+				btxf_t xr = xl + 1;
 				return mulalpha_argb(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
 					+ mulalpha_argb(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
 			}
@@ -948,8 +1048,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 				int xal = 255 - xar;
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
-				int xr = xl + 1;
-				int yb = yt + 1;
+				btxf_t xr = xl + 1;
+				btxf_t yb = yt + 1;
 #if FTEMU_SSE41_INSTRUCTIONS_USE
 				const __m128i tl = to_m128i(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS));
 				const __m128i tr = to_m128i(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS));
@@ -972,6 +1072,35 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 	return 0xFFFFFF00; // invalid filter
 }
 
+#ifdef BT815EMU_MODE
+BT8XXEMU_FORCE_INLINE argb8888 swizzleSelect(const argb8888 sample, const uint8_t select)
+{
+	switch (select)
+	{
+	case ZERO:
+		return 0;
+	case ONE:
+		return 255;
+	case ALPHA:
+		return sample >> 24;
+	default:
+		return (sample >> ((BLUE - select) << 3)) & 0xFF;
+	}
+}
+
+BT8XXEMU_FORCE_INLINE argb8888 swizzleSample(const argb8888 sample, const BitmapInfo &bi)
+{
+	static const uint32_t swizzleNone =
+		(BLUE) | (GREEN << 8) | (RED << 16) | (ALPHA << 24);
+	if (bi.Swizzle.U == swizzleNone)
+		return sample; // Early exit for common case
+	return swizzleSelect(sample, bi.Swizzle.B)
+		| (swizzleSelect(sample, bi.Swizzle.G) << 8)
+		| (swizzleSelect(sample, bi.Swizzle.R) << 16)
+		| (swizzleSelect(sample, bi.Swizzle.A) << 24);
+}
+#endif
+
 template <bool debugTrace>
 void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, 
 #ifdef FT810EMU_MODE
@@ -979,34 +1108,56 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 #endif
 	BitmapInfo *const bitmapInfo)
 {
+	// px, py => 15.4i, 19+1b
+
     // if (y != 22) return;
 	// FTEMU_printf("bitmap\n");
 	FT8XXEMU::System *const system = gs.Processor->system();
 	const BitmapInfo &bi = bitmapInfo[handle];
-	const uint8_t *ram = gs.Processor->memory()->getRam();
 
+	// system->log(BT8XXEMU_LogMessage, "Bitmap Vertex: handle %u, cell %u", handle, cell);
+	
 #ifdef FT810EMU_MODE
-	int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
+	const int sizeHeight = swapXY ? bi.SizeWidth : bi.SizeHeight;
 #else
-	int sizeHeight = bi.SizeHeight;
+	const int sizeHeight = bi.SizeHeight;
 #endif
 
-	int pytop = py; // incl pixel*16 top
-	int pybtm = py + (sizeHeight << 4) - 16; // incl pixel*16 btm
+	const int pytop = py; // incl pixel*16 top
+	const int pybtm = py + (sizeHeight << 4) - 16; // incl pixel*16 btm
 
-	int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
-	int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
+	const int pytopi = (pytop + 15) >> 4; // (pytop + 8) >> 4 // reference jumps over to the next pixel at +1/16 already
+	const int pybtmi = (pybtm + 15) >> 4; // (pybtm + 8) >> 4 // +8 jumps over halfway
 
 	if (max(pytopi, gs.ScissorY.I) <= y && y <= min(pybtmi, gs.ScissorY2.I - 1)) // Scissor Y
 	{
+#ifdef BT815EMU_MODE
+		const uint32_t origSource = bi.Source;
+		const uint8_t *const ram = BT815EMU_ADDR_IS_FLASH(origSource)
+			? gs.Processor->memory()->getFlash()
+			: gs.Processor->memory()->getRam();
+
+		if (!ram)
+		{
+			gs.Processor->system()->log(BT8XXEMU_LogError, "Bitmap source in flash, but no flash exists");
+			return;
+		}
+
+		const uint32_t sourceAddr = BT815EMU_ADDR_IS_FLASH(origSource)
+			? BT815EMU_ADDR_TO_FLASH(origSource) : origSource;
+#else
+		const uint32_t sourceAddr = bi.Source;
+		const uint8_t *const ram = gs.Processor->memory()->getRam();
+#endif
+
 #ifdef FT810EMU_MODE
 		int sizeWidth = swapXY ? bi.SizeHeight : bi.SizeWidth;
 #else
 		int sizeWidth = bi.SizeWidth;
 #endif
 
-		int pxlef = px;
-		int pxrig = px + (sizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
+		const int pxlef = px;
+		const int pxrig = px + (sizeWidth << 4) - 16; // verify if this is the correct behaviour for sizewidth = 0
 
 		int pxlefi = (pxlef + 15) >> 4; // (pxlef + 8) >> 4
 		int pxrigi = (pxrig + 15) >> 4; // (pxrig + 8) >> 4
@@ -1015,45 +1166,92 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 		pxrigi = min((int)gs.ScissorX2.I - 1, pxrigi);
 
 		//if (bi.
-		int vy = y * 16;
-		int ry = vy - py;
-		uint32_t sampleSrcPos = bi.Source + (cell * bi.LayoutStride * bi.LayoutHeight);
-		// uint8_t *sampleSrc = &s_Memory->getRam()[sampleSrcPos];
-		int sampleFormat = bi.LayoutFormat;
-		int sampleWidth = bi.LayoutWidth;
-		int sampleHeight = (sampleFormat == TEXT8X8) ? bi.LayoutHeight << 3 : ((sampleFormat == TEXTVGA) ? bi.LayoutHeight << 4 : bi.LayoutHeight);
-		int sampleStride = bi.LayoutStride;
-		int sampleWrapX = bi.SizeWrapX;
-		int sampleWrapY = bi.SizeWrapY;
-		int sampleFilter = bi.SizeFilter;
-#if FT810EMU_MODE
-		int paletteSource = gs.PaletteSource;
+		const int vy = y * 16; // x.4u
+		const int ry = vy - py; // ~15.4i, 19 + 1b
+#ifdef BT815EMU_MODE
+		const bool extFormat = bi.LayoutFormat == GLFORMAT;;
+		const int sampleFormat = extFormat ? bi.ExtFormat : bi.LayoutFormat;
+#else
+		const int sampleFormat = bi.LayoutFormat;
 #endif
+		const int sampleStride = bi.LayoutStride;
+		const int sampleLines = bi.LayoutLines;
+		const int samplePixelWidth = bi.LayoutPixelWidth;
+		const int samplePixelHeight = bi.LayoutPixelHeight;
+#ifdef sfdfsd // BT815EMU_MODE
+		const ramaddr cellOffset = (cell * sampleStride *
+		(BT815EMU_IS_FORMAT_ASTC(sampleFormat)
+			? ((sampleHeight + c_AstcBlockHeight[sampleFormat & 0xF] - 1) / c_AstcBlockHeight[sampleFormat & 0xF])
+			: sampleHeight));
+#else
+		const ramaddr cellOffset = (cell * sampleStride * sampleLines);
+#endif
+		const int sampleWrapX = bi.SizeWrapX;
+		const int sampleWrapY = bi.SizeWrapY;
+		const int sampleFilter = bi.SizeFilter;
+		const uint32_t sampleSrcPos = sourceAddr + cellOffset;
+#ifdef FT810EMU_MODE
+		const int paletteSource = gs.PaletteSource;
+#endif
+		/*
+#ifdef BT815EMU_MODE
+		if (extFormat)
+		{
+			system->log(BT8XXEMU_LogMessage, "Ext format %u: width: %u, height: %u, stride: %u, l: %u, r: %u", bi.ExtFormat,
+				sampleWidth, sampleHeight, sampleStride, pxlefi, pxrigi);
+		}
+#endif
+		*/
+
 		// pretransform
-		int rxtbc = (gs.BitmapTransformB * ry) + (gs.BitmapTransformC << 4);
-		int rytef = (gs.BitmapTransformE * ry) + (gs.BitmapTransformF << 4);
+		// rot transform 8.8i  * 15.4i => 23.12i, 35+1b (ft810+)
+		// rot transform 1.15i * 15.4i => 16.19i, 35+1b (bt815 precise)
+		// plus 15.8i translate => 24.12i or 17.19i, 36+1b (31+1b on ft800...)
+#ifdef BT815EMU_MODE
+#define BT815EMU_TRANSLATE_SHIFT(v) ((v) << 11) /* From 15.8 to .19 */
+#define BT815EMU_ROTATE_SHIFT(v) ((v) << 11) /* From 8.8 to 8.15, not applicable for ft800 */
+#else
+#define BT815EMU_TRANSLATE_SHIFT(v) ((v) << 4) /* From 15.8 to .12 */
+#endif
+		const btxf_t rxtbc = ((btxf_t)gs.BitmapTransformB * (btxf_t)ry) + ((btxf_t)gs.BitmapTransformC);
+		const btxf_t rytef = ((btxf_t)gs.BitmapTransformE * (btxf_t)ry) + ((btxf_t)gs.BitmapTransformF);
+		const btxf_t btfa = gs.BitmapTransformA;
+		const btxf_t btfd = gs.BitmapTransformD;
 		//int sample
 		for (int x = pxlefi; x <= pxrigi; ++x)
 		{
 			// relative at 1/16 pixel units
-			int vx = x * 16;
-			int rx = vx - px;
+			const int vx = x * 16;
+			const int rx = vx - px;
 			// transform with 1/(256*16) pixel units
-			int rxt = (gs.BitmapTransformA * rx) + rxtbc;
-			int ryt = (gs.BitmapTransformD * rx) + rytef;
-#if FT810EMU_MODE
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
+#ifdef BT815EMU_MODE
+#define BT815EMU_TRANSFORM_SHIFT(v) ((v) >> 7)
 #else
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, sampleWidth, sampleHeight, sampleFormat, sampleStride, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
+#define BT815EMU_TRANSFORM_SHIFT(v) ((v))
 #endif
-			// todo tag and stencil // todo multiply by gs.Color // todo ColorMask
+			const btxf_t rxt = BT815EMU_TRANSFORM_SHIFT((btfa * (btxf_t)rx) + rxtbc); // 37+1b to  on ft810+
+			const btxf_t ryt = BT815EMU_TRANSFORM_SHIFT((btfd * (btxf_t)rx) + rytef);
+			// on ft800-ft81x rxt and ryt are (20-25).12i fixed point
+			// on bt815 precision can be increased, so end up at 25.19i, precision only affects multiplication
+			// because maximum visual precision after calculation is only 1/16 subpixel with 1/256 gradation, 
+			// we shift the transform back down to .12
+#ifdef FT810EMU_MODE
+			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
+#else
+			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
+#endif
+#ifdef BT815EMU_MODE
+			const argb8888 swizzled = extFormat ? swizzleSample(sample, bi) : sample;
+			const argb8888 out = mul_argb(swizzled, gs.ColorARGB);
+#else
 			const argb8888 out = mul_argb(sample, gs.ColorARGB);
+#endif
 			processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 		}
 	}
 }
 
-BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const int &format, const int &stride)
+BT8XXEMU_FORCE_INLINE int getLayoutPixelWidth(FT8XXEMU::System *const system, const int format, const int stride)
 {
 	switch (format)
 	{
@@ -1076,9 +1274,50 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 		case L2: return stride << 2;
 #endif
 	}
-	system->log(BT8XXEMU_LogError, "Invalid bitmap layout");
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockWidth = c_AstcBlockWidth[format & 0xF];
+		return (stride >> 4) * blockWidth;
+	}
+#endif
+	system->log(BT8XXEMU_LogError, "Invalid bitmap layout format", format);
 	return stride;
 }
+
+BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, const int format, const int lines)
+{
+	switch (format)
+	{
+		case TEXT8X8:
+			return lines << 3;
+		case TEXTVGA:
+			return lines << 4;
+	}
+#ifdef BT815EMU_MODE
+	if (BT815EMU_IS_FORMAT_ASTC(format))
+	{
+		const int blockHeight = c_AstcBlockHeight[format & 0xF];
+		return blockHeight * lines;
+	}
+#endif
+	return lines;
+}
+
+#ifdef BT815EMU_MODE
+BT8XXEMU_FORCE_INLINE int getLayoutPixelWidth(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int stride)
+{
+	const bool usingExtFormat = layoutFormat == GLFORMAT;
+	const int sampleFormat = usingExtFormat ? extFormat : layoutFormat;
+	return getLayoutPixelWidth(system, sampleFormat, stride);
+}
+BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, const int layoutFormat, const int extFormat, const int lines)
+{
+	const bool usingExtFormat = layoutFormat == GLFORMAT;
+	const int sampleFormat = usingExtFormat ? extFormat : layoutFormat;
+	return getLayoutPixelHeight(system, sampleFormat, lines);
+}
+#endif
 
 #pragma endregion
 
@@ -1086,6 +1325,9 @@ BT8XXEMU_FORCE_INLINE int getLayoutWidth(FT8XXEMU::System *const system, const i
 
 #define FT800EMU_DEBUG_RECTS_MATH 0
 #define FT800EMU_RECTS_FT800_COORDINATES 1
+
+// Mimic hardware alpha behaviour with line width lower than 16
+#define FT800EMU_LINE_WIDTH_BEHAVIOUR 1
 
 struct VertexState
 {
@@ -1259,7 +1501,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int x = x1lw_px_sc;
 					const int surf = (16 - dxl) * rowfill;
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+					const int alpha = ((gs.ColorARGB >> 24) * surf * lw) >> 12;
+#else
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+#endif
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					++x1lw_px_sc;
@@ -1268,7 +1514,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					const int x = x2lw_px_sc - 1;
 					const int surf = dxr * rowfill;
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+					const int alpha = ((gs.ColorARGB >> 24) * surf * lw) >> 12;
+#else
 					const int alpha = ((gs.ColorARGB >> 24) * surf) >> 8;
+#endif
 					const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 					processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					--x2lw_px_sc;
@@ -1277,7 +1527,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+						const int alpha = ((gs.ColorARGB >> 24) * rowfill * lw) >> 8;
+#else
 						const int alpha = ((gs.ColorARGB >> 24) * rowfill) >> 4;
+#endif
 						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
@@ -1286,7 +1540,12 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 				{
 					for (int x = x1lw_px_sc; x < x2lw_px_sc; ++x) // Draw the rest of the pixels
 					{
+#if FT800EMU_LINE_WIDTH_BEHAVIOUR
+						const int alpha = ((gs.ColorARGB >> 24) * lw) >> 4;
+						const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
+#else
 						const argb8888 out = gs.ColorARGB;
+#endif
 						processPixel<debugTrace>(gs, bc, bs, bt, x, out);
 					}
 				}
@@ -2342,8 +2601,24 @@ void displayLineStrip(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_
 
 }
 
+#ifdef BT815EMU_MODE
+static std::mutex s_ASTCInitMutex;
+static bool s_ASTCInitOk = false;
+#endif
+
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
+#ifdef BT815EMU_MODE
+	; {
+		std::unique_lock<std::mutex> lock(s_ASTCInitMutex);
+		if (!s_ASTCInitOk)
+		{
+			prepare_angular_tables();
+			build_quantization_mode_table();
+		}
+	}
+#endif
+
 	m_System = system;
 	m_Memory = memory;
 	m_Touch = touch;
@@ -2358,6 +2633,16 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	m_RegPwmDutyEmulation = false;
 	m_ThreadCount = 1;
 
+#ifdef BT815EMU_MODE
+	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)
+	{
+		m_BitmapInfoMaster[i].Swizzle.A = ALPHA;
+		m_BitmapInfoMaster[i].Swizzle.R = BLUE;
+		m_BitmapInfoMaster[i].Swizzle.G = GREEN;
+		m_BitmapInfoMaster[i].Swizzle.B = RED;
+	}
+#endif
+
 	uint8_t *ram = m_Memory->getRam();
 	uint32_t fi = Memory::rawReadU32(ram, FT800EMU_ROM_FONTINFO);
 	m_System->log(BT8XXEMU_LogMessage, "Font index : %u", fi);
@@ -2365,23 +2650,86 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	{
 		int ir = i + 16;
 		uint32_t bi = (i * 148) + fi;
-		uint32_t format =  Memory::rawReadU32(ram, bi + 128);
-		uint32_t stride =  Memory::rawReadU32(ram, bi + 132);
-		uint32_t width =  Memory::rawReadU32(ram, bi + 136);
-		uint32_t height =  Memory::rawReadU32(ram, bi + 140);
-		uint32_t data =  Memory::rawReadU32(ram, bi + 144);
-		if (FT800EMU_DEBUG) m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Height: %u, Data: %u", ir, format, stride, width, height, data);
+#ifdef BT815EMU_MODE
+		uint32_t signature = Memory::rawReadU32(ram, bi);
+		if (signature == 0x0100aaff)
+		{
+			// NOTE: For future reference only, not currently used
 
-		m_BitmapInfoMaster[ir].Source = data;
-		m_BitmapInfoMaster[ir].LayoutFormat = format;
-		m_BitmapInfoMaster[ir].LayoutStride = stride;
-		m_BitmapInfoMaster[ir].LayoutHeight = height;
-		m_BitmapInfoMaster[ir].LayoutWidth = getLayoutWidth(system, format, stride);
-		m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
-		m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
-		m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
-		m_BitmapInfoMaster[ir].SizeWidth = width;
-		m_BitmapInfoMaster[ir].SizeHeight = height;
+			m_System->log(BT8XXEMU_LogError, "Extended font format not allowed in ROM");
+
+			const uint32_t format = Memory::rawReadU32(ram, bi + 8);
+			const uint32_t swizzle = Memory::rawReadU32(ram, bi + 12);
+			const uint32_t layoutStride = Memory::rawReadU32(ram, bi + 16);
+			const uint32_t layoutLines = Memory::rawReadU32(ram, bi + 20);
+			const uint32_t sizeWidth = Memory::rawReadU32(ram, bi + 24);
+			const uint32_t sizeHeight = Memory::rawReadU32(ram, bi + 28);
+			const uint32_t data = Memory::rawReadU32(ram, bi + 32);
+			m_System->log(BT8XXEMU_LogMessage,
+				"Extended Font[%i] -> Format: %u, Swizzle: %u, "
+				"Layout Stride: %u, Size Width: %u, "
+				"Layout Height: %u, Size Height: %u, Data: %u", 
+				ir, format, swizzle, layoutStride, sizeWidth, layoutLines, sizeHeight, data);
+
+			m_BitmapInfoMaster[ir].Source = data;
+			m_BitmapInfoMaster[ir].LayoutFormat = GLFORMAT;
+			m_BitmapInfoMaster[ir].LayoutStride = layoutStride;
+			m_BitmapInfoMaster[ir].LayoutLines = layoutLines;
+			m_BitmapInfoMaster[ir].LayoutPixelWidth = getLayoutPixelWidth(system, format, layoutStride);
+			m_BitmapInfoMaster[ir].LayoutPixelHeight = getLayoutPixelHeight(system, format, layoutLines);
+			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+			m_BitmapInfoMaster[ir].SizeWidth = sizeWidth;
+			m_BitmapInfoMaster[ir].SizeHeight = sizeHeight;
+			m_BitmapInfoMaster[ir].ExtFormat = format;
+			m_BitmapInfoMaster[ir].Swizzle.A = RED;
+			m_BitmapInfoMaster[ir].Swizzle.R = ONE;
+			m_BitmapInfoMaster[ir].Swizzle.G = ONE;
+			m_BitmapInfoMaster[ir].Swizzle.B = ONE;
+		}
+		else
+		{
+#endif
+			const uint32_t format = Memory::rawReadU32(ram, bi + 128);
+			const uint32_t stride = Memory::rawReadU32(ram, bi + 132);
+			const uint32_t width = Memory::rawReadU32(ram, bi + 136);
+			const uint32_t height = Memory::rawReadU32(ram, bi + 140);
+			const uint32_t linesFactor = getLayoutPixelHeight(system, format, 1);
+			const uint32_t lines = (height + linesFactor - 1) / linesFactor;
+			const uint32_t data = Memory::rawReadU32(ram, bi + 144);
+			m_System->log(BT8XXEMU_LogMessage, "Font[%i] -> Format: %u, Stride: %u, Width: %u, Lines: %u, Data: %u", ir, format, stride, width, lines, data);
+
+			m_BitmapInfoMaster[ir].Source = data;
+#ifdef BT815EMU_MODE
+			if (BT815EMU_IS_FORMAT_ASTC(format))
+			{
+				m_BitmapInfoMaster[ir].LayoutFormat = GLFORMAT;
+				m_BitmapInfoMaster[ir].ExtFormat = format;
+				m_BitmapInfoMaster[ir].Swizzle.A = RED;
+				m_BitmapInfoMaster[ir].Swizzle.R = ONE;
+				m_BitmapInfoMaster[ir].Swizzle.G = ONE;
+				m_BitmapInfoMaster[ir].Swizzle.B = ONE;
+			}
+			else
+			{
+				m_BitmapInfoMaster[ir].LayoutFormat = format;
+			}
+#else
+			m_BitmapInfoMaster[ir].LayoutFormat = format;
+#endif
+			m_BitmapInfoMaster[ir].LayoutStride = stride;
+			m_BitmapInfoMaster[ir].LayoutLines = lines;
+			m_BitmapInfoMaster[ir].LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+			m_BitmapInfoMaster[ir].LayoutPixelHeight = height;
+			m_BitmapInfoMaster[ir].SizeFilter = ir < 25 ? NEAREST : BILINEAR; // i assume
+			m_BitmapInfoMaster[ir].SizeWrapX = BORDER;
+			m_BitmapInfoMaster[ir].SizeWrapY = BORDER;
+			m_BitmapInfoMaster[ir].SizeWidth = width;
+			m_BitmapInfoMaster[ir].SizeHeight = m_BitmapInfoMaster[ir].LayoutPixelHeight;
+#ifdef BT815EMU_MODE
+		}
+#endif
 	}
 }
 
@@ -2541,7 +2889,12 @@ EvaluateDisplayListValue:
 		case FT800EMU_DL_DISPLAY:
 			goto DisplayListDisplay;
 		case FT800EMU_DL_BITMAP_SOURCE:
+#ifdef BT815EMU_MODE
+			bitmapInfo[gs.BitmapHandle].Source = v & (BT815EMU_ADDR_IS_FLASH(v)
+				? BT815EMU_ADDR_MASK_WITH_FLASH : FT800EMU_ADDR_MASK);
+#else
 			bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
+#endif
 			break;
 		case FT800EMU_DL_BITMAP_HANDLE:
 			gs.BitmapHandle = v & 0x1F;
@@ -2555,16 +2908,24 @@ EvaluateDisplayListValue:
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+				int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
 #else
 				int stride = (v >> 9) & 0x3FF;
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = v & 0x1FF;
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+				int lines = v & 0x1FF;
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 512; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
 #endif
-				bi.LayoutWidth = getLayoutWidth(system, format, stride);
+#ifdef BT815EMU_MODE
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, bi.ExtFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, bi.ExtFormat, lines);
+#else
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, lines);
+#endif
 			}
 			break;
 		case FT800EMU_DL_BITMAP_SIZE:
@@ -2607,8 +2968,15 @@ EvaluateDisplayListValue:
             }
 			break;
 		case FT800EMU_DL_RETURN:
-			c = callstack.top();
-			callstack.pop();
+			if (callstack.empty())
+			{
+				system->log(BT8XXEMU_LogError, "Invalid RETURN() in display list");
+			}
+			else
+			{
+				c = callstack.top();
+				callstack.pop();
+			}
 			break;
 		case FT800EMU_DL_MACRO:
 			v = Memory::rawReadU32(ram, REG_MACRO_0 + (4 * (v & 0x01)));
@@ -2616,22 +2984,47 @@ EvaluateDisplayListValue:
 			goto EvaluateDisplayListValue;
 			break;
 #ifdef FT810EMU_MODE
-		case FT800EMU_DL_BITMAP_LAYOUT_H:
+		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
-				bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-				if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
-				bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+				int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
+				if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+				bi.LayoutLines = lines;
+#ifdef BT815EMU_MODE
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, bi.ExtFormat, lines);
+#else
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, stride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, lines);
+#endif
 			}
 			break;
-		case FT800EMU_DL_BITMAP_SIZE_H:
+		case FT810EMU_DL_BITMAP_SIZE_H:
 			bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
 			if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
 			bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
 			if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
+			break;
+#endif
+#ifdef BT815EMU_MODE
+		case BT815EMU_DL_BITMAP_EXT_FORMAT:
+			; {
+				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+				const int extFormat = (v & 0xFFFF);
+				bi.ExtFormat = extFormat;
+				bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+				bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, extFormat, bi.LayoutLines);
+			}
+			break;
+		case BT815EMU_DL_BITMAP_SWIZZLE:
+			bitmapInfo[gs.BitmapHandle].Swizzle.U =
+				  (/* b = */ ((v >> 3) & 0x7))
+				| (/* g = */ ((v >> 6) & 0x7) << 8)
+				| (/* r = */ ((v >> 9) & 0x7) << 16)
+				| (/* a = */ ((v) & 0x7) << 24);
 			break;
 #endif
 		}
@@ -2758,7 +3151,12 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_DISPLAY:
 					goto DisplayListDisplay;
 				case FT800EMU_DL_BITMAP_SOURCE:
+#ifdef BT815EMU_MODE
+					bitmapInfo[gs.BitmapHandle].Source = v & (BT815EMU_ADDR_IS_FLASH(v)
+						? BT815EMU_ADDR_MASK_WITH_FLASH : FT800EMU_ADDR_MASK);
+#else
 					bitmapInfo[gs.BitmapHandle].Source = v & FT800EMU_ADDR_MASK;
+#endif
 					break;
 				case FT800EMU_DL_CLEAR_COLOR_RGB:
 					gs.ClearColorARGB = (gs.ClearColorARGB & 0xFF000000) | (v & 0x00FFFFFF);
@@ -2784,16 +3182,25 @@ EvaluateDisplayListValue:
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = (bi.LayoutHeight & 0x600) | (v & 0x1FF);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
+						int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
 #else
 						int stride = (v >> 9) & 0x3FF;
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 1024; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = v & 0x1FF;
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 512; } // correct behaviour is probably 'infinite'?
+						int lines = v & 0x1FF;
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 512; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
 #endif
-						bi.LayoutWidth = getLayoutWidth(system, format, stride);
+#ifdef BT815EMU_MODE
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, bi.ExtFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, bi.ExtFormat, lines);
+#else
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, format, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, format, lines);
+#endif
+						// FTEMU_message("DL_BITMAP_LAYOUT format %u, stride %u, height %u", format, stride, bi.LayoutHeight);
 					}
 					break;
 				case FT800EMU_DL_BITMAP_SIZE:
@@ -2853,47 +3260,52 @@ EvaluateDisplayListValue:
 				case FT800EMU_DL_TAG_MASK:
 					gs.TagMask = (v & 0x01) != 0;
 					break;
+#ifdef BT815EMU_MODE
+#define BT815EMU_ROTATE_SHIFTED(v) (((v) & (1 << 17)) ? SIGNED_N((v), 17) : (SIGNED_N((v), 17) << 7))
+#else
+#define BT815EMU_ROTATE_SHIFTED(v) (SIGNED_N((v), 17))
+#endif
 				case FT800EMU_DL_BITMAP_TRANSFORM_A:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformB = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformB = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformA = SIGNED_N(v, 17);
+						gs.BitmapTransformA = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_B:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformA = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformA = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformB = SIGNED_N(v, 17);
+						gs.BitmapTransformB = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_C: // 15.8 signed
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformF = SIGNED_N(v, 24);
+					if (swapXY) gs.BitmapTransformF = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					else
 #endif
-					gs.BitmapTransformC = SIGNED_N(v, 24);
+						gs.BitmapTransformC = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_D:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformE = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformE = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformD = SIGNED_N(v, 17);
+						gs.BitmapTransformD = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_E:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformD = SIGNED_N(v, 17);
+					if (swapXY) gs.BitmapTransformD = BT815EMU_ROTATE_SHIFTED(v);
 					else
 #endif
-					gs.BitmapTransformE = SIGNED_N(v, 17);
+						gs.BitmapTransformE = BT815EMU_ROTATE_SHIFTED(v);
 					break;
 				case FT800EMU_DL_BITMAP_TRANSFORM_F:
 #ifdef FT810EMU_MODE
-					if (swapXY) gs.BitmapTransformC = SIGNED_N(v, 24);
+					if (swapXY) gs.BitmapTransformC = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					else
 #endif
-					gs.BitmapTransformF = SIGNED_N(v, 24);
+						gs.BitmapTransformF = BT815EMU_TRANSLATE_SHIFT(SIGNED_N(v, 24));
 					break;
 				case FT800EMU_DL_SCISSOR_XY:
 #ifdef FT810EMU_MODE
@@ -3041,37 +3453,67 @@ EvaluateDisplayListValue:
 					}
 					break;
 #ifdef FT810EMU_MODE
-				case FT800EMU_DL_VERTEX_FORMAT:
+				case FT810EMU_DL_VERTEX_FORMAT:
 					gs.VertexFormatShift = 4 - (v & 0x7);
 					break;
-				case FT800EMU_DL_BITMAP_LAYOUT_H:
+				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
-						bi.LayoutHeight = (bi.LayoutHeight & 0x1FF) | ((v & 0x3) << 9);
-						if (bi.LayoutHeight == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ bi.LayoutHeight = 2048; } // correct behaviour is probably 'infinite'?
-						bi.LayoutWidth = getLayoutWidth(system, bi.LayoutFormat, stride);
+						int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
+						if (lines == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout height invalid\n", gs.DebugDisplayListIndex);*/ lines = 2048; } // correct behaviour is probably 'infinite'?
+						bi.LayoutLines = lines;
+#ifdef BT815EMU_MODE
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, bi.ExtFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, bi.ExtFormat, lines);
+#else
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, stride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, lines);
+#endif
+#ifdef BT815EMU_MODE
+#endif
 					}
 					break;
-				case FT800EMU_DL_BITMAP_SIZE_H:
+				case FT810EMU_DL_BITMAP_SIZE_H:
 					bitmapInfo[gs.BitmapHandle].SizeWidth = (bitmapInfo[gs.BitmapHandle].SizeWidth & 0x1FF) | (((v >> 2) & 0x3) << 9);
 					if (bitmapInfo[gs.BitmapHandle].SizeWidth == 0) bitmapInfo[gs.BitmapHandle].SizeWidth = 2048; // verify
 					bitmapInfo[gs.BitmapHandle].SizeHeight = (bitmapInfo[gs.BitmapHandle].SizeHeight & 0x1FF) | ((v & 0x3) << 9);
 					if (bitmapInfo[gs.BitmapHandle].SizeHeight== 0) bitmapInfo[gs.BitmapHandle].SizeHeight = 2048; // verify
 					break;
-				case FT800EMU_DL_PALETTE_SOURCE:
+				case FT810EMU_DL_PALETTE_SOURCE:
 					gs.PaletteSource = v & FT800EMU_ADDR_MASK;
 					break;
-				case FT800EMU_DL_VERTEX_TRANSLATE_X:
+				case FT810EMU_DL_VERTEX_TRANSLATE_X:
 					gs.VertexTranslateX = SIGNED_N(v & 0x1FFFF, 17);
 					break;
-				case FT800EMU_DL_VERTEX_TRANSLATE_Y:
+				case FT810EMU_DL_VERTEX_TRANSLATE_Y:
 					gs.VertexTranslateY = SIGNED_N(v & 0x1FFFF, 17);
 					break;
-				case FT800EMU_DL_NOP:
+				case FT810EMU_DL_NOP:
 					// no-op
+					break;
+#endif
+#ifdef BT815EMU_MODE
+				case BT815EMU_DL_BITMAP_EXT_FORMAT:
+					; {
+						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+						const int extFormat = (v & 0xFFFF);
+						bi.ExtFormat = extFormat;
+						bi.LayoutPixelWidth = getLayoutPixelWidth(system, bi.LayoutFormat, extFormat, bi.LayoutStride);
+						bi.LayoutPixelHeight = getLayoutPixelHeight(system, bi.LayoutFormat, extFormat, bi.LayoutLines);
+					}
+					break;
+				case BT815EMU_DL_BITMAP_SWIZZLE:
+					bitmapInfo[gs.BitmapHandle].Swizzle.U =
+						  (/* b = */ ((v >> 3) & 0x7))
+						| (/* g = */ ((v >> 6) & 0x7) << 8)
+						| (/* r = */ ((v >> 9) & 0x7) << 16)
+						| (/* a = */ ((v) & 0x7) << 24);
+					break;
+				case BT815EMU_DL_INT_FRR:
+					// TODO: BT815
 					break;
 #endif
 				default:
@@ -3080,10 +3522,10 @@ EvaluateDisplayListValue:
 				break;
 			case FT800EMU_DL_VERTEX2II:
 				{
-					int px = ((v >> 21) & 0x1FF) * 16;
+					int px = ((v >> 21) & 0x1FF) * 16; // => 9.4u, 14b
 					int py = ((v >> 12) & 0x1FF) * 16;
 #ifdef FT810EMU_MODE
-					px += gs.VertexTranslateX;
+					px += gs.VertexTranslateX; // (translate = 12.4i, 16+1b) (max + 1) => 13.4i, 17+1b
 					py += gs.VertexTranslateY;
 					if (swapXY) std::swap(px, py);
 #endif
@@ -3144,13 +3586,13 @@ EvaluateDisplayListValue:
 			case FT800EMU_DL_VERTEX2F:
 				{
 					int px = (v >> 15) & 0x3FFF;
-					if ((v >> 15) & 0x4000) px = px - 0x4000;
+					if ((v >> 15) & 0x4000) px = px - 0x4000; // 10.4i -> 14.0i, 14+1b
 					int py = (v) & 0x3FFF;
 					if ((v) & 0x4000) py = py - 0x4000;
 #ifdef FT810EMU_MODE
-					px <<= gs.VertexFormatShift;
+					px <<= gs.VertexFormatShift; // 14.4i, 18+1b
 					py <<= gs.VertexFormatShift;
-					px += gs.VertexTranslateX;
+					px += gs.VertexTranslateX; // (translate = 12.4i, 16+1b) (max + 1) => 15.4i, 19+1b
 					py += gs.VertexTranslateY;
 					if (swapXY) std::swap(px, py);
 #endif

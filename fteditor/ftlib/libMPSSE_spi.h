@@ -84,8 +84,8 @@ typedef unsigned char	bool;
 	typedef unsigned int   uint32;
 	typedef signed int   int32;
 #else
-	typedef unsigned long   uint32;
-	typedef signed long   int32;
+    typedef UINT32  uint32;
+    typedef INT32   int32;
 #endif
 
 typedef enum I2C_ClockRate_t{

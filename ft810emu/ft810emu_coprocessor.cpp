@@ -1,6 +1,7 @@
 /*
 FT810 Emulator Library
 Copyright (C) 2015  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2017  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
 */
@@ -18,13 +19,21 @@ Author: James Bowman <jamesb@excamera.com>
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
 
+#ifdef BT815EMU_MODE
+#	include "bt815emu_espim.h"
+#endif
+
 // using namespace ...;
 
 namespace FT810EMU {
 
 #define FT800EMU_COPROCESSOR_DEBUG 0
 #define FT800EMU_COPROCESSOR_TRACE 0
+#ifdef BT815EMU_MODE
+#define FT800EMU_COPROCESSOR_TRACEFILE "bt815emu.log"
+#else
 #define FT800EMU_COPROCESSOR_TRACEFILE "ft810emu.log"
+#endif
 
 #define FT800EMU_COPROCESSOR_ROM_SIZE 16384
 #define PRODUCT64(a, b) ((int64_t)(int32_t)(a) * (int64_t)(int32_t)(b))
@@ -33,9 +42,15 @@ namespace FT810EMU {
 
 namespace /* anonymous */ {
 
+#ifdef BT815EMU_MODE
+const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt815.h"
+};
+#else
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_ft810.h"
 };
+#endif
 
 const uint32_t crc_table[16] = {
 	0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
@@ -211,7 +226,7 @@ void Ejpg::run2(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run2\n");
+	FTEMU_message("Ejpg::run2");
 #endif
 
 	if (stim)
@@ -385,7 +400,7 @@ void Ejpg::run(uint8_t *memory8,
 	uint32_t feed)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run\n");
+	FTEMU_message("Ejpg::run");
 #endif
 
 	// assert((bitsize == 8) | (bitsize == 32));
@@ -557,7 +572,7 @@ void Ejpg::run1(uint8_t *memory8,
 	int16_t dm)
 {
 #if FT800EMU_COPROCESSOR_DEBUG
-	FTEMU_printf("Ejpg::run1\n");
+	FTEMU_message("Ejpg::run1");
 #endif
 
 	// FTEMU_printf("idct_i=%d, symbol %02x\n", idct_i, symbol);
@@ -660,14 +675,17 @@ BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack an
 static FILE *trace = NULL;
 #endif
 
-Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath, BT8XXEMU_EmulatorMode mode)
+Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
 {
+#ifdef BT815EMU_MODE
+	m_Espim = new Espim(memory);
+#endif
 	ejpg.setSystem(system);
 	if (romFilePath)
 	{
 		FILE *f;
-		f = fopen(romFilePath, "rb");
+		f = _wfopen(romFilePath, L"rb");
 		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
 		else
 		{
@@ -679,12 +697,16 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *r
 	}
 	else
 	{
+#ifdef BT815EMU_MODE
+		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
+#else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
+#endif
 	}
 
 #if FT800EMU_COPROCESSOR_TRACE
 	trace = fopen(FT800EMU_COPROCESSOR_TRACEFILE, "w");
-	if (!trace) FTEMU_printf("Failed to create trace file\n");
+	if (!trace) FTEMU_warning("Failed to create trace file");
 #endif
 
 	ejpg.reset();
@@ -724,23 +746,23 @@ void Coprocessor::execute()
 		switch (pc)
 		{
 		case 0x04CB:
-			FTEMU_printf("COPROCESSOR: throw\n");
+			// FTEMU_printf("COPROCESSOR: throw\n");
 			break;
 		case 0x2D5A:
-			FTEMU_printf("func:playvideo\n");
-			FTEMU_printf("\tCALL mjpeg-DHT\n");
+			// FTEMU_printf("func:playvideo\n");
+			// FTEMU_printf("\tCALL mjpeg-DHT\n");
 			break;
 		case 0x2D5B:
-			FTEMU_printf("\tCALL jpgavi-common\n");
+			// FTEMU_printf("\tCALL jpgavi-common\n");
 			break;
 		case 0x2D5C:
-			FTEMU_printf("\tCALL avi-prime\n");
+			// FTEMU_printf("\tCALL avi-prime\n");
 			break;
 		case 0x2D5D:
-			FTEMU_printf("\tCALL avi-chunk\n");
+			// FTEMU_printf("\tCALL avi-chunk\n");
 			break;
 		case 0x2D64:
-			FTEMU_printf("\tJUMP avi-cleanup\n");
+			// FTEMU_printf("\tJUMP avi-cleanup\n");
 			break;
 		/*case 0x2C3A:
 			FTEMU_printf("\t0x2C3A N==T (N: 0x%x, T: 0x%x)\n", (unsigned int)d[dsp], (unsigned int)t);
@@ -766,7 +788,7 @@ void Coprocessor::execute()
 
 #if FT800EMU_COPROCESSOR_DEBUG
 		if (pc == 0x3fff)
-			FTEMU_printf("NEW ENTRYPOINT\n");
+			FTEMU_message("NEW ENTRYPOINT");
 #endif
 
 		switch (insn >> 13)
@@ -788,7 +810,7 @@ void Coprocessor::execute()
 			rsp = 31 & (rsp + 1);
 			r[rsp] = _pc << 1;
 #if FT800EMU_COPROCESSOR_DEBUG
-			FTEMU_printf("(call) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+			FTEMU_message("(call) r[rsp] = r[%i] = %i", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 			_pc = insn & 0x3fff;
 			break;
@@ -814,7 +836,7 @@ void Coprocessor::execute()
 			case 0x07:
 				_t = -(t == n);
 #if FT800EMU_COPROCESSOR_DEBUG
-				FTEMU_printf("\tN==T (N: 0x%x, T: 0x%x)\n", (unsigned int)n, (unsigned int)t);
+				FTEMU_message("\tN==T (N: 0x%x, T: 0x%x)", (unsigned int)n, (unsigned int)t);
 #endif
 				break;
 			case 0x08:  _t = -((int32_t)n < (int32_t)t); break;
@@ -883,7 +905,7 @@ void Coprocessor::execute()
 			case 2:
 				r[rsp] = t;
 #if FT800EMU_COPROCESSOR_DEBUG
-				FTEMU_printf("(r[rsp] = t) r[rsp] = r[%i] = %i\n", (uint32_t)rsp, (uint32_t)r[rsp]);
+				FTEMU_message("(r[rsp] = t) r[rsp] = r[%i] = %i", (uint32_t)rsp, (uint32_t)r[rsp]);
 #endif
 				break;
 			case 3:
@@ -913,6 +935,12 @@ void Coprocessor::execute()
 						m_Memory->coprocessorReadU32(REG_INT_FLAGS) | (n << 5));
 					// REG(INT_FLAGS) |= (n << 5);
 				}
+#ifdef BT815EMU_MODE
+				if (t == REG_ESPIM_TRIG)
+				{
+					m_Espim->trigger();
+				}
+#endif
 				break;
 			case 5:
 				// assert((t & 1) == 0);
@@ -965,10 +993,15 @@ void Coprocessor::execute()
 			memory8[REG_DLSWAP] = 0;
 		}*/
 
+#ifdef BT815EMU_MODE
+		if (m_Espim->running())
+			m_Espim->drive();
+#endif
+
 #if FT800EMU_COPROCESSOR_TRACE
 		fprintf(trace, "pc=%04x t=%08x insn=%04x\n", pc, t, insn);
 #if FT800EMU_COPROCESSOR_DEBUG
-		FTEMU_printf("pc=%04x t=%08x insn=%04x\n", pc, t, insn);
+		FTEMU_message("pc=%04x t=%08x insn=%04x", pc, t, insn);
 #endif
 #endif
 

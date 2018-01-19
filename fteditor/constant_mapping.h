@@ -7,7 +7,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #define FTEDITOR_CONSTANT_MAPPING_H
 
 // Emulator includes
-#include <ft8xxemu.h>
+#include <bt8xxemu.h>
 
 // STL includes
 
@@ -22,18 +22,19 @@ namespace FTEDITOR {
 #define FTEDITOR_FT811 3
 #define FTEDITOR_FT812 4
 #define FTEDITOR_FT813 5
-#define FTEDITOR_DEVICE_NB 6
-extern const FT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
-inline FT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
+#define FTEDITOR_BT815 6
+#define FTEDITOR_DEVICE_NB 7
+extern const BT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
+inline BT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
 extern const int g_DeviceToIntf[256];
-inline int deviceToIntf(FT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
+inline int deviceToIntf(BT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
 extern const char *g_DeviceToString[FTEDITOR_DEVICE_NB];
 inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR_DEVICE_NB ? g_DeviceToString[deviceIntf] : ""; }
 
 // Tempory for mapping conversion
 extern int g_CurrentDevice;
 #define FTEDITOR_CURRENT_DEVICE FTEDITOR::g_CurrentDevice
-#define FTEDITOR_DEFAULT_DEVICE FTEDITOR_FT811
+#define FTEDITOR_DEFAULT_DEVICE FTEDITOR_BT815
 
 // Screen specs
 extern const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB];
@@ -54,7 +55,19 @@ extern const uint32_t g_AddressSpace[FTEDITOR_DEVICE_NB];
 extern const uint32_t g_AddressMask[FTEDITOR_DEVICE_NB];
 inline uint32_t addressSpace(int deviceIntf) { return g_AddressSpace[deviceIntf]; }
 inline uint32_t addressMask(int deviceIntf) { return g_AddressMask[deviceIntf]; }
-inline int addressSigned(int deviceIntf, int address) { int masked = (address & g_AddressMask[deviceIntf]); int negmask = ~(g_AddressMask[deviceIntf] >> 1); int neg = masked & negmask; return neg ? masked | negmask : masked; }
+inline int addressSigned(int deviceIntf, int address)
+{
+	if (deviceIntf >= FTEDITOR_BT815 
+		&& ((address >> 23) & 0x1))
+	{
+		// Flash address / 32
+		return address & 0x1FFFFFF;
+	}
+	int masked = (address & g_AddressMask[deviceIntf]);
+	int negmask = ~(g_AddressMask[deviceIntf] >> 1);
+	int neg = masked & negmask;
+	return neg ? masked | negmask : masked;
+}
 
 // RAM addresses
 #define FTEDITOR_RAM_G 0
@@ -245,6 +258,9 @@ inline const char *regToString(int deviceIntf, int regIntf) { return g_RegToStri
 #define FTEDITOR_DL_VERTEX_TRANSLATE_X 43
 #define FTEDITOR_DL_VERTEX_TRANSLATE_Y 44
 #define FTEDITOR_DL_NOP 45
+#define FTEDITOR_DL_BITMAP_EXT_FORMAT 46
+#define FTEDITOR_DL_BITMAP_SWIZZLE 47
+#define FTEDITOR_DL_INT_FRR 48
 
 // Mappings for bitmap formats
 #define ARGB8_SNAPSHOT 0x20
@@ -256,6 +272,11 @@ inline const char *bitmapFormatToString(int deviceIntf, int bitmapFormatEnum) { 
 extern const int g_BitmapFormatIntfNb[FTEDITOR_DEVICE_NB];
 extern const int *g_BitmapFormatFromIntf[FTEDITOR_DEVICE_NB];
 extern const int *g_BitmapFormatToIntf[FTEDITOR_DEVICE_NB];
+
+// Valid extended bitmap formats, using bitmap formats enum
+extern const int g_ExtFormatIntfNb[FTEDITOR_DEVICE_NB];
+extern const int *g_ExtFormatFromIntf[FTEDITOR_DEVICE_NB];
+extern const int *g_ExtFormatToIntf[FTEDITOR_DEVICE_NB];
 
 // Snapshot formats, using bitmap formats enum
 extern const int g_SnapshotFormatIntfNb[FTEDITOR_DEVICE_NB];

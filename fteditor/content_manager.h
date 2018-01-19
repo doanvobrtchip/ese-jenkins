@@ -25,7 +25,7 @@
 #include <QJsonObject>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 // Project includes
 #include "undo_stack_disabler.h"

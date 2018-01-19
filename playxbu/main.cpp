@@ -4,22 +4,32 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
+// #define BT815EMU_MODE
+
 #include <Windows.h>
 
 #include <bt8xxemu.h>
 #include <stdio.h>
 #include <ft800emu_vc.h>
 
-#define TEST_THREAD_REDUCE
+// #define TEST_THREAD_REDUCE
 
 class PlayXBU
 {
 public:
 	PlayXBU(const char *file)
 	{
+#if defined(BT815EMU_MODE)
+		BT8XXEMU_FlashParameters flashParams;
+		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+		flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+#endif
+
 		BT8XXEMU_EmulatorParameters params;
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params,
-#ifdef FT810EMU_MODE
+#if defined(BT815EMU_MODE)
+			BT8XXEMU_EmulatorBT815
+#elif defined(FT810EMU_MODE)
 			BT8XXEMU_EmulatorFT810
 #else
 			BT8XXEMU_EmulatorFT801
@@ -29,6 +39,7 @@ public:
 		params.Flags =
 			BT8XXEMU_EmulatorEnableKeyboard
 			| BT8XXEMU_EmulatorEnableMouse
+			| BT8XXEMU_EmulatorEnableAudio
 			| BT8XXEMU_EmulatorEnableDebugShortkeys
 			| BT8XXEMU_EmulatorEnableCoprocessor
 			| BT8XXEMU_EmulatorEnableGraphicsMultithread
@@ -36,6 +47,10 @@ public:
 			| BT8XXEMU_EmulatorEnableMainPerformance
 			;
 		params.UserContext = this;
+
+#if defined(BT815EMU_MODE)
+		params.Flash = flash;
+#endif
 
 #ifdef TEST_THREAD_REDUCE
 		params.ReduceGraphicsThreads = 2;
@@ -59,13 +74,21 @@ public:
 	{
 		BT8XXEMU_destroy(emulator);
 		emulator = NULL;
+#if defined(BT815EMU_MODE)
+		BT8XXEMU_Flash_destroy(flash);
+		flash = NULL;
+#endif
 	}
 
 	BT8XXEMU_Emulator *emulator;
 
+#if defined(BT815EMU_MODE)
+	BT8XXEMU_Flash *flash;
+#endif
+
 	void swrbegin(size_t address)
 	{
-		BT8XXEMU_cs(emulator, 1);
+		BT8XXEMU_chipSelect(emulator, 1);
 
 		BT8XXEMU_transfer(emulator, (2 << 6) | ((address >> 16) & 0x3F));
 		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
@@ -94,7 +117,7 @@ public:
 
 	void swrend()
 	{
-		BT8XXEMU_cs(emulator, 0);
+		BT8XXEMU_chipSelect(emulator, 0);
 	}
 
 	void wr32(size_t address, uint32_t value)
@@ -106,7 +129,7 @@ public:
 
 	uint32_t rd32(size_t address)
 	{
-		BT8XXEMU_cs(emulator, 1);
+		BT8XXEMU_chipSelect(emulator, 1);
 
 		BT8XXEMU_transfer(emulator, (address >> 16) & 0x3F);
 		BT8XXEMU_transfer(emulator, (address >> 8) & 0xFF);
@@ -119,7 +142,7 @@ public:
 		value |= BT8XXEMU_transfer(emulator, 0) << 16;
 		value |= BT8XXEMU_transfer(emulator, 0) << 24;
 
-		BT8XXEMU_cs(emulator, 0);
+		BT8XXEMU_chipSelect(emulator, 0);
 		return value;
 	}
 
@@ -134,6 +157,15 @@ public:
 
 	bool loop()
 	{
+		/*
+		wr32(REG_CMDB_WRITE, CMD_FLASHATTACH);
+		Sleep(1500);
+		wr32(REG_CMDB_WRITE, CMD_FLASHDETACH);
+		Sleep(3000);
+		*/
+
+		// Sleep(5000);
+
 		if (!fh)
 		{
 			Sleep(10);
@@ -235,10 +267,13 @@ int main(int, char* [])
 	SetProcessAffinityMask(GetCurrentProcess(), 3);
 #endif
 	
-	const int nb = 2;
+	printf("%s\n\n", BT8XXEMU_version());
+
+	const int nb = 1;
 	char *xbu[nb] = {
 		"xbu/SCATTER.XBU",
-		"xbu/STARS.XBU"
+		// "xbu/BIRDS.XBU",
+		// "xbu/STARS.XBU",
 	};
 	PlayXBU *app[nb];
 	for (int i = 0; i < nb; ++i)

@@ -2,6 +2,7 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT815 Emulator Library
 Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
@@ -17,7 +18,6 @@ Author: Jan Boon <jan@no-break.space>
 // Project includes
 #include "bt8xxemu_inttypes.h"
 
-#ifndef BT8XXEMU_NODEFS
 #ifdef FT810EMU_MODE
 #define FT800EMU_SCREEN_WIDTH_MAX 2048
 #define FT800EMU_SCREEN_HEIGHT_MAX 2048
@@ -27,12 +27,13 @@ Author: Jan Boon <jan@no-break.space>
 #endif
 #define FT800EMU_SCREEN_HEIGHT_MASK (FT800EMU_SCREEN_HEIGHT_MAX - 1)
 
+#define FT800EMU_BITMAP_HANDLE_NB 32
+
 #define FT800EMU_DEBUGMODE_NONE 0
 #define FT800EMU_DEBUGMODE_ALPHA 1
 #define FT800EMU_DEBUGMODE_TAG 2
 #define FT800EMU_DEBUGMODE_STENCIL 3
 #define FT800EMU_DEBUGMODE_COUNT 4
-#endif
 
 namespace FT8XXEMU {
 	class System;
@@ -46,14 +47,29 @@ struct BitmapInfo
 {
 	uint32_t Source;
 	int LayoutFormat;
-	int LayoutWidth;
+	int LayoutPixelWidth;
+	int LayoutPixelHeight;
 	int LayoutStride;
-	int LayoutHeight;
+	int LayoutLines;
 	int SizeFilter;
 	int SizeWrapX;
 	int SizeWrapY;
 	int SizeWidth;
 	int SizeHeight;
+#ifdef BT815EMU_MODE
+	int ExtFormat;
+	union
+	{
+		uint32_t U;
+		struct {
+			uint8_t B;
+			uint8_t G;
+			uint8_t R;
+			uint8_t A;
+		};
+	} Swizzle;
+#endif
+	
 };
 
 #ifdef FT810EMU_MODE
@@ -139,7 +155,7 @@ private:
 	Touch *m_Touch = 0;
 
 	// Master copy of bitmap
-	BitmapInfo m_BitmapInfoMaster[32];
+	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { 0 };
 
 	bool m_RegPwmDutyEmulation;
 

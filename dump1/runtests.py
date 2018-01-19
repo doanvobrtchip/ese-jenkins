@@ -29,7 +29,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_line_scatter.1',
         'test_line_scatter.2',
         'test_line_scatter.3',
-        'test_lines_offscreen.0',
         'test_lines_parse.0',
         'test_lines_subpixel.0',
         'test_lines_xy.0',
@@ -52,7 +51,6 @@ def main(dump1, ref_dir, quiet, only = None):
         'test_scissor_overlap.0',
         'test_shortlines.0',
         'test_state_saverestore.0',
-        'test_stencil_ops.0',
         'test_textvga_1.0',
         'test_uiscape.0',
     ])
@@ -60,12 +58,17 @@ def main(dump1, ref_dir, quiet, only = None):
     def run1(t):
         expected = Image.open(os.path.join(dump_dir, t + ".png"))
         w,h = expected.size
-
+        bgra = None
         try:
             subprocess.check_call([dump1, os.path.join(dump_dir, t + ".vc1dump"), "out"], stdout = open("0", "w"))
         except subprocess.CalledProcessError:
             return 'CRASH'
-        bgra = Image.fromstring("RGBA", (w, h), open("out").read())
+        try:
+            fi = open("out", mode='rb')
+            bgra = Image.fromstring("RGBA", (w, h), fi.read())
+            fi.close()
+        except ValueError:
+            return 'incorrect size %d, expect %d' % (os.path.getsize("out"), w*h*4)
         (b,g,r,a) = bgra.split()
         actual = Image.merge("RGBA", (r,g,b,a))
         error4 = abs(np.array(actual).astype(int) - np.array(expected).astype(int))

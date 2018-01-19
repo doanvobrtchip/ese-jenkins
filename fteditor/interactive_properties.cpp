@@ -32,6 +32,9 @@ static int s_CoordMin[FTEDITOR_DEVICE_NB] = {
 	-1024,
 	-4096,
 	-4096,
+	-4096,
+	-4096,
+	-4096,
 };
 
 static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
@@ -39,11 +42,17 @@ static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
 	1023,
 	4095,
 	4095,
+	4095,
+	4095,
+	4095,
 };
 
 static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
 	512,
 	512,
+	2048,
+	2048,
+	2048,
 	2048,
 	2048,
 };
@@ -491,6 +500,14 @@ void InteractiveProperties::addAlpha(int alpha)
 	addSpinBox(alpha, 0, 255, "Alpha: ", "Set alpha");
 }
 
+void InteractiveProperties::addAlphaHex(int alpha)
+{
+	PropertiesSpinBoxAlphaHex *prop = new PropertiesSpinBoxAlphaHex(this, tr("Set alpha"), alpha);
+	addLabeledWidget(tr("Alpha") + ": ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
 void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 {
 	QHBoxLayout *hbox = new QHBoxLayout();
@@ -604,6 +621,26 @@ void InteractiveProperties::addBitmapFormat(int format)
 		tr("Format") + ": ", tr("Set bitmap format"));
 }
 
+void InteractiveProperties::addExtFormat(int format)
+{
+	// TODO: Identifier remapping, centralized combobox listings
+	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
+	if (!g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE])
+		return;
+	addComboBox(format,
+		g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+		g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+		g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+		tr("Format") + ": ", tr("Set extended bitmap format"));
+}
+
+void InteractiveProperties::addSwizzle(int swizzle, const QString &label, const QString &undoMessage)
+{
+	addComboBox(swizzle, g_DlEnumSwizzle, DL_ENUM_SWIZZLE_NB, label, undoMessage);
+}
+
 void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const QString &undoMessage)
 {
 	addComboBox(wrap, g_DlEnumBitmapWrap, DL_ENUM_BITMAP_WRAP_NB, label, undoMessage);
@@ -612,6 +649,34 @@ void InteractiveProperties::addBitmapWrap(int wrap, const QString &label, const 
 void InteractiveProperties::addBitmapFilter(int filter)
 {
 	addComboBox(filter, g_DlEnumBitmapFilter, DL_ENUM_BITMAP_FILTER_NB, tr("Filter") + ": ", tr("Set bitmap filter"));
+}
+
+void InteractiveProperties::addAnimLoop(int loop)
+{
+	addComboBox(loop, g_DlEnumAnimLoop, DL_ENUM_BITMAP_FILTER_NB, tr("Loop") + ": ", tr("Set animation loop"));
+}
+
+void InteractiveProperties::addAddressFlashOpt(int address, bool negative)
+{
+	; {
+		PropertiesSpinBoxAddressFlashOpt *prop = new PropertiesSpinBoxAddressFlashOpt(this, tr("Set address"), address, negative);
+		addLabeledWidget("Address: ", prop);
+		m_CurrentProperties.push_back(prop);
+		prop->done();
+	}
+	; {
+		PropertiesCheckBox *prop = new PropertiesCheckBox(this, tr("Set flash"), address, 0x800000);
+		addLabeledWidget("Flash: ", prop);
+		m_CurrentProperties.push_back(prop);
+	}
+}
+
+void InteractiveProperties::addAddressFlash(int address)
+{
+	PropertiesSpinBoxAddressFlash *prop = new PropertiesSpinBoxAddressFlash(this, tr("Set flash address"), address);
+	addLabeledWidget("Flash address: ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
 }
 
 void InteractiveProperties::addAddress(int address, bool negative)
@@ -1071,8 +1136,8 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_TRANSLATE");
-				addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set x translation");
-				addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", "Set y translation");
+				addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", tr("Set x translation"));
+				addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", tr("Set y translation"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1084,8 +1149,8 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SCALE");
-				addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set x scale");
-				addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", "Set y scale");
+				addSpinBox65536(0, 0x80000000, 0x7FFFFFFF, "X: ", tr("Set x scale"));
+				addSpinBox65536(1, 0x80000000, 0x7FFFFFFF, "Y: ", tr("Set y scale"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1097,7 +1162,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_ROTATE");
-				addSpinBoxAngle65536(0, 0x80000000, 0x7FFFFFFF, "X: ", "Set angle");
+				addSpinBoxAngle65536(0, 0x80000000, 0x7FFFFFFF, tr("Angle") + ": ", tr("Set angle"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1401,9 +1466,295 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SETBITMAP");
-				addAddress(0, true);
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addAddressFlashOpt(0, true);
+				else
+					addAddress(0, true);
 				addBitmapFormat(1);
 				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHERASE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHERASE."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHERASE");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHWRITE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHWRITE."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHWRITE");
+				addAddressFlash(0);
+				addMemorySize(1);
+				addStream(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHREAD:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHREAD."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHREAD");
+				addAddress(0, false);
+				addAddressFlash(1);
+				addMemorySize(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHUPDATE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHUPDATE."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHUPDATE");
+				addAddressFlash(0);
+				addAddress(1, false);
+				addMemorySize(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHDETACH:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHDETACH."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHDETACH");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHATTACH:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHATTACH."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHATTACH");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHFAST:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHFAST."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHFAST");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FLASHSPIDESEL:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHSPIDESEL."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHSPIDESEL");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		// case CMD_FLASHSPITX:
+		// case CMD_FLASHSPIRX:
+		case CMD_FLASHSOURCE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHSOURCE."));
+			if (editor)
+			{
+				setTitle("CMD_FLASHSOURCE");
+				addAddressFlash(0);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_CLEARCACHE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CLEARCACHE."));
+			if (editor)
+			{
+				setTitle("CMD_CLEARCACHE");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_INFLATE2:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE2."));
+			if (editor)
+			{
+				setTitle("CMD_INFLATE2");
+				addAddress(0, false);
+				addOptions(1, OPT_MEDIAFIFO | OPT_FLASH);
+				addStream(2); // Stream not applicable when OPT_FLASH given
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ROTATEAROUND:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ROTATEAROUND."));
+			if (editor)
+			{
+				setTitle("CMD_ROTATEAROUND");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addSpinBox65536(2, 0x80000000UL, 0x7FFFFFFFUL, tr("Angle") + ": ", tr("Set angle"));
+				addSpinBox65536(3, 0x80000000UL, 0x7FFFFFFFUL, tr("Scale") + ": ", tr("Set scale"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_RESETFONTS:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_RESETFONTS."));
+			if (editor)
+			{
+				setTitle("CMD_RESETFONTS");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMSTART:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMSTART."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMSTART");
+				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
+				addAddressFlash(1);
+				addAnimLoop(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMSTOP:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMSTOP."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMSTOP");
+				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMXY:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMXY."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMXY");
+				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
+				addXY(1, 2, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMDRAW:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMDRAW."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMDRAW");
+				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_GRADIENTA:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GRADIENTA."));
+			if (editor)
+			{
+				setTitle("CMD_GRADIENTA");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addAlphaHex(2);
+				addColorHex(2);
+				addXY(3, 4, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addAlphaHex(5);
+				addColorHex(5);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FILLWIDTH:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FILLWIDTH."));
+			if (editor)
+			{
+				setTitle("CMD_FILLWIDTH");
+				addWidth(0, 0, FTEDITOR_COORD_MAX);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_APPENDF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_APPENDF."));
+			if (editor)
+			{
+				setTitle("CMD_APPENDF");
+				addAddressFlash(0);
+				addMemorySize(1);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMFRAME:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMFRAME."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMFRAME");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addAddressFlash(2);
+				addSpinBox(3, 0, 0x7FFFFFFF, tr("Frame") + ": ", tr("Set frame"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		// case CMD_NOP:
+		// case CMD_SHA1:
+		// case CMD_HMAC:
+		// case CMD_LAST_:
+		case CMD_VIDEOSTARTF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOSTARTF."));
+			if (editor)
+			{
+				setTitle("CMD_VIDEOSTARTF");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1429,7 +1780,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("BITMAP_SOURCE");
-				addAddress(0, true);
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addAddressFlashOpt(0, true);
+				else
+					addAddress(0, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1682,11 +2036,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_A:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_A."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_A");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "A: ", "Set transform a");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision A");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1694,11 +2059,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_B:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_B."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_B");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "B: ", "Set transform b");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision B");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1718,11 +2094,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_D:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_D."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_D");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "D: ", "Set transform d");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision D");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1730,11 +2117,22 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		case FTEDITOR_DL_BITMAP_TRANSFORM_E:
 		{
-			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E_BT815."));
+			else
+				m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_TRANSFORM_E."));
 			if (editor)
 			{
 				setTitle("BITMAP_TRANSFORM_E");
-				addSpinBox256(0, 0xFFFF0000, 0xFFFF, "E: ", "Set transform e");
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addCheckBox(0, "Precision: ", "Set transform precision E");
+					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E"); // TODO: Precision-aware SpinBox
+				}
+				else
+				{
+					addSpinBox256(0, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E");
+				}
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1973,6 +2371,44 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_EXT_FORMAT."));
+			if (editor)
+			{
+				setTitle("BITMAP_EXT_FORMAT");
+				addExtFormat(0);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FTEDITOR_DL_BITMAP_SWIZZLE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_BITMAP_SWIZZLE_FORMAT."));
+			if (editor)
+			{
+				setTitle("BITMAP_SWIZZLE");
+				addSwizzle(0, "R: ", tr("Set swizzle R"));
+				addSwizzle(1, "G: ", tr("Set swizzle G"));
+				addSwizzle(2, "B: ", tr("Set swizzle B"));
+				addSwizzle(3, "A: ", tr("Set swizzle A"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case FTEDITOR_DL_INT_FRR:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_INT_FRR."));
+			if (editor)
+			{
+				setTitle("INT_FRR");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;

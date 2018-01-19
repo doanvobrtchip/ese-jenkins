@@ -24,7 +24,7 @@
 #include <QString>
 
 // Emulator includes
-#include "ft8xxemu_inttypes.h"
+#include "bt8xxemu_inttypes.h"
 
 // Project includes
 #include "constant_mapping.h"
@@ -48,6 +48,12 @@ extern const char *g_DlEnumBitmapWrap[DL_ENUM_BITMAP_WRAP_NB];
 
 #define DL_ENUM_PRIMITIVE_NB 10
 extern const char *g_DlEnumPrimitive[DL_ENUM_PRIMITIVE_NB];
+
+#define DL_ENUM_SWIZZLE_NB 6
+extern const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB];
+
+#define DL_ENUM_ANIM_LOOP_NB 3
+extern const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB];
 
 #define DLPARSED_MAX_PARAMETER 12
 struct DlParsed
@@ -111,18 +117,25 @@ public:
 private:
 	static void initVC1();
 	static void initVC2();
+	static void initVC3();
 	static uint32_t compileVC1(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static uint32_t compileVC2(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static uint32_t compileVC3(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static void compileVC1(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void toStringVC1(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC2(int deviceIntf, std::string &dst, uint32_t v); // DL only
+	static void toStringVC3(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static void toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+	static void toStringVC3(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static ParameterOptions *defaultParamVC1();
 	static ParameterOptions *defaultParamVC2();
+	static ParameterOptions *defaultParamVC3();
 	static ParameterOptions *defaultCmdParamVC1();
 	static ParameterOptions *defaultCmdParamVC2();
+	static ParameterOptions *defaultCmdParamVC3();
 
 	static const std::map<std::string, int> *m_IdMap[FTEDITOR_DEVICE_NB];
 	static const std::map<std::string, int> *m_ParamMap[FTEDITOR_DEVICE_NB];

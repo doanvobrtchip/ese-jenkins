@@ -26,7 +26,7 @@
 #include <QGroupBox>
 
 // Emulator includes
-#include <ft8xxemu_diag.h>
+#include <bt8xxemu_diag.h>
 
 // Project includes
 #include "main_window.h"
@@ -35,6 +35,9 @@
 #include "constant_common.h"
 
 namespace FTEDITOR {
+
+extern BT8XXEMU_Emulator *g_Emulator;
+extern BT8XXEMU_Flash *g_Flash;
 
 static QString asRaw(uint32_t value)
 {
@@ -189,7 +192,7 @@ bool wantRegister(int regEnum)
 void Inspector::initDisplayReg()
 {
 	// 102400
-	//const uint8_t *ram = FT8XXEMU_getRam();
+	//const uint8_t *ram = BT8XXEMU_getRam();
 	m_RegisterCopy.reserve(FTEDITOR_REG_NB);
 	m_RegisterItems.reserve(FTEDITOR_REG_NB);
 	for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum)
@@ -235,7 +238,7 @@ void Inspector::frameEmu()
 	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
 		handleUsage[handle] = false;
 
-	const uint32_t *dl = FT8XXEMU_getDisplayList();
+	const uint32_t *dl = BT8XXEMU_getDisplayList(g_Emulator);
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListCopy[i] != dl[i])
@@ -272,7 +275,7 @@ void Inspector::frameQt()
 
 	if (m_RegisterItems.size() == FTEDITOR_REG_NB)
 	{
-		uint8_t *ram = FT8XXEMU_getRam();
+		uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 		for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum)
 		{
 			if (m_RegisterItems[regEnum])

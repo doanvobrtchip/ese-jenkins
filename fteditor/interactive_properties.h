@@ -21,7 +21,7 @@
 #include <QGroupBox>
 
 // Emulator includes
-#include <ft8xxemu_inttypes.h>
+#include <bt8xxemu_inttypes.h>
 
 // Project includes
 
@@ -87,6 +87,7 @@ private:
 	void addCheckBox(int index, const QString &label, const QString &undoMessage);
 	void addWidth16(int width, int minim, int maxim, bool size);
 	void addAlpha(int alpha);
+	void addAlphaHex(int alpha);
 	void addByteFlag(int flag, const QString &undoMessage);
 	// void addAddress(int address);
 	void addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage);
@@ -97,10 +98,14 @@ private:
 	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);
 	void addPrimitive(int primitive);
 	void addBitmapFormat(int format);
+	void addExtFormat(int format);
+	void addSwizzle(int swizzle, const QString &label, const QString &undoMessage);
 	void addBitmapWrap(int wrap, const QString &label, const QString &undoMessage);
 	void addBitmapFilter(int filter);
+	void addAnimLoop(int loop);
+	void addAddressFlashOpt(int address, bool negative);
+	void addAddressFlash(int address);
 	void addAddress(int address, bool negative);
-	void addSize(int address);
 	void addMemorySize(int size);
 	void addCaptureButton(const QString &text, const QString &undoMessage);
 	void addHelp(const QString &text);
@@ -110,7 +115,10 @@ private slots:
 
 private:
 	class PropertiesWidget;
+	class PropertiesSpinBoxAlphaHex;
 	class PropertiesSpinBoxAddress;
+	class PropertiesSpinBoxAddressFlash;
+	class PropertiesSpinBoxAddressFlashOpt;
 	class PropertiesSpinBox;
 	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;

@@ -13,6 +13,14 @@ Author: Jan Boon <jan@no-break.space>
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
 #define BT8XXEMU_VERSION_API 11
 
+#ifdef BT8XXEMU_REMOTE
+#	ifndef WIN32
+#		undef BT8XXEMU_REMOTE /* Not yet supported */
+#	else
+#		define BT8XXEMU_STATIC
+#	endif
+#endif
+
 #ifndef BT8XXEMU_STATIC
 #	ifdef BT8XXEMU_EXPORT_DYNAMIC
 #		ifdef WIN32
@@ -35,13 +43,21 @@ Author: Jan Boon <jan@no-break.space>
 
 namespace BT8XXEMU {
 	class Emulator;
+	class Flash;
 }
 
 typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
+typedef BT8XXEMU::Flash BT8XXEMU_Flash;
+
+#elif defined(BT8XXEMU_REMOTE)
+
+typedef struct BT8XXEMUC_Remote BT8XXEMU_Emulator;
+typedef struct BT8XXEMUC_Remote BT8XXEMU_Flash;
 
 #else
 
 typedef void BT8XXEMU_Emulator;
+typedef void BT8XXEMU_Flash;
 
 #endif /* #ifdef __cplusplus */
 
@@ -60,7 +76,7 @@ typedef enum
 	BT8XXEMU_EmulatorFT811 = 0x0811,
 	BT8XXEMU_EmulatorFT812 = 0x0812,
 	BT8XXEMU_EmulatorFT813 = 0x0813,
-	// BT8XXEMU_EmulatorBT815 = 0x0815,
+	BT8XXEMU_EmulatorBT815 = 0x0815,
 } BT8XXEMU_EmulatorMode;
 
 typedef enum
@@ -151,13 +167,13 @@ typedef struct
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *RomFilePath;
+	wchar_t RomFilePath[260];
 	// Replaces the default builtin OTP with a custom OTP from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *OtpFilePath;
+	wchar_t OtpFilePath[260];
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	char *CoprocessorRomFilePath;
+	wchar_t CoprocessorRomFilePath[260];
 
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
@@ -171,7 +187,7 @@ typedef struct
 	// The contents of the buffer pointer are undefined after this
 	// function returns. Create a copy to use it on another thread.
 	// Return false (0) when the application must exit, otherwise return true (1).
-	int(*Graphics)(int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
+	int(*Graphics)(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
 
 	// Interrupt handler
 	// void (*Interrupt)(void *sender, void *context);
@@ -185,7 +201,46 @@ typedef struct
 	// User context that will be passed along to callbacks
 	void *UserContext;
 
+	// Flash device to connect with, default NULL
+	BT8XXEMU_Flash *Flash;
+
 } BT8XXEMU_EmulatorParameters;
+
+typedef struct
+{
+	// Device type, by library name, default "mx25lemu"
+	wchar_t DeviceType[26];
+
+	// Size of the flash memory in bytes, default 8MB
+	size_t SizeBytes;
+
+	// Data file to load onto the flash, default NULL
+	wchar_t DataFilePath[260];
+
+	// Internal flash status file, device specific, default NULL
+	wchar_t StatusFilePath[260];
+
+	// Write actions to the flash are persisted to the used file.
+	// This is accomplished by memory mapping the file, instead of
+	// the file being copied to memory. Default false
+	bool Persistent;
+
+	// Print log to standard output. Default false
+	bool StdOut;
+
+	// Data buffer that is written to the flash initially,
+	// overriding any existing contents that may have been
+	// loaded from a flash file already, default NULL and 0
+	void *Data;
+	size_t DataSizeBytes;
+
+	// Log callback
+	void(*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
+
+	// User context that will be passed along to callbacks
+	void *UserContext;
+
+} BT8XXEMU_FlashParameters;
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,22 +251,22 @@ extern "C" {
 //////////
 
 // Return version information
-BT8XXEMU_API const char *BT8XXEMU_version();
+BT8XXEMU_API extern const char *BT8XXEMU_version();
 
 // Initialize the default emulator parameters
-BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
+BT8XXEMU_API extern void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params, BT8XXEMU_EmulatorMode mode);
 
 // Run the emulator on the current thread. Returns when the emulator is fully stopped when a Main function is supplied, returns when the emulator is fully started otherwise. Parameter versionApi must be set to BT8XXEMU_VERSION_API
-BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params);
+BT8XXEMU_API extern void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XXEMU_EmulatorParameters *params);
 
 // Stop the emulator. Can be called from any thread. Returns when the emulator has fully stopped. Safe to call multiple times.
-BT8XXEMU_API void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator);
 
 // Destroy the emulator. Calls BT8XXEMU_stop implicitly. Emulator must be destroyed before process exits.
-BT8XXEMU_API void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator);
 
 // Poll if the emulator is still running. Returns 0 when the output window has been closed, or when the emulator has been stopped.
-BT8XXEMU_API int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
+BT8XXEMU_API extern int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
 
 /////////////
 // RUNTIME //
@@ -220,11 +275,8 @@ BT8XXEMU_API int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator);
 // Transfer data over the imaginary SPI bus. Call from the MCU thread (from the setup/loop callbacks). See FT8XX documentation for SPI transfer protocol
 BT8XXEMU_API extern uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data);
 
-// Identical to BT8XXEMU_transfer. Transfer data to the last emulator selected by BT8XXEMU_cs. Supports only a single MCU thread
-BT8XXEMU_API extern uint8_t BT8XXEMU_transferSelect(uint8_t data);
-
-// Set cable select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
-BT8XXEMU_API extern void BT8XXEMU_cs(BT8XXEMU_Emulator *, int cs);
+// Set chip select. Must be set to 1 to start data transfer, 0 to end. See FT8XX documentation for CS_N
+BT8XXEMU_API extern void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *, int cs);
 
 // Returns 1 if there is an interrupt flag set. Depends on mask. See FT8XX documentation for INT_N
 BT8XXEMU_API extern int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator);
@@ -234,10 +286,30 @@ BT8XXEMU_API extern int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator);
 //////////////
 
 // Set touch XY. Param idx 0..4. Call on every frame during mouse down or touch when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int x, int y, int pressure);
+BT8XXEMU_API extern void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int x, int y, int pressure);
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
-BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
+BT8XXEMU_API extern void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
+
+///////////
+// FLASH //
+///////////
+
+#ifndef BT8XXEMU_FLASH_LIBRARY
+
+// Initialize the default flash emulator parameters
+BT8XXEMU_API extern void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *params);
+
+// Create flash emulator instance
+BT8XXEMU_API extern BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashParameters *params);
+
+// Destroy flash emulator instance
+BT8XXEMU_API extern void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash);
+
+// Transfer data using SPI or Quad SPI protocol. Bit 0:3 are data, bit 4 is cable select (0 active), SCK is clock. In single mode bit 0 is MOSI and bit 1 is MISO
+BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal);
+
+#endif
 
 #ifdef __cplusplus 
 } /* extern "C" */

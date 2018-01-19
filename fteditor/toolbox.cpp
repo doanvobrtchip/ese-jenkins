@@ -175,6 +175,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primGradient->setText(0, tr("Gradient"));
 		primGradient->setData(1, Qt::UserRole, QVariant((uint)2));
 		primGradient->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
+		QTreeWidgetItem *primGradientA = new QTreeWidgetItem(m_Widgets);
+		primGradientA->setText(0, tr("Gradient A"));
+		primGradientA->setData(1, Qt::UserRole, QVariant((uint)2));
+		primGradientA->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENTA));
+		m_CoprocessorBT815Plus.push_back(primGradientA);
 	}
 
 	m_Utilities = new QTreeWidgetItem(m_Tools);
@@ -639,6 +644,10 @@ void Toolbox::bindCurrentDevice()
 	for (size_t i = 0; i < m_CoprocessorFT810Plus.size(); ++i)
 	{
 		m_CoprocessorFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor()));
+	}
+	for (size_t i = 0; i < m_CoprocessorBT815Plus.size(); ++i)
+	{
+		m_CoprocessorBT815Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && m_LineEditor->isCoprocessor()));
 	}
 	for (size_t i = 0; i < m_DisplayListFT810Plus.size(); ++i)
 	{

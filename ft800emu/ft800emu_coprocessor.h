@@ -34,7 +34,7 @@ namespace FT800EMU {
 class Coprocessor
 {
 public:
-	Coprocessor(FT8XXEMU::System *system, Memory *memory, const char *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
+	Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath = 0, BT8XXEMU_EmulatorMode mode = BT8XXEMU_EmulatorFT800);
 	~Coprocessor();
 
 	void executeManual();

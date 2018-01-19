@@ -29,7 +29,7 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
-#define FT_VCDUMP_VISIBLE false
+#define FT_VCDUMP_VISIBLE true
 
 class QTemporaryDir;
 class QTreeView;
@@ -106,7 +106,7 @@ public:
 
 	bool waitingCoprocessorAnimation();
 
-	void focusDlEditor();
+	void focusDlEditor(bool forceOnly = false);
 	void focusCmdEditor();
 	void focusProperties();
 
