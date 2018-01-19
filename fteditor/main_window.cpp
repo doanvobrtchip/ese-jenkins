@@ -3765,22 +3765,15 @@ void MainWindow::startEmulatorInternal()
 	printf("Start the emulator\n");
 	BT8XXEMU_EmulatorParameters params;
 	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
-	params.Main = emuMain;
-	params.Flags =
-		// FT800EMU::EmulatorEnableKeyboard
-		/*|*/ BT8XXEMU_EmulatorEnableMouse
-		//| FT800EMU::EmulatorEnableDebugShortkeys
-//#ifdef FTEMU_SDL2 // Cannot combine WASAPI with Qt
-		| BT8XXEMU_EmulatorEnableAudio
-//#endif
-		| BT8XXEMU_EmulatorEnableCoprocessor
-		| BT8XXEMU_EmulatorEnableGraphicsMultithread
-		// | BT8XXEMU_EmulatorEnableDynamicDegrade
-		| BT8XXEMU_EmulatorEnableMainPerformance
-		;
+	params.Main  =  emuMain;
+	params.Flags =  BT8XXEMU_EmulatorEnableMouse
+				  | BT8XXEMU_EmulatorEnableAudio
+				  | BT8XXEMU_EmulatorEnableCoprocessor
+				  | BT8XXEMU_EmulatorEnableGraphicsMultithread
+				  | BT8XXEMU_EmulatorEnableMainPerformance
+					;
 	params.Mode = deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	params.Close = closeDummy;
-	// params.Keyboard = keyboard;
 	s_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
