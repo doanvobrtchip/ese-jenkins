@@ -1,6 +1,9 @@
 #include "device_display_settings_dialog.h"
 #include "device_manager.h"
 
+#include "constant_mapping.h"
+
+
 namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER
@@ -21,7 +24,7 @@ namespace FTEDITOR {
 		connect(buttonBox, SIGNAL(accepted()), this, SLOT(saveInputValues()));
 	}
 
-	//this layout consist of a mutually exclusive radio buttons for the screen resolutions
+	//this layout consists of a mutually exclusive radio buttons for the screen resolutions
 	QGroupBox *DeviceDisplaySettingsDialog::createRadioButtonsGroup(){
 		QGroupBox *groupBox = new QGroupBox(tr("Device type"));
 
@@ -42,26 +45,27 @@ namespace FTEDITOR {
 		VM800BU43A = new QRadioButton(tr("VM800BU43A"));
 		VM800BU43A->setToolTip(tr("FT800 Basic USB module with 4.3\" display."));
 		VM800BU50A = new QRadioButton(tr("VM800BU50A"));
+		
 		VM800BU50A->setToolTip(tr("FT800 Basic USB module with 5.0\" display."));
 
-        ME813AUWH50C = new QRadioButton(tr("ME813AU_WH50C(800x480)"));
-        ME813AUWH50C->setToolTip(tr("FT813 module with 5.0\" display and FT4222 USB-SPI"));
+		ME813AUWH50C = new QRadioButton(tr("ME813AU_WH50C(800x480)"));
+		ME813AUWH50C->setToolTip(tr("FT813 module with 5.0\" display and FT4222 USB-SPI"));
 
 		QVBoxLayout *VBox = new QVBoxLayout;
 		VBox->addWidget(VM800B35A);
 		VBox->addWidget(VM800B43A);
 		VBox->addWidget(VM800B50A);
-		//VM800BVBox->addStretch(1);
+		
 		VBox->addWidget(VM800C35A);
 		VBox->addWidget(VM800C43A);
 		VBox->addWidget(VM800C50A);
-		//VM800BVBox->addStretch(1);
+		
 
 		VBox->addWidget(VM800BU35A);
 		VBox->addWidget(VM800BU43A);
 		VBox->addWidget(VM800BU50A);
 
-        VBox->addWidget(ME813AUWH50C);
+		VBox->addWidget(ME813AUWH50C);
 		groupBox->setLayout(VBox);
 
 		return groupBox;
@@ -70,29 +74,61 @@ namespace FTEDITOR {
 
 	void DeviceDisplaySettingsDialog::updateSyncDeviceSelection(){
 		QString selectedDevice = pParent->getSyncDeviceName();
-		if (selectedDevice == "VM800B35A")
-			VM800B35A->setChecked(true);
-		else if (selectedDevice == "VM800B43A")
-			VM800B43A->setChecked(true);
-		else if (selectedDevice == "VM800B50A")
-			VM800B50A->setChecked(true);
-		else if (selectedDevice == "VM800C35A")
-			VM800C35A->setChecked(true);
-		else if (selectedDevice == "VM800C43A")
-			VM800C43A->setChecked(true);
-		else if (selectedDevice == "VM800C50A")
-			VM800C50A->setChecked(true);
-		else if (selectedDevice == "VM800BU35A")
-			VM800BU35A->setChecked(true);
-		else if (selectedDevice == "VM800BU43A")
-			VM800BU43A->setChecked(true);
-		else if (selectedDevice == "VM800BU50A")
-			VM800BU50A->setChecked(true);
-        else if (selectedDevice == "ME813AU_WH50C(800x480)")
-            ME813AUWH50C->setChecked(true);
-        else
-			VM800B43A->setChecked(true);
 
+		; {
+			VM800B35A->setVisible(false);
+			VM800B43A->setVisible(false);
+			VM800B50A->setVisible(false);
+			VM800C35A->setVisible(false);
+			VM800C50A->setVisible(false);
+			VM800C43A->setVisible(false);
+			VM800BU35A->setVisible(false);
+			VM800BU43A->setVisible(false);
+			VM800BU50A->setVisible(false);
+
+			ME813AUWH50C->setVisible(false);
+		}
+
+		if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT800 ||
+			FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801) {
+
+			VM800B35A->setVisible(true);
+			VM800B43A->setVisible(true);
+			VM800B50A->setVisible(true);
+			VM800C35A->setVisible(true);
+			VM800C50A->setVisible(true);
+			VM800C43A->setVisible(true);
+			VM800BU35A->setVisible(true);
+			VM800BU43A->setVisible(true);
+			VM800BU50A->setVisible(true);
+
+			if (selectedDevice == "VM800B35A")
+				VM800B35A->setChecked(true);
+			else if (selectedDevice == "VM800B43A")
+				VM800B43A->setChecked(true);
+			else if (selectedDevice == "VM800B50A")
+				VM800B50A->setChecked(true);
+			else if (selectedDevice == "VM800C35A")
+				VM800C35A->setChecked(true);
+			else if (selectedDevice == "VM800C43A")
+				VM800C43A->setChecked(true);
+			else if (selectedDevice == "VM800C50A")
+				VM800C50A->setChecked(true);
+			else if (selectedDevice == "VM800BU35A")
+				VM800BU35A->setChecked(true);
+			else if (selectedDevice == "VM800BU43A")
+				VM800BU43A->setChecked(true);
+			else if (selectedDevice == "VM800BU50A")
+				VM800BU50A->setChecked(true);
+		}
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 &&
+			FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815) {
+
+			ME813AUWH50C->setVisible(true);
+
+			if (selectedDevice == "ME813AU_WH50C(800x480)")
+				ME813AUWH50C->setChecked(true);
+		}
 	}
 
 	void DeviceDisplaySettingsDialog::execute(){
@@ -102,17 +138,6 @@ namespace FTEDITOR {
 
 
 	void DeviceDisplaySettingsDialog::saveInputValues(){
-		/*
-		if (VM800B35A->isChecked() || VM800C35A->isChecked() || VM800BU35A->isChecked()){
-			pParent->setDeviceandScreenSize("320x240");
-
-		}
-		else if (VM800B43A->isChecked() || VM800C43A->isChecked() || VM800BU43A->isChecked() ||
-			VM800B50A->isChecked() || VM800C50A->isChecked() || VM800BU50A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272");
-		}
-		*/
-
 		if (VM800B35A->isChecked()) {
 			pParent->setDeviceandScreenSize("320x240", "VM800B35A");
 		}
@@ -139,9 +164,9 @@ namespace FTEDITOR {
 		}
 		else if (VM800BU50A->isChecked()){
 			pParent->setDeviceandScreenSize("480x272", "VM800BU50A");
-        }else if (ME813AUWH50C->isChecked()){
-            pParent->setDeviceandScreenSize("800x480", "ME813AU_WH50C(800x480)");
-        }
+		}else if (ME813AUWH50C->isChecked()){
+			pParent->setDeviceandScreenSize("800x480", "ME813AU_WH50C(800x480)");
+		}
 
 		this->accept();
 	}
