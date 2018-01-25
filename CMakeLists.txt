@@ -65,6 +65,8 @@ OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
 
 OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
+OPTION(WITH_FREETYPE_STATIC "Include dependencies for static Freetype build" OFF)
+
 OPTION(WITH_FT800EMU "Include FT800EMU" ON)
 
 OPTION(WITH_FT810EMU "Include FT810EMU" ON)
