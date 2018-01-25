@@ -69,6 +69,8 @@ inline int addressSigned(int deviceIntf, int address)
 	return neg ? masked | negmask : masked;
 }
 
+inline bool flashSupport(int deviceIntf) { return deviceIntf >= FTEDITOR_BT815; }
+
 // RAM addresses
 #define FTEDITOR_RAM_G 0
 #define FTEDITOR_RAM_G_END 1

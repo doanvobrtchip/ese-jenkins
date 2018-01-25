@@ -23,6 +23,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Project includes
 #include "constant_mapping.h"
+#include "constant_mapping_flash.h"
 
 namespace FTEDITOR {
 
@@ -138,14 +139,22 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 		// Copy the params for the new thread to use
 		s_EmulatorParameters = params;
 
+		// Attach flash
+		if (flashSupport(FTEDITOR_CURRENT_DEVICE))
+		{
+			BT8XXEMU_FlashParameters flashParams;
+			BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+			wcscpy(flashParams.DeviceType, flashDeviceType(FTEDITOR_CURRENT_FLASH));
+			flashParams.SizeBytes = flashSizeBytes(FTEDITOR_CURRENT_FLASH);
+			flashParams.Persistent = false;
+			flashParams.StdOut = false;
+			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
 #ifdef FTEDITOR_STDFLASH
-		// Attach standard flash image (for testing)
-		BT8XXEMU_FlashParameters flashParams;
-		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-		wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH);
-		g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
-		s_EmulatorParameters.Flash = g_Flash;
+			wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH); // Standard flash image (for testing)
 #endif
+			g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+			s_EmulatorParameters.Flash = g_Flash;
+		}
 
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
@@ -182,10 +191,11 @@ void EmulatorViewport::stop()
 		BT8XXEMU_destroy(g_Emulator);
 		g_Emulator = NULL;
 
-#ifdef FTEDITOR_STDFLASH
-		BT8XXEMU_Flash_destroy(g_Flash);
-		g_Flash = NULL;
-#endif
+		if (g_Flash)
+		{
+			BT8XXEMU_Flash_destroy(g_Flash);
+			g_Flash = NULL;
+		}
 	}
 }
 

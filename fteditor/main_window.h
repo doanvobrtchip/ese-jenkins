@@ -43,6 +43,7 @@ class QProgressBar;
 class QComboBox;
 class QLabel;
 class QMenu;
+class QGroupBox;
 
 namespace FTEDITOR {
 
@@ -181,6 +182,7 @@ private slots:
 
 	void projectDeviceChanged(int i);
 	void projectDisplayChanged(int i);
+	void projectFlashChanged(int i);
 
 private:
 	void updateInitialization(bool visible);
@@ -211,7 +213,7 @@ private:
 
 	void stopEmulatorInternal();
 	void startEmulatorInternal();
-	void changeEmulatorInternal(int deviceIntf);
+	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -270,6 +272,9 @@ private:
 	QDockWidget *m_ProjectDock;
 	QComboBox *m_ProjectDevice;
 	QComboBox *m_ProjectDisplay;
+	QGroupBox *m_ProjectFlashGroup; // Flash device group, dynamically shown depending on project device
+	QComboBox *m_ProjectFlash;
+	// QLineEdit *m_ProjectFlashImage; // Image loaded as read-only upon reset, loads mapping into content manager if found
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
@@ -331,6 +336,7 @@ private:
 	QString m_LastProjectDir;
 
 	friend class ProjectDeviceCommand;
+	friend class ProjectFlashCommand;
 
 }; /* class MainWindow */
 

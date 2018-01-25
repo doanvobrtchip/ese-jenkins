@@ -73,6 +73,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "emulator_navigator.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
+#include "constant_mapping_flash.h"
 
 namespace FTEDITOR {
 
@@ -2086,6 +2087,24 @@ void MainWindow::createDockWindows()
 			layout->addWidget(group);
 		}
 
+		// Flash
+		{
+			QGroupBox *group = new QGroupBox(widget);
+			group->setTitle(tr("Flash"));
+			QHBoxLayout *groupLayout = new QHBoxLayout();
+			m_ProjectFlashGroup = group;
+
+			m_ProjectFlash = new QComboBox(this);
+			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)
+				m_ProjectFlash->addItem(flashToString(i));
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+			groupLayout->addWidget(m_ProjectFlash);
+			connect(m_ProjectFlash, SIGNAL(currentIndexChanged(int)), this, SLOT(projectFlashChanged(int)));
+
+			group->setLayout(groupLayout);
+			layout->addWidget(group);
+		}
+
 		layout->addStretch();
 
 		widget->setLayout(layout);
@@ -3780,9 +3799,12 @@ void MainWindow::startEmulatorInternal()
 	BT8XXEMU_setDebugLimiter(g_Emulator, 2048 * 64);
 }
 
-void MainWindow::changeEmulatorInternal(int deviceIntf)
+void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 {
-	if (deviceIntf == FTEDITOR_CURRENT_DEVICE)
+	bool changeDevice = deviceIntf != FTEDITOR_CURRENT_DEVICE;
+	bool changeFlash = flashIntf != FTEDITOR_CURRENT_FLASH && flashSupport(deviceIntf);
+
+	if (!changeDevice && !changeFlash)
 		return;
 
 	// Remove any references to the current emulator device version
@@ -3792,7 +3814,8 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	stopEmulatorInternal();
 
 	// Set the new emulator version
-	FTEDITOR_CURRENT_DEVICE = deviceIntf;
+	if (changeDevice) FTEDITOR_CURRENT_DEVICE = deviceIntf;
+	if (changeFlash) FTEDITOR_CURRENT_FLASH = flashIntf;
 
 	// Reset emulator data
 	printf("Reset emulator parameters\n");
@@ -3815,29 +3838,41 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	m_InteractiveProperties->bindCurrentDevice();
 
 	// Update resolution list
-	s_UndoRedoWorking = true;
-	m_ProjectDisplay->clear();
-	for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_ProjectDisplay->addItem(s_StandardResolutions[i]);
-	m_ProjectDisplay->addItem("");
-	updateProjectDisplay(m_HSize->value(), m_VSize->value());
-	s_UndoRedoWorking = false;
+	if (changeDevice)
+	{
+		s_UndoRedoWorking = true;
+		m_ProjectDisplay->clear();
+		for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+			m_ProjectDisplay->addItem(s_StandardResolutions[i]);
+		m_ProjectDisplay->addItem("");
+		updateProjectDisplay(m_HSize->value(), m_VSize->value());
+		s_UndoRedoWorking = false;
+	}
+
+	// Update flash support
+	if (changeDevice)
+	{
+		m_ProjectFlashGroup->setVisible(flashSupport(FTEDITOR_CURRENT_DEVICE));
+	}
 
 	// Reconfigure emulator controls
 	stepEnabled(m_StepEnabled->isChecked());
 	stepCmdEnabled(m_StepCmdEnabled->isChecked());
 
 	// Update interface ranges
-	m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
-	m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
-	m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
-	m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
-	m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
-	m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
-	m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
-	m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
-	m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
-	m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+	if (changeDevice)
+	{
+		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
+		m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+		m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+		m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+		m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+		m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+		m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+	}
 
 	// TODO:
 	// Inside ProjectDeviceCommand store the original display lists (incl macro) plus a backup of the current ContentInfo settings
@@ -3853,8 +3888,8 @@ class ProjectDeviceCommand : public QUndoCommand
 public:
 	ProjectDeviceCommand(int deviceIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectDevice(deviceIntf), m_OldProjectDevice(FTEDITOR_CURRENT_DEVICE), m_MainWindow(mainWindow) { }
 	virtual ~ProjectDeviceCommand() { }
-	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
-	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
 	virtual int id() const { return 98919600; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectDevice = static_cast<const ProjectDeviceCommand *>(command)->m_NewProjectDevice; return true; }
 
@@ -3871,6 +3906,31 @@ void MainWindow::projectDeviceChanged(int deviceIntf)
 		return;
 	
 	m_UndoStack->push(new ProjectDeviceCommand(deviceIntf, this));
+}
+
+class ProjectFlashCommand : public QUndoCommand
+{
+public:
+	ProjectFlashCommand(int flashIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectFlash(flashIntf), m_OldProjectFlash(FTEDITOR_CURRENT_FLASH), m_MainWindow(mainWindow) { }
+	virtual ~ProjectFlashCommand() { }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual int id() const { return 98919601; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectFlash = static_cast<const ProjectFlashCommand *>(command)->m_NewProjectFlash; return true; }
+
+private:
+	int m_NewProjectFlash;
+	int m_OldProjectFlash;
+	MainWindow *m_MainWindow;
+
+};
+
+void MainWindow::projectFlashChanged(int flashIntf)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
 }
 
 void MainWindow::projectDisplayChanged(int i)
