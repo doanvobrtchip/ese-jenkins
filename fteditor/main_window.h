@@ -44,6 +44,7 @@ class QComboBox;
 class QLabel;
 class QMenu;
 class QGroupBox;
+class QHBoxLayout;
 
 namespace FTEDITOR {
 
@@ -272,9 +273,9 @@ private:
 	QDockWidget *m_ProjectDock;
 	QComboBox *m_ProjectDevice;
 	QComboBox *m_ProjectDisplay;
-	QGroupBox *m_ProjectFlashGroup; // Flash device group, dynamically shown depending on project device
+	QWidget *m_ProjectFlashLayout;
 	QComboBox *m_ProjectFlash;
-	// QLineEdit *m_ProjectFlashImage; // Image loaded as read-only upon reset, loads mapping into content manager if found
+	QPushButton *m_ProjectFlashImport;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;

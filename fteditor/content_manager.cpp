@@ -844,6 +844,24 @@ void ContentManager::rebuildAll()
 	}
 }
 
+void ContentManager::importFlashMap()
+{
+	printf("ContentManager::importFlashMap()\n");
+
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Import Mapped Flash Image"),
+		m_MainWindow->getFileDialogPath(),
+		tr("Flash image map (*.map)"));
+
+	if (fileName.isNull())
+		return;
+}
+
+void ContentManager::exportFlashMap()
+{
+
+}
+
 void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
 {
 	// Iterate through the list and copy the pointer to the data

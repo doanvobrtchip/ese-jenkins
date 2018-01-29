@@ -50,6 +50,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMovie>
 #include <QDirIterator>
 #include <QElapsedTimer>
+#include <QPushButton>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -2067,39 +2068,50 @@ void MainWindow::createDockWindows()
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Device"));
-			QHBoxLayout *groupLayout = new QHBoxLayout();
+			QVBoxLayout *groupLayout = new QVBoxLayout();
+
+			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
-			groupLayout->addWidget(m_ProjectDevice);
+			hBoxLayout->addWidget(m_ProjectDevice);
 			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
 
 			m_ProjectDisplay = new QComboBox(this);
 			for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
 			m_ProjectDisplay->addItem("");
-			groupLayout->addWidget(m_ProjectDisplay);
+			hBoxLayout->addWidget(m_ProjectDisplay);
 			connect(m_ProjectDisplay, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDisplayChanged(int)));
 
-			group->setLayout(groupLayout);
-			layout->addWidget(group);
-		}
+			groupLayout->addLayout(hBoxLayout);
 
-		// Flash
-		{
-			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Flash"));
-			QHBoxLayout *groupLayout = new QHBoxLayout();
-			m_ProjectFlashGroup = group;
+			hBoxLayout = new QHBoxLayout();
+			m_ProjectFlashLayout = new QWidget(this);
+			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
+			// m_ProjectFlashLayout->marg
+			hBoxLayout->setMargin(0);
 
 			m_ProjectFlash = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)
 				m_ProjectFlash->addItem(flashToString(i));
 			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
-			groupLayout->addWidget(m_ProjectFlash);
+			hBoxLayout->addWidget(m_ProjectFlash, 1);
 			connect(m_ProjectFlash, SIGNAL(currentIndexChanged(int)), this, SLOT(projectFlashChanged(int)));
+
+			m_ProjectFlashImport = new QPushButton(this);
+			// m_ProjectFlashImport->setText(tr("Import"));
+			m_ProjectFlashImport->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
+			m_ProjectFlashImport->setToolTip(tr("Import Mapped Flash Image"));
+			connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMap()));
+			hBoxLayout->addWidget(m_ProjectFlashImport);
+
+			// m_ProjectFlashLayout->stretch
+
+			m_ProjectFlashLayout->setLayout(hBoxLayout);
+			groupLayout->addWidget(m_ProjectFlashLayout);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -3852,7 +3864,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 	// Update flash support
 	if (changeDevice)
 	{
-		m_ProjectFlashGroup->setVisible(flashSupport(FTEDITOR_CURRENT_DEVICE));
+		m_ProjectFlashLayout->setVisible(flashSupport(FTEDITOR_CURRENT_DEVICE));
 	}
 
 	// Reconfigure emulator controls

@@ -287,6 +287,9 @@ private slots:
 public slots:
 	void rebuildAll();
 
+	void importFlashMap();
+	void exportFlashMap();
+
 private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 	void propertiesSetterChanged(QWidget *setter);
