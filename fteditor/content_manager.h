@@ -67,6 +67,7 @@ struct ContentInfo
 		Raw, // Raw copy to ram
 		Font, // Font
 		ImageCoprocessor, // Load jpeg on coprocessor
+		FlashMap = 1025, // Loaded from flash map, can only be set using import
 	};
 
 	QString SourcePath; // Relative source path
@@ -78,6 +79,11 @@ struct ContentInfo
 
 	bool DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
 	bool DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
+
+	QString FlashMapPath; // If set, the data is sourced raw from a flash image. Can only be set using import
+	QString FlashMapName; // Name of this asset in the flash map
+	bool FlashLoaded; // Whether this is loaded into (or sourced from, if not dirty) flash
+	int FlashAddress; // Target (or source) flash address
 
 	int RawStart; // Raw start of memory
 	int RawLength; // Raw length of memory
@@ -96,7 +102,8 @@ struct ContentInfo
 	void fromJson(QJsonObject &j, bool meta);
 	bool equalsMeta(const ContentInfo *other) const;
 
-	bool UploadDirty;
+	bool UploadMemoryDirty;
+	bool UploadFlashDirty;
 	bool ExternalDirty;
 
 	bool CachedImage;
@@ -106,7 +113,8 @@ struct ContentInfo
 
 	int CachedSize; // Memory size
 
-	bool OverlapFlag;
+	bool OverlapMemoryFlag;
+	bool OverlapFlashFlag;
 	bool WantAutoLoad;
 
 	int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
@@ -229,8 +237,10 @@ private:
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
-	void reuploadInternal(ContentInfo *contentInfo);
-	void recalculateOverlapInternal();
+	void reuploadMemoryInternal(ContentInfo *contentInfo);
+	void reuploadFlashInternal(ContentInfo *contentInfo);
+	void recalculateOverlapMemoryInternal();
+	void recalculateOverlapFlashInternal();
 	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
 
@@ -275,8 +285,11 @@ private:
 
 	static std::vector<QString> s_FileExtensions;
 
-	std::set<ContentInfo *> m_ContentUploadDirty;
-	std::set<ContentInfo *> m_ContentOverlap;
+	std::set<ContentInfo *> m_ContentUploadMemoryDirty;
+	std::set<ContentInfo *> m_ContentOverlapMemory;
+
+	std::set<ContentInfo *> m_ContentUploadFlashDirty;
+	std::set<ContentInfo *> m_ContentOverlapFlash;
 
 	static QMutex s_Mutex;
 
@@ -287,8 +300,8 @@ private slots:
 public slots:
 	void rebuildAll();
 
-	void importFlashMap();
-	void exportFlashMap();
+	void importFlashMapped();
+	void exportFlashMapped();
 
 private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);

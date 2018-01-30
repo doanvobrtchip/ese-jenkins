@@ -2105,7 +2105,7 @@ void MainWindow::createDockWindows()
 			// m_ProjectFlashImport->setText(tr("Import"));
 			m_ProjectFlashImport->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
 			m_ProjectFlashImport->setToolTip(tr("Import Mapped Flash Image"));
-			connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMap()));
+			connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
 			hBoxLayout->addWidget(m_ProjectFlashImport);
 
 			// m_ProjectFlashLayout->stretch

@@ -56,6 +56,10 @@ ContentInfo::ContentInfo(const QString &filePath)
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
 	MemoryAddress = 0;
+	FlashMapPath = QString::null;
+	FlashMapName = QString::null;
+	FlashLoaded = false;
+	FlashAddress = 1024;
 	DataCompressed = true;
 	DataEmbedded = true;
 	RawStart = 0;
@@ -65,11 +69,13 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
-	UploadDirty = true;
+	UploadMemoryDirty = true;
+	UploadFlashDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
 	CachedSize = 0;
-	OverlapFlag = false;
+	OverlapMemoryFlag = false;
+	OverlapFlashFlag = false;
 	WantAutoLoad = false;
 }
 
@@ -84,6 +90,8 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		j["memoryAddress"] = MemoryAddress;
 		j["dataCompressed"] = DataCompressed;
 		j["dataEmbedded"] = DataEmbedded;
+		j["flashLoaded"] = FlashLoaded;
+		j["flashAddress"] = FlashAddress;
 	}
 	switch (Converter)
 	{
@@ -107,6 +115,11 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		j["fontCharSet"] = FontCharSet;
 		j["fontOffset"] = FontOffset;
 		break;
+	case FlashMap:
+		j["converter"] = QString("FlashMap");
+		j["flashMapPath"] = FlashMapPath;
+		j["flashMapName"] = FlashMapName;
+		break;
 	}
 	return j;
 }
@@ -121,6 +134,16 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
 		DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
 		DataEmbedded = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool();
+		if (j.contains("flashLoaded"))
+		{
+			FlashLoaded = ((QJsonValue)j["flashLoaded"]).toVariant().toBool();
+			FlashAddress = ((QJsonValue)j["flashAddress"]).toVariant().toInt();
+		}
+		else
+		{
+			FlashLoaded = false;
+			FlashAddress = 1024;
+		}
 	}
 	QString converter = j["converter"].toString();
 	if (converter == "Raw")
@@ -147,6 +170,11 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		FontCharSet = j["fontCharSet"].toString();
 		if (j.contains("fontOffset")) FontOffset = ((QJsonValue)j["fontOffset"]).toVariant().toInt();
 		else FontOffset = 0;
+	}
+	else if (converter == "FlashMap")
+	{
+		FlashMapPath = j["flashMapPath"].toString();
+		FlashMapName = j["flashMapName"].toString();
 	}
 	else
 	{
@@ -185,6 +213,9 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 			return false;
 		if (FontOffset != other->FontOffset)
 			return false;
+		break;
+	case FlashMap:
+		break;
 	}
 	return true;
 }
@@ -433,6 +464,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	line->setFrameShape(QFrame::HLine);
 	line->setFrameShadow(QFrame::Sunken);
 	propMemLayout->addWidget(line);
+	// TODO: New groupbox Storage Options: Compressed:, Embedded:, Flash:, Address:
 	m_PropertiesDataCompressed = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Compressed: "), m_PropertiesDataCompressed);
 	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataCompressedChanged(int)));
@@ -477,6 +509,8 @@ void ContentManager::bindCurrentDevice()
 	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 	
 	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+
+	// TODO: Set maximum flash address (minimum is always fixed)
 	
 	if (info)
 		m_ContentList->setCurrentItem(info->View);
@@ -721,19 +755,28 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	contentInfo->View = NULL;
 
 	// Mark upload as dirty
-	contentInfo->UploadDirty = true;
+	contentInfo->UploadMemoryDirty = true;
+	contentInfo->UploadFlashDirty = true;
 
 	// Make sure not in content
 	lockContent();
-	if (m_ContentUploadDirty.find(contentInfo) != m_ContentUploadDirty.end())
-		m_ContentUploadDirty.erase(contentInfo);
+	if (m_ContentUploadMemoryDirty.find(contentInfo) != m_ContentUploadMemoryDirty.end())
+		m_ContentUploadMemoryDirty.erase(contentInfo);
+	if (m_ContentUploadFlashDirty.find(contentInfo) != m_ContentUploadFlashDirty.end())
+		m_ContentUploadFlashDirty.erase(contentInfo);
 	unlockContent();
 
-	// Recalculate overlap
-	if (m_ContentOverlap.find(contentInfo) != m_ContentOverlap.end())
-		m_ContentOverlap.erase(contentInfo);
-	contentInfo->OverlapFlag = false;
-	recalculateOverlapInternal();
+	// Recalculate overlap in memory
+	if (m_ContentOverlapMemory.find(contentInfo) != m_ContentOverlapMemory.end())
+		m_ContentOverlapMemory.erase(contentInfo);
+	contentInfo->OverlapMemoryFlag = false;
+	recalculateOverlapMemoryInternal();
+
+	// Recalculate overlap in flash
+	if (m_ContentOverlapFlash.find(contentInfo) != m_ContentOverlapFlash.end())
+		m_ContentOverlapFlash.erase(contentInfo);
+	contentInfo->OverlapFlashFlag = false;
+	recalculateOverlapFlashInternal();
 
 	// Reload external dependencies
 	reloadExternal(contentInfo);
@@ -844,9 +887,9 @@ void ContentManager::rebuildAll()
 	}
 }
 
-void ContentManager::importFlashMap()
+void ContentManager::importFlashMapped()
 {
-	printf("ContentManager::importFlashMap()\n");
+	printf("ContentManager::importFlashMapped()\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this,
 		tr("Import Mapped Flash Image"),
@@ -857,7 +900,7 @@ void ContentManager::importFlashMap()
 		return;
 }
 
-void ContentManager::exportFlashMap()
+void ContentManager::exportFlashMapped()
 {
 
 }
@@ -930,6 +973,10 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 
 int ContentManager::getContentSize(ContentInfo *contentInfo)
 {
+	// TODO: if (contentInfo->Converter == ContentInfo::FlashMap)
+	// -> Use a cached copy of the flash map for quickly getting the size
+	// note: check whether lock/unlockContent is required for getContentSize in this case
+
 	if (contentInfo->Converter == ContentInfo::ImageCoprocessor)
 	{
 		ImageInfo bitmapInfo;
@@ -1001,9 +1048,40 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 
 void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 {
+	QString text;
+	QIcon icon;
+
+	if (!contentInfo->BuildError.isEmpty())
+	{
+		text = "Error";
+		icon = QIcon(":/icons/exclamation-red.png");
+	}
+	else
+	{
+		if (contentInfo->MemoryLoaded)
+		{
+			if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
+				|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
+			{
+				text = "Overlap";
+				icon = QIcon(":/icons/exclamation-red.png");
+			}
+			else if (contentInfo->MemoryLoaded)
+			{
+				text = "Loaded";
+				icon = QIcon(":/icons/tick");
+			}
+			else if (contentInfo->FlashLoaded)
+			{
+				text = "Flash";
+				icon = QIcon(":/icons/tick");
+			}
+		}
+	}
+
 	// contentInfo->View->setText(0, contentInfo->SourcePath);
-	contentInfo->View->setText(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? "Overlap" : "Loaded") : "") : "Error");
-	contentInfo->View->setIcon(0, contentInfo->BuildError.isEmpty() ? (contentInfo->MemoryLoaded ? (contentInfo->OverlapFlag ? QIcon(":/icons/exclamation-red.png") : QIcon(":/icons/tick")) : QIcon()) : QIcon(":/icons/exclamation-red.png"));
+	contentInfo->View->setText(0, text);
+	contentInfo->View->setIcon(0, icon);
 	contentInfo->View->setText(1, contentInfo->DestName);
 
 	m_ContentList->resizeColumnToContents(1);
@@ -1065,6 +1143,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
 		m_PropertiesDataEmbedded->setCheckState(contentInfo->DataEmbedded ? Qt::Checked : Qt::Unchecked);
 	}
+	// TODO: Flash map hide/show options etc
 
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
@@ -1235,6 +1314,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		{
 			contentInfo->BuildError = "<i>(Filesystem)</i><br>Source file does not exist.";
 			contentInfo->ExternalDirty = true;
+			// goto SkipRebuild; // Implicit // Error, skip rebuild
 		}
 		else
 		{
@@ -1252,9 +1332,32 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					{
 						// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
 						printf("Source file has been modified, ignore meta, rebuild\n");
+						goto IgnoreMeta; // Ignore meta comparison and rebuild
 					}
-					else
+					else if (contentInfo->Converter == ContentInfo::FlashMap)
 					{
+						QString srcMapFile = contentInfo->FlashMapPath;
+						bool srcMapExists = QFile::exists(srcMapFile);
+						if (!srcMapExists)
+						{
+							contentInfo->BuildError = "<i>(Filesystem)</i><br>Flash map file does not exist.";
+							contentInfo->ExternalDirty = true;
+							goto SkipRebuild; // Error, skip rebuild
+						}
+						else
+						{
+							QFileInfo srcMapInfo(srcMapFile);
+							if (srcMapInfo.lastModified() > metaInfo.lastModified())
+							{
+								// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
+								printf("Flash map file has been modified, ignore meta, rebuild\n");
+								goto IgnoreMeta; // Ignore meta comparison and rebuild
+							}
+						}
+					}
+					// else goto CompareMeta; // Implicit // Ignore meta comparison and rebuild
+				CompareMeta:
+					; {
 						QFile file(metaFile);
 						file.open(QIODevice::ReadOnly);
 						QByteArray data = file.readAll();
@@ -1269,6 +1372,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 							equalMeta = contentInfo->equalsMeta(&ci);
 						}
 					}
+				IgnoreMeta:;
 				}
 			}
 			if (equalMeta)
@@ -1317,6 +1421,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					case ContentInfo::Font:
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
 						break;
+					case ContentInfo::FlashMap:
+						// No-op, only need CachedSize set through getContentSize
+						break;
 					default:
 						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
 						break;
@@ -1334,10 +1441,12 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					QJsonDocument doc(contentInfo->toJson(true));
 					QByteArray data = doc.toJson();
 					out.writeRawData(data, data.size());
-					contentInfo->UploadDirty = true;
+					contentInfo->UploadMemoryDirty = true;
+					contentInfo->UploadFlashDirty = true;
 				}
 			}
 		}
+	SkipRebuild:
 		unlockContent();
 	}
 	else
@@ -1347,11 +1456,19 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	}
 
 	// Reupload the content to emulator RAM if dirty
-	if (contentInfo->UploadDirty)
+	if (contentInfo->UploadMemoryDirty)
 	{
-		contentInfo->UploadDirty = false;
-		reuploadInternal(contentInfo);
-		recalculateOverlapInternal();
+		contentInfo->UploadMemoryDirty = false;
+		reuploadMemoryInternal(contentInfo);
+		recalculateOverlapMemoryInternal();
+	}
+
+	// Reupload the content to flash if dirty
+	if (contentInfo->UploadFlashDirty)
+	{
+		contentInfo->UploadFlashDirty = false;
+		reuploadFlashInternal(contentInfo);
+		recalculateOverlapFlashInternal();
 	}
 
 	// Reload external if dirty
@@ -1368,9 +1485,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		rebuildGUIInternal(contentInfo);
 }
 
-void ContentManager::reuploadInternal(ContentInfo *contentInfo)
+void ContentManager::reuploadMemoryInternal(ContentInfo *contentInfo)
 {
-	printf("ContentManager::reuploadInternal(contentInfo)\n");
+	printf("ContentManager::reuploadMemoryInternal(contentInfo)\n");
 
 	// Reupload the content to emulator RAM
 	// This happens in the emulator main loop
@@ -1385,8 +1502,31 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo)
 		}
 
 		lockContent();
-		if (m_ContentUploadDirty.find(contentInfo) == m_ContentUploadDirty.end())
-			m_ContentUploadDirty.insert(contentInfo);
+		if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
+			m_ContentUploadFlashDirty.insert(contentInfo);
+		unlockContent();
+	}
+}
+
+void ContentManager::reuploadFlashInternal(ContentInfo *contentInfo)
+{
+	printf("ContentManager::reuploadFlashInternal(contentInfo)\n");
+
+	// Reupload the content to emulator flash
+	// This happens in the emulator main loop
+	// Emulator main loop will lock the content mutex
+	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
+	{
+		if (contentInfo->Converter == ContentInfo::Image
+			|| contentInfo->Converter == ContentInfo::Font)
+		{
+			// Bitmap setup is always updated after upload and requires cached image info
+			cacheImageInfo(contentInfo);
+		}
+
+		lockContent();
+		if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
+			m_ContentUploadFlashDirty.insert(contentInfo);
 		unlockContent();
 	}
 }
@@ -1398,7 +1538,8 @@ void ContentManager::reuploadAll()
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		reuploadInternal(info);
+		reuploadMemoryInternal(info);
+		reuploadFlashInternal(info);
 	}
 }
 
