@@ -29,6 +29,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDateTime>
 
 // Emulator includes
+#include "bt8xxemu_diag.h"
 
 // Project includes
 #include "main_window.h"
@@ -44,6 +45,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 namespace FTEDITOR {
 
 int g_RamGlobalUsage = 0;
+int g_FlashGlobalUsage = 0;
+
+extern BT8XXEMU_Flash *g_Flash;
 
 std::vector<QString> ContentManager::s_FileExtensions;
 QMutex ContentManager::s_Mutex;
@@ -59,7 +63,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FlashMapPath = QString::null;
 	FlashMapName = QString::null;
 	FlashLoaded = false;
-	FlashAddress = 1024;
+	FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 	DataCompressed = true;
 	DataEmbedded = true;
 	RawStart = 0;
@@ -73,7 +77,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	UploadFlashDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
-	CachedSize = 0;
+	CachedMemorySize = 0;
+	CachedFlashSize = 0;
 	OverlapMemoryFlag = false;
 	OverlapFlashFlag = false;
 	WantAutoLoad = false;
@@ -142,7 +147,7 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		else
 		{
 			FlashLoaded = false;
-			FlashAddress = 1024;
+			FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 		}
 	}
 	QString converter = j["converter"].toString();
@@ -973,9 +978,11 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 
 int ContentManager::getContentSize(ContentInfo *contentInfo)
 {
-	// TODO: if (contentInfo->Converter == ContentInfo::FlashMap)
-	// -> Use a cached copy of the flash map for quickly getting the size
-	// note: check whether lock/unlockContent is required for getContentSize in this case
+	if (contentInfo->Converter == ContentInfo::FlashMap)
+	{
+		// In future, if useful, may want special handling for a few file extensions that can load through the coprocessor (jpg, jpeg, png, bin vs raw)
+		return getFlashSize(contentInfo);
+	}
 
 	if (contentInfo->Converter == ContentInfo::ImageCoprocessor)
 	{
@@ -989,9 +996,11 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 	QFileInfo binFile(fileName);
 	if (!binFile.exists()) return -1;
 	int contentSize = binFile.size();
-	switch (contentInfo->ImageFormat)
+	if (contentInfo->Converter == ContentInfo::Image || contentInfo->Converter == ContentInfo::Font)
 	{
-		// Add palette into content
+		switch (contentInfo->ImageFormat)
+		{
+			// Add palette into content
 		case PALETTED8:
 			contentSize += 256 * 4;
 			break;
@@ -999,6 +1008,45 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 		case PALETTED4444:
 			contentSize += 256 * 2;
 			break;
+		}
+	}
+	return contentSize;
+}
+
+int ContentManager::getFlashSize(ContentInfo *contentInfo)
+{
+	int contentSize;
+	if (contentInfo->Converter == ContentInfo::FlashMap)
+	{
+		// TODO: Parse flash map
+	}
+	else if (contentInfo->DataCompressed)
+	{
+		QString fileName = contentInfo->DestName + ".bin";
+		QFileInfo binFile(fileName);
+		if (!binFile.exists()) return -1;
+		contentSize = binFile.size();
+	}
+	else
+	{
+		QString fileName = contentInfo->DestName + ".raw";
+		QFileInfo binFile(fileName);
+		if (!binFile.exists()) return -1;
+		contentSize = binFile.size();
+	}
+	if (contentInfo->Converter == ContentInfo::Image || contentInfo->Converter == ContentInfo::Font)
+	{
+		switch (contentInfo->ImageFormat)
+		{
+			// Add palette into content
+		case PALETTED8:
+			contentSize += 256 * 4;
+			break;
+		case PALETTED565:
+		case PALETTED4444:
+			contentSize += 256 * 2;
+			break;
+		}
 	}
 	return contentSize;
 }
@@ -1061,7 +1109,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		if (contentInfo->MemoryLoaded)
 		{
 			if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
-				|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
+				|| ((contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap)) && contentInfo->OverlapFlashFlag))
 			{
 				text = "Overlap";
 				icon = QIcon(":/icons/exclamation-red.png");
@@ -1071,7 +1119,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 				text = "Loaded";
 				icon = QIcon(":/icons/tick");
 			}
-			else if (contentInfo->FlashLoaded)
+			else if (contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap))
 			{
 				text = "Flash";
 				icon = QIcon(":/icons/tick");
@@ -1356,7 +1404,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						}
 					}
 					// else goto CompareMeta; // Implicit // Ignore meta comparison and rebuild
-				CompareMeta:
+				// CompareMeta:
 					; {
 						QFile file(metaFile);
 						file.open(QIODevice::ReadOnly);
@@ -1380,9 +1428,13 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				printf("Equal meta, skip convert\n");
 				
 				// Cache size
-				if (!contentInfo->CachedSize)
+				if (!contentInfo->CachedMemorySize)
 				{
-					contentInfo->CachedSize = getContentSize(contentInfo);
+					contentInfo->CachedMemorySize = getContentSize(contentInfo);
+				}
+				if (!contentInfo->CachedFlashSize)
+				{
+					contentInfo->CachedFlashSize = getFlashSize(contentInfo);
 				}
 			}
 			else
@@ -1392,7 +1444,8 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					QFile::remove(metaFile); // *** FILE REMOVE ***
 				}
 				contentInfo->CachedImage = false;
-				contentInfo->CachedSize = 0;
+				contentInfo->CachedMemorySize = 0;
+				contentInfo->CachedFlashSize = 0;
 				contentInfo->ExternalDirty = true;
 				contentInfo->BuildError = "";
 				// Create directory if necessary
@@ -1422,7 +1475,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
 						break;
 					case ContentInfo::FlashMap:
-						// No-op, only need CachedSize set through getContentSize
+						// No-op, only need CachedFlashSize set through getFlashSize
 						break;
 					default:
 						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
@@ -1432,7 +1485,8 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				if (contentInfo->BuildError.isEmpty())
 				{
 					// Cache size
-					contentInfo->CachedSize = getContentSize(contentInfo);
+					contentInfo->CachedMemorySize = getContentSize(contentInfo);
+					contentInfo->CachedFlashSize = getFlashSize(contentInfo);
 
 					// Write meta file
 					QFile file(metaFile);
@@ -1455,20 +1509,16 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		contentInfo->ExternalDirty = true;
 	}
 
-	// Reupload the content to emulator RAM if dirty
-	if (contentInfo->UploadMemoryDirty)
+	// Reupload the content to emulator RAM and/or flash if dirty
+	if (contentInfo->UploadMemoryDirty || contentInfo->UploadFlashDirty)
 	{
+		bool memory = contentInfo->UploadMemoryDirty;
+		bool flash = contentInfo->UploadFlashDirty;
 		contentInfo->UploadMemoryDirty = false;
-		reuploadMemoryInternal(contentInfo);
-		recalculateOverlapMemoryInternal();
-	}
-
-	// Reupload the content to flash if dirty
-	if (contentInfo->UploadFlashDirty)
-	{
 		contentInfo->UploadFlashDirty = false;
-		reuploadFlashInternal(contentInfo);
-		recalculateOverlapFlashInternal();
+		reuploadInternal(contentInfo, memory, flash);
+		if (memory) recalculateOverlapMemoryInternal();
+		if (flash) recalculateOverlapFlashInternal();
 	}
 
 	// Reload external if dirty
@@ -1485,14 +1535,14 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		rebuildGUIInternal(contentInfo);
 }
 
-void ContentManager::reuploadMemoryInternal(ContentInfo *contentInfo)
+void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash)
 {
-	printf("ContentManager::reuploadMemoryInternal(contentInfo)\n");
+	printf("ContentManager::reuploadMemoryInternal(contentInfo, memory, flash)\n");
 
-	// Reupload the content to emulator RAM
+	// Reupload the content to emulator RAM or flash
 	// This happens in the emulator main loop
 	// Emulator main loop will lock the content mutex
-	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
+	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || ((contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap)) && flash)))
 	{
 		if (contentInfo->Converter == ContentInfo::Image
 			|| contentInfo->Converter == ContentInfo::Font)
@@ -1502,31 +1552,16 @@ void ContentManager::reuploadMemoryInternal(ContentInfo *contentInfo)
 		}
 
 		lockContent();
-		if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
-			m_ContentUploadFlashDirty.insert(contentInfo);
-		unlockContent();
-	}
-}
-
-void ContentManager::reuploadFlashInternal(ContentInfo *contentInfo)
-{
-	printf("ContentManager::reuploadFlashInternal(contentInfo)\n");
-
-	// Reupload the content to emulator flash
-	// This happens in the emulator main loop
-	// Emulator main loop will lock the content mutex
-	if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->MemoryLoaded)
-	{
-		if (contentInfo->Converter == ContentInfo::Image
-			|| contentInfo->Converter == ContentInfo::Font)
+		if (memory)
 		{
-			// Bitmap setup is always updated after upload and requires cached image info
-			cacheImageInfo(contentInfo);
+			if (m_ContentUploadMemoryDirty.find(contentInfo) == m_ContentUploadMemoryDirty.end())
+				m_ContentUploadMemoryDirty.insert(contentInfo);
 		}
-
-		lockContent();
-		if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
-			m_ContentUploadFlashDirty.insert(contentInfo);
+		if (flash)
+		{
+			if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
+				m_ContentUploadFlashDirty.insert(contentInfo);
+		}
 		unlockContent();
 	}
 }
@@ -1538,19 +1573,19 @@ void ContentManager::reuploadAll()
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		reuploadMemoryInternal(info);
-		reuploadFlashInternal(info);
+		reuploadInternal(info, true, true);
 	}
 }
 
-void ContentManager::recalculateOverlapInternal()
+void ContentManager::recalculateOverlapMemoryInternal()
 {
-	printf("ContentManager::recalculateOverlapInternal()\n");
+	printf("ContentManager::recalculateOverlapMemoryInternal()\n");
 
 	std::set<ContentInfo *> contentOverlap;
-	m_ContentOverlap.swap(contentOverlap);
+	m_ContentOverlapMemory.swap(contentOverlap);
 
-	int ramGlobalUsage = 0;
+	int globalUsage = 0;
+	int globalSize = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
 
 	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
 	{
@@ -1562,16 +1597,16 @@ void ContentManager::recalculateOverlapInternal()
 			if (leftSize >= 0)
 			{
 				int leftAddr = leftInfo->MemoryAddress;
-				if (leftAddr + leftSize > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
+				if (leftAddr + leftSize > globalSize)
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
-					if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
-						m_ContentOverlap.insert(leftInfo);
+					if (m_ContentOverlapMemory.find(leftInfo) == m_ContentOverlapMemory.end())
+						m_ContentOverlapMemory.insert(leftInfo);
 					++left;
 				}
 				else
 				{
-					ramGlobalUsage += leftSize;
+					globalUsage += leftSize;
 					for (QTreeWidgetItemIterator right(++left); *right; ++right)
 					{
 						ContentInfo *rightInfo = (ContentInfo *)(void *)(*right)->data(0, Qt::UserRole).value<quintptr>();
@@ -1588,11 +1623,11 @@ void ContentManager::recalculateOverlapInternal()
 									{
 										// overlap
 										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
-										if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
-											m_ContentOverlap.insert(leftInfo);
-										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
-											m_ContentOverlap.insert(rightInfo);
-										ramGlobalUsage -= (leftAddr + leftSize - rightAddr);
+										if (m_ContentOverlapMemory.find(leftInfo) == m_ContentOverlapMemory.end())
+											m_ContentOverlapMemory.insert(leftInfo);
+										if (m_ContentOverlapMemory.find(rightInfo) == m_ContentOverlapMemory.end())
+											m_ContentOverlapMemory.insert(rightInfo);
+										globalUsage -= (leftAddr + leftSize - rightAddr);
 									}
 								}
 								else if (rightAddr < leftAddr)
@@ -1601,24 +1636,24 @@ void ContentManager::recalculateOverlapInternal()
 									{
 										// overlap
 										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
-										if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
-											m_ContentOverlap.insert(leftInfo);
-										if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
-											m_ContentOverlap.insert(rightInfo);
-										ramGlobalUsage -= (rightAddr + rightSize - leftAddr);
+										if (m_ContentOverlapMemory.find(leftInfo) == m_ContentOverlapMemory.end())
+											m_ContentOverlapMemory.insert(leftInfo);
+										if (m_ContentOverlapMemory.find(rightInfo) == m_ContentOverlapMemory.end())
+											m_ContentOverlapMemory.insert(rightInfo);
+										globalUsage -= (rightAddr + rightSize - leftAddr);
 									}
 								}
 								else
 								{
 									// overlap
 									printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
-									if (m_ContentOverlap.find(leftInfo) == m_ContentOverlap.end())
-										m_ContentOverlap.insert(leftInfo);
-									if (m_ContentOverlap.find(rightInfo) == m_ContentOverlap.end())
-										m_ContentOverlap.insert(rightInfo);
+									if (m_ContentOverlapMemory.find(leftInfo) == m_ContentOverlapMemory.end())
+										m_ContentOverlapMemory.insert(leftInfo);
+									if (m_ContentOverlapMemory.find(rightInfo) == m_ContentOverlapMemory.end())
+										m_ContentOverlapMemory.insert(rightInfo);
 									if (leftSize > rightSize)
-										ramGlobalUsage -= rightSize;
-									else ramGlobalUsage -= leftSize;
+										globalUsage -= rightSize;
+									else globalUsage -= leftSize;
 								}
 							}
 						}
@@ -1638,21 +1673,21 @@ void ContentManager::recalculateOverlapInternal()
 
 	for (std::set<ContentInfo *>::iterator it(contentOverlap.begin()), end(contentOverlap.end()); it != end; ++it)
 	{
-		if (m_ContentOverlap.find(*it) == m_ContentOverlap.end())
+		if (m_ContentOverlapMemory.find(*it) == m_ContentOverlapMemory.end())
 		{
 			// Content no longer overlaps
 			printf("CM: Content '%s' no longer overlapping\n", (*it)->DestName.toLocal8Bit().data());
 
 			// Update overlap GUI
-			(*it)->OverlapFlag = false;
+			(*it)->OverlapMemoryFlag = false;
 			rebuildViewInternal(*it);
 
-			// Repuload
-			reuploadInternal(*it);
+			// Reupload
+			reuploadInternal(*it, true, false);
 		}
 	}
 
-	for (std::set<ContentInfo *>::iterator it(m_ContentOverlap.begin()), end(m_ContentOverlap.end()); it != end; ++it)
+	for (std::set<ContentInfo *>::iterator it(m_ContentOverlapMemory.begin()), end(m_ContentOverlapMemory.end()); it != end; ++it)
 	{
 		if (contentOverlap.find(*it) == contentOverlap.end())
 		{
@@ -1660,12 +1695,145 @@ void ContentManager::recalculateOverlapInternal()
 			printf("CM: Content '%s' is overlapping\n", (*it)->DestName.toLocal8Bit().data());
 
 			// Update overlap GUI
-			(*it)->OverlapFlag = true;
+			(*it)->OverlapMemoryFlag = true;
 			rebuildViewInternal(*it);
 		}
 	}
 
-	g_RamGlobalUsage = ramGlobalUsage;
+	g_RamGlobalUsage = globalUsage;
+}
+
+void ContentManager::recalculateOverlapFlashInternal()
+{
+	printf("ContentManager::recalculateOverlapFlashInternal()\n");
+
+	std::set<ContentInfo *> contentOverlap;
+	m_ContentOverlapFlash.swap(contentOverlap);
+
+	int globalUsage = 0;
+	size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
+
+	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
+	{
+		ContentInfo *leftInfo = (ContentInfo *)(void *)(*left)->data(0, Qt::UserRole).value<quintptr>();
+		if (leftInfo->Converter != ContentInfo::Invalid && leftInfo->FlashLoaded)
+		{
+			int leftSize = getContentSize(leftInfo);
+			// printf("leftSize: %i\n", leftSize);
+			if (leftSize >= 0)
+			{
+				int leftAddr = leftInfo->FlashAddress;
+				if (leftAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
+				{
+					printf("CM: Content '%s' overlaps with flash firmware\n", leftInfo->DestName.toLocal8Bit().data());
+					if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
+						m_ContentOverlapFlash.insert(leftInfo);
+					++left;
+				}
+				if (leftAddr + leftSize > globalSize)
+				{
+					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
+					if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
+						m_ContentOverlapFlash.insert(leftInfo);
+					++left;
+				}
+				else
+				{
+					globalUsage += leftSize;
+					for (QTreeWidgetItemIterator right(++left); *right; ++right)
+					{
+						ContentInfo *rightInfo = (ContentInfo *)(void *)(*right)->data(0, Qt::UserRole).value<quintptr>();
+						if (rightInfo->Converter != ContentInfo::Invalid && rightInfo->FlashLoaded)
+						{
+							int rightSize = getContentSize(rightInfo);
+							if (rightSize >= 0)
+							{
+								int rightAddr = rightInfo->FlashAddress;
+
+								if (leftAddr < rightAddr)
+								{
+									if (leftAddr + leftSize > rightAddr)
+									{
+										// overlap
+										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+										if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
+											m_ContentOverlapFlash.insert(leftInfo);
+										if (m_ContentOverlapFlash.find(rightInfo) == m_ContentOverlapFlash.end())
+											m_ContentOverlapFlash.insert(rightInfo);
+										globalUsage -= (leftAddr + leftSize - rightAddr);
+									}
+								}
+								else if (rightAddr < leftAddr)
+								{
+									if (rightAddr + rightSize > leftAddr)
+									{
+										// overlap
+										printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+										if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
+											m_ContentOverlapFlash.insert(leftInfo);
+										if (m_ContentOverlapFlash.find(rightInfo) == m_ContentOverlapFlash.end())
+											m_ContentOverlapFlash.insert(rightInfo);
+										globalUsage -= (rightAddr + rightSize - leftAddr);
+									}
+								}
+								else
+								{
+									// overlap
+									printf("CM: Content '%s' overlap with '%s'\n", leftInfo->DestName.toLocal8Bit().data(), rightInfo->DestName.toLocal8Bit().data());
+									if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
+										m_ContentOverlapFlash.insert(leftInfo);
+									if (m_ContentOverlapFlash.find(rightInfo) == m_ContentOverlapFlash.end())
+										m_ContentOverlapFlash.insert(rightInfo);
+									if (leftSize > rightSize)
+										globalUsage -= rightSize;
+									else globalUsage -= leftSize;
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				++left;
+			}
+		}
+		else
+		{
+			++left;
+		}
+	}
+
+	for (std::set<ContentInfo *>::iterator it(contentOverlap.begin()), end(contentOverlap.end()); it != end; ++it)
+	{
+		if (m_ContentOverlapFlash.find(*it) == m_ContentOverlapFlash.end())
+		{
+			// Content no longer overlaps
+			printf("CM: Content '%s' no longer overlapping\n", (*it)->DestName.toLocal8Bit().data());
+
+			// Update overlap GUI
+			(*it)->OverlapFlashFlag = false;
+			rebuildViewInternal(*it);
+
+			// Reupload
+			reuploadInternal(*it, false, true);
+		}
+	}
+
+	for (std::set<ContentInfo *>::iterator it(m_ContentOverlapFlash.begin()), end(m_ContentOverlapFlash.end()); it != end; ++it)
+	{
+		if (contentOverlap.find(*it) == contentOverlap.end())
+		{
+			// Newly overlapping content
+			printf("CM: Content '%s' is overlapping\n", (*it)->DestName.toLocal8Bit().data());
+
+			// Update overlap GUI
+			(*it)->OverlapFlashFlag = true;
+			rebuildViewInternal(*it);
+		}
+	}
+
+	g_FlashGlobalUsage = globalUsage;
 }
 
 void ContentManager::reloadExternal(ContentInfo *contentInfo)
@@ -3182,8 +3350,8 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->MemoryLoaded = m_OldValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo);
-		m_ContentManager->recalculateOverlapInternal();
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapMemoryInternal();
 		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -3192,8 +3360,8 @@ public:
 	virtual void redo()
 	{
 		m_ContentInfo->MemoryLoaded = m_NewValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo);
-		m_ContentManager->recalculateOverlapInternal();
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapMemoryInternal();
 		m_ContentManager->reloadExternal(m_ContentInfo);
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -3244,8 +3412,8 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->MemoryAddress = m_OldValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo);
-		m_ContentManager->recalculateOverlapInternal();
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapMemoryInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -3253,8 +3421,8 @@ public:
 	virtual void redo()
 	{
 		m_ContentInfo->MemoryAddress = m_NewValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo);
-		m_ContentManager->recalculateOverlapInternal();
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapMemoryInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -3441,6 +3609,178 @@ void ContentManager::propertiesDataEmbeddedChanged(int value)
 		changeDataEmbedded(current(), (value == (int)Qt::Checked));
 }
 
+////////////////////////////////////////////////////////////////////////
+/*
+
+class ContentManager::ChangeFlashLoaded : public QUndoCommand
+{
+public:
+	ChangeFlashLoaded(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->FlashLoaded),
+		m_NewValue(value)
+	{
+		setText(value ? tr("Load content to flash") : tr("Unload content from flash"));
+	}
+
+	virtual ~ChangeFlashLoaded()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->FlashLoaded = m_OldValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapFlashInternal();
+		m_ContentManager->reloadExternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->FlashLoaded = m_NewValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapFlashInternal();
+		m_ContentManager->reloadExternal(m_ContentInfo);
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	bool m_OldValue;
+	bool m_NewValue;
+};
+
+void ContentManager::changeFlashLoaded(ContentInfo *contentInfo, bool value)
+{
+	// Create undo/redo
+	ChangeFlashLoaded *changeFlashLoaded = new ChangeFlashLoaded(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeFlashLoaded);
+}
+
+void ContentManager::propertiesFlashLoadedChanged(int value)
+{
+	printf("ContentManager::propertiesFlashLoadedChanged(value)\n");
+
+	if (current() && current()->FlashLoaded != (value == (int)Qt::Checked))
+		changeFlashLoaded(current(), (value == (int)Qt::Checked));
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::ChangeFlashAddress : public QUndoCommand
+{
+public:
+	ChangeFlashAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_ContentInfo(contentInfo),
+		m_OldValue(contentInfo->FlashAddress),
+		m_NewValue(value)
+	{
+		setText(tr("Change flash address"));
+	}
+
+	virtual ~ChangeFlashAddress()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentInfo->FlashAddress = m_OldValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapFlashInternal();
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual void redo()
+	{
+		m_ContentInfo->FlashAddress = m_NewValue;
+		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->recalculateOverlapFlashInternal();
+		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
+			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9074404;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeFlashAddress *c = static_cast<const ChangeFlashAddress *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	ContentInfo *m_ContentInfo;
+	int m_OldValue;
+	int m_NewValue;
+};
+
+void ContentManager::changeFlashAddress(ContentInfo *contentInfo, int value, bool internal)
+{
+	// Create undo/redo
+	value &= 0x7FFFFFFC;
+	ChangeFlashAddress *changeFlashAddress = new ChangeFlashAddress(this, contentInfo, value); // Force round to 4
+	if (!internal)
+	{
+		m_MainWindow->undoStack()->beginMacro(tr("Change flash address"));
+	}
+	int oldFlashAddr = contentInfo->FlashAddress;
+	int oldBitmapAddr = contentInfo->bitmapAddress();
+	m_MainWindow->undoStack()->push(changeFlashAddress);
+	if (!internal)
+	{
+		m_MainWindow->propertiesEditor()->surpressSet(true);
+		int newBitmapAddr = contentInfo->bitmapAddress();
+		if (contentInfo->Converter == ContentInfo::Font)
+		{
+			editorUpdateFontAddress(value, oldFlashAddr, m_MainWindow->dlEditor());
+			editorUpdateFontAddress(value, oldFlashAddr, m_MainWindow->cmdEditor());
+		}
+		if (requirePaletteAddress(contentInfo))
+		{
+			editorUpdatePaletteAddress(value, oldFlashAddr, m_MainWindow->dlEditor());
+			editorUpdatePaletteAddress(value, oldFlashAddr, m_MainWindow->cmdEditor());
+		}
+		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
+		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		m_ContentList->setCurrentItem(contentInfo->View);
+		m_MainWindow->propertiesEditor()->surpressSet(false);
+		m_MainWindow->undoStack()->endMacro();
+	}
+}
+
+void ContentManager::propertiesFlashAddressChanged(int value)
+{
+	printf("ContentManager::propertiesFlashAddressChanged(value)\n");
+
+	if (current() && current()->FlashAddress != (value & 0x7FFFFFFC))
+		changeFlashAddress(current(), value);
+	else if (current() && value != (value & 0x7FFFFFFC))
+		rebuildGUIInternal(current());
+}
+
+*/
 ////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeRawStart : public QUndoCommand

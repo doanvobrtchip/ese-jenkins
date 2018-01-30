@@ -394,14 +394,47 @@ void loop()
 		return;
 
 	s_ContentManager->lockContent();
-	std::set<ContentInfo *> contentInfo;
-	s_ContentManager->swapUploadDirty(contentInfo);
+	if (g_Flash)
+	{
+		std::set<ContentInfo *> contentInfoFlash;
+		s_ContentManager->swapUploadFlashDirty(contentInfoFlash);
+		size_t flashSize = BT8XXEMU_Flash_size(g_Flash);
+		for (std::set<ContentInfo *>::iterator it(contentInfoFlash.begin()), end(contentInfoFlash.end()); it != end; ++it)
+		{
+			ContentInfo *info = (*it);
+			int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+			QString fileName = (info->Converter == ContentInfo::FlashMap) ? info->SourcePath : (info->DestName + (info->DataCompressed ? ".bin" : ".raw"));
+			printf("[Flash] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+			QFile binFile(fileName);
+			if (!binFile.exists())
+			{
+				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
+				continue;
+			}
+			int binSize = (info->Converter == ContentInfo::FlashMap) ? info->CachedFlashSize : binFile.size();
+			if (binSize + loadAddr > flashSize)
+			{
+				printf("[Flash] Error: File of size '%i' exceeds flash size\n", binSize);
+				continue;
+			}
+			; {
+				binFile.open(QIODevice::ReadOnly);
+				QDataStream in(&binFile);
+				if (info->Converter == ContentInfo::FlashMap) in.skipRawData(info->FlashAddress);
+				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
+				int s = in.readRawData(&ram[loadAddr], binSize);
+				BT8XXEMU_poke(g_Emulator);
+			}
+		}
+	}
+	std::set<ContentInfo *> contentInfoMemory;
+	s_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
 	bool reuploadFontSetup = false;
-	for (std::set<ContentInfo *>::iterator it(contentInfo.begin()), end(contentInfo.end()); it != end; ++it)
+	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
 		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
-		QString fileName = info->DestName + ".raw";
+		QString fileName = (info->Converter == ContentInfo::FlashMap) ? info->SourcePath : (info->DestName + ".raw");
 		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
 		QFile binFile(fileName);
 		if (!binFile.exists())
@@ -410,7 +443,7 @@ void loop()
 			continue;
 		}
 		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
-		int binSize = imageCoprocessor ? info->CachedSize : (int)binFile.size();
+		int binSize = imageCoprocessor ? info->CachedMemorySize : ((info->Converter == ContentInfo::FlashMap) ? info->CachedFlashSize : binFile.size());
 		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
@@ -435,6 +468,7 @@ void loop()
 			int fileSize = binFile.size();
 			binFile.open(QIODevice::ReadOnly);
 			QDataStream in(&binFile);
+			if (info->Converter == ContentInfo::FlashMap) in.skipRawData(info->FlashAddress);
 			int writeCount = 0;
 			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			for (;;)
@@ -494,6 +528,7 @@ void loop()
 		; {
 			binFile.open(QIODevice::ReadOnly);
 			QDataStream in(&binFile);
+			if (info->Converter == ContentInfo::FlashMap) in.skipRawData(info->FlashAddress);
 			/*swrbegin(info->MemoryAddress);
 			char b;
 			while (in.readRawData(&b, 1))

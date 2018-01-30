@@ -44,6 +44,9 @@ class QCheckBox;
 namespace FTEDITOR {
 
 extern int g_RamGlobalUsage;
+extern int g_FlashGlobalUsage;
+
+#define FTEDITOR_FLASH_FIRMWARE_SIZE 1024
 
 #define BITMAP_SETUP_HANDLES_NB 16
 
@@ -111,7 +114,8 @@ struct ContentInfo
 	int CachedImageHeight;
 	int CachedImageStride;
 
-	int CachedSize; // Memory size
+	int CachedMemorySize; // Memory size
+	int CachedFlashSize;
 
 	bool OverlapMemoryFlag;
 	bool OverlapFlashFlag;
@@ -202,7 +206,8 @@ public:
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
-	inline void swapUploadDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadDirty.swap(contentInfo); }
+	inline void swapUploadMemoryDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadMemoryDirty.swap(contentInfo); }
+	inline void swapUploadFlashDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadFlashDirty.swap(contentInfo); }
 	void reuploadAll();
 
 	// Utility
@@ -232,13 +237,13 @@ private:
 	QString createName(const QString &name); // Rename if already exists.
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
+	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFreeAddress(); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
-	void reuploadMemoryInternal(ContentInfo *contentInfo);
-	void reuploadFlashInternal(ContentInfo *contentInfo);
+	void reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash);
 	void recalculateOverlapMemoryInternal();
 	void recalculateOverlapFlashInternal();
 	void rebuildViewInternal(ContentInfo *contentInfo);
