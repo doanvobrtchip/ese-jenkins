@@ -82,6 +82,8 @@ private:
 	QScrollBar *m_Vertical;
 	int m_ScreenScale;
 
+	QString m_InitialWorkingDir;
+
 private:
 	EmulatorViewport(const EmulatorViewport &);
 	EmulatorViewport &operator=(const EmulatorViewport &);

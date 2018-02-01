@@ -82,9 +82,6 @@ struct ContentInfo
 
 	bool DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
 	bool DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
-
-	QString FlashMapPath; // If set, the data is sourced raw from a flash image. Can only be set using import
-	QString FlashMapName; // Name of this asset in the flash map
 	bool FlashLoaded; // Whether this is loaded into (or sourced from, if not dirty) flash
 	int FlashAddress; // Target (or source) flash address
 
@@ -98,6 +95,9 @@ struct ContentInfo
 	int FontSize;
 	QString FontCharSet;
 	int FontOffset;
+
+	QString FlashMapPath; // Path of the flash map used for mapped flash import
+	QString FlashMapName; // Name of this asset in the flash map
 
 	QString BuildError;
 
@@ -162,6 +162,9 @@ public:
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
 
+	// Get the current flash map path
+	QString findFlashMapPath();
+
 	// Editor utilities
 	// Find handle related to content address, return -1 on failure // TODO: depend on current editor line
 	int editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor);
@@ -184,6 +187,7 @@ public:
 	void editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor);
 
 	// Changes
+	void setFlashMapPath(const QString &value);
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
@@ -217,6 +221,7 @@ private:
 	class Add;
 	class Remove;
 
+	class SetFlashMapPath;
 	class ChangeSourcePath;
 	class ChangeDestName;
 	class ChangeConverter;
@@ -240,6 +245,7 @@ private:
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFreeAddress(); // Return -1 if no more space
 
+	bool reloadFlashMapInternal(QString flashMapPath = QString::null);
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);

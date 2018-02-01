@@ -27,6 +27,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QDateTime>
+#include <QMessageBox>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -60,8 +61,6 @@ ContentInfo::ContentInfo(const QString &filePath)
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
 	MemoryAddress = 0;
-	FlashMapPath = QString::null;
-	FlashMapName = QString::null;
 	FlashLoaded = false;
 	FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 	DataCompressed = true;
@@ -73,6 +72,8 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
+	FlashMapPath = QString::null;
+	FlashMapName = QString::null;
 	UploadMemoryDirty = true;
 	UploadFlashDirty = true;
 	ExternalDirty = false;
@@ -729,6 +730,33 @@ int ContentManager::getFreeAddress()
 	return freeAddress;
 }
 
+bool ContentManager::reloadFlashMapInternal(QString flashMapPath)
+{
+	printf("ContentManager::reloadFlashMapInternal(\"%s\")\n", flashMapPath.toLocal8Bit().data());
+
+	if (flashMapPath.isEmpty())
+	{
+		flashMapPath = findFlashMapPath();
+	}
+
+	if (!flashMapPath.isEmpty())
+	{
+		QFileInfo flashMapInfo = QFileInfo(flashMapPath);
+		QString filePath = flashMapInfo.absolutePath() + "/" + flashMapInfo.completeBaseName() + ".bin";
+
+		// TODO_FLASH: Load map!
+
+		// TODO_FLASH: Update/add/remove content!
+
+		// m_MainWindow->undoStack()->beginMacro("Load Flash Map");
+		// m_MainWindow->undoStack()->endMacro();
+
+		printf("Hi");
+	}
+
+	return false;
+}
+
 void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
@@ -865,7 +893,7 @@ void ContentManager::add()
 		m_MainWindow->getFileDialogPath(),
 		tr("All files (*.*)"));
 
-	if (fileName.isNull())
+	if (fileName.isEmpty())
 		return;
 
 	ContentInfo *info = add(fileName);
@@ -885,6 +913,7 @@ void ContentManager::remove()
 void ContentManager::rebuildAll()
 {
 	// Reprocess all content if necessary
+	reloadFlashMapInternal();
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
@@ -901,8 +930,13 @@ void ContentManager::importFlashMapped()
 		m_MainWindow->getFileDialogPath(),
 		tr("Flash image map (*.map)"));
 
-	if (fileName.isNull())
+	if (fileName.isEmpty())
 		return;
+
+	if (!reloadFlashMapInternal(fileName))
+	{
+		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
+	}
 }
 
 void ContentManager::exportFlashMapped()
@@ -1858,6 +1892,23 @@ ContentInfo *ContentManager::current()
 	if (!m_ContentList->currentItem())
 		return NULL;
 	return (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+}
+
+QString ContentManager::findFlashMapPath()
+{
+	QString flashMapPath;
+
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		if (info->Converter == ContentInfo::FlashMap)
+		{
+			flashMapPath = info->FlashMapPath;
+			if (!flashMapPath.isEmpty()) break;
+		}
+	}
+
+	return flashMapPath;
 }
 
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)
@@ -2835,6 +2886,48 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 			}
 		}
 	}
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class ContentManager::SetFlashMapPath : public QUndoCommand
+{
+public:
+	SetFlashMapPath(ContentManager *contentManager, const QString &value) :
+		QUndoCommand(),
+		m_ContentManager(contentManager),
+		m_OldValue(contentManager->findFlashMapPath()),
+		m_NewValue(value)
+	{
+		setText(tr("Import mapped flash image"));
+	}
+
+	virtual ~SetFlashMapPath()
+	{
+
+	}
+
+	virtual void undo()
+	{
+		m_ContentManager->reloadFlashMapInternal(m_OldValue);
+	}
+
+	virtual void redo()
+	{
+		m_ContentManager->reloadFlashMapInternal(m_NewValue);
+	}
+
+private:
+	ContentManager *m_ContentManager;
+	QString m_OldValue;
+	QString m_NewValue;
+};
+
+void ContentManager::setFlashMapPath(const QString &value)
+{
+	// Create undo/redo
+	SetFlashMapPath *setFlashMapPath = new SetFlashMapPath(this, value);
+	m_MainWindow->undoStack()->push(setFlashMapPath);
 }
 
 ////////////////////////////////////////////////////////////////////////

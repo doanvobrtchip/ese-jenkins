@@ -17,6 +17,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMutex>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QDir>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -28,6 +29,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 namespace FTEDITOR {
 
 #define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+
+#define FTEDITOR_FLASH_FIRMWARE_DIR "firmware"
 
 BT8XXEMU_Emulator *g_Emulator = NULL;
 BT8XXEMU_Flash *g_Flash = NULL;
@@ -109,6 +112,8 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	m_Horizontal->setSingleStep(16);
 	m_Horizontal->setPageStep(16 * 16);
 
+	m_InitialWorkingDir = QDir::currentPath();
+
 	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 }
@@ -149,6 +154,15 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			flashParams.Persistent = false;
 			flashParams.StdOut = false;
 			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
+			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
+			{
+				QString blobPath = m_InitialWorkingDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				if (blobPath.length() < 260)
+				{
+					int i = blobPath.toWCharArray(flashParams.DataFilePath);
+					flashParams.DataFilePath[i] = L'\0';
+				}
+			}
 #ifdef FTEDITOR_STDFLASH
 			wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH); // Standard flash image (for testing)
 #endif

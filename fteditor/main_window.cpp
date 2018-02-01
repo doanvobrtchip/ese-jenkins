@@ -2140,7 +2140,6 @@ void MainWindow::createDockWindows()
 			// m_ProjectFlashImport->setText(tr("Import"));
 			m_ProjectFlashImport->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
 			m_ProjectFlashImport->setToolTip(tr("Import Mapped Flash Image"));
-			connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
 			hBoxLayout->addWidget(m_ProjectFlashImport);
 
 			// m_ProjectFlashLayout->stretch
@@ -2553,6 +2552,8 @@ void MainWindow::createDockWindows()
 		m_ContentManagerDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);
 		m_WidgetsMenu->addAction(m_ContentManagerDock->toggleViewAction());
+
+		connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
 	}
 
 	// Bitmap
