@@ -261,6 +261,7 @@ static QFile *s_MediaFifoFile = NULL;
 static QDataStream *s_MediaFifoStream = NULL;
 
 static bool s_CoprocessorFaultOccured = false;
+static char s_CoprocessorDiagnostic[128 + 4] = { 0 };
 static bool s_StreamingData = false;
 
 static bool s_WarnMissingClear = false;
@@ -353,6 +354,16 @@ void loop()
 		{
 			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+			{
+				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
+				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
+				s_CoprocessorDiagnostic[128] = '\0';
+			}
+			else
+			{
+				s_CoprocessorDiagnostic[0] = '\0';
+			}
 			resetCoprocessorFromLoop();
 		}
 	}
@@ -1826,11 +1837,10 @@ void MainWindow::frameQt()
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
-			uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-			if (ram)
+			if (s_CoprocessorDiagnostic[0])
 			{
 				info = "<b>Co-processor engine fault</b><br><br>";
-				info += QString::fromLatin1((char *)&ram[0x309800]);
+				info += QString::fromLatin1(s_CoprocessorDiagnostic);
 			}
 			else
 			{
