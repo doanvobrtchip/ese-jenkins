@@ -651,8 +651,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	}
 	// width = slot->advance.x.. bitmap_left -> always substract (add) minx (negative) // pen_x += slot->advance.x >> 6
 	// bitmap = slot->bitmap.buffer, bitmap.pitch
-	FontMetricBlock fmb;
-	memset(fmb.Data, 0, 148);
+	FontMetricBlock fmb = { 0 };
 	fmb.Value.Format = format;
 	fmb.Value.LineStride = (format == L1) ? (maxw / 8) : ((format == L2) ? (maxw / 4) : ((format == L4) ? (maxw / 2) : (maxw)));
 	fmb.Value.Width = maxw;
@@ -706,7 +705,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 		const int ci = (format == L1) ? (i * fmb.Value.LineStride * maxh) : (i * maxw * maxh);
 		//printf("rows: %i\n", slot->bitmap.rows);
 		//printf("pitch: %i\n", slot->bitmap.pitch);
-		for (int by = 0; by < slot->bitmap.rows; ++by)
+		for (unsigned int by = 0; by < slot->bitmap.rows; ++by)
 		{
 			//printf("by%i\n", by);
 			const int ty = y + by;
@@ -950,6 +949,92 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 		QFile fo(outName + ".binh");
 		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
 	}
+}
+
+bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &flashMapPath)
+{
+	flashMapInfo.clear();
+
+	QFile file(flashMapPath);
+	if (!file.open(QIODevice::ReadOnly))
+		return false;
+
+	QTextStream in(&file);
+	FlashMapEntry lastEntry;
+	while (!in.atEnd())
+	{
+		QString line = in.readLine();
+		QStringList list = line.split(':');
+		if (list.size() >= 2)
+		{
+			// flashMapInfo[list[0]]
+			const QString &name = list[0];
+			bool ok;
+			int index = list[1].toInt(&ok);
+			if (!ok) continue;
+			if (!lastEntry.Name.isEmpty())
+			{
+				lastEntry.Size = index - lastEntry.Index;
+				flashMapInfo[lastEntry.Name] = lastEntry;
+			}
+			lastEntry.Name = list[0].trimmed().replace('\\', '/');
+			lastEntry.Index = index;
+		}
+	}
+	if (!lastEntry.Name.isEmpty())
+	{
+		QFileInfo flashMapPathInfo = QFileInfo(flashMapPath);
+		QString flashBinPath = flashMapPathInfo.absolutePath() + "/" + flashMapPathInfo.completeBaseName() + ".bin";
+		QFileInfo flashBinInfo(flashBinPath);
+		if (flashBinInfo.exists())
+		{
+			lastEntry.Size = flashBinInfo.size() - lastEntry.Index;
+			flashMapInfo[lastEntry.Name] = lastEntry;
+		}
+	}
+	file.close();
+	return true;
+}
+
+bool isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName)
+{
+	QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
+	QString flashBinPath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
+	QFileInfo flashBinInfo(flashBinPath);
+	if (!flashBinInfo.exists()) return false;
+	FlashMapInfo::const_iterator it = flashMapInfo.find(mappedName);
+	if (it == flashMapInfo.end()) return false;
+	int index = it->second.Index;
+	QFile file(flashBinPath);
+	if (!file.open(QIODevice::ReadOnly)) return false;
+	file.seek(index);
+	char d[2];
+	file.read(d, 2);
+	if (d != 2) return;
+	return false;
+}
+
+void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName)
+{
+	QFileInfo flashMapFileInfo = QFileInfo(inFile);
+	if (!flashMapFileInfo.exists())
+	{
+		buildError = "Flash map does not exist";
+		return;
+	}
+
+	QString flashBinPath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
+	QFileInfo flashBinInfo(flashBinPath);
+	if (!flashBinInfo.exists())
+	{
+		buildError = "Flash binary does not exist";
+		return;
+	}
+
+	FlashMapInfo flashMapInfo;
+	parseFlashMap(flashMapInfo, inFile);
+
+	buildError = "Not fully implemented";
 }
 
 } /* namespace FTEDITOR */

@@ -28,7 +28,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 namespace FTEDITOR {
 
-#define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+// #define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
 #define FTEDITOR_FLASH_FIRMWARE_DIR "firmware"
 

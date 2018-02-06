@@ -72,8 +72,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
-	FlashMapPath = QString::null;
-	FlashMapName = QString::null;
+	MappedName = QString::null;
 	UploadMemoryDirty = true;
 	UploadFlashDirty = true;
 	ExternalDirty = false;
@@ -123,8 +122,7 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		break;
 	case FlashMap:
 		j["converter"] = QString("FlashMap");
-		j["flashMapPath"] = FlashMapPath;
-		j["flashMapName"] = FlashMapName;
+		j["mappedName"] = MappedName;
 		break;
 	}
 	return j;
@@ -179,8 +177,8 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	}
 	else if (converter == "FlashMap")
 	{
-		FlashMapPath = j["flashMapPath"].toString();
-		FlashMapName = j["flashMapName"].toString();
+		Converter = FlashMap;
+		MappedName = j["mappedName"].toString();
 	}
 	else
 	{
@@ -221,6 +219,8 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 			return false;
 		break;
 	case FlashMap:
+		if (MappedName != other->MappedName)
+			return false;
 		break;
 	}
 	return true;
@@ -571,7 +571,6 @@ private:
 ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
-
 	ContentInfo *contentInfo = new ContentInfo(filePath);
 
 	QString fileExt = QFileInfo(filePath).suffix().toLower();
@@ -730,9 +729,12 @@ int ContentManager::getFreeAddress()
 	return freeAddress;
 }
 
-bool ContentManager::reloadFlashMapInternal(QString flashMapPath)
+bool ContentManager::loadFlashMap(QString flashMapPath)
 {
-	printf("ContentManager::reloadFlashMapInternal(\"%s\")\n", flashMapPath.toLocal8Bit().data());
+	printf("ContentManager::loadFlashMap(\"%s\")\n", flashMapPath.toLocal8Bit().data());
+
+	bool success = false;
+	m_MainWindow->undoStack()->beginMacro(tr("Load flash map"));
 
 	if (flashMapPath.isEmpty())
 	{
@@ -741,20 +743,72 @@ bool ContentManager::reloadFlashMapInternal(QString flashMapPath)
 
 	if (!flashMapPath.isEmpty())
 	{
-		QFileInfo flashMapInfo = QFileInfo(flashMapPath);
-		QString filePath = flashMapInfo.absolutePath() + "/" + flashMapInfo.completeBaseName() + ".bin";
+		QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
+		QString filePath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
 
-		// TODO_FLASH: Load map!
+		// Load flash map 
+		// C:\sync_projects_work\ft800emu\bt815\paul\FULL.map
+		FlashMapInfo flashMapInfo;
+		AssetConverter::parseFlashMap(flashMapInfo, flashMapPath);
 
-		// TODO_FLASH: Update/add/remove content!
+		// Create list of existing content entries to be updated and removed
+		std::vector<ContentInfo *> removeEntries;
+		std::map<QString, ContentInfo *> updateEntries;
+		QString absoluteMapPath = flashMapFileInfo.absoluteFilePath();
+		for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+		{
+			ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+			if (info->Converter == ContentInfo::FlashMap)
+			{
+				QString otherAbsoluteMapPath = QFileInfo(info->SourcePath).absoluteFilePath();
+				if ((otherAbsoluteMapPath != absoluteMapPath)
+					|| (flashMapInfo.find(info->MappedName) == flashMapInfo.end()))
+				{
+					removeEntries.push_back(info);
+				}
+				else
+				{
+					updateEntries[info->MappedName] = info;
+				}
+			}
+		}
 
-		// m_MainWindow->undoStack()->beginMacro("Load Flash Map");
-		// m_MainWindow->undoStack()->endMacro();
+		// Add or update from the flash map
+		for (FlashMapInfo::iterator it(flashMapInfo.begin()), end(flashMapInfo.end()); it != end; ++it)
+		{
+			std::map<QString, ContentInfo *>::iterator update = updateEntries.find(it->second.Name);
+			if (update != updateEntries.end())
+			{
+				// Reprocess existing content info
+				reprocessInternal(update->second);
+				success = true;
+			}
+			else
+			{
+				// Add new content info
+				ContentInfo *contentInfo = new ContentInfo(flashMapPath);
+				contentInfo->DestName = it->second.Name;
+				contentInfo->Converter = ContentInfo::FlashMap;
+				contentInfo->MappedName = it->second.Name;
+				addInternal(contentInfo);
+				success = true;
+			}
+		}
 
-		printf("Hi");
+		// Remove previous content
+		if (success)
+		{
+			for (std::vector<ContentInfo *>::iterator it(removeEntries.begin()), end(removeEntries.end()); it != end; ++it)
+			{
+				// Remove it
+				remove(*it);
+			}
+		}
 	}
 
-	return false;
+	m_MainWindow->undoStack()->endMacro();
+
+	return success;
 }
 
 void ContentManager::addInternal(ContentInfo *contentInfo)
@@ -913,7 +967,6 @@ void ContentManager::remove()
 void ContentManager::rebuildAll()
 {
 	// Reprocess all content if necessary
-	reloadFlashMapInternal();
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
@@ -933,7 +986,7 @@ void ContentManager::importFlashMapped()
 	if (fileName.isEmpty())
 		return;
 
-	if (!reloadFlashMapInternal(fileName))
+	if (!loadFlashMap(fileName))
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
 	}
@@ -1012,11 +1065,12 @@ bool ContentManager::cacheImageInfo(ContentInfo *info)
 
 int ContentManager::getContentSize(ContentInfo *contentInfo)
 {
+	/* REMOVE
 	if (contentInfo->Converter == ContentInfo::FlashMap)
 	{
 		// In future, if useful, may want special handling for a few file extensions that can load through the coprocessor (jpg, jpeg, png, bin vs raw)
 		return getFlashSize(contentInfo);
-	}
+	}*/
 
 	if (contentInfo->Converter == ContentInfo::ImageCoprocessor)
 	{
@@ -1050,11 +1104,12 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 int ContentManager::getFlashSize(ContentInfo *contentInfo)
 {
 	int contentSize;
+	/* REMOVE
 	if (contentInfo->Converter == ContentInfo::FlashMap)
 	{
 		// TODO: Parse flash map
 	}
-	else if (contentInfo->DataCompressed)
+	else */ if (contentInfo->DataCompressed)
 	{
 		QString fileName = contentInfo->DestName + ".bin";
 		QFileInfo binFile(fileName);
@@ -1143,7 +1198,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		if (contentInfo->MemoryLoaded)
 		{
 			if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
-				|| ((contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap)) && contentInfo->OverlapFlashFlag))
+				|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
 			{
 				text = "Overlap";
 				icon = QIcon(":/icons/exclamation-red.png");
@@ -1153,7 +1208,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 				text = "Loaded";
 				icon = QIcon(":/icons/tick");
 			}
-			else if (contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap))
+			else if (contentInfo->FlashLoaded)
 			{
 				text = "Flash";
 				icon = QIcon(":/icons/tick");
@@ -1220,6 +1275,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	}
 	if (contentInfo->Converter != ContentInfo::Invalid)
 	{
+		// TODO: Flash loaded option
 		m_PropertiesMemoryLoaded->setCheckState(contentInfo->MemoryLoaded ? Qt::Checked : Qt::Unchecked);
 		m_PropertiesMemoryAddress->setValue(contentInfo->MemoryAddress);
 		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
@@ -1230,6 +1286,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
+		m_PropertiesCommonConverter->setHidden(false);
 		m_PropertiesImage->setHidden(true);
 		m_PropertiesImageCoprocessor->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
@@ -1250,6 +1307,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		{
 			case ContentInfo::Image:
 			{
+				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
 				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
@@ -1311,6 +1369,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::Raw:
 			{
+				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
@@ -1329,6 +1388,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::ImageCoprocessor:
 			{
+				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(false);
 				QPixmap pixmap;
@@ -1354,6 +1414,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::Font:
 			{
+				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(true);
@@ -1374,6 +1435,23 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
+				break;
+			}
+			case ContentInfo::FlashMap:
+			{
+				m_PropertiesCommonConverter->setHidden(true);
+				m_PropertiesImage->setHidden(true);
+				m_PropertiesImagePreview->setHidden(true);
+				m_PropertiesImageCoprocessor->setHidden(true);
+				m_PropertiesRaw->setHidden(true);
+				m_PropertiesFont->setHidden(true);
+				m_PropertiesMemory->setHidden(false);
+				if (!propInfo.isEmpty()) propInfo += "<br>";
+				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
+				QFileInfo rawInfo(contentInfo->DestName + ".raw");
+				QFileInfo binInfo(contentInfo->DestName + ".bin");
+				if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
 				break;
 			}
 		}
@@ -1418,21 +1496,21 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					}
 					else if (contentInfo->Converter == ContentInfo::FlashMap)
 					{
-						QString srcMapFile = contentInfo->FlashMapPath;
-						bool srcMapExists = QFile::exists(srcMapFile);
-						if (!srcMapExists)
+						QString srcBinFile = srcInfo.absolutePath() + "/" + srcInfo.completeBaseName() + ".bin";
+						bool srcBinExists = QFile::exists(srcBinFile);
+						if (!srcBinExists)
 						{
-							contentInfo->BuildError = "<i>(Filesystem)</i><br>Flash map file does not exist.";
+							contentInfo->BuildError = "<i>(Filesystem)</i><br>Flash binary file does not exist.";
 							contentInfo->ExternalDirty = true;
 							goto SkipRebuild; // Error, skip rebuild
 						}
 						else
 						{
-							QFileInfo srcMapInfo(srcMapFile);
-							if (srcMapInfo.lastModified() > metaInfo.lastModified())
+							QFileInfo srcBinInfo(srcBinFile);
+							if (srcBinInfo.lastModified() > metaInfo.lastModified())
 							{
 								// FIXME: Perhaps better to store the srcInfo.lastModified() in the meta and compare if equal in case of swapping with older files
-								printf("Flash map file has been modified, ignore meta, rebuild\n");
+								printf("Flash binary file has been modified, ignore meta, rebuild\n");
 								goto IgnoreMeta; // Ignore meta comparison and rebuild
 							}
 						}
@@ -1509,7 +1587,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
 						break;
 					case ContentInfo::FlashMap:
-						// No-op, only need CachedFlashSize set through getFlashSize
+						AssetConverter::convertFlashMap(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->MappedName);
 						break;
 					default:
 						contentInfo->BuildError = "<i>(Critical Error)</i><br>Unknown converter selected.";
@@ -1571,12 +1649,12 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 
 void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash)
 {
-	printf("ContentManager::reuploadMemoryInternal(contentInfo, memory, flash)\n");
+	printf("ContentManager::reuploadInternal(contentInfo, memory, flash)\n");
 
 	// Reupload the content to emulator RAM or flash
 	// This happens in the emulator main loop
 	// Emulator main loop will lock the content mutex
-	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || ((contentInfo->FlashLoaded || (contentInfo->Converter == ContentInfo::FlashMap)) && flash)))
+	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || (contentInfo->FlashLoaded && flash)))
 	{
 		if (contentInfo->Converter == ContentInfo::Image
 			|| contentInfo->Converter == ContentInfo::Font)
@@ -1903,7 +1981,7 @@ QString ContentManager::findFlashMapPath()
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->Converter == ContentInfo::FlashMap)
 		{
-			flashMapPath = info->FlashMapPath;
+			flashMapPath = info->SourcePath;
 			if (!flashMapPath.isEmpty()) break;
 		}
 	}
@@ -2890,48 +2968,6 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 
 ////////////////////////////////////////////////////////////////////////
 
-class ContentManager::SetFlashMapPath : public QUndoCommand
-{
-public:
-	SetFlashMapPath(ContentManager *contentManager, const QString &value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_OldValue(contentManager->findFlashMapPath()),
-		m_NewValue(value)
-	{
-		setText(tr("Import mapped flash image"));
-	}
-
-	virtual ~SetFlashMapPath()
-	{
-
-	}
-
-	virtual void undo()
-	{
-		m_ContentManager->reloadFlashMapInternal(m_OldValue);
-	}
-
-	virtual void redo()
-	{
-		m_ContentManager->reloadFlashMapInternal(m_NewValue);
-	}
-
-private:
-	ContentManager *m_ContentManager;
-	QString m_OldValue;
-	QString m_NewValue;
-};
-
-void ContentManager::setFlashMapPath(const QString &value)
-{
-	// Create undo/redo
-	SetFlashMapPath *setFlashMapPath = new SetFlashMapPath(this, value);
-	m_MainWindow->undoStack()->push(setFlashMapPath);
-}
-
-////////////////////////////////////////////////////////////////////////
-
 class ContentManager::ChangeSourcePath : public QUndoCommand
 {
 public:
@@ -3712,7 +3748,7 @@ public:
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->FlashLoaded),
+		m_OldValue((contentInfo->FlashLoaded),
 		m_NewValue(value)
 	{
 		setText(value ? tr("Load content to flash") : tr("Unload content from flash"));

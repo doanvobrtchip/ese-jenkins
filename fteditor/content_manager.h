@@ -73,6 +73,10 @@ struct ContentInfo
 		FlashMap = 1025, // Loaded from flash map, can only be set using import
 	};
 
+	// ContentInfo::FlashMap functionality:
+	// Similar to Raw, but takes a .map file as input, and renames the .map extension to .bin to get the source data
+	// Links to specific file by means of name. Error in case name no longer exists in the map
+
 	QString SourcePath; // Relative source path
 	QString DestName; // Local destination name
 	ConverterType Converter;
@@ -96,8 +100,7 @@ struct ContentInfo
 	QString FontCharSet;
 	int FontOffset;
 
-	QString FlashMapPath; // Path of the flash map used for mapped flash import
-	QString FlashMapName; // Name of this asset in the flash map
+	QString MappedName; // Name of this asset in the flash map
 
 	QString BuildError;
 
@@ -146,6 +149,8 @@ public:
 	void add(ContentInfo *contentInfo);
 	// Remove the content
 	void remove(ContentInfo *remove);
+	// Load or reload a flash map. Only one flash map will be included at a time
+	bool loadFlashMap(QString flashMapPath = QString::null);
 	// Clear all content
 	void clear();
 	// Get all content
@@ -187,7 +192,6 @@ public:
 	void editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlEditor);
 
 	// Changes
-	void setFlashMapPath(const QString &value);
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
 	void changeDestName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
@@ -221,7 +225,6 @@ private:
 	class Add;
 	class Remove;
 
-	class SetFlashMapPath;
 	class ChangeSourcePath;
 	class ChangeDestName;
 	class ChangeConverter;
@@ -245,7 +248,6 @@ private:
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFreeAddress(); // Return -1 if no more space
 
-	bool reloadFlashMapInternal(QString flashMapPath = QString::null);
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);

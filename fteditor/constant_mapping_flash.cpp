@@ -12,6 +12,8 @@ namespace FTEDITOR {
 
 ///////////////////////////////////////////////////////////////////////
 
+// TODO: Load from a simple CSV file
+
 const char *g_FlashToString[FTEDITOR_FLASH_NB] = { // Flash device names
 	"MX25L64 (8 MiB)",
 };
