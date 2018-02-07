@@ -1690,13 +1690,29 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, boo
 		lockContent();
 		if (memory)
 		{
-			if (m_ContentUploadMemoryDirty.find(contentInfo) == m_ContentUploadMemoryDirty.end())
-				m_ContentUploadMemoryDirty.insert(contentInfo);
+			if (contentInfo->MemoryLoaded)
+			{
+				if (m_ContentUploadMemoryDirty.find(contentInfo) == m_ContentUploadMemoryDirty.end())
+					m_ContentUploadMemoryDirty.insert(contentInfo);
+			}
+			else
+			{
+				if (m_ContentUploadMemoryDirty.find(contentInfo) != m_ContentUploadMemoryDirty.end())
+					m_ContentUploadMemoryDirty.erase(contentInfo);
+			}
 		}
 		if (flash)
 		{
-			if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
-				m_ContentUploadFlashDirty.insert(contentInfo);
+			if (contentInfo->FlashLoaded)
+			{
+				if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
+					m_ContentUploadFlashDirty.insert(contentInfo);
+			}
+			else
+			{
+				if (m_ContentUploadFlashDirty.find(contentInfo) != m_ContentUploadFlashDirty.end())
+					m_ContentUploadFlashDirty.erase(contentInfo);
+			}
 		}
 		unlockContent();
 	}
