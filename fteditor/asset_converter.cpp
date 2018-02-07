@@ -951,9 +951,15 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 	}
 }
 
+static QString s_CachedFlashMapPath;
+static FlashMapInfo s_CachedFlashMapInfo;
+
 bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &flashMapPath)
 {
 	flashMapInfo.clear();
+
+	if (s_CachedFlashMapPath == flashMapPath) // TEMP: Speedup
+		flashMapInfo = s_CachedFlashMapInfo; // TEMP: Speedup
 
 	QFile file(flashMapPath);
 	if (!file.open(QIODevice::ReadOnly))
@@ -974,7 +980,8 @@ bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &fl
 			if (!ok) continue;
 			if (!lastEntry.Name.isEmpty())
 			{
-				lastEntry.Size = index - lastEntry.Index;
+				int lastSize = index - lastEntry.Index;
+				lastEntry.Size = lastSize;
 				flashMapInfo[lastEntry.Name] = lastEntry;
 			}
 			lastEntry.Name = list[0].trimmed().replace('\\', '/');
@@ -993,11 +1000,16 @@ bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &fl
 		}
 	}
 	file.close();
+
+	s_CachedFlashMapInfo = flashMapInfo; // TEMP: Speedup
+	s_CachedFlashMapPath = flashMapPath; // TEMP: Speedup
 	return true;
 }
 
-bool isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName)
+bool AssetConverter::isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName)
 {
+	return false; // TODO
+
 	QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
 	QString flashBinPath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
 	QFileInfo flashBinInfo(flashBinPath);
@@ -1009,13 +1021,21 @@ bool isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMap
 	if (!file.open(QIODevice::ReadOnly)) return false;
 	file.seek(index);
 	char d[2];
-	file.read(d, 2);
-	if (d != 2) return;
+	if (file.read(d, 2) != 2) return false;
+	if (d[0] == 0x78 && d[1] == 0x9c) return true;
 	return false;
 }
 
 void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName)
 {
+	// Remove old output
+	QString outRawName = outName + ".raw";
+	if (QFile::exists(outRawName))
+		QFile::remove(outRawName);
+	QString outBinName = outName + ".bin";
+	if (QFile::exists(outBinName))
+		QFile::remove(outBinName);
+
 	QFileInfo flashMapFileInfo = QFileInfo(inFile);
 	if (!flashMapFileInfo.exists())
 	{
@@ -1034,7 +1054,101 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 	FlashMapInfo flashMapInfo;
 	parseFlashMap(flashMapInfo, inFile);
 
-	buildError = "Not fully implemented";
+	FlashMapInfo::iterator entryIt = flashMapInfo.find(mappedName);
+	if (entryIt == flashMapInfo.end())
+	{
+		buildError = "Mapped name does not exist in flash map";
+		return;
+	}
+	const FlashMapEntry &entry = entryIt->second;
+
+	// bool compressed = isFlashCompressed(flashMapInfo, inFile, mappedName);
+
+	// buildError = "Not fully implemented";
+
+	// Copy the raw data
+	; {
+		QFile file(flashBinPath);
+		if (!file.open(QIODevice::ReadOnly))
+		{
+			buildError = "Could not read file";
+			return;
+		}
+		QDataStream in(&file);
+		in.skipRawData(entry.Index);
+		QFile fo(outName + ".raw");
+		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+		QDataStream out(&fo);
+		int i = 0;
+		char c[4096];
+		int jm;
+		int sz = 0;
+		int size = entry.Size;
+		while ((jm = in.readRawData(c, 4096)) > 0)
+		{
+			sz += jm;
+			if (sz >= size)
+				jm -= (sz - size);
+			if (out.writeRawData(c, jm) != jm)
+			{
+				buildError = "Write error";
+				break;
+			}
+			if (sz >= entry.Size)
+				break;
+		}
+		fo.close();
+		fo.resize(size); // FIXME
+		file.close();
+	}
+
+	// Copy the raw data
+	/*; {
+		QFile file(flashBinPath);
+		if (!file.open(QIODevice::ReadOnly))
+		{
+			buildError = "Could not read file";
+			return;
+		}
+		QDataStream in(&file);
+		in.skipRawData(entry.Index);
+		QFile fo(outName + ".rawh");
+		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+		QTextStream out(&fo);
+		out << "/* ('" << mappedName << "') * /\n";
+		int i = 0;
+		char c[4096];
+		int jm;
+		while ((jm = in.readRawData(c, 4096)) > 0)
+		{
+			for (int j = 0; j < jm; ++j)
+			{
+				out << ((unsigned int)c[j] & 0xFF) << ", ";
+				if (i % 32 == 31)
+					out << "\n";
+				++i;
+				if (i >= entry.Size)
+					goto BreakRawH;
+			}
+		}
+	BreakRawH:
+		fo.close();
+		file.close();
+	}*/
+
+	// TODO: Compression (and decompression) not supported yet
+	; {
+		QFile fo(outName + ".bin");
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	}
+	; {
+		QFile fo(outName + ".binh");
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	}
+	; {
+		QFile fo(outName + ".rawh");
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	}
 }
 
 } /* namespace FTEDITOR */

@@ -520,6 +520,9 @@ void ContentManager::bindCurrentDevice()
 	
 	if (info)
 		m_ContentList->setCurrentItem(info->View);
+
+	recalculateOverlapMemoryInternal();
+	recalculateOverlapFlashInternal();
 }
 
 class ContentManager::Add : public QUndoCommand
@@ -790,7 +793,11 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 				contentInfo->DestName = it->second.Name;
 				contentInfo->Converter = ContentInfo::FlashMap;
 				contentInfo->MappedName = it->second.Name;
-				addInternal(contentInfo);
+				contentInfo->DataCompressed = AssetConverter::isFlashCompressed(flashMapInfo, flashMapPath, it->second.Name);
+				contentInfo->FlashAddress = it->second.Index;
+				contentInfo->FlashLoaded = true; // TODO: Storage enum
+				contentInfo->DataEmbedded = false; // TODO: Storage enum
+				add(contentInfo);
 				success = true;
 			}
 		}
@@ -1195,24 +1202,37 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 	}
 	else
 	{
-		if (contentInfo->MemoryLoaded)
+		if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
+			|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
 		{
-			if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
-				|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
+			if (contentInfo->OverlapFlashFlag)
+			{
+				int globalUsage = 0;
+				size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
+				if (contentInfo->FlashAddress + contentInfo->CachedFlashSize > globalSize)
+				{
+					text = "No Space";
+				}
+				else
+				{
+					text = "Overlap";
+				}
+			}
+			else
 			{
 				text = "Overlap";
-				icon = QIcon(":/icons/exclamation-red.png");
 			}
-			else if (contentInfo->MemoryLoaded)
-			{
-				text = "Loaded";
-				icon = QIcon(":/icons/tick");
-			}
-			else if (contentInfo->FlashLoaded)
-			{
-				text = "Flash";
-				icon = QIcon(":/icons/tick");
-			}
+			icon = QIcon(":/icons/exclamation-red.png");
+		}
+		else if (contentInfo->MemoryLoaded)
+		{
+			text = "Loaded";
+			icon = QIcon(":/icons/tick");
+		}
+		else if (contentInfo->FlashLoaded)
+		{
+			text = "Flash";
+			icon = QIcon(":/icons/tick");
 		}
 	}
 
@@ -1253,7 +1273,10 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	// Set common widget values
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
 	m_PropertiesCommonName->setText(contentInfo->DestName);
-	m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
+	if (contentInfo->Converter < ContentInfo::FlashMap)
+	{
+		m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
+	}
 	switch (contentInfo->Converter)
 	{
 	case ContentInfo::Image:
@@ -1450,8 +1473,9 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
 				QFileInfo rawInfo(contentInfo->DestName + ".raw");
 				QFileInfo binInfo(contentInfo->DestName + ".bin");
+				propInfo += tr("<br><b>Flash Address: </b> ") + QString::number(contentInfo->FlashAddress); // TEMP
 				if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-				if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				// if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
 				break;
 			}
 		}
