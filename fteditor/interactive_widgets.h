@@ -212,7 +212,7 @@ public:
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
-		setMaximum(g_Flash ? BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
+		setMaximum(g_Flash ? (int)BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
 		setSingleStep(64);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
 	}
@@ -296,7 +296,7 @@ public:
 		if (addr & 0x800000)
 		{
 			setMinimum(0);
-			setMaximum(g_Flash ? BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
+			setMaximum(g_Flash ? (int)BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
 			setSingleStep(64);
 		}
 		else
