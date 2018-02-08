@@ -1077,18 +1077,26 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 		QDataStream in(&file);
 		in.skipRawData(entry.Index);
 		QFile fo(outName + ".raw");
-		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
 		QDataStream out(&fo);
 		int i = 0;
 		char c[4096];
 		int jm;
 		int sz = 0;
 		int size = entry.Size;
-		while ((jm = in.readRawData(c, 4096)) > 0)
+		while ((jm = in.readRawData(c, 4096)) != 0)
 		{
+			if (jm < 0)
+			{
+				buildError = "Read error";
+				break;
+			}
 			sz += jm;
 			if (sz >= size)
+			{
 				jm -= (sz - size);
+				sz -= (sz - size);
+			}
 			if (out.writeRawData(c, jm) != jm)
 			{
 				buildError = "Write error";
@@ -1098,7 +1106,6 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 				break;
 		}
 		fo.close();
-		fo.resize(size); // FIXME
 		file.close();
 	}
 
