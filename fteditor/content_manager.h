@@ -46,7 +46,7 @@ namespace FTEDITOR {
 extern int g_RamGlobalUsage;
 extern int g_FlashGlobalUsage;
 
-#define FTEDITOR_FLASH_FIRMWARE_SIZE 1024
+#define FTEDITOR_FLASH_FIRMWARE_SIZE 4096
 
 #define BITMAP_SETUP_HANDLES_NB 16
 

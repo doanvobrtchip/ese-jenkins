@@ -414,6 +414,12 @@ void loop()
 		{
 			ContentInfo *info = (*it);
 			int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+			if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
+			{
+				// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
+				printf("[Flash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+				continue;
+			}
 			QString fileName = info->DestName + (info->DataCompressed ? ".bin" : ".raw");
 			printf("[Flash] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
 			QFile binFile(fileName);
