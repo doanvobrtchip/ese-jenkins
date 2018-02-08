@@ -3389,6 +3389,7 @@ void MainWindow::openFile(const QString &fileName)
 		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 		QJsonArray content = root["content"].toArray();
+		m_ContentManager->suppressOverlapCheck();
 		for (int i = 0; i < content.size(); ++i)
 		{
 			ContentInfo *ci = new ContentInfo("");
@@ -3403,6 +3404,7 @@ void MainWindow::openFile(const QString &fileName)
 			bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
 			// m_BitmapSetup->fromJson(bitmaps);
 		}
+		m_ContentManager->resumeOverlapCheck();
 		postProcessEditor(m_Macro);
 		postProcessEditor(m_DlEditor);
 		postProcessEditor(m_CmdEditor);

@@ -163,6 +163,10 @@ public:
 	bool cacheImageInfo(ContentInfo *info);
 	// Find content info
 	ContentInfo *find(const QString &destName);
+	// Suppress overlap check
+	void suppressOverlapCheck();
+	// Resume overlap check
+	void resumeOverlapCheck();
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
@@ -303,6 +307,10 @@ private:
 
 	std::set<ContentInfo *> m_ContentUploadFlashDirty;
 	std::set<ContentInfo *> m_ContentOverlapFlash;
+
+	int m_OverlapSuppressed;
+	bool m_OverlapMemorySuppressed;
+	bool m_OverlapFlashSuppressed;
 
 	static QMutex s_Mutex;
 

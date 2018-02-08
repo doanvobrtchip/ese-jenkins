@@ -276,7 +276,7 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 	layout->addLayout(hbox);
 }
 
-ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL)
+ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL), m_OverlapSuppressed(0), m_OverlapMemorySuppressed(false),  m_OverlapFlashSuppressed(false)
 {
 	if (s_FileExtensions.empty())
 	{
@@ -738,6 +738,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 
 	bool success = false;
 	m_MainWindow->undoStack()->beginMacro(tr("Load flash map"));
+	suppressOverlapCheck();
 
 	if (flashMapPath.isEmpty())
 	{
@@ -813,6 +814,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 		}
 	}
 
+	resumeOverlapCheck();
 	m_MainWindow->undoStack()->endMacro();
 
 	return success;
@@ -1052,6 +1054,29 @@ ContentInfo *ContentManager::find(const QString &destName)
 
 	printf("Content '%s' not found\n", destName.toLocal8Bit().data());
 	return NULL;
+}
+
+void ContentManager::suppressOverlapCheck()
+{
+	++m_OverlapSuppressed;
+}
+
+void ContentManager::resumeOverlapCheck()
+{
+	--m_OverlapSuppressed;
+	if (!m_OverlapSuppressed)
+	{
+		if (m_OverlapFlashSuppressed)
+		{
+			recalculateOverlapFlashInternal();
+			m_OverlapFlashSuppressed = false;
+		}
+		if (m_OverlapMemorySuppressed)
+		{
+			recalculateOverlapMemoryInternal();
+			m_OverlapMemorySuppressed = false;
+		}
+	}
 }
 
 bool ContentManager::cacheImageInfo(ContentInfo *info)
@@ -1733,6 +1758,12 @@ void ContentManager::recalculateOverlapMemoryInternal()
 {
 	printf("ContentManager::recalculateOverlapMemoryInternal()\n");
 
+	if (m_OverlapSuppressed)
+	{
+		m_OverlapMemorySuppressed = true;
+		return;
+	}
+
 	std::set<ContentInfo *> contentOverlap;
 	m_ContentOverlapMemory.swap(contentOverlap);
 
@@ -1858,6 +1889,12 @@ void ContentManager::recalculateOverlapMemoryInternal()
 void ContentManager::recalculateOverlapFlashInternal()
 {
 	printf("ContentManager::recalculateOverlapFlashInternal()\n");
+
+	if (m_OverlapSuppressed)
+	{
+		m_OverlapFlashSuppressed = true;
+		return;
+	}
 
 	std::set<ContentInfo *> contentOverlap;
 	m_ContentOverlapFlash.swap(contentOverlap);
