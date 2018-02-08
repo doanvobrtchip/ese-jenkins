@@ -61,7 +61,7 @@ inline int addressSigned(int deviceIntf, int address)
 		&& ((address >> 23) & 0x1))
 	{
 		// Flash address / 32
-		return address & 0x1FFFFFF;
+		return address & 0xFFFFFF; // & 0x1FFFFFF;
 	}
 	int masked = (address & g_AddressMask[deviceIntf]);
 	int negmask = ~(g_AddressMask[deviceIntf] >> 1);

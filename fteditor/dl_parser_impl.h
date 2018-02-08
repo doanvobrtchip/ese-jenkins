@@ -1302,7 +1302,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				}
 				case CMD_SETBITMAP:
 				{
-					compiled.push_back(parsed.Parameter[0].I & addressMask(FTEDITOR_CURRENT_DEVICE));
+					compiled.push_back(addressSigned(FTEDITOR_CURRENT_DEVICE, parsed.Parameter[0].I));
 					uint32_t fmtw = parsed.Parameter[1].U & 0xFFFF
 						| parsed.Parameter[2].U << 16;
 					compiled.push_back(fmtw);
