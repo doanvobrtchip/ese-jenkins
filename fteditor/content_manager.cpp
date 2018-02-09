@@ -752,8 +752,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 
 		// Load flash map 
 		// C:\sync_projects_work\ft800emu\bt815\paul\FULL.map
-		FlashMapInfo flashMapInfo;
-		AssetConverter::parseFlashMap(flashMapInfo, flashMapPath);
+		const FlashMapInfo &flashMapInfo = AssetConverter::parseFlashMap(flashMapPath);
 
 		// Create list of existing content entries to be updated and removed
 		std::vector<ContentInfo *> removeEntries;
@@ -778,14 +777,20 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 		}
 
 		// Add or update from the flash map
-		for (FlashMapInfo::iterator it(flashMapInfo.begin()), end(flashMapInfo.end()); it != end; ++it)
+		for (FlashMapInfo::const_iterator it(flashMapInfo.begin()), end(flashMapInfo.end()); it != end; ++it)
 		{
 			std::map<QString, ContentInfo *>::iterator update = updateEntries.find(it->second.Name);
 			if (update != updateEntries.end())
 			{
 				// Reprocess existing content info
-				reprocessInternal(update->second);
+				ContentInfo *contentInfo = update->second;
+				bool dataCompressed = AssetConverter::isFlashCompressed(flashMapInfo, flashMapPath, it->second.Name);
+				if (contentInfo->DataCompressed != dataCompressed)
+					changeDataCompressed(contentInfo, dataCompressed);
+				reprocessInternal(contentInfo);
 				success = true;
+
+				// TODO: Update FlashAddress
 			}
 			else
 			{
@@ -1500,7 +1505,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				QFileInfo binInfo(contentInfo->DestName + ".bin");
 				propInfo += tr("<br><b>Flash Address: </b> ") + QString::number(contentInfo->FlashAddress); // TEMP
 				if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-				// if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
 				break;
 			}
 		}
@@ -3726,6 +3731,11 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->DataCompressed = m_OldValue;
+		if (m_ContentInfo->FlashLoaded)
+		{
+			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
+			m_ContentManager->recalculateOverlapFlashInternal();
+		}
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
@@ -3733,6 +3743,11 @@ public:
 	virtual void redo()
 	{
 		m_ContentInfo->DataCompressed = m_NewValue;
+		if (m_ContentInfo->FlashLoaded)
+		{
+			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
+			m_ContentManager->recalculateOverlapFlashInternal();
+		}
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}

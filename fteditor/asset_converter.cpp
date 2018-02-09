@@ -33,12 +33,17 @@
 #include <QFileInfo>
 #include <QTextStream>
 #include <QCoreApplication>
+#include <QDateTime>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
 
 // Project includes
 #include "constant_common.h"
+
+// Not practical to implement uncompress for now, since Qt library qUncompress expects uncompressed size as first 4 bytes in compressed data
+// TODO: Hide and turn off "Compressed" option when using FlashMap; disable compression processing when using FlashMap
+// #define FTEDITOR_UNCOMPRESS
 
 namespace FTEDITOR {
 
@@ -434,9 +439,102 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	return true;
 }
 
+static void copyCompress(QString &buildError, const QString &inFile, const QString &outName, int begin, int length, bool headers, const QString &comment)
+{
+	QFile fi(inFile);
+	if (!fi.open(QIODevice::ReadOnly))
+	{
+		buildError = "Could not read file";
+		return;
+	}
+	fi.seek(begin);
+	QByteArray ba = fi.read(length);
+	QByteArray zba;
+#ifdef FTEDITOR_UNCOMPRESS
+	if (ba[0] == '\x78' && (ba[1] == '\x9c' || ba[1] == '\xda'))
+	{
+		// Source is compressed
+		swap(ba, zba);
+		ba = qUncompress(zba);
+	}
+	else
+	{
+#else
+	; {
+#endif
+		// Compress
+		zba = qCompress(ba, 9);
+		zba = zba.right(zba.size() - 4);
+	}
+	; {
+		// Write raw
+		QFile fo(outName + ".raw");
+		if (!fo.open(QIODevice::WriteOnly | QIODevice::Truncate))
+		{
+			buildError = "Could not open file for writing";
+			return;
+		}
+		if (fo.write(ba) != ba.length())
+		{
+			buildError = "Write error";
+			return;
+		}
+		fo.close();
+	}
+	; {
+		// Write compressed
+		QFile fo(outName + ".bin");
+		if (!fo.open(QIODevice::WriteOnly | QIODevice::Truncate))
+		{
+			buildError = "Could not open file for writing";
+			return;
+		}
+		if (fo.write(zba) != zba.length())
+		{
+			buildError = "Write error";
+			return;
+		}
+		fo.close();
+	}
+	if (headers)
+	{
+		; {
+			QFile fo(outName + ".rawh");
+			fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+			QTextStream out(&fo);
+			out << comment;
+			out.setIntegerBase(16);
+			for (int i = 0; i < ba.size(); ++i)
+			{
+				out << "0x" << ((unsigned int)ba[i] & 0xFF) << ", ";
+				if (i % 32 == 31)
+					out << "\n";
+			}
+			fo.close();
+		}
+		; {
+			QFile fo(outName + ".binh");
+			fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+			QTextStream out(&fo);
+			// out << comment;
+			out.setIntegerBase(16);
+			for (int i = 0; i < zba.size(); ++i)
+			{
+				out << "0x" << ((unsigned int)zba[i] & 0xFF) << ", ";
+				if (i % 32 == 31)
+					out << "\n";
+			}
+			fo.close();
+		}
+	}
+}
+
 void AssetConverter::convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length)
 {
-#ifdef FT800EMU_PYTHON
+#if 1
+	copyCompress(buildError, inFile, outName, begin, (length > 0) ? (length) : (QFileInfo(inFile).size() - begin + length), true, 
+		QString("/*('file properties: ', 'total size ', ") + QString::number(length) + ")*/\n");
+#elif defined(FT800EMU_PYTHON)
 	if (a_RawConvRun)
 	{
 		PyErr_Clear();
@@ -952,18 +1050,24 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 }
 
 static QString s_CachedFlashMapPath;
+static QDateTime s_CachedFlashMapModified;
 static FlashMapInfo s_CachedFlashMapInfo;
 
-bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &flashMapPath)
+const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 {
-	flashMapInfo.clear();
+	FlashMapInfo &flashMapInfo = s_CachedFlashMapInfo;
 
-	if (s_CachedFlashMapPath == flashMapPath) // TEMP: Speedup
-		flashMapInfo = s_CachedFlashMapInfo; // TEMP: Speedup
+	QDateTime lastModified = QFileInfo(s_CachedFlashMapPath).lastModified();
+	if (s_CachedFlashMapPath == flashMapPath && s_CachedFlashMapModified == lastModified)
+		return flashMapInfo;
+
+	flashMapInfo.clear();
+	s_CachedFlashMapPath = flashMapPath;
+	s_CachedFlashMapModified = lastModified;
 
 	QFile file(flashMapPath);
 	if (!file.open(QIODevice::ReadOnly))
-		return false;
+		return flashMapInfo;
 
 	QTextStream in(&file);
 	FlashMapEntry lastEntry;
@@ -1001,15 +1105,12 @@ bool AssetConverter::parseFlashMap(FlashMapInfo &flashMapInfo, const QString &fl
 	}
 	file.close();
 
-	s_CachedFlashMapInfo = flashMapInfo; // TEMP: Speedup
-	s_CachedFlashMapPath = flashMapPath; // TEMP: Speedup
-	return true;
+	return flashMapInfo;
 }
 
 bool AssetConverter::isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName)
 {
-	return false; // TODO
-
+#ifdef FTEDITOR_UNCOMPRESS
 	QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
 	QString flashBinPath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
 	QFileInfo flashBinInfo(flashBinPath);
@@ -1022,8 +1123,11 @@ bool AssetConverter::isFlashCompressed(const FlashMapInfo &flashMapInfo, const Q
 	file.seek(index);
 	char d[2];
 	if (file.read(d, 2) != 2) return false;
-	if (d[0] == 0x78 && d[1] == 0x9c) return true;
+	if (d[0] == '\x78' && (d[1] == '\x9c' || d[1] == '\xda')) return true;
 	return false;
+#else
+	return false;
+#endif
 }
 
 void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName)
@@ -1051,10 +1155,9 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 		return;
 	}
 
-	FlashMapInfo flashMapInfo;
-	parseFlashMap(flashMapInfo, inFile);
+	const FlashMapInfo &flashMapInfo = parseFlashMap(inFile);
 
-	FlashMapInfo::iterator entryIt = flashMapInfo.find(mappedName);
+	FlashMapInfo::const_iterator entryIt = flashMapInfo.find(mappedName);
 	if (entryIt == flashMapInfo.end())
 	{
 		buildError = "Mapped name does not exist in flash map";
@@ -1062,92 +1165,9 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 	}
 	const FlashMapEntry &entry = entryIt->second;
 
-	// bool compressed = isFlashCompressed(flashMapInfo, inFile, mappedName);
+	// Copy raw and compressed data
+	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, QString::null);
 
-	// buildError = "Not fully implemented";
-
-	// Copy the raw data
-	; {
-		QFile file(flashBinPath);
-		if (!file.open(QIODevice::ReadOnly))
-		{
-			buildError = "Could not read file";
-			return;
-		}
-		QDataStream in(&file);
-		in.skipRawData(entry.Index);
-		QFile fo(outName + ".raw");
-		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		QDataStream out(&fo);
-		int i = 0;
-		char c[4096];
-		int jm;
-		int sz = 0;
-		int size = entry.Size;
-		while ((jm = in.readRawData(c, 4096)) != 0)
-		{
-			if (jm < 0)
-			{
-				buildError = "Read error";
-				break;
-			}
-			sz += jm;
-			if (sz >= size)
-			{
-				jm -= (sz - size);
-				sz -= (sz - size);
-			}
-			if (out.writeRawData(c, jm) != jm)
-			{
-				buildError = "Write error";
-				break;
-			}
-			if (sz >= entry.Size)
-				break;
-		}
-		fo.close();
-		file.close();
-	}
-
-	// Copy the raw data
-	/*; {
-		QFile file(flashBinPath);
-		if (!file.open(QIODevice::ReadOnly))
-		{
-			buildError = "Could not read file";
-			return;
-		}
-		QDataStream in(&file);
-		in.skipRawData(entry.Index);
-		QFile fo(outName + ".rawh");
-		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
-		QTextStream out(&fo);
-		out << "/* ('" << mappedName << "') * /\n";
-		int i = 0;
-		char c[4096];
-		int jm;
-		while ((jm = in.readRawData(c, 4096)) > 0)
-		{
-			for (int j = 0; j < jm; ++j)
-			{
-				out << ((unsigned int)c[j] & 0xFF) << ", ";
-				if (i % 32 == 31)
-					out << "\n";
-				++i;
-				if (i >= entry.Size)
-					goto BreakRawH;
-			}
-		}
-	BreakRawH:
-		fo.close();
-		file.close();
-	}*/
-
-	// TODO: Compression (and decompression) not supported yet
-	; {
-		QFile fo(outName + ".bin");
-		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
-	}
 	; {
 		QFile fo(outName + ".binh");
 		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
