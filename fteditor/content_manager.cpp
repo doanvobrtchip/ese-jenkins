@@ -529,7 +529,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	addLabeledWidget(this, propDataLayout, tr("Compressed: "), m_PropertiesDataCompressed);
 	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataCompressedChanged(int)));
 	m_PropertiesFlashAddress = new UndoStackDisabler<QSpinBox>(this);
-	m_PropertiesFlashAddress->setMinimum(0);
+	m_PropertiesFlashAddress->setMinimum(FTEDITOR_FLASH_FIRMWARE_SIZE);
 	m_PropertiesFlashAddress->setSingleStep(32);
 	m_PropertiesFlashAddress->setKeyboardTracking(false);
 	m_PropertiesFlashAddressLabel = addLabeledWidget(this, propDataLayout, tr("Flash Address: "), m_PropertiesFlashAddress);
@@ -574,7 +574,13 @@ void ContentManager::bindCurrentDevice()
 	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 
 	if (g_Flash)
-		m_PropertiesFlashAddress->setMaximum((int)BT8XXEMU_Flash_size(g_Flash));
+	{
+		int size = (int)BT8XXEMU_Flash_size(g_Flash);
+		if (m_PropertiesFlashAddress->value() < size)
+			m_PropertiesFlashAddress->setMaximum(size);
+		else
+			m_PropertiesFlashAddress->setMaximum(m_PropertiesFlashAddress->value());
+	}
 	
 	if (info)
 		m_ContentList->setCurrentItem(info->View);
@@ -1386,7 +1392,26 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesMemoryAddress->setValue(contentInfo->MemoryAddress);
 		m_PropertiesDataStorage->setCurrentIndex((int)contentInfo->DataStorage);
 		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
-		m_PropertiesFlashAddress->setValue(contentInfo->FlashAddress);
+		if (g_Flash)
+		{
+			int flashSize = (int)BT8XXEMU_Flash_size(g_Flash);
+			bool b = m_PropertiesFlashAddress->blockSignals(true);
+			if (contentInfo->FlashAddress < FTEDITOR_FLASH_FIRMWARE_SIZE)
+				m_PropertiesFlashAddress->setMinimum(contentInfo->FlashAddress);
+			else
+				m_PropertiesFlashAddress->setMinimum(FTEDITOR_FLASH_FIRMWARE_SIZE);
+			if (contentInfo->FlashAddress > flashSize)
+				m_PropertiesFlashAddress->setMaximum(contentInfo->FlashAddress);
+			else
+				m_PropertiesFlashAddress->setMaximum(flashSize);
+			m_PropertiesFlashAddress->blockSignals(b);
+			m_PropertiesFlashAddress->setValue(contentInfo->FlashAddress);
+			m_PropertiesFlashAddress->setEnabled(true);
+		}
+		else
+		{
+			m_PropertiesFlashAddress->setEnabled(false);
+		}
 	}
 
 	bool flashMapOnly = (contentInfo->Converter == ContentInfo::FlashMap);
@@ -4055,13 +4080,7 @@ void ContentManager::propertiesFlashAddressChanged(int value)
 {
 	printf("ContentManager::propertiesFlashAddressChanged(value)\n");
 
-	int m = m_PropertiesFlashAddress->maximum();
-	if (value == m && current()->FlashAddress > m)
-	{
-		printf("Don't change FlashAddress value %i to %i with maximum %i", current()->FlashAddress, value, m);
-		return;
-	}
-	if (current() && (current()->FlashAddress % m) != (value & (0x7FFFFF << 5)))
+	if (current() && current()->FlashAddress != (value & (0x7FFFFF << 5)))
 		changeFlashAddress(current(), value);
 	else if (current() && value != (value & (0x7FFFFF << 5)))
 		rebuildGUIInternal(current());
