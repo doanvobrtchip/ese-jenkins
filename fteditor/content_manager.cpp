@@ -3760,7 +3760,13 @@ void ContentManager::propertiesMemoryAddressChanged(int value)
 {
 	printf("ContentManager::propertiesMemoryAddressChanged(value)\n");
 
-	if (current() && current()->MemoryAddress != (value & 0x7FFFFFFC))
+	int m = m_PropertiesMemoryAddress->maximum();
+	if (value == m && current()->MemoryAddress > m)
+	{
+		printf("Don't change MemoryAddress value %i to %i with maximum %i", current()->FlashAddress, value, m);
+		return;
+	}
+	if (current() && (current()->MemoryAddress % m) != (value & 0x7FFFFFFC))
 		changeMemoryAddress(current(), value);
 	else if (current() && value != (value & 0x7FFFFFFC))
 		rebuildGUIInternal(current());
@@ -4052,7 +4058,7 @@ void ContentManager::propertiesFlashAddressChanged(int value)
 	int m = m_PropertiesFlashAddress->maximum();
 	if (value == m && current()->FlashAddress > m)
 	{
-		printf("Don't change value %i to %i with maximum %i", current()->FlashAddress, value, m);
+		printf("Don't change FlashAddress value %i to %i with maximum %i", current()->FlashAddress, value, m);
 		return;
 	}
 	if (current() && (current()->FlashAddress % m) != (value & (0x7FFFFF << 5)))
