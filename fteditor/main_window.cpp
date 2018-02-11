@@ -1438,6 +1438,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	startEmulatorInternal();
 
+	bindCurrentDevice();
+
 	actNew(true);
 }
 
@@ -3834,6 +3836,17 @@ void MainWindow::actResetEmulator()
 	startEmulatorInternal();
 }
 
+void MainWindow::bindCurrentDevice()
+{
+	m_Inspector->bindCurrentDevice();
+	m_DlEditor->bindCurrentDevice();
+	m_CmdEditor->bindCurrentDevice();
+	m_Macro->bindCurrentDevice();
+	m_Toolbox->bindCurrentDevice();
+	m_ContentManager->bindCurrentDevice();
+	m_InteractiveProperties->bindCurrentDevice();
+}
+
 void MainWindow::stopEmulatorInternal()
 {
 	printf("Stop the emulator\n");
@@ -3892,13 +3905,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 	startEmulatorInternal();
 
 	// Re-establish the current emulator device
-	m_Inspector->bindCurrentDevice();
-	m_DlEditor->bindCurrentDevice();
-	m_CmdEditor->bindCurrentDevice();
-	m_Macro->bindCurrentDevice();
-	m_Toolbox->bindCurrentDevice();
-	m_ContentManager->bindCurrentDevice();
-	m_InteractiveProperties->bindCurrentDevice();
+	bindCurrentDevice();
 
 	// Update resolution list
 	if (changeDevice)

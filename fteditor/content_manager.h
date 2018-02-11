@@ -73,6 +73,13 @@ struct ContentInfo
 		FlashMap = 1025, // Loaded from flash map, can only be set using import
 	};
 
+	enum StorageType
+	{
+		File,
+		Embedded,
+		Flash
+	};
+
 	// ContentInfo::FlashMap functionality:
 	// Similar to Raw, but takes a .map file as input, and renames the .map extension to .bin to get the source data
 	// Links to specific file by means of name. Error in case name no longer exists in the map
@@ -84,10 +91,9 @@ struct ContentInfo
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
 	int MemoryAddress; // Target memory address
 
+	StorageType DataStorage; // Whether to use embedded header or file - only relevant for code generator scripts, or whether this is loaded into flash
 	bool DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
-	bool DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
-	bool FlashLoaded; // Whether this is loaded into (or sourced from, if not dirty) flash
-	int FlashAddress; // Target (or source) flash address
+	int FlashAddress; // Target flash address
 
 	int RawStart; // Raw start of memory
 	int RawLength; // Raw length of memory
@@ -117,8 +123,7 @@ struct ContentInfo
 	int CachedImageHeight;
 	int CachedImageStride;
 
-	int CachedMemorySize; // Memory size
-	int CachedFlashSize;
+	int CachedMemorySize; // Memory size (for example, after JPEG decompression by coprocessor)
 
 	bool OverlapMemoryFlag;
 	bool OverlapFlashFlag;
@@ -209,8 +214,9 @@ public:
 	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
 	void changeMemoryAddress(ContentInfo *contentInfo, int value, bool internal = false);
+	void changeDataStorage(ContentInfo *contentInfo, ContentInfo::StorageType value);
 	void changeDataCompressed(ContentInfo *contentInfo, bool value);
-	void changeDataEmbedded(ContentInfo *contentInfo, bool value);
+	void changeFlashAddress(ContentInfo *contentInfo, int value, bool internal = false);
 
 	// Lock to call when editing/moving content files from qt thread, when reading content from non-qt threads
 	void lockContent() { s_Mutex.lock(); }
@@ -242,15 +248,17 @@ private:
 	class ChangeRawLength;
 	class ChangeMemoryLoaded;
 	class ChangeMemoryAddress;
+	class ChangeDataStorage;
 	class ChangeDataCompressed;
-	class ChangeDataEmbedded;
+	class ChangeFlashAddress;
 
 	bool nameExists(const QString &name);
 	QString createName(const QString &name); // Rename if already exists.
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
-	int getFreeAddress(); // Return -1 if no more space
+	int getFreeMemoryAddress(); // Return -1 if no more space
+	// int getFreeFlashAddress(int size); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
@@ -273,6 +281,7 @@ private:
 	QWidget *m_PropertiesCommon;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
+	QLabel *m_PropertiesCommonConverterLabel;
 	QComboBox *m_PropertiesCommonConverter;
 
 	QGroupBox *m_PropertiesImage;
@@ -297,8 +306,12 @@ private:
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
 	UndoStackDisabler<QSpinBox> *m_PropertiesMemoryAddress;
+
+	QGroupBox *m_PropertiesData; // Storage
+	QComboBox *m_PropertiesDataStorage;
 	QCheckBox *m_PropertiesDataCompressed;
-	QCheckBox *m_PropertiesDataEmbedded;
+	QLabel *m_PropertiesFlashAddressLabel;
+	UndoStackDisabler<QSpinBox> *m_PropertiesFlashAddress;
 
 	static std::vector<QString> s_FileExtensions;
 
@@ -342,8 +355,9 @@ private slots:
 	void propertiesRawLengthChanged(int value);
 	void propertiesMemoryLoadedChanged(int value);
 	void propertiesMemoryAddressChanged(int value);
+	void propertiesDataStorageChanged(int value);
 	void propertiesDataCompressedChanged(int value);
-	void propertiesDataEmbeddedChanged(int value);
+	void propertiesFlashAddressChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);

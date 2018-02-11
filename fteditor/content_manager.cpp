@@ -61,10 +61,9 @@ ContentInfo::ContentInfo(const QString &filePath)
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
 	MemoryAddress = 0;
-	FlashLoaded = false;
-	FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
+	DataStorage = Embedded;
 	DataCompressed = true;
-	DataEmbedded = true;
+	FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 	RawStart = 0;
 	RawLength = 0;
 	ImageFormat = 0;
@@ -78,7 +77,6 @@ ContentInfo::ContentInfo(const QString &filePath)
 	ExternalDirty = false;
 	CachedImage = false;
 	CachedMemorySize = 0;
-	CachedFlashSize = 0;
 	OverlapMemoryFlag = false;
 	OverlapFlashFlag = false;
 	WantAutoLoad = false;
@@ -93,10 +91,26 @@ QJsonObject ContentInfo::toJson(bool meta) const
 		j["destName"] = DestName;
 		j["memoryLoaded"] = MemoryLoaded;
 		j["memoryAddress"] = MemoryAddress;
-		j["dataCompressed"] = DataCompressed;
-		j["dataEmbedded"] = DataEmbedded;
-		j["flashLoaded"] = FlashLoaded;
-		j["flashAddress"] = FlashAddress;
+		switch (DataStorage)
+		{
+		case File:
+			j["dataStorage"] = QString("File");
+			break;
+		case Embedded:
+			j["dataStorage"] = QString("Embedded");
+			break;
+		case Flash:
+			j["dataStorage"] = QString("Flash");
+			break;
+		}
+		if (Converter != FlashMap)
+		{
+			j["dataCompressed"] = DataCompressed;
+		}
+		if (DataStorage == Flash)
+		{
+			j["flashAddress"] = FlashAddress;
+		}
 	}
 	switch (Converter)
 	{
@@ -136,16 +150,38 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		DestName = j["destName"].toString();
 		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
 		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
-		DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
-		DataEmbedded = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool();
+		if (j.contains("dataEmbedded"))
+		{
+			DataStorage = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool()
+				? Embedded : File;
+		}
 		if (j.contains("flashLoaded"))
 		{
-			FlashLoaded = ((QJsonValue)j["flashLoaded"]).toVariant().toBool();
+			// Development temporary
+			DataStorage = ((QJsonValue)j["flashLoaded"]).toVariant().toBool()
+				? Flash : DataStorage;
+		}
+		if (j.contains("dataStorage"))
+		{
+			QString dataStorage = j["dataStorage"].toString();
+			if (dataStorage == "File") DataStorage = File;
+			else if (dataStorage == "Embedded") DataStorage = Embedded;
+			else if (dataStorage == "Flash") DataStorage = Flash;
+		}
+		if (j.contains("dataCompressed"))
+		{
+			DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
+		}
+		else
+		{
+			DataCompressed = false;
+		}
+		if (DataStorage == Flash)
+		{
 			FlashAddress = ((QJsonValue)j["flashAddress"]).toVariant().toInt();
 		}
 		else
 		{
-			FlashLoaded = false;
 			FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 		}
 	}
@@ -255,7 +291,7 @@ int ContentInfo::bitmapAddress(int deviceIntf) const
 	return MemoryAddress;
 }
 
-void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
+QLabel *addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget)
 {
 	QHBoxLayout *hbox = new QHBoxLayout();
 	QLabel *l = new QLabel(parent);
@@ -263,6 +299,7 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 	hbox->addWidget(l);
 	hbox->addWidget(widget);
 	layout->addLayout(hbox);
+	return l;
 }
 
 void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label, QWidget *widget0, QWidget *widget1)
@@ -368,7 +405,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	propCommonConverter->addItem(tr("Raw"));
 	propCommonConverter->addItem(tr("Font"));
 	propCommonConverter->addItem(tr("Image Coprocessor"));
-	addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
+	m_PropertiesCommonConverterLabel = addLabeledWidget(this, propCommonLayout, tr("Converter: "), propCommonConverter);
 	connect(m_PropertiesCommonConverter, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesCommonConverterChanged(int)));
 	propCommon->setLayout(propCommonLayout);
 
@@ -466,18 +503,38 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesMemoryLoaded = new QCheckBox(this);
 	addLabeledWidget(this, propMemLayout, tr("Loaded: "), m_PropertiesMemoryLoaded);
 	connect(m_PropertiesMemoryLoaded, SIGNAL(stateChanged(int)), this, SLOT(propertiesMemoryLoadedChanged(int)));
-	QFrame* line = new QFrame();
-	line->setFrameShape(QFrame::HLine);
-	line->setFrameShadow(QFrame::Sunken);
-	propMemLayout->addWidget(line);
+	// QFrame* line = new QFrame();
+	// line->setFrameShape(QFrame::HLine);
+	// line->setFrameShadow(QFrame::Sunken);
+	// propMemLayout->addWidget(line);
 	// TODO: New groupbox Storage Options: Compressed:, Embedded:, Flash:, Address:
-	m_PropertiesDataCompressed = new QCheckBox(this);
-	addLabeledWidget(this, propMemLayout, tr("Compressed: "), m_PropertiesDataCompressed);
-	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataCompressedChanged(int)));
-	m_PropertiesDataEmbedded = new QCheckBox(this);
-	addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
-	connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataEmbeddedChanged(int)));
+	// m_PropertiesDataEmbedded = new QCheckBox(this);
+	// addLabeledWidget(this, propMemLayout, tr("Embedded: "), m_PropertiesDataEmbedded);
+	// connect(m_PropertiesDataEmbedded, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataEmbeddedChanged(int)));
 	m_PropertiesMemory->setLayout(propMemLayout);
+
+	// Storage
+	m_PropertiesData = new QGroupBox(this);
+	m_PropertiesData->setHidden(true);
+	m_PropertiesData->setTitle(tr("Storage Options"));
+	QVBoxLayout *propDataLayout = new QVBoxLayout();
+	QComboBox *propDataStorage = new QComboBox(this);
+	m_PropertiesDataStorage = propDataStorage;
+	propDataStorage->addItem(tr("File"));
+	propDataStorage->addItem(tr("Embedded"));
+	propDataStorage->addItem(tr("Flash"));
+	addLabeledWidget(this, propDataLayout, tr("Storage: "), propDataStorage);
+	connect(m_PropertiesDataStorage, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesDataStorageChanged(int)));
+	m_PropertiesDataCompressed = new QCheckBox(this);
+	addLabeledWidget(this, propDataLayout, tr("Compressed: "), m_PropertiesDataCompressed);
+	connect(m_PropertiesDataCompressed, SIGNAL(stateChanged(int)), this, SLOT(propertiesDataCompressedChanged(int)));
+	m_PropertiesFlashAddress = new UndoStackDisabler<QSpinBox>(this);
+	m_PropertiesFlashAddress->setMinimum(0);
+	m_PropertiesFlashAddress->setSingleStep(32);
+	m_PropertiesFlashAddress->setKeyboardTracking(false);
+	m_PropertiesFlashAddressLabel = addLabeledWidget(this, propDataLayout, tr("Flash Address: "), m_PropertiesFlashAddress);
+	connect(m_PropertiesFlashAddress, SIGNAL(valueChanged(int)), this, SLOT(propertiesFlashAddressChanged(int)));
+	m_PropertiesData->setLayout(propDataLayout);
 
 	QVBoxLayout *helpLayout = new QVBoxLayout();
 	m_HelpfulLabel = new QLabel(m_ContentList);
@@ -486,7 +543,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	helpLayout->addWidget(m_HelpfulLabel);
 	m_ContentList->setLayout(helpLayout);
 	
-	bindCurrentDevice();
+	// bindCurrentDevice();
 }
 
 ContentManager::~ContentManager()
@@ -516,7 +573,8 @@ void ContentManager::bindCurrentDevice()
 	
 	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 
-	// TODO: Set maximum flash address (minimum is always fixed)
+	if (g_Flash)
+		m_PropertiesFlashAddress->setMaximum((int)BT8XXEMU_Flash_size(g_Flash));
 	
 	if (info)
 		m_ContentList->setCurrentItem(info->View);
@@ -603,7 +661,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	}
 	else
 	{
-		int freeAddress = getFreeAddress();
+		int freeAddress = getFreeMemoryAddress();
 		if (freeAddress >= 0)
 		{
 			contentInfo->MemoryLoaded = true;
@@ -705,7 +763,7 @@ void ContentManager::remove(ContentInfo *contentInfo)
 	m_MainWindow->undoStack()->endMacro();
 }
 
-int ContentManager::getFreeAddress()
+int ContentManager::getFreeMemoryAddress()
 {
 	int freeAddress = 0;
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
@@ -784,13 +842,10 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 			{
 				// Reprocess existing content info
 				ContentInfo *contentInfo = update->second;
-				bool dataCompressed = AssetConverter::isFlashCompressed(flashMapInfo, flashMapPath, it->second.Name);
-				if (contentInfo->DataCompressed != dataCompressed)
-					changeDataCompressed(contentInfo, dataCompressed);
+				if (contentInfo->FlashAddress != it->second.Index)
+					changeFlashAddress(contentInfo, it->second.Index);
 				reprocessInternal(contentInfo);
 				success = true;
-
-				// TODO: Update FlashAddress
 			}
 			else
 			{
@@ -799,10 +854,9 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 				contentInfo->DestName = it->second.Name;
 				contentInfo->Converter = ContentInfo::FlashMap;
 				contentInfo->MappedName = it->second.Name;
-				contentInfo->DataCompressed = AssetConverter::isFlashCompressed(flashMapInfo, flashMapPath, it->second.Name);
+				contentInfo->DataCompressed = false;
 				contentInfo->FlashAddress = it->second.Index;
-				contentInfo->FlashLoaded = true; // TODO: Storage enum
-				contentInfo->DataEmbedded = false; // TODO: Storage enum
+				contentInfo->DataStorage = ContentInfo::Flash;
 				add(contentInfo);
 				success = true;
 			}
@@ -1140,26 +1194,23 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 
 int ContentManager::getFlashSize(ContentInfo *contentInfo)
 {
-	int contentSize;
-	/* REMOVE
-	if (contentInfo->Converter == ContentInfo::FlashMap)
-	{
-		// TODO: Parse flash map
-	}
-	else */ if (contentInfo->DataCompressed)
+	// TODO: Maybe cache getFlashSize
+	int size;
+	if (contentInfo->DataCompressed)
 	{
 		QString fileName = contentInfo->DestName + ".bin";
 		QFileInfo binFile(fileName);
 		if (!binFile.exists()) return -1;
-		contentSize = binFile.size();
+		size = binFile.size();
 	}
 	else
 	{
 		QString fileName = contentInfo->DestName + ".raw";
 		QFileInfo binFile(fileName);
 		if (!binFile.exists()) return -1;
-		contentSize = binFile.size();
+		size = binFile.size();
 	}
+	/*
 	if (contentInfo->Converter == ContentInfo::Image || contentInfo->Converter == ContentInfo::Font)
 	{
 		switch (contentInfo->ImageFormat)
@@ -1174,7 +1225,8 @@ int ContentManager::getFlashSize(ContentInfo *contentInfo)
 			break;
 		}
 	}
-	return contentSize;
+	*/
+	return size;
 }
 
 void ContentManager::clear()
@@ -1233,13 +1285,13 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 	else
 	{
 		if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
-			|| (contentInfo->FlashLoaded && contentInfo->OverlapFlashFlag))
+			|| ((contentInfo->DataStorage == ContentInfo::Flash) && contentInfo->OverlapFlashFlag))
 		{
 			if (contentInfo->OverlapFlashFlag)
 			{
 				int globalUsage = 0;
 				size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
-				if (contentInfo->FlashAddress + contentInfo->CachedFlashSize > globalSize)
+				if (contentInfo->FlashAddress + getFlashSize(contentInfo) > globalSize) // TODO: Maybe cache getFlashSize
 				{
 					text = "No Space";
 				}
@@ -1259,7 +1311,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 			text = "Loaded";
 			icon = QIcon(":/icons/tick");
 		}
-		else if (contentInfo->FlashLoaded)
+		else if ((contentInfo->DataStorage == ContentInfo::Flash))
 		{
 			text = "Flash";
 			icon = QIcon(":/icons/tick");
@@ -1296,6 +1348,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		widgets.push_back(m_PropertiesRaw);
 		widgets.push_back(m_PropertiesFont);
 		widgets.push_back(m_PropertiesMemory);
+		widgets.push_back(m_PropertiesData);
 
 		props->setEditWidgets(widgets, false, this);
 	}
@@ -1331,21 +1384,25 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		// TODO: Flash loaded option
 		m_PropertiesMemoryLoaded->setCheckState(contentInfo->MemoryLoaded ? Qt::Checked : Qt::Unchecked);
 		m_PropertiesMemoryAddress->setValue(contentInfo->MemoryAddress);
+		m_PropertiesDataStorage->setCurrentIndex((int)contentInfo->DataStorage);
 		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
-		m_PropertiesDataEmbedded->setCheckState(contentInfo->DataEmbedded ? Qt::Checked : Qt::Unchecked);
+		m_PropertiesFlashAddress->setValue(contentInfo->FlashAddress);
 	}
-	// TODO: Flash map hide/show options etc
+
+	bool flashMapOnly = (contentInfo->Converter == ContentInfo::FlashMap);
+	m_PropertiesCommonConverter->setHidden(flashMapOnly);
+	m_PropertiesCommonConverterLabel->setHidden(flashMapOnly);
 
 	// Set user help, wizard format
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
-		m_PropertiesCommonConverter->setHidden(false);
 		m_PropertiesImage->setHidden(true);
 		m_PropertiesImageCoprocessor->setHidden(true);
 		m_PropertiesImagePreview->setHidden(true);
 		m_PropertiesRaw->setHidden(true);
 		m_PropertiesFont->setHidden(true);
 		m_PropertiesMemory->setHidden(true);
+		m_PropertiesData->setHidden(true);
 		props->setInfo(tr("Select a <b>Converter</b> to be used for this file. Converted files will be stored in the folder where the project is saved.<br><br><b>Image</b>: Converts an image to one of the supported formats.<br><b>Raw</b>: Does a direct binary copy.<br><b>Raw JPEG</b>: Does a raw binary copy and decodes the JPEG on the coprocessor."));
 	}
 	else
@@ -1355,12 +1412,15 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		{
 			propInfo = tr("<b>Error</b>: ") + contentInfo->BuildError;
 		}
-		m_PropertiesDataCompressed->setDisabled(contentInfo->Converter == ContentInfo::ImageCoprocessor);
+		m_PropertiesDataStorage->setEnabled(!flashMapOnly);
+		m_PropertiesDataCompressed->setDisabled((contentInfo->Converter == ContentInfo::ImageCoprocessor) || flashMapOnly);
+		bool flashStorage = (contentInfo->DataStorage == ContentInfo::Flash);
+		m_PropertiesFlashAddress->setVisible(flashStorage);
+		m_PropertiesFlashAddressLabel->setVisible(flashStorage);
 		switch (contentInfo->Converter)
 		{
 			case ContentInfo::Image:
 			{
-				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
 				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
@@ -1373,6 +1433,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				m_PropertiesData->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
 					if (!propInfo.isEmpty()) propInfo += "<br>";
@@ -1422,13 +1483,13 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::Raw:
 			{
-				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesRaw->setHidden(false);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				m_PropertiesData->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
 					if (!propInfo.isEmpty()) propInfo += "<br>";
@@ -1441,7 +1502,6 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::ImageCoprocessor:
 			{
-				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(false);
 				QPixmap pixmap;
@@ -1453,6 +1513,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				m_PropertiesData->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
 					if (cacheImageInfo(contentInfo))
@@ -1467,13 +1528,13 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::Font:
 			{
-				m_PropertiesCommonConverter->setHidden(false);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(false);
 				m_PropertiesMemory->setHidden(false);
+				m_PropertiesData->setHidden(false);
 				if (contentInfo->BuildError.isEmpty())
 				{
 					if (!propInfo.isEmpty()) propInfo += "<br>";
@@ -1492,13 +1553,13 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 			}
 			case ContentInfo::FlashMap:
 			{
-				m_PropertiesCommonConverter->setHidden(true);
 				m_PropertiesImage->setHidden(true);
 				m_PropertiesImagePreview->setHidden(true);
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
 				m_PropertiesMemory->setHidden(false);
+				m_PropertiesData->setHidden(false);
 				if (!propInfo.isEmpty()) propInfo += "<br>";
 				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
 				QFileInfo rawInfo(contentInfo->DestName + ".raw");
@@ -1598,10 +1659,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				{
 					contentInfo->CachedMemorySize = getContentSize(contentInfo);
 				}
-				if (!contentInfo->CachedFlashSize)
-				{
-					contentInfo->CachedFlashSize = getFlashSize(contentInfo);
-				}
+				// TODO: Maybe cache flash size
 			}
 			else
 			{
@@ -1611,7 +1669,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				}
 				contentInfo->CachedImage = false;
 				contentInfo->CachedMemorySize = 0;
-				contentInfo->CachedFlashSize = 0;
+				// TODO: Maybe cache flash size
 				contentInfo->ExternalDirty = true;
 				contentInfo->BuildError = "";
 				// Create directory if necessary
@@ -1652,7 +1710,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 				{
 					// Cache size
 					contentInfo->CachedMemorySize = getContentSize(contentInfo);
-					contentInfo->CachedFlashSize = getFlashSize(contentInfo);
+					// TODO: Maybe cache flash size
 
 					// Write meta file
 					QFile file(metaFile);
@@ -1708,7 +1766,7 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, boo
 	// Reupload the content to emulator RAM or flash
 	// This happens in the emulator main loop
 	// Emulator main loop will lock the content mutex
-	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || (contentInfo->FlashLoaded && flash)))
+	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || ((contentInfo->DataStorage == ContentInfo::Flash) && flash)))
 	{
 		if (contentInfo->Converter == ContentInfo::Image
 			|| contentInfo->Converter == ContentInfo::Font)
@@ -1733,7 +1791,7 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, boo
 		}
 		if (flash)
 		{
-			if (contentInfo->FlashLoaded)
+			if ((contentInfo->DataStorage == ContentInfo::Flash))
 			{
 				if (m_ContentUploadFlashDirty.find(contentInfo) == m_ContentUploadFlashDirty.end())
 					m_ContentUploadFlashDirty.insert(contentInfo);
@@ -1910,7 +1968,7 @@ void ContentManager::recalculateOverlapFlashInternal()
 	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
 	{
 		ContentInfo *leftInfo = (ContentInfo *)(void *)(*left)->data(0, Qt::UserRole).value<quintptr>();
-		if (leftInfo->Converter != ContentInfo::Invalid && leftInfo->FlashLoaded)
+		if (leftInfo->Converter != ContentInfo::Invalid && (leftInfo->DataStorage == ContentInfo::Flash))
 		{
 			int leftSize = getContentSize(leftInfo);
 			// printf("leftSize: %i\n", leftSize);
@@ -1937,7 +1995,7 @@ void ContentManager::recalculateOverlapFlashInternal()
 					for (QTreeWidgetItemIterator right(++left); *right; ++right)
 					{
 						ContentInfo *rightInfo = (ContentInfo *)(void *)(*right)->data(0, Qt::UserRole).value<quintptr>();
-						if (rightInfo->Converter != ContentInfo::Invalid && rightInfo->FlashLoaded)
+						if (rightInfo->Converter != ContentInfo::Invalid && (rightInfo->DataStorage == ContentInfo::Flash))
 						{
 							int rightSize = getContentSize(rightInfo);
 							if (rightSize >= 0)
@@ -3356,7 +3414,7 @@ void ContentManager::changeConverter(ContentInfo *contentInfo, ContentInfo::Conv
 	m_MainWindow->undoStack()->push(changeConverter);
 	if (contentInfo->WantAutoLoad && contentInfo->Converter != ContentInfo::Invalid)
 	{
-		int freeAddress = getFreeAddress();
+		int freeAddress = getFreeMemoryAddress();
 		if (freeAddress >= 0)
 		{
 			changeMemoryAddress(contentInfo, freeAddress, true);
@@ -3731,7 +3789,7 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->DataCompressed = m_OldValue;
-		if (m_ContentInfo->FlashLoaded)
+		if (m_ContentInfo->DataStorage == ContentInfo::Flash)
 		{
 			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
 			m_ContentManager->recalculateOverlapFlashInternal();
@@ -3743,7 +3801,7 @@ public:
 	virtual void redo()
 	{
 		m_ContentInfo->DataCompressed = m_NewValue;
-		if (m_ContentInfo->FlashLoaded)
+		if (m_ContentInfo->DataStorage == ContentInfo::Flash)
 		{
 			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
 			m_ContentManager->recalculateOverlapFlashInternal();
@@ -3776,6 +3834,7 @@ void ContentManager::propertiesDataCompressedChanged(int value)
 
 ////////////////////////////////////////////////////////////////////////
 
+/*
 class ContentManager::ChangeDataEmbedded : public QUndoCommand
 {
 public:
@@ -3829,6 +3888,12 @@ void ContentManager::propertiesDataEmbeddedChanged(int value)
 	if (current() && current()->DataEmbedded != (value == (int)Qt::Checked))
 		changeDataEmbedded(current(), (value == (int)Qt::Checked));
 }
+*/
+
+void ContentManager::propertiesDataStorageChanged(int value)
+{
+	
+}
 
 ////////////////////////////////////////////////////////////////////////
 /*
@@ -3840,7 +3905,7 @@ public:
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_OldValue((contentInfo->FlashLoaded),
+		m_OldValue(((contentInfo->DataStorage == ContentInfo::Flash)),
 		m_NewValue(value)
 	{
 		setText(value ? tr("Load content to flash") : tr("Unload content from flash"));
@@ -3892,7 +3957,7 @@ void ContentManager::propertiesFlashLoadedChanged(int value)
 	if (current() && current()->FlashLoaded != (value == (int)Qt::Checked))
 		changeFlashLoaded(current(), (value == (int)Qt::Checked));
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeFlashAddress : public QUndoCommand
@@ -3916,7 +3981,7 @@ public:
 	virtual void undo()
 	{
 		m_ContentInfo->FlashAddress = m_OldValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
 		m_ContentManager->recalculateOverlapFlashInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -3925,7 +3990,7 @@ public:
 	virtual void redo()
 	{
 		m_ContentInfo->FlashAddress = m_NewValue;
-		m_ContentManager->reuploadInternal(m_ContentInfo, true, false);
+		m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
 		m_ContentManager->recalculateOverlapFlashInternal();
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
@@ -3960,31 +4025,20 @@ private:
 void ContentManager::changeFlashAddress(ContentInfo *contentInfo, int value, bool internal)
 {
 	// Create undo/redo
-	value &= 0x7FFFFFFC;
+	value &= (0x7FFFFF << 5);
+	int editorAddress = 0x800000 | ((value >> 5) & 0x7FFFFF);
 	ChangeFlashAddress *changeFlashAddress = new ChangeFlashAddress(this, contentInfo, value); // Force round to 4
 	if (!internal)
 	{
 		m_MainWindow->undoStack()->beginMacro(tr("Change flash address"));
 	}
-	int oldFlashAddr = contentInfo->FlashAddress;
-	int oldBitmapAddr = contentInfo->bitmapAddress();
+	int oldEditorAddr = 0x800000 | ((contentInfo->FlashAddress >> 5) & 0x7FFFFF);
 	m_MainWindow->undoStack()->push(changeFlashAddress);
 	if (!internal)
 	{
 		m_MainWindow->propertiesEditor()->surpressSet(true);
-		int newBitmapAddr = contentInfo->bitmapAddress();
-		if (contentInfo->Converter == ContentInfo::Font)
-		{
-			editorUpdateFontAddress(value, oldFlashAddr, m_MainWindow->dlEditor());
-			editorUpdateFontAddress(value, oldFlashAddr, m_MainWindow->cmdEditor());
-		}
-		if (requirePaletteAddress(contentInfo))
-		{
-			editorUpdatePaletteAddress(value, oldFlashAddr, m_MainWindow->dlEditor());
-			editorUpdatePaletteAddress(value, oldFlashAddr, m_MainWindow->cmdEditor());
-		}
-		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor());
-		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		editorUpdateHandleAddress(editorAddress, oldEditorAddr, m_MainWindow->dlEditor());
+		editorUpdateHandleAddress(editorAddress, oldEditorAddr, m_MainWindow->cmdEditor());
 		m_ContentList->setCurrentItem(contentInfo->View);
 		m_MainWindow->propertiesEditor()->surpressSet(false);
 		m_MainWindow->undoStack()->endMacro();
@@ -3995,13 +4049,18 @@ void ContentManager::propertiesFlashAddressChanged(int value)
 {
 	printf("ContentManager::propertiesFlashAddressChanged(value)\n");
 
-	if (current() && current()->FlashAddress != (value & 0x7FFFFFFC))
+	int m = m_PropertiesFlashAddress->maximum();
+	if (value == m && current()->FlashAddress > m)
+	{
+		printf("Don't change value %i to %i with maximum %i", current()->FlashAddress, value, m);
+		return;
+	}
+	if (current() && (current()->FlashAddress % m) != (value & (0x7FFFFF << 5)))
 		changeFlashAddress(current(), value);
-	else if (current() && value != (value & 0x7FFFFFFC))
+	else if (current() && value != (value & (0x7FFFFF << 5)))
 		rebuildGUIInternal(current());
 }
 
-*/
 ////////////////////////////////////////////////////////////////////////
 
 class ContentManager::ChangeRawStart : public QUndoCommand

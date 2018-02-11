@@ -60,7 +60,6 @@ public:
 	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet, int offset);
 	static void convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG);
 	static const FlashMapInfo &parseFlashMap(const QString &flashMapPath);
-	static bool isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName);
 	static void convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName);
 	static void release();
 

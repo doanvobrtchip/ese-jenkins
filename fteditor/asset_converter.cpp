@@ -41,10 +41,6 @@
 // Project includes
 #include "constant_common.h"
 
-// Not practical to implement uncompress for now, since Qt library qUncompress expects uncompressed size as first 4 bytes in compressed data
-// TODO: Hide and turn off "Compressed" option when using FlashMap; disable compression processing when using FlashMap
-// #define FTEDITOR_UNCOMPRESS
-
 namespace FTEDITOR {
 
 namespace {
@@ -439,7 +435,7 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	return true;
 }
 
-static void copyCompress(QString &buildError, const QString &inFile, const QString &outName, int begin, int length, bool headers, const QString &comment)
+static void copyCompress(QString &buildError, const QString &inFile, const QString &outName, int begin, int length, bool compress, bool headers, const QString &comment)
 {
 	QFile fi(inFile);
 	if (!fi.open(QIODevice::ReadOnly))
@@ -450,18 +446,7 @@ static void copyCompress(QString &buildError, const QString &inFile, const QStri
 	fi.seek(begin);
 	QByteArray ba = fi.read(length);
 	QByteArray zba;
-#ifdef FTEDITOR_UNCOMPRESS
-	if (ba[0] == '\x78' && (ba[1] == '\x9c' || ba[1] == '\xda'))
-	{
-		// Source is compressed
-		swap(ba, zba);
-		ba = qUncompress(zba);
-	}
-	else
-	{
-#else
 	; {
-#endif
 		// Compress
 		zba = qCompress(ba, 9);
 		zba = zba.right(zba.size() - 4);
@@ -481,7 +466,8 @@ static void copyCompress(QString &buildError, const QString &inFile, const QStri
 		}
 		fo.close();
 	}
-	; {
+	if (compress) 
+	{
 		// Write compressed
 		QFile fo(outName + ".bin");
 		if (!fo.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -512,7 +498,8 @@ static void copyCompress(QString &buildError, const QString &inFile, const QStri
 			}
 			fo.close();
 		}
-		; {
+		if (compress)
+		{
 			QFile fo(outName + ".binh");
 			fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
 			QTextStream out(&fo);
@@ -532,7 +519,7 @@ static void copyCompress(QString &buildError, const QString &inFile, const QStri
 void AssetConverter::convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length)
 {
 #if 1
-	copyCompress(buildError, inFile, outName, begin, (length > 0) ? (length) : (QFileInfo(inFile).size() - begin + length), true, 
+	copyCompress(buildError, inFile, outName, begin, (length > 0) ? (length) : (QFileInfo(inFile).size() - begin + length), true, true, 
 		QString("/*('file properties: ', 'total size ', ") + QString::number(length) + ")*/\n");
 #elif defined(FT800EMU_PYTHON)
 	if (a_RawConvRun)
@@ -1108,28 +1095,6 @@ const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 	return flashMapInfo;
 }
 
-bool AssetConverter::isFlashCompressed(const FlashMapInfo &flashMapInfo, const QString &flashMapPath, const QString &mappedName)
-{
-#ifdef FTEDITOR_UNCOMPRESS
-	QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
-	QString flashBinPath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
-	QFileInfo flashBinInfo(flashBinPath);
-	if (!flashBinInfo.exists()) return false;
-	FlashMapInfo::const_iterator it = flashMapInfo.find(mappedName);
-	if (it == flashMapInfo.end()) return false;
-	int index = it->second.Index;
-	QFile file(flashBinPath);
-	if (!file.open(QIODevice::ReadOnly)) return false;
-	file.seek(index);
-	char d[2];
-	if (file.read(d, 2) != 2) return false;
-	if (d[0] == '\x78' && (d[1] == '\x9c' || d[1] == '\xda')) return true;
-	return false;
-#else
-	return false;
-#endif
-}
-
 void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName)
 {
 	// Remove old output
@@ -1166,8 +1131,12 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 	const FlashMapEntry &entry = entryIt->second;
 
 	// Copy raw and compressed data
-	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, QString::null);
+	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, false, QString::null);
 
+	; {
+		QFile fo(outName + ".bin");
+		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	}
 	; {
 		QFile fo(outName + ".binh");
 		fo.open(QIODevice::WriteOnly | QIODevice::Truncate);

@@ -130,7 +130,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
         m_DisplayList->resizeColumnToContents(i);
 	m_DisplayListItems[0]->setText(0, "0");
 
-	bindCurrentDevice();
+	// bindCurrentDevice();
 }
 
 Inspector::~Inspector()

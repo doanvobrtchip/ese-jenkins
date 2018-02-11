@@ -212,6 +212,8 @@ private:
 	QString scriptDir();
 #endif
 
+	void bindCurrentDevice();
+
 	void stopEmulatorInternal();
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);

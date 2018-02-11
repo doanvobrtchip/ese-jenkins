@@ -637,6 +637,10 @@ uint32_t Toolbox::getSelectionId()
 
 void Toolbox::bindCurrentDevice()
 {
+	if (!m_LineEditor)
+	{
+		return;
+	}
 	for (size_t i = 0; i < m_CoprocessorFT801Only.size(); ++i)
 	{
 		m_CoprocessorFT801Only[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801 && m_LineEditor->isCoprocessor()));
