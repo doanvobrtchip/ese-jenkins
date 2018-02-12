@@ -817,6 +817,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 		// Load flash map 
 		// C:\sync_projects_work\ft800emu\bt815\paul\FULL.map
 		const FlashMapInfo &flashMapInfo = AssetConverter::parseFlashMap(flashMapPath);
+		AssetConverter::lockFlashMap(true);
 
 		// Create list of existing content entries to be updated and removed
 		std::vector<ContentInfo *> removeEntries;
@@ -877,6 +878,8 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 				remove(*it);
 			}
 		}
+
+		AssetConverter::lockFlashMap(false);
 	}
 
 	resumeOverlapCheck();

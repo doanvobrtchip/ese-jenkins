@@ -59,6 +59,7 @@ public:
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
 	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet, int offset);
 	static void convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG);
+	static void lockFlashMap(bool lock);
 	static const FlashMapInfo &parseFlashMap(const QString &flashMapPath);
 	static void convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName);
 	static void release();

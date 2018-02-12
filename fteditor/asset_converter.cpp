@@ -1039,6 +1039,13 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 static QString s_CachedFlashMapPath;
 static QDateTime s_CachedFlashMapModified;
 static FlashMapInfo s_CachedFlashMapInfo;
+static FlashMapInfo s_BlankFlashMapInfo;
+static bool s_LockedFlashMapInfo = false;
+
+void AssetConverter::lockFlashMap(bool lock)
+{
+	s_LockedFlashMapInfo = lock;
+}
 
 const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 {
@@ -1047,6 +1054,12 @@ const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 	QDateTime lastModified = QFileInfo(flashMapPath).lastModified();
 	if (s_CachedFlashMapPath == flashMapPath && s_CachedFlashMapModified == lastModified)
 		return flashMapInfo;
+
+	if (s_LockedFlashMapInfo)
+	{
+		printf("Flash map cannot be updated while loading from it, return blank");
+		return s_BlankFlashMapInfo;
+	}
 
 	flashMapInfo.clear();
 	s_CachedFlashMapPath = flashMapPath;
