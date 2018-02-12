@@ -318,7 +318,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					else if (parsed.SymbolLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						++i;
 						goto ParseString;
 					}
@@ -403,8 +403,8 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						++i;
 						if (i < len)
 						{
-							c = src[i];
-							pss << c;
+							// c = src[i];
+							pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						}
 						else
 						{
@@ -414,14 +414,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					else if (c == '"')
 					{
 						// end (post-trim)
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						++i;
 						parsed.SymbolLength[pq] = i - parsed.SymbolIndex[pq];
 						goto ContinueParameter;
 					}
 					else
 					{
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 					}
 				}
 				else
