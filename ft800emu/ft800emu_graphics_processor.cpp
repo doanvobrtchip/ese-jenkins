@@ -984,9 +984,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		if (imageBlock.nan_texel[index])
 			return 0xFFFF00FF;
 		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
-		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)] * 255.0f + 0.5f), 255U);
 		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
-		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
 		return (a << 24) | (r << 16) | (g << 8) | (b);
 	}
 #endif
@@ -2637,9 +2637,9 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)
 	{
 		m_BitmapInfoMaster[i].Swizzle.A = ALPHA;
-		m_BitmapInfoMaster[i].Swizzle.R = BLUE;
+		m_BitmapInfoMaster[i].Swizzle.R = RED;
 		m_BitmapInfoMaster[i].Swizzle.G = GREEN;
-		m_BitmapInfoMaster[i].Swizzle.B = RED;
+		m_BitmapInfoMaster[i].Swizzle.B = BLUE;
 	}
 #endif
 
