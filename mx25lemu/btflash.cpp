@@ -280,7 +280,7 @@ public:
 
 		m_Log = params->Log;
 		m_UserContext = params->UserContext;
-		m_PrintStd = true;
+		m_PrintStd = params->StdOut;
 
 		Flash_debug("Create flash");
 
