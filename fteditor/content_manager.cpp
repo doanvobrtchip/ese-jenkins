@@ -570,14 +570,18 @@ void ContentManager::bindCurrentDevice()
 		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
 	
 	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
-	
-	m_PropertiesMemoryAddress->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
+
+	int memSize = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
+	if (m_PropertiesMemoryAddress->value() > memSize - 4)
+		m_PropertiesMemoryAddress->setMaximum(m_PropertiesMemoryAddress->value());
+	else
+		m_PropertiesMemoryAddress->setMaximum(memSize - 4);
 
 	if (g_Flash)
 	{
 		int size = (int)BT8XXEMU_Flash_size(g_Flash);
-		if (m_PropertiesFlashAddress->value() < size)
-			m_PropertiesFlashAddress->setMaximum(size);
+		if (m_PropertiesFlashAddress->value() < size - 32)
+			m_PropertiesFlashAddress->setMaximum(size - 32);
 		else
 			m_PropertiesFlashAddress->setMaximum(m_PropertiesFlashAddress->value());
 	}
@@ -1390,8 +1394,14 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	}
 	if (contentInfo->Converter != ContentInfo::Invalid)
 	{
-		// TODO: Flash loaded option
 		m_PropertiesMemoryLoaded->setCheckState(contentInfo->MemoryLoaded ? Qt::Checked : Qt::Unchecked);
+		int memSize = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
+		bool mb = m_PropertiesMemoryAddress->blockSignals(true);
+		if (contentInfo->MemoryAddress > memSize - 4)
+			m_PropertiesMemoryAddress->setMaximum(contentInfo->MemoryAddress);
+		else
+			m_PropertiesMemoryAddress->setMaximum(memSize - 4);
+		m_PropertiesMemoryAddress->blockSignals(mb);
 		m_PropertiesMemoryAddress->setValue(contentInfo->MemoryAddress);
 		m_PropertiesDataStorage->setCurrentIndex((int)contentInfo->DataStorage);
 		m_PropertiesDataCompressed->setCheckState(contentInfo->DataCompressed ? Qt::Checked : Qt::Unchecked);
@@ -1403,10 +1413,10 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesFlashAddress->setMinimum(contentInfo->FlashAddress);
 			else
 				m_PropertiesFlashAddress->setMinimum(FTEDITOR_FLASH_FIRMWARE_SIZE);
-			if (contentInfo->FlashAddress > flashSize)
+			if (contentInfo->FlashAddress > flashSize - 32)
 				m_PropertiesFlashAddress->setMaximum(contentInfo->FlashAddress);
 			else
-				m_PropertiesFlashAddress->setMaximum(flashSize);
+				m_PropertiesFlashAddress->setMaximum(flashSize - 32);
 			m_PropertiesFlashAddress->blockSignals(b);
 			m_PropertiesFlashAddress->setValue(contentInfo->FlashAddress);
 			m_PropertiesFlashAddress->setEnabled(true);
@@ -3788,13 +3798,7 @@ void ContentManager::propertiesMemoryAddressChanged(int value)
 {
 	printf("ContentManager::propertiesMemoryAddressChanged(value)\n");
 
-	int m = m_PropertiesMemoryAddress->maximum();
-	if (value == m && current()->MemoryAddress > m)
-	{
-		printf("Don't change MemoryAddress value %i to %i with maximum %i", current()->FlashAddress, value, m);
-		return;
-	}
-	if (current() && (current()->MemoryAddress % m) != (value & 0x7FFFFFFC))
+	if (current() && current()->MemoryAddress != (value & 0x7FFFFFFC))
 		changeMemoryAddress(current(), value);
 	else if (current() && value != (value & 0x7FFFFFFC))
 		rebuildGUIInternal(current());
@@ -4101,7 +4105,7 @@ public:
 		m_OldValue(contentInfo->RawStart),
 		m_NewValue(value)
 	{
-		setText(tr("Change memory address"));
+		setText(tr("Change raw start"));
 	}
 
 	virtual ~ChangeRawStart()
@@ -4176,7 +4180,7 @@ public:
 		m_OldValue(contentInfo->RawLength),
 		m_NewValue(value)
 	{
-		setText(tr("Change memory address"));
+		setText(tr("Change raw length"));
 	}
 
 	virtual ~ChangeRawLength()
