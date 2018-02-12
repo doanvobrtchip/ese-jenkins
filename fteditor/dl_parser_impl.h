@@ -1315,11 +1315,19 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_FLASHREAD:
 				case CMD_FLASHUPDATE:
 				case CMD_ANIMSTART:
-				case CMD_ANIMXY:
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
+				case CMD_ANIMXY:
+				{
+					uint32_t x = parsed.Parameter[1].U;
+					uint32_t y = parsed.Parameter[2].U;
+					compiled.push_back(parsed.Parameter[0].U);
+					uint32_t xy = y << 16 | x & 0xFFFF;
+					compiled.push_back(xy);
 					break;
 				}
 				case CMD_FLASHFAST:
