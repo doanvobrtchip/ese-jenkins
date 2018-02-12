@@ -37,6 +37,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QProgressBar>
+#include <QStyleFactory>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -2244,32 +2245,37 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabelH);
 
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
+		m_UtilizationBitmapHandleStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationBitmapHandleStatus->setMinimum(0);
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
-		m_UtilizationBitmapHandleStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
+		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
 		QLabel *dlLabel = new QLabel(statusBar());
 		dlLabel->setText(tr("RAM_DL: "));
 		statusBar()->addPermanentWidget(dlLabel);
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
+		m_UtilizationDisplayListStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationDisplayListStatus->setMinimum(0);
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
-		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
+		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
 		QLabel *dlLabelG = new QLabel(statusBar());
 		dlLabelG->setText(tr("RAM_G: "));
 		statusBar()->addPermanentWidget(dlLabelG);
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
+		m_UtilizationGlobalStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationGlobalStatus->setMinimum(0);
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
-		m_UtilizationGlobalStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
 		/*w->setLayout(l);

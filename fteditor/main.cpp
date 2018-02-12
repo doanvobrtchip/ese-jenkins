@@ -104,7 +104,8 @@ int main(int argc, char* argv[])
 	QApplication app(argc, const_cast<char **>(argv));
 	QLocale::setDefault(QLocale::c());
 
-	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
+	app.setStyleSheet("QStatusBar::item { border: 0px solid black; }");
+
 
 	QTranslator* translator = new QTranslator();
 	if (translator->load(":/translation_en.qm"))
