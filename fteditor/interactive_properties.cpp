@@ -1470,7 +1470,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 					addAddressFlashOpt(0, true);
 				else
 					addAddress(0, true);
-				addBitmapFormat(1);
+				addExtFormat(1);
 				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
