@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 	PyObject* sysPath = PySys_GetObject((char*)"path");
 	{
 		QByteArray cpUtf8 = QDir::currentPath().toUtf8();
-		PyObject* curPath = PyUnicode_FromString(cpUtf8.data());
+		PyObject* curPath = PyUnicode_FromString(cpUtf8.constData());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 #ifdef FT800EMU_PYTHON
 	{
 		QByteArray apUtf8 = QCoreApplication::applicationDirPath().toUtf8();
-		PyObject* curPath = PyUnicode_FromString(apUtf8.data());
+		PyObject* curPath = PyUnicode_FromString(apUtf8.constData());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
