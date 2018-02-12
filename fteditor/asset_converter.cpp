@@ -1044,7 +1044,7 @@ const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 {
 	FlashMapInfo &flashMapInfo = s_CachedFlashMapInfo;
 
-	QDateTime lastModified = QFileInfo(s_CachedFlashMapPath).lastModified();
+	QDateTime lastModified = QFileInfo(flashMapPath).lastModified();
 	if (s_CachedFlashMapPath == flashMapPath && s_CachedFlashMapModified == lastModified)
 		return flashMapInfo;
 
