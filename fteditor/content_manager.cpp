@@ -1601,10 +1601,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				if (!propInfo.isEmpty()) propInfo += "<br>";
 				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
 				QFileInfo rawInfo(contentInfo->DestName + ".raw");
-				QFileInfo binInfo(contentInfo->DestName + ".bin");
-				propInfo += tr("<br><b>Flash Address: </b> ") + QString::number(contentInfo->FlashAddress); // TEMP
 				if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-				if (binInfo.exists()) propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
 				break;
 			}
 		}
