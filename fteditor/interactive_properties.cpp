@@ -563,12 +563,12 @@ void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
-void InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
 {
-	addComboBox(index, items, 0, nb, label, undoMessage);
+	return addComboBox(index, items, 0, nb, label, undoMessage);
 }
 
-void InteractiveProperties::addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage)
 {
 	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index, begin);
 	for (int i = begin; i < end; ++i)
@@ -576,9 +576,10 @@ void InteractiveProperties::addComboBox(int index, const char **items, int begin
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
+	return prop;
 }
 
-void InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage)
 {
 	PropertiesRemapComboBox *prop = new PropertiesRemapComboBox(this, undoMessage, index, toIntf, toIntfStringSz, toEnum, toEnumSz);
 	for (int i = 0; i < toEnumSz; ++i)
@@ -586,6 +587,7 @@ void InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnum
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
+	return prop;
 }
 
 void InteractiveProperties::addBlendFunction(int blend, const QString &label, const QString &undoMessage)
@@ -610,8 +612,6 @@ void InteractiveProperties::addPrimitive(int primitive)
 
 void InteractiveProperties::addBitmapFormat(int format)
 {
-	// TODO: Identifier remapping, centralized combobox listings
-	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
 	addComboBox(format, 
 		g_BitmapFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
@@ -623,17 +623,20 @@ void InteractiveProperties::addBitmapFormat(int format)
 
 void InteractiveProperties::addExtFormat(int format)
 {
-	// TODO: Identifier remapping, centralized combobox listings
-	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
 	if (!g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE])
+	{
+		addBitmapFormat(format);
 		return;
-	addComboBox(format,
+	}
+	QComboBox *comboBox = addComboBox(format,
 		g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
 		g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
 		g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
 		tr("Format") + ": ", tr("Set extended bitmap format"));
+	for (int i = 0; i < comboBox->count(); ++i)
+		comboBox->setItemText(i, comboBox->itemText(i).replace("COMPRESSED_RGBA_", ""));
 }
 
 void InteractiveProperties::addSwizzle(int swizzle, const QString &label, const QString &undoMessage)
