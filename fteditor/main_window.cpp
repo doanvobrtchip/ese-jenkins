@@ -625,10 +625,10 @@ void loop()
 				}
 			}
 		}
-		if (info->Converter == ContentInfo::Font)
-		{
+		/*if (info->Converter == ContentInfo::Font)
+		{*/ // Always reupload, since raw data may change too
 			reuploadFontSetup = true;
-		}
+		/*}*/
 	}
 	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
 	if (reuploadBitmapSetup)
