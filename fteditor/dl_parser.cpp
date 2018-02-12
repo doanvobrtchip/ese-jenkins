@@ -161,11 +161,11 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 
 	parsed.BadCharacterIndex = -1;
 
-	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
+	for (int p = 0; p < DLPARSED_MAX_SYMBOL; ++p)
 	{
-		parsed.ValidParameter[p] = false;
-		parsed.NumericParameter[p] = true;
-		parsed.ParameterLength[p] = 0;
+		parsed.ValidSymbol[p] = false;
+		parsed.NumericSymbol[p] = true;
+		parsed.SymbolLength[p] = 0;
 	}
 
 	parsed.ValidId = false;
@@ -225,7 +225,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 	parsed.IdLeft = 0;
 	parsed.IdRight = 0;
 	parsed.ExpectedStringParameter = false;
-	parsed.StringParameterAt = DLPARSED_MAX_PARAMETER;
+	parsed.StringParameterAt = DLPARSED_MAX_SYMBOL;
 
 	if (parsed.IdText == "VERTEX2F")
 	{
@@ -292,14 +292,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		bool failParam = false;
 		int finalIndex = -1;
 		int pq;
-		for (pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
+		for (pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_SYMBOL; ++p, ++pq)
 		{
 			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
 		CombineParameter:
 			bool hexadecimal = false;
 			bool combinedParameter = combineParameter;
 			combineParameter = false;
-			parsed.ParameterIndex[pq] = i;
+			parsed.SymbolIndex[pq] = i;
 			std::stringstream pss;
 		ContinueParameter:
 			for (; ; ++i)
@@ -311,64 +311,64 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						c = c - 'a' + 'A'; // uppercase
 					}
-					if (parsed.ParameterLength[pq] == 0 && (c == ' ' || c == '\t'))
+					if (parsed.SymbolLength[pq] == 0 && (c == ' ' || c == '\t'))
 					{
-						++parsed.ParameterIndex[pq]; /* pre-trim */
+						++parsed.SymbolIndex[pq]; /* pre-trim */
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
 						pss << c;
 						++i;
 						goto ParseString;
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '\'') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '\'') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
 						++i;
 						goto ParseChar;
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '-'))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '-'))
 					{
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 					}
-					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 					}
-					else if (parsed.ParameterLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (parsed.SymbolLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss.clear();
 						hexadecimal = true;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 						pss << std::hex;
 					}
-					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i  && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
-						parsed.NumericParameter[pq] = false;
+						parsed.NumericSymbol[pq] = false;
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 					}
 					else if (c == ' ' || c == '\t')
 					{
 						/* post-trim */
 					}
-					else if (parsed.ParameterLength[pq] > 0 && c == ',')
+					else if (parsed.SymbolLength[pq] > 0 && c == ',')
 					{
 						/* valid, more, continue */
 						++i;
 						break;
 					}
-					else if (parsed.ParameterLength[pq] > 0 && c == '|')
+					else if (parsed.SymbolLength[pq] > 0 && c == '|')
 					{
 						/* valid, more, continue */
 						++i;
 						combineParameter = true;
 						break;
 					}
-					else if (((p == 0) || (parsed.ParameterLength[pq] > 0)) && c == ')')
+					else if (((p == 0) || (parsed.SymbolLength[pq] > 0)) && c == ')')
 					{
 						/* valid, last, continue */
 						finalIndex = i;
@@ -416,7 +416,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						// end (post-trim)
 						pss << c;
 						++i;
-						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						parsed.SymbolLength[pq] = i - parsed.SymbolIndex[pq];
 						goto ContinueParameter;
 					}
 					else
@@ -449,7 +449,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						// end (post-trim)
 						++i;
-						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						parsed.SymbolLength[pq] = i - parsed.SymbolIndex[pq];
 						goto ContinueParameter;
 					}
 				}
@@ -477,7 +477,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						unescapeString(psstr, psubstr);
 						parsed.Parameter[p].U = 0;
 						parsed.StringParameter = psstr;
-						parsed.ValidParameter[pq] = true;
+						parsed.ValidSymbol[pq] = true;
 						parsed.StringParameterAt = pq;
 					}
 				}
@@ -492,21 +492,21 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						vchar |= psstr[ci];
 					}
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
-					parsed.ValidParameter[pq] = true;
+					parsed.ValidSymbol[pq] = true;
 					validateInt = true;
 				}
-				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
+				else if (hexadecimal && parsed.NumericSymbol[pq] && ps.length() > 0)
 				{
 					unsigned int vhex;
 					pss >> vhex;
 					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vhex;
-					parsed.ValidParameter[pq] = true;
+					parsed.ValidSymbol[pq] = true;
 					validateInt = true;
 				}
-				else if (parsed.NumericParameter[pq] && ps.length() > 0)
+				else if (parsed.NumericSymbol[pq] && ps.length() > 0)
 				{
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | atoi(ps.c_str());
-					parsed.ValidParameter[pq] = true;
+					parsed.ValidSymbol[pq] = true;
 					validateInt = true;
 				}
 				else
@@ -523,7 +523,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					if (it != m_ParamMap[deviceIntf]->end())
 					{
 						parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
-						parsed.ValidParameter[pq] = true;
+						parsed.ValidSymbol[pq] = true;
 					}
 					else if (coprocessor)
 					{
@@ -531,7 +531,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						if (it != m_CmdParamMap[deviceIntf]->end())
 						{
 							parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
-							parsed.ValidParameter[pq] = true;
+							parsed.ValidSymbol[pq] = true;
 						}
 						else
 						{
@@ -543,9 +543,9 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
 				}
-				if (validateInt && parsed.ValidParameter[pq] && defaultParam)
+				if (validateInt && parsed.ValidSymbol[pq] && defaultParam)
 				{
-					parsed.ValidParameter[pq] =
+					parsed.ValidSymbol[pq] =
 						((parsed.Parameter[p].I & defaultParam[parsed.IdRight].Mask[p]) == parsed.Parameter[p].I)
 						&& (parsed.Parameter[p].I >= defaultParam[parsed.IdRight].Min[p]
 						&& parsed.Parameter[p].I <= defaultParam[parsed.IdRight].Max[p]);
@@ -576,7 +576,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 
 			if (combineParameter)
 			{
-				// parsed.ParameterLength[p] = 0;
+				// parsed.SymbolLength[p] = 0;
 				++pq;
 				goto CombineParameter;
 			}
