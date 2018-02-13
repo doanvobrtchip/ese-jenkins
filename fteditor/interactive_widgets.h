@@ -269,7 +269,7 @@ public:
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
 		setKeyboardTracking(false);
-		setMinimum(negative ? -addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4 : 0);
+		setMinimum(m_Negative ? ~(addressMask(FTEDITOR_CURRENT_DEVICE) >> 1) : 0);
 		setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 		setSingleStep(4);
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -292,8 +292,7 @@ public:
 		if (m_SoftMod) return;
 		m_SoftMod = true;
 		int addr = getLine().Parameter[m_Index].I;
-		setValue((addr & 0x800000) ? (addr & 0x7FFFFF) * 32 : (addr & 0x7FFFFF));
-		if (addr & 0x800000)
+		if ((addr & 0x800000) && (addr > 0))
 		{
 			setMinimum(0);
 			setMaximum(g_Flash ? (int)BT8XXEMU_Flash_size(g_Flash) : (0x7FFFFF * 32));
@@ -301,10 +300,11 @@ public:
 		}
 		else
 		{
-			setMinimum(m_Negative ? -FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) + 4 : 0);
+			setMinimum(m_Negative ? ~(addressMask(FTEDITOR_CURRENT_DEVICE) >> 1) : 0);
 			setMaximum(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - 4);
 			setSingleStep(4);
 		}
+		setValue(((addr & 0x800000) && (addr > 0)) ? (addr & 0x7FFFFF) * 32 : addr);
 		m_SoftMod = false;
 		//printf("bye");
 	}
@@ -318,7 +318,7 @@ private slots:
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
 		int addr = getLine().Parameter[m_Index].I;
-		addr = (addr & 0x800000) ? 0x800000 | (value) / 32 : (value & 0x7FFFFF);
+		addr = ((addr & 0x800000) && (addr > 0)) ? 0x800000 | ((value / 32) & 0x7FFFFF) : value;
 		parsed.Parameter[m_Index].I = addr;
 		setLine(parsed);
 		m_SoftMod = false;

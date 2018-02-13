@@ -71,7 +71,20 @@ static QString asInt(uint32_t value)
 
 static QString asText(uint32_t value)
 {
-	return DlParser::toString(FTEDITOR_CURRENT_DEVICE, value);
+	QString line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, value);
+
+	// verify parsing ->
+	DlParsed parsed;
+	DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line, false);
+	uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsed);
+	if (compiled != value)
+	{
+		QByteArray chars = line.toLocal8Bit();
+		printf("Parser bug '%s' -> expect %u, compiled %u\n", chars.constData(), value, compiled);
+	}
+	// <- verify parsing
+
+	return line;
 }
 
 Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)

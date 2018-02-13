@@ -106,7 +106,6 @@ int main(int argc, char* argv[])
 
 	app.setStyleSheet("QStatusBar::item { border: 0px solid black; }");
 
-
 	QTranslator* translator = new QTranslator();
 	if (translator->load(":/translation_en.qm"))
 	{
@@ -118,8 +117,9 @@ int main(int argc, char* argv[])
 		printf("Could not load translation\n");
 	}
 
+	// QApplication::setStyle(QStyleFactory::create("Fusion"));
+
 	/*
-	QApplication::setStyle(QStyleFactory::create("Fusion"));
 	QPalette palette = app.palette();
 	palette.setColor(QPalette::Window, QColor(64, 64, 64));
 	palette.setColor(QPalette::WindowText, Qt::white);

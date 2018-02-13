@@ -57,16 +57,20 @@ inline uint32_t addressSpace(int deviceIntf) { return g_AddressSpace[deviceIntf]
 inline uint32_t addressMask(int deviceIntf) { return g_AddressMask[deviceIntf]; }
 inline int addressSigned(int deviceIntf, int address)
 {
+	// On BT815 either
+	// Flash: 0x800000 to 0xFFFFFF
+	// RAM_G: 0x000000 to 0x3FFFFF (0x200000 or 0x400000 is negative address)
 	if (deviceIntf >= FTEDITOR_BT815 
 		&& ((address >> 23) & 0x1))
 	{
 		// Flash address / 32
 		return address & 0xFFFFFF; // & 0x1FFFFFF;
 	}
-	int masked = (address & g_AddressMask[deviceIntf]);
-	int negmask = ~(g_AddressMask[deviceIntf] >> 1);
+	int mask = g_AddressMask[deviceIntf];
+	int masked = (address & mask);
+	int negmask = ~(mask >> 1);
 	int neg = masked & negmask;
-	return neg ? masked | negmask : masked;
+	return neg ? (masked | negmask) : masked;
 }
 
 inline bool flashSupport(int deviceIntf) { return deviceIntf >= FTEDITOR_BT815; }
