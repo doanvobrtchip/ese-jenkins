@@ -666,7 +666,7 @@ private slots:
 		m_SoftMod = true;
 		// printf("PropertiesLineEdit::updateValue(value)\n");
 		DlParsed parsed = getLine();
-		QByteArray ba = text.toLatin1();
+		QByteArray ba = text.toUtf8();
 		std::string str = std::string(ba.data());
 		DlParser::unescapeString(parsed.StringParameter, str);
 		setLine(parsed);

@@ -697,29 +697,30 @@ static int isCharUtf8(const char *s, size_t len)
 		if (len > 1)
 		{
 			char c1 = s[1];
-			if (((c0 & '\xE0') == '\xC0')
-				&& ((c1 & '\xC0') == '\x80'))
+			if ((c1 & '\xC0') == '\x80')
 			{
-				return 2;
-			}
-			if (len > 2)
-			{
-				char c2 = s[2];
-				if (((c0 & '\xF0') == '\xE0')
-					&& ((c1 & '\xC0') == '\x80')
-					&& ((c2 & '\xC0') == '\x80'))
+				if ((c0 & '\xE0') == '\xC0')
 				{
-					return 3;
+					return 2;
 				}
-				if (len > 4)
+				if (len > 2)
 				{
-					char c3 = s[3];
-					if (((c0 & '\xF8') == '\xF0')
-						&& ((c1 & '\xC0') == '\x80')
-						&& ((c2 & '\xC0') == '\x80')
-						&& ((c3 & '\xC0') == '\x80'))
+					char c2 = s[2];
+					if ((c2 & '\xC0') == '\x80')
 					{
-						return 4;
+						if ((c0 & '\xF0') == '\xE0')
+						{
+							return 3;
+						}
+						if (len > 4)
+						{
+							char c3 = s[3];
+							if (((c0 & '\xF8') == '\xF0')
+								&& ((c3 & '\xC0') == '\x80'))
+							{
+								return 4;
+							}
+						}
 					}
 				}
 			}
