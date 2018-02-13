@@ -685,6 +685,49 @@ QString DlParser::toString(int deviceIntf, const DlParsed &parsed)
 	return QString(str.c_str());
 }
 
+static int isCharUtf8(const char *s, size_t len)
+{
+	if (len > 0)
+	{
+		char c0 = s[0];
+		if ((c0 & '\x80') == '\x00')
+		{
+			return 1;
+		}
+		if (len > 1)
+		{
+			char c1 = s[1];
+			if (((c0 & '\xE0') == '\xC0')
+				&& ((c1 & '\xC0') == '\x80'))
+			{
+				return 2;
+			}
+			if (len > 2)
+			{
+				char c2 = s[2];
+				if (((c0 & '\xF0') == '\xE0')
+					&& ((c1 & '\xC0') == '\x80')
+					&& ((c2 & '\xC0') == '\x80'))
+				{
+					return 3;
+				}
+				if (len > 4)
+				{
+					char c3 = s[3];
+					if (((c0 & '\xF8') == '\xF0')
+						&& ((c1 & '\xC0') == '\x80')
+						&& ((c2 & '\xC0') == '\x80')
+						&& ((c3 & '\xC0') == '\x80'))
+					{
+						return 4;
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 void DlParser::escapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
@@ -696,67 +739,20 @@ void DlParser::escapeString(std::string &dst, const std::string &src)
 		else if (ch == '\n') res << "\\n";
 		else if (ch == '\r') res << "\\r";
 		else if (ch >= 32 && ch <= 126) res << ch;
+		else if (int nb = isCharUtf8(&src[c], src.size() - c))
+		{
+			res << ch;
+			for (int i = 1; i < nb; ++i)
+			{
+				++c;
+				res << src[c];
+			}
+		}
 		else
 		{
-			if (c + 1 < src.size())
-			{
-				unsigned char ch1 = src[c + 1];
-				if (!(ch1 >= 32 && ch1 <= 126)) // Has next character and next is not ASCII
-				{
-					QByteArray ba1 = QString::fromUtf8(&src[c], 2).toUtf8();
-					if (((unsigned char *)ba1.constData())[0] == ch 
-						&& ba1.constData()[1] == ch1)
-					{
-						res << ch;
-						res << ch1;
-						++c;
-						continue;
-					}
-					else if (c + 2 < src.size())
-					{
-						unsigned char ch2 = src[c + 2];
-						if (!(ch2 >= 32 && ch2 <= 126)) // Has next character and next is not ASCII
-						{
-							QByteArray ba2 = QString::fromUtf8(&src[c], 3).toUtf8();
-							if (((unsigned char *)ba2.constData())[0] == ch
-								&& ((unsigned char *)ba2.constData())[1] == ch1
-								&& ((unsigned char *)ba2.constData())[2] == ch2)
-							{
-								res << ch;
-								res << ch1;
-								res << ch2;
-								c += 2;
-								continue;
-							}
-							else if (c + 3 < src.size())
-							{
-								unsigned char ch3 = src[c + 3];
-								if (!(ch3 >= 32 && ch3 <= 126)) // Has next character and next is not ASCII
-								{
-									QByteArray ba3 = QString::fromUtf8(&src[c], 4).toUtf8();
-									if (((unsigned char *)ba3.constData())[0] == ch
-										&& ((unsigned char *)ba3.constData())[1] == ch1
-										&& ((unsigned char *)ba3.constData())[2] == ch2
-										&& ((unsigned char *)ba3.constData())[3] == ch3)
-									{
-										res << ch;
-										res << ch1;
-										res << ch2;
-										res << ch3;
-										c += 3;
-										continue;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			; {
-				std::stringstream tmp;
-				tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
-				res << tmp.str();
-			}
+			std::stringstream tmp;
+			tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
+			res << tmp.str();
 		}
 	}
 	dst = res.str();
