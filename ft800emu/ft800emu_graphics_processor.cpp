@@ -156,6 +156,10 @@ public:
 		CachedAstcAddr = 0;
 		CachedAstcEntry = NULL;
 #	endif
+#	if BT815EMU_ASTC_LAST_CACHE
+		CachedAstcAddr = 0;
+		CachedAstcBlock = { 0 };
+#	endif
 #endif
 
 	}
@@ -208,6 +212,11 @@ public:
 	// Cache optimization
 	ptrdiff_t CachedAstcAddr;
 	AstcCacheEntry *CachedAstcEntry;
+#	endif
+#	if BT815EMU_ASTC_LAST_CACHE
+	// Cache optimization
+	ptrdiff_t CachedAstcAddr;
+	imageblock CachedAstcBlock;
 #	endif
 #endif
 
@@ -1031,6 +1040,26 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
 		gs.CachedAstcEntry = &cacheEntry;
 		return cacheEntry.C[index];
+#elif BT815EMU_ASTC_LAST_CACHE
+		// Decompress ASTC
+		const void *blockAddr = &ram[srci + blockOffset];
+		imageblock &imageBlock = gs.CachedAstcBlock;
+		if (gs.CachedAstcAddr != (ptrdiff_t)blockAddr)
+		{
+			const physical_compressed_block *physicalBlock =
+				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			symbolic_compressed_block symbolicBlock = { 0 };
+			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
+			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+			gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
+		}
+		if (imageBlock.nan_texel[index])
+			return 0xFFFF00FF;
+		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)] * 255.0f + 0.5f), 255U);
+		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		return (a << 24) | (r << 16) | (g << 8) | (b);
 #else
 		// Decompress ASTC
 		const physical_compressed_block *physicalBlock = 

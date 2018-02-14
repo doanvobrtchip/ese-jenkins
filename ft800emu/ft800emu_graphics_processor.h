@@ -12,7 +12,9 @@ Author: Jan Boon <jan@no-break.space>
 // #include <...>
 
 #ifdef BT815EMU_MODE
+// Select only one cache mechanism
 #define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
+#define BT815EMU_ASTC_LAST_CACHE 1
 #endif
 
 // System includes
