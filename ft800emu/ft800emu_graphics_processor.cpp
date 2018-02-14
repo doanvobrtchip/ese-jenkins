@@ -55,6 +55,8 @@ Author: Jan Boon <jan@no-break.space>
 // Library includes
 #ifdef BT815EMU_MODE
 #	include <astc_codec_internals.h>
+const partition_info *get_partition_table(int xdim, int ydim, int zdim, int partition_count);
+const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int zdim);
 #endif
 
 // Project includes
@@ -767,11 +769,12 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 }
 
 #ifdef BT815EMU_MODE
-static const int c_AstcBlockWidth[] = {
+#define BT815EMU_ASTC_FORMAT_NB 14
+static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB] = {
 	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
 };
 
-static const int c_AstcBlockHeight[] = {
+static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB] = {
 	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
 };
 #endif
@@ -2703,6 +2706,11 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		{
 			prepare_angular_tables();
 			build_quantization_mode_table();
+			for (int i = 0; i < BT815EMU_ASTC_FORMAT_NB; ++i)
+			{
+				get_partition_table(c_AstcBlockWidth[i], c_AstcBlockHeight[i], 1, 0);
+				get_block_size_descriptor(c_AstcBlockWidth[i], c_AstcBlockHeight[i], 1);
+			}
 		}
 	}
 #endif
