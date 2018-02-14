@@ -1535,6 +1535,39 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					QFileInfo binInfo(contentInfo->DestName + ".bin");
 					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
 					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+					goto RawDetect;
+				}
+				break;
+			}
+			RawDetect:
+			{
+				QFile rawFile(contentInfo->DestName + ".raw");
+				if (rawFile.open(QIODevice::ReadOnly))
+				{
+					QDataStream in(&rawFile);
+					in.setByteOrder(QDataStream::LittleEndian);
+					quint32 signature;
+					in >> signature;
+					if (signature == 0xAAAA0100)
+					{
+						if (!propInfo.isEmpty()) propInfo += "<br>";
+						propInfo += tr("<b>Signature: </b> ANIM_SIGNATURE");
+						quint32 num_frames;
+						in >> num_frames;
+						propInfo += tr("<br><b>Number of Frames: </b> ") + QString::number(num_frames);
+						for (quint32 i = 0; i < num_frames && i < 256; ++i)
+						{
+							quint32 nbytes, ptr;
+							in >> nbytes;
+							in >> ptr;
+							propInfo += QString("<br><b>") + QString::number(i) + " </b> (0x" + QString::number(ptr, 16).rightJustified(8, '0').toLower() + "): " + QString::number(nbytes) + " bytes";
+						}
+						if (num_frames >= 256)
+						{
+							propInfo += tr("<br>...");
+						}
+					}
+					rawFile.close();
 				}
 				break;
 			}
@@ -1600,8 +1633,12 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesData->setHidden(false);
 				if (!propInfo.isEmpty()) propInfo += "<br>";
 				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
-				QFileInfo rawInfo(contentInfo->DestName + ".raw");
-				if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				if (contentInfo->BuildError.isEmpty())
+				{
+					QFileInfo rawInfo(contentInfo->DestName + ".raw");
+					if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+					goto RawDetect;
+				}
 				break;
 			}
 		}
