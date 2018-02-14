@@ -1561,6 +1561,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 							in >> nbytes;
 							in >> ptr;
 							propInfo += QString("<br><b>") + QString::number(i) + " </b> (0x" + QString::number(ptr, 16).rightJustified(8, '0').toLower() + "): " + QString::number(nbytes) + " bytes";
+							if ((nbytes & (4 - 1)) || ptr & (64 - 1)) propInfo += tr(" (invalid)");
 						}
 						if (num_frames >= 256)
 						{
