@@ -3907,65 +3907,87 @@ void ContentManager::propertiesDataCompressedChanged(int value)
 
 ////////////////////////////////////////////////////////////////////////
 
-/*
-class ContentManager::ChangeDataEmbedded : public QUndoCommand
+class ContentManager::ChangeDataStorage : public QUndoCommand
 {
 public:
-	ChangeDataEmbedded(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
+	ChangeDataStorage(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::StorageType value) :
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->DataEmbedded),
+		m_OldValue(contentInfo->DataStorage),
 		m_NewValue(value)
 	{
-		setText(value ? tr("Store data in header") : tr("Store data as file"));
+		setText("Change data storage");
 	}
 
-	virtual ~ChangeDataEmbedded()
+	virtual ~ChangeDataStorage()
 	{
 
 	}
 
 	virtual void undo()
 	{
-		m_ContentInfo->DataEmbedded = m_OldValue;
+		m_ContentInfo->DataStorage = m_OldValue;
+		if (m_ContentInfo->DataStorage == ContentInfo::Flash)
+		{
+			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
+			m_ContentManager->recalculateOverlapFlashInternal();
+		}
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
-		m_ContentInfo->DataEmbedded = m_NewValue;
+		m_ContentInfo->DataStorage = m_NewValue;
+		if (m_ContentInfo->DataStorage == ContentInfo::Flash)
+		{
+			m_ContentManager->reuploadInternal(m_ContentInfo, false, true);
+			m_ContentManager->recalculateOverlapFlashInternal();
+		}
 		if (m_ContentManager->m_CurrentPropertiesContent == m_ContentInfo)
 			m_ContentManager->rebuildGUIInternal(m_ContentInfo);
+	}
+
+	virtual int id() const
+	{
+		return 9076474;
+	}
+
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		const ChangeDataStorage *c = static_cast<const ChangeDataStorage *>(command);
+
+		if (c->m_ContentInfo != m_ContentInfo)
+			return false;
+
+		if (c->m_NewValue == m_OldValue)
+			return false;
+
+		m_NewValue = c->m_NewValue;
+		return true;
 	}
 
 private:
 	ContentManager *m_ContentManager;
 	ContentInfo *m_ContentInfo;
-	bool m_OldValue;
-	bool m_NewValue;
+	ContentInfo::StorageType m_OldValue;
+	ContentInfo::StorageType m_NewValue;
 };
 
-void ContentManager::changeDataEmbedded(ContentInfo *contentInfo, bool value)
+void ContentManager::changeDataStorage(ContentInfo *contentInfo, ContentInfo::StorageType value)
 {
 	// Create undo/redo
-	ChangeDataEmbedded *changeDataEmbedded = new ChangeDataEmbedded(this, contentInfo, value);
-	m_MainWindow->undoStack()->push(changeDataEmbedded);
+	ChangeDataStorage *changeDataStorage = new ChangeDataStorage(this, contentInfo, value);
+	m_MainWindow->undoStack()->push(changeDataStorage);
 }
-
-void ContentManager::propertiesDataEmbeddedChanged(int value)
-{
-	printf("ContentManager::propertiesDataEmbeddedChanged(value)\n");
-
-	if (current() && current()->DataEmbedded != (value == (int)Qt::Checked))
-		changeDataEmbedded(current(), (value == (int)Qt::Checked));
-}
-*/
 
 void ContentManager::propertiesDataStorageChanged(int value)
 {
-	
+	printf("ContentManager::propertiesDataStorageChanged(value)\n");
+
+	if (current() && current()->DataStorage != (ContentInfo::StorageType)value)
+		changeDataStorage(current(), (ContentInfo::StorageType)value);
 }
 
 ////////////////////////////////////////////////////////////////////////
