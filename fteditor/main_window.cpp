@@ -1425,6 +1425,27 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
 
+	// Error message box pop-up over viewport
+	QVBoxLayout *outerWarning = new QVBoxLayout();
+	QFrame *frame = new QFrame(this);
+	frame->setFrameStyle(QFrame::StyledPanel);
+	frame->setStyleSheet("background-color: " + palette().color(QPalette::ToolTipBase).name() + ";");
+	QHBoxLayout *warningLayout = new QHBoxLayout();
+	QLabel *warningIcon = new QLabel();
+	warningIcon->setPixmap(QIcon(":/icons/exclamation-red.png").pixmap(16, 16));
+	warningLayout->addWidget(warningIcon);
+	QLabel *warningText = new QLabel(tr("ERROR\nERROR\nERROR"));
+	warningLayout->addWidget(warningText);
+	warningLayout->setStretchFactor(warningText, 1);
+	frame->setLayout(warningLayout);
+	warningLayout->setAlignment(warningIcon, Qt::AlignTop | Qt::AlignLeft);
+	warningLayout->setAlignment(warningText, Qt::AlignTop | Qt::AlignLeft);
+	outerWarning->addWidget(frame);
+	outerWarning->addStretch();
+	layout->addLayout(outerWarning, 0, 0);
+
+	frame->setVisible(false);
+
 	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 	createDockWindows();
 
