@@ -237,6 +237,9 @@ private:
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
 
+	QWidget *m_ErrorFrame;
+	QLabel *m_ErrorLabel;
+
 	QLabel *m_CursorPosition;
 	QLabel *m_CoprocessorBusy;
 

@@ -261,7 +261,8 @@ static int s_MediaFifoSize = 0;
 static QFile *s_MediaFifoFile = NULL;
 static QDataStream *s_MediaFifoStream = NULL;
 
-static bool s_CoprocessorFaultOccured = false;
+static volatile bool s_CoprocessorFaultOccured = false;
+static volatile bool s_CoprocessorFrameSuccess = false;
 static char s_CoprocessorDiagnostic[128 + 4] = { 0 };
 static bool s_StreamingData = false;
 
@@ -1329,6 +1330,7 @@ void loop()
 		}
 
 		s_ShowCoprocessorBusy = false;
+		s_CoprocessorFrameSuccess = true;
 
 		// FIXME: Not very thread-safe, but not too critical
 		int *nextWrite = s_DisplayListCoprocessorCommandRead;
@@ -1443,7 +1445,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	outerWarning->addWidget(frame);
 	outerWarning->addStretch();
 	layout->addLayout(outerWarning, 0, 0);
-
+	m_ErrorFrame = frame;
+	m_ErrorLabel = warningText;
 	frame->setVisible(false);
 
 	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -1883,9 +1886,16 @@ void MainWindow::frameQt()
 				"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
 				"- An invalid data stream is supplied to CMD_INFLATE";
 		}
-		m_PropertiesEditor->setInfo(info);
-		m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
-		focusProperties();
+		// m_PropertiesEditor->setInfo(info);
+		// m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
+		// focusProperties();
+		m_ErrorLabel->setText(info);
+		m_ErrorFrame->setVisible(true);
+		s_CoprocessorFrameSuccess = false;
+	}
+	if (s_CoprocessorFrameSuccess)
+	{
+		m_ErrorFrame->setVisible(false);
 	}
 
 	// printf("msc: %s\n", s_WarnMissingClear ? "warn" : "ok");
