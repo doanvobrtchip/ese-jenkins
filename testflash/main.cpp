@@ -1394,6 +1394,54 @@ int main(int, char*[])
 				assert(ram[i] == data[i]);
 		}
 
+#if 0
+		for (int i = 0; i < 4096; ++i)
+		{
+			ram[i] = data[i];
+		}
+
+		; {
+			assert(data[0] == 0x70);
+			printf("CMD_FLASHERASE (FLASH_STATUS_FULL)\n");
+			wr32(emulator, REG_CMDB_WRITE, CMD_FLASHERASE);
+			flush(emulator);
+			for (int i = 0; i < 32 * 4096; ++i)
+				assert(data[i] == 0xFF);
+		}
+
+		; {
+			assert(ram[0] == 0x70);
+			assert(data[0] != 0x70);
+			printf("CMD_FLASHWRITE (FLASH_STATUS_FULL\n");
+			wr32(emulator, REG_CMDB_WRITE, CMD_FLASHWRITE);
+			wr32(emulator, REG_CMDB_WRITE, 0);
+			wr32(emulator, REG_CMDB_WRITE, 2048);
+			for (int i = 0; i < 512; ++i)
+				wr32(emulator, REG_CMDB_WRITE, ((uint32_t *)ram)[i]);
+			flush(emulator);
+			for (int i = 0; i < 2048; ++i)
+				assert(data[i] == ram[i]);
+			assert(data[0] == 0x70);
+		}
+
+		for (int i = 0; i < 4096; ++i)
+		{
+			ram[i] = 0x55;
+		}
+
+		; {
+			assert(ram[128] != data[128]);
+			printf("CMD_FLASHREAD (FLASH_STATUS_FULL)\n");
+			wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+			wr32(emulator, REG_CMDB_WRITE, 128); // dest
+			wr32(emulator, REG_CMDB_WRITE, 128); // src
+			wr32(emulator, REG_CMDB_WRITE, 512); // num
+			flush(emulator);
+			for (int i = 128; i < 128 + 512; ++i)
+				assert(ram[i] == data[i]);
+		}
+#endif
+
 		int idx = (sz * 1024 * 1024) - 12288;
 		for (int i = 0; i < 256; ++i)
 		{
