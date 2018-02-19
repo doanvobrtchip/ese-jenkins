@@ -70,7 +70,7 @@ QMap<QString, QSize> parseCustomSizeHints(int argc, char **argv)
 int main(int argc, char* argv[])
 {
 #ifdef WIN32
-	// HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 #endif
 
 	Q_INIT_RESOURCE(icons);
@@ -160,8 +160,8 @@ int main(int argc, char* argv[])
 #endif /* FT800EMU_PYTHON */
 
 #ifdef WIN32
-	// if (coInitHR == S_OK)
-	//	CoUninitialize();
+	if (coInitHR == S_OK)
+		CoUninitialize();
 #endif
 
 	return result;
