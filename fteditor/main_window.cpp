@@ -4020,8 +4020,8 @@ class ProjectFlashCommand : public QUndoCommand
 public:
 	ProjectFlashCommand(int flashIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectFlash(flashIntf), m_OldProjectFlash(FTEDITOR_CURRENT_FLASH), m_MainWindow(mainWindow) { }
 	virtual ~ProjectFlashCommand() { }
-	virtual void undo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
-	virtual void redo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
 	virtual int id() const { return 98919601; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectFlash = static_cast<const ProjectFlashCommand *>(command)->m_NewProjectFlash; return true; }
 
