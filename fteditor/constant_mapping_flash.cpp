@@ -27,7 +27,7 @@ const wchar_t *g_FlashDeviceType[FTEDITOR_FLASH_NB] = { // Library for flash dev
 };
 
 const wchar_t *g_FlashFirmware[FTEDITOR_FLASH_NB] = { // Library for flash device
-	L"mx25l.blob",
+	L"unified.blob",
 };
 
 int g_CurrentFlash = FTEDITOR_DEFAULT_FLASH;
