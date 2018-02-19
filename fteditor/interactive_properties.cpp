@@ -214,7 +214,7 @@ void InteractiveProperties::addCell(int cell)
 	propCell->done();
 }
 
-void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly)
+void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly, bool noClock)
 {
 	#define ADD_OPTIONS_CHECKBOX(opt) \
 		{ \
@@ -232,6 +232,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_CENTER           1536UL ----
 	#define OPT_RIGHTX           2048UL
 	#define OPT_NOBACK           4096UL
+	#define OPT_FILL             8192UL x
 	#define OPT_NOTICKS          8192UL
 	#define OPT_NOHM             16384UL
 	#define OPT_NOPOINTER        16384UL <- special case (when NOHM this but not NOSECS)
@@ -292,9 +293,19 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		ADD_OPTIONS_CHECKBOX(OPT_RIGHTX);
 	}
-	if (flags & OPT_NOTICKS)
+	if (noClock)
 	{
-		ADD_OPTIONS_CHECKBOX(OPT_NOTICKS);
+		if (flags & OPT_FILL)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_FILL);
+		}
+	}
+	else
+	{
+		if (flags & OPT_NOTICKS)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_NOTICKS);
+		}
 	}
 	if (flags & OPT_NOHM)
 	{
@@ -862,7 +873,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_TEXT");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addHandle(2, true);
-				addOptions(3, OPT_CENTER | OPT_RIGHTX);
+				addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_FILL, false, true);
 				addText(4);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -878,7 +889,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addHandle(4, true);
-				addOptions(5, OPT_FLAT, true);
+				addOptions(5, OPT_FLAT | OPT_FILL, true, true);
 				addText(6);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}

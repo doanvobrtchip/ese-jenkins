@@ -67,7 +67,7 @@ private:
 	void addXYVertexFormat(int x, int y, int minim, int maxim);
 	void addHandle(int handle, bool font = false);
 	void addCell(int cell);
-	void addOptions(int options, uint32_t flags, bool flatOnly = false);
+	void addOptions(int options, uint32_t flags, bool flatOnly = false, bool noClock = false);
 	void addCharacter(int character);
 	void addText(int text);
 	void addStream(int stream);
