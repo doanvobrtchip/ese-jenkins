@@ -383,6 +383,7 @@ void loop()
 		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_DL)) != 0)
 		{
 			if (!s_EmulatorRunning) return;
+			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 		}
 		coprocessorSwapped = false;
 		// ++s_SwapCount;
