@@ -423,12 +423,14 @@ void loop()
 				printf("[Flash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
 				continue;
 			}
-			QString fileName = info->DestName + (info->DataCompressed ? ".bin" : ".raw");
-			printf("[Flash] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+			bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
+				? info->DataCompressed : false;
+			QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
+			printf("[Flash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
 			QFile binFile(fileName);
 			if (!binFile.exists())
 			{
-				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
+				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
 				continue;
 			}
 			int binSize = binFile.size();
@@ -773,6 +775,7 @@ void loop()
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
 			bool useMediaFifo;
+			bool useFlash;
 			const char *useFileStream = NULL;
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
@@ -781,10 +784,12 @@ void loop()
 			}
 			else if (cmdList[i] == CMD_LOADIMAGE)
 			{
-				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_FLASH);
+				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-					&& ((s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
+					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{

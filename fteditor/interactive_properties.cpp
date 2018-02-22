@@ -216,7 +216,7 @@ void InteractiveProperties::addCell(int cell)
 
 void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly, bool noClock)
 {
-	#define ADD_OPTIONS_CHECKBOX(opt) \
+#define ADD_OPTIONS_CHECKBOX(opt) \
 		{ \
 			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set " #opt, options, opt); \
 			addLabeledWidget(#opt ": ", chb); \
@@ -225,6 +225,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	/*
 	#define OPT_MONO             1UL
 	#define OPT_NODL             2UL
+	#define OPT_FLASH            64UL -- BT815
 	#define OPT_SIGNED           256UL <- special case (when CMD_NUMBER, probably whenever no NOBACK)
 	#define OPT_FLAT             256UL
 	#define OPT_CENTERX          512UL
@@ -232,7 +233,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_CENTER           1536UL ----
 	#define OPT_RIGHTX           2048UL
 	#define OPT_NOBACK           4096UL
-	#define OPT_FILL             8192UL x
+	#define OPT_FILL             8192UL -- BT815
 	#define OPT_NOTICKS          8192UL
 	#define OPT_NOHM             16384UL
 	#define OPT_NOPOINTER        16384UL <- special case (when NOHM this but not NOSECS)
@@ -245,6 +246,13 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	if (flags & OPT_NODL)
 	{
 		ADD_OPTIONS_CHECKBOX(OPT_NODL);
+	}
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+	{
+		if (flags & OPT_FLASH)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_FLASH);
+		}
 	}
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
@@ -295,9 +303,12 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	}
 	if (noClock)
 	{
-		if (flags & OPT_FILL)
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
-			ADD_OPTIONS_CHECKBOX(OPT_FILL);
+			if (flags & OPT_FILL)
+			{
+				ADD_OPTIONS_CHECKBOX(OPT_FILL);
+			}
 		}
 	}
 	else
@@ -1127,7 +1138,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_LOADIMAGE");
 				addAddress(0, false);
-				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_FLASH);
+				else
+					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
 				addStream(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
