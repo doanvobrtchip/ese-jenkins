@@ -2361,7 +2361,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_X");
-				addSpinBoxVertexFormat(0, -32768, 32767, "X: ", "Set x translation");
+				addSpinBox16(0, -32768, 32767, "X: ", "Set x translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -2373,7 +2373,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_Y");
-				addSpinBoxVertexFormat(0, -32768, 32767, "Y: ", "Set y translation");
+				addSpinBox16(0, -32768, 32767, "Y: ", "Set y translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
