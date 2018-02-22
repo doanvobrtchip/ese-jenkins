@@ -253,7 +253,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			it = m_CmdIdMap[deviceIntf]->find(parsed.IdText);
 			if (it != m_CmdIdMap[deviceIntf]->end())
 			{
-				parsed.IdLeft = 0xFFFFFF00;
+				parsed.IdLeft = FTEDITOR_CO_COMMAND;
 				parsed.IdRight = it->second;
 				parsed.ValidId = true;
 				parsed.ExpectedParameterCount = m_CmdParamCount[deviceIntf][parsed.IdRight];
@@ -662,7 +662,7 @@ QString DlParser::toString(int deviceIntf, uint32_t v)
 
 void DlParser::toString(int deviceIntf, std::string &dst, const DlParsed &parsed)
 {
-	if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // Coprocessor
 	{
 		if (deviceIntf >= FTEDITOR_BT815)
 			toStringVC3(deviceIntf, dst, parsed);
@@ -712,7 +712,7 @@ static int isCharUtf8(const char *s, size_t len)
 						{
 							return 3;
 						}
-						if (len > 4)
+						if (len > 3)
 						{
 							char c3 = s[3];
 							if (((c0 & '\xF8') == '\xF0')

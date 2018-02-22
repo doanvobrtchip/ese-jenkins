@@ -778,7 +778,7 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 	{
 		return VERTEX2II(p[0], p[1], p[2], p[3]);
 	}
-	else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	else if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // Coprocessor
 	{
 		return 0xFFFFFF00 | (parsed.IdRight);
 	}
@@ -921,7 +921,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 {
 	if (parsed.ValidId)
 	{
-		if (parsed.IdLeft == 0xFFFFFF00)
+		if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 		{
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{

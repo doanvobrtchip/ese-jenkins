@@ -113,7 +113,7 @@ void Espim::trigger()
 	state = 1;
 	a = *(uint32_t *)(&ram[REG_ESPIM_ADD]);
 	count = *(uint32_t *)(&ram[REG_ESPIM_COUNT]);
-	// printf("trigger: a %x, count %\n", a, count);
+	// printf("trigger: a %x, count %i\n", a, count);
 	Memory::rawWriteU32(ram, REG_ESPIM_TRIG, 0);
 }
 
