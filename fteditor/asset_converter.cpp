@@ -1085,11 +1085,13 @@ const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 			if (!lastEntry.Name.isEmpty())
 			{
 				int lastSize = index - lastEntry.Index;
-				lastEntry.Size = lastSize;
+				lastEntry.Size = lastEntry.Size >= 0 ? std::min(lastEntry.Size, lastSize) : lastSize;
 				flashMapInfo[lastEntry.Name] = lastEntry;
 			}
 			lastEntry.Name = list[0].trimmed().replace('\\', '/');
 			lastEntry.Index = index;
+			int sz = (list.size() >= 3) ? (list[2].toInt(&ok)) : (ok = false, 0);
+			lastEntry.Size = ok ? sz : -1;
 		}
 	}
 	if (!lastEntry.Name.isEmpty())
@@ -1099,7 +1101,8 @@ const FlashMapInfo &AssetConverter::parseFlashMap(const QString &flashMapPath)
 		QFileInfo flashBinInfo(flashBinPath);
 		if (flashBinInfo.exists())
 		{
-			lastEntry.Size = flashBinInfo.size() - lastEntry.Index;
+			int lastSize = flashBinInfo.size() - lastEntry.Index;
+			lastEntry.Size = lastEntry.Size >= 0 ? std::min(lastEntry.Size, lastSize) : lastSize;
 			flashMapInfo[lastEntry.Name] = lastEntry;
 		}
 	}
