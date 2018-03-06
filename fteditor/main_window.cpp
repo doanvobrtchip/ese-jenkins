@@ -3229,6 +3229,9 @@ void MainWindow::actNew(bool addClear)
 #endif
 	updateWindowTitle();
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+
+	// reset flash file name
+	m_ProjectFlashFilename->setText("No flash file is loaded");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
