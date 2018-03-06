@@ -2201,7 +2201,7 @@ void MainWindow::createDockWindows()
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
 			m_ProjectFlashFilename = new QLabel(this);
-			m_ProjectFlashFilename->setText("Unloaded");
+			m_ProjectFlashFilename->setText("No flash file is loaded");
 			groupLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
