@@ -778,7 +778,7 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 	{
 		return VERTEX2II(p[0], p[1], p[2], p[3]);
 	}
-	else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	else if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // Coprocessor
 	{
 		return 0xFFFFFF00 | (parsed.IdRight);
 	}
@@ -787,7 +787,12 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 		case FTEDITOR_DL_DISPLAY:
 			return DISPLAY();
 		case FTEDITOR_DL_BITMAP_SOURCE:
+			// Negative addresses must disable the flash bit
+#if defined(FTEDITOR_PARSER_VC3)
+			return BITMAP_SOURCE((p[0] & 0x80000000) ? (p[0] & g_AddressMask[deviceIntf]) : (p[0]));
+#else
 			return BITMAP_SOURCE(p[0]);
+#endif
 		case FTEDITOR_DL_CLEAR_COLOR_RGB:
 			return CLEAR_COLOR_RGB(p[0], p[1], p[2]);
 		case FTEDITOR_DL_TAG:
@@ -916,7 +921,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 {
 	if (parsed.ValidId)
 	{
-		if (parsed.IdLeft == 0xFFFFFF00)
+		if (parsed.IdLeft == FTEDITOR_CO_COMMAND)
 		{
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
@@ -1302,7 +1307,7 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				}
 				case CMD_SETBITMAP:
 				{
-					compiled.push_back(parsed.Parameter[0].I & addressMask(FTEDITOR_CURRENT_DEVICE));
+					compiled.push_back(parsed.Parameter[0].I); // addressSigned(FTEDITOR_CURRENT_DEVICE, parsed.Parameter[0].I));
 					uint32_t fmtw = parsed.Parameter[1].U & 0xFFFF
 						| parsed.Parameter[2].U << 16;
 					compiled.push_back(fmtw);
@@ -1315,11 +1320,19 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_FLASHREAD:
 				case CMD_FLASHUPDATE:
 				case CMD_ANIMSTART:
-				case CMD_ANIMXY:
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
+				case CMD_ANIMXY:
+				{
+					uint32_t x = parsed.Parameter[1].U;
+					uint32_t y = parsed.Parameter[2].U;
+					compiled.push_back(parsed.Parameter[0].U);
+					uint32_t xy = y << 16 | x & 0xFFFF;
+					compiled.push_back(xy);
 					break;
 				}
 				case CMD_FLASHFAST:
@@ -1473,13 +1486,12 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 					int addr = addressSigned(FTEDITOR_CURRENT_DEVICE, v);
 					res << "BITMAP_SOURCE(";
 #if defined(FTEDITOR_PARSER_VC3)
-					if ((addr >> 23) & 0x1)
+					if (((addr >> 23) & 0x1) && addr > 0)
 					{
 						res << "0x800000 | ";
 						addr &= 0x7FFFFF;
 					}
 #endif
-
 					res << addr << ")";
 					break;
 				}
@@ -2244,7 +2256,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 			case 4: {
 				int addr = addressSigned(FTEDITOR_CURRENT_DEVICE, parsed.Parameter[p].U);
 #if defined(FTEDITOR_PARSER_VC3)
-				if ((addr >> 23) & 0x1)
+				if (((addr >> 23) & 0x1) && addr > 0)
 				{
 					res << "0x800000 | ";
 					addr &= 0x7FFFFF;

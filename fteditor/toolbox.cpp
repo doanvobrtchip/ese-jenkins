@@ -452,6 +452,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROTATE));
 		m_CoprocessorTools.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Matrix Rotate Around"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROTATEAROUND));
+		m_CoprocessorBT815Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Matrix Set Current"));
 		item->setData(1, Qt::UserRole, QVariant((uint)4));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETMATRIX));
@@ -476,6 +481,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)4));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROMFONT));
 		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Text Fill Width"));
+		item->setData(1, Qt::UserRole, QVariant((uint)4));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FILLWIDTH));
+		m_CoprocessorBT815Plus.push_back(item);
 	}
 
 	m_Drawing = new QTreeWidgetItem(m_Tools);
@@ -637,6 +647,10 @@ uint32_t Toolbox::getSelectionId()
 
 void Toolbox::bindCurrentDevice()
 {
+	if (!m_LineEditor)
+	{
+		return;
+	}
 	for (size_t i = 0; i < m_CoprocessorFT801Only.size(); ++i)
 	{
 		m_CoprocessorFT801Only[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801 && m_LineEditor->isCoprocessor()));

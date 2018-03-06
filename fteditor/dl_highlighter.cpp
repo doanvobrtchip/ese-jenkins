@@ -49,21 +49,21 @@ void DlHighlighter::highlightBlock(const QString &text)
 		setFormat(parsed.IdIndex, parsed.IdLength, parsed.ValidId ? idFormat : badIdFormat);
 	}
 
-	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
+	for (int p = 0; p < DLPARSED_MAX_SYMBOL; ++p)
 	{
-		if (parsed.ParameterLength[p])
+		if (parsed.SymbolLength[p])
 		{
 			if (p == parsed.StringParameterAt)
 			{
-				setFormat(parsed.ParameterIndex[p], parsed.ParameterLength[p],
-					(parsed.ValidParameter[p] ? stringFormat : errorFormat));
+				setFormat(parsed.SymbolIndex[p], parsed.SymbolLength[p],
+					(parsed.ValidSymbol[p] ? stringFormat : errorFormat));
 			}
 			else
 			{
-				setFormat(parsed.ParameterIndex[p], parsed.ParameterLength[p],
-					parsed.NumericParameter[p]
-						? (parsed.ValidParameter[p] ? numberFormat : errorFormat)
-						: (parsed.ValidParameter[p] ? paramFormat : badIdFormat));
+				setFormat(parsed.SymbolIndex[p], parsed.SymbolLength[p],
+					parsed.NumericSymbol[p]
+						? (parsed.ValidSymbol[p] ? numberFormat : errorFormat)
+						: (parsed.ValidSymbol[p] ? paramFormat : badIdFormat));
 			}
 		}
 	}

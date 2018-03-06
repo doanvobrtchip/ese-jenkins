@@ -25,6 +25,8 @@
 
 // Project includes
 
+class QComboBox;
+
 namespace FTEDITOR {
 
 class MainWindow;
@@ -65,7 +67,7 @@ private:
 	void addXYVertexFormat(int x, int y, int minim, int maxim);
 	void addHandle(int handle, bool font = false);
 	void addCell(int cell);
-	void addOptions(int options, uint32_t flags, bool flatOnly = false);
+	void addOptions(int options, uint32_t flags, bool flatOnly = false, bool noClock = false);
 	void addCharacter(int character);
 	void addText(int text);
 	void addStream(int stream);
@@ -90,9 +92,9 @@ private:
 	void addAlphaHex(int alpha);
 	void addByteFlag(int flag, const QString &undoMessage);
 	// void addAddress(int address);
-	void addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage);
-	void addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage);
-	void addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage);
+	QComboBox *addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage);
+	QComboBox *addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage);
+	QComboBox *addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage);
 	void addBlendFunction(int blend, const QString &label, const QString &undoMessage);
 	void addCompareFunction(int compare);
 	void addStencilOperation(int operation, const QString &label, const QString &undoMessage);

@@ -30,6 +30,7 @@ namespace FT800EMU {
 	class AudioRender;
 
 typedef int32_t ramaddr;
+// typedef ramaddr flashaddr;
 
 /**
  * Memory

@@ -49,8 +49,6 @@ Author: Jan Boon <jan@no-break.space>
 #undef BT815EMU_MODE
 #endif
 
-static BT8XXEMU_Emulator *s_EmulatorSelect = NULL;
-
 static const char *c_Version =
 	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
@@ -158,14 +156,8 @@ BT8XXEMU_API uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data
 	return emulator->transfer(data);
 }
 
-BT8XXEMU_API uint8_t BT8XXEMU_transferSelect(uint8_t data)
-{
-	return s_EmulatorSelect ? s_EmulatorSelect->transfer(data) : 0;
-}
-
 BT8XXEMU_API void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *emulator, int cs)
 {
-	s_EmulatorSelect = cs ? emulator : NULL;
 	emulator->cs(cs != 0);
 }
 

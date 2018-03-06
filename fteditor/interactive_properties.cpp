@@ -214,9 +214,9 @@ void InteractiveProperties::addCell(int cell)
 	propCell->done();
 }
 
-void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly)
+void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly, bool noClock)
 {
-	#define ADD_OPTIONS_CHECKBOX(opt) \
+#define ADD_OPTIONS_CHECKBOX(opt) \
 		{ \
 			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set " #opt, options, opt); \
 			addLabeledWidget(#opt ": ", chb); \
@@ -225,6 +225,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	/*
 	#define OPT_MONO             1UL
 	#define OPT_NODL             2UL
+	#define OPT_FLASH            64UL -- BT815
 	#define OPT_SIGNED           256UL <- special case (when CMD_NUMBER, probably whenever no NOBACK)
 	#define OPT_FLAT             256UL
 	#define OPT_CENTERX          512UL
@@ -232,6 +233,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_CENTER           1536UL ----
 	#define OPT_RIGHTX           2048UL
 	#define OPT_NOBACK           4096UL
+	#define OPT_FILL             8192UL -- BT815
 	#define OPT_NOTICKS          8192UL
 	#define OPT_NOHM             16384UL
 	#define OPT_NOPOINTER        16384UL <- special case (when NOHM this but not NOSECS)
@@ -244,6 +246,13 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	if (flags & OPT_NODL)
 	{
 		ADD_OPTIONS_CHECKBOX(OPT_NODL);
+	}
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+	{
+		if (flags & OPT_FLASH)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_FLASH);
+		}
 	}
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
@@ -292,9 +301,22 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		ADD_OPTIONS_CHECKBOX(OPT_RIGHTX);
 	}
-	if (flags & OPT_NOTICKS)
+	if (noClock)
 	{
-		ADD_OPTIONS_CHECKBOX(OPT_NOTICKS);
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+		{
+			if (flags & OPT_FILL)
+			{
+				ADD_OPTIONS_CHECKBOX(OPT_FILL);
+			}
+		}
+	}
+	else
+	{
+		if (flags & OPT_NOTICKS)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_NOTICKS);
+		}
 	}
 	if (flags & OPT_NOHM)
 	{
@@ -563,12 +585,12 @@ void InteractiveProperties::addByteFlag(int flag, const QString &undoMessage)
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
-void InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const char **items, int nb, const QString &label, const QString &undoMessage)
 {
-	addComboBox(index, items, 0, nb, label, undoMessage);
+	return addComboBox(index, items, 0, nb, label, undoMessage);
 }
 
-void InteractiveProperties::addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const char **items, int begin, int end, const QString &label, const QString &undoMessage)
 {
 	PropertiesComboBox *prop = new PropertiesComboBox(this, undoMessage, index, begin);
 	for (int i = begin; i < end; ++i)
@@ -576,9 +598,10 @@ void InteractiveProperties::addComboBox(int index, const char **items, int begin
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
+	return prop;
 }
 
-void InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage)
+QComboBox *InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnumSz, const int *toIntf, const char **toString, int toIntfStringSz, const QString &label, const QString &undoMessage)
 {
 	PropertiesRemapComboBox *prop = new PropertiesRemapComboBox(this, undoMessage, index, toIntf, toIntfStringSz, toEnum, toEnumSz);
 	for (int i = 0; i < toEnumSz; ++i)
@@ -586,6 +609,7 @@ void InteractiveProperties::addComboBox(int index, const int *toEnum, int toEnum
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->ready();
+	return prop;
 }
 
 void InteractiveProperties::addBlendFunction(int blend, const QString &label, const QString &undoMessage)
@@ -610,8 +634,6 @@ void InteractiveProperties::addPrimitive(int primitive)
 
 void InteractiveProperties::addBitmapFormat(int format)
 {
-	// TODO: Identifier remapping, centralized combobox listings
-	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
 	addComboBox(format, 
 		g_BitmapFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
@@ -623,17 +645,20 @@ void InteractiveProperties::addBitmapFormat(int format)
 
 void InteractiveProperties::addExtFormat(int format)
 {
-	// TODO: Identifier remapping, centralized combobox listings
-	// addComboBox(format, g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE], g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE], "Format: ", "Set bitmap format");
 	if (!g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE])
+	{
+		addBitmapFormat(format);
 		return;
-	addComboBox(format,
+	}
+	QComboBox *comboBox = addComboBox(format,
 		g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
 		g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
 		g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
 		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
 		tr("Format") + ": ", tr("Set extended bitmap format"));
+	for (int i = 0; i < comboBox->count(); ++i)
+		comboBox->setItemText(i, comboBox->itemText(i).replace("COMPRESSED_RGBA_", ""));
 }
 
 void InteractiveProperties::addSwizzle(int swizzle, const QString &label, const QString &undoMessage)
@@ -859,7 +884,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_TEXT");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addHandle(2, true);
-				addOptions(3, OPT_CENTER | OPT_RIGHTX);
+				addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_FILL, false, true);
 				addText(4);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -875,7 +900,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addHandle(4, true);
-				addOptions(5, OPT_FLAT, true);
+				addOptions(5, OPT_FLAT | OPT_FILL, true, true);
 				addText(6);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1113,7 +1138,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_LOADIMAGE");
 				addAddress(0, false);
-				addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_FLASH);
+				else
+					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
 				addStream(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1470,7 +1498,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 					addAddressFlashOpt(0, true);
 				else
 					addAddress(0, true);
-				addBitmapFormat(1);
+				addExtFormat(1);
 				addWH(2, 3, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -2347,7 +2375,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_X");
-				addSpinBoxVertexFormat(0, -32768, 32767, "X: ", "Set x translation");
+				addSpinBox16(0, -32768, 32767, "X: ", "Set x translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -2359,7 +2387,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("VERTEX_TRANSLATE_Y");
-				addSpinBoxVertexFormat(0, -32768, 32767, "Y: ", "Set y translation");
+				addSpinBox16(0, -32768, 32767, "Y: ", "Set y translation");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

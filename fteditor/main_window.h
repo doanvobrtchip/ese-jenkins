@@ -43,6 +43,8 @@ class QProgressBar;
 class QComboBox;
 class QLabel;
 class QMenu;
+class QGroupBox;
+class QHBoxLayout;
 
 namespace FTEDITOR {
 
@@ -138,6 +140,8 @@ public:
 
 	void openFile(const QString &fileName);
 
+	void setFlashFileNameToLabel(const QString &fileName);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -181,6 +185,7 @@ private slots:
 
 	void projectDeviceChanged(int i);
 	void projectDisplayChanged(int i);
+	void projectFlashChanged(int i);
 
 private:
 	void updateInitialization(bool visible);
@@ -209,9 +214,11 @@ private:
 	QString scriptDir();
 #endif
 
+	void bindCurrentDevice();
+
 	void stopEmulatorInternal();
 	void startEmulatorInternal();
-	void changeEmulatorInternal(int deviceIntf);
+	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -231,6 +238,9 @@ private:
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
+
+	QWidget *m_ErrorFrame;
+	QLabel *m_ErrorLabel;
 
 	QLabel *m_CursorPosition;
 	QLabel *m_CoprocessorBusy;
@@ -270,6 +280,10 @@ private:
 	QDockWidget *m_ProjectDock;
 	QComboBox *m_ProjectDevice;
 	QComboBox *m_ProjectDisplay;
+	QWidget *m_ProjectFlashLayout;
+	QComboBox *m_ProjectFlash;
+	QPushButton *m_ProjectFlashImport;
+	QLabel *m_ProjectFlashFilename;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
@@ -331,6 +345,7 @@ private:
 	QString m_LastProjectDir;
 
 	friend class ProjectDeviceCommand;
+	friend class ProjectFlashCommand;
 
 }; /* class MainWindow */
 
