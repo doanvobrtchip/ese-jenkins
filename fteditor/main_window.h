@@ -140,6 +140,8 @@ public:
 
 	void openFile(const QString &fileName);
 
+	void setFlashFileNameToLabel(const QString &fileName);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -281,6 +283,7 @@ private:
 	QWidget *m_ProjectFlashLayout;
 	QComboBox *m_ProjectFlash;
 	QPushButton *m_ProjectFlashImport;
+	QLabel *m_ProjectFlashFilename;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;

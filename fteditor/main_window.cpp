@@ -2200,6 +2200,10 @@ void MainWindow::createDockWindows()
 			m_ProjectFlashLayout->setLayout(hBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
+			m_ProjectFlashFilename = new QLabel(this);
+			m_ProjectFlashFilename->setText("Unloaded");
+			groupLayout->addWidget(m_ProjectFlashFilename);
+
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
@@ -3487,6 +3491,11 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+}
+
+void MainWindow::setFlashFileNameToLabel(const QString & fileName)
+{
+	m_ProjectFlashFilename->setText(fileName);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)

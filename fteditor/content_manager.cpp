@@ -1071,6 +1071,11 @@ void ContentManager::importFlashMapped()
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
 	}
+	else
+	{
+		// set flash file name to GUI
+		m_MainWindow->setFlashFileNameToLabel(fileName);
+	}
 }
 
 void ContentManager::exportFlashMapped()
