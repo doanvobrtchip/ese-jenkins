@@ -28,6 +28,8 @@
 
 class QTreeWidget;
 class QTreeWidgetItem;
+class QEvent;
+class QKeyEvent;
 
 namespace FTEDITOR {
 
@@ -57,9 +59,13 @@ public:
 
 	int countHandleUsage();
 
+	bool eventFilter(QObject* watched, QEvent* event);
+
 private:
 	void initDisplayReg();
 	void releaseDisplayReg();
+
+	void copy(const QTreeWidget *widget);
 
 	MainWindow *m_MainWindow;
 
