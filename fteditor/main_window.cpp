@@ -2201,7 +2201,12 @@ void MainWindow::createDockWindows()
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
 			m_ProjectFlashFilename = new QLabel(this);
-			m_ProjectFlashFilename->setText("No flash file is loaded");
+			QSizePolicy sizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+			sizePolicy.setHorizontalStretch(0);
+			sizePolicy.setVerticalStretch(0);
+			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
+			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
+			m_ProjectFlashFilename->installEventFilter(this);
 			groupLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
@@ -3231,7 +3236,7 @@ void MainWindow::actNew(bool addClear)
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
 	// reset flash file name
-	m_ProjectFlashFilename->setText("No flash file is loaded");
+	setFlashFileNameToLabel("No flash file is loaded");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3384,7 +3389,7 @@ void MainWindow::actOpen()
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-		tr("EVE Screen Editor Project (*.ft800proj  *.ft8xxproj)"));
+		tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
 	if (fileName.isNull())
 		return;
 
@@ -3498,7 +3503,34 @@ void MainWindow::openFile(const QString &fileName)
 
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
 {
-	m_ProjectFlashFilename->setText(fileName);
+	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(fileName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, fileName);
+	m_ProjectFlashFilename->setText(elidedText);
+}
+
+const bool MainWindow::isProjectSaved(void)
+{
+	return (false == m_CurrentFile.isEmpty());
+}
+
+const QString MainWindow::getProjectSavedFolder(void)
+{
+	if (m_CurrentFile.isEmpty())
+	{
+		return QString("");
+	}
+
+	return QFileInfo(m_CurrentFile).absolutePath();
+}
+
+bool MainWindow::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
+	{
+		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+	}
+
+	return QMainWindow::eventFilter(watched, event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -3573,7 +3605,8 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filterft8xxproj = tr("ESE Project (*.ft8xxproj)");
+	const QString fileExtend(".ese");
+	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
@@ -3583,8 +3616,8 @@ void MainWindow::actSaveAs()
 
 	if (filter == filterft8xxproj)
 	{
-		if (!fileName.endsWith(".ft8xxproj"))
-			fileName = fileName + ".ft8xxproj";
+		if (!fileName.endsWith(fileExtend))
+			fileName = fileName + fileExtend;
 	}
 
 	// Copy asset files, abort if already exists (check first)

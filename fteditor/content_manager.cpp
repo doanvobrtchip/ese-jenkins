@@ -28,6 +28,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QSpinBox>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QMessageBox>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -1055,6 +1056,33 @@ void ContentManager::rebuildAll()
 	}
 }
 
+void ContentManager::copyFlashFile()
+{
+	if (m_MainWindow->isProjectSaved())
+	{
+		QDir projectFolder(m_MainWindow->getProjectSavedFolder());
+		projectFolder.mkpath("flash");
+		projectFolder.cd("flash");
+		QString projectFlashFolder = projectFolder.absolutePath() + "/";
+
+		// copy file .map
+		QFile::copy(m_FlashFileName, projectFlashFolder + QFileInfo(m_FlashFileName).fileName());
+
+		// copy file .bin
+		QString binFileName(m_FlashFileName);
+		binFileName.replace(m_FlashFileName.length() - 3, 3, "bin");
+		QFile::copy(binFileName, projectFlashFolder + QFileInfo(binFileName).fileName());
+
+		// flash file point to new folder
+		m_FlashFileName = projectFlashFolder + QFileInfo(m_FlashFileName).fileName();
+	}
+	else
+	{
+		m_MainWindow->requestSave();
+		copyFlashFile();
+	}
+}
+
 void ContentManager::importFlashMapped()
 {
 	printf("ContentManager::importFlashMapped()\n");
@@ -1067,14 +1095,26 @@ void ContentManager::importFlashMapped()
 	if (fileName.isEmpty())
 		return;
 
-	if (!loadFlashMap(fileName))
+	m_FlashFileName = fileName;
+
+	// ask if user wanna move flash files
+	int answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
+	if (QMessageBox::Yes == answer)
+	{
+		copyFlashFile();
+	}
+
+	// set flash file name to GUI
+	m_MainWindow->setFlashFileNameToLabel(m_FlashFileName);
+
+	QString relativeFlashMapPath = QDir(QDir::currentPath()).relativeFilePath(m_FlashFileName);
+	if (!loadFlashMap(relativeFlashMapPath))
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
 	}
-	else
+	else if (QMessageBox::Yes == answer)
 	{
-		// set flash file name to GUI
-		m_MainWindow->setFlashFileNameToLabel(fileName);
+		m_MainWindow->requestSave();
 	}
 }
 
