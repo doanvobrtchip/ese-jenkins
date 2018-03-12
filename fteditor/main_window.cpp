@@ -3169,6 +3169,23 @@ bool MainWindow::maybeSave()
 	return true;
 }
 
+void MainWindow::checkAndPromptFlashPath(const QString & filePath)
+{
+	if (filePath.isEmpty())
+	{
+		return;
+	}
+
+	// check .map and .bin files
+	QString binPath(filePath);
+	binPath = binPath.replace(filePath.length() - 3, 3, "bin");
+	if (false == QFileInfo::exists(filePath) || false == QFileInfo::exists(binPath))
+	{
+		// prompt user
+		QMessageBox::information(this, tr("Flash files do not exist"), tr("Flash files do not exist!"));
+	}
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
@@ -3447,12 +3464,20 @@ void MainWindow::openFile(const QString &fileName)
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
+
+		bool checkFlashPath = false;
 		for (int i = 0; i < content.size(); ++i)
 		{
 			ContentInfo *ci = new ContentInfo("");
 			QJsonObject cio = content[i].toObject();
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
+
+			if (false == checkFlashPath)
+			{
+				checkFlashPath = true;
+				checkAndPromptFlashPath(ci->SourcePath);
+			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{

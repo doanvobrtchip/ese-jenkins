@@ -217,6 +217,8 @@ private:
 
 	bool maybeSave();
 
+	void checkAndPromptFlashPath(const QString &filePath);
+
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();
 	QString scriptDir();
