@@ -3169,11 +3169,11 @@ bool MainWindow::maybeSave()
 	return true;
 }
 
-void MainWindow::checkAndPromptFlashPath(const QString & filePath)
+bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 {
 	if (filePath.isEmpty())
 	{
-		return;
+		return false;
 	}
 
 	// check .map and .bin files
@@ -3184,6 +3184,33 @@ void MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		// prompt user
 		QMessageBox::information(this, tr("Flash files do not exist"), tr("Flash files do not exist!"));
 	}
+	else
+	{
+		// check flash configuration
+		qint64 binSize = QFileInfo(binPath).size();
+
+		if (binSize > 256 * 1024 * 1024)
+		{
+			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
+			return false;
+		}
+		else
+		{
+			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
+			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
+			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
+			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
+			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
+			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
+			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
+			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
+			
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+			setFlashFileNameToLabel(QFileInfo(filePath).absoluteFilePath());
+		}
+	}
+
+	return true;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -3476,7 +3503,10 @@ void MainWindow::openFile(const QString &fileName)
 			if (false == checkFlashPath)
 			{
 				checkFlashPath = true;
-				checkAndPromptFlashPath(ci->SourcePath);
+				if (false == checkAndPromptFlashPath(ci->SourcePath))
+				{
+					break;
+				}
 			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))

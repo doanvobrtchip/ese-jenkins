@@ -149,7 +149,7 @@ public:
 
 	bool eventFilter(QObject *watched, QEvent *event);
 	void requestSave() { actSave(); }
-
+	bool checkAndPromptFlashPath(const QString &filePath);
 private slots:
 	// void applyEmulatorConfig();
 
@@ -216,8 +216,6 @@ private:
 	void updateProjectDisplay(int hsize, int vsize);
 
 	bool maybeSave();
-
-	void checkAndPromptFlashPath(const QString &filePath);
 
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();

@@ -1097,6 +1097,12 @@ void ContentManager::importFlashMapped()
 
 	m_FlashFileName = fileName;
 
+	// check flash size
+	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
+	{
+		return;
+	}
+
 	// ask if user wanna move flash files
 	int answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
 	if (QMessageBox::Yes == answer)
