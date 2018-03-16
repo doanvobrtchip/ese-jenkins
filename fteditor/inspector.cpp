@@ -24,6 +24,10 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QGroupBox>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QClipboard>
+#include <QApplication>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -98,6 +102,10 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	QVBoxLayout *dlLayout = new QVBoxLayout();
 	m_DisplayList = new QTreeWidget(this);
 	m_DisplayList->setColumnCount(3);
+	m_DisplayList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_DisplayList->setSelectionBehavior(QAbstractItemView::SelectRows);
+	m_DisplayList->installEventFilter(this);
+
 	QStringList dlHeaders;
 	dlHeaders.push_back(tr(""));
 	dlHeaders.push_back(tr("Raw"));
@@ -112,6 +120,10 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	QVBoxLayout *regLayout = new QVBoxLayout();
 	m_Registers = new QTreeWidget(this);
 	m_Registers->setColumnCount(4);
+	m_Registers->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	m_Registers->setSelectionBehavior(QAbstractItemView::SelectRows);
+	m_Registers->installEventFilter(this);
+
 	QStringList regHeaders;
 	regHeaders.push_back(tr("Address"));
 	regHeaders.push_back(tr("Id"));
@@ -358,6 +370,50 @@ int Inspector::countHandleUsage()
 		if (m_HandleUsage[i])
 			++result;
 	return result;
+}
+
+bool Inspector::eventFilter(QObject * watched, QEvent * event)
+{
+	if ((watched == m_DisplayList || watched == m_Registers) && event->type() == QEvent::KeyPress)
+	{
+		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+
+		if (keyEvent->key() == Qt::Key_C && keyEvent->modifiers().testFlag(Qt::ControlModifier))
+		{
+			copy(static_cast<const QTreeWidget *>(watched));
+			return true;
+		}
+	}
+
+	return QWidget::eventFilter(watched, event);
+}
+
+void Inspector::copy(const QTreeWidget * widget)
+{
+	QList<QTreeWidgetItem *> selectedItems = widget->selectedItems();
+	QClipboard * clip = QApplication::clipboard();
+	QString copy_text("");
+
+	// get header
+	int len = widget->headerItem()->columnCount();
+	int i = 0;
+
+	for (i; i < len; ++i)
+	{
+		copy_text += widget->headerItem()->text(i) + '\t';
+	}
+	copy_text.replace(copy_text.length() - 1, 1, '\n');
+
+	foreach(QTreeWidgetItem* item, selectedItems)
+	{
+		for (i = 0; i < len; ++i)
+		{
+			copy_text += item->text(i) + '\t';
+		}
+		copy_text.replace(copy_text.length() - 1, 1, '\n');
+	}
+
+	clip->setText(copy_text);
 }
 
 } /* namespace FTEDITOR */
