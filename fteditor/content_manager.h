@@ -231,6 +231,8 @@ public:
 	// Utility
 	inline const QTreeWidget *contentList() const { return m_ContentList; }
 
+	void copyFlashFile();
+
 private:
 	class Add;
 	class Remove;
@@ -326,6 +328,8 @@ private:
 	bool m_OverlapFlashSuppressed;
 
 	static QMutex s_Mutex;
+
+	QString m_FlashFileName;
 
 private slots:
 	void add();

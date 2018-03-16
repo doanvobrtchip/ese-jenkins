@@ -91,6 +91,8 @@ class MainWindow : public QMainWindow
 {
 	Q_OBJECT
 
+	const char * PROPERTY_FLASH_FILE_NAME = "originalFlashFileName";
+
 public:
 	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = 0);
 	virtual ~MainWindow();
@@ -140,6 +142,14 @@ public:
 
 	void openFile(const QString &fileName);
 
+	void setFlashFileNameToLabel(const QString &fileName);
+
+	const bool isProjectSaved(void);
+	const QString getProjectSavedFolder(void);
+
+	bool eventFilter(QObject *watched, QEvent *event);
+	void requestSave() { actSave(); }
+	bool checkAndPromptFlashPath(const QString &filePath);
 private slots:
 	// void applyEmulatorConfig();
 
@@ -281,6 +291,7 @@ private:
 	QWidget *m_ProjectFlashLayout;
 	QComboBox *m_ProjectFlash;
 	QPushButton *m_ProjectFlashImport;
+	QLabel *m_ProjectFlashFilename;
 
 	QDockWidget *m_RegistersDock;
 	DlEditor *m_Macro;
