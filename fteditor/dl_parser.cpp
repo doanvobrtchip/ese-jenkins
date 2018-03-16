@@ -15,6 +15,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Qt includes
 #include <QStringList>
+#include <QRegularExpression>
 
 // Emulator includes
 
@@ -802,6 +803,52 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 					{
 						res << "\\x";
 					}
+					break;
+				}
+				case 'u':
+				{
+					if (i + 4 < src.size())
+					{
+						QString tmp = QString::fromStdString(src.substr(i + 1, 4));
+						QRegularExpression hexMatcher("^[0-9A-F]{4}$", QRegularExpression::CaseInsensitiveOption);
+						QRegularExpressionMatch match = hexMatcher.match(tmp);
+						if (match.hasMatch())
+						{
+							bool ok;
+							unsigned int v = match.captured(0).toUInt(&ok, 16);
+							if (ok)
+							{
+								res << QString(v).toStdString();
+								i += 4;
+								break;
+							}
+						}
+					}
+
+					res << "\\u";
+					break;
+				}
+				case 'U':
+				{
+					if (i + 8 < src.size())
+					{
+						QString tmp = QString::fromStdString(src.substr(i + 1, 8));
+						QRegularExpression hexMatcher("^[0-9A-F]{8}$", QRegularExpression::CaseInsensitiveOption);
+						QRegularExpressionMatch match = hexMatcher.match(tmp);
+						if (match.hasMatch())
+						{
+							bool ok;
+							unsigned int v = match.captured(0).toUInt(&ok, 16);
+							if (ok)
+							{
+								res << QString(v).toStdString();
+								i += 8;
+								break;
+							}
+						}
+					}
+
+					res << "\\U";
 					break;
 				}
 				default:
