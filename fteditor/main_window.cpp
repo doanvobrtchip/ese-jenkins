@@ -2200,6 +2200,15 @@ void MainWindow::createDockWindows()
 			m_ProjectFlashLayout->setLayout(hBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
+			m_ProjectFlashFilename = new QLabel(this);
+			QSizePolicy sizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+			sizePolicy.setHorizontalStretch(0);
+			sizePolicy.setVerticalStretch(0);
+			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
+			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
+			m_ProjectFlashFilename->installEventFilter(this);
+			groupLayout->addWidget(m_ProjectFlashFilename);
+
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
 		}
@@ -3160,6 +3169,50 @@ bool MainWindow::maybeSave()
 	return true;
 }
 
+bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
+{
+	if (filePath.isEmpty())
+	{
+		return false;
+	}
+
+	// check .map and .bin files
+	QString binPath(filePath);
+	binPath = binPath.replace(filePath.length() - 3, 3, "bin");
+	if (false == QFileInfo::exists(filePath) || false == QFileInfo::exists(binPath))
+	{
+		// prompt user
+		QMessageBox::information(this, tr("Flash files do not exist"), tr("Flash files do not exist!"));
+	}
+	else
+	{
+		// check flash configuration
+		qint64 binSize = QFileInfo(binPath).size();
+
+		if (binSize > 256 * 1024 * 1024)
+		{
+			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
+			return false;
+		}
+		else
+		{
+			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
+			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
+			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
+			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
+			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
+			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
+			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
+			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
+			
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+			setFlashFileNameToLabel(QFileInfo(filePath).absoluteFilePath());
+		}
+	}
+
+	return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
@@ -3225,6 +3278,9 @@ void MainWindow::actNew(bool addClear)
 #endif
 	updateWindowTitle();
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+
+	// reset flash file name
+	setFlashFileNameToLabel("No flash file is loaded");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3377,7 +3433,7 @@ void MainWindow::actOpen()
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-		tr("EVE Screen Editor Project (*.ft800proj  *.ft8xxproj)"));
+		tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
 	if (fileName.isNull())
 		return;
 
@@ -3435,12 +3491,23 @@ void MainWindow::openFile(const QString &fileName)
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
+
+		bool checkFlashPath = false;
 		for (int i = 0; i < content.size(); ++i)
 		{
 			ContentInfo *ci = new ContentInfo("");
 			QJsonObject cio = content[i].toObject();
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
+
+			if (false == checkFlashPath)
+			{
+				checkFlashPath = true;
+				if (false == checkAndPromptFlashPath(ci->SourcePath))
+				{
+					break;
+				}
+			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -3487,6 +3554,38 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+}
+
+void MainWindow::setFlashFileNameToLabel(const QString & fileName)
+{
+	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(fileName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, fileName);
+	m_ProjectFlashFilename->setText(elidedText);
+}
+
+const bool MainWindow::isProjectSaved(void)
+{
+	return (false == m_CurrentFile.isEmpty());
+}
+
+const QString MainWindow::getProjectSavedFolder(void)
+{
+	if (m_CurrentFile.isEmpty())
+	{
+		return QString("");
+	}
+
+	return QFileInfo(m_CurrentFile).absolutePath();
+}
+
+bool MainWindow::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
+	{
+		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+	}
+
+	return QMainWindow::eventFilter(watched, event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -3561,7 +3660,8 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filterft8xxproj = tr("ESE Project (*.ft8xxproj)");
+	const QString fileExtend(".ese");
+	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
@@ -3571,8 +3671,8 @@ void MainWindow::actSaveAs()
 
 	if (filter == filterft8xxproj)
 	{
-		if (!fileName.endsWith(".ft8xxproj"))
-			fileName = fileName + ".ft8xxproj";
+		if (!fileName.endsWith(fileExtend))
+			fileName = fileName + fileExtend;
 	}
 
 	// Copy asset files, abort if already exists (check first)
