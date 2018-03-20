@@ -1098,7 +1098,7 @@ void ContentManager::importFlashMapped()
 	m_FlashFileName = fileName;
 
 	// check flash size
-	if (!m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
+	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
 	{
 		return;
 	}

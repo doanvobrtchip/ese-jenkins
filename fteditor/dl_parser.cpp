@@ -686,7 +686,7 @@ QString DlParser::toString(int deviceIntf, const DlParsed &parsed)
 	return QString(str.c_str());
 }
 
-static int isCharUtf8(const char *s, size_t len)
+static inline int isCharUtf8(const char *s, size_t len)
 {
 	if (len > 0)
 	{
@@ -733,15 +733,19 @@ static int isCharUtf8(const char *s, size_t len)
 void DlParser::escapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
+	bool lastX = false;
 	for (size_t c = 0; c < src.size(); ++c)
 	{
+		bool x = false;
 		unsigned char ch = src[c];
 		if (ch == '\t') res << "\\t";
 		else if (ch == '\\') res << "\\\\";
 		else if (ch == '\n') res << "\\n";
 		else if (ch == '\r') res << "\\r";
-		else if (ch >= 32 && ch <= 126) res << ch;
-		else if (int nb = isCharUtf8(&src[c], src.size() - c))
+		else if (int nb = ((!lastX || !((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') || (ch >= '0' && ch <= '9')))
+			&& (ch >= 32))
+			? isCharUtf8(&src[c], src.size() - c) 
+			: 0)
 		{
 			res << ch;
 			for (int i = 1; i < nb; ++i)
@@ -755,7 +759,9 @@ void DlParser::escapeString(std::string &dst, const std::string &src)
 			std::stringstream tmp;
 			tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
 			res << tmp.str();
+			x = true;
 		}
+		lastX = x;
 	}
 	dst = res.str();
 }
