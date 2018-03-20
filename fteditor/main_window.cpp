@@ -3568,16 +3568,6 @@ const bool MainWindow::isProjectSaved(void)
 	return (false == m_CurrentFile.isEmpty());
 }
 
-const QString MainWindow::getProjectSavedFolder(void)
-{
-	if (m_CurrentFile.isEmpty())
-	{
-		return QString("");
-	}
-
-	return QFileInfo(m_CurrentFile).absolutePath();
-}
-
 bool MainWindow::eventFilter(QObject * watched, QEvent * event)
 {
 	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)

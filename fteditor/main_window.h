@@ -145,7 +145,6 @@ public:
 	void setFlashFileNameToLabel(const QString &fileName);
 
 	const bool isProjectSaved(void);
-	const QString getProjectSavedFolder(void);
 
 	bool eventFilter(QObject *watched, QEvent *event);
 	void requestSave() { actSave(); }

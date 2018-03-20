@@ -1060,7 +1060,7 @@ void ContentManager::copyFlashFile()
 {
 	if (m_MainWindow->isProjectSaved())
 	{
-		QDir projectFolder(m_MainWindow->getProjectSavedFolder());
+		QDir projectFolder(QDir::current());
 		projectFolder.mkpath("flash");
 		projectFolder.cd("flash");
 		QString projectFlashFolder = projectFolder.absolutePath() + "/";
@@ -1098,16 +1098,22 @@ void ContentManager::importFlashMapped()
 	m_FlashFileName = fileName;
 
 	// check flash size
-	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
+	if (!m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
 	{
 		return;
 	}
 
-	// ask if user wanna move flash files
-	int answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
-	if (QMessageBox::Yes == answer)
+	// check if flash files exist
+	QString checkFlashPath = QDir::currentPath() + "/flash/" + QFileInfo(m_FlashFileName).baseName();
+	int answer = -1;
+	if (!QFile::exists(checkFlashPath + ".bin") || !QFile::exists(checkFlashPath + ".map"))
 	{
-		copyFlashFile();
+		// ask if user wanna move flash files
+		answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
+		if (answer == QMessageBox::Yes)
+		{
+			copyFlashFile();
+		}
 	}
 
 	// set flash file name to GUI
@@ -1118,7 +1124,7 @@ void ContentManager::importFlashMapped()
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
 	}
-	else if (QMessageBox::Yes == answer)
+	else if (answer == QMessageBox::Yes)
 	{
 		m_MainWindow->requestSave();
 	}
