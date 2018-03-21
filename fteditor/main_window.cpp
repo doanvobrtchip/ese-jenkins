@@ -3206,7 +3206,6 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
 			
 			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
-			setFlashFileNameToLabel(QFileInfo(filePath).absoluteFilePath());
 		}
 	}
 
@@ -3280,7 +3279,7 @@ void MainWindow::actNew(bool addClear)
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
 	// reset flash file name
-	setFlashFileNameToLabel("No flash file is loaded");
+	setFlashFileNameToLabel("");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3558,8 +3557,13 @@ void MainWindow::openFile(const QString &fileName)
 
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
 {
-	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(fileName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
-	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, fileName);
+	QString flashName(fileName);
+	if (flashName.isEmpty())
+	{
+		flashName = tr("No flash file is loaded");
+	}
+	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, flashName);
 	m_ProjectFlashFilename->setText(elidedText);
 }
 

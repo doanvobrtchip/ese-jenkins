@@ -897,6 +897,13 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
 
+	// check to see if there is a need to set flash file path to GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap)
+	{
+		QString flashPath = QDir::current().absoluteFilePath(contentInfo->SourcePath);
+		m_MainWindow->setFlashFileNameToLabel(flashPath);
+	}
+
 	// Ensure no duplicate names are used
 	contentInfo->DestName = createName(contentInfo->DestName);
 
@@ -952,6 +959,12 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 
 	// Be helpful
 	m_HelpfulLabel->setVisible(getContentCount() == 0);
+
+	// Check to see a flash map is in use, if not, remove flash path in GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap && findFlashMapPath().isEmpty())
+	{
+		m_MainWindow->setFlashFileNameToLabel("");
+	}
 }
 
 bool ContentManager::nameExists(const QString &name)
@@ -1115,9 +1128,6 @@ void ContentManager::importFlashMapped()
 			copyFlashFile();
 		}
 	}
-
-	// set flash file name to GUI
-	m_MainWindow->setFlashFileNameToLabel(m_FlashFileName);
 
 	QString relativeFlashMapPath = QDir(QDir::currentPath()).relativeFilePath(m_FlashFileName);
 	if (!loadFlashMap(relativeFlashMapPath))
