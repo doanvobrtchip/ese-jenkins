@@ -3499,13 +3499,10 @@ void MainWindow::openFile(const QString &fileName)
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
 
-			if (false == checkFlashPath)
+			if (!checkFlashPath && ci->Converter == ContentInfo::FlashMap)
 			{
 				checkFlashPath = true;
-				if (false == checkAndPromptFlashPath(ci->SourcePath))
-				{
-					break;
-				}
+				checkAndPromptFlashPath(ci->SourcePath);
 			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))
