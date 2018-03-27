@@ -468,7 +468,7 @@ void DeviceManager::loadContent2Device(ContentManager *contentManager, Ft_Gpu_Ha
 	for (QTreeWidgetItemIterator it(contentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(syncDeviceEVEType, FTEDITOR_RAM_G_END)))
+		/*if (info->MemoryLoaded && info->CachedSize && (info->MemoryAddress + info->CachedSize <= addr(syncDeviceEVEType, FTEDITOR_RAM_G_END)))
 		{
             {
 			Ft_Gpu_Hal_WrMem(phost,addr(syncDeviceEVEType, FTEDITOR_RAM_G)+info->MemoryAddress,&ram[addr(syncDeviceEVEType, FTEDITOR_RAM_G)+info->MemoryAddress],info->CachedSize);
@@ -481,7 +481,7 @@ void DeviceManager::loadContent2Device(ContentManager *contentManager, Ft_Gpu_Ha
 					Ft_Gpu_Hal_WrMem(phost,addr(syncDeviceEVEType, FTEDITOR_RAM_PAL),&ram[addr(syncDeviceEVEType, FTEDITOR_RAM_PAL)],PALSIZE);
 				}
 			}
-		}
+		}*/
 	}
 	contentManager->unlockContent();
 }

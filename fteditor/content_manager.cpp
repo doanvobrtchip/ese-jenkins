@@ -28,6 +28,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QSpinBox>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QMessageBox>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -896,6 +897,13 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
 
+	// check to see if there is a need to set flash file path to GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap)
+	{
+		QString flashPath = QDir::current().absoluteFilePath(contentInfo->SourcePath);
+		m_MainWindow->setFlashFileNameToLabel(flashPath);
+	}
+
 	// Ensure no duplicate names are used
 	contentInfo->DestName = createName(contentInfo->DestName);
 
@@ -951,6 +959,12 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 
 	// Be helpful
 	m_HelpfulLabel->setVisible(getContentCount() == 0);
+
+	// Check to see a flash map is in use, if not, remove flash path in GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap && findFlashMapPath().isEmpty())
+	{
+		m_MainWindow->setFlashFileNameToLabel("");
+	}
 }
 
 bool ContentManager::nameExists(const QString &name)
@@ -1055,6 +1069,33 @@ void ContentManager::rebuildAll()
 	}
 }
 
+void ContentManager::copyFlashFile()
+{
+	if (m_MainWindow->isProjectSaved())
+	{
+		QDir projectFolder(QDir::current());
+		projectFolder.mkpath("flash");
+		projectFolder.cd("flash");
+		QString projectFlashFolder = projectFolder.absolutePath() + "/";
+
+		// copy file .map
+		QFile::copy(m_FlashFileName, projectFlashFolder + QFileInfo(m_FlashFileName).fileName());
+
+		// copy file .bin
+		QString binFileName(m_FlashFileName);
+		binFileName.replace(m_FlashFileName.length() - 3, 3, "bin");
+		QFile::copy(binFileName, projectFlashFolder + QFileInfo(binFileName).fileName());
+
+		// flash file point to new folder
+		m_FlashFileName = projectFlashFolder + QFileInfo(m_FlashFileName).fileName();
+	}
+	else
+	{
+		m_MainWindow->requestSave();
+		copyFlashFile();
+	}
+}
+
 void ContentManager::importFlashMapped()
 {
 	printf("ContentManager::importFlashMapped()\n");
@@ -1067,9 +1108,35 @@ void ContentManager::importFlashMapped()
 	if (fileName.isEmpty())
 		return;
 
-	if (!loadFlashMap(fileName))
+	m_FlashFileName = fileName;
+
+	// check flash size
+	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
+	{
+		return;
+	}
+
+	// check if flash files exist
+	QString checkFlashPath = QDir::currentPath() + "/flash/" + QFileInfo(m_FlashFileName).baseName();
+	int answer = -1;
+	if (!QFile::exists(checkFlashPath + ".bin") || !QFile::exists(checkFlashPath + ".map"))
+	{
+		// ask if user wanna move flash files
+		answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
+		if (answer == QMessageBox::Yes)
+		{
+			copyFlashFile();
+		}
+	}
+
+	QString relativeFlashMapPath = QDir(QDir::currentPath()).relativeFilePath(m_FlashFileName);
+	if (!loadFlashMap(relativeFlashMapPath))
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
+	}
+	else if (answer == QMessageBox::Yes)
+	{
+		m_MainWindow->requestSave();
 	}
 }
 
