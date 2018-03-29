@@ -1,0 +1,25 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "//for more information on CMD_PLAYVIDEO: see section xxxx of the help manual",
+        "",
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN, \"..//chickens-4.avi\")",
+        "CMD_DLSTART()",
+        "CMD_TEXT(154, 212, 31, 0, \"Video playback has ended.\")",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
