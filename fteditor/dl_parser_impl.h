@@ -4,6 +4,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "dl_parser.h"
+#include "constant_common.h"
 
 // STL includes
 #include <stdio.h>
@@ -524,10 +525,11 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 1; // rgb
 		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
+
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3)
-		/*s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
+		s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
 		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7
-		s_CmdParamString[CMD_SETROTATE & 0xFF] = false;*/ // currently don't support because we don't remap coordinates in the editor yet
+		s_CmdParamString[CMD_SETROTATE & 0xFF] = false; // currently don't support because we don't remap coordinates in the editor yet
 		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
 		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
