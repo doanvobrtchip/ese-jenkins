@@ -4,6 +4,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "dl_parser.h"
+#include "constant_common.h"
 
 // STL includes
 #include <stdio.h>
@@ -16,6 +17,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Qt includes
 #include <QStringList>
 #include <QRegularExpression>
+#include <QVector>
 
 // Emulator includes
 
@@ -31,7 +33,8 @@ const std::map<std::string, int> *DlParser::m_CmdParamMap[FTEDITOR_DEVICE_NB];
 
 const int *DlParser::m_ParamCount[FTEDITOR_DEVICE_NB];
 const int *DlParser::m_CmdParamCount[FTEDITOR_DEVICE_NB];
-const bool *DlParser::m_CmdParamString[FTEDITOR_DEVICE_NB];
+const bool *DlParser::m_CmdParamString[FTEDITOR_DEVICE_NB]; // Whether the last parameter is a string
+const int *DlParser::m_CmdParamOptFormat[FTEDITOR_DEVICE_NB]; // Index of the parameter specifying OPT_FORMAT, -1 for no format support
 
 const std::string *DlParser::m_CmdIdList[FTEDITOR_DEVICE_NB];
 
@@ -152,6 +155,28 @@ void DlParser::getParams(int deviceIntf, QStringList &list, bool coprocessor)
 	}
 }
 
+/// Count number of arguments in Cmd_Text for string format
+static int countArgs(const char* str)
+{
+	int count = 0;
+	const char *tmp = str;
+
+	while (tmp = strstr(tmp, "%"))
+	{
+		if (*(tmp + 1) == '%') 
+		{
+			tmp += 2;
+		}
+		else
+		{
+			++count;
+			++tmp;
+		}
+	}
+
+	return count;
+}
+
 void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor, bool dynamic)
 {
 	init();
@@ -227,6 +252,9 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 	parsed.IdRight = 0;
 	parsed.ExpectedStringParameter = false;
 	parsed.StringParameterAt = DLPARSED_MAX_SYMBOL;
+	parsed.VarArgCount = 0;
+	int optFormatIndex = -1;
+	bool parseVarArg = false;
 
 	if (parsed.IdText == "VERTEX2F")
 	{
@@ -259,6 +287,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 				parsed.ValidId = true;
 				parsed.ExpectedParameterCount = m_CmdParamCount[deviceIntf][parsed.IdRight];
 				parsed.ExpectedStringParameter = m_CmdParamString[deviceIntf][parsed.IdRight];
+				optFormatIndex = m_CmdParamOptFormat[deviceIntf][parsed.IdRight];
 			}
 		}
 	}
@@ -298,6 +327,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
 		CombineParameter:
 			bool hexadecimal = false;
+			// bool floating = false;
 			bool combinedParameter = combineParameter;
 			combineParameter = false;
 			parsed.SymbolIndex[pq] = i;
@@ -334,10 +364,12 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						pss << c;
 						++parsed.SymbolLength[pq];
 					}
-					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F') /* || (parseVarArg && !hexadecimal && !combinedParameter && (c == '.')) */)) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
 						++parsed.SymbolLength[pq];
+						// if (c == '.')
+						// 	floating = true;
 					}
 					else if (parsed.SymbolLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
@@ -464,7 +496,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		ValidateNamed:
 
 			// validate named parameter
-			if ((p < parsed.ExpectedParameterCount || dynamic) || !parsed.ValidId)
+			if ((p < (parsed.ExpectedParameterCount + parsed.VarArgCount) || dynamic) || !parsed.ValidId)
 			{
 				bool validateInt = false;
 				std::string ps = pss.str();
@@ -479,21 +511,32 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						parsed.Parameter[p].U = 0;
 						parsed.StringParameter = psstr;
 						parsed.ValidSymbol[pq] = true;
+						// parsed.FloatingVarArg[p] = false;
 						parsed.StringParameterAt = pq;
+						if (optFormatIndex >= 0 && (parsed.Parameter[optFormatIndex].U & OPT_FORMAT))
+						{
+							// String expects vararg
+							parsed.VarArgCount = countArgs(psstr.c_str());
+							parseVarArg = true;
+						}
 					}
 				}
 				else if (ps.length() > 0 && ps[0] == '\'')
 				{
 					std::string psstr;
 					unescapeString(psstr, ps);
-					int vchar = 0;
+					/* int vchar = 0;
 					for (int ci = (int)psstr.length() - 2; ci > 0; --ci)
 					{
 						vchar <<= 8;
 						vchar |= psstr[ci];
 					}
-					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
+					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar; */
+					QVector<uint> qstr = QString::fromUtf8(psstr.c_str()).toUcs4();
+					unsigned int vchar = qstr.length() > 1 ? qstr[1] : 0;
+					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vchar;
 					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
 				else if (hexadecimal && parsed.NumericSymbol[pq] && ps.length() > 0)
@@ -502,12 +545,21 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					pss >> vhex;
 					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vhex;
 					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
+				/* else if (floating && parsed.NumericSymbol[pq] && ps.length() > 0)
+				{
+					parsed.Parameter[p].F = (float)atof(ps.c_str());
+					parsed.ValidSymbol[pq] = true;
+					parsed.FloatingVarArg[p] = true;
+					validateInt = true;
+				} */
 				else if (parsed.NumericSymbol[pq] && ps.length() > 0)
 				{
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | atoi(ps.c_str());
 					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
 				else
@@ -543,6 +595,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
+					// parsed.FloatingVarArg[p] = false;
 				}
 				if (validateInt && parsed.ValidSymbol[pq] && defaultParam)
 				{
@@ -555,13 +608,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			else
 			{
 				parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
+				// parsed.FloatingVarArg[p] = false;
 			}
 
 			if (finalIndex >= 0)
 			{
 				if (parsed.BadCharacterIndex == -1)
 				{
-					if ((p + 1 < parsed.ExpectedParameterCount) && !dynamic)
+					if ((p + 1 < (parsed.ExpectedParameterCount + parsed.VarArgCount)) && !dynamic)
 					{
 						// not enough params
 						parsed.BadCharacterIndex = finalIndex;
@@ -598,10 +652,12 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			{
 				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
 					parsed.Parameter[p].I = defaultParam[parsed.IdRight].Default[p];
+				for (; p < (parsed.ExpectedParameterCount + parsed.VarArgCount) && p < DLPARSED_MAX_PARAMETER; ++p)
+					parsed.Parameter[p].U = 0;
 			}
 			else
 			{
-				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+				for (; p < (parsed.ExpectedParameterCount + parsed.VarArgCount) && p < DLPARSED_MAX_PARAMETER; ++p)
 					parsed.Parameter[p].U = 0;
 			}
 		}

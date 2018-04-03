@@ -279,7 +279,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 		{
 			ADD_OPTIONS_CHECKBOX(OPT_FLAT);
 
-			if (flags & OPT_NOBACK)
+			if (!noClock && flags & OPT_NOBACK)
 			{
 				ADD_OPTIONS_CHECKBOX(OPT_NOBACK);
 			}
@@ -305,6 +305,10 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	{
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
+			if (flags & OPT_FORMAT)
+			{
+				ADD_OPTIONS_CHECKBOX(OPT_FORMAT);
+			}
 			if (flags & OPT_FILL)
 			{
 				ADD_OPTIONS_CHECKBOX(OPT_FILL);
@@ -884,7 +888,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_TEXT");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addHandle(2, true);
-				addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_FILL, false, true);
+				addOptions(3, OPT_CENTER | OPT_RIGHTX | OPT_FILL | OPT_FORMAT, false, true);
 				addText(4);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -900,7 +904,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addHandle(4, true);
-				addOptions(5, OPT_FLAT | OPT_FILL, true, true);
+				addOptions(5, OPT_FLAT | OPT_FILL | OPT_FORMAT, true, true);
 				addText(6);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}

@@ -621,6 +621,8 @@ private slots:
 		parsed.Parameter[m_Index].U = (value == Qt::Checked)
 			? (parsed.Parameter[m_Index].U | m_Flag)
 			: (parsed.Parameter[m_Index].U & ~m_Flag);
+		if ((parsed.Parameter[m_Index].U & OPT_FORMAT) == 0)
+			parsed.VarArgCount = 0;
 		setLine(parsed);
 		m_SoftMod = false;
 	}

@@ -63,7 +63,7 @@ struct DlParsed
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
-	union { uint32_t U; int I; float F; } Parameter[DLPARSED_MAX_PARAMETER];
+	union { uint32_t U; int I; /* float F; */ } Parameter[DLPARSED_MAX_PARAMETER];
 
 	bool ValidId;
 	bool ValidSymbol[DLPARSED_MAX_SYMBOL];
@@ -74,9 +74,12 @@ struct DlParsed
 	int SymbolIndex[DLPARSED_MAX_SYMBOL];
 	int SymbolLength[DLPARSED_MAX_SYMBOL];
 
+	// bool FloatingVarArg[DLPARSED_MAX_PARAMETER];
+
 	int ExpectedParameterCount;
 	int BadCharacterIndex;
 	bool ExpectedStringParameter;
+	int VarArgCount;
 
 	bool ValidStringParameter; // single string parameter at end
 	std::string StringParameter;
@@ -151,6 +154,7 @@ private:
 	static const int *m_ParamCount[FTEDITOR_DEVICE_NB];
 	static const int *m_CmdParamCount[FTEDITOR_DEVICE_NB];
 	static const bool *m_CmdParamString[FTEDITOR_DEVICE_NB];
+	static const int *m_CmdParamOptFormat[FTEDITOR_DEVICE_NB];
 
 	static const std::string *m_CmdIdList[FTEDITOR_DEVICE_NB];
 
