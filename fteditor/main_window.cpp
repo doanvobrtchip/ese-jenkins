@@ -3377,7 +3377,7 @@ void MainWindow::actOpen()
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-		tr("EVE Screen Editor Project (*.ft800proj  *.ft8xxproj)"));
+		tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
 	if (fileName.isNull())
 		return;
 
@@ -3561,7 +3561,9 @@ void MainWindow::actSave()
 
 void MainWindow::actSaveAs()
 {
-	QString filterft8xxproj = tr("ESE Project (*.ft8xxproj)");
+	const QString fileExtend(".ese");
+	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
+
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
@@ -3571,8 +3573,8 @@ void MainWindow::actSaveAs()
 
 	if (filter == filterft8xxproj)
 	{
-		if (!fileName.endsWith(".ft8xxproj"))
-			fileName = fileName + ".ft8xxproj";
+		if (!fileName.endsWith(fileExtend))
+			fileName = fileName + fileExtend;
 	}
 
 	// Copy asset files, abort if already exists (check first)

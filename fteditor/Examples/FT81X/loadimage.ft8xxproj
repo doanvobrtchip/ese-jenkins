@@ -1,0 +1,41 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataEmbedded": true,
+            "destName": "images/EiffelTower_800_480",
+            "imageFormat": 7,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "..//EiffelTower_800_480.png"
+        }
+    ],
+    "coprocessor": [
+        "//See Help manual section: xxxxx",
+        "CLEAR(1, 1, 1)",
+        "CMD_LOADIMAGE(0, 0, \"..//EiffelTower_800_480.png\")",
+        "",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0, 0, 0, 0) //draw EiffelTower_800_480.jpg",
+        "END()",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

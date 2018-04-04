@@ -1,0 +1,31 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "//For more information on vertex translate: see section xxxx of the help manual",
+        "CLEAR(1, 1, 1)",
+        "VERTEX_TRANSLATE_X(320)  //translate all subsequent display objects by 20 pixels in the x-axis",
+        "VERTEX_TRANSLATE_Y(800)  //translate all subsequent display objects by 50 pixels in the y-axis",
+        "CMD_BUTTON(35, 45, 120, 36, 27, 0, \"Button\")",
+        "CMD_KEYS(34, 141, 160, 36, 29, 0, \"keys\")",
+        "CMD_TEXT(316, 56, 28, 0, \"Text\")",
+        "CMD_GAUGE(305, 135, 36, 0, 4, 8, 40, 100)",
+        "CMD_TOGGLE(205, 53, 40, 27, 0, 0, \"on\\xFFoff\")",
+        "CMD_DIAL(201, 226, 36, 0, 6144)",
+        "VERTEX_TRANSLATE_X(0) //change back to default ",
+        "VERTEX_TRANSLATE_Y(0)  //change back to default"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2064
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(29, 29, 253)",
+        "CLEAR(1,1,1)",
+        "CMD_BUTTON(6, 8, 120, 36, 27, 0, \"Button\")",
+        "",
+        "CMD_SNAPSHOT2(RGB565, 0, 0, 0, 100, 40)",
+        "CMD_SETBITMAP(0, RGB565, 100, 40)",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(200,110,0,0)",
+        "END()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2064
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

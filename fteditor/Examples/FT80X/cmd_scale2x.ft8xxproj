@@ -1,0 +1,43 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataEmbedded": true,
+            "destName": "image/lenaface40",
+            "imageFormat": 0,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "..//lenaface40.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1,1,1)",
+        "BITMAP_HANDLE(0)",
+        "BITMAP_SOURCE(0)",
+        "BITMAP_LAYOUT(ARGB1555, 80, 40)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 40, 40)",
+        "",
+        "",
+        "CMD_LOADIDENTITY()",
+        "CMD_SCALE(0x2ffff, 65536)",
+        "",
+        "CMD_SETMATRIX()",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(165, 133, 0, 0)",
+        "END()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2048
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}
