@@ -816,7 +816,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 					if (i + 4 < src.size())
 					{
 						QString tmp = QString::fromStdString(src.substr(i + 1, 4));
-						QRegularExpression hexMatcher("^[0-9A-F]{4}$", QRegularExpression::CaseInsensitiveOption);
+						static const QRegularExpression hexMatcher("^[0-9A-F]{4}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
 						if (match.hasMatch())
 						{
@@ -824,7 +824,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							unsigned int v = match.captured(0).toUInt(&ok, 16);
 							if (ok)
 							{
-								res << QString(v).toStdString();
+								res << QString(QChar(v)).toUtf8().constData();
 								i += 4;
 								break;
 							}
@@ -839,7 +839,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 					if (i + 8 < src.size())
 					{
 						QString tmp = QString::fromStdString(src.substr(i + 1, 8));
-						QRegularExpression hexMatcher("^[0-9A-F]{8}$", QRegularExpression::CaseInsensitiveOption);
+						static const QRegularExpression hexMatcher("^[0-9A-F]{8}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
 						if (match.hasMatch())
 						{
@@ -847,7 +847,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							unsigned int v = match.captured(0).toUInt(&ok, 16);
 							if (ok)
 							{
-								res << QString(v).toStdString();
+								res << QString(QChar(v)).toUtf8().constData();
 								i += 8;
 								break;
 							}
