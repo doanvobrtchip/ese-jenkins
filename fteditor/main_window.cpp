@@ -1945,7 +1945,7 @@ void MainWindow::translateActions()
 	m_UndoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
-	m_RedoAct->setIcon(QIcon(":/icons/arrow-circle-315.png"));
+	m_RedoAct->setIcon(QIcon(":/icons/arrow-return.png"));
 	m_DummyAct->setText(tr("Dummy"));
 	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
@@ -3960,7 +3960,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v2.5.0"));
+	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.0.0"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
