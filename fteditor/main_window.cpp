@@ -1942,10 +1942,10 @@ void MainWindow::translateActions()
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
 	m_UndoAct->setText(tr("Undo"));
 	m_UndoAct->setStatusTip(tr("Reverses the last action"));
-	m_UndoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
+	m_UndoAct->setIcon(QIcon(":/icons/arrow-return.png"));
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
-	m_RedoAct->setIcon(QIcon(":/icons/arrow-return.png"));
+	m_RedoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
 	m_DummyAct->setText(tr("Dummy"));
 	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
