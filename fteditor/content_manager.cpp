@@ -532,9 +532,10 @@ ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
 
-	ContentInfo *contentInfo = new ContentInfo(filePath);
+	QString relativePath = QDir::current().relativeFilePath(filePath);
+	ContentInfo *contentInfo = new ContentInfo(relativePath);
 
-	QString fileExt = QFileInfo(filePath).suffix().toLower();
+	QString fileExt = QFileInfo(relativePath).suffix().toLower();
 	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
@@ -546,6 +547,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "raw") contentInfo->Converter = ContentInfo::Raw;
 
 	if (contentInfo->Converter == ContentInfo::Font)
 	{
@@ -812,15 +814,15 @@ void ContentManager::add()
 {
 	printf("ContentManager::add()\n");
 
-	QString fileName = QFileDialog::getOpenFileName(this,
+	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
 		tr("Load Content"),
 		m_MainWindow->getFileDialogPath(),
 		tr("All files (*.*)"));
 
-	if (fileName.isNull())
-		return;
-
-	ContentInfo *info = add(fileName);
+	foreach (QString fileName, fileNameList)
+	{
+		add(fileName);
+	}
 }
 
 void ContentManager::remove()
