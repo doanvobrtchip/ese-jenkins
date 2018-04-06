@@ -643,15 +643,11 @@ private:
 ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
-<<<<<<< HEAD
 
 	QString relativePath = QDir::current().relativeFilePath(filePath);
 	ContentInfo *contentInfo = new ContentInfo(relativePath);
-=======
-	ContentInfo *contentInfo = new ContentInfo(filePath);
->>>>>>> feature/bt815emu
-
 	QString fileExt = QFileInfo(relativePath).suffix().toLower();
+
 	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
@@ -1049,17 +1045,12 @@ void ContentManager::add()
 		m_MainWindow->getFileDialogPath(),
 		tr("All files (*.*)"));
 
-<<<<<<< HEAD
+
 	foreach (QString fileName, fileNameList)
 	{
 		add(fileName);
 	}
-=======
-	if (fileName.isEmpty())
-		return;
 
-	ContentInfo *info = add(fileName);
->>>>>>> feature/bt815emu
 }
 
 void ContentManager::remove()

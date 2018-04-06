@@ -17,10 +17,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Qt includes
 #include <QStringList>
 #include <QRegularExpression>
-<<<<<<< HEAD
-=======
 #include <QVector>
->>>>>>> feature/bt815emu
 
 // Emulator includes
 
@@ -878,7 +875,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 				{
 					if (i + 4 < src.size())
 					{
-<<<<<<< HEAD
 						QString tmp = QString::fromStdString(src.substr(i + 1, 4));
 						QRegularExpression hexMatcher("^[0-9A-F]{4}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
@@ -889,16 +885,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							if (ok)
 							{
 								res << QString(v).toStdString();
-=======
-						tmp = QString::fromStdString(src.substr(i + 1, 4));
-						match = hexMatcher.match(tmp);
-						if (match.hasMatch())
-						{							
-							unsigned int v = match.captured(0).toUInt(&ok, 16);
-							if (ok)
-							{
-								res << QString(QChar(v)).toUtf8().constData();
->>>>>>> feature/bt815emu
 								i += 4;
 								break;
 							}
@@ -912,7 +898,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 				{
 					if (i + 8 < src.size())
 					{
-<<<<<<< HEAD
 						QString tmp = QString::fromStdString(src.substr(i + 1, 8));
 						QRegularExpression hexMatcher("^[0-9A-F]{8}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
@@ -923,16 +908,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							if (ok)
 							{
 								res << QString(v).toStdString();
-=======
-						tmp = QString::fromStdString(src.substr(i + 1, 8));						
-						match = hexMatcher.match(tmp);
-						if (match.hasMatch())
-						{
-							unsigned int v = match.captured(0).toUInt(&ok, 16);
-							if (ok)
-							{
-								res << QString(QChar(v)).toUtf8().constData();
->>>>>>> feature/bt815emu
 								i += 8;
 								break;
 							}

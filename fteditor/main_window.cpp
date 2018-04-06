@@ -3653,10 +3653,6 @@ void MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
 	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/bt815emu
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
