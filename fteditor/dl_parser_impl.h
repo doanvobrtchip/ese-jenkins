@@ -429,7 +429,11 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_TOGGLE"] = CMD_TOGGLE & 0xFF;
 		s_CmdParamCount[CMD_TOGGLE & 0xFF] = 7;
 		s_CmdParamString[CMD_TOGGLE & 0xFF] = true;
-		s_CmdParamOptFormat[CMD_TOGGLE & 0xFF] = -1;
+#if defined(FTEDITOR_PARSER_VC3)
+        s_CmdParamOptFormat[CMD_TOGGLE & 0xFF] = 4;
+#else
+        s_CmdParamOptFormat[CMD_TOGGLE & 0xFF] = -1;
+#endif
 		s_CmdIdMap["CMD_GAUGE"] = CMD_GAUGE & 0xFF;
 		s_CmdParamCount[CMD_GAUGE & 0xFF] = 8;
 		s_CmdParamString[CMD_GAUGE & 0xFF] = false;
@@ -1079,6 +1083,12 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
+#if defined(FTEDITOR_PARSER_VC3)
+                    for (int i = 7; i < parsed.ExpectedParameterCount + parsed.VarArgCount && i < DLPARSED_MAX_PARAMETER; ++i)
+                        compiled.push_back(parsed.Parameter[i].U);
+                    for (int i = DLPARSED_MAX_PARAMETER; i < parsed.ExpectedParameterCount + parsed.VarArgCount; ++i)
+                        compiled.push_back(parsed.Parameter[i].U);
+#endif
 					break;
 				}
 				case CMD_GAUGE:

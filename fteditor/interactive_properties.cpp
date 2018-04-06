@@ -986,7 +986,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWidth(2, 0, 1023);
 				addHandle(3, true);
-				addOptions(4, OPT_FLAT, true);
+				addOptions(4, OPT_FLAT | OPT_FORMAT, false, true);
 				addValueSlider(5, 0xFFFF);
 				addText(6); // TODO: Separate
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
