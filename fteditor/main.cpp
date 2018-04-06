@@ -70,7 +70,7 @@ QMap<QString, QSize> parseCustomSizeHints(int argc, char **argv)
 int main(int argc, char* argv[])
 {
 #ifdef WIN32
-	// HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	HRESULT coInitHR = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 #endif
 
 	Q_INIT_RESOURCE(icons);
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 	PyObject* sysPath = PySys_GetObject((char*)"path");
 	{
 		QByteArray cpUtf8 = QDir::currentPath().toUtf8();
-		PyObject* curPath = PyUnicode_FromString(cpUtf8.data());
+		PyObject* curPath = PyUnicode_FromString(cpUtf8.constData());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 	QApplication app(argc, const_cast<char **>(argv));
 	QLocale::setDefault(QLocale::c());
 
-	app.setStyleSheet("QStatusBar::item { border: 0px solid black }; ");
+	app.setStyleSheet("QStatusBar::item { border: 0px solid black; }");
 
 	QTranslator* translator = new QTranslator();
 	if (translator->load(":/translation_en.qm"))
@@ -117,8 +117,9 @@ int main(int argc, char* argv[])
 		printf("Could not load translation\n");
 	}
 
+	// QApplication::setStyle(QStyleFactory::create("Fusion"));
+
 	/*
-	QApplication::setStyle(QStyleFactory::create("Fusion"));
 	QPalette palette = app.palette();
 	palette.setColor(QPalette::Window, QColor(64, 64, 64));
 	palette.setColor(QPalette::WindowText, Qt::white);
@@ -139,7 +140,7 @@ int main(int argc, char* argv[])
 #ifdef FT800EMU_PYTHON
 	{
 		QByteArray apUtf8 = QCoreApplication::applicationDirPath().toUtf8();
-		PyObject* curPath = PyUnicode_FromString(apUtf8.data());
+		PyObject* curPath = PyUnicode_FromString(apUtf8.constData());
 		PyList_Append(sysPath, curPath);
 		Py_DECREF(curPath);
 	}
@@ -159,8 +160,8 @@ int main(int argc, char* argv[])
 #endif /* FT800EMU_PYTHON */
 
 #ifdef WIN32
-	// if (coInitHR == S_OK)
-	//	CoUninitialize();
+	if (coInitHR == S_OK)
+		CoUninitialize();
 #endif
 
 	return result;

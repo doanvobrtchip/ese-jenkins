@@ -55,6 +55,8 @@ Author: Jan Boon <jan@no-break.space>
 // Library includes
 #ifdef BT815EMU_MODE
 #	include <astc_codec_internals.h>
+const partition_info *get_partition_table(int xdim, int ydim, int zdim, int partition_count);
+const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int zdim);
 #endif
 
 // Project includes
@@ -150,6 +152,18 @@ public:
 		VertexTranslateY = 0;
 		PaletteSource = 0;
 #endif
+
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+		CachedAstcAddr = 0;
+		CachedAstcEntry = NULL;
+#	endif
+#	if BT815EMU_ASTC_LAST_CACHE
+		CachedAstcAddr = 0;
+		CachedAstcBlock = { 0 };
+#	endif
+#endif
+
 	}
 	
 	GraphicsProcessor *Processor;
@@ -193,6 +207,19 @@ public:
 	int VertexTranslateX;
 	int VertexTranslateY;
 	int PaletteSource;
+#endif
+
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+	// Cache optimization
+	ptrdiff_t CachedAstcAddr;
+	AstcCacheEntry *CachedAstcEntry;
+#	endif
+#	if BT815EMU_ASTC_LAST_CACHE
+	// Cache optimization
+	ptrdiff_t CachedAstcAddr;
+	imageblock CachedAstcBlock;
+#	endif
 #endif
 
 };
@@ -742,20 +769,21 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 }
 
 #ifdef BT815EMU_MODE
-static const int c_AstcBlockWidth[] = {
+#define BT815EMU_ASTC_FORMAT_NB 14
+static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB] = {
 	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
 };
 
-static const int c_AstcBlockHeight[] = {
+static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB] = {
 	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
 };
 #endif
 
 // uses pixel units
 #if FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *ram, const uint32_t srci, btxf_t xl, btxf_t yl, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const BitmapInfo *const bitmapInfo)
 #endif
 {
 	btxf_t xol;   // x byte offset
@@ -894,7 +922,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 	case PALETTED:
 		{
 #ifdef FT810EMU_MODE
-			system->log(BT8XXEMU_LogError, "PALETTED is not a valid format");
+			gs.Processor->system()->log(BT8XXEMU_LogError, "PALETTED is not a valid format");
 			return 0xFFFF00FF; // invalid format
 #else
 			uint8_t val = bmpSrc8(ram, srci, py + xo);
@@ -955,6 +983,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 #ifdef BT815EMU_MODE
 	if (BT815EMU_IS_FORMAT_ASTC(format))
 	{
+		// Calculate sample point
 		const int blockWidth = c_AstcBlockWidth[format & 0xF];
 		const int blockHeight = c_AstcBlockHeight[format & 0xF];
 		const int numBlocksWidth = stride >> 4;
@@ -974,20 +1003,82 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 		const ptrdiff_t blockOffset = (tileHeight == 1) 
 			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
 			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
+		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth)); // texel index in block
+
+#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+		GraphicsProcessor *me = (GraphicsProcessor *)gs.Processor;
+		const void *blockAddr = &ram[srci + blockOffset];
+		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
+			return gs.CachedAstcEntry->C[index];
+		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
+		if (!cacheEntry.Ok)
+		{
+			// Decompress ASTC
+			const physical_compressed_block *physicalBlock =
+				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			symbolic_compressed_block symbolicBlock = { 0 };
+			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
+			imageblock imageBlock = { 0 };
+			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+			const int nbTexels = blockHeight * blockWidth;
+			for (int i = 0; i < nbTexels; ++i)
+			{
+				argb8888 c;
+				if (imageBlock.nan_texel[i])
+				{
+					c = 0xFFFF00FF;
+				}
+				else
+				{
+					uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 3] * 255.0f + 0.5f), 255U);
+					uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4)] * 255.0f + 0.5f), 255U);
+					uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 1] * 255.0f + 0.5f), 255U);
+					uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 2] * 255.0f + 0.5f), 255U);
+					c = (a << 24) | (r << 16) | (g << 8) | (b);
+				}
+				cacheEntry.C[i] = c;
+			}
+			cacheEntry.Ok = true;
+		}
+		gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
+		gs.CachedAstcEntry = &cacheEntry;
+		return cacheEntry.C[index];
+#elif BT815EMU_ASTC_LAST_CACHE
+		// Decompress ASTC
+		const void *blockAddr = &ram[srci + blockOffset];
+		imageblock &imageBlock = gs.CachedAstcBlock;
+		if (gs.CachedAstcAddr != (ptrdiff_t)blockAddr)
+		{
+			const physical_compressed_block *physicalBlock =
+				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			symbolic_compressed_block symbolicBlock = { 0 };
+			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
+			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+			gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
+		}
+		if (imageBlock.nan_texel[index])
+			return 0xFFFF00FF;
+		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)] * 255.0f + 0.5f), 255U);
+		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		return (a << 24) | (r << 16) | (g << 8) | (b);
+#else
+		// Decompress ASTC
 		const physical_compressed_block *physicalBlock = 
 			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
 		symbolic_compressed_block symbolicBlock = { 0 };
 		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 		imageblock imageBlock = { 0 };
 		decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
-		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth));
 		if (imageBlock.nan_texel[index])
 			return 0xFFFF00FF;
 		uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
-		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)    ] * 255.0f + 0.5f), 255U);
+		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4)] * 255.0f + 0.5f), 255U);
 		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
-		uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
+		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
 		return (a << 24) | (r << 16) | (g << 8) | (b);
+#endif
 	}
 #endif
 	return 0xFFFF00FF; // invalid format
@@ -995,9 +1086,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(FT8XXEMU::System *const system, co
 
 // uses 1/(256*16) pixel units, w & h in pixel units
 #ifdef FT810EMU_MODE
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(GraphicsState &gs, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo, const int paletteSource)
 #else
-BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
+BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(GraphicsState &gs, const uint8_t *ram, const uint32_t srci, const btxf_t x, const btxf_t y, const int width, const int height, const int format, const int stride, const int lines, const int wrapx, const int wrapy, const int filter, const BitmapInfo *const bitmapInfo)
 #endif
 {
 #ifdef FT810EMU_MODE
@@ -1013,7 +1104,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 		{
 			btxf_t xi = x >> 12;
 			btxf_t yi = y >> 12;
-			return sampleBitmapAt(system, ram, srci, xi, yi, FT800_SAMPLE_AT_PARAMS);
+			return sampleBitmapAt(gs, ram, srci, xi, yi, FT800_SAMPLE_AT_PARAMS);
 		}
 	case BILINEAR:
 		{
@@ -1023,15 +1114,15 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 			btxf_t yt = y >> 12;
 			if (xsep == 0 && ysep == 0)
 			{
-				return sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
+				return sampleBitmapAt(gs, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
 			}
 			else if (xsep == 0)
 			{
 				int yab = ysep >> 4;
 				int yat = 255 - yab;
 				btxf_t yb = yt + 1;
-				argb8888 top = sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
-				argb8888 btm = sampleBitmapAt(system, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS);
+				argb8888 top = sampleBitmapAt(gs, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS);
+				argb8888 btm = sampleBitmapAt(gs, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 			}
 			else if (ysep == 0)
@@ -1039,8 +1130,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 				int xar = xsep >> 4;
 				int xal = 255 - xar;
 				btxf_t xr = xl + 1;
-				return mulalpha_argb(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
-					+ mulalpha_argb(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
+				return mulalpha_argb(sampleBitmapAt(gs, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(gs, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
 			}
 			else
 			{
@@ -1060,10 +1151,10 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmap(FT8XXEMU::System *const system, cons
 				const __m128i result = _mm_add_epi32(mulalpha_argb(top, yat), mulalpha_argb(btm, yab));
 				return to_argb8888(result);
 #else
-				argb8888 top = mulalpha_argb(sampleBitmapAt(system, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
-					+ mulalpha_argb(sampleBitmapAt(system, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
-				argb8888 btm = mulalpha_argb(sampleBitmapAt(system, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS), xal)
-					+ mulalpha_argb(sampleBitmapAt(system, ram, srci, xr, yb, FT800_SAMPLE_AT_PARAMS), xar);
+				argb8888 top = mulalpha_argb(sampleBitmapAt(gs, ram, srci, xl, yt, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(gs, ram, srci, xr, yt, FT800_SAMPLE_AT_PARAMS), xar);
+				argb8888 btm = mulalpha_argb(sampleBitmapAt(gs, ram, srci, xl, yb, FT800_SAMPLE_AT_PARAMS), xal)
+					+ mulalpha_argb(sampleBitmapAt(gs, ram, srci, xr, yb, FT800_SAMPLE_AT_PARAMS), xar);
 				return mulalpha_argb(top, yat) + mulalpha_argb(btm, yab);
 #endif
 			}
@@ -1102,7 +1193,7 @@ BT8XXEMU_FORCE_INLINE argb8888 swizzleSample(const argb8888 sample, const Bitmap
 #endif
 
 template <bool debugTrace>
-void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, 
+void displayBitmap(GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, int y, int hsize, int px, int py, int handle, int cell, 
 #ifdef FT810EMU_MODE
 	bool swapXY, // Used to swap width and height from bitmapinfo
 #endif
@@ -1236,9 +1327,9 @@ void displayBitmap(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *
 			// because maximum visual precision after calculation is only 1/16 subpixel with 1/256 gradation, 
 			// we shift the transform back down to .12
 #ifdef FT810EMU_MODE
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
+			const argb8888 sample = sampleBitmap(gs, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo, paletteSource);
 #else
-			const argb8888 sample = sampleBitmap(system, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
+			const argb8888 sample = sampleBitmap(gs, ram, sampleSrcPos, rxt, ryt, samplePixelWidth, samplePixelHeight, sampleFormat, sampleStride, sampleLines, sampleWrapX, sampleWrapY, sampleFilter, bitmapInfo);
 #endif
 #ifdef BT815EMU_MODE
 			const argb8888 swizzled = extFormat ? swizzleSample(sample, bi) : sample;
@@ -2615,6 +2706,11 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 		{
 			prepare_angular_tables();
 			build_quantization_mode_table();
+			for (int i = 0; i < BT815EMU_ASTC_FORMAT_NB; ++i)
+			{
+				get_partition_table(c_AstcBlockWidth[i], c_AstcBlockHeight[i], 1, 0);
+				get_block_size_descriptor(c_AstcBlockWidth[i], c_AstcBlockHeight[i], 1);
+			}
 		}
 	}
 #endif
@@ -2637,9 +2733,9 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)
 	{
 		m_BitmapInfoMaster[i].Swizzle.A = ALPHA;
-		m_BitmapInfoMaster[i].Swizzle.R = BLUE;
+		m_BitmapInfoMaster[i].Swizzle.R = RED;
 		m_BitmapInfoMaster[i].Swizzle.G = GREEN;
-		m_BitmapInfoMaster[i].Swizzle.B = RED;
+		m_BitmapInfoMaster[i].Swizzle.B = BLUE;
 	}
 #endif
 

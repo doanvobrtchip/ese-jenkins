@@ -4,6 +4,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "dl_parser.h"
+#include "constant_common.h"
 
 // STL includes
 #include <stdio.h>
@@ -16,6 +17,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Qt includes
 #include <QStringList>
 #include <QRegularExpression>
+<<<<<<< HEAD
+=======
+#include <QVector>
+>>>>>>> feature/bt815emu
 
 // Emulator includes
 
@@ -31,7 +36,8 @@ const std::map<std::string, int> *DlParser::m_CmdParamMap[FTEDITOR_DEVICE_NB];
 
 const int *DlParser::m_ParamCount[FTEDITOR_DEVICE_NB];
 const int *DlParser::m_CmdParamCount[FTEDITOR_DEVICE_NB];
-const bool *DlParser::m_CmdParamString[FTEDITOR_DEVICE_NB];
+const bool *DlParser::m_CmdParamString[FTEDITOR_DEVICE_NB]; // Whether the last parameter is a string
+const int *DlParser::m_CmdParamOptFormat[FTEDITOR_DEVICE_NB]; // Index of the parameter specifying OPT_FORMAT, -1 for no format support
 
 const std::string *DlParser::m_CmdIdList[FTEDITOR_DEVICE_NB];
 
@@ -152,6 +158,28 @@ void DlParser::getParams(int deviceIntf, QStringList &list, bool coprocessor)
 	}
 }
 
+/// Count number of arguments in Cmd_Text for string format
+static int countArgs(const char* str)
+{
+	int count = 0;
+	const char *tmp = str;
+
+	while (tmp = strstr(tmp, "%"))
+	{
+		if (*(tmp + 1) == '%') 
+		{
+			tmp += 2;
+		}
+		else
+		{
+			++count;
+			++tmp;
+		}
+	}
+
+	return count;
+}
+
 void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool coprocessor, bool dynamic)
 {
 	init();
@@ -162,11 +190,11 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 
 	parsed.BadCharacterIndex = -1;
 
-	for (int p = 0; p < DLPARSED_MAX_PARAMETER; ++p)
+	for (int p = 0; p < DLPARSED_MAX_SYMBOL; ++p)
 	{
-		parsed.ValidParameter[p] = false;
-		parsed.NumericParameter[p] = true;
-		parsed.ParameterLength[p] = 0;
+		parsed.ValidSymbol[p] = false;
+		parsed.NumericSymbol[p] = true;
+		parsed.SymbolLength[p] = 0;
 	}
 
 	parsed.ValidId = false;
@@ -226,7 +254,10 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 	parsed.IdLeft = 0;
 	parsed.IdRight = 0;
 	parsed.ExpectedStringParameter = false;
-	parsed.StringParameterAt = DLPARSED_MAX_PARAMETER;
+	parsed.StringParameterAt = DLPARSED_MAX_SYMBOL;
+	parsed.VarArgCount = 0;
+	int optFormatIndex = -1;
+	bool parseVarArg = false;
 
 	if (parsed.IdText == "VERTEX2F")
 	{
@@ -254,11 +285,12 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			it = m_CmdIdMap[deviceIntf]->find(parsed.IdText);
 			if (it != m_CmdIdMap[deviceIntf]->end())
 			{
-				parsed.IdLeft = 0xFFFFFF00;
+				parsed.IdLeft = FTEDITOR_CO_COMMAND;
 				parsed.IdRight = it->second;
 				parsed.ValidId = true;
 				parsed.ExpectedParameterCount = m_CmdParamCount[deviceIntf][parsed.IdRight];
 				parsed.ExpectedStringParameter = m_CmdParamString[deviceIntf][parsed.IdRight];
+				optFormatIndex = m_CmdParamOptFormat[deviceIntf][parsed.IdRight];
 			}
 		}
 	}
@@ -293,14 +325,15 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		bool failParam = false;
 		int finalIndex = -1;
 		int pq;
-		for (pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_PARAMETER; ++p, ++pq)
+		for (pq = 0; p < DLPARSED_MAX_PARAMETER && pq < DLPARSED_MAX_SYMBOL; ++p, ++pq)
 		{
 			bool combineParameter = false; // temporary method for using | operator // CMD_CLOCK(100, 100, 50, OPT_FLAT | OPT_NOTICKS, 0, 0, 0, 0), pq is a TEMPORARY trick that shifts the actual parameters from the metadata
 		CombineParameter:
 			bool hexadecimal = false;
+			// bool floating = false;
 			bool combinedParameter = combineParameter;
 			combineParameter = false;
-			parsed.ParameterIndex[pq] = i;
+			parsed.SymbolIndex[pq] = i;
 			std::stringstream pss;
 		ContinueParameter:
 			for (; ; ++i)
@@ -312,64 +345,66 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						c = c - 'a' + 'A'; // uppercase
 					}
-					if (parsed.ParameterLength[pq] == 0 && (c == ' ' || c == '\t'))
+					if (parsed.SymbolLength[pq] == 0 && (c == ' ' || c == '\t'))
 					{
-						++parsed.ParameterIndex[pq]; /* pre-trim */
+						++parsed.SymbolIndex[pq]; /* pre-trim */
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '"') && ((p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter) || dynamic))
 					{
 						/* begin string, only works on last parameter */ // CMD_TEXT(50, 119, 31, 0, "hello world")
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						++i;
 						goto ParseString;
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '\'') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '\'') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
 						++i;
 						goto ParseChar;
 					}
-					else if (parsed.ParameterLength[pq] == 0 && (c == '-'))
+					else if (parsed.SymbolLength[pq] == 0 && (c == '-'))
 					{
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 					}
-					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F'))) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (((c >= '0' && c <= '9') || (hexadecimal && (c >= 'A' && c <= 'F') /* || (parseVarArg && !hexadecimal && !combinedParameter && (c == '.')) */)) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
+						// if (c == '.')
+						// 	floating = true;
 					}
-					else if (parsed.ParameterLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (parsed.SymbolLength[pq] == 1 && src[i - 1] == '0' && (c == 'X') && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
 						pss.clear();
 						hexadecimal = true;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 						pss << std::hex;
 					}
-					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.ParameterIndex[pq] + parsed.ParameterLength[pq] == i  && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
+					else if (((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_')) && parsed.SymbolIndex[pq] + parsed.SymbolLength[pq] == i  && ((!(p == (parsed.ExpectedParameterCount - 1) && parsed.ExpectedStringParameter)) || dynamic))
 					{
-						parsed.NumericParameter[pq] = false;
+						parsed.NumericSymbol[pq] = false;
 						pss << c;
-						++parsed.ParameterLength[pq];
+						++parsed.SymbolLength[pq];
 					}
 					else if (c == ' ' || c == '\t')
 					{
 						/* post-trim */
 					}
-					else if (parsed.ParameterLength[pq] > 0 && c == ',')
+					else if (parsed.SymbolLength[pq] > 0 && c == ',')
 					{
 						/* valid, more, continue */
 						++i;
 						break;
 					}
-					else if (parsed.ParameterLength[pq] > 0 && c == '|')
+					else if (parsed.SymbolLength[pq] > 0 && c == '|')
 					{
 						/* valid, more, continue */
 						++i;
 						combineParameter = true;
 						break;
 					}
-					else if (((p == 0) || (parsed.ParameterLength[pq] > 0)) && c == ')')
+					else if (((p == 0) || (parsed.SymbolLength[pq] > 0)) && c == ')')
 					{
 						/* valid, last, continue */
 						finalIndex = i;
@@ -404,8 +439,8 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						++i;
 						if (i < len)
 						{
-							c = src[i];
-							pss << c;
+							// c = src[i];
+							pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						}
 						else
 						{
@@ -415,14 +450,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					else if (c == '"')
 					{
 						// end (post-trim)
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 						++i;
-						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						parsed.SymbolLength[pq] = i - parsed.SymbolIndex[pq];
 						goto ContinueParameter;
 					}
 					else
 					{
-						pss << c;
+						pss << QString(line[i]).toUtf8().constData(); // pss << c;
 					}
 				}
 				else
@@ -450,7 +485,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						// end (post-trim)
 						++i;
-						parsed.ParameterLength[pq] = i - parsed.ParameterIndex[pq];
+						parsed.SymbolLength[pq] = i - parsed.SymbolIndex[pq];
 						goto ContinueParameter;
 					}
 				}
@@ -464,7 +499,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		ValidateNamed:
 
 			// validate named parameter
-			if ((p < parsed.ExpectedParameterCount || dynamic) || !parsed.ValidId)
+			if ((p < (parsed.ExpectedParameterCount + parsed.VarArgCount) || dynamic) || !parsed.ValidId)
 			{
 				bool validateInt = false;
 				std::string ps = pss.str();
@@ -478,36 +513,56 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						unescapeString(psstr, psubstr);
 						parsed.Parameter[p].U = 0;
 						parsed.StringParameter = psstr;
-						parsed.ValidParameter[pq] = true;
+						parsed.ValidSymbol[pq] = true;
+						// parsed.FloatingVarArg[p] = false;
 						parsed.StringParameterAt = pq;
+						if (optFormatIndex >= 0 && (parsed.Parameter[optFormatIndex].U & OPT_FORMAT))
+						{
+							// String expects vararg
+							parsed.VarArgCount = countArgs(psstr.c_str());
+							parseVarArg = true;
+						}
 					}
 				}
 				else if (ps.length() > 0 && ps[0] == '\'')
 				{
 					std::string psstr;
 					unescapeString(psstr, ps);
-					int vchar = 0;
+					/* int vchar = 0;
 					for (int ci = (int)psstr.length() - 2; ci > 0; --ci)
 					{
 						vchar <<= 8;
 						vchar |= psstr[ci];
 					}
-					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar;
-					parsed.ValidParameter[pq] = true;
+					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | vchar; */
+					QVector<uint> qstr = QString::fromUtf8(psstr.c_str()).toUcs4();
+					unsigned int vchar = qstr.length() > 1 ? qstr[1] : 0;
+					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vchar;
+					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
-				else if (hexadecimal && parsed.NumericParameter[pq] && ps.length() > 0)
+				else if (hexadecimal && parsed.NumericSymbol[pq] && ps.length() > 0)
 				{
 					unsigned int vhex;
 					pss >> vhex;
 					parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | vhex;
-					parsed.ValidParameter[pq] = true;
+					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
-				else if (parsed.NumericParameter[pq] && ps.length() > 0)
+				/* else if (floating && parsed.NumericSymbol[pq] && ps.length() > 0)
+				{
+					parsed.Parameter[p].F = (float)atof(ps.c_str());
+					parsed.ValidSymbol[pq] = true;
+					parsed.FloatingVarArg[p] = true;
+					validateInt = true;
+				} */
+				else if (parsed.NumericSymbol[pq] && ps.length() > 0)
 				{
 					parsed.Parameter[p].I = (combinedParameter ? parsed.Parameter[p].I : 0) | atoi(ps.c_str());
-					parsed.ValidParameter[pq] = true;
+					parsed.ValidSymbol[pq] = true;
+					// parsed.FloatingVarArg[p] = false;
 					validateInt = true;
 				}
 				else
@@ -524,7 +579,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					if (it != m_ParamMap[deviceIntf]->end())
 					{
 						parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
-						parsed.ValidParameter[pq] = true;
+						parsed.ValidSymbol[pq] = true;
 					}
 					else if (coprocessor)
 					{
@@ -532,7 +587,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 						if (it != m_CmdParamMap[deviceIntf]->end())
 						{
 							parsed.Parameter[p].U = (combinedParameter ? parsed.Parameter[p].U : 0) | it->second;
-							parsed.ValidParameter[pq] = true;
+							parsed.ValidSymbol[pq] = true;
 						}
 						else
 						{
@@ -543,10 +598,11 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 					{
 						parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
 					}
+					// parsed.FloatingVarArg[p] = false;
 				}
-				if (validateInt && parsed.ValidParameter[pq] && defaultParam)
+				if (validateInt && parsed.ValidSymbol[pq] && defaultParam)
 				{
-					parsed.ValidParameter[pq] =
+					parsed.ValidSymbol[pq] =
 						((parsed.Parameter[p].I & defaultParam[parsed.IdRight].Mask[p]) == parsed.Parameter[p].I)
 						&& (parsed.Parameter[p].I >= defaultParam[parsed.IdRight].Min[p]
 						&& parsed.Parameter[p].I <= defaultParam[parsed.IdRight].Max[p]);
@@ -555,13 +611,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			else
 			{
 				parsed.Parameter[p].I = defaultParam ? defaultParam[parsed.IdRight].Default[p] : 0;
+				// parsed.FloatingVarArg[p] = false;
 			}
 
 			if (finalIndex >= 0)
 			{
 				if (parsed.BadCharacterIndex == -1)
 				{
-					if ((p + 1 < parsed.ExpectedParameterCount) && !dynamic)
+					if ((p + 1 < (parsed.ExpectedParameterCount + parsed.VarArgCount)) && !dynamic)
 					{
 						// not enough params
 						parsed.BadCharacterIndex = finalIndex;
@@ -577,7 +634,7 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 
 			if (combineParameter)
 			{
-				// parsed.ParameterLength[p] = 0;
+				// parsed.SymbolLength[p] = 0;
 				++pq;
 				goto CombineParameter;
 			}
@@ -598,10 +655,12 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 			{
 				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
 					parsed.Parameter[p].I = defaultParam[parsed.IdRight].Default[p];
+				for (; p < (parsed.ExpectedParameterCount + parsed.VarArgCount) && p < DLPARSED_MAX_PARAMETER; ++p)
+					parsed.Parameter[p].U = 0;
 			}
 			else
 			{
-				for (; p < parsed.ExpectedParameterCount && p < DLPARSED_MAX_PARAMETER; ++p)
+				for (; p < (parsed.ExpectedParameterCount + parsed.VarArgCount) && p < DLPARSED_MAX_PARAMETER; ++p)
 					parsed.Parameter[p].U = 0;
 			}
 		}
@@ -663,7 +722,7 @@ QString DlParser::toString(int deviceIntf, uint32_t v)
 
 void DlParser::toString(int deviceIntf, std::string &dst, const DlParsed &parsed)
 {
-	if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
+	if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // Coprocessor
 	{
 		if (deviceIntf >= FTEDITOR_BT815)
 			toStringVC3(deviceIntf, dst, parsed);
@@ -686,23 +745,82 @@ QString DlParser::toString(int deviceIntf, const DlParsed &parsed)
 	return QString(str.c_str());
 }
 
+static inline int isCharUtf8(const char *s, size_t len)
+{
+	if (len > 0)
+	{
+		char c0 = s[0];
+		if ((c0 & '\x80') == '\x00')
+		{
+			return 1;
+		}
+		if (len > 1)
+		{
+			char c1 = s[1];
+			if ((c1 & '\xC0') == '\x80')
+			{
+				if ((c0 & '\xE0') == '\xC0')
+				{
+					return 2;
+				}
+				if (len > 2)
+				{
+					char c2 = s[2];
+					if ((c2 & '\xC0') == '\x80')
+					{
+						if ((c0 & '\xF0') == '\xE0')
+						{
+							return 3;
+						}
+						if (len > 3)
+						{
+							char c3 = s[3];
+							if (((c0 & '\xF8') == '\xF0')
+								&& ((c3 & '\xC0') == '\x80'))
+							{
+								return 4;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 void DlParser::escapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
+	bool lastX = false;
 	for (size_t c = 0; c < src.size(); ++c)
 	{
+		bool x = false;
 		unsigned char ch = src[c];
 		if (ch == '\t') res << "\\t";
 		else if (ch == '\\') res << "\\\\";
 		else if (ch == '\n') res << "\\n";
 		else if (ch == '\r') res << "\\r";
-		else if (ch >= 32 && ch <= 126) res << ch;
+		else if (int nb = ((!lastX || !((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') || (ch >= '0' && ch <= '9')))
+			&& (ch >= 32))
+			? isCharUtf8(&src[c], src.size() - c) 
+			: 0)
+		{
+			res << ch;
+			for (int i = 1; i < nb; ++i)
+			{
+				++c;
+				res << src[c];
+			}
+		}
 		else
 		{
 			std::stringstream tmp;
 			tmp << "\\x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (unsigned int)ch;
 			res << tmp.str();
+			x = true;
 		}
+		lastX = x;
 	}
 	dst = res.str();
 }
@@ -710,6 +828,10 @@ void DlParser::escapeString(std::string &dst, const std::string &src)
 void DlParser::unescapeString(std::string &dst, const std::string &src)
 {
 	std::stringstream res;
+	const QRegularExpression hexMatcher("(^[0-9A-F]{4}$)|(^[0-9A-F]{8}$)", QRegularExpression::CaseInsensitiveOption);
+	QRegularExpressionMatch match;
+	QString tmp;
+	bool ok;
 	for (size_t i = 0; i < src.size(); ++i)
 	{
 		char c = src[i];
@@ -756,6 +878,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 				{
 					if (i + 4 < src.size())
 					{
+<<<<<<< HEAD
 						QString tmp = QString::fromStdString(src.substr(i + 1, 4));
 						QRegularExpression hexMatcher("^[0-9A-F]{4}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
@@ -766,6 +889,16 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							if (ok)
 							{
 								res << QString(v).toStdString();
+=======
+						tmp = QString::fromStdString(src.substr(i + 1, 4));
+						match = hexMatcher.match(tmp);
+						if (match.hasMatch())
+						{							
+							unsigned int v = match.captured(0).toUInt(&ok, 16);
+							if (ok)
+							{
+								res << QString(QChar(v)).toUtf8().constData();
+>>>>>>> feature/bt815emu
 								i += 4;
 								break;
 							}
@@ -779,6 +912,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 				{
 					if (i + 8 < src.size())
 					{
+<<<<<<< HEAD
 						QString tmp = QString::fromStdString(src.substr(i + 1, 8));
 						QRegularExpression hexMatcher("^[0-9A-F]{8}$", QRegularExpression::CaseInsensitiveOption);
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
@@ -789,6 +923,16 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 							if (ok)
 							{
 								res << QString(v).toStdString();
+=======
+						tmp = QString::fromStdString(src.substr(i + 1, 8));						
+						match = hexMatcher.match(tmp);
+						if (match.hasMatch())
+						{
+							unsigned int v = match.captured(0).toUInt(&ok, 16);
+							if (ok)
+							{
+								res << QString(QChar(v)).toUtf8().constData();
+>>>>>>> feature/bt815emu
 								i += 8;
 								break;
 							}

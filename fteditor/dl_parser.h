@@ -56,29 +56,37 @@ extern const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB];
 extern const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB];
 
 #define DLPARSED_MAX_PARAMETER 12
+#define DLPARSED_MAX_SYMBOL 18
+#define DLPARSED_MAX_VARARG 8
 struct DlParsed
 {
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
-	union { uint32_t U; int I; } Parameter[DLPARSED_MAX_PARAMETER];
+	union { uint32_t U; int I; /* float F; */ } Parameter[DLPARSED_MAX_PARAMETER];
 
 	bool ValidId;
-	bool ValidParameter[DLPARSED_MAX_PARAMETER];
-	bool NumericParameter[DLPARSED_MAX_PARAMETER];
+	bool ValidSymbol[DLPARSED_MAX_SYMBOL];
+	bool NumericSymbol[DLPARSED_MAX_SYMBOL];
 
 	int IdIndex;
 	int IdLength;
-	int ParameterIndex[DLPARSED_MAX_PARAMETER];
-	int ParameterLength[DLPARSED_MAX_PARAMETER];
+	int SymbolIndex[DLPARSED_MAX_SYMBOL];
+	int SymbolLength[DLPARSED_MAX_SYMBOL];
+
+	// bool FloatingVarArg[DLPARSED_MAX_PARAMETER];
 
 	int ExpectedParameterCount;
 	int BadCharacterIndex;
 	bool ExpectedStringParameter;
+	int VarArgCount;
 
 	bool ValidStringParameter; // single string parameter at end
 	std::string StringParameter;
 	int StringParameterAt; // temporary pq
+
+	// int VarArgCount;
+	// char VarArgFormat[DLPARSED_MAX_VARARG];
 };
 
 struct ParameterOptions
@@ -146,6 +154,7 @@ private:
 	static const int *m_ParamCount[FTEDITOR_DEVICE_NB];
 	static const int *m_CmdParamCount[FTEDITOR_DEVICE_NB];
 	static const bool *m_CmdParamString[FTEDITOR_DEVICE_NB];
+	static const int *m_CmdParamOptFormat[FTEDITOR_DEVICE_NB];
 
 	static const std::string *m_CmdIdList[FTEDITOR_DEVICE_NB];
 

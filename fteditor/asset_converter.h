@@ -15,6 +15,7 @@
 #define FTEDITOR_ASSET_CONVERTER_H
 
 // STL includes
+#include <map>
 
 // Qt includes
 #include <QString>
@@ -33,6 +34,15 @@ struct ImageInfo
 	int LayoutHeight;
 };
 
+struct FlashMapEntry
+{
+	QString Name;
+	int Index;
+	int Size;
+};
+
+typedef std::map<QString, FlashMapEntry> FlashMapInfo;
+
 /**
  * AssetConverter
  * \brief AssetConverter
@@ -49,6 +59,9 @@ public:
 	static void convertRaw(QString &buildError, const QString &inFile, const QString &outName, int begin, int length);
 	static void convertFont(QString &buildError, const QString &inFile, const QString &outName, int format, int size, const QString &charSet, int offset);
 	static void convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG);
+	static void lockFlashMap(bool lock);
+	static const FlashMapInfo &parseFlashMap(const QString &flashMapPath);
+	static void convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName);
 	static void release();
 
 }; /* class AssetConverter */

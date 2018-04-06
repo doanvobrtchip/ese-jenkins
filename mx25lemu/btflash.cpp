@@ -280,7 +280,7 @@ public:
 
 		m_Log = params->Log;
 		m_UserContext = params->UserContext;
-		m_PrintStd = true;
+		m_PrintStd = params->StdOut;
 
 		Flash_debug("Create flash");
 
@@ -296,6 +296,7 @@ public:
 
 		const wchar_t *const dataFilePath = params->DataFilePath[0] ? params->DataFilePath : NULL;
 		const size_t sizeBytes = (params->SizeBytes + 65535) & (~(size_t)0xFFFF);
+		// TODO: Always round up size to power-of-2
 
 		if (dataFilePath)
 		{
@@ -1494,7 +1495,7 @@ public:
 			Flash_debug("Read SFDP addr %i", (int)addr);
 			m_OutArray = &m_Sfdp->Data[0];
 			m_OutArraySize = 256;
-			m_OutArrayAt = addr;
+			m_OutArrayAt = addr & 0xFF;
 			m_OutArrayLoop = true; // VERIFY: Does this loop or not?
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
@@ -1511,7 +1512,7 @@ public:
 			Flash_debug("Read READ addr %i", (int)addr);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
-			m_OutArrayAt = addr;
+			m_OutArrayAt = addr & (Size - 1);
 			m_OutArrayLoop = true;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
@@ -1530,7 +1531,7 @@ public:
 			Flash_debug("Read FAST_READ addr %i", (int)addr);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
-			m_OutArrayAt = addr;
+			m_OutArrayAt = addr & (Size - 1);
 			m_OutArrayLoop = true;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
@@ -1547,7 +1548,7 @@ public:
 			Flash_debug("Read FASTDTRD addr %i", (int)addr);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
-			m_OutArrayAt = addr;
+			m_OutArrayAt = addr & (Size - 1);
 			m_OutArrayLoop = true;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY_DT;
 		}
@@ -1583,7 +1584,7 @@ public:
 			Flash_debug("Read 4READ addr %i, p %x, pe %i", (int)m_DelayedCommandAddr, (int)p, (int)pe);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
-			m_OutArrayAt = m_DelayedCommandAddr;
+			m_OutArrayAt = m_DelayedCommandAddr & (Size - 1);
 			m_OutArrayLoop = true;
 			m_SignalOutMask = BTFLASH_SPI4_MASK_D4;
 			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;

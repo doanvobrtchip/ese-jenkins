@@ -44,6 +44,9 @@ class QCheckBox;
 namespace FTEDITOR {
 
 extern int g_RamGlobalUsage;
+extern int g_FlashGlobalUsage;
+
+#define FTEDITOR_FLASH_FIRMWARE_SIZE 4096
 
 #define BITMAP_SETUP_HANDLES_NB 16
 
@@ -67,7 +70,19 @@ struct ContentInfo
 		Raw, // Raw copy to ram
 		Font, // Font
 		ImageCoprocessor, // Load jpeg on coprocessor
+		FlashMap = 1025, // Loaded from flash map, can only be set using import
 	};
+
+	enum StorageType
+	{
+		File,
+		Embedded,
+		Flash
+	};
+
+	// ContentInfo::FlashMap functionality:
+	// Similar to Raw, but takes a .map file as input, and renames the .map extension to .bin to get the source data
+	// Links to specific file by means of name. Error in case name no longer exists in the map
 
 	QString SourcePath; // Relative source path
 	QString DestName; // Local destination name
@@ -76,8 +91,9 @@ struct ContentInfo
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
 	int MemoryAddress; // Target memory address
 
+	StorageType DataStorage; // Whether to use embedded header or file - only relevant for code generator scripts, or whether this is loaded into flash
 	bool DataCompressed; // Use compressed data source when embedding - only relevant for code generator scripts
-	bool DataEmbedded; // Whether to use embedded header or file - only relevant for code generator scripts
+	int FlashAddress; // Target flash address
 
 	int RawStart; // Raw start of memory
 	int RawLength; // Raw length of memory
@@ -90,13 +106,16 @@ struct ContentInfo
 	QString FontCharSet;
 	int FontOffset;
 
+	QString MappedName; // Name of this asset in the flash map
+
 	QString BuildError;
 
 	QJsonObject toJson(bool meta) const;
 	void fromJson(QJsonObject &j, bool meta);
 	bool equalsMeta(const ContentInfo *other) const;
 
-	bool UploadDirty;
+	bool UploadMemoryDirty;
+	bool UploadFlashDirty;
 	bool ExternalDirty;
 
 	bool CachedImage;
@@ -104,9 +123,10 @@ struct ContentInfo
 	int CachedImageHeight;
 	int CachedImageStride;
 
-	int CachedSize; // Memory size
+	int CachedMemorySize; // Memory size (for example, after JPEG decompression by coprocessor)
 
-	bool OverlapFlag;
+	bool OverlapMemoryFlag;
+	bool OverlapFlashFlag;
 	bool WantAutoLoad;
 
 	int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
@@ -134,6 +154,8 @@ public:
 	void add(ContentInfo *contentInfo);
 	// Remove the content
 	void remove(ContentInfo *remove);
+	// Load or reload a flash map. Only one flash map will be included at a time
+	bool loadFlashMap(QString flashMapPath = QString::null);
 	// Clear all content
 	void clear();
 	// Get all content
@@ -146,9 +168,16 @@ public:
 	bool cacheImageInfo(ContentInfo *info);
 	// Find content info
 	ContentInfo *find(const QString &destName);
+	// Suppress overlap check
+	void suppressOverlapCheck();
+	// Resume overlap check
+	void resumeOverlapCheck();
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
+
+	// Get the current flash map path
+	QString findFlashMapPath();
 
 	// Editor utilities
 	// Find handle related to content address, return -1 on failure // TODO: depend on current editor line
@@ -185,8 +214,9 @@ public:
 	void changeRawLength(ContentInfo *contentInfo, int value);
 	void changeMemoryLoaded(ContentInfo *contentInfo, bool value);
 	void changeMemoryAddress(ContentInfo *contentInfo, int value, bool internal = false);
+	void changeDataStorage(ContentInfo *contentInfo, ContentInfo::StorageType value);
 	void changeDataCompressed(ContentInfo *contentInfo, bool value);
-	void changeDataEmbedded(ContentInfo *contentInfo, bool value);
+	void changeFlashAddress(ContentInfo *contentInfo, int value, bool internal = false);
 
 	// Lock to call when editing/moving content files from qt thread, when reading content from non-qt threads
 	void lockContent() { s_Mutex.lock(); }
@@ -194,11 +224,14 @@ public:
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
-	inline void swapUploadDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadDirty.swap(contentInfo); }
+	inline void swapUploadMemoryDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadMemoryDirty.swap(contentInfo); }
+	inline void swapUploadFlashDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadFlashDirty.swap(contentInfo); }
 	void reuploadAll();
 
 	// Utility
 	inline const QTreeWidget *contentList() const { return m_ContentList; }
+
+	void copyFlashFile();
 
 private:
 	class Add;
@@ -217,20 +250,24 @@ private:
 	class ChangeRawLength;
 	class ChangeMemoryLoaded;
 	class ChangeMemoryAddress;
+	class ChangeDataStorage;
 	class ChangeDataCompressed;
-	class ChangeDataEmbedded;
+	class ChangeFlashAddress;
 
 	bool nameExists(const QString &name);
 	QString createName(const QString &name); // Rename if already exists.
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
-	int getFreeAddress(); // Return -1 if no more space
+	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
+	int getFreeMemoryAddress(); // Return -1 if no more space
+	// int getFreeFlashAddress(int size); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
-	void reuploadInternal(ContentInfo *contentInfo);
-	void recalculateOverlapInternal();
+	void reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash);
+	void recalculateOverlapMemoryInternal();
+	void recalculateOverlapFlashInternal();
 	void rebuildViewInternal(ContentInfo *contentInfo);
 	void rebuildGUIInternal(ContentInfo *contentInfo);
 
@@ -246,6 +283,7 @@ private:
 	QWidget *m_PropertiesCommon;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonName;
+	QLabel *m_PropertiesCommonConverterLabel;
 	QComboBox *m_PropertiesCommonConverter;
 
 	QGroupBox *m_PropertiesImage;
@@ -270,15 +308,28 @@ private:
 	QGroupBox *m_PropertiesMemory;
 	QCheckBox *m_PropertiesMemoryLoaded;
 	UndoStackDisabler<QSpinBox> *m_PropertiesMemoryAddress;
+
+	QGroupBox *m_PropertiesData; // Storage
+	QComboBox *m_PropertiesDataStorage;
 	QCheckBox *m_PropertiesDataCompressed;
-	QCheckBox *m_PropertiesDataEmbedded;
+	QLabel *m_PropertiesFlashAddressLabel;
+	UndoStackDisabler<QSpinBox> *m_PropertiesFlashAddress;
 
 	static std::vector<QString> s_FileExtensions;
 
-	std::set<ContentInfo *> m_ContentUploadDirty;
-	std::set<ContentInfo *> m_ContentOverlap;
+	std::set<ContentInfo *> m_ContentUploadMemoryDirty;
+	std::set<ContentInfo *> m_ContentOverlapMemory;
+
+	std::set<ContentInfo *> m_ContentUploadFlashDirty;
+	std::set<ContentInfo *> m_ContentOverlapFlash;
+
+	int m_OverlapSuppressed;
+	bool m_OverlapMemorySuppressed;
+	bool m_OverlapFlashSuppressed;
 
 	static QMutex s_Mutex;
+
+	QString m_FlashFileName;
 
 private slots:
 	void add();
@@ -286,6 +337,9 @@ private slots:
 
 public slots:
 	void rebuildAll();
+
+	void importFlashMapped();
+	void exportFlashMapped();
 
 private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
@@ -305,8 +359,9 @@ private slots:
 	void propertiesRawLengthChanged(int value);
 	void propertiesMemoryLoadedChanged(int value);
 	void propertiesMemoryAddressChanged(int value);
+	void propertiesDataStorageChanged(int value);
 	void propertiesDataCompressedChanged(int value);
-	void propertiesDataEmbeddedChanged(int value);
+	void propertiesFlashAddressChanged(int value);
 
 private:
 	ContentManager(const ContentManager &);

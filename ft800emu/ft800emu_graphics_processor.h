@@ -11,9 +11,21 @@ Author: Jan Boon <jan@no-break.space>
 #define FT800EMU_GRAPHICS_PROCESSOR_H
 // #include <...>
 
+#ifdef BT815EMU_MODE
+// Select only one cache mechanism
+#define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
+#define BT815EMU_ASTC_LAST_CACHE 1
+#endif
+
 // System includes
 #include <vector>
 #include <memory>
+
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#		include <concurrent_unordered_map.h>
+#	endif
+#endif
 
 // Project includes
 #include "bt8xxemu_inttypes.h"
@@ -84,6 +96,15 @@ struct BitmapInfo
 
 #ifndef FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE
 #define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE private
+#endif
+
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#define MAX_TEXELS_PER_BLOCK 216
+struct AstcCacheEntry { AstcCacheEntry() : Ok(false) { } argb8888 C[MAX_TEXELS_PER_BLOCK]; volatile bool Ok; };
+typedef concurrency::concurrent_unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
+#undef MAX_TEXELS_PER_BLOCK
+#	endif
 #endif
 
 /**
@@ -157,6 +178,15 @@ private:
 	// Master copy of bitmap
 	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { 0 };
 
+FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+	// ASTC Cache
+	AstcCache m_AstcCache;
+#	endif
+#endif
+
+private:
 	bool m_RegPwmDutyEmulation;
 
 	// Threading options

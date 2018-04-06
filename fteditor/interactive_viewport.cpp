@@ -203,6 +203,8 @@ static bool isValidInsert(const DlParsed &parsed)
 				return true;
 			case CMD_CSKETCH:
 				return FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801; // Deprecated in FT810
+			case CMD_ANIMFRAME:
+				return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815;
 			}
 		}
 	}
@@ -601,6 +603,7 @@ CMD_SCREENSAVER()
 				case CMD_NUMBER:
 				case CMD_SKETCH:
 				case CMD_CSKETCH:
+				case CMD_ANIMFRAME:
 				{
 					QPen outer;
 					QPen inner;

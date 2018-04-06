@@ -17,16 +17,20 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMutex>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QDir>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
 
 // Project includes
 #include "constant_mapping.h"
+#include "constant_mapping_flash.h"
 
 namespace FTEDITOR {
 
-#define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+// #define FTEDITOR_STDFLASH L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+
+#define FTEDITOR_FLASH_FIRMWARE_DIR "firmware"
 
 BT8XXEMU_Emulator *g_Emulator = NULL;
 BT8XXEMU_Flash *g_Flash = NULL;
@@ -108,6 +112,8 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	m_Horizontal->setSingleStep(16);
 	m_Horizontal->setPageStep(16 * 16);
 
+	m_InitialWorkingDir = QDir::currentPath();
+
 	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 }
@@ -138,14 +144,31 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 		// Copy the params for the new thread to use
 		s_EmulatorParameters = params;
 
+		// Attach flash
+		if (flashSupport(FTEDITOR_CURRENT_DEVICE))
+		{
+			BT8XXEMU_FlashParameters flashParams;
+			BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
+			wcscpy(flashParams.DeviceType, flashDeviceType(FTEDITOR_CURRENT_FLASH));
+			flashParams.SizeBytes = flashSizeBytes(FTEDITOR_CURRENT_FLASH);
+			flashParams.Persistent = false;
+			flashParams.StdOut = false;
+			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
+			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
+			{
+				QString blobPath = m_InitialWorkingDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				if (blobPath.length() < 260)
+				{
+					int i = blobPath.toWCharArray(flashParams.DataFilePath);
+					flashParams.DataFilePath[i] = L'\0';
+				}
+			}
 #ifdef FTEDITOR_STDFLASH
-		// Attach standard flash image (for testing)
-		BT8XXEMU_FlashParameters flashParams;
-		BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, &flashParams);
-		wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH);
-		g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
-		s_EmulatorParameters.Flash = g_Flash;
+			wcscpy(flashParams.DataFilePath, FTEDITOR_STDFLASH); // Standard flash image (for testing)
 #endif
+			g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+			s_EmulatorParameters.Flash = g_Flash;
+		}
 
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
@@ -182,10 +205,11 @@ void EmulatorViewport::stop()
 		BT8XXEMU_destroy(g_Emulator);
 		g_Emulator = NULL;
 
-#ifdef FTEDITOR_STDFLASH
-		BT8XXEMU_Flash_destroy(g_Flash);
-		g_Flash = NULL;
-#endif
+		if (g_Flash)
+		{
+			BT8XXEMU_Flash_destroy(g_Flash);
+			g_Flash = NULL;
+		}
 	}
 }
 

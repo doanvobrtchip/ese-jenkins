@@ -37,6 +37,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QProgressBar>
+#include <QStyleFactory>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -50,6 +51,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMovie>
 #include <QDirIterator>
 #include <QElapsedTimer>
+#include <QPushButton>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -73,6 +75,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "emulator_navigator.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
+#include "constant_mapping_flash.h"
 
 namespace FTEDITOR {
 
@@ -258,7 +261,9 @@ static int s_MediaFifoSize = 0;
 static QFile *s_MediaFifoFile = NULL;
 static QDataStream *s_MediaFifoStream = NULL;
 
-static bool s_CoprocessorFaultOccured = false;
+static volatile bool s_CoprocessorFaultOccured = false;
+static volatile bool s_CoprocessorFrameSuccess = false;
+static char s_CoprocessorDiagnostic[128 + 4] = { 0 };
 static bool s_StreamingData = false;
 
 static bool s_WarnMissingClear = false;
@@ -307,7 +312,7 @@ void resetCoprocessorFromLoop()
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
@@ -318,7 +323,7 @@ void resetCoprocessorFromLoop()
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
 		// Go back into the patched coprocessor main loop
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
@@ -351,6 +356,16 @@ void loop()
 		{
 			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
+			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+			{
+				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
+				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
+				s_CoprocessorDiagnostic[128] = '\0';
+			}
+			else
+			{
+				s_CoprocessorDiagnostic[0] = '\0';
+			}
 			resetCoprocessorFromLoop();
 		}
 	}
@@ -368,6 +383,7 @@ void loop()
 		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_DL)) != 0)
 		{
 			if (!s_EmulatorRunning) return;
+			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
 		}
 		coprocessorSwapped = false;
 		// ++s_SwapCount;
@@ -392,10 +408,50 @@ void loop()
 		return;
 
 	s_ContentManager->lockContent();
-	std::set<ContentInfo *> contentInfo;
-	s_ContentManager->swapUploadDirty(contentInfo);
+	if (g_Flash)
+	{
+		std::set<ContentInfo *> contentInfoFlash;
+		s_ContentManager->swapUploadFlashDirty(contentInfoFlash);
+		size_t flashSize = BT8XXEMU_Flash_size(g_Flash);
+		for (std::set<ContentInfo *>::iterator it(contentInfoFlash.begin()), end(contentInfoFlash.end()); it != end; ++it)
+		{
+			ContentInfo *info = (*it);
+			int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+			if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
+			{
+				// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
+				printf("[Flash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+				continue;
+			}
+			bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
+				? info->DataCompressed : false;
+			QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
+			printf("[Flash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
+			QFile binFile(fileName);
+			if (!binFile.exists())
+			{
+				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
+				continue;
+			}
+			int binSize = binFile.size();
+			if (binSize + loadAddr > flashSize)
+			{
+				printf("[Flash] Error: File of size '%i' exceeds flash size\n", binSize);
+				continue;
+			}
+			; {
+				binFile.open(QIODevice::ReadOnly);
+				QDataStream in(&binFile);
+				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
+				int s = in.readRawData(&ram[loadAddr], binSize);
+				BT8XXEMU_poke(g_Emulator);
+			}
+		}
+	}
+	std::set<ContentInfo *> contentInfoMemory;
+	s_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
 	bool reuploadFontSetup = false;
-	for (std::set<ContentInfo *>::iterator it(contentInfo.begin()), end(contentInfo.end()); it != end; ++it)
+	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
 		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
@@ -408,7 +464,7 @@ void loop()
 			continue;
 		}
 		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
-		int binSize = imageCoprocessor ? info->CachedSize : (int)binFile.size();
+		int binSize = imageCoprocessor ? info->CachedMemorySize : binFile.size();
 		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
 		{
 			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
@@ -574,10 +630,10 @@ void loop()
 				}
 			}
 		}
-		if (info->Converter == ContentInfo::Font)
-		{
+		/*if (info->Converter == ContentInfo::Font)
+		{*/ // Always reupload, since raw data may change too
 			reuploadFontSetup = true;
-		}
+		/*}*/
 	}
 	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
 	if (reuploadBitmapSetup)
@@ -719,6 +775,7 @@ void loop()
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
 			bool useMediaFifo;
+			bool useFlash;
 			const char *useFileStream = NULL;
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
@@ -727,10 +784,12 @@ void loop()
 			}
 			else if (cmdList[i] == CMD_LOADIMAGE)
 			{
-				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_FLASH);
+				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-					&& ((s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
+					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{
@@ -1277,6 +1336,7 @@ void loop()
 		}
 
 		s_ShowCoprocessorBusy = false;
+		s_CoprocessorFrameSuccess = true;
 
 		// FIXME: Not very thread-safe, but not too critical
 		int *nextWrite = s_DisplayListCoprocessorCommandRead;
@@ -1373,6 +1433,28 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
 
+	// Error message box pop-up over viewport
+	QVBoxLayout *outerWarning = new QVBoxLayout();
+	QFrame *frame = new QFrame(this);
+	frame->setFrameStyle(QFrame::StyledPanel);
+	frame->setStyleSheet("background-color: " + palette().color(QPalette::ToolTipBase).name() + ";");
+	QHBoxLayout *warningLayout = new QHBoxLayout();
+	QLabel *warningIcon = new QLabel();
+	warningIcon->setPixmap(QIcon(":/icons/exclamation-red.png").pixmap(16, 16));
+	warningLayout->addWidget(warningIcon);
+	QLabel *warningText = new QLabel(tr("ERROR\nERROR\nERROR"));
+	warningLayout->addWidget(warningText);
+	warningLayout->setStretchFactor(warningText, 1);
+	frame->setLayout(warningLayout);
+	warningLayout->setAlignment(warningIcon, Qt::AlignTop | Qt::AlignLeft);
+	warningLayout->setAlignment(warningText, Qt::AlignTop | Qt::AlignLeft);
+	outerWarning->addWidget(frame);
+	outerWarning->addStretch();
+	layout->addLayout(outerWarning, 0, 0);
+	m_ErrorFrame = frame;
+	m_ErrorLabel = warningText;
+	frame->setVisible(false);
+
 	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 	createDockWindows();
 
@@ -1386,6 +1468,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	s_Macro = m_Macro;
 
 	startEmulatorInternal();
+
+	bindCurrentDevice();
 
 	actNew(true);
 }
@@ -1789,11 +1873,10 @@ void MainWindow::frameQt()
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
-			uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-			if (ram)
+			if (s_CoprocessorDiagnostic[0])
 			{
 				info = "<b>Co-processor engine fault</b><br><br>";
-				info += QString::fromLatin1((char *)&ram[0x309800]);
+				info += QString::fromLatin1(s_CoprocessorDiagnostic);
 			}
 			else
 			{
@@ -1809,9 +1892,16 @@ void MainWindow::frameQt()
 				"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
 				"- An invalid data stream is supplied to CMD_INFLATE";
 		}
-		m_PropertiesEditor->setInfo(info);
-		m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
-		focusProperties();
+		// m_PropertiesEditor->setInfo(info);
+		// m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
+		// focusProperties();
+		m_ErrorLabel->setText(info);
+		m_ErrorFrame->setVisible(true);
+		s_CoprocessorFrameSuccess = false;
+	}
+	if (s_CoprocessorFrameSuccess)
+	{
+		m_ErrorFrame->setVisible(false);
 	}
 
 	// printf("msc: %s\n", s_WarnMissingClear ? "warn" : "ok");
@@ -2066,21 +2156,58 @@ void MainWindow::createDockWindows()
 		{
 			QGroupBox *group = new QGroupBox(widget);
 			group->setTitle(tr("Device"));
-			QHBoxLayout *groupLayout = new QHBoxLayout();
+			QVBoxLayout *groupLayout = new QVBoxLayout();
+
+			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
-			groupLayout->addWidget(m_ProjectDevice);
+			hBoxLayout->addWidget(m_ProjectDevice);
 			connect(m_ProjectDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDeviceChanged(int)));
 
 			m_ProjectDisplay = new QComboBox(this);
 			for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
 			m_ProjectDisplay->addItem("");
-			groupLayout->addWidget(m_ProjectDisplay);
+			hBoxLayout->addWidget(m_ProjectDisplay);
 			connect(m_ProjectDisplay, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDisplayChanged(int)));
+
+			groupLayout->addLayout(hBoxLayout);
+
+			hBoxLayout = new QHBoxLayout();
+			m_ProjectFlashLayout = new QWidget(this);
+			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
+			// m_ProjectFlashLayout->marg
+			hBoxLayout->setMargin(0);
+
+			m_ProjectFlash = new QComboBox(this);
+			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)
+				m_ProjectFlash->addItem(flashToString(i));
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+			hBoxLayout->addWidget(m_ProjectFlash, 1);
+			connect(m_ProjectFlash, SIGNAL(currentIndexChanged(int)), this, SLOT(projectFlashChanged(int)));
+
+			m_ProjectFlashImport = new QPushButton(this);
+			// m_ProjectFlashImport->setText(tr("Import"));
+			m_ProjectFlashImport->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
+			m_ProjectFlashImport->setToolTip(tr("Import Mapped Flash Image"));
+			hBoxLayout->addWidget(m_ProjectFlashImport);
+
+			// m_ProjectFlashLayout->stretch
+
+			m_ProjectFlashLayout->setLayout(hBoxLayout);
+			groupLayout->addWidget(m_ProjectFlashLayout);
+
+			m_ProjectFlashFilename = new QLabel(this);
+			QSizePolicy sizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+			sizePolicy.setHorizontalStretch(0);
+			sizePolicy.setVerticalStretch(0);
+			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
+			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
+			m_ProjectFlashFilename->installEventFilter(this);
+			groupLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -2164,32 +2291,37 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabelH);
 
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
+		m_UtilizationBitmapHandleStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationBitmapHandleStatus->setMinimum(0);
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
-		m_UtilizationBitmapHandleStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
+		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
 		QLabel *dlLabel = new QLabel(statusBar());
 		dlLabel->setText(tr("RAM_DL: "));
 		statusBar()->addPermanentWidget(dlLabel);
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
+		m_UtilizationDisplayListStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationDisplayListStatus->setMinimum(0);
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
-		m_UtilizationDisplayListStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
+		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
 		QLabel *dlLabelG = new QLabel(statusBar());
 		dlLabelG->setText(tr("RAM_G: "));
 		statusBar()->addPermanentWidget(dlLabelG);
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
+		m_UtilizationGlobalStatus->setStyle(QStyleFactory::create("Fusion"));
 		m_UtilizationGlobalStatus->setMinimum(0);
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
-		m_UtilizationGlobalStatus->setMaximumSize(120, 19); // FIXME
+		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
 		/*w->setLayout(l);
@@ -2487,6 +2619,8 @@ void MainWindow::createDockWindows()
 		m_ContentManagerDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);
 		m_WidgetsMenu->addAction(m_ContentManagerDock->toggleViewAction());
+
+		connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
 	}
 
 	// Bitmap
@@ -3035,6 +3169,49 @@ bool MainWindow::maybeSave()
 	return true;
 }
 
+bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
+{
+	if (filePath.isEmpty())
+	{
+		return false;
+	}
+
+	// check .map and .bin files
+	QString binPath(filePath);
+	binPath = binPath.replace(filePath.length() - 3, 3, "bin");
+	if (false == QFileInfo::exists(filePath) || false == QFileInfo::exists(binPath))
+	{
+		// prompt user
+		QMessageBox::information(this, tr("Flash files do not exist"), tr("Flash files do not exist!"));
+	}
+	else
+	{
+		// check flash configuration
+		qint64 binSize = QFileInfo(binPath).size();
+
+		if (binSize > 256 * 1024 * 1024)
+		{
+			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
+			return false;
+		}
+		else
+		{
+			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
+			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
+			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
+			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
+			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
+			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
+			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
+			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
+			
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+		}
+	}
+
+	return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
@@ -3100,6 +3277,9 @@ void MainWindow::actNew(bool addClear)
 #endif
 	updateWindowTitle();
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+
+	// reset flash file name
+	setFlashFileNameToLabel("");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3309,12 +3489,21 @@ void MainWindow::openFile(const QString &fileName)
 		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 		QJsonArray content = root["content"].toArray();
+		m_ContentManager->suppressOverlapCheck();
+
+		bool checkFlashPath = false;
 		for (int i = 0; i < content.size(); ++i)
 		{
 			ContentInfo *ci = new ContentInfo("");
 			QJsonObject cio = content[i].toObject();
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
+
+			if (!checkFlashPath && ci->Converter == ContentInfo::FlashMap)
+			{
+				checkFlashPath = true;
+				checkAndPromptFlashPath(ci->SourcePath);
+			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -3323,6 +3512,7 @@ void MainWindow::openFile(const QString &fileName)
 			bitmapSetupfromJson(this, m_CmdEditor, bitmaps);
 			// m_BitmapSetup->fromJson(bitmaps);
 		}
+		m_ContentManager->resumeOverlapCheck();
 		postProcessEditor(m_Macro);
 		postProcessEditor(m_DlEditor);
 		postProcessEditor(m_CmdEditor);
@@ -3360,6 +3550,33 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+}
+
+void MainWindow::setFlashFileNameToLabel(const QString & fileName)
+{
+	QString flashName(fileName);
+	if (flashName.isEmpty())
+	{
+		flashName = tr("No flash file is loaded");
+	}
+	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, flashName);
+	m_ProjectFlashFilename->setText(elidedText);
+}
+
+const bool MainWindow::isProjectSaved(void)
+{
+	return (false == m_CurrentFile.isEmpty());
+}
+
+bool MainWindow::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
+	{
+		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+	}
+
+	return QMainWindow::eventFilter(watched, event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -3436,7 +3653,10 @@ void MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
 	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/bt815emu
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
@@ -3754,6 +3974,17 @@ void MainWindow::actResetEmulator()
 	startEmulatorInternal();
 }
 
+void MainWindow::bindCurrentDevice()
+{
+	m_Inspector->bindCurrentDevice();
+	m_DlEditor->bindCurrentDevice();
+	m_CmdEditor->bindCurrentDevice();
+	m_Macro->bindCurrentDevice();
+	m_Toolbox->bindCurrentDevice();
+	m_ContentManager->bindCurrentDevice();
+	m_InteractiveProperties->bindCurrentDevice();
+}
+
 void MainWindow::stopEmulatorInternal()
 {
 	printf("Stop the emulator\n");
@@ -3782,9 +4013,12 @@ void MainWindow::startEmulatorInternal()
 	BT8XXEMU_setDebugLimiter(g_Emulator, 2048 * 64);
 }
 
-void MainWindow::changeEmulatorInternal(int deviceIntf)
+void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 {
-	if (deviceIntf == FTEDITOR_CURRENT_DEVICE)
+	bool changeDevice = deviceIntf != FTEDITOR_CURRENT_DEVICE;
+	bool changeFlash = flashIntf != FTEDITOR_CURRENT_FLASH && flashSupport(deviceIntf);
+
+	if (!changeDevice && !changeFlash)
 		return;
 
 	// Remove any references to the current emulator device version
@@ -3794,7 +4028,8 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	stopEmulatorInternal();
 
 	// Set the new emulator version
-	FTEDITOR_CURRENT_DEVICE = deviceIntf;
+	if (changeDevice) FTEDITOR_CURRENT_DEVICE = deviceIntf;
+	if (changeFlash) FTEDITOR_CURRENT_FLASH = flashIntf;
 
 	// Reset emulator data
 	printf("Reset emulator parameters\n");
@@ -3808,38 +4043,44 @@ void MainWindow::changeEmulatorInternal(int deviceIntf)
 	startEmulatorInternal();
 
 	// Re-establish the current emulator device
-	m_Inspector->bindCurrentDevice();
-	m_DlEditor->bindCurrentDevice();
-	m_CmdEditor->bindCurrentDevice();
-	m_Macro->bindCurrentDevice();
-	m_Toolbox->bindCurrentDevice();
-	m_ContentManager->bindCurrentDevice();
-	m_InteractiveProperties->bindCurrentDevice();
+	bindCurrentDevice();
 
 	// Update resolution list
-	s_UndoRedoWorking = true;
-	m_ProjectDisplay->clear();
-	for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_ProjectDisplay->addItem(s_StandardResolutions[i]);
-	m_ProjectDisplay->addItem("");
-	updateProjectDisplay(m_HSize->value(), m_VSize->value());
-	s_UndoRedoWorking = false;
+	if (changeDevice)
+	{
+		s_UndoRedoWorking = true;
+		m_ProjectDisplay->clear();
+		for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
+			m_ProjectDisplay->addItem(s_StandardResolutions[i]);
+		m_ProjectDisplay->addItem("");
+		updateProjectDisplay(m_HSize->value(), m_VSize->value());
+		s_UndoRedoWorking = false;
+	}
+
+	// Update flash support
+	if (changeDevice)
+	{
+		m_ProjectFlashLayout->setVisible(flashSupport(FTEDITOR_CURRENT_DEVICE));
+	}
 
 	// Reconfigure emulator controls
 	stepEnabled(m_StepEnabled->isChecked());
 	stepCmdEnabled(m_StepCmdEnabled->isChecked());
 
 	// Update interface ranges
-	m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
-	m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
-	m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
-	m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
-	m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
-	m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
-	m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
-	m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
-	m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
-	m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+	if (changeDevice)
+	{
+		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
+		m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+		m_StepCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+		m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
+		m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+		m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
+		m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+	}
 
 	// TODO:
 	// Inside ProjectDeviceCommand store the original display lists (incl macro) plus a backup of the current ContentInfo settings
@@ -3855,8 +4096,8 @@ class ProjectDeviceCommand : public QUndoCommand
 public:
 	ProjectDeviceCommand(int deviceIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectDevice(deviceIntf), m_OldProjectDevice(FTEDITOR_CURRENT_DEVICE), m_MainWindow(mainWindow) { }
 	virtual ~ProjectDeviceCommand() { }
-	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
-	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
 	virtual int id() const { return 98919600; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectDevice = static_cast<const ProjectDeviceCommand *>(command)->m_NewProjectDevice; return true; }
 
@@ -3873,6 +4114,31 @@ void MainWindow::projectDeviceChanged(int deviceIntf)
 		return;
 	
 	m_UndoStack->push(new ProjectDeviceCommand(deviceIntf, this));
+}
+
+class ProjectFlashCommand : public QUndoCommand
+{
+public:
+	ProjectFlashCommand(int flashIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectFlash(flashIntf), m_OldProjectFlash(FTEDITOR_CURRENT_FLASH), m_MainWindow(mainWindow) { }
+	virtual ~ProjectFlashCommand() { }
+	virtual void undo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
+	virtual void redo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
+	virtual int id() const { return 98919601; }
+	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectFlash = static_cast<const ProjectFlashCommand *>(command)->m_NewProjectFlash; return true; }
+
+private:
+	int m_NewProjectFlash;
+	int m_OldProjectFlash;
+	MainWindow *m_MainWindow;
+
+};
+
+void MainWindow::projectFlashChanged(int flashIntf)
+{
+	if (s_UndoRedoWorking)
+		return;
+	
+	m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
 }
 
 void MainWindow::projectDisplayChanged(int i)

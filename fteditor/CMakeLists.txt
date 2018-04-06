@@ -17,6 +17,10 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 # Find the QtWidgets library
 FIND_PACKAGE(Qt5Widgets)
 
+IF (POLICY CMP0071)
+	CMAKE_POLICY(SET CMP0071 OLD)
+ENDIF ()
+
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
 
@@ -92,12 +96,22 @@ ENDIF (WITH_PYTHON)
 
 IF(WITH_FREETYPE)
   FIND_PACKAGE(Freetype REQUIRED)
+  IF (WITH_FREETYPE_STATIC)
+    FIND_PACKAGE(ZLIB REQUIRED) # Dependency of Freetype
+    FIND_PACKAGE(PNG REQUIRED) # Dependency of Freetype
+  ENDIF (WITH_FREETYPE_STATIC)
   INCLUDE_DIRECTORIES(
     ${FREETYPE_INCLUDE_DIRS}
     )
   TARGET_LINK_LIBRARIES(fteditor
     ${FREETYPE_LIBRARIES}
     )
+  IF (WITH_FREETYPE_STATIC)
+    TARGET_LINK_LIBRARIES(fteditor
+      ${ZLIB_LIBRARIES}
+      ${PNG_LIBRARIES}
+    )
+  ENDIF (WITH_FREETYPE_STATIC)
 
   ADD_DEFINITIONS(-DFT800EMU_FREETYPE)
 ENDIF(WITH_FREETYPE)
@@ -106,10 +120,14 @@ ENDIF(WITH_FREETYPE)
 IF (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
     Qt5::Widgets
-    ${CMAKE_SOURCE_DIR}/fteditor/ftlib/ftd2xx.lib
-    ${CMAKE_SOURCE_DIR}/fteditor/ftlib/libMPSSE.a
-    ${CMAKE_SOURCE_DIR}/fteditor/ftlib/LibFT4222.lib
   )
+  IF (FTEDITOR_DEVICE_MANAGER)
+    TARGET_LINK_LIBRARIES(fteditor
+      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/ftd2xx.lib
+      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/libMPSSE.a
+      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/LibFT4222.lib
+    )
+  ENDIF (FTEDITOR_DEVICE_MANAGER)
 ELSE (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
     Qt5::Widgets
