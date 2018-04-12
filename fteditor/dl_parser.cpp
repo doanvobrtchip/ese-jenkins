@@ -828,7 +828,7 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 	const QRegularExpression hexMatcher("(^[0-9A-F]{4}$)|(^[0-9A-F]{8}$)", QRegularExpression::CaseInsensitiveOption);
 	QRegularExpressionMatch match;
 	QString tmp;
-	bool ok;
+	bool ok = false;
 	for (size_t i = 0; i < src.size(); ++i)
 	{
 		char c = src[i];
@@ -880,7 +880,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
 						if (match.hasMatch())
 						{
-							bool ok;
 							unsigned int v = match.captured(0).toUInt(&ok, 16);
 							if (ok)
 							{
@@ -903,7 +902,6 @@ void DlParser::unescapeString(std::string &dst, const std::string &src)
 						QRegularExpressionMatch match = hexMatcher.match(tmp);
 						if (match.hasMatch())
 						{
-							bool ok;
 							unsigned int v = match.captured(0).toUInt(&ok, 16);
 							if (ok)
 							{

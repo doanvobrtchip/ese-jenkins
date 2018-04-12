@@ -55,7 +55,7 @@ extern const char *g_DlEnumSwizzle[DL_ENUM_SWIZZLE_NB];
 #define DL_ENUM_ANIM_LOOP_NB 3
 extern const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB];
 
-#define DLPARSED_MAX_PARAMETER 12
+#define DLPARSED_MAX_PARAMETER 127
 #define DLPARSED_MAX_SYMBOL 18
 #define DLPARSED_MAX_VARARG 8
 struct DlParsed
