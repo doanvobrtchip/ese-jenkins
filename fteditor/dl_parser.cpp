@@ -174,6 +174,13 @@ static int countArgs(const char* str)
 		}
 	}
 
+    tmp = str;
+    while (tmp = strstr(tmp, "*"))
+    {
+        ++count;
+        ++tmp;
+    }
+
 	return count;
 }
 
