@@ -202,7 +202,7 @@ void EmulatorViewport::stop()
 		s_EmulatorThread = NULL;
 		printf("Emulator threads finished\n");
 
-		BT8XXEMU_destroy(g_Emulator);
+        delete g_Emulator;
 		g_Emulator = NULL;
 
 		if (g_Flash)
