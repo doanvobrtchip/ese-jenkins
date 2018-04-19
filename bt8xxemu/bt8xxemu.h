@@ -77,6 +77,7 @@ typedef enum
 	BT8XXEMU_EmulatorFT812 = 0x0812,
 	BT8XXEMU_EmulatorFT813 = 0x0813,
 	BT8XXEMU_EmulatorBT815 = 0x0815,
+	BT8XXEMU_EmulatorBT816 = 0x0816,
 } BT8XXEMU_EmulatorMode;
 
 typedef enum
