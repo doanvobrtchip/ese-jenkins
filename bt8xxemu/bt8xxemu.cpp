@@ -119,6 +119,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 #endif
 #ifdef FTEMU_HAVE_BT815EMU
 	case BT8XXEMU_EmulatorBT815:
+	case BT8XXEMU_EmulatorBT816:
 	{
 		BT815EMU::Emulator *bt815emu = new BT815EMU::Emulator();
 		*emulator = bt815emu;
