@@ -434,10 +434,11 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	// Image Preview
 	m_PropertiesImagePreview = new QGroupBox(this);
-	QVBoxLayout *imagePreviewLayout = new QVBoxLayout();
+	QGridLayout *imagePreviewLayout = new QGridLayout();
 	m_PropertiesImagePreview->setHidden(true);
 	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
 	m_PropertiesImageLabel = new QLabel(this);
+    m_PropertiesImageLabel->setMaximumSize(250, 250);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 
@@ -1534,11 +1535,17 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
 				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
-					pixmap.load(contentInfo->DestName + "_converted.png");
-				m_PropertiesImagePreview->setHidden(!loadSuccess);
-				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
-				if (loadSuccess) m_PropertiesImageLabel->repaint();
-				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
+					               pixmap.load(contentInfo->DestName + "_converted.png");
+				m_PropertiesImagePreview->setHidden(!loadSuccess);				
+                if (loadSuccess)
+                {
+                    m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
+                    m_PropertiesImageLabel->repaint();
+                }
+				else 
+                {
+                    if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview.");
+                }
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
@@ -1866,6 +1873,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					out.writeRawData(data, data.size());
 					contentInfo->UploadMemoryDirty = true;
 					contentInfo->UploadFlashDirty = true;
+                    file.close();
 				}
 			}
 		}
