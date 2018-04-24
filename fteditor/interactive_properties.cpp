@@ -134,7 +134,7 @@ void InteractiveProperties::addLabeledWidget(const QString &label, QWidget *widg
 	((QVBoxLayout *)layout())->addLayout(hbox);
 }
 
-void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
+void InteractiveProperties::addXY(int x, int y, int minim, int maxim, QString label)
 {
 	PropertiesSpinBox *propX = new PropertiesSpinBox(this, "Set x position", x);
 	propX->setMinimum(minim);
@@ -142,7 +142,7 @@ void InteractiveProperties::addXY(int x, int y, int minim, int maxim)
 	PropertiesSpinBox *propY = new PropertiesSpinBox(this, "Set y position", y);
 	propY->setMinimum(minim);
 	propY->setMaximum(maxim);
-	addLabeledWidget("XY: ", propX, propY);
+	addLabeledWidget(label, propX, propY);
 	m_CurrentProperties.push_back(propX);
 	m_CurrentProperties.push_back(propY);
 	propX->done();
@@ -1631,6 +1631,19 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+        case CMD_INFLATE:
+        {
+            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE."));
+            if (editor)
+            {
+                setTitle("CMD_INFLATE");
+                addAddress(0, false);
+                addStream(1);
+                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+            }
+            ok = true;
+            break;
+        }
 		case CMD_INFLATE2:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE2."));
@@ -1664,8 +1677,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_RESETFONTS."));
 			if (editor)
 			{
-				setTitle("CMD_RESETFONTS");
-				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			ok = true;
 			break;
@@ -1786,12 +1798,28 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOSTARTF."));
 			if (editor)
 			{
-				setTitle("CMD_VIDEOSTARTF");
-				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			ok = true;
 			break;
 		}
+        case CMD_BITMAP_TRANSFORM:
+        {
+            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BITMAP_TRANSFORM."));
+            if (editor)
+            {
+                setTitle("CMD_BITMAP_TRANSFORM");
+                addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X0 Y0: ");
+                addXY(2, 3, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X1 Y1: ");
+                addXY(4, 5, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X2 Y2: ");
+                addXY(6, 7, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX0 TY0: ");
+                addXY(8, 9, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX1 TY1: ");
+                addXY(10, 11, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX2 TY2: ");
+                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+            }
+            ok = true;
+            break;
+        }
 	}
 	else switch (idRight)
 	{

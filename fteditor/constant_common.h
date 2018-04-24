@@ -239,6 +239,7 @@ namespace FTEDITOR {
 #define CMD_HMAC             4294967133UL
 #define CMD_LAST_            4294967134UL
 #define CMD_VIDEOSTARTF      4294967135UL
+#define CMD_BITMAP_TRANSFORM 4294967073UL
 
 #define DISPLAY() ((0UL<<24))
 #define JUMP(dest) ((30UL<<24)|(((dest)&65535UL)<<0))

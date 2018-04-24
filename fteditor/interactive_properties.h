@@ -61,7 +61,7 @@ private:
 	void addLabeledWidget(const QString &label, QWidget *widget);
 	void addLabeledWidget(const QString &label, QWidget *widget0, QWidget *widget1);
 
-	void addXY(int x, int y, int minim, int maxim);
+	void addXY(int x, int y, int minim, int maxim, QString label = QString("XY: "));
 	void addWH(int w, int h, int minim, int maxim);
 	void addXY16(int x, int y, int minim, int maxim);
 	void addXYVertexFormat(int x, int y, int minim, int maxim);
