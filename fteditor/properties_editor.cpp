@@ -33,6 +33,7 @@ PropertiesEditor::PropertiesEditor(QWidget *parent) : QWidget(parent), m_OwnCurr
 	m_InfoGroupBox = new QGroupBox(this);
 	m_InfoGroupBox->setLayout(infoLayout);
 	m_InfoLabel = new QLabel(this);
+    m_InfoLabel->setMinimumWidth(150);
 	m_InfoLabel->setTextFormat(Qt::RichText);
 	m_InfoLabel->setWordWrap(true);
 	infoLayout->addWidget(m_InfoLabel);

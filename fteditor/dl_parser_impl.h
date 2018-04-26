@@ -2324,6 +2324,9 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
             case CMD_INFLATE2:
                 if (p == 1) paramType = 1;
                 break;
+            case CMD_ANIMSTART:
+                if (p == 2) paramType = 1;
+                break;
 #endif
 			}
 			switch (paramType)

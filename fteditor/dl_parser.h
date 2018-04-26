@@ -87,6 +87,12 @@ struct DlParsed
 
 	// int VarArgCount;
 	// char VarArgFormat[DLPARSED_MAX_VARARG];
+
+    DlParsed::DlParsed()
+    {
+        ExpectedParameterCount = 0;
+        VarArgCount = 0;
+    }
 };
 
 struct ParameterOptions

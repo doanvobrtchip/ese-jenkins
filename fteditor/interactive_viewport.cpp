@@ -2625,7 +2625,47 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         }
                         pa.ExpectedParameterCount = 13;
                         break;
-                    }
+                    case CMD_INFLATE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_INFLATE2:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_FLASHSOURCE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMSTART:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMSTOP:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMXY:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMDRAW:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.Parameter[3].I = 0;
+                        pa.ExpectedParameterCount = 4;
+                        break;
+                    }                    
 				}
 				else
 				{
