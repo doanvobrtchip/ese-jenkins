@@ -2053,8 +2053,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_ProjectFolderAct);
 	m_FileMenu->addSeparator();
-	m_FileMenu->addAction(m_ImportAct);
-	m_FileMenu->addAction(m_ExportAct);
+	//m_FileMenu->addAction(m_ImportAct);
+	//m_FileMenu->addAction(m_ExportAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
 	m_FileMenu->addSeparator();
