@@ -12,7 +12,7 @@
 <context>
     <name>FTEDITOR</name>
     <message>
-        <location filename="main_window.cpp" line="3109"/>
+        <location filename="main_window.cpp" line="3112"/>
         <source>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</source>
         <translation>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</translation>
     </message>
@@ -724,13 +724,13 @@
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1197"/>
-        <location filename="interactive_properties.cpp" line="1668"/>
+        <location filename="interactive_properties.cpp" line="1666"/>
         <source>Angle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1197"/>
-        <location filename="interactive_properties.cpp" line="1668"/>
+        <location filename="interactive_properties.cpp" line="1666"/>
         <source>Set angle</source>
         <translation type="unfinished"></translation>
     </message>
@@ -821,457 +821,467 @@
         <translation>Set handle</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1514"/>
+        <location filename="interactive_properties.cpp" line="1475"/>
+        <source>DESCRIPTION_CMD_VIDEOSTART.</source>
+        <translation>&lt;b&gt;CMD_VIDEOSTART&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Initializes the AVI video decoder. The video data should be supplied using the media fifo. This command processes the video header information from the media fifo, and completes when it has consumed it.</translation>
+    </message>
+    <message>
+        <location filename="interactive_properties.cpp" line="1512"/>
         <source>DESCRIPTION_CMD_FLASHERASE.</source>
         <translation>&lt;b&gt;CMD_FLASHERASE&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command erases the attached flash storage.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1525"/>
+        <location filename="interactive_properties.cpp" line="1523"/>
         <source>DESCRIPTION_CMD_FLASHWRITE.</source>
         <translation>&lt;b&gt;CMD_FLASHWRITE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: destination address in flash memory, must be 256-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to write, must be multiple of 256&lt;br&gt;&lt;br&gt;This command writes the following inline data to flash storage. The storage should have been previously erased using CMD_FLASHERASE.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1539"/>
+        <location filename="interactive_properties.cpp" line="1537"/>
         <source>DESCRIPTION_CMD_FLASHREAD.</source>
         <translation>&lt;b&gt;CMD_FLASHREAD&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;, &lt;i&gt;src&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: destination address in main memory, must be 4-byte aligned&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: source address in flash memory, must be 64-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to read, must be multiple of 4&lt;br&gt;&lt;br&gt;This command reads data from flash into main memory.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1553"/>
+        <location filename="interactive_properties.cpp" line="1551"/>
         <source>DESCRIPTION_CMD_FLASHUPDATE.</source>
         <translation>&lt;b&gt;CMD_FLASHUPDATE&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;, &lt;i&gt;src&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: destination address in flash memory, must be 4096-byte aligned&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: source data in main memory, must be 4-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to write, must be multiple of 4096&lt;br&gt;&lt;br&gt;This command writes the given data to flash. If the data matches the existing contents of flash, nothing is done. Otherwise the flash is erased in 4K units, and the data is written.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1567"/>
+        <location filename="interactive_properties.cpp" line="1565"/>
         <source>DESCRIPTION_CMD_FLASHDETACH.</source>
         <translation>&lt;b&gt;CMD_FLASHDETACH&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command causes the VC3 to put the SPI device lines into a hi-Z state. The only valid flash operations when detached are the lowlevel SPI access commands: CMD_FLASHSPIDESEL, CMD_FLASHSPITX, CMD_FLASHSPIRX, and CMD_FLASHATTACH.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1578"/>
+        <location filename="interactive_properties.cpp" line="1576"/>
         <source>DESCRIPTION_CMD_FLASHATTACH.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;CMD_FLASHATTACH&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command causes the VC3 to re-connect to the attached SPI flash storage. After the command, register REG_FLASH_STATE should be FLASH_STATUS_BASIC. See Flash interface for details.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1589"/>
+        <location filename="interactive_properties.cpp" line="1587"/>
         <source>DESCRIPTION_CMD_FLASHFAST.</source>
         <translation>&lt;b&gt;CMD_FLASHFAST&lt;/b&gt;(&lt;i&gt;result&lt;/i&gt;)&lt;br&gt;&lt;b&gt;result&lt;/b&gt;: written with the result code. If the command succeeds, zero is written as a result. Otherwise an error code is set as follows:&lt;br&gt;&lt;br&gt;0xe001&amp;emsp;flash is not attached&lt;br&gt;0xe002&amp;emsp;no header detected in sector 0 - is flash blank?&lt;br&gt;0xe003&amp;emsp;sector 0 data failed integrity check&lt;br&gt;0xe004&amp;emsp;device/blob mismatch - was correct blob loaded?&lt;br&gt;0xe005&amp;emsp;failed full-speed test - check board wiring&lt;br&gt;&lt;br&gt;This commands causes the VC3 to drive the attached flash in full speed mode, if possible.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1600"/>
+        <location filename="interactive_properties.cpp" line="1598"/>
         <source>DESCRIPTION_CMD_FLASHSPIDESEL.</source>
         <translation>&lt;b&gt;CMD_FLASHSPIDESEL&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command deasserts the SPI CS signal. It is only valid when&lt;br&gt;the flash has been detached, using CMD_FLASHDETACH.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1613"/>
+        <location filename="interactive_properties.cpp" line="1611"/>
         <source>DESCRIPTION_CMD_FLASHSOURCE.</source>
         <translation>&lt;b&gt;CMD_FLASHSOURCE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: flash address, must be 64-byte aligned&lt;br&gt;&lt;br&gt;This command specifies the source address for flash data loaded by the CMD_LOADIMAGE, CMD_PLAYVIDEO, CMD_VIDEOSTART and CMD_INFLATE2 commands with the OPT_FLASH option.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1625"/>
+        <location filename="interactive_properties.cpp" line="1623"/>
         <source>DESCRIPTION_CMD_CLEARCACHE.</source>
         <translation>&lt;b&gt;CMD_CLEARCACHE&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command clears the graphics system’s flash cache. It should be executed after modifying graphics data in flash, otherwise bitmaps from flash may render &quot;stale&quot; data. This command must be executed when the display list is empty, immediately after a CMD_DLSTART command. Otherwise it generates a coprocessor fault (&quot;display list must be empty&quot;) and sets REG_PCLK to zero.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1636"/>
+        <location filename="interactive_properties.cpp" line="1634"/>
         <source>DESCRIPTION_CMD_INFLATE.</source>
         <translation>&lt;b&gt;CMD_INFLATE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address.&lt;br&gt;&lt;br&gt;The byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command. These padding bytes can have any value.&lt;br&gt;&lt;br&gt;Decompress the following compressed data into VC3 memory. The data should have been compressed with the DEFLATE algorithm, e.g. with the zlib library. This is particularly useful for loading graphics data.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1649"/>
+        <location filename="interactive_properties.cpp" line="1647"/>
         <source>DESCRIPTION_CMD_INFLATE2.</source>
         <translation>&lt;b&gt;CMD_INFLATE2&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the compressed data follows in the command buffer. If option OPT_MEDIAFIFO is given, the compressed data is sourced from the media fifo. If option OPT_FLASH is given, then flash memory is the source.&lt;br&gt;&lt;br&gt;Decompress compressed data into VC3 memory. The data may be supplied in the command buffer, the media fifo, or from etxernal flash. The data should have been compressed with the DEFLATE algorithm, e.g. with the zlib library. This is particularly useful for loading graphics data.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1663"/>
+        <location filename="interactive_properties.cpp" line="1661"/>
         <source>DESCRIPTION_CMD_ROTATEAROUND.</source>
-        <translation>&lt;b&gt;CMD_ROTATEAROUND&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: center of rotation/scaling, x-coordinate&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: center of rotation/scaling, y-coordinate&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: clockwise rotation angle, in units of 1/65536 of a circle&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: scale factor, in signed 16.16 bit fixed-point form</translation>
+        <translation>&lt;b&gt;CMD_ROTATEAROUND&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: center of rotation/scaling, x-coordinate&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: center of rotation/scaling, y-coordinate&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: clockwise rotation angle, in units of 1/65536 of a circle&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: scale factor, in signed 16.16 bit fixed-point form&lt;br&gt;&lt;br&gt;Apply a rotation and scale around (x,y).</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1669"/>
+        <location filename="interactive_properties.cpp" line="1667"/>
         <source>Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1669"/>
+        <location filename="interactive_properties.cpp" line="1667"/>
         <source>Set scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1677"/>
+        <location filename="interactive_properties.cpp" line="1675"/>
         <source>DESCRIPTION_CMD_RESETFONTS.</source>
         <translation>&lt;b&gt;CMD_RESETFONTS&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command loads bitmap handles 16-31 with their reset default fonts.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1687"/>
+        <location filename="interactive_properties.cpp" line="1685"/>
         <source>DESCRIPTION_CMD_ANIMSTART.</source>
         <translation>&lt;b&gt;CMD_ANIMSTART&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;, &lt;i&gt;aoptr&lt;/i&gt;, &lt;i&gt;loop&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then the command selects the lowest unused channel, if one is available. If no channel is available, then an &quot;out of channels&quot; exception is raised.&lt;br&gt;&lt;b&gt;aoptr&lt;/b&gt;: Pointer to the animation object in flash memory&lt;br&gt;&lt;b&gt;loop&lt;/b&gt;: Loop flags. ANIM_ONCE plays the animation once, then cancels it. ANIM_LOOP plays the animation in a loop. ANIM_HOLD plays the animation once, then displays the final frame.&lt;br&gt;&lt;br&gt;Start an animation. If the channel was previously in use, the previous animation is replaced.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1691"/>
-        <location filename="interactive_properties.cpp" line="1705"/>
-        <location filename="interactive_properties.cpp" line="1717"/>
-        <location filename="interactive_properties.cpp" line="1730"/>
+        <location filename="interactive_properties.cpp" line="1689"/>
+        <location filename="interactive_properties.cpp" line="1703"/>
+        <location filename="interactive_properties.cpp" line="1715"/>
+        <location filename="interactive_properties.cpp" line="1728"/>
         <source>Channel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1691"/>
-        <location filename="interactive_properties.cpp" line="1705"/>
-        <location filename="interactive_properties.cpp" line="1717"/>
-        <location filename="interactive_properties.cpp" line="1730"/>
+        <location filename="interactive_properties.cpp" line="1689"/>
+        <location filename="interactive_properties.cpp" line="1703"/>
+        <location filename="interactive_properties.cpp" line="1715"/>
+        <location filename="interactive_properties.cpp" line="1728"/>
         <source>Set channel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1701"/>
+        <location filename="interactive_properties.cpp" line="1699"/>
         <source>DESCRIPTION_CMD_ANIMSTOP.</source>
         <translation>&lt;b&gt;CMD_ANIMSTOP&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then all animations are stopped.&lt;br&gt;&lt;br&gt;This command stops one or more active animations.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1713"/>
+        <location filename="interactive_properties.cpp" line="1711"/>
         <source>DESCRIPTION_CMD_ANIMXY.</source>
         <translation>&lt;b&gt;CMD_ANIMXY&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;, &lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y screen coordinate for the animation center, in pixels&lt;br&gt;&lt;br&gt;This command sets the (x; y) coordinates of an animation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1726"/>
+        <location filename="interactive_properties.cpp" line="1724"/>
         <source>DESCRIPTION_CMD_ANIMDRAW.</source>
         <translation>&lt;b&gt;CMD_ANIMDRAW&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then it draws all undrawn animations in ascending order.&lt;br&gt;&lt;br&gt;This command draws one or more active animations.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1738"/>
+        <location filename="interactive_properties.cpp" line="1736"/>
         <source>DESCRIPTION_CMD_GRADIENTA.</source>
         <translation>&lt;b&gt;CMD_GRADIENTA&lt;/b&gt;(&lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;y0&lt;/i&gt;, &lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;argb0&lt;/i&gt;, &lt;i&gt;x1&lt;/i&gt;, &lt;i&gt;y1&lt;/i&gt;, &lt;i&gt;argb1&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x0&lt;/b&gt;: x-coordinate of point 0, in pixels&lt;br&gt;&lt;b&gt;y0&lt;/b&gt;: y-coordinate of point 0, in pixels&lt;br&gt;&lt;b&gt;argb0&lt;/b&gt;: Color of point 0, as a 32-bit ARGB number. A is the most significant 8 bits, B is the least. So 0x80ff0000 is 50% transparent bright red, and 0xff0000ff is solid blue.&lt;br&gt;&lt;b&gt;x1&lt;/b&gt;: x-coordinate of point 1, in pixels&lt;br&gt;&lt;b&gt;y1&lt;/b&gt;: y-coordinate of point 1, in pixels&lt;br&gt;&lt;b&gt;argb1&lt;/b&gt;: Color of point 1&lt;br&gt;&lt;br&gt;The two points have RGB color values, and alpha values which specify their opacity in the range 0x00 to 0xff.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1755"/>
+        <location filename="interactive_properties.cpp" line="1753"/>
         <source>DESCRIPTION_CMD_FILLWIDTH.</source>
         <translation>&lt;b&gt;CMD_FILLWIDTH&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: line fill width, in pixels&lt;br&gt;&lt;br&gt;This CMD_FILLWIDTH sets the pixel fill width for CMD_TEXT and CMD_BUTTON with the OPT_FILL option.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1767"/>
+        <location filename="interactive_properties.cpp" line="1765"/>
         <source>DESCRIPTION_CMD_APPENDF.</source>
         <translation>&lt;b&gt;CMD_APPENDF&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: start of source commands in flash memory, must be 64-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to copy, must be a multiple of 4&lt;br&gt;&lt;br&gt;This command appends data from flash to the display list.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1780"/>
+        <location filename="interactive_properties.cpp" line="1778"/>
         <source>DESCRIPTION_CMD_ANIMFRAME.</source>
         <translation>&lt;b&gt;CMD_ANIMFRAME&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;aoptr&lt;/i&gt;, &lt;i&gt;frame&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;aoptr&lt;/b&gt;: Pointer to the animation object in flash memory&lt;br&gt;&lt;b&gt;frame&lt;/b&gt;: Frame number to draw, starting at zero&lt;br&gt;&lt;br&gt;This command draws the specified frame of an animation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1786"/>
+        <location filename="interactive_properties.cpp" line="1784"/>
         <source>Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1786"/>
+        <location filename="interactive_properties.cpp" line="1784"/>
         <source>Set frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1798"/>
+        <location filename="interactive_properties.cpp" line="1796"/>
         <source>DESCRIPTION_CMD_VIDEOSTARTF.</source>
         <translation>&lt;b&gt;CMD_VIDEOSTARTF&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Initializes the AVI video decoder. The video data should be present in flash memory, and its address previously set using CMD_FLASHSOURCE. This command processes the video header information, and completes when it has consumed it.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1808"/>
-        <source>DESCRIPTION_CMD_BITMAP_TRANSFORM.</source>
-        <translation type="unfinished">&lt;b&gt;CMD_BITMAP_TRANSFORM&lt;/b&gt;(&lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;y0&lt;/i&gt;, &lt;i&gt;x1&lt;/i&gt;, &lt;i&gt;y1&lt;/i&gt;, &lt;i&gt;x2&lt;/i&gt;, &lt;i&gt;y2&lt;/i&gt;, &lt;i&gt;tx0&lt;/i&gt;, &lt;i&gt;ty0&lt;/i&gt;, &lt;i&gt;tx1&lt;/i&gt;, &lt;i&gt;ty1&lt;/i&gt;, &lt;i&gt;tx2&lt;/i&gt;, &lt;i&gt;ty2&lt;/i&gt;, &lt;i&gt;result&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x0,y0&lt;/b&gt;: Point 0 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x1,y1&lt;/b&gt;: Point 1 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x2,y2&lt;/b&gt;: Point 2 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;tx0,ty0&lt;/b&gt;: Point 0 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx1,ty1&lt;/b&gt;: Point 1 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx2,ty2&lt;/b&gt;: Point 2 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;result&lt;/b&gt;: result return. Set to -1 on success, or 0 if it is not possible to find the solution matrix.&lt;br&gt;&lt;br&gt;This command computes a bitmap transform and appends commands BITMAP TRANSFORM A - BITMAP TRANSFORM F to the display list. It computes the transform given three corresponding points in screen space and bitmap space. Using these three points, the command computes a matrix that transforms the bitmap coordinates into screen space, and appends the display list commands to set the bitmap matrix.</translation>
+        <location filename="interactive_properties.cpp" line="1806"/>
+        <source>DESCRIPTION_CMD_VIDEOFRAME.</source>
+        <translation>&lt;b&gt;CMD_VIDEOFRAME&lt;/b&gt;(&lt;i&gt;dst&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dst&lt;/b&gt;: Main memory location to load the frame data&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Completion pointer. The command writes the 32-bit word at this location. It is set to 1 if there is at least one more frame available in the video. 0 indicates that this is the last frame.&lt;br&gt;&lt;br&gt;Loads the next frame of video. The video data should be supplied using the media fifo. This command extracts the next frame of video from the media fifo, and completes when it has consumed it.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1829"/>
+        <location filename="interactive_properties.cpp" line="1819"/>
+        <source>DESCRIPTION_CMD_BITMAP_TRANSFORM.</source>
+        <translation>&lt;b&gt;CMD_BITMAP_TRANSFORM&lt;/b&gt;(&lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;y0&lt;/i&gt;, &lt;i&gt;x1&lt;/i&gt;, &lt;i&gt;y1&lt;/i&gt;, &lt;i&gt;x2&lt;/i&gt;, &lt;i&gt;y2&lt;/i&gt;, &lt;i&gt;tx0&lt;/i&gt;, &lt;i&gt;ty0&lt;/i&gt;, &lt;i&gt;tx1&lt;/i&gt;, &lt;i&gt;ty1&lt;/i&gt;, &lt;i&gt;tx2&lt;/i&gt;, &lt;i&gt;ty2&lt;/i&gt;, &lt;i&gt;result&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x0,y0&lt;/b&gt;: Point 0 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x1,y1&lt;/b&gt;: Point 1 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x2,y2&lt;/b&gt;: Point 2 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;tx0,ty0&lt;/b&gt;: Point 0 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx1,ty1&lt;/b&gt;: Point 1 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx2,ty2&lt;/b&gt;: Point 2 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;result&lt;/b&gt;: result return. Set to -1 on success, or 0 if it is not possible to find the solution matrix.&lt;br&gt;&lt;br&gt;This command computes a bitmap transform and appends commands BITMAP TRANSFORM A - BITMAP TRANSFORM F to the display list. It computes the transform given three corresponding points in screen space and bitmap space. Using these three points, the command computes a matrix that transforms the bitmap coordinates into screen space, and appends the display list commands to set the bitmap matrix.</translation>
+    </message>
+    <message>
+        <location filename="interactive_properties.cpp" line="1840"/>
         <source>DESCRIPTION_DISPLAY.</source>
         <oldsource>DESCRIPTION_DISPLAY</oldsource>
         <translation>&lt;b&gt;DISPLAY&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End the display list. FT8XX will ignore all the commands following this command.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1839"/>
+        <location filename="interactive_properties.cpp" line="1850"/>
         <source>DESCRIPTION_BITMAP_SOURCE.</source>
         <oldsource>DESCRIPTION_BITMAP_SOURCE</oldsource>
         <translation>&lt;b&gt;BITMAP_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in graphics SRAM FT8XX, aligned with respect to the bitmap format.&lt;br&gt;For example, if the bitmap format is RGB565/ARGB4/ARGB1555, the bitmap source shall be aligned to 2 bytes.&lt;br&gt;&lt;br&gt;Specify the source address of bitmap data in FT8XX graphics memory RAM_G.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1854"/>
+        <location filename="interactive_properties.cpp" line="1865"/>
         <source>DESCRIPTION_CLEAR_COLOR_RGB.</source>
         <oldsource>DESCRIPTION_CLEAR_COLOR_RGB</oldsource>
         <translation>&lt;b&gt;CLEAR_COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Sets the color values used by a following CLEAR.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1866"/>
+        <location filename="interactive_properties.cpp" line="1877"/>
         <source>DESCRIPTION_TAG.</source>
         <oldsource>DESCRIPTION_TAG</oldsource>
         <translation>&lt;b&gt;TAG&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Tag value. Valid value range is from 1 to 255.&lt;br&gt;&lt;br&gt;Attach the tag value for the following graphics objects drawn on the screen. The initial tag buffer value is 255.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1878"/>
+        <location filename="interactive_properties.cpp" line="1889"/>
         <source>DESCRIPTION_COLOR_RGB.</source>
         <oldsource>DESCRIPTION_COLOR_RGB</oldsource>
         <translation>&lt;b&gt;COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Sets red, green and blue values of the FT8XX color buffer which will be applied to the following draw operation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1890"/>
+        <location filename="interactive_properties.cpp" line="1901"/>
         <source>DESCRIPTION_BITMAP_HANDLE.</source>
         <oldsource>DESCRIPTION_BITMAP_HANDLE</oldsource>
         <translation>&lt;b&gt;BITMAP_HANDLE&lt;/b&gt;(&lt;i&gt;handle&lt;/i&gt;)&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The initial value is 0. The valid value range is from 0 to 31.&lt;br&gt;&lt;br&gt;Specify the bitmap handle.&lt;br&gt;&lt;br&gt;Handles 16 to 31 are defined by the FT8XX for built-in font and handle 15 is defined in the co-processor engine commands CMD_GRADIENT, CMD_BUTTON and CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in the current display list, users can even define a bitmap using handle 15.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1902"/>
+        <location filename="interactive_properties.cpp" line="1913"/>
         <source>DESCRIPTION_CELL.</source>
         <oldsource>DESCRIPTION_CELL</oldsource>
         <translation>&lt;b&gt;CELL&lt;/b&gt;(&lt;i&gt;cell&lt;/i&gt;)&lt;br&gt;&lt;b&gt;cell&lt;/b&gt;: Bitmap cell number. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the bitmap cell number for the VERTEX2F command.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1915"/>
+        <location filename="interactive_properties.cpp" line="1926"/>
         <source>DESCRIPTION_BITMAP_LAYOUT_FT810.</source>
         <translation>&lt;b&gt;BITMAP_LAYOUT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;, &lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Bitmap pixel format. The bitmap formats supported are L1, L4, L8, RGB332, ARGB2, ARGB4, ARGB1555, RGB565, PALETTED565, PALETTED4444 and PALETTED8.&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: Bitmap linestride, in bytes. For L1 format, the line stride must be a multiple of 8 bits; For L4 format the line stride must be multiple of 2 nibbles. (Aligned to byte).&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Bitmap height, in lines&lt;br&gt;&lt;br&gt;Specify the source bitmap memory format and layout for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1917"/>
+        <location filename="interactive_properties.cpp" line="1928"/>
         <source>DESCRIPTION_BITMAP_LAYOUT.</source>
         <oldsource>DESCRIPTION_BITMAP_LAYOUT</oldsource>
         <translation>&lt;b&gt;BITMAP_LAYOUT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;, &lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Bitmap pixel format. The bitmap formats supported are L1, L4, L8, RGB332, ARGB2, ARGB4, ARGB1555, RGB565 and PALETTED.&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: Bitmap linestride, in bytes. For L1 format, the line stride must be a multiple of 8 bits; For L4 format the line stride must be multiple of 2 nibbles. (Aligned to byte).&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Bitmap height, in lines&lt;br&gt;&lt;br&gt;Specify the source bitmap memory format and layout for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1931"/>
+        <location filename="interactive_properties.cpp" line="1942"/>
         <source>DESCRIPTION_BITMAP_SIZE.</source>
         <oldsource>DESCRIPTION_BITMAP_SIZE</oldsource>
         <translation>&lt;b&gt;BITMAP_SIZE&lt;/b&gt;(&lt;i&gt;filter&lt;/i&gt;, &lt;i&gt;wrapx&lt;/i&gt;, &lt;i&gt;wrapy&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;filter&lt;/b&gt;: Bitmap filtering mode, one of NEAREST or BILINEAR&lt;br&gt;&lt;b&gt;wrapx&lt;/b&gt;: Bitmap x wrap mode, one of REPEAT or BORDER&lt;br&gt;&lt;b&gt;wrapy&lt;/b&gt;: Bitmap y wrap mode, one of REPEAT or BORDER&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: Drawn bitmap width, in pixels&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Drawn bitmap height, in pixels&lt;br&gt;&lt;br&gt;Specify the screen drawing of bitmaps for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1947"/>
+        <location filename="interactive_properties.cpp" line="1958"/>
         <source>DESCRIPTION_ALPHA_FUNC.</source>
         <oldsource>DESCRIPTION_ALPHA_FUNC</oldsource>
         <translation>&lt;b&gt;ALPHA_FUNC&lt;/b&gt;(&lt;i&gt;func&lt;/i&gt;, &lt;i&gt;ref&lt;/i&gt;)&lt;br&gt;&lt;b&gt;func&lt;/b&gt;: Specifies the test function, one of NEVER, LESS, LEQUAL, GREATER, GEQUAL, EQUAL, NOTEQUAL, or ALWAYS. The initial value is ALWAYS (7)&lt;br&gt;&lt;b&gt;ref&lt;/b&gt;: Specifies the reference value for the alpha test. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the alpha test function.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1960"/>
+        <location filename="interactive_properties.cpp" line="1971"/>
         <source>DESCRIPTION_STENCIL_FUNC.</source>
         <oldsource>DESCRIPTION_STENCIL_FUNC</oldsource>
         <translation>&lt;b&gt;STENCIL_FUNC&lt;/b&gt;(&lt;i&gt;func&lt;/i&gt;, &lt;i&gt;ref&lt;/i&gt;, &lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;func&lt;/b&gt;: Specifies the test function, one of NEVER, LESS, LEQUAL, GREATER, GEQUAL, EQUAL, NOTEQUAL, or ALWAYS. The initial value is ALWAYS. &lt;br&gt;&lt;b&gt;ref&lt;/b&gt;: Specifies the reference value for the stencil test. The initial value is 0&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Specifies a mask that is ANDed with the reference value and the stored stencil value. The initial value is 255&lt;br&gt;&lt;br&gt;Set function and reference value for stencil testing.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1975"/>
+        <location filename="interactive_properties.cpp" line="1986"/>
         <source>DESCRIPTION_BLEND_FUNC.</source>
         <oldsource>DESCRIPTION_BLEND_FUNC</oldsource>
         <translation>&lt;b&gt;BLEND_FUNC&lt;/b&gt;(&lt;i&gt;src&lt;/i&gt;, &lt;i&gt;dst&lt;/i&gt;)&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: Specifies how the source blending factor is computed. One of ZERO, ONE, SRC_ALPHA, DST_ALPHA, ONE_MINUS_SRC_ALPHA or ONE_MINUS_DST_ALPHA. The initial value is SRC_ALPHA (2).&lt;br&gt;&lt;b&gt;dst&lt;/b&gt;: Specifies how the destination blending factor is computed, one of the same constants as src. The initial value is ONE_MINUS_SRC_ALPHA(4)&lt;br&gt;&lt;br&gt;Specify pixel arithmetic.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1988"/>
+        <location filename="interactive_properties.cpp" line="1999"/>
         <source>DESCRIPTION_STENCIL_OP.</source>
         <oldsource>DESCRIPTION_STENCIL_OP</oldsource>
         <translation>&lt;b&gt;STENCIL_OP&lt;/b&gt;(&lt;i&gt;sfail&lt;/i&gt;, &lt;i&gt;spass&lt;/i&gt;)&lt;br&gt;&lt;b&gt;sfail&lt;/b&gt;: Specifies the action to take when the stencil test fails, one of KEEP, ZERO, REPLACE, INCR, DECR, and INVERT. The initial value is KEEP (1)&lt;br&gt;&lt;b&gt;spass&lt;/b&gt;: Specifies the action to take when the stencil test passes, one of the same constants as sfail. The initial value is KEEP (1)&lt;br&gt;&lt;br&gt;Set stencil test actions.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2001"/>
+        <location filename="interactive_properties.cpp" line="2012"/>
         <source>DESCRIPTION_POINT_SIZE.</source>
         <oldsource>DESCRIPTION_POINT_SIZE</oldsource>
         <translation>&lt;b&gt;POINT_SIZE&lt;/b&gt;(&lt;i&gt;size&lt;/i&gt;)&lt;br&gt;&lt;b&gt;size&lt;/b&gt;: Point radius in 1/16 pixel. The initial value is 16.&lt;br&gt;&lt;br&gt;Sets the size of drawn points. The width is the distance from the center of the point to the outermost drawn pixel, in units of 1/16 pixels. The valid range is from 16 to 8191 with respect to 1/16th pixel unit.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2013"/>
+        <location filename="interactive_properties.cpp" line="2024"/>
         <source>DESCRIPTION_LINE_WIDTH.</source>
         <oldsource>DESCRIPTION_LINE_WIDTH</oldsource>
         <translation>&lt;b&gt;LINE_WIDTH&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: Line width in 1/16 pixel. The initial value is 16.&lt;br&gt;&lt;br&gt;Sets the width of drawn lines. The width is the distance from the center of the line to the outermost drawn pixel, in units of 1/16 pixel. The valid range is from 16 to 4095 in terms of 1/16th pixel units.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2025"/>
+        <location filename="interactive_properties.cpp" line="2036"/>
         <source>DESCRIPTION_CLEAR_COLOR_A.</source>
         <oldsource>DESCRIPTION_CLEAR_COLOR_A</oldsource>
         <translation>&lt;b&gt;CLEAR_COLOR_A&lt;/b&gt;(&lt;i&gt;alpha&lt;/i&gt;)&lt;br&gt;&lt;b&gt;alpha&lt;/b&gt;: Alpha value used when the color buffer is cleared. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify clear value for the alpha channel.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2037"/>
+        <location filename="interactive_properties.cpp" line="2048"/>
         <source>DESCRIPTION_COLOR_A.</source>
         <oldsource>DESCRIPTION_COLOR_A</oldsource>
         <translation>&lt;b&gt;COLOR_A&lt;/b&gt;(&lt;i&gt;alpha&lt;/i&gt;)&lt;br&gt;&lt;b&gt;alpha&lt;/b&gt;: Alpha for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Set the current color alpha.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2049"/>
+        <location filename="interactive_properties.cpp" line="2060"/>
         <source>DESCRIPTION_CLEAR_STENCIL.</source>
         <oldsource>DESCRIPTION_CLEAR_STENCIL</oldsource>
         <translation>&lt;b&gt;CLEAR_STENCIL&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Value used when the stencil buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Specify clear value for the stencil buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2062"/>
+        <location filename="interactive_properties.cpp" line="2073"/>
         <source>DESCRIPTION_CLEAR_TAG.</source>
         <oldsource>DESCRIPTION_CLEAR_TAG</oldsource>
         <translation>&lt;b&gt;CLEAR_TAG&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Value used when the tag buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Specify clear value for the tag buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2074"/>
+        <location filename="interactive_properties.cpp" line="2085"/>
         <source>DESCRIPTION_STENCIL_MASK.</source>
         <oldsource>DESCRIPTION_STENCIL_MASK</oldsource>
         <translation>&lt;b&gt;STENCIL_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: The mask used to enable writing stencil bits. The initial value is 255&lt;br&gt;&lt;br&gt;Control the writing of individual bits in the stencil planes.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2087"/>
+        <location filename="interactive_properties.cpp" line="2098"/>
         <source>DESCRIPTION_TAG_MASK.</source>
         <oldsource>DESCRIPTION_TAG_MASK</oldsource>
         <translation>&lt;b&gt;TAG_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Allow updates to the tag buffer. The initial value is one and it means the tag buffer of the FT8XX is updated with the value given by the TAG command. Therefore, the following graphics objects will be attached to the tag value given by the TAG command.&lt;br&gt;The value zero means the tag buffer of the FT8XX is set as the default value,rather than the value given by TAG command in the display list.&lt;br&gt;&lt;br&gt;Control the writing of the tag buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2100"/>
+        <location filename="interactive_properties.cpp" line="2111"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_A_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2102"/>
+        <location filename="interactive_properties.cpp" line="2113"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_A.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_A</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Coefficient A of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the A coefficient of the bitmap transform </translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2123"/>
+        <location filename="interactive_properties.cpp" line="2134"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_B_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2125"/>
+        <location filename="interactive_properties.cpp" line="2136"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_B.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_B</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;b&lt;/i&gt;)&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Coefficient B of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the B coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2145"/>
+        <location filename="interactive_properties.cpp" line="2156"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_C.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_C</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_C&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Coefficient C of the bitmap transform matrix, in signed 15.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the C coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2158"/>
+        <location filename="interactive_properties.cpp" line="2169"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_D_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2160"/>
+        <location filename="interactive_properties.cpp" line="2171"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_D.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_D</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;d&lt;/i&gt;)&lt;br&gt;&lt;b&gt;d&lt;/b&gt;: Coefficient D of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the D coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2181"/>
+        <location filename="interactive_properties.cpp" line="2192"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_E_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2183"/>
+        <location filename="interactive_properties.cpp" line="2194"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_E.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_E</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;e&lt;/i&gt;)&lt;br&gt;&lt;b&gt;e&lt;/b&gt;: Coefficient E of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the E coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2203"/>
+        <location filename="interactive_properties.cpp" line="2214"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_F.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_F</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_F&lt;/b&gt;(&lt;i&gt;f&lt;/i&gt;)&lt;br&gt;&lt;b&gt;f&lt;/b&gt;: Coefficient F of the bitmap transform matrix, in signed 15.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the F coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2215"/>
+        <location filename="interactive_properties.cpp" line="2226"/>
         <source>DESCRIPTION_SCISSOR_XY.</source>
         <oldsource>DESCRIPTION_SCISSOR_XY</oldsource>
         <translation>&lt;b&gt;SCISSOR_XY&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: The x coordinate of the scissor clip rectangle, in pixels. The initial value is 0&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: The y coordinate of the scissor clip rectangle, in pixels. The initial value is 0&lt;br&gt;&lt;br&gt;Sets the top-left position of the scissor clip rectangle, which limits the drawing area.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2227"/>
+        <location filename="interactive_properties.cpp" line="2238"/>
         <source>DESCRIPTION_SCISSOR_SIZE.</source>
         <oldsource>DESCRIPTION_SCISSOR_SIZE</oldsource>
         <translation>&lt;b&gt;SCISSOR_SIZE&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: The width of the scissor clip rectangle, in pixels. The initial value is 512. The valid value range is from 0 to 512.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: The height of the scissor clip rectangle, in pixels. The initial value is 512. The valid value range is from 0 to 512.&lt;br&gt;&lt;br&gt;Sets the width and height of the scissor clip rectangle, which limits the drawing area.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2239"/>
+        <location filename="interactive_properties.cpp" line="2250"/>
         <source>DESCRIPTION_CALL.</source>
         <oldsource>DESCRIPTION_CALL</oldsource>
         <translation>&lt;b&gt;CALL&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: The destination address in RAM_DL which the display command is to be switched. FT8XX has the stack to store the return address. To come back to the next command of source address, the RETURN command can help.&lt;br&gt;&lt;br&gt;Execute a sequence of commands at another location in the display list&lt;br&gt;&lt;br&gt;CALL and RETURN have a 4 level stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2251"/>
+        <location filename="interactive_properties.cpp" line="2262"/>
         <source>DESCRIPTION_JUMP.</source>
         <oldsource>DESCRIPTION_JUMP</oldsource>
         <translation>&lt;b&gt;JUMP&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: Display list address to be jumped.&lt;br&gt;&lt;br&gt;Execute commands at another location in the display list.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2263"/>
+        <location filename="interactive_properties.cpp" line="2274"/>
         <source>DESCRIPTION_BEGIN.</source>
         <oldsource>DESCRIPTION_BEGIN</oldsource>
         <translation>&lt;b&gt;BEGIN&lt;/b&gt;(&lt;i&gt;prim&lt;/i&gt;)&lt;br&gt;&lt;b&gt;prim&lt;/b&gt;: Graphics primitive. The valid value is defined as: BITMAPS, POINTS, LINES, LINE_STRIP, EDGE_STRIP_R, EDGE_STRIP_L, EDGE_STRIP_A, EDGE_STRIP_B, RECTS&lt;br&gt;&lt;br&gt;Begin drawing a graphics primitive.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2275"/>
+        <location filename="interactive_properties.cpp" line="2286"/>
         <source>DESCRIPTION_COLOR_MASK.</source>
         <oldsource>DESCRIPTION_COLOR_MASK</oldsource>
         <translation>&lt;b&gt;COLOR_MASK&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: Enable or disable the red channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: Enable or disable the green channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Enable or disable the blue channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Enable or disable the alpha channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;br&gt;The color mask controls whether the color values of a pixel are updated. Sometimes it is used to selectively update only the red, green, blue or alpha channels of the image. More often, it is used to completely disable color updates while updating the tag and stencil buffers.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2290"/>
+        <location filename="interactive_properties.cpp" line="2301"/>
         <source>DESCRIPTION_END.</source>
         <oldsource>DESCRIPTION_END</oldsource>
         <translation>&lt;b&gt;END&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End drawing a graphics primitive.&lt;br&gt;&lt;br&gt;It is recommended to have an END for each BEGIN. Whereas advanced users can avoid the usage of END in order to save extra graphics instructions in the display list RAM.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2300"/>
+        <location filename="interactive_properties.cpp" line="2311"/>
         <source>DESCRIPTION_SAVE_CONTEXT.</source>
         <oldsource>DESCRIPTION_SAVE_CONTEXT</oldsource>
         <translation>&lt;b&gt;SAVE_CONTEXT&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Push the current graphics context on the context stack.&lt;br&gt;&lt;br&gt;Any extra SAVE_CONTEXT will throw away the earliest saved context.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2310"/>
+        <location filename="interactive_properties.cpp" line="2321"/>
         <source>DESCRIPTION_RESTORE_CONTEXT.</source>
         <oldsource>DESCRIPTION_RESTORE_CONTEXT</oldsource>
         <translation>&lt;b&gt;RESTORE_CONTEXT&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Restore the current graphics context from the context stack.&lt;br&gt;&lt;br&gt;Any extra RESTORE_CONTEXT will load the default values into the present context.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2320"/>
+        <location filename="interactive_properties.cpp" line="2331"/>
         <source>DESCRIPTION_RETURN.</source>
         <oldsource>DESCRIPTION_RETURN</oldsource>
         <translation>&lt;b&gt;RETURN&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Return from a previous CALL command.&lt;br&gt;&lt;br&gt;CALL and RETURN have 4 levels of stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2330"/>
+        <location filename="interactive_properties.cpp" line="2341"/>
         <source>DESCRIPTION_MACRO.</source>
         <oldsource>DESCRIPTION_MACRO</oldsource>
         <translation>&lt;b&gt;MACRO&lt;/b&gt;(&lt;i&gt;m&lt;/i&gt;)&lt;br&gt;&lt;b&gt;m&lt;/b&gt;: Macro register to read. Value 0 means the FT8XX will fetch the command from REG_MACRO_0 to execute. Value 1 means the FT8XX will fetch the command from REG_MACRO_1 to execute. The content of REG_MACRO_0 or REG_MACRO_1 shall be a valid display list command, otherwise the behavior is undefined.&lt;br&gt;&lt;br&gt;Execute a single command from a macro register.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2342"/>
+        <location filename="interactive_properties.cpp" line="2353"/>
         <source>DESCRIPTION_CLEAR.</source>
         <oldsource>DESCRIPTION_CLEAR</oldsource>
         <translation>&lt;b&gt;CLEAR&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;, &lt;i&gt;t&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Clear color buffer. Setting this bit to 1 will clear the color buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the color buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_COLOR_RGB for RGB channel and CLEAR_COLOR_A for alpha channel.&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Clear stencil buffer. Setting this bit to 1 will clear the stencil buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the stencil buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_STENCIL.&lt;br&gt;&lt;b&gt;t&lt;/b&gt;: Clear tag buffer. Setting this bit to 1 will clear the tag buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the tag buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_TAG.&lt;br&gt;&lt;br&gt;Clear buffers to preset values.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2440"/>
+        <location filename="interactive_properties.cpp" line="2451"/>
         <source>DESCRIPTION_BITMAP_EXT_FORMAT.</source>
         <translation>&lt;b&gt;BITMAP_EXT_FORMAT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: bitmap pixel format&lt;br&gt;&lt;br&gt;Specify the extended format of the bitmap.&lt;br&gt;&lt;br&gt;If BITMAP_LAYOUT specifes a format for GLFORMAT, then the format&lt;br&gt;is taken from BITMAP_EXT_FORMAT instead.&lt;br&gt;Valid values for this field are:&lt;br&gt;• L1&lt;br&gt;• L2&lt;br&gt;• L4&lt;br&gt;• L8&lt;br&gt;• RGB332&lt;br&gt;• ARGB2&lt;br&gt;• ARGB4&lt;br&gt;• ARGB1555&lt;br&gt;• RGB565&lt;br&gt;• PALETTED565&lt;br&gt;• PALETTED4444&lt;br&gt;• PALETTED8&lt;br&gt;• TEXT8X8&lt;br&gt;• TEXTVGA&lt;br&gt;• BARGRAPH&lt;br&gt;• COMPRESSED RGBA ASTC 4x4 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 5x4 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 5x5 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 6x5 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 6x6 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 8x5 KHR</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2452"/>
+        <location filename="interactive_properties.cpp" line="2463"/>
         <source>DESCRIPTION_BITMAP_SWIZZLE_FORMAT.</source>
         <translation>&lt;b&gt;BITMAP_SWIZZLE&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: red component swizzle source&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: green component swizzle source&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: blue component swizzle source&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: alpha component swizzle source&lt;br&gt;&lt;br&gt;Specify the color channel swizzle for a bitmap.&lt;br&gt;&lt;br&gt;Each color component can be sourced from any of the bitmap color&lt;br&gt;components, or can be set to zero or one. Valid values for each&lt;br&gt;source are:&lt;br&gt;• ZERO&lt;br&gt;• ONE&lt;br&gt;• RED&lt;br&gt;• GREEN&lt;br&gt;• BLUE&lt;br&gt;• ALPHA&lt;br&gt;Bitmap swizzle is only applied when BITMAP_LAYOUT format is GLFORMAT.&lt;br&gt;Otherwise the four components are in their default order.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2456"/>
+        <location filename="interactive_properties.cpp" line="2467"/>
         <source>Set swizzle R</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2457"/>
+        <location filename="interactive_properties.cpp" line="2468"/>
         <source>Set swizzle G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2458"/>
+        <location filename="interactive_properties.cpp" line="2469"/>
         <source>Set swizzle B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2459"/>
+        <location filename="interactive_properties.cpp" line="2470"/>
         <source>Set swizzle A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2467"/>
+        <location filename="interactive_properties.cpp" line="2478"/>
         <source>DESCRIPTION_INT_FRR.</source>
         <translation>&lt;b&gt;INT_FRR&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Interal: flash read result</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2479"/>
+        <location filename="interactive_properties.cpp" line="2490"/>
         <source>&lt;/i&gt;Not yet implemented.&lt;/i&gt;</source>
         <translation>&lt;/i&gt;Not yet implemented.&lt;/i&gt;</translation>
     </message>
@@ -1426,42 +1436,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1497"/>
+        <location filename="interactive_properties.cpp" line="1495"/>
         <source>DESCRIPTION_CMD_SETBITMAP.</source>
         <translation>&lt;b&gt;CMD_SETBITMAP&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;, &lt;i&gt;fmt&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in RAM.&lt;br&gt;&lt;b&gt;fmt&lt;/b&gt;: Bitmap format, see the definition in BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: bitmap width, in pixels.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: bitmap height, in pixels&lt;br&gt;&lt;br&gt;This command will generate the corresponding display list for given bitmap information, sparing the effort of writing display list manually.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2356"/>
+        <location filename="interactive_properties.cpp" line="2367"/>
         <source>DESCRIPTION_VERTEX_FORMAT.</source>
         <translation>&lt;b&gt;VERTEX_FORMAT&lt;/b&gt;(&lt;i&gt;frac&lt;/i&gt;)&lt;br&gt;&lt;b&gt;frac&lt;/b&gt;: Number of fractional bits in X,Y coordinates. Valid range is from 0 to 4. The initial value is 4.&lt;br&gt;&lt;br&gt;Set the precision of VERTEX2F coordinates.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2368"/>
+        <location filename="interactive_properties.cpp" line="2379"/>
         <source>DESCRIPTION_BITMAP_LAYOUT_H.</source>
         <translation>&lt;b&gt;BITMAP_LAYOUT_H&lt;/b&gt;(&lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: The 2 most significant bits of the 12-bit linestride parameter value specified to BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: The 2 most significant bits of the 11-bit height parameter value specified to BITMAP_LAYOUT.&lt;br&gt;&lt;br&gt;This command is the extension command of BITMAP_LAYOUT for large drawn bitmap. This command is not needed if the specified linestride parameter value to BITMAP_LAYOUT is less than 1024 and the height parameter value is less than 512.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2381"/>
+        <location filename="interactive_properties.cpp" line="2392"/>
         <source>DESCRIPTION_BITMAP_SIZE_H.</source>
         <translation>&lt;b&gt;BITMAP_SIZE&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: high part of drawn bitmap width, in pixels. The initial value is zero.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: high part of drawn bitmap height, in pixels. The initial value is zero.&lt;br&gt;&lt;br&gt;Specify the screen drawing of bitmaps for the current handle. High bits for large bitmap.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2394"/>
+        <location filename="interactive_properties.cpp" line="2405"/>
         <source>DESCRIPTION_PALETTE_SOURCE.</source>
         <translation>&lt;b&gt;PALETTE_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Address of palette in RAM_G, 2-byte alignment is required if pixel format is PALETTE4444 or PALETTE565. The initial value is RAM_G.&lt;br&gt;&lt;br&gt;Specify the base address in RAM_G for palette.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2406"/>
+        <location filename="interactive_properties.cpp" line="2417"/>
         <source>DESCRIPTION_VERTEX_TRANSLATE_X.</source>
         <translation>&lt;b&gt;VERTEX_TRANSLATE_X&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: signed x-coordinate in 1/16 pixel. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify the vertex transformation’s X translation component.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2418"/>
+        <location filename="interactive_properties.cpp" line="2429"/>
         <source>DESCRIPTION_VERTEX_TRANSLATE_Y.</source>
         <translation>&lt;b&gt;VERTEX_TRANSLATE_Y&lt;/b&gt;(&lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: signed y-coordinate in 1/16 pixel. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify the vertex transformation’s Y translation component.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2430"/>
+        <location filename="interactive_properties.cpp" line="2441"/>
         <source>DESCRIPTION_NOP.</source>
         <translation>&lt;b&gt;NOP&lt;/b&gt;()&lt;br&gt;&lt;br&gt;No operation.</translation>
     </message>
@@ -1610,7 +1620,7 @@
     </message>
     <message>
         <location filename="main_window.cpp" line="2009"/>
-        <location filename="main_window.cpp" line="3742"/>
+        <location filename="main_window.cpp" line="3745"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1622,8 +1632,8 @@
     <message>
         <location filename="main_window.cpp" line="2011"/>
         <location filename="main_window.cpp" line="2099"/>
-        <location filename="main_window.cpp" line="3899"/>
-        <location filename="main_window.cpp" line="3948"/>
+        <location filename="main_window.cpp" line="3902"/>
+        <location filename="main_window.cpp" line="3951"/>
         <source>Export</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1654,7 +1664,7 @@
     </message>
     <message>
         <location filename="main_window.cpp" line="2017"/>
-        <location filename="main_window.cpp" line="4159"/>
+        <location filename="main_window.cpp" line="4162"/>
         <source>Save Screenshot</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1705,7 +1715,7 @@
     </message>
     <message>
         <location filename="main_window.cpp" line="2029"/>
-        <location filename="main_window.cpp" line="4242"/>
+        <location filename="main_window.cpp" line="4245"/>
         <source>3rd Party</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1802,302 +1812,302 @@ ERROR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2195"/>
+        <location filename="main_window.cpp" line="2197"/>
         <source>Import Mapped Flash Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2290"/>
+        <location filename="main_window.cpp" line="2293"/>
         <source>BITMAP_HANDLE: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2303"/>
+        <location filename="main_window.cpp" line="2306"/>
         <source>RAM_DL: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2316"/>
+        <location filename="main_window.cpp" line="2319"/>
         <source>RAM_G: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2343"/>
-        <location filename="main_window.cpp" line="2711"/>
+        <location filename="main_window.cpp" line="2346"/>
+        <location filename="main_window.cpp" line="2714"/>
         <source>Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2437"/>
+        <location filename="main_window.cpp" line="2440"/>
         <source>Steps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2475"/>
+        <location filename="main_window.cpp" line="2478"/>
         <source>Trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2520"/>
+        <location filename="main_window.cpp" line="2523"/>
         <source>Display Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2529"/>
+        <location filename="main_window.cpp" line="2532"/>
         <source>Horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2540"/>
+        <location filename="main_window.cpp" line="2543"/>
         <source>Vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2553"/>
+        <location filename="main_window.cpp" line="2556"/>
         <source>Rotate (debug mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2563"/>
+        <location filename="main_window.cpp" line="2566"/>
         <source>Rotate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2582"/>
+        <location filename="main_window.cpp" line="2585"/>
         <source>Macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2710"/>
+        <location filename="main_window.cpp" line="2713"/>
         <source>Inspector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2712"/>
+        <location filename="main_window.cpp" line="2715"/>
         <source>Coprocessor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2713"/>
+        <location filename="main_window.cpp" line="2716"/>
         <source>Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2715"/>
+        <location filename="main_window.cpp" line="2718"/>
         <source>Devices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2717"/>
+        <location filename="main_window.cpp" line="2720"/>
         <source>Utilization</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2718"/>
+        <location filename="main_window.cpp" line="2721"/>
         <source>Navigator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2719"/>
+        <location filename="main_window.cpp" line="2722"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2720"/>
+        <location filename="main_window.cpp" line="2723"/>
         <source>Toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2721"/>
+        <location filename="main_window.cpp" line="2724"/>
         <source>Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2722"/>
+        <location filename="main_window.cpp" line="2725"/>
         <source>Registers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2723"/>
+        <location filename="main_window.cpp" line="2726"/>
         <source>Controls</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3013"/>
+        <location filename="main_window.cpp" line="3016"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3156"/>
+        <location filename="main_window.cpp" line="3159"/>
         <source>The project has been modified.
 Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3185"/>
+        <location filename="main_window.cpp" line="3188"/>
         <source>Flash files do not exist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3185"/>
+        <location filename="main_window.cpp" line="3188"/>
         <source>Flash files do not exist!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3194"/>
+        <location filename="main_window.cpp" line="3197"/>
         <source>Flash is too big</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3194"/>
+        <location filename="main_window.cpp" line="3197"/>
         <source>Flash is too big.
 Cannot load!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3434"/>
+        <location filename="main_window.cpp" line="3437"/>
         <source>Open Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3560"/>
+        <location filename="main_window.cpp" line="3563"/>
         <source>No flash file is loaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3658"/>
+        <location filename="main_window.cpp" line="3661"/>
         <source>Save Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3743"/>
-        <location filename="main_window.cpp" line="3897"/>
+        <location filename="main_window.cpp" line="3746"/>
+        <location filename="main_window.cpp" line="3900"/>
         <source>Memory dump, *.vc1dump (*.vc1dump)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3874"/>
+        <location filename="main_window.cpp" line="3877"/>
         <source>Invalid header version: %i</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4225"/>
+        <location filename="main_window.cpp" line="4228"/>
         <source>About EVE Screen Editor v3.0.0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3777"/>
-        <location filename="main_window.cpp" line="3800"/>
-        <location filename="main_window.cpp" line="3806"/>
-        <location filename="main_window.cpp" line="3813"/>
-        <location filename="main_window.cpp" line="3855"/>
-        <location filename="main_window.cpp" line="3862"/>
-        <location filename="main_window.cpp" line="3875"/>
+        <location filename="main_window.cpp" line="3780"/>
+        <location filename="main_window.cpp" line="3803"/>
+        <location filename="main_window.cpp" line="3809"/>
+        <location filename="main_window.cpp" line="3816"/>
+        <location filename="main_window.cpp" line="3858"/>
+        <location filename="main_window.cpp" line="3865"/>
+        <location filename="main_window.cpp" line="3878"/>
         <source>Import .vc1dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2730"/>
-        <location filename="main_window.cpp" line="3141"/>
-        <location filename="main_window.cpp" line="3155"/>
+        <location filename="main_window.cpp" line="2733"/>
+        <location filename="main_window.cpp" line="3144"/>
+        <location filename="main_window.cpp" line="3158"/>
         <source>EVE Screen Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3435"/>
+        <location filename="main_window.cpp" line="3438"/>
         <source>EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3519"/>
+        <location filename="main_window.cpp" line="3522"/>
         <source>Opened EVE Screen Editor project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3655"/>
+        <location filename="main_window.cpp" line="3658"/>
         <source>ESE Project (*%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3777"/>
+        <location filename="main_window.cpp" line="3780"/>
         <source>Incomplete header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3800"/>
-        <location filename="main_window.cpp" line="3855"/>
+        <location filename="main_window.cpp" line="3803"/>
+        <location filename="main_window.cpp" line="3858"/>
         <source>Incomplete RAM_G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3806"/>
+        <location filename="main_window.cpp" line="3809"/>
         <source>Incomplete RAM_PAL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3813"/>
-        <location filename="main_window.cpp" line="3862"/>
+        <location filename="main_window.cpp" line="3816"/>
+        <location filename="main_window.cpp" line="3865"/>
         <source>Incomplete RAM_DL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3830"/>
-        <location filename="main_window.cpp" line="3866"/>
+        <location filename="main_window.cpp" line="3833"/>
+        <location filename="main_window.cpp" line="3869"/>
         <source>Imported project from .vc1dump file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3890"/>
+        <location filename="main_window.cpp" line="3893"/>
         <source>Imported project from .vc1dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3940"/>
+        <location filename="main_window.cpp" line="3943"/>
         <source>Exported project to .vc1dump file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3943"/>
+        <location filename="main_window.cpp" line="3946"/>
         <source>Exported project to .vc1dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3948"/>
+        <location filename="main_window.cpp" line="3951"/>
         <source>Failed to write file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4147"/>
+        <location filename="main_window.cpp" line="4150"/>
         <source>Change display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4156"/>
+        <location filename="main_window.cpp" line="4159"/>
         <source>PNG image (*.png)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4157"/>
+        <location filename="main_window.cpp" line="4160"/>
         <source>JPG image (*.jpg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4181"/>
+        <location filename="main_window.cpp" line="4184"/>
         <source>Import display list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4194"/>
+        <location filename="main_window.cpp" line="4197"/>
         <source>Display list from integers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4227"/>
+        <location filename="main_window.cpp" line="4230"/>
         <source>Copyright (C) 2013-2015  Future Technology Devices International Ltd&lt;br&gt;&lt;br&gt;Copyright (C) 2016-2017  Bridgetek Pte Ltd&lt;br&gt;&lt;br&gt;Support and updates:&lt;br&gt;&lt;a href=&apos;http://www.ftdichip.com/Support/Utilities.htm&apos;&gt;http://www.ftdichip.com/Support/Utilities.htm&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&apos;http://brtchip.com/utilities/#evescreeneditor&apos;&gt;http://brtchip.com/utilities/#evescreeneditor&lt;/a&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="4242"/>
+        <location filename="main_window.cpp" line="4245"/>
         <source>The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 Contact: http://www.qt-project.org/legal
 Qt is available under the LGPL.
@@ -2117,7 +2127,7 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
 <context>
     <name>FTEDITOR::PropertiesEditor</name>
     <message>
-        <location filename="properties_editor.cpp" line="129"/>
+        <location filename="properties_editor.cpp" line="130"/>
         <source>Information</source>
         <translation type="unfinished"></translation>
     </message>

@@ -2665,6 +2665,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[3].I = 0;
                         pa.ExpectedParameterCount = 4;
                         break;
+                    case CMD_VIDEOFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
                     }                    
 				}
 				else

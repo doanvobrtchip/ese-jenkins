@@ -1470,18 +1470,16 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		/*case CMD_VIDEOSTART:
+		case CMD_VIDEOSTART:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOSTART."));
 			if (editor)
 			{
-				setTitle("CMD_VIDEOSTART");
-				// ...
-				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			ok = true;
 			break;
-		}*/
+		}
 		/*
 		s_CmdIdMap["CMD_VIDEOSTART"] = CMD_VIDEOSTART & 0xFF;
 		s_CmdParamCount[CMD_VIDEOSTART & 0xFF] = 0;
@@ -1803,6 +1801,19 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+        case CMD_VIDEOFRAME:
+        {
+            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOFRAME."));
+            if (editor)
+            {
+                setTitle("CMD_VIDEOFRAME");
+                addAddress(0, false);
+                addAddress(1, false);
+                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+            }
+            ok = true;
+            break;
+        }
         case CMD_BITMAP_TRANSFORM:
         {
             m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BITMAP_TRANSFORM."));
