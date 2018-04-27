@@ -2176,6 +2176,8 @@ void MainWindow::createDockWindows()
 
 			groupLayout->addLayout(hBoxLayout);
 
+            QVBoxLayout *vBoxLayout = new QVBoxLayout();
+            vBoxLayout->setMargin(0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
@@ -2197,7 +2199,8 @@ void MainWindow::createDockWindows()
 
 			// m_ProjectFlashLayout->stretch
 
-			m_ProjectFlashLayout->setLayout(hBoxLayout);
+            vBoxLayout->addLayout(hBoxLayout);
+			m_ProjectFlashLayout->setLayout(vBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
 			m_ProjectFlashFilename = new QLabel(this);
@@ -2207,7 +2210,7 @@ void MainWindow::createDockWindows()
 			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
 			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
 			m_ProjectFlashFilename->installEventFilter(this);
-			groupLayout->addWidget(m_ProjectFlashFilename);
+            vBoxLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
