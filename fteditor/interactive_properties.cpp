@@ -253,6 +253,10 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 		{
 			ADD_OPTIONS_CHECKBOX(OPT_FLASH);
 		}
+        if (flags & OPT_OVERLAY)
+        {
+            ADD_OPTIONS_CHECKBOX(OPT_OVERLAY);
+        }
 	}
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
@@ -1417,7 +1421,14 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_PLAYVIDEO");
-				addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_MONO | OPT_SOUND);
+                if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+                {
+                    addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND | OPT_FLASH | OPT_OVERLAY | OPT_NODL);
+                }
+                else
+                {
+                    addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND);
+                }
 				addStream(1);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}

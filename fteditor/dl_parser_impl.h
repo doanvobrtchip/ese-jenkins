@@ -2003,6 +2003,23 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 {
 #if defined(FTEDITOR_PARSER_VC3)
+    if (cmd == CMD_PLAYVIDEO)
+    {
+        if (opt == 0) { dst << "0"; return; }
+        if (opt & OPT_NODL) dst << "OPT_NODL | ";
+        if (opt & OPT_FLASH) dst << "OPT_FLASH | ";
+        if (opt & OPT_OVERLAY) dst << "OPT_OVERLAY | ";
+        if (opt & OPT_NOTEAR) dst << "OPT_NOTEAR | ";
+        if (opt & OPT_FULLSCREEN) dst << "OPT_FULLSCREEN | ";
+        if (opt & OPT_MEDIAFIFO) dst << "OPT_MEDIAFIFO | ";
+        if (opt & OPT_SOUND) dst << "OPT_SOUND";
+        else
+        {
+            long t = dst.tellp();
+            dst.seekp(t - 3);
+        }
+        return;
+    }
     if (cmd == CMD_ANIMSTART)
     {
         if (opt == ANIM_LOOP)
