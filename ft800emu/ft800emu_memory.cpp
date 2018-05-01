@@ -439,8 +439,8 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #if defined(BT815EMU_MODE)
-		if (emulatorMode == BT8XXEMU_EmulatorBT815) memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));
-		else if (emulatorMode == BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
+		if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
+		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));
 #elif defined(FT810EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], c_OTP813, sizeof(c_OTP813));
 		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], c_OTP812, sizeof(c_OTP812));
