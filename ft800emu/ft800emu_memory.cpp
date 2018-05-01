@@ -341,42 +341,42 @@ BT8XXEMU_FORCE_INLINE uint8_t Memory::rawReadU8(ramaddr address)
 }
 
 #if defined(BT815EMU_MODE)
-	static const uint8_t c_RomBT815[FT800EMU_ROM_SIZE] = {
-	#include "resources/rom_bt815.h"
-	};
+static const uint8_t c_RomBT815[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_bt815.h"
+};
 #elif defined(FT810EMU_MODE)
-	static const uint8_t c_RomFT810[FT800EMU_ROM_SIZE] = {
-	#include "resources/rom_ft810.h"
+static const uint8_t c_RomFT810[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_ft810.h"
 };
 #else
-	static const uint8_t c_RomFT800[FT800EMU_ROM_SIZE] = {
-	#include "resources/rom_ft800.h"
-	};
-	static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
-	#include "resources/rom_ft801.h"
-	};
+static const uint8_t c_RomFT800[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_ft800.h"
+};
+static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_ft801.h"
+};
 #endif
 
 #if defined(BT815EMU_MODE)
-	static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_815.h"
-	};
-	static const uint8_t c_OTP816[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_816.h"
-	};
+static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_815.h"
+};
+static const uint8_t c_OTP816[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_816.h"
+};
 #elif defined(FT810EMU_MODE)
-	static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_810.h"
-	};
-	static const uint8_t c_OTP811[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_811.h"
-	};
-	static const uint8_t c_OTP812[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_812.h"
-	};
-	static const uint8_t c_OTP813[FT800EMU_OTP_SIZE] = {
-	#include "resources/otp_813.h"
-	};
+static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_810.h"
+};
+static const uint8_t c_OTP811[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_811.h"
+};
+static const uint8_t c_OTP812[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_812.h"
+};
+static const uint8_t c_OTP813[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_813.h"
+};
 #endif
 
 Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std::mutex &swapDLMutex,
