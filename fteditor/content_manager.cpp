@@ -904,8 +904,8 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	// check to see if there is a need to set flash file path to GUI
 	if (contentInfo->Converter == ContentInfo::FlashMap)
 	{
-		QString flashPath = QDir::current().absoluteFilePath(contentInfo->SourcePath);
-		m_MainWindow->setFlashFileNameToLabel(flashPath);
+		m_FlashFileName = contentInfo->SourcePath;
+		m_MainWindow->setFlashFileNameToLabel(QDir::current().absoluteFilePath(m_FlashFileName));
 	}
 
 	// Ensure no duplicate names are used
@@ -965,9 +965,10 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	m_HelpfulLabel->setVisible(getContentCount() == 0);
 
 	// Check to see a flash map is in use, if not, remove flash path in GUI
-	if (contentInfo->Converter == ContentInfo::FlashMap && findFlashMapPath().isEmpty())
+	if (contentInfo->Converter == ContentInfo::FlashMap)
 	{
-		m_MainWindow->setFlashFileNameToLabel("");
+		findFlashMapPath(true);
+		m_MainWindow->setFlashFileNameToLabel(m_FlashFileName.isEmpty() ? "" : QDir::current().absoluteFilePath(m_FlashFileName));
 	}
 }
 
@@ -1114,13 +1115,11 @@ void ContentManager::importFlashMapped()
 	if (fileName.isEmpty())
 		return;
 
-	m_FlashFileName = fileName;
-
 	// check flash size
-	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
-	{
+	if (!m_MainWindow->checkAndPromptFlashPath(fileName))
 		return;
-	}
+
+	m_FlashFileName = fileName;
 
 	// check if flash files exist
 	QString checkFlashPath = QDir::currentPath() + "/flash/" + QFileInfo(m_FlashFileName).baseName();
@@ -1139,6 +1138,7 @@ void ContentManager::importFlashMapped()
 	if (!loadFlashMap(relativeFlashMapPath))
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
+		findFlashMapPath(true);
 	}
 	else if (answer == QMessageBox::Yes)
 	{
@@ -2265,21 +2265,25 @@ ContentInfo *ContentManager::current()
 	return (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 }
 
-QString ContentManager::findFlashMapPath()
+QString ContentManager::findFlashMapPath(bool forceScan)
 {
-	QString flashMapPath;
+	if (!forceScan && !m_FlashFileName.isEmpty())
+	{
+		// Return cached file name first
+		return m_FlashFileName;
+	}
 
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
 		if (info->Converter == ContentInfo::FlashMap)
 		{
-			flashMapPath = info->SourcePath;
-			if (!flashMapPath.isEmpty()) break;
+			m_FlashFileName = info->SourcePath;
+			if (!m_FlashFileName.isEmpty()) break;
 		}
 	}
 
-	return flashMapPath;
+	return m_FlashFileName;
 }
 
 int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEditor)

@@ -14,7 +14,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <stdio.h>
 
 // Version
-#define BT8XXEMU_VERSION_STRING "3.0.0"
+#define BT8XXEMU_VERSION_STRING "3.11.0.1"
 
 // Include BT8XXEMU_PLATFORM
 #include "ft8xxemu_window_output.h"
@@ -52,7 +52,7 @@ Author: Jan Boon <jan@no-break.space>
 static const char *c_Version =
 	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
-	"Copyright(C) 2016-2017  Bridgetek Pte Lte\n"
+	"Copyright(C) 2016-2018  Bridgetek Pte Lte\n"
 	"Author: Jan Boon <jan@no-break.space>";
 
 BT8XXEMU_API const char *BT8XXEMU_version()
