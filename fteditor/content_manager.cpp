@@ -968,7 +968,7 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 	if (contentInfo->Converter == ContentInfo::FlashMap)
 	{
 		findFlashMapPath(true);
-		m_MainWindow->setFlashFileNameToLabel(m_FlashFileName.isEmpty ? "" : QDir::current().absoluteFilePath(m_FlashFileName));
+		m_MainWindow->setFlashFileNameToLabel(m_FlashFileName.isEmpty() ? "" : QDir::current().absoluteFilePath(m_FlashFileName));
 	}
 }
 
