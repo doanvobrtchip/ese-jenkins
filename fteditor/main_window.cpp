@@ -306,13 +306,18 @@ void resetemu()
 	cleanupMediaFifo();
 }
 
+bool hasOTP()
+{
+	return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816;
+}
+
 void resetCoprocessorFromLoop()
 {
 	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	if (hasOTP() && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
@@ -323,7 +328,7 @@ void resetCoprocessorFromLoop()
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT815)
+	if (hasOTP())
 	{
 		// Go back into the patched coprocessor main loop
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
