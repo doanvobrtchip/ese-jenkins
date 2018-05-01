@@ -113,6 +113,21 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primRects->setText(0, tr("Rects"));
 		primRects->setData(1, Qt::UserRole, QVariant((uint)1));
 		primRects->setData(2, Qt::UserRole, QVariant((uint)RECTS));
+
+        QTreeWidgetItem *pItem = new QTreeWidgetItem(m_Primitives);
+        pItem->setText(0, tr("Bitmap Extend Format"));
+        pItem->setData(1, Qt::UserRole, QVariant((uint)3));
+        pItem->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_EXT_FORMAT));
+
+        pItem = new QTreeWidgetItem(m_Primitives);
+        pItem->setText(0, tr("Bitmap Swizzle"));
+        pItem->setData(1, Qt::UserRole, QVariant((uint)3));
+        pItem->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SWIZZLE));
+
+        pItem = new QTreeWidgetItem(m_Primitives);
+        pItem->setText(0, tr("NOP"));
+        pItem->setData(1, Qt::UserRole, QVariant((uint)3));
+        pItem->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_NOP));
 	}
 
 	m_Widgets = new QTreeWidgetItem(m_Tools);
@@ -239,6 +254,71 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Memory Zero"));
 		item->setData(1, Qt::UserRole, QVariant((uint)2));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMZERO));
+
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Display List Start"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_DLSTART));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Swap"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_SWAP));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Inflat"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Inflat2"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE2));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Video Start"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Video Start F"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTARTF));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Video Frame"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOFRAME));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Reset Font"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_RESETFONTS));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Logo"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOGO));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Flash Source"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_FLASHSOURCE));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Animation Start"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTART));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Animation Stop"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTOP));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Animation XY"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMXY));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Animation Draw"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMDRAW));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Animation Frame"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMFRAME));
+        item = new QTreeWidgetItem(m_Utilities);
+        item->setText(0, tr("Bitmap Transform"));
+        item->setData(1, Qt::UserRole, QVariant((uint)4));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_BITMAP_TRANSFORM));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);

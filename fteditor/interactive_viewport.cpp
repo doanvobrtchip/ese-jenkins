@@ -2554,71 +2554,123 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				{
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
-					switch (selection)
-					{
-					case CMD_BGCOLOR:
-						pa.Parameter[0].U = 0x7F3F1F;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_FGCOLOR:
-						pa.Parameter[0].U = 0xFF7F3F;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_GRADCOLOR:
-						pa.Parameter[0].U = 0xFFFF7F;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_LOADIDENTITY:
-					case CMD_SETMATRIX:
-						pa.ExpectedParameterCount = 0;
-						break;
-					case CMD_SCALE:
-						pa.Parameter[0].I = 65536;
-						pa.Parameter[1].I = 65536;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case CMD_ROTATE:
-						pa.Parameter[0].I = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_TRANSLATE:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case CMD_SETSCRATCH:
-						pa.Parameter[0].I = 15;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_SETBASE:
-						pa.Parameter[0].I = 10;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_ROMFONT:
-						pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
-						if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
-						pa.Parameter[1].I = 34;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case CMD_SETFONT:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case CMD_SETFONT2:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
-						pa.Parameter[2].I = 32;
-						pa.ExpectedParameterCount = 3;
-						break;
-					case CMD_SETBITMAP:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
-						pa.Parameter[2].I = 64;
-						pa.Parameter[3].I = 64;
-						pa.ExpectedParameterCount = 4;
-						break;
-					}
+                    switch (selection)
+                    {
+                    case CMD_BGCOLOR:
+                        pa.Parameter[0].U = 0x7F3F1F;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_FGCOLOR:
+                        pa.Parameter[0].U = 0xFF7F3F;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_GRADCOLOR:
+                        pa.Parameter[0].U = 0xFFFF7F;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_LOADIDENTITY:
+                    case CMD_SETMATRIX:
+                        pa.ExpectedParameterCount = 0;
+                        break;
+                    case CMD_SCALE:
+                        pa.Parameter[0].I = 65536;
+                        pa.Parameter[1].I = 65536;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_ROTATE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_TRANSLATE:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_SETSCRATCH:
+                        pa.Parameter[0].I = 15;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_SETBASE:
+                        pa.Parameter[0].I = 10;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ROMFONT:
+                        pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
+                        if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
+                        pa.Parameter[1].I = 34;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_SETFONT:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_SETFONT2:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 32;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_SETBITMAP:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 64;
+                        pa.Parameter[3].I = 64;
+                        pa.ExpectedParameterCount = 4;
+                        break;
+                    case CMD_BITMAP_TRANSFORM:
+                        for (size_t i = 0; i < 13; i++)
+                        {
+                            pa.Parameter[i].I = 0;
+                        }
+                        pa.ExpectedParameterCount = 13;
+                        break;
+                    case CMD_INFLATE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_INFLATE2:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    case CMD_FLASHSOURCE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMSTART:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMSTOP:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMXY:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMDRAW:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.Parameter[3].I = 0;
+                        pa.ExpectedParameterCount = 4;
+                        break;
+                    case CMD_VIDEOFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
+                    }                    
 				}
 				else
 				{

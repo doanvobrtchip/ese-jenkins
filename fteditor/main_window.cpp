@@ -323,7 +323,7 @@ void resetCoprocessorFromLoop()
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT815)
 	{
 		// Go back into the patched coprocessor main loop
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
@@ -2032,10 +2032,10 @@ void MainWindow::translateActions()
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
 	m_UndoAct->setText(tr("Undo"));
 	m_UndoAct->setStatusTip(tr("Reverses the last action"));
-	m_UndoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
+	m_UndoAct->setIcon(QIcon(":/icons/arrow-return.png"));
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
-	m_RedoAct->setIcon(QIcon(":/icons/arrow-circle-315.png"));
+	m_RedoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
 	m_DummyAct->setText(tr("Dummy"));
 	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
@@ -2176,6 +2176,8 @@ void MainWindow::createDockWindows()
 
 			groupLayout->addLayout(hBoxLayout);
 
+            QVBoxLayout *vBoxLayout = new QVBoxLayout();
+            vBoxLayout->setMargin(0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
@@ -2197,8 +2199,18 @@ void MainWindow::createDockWindows()
 
 			// m_ProjectFlashLayout->stretch
 
-			m_ProjectFlashLayout->setLayout(hBoxLayout);
+            vBoxLayout->addLayout(hBoxLayout);
+			m_ProjectFlashLayout->setLayout(vBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
+
+			m_ProjectFlashFilename = new QLabel(this);
+			QSizePolicy sizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+			sizePolicy.setHorizontalStretch(0);
+			sizePolicy.setVerticalStretch(0);
+			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
+			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
+			m_ProjectFlashFilename->installEventFilter(this);
+            vBoxLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -3160,6 +3172,49 @@ bool MainWindow::maybeSave()
 	return true;
 }
 
+bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
+{
+	if (filePath.isEmpty())
+	{
+		return false;
+	}
+
+	// check .map and .bin files
+	QString binPath(filePath);
+	binPath = binPath.replace(filePath.length() - 3, 3, "bin");
+	if (false == QFileInfo::exists(filePath) || false == QFileInfo::exists(binPath))
+	{
+		// prompt user
+		QMessageBox::information(this, tr("Flash files do not exist"), tr("Flash files do not exist!"));
+	}
+	else
+	{
+		// check flash configuration
+		qint64 binSize = QFileInfo(binPath).size();
+
+		if (binSize > 256 * 1024 * 1024)
+		{
+			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
+			return false;
+		}
+		else
+		{
+			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
+			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
+			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
+			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
+			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
+			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
+			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
+			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
+			
+			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+		}
+	}
+
+	return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
@@ -3225,6 +3280,9 @@ void MainWindow::actNew(bool addClear)
 #endif
 	updateWindowTitle();
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+
+	// reset flash file name
+	setFlashFileNameToLabel("");
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3435,12 +3493,20 @@ void MainWindow::openFile(const QString &fileName)
 		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
+
+		bool checkFlashPath = false;
 		for (int i = 0; i < content.size(); ++i)
 		{
 			ContentInfo *ci = new ContentInfo("");
 			QJsonObject cio = content[i].toObject();
 			ci->fromJson(cio, false);
 			m_ContentManager->add(ci);
+
+			if (!checkFlashPath && ci->Converter == ContentInfo::FlashMap)
+			{
+				checkFlashPath = true;
+				checkAndPromptFlashPath(ci->SourcePath);
+			}			
 		}
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -3487,6 +3553,33 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+}
+
+void MainWindow::setFlashFileNameToLabel(const QString & fileName)
+{
+	QString flashName(fileName);
+	if (flashName.isEmpty())
+	{
+		flashName = tr("No flash file is loaded");
+	}
+	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, flashName);
+	m_ProjectFlashFilename->setText(elidedText);
+}
+
+const bool MainWindow::isProjectSaved(void)
+{
+	return (false == m_CurrentFile.isEmpty());
+}
+
+bool MainWindow::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
+	{
+		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+	}
+
+	return QMainWindow::eventFilter(watched, event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -3563,7 +3656,6 @@ void MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
 	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
-
 
 	QString filter = filterft8xxproj;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
@@ -4133,7 +4225,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v2.5.0"));
+	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.0.0"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		

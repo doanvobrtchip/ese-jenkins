@@ -67,6 +67,7 @@ static ParameterOptions s_ParamOptions[DL_ID_NB];
 static int s_CmdParamCount[CMD_ID_NB];
 static ParameterOptions s_CmdParamOptions[CMD_ID_NB];
 static bool s_CmdParamString[CMD_ID_NB];
+static int s_CmdParamOptFormat[CMD_ID_NB];
 
 static std::string s_CmdIdList[CMD_ID_NB];
 
@@ -398,14 +399,25 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
 		s_CmdParamString[CMD_TEXT & 0xFF] = true;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_CmdParamOptFormat[CMD_TEXT & 0xFF] = 3;
+#else
+		s_CmdParamOptFormat[CMD_TEXT & 0xFF] = -1;
+#endif
 		s_CmdIdMap["CMD_BUTTON"] = CMD_BUTTON & 0xFF;
 		s_CmdParamCount[CMD_BUTTON & 0xFF] = 7;
 		s_CmdParamString[CMD_BUTTON & 0xFF] = true;
+#if defined(FTEDITOR_PARSER_VC3)
+		s_CmdParamOptFormat[CMD_BUTTON & 0xFF] = 5;
+#else
+		s_CmdParamOptFormat[CMD_BUTTON & 0xFF] = -1;
+#endif
 		s_CmdParamOptions[CMD_BUTTON & 0xFF].Min[4] = 0;
 		s_CmdParamOptions[CMD_BUTTON & 0xFF].Max[4] = 31;
 		s_CmdIdMap["CMD_KEYS"] = CMD_KEYS & 0xFF;
 		s_CmdParamCount[CMD_KEYS & 0xFF] = 7;
 		s_CmdParamString[CMD_KEYS & 0xFF] = true;
+		s_CmdParamOptFormat[CMD_KEYS & 0xFF] = -1;
 		s_CmdIdMap["CMD_PROGRESS"] = CMD_PROGRESS & 0xFF;
 		s_CmdParamCount[CMD_PROGRESS & 0xFF] = 7;
 		s_CmdParamString[CMD_PROGRESS & 0xFF] = false;
@@ -418,6 +430,11 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_TOGGLE"] = CMD_TOGGLE & 0xFF;
 		s_CmdParamCount[CMD_TOGGLE & 0xFF] = 7;
 		s_CmdParamString[CMD_TOGGLE & 0xFF] = true;
+#if defined(FTEDITOR_PARSER_VC3)
+        s_CmdParamOptFormat[CMD_TOGGLE & 0xFF] = 4;
+#else
+        s_CmdParamOptFormat[CMD_TOGGLE & 0xFF] = -1;
+#endif
 		s_CmdIdMap["CMD_GAUGE"] = CMD_GAUGE & 0xFF;
 		s_CmdParamCount[CMD_GAUGE & 0xFF] = 8;
 		s_CmdParamString[CMD_GAUGE & 0xFF] = false;
@@ -472,6 +489,7 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 3;
 		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = true;
+		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;
 		// s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
 		// s_CmdParamCount[CMD_GETPROPS & 0xFF] = 0; // undocumented
 		// s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
@@ -544,6 +562,7 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 2;
 		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = true;
+		s_CmdParamOptFormat[CMD_PLAYVIDEO & 0xFF] = -1;
 		s_CmdIdMap["CMD_SETFONT2"] = CMD_SETFONT2 & 0xFF;
 		s_CmdParamCount[CMD_SETFONT2 & 0xFF] = 3;
 		s_CmdParamString[CMD_SETFONT2 & 0xFF] = false;
@@ -579,6 +598,7 @@ void DlParser::initVC3()
 		// s_CmdIdMap["CMD_FLASHWRITE"] = CMD_FLASHWRITE & 0xFF; // Stream
 		// s_CmdParamCount[CMD_FLASHWRITE & 0xFF] = 2;
 		// s_CmdParamString[CMD_FLASHWRITE & 0xFF] = true;
+		s_CmdParamOptFormat[CMD_FLASHWRITE & 0xFF] = -1;
 		s_CmdIdMap["CMD_FLASHREAD"] = CMD_FLASHREAD & 0xFF;
 		s_CmdParamCount[CMD_FLASHREAD & 0xFF] = 3;
 		s_CmdParamString[CMD_FLASHREAD & 0xFF] = false;
@@ -609,6 +629,9 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
 		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
 		s_CmdParamString[CMD_CLEARCACHE & 0xFF] = false;
+        s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
+        s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+        s_CmdParamString[CMD_INFLATE & 0xFF] = false;
 		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
 		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
 		s_CmdParamString[CMD_INFLATE2 & 0xFF] = false;
@@ -657,6 +680,9 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_VIDEOSTARTF"] = CMD_VIDEOSTARTF & 0xFF;
 		s_CmdParamCount[CMD_VIDEOSTARTF & 0xFF] = 0;
 		s_CmdParamString[CMD_VIDEOSTARTF & 0xFF] = false;
+        s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
+        s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 13;
+        s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
 #endif
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
@@ -709,6 +735,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT800] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT800] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT800] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT800] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT800] = s_CmdIdList;
 	m_IdMap[FTEDITOR_FT801] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT801] = &s_ParamMap;
@@ -717,6 +744,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT801] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT801] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT801] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT801] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT801] = s_CmdIdList;
 #elif defined(FTEDITOR_PARSER_VC2)
 	m_IdMap[FTEDITOR_FT810] = &s_IdMap;
@@ -726,6 +754,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT810] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT810] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT810] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT810] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT810] = s_CmdIdList;
 	m_IdMap[FTEDITOR_FT811] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT811] = &s_ParamMap;
@@ -734,6 +763,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT811] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT811] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT811] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT811] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT811] = s_CmdIdList;
 	m_IdMap[FTEDITOR_FT812] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT812] = &s_ParamMap;
@@ -742,6 +772,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT812] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT812] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT812] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT812] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT812] = s_CmdIdList;
 	m_IdMap[FTEDITOR_FT813] = &s_IdMap;
 	m_ParamMap[FTEDITOR_FT813] = &s_ParamMap;
@@ -750,6 +781,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_FT813] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_FT813] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_FT813] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_FT813] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT813] = s_CmdIdList;
 #elif defined(FTEDITOR_PARSER_VC3)
 	m_IdMap[FTEDITOR_BT815] = &s_IdMap;
@@ -759,6 +791,7 @@ void DlParser::initVC3()
 	m_ParamCount[FTEDITOR_BT815] = s_ParamCount;
 	m_CmdParamCount[FTEDITOR_BT815] = s_CmdParamCount;
 	m_CmdParamString[FTEDITOR_BT815] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT815] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_BT815] = s_CmdIdList;
 #endif
 }
@@ -969,6 +1002,12 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
+#if defined(FTEDITOR_PARSER_VC3)
+					for (int i = 5; i < parsed.ExpectedParameterCount + parsed.VarArgCount && i < DLPARSED_MAX_PARAMETER; ++i)
+						compiled.push_back(parsed.Parameter[i].U);
+					for (int i = DLPARSED_MAX_PARAMETER; i < parsed.ExpectedParameterCount + parsed.VarArgCount; ++i)
+						compiled.push_back(parsed.Parameter[i].U);
+#endif
 					break;
 				}
 				case CMD_BUTTON:
@@ -992,6 +1031,12 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
+#if defined(FTEDITOR_PARSER_VC3)
+					for (int i = 7; i < parsed.ExpectedParameterCount + parsed.VarArgCount && i < DLPARSED_MAX_PARAMETER; ++i)
+						compiled.push_back(parsed.Parameter[i].U);
+					for (int i = DLPARSED_MAX_PARAMETER; i < parsed.ExpectedParameterCount + parsed.VarArgCount; ++i)
+						compiled.push_back(parsed.Parameter[i].U);
+#endif
 					break;
 				}
 				case CMD_PROGRESS:
@@ -1046,6 +1091,12 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 						uint32_t s = c0 | c1 << 8 | c2 << 16 | c3 << 24;
 						compiled.push_back(s);
 					}
+#if defined(FTEDITOR_PARSER_VC3)
+                    for (int i = 7; i < parsed.ExpectedParameterCount + parsed.VarArgCount && i < DLPARSED_MAX_PARAMETER; ++i)
+                        compiled.push_back(parsed.Parameter[i].U);
+                    for (int i = DLPARSED_MAX_PARAMETER; i < parsed.ExpectedParameterCount + parsed.VarArgCount; ++i)
+                        compiled.push_back(parsed.Parameter[i].U);
+#endif
 					break;
 				}
 				case CMD_GAUGE:
@@ -1359,6 +1410,15 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[3].U);
 					break;
 				}
+                case CMD_BITMAP_TRANSFORM:
+                {
+                    for (size_t i = 0; i < 12; ++i)
+                    {
+                        compiled.push_back(parsed.Parameter[i].U);
+                    }                    
+                    compiled.push_back(parsed.Parameter[12].U & 0xFFFF);
+                    break;
+                }
 #endif
 			}
 		}
@@ -1942,6 +2002,37 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 
 static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 {
+#if defined(FTEDITOR_PARSER_VC3)
+    if (cmd == CMD_PLAYVIDEO)
+    {
+        if (opt == 0) { dst << "0"; return; }
+        if (opt & OPT_NODL) dst << "OPT_NODL | ";
+        if (opt & OPT_FLASH) dst << "OPT_FLASH | ";
+        if (opt & OPT_OVERLAY) dst << "OPT_OVERLAY | ";
+        if (opt & OPT_NOTEAR) dst << "OPT_NOTEAR | ";
+        if (opt & OPT_FULLSCREEN) dst << "OPT_FULLSCREEN | ";
+        if (opt & OPT_MEDIAFIFO) dst << "OPT_MEDIAFIFO | ";
+        if (opt & OPT_SOUND) dst << "OPT_SOUND";
+        else
+        {
+            long t = dst.tellp();
+            dst.seekp(t - 3);
+        }
+        return;
+    }
+    if (cmd == CMD_ANIMSTART)
+    {
+        if (opt == ANIM_LOOP)
+        {
+            dst << "ANIM_LOOP";
+        }
+        else if (opt == ANIM_ONCE)
+        {
+            dst << "ANIM_ONCE";
+        }
+        return;
+    }
+#endif
 	if (opt == 0)
 	{
 		dst << "0";
@@ -2171,7 +2262,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 	res << s_CmdIdList[parsed.IdRight];
 	res << "(";
 
-	for (int p = 0; p < parsed.ExpectedParameterCount; ++p)
+	for (int p = 0; p < parsed.ExpectedParameterCount + parsed.VarArgCount; ++p)
 	{
 		if (p != 0) res << ", ";
 		if (p == parsed.ExpectedParameterCount - 1 && parsed.ExpectedStringParameter)
@@ -2182,6 +2273,13 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 			escapeString(escstr, parsed.StringParameter);
 			res << escstr;
 			res << "\"";
+		}
+		else if (p > parsed.ExpectedParameterCount)
+		{
+			/* if (parsed.FloatingVarArg[p])
+				res << parsed.Parameter[p].F;
+			else */
+			res << parsed.Parameter[p].I;
 		}
 		else
 		{
@@ -2240,6 +2338,12 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				if (p == 2) paramType = 5;
 				else if (p == 5) paramType = 5;
 				break;
+            case CMD_INFLATE2:
+                if (p == 1) paramType = 1;
+                break;
+            case CMD_ANIMSTART:
+                if (p == 2) paramType = 1;
+                break;
 #endif
 			}
 			switch (paramType)

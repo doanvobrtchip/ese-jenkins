@@ -28,6 +28,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QSpinBox>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QMessageBox>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -433,10 +434,11 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	// Image Preview
 	m_PropertiesImagePreview = new QGroupBox(this);
-	QVBoxLayout *imagePreviewLayout = new QVBoxLayout();
+	QGridLayout *imagePreviewLayout = new QGridLayout();
 	m_PropertiesImagePreview->setHidden(true);
 	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
 	m_PropertiesImageLabel = new QLabel(this);
+    m_PropertiesImageLabel->setMaximumSize(250, 250);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 
@@ -642,9 +644,11 @@ private:
 ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
-	ContentInfo *contentInfo = new ContentInfo(filePath);
 
-	QString fileExt = QFileInfo(filePath).suffix().toLower();
+	QString relativePath = QDir::current().relativeFilePath(filePath);
+	ContentInfo *contentInfo = new ContentInfo(relativePath);
+	QString fileExt = QFileInfo(relativePath).suffix().toLower();
+
 	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
@@ -656,6 +660,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "raw") contentInfo->Converter = ContentInfo::Raw;
 
 	if (contentInfo->Converter == ContentInfo::Font)
 	{
@@ -896,6 +901,13 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::addInternal(contentInfo)\n");
 
+	// check to see if there is a need to set flash file path to GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap)
+	{
+		QString flashPath = QDir::current().absoluteFilePath(contentInfo->SourcePath);
+		m_MainWindow->setFlashFileNameToLabel(flashPath);
+	}
+
 	// Ensure no duplicate names are used
 	contentInfo->DestName = createName(contentInfo->DestName);
 
@@ -951,6 +963,12 @@ void ContentManager::removeInternal(ContentInfo *contentInfo)
 
 	// Be helpful
 	m_HelpfulLabel->setVisible(getContentCount() == 0);
+
+	// Check to see a flash map is in use, if not, remove flash path in GUI
+	if (contentInfo->Converter == ContentInfo::FlashMap && findFlashMapPath().isEmpty())
+	{
+		m_MainWindow->setFlashFileNameToLabel("");
+	}
 }
 
 bool ContentManager::nameExists(const QString &name)
@@ -1023,15 +1041,17 @@ void ContentManager::add()
 {
 	printf("ContentManager::add()\n");
 
-	QString fileName = QFileDialog::getOpenFileName(this,
+	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
 		tr("Load Content"),
 		m_MainWindow->getFileDialogPath(),
 		tr("All files (*.*)"));
 
-	if (fileName.isEmpty())
-		return;
 
-	ContentInfo *info = add(fileName);
+	foreach (QString fileName, fileNameList)
+	{
+		add(fileName);
+	}
+
 }
 
 void ContentManager::remove()
@@ -1055,6 +1075,33 @@ void ContentManager::rebuildAll()
 	}
 }
 
+void ContentManager::copyFlashFile()
+{
+	if (m_MainWindow->isProjectSaved())
+	{
+		QDir projectFolder(QDir::current());
+		projectFolder.mkpath("flash");
+		projectFolder.cd("flash");
+		QString projectFlashFolder = projectFolder.absolutePath() + "/";
+
+		// copy file .map
+		QFile::copy(m_FlashFileName, projectFlashFolder + QFileInfo(m_FlashFileName).fileName());
+
+		// copy file .bin
+		QString binFileName(m_FlashFileName);
+		binFileName.replace(m_FlashFileName.length() - 3, 3, "bin");
+		QFile::copy(binFileName, projectFlashFolder + QFileInfo(binFileName).fileName());
+
+		// flash file point to new folder
+		m_FlashFileName = projectFlashFolder + QFileInfo(m_FlashFileName).fileName();
+	}
+	else
+	{
+		m_MainWindow->requestSave();
+		copyFlashFile();
+	}
+}
+
 void ContentManager::importFlashMapped()
 {
 	printf("ContentManager::importFlashMapped()\n");
@@ -1067,9 +1114,35 @@ void ContentManager::importFlashMapped()
 	if (fileName.isEmpty())
 		return;
 
-	if (!loadFlashMap(fileName))
+	m_FlashFileName = fileName;
+
+	// check flash size
+	if (false == m_MainWindow->checkAndPromptFlashPath(m_FlashFileName))
+	{
+		return;
+	}
+
+	// check if flash files exist
+	QString checkFlashPath = QDir::currentPath() + "/flash/" + QFileInfo(m_FlashFileName).baseName();
+	int answer = -1;
+	if (!QFile::exists(checkFlashPath + ".bin") || !QFile::exists(checkFlashPath + ".map"))
+	{
+		// ask if user wanna move flash files
+		answer = QMessageBox::question(this, tr("Copy flash files"), tr("Do you want to copy flash files to project folder?"), QMessageBox::Yes, QMessageBox::No);
+		if (answer == QMessageBox::Yes)
+		{
+			copyFlashFile();
+		}
+	}
+
+	QString relativeFlashMapPath = QDir(QDir::currentPath()).relativeFilePath(m_FlashFileName);
+	if (!loadFlashMap(relativeFlashMapPath))
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
+	}
+	else if (answer == QMessageBox::Yes)
+	{
+		m_MainWindow->requestSave();
 	}
 }
 
@@ -1462,11 +1535,17 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 				m_PropertiesImage->setHidden(false);
 				QPixmap pixmap;
 				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
-					pixmap.load(contentInfo->DestName + "_converted.png");
-				m_PropertiesImagePreview->setHidden(!loadSuccess);
-				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
-				if (loadSuccess) m_PropertiesImageLabel->repaint();
-				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
+					               pixmap.load(contentInfo->DestName + "_converted.png");
+				m_PropertiesImagePreview->setHidden(!loadSuccess);				
+                if (loadSuccess)
+                {
+                    m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
+                    m_PropertiesImageLabel->repaint();
+                }
+				else 
+                {
+                    if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview.");
+                }
 				m_PropertiesImageCoprocessor->setHidden(true);
 				m_PropertiesRaw->setHidden(true);
 				m_PropertiesFont->setHidden(true);
@@ -1794,6 +1873,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					out.writeRawData(data, data.size());
 					contentInfo->UploadMemoryDirty = true;
 					contentInfo->UploadFlashDirty = true;
+                    file.close();
 				}
 			}
 		}

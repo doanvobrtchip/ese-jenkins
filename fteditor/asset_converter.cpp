@@ -29,6 +29,7 @@
 // Qt includes
 #include <QImage>
 #include <QByteArray>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
@@ -185,32 +186,66 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
+    QString outDirPath(outName);
+    outDirPath = outName.left(outName.lastIndexOf("/"));
+
 	QString quantFile = outName + "_converted-fs8.png";
 	if (QFile::exists(quantFile))
 		QFile::remove(quantFile);
 
-	if (format == PALETTED || format == PALETTED8 || format == PALETTED565 || format == PALETTED4444)
-	{
-		convertImagePaletted(buildError, inFile, outName, format);
-		if (buildError.isEmpty())
-			return;
-		buildError.clear();
-		printf("Failed to export using pngquant, try PIL\n");
-	}
-#ifdef FT800EMU_PYTHON
-	if (a_ImageConvRun)
-	{
-		PyErr_Clear();
-		bool error = true;
+    QDir outDir(outDirPath);
+    if (outDir.exists())
+    {
+        outDir.removeRecursively();
+    }
 
-		QByteArray inFileUtf8 = inFile.toUtf8();
-		QByteArray outNameUtf8 = outName.toUtf8();
-		std::stringstream sFormat;
-		sFormat << format;
+#ifdef FT800EMU_PYTHON
+    if (a_ImageConvRun)
+    {
+        PyErr_Clear();
+        bool error = true;
+
+        QByteArray inFileUtf8 = inFile.toUtf8();
+        QByteArray outNameUtf8 = outDirPath.toUtf8();
+
+        // convert fteditor's format to python script's format
+        switch (format)
+        {
+        case ARGB1555:                          format = 0;  break;
+        case L1:                                format = 1;  break;
+        case L4:                                format = 2;  break;
+        case L8:                                format = 3;  break;
+        case RGB332:                            format = 4;  break;
+        case ARGB2:                             format = 5;  break;
+        case ARGB4:                             format = 6;  break;
+        case RGB565:                            format = 7;  break;
+        case PALETTED:                          format = 8;  break;
+        case L2:                                format = 9;  break;
+        case PALETTED565:                       format = 10; break;
+        case PALETTED4444:                      format = 11; break;
+        case PALETTED8:                         format = 12; break;
+        case COMPRESSED_RGBA_ASTC_4x4_KHR:		format = 13; break;
+        case COMPRESSED_RGBA_ASTC_5x4_KHR:		format = 14; break;
+        case COMPRESSED_RGBA_ASTC_5x5_KHR:	    format = 15; break;
+        case COMPRESSED_RGBA_ASTC_6x5_KHR:		format = 16; break;
+        case COMPRESSED_RGBA_ASTC_6x6_KHR:		format = 17; break;
+        case COMPRESSED_RGBA_ASTC_8x5_KHR:		format = 18; break;
+        case COMPRESSED_RGBA_ASTC_8x6_KHR:		format = 19; break;
+        case COMPRESSED_RGBA_ASTC_8x8_KHR:		format = 20; break;
+        case COMPRESSED_RGBA_ASTC_10x5_KHR:		format = 21; break;
+        case COMPRESSED_RGBA_ASTC_10x6_KHR:		format = 22; break;
+        case COMPRESSED_RGBA_ASTC_10x8_KHR:		format = 23; break;
+        case COMPRESSED_RGBA_ASTC_10x10_KHR:	format = 24; break;
+        case COMPRESSED_RGBA_ASTC_12x10_KHR:	format = 25; break;
+        case COMPRESSED_RGBA_ASTC_12x12_KHR:	format = 26; break;
+        default: break;
+        }
+
+        QString sFormat = QString::number(format);
 
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
-		PyObject *pyTuple = PyTuple_New(6);
+		PyObject *pyTuple = PyTuple_New(8);
 		pyValue = PyString_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
 		pyValue = PyUnicode_FromString(inFileUtf8.data());
@@ -221,8 +256,14 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 		PyTuple_SetItem(pyTuple, 3, pyValue);
 		pyValue = PyString_FromString("-f");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
-		pyValue = PyString_FromString(sFormat.str().c_str());
+		pyValue = PyString_FromString(sFormat.toUtf8().data());
 		PyTuple_SetItem(pyTuple, 5, pyValue);
+
+        pyValue = PyString_FromString("-e");
+        PyTuple_SetItem(pyTuple, 6, pyValue);
+        pyValue = PyString_FromString("thorough");
+        PyTuple_SetItem(pyTuple, 7, pyValue);
+
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
 		PyObject *pyResult = PyObject_CallObject(a_ImageConvRun, pyArgs);
 		Py_DECREF(pyArgs); pyArgs = NULL;
@@ -426,6 +467,20 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	else if (!strcmp(format, "PALETTED8")) bitmapInfo.LayoutFormat = PALETTED8;
 	else if (!strcmp(format, "PALETTED565")) bitmapInfo.LayoutFormat = PALETTED565;
 	else if (!strcmp(format, "PALETTED4444")) bitmapInfo.LayoutFormat = PALETTED4444;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_4x4_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_4x4_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_5x4_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_5x4_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_5x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_5x5_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_6x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_6x5_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_6x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_6x6_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x5_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x6_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x8_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x8_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x5_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x6_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x8_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x8_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x10_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x10_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_12x10_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_12x10_KHR;
+    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_12x12_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_12x12_KHR;
 	else
 	{
 		printf("Invalid format in RAWH: '%s'\n", format);
