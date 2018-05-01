@@ -3563,13 +3563,19 @@ void MainWindow::openFile(const QString &fileName)
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
 {
 	QString flashName(fileName);
+	QString text;
 	if (flashName.isEmpty())
 	{
-		flashName = tr("No flash file is loaded");
+		text = tr("<i>No flash file is currently loaded.</i>");
+		m_ProjectFlashFilename->setTextFormat(Qt::RichText);
 	}
-	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	else
+	{
+		text = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+		m_ProjectFlashFilename->setTextFormat(Qt::PlainText);
+	}
 	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, flashName);
-	m_ProjectFlashFilename->setText(elidedText);
+	m_ProjectFlashFilename->setText(text);
 }
 
 const bool MainWindow::isProjectSaved(void)
@@ -3581,7 +3587,9 @@ bool MainWindow::eventFilter(QObject * watched, QEvent * event)
 {
 	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
 	{
-		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+		QString flashName = m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString();
+		if (!flashName.isEmpty())
+			setFlashFileNameToLabel(flashName);
 	}
 
 	return QMainWindow::eventFilter(watched, event);
