@@ -441,7 +441,7 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	char format[32];
 	format[0] = 0x00;
 	int stride;
-	int result = fscanf(f, "/*('file properties: ', 'resolution ', %i, 'x', %i, 'format ', '%31[A-Z0-9]', 'stride ', %i", &width, &height, format, &stride);
+	int result = fscanf(f, "/*('file properties: ', 'resolution ', %i, 'x', %i, 'format ', '%31[_A-Za-z0-9]', 'stride ', %i", &width, &height, format, &stride);
 	fclose(f);
 	if (result != 4)
 	{
