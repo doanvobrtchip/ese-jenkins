@@ -133,9 +133,21 @@ private:
 }; /* class System */
 
 // #define FTEMU_printf(s, ...) do { if (m_System->getPrintStd()) { printf(s, __VA_ARGS__); } } while (false)
-#define FTEMU_error(s, ...) m_System->log(BT8XXEMU_LogError, s, __VA_ARGS__)
-#define FTEMU_warning(s, ...) m_System->log(BT8XXEMU_LogWarning, s, __VA_ARGS__)
-#define FTEMU_message(s, ...) m_System->log(BT8XXEMU_LogMessage, s, __VA_ARGS__)
+#ifdef _DEBUG	
+	#define FTEMU_error(s, ...)  m_System->log(BT8XXEMU_LogError, s, __VA_ARGS__)  
+#else
+	#define FTEMU_error(s, ...)	{}
+#endif
+#ifdef _DEBUG
+	#define FTEMU_warning(s, ...)   m_System->log(BT8XXEMU_LogWarning, s, __VA_ARGS__) 
+#else
+	#define FTEMU_warning(s, ...)	{}
+#endif
+#ifdef _DEBUG
+	#define FTEMU_message(s, ...)    m_System->log(BT8XXEMU_LogMessage, s, __VA_ARGS__) 
+#else
+	#define FTEMU_message(s, ...)	{}
+#endif
 
 } /* namespace FT8XXEMU */
 

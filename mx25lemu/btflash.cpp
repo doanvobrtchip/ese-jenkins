@@ -61,8 +61,11 @@ EXITQPIFFh  Ok (No-op)
 #include <algorithm>
 #include <mutex>
 
-#define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)
-// #define Flash_debug(message, ...)
+#ifdef _DEBUG  
+	#define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)  
+#else
+	#define Flash_debug(message, ...) {} 
+#endif
 
 extern BT8XXEMU_FlashVTable g_FlashVTable;
 static std::mutex s_LogMutex;
