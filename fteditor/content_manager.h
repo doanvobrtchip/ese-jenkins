@@ -177,7 +177,7 @@ public:
 	ContentInfo *current();
 
 	// Get the current flash map path
-	QString findFlashMapPath();
+	QString findFlashMapPath(bool forceScan = false);
 
 	// Editor utilities
 	// Find handle related to content address, return -1 on failure // TODO: depend on current editor line

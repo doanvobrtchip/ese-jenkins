@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 #endif /* FT800EMU_PYTHON */
 	FTEDITOR::MainWindow mainWin(customSizeHints);
 	mainWin.resize(800, 600);
-	mainWin.show(); // calls isVisible(true)
+	mainWin.showMaximized();
 
 	const QStringList arguments = app.arguments();
 	if (arguments.size() > 1 && QFile::exists(arguments.last()))

@@ -133,3 +133,8 @@ install/*
 build_*
 distribution_*
 fteditor/untitled/Project/Msvc_win32/untitled/untitled.VC.db
+
+!deployment/emulator/bin
+!deployment/emulator/lib
+!deployment/emulator/lib/*.lib
+!deployment/emulator/bin/*.dll

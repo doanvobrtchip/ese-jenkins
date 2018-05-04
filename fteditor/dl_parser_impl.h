@@ -629,6 +629,9 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
 		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
 		s_CmdParamString[CMD_CLEARCACHE & 0xFF] = false;
+        s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
+        s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+        s_CmdParamString[CMD_INFLATE & 0xFF] = false;
 		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
 		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
 		s_CmdParamString[CMD_INFLATE2 & 0xFF] = false;
@@ -677,6 +680,9 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_VIDEOSTARTF"] = CMD_VIDEOSTARTF & 0xFF;
 		s_CmdParamCount[CMD_VIDEOSTARTF & 0xFF] = 0;
 		s_CmdParamString[CMD_VIDEOSTARTF & 0xFF] = false;
+        s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
+        s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 13;
+        s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
 #endif
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
@@ -787,6 +793,16 @@ void DlParser::initVC3()
 	m_CmdParamString[FTEDITOR_BT815] = s_CmdParamString;
 	m_CmdParamOptFormat[FTEDITOR_BT815] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_BT815] = s_CmdIdList;
+
+    m_IdMap[FTEDITOR_BT816] = &s_IdMap;
+    m_ParamMap[FTEDITOR_BT816] = &s_ParamMap;
+    m_CmdIdMap[FTEDITOR_BT816] = &s_CmdIdMap;
+    m_CmdParamMap[FTEDITOR_BT816] = &s_CmdParamMap;
+    m_ParamCount[FTEDITOR_BT816] = s_ParamCount;
+    m_CmdParamCount[FTEDITOR_BT816] = s_CmdParamCount;
+    m_CmdParamString[FTEDITOR_BT816] = s_CmdParamString;
+    m_CmdParamOptFormat[FTEDITOR_BT816] = s_CmdParamOptFormat;
+    m_CmdIdList[FTEDITOR_BT816] = s_CmdIdList;
 #endif
 }
 
@@ -1404,6 +1420,15 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[3].U);
 					break;
 				}
+                case CMD_BITMAP_TRANSFORM:
+                {
+                    for (size_t i = 0; i < 12; ++i)
+                    {
+                        compiled.push_back(parsed.Parameter[i].U);
+                    }                    
+                    compiled.push_back(parsed.Parameter[12].U & 0xFFFF);
+                    break;
+                }
 #endif
 			}
 		}
@@ -1987,6 +2012,37 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 
 static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 {
+#if defined(FTEDITOR_PARSER_VC3)
+    if (cmd == CMD_PLAYVIDEO)
+    {
+        if (opt == 0) { dst << "0"; return; }
+        if (opt & OPT_NODL) dst << "OPT_NODL | ";
+        if (opt & OPT_FLASH) dst << "OPT_FLASH | ";
+        if (opt & OPT_OVERLAY) dst << "OPT_OVERLAY | ";
+        if (opt & OPT_NOTEAR) dst << "OPT_NOTEAR | ";
+        if (opt & OPT_FULLSCREEN) dst << "OPT_FULLSCREEN | ";
+        if (opt & OPT_MEDIAFIFO) dst << "OPT_MEDIAFIFO | ";
+        if (opt & OPT_SOUND) dst << "OPT_SOUND";
+        else
+        {
+            long t = dst.tellp();
+            dst.seekp(t - 3);
+        }
+        return;
+    }
+    if (cmd == CMD_ANIMSTART)
+    {
+        if (opt == ANIM_LOOP)
+        {
+            dst << "ANIM_LOOP";
+        }
+        else if (opt == ANIM_ONCE)
+        {
+            dst << "ANIM_ONCE";
+        }
+        return;
+    }
+#endif
 	if (opt == 0)
 	{
 		dst << "0";
@@ -2292,6 +2348,12 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, const DlParsed &par
 				if (p == 2) paramType = 5;
 				else if (p == 5) paramType = 5;
 				break;
+            case CMD_INFLATE2:
+                if (p == 1) paramType = 1;
+                break;
+            case CMD_ANIMSTART:
+                if (p == 2) paramType = 1;
+                break;
 #endif
 			}
 			switch (paramType)

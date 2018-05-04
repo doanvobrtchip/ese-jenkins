@@ -98,6 +98,7 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT812
 	5, // FT813
 	5, // BT815
+    5, // BT816
 };
 
 static const char *s_StandardResolutions[] = {
@@ -306,13 +307,18 @@ void resetemu()
 	cleanupMediaFifo();
 }
 
+bool hasOTP()
+{
+	return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816;
+}
+
 void resetCoprocessorFromLoop()
 {
 	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	if (hasOTP())
 	{
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
@@ -323,7 +329,7 @@ void resetCoprocessorFromLoop()
 	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	if (hasOTP())
 	{
 		// Go back into the patched coprocessor main loop
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
@@ -1559,7 +1565,8 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"ft81x",
-	"bt81x"
+	"bt81x",
+    "bt81x"
 };
 
 QString MainWindow::scriptModule()
@@ -2176,6 +2183,8 @@ void MainWindow::createDockWindows()
 
 			groupLayout->addLayout(hBoxLayout);
 
+            QVBoxLayout *vBoxLayout = new QVBoxLayout();
+            vBoxLayout->setMargin(0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
@@ -2197,7 +2206,8 @@ void MainWindow::createDockWindows()
 
 			// m_ProjectFlashLayout->stretch
 
-			m_ProjectFlashLayout->setLayout(hBoxLayout);
+            vBoxLayout->addLayout(hBoxLayout);
+			m_ProjectFlashLayout->setLayout(vBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
 			m_ProjectFlashFilename = new QLabel(this);
@@ -2207,7 +2217,7 @@ void MainWindow::createDockWindows()
 			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
 			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
 			m_ProjectFlashFilename->installEventFilter(this);
-			groupLayout->addWidget(m_ProjectFlashFilename);
+            vBoxLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -3555,13 +3565,19 @@ void MainWindow::openFile(const QString &fileName)
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
 {
 	QString flashName(fileName);
+	QString text;
 	if (flashName.isEmpty())
 	{
-		flashName = tr("No flash file is loaded");
+		text = tr("<i>No flash file is currently loaded.</i>");
+		m_ProjectFlashFilename->setTextFormat(Qt::RichText);
 	}
-	QString elidedText = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+	else
+	{
+		text = m_ProjectFlashFilename->fontMetrics().elidedText(flashName, Qt::ElideMiddle, m_ProjectFlashFilename->width());
+		m_ProjectFlashFilename->setTextFormat(Qt::PlainText);
+	}
 	m_ProjectFlashFilename->setProperty(PROPERTY_FLASH_FILE_NAME, flashName);
-	m_ProjectFlashFilename->setText(elidedText);
+	m_ProjectFlashFilename->setText(text);
 }
 
 const bool MainWindow::isProjectSaved(void)
@@ -3573,7 +3589,9 @@ bool MainWindow::eventFilter(QObject * watched, QEvent * event)
 {
 	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
 	{
-		setFlashFileNameToLabel(m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString());
+		QString flashName = m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString();
+		if (!flashName.isEmpty())
+			setFlashFileNameToLabel(flashName);
 	}
 
 	return QMainWindow::eventFilter(watched, event);

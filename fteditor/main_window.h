@@ -29,7 +29,7 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
-#define FT_VCDUMP_VISIBLE true
+#define FT_VCDUMP_VISIBLE false
 
 class QTemporaryDir;
 class QTreeView;
