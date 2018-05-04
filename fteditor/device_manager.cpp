@@ -291,7 +291,7 @@ void DeviceManager::connectDevice()
 
 	/* Access address 0 to wake up the FT800 */
 	Ft_Gpu_HostCommand(phost,FT_GPU_ACTIVE_M);
-	Ft_Gpu_Hal_Sleep(20);
+	Ft_Gpu_Hal_Sleep(300);
 
     if (phost->spi_host == SPIHOST_MPSSE_VA800A_SPI){
         /* Set the clk to external clock */
@@ -445,16 +445,14 @@ void DeviceManager::setCurrentDisplaySize(QString displaySize){
 
 void DeviceManager::setSyncDeviceName(QString deviceName){
 	selectedSyncDevice = deviceName;
+	syncDeviceEVEType = FTEDITOR_FT800;
 
-    if (selectedSyncDevice == "ME813AU_WH50C(800x480)")
+	if (selectedSyncDevice == "VM816C50A(800x480)") {
+		syncDeviceEVEType = FTEDITOR_BT815;
+	}
+    else if (selectedSyncDevice == "ME813AU_WH50C(800x480)")
     {
         syncDeviceEVEType = FTEDITOR_FT813;
-    }else if (selectedSyncDevice == "VM800BU50A")
-    {
-        syncDeviceEVEType = FTEDITOR_FT800;
-    }else
-    {
-        syncDeviceEVEType = FTEDITOR_FT800;
     }
 }
 
