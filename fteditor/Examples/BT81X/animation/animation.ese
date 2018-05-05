@@ -1,0 +1,54 @@
+{
+    "content": [
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "ani.anim.data",
+            "flashAddress": 4096,
+            "mappedName": "ani.anim.data",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/ani123.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "ani.anim.object",
+            "flashAddress": 23296,
+            "mappedName": "ani.anim.object",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/ani123.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "unified.blob",
+            "flashAddress": 0,
+            "mappedName": "unified.blob",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/ani123.map"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_FLASHFAST()",
+        "CMD_ANIMFRAME(80, 73, 23296, 0)",
+        "CMD_ANIMFRAME(245, 200, 23296, 2)",
+        "CMD_ANIMFRAME(403, 77, 23296, 5)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}

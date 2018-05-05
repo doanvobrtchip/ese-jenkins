@@ -239,7 +239,7 @@ class Image_Conv:
                         raise Exception('Output folder already contains previously generated outputs: {}'.format(File))
                         break
         except Exception as ex:
-            raise Exception('Error occured while processing output folder: {}\n{}'.format(outputdir, ex))
+            raise Exception('Error occured while processing output folder: {}. {}'.format(outputdir, ex))
 
         # regular images
         if self.output_format in binary_formats:
@@ -393,8 +393,7 @@ class Image_Conv:
             def is_exe(fpath):
                 return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
             if (not self.astc_encode.endswith('astcenc.exe')) or (not is_exe(self.astc_encode)):
-                print( self.astc_encode + " is not a valid astc-encoder")
-                sys.exit(2)
+                raise Exception( self.astc_encode + " is not a valid astc-encoder")
             is_astc = True
             astc_format = {
             VC_ASTC_4X4_KHR   :0x93B0 ,
@@ -861,12 +860,4 @@ class Image_Conv:
         writeToJSONFile(self.output_dir, self.infile_basename, json)
 
 if __name__ == '__main__':
-    #print('Image conversion utility for FT8XX {}'.format(version))
-    try:
-        Image_Conv().run(sys.argv[1:])
-    except Exception as ex:
-        print('{}'.format(ex))
-        sys.exit(2)
-
-
-
+    Image_Conv().run(sys.argv[1:])

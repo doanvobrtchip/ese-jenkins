@@ -98,6 +98,7 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT812
 	5, // FT813
 	5, // BT815
+    5, // BT816
 };
 
 static const char *s_StandardResolutions[] = {
@@ -1564,7 +1565,8 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"ft81x",
-	"bt81x"
+	"bt81x",
+    "bt81x"
 };
 
 QString MainWindow::scriptModule()

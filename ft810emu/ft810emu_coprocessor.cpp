@@ -686,13 +686,25 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 	{
 		FILE *f;
 		f = _wfopen(romFilePath, L"rb");
-		if (!f) FTEMU_error("Failed to open coprocessor ROM file");
+		if (!f)
+		{
+			FTEMU_error("Failed to open coprocessor ROM file");
+		}
 		else
 		{
-			size_t s = fread(j1boot, 1, FT800EMU_COPROCESSOR_ROM_SIZE, f);
-			if (s != FT800EMU_COPROCESSOR_ROM_SIZE) FTEMU_error("Incomplete coprocessor ROM file");
-			else FTEMU_message("Loaded coprocessor ROM file");
-			if (fclose(f)) FTEMU_error("Error closing coprocessor ROM file");
+			size_t s = fread(j1boot, 2, FT800EMU_COPROCESSOR_ROM_SIZE, f);//16384 WORDs (1 WORD = 2 Bytes)
+			if (s != FT800EMU_COPROCESSOR_ROM_SIZE * 2)
+			{
+				FTEMU_error("Incomplete coprocessor ROM file");
+			}
+			else
+			{
+				FTEMU_message("Loaded coprocessor ROM file");
+			}
+			if (fclose(f))
+			{
+				FTEMU_error("Error closing coprocessor ROM file");
+			}
 		}
 	}
 	else

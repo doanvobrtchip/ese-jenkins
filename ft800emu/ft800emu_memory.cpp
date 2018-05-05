@@ -402,13 +402,25 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	{
 		FILE *f;
 		f = _wfopen(romFilePath, L"rb");
-		if (!f) FTEMU_error("Failed to open ROM file");
+		if (!f)
+		{
+			FTEMU_error("Failed to open ROM file");
+		}
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
-			if (s != FT800EMU_ROM_SIZE) FTEMU_error("Incomplete ROM file");
-			else FTEMU_message("Loaded ROM file");
-			if (fclose(f)) FTEMU_error("Error closing ROM file");
+			if (s != FT800EMU_ROM_SIZE)
+			{
+				FTEMU_error("Incomplete ROM file");
+			}
+			else
+			{
+				FTEMU_message("Loaded ROM file");
+			}
+			if (fclose(f))
+			{
+				FTEMU_error("Error closing ROM file");
+			}
 		}
 	}
 	else
@@ -427,13 +439,25 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	{
 		FILE *f;
 		f = _wfopen(otpFilePath, L"rb");
-		if (!f) FTEMU_error("Failed to open OTP file");
+		if (!f)
+		{
+			FTEMU_error("Failed to open OTP file");
+		}
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
-			if (s != FT800EMU_OTP_SIZE) FTEMU_error("Incomplete OTP file");
-			else FTEMU_message("Loaded OTP file");
-			if (fclose(f)) FTEMU_error("Error closing OTP file");
+			if (s != FT800EMU_OTP_SIZE)
+			{
+				FTEMU_error("Incomplete OTP file");
+			}
+			else
+			{
+				FTEMU_message("Loaded OTP file");
+			}
+			if (fclose(f))
+			{
+				FTEMU_error("Error closing OTP file");
+			}
 		}
 	}
 	else

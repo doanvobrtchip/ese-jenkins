@@ -793,6 +793,16 @@ void DlParser::initVC3()
 	m_CmdParamString[FTEDITOR_BT815] = s_CmdParamString;
 	m_CmdParamOptFormat[FTEDITOR_BT815] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_BT815] = s_CmdIdList;
+
+    m_IdMap[FTEDITOR_BT816] = &s_IdMap;
+    m_ParamMap[FTEDITOR_BT816] = &s_ParamMap;
+    m_CmdIdMap[FTEDITOR_BT816] = &s_CmdIdMap;
+    m_CmdParamMap[FTEDITOR_BT816] = &s_CmdParamMap;
+    m_ParamCount[FTEDITOR_BT816] = s_ParamCount;
+    m_CmdParamCount[FTEDITOR_BT816] = s_CmdParamCount;
+    m_CmdParamString[FTEDITOR_BT816] = s_CmdParamString;
+    m_CmdParamOptFormat[FTEDITOR_BT816] = s_CmdParamOptFormat;
+    m_CmdIdList[FTEDITOR_BT816] = s_CmdIdList;
 #endif
 }
 
