@@ -202,6 +202,9 @@ void EmulatorViewport::stop()
 		s_EmulatorThread = NULL;
 		printf("Emulator threads finished\n");
 
+		// FIXME: WORKAROUND: Issue #17
+		// This should use BT8XXEMU_destroy, but the additional call to BT8XXEMU_stop 
+		// is causing inconsistent behaviour.
 		delete (g_Emulator);
 		g_Emulator = NULL;
 
