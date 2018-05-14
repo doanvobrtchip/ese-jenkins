@@ -199,13 +199,13 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 #ifdef BT815EMU_MODE
 		case REG_FLASH_STATUS:
-			FTEMU_warning("Write REG_FLASH_STATUS %i", (int)data);
+			//FTEMU_warning("Write REG_FLASH_STATUS %i", (int)data);
 			break;
 		case REG_FLASH_SIZE:
-			FTEMU_warning("Write REG_FLASH_SIZE %i", (int)data);
+			//FTEMU_warning("Write REG_FLASH_SIZE %i", (int)data);
 			break;
 		case REG_SPIM_DIR:
-			FTEMU_warning("Write REG_SPIM_DIR 0x%x", (int)data);
+			//FTEMU_warning("Write REG_SPIM_DIR 0x%x", (int)data);
 			break;
 		case REG_SPIM:
 			// FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
@@ -232,37 +232,37 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			}
 			break;
 		case REG_ESPIM_ADD:
-			FTEMU_warning("Write REG_ESPIM_ADD %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_ADD %i", (int)data);
 			break;
 		case REG_ESPIM_COUNT:
-			FTEMU_warning("Write REG_ESPIM_COUNT %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_COUNT %i", (int)data);
 			break;
 		case REG_ESPIM_DUMMY:
-			FTEMU_warning("Write REG_ESPIM_DUMMY %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_DUMMY %i", (int)data);
 			break;
 		case REG_ESPIM_READSTART:
-			FTEMU_warning("Write REG_ESPIM_READSTART %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_READSTART %i", (int)data);
 			break;
 		case REG_ESPIM_SEQ:
-			FTEMU_warning("Write REG_ESPIM_SEQ %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_SEQ %i", (int)data);
 			break;
 		case REG_ESPIM_TRIG:
-			FTEMU_warning("Write REG_ESPIM_TRIG %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_TRIG %i", (int)data);
 			break;
 		case REG_ESPIM_WINDOW:
-			FTEMU_warning("Write REG_ESPIM_WINDOW %i", (int)data);
+			//FTEMU_warning("Write REG_ESPIM_WINDOW %i", (int)data);
 			break;
 		case REG_GPIO:
-			FTEMU_warning("Write REG_GPIO %i", (int)data);
+			//FTEMU_warning("Write REG_GPIO %i", (int)data);
 			break;
 		case REG_GPIOX:
-			FTEMU_warning("Write REG_GPIOX %i", (int)data);
+			//FTEMU_warning("Write REG_GPIOX %i", (int)data);
 			break;
 		case REG_GPIOX_DIR:
-			FTEMU_warning("Write REG_GPIOX_DIR %i", (int)data);
+			//FTEMU_warning("Write REG_GPIOX_DIR %i", (int)data);
 			break;
 		case REG_GPIO_DIR:
-			FTEMU_warning("Write REG_GPIO_DIR %i", (int)data);
+			//FTEMU_warning("Write REG_GPIO_DIR %i", (int)data);
 			break;
 #endif
 #endif
@@ -402,13 +402,25 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	{
 		FILE *f;
 		f = _wfopen(romFilePath, L"rb");
-		if (!f) FTEMU_error("Failed to open ROM file");
+		if (!f)
+		{
+			FTEMU_error("Failed to open ROM file");
+		}
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_ROM_INDEX], 1, FT800EMU_ROM_SIZE, f);
-			if (s != FT800EMU_ROM_SIZE) FTEMU_error("Incomplete ROM file");
-			else FTEMU_message("Loaded ROM file");
-			if (fclose(f)) FTEMU_error("Error closing ROM file");
+			if (s != FT800EMU_ROM_SIZE)
+			{
+				FTEMU_error("Incomplete ROM file");
+			}
+			else
+			{
+				FTEMU_message("Loaded ROM file");
+			}
+			if (fclose(f))
+			{
+				FTEMU_error("Error closing ROM file");
+			}
 		}
 	}
 	else
@@ -427,13 +439,25 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	{
 		FILE *f;
 		f = _wfopen(otpFilePath, L"rb");
-		if (!f) FTEMU_error("Failed to open OTP file");
+		if (!f)
+		{
+			FTEMU_error("Failed to open OTP file");
+		}
 		else
 		{
 			size_t s = fread(&m_Ram[FT800EMU_OTP_SIZE], 1, FT800EMU_OTP_SIZE, f);
-			if (s != FT800EMU_OTP_SIZE) FTEMU_error("Incomplete OTP file");
-			else FTEMU_message("Loaded OTP file");
-			if (fclose(f)) FTEMU_error("Error closing OTP file");
+			if (s != FT800EMU_OTP_SIZE)
+			{
+				FTEMU_error("Incomplete OTP file");
+			}
+			else
+			{
+				FTEMU_message("Loaded OTP file");
+			}
+			if (fclose(f))
+			{
+				FTEMU_error("Error closing OTP file");
+			}
 		}
 	}
 	else
@@ -1082,13 +1106,13 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 #endif
 #ifdef BT815EMU_MODE
 	case REG_FLASH_STATUS:
-		FTEMU_warning("Read Co U32 REG_FLASH_STATUS");
+		//FTEMU_warning("Read Co U32 REG_FLASH_STATUS");
 		break;
 	case REG_FLASH_SIZE:
-		FTEMU_warning("Read Co U32 REG_FLASH_SIZE");
+		//FTEMU_warning("Read Co U32 REG_FLASH_SIZE");
 		break;
 	case REG_SPIM_DIR:
-		FTEMU_warning("Read Co U32 REG_SPIM_DIR");
+		//FTEMU_warning("Read Co U32 REG_SPIM_DIR");
 		break;
 	case REG_SPIM:
 		// FTEMU_warning("Read Co U32 REG_SPIM %x (miso: %i)",
@@ -1100,19 +1124,19 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		// }
 		break;
 	case REG_ESPIM_ADD:
-		FTEMU_warning("Read Co U32 REG_ESPIM_ADD");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_ADD");
 		break;
 	case REG_ESPIM_COUNT:
-		FTEMU_warning("Read Co U32 REG_ESPIM_COUNT");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_COUNT");
 		break;
 	case REG_ESPIM_DUMMY:
-		FTEMU_warning("Read Co U32 REG_ESPIM_DUMMY");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_DUMMY");
 		break;
 	case REG_ESPIM_READSTART:
-		FTEMU_warning("Read Co U32 REG_ESPIM_READSTART");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_READSTART");
 		break;
 	case REG_ESPIM_SEQ:
-		FTEMU_warning("Read Co U32 REG_ESPIM_SEQ");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_SEQ");
 		break;
 	case REG_ESPIM_TRIG:
 		// FTEMU_warning("Read Co U32 REG_ESPIM_TRIG");
@@ -1122,19 +1146,19 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			return regEspimTrig;
 		}
 	case REG_ESPIM_WINDOW:
-		FTEMU_warning("Read Co U32 REG_ESPIM_WINDOW");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_WINDOW");
 		break;
 	case REG_GPIO:
-		FTEMU_warning("Read Co U32 REG_GPIO");
+		//FTEMU_warning("Read Co U32 REG_GPIO");
 		break;
 	case REG_GPIOX:
-		FTEMU_warning("Read Co U32 REG_GPIOX");
+		//FTEMU_warning("Read Co U32 REG_GPIOX");
 		break;
 	case REG_GPIOX_DIR:
-		FTEMU_warning("Read Co U32 REG_GPIOX_DIR");
+		//FTEMU_warning("Read Co U32 REG_GPIOX_DIR");
 		break;
 	case REG_GPIO_DIR:
-		FTEMU_warning("Read Co U32 REG_GPIO_DIR");
+		//FTEMU_warning("Read Co U32 REG_GPIO_DIR");
 		break;
 #endif
 	}
@@ -1194,16 +1218,16 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 	switch (address)
 	{
 	case REG_FLASH_STATUS:
-		FTEMU_warning("Read Co U16 REG_FLASH_STATUS");
+		//FTEMU_warning("Read Co U16 REG_FLASH_STATUS");
 		break;
 	case REG_FLASH_SIZE:
-		FTEMU_warning("Read Co U16 REG_FLASH_SIZE");
+		//FTEMU_warning("Read Co U16 REG_FLASH_SIZE");
 		break;
 	case REG_SPIM_DIR:
-		FTEMU_warning("Read Co U16 REG_SPIM_DIR");
+		//FTEMU_warning("Read Co U16 REG_SPIM_DIR");
 		break;
 	case REG_SPIM:
-		FTEMU_warning("Read Co U16 REG_SPIM");
+		//FTEMU_warning("Read Co U16 REG_SPIM");
 		if (m_Flash)
 		{
 			// m_Flash->vTable()->ChipSelect(m_Flash, true);
@@ -1211,37 +1235,37 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 		}
 		break;
 	case REG_ESPIM_ADD:
-		FTEMU_warning("Read Co U16 REG_ESPIM_ADD");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_ADD");
 		break;
 	case REG_ESPIM_COUNT:
-		FTEMU_warning("Read Co U16 REG_ESPIM_COUNT");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_COUNT");
 		break;
 	case REG_ESPIM_DUMMY:
-		FTEMU_warning("Read Co U16 REG_ESPIM_DUMMY");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_DUMMY");
 		break;
 	case REG_ESPIM_READSTART:
-		FTEMU_warning("Read Co U16 REG_ESPIM_READSTART");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_READSTART");
 		break;
 	case REG_ESPIM_SEQ:
-		FTEMU_warning("Read Co U16 REG_ESPIM_SEQ");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_SEQ");
 		break;
 	case REG_ESPIM_TRIG:
-		FTEMU_warning("Read Co U16 REG_ESPIM_TRIG");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_TRIG");
 		break;
 	case REG_ESPIM_WINDOW:
-		FTEMU_warning("Read Co U16 REG_ESPIM_WINDOW");
+		//FTEMU_warning("Read Co U16 REG_ESPIM_WINDOW");
 		break;
 	case REG_GPIO:
-		FTEMU_warning("Read Co U16 REG_GPIO");
+		//FTEMU_warning("Read Co U16 REG_GPIO");
 		break;
 	case REG_GPIOX:
-		FTEMU_warning("Read Co U16 REG_GPIOX");
+		//FTEMU_warning("Read Co U16 REG_GPIOX");
 		break;
 	case REG_GPIOX_DIR:
-		FTEMU_warning("Read Co U16 REG_GPIOX_DIR");
+		//FTEMU_warning("Read Co U16 REG_GPIOX_DIR");
 		break;
 	case REG_GPIO_DIR:
-		FTEMU_warning("Read Co U16 REG_GPIO_DIR");
+		//FTEMU_warning("Read Co U16 REG_GPIO_DIR");
 		break;
 	}
 #endif
@@ -1308,16 +1332,16 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 	switch (address)
 	{
 	case REG_FLASH_STATUS:
-		FTEMU_warning("Read Co U8 REG_FLASH_STATUS");
+		//FTEMU_warning("Read Co U8 REG_FLASH_STATUS");
 		break;
 	case REG_FLASH_SIZE:
-		FTEMU_warning("Read Co U8 REG_FLASH_SIZE");
+		//FTEMU_warning("Read Co U8 REG_FLASH_SIZE");
 		break;
 	case REG_SPIM_DIR:
-		FTEMU_warning("Read Co U8 REG_SPIM_DIR");
+		//FTEMU_warning("Read Co U8 REG_SPIM_DIR");
 		break;
 	case REG_SPIM:
-		FTEMU_warning("Read Co U8 REG_SPIM");
+		//FTEMU_warning("Read Co U8 REG_SPIM");
 		if (m_Flash)
 		{
 			// m_Flash->vTable()->ChipSelect(m_Flash, true);
@@ -1325,37 +1349,37 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 		}
 		break;
 	case REG_ESPIM_ADD:
-		FTEMU_warning("Read Co U8 REG_ESPIM_ADD");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_ADD");
 		break;
 	case REG_ESPIM_COUNT:
-		FTEMU_warning("Read Co U8 REG_ESPIM_COUNT");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_COUNT");
 		break;
 	case REG_ESPIM_DUMMY:
-		FTEMU_warning("Read Co U8 REG_ESPIM_DUMMY");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_DUMMY");
 		break;
 	case REG_ESPIM_READSTART:
-		FTEMU_warning("Read Co U8 REG_ESPIM_READSTART");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_READSTART");
 		break;
 	case REG_ESPIM_SEQ:
-		FTEMU_warning("Read Co U8 REG_ESPIM_SEQ");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_SEQ");
 		break;
 	case REG_ESPIM_TRIG:
-		FTEMU_warning("Read Co U8 REG_ESPIM_TRIG");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_TRIG");
 		break;
 	case REG_ESPIM_WINDOW:
-		FTEMU_warning("Read Co U8 REG_ESPIM_WINDOW");
+		//FTEMU_warning("Read Co U8 REG_ESPIM_WINDOW");
 		break;
 	case REG_GPIO:
-		FTEMU_warning("Read Co U8 REG_GPIO");
+		//FTEMU_warning("Read Co U8 REG_GPIO");
 		break;
 	case REG_GPIOX:
-		FTEMU_warning("Read Co U8 REG_GPIOX");
+		//FTEMU_warning("Read Co U8 REG_GPIOX");
 		break;
 	case REG_GPIOX_DIR:
-		FTEMU_warning("Read Co U8 REG_GPIOX_DIR");
+		//FTEMU_warning("Read Co U8 REG_GPIOX_DIR");
 		break;
 	case REG_GPIO_DIR:
-		FTEMU_warning("Read Co U8 REG_GPIO_DIR");
+		//FTEMU_warning("Read Co U8 REG_GPIO_DIR");
 		break;
 	}
 #endif

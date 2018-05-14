@@ -102,7 +102,10 @@ void AudioOutput::beginBuffer(short **buffer, int *samples)
 	unsigned int numFramesPadding;
 
 	hr = m_AudioClient->GetCurrentPadding(&numFramesPadding);
-	if (hr) FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr));
+	if (hr)
+	{
+		FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr));
+	}
 
 	m_NumFramesAvailable = m_BufferFrameCount - numFramesPadding;
 	*samples = m_NumFramesAvailable;
@@ -114,7 +117,10 @@ void AudioOutput::beginBuffer(short **buffer, int *samples)
 	else
 	{
 		hr = m_AudioRenderClient->GetBuffer(m_NumFramesAvailable, (BYTE **)buffer);
-		if (hr) FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr));
+		if (hr)
+		{
+			FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr));
+		}
 	}
 }
 
@@ -123,7 +129,11 @@ void AudioOutput::endBuffer()
 	HRESULT hr;
 
 	hr = m_AudioRenderClient->ReleaseBuffer(m_NumFramesAvailable, 0);
-	if (hr) FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr));
+	if (hr) 
+	{
+		FTEMU_error("WASAPI Buffer: %s", SystemWin32::getHResultErrorString(hr)); 
+	}
+
 }
 
 } /* namespace FT8XXEMU */

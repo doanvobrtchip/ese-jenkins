@@ -51,6 +51,9 @@ namespace FTEDITOR {
 		ME813AUWH50C = new QRadioButton(tr("ME813AU_WH50C(800x480)"));
 		ME813AUWH50C->setToolTip(tr("FT813 module with 5.0\" display and FT4222 USB-SPI"));
 
+		VM816C50A = new QRadioButton(tr("VM816C50A(800x480)"));
+		VM816C50A->setToolTip(tr("VM816C module with 5.0\" display"));
+
 		QVBoxLayout *VBox = new QVBoxLayout;
 		VBox->addWidget(VM800B35A);
 		VBox->addWidget(VM800B43A);
@@ -66,6 +69,8 @@ namespace FTEDITOR {
 		VBox->addWidget(VM800BU50A);
 
 		VBox->addWidget(ME813AUWH50C);
+		VBox->addWidget(VM816C50A);
+
 		groupBox->setLayout(VBox);
 
 		return groupBox;
@@ -129,6 +134,15 @@ namespace FTEDITOR {
 			if (selectedDevice == "ME813AU_WH50C(800x480)")
 				ME813AUWH50C->setChecked(true);
 		}
+
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+		{
+			VM816C50A->setVisible(true);
+
+			if (selectedDevice == "VM816C50A(800x480)")
+				VM816C50A->setChecked(true);
+
+		}
 	}
 
 	void DeviceDisplaySettingsDialog::execute(){
@@ -166,6 +180,9 @@ namespace FTEDITOR {
 			pParent->setDeviceandScreenSize("480x272", "VM800BU50A");
 		}else if (ME813AUWH50C->isChecked()){
 			pParent->setDeviceandScreenSize("800x480", "ME813AU_WH50C(800x480)");
+		}
+		else if (VM816C50A->isChecked()) {
+			pParent->setDeviceandScreenSize("800x480", "VM816C50A(800x480)");
 		}
 
 		this->accept();

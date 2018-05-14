@@ -188,7 +188,10 @@ WindowOutput::WindowOutput(System *system) : m_System(system)
 			//wcex.hIconSm = LoadIcon(m_HInstance, MAKEINTRESOURCE(IDI_SMALL));
 			wcex.hIcon = NULL;
 			wcex.hIconSm = NULL;
-			if (!RegisterClassEx(&wcex)) FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
+			if (!RegisterClassEx(&wcex))
+			{
+				FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
+			}
 		}
 		++s_ClassRegCount;
 
@@ -200,12 +203,17 @@ WindowOutput::WindowOutput(System *system) : m_System(system)
 		RECT r; r.top = 0; r.left = 0; r.bottom = m_Height * BT8XXEMU_WINDOW_SCALE; r.right = m_Width * BT8XXEMU_WINDOW_SCALE; // window size
 																															   /*#endif*/
 		AdjustWindowRect(&r, dw_style, FALSE);
-		if (m_HWnd) FTEMU_error("WindowOutput.begin()  s_HWnd != NULL");
+		if (m_HWnd)
+		{
+			FTEMU_error("WindowOutput.begin()  s_HWnd != NULL");
+		}
 		if (!(m_HWnd = CreateWindow(BT8XXEMU_WINDOW_CLASS_NAME,
 			/*(LPCTSTR)title.c_str()*/BT8XXEMU_WINDOW_TITLE, dw_style,
 			CW_USEDEFAULT, 0, r.right - r.left, r.bottom - r.top, // x y w h
 			NULL, NULL, m_HInstance, NULL)))
-				FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
+		{
+			FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
+		}
 		ShowWindow(m_HWnd, /*nCmdShow*/ true); // If the window was previously visible, the return value is nonzero.
 		if (!UpdateWindow(m_HWnd)) FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
 
