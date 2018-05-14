@@ -62,9 +62,9 @@ EXITQPIFFh  Ok (No-op)
 #include <mutex>
 
 #ifdef _DEBUG  
-	#define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)  
+#	define Flash_debug(message, ...) log(BT8XXEMU_LogMessage, "[[DEBUG]] " message, __VA_ARGS__)
 #else
-	#define Flash_debug(message, ...) {} 
+#	define Flash_debug(message, ...) do { } while (false)
 #endif
 
 extern BT8XXEMU_FlashVTable g_FlashVTable;
