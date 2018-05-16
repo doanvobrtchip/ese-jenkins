@@ -14,7 +14,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <stdio.h>
 
 // Version
-#define BT8XXEMU_VERSION_STRING "3.11.0.1"
+#define BT8XXEMU_VERSION_STRING "3.11.1"
 
 // Include BT8XXEMU_PLATFORM
 #include "ft8xxemu_window_output.h"
