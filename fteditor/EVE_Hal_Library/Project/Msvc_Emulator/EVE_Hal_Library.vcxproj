@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -102,6 +102,7 @@ copy /Y "$(ProjectDir)\..\..\Bin\Msvc_Emulator\mx25lemu.dll"  "$(OutDir)" </Comm
     <ClCompile Include="..\..\Src\Msvc_Emulator\Gpu_Hal.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Hdr\Assets.h" />
     <ClInclude Include="..\..\Hdr\App_Common.h" />
     <ClInclude Include="..\..\Hdr\Skeleton.h" />
     <ClInclude Include="..\..\Hdr\CoPro_Cmds.h" />
