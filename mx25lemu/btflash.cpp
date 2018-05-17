@@ -1454,7 +1454,7 @@ public:
 				| BTFLASH_STATUS_BP3_FLAG
 				| BTFLASH_STATUS_QE_FLAG
 				| BTFLASH_STATUS_SRWD_FLAG;
-			static const uint8_t invMask = (~mask) & (~BTFLASH_STATUS_WEL_FLAG);
+			static const uint8_t invMask = (uint8_t)((~mask) & (~BTFLASH_STATUS_WEL_FLAG));
 			const uint8_t maskedWrite = data & mask;
 			const uint8_t maskedReg = m_StatusRegister & invMask;
 			m_StatusRegister = maskedWrite | maskedReg;
