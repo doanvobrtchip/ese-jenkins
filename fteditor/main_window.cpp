@@ -2300,8 +2300,14 @@ void MainWindow::createDockWindows()
 		dlLabelH->setText(tr("BITMAP_HANDLE: "));
 		statusBar()->addPermanentWidget(dlLabelH);
 
+		QStyle *progressStyle = QStyleFactory::create("Fusion"); // FIXME: This might be a memory leak
+		QPalette progressPalette = palette();
+		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
+		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
+
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
-		m_UtilizationBitmapHandleStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
+		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
 		m_UtilizationBitmapHandleStatus->setMinimum(0);
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
@@ -2314,7 +2320,8 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabel);
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
-		m_UtilizationDisplayListStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationDisplayListStatus->setStyle(progressStyle);
+		m_UtilizationDisplayListStatus->setPalette(progressPalette);
 		m_UtilizationDisplayListStatus->setMinimum(0);
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
@@ -2327,7 +2334,8 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabelG);
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
-		m_UtilizationGlobalStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationGlobalStatus->setStyle(progressStyle);
+		m_UtilizationGlobalStatus->setPalette(progressPalette);
 		m_UtilizationGlobalStatus->setMinimum(0);
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
