@@ -8,8 +8,8 @@
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,11,2,0
- PRODUCTVERSION 3,11,2,0
+ FILEVERSION 3,0,2,0
+ PRODUCTVERSION 3,0,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -26,12 +26,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Bridgetek Pte Ltd"
             VALUE "FileDescription", "BT8XX Emulator Library"
-            VALUE "FileVersion", "3.11.2"
+            VALUE "FileVersion", "3.0.2"
             VALUE "InternalName", "bt8xxemu"
             VALUE "LegalCopyright", "Copyright (C) 2016-2018  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "bt8xxemu.dll"
             VALUE "ProductName", "BT8XXEMU"
-            VALUE "ProductVersion", "3.11.2"
+            VALUE "ProductVersion", "3.0.2"
         END
     END
     BLOCK "VarFileInfo"
