@@ -105,7 +105,7 @@ private:
 	HDC m_HDC = NULL;
 #endif
 
-	BITMAPINFO m_BitInfo = { 0 };
+	BITMAPINFO m_BitInfo = { .bmiHeader = { .biSize = 0 } };
 	int m_Width = BT8XXEMU_WINDOW_WIDTH_DEFAULT;
 	int m_Height = BT8XXEMU_WINDOW_HEIGHT_DEFAULT;
 	float m_Ratio = BT8XXEMU_WINDOW_RATIO_DEFAULT;

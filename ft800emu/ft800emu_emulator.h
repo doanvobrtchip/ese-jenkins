@@ -19,6 +19,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <string>
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 // Project includes (include standard stuff for user)
 #include "bt8xxemu_pp.h"

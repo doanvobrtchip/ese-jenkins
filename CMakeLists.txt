@@ -4,12 +4,15 @@ PROJECT("FTEMU")
 
 # Minimum required 2.6
 # Minimum required 2.8.11 for automatic linking to qtmain.lib
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
-# set (CMAKE_VERBOSE_MAKEFILE ON)
+# Minimum required 3.1 for c++ standard macro
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1 FATAL_ERROR)
+# SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 IF (POLICY CMP0020)
 	CMAKE_POLICY(SET CMP0020 NEW)
 ENDIF ()
+
+SET(CMAKE_CXX_STANDARD 14)
 
 
 ########################################################################

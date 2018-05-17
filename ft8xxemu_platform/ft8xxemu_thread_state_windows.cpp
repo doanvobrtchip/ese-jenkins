@@ -42,6 +42,56 @@ bool ThreadState::init()
 	return false;
 }
 
+#ifdef __GNUC__
+
+// From: https://gist.github.com/rossy/7faf0ab90a54d6b5a46f
+
+#include <pshpack8.h>
+typedef struct {
+	DWORD dwType;
+	LPCSTR szName;
+	DWORD dwThreadID;
+	DWORD dwFlags;
+} THREADNAME_INFO;
+#include <poppack.h>
+
+static EXCEPTION_DISPOSITION NTAPI ignore_handler(EXCEPTION_RECORD *rec, void *frame, CONTEXT *ctx, void *disp)
+{
+	return ExceptionContinueExecution;
+}
+
+static void SetThreadName(DWORD dwThreadID, const char *name)
+{
+	static const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+	// Don't bother if a debugger isn't attached to receive the event
+	if (!IsDebuggerPresent())
+		return;
+
+	// Thread information for VS compatible debugger. -1 sets current thread.
+	THREADNAME_INFO ti = {
+		.dwType = 0x1000,
+		.szName = name,
+		.dwThreadID = dwThreadID,
+	};
+
+	// Push an exception handler to ignore all following exceptions
+	NT_TIB *tib = ((NT_TIB*)NtCurrentTeb());
+	EXCEPTION_REGISTRATION_RECORD rec;
+	rec.Next = tib->ExceptionList;
+	rec.Handler = ignore_handler;
+	tib->ExceptionList = &rec;
+
+	// Visual Studio and compatible debuggers receive thread names from the
+	// program through a specially crafted exception
+	RaiseException(MS_VC_EXCEPTION, 0, sizeof(ti) / sizeof(ULONG_PTR), (ULONG_PTR*)&ti);
+
+	// Pop exception handler
+	tib->ExceptionList = tib->ExceptionList->Next;
+}
+
+#else
+
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 #pragma pack(push,8)  
 typedef struct tagTHREADNAME_INFO
@@ -52,7 +102,7 @@ typedef struct tagTHREADNAME_INFO
 	DWORD dwFlags; // Reserved for future use, must be zero.  
 } THREADNAME_INFO;
 #pragma pack(pop)  
-void SetThreadName(DWORD dwThreadID, const char* threadName) {
+static void SetThreadName(DWORD dwThreadID, const char* threadName) {
 	THREADNAME_INFO info;
 	info.dwType = 0x1000;
 	info.szName = threadName;
@@ -67,6 +117,8 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 	}
 #pragma warning(pop)  
 }
+
+#endif
 
 void ThreadState::setName(const char *name)
 {

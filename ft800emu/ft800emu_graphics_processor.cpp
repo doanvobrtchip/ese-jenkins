@@ -38,6 +38,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <assert.h>
 #include <stack>
 #include <sstream>
+#include <thread>
 #if FTEMU_SSE41_INSTRUCTIONS
 #	include <xmmintrin.h>
 #	include <emmintrin.h>

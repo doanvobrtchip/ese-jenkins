@@ -176,7 +176,7 @@ private:
 	Touch *m_Touch = 0;
 
 	// Master copy of bitmap
-	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { 0 };
+	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { { .Source = 0 } };
 
 FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #ifdef BT815EMU_MODE
@@ -212,7 +212,7 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 private:
 	template <bool debugTrace>
 	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo);
-	void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo);
+	void processBlankDL(BitmapInfo *const bitmapInfo);
 
 private:
 	GraphicsProcessor(const GraphicsProcessor &) = delete;
