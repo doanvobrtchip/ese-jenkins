@@ -182,6 +182,38 @@ void Emulator::finalMasterThread(bool sync, int flags)
 
 	m_Memory->done();
 
+	if (m_AudioRender)
+	{
+		m_Memory->setAudioRender(NULL);
+		delete m_AudioRender;
+		m_AudioRender = NULL;
+	}
+	if (m_AudioProcessor)
+	{
+		m_Memory->setAudioProcessor(NULL);
+		delete m_AudioProcessor;
+		m_AudioProcessor = NULL;
+	}
+	if (m_AudioOutput)
+	{
+		m_AudioOutput->destroy();
+		m_AudioOutput = NULL;
+	}
+	if (m_WindowOutput)
+	{
+		assert(!m_Graphics);
+		m_WindowOutput->destroy();
+		m_WindowOutput = NULL;
+	}
+
+#ifdef WIN32
+	if (m_CoInit)
+	{
+		m_CoInit = false;
+		CoUninitialize();
+	}
+#endif
+
 	m_EmulatorRunning = false;
 }
 
@@ -222,29 +254,6 @@ void Emulator::destroy()
 		}
 		delete m_Coprocessor;
 		m_Coprocessor = NULL;
-		if (m_AudioRender)
-		{
-			m_Memory->setAudioRender(NULL);
-			delete m_AudioRender;
-			m_AudioRender = NULL;
-		}
-		if (m_AudioProcessor)
-		{
-			m_Memory->setAudioProcessor(NULL);
-			delete m_AudioProcessor;
-			m_AudioProcessor = NULL;
-		}
-		if (m_AudioOutput)
-		{
-			m_AudioOutput->destroy();
-			m_AudioOutput = NULL;
-		}
-		if (m_WindowOutput)
-		{
-			assert(!m_Graphics);
-			m_WindowOutput->destroy();
-			m_WindowOutput = NULL;
-		}
 		delete m_BusSlave;
 		m_BusSlave = NULL;
 		m_Memory->setGraphicsProcessor(NULL);
@@ -255,11 +264,6 @@ void Emulator::destroy()
 		m_Touch = NULL;
 		delete m_Memory;
 		m_Memory = NULL;
-
-#ifdef WIN32
-		if (m_CoInit)
-			CoUninitialize();
-#endif
 	}
 }
 
@@ -270,6 +274,7 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 	destroy();
 
 #ifdef WIN32
+	assert(!m_CoInit);
 	m_CoInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
 #endif
 

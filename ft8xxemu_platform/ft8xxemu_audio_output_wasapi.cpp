@@ -54,13 +54,13 @@ bool AudioOutput::init()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&m_MMDeviceEnumerator);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_MMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_MMDevice);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_MMDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&m_AudioClient);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	WAVEFORMATEX *pwfx;
 	hr = m_AudioClient->GetMixFormat(&pwfx);
@@ -77,16 +77,18 @@ bool AudioOutput::init()
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
 	hr = m_AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, hnsRequestedDuration, 0, &wfx, NULL);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->GetBufferSize(&m_BufferFrameCount);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->GetService(IID_IAudioRenderClient, (void **)&m_AudioRenderClient);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->Start();
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
+
+	return true;
 }
 
 AudioOutput::~AudioOutput()
