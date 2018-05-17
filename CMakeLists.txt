@@ -54,7 +54,7 @@ ENDIF ()
 
 OPTION(WITH_SDL "Use old SDL1 (deprecated)" OFF)
 
-OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" ON)
+OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" OFF)
 
 OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" ON)
 
