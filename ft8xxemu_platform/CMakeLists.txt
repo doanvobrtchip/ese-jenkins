@@ -11,7 +11,7 @@ ADD_LIBRARY(ft8xxemu_platform
 
 IF (MINGW)
   TARGET_LINK_LIBRARIES(ft8xxemu_platform
-    gomp dinput8 dxguid)
+    avrt dinput8 dxguid)
 ELSE (MINGW)
   TARGET_LINK_LIBRARIES(ft8xxemu_platform
     )

@@ -18,6 +18,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTDUMP_FALLBACK "C:/source/ft800emu/reference/vc3test/traces/test_astc_layout_0.vc1dump"
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
+extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long Timeout);
+
 void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
 {
 	BT8XXEMU_chipSelect(emulator, 1);
@@ -99,8 +101,8 @@ int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb888
 	{
 		int bsize = hsize * vsize;
 		FILE *f = NULL;
-		while (!(f = fopen(s_OutFileName, "wb"))) _sleep(1);
-		while (!fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f)) _sleep(1);
+		while (!(f = fopen(s_OutFileName, "wb"))) Sleep(1);
+		while (!fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f)) Sleep(1);
 		fflush(f);
 		fclose(f);
 		s_GraphicsDone = true;
@@ -137,7 +139,7 @@ int main(int argc, char* argv[])
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
 	uint8_t *ram = BT8XXEMU_getRam(emulator);
 
-    char *a0 = argc > 1 ? BTDUMP_FILE : BTDUMP_FALLBACK;
+    const char *a0 = argc > 1 ? BTDUMP_FILE : BTDUMP_FALLBACK;
     if (strcmp(a0 + strlen(a0) - 4, ".XBU") == 0) {
 		/*
         hsize = 480;

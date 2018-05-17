@@ -119,23 +119,18 @@ void loopFunction()
 			std::function<void()> f;
 #ifdef __GNUC__
 			s_LoopQueueMutex.lock();
-			while (f = s_LoopQueue.front())
+			while (!s_LoopQueue.empty())
 			{
+				f = s_LoopQueue.front();
 				s_LoopQueue.pop();
+				s_LoopQueueMutex.unlock();
+				f();
+				s_LoopQueueMutex.lock();
+			}
+			s_LoopQueueMutex.unlock();
 #else
 			while (s_LoopQueue.try_pop(f))
-			{
-#endif
-#ifdef __GNUC__
-				s_LoopQueueMutex.unlock();
-#endif
 				f();
-#ifdef __GNUC__
-				s_LoopQueueMutex.lock();
-#endif
-			}
-#ifdef __GNUC__
-			s_LoopQueueMutex.unlock();
 #endif
 			switch (msg.message)
 			{
@@ -352,23 +347,18 @@ LRESULT WindowOutput::wndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	std::function<void()> f;
 #ifdef __GNUC__
 	s_LoopQueueMutex.lock();
-	while (f = s_LoopQueue.front())
+	while (!s_LoopQueue.empty())
 	{
+		f = s_LoopQueue.front();
 		s_LoopQueue.pop();
+		s_LoopQueueMutex.unlock();
+		f();
+		s_LoopQueueMutex.lock();
+	}
+	s_LoopQueueMutex.unlock();
 #else
 	while (s_LoopQueue.try_pop(f))
-	{
-#endif
-#ifdef __GNUC__
-		s_LoopQueueMutex.unlock();
-#endif
 		f();
-#ifdef __GNUC__
-		s_LoopQueueMutex.lock();
-#endif
-	}
-#ifdef __GNUC__
-	s_LoopQueueMutex.unlock();
 #endif
 
 	switch (message)

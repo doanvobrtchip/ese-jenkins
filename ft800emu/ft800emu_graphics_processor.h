@@ -176,7 +176,7 @@ private:
 	Touch *m_Touch = 0;
 
 	// Master copy of bitmap
-	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { { .Source = 0 } };
+	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { };
 
 FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #ifdef BT815EMU_MODE

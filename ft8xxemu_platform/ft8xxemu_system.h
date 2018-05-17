@@ -122,8 +122,8 @@ private:
 
 #ifdef WIN32
 	SystemWin32 *m_Win32 = NULL;
-	LARGE_INTEGER m_PerformanceFrequency = { .QuadPart = 0 };
-	LARGE_INTEGER m_PerformanceCounterBegin = { .QuadPart = 0 };
+	LARGE_INTEGER m_PerformanceFrequency = { };
+	LARGE_INTEGER m_PerformanceCounterBegin = { };
 #endif
 
 private:
