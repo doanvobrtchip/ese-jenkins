@@ -1,4 +1,4 @@
-import os, sys, re, shutil, subprocess, errno, stat
+import os, sys, re, shutil, subprocess, errno, stat, codecs
 import export_bt81x_helper
 from export_bt81x_helper import globalValue
 
@@ -10,17 +10,16 @@ def renameAllItemsInFolder(folder, from_name, to_name):
             new = item.replace(from_name, to_name)
             os.rename(folder + '/' + item, folder + '/' + new)
             
-def replaceStringInFile(file, oldName, newName):
+def replaceStringInFile(file, oldString, newString):
     with open(file, 'r') as resourceFile:
         data = resourceFile.read().decode("utf-8-sig").encode("utf-8")
 
-    data = data.replace(oldName, newName)
-    #source = unicode(data, 'utf-8')
-
+    data = data.replace(oldString, newString)
+    
     with open(file, 'w+') as resourceFile:
         resourceFile.truncate()
         resourceFile.write(data)
-
+   
 def copydir2(source, dest):
     try:
         for item in os.listdir(source):
@@ -127,32 +126,46 @@ def run(projectName, document, ram, moduleName):
     except Exception as e:
         raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed. " + str(e))
        
-    filesToTestFolder = []
-     
-    exportAssets = export_bt81x_helper.exportContent(outDir, document)
+    try:
     
-    export = export_bt81x_helper.exportLoadImageCommand(document)    
-    
-    export += export_bt81x_helper.exportSpecialCommand(document)    
-    
-    export += export_bt81x_helper.exportCoprocessorCommand(document, filesToTestFolder)
+        #debug code
+        with open('d:/doc.txt', 'w') as fd:
+            fd.write(str(document))
+           
+        filesToTestFolder = []
+         
+        exportAssets = export_bt81x_helper.exportContent(outDir, document)
+        
+        export = export_bt81x_helper.exportLoadImageCommand(document)    
+        
+        #export += export_bt81x_helper.exportSpecialCommand(document)    
+        
+        export += export_bt81x_helper.exportCoprocessorCommand(document, filesToTestFolder)
 
-    generateProjectFiles(outDir, projectName, filesToTestFolder, moduleName)
-    
-    skeletonFilePath = outDir + '/Src/Skeleton.c'
-    replaceStringInFile(skeletonFilePath, '/*RESERVED_FOR_EXPORTING_FROM_ESE*/', export)
-    
-    assetsHeaderPath = outDir + '/Hdr/Assets.h'
-    replaceStringInFile(assetsHeaderPath, '/*RESERVED_FOR_EXPORTING_FROM_ESE*/', exportAssets)
+        generateProjectFiles(outDir, projectName, filesToTestFolder, moduleName)
+        
+        skeletonFilePath = outDir + '/Src/Skeleton.c'
+                   
+        export = export.encode('utf-8')
+        
+        replaceStringInFile(skeletonFilePath, '/*RESERVED_FOR_EXPORTING_FROM_ESE*/', export)
+        
+        assetsHeaderPath = outDir + '/Hdr/Assets.h'
+        replaceStringInFile(assetsHeaderPath, '/*RESERVED_FOR_EXPORTING_FROM_ESE*/', exportAssets)
 
-    resultText += "<p>Output files: " + skeletonFilePath + "</p> <p>Project files: " + outDir + "</p><p>ReadMe file: " + outDir + "/ReadMe.txt, details the project folder structure</p>"
+        resultText += "<p>Output files: " + skeletonFilePath + "</p> <p>Project files: " + outDir + "</p><p>ReadMe file: " + outDir + "/ReadMe.txt, details the project folder structure</p>"
 
-    if sys.platform.startswith('darwin'):
-        subprocess.call(('open', outName))
-    elif os.name == 'nt':
-        subprocess.call(['explorer', outDir])
-    elif os.name == 'posix':
-        subprocess.call(('xdg-open', outName))
-    #print resultText
+        if sys.platform.startswith('darwin'):
+            subprocess.call(('open', outName))
+        elif os.name == 'nt':
+            subprocess.call(['explorer', outDir])
+        elif os.name == 'posix':
+            subprocess.call(('xdg-open', outName))
+    
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        raise Exception(exc_type, fname, exc_tb.tb_lineno, str(e))
+ 
     return resultText
 
