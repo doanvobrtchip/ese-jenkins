@@ -52,9 +52,11 @@ ENDIF ()
 
 ########################################################################
 
-OPTION(WITH_SDL "Use old SDL1 (deprecated)" OFF)
-
-OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" ON)
+IF (WIN32)
+  OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU)" OFF)
+ELSE ()
+  OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU and Linux support)" ON)
+ENDIF ()
 
 OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" ON)
 
@@ -89,8 +91,6 @@ OPTION(WITH_EMUTEST "Include emulator test projects" ON)
 OPTION(WITH_EMUSERVICE "Include emulator service" ON)
 
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
-
-OPTION(FTEMU_PIC "Add -fPIC to libraries to build dynamic dll" OFF)
 
 ########################################################################
 
@@ -131,20 +131,6 @@ IF (WITH_SDL2)
     )
   ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
   ADD_DEFINITIONS(-DFTEMU_SDL2)
-ELSEIF (WITH_SDL)
-  # SDL base package
-  FIND_PACKAGE(SDL REQUIRED)
-  INCLUDE_DIRECTORIES(
-    ${SDL_INCLUDE_DIR}
-    )
-  ADD_DEFINITIONS(-DFTEMU_SDL)
-ELSE ()
-  #FIND_PACKAGE(OpenMP REQUIRED)
-  #IF (OPENMP_FOUND)
-  #  SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  #  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  #  SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-  #ENDIF ()
 ENDIF (WITH_SDL2)
 
 ########################################################################
