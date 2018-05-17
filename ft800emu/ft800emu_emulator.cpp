@@ -140,6 +140,21 @@ int Emulator::audioThread()
 
 void Emulator::finalMasterThread(bool sync, int flags)
 {
+#ifdef WIN32
+	bool coInit;
+	if (sync)
+	{
+		// Running on original run thread, already initialized COM
+		coInit = m_CoInit;
+		m_CoInit = false;
+	}
+	else
+	{
+		// This is a new thread, so need to initialize COM again
+		coInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
+	}
+#endif
+
 	masterThread(sync);
 
 	m_MasterRunning = false;
@@ -207,11 +222,8 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	}
 
 #ifdef WIN32
-	if (m_CoInit)
-	{
-		m_CoInit = false;
+	if (coInit)
 		CoUninitialize();
-	}
 #endif
 
 	m_EmulatorRunning = false;
@@ -428,6 +440,17 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 		m_StdThreadMaster = std::thread(&Emulator::finalMasterThread, this, false, params.Flags);
 		m_InitCond.wait(lock);
 	}
+
+
+#ifdef WIN32
+	if (m_CoInit)
+	{
+		// In case of synchronous master thread, no longer need the COM initialization here
+		assert(params.Main);
+		CoUninitialize();
+		m_CoInit = false;
+	}
+#endif
 }
 
 void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
