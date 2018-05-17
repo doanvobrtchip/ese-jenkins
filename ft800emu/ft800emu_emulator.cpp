@@ -105,6 +105,11 @@ int Emulator::audioThread()
 	m_ThreadAudio.realtime();
 	m_ThreadAudio.setName("FT8XXEMU Audio");
 
+	; {
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_InitCond.notify_one();
+	}
+
 	while (m_MasterRunning)
 	{
 		//FTEMU_printf("sound thread\n");
@@ -146,7 +151,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	}
 
 	FTEMU_message("Wait for Coprocessor");
-	if (flags & BT8XXEMU_EmulatorEnableCoprocessor)
+	if ((flags & BT8XXEMU_EmulatorEnableCoprocessor) && m_StdThreadCoprocessor.joinable())
 		m_StdThreadCoprocessor.join();
 
 	if (!m_CloseCalled && m_StdThreadMCU.joinable())
@@ -163,14 +168,15 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		}
 	}
 	
-	if (sync)
+	if (sync && m_StdThreadMCU.joinable())
 	{
 		FTEMU_message("Wait for MCU");
 		m_StdThreadMCU.join();
 	}
 
 	FTEMU_message("Wait for Audio");
-	m_StdThreadAudio.join();
+	if ((flags & BT8XXEMU_EmulatorEnableAudio) && m_StdThreadAudio.joinable())
+		m_StdThreadAudio.join();
 
 	FTEMU_message("Threads finished, emulator stopped running");
 
@@ -186,6 +192,8 @@ Emulator::Emulator()
 
 Emulator::~Emulator()
 {
+	std::unique_lock<std::mutex> initLockGlobal(m_InitMutexGlobal);
+
 	destroy();
 	delete m_System;
 	m_System = NULL;
@@ -255,11 +263,11 @@ void Emulator::destroy()
 	}
 }
 
-void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
+void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 {
-	destroy();
+	std::unique_lock<std::mutex> initLockGlobal(m_InitMutexGlobal);
 
-	m_InitMutexGlobal.lock();
+	destroy();
 
 #ifdef WIN32
 	m_CoInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
@@ -272,19 +280,18 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	if (mode < BT8XXEMU_EmulatorFT810)
 	{
 		FTEMU_error("Invalid emulator version selected, this library is built in FT810 mode");
-		m_InitMutexGlobal.unlock();
 		return;
 	}
 #else
 	if (mode > BT8XXEMU_EmulatorFT801)
 	{
 		FTEMU_error("Invalid emulator version selected, this library is built in FT800/FT800 mode");
-		m_InitMutexGlobal.unlock();
 		return;
 	}
 #endif
 
 	m_EmulatorRunning = true;
+	m_MasterRunning = true;
 
 	m_Main = params.Main;
 	m_Flags = params.Flags;
@@ -301,9 +308,9 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_System->overrideMCUDelay(params.MCUSleep);
 	m_System->setSender(static_cast<BT8XXEMU_Emulator *>(this));
 	m_System->setUserContext(params.UserContext);
-	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor, 
+	m_Memory = new Memory(m_System, mode, m_SwapDLMutex, m_ThreadMCU, m_ThreadCoprocessor,
 #ifdef BT815EMU_MODE
-		params.Flash, 
+		params.Flash,
 #endif
 		params.RomFilePath[0] ? params.RomFilePath : NULL, params.OtpFilePath[0] ? params.OtpFilePath : NULL);
 	assert(!m_Touch);
@@ -314,6 +321,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	m_Memory->setGraphicsProcessor(m_GraphicsProcessor);
 	assert(!m_BusSlave);
 	m_BusSlave = new BusSlave(m_System, m_Memory);
+
 	if (!m_Graphics)
 	{
 		m_WindowOutput = FT8XXEMU::WindowOutput::create(m_System);
@@ -324,25 +332,27 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 			m_Touch->touch(idx).resetXY();
 		});
 	}
+
 	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		assert(!m_AudioOutput);
 		m_AudioOutput = FT8XXEMU::AudioOutput::create(m_System);
-		assert(!m_AudioProcessor);
-		m_AudioProcessor = new AudioProcessor();
-		m_Memory->setAudioProcessor(m_AudioProcessor);
-		m_AudioRender = new AudioRender(m_AudioOutput, m_Memory, m_AudioProcessor);
-		m_Memory->setAudioRender(m_AudioRender);
-		/*
-		// TODO: 2017-08-09: Output creation failure manage
-		if (!FT8XXEMU::AudioOutput.begin())
+		if (m_AudioOutput)
 		{
-			AudioRender.end();
-			AudioProcessor.end();
+			assert(!m_AudioProcessor);
+			m_AudioProcessor = new AudioProcessor();
+			m_Memory->setAudioProcessor(m_AudioProcessor);
+			assert(!m_AudioRender);
+			m_AudioRender = new AudioRender(m_AudioOutput, m_Memory, m_AudioProcessor);
+			m_Memory->setAudioRender(m_AudioRender);
+		}
+		else
+		{
+			// Audio failed to initialize
 			m_Flags &= ~BT8XXEMU_EmulatorEnableAudio;
 		}
-		*/
 	}
+
 	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		assert(!m_Coprocessor);
@@ -350,11 +360,14 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 			params.CoprocessorRomFilePath[0] ? params.CoprocessorRomFilePath : NULL,
 			mode);
 	}
-	if ((!m_Graphics) && (params.Flags & BT8XXEMU_EmulatorEnableKeyboard))
+
+	if (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)
 	{
-		m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_System, m_WindowOutput);
+		if (!m_Graphics)
+			m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_System, m_WindowOutput);
+		else
+			m_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 	}
-	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableKeyboard;
 
 	if (m_Graphics)
 	{
@@ -377,9 +390,11 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	// m_RotateEnabled = (params.Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
 	m_Touch->enableTouchMatrix((params.Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
 
-	m_MasterRunning = true;
-
-	m_StdThreadAudio = std::thread(&Emulator::audioThread, this);
+	; {
+		std::unique_lock<std::mutex> lock(m_InitMutex);
+		m_StdThreadAudio = std::thread(&Emulator::audioThread, this);
+		m_InitCond.wait(lock); // FIXME: 2018-05-17: conditional_variable are subject to random wake-ups...
+	}
 
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -391,7 +406,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	{
 		std::unique_lock<std::mutex> lock(m_InitMutex);
 		m_StdThreadMCU = std::thread(&Emulator::mcuThread, this);
-		m_InitCond.wait(lock);
+		m_InitCond.wait(lock); // FIXME: 2018-05-17: conditional_variable are subject to random wake-ups...
 	}
 	else
 	{
@@ -408,8 +423,11 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		m_StdThreadMaster = std::thread(&Emulator::finalMasterThread, this, false, params.Flags);
 		m_InitCond.wait(lock);
 	}
+}
 
-	m_InitMutexGlobal.unlock();
+void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
+{
+	runInternal(params);
 
 	if (params.Main)
 	{
@@ -420,11 +438,9 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 
 void Emulator::stop()
 {
-	m_InitMutexGlobal.lock();
+	std::unique_lock<std::mutex> initLockGlobal(m_InitMutexGlobal);
 
 	m_MasterRunning = false;
-
-	m_InitMutexGlobal.unlock();
 
 	// Wait for emulator threads thread to finish if async run or if not called from the MCU thread
 	if (!m_Main || !m_ThreadMCU.current())
@@ -447,6 +463,16 @@ void Emulator::stop()
 	{
 		m_StdThreadMaster.join();
 	}
+
+	assert(!m_ThreadMaster.valid());
+	assert(!m_ThreadMCU.valid());
+	assert(!m_ThreadCoprocessor.valid());
+	assert(!m_ThreadAudio.valid());
+
+	assert(!m_StdThreadMaster.joinable());
+	assert(!m_StdThreadMCU.joinable());
+	assert(!m_StdThreadCoprocessor.joinable());
+	assert(!m_StdThreadAudio.joinable());
 
 	FTEMU_message("Stop ok");
 }

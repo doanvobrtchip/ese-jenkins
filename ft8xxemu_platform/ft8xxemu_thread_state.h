@@ -59,6 +59,9 @@ public:
 	// Is this the current thread
 	bool current();
 
+	// Is this state valid
+	bool valid();
+
 private:
 #ifdef WIN32
 	HANDLE m_Handle = NULL;

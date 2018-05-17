@@ -139,6 +139,11 @@ bool ThreadState::current()
 	return GetCurrentThreadId() == m_Id;
 }
 
+bool ThreadState::valid()
+{
+	return m_Id != 0;
+}
+
 } /* namespace FT8XXEMU */
 
 #endif /* #ifdef WIN32 */

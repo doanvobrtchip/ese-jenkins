@@ -27,7 +27,11 @@ namespace FT8XXEMU {
 
 AudioOutput *AudioOutput::create(System *system)
 {
-	return new AudioOutput(system);
+	AudioOutput *audioOutput = new AudioOutput(system);
+	if (audioOutput->init())
+		return audioOutput;
+	audioOutput->destroy();
+	return NULL;
 }
 
 void AudioOutput::destroy()
@@ -36,6 +40,11 @@ void AudioOutput::destroy()
 }
 
 AudioOutput::AudioOutput(System *system) : m_System(system)
+{
+	// no-op
+}
+
+bool AudioOutput::init()
 {
 	const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 	const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
@@ -82,7 +91,26 @@ AudioOutput::AudioOutput(System *system) : m_System(system)
 
 AudioOutput::~AudioOutput()
 {
-
+	if (m_AudioRenderClient != NULL)
+	{
+		m_AudioRenderClient->Release();
+		m_AudioRenderClient = NULL;
+	}
+	if (m_AudioClient != NULL)
+	{
+		m_AudioClient->Release();
+		m_AudioClient = NULL;
+	}
+	if (m_MMDevice != NULL)
+	{
+		m_MMDevice->Release();
+		m_MMDevice = NULL;
+	}
+	if (m_MMDeviceEnumerator != NULL)
+	{
+		m_MMDeviceEnumerator->Release();
+		m_MMDeviceEnumerator = NULL;
+	}
 }
 
 int AudioOutput::getFrequency()
