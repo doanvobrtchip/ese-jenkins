@@ -46,7 +46,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 ########################################################################
 # Strip binary in release mode
 
-IF (CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX AND !MINGW)
   SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
 ENDIF ()
 
