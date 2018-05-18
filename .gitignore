@@ -138,3 +138,7 @@ fteditor/untitled/Project/Msvc_win32/untitled/untitled.VC.db
 !deployment/emulator/lib
 !deployment/emulator/lib/*.lib
 !deployment/emulator/bin/*.dll
+!deployment/emulator/lib32/*.lib
+!deployment/emulator/bin32/*.dll
+!deployment/emulator/lib64/*.lib
+!deployment/emulator/bin64/*.dll
