@@ -56,7 +56,7 @@ Revision History:
 	#define CLOCKS_PER_SEC 1000
 	#endif
 #else /* ARDUINO_PLATFORM */
-	#define getClock() millis() //Arduino, MSVC have their own millis()
+	#define getClock() millis()     //Arduino, MSVC have their own millis()
 	#define CLOCKS_PER_SEC (1000)   //Need divide 1000 to get millisecond
 #endif
 
@@ -85,7 +85,8 @@ void loadDataToCoprocessorCMDfifo(Gpu_Hal_Context_t *phost, char8_t *fileName)
     uint8_t pBuff[SCRATCH_BUFF_SZ];
     fResult = f_open(&CurFile, fileName, FA_READ);
 
-    if (fResult == FR_OK) {
+    if (fResult == FR_OK)
+    {
         fileLen = f_size(&CurFile);
         while (fileLen > 0) {
             uint32_t blocklen = fileLen>SCRATCH_BUFF_SZ ? SCRATCH_BUFF_SZ : fileLen;
@@ -95,7 +96,8 @@ void loadDataToCoprocessorCMDfifo(Gpu_Hal_Context_t *phost, char8_t *fileName)
         }
         f_close(&CurFile);
     }
-    else {
+    else
+    {
         printf("Unable to open file\\n");
     }
 
@@ -298,25 +300,7 @@ void loadDataToCoprocessorMediafifo(Gpu_Hal_Context_t *phost, char8_t *fileName,
 
 void Skeleton(Gpu_Hal_Context_t *phost)
 {
-	Gpu_Hal_WrMem(phost,RAM_IMAGES_CASE1, images_case1, sizeof(images_case1));
-	App_WrCoCmd_Buffer(phost,BITMAP_HANDLE(0));
-	Gpu_CoCmd_SetBitmap(phost,0, ARGB1555, 181, 185);
-	App_WrCoCmd_Buffer(phost,CLEAR_COLOR_RGB(0, 170, 127));
-	App_WrCoCmd_Buffer(phost,CLEAR(1, 1, 1));
-	Gpu_CoCmd_Number(phost,411, 199, 28, 0, 59);
-	Gpu_CoCmd_Text(phost,228, 66, 28, OPT_CENTER, "Text");
-	Gpu_CoCmd_Button(phost,143, 97, 120, 36, 27, 0, "Button");
-	Gpu_CoCmd_Button(phost,388, 116, 120, 36, 27, 0, "Button");
-	Gpu_CoCmd_Keys(phost,108, 210, 160, 36, 29, 'y', "keys");
-	Gpu_CoCmd_Progress(phost,26, 300, 385, 26, 0, 20, 100);
-	Gpu_CoCmd_Scrollbar(phost,763, 104, 16, 310, 0, 120, 60, 480);
-	Gpu_CoCmd_Toggle(phost,117, 409, 40, 27, 0, 0, "on\xFFoff");
-	Gpu_CoCmd_Clock(phost,627, 114, 81, 0, 13, 51, 17, 0);
-	App_WrCoCmd_Buffer(phost,BEGIN(BITMAPS));
-	App_WrCoCmd_Buffer(phost,VERTEX2II(511, 237, 0, 0));
-	App_WrCoCmd_Buffer(phost,END());
-	
-
+/*RESERVED_FOR_EXPORTING_FROM_ESE*/
 }
 
 #if defined (MSVC_PLATFORM) || defined (FT900_PLATFORM) || defined (FT93X_PLATFORM)
@@ -329,11 +313,6 @@ void setup()
 {
     /* Init HW Hal */
     App_Common_Init(&host);
-    /* Show Logo, do calibration and display welcome screen */
-    //App_Common_Start(&host,info);
-    
-    Gpu_CoCmd_Dlstart(&host);
-    App_WrCoCmd_Buffer(&host, CLEAR(1, 1, 1));
     
     /* Our main application */
     Skeleton(&host);
