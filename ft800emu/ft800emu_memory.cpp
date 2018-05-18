@@ -917,7 +917,7 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 		if (data & 0x1)
 		{
 #if defined(BT815EMU_MODE)
-			FTEMU_warning("Co-processor engine fault: %s", m_Ram[0x309800]);
+			FTEMU_warning("Co-processor engine fault: %s", &m_Ram[0x309800]);
 #else
 			FTEMU_warning("Coprocessor has flagged an error");
 #endif
