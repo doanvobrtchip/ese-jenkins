@@ -9,12 +9,10 @@ Author: Jan Boon <jan@no-break.space>
 #include "bt8xxemu_diag.h"
 #include "bt8xxemu_pp.h"
 #include "bt8xxemu_flash.h"
+#include "bt8xxemu_version.h"
 
 #include <string.h>
 #include <stdio.h>
-
-// Version
-#define BT8XXEMU_VERSION_STRING "3.11.1"
 
 // Include BT8XXEMU_PLATFORM
 #include "ft8xxemu_window_output.h"

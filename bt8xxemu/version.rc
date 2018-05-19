@@ -1,15 +1,16 @@
-// Microsoft Visual C++ generated resource script.
-//
-#include "resource.h"
+/*
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2018  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
+#include "resource.h"
+#include "bt8xxemu_version.h"
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,4,0
- PRODUCTVERSION 3,0,4,0
+ FILEVERSION BT8XXEMU_VERSION_CODE
+ PRODUCTVERSION BT8XXEMU_VERSION_CODE
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -26,54 +27,14 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Bridgetek Pte Ltd"
             VALUE "FileDescription", "BT8XX Emulator Library"
-            VALUE "FileVersion", "3.0.4"
+            VALUE "FileVersion", BT8XXEMU_VERSION_STRING
             VALUE "InternalName", "bt8xxemu"
-            VALUE "LegalCopyright", "Copyright (C) 2016-2018  Bridgetek Pte Ltd"
+            VALUE "LegalCopyright", "Copyright (C) 2013-2018  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "bt8xxemu.dll"
             VALUE "ProductName", "BT8XXEMU"
-            VALUE "ProductVersion", "3.0.4"
+            VALUE "ProductVersion", BT8XXEMU_VERSION_STRING
         END
     END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1252
-    END
 END
 
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
+/* end of file */
