@@ -206,7 +206,11 @@ inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToS
 #define FTEDITOR_REG_TRACKER_4 109
 #define FTEDITOR_REG_MEDIAFIFO_READ 110
 #define FTEDITOR_REG_MEDIAFIFO_WRITE 111
-#define FTEDITOR_REG_NB 112
+#define FTEDITOR_REG_MEDIAFIFO_BASE 112
+#define FTEDITOR_REG_MEDIAFIFO_SIZE 113
+#define FTEDITOR_REG_FLASH_SIZE 114
+#define FTEDITOR_REG_PLAY_CONTROL 115
+#define FTEDITOR_REG_NB 116
 extern const int32_t *g_Reg[FTEDITOR_DEVICE_NB];
 inline int32_t reg(int deviceIntf, int regIntf) { return g_Reg[deviceIntf][regIntf]; }
 extern const char **g_RegToString[FTEDITOR_DEVICE_NB];

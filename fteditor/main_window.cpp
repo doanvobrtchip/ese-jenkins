@@ -329,9 +329,19 @@ void resetCoprocessorFromLoop()
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 	for (int i = 0; i < 4096; i += 4)
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
+	/*
+	if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT815 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816)
+	{
+		// Wipe J1 RAM
+		for (int i = 0; i < 8192; i += 4)
+			wr32(3182592 + i, 0);
+	}
+	*/
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
+	if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT815)
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL), 1);
 	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
@@ -963,7 +973,7 @@ void loop()
 				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
 			}
-			else if (cmdList[i] == CMD_PLAYVIDEO)
+			else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
 			{
 				printf("Waiting for CMD_PLAYVIDEO...\n");
 				s_WaitingCoprocessorAnimation = true;

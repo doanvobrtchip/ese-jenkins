@@ -146,6 +146,10 @@ const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	REG_TRACKER_4,
 	REG_MEDIAFIFO_READ,
 	REG_MEDIAFIFO_WRITE,
+	-1, // REG_MEDIAFIFO_BASE,
+	-1, // REG_MEDIAFIFO_SIZE,
+	-1, // REG_FLASH_SIZE,
+	-1, // REG_PLAY_CONTROL,
 };
 
 const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
@@ -261,6 +265,10 @@ const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
 	"REG_TRACKER_4",
 	"REG_MEDIAFIFO_READ",
 	"REG_MEDIAFIFO_WRITE",
+	"",
+	"",
+	"",
+	"",
 };
 
 ///////////////////////////////////////////////////////////////////////

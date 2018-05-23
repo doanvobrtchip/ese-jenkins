@@ -146,6 +146,10 @@ const int32_t g_RegVC1[FTEDITOR_REG_NB] = {
 	-1, // REG_TRACKER_4,
 	-1, // REG_MEDIAFIFO_READ,
 	-1, // REG_MEDIAFIFO_WRITE,
+	-1, // REG_MEDIAFIFO_BASE,
+	-1, // REG_MEDIAFIFO_SIZE,
+	-1, // REG_FLASH_SIZE,
+	-1, // REG_PLAY_CONTROL,
 };
 
 const char *g_RegToStringFT800[FTEDITOR_REG_NB] = {
@@ -261,6 +265,10 @@ const char *g_RegToStringFT800[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"",
+	"",
+	"",
+	"",
+	"",
 };
 
 const char *g_RegToStringFT801[FTEDITOR_REG_NB] = {
@@ -370,6 +378,10 @@ const char *g_RegToStringFT801[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"REG_TRACKER",
+	"",
+	"",
+	"",
+	"",
 	"",
 	"",
 	"",
