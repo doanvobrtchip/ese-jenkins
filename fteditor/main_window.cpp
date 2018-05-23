@@ -323,10 +323,10 @@ void resetCoprocessorFromLoop()
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
 	}
-	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Leave reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
 	if (hasOTP())
@@ -336,7 +336,7 @@ void resetCoprocessorFromLoop()
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
-		QThread::msleep(1); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
+		QThread::msleep(100); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
 		// Need to manually stop previous command from repeating infinitely
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
 	}
@@ -1877,7 +1877,7 @@ void MainWindow::frameQt()
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (!s_StreamingData && s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (!s_StreamingData && s_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
