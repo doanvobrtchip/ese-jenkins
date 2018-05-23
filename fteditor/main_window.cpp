@@ -125,7 +125,7 @@ static const int s_StandardHeights[] = {
 	600,
 };
 
-bool s_EmulatorRunning = false;
+static volatile bool s_EmulatorRunning = false;
 
 void swrbegin(ramaddr address)
 {
@@ -314,21 +314,25 @@ bool hasOTP()
 
 void resetCoprocessorFromLoop()
 {
+	printf("Reset coprocessor from loop\n");
+
 	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	// Leave reset
 	if (hasOTP())
 	{
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
 	}
-	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	// Leave reset
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	for (int i = 0; i < 4096; i += 4)
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
+	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
 		// Go back into the patched coprocessor main loop
@@ -336,13 +340,15 @@ void resetCoprocessorFromLoop()
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
-		QThread::msleep(100); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
+		QThread::msleep(10); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
 		// Need to manually stop previous command from repeating infinitely
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+		QThread::msleep(10);
 	}
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
+	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_COLDSTART);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
 }
 
 // static int s_SwapCount = 0;
@@ -360,17 +366,18 @@ void loop()
 		// printf("INTERRUPT %i\n", flags);
 		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF)
 		{
-			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
 			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 			{
 				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
 				s_CoprocessorDiagnostic[128] = '\0';
+				printf("COPROCESSOR FAULT: '%s'\n", s_CoprocessorDiagnostic);
 			}
 			else
 			{
 				s_CoprocessorDiagnostic[0] = '\0';
+				printf("COPROCESSOR FAULT\n");
 			}
 			resetCoprocessorFromLoop();
 		}
@@ -780,8 +787,8 @@ void loop()
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
-			bool useMediaFifo;
-			bool useFlash;
+			bool useMediaFifo = false;
+			bool useFlash = false;
 			const char *useFileStream = NULL;
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
@@ -956,6 +963,38 @@ void loop()
 				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
 			}
+			else if (cmdList[i] == CMD_PLAYVIDEO)
+			{
+				printf("Waiting for CMD_PLAYVIDEO...\n");
+				s_WaitingCoprocessorAnimation = true;
+				swrend();
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) { printf("Abort wait, restarting\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
+				}
+				printf("Waiting for CMD_COLDSTART...\n");
+				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				swr32(CMD_DLSTART);
+				swr32(CMD_COLDSTART);
+				wp += 8;
+				freespace -= 8;
+				s_MediaFifoPtr = 0;
+				s_MediaFifoSize = 0;
+				swrend();
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault 2\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
+				}
+				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				s_WaitingCoprocessorAnimation = false;
+				printf("Finished CMD_PLAYVIDEO\n");
+			}
 			if (useFileStream)
 			{
 				printf("Flush before stream\n");
@@ -995,7 +1034,6 @@ void loop()
 
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
-
 				if (useMediaFifo)
 				{
 					if (s_MediaFifoSize)
@@ -1908,7 +1946,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		s_CoprocessorFrameSuccess = false;
 	}
-	if (s_CoprocessorFrameSuccess)
+	if (s_CoprocessorFrameSuccess || s_WaitingCoprocessorAnimation)
 	{
 		m_ErrorFrame->setVisible(false);
 	}
