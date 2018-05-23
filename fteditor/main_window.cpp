@@ -799,7 +799,9 @@ void loop()
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{
-				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					&& (s_CmdParamCache[cmdParamCache[i]] & OPT_FLASH);
+				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
