@@ -4282,7 +4282,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/FT8XX Screen Editor.chm"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()
