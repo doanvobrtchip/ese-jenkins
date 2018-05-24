@@ -322,7 +322,7 @@ def run(name, document, ram, moduleName):
                     memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
                     f.write("\n")
                     f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
-            if content["dataEmbedded"]:
+            if content["dataStorage"] == 'Embedded':
                 data = ""
                 contentName = re.sub(r'[-/. ]', '_', content["destName"]).upper()
                 headerName = content["destName"].replace('/', os.path.sep)
@@ -425,7 +425,7 @@ def run(name, document, ram, moduleName):
         if content["memoryLoaded"]:
             memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
             lutMemoryAddress = memoryAddress + "_LUT"
-            if content["dataEmbedded"]:
+            if content["dataStorage"] == 'Embedded':
                 contentName = content["FTEVE_Name"]
                 lutContentName = contentName + "_lut"
                 if content["converter"] == "RawJpeg":

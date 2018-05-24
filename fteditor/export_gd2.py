@@ -146,7 +146,7 @@ def run(name, document, ram):
 			f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
 			contentName = content["destName"].replace("/", "_")
 			content["gd2Name"] = contentName
-			if content["dataEmbedded"]:
+			if content["dataStorage"] == 'Embedded':
 				headerName = content["destName"];
 				if content["dataCompressed"]:
 					headerName += ".binh"
@@ -194,7 +194,7 @@ def run(name, document, ram):
 				f.write("\tGD.cmd_inflate(" + memoryAddress + ");\n")
 			else:
 				f.write("\tGD.cmd_memwrite(" + memoryAddress + ", sizeof(" + contentName + "));\n")
-			if content["dataEmbedded"]:
+			if content["dataStorage"] == 'Embedded':
 				f.write("\tGD.copy(" + contentName + ", sizeof(" + contentName + "));\n")
 			else:
 				f.write("\tGD.load(\"" + contentName + ".gd2\");\n")

@@ -5,10 +5,6 @@ paletted8_format = 16
 paletted565_format = 14		
 paletted4444_format = 15
 
-def displayName():
-    return "EVE HAL 2.0 Project"
-
-
 def renameStringInFile(file, oldName, newName):
     with open(file, 'r') as resourceFile:
         data = resourceFile.read().decode("utf-8-sig").encode("utf-8")
@@ -19,20 +15,6 @@ def renameStringInFile(file, oldName, newName):
     with open(file, 'w+') as resourceFile:
         resourceFile.truncate()
         resourceFile.write(data)
-
-def copydir(source, dest):
-
-    for root, dirs, files in os.walk(source):
-        if not os.path.isdir(root):
-            os.makedirs(root)
-        for each_file in files:
-            rel_path = root.replace(source, '').lstrip(os.sep)
-            dest_path = os.path.join(dest, rel_path, each_file)
-            shutil.copyfile(os.path.join(root, each_file), dest_path)
-
-def readOnlyDirectory(operation, name, exc):
-    os.chmod(name, stat.S_IWRITE)
-    return True
 
 def copydir2(source, dest):
     try:
@@ -56,14 +38,6 @@ def copydir2(source, dest):
     except Exception as e:
         raise Exception("Error while generating project. " + str(e))
 
-def constructHostPath(folderNames):
-    fullPath = ""
-    for folder in foldernames:
-        fullPath += folder
-        fullPath += os.path.sep
-    return fullPath
-
-
 def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, moduleName):
     skeletonProjectDir = destDir + os.path.sep + projectName
     MSVCSolutionName = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "Msvc_win32" + os.path.sep + projectName + os.path.sep + projectName
@@ -83,14 +57,14 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
     Ft90xCProject = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "FT90x" + os.path.sep + projectName + os.path.sep + ".cproject"
     Ft90xProject = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "FT90x" + os.path.sep + projectName + os.path.sep + ".project"
 
-
-
     defaultSkeletonProjectDir = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + globalValue['skeletonProjectName']
     if os.path.isdir(defaultSkeletonProjectDir):
         copydir2(defaultSkeletonProjectDir, skeletonProjectDir)
     else:
         raise Exception("Required program files are missing.")
 
+    return
+    
     try:
         shutil.copy(srcFile, skeletonProjectDir + os.path.sep + "Src" + os.path.sep + projectName + ".c") #copy source file
         #rename Msvc_win32 project files
@@ -302,6 +276,14 @@ functionMap = {
     "CMD_COLDSTART" : "Ft_Gpu_CoCmd_ColdStart",
     "CMD_GETMATRIX" : "Ft_Gpu_CoCmd_GetMatrix",
     "CMD_GRADCOLOR" : "Ft_Gpu_CoCmd_GradColor"
+    functionMap["CMD_SNAPSHOT2"] = "Ft_Gpu_CoCmd_Snapshot2"
+        functionMap["CMD_SETBASE"] = "Ft_Gpu_CoCmd_SetBase"
+        functionMap["CMD_MEDIAFIFO"] = "Ft_Gpu_CoCmd_MediaFifo"
+        functionMap["CMD_PLAYVIDEO"] = "Ft_Gpu_CoCmd_PlayVideo"
+        functionMap["CMD_SETFONT2"] = "Ft_Gpu_CoCmd_SetFont2"
+        functionMap["CMD_SETSCRATCH"] = "Ft_Gpu_CoCmd_SetScratch"
+        functionMap["CMD_ROMFONT"] = "Ft_Gpu_CoCmd_RomFont"
+        functionMap["CMD_SETBITMAP"] = "Ft_Gpu_CoCmd_SetBitmap"
 }
 
 FT8xxInitialConfig = """
@@ -1143,7 +1125,7 @@ globalContext = {
 
 
 globalValue = {
-    'skeletonProjectName': "untitled",
+    'skeletonProjectName': "template",
     'assetsFolder': "Test",
 }
 
@@ -1165,18 +1147,12 @@ def run(name, document, ram, moduleName):
     except UnicodeDecodeError:
         raiseUnicodeError("Project Name")
 
+    if deviceType == 2069 or deviceType == 2070:
+        outDir = name + "_BT81X_EVE_HAL"
     if deviceType == 2064 or deviceType == 2065 or deviceType == 2066 or deviceType == 2067:
-        outDir = "FT81X_" + name + "_FTEVE_HAL"
-        functionMap["CMD_SNAPSHOT2"] = "Ft_Gpu_CoCmd_Snapshot2"
-        functionMap["CMD_SETBASE"] = "Ft_Gpu_CoCmd_SetBase"
-        functionMap["CMD_MEDIAFIFO"] = "Ft_Gpu_CoCmd_MediaFifo"
-        functionMap["CMD_PLAYVIDEO"] = "Ft_Gpu_CoCmd_PlayVideo"
-        functionMap["CMD_SETFONT2"] = "Ft_Gpu_CoCmd_SetFont2"
-        functionMap["CMD_SETSCRATCH"] = "Ft_Gpu_CoCmd_SetScratch"
-        functionMap["CMD_ROMFONT"] = "Ft_Gpu_CoCmd_RomFont"
-        functionMap["CMD_SETBITMAP"] = "Ft_Gpu_CoCmd_SetBitmap"
+        outDir = name + "_FT81X_EVE_HAL"        
     else:
-        outDir = "FT80X_" + name + "_FTEVE_HAL" 
+        outDir = name + "_FT80X_EVE_HAL" 
 
     try:
         if os.path.isdir(outDir):
@@ -1221,7 +1197,7 @@ def run(name, document, ram, moduleName):
                     memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()		
                     f.write("\n")		
                     f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
-            if content["dataStorage"] == "Embedded":
+            if content["dataStorage"] == 'Embedded':
                 data = ""
                 contentName = re.sub(r'[-/. ]', '_', content["destName"])
                 headerName = content["destName"].replace('/', os.path.sep)
@@ -1331,7 +1307,7 @@ def run(name, document, ram, moduleName):
         if content["memoryLoaded"]:
             memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
             lutMemoryAddress = memoryAddress + "_LUT"
-            if content["dataStorage"] == "Embedded":
+            if content["dataStorage"] == 'Embedded':
                 contentName = content["FTEVE_Name"]
                 lutContentName = contentName + "_lut"
                 if content["converter"] == "RawJpeg":
