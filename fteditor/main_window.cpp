@@ -338,21 +338,11 @@ void resetCoprocessorFromLoop()
 	}
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	for (int i = 0; i < 4096; i += 4)
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
-	/*
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816)
-	{
-		// Wipe J1 RAM
-		for (int i = 0; i < 8192; i += 4)
-			wr32(3182592 + i, 0);
-	}
-	*/
+	
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-		wr8(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL), 1);
+
 	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
@@ -369,40 +359,11 @@ void resetCoprocessorFromLoop()
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 
-	/*
-	// Wait...
-	while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE)) 
-		!= rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)))
-	{
-		if (!s_EmulatorRunning) return;
-		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-	}
-	*/
 
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_FLASHATTACH);
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
-
-		/*
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_FLASHATTACH);
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, CMD_FLASHFAST);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 16); // + result
-
-		printf("Waiting for flash after reset...\n");
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE))
-			!= rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)))
-		{
-			if (!s_EmulatorRunning) return;
-			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-		}
-
-		int32_t res = rd32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 12);
-		if (res != 0)
-		{
-			printf("CMD_FLASHFAST: %x\n");
-		}
-		*/
 	}
 	else
 	{
