@@ -76,6 +76,10 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_FIRMWARE L"C:/source/ft800emu/fteditor/firmware/mx25l.blob"
 // #define BTFLASH_FIRMWARE_OVERRIDE 1 // TODO: Enhanced testing
 
+#define BTTESTFLASH_EMULATOR 1
+#define BTTESTFLASH_SIZES 1
+#define BTTESTFLASH_CPURESET 1
+
 static uint8_t lastValue = 0xFF;
 
 static const uint8_t outMask1 = 0x31;
@@ -1078,6 +1082,14 @@ int main(int, char*[])
 	//// Emulator Coprocessor
 	/////////////////////////////////////////////////////////////////
 
+	BT8XXEMU_Emulator *emulator = NULL;
+	uint8_t *ram = NULL;
+
+	BT8XXEMU_EmulatorParameters params;
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
+
+#if BTTESTFLASH_EMULATOR
 	flashParams.SizeBytes = BTFLASH_SIZE; // BTFLASH_SIZE_EXTENDED;
 	flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 
@@ -1086,15 +1098,9 @@ int main(int, char*[])
 	size = BT8XXEMU_Flash_size(flash);
 	assert(size == BTFLASH_SIZE);
 
-	BT8XXEMU_EmulatorParameters params;
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
-	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
-
 	params.Flash = flash;
-
-	BT8XXEMU_Emulator *emulator = NULL;
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
-	uint8_t *ram = BT8XXEMU_getRam(emulator);
+	ram = BT8XXEMU_getRam(emulator);
 
 	wr32(emulator, REG_HSIZE, 480);
 	wr32(emulator, REG_VSIZE, 272);
@@ -1114,7 +1120,7 @@ int main(int, char*[])
 		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
 		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
 		flush(emulator);
-		assert(rd32(emulator, resAddr) == 0);
+		assert(rd32(emulator, RAM_CMD + resAddr) == 0);
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 	}
 
@@ -1270,6 +1276,7 @@ int main(int, char*[])
 
 	for (int i = 0; i < 4096; ++i)
 	{
+		// Backup firmware
 		ram[i] = data[i];
 	}
 
@@ -1297,6 +1304,12 @@ int main(int, char*[])
 		assert(data[0] == 0x70);
 	}
 
+	for (int i = 0; i < 4096; ++i)
+	{
+		// Restore firmware
+		data[i] = ram[i];
+	}
+
 	/////////////////////////////////////////////////////////////////
 
 	/*
@@ -1321,11 +1334,13 @@ int main(int, char*[])
 	BT8XXEMU_Flash_destroy(flash);
 	flash = NULL;
 	data = NULL;
+#endif
 
 	/////////////////////////////////////////////////////////////////
 	//// Test different memory sizes
 	/////////////////////////////////////////////////////////////////
 
+#if BTTESTFLASH_SIZES
 	int sizes[8] = { 2, 4, 8, 16, 32, 64, 128, 256 };
 
 	for (int si = 0; si < 8; ++si)
@@ -1374,7 +1389,7 @@ int main(int, char*[])
 			uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
 			wr32(emulator, REG_CMD_WRITE, resAddr + 4);
 			flush(emulator);
-			assert(rd32(emulator, resAddr) == 0);
+			assert(rd32(emulator, RAM_CMD + resAddr) == 0);
 			assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 		}
 
@@ -1468,6 +1483,145 @@ int main(int, char*[])
 		flash = NULL;
 		data = NULL;
 	}
+#endif
+
+	/////////////////////////////////////////////////////////////////
+	//// Read, CPU Reset, Read
+	/////////////////////////////////////////////////////////////////
+
+	flashParams.SizeBytes = BTFLASH_SIZE;
+	flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
+
+	data = BT8XXEMU_Flash_data(flash);
+	assert(data[0] == 0x70);
+	size = BT8XXEMU_Flash_size(flash);
+	assert(size == BTFLASH_SIZE);
+
+	params.Flash = flash;
+	BT8XXEMU_run(BT8XXEMU_VERSION_API, &emulator, &params);
+	ram = BT8XXEMU_getRam(emulator);
+
+	wr32(emulator, REG_HSIZE, 480);
+	wr32(emulator, REG_VSIZE, 272);
+	wr32(emulator, REG_PCLK, 5);
+
+	flush(emulator);
+	while (!rd32(emulator, REG_FLASH_STATUS));
+	assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+
+	; {
+		printf("CMD_FLASHFAST\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
+		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
+		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
+		flush(emulator);
+		uint32_t res = rd32(emulator, RAM_CMD + resAddr);
+		assert(res == 0);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+		assert(rd32(emulator, REG_ROMSUB_SEL) == 3);
+	}
+
+	/*; {
+		// NOTE: Required to call CMD_FLASHFAST a second time without errors
+		// It brings the flash from FULL back to BASIC, so the FLASHFAST may succeed correctly
+		printf("CMD_FLASHATTACH (unfast)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHATTACH);
+		flush(emulator);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+	}*/
+
+	/*; {
+		// NOTE: This fails if CMD_FLASHATTACH was not called with 0xE001
+		printf("CMD_FLASHFAST (second)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
+		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
+		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
+		flush(emulator);
+		uint32_t res = rd32(emulator, RAM_CMD + resAddr);
+		assert(res == 0);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+		assert(rd32(emulator, REG_ROMSUB_SEL) == 3);
+	}*/
+
+	for (int i = 0; i < 4096 * 24; ++i)
+	{
+		ram[i] = 0x55;
+	}
+
+	assert(data[4096] != ram[4096]);
+	assert(data[8192] != ram[8192]);
+
+	; {
+		printf("CMD_FLASHREAD (FLASH_STATUS_FULL)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+		wr32(emulator, REG_CMDB_WRITE, 4096); // dest
+		wr32(emulator, REG_CMDB_WRITE, 4096); // src
+		wr32(emulator, REG_CMDB_WRITE, 4096 * 16); // num
+		while (ram[8192 - 7] == 0x55); // wait
+		wr32(emulator, REG_CPURESET, 1);
+		printf("REG_CPURESET = 1\n");
+		_sleep(100);
+
+		// not an error if this fails (flash read too fast)
+		// but crucial to ensure the test does it's job
+		assert(ram[4096 * 8] == 0x55);
+
+		for (int i = 4096; i < 8192; ++i)
+			assert(ram[i] == data[i]);
+
+		wr32(emulator, REG_CMD_WRITE, 0);
+		wr32(emulator, REG_CMD_READ, 0);
+		wr32(emulator, REG_CPURESET, 0);
+		printf("REG_CPURESET = 0\n");
+		_sleep(100);
+
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL); // it says so, but it's not stable
+	}
+
+	for (int i = 0; i < 4096 * 24; ++i)
+	{
+		ram[i] = 0x55;
+	}
+
+	; {
+		printf("CMD_FLASHATTACH (after REG_CPURESET)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHATTACH);
+		flush(emulator);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
+	}
+	
+	; {
+		printf("CMD_FLASHFAST (after REG_CPURESET)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHFAST);
+		uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
+		wr32(emulator, REG_CMD_WRITE, resAddr + 4);
+		flush(emulator);
+		uint32_t res = rd32(emulator, RAM_CMD + resAddr);
+		assert(res == 0);
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+		assert(rd32(emulator, REG_ROMSUB_SEL) == 3);
+	}
+	
+	; {
+		printf("CMD_FLASHREAD (FLASH_STATUS_FULL)\n");
+		wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
+		wr32(emulator, REG_CMDB_WRITE, 4096 * 4); // dest
+		wr32(emulator, REG_CMDB_WRITE, 4096 * 4); // src
+		wr32(emulator, REG_CMDB_WRITE, 4096); // num
+		flush(emulator);
+
+		for (int i = 4096 * 4; i < 4096 * 4; ++i)
+			assert(ram[i] == data[i]);
+
+		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL); // it says so
+	}
+
+	BT8XXEMU_stop(emulator);
+	BT8XXEMU_destroy(emulator);
+	emulator = NULL;
+	BT8XXEMU_Flash_destroy(flash);
+	flash = NULL;
+	data = NULL;
 
 	/////////////////////////////////////////////////////////////////
 	//// End
