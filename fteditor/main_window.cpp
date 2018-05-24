@@ -832,7 +832,7 @@ void loop()
 		{
 			swr32(CMD_FLASHATTACH);
 			swr32(CMD_FLASHFAST);
-			// swr32(0); // result
+			swr32(~0); // result
 			wp += 12;
 			freespace -= 12;
 		}
