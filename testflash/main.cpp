@@ -1393,6 +1393,8 @@ int main(int, char*[])
 			assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
 		}
 
+		assert(rd32(emulator, REG_FLASH_SIZE) == sz);
+		
 		for (int i = 0; i < 4096; ++i)
 		{
 			ram[i] = 0x55;
