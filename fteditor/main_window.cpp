@@ -181,6 +181,17 @@ void swrend()
 	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
+void wr8(ramaddr address, uint8_t value)
+{
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("wr8(%i, %i)\n", (int)address, (int)value);
+#endif
+
+	swrbegin(address);
+	swr8(value);
+	swrend();
+}
+
 void wr32(ramaddr address, uint32_t value)
 {
 #if FTEDITOR_DEBUG_EMUWRITE
