@@ -341,7 +341,7 @@ void resetCoprocessorFromLoop()
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL), 1);
+		wr8(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL), 1);
 	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
