@@ -560,8 +560,8 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_PLAYBACK_LENGTH, 0);
 	rawWriteU32(REG_PLAYBACK_START, 0);
 #if defined(BT815EMU_MODE)
-	rawWriteU32(REG_PLAYBACK_PAUSE, 0);
-	rawWriteU32(REG_PLAY_CONTROL, 1);
+	rawWriteU8(REG_PLAYBACK_PAUSE, 0);
+	rawWriteU8(REG_PLAY_CONTROL, 1);
 #endif
 
 	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000);
