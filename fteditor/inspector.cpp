@@ -84,7 +84,9 @@ static QString asText(uint32_t value)
 	if (compiled != value)
 	{
 		QByteArray chars = line.toLocal8Bit();
+#if _DEBUG
 		printf("Parser bug '%s' -> expect %u, compiled %u\n", chars.constData(), value, compiled);
+#endif
 	}
 	// <- verify parsing
 

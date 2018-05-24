@@ -205,7 +205,9 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 			{
 				QByteArray chars = line.toLatin1();
 				const char *src = chars.constData();
+#if _DEBUG
 				printf("Parser bug at dl %i: '%s' -> expect %u, compiled %u\n", i, src, m_DisplayListShared[i], compiled);
+#endif
 			}
 			// <- verify parsing
 			if (firstLine) firstLine = false;
