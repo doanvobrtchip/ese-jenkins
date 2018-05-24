@@ -4349,7 +4349,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/EVE Screen Editor User Guide.pdf"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/Manual/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()
@@ -4360,7 +4360,7 @@ void MainWindow::about()
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
-		"Copyright (C) 2016-2017  Bridgetek Pte Ltd<br>"
+		"Copyright (C) 2016-2018  Bridgetek Pte Ltd<br>"
 		"<br>"
 		"Support and updates:<br>"
 		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
