@@ -441,12 +441,10 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 		m_InitCond.wait(lock);
 	}
 
-
 #ifdef WIN32
-	if (m_CoInit)
+	if (m_CoInit && !params.Main)
 	{
 		// In case of synchronous master thread, no longer need the COM initialization here
-		assert(params.Main);
 		CoUninitialize();
 		m_CoInit = false;
 	}
@@ -462,6 +460,8 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 		// Synchronous run function, calling thread is graphics
 		finalMasterThread(true, params.Flags);
 	}
+
+	assert(!m_CoInit);
 }
 
 void Emulator::stop()
