@@ -192,6 +192,17 @@ void wr8(ramaddr address, uint8_t value)
 	swrend();
 }
 
+void wr16(ramaddr address, uint16_t value)
+{
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("wr16(%i, %i)\n", (int)address, (int)value);
+#endif
+
+	swrbegin(address);
+	swr16(value);
+	swrend();
+}
+
 void wr32(ramaddr address, uint32_t value)
 {
 #if FTEDITOR_DEBUG_EMUWRITE
@@ -201,6 +212,28 @@ void wr32(ramaddr address, uint32_t value)
 	swrbegin(address);
 	swr32(value);
 	swrend();
+}
+
+uint16_t rd16(size_t address)
+{
+
+	BT8XXEMU_chipSelect(g_Emulator, 1);
+
+	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
+	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
+	BT8XXEMU_transfer(g_Emulator, 0x00);
+
+	uint16_t value;
+	value = BT8XXEMU_transfer(g_Emulator, 0);
+	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
+
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("rd16(%i), %i\n", (int)address, (int)value);
+#endif
+
+	BT8XXEMU_chipSelect(g_Emulator, 0);
+	return value;
 }
 
 uint32_t rd32(size_t address)
@@ -327,6 +360,11 @@ void resetCoprocessorFromLoop()
 {
 	printf("Reset coprocessor from loop\n");
 
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
+	uint16_t videoPatchVector;
+	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		videoPatchVector = rd16(0x309162);
+
 	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
 	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
@@ -338,12 +376,11 @@ void resetCoprocessorFromLoop()
 	}
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
 
-	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
 		// Go back into the patched coprocessor main loop
@@ -354,11 +391,15 @@ void resetCoprocessorFromLoop()
 		QThread::msleep(10); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
 		// Need to manually stop previous command from repeating infinitely
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-		QThread::msleep(10);
+		QThread::msleep(100);
 	}
+
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
+	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		wr16(0x309162, videoPatchVector);
+
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-
 
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
