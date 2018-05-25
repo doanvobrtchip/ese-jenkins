@@ -127,11 +127,7 @@ def run(projectName, document, ram, moduleName):
         raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed. " + str(e))
        
     try:
-    
-        #debug code
-        with open('d:/doc.txt', 'w') as fd:
-            fd.write(str(document))
-           
+          
         filesToTestFolder = []
          
         exportAssets = export_bt81x_helper.exportContent(outDir, document)
