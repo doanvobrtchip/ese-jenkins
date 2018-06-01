@@ -34,12 +34,9 @@
 //mpsse lib includes -- Windows
 #undef POINTS
 #include <Windows.h>
-#include "libMPSSE_spi.h"
-
-#include "FT_DataTypes.h"
-#include "FT_Gpu_Hal.h"
+#include "Platform.h"
+#include "Gpu_Hal.h"
 #endif
-
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -107,9 +104,11 @@ private slots:
 	void deviceDisplaySettings();
 	void refreshDevices();
 	void connectDevice();
+    bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
+    bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
 	void disconnectDevice();
 	void syncDevice();
-    void loadContent2Device(ContentManager *contentManager, Ft_Gpu_Hal_Context_t *phost);
+    void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
