@@ -3282,7 +3282,7 @@ void MainWindow::undoCleanChanged(bool clean)
 
 bool MainWindow::maybeSave()
 {
-    bool res = false;
+    bool res = true;
 
 	if (!m_UndoStack->isClean())
 	{
@@ -3294,17 +3294,12 @@ bool MainWindow::maybeSave()
 		if (ret == QMessageBox::Save)
 		{
 			actSave();
-            res = true;
 		}
 		else if (ret == QMessageBox::Cancel)
 		{
             res = false;
 		}
 	}
-    else
-    {
-        res = true;
-    }
 
     if (res && m_AddRecentProjectFlag)
     {
