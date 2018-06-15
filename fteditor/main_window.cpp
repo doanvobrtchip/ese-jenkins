@@ -4373,6 +4373,8 @@ void MainWindow::openRecentProject()
     QAction *pAction = (QAction *)sender();
     QString projectPath = pAction->data().toString();
 
+    if (!maybeSave()) return;
+
     openFile(projectPath);
 }
 
