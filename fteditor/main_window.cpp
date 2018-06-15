@@ -11,6 +11,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // STL includes
 #include <stdio.h>
 #include <algorithm>
+#include <math.h>
 
 // Qt includes
 #include <QCoreApplication>
@@ -82,6 +83,7 @@ namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
+extern QString FLASH_BIN_PATH;
 
 #define FTEDITOR_DEBUG_EMUWRITE 0
 
@@ -3408,25 +3410,18 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	else
 	{
 		// check flash configuration
-		qint64 binSize = QFileInfo(binPath).size();
+		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;
 
-		if (binSize > 256 * 1024 * 1024)
+		if (binSize > 256)
 		{
 			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
 			return false;
 		}
 		else
 		{
-			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
-			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
-			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
-			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
-			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
-			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
-			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
-			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
-			
-			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+            FLASH_BIN_PATH = binPath;
+            int flashType = log2(binSize);
+			m_ProjectFlash->setCurrentIndex(flashType);
 		}
 	}
 
