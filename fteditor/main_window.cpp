@@ -1523,7 +1523,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
+	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL),//, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
 {
@@ -3314,6 +3314,13 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadRecentProject()
 {
+
+	// insert recent project separator
+	if (m_RecentSeparator == NULL)
+		m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
+
+	m_RecentSeparator->setVisible(false);
+
     QFile f(qApp->applicationDirPath() + "/recent_project");
     
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;    
@@ -3332,9 +3339,6 @@ void MainWindow::loadRecentProject()
         m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
     }
 
-    // insert recent project separator
-    m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
-    m_RecentSeparator->setVisible(false);
 
     // add recent project path to File Menu
     for (int i = pathList.size() - 1; i >= 0; --i)
