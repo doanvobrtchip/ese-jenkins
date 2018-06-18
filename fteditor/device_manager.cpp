@@ -576,7 +576,8 @@ void DeviceManager::setSyncDeviceName(QString deviceName){
 	selectedSyncDevice = deviceName;
 	syncDeviceEVEType = FTEDITOR_FT800;
 
-	if (selectedSyncDevice == "VM816C50A(800x480)") {
+	if (selectedSyncDevice == "VM816C50A(800x480)" ||
+        selectedSyncDevice == "VM816CU50A(800x480)") {
 		syncDeviceEVEType = FTEDITOR_BT815;
 	}
     else if (selectedSyncDevice == "ME813AU_WH50C(800x480)")
