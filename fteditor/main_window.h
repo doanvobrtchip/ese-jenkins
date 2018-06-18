@@ -194,7 +194,6 @@ private slots:
 	void projectDisplayChanged(int i);
 	void projectFlashChanged(int i);
 
-    void openRecentProject();
 private:
 	void updateInitialization(bool visible);
 
@@ -216,10 +215,6 @@ private:
 	void updateProjectDisplay(int hsize, int vsize);
 
 	bool maybeSave();
-    void loadRecentProject();
-    void addRecentProject(QString recentPath);
-    void removeRecentProject(QString removePath);
-    void saveRecentProject();
 
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();
@@ -240,10 +235,7 @@ private:
 	MainWindow &operator=(const MainWindow &);
 
 private:
-    bool m_AddRecentProjectFlag;
-    QAction *m_RecentSeparator;
-    QList<QAction *> m_RecentActionList;
-    QStringList m_RecentPathList;
+
 	QString m_InitialWorkingDir;
 	QUndoStack *m_UndoStack;
 

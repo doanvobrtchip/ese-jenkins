@@ -53,7 +53,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDirIterator>
 #include <QElapsedTimer>
 #include <QPushButton>
-#include <QTextStream>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -1505,7 +1504,6 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
-    m_AddRecentProjectFlag(false),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
@@ -1541,8 +1539,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createMenus();
 	createToolBars();
 	createStatusBar();
-
-    loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
 
@@ -3432,8 +3428,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
 	else event->ignore();
-
-    saveRecentProject();
 }
 
 void MainWindow::actNew()
@@ -3768,9 +3762,6 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
-
-    m_AddRecentProjectFlag = true;
-    removeRecentProject(fileName);
 }
 
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
@@ -3876,8 +3867,6 @@ void MainWindow::actSave()
 	out.writeRawData(data, data.size());
 
 	m_UndoStack->setClean();
-
-    m_AddRecentProjectFlag = true;
 }
 
 void MainWindow::actSaveAs()
