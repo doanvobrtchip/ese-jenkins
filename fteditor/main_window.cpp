@@ -3421,7 +3421,7 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		{
             FLASH_BIN_PATH = binPath;
             int flashType = log2(binSize);
-			m_ProjectFlash->setCurrentIndex(flashType);
+			m_ProjectFlash->setCurrentIndex(flashType > 0 ? flashType : 0);
 		}
 	}
 
