@@ -54,6 +54,9 @@ namespace FTEDITOR {
 		VM816C50A = new QRadioButton(tr("VM816C50A(800x480)"));
 		VM816C50A->setToolTip(tr("VM816C module with 5.0\" display"));
 
+        VM816CU50A = new QRadioButton(tr("VM816CU50A(800x480)"));
+        VM816CU50A->setToolTip(tr("VM816CU module with 5.0\" display"));
+
 		QVBoxLayout *VBox = new QVBoxLayout;
 		VBox->addWidget(VM800B35A);
 		VBox->addWidget(VM800B43A);
@@ -70,6 +73,7 @@ namespace FTEDITOR {
 
 		VBox->addWidget(ME813AUWH50C);
 		VBox->addWidget(VM816C50A);
+        VBox->addWidget(VM816CU50A);
 
 		groupBox->setLayout(VBox);
 
@@ -92,6 +96,9 @@ namespace FTEDITOR {
 			VM800BU50A->setVisible(false);
 
 			ME813AUWH50C->setVisible(false);
+
+            VM816C50A->setVisible(false);
+            VM816CU50A->setVisible(false);
 		}
 
 		if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT800 ||
@@ -138,10 +145,12 @@ namespace FTEDITOR {
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
 			VM816C50A->setVisible(true);
+            VM816CU50A->setVisible(true);
 
 			if (selectedDevice == "VM816C50A(800x480)")
 				VM816C50A->setChecked(true);
-
+            else if (selectedDevice == "VM816CU50A(800x480)")
+                VM816CU50A->setChecked(true);
 		}
 	}
 
@@ -184,6 +193,9 @@ namespace FTEDITOR {
 		else if (VM816C50A->isChecked()) {
 			pParent->setDeviceandScreenSize("800x480", "VM816C50A(800x480)");
 		}
+        else if (VM816CU50A->isChecked()) {
+            pParent->setDeviceandScreenSize("800x480", "VM816CU50A(800x480)");
+        }
 
 		this->accept();
 	}
