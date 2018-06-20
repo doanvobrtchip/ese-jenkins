@@ -34,7 +34,6 @@ namespace FTEDITOR {
 
 BT8XXEMU_Emulator *g_Emulator = NULL;
 BT8XXEMU_Flash *g_Flash = NULL;
-QString FLASH_BIN_PATH("");
 
 static BT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
@@ -154,11 +153,13 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			flashParams.SizeBytes = flashSizeBytes(FTEDITOR_CURRENT_FLASH);
 			flashParams.Persistent = false;
 			flashParams.StdOut = false;
+			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
 			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
 			{
-				if (FLASH_BIN_PATH.length() < 260)
+				QString blobPath = m_InitialWorkingDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				if (blobPath.length() < 260)
 				{
-					int i = FLASH_BIN_PATH.toWCharArray(flashParams.DataFilePath);
+					int i = blobPath.toWCharArray(flashParams.DataFilePath);
 					flashParams.DataFilePath[i] = L'\0';
 				}
 			}

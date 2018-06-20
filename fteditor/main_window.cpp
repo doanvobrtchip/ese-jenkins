@@ -83,7 +83,6 @@ namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
-extern QString FLASH_BIN_PATH;
 
 #define FTEDITOR_DEBUG_EMUWRITE 0
 
@@ -524,6 +523,7 @@ void loop()
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 				int s = in.readRawData(&ram[loadAddr], binSize);
 				BT8XXEMU_poke(g_Emulator);
+                binFile.close();
 			}
 		}
 	}
@@ -3335,6 +3335,7 @@ void MainWindow::loadRecentProject()
         pRecentProjAction = new QAction("", this);
         connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
         pRecentProjAction->setVisible(false);
+        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i+1)));
         m_RecentActionList << pRecentProjAction;
         m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
     }
@@ -3423,7 +3424,6 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		}
 		else
 		{
-            FLASH_BIN_PATH = binPath;
             int flashType = log2(binSize);
 			m_ProjectFlash->setCurrentIndex(flashType > 0 ? flashType : 0);
 		}
