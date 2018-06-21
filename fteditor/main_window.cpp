@@ -3314,18 +3314,11 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadRecentProject()
 {
-
 	// insert recent project separator
 	if (m_RecentSeparator == NULL)
 		m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
 
 	m_RecentSeparator->setVisible(false);
-
-    QFile f(qApp->applicationDirPath() + "/recent_project");
-    
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;    
-    QStringList pathList = QString(f.readAll()).split("\n");    
-    f.close();
 
     // insert recent project actions
     QAction *pRecentProjAction = 0;
@@ -3340,7 +3333,11 @@ void MainWindow::loadRecentProject()
         m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
     }
 
+    QFile f(qApp->applicationDirPath() + "/recent_project");
 
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QStringList pathList = QString(f.readAll()).split("\n");
+    f.close();
     // add recent project path to File Menu
     for (int i = pathList.size() - 1; i >= 0; --i)
     {
