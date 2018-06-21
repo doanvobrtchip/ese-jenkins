@@ -2059,6 +2059,7 @@ void MainWindow::createActions()
 	m_NewAct->setShortcuts(QKeySequence::New);
 	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
 	m_OpenAct = new QAction(this);
+    m_OpenAct->setShortcut(QKeySequence::Open);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
 
 	m_SaveAct = new QAction(this);
@@ -3326,6 +3327,7 @@ void MainWindow::loadRecentProject()
         pRecentProjAction = new QAction("", this);
         connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
         pRecentProjAction->setVisible(false);
+        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i + 1)));
         m_RecentActionList << pRecentProjAction;
         m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
     }
@@ -3408,25 +3410,19 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	else
 	{
 		// check flash configuration
-		qint64 binSize = QFileInfo(binPath).size();
+		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;  // convert to MB
 
-		if (binSize > 256 * 1024 * 1024)
+		if (binSize > 256)
 		{
 			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
 			return false;
 		}
 		else
 		{
-			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
-			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
-			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
-			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
-			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
-			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
-			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
-			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
-			
-			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+            int flashType = ceil(log2(binSize)) - 1;
+            if (flashType < 0 ) flashType = 0;
+            m_ProjectFlash->setCurrentIndex(flashType);
+            m_MinFlashType = flashType;
 		}
 	}
 
@@ -3503,6 +3499,8 @@ void MainWindow::actNew(bool addClear)
 
 	// reset flash file name
 	setFlashFileNameToLabel("");
+
+    m_MinFlashType = 0;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -4367,6 +4365,9 @@ private:
 
 void MainWindow::projectFlashChanged(int flashIntf)
 {
+    if (flashIntf <= m_MinFlashType)
+        return;
+
 	if (s_UndoRedoWorking)
 		return;
 	
@@ -4377,6 +4378,8 @@ void MainWindow::openRecentProject()
 {
     QAction *pAction = (QAction *)sender();
     QString projectPath = pAction->data().toString();
+
+    if (!maybeSave()) return;
 
     openFile(projectPath);
 }

@@ -72,8 +72,8 @@ const int g_ScreenWidthDefault[FTEDITOR_DEVICE_NB] = {
 	480, // FT811
 	480, // FT812
 	480, // FT813
-	480, // BT815
-	480, // BT816
+	800, // BT815
+	800, // BT816
 };
 
 const int g_ScreenWidthMaximum[FTEDITOR_DEVICE_NB] = {
@@ -94,8 +94,8 @@ const int g_ScreenHeightDefault[FTEDITOR_DEVICE_NB] = {
 	272, // FT811
 	272, // FT812
 	272, // FT813
-	272, // BT815
-	272, // BT816
+	480, // BT815
+	480, // BT816
 };
 
 const int g_ScreenHeightMaximum[FTEDITOR_DEVICE_NB] = {
