@@ -322,6 +322,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             pass
 
     export += '\tGpu_CoCmd_Dlstart(phost);\n'
+    export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
     if clearFound == False:
         export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
     export += '\t\n';
