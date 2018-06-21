@@ -1503,7 +1503,6 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
-    m_AddRecentProjectFlag(false),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
@@ -1521,7 +1520,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL), //, m_SaveScreenshotAct(NULL)
+	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
 {
@@ -1539,8 +1538,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createMenus();
 	createToolBars();
 	createStatusBar();
-
-    loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
 
@@ -3302,100 +3299,7 @@ bool MainWindow::maybeSave()
 		}
 	}
 
-    if (res && m_AddRecentProjectFlag)
-    {
-        m_AddRecentProjectFlag = false;
-        addRecentProject(m_CurrentFile);
-    }
-
 	return res;
-}
-
-void MainWindow::loadRecentProject()
-{
-    QFile f(qApp->applicationDirPath() + "/recent_project");
-    
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;    
-    QStringList pathList = QString(f.readAll()).split("\n");    
-    f.close();
-
-    // insert recent project actions
-    QAction *pRecentProjAction = 0;
-    m_RecentActionList.clear();
-    for (int i = 0; i < 5; i++)
-    {
-        pRecentProjAction = new QAction("", this);
-        connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
-        pRecentProjAction->setVisible(false);
-        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i + 1)));
-        m_RecentActionList << pRecentProjAction;
-        m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
-    }
-
-    // insert recent project separator
-    m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
-    m_RecentSeparator->setVisible(false);
-
-    // add recent project path to File Menu
-    for (int i = pathList.size() - 1; i >= 0; --i)
-    {
-        if (pathList.at(i).isEmpty()) continue;
-        addRecentProject(pathList.at(i));
-    }
-}
-
-void MainWindow::addRecentProject(QString recentPath)
-{
-    m_RecentPathList.prepend(recentPath);
-    while (m_RecentPathList.size() > 5)
-    {
-        m_RecentPathList.removeLast();
-    }
-
-    for (int i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setText(QString("%1: %2").arg(i+1).arg(m_RecentPathList.at(i)));
-        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
-        m_RecentActionList[i]->setVisible(true);
-    }
-
-    if (m_RecentSeparator)
-    {
-        m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
-    }
-}
-
-void MainWindow::removeRecentProject(QString removePath)
-{
-    int i = 0;
-
-    if (!m_RecentPathList.removeOne(removePath)) return;
-
-    for (i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setText(QString("%1: %2").arg(i + 1).arg(m_RecentPathList.at(i)));
-        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
-        m_RecentActionList[i]->setVisible(true);
-    }
-
-    for (; i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setVisible(false);
-    }
-
-    if (m_RecentSeparator)
-    {
-        m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
-    }
-}
-
-void MainWindow::saveRecentProject()
-{
-    QFile f(qApp->applicationDirPath() + "/recent_project");
-    if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) return;
-    QTextStream ts(&f);    
-    ts << m_RecentPathList.join("\n");
-    f.close();
 }
 
 bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
@@ -3439,8 +3343,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
 	else event->ignore();
-
-    saveRecentProject();
 }
 
 void MainWindow::actNew()
@@ -3777,9 +3679,6 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
-
-    m_AddRecentProjectFlag = true;
-    removeRecentProject(fileName);
 }
 
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
@@ -3885,8 +3784,6 @@ void MainWindow::actSave()
 	out.writeRawData(data, data.size());
 
 	m_UndoStack->setClean();
-
-    m_AddRecentProjectFlag = true;
 }
 
 void MainWindow::actSaveAs()
@@ -4378,16 +4275,6 @@ void MainWindow::projectFlashChanged(int flashIntf)
 		return;
 	
 	m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
-}
-
-void MainWindow::openRecentProject()
-{
-    QAction *pAction = (QAction *)sender();
-    QString projectPath = pAction->data().toString();
-
-    if (!maybeSave()) return;
-
-    openFile(projectPath);
 }
 
 void MainWindow::projectDisplayChanged(int i)
