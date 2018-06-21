@@ -60,6 +60,7 @@ namespace FTEDITOR {
 
 		QRadioButton *VM816C50A;
 
+        QRadioButton *VM816CU50A;
 
 	private:
 		QGroupBox* createRadioButtonsGroup();
