@@ -1521,7 +1521,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
+	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL), //, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
 {
@@ -3359,7 +3359,10 @@ void MainWindow::addRecentProject(QString recentPath)
         m_RecentActionList[i]->setVisible(true);
     }
 
-    m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+    if (m_RecentSeparator)
+    {
+        m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+    }
 }
 
 void MainWindow::removeRecentProject(QString removePath)
@@ -3380,7 +3383,10 @@ void MainWindow::removeRecentProject(QString removePath)
         m_RecentActionList[i]->setVisible(false);
     }
 
-    m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+    if (m_RecentSeparator)
+    {
+        m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+    }
 }
 
 void MainWindow::saveRecentProject()
