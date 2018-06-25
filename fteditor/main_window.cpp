@@ -83,7 +83,6 @@ namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
-extern QString FLASH_BIN_PATH;
 
 #define FTEDITOR_DEBUG_EMUWRITE 0
 
@@ -524,6 +523,7 @@ void loop()
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 				int s = in.readRawData(&ram[loadAddr], binSize);
 				BT8XXEMU_poke(g_Emulator);
+                binFile.close();
 			}
 		}
 	}
@@ -3314,18 +3314,11 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadRecentProject()
 {
-
 	// insert recent project separator
 	if (m_RecentSeparator == NULL)
 		m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
 
 	m_RecentSeparator->setVisible(false);
-
-    QFile f(qApp->applicationDirPath() + "/recent_project");
-    
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;    
-    QStringList pathList = QString(f.readAll()).split("\n");    
-    f.close();
 
     // insert recent project actions
     QAction *pRecentProjAction = 0;
@@ -3335,11 +3328,16 @@ void MainWindow::loadRecentProject()
         pRecentProjAction = new QAction("", this);
         connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
         pRecentProjAction->setVisible(false);
+        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i+1)));
         m_RecentActionList << pRecentProjAction;
         m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
     }
 
+    QFile f(qApp->applicationDirPath() + "/recent_project");
 
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QStringList pathList = QString(f.readAll()).split("\n");
+    f.close();
     // add recent project path to File Menu
     for (int i = pathList.size() - 1; i >= 0; --i)
     {
@@ -3423,7 +3421,6 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		}
 		else
 		{
-            FLASH_BIN_PATH = binPath;
             int flashType = log2(binSize);
 			m_ProjectFlash->setCurrentIndex(flashType > 0 ? flashType : 0);
 		}
