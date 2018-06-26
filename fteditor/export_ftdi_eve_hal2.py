@@ -11,10 +11,9 @@ def displayName():
 
 def renameStringInFile(file, oldName, newName):
     with open(file, 'r') as resourceFile:
-        data = resourceFile.read().decode("utf-8-sig").encode("utf-8")
+        data = resourceFile.read()
 
     data = data.replace(oldName, newName)
-    #source = unicode(data, 'utf-8')
 
     with open(file, 'w+') as resourceFile:
         resourceFile.truncate()
@@ -1160,11 +1159,6 @@ def run(name, document, ram, moduleName):
             resultText += "<b>Warning</b>: Only support for Coprocessor commands, ignoring Display List.<br>"
             break
 
-    try:
-        name.decode('ascii')
-    except UnicodeDecodeError:
-        raiseUnicodeError("Project Name")
-
     if deviceType == 2064 or deviceType == 2065 or deviceType == 2066 or deviceType == 2067:
         outDir = "FT81X_" + name + "_FTEVE_HAL"
         functionMap["CMD_SNAPSHOT2"] = "Ft_Gpu_CoCmd_Snapshot2"
@@ -1373,7 +1367,7 @@ def run(name, document, ram, moduleName):
                 splitlinea = line.split('(', 1)
                 splitlineb = splitlinea[1].split(')',1)
                 functionName = splitlinea[0]
-                if functionMap.has_key(functionName):
+                if functionName in functionMap:
                     functionName = functionMap[functionName]
                 commentsRegex = re.compile("//.*$")
                 if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "CMD_SETFONT":
@@ -1397,7 +1391,7 @@ def run(name, document, ram, moduleName):
             try:
                 splitlinea = line.split('(', 1)
                 functionName = splitlinea[0]
-                if functionMap.has_key(functionName):
+                if functionName in functionMap:
                     functionName = functionMap[functionName]
                 if functionName == "CLEAR":
                     clearFound = True
@@ -1520,12 +1514,7 @@ def run(name, document, ram, moduleName):
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, " + functionArgsSplit[1] + ");\n")
                     functionArgs = functionArgsSplit[0] + ","
                     functionArgs += functionArgsSplit[1]
-                    try:
-                        functionArgsSplit[2].decode('ascii')
-                    except UnicodeDecodeError:
-                        f.close()
-                        raiseUnicodeError("Input file path")
-
+                    
                     if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
                         globalContext['mediaFIFOEnabled'] = 'True'
                     functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])

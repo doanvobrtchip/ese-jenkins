@@ -155,10 +155,6 @@ def raiseUnicodeError(errorArea):
 
 # name: the input file name,
 def run(name, document, ram, moduleName):
-    try:
-        name.decode('ascii')
-    except UnicodeDecodeError:
-        raiseUnicodeError("Project Name")
 
     resultText = "<b>EVE Arduino Export</b><br>"
     functionMap = {

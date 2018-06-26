@@ -322,7 +322,6 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             pass
 
     export += '\tGpu_CoCmd_Dlstart(phost);\n'
-    export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
     if clearFound == False:
         export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
     export += '\t\n';
@@ -425,12 +424,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[1] + ");\n"
                 functionArgs = functionArgsSplit[0] + ","
                 functionArgs += functionArgsSplit[1]
-                try:
-                    functionArgsSplit[2].decode('ascii')
-                except UnicodeDecodeError:
-                    f.close()
-                    raiseUnicodeError("Input file path")
-
+                
                 if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
                     globalContext['mediaFIFOEnabled'] = 'True'
                 functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
