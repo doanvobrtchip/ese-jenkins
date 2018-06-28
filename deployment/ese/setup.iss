@@ -1,7 +1,7 @@
-; Inno Setup Script for FTDI EVE Screen Editor tool
+; Inno Setup Script for EVE Screen Editor tool
 
-#define MyAppName "FTDI EVE Screen Editor"
-#define MyAppVersion "V3.0.0"
+#define MyAppName "EVE Screen Editor"
+#define MyAppVersion "V3.0.0 RC1"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -17,7 +17,8 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
+AppUpdatesURL={#MyAppURL}
+DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\\prerelease.txt
 OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
