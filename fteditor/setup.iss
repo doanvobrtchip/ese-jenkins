@@ -1,4 +1,4 @@
-; Inno Setup Script for FTDI EVE Screen Editor tool
+; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor 3.0"
 #define MyAppVersion "V3.0.0"
@@ -17,7 +17,8 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
+AppUpdatesURL={#MyAppURL}
+DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 ;InfoBeforeFile=.\\prerelease.txt
 OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
@@ -25,11 +26,10 @@ SetupIconFile=.\\eve_editor.ico
 Compression=lzma
 SolidCompression=yes
 
-
-
 CreateAppDir=yes
 DisableDirPage=no
 EnableDirDoesntExistWarning=True
+
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
@@ -40,10 +40,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: ".\\*.exe"; DestDir: "{app}"; Flags: ignoreversion
-
 Source: ".\\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\*.py"; DestDir: "{app}"; Flags: ignoreversion
-
 Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs
 
 ;Source: ".\\setup.iss"; DestDir: "{app}"; Flags: ignoreversion
