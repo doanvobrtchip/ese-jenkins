@@ -13,6 +13,7 @@
 
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
+#include <frameobject.h>
 #endif /* FT800EMU_PYTHON */
 #include "asset_converter.h"
 
@@ -97,7 +98,7 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
 	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
@@ -126,7 +127,7 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(pvalue);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
 	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
@@ -186,18 +187,9 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
-    QString outDirPath(outName);
-    outDirPath = outName.left(outName.lastIndexOf("/"));
-
 	QString quantFile = outName + "_converted-fs8.png";
 	if (QFile::exists(quantFile))
 		QFile::remove(quantFile);
-
-    QDir outDir(outDirPath);
-    if (outDir.exists())
-    {
-        outDir.removeRecursively();
-    }
 
 #ifdef FT800EMU_PYTHON
     if (a_ImageConvRun)
@@ -206,7 +198,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
         bool error = true;
 
         QByteArray inFileUtf8 = inFile.toUtf8();
-        QByteArray outNameUtf8 = outDirPath.toUtf8();
+        QByteArray outNameUtf8 = outName.toUtf8();
 
         // convert fteditor's format to python script's format
         switch (format)

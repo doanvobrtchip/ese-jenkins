@@ -1,8 +1,4 @@
 import os
-try:
-    import Image
-except ImportError:
-    from PIL import Image
 import zlib
 import sys
 import array
@@ -12,7 +8,7 @@ import png
 import subprocess
 import shutil
 from helperapi import resource_path
-import traceback
+from PIL import Image
 
 import astc_conv
 import json
@@ -222,11 +218,15 @@ class Image_Conv:
 
         abspath = os.path.abspath(inputfile)
         self.infile_name = os.path.basename(abspath)
-        self.infile_basename = os.path.splitext(os.path.basename(abspath))[0]
+        #self.infile_basename = os.path.splitext(os.path.basename(abspath))[0]
+        self.infile_basename = os.path.split(self.output_dir)[-1]
+        
+        print (self.infile_basename)
         if self.output_dir is None:
             outputdir = os.path.join(cwd, '{}_{}'.format(self.infile_basename, format_table[self.output_format]))
             self.output_dir = outputdir
         else:
+            self.output_dir = self.output_dir.replace(self.infile_basename, '')
             outputdir = self.output_dir
 
         try:
@@ -238,18 +238,17 @@ class Image_Conv:
                     if tempfile == (self.infile_basename) or tempfile == (self.infile_basename+"_index") or tempfile.startswith(self.infile_basename+"_PALETTED"):
                         raise Exception('Output folder already contains previously generated outputs: {}'.format(File))
                         break
+            
         except Exception as ex:
             raise Exception('Error occured while processing output folder: {}. {}'.format(outputdir, ex))
 
         # regular images
         if self.output_format in binary_formats:
             try:
-                if self.iszip:
-                    self.main_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
-                    self.main_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
-                else:
-                    self.main_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
-                    self.main_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
+                self.main_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
+                self.main_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w', encoding="ascii")
+                self.main_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
+                self.main_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
             except Exception as ex:
                 raise Exception('Unable to generate output files, check directory permission at: {} ({})'.format(outputdir, ex))
 
@@ -258,9 +257,8 @@ class Image_Conv:
             try:
                 self.index_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
                 self.index_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
-                if self.iszip:
-                    self.index_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
-                    self.index_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
+                self.index_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
+                self.index_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
             except Exception as ex:
                 raise Exception('Unable to generate output files, check directory permission at: {} ({})'.format(outputdir, ex))
             outputdir_lut = os.path.join(outputdir, '{}_{}_LUT'.format(self.infile_basename,
@@ -277,9 +275,8 @@ class Image_Conv:
             try:
                 self.lut_raw = open(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)), 'wb')
                 self.lut_rawh = open(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)), 'w')
-                if self.iszip:
-                    self.lut_bin = open(os.path.join(outputdir_lut, '{}_lut.bin'.format(self.infile_basename)), 'wb')
-                    self.lut_binh = open(os.path.join(outputdir_lut, '{}_lut.binh'.format(self.infile_basename)), 'w')
+                self.lut_bin = open(os.path.join(outputdir_lut, '{}_lut.bin'.format(self.infile_basename)), 'wb')
+                self.lut_binh = open(os.path.join(outputdir_lut, '{}_lut.binh'.format(self.infile_basename)), 'w')
             except:
                 raise Exception('Unable to generate output files, check directory permission at: {}'.format(outputdir_lut))
 
@@ -316,8 +313,8 @@ class Image_Conv:
         self.main_binh.write("*/ \n")
 
         #write the data by byte
-        for i in deflatedata:
-            self.main_binh.write(str(ord(i)))
+        for i in deflatedata:            
+            self.main_binh.write('{}'.format(i))
             self.main_binh.write(",")
         self.main_binh.close()
 
@@ -419,10 +416,8 @@ class Image_Conv:
 
             im = im.resize((iw,ih),Image.BICUBIC)
             im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
-            if self.iszip:
-                self.save_binfiles(data, im.size)
-            else:
-                self.save_rawfiles(data, im.size, self.stride, is_astc)
+            self.save_binfiles(data, im.size)
+            self.save_rawfiles(data, im.size, self.stride, is_astc)
             return im.size
 
         elif self.output_format in colorfmts:
@@ -451,7 +446,7 @@ class Image_Conv:
                     imdata.append(binary)
 
             fmtchr = {8: 'B', 16: 'H'}[totalsz]
-            data = array.array('B', array.array(fmtchr, imdata).tostring())
+            data = array.array('B', array.array(fmtchr, imdata).tobytes())
 
             if self.output_format in colorfmts_A:
                 im = im_origin.convert("RGBA")
@@ -507,10 +502,8 @@ class Image_Conv:
         im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
 
         self.stride = self.calc_stride(im, totalsz)
-        if self.iszip:
-            self.save_binfiles(data,im.size)
-        else:
-            self.save_rawfiles(data,im.size, totalsz, is_astc)
+        self.save_binfiles(data,im.size)
+        self.save_rawfiles(data,im.size, totalsz, is_astc)
 
         return im.size
 
@@ -576,20 +569,19 @@ class Image_Conv:
             self.index_raw.close()
             self.index_rawh.close()
 
-            if self.iszip:
-                deflatdata = zlib.compress(array.array('B', imdata))
-                self.index_bin.write(deflatdata)
-                self.index_bin.close()
-                index = 0
-                for i in deflatdata:
-                    self.index_binh.write(str(ord(i)))
-                    self.index_binh.write(",")
-                    index = index  + 1
-                    if 0 == index % 32:
-                        self.index_binh.write("\n")
-                self.index_binh.close()
-                os.remove(os.path.join(self.output_dir, '{}_index.raw'.format(self.infile_basename)))
-                os.remove(os.path.join(self.output_dir, '{}_index.rawh'.format(self.infile_basename)))
+            deflatdata = zlib.compress(array.array('B', imdata))
+            self.index_bin.write(deflatdata)
+            self.index_bin.close()
+            index = 0
+            for i in deflatdata:
+                self.index_binh.write(str(ord(i)))
+                self.index_binh.write(",")
+                index = index  + 1
+                if 0 == index % 32:
+                    self.index_binh.write("\n")
+            self.index_binh.close()
+            os.remove(os.path.join(self.output_dir, '{}_index.raw'.format(self.infile_basename)))
+            os.remove(os.path.join(self.output_dir, '{}_index.rawh'.format(self.infile_basename)))
 
         write_index(img_indexdata)
 
@@ -710,22 +702,22 @@ class Image_Conv:
 
             self.lut_raw.close()
             self.lut_rawh.close()
-            if self.iszip:
-                deflatdata = zlib.compress(array.array('B', imdata))
-                self.lut_bin.write(deflatdata)
-                self.lut_bin.close()
-                index = 0
-                for i in deflatdata:
-                    self.lut_binh.write(str(ord(i)))
-                    self.lut_binh.write(",")
-                    index = index + 1
-                    if 0 == index % 32:
-                        self.lut_binh.write("\n")
-                self.lut_binh.close()
-                outputdir_lut = os.path.join(self.output_dir, '{}_{}_LUT'.format(self.infile_basename,
-                                                                    format_table[self.output_format]))
-                os.remove(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)))
-                os.remove(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)))
+            
+            deflatdata = zlib.compress(array.array('B', imdata))
+            self.lut_bin.write(deflatdata)
+            self.lut_bin.close()
+            index = 0
+            for i in deflatdata:
+                self.lut_binh.write(str(ord(i)))
+                self.lut_binh.write(",")
+                index = index + 1
+                if 0 == index % 32:
+                    self.lut_binh.write("\n")
+            self.lut_binh.close()
+            outputdir_lut = os.path.join(self.output_dir, '{}_{}_LUT'.format(self.infile_basename,
+                                                                format_table[self.output_format]))
+            os.remove(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)))
+            os.remove(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)))
 
         write_lutfile(lut)
 
@@ -733,7 +725,7 @@ class Image_Conv:
         dither = True
         self.astc_effort = "exhaustive"
         self.astc_encode = resource_path("astcenc.exe")
-        self.iszip = False
+        self.iszip = True
         try:
             opts, args = getopt.getopt(argv, "vhdi:f:e:x:o:z")
         except getopt.GetoptError:
@@ -767,8 +759,6 @@ class Image_Conv:
                 self.astc_encode = arg
             elif opt == '-o':
                 self.output_dir = arg
-            elif opt == "-z":
-                self.iszip = True
             else:
                 print_usage()
                 sys.exit(2)
