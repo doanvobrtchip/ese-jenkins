@@ -1251,7 +1251,7 @@ def run(name, document, ram, moduleName):
 		
                         foutput = open(lutTargetPath, 'w+')		
                         for i in range(0, len(lutContent)):		
-                            foutput.write(str(ord(lutContent[i])))		
+                            foutput.write("{}".format(lutContent[i]))
                             foutput.write(",")		
                         foutput.close()		
 
@@ -1259,7 +1259,7 @@ def run(name, document, ram, moduleName):
                         
                     foutput = open(targetPath, 'w+')
                     for i in range(0,len(fcontent)):
-                        foutput.write(str(ord(fcontent[i])))
+                        foutput.write("{}".format(fcontent[i]))
                         foutput.write(",")
                     foutput.close()
                 else:

@@ -184,14 +184,14 @@ def exportContent(outDir, document):
 
                         foutput = open(lutTargetPath, 'w+')
                         for i in range(0, len(lutContent)):
-                            foutput.write(str(ord(lutContent[i])))
+                            foutput.write("{}".format(lutContent[i]))
                             foutput.write(",")
                         foutput.close()
 
                     foutput = open(targetPath, 'w+')
                     try:
                         for i in range(0,len(fcontent)):
-                            foutput.write(str(ord(fcontent[i])))
+                            foutput.write("{}".format(fcontent[i]))
                             foutput.write(",")
                     finally:
                         foutput.close()
@@ -321,6 +321,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
         except:
             pass
 
+    export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
     export += '\tGpu_CoCmd_Dlstart(phost);\n'
     if clearFound == False:
         export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'

@@ -574,7 +574,7 @@ class Image_Conv:
             self.index_bin.close()
             index = 0
             for i in deflatdata:
-                self.index_binh.write(str(ord(i)))
+                self.index_binh.write("{}".format(i))
                 self.index_binh.write(",")
                 index = index  + 1
                 if 0 == index % 32:
@@ -708,7 +708,7 @@ class Image_Conv:
             self.lut_bin.close()
             index = 0
             for i in deflatdata:
-                self.lut_binh.write(str(ord(i)))
+                self.lut_binh.write("{}".format(i))
                 self.lut_binh.write(",")
                 index = index + 1
                 if 0 == index % 32:

@@ -16,7 +16,7 @@ def replaceStringInFile(file, oldString, newString):
 
     data = data.replace(oldString, newString)
     
-    with open(file, 'w+') as resourceFile:
+    with open(file, 'w+', encoding='utf-8') as resourceFile:
         resourceFile.truncate()
         resourceFile.write(data)
    
