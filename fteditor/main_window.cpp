@@ -7,6 +7,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
 #include "main_window.h"
+#include "Windows.h"
 
 // STL includes
 #include <stdio.h>
@@ -85,6 +86,7 @@ extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
 
 #define FTEDITOR_DEBUG_EMUWRITE 0
+#define EMULATOR_DLL_NAME       "bt8xxemu.dll"
 
 typedef int32_t ramaddr;
 
@@ -128,6 +130,32 @@ static const int s_StandardHeights[] = {
 };
 
 static volatile bool s_EmulatorRunning = false;
+
+void getVersionString(QString fName, QString &fileDescription, QString &fileVersion)
+{
+    // first of all, GetFileVersionInfoSize
+    DWORD dwHandle;
+    DWORD dwLen = GetFileVersionInfoSize((LPCTSTR)fName.toStdString().data(), &dwHandle);
+
+    LPVOID *lpData = new LPVOID[dwLen];
+    if (!GetFileVersionInfo((LPCTSTR)fName.toStdString().data(), dwHandle, dwLen, lpData))
+    {
+        delete[] lpData;
+        return;
+    }
+   
+    char *lpBuffer = NULL;
+    UINT uLen;
+
+    // language ID 040904E4: U.S. English, char set = Windows, Multilingual
+    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileDescription", (LPVOID*)&lpBuffer, &uLen);
+    fileDescription = lpBuffer;
+
+    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileVersion", (LPVOID*)&lpBuffer, &uLen);
+    fileVersion = lpBuffer;
+    
+    delete[] lpData;
+}
 
 void swrbegin(ramaddr address)
 {
@@ -3270,7 +3298,19 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	setWindowTitle(QString(m_CleanUndoStack ? "" : "*") + (m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName()) + " - " + tr("EVE Screen Editor") + " - (" + QDir::currentPath() + ")");
+    QString emuDescription, emuVersion;
+    getVersionString(QCoreApplication::applicationDirPath() + "/" + EMULATOR_DLL_NAME, emuDescription, emuVersion);
+
+    QString title = QString("%1%2 - EVE Screen Editor [Build Time: %3 - %4] (%5 %6) - (%7)")
+        .arg(QString(m_CleanUndoStack ? "" : "*"))
+        .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
+        .arg(__DATE__)
+        .arg(__TIME__)
+        .arg(emuDescription)
+        .arg(emuVersion)
+        .arg(QDir::currentPath());
+
+	setWindowTitle(title);
 }
 
 void MainWindow::undoCleanChanged(bool clean)
