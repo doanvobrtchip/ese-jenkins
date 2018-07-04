@@ -3331,7 +3331,7 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		else
 		{
             int flashType = ceil(log2(binSize)) - 1;
-            if (flashType < 0) flashType = 0;
+            if (flashType < 0) flashType = 0;            
             m_ProjectFlash->setCurrentIndex(flashType);
             m_MinFlashType = flashType;
 		}
@@ -3409,7 +3409,7 @@ void MainWindow::actNew(bool addClear)
 	// reset flash file name
 	setFlashFileNameToLabel("");
 
-    m_MinFlashType = 0;
+    m_MinFlashType = -1;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3566,6 +3566,7 @@ void MainWindow::actOpen()
 	if (fileName.isNull())
 		return;
 
+    m_MinFlashType = -1;
 	openFile(fileName);
 }
 
