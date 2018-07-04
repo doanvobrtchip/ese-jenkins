@@ -123,6 +123,11 @@ IF (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
     Qt5::Widgets
   )
+  
+  TARGET_LINK_LIBRARIES(fteditor
+    version
+  )
+  
   IF (FTEDITOR_DEVICE_MANAGER)
     TARGET_LINK_LIBRARIES(fteditor
       ${CMAKE_SOURCE_DIR}/fteditor/ftlib/ftd2xx.lib
