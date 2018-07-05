@@ -853,6 +853,11 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		if (format != BARGRAPH) { if (!wrap(yl, height, wrapy)) return 0x00000000; }
 	const int y = (int)yl;
 	const int py = y * stride;
+#ifdef BT815EMU_MODE
+	uint32_t bmpFormat = (bitmapInfo->LayoutFormat == 0x1F) ? bitmapInfo->ExtFormat : bitmapInfo->LayoutFormat;
+	if (!BT815EMU_IS_FORMAT_ASTC(bmpFormat) && (BT815EMU_ADDR_IS_FLASH(bitmapInfo->Source)))
+		return 0x00000000;
+#endif
 	switch (format)
 	{
 	case ARGB1555:
