@@ -1533,6 +1533,7 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
+    m_MinFlashType(-1),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
@@ -3610,7 +3611,6 @@ void MainWindow::actOpen()
 	openFile(fileName);
 }
 
-
 void MainWindow::openFile(const QString &fileName)
 {
 	printf("*** Open file ***\n");
@@ -3656,9 +3656,7 @@ void MainWindow::openFile(const QString &fileName)
 		QJsonObject registers = root["registers"].toObject();
 		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
 		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
-		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
-		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
-		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());		
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
 
@@ -3676,6 +3674,10 @@ void MainWindow::openFile(const QString &fileName)
 				checkAndPromptFlashPath(ci->SourcePath);
 			}			
 		}
+
+        documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
+        documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
 			// Compatibility loading BITMAP_SETUP
@@ -4305,7 +4307,6 @@ private:
 	int m_NewProjectFlash;
 	int m_OldProjectFlash;
 	MainWindow *m_MainWindow;
-
 };
 
 void MainWindow::projectFlashChanged(int flashIntf)

@@ -235,11 +235,11 @@ private:
 	MainWindow &operator=(const MainWindow &);
 
 private:
-  int m_MinFlashType;
-  bool m_AddRecentProjectFlag;
-  QAction *m_RecentSeparator;
-  QList<QAction *> m_RecentActionList;
-  QStringList m_RecentPathList;
+    int m_MinFlashType;
+    bool m_AddRecentProjectFlag;
+    QAction *m_RecentSeparator;
+    QList<QAction *> m_RecentActionList;
+    QStringList m_RecentPathList;
   
 	QString m_InitialWorkingDir;
 	QUndoStack *m_UndoStack;
