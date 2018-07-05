@@ -1533,6 +1533,7 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
+	m_MinFlashType(-1),
     m_AddRecentProjectFlag(false),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
@@ -3461,8 +3462,10 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		}
 		else
 		{
-            int flashType = log2(binSize);
-			m_ProjectFlash->setCurrentIndex(flashType > 0 ? flashType : 0);
+            int flashType = ceil(log2(binSize)) - 1;
+            if (flashType < 0) flashType = 0;            
+            m_ProjectFlash->setCurrentIndex(flashType);
+            m_MinFlashType = flashType;
 		}
 	}
 
@@ -3539,6 +3542,7 @@ void MainWindow::actNew(bool addClear)
 
 	// reset flash file name
 	setFlashFileNameToLabel("");
+    m_MinFlashType = -1;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3695,9 +3699,9 @@ void MainWindow::actOpen()
 	if (fileName.isNull())
 		return;
 
+    m_MinFlashType = -1;
 	openFile(fileName);
 }
-
 
 void MainWindow::openFile(const QString &fileName)
 {
@@ -3744,9 +3748,7 @@ void MainWindow::openFile(const QString &fileName)
 		QJsonObject registers = root["registers"].toObject();
 		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
 		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
-		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
-		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
-		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());		
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
 
@@ -3764,6 +3766,10 @@ void MainWindow::openFile(const QString &fileName)
 				checkAndPromptFlashPath(ci->SourcePath);
 			}			
 		}
+
+        documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
+        documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
 			// Compatibility loading BITMAP_SETUP
@@ -4398,7 +4404,6 @@ private:
 	int m_NewProjectFlash;
 	int m_OldProjectFlash;
 	MainWindow *m_MainWindow;
-
 };
 
 void MainWindow::projectFlashChanged(int flashIntf)
