@@ -38,91 +38,93 @@ static int lastround = 0;
 
 void loop()
 {
-	if (!s_F)
+	int regwp = rd32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
+	int rp = rd32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
+	int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
+	int freespace = ((4096 - 4) - fullness);
+
+	// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
+	if (rp == -1)
 	{
-		exit(0);
+		printf("rp < 0, error\n");
+		printf("Close XBU\n");
+		if (fclose(s_F)) printf("Error closing vc1dump file\n");
+		s_F = NULL;
 	}
 	else
 	{
-		int regwp = rd32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-		int rp = rd32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-		int freespace = ((4096 - 4) - fullness);
+		if (freespace)
+			// if (freespace >= 2048)
+		{
+			int freespacediv = freespace >> 2;
 
-		// printf("rp: %i, wp: %i, wpr: %i, regwp: %i\n", rp, wp, wpr, regwp);
-		if (rp == -1)
-		{
-			printf("rp < 0, error\n");
-			printf("Close XBU\n");
-			if (fclose(s_F)) printf("Error closing vc1dump file\n");
-			s_F = NULL;
-		}
-		else
-		{
-			if (freespace)
-				// if (freespace >= 2048)
+			wrstart(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+			for (int i = 0; i < freespacediv; ++i)
 			{
-				int freespacediv = freespace >> 2;
-
-				wrstart(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				for (int i = 0; i < freespacediv; ++i)
+				uint32_t buffer;
+				size_t nb = fread(&buffer, 4, 1, s_F);
+				if (nb == 1)
 				{
-					uint32_t buffer;
-					size_t nb = fread(&buffer, 4, 1, s_F);
-					if (nb == 1)
-					{
-						/*if (buffer == CMD_DLSTART) okwrite = true;
+					/*if (buffer == CMD_DLSTART) okwrite = true;
 
-						if (okwrite)
-						{*/
-						wr32(buffer);
-						wp += 4;
-						//}
+					if (okwrite)
+					{*/
+					wr32(buffer);
+					wp += 4;
+					//}
 
-						if (buffer == CMD_SWAP)
-						{
-							wpr = wp;
-							wrend();
-							wr32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wpr & 0xFFF));
-							wrstart(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-						}
-					}
-					else
+					if (buffer == CMD_SWAP)
 					{
-						printf("Close XBU, nb = %i\n", (int)nb);
-						if (fclose(s_F)) printf("Error closing xbu file\n");
-						s_F = NULL;
-						break;
-					}
-				}
-				wrend();
-
-				if (s_F)
-				{
-					int wprn = (wp - 128);
-					if (wprn > wpr)
-					{
-						wpr = wprn;
+						wpr = wp;
+						wrend();
 						wr32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wpr & 0xFFF));
+						wrstart(FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 					}
 				}
 				else
 				{
-					wpr = wp;
+					printf("Close XBU, nb = %i\n", (int)nb);
+					if (fclose(s_F)) printf("Error closing xbu file\n");
+					s_F = NULL;
+					break;
+				}
+			}
+			wrend();
+
+			if (s_F)
+			{
+				int wprn = (wp - 128);
+				if (wprn > wpr)
+				{
+					wpr = wprn;
 					wr32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wpr & 0xFFF));
 				}
 			}
 			else
 			{
-				// FT800EMU::System.delay(1000);
-			}
-			int newround = wpr / 4096;
-			if (lastround != newround)
-			{
-				// printf("new round\n");
-				lastround = newround;
+				wpr = wp;
+				wr32(FTEDITOR::reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wpr & 0xFFF));
 			}
 		}
+		else
+		{
+			// FT800EMU::System.delay(1000);
+		}
+		int newround = wpr / 4096;
+		if (lastround != newround)
+		{
+			// printf("new round\n");
+			lastround = newround;
+		}
+	}
+}
+
+void coprocdiff(BT8XXEMU_Emulator *sender, void *context)
+{
+	setup();
+	while (s_F)
+	{
+		loop();
 	}
 }
 
