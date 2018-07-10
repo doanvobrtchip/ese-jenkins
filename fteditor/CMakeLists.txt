@@ -126,7 +126,7 @@ IF (WIN32)
   IF (FTEDITOR_DEVICE_MANAGER)
     TARGET_LINK_LIBRARIES(fteditor
       ${CMAKE_SOURCE_DIR}/fteditor/ftlib/ftd2xx.lib
-      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/libMPSSE.a
+      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/libMPSSE.lib
       ${CMAKE_SOURCE_DIR}/fteditor/ftlib/LibFT4222.lib
     )
   ENDIF (FTEDITOR_DEVICE_MANAGER)
