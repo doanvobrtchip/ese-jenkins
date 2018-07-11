@@ -47,6 +47,7 @@ cd ..
 copy C:\2018q3-external-vs2017-x64\freetype\bin\freetype.dll freetype.dll
 copy C:\2018q3-external-vs2017-x64\libpng\bin\libpng16.dll libpng16.dll
 copy C:\2018q3-external-vs2017-x64\zlib\bin\zlib.dll zlib.dll
-rem "C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 B1235EB3CE053D3C4CB42F500271598DDE59117F /t http://timestamp.comodoca.com/authenticode fteditor.exe
-rem "C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 B1235EB3CE053D3C4CB42F500271598DDE59117F /t http://timestamp.comodoca.com/authenticode ft8xxemu.dll
-rem "C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 B1235EB3CE053D3C4CB42F500271598DDE59117F /t http://timestamp.comodoca.com/authenticode mx25lemu.dll
+
+"C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 028eb5ba2732d21fb599aa88d9e0c26ac76b4045 /t http://timestamp.comodoca.com/authenticode fteditor.exe
+"C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 028eb5ba2732d21fb599aa88d9e0c26ac76b4045 /t http://timestamp.comodoca.com/authenticode bt8xxemu.dll
+"C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 028eb5ba2732d21fb599aa88d9e0c26ac76b4045 /t http://timestamp.comodoca.com/authenticode mx25lemu.dll
