@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Bridgetek Pte Ltd"
             VALUE "FileDescription", "EVE Screen Editor"
-            VALUE "FileVersion", "3.0.0"
+            VALUE "FileVersion", "3.0.0 RC2"
             VALUE "InternalName", "fteditor"
             VALUE "LegalCopyright", "Copyright (C) 2016-2018  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "fteditor.exe"
             VALUE "ProductName", "EVE Screen Editor"
-            VALUE "ProductVersion", "3.0.0"
+            VALUE "ProductVersion", "3.0.0 RC2"
         END
     END
     BLOCK "VarFileInfo"
