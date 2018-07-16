@@ -2,11 +2,11 @@
 
 Please uninstall the last version if you have one installed on your PC. 
 
-Version 3.0.0 RC1
+Version 3.0.0 RC2
 
 Release Note: 
    Features: 
-•   Add support of BT815   
+•   Add support of BT815, including ASTC, flash, Unicode and more features.   
 •   Support FT4222 board in device manager
 •   Change the user guide from .chm format to .pdf format
 •   Support BT81X modules in export feature for MSVC platform:
@@ -24,7 +24,7 @@ Release Note:
       - ME813A-WH50C       
 
 •   Rebuild the project with Qt5.7.0 and MSVC 2015
-
+•   Add the missing firmware folder in the installation package.
 
     Bug Fix: 
 *   Fix the crash issue when export menu is clicked for FT813 device.
@@ -32,5 +32,5 @@ Release Note:
 
 
     Known issues:
-*   Video and animation is unable to be played back
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
+*   Playing the invalid animation frame data in flash may cause ESE hang

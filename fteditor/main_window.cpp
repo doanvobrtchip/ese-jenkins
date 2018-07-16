@@ -4405,7 +4405,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.0.0"));
+	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.0.0 RC2"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		

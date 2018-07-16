@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.0.0 RC1"
+#define MyAppVersion "V3.0.0 RC2"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -26,11 +26,10 @@ OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 
-
-
 CreateAppDir=yes
 DisableDirPage=no
 EnableDirDoesntExistWarning=True
+
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
@@ -39,23 +38,63 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 
-
 [Files]
-Source: ".\\prerelease.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\*.txt"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\fteditor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\astc_conv.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_bt81x_helper.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_EVE_Arduino.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_ftdi_eve_hal.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_ftdi_eve_hal2.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_GameDuino2.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_gd2.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\helperapi.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\img_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\png.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\pngp2pa.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\raw_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+
+
+
+
+Source: ".\\astcenc.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\pngquant.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\fteditor.exe"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\*.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\bt8xxemu.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\mx25lemu.dll"; DestDir: "{app}"; Flags: ignoreversion
 
+Source: ".\\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\libFT4222.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\EVE Screen Editor User Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\python27.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: ".\\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: ".\\msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\setup.iss"; DestDir: "{app}"; Flags: ignoreversion
+
 Source: ".\\Lib\*.*"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
 Source: ".\\Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs
+Source: ".\\EVE_Hal_Library\*.*"; DestDir: "{app}\EVE_Hal_Library"; Flags: recursesubdirs createallsubdirs
 Source: ".\\export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs
+Source: ".\\firmware\*.*"; DestDir: "{app}\firmware"; Flags: recursesubdirs createallsubdirs
+Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs
 Source: ".\\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs
 Source: ".\\platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs
 Source: ".\\imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs
