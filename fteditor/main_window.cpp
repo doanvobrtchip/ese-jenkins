@@ -3451,6 +3451,7 @@ void MainWindow::actNew(bool addClear)
 	setFlashFileNameToLabel("");
 
     m_MinFlashType = -1;
+    actResetEmulator();
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
