@@ -1721,7 +1721,7 @@ QString MainWindow::scriptModule()
 
 QString MainWindow::scriptDir()
 {
-	return m_InitialWorkingDir + "/"
+	return QCoreApplication::applicationDirPath() + "/"
 		+ scriptFolder + "/"
 		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
@@ -4400,7 +4400,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/Manual/EVE Screen Editor User Guide.pdf"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/Manual/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()
