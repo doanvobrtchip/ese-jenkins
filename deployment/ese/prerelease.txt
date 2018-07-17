@@ -2,7 +2,7 @@
 
 Please uninstall the last version if you have one installed on your PC. 
 
-Version 3.0.0 RC2
+Version 3.0.1 RC2
 
 Release Note: 
    Features: 

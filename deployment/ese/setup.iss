@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.0.0 RC2"
+#define MyAppVersion "V3.0.1 RC2"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
