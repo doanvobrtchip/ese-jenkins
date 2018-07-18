@@ -8,6 +8,7 @@
         "",
         "CMD_MEMSET(0, 66, 1)",
         "CMD_MEMSET(1, 84, 1)",
+        "CMD_MEMSET(2, 0, 1)",
         "CMD_TEXT(0, 31, 30, OPT_FORMAT, \"Format string in new chip: %s%X/%s%d\", 0, 2069, 0, 816)",
         "",
         "CMD_TEXT(0, 103, 28, 0, \"Format   %d     %o                        %x             %X\")",
