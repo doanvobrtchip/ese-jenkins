@@ -3,18 +3,6 @@
         {
             "converter": "Raw",
             "dataCompressed": false,
-            "dataStorage": "Flash",
-            "destName": "content/AgYinXiang_16",
-            "flashAddress": 4096,
-            "memoryAddress": 24312,
-            "memoryLoaded": false,
-            "rawLength": 0,
-            "rawStart": 0,
-            "sourcePath": "font/AgYinXiang_16.glyph"
-        },
-        {
-            "converter": "Raw",
-            "dataCompressed": true,
             "dataStorage": "Embedded",
             "destName": "content/AgYinXiang_16_2",
             "memoryAddress": 0,
@@ -26,18 +14,6 @@
         {
             "converter": "Raw",
             "dataCompressed": false,
-            "dataStorage": "Flash",
-            "destName": "content/mssong_20",
-            "flashAddress": 4754752,
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "rawLength": 0,
-            "rawStart": 0,
-            "sourcePath": "font/mssong_20.glyph"
-        },
-        {
-            "converter": "Raw",
-            "dataCompressed": true,
             "dataStorage": "Embedded",
             "destName": "content/mssong_20_2",
             "memoryAddress": 17188,
@@ -49,18 +25,6 @@
         {
             "converter": "Raw",
             "dataCompressed": false,
-            "dataStorage": "Flash",
-            "destName": "content/NotoSansCJKjp-Medium_18",
-            "flashAddress": 5512320,
-            "memoryAddress": 27176,
-            "memoryLoaded": false,
-            "rawLength": 0,
-            "rawStart": 0,
-            "sourcePath": "font/NotoSansCJKjp-Medium_18.glyph"
-        },
-        {
-            "converter": "Raw",
-            "dataCompressed": true,
             "dataStorage": "Embedded",
             "destName": "content/NotoSansCJKjp-Medium_18_2",
             "memoryAddress": 20052,
@@ -68,14 +32,58 @@
             "rawLength": 0,
             "rawStart": 0,
             "sourcePath": "font/NotoSansCJKjp-Medium_18.xfont"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "AgYinXiang_16.glyph",
+            "flashAddress": 3030336,
+            "mappedName": "AgYinXiang_16.glyph",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/unicode_font.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "NotoSansCJKjp-Medium_18.glyph",
+            "flashAddress": 4096,
+            "mappedName": "NotoSansCJKjp-Medium_18.glyph",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/unicode_font.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "mssong_20.glyph",
+            "flashAddress": 2272768,
+            "mappedName": "mssong_20.glyph",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/unicode_font.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "unified.blob",
+            "flashAddress": 0,
+            "mappedName": "unified.blob",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/unicode_font.map"
         }
     ],
     "coprocessor": [
         "CLEAR(1, 1, 1)",
+        "CMD_FLASHFAST()",
+        "",
         "CMD_SETFONT2(0,0,32)",
         "CMD_TEXT(50, 100, 0, 0, \"あいうえおぴゃぴゅぴょハヒフヘホパピプペポ ||| \\u3042\\u3044\\u3046\\u3048\\u304a\\u3074\\u3083\\u3074\\u3085\\u3074\\u3087\\u30cf\\u30d2\\u30d5\\u30d8\\u30db\\u30d1\\u30d4\\u30d7\\u30da\\u30dd\")",
+        "",
         "CMD_SETFONT2(1,17188,32)",
         "CMD_TEXT(50, 200, 1, 0, \"\\u0046\\u0054\\u0038\\u0078\\u0078\\u7cfb\\u5217\\u8bbe\\u5907\\u63d0\\u4f9b\\u5b9e\\u73b0\\u56fe\\u5f62\\u63a7\\u5236\\u5668\\u5230\\u8bbe\\u8ba1\\u6210\\u672c\\u4f18\\u5316\\u7684\\u89e3\\u51b3\\u65b9\\u6848\\u3002\")",
+        "",
         "CMD_SETFONT2(2,20052,32)",
         "CMD_TEXT(50, 300, 2, 0, \"采用物件导向编程FT8xx的简化设计。\\u0020\\u91c7\\u7528\\u7269\\u4ef6\\u5bfc\\u5411\\u7f16\\u7a0b\\u0046\\u0054\\u0038\\u0078\\u0078\\u7684\\u7b80\\u5316\\u8bbe\\u8ba1。\")"
     ],
