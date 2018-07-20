@@ -254,7 +254,7 @@ def run(name, document, ram):
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
 			f.write("\n")
 			f.write("#define " + memoryAddress + " " + str(content["memoryAddress"]) + "\n")
-		if content["dataEmbedded"]:
+		if content["dataStorage"] == 'Embedded':
 			contentName = content["destName"].replace("/", "_")
 			headerName = content["destName"];
 			if content["dataCompressed"]:
@@ -288,7 +288,7 @@ def run(name, document, ram):
 	for content in document["content"]:
 		if content["memoryLoaded"]:
 			memoryAddress = "RAM_" + content["destName"].replace("/", "_").upper();
-			if content["dataEmbedded"]:
+			if content["dataStorage"] == 'Embedded':
 				contentName = content["FTEVE_Name"]
 				if content["converter"] == "RawJpeg":
 					f.write("\tFt_Gpu_CoCmd_LoadImage(phost," + memoryAddress + ");\n")

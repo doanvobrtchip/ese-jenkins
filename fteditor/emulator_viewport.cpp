@@ -18,6 +18,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QDir>
+#include <QCoreApplication>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -156,7 +157,7 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
 			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
 			{
-				QString blobPath = m_InitialWorkingDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				QString blobPath = QCoreApplication::applicationDirPath() + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
 				if (blobPath.length() < 260)
 				{
 					int i = blobPath.toWCharArray(flashParams.DataFilePath);
@@ -202,10 +203,7 @@ void EmulatorViewport::stop()
 		s_EmulatorThread = NULL;
 		printf("Emulator threads finished\n");
 
-		// FIXME: WORKAROUND: Issue #17
-		// This should use BT8XXEMU_destroy, but the additional call to BT8XXEMU_stop 
-		// is causing inconsistent behaviour.
-		delete (g_Emulator);
+		BT8XXEMU_destroy(g_Emulator);
 		g_Emulator = NULL;
 
 		if (g_Flash)

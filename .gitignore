@@ -134,7 +134,17 @@ build_*
 distribution_*
 fteditor/untitled/Project/Msvc_win32/untitled/untitled.VC.db
 
+!fteditor/ftlib/*.lib
+!fteditor/ftlib/*.dll
+
 !deployment/emulator/bin
 !deployment/emulator/lib
 !deployment/emulator/lib/*.lib
 !deployment/emulator/bin/*.dll
+!deployment/emulator/bin/*.exe
+!deployment/emulator/lib32/*.lib
+!deployment/emulator/bin32/*.dll
+!deployment/emulator/bin32/*.exe
+!deployment/emulator/lib64/*.lib
+!deployment/emulator/bin64/*.dll
+!deployment/emulator/bin64/*.exe

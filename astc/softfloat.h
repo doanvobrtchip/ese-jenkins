@@ -62,6 +62,11 @@ uint32_t clz32(uint32_t p);
 
 #endif
 
+#ifdef __MINGW32__
+	#undef INT32_C
+	#define INT32_C(a) (int32_t)a
+#endif
+
 	/*	sized soft-float types. These are mapped to the sized integer types of C99, instead of C's
 		floating-point types; this is because the library needs to maintain exact, bit-level control on all
 		operations on these data types. */

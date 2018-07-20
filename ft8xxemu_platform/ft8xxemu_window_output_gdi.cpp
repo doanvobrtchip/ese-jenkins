@@ -13,6 +13,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <mutex>
 #include <map>
 #include <cassert>
+#include <condition_variable>
 
 #include "ft8xxemu_system.h"
 
@@ -22,7 +23,11 @@ Author: Jan Boon <jan@no-break.space>
 #endif
 
 #include <Windowsx.h>
+#ifdef __GNUC__
+#include <queue>
+#else
 #include <concurrent_queue.h>
+#endif
 
 // Project includes
 #include "bt8xxemu_inttypes.h"
@@ -45,14 +50,24 @@ struct AutoDetach { ~AutoDetach() { if (Thread.joinable()) Thread.detach(); } st
 AutoDetach s_AutoDetach;
 std::thread &s_LoopThread = s_AutoDetach.Thread;
 int s_LoopActive = 0;
+#ifdef __GNUC__
+std::mutex s_LoopQueueMutex;
+std::queue<std::function<void()>> s_LoopQueue;
+#else
 concurrency::concurrent_queue<std::function<void()>> s_LoopQueue;
+#endif
 DWORD s_LoopThreadId = 0;
 std::map<HWND, WindowOutput *> s_WindowMap;
 int s_ClassRegCount = 0;
 
 void immediate(std::function<void()> f)
 {
-	s_LoopQueue.push(f);
+	; {
+#ifdef __GNUC__
+		std::unique_lock<std::mutex> lock(s_LoopQueueMutex);
+#endif
+		s_LoopQueue.push(f);
+	}
 	while (!PostThreadMessage(s_LoopThreadId, BT8XXEMU_WM_FUNCTION, 0, 0))
 		SwitchToThread();
 }
@@ -102,8 +117,21 @@ void loopFunction()
 		else
 		{
 			std::function<void()> f;
+#ifdef __GNUC__
+			s_LoopQueueMutex.lock();
+			while (!s_LoopQueue.empty())
+			{
+				f = s_LoopQueue.front();
+				s_LoopQueue.pop();
+				s_LoopQueueMutex.unlock();
+				f();
+				s_LoopQueueMutex.lock();
+			}
+			s_LoopQueueMutex.unlock();
+#else
 			while (s_LoopQueue.try_pop(f))
 				f();
+#endif
 			switch (msg.message)
 			{
 			case BT8XXEMU_WM_FUNCTION:
@@ -124,7 +152,14 @@ void incLoop()
 	std::unique_lock<std::mutex> lock(s_LoopMutex);
 	if (!s_LoopActive)
 	{
-		assert(s_LoopQueue.empty());
+#ifdef _DEBUG
+		; {
+#ifdef __GNUC__
+			std::unique_lock<std::mutex> lock(s_LoopQueueMutex);
+#endif
+			assert(s_LoopQueue.empty());
+		}
+#endif
 		s_LoopThread = std::move(std::thread(loopFunction));
 	}
 	++s_LoopActive;
@@ -135,7 +170,14 @@ void decLoop()
 	std::unique_lock<std::mutex> lock(s_LoopMutex);
 	--s_LoopActive;
 	assert(s_LoopActive >= 0);
-	assert(s_LoopQueue.empty());
+#ifdef _DEBUG
+	; {
+#ifdef __GNUC__
+		std::unique_lock<std::mutex> lock(s_LoopQueueMutex);
+#endif
+		assert(s_LoopQueue.empty());
+	}
+#endif
 	if (!s_LoopActive)
 	{
 		PostThreadMessage(s_LoopThreadId, BT8XXEMU_WM_STOP, 0, 0);
@@ -303,8 +345,21 @@ LRESULT WindowOutput::wndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 
 	std::function<void()> f;
+#ifdef __GNUC__
+	s_LoopQueueMutex.lock();
+	while (!s_LoopQueue.empty())
+	{
+		f = s_LoopQueue.front();
+		s_LoopQueue.pop();
+		s_LoopQueueMutex.unlock();
+		f();
+		s_LoopQueueMutex.lock();
+	}
+	s_LoopQueueMutex.unlock();
+#else
 	while (s_LoopQueue.try_pop(f))
 		f();
+#endif
 
 	switch (message)
 	{

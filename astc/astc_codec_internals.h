@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h> // WORKAROUND: mathlib.h includes vectypes.h which defines 'xx' which is used by math.h under MinGW64
 #include "mathlib.h"
 
 #ifndef MIN

@@ -42,6 +42,15 @@ bool ThreadState::init()
 	return false;
 }
 
+#ifdef __GNUC__
+
+static void SetThreadName(DWORD dwThreadID, const char *name)
+{
+	// no-op
+}
+
+#else
+
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 #pragma pack(push,8)  
 typedef struct tagTHREADNAME_INFO
@@ -52,7 +61,7 @@ typedef struct tagTHREADNAME_INFO
 	DWORD dwFlags; // Reserved for future use, must be zero.  
 } THREADNAME_INFO;
 #pragma pack(pop)  
-void SetThreadName(DWORD dwThreadID, const char* threadName) {
+static void SetThreadName(DWORD dwThreadID, const char* threadName) {
 	THREADNAME_INFO info;
 	info.dwType = 0x1000;
 	info.szName = threadName;
@@ -67,6 +76,8 @@ void SetThreadName(DWORD dwThreadID, const char* threadName) {
 	}
 #pragma warning(pop)  
 }
+
+#endif
 
 void ThreadState::setName(const char *name)
 {
@@ -137,6 +148,11 @@ bool ThreadState::kill()
 bool ThreadState::current()
 {
 	return GetCurrentThreadId() == m_Id;
+}
+
+bool ThreadState::valid()
+{
+	return m_Id != 0;
 }
 
 } /* namespace FT8XXEMU */

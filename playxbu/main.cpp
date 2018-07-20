@@ -270,7 +270,7 @@ int main(int, char* [])
 	printf("%s\n\n", BT8XXEMU_version());
 
 	const int nb = 1;
-	char *xbu[nb] = {
+	const char *xbu[nb] = {
 		"xbu/SCATTER.XBU",
 		// "xbu/BIRDS.XBU",
 		// "xbu/STARS.XBU",

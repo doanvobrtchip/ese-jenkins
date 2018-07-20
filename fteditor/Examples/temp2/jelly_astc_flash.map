@@ -1,0 +1,15 @@
+unified.blob             : 0     : 4096
+jelly52x52_astc4x4.raw   : 4096  : 2752
+jelly52x52_astc5x4.raw   : 6848  : 2304
+jelly52x52_astc5x5.raw   : 9152  : 1984
+jelly52x52_astc6x5.raw   : 11136 : 1600
+jelly52x52_astc6x6.raw   : 12736 : 1344
+jelly52x52_astc8x5.raw   : 14080 : 1280
+jelly52x52_astc8x6.raw   : 15360 : 1024
+jelly52x52_astc8x8.raw   : 16384 : 832
+jelly52x52_astc10x5.raw  : 17216 : 1088
+jelly52x52_astc10x6.raw  : 18304 : 896
+jelly52x52_astc10x8.raw  : 19200 : 704
+jelly52x52_astc10x10.raw : 19904 : 576
+jelly52x52_astc12x10.raw : 20480 : 512
+jelly52x52_astc12x12.raw : 20992 : 448

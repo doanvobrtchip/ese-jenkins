@@ -1,7 +1,7 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2018  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
@@ -77,6 +77,7 @@ typedef enum
 	BT8XXEMU_EmulatorFT812 = 0x0812,
 	BT8XXEMU_EmulatorFT813 = 0x0813,
 	BT8XXEMU_EmulatorBT815 = 0x0815,
+	BT8XXEMU_EmulatorBT816 = 0x0816,
 } BT8XXEMU_EmulatorMode;
 
 typedef enum

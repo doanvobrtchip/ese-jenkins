@@ -27,7 +27,11 @@ namespace FT8XXEMU {
 
 AudioOutput *AudioOutput::create(System *system)
 {
-	return new AudioOutput(system);
+	AudioOutput *audioOutput = new AudioOutput(system);
+	if (audioOutput->init())
+		return audioOutput;
+	audioOutput->destroy();
+	return NULL;
 }
 
 void AudioOutput::destroy()
@@ -37,6 +41,11 @@ void AudioOutput::destroy()
 
 AudioOutput::AudioOutput(System *system) : m_System(system)
 {
+	// no-op
+}
+
+bool AudioOutput::init()
+{
 	const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 	const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 	const IID IID_IAudioClient = __uuidof(IAudioClient);
@@ -45,13 +54,13 @@ AudioOutput::AudioOutput(System *system) : m_System(system)
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&m_MMDeviceEnumerator);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_MMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_MMDevice);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_MMDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&m_AudioClient);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	WAVEFORMATEX *pwfx;
 	hr = m_AudioClient->GetMixFormat(&pwfx);
@@ -68,21 +77,42 @@ AudioOutput::AudioOutput(System *system) : m_System(system)
 
 	long hnsRequestedDuration = REFTIMES_PER_SEC / 10;
 	hr = m_AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, hnsRequestedDuration, 0, &wfx, NULL);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->GetBufferSize(&m_BufferFrameCount);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->GetService(IID_IAudioRenderClient, (void **)&m_AudioRenderClient);
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
 
 	hr = m_AudioClient->Start();
-	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); }
+	if (hr) { FTEMU_warning("WASAPI Initialisation: %s", SystemWin32::getHResultErrorString(hr)); return false; }
+
+	return true;
 }
 
 AudioOutput::~AudioOutput()
 {
-
+	if (m_AudioRenderClient != NULL)
+	{
+		m_AudioRenderClient->Release();
+		m_AudioRenderClient = NULL;
+	}
+	if (m_AudioClient != NULL)
+	{
+		m_AudioClient->Release();
+		m_AudioClient = NULL;
+	}
+	if (m_MMDevice != NULL)
+	{
+		m_MMDevice->Release();
+		m_MMDevice = NULL;
+	}
+	if (m_MMDeviceEnumerator != NULL)
+	{
+		m_MMDeviceEnumerator->Release();
+		m_MMDeviceEnumerator = NULL;
+	}
 }
 
 int AudioOutput::getFrequency()

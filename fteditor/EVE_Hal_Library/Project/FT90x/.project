@@ -34,6 +34,11 @@
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
+        <link>
+			<name>Hdr/Assets.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Hdr/Assets.h</locationURI>
+		</link>
 		<link>
 			<name>Hdr/App_Common.h</name>
 			<type>1</type>

@@ -19,6 +19,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <string>
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 // Project includes (include standard stuff for user)
 #include "bt8xxemu_pp.h"
@@ -56,8 +57,11 @@ public:
 	Emulator();
 	virtual ~Emulator();
 
+private:
 	void destroy();
+	void runInternal(const BT8XXEMU_EmulatorParameters &params);
 
+public:
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	virtual void stop() override;
 	virtual bool isRunning() override;

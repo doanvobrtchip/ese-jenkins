@@ -4,12 +4,15 @@ PROJECT("FTEMU")
 
 # Minimum required 2.6
 # Minimum required 2.8.11 for automatic linking to qtmain.lib
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
-# set (CMAKE_VERBOSE_MAKEFILE ON)
+# Minimum required 3.1 for c++ standard macro
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1 FATAL_ERROR)
+# SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 IF (POLICY CMP0020)
 	CMAKE_POLICY(SET CMP0020 NEW)
 ENDIF ()
+
+SET(CMAKE_CXX_STANDARD 14)
 
 
 ########################################################################
@@ -43,21 +46,23 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 ########################################################################
 # Strip binary in release mode
 
-IF (CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX AND !MINGW)
   SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
 ENDIF ()
 
 ########################################################################
 
-OPTION(WITH_SDL "Use old SDL1 (deprecated)" OFF)
-
-OPTION(WITH_SDL2 "Use SDL2 instead of SDL1 (required for FT900EMU)" ON)
+IF (WIN32)
+  OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU)" OFF)
+ELSE ()
+  OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU and Linux support)" ON)
+ENDIF ()
 
 OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" ON)
 
 OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
-OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" ON)
+OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" OFF)
 
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
@@ -75,7 +80,7 @@ OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 
 OPTION(WITH_BT815EMU "Include BT815EMU" ON)
 
-OPTION(WITH_FT900EMU "Include FT900EMU" ON)
+OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
 
 OPTION(WITH_MX25LEMU "Include MX25LEMU" ON)
 
@@ -86,8 +91,6 @@ OPTION(WITH_EMUTEST "Include emulator test projects" ON)
 OPTION(WITH_EMUSERVICE "Include emulator service" ON)
 
 SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
-
-OPTION(FTEMU_PIC "Add -fPIC to libraries to build dynamic dll" OFF)
 
 ########################################################################
 
@@ -128,20 +131,6 @@ IF (WITH_SDL2)
     )
   ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
   ADD_DEFINITIONS(-DFTEMU_SDL2)
-ELSEIF (WITH_SDL)
-  # SDL base package
-  FIND_PACKAGE(SDL REQUIRED)
-  INCLUDE_DIRECTORIES(
-    ${SDL_INCLUDE_DIR}
-    )
-  ADD_DEFINITIONS(-DFTEMU_SDL)
-ELSE ()
-  #FIND_PACKAGE(OpenMP REQUIRED)
-  #IF (OPENMP_FOUND)
-  #  SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  #  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  #  SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-  #ENDIF ()
 ENDIF (WITH_SDL2)
 
 ########################################################################

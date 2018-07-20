@@ -117,15 +117,9 @@ def convertArgs(functionArgs):
         "POINTS":"FTPOINTS",
     }
 
-    functionArgsSplit = functionArgs.split(",")
-    for argument in functionArgsSplit:
-        if '|' in argument:
-            argumentOptions = argument.split('|')
-            for argumentOption in argumentOptions:
-                if argumentOption.replace(" ", "") in argsMap:
-                    functionArgs = functionArgs.replace(argumentOption.replace(" ", ""), argsMap[argumentOption.replace(" ", "")])
-        if argument.replace(" ", "") in argsMap:
-            functionArgs = functionArgs.replace(argument.replace(" ", ""), argsMap[argument.replace(" ", "")])
+    for k, v in argsMap.items():
+        functionArgs = functionArgs.replace(k, v)
+        
     return functionArgs
 
 def raiseUnicodeError(errorArea):
@@ -250,33 +244,33 @@ def exportLoadImageCommand(document):
     for content in document["content"]:
         if not content["memoryLoaded"]:
             continue
-        memoryAddress = "RAM_" + re.sub(r'[/. ]', '_', content["destName"]).upper()
+        memoryAddress = "RAM_" + re.sub(r'[-/. ]', '_', content["destName"]).upper()
         lutMemoryAddress = memoryAddress + "_LUT"
         if content["dataStorage"] == "Embedded":
             contentName = content["FTEVE_Name"]
             lutContentName = contentName + "_lut"
             if content["converter"] == "RawJpeg":
-                export += "\tGpu_Hal_WrCmd32(phost,CMD_LOADIMAGE);\n"
-                export += "\tGpu_Hal_WrCmd32(phost," + memoryAddress + ");\n"
-                export += "\tGpu_Hal_WrCmd32(phost,0);\n"
-                export += "\tGpu_Hal_WrCmdBuf(phost," + contentName + ", sizeof(" + contentName + "));\n"
+                export += "\tGpu_Hal_WrCmd32(phost, CMD_LOADIMAGE);\n"
+                export += "\tGpu_Hal_WrCmd32(phost, " + memoryAddress + ");\n"
+                export += "\tGpu_Hal_WrCmd32(phost, 0);\n"
+                export += "\tGpu_Hal_WrCmdBuf(phost, " + contentName + ", sizeof(" + contentName + "));\n"
             if content["converter"] == "Raw":
-                export += "\tGpu_Hal_WrMem(phost," + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n"
+                export += "\tGpu_Hal_WrMem(phost, " + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n"
                 if content["imageFormat"] in palettedFormats:
-                    export += "\tGpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n"                    
+                    export += "\tGpu_Hal_WrMem(phost, " + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n"                    
             else:
                 if content["dataCompressed"]:
                     export += "\tGpu_Hal_WrCmd32(phost, CMD_INFLATE);\n"                        
-                    export += "\tGpu_Hal_WrCmd32(phost," + memoryAddress + ");\n"
-                    export += "\tGpu_Hal_WrCmdBuf(phost," + contentName + ", sizeof(" + contentName + "));\n"
+                    export += "\tGpu_Hal_WrCmd32(phost, " + memoryAddress + ");\n"
+                    export += "\tGpu_Hal_WrCmdBuf(phost, " + contentName + ", sizeof(" + contentName + "));\n"
                     if content["imageFormat"] in palettedFormats:		
                         export += "\tGpu_Hal_WrCmd32(phost, CMD_INFLATE);\n"		
-                        export += "\tGpu_Hal_WrCmd32(phost," + lutMemoryAddress + " );\n"		
-                        export += "\tGpu_Hal_WrCmdBuf(phost," + lutContentName + ", sizeof(" + lutContentName + "));\n"                        
+                        export += "\tGpu_Hal_WrCmd32(phost, " + lutMemoryAddress + " );\n"		
+                        export += "\tGpu_Hal_WrCmdBuf(phost, " + lutContentName + ", sizeof(" + lutContentName + "));\n"                        
                 else:
-                    export += "\tGpu_Hal_WrMem(phost," + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n"
+                    export += "\tGpu_Hal_WrMem(phost, " + memoryAddress + ", " + contentName + ", sizeof(" + contentName + "));\n"
                     if content["imageFormat"] in palettedFormats:		
-                        export += "\tGpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n"                        
+                        export += "\tGpu_Hal_WrMem(phost, " + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n"                        
     return export
     
 def exportSpecialCommand(document):
@@ -296,7 +290,7 @@ def exportSpecialCommand(document):
                 m = commentsRegex.match(splitlineb[1])
                 if m:
                     comment = m.group(0)
-                line = "\tApp_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));" + comment + "\n"
+                line = "\tApp_WrCoCmd_Buffer(phost, " + functionName + "(" + functionArgs + "));" + comment + "\n"
                 export += line
             else:
                 break
@@ -309,29 +303,38 @@ def exportCoprocessorCommand(document, filesToTestFolder):
     export = ''
     clearFound = False
     for line in document["coprocessor"]:
-        if not line == "":
-            try:
-                functionName = line.split('(', 1)[0]
-                if functionName in functionMap:
-                    functionName = functionMap[functionName]
-                if functionName == "CLEAR":
-                    clearFound = True
-                if functionName == "Gpu_CoCmd_Calibrate":
-                    export += functionName + '(phost);\n'
-            except:
-                pass
+        if line == "": continue
+        try:
+            functionName = line.split('(', 1)[0]            
+            if 'CLEAR' in functionName:
+                clearFound = True
+            if functionName in functionMap:                    
+                if functionMap[functionName] == "Gpu_CoCmd_Calibrate":
+                    export += '\tApp_Calibrate_Screen(phost);\n'
+                    # remove this line because it was processed already
+                    document["coprocessor"].remove(line)                    
+                if functionMap[functionName] == "Gpu_CoCmd_Logo":
+                    export += '\tApp_Show_Logo(phost);\n'                
+                    # remove this line because it was processed already
+                    document["coprocessor"].remove(line)                    
+                
+        except:
+            pass
 
-    if not clearFound:
-        export += "\tApp_WrCoCmd_Buffer(phost,CLEAR(1, 1, 1));\n"
-
-    skippedBitmaps = False
+    export += '\tGpu_CoCmd_Dlstart(phost);\n'
+    export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
+    if clearFound == False:
+        export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
+    export += '\t\n';
+                
+    #skippedBitmaps = False
     specialParameter = ""
     specialParameter2 = ""
     specialCommandType = ""
 
     for line in document["coprocessor"]:
         if line == "": 
-            if skippedBitmaps: export += "\t\n"
+            #if skippedBitmaps: export += "\t\n"; skippedBitmaps = False
             continue
         try:
             if (line.lstrip()).startswith("//"): #if the line is a comment line then just write it out
@@ -345,11 +348,11 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             if functionName in functionMap:
                 functionName = functionMap[functionName]
                 coprocessor_cmd = True
-            if not skippedBitmaps:
-                if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "CMD_SETFONT":
-                    continue
-                else:
-                    skippedBitmaps = True
+            #if not skippedBitmaps:
+            #    if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName #== "BITMAP_SIZE" or functionName == "CMD_SETFONT":
+            #        continue
+            #    else:
+            #        skippedBitmaps = True
             functionArgs = convertArgs(splitlineb[0])
 
             if functionName == "Gpu_CoCmd_Snapshot2":
@@ -365,7 +368,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
 
                 export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
 
-                export += "\tGpu_CoCmd_Snapshot2(phost," + splitlineb[0] + ");\n"
+                export += "\tGpu_CoCmd_Snapshot2(phost, " + splitlineb[0] + ");\n"
 
                 export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
                 export += "\tGpu_CoCmd_Dlstart(phost);\n"
@@ -392,7 +395,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
 
                 export += "\t/* Take snap shot of the current screen */\n"
                 export += "\tGpu_Hal_WrCmd32(phost, CMD_SNAPSHOT);\n"
-                export += "\tGpu_Hal_WrCmd32(phost," + splitlineb[0] + ");\n"
+                export += "\tGpu_Hal_WrCmd32(phost, " + splitlineb[0] + ");\n"
 
                 export += "\t//timeout for snapshot to be performed by coprocessor\n"
 
@@ -453,8 +456,8 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 globalContext['mediaFIFOLength'] = functionArgsSplit[1]
 
             if functionName == "Gpu_CoCmd_Dlstart":
-                export += 'Gpu_CoCmd_Dlstart(phost);\n'
-                export += 'App_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
+                export += '\tGpu_CoCmd_Dlstart(phost);\n'
+                export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
                 functionName = ""
 
             if functionName == "Gpu_CoCmd_PlayVideo":
@@ -481,19 +484,23 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 functionName = ""
 
             #The following commands don't take any parameters so there shouldn't be a comma after the phost
-            parameterComma = ","
-            if functionName in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver"]:
+            parameterComma = ", "
+            if functionName in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver", "Gpu_CoCmd_VideoStartF"]:
                 parameterComma = ""
-            #attempt to append comments.
+                
+            if functionName == "Gpu_CoCmd_FlashFast" and functionArgs == "":
+                functionArgs = '0'
+                
+            #Attempt to append comments
             comments = ""
             if len(functionName):
                 m = commentsRegex.match(splitlineb[1])
                 if m:
                     comments = m.group(0)
                 if coprocessor_cmd:
-                        newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
+                    newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
                 else:
-                        newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
+                    newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
                 export += newline
 
             if specialCommandType == "Gpu_CoCmd_LoadImage":

@@ -15,6 +15,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTDUMP_FILE argv[1] /* "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump" */
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
+extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long Timeout);
+
 void swrbegin(BT8XXEMU_Emulator *emulator, size_t address)
 {
 	BT8XXEMU_chipSelect(emulator, 1);
@@ -96,8 +98,8 @@ int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb888
 	{
 		int bsize = hsize * vsize;
 		FILE *f = NULL;
-		while (!(f = fopen(s_OutFileName, "wb"))) _sleep(1);
-		while (!fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f)) _sleep(1);
+		while (!(f = fopen(s_OutFileName, "wb"))) Sleep(1);
+		while (!fwrite(buffer, 1, sizeof(buffer[0]) * bsize, f)) Sleep(1);
 		fflush(f);
 		fclose(f);
 		s_GraphicsDone = true;

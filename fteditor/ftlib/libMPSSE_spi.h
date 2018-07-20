@@ -1,20 +1,38 @@
-/*!
- * \file libMPSSE_spi.h
- *
- * \author FTDI
- * \date 20110527
- *
- * Copyright ?2011 Future Technology Devices International Limited
- * Company Confidential
- *
- * Project: libMPSSE
- * Module: SPI
- *
- * Rivision History:
- * 0.1 - initial version
- * 0.2 - 20110708 - added FT_ReadGPIO, FT_WriteGPIO & SPI_ChangeCS
- * 0.3 - 20111025 - modified for supporting 64bit linux
- */
+/*
+
+Copyright (c) Future Technology Devices International 2014
+
+THIS SOFTWARE IS PROVIDED BY FUTURE TECHNOLOGY DEVICES INTERNATIONAL LIMITED "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+FUTURE TECHNOLOGY DEVICES INTERNATIONAL LIMITED BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES LOSS OF USE, DATA, OR PROFITS OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+FTDI DRIVERS MAY BE USED ONLY IN CONJUNCTION WITH PRODUCTS BASED ON FTDI PARTS.
+
+FTDI DRIVERS MAY BE DISTRIBUTED IN ANY FORM AS LONG AS LICENSE INFORMATION IS NOT MODIFIED.
+
+IF A CUSTOM VENDOR ID AND/OR PRODUCT ID OR DESCRIPTION STRING ARE USED, IT IS THE
+RESPONSIBILITY OF THE PRODUCT MANUFACTURER TO MAINTAIN ANY CHANGES AND SUBSEQUENT WHQL
+RE-CERTIFICATION AS A RESULT OF MAKING THESE CHANGES.
+
+Author : FTDI 
+
+Project: libMPSSE
+Module: SPI
+
+Revision History:
+0.1 - initial version
+0.2 - 2011.07.08 - added FT_ReadGPIO, FT_WriteGPIO & SPI_ChangeCS
+0.3 - 2011.10.25 - modified for supporting 64bit linux
+
+*/
+ 
+ 
 
 #ifndef LIBMPSSE_SPI_H
 #define LIBMPSSE_SPI_H
@@ -27,7 +45,7 @@
 /******************************************************************************/
 
 #ifdef _MSC_VER
-#define FTDI_API extern "C"
+#define FTDI_API 
 #else
 #define FTDI_API
 #endif
@@ -80,12 +98,12 @@ typedef unsigned char	bool;
 #endif
 
 #ifdef __x86_64__  
-/*20111025: 64bit linux doesn't work is uint32 is unsigned long*/
-	typedef unsigned int   uint32;
+/*20111025: 64bit linux doesn't work is ulong_t is unsigned long*/
+	typedef unsigned int   ulong_t;
 	typedef signed int   int32;
 #else
-    typedef UINT32  uint32;
-    typedef INT32   int32;
+	typedef unsigned long   ulong_t;
+	//typedef signed long   int32;
 #endif
 
 typedef enum I2C_ClockRate_t{
@@ -97,11 +115,11 @@ typedef enum I2C_ClockRate_t{
 
 typedef struct ChannelConfig_t
 {
-	uint32	ClockRate; 
+	ulong_t	ClockRate; 
 
 	uint8	LatencyTimer; 
 
-	uint32	configOptions;	/*This member provides a way to enable/disable features
+	ulong_t	configOptions;	/*This member provides a way to enable/disable features
 	specific to the protocol that are implemented in the chip
 	BIT1-0=CPOL-CPHA:	00 - MODE0 - data captured on rising edge, propagated on falling
  						01 - MODE1 - data captured on falling edge, propagated on rising
@@ -116,7 +134,7 @@ typedef struct ChannelConfig_t
 	BIT6 -BIT31		: Reserved
 	*/
 
-	uint32		Pin;/*BIT7   -BIT0:   Initial direction of the pins	*/
+	ulong_t		Pin;/*BIT7   -BIT0:   Initial direction of the pins	*/
 					/*BIT15 -BIT8:   Initial values of the pins		*/
 					/*BIT23 -BIT16: Final direction of the pins		*/
 					/*BIT31 -BIT24: Final values of the pins		*/
@@ -135,26 +153,34 @@ typedef struct ChannelConfig_t
 /******************************************************************************/
 /*								Function declarations						  */
 /******************************************************************************/
-FTDI_API FT_STATUS SPI_GetNumChannels(uint32 *numChannels);
-FTDI_API FT_STATUS SPI_GetChannelInfo(uint32 index, 
-	FT_DEVICE_LIST_INFO_NODE *chanInfo);
-FTDI_API FT_STATUS SPI_OpenChannel(uint32 index, FT_HANDLE *handle);
-FTDI_API FT_STATUS SPI_InitChannel(FT_HANDLE handle, ChannelConfig *config);
-FTDI_API FT_STATUS SPI_CloseChannel(FT_HANDLE handle);
-FTDI_API FT_STATUS SPI_Read(FT_HANDLE handle, uint8 *buffer, 
-	uint32 sizeToTransfer, uint32 *sizeTransfered, uint32 options);
-FTDI_API FT_STATUS SPI_Write(FT_HANDLE handle, uint8 *buffer, 
-	uint32 sizeToTransfer, uint32 *sizeTransfered, uint32 options);
-FTDI_API FT_STATUS SPI_ReadWrite(FT_HANDLE handle, uint8 *inBuffer, 
-	uint8 *outBuffer, uint32 sizeToTransfer, uint32 *sizeTransferred, 
-	uint32 transferOptions);
-FTDI_API FT_STATUS SPI_IsBusy(FT_HANDLE handle, bool *state);
-FTDI_API void Init_libMPSSE(void);
-FTDI_API void Cleanup_libMPSSE(void);
-FTDI_API FT_STATUS SPI_ChangeCS(FT_HANDLE handle, uint32 configOptions);
-FTDI_API FT_STATUS FT_WriteGPIO(FT_HANDLE handle, uint8 dir, uint8 value);
-FTDI_API FT_STATUS FT_ReadGPIO(FT_HANDLE handle,uint8 *value);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+    FTDI_API FT_STATUS SPI_GetNumChannels(ulong_t *numChannels);
+    FTDI_API FT_STATUS SPI_GetChannelInfo(ulong_t index,
+        FT_DEVICE_LIST_INFO_NODE *chanInfo);
+    FTDI_API FT_STATUS SPI_OpenChannel(ulong_t index, FT_HANDLE *handle);
+    FTDI_API FT_STATUS SPI_InitChannel(FT_HANDLE handle, ChannelConfig *config);
+    FTDI_API FT_STATUS SPI_CloseChannel(FT_HANDLE handle);
+    FTDI_API FT_STATUS SPI_ToggleCS(FT_HANDLE handle, uint8 high);
+    FTDI_API FT_STATUS SPI_Read(FT_HANDLE handle, uint8 *buffer,
+        ulong_t sizeToTransfer, ulong_t *sizeTransfered, ulong_t options);
+    FTDI_API FT_STATUS SPI_Write(FT_HANDLE handle, uint8 *buffer,
+        ulong_t sizeToTransfer, ulong_t *sizeTransfered, ulong_t options);
+    FTDI_API FT_STATUS SPI_ReadWrite(FT_HANDLE handle, uint8 *inBuffer,
+        uint8 *outBuffer, ulong_t sizeToTransfer, ulong_t *sizeTransferred,
+        ulong_t transferOptions);
+    FTDI_API FT_STATUS SPI_IsBusy(FT_HANDLE handle, bool_t *state);
+    FTDI_API void Init_libMPSSE(void);
+    FTDI_API void Cleanup_libMPSSE(void);
+    FTDI_API FT_STATUS SPI_ChangeCS(FT_HANDLE handle, ulong_t configOptions);
+    FTDI_API FT_STATUS FT_WriteGPIO(FT_HANDLE handle, uint8 dir, uint8 value);
+    FTDI_API FT_STATUS FT_ReadGPIO(FT_HANDLE handle, uint8 *value);
+
+#ifdef __cplusplus
+}
+#endif
 
 /******************************************************************************/
 

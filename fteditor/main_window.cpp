@@ -11,6 +11,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // STL includes
 #include <stdio.h>
 #include <algorithm>
+#include <math.h>
 
 // Qt includes
 #include <QCoreApplication>
@@ -52,6 +53,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDirIterator>
 #include <QElapsedTimer>
 #include <QPushButton>
+#include <QTextStream>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -125,7 +127,7 @@ static const int s_StandardHeights[] = {
 	600,
 };
 
-bool s_EmulatorRunning = false;
+static volatile bool s_EmulatorRunning = false;
 
 void swrbegin(ramaddr address)
 {
@@ -181,6 +183,28 @@ void swrend()
 	BT8XXEMU_chipSelect(g_Emulator, 0);
 }
 
+void wr8(ramaddr address, uint8_t value)
+{
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("wr8(%i, %i)\n", (int)address, (int)value);
+#endif
+
+	swrbegin(address);
+	swr8(value);
+	swrend();
+}
+
+void wr16(ramaddr address, uint16_t value)
+{
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("wr16(%i, %i)\n", (int)address, (int)value);
+#endif
+
+	swrbegin(address);
+	swr16(value);
+	swrend();
+}
+
 void wr32(ramaddr address, uint32_t value)
 {
 #if FTEDITOR_DEBUG_EMUWRITE
@@ -190,6 +214,28 @@ void wr32(ramaddr address, uint32_t value)
 	swrbegin(address);
 	swr32(value);
 	swrend();
+}
+
+uint16_t rd16(size_t address)
+{
+
+	BT8XXEMU_chipSelect(g_Emulator, 1);
+
+	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
+	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
+	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
+	BT8XXEMU_transfer(g_Emulator, 0x00);
+
+	uint16_t value;
+	value = BT8XXEMU_transfer(g_Emulator, 0);
+	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
+
+#if FTEDITOR_DEBUG_EMUWRITE
+	printf("rd16(%i), %i\n", (int)address, (int)value);
+#endif
+
+	BT8XXEMU_chipSelect(g_Emulator, 0);
+	return value;
 }
 
 uint32_t rd32(size_t address)
@@ -314,21 +360,31 @@ bool hasOTP()
 
 void resetCoprocessorFromLoop()
 {
+	printf("Reset coprocessor from loop\n");
+
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
+	uint16_t videoPatchVector;
+	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		videoPatchVector = rd16(0x309162);
+
 	// Enter reset state
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
+	// Leave reset
 	if (hasOTP())
 	{
 		// Enable patched rom in case cmd_logo was running
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
 	}
-	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	// Leave reset
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
+	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+	for (int i = 0; i < 4096; i += 4)
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	QThread::msleep(1); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	// Stop playing audio in case video with audio was playing during reset
 	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
+
+	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
 	if (hasOTP())
 	{
 		// Go back into the patched coprocessor main loop
@@ -336,13 +392,28 @@ void resetCoprocessorFromLoop()
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
-		QThread::msleep(1); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
+		QThread::msleep(10); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
 		// Need to manually stop previous command from repeating infinitely
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
+		QThread::msleep(100);
 	}
+
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
+	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		wr16(0x309162, videoPatchVector);
+
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
+
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+	{
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_FLASHATTACH);
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
+	}
+	else
+	{
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
+	}
 }
 
 // static int s_SwapCount = 0;
@@ -360,17 +431,18 @@ void loop()
 		// printf("INTERRUPT %i\n", flags);
 		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF)
 		{
-			printf("COPROCESSOR FAULT\n");
 			s_CoprocessorFaultOccured = true;
 			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 			{
 				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
 				s_CoprocessorDiagnostic[128] = '\0';
+				printf("COPROCESSOR FAULT: '%s'\n", s_CoprocessorDiagnostic);
 			}
 			else
 			{
 				s_CoprocessorDiagnostic[0] = '\0';
+				printf("COPROCESSOR FAULT\n");
 			}
 			resetCoprocessorFromLoop();
 		}
@@ -451,6 +523,7 @@ void loop()
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 				int s = in.readRawData(&ram[loadAddr], binSize);
 				BT8XXEMU_poke(g_Emulator);
+                binFile.close();
 			}
 		}
 	}
@@ -773,6 +846,14 @@ void loop()
 		swr32(CMD_COLDSTART);
 		wp += 4;
 		freespace -= 4;
+		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+		{
+			swr32(CMD_FLASHATTACH);
+			swr32(CMD_FLASHFAST);
+			swr32(~0); // result
+			wp += 12;
+			freespace -= 12;
+		}
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
@@ -780,8 +861,8 @@ void loop()
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
-			bool useMediaFifo;
-			bool useFlash;
+			bool useMediaFifo = false;
+			bool useFlash = false;
 			const char *useFileStream = NULL;
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
@@ -799,7 +880,9 @@ void loop()
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{
-				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+					&& (s_CmdParamCache[cmdParamCache[i]] & OPT_FLASH);
+				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
@@ -954,6 +1037,38 @@ void loop()
 				s_WantReloopCmd = true;
 				printf("Finished CMD_CALIBRATE\n");
 			}
+			else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
+			{
+				printf("Waiting for CMD_PLAYVIDEO...\n");
+				s_WaitingCoprocessorAnimation = true;
+				swrend();
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) { printf("Abort wait, restarting\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
+				}
+				printf("Waiting for CMD_COLDSTART...\n");
+				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				swr32(CMD_DLSTART);
+				swr32(CMD_COLDSTART);
+				wp += 8;
+				freespace -= 8;
+				s_MediaFifoPtr = 0;
+				s_MediaFifoSize = 0;
+				swrend();
+				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
+				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
+				{
+					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
+					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault 2\n"); s_WaitingCoprocessorAnimation = false; return; }
+					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
+				}
+				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
+				s_WaitingCoprocessorAnimation = false;
+				printf("Finished CMD_PLAYVIDEO\n");
+			}
 			if (useFileStream)
 			{
 				printf("Flush before stream\n");
@@ -993,7 +1108,6 @@ void loop()
 
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
-
 				if (useMediaFifo)
 				{
 					if (s_MediaFifoSize)
@@ -1875,7 +1989,7 @@ void MainWindow::frameQt()
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (!s_StreamingData && s_CoprocessorFaultOccured && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (!s_StreamingData && s_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
@@ -1906,7 +2020,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		s_CoprocessorFrameSuccess = false;
 	}
-	if (s_CoprocessorFrameSuccess)
+	if (s_CoprocessorFrameSuccess || s_WaitingCoprocessorAnimation)
 	{
 		m_ErrorFrame->setVisible(false);
 	}
@@ -2300,8 +2414,14 @@ void MainWindow::createDockWindows()
 		dlLabelH->setText(tr("BITMAP_HANDLE: "));
 		statusBar()->addPermanentWidget(dlLabelH);
 
+		QStyle *progressStyle = QStyleFactory::create("Fusion"); // FIXME: This might be a memory leak
+		QPalette progressPalette = palette();
+		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
+		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
+
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
-		m_UtilizationBitmapHandleStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
+		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
 		m_UtilizationBitmapHandleStatus->setMinimum(0);
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
@@ -2314,7 +2434,8 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabel);
 
 		m_UtilizationDisplayListStatus = new QProgressBar(statusBar());
-		m_UtilizationDisplayListStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationDisplayListStatus->setStyle(progressStyle);
+		m_UtilizationDisplayListStatus->setPalette(progressPalette);
 		m_UtilizationDisplayListStatus->setMinimum(0);
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
@@ -2327,7 +2448,8 @@ void MainWindow::createDockWindows()
 		statusBar()->addPermanentWidget(dlLabelG);
 
 		m_UtilizationGlobalStatus = new QProgressBar(statusBar());
-		m_UtilizationGlobalStatus->setStyle(QStyleFactory::create("Fusion"));
+		m_UtilizationGlobalStatus->setStyle(progressStyle);
+		m_UtilizationGlobalStatus->setPalette(progressPalette);
 		m_UtilizationGlobalStatus->setMinimum(0);
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
@@ -3159,6 +3281,8 @@ void MainWindow::undoCleanChanged(bool clean)
 
 bool MainWindow::maybeSave()
 {
+    bool res = true;
+
 	if (!m_UndoStack->isClean())
 	{
 		QMessageBox::StandardButton ret;
@@ -3169,14 +3293,14 @@ bool MainWindow::maybeSave()
 		if (ret == QMessageBox::Save)
 		{
 			actSave();
-			return true;
 		}
 		else if (ret == QMessageBox::Cancel)
 		{
-			return false;
+            res = false;
 		}
 	}
-	return true;
+
+	return res;
 }
 
 bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
@@ -3197,25 +3321,19 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	else
 	{
 		// check flash configuration
-		qint64 binSize = QFileInfo(binPath).size();
+		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;
 
-		if (binSize > 256 * 1024 * 1024)
+		if (binSize > 256)
 		{
 			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
 			return false;
 		}
 		else
 		{
-			if (binSize < 2 * 1024 * 1024)				FTEDITOR_CURRENT_FLASH = 0;
-			else if (binSize < 4 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 1;
-			else if (binSize < 8 * 1024 * 1024)			FTEDITOR_CURRENT_FLASH = 2;
-			else if (binSize < 16 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 3;
-			else if (binSize < 32 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 4;
-			else if (binSize < 64 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 5;
-			else if (binSize < 128 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 6;
-			else if (binSize < 256 * 1024 * 1024)		FTEDITOR_CURRENT_FLASH = 7;
-			
-			m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+            int flashType = ceil(log2(binSize)) - 1;
+            if (flashType < 0) flashType = 0;
+            m_ProjectFlash->setCurrentIndex(flashType);
+            m_MinFlashType = flashType;
 		}
 	}
 
@@ -3290,6 +3408,8 @@ void MainWindow::actNew(bool addClear)
 
 	// reset flash file name
 	setFlashFileNameToLabel("");
+
+    m_MinFlashType = 0;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -4149,6 +4269,9 @@ private:
 
 void MainWindow::projectFlashChanged(int flashIntf)
 {
+    if (flashIntf <= m_MinFlashType)
+        return;
+
 	if (s_UndoRedoWorking)
 		return;
 	
@@ -4234,7 +4357,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/FT8XX Screen Editor.chm"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/Manual/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()
@@ -4245,7 +4368,7 @@ void MainWindow::about()
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
-		"Copyright (C) 2016-2017  Bridgetek Pte Ltd<br>"
+		"Copyright (C) 2016-2018  Bridgetek Pte Ltd<br>"
 		"<br>"
 		"Support and updates:<br>"
 		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"

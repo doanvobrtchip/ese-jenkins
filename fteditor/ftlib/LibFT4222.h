@@ -18,12 +18,15 @@
  * @file LibFT4222.h
  *
  * @author FTDI
- * @date 2015-06-09
+ * @date 2015-08-10
  *
  *
  * Revision History:
  * 1.0 - initial version
- * 1.2 - allow use on non-Windows platforms
+ * 1.2 - allow use on non-Windows platforms;
+ *       add I2CMaster ReadEx/WriteEx/GetStatus
+ * 1.3   add FT4222_I2CSlave_SetClockStretch
+ *           FT4222_I2CSlave_SetRespWord
  */
  
 #ifdef _WIN32
@@ -126,7 +129,7 @@ typedef enum FT4222_STATUS
     FT4222_DEVICE_LIST_NOT_READY,
 
     FT4222_DEVICE_NOT_SUPPORTED   = 1000,        // FT_STATUS extending message
-    FT4222_CLK_NOT_SUPPORTED,     // spi master do not support 80MHz/CLK_2
+    FT4222_CLK_NOT_SUPPORTED,
     FT4222_VENDER_CMD_NOT_SUPPORTED,
     FT4222_IS_NOT_SPI_MODE,
     FT4222_IS_NOT_I2C_MODE,
@@ -331,7 +334,7 @@ LIBFT4222_API FT4222_STATUS FT4222_SPISlave_Write(FT_HANDLE ftHandle, uint8* buf
 
 LIBFT4222_API FT4222_STATUS FT4222_SPI_Reset(FT_HANDLE ftHandle);
 LIBFT4222_API FT4222_STATUS FT4222_SPI_ResetTransaction(FT_HANDLE ftHandle, uint8 spiIdx);
-LIBFT4222_API FT4222_STATUS FT4222_SPI_SetDrivingStrength(FT_HANDLE ftHandle, SPI_DrivingStrength clkStrength, SPI_DrivingStrength ioStrength, SPI_DrivingStrength ssoStregth);
+LIBFT4222_API FT4222_STATUS FT4222_SPI_SetDrivingStrength(FT_HANDLE ftHandle, SPI_DrivingStrength clkStrength, SPI_DrivingStrength ioStrength, SPI_DrivingStrength ssoStrength);
 
 
 
@@ -352,6 +355,8 @@ LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_SetAddress(FT_HANDLE ftHandle, uint8
 LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_GetRxStatus(FT_HANDLE ftHandle, uint16* pRxSize);
 LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_Read(FT_HANDLE ftHandle, uint8* buffer, uint16 bufferSize, uint16* sizeTransferred);
 LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_Write(FT_HANDLE ftHandle, uint8* buffer, uint16 bufferSize, uint16* sizeTransferred);
+LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_SetClockStretch(FT_HANDLE ftHandle, BOOL enable);
+LIBFT4222_API FT4222_STATUS FT4222_I2CSlave_SetRespWord(FT_HANDLE ftHandle, uint8 responseWord);
 
 
 
@@ -362,6 +367,7 @@ LIBFT4222_API FT4222_STATUS FT4222_GPIO_Write(FT_HANDLE ftHandle, GPIO_Port port
 LIBFT4222_API FT4222_STATUS FT4222_GPIO_SetInputTrigger(FT_HANDLE ftHandle, GPIO_Port portNum, GPIO_Trigger trigger);
 LIBFT4222_API FT4222_STATUS FT4222_GPIO_GetTriggerStatus(FT_HANDLE ftHandle, GPIO_Port portNum, uint16* queueSize);
 LIBFT4222_API FT4222_STATUS FT4222_GPIO_ReadTriggerQueue(FT_HANDLE ftHandle, GPIO_Port portNum, GPIO_Trigger* events, uint16 readSize, uint16* sizeofRead);
+LIBFT4222_API FT4222_STATUS FT4222_GPIO_SetWaveFormMode(FT_HANDLE ftHandle, BOOL enable);
 
 
  

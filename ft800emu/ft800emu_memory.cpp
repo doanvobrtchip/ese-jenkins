@@ -560,8 +560,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_PLAYBACK_LENGTH, 0);
 	rawWriteU32(REG_PLAYBACK_START, 0);
 #if defined(BT815EMU_MODE)
-	rawWriteU32(REG_PLAYBACK_PAUSE, 0);
-	rawWriteU32(REG_PLAY_CONTROL, 1);
+	rawWriteU8(REG_PLAYBACK_PAUSE, 0);
 #endif
 
 	rawWriteU32(REG_TOUCH_TRANSFORM_A, 0x10000);
@@ -916,7 +915,11 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 	{
 		if (data & 0x1)
 		{
+#if defined(BT815EMU_MODE)
+			FTEMU_warning("Co-processor engine fault: %s", &m_Ram[0x309800]);
+#else
 			FTEMU_warning("Coprocessor has flagged an error");
+#endif
 		}
 	}
 	if (address < 0 || address >= FT800EMU_RAM_SIZE)

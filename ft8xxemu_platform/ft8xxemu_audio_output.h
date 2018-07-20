@@ -38,6 +38,7 @@ public:
 
 private:
 	AudioOutput(System *system);
+	bool init();
 	virtual ~AudioOutput();
 
 public:
