@@ -1533,6 +1533,19 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
 
 	m_InitialWorkingDir = QDir::currentPath();
+	if (QDir(m_InitialWorkingDir).cd("firmware"))
+	{
+		m_ApplicationDataDir = m_InitialWorkingDir;
+	}
+	else if (QDir(QCoreApplication::applicationDirPath()).cd("firmware"))
+	{
+		m_ApplicationDataDir = QCoreApplication::applicationDirPath();
+	}
+	else
+	{
+		QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+	}
+
 	m_UndoStack = new QUndoStack(this);
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
 
@@ -1692,7 +1705,7 @@ QString MainWindow::scriptModule()
 
 QString MainWindow::scriptDir()
 {
-	return m_InitialWorkingDir + "/"
+	return m_ApplicationDataDir + "/"
 		+ scriptFolder + "/"
 		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
@@ -3321,6 +3334,11 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	else
 	{
 		// check flash configuration
+
+		/*
+		
+		// Not using this, since the code is making delicate assumptions of the flash size by index.
+
 		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;
 
 		if (binSize > 256)
@@ -3334,6 +3352,39 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
             if (flashType < 0) flashType = 0;
             m_ProjectFlash->setCurrentIndex(flashType);
             m_MinFlashType = flashType;
+		}
+
+		*/
+
+		quint64 binSize = QFileInfo(binPath).size();
+
+		// Iterate through flash, starting from the selected one, until one is found that is large enough
+		// Assume flash are sorted from small to large, and assume similar flash are in the same sequence
+		// No need to pick a smaller flash in case the user already selected a good flash size
+
+		int flashIntf = g_CurrentFlash;
+		for (; flashIntf < FTEDITOR_FLASH_NB; ++flashIntf)
+		{
+			if (flashSizeBytes(flashIntf) >= binSize) // There is enough space in this flash type
+				break;
+		}
+
+		if (flashIntf == FTEDITOR_FLASH_NB)
+		{
+			// TODO: This is technically not an issue for FTEDITOR to handle,
+			//       internally this will restrict the loaded content to the available size.
+			//       It is permissible to let the user continue and explore the flash with the missing content
+			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
+			return false;
+		}
+		else if (flashIntf != g_CurrentFlash)
+		{
+			// Push the change of flash size onto the undo stack
+			// TODO: Preferably we should ask the user permission 
+			//       or provide notification when changing the flash size,
+			//       since it's not reliable application behaviour 
+			//       to change options without the user's knowledge
+			m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
 		}
 	}
 
@@ -3409,7 +3460,7 @@ void MainWindow::actNew(bool addClear)
 	// reset flash file name
 	setFlashFileNameToLabel("");
 
-    m_MinFlashType = 0;
+    // m_MinFlashType = 0;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -4269,8 +4320,16 @@ private:
 
 void MainWindow::projectFlashChanged(int flashIntf)
 {
+	/*
+
+	Permit this case, since ignoring the change callback breaks the consistency between UI state and internal state!
+	From technical POV there is no issue in having a flash that's too small, the extra content will simply not be loaded
+	The emulator is also masking the flash addresses, so that address overrun does not occur
+
     if (flashIntf <= m_MinFlashType)
         return;
+
+	*/
 
 	if (s_UndoRedoWorking)
 		return;
@@ -4357,7 +4416,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/Manual/EVE Screen Editor User Guide.pdf"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_ApplicationDataDir + "/Manual/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()

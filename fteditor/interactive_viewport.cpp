@@ -67,7 +67,7 @@ extern BT8XXEMU_Flash *g_Flash;
 #define FTED_SNAP_HISTORY_NONE 4096
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
-	: EmulatorViewport(parent), m_MainWindow(parent),
+	: EmulatorViewport(parent, parent->applicationDataDir()), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false), m_MouseStackWritten(false), 
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
