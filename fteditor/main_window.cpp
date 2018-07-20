@@ -1533,6 +1533,19 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
 
 	m_InitialWorkingDir = QDir::currentPath();
+	if (QDir(m_InitialWorkingDir).cd("firmware"))
+	{
+		m_ApplicationDataDir = m_InitialWorkingDir;
+	}
+	else if (QDir(QCoreApplication::applicationDirPath()).cd("firmware"))
+	{
+		m_ApplicationDataDir = QCoreApplication::applicationDirPath();
+	}
+	else
+	{
+		QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+	}
+
 	m_UndoStack = new QUndoStack(this);
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
 
@@ -1692,7 +1705,7 @@ QString MainWindow::scriptModule()
 
 QString MainWindow::scriptDir()
 {
-	return m_InitialWorkingDir + "/"
+	return m_ApplicationDataDir + "/"
 		+ scriptFolder + "/"
 		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
@@ -4357,7 +4370,7 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_InitialWorkingDir + "/Manual/EVE Screen Editor User Guide.pdf"));
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_ApplicationDataDir + "/Manual/EVE Screen Editor User Guide.pdf"));
 }
 
 void MainWindow::about()

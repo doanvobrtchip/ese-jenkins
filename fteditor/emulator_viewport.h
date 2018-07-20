@@ -36,7 +36,7 @@ class EmulatorViewport : public QWidget
 	Q_OBJECT
 
 public:
-	EmulatorViewport(QWidget *parent);
+	EmulatorViewport(QWidget *parent, const QString &applicationDataDir);
 	virtual ~EmulatorViewport();
 	
 	// Runs the emulator on a new thread and connects it with this viewport
@@ -82,7 +82,7 @@ private:
 	QScrollBar *m_Vertical;
 	int m_ScreenScale;
 
-	QString m_InitialWorkingDir;
+	QString m_ApplicationDataDir;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);

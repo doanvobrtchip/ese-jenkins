@@ -108,6 +108,8 @@ public:
 	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
 
+	inline const QString &applicationDataDir() { return m_ApplicationDataDir; }
+
 	bool waitingCoprocessorAnimation();
 
 	void focusDlEditor(bool forceOnly = false);
@@ -242,6 +244,7 @@ private:
 	QStringList m_RecentPathList;
 
 	QString m_InitialWorkingDir;
+	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
 
 	InteractiveViewport *m_EmulatorViewport;

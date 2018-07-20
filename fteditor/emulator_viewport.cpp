@@ -92,8 +92,8 @@ void EmulatorThread::run()
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &s_EmulatorParameters);
 }
 
-EmulatorViewport::EmulatorViewport(QWidget *parent)
-	: QWidget(parent), m_ScreenScale(16)
+EmulatorViewport::EmulatorViewport(QWidget *parent, const QString &applicationDataDir)
+	: QWidget(parent), m_ApplicationDataDir(applicationDataDir), m_ScreenScale(16)
 {
 	s_EmulatorViewport = this;
 	s_Image = new QImage(screenWidthDefault(FTEDITOR_CURRENT_DEVICE), screenHeightDefault(FTEDITOR_CURRENT_DEVICE), QImage::Format_RGB32);
@@ -112,8 +112,6 @@ EmulatorViewport::EmulatorViewport(QWidget *parent)
 	m_Horizontal->setValue(0);
 	m_Horizontal->setSingleStep(16);
 	m_Horizontal->setPageStep(16 * 16);
-
-	m_InitialWorkingDir = QDir::currentPath();
 
 	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
@@ -157,7 +155,7 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
 			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
 			{
-				QString blobPath = QCoreApplication::applicationDirPath() + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				QString blobPath = m_ApplicationDataDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
 				if (blobPath.length() < 260)
 				{
 					int i = blobPath.toWCharArray(flashParams.DataFilePath);
