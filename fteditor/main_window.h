@@ -108,6 +108,8 @@ public:
 	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
 
+	inline const QString &applicationDataDir() { return m_ApplicationDataDir; }
+
 	bool waitingCoprocessorAnimation();
 
 	void focusDlEditor(bool forceOnly = false);
@@ -235,13 +237,14 @@ private:
 	MainWindow &operator=(const MainWindow &);
 
 private:
-  int m_MinFlashType;
-  bool m_AddRecentProjectFlag;
-  QAction *m_RecentSeparator;
-  QList<QAction *> m_RecentActionList;
-  QStringList m_RecentPathList;
-  
+	// int m_MinFlashType;
+	bool m_AddRecentProjectFlag;
+	QAction *m_RecentSeparator;
+	QList<QAction *> m_RecentActionList;
+	QStringList m_RecentPathList;
+
 	QString m_InitialWorkingDir;
+	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
 
 	InteractiveViewport *m_EmulatorViewport;
