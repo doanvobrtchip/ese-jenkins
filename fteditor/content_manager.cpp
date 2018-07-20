@@ -1099,7 +1099,11 @@ void ContentManager::copyFlashFile()
 	else
 	{
 		m_MainWindow->requestSave();
-		copyFlashFile();
+
+        if (m_MainWindow->isProjectSaved())
+        {
+            copyFlashFile();
+        }
 	}
 }
 
@@ -1139,10 +1143,6 @@ void ContentManager::importFlashMapped()
 	{
 		QMessageBox::critical(this, tr("Import Mapped Flash Image"), tr("Unable to import mapped flash image"));
 		findFlashMapPath(true);
-	}
-	else if (answer == QMessageBox::Yes)
-	{
-		m_MainWindow->requestSave();
 	}
 }
 
