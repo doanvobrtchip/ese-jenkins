@@ -3371,20 +3371,27 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 
 		if (flashIntf == FTEDITOR_FLASH_NB)
 		{
-			// TODO: This is technically not an issue for FTEDITOR to handle,
-			//       internally this will restrict the loaded content to the available size.
-			//       It is permissible to let the user continue and explore the flash with the missing content
-			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
-			return false;
+			// This is technically not an issue for FTEDITOR to handle,
+			// internally this will restrict the loaded content to the available size.
+			// It is permissible to let the user continue and explore the flash with the missing content
+			int ans = QMessageBox::critical(this, tr("Flash image is too big"), tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
+			return ans == QMessageBox::Ignore;
 		}
 		else if (flashIntf != g_CurrentFlash)
 		{
 			// Push the change of flash size onto the undo stack
-			// TODO: Preferably we should ask the user permission 
-			//       or provide notification when changing the flash size,
-			//       since it's not reliable application behaviour 
-			//       to change options without the user's knowledge
-			m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
+			// We ask the user permission when changing the flash size,
+			// since it's not reliable application behaviour 
+			// to change options without the user's knowledge
+			int ans = QMessageBox::information(this, tr("Resize flash device"), tr("The selected flash image is larger than the current flash device.\nWould you like to resize the flash device to a larger size?"), QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
+			if (ans == QMessageBox::Yes)
+			{
+				m_UndoStack->beginMacro(tr("Increase flash size"));
+				m_ProjectFlash->setCurrentIndex(flashIntf);
+				m_UndoStack->endMacro();
+			}
+			// It is permissible to let the user continue and explore the flash with the missing content
+			return ans != QMessageBox::Cancel;
 		}
 	}
 
