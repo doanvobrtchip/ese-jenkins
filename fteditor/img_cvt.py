@@ -222,34 +222,28 @@ class Image_Conv:
 
         abspath = os.path.abspath(inputfile)
         self.infile_name = os.path.basename(abspath)
-        self.infile_basename = os.path.splitext(os.path.basename(abspath))[0]
+
+        self.infile_basename = os.path.split(self.output_dir)[-1]
         if self.output_dir is None:
             outputdir = os.path.join(cwd, '{}_{}'.format(self.infile_basename, format_table[self.output_format]))
             self.output_dir = outputdir
         else:
+            self.output_dir = os.path.split(self.output_dir)[0]
             outputdir = self.output_dir
 
         try:
             if not os.path.exists(outputdir):
-                os.makedirs(outputdir)
-            else:
-                for File in os.listdir(outputdir):
-                    tempfile = os.path.splitext(File)[0]
-                    if tempfile == (self.infile_basename) or tempfile == (self.infile_basename+"_index") or tempfile.startswith(self.infile_basename+"_PALETTED"):
-                        raise Exception('Output folder already contains previously generated outputs: {}'.format(File))
-                        break
+                os.makedirs(outputdir)            
         except Exception as ex:
             raise Exception('Error occured while processing output folder: {}. {}'.format(outputdir, ex))
 
         # regular images
         if self.output_format in binary_formats:
             try:
-                if self.iszip:
-                    self.main_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
-                    self.main_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
-                else:
-                    self.main_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
-                    self.main_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
+                self.main_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
+                self.main_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
+                self.main_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
+                self.main_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
             except Exception as ex:
                 raise Exception('Unable to generate output files, check directory permission at: {} ({})'.format(outputdir, ex))
 
@@ -258,28 +252,27 @@ class Image_Conv:
             try:
                 self.index_raw = open(os.path.join(outputdir, '{}.raw'.format(self.infile_basename)), 'wb')
                 self.index_rawh = open(os.path.join(outputdir, '{}.rawh'.format(self.infile_basename)), 'w')
-                if self.iszip:
-                    self.index_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
-                    self.index_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
+                self.index_bin = open(os.path.join(outputdir, '{}.bin'.format(self.infile_basename)), 'wb')
+                self.index_binh = open(os.path.join(outputdir, '{}.binh'.format(self.infile_basename)), 'w')
             except Exception as ex:
                 raise Exception('Unable to generate output files, check directory permission at: {} ({})'.format(outputdir, ex))
-            outputdir_lut = os.path.join(outputdir, '{}_{}_LUT'.format(self.infile_basename,
-                                                                    format_table[self.output_format]))
+            outputdir_lut = outputdir 
+            
             try:
                 if not os.path.exists(outputdir_lut):
                     os.makedirs(outputdir_lut)
-                else:
+                '''else:
                     if len(os.listdir(outputdir_lut)) != 0:
                         raise Exception('Output folder already contains previously generated outputs: {}'.format(outputdir_lut))
+                '''
             except:
                 raise Exception('Error occured while processing output folder: {}'.format(outputdir_lut))
 
             try:
-                self.lut_raw = open(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)), 'wb')
-                self.lut_rawh = open(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)), 'w')
-                if self.iszip:
-                    self.lut_bin = open(os.path.join(outputdir_lut, '{}_lut.bin'.format(self.infile_basename)), 'wb')
-                    self.lut_binh = open(os.path.join(outputdir_lut, '{}_lut.binh'.format(self.infile_basename)), 'w')
+                self.lut_raw = open(os.path.join(outputdir_lut, '{}.lut.raw'.format(self.infile_basename)), 'wb')
+                self.lut_rawh = open(os.path.join(outputdir_lut, '{}.lut.rawh'.format(self.infile_basename)), 'w')
+                self.lut_bin = open(os.path.join(outputdir_lut, '{}.lut.bin'.format(self.infile_basename)), 'wb')
+                self.lut_binh = open(os.path.join(outputdir_lut, '{}.lut.binh'.format(self.infile_basename)), 'w')
             except:
                 raise Exception('Unable to generate output files, check directory permission at: {}'.format(outputdir_lut))
 
@@ -419,10 +412,8 @@ class Image_Conv:
 
             im = im.resize((iw,ih),Image.BICUBIC)
             im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
-            if self.iszip:
-                self.save_binfiles(data, im.size)
-            else:
-                self.save_rawfiles(data, im.size, self.stride, is_astc)
+            self.save_binfiles(data, im.size)
+            self.save_rawfiles(data, im.size, self.stride, is_astc)
             return im.size
 
         elif self.output_format in colorfmts:
@@ -460,7 +451,7 @@ class Image_Conv:
 
         elif self.output_format == vc_L8:
             im = im.convert("L")
-            data = array.array('B', im.tobytes())
+            data = array.array('B', im.tostring())
             totalsz = 8
 
         elif self.output_format == vc_L4:
@@ -469,8 +460,8 @@ class Image_Conv:
             #im = pad(im,2)
             im = im.convert("L")
 
-            b0 = im.tobytes()[::2]#even numbers
-            b1 = im.tobytes()[1::2]#odd numbers
+            b0 = im.tostring()[::2]#even numbers
+            b1 = im.tostring()[1::2]#odd numbers
 
             def to15(c):
                 return int(round(15 * ord(c) / 255.))
@@ -485,10 +476,10 @@ class Image_Conv:
             im = im.convert("L")
 
             totalsz = 2
-            b0 = im.tobytes()[0::4]# even numbers
-            b1 = im.tobytes()[1::4]# odd numbers
-            b2 = im.tobytes()[2::4]# even numbers
-            b3 = im.tobytes()[3::4]# odd numbers
+            b0 = im.tostring()[0::4]# even numbers
+            b1 = im.tostring()[1::4]# odd numbers
+            b2 = im.tostring()[2::4]# even numbers
+            b3 = im.tostring()[3::4]# odd numbers
 
             def to3(c):
                 return int(round(3 * ord(c) / 255.))
@@ -500,17 +491,15 @@ class Image_Conv:
                 im = im.convert("1", dither=Image.FLOYDSTEINBERG)
             else:
                 im = im.convert("1", dither=Image.NONE)
-            data = array.array('B', im.tobytes())
+            data = array.array('B', im.tostring())
             totalsz = 1
 
 
         im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
 
         self.stride = self.calc_stride(im, totalsz)
-        if self.iszip:
-            self.save_binfiles(data,im.size)
-        else:
-            self.save_rawfiles(data,im.size, totalsz, is_astc)
+        self.save_binfiles(data,im.size)
+        self.save_rawfiles(data,im.size, totalsz, is_astc)
 
         return im.size
 
@@ -588,8 +577,8 @@ class Image_Conv:
                     if 0 == index % 32:
                         self.index_binh.write("\n")
                 self.index_binh.close()
-                os.remove(os.path.join(self.output_dir, '{}_index.raw'.format(self.infile_basename)))
-                os.remove(os.path.join(self.output_dir, '{}_index.rawh'.format(self.infile_basename)))
+                #os.remove(os.path.join(self.output_dir, '{}_index.raw'.format(self.infile_basename)))
+                #os.remove(os.path.join(self.output_dir, '{}_index.rawh'.format(self.infile_basename)))
 
         write_index(img_indexdata)
 
@@ -724,140 +713,149 @@ class Image_Conv:
                 self.lut_binh.close()
                 outputdir_lut = os.path.join(self.output_dir, '{}_{}_LUT'.format(self.infile_basename,
                                                                     format_table[self.output_format]))
-                os.remove(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)))
-                os.remove(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)))
+                #os.remove(os.path.join(outputdir_lut, '{}_lut.raw'.format(self.infile_basename)))
+                #os.remove(os.path.join(outputdir_lut, '{}_lut.rawh'.format(self.infile_basename)))
 
         write_lutfile(lut)
 
     def run(self, argv):
-        dither = True
-        self.astc_effort = "exhaustive"
-        self.astc_encode = resource_path("astcenc.exe")
-        self.iszip = False
         try:
-            opts, args = getopt.getopt(argv, "vhdi:f:e:x:o:z")
-        except getopt.GetoptError:
-            print_usage()
-            sys.exit(2)
-
-        for opt, arg in opts:
-            if opt == '-v':
-                print_version()
-                sys.exit(0)
-            if opt == '-h':
-                print_usage()
-                sys.exit(0)
-            if opt == '-d':
-                #print_usage()
-                dither = False
-                print("Dithering is turned off Now\n")
-            elif opt == '-i':
-                self.filename = arg
-                if not os.path.exists(self.filename):
-                    raise Exception('Input file doesn\'t exist')
-            elif opt == '-f':
-                self.output_format = int(arg)
-                if self.output_format not in supported_formats:
-                    raise Exception('The input format is not supported.')
-            elif opt == '-e':
-                self.astc_effort = arg
-                if not is_valid_effort(arg):
-                    raise Exception('Invalid ASTC effort option.')
-            elif opt == '-x':
-                self.astc_encode = arg
-            elif opt == '-o':
-                self.output_dir = arg
-            elif opt == "-z":
-                self.iszip = True
-            else:
+            dither = True
+            self.astc_effort = "exhaustive"
+            self.astc_encode = resource_path("astcenc.exe")
+            self.iszip = True
+            try:
+                opts, args = getopt.getopt(argv, "vhdi:f:e:x:o:z")
+            except getopt.GetoptError:
                 print_usage()
                 sys.exit(2)
 
-        if self.filename is None:
-            print_usage()
-            print('Missing image input parameter.')
-            sys.exit(2)
+            for opt, arg in opts:
+                if opt == '-v':
+                    print_version()
+                    sys.exit(0)
+                if opt == '-h':
+                    print_usage()
+                    sys.exit(0)
+                if opt == '-d':
+                    #print_usage()
+                    dither = False
+                    print("Dithering is turned off Now\n")
+                elif opt == '-i':
+                    self.filename = arg
+                    if not os.path.exists(self.filename):
+                        raise Exception('Input file doesn\'t exist')
+                elif opt == '-f':
+                    self.output_format = int(arg)
+                    if self.output_format not in supported_formats:
+                        raise Exception('The input format is not supported.')
+                elif opt == '-e':
+                    self.astc_effort = arg
+                    if not is_valid_effort(arg):
+                        raise Exception('Invalid ASTC effort option.')
+                elif opt == '-x':
+                    self.astc_encode = arg
+                elif opt == '-o':
+                    self.output_dir = arg
+                elif opt == "-z":
+                    self.iszip = True
+                else:
+                    print_usage()
+                    sys.exit(2)
 
-        if self.output_format is None:
-            self.output_format = 0
-            print('Default output format to: {}'.format(format_table[self.output_format]))
+            if self.filename is None:
+                print_usage()
+                print('Missing image input parameter.')
+                sys.exit(2)
 
-        # pre-allocate all files
-        self.generate_file_paths(self.filename)
+            if self.output_format is None:
+                self.output_format = 0
+                print('Default output format to: {}'.format(format_table[self.output_format]))
 
-        # TODO: if the image width dimension will not yield an integer stride value, resize the input image or simply warn the user.  Resizing might alter the aspect ratio of the original image.  Resize it but warn user that the input image has been resized due to the selected format.  The input image file format might get changed.
+            # pre-allocate all files
+            self.generate_file_paths(self.filename)
 
-        # for paletted formats, if the input image is not png8, convert it.
-        if self.output_format in paletted_formats:
-            try:
-                if (not self.filename.endswith('.png')) or (not self.filename.endswith('.PNG')):
-                    convertedpng = os.path.join(self.output_dir, self.infile_basename + "_converted.png")
-                    pngimg = Image.open(self.filename)
-                    pngimg.save(convertedpng, "PNG")
-                    self.filename = convertedpng
+            # TODO: if the image width dimension will not yield an integer stride value, resize the input image or simply warn the user.  Resizing might alter the aspect ratio of the original image.  Resize it but warn user that the input image has been resized due to the selected format.  The input image file format might get changed.
 
-                if self.ispng8(self.filename) is False:
-                    newimg = os.path.join(self.output_dir, self.infile_basename + "-fs8.png")
-                    cmd = '\"{}\" --output \"{}\" \"{}\"'.format(resource_path(pngquant), newimg, self.filename)
-                    returncode = execute_subprocess(cmd)
-                    if returncode != 0:
-                        raise Exception(resource_path(pngquant), pngquant, newimg, self.filename,'Unable to convert image to PNG8')
-                    self.filename = newimg
-            except Exception as ex:            
-                self.index_raw.close()
-                self.index_rawh.close()
-                self.index_bin.close()
-                self.index_binh.close()
-                self.lut_raw.close()
-                self.lut_rawh.close()
-                self.lut_bin.close()
-                self.lut_binh.close()
-                shutil.rmtree(self.output_dir)
-                raise Exception('The input image is incompatible. Error occurred while attempting to convert the '
-                                'input image to a compatible format.')                               
+            # for paletted formats, if the input image is not png8, convert it.
+            if self.output_format in paletted_formats:
+                try:
+                    if (not self.filename.endswith('.png')) or (not self.filename.endswith('.PNG')):
+                        convertedpng = os.path.join(self.output_dir, self.infile_basename + "_converted.png")
+                        pngimg = Image.open(self.filename)
+                        pngimg.save(convertedpng, "PNG")
+                        self.filename = convertedpng
 
-        # convert to a paletted format
-        if self.output_format in paletted_formats:
-            self.load_paletted_conv(infile_name=self.filename)
-            self.infile = Image.open(self.filename)
-            outputsize = self.infile.size
-            self.infile.close()
-        # convert to a regular binary format
-        else:
-            try:
+                    if self.ispng8(self.filename) is False:
+                        newimg = os.path.join(self.output_dir, self.infile_basename + "-fs8.png")
+                        cmd = '\"{}\" -f --output \"{}\" \"{}\"'.format(resource_path(pngquant), newimg, self.filename)
+                        returncode = execute_subprocess(cmd)
+                        if returncode != 0:
+                            raise Exception(resource_path(pngquant), pngquant, newimg, self.filename, 'Unable to convert image to PNG8')
+                        self.filename = newimg
+                except Exception as ex:  
+                    self.index_raw.close()
+                    self.index_rawh.close()
+                    self.index_bin.close()
+                    self.index_binh.close()
+                    self.lut_raw.close()
+                    self.lut_rawh.close()
+                    self.lut_bin.close()
+                    self.lut_binh.close()
+
+                    raise Exception('The input image is incompatible. Error occurred while attempting to convert the '
+                                    'input image to a compatible format.')                               
+
+            # convert to a paletted format
+            if self.output_format in paletted_formats:
+                self.load_paletted_conv(infile_name=self.filename)
                 self.infile = Image.open(self.filename)
-            except:
-                self.infile.close()
-                self.main_raw.close()
-                self.main_rawh.close()
-                self.main_bin.close()
-                self.main_binh.close()
-                shutil.rmtree(self.output_dir)
-                raise Exception('The input image is not compatible: {}'.format(self.filename))
+                outputsize = self.infile.size
+                
+                self.infile.fp.close()
+                
+            # convert to a regular binary format
+            else:
+                try:
+                    self.infile = Image.open(self.filename)
+                except:
+                    self.infile.fp.close()
+                    
+                    self.main_raw.close()
+                    self.main_rawh.close()
+                    self.main_bin.close()
+                    self.main_binh.close()
+                    shutil.rmtree(self.output_dir)
+                    raise Exception('The input image is not compatible: {}'.format(self.filename))
 
-            outputsize = self.load_image_conv(dither)
+                outputsize = self.load_image_conv(dither)
 
-        print('Image Conversion completed!\n')
-        json = {}
-        print( "Filename              : %s" % self.infile_basename)
-        json['name'] = self.infile_basename
-        json['type'] = 'bitmap'
-        print( "Format                : %s" % format_table[self.output_format])
-        json['format'] = format_table[self.output_format]
-        if self.output_format in supported_astc_formats:
-            print( "ASTC compression speed: %s" % self.astc_effort)
-            json['astcCompressionSpeed'] = self.astc_effort
-        print( "Width                 : %d" % outputsize[0])
-        json['width'] = outputsize[0]
-        print( "Height                : %d" % outputsize[1])
-        json['height'] = outputsize[1]
-        if self.iszip:
-            print( "Compressed            : yes")
-            json['compressed'] = 1
-        else:
-            print( "Compressed            : no")
-            json['compressed'] = 0
-        writeToJSONFile(self.output_dir, self.infile_basename, json)
+            print('Image Conversion completed!\n')
+            json = {}
+            print( "Filename              : %s" % self.infile_basename)
+            json['name'] = self.infile_basename
+            json['type'] = 'bitmap'
+            print( "Format                : %s" % format_table[self.output_format])
+            json['format'] = format_table[self.output_format]
+            if self.output_format in supported_astc_formats:
+                print( "ASTC compression speed: %s" % self.astc_effort)
+                json['astcCompressionSpeed'] = self.astc_effort
+            print( "Width                 : %d" % outputsize[0])
+            json['width'] = outputsize[0]
+            print( "Height                : %d" % outputsize[1])
+            json['height'] = outputsize[1]
+            if self.iszip:
+                print( "Compressed            : yes")
+                json['compressed'] = 1
+            else:
+                print( "Compressed            : no")
+                json['compressed'] = 0
+            writeToJSONFile(self.output_dir, self.infile_basename, json)
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            raise Exception(exc_type, fname, str(e), exc_tb.tb_lineno)
+
 
 if __name__ == '__main__':
     Image_Conv().run(sys.argv[1:])

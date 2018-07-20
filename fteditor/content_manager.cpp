@@ -645,12 +645,12 @@ ContentInfo *ContentManager::add(const QString &filePath)
 {
 	printf("ContentManager::add(filePath)\n");
 
-	QString relativePath = QDir::current().relativeFilePath(filePath);
-	ContentInfo *contentInfo = new ContentInfo(relativePath);
-	QString fileExt = QFileInfo(relativePath).suffix().toLower();
+	ContentInfo *contentInfo = new ContentInfo(filePath);
+	QString fileExt = QFileInfo(filePath).suffix().toLower();
 
-	if (fileExt == "jpg") contentInfo->Converter = ContentInfo::Image;
+	if (fileExt == "jpg")      contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
+    else if (fileExt == "bmp") contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "otf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfa") contentInfo->Converter = ContentInfo::Font;

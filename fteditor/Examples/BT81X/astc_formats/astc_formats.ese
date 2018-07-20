@@ -3,149 +3,149 @@
         {
             "converter": "FlashMap",
             "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_10x10_KHR.raw",
-            "flashAddress": 54912,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_10x10_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_10x5_KHR.raw",
-            "flashAddress": 47232,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_10x5_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_10x6_KHR.raw",
-            "flashAddress": 50240,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_10x6_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_10x8_KHR.raw",
-            "flashAddress": 52928,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_10x8_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_12x10_KHR.raw",
-            "flashAddress": 56512,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_12x10_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_12x12_KHR.raw",
-            "flashAddress": 57984,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_12x12_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_4x4_KHR.raw",
-            "flashAddress": 4096,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_4x4_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_5x4_KHR.raw",
-            "flashAddress": 13952,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_5x4_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_5x5_KHR.raw",
-            "flashAddress": 21696,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_5x5_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_6x5_KHR.raw",
-            "flashAddress": 27712,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_6x5_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_6x6_KHR.raw",
-            "flashAddress": 32896,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_6x6_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_8x5_KHR.raw",
-            "flashAddress": 37504,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_8x5_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_8x6_KHR.raw",
-            "flashAddress": 41344,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_8x6_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
-            "destName": "a_COMPRESSED_RGBA_ASTC_8x8_KHR.raw",
-            "flashAddress": 44736,
-            "mappedName": "a_COMPRESSED_RGBA_ASTC_8x8_KHR.raw",
-            "memoryAddress": 0,
-            "memoryLoaded": false,
-            "sourcePath": "flash/astc_flash.map"
-        },
-        {
-            "converter": "FlashMap",
-            "dataStorage": "Flash",
             "destName": "unified.blob",
             "flashAddress": 0,
             "mappedName": "unified.blob",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_10x10_KHR.raw",
+            "flashAddress": 54912,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_10x10_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_10x5_KHR.raw",
+            "flashAddress": 47232,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_10x5_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_10x6_KHR.raw",
+            "flashAddress": 50240,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_10x6_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_10x8_KHR.raw",
+            "flashAddress": 52928,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_10x8_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_12x10_KHR.raw",
+            "flashAddress": 56512,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_12x10_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_12x12_KHR.raw",
+            "flashAddress": 57984,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_12x12_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_4x4_KHR.raw",
+            "flashAddress": 4096,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_4x4_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_5x4_KHR.raw",
+            "flashAddress": 13952,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_5x4_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_5x5_KHR.raw",
+            "flashAddress": 21696,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_5x5_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_6x5_KHR.raw",
+            "flashAddress": 27712,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_6x5_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_6x6_KHR.raw",
+            "flashAddress": 32896,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_6x6_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_8x5_KHR.raw",
+            "flashAddress": 37504,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_8x5_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_8x6_KHR.raw",
+            "flashAddress": 41344,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_8x6_KHR.raw",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "sourcePath": "flash/astc_flash.map"
+        },
+        {
+            "converter": "FlashMap",
+            "dataStorage": "Flash",
+            "destName": "lenna_COMPRESSED_RGBA_ASTC_8x8_KHR.raw",
+            "flashAddress": 44736,
+            "mappedName": "lenna_COMPRESSED_RGBA_ASTC_8x8_KHR.raw",
             "memoryAddress": 0,
             "memoryLoaded": false,
             "sourcePath": "flash/astc_flash.map"
@@ -212,7 +212,6 @@
         "CMD_SETBITMAP(0x800000 | 1812, COMPRESSED_RGBA_ASTC_12x12_KHR, 110, 85)",
         "BEGIN(BITMAPS)",
         "VERTEX2II(384, 360, 0, 0)",
-        "",
         "END()",
         "",
         ""

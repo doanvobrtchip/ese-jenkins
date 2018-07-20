@@ -1160,6 +1160,8 @@ Revision History:
 #define TOUCHMODE_ONESHOT    1UL
 #define ULAW_SAMPLES         1UL
 #define ZERO                 0UL
+#define ARGB8_SNAPSHOT       0x20
+
 #define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
 #define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
 #define BITMAP_SOURCE(addr) ((1UL<<24)|(((addr)&4194303UL)<<0))

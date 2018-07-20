@@ -7,7 +7,6 @@ paletted8_format = 16
 paletted565_format = 14		
 paletted4444_format = 15
 palettedFormats = [paletted_format, paletted8_format, paletted565_format, paletted4444_format]
-palettedString = {8: '_PALETTED_LUT', 16: '_PALETTED8_LUT', 14: '_PALETTED565_LUT', 15: '_PALETTED4444_LUT'}
 
 globalContext = {
     'mediaFIFOEnabled': "False",
@@ -126,6 +125,7 @@ def raiseUnicodeError(errorArea):
     raise Exception("Unable to export project: unicode characters are currently unsupported.  Please check: " + errorArea)
     
 def exportContent(outDir, document):
+    global lutSize
     export = ''
     for content in document["content"]:
         if "imageFormat" not in content:
@@ -156,7 +156,7 @@ def exportContent(outDir, document):
                 headerName = content["destName"] 
 
                 lutContentName = contentName + "_lut"
-                lutHeaderName = headerName + (palettedString[content["imageFormat"]] if content["imageFormat"] in palettedString else '') + '/' + headerName[headerName.rfind('/')+1:] + '_lut'
+                lutHeaderName = headerName + '.lut'
 
                 #load raw files
                 if content["converter"] == "Raw":

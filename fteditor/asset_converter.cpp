@@ -186,19 +186,6 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
-    QString outDirPath(outName);
-    outDirPath = outName.left(outName.lastIndexOf("/"));
-
-	QString quantFile = outName + "_converted-fs8.png";
-	if (QFile::exists(quantFile))
-		QFile::remove(quantFile);
-
-    QDir outDir(outDirPath);
-    if (outDir.exists())
-    {
-        outDir.removeRecursively();
-    }
-
 #ifdef FT800EMU_PYTHON
     if (a_ImageConvRun)
     {
@@ -206,7 +193,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
         bool error = true;
 
         QByteArray inFileUtf8 = inFile.toUtf8();
-        QByteArray outNameUtf8 = outDirPath.toUtf8();
+        QByteArray outNameUtf8 = outName.toUtf8();
 
         // convert fteditor's format to python script's format
         switch (format)
