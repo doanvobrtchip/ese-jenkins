@@ -1377,20 +1377,28 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 			{
 				int globalUsage = 0;
 				size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
-				if (contentInfo->FlashAddress + getFlashSize(contentInfo) > globalSize) // TODO: Maybe cache getFlashSize
+				int contentSize = getFlashSize(contentInfo);
+				if (contentInfo->FlashAddress == 0 && contentSize == 4096)
+				{
+					text = "Builtin";
+					icon = QIcon(":/icons/information-white");
+				}
+				else if (contentInfo->FlashAddress + contentSize > globalSize) // TODO: Maybe cache getFlashSize
 				{
 					text = "No Space";
+					icon = QIcon(":/icons/exclamation-red");
 				}
 				else
 				{
 					text = "Overlap";
+					icon = QIcon(":/icons/exclamation-red");
 				}
 			}
 			else
 			{
 				text = "Overlap";
+				icon = QIcon(":/icons/exclamation-red");
 			}
-			icon = QIcon(":/icons/exclamation-red.png");
 		}
 		else if (contentInfo->MemoryLoaded)
 		{
