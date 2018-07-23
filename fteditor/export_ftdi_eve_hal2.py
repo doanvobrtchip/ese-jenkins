@@ -1151,6 +1151,7 @@ def raiseUnicodeError(errorArea):
 
 
 def run(name, document, ram, moduleName):
+    global lutSize
     deviceType = document["project"]["device"]
     resultText = "<b>EVE HAL Export</b><br>"
     HALProjectName = "_FTEVE_HAL"
