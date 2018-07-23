@@ -85,6 +85,8 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName):
     for content in filesToTestFolder:
         destinationName = ""
         content = content.strip()
+        if len(content) == 0:
+            continue
         if '/' in content:
             destinationName = content.rsplit('/', 1)[1]
         elif '\\' in content:

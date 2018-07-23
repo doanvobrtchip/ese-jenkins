@@ -9,9 +9,11 @@ paletted4444_format = 15
 palettedFormats = [paletted_format, paletted8_format, paletted565_format, paletted4444_format]
 
 globalContext = {
-    'mediaFIFOEnabled': "False",
+    'mediaFIFOEnabled': False,
     'mediaFIFOAddress':  "",
     'mediaFIFOLength': "",
+    'loadImageFromFlash' : False,
+    'loadVideoFromFlash' : False,
 }
 
 globalValue = {
@@ -418,29 +420,25 @@ def exportCoprocessorCommand(document, filesToTestFolder):
 
             if functionName == "Gpu_CoCmd_LoadImage":
                 functionArgsSplit = functionArgs.split(',')
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, CMD_LOADIMAGE);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[1] + ");\n"
-                functionArgs = functionArgsSplit[0] + ","
-                functionArgs += functionArgsSplit[1]
+                
                 try:
                     functionArgsSplit[2].decode('ascii')
                 except UnicodeDecodeError:
                     f.close()
                     raiseUnicodeError("Input file path")
 
+                if "OPT_FLASH" in functionArgsSplit[1]:
+                    globalContext['loadImageFromFlash'] = True
+                    
                 if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
-                    globalContext['mediaFIFOEnabled'] = 'True'
+                    globalContext['mediaFIFOEnabled'] = True
+                    export += "\tApp_Flush_Co_Buffer(phost);\n"
+                    export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                
+                export += "\tGpu_CoCmd_LoadImage(phost, " + functionArgsSplit[0] + ", " + functionArgsSplit[1] + ");\n"
+                    
                 functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
-
-                if '/' in functionArgsSplit[2]:
-                    specialParameter = functionArgsSplit[2].rsplit('/',1)[1]
-                elif '\\' in functionArgsSplit[2]:
-                    specialParameter = functionArgsSplit[2].rsplit('\\',1)[1]
-                else:
-                    specialParameter = functionArgsSplit[2]
+                specialParameter = os.path.split(functionArgsSplit[2])[1]                    
                 specialParameter2 = specialParameter
                 filesToTestFolder.append(functionArgsSplit[2])
                 specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
@@ -464,20 +462,22 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 export += "\n"
                 functionArgsSplit =functionArgs.split(',')
                 functionArgs = functionArgsSplit[0]
+                
+                if 'OPT_FLASH' in functionArgsSplit[0]:
+                    globalContext['loadVideoFromFlash'] = True
+                    
                 if 'OPT_MEDIAFIFO' in functionArgsSplit[0]:
-                    globalContext['mediaFIFOEnabled'] = 'True'
+                    globalContext['mediaFIFOEnabled'] = True
+                    export += "\tApp_Flush_Co_Buffer(phost);\n"
+                    export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                
+                export += "\tGpu_CoCmd_PlayVideo(phost, " + functionArgsSplit[0] + ");\n"                
+
                 functionArgsSplit[1] = re.sub(r'["]', "", functionArgsSplit[1])
-                if '/' in functionArgsSplit[1]:
-                    specialParameter = functionArgsSplit[1].rsplit('/',1)[1]
-                elif '\\' in functionArgsSplit[1]:
-                    specialParameter = functionArgsSplit[1].rsplit('\\',1)[1]
-                else:
-                    specialParameter = functionArgsSplit[1]
-                filesToTestFolder.append(functionArgsSplit[1])
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, CMD_PLAYVIDEO);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n"
+                specialParameter = os.path.split(functionArgsSplit[1])[1]
+                
+                filesToTestFolder.append(functionArgsSplit[1])                
+                
                 specialParameter2 = specialParameter
                 specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
                 specialCommandType = "Gpu_CoCmd_PlayVideo"
@@ -504,37 +504,41 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 export += newline
 
             if specialCommandType == "Gpu_CoCmd_LoadImage":
-                if globalContext['mediaFIFOEnabled'] == "True":
+                if globalContext['mediaFIFOEnabled'] == True:
                     export += "\t#if defined(FT900_PLATFORM)\n"
                     export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
                     export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
                     export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
                     export += "\t#endif\n"
                     export += "\tApp_Flush_Co_Buffer(phost);\n"
-                    globalContext['mediaFIFOEnabled'] = "False"
-                else:
+                    globalContext['mediaFIFOEnabled'] = False
+                elif globalContext['loadImageFromFlash'] == False:
                     export += "\t#if defined(FT900_PLATFORM)\n"
                     export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\");\n"
                     export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
                     export += "\tloadDataToCoprocessorCMDfifo(phost, \"" + specialParameter + "\");\n"
                     export += "\t#endif\n"
                     export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                    
+                globalContext['loadImageFromFlash'] = False
                 specialCommandType = ""
             elif specialCommandType == "Gpu_CoCmd_PlayVideo":
-                if globalContext['mediaFIFOEnabled'] == 'True':
+                if globalContext['mediaFIFOEnabled'] == True:
                     export += "\t#if defined(FT900_PLATFORM)\n"
                     export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
                     export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
                     export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
                     export += "\t#endif\n"
-                    globalContext['mediaFIFOEnabled'] = "False"
-                else:
+                    globalContext['mediaFIFOEnabled'] = False
+                elif globalContext['loadVideoFromFlash'] == False:
                     export += "\t#if defined(FT900_PLATFORM)\n"
                     export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter2 + "\");\n"
                     export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
                     export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter + "\");\n"
                     export += "\t#endif\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                    export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                    
+                globalContext['loadVideoFromFlash'] = False
                 specialCommandType = ""
             else:
                 specialCommandType = ""
