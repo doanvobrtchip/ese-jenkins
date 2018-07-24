@@ -1533,6 +1533,8 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
+	m_MinFlashType(-1),
+    m_AddRecentProjectFlag(false),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
@@ -1659,7 +1661,7 @@ void pythonError()
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 	PyObject *errStr = PyObject_Repr(pvalue);
-	char *pStrErrorMessage = PyString_AsString(errStr);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 	QString error = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	Py_DECREF(errStr);
@@ -1698,7 +1700,7 @@ static QString scriptDisplayName(const QString &script)
 
 	if (pyValue)
 	{
-		char *resCStr = PyString_AsString(pyValue);
+		char *resCStr = PyUnicode_AsUTF8(pyValue);
 		QString res = QString::fromLocal8Bit(resCStr);
 		Py_DECREF(pyValue); pyValue = NULL; // !
 		return res;
@@ -1879,7 +1881,7 @@ void MainWindow::runScript(const QString &script)
 
 	bool error = true;
 
-	PyObject *pyJsonScript = PyString_FromString("json");
+	PyObject *pyJsonScript = PyUnicode_FromString("json");
 	PyObject *pyJsonModule = PyImport_Import(pyJsonScript);
 	Py_DECREF(pyJsonScript); pyJsonScript = NULL;
 	PyObject *pyJsonLoadS = NULL;
@@ -1900,7 +1902,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -1913,7 +1915,7 @@ void MainWindow::runScript(const QString &script)
 	// Create python object from JSON
 	error = true;
 	QByteArray jsonDoc = toJson(true);
-	PyObject *pyJsonDoc = PyString_FromString(jsonDoc.data());
+	PyObject *pyJsonDoc = PyUnicode_FromString(jsonDoc.data());
 	PyObject *pyArgs = PyTuple_New(1);
 	PyTuple_SetItem(pyArgs, 0, pyJsonDoc);
 	PyObject *pyDocument = PyObject_CallObject(pyJsonLoadS, pyArgs);
@@ -1928,7 +1930,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -1938,7 +1940,7 @@ void MainWindow::runScript(const QString &script)
 	}
 
 	/*PyObject *pyDocumentString = PyObject_Repr(pyDocument);
-	printf("Demo: %s\n", PyString_AsString(pyDocumentString));
+	printf("Demo: %s\n", PyUnicode_AsUTF8(pyDocumentString));
 	Py_DECREF(pyDocumentString); pyDocumentString = NULL;
 	Py_DECREF(pyDocument); pyDocument = NULL;*/
 
@@ -1973,7 +1975,7 @@ void MainWindow::runScript(const QString &script)
 				{
 					printf("Ok\n");
 					PyObject *resStr = PyObject_Repr(pyValue);
-					char *resCStr = PyString_AsString(resStr);
+					char *resCStr = PyUnicode_AsUTF8(resStr);
 					QString res = QString::fromLocal8Bit(resCStr);
 					Py_DECREF(pyValue); pyValue = NULL;
 					m_PropertiesEditor->setInfo(res);
@@ -2004,7 +2006,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -3375,27 +3377,6 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	{
 		// check flash configuration
 
-		/*
-		
-		// Not using this, since the code is making delicate assumptions of the flash size by index.
-
-		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;
-
-		if (binSize > 256)
-		{
-			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
-			return false;
-		}
-		else
-		{
-            int flashType = ceil(log2(binSize)) - 1;
-            if (flashType < 0) flashType = 0;            
-            m_ProjectFlash->setCurrentIndex(flashType);
-            m_MinFlashType = flashType;
-		}
-
-		*/
-
 		quint64 binSize = QFileInfo(binPath).size();
 
 		// Iterate through flash, starting from the selected one, until one is found that is large enough
@@ -3509,6 +3490,7 @@ void MainWindow::actNew(bool addClear)
 
 	// WORKAROUND: Issue #100
 	actResetEmulator();
+    m_MinFlashType = -1;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3665,7 +3647,9 @@ void MainWindow::actOpen()
 	if (fileName.isNull())
 		return;
 
+    m_MinFlashType = -1;
 	openFile(fileName);
+    actResetEmulator();
 }
 
 void MainWindow::openFile(const QString &fileName)
