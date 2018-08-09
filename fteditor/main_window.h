@@ -196,6 +196,7 @@ private slots:
 	void projectDisplayChanged(int i);
 	void projectFlashChanged(int i);
 
+	void openRecentProject();
 private:
 	void updateInitialization(bool visible);
 
@@ -228,6 +229,11 @@ private:
 	void stopEmulatorInternal();
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
+
+	void loadRecentProject();
+	void addRecentProject(QString recentPath);
+	void removeRecentProject(QString removePath);
+	void saveRecentProject();
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
