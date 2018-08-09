@@ -4476,8 +4476,15 @@ void MainWindow::openRecentProject()
 {
     QAction *pAction = (QAction *)sender();
     QString projectPath = pAction->data().toString();
+    
+	if (!QFile::exists(projectPath))
+	{	
+		removeRecentProject(projectPath);
+		QMessageBox::critical(this, tr(""), QString(tr("%1 cannot be opened.")).arg(projectPath));
+		return;
+	}
 
-    if (!maybeSave()) return;
+	if (!maybeSave()) return;
 
     openFile(projectPath);
 }
