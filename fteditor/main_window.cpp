@@ -3559,6 +3559,9 @@ void MainWindow::toggleUI(bool hasProject)
 	m_CloseProjectAct->setEnabled(hasProject);
 	m_ProjectFolderAct->setEnabled(hasProject);
 	m_SaveScreenshotAct->setEnabled(hasProject);
+
+	// toogle emulator viewport
+	m_EmulatorViewport->setVisible(hasProject);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
