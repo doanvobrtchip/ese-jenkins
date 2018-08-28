@@ -478,7 +478,7 @@ void InteractiveProperties::addSpinBoxAngle65536(int index, int minim, int maxim
 	PropertiesSpinBoxAngle65536 *prop = new PropertiesSpinBoxAngle65536(this, undoMessage, index);
 	prop->setMinimum(minim);
 	prop->setMaximum(maxim);
-	prop->setSingleStep(65536 / 360);
+	prop->setSingleStep(65536 / 360.0);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -1674,7 +1674,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_ROTATEAROUND");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
-				addSpinBox65536(2, 0x80000000UL, 0x7FFFFFFFUL, tr("Angle") + ": ", tr("Set angle"));
+				addSpinBoxAngle65536(2, 0x80000000UL, 0x7FFFFFFFUL, tr("Angle") + ": ", tr("Set angle"));
 				addSpinBox65536(3, 0x80000000UL, 0x7FFFFFFFUL, tr("Scale") + ": ", tr("Set scale"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
