@@ -1549,7 +1549,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 #endif
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
-	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
+	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), m_CloseProjectAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
 	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL),//, m_SaveScreenshotAct(NULL)
@@ -2111,6 +2111,10 @@ void MainWindow::createActions()
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
 
+	m_CloseProjectAct = new QAction(this);
+	m_CloseProjectAct->setShortcuts(QKeySequence::Close);
+	connect(m_CloseProjectAct, SIGNAL(triggered()), this, SLOT(actCloseProject()));
+
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
 	m_ImportAct->setVisible(FT_VCDUMP_VISIBLE);
@@ -2170,8 +2174,10 @@ void MainWindow::translateActions()
 	m_SaveAct->setStatusTip(tr("Save the current project"));
 	m_SaveAct->setIcon(QIcon(":/icons/disk.png"));
 	m_SaveAsAct->setText(tr("Save As"));
-	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));;
+	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
 	m_SaveAsAct->setIcon(QIcon(":/icons/disk--pencil.png"));
+	m_CloseProjectAct->setText(tr("Close Project"));
+	m_CloseProjectAct->setStatusTip(tr("Close the current project"));
 	m_ImportAct->setText(tr("Import"));
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
@@ -2216,6 +2222,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveAct);
 	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_CloseProjectAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_ProjectFolderAct);
 	m_FileMenu->addSeparator();
@@ -3515,6 +3523,44 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	return true;
 }
 
+void MainWindow::toggleDockWindow(bool isShow)
+{
+	m_InspectorDock->setVisible(isShow);
+	m_DlEditorDock->setVisible(isShow);
+	m_CmdEditorDock->setVisible(isShow);
+	m_ProjectDock->setVisible(isShow);
+#if FT800_DEVICE_MANAGER
+	m_DeviceManagerDock->setVisible(isShow);
+#endif /* FT800_DEVICE_MANAGER */
+	m_UtilizationDock->setVisible(isShow);
+	m_NavigatorDock->setVisible(isShow);
+	m_PropertiesEditorDock->setVisible(isShow);
+	m_ToolboxDock->setVisible(isShow);
+	m_ContentManagerDock->setVisible(isShow);
+	m_RegistersDock->setVisible(isShow);
+	m_ControlsDock->setVisible(isShow);
+}
+
+void MainWindow::toggleUI(bool hasProject)
+{
+	toggleDockWindow(hasProject);
+
+	// toggle Edit, Tools, View and Export menu
+	m_EditMenu->setEnabled(hasProject);
+	m_ToolsMenu->setEnabled(hasProject);
+	m_WidgetsMenu->setEnabled(hasProject);
+#ifdef FT800EMU_PYTHON
+	m_ScriptsMenu->setEnabled(hasProject);
+#endif /* FT800EMU_PYTHON */
+
+	// toggle Save, Save As, Browse Project Folder menu item
+	m_SaveAct->setEnabled(hasProject);
+	m_SaveAsAct->setEnabled(hasProject);
+	m_CloseProjectAct->setEnabled(hasProject);
+	m_ProjectFolderAct->setEnabled(hasProject);
+	m_SaveScreenshotAct->setEnabled(hasProject);
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
@@ -3523,8 +3569,39 @@ void MainWindow::closeEvent(QCloseEvent *event)
     saveRecentProject();
 }
 
+void MainWindow::actCloseProject()
+{
+	if (!maybeSave()) return;
+
+	// reset filename
+	m_CurrentFile = QString();
+
+	// reset editors to their default state
+	clearEditor();
+
+	// clear undo stacks
+	clearUndoStack();
+
+	// be helpful
+	focusCmdEditor();
+	m_PropertiesEditor->setInfo(FTEDITOR_INITIAL_HELP);
+	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
+	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+	m_CmdEditor->selectLine(0);
+
+	QDir::setCurrent("");
+	setWindowTitle(tr("No project"));
+
+	// reset flash file name
+	setFlashFileNameToLabel("");
+
+	// hide all dock windows
+	toggleUI(false);
+}
+
 void MainWindow::actNew()
 {
+	toggleUI(true);
 	actNew(true);
 }
 
@@ -3753,6 +3830,8 @@ void MainWindow::actOpen()
 void MainWindow::openFile(const QString &fileName)
 {
 	printf("*** Open file ***\n");
+
+	toggleUI(true);
 
 	// Reset editors to their default state
 	clearEditor();
