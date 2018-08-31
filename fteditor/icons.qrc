@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/magnifier-zoom-in.png</file>
+    <file>icons/magnifier-zoom-out.png</file>
     <file>icons/border-weight.png</file>
     <file>icons/category.png</file>
     <file>icons/clipboard-paste.png</file>

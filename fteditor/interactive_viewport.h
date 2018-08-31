@@ -18,6 +18,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "dl_editor.h"
 
 class QAction;
+class QComboBox;
 
 namespace FTEDITOR {
 
@@ -60,6 +61,8 @@ public:
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 
+	bool eventFilter(QObject *watched, QEvent *event);
+
 private:
 	void updatePointerMethod();
 	bool acceptableSource(QDropEvent *e);
@@ -83,7 +86,12 @@ private slots:
 	void traceChecked();
 	void editChecked();
 
+	void zoomIn();
+	void zoomOut();
+	void zoomChanged(int index);
+	void zoomEditTextChanged();
 private:
+	QComboBox  *m_ZoomCB;
 	MainWindow *m_MainWindow;
 	QAction *m_Insert;
 
