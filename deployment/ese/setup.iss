@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.0.1 RC2"
+#define MyAppVersion "V3.1.2"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -73,7 +73,7 @@ Source: ".\\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\libFT4222.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\python27.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\python36.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -89,7 +89,7 @@ Source: ".\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\Lib\*.*"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
+Source: ".\\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
 Source: ".\\Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs
 Source: ".\\EVE_Hal_Library\*.*"; DestDir: "{app}\EVE_Hal_Library"; Flags: recursesubdirs createallsubdirs
 Source: ".\\export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs
@@ -109,7 +109,11 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser
 
 [UninstallDelete]
+Type: files; Name: "{app}\recent_project"
 Type: files; Name: "{app}\*.pyc"
+Type: filesandordirs; Name: "{app}\__pycache__"
+Type: filesandordirs; Name: "{app}\Examples"
+Type: filesandordirs; Name: "{app}\Lib"
 
 [Registry]
 Root: HKCR; Subkey: ".ese";                             ValueData: "{#MyAppName}";          Flags: uninsdeletevalue; ValueType: string;  ValueName: ""
