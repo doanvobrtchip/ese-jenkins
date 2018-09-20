@@ -151,6 +151,10 @@ public:
 	bool eventFilter(QObject *watched, QEvent *event);
 	void requestSave() { actSave(); }
 	bool checkAndPromptFlashPath(const QString &filePath);
+
+	void toggleDockWindow(bool isShow);
+	void toggleUI(bool hasProject);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -163,6 +167,7 @@ private slots:
 	void actOpen();
 	void actSave();
 	void actSaveAs();
+	void actCloseProject();
 	void actImport();
 	void actExport();
 	
@@ -341,6 +346,7 @@ private:
 	QAction *m_OpenAct;
 	QAction *m_SaveAct;
 	QAction *m_SaveAsAct;
+	QAction *m_CloseProjectAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
 	QAction *m_ProjectFolderAct;
