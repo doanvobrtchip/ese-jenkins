@@ -62,7 +62,7 @@ OPTION(FTEDITOR_TEMP_DIR "Store unsaved projects in a temporary directory" ON)
 
 OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
-OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" ON)
+OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" OFF)
 
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
@@ -80,7 +80,7 @@ OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 
 OPTION(WITH_BT815EMU "Include BT815EMU" ON)
 
-OPTION(WITH_FT900EMU "Include FT900EMU" ON)
+OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
 
 OPTION(WITH_MX25LEMU "Include MX25LEMU" ON)
 

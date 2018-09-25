@@ -1735,7 +1735,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 #if defined(FTEDITOR_PARSER_VC3)
 					int p = (v >> 17) & 0x1;
 #endif
-					int a = v & 0x1FFFF;
+					int a = int(v << 15) / 32768;
 					res << "BITMAP_TRANSFORM_A(";
 #if defined(FTEDITOR_PARSER_VC3)
 					res << p << ",";
@@ -1748,7 +1748,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 #if defined(FTEDITOR_PARSER_VC3)
 					int p = (v >> 17) & 0x1;
 #endif
-					int b = v & 0x1FFFF;
+					int b = int(v << 15) / 32768;
 					res << "BITMAP_TRANSFORM_B(";
 #if defined(FTEDITOR_PARSER_VC3)
 					res << p << ",";
@@ -1758,7 +1758,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_C:
 				{
-					int c = v & 0xFFFFFF;
+					int c =  int(v << 8) / 256;
 					res << "BITMAP_TRANSFORM_C(";
 					res << c << ")";
 					break;
@@ -1768,7 +1768,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 #if defined(FTEDITOR_PARSER_VC3)
 					int p = (v >> 17) & 0x1;
 #endif
-					int d = v & 0x1FFFF;
+					int d = int(v << 15) / 32768;
 					res << "BITMAP_TRANSFORM_D(";
 #if defined(FTEDITOR_PARSER_VC3)
 					res << p << ",";
@@ -1781,7 +1781,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 #if defined(FTEDITOR_PARSER_VC3)
 					int p = (v >> 17) & 0x1;
 #endif
-					int e = v & 0x1FFFF;
+					int e = int(v << 15) / 32768;
 					res << "BITMAP_TRANSFORM_E(";
 #if defined(FTEDITOR_PARSER_VC3)
 					res << p << ",";
@@ -1791,7 +1791,7 @@ void DlParser::toStringVC3(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_TRANSFORM_F:
 				{
-					int f = v & 0xFFFFFF;
+					int f = int(v << 8) / 256;
 					res << "BITMAP_TRANSFORM_F(";
 					res << f << ")";
 					break;

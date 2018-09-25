@@ -28,6 +28,8 @@
 #include <QKeyEvent>
 #include <QClipboard>
 #include <QApplication>
+#include <QMenu>
+#include <QAction>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -106,7 +108,10 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	m_DisplayList->setColumnCount(3);
 	m_DisplayList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 	m_DisplayList->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_DisplayList->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_DisplayList->installEventFilter(this);
+    connect(m_DisplayList, &QTreeWidget::customContextMenuRequested, this, &Inspector::onPrepareContextMenu);
+
 
 	QStringList dlHeaders;
 	dlHeaders.push_back(tr(""));
@@ -124,7 +129,9 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	m_Registers->setColumnCount(4);
 	m_Registers->setSelectionMode(QAbstractItemView::ExtendedSelection);
 	m_Registers->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_Registers->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_Registers->installEventFilter(this);
+    connect(m_Registers, &QTreeWidget::customContextMenuRequested, this, &Inspector::onPrepareContextMenu);
 
 	QStringList regHeaders;
 	regHeaders.push_back(tr("Address"));
@@ -158,6 +165,12 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	m_DisplayListItems[0]->setText(0, "0");
 
 	// bindCurrentDevice();
+    m_CopyAct = new QAction(tr("&New"), this);
+    m_CopyAct->setText(tr("Copy"));
+    connect(m_CopyAct, &QAction::triggered, this, &Inspector::onCopy);
+
+    m_ContextMenu = new QMenu(this);
+    m_ContextMenu->addAction(m_CopyAct);
 }
 
 Inspector::~Inspector()
@@ -423,6 +436,18 @@ void Inspector::copy(const QTreeWidget * widget)
 	}
 
 	clip->setText(copy_text);
+}
+
+void Inspector::onPrepareContextMenu(const QPoint &pos)
+{
+    QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
+
+    m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
+}
+
+void Inspector::onCopy()
+{
+    copy(m_DisplayList->hasFocus() ? m_DisplayList : m_Registers);
 }
 
 } /* namespace FTEDITOR */

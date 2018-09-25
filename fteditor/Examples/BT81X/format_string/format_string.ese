@@ -1,0 +1,50 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "COLOR_RGB(255, 255, 255)",
+        "",
+        "CMD_MEMSET(0, 66, 1)",
+        "CMD_MEMSET(1, 84, 1)",
+        "CMD_MEMSET(2, 0, 1)",
+        "CMD_TEXT(0, 31, 30, OPT_FORMAT, \"Format string in new chip: %s%X/%s%d\", 0, 2069, 0, 816)",
+        "",
+        "CMD_TEXT(0, 103, 28, 0, \"Format   %d     %o                        %x             %X\")",
+        "",
+        "CMD_TEXT(0, 151, 28, OPT_FORMAT, \"      123   %d    %o                       %x              %X\", 123, 123, 123, 123)",
+        "",
+        "CMD_TEXT(0, 197, 28, OPT_FORMAT, \"         -5   %d       %o    %x    %X\", -5, -5, -5, -5)",
+        "",
+        "CMD_TEXT(0, 296, 28, 0, \"Format string in toogle:\")",
+        "CMD_TOGGLE(260, 302, 105, 27, OPT_FORMAT, 35939, \"ON%3d  \\xFF OFF %3d\", 1, 0)",
+        "",
+        "CMD_TEXT(0, 376, 28, 0, \"Format string in button:\")",
+        "CMD_BUTTON(251, 366, 137, 44, 27, OPT_FORMAT, \"%X\", -1)",
+        "",
+        "COLOR_RGB(55, 255, 155)",
+        "BEGIN(LINES)",
+        "VERTEX2II(75, 96, 0, 0)",
+        "VERTEX2II(75, 228, 0, 0)",
+        "VERTEX2II(0, 136, 0, 0)",
+        "VERTEX2II(511, 136, 0, 0)",
+        "VERTEX2II(0, 186, 0, 0)",
+        "VERTEX2II(511, 184, 0, 0)",
+        "END()",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

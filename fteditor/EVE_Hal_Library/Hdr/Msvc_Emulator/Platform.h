@@ -37,7 +37,7 @@ Revision History:
 
 /* platform specific macros */
 #define MSVC_FT800EMU                             (1)// enable by default for emulator platform
-#define FLASH_ENABLE                              (0)
+#define FLASH_ENABLE                              (1)
 
 //#define VM800B43_50                           (1)
 //#define VM800B35                              (1)

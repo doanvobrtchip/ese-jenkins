@@ -24,6 +24,8 @@
 #include <QPen>
 #include <QTreeWidget>
 #include <QApplication>
+#include <QComboBox>
+#include <QLineEdit>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -66,8 +68,11 @@ extern BT8XXEMU_Flash *g_Flash;
 // Value outside display space
 #define FTED_SNAP_HISTORY_NONE 4096
 
+static QVector<float> ZoomRange({ 6.25, 12.5, 25, 37.5, 50, 62.5, 75, 100, 125, 150, 200, 300, 400, 600, 800, 1200, 1600 });
+static const int ZOOM_INIT_INDEX = 7; // index 7 means zooming at 100%
+
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
-	: EmulatorViewport(parent), m_MainWindow(parent),
+	: EmulatorViewport(parent, parent->applicationDataDir()), m_MainWindow(parent),
 	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false), m_MouseStackWritten(false), 
 	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
 	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
@@ -151,11 +156,124 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	toolBar->addAction(m_Insert);
 	// toolBar->addAction(decrease);
 	// toolBar->addAction(increase);
+
+
+	QAction *zoomIn = new QAction(this);
+	connect(zoomIn, &QAction::triggered, this, &InteractiveViewport::zoomIn);
+	zoomIn->setText(tr("Zoom In"));
+	zoomIn->setIcon(QIcon(":/icons/magnifier-zoom-in.png"));
+	zoomIn->setStatusTip(tr("Zoom In"));
+
+	QAction *zoomOut = new QAction(this);
+	connect(zoomOut, &QAction::triggered, this, &InteractiveViewport::zoomOut);
+	zoomOut->setText(tr("Zoom Out"));
+	zoomOut->setIcon(QIcon(":/icons/magnifier-zoom-out.png"));
+	zoomOut->setStatusTip(tr("Zoom Out"));
+
+	m_ZoomCB = new QComboBox(this);
+	m_ZoomCB->setEditable(true);
+	m_ZoomCB->setInsertPolicy(QComboBox::NoInsert);
+	
+	m_ZoomCB->lineEdit()->installEventFilter(this);
+
+	connect(m_ZoomCB, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InteractiveViewport::zoomChanged);
+	connect(m_ZoomCB->lineEdit(), &QLineEdit::returnPressed, this, &InteractiveViewport::zoomEditTextChanged);
+	connect(m_ZoomCB, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::activated),
+		[=](const QString &text) {  m_ZoomCB->lineEdit()->selectAll();  });
+
+	QStringList zoomList;
+	
+	for (int i = 0; i < ZoomRange.count(); i++)
+	{
+		zoomList << QString("%1%").arg(ZoomRange[i]);
+	}
+
+	m_ZoomCB->addItems(zoomList);
+	m_ZoomCB->setCurrentIndex(ZOOM_INIT_INDEX);
+	m_ZoomCB->setMaxVisibleItems(zoomList.count());
+
+	QRegExp rx("(\\d{1,4}\\.)?\\d{1,4}%?");
+	QValidator *validator = new QRegExpValidator(rx, this);
+	m_ZoomCB->setValidator(validator);
+
+	QToolBar *zoomToolBar = m_MainWindow->addToolBar(tr("Zoom"));
+	zoomToolBar->setIconSize(QSize(16, 16));	
+	zoomToolBar->addAction(zoomOut);
+	zoomToolBar->addWidget(m_ZoomCB);
+	zoomToolBar->addAction(zoomIn);
 }
 
 InteractiveViewport::~InteractiveViewport()
 {
 
+}
+
+void InteractiveViewport::zoomIn()
+{
+	float currentScale = this->screenScale() * 100 / 16.0;
+
+	// find next index
+	for (int i = 0; i < ZoomRange.count(); i++)
+	{
+		if (currentScale < ZoomRange[i])
+		{
+			m_ZoomCB->setCurrentIndex(i);
+			break;
+		}
+	}	
+}
+
+void InteractiveViewport::zoomOut()
+{
+	float currentScale = this->screenScale() * 100 / 16.0;
+
+	// find previous index
+	for (int i = ZoomRange.count() - 1; i >= 0; i--)
+	{
+		if (currentScale > ZoomRange[i])
+		{
+			m_ZoomCB->setCurrentIndex(i);
+			break;
+		}
+	}
+}
+
+void InteractiveViewport::zoomChanged(int index)
+{
+	if (index < 0 || index >= ZoomRange.count())
+		return;
+
+	// zoom 100% equal to scale = 16
+	setScreenScale(ZoomRange[index] * 0.16);
+}
+
+void InteractiveViewport::zoomEditTextChanged()
+{
+	bool ok = false;
+	QString text = m_ZoomCB->lineEdit()->text();
+	float zoom = text.remove('%').toFloat(&ok);
+
+	if (zoom < ZoomRange.first()) zoom = ZoomRange.first();
+	if (zoom > ZoomRange.last()) zoom = ZoomRange.last();
+
+	if (!ok)	return;
+
+	text.append("%");
+	m_ZoomCB->lineEdit()->setText(text);
+
+	// zoom 100% equal to scale = 16
+	setScreenScale(zoom * 0.16);
+}
+
+bool InteractiveViewport::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_ZoomCB->lineEdit() && event->type() == QEvent::MouseButtonPress)
+	{
+		m_ZoomCB->lineEdit()->selectAll();
+		return true;
+	}
+
+	return EmulatorViewport::eventFilter(watched, event);
 }
 
 /*
@@ -1534,6 +1652,9 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 	{
 		setScreenScale(screenScale() / 2);
 	}
+
+	// update text in zoom combobox
+	m_ZoomCB->lineEdit()->setText(QString("%1%").arg(screenScale() * 100 / 16));
 
 	mvx = screenLeft();
 	mvy = screenTop();

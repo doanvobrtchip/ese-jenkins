@@ -30,6 +30,8 @@ class QTreeWidget;
 class QTreeWidgetItem;
 class QEvent;
 class QKeyEvent;
+class QMenu;
+class QAction;
 
 namespace FTEDITOR {
 
@@ -61,6 +63,10 @@ public:
 
 	bool eventFilter(QObject* watched, QEvent* event);
 
+private slots:
+    void onCopy();
+    void onPrepareContextMenu(const QPoint &pos);
+
 private:
 	void initDisplayReg();
 	void releaseDisplayReg();
@@ -79,6 +85,9 @@ private:
 	std::vector<uint32_t> m_RegisterCopy;
 
 	bool m_HandleUsage[FTED_NUM_HANDLES];
+
+    QMenu   *m_ContextMenu;
+    QAction *m_CopyAct;
 
 private:
 	Inspector(const Inspector &);

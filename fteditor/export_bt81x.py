@@ -12,11 +12,11 @@ def renameAllItemsInFolder(folder, from_name, to_name):
             
 def replaceStringInFile(file, oldString, newString):
     with open(file, 'r') as resourceFile:
-        data = resourceFile.read().decode("utf-8-sig").encode("utf-8")
+        data = resourceFile.read()
 
     data = data.replace(oldString, newString)
     
-    with open(file, 'w+') as resourceFile:
+    with open(file, 'w+', encoding='utf-8') as resourceFile:
         resourceFile.truncate()
         resourceFile.write(data)
    
@@ -85,6 +85,8 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName):
     for content in filesToTestFolder:
         destinationName = ""
         content = content.strip()
+        if len(content) == 0:
+            continue
         if '/' in content:
             destinationName = content.rsplit('/', 1)[1]
         elif '\\' in content:
@@ -101,11 +103,6 @@ def run(projectName, document, ram, moduleName):
         if not line == "":
             resultText += "<b>Warning</b>: Only support for Coprocessor commands, ignoring Display List.<br>"
             break
-
-    try:
-        projectName.decode('ascii')
-    except UnicodeDecodeError:
-        export_bt81x_helper.raiseUnicodeError(projectName)
 
     if deviceType in [2069, 2070]:
         outDir = projectName + "_BT81X_EVE_HAL"            
@@ -126,20 +123,19 @@ def run(projectName, document, ram, moduleName):
     except Exception as e:
         raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed. " + str(e))
        
-    try:  
+    try:           
         filesToTestFolder = []
          
         exportAssets = export_bt81x_helper.exportContent(outDir, document)
         
         export = export_bt81x_helper.exportLoadImageCommand(document)    
-               
         export += export_bt81x_helper.exportCoprocessorCommand(document, filesToTestFolder)
 
         generateProjectFiles(outDir, projectName, filesToTestFolder, moduleName)
         
         skeletonFilePath = outDir + '/Src/Skeleton.c'
                    
-        export = export.encode('utf-8')
+        #export = export.encode('utf-8')
         
         replaceStringInFile(skeletonFilePath, '/*RESERVED_FOR_EXPORTING_FROM_ESE*/', export)
         
