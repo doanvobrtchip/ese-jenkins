@@ -4,10 +4,12 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
+/* Shim for backwards compatibility. Deprecated. Do not redistribute this header. */
+
 #ifndef FT8XXEMU_DIAG_H
 #define FT8XXEMU_DIAG_H
 
-#include "ft8xxemu.h"
+#include "ft8xxemu_legacy.h"
 
 #ifdef __cplusplus 
 extern "C" {
