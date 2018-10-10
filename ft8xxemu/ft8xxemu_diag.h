@@ -9,7 +9,7 @@
 #ifndef FT8XXEMU_DIAG_H
 #define FT8XXEMU_DIAG_H
 
-#include "ft8xxemu_legacy.h"
+#include "ft8xxemu.h"
 
 #ifdef __cplusplus 
 extern "C" {

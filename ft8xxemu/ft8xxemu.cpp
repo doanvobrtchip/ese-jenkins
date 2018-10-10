@@ -5,8 +5,8 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
-#include "ft8xxemu_legacy.h"
-#include "ft8xxemu_legacy_diag.h"
+#include "ft8xxemu.h"
+#include "ft8xxemu_diag.h"
 
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
