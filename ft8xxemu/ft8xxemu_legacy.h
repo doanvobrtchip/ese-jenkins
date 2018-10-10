@@ -69,9 +69,9 @@ typedef enum
 	// enable output to stdout from the emulator (default: off) (note: stdout is is some cases not thread safe)
 	FT8XXEMU_EmulatorEnableStdOut = 0x400,
 	// enable performance adjustments for running the emulator as a background process without window (default: off)
-	BT8XXEMU_EmulatorEnableBackgroundPerformance = 0x800,
+	FT8XXEMU_EmulatorEnableBackgroundPerformance = 0x800,
 	// enable performance adjustments for the main MCU thread (default: on)
-	BT8XXEMU_EmulatorEnableMainPerformance = 0x1000,
+	FT8XXEMU_EmulatorEnableMainPerformance = 0x1000,
 } FT8XXEMU_EmulatorFlags;
 
 typedef enum
