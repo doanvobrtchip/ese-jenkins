@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
 		QByteArray cpUtf8 = QDir::currentPath().toUtf8();
 		PyObject* curPath = PyUnicode_FromString(cpUtf8.constData());
 		PyList_Append(sysPath, curPath);
+
 		Py_DECREF(curPath);
 	}
 #endif /* FT800EMU_PYTHON */

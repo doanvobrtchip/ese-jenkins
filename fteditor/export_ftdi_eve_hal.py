@@ -11,7 +11,7 @@ def convertArgs(functionArgs):
 	functionArgs = functionArgs.replace(" ","")
 	functionArgsSplit = functionArgs.split(",")
 	for i,v in enumerate(functionArgsSplit):
-		if argsMap.has_key(v):
+		if v in argsMap:
 			functionArgsSplit[i] = argsMap[v]
 
 	return ",".join(functionArgsSplit)
@@ -330,7 +330,7 @@ def run(name, document, ram):
 		if not line == "":
 			splitlinea = line.split('(', 1)
 			functionName = splitlinea[0]
-			if functionMap.has_key(functionName):
+			if functionName in functionMap:
 				functionName = functionMap[functionName]
 			if functionName == "Clear":
 				clearFound = True
@@ -347,7 +347,7 @@ def run(name, document, ram):
 			functionName = splitlinea[0]
 
 			coprocessor_cmd = False
-			if functionMap.has_key(functionName):
+			if functionName in functionMap:
 				functionName = functionMap[functionName]
 				coprocessor_cmd = True
 			#if not skippedBitmaps:

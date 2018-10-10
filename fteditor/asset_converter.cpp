@@ -69,7 +69,7 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 {
 	PyErr_Clear();
 
-	PyObject *pyScript = PyString_FromString(scriptName);
+	PyObject *pyScript = PyUnicode_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
 
@@ -97,7 +97,7 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyString_AsString(pvalue);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
 	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
@@ -110,7 +110,7 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 {
 	PyErr_Clear();
 
-	PyObject *pyScript = PyString_FromString(scriptName);
+	PyObject *pyScript = PyUnicode_FromString(scriptName);
 	module = PyImport_Import(pyScript);
 	Py_DECREF(pyScript); pyScript = NULL;
 
@@ -126,7 +126,7 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyString_AsString(pvalue);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
 	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	printf("---\n");
@@ -186,6 +186,10 @@ void AssetConverter::release()
 
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
+	QString quantFile = outName + "_converted-fs8.png";
+	if (QFile::exists(quantFile))
+		QFile::remove(quantFile);
+
 #ifdef FT800EMU_PYTHON
     if (a_ImageConvRun)
     {
@@ -233,22 +237,22 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
 		PyObject *pyTuple = PyTuple_New(8);
-		pyValue = PyString_FromString("-i");
+		pyValue = PyUnicode_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
 		pyValue = PyUnicode_FromString(inFileUtf8.data());
 		PyTuple_SetItem(pyTuple, 1, pyValue);
-		pyValue = PyString_FromString("-o");
+		pyValue = PyUnicode_FromString("-o");
 		PyTuple_SetItem(pyTuple, 2, pyValue);
 		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
-		pyValue = PyString_FromString("-f");
+		pyValue = PyUnicode_FromString("-f");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
-		pyValue = PyString_FromString(sFormat.toUtf8().data());
+		pyValue = PyUnicode_FromString(sFormat.toUtf8().data());
 		PyTuple_SetItem(pyTuple, 5, pyValue);
 
-        pyValue = PyString_FromString("-e");
+        pyValue = PyUnicode_FromString("-e");
         PyTuple_SetItem(pyTuple, 6, pyValue);
-        pyValue = PyString_FromString("thorough");
+        pyValue = PyUnicode_FromString("thorough");
         PyTuple_SetItem(pyTuple, 7, pyValue);
 
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
@@ -265,7 +269,7 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyString_AsString(errStr);
+			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 			QString error = QString::fromLocal8Bit(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
@@ -352,21 +356,21 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
 		PyObject *pyTuple = PyTuple_New(8);
-		pyValue = PyString_FromString("-i");
+		pyValue = PyUnicode_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
 		pyValue = PyUnicode_FromString(inFileUtf8.data());
 		PyTuple_SetItem(pyTuple, 1, pyValue);
-		pyValue = PyString_FromString("-o");
+		pyValue = PyUnicode_FromString("-o");
 		PyTuple_SetItem(pyTuple, 2, pyValue);
 		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
-		pyValue = PyString_FromString("-q");
+		pyValue = PyUnicode_FromString("-q");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
 		pyValue = PyUnicode_FromString(quantPath);
 		PyTuple_SetItem(pyTuple, 5, pyValue);
-		pyValue = PyString_FromString("-f");
+		pyValue = PyUnicode_FromString("-f");
 		PyTuple_SetItem(pyTuple, 6, pyValue);
-		pyValue = PyString_FromString(sFormat.str().c_str());
+		pyValue = PyUnicode_FromString(sFormat.str().c_str());
 		PyTuple_SetItem(pyTuple, 7, pyValue);
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
 		PyObject *pyResult = PyObject_CallObject(a_PalettedConvRun, pyArgs);
@@ -383,7 +387,7 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyString_AsString(errStr);
+			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 			QString error = QString::fromLocal8Bit(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
@@ -579,21 +583,21 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 		PyObject *pyValue;
 		PyObject *pyArgs = PyTuple_New(1);
 		PyObject *pyTuple = PyTuple_New(8);
-		pyValue = PyString_FromString("-i");
+		pyValue = PyUnicode_FromString("-i");
 		PyTuple_SetItem(pyTuple, 0, pyValue);
 		pyValue = PyUnicode_FromString(inFileUtf8.data());
 		PyTuple_SetItem(pyTuple, 1, pyValue);
-		pyValue = PyString_FromString("-o");
+		pyValue = PyUnicode_FromString("-o");
 		PyTuple_SetItem(pyTuple, 2, pyValue);
 		pyValue = PyUnicode_FromString(outNameUtf8.data());
 		PyTuple_SetItem(pyTuple, 3, pyValue);
-		pyValue = PyString_FromString("-s");
+		pyValue = PyUnicode_FromString("-s");
 		PyTuple_SetItem(pyTuple, 4, pyValue);
-		pyValue = PyString_FromString(sBegin.str().c_str());
+		pyValue = PyUnicode_FromString(sBegin.str().c_str());
 		PyTuple_SetItem(pyTuple, 5, pyValue);
-		pyValue = PyString_FromString("-l");
+		pyValue = PyUnicode_FromString("-l");
 		PyTuple_SetItem(pyTuple, 6, pyValue);
-		pyValue = PyString_FromString(sLength.str().c_str());
+		pyValue = PyUnicode_FromString(sLength.str().c_str());
 		PyTuple_SetItem(pyTuple, 7, pyValue);
 		PyTuple_SetItem(pyArgs, 0, pyTuple);
 		PyObject *pyResult = PyObject_CallObject(a_RawConvRun, pyArgs);
@@ -609,7 +613,7 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyString_AsString(errStr);
+			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 			QString error = QString::fromLocal8Bit(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{

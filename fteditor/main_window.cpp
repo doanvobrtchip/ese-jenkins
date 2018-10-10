@@ -1533,6 +1533,8 @@ int *MainWindow::getDlCmd()
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
 	: QMainWindow(parent, flags),
+	m_MinFlashType(-1),
+    m_AddRecentProjectFlag(false),
 	m_UndoStack(NULL),
 	m_EmulatorViewport(NULL),
 	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
@@ -1547,10 +1549,10 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 #endif
 	m_HelpMenu(NULL),
 	m_FileToolBar(NULL), m_EditToolBar(NULL),
-	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL),
+	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), m_CloseProjectAct(NULL),
 	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
 	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL), //, m_SaveScreenshotAct(NULL)
+	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL),//, m_SaveScreenshotAct(NULL)
 	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
 	m_TemporaryDir(NULL)
 {
@@ -1581,6 +1583,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createMenus();
 	createToolBars();
 	createStatusBar();
+
+    loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
 
@@ -1659,7 +1663,7 @@ void pythonError()
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 	PyObject *errStr = PyObject_Repr(pvalue);
-	char *pStrErrorMessage = PyString_AsString(errStr);
+	char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 	QString error = QString::fromLocal8Bit(pStrErrorMessage);
 	printf("%s\n", pStrErrorMessage);
 	Py_DECREF(errStr);
@@ -1698,7 +1702,7 @@ static QString scriptDisplayName(const QString &script)
 
 	if (pyValue)
 	{
-		char *resCStr = PyString_AsString(pyValue);
+		char *resCStr = PyUnicode_AsUTF8(pyValue);
 		QString res = QString::fromLocal8Bit(resCStr);
 		Py_DECREF(pyValue); pyValue = NULL; // !
 		return res;
@@ -1879,7 +1883,7 @@ void MainWindow::runScript(const QString &script)
 
 	bool error = true;
 
-	PyObject *pyJsonScript = PyString_FromString("json");
+	PyObject *pyJsonScript = PyUnicode_FromString("json");
 	PyObject *pyJsonModule = PyImport_Import(pyJsonScript);
 	Py_DECREF(pyJsonScript); pyJsonScript = NULL;
 	PyObject *pyJsonLoadS = NULL;
@@ -1900,7 +1904,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -1913,7 +1917,7 @@ void MainWindow::runScript(const QString &script)
 	// Create python object from JSON
 	error = true;
 	QByteArray jsonDoc = toJson(true);
-	PyObject *pyJsonDoc = PyString_FromString(jsonDoc.data());
+	PyObject *pyJsonDoc = PyUnicode_FromString(jsonDoc.data());
 	PyObject *pyArgs = PyTuple_New(1);
 	PyTuple_SetItem(pyArgs, 0, pyJsonDoc);
 	PyObject *pyDocument = PyObject_CallObject(pyJsonLoadS, pyArgs);
@@ -1928,7 +1932,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -1938,7 +1942,7 @@ void MainWindow::runScript(const QString &script)
 	}
 
 	/*PyObject *pyDocumentString = PyObject_Repr(pyDocument);
-	printf("Demo: %s\n", PyString_AsString(pyDocumentString));
+	printf("Demo: %s\n", PyUnicode_AsUTF8(pyDocumentString));
 	Py_DECREF(pyDocumentString); pyDocumentString = NULL;
 	Py_DECREF(pyDocument); pyDocument = NULL;*/
 
@@ -1973,7 +1977,7 @@ void MainWindow::runScript(const QString &script)
 				{
 					printf("Ok\n");
 					PyObject *resStr = PyObject_Repr(pyValue);
-					char *resCStr = PyString_AsString(resStr);
+					char *resCStr = PyUnicode_AsUTF8(resStr);
 					QString res = QString::fromLocal8Bit(resCStr);
 					Py_DECREF(pyValue); pyValue = NULL;
 					m_PropertiesEditor->setInfo(res);
@@ -2004,7 +2008,7 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyString_AsString(errStr);
+		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 		QString error = QString::fromLocal8Bit(pStrErrorMessage);
 		printf("%s\n", pStrErrorMessage);
 		Py_DECREF(errStr);
@@ -2107,6 +2111,10 @@ void MainWindow::createActions()
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
 
+	m_CloseProjectAct = new QAction(this);
+	m_CloseProjectAct->setShortcuts(QKeySequence::Close);
+	connect(m_CloseProjectAct, SIGNAL(triggered()), this, SLOT(actCloseProject()));
+
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
 	m_ImportAct->setVisible(FT_VCDUMP_VISIBLE);
@@ -2166,8 +2174,10 @@ void MainWindow::translateActions()
 	m_SaveAct->setStatusTip(tr("Save the current project"));
 	m_SaveAct->setIcon(QIcon(":/icons/disk.png"));
 	m_SaveAsAct->setText(tr("Save As"));
-	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));;
+	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
 	m_SaveAsAct->setIcon(QIcon(":/icons/disk--pencil.png"));
+	m_CloseProjectAct->setText(tr("Close Project"));
+	m_CloseProjectAct->setStatusTip(tr("Close the current project"));
 	m_ImportAct->setText(tr("Import"));
 	m_ImportAct->setStatusTip(tr("Import file to a new project"));
 	m_ExportAct->setText(tr("Export"));
@@ -2212,6 +2222,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveAct);
 	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_CloseProjectAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_ProjectFolderAct);
 	m_FileMenu->addSeparator();
@@ -3353,7 +3365,101 @@ bool MainWindow::maybeSave()
 		}
 	}
 
+    if (res && m_AddRecentProjectFlag)
+    {
+        m_AddRecentProjectFlag = false;
+        addRecentProject(m_CurrentFile);
+    }
+
 	return res;
+}
+
+void MainWindow::loadRecentProject()
+{
+    // insert recent project actions
+    QAction *pRecentProjAction = 0;
+    m_RecentActionList.clear();
+    for (int i = 0; i < 5; i++)
+    {
+        pRecentProjAction = new QAction("", this);
+        connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
+        pRecentProjAction->setVisible(false);
+        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i+1)));
+        m_RecentActionList << pRecentProjAction;
+        m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
+    }
+
+	// insert recent project separator
+	if (m_RecentSeparator == NULL)
+		m_RecentSeparator = m_FileMenu->insertSeparator(m_QuitAct);
+
+	m_RecentSeparator->setVisible(false);
+
+    QFile f(qApp->applicationDirPath() + "/recent_project");
+
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QStringList pathList = QString(f.readAll()).split("\n");
+    f.close();
+    // add recent project path to File Menu
+    for (int i = pathList.size() - 1; i >= 0; --i)
+    {
+        if (pathList.at(i).isEmpty()) continue;
+        addRecentProject(pathList.at(i));
+    }
+}
+
+void MainWindow::addRecentProject(QString recentPath)
+{
+    m_RecentPathList.prepend(recentPath);
+    while (m_RecentPathList.size() > 5)
+    {
+        m_RecentPathList.removeLast();
+    }
+
+    for (int i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
+    {
+        m_RecentActionList[i]->setText(QString("%1: %2").arg(i+1).arg(m_RecentPathList.at(i)));
+        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
+        m_RecentActionList[i]->setVisible(true);
+    }
+
+	if (m_RecentSeparator)
+	{
+		m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+	}
+}
+
+void MainWindow::removeRecentProject(QString removePath)
+{
+    int i = 0;
+
+    if (!m_RecentPathList.removeOne(removePath)) return;
+
+    for (i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
+    {
+        m_RecentActionList[i]->setText(QString("%1: %2").arg(i + 1).arg(m_RecentPathList.at(i)));
+        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
+        m_RecentActionList[i]->setVisible(true);
+    }
+
+    for (; i < m_RecentActionList.size(); ++i)
+    {
+        m_RecentActionList[i]->setVisible(false);
+    }
+
+	if (m_RecentSeparator)
+	{
+		m_RecentSeparator->setVisible(m_RecentPathList.size() > 0);
+	}
+}
+
+void MainWindow::saveRecentProject()
+{
+    QFile f(qApp->applicationDirPath() + "/recent_project");
+    if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) return;
+    QTextStream ts(&f);    
+    ts << m_RecentPathList.join("\n");
+    f.close();
 }
 
 bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
@@ -3374,27 +3480,6 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	else
 	{
 		// check flash configuration
-
-		/*
-		
-		// Not using this, since the code is making delicate assumptions of the flash size by index.
-
-		double binSize = QFileInfo(binPath).size() / 1024.0 / 1024.0;
-
-		if (binSize > 256)
-		{
-			QMessageBox::critical(this, tr("Flash is too big"), tr("Flash is too big.\nCannot load!"));
-			return false;
-		}
-		else
-		{
-            int flashType = ceil(log2(binSize)) - 1;
-            if (flashType < 0) flashType = 0;            
-            m_ProjectFlash->setCurrentIndex(flashType);
-            m_MinFlashType = flashType;
-		}
-
-		*/
 
 		quint64 binSize = QFileInfo(binPath).size();
 
@@ -3438,14 +3523,88 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 	return true;
 }
 
+void MainWindow::toggleDockWindow(bool isShow)
+{
+	m_InspectorDock->setVisible(isShow);
+	m_DlEditorDock->setVisible(isShow);
+	m_CmdEditorDock->setVisible(isShow);
+	m_ProjectDock->setVisible(isShow);
+#if FT800_DEVICE_MANAGER
+	m_DeviceManagerDock->setVisible(isShow);
+#endif /* FT800_DEVICE_MANAGER */
+	m_UtilizationDock->setVisible(isShow);
+	m_NavigatorDock->setVisible(isShow);
+	m_PropertiesEditorDock->setVisible(isShow);
+	m_ToolboxDock->setVisible(isShow);
+	m_ContentManagerDock->setVisible(isShow);
+	m_RegistersDock->setVisible(isShow);
+	m_ControlsDock->setVisible(isShow);
+}
+
+void MainWindow::toggleUI(bool hasProject)
+{
+	toggleDockWindow(hasProject);
+
+	// toggle Edit, Tools, View and Export menu
+	m_EditMenu->setEnabled(hasProject);
+	m_ToolsMenu->setEnabled(hasProject);
+	m_WidgetsMenu->setEnabled(hasProject);
+#ifdef FT800EMU_PYTHON
+	m_ScriptsMenu->setEnabled(hasProject);
+#endif /* FT800EMU_PYTHON */
+
+	// toggle Save, Save As, Browse Project Folder menu item
+	m_SaveAct->setEnabled(hasProject);
+	m_SaveAsAct->setEnabled(hasProject);
+	m_CloseProjectAct->setEnabled(hasProject);
+	m_ProjectFolderAct->setEnabled(hasProject);
+	m_SaveScreenshotAct->setEnabled(hasProject);
+
+	// toogle emulator viewport
+	m_EmulatorViewport->setVisible(hasProject);
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if (maybeSave()) event->accept();
 	else event->ignore();
+
+    saveRecentProject();
+}
+
+void MainWindow::actCloseProject()
+{
+	if (!maybeSave()) return;
+
+	// reset filename
+	m_CurrentFile = QString();
+
+	// reset editors to their default state
+	clearEditor();
+
+	// clear undo stacks
+	clearUndoStack();
+
+	// be helpful
+	focusCmdEditor();
+	m_PropertiesEditor->setInfo(FTEDITOR_INITIAL_HELP);
+	m_PropertiesEditor->setEditWidget(NULL, false, NULL);
+	m_Toolbox->setEditorLine(m_CmdEditor, 0);
+	m_CmdEditor->selectLine(0);
+
+	QDir::setCurrent("");
+	setWindowTitle(tr("No project"));
+
+	// reset flash file name
+	setFlashFileNameToLabel("");
+
+	// hide all dock windows
+	toggleUI(false);
 }
 
 void MainWindow::actNew()
 {
+	toggleUI(true);
 	actNew(true);
 }
 
@@ -3509,6 +3668,7 @@ void MainWindow::actNew(bool addClear)
 
 	// WORKAROUND: Issue #100
 	actResetEmulator();
+    m_MinFlashType = -1;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3665,12 +3825,16 @@ void MainWindow::actOpen()
 	if (fileName.isNull())
 		return;
 
+    m_MinFlashType = -1;
 	openFile(fileName);
+    actResetEmulator();
 }
 
 void MainWindow::openFile(const QString &fileName)
 {
 	printf("*** Open file ***\n");
+
+	toggleUI(true);
 
 	// Reset editors to their default state
 	clearEditor();
@@ -3780,6 +3944,9 @@ void MainWindow::openFile(const QString &fileName)
 	m_Toolbox->setEditorLine(m_CmdEditor, m_CmdEditor->getLineCount() - 1);
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
+
+    m_AddRecentProjectFlag = true;
+    removeRecentProject(fileName);
 }
 
 void MainWindow::setFlashFileNameToLabel(const QString & fileName)
@@ -3885,6 +4052,8 @@ void MainWindow::actSave()
 	out.writeRawData(data, data.size());
 
 	m_UndoStack->setClean();
+
+    m_AddRecentProjectFlag = true;
 }
 
 void MainWindow::actSaveAs()
@@ -4385,6 +4554,23 @@ void MainWindow::projectFlashChanged(int flashIntf)
 	m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
 }
 
+void MainWindow::openRecentProject()
+{
+    QAction *pAction = (QAction *)sender();
+    QString projectPath = pAction->data().toString();
+    
+	if (!QFile::exists(projectPath))
+	{	
+		removeRecentProject(projectPath);
+		QMessageBox::critical(this, tr(""), QString(tr("%1 cannot be opened.")).arg(projectPath));
+		return;
+	}
+
+	if (!maybeSave()) return;
+
+    openFile(projectPath);
+}
+
 void MainWindow::projectDisplayChanged(int i)
 {
 	if (s_UndoRedoWorking)
@@ -4470,7 +4656,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.0.1 RC2"));
+	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.1.2"));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		

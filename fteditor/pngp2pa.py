@@ -127,7 +127,7 @@ def run(argv):
 		outfile_bin.close()
 		index  = 0
 		for i in deflatdata:
-			outfile_bin_h.write(str(ord(i)))
+			outfile_bin_h.write("{}".format(i))
 			outfile_bin_h.write(",")
 			index = index  + 1
 			if (0 == index % 32):
@@ -263,7 +263,7 @@ def run(argv):
 		outfile_bin.close()
 		index  = 0
 		for i in deflatdata:
-			outfile_bin_h.write(str(ord(i)))
+			outfile_bin_h.write("{}".format(i))
 			outfile_bin_h.write(",")
 			index = index + 1
 			if (0 == index % 32):

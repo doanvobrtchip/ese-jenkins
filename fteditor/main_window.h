@@ -151,6 +151,10 @@ public:
 	bool eventFilter(QObject *watched, QEvent *event);
 	void requestSave() { actSave(); }
 	bool checkAndPromptFlashPath(const QString &filePath);
+
+	void toggleDockWindow(bool isShow);
+	void toggleUI(bool hasProject);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -163,6 +167,7 @@ private slots:
 	void actOpen();
 	void actSave();
 	void actSaveAs();
+	void actCloseProject();
 	void actImport();
 	void actExport();
 	
@@ -196,6 +201,7 @@ private slots:
 	void projectDisplayChanged(int i);
 	void projectFlashChanged(int i);
 
+	void openRecentProject();
 private:
 	void updateInitialization(bool visible);
 
@@ -229,6 +235,11 @@ private:
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
+	void loadRecentProject();
+	void addRecentProject(QString recentPath);
+	void removeRecentProject(QString removePath);
+	void saveRecentProject();
+
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 
@@ -237,12 +248,11 @@ private:
 	MainWindow &operator=(const MainWindow &);
 
 private:
-	// int m_MinFlashType;
-	bool m_AddRecentProjectFlag;
-	QAction *m_RecentSeparator;
-	QList<QAction *> m_RecentActionList;
-	QStringList m_RecentPathList;
-
+    int m_MinFlashType;
+    bool m_AddRecentProjectFlag;
+    QAction *m_RecentSeparator;
+    QList<QAction *> m_RecentActionList;
+    QStringList m_RecentPathList;
 	QString m_InitialWorkingDir;
 	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
@@ -336,6 +346,7 @@ private:
 	QAction *m_OpenAct;
 	QAction *m_SaveAct;
 	QAction *m_SaveAsAct;
+	QAction *m_CloseProjectAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;
 	QAction *m_ProjectFolderAct;

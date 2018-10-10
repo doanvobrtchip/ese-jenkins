@@ -544,7 +544,7 @@ public:
 protected:
 	virtual QString textFromValue(double value) const
 	{
-		return QString::number((double)value / (65536.0 / 360.0));
+		return QString::number(value * 360.0 / 65536.0);
 	}
 
 	virtual double valueFromText(const QString &text) const

@@ -25,7 +25,6 @@ OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
 SetupIconFile=.\\eve_editor.ico
 Compression=lzma
 SolidCompression=yes
-
 CreateAppDir=yes
 DisableDirPage=no
 EnableDirDoesntExistWarning=True
@@ -44,7 +43,6 @@ Source: ".\\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\*.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs
 
-;Source: ".\\setup.iss"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\Lib\*.*"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
 Source: ".\\Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs
 Source: ".\\export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs

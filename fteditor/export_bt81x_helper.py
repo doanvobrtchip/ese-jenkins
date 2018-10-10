@@ -9,9 +9,11 @@ paletted4444_format = 15
 palettedFormats = [paletted_format, paletted8_format, paletted565_format, paletted4444_format]
 
 globalContext = {
-    'mediaFIFOEnabled': "False",
+    'mediaFIFOEnabled': False,
     'mediaFIFOAddress':  "",
     'mediaFIFOLength': "",
+    'loadImageFromFlash' : False,
+    'loadVideoFromFlash' : False,
 }
 
 globalValue = {
@@ -184,14 +186,14 @@ def exportContent(outDir, document):
 
                         foutput = open(lutTargetPath, 'w+')
                         for i in range(0, len(lutContent)):
-                            foutput.write(str(ord(lutContent[i])))
+                            foutput.write("{}".format(lutContent[i]))
                             foutput.write(",")
                         foutput.close()
 
                     foutput = open(targetPath, 'w+')
                     try:
                         for i in range(0,len(fcontent)):
-                            foutput.write(str(ord(fcontent[i])))
+                            foutput.write("{}".format(fcontent[i]))
                             foutput.write(",")
                     finally:
                         foutput.close()
@@ -321,8 +323,8 @@ def exportCoprocessorCommand(document, filesToTestFolder):
         except:
             pass
 
-    export += '\tGpu_CoCmd_Dlstart(phost);\n'
     export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
+    export += '\tGpu_CoCmd_Dlstart(phost);\n'
     if clearFound == False:
         export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
     export += '\t\n';
@@ -336,212 +338,205 @@ def exportCoprocessorCommand(document, filesToTestFolder):
         if line == "": 
             #if skippedBitmaps: export += "\t\n"; skippedBitmaps = False
             continue
-        try:
-            if (line.lstrip()).startswith("//"): #if the line is a comment line then just write it out
-                export += "\t" + line + "\n"
-                continue
-            splitlinea = line.split('(',1)
-            splitlineb = splitlinea[1].split(')',1)
-            functionName = splitlinea[0]
-            commentsRegex = re.compile("//.*$")
-            coprocessor_cmd = False
-            if functionName in functionMap:
-                functionName = functionMap[functionName]
-                coprocessor_cmd = True
-            #if not skippedBitmaps:
-            #    if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName #== "BITMAP_SIZE" or functionName == "CMD_SETFONT":
-            #        continue
-            #    else:
-            #        skippedBitmaps = True
-            functionArgs = convertArgs(splitlineb[0])
 
-            if functionName == "Gpu_CoCmd_Snapshot2":
+        if (line.lstrip()).startswith("//"): #if the line is a comment line then just write it out
+            export += "\t" + line + "\n"
+            continue
+        splitlinea = line.split('(',1)
+        splitlineb = splitlinea[1].split(')',1)
+        functionName = splitlinea[0]
+        commentsRegex = re.compile("//.*$")
+        coprocessor_cmd = False
+        if functionName in functionMap:
+            functionName = functionMap[functionName]
+            coprocessor_cmd = True
+        #if not skippedBitmaps:
+        #    if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName #== "BITMAP_SIZE" or functionName == "CMD_SETFONT":
+        #        continue
+        #    else:
+        #        skippedBitmaps = True
+        functionArgs = convertArgs(splitlineb[0])
 
-                export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
-                export += "\tGpu_CoCmd_Swap(phost);\n"
+        if functionName == "Gpu_CoCmd_Snapshot2":
 
-                export += "\t/* Download the commands into fifo */\n"
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
+            export += "\tGpu_CoCmd_Swap(phost);\n"
 
-                export += "\t/* Wait till coprocessor completes the operation */\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+            export += "\t/* Download the commands into fifo */\n"
+            export += "\tApp_Flush_Co_Buffer(phost);\n"
 
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
+            export += "\t/* Wait till coprocessor completes the operation */\n"
+            export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
 
-                export += "\tGpu_CoCmd_Snapshot2(phost, " + splitlineb[0] + ");\n"
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
 
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
-                export += "\tGpu_CoCmd_Dlstart(phost);\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
+            export += "\tGpu_CoCmd_Snapshot2(phost, " + splitlineb[0] + ");\n"
 
-            if functionName == "Gpu_CoCmd_Snapshot":
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
+            export += "\tGpu_CoCmd_Dlstart(phost);\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
 
-                export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
-                export += "\tGpu_CoCmd_Swap(phost);\n"
+        if functionName == "Gpu_CoCmd_Snapshot":
 
-                export += "\t/* Download the commands into fifo */\n"
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
+            export += "\tGpu_CoCmd_Swap(phost);\n"
 
-                export += "\t/* Wait till coprocessor completes the operation */\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+            export += "\t/* Download the commands into fifo */\n"
+            export += "\tApp_Flush_Co_Buffer(phost);\n"
 
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
+            export += "\t/* Wait till coprocessor completes the operation */\n"
+            export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
 
-                export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, " + str(document["registers"]["hSize"]) + ");\n"
-                export += "\tGpu_Hal_Wr16(phost, REG_VSIZE, " + str(document["registers"]["vSize"]) + ");\n"
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
 
-                export += "\t/* Take snap shot of the current screen */\n"
-                export += "\tGpu_Hal_WrCmd32(phost, CMD_SNAPSHOT);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + splitlineb[0] + ");\n"
+            export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, " + str(document["registers"]["hSize"]) + ");\n"
+            export += "\tGpu_Hal_Wr16(phost, REG_VSIZE, " + str(document["registers"]["vSize"]) + ");\n"
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
 
-                export += "\t//timeout for snapshot to be performed by coprocessor\n"
+            export += "\t/* Take snap shot of the current screen */\n"
+            export += "\tGpu_Hal_WrCmd32(phost, CMD_SNAPSHOT);\n"
+            export += "\tGpu_Hal_WrCmd32(phost, " + splitlineb[0] + ");\n"
 
-                export += "\t/* Wait till coprocessor completes the operation */\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+            export += "\t//timeout for snapshot to be performed by coprocessor\n"
 
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
+            export += "\t/* Wait till coprocessor completes the operation */\n"
+            export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
 
-                export += "\t/* reconfigure the resolution wrt configuration */\n"
-                export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, 800);\n"
-                export += "\tGpu_Hal_Wr16(phost, REG_VSIZE, 480);\n"
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
 
-                export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
-                export += "\tGpu_CoCmd_Dlstart(phost);\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
-                export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
+            export += "\t/* reconfigure the resolution wrt configuration */\n"
+            export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, 800);\n"
+            export += "\tGpu_Hal_Wr16(phost, REG_VSIZE, 480);\n"
 
-                functionName = ""
+            export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
+            export += "\tGpu_CoCmd_Dlstart(phost);\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
+            export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
 
-            if functionName == "Gpu_CoCmd_LoadImage":
-                functionArgsSplit = functionArgs.split(',')
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, CMD_LOADIMAGE);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[1] + ");\n"
-                functionArgs = functionArgsSplit[0] + ","
-                functionArgs += functionArgsSplit[1]
-                try:
-                    functionArgsSplit[2].decode('ascii')
-                except UnicodeDecodeError:
-                    f.close()
-                    raiseUnicodeError("Input file path")
+            functionName = ""
 
-                if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
-                    globalContext['mediaFIFOEnabled'] = 'True'
-                functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
-
-                if '/' in functionArgsSplit[2]:
-                    specialParameter = functionArgsSplit[2].rsplit('/',1)[1]
-                elif '\\' in functionArgsSplit[2]:
-                    specialParameter = functionArgsSplit[2].rsplit('\\',1)[1]
-                else:
-                    specialParameter = functionArgsSplit[2]
-                specialParameter2 = specialParameter
-                filesToTestFolder.append(functionArgsSplit[2])
-                specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
-                specialCommandType = "Gpu_CoCmd_LoadImage"
-                functionName = ""
-
-            if functionName == "Gpu_CoCmd_MediaFifo":
-                functionArgsSplit = functionArgs.split(',')
-                functionArgs = functionArgsSplit[0] + ","
-                functionArgs += functionArgsSplit[1]
-                specialCommandType = "Gpu_CoCmd_MediaFifo"
-                globalContext['mediaFIFOAddress'] = functionArgsSplit[0]
-                globalContext['mediaFIFOLength'] = functionArgsSplit[1]
-
-            if functionName == "Gpu_CoCmd_Dlstart":
-                export += '\tGpu_CoCmd_Dlstart(phost);\n'
-                export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
-                functionName = ""
-
-            if functionName == "Gpu_CoCmd_PlayVideo":
-                export += "\n"
-                functionArgsSplit =functionArgs.split(',')
-                functionArgs = functionArgsSplit[0]
-                if 'OPT_MEDIAFIFO' in functionArgsSplit[0]:
-                    globalContext['mediaFIFOEnabled'] = 'True'
-                functionArgsSplit[1] = re.sub(r'["]', "", functionArgsSplit[1])
-                if '/' in functionArgsSplit[1]:
-                    specialParameter = functionArgsSplit[1].rsplit('/',1)[1]
-                elif '\\' in functionArgsSplit[1]:
-                    specialParameter = functionArgsSplit[1].rsplit('\\',1)[1]
-                else:
-                    specialParameter = functionArgsSplit[1]
-                filesToTestFolder.append(functionArgsSplit[1])
-                export += "\tApp_Flush_Co_Buffer(phost);\n"
-                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, CMD_PLAYVIDEO);\n"
-                export += "\tGpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n"
-                specialParameter2 = specialParameter
-                specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
-                specialCommandType = "Gpu_CoCmd_PlayVideo"
-                functionName = ""
-
-            #The following commands don't take any parameters so there shouldn't be a comma after the phost
-            parameterComma = ", "
-            if functionName in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver", "Gpu_CoCmd_VideoStartF"]:
-                parameterComma = ""
+        if functionName == "Gpu_CoCmd_LoadImage":
+            functionArgsSplit = functionArgs.split(',')
+            
+            if "OPT_FLASH" in functionArgsSplit[1]:
+                globalContext['loadImageFromFlash'] = True
                 
-            if functionName == "Gpu_CoCmd_FlashFast" and functionArgs == "":
-                functionArgs = '0'
-                
-            #Attempt to append comments
-            comments = ""
-            if len(functionName):
-                m = commentsRegex.match(splitlineb[1])
-                if m:
-                    comments = m.group(0)
-                if coprocessor_cmd:
-                    newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
-                else:
-                    newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
-                export += newline
-
-            if specialCommandType == "Gpu_CoCmd_LoadImage":
-                if globalContext['mediaFIFOEnabled'] == "True":
-                    export += "\t#if defined(FT900_PLATFORM)\n"
-                    export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
-                    export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
-                    export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
-                    export += "\t#endif\n"
-                    export += "\tApp_Flush_Co_Buffer(phost);\n"
-                    globalContext['mediaFIFOEnabled'] = "False"
-                else:
-                    export += "\t#if defined(FT900_PLATFORM)\n"
-                    export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\");\n"
-                    export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
-                    export += "\tloadDataToCoprocessorCMDfifo(phost, \"" + specialParameter + "\");\n"
-                    export += "\t#endif\n"
-                    export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                specialCommandType = ""
-            elif specialCommandType == "Gpu_CoCmd_PlayVideo":
-                if globalContext['mediaFIFOEnabled'] == 'True':
-                    export += "\t#if defined(FT900_PLATFORM)\n"
-                    export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
-                    export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
-                    export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
-                    export += "\t#endif\n"
-                    globalContext['mediaFIFOEnabled'] = "False"
-                else:
-                    export += "\t#if defined(FT900_PLATFORM)\n"
-                    export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter2 + "\");\n"
-                    export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
-                    export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter + "\");\n"
-                    export += "\t#endif\n"
+            if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
+                globalContext['mediaFIFOEnabled'] = True
+                export += "\tApp_Flush_Co_Buffer(phost);\n"
                 export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-                specialCommandType = ""
+            
+            export += "\tGpu_CoCmd_LoadImage(phost, " + functionArgsSplit[0] + ", " + functionArgsSplit[1] + ");\n"
+                
+            functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
+            specialParameter = os.path.split(functionArgsSplit[2])[1]                    
+            specialParameter2 = specialParameter
+            filesToTestFolder.append(functionArgsSplit[2])
+            specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+            specialCommandType = functionName
+            functionName = ""
+
+        if functionName == "Gpu_CoCmd_MediaFifo":
+            functionArgsSplit = functionArgs.split(',')
+            functionArgs = functionArgsSplit[0] + ","
+            functionArgs += functionArgsSplit[1]
+            specialCommandType = "Gpu_CoCmd_MediaFifo"
+            globalContext['mediaFIFOAddress'] = functionArgsSplit[0]
+            globalContext['mediaFIFOLength'] = functionArgsSplit[1]
+
+        if functionName == "Gpu_CoCmd_Dlstart":
+            export += '\tGpu_CoCmd_Dlstart(phost);\n'
+            export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
+            functionName = ""
+
+        if functionName == "Gpu_CoCmd_PlayVideo":
+            export += "\n"
+            functionArgsSplit =functionArgs.split(',')
+            functionArgs = functionArgsSplit[0]
+            
+            if 'OPT_FLASH' in functionArgsSplit[0]:
+                globalContext['loadVideoFromFlash'] = True
+                
+            if 'OPT_MEDIAFIFO' in functionArgsSplit[0]:
+                globalContext['mediaFIFOEnabled'] = True
+                export += "\tApp_Flush_Co_Buffer(phost);\n"
+                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+            
+            export += "\tGpu_CoCmd_PlayVideo(phost, " + functionArgsSplit[0] + ");\n"                
+
+            functionArgsSplit[1] = re.sub(r'["]', "", functionArgsSplit[1])
+            specialParameter = os.path.split(functionArgsSplit[1])[1]
+            
+            filesToTestFolder.append(functionArgsSplit[1])                
+            
+            specialParameter2 = specialParameter
+            specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+            specialCommandType = functionName
+            functionName = ""
+
+        #The following commands don't take any parameters so there shouldn't be a comma after the phost
+        parameterComma = ", "
+        if functionName in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver", "Gpu_CoCmd_VideoStartF"]:
+            parameterComma = ""
+            
+        if functionName == "Gpu_CoCmd_FlashFast" and functionArgs == "":
+            functionArgs = '0'
+            
+        #Attempt to append comments
+        comments = ""
+        if len(functionName):
+            m = commentsRegex.match(splitlineb[1])
+            if m:
+                comments = m.group(0)
+            if coprocessor_cmd:
+                newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
             else:
-                specialCommandType = ""
+                newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
+            export += newline
 
-        except Exception as e:
-            pass
-    
+        if specialCommandType == "Gpu_CoCmd_LoadImage":
+            if globalContext['mediaFIFOEnabled'] == True:
+                export += "\t#if defined(FT900_PLATFORM)\n"
+                export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
+                export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
+                export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
+                export += "\t#endif\n"
+                export += "\tApp_Flush_Co_Buffer(phost);\n"
+                globalContext['mediaFIFOEnabled'] = False
+            elif globalContext['loadImageFromFlash'] == False:
+                export += "\t#if defined(FT900_PLATFORM)\n"
+                export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\");\n"
+                export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
+                export += "\tloadDataToCoprocessorCMDfifo(phost, \"" + specialParameter + "\");\n"
+                export += "\t#endif\n"
+                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                
+            globalContext['loadImageFromFlash'] = False
+            specialCommandType = ""
+        elif specialCommandType == "Gpu_CoCmd_PlayVideo":
+            if globalContext['mediaFIFOEnabled'] == True:
+                export += "\t#if defined(FT900_PLATFORM)\n"
+                export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter2 + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
+                export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
+                export += "\tloadDataToCoprocessorMediafifo(phost, \"" + specialParameter + "\" , " + globalContext['mediaFIFOAddress'] + " , " + globalContext['mediaFIFOLength'] + ");\n"
+                export += "\t#endif\n"
+                globalContext['mediaFIFOEnabled'] = False
+            elif globalContext['loadVideoFromFlash'] == False:
+                export += "\t#if defined(FT900_PLATFORM)\n"
+                export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter2 + "\");\n"
+                export += "\t#elif defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)\n"
+                export += "\tloadDataToCoprocessorCMDfifo_nowait(phost, \"" + specialParameter + "\");\n"
+                export += "\t#endif\n"
+                export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
+                
+            globalContext['loadVideoFromFlash'] = False
+            specialCommandType = ""
+        else:
+            specialCommandType = ""
+   
     return export
 
     
