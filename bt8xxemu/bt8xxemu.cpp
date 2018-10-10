@@ -62,7 +62,7 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -86,7 +86,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -127,7 +127,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 #endif
 	default:
 	{
-		fprintf(stderr, "Invalid ft8xxemu emulator mode selected\n");
+		fprintf(stderr, "Invalid bt8xxemu emulator mode selected\n");
 		*emulator = NULL;
 		break;
 	}
@@ -224,7 +224,7 @@ BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashPar
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -239,7 +239,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return NULL;
 	}
 

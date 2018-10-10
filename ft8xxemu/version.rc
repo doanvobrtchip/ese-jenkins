@@ -1,0 +1,44 @@
+/*
+FT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2018  Bridgetek Pte Lte
+Author: Jan Boon <jan@no-break.space>
+*/
+
+#include "resource.h"
+#include "bt8xxemu_version.h"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION FT8XXEMU_VERSION_CODE
+ PRODUCTVERSION FT8XXEMU_VERSION_CODE
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "Bridgetek Pte Ltd"
+            VALUE "FileDescription", "FT8XX Emulator Library"
+            VALUE "FileVersion", FT8XXEMU_VERSION_STRING
+            VALUE "InternalName", "bt8xxemu"
+            VALUE "LegalCopyright", "Copyright (C) 2013-2018  Bridgetek Pte Ltd"
+            VALUE "OriginalFilename", "ft8xxemu.dll"
+            VALUE "ProductName", "FT8XXEMU"
+            VALUE "ProductVersion", FT8XXEMU_VERSION_STRING
+        END
+    END
+	BLOCK "VarFileInfo"
+	BEGIN
+	VALUE "Translation", 0x409, 1252
+	END
+END
+
+/* end of file */
