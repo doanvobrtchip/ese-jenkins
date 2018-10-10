@@ -23,6 +23,21 @@ static void(*s_Exception)(const char *message);
 static void(*s_Close)();
 static bool s_Closed;
 
+void(*FT8XXEMU_stop)() = NULL;
+uint8_t(*FT8XXEMU_transfer)(uint8_t data) = NULL;
+void(*FT8XXEMU_cs)(int cs) = NULL;
+int(*FT8XXEMU_int)() = NULL;
+
+uint8_t *(*FT8XXEMU_getRam)() = NULL;
+const uint32_t *(*FT8XXEMU_getDisplayList)() = NULL;
+void(*FT8XXEMU_poke)() = NULL;
+int *(*FT8XXEMU_getDisplayListCoprocessorWrites)() = NULL;
+void(*FT8XXEMU_clearDisplayListCoprocessorWrites)() = NULL;
+bool(*FT8XXEMU_getDebugLimiterEffective)() = NULL;
+int(*FT8XXEMU_getDebugLimiterIndex)() = NULL;
+void(*FT8XXEMU_setDebugLimiter)(int debugLimiter) = NULL;
+void(*FT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = NULL;
+
 static void mainLoop(BT8XXEMU_Emulator *sender, void *context)
 {
 	if (s_Setup) 
@@ -87,6 +102,81 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 	params->Mode = mode;
 }
 
+static void FT8XXEMU_stop_()
+{
+	BT8XXEMU_stop(s_Emulator);
+}
+
+static uint8_t FT8XXEMU_transfer_(uint8_t data)
+{
+	return BT8XXEMU_transfer(s_Emulator, data);
+}
+
+static void FT8XXEMU_cs_(int cs)
+{
+	BT8XXEMU_chipSelect(s_Emulator, cs);
+}
+
+static int FT8XXEMU_int_()
+{
+	return BT8XXEMU_hasInterrupt(s_Emulator);
+}
+
+FT8XXEMU_API void FT8XXEMU_touchSetXY(int idx, int x, int y, int pressure)
+{
+	BT8XXEMU_touchSetXY(s_Emulator, idx, x, y, pressure);
+}
+
+FT8XXEMU_API void FT8XXEMU_touchResetXY(int idx)
+{
+	BT8XXEMU_touchResetXY(s_Emulator, idx);
+}
+
+uint8_t *FT8XXEMU_getRam_()
+{
+	return BT8XXEMU_getRam(s_Emulator);
+}
+
+const uint32_t *FT8XXEMU_getDisplayList_()
+{
+	return BT8XXEMU_getDisplayList(s_Emulator);
+}
+
+void FT8XXEMU_poke_()
+{
+	BT8XXEMU_poke(s_Emulator);
+}
+
+int *FT8XXEMU_getDisplayListCoprocessorWrites_()
+{
+	return BT8XXEMU_getDisplayListCoprocessorWrites(s_Emulator);
+}
+
+void FT8XXEMU_clearDisplayListCoprocessorWrites_()
+{
+	return BT8XXEMU_clearDisplayListCoprocessorWrites(s_Emulator);
+}
+
+bool FT8XXEMU_getDebugLimiterEffective_()
+{
+	return BT8XXEMU_getDebugLimiterEffective(s_Emulator);
+}
+
+int FT8XXEMU_getDebugLimiterIndex_()
+{
+	return BT8XXEMU_getDebugLimiterIndex(s_Emulator);
+}
+
+void FT8XXEMU_setDebugLimiter_(int debugLimiter)
+{
+	BT8XXEMU_setDebugLimiter(s_Emulator, debugLimiter);
+}
+
+void FT8XXEMU_processTrace_(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
+{
+	BT8XXEMU_processTrace(s_Emulator, result, size, x, y, hsize);
+}
+
 FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParameters *params)
 {
 	if (versionApi != FT8XXEMU_VERSION_API)
@@ -147,6 +237,20 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		params_.Close = close;
 	}
 
+	FT8XXEMU_stop = &FT8XXEMU_stop_;
+	FT8XXEMU_transfer = &FT8XXEMU_transfer_;
+	FT8XXEMU_cs = &FT8XXEMU_cs_;
+	FT8XXEMU_int = &FT8XXEMU_int_;
+	FT8XXEMU_getRam = &FT8XXEMU_getRam_;
+	FT8XXEMU_getDisplayList = &FT8XXEMU_getDisplayList_;
+	FT8XXEMU_poke = &FT8XXEMU_poke_;
+	FT8XXEMU_getDisplayListCoprocessorWrites = &FT8XXEMU_getDisplayListCoprocessorWrites_;
+	FT8XXEMU_clearDisplayListCoprocessorWrites = &FT8XXEMU_clearDisplayListCoprocessorWrites_;
+	FT8XXEMU_getDebugLimiterEffective = &FT8XXEMU_getDebugLimiterEffective_;
+	FT8XXEMU_getDebugLimiterIndex = &FT8XXEMU_getDebugLimiterIndex_;
+	FT8XXEMU_setDebugLimiter = &FT8XXEMU_setDebugLimiter_;
+	FT8XXEMU_processTrace = &FT8XXEMU_processTrace_;
+
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &s_Emulator, &params_);
 
 	if (s_Emulator)
@@ -155,106 +259,5 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		s_Emulator = NULL;
 	}
 }
-
-static void FT8XXEMU_stop_()
-{
-	BT8XXEMU_stop(s_Emulator);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_stop)() = FT8XXEMU_stop_;
-
-static uint8_t FT8XXEMU_transfer_(uint8_t data)
-{
-	return BT8XXEMU_transfer(s_Emulator, data);
-}
-
-FT8XXEMU_API uint8_t(*FT8XXEMU_transfer)(uint8_t data) = FT8XXEMU_transfer_;
-
-static void FT8XXEMU_cs_(int cs)
-{
-	BT8XXEMU_chipSelect(s_Emulator, cs);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_cs)(int cs) = FT8XXEMU_cs_;
-
-static int FT8XXEMU_int_()
-{
-	return BT8XXEMU_hasInterrupt(s_Emulator);
-}
-
-FT8XXEMU_API extern int(*FT8XXEMU_int)() = FT8XXEMU_int_;
-
-FT8XXEMU_API void FT8XXEMU_touchSetXY(int idx, int x, int y, int pressure)
-{
-	BT8XXEMU_touchSetXY(s_Emulator, idx, x, y, pressure);
-}
-
-FT8XXEMU_API void FT8XXEMU_touchResetXY(int idx)
-{
-	BT8XXEMU_touchResetXY(s_Emulator, idx);
-}
-
-uint8_t *FT8XXEMU_getRam_()
-{
-	return BT8XXEMU_getRam(s_Emulator);
-}
-
-FT8XXEMU_API uint8_t *(*FT8XXEMU_getRam)() = FT8XXEMU_getRam_;
-
-const uint32_t *FT8XXEMU_getDisplayList_()
-{
-	return BT8XXEMU_getDisplayList(s_Emulator);
-}
-
-FT8XXEMU_API const uint32_t *(*FT8XXEMU_getDisplayList)() = FT8XXEMU_getDisplayList_;
-
-void FT8XXEMU_poke_()
-{
-	BT8XXEMU_poke(s_Emulator);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_poke)() = FT8XXEMU_poke_;
-
-int *FT8XXEMU_getDisplayListCoprocessorWrites_()
-{
-	return BT8XXEMU_getDisplayListCoprocessorWrites(s_Emulator);
-}
-
-FT8XXEMU_API int *(*FT8XXEMU_getDisplayListCoprocessorWrites)() = FT8XXEMU_getDisplayListCoprocessorWrites_;
-
-void FT8XXEMU_clearDisplayListCoprocessorWrites_()
-{
-	return BT8XXEMU_clearDisplayListCoprocessorWrites(s_Emulator);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_clearDisplayListCoprocessorWrites)() = FT8XXEMU_clearDisplayListCoprocessorWrites_;
-
-bool FT8XXEMU_getDebugLimiterEffective_()
-{
-	return BT8XXEMU_getDebugLimiterEffective(s_Emulator);
-}
-
-FT8XXEMU_API bool(*FT8XXEMU_getDebugLimiterEffective)() = FT8XXEMU_getDebugLimiterEffective_;
-
-int FT8XXEMU_getDebugLimiterIndex_()
-{
-	return BT8XXEMU_getDebugLimiterIndex(s_Emulator);
-}
-
-FT8XXEMU_API int(*FT8XXEMU_getDebugLimiterIndex)() = FT8XXEMU_getDebugLimiterIndex_;
-
-void FT8XXEMU_setDebugLimiter_(int debugLimiter)
-{
-	BT8XXEMU_setDebugLimiter(s_Emulator, debugLimiter);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_setDebugLimiter)(int debugLimiter) = FT8XXEMU_setDebugLimiter_;
-
-void FT8XXEMU_processTrace_(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
-{
-	BT8XXEMU_processTrace(s_Emulator, result, size, x, y, hsize);
-}
-
-FT8XXEMU_API void(*FT8XXEMU_processTrace)(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize) = FT8XXEMU_processTrace_;
 
 /* end of file */

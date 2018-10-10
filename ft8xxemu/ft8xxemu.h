@@ -9,7 +9,7 @@
 #ifndef FT8XXEMU_H
 #define FT8XXEMU_H
 
-#include "bt8xxemu_inttypes.h"
+#include "ft8xxemu_inttypes.h"
 
 // API version is increased whenever FT8XXEMU_EmulatorParameters format changes or functions are modified
 #define FT8XXEMU_VERSION_API 10

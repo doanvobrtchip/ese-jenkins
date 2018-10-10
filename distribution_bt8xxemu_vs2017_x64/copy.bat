@@ -14,6 +14,7 @@ copy ..\bt8xxemuc\bt8xxemuc.c bt8xxemuc.c
 
 copy ..\ft8xxemu\ft8xxemu.h ft8xxemu.h
 copy ..\ft8xxemu\ft8xxemu_diag.h ft8xxemu_diag.h
+copy ..\ft8xxemu\ft8xxemu_inttypes.h ft8xxemu_inttypes.h
 
 "C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 028eb5ba2732d21fb599aa88d9e0c26ac76b4045 /t http://timestamp.comodoca.com/authenticode bt8xxemu.dll
 "C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bin\signtool.exe" sign /sha1 028eb5ba2732d21fb599aa88d9e0c26ac76b4045 /t http://timestamp.comodoca.com/authenticode mx25lemu.dll
