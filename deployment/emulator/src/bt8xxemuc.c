@@ -1,6 +1,6 @@
 /*
 BT8XX Emulator Library
-Copyright (C) 2017-2018  Bridgetek Pte Lte
+Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
@@ -8,7 +8,8 @@ Author: Jan Boon <jan@no-break.space>
 Redistributable file to use the emulator using a separate "bt8xxemus" process.
 Should be compiled as part of the EVE HAL with BT8XXEMU_REMOTE enabled in the 
 compiler options. When enabled, do not link to the "bt8xxemu" library.
-This implements the communication channel with the separated "bt8xxemus" process.
+This implements the communication channel with the separated process.
+The "bt8xxemus" process provides a graphical debugging user interface.
 */
 
 #include <bt8xxemu.h>
