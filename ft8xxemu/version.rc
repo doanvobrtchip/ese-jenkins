@@ -6,7 +6,7 @@ Author: Jan Boon <jan@no-break.space>
 */
 
 #include "resource.h"
-#include "bt8xxemu_version.h"
+#include "ft8xxemu_version.h"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION FT8XXEMU_VERSION_CODE

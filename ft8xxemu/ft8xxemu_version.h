@@ -10,8 +10,10 @@ Author: Jan Boon <jan@no-break.space>
 #ifndef FT8XXEMU_VERSION_H
 #define FT8XXEMU_VERSION_H
 
-#define FT8XXEMU_VERSION_STRING "3.0.7"
-#define FT8XXEMU_VERSION_CODE 3,0,7,0
+#include "bt8xxemu_version.h"
+
+#define FT8XXEMU_VERSION_STRING BT8XXEMU_VERSION_STRING
+#define FT8XXEMU_VERSION_CODE BT8XXEMU_VERSION_CODE
 
 #endif /* #ifndef FT8XXEMU_VERSION_H */
 
