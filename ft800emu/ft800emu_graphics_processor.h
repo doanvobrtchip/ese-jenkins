@@ -29,7 +29,7 @@ Author: Jan Boon <jan@no-break.space>
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 #		include <astc_codec_internals.h>
 #		undef IGNORE
-#		include <map>
+#		include <unordered_map>
 #		include <shared_mutex>
 #	endif
 #endif
@@ -192,7 +192,7 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 	AstcCache m_AstcCache;
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::map<ptrdiff_t, imageblock> m_CachedAstc;
+	std::unordered_map<ptrdiff_t, imageblock> m_CachedAstc;
 	std::shared_mutex m_CachedAstcMutex;
 #	endif
 #endif

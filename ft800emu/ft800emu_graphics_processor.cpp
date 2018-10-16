@@ -226,8 +226,8 @@ public:
 	imageblock CachedAstcBlock;
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::map<ptrdiff_t, imageblock> *CachedAstcGlobal;
-	std::map<ptrdiff_t, imageblock> *CachedAstcLocal;
+	std::unordered_map<ptrdiff_t, imageblock> *CachedAstcGlobal;
+	std::unordered_map<ptrdiff_t, imageblock> *CachedAstcLocal;
 #	endif
 #endif
 
@@ -1081,7 +1081,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		// Decompress ASTC
 		const void *blockAddr = &ram[srci + blockOffset];
 		imageblock *imageBlock;
-		std::map<ptrdiff_t, imageblock>::iterator imageBlockIt;
+		std::unordered_map<ptrdiff_t, imageblock>::iterator imageBlockIt;
 		if ((imageBlockIt = gs.CachedAstcGlobal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcGlobal->end())
 		{
 			imageBlock = &(imageBlockIt->second);
@@ -3184,7 +3184,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::map<ptrdiff_t, imageblock> cachedAstc;
+	std::unordered_map<ptrdiff_t, imageblock> cachedAstc;
 #	endif
 #endif
 
@@ -3915,7 +3915,7 @@ DisplayListDisplay:
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 	m_CachedAstcMutex.lock();
-	for (std::map<ptrdiff_t, imageblock>::iterator it(cachedAstc.begin()), end(cachedAstc.end()); it != end; ++it)
+	for (std::unordered_map<ptrdiff_t, imageblock>::iterator it(cachedAstc.begin()), end(cachedAstc.end()); it != end; ++it)
 	{
 		m_CachedAstc[it->first] = it->second;
 	}
