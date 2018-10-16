@@ -226,8 +226,8 @@ public:
 	imageblock CachedAstcBlock;
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::unordered_map<ptrdiff_t, imageblock> *CachedAstcGlobal;
-	std::unordered_map<ptrdiff_t, imageblock> *CachedAstcLocal;
+	AstcCache *CachedAstcGlobal;
+	AstcCache *CachedAstcLocal;
 #	endif
 #endif
 
@@ -1080,32 +1080,57 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 #elif BT815EMU_ASTC_THREAD_LOCAL_CACHE
 		// Decompress ASTC
 		const void *blockAddr = &ram[srci + blockOffset];
-		imageblock *imageBlock;
-		std::unordered_map<ptrdiff_t, imageblock>::iterator imageBlockIt;
-		if ((imageBlockIt = gs.CachedAstcGlobal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcGlobal->end())
+		const physical_compressed_block *physicalBlock =
+			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+		AstcCacheEntry *cacheEntry;
+		AstcCache::iterator cacheEntryIt;
+		bool cacheOk;
+		if ((cacheEntryIt = gs.CachedAstcGlobal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcGlobal->end())
 		{
-			imageBlock = &(imageBlockIt->second);
+			cacheEntry = &(cacheEntryIt->second);
+			cacheOk = cacheEntry->PhysicalBlock.data64[0] == physicalBlock->data64[0]
+				&& cacheEntry->PhysicalBlock.data64[1] == physicalBlock->data64[1];
+			if (!cacheOk)
+				cacheEntry = &((*gs.CachedAstcLocal)[(ptrdiff_t)blockAddr]);
 		}
-		else if ((imageBlockIt = gs.CachedAstcLocal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcLocal->end())
+		else if ((cacheEntryIt = gs.CachedAstcLocal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcLocal->end())
 		{
-			imageBlock = &(imageBlockIt->second);
+			cacheEntry = &(cacheEntryIt->second);
+			cacheOk = cacheEntry->PhysicalBlock.data64[0] == physicalBlock->data64[0]
+				&& cacheEntry->PhysicalBlock.data64[1] == physicalBlock->data64[1];
 		}
-		else
+		else 
 		{
-			imageBlock = &(*gs.CachedAstcLocal)[(ptrdiff_t)blockAddr];
-			const physical_compressed_block *physicalBlock =
-				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			cacheEntry = &((*gs.CachedAstcLocal)[(ptrdiff_t)blockAddr]);
+			cacheOk = false;
+		}
+		if (!cacheOk)
+		{
+			cacheEntry->PhysicalBlock = *physicalBlock;
+			imageblock imageBlock;
 			symbolic_compressed_block symbolicBlock = { 0 };
-			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
-			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, imageBlock);
+			physical_to_symbolic(blockWidth, blockHeight, 1, &cacheEntry->PhysicalBlock, &symbolicBlock);
+			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+			const int nbTexels = blockHeight * blockWidth;
+			for (int i = 0; i < nbTexels; ++i)
+			{
+				argb8888 c;
+				if (imageBlock.nan_texel[i])
+				{
+					c = 0xFFFF00FF;
+				}
+				else
+				{
+					uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 3] * 255.0f + 0.5f), 255U);
+					uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4)] * 255.0f + 0.5f), 255U);
+					uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 1] * 255.0f + 0.5f), 255U);
+					uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 2] * 255.0f + 0.5f), 255U);
+					c = (a << 24) | (r << 16) | (g << 8) | (b);
+				}
+				cacheEntry->Color[i] = c;
+			}
 		}
-		if (imageBlock->nan_texel[index])
-			return 0xFFFF00FF;
-		uint32_t a = std::min((uint32_t)floor(imageBlock->orig_data[(index * 4) + 3] * 255.0f + 0.5f), 255U);
-		uint32_t r = std::min((uint32_t)floor(imageBlock->orig_data[(index * 4)] * 255.0f + 0.5f), 255U);
-		uint32_t g = std::min((uint32_t)floor(imageBlock->orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
-		uint32_t b = std::min((uint32_t)floor(imageBlock->orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
-		return (a << 24) | (r << 16) | (g << 8) | (b);
+		return cacheEntry->Color[index];
 #else
 		// Decompress ASTC
 		const physical_compressed_block *physicalBlock = 
@@ -3184,7 +3209,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::unordered_map<ptrdiff_t, imageblock> cachedAstc;
+	AstcCache cachedAstc;
 #	endif
 #endif
 
@@ -3915,7 +3940,7 @@ DisplayListDisplay:
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 	m_CachedAstcMutex.lock();
-	for (std::unordered_map<ptrdiff_t, imageblock>::iterator it(cachedAstc.begin()), end(cachedAstc.end()); it != end; ++it)
+	for (AstcCache::iterator it(cachedAstc.begin()), end(cachedAstc.end()); it != end; ++it)
 	{
 		m_CachedAstc[it->first] = it->second;
 	}

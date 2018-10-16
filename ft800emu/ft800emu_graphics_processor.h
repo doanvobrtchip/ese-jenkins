@@ -112,6 +112,14 @@ struct AstcCacheEntry { AstcCacheEntry() : Ok(false) { } argb8888 C[MAX_TEXELS_P
 typedef concurrency::concurrent_unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
 #undef MAX_TEXELS_PER_BLOCK
 #	endif
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+struct AstcCacheEntry
+{
+	physical_compressed_block PhysicalBlock;
+	argb8888 Color[MAX_TEXELS_PER_BLOCK];
+};
+typedef std::unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
+#	endif
 #endif
 
 /**
@@ -192,7 +200,7 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 	AstcCache m_AstcCache;
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
-	std::unordered_map<ptrdiff_t, imageblock> m_CachedAstc;
+	AstcCache m_CachedAstc;
 	std::shared_mutex m_CachedAstcMutex;
 #	endif
 #endif

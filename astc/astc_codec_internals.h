@@ -395,7 +395,11 @@ struct symbolic_compressed_block
 
 struct physical_compressed_block
 {
-	uint8_t data[16];
+	union
+	{
+		uint8_t data[16];
+		uint64_t data64[2];
+	};
 };
 
 
