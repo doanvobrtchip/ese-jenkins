@@ -14,7 +14,8 @@ Author: Jan Boon <jan@no-break.space>
 #ifdef BT815EMU_MODE
 // Select only one cache mechanism
 #define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
-#define BT815EMU_ASTC_LAST_CACHE 1
+#define BT815EMU_ASTC_LAST_CACHE 0
+#define BT815EMU_ASTC_THREAD_LOCAL_CACHE 1
 #endif
 
 // System includes
@@ -24,6 +25,12 @@ Author: Jan Boon <jan@no-break.space>
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
 #		include <concurrent_unordered_map.h>
+#	endif
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+#		include <astc_codec_internals.h>
+#		undef IGNORE
+#		include <map>
+#		include <shared_mutex>
 #	endif
 #endif
 
@@ -183,6 +190,10 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
 	// ASTC Cache
 	AstcCache m_AstcCache;
+#	endif
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	std::map<ptrdiff_t, imageblock> m_CachedAstc;
+	std::shared_mutex m_CachedAstcMutex;
 #	endif
 #endif
 
