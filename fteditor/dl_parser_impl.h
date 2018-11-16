@@ -834,7 +834,7 @@ uint32_t DlParser::compileVC3(int deviceIntf, const DlParsed &parsed)
 		case FTEDITOR_DL_BITMAP_SOURCE:
 			// Negative addresses must disable the flash bit
 #if defined(FTEDITOR_PARSER_VC3)
-			return BITMAP_SOURCE((p[0] & 0x80000000) ? (p[0] & g_AddressMask[deviceIntf]) : (p[0]));
+			return BITMAP_SOURCE((p[0] & 0x80000000) ? (p[0] & 0x7fffff) : (p[0]));
 #else
 			return BITMAP_SOURCE(p[0]);
 #endif

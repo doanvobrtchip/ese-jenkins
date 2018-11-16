@@ -607,7 +607,10 @@ public:
 	{
 		if (m_SoftMod) return;
 		m_SoftMod = true;
-		setChecked(((getLine().Parameter[m_Index].U & m_Flag) == m_Flag) ? Qt::Checked : Qt::Unchecked);
+
+		uint32 v = getLine().Parameter[m_Index].U;
+		bool isChecked = v & 0x80000000 ? Qt::Unchecked : ((v & m_Flag) == m_Flag ? Qt::Checked : Qt::Unchecked);
+		setChecked(isChecked);
 		m_SoftMod = false;
 	}
 
@@ -618,11 +621,17 @@ private slots:
 		m_SoftMod = true;
 		// printf("PropertiesCheckBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
-		parsed.Parameter[m_Index].U = (value == Qt::Checked)
-			? (parsed.Parameter[m_Index].U | m_Flag)
-			: (parsed.Parameter[m_Index].U & ~m_Flag);
-		if ((parsed.Parameter[m_Index].U & OPT_FORMAT) == 0)
+		uint32 v = parsed.Parameter[m_Index].U;
+
+		if ((v & 0x80000000) == 0)
+		{
+			v = (value == Qt::Checked) ? (v | m_Flag) : (v & ~m_Flag);
+		}
+
+		if ((v & OPT_FORMAT) == 0)
 			parsed.VarArgCount = 0;
+		
+		parsed.Parameter[m_Index].U = v;
 		setLine(parsed);
 		m_SoftMod = false;
 	}
