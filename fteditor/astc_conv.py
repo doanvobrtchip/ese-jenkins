@@ -81,7 +81,7 @@ def pad(im, mult):
     return n
 
 def round_up(n, d):
-    return int(d * ((n + d - 1) / d))
+    return int(d * ((n + d - 1) // d))
     
 def convert(im, fmt = "COMPRESSED_RGBA_ASTC_4x4_KHR", effort = "exhaustive", astc_encode = "astcenc"):
     (w, h) = astc_dims(fmt)
