@@ -3308,7 +3308,7 @@ void MainWindow::clearEditor()
 	m_DlEditor->clear();
 	m_CmdEditor->clear();
 	m_Macro->clear();
-	m_ContentManager->clear();
+	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
 	m_ProjectDock->setVisible(true);
 }
@@ -3576,11 +3576,11 @@ void MainWindow::actCloseProject()
 {
 	if (!maybeSave()) return;
 
-	// reset filename
-	m_CurrentFile = QString();
-
 	// reset editors to their default state
 	clearEditor();
+
+	// reset filename
+	m_CurrentFile = QString();
 
 	// clear undo stacks
 	clearUndoStack();
@@ -3614,11 +3614,11 @@ void MainWindow::actNew(bool addClear)
 
 	printf("** New **\n");
 
-	// reset filename
-	m_CurrentFile = QString();
-
 	// reset editors to their default state
 	clearEditor();
+
+	// reset filename
+	m_CurrentFile = QString();
 
 	// add clear
 	int editLine;
@@ -4083,6 +4083,23 @@ void MainWindow::actSaveAs()
 	{
 		printf("From: %s\n", srcPath.toLocal8Bit().data());
 		printf("To: %s\n", dstPath.toLocal8Bit().data());
+
+		// Copy resource files
+		QDir destDir(dstPath + '/' + ContentManager::ResourceDir);
+		if (!destDir.exists())
+		{
+			destDir.mkpath(".");
+		}
+
+		QDir sourceDir(srcPath + '/' + ContentManager::ResourceDir);
+		QStringList files = sourceDir.entryList(QDir::Files);
+		for (int i = 0; i < files.count(); i++)
+		{
+			QString srcName = sourceDir.absolutePath() + '/' + files[i];
+			QString destName = destDir.absolutePath() + '/' + files[i];
+			QFile::copy(srcName, destName);
+		}
+
 		m_ContentManager->lockContent();
 		// Copy assets from srcPath to dstPath
 		std::vector<ContentInfo *> contentInfos;
@@ -4698,6 +4715,17 @@ void MainWindow::aboutQt()
 		"These icons are licensed under a Creative Commons"
 		"Attribution 3.0 License.\n"
 		"<http://creativecommons.org/licenses/by/3.0/>"));
+}
+
+QString MainWindow::getProjectContent() const
+{
+	QFile file(m_CurrentFile);
+	file.open(QIODevice::ReadOnly);
+	QTextStream ts(&file);
+	QString projectContent = ts.readAll();
+	file.close();
+
+	return projectContent;
 }
 
 } /* namespace FTEDITOR */

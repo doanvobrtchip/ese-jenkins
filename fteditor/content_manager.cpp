@@ -314,6 +314,8 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 	layout->addLayout(hbox);
 }
 
+const QString ContentManager::ResourceDir = "resources";
+
 ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL), m_OverlapSuppressed(0), m_OverlapMemorySuppressed(false),  m_OverlapFlashSuppressed(false)
 {
 	if (s_FileExtensions.empty())
@@ -622,6 +624,25 @@ public:
 		// Remove from the content manager
 		m_ContentManager->removeInternal(m_ContentInfo);
 
+		// Check if there is another content used the same source path
+		QTreeWidgetItem * item = 0;
+		ContentInfo * info = 0;
+		bool keepThisResource = false;
+		for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
+		{
+			item = m_ContentManager->contentList()->topLevelItem(i);
+			info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
+			if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
+			{
+				keepThisResource = true;
+			}
+		}
+
+		if (!keepThisResource)
+		{
+			QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
+		}
+
 		m_Owner = true;
 	}
 
@@ -630,6 +651,8 @@ public:
 		printf("Add::redo()\n");
 
 		m_Owner = false;
+
+		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
 
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
@@ -716,10 +739,11 @@ void ContentManager::add(ContentInfo *contentInfo)
 class ContentManager::Remove : public QUndoCommand
 {
 public:
-	Remove(ContentManager *contentManager, ContentInfo *contentInfo) :
+	Remove(ContentManager *contentManager, ContentInfo *contentInfo, bool whenCloseProject = false) :
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
+		m_WhenCloseProject(whenCloseProject),
 		m_Owner(false)
 	{
 		setText(tr("Remove content"));
@@ -739,6 +763,9 @@ public:
 
 		m_Owner = false;
 
+		// Unmark source file
+		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
+
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
 	}
@@ -751,22 +778,45 @@ public:
 		m_ContentManager->removeInternal(m_ContentInfo);
 
 		m_Owner = true;
+
+		if (!m_WhenCloseProject)
+		{
+			// Check if there is another content used the same source path
+			QTreeWidgetItem * item = 0;
+			ContentInfo * info = 0;
+			bool keepThisResource = false;
+			for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
+			{
+				item = m_ContentManager->contentList()->topLevelItem(i);
+				info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
+				if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
+				{
+					keepThisResource = true;
+				}
+			}
+
+			if (!keepThisResource)
+			{
+				QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
+			}
+		}
 	}
 
 private:
 	ContentManager *m_ContentManager;
 	// int m_Index; // FIXME: When undo-ing, the item will appear at the end rather than it's original index.
 	ContentInfo *m_ContentInfo;
+	bool m_WhenCloseProject = false;
 	bool m_Owner;
 };
 
-void ContentManager::remove(ContentInfo *contentInfo)
+void ContentManager::remove(ContentInfo *contentInfo, bool whenCloseProject)
 {
 	printf("ContentManager::remove(contentInfo)\n");
 
 	m_MainWindow->undoStack()->beginMacro(tr("Remove content"));
 
-	Remove *remove = new Remove(this, contentInfo);
+	Remove *remove = new Remove(this, contentInfo, whenCloseProject);
 	m_MainWindow->undoStack()->push(remove);
 
 	// ISSUE#113: Remove all related commands
@@ -1046,13 +1096,38 @@ void ContentManager::add()
 		tr("Load Content"),
 		m_MainWindow->getFileDialogPath(),
 		tr("All files (*.*)"));
-
-
-	foreach (QString fileName, fileNameList)
+	
+	if (fileNameList.size() <= 0)
 	{
-		add(fileName);
+		return;
 	}
 
+	// create resource folder to save content files
+	QDir dir(QDir::currentPath() + '/' + ResourceDir);
+	if (!dir.exists())
+	{
+		dir.mkpath(".");
+	}
+
+	QString NewNameTemplate("%1/%2_%3.%4");
+	QString newName;
+	int i = 0;
+	foreach (QString fileName, fileNameList)
+	{
+		QFileInfo fi(fileName);
+		newName = dir.absolutePath() + '/' + fi.fileName();
+
+		i = 1;
+		while (QFileInfo(newName).exists())
+		{
+			++i;
+			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.baseName()).arg(i).arg(fi.completeSuffix());
+		}
+
+		QFile::copy(fileName, newName);
+		
+		add(QDir(QDir::currentPath()).relativeFilePath(newName));
+	}
 }
 
 void ContentManager::remove()
@@ -1315,7 +1390,7 @@ int ContentManager::getFlashSize(ContentInfo *contentInfo)
 	return size;
 }
 
-void ContentManager::clear()
+void ContentManager::clear(bool whenCloseProject)
 {
 	printf("ContentManager::clear()\n");
 
@@ -1326,9 +1401,29 @@ void ContentManager::clear()
 	m_MainWindow->undoStack()->beginMacro(tr("Clear content"));
 	for (std::vector<ContentInfo *>::iterator it = contentInfos.begin(), end = contentInfos.end(); it != end; ++it)
 	{
-		remove(*it);
+		remove(*it, whenCloseProject);
 	}
 	m_MainWindow->undoStack()->endMacro();
+
+	// Clean resource files
+	QString projectContent = m_MainWindow->getProjectContent();
+	if (whenCloseProject)
+	{
+		QDir removeDir(QDir::currentPath() + '/' + ContentManager::ResourceDir);
+		for each (QString path in removeDir.entryList(QDir::Files))
+		{
+			QRegularExpression re("\"sourcePath\": \".+" + QFileInfo(path).completeBaseName());
+			if (projectContent.indexOf(re) == -1)
+			{
+				QFile::remove(removeDir.path() + '/' + path);
+			}
+			else if (path.endsWith(".rem"))
+			{
+				// Remove extension "rem" because resource file is still in use
+				QFile::rename(removeDir.path() + '/' + path, removeDir.path() + '/' + QFileInfo(path).completeBaseName());
+			}
+		}
+	}
 }
 
 void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)

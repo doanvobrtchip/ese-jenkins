@@ -143,6 +143,9 @@ class ContentManager : public QWidget
 	Q_OBJECT
 
 public:
+	static const QString ResourceDir;
+
+public:
 	ContentManager(MainWindow *parent);
 	virtual ~ContentManager();
 
@@ -153,11 +156,11 @@ public:
 	// Add the content (this creates the undo/redo)
 	void add(ContentInfo *contentInfo);
 	// Remove the content
-	void remove(ContentInfo *remove);
+	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time
 	bool loadFlashMap(QString flashMapPath = QString::null);
 	// Clear all content
-	void clear();
+	void clear(bool whenCloseProject = false);
 	// Get all content
 	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
 	// Get the number of content

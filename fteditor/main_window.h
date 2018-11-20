@@ -155,6 +155,8 @@ public:
 	void toggleDockWindow(bool isShow);
 	void toggleUI(bool hasProject);
 
+	QString getProjectContent(void) const;
+
 private slots:
 	// void applyEmulatorConfig();
 
