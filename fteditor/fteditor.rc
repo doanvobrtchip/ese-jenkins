@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,1,2,0
- PRODUCTVERSION 3,1,2,0
+ FILEVERSION VER_FILEVERSION
+ PRODUCTVERSION VER_PRODUCTVERSION
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +70,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Bridgetek Pte Ltd"
             VALUE "FileDescription", "EVE Screen Editor"
-            VALUE "FileVersion", "3.1.2"
+            VALUE "FileVersion", STR_FILEVERSION
             VALUE "InternalName", "fteditor"
             VALUE "LegalCopyright", "Copyright (C) 2016-2018  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "fteditor.exe"
             VALUE "ProductName", "EVE Screen Editor"
-            VALUE "ProductVersion", "3.1.2"
+            VALUE "ProductVersion", STR_PRODUCTVERSION
         END
     END
     BLOCK "VarFileInfo"

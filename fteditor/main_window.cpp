@@ -7,6 +7,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
 #include "main_window.h"
+#include "version.h"
 #include "Windows.h"
 
 // STL includes
@@ -4673,7 +4674,8 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.1.2"));
+
+	msgBox.setWindowTitle( QString( tr("About EVE Screen Editor v%1") ).arg(STR_PRODUCTVERSION) );
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
