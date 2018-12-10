@@ -27,6 +27,7 @@ Release Note:
 •   Add the missing firmware folder in the installation package.
 •   Add zooming function of emulator viewport
 •   Upgrade C++ source and Python script to work with Python v3.6.5
+•   Clone resource so that project can be moved to another location safely
 
     Bug Fix: 
 *   Fix the crash issue when export menu is clicked for FT813 device.
