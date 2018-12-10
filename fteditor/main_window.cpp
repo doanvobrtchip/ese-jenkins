@@ -3837,6 +3837,8 @@ void MainWindow::openFile(const QString &fileName)
 
 	toggleUI(true);
 
+	m_CurrentFile = fileName;
+
 	// Reset editors to their default state
 	clearEditor();
 
@@ -3847,8 +3849,7 @@ void MainWindow::openFile(const QString &fileName)
 		delete m_TemporaryDir; m_TemporaryDir = NULL;
 	}
 
-	// Set current project path
-	m_CurrentFile = fileName;
+	// Set current project path	
 	QDir dir(fileName);
 	dir.cdUp();
 	QString dstPath = dir.path();
@@ -4169,10 +4170,10 @@ void MainWindow::actImport()
 	if (fileName.isNull())
 		return;
 
-	m_CurrentFile = QString();
-
 	// reset editors to their default state
 	clearEditor();
+
+	m_CurrentFile = QString();
 
 	// set working directory to temporary directory
 #ifdef FTEDITOR_TEMP_DIR
