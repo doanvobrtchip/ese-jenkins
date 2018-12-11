@@ -1574,7 +1574,15 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	}
 	else
 	{
-		QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+		QDir dir(m_InitialWorkingDir);
+		if (dir.cdUp() && dir.cdUp() && dir.cd("fteditor") && dir.cd("firmware") && dir.cdUp())
+		{
+			m_ApplicationDataDir = dir.absolutePath();
+		}
+		else
+		{
+			QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+		}
 	}
 
 	m_UndoStack = new QUndoStack(this);
