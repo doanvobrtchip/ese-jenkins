@@ -1,0 +1,28 @@
+jobs:
+  - job: build_vs2017_x64
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+    - script: mkdir build_vs2017_x64
+      displayName: Make Build Directory
+    - task: CMake@1
+      inputs:
+        workingDirectory: 'build_vs2017_x64'
+        cmakeArgs: '..'
+    # - task: MSBuild@1
+    #   inputs:
+    #     solution: 'build_vs2017_x64/ALL_BUILD.vcxproj'
+    #     maximumCpuCount: true
+    # - script: |
+    #     cd build_vs2017_x64\Release\Binaries\Debug
+    #     .\test_runner.exe *testd.dll
+    #   displayName: 'Run tests, debug'
+    - task: MSBuild@1
+      inputs:
+        solution: 'build_vs2017_x64/ALL_BUILD.vcxproj'
+        maximumCpuCount: true
+        configuration: 'Release'
+    # - script: |
+    #     cd build_vs2017_x64\Release\Binaries\Release
+    #     .\test_runner.exe *test.dll
+#   displayName: 'Run tests, release'
