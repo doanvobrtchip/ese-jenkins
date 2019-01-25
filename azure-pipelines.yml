@@ -30,22 +30,22 @@ jobs:
       inputs:
         sourceFolder: 'build_vs141_x64'
         contents: '**/Release/**/(bt8xxemu.dll|bt8xxemu.lib|mx25lemu.dll|bt8xxemus.exe|ft8xxemu.dll|ft8xxemu.lib)'
-        targetDirectory: '$(Build.ArtifactStagingDirectory)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
         contents: 'bt8xxemu/(bt8xxemu.h|bt8xxemu_diag.h|bt8xxemu_flash.h|bt8xxemu_inttypes.h)'
-        targetDirectory: '$(Build.ArtifactStagingDirectory)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
         contents: 'bt8xxemuc/bt8xxemuc.c'
-        targetDirectory: '$(Build.ArtifactStagingDirectory)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
         contents: 'ft8xxemu/(ft8xxemu.h|ft8xxemu_diag.h|ft8xxemu_inttypes.h)'
-        targetDirectory: '$(Build.ArtifactStagingDirectory)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: PublishBuildArtifacts@1
       inputs:
         pathtoPublish: '$(Build.ArtifactStagingDirectory)'
