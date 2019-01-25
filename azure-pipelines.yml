@@ -8,7 +8,7 @@ jobs:
     - task: CMake@1
       inputs:
         workingDirectory: 'build_vs141_x64'
-        cmakeArgs: '..'
+        cmakeArgs: '-G "Visual Studio 15 2017 Win64" ..'
     # - task: MSBuild@1
     #   inputs:
     #     solution: 'build_vs141_x64/ALL_BUILD.vcxproj'
@@ -40,12 +40,12 @@ jobs:
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
         contents: |
-          build_vs2017_x64/bin/Release/bt8xxemu.dll
-          build_vs2017_x64/lib/Release/bt8xxemu.lib
-          build_vs2017_x64/bin/Release/mx25lemu.dll
-          build_vs2017_x64/bin/Release/bt8xxemus.dll
-          build_vs2017_x64/bin/Release/ft8xxemu.dll
-          build_vs2017_x64/lib/Release/ft8xxemu.lib
+          build_vs141_x64/bin/Release/bt8xxemu.dll
+          build_vs141_x64/lib/Release/bt8xxemu.lib
+          build_vs141_x64/bin/Release/mx25lemu.dll
+          build_vs141_x64/bin/Release/bt8xxemus.dll
+          build_vs141_x64/bin/Release/ft8xxemu.dll
+          build_vs141_x64/lib/Release/ft8xxemu.lib
           bt8xxemu/bt8xxemu.h
           bt8xxemu/bt8xxemu_diag.h
           bt8xxemu/bt8xxemu_flash.h
@@ -60,3 +60,64 @@ jobs:
       inputs:
         pathtoPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: bt8xxemu_vs141_x64
+  - job: build_vs141_x86
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+    - script: mkdir build_vs141_x86
+      displayName: Make Build Directory
+    - task: CMake@1
+      inputs:
+        workingDirectory: 'build_vs141_x86'
+        cmakeArgs: '-G "Visual Studio 15 2017" ..'
+    # - task: MSBuild@1
+    #   inputs:
+    #     solution: 'build_vs141_x86/ALL_BUILD.vcxproj'
+    #     maximumCpuCount: true
+    # - script: |
+    #     cd build_vs141_x86\Release\Binaries\Debug
+    #     .\test_runner.exe *testd.dll
+    #   displayName: 'Run tests, debug'
+    - task: MSBuild@1
+      inputs:
+        solution: 'build_vs141_x86/ALL_BUILD.vcxproj'
+        maximumCpuCount: true
+        configuration: 'Release'
+    # - script: |
+    #     cd build_vs141_x86\Release\Binaries\Release
+    #     .\test_runner.exe *test.dll
+#   displayName: 'Run tests, release'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: 'build_vs141_x86'
+        contents: '**/Release/**/(bt8xxemu.dll|bt8xxemu.lib|mx25lemu.dll|bt8xxemus.exe|ft8xxemu.dll|ft8xxemu.lib)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: 'bt8xxemu/(bt8xxemu.h|bt8xxemu_diag.h|bt8xxemu_flash.h|bt8xxemu_inttypes.h)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          build_vs141_x86/bin/Release/bt8xxemu.dll
+          build_vs141_x86/lib/Release/bt8xxemu.lib
+          build_vs141_x86/bin/Release/mx25lemu.dll
+          build_vs141_x86/bin/Release/bt8xxemus.dll
+          build_vs141_x86/bin/Release/ft8xxemu.dll
+          build_vs141_x86/lib/Release/ft8xxemu.lib
+          bt8xxemu/bt8xxemu.h
+          bt8xxemu/bt8xxemu_diag.h
+          bt8xxemu/bt8xxemu_flash.h
+          bt8xxemu/bt8xxemu_inttypes.h
+          bt8xxemuc/bt8xxemuc.c
+          ft8xxemu/ft8xxemu.h
+          ft8xxemu/ft8xxemu_diag.h
+          ft8xxemu/ft8xxemu_inttypes.h
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+        flattenFolders: true
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: bt8xxemu_vs141_x86
