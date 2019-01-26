@@ -102,7 +102,7 @@ jobs:
       inputs:
         sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x86'
         contents: |
-          **/*.lib
+          bt8xxemu.lib
         targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/lib'
         flattenFolders: true
       displayName: Copy Deployment Libraries
@@ -119,7 +119,7 @@ jobs:
       inputs:
         sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x64'
         contents: |
-          **/*.lib
+          bt8xxemu.lib
         targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/lib64'
         flattenFolders: true
       displayName: Copy Deployment Win64 Libraries
