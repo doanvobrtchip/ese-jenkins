@@ -268,6 +268,12 @@ void AudioRender::process(short *audioBuffer, int samples)
 			synth = m_AudioProcessor->execute(busy, sound, volume);
 		}
 
+		// Mute mute and unmute
+		if (sound == 0x60 || sound == 0x61) synth = 0;
+
+		// Mute when not busy
+		if (!busy) synth = 0;
+
 		int16_t pb;
 		if (audioFrequency != playbackFreq && playbackFreq >= 8000 && playbackFreq <= 48000)
 		{
