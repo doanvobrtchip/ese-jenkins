@@ -291,7 +291,7 @@ float float_to_lns(float p)
 	}
 
 	int expo;
-	float normfrac = frexp(p, &expo);
+	float normfrac = frexpf(p, &expo);
 	float p1;
 	if (expo < -13)
 	{
@@ -659,17 +659,17 @@ void fetch_imageblock(const astc_codec_image * img, imageblock * pb,	// picture-
 			if (r <= 0.04045f)
 				r = r * (1.0f / 12.92f);
 			else if (r <= 1)
-				r = pow((r + 0.055f) * (1.0f / 1.055f), 2.4f);
+				r = powf((r + 0.055f) * (1.0f / 1.055f), 2.4f);
 
 			if (g <= 0.04045f)
 				g = g * (1.0f / 12.92f);
 			else if (g <= 1)
-				g = pow((g + 0.055f) * (1.0f / 1.055f), 2.4f);
+				g = powf((g + 0.055f) * (1.0f / 1.055f), 2.4f);
 
 			if (b <= 0.04045f)
 				b = b * (1.0f / 12.92f);
 			else if (b <= 1)
-				b = pow((b + 0.055f) * (1.0f / 1.055f), 2.4f);
+				b = powf((b + 0.055f) * (1.0f / 1.055f), 2.4f);
 
 			fptr[0] = r;
 			fptr[1] = g;
@@ -790,17 +790,17 @@ void write_imageblock(astc_codec_image * img, const imageblock * pb,	// picture-
 								if (r <= 0.0031308f)
 									r = r * 12.92f;
 								else if (r <= 1)
-									r = 1.055f * pow(r, (1.0f / 2.4f)) - 0.055f;
+									r = 1.055f * powf(r, (1.0f / 2.4f)) - 0.055f;
 
 								if (g <= 0.0031308f)
 									g = g * 12.92f;
 								else if (g <= 1)
-									g = 1.055f * pow(g, (1.0f / 2.4f)) - 0.055f;
+									g = 1.055f * powf(g, (1.0f / 2.4f)) - 0.055f;
 
 								if (b <= 0.0031308f)
 									b = b * 12.92f;
 								else if (b <= 1)
-									b = 1.055f * pow(b, (1.0f / 2.4f)) - 0.055f;
+									b = 1.055f * powf(b, (1.0f / 2.4f)) - 0.055f;
 
 								data[0] = r;
 								data[1] = g;
@@ -887,15 +887,15 @@ void write_imageblock(astc_codec_image * img, const imageblock * pb,	// picture-
 								if (r <= 0.0031308f)
 									r = r * 12.92f;
 								else if (r <= 1)
-									r = 1.055f * pow(r, (1.0f / 2.4f)) - 0.055f;
+									r = 1.055f * powf(r, (1.0f / 2.4f)) - 0.055f;
 								if (g <= 0.0031308f)
 									g = g * 12.92f;
 								else if (g <= 1)
-									g = 1.055f * pow(g, (1.0f / 2.4f)) - 0.055f;
+									g = 1.055f * powf(g, (1.0f / 2.4f)) - 0.055f;
 								if (b <= 0.0031308f)
 									b = b * 12.92f;
 								else if (b <= 1)
-									b = 1.055f * pow(b, (1.0f / 2.4f)) - 0.055f;
+									b = 1.055f * powf(b, (1.0f / 2.4f)) - 0.055f;
 
 								data[0] = r;
 								data[1] = g;
@@ -914,7 +914,7 @@ void write_imageblock(astc_codec_image * img, const imageblock * pb,	// picture-
 							float z = 1.0f - x * x - y * y;
 							if (z < 0.0f)
 								z = 0.0f;
-							data[6] = (sqrt(z) * 0.5f) + 0.5f;
+							data[6] = (sqrtf(z) * 0.5f) + 0.5f;
 
 
 							int r = float_to_sf16(data[swz.r], SF_NEARESTEVEN);
@@ -1274,7 +1274,7 @@ astc_codec_image *astc_codec_load_image(const char *input_filename, int padding,
 
 	// check the ending of the input filename
 	int load_fileformat = LOAD_STB_IMAGE;
-	int filename_len = strlen(input_filename);
+	size_t filename_len = strlen(input_filename);
 
 	const char *eptr = input_filename + filename_len - 5;
 	if (eptr > input_filename && (strcmp(eptr, ".htga") == 0 || strcmp(eptr, ".HTGA") == 0))
@@ -1348,7 +1348,7 @@ int get_output_filename_enforced_bitness(const char *output_filename)
 	if (output_filename == NULL)
 		return -1;
 
-	int filename_len = strlen(output_filename);
+	size_t filename_len = strlen(output_filename);
 	const char *eptr = output_filename + filename_len - 5;
 
 	if (eptr > output_filename && (strcmp(eptr, ".htga") == 0 || strcmp(eptr, ".HTGA") == 0))
@@ -1382,7 +1382,7 @@ int astc_codec_store_image(const astc_codec_image * output_image, const char *ou
 	#define STORE_DDS 3
 	#define STORE_EXR 4
 
-	int filename_len = strlen(output_filename);
+	size_t filename_len = strlen(output_filename);
 
 	int store_fileformat = STORE_TGA;
 	const char *eptr = output_filename + filename_len - 5;
