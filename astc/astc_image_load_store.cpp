@@ -826,7 +826,7 @@ void write_imageblock(astc_codec_image * img, const imageblock * pb,	// picture-
 							float zcoord = 1.0f - xcoord * xcoord - ycoord * ycoord;
 							if (zcoord < 0.0f)
 								zcoord = 0.0f;
-							data[6] = (sqrt(zcoord) * 0.5f) + 0.5f;
+							data[6] = (sqrtf(zcoord) * 0.5f) + 0.5f;
 
 							// clamp to [0,1]
 							if (data[0] > 1.0f)

@@ -598,7 +598,7 @@ void find_closest_blockdim_2d(float target_bitrate, int *x, int *y, int consider
 			if(consider_illegal || is_legal)
 			{
 				float bitrate = 128.0f / (blockdims[i] * blockdims[j]);
-				float bitrate_error = fabs(bitrate - target_bitrate);
+				float bitrate_error = fabsf(bitrate - target_bitrate);
 				float aspect = (float)blockdims[j] / blockdims[i];
 				if (bitrate_error < best_error || (bitrate_error == best_error && aspect < aspect_of_best))
 				{
@@ -632,7 +632,7 @@ void find_closest_blockdim_3d(float target_bitrate, int *x, int *y, int *z, int 
 				if(consider_illegal || is_legal)
 				{
 					float bitrate = 128.0f / (blockdims[i] * blockdims[j] * blockdims[k]);
-					float bitrate_error = fabs(bitrate - target_bitrate);
+					float bitrate_error = fabsf(bitrate - target_bitrate);
 					float aspect = (float)blockdims[k] / blockdims[j] + (float)blockdims[j] / blockdims[i] + (float)blockdims[k] / blockdims[i];
 
 					if (bitrate_error < best_error || (bitrate_error == best_error && aspect < aspect_of_best))

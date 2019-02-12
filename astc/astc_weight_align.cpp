@@ -187,7 +187,7 @@ void compute_angular_offsets(int samplecount, const float *samples, const float 
 	// postprocess the angle-sums
 	for (i = 0; i < max_angular_steps; i++)
 	{
-		float angle = atan2(anglesum_y[i], anglesum_x[i]);	// positive angle -> positive offset
+		float angle = atan2f(anglesum_y[i], anglesum_x[i]);	// positive angle -> positive offset
 		offsets[i] = angle * (stepsizes[i] * (1.0f / (2.0f * (float)M_PI)));
 	}
 }
