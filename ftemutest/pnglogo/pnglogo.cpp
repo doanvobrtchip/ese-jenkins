@@ -19,7 +19,7 @@ int lastfreespace = 0;
 
 void loadimage(int handle, int addr, int x, int y)
 {
-	printf("Handle: %i\n", handle);
+	printf("\n\Address: %i\n\n", addr);
 	FILE *f = fopen(TEST_FILE, "rb");
 	if (!f)
 		printf("Failed to open file\n");
@@ -65,7 +65,12 @@ void loadimage(int handle, int addr, int x, int y)
 						f = NULL;
 						wrend();
 						while (rd32(REG_CMDB_SPACE) != 4092)
-							;
+						{
+							if (rd32(REG_CMDB_SPACE) & 1)
+							{
+								printf("Coprocessor returned error\n");
+							}
+						}
 						break;
 					}
 				}
@@ -84,16 +89,25 @@ void setup()
 {
 	wr32(REG_PCLK, 5);
 
-	printf("Using '%s', w: %i, h: %i, expected size: %i\n",
+	printf("\n\nWait for coprocessor ready\n\n");
+
+	wrstart(REG_CMDB_WRITE);
+	wr32(CMD_COLDSTART);
+	wrend();
+
+	while (rd32(REG_CMDB_SPACE) != 4092)
+		;
+
+	printf("\n\nUsing '%s', w: %i, h: %i, expected size: %i\n\n",
 	    TEST_FILE, TEST_WIDTH, TEST_HEIGHT, TEST_SIZE);
 
 	wrstart(REG_CMDB_WRITE);
 	wr32(CMD_DLSTART);
 	wrend();
 
+	// loadimage(3, TEST_SIZE, TEST_WIDTH, 0);
 	loadimage(1, 0, 0, 0);
-	loadimage(3, TEST_SIZE, TEST_WIDTH, 0);
-	loadimage(5, RAM_G_SIZE - TEST_SIZE - (TEST_SIZE / 2), 0, TEST_HEIGHT);
+	loadimage(5, RAM_G_SIZE - (80 * 1024) /* TEST_SIZE - (1024 * 20) */, 0, TEST_HEIGHT);
 
 	wrstart(REG_CMDB_WRITE);
 	wr32(DISPLAY());
