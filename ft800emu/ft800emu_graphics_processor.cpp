@@ -487,11 +487,7 @@ BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint8_t val = reinterpret_cast<const uint8_t *>(&reinterpret_cast<const uint32_t *>(&ram[paletteSource])[value])[0];
-#ifdef BT815EMU_MODE
 	return (val << 24) | (val << 16) | (val << 8) | val;
-#else
-	return val << ((paletteSource & 3) << 3);
-#endif
 }
 
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
