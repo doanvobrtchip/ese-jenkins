@@ -113,88 +113,74 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		primRects->setText(0, tr("Rects"));
 		primRects->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_PRIMITIVE));
 		primRects->setData(2, Qt::UserRole, QVariant((uint)RECTS));
-
-        QTreeWidgetItem *item = new QTreeWidgetItem(m_Primitives);
-        item->setText(0, tr("Bitmap Extend Format"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_EXT_FORMAT));
-
-        item = new QTreeWidgetItem(m_Primitives);
-        item->setText(0, tr("Bitmap Swizzle"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SWIZZLE));
-
-        item = new QTreeWidgetItem(m_Primitives);
-        item->setText(0, tr("No-op"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_NOP));
 	}
 
 	m_Widgets = new QTreeWidgetItem(m_Tools);
 	m_Widgets->setText(0, tr("Widgets"));
 	m_Widgets->setIcon(0, QIcon(":/icons/ui-buttons.png"));
 	{
-		QTreeWidgetItem *primText = new QTreeWidgetItem(m_Widgets);
-		primText->setText(0, tr("Text"));
-		primText->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primText->setData(2, Qt::UserRole, QVariant((uint)CMD_TEXT));
-		QTreeWidgetItem *primButton = new QTreeWidgetItem(m_Widgets);
-		primButton->setText(0, tr("Button"));
-		primButton->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primButton->setData(2, Qt::UserRole, QVariant((uint)CMD_BUTTON));
-		QTreeWidgetItem *primKeys = new QTreeWidgetItem(m_Widgets);
-		primKeys->setText(0, tr("Keys"));
-		primKeys->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primKeys->setData(2, Qt::UserRole, QVariant((uint)CMD_KEYS));
-		QTreeWidgetItem *primProgress = new QTreeWidgetItem(m_Widgets);
-		primProgress->setText(0, tr("Progress"));
-		primProgress->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primProgress->setData(2, Qt::UserRole, QVariant((uint)CMD_PROGRESS));
-		QTreeWidgetItem *primSlider = new QTreeWidgetItem(m_Widgets);
-		primSlider->setText(0, tr("Slider"));
-		primSlider->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primSlider->setData(2, Qt::UserRole, QVariant((uint)CMD_SLIDER));
-		QTreeWidgetItem *primScrollbar = new QTreeWidgetItem(m_Widgets);
-		primScrollbar->setText(0, tr("Scrollbar"));
-		primScrollbar->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primScrollbar->setData(2, Qt::UserRole, QVariant((uint)CMD_SCROLLBAR));
-		QTreeWidgetItem *primToggle = new QTreeWidgetItem(m_Widgets);
-		primToggle->setText(0, tr("Toggle"));
-		primToggle->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primToggle->setData(2, Qt::UserRole, QVariant((uint)CMD_TOGGLE));
-		QTreeWidgetItem *primGauge = new QTreeWidgetItem(m_Widgets);
-		primGauge->setText(0, tr("Gauge"));
-		primGauge->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primGauge->setData(2, Qt::UserRole, QVariant((uint)CMD_GAUGE));
-		QTreeWidgetItem *primClock = new QTreeWidgetItem(m_Widgets);
-		primClock->setText(0, tr("Clock"));
-		primClock->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primClock->setData(2, Qt::UserRole, QVariant((uint)CMD_CLOCK));
-		QTreeWidgetItem *primDial = new QTreeWidgetItem(m_Widgets);
-		primDial->setText(0, tr("Dial"));
-		primDial->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primDial->setData(2, Qt::UserRole, QVariant((uint)CMD_DIAL));
-		QTreeWidgetItem *primNumber = new QTreeWidgetItem(m_Widgets);
-		primNumber->setText(0, tr("Number"));
-		primNumber->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primNumber->setData(2, Qt::UserRole, QVariant((uint)CMD_NUMBER));
-		QTreeWidgetItem *primSpinner = new QTreeWidgetItem(m_Widgets);
-		primSpinner->setText(0, tr("Spinner"));
-		primSpinner->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primSpinner->setData(2, Qt::UserRole, QVariant((uint)CMD_SPINNER));
-		QTreeWidgetItem *primScreensaver = new QTreeWidgetItem(m_Widgets);
-		primScreensaver->setText(0, tr("Screensaver"));
-		primScreensaver->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primScreensaver->setData(2, Qt::UserRole, QVariant((uint)CMD_SCREENSAVER));
-		QTreeWidgetItem *primGradient = new QTreeWidgetItem(m_Widgets);
-		primGradient->setText(0, tr("Gradient"));
-		primGradient->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primGradient->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
-		QTreeWidgetItem *primGradientA = new QTreeWidgetItem(m_Widgets);
-		primGradientA->setText(0, tr("Gradient A"));
-		primGradientA->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-		primGradientA->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENTA));
-		m_CoprocessorBT815Plus.push_back(primGradientA);
+		QTreeWidgetItem *item;
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Text"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TEXT));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Button"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_BUTTON));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Keys"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_KEYS));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Progress"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_PROGRESS));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Slider"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SLIDER));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Scrollbar"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SCROLLBAR));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Toggle"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TOGGLE));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Gauge"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GAUGE));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Clock"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CLOCK));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Dial"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_DIAL));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Number"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_NUMBER));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Spinner"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SPINNER));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Screensaver"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SCREENSAVER));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Gradient"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENT));
+		item = new QTreeWidgetItem(m_Widgets);
+		item->setText(0, tr("Gradient A"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GRADIENTA));
+		m_CoprocessorBT815Plus.push_back(item);
 	}
 
 	m_Utilities = new QTreeWidgetItem(m_Tools);
@@ -254,6 +240,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Memory Zero"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMZERO));
+
+
+
+
 
         item = new QTreeWidgetItem(m_Utilities);
         item->setText(0, tr("Display List Start"));
@@ -315,10 +305,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
         item->setText(0, tr("Animation Frame"));
         item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
         item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMFRAME));
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Bitmap Transform"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_BITMAP_TRANSFORM));
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
@@ -440,6 +426,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETBASE));
 		m_CoprocessorFT810Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Graphics);
+		item->setText(0, tr("Text Fill Width"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FILLWIDTH));
+		m_CoprocessorBT815Plus.push_back(item);
 	}
 
 	m_Bitmaps = new QTreeWidgetItem(m_Tools);
@@ -473,6 +464,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SIZE_H));
 		m_DisplayListFT810Plus.push_back(item);
+        item = new QTreeWidgetItem(m_Bitmaps);
+        item->setText(0, tr("Bitmap Extend Format"));
+        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
+        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_EXT_FORMAT));
+		m_DisplayListBT815Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Set Bitmap"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
@@ -487,6 +483,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_PALETTE_SOURCE));
 		m_DisplayListFT810Plus.push_back(item);
+        item = new QTreeWidgetItem(m_Bitmaps);
+        item->setText(0, tr("Bitmap Swizzle"));
+        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
+        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SWIZZLE));
+		m_DisplayListBT815Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Transform A"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
@@ -541,6 +542,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETMATRIX));
 		m_CoprocessorTools.push_back(item);
+        item = new QTreeWidgetItem(m_Bitmaps);
+        item->setText(0, tr("Bitmap Transform"));
+        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+        item->setData(2, Qt::UserRole, QVariant((uint)CMD_BITMAP_TRANSFORM));
+		m_CoprocessorBT815Plus.push_back(item);
 		/*item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Matrix Get Current"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
@@ -561,11 +567,6 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ROMFONT));
 		m_CoprocessorFT810Plus.push_back(item);
-		item = new QTreeWidgetItem(m_Bitmaps);
-		item->setText(0, tr("Text Fill Width"));
-		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FILLWIDTH));
-		m_CoprocessorBT815Plus.push_back(item);
 	}
 
 	m_Drawing = new QTreeWidgetItem(m_Tools);
@@ -583,11 +584,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_END));
 		item = new QTreeWidgetItem(m_Drawing);
 		item->setText(0, tr("Vertex Float"));
-		item->setData(1, Qt::UserRole, QVariant((uint)5));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_VERTEX));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX2F));
 		item = new QTreeWidgetItem(m_Drawing);
 		item->setText(0, tr("Vertex Integer"));
-		item->setData(1, Qt::UserRole, QVariant((uint)5));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_VERTEX));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_VERTEX2II));
 	}
 	//m_CoprocessorFT810Plus.push_back(item);
@@ -619,6 +620,11 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Return"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RETURN));
+        item = new QTreeWidgetItem(m_Execution);
+        item->setText(0, tr("No-op"));
+        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_NOP));
+		m_DisplayListBT815Plus.push_back(item);
 	}
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
@@ -746,6 +752,10 @@ void Toolbox::bindCurrentDevice()
 	for (size_t i = 0; i < m_DisplayListFT810Plus.size(); ++i)
 	{
 		m_DisplayListFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810));
+	}
+	for (size_t i = 0; i < m_DisplayListBT815Plus.size(); ++i)
+	{
+		m_DisplayListBT815Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815));
 	}
 }
 

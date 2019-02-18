@@ -28,6 +28,9 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 
+// Primitive, functions, and vertices drop on top of the command list,
+// Display list and command state drop before the widget that's under the cursor
+
 #define FTEDITOR_SELECTION_PRIMITIVE (1)
 #define FTEDITOR_SELECTION_FUNCTION (2)
 #define FTEDITOR_SELECTION_DL_STATE (3)
@@ -85,6 +88,7 @@ private:
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT810Plus;
 	std::vector<QTreeWidgetItem *> m_CoprocessorBT815Plus;
 	std::vector<QTreeWidgetItem *> m_DisplayListFT810Plus;
+	std::vector<QTreeWidgetItem *> m_DisplayListBT815Plus;
 
 	// Current line
 	DlEditor *m_LineEditor;
