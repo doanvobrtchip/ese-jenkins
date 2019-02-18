@@ -19,7 +19,7 @@ int lastfreespace = 0;
 
 void loadimage(int handle, int addr, int x, int y)
 {
-	printf("\n\Address: %i\n\n", addr);
+	printf("\n\nAddress: %i\n\n", addr);
 	FILE *f = fopen(TEST_FILE, "rb");
 	if (!f)
 		printf("Failed to open file\n");
