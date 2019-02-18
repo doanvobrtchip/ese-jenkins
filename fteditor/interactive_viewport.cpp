@@ -381,23 +381,20 @@ void InteractiveViewport::graphics()
 	m_MouseStackWrite.clear();
 	if (m_MouseOver || m_DragMoving)
 	{
-		if (!m_MouseStackWritten)
+		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 		{
-			if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
+			int size = FTEDITOR_TRACE_STACK_SIZE;
+			m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
+			BT8XXEMU_processTrace(g_Emulator, &m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
+			m_MouseStackWrite.resize(size);
+			if (m_MouseStackWrite.size())
 			{
-				int size = FTEDITOR_TRACE_STACK_SIZE;
-				m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
-				BT8XXEMU_processTrace(g_Emulator, &m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
-				m_MouseStackWrite.resize(size);
-				if (m_MouseStackWrite.size())
-				{
-					m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
-					m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
-					m_MouseStackValid = true;
-				}
-				else m_MouseStackValid = false;
-				m_MouseStackWritten = true;
+				m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
+				m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
+				m_MouseStackValid = true;
 			}
+			else m_MouseStackValid = false;
+			m_MouseStackWritten = true;
 		}
 		m_DragMoving = false;
 	}
