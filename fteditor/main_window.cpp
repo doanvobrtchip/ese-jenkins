@@ -86,14 +86,41 @@ namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
 
-#define FTEDITOR_DEBUG_EMUWRITE 0
-#define EMULATOR_DLL_NAME       "bt8xxemu.dll"
-
 typedef int32_t ramaddr;
 
-volatile int s_HSize = 480;
-volatile int s_VSize = 272;
-volatile int s_Rotate = 0;
+extern volatile int g_HSize;
+extern volatile int g_VSize;
+extern volatile int g_Rotate;
+
+extern volatile bool g_EmulatorRunning;
+
+extern ContentManager *g_ContentManager;
+
+extern DlEditor *g_DlEditor;
+extern DlEditor *g_CmdEditor;
+extern DlEditor *g_Macro;
+
+extern int g_UtilizationDisplayListCmd;
+extern volatile bool g_WaitingCoprocessorAnimation;
+
+extern int *g_DisplayListCoprocessorCommandRead;
+
+extern int g_StepCmdLimit;
+
+extern volatile bool g_CoprocessorFaultOccured;
+extern volatile bool g_CoprocessorFrameSuccess;
+extern char g_CoprocessorDiagnostic[128 + 4];
+extern bool g_StreamingData;
+
+extern bool g_WarnMissingClear;
+extern bool g_WarnMissingClearActive;
+
+extern volatile bool g_ShowCoprocessorBusy;
+
+void cleanupMediaFifo();
+void emuMain(BT8XXEMU_Emulator *sender, void *context);
+void closeDummy(BT8XXEMU_Emulator *sender, void *context);
+void resetemu();
 
 static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	3, // FT800
@@ -130,1406 +157,15 @@ static const int s_StandardHeights[] = {
 	600,
 };
 
-static volatile bool s_EmulatorRunning = false;
-
-void getVersionString(QString fName, QString &fileDescription, QString &fileVersion)
-{
-    // first of all, GetFileVersionInfoSize
-    DWORD dwHandle;
-    DWORD dwLen = GetFileVersionInfoSize((LPCTSTR)fName.toStdString().data(), &dwHandle);
-
-    LPVOID *lpData = new LPVOID[dwLen];
-    if (!GetFileVersionInfo((LPCTSTR)fName.toStdString().data(), dwHandle, dwLen, lpData))
-    {
-        delete[] lpData;
-        return;
-    }
-   
-    char *lpBuffer = NULL;
-    UINT uLen;
-
-    // language ID 040904E4: U.S. English, char set = Windows, Multilingual
-    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileDescription", (LPVOID*)&lpBuffer, &uLen);
-    fileDescription = lpBuffer;
-
-    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileVersion", (LPVOID*)&lpBuffer, &uLen);
-    fileVersion = lpBuffer;
-    
-    delete[] lpData;
-}
-
-void swrbegin(ramaddr address)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swrbegin(%i)\n", (int)address);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0x3F));
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	// BT8XXEMU_transfer(0x00);
-}
-
-void swr8(uint8_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr8(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value);
-}
-
-void swr16(uint16_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr16(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 8) & 0xFF);
-}
-
-void swr32(uint32_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr32(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 16) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 24) & 0xFF);
-}
-
-void swrend()
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swrend()\n");
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-}
-
-void wr8(ramaddr address, uint8_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr8(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr8(value);
-	swrend();
-}
-
-void wr16(ramaddr address, uint16_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr16(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr16(value);
-	swrend();
-}
-
-void wr32(ramaddr address, uint32_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr32(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr32(value);
-	swrend();
-}
-
-uint16_t rd16(size_t address)
-{
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, 0x00);
-
-	uint16_t value;
-	value = BT8XXEMU_transfer(g_Emulator, 0);
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
-
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("rd16(%i), %i\n", (int)address, (int)value);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-	return value;
-}
-
-uint32_t rd32(size_t address)
-{
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, 0x00);
-
-	uint32_t value;
-	value = BT8XXEMU_transfer(g_Emulator, 0);
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 16;
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 24;
-
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("rd32(%i), %i\n", (int)address, (int)value);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-	return value;
-}
-
-static DlEditor *s_DlEditor = NULL;
-static DlEditor *s_CmdEditor = NULL;
-static DlEditor *s_Macro = NULL;
-// static FILE *s_F = NULL;
-
-void closeDummy(BT8XXEMU_Emulator *sender, void *context)
-{
-	// no-op
-	// NOTE: Used to avoid loop thread kill
-}
-
-void setup()
-{
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 480);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 272);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 5);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_MASK), 0xFF); // INT_CMDEMPTY);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_EN), 1);
-}
-
-// Content manager
-static ContentManager *s_ContentManager = NULL;
-//static BitmapSetup *s_BitmapSetup = NULL;
-//static int s_BitmapSetupModNb = 0;
-
-// Utilization
-static int s_UtilizationDisplayListCmd = 0;
-static volatile bool s_WaitingCoprocessorAnimation = false;
-
-// Array indexed by display list index containing coprocessor line which wrote the display list command
-static int s_DisplayListCoprocessorCommandA[FTEDITOR_DL_SIZE];
-static int s_DisplayListCoprocessorCommandB[FTEDITOR_DL_SIZE];
-static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
-
-static std::vector<uint32_t> s_CmdParamCache;
-static std::vector<std::string> s_CmdStrParamCache;
-
-int g_StepCmdLimit = 0;
-static int s_StepCmdLimitCurrent = 0;
-
-static int s_MediaFifoPtr = 0;
-static int s_MediaFifoSize = 0;
-static QFile *s_MediaFifoFile = NULL;
-static QDataStream *s_MediaFifoStream = NULL;
-
-static volatile bool s_CoprocessorFaultOccured = false;
-static volatile bool s_CoprocessorFrameSuccess = false;
-static char s_CoprocessorDiagnostic[128 + 4] = { 0 };
-static bool s_StreamingData = false;
-
-static bool s_WarnMissingClear = false;
-static bool s_WarnMissingClearActive = false;
-
-static bool displayListSwapped = false;
-static bool coprocessorSwapped = false;
-
-static bool s_WantReloopCmd = false;
-
-QElapsedTimer s_AbortTimer;
-
-static volatile bool s_ShowCoprocessorBusy = true;
-
-void cleanupMediaFifo()
-{
-	delete s_MediaFifoStream;
-	s_MediaFifoStream = NULL;
-	delete s_MediaFifoFile;
-	s_MediaFifoFile = NULL;
-}
-
-void resetemu()
-{
-	s_UtilizationDisplayListCmd = 0;
-	s_WaitingCoprocessorAnimation = false;
-	s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-	s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
-	s_CmdParamCache.clear();
-	g_StepCmdLimit = 0;
-	s_StepCmdLimitCurrent = 0;
-	s_CoprocessorFaultOccured = false;
-	s_WarnMissingClear = false;
-	s_WarnMissingClearActive = false;
-	displayListSwapped = false;
-	coprocessorSwapped = false;
-	s_WantReloopCmd = false;
-	s_MediaFifoPtr = 0;
-	s_MediaFifoSize = 0;
-	cleanupMediaFifo();
-}
-
-bool hasOTP()
-{
-	return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816;
-}
-
-void resetCoprocessorFromLoop()
-{
-	printf("Reset coprocessor from loop\n");
-
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
-	uint16_t videoPatchVector;
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		videoPatchVector = rd16(0x309162);
-
-	// Enter reset state
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
-	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	// Leave reset
-	if (hasOTP())
-	{
-		// Enable patched rom in case cmd_logo was running
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
-	}
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	for (int i = 0; i < 4096; i += 4)
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	// Stop playing audio in case video with audio was playing during reset
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-
-	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	if (hasOTP())
-	{
-		// Go back into the patched coprocessor main loop
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
-		QThread::msleep(10); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
-		// Need to manually stop previous command from repeating infinitely
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-		QThread::msleep(100);
-	}
-
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		wr16(0x309162, videoPatchVector);
-
-	// Start display list from beginning
-	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-	{
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_FLASHATTACH);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
-	}
-	else
-	{
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
-	}
-}
-
-// static int s_SwapCount = 0;
-void loop()
-{
-	if (!s_EmulatorRunning)
-	{
-		QThread::yieldCurrentThread();
-		return;
-	}
-
-	if (BT8XXEMU_hasInterrupt(g_Emulator))
-	{
-		uint32_t flags = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_FLAGS));
-		// printf("INTERRUPT %i\n", flags);
-		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF)
-		{
-			s_CoprocessorFaultOccured = true;
-			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-			{
-				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
-				s_CoprocessorDiagnostic[128] = '\0';
-				printf("COPROCESSOR FAULT: '%s'\n", s_CoprocessorDiagnostic);
-			}
-			else
-			{
-				s_CoprocessorDiagnostic[0] = '\0';
-				printf("COPROCESSOR FAULT\n");
-			}
-			resetCoprocessorFromLoop();
-		}
-	}
-
-	s_ShowCoprocessorBusy = false;
-
-	// wait
-	if (coprocessorSwapped)
-	{
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE)) != rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)))
-		{
-			if (!s_EmulatorRunning) return;
-			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-		}
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_DL)) != 0)
-		{
-			if (!s_EmulatorRunning) return;
-			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-		}
-		coprocessorSwapped = false;
-		// ++s_SwapCount;
-		// printf("Swapped CMD %i\n", s_SwapCount);
-	}
-	else if (displayListSwapped)
-	{
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP)) != DLSWAP_DONE)
-		{
-			if (!s_EmulatorRunning) return;
-		}
-		displayListSwapped = false;
-		// ++s_SwapCount;
-		// printf("Swapped DL %i\n", s_SwapCount);
-	}
-	else
-	{
-		QThread::msleep(10);
-	}
-
-	if (!s_EmulatorRunning)
-		return;
-
-	s_ContentManager->lockContent();
-	if (g_Flash)
-	{
-		std::set<ContentInfo *> contentInfoFlash;
-		s_ContentManager->swapUploadFlashDirty(contentInfoFlash);
-		size_t flashSize = BT8XXEMU_Flash_size(g_Flash);
-		for (std::set<ContentInfo *>::iterator it(contentInfoFlash.begin()), end(contentInfoFlash.end()); it != end; ++it)
-		{
-			ContentInfo *info = (*it);
-			int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
-			if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
-			{
-				// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
-				printf("[Flash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
-				continue;
-			}
-			bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
-				? info->DataCompressed : false;
-			QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
-			printf("[Flash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
-			QFile binFile(fileName);
-			if (!binFile.exists())
-			{
-				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
-				continue;
-			}
-			int binSize = binFile.size();
-			if (binSize + loadAddr > flashSize)
-			{
-				printf("[Flash] Error: File of size '%i' exceeds flash size\n", binSize);
-				continue;
-			}
-			; {
-				binFile.open(QIODevice::ReadOnly);
-				QDataStream in(&binFile);
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
-				int s = in.readRawData(&ram[loadAddr], binSize);
-				BT8XXEMU_poke(g_Emulator);
-                binFile.close();
-			}
-		}
-	}
-	std::set<ContentInfo *> contentInfoMemory;
-	s_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
-	bool reuploadFontSetup = false;
-	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
-	{
-		ContentInfo *info = (*it);
-		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
-		QString fileName = info->DestName + ".raw";
-		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
-		QFile binFile(fileName);
-		if (!binFile.exists())
-		{
-			printf("[RAM_G] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
-			continue;
-		}
-		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
-		int binSize = imageCoprocessor ? info->CachedMemorySize : binFile.size();
-		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
-		{
-			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
-			continue;
-		}
-		if (imageCoprocessor) // Load image through coprocessor
-		{
-			int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-			int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-			int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-			int freespace = ((4096 - 4) - fullness);
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			swr32(CMD_LOADIMAGE);
-			swr32(loadAddr);
-			swr32(OPT_NODL | (info->ImageMono ? OPT_MONO : 0));
-			swrend();
-			fullness += 12;
-			freespace -= 12;
-			wp += 12;
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			int fileSize = binFile.size();
-			binFile.open(QIODevice::ReadOnly);
-			QDataStream in(&binFile);
-			int writeCount = 0;
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			for (;;)
-			{
-				if (freespace < (4 + 8) || writeCount < 128)
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF)
-						{
-							printf("Error during stream at %i bytes\n", (int)writeCount);
-							return;
-						}
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-					} while (fullness > 1024);
-					freespace = ((4096 - 4) - fullness);
-					printf("Stream: %i bytes\n", (int)writeCount);
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-				uint32_t buffer;
-				int nb = in.readRawData(reinterpret_cast<char *>(&buffer), 4);
-				if (nb > 0)
-				{
-					// write
-					writeCount += nb;
-					wp += 4;
-					freespace -= 4;
-					swr32(buffer);
-				}
-				if (nb != 4)
-				{
-					// done
-					printf("Stream finished: %i bytes\n", (int)writeCount);
-					if (writeCount == 0)
-					{
-						swrend();
-						resetCoprocessorFromLoop();
-						return;
-					}
-					break;
-				}
-				if (!s_EmulatorRunning)
-				{
-					swrend();
-					return;
-				}
-			}
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-			continue;
-		}
-		// ok
-		; {
-			binFile.open(QIODevice::ReadOnly);
-			QDataStream in(&binFile);
-			/*swrbegin(info->MemoryAddress);
-			char b;
-			while (in.readRawData(&b, 1))
-			{
-				swr8(b);
-			}
-			swrend();*/
-			char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
-			BT8XXEMU_poke(g_Emulator);
-		}
-		if (info->Converter == ContentInfo::Font)
-		{
-			// Write bitmap address
-			wr32(loadAddr + 144, loadAddr + 148);
-		}
-		if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
-		{
-			if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
-			{
-				QString palName = info->DestName + ".lut.raw";
-				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
-				QFile palFile(palName);
-				if (!palFile.exists())
-				{
-					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
-					continue;
-				}
-				int palSize = (int)palFile.size();
-				if (palSize != 1024)
-				{
-					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-					continue;
-				}
-				// ok
-				{
-					palFile.open(QIODevice::ReadOnly);
-					QDataStream in(&palFile);
-					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
-					BT8XXEMU_poke(g_Emulator);
-				}
-			}
-		}
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-		{
-			if (info->Converter == ContentInfo::Image && (info->ImageFormat == PALETTED8 || info->ImageFormat == PALETTED565 || info->ImageFormat == PALETTED4444))
-			{
-				int palSize;
-				switch (info->ImageFormat)
-				{
-				case PALETTED565:
-				case PALETTED4444:
-					palSize = 256 * 2;
-					break;
-				default:
-					palSize = 256 * 4;
-					break;
-				}
-				QString palName = info->DestName + ".lut.raw";
-				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
-				QFile palFile(palName);
-				if (!palFile.exists())
-				{
-					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
-					continue;
-				}
-				if (palSize != (int)palFile.size())
-				{
-					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-					continue;
-				}
-				// ok
-				{
-					palFile.open(QIODevice::ReadOnly);
-					QDataStream in(&palFile);
-					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-					int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], palSize);
-					BT8XXEMU_poke(g_Emulator);
-				}
-			}
-		}
-		/*if (info->Converter == ContentInfo::Font)
-		{*/ // Always reupload, since raw data may change too
-			reuploadFontSetup = true;
-		/*}*/
-	}
-	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
-	if (reuploadBitmapSetup)
-	{
-		printf("Reupload bitmap setup to RAM_DL\n");
-		wr32(REG_PCLK, 0);
-		swrbegin(RAM_DL);
-		const FT800EMU::BitmapInfo *bitmapInfo = s_BitmapSetup->getBitmapInfos();
-		const ContentInfo *const *bitmapSources = s_BitmapSetup->getBitmapSources();
-		for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
-		{
-			const ContentInfo *info = bitmapSources[i];
-			if (info && s_BitmapSetup->bitmapSourceExists(i))
-			{
-				swr32(BITMAP_HANDLE(i));
-				// printf("%i\n", i);
-				swr32(BITMAP_SOURCE(info->MemoryAddress));
-				// printf("%i, %i, %i\n", info->ImageFormat, info->CachedImageStride, info->CachedImageHeight);
-				if (info->Converter == ContentInfo::Image) // Always use cached data from content info for image layout
-					swr32(BITMAP_LAYOUT(info->ImageFormat, info->CachedImageStride, info->CachedImageHeight));
-				else
-					swr32(BITMAP_LAYOUT(bitmapInfo[i].LayoutFormat, bitmapInfo[i].LayoutStride, bitmapInfo[i].LayoutHeight));
-				swr32(BITMAP_SIZE(bitmapInfo[i].SizeFilter, bitmapInfo[i].SizeWrapX, bitmapInfo[i].SizeWrapY, bitmapInfo[i].SizeWidth, bitmapInfo[i].SizeHeight));
-			}
-		}
-		swrend();
-		wr32(REG_DLSWAP, DLSWAP_FRAME);
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
-		{
-			printf("Waiting for bitmap setup DL swap\n");
-			if (!s_EmulatorRunning) return;
-		}
-		wr32(REG_PCLK, 5);
-		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
-	}*/
-	s_ContentManager->unlockContent();
-
-	// switch to next resolution
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)) != s_HSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), s_HSize);
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != s_VSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), s_VSize);
-	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != s_Rotate)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), s_Rotate);
-	// switch to next macro list
-	s_Macro->lockDisplayList();
-	bool macroModified = s_Macro->isDisplayListModified();
-	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
-	// {
-		if (s_Macro->getDisplayListParsed()[0].ValidId
-			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0)) != s_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0), s_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
-		if (s_Macro->getDisplayListParsed()[1].ValidId
-			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1)) != s_Macro->getDisplayList()[1])
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1), s_Macro->getDisplayList()[1]);
-	// }
-	s_Macro->unlockDisplayList();
-	// switch to next display list
-	s_DlEditor->lockDisplayList();
-	s_CmdEditor->lockDisplayList();
-	bool dlModified = s_DlEditor->isDisplayListModified();
-	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
-	{
-		bool warnMissingClear = true;
-		s_WantReloopCmd = false;
-		s_StepCmdLimitCurrent = g_StepCmdLimit;
-		// if (dlModified) printf("dl modified\n");
-		// if (cmdModified) printf("cmd modified\n");
-		uint32_t *displayList = s_DlEditor->getDisplayList();
-		swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-		{
-			// printf("dl %i: %i\n", i, displayList[i]);
-			if ((displayList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
-				warnMissingClear = false;
-			swr32(displayList[i]);
-		}
-		swrend();
-		// wr32(REG_DLSWAP, DLSWAP_FRAME);
-		// displayListSwapped = true;
-		s_DlEditor->unlockDisplayList();
-
-		uint32_t cmdList[FTEDITOR_DL_SIZE];
-		// DlParsed cmdParsed[FTEDITOR_DL_SIZE];
-		s_CmdParamCache.clear();
-		s_CmdStrParamCache.clear();
-		int strParamRead = 0;
-		int cmdParamCache[FTEDITOR_DL_SIZE + 1];
-		bool cmdValid[FTEDITOR_DL_SIZE];
-		uint32_t *cmdListPtr = s_CmdEditor->getDisplayList();
-		const DlParsed *cmdParsedPtr = s_CmdEditor->getDisplayListParsed();
-		// Make local copy, necessary in case of blocking commands
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-		{
-			cmdList[i] = cmdListPtr[i];
-			// cmdParsed[i] = cmdParsedPtr[i];
-			cmdParamCache[i] = (int)s_CmdParamCache.size();
-			DlParser::compile(FTEDITOR_CURRENT_DEVICE, s_CmdParamCache, cmdParsedPtr[i]);
-			cmdValid[i] = cmdParsedPtr[i].ValidId;
-			if (cmdValid[i])
-			{
-				switch (cmdList[i])
-				{
-				case CMD_LOADIMAGE:
-				case CMD_PLAYVIDEO:
-					s_CmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
-					break;
-				}
-				if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
-					warnMissingClear = false;
-			}
-		}
-		cmdParamCache[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
-		s_CmdEditor->unlockDisplayList();
-		s_WarnMissingClear = warnMissingClear;
-
-		s_ShowCoprocessorBusy = true;
-		bool validCmd = false;
-		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
-		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
-		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
-		int freespace = ((4096 - 4) - fullness);
-		BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-		swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-		swr32(CMD_COLDSTART);
-		wp += 4;
-		freespace -= 4;
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-		{
-			swr32(CMD_FLASHATTACH);
-			swr32(CMD_FLASHFAST);
-			swr32(~0); // result
-			wp += 12;
-			freespace -= 12;
-		}
-		s_MediaFifoPtr = 0;
-		s_MediaFifoSize = 0;
-		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
-		{
-			// const DlParsed &pa = cmdParsed[i];
-			// Skip invalid lines (invalid id)
-			if (!cmdValid[i]) continue;
-			bool useMediaFifo = false;
-			bool useFlash = false;
-			const char *useFileStream = NULL;
-			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
-			{
-				s_MediaFifoPtr = s_CmdParamCache[cmdParamCache[i]];
-				s_MediaFifoSize = s_CmdParamCache[cmdParamCache[i] + 1];
-			}
-			else if (cmdList[i] == CMD_LOADIMAGE)
-			{
-				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_FLASH);
-				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
-				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO);
-			}
-			else if (cmdList[i] == CMD_PLAYVIDEO)
-			{
-				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i]] & OPT_FLASH);
-				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
-				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
-			}
-			else if (cmdList[i] == CMD_SNAPSHOT)
-			{
-				// Validate snapshot address range
-				uint32_t addr = s_CmdParamCache[cmdParamCache[i]];
-				uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
-				uint32_t imgSize = (s_VSize * s_HSize) * 2;
-				if (addr + imgSize > ramGEnd)
-				{
-					printf("Dropping CMD_SNAPSHOT, out of memory range\n");
-					continue;
-				}
-			}
-			if (useFileStream)
-			{
-				if (!QFileInfo(useFileStream).exists())
-					continue;
-			}
-			validCmd = true;
-			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
-			int cmdLen = 4 + (paramNb * 4);
-			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
-			{
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				do
-				{
-					if (!s_EmulatorRunning) return;
-					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-					if ((rp & 0xFFF) == 0xFFF) return;
-					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-				} while (fullness != 0);
-				freespace = ((4096 - 4) - fullness);
-
-				int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-				{
-					if (cpWrite[i] >= 0)
-					{
-						// printf("A %i\n", i);
-						s_DisplayListCoprocessorCommandWrite[i]
-							= coprocessorWrites[cpWrite[i]];
-					}
-				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			}
-			int wpn = 0;
-			coprocessorWrites[(wp & 0xFFF) >> 2] = i;
-			swr32(cmdList[i]);
-			// printf("cmd %i", cmdList[i]);
-			for (int j = cmdParamCache[i]; j < cmdParamCache[i + 1]; ++j)
-			{
-				++wpn;
-				// printf("; param %i", s_CmdParamCache[j]);
-				coprocessorWrites[((wp >> 2) + wpn) & 0x3FF] = i;
-				swr32(s_CmdParamCache[j]);
-			}
-			// printf("\n");
-			wp += cmdLen;
-			freespace -= cmdLen;
-			// Handle special cases
-			if (cmdList[i] == CMD_LOGO)
-			{
-				printf("Waiting for CMD_LOGO...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				printf("WP = %i\n", wp);
-				QThread::msleep(100);
-
-				do
-				{
-					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-					wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rp & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				} while (rp || wp);
-				wp = 0;
-				rp = 0;
-				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-				freespace = ((4096 - 4) - fullness);
-
-				int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-				{
-					if (cpWrite[i] >= 0)
-					{
-						// printf("D %i\n", i);
-						s_DisplayListCoprocessorCommandWrite[i]
-							= coprocessorWrites[cpWrite[i]];
-					}
-				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-				if (wp == 0) printf("WP 0\n");
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				if (wp == 8) printf("WP 8\n");
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				s_WantReloopCmd = true;
-				printf("Finished CMD_LOGO\n");
-			}
-			else if (cmdList[i] == CMD_CALIBRATE)
-			{
-				printf("Waiting for CMD_CALIBRATE...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				s_WantReloopCmd = true;
-				printf("Finished CMD_CALIBRATE\n");
-			}
-			else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
-			{
-				printf("Waiting for CMD_PLAYVIDEO...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { printf("Abort wait, restarting\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				printf("Waiting for CMD_COLDSTART...\n");
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault 2\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				printf("Finished CMD_PLAYVIDEO\n");
-			}
-			if (useFileStream)
-			{
-				printf("Flush before stream\n");
-				if (true) // Flush first
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF) return;
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-						{
-							printf("Abort coprocessor flush (793)\n");
-							s_WantReloopCmd = true;
-							resetCoprocessorFromLoop();
-							return;
-						}
-					} while (fullness > cmdLen); // Ok to keep streaming command in
-					freespace = ((4096 - 4) - fullness);
-
-					int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-					{
-						if (cpWrite[i] >= 0)
-						{
-							// printf("A %i\n", i);
-							s_DisplayListCoprocessorCommandWrite[i]
-								= coprocessorWrites[cpWrite[i]];
-						}
-					}
-					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-				if (useMediaFifo)
-				{
-					if (s_MediaFifoSize)
-					{
-						swrend();
-
-						cleanupMediaFifo();
-						s_MediaFifoFile = new QFile(useFileStream);
-						s_MediaFifoFile->open(QIODevice::ReadOnly);
-						s_MediaFifoStream = new QDataStream(s_MediaFifoFile);
-
-						s_StreamingData = true;
-						printf("Streaming into media fifo\n");
-						int writeCount = 0;
-						QDataStream &mfstream = *s_MediaFifoStream;
-						ramaddr mfptr = s_MediaFifoPtr;
-						ramaddr mfsz = s_MediaFifoSize;
-						ramaddr mfwp;
-						ramaddr mfrp;
-						ramaddr mffree;
-#define mfwprd() mfwp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE)) /*- mfptr*/) % mfsz;
-#define mfwpinc(v) { mfwp += v; mffree -= v; mfwp %= mfsz; }
-#define mfwpwr() wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE), mfwp /*+ mfptr*/);
-#define mffreespace ((mfrp > mfwp) ? (mfrp - mfwp - 4) : (mfrp + s_MediaFifoSize - mfwp - 4))
-#define mfrprd() { mfrp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_READ)) /*- mfptr*/) % mfsz; mffree = mffreespace; }
-						mfwprd();
-						mfrprd();
-
-						printf("Media fifo write start at %x (%i)\n", mfptr + mfwp, mfwp);
-						printf("Media fifo read start at %x (%i)\n", mfptr + mfrp, mfrp);
-						printf("Media fifo freespace start at %i\n", mffree);
-
-						swrbegin(mfptr + mfwp);
-						for (;;)
-						{
-							if (mffree < 4)
-							{
-								swrend();
-
-								printf("Media fifo stream: %i bytes\n", (int)writeCount);
-
-								mfwpwr();
-								printf("Media fifo write at %x (%i)\n", mfptr + mfwp, mfwp);
-								printf("Media fifo read at %x (%i)\n", mfptr + mfrp, mfrp);
-								printf("Media fifo freespace at %i\n", mffree);
-								do
-								{
-									if (!s_EmulatorRunning) return;
-									ramaddr rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-									if ((rp & 0xFFF) == 0xFFF) return;
-									mfrprd();
-
-									if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-									{
-										printf("Abort media fifo flush (871)\n");
-										s_WantReloopCmd = true;
-										resetCoprocessorFromLoop();
-										return;
-									}
-								} while (mffree < (mfsz >> 1));
-
-								swrbegin(mfptr + mfwp);
-							}
-
-							uint32_t buffer;
-							int nb = mfstream.readRawData(reinterpret_cast<char *>(&buffer), 4);
-							if (nb > 0)
-							{
-								// write
-								swr32(buffer);
-								writeCount += nb;
-								mfwpinc(4);
-
-								if (mfwp == 0)
-								{
-									swrend();
-									swrbegin(mfptr + mfwp);
-								}
-							}
-							if (nb != 4)
-							{
-								// done
-								swrend();
-								mfrprd();
-								mfwpwr();
-								printf("Media fifo stream finished: %i bytes\n", (int)writeCount);
-								printf("Media fifo write end at %x (%i)\n", mfptr + mfwp, mfwp);
-								printf("Media fifo read end at %x (%i)\n", mfptr + mfrp, mfrp);
-								printf("Media fifo freespace end at %i\n", mffree);
-								if (writeCount == 0)
-								{
-									resetCoprocessorFromLoop();
-									return;
-								}
-								break;
-							}
-							if (!s_EmulatorRunning)
-							{
-								swrend();
-								return;
-							}
-							if (s_CmdEditor->isDisplayListModified())
-							{
-								s_WantReloopCmd = true;
-								swrend();
-								resetCoprocessorFromLoop();
-								return;
-							}
-						}
-						s_StreamingData = false;
-						printf("Media fifo finished\n");
-
-#undef mfrprd
-#undef mfwprd
-#undef mfwpinc
-#undef mfwpwr
-#undef mffreespace
-
-						swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-					}
-					else
-					{
-						printf("Media fifo not setup\n");
-						swrend();
-						resetCoprocessorFromLoop();
-						return;
-					}
-				}
-				else
-				{
-					s_StreamingData = true;
-					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
-					QFile cmdFile(useFileStream);
-					printf("File size: %i\n", (int)cmdFile.size());
-					cmdFile.open(QIODevice::ReadOnly);
-					QDataStream cmdStream(&cmdFile);
-					int writeCount = 0;
-					
-					for (;;)
-					{
-						if (freespace < (4 + 8) || writeCount < 128) // Wait for coprocessor free space, + 4 for swap and display afterwards
-						{
-							// COPY PASTE FROM ABOVE
-							
-							swrend();
-							wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-							do
-							{
-								if (!s_EmulatorRunning) return;
-								rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-								if ((rp & 0xFFF) == 0xFFF)
-								{
-									printf("Error during stream at %i bytes\n", (int)writeCount);
-									return; // DIFFER FROM ABOVE HERE
-								}
-								fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-								if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-								{
-									printf("Abort streaming flush (976)\n");
-									s_WantReloopCmd = true;
-									resetCoprocessorFromLoop();
-									return;
-								}
-							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
-							freespace = ((4096 - 4) - fullness);
-
-							int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-							for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-							{
-								if (cpWrite[i] >= 0)
-								{
-									// printf("A %i\n", i);
-									s_DisplayListCoprocessorCommandWrite[i]
-										= coprocessorWrites[cpWrite[i]];
-								}
-							}
-							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-							BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-							printf("Stream: %i bytes\n", (int)writeCount);
-
-							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-						}
-						
-						uint32_t buffer;
-						int nb = cmdStream.readRawData(reinterpret_cast<char *>(&buffer), 4);
-						if (nb > 0)
-						{
-							// write
-							coprocessorWrites[(wp >> 2) & 0x3FF] = i;
-							writeCount += nb;
-							wp += 4;
-							freespace -= 4;
-							swr32(buffer);
-						}
-						if (nb != 4)
-						{
-							// done
-							printf("Stream finished: %i bytes\n", (int)writeCount);
-							if (writeCount == 0)
-							{
-								swrend();
-								resetCoprocessorFromLoop();
-								return;
-							}
-							break;
-						}
-						if (!s_EmulatorRunning)
-						{
-							swrend();
-							return;
-						}
-						if (s_CmdEditor->isDisplayListModified())
-						{
-							s_WantReloopCmd = true;
-							swrend();
-							resetCoprocessorFromLoop();
-							return;
-						}
-					}
-					printf("Finished streaming in file\n");
-					s_StreamingData = false;
-				}
-
-				printf("Flush after stream\n");
-				if (true) // Flush after
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF) return;
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-						{
-							printf("Abort coprocessor flush (1056)\n");
-							s_WantReloopCmd = true;
-							resetCoprocessorFromLoop();
-							return;
-						}
-					} while (fullness > 0); // Want completely empty
-					freespace = ((4096 - 4) - fullness);
-
-					int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-					{
-						if (cpWrite[i] >= 0)
-						{
-							// printf("A %i\n", i);
-							s_DisplayListCoprocessorCommandWrite[i]
-								= coprocessorWrites[cpWrite[i]];
-						}
-					}
-					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-			}
-		}
-
-		if (validCmd)
-		{
-			swr32(DISPLAY());
-			swr32(CMD_SWAP);
-			wp += 8;
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			// Finish all processing
-			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-			s_AbortTimer.start();
-			while ((wp & 0xFFF) != rpl)
-			{
-				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-				if (!s_EmulatorRunning) return;
-				if ((rpl & 0xFFF) == 0xFFF) return;
-
-				if (s_CmdEditor->isDisplayListModified() || s_WantReloopCmd) // Trap to avoid infinite flush on errors
-				{
-					s_WantReloopCmd = true;
-					if (s_AbortTimer.elapsed() > 1000)
-					{
-						printf("Abort coprocessor flush (1100)\n");
-						resetCoprocessorFromLoop();
-						return;
-					}
-				}
-			}
-			int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-			for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-			{
-				if (cpWrite[i] >= 0)
-				{
-					// printf("C %i, %i, %i\n", i, cpWrite[i], coprocessorWrites[cpWrite[i]]);
-					s_DisplayListCoprocessorCommandWrite[i]
-						= coprocessorWrites[cpWrite[i]];
-				}
-			}
-			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
-			{
-				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
-				{
-					s_UtilizationDisplayListCmd = i;
-					break;
-				}
-			}
-
-			// Test
-			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-			{
-				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
-				{
-					std::string res;
-					DlParser::toString(res, rd32(RAM_DL + (i * 4)));
-					printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
-				}
-			}*/
-
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			swr32(CMD_DLSTART);
-			wp += 4;
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			s_CoprocessorFaultOccured = false;
-			s_StreamingData = false;
-			coprocessorSwapped = true;
-		}
-		else
-		{
-			// Swap frame directly if nothing was written to the coprocessor
-			s_UtilizationDisplayListCmd = 0;
-
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
-		}
-
-		s_ShowCoprocessorBusy = false;
-		s_CoprocessorFrameSuccess = true;
-
-		// FIXME: Not very thread-safe, but not too critical
-		int *nextWrite = s_DisplayListCoprocessorCommandRead;
-		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
-		s_DisplayListCoprocessorCommandWrite = nextWrite;
-	}
-	else
-	{
-		s_CmdEditor->unlockDisplayList();
-		s_DlEditor->unlockDisplayList();
-	}
-
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && s_MediaFifoStream && s_MediaFifoSize)
-	{
-		// Write out to media FIFO
-
-
-	}
-}
-
-void emuMain(BT8XXEMU_Emulator *sender, void *context)
-{
-	setup();
-
-	while (BT8XXEMU_isRunning(sender))
-	{
-		loop();
-	}
-}
-
-void keyboard(BT8XXEMU_Emulator *sender, void *context)
-{
-
-}
-
 bool MainWindow::waitingCoprocessorAnimation()
 {
-	return s_WaitingCoprocessorAnimation;
+	return g_WaitingCoprocessorAnimation;
 }
 
 int *MainWindow::getDlCmd()
 {
 	// FIXME: Not very thread-safe, but not too critical
-	return s_DisplayListCoprocessorCommandRead;
+	return g_DisplayListCoprocessorCommandRead;
 }
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
@@ -1637,9 +273,9 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	incbLanguageCode();
 
-	s_DlEditor = m_DlEditor;
-	s_CmdEditor = m_CmdEditor;
-	s_Macro = m_Macro;
+	g_DlEditor = m_DlEditor;
+	g_CmdEditor = m_CmdEditor;
+	g_Macro = m_Macro;
 
 	startEmulatorInternal();
 
@@ -1653,10 +289,10 @@ MainWindow::~MainWindow()
 	stopEmulatorInternal();
 
 	m_ContentManager->lockContent();
-	s_DlEditor = NULL;
-	s_CmdEditor = NULL;
-	s_Macro = NULL;
-	s_ContentManager = NULL;
+	g_DlEditor = NULL;
+	g_CmdEditor = NULL;
+	g_Macro = NULL;
+	g_ContentManager = NULL;
 	m_ContentManager->unlockContent();
 	//s_BitmapSetup = NULL;
 
@@ -2037,21 +673,21 @@ void MainWindow::frameQt()
 {
 	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
 
-	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+	int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (!s_StreamingData && s_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (!g_StreamingData && g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
-			if (s_CoprocessorDiagnostic[0])
+			if (g_CoprocessorDiagnostic[0])
 			{
 				info = "<b>Co-processor engine fault</b><br><br>";
-				info += QString::fromLatin1(s_CoprocessorDiagnostic);
+				info += QString::fromLatin1(g_CoprocessorDiagnostic);
 			}
 			else
 			{
@@ -2072,17 +708,17 @@ void MainWindow::frameQt()
 		// focusProperties();
 		m_ErrorLabel->setText(info);
 		m_ErrorFrame->setVisible(true);
-		s_CoprocessorFrameSuccess = false;
+		g_CoprocessorFrameSuccess = false;
 	}
-	if (s_CoprocessorFrameSuccess || s_WaitingCoprocessorAnimation)
+	if (g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation)
 	{
 		m_ErrorFrame->setVisible(false);
 	}
 
-	// printf("msc: %s\n", s_WarnMissingClear ? "warn" : "ok");
-	if (s_WarnMissingClear != s_WarnMissingClearActive)
+	// printf("msc: %s\n", g_WarnMissingClear ? "warn" : "ok");
+	if (g_WarnMissingClear != g_WarnMissingClearActive)
 	{
-		if (s_WarnMissingClear)
+		if (g_WarnMissingClear)
 		{
 			statusBar()->showMessage(tr("WARNING: Missing CLEAR instruction in display list"));
 		}
@@ -2090,7 +726,7 @@ void MainWindow::frameQt()
 		{
 			statusBar()->showMessage("");
 		}
-		s_WarnMissingClearActive = s_WarnMissingClear;
+		g_WarnMissingClearActive = g_WarnMissingClear;
 	}
 
 	// m_CursorPosition
@@ -2103,7 +739,7 @@ void MainWindow::frameQt()
 		m_CursorPosition->setText("");
 
 	// Busy loader
-	m_CoprocessorBusy->setVisible(s_ShowCoprocessorBusy && !s_WaitingCoprocessorAnimation);
+	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
 }
 
 void MainWindow::createActions()
@@ -2808,7 +1444,7 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		m_ContentManager = new ContentManager(this);
-		s_ContentManager = m_ContentManager;
+		g_ContentManager = m_ContentManager;
 		scrollArea->setWidget(m_ContentManager);
 		m_ContentManagerDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);
@@ -3118,10 +1754,10 @@ static bool s_UndoRedoWorking = false;
 class HSizeCommand : public QUndoCommand
 {
 public:
-	HSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewHSize(hsize), m_OldHSize(s_HSize), m_SpinBox(spinbox) { }
+	HSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewHSize(hsize), m_OldHSize(g_HSize), m_SpinBox(spinbox) { }
 	virtual ~HSizeCommand() { }
-	virtual void undo() { s_HSize = m_OldHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
-	virtual void redo() { s_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
+	virtual void undo() { g_HSize = m_OldHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(g_HSize); s_UndoRedoWorking = false; }
+	virtual void redo() { g_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(g_HSize); s_UndoRedoWorking = false; }
 	virtual int id() const { printf("id get\n"); return 41517686; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize; return true; }
 
@@ -3135,10 +1771,10 @@ private:
 class VSizeCommand : public QUndoCommand
 {
 public:
-	VSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewVSize(hsize), m_OldVSize(s_VSize), m_SpinBox(spinbox) { }
+	VSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewVSize(hsize), m_OldVSize(g_VSize), m_SpinBox(spinbox) { }
 	virtual ~VSizeCommand() { }
-	virtual void undo() { s_VSize = m_OldVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
-	virtual void redo() { s_VSize = m_NewVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
+	virtual void undo() { g_VSize = m_OldVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(g_VSize); s_UndoRedoWorking = false; }
+	virtual void redo() { g_VSize = m_NewVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(g_VSize); s_UndoRedoWorking = false; }
 	virtual int id() const { return 78984351; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize; return true; }
 
@@ -3180,10 +1816,10 @@ void MainWindow::vsizeChanged(int vsize)
 class RotateCommand : public QUndoCommand
 {
 public:
-	RotateCommand(int rotate, QSpinBox *spinbox) : QUndoCommand(), m_NewRotate(rotate), m_OldRotate(s_Rotate), m_SpinBox(spinbox) { }
+	RotateCommand(int rotate, QSpinBox *spinbox) : QUndoCommand(), m_NewRotate(rotate), m_OldRotate(g_Rotate), m_SpinBox(spinbox) { }
 	virtual ~RotateCommand() { }
-	virtual void undo() { s_Rotate = m_OldRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
-	virtual void redo() { s_Rotate = m_NewRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
+	virtual void undo() { g_Rotate = m_OldRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(g_Rotate); s_UndoRedoWorking = false; }
+	virtual void redo() { g_Rotate = m_NewRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(g_Rotate); s_UndoRedoWorking = false; }
 	virtual int id() const { return 78994352; }
 	virtual bool mergeWith(const QUndoCommand *command) { m_NewRotate = static_cast<const RotateCommand *>(command)->m_NewRotate; return true; }
 
@@ -3332,16 +1968,15 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-    QString emuDescription, emuVersion;
-    getVersionString(QCoreApplication::applicationDirPath() + "/" + EMULATOR_DLL_NAME, emuDescription, emuVersion);
+    QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
+	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString::null;
 
-    QString title = QString("%1%2 - EVE Screen Editor [Build Time: %3 - %4] (%5 %6) - (%7)")
+    QString title = QString("%1%2 - EVE Screen Editor [Build Time: %3 - %4] (%5) - (%7)")
         .arg(QString(m_CleanUndoStack ? "" : "*"))
         .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
         .arg(__DATE__)
         .arg(__TIME__)
-        .arg(emuDescription)
-        .arg(emuVersion)
+        .arg(emulatorVersion)
         .arg(QDir::currentPath());
 
 	setWindowTitle(title);
@@ -4019,8 +2654,8 @@ QByteArray MainWindow::toJson(bool exportScript)
 	project["device"] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	root["project"] = project;
 	QJsonObject registers;
-	registers["hSize"] = s_HSize;
-	registers["vSize"] = s_VSize;
+	registers["hSize"] = g_HSize;
+	registers["vSize"] = g_VSize;
 	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
@@ -4349,8 +2984,8 @@ void MainWindow::actExport()
 		const size_t headersz = 6;
 		uint32_t header[headersz];
 		header[0] = 100;
-		header[1] = s_HSize;
-		header[2] = s_VSize;
+		header[1] = g_HSize;
+		header[2] = g_VSize;
 		m_Macro->lockDisplayList();
 		header[3] = m_Macro->getDisplayList()[0];
 		header[4] = m_Macro->getDisplayList()[1];
@@ -4418,7 +3053,7 @@ void MainWindow::bindCurrentDevice()
 void MainWindow::stopEmulatorInternal()
 {
 	printf("Stop the emulator\n");
-	s_EmulatorRunning = false;
+	g_EmulatorRunning = false;
 	m_EmulatorViewport->stop();
 	cleanupMediaFifo();
 }
@@ -4437,7 +3072,7 @@ void MainWindow::startEmulatorInternal()
 					;
 	params.Mode = deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	params.Close = closeDummy;
-	s_EmulatorRunning = true;
+	g_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
 	BT8XXEMU_setDebugLimiter(g_Emulator, 2048 * 64);

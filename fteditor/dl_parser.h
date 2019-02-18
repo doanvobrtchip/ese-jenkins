@@ -88,6 +88,7 @@ struct DlParsed
 	// int VarArgCount;
 	// char VarArgFormat[DLPARSED_MAX_VARARG];
 
+	// TODO: Remove this
     DlParsed::DlParsed()
     {
         ExpectedParameterCount = 0;
