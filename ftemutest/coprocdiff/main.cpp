@@ -31,7 +31,7 @@ int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb888
 		{
 			QString path = QString("cases/coprocdiff/") + g_Device + "/" + QString(g_Case).toLower() + "/" + QString(g_Case).toLower() + "_" + QString::number(s_Frame);
 			QImage image(hsize, vsize, QImage::Format_RGB32);
-			for (int y = 0; y < vsize; ++y)
+			for (unsigned int y = 0; y < vsize; ++y)
 				memcpy(image.scanLine(y), &buffer[y * hsize], sizeof(argb8888) * hsize);
 			image.save(path + ".png");
 			QByteArray pathOut = path.toLocal8Bit();
