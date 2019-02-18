@@ -28,6 +28,12 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 
+#define FTEDITOR_SELECTION_PRIMITIVE (1)
+#define FTEDITOR_SELECTION_FUNCTION (2)
+#define FTEDITOR_SELECTION_DL_STATE (3)
+#define FTEDITOR_SELECTION_CMD_STATE (4)
+#define FTEDITOR_SELECTION_VERTEX (5)
+
 namespace FTEDITOR {
 
 class MainWindow;

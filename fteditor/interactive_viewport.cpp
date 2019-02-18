@@ -1911,14 +1911,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			}
 			/*else if (e->source() == m_MainWindow->bitmapSetup())
 			{
-				selectionType = 1; // PRIMITIVE
+				selectionType = FTEDITOR_SELECTION_PRIMITIVE; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = m_MainWindow->bitmapSetup()->selected();
 				contentInfo = NULL;
 			}*/
 			else if (e->source() == m_MainWindow->contentManager()->contentList())
 			{
-				selectionType = 1; // PRIMITIVE
+				selectionType = FTEDITOR_SELECTION_PRIMITIVE; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = 0;
 				contentInfo = m_MainWindow->contentManager()->current();
@@ -1938,7 +1938,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				m_MainWindow->focusDlEditor();
 			}
 
-			if (selectionType == 1 || selectionType == 2 || selectionType == 5)
+			if (selectionType == FTEDITOR_SELECTION_PRIMITIVE 
+				|| selectionType == FTEDITOR_SELECTION_FUNCTION
+				|| selectionType == FTEDITOR_SELECTION_VERTEX)
 			{
 				int line = m_LineNumber;
 				if (m_LineEditor->getLine(line).ValidId)
@@ -1994,7 +1996,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				// printf("Dropped item from toolbox, type %i\n", selection);
 
 				// void insertLine(int line, const DlParsed &parsed);
-				if (selectionType == 5)
+				if (selectionType == FTEDITOR_SELECTION_VERTEX)
 				{
 					int mvx = screenLeft();
 					int mvy = screenTop();
@@ -2248,7 +2250,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
-				else if (selectionType == 2)
+				else if (selectionType == FTEDITOR_SELECTION_FUNCTION)
 				{
 					if (!m_MouseStackValid) line = m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop from toolbox"));
@@ -2295,7 +2297,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
-				else if (selectionType == 1) // Primitive
+				else if (selectionType == FTEDITOR_SELECTION_PRIMITIVE) // Primitive
 				{
 					bool mustCreateHandle = true;
 					if (contentInfo)
@@ -2636,11 +2638,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 				}
 			}
-			else if (selectionType == 3 || selectionType == 4)
+			else if (selectionType == FTEDITOR_SELECTION_DL_STATE 
+				|| selectionType == FTEDITOR_SELECTION_CMD_STATE)
 			{
 				bool useMouseStack;
 				int lineOverride = -1;
-				if (selectionType == 3 && (
+				if (selectionType == FTEDITOR_SELECTION_DL_STATE && (
 					selection == FTEDITOR_DL_CLEAR_COLOR_RGB
 					|| selection == FTEDITOR_DL_CLEAR_COLOR_A
 					|| selection == FTEDITOR_DL_CLEAR_STENCIL
@@ -2671,7 +2674,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.ExpectedStringParameter = false;
-				if (selectionType == 4)
+				if (selectionType == FTEDITOR_SELECTION_CMD_STATE)
 				{
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
