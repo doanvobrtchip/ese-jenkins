@@ -3324,7 +3324,7 @@ void MainWindow::about()
 	msgBox.setText(tr(
 		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
 		"<br>"
-		"Copyright (C) 2016-2018  Bridgetek Pte Ltd<br>"
+		"Copyright (C) 2016-2019  Bridgetek Pte Ltd<br>"
 		"<br>"
 		"Support and updates:<br>"
 		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
