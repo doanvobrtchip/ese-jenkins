@@ -2222,6 +2222,15 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
+                    case CMD_INFLATE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_INFLATE2:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
 					case CMD_GRADIENTA:
 						pa.Parameter[2].U = 0xFF007FFF;
 						pa.Parameter[3].I = pa.Parameter[0].I + 32;
@@ -2229,6 +2238,32 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[5].U = 0x7FFF00;
 						pa.ExpectedParameterCount = 6;
 						break;
+                    case CMD_ANIMSTART:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMSTOP:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMDRAW:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.Parameter[3].I = 0;
+                        pa.ExpectedParameterCount = 4;
+                        break;
+                    case CMD_VIDEOFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
@@ -2749,26 +2784,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         }
                         pa.ExpectedParameterCount = 13;
                         break;
-                    case CMD_INFLATE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_INFLATE2:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
-                        break;
                     case CMD_FLASHSOURCE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ANIMSTART:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.ExpectedParameterCount = 3;
-                        break;
-                    case CMD_ANIMSTOP:
                         pa.Parameter[0].I = 0;
                         pa.ExpectedParameterCount = 1;
                         break;
@@ -2777,22 +2793,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[1].I = 0;
                         pa.Parameter[2].I = 0;
                         pa.ExpectedParameterCount = 3;
-                        break;
-                    case CMD_ANIMDRAW:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ANIMFRAME:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.Parameter[3].I = 0;
-                        pa.ExpectedParameterCount = 4;
-                        break;
-                    case CMD_VIDEOFRAME:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
                         break;
                     }                    
 				}
