@@ -45,6 +45,8 @@ namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
 
+extern QMutex g_ViewportMutex;
+
 #define POINTER_ALL 0xFFFF
 #define POINTER_TOUCH 0x0001
 #define POINTER_TRACE 0x0002
@@ -428,6 +430,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 	QPainter p(this);
 
 	// Update frame dependent gui
+	g_ViewportMutex.lock();
 	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStackDl);
 	m_MainWindow->cmdEditor()->codeEditor()->setTraceHighlights(m_TraceStackCmd);
 	m_MouseX = m_NextMouseX;
@@ -437,6 +440,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 		m_MouseStackRead.swap(m_MouseStackWrite);
 		m_MouseStackWritten = false;
 	}
+	g_ViewportMutex.unlock();
 
 	int mvx = screenLeft();
 	int mvy = screenTop();

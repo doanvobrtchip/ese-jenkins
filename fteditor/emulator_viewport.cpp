@@ -40,7 +40,7 @@ static BT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
-static QMutex s_Mutex;
+QMutex g_ViewportMutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
 static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
@@ -62,7 +62,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 	// don't need to copy the buffer each time.
 	if (s_Image && s_Pixmap)
 	{
-		s_Mutex.lock();
+		g_ViewportMutex.lock();
 		if (hsize != s_Image->width() || vsize != s_Image->height())
 		{
 			// printf("Graphics resize");
@@ -88,7 +88,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			s_LastRendered = false;
 			emit s_EmulatorThread->repaint();
 		}
-		s_Mutex.unlock();
+		g_ViewportMutex.unlock();
 		QThread::yieldCurrentThread();
 	}
 	return true; // g_EmulatorThread != NULL;
@@ -270,7 +270,7 @@ void EmulatorViewport::setScreenScale(int screenScale)
 
 void EmulatorViewport::threadRepaint() // on Qt thread
 {
-	s_Mutex.lock();
+	g_ViewportMutex.lock();
 	graphics(s_Image);
 	if (s_Image->width() != s_Pixmap->width()
 		|| s_Image->height() != s_Pixmap->height())
@@ -287,7 +287,7 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	}
 	s_Pixmap->convertFromImage(*s_Image);
 	s_LastRendered = true;
-	s_Mutex.unlock();
+	g_ViewportMutex.unlock();
 	repaint();
 	frame();
 }
