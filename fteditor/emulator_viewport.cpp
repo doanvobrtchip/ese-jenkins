@@ -46,6 +46,8 @@ static EmulatorViewport *s_EmulatorViewport = NULL;
 static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
 static bool s_MainReady = false;
 
+static bool s_LastRendered = true;
+
 void overrideMain(BT8XXEMU_Emulator *sender, void *context)
 {
 	s_MainReady = true;
@@ -68,7 +70,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			s_Image = new QImage(hsize, vsize, QImage::Format_RGB32);
 			delete image;
 		}
-		if (output)
+		if (output && (flags & BT8XXEMU_FrameBufferChanged))
 		{
 			// printf("Graphics received");
 			// This is just terrible code.
@@ -81,8 +83,13 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			// ..
 		}
 		s_EmulatorViewport->graphics();
+		if (s_LastRendered)
+		{
+			s_LastRendered = false;
+			emit s_EmulatorThread->repaint();
+		}
 		s_Mutex.unlock();
-		s_EmulatorThread->repaint();
+		QThread::yieldCurrentThread();
 	}
 	return true; // g_EmulatorThread != NULL;
 }
@@ -185,6 +192,7 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			QThread::msleep(1);
 
 		// Connect the cross thread repaint event
+		s_LastRendered = true;
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
 	}
 }
@@ -278,10 +286,10 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
+	s_LastRendered = true;
 	s_Mutex.unlock();
 	repaint();
 	frame();
-	qApp->processEvents();
 }
 
 const QPixmap &EmulatorViewport::getPixMap() const
