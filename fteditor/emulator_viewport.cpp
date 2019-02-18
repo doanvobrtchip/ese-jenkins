@@ -281,6 +281,7 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	s_Mutex.unlock();
 	repaint();
 	frame();
+	qApp->processEvents();
 }
 
 const QPixmap &EmulatorViewport::getPixMap() const
