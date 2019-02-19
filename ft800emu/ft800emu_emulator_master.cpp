@@ -57,7 +57,7 @@ const uint8_t bayerDiv4[2][2] = {
 	0, 2,
 	3, 1,
 };
-#define DITHERDIV4(val, x, y) std::min<uint8_t>(3, ((val) + bayerDiv4[(x) & 0x1][(y) & 0x1]) >> 2)
+#define DITHERDIV4(val, x, y) std::min<uint8_t>(63, ((val) + bayerDiv4[(x) & 0x1][(y) & 0x1]) >> 2)
 
 }
 

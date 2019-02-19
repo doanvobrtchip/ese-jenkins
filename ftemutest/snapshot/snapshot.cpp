@@ -10,7 +10,7 @@ Author: Jan Boon <jan@no-break.space>
 #include <stdio.h>
 
 #define RAM_SNAPSHOT_ADDR 0
-#define SNAPSHOT_FORMAT ARGB4
+#define SNAPSHOT_FORMAT RGB565
 
 void setup()
 {
