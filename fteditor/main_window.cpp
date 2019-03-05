@@ -2706,19 +2706,36 @@ void MainWindow::actSave()
 void MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
-	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
 
-	QString filter = filterft8xxproj;
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
-	if (fileName.isNull())
-		return;
+	QString filter = tr("ESE Project (*.ese)").arg(fileExtend);
+	QString dirPath = getFileDialogPath();
+	QString fileName;
 
-
-	if (filter == filterft8xxproj)
+	while (true)
 	{
-		if (!fileName.endsWith(fileExtend))
-			fileName = fileName + fileExtend;
+		fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), dirPath, filter, &filter);
+
+		if (fileName.isEmpty())
+			return;
+
+		QDir dir(fileName);
+		dir.cdUp();
+	
+		dirPath = dir.absolutePath();
+
+		// check if dir empty
+		if (dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries).count() != 0)
+		{
+			QMessageBox::warning(this, tr("Save Project"), tr("Please select an empty folder!"));
+		}
+		else
+		{
+			break;
+		}
 	}
+
+	if (!fileName.endsWith(fileExtend))
+		fileName = fileName + fileExtend;
 
 	// Copy asset files, abort if already exists (check first)
 	QDir dir(fileName);
