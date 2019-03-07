@@ -1,0 +1,62 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/touch_linear",
+            "imageFormat": 37808,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/touch_linear.png"
+        },
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/touch_round",
+            "imageFormat": 37808,
+            "memoryAddress": 88288,
+            "memoryLoaded": true,
+            "sourcePath": "resources/touch_round .png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_TEXT(18, 10, 28, 0, \"1. In Toolbar, click Hand icon to select touch mode.\\n2. Switch to [Inspector] tab, focus to [RAM_REG] window.\\n3. See value change at REG_TRACKER by touching on Dial and Slider.\")",
+        "",
+        "CMD_TRACK(55, 395, 700, 35, 1)",
+        "TAG(1)",
+        "CMD_SLIDER(55, 395, 700, 35, 0, 21, 100)",
+        "",
+        "CMD_TRACK(400, 220, 1, 1, 2)",
+        "TAG(2)",
+        "CMD_DIAL(400, 220, 100, 0, 53203)",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_4x4_KHR, 712, 124)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(56, 337, 0, 0)",
+        "END()",
+        "",
+        "BITMAP_HANDLE(1)",
+        "CMD_SETBITMAP(88288, COMPRESSED_RGBA_ASTC_4x4_KHR, 140, 152)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(326, 141, 1, 0)",
+        "END()",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
