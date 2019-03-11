@@ -310,6 +310,7 @@ void Inspector::frameEmu()
 
 void Inspector::frameQt()
 {
+	int cmd_count = 0;
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListUpdate[i])
@@ -317,6 +318,11 @@ void Inspector::frameQt()
 			m_DisplayListUpdate[i] = false;
 			m_DisplayListItems[i]->setText(1, asRaw(m_DisplayListCopy[i]));
 			m_DisplayListItems[i]->setText(2, asText(m_DisplayListCopy[i]));
+		}
+
+		if (m_DisplayListCopy[i] > 0)
+		{
+			cmd_count = i + 1;
 		}
 	}
 
@@ -330,6 +336,11 @@ void Inspector::frameQt()
 				uint32_t regValue;
 				switch (regEnum)
 				{
+					case FTEDITOR_REG_CMD_DL:
+					{
+					    regValue = (cmd_count << 2);
+					    break;
+					}
 					case FTEDITOR_REG_CMDB_SPACE:
 					{
 						/*uint32_t wp = rawReadU32(REG_CMD_WRITE);
