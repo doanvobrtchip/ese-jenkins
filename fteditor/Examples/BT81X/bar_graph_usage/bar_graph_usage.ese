@@ -1,0 +1,88 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/grid",
+            "imageFormat": 37808,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/grid.png"
+        },
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/graph",
+            "imageFormat": 37808,
+            "memoryAddress": 164288,
+            "memoryLoaded": true,
+            "sourcePath": "resources/graph.png"
+        },
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/600_random",
+            "memoryAddress": 328576,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/600_random.raw"
+        }
+    ],
+    "coprocessor": [
+        "BITMAP_HANDLE(0)    #Grid  handle",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_4x4_KHR, 604, 255)",
+        "",
+        "BITMAP_HANDLE(1)   #Graph handle",
+        "CMD_SETBITMAP(164288, COMPRESSED_RGBA_ASTC_4x4_KHR, 604, 255)",
+        "",
+        "BITMAP_HANDLE(2)   #Bar Graph data handle",
+        "CMD_SETBITMAP(328576, BARGRAPH, 600, 255)",
+        "",
+        "",
+        "CLEAR_COLOR_RGB(109, 145, 145)",
+        "CLEAR(1, 1, 1)",
+        "",
+        "BEGIN(BITMAPS)",
+        "COLOR_RGB(188, 222, 221)",
+        "VERTEX2II(80, 80, 0, 0)",
+        "END()",
+        "",
+        "SAVE_CONTEXT()",
+        "COLOR_MASK(0,0,0,1)",
+        "BLEND_FUNC(ONE,ZERO)",
+        "COLOR_A(200)",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(81, 80, 2, 0)",
+        "RESTORE_CONTEXT()",
+        "",
+        "BLEND_FUNC(DST_ALPHA,ONE_MINUS_DST_ALPHA)",
+        "COLOR_RGB(255,255,255)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(81, 80, 1, 0)",
+        "END()",
+        "",
+        "CMD_MEMSET(328576, 120, 15)",
+        "CMD_MEMSET(328591,   50, 15)",
+        "CMD_MEMSET(328606, 120, 15)",
+        "CMD_MEMSET(328621, 120, 15)",
+        "CMD_MEMSET(328636, 120, 15)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
