@@ -29,6 +29,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDateTime>
 #include <QMessageBox>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -1092,15 +1093,21 @@ void ContentManager::add()
 {
 	printf("ContentManager::add()\n");
 
+	static QString saveDirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
 	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
 		tr("Load Content"),
-		m_MainWindow->getFileDialogPath(),
+	    saveDirPath,
 		tr("All files (*.*)"));
 	
 	if (fileNameList.size() <= 0)
 	{
 		return;
 	}
+
+	QDir saveDir(fileNameList[0]);
+	saveDir.cdUp();
+	saveDirPath = saveDir.absolutePath();
 
 	// create resource folder to save content files
 	QDir dir(QDir::currentPath() + '/' + ResourceDir);
@@ -1544,6 +1551,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 
 	// Set common widget values
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
+	m_PropertiesCommonSourceFile->setToolTip(QDir(m_PropertiesCommonSourceFile->text()).absolutePath());
 	m_PropertiesCommonName->setText(contentInfo->DestName);
 	if (contentInfo->Converter < ContentInfo::FlashMap)
 	{
@@ -3458,9 +3466,11 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 	if (!current())
 		return;
 
+	QString dirPath = m_PropertiesCommonSourceFile->text();
+	
 	QString fileName = QFileDialog::getOpenFileName(this,
 		tr("Load Content"),
-		m_MainWindow->getFileDialogPath(),
+	    QDir(dirPath).absolutePath(),
 		tr("All files (*.*)"));
 
 	if (fileName.isNull())
