@@ -6,7 +6,7 @@
 
 #define VERSION_MAJOR                           3
 #define VERSION_MINOR                           1
-#define VERSION_BUILD                           4
+#define VERSION_BUILD                           6
 
 #define VER_FILEVERSION           				VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD,0
 #define STR_FILEVERSION                     	VERSION_MAJOR##"."##VERSION_MINOR##"."VERSION_BUILD##"."0

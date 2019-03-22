@@ -1,11 +1,12 @@
 ﻿NOTE: This software is only for evaluation purpose. 
 
-Please uninstall the last version if you have one installed on your PC. 
+Please uninstall the latest version if you have one installed on your PC. 
 
-Version 3.1.4
+Version 3.1.6
 
 Release Note: 
-   Features: 
+
+Features: 
 •   Add support of BT815, including ASTC, flash, Unicode and more features.   
 •   Support FT4222 board in device manager
 •   Change the user guide from .chm format to .pdf format
@@ -23,17 +24,24 @@ Release Note:
       - ME812A-WH50R       
       - ME813A-WH50C       
 
+•   Open the last location of loaded file in content manager
+•   Force to save project in an empty folder
+•   Add example "Bar graph usage"
+•   Add example for CMD_TRACK
+•   Add example Paletted8
 •   Rebuild the project with Qt5.7.0 and MSVC 2017
 •   Add the missing firmware folder in the installation package.
 •   Add zooming function of emulator viewport
 •   Upgrade C++ source and Python script to work with Python v3.6.5
 •   Clone resource so that project can be moved to another location safely
 
-    Bug Fix: 
+Bug Fix:
+*   Link library free-type into executable file
+*   Update REG_CMD_DL correctly
 *   Fix the crash issue when export menu is clicked for FT813 device.
 *   Fix the improper emulator library of export project 
 
 
-    Known issues:
+Known issues: 
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
 *   Playing the invalid animation frame data in flash may cause ESE hang
