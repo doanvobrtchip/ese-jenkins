@@ -310,7 +310,8 @@ void Inspector::frameEmu()
 
 void Inspector::frameQt()
 {
-	int cmd_count = 0;
+	int dl_cmd_count = 0;
+	int first_display_cmd = -1;
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListUpdate[i])
@@ -322,9 +323,23 @@ void Inspector::frameQt()
 
 		if (m_DisplayListCopy[i] > 0)
 		{
-			cmd_count = i + 1;
+			dl_cmd_count++;
+		}
+		else if (first_display_cmd == -1)
+		{
+			first_display_cmd = i;
 		}
 	}
+
+	if (m_MainWindow->cmdEditor()->isInvalid())
+	{
+		dl_cmd_count = 0;	
+	}
+	else if (!m_MainWindow->dlEditor()->isInvalid())
+	{
+		// both editor are valid, get the first command DISPLAY()
+		dl_cmd_count = first_display_cmd;
+	} 
 
 	if (m_RegisterItems.size() == FTEDITOR_REG_NB)
 	{
@@ -338,7 +353,7 @@ void Inspector::frameQt()
 				{
 					case FTEDITOR_REG_CMD_DL:
 					{
-					    regValue = (cmd_count << 2);
+					    regValue = (dl_cmd_count << 2);
 					    break;
 					}
 					case FTEDITOR_REG_CMDB_SPACE:

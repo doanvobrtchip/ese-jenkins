@@ -282,6 +282,18 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	unlockDisplayList();
 }
 
+bool DlEditor::isInvalid(void)
+{
+	for (int i = 0; i < getLineCount(); i++)
+	{
+		if (getLine(i).ValidId)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void DlEditor::documentBlockCountChanged(int newBlockCount)
 {
 	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);

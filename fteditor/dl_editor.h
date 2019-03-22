@@ -94,6 +94,8 @@ public:
 
 	const DlState &getState(int line) { if (m_InvalidState) { processState(); } return m_State[line]; }
 
+	bool isInvalid(void);
+
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
