@@ -195,7 +195,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 		}
 		case REG_ROMSUB_SEL:
-			data &= 0x3;
+			// data &= 0x3;
 			break;
 #ifdef BT815EMU_MODE
 		case REG_FLASH_STATUS:
@@ -524,7 +524,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 #if defined(BT815EMU_MODE)
 	rawWriteU32(REG_SNAPFORMAT, 32);
 #endif
-	rawWriteU32(REG_CPURESET, 0);
+	rawWriteU32(REG_CPURESET, 2);
 	rawWriteU32(REG_TAP_CRC, 0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_TAP_MASK, ~0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_HCYCLE, 548);

@@ -750,7 +750,7 @@ void Coprocessor::execute()
 			FT8XXEMU::System::delay(1);
 			continue;
 		}
-		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL);
+		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL) & 0x3;
 		// uint32_t regJ1Cold = m_Memory->rawReadU32(m_Memory->getRam(), REG_J1_COLD);
 
 #if FT800EMU_COPROCESSOR_DEBUG
