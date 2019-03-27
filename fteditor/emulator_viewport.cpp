@@ -48,6 +48,11 @@ static bool s_MainReady = false;
 
 static bool s_LastRendered = true;
 
+static void emuLog(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message)
+{
+	printf("[BT8XXEMU] %s\n", message);
+}
+
 void overrideMain(BT8XXEMU_Emulator *sender, void *context)
 {
 	s_MainReady = true;
@@ -175,6 +180,9 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 			s_EmulatorParameters.Flash = g_Flash;
 		}
+
+		// Log output
+		s_EmulatorParameters.Log = emuLog;
 
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
