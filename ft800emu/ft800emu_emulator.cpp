@@ -190,7 +190,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	}
 
 	FTEMU_message("Wait for Audio");
-	if ((flags & BT8XXEMU_EmulatorEnableAudio) && m_StdThreadAudio.joinable())
+	if (m_StdThreadAudio.joinable())
 		m_StdThreadAudio.join();
 
 	FTEMU_message("Threads finished, emulator stopped running");
