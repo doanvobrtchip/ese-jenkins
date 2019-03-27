@@ -316,12 +316,12 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 	m_Close = params.Close;
 	m_CloseCalled = false;
 	m_ExternalFrequency = params.ExternalFrequency;
-	m_BackgroundPerformance = (params.Flags & BT8XXEMU_EmulatorEnableBackgroundPerformance) == BT8XXEMU_EmulatorEnableBackgroundPerformance;
-	m_MainPerformance = (params.Flags & BT8XXEMU_EmulatorEnableMainPerformance) == BT8XXEMU_EmulatorEnableMainPerformance;
+	m_BackgroundPerformance = (m_Flags & BT8XXEMU_EmulatorEnableBackgroundPerformance) == BT8XXEMU_EmulatorEnableBackgroundPerformance;
+	m_MainPerformance = (m_Flags & BT8XXEMU_EmulatorEnableMainPerformance) == BT8XXEMU_EmulatorEnableMainPerformance;
 	m_UserContext = params.UserContext;
 
 	m_System->onLog(params.Log);
-	m_System->setPrintStd((params.Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut);
+	m_System->setPrintStd((m_Flags & BT8XXEMU_EmulatorEnableStdOut) == BT8XXEMU_EmulatorEnableStdOut);
 	m_System->overrideMCUDelay(params.MCUSleep);
 	m_System->setSender(static_cast<BT8XXEMU_Emulator *>(this));
 	m_System->setUserContext(params.UserContext);
@@ -350,7 +350,7 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 		});
 	}
 
-	if (params.Flags & BT8XXEMU_EmulatorEnableAudio)
+	if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
 	{
 		assert(!m_AudioOutput);
 		m_AudioOutput = FT8XXEMU::AudioOutput::create(m_System);
@@ -370,7 +370,7 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 		}
 	}
 
-	if (params.Flags & BT8XXEMU_EmulatorEnableCoprocessor)
+	if (m_Flags & BT8XXEMU_EmulatorEnableCoprocessor)
 	{
 		assert(!m_Coprocessor);
 		m_Coprocessor = new Coprocessor(m_System, m_Memory,
@@ -378,7 +378,7 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 			mode);
 	}
 
-	if (params.Flags & BT8XXEMU_EmulatorEnableKeyboard)
+	if (m_Flags & BT8XXEMU_EmulatorEnableKeyboard)
 	{
 		if (!m_Graphics)
 			m_KeyboardInput = FT8XXEMU::KeyboardInput::create(m_System, m_WindowOutput);
@@ -392,20 +392,20 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 		memset(m_GraphicsBuffer, 0, FT800EMU_SCREEN_WIDTH_MAX * FT800EMU_SCREEN_HEIGHT_MAX * sizeof(argb8888));
 	}
 
-	if (!m_Graphics) m_WindowOutput->enableMouse((params.Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
+	if (!m_Graphics) m_WindowOutput->enableMouse((m_Flags & BT8XXEMU_EmulatorEnableMouse) == BT8XXEMU_EmulatorEnableMouse);
 	if (m_Graphics) m_Flags &= ~BT8XXEMU_EmulatorEnableMouse;
 	m_Memory->enableReadDelay();
 
-	if (params.Flags & BT8XXEMU_EmulatorEnableGraphicsMultithread)
+	if (m_Flags & BT8XXEMU_EmulatorEnableGraphicsMultithread)
 	{
 		m_GraphicsProcessor->enableMultithread();
 		m_GraphicsProcessor->reduceThreads(params.ReduceGraphicsThreads);
 	}
-	if (params.Flags & BT8XXEMU_EmulatorEnableRegPwmDutyEmulation) m_GraphicsProcessor->enableRegPwmDutyEmulation();
+	if (m_Flags & BT8XXEMU_EmulatorEnableRegPwmDutyEmulation) m_GraphicsProcessor->enableRegPwmDutyEmulation();
 
-	m_DynamicDegrade = (params.Flags & BT8XXEMU_EmulatorEnableDynamicDegrade) == BT8XXEMU_EmulatorEnableDynamicDegrade;
-	// m_RotateEnabled = (params.Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
-	m_Touch->enableTouchMatrix((params.Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
+	m_DynamicDegrade = (m_Flags & BT8XXEMU_EmulatorEnableDynamicDegrade) == BT8XXEMU_EmulatorEnableDynamicDegrade;
+	// m_RotateEnabled = (m_Flags & BT8XXEMU_EmulatorEnableRegRotate) == BT8XXEMU_EmulatorEnableRegRotate;
+	m_Touch->enableTouchMatrix((m_Flags & BT8XXEMU_EmulatorEnableTouchTransformation) == BT8XXEMU_EmulatorEnableTouchTransformation);
 
 	; {
 		std::unique_lock<std::mutex> lock(m_InitMutex);
@@ -437,7 +437,7 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 			m_ThreadMCU.unprioritize();
 		}
 		std::unique_lock<std::mutex> lock(m_InitMutex);
-		m_StdThreadMaster = std::thread(&Emulator::finalMasterThread, this, false, params.Flags);
+		m_StdThreadMaster = std::thread(&Emulator::finalMasterThread, this, false, m_Flags);
 		m_InitCond.wait(lock);
 	}
 
@@ -458,7 +458,7 @@ void Emulator::run(const BT8XXEMU_EmulatorParameters &params)
 	if (params.Main)
 	{
 		// Synchronous run function, calling thread is graphics
-		finalMasterThread(true, params.Flags);
+		finalMasterThread(true, m_Flags);
 	}
 
 	assert(!m_CoInit);
