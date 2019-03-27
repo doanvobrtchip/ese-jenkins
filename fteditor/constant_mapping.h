@@ -262,8 +262,9 @@ inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToS
 
 ////////////////////////
 #define FTEDITOR_REG_PLAY_CONTROL        154
+#define FTEDITOR_REG_COPRO_PATCH_PTR     155
 
-#define FTEDITOR_REG_NB 155
+#define FTEDITOR_REG_NB 156
 extern const int32_t *g_Reg[FTEDITOR_DEVICE_NB];
 inline int32_t reg(int deviceIntf, int regIntf) { return g_Reg[deviceIntf][regIntf]; }
 extern const char **g_RegToString[FTEDITOR_DEVICE_NB];

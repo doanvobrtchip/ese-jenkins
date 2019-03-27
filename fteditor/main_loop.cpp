@@ -329,10 +329,12 @@ void resetCoprocessorFromLoop()
 {
 	printf("Reset coprocessor from loop\n");
 
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
-	uint16_t videoPatchVector;
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76 and #136
+	uint16_t copro_patch_ptr;
 	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		videoPatchVector = rd16(0x309162);
+	{
+		copro_patch_ptr = rd16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR));
+	}
 
 	// Enter reset state
 	wr8(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
@@ -365,9 +367,11 @@ void resetCoprocessorFromLoop()
 		QThread::msleep(100);
 	}
 
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
+	// BT81X video patch, see ftdichipsg/FT8XXEMU#76 and #136
 	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		wr16(0x309162, videoPatchVector);
+	{
+		wr16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR), copro_patch_ptr);
+	}
 
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);

@@ -194,6 +194,7 @@ const int32_t g_RegVC3[FTEDITOR_REG_NB] = {
 	REG_ANIM_ACTIVE,
 	REG_DF_TUNED,
 	REG_PLAY_CONTROL,
+	REG_COPRO_PATCH_PTR,
 };
 
 const char *g_RegToStringVC3[FTEDITOR_REG_NB] = {
@@ -356,6 +357,7 @@ const char *g_RegToStringVC3[FTEDITOR_REG_NB] = {
 	"REG_ANIM_ACTIVE",
 	"REG_DF_TUNED",
 	"REG_PLAY_CONTROL",
+	"REG_COPRO_PATCH_PTR",
 };
 
 ///////////////////////////////////////////////////////////////////////

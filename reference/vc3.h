@@ -288,6 +288,7 @@
 #define REG_CMD_DL           3154176UL
 #define REG_CMD_READ         3154168UL
 #define REG_CMD_WRITE        3154172UL
+#define REG_COPRO_PATCH_PTR  3182946UL
 #define REG_CPURESET         3153952UL
 #define REG_CRC              3154296UL
 #define REG_CSPREAD          3154024UL
