@@ -13,12 +13,18 @@
         }
     ],
     "coprocessor": [
+        "#define FONT_HANDLE 1",
+        "#define FONT_FILE_ADDRESS (RAM_G + 1000)",
+        "#define STRIDE 25",
+        "#define FONT_HEIGHT 68",
+        "#define FIRST_CHARACTER 32",
+        "",
         "CLEAR(1, 1, 1)",
         "BITMAP_HANDLE(0)",
-        "BITMAP_SOURCE( -53252)",
-        "BITMAP_LAYOUT(L4, 25, 68)",
+        "BITMAP_SOURCE( -53252) #FONT_FILE_ADDRESS + 148 - STRIDE*FONT_HEIGHT*FIRST_CHARACTER",
+        "BITMAP_LAYOUT(L4, 25, 68) ",
         "BITMAP_SIZE(NEAREST, BORDER,BORDER, 50,68)",
-        "CMD_SETFONT(0, 1000)",
+        "CMD_SETFONT(0, 1000) #FONT_FILE_ADDRESS",
         "CMD_TEXT(100,100, 0, 0, \"jSW\")"
     ],
     "displayList": [
