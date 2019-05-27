@@ -465,6 +465,17 @@ void InteractiveProperties::addSpinBox256(int index, int minim, int maxim, const
 	prop->done();
 }
 
+void InteractiveProperties::addSpinBoxForBitmapTransform(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBoxForBitmapTransform *prop = new PropertiesSpinBoxForBitmapTransform(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	prop->setSingleStep(256);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
 void InteractiveProperties::addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
 {
 	PropertiesSpinBox65536 *prop = new PropertiesSpinBox65536(this, undoMessage, index);
@@ -2131,7 +2142,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
 					addCheckBox(0, "Precision: ", "Set transform precision A");
-					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A"); // TODO: Precision-aware SpinBox
+					addSpinBoxForBitmapTransform(1, 0xFFFF0000, 0xFFFF, "A: ", "Set transform A"); // TODO: Precision-aware SpinBox
 				}
 				else
 				{
@@ -2154,7 +2165,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
 					addCheckBox(0, "Precision: ", "Set transform precision B");
-					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B"); // TODO: Precision-aware SpinBox
+					addSpinBoxForBitmapTransform(1, 0xFFFF0000, 0xFFFF, "B: ", "Set transform B"); // TODO: Precision-aware SpinBox
 				}
 				else
 				{
@@ -2189,7 +2200,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
 					addCheckBox(0, "Precision: ", "Set transform precision D");
-					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D"); // TODO: Precision-aware SpinBox
+					addSpinBoxForBitmapTransform(1, 0xFFFF0000, 0xFFFF, "D: ", "Set transform D"); // TODO: Precision-aware SpinBox
 				}
 				else
 				{
@@ -2212,7 +2223,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
 					addCheckBox(0, "Precision: ", "Set transform precision E");
-					addSpinBox256(1, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E"); // TODO: Precision-aware SpinBox
+					addSpinBoxForBitmapTransform(1, 0xFFFF0000, 0xFFFF, "E: ", "Set transform E"); // TODO: Precision-aware SpinBox
 				}
 				else
 				{

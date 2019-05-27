@@ -81,6 +81,7 @@ private:
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox16(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBoxForBitmapTransform(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxAngle65536(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxVertexFormat(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
@@ -125,6 +126,7 @@ private:
 	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesSpinBox256;
+	class PropertiesSpinBoxForBitmapTransform;
 	class PropertiesSpinBox65536;
 	class PropertiesSpinBoxAngle65536;
 	class PropertiesSpinBoxVertexFormat;

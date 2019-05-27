@@ -42,7 +42,8 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
@@ -55,14 +56,16 @@ extern int g_PropertiesWidgetCombineId;
 class InteractiveProperties::PropertiesWidget
 {
 public:
-	PropertiesWidget(InteractiveProperties *parent, const QString &undoMessage) : m_InteractiveProperties(parent), m_CombineId(g_PropertiesWidgetCombineId), m_UndoMessage(undoMessage)
+	PropertiesWidget(InteractiveProperties *parent, const QString &undoMessage)
+	    : m_InteractiveProperties(parent)
+	    , m_CombineId(g_PropertiesWidgetCombineId)
+	    , m_UndoMessage(undoMessage)
 	{
 		++g_PropertiesWidgetCombineId;
 	}
 
 	virtual ~PropertiesWidget()
 	{
-
 	}
 
 	virtual void modifiedEditorLine() = 0;
@@ -73,7 +76,7 @@ protected:
 		m_InteractiveProperties->m_LineEditor->replaceLine(m_InteractiveProperties->m_LineNumber, parsed, m_CombineId, m_UndoMessage);
 	}
 
-	const DlParsed &getLine()
+	const DlParsed &getLine() const
 	{
 		return m_InteractiveProperties->m_LineEditor->getLine(m_InteractiveProperties->m_LineNumber);
 	}
@@ -81,7 +84,6 @@ protected:
 	InteractiveProperties *m_InteractiveProperties;
 	int m_CombineId;
 	QString m_UndoMessage;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -91,7 +93,11 @@ class InteractiveProperties::PropertiesSpinBoxAlphaHex : public UndoStackDisable
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAlphaHex(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBoxAlphaHex(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -104,7 +110,6 @@ public:
 
 	virtual ~PropertiesSpinBoxAlphaHex()
 	{
-
 	}
 
 	void done()
@@ -116,18 +121,20 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].U >> 24);
 		m_SoftMod = false;
 		//printf("bye");
 	}
 
-	private slots:
+private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -139,7 +146,6 @@ public:
 private:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -149,7 +155,11 @@ class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative)
+	    : UndoStackDisabler<QSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -162,7 +172,6 @@ public:
 
 	virtual ~PropertiesSpinBoxAddress()
 	{
-
 	}
 
 	void done()
@@ -174,18 +183,20 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
 		//printf("bye");
 	}
 
-	private slots:
+private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -197,7 +208,6 @@ public:
 private:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -207,7 +217,11 @@ class InteractiveProperties::PropertiesSpinBoxAddressFlash : public UndoStackDis
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAddressFlash(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBoxAddressFlash(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -219,7 +233,6 @@ public:
 
 	virtual ~PropertiesSpinBoxAddressFlash()
 	{
-
 	}
 
 	void done()
@@ -231,18 +244,20 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
 		//printf("bye");
 	}
 
-	private slots:
+private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -254,7 +269,6 @@ public:
 private:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -264,7 +278,12 @@ class InteractiveProperties::PropertiesSpinBoxAddressFlashOpt : public UndoStack
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Negative(negative)
+	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative)
+	    : UndoStackDisabler<QSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
+	    , m_Negative(negative)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -277,7 +296,6 @@ public:
 
 	virtual ~PropertiesSpinBoxAddressFlashOpt()
 	{
-
 	}
 
 	void done()
@@ -289,7 +307,8 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		int addr = getLine().Parameter[m_Index].I;
 		if ((addr & 0x800000) && (addr > 0))
@@ -313,7 +332,8 @@ private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -328,7 +348,6 @@ private:
 	int m_Index;
 	bool m_SoftMod;
 	bool m_Negative;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -338,7 +357,11 @@ class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<QSpinB
 	Q_OBJECT
 
 public:
-	PropertiesSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -350,7 +373,6 @@ public:
 
 	virtual ~PropertiesSpinBox()
 	{
-
 	}
 
 	void done()
@@ -362,7 +384,8 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
@@ -373,7 +396,8 @@ private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -385,7 +409,6 @@ private slots:
 private:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -395,7 +418,11 @@ class InteractiveProperties::PropertiesDoubleSpinBox : public UndoStackDisabler<
 	Q_OBJECT
 
 public:
-	PropertiesDoubleSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QDoubleSpinBox>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesDoubleSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QDoubleSpinBox>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -407,7 +434,6 @@ public:
 
 	virtual ~PropertiesDoubleSpinBox()
 	{
-
 	}
 
 	void done()
@@ -419,18 +445,20 @@ public:
 	virtual void modifiedEditorLine()
 	{
 		//printf("modifiedEditorLine %i\n", getLine().Parameter[m_Index].I);
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
 		//printf("bye");
 	}
 
-	private slots:
-	void updateValue(double value)
+protected slots:
+	virtual void updateValue(double value)
 	{
 		//printf("updateValue\n");
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSpinBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -439,10 +467,9 @@ public:
 		m_SoftMod = false;
 	}
 
-private:
+protected:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -450,14 +477,13 @@ private:
 class InteractiveProperties::PropertiesSpinBox16 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox16(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox16(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-
 	}
 
 	virtual ~PropertiesSpinBox16()
 	{
-
 	}
 
 protected:
@@ -477,14 +503,13 @@ protected:
 class InteractiveProperties::PropertiesSpinBox256 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox256(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox256(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-
 	}
 
 	virtual ~PropertiesSpinBox256()
 	{
-
 	}
 
 protected:
@@ -501,17 +526,66 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 
+class InteractiveProperties::PropertiesSpinBoxForBitmapTransform : public InteractiveProperties::PropertiesDoubleSpinBox
+{
+	Q_OBJECT
+public:
+	PropertiesSpinBoxForBitmapTransform(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	{
+		int p = getLine().Parameter[m_Index - 1].I;
+
+		p ? setDecimals(15) : setDecimals(8);
+	}
+
+	virtual ~PropertiesSpinBoxForBitmapTransform()
+	{
+	}
+
+protected slots:
+	virtual void updateValue(double value)
+	{
+		int p = getLine().Parameter[m_Index - 1].I;
+		p ? setDecimals(15) : setDecimals(8);
+		PropertiesDoubleSpinBox::updateValue(value);
+	}
+
+protected:
+	virtual QString textFromValue(double value) const
+	{
+		int p = getLine().Parameter[m_Index - 1].I;
+
+		if (p)
+		{
+			return QString::number((double)value / 32768.0, 'g', 16);
+		}
+		return QString::number((double)value / 256.0, 'g', 16);
+	}
+
+	virtual double valueFromText(const QString &text) const
+	{
+		int p = getLine().Parameter[m_Index - 1].I;
+
+		if (p)
+		{
+			return (text.toDouble() * 32768.0);
+		}
+		return (text.toDouble() * 256.0);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
+
 class InteractiveProperties::PropertiesSpinBox65536 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBox65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	PropertiesSpinBox65536(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-
 	}
 
 	virtual ~PropertiesSpinBox65536()
 	{
-
 	}
 
 protected:
@@ -531,14 +605,13 @@ protected:
 class InteractiveProperties::PropertiesSpinBoxAngle65536 : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBoxAngle65536(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	PropertiesSpinBoxAngle65536(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-
 	}
 
 	virtual ~PropertiesSpinBoxAngle65536()
 	{
-
 	}
 
 protected:
@@ -558,14 +631,13 @@ protected:
 class InteractiveProperties::PropertiesSpinBoxVertexFormat : public InteractiveProperties::PropertiesDoubleSpinBox
 {
 public:
-	PropertiesSpinBoxVertexFormat(InteractiveProperties *parent, const QString &undoMessage, int index) : PropertiesDoubleSpinBox(parent, undoMessage, index)
+	PropertiesSpinBoxVertexFormat(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : PropertiesDoubleSpinBox(parent, undoMessage, index)
 	{
-		
 	}
 
 	virtual ~PropertiesSpinBoxVertexFormat()
 	{
-
 	}
 
 protected:
@@ -591,7 +663,12 @@ class InteractiveProperties::PropertiesCheckBox : public QCheckBox, public Prope
 	Q_OBJECT
 
 public:
-	PropertiesCheckBox(InteractiveProperties *parent, const QString &undoMessage, int index, uint32_t flag) : QCheckBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_Flag(flag), m_SoftMod(false)
+	PropertiesCheckBox(InteractiveProperties *parent, const QString &undoMessage, int index, uint32_t flag)
+	    : QCheckBox(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_Flag(flag)
+	    , m_SoftMod(false)
 	{
 		m_CombineId = -1;
 		connect(this, SIGNAL(stateChanged(int)), this, SLOT(updateValue(int)));
@@ -600,12 +677,12 @@ public:
 
 	virtual ~PropertiesCheckBox()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 
 		uint32_t v = getLine().Parameter[m_Index].U;
@@ -617,7 +694,8 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesCheckBox::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -630,7 +708,7 @@ private slots:
 
 		if ((v & OPT_FORMAT) == 0)
 			parsed.VarArgCount = 0;
-		
+
 		parsed.Parameter[m_Index].U = v;
 		setLine(parsed);
 		m_SoftMod = false;
@@ -647,7 +725,11 @@ class InteractiveProperties::PropertiesLineEdit : public UndoStackDisabler<QLine
 	Q_OBJECT
 
 public:
-	PropertiesLineEdit(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QLineEdit>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesLineEdit(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QLineEdit>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		setUndoStack(parent->m_MainWindow->undoStack());
 		connect(this, SIGNAL(textEdited(const QString &)), this, SLOT(updateValue(const QString &)));
@@ -656,12 +738,12 @@ public:
 
 	virtual ~PropertiesLineEdit()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		const DlParsed &parsed = getLine();
 		std::string str;
@@ -673,7 +755,8 @@ public:
 private slots:
 	void updateValue(const QString &text)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesLineEdit::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -694,7 +777,11 @@ class InteractiveProperties::PropertiesLineEditChar : public UndoStackDisabler<Q
 	Q_OBJECT
 
 public:
-	PropertiesLineEditChar(InteractiveProperties *parent, const QString &undoMessage, int index) : UndoStackDisabler<QLineEdit>(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesLineEditChar(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : UndoStackDisabler<QLineEdit>(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		setUndoStack(parent->m_MainWindow->undoStack());
 		connect(this, SIGNAL(textEdited(const QString &)), this, SLOT(updateValue(const QString &)));
@@ -703,12 +790,12 @@ public:
 
 	virtual ~PropertiesLineEditChar()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		const DlParsed &parsed = getLine();
 		std::string str;
@@ -727,7 +814,8 @@ public:
 private slots:
 	void updateValue(const QString &text)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesLineEdit::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -759,7 +847,11 @@ class InteractiveProperties::PropertiesSlider : public QSlider, public Propertie
 	Q_OBJECT
 
 public:
-	PropertiesSlider(InteractiveProperties *parent, const QString &undoMessage, int index) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false)
+	PropertiesSlider(InteractiveProperties *parent, const QString &undoMessage, int index)
+	    : QSlider(Qt::Horizontal, parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -769,7 +861,6 @@ public:
 
 	virtual ~PropertiesSlider()
 	{
-
 	}
 
 	void ready()
@@ -780,7 +871,8 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setValue(getLine().Parameter[m_Index].I);
 		m_SoftMod = false;
@@ -789,7 +881,8 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesSlider::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -801,7 +894,6 @@ private slots:
 private:
 	int m_Index;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -811,7 +903,12 @@ class InteractiveProperties::PropertiesSliderDyn : public QSlider, public Proper
 	Q_OBJECT
 
 public:
-	PropertiesSliderDyn(InteractiveProperties *parent, const QString &undoMessage, int index, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Maxim(maxim)
+	PropertiesSliderDyn(InteractiveProperties *parent, const QString &undoMessage, int index, int maxim)
+	    : QSlider(Qt::Horizontal, parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
+	    , m_Maxim(maxim)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -825,12 +922,12 @@ public:
 
 	virtual ~PropertiesSliderDyn()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setMaximum(getLine().Parameter[m_Maxim].I);
 		setValue(getLine().Parameter[m_Index].I);
@@ -840,7 +937,8 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesSlider::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -853,7 +951,6 @@ private:
 	int m_Index;
 	int m_Maxim;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -863,7 +960,13 @@ class InteractiveProperties::PropertiesSliderDynSubClip : public QSlider, public
 	Q_OBJECT
 
 public:
-	PropertiesSliderDynSubClip(InteractiveProperties *parent, const QString &undoMessage, int index, int clip, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_Clip(clip), m_SoftMod(false), m_Maxim(maxim)
+	PropertiesSliderDynSubClip(InteractiveProperties *parent, const QString &undoMessage, int index, int clip, int maxim)
+	    : QSlider(Qt::Horizontal, parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_Clip(clip)
+	    , m_SoftMod(false)
+	    , m_Maxim(maxim)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -871,7 +974,6 @@ public:
 
 	virtual ~PropertiesSliderDynSubClip()
 	{
-
 	}
 
 	void ready()
@@ -882,7 +984,8 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setMaximum(getLine().Parameter[m_Maxim].I);
 		setValue(getLine().Parameter[m_Index].I);
@@ -892,13 +995,15 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesSlider::updateValue(value)\n");
 		DlParsed parsed = getLine();
 		parsed.Parameter[m_Index].I = value;
 		int maxim = parsed.Parameter[m_Maxim].I - parsed.Parameter[m_Index].I;
-		if (parsed.Parameter[m_Clip].I > maxim) parsed.Parameter[m_Clip].I = maxim;
+		if (parsed.Parameter[m_Clip].I > maxim)
+			parsed.Parameter[m_Clip].I = maxim;
 		setLine(parsed);
 		m_SoftMod = false;
 	}
@@ -908,7 +1013,6 @@ private:
 	int m_Clip;
 	int m_Maxim;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -918,7 +1022,13 @@ class InteractiveProperties::PropertiesSliderDynSub : public QSlider, public Pro
 	Q_OBJECT
 
 public:
-	PropertiesSliderDynSub(InteractiveProperties *parent, const QString &undoMessage, int index, int sub, int maxim) : QSlider(Qt::Horizontal, parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_SoftMod(false), m_Sub(sub), m_Maxim(maxim)
+	PropertiesSliderDynSub(InteractiveProperties *parent, const QString &undoMessage, int index, int sub, int maxim)
+	    : QSlider(Qt::Horizontal, parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_SoftMod(false)
+	    , m_Sub(sub)
+	    , m_Maxim(maxim)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValue(int)));
@@ -926,7 +1036,6 @@ public:
 
 	virtual ~PropertiesSliderDynSub()
 	{
-
 	}
 
 	void ready()
@@ -937,7 +1046,8 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setMaximum(getLine().Parameter[m_Maxim].I - getLine().Parameter[m_Sub].I);
 		setValue(getLine().Parameter[m_Index].I);
@@ -947,7 +1057,8 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		// printf("PropertiesSlider::updateValue(value)\n");
 		DlParsed parsed = getLine();
@@ -961,7 +1072,6 @@ private:
 	int m_Sub;
 	int m_Maxim;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -971,7 +1081,12 @@ class InteractiveProperties::PropertiesColor : public QFrame, public PropertiesW
 	Q_OBJECT
 
 public:
-	PropertiesColor(InteractiveProperties *parent, const QString &undoMessage, int r, int g, int b) : QFrame(parent), PropertiesWidget(parent, undoMessage), m_R(r), m_G(g), m_B(b)
+	PropertiesColor(InteractiveProperties *parent, const QString &undoMessage, int r, int g, int b)
+	    : QFrame(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_R(r)
+	    , m_G(g)
+	    , m_B(b)
 	{
 		//setWidth(48);
 		//setHeight(26);
@@ -986,7 +1101,6 @@ public:
 
 	virtual ~PropertiesColor()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
@@ -999,7 +1113,8 @@ public:
 
 	virtual void mousePressEvent(QMouseEvent *event)
 	{
-		if (event->button() != Qt::LeftButton) return;
+		if (event->button() != Qt::LeftButton)
+			return;
 		// printf("PropertiesColor::mousePressEvent(event)\n");
 		QColor c = QColorDialog::getColor(palette().color(QPalette::Window), this);
 		if (c.isValid())
@@ -1016,7 +1131,6 @@ private:
 	int m_R;
 	int m_G;
 	int m_B;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1026,7 +1140,10 @@ class InteractiveProperties::PropertiesColorHex : public QFrame, public Properti
 	Q_OBJECT
 
 public:
-	PropertiesColorHex(InteractiveProperties *parent, const QString &undoMessage, int rgb) : QFrame(parent), PropertiesWidget(parent, undoMessage), m_RGB(rgb)
+	PropertiesColorHex(InteractiveProperties *parent, const QString &undoMessage, int rgb)
+	    : QFrame(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_RGB(rgb)
 	{
 		//setWidth(48);
 		//setHeight(26);
@@ -1041,7 +1158,6 @@ public:
 
 	virtual ~PropertiesColorHex()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
@@ -1057,16 +1173,16 @@ public:
 
 	virtual void mousePressEvent(QMouseEvent *event)
 	{
-		if (event->button() != Qt::LeftButton) return;
+		if (event->button() != Qt::LeftButton)
+			return;
 		// printf("PropertiesColor::mousePressEvent(event)\n");
 		QColor c = QColorDialog::getColor(palette().color(QPalette::Window), this);
 		if (c.isValid())
 		{
 			DlParsed parsed = getLine();
-			int rgb = 
-				c.red() << 16
-				| c.green() << 8
-				| c.blue();
+			int rgb = c.red() << 16
+			    | c.green() << 8
+			    | c.blue();
 			parsed.Parameter[m_RGB].U = (parsed.Parameter[m_RGB].U & 0xFF000000) | (rgb & 0xFFFFFF);
 			setLine(parsed);
 		}
@@ -1074,7 +1190,6 @@ public:
 
 private:
 	int m_RGB;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1084,7 +1199,12 @@ class InteractiveProperties::PropertiesComboBox : public QComboBox, public Prope
 	Q_OBJECT
 
 public:
-	PropertiesComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, int begin) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_Begin(begin), m_SoftMod(false)
+	PropertiesComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, int begin)
+	    : QComboBox(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_Begin(begin)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(updateValue(int)));
@@ -1092,7 +1212,6 @@ public:
 
 	virtual ~PropertiesComboBox()
 	{
-
 	}
 
 	void ready()
@@ -1103,7 +1222,8 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setCurrentIndex(getLine().Parameter[m_Index].U - m_Begin);
 		m_SoftMod = false;
@@ -1112,8 +1232,10 @@ public:
 private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
-		if (value < 0) return;
+		if (m_SoftMod)
+			return;
+		if (value < 0)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSlider::updateValue(value) %i\n", value);
 		DlParsed parsed = getLine();
@@ -1126,7 +1248,6 @@ private:
 	int m_Index;
 	int m_Begin;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1257,15 @@ class InteractiveProperties::PropertiesRemapComboBox : public QComboBox, public 
 	Q_OBJECT
 
 public:
-	PropertiesRemapComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz) : QComboBox(parent), PropertiesWidget(parent, undoMessage), m_Index(index), m_ToIntf(toIntf), m_ToIntfSz(toIntfSz), m_ToEnum(toEnum), m_ToEnumSz(toEnumSz), m_SoftMod(false)
+	PropertiesRemapComboBox(InteractiveProperties *parent, const QString &undoMessage, int index, const int *toIntf, int toIntfSz, const int *toEnum, int toEnumSz)
+	    : QComboBox(parent)
+	    , PropertiesWidget(parent, undoMessage)
+	    , m_Index(index)
+	    , m_ToIntf(toIntf)
+	    , m_ToIntfSz(toIntfSz)
+	    , m_ToEnum(toEnum)
+	    , m_ToEnumSz(toEnumSz)
+	    , m_SoftMod(false)
 	{
 		m_SoftMod = true;
 		connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(updateValue(int)));
@@ -1144,7 +1273,6 @@ public:
 
 	virtual ~PropertiesRemapComboBox()
 	{
-
 	}
 
 	void ready()
@@ -1155,17 +1283,20 @@ public:
 
 	virtual void modifiedEditorLine()
 	{
-		if (m_SoftMod) return;
+		if (m_SoftMod)
+			return;
 		m_SoftMod = true;
 		setCurrentIndex(m_ToIntf[getLine().Parameter[m_Index].U % m_ToIntfSz]);
 		m_SoftMod = false;
 	}
 
-	private slots:
+private slots:
 	void updateValue(int value)
 	{
-		if (m_SoftMod) return;
-		if (value < 0) return;
+		if (m_SoftMod)
+			return;
+		if (value < 0)
+			return;
 		m_SoftMod = true;
 		//printf("PropertiesSlider::updateValue(value) %i\n", value);
 		DlParsed parsed = getLine();
@@ -1181,7 +1312,6 @@ private:
 	const int *m_ToEnum;
 	int m_ToEnumSz;
 	bool m_SoftMod;
-
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1206,7 +1336,9 @@ class InteractiveProperties::PropertiesCaptureButton : public QPushButton, publi
 	Q_OBJECT
 
 public:
-	PropertiesCaptureButton(InteractiveProperties *parent, const QString &text, const QString &undoMessage) : QPushButton(parent), PropertiesWidget(parent, undoMessage)
+	PropertiesCaptureButton(InteractiveProperties *parent, const QString &text, const QString &undoMessage)
+	    : QPushButton(parent)
+	    , PropertiesWidget(parent, undoMessage)
 	{
 		setText(text);
 		connect(this, SIGNAL(clicked()), this, SLOT(actCapture()));
@@ -1214,12 +1346,10 @@ public:
 
 	virtual ~PropertiesCaptureButton()
 	{
-
 	}
 
 	virtual void modifiedEditorLine()
 	{
-
 	}
 
 private slots:
@@ -1360,59 +1490,59 @@ private slots:
 
 		switch (targetFormat)
 		{
-			case 0:
+		case 0:
+		{
+			QFile file(fileName);
+			file.open(QIODevice::WriteOnly);
+			QDataStream out(&file);
+			out.writeRawData((const char *)(void *)&ram[memAddress], memSize);
+			break;
+		}
+		case 1:
+		case 2:
+		{
+			QImage image(imageWidth, imageHeight, QImage::Format_RGB32);
+			argb8888 *buffer = (argb8888 *)(void *)&ram[memAddress];
+			switch (sourceFormat)
 			{
-				QFile file(fileName);
-				file.open(QIODevice::WriteOnly);
-				QDataStream out(&file);
-				out.writeRawData((const char *)(void *)&ram[memAddress], memSize);
-				break;
-			}
-			case 1:
-			case 2:
-			{
-				QImage image(imageWidth, imageHeight, QImage::Format_RGB32);
-				argb8888 *buffer = (argb8888 *)(void *)&ram[memAddress];
-				switch (sourceFormat)
+			case ARGB4:
+				for (int y = 0; y < imageHeight; ++y)
 				{
-				case ARGB4:
-					for (int y = 0; y < imageHeight; ++y)
+					argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
+					uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
+					for (int x = 0; x < imageWidth; ++x)
 					{
-						argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
-						uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
-						for (int x = 0; x < imageWidth; ++x)
-						{
-							uint16_t val = input[x];
-							scanline[x] = (mul255div15(val >> 12) << 24)
-								| (mul255div15((val >> 8) & 0xF) << 16)
-								| (mul255div15((val >> 4) & 0xF) << 8)
-								| (mul255div15(val & 0xF));
-						}
+						uint16_t val = input[x];
+						scanline[x] = (mul255div15(val >> 12) << 24)
+						    | (mul255div15((val >> 8) & 0xF) << 16)
+						    | (mul255div15((val >> 4) & 0xF) << 8)
+						    | (mul255div15(val & 0xF));
 					}
-					break;
-				case RGB565:
-					for (int y = 0; y < imageHeight; ++y)
-					{
-						argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
-						uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
-						for (int x = 0; x < imageWidth; ++x)
-						{
-							uint16_t val = input[x];
-							scanline[x] = 0xFF000000 // todo opt
-								| (mul255div31(val >> 11) << 16)
-								| (mul255div63((val >> 5) & 0x3F) << 8)
-								| mul255div31(val & 0x1F);
-						}
-					}
-					break;
-				case ARGB8_SNAPSHOT:
-					for (int y = 0; y < imageHeight; ++y)
-						memcpy(image.scanLine(y), &buffer[y * imageWidth], sizeof(argb8888) * imageWidth);
-					break;
 				}
-				image.save(fileName);
+				break;
+			case RGB565:
+				for (int y = 0; y < imageHeight; ++y)
+				{
+					argb8888 *scanline = (argb8888 *)(void *)image.scanLine(y);
+					uint16_t *input = (uint16_t *)(void *)&ram[memAddress + (y * (imageWidth * 2))];
+					for (int x = 0; x < imageWidth; ++x)
+					{
+						uint16_t val = input[x];
+						scanline[x] = 0xFF000000 // todo opt
+						    | (mul255div31(val >> 11) << 16)
+						    | (mul255div63((val >> 5) & 0x3F) << 8)
+						    | mul255div31(val & 0x1F);
+					}
+				}
+				break;
+			case ARGB8_SNAPSHOT:
+				for (int y = 0; y < imageHeight; ++y)
+					memcpy(image.scanLine(y), &buffer[y * imageWidth], sizeof(argb8888) * imageWidth);
 				break;
 			}
+			image.save(fileName);
+			break;
+		}
 		}
 
 		// Save screenshot
@@ -1421,7 +1551,6 @@ private slots:
 
 		// TODO: Automatically add to content manager
 	}
-
 };
 
 ////////////////////////////////////////////////////////////////////////
