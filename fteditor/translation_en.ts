@@ -1120,7 +1120,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="2111"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_A_BT815.</source>
-        <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix.</translation>
+        <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="2113"/>
@@ -1131,7 +1131,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="2134"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_B_BT815.</source>
-        <translation>&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix.</translation>
+        <translation type="unfinished">&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="2136"/>
@@ -1148,7 +1148,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="2169"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_D_BT815.</source>
-        <translation>&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix.</translation>
+        <translation type="unfinished">&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="2171"/>
@@ -1159,7 +1159,7 @@
     <message>
         <location filename="interactive_properties.cpp" line="2192"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_E_BT815.</source>
-        <translation>&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.1. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix.</translation>
+        <translation type="unfinished">&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="2194"/>
