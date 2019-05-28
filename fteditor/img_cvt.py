@@ -182,6 +182,23 @@ def pad(im, mult):
     n.paste(im, (0, 0))
     return n
 
+def remove_transparency(im, bg_colour=(0, 0, 0)):
+
+    # Only process if image has transparency (http://stackoverflow.com/a/1963146)
+    if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+
+        # Need to convert to RGBA if LA format due to a bug in PIL (http://stackoverflow.com/a/1963146)
+        alpha = im.convert('RGBA').split()[-1]
+
+        # Create a new background image of our matt color.
+        # Must be RGBA because paste requires both images have the same format
+        # (http://stackoverflow.com/a/8720632  and  http://stackoverflow.com/a/9459208)
+        bg = Image.new('RGBA', im.size, bg_colour + (0,))
+        bg.paste(im, mask=alpha)
+        return bg.convert('RGB')
+    else:
+        return im
+
 class Image_Conv:
     def __init__(self):
         self.size = (480, 272)
@@ -344,13 +361,8 @@ class Image_Conv:
         is_astc = False
         # Handle alpha bitmaps here. A solid color in all
         # pixels with nonzero alpha means use alpha channel
-        if im.mode == "RGBA" and self.output_format in (vc_L1, vc_L2, vc_L4, vc_L8):
-            allrgb = set()
-            for (r,g,b,a) in im.getdata():
-                if a:
-                    allrgb.add((r,g,b))
-            if len(allrgb) == 1:
-                im = im.split()[3]
+        if self.output_format in (vc_L1, vc_L2, vc_L4, vc_L8, vc_RGB332, vc_RGB565):
+            im = remove_transparency(im)
 
         colorfmts = {
             vc_ARGB1555: (1, 5, 5, 5),
@@ -363,9 +375,6 @@ class Image_Conv:
             vc_ARGB1555: (1, 5, 5, 5),
             vc_ARGB2:    (2, 2, 2, 2),
             vc_ARGB4:    (4, 4, 4, 4)}
-
-        rnd = random.Random()
-        rnd.seed(0)
 
         if self.output_format in supported_astc_formats:
             def is_exe(fpath):
@@ -403,12 +412,16 @@ class Image_Conv:
         elif self.output_format in colorfmts:
             (asz, rsz, gsz, bsz) = colorfmts[self.output_format]
             im_origin = im
+
             im = im.convert("RGBA")
             imdata = []
 
             totalsz = sum((asz, rsz, gsz, bsz))
             assert totalsz in (8, 16)
 
+            if dither:
+                rnd = random.Random()
+                rnd.seed(0)
             for y in range(im.size[1]):
                 for x in range(im.size[0]):
                     (r, g, b, a) = im.getpixel((x, y))
@@ -428,109 +441,58 @@ class Image_Conv:
             if self.output_format in colorfmts_A:
                 im = im_origin.convert("RGBA")
             else:
-                im = im_origin.convert("RGB")
+                im = remove_transparency(im)
 
         elif self.output_format == vc_L8:
-            if im.mode == "LA":
-                im = im.convert("LA")
-                data = array.array('B', im.tobytes()[1::2])
-            else:
-                im = im.convert("L")
-                data = array.array('B', im.tobytes())
+            im = im.convert("L")
+            data = array.array('B', im.tobytes())
             totalsz = 8
 
         elif self.output_format == vc_L4:
             (newWidth, newHeight) = ((im.size[0] + 1) & ~1, im.size[1])
-            im = im.resize((newWidth, newHeight), Image.BICUBIC)
-            LA = False
+            im = im.resize((newWidth,newHeight),Image.BICUBIC)
+            #im = pad(im,2)
+            im = im.convert("L")
 
-            if im.mode == "LA":
-                im = im.convert("LA")
-                LA = True
-            else:
-                im = im.convert("L")
+            b0 = im.tobytes()[::2]  #even numbers
+            b1 = im.tobytes()[1::2] #odd numbers
 
-            b0 = im.tobytes()[::2]  # even numbers
-            b1 = im.tobytes()[1::2]  # odd numbers
+            def to15(c):
+                return int(round(15 * c / 255.))
 
-            def to15(c, d=1):
-                if d == 0 and LA:
-                    return 0
-
-                if dither:
-                    dc = min(255, c + rnd.randrange(16))
-                else:
-                    dc = c
-                return int((15. * dc / 255))
-
-            data = array.array('B', [((to15(l, r) << 4) | to15(r)) for (l, r) in zip(b0, b1)])
-
-            if LA:
-                data = data[::2]
-
+            data = array.array('B', [((to15(l) << 4) + to15(r)) for (l, r) in zip(b0, b1)])
             totalsz = 4
 
         elif self.output_format == vc_L2:
-            (newWidth, newHeight) = ((im.size[0] + 3) & ~3, im.size[1])
-            # im = pad(im,4)
-            im = im.resize((newWidth, newHeight), Image.BICUBIC)
-            if (im.mode == "LA"):
-                im = im.convert("LA")
-            else:
-                im = im.convert("L")
+            (newWidth, newHeight) = ((im.size[0] + 3) & ~3,im.size[1])
+            #im = pad(im,4)
+            im = im.resize((newWidth,newHeight),Image.BICUBIC)
+            im = im.convert("L")
 
-            b0 = im.tobytes()[0::4]  # even numbers
-            b1 = im.tobytes()[1::4]  # odd numbers
-            b2 = im.tobytes()[2::4]  # even numbers
-            b3 = im.tobytes()[3::4]  # odd numbers
+            totalsz = 2
+            b0 = im.tobytes()[0::4]     # even numbers
+            b1 = im.tobytes()[1::4]     # odd numbers
+            b2 = im.tobytes()[2::4]     # even numbers
+            b3 = im.tobytes()[3::4]     # odd numbers
 
             def to3(c):
                 return int(round(3 * c / 255.))
 
-            data = array.array('B', [((to3(l) << 6) + (to3(r) << 4) + (to3(x) << 2) + to3(y)) for (l, r, x, y) in
-                                     zip(b0, b1, b2, b3)])
-            if im.mode == "LA":
-                data = data[1::2]
-            totalsz = 2
+            data = array.array('B', [((to3(l) << 6) + (to3(r)<<4) + (to3(x)<<2) + to3(y)) for (l, r, x, y) in zip(b0, b1, b2, b3)])
+
         elif self.output_format == vc_L1:
-            if im.mode != "LA":
-                if dither:
-                    im = im.convert("1", dither=Image.FLOYDSTEINBERG)
-                else:
-                    im = im.convert("1", dither=Image.NONE)
-                data = array.array('B', im.tobytes())
+            if dither:
+                im = im.convert("1", dither=Image.FLOYDSTEINBERG)
             else:
-                (newWidth, newHeight) = ((im.size[0] + 7) & ~7, im.size[1])
-                im = im.resize((newWidth, newHeight), Image.BICUBIC)
-                im = im.convert("LA")
-
-                b0 = im.tobytes()[::2]  # even numbers
-                b1 = im.tobytes()[1::2]  # odd numbers
-
-                def norm(c, d=1):
-                    return c if d != 0 else 0
-
-                data = array.array('B', [norm(l, r) for (l, r) in zip(b0, b1)])
-
-                def to1(c):
-                    return 1 if c > 127 else 0
-
-                def comb(L):
-                    L = [to1(i) for i in L]
-
-                    res = 0
-                    for i, v in enumerate(L):
-                        res |= v << (7 - i)
-                    return res
-
-                data = array.array('B', [comb(data[i:i + 8]) for i in range(0, len(data), 8)])
+                im = im.convert("1", dither=Image.NONE)
+            data = array.array('B', im.tobytes())
             totalsz = 1
 
         im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
 
         self.stride = self.calc_stride(im, totalsz)
-        self.save_binfiles(data,im.size)
-        self.save_rawfiles(data,im.size, totalsz, is_astc)        
+        self.save_binfiles(data, im.size)
+        self.save_rawfiles(data, im.size, totalsz, is_astc)
     
         return im.size
 
@@ -540,7 +502,7 @@ class Image_Conv:
             raise Exception('Palette conversion error: missing input file.')
 
         try:
-            infile = png.Reader(filename = infile_name)
+            infile = png.Reader(filename=infile_name)
         except:
             raise Exception('Unable to open: {}'.format(infile_name))
 
@@ -819,6 +781,8 @@ class Image_Conv:
                     if returncode != 0:
                         raise Exception(resource_path(pngquant), pngquant, newimg, self.filename, 'Unable to convert image to PNG8')
                     self.filename = newimg
+
+
             except Exception as ex:  
                 self.index_raw.close()
                 self.index_rawh.close()
