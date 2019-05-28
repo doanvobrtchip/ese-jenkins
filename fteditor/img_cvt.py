@@ -364,6 +364,9 @@ class Image_Conv:
             vc_ARGB2:    (2, 2, 2, 2),
             vc_ARGB4:    (4, 4, 4, 4)}
 
+        rnd = random.Random()
+        rnd.seed(0)
+
         if self.output_format in supported_astc_formats:
             def is_exe(fpath):
                 return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -406,9 +409,6 @@ class Image_Conv:
             totalsz = sum((asz, rsz, gsz, bsz))
             assert totalsz in (8, 16)
 
-            if dither:
-                rnd = random.Random()
-                rnd.seed(0)
             for y in range(im.size[1]):
                 for x in range(im.size[0]):
                     (r, g, b, a) = im.getpixel((x, y))
@@ -431,48 +431,99 @@ class Image_Conv:
                 im = im_origin.convert("RGB")
 
         elif self.output_format == vc_L8:
-            im = im.convert("L")
-            data = array.array('B', im.tobytes())
+            if im.mode == "LA":
+                im = im.convert("LA")
+                data = array.array('B', im.tobytes()[1::2])
+            else:
+                im = im.convert("L")
+                data = array.array('B', im.tobytes())
             totalsz = 8
 
         elif self.output_format == vc_L4:
             (newWidth, newHeight) = ((im.size[0] + 1) & ~1, im.size[1])
-            im = im.resize((newWidth,newHeight),Image.BICUBIC)
-            #im = pad(im,2)
-            im = im.convert("L")
+            im = im.resize((newWidth, newHeight), Image.BICUBIC)
+            LA = False
 
-            b0 = im.tobytes()[::2]  #even numbers
-            b1 = im.tobytes()[1::2] #odd numbers
+            if im.mode == "LA":
+                im = im.convert("LA")
+                LA = True
+            else:
+                im = im.convert("L")
 
-            def to15(c):
-                return int(round(15 * c / 255.))
+            b0 = im.tobytes()[::2]  # even numbers
+            b1 = im.tobytes()[1::2]  # odd numbers
 
-            data = array.array('B', [((to15(l) << 4) + to15(r)) for (l, r) in zip(b0, b1)])
+            def to15(c, d=1):
+                if d == 0 and LA:
+                    return 0
+
+                if dither:
+                    dc = min(255, c + rnd.randrange(16))
+                else:
+                    dc = c
+                return int((15. * dc / 255))
+
+            data = array.array('B', [((to15(l, r) << 4) | to15(r)) for (l, r) in zip(b0, b1)])
+
+            if LA:
+                data = data[::2]
+
             totalsz = 4
 
         elif self.output_format == vc_L2:
-            (newWidth, newHeight) = ((im.size[0] + 3) & ~3,im.size[1])
-            #im = pad(im,4)
-            im = im.resize((newWidth,newHeight),Image.BICUBIC)
-            im = im.convert("L")
+            (newWidth, newHeight) = ((im.size[0] + 3) & ~3, im.size[1])
+            # im = pad(im,4)
+            im = im.resize((newWidth, newHeight), Image.BICUBIC)
+            if (im.mode == "LA"):
+                im = im.convert("LA")
+            else:
+                im = im.convert("L")
 
-            totalsz = 2
-            b0 = im.tobytes()[0::4]     # even numbers
-            b1 = im.tobytes()[1::4]     # odd numbers
-            b2 = im.tobytes()[2::4]     # even numbers
-            b3 = im.tobytes()[3::4]     # odd numbers
+            b0 = im.tobytes()[0::4]  # even numbers
+            b1 = im.tobytes()[1::4]  # odd numbers
+            b2 = im.tobytes()[2::4]  # even numbers
+            b3 = im.tobytes()[3::4]  # odd numbers
 
             def to3(c):
                 return int(round(3 * c / 255.))
 
-            data = array.array('B', [((to3(l) << 6) + (to3(r)<<4) + (to3(x)<<2) + to3(y)) for (l, r, x, y) in zip(b0, b1, b2, b3)])
-
+            data = array.array('B', [((to3(l) << 6) + (to3(r) << 4) + (to3(x) << 2) + to3(y)) for (l, r, x, y) in
+                                     zip(b0, b1, b2, b3)])
+            if im.mode == "LA":
+                data = data[1::2]
+            totalsz = 2
         elif self.output_format == vc_L1:
-            if dither:
-                im = im.convert("1", dither=Image.FLOYDSTEINBERG)
+            if im.mode != "LA":
+                if dither:
+                    im = im.convert("1", dither=Image.FLOYDSTEINBERG)
+                else:
+                    im = im.convert("1", dither=Image.NONE)
+                data = array.array('B', im.tobytes())
             else:
-                im = im.convert("1", dither=Image.NONE)
-            data = array.array('B', im.tobytes())
+                (newWidth, newHeight) = ((im.size[0] + 7) & ~7, im.size[1])
+                im = im.resize((newWidth, newHeight), Image.BICUBIC)
+                im = im.convert("LA")
+
+                b0 = im.tobytes()[::2]  # even numbers
+                b1 = im.tobytes()[1::2]  # odd numbers
+
+                def norm(c, d=1):
+                    return c if d != 0 else 0
+
+                data = array.array('B', [norm(l, r) for (l, r) in zip(b0, b1)])
+
+                def to1(c):
+                    return 1 if c > 127 else 0
+
+                def comb(L):
+                    L = [to1(i) for i in L]
+
+                    res = 0
+                    for i, v in enumerate(L):
+                        res |= v << (7 - i)
+                    return res
+
+                data = array.array('B', [comb(data[i:i + 8]) for i in range(0, len(data), 8)])
             totalsz = 1
 
         im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
