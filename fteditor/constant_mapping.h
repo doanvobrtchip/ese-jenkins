@@ -89,9 +89,6 @@ inline int32_t addr(int deviceIntf, int addrIntf) { return g_Addr[deviceIntf][ad
 extern const char **g_AddrToString[FTEDITOR_DEVICE_NB];
 inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToString[deviceIntf][addrIntf]; }
 
-// Flash Address Mask
-#define FLASH_ADDRESS_MASK				0x7FFFFF
-
 // Register addresses
 #define FTEDITOR_REG_ID 0
 #define FTEDITOR_REG_FRAMES 1

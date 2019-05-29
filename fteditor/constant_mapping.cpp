@@ -139,8 +139,8 @@ const uint32_t g_AddressMask[FTEDITOR_DEVICE_NB] = {
 	0x3FFFFF, // FT811
 	0x3FFFFF, // FT812
 	0x3FFFFF, // FT813
-	0x3FFFFF, // BT815 // Mask for RAM address only
-	0x3FFFFF, // BT816
+	0x7FFFFF, // BT815 // Mask for RAM address only
+	0x7FFFFF, // BT816
 };
 
 ///////////////////////////////////////////////////////////////////////
