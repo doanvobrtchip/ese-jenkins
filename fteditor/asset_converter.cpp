@@ -97,9 +97,9 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
-	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
+	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
 	printf("---\n");
 	return false;
 }
@@ -126,9 +126,9 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
-	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
+	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
 	printf("---\n");
 	return false;
 }
@@ -269,11 +269,10 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -387,11 +386,11 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+			QString error = QString::fromUtf8(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -421,8 +420,12 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	// Returns image layout
 	// /*('file properties: ', 'resolution ', 360, 'x', 238, 'format ', 'L1', 'stride ', 45, ' total size ', 10710)*/
 	QString fileName = name + ".rawh";
-	QByteArray fileNameCStr = fileName.toLocal8Bit(); // VERIFY: UNICODE
+#ifdef WIN32
+	FILE *f = _wfopen((wchar_t *)fileName.data(), L"r");
+#else
+	QByteArray fileNameCStr = fileName.toLocal8Bit();
 	FILE *f = fopen(fileNameCStr.data(), "r");
+#endif
 	if (!f)
 	{
 		printf("Failed to open RAWH file\n");
@@ -614,10 +617,10 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
 			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			QString error = QString::fromUtf8(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -675,6 +678,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	}
 	FT_Face face;
 	int error;
+	
 	QByteArray inFileLocal8 = inFile.toLocal8Bit(); // If this does not work for unicode, we can load the font file to ram first
 	error = FT_New_Face(library, inFileLocal8.data(), 0, &face); // and use FT_New_Memory_Face instead
 	if (error == FT_Err_Unknown_File_Format) // TODO?: Replace 0 in FT_New_Face call with the correct face index to support multi-face fonts

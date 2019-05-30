@@ -308,9 +308,9 @@ void pythonError()
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 	PyObject *errStr = PyObject_Repr(pvalue);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-	QString error = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+	QString error = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", error.toLocal8Bit().data());
 	Py_DECREF(errStr);
 	printf("---\n");
 }
@@ -347,8 +347,8 @@ static QString scriptDisplayName(const QString &script)
 
 	if (pyValue)
 	{
-		char *resCStr = PyUnicode_AsUTF8(pyValue);
-		QString res = QString::fromLocal8Bit(resCStr);
+		const char *resCStr = PyUnicode_AsUTF8(pyValue);
+		QString res = QString::fromUtf8(resCStr);
 		Py_DECREF(pyValue); pyValue = NULL; // !
 		return res;
 	}
@@ -549,9 +549,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
@@ -577,9 +577,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
@@ -622,8 +622,8 @@ void MainWindow::runScript(const QString &script)
 				{
 					printf("Ok\n");
 					PyObject *resStr = PyObject_Repr(pyValue);
-					char *resCStr = PyUnicode_AsUTF8(resStr);
-					QString res = QString::fromLocal8Bit(resCStr);
+					const char *resCStr = PyUnicode_AsUTF8(resStr);
+					QString res = QString::fromUtf8(resCStr);
 					Py_DECREF(pyValue); pyValue = NULL;
 					m_PropertiesEditor->setInfo(res);
 					m_PropertiesEditor->setEditWidget(NULL, false, NULL);
@@ -653,9 +653,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
