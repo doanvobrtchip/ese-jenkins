@@ -1,0 +1,53 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/lion",
+            "imageFormat": 7,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/lion.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(0, 85, 127)",
+        "CLEAR(1,1,1)",
+        "",
+        "BLEND_FUNC(SRC_ALPHA, ZERO)",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, RGB565, 300, 200)",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(50, 50, 0, 0)",
+        "",
+        "#Now Rotate 32 Degree ",
+        "#We need enlarge the drawing area because of rotation:   2* R  where R = sqrt((w / 2) ** 2 + (h / 2) ** 2)  = 188, that is 2*188",
+        "BITMAP_SIZE(BILINEAR, BORDER, BORDER, 376, 376)",
+        "CMD_LOADIDENTITY()",
+        "CMD_TRANSLATE(12320768, 12320768)   #Translate the image with R pixels in X and Y",
+        "CMD_ROTATE(5825)                                   #Rotate 32 degree:  32 * 65536 / 360",
+        "CMD_TRANSLATE(-10485760, -6553600)  #Translate the image with w/2, h/2 pixels in X and Y",
+        "CMD_SETMATRIX()",
+        "",
+        "#Draw the rotated image centering at  (588, 268) by specifying the topleft at (588-188, 268-188)",
+        "VERTEX2II(400, 80, 0, 0)",
+        "",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
