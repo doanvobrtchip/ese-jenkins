@@ -85,8 +85,8 @@ static QString asText(uint32_t value)
 	uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsed);
 	if (compiled != value)
 	{
-		QByteArray chars = line.toLocal8Bit();
 #if _DEBUG
+		QByteArray chars = line.toLocal8Bit();
 		printf("Parser bug '%s' -> expect %u, compiled %u\n", chars.constData(), value, compiled);
 #endif
 	}
