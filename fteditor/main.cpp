@@ -118,24 +118,24 @@ int main(int argc, char* argv[])
 		printf("Could not load translation\n");
 	}
 
-	// QApplication::setStyle(QStyleFactory::create("Fusion"));
+	QApplication::setStyle(QStyleFactory::create("Fusion"));
 
-	/*
-	QPalette palette = app.palette();
-	palette.setColor(QPalette::Window, QColor(64, 64, 64));
-	palette.setColor(QPalette::WindowText, Qt::white);
-	palette.setColor(QPalette::Base, QColor(48, 48, 48));
-	palette.setColor(QPalette::AlternateBase, QColor(64, 64, 64));
-	palette.setColor(QPalette::ToolTipBase, Qt::white);
-	palette.setColor(QPalette::ToolTipText, Qt::white);
-	palette.setColor(QPalette::Text, Qt::white);
-	palette.setColor(QPalette::Button, QColor(64, 64, 64));
-	palette.setColor(QPalette::ButtonText, Qt::white);
-	palette.setColor(QPalette::BrightText, Qt::red);
-	palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
-	palette.setColor(QPalette::HighlightedText, Qt::white);
-	app.setPalette(palette);
-	*/
+	
+	//QPalette palette = app.palette();
+	//palette.setColor(QPalette::Window, QColor(64, 64, 64));
+	//palette.setColor(QPalette::WindowText, Qt::white);
+	//palette.setColor(QPalette::Base, QColor(48, 48, 48));
+	//palette.setColor(QPalette::AlternateBase, QColor(64, 64, 64));
+	//palette.setColor(QPalette::ToolTipBase, Qt::white);
+	//palette.setColor(QPalette::ToolTipText, Qt::white);
+	//palette.setColor(QPalette::Text, Qt::white);
+	//palette.setColor(QPalette::Button, QColor(64, 64, 64));
+	//palette.setColor(QPalette::ButtonText, Qt::white);
+	//palette.setColor(QPalette::BrightText, Qt::red);
+	//palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
+	//palette.setColor(QPalette::HighlightedText, Qt::white);
+	//app.setPalette(palette);
+	
 
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON

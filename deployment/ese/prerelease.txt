@@ -34,13 +34,17 @@ Features:
 •   Add zooming function of emulator viewport
 •   Upgrade C++ source and Python script to work with Python v3.6.5
 •   Clone resource so that project can be moved to another location safely
+•   Add more comprehensive bitmap rotate example
+•   Add bar graph invert example
 
 Bug Fix:
 *   Link library free-type into executable file
 *   Update REG_CMD_DL correctly
 *   Fix the crash issue when export menu is clicked for FT813 device.
 *   Fix the improper emulator library of export project 
-
+*   L1/L2/L4/L8 formats are not converted correctly
+*   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
+*   Update the bitmap_source in ESE for negative address case
 
 Known issues: 
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager

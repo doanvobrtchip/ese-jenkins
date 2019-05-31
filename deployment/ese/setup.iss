@@ -86,6 +86,7 @@ Source: ".\\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
