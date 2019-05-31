@@ -665,11 +665,11 @@ void loop()
 					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
 					continue;
 				}
-				if (palSize != (int)palFile.size())
-				{
-					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-					continue;
-				}
+				//if (palSize != (int)palFile.size())
+				//{
+				//	printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
+				//	continue;
+				//}
 				// ok
 				{
 					palFile.open(QIODevice::ReadOnly);
