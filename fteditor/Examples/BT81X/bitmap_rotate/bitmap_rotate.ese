@@ -12,7 +12,7 @@
         }
     ],
     "coprocessor": [
-        "CLEAR_COLOR_RGB(0, 85, 127)",
+        "CLEAR_COLOR_RGB(0, 85, 0)",
         "CLEAR(1,1,1)",
         "",
         "BLEND_FUNC(SRC_ALPHA, ZERO)",
