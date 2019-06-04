@@ -164,7 +164,7 @@ def is_valid_effort(effort):
 def execute_subprocess(cmd):
     try:
         if os.name == "nt":
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             proc.communicate()
             return proc.returncode
     except Exception as ex:

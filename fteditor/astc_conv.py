@@ -1,12 +1,10 @@
-try:
-    import Image,ImageChops
-except ImportError:
-    from PIL import Image,ImageChops
+from PIL import Image,ImageChops
 import array
 import random
 import tempfile
 import os
 import struct
+import subprocess
 
 def astc_dims(fmt):
     if isinstance(fmt, int):
@@ -93,7 +91,7 @@ def convert(im, fmt = "COMPRESSED_RGBA_ASTC_4x4_KHR", effort = "exhaustive", ast
 
     astc = tempfile.NamedTemporaryFile(delete = False)
     
-    os.system("\"%s\" -c %s %s %dx%d -%s -silentmode" % (astc_encode, png.name, astc.name, w, h, effort))
+    subprocess.call("\"%s\" -c %s %s %dx%d -%s -silentmode" % (astc_encode, png.name, astc.name, w, h, effort), shell=True)
 
     (bw, bh, d0) = tile(open(astc.name, "rb"))
 
