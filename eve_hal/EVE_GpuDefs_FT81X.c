@@ -34,6 +34,7 @@
 #include "EVE_Hal.h"
 
 #undef EVE_MULTI_TARGET
+#undef EVE_MODEL
 #define FT_81X_ENABLE
 #include "EVE_GpuDefs.h"
 
@@ -68,6 +69,10 @@ EVE_GpuDefs EVE_GpuDefs_FT81X = {
 	REG_GPIO,
 	REG_PCLK,
 	REG_PLAYBACK_PLAY,
+	REG_SPI_WIDTH,
+	REG_GPIOX_DIR,
+	REG_GPIOX,
+	REG_ROMSUB_SEL,
 	RAM_DL,
 	RAM_CMD,
 	ROM_CHIPID,

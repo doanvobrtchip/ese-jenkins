@@ -63,7 +63,7 @@ void EVE_HalImpl_release()
 }
 
 void EVE_HalImpl_BT8XXEMU_list(EVE_DeviceInfo *deviceList, size_t *deviceCount);
-EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount)
+EVE_HAL_EXPORT EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount)
 {
 	memset(s_DeviceList, 0, sizeof(s_DeviceList));
 	s_DeviceCount = 0;
@@ -154,165 +154,165 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 ** TRANSFER **
 *************/
 
-void EVE_HalImpl_BT8XXEMU_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
-void EVE_HalImpl_FT4222_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
-void EVE_HalImpl_MPSSE_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
-void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr)
+void EVE_Hal_BT8XXEMU_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
+void EVE_Hal_FT4222_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
+void EVE_Hal_MPSSE_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
+EVE_HAL_EXPORT void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_startTransfer(phost, rw, addr);
+		EVE_Hal_BT8XXEMU_startTransfer(phost, rw, addr);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_HalImpl_FT4222_startTransfer(phost, rw, addr);
+		EVE_Hal_FT4222_startTransfer(phost, rw, addr);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_HalImpl_MPSSE_startTransfer(phost, rw, addr);
+		EVE_Hal_MPSSE_startTransfer(phost, rw, addr);
 		break;
 	}
 }
 
-void EVE_HalImpl_BT8XXEMU_endTransfer(EVE_HalContext *phost);
-void EVE_HalImpl_FT4222_endTransfer(EVE_HalContext *phost);
-void EVE_HalImpl_MPSSE_endTransfer(EVE_HalContext *phost);
-void EVE_Hal_endTransfer(EVE_HalContext *phost)
+void EVE_Hal_BT8XXEMU_endTransfer(EVE_HalContext *phost);
+void EVE_Hal_FT4222_endTransfer(EVE_HalContext *phost);
+void EVE_Hal_MPSSE_endTransfer(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_endTransfer(phost);
+		EVE_Hal_BT8XXEMU_endTransfer(phost);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_HalImpl_FT4222_endTransfer(phost);
+		EVE_Hal_FT4222_endTransfer(phost);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_HalImpl_MPSSE_endTransfer(phost);
+		EVE_Hal_MPSSE_endTransfer(phost);
 		break;
 	}
 }
 
-void EVE_HalImpl_BT8XXEMU_flush(EVE_HalContext *phost);
-void EVE_HalImpl_FT4222_flush(EVE_HalContext *phost);
-void EVE_HalImpl_MPSSE_flush(EVE_HalContext *phost);
-void EVE_Hal_flush(EVE_HalContext *phost)
+void EVE_Hal_BT8XXEMU_flush(EVE_HalContext *phost);
+void EVE_Hal_FT4222_flush(EVE_HalContext *phost);
+void EVE_Hal_MPSSE_flush(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_flush(EVE_HalContext *phost)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_flush(phost);
+		EVE_Hal_BT8XXEMU_flush(phost);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_HalImpl_FT4222_flush(phost);
+		EVE_Hal_FT4222_flush(phost);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_HalImpl_MPSSE_flush(phost);
+		EVE_Hal_MPSSE_flush(phost);
 		break;
 	}
 }
 
-uint8_t EVE_HalImpl_BT8XXEMU_transfer8(EVE_HalContext *phost, uint8_t value);
-uint8_t EVE_HalImpl_FT4222_transfer8(EVE_HalContext *phost, uint8_t value);
-uint8_t EVE_HalImpl_MPSSE_transfer8(EVE_HalContext *phost, uint8_t value);
-uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
+uint8_t EVE_Hal_BT8XXEMU_transfer8(EVE_HalContext *phost, uint8_t value);
+uint8_t EVE_Hal_FT4222_transfer8(EVE_HalContext *phost, uint8_t value);
+uint8_t EVE_Hal_MPSSE_transfer8(EVE_HalContext *phost, uint8_t value);
+EVE_HAL_EXPORT uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_transfer8(phost, value);
+		return EVE_Hal_BT8XXEMU_transfer8(phost, value);
 	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_transfer8(phost, value);
+		return EVE_Hal_FT4222_transfer8(phost, value);
 	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_transfer8(phost, value);
-	}
-	return 0;
-}
-
-uint16_t EVE_HalImpl_BT8XXEMU_transfer16(EVE_HalContext *phost, uint16_t value);
-uint16_t EVE_HalImpl_FT4222_transfer16(EVE_HalContext *phost, uint16_t value);
-uint16_t EVE_HalImpl_MPSSE_transfer16(EVE_HalContext *phost, uint16_t value);
-uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
-{
-	switch (phost->DeviceType)
-	{
-	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_transfer16(phost, value);
-	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_transfer16(phost, value);
-	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_transfer16(phost, value);
+		return EVE_Hal_MPSSE_transfer8(phost, value);
 	}
 	return 0;
 }
 
-uint32_t EVE_HalImpl_BT8XXEMU_transfer32(EVE_HalContext *phost, uint32_t value);
-uint32_t EVE_HalImpl_FT4222_transfer32(EVE_HalContext *phost, uint32_t value);
-uint32_t EVE_HalImpl_MPSSE_transfer32(EVE_HalContext *phost, uint32_t value);
-uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
+uint16_t EVE_Hal_BT8XXEMU_transfer16(EVE_HalContext *phost, uint16_t value);
+uint16_t EVE_Hal_FT4222_transfer16(EVE_HalContext *phost, uint16_t value);
+uint16_t EVE_Hal_MPSSE_transfer16(EVE_HalContext *phost, uint16_t value);
+EVE_HAL_EXPORT uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_transfer32(phost, value);
+		return EVE_Hal_BT8XXEMU_transfer16(phost, value);
 	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_transfer32(phost, value);
+		return EVE_Hal_FT4222_transfer16(phost, value);
 	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_transfer32(phost, value);
+		return EVE_Hal_MPSSE_transfer16(phost, value);
 	}
 	return 0;
 }
 
-void EVE_HalImpl_BT8XXEMU_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
-void EVE_HalImpl_FT4222_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
-void EVE_HalImpl_MPSSE_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
+uint32_t EVE_Hal_BT8XXEMU_transfer32(EVE_HalContext *phost, uint32_t value);
+uint32_t EVE_Hal_FT4222_transfer32(EVE_HalContext *phost, uint32_t value);
+uint32_t EVE_Hal_MPSSE_transfer32(EVE_HalContext *phost, uint32_t value);
+EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_transferMem(phost, buffer, size);
+		return EVE_Hal_BT8XXEMU_transfer32(phost, value);
+	case EVE_DEVICE_FT4222:
+		return EVE_Hal_FT4222_transfer32(phost, value);
+	case EVE_DEVICE_MPSSE:
+		return EVE_Hal_MPSSE_transfer32(phost, value);
+	}
+	return 0;
+}
+
+void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
+{
+	switch (phost->DeviceType)
+	{
+	case EVE_DEVICE_BT8XXEMU:
+		EVE_Hal_BT8XXEMU_transferMem(phost, buffer, size);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_HalImpl_FT4222_transferMem(phost, buffer, size);
+		EVE_Hal_FT4222_transferMem(phost, buffer, size);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_HalImpl_MPSSE_transferMem(phost, buffer, size);
+		EVE_Hal_MPSSE_transferMem(phost, buffer, size);
 		break;
 	}
 }
 
-void EVE_HalImpl_BT8XXEMU_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_HalImpl_FT4222_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_HalImpl_MPSSE_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_BT8XXEMU_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_transferProgmem(phost, result, buffer, size);
+		EVE_Hal_BT8XXEMU_transferProgmem(phost, result, buffer, size);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_HalImpl_FT4222_transferProgmem(phost, result, buffer, size);
+		EVE_Hal_FT4222_transferProgmem(phost, result, buffer, size);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_HalImpl_MPSSE_transferProgmem(phost, result, buffer, size);
+		EVE_Hal_MPSSE_transferProgmem(phost, result, buffer, size);
 		break;
 	}
 }
 
-uint32_t EVE_HalImpl_BT8XXEMU_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
-uint32_t EVE_HalImpl_FT4222_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
-uint32_t EVE_HalImpl_MPSSE_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
-uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
+uint32_t EVE_Hal_BT8XXEMU_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
+uint32_t EVE_Hal_FT4222_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
+uint32_t EVE_Hal_MPSSE_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
+EVE_HAL_EXPORT uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_transferString(phost, str, index, size, padMask);
+		return EVE_Hal_BT8XXEMU_transferString(phost, str, index, size, padMask);
 	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_transferString(phost, str, index, size, padMask);
+		return EVE_Hal_FT4222_transferString(phost, str, index, size, padMask);
 	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_transferString(phost, str, index, size, padMask);
+		return EVE_Hal_MPSSE_transferString(phost, str, index, size, padMask);
 	}
 	return 0;
 }
@@ -324,7 +324,7 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 void EVE_Hal_BT8XXEMU_hostCommand(EVE_HalContext *phost, uint8_t cmd);
 void EVE_Hal_FT4222_hostCommand(EVE_HalContext *phost, uint8_t cmd);
 void EVE_Hal_MPSSE_hostCommand(EVE_HalContext *phost, uint8_t cmd);
-void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
+EVE_HAL_EXPORT void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 {
 	switch (phost->DeviceType)
 	{
@@ -344,7 +344,7 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 void EVE_Hal_BT8XXEMU_hostCommandExt3(EVE_HalContext *phost, uint8_t cmd);
 void EVE_Hal_FT4222_hostCommandExt3(EVE_HalContext *phost, uint8_t cmd);
 void EVE_Hal_MPSSE_hostCommandExt3(EVE_HalContext *phost, uint8_t cmd);
-void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
+EVE_HAL_EXPORT void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 {
 	switch (phost->DeviceType)
 	{
@@ -364,7 +364,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 void EVE_Hal_BT8XXEMU_powerCycle(EVE_HalContext *phost, bool up);
 void EVE_Hal_FT4222_powerCycle(EVE_HalContext *phost, bool up);
 void EVE_Hal_MPSSE_powerCycle(EVE_HalContext *phost, bool up);
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+EVE_HAL_EXPORT void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	switch (phost->DeviceType)
 	{
@@ -383,7 +383,7 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 void EVE_Hal_BT8XXEMU_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
 void EVE_Hal_FT4222_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
 void EVE_Hal_MPSSE_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
-void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
+EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
 	switch (phost->DeviceType)
 	{
@@ -403,19 +403,19 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 ** MISC **
 *********/
 
-bool EVE_HalImpl_BT8XXEMU_bootupDisplayGpio(EVE_HalContext *phost);
-bool EVE_HalImpl_FT4222_bootupDisplayGpio(EVE_HalContext *phost);
-bool EVE_HalImpl_MPSSE_bootupDisplayGpio(EVE_HalContext *phost);
+bool EVE_UtilImpl_BT8XXEMU_bootupDisplayGpio(EVE_HalContext *phost);
+bool EVE_UtilImpl_FT4222_bootupDisplayGpio(EVE_HalContext *phost);
+bool EVE_UtilImpl_MPSSE_bootupDisplayGpio(EVE_HalContext *phost);
 bool EVE_UtilImpl_bootupDisplayGpio(EVE_HalContext *phost)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_bootupDisplayGpio(phost);
+		return EVE_UtilImpl_BT8XXEMU_bootupDisplayGpio(phost);
 	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_bootupDisplayGpio(phost);
+		return EVE_UtilImpl_FT4222_bootupDisplayGpio(phost);
 	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_bootupDisplayGpio(phost);
+		return EVE_UtilImpl_MPSSE_bootupDisplayGpio(phost);
 	}
 	return false;
 }

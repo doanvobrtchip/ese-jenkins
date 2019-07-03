@@ -126,6 +126,10 @@ typedef struct EVE_GpuDefs
 	uint32_t RegGpio;
 	uint32_t RegPclk;
 	uint32_t RegPlaybackPlay;
+	uint32_t RegSpiWidth;
+	uint32_t RegGpioXDir;
+	uint32_t RegGpioX;
+	uint32_t RegRomSubSel;
 	uint32_t RamDl;
 	uint32_t RamCmd;
 	uint32_t RomChipId;
@@ -259,121 +263,121 @@ typedef struct EVE_HalPlatform
 *********/
 
 /* Initialize HAL platform */
-EVE_HalPlatform *EVE_Hal_initialize();
+EVE_HAL_EXPORT EVE_HalPlatform *EVE_Hal_initialize();
 
 /* Release HAL platform */
-void EVE_Hal_release();
+EVE_HAL_EXPORT void EVE_Hal_release();
 
 #if defined(EVE_MULTI_TARGET)
 /* List the available devices */
-EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount);
+EVE_HAL_EXPORT EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount);
 #endif
 
 /* Get the default configuration parameters */
-void EVE_Hal_defaults(EVE_HalParameters *parameters);
-void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device);
+EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters);
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device);
 
 /* Opens a new HAL context using the specified parameters */
-bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
+EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
 
 /* Close a HAL context */
-void EVE_Hal_close(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_close(EVE_HalContext *phost);
 
 /* Idle. Call regularly to update frequently changing internal state.
 This is also called while waiting for cmd, in addition to the user idle callback */
-void EVE_Hal_idle(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_idle(EVE_HalContext *phost);
 
 /*************
 ** TRANSFER **
 *************/
 
-void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
-uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value);
-uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value);
-uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value);
-void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
-void EVE_Hal_endTransfer(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr);
+EVE_HAL_EXPORT uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value);
+EVE_HAL_EXPORT uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value);
+EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value);
+EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
+EVE_HAL_EXPORT void EVE_Hal_endTransfer(EVE_HalContext *phost);
 
 /* Flush any pending write transfers */
-void EVE_Hal_flush(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_flush(EVE_HalContext *phost);
 
 /*********************
 ** TRANSFER HELPERS **
 *********************/
 
-uint8_t EVE_Hal_rd8(EVE_HalContext *phost, uint32_t addr);
-uint16_t EVE_Hal_rd16(EVE_HalContext *phost, uint32_t addr);
-uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr);
-void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size);
+EVE_HAL_EXPORT uint8_t EVE_Hal_rd8(EVE_HalContext *phost, uint32_t addr);
+EVE_HAL_EXPORT uint16_t EVE_Hal_rd16(EVE_HalContext *phost, uint32_t addr);
+EVE_HAL_EXPORT uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr);
+EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size);
 
-void EVE_Hal_wr8(EVE_HalContext *phost, uint32_t addr, uint8_t v);
-void EVE_Hal_wr16(EVE_HalContext *phost, uint32_t addr, uint16_t v);
-void EVE_Hal_wr32(EVE_HalContext *phost, uint32_t addr, uint32_t v);
-void EVE_Hal_wrMem(EVE_HalContext *phost, uint32_t addr, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_wrProgmem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
+EVE_HAL_EXPORT void EVE_Hal_wr8(EVE_HalContext *phost, uint32_t addr, uint8_t v);
+EVE_HAL_EXPORT void EVE_Hal_wr16(EVE_HalContext *phost, uint32_t addr, uint16_t v);
+EVE_HAL_EXPORT void EVE_Hal_wr32(EVE_HalContext *phost, uint32_t addr, uint32_t v);
+EVE_HAL_EXPORT void EVE_Hal_wrMem(EVE_HalContext *phost, uint32_t addr, const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_wrProgmem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
 
 /************
 ** UTILITY **
 ************/
 
-void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd);
+EVE_HAL_EXPORT void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd);
 
 /* This API sends a 3byte command to the phost */
-void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd);
+EVE_HAL_EXPORT void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd);
 
 /* Toggle PD_N pin of FT800 board for a power cycle */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
+EVE_HAL_EXPORT void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
 
 /* Switch EVE to different SPI channel mode */
-void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
+EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
 
-uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost);
+EVE_HAL_EXPORT uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost);
 
-int32_t EVE_Hal_clockTrimming(EVE_HalContext *phost, uint32_t lowFreq);
+EVE_HAL_EXPORT int32_t EVE_Hal_clockTrimming(EVE_HalContext *phost, uint32_t lowFreq);
 
 /*********
 ** HOST **
 *********/
 
-void EVE_Host_clockSelect(EVE_HalContext *phost, EVE_PLL_SOURCE_T pllsource);
-void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T freq);
-void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode);
-void EVE_Host_coreReset(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Host_clockSelect(EVE_HalContext *phost, EVE_PLL_SOURCE_T pllsource);
+EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T freq);
+EVE_HAL_EXPORT void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode);
+EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost);
 
 #if (EVE_MODEL >= EVE_FT810)
 /* This API can only be called when PLL is stopped(SLEEP mode).
 For compatibility, set frequency to the EVE_GPU_12MHZ option in the EVE_SETPLLSP1_T table. */
-void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq);
+EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq);
 
 /* Power down or up ROMs and ADCs.
 Specified one or more elements in the EVE_81X_ROM_AND_ADC_T 
 table to power down, unspecified elements will be powered up.
 The application must retain the state of the ROMs and ADCs 
 as they're not readable from the device. */
-void EVE_Host_powerOffComponents(EVE_HalContext *phost, uint8_t val);
+EVE_HAL_EXPORT void EVE_Host_powerOffComponents(EVE_HalContext *phost, uint8_t val);
 
 /* This API sets the current strength of supported GPIO/IO group(s) */
-void EVE_Host_padDriveStrength(EVE_HalContext *phost, EVE_81X_GPIO_DRIVE_STRENGTH_T strength, EVE_81X_GPIO_GROUP_T group);
+EVE_HAL_EXPORT void EVE_Host_padDriveStrength(EVE_HalContext *phost, EVE_81X_GPIO_DRIVE_STRENGTH_T strength, EVE_81X_GPIO_GROUP_T group);
 
 /* This API will hold the system reset active, 
 EVE_Host_resetRemoval() must be called to release the system reset. */
-void EVE_Host_resetActive(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Host_resetActive(EVE_HalContext *phost);
 
 /* This API will release the system reset, 
 and the system will exit reset and behave as after POR, 
 settings done through SPI commands will not be affected. */
-void EVE_Host_resetRemoval(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Host_resetRemoval(EVE_HalContext *phost);
 #endif
 
 /*********
 ** MISC **
 *********/
 
-uint32_t EVE_millis();
-void EVE_sleep(uint32_t ms);
+EVE_HAL_EXPORT uint32_t EVE_millis();
+EVE_HAL_EXPORT void EVE_sleep(uint32_t ms);
 
 #endif /* #ifndef EVE_HAL__H */
 
