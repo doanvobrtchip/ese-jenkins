@@ -33,6 +33,7 @@
     // Compiling on Windows
     #include <windows.h>
 
+#ifndef LIBMPSSE_SPI_H
     typedef UINT8  uint8;
     typedef UINT16 uint16;
     typedef UINT32 uint32;
@@ -41,6 +42,7 @@
     typedef INT16  int16;
     typedef INT32  int32;
     typedef INT64  int64;
+#endif
 
     #ifdef LIBFT4222_EXPORTS
         #define LIBFT4222_API __declspec(dllexport)
@@ -315,6 +317,7 @@ LIBFT4222_API FT4222_STATUS FT4222_SetSuspendOut(FT_HANDLE ftHandle, BOOL enable
 LIBFT4222_API FT4222_STATUS FT4222_GetMaxTransferSize(FT_HANDLE ftHandle, uint16* pMaxSize);
 LIBFT4222_API FT4222_STATUS FT4222_SetEventNotification(FT_HANDLE ftHandle, DWORD mask, PVOID param);
 LIBFT4222_API FT4222_STATUS FT4222_GetVersion(FT_HANDLE ftHandle, FT4222_Version* pVersion);
+LIBFT4222_API FT4222_STATUS FT4222_ChipReset(FT_HANDLE ftHandle);
 
 
 
@@ -328,9 +331,11 @@ LIBFT4222_API FT4222_STATUS FT4222_SPIMaster_MultiReadWrite(FT_HANDLE ftHandle, 
 
 LIBFT4222_API FT4222_STATUS FT4222_SPISlave_Init(FT_HANDLE ftHandle);
 LIBFT4222_API FT4222_STATUS FT4222_SPISlave_InitEx(FT_HANDLE ftHandle, SPI_SlaveProtocol protocolOpt);
+LIBFT4222_API FT4222_STATUS FT4222_SPISlave_SetMode(FT_HANDLE ftHandle, FT4222_SPICPOL  cpol, FT4222_SPICPHA  cpha);
 LIBFT4222_API FT4222_STATUS FT4222_SPISlave_GetRxStatus(FT_HANDLE ftHandle, uint16* pRxSize);
 LIBFT4222_API FT4222_STATUS FT4222_SPISlave_Read(FT_HANDLE ftHandle, uint8* buffer, uint16 bufferSize, uint16* sizeOfRead);
 LIBFT4222_API FT4222_STATUS FT4222_SPISlave_Write(FT_HANDLE ftHandle, uint8* buffer, uint16 bufferSize, uint16* sizeTransferred);
+LIBFT4222_API FT4222_STATUS FT4222_SPISlave_RxQuickResponse(FT_HANDLE ftHandle, BOOL enable);
 
 LIBFT4222_API FT4222_STATUS FT4222_SPI_Reset(FT_HANDLE ftHandle);
 LIBFT4222_API FT4222_STATUS FT4222_SPI_ResetTransaction(FT_HANDLE ftHandle, uint8 spiIdx);
