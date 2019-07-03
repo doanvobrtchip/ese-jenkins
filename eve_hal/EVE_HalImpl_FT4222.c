@@ -1087,6 +1087,9 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 #if (EVE_MODEL < EVE_FT810)
 	return;
 #else
+	if_multi_target_and(phost->Parameters.Model < EVE_FT810)
+		return;
+
 	uint8_t writebyte = 0;
 
 	if ((numchnls > EVE_SPI_QUAD_CHANNEL) || (numdummy > 2) || (numdummy < 1))

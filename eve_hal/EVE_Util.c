@@ -39,8 +39,8 @@ static eve_progmem_const uint8_t c_DlCodeBootup[12] = {
 	0, 0, 0, 0, //G PU instruction DISPLAY
 };
 
-#if !defined(BT8XXEMU_PLATFORM) /* TODO: Can the emulator handle this? */
-#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813)
+#if !defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_TARGET) /* TODO: Can the emulator handle this? */
+#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813) || defined(EVE_MULTI_TARGET)
 #define TOUCH_DATA_LEN 1172
 static eve_progmem_const uint8_t c_TouchDataU8[TOUCH_DATA_LEN] = {
 	26, 255, 255, 255, 32, 32, 48, 0, 4, 0, 0, 0, 2, 0, 0, 0, 34,
@@ -131,7 +131,7 @@ static eve_progmem_const uint8_t c_TouchDataU8[TOUCH_DATA_LEN] = {
 };
 
 /* Download new touch firmware for FT811 and FT813 chip */
-void uploadTouchFirmware(EVE_HalContext *phost)
+static void uploadTouchFirmware(EVE_HalContext *phost)
 {
 	/* bug fix pen up section */
 	eve_assert_do(EVE_Cmd_wrProgmem(phost, c_TouchDataU8, TOUCH_DATA_LEN));
@@ -182,20 +182,24 @@ bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", id);
 
-#if !defined(BT8XXEMU_PLATFORM) /* TODO: Can the emulator handle this? */
-#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813)
+#if !defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_TARGET) /* TODO: Can the emulator handle this? */
+#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813) || defined(EVE_MULTI_TARGET)
+	if_not_multi_target_or((phost->Parameters.Model == EVE_FT811 || phost->Parameters.Model == EVE_FT813)
+	    && (phost->DeviceType != EVE_DEVICE_BT8XXEMU))
+	{
 #if defined(PANL70) || defined(PANL70PLUS)
-	EVE_Hal_wr8(phost, REG_CPURESET, 2);
-	EVE_Hal_wr16(phost, REG_CYA_TOUCH, 0x05d0);
+		EVE_Hal_wr8(phost, REG_CPURESET, 2);
+		EVE_Hal_wr16(phost, REG_CYA_TOUCH, 0x05d0);
 #endif
-	/* Download new firmware to fix pen up issue */
-	/* It may cause resistive touch not working any more*/
-	uploadTouchFirmware(phost); // FIXME: Shouldn't this be called *after* waiting for REG_ID?
+		/* Download new firmware to fix pen up issue */
+		/* It may cause resistive touch not working any more*/
+		uploadTouchFirmware(phost); // FIXME: Shouldn't this be called *after* waiting for REG_ID?
 #if defined(PANL70) || defined(PANL70PLUS)
-	EVE_UtilImpl_bootupDisplayGpio(phost);
+		EVE_UtilImpl_bootupDisplayGpio(phost);
 #endif
-	EVE_Hal_flush(phost);
-	EVE_sleep(100);
+		EVE_Hal_flush(phost);
+		EVE_sleep(100);
+	}
 #endif
 #endif
 
@@ -308,13 +312,16 @@ bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	/* Switch to configured default SPI channel mode */
 #if (EVE_MODEL >= EVE_FT810)
+	if_not_multi_target_or(phost->Parameters.Model >= EVE_FT810)
+	{
 #ifdef ENABLE_SPI_QUAD
-	EVE_Hal_setSPI(phost, EVE_SPI_QUAD_CHANNEL, 2);
+		EVE_Hal_setSPI(phost, EVE_SPI_QUAD_CHANNEL, 2);
 #elif ENABLE_SPI_DUAL
-	EVE_Hal_setSPI(phost, EVE_SPI_DUAL_CHANNEL, 2);
+		EVE_Hal_setSPI(phost, EVE_SPI_DUAL_CHANNEL, 2);
 #else
-	EVE_Hal_setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
+		EVE_Hal_setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
 #endif
+	}
 #endif
 
 	return true;

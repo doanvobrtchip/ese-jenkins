@@ -60,11 +60,7 @@ EVE_HAL_EXPORT void EVE_Hal_release()
 
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters)
 {
-#ifdef EVE_MODEL
 	EVE_Hal_defaultsEx(parameters, EVE_MODEL, NULL);
-#else
-	EVE_Hal_defaultsEx(parameters, EVE_BT816, NULL);
-#endif
 }
 
 EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device)

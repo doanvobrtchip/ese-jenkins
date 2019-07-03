@@ -334,9 +334,12 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 		phost->CmdWaiting = false;
 		eve_printf_debug("Coprocessor fault\n");
 #if defined(_DEBUG) && (EVE_MODEL >= EVE_BT815)
-		EVE_Hal_rdMem(phost, err, RAM_ERR_REPORT, 128);
-		eve_printf_debug("%s\n", err);
-		displayError(phost, err);
+		if_not_multi_target_or(phost->Model >= EVE_BT815)
+		{
+			EVE_Hal_rdMem(phost, err, RAM_ERR_REPORT, 128);
+			eve_printf_debug("%s\n", err);
+			displayError(phost, err);
+		}
 #endif
 		/* eve_debug_break(); */
 		return false;

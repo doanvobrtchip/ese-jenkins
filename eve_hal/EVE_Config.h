@@ -711,6 +711,11 @@ These may only be set by one of the platform target definitions, and should not 
 #define EVE_SCREEN_RESISTIVE
 #define EVE_MODEL EVE_BT816
 #define RESISTANCE_THRESHOLD (1800)
+#define if_not_multi_target_or(cond) if (cond)
+#define if_multi_target_and(cond) if (cond)
+#else
+#define if_not_multi_target_or(cond) if (true)
+#define if_multi_target_and(cond) if (false)
 #endif
 
 ///////////////////////////////////////////////////////////////////////
