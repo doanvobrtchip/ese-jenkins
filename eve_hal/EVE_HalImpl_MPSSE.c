@@ -76,9 +76,10 @@ void EVE_HalImpl_initialize()
 
 	/* Initialize the libmpsse */
 	Init_libMPSSE();
-	SPI_GetNumChannels(&g_HalPlatform.TotalDevices);
+	uint32_t numberChannels;
+	SPI_GetNumChannels(&numberChannels);
 
-	if (g_HalPlatform.TotalDevices > 0)
+	if (numberChannels > 0)
 	{
 		FT_DEVICE_LIST_INFO_NODE devList;
 		memset(&devList, 0, sizeof(devList));
@@ -88,7 +89,7 @@ void EVE_HalImpl_initialize()
 		if (FT_OK == status)
 		{
 			eve_printf_debug("Number of D2xx devices connected = %d\n", numdevs);
-			g_HalPlatform.TotalDevices = numdevs;
+			numberChannels = numdevs;
 
 			FT_GetDeviceInfoDetail(0, &devList.Flags, &devList.Type, &devList.ID,
 			    &devList.LocId,

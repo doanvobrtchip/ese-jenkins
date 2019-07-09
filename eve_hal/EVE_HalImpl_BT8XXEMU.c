@@ -71,7 +71,7 @@ EVE_HalPlatform g_HalPlatform;
 /* Initialize HAL platform */
 void EVE_HalImpl_initialize()
 {
-	g_HalPlatform.TotalDevices = 1;
+	// TODO: g_HalPlatform.TotalDevices = 1;
 }
 
 /* Release HAL platform */
@@ -85,6 +85,8 @@ void EVE_HalImpl_BT8XXEMU_list(EVE_DeviceInfo *deviceList, size_t *deviceCount)
 {
 	strcpy_s((deviceList[*deviceCount]).DisplayName, 
 		sizeof((deviceList[*deviceCount]).DisplayName), "BT8XX Emulator");
+	strcpy_s((deviceList[*deviceCount]).SerialNumber, 
+		sizeof((deviceList[*deviceCount]).SerialNumber), "BT8XXEMU");
 	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
 	++(*deviceCount);
 

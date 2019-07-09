@@ -151,6 +151,7 @@ typedef enum EVE_DEVICE_T
 typedef struct EVE_DeviceInfo
 {
 	char DisplayName[256];
+	char SerialNumber[256];
 	size_t Identifier;
 	EVE_DEVICE_T Type;
 
@@ -253,7 +254,6 @@ typedef struct EVE_HalContext
 
 typedef struct EVE_HalPlatform
 {
-	uint32_t TotalDevices;
 	uint32_t OpenedDevices;
 
 } EVE_HalPlatform;

@@ -30,19 +30,12 @@
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
 
-#if FT800_DEVICE_MANAGER
-//mpsse lib includes -- Windows
-#undef POINTS
-#include <Windows.h>
-#include "Platform.h"
-#include "Gpu_Hal.h"
-#endif
-
 class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 class MainWindow;
 class DeviceDisplaySettingsDialog;
@@ -54,7 +47,7 @@ class ContentManager;
 /**
  * DeviceManager
  * \brief DeviceManager
- * \date 2014-01-27 18:59GMT
+ * \author Paul Jiao Shouwu
  * \author Jan Boon (Kaetemi)
  */
 class DeviceManager : public QWidget
@@ -76,18 +69,17 @@ public:
 	struct DeviceInfo
 	{
 		DeviceId Id;
+		void *EveDeviceInfo;
+		std::string SerialNumber;
+		// std::string DisplayName;
 		QTreeWidgetItem *View;
-		char description[65];
 		bool Connected;
-		void* handle;
-		// Add necessary device specific data here
+		void *EveHalContext;
 	};
 
-	typedef DeviceInfo * EveModuleDeviceInforPtr;
+	typedef DeviceInfo *EveModuleDeviceInforPtr;
 
 private:
-
-
 	QString currScreenSize;
 	QString selectedSyncDevice;
 	MainWindow *m_MainWindow;
@@ -97,26 +89,25 @@ private:
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
-    int    syncDeviceEVEType;
-
+	int syncDeviceEVEType;
 
 private slots:
 	void deviceDisplaySettings();
 	void refreshDevices();
 	void connectDevice();
-    bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
-    bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
+	//bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
+	//bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
 	void disconnectDevice();
 	void syncDevice();
-    void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
+	//void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
 	void updateSelection();
 
 private:
-	DeviceManager(const DeviceManager &) {};
-	DeviceManager &operator=(const DeviceManager &) {};	
+	DeviceManager(const DeviceManager &) = delete;
+	DeviceManager &operator=(const DeviceManager &) = delete;
 }; /* class DeviceManager */
 
 #else /* FT800_DEVICE_MANAGER */
@@ -127,8 +118,6 @@ class DeviceManager : public QWidget
 };
 
 #endif /* FT800_DEVICE_MANAGER */
-
-
 
 } /* namespace FTEDITOR */
 

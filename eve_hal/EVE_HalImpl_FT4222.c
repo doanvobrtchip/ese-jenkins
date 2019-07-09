@@ -78,7 +78,7 @@ void EVE_HalImpl_initialize()
 	if (FT_OK == status)
 	{
 		eve_printf_debug("Number of D2xx devices connected = %d\n", numdevs);
-		g_HalPlatform.TotalDevices = numdevs;
+		// TODO: g_HalPlatform.TotalDevices = numdevs;
 
 		FT_GetDeviceInfoDetail(0, &devList.Flags, &devList.Type, &devList.ID,
 		    &devList.LocId,

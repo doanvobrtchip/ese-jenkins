@@ -35,6 +35,10 @@ Main file to include the EVE HAL in your applications.
 
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef EVE_PLATFORM__H
 #define EVE_PLATFORM__H
 
@@ -153,5 +157,9 @@ Main file to include the EVE HAL in your applications.
 #endif
 
 #endif /* #ifndef EVE_PLATFORM__H */
+
+#ifdef __cplusplus
+}
+#endif
 
 /* end of file */
