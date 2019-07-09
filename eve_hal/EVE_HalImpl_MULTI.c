@@ -90,6 +90,8 @@ void EVE_HalImpl_defaults(EVE_HalParameters *parameters, uint32_t model, EVE_Dev
 		EVE_HalImpl_MPSSE_defaults(parameters, model, device);
 		break;
 	}
+	parameters->DeviceType = device->Type;
+	parameters->Model = model;
 }
 
 /* Opens a new HAL context using the specified parameters */
@@ -98,16 +100,24 @@ bool EVE_HalImpl_FT4222_open(EVE_HalContext *phost, EVE_HalParameters *parameter
 bool EVE_HalImpl_MPSSE_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
-	switch (phost->DeviceType)
+	bool res;
+	switch (parameters->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		return EVE_HalImpl_BT8XXEMU_open(phost, parameters);
+		res = EVE_HalImpl_BT8XXEMU_open(phost, parameters);
+		break;
 	case EVE_DEVICE_FT4222:
-		return EVE_HalImpl_FT4222_open(phost, parameters);
+		res = EVE_HalImpl_FT4222_open(phost, parameters);
+		break;
 	case EVE_DEVICE_MPSSE:
-		return EVE_HalImpl_MPSSE_open(phost, parameters);
+		res = EVE_HalImpl_MPSSE_open(phost, parameters);
+		break;
+	default:
+		res = false;
+		break;
 	}
-	return false;
+	phost->DeviceType = parameters->DeviceType;
+	return res;
 }
 
 /* Close a HAL context */
@@ -262,21 +272,21 @@ EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value
 	return 0;
 }
 
-void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
 EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->DeviceType)
 	{
 	case EVE_DEVICE_BT8XXEMU:
-		EVE_Hal_BT8XXEMU_transferMem(phost, buffer, size);
+		EVE_Hal_BT8XXEMU_transferMem(phost, result, buffer, size);
 		break;
 	case EVE_DEVICE_FT4222:
-		EVE_Hal_FT4222_transferMem(phost, buffer, size);
+		EVE_Hal_FT4222_transferMem(phost, result, buffer, size);
 		break;
 	case EVE_DEVICE_MPSSE:
-		EVE_Hal_MPSSE_transferMem(phost, buffer, size);
+		EVE_Hal_MPSSE_transferMem(phost, result, buffer, size);
 		break;
 	}
 }

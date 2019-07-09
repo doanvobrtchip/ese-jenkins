@@ -140,13 +140,13 @@ static void uploadTouchFirmware(EVE_HalContext *phost)
 #endif
 #endif
 
-void EVE_Util_clearScreen(EVE_HalContext *phost)
+EVE_HAL_EXPORT void EVE_Util_clearScreen(EVE_HalContext *phost)
 {
 	EVE_Hal_wrProgmem(phost, RAM_DL, (eve_progmem_const uint8_t *)c_DlCodeBootup, sizeof(c_DlCodeBootup));
 	EVE_Hal_wr8(phost, REG_DLSWAP, DLSWAP_FRAME);
 }
 
-bool EVE_Util_bootupConfig(EVE_HalContext *phost)
+EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 {
 	EVE_HalParameters *parameters = &phost->Parameters;
 	uint32_t chipId;
@@ -174,11 +174,16 @@ bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	/* Read Register ID to check if EVE is ready. */
 	id = EVE_Hal_rd8(phost, REG_ID);
+	int idi = 0;
 	while (id != 0x7C)
 	{
 		id = EVE_Hal_rd8(phost, REG_ID);
 		eve_printf_debug("EVE register ID after wake up %x\n", id);
 		EVE_sleep(100);
+
+		++idi;
+		if (idi > 50)
+			return false;
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", id);
 
@@ -340,7 +345,7 @@ bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 #define EVE_VIDEOPATCH_ADDR 0x309162
 #endif
 
-bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
+EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 {
 	eve_printf_debug("Reset coprocessor\n");
 

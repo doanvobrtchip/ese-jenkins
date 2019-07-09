@@ -167,7 +167,6 @@ void DeviceManager::refreshDevices()
 		{
 			// The device was not added yet, create the gui
 			di = new DeviceInfo();
-			di->Connected = false;
 			di->EveHalContext = NULL;
 			di->SerialNumber = info->SerialNumber; // Store serial number for matching
 			di->View = new QTreeWidgetItem(m_DeviceList);
@@ -561,11 +560,50 @@ void DeviceManager::connectDevice()
 
 	printf("connectDevice\n");
 
-#if 0
 	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
-	if (devInfo->Connected)
+	if (!devInfo)
+		return;
+	if (devInfo->EveHalContext)
 		return;
 
+	// Get parameters to open the selected device
+	EVE_HalParameters params = { 0 };
+	EVE_Hal_defaultsEx(&params, deviceToEnum(FTEDITOR_CURRENT_DEVICE), (EVE_DeviceInfo *)devInfo->EveDeviceInfo);
+
+	EVE_HalContext *phost = new EVE_HalContext { 0 };
+	bool ok = EVE_Hal_open(phost, &params);
+	if (!ok)
+	{
+		QMessageBox::critical(this, "Failed", "Failed to open HAL context", QMessageBox::Ok);
+		delete phost;
+		return;
+	}
+
+	devInfo->EveHalContext = phost;
+
+	const uint32_t connectedScreenCmds[] = {
+		CMD_DLSTART,
+		CLEAR_COLOR_RGB(31, 63, 0),
+		CLEAR(1, 1, 1),
+		DISPLAY(),
+		CMD_SWAP
+	};
+
+	if (!EVE_Util_bootupConfig(phost))
+	{
+		EVE_Hal_close(phost);
+		devInfo->EveHalContext = NULL;
+		delete phost;
+		QMessageBox::critical(this, "Failed", "Failed to boot up EVE", QMessageBox::Ok);
+		return;
+	}
+
+	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
+	EVE_Hal_flush(phost);
+
+	updateSelection();
+
+#if 0
 	QString deviceDescription = (QString)devInfo->description;
 
 	Gpu_Hal_Context_t *phost = new Gpu_Hal_Context_t;
@@ -599,32 +637,40 @@ void DeviceManager::disconnectDevice()
 		return;
 
 	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
+	if (!devInfo)
+		return;
+	if (!devInfo->EveHalContext)
+		return;
+
+	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
+
+	const uint32_t connectedScreenCmds[] = {
+		CMD_DLSTART,
+		CLEAR_COLOR_RGB(31, 63, 0),
+		CLEAR(1, 1, 1),
+		DISPLAY(),
+		CMD_SWAP
+	};
+
+	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
+	EVE_Hal_flush(phost);
+
+	devInfo->EveHalContext = NULL;
+	EVE_Hal_close(phost);
+
+	updateSelection();
 
 #if 0
-	if (devInfo)
-	{
-		Gpu_Hal_Context_t *phost = (Gpu_Hal_Context_t *)devInfo->handle;
-		if (phost)
-		{
-			const uint32_t CONNECTED_SCREEN_CMDS[] = {
-				CMD_DLSTART,
-				CLEAR_COLOR_RGB(31, 63, 0),
-				CLEAR(1, 1, 1),
-				DISPLAY(),
-				CMD_SWAP
-			};
 
-			Gpu_Hal_WrMem(phost, addr(syncDeviceEVEType, FTEDITOR_RAM_CMD), (uint8_t *)CONNECTED_SCREEN_CMDS, sizeof(CONNECTED_SCREEN_CMDS));
+	Gpu_Hal_WrMem(phost, addr(syncDeviceEVEType, FTEDITOR_RAM_CMD), (uint8_t *)CONNECTED_SCREEN_CMDS, sizeof(CONNECTED_SCREEN_CMDS));
 
-			Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_CMD_WRITE), sizeof(CONNECTED_SCREEN_CMDS));
+	Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_CMD_WRITE), sizeof(CONNECTED_SCREEN_CMDS));
 
-			Gpu_Hal_Close(phost);
+	Gpu_Hal_Close(phost);
 
-			Gpu_Hal_DeInit(phost);
+	Gpu_Hal_DeInit(phost);
 
-			delete (phost);
-		}
-	}
+	delete (phost);
 
 	devInfo->Connected = false;
 	updateSelection();
@@ -732,10 +778,10 @@ void DeviceManager::updateSelection()
 	else
 	{
 		DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
-		m_ConnectButton->setVisible(!devInfo->Connected);
-		m_DisconnectButton->setVisible(devInfo->Connected);
-		m_SendImageButton->setVisible(devInfo->Connected);
-		if (devInfo->Connected)
+		m_ConnectButton->setVisible(!devInfo->EveHalContext);
+		m_DisconnectButton->setVisible(devInfo->EveHalContext);
+		m_SendImageButton->setVisible(devInfo->EveHalContext);
+		if (devInfo->EveHalContext)
 		{
 			devInfo->View->setText(0, "Yes");
 		}

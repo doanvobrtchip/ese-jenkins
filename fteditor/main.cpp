@@ -118,9 +118,6 @@ int main(int argc, char* argv[])
 		printf("Could not load translation\n");
 	}
 
-	QApplication::setStyle(QStyleFactory::create("Fusion"));
-
-	
 	//QPalette palette = app.palette();
 	//palette.setColor(QPalette::Window, QColor(64, 64, 64));
 	//palette.setColor(QPalette::WindowText, Qt::white);
@@ -136,7 +133,6 @@ int main(int argc, char* argv[])
 	//palette.setColor(QPalette::HighlightedText, Qt::white);
 	//app.setPalette(palette);
 	
-
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{

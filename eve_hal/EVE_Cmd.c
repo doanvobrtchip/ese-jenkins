@@ -43,7 +43,7 @@ static inline void endFunc(EVE_HalContext *phost)
 	}
 }
 
-uint16_t EVE_Cmd_rp(EVE_HalContext *phost)
+EVE_HAL_EXPORT uint16_t EVE_Cmd_rp(EVE_HalContext *phost)
 {
 	uint16_t rp;
 	endFunc(phost);
@@ -53,7 +53,7 @@ uint16_t EVE_Cmd_rp(EVE_HalContext *phost)
 	return rp;
 }
 
-uint16_t EVE_Cmd_wp(EVE_HalContext *phost)
+EVE_HAL_EXPORT uint16_t EVE_Cmd_wp(EVE_HalContext *phost)
 {
 	endFunc(phost);
 #if defined(EVE_SUPPORT_CMDB)
@@ -64,7 +64,7 @@ uint16_t EVE_Cmd_wp(EVE_HalContext *phost)
 #endif
 }
 
-uint16_t EVE_Cmd_space(EVE_HalContext *phost)
+EVE_HAL_EXPORT uint16_t EVE_Cmd_space(EVE_HalContext *phost)
 {
 	uint16_t space;
 #if !defined(EVE_SUPPORT_CMDB)
@@ -167,7 +167,7 @@ static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t siz
 }
 
 /* Begin writing a function, keeps the transfer open */
-void EVE_Cmd_startFunc(EVE_HalContext *phost)
+EVE_HAL_EXPORT void EVE_Cmd_startFunc(EVE_HalContext *phost)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
@@ -175,7 +175,7 @@ void EVE_Cmd_startFunc(EVE_HalContext *phost)
 }
 
 /* End writing a function, closes the transfer */
-void EVE_Cmd_endFunc(EVE_HalContext *phost)
+EVE_HAL_EXPORT void EVE_Cmd_endFunc(EVE_HalContext *phost)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
@@ -183,21 +183,21 @@ void EVE_Cmd_endFunc(EVE_HalContext *phost)
 	phost->CmdFunc = false;
 }
 
-bool EVE_Cmd_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+EVE_HAL_EXPORT bool EVE_Cmd_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
 	return wrBuffer(phost, buffer, size, false, false) == size;
 }
 
-bool EVE_Cmd_wrProgmem(EVE_HalContext *phost, eve_progmem_const uint8_t *buffer, uint32_t size)
+EVE_HAL_EXPORT bool EVE_Cmd_wrProgmem(EVE_HalContext *phost, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
 	return wrBuffer(phost, (void *)(uintptr_t)buffer, size, true, false) == size;
 }
 
-uint32_t EVE_Cmd_wrString(EVE_HalContext *phost, const char *str, uint32_t maxLength)
+EVE_HAL_EXPORT uint32_t EVE_Cmd_wrString(EVE_HalContext *phost, const char *str, uint32_t maxLength)
 {
 	uint32_t transfered;
 	eve_assert(!phost->CmdWaiting);
@@ -206,7 +206,7 @@ uint32_t EVE_Cmd_wrString(EVE_HalContext *phost, const char *str, uint32_t maxLe
 	return transfered;
 }
 
-bool EVE_Cmd_wr8(EVE_HalContext *phost, uint8_t value)
+EVE_HAL_EXPORT bool EVE_Cmd_wr8(EVE_HalContext *phost, uint8_t value)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex < 4);
@@ -222,7 +222,7 @@ bool EVE_Cmd_wr8(EVE_HalContext *phost, uint8_t value)
 	return true;
 }
 
-bool EVE_Cmd_wr16(EVE_HalContext *phost, uint16_t value)
+EVE_HAL_EXPORT bool EVE_Cmd_wr16(EVE_HalContext *phost, uint16_t value)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex < 3);
@@ -239,7 +239,7 @@ bool EVE_Cmd_wr16(EVE_HalContext *phost, uint16_t value)
 	return true;
 }
 
-bool EVE_Cmd_wr32(EVE_HalContext *phost, uint32_t value)
+EVE_HAL_EXPORT bool EVE_Cmd_wr32(EVE_HalContext *phost, uint32_t value)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
@@ -275,7 +275,7 @@ bool EVE_Cmd_wr32(EVE_HalContext *phost, uint32_t value)
 }
 
 /* Move the write pointer forward by the specified number of bytes. Returns the previous write pointer */
-uint16_t EVE_Cmd_moveWp(EVE_HalContext *phost, uint16_t bytes)
+EVE_HAL_EXPORT uint16_t EVE_Cmd_moveWp(EVE_HalContext *phost, uint16_t bytes)
 {
 	uint16_t wp, prevWp;
 	eve_assert(!phost->CmdWaiting);
@@ -389,7 +389,7 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	return true;
 }
 
-bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
+EVE_HAL_EXPORT bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 {
 	uint16_t space;
 
@@ -420,7 +420,7 @@ bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 	return true;
 }
 
-bool EVE_Cmd_waitLogo(EVE_HalContext *phost)
+EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost)
 {
 	eve_assert(!phost->CmdWaiting);
 	phost->CmdWaiting = true;

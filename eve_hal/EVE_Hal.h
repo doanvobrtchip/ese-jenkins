@@ -163,8 +163,11 @@ typedef struct EVE_HalParameters
 {
 	void *UserContext;
 	EVE_Callback CbCmdWait; /* Called anytime the code is waiting during CMD write. Return false to abort wait */
-	
+
+#if defined(EVE_MULTI_TARGET)
+	EVE_DEVICE_T DeviceType;
 	uint32_t Model;
+#endif
 	Eve_DisplayParameters Display;
 
 #if defined(BT8XXEMU_PLATFORM)

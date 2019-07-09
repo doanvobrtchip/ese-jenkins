@@ -73,7 +73,6 @@ public:
 		std::string SerialNumber;
 		// std::string DisplayName;
 		QTreeWidgetItem *View;
-		bool Connected;
 		void *EveHalContext;
 	};
 
