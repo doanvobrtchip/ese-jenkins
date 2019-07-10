@@ -13,62 +13,58 @@
 #include <qgroupbox.h>
 #include "device_manager.h"
 
-
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 #if FT800_DEVICE_MANAGER
 
-	class DeviceManager;
+class DeviceManager;
 
+class DeviceDisplaySettingsDialog : public QDialog
+{
+	Q_OBJECT
 
-	class DeviceDisplaySettingsDialog : public QDialog
-	{
-		Q_OBJECT
+public:
+	explicit DeviceDisplaySettingsDialog(DeviceManager *parent = 0);
+	void execute();
+	void setInitialScreenSize(QString screenSize);
 
-	public:
-		explicit DeviceDisplaySettingsDialog(DeviceManager *parent=0);
-		void execute();
-		void setInitialScreenSize(QString screenSize);
+private slots:
+	void saveInputValues();
 
+private:
+	DeviceManager *pParent;
 
-	private slots: 
-		void saveInputValues();
+	qint32 maxScreenWidth;
+	qint32 maxScreenHeight;
+	qint16 inputSpinboxMin;
+	qint16 inputSpinboxMax;
 
-	private:
-		DeviceManager *pParent;
+	QGridLayout *gridLayout;
+	QDialogButtonBox *buttonBox;
+	QDialogButtonBox *defaultSettingsButtonBox;
 
-		qint32 maxScreenWidth;
-		qint32 maxScreenHeight;
-		qint16 inputSpinboxMin;
-		qint16 inputSpinboxMax;
+	QRadioButton *VM800B35A;
+	QRadioButton *VM800B43A;
+	QRadioButton *VM800B50A;
+	QRadioButton *VM800BU35A;
+	QRadioButton *VM800BU43A;
+	QRadioButton *VM800BU50A;
+	QRadioButton *VM800C35A;
+	QRadioButton *VM800C43A;
+	QRadioButton *VM800C50A;
 
-		QGridLayout* gridLayout;
-		QDialogButtonBox* buttonBox;
-		QDialogButtonBox* defaultSettingsButtonBox;
+	QRadioButton *ME813AUWH50C;
 
-		QRadioButton *VM800B35A;
-		QRadioButton *VM800B43A;
-		QRadioButton *VM800B50A;
-		QRadioButton *VM800BU35A;
-		QRadioButton *VM800BU43A;
-		QRadioButton *VM800BU50A;
-		QRadioButton *VM800C35A;
-		QRadioButton *VM800C43A;
-		QRadioButton *VM800C50A;
+	QRadioButton *VM816C50A;
 
-        QRadioButton *ME813AUWH50C;
+	QRadioButton *VM816CU50A;
 
-		QRadioButton *VM816C50A;
-
-        QRadioButton *VM816CU50A;
-
-	private:
-		QGroupBox* createRadioButtonsGroup();
-		void updateSyncDeviceSelection();
-
-	};
+private:
+	QGroupBox *createRadioButtonsGroup();
+	void updateSyncDeviceSelection();
+};
 
 #endif
-
 }
 #endif // COPTIONDIALOG_H

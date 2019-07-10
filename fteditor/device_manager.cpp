@@ -31,14 +31,13 @@ namespace FTEDITOR
 {
 
 extern BT8XXEMU_Emulator *g_Emulator;
+extern ContentManager *g_ContentManager;
 
 #if FT800_DEVICE_MANAGER
 
 DeviceManager::DeviceManager(MainWindow *parent)
     : QWidget(parent)
     , m_MainWindow(parent)
-    , currScreenSize("480x272")
-    , selectedSyncDevice("VM800B43A")
     , m_displaySettingsDialog(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
@@ -72,11 +71,15 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	buttons->addStretch();
 
+	// Upload RAM_G and RAM_DL
+	// Upload RAM and Coprocessor Commands
+	// Upload Flash
+
 	m_SendImageButton = new QPushButton(this);
-	m_SendImageButton->setText(tr("Sync With Device"));
+	m_SendImageButton->setText(tr("Upload RAM_G and RAM_DL"));
 	m_SendImageButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
 	m_SendImageButton->setVisible(false);
-	connect(m_SendImageButton, SIGNAL(clicked()), this, SLOT(syncDevice()));
+	connect(m_SendImageButton, &QPushButton::clicked, this, &DeviceManager::uploadRamDl);
 	buttons->addWidget(m_SendImageButton);
 
 	m_ConnectButton = new QPushButton(this);
@@ -92,8 +95,6 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	m_DisconnectButton->setVisible(false);
 	connect(m_DisconnectButton, SIGNAL(clicked()), this, SLOT(disconnectDevice()));
 	buttons->addWidget(m_DisconnectButton);
-
-	syncDeviceEVEType = FTEDITOR_FT800;
 
 	layout->addLayout(buttons);
 
@@ -112,6 +113,7 @@ DeviceManager::~DeviceManager()
 {
 }
 
+/*
 void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice)
 {
 	QStringList pieces = displaySize.split("x");
@@ -124,7 +126,9 @@ void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevi
 
 	setSyncDeviceName(syncDevice);
 	m_MainWindow->userChangeResolution(pieces[0].toUInt(), pieces[1].toUInt());
+	
 }
+*/
 
 void DeviceManager::deviceDisplaySettings()
 {
@@ -153,7 +157,7 @@ void DeviceManager::refreshDevices()
 		EVE_DeviceInfo *info = &eveDeviceInfo[i];
 		std::map<DeviceId, DeviceInfo *>::iterator it = std::find_if(deviceInfo.begin(), deviceInfo.end(),
 		    [&](std::pair<const DeviceId, DeviceInfo *> &di) -> bool {
-				// Match by serial number
+			    // Match by serial number
 			    return di.second->SerialNumber == info->SerialNumber;
 		    });
 
@@ -172,10 +176,12 @@ void DeviceManager::refreshDevices()
 			di->View = new QTreeWidgetItem(m_DeviceList);
 			di->View->setText(0, "No");
 			di->View->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(di));
+			di->DeviceIntf = 0;
 		}
 
 		// Store this device
 		di->EveDeviceInfo = info;
+		di->Type = info->Type;
 		// di->DisplayName = info->DisplayName;
 		di->View->setText(1, info->DisplayName);
 		di->Id = (DeviceId)i;
@@ -187,7 +193,7 @@ void DeviceManager::refreshDevices()
 	{
 		// Delete anything in the DeviceInfo that needs to be deleted
 		delete it->second->View;
-		delete it->second;		
+		delete it->second;
 	}
 
 #if 0 /* move this to hal */
@@ -552,12 +558,6 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
-	if (syncDeviceEVEType >= FTEDITOR_DEVICE_NB)
-	{
-		QMessageBox::warning(this, "Project Type Not correct\n", "Only FT80X project supported", QMessageBox::Ok);
-		return;
-	}
-
 	printf("connectDevice\n");
 
 	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
@@ -569,8 +569,9 @@ void DeviceManager::connectDevice()
 	// Get parameters to open the selected device
 	EVE_HalParameters params = { 0 };
 	EVE_Hal_defaultsEx(&params, deviceToEnum(FTEDITOR_CURRENT_DEVICE), (EVE_DeviceInfo *)devInfo->EveDeviceInfo);
+	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.Model);
 
-	EVE_HalContext *phost = new EVE_HalContext { 0 };
+	EVE_HalContext *phost = new EVE_HalContext{ 0 };
 	bool ok = EVE_Hal_open(phost, &params);
 	if (!ok)
 	{
@@ -600,6 +601,8 @@ void DeviceManager::connectDevice()
 
 	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
 	EVE_Hal_flush(phost);
+
+	// TODO: Initialize with the specified screen resolution & the default settings for said resolution
 
 	updateSelection();
 
@@ -677,38 +680,6 @@ void DeviceManager::disconnectDevice()
 #endif
 }
 
-QString DeviceManager::getCurrentDisplaySize()
-{
-	return currScreenSize;
-}
-
-QString DeviceManager::getSyncDeviceName()
-{
-	return selectedSyncDevice;
-}
-
-void DeviceManager::setCurrentDisplaySize(QString displaySize)
-{
-	currScreenSize = displaySize;
-}
-
-void DeviceManager::setSyncDeviceName(QString deviceName)
-{
-	selectedSyncDevice = deviceName;
-#if 0
-	syncDeviceEVEType = FTEDITOR_FT800;
-
-	if (selectedSyncDevice == "VM816C50A(800x480)" || selectedSyncDevice == "VM816CU50A(800x480)")
-	{
-		syncDeviceEVEType = FTEDITOR_BT815;
-	}
-	else if (selectedSyncDevice == "ME813AU_WH50C(800x480)")
-	{
-		syncDeviceEVEType = FTEDITOR_FT813;
-	}
-#endif
-}
-
 #if 0
 void DeviceManager::loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost)
 {
@@ -739,32 +710,41 @@ void DeviceManager::loadContent2Device(ContentManager *contentManager, Gpu_Hal_C
 }
 #endif
 
-void DeviceManager::syncDevice()
+void DeviceManager::uploadRamDl()
 {
 	if (!m_DeviceList->currentItem())
 	{
-		QMessageBox::question(this, "General confirmation", "No Content in the command list.", QMessageBox::Yes | QMessageBox::No);
+		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
 		return;
 	}
 
-	uint8_t *ram = static_cast<uint8_t *>(BT8XXEMU_getRam(g_Emulator));
+	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
+	if (!devInfo)
+		return;
+	if (!devInfo->EveHalContext)
+		return;
+
+	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
+
+	g_ContentManager->lockContent();
+
+	const uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 	const uint32_t *displayList = BT8XXEMU_getDisplayList(g_Emulator);
-	//Sync with selected device
-	{
-#if 0
-		DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
-		if (devInfo->Connected)
-		{
-			Gpu_Hal_Context_t *phost = (Gpu_Hal_Context_t *)devInfo->handle;
 
-			loadContent2Device(m_MainWindow->contentManager(), phost);
+	EVE_Hal_wrMem(phost, addr(devInfo->DeviceIntf, FTEDITOR_RAM_G), ram, addr(devInfo->DeviceIntf, FTEDITOR_RAM_G_END) - addr(devInfo->DeviceIntf, FTEDITOR_RAM_G));
+	EVE_Hal_wrMem(phost, addr(devInfo->DeviceIntf, FTEDITOR_RAM_DL), reinterpret_cast<const uint8_t *>(displayList), 4 * displayListSize(devInfo->DeviceIntf));
 
-			Gpu_Hal_WrMem(phost, addr(syncDeviceEVEType, FTEDITOR_RAM_DL), static_cast<const uint8_t *>(static_cast<const void *>(displayList)), 4 * displayListSize(syncDeviceEVEType));
+	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 
-			Gpu_Hal_Wr32(phost, reg(syncDeviceEVEType, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
-		}
-#endif
-	}
+	g_ContentManager->unlockContent();
+}
+
+void DeviceManager::uploadCoprocessorContent()
+{
+}
+
+void DeviceManager::uploadFlash()
+{
 }
 
 void DeviceManager::updateSelection()

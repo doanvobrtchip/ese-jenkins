@@ -57,12 +57,6 @@ class DeviceManager : public QWidget
 public:
 	DeviceManager(MainWindow *parent);
 	virtual ~DeviceManager();
-	void setDeviceandScreenSize(QString displaySize, QString syncDevice);
-
-	QString getCurrentDisplaySize();
-	void setCurrentDisplaySize(QString displaySize);
-	QString getSyncDeviceName();
-	void setSyncDeviceName(QString deviceName);
 
 	typedef uint32_t DeviceId; // Change type to whatever needed
 
@@ -70,6 +64,8 @@ public:
 	{
 		DeviceId Id;
 		void *EveDeviceInfo;
+		uint32_t Type;
+		int DeviceIntf;
 		std::string SerialNumber;
 		// std::string DisplayName;
 		QTreeWidgetItem *View;
@@ -79,8 +75,6 @@ public:
 	typedef DeviceInfo *EveModuleDeviceInforPtr;
 
 private:
-	QString currScreenSize;
-	QString selectedSyncDevice;
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_DeviceList;
 	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
@@ -88,7 +82,6 @@ private:
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
-	int syncDeviceEVEType;
 
 private slots:
 	void deviceDisplaySettings();
@@ -97,8 +90,11 @@ private slots:
 	//bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
 	//bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
 	void disconnectDevice();
-	void syncDevice();
+	//void syncDevice();
 	//void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
+	void uploadRamDl();
+	void uploadCoprocessorContent();
+	void uploadFlash();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
