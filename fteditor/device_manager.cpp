@@ -13,6 +13,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QPushButton>
+#include <QFileInfo>
 
 // Emulator includes
 #include <EVE_Platform.h>
@@ -791,6 +792,8 @@ void DeviceManager::uploadCoprocessorContent()
 
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 
+	EVE_Util_resetCoprocessor(phost);
+
 	g_ContentManager->lockContent();
 
 	std::vector<ContentInfo *> ramContent = g_ContentManager->allRam();
@@ -893,14 +896,165 @@ void DeviceManager::uploadCoprocessorContent()
 
 	g_DlEditor->unlockDisplayList();
 
+	g_CmdEditor->lockDisplayList();
+
 	bool validCmd = false;
+	uint32_t cmdList[FTEDITOR_DL_SIZE];
+	std::vector<uint32_t> cmdParamCache;
+	std::vector<std::string> cmdStrParamCache;
+	int strParamRead = 0;
+	int cmdParamIdx[FTEDITOR_DL_SIZE + 1];
+	bool cmdValid[FTEDITOR_DL_SIZE];
+	uint32_t *cmdListPtr = g_CmdEditor->getDisplayList();
+	const DlParsed *cmdParsedPtr = g_CmdEditor->getDisplayListParsed();
 
+	// Make local copy, necessary in case of blocking commands
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		cmdList[i] = cmdListPtr[i];
+		// cmdParsed[i] = cmdParsedPtr[i];
+		cmdParamIdx[i] = (int)cmdParamCache.size();
+		DlParser::compile(devInfo->DeviceIntf, cmdParamCache, cmdParsedPtr[i]);
+		cmdValid[i] = cmdParsedPtr[i].ValidId;
+		if (cmdValid[i])
+		{
+			switch (cmdList[i])
+			{
+			case CMD_LOADIMAGE:
+			case CMD_PLAYVIDEO:
+				cmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
+				break;
+			}
+		}
+	}
+	cmdParamIdx[FTEDITOR_DL_SIZE] = (int)cmdParamCache.size();
 
+	g_CmdEditor->unlockDisplayList();
+
+	/*
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+	{
+	swr32(CMD_FLASHATTACH);
+	swr32(CMD_FLASHFAST);
+	swr32(~0); // result
+	wp += 12;
+	freespace -= 12;
+	}
+	*/
+
+	int32_t mediaFifoPtr = 0;
+	int32_t mediaFifoSize = 0;
+
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		if (!cmdValid[i]) continue;
+		bool useMediaFifo = false;
+		bool useFlash = false;
+		const char *useFileStream = NULL;
+		if ((devInfo->DeviceIntf >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
+		{
+			mediaFifoPtr = cmdParamCache[cmdParamIdx[i]];
+			mediaFifoSize = cmdParamCache[cmdParamIdx[i] + 1];
+		}
+		else if (cmdList[i] == CMD_LOADIMAGE)
+		{
+			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
+				&& (cmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
+			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
+			++strParamRead;
+			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810) 
+				&& (cmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+		}
+		else if (cmdList[i] == CMD_PLAYVIDEO)
+		{
+			useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				&& (cmdParamCache[cmdParamIdx[i]] & OPT_FLASH);
+			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
+			++strParamRead;
+			useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+				&& ((cmdParamCache[cmdParamIdx[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+		}
+		else if (cmdList[i] == CMD_SNAPSHOT)
+		{
+			// Validate snapshot address range
+			uint32_t addr = cmdParamCache[cmdParamIdx[i]];
+			uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
+			uint32_t imgSize = (g_VSize * g_HSize) * 2;
+			if (addr + imgSize > ramGEnd)
+				continue;
+		}
+		if (useFileStream)
+		{
+			if (!QFileInfo(useFileStream).exists())
+				continue;
+		}
+		validCmd = true;
+		int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+		int cmdLen = 4 + (paramNb * 4);
+		EVE_Cmd_startFunc(phost);
+		EVE_Cmd_wr32(phost, cmdList[i]);
+		for (int j = cmdParamIdx[i]; j < cmdParamIdx[i + 1]; ++j)
+			EVE_Cmd_wr32(phost, cmdParamCache[j]);
+		EVE_Cmd_endFunc(phost);
+		if (cmdList[i] == CMD_LOGO)
+		{
+			// printf("Waiting for CMD_LOGO...\n");
+			EVE_Cmd_waitLogo(phost); // FIXME: Infinite loop idle callback
+
+			EVE_Cmd_wr32(phost, CMD_DLSTART);
+			EVE_Cmd_wr32(phost, CMD_COLDSTART);
+		}
+		else if (cmdList[i] == CMD_CALIBRATE)
+		{
+			EVE_Cmd_waitFlush(phost); // FIXME: Infinite loop idle callback
+
+			EVE_Cmd_wr32(phost, CMD_DLSTART);
+			EVE_Cmd_wr32(phost, CMD_COLDSTART);
+		}
+		else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
+		{
+			EVE_Cmd_waitFlush(phost); // FIXME: Infinite loop idle callback
+
+			EVE_Cmd_wr32(phost, CMD_DLSTART);
+			EVE_Cmd_wr32(phost, CMD_COLDSTART);
+		}
+		if (useFileStream)
+		{
+			// Flush before stream
+			EVE_Cmd_waitFlush(phost);
+
+			if (useMediaFifo)
+			{
+				if (mediaFifoSize)
+				{
+					
+				}
+				else
+				{
+					// Media fifo not set up
+					EVE_Util_resetCoprocessor(phost);
+					continue;
+				}
+			}
+			else
+			{
+
+			}
+
+			// Stream not yet implemented
+			EVE_Util_resetCoprocessor(phost); // TODO
+			continue;
+
+			// Flush after stream
+			EVE_Cmd_waitFlush(phost);
+		}
+	}
 
 	if (validCmd)
 	{
-		// swr32(DISPLAY());
-		// swr32(CMD_SWAP);
+		EVE_Cmd_wr32(phost, DISPLAY());
+		EVE_Cmd_wr32(phost, CMD_SWAP);
+		EVE_Cmd_waitFlush(phost);
 	}
 	else
 	{

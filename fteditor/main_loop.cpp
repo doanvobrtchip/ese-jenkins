@@ -773,7 +773,7 @@ void loop()
 		s_CmdParamCache.clear();
 		s_CmdStrParamCache.clear();
 		int strParamRead = 0;
-		int cmdParamCache[FTEDITOR_DL_SIZE + 1];
+		int cmdParamIdx[FTEDITOR_DL_SIZE + 1];
 		bool cmdValid[FTEDITOR_DL_SIZE];
 		uint32_t *cmdListPtr = g_CmdEditor->getDisplayList();
 		const DlParsed *cmdParsedPtr = g_CmdEditor->getDisplayListParsed();
@@ -782,7 +782,7 @@ void loop()
 		{
 			cmdList[i] = cmdListPtr[i];
 			// cmdParsed[i] = cmdParsedPtr[i];
-			cmdParamCache[i] = (int)s_CmdParamCache.size();
+			cmdParamIdx[i] = (int)s_CmdParamCache.size();
 			DlParser::compile(FTEDITOR_CURRENT_DEVICE, s_CmdParamCache, cmdParsedPtr[i]);
 			cmdValid[i] = cmdParsedPtr[i].ValidId;
 			if (cmdValid[i])
@@ -798,7 +798,7 @@ void loop()
 					warnMissingClear = false;
 			}
 		}
-		cmdParamCache[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
+		cmdParamIdx[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
 		g_CmdEditor->unlockDisplayList();
 		g_WarnMissingClear = warnMissingClear;
 
@@ -837,31 +837,31 @@ void loop()
 			const char *useFileStream = NULL;
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
-				s_MediaFifoPtr = s_CmdParamCache[cmdParamCache[i]];
-				s_MediaFifoSize = s_CmdParamCache[cmdParamCache[i] + 1];
+				s_MediaFifoPtr = s_CmdParamCache[cmdParamIdx[i]];
+				s_MediaFifoSize = s_CmdParamCache[cmdParamIdx[i] + 1];
 			}
 			else if (cmdList[i] == CMD_LOADIMAGE)
 			{
 				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_FLASH);
+					&& (s_CmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
 				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO);
+					&& (s_CmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{
 				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i]] & OPT_FLASH);
+					&& (s_CmdParamCache[cmdParamIdx[i]] & OPT_FLASH);
 				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+					&& ((s_CmdParamCache[cmdParamIdx[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_SNAPSHOT)
 			{
 				// Validate snapshot address range
-				uint32_t addr = s_CmdParamCache[cmdParamCache[i]];
+				uint32_t addr = s_CmdParamCache[cmdParamIdx[i]];
 				uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
 				uint32_t imgSize = (g_VSize * g_HSize) * 2;
 				if (addr + imgSize > ramGEnd)
@@ -876,7 +876,7 @@ void loop()
 					continue;
 			}
 			validCmd = true;
-			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
+			int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
 			int cmdLen = 4 + (paramNb * 4);
 			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
 			{
@@ -910,7 +910,7 @@ void loop()
 			coprocessorWrites[(wp & 0xFFF) >> 2] = i;
 			swr32(cmdList[i]);
 			// printf("cmd %i", cmdList[i]);
-			for (int j = cmdParamCache[i]; j < cmdParamCache[i + 1]; ++j)
+			for (int j = cmdParamIdx[i]; j < cmdParamIdx[i + 1]; ++j)
 			{
 				++wpn;
 				// printf("; param %i", s_CmdParamCache[j]);
