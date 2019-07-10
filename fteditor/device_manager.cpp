@@ -22,6 +22,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "main_window.h"
 #include "content_manager.h"
 #include "dl_parser.h"
+#include "dl_editor.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
 
@@ -32,6 +33,15 @@ namespace FTEDITOR
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern ContentManager *g_ContentManager;
+
+extern volatile int g_HSize;
+extern volatile int g_VSize;
+extern volatile int g_Rotate;
+
+// Editors
+extern DlEditor *g_DlEditor;
+extern DlEditor *g_CmdEditor;
+extern DlEditor *g_Macro;
 
 #if FT800_DEVICE_MANAGER
 
@@ -750,6 +760,18 @@ void DeviceManager::uploadRamDl()
 
 	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 
+	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_ROTATE), g_Rotate);
+
+	g_Macro->lockDisplayList();
+
+	if (g_Macro->getDisplayListParsed()[0].ValidId)
+		EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_MACRO_0), g_Macro->getDisplayList()[0]);
+	if (g_Macro->getDisplayListParsed()[1].ValidId)
+		EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_MACRO_1), g_Macro->getDisplayList()[1]);
+
+	g_Macro->unlockDisplayList();
+
 	g_ContentManager->unlockContent();
 }
 
@@ -847,6 +869,43 @@ void DeviceManager::uploadCoprocessorContent()
 	}
 
 	g_ContentManager->unlockContent();
+
+	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_ROTATE), g_Rotate);
+
+	g_Macro->lockDisplayList();
+
+	if (g_Macro->getDisplayListParsed()[0].ValidId)
+		EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_MACRO_0), g_Macro->getDisplayList()[0]);
+	if (g_Macro->getDisplayListParsed()[1].ValidId)
+		EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_MACRO_1), g_Macro->getDisplayList()[1]);
+
+	g_Macro->unlockDisplayList();
+
+	g_DlEditor->lockDisplayList();
+
+	uint32_t *displayList = g_DlEditor->getDisplayList();
+
+	EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, addr(devInfo->DeviceIntf, FTEDITOR_RAM_DL));
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+		EVE_Hal_transfer32(phost, displayList[i]);
+	EVE_Hal_endTransfer(phost);
+
+	g_DlEditor->unlockDisplayList();
+
+	bool validCmd = false;
+
+
+
+	if (validCmd)
+	{
+		// swr32(DISPLAY());
+		// swr32(CMD_SWAP);
+	}
+	else
+	{
+		EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
+	}
 }
 
 void DeviceManager::uploadFlash()

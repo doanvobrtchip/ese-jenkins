@@ -180,9 +180,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 		id = EVE_Hal_rd8(phost, REG_ID);
 		eve_printf_debug("EVE register ID after wake up %x\n", id);
 		EVE_sleep(100);
-
-		++idi;
-		if (idi > 50)
+		if (++idi >= 100)
 			return false;
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", id);
