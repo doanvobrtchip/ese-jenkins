@@ -178,6 +178,10 @@ public:
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
+	// Get all content that's selected to be loaded into RAM
+	std::vector<ContentInfo *> allRam();
+	// Get all content that's selected to be loaded into Flash
+	std::vector<ContentInfo *> allFlash();
 
 	// Get the current flash map path
 	QString findFlashMapPath(bool forceScan = false);

@@ -35,13 +35,13 @@
 
 #include <stdio.h>
 
-bool EVE_Util_loadSdCard(EVE_HalContext *phost)
+EVE_HAL_EXPORT bool EVE_Util_loadSdCard(EVE_HalContext *phost)
 {
 	/* no-op */
 	return true;
 }
 
-bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename)
+EVE_HAL_EXPORT bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename)
 {
 	FILE *afile;
 	uint32_t ftsize = 0;
@@ -74,7 +74,7 @@ bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *f
 	return true;
 }
 
-bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename)
+EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename)
 {
 	FILE *afile;
 	uint32_t ftsize = 0;
@@ -113,7 +113,7 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
 	return EVE_Cmd_waitFlush(phost);
 }
 
-bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format)
+EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format)
 {
 	FILE *afile;
 	uint32_t ftsize = 0;

@@ -148,7 +148,7 @@ extern "C" {
 
 /* Scope */
 #ifndef scope
-#define scope ;
+#define scope if (true)
 #endif
 
 /* Breakable */

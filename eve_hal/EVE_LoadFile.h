@@ -32,13 +32,13 @@
 #include "EVE_Platform.h"
 
 /* Load SD card */
-bool EVE_Util_loadSdCard(EVE_HalContext *phost);
+EVE_HAL_EXPORT bool EVE_Util_loadSdCard(EVE_HalContext *phost);
 
-bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename);
-bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename);
+EVE_HAL_EXPORT bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename);
+EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename);
 
 /* Load a file using CMD_LOADIMAGE.
 The image format is provided as output to the optional format argument */
-bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format);
+EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format);
 
 /* end of file */

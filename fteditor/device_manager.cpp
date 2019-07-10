@@ -71,17 +71,6 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	buttons->addStretch();
 
-	// Upload RAM_G and RAM_DL
-	// Upload RAM and Coprocessor Commands
-	// Upload Flash
-
-	m_SendImageButton = new QPushButton(this);
-	m_SendImageButton->setText(tr("Upload RAM_G and RAM_DL"));
-	m_SendImageButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
-	m_SendImageButton->setVisible(false);
-	connect(m_SendImageButton, &QPushButton::clicked, this, &DeviceManager::uploadRamDl);
-	buttons->addWidget(m_SendImageButton);
-
 	m_ConnectButton = new QPushButton(this);
 	m_ConnectButton->setText(tr("Connect"));
 	m_ConnectButton->setToolTip(tr("Connect the selected device"));
@@ -97,6 +86,31 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	buttons->addWidget(m_DisconnectButton);
 
 	layout->addLayout(buttons);
+
+	// Upload RAM_G and RAM_DL
+	// Upload RAM and Coprocessor Commands
+	// Upload Flash
+
+	m_UploadRamDlButton = new QPushButton(this);
+	m_UploadRamDlButton->setText(tr("Upload RAM_G and RAM_DL"));
+	m_UploadRamDlButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
+	m_UploadRamDlButton->setVisible(false);
+	connect(m_UploadRamDlButton, &QPushButton::clicked, this, &DeviceManager::uploadRamDl);
+	layout->addWidget(m_UploadRamDlButton);
+
+	m_UploadCoprocessorContentButton = new QPushButton(this);
+	m_UploadCoprocessorContentButton->setText(tr("Upload RAM and Coprocessor"));
+	m_UploadCoprocessorContentButton->setToolTip(tr(""));
+	m_UploadCoprocessorContentButton->setVisible(false);
+	connect(m_UploadCoprocessorContentButton, &QPushButton::clicked, this, &DeviceManager::uploadCoprocessorContent);
+	layout->addWidget(m_UploadCoprocessorContentButton);
+
+	m_UploadFlashButton = new QPushButton(this);
+	m_UploadFlashButton->setText(tr("Upload Flash"));
+	m_UploadFlashButton->setToolTip(tr(""));
+	m_UploadFlashButton->setVisible(false);
+	connect(m_UploadFlashButton, &QPushButton::clicked, this, &DeviceManager::uploadFlash);
+	layout->addWidget(m_UploadFlashButton);
 
 	setLayout(layout);
 
@@ -741,6 +755,98 @@ void DeviceManager::uploadRamDl()
 
 void DeviceManager::uploadCoprocessorContent()
 {
+	if (!m_DeviceList->currentItem())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
+		return;
+	}
+
+	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
+	if (!devInfo)
+		return;
+	if (!devInfo->EveHalContext)
+		return;
+
+	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
+
+	g_ContentManager->lockContent();
+
+	std::vector<ContentInfo *> ramContent = g_ContentManager->allRam();
+	for (const ContentInfo *info : ramContent)
+	{
+		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+		QString fileName = info->DestName + ".raw";
+		QFile binFile(fileName);
+		if (!binFile.exists())
+			continue;
+		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
+		int binSize = imageCoprocessor ? info->CachedMemorySize : binFile.size();
+		if (binSize + loadAddr > addr(devInfo->DeviceIntf, FTEDITOR_RAM_G_END))
+			continue;
+		if (imageCoprocessor)
+		{
+			// FIXME: Unicode support on Windows
+			EVE_Util_loadImageFile(phost, loadAddr, fileName.toLocal8Bit(), NULL);
+			continue;
+		}
+		scope
+		{
+			binFile.open(QIODevice::ReadOnly);
+			QByteArray ba = binFile.readAll();
+			EVE_Hal_wrMem(phost, loadAddr, reinterpret_cast<const uint8_t *>(ba.data()), ba.size());
+		}
+		if (info->Converter == ContentInfo::Font)
+		{
+			// Write bitmap address
+			EVE_Hal_wr32(phost, loadAddr + 144, loadAddr + 148);
+		}
+		if (devInfo->DeviceIntf < FTEDITOR_FT810)
+		{
+			if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
+			{
+				QString palName = info->DestName + ".lut.raw";
+				QFile palFile(palName);
+				if (!palFile.exists())
+					continue;
+				int palSize = (int)palFile.size();
+				if (palSize != 1024)
+					continue;
+
+					palFile.open(QIODevice::ReadOnly);
+					QByteArray ba = palFile.readAll();
+					EVE_Hal_wrMem(phost, addr(devInfo->DeviceIntf, FTEDITOR_RAM_PAL), reinterpret_cast<const uint8_t *>(ba.data()), ba.size());
+			}
+		}
+		if (devInfo->DeviceIntf >= FTEDITOR_FT810)
+		{
+			if (info->Converter == ContentInfo::Image && (info->ImageFormat == PALETTED8 || info->ImageFormat == PALETTED565 || info->ImageFormat == PALETTED4444))
+			{
+				int palSize;
+				switch (info->ImageFormat)
+				{
+				case PALETTED565:
+				case PALETTED4444:
+					palSize = 256 * 2;
+					break;
+				default:
+					palSize = 256 * 4;
+					break;
+				}
+				QString palName = info->DestName + ".lut.raw";
+				QFile palFile(palName);
+				if (!palFile.exists())
+					continue;
+
+				{
+					palFile.open(QIODevice::ReadOnly);
+					QByteArray ba = palFile.readAll();
+					EVE_Hal_wrMem(phost, info->MemoryAddress, reinterpret_cast<const uint8_t *>(ba.data()), ba.size());
+				}
+			}
+		}
+	}
+
+	g_ContentManager->unlockContent();
 }
 
 void DeviceManager::uploadFlash()
@@ -753,14 +859,18 @@ void DeviceManager::updateSelection()
 	{
 		m_ConnectButton->setVisible(false);
 		m_DisconnectButton->setVisible(false);
-		m_SendImageButton->setVisible(false);
+		m_UploadRamDlButton->setVisible(false);
+		m_UploadCoprocessorContentButton->setVisible(false);
+		m_UploadFlashButton->setVisible(false);
 	}
 	else
 	{
 		DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
 		m_ConnectButton->setVisible(!devInfo->EveHalContext);
 		m_DisconnectButton->setVisible(devInfo->EveHalContext);
-		m_SendImageButton->setVisible(devInfo->EveHalContext);
+		m_UploadRamDlButton->setVisible(devInfo->EveHalContext);
+		m_UploadCoprocessorContentButton->setVisible(devInfo->EveHalContext);
+		m_UploadFlashButton->setVisible(devInfo->EveHalContext && flashSupport(devInfo->DeviceIntf));
 		if (devInfo->EveHalContext)
 		{
 			devInfo->View->setText(0, "Yes");

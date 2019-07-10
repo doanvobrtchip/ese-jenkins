@@ -80,7 +80,9 @@ private:
 	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
 	QPushButton *m_ConnectButton;
 	QPushButton *m_DisconnectButton;
-	QPushButton *m_SendImageButton;
+	QPushButton *m_UploadRamDlButton;
+	QPushButton *m_UploadCoprocessorContentButton;
+	QPushButton *m_UploadFlashButton;
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
 
 private slots:
