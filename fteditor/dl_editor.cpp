@@ -24,6 +24,7 @@
 #include <QCompleter>
 #include <QStringListModel>
 #include <QAbstractItemView>
+#include <QTextStream>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -280,6 +281,42 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	}
 	m_DisplayListModified = true;
 	unlockDisplayList();
+}
+
+void DlEditor::saveCoprocessorCmd(bool isBigEndian)
+{
+	int blockCount = 0;
+	QString line("");
+	QTextBlock block;
+
+	QFile f("d:/c.txt");
+
+	if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		return;
+	}
+	QTextStream ts(&f);
+
+	while (blockCount < m_CodeEditor->document()->blockCount())
+	{
+		block = m_CodeEditor->document()->findBlockByNumber(blockCount);
+		line = block.text();
+
+		DlParsed dl;
+		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, line, m_ModeCoprocessor);
+
+		ts << dl.IdIndex << '\t' << dl.IdLeft << '\t' << dl.IdRight << '\n';
+		ts << dl.IdText.c_str() << '\t' << dl.StringParameter.c_str() << '\n';
+		for (int i = 0; i < dl.VarArgCount; i++)
+		{
+			ts << dl.Parameter->I << '\t' << dl.Parameter->U << '\n';
+		}
+		
+		++blockCount;
+	}
+
+	ts.flush();
+	f.close();
 }
 
 bool DlEditor::isInvalid(void)

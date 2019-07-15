@@ -96,6 +96,8 @@ public:
 
 	bool isInvalid(void);
 
+	void saveCoprocessorCmd(bool isBigEndian);
+
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
