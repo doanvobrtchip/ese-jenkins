@@ -166,9 +166,9 @@ typedef enum EVE_HOST_T
 typedef struct EVE_DeviceInfo
 {
 	char DisplayName[256];
-	char SerialNumber[256];
-	size_t Identifier;
+	char SerialNumber[16];
 	EVE_HOST_T Host;
+	bool Opened;
 
 } EVE_DeviceInfo;
 #endif
@@ -192,10 +192,11 @@ typedef struct EVE_HalParameters
 #endif
 
 #if defined(MPSSE_PLATFORM)
-	uint8_t MpsseChannelNo; /* MPSSE channel number */
+	uint32_t MpsseChannelNo; /* MPSSE channel number */
 #endif
 
 #if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM)
+	uint32_t DeviceIdx;
 	uint8_t SpiCsPin; /* SPI chip select number of FT8XX chip */
 #endif
 
@@ -221,7 +222,7 @@ typedef struct EVE_HalContext
 
 #if defined(EVE_MULTI_TARGET)
 	EVE_HOST_T Host;
-	EVE_CHIPID_T ChipId : 16;
+	EVE_CHIPID_T ChipId;
 	uint16_t Revision;
 	const EVE_GpuDefs *GpuDefs;
 #endif
@@ -290,14 +291,18 @@ EVE_HAL_EXPORT EVE_HalPlatform *EVE_Hal_initialize();
 /* Release HAL platform */
 EVE_HAL_EXPORT void EVE_Hal_release();
 
-#if defined(EVE_MULTI_TARGET)
 /* List the available devices */
-EVE_HAL_EXPORT EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount);
-#endif
+EVE_HAL_EXPORT size_t EVE_Hal_list();
+
+/* Get info of the specified device. Devices of type EVE_HOST_UNKNOWN should be ignored */
+EVE_HAL_EXPORT void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx);
+
+/* Check whether the context is the specified device */
+EVE_HAL_EXPORT bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx);
 
 /* Get the default configuration parameters */
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters);
-EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device);
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx);
 
 /* Opens a new HAL context using the specified parameters */
 EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters);

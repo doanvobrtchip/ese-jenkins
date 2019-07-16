@@ -36,6 +36,9 @@
 #if defined(EVE_MULTI_TARGET)
 #define EVE_HalImpl_initialize EVE_HalImpl_MPSSE_initialize
 #define EVE_HalImpl_release EVE_HalImpl_MPSSE_release
+#define EVE_Hal_list EVE_Hal_MPSSE_list
+#define EVE_Hal_info EVE_Hal_MPSSE_info
+#define EVE_Hal_isDevice EVE_Hal_MPSSE_isDevice
 #define EVE_HalImpl_defaults EVE_HalImpl_MPSSE_defaults
 #define EVE_HalImpl_open EVE_HalImpl_MPSSE_open
 #define EVE_HalImpl_close EVE_HalImpl_MPSSE_close
@@ -67,18 +70,46 @@
 *********/
 
 EVE_HalPlatform g_HalPlatform;
+uint32_t s_NumChannels = 0;
 
 /* Initialize HAL platform */
 void EVE_HalImpl_initialize()
 {
-	FT_STATUS status;
-	DWORD numdevs;
-
 	/* Initialize the libmpsse */
 	Init_libMPSSE();
-	uint32_t numberChannels;
-	SPI_GetNumChannels(&numberChannels);
+}
 
+/* Release HAL platform */
+void EVE_HalImpl_release()
+{
+	/* Cleanup the MPSSE Lib */
+	Cleanup_libMPSSE();
+}
+
+/* List the available devices */
+size_t EVE_Hal_list()
+{
+	s_NumChannels = 0;
+	SPI_GetNumChannels(&s_NumChannels);
+	return s_NumChannels;
+}
+
+/* Get info of the specified device */
+void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
+{
+	memset(deviceInfo, 0, sizeof(EVE_DeviceInfo));
+	if (deviceIdx < 0 || deviceIdx >= s_NumChannels)
+		return;
+
+	FT_DEVICE_LIST_INFO_NODE chanInfo = { 0 };
+	SPI_GetChannelInfo((uint32_t)deviceIdx, &chanInfo);
+
+	strcpy(deviceInfo->SerialNumber, chanInfo.SerialNumber);
+	strcpy(deviceInfo->DisplayName, chanInfo.Description);
+	deviceInfo->Host = EVE_HOST_MPSSE;
+	deviceInfo->Opened = chanInfo.Flags & FT_FLAGS_OPENED;
+
+#if 0
 	if (numberChannels > 0)
 	{
 		FT_DEVICE_LIST_INFO_NODE devList;
@@ -92,10 +123,10 @@ void EVE_HalImpl_initialize()
 			numberChannels = numdevs;
 
 			FT_GetDeviceInfoDetail(0, &devList.Flags, &devList.Type, &devList.ID,
-			    &devList.LocId,
-			    devList.SerialNumber,
-			    devList.Description,
-			    &devList.ftHandle);
+				&devList.LocId,
+				devList.SerialNumber,
+				devList.Description,
+				&devList.ftHandle);
 		}
 		else
 		{
@@ -112,19 +143,52 @@ void EVE_HalImpl_initialize()
 		eve_printf_debug(" Description=%s\n", devList.Description);
 		eve_printf_debug(" ftHandle=0x%p\n", devList.ftHandle); /* is 0 unless open */
 	}
+#endif
 }
 
-/* Release HAL platform */
-void EVE_HalImpl_release()
+/* Check whether the context is the specified device */
+bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 {
-	/* Cleanup the MPSSE Lib */
-	Cleanup_libMPSSE();
+	if (!phost)
+		return false;
+	if (phost->Host != EVE_HOST_MPSSE)
+		return false;
+	if (deviceIdx < 0 || deviceIdx >= s_NumChannels)
+		return false;
+
+	if (!phost->SpiHandle)
+		return false;
+
+	FT_DEVICE_LIST_INFO_NODE chanInfo = { 0 };
+	if (!SPI_GetChannelInfo((uint32_t)deviceIdx, &chanInfo))
+		return false;
+
+	return phost->SpiHandle == chanInfo.ftHandle;
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
-	parameters->MpsseChannelNo = device->Identifier & 0xFF;
+	if (deviceIdx < 0 || deviceIdx >= s_NumChannels)
+	{
+		if (!s_NumChannels)
+			EVE_Hal_list();
+
+		// Select first open device
+		deviceIdx = 0;
+		for (uint32_t i = 0; i < s_NumChannels; ++i)
+		{
+			FT_DEVICE_LIST_INFO_NODE chanInfo;
+			if (SPI_GetChannelInfo((uint32_t)deviceIdx, &chanInfo) != FT_OK)
+				continue;
+			if (!(chanInfo.Flags & FT_FLAGS_OPENED))
+			{ 
+				deviceIdx = i;
+				break;
+			}
+		}
+	}
+	parameters->MpsseChannelNo = deviceIdx & 0xFF;
 	parameters->PowerDownPin = 7;
 	parameters->SpiClockrateKHz = 12000; /* in KHz */
 }
@@ -134,6 +198,16 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	FT_STATUS status;
 	ChannelConfig channelConf; /* channel configuration */
+
+#ifdef EVE_MULTI_TARGET
+	if (parameters->ChipId >= EVE_BT815)
+		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (parameters->ChipId >= EVE_FT810)
+		phost->GpuDefs = &EVE_GpuDefs_FT81X;
+	else
+		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+#endif
+	phost->ChipId = parameters->ChipId;
 
 	/* configure the spi settings */
 	channelConf.ClockRate = phost->Parameters.SpiClockrateKHz * 1000;

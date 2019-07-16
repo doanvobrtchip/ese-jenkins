@@ -60,10 +60,10 @@ EVE_HAL_EXPORT void EVE_Hal_release()
 
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters)
 {
-	EVE_Hal_defaultsEx(parameters, EVE_SUPPORT_CHIPID, NULL);
+	EVE_Hal_defaultsEx(parameters, EVE_SUPPORT_CHIPID, -1);
 }
 
-EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
 	memset(parameters, 0, sizeof(EVE_HalParameters));
 
@@ -149,7 +149,7 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID
 	parameters->Display.Dither = 1;
 #endif
 
-	EVE_HalImpl_defaults(parameters, chipId, device);
+	EVE_HalImpl_defaults(parameters, chipId, deviceIdx);
 }
 
 EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters)

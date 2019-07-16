@@ -172,6 +172,17 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 		eve_printf_debug("Mismatching EVE chip id %x, expect model %x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), phost->Parameters.ChipId);
 	eve_printf_debug("EVE chip id %x %x.%x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), ((chipId >> 16) & 0xFF), ((chipId >> 24) & 0xFF));
 
+	/* Switch to the proper chip id if applicable */
+	phost->ChipId = ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8);
+#ifdef EVE_MULTI_TARGET
+	if (phost->ChipId >= EVE_BT815)
+		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (phost->ChipId >= EVE_FT810)
+		phost->GpuDefs = &EVE_GpuDefs_FT81X;
+	else
+		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+#endif
+
 	/* Read Register ID to check if EVE is ready. */
 	id = EVE_Hal_rd8(phost, REG_ID);
 	int idi = 0;

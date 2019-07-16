@@ -33,8 +33,12 @@
 #include "EVE_Platform.h"
 #if defined(EVE_MULTI_TARGET)
 
-static size_t s_DeviceCount;
-static EVE_DeviceInfo s_DeviceList[256];
+static size_t s_TotalDeviceCount = 0;
+static size_t s_DeviceCountBT8XXEMU = 0;
+static size_t s_DeviceCountMPSSE = 0;
+static size_t s_DeviceCountFT4222 = 0;
+
+DWORD g_NumDevsD2XX = 0;
 
 /*********
 ** INIT **
@@ -47,8 +51,8 @@ void EVE_HalImpl_MPSSE_initialize();
 void EVE_HalImpl_initialize()
 {
 	EVE_HalImpl_BT8XXEMU_initialize();
-	EVE_HalImpl_FT4222_initialize();
 	EVE_HalImpl_MPSSE_initialize();
+	EVE_HalImpl_FT4222_initialize();
 }
 
 /* Release HAL platform */
@@ -57,40 +61,83 @@ void EVE_HalImpl_FT4222_release();
 void EVE_HalImpl_MPSSE_release();
 void EVE_HalImpl_release()
 {
-	EVE_HalImpl_BT8XXEMU_release();
 	EVE_HalImpl_FT4222_release();
 	EVE_HalImpl_MPSSE_release();
+	EVE_HalImpl_BT8XXEMU_release();
 }
 
-void EVE_HalImpl_BT8XXEMU_list(EVE_DeviceInfo *deviceList, size_t *deviceCount);
-EVE_HAL_EXPORT EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount)
+size_t EVE_Hal_BT8XXEMU_list();
+size_t EVE_Hal_FT4222_list();
+size_t EVE_Hal_MPSSE_list();
+EVE_HAL_EXPORT size_t EVE_Hal_list()
 {
-	memset(s_DeviceList, 0, sizeof(s_DeviceList));
-	s_DeviceCount = 0;
-	EVE_HalImpl_BT8XXEMU_list(s_DeviceList, &s_DeviceCount);
-	*deviceCount = s_DeviceCount;
-	return s_DeviceList;
+	s_DeviceCountBT8XXEMU = EVE_Hal_BT8XXEMU_list();
+	s_DeviceCountMPSSE = EVE_Hal_MPSSE_list();
+	s_DeviceCountFT4222 = EVE_Hal_FT4222_list();
+	s_TotalDeviceCount = s_DeviceCountBT8XXEMU + s_DeviceCountMPSSE + s_DeviceCountFT4222;
+	return s_TotalDeviceCount;
+}
+
+void EVE_Hal_BT8XXEMU_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx);
+void EVE_Hal_FT4222_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx);
+void EVE_Hal_MPSSE_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx);
+EVE_HAL_EXPORT void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
+{
+	if (deviceIdx < s_DeviceCountBT8XXEMU)
+	{
+		EVE_Hal_BT8XXEMU_info(deviceInfo, deviceIdx);
+	}
+	else if (deviceIdx < s_DeviceCountBT8XXEMU + s_DeviceCountMPSSE)
+	{
+		EVE_Hal_MPSSE_info(deviceInfo, deviceIdx - s_DeviceCountBT8XXEMU);
+	}
+	else
+	{
+		EVE_Hal_FT4222_info(deviceInfo, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE);
+	}
+}
+
+/* Check whether the context is the specified device */
+bool EVE_Hal_BT8XXEMU_isDevice(EVE_HalContext *phost, size_t deviceIdx);
+bool EVE_Hal_FT4222_isDevice(EVE_HalContext *phost, size_t deviceIdx);
+bool EVE_Hal_MPSSE_isDevice(EVE_HalContext *phost, size_t deviceIdx);
+EVE_HAL_EXPORT bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
+{
+	if (deviceIdx < s_DeviceCountBT8XXEMU)
+	{
+		return EVE_Hal_BT8XXEMU_isDevice(phost, deviceIdx);
+	}
+	else if (deviceIdx < s_DeviceCountBT8XXEMU + s_DeviceCountMPSSE)
+	{
+		return EVE_Hal_MPSSE_isDevice(phost, deviceIdx - s_DeviceCountBT8XXEMU);
+	}
+	else
+	{
+		return EVE_Hal_FT4222_isDevice(phost, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE);
+	}
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_BT8XXEMU_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device);
-void EVE_HalImpl_FT4222_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device);
-void EVE_HalImpl_MPSSE_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device);
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
+void EVE_HalImpl_BT8XXEMU_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx);
+void EVE_HalImpl_FT4222_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx);
+void EVE_HalImpl_MPSSE_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx);
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
-	switch (device->Host)
+	if (deviceIdx < s_DeviceCountBT8XXEMU)
 	{
-	case EVE_HOST_BT8XXEMU:
-		EVE_HalImpl_BT8XXEMU_defaults(parameters, chipId, device);
-		break;
-	case EVE_HOST_FT4222:
-		EVE_HalImpl_FT4222_defaults(parameters, chipId, device);
-		break;
-	case EVE_HOST_MPSSE:
-		EVE_HalImpl_MPSSE_defaults(parameters, chipId, device);
-		break;
+		EVE_HalImpl_BT8XXEMU_defaults(parameters, chipId, deviceIdx);
+		parameters->Host = EVE_HOST_BT8XXEMU;
 	}
-	parameters->Host = device->Host;
+	else if (deviceIdx < s_DeviceCountBT8XXEMU + s_DeviceCountMPSSE)
+	{
+		EVE_HalImpl_MPSSE_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU);
+		parameters->Host = EVE_HOST_FT4222;
+	}
+	else
+	{
+		EVE_HalImpl_FT4222_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE);
+		parameters->Host = EVE_HOST_MPSSE;
+	}
 	parameters->ChipId = chipId;
 }
 

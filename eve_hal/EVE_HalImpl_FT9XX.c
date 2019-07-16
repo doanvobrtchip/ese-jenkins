@@ -80,10 +80,10 @@ void EVE_HalImpl_release()
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
 	parameters->PowerDownPin = FT800_PD_N;
-	parameters->SpiCsPin = 0; // SS0
+	parameters->SpiCsPin = (deviceIdx < 0) ? 0 : deviceIdx; // SS0
 }
 
 void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
@@ -144,6 +144,16 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	uint8_t spimGpio = s_SpimGpio[phost->Parameters.SpiCsPin];
 	pad_dir_t spimFunc = s_SpimFunc[phost->Parameters.SpiCsPin];
+
+#ifdef EVE_MULTI_TARGET
+	if (parameters->ChipId >= EVE_BT815)
+		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (parameters->ChipId >= EVE_FT810)
+		phost->GpuDefs = &EVE_GpuDefs_FT81X;
+	else
+		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+#endif
+	phost->ChipId = parameters->ChipId;
 
 	sys_enable(sys_device_spi_master);
 	gpio_function(GPIO_SPIM_CLK, pad_spim_sck); /* GPIO27 to SPIM_CLK */

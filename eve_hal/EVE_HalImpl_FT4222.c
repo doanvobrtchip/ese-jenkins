@@ -36,6 +36,9 @@
 #if defined(EVE_MULTI_TARGET)
 #define EVE_HalImpl_initialize EVE_HalImpl_FT4222_initialize
 #define EVE_HalImpl_release EVE_HalImpl_FT4222_release
+#define EVE_Hal_list EVE_Hal_FT4222_list
+#define EVE_Hal_info EVE_Hal_FT4222_info
+#define EVE_Hal_isDevice EVE_Hal_FT4222_isDevice
 #define EVE_HalImpl_defaults EVE_HalImpl_FT4222_defaults
 #define EVE_HalImpl_open EVE_HalImpl_FT4222_open
 #define EVE_HalImpl_close EVE_HalImpl_FT4222_close
@@ -66,10 +69,12 @@
 #define FT4222_LATENCY_TIME (2)
 
 EVE_HalPlatform g_HalPlatform;
+DWORD s_NumDevsD2XX;
 
 /* Initialize HAL platform */
 void EVE_HalImpl_initialize()
 {
+#if 0
 	FT_DEVICE_LIST_INFO_NODE devList;
 	FT_STATUS status;
 	uint32_t numdevs;
@@ -101,6 +106,7 @@ void EVE_HalImpl_initialize()
 	eve_printf_debug(" SerialNumber=%s\n", devList.SerialNumber);
 	eve_printf_debug(" Description=%s\n", devList.Description);
 	eve_printf_debug(" ftHandle=0x%p\n", devList.ftHandle); /*is 0 unless open*/
+#endif
 }
 
 /* Release HAL platform */
@@ -109,9 +115,85 @@ void EVE_HalImpl_release()
 	/* no-op */
 }
 
-/* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
+/* List the available devices */
+size_t EVE_Hal_list()
 {
+	s_NumDevsD2XX = 0;
+	FT_CreateDeviceInfoList(&s_NumDevsD2XX);
+	return s_NumDevsD2XX;
+}
+
+/* Get info of the specified device */
+void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
+{
+	memset(deviceInfo, 0, sizeof(EVE_DeviceInfo));
+	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
+		return;
+
+	FT_DEVICE_LIST_INFO_NODE devInfo = { 0 };
+	if (FT_GetDeviceInfoDetail((DWORD)deviceIdx,
+	        &devInfo.Flags, &devInfo.Type, &devInfo.ID, &devInfo.LocId,
+	        devInfo.SerialNumber, devInfo.Description, &devInfo.ftHandle)
+	    != FT_OK)
+		return;
+
+	strcpy(deviceInfo->SerialNumber, devInfo.SerialNumber);
+	strcpy(deviceInfo->DisplayName, devInfo.Description);
+	if (!strcmp(devInfo.Description, "FT4222 A"))
+		deviceInfo->Host = EVE_HOST_FT4222;
+	deviceInfo->Opened = devInfo.Flags & FT_FLAGS_OPENED;
+}
+
+/* Check whether the context is the specified device */
+bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
+{
+	if (!phost)
+		return false;
+	if (phost->Host != EVE_HOST_FT4222)
+		return false;
+	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
+		return false;
+
+	if (!phost->SpiHandle)
+		return false;
+
+	FT_DEVICE_LIST_INFO_NODE devInfo = { 0 };
+	if (FT_GetDeviceInfoDetail((DWORD)deviceIdx,
+	        &devInfo.Flags, &devInfo.Type, &devInfo.ID, &devInfo.LocId,
+	        devInfo.SerialNumber, devInfo.Description, &devInfo.ftHandle)
+	    != FT_OK)
+		return false;
+
+	return phost->SpiHandle == devInfo.ftHandle;
+}
+
+/* Get the default configuration parameters */
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+{
+	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
+	{
+		if (!s_NumDevsD2XX)
+			EVE_Hal_list();
+
+		// Select first open device
+		deviceIdx = 0;
+		for (uint32_t i = 0; i < s_NumDevsD2XX; ++i)
+		{
+			FT_DEVICE_LIST_INFO_NODE devInfo;
+			if (FT_GetDeviceInfoDetail((DWORD)deviceIdx,
+			        &devInfo.Flags, &devInfo.Type, &devInfo.ID, &devInfo.LocId,
+			        devInfo.SerialNumber, devInfo.Description, &devInfo.ftHandle)
+			    != FT_OK)
+				continue;
+			if (!(devInfo.Flags & FT_FLAGS_OPENED))
+			{
+				deviceIdx = i;
+				break;
+			}
+		}
+	}
+
+	parameters->DeviceIdx = (uint32_t)deviceIdx;
 	parameters->PowerDownPin = GPIO_PORT0;
 	parameters->SpiCsPin = 1;
 	parameters->SpiClockrateKHz = 12000;
@@ -194,10 +276,6 @@ bool computeCLK(EVE_HalContext *phost, FT4222_ClockRate *sysclk, FT4222_SPIClock
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	FT_STATUS status;
-	//ulong_t numdevs;
-	uint32_t numdevs;
-	uint32_t index;
-	FT_HANDLE fthandle;
 	FT4222_Version pversion;
 	FT4222_ClockRate ftclk = 0;
 	uint16_t max_size = 0;
@@ -206,10 +284,90 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	/* GPIO0         , GPIO1      , GPIO2       , GPIO3         } */
 	GPIO_Dir gpio_dir[4] = { GPIO_OUTPUT, GPIO_INPUT, GPIO_INPUT, GPIO_INPUT };
 
+	DWORD deviceIdxA = parameters->DeviceIdx;
+	FT_DEVICE_LIST_INFO_NODE devInfoA;
+	DWORD deviceIdxB;
+	FT_DEVICE_LIST_INFO_NODE devInfoB;
+
 	bool ret = true;
 
 	phost->SpiHandle = phost->GpioHandle = NULL;
 
+#ifdef EVE_MULTI_TARGET
+	if (parameters->ChipId >= EVE_BT815)
+		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (parameters->ChipId >= EVE_FT810)
+		phost->GpuDefs = &EVE_GpuDefs_FT81X;
+	else
+		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+#endif
+	phost->ChipId = parameters->ChipId;
+
+	memset(&devInfoA, 0, sizeof(devInfoA));
+	status = FT_GetDeviceInfoDetail(deviceIdxA,
+	    &devInfoA.Flags, &devInfoA.Type, &devInfoA.ID, &devInfoA.LocId,
+	    devInfoA.SerialNumber, devInfoA.Description, &devInfoA.ftHandle);
+	if (status != FT_OK)
+	{
+		eve_printf_debug("FT_GetDeviceInfoDetail failed");
+		ret = false;
+	}
+	if (devInfoA.Flags & FT_FLAGS_OPENED)
+	{
+		eve_printf_debug("Device FT4222 A already opened");
+		ret = false;
+	}
+
+	if (ret)
+	{
+		for (deviceIdxB = deviceIdxA + 1; deviceIdxB < s_NumDevsD2XX; ++deviceIdxB)
+		{
+			memset(&devInfoB, 0, sizeof(devInfoB));
+			status = FT_GetDeviceInfoDetail(deviceIdxB,
+			    &devInfoB.Flags, &devInfoB.Type, &devInfoB.ID, &devInfoB.LocId,
+			    devInfoB.SerialNumber, devInfoB.Description, &devInfoB.ftHandle);
+			if (status != FT_OK)
+				continue;
+			if (!strcmp(devInfoB.Description, "FT4222 B"))
+				break;
+		}
+		if (deviceIdxB >= s_NumDevsD2XX)
+		{
+			eve_printf_debug("FT4222 B not found");
+			ret = false;
+		}
+		else if (devInfoB.Flags & FT_FLAGS_OPENED)
+		{
+			eve_printf_debug("Device FT4222 B already opened");
+			ret = false;
+		}
+	}
+
+	if (ret)
+	{
+		status = FT_Open(deviceIdxA, &phost->SpiHandle);
+		if (status != FT_OK)
+		{
+			eve_printf_debug("FT_Open FT4222 A failed %d\n", status);
+			phost->SpiHandle = NULL;
+			ret = false;
+		}
+	}
+
+	if (ret)
+	{
+		status = FT_Open(deviceIdxB, &phost->GpioHandle);
+		if (status != FT_OK)
+		{
+			eve_printf_debug("FT_Open FT4222 B failed %d\n", status);
+			FT_Close(phost->SpiHandle);
+			phost->GpioHandle = NULL;
+			phost->SpiHandle = NULL;
+			ret = false;
+		}
+	}
+
+#if 0
 	status = FT_CreateDeviceInfoList(&numdevs);
 	if (status != FT_OK)
 	{
@@ -291,6 +449,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 			}
 		}
 	}
+#endif
 
 	if (ret)
 	{

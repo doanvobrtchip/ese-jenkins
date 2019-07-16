@@ -169,8 +169,7 @@ void DeviceManager::refreshDevices()
 {
 	printf("Refresh devices\n");
 
-	size_t eveDeviceCount;
-	EVE_DeviceInfo *eveDeviceInfo = EVE_Hal_list(&eveDeviceCount);
+	size_t eveDeviceCount = EVE_Hal_list();
 
 	// Swap device list to local
 	std::map<DeviceId, DeviceInfo *> deviceInfo;
@@ -179,11 +178,16 @@ void DeviceManager::refreshDevices()
 	// For each device that is found
 	for (size_t i = 0; i < eveDeviceCount; ++i)
 	{
-		EVE_DeviceInfo *info = &eveDeviceInfo[i];
+		EVE_DeviceInfo info;
+		EVE_Hal_info(&info, i);
+		if (!info.Host)
+			continue; // Skip unknown
+
 		std::map<DeviceId, DeviceInfo *>::iterator it = std::find_if(deviceInfo.begin(), deviceInfo.end(),
 		    [&](std::pair<const DeviceId, DeviceInfo *> &di) -> bool {
 			    // Match by serial number
-			    return di.second->SerialNumber == info->SerialNumber;
+			    // return di.second->SerialNumber == info.SerialNumber;
+				return EVE_Hal_isDevice((EVE_HalContext *)di.second->EveHalContext, i);
 		    });
 
 		DeviceInfo *di;
@@ -194,10 +198,10 @@ void DeviceManager::refreshDevices()
 		}
 		else
 		{
-			// The device was not added yet, create the gui
+			// The device was not in use yet, create the gui
 			di = new DeviceInfo();
 			di->EveHalContext = NULL;
-			di->SerialNumber = info->SerialNumber; // Store serial number for matching
+			di->SerialNumber = info.SerialNumber; // Store serial number for matching
 			di->View = new QTreeWidgetItem(m_DeviceList);
 			di->View->setText(0, "No");
 			di->View->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(di));
@@ -205,10 +209,10 @@ void DeviceManager::refreshDevices()
 		}
 
 		// Store this device
-		di->EveDeviceInfo = info;
-		di->Host = info->Host;
+		di->DeviceIdx = i;
+		di->Host = info.Host;
 		// di->DisplayName = info->DisplayName;
-		di->View->setText(1, info->DisplayName);
+		di->View->setText(1, QString(info.DisplayName) + " (" + info.SerialNumber + ")");
 		di->Id = (DeviceId)i;
 		m_DeviceInfo[(DeviceId)i] = di;
 	}
@@ -593,7 +597,7 @@ void DeviceManager::connectDevice()
 
 	// Get parameters to open the selected device
 	EVE_HalParameters params = { 0 };
-	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), (EVE_DeviceInfo *)devInfo->EveDeviceInfo);
+	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), devInfo->DeviceIdx);
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.ChipId);
 
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };

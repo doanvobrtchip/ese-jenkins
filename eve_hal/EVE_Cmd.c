@@ -311,6 +311,7 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_moveWp(EVE_HalContext *phost, uint16_t bytes)
 #if defined(_DEBUG) && (EVE_SUPPORT_CHIPID >= EVE_BT815)
 static void displayError(EVE_HalContext *phost, char *err)
 {
+#if 0 // TODO
 	uint32_t addr = RAM_G + RAM_G_SIZE - 128;
 	uint32_t dl = 0;
 
@@ -333,6 +334,7 @@ static void displayError(EVE_HalContext *phost, char *err)
 	/* EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), VERTEX2II(32, 96, 15, 0)); */
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), DISPLAY());
 	EVE_Hal_wr8(phost, REG_DLSWAP, DLSWAP_FRAME);
+#endif
 }
 #endif
 
@@ -348,12 +350,14 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 		phost->CmdWaiting = false;
 		eve_printf_debug("Coprocessor fault\n");
 #if defined(_DEBUG) && (EVE_SUPPORT_CHIPID >= EVE_BT815)
+#if 0
 		if (EVE_CHIPID >= EVE_BT815)
 		{
 			EVE_Hal_rdMem(phost, err, RAM_ERR_REPORT, 128);
 			eve_printf_debug("%s\n", err);
 			displayError(phost, err);
 		}
+#endif
 #endif
 		/* eve_debug_break(); */
 		return false;

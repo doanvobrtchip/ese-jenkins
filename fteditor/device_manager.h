@@ -63,7 +63,7 @@ public:
 	struct DeviceInfo
 	{
 		DeviceId Id;
-		void *EveDeviceInfo;
+		size_t DeviceIdx;
 		int Host;
 		int DeviceIntf;
 		std::string SerialNumber;
