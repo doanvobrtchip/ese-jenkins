@@ -42,7 +42,6 @@
 
 EVE_HAL_EXPORT EVE_HalPlatform *EVE_Hal_initialize()
 {
-	eve_assert_ex(g_HalPlatform.TotalDevices == 0, "HAL platform already initialized\n");
 	EVE_Mcu_initialize();
 	EVE_Millis_initialize();
 	EVE_HalImpl_initialize();
@@ -87,7 +86,7 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID
 	parameters->Display.CSpread = 1;
 	parameters->Display.Dither = 1;
 #elif defined(DISPLAY_RESOLUTION_WVGA)
-	/* Values specific to QVGA LCD display */
+	/* Values specific to WVGA LCD display */
 	parameters->Display.Width = 800;
 	parameters->Display.Height = 480;
 	parameters->Display.HCycle = 928;
@@ -131,22 +130,63 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID
 	parameters->Display.PCLK = 5;
 #endif
 #else
-	/* Default is WQVGA - 480x272 */
-	parameters->Display.Width = 480;
-	parameters->Display.Height = 272;
-	parameters->Display.HCycle = 548;
-	parameters->Display.HOffset = 43;
-	parameters->Display.HSync0 = 0;
-	parameters->Display.HSync1 = 41;
-	parameters->Display.VCycle = 292;
-	parameters->Display.VOffset = 12;
-	parameters->Display.VSync0 = 0;
-	parameters->Display.VSync1 = 10;
-	parameters->Display.PCLK = 5;
-	parameters->Display.Swizzle = 0;
-	parameters->Display.PCLKPol = 1;
-	parameters->Display.CSpread = 1;
-	parameters->Display.Dither = 1;
+	if (chipId >= EVE_BT815)
+	{
+		/* Values specific to WVGA LCD display */
+		parameters->Display.Width = 800;
+		parameters->Display.Height = 480;
+		parameters->Display.HCycle = 928;
+		parameters->Display.HOffset = 88;
+		parameters->Display.HSync0 = 0;
+		parameters->Display.HSync1 = 48;
+		parameters->Display.VCycle = 525;
+		parameters->Display.VOffset = 32;
+		parameters->Display.VSync0 = 0;
+		parameters->Display.VSync1 = 3;
+		parameters->Display.PCLK = 2;
+		parameters->Display.Swizzle = 0;
+		parameters->Display.PCLKPol = 1;
+		parameters->Display.CSpread = 0;
+		parameters->Display.Dither = 1;
+	}
+	else if (chipId >= EVE_FT810)
+	{
+		/* Default is WQVGA - 480x272 */
+		parameters->Display.Width = 480;
+		parameters->Display.Height = 272;
+		parameters->Display.HCycle = 548;
+		parameters->Display.HOffset = 43;
+		parameters->Display.HSync0 = 0;
+		parameters->Display.HSync1 = 41;
+		parameters->Display.VCycle = 292;
+		parameters->Display.VOffset = 12;
+		parameters->Display.VSync0 = 0;
+		parameters->Display.VSync1 = 10;
+		parameters->Display.PCLK = 5;
+		parameters->Display.Swizzle = 0;
+		parameters->Display.PCLKPol = 1;
+		parameters->Display.CSpread = 1;
+		parameters->Display.Dither = 1;
+	}
+	else
+	{
+		/* Values specific to QVGA LCD display */
+		parameters->Display.Width = 320;
+		parameters->Display.Height = 240;
+		parameters->Display.HCycle = 408;
+		parameters->Display.HOffset = 70;
+		parameters->Display.HSync0 = 0;
+		parameters->Display.HSync1 = 10;
+		parameters->Display.VCycle = 263;
+		parameters->Display.VOffset = 13;
+		parameters->Display.VSync0 = 0;
+		parameters->Display.VSync1 = 2;
+		parameters->Display.PCLK = 8;
+		parameters->Display.Swizzle = 2;
+		parameters->Display.PCLKPol = 0;
+		parameters->Display.CSpread = 1;
+		parameters->Display.Dither = 1;
+	}
 #endif
 
 	EVE_HalImpl_defaults(parameters, chipId, deviceIdx);

@@ -818,7 +818,7 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 				{
 					eve_assert_ex((sizeTransferred - FT4222_WRITE_HEADER_SIZE) <= (int32_t)size, "Cannot have transferred more than size\n");
 					size -= sizeTransferred - FT4222_WRITE_HEADER_SIZE;
-					eve_assert_ex(!(buffer && size), "Cannot have space left after flushing buffer\n");
+					// eve_assert_ex(!(buffer && size), "Cannot have space left after flushing buffer\n");
 				}
 
 				addr = incrementRamGAddr(phost, addr, sizeTransferred);

@@ -131,12 +131,12 @@ void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 	else if (deviceIdx < s_DeviceCountBT8XXEMU + s_DeviceCountMPSSE)
 	{
 		EVE_HalImpl_MPSSE_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU);
-		parameters->Host = EVE_HOST_FT4222;
+		parameters->Host = EVE_HOST_MPSSE;
 	}
 	else
 	{
 		EVE_HalImpl_FT4222_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE);
-		parameters->Host = EVE_HOST_MPSSE;
+		parameters->Host = EVE_HOST_FT4222;
 	}
 	parameters->ChipId = chipId;
 }
