@@ -31,6 +31,13 @@
 
 #include "EVE_Platform.h"
 
+/*
+On Windows platform, filenames are assumed to be in the local character set.
+The unicode variants of the functions can be used for unicode paths.
+On Linux platform, filenames are assumed to be in UTF-8.
+On embedded platforms, filename character set depends on the filesystem library.
+*/
+
 /* Load SD card */
 EVE_HAL_EXPORT bool EVE_Util_loadSdCard(EVE_HalContext *phost);
 
@@ -40,5 +47,16 @@ EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t add
 /* Load a file using CMD_LOADIMAGE.
 The image format is provided as output to the optional format argument */
 EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format);
+
+#ifdef WIN32
+
+EVE_HAL_EXPORT bool EVE_Util_loadRawFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename);
+EVE_HAL_EXPORT bool EVE_Util_loadInflateFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename);
+
+/* Load a file using CMD_LOADIMAGE.
+The image format is provided as output to the optional format argument */
+EVE_HAL_EXPORT bool EVE_Util_loadImageFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename, uint32_t *format);
+
+#endif
 
 /* end of file */

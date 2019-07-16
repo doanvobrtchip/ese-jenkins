@@ -638,7 +638,7 @@ These may only be set by one of the platform target definitions, and should not 
 #if defined(FT900_PLATFORM) || defined(FT93X_PLATFORM)
 
 #define FT9XX_PLATFORM
-#define EVE_HOST EVE_HOST_FT9XX 
+#define EVE_HOST EVE_HOST_FT9XX
 
 #endif
 

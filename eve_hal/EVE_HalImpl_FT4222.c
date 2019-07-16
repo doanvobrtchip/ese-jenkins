@@ -537,7 +537,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
 			eve_assert_ex(sizeTransferred <= size, "Cannot have transferred more than size\n");
 			size -= sizeTransferred;
 		}
-		
+
 		if (!EVE_Hal_supportCmdB(phost) || (addr != REG_CMDB_WRITE))
 		{
 			bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE));
@@ -766,13 +766,15 @@ uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 #if defined(BUFFER_OPTIMIZATION)
-	if (!EVE_Hal_supportCmdB(phost)){
-	if (phost->SpiWpWriting)
+	if (!EVE_Hal_supportCmdB(phost))
 	{
-		phost->SpiWpWrite = value;
-		phost->SpiWpWritten = true;
-		return 0;
-	}}
+		if (phost->SpiWpWriting)
+		{
+			phost->SpiWpWrite = value;
+			phost->SpiWpWritten = true;
+			return 0;
+		}
+	}
 #endif
 	uint8_t buffer[2];
 	if (phost->Status == EVE_STATUS_READING)

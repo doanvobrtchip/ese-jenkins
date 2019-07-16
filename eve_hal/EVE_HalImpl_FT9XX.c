@@ -445,9 +445,9 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
-#if (EVE_SUPPORT_CHIPID < EVE_FT810)
-	return;
-#else
+	if (EVE_CHIPID < EVE_FT810)
+		return;
+
 	uint8_t writebyte = 0;
 
 	if ((numchnls > EVE_SPI_QUAD_CHANNEL) || (numdummy > 2) || (numdummy < 1))
@@ -461,7 +461,6 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 
 	// Switch FT9XX to multi channel SPI mode
 	setSPI(phost, numchnls, numdummy);
-#endif
 }
 
 uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)

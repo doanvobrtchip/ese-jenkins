@@ -85,10 +85,10 @@ void EVE_HalImpl_release()
 /* List the available devices */
 void EVE_HalImpl_BT8XXEMU_list(EVE_DeviceInfo *deviceList, size_t *deviceCount)
 {
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "BT8XX Emulator");
-	strcpy_s((deviceList[*deviceCount]).SerialNumber, 
-		sizeof((deviceList[*deviceCount]).SerialNumber), "BT8XXEMU");
+	strcpy_s((deviceList[*deviceCount]).DisplayName,
+	    sizeof((deviceList[*deviceCount]).DisplayName), "BT8XX Emulator");
+	strcpy_s((deviceList[*deviceCount]).SerialNumber,
+	    sizeof((deviceList[*deviceCount]).SerialNumber), "BT8XXEMU");
 	(deviceList[*deviceCount]).Host = EVE_HOST_BT8XXEMU;
 	++(*deviceCount);
 }
@@ -120,7 +120,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 
 	if (sizeof(BT8XXEMU_EmulatorParameters) > sizeof(parameters->EmulatorParameters))
 		return false;
-	
+
 	params = (void *)parameters->EmulatorParameters;
 	if (!params->Mode)
 		return false;
