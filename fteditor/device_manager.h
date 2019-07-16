@@ -66,13 +66,15 @@ public:
 		size_t DeviceIdx;
 		int Host;
 		int DeviceIntf;
-		std::string SerialNumber;
+		// std::string SerialNumber;
 		// std::string DisplayName;
 		QTreeWidgetItem *View;
 		void *EveHalContext;
 	};
 
-	typedef DeviceInfo *EveModuleDeviceInforPtr;
+	typedef DeviceInfo *EveModuleDeviceInforPtr;   
+	void setDeviceAndScreenSize(QString displaySize, QString syncDevice);
+	const QString &getSelectedDeviceName() { return m_SelectedDeviceName; }
 
 private:
 	MainWindow *m_MainWindow;
@@ -83,7 +85,9 @@ private:
 	QPushButton *m_UploadRamDlButton;
 	QPushButton *m_UploadCoprocessorContentButton;
 	QPushButton *m_UploadFlashButton;
-	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
+	DeviceDisplaySettingsDialog *m_DisplaySettingsDialog;
+	QString m_SelectedDisplaySize;
+	QString m_SelectedDeviceName;
 
 private slots:
 	void deviceDisplaySettings();

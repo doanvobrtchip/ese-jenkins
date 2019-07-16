@@ -85,7 +85,7 @@ QGroupBox *DeviceDisplaySettingsDialog::createRadioButtonsGroup()
 
 void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 {
-	QString selectedDevice = ""; // TODO pParent->getSyncDeviceName();
+	QString selectedDevice = pParent->getSelectedDeviceName();
 
 	;
 	{
@@ -166,43 +166,54 @@ void DeviceDisplaySettingsDialog::execute()
 
 void DeviceDisplaySettingsDialog::saveInputValues()
 {
-	/*
-		if (VM800B35A->isChecked()) {
-			pParent->setDeviceandScreenSize("320x240", "VM800B35A");
-		}
-		else if (VM800C35A->isChecked()){
-			pParent->setDeviceandScreenSize("320x240", "VM800C35A");
-		}
-		else if (VM800BU35A->isChecked()){
-			pParent->setDeviceandScreenSize("320x240", "VM800BU35A");
-		}
-		else if (VM800B43A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800B43A");
-		}
-		else if (VM800C43A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800C43A");
-		}
-		else if (VM800BU43A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800BU43A");
-		}
-		else if (VM800B50A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800B50A");
-		}
-		else if (VM800C50A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800C50A");
-		}
-		else if (VM800BU50A->isChecked()){
-			pParent->setDeviceandScreenSize("480x272", "VM800BU50A");
-		}else if (ME813AUWH50C->isChecked()){
-			pParent->setDeviceandScreenSize("800x480", "ME813AU_WH50C(800x480)");
-		}
-		else if (VM816C50A->isChecked()) {
-			pParent->setDeviceandScreenSize("800x480", "VM816C50A(800x480)");
-		}
-        else if (VM816CU50A->isChecked()) {
-            pParent->setDeviceandScreenSize("800x480", "VM816CU50A(800x480)");
-        }
-		*/
+	if (VM800B35A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("320x240", "VM800B35A");
+	}
+	else if (VM800C35A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("320x240", "VM800C35A");
+	}
+	else if (VM800BU35A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("320x240", "VM800BU35A");
+	}
+	else if (VM800B43A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800B43A");
+	}
+	else if (VM800C43A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800C43A");
+	}
+	else if (VM800BU43A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800BU43A");
+	}
+	else if (VM800B50A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800B50A");
+	}
+	else if (VM800C50A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800C50A");
+	}
+	else if (VM800BU50A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("480x272", "VM800BU50A");
+	}
+	else if (ME813AUWH50C->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("800x480", "ME813AU_WH50C(800x480)");
+	}
+	else if (VM816C50A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("800x480", "VM816C50A(800x480)");
+	}
+	else if (VM816CU50A->isChecked())
+	{
+		pParent->setDeviceAndScreenSize("800x480", "VM816CU50A(800x480)");
+	}
 	this->accept();
 }
 

@@ -49,7 +49,7 @@ extern DlEditor *g_Macro;
 DeviceManager::DeviceManager(MainWindow *parent)
     : QWidget(parent)
     , m_MainWindow(parent)
-    , m_displaySettingsDialog(NULL)
+    , m_DisplaySettingsDialog(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -129,40 +129,35 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	// Init_libMPSSE();
 	EVE_HalPlatform *platform = EVE_Hal_initialize();
 	// Initial refresh of devices
-	refreshDevices();
+	refreshDevices(); // TODO: Move to when device manager is first shown for faster bootup
 
-	m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+	// m_DisplaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 }
 
 DeviceManager::~DeviceManager()
 {
+	EVE_Hal_release();
 }
 
-/*
-void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice)
+void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevice)
 {
 	QStringList pieces = displaySize.split("x");
-	if ((currScreenSize != displaySize) && m_DisconnectButton->isVisible())
-	{
-		disconnectDevice();
-	}
 
-	setCurrentDisplaySize(displaySize);
+	m_SelectedDisplaySize = displaySize;
+	m_SelectedDeviceName = syncDevice;
 
-	setSyncDeviceName(syncDevice);
 	m_MainWindow->userChangeResolution(pieces[0].toUInt(), pieces[1].toUInt());
 	
 }
-*/
 
 void DeviceManager::deviceDisplaySettings()
 {
-	if (m_displaySettingsDialog == NULL)
+	if (m_DisplaySettingsDialog == NULL)
 	{
-		m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+		m_DisplaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 	}
 
-	m_displaySettingsDialog->execute();
+	m_DisplaySettingsDialog->execute();
 }
 
 void DeviceManager::refreshDevices()
@@ -201,7 +196,6 @@ void DeviceManager::refreshDevices()
 			// The device was not in use yet, create the gui
 			di = new DeviceInfo();
 			di->EveHalContext = NULL;
-			di->SerialNumber = info.SerialNumber; // Store serial number for matching
 			di->View = new QTreeWidgetItem(m_DeviceList);
 			di->View->setText(0, "No");
 			di->View->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(di));
@@ -599,6 +593,61 @@ void DeviceManager::connectDevice()
 	EVE_HalParameters params = { 0 };
 	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), devInfo->DeviceIdx);
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.ChipId);
+
+	if (m_SelectedDisplaySize == "480x272")
+	{
+		params.Display.Width = 480;
+		params.Display.Height = 272;
+		params.Display.HCycle = 548;
+		params.Display.HOffset = 43;
+		params.Display.HSync0 = 0;
+		params.Display.HSync1 = 41;
+		params.Display.VCycle = 292;
+		params.Display.VOffset = 12;
+		params.Display.VSync0 = 0;
+		params.Display.VSync1 = 10;
+		params.Display.PCLK = 5;
+		params.Display.Swizzle = 0;
+		params.Display.PCLKPol = 1;
+		params.Display.CSpread = 1;
+		params.Display.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "800x480")
+	{
+		params.Display.Width = 800;
+		params.Display.Height = 480;
+		params.Display.HCycle = 928;
+		params.Display.HOffset = 88;
+		params.Display.HSync0 = 0;
+		params.Display.HSync1 = 48;
+		params.Display.VCycle = 525;
+		params.Display.VOffset = 32;
+		params.Display.VSync0 = 0;
+		params.Display.VSync1 = 3;
+		params.Display.PCLK = 2;
+		params.Display.Swizzle = 0;
+		params.Display.PCLKPol = 1;
+		params.Display.CSpread = 0;
+		params.Display.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "320x240")
+	{
+		params.Display.Width = 320;
+		params.Display.Height = 240;
+		params.Display.HCycle = 408;
+		params.Display.HOffset = 70;
+		params.Display.HSync0 = 0;
+		params.Display.HSync1 = 10;
+		params.Display.VCycle = 263;
+		params.Display.VOffset = 13;
+		params.Display.VSync0 = 0;
+		params.Display.VSync1 = 2;
+		params.Display.PCLK = 8;
+		params.Display.Swizzle = 2;
+		params.Display.PCLKPol = 0;
+		params.Display.CSpread = 1;
+		params.Display.Dither = 1;
+	}
 
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };
 	bool ok = EVE_Hal_open(phost, &params);
