@@ -3597,12 +3597,12 @@ void MainWindow::actBigEndianSaveDisplayList()
 
 void MainWindow::actLittleEndianSaveCoproCmd()
 {
-	m_DlEditor->saveCoprocessorCmd(false);
+	m_CmdEditor->saveCoprocessorCmd(false);
 }
 
 void MainWindow::actBigEndianSaveCoproCmd()
 {
-	m_DlEditor->saveCoprocessorCmd(true);
+	m_CmdEditor->saveCoprocessorCmd(true);
 }
 
 void MainWindow::actDisplayListFromIntegers()

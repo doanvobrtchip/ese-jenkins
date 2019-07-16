@@ -25,6 +25,7 @@
 #include <QStringListModel>
 #include <QAbstractItemView>
 #include <QTextStream>
+#include <QtEndian>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -286,6 +287,7 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 {
 	int blockCount = 0;
+	uint32_t val = 0;
 	QString line("");
 	QTextBlock block;
 
@@ -296,24 +298,42 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 		return;
 	}
 	QTextStream ts(&f);
+	std::vector<uint32_t> comp;
 
-	while (blockCount < m_CodeEditor->document()->blockCount())
+	lockDisplayList();	
+	for (int i = 0; i < m_CodeEditor->document()->blockCount(); i++)
 	{
-		block = m_CodeEditor->document()->findBlockByNumber(blockCount);
-		line = block.text();
-
 		DlParsed dl;
-		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, line, m_ModeCoprocessor);
-
-		ts << dl.IdIndex << '\t' << dl.IdLeft << '\t' << dl.IdRight << '\n';
-		ts << dl.IdText.c_str() << '\t' << dl.StringParameter.c_str() << '\n';
-		for (int i = 0; i < dl.VarArgCount; i++)
-		{
-			ts << dl.Parameter->I << '\t' << dl.Parameter->U << '\n';
-		}
 		
-		++blockCount;
+		block = m_CodeEditor->document()->findBlockByNumber(i);
+		line = block.text();
+		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, line, true);
+
+		if (!dl.ValidId)
+			continue;
+
+		if (dl.IdLeft != FTEDITOR_CO_COMMAND)
+		{
+			val = DlParser::compile(FTEDITOR_CURRENT_DEVICE, dl);
+			val = isBigEndian ? qToBigEndian(val) : val;
+			ts << QString("0x%1\t// %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+		}
+		else
+		{
+			comp.clear();
+			DlParser::compile(FTEDITOR_CURRENT_DEVICE, comp, dl);
+			val = (0xFFFFFF00 | dl.IdRight);
+			val = isBigEndian ? qToBigEndian(val) : val;
+			ts << QString("0x%1\t// %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+		 
+			for (int i = 0; i < comp.size(); i++)
+			{
+				val = isBigEndian ? qToBigEndian(comp.at(i)) : comp.at(i);
+				ts << QString("0x%1\n").arg(val, 8, 16, QChar('0'));
+			}		
+		}
 	}
+	unlockDisplayList();
 
 	ts.flush();
 	f.close();
