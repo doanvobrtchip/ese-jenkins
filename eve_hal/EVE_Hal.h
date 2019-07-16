@@ -66,6 +66,18 @@ typedef enum EVE_TRANSFER_T
 	EVE_TRANSFER_WRITE,
 } EVE_TRANSFER_T;
 
+typedef enum EVE_CHIPID_T
+{
+	EVE_CHIPID_FT800 = 0x0800,
+	EVE_CHIPID_FT801 = 0x0801,
+	EVE_CHIPID_FT810 = 0x0810,
+	EVE_CHIPID_FT811 = 0x0811,
+	EVE_CHIPID_FT812 = 0x0812,
+	EVE_CHIPID_FT813 = 0x0813,
+	EVE_CHIPID_BT815 = 0x0815,
+	EVE_CHIPID_BT816 = 0x0816
+} EVE_CHIPID_T;
+
 /************
 ** STRUCTS **
 ************/
@@ -88,7 +100,7 @@ typedef struct EVE_DisplayParameters
 	int8_t PCLKPol;
 	int8_t CSpread;
 	bool Dither;
-} Eve_DisplayParameters;
+} EVE_DisplayParameters;
 
 typedef struct EVE_HalContext EVE_HalContext;
 typedef bool (*EVE_Callback)(EVE_HalContext *phost);
@@ -130,6 +142,7 @@ typedef struct EVE_GpuDefs
 	uint32_t RegGpioXDir;
 	uint32_t RegGpioX;
 	uint32_t RegRomSubSel;
+	uint32_t RegCyaTouch;
 	uint32_t RamDl;
 	uint32_t RamCmd;
 	uint32_t RomChipId;
@@ -140,20 +153,22 @@ extern EVE_GpuDefs EVE_GpuDefs_FT80X;
 extern EVE_GpuDefs EVE_GpuDefs_FT81X;
 extern EVE_GpuDefs EVE_GpuDefs_BT81X;
 
-typedef enum EVE_DEVICE_T
+typedef enum EVE_HOST_T
 {
-	EVE_DEVICE_UNKNOWN = 0,
-	EVE_DEVICE_BT8XXEMU,
-	EVE_DEVICE_FT4222,
-	EVE_DEVICE_MPSSE,
-} EVE_DEVICE_T;
+	EVE_HOST_UNKNOWN = 0,
+	EVE_HOST_BT8XXEMU,
+	EVE_HOST_FT4222,
+	EVE_HOST_MPSSE,
+	EVE_HOST_FT9XX,
+	EVE_HOST_PANL70
+} EVE_HOST_T;
 
 typedef struct EVE_DeviceInfo
 {
 	char DisplayName[256];
 	char SerialNumber[256];
 	size_t Identifier;
-	EVE_DEVICE_T Type;
+	EVE_HOST_T Host;
 
 } EVE_DeviceInfo;
 #endif
@@ -165,13 +180,15 @@ typedef struct EVE_HalParameters
 	EVE_Callback CbCmdWait; /* Called anytime the code is waiting during CMD write. Return false to abort wait */
 
 #if defined(EVE_MULTI_TARGET)
-	EVE_DEVICE_T DeviceType;
-	uint32_t Model;
+	EVE_HOST_T Host;
+	EVE_CHIPID_T ChipId;
 #endif
-	Eve_DisplayParameters Display;
+
+	EVE_DisplayParameters Display;
 
 #if defined(BT8XXEMU_PLATFORM)
-	char EmulatorParameters[4096];
+	char EmulatorParameters[1640];
+	char EmulatorFlashParameters[1144];
 #endif
 
 #if defined(MPSSE_PLATFORM)
@@ -203,7 +220,9 @@ typedef struct EVE_HalContext
 	EVE_STATUS_T Status;
 
 #if defined(EVE_MULTI_TARGET)
-	EVE_DEVICE_T DeviceType;
+	EVE_HOST_T Host;
+	EVE_CHIPID_T ChipId : 16;
+	uint16_t Revision;
 	const EVE_GpuDefs *GpuDefs;
 #endif
 
@@ -230,7 +249,7 @@ typedef struct EVE_HalContext
 	uint8_t SpiWrBuf[0xFFFF];
 	uint32_t SpiWrBufIndex;
 	uint32_t SpiRamGAddr; /* Current RAM_G address of ongoing SPI write transaction */
-#if !defined(EVE_SUPPORT_CMDB)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	bool SpiWpWriting;
 	bool SpiWpWritten;
 	uint16_t SpiWpWrite;
@@ -245,7 +264,7 @@ typedef struct EVE_HalContext
 	uint8_t CmdBufferIndex;
 
 	uint16_t CmdSpace; /* Free space */
-#if !defined(EVE_SUPPORT_CMDB)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	uint16_t CmdWp; /* Write pointer */
 #endif
 
@@ -278,7 +297,7 @@ EVE_HAL_EXPORT EVE_DeviceInfo *EVE_Hal_list(size_t *deviceCount);
 
 /* Get the default configuration parameters */
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters);
-EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device);
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device);
 
 /* Opens a new HAL context using the specified parameters */
 EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
@@ -322,6 +341,40 @@ EVE_HAL_EXPORT void EVE_Hal_wrMem(EVE_HalContext *phost, uint32_t addr, const ui
 EVE_HAL_EXPORT void EVE_Hal_wrProgmem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size);
 EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
 
+/*********
+** CAPS **
+*********/
+
+/* Screen based on chip id. This function compiles as a constant on single supported chipid target */
+static inline bool EVE_Hal_isScreenCapacitive(EVE_HalContext *phost)
+{
+	return (EVE_CHIPID & 0x01) == 0x01;
+}
+
+/* Screen based on chip id. This function compiles as a constant on single supported chipid target */
+static inline bool EVE_Hal_isScreenResistive(EVE_HalContext *phost)
+{
+	return !EVE_Hal_isScreenCapacitive(phost);
+}
+
+static inline bool EVE_Hal_supportFlash(EVE_HalContext *phost)
+{
+#ifdef EVE_SUPPORT_FLASH
+	return EVE_CHIPID >= EVE_BT815;
+#else
+	return false;
+#endif
+}
+
+static inline bool EVE_Hal_supportCmdB(EVE_HalContext *phost)
+{
+#ifdef EVE_SUPPORT_CMDB
+	return EVE_CHIPID >= EVE_FT810;
+#else
+	return false;
+#endif
+}
+
 /************
 ** UTILITY **
 ************/
@@ -350,7 +403,7 @@ EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T
 EVE_HAL_EXPORT void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode);
 EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost);
 
-#if (EVE_MODEL >= EVE_FT810)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* This API can only be called when PLL is stopped(SLEEP mode).
 For compatibility, set frequency to the EVE_GPU_12MHZ option in the EVE_SETPLLSP1_T table. */
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq);

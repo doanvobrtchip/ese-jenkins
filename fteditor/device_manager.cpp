@@ -206,7 +206,7 @@ void DeviceManager::refreshDevices()
 
 		// Store this device
 		di->EveDeviceInfo = info;
-		di->Type = info->Type;
+		di->Host = info->Host;
 		// di->DisplayName = info->DisplayName;
 		di->View->setText(1, info->DisplayName);
 		di->Id = (DeviceId)i;
@@ -593,8 +593,8 @@ void DeviceManager::connectDevice()
 
 	// Get parameters to open the selected device
 	EVE_HalParameters params = { 0 };
-	EVE_Hal_defaultsEx(&params, deviceToEnum(FTEDITOR_CURRENT_DEVICE), (EVE_DeviceInfo *)devInfo->EveDeviceInfo);
-	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.Model);
+	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), (EVE_DeviceInfo *)devInfo->EveDeviceInfo);
+	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.ChipId);
 
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };
 	bool ok = EVE_Hal_open(phost, &params);
@@ -955,6 +955,7 @@ void DeviceManager::uploadCoprocessorContent()
 		{
 			mediaFifoPtr = cmdParamCache[cmdParamIdx[i]];
 			mediaFifoSize = cmdParamCache[cmdParamIdx[i] + 1];
+			// EVE_MediaFifo_set(mediaFifoPtr, mediaFifoSize);
 		}
 		else if (cmdList[i] == CMD_LOADIMAGE)
 		{
@@ -967,18 +968,18 @@ void DeviceManager::uploadCoprocessorContent()
 		}
 		else if (cmdList[i] == CMD_PLAYVIDEO)
 		{
-			useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
 				&& (cmdParamCache[cmdParamIdx[i]] & OPT_FLASH);
 			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
 			++strParamRead;
-			useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810)
 				&& ((cmdParamCache[cmdParamIdx[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
 		}
 		else if (cmdList[i] == CMD_SNAPSHOT)
 		{
 			// Validate snapshot address range
 			uint32_t addr = cmdParamCache[cmdParamIdx[i]];
-			uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
+			uint32_t ramGEnd = FTEDITOR::addr(devInfo->DeviceIntf, FTEDITOR_RAM_G_END);
 			uint32_t imgSize = (g_VSize * g_HSize) * 2;
 			if (addr + imgSize > ramGEnd)
 				continue;
@@ -1038,7 +1039,8 @@ void DeviceManager::uploadCoprocessorContent()
 			}
 			else
 			{
-
+				// NOTE: Buffer should be smaller than the media fifo buffer size for optimal performance. Not equal.
+				// EVE_MediaFifo_wrBuffer(...)
 			}
 
 			// Stream not yet implemented

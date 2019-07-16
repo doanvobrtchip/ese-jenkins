@@ -105,7 +105,7 @@ void EVE_HalImpl_initialize()
 		eve_printf_debug("Information on channel number %d:\n", 0);
 		/* print the dev info */
 		eve_printf_debug(" Flags=0x%x\n", devList.Flags);
-		eve_printf_debug(" Type=0x%x\n", devList.Type);
+		eve_printf_debug(" Type=0x%x\n", devList.Host);
 		eve_printf_debug(" ID=0x%x\n", devList.ID);
 		eve_printf_debug(" LocId=0x%x\n", devList.LocId);
 		eve_printf_debug(" SerialNumber=%s\n", devList.SerialNumber);
@@ -122,9 +122,9 @@ void EVE_HalImpl_release()
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device)
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
 {
-	parameters->MpsseChannelNo = 0;
+	parameters->MpsseChannelNo = device->Identifier & 0xFF;
 	parameters->PowerDownPin = 7;
 	parameters->SpiClockrateKHz = 12000; /* in KHz */
 }

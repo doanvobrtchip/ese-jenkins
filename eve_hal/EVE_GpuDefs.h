@@ -83,6 +83,7 @@ due to conflicts with other libraries.
 #define REG_GPIOX_DIR (phost->GpuDefs->RegGpioXDir)
 #define REG_GPIOX (phost->GpuDefs->RegGpioX)
 #define REG_ROMSUB_SEL (phost->GpuDefs->RegRomSubSel)
+#define REG_CYA_TOUCH (phost->GpuDefs->RegCyaTouch)
 #define RAM_DL (phost->GpuDefs->RamDl)
 #define RAM_CMD (phost->GpuDefs->RamCmd)
 #define ROM_CHIPID (phost->GpuDefs->RomChipId)
@@ -215,7 +216,7 @@ due to conflicts with other libraries.
 
 #else
 
-#ifdef EVE_SCREEN_CAPACITIVE
+#ifdef EVE_SUPPORT_CAPACITIVE
 #define CTOUCH_MODE_COMPATIBILITY (1)
 #define CTOUCH_MODE_EXTENDED (0)
 #endif

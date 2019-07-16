@@ -64,7 +64,7 @@ public:
 	{
 		DeviceId Id;
 		void *EveDeviceInfo;
-		uint32_t Type;
+		int Host;
 		int DeviceIntf;
 		std::string SerialNumber;
 		// std::string DisplayName;

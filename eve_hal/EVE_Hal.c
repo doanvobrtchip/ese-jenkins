@@ -60,14 +60,14 @@ EVE_HAL_EXPORT void EVE_Hal_release()
 
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters)
 {
-	EVE_Hal_defaultsEx(parameters, EVE_MODEL, NULL);
+	EVE_Hal_defaultsEx(parameters, EVE_SUPPORT_CHIPID, NULL);
 }
 
-EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device)
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
 {
 	memset(parameters, 0, sizeof(EVE_HalParameters));
 
-	parameters->Model = model;
+	parameters->ChipId = chipId;
 
 #if defined(DISPLAY_RESOLUTION_QVGA)
 	/* Values specific to QVGA LCD display */
@@ -149,7 +149,7 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, uint32_t m
 	parameters->Display.Dither = 1;
 #endif
 
-	EVE_HalImpl_defaults(parameters, model, device);
+	EVE_HalImpl_defaults(parameters, chipId, device);
 }
 
 EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
@@ -299,7 +299,7 @@ EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost)
 	EVE_Hal_hostCommand(phost, EVE_CORE_RESET);
 }
 
-#if (EVE_MODEL >= EVE_FT810)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq)
 {
 	if (EVE_SYSCLK_72M == freq)

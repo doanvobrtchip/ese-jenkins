@@ -84,7 +84,7 @@ typedef enum EVE_POWER_MODE_T
 	EVE_POWERDOWN_M = 0x50,
 } EVE_POWER_MODE_T;
 
-#if (EVE_MODEL >= EVE_FT810)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 typedef enum EVE_81X_PLL_FREQ_T
 {
 	EVE_SYSCLK_DEFAULT = 0x00, // default 60mhz

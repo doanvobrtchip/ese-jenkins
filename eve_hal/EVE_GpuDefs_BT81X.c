@@ -34,7 +34,7 @@
 #include "EVE_Hal.h"
 
 #undef EVE_MULTI_TARGET
-#undef EVE_MODEL
+#undef EVE_SUPPORT_CHIPID
 #define BT_81X_ENABLE
 #include "EVE_GpuDefs.h"
 
@@ -73,6 +73,7 @@ EVE_GpuDefs EVE_GpuDefs_BT81X = {
 	REG_GPIOX_DIR,
 	REG_GPIOX,
 	REG_ROMSUB_SEL,
+	REG_CYA_TOUCH,
 	RAM_DL,
 	RAM_CMD,
 	ROM_CHIPID,

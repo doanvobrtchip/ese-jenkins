@@ -80,7 +80,7 @@ void EVE_HalImpl_release()
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device)
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
 {
 	parameters->PowerDownPin = FT800_PD_N;
 	parameters->SpiCsPin = 0; // SS0
@@ -445,7 +445,7 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
-#if (EVE_MODEL < EVE_FT810)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810)
 	return;
 #else
 	uint8_t writebyte = 0;

@@ -78,6 +78,8 @@ void EVE_HalImpl_initialize()
 void EVE_HalImpl_release()
 {
 	/* no-op */
+	// sizeof(BT8XXEMU_EmulatorParameters) == 1640
+	// sizeof(BT8XXEMU_FlashParameters) == 1144
 }
 
 /* List the available devices */
@@ -87,78 +89,12 @@ void EVE_HalImpl_BT8XXEMU_list(EVE_DeviceInfo *deviceList, size_t *deviceCount)
 		sizeof((deviceList[*deviceCount]).DisplayName), "BT8XX Emulator");
 	strcpy_s((deviceList[*deviceCount]).SerialNumber, 
 		sizeof((deviceList[*deviceCount]).SerialNumber), "BT8XXEMU");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
+	(deviceList[*deviceCount]).Host = EVE_HOST_BT8XXEMU;
 	++(*deviceCount);
-
-	/*
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT800 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT800;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT801 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT801;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT810 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT810;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT811 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT811;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT812 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT812;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "FT813 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorFT813;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "BT815 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorBT815;
-	++(*deviceCount);
-#endif
-
-#if defined(EVE_MULTI_TARGET) || (EVE_MODEL == EVE_FT800)
-	strcpy_s((deviceList[*deviceCount]).DisplayName, 
-		sizeof((deviceList[*deviceCount]).DisplayName), "BT816 Emulator");
-	(deviceList[*deviceCount]).Type = EVE_DEVICE_BT8XXEMU;
-	(deviceList[*deviceCount]).Identifier = BT8XXEMU_EmulatorBT816;
-	++(*deviceCount);
-#endif
-*/
 }
 
 /* Get the default configuration parameters */
-void EVE_HalImpl_defaults(EVE_HalParameters *parameters, uint32_t model, EVE_DeviceInfo *device)
+void EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, EVE_DeviceInfo *device)
 {
 	BT8XXEMU_EmulatorParameters *params = (void *)parameters->EmulatorParameters;
 	if (sizeof(BT8XXEMU_EmulatorParameters) > sizeof(parameters->EmulatorParameters))
@@ -172,7 +108,7 @@ void EVE_HalImpl_defaults(EVE_HalParameters *parameters, uint32_t model, EVE_Dev
 			return;
 	}
 
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, model);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, chipId);
 	params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 }
 

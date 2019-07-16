@@ -40,7 +40,7 @@ static eve_progmem_const uint8_t c_DlCodeBootup[12] = {
 };
 
 #if !defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_TARGET) /* TODO: Can the emulator handle this? */
-#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID == EVE_FT811) || (EVE_SUPPORT_CHIPID == EVE_FT813) || defined(EVE_MULTI_TARGET)
 #define TOUCH_DATA_LEN 1172
 static eve_progmem_const uint8_t c_TouchDataU8[TOUCH_DATA_LEN] = {
 	26, 255, 255, 255, 32, 32, 48, 0, 4, 0, 0, 0, 2, 0, 0, 0, 34,
@@ -168,8 +168,8 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	/* Validate chip ID to ensure the correct HAL is used */
 	/* ROM_CHIPID is valid accross all EVE devices */
-	if (((chipId = EVE_Hal_rd32(phost, ROM_CHIPID)) & 0xFFFF) != (((phost->Parameters.Model >> 8) & 0xFF) | ((phost->Parameters.Model & 0xFF) << 8)))
-		eve_printf_debug("Mismatching EVE chip id %x, expect model %x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), phost->Parameters.Model);
+	if (((chipId = EVE_Hal_rd32(phost, ROM_CHIPID)) & 0xFFFF) != (((phost->Parameters.ChipId >> 8) & 0xFF) | ((phost->Parameters.ChipId & 0xFF) << 8)))
+		eve_printf_debug("Mismatching EVE chip id %x, expect model %x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), phost->Parameters.ChipId);
 	eve_printf_debug("EVE chip id %x %x.%x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), ((chipId >> 16) & 0xFF), ((chipId >> 24) & 0xFF));
 
 	/* Read Register ID to check if EVE is ready. */
@@ -185,26 +185,23 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", id);
 
-#if !defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_TARGET) /* TODO: Can the emulator handle this? */
-#if (EVE_MODEL == EVE_FT811) || (EVE_MODEL == EVE_FT813) || defined(EVE_MULTI_TARGET)
-	if_not_multi_target_or((phost->Parameters.Model == EVE_FT811 || phost->Parameters.Model == EVE_FT813)
-	    && (phost->DeviceType != EVE_DEVICE_BT8XXEMU))
+	if ((EVE_CHIPID == EVE_FT811 || EVE_CHIPID == EVE_FT813) && (EVE_HOST != EVE_HOST_BT8XXEMU))
 	{
-#if defined(PANL70) || defined(PANL70PLUS)
-		EVE_Hal_wr8(phost, REG_CPURESET, 2);
-		EVE_Hal_wr16(phost, REG_CYA_TOUCH, 0x05d0);
-#endif
+		if (EVE_HOST == EVE_HOST_PANL70)
+		{
+			EVE_Hal_wr8(phost, REG_CPURESET, 2);
+			EVE_Hal_wr16(phost, REG_CYA_TOUCH, 0x05d0);
+		}
 		/* Download new firmware to fix pen up issue */
 		/* It may cause resistive touch not working any more*/
 		uploadTouchFirmware(phost); // FIXME: Shouldn't this be called *after* waiting for REG_ID?
-#if defined(PANL70) || defined(PANL70PLUS)
-		EVE_UtilImpl_bootupDisplayGpio(phost);
-#endif
+		if (EVE_HOST == EVE_HOST_PANL70)
+		{
+			EVE_UtilImpl_bootupDisplayGpio(phost);
+		}
 		EVE_Hal_flush(phost);
 		EVE_sleep(100);
 	}
-#endif
-#endif
 
 	/* Read REG_CPURESET to check if engines are ready.
 	Bit 0 for coprocessor engine,
@@ -232,13 +229,16 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	}
 	eve_printf_debug("All engines are ready\n");
 
-#if (EVE_MODEL < EVE_FT810)
-	eve_assert(parameters->Display.Width < 512);
-	eve_assert(parameters->Display.Height < 512);
-#else
-	eve_assert(parameters->Display.Width < 2048);
-	eve_assert(parameters->Display.Height < 2048);
-#endif
+	if (EVE_CHIPID < EVE_FT810)
+	{
+		eve_assert(parameters->Display.Width < 512);
+		eve_assert(parameters->Display.Height < 512);
+	}
+	else
+	{
+		eve_assert(parameters->Display.Width < 2048);
+		eve_assert(parameters->Display.Height < 2048);
+	}
 
 	EVE_Hal_wr16(phost, REG_HCYCLE, parameters->Display.HCycle);
 	EVE_Hal_wr16(phost, REG_HOFFSET, parameters->Display.HOffset);
@@ -259,19 +259,23 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	// EVE_Hal_wr16(phost, REG_OUTBITS, 0x1B6);
 	// EVE_Hal_wr16(phost, REG_ADAPTIVE_FRAMERATE, 1);
 
-#ifdef EVE_SCREEN_RESISTIVE
-	/* Touch configuration - configure the resistance value to 1200 - this value is specific to customer requirement and derived by experiment */
-	/* TODO: From parameters */
-	EVE_Hal_wr16(phost, REG_TOUCH_RZTHRESH, RESISTANCE_THRESHOLD);
-#endif
+	if (EVE_Hal_isScreenResistive(phost))
+	{
+		/* Touch configuration - configure the resistance value to 1200 - this value is specific to customer requirement and derived by experiment */
+		/* TODO: From parameters */
+		EVE_Hal_wr16(phost, REG_TOUCH_RZTHRESH, RESISTANCE_THRESHOLD);
+	}
 
-#if (EVE_MODEL >= EVE_FT810)
-	EVE_Hal_wr16(phost, REG_GPIOX_DIR, 0xffff);
-	EVE_Hal_wr16(phost, REG_GPIOX, 0xffff);
-#else
-	EVE_Hal_wr8(phost, REG_GPIO_DIR, 0xff);
-	EVE_Hal_wr8(phost, REG_GPIO, 0xff);
-#endif
+	if (EVE_CHIPID >= EVE_FT810)
+	{
+		EVE_Hal_wr16(phost, REG_GPIOX_DIR, 0xffff);
+		EVE_Hal_wr16(phost, REG_GPIOX, 0xffff);
+	}
+	else
+	{
+		EVE_Hal_wr8(phost, REG_GPIO_DIR, 0xff);
+		EVE_Hal_wr8(phost, REG_GPIO, 0xff);
+	}
 
 	EVE_Util_clearScreen(phost);
 
@@ -314,8 +318,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	EVE_Hal_flush(phost);
 
 	/* Switch to configured default SPI channel mode */
-#if (EVE_MODEL >= EVE_FT810)
-	if_not_multi_target_or(phost->Parameters.Model >= EVE_FT810)
+	if (EVE_CHIPID >= EVE_FT810)
 	{
 #ifdef ENABLE_SPI_QUAD
 		EVE_Hal_setSPI(phost, EVE_SPI_QUAD_CHANNEL, 2);
@@ -325,32 +328,32 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 		EVE_Hal_setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
 #endif
 	}
-#endif
 
 	return true;
 }
 
-#if (EVE_MODEL >= EVE_FT810) && (EVE_MODEL <= EVE_BT816)
-#ifndef EVE_HAS_OTP
-#define EVE_HAS_OTP
-#endif
-#endif
+static inline bool EVE_Util_hasOTP(EVE_HalContext *phost)
+{
+	return (EVE_CHIPID >= EVE_FT810) && (EVE_CHIPID <= EVE_BT816);
+}
 
-#if (EVE_MODEL >= EVE_BT815) && (EVE_MODEL <= EVE_BT816)
-#ifndef EVE_HAS_VIDEOPATCH
-#define EVE_HAS_VIDEOPATCH
-#endif
-#define EVE_VIDEOPATCH_ADDR 0x309162
-#endif
+#define EVE_VIDEOPATCH_ADDR 0x309162 // NOTE: This is only valid for BT815 and BT816
+static inline bool EVE_Util_hasVideoPatch(EVE_HalContext *phost)
+{
+	return (EVE_CHIPID >= EVE_BT815) && (EVE_CHIPID <= EVE_BT816);
+}
 
 EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 {
+	uint16_t videoPatchVector;
+
 	eve_printf_debug("Reset coprocessor\n");
 
-#ifdef EVE_HAS_VIDEOPATCH
-	/* BT81X video patch */
-	uint16_t videoPatchVector = EVE_Hal_rd16(phost, EVE_VIDEOPATCH_ADDR);
-#endif
+	if (EVE_Util_hasVideoPatch(phost))
+	{
+		/* BT81X video patch */
+		videoPatchVector = EVE_Hal_rd16(phost, EVE_VIDEOPATCH_ADDR);
+	}
 
 	/* Set REG_CPURESET to 1, to hold the coprocessor in the reset condition */
 	EVE_Hal_wr8(phost, REG_CPURESET, 1);
@@ -366,11 +369,12 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	/* Stop playing audio in case video with audio was playing during reset */
 	EVE_Hal_wr8(phost, REG_PLAYBACK_PLAY, 0);
 
-#ifdef EVE_HAS_OTP
-	/* Enable patched rom in case the reset is requested while CMD_LOGO is running.
-	This is necessary as CMD_LOGO may swap to the other rom page */
-	EVE_Hal_wr8(phost, REG_ROMSUB_SEL, 3);
-#endif
+	if (EVE_Util_hasOTP(phost))
+	{
+		/* Enable patched rom in case the reset is requested while CMD_LOGO is running.
+		This is necessary as CMD_LOGO may swap to the other rom page */
+		EVE_Hal_wr8(phost, REG_ROMSUB_SEL, 3);
+	}
 
 	/* Refresh fifo */
 	EVE_Cmd_wp(phost);
@@ -385,42 +389,44 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	EVE_Hal_flush(phost);
 	EVE_sleep(100);
 
-#ifdef EVE_HAS_OTP
-	/* Clear cmd with CMD_STOP, exiting CMD_EXECUTE may loop over, depending on OTP */
-	EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD);
-	for (int i = 0; i < 4096; i += 4)
-		EVE_Hal_transfer32(phost, CMD_STOP);
-	EVE_Hal_endTransfer(phost);
+	if (EVE_Util_hasOTP(phost))
+	{
+		/* Clear cmd with CMD_STOP, exiting CMD_EXECUTE may loop over, depending on OTP */
+		EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD);
+		for (int i = 0; i < 4096; i += 4)
+			EVE_Hal_transfer32(phost, CMD_STOP);
+		EVE_Hal_endTransfer(phost);
 
-	/* Go back into the patched coprocessor main loop */
-	EVE_Cmd_startFunc(phost);
-	EVE_Cmd_wr32(phost, CMD_EXECUTE);
-	EVE_Cmd_wr32(phost, 0x7ffe);
-	EVE_Cmd_wr32(phost, 0);
-	EVE_Cmd_endFunc(phost);
-	EVE_Hal_flush(phost);
+		/* Go back into the patched coprocessor main loop */
+		EVE_Cmd_startFunc(phost);
+		EVE_Cmd_wr32(phost, CMD_EXECUTE);
+		EVE_Cmd_wr32(phost, 0x7ffe);
+		EVE_Cmd_wr32(phost, 0);
+		EVE_Cmd_endFunc(phost);
+		EVE_Hal_flush(phost);
 
-	/* Difficult to check when CMD_EXECUTE is processed when there's an OTP,
-	since the read pointer keeps looping back to 0. */
-	EVE_sleep(100);
+		/* Difficult to check when CMD_EXECUTE is processed when there's an OTP,
+		since the read pointer keeps looping back to 0. */
+		EVE_sleep(100);
 
-	/* Need to manually stop previous command from repeating infinitely,
-	however, this may cause the coprocessor to overshoot the command fifo,
-	hence it's been filled with harmless CMD_STOP commands. */
-	EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
-	EVE_Hal_flush(phost);
-	EVE_sleep(10);
+		/* Need to manually stop previous command from repeating infinitely,
+		however, this may cause the coprocessor to overshoot the command fifo,
+		hence it's been filled with harmless CMD_STOP commands. */
+		EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
+		EVE_Hal_flush(phost);
+		EVE_sleep(10);
 
-	/* Refresh fifo */
-	EVE_Cmd_wp(phost);
-	EVE_Cmd_rp(phost);
-	EVE_Cmd_space(phost);
-#endif
+		/* Refresh fifo */
+		EVE_Cmd_wp(phost);
+		EVE_Cmd_rp(phost);
+		EVE_Cmd_space(phost);
+	}
 
-#ifdef EVE_HAS_VIDEOPATCH
-	/* BT81X video patch */
-	EVE_Hal_wr16(phost, EVE_VIDEOPATCH_ADDR, videoPatchVector);
-#endif
+	if (EVE_Util_hasVideoPatch(phost))
+	{
+		/* BT81X video patch */
+		EVE_Hal_wr16(phost, EVE_VIDEOPATCH_ADDR, videoPatchVector);
+	}
 
 	/* Cold start. Ensure that the coprocessor is ready. */
 	EVE_Cmd_wr32(phost, CMD_DLSTART);
