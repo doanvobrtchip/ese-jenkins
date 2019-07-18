@@ -445,7 +445,7 @@ QString Inspector::getDisplayListContent(bool isBigEndian)
 	uint32_t lit = 0, big = 0;
 	QTreeWidgetItem *item = 0;
 	bool ok;
-	bool isDisplayCmd;
+	bool isDisplayCmd = false;
 	int pos = 0;
 	QString iText("");
 

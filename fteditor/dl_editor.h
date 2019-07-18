@@ -141,6 +141,8 @@ private:
 
 	bool m_InvalidState;
 
+	QHash<QString, QStringList> m_CoproCmdArgName;
+
 private:
 	DlEditor(const DlEditor &);
 	DlEditor &operator=(const DlEditor &);

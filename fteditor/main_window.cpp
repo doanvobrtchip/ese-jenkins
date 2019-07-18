@@ -981,6 +981,17 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
 	m_FileMenu->addSeparator();
+
+	QMenu *sdl = m_FileMenu->addMenu("Save Display List");
+	sdl->addAction(m_LittleEndianSaveDisplayListAct);
+	sdl->addAction(m_BigEndianSaveDisplayListAct);
+
+	m_FileMenu->addSeparator();
+	sdl = m_FileMenu->addMenu("Save Coprocessor Command");
+	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
+	sdl->addAction(m_BigEndianSaveCoproCmdAct);
+
+	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
 	m_EditMenu = menuBar()->addMenu(QString::null);
@@ -993,13 +1004,7 @@ void MainWindow::createMenus()
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 	m_ToolsMenu->addAction(m_ImportDisplayListAct);
 
-	QMenu *sdl = m_ToolsMenu->addMenu("Save Display List");
-	sdl->addAction(m_LittleEndianSaveDisplayListAct);
-	sdl->addAction(m_BigEndianSaveDisplayListAct);
-
-	sdl = m_ToolsMenu->addMenu("Save Coprocessor Command");
-	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
-	sdl->addAction(m_BigEndianSaveCoproCmdAct);
+	
 
 #if _DEBUG
 	m_ToolsMenu->addAction(m_DisplayListFromIntegers);
@@ -3562,15 +3567,11 @@ void MainWindow::actImportDisplayList()
 void MainWindow::saveDisplayListToTextFile(bool isBigEndian)
 {
 	static QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Display List"), QString(), tr("Display List Files(*.txt)"));
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Display List"), dirPath, tr("Display List Files(*.txt)"));
 
 	QDir saveDir(fileName);
 	saveDir.cdUp();
 	dirPath = saveDir.absolutePath();
-
-	m_DlEditor->lockDisplayList();
-	uint32_t *dl = m_DlEditor->getDisplayList();
-	memcpy(dl, BT8XXEMU_getDisplayList(g_Emulator), FTEDITOR_DL_SIZE * sizeof(uint32_t));
 
 	QFile f(fileName);
 	if (f.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -3581,8 +3582,6 @@ void MainWindow::saveDisplayListToTextFile(bool isBigEndian)
 		ts.flush();
 		f.close();
 	}
-
-	m_DlEditor->unlockDisplayList();
 }
 
 void MainWindow::actLittleEndianSaveDisplayList()

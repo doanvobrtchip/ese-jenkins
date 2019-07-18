@@ -26,6 +26,8 @@
 #include <QAbstractItemView>
 #include <QTextStream>
 #include <QtEndian>
+#include <QFileDialog>
+#include <QStandardPaths>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -40,16 +42,27 @@
 #include "interactive_properties.h"
 #include "constant_common.h"
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
 
 extern int g_StepCmdLimit;
 
-DlEditor::DlEditor(MainWindow *parent, bool coprocessor) : QWidget(parent), m_MainWindow(parent), m_Reloading(false), m_CompleterIdentifiersActive(true),
-m_PropertiesEditor(NULL), m_PropLine(-1), m_PropIdLeft(-1), m_PropIdRight(-1), m_ModeMacro(false), m_ModeCoprocessor(coprocessor), m_EditingInteractive(false),
-m_CompleterModel(NULL)
+DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
+    : QWidget(parent)
+    , m_MainWindow(parent)
+    , m_Reloading(false)
+    , m_CompleterIdentifiersActive(true)
+    , m_PropertiesEditor(NULL)
+    , m_PropLine(-1)
+    , m_PropIdLeft(-1)
+    , m_PropIdRight(-1)
+    , m_ModeMacro(false)
+    , m_ModeCoprocessor(coprocessor)
+    , m_EditingInteractive(false)
+    , m_CompleterModel(NULL)
 {
 	m_DisplayListShared[0] = DISPLAY();
 
@@ -86,11 +99,98 @@ m_CompleterModel(NULL)
 		m_DisplayListParsed[i].ValidId = false;
 		m_DisplayListShared[i] = DISPLAY();
 	}
+
+	if (m_ModeCoprocessor)
+	{
+	    m_CoproCmdArgName
+	    = {
+		      { "CMD_DLSTART", {} },
+		      { "CMD_INTERRUPT", { "milliseconds: %1" } },
+		      { "CMD_COLDSTART", {} },
+		      { "CMD_APPEND", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_REGREAD", { "<u>pointer: %1", "result: %1" } },
+		      { "CMD_MEMWRITE", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_INFLATE", { "<u>pointer: %1" } },
+		      { "CMD_INFLATE2", { "<u>pointer: %1", "options: %1" } },
+		      { "CMD_LOADIMAGE", { "<u>pointer: %1", "options: %1" } },
+		      { "CMD_MEDIAFIFO", { "<u>pointer: %1", "size: %1" } },
+		      { "CMD_PLAYVIDEO", { "options: %1" } },
+		      { "CMD_VIDEOSTART", {} },
+		      { "CMD_VIDEOFRAME", { "<u>destination: %1", "<u>pointer: %1" } },
+		      { "CMD_MEMCRC", { "<u>pointer: %1", "number of bytes: %1", "result: %1" } },
+		      { "CMD_MEMZERO", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_MEMSET", { "<u>pointer: %1", "value: %1", "number of bytes: %1" } },
+		      { "CMD_MEMCPY", { "<u>destination: %1", "<u>source: %1", "number of bytes: %1" } },
+		      { "CMD_BUTTON", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "font: %1, options: %2", "string: %1" } },
+		      { "CMD_CLOCK", { "<i>", "x: %1, y: %2", "radius: %1, options: %2", "hour: %1, minutes: %2", "second: %1, milliseconds: %2" } },
+		      { "CMD_FGCOLOR", { "<u>color: %1" } },
+		      { "CMD_BGCOLOR", { "<u>color: %1" } },
+		      { "CMD_GRADCOLOR", { "<u>color: %1" } },
+		      { "CMD_GAUGE", { "<i>", "x: %1, y: %2", "radius: %1, options: %2", "major: %1, minor: %2", "value: %1, range: %2" } },
+		      { "CMD_GRADIENT", { "<i>", "x0: %1, y0: %2", "<u>rgb0: %1", "x1: %1, y1: %2", "<u>rgb1: %1" } },
+		      { "CMD_GRADIENTA", { "<i>", "x0: %1, y0: %2", "<u>argb0: %1", "x1: %1, y1: %2", "<u>argb1: %1" } },
+		      { "CMD_KEYS", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "font: %1, options: %2", "string: %1" } },
+		      { "CMD_PROGRESS", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "options: %1, value: %2", "range: %1" } },
+		      { "CMD_SCROLLBAR", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "options: %1, value: %2", "size: %1, range: %2" } },
+		      { "CMD_SLIDER", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "options: %1, value: %2", "range: %1" } },
+		      { "CMD_DIAL", { "<i>", "x: %1, y: %2", "radius: %1, options: %2", "value: %1" } },
+		      { "CMD_TOGGLE", { "<i>", "x: %1, y: %2", "width: %1, font: %2", "options: %1, state: %2", "string: %1" } },
+		      { "CMD_FILLWIDTH", { "fill width: %1" } },
+		      { "CMD_TEXT", { "<i>", "x: %1, y: %2", "font: %1, options: %2", "string: %1" } },
+		      { "CMD_SETBASE", { "numeric base: %1" } },
+		      { "CMD_NUMBER", { "<i>", "x: %1, y: %2", "font: %1, options: %2", "number: %1" } },
+		      { "CMD_LOADIDENTIY", {} },
+		      { "CMD_SETMATRIX", {} },
+		      { "CMD_GETMATRIX", { "<i>", "a: %1", "b: %1", "c: %1", "d: %1", "e: %1", "f: %1" } },
+		      { "CMD_GETPTR", { "result: %1" } },
+		      { "CMD_GETPROPS", { "<u>pointer: %1", "width: %1", "height: %1" } },
+		      { "CMD_SCALE", { "<i>", "x scale factor: %1", "y scale factor: %1" } },
+		      { "CMD_ROTATE", { "<i>", "clockwise rotation angle: %1" } },
+		      { "CMD_ROTATEAROUND", { "<i>", "center of rotation/scaling, x-coordinate: %1", "center of rotation/scaling, y-coordinate: %1", "clockwise rotation angle: %1", "scale factor: %1" } },
+		      { "CMD_TRANSLATE", { "<i>", "x translate factor: %1", "y translate factor: %1" } },
+		      { "CMD_CALIBRATE", { "result: %1" } },
+		      { "CMD_SETROTATE", { "rotation: %1" } },
+		      { "CMD_SPINNER", { "<i>", "x: %1, y: %2", "style: %1, scale: %2" } },
+		      { "CMD_SCREENSAVER", {} },
+		      { "CMD_SKETCH", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "<u>pointer: %1", "format: %1" } },
+		      { "CMD_STOP", {} },
+		      { "CMD_SETFONT", { "font: %1", "<u>pointer: %1" } },
+		      { "CMD_SETFONT2", { "font: %1", "<u>pointer: %1", "first character: %1" } },
+		      { "CMD_SETSCRATCH", { "bitmap handle: %1" } },
+		      { "CMD_ROMFONT", { "font: %1", "ROM slot: %1" } },
+		      { "CMD_RESETFONTS", {} },
+		      { "CMD_TRACK", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "tag: %1" } },
+		      { "CMD_SNAPSHOT", { "<u>pointer: %1" } },
+		      { "CMD_SNAPSHOT2", { "<i>", "<u>format: %1", "<u>pointer: %1", "x: %1, y: %2", "width: %1, height: %2" } },
+		      { "CMD_SETBITMAP", { "<u>source: %1", "format: %1, width: %2", "height: %1" } },
+		      { "CMD_LOGO", {} },
+		      { "CMD_FLASHERASE", {} },
+		      { "CMD_FLASHWRITE", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_FLASHREAD", { "<u>destination: %1", "<u>source: %1", "number of bytes: %1" } },
+		      { "CMD_APPENDF", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_FLASHUPDATE", { "<u>destination: %1", "<u>source: %1", "number of bytes: %1" } },
+		      { "CMD_FLASHDETACH", {} },
+		      { "CMD_FLASHATTACH", {} },
+		      { "CMD_FLASHFAST", { "result: %1" } },
+		      { "CMD_FLASHSPIDESEL", {} },
+		      { "CMD_FLASHSPITX", { "number of bytes: %1" } },
+		      { "CMD_FLASHSPIRX", { "<u>pointer: %1", "number of bytes: %1" } },
+		      { "CMD_CLEARCACHE", {} },
+		      { "CMD_FLASHSOURCE", { "<u>pointer: %1" } },
+		      { "CMD_VIDEOSTARTF", {} },
+		      { "CMD_ANIMSTART", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },
+		      { "CMD_ANIMSTOP", { "<i>", "animation channel: %1" } },
+		      { "CMD_ANIMXY", { "<i>", "animation channel: %1", "x: %1, y: %2" } },
+		      { "CMD_ANIMDRAW", { "<i>", "animation channel: %1" } },
+		      { "CMD_ANIMFRAME", { "<i>", "x: %1, y: %2", "<u>animation object pointer: %1", "<u>frame: %1" } },
+		      { "CMD_SYNC", {} },
+		      { "CMD_BITMAP_TRANSFORM", { "<i>", "x0: %1", "y0: %1", "x1: %1", "y1: %1", "x2: %1", "y2: %1", "tx0: %1", "ty0: %1", "tx1: %1", "ty1: %1", "tx2: %1", "ty2: %1", "result: %1" } }
+	      };
+	}
 }
 
 DlEditor::~DlEditor()
 {
-
 }
 
 void DlEditor::bindCurrentDevice()
@@ -189,8 +289,10 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 			{
 				for (int dc = 1; dc < dcount; ++dc)
 				{
-					if (firstLine) firstLine = false;
-					else m_CodeEditor->textCursor().insertText("\n");
+					if (firstLine)
+						firstLine = false;
+					else
+						m_CodeEditor->textCursor().insertText("\n");
 				}
 				dcount = 0;
 			}
@@ -212,8 +314,10 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 #endif
 			}
 			// <- verify parsing
-			if (firstLine) firstLine = false;
-			else m_CodeEditor->textCursor().insertText("\n");
+			if (firstLine)
+				firstLine = false;
+			else
+				m_CodeEditor->textCursor().insertText("\n");
 			m_CodeEditor->textCursor().insertText(line);
 		}
 	}
@@ -224,7 +328,8 @@ void DlEditor::editorCursorPositionChanged()
 {
 	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 
-	if (QApplication::instance()->closingDown()) return;
+	if (QApplication::instance()->closingDown())
+		return;
 
 	QTextBlock block = m_CodeEditor->document()->findBlock(m_CodeEditor->textCursor().position());
 
@@ -251,7 +356,8 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 
 	//printf("contents change %i %i\n", charsRemoved, charsAdded);
 
-	if (QApplication::instance()->closingDown()) return;
+	if (QApplication::instance()->closingDown())
+		return;
 
 	if (m_Reloading)
 		return;
@@ -286,25 +392,35 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 
 void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 {
+	static QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+	QString fileName = QFileDialog::getSaveFileName(m_MainWindow, tr("Save Coprocessor Command"), dirPath, tr("Coprocessor Command Files(*.txt)"));
+
+	QDir saveDir(fileName);
+	saveDir.cdUp();
+	dirPath = saveDir.absolutePath();
+
 	int blockCount = 0;
 	uint32_t val = 0;
 	QString line("");
 	QTextBlock block;
 
-	QFile f("d:/c.txt");
+	QFile f(fileName);
 
 	if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		return;
 	}
+
 	QTextStream ts(&f);
+	ts.setAutoDetectUnicode(true);
+	ts.setCodec("utf-8");
 	std::vector<uint32_t> comp;
 
-	lockDisplayList();	
+	lockDisplayList();
 	for (int i = 0; i < m_CodeEditor->document()->blockCount(); i++)
 	{
 		DlParsed dl;
-		
+
 		block = m_CodeEditor->document()->findBlockByNumber(i);
 		line = block.text();
 		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, line, true);
@@ -316,7 +432,7 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 		{
 			val = DlParser::compile(FTEDITOR_CURRENT_DEVICE, dl);
 			val = isBigEndian ? qToBigEndian(val) : val;
-			ts << QString("0x%1\t// %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+			ts << QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
 		}
 		else
 		{
@@ -324,13 +440,74 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 			DlParser::compile(FTEDITOR_CURRENT_DEVICE, comp, dl);
 			val = (0xFFFFFF00 | dl.IdRight);
 			val = isBigEndian ? qToBigEndian(val) : val;
-			ts << QString("0x%1\t// %2\n").arg(val, 8, 16, QChar('0')).arg(line);
-		 
+			ts << QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+
+			QStringList argNames = m_CoproCmdArgName.value(QString(dl.IdText.c_str()));
+			bool isSigned = (argNames.size() > 0 && argNames[0] == "<i>");
+			int j = 0;
+			int x = 0, y = 0;
+			QString argItem("");
+
+			if (isSigned)
+				argNames.removeFirst();
+
 			for (int i = 0; i < comp.size(); i++)
 			{
+				if (i == comp.size() - 1 && argNames.indexOf(QRegExp("^string.*")) != -1)
+				{
+					argNames.append("end string");
+				}
+
+				if (argNames.size() < i + 1)
+				{
+					if (argNames.indexOf(QRegExp("^string.*")) != -1)
+					{
+						argNames.append("(string continue)");
+					}
+					else
+					{
+						argNames.append("");
+					}
+				}
+
 				val = isBigEndian ? qToBigEndian(comp.at(i)) : comp.at(i);
-				ts << QString("0x%1\n").arg(val, 8, 16, QChar('0'));
-			}		
+				ts << QString("0x%1   //    ").arg(val, 8, 16, QChar('0'));
+
+				argItem = argNames.at(i);
+
+				if (argItem.startsWith("string"))
+				{
+					QString s = QString("\"%1\"").arg(dl.StringParameter.c_str());
+					s.replace("\n", "\\n");
+					ts << argItem.arg(s);
+				}
+				else if (argItem.startsWith("end string"))
+				{
+					ts << argItem;
+				}
+				else
+				{
+					if (argItem.startsWith("<u>"))
+					{
+						argItem.remove(0, 3);
+						QString h = QString("0x%1").arg(dl.Parameter[j++].U, 8, 16, QChar('0'));
+						ts << argItem.arg(h);
+					}
+					else if (argItem.indexOf(",") != -1)
+					{
+						x = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
+						y = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
+						ts << argItem.arg(x).arg(y);
+					}
+					else
+					{
+						x = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
+						ts << argItem.arg(x);
+					}
+				}
+				
+				ts << '\n';
+			}
 		}
 	}
 	unlockDisplayList();
@@ -357,7 +534,8 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 
 	//printf("blockcount change\n");
 
-	if (QApplication::instance()->closingDown()) return;
+	if (QApplication::instance()->closingDown())
+		return;
 
 	if (m_Reloading)
 		return;
@@ -384,7 +562,8 @@ void DlEditor::parseLine(QTextBlock block)
 	QString line = block.text();
 	int i = block.blockNumber();
 
-	if (!m_InvalidState) m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
+	if (!m_InvalidState)
+		m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
 
 	m_DisplayListParsed[i] = DlParsed();
 	DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
@@ -396,13 +575,15 @@ void DlEditor::parseLine(QTextBlock block)
 		m_DisplayListShared[i] = JUMP(i + 1);
 	}
 
-	if (!m_InvalidState) m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
+	if (!m_InvalidState)
+		m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
 }
 
 void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, const QString &message)
 {
 	m_EditingInteractive = true;
-	if (combineId >= 0) m_CodeEditor->setUndoCombine(combineId, message);
+	if (combineId >= 0)
+		m_CodeEditor->setUndoCombine(combineId, message);
 	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
@@ -411,7 +592,8 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, cons
 	c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	c.insertText(linestr);
 	// editorCursorPositionChanged() needed? // VERIFY
-	if (combineId >= 0) m_CodeEditor->endUndoCombine();
+	if (combineId >= 0)
+		m_CodeEditor->endUndoCombine();
 	m_EditingInteractive = false;
 }
 
@@ -487,11 +669,11 @@ void DlEditor::editingLine(QTextBlock block)
 	// update properties editor
 	m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 	if (m_PropertiesEditor->getEditWidgetSetter() != this
-		|| block.blockNumber() != m_PropLine
-		|| m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft
-		|| m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
-		|| m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid
-		|| !m_DisplayListParsed[block.blockNumber()].ValidId) // Necessary for the "Unknown command" info message
+	    || block.blockNumber() != m_PropLine
+	    || m_DisplayListParsed[block.blockNumber()].IdLeft != m_PropIdLeft
+	    || m_DisplayListParsed[block.blockNumber()].IdRight != m_PropIdRight
+	    || m_DisplayListParsed[block.blockNumber()].ValidId != m_PropIdValid
+	    || !m_DisplayListParsed[block.blockNumber()].ValidId) // Necessary for the "Unknown command" info message
 	{
 		m_PropLine = block.blockNumber();
 		if (m_PropLine < 0) // ?
