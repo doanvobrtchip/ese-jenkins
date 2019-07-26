@@ -46,6 +46,7 @@ namespace FTEDITOR {
 
 class MainWindow;
 class DeviceDisplaySettingsDialog;
+class DeviceManageDialog;
 
 class ContentManager;
 
@@ -97,10 +98,13 @@ private:
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_SendImageButton;
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
+	DeviceManageDialog *m_DeviceManageDialog;
+
     int    syncDeviceEVEType;
 
 
 private slots:
+	void deviceManage();
 	void deviceDisplaySettings();
 	void refreshDevices();
 	void connectDevice();

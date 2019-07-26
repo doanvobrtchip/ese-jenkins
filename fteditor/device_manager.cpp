@@ -25,8 +25,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "constant_common.h"
 
 #include "device_display_settings_dialog.h"
-
-
+#include "device_manage_dialog.h"
 
 namespace FTEDITOR {
 
@@ -34,8 +33,12 @@ extern BT8XXEMU_Emulator *g_Emulator;
 
 #if FT800_DEVICE_MANAGER
 
-DeviceManager::DeviceManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
-currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDialog(NULL)
+DeviceManager::DeviceManager(MainWindow *parent) 
+	: QWidget(parent), m_MainWindow(parent)
+	, currScreenSize("480x272")
+	, selectedSyncDevice("VM800B43A")
+	, m_displaySettingsDialog(NULL)
+    , m_DeviceManageDialog(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -67,6 +70,12 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDia
 	buttons->addWidget(deviceDisplayButton);
 	deviceDisplayButton->setMaximumWidth(deviceDisplayButton->height());
 
+	QPushButton *deviceManageButton = new QPushButton(this);
+	deviceManageButton->setIcon(QIcon(":/icons/category.png"));
+	deviceManageButton->setToolTip(tr("Manage Device"));
+	connect(deviceManageButton, SIGNAL(clicked()), this, SLOT(deviceManage()));
+	buttons->addWidget(deviceManageButton);
+	deviceManageButton->setMaximumWidth(deviceManageButton->height());
 
 	buttons->addStretch();
 
@@ -107,7 +116,16 @@ currScreenSize("480x272"), selectedSyncDevice("VM800B43A"), m_displaySettingsDia
 
 DeviceManager::~DeviceManager()
 {
+	if (m_DeviceManageDialog)
+	{
+		delete m_DeviceManageDialog;
+		m_DeviceManageDialog = NULL;
+	}
 
+	if (m_displaySettingsDialog)
+	{
+		delete m_displaySettingsDialog;
+	}
 }
 
 void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice){
@@ -122,13 +140,26 @@ void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevi
 	m_MainWindow->userChangeResolution(pieces[0].toUInt(),pieces[1].toUInt());
 }
 
-void DeviceManager::deviceDisplaySettings(){
-	if (m_displaySettingsDialog == NULL){
-		m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+void DeviceManager::deviceManage()
+{
+	if (m_DeviceManageDialog)
+	{
+		delete m_DeviceManageDialog;
 	}
 
+	m_DeviceManageDialog = new DeviceManageDialog(this);
+	m_DeviceManageDialog->execute();
+}
+
+void DeviceManager::deviceDisplaySettings()
+{
+	if (m_displaySettingsDialog)
+	{
+		delete m_displaySettingsDialog;
+	}
+
+	m_displaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 	m_displaySettingsDialog->execute();
-	
 }
 
 void DeviceManager::refreshDevices()
