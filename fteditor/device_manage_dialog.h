@@ -11,8 +11,8 @@
 #include <QMessageBox>
 #include <qradiobutton.h>
 #include <qgroupbox.h>
-#include "device_manager.h"
 #include "ui_device_manage.h"
+#include "device_manager.h"
 
 namespace FTEDITOR
 {
@@ -34,14 +34,12 @@ public:
 	void execute();
 
 	static QJsonObject getDeviceJson(QString jsonPath);
-	static QString getDeviceName(QString jsonPath);
-	static QString getDeviceChip(QString jsonPath);
-	static QString getDeviceScreenSize(QString jsonPath);
+	static void getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo & cdi);
 
 private:
 	void loadDevice(QString jsonPath);
 	void loadAllDevice();
-
+	
 private slots:
 	void addDevice();
 	void editDevice();
@@ -58,4 +56,4 @@ private:
 
 #endif
 }
-#endif // COPTIONDIALOG_H
+#endif // DEVICE_MANAGE_DIALOG_H_

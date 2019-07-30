@@ -46,11 +46,43 @@ namespace FTEDITOR {
 
 class MainWindow;
 class DeviceDisplaySettingsDialog;
+class ContentManager;
 class DeviceManageDialog;
 
-class ContentManager;
-
 #if FT800_DEVICE_MANAGER
+
+typedef struct customDeviceInfo
+{
+	QString DeviceName;
+	int EVE_Type;
+	QString ConnectionType;
+	QString FlashModel;
+	int FlashSize;
+	QString ScreenSize;       // width x height
+
+	int CUS_REG_HCYCLE;
+	int CUS_REG_HOFFSET;
+	int CUS_REG_HSYNC0;
+	int CUS_REG_HSYNC1;
+	int CUS_REG_VCYCLE;
+	int CUS_REG_VOFFSET;
+	int CUS_REG_VSYNC0;
+	int CUS_REG_VSYNC1;
+	int CUS_REG_SWIZZLE;
+	int CUS_REG_PCLK_POL;
+	int CUS_REG_HSIZE;
+	int CUS_REG_VSIZE;
+	int CUS_REG_CSPREAD;
+	int CUS_REG_DITHER;
+	int CUS_REG_PCLK;
+
+	customDeviceInfo & operator = (const customDeviceInfo & s)
+	{
+		CUS_REG_HCYCLE = s.CUS_REG_HCYCLE;
+		return (*this);
+	}
+
+} CustomDeviceInfo;
 
 /**
  * DeviceManager
@@ -65,7 +97,7 @@ class DeviceManager : public QWidget
 public:
 	DeviceManager(MainWindow *parent);
 	virtual ~DeviceManager();
-	void setDeviceandScreenSize(QString displaySize, QString syncDevice);
+	void setDeviceandScreenSize(QString displaySize, QString syncDevice, QString jsonPath = QString(), bool custom = false);
 
 	QString getCurrentDisplaySize();
 	void setCurrentDisplaySize(QString displaySize);
@@ -100,8 +132,9 @@ private:
 	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
 	DeviceManageDialog *m_DeviceManageDialog;
 
-    int    syncDeviceEVEType;
-
+    int		syncDeviceEVEType;
+	bool	m_isCustomDevice;
+	CustomDeviceInfo m_CDI;
 
 private slots:
 	void deviceManage();

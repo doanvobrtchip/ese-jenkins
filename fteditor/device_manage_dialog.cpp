@@ -1,6 +1,7 @@
 #include "device_manage_dialog.h"
 #include "device_manager.h"
 #include "device_add_new_dialog.h"
+#include "constant_mapping.h"
 
 #include <QFile>
 #include <QJsonDocument>
@@ -37,7 +38,9 @@ void DeviceManageDialog::execute()
 
 void DeviceManageDialog::loadDevice(QString jsonPath)
 {
-	QString deviceName = getDeviceName(jsonPath);
+	CustomDeviceInfo cdi;
+	getCustomDeviceInfo(jsonPath, cdi);
+	QString deviceName = cdi.DeviceName;
 
 	if (!deviceName.isEmpty())
 	{
@@ -136,41 +139,119 @@ QJsonObject DeviceManageDialog::getDeviceJson(QString jsonPath)
 	return jo;
 }
 
-QString DeviceManageDialog::getDeviceName(QString jsonPath)
+void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo & cdi)
 {
 	QJsonObject jo = getDeviceJson(jsonPath);
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
 	{
-		return jo["Device Name"].toString();
+		cdi.DeviceName = jo["Device Name"].toString();
 	}
-		
-	return QString("");
-}
 
-QString DeviceManageDialog::getDeviceChip(QString jsonPath)
-{
-	QJsonObject jo = getDeviceJson(jsonPath);
-
-	if (jo.contains("EVE") && jo["EVE"].isString())
+	if (jo.contains("EVE Type") && jo["EVE Type"].isString())
 	{
-		return jo["EVE"].toString();
+		if (jo["EVE Type"].toString() == "FT80X")
+			cdi.EVE_Type = FTEDITOR_FT800;
+		else if (jo["EVE Type"].toString() == "FT81X")
+			cdi.EVE_Type = FTEDITOR_FT813;
+		else
+			cdi.EVE_Type = FTEDITOR_BT815;
 	}
 
-	return QString("");
-}
-
-QString DeviceManageDialog::getDeviceScreenSize(QString jsonPath)
-{
-	QJsonObject jo = getDeviceJson(jsonPath);
-
-	if (jo.contains("Screen Width") && jo["Screen Width"].isString() &&
-		jo.contains("Screen Height") && jo["Screen Height"].isString())
+	if (jo.contains("Connection Type") && jo["Connection Type"].isString())
 	{
-		return jo["Screen Width"].toString() + "x" + jo["Screen Height"].toString();
+		cdi.ConnectionType = jo["Connection Type"].toString();
 	}
 
-	return QString("");
+	if (jo.contains("Flash Model") && jo["Flash Model"].isString())
+	{
+		cdi.FlashModel = jo["Flash Model"].toString();
+	}
+
+	if (jo.contains("Flash Size (MB)") && jo["Flash Size (MB)"].isString())
+	{
+		cdi.FlashSize = jo["Flash Size (MB)"].toString().toInt();
+	}
+
+	if (jo.contains("Screen Width") && jo.contains("Screen Height"))
+	{
+		cdi.ScreenSize = QString("%1x%2").arg(jo["Screen Width"].toInt()).arg(jo["Screen Height"].toInt());
+	}
+
+	if (jo.contains("REG_HCYCLE"))
+	{
+		cdi.CUS_REG_HCYCLE = jo["REG_HCYCLE"].toInt();
+	}
+
+	if (jo.contains("REG_HOFFSET"))
+	{
+		cdi.CUS_REG_HOFFSET = jo["REG_HOFFSET"].toInt();
+	}
+
+	if (jo.contains("REG_HSYNC0"))
+	{
+		cdi.CUS_REG_HSYNC0 = jo["REG_HSYNC0"].toInt();
+	}
+
+	if (jo.contains("REG_HSYNC1"))
+	{
+		cdi.CUS_REG_HSYNC1 = jo["REG_HSYNC1"].toInt();
+	}
+
+	if (jo.contains("REG_VCYCLE"))
+	{
+		cdi.CUS_REG_VCYCLE = jo["REG_VCYCLE"].toInt();
+	}
+
+	if (jo.contains("REG_VOFFSET"))
+	{
+		cdi.CUS_REG_VOFFSET = jo["REG_VOFFSET"].toInt();
+	}
+
+	if (jo.contains("REG_VSYNC0"))
+	{
+		cdi.CUS_REG_VSYNC0 = jo["REG_VSYNC0"].toInt();
+	}
+
+	if (jo.contains("REG_VSYNC1"))
+	{
+		cdi.CUS_REG_VSYNC1 = jo["REG_VSYNC1"].toInt();
+	}
+
+	if (jo.contains("REG_SWIZZLE"))
+	{
+		cdi.CUS_REG_SWIZZLE = jo["REG_SWIZZLE"].toInt();
+	}
+
+	if (jo.contains("REG_PCLK_POL"))
+	{
+		cdi.CUS_REG_PCLK_POL = jo["REG_PCLK_POL"].toInt();
+	}
+
+	if (jo.contains("REG_HSIZE"))
+	{
+		cdi.CUS_REG_HSIZE = jo["REG_HSIZE"].toInt();
+	}
+
+	if (jo.contains("REG_VSIZE"))
+	{
+		cdi.CUS_REG_VSIZE = jo["REG_VSIZE"].toInt();
+	}
+
+	if (jo.contains("REG_CSPREAD"))
+	{
+		cdi.CUS_REG_CSPREAD = jo["REG_CSPREAD"].toInt();
+	}
+
+	if (jo.contains("REG_DITHER"))
+	{
+		cdi.CUS_REG_DITHER = jo["REG_DITHER"].toInt();
+	}
+
+	if (jo.contains("REG_PCLK"))
+	{
+		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
+	}
 }
 
 #endif

@@ -39,6 +39,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	, selectedSyncDevice("VM800B43A")
 	, m_displaySettingsDialog(NULL)
     , m_DeviceManageDialog(NULL)
+	, m_isCustomDevice(false)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -128,9 +129,18 @@ DeviceManager::~DeviceManager()
 	}
 }
 
-void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice){
+void DeviceManager::setDeviceandScreenSize(QString displaySize, QString syncDevice, QString jsonPath, bool isCustomDevice)
+{
+	m_isCustomDevice = isCustomDevice;
+
+	if (m_isCustomDevice)
+	{
+		DeviceManageDialog::getCustomDeviceInfo(jsonPath, m_CDI);
+	}
+
 	QStringList pieces = displaySize.split("x");
-	if ((currScreenSize != displaySize) && m_DisconnectButton->isVisible()){
+	if ((currScreenSize != displaySize) && m_DisconnectButton->isVisible())
+	{
 		disconnectDevice();
 	}
 
@@ -354,27 +364,54 @@ bool DeviceManager::connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * de
 
     /* Configuration of LCD display */
 
-
-    Gpu_Hal_Wr16(phost, REG_HCYCLE, DispHCycle);
-    Gpu_Hal_Wr16(phost, REG_HOFFSET, DispHOffset);
-    Gpu_Hal_Wr16(phost, REG_HSYNC0, DispHSync0);
-    Gpu_Hal_Wr16(phost, REG_HSYNC1, DispHSync1);
-    Gpu_Hal_Wr16(phost, REG_VCYCLE, DispVCycle);
-    Gpu_Hal_Wr16(phost, REG_VOFFSET, DispVOffset);
-    Gpu_Hal_Wr16(phost, REG_VSYNC0, DispVSync0);
-    Gpu_Hal_Wr16(phost, REG_VSYNC1, DispVSync1);
-    Gpu_Hal_Wr8(phost, REG_SWIZZLE, DispSwizzle);
-    Gpu_Hal_Wr8(phost, REG_PCLK_POL, DispPCLKPol);
-    Gpu_Hal_Wr16(phost, REG_HSIZE, DispWidth);
-    Gpu_Hal_Wr16(phost, REG_VSIZE, DispHeight);
-    Gpu_Hal_Wr16(phost, REG_CSPREAD, DispCSpread);
-    Gpu_Hal_Wr16(phost, REG_DITHER, DispDither);
+	if (m_isCustomDevice)
+	{
+		Gpu_Hal_Wr16(phost, REG_HCYCLE, m_CDI.CUS_REG_HCYCLE);
+		Gpu_Hal_Wr16(phost, REG_HOFFSET, m_CDI.CUS_REG_HOFFSET);
+		Gpu_Hal_Wr16(phost, REG_HSYNC0, m_CDI.CUS_REG_HSYNC0);
+		Gpu_Hal_Wr16(phost, REG_HSYNC1, m_CDI.CUS_REG_HSYNC1);
+		Gpu_Hal_Wr16(phost, REG_VCYCLE, m_CDI.CUS_REG_VCYCLE);
+		Gpu_Hal_Wr16(phost, REG_VOFFSET, m_CDI.CUS_REG_VOFFSET);
+		Gpu_Hal_Wr16(phost, REG_VSYNC0, m_CDI.CUS_REG_VSYNC0);
+		Gpu_Hal_Wr16(phost, REG_VSYNC1, m_CDI.CUS_REG_VSYNC1);
+		Gpu_Hal_Wr8(phost, REG_SWIZZLE, m_CDI.CUS_REG_SWIZZLE);
+		Gpu_Hal_Wr8(phost, REG_PCLK_POL, m_CDI.CUS_REG_PCLK_POL);
+		Gpu_Hal_Wr16(phost, REG_HSIZE, m_CDI.CUS_REG_HSIZE);
+		Gpu_Hal_Wr16(phost, REG_VSIZE, m_CDI.CUS_REG_VSIZE);
+		Gpu_Hal_Wr16(phost, REG_CSPREAD, m_CDI.CUS_REG_CSPREAD);
+		Gpu_Hal_Wr16(phost, REG_DITHER, m_CDI.CUS_REG_DITHER);
+	}
+	else
+	{
+		Gpu_Hal_Wr16(phost, REG_HCYCLE, DispHCycle);
+		Gpu_Hal_Wr16(phost, REG_HOFFSET, DispHOffset);
+		Gpu_Hal_Wr16(phost, REG_HSYNC0, DispHSync0);
+		Gpu_Hal_Wr16(phost, REG_HSYNC1, DispHSync1);
+		Gpu_Hal_Wr16(phost, REG_VCYCLE, DispVCycle);
+		Gpu_Hal_Wr16(phost, REG_VOFFSET, DispVOffset);
+		Gpu_Hal_Wr16(phost, REG_VSYNC0, DispVSync0);
+		Gpu_Hal_Wr16(phost, REG_VSYNC1, DispVSync1);
+		Gpu_Hal_Wr8(phost, REG_SWIZZLE, DispSwizzle);
+		Gpu_Hal_Wr8(phost, REG_PCLK_POL, DispPCLKPol);
+		Gpu_Hal_Wr16(phost, REG_HSIZE, DispWidth);
+		Gpu_Hal_Wr16(phost, REG_VSIZE, DispHeight);
+		Gpu_Hal_Wr16(phost, REG_CSPREAD, DispCSpread);
+		Gpu_Hal_Wr16(phost, REG_DITHER, DispDither);
+	}
 
     Gpu_Hal_Wr16(phost, REG_GPIOX_DIR, 0xffff);
     Gpu_Hal_Wr16(phost, REG_GPIOX, 0xffff);
 
     Gpu_ClearScreen(phost);
-    Gpu_Hal_Wr8(phost, REG_PCLK, DispPCLK);//after this display is visible on the LCD
+
+	if (m_isCustomDevice)
+	{
+		Gpu_Hal_Wr8(phost, REG_PCLK, m_CDI.CUS_REG_PCLK); // after this display is visible on the LCD
+	}
+	else
+	{
+		Gpu_Hal_Wr8(phost, REG_PCLK, DispPCLK); // after this display is visible on the LCD
+	}
 
     if (phost->lib_type == LIB_FT4222)
     {
@@ -456,7 +493,28 @@ bool DeviceManager::connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo *dev
 
     printf("REG_ID detected as  %x\n", chipid);
 
-    if (currScreenSize == "480x272") {
+	if (m_isCustomDevice)
+	{
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HCYCLE), m_CDI.CUS_REG_HCYCLE);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HOFFSET), m_CDI.CUS_REG_HOFFSET);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC0), m_CDI.CUS_REG_HSYNC0);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC1), m_CDI.CUS_REG_HSYNC1);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VCYCLE), m_CDI.CUS_REG_VCYCLE);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VOFFSET), m_CDI.CUS_REG_VOFFSET);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC0), m_CDI.CUS_REG_VSYNC0);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSYNC1), m_CDI.CUS_REG_VSYNC1);
+		Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_SWIZZLE), m_CDI.CUS_REG_SWIZZLE);
+		Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK_POL), m_CDI.CUS_REG_PCLK_POL);
+
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSIZE), m_CDI.CUS_REG_HSIZE);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_VSIZE), m_CDI.CUS_REG_VSIZE);
+
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_CSPREAD), m_CDI.CUS_REG_CSPREAD);
+		Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_DITHER), m_CDI.CUS_REG_DITHER);
+
+		Gpu_Hal_Wr8(phost, reg(syncDeviceEVEType, FTEDITOR_REG_PCLK), m_CDI.CUS_REG_PCLK);//after this display is visible on the LCD
+	}
+    else if (currScreenSize == "480x272") {
         Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HCYCLE), 548);
         Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HOFFSET), 43);
         Gpu_Hal_Wr16(phost, reg(syncDeviceEVEType, FTEDITOR_REG_HSYNC0), 0);
@@ -603,8 +661,16 @@ void DeviceManager::setCurrentDisplaySize(QString displaySize){
 	currScreenSize = displaySize;
 }
 
-void DeviceManager::setSyncDeviceName(QString deviceName){
+void DeviceManager::setSyncDeviceName(QString deviceName)
+{
 	selectedSyncDevice = deviceName;
+
+	if (m_isCustomDevice)
+	{
+		syncDeviceEVEType = m_CDI.EVE_Type;
+		return;
+	}
+	
 	syncDeviceEVEType = FTEDITOR_FT800;
 
 	if (selectedSyncDevice == "VM816C50A(800x480)" ||
@@ -670,8 +736,6 @@ void DeviceManager::syncDevice()
 		}
 	}
 }
-
-
 
 void DeviceManager::updateSelection()
 {

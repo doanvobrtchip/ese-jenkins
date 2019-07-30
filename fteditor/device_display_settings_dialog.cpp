@@ -96,17 +96,18 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 	while (it.hasNext())
 	{
 		QString path = it.next();
-		QString deviceName = DeviceManageDialog::getDeviceName(path);
-		QString deviceChip = DeviceManageDialog::getDeviceChip(path);
-		QString deviceScreenSize = DeviceManageDialog::getDeviceScreenSize(path);
 
-		if (deviceName.isEmpty())
+		CustomDeviceInfo cdi;
+		DeviceManageDialog::getCustomDeviceInfo(path, cdi);
+
+		if (cdi.DeviceName.isEmpty())
 			continue;
 
-		rb = new QRadioButton(deviceName, this);
+		rb = new QRadioButton(cdi.DeviceName, this);
 		rb->setToolTip("Custom device");
-		rb->setProperty("EVE_CHIP", deviceChip);
-		rb->setProperty("SCREEN_SIZE", deviceScreenSize);
+		rb->setProperty("EVE_TYPE", cdi.EVE_Type);
+		rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
+		rb->setProperty("JSON_PATH", path);
 
 		m_CustomRadioButtonList.append(rb);
 		layout->addWidget(rb);
@@ -115,7 +116,7 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 
 void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 {
-	QString currenDevice("");
+	int currenDevice;
 	QString selectedDevice = pParent->getSyncDeviceName();
 
 	; {
@@ -143,7 +144,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 
 	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT800 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801)
 	{
-		currenDevice = "FT80X";
+		currenDevice = FTEDITOR_FT800;
 
 		VM800B35A->setVisible(true);
 		VM800B43A->setVisible(true);
@@ -176,7 +177,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	}
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
-		currenDevice = "FT81X";
+		currenDevice = FTEDITOR_FT810;
 
 		ME813AUWH50C->setVisible(true);
 
@@ -185,7 +186,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	}
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
-		currenDevice = "BT81X";
+		currenDevice = FTEDITOR_BT815;
 
 		VM816C50A->setVisible(true);
         VM816CU50A->setVisible(true);
@@ -198,7 +199,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 
 	for each(QRadioButton * rb in m_CustomRadioButtonList)
 	{
-		if (rb->property("EVE_CHIP").toString() == currenDevice)
+		if (rb->property("EVE_TYPE").toInt() == currenDevice)
 		{
 			rb->setVisible(true);
 		}
@@ -255,7 +256,7 @@ void DeviceDisplaySettingsDialog::saveInputValues(){
 		{
 			if (rb->isChecked())
 			{
-				pParent->setDeviceandScreenSize(rb->property("SCREEN_SIZE").toString(), rb->text());
+				pParent->setDeviceandScreenSize(rb->property("SCREEN_SIZE").toString(), rb->text(), rb->property("JSON_PATH").toString(), true);
 			}
 		}
 	}

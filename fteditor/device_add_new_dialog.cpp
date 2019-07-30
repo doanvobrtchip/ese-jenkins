@@ -9,13 +9,17 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QComboBox>
+#include <QSpinBox>
 
 namespace FTEDITOR
 {
 
 #if FT800_DEVICE_MANAGER
 
-const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Vender", "Version", "EVE", "Connection", "Flash Model", "Flash Size (MB)", "Screen Width", "Screen Height"};
+const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Vender", "Version", "EVE Type", "Connection Type", "Flash Model",
+							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
+							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
+							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", };
 
 DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
     : QDialog(parent)
@@ -36,6 +40,7 @@ void DeviceAddNewDialog::execute()
 void DeviceAddNewDialog::editDevice(QString jsonPath)
 {
 	isEdited = true;
+	this->setWindowTitle("Edit Device");
 	editPath = jsonPath;
 	loadData(jsonPath);
 	show();
@@ -55,10 +60,15 @@ void DeviceAddNewDialog::addDevice()
 		
 		if (value == NULL)
 		{
-			QComboBox * cb = static_cast<QComboBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
+			QComboBox * cb = dynamic_cast<QComboBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
+			QSpinBox * sb = dynamic_cast<QSpinBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
 			if (cb)
 			{
-				value = cb->currentText();
+				jo[property] = cb->currentText();
+			}
+			else if (sb)
+			{
+				jo[property] = sb->value();
 			}
 			else
 			{
@@ -66,8 +76,10 @@ void DeviceAddNewDialog::addDevice()
 				return;
 			}
 		}
-
-		jo[property] = value;
+		else
+		{
+			jo[property] = value;
+		}
 	}
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
@@ -114,8 +126,9 @@ QString DeviceAddNewDialog::buildJsonFilePath(QString name)
 void DeviceAddNewDialog::prepareData()
 {
 	QComboBox *cb = NULL;
-	QString cg = "* { background-color: #f5f5f5; }";
-	QString cw = "* { background-color: #ffffff; }";
+	QSpinBox *sb = NULL;
+	QString sg = "QSpinBox { background-color: #e9e7e3; border: none; }";
+	QString sw = "QSpinBox { background-color: #ffffff; border: none; }";
 
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
@@ -126,10 +139,9 @@ void DeviceAddNewDialog::prepareData()
 		{
 			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem("New Device"));
 		}
-		else if (PROPERTIES[i] == "EVE")
+		else if (PROPERTIES[i] == "EVE Type")
 		{
 			cb = new QComboBox(this);
-			cb->setStyleSheet( i % 2 == 0 ? cw : cg);
 			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
 			cb->setCurrentIndex(0);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
@@ -137,18 +149,25 @@ void DeviceAddNewDialog::prepareData()
 		else if (PROPERTIES[i] == "Flash Size (MB)")
 		{
 			QComboBox *cb = new QComboBox(this);
-			cb->setStyleSheet(i % 2 == 0 ? cw : cg);
 			cb->addItems(QStringList() << "2" << "4" << "8" << "16" << "32" << "64" << "128" << "512");
 			cb->setCurrentIndex(3);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
-		else if (PROPERTIES[i] == "Connection")
+		else if (PROPERTIES[i] == "Connection Type")
 		{
 			cb = new QComboBox(this);
-			cb->setStyleSheet(i % 2 == 0 ? cw : cg);
 			cb->addItems(QStringList() << "FT4222" << "MPSSE");
 			cb->setCurrentIndex(0);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
+		}
+		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || PROPERTIES[i].startsWith("REG_"))
+		{
+			sb = new QSpinBox(this);
+			sb->setMinimum(0);
+			sb->setMaximum(9999);
+			sb->setButtonSymbols(QSpinBox::NoButtons);
+			sb->setStyleSheet(i % 2 == 0 ? sw : sg);
+			ui->DeviceTableWidget->setCellWidget(i, 1, sb);
 		}
 	}
 }
@@ -170,50 +189,48 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 		return;
 	
 	QComboBox *cb = NULL;
-	QString cg = "* { background-color: #f5f5f5; }";
-	QString cw = "* { background-color: #ffffff; }";
+	QSpinBox *sb = NULL;
+	QString sg = "* { background-color: #f5f5f5; border: none; }";
+	QString sw = "* { background-color: #ffffff; border: none; }";
 	   
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
 		ui->DeviceTableWidget->insertRow(i);
 		ui->DeviceTableWidget->setItem(i, 0, new QTableWidgetItem(PROPERTIES[i]));
 
-		if (!jo.contains(PROPERTIES[i]) || !jo[PROPERTIES[i]].isString())
+		if (!jo.contains(PROPERTIES[i]))
 			continue;
 
-		if (PROPERTIES[i] == "EVE")
+		if (PROPERTIES[i] == "EVE Type")
 		{
 			cb = new QComboBox(this);
-			cb->setStyleSheet(i % 2 == 0 ? cw : cg);
-			cb->addItems(QStringList() << "BT81X"
-			                           << "FT81X"
-			                           << "FT80X");
+			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Flash Size (MB)")
 		{
 			QComboBox *cb = new QComboBox(this);
-			cb->setStyleSheet(i % 2 == 0 ? cw : cg);
-			cb->addItems(QStringList() << "2"
-			                           << "4"
-			                           << "8"
-			                           << "16"
-			                           << "32"
-			                           << "64"
-			                           << "128"
-			                           << "512");
+			cb->addItems(QStringList() << "2" << "4" << "8" << "16" << "32" << "64" << "128" << "512");
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
-		else if (PROPERTIES[i] == "Connection")
+		else if (PROPERTIES[i] == "Connection Type")
 		{
 			cb = new QComboBox(this);
-			cb->setStyleSheet(i % 2 == 0 ? cw : cg);
-			cb->addItems(QStringList() << "FT4222"
-			                           << "MPSSE");
+			cb->addItems(QStringList() << "FT4222" << "MPSSE");
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
+		}
+		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || PROPERTIES[i].startsWith("REG_"))
+		{
+			sb = new QSpinBox(this);
+			sb->setMinimum(0);
+			sb->setMaximum(9999);
+			sb->setButtonSymbols(QSpinBox::NoButtons);
+			sb->setStyleSheet(i % 2 == 0 ? sw : sg);
+			sb->setValue(jo[PROPERTIES[i]].toInt());
+			ui->DeviceTableWidget->setCellWidget(i, 1, sb);
 		}
 		else
 		{
