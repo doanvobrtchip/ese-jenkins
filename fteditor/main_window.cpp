@@ -240,7 +240,10 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     m_CursorPosition(NULL)
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
+	, m_isVCDumpEnable(false)
 {
+	loadConfig(QCoreApplication::applicationDirPath() + '/' + CONFIGURE_FILE_PATH);
+
 	setObjectName("MainWindow");
 	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 
@@ -277,6 +280,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createToolBars();
 	createStatusBar();
 
+	
 	loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
@@ -839,10 +843,10 @@ void MainWindow::createActions()
 
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
-	m_ImportAct->setVisible(FT_VCDUMP_VISIBLE);
+	m_ImportAct->setVisible(m_isVCDumpEnable);
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
-	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
+	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
@@ -2204,6 +2208,28 @@ bool MainWindow::maybeSave()
 	return res;
 }
 
+void MainWindow::loadConfig(QString configPath)
+{
+	QFile f(configPath);
+
+	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		return;
+	}
+	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
+	f.close();
+
+	QJsonObject jo = jd.object();
+
+	if (jo.isEmpty())
+		return;
+
+	if (jo.contains("vc1dump") && jo["vc1dump"].isBool())
+	{
+		m_isVCDumpEnable = jo["vc1dump"].toBool();
+	}
+}
+
 void MainWindow::loadRecentProject()
 {
 	// insert recent project actions
@@ -3025,15 +3051,25 @@ void MainWindow::actSaveAs()
 	updateWindowTitle();
 }
 
+#define DUMP_VERSION_FT80X			(100)
+#define DUMP_VERSION_FT81X		    (110)
+#define DUMP_VERSION_BT81X		    (111)
+#define DUMP_256K				    (256 * 1024)
+#define DUMP_1K						(1024)
+#define DUMP_8K						(8 * 1024)
+#define DUMP_1024K					(1024 * 1024)
+
 void MainWindow::actImport()
 {
 	if (!maybeSave())
 		return;
 
+	toggleUI(true);
+
 	printf("*** Import ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), getFileDialogPath(),
-	    tr("Memory dump, *.vc1dump (*.vc1dump)"));
+	    tr("Memory dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
 
@@ -3053,128 +3089,60 @@ void MainWindow::actImport()
 #endif
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
-	// open a project
-	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
-	// int QDataStream::readRawData(char * s, int len)
 	QFile file(fileName);
-	file.open(QIODevice::ReadOnly);
+	if (!file.open(QIODevice::ReadOnly))
+		return;
+
 	QDataStream in(&file);
 	bool loadOk = false;
-	if (true) // todo: if .vc1dump
+		
+	const size_t headersz = 6;
+	uint32_t header[headersz];
+	int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
+	if (s != sizeof(uint32_t) * headersz)
 	{
-		const size_t headersz = 6;
-		uint32_t header[headersz];
-		int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (s != sizeof(uint32_t) * headersz)
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
+	}
+	else
+	{
+		m_HSize->setValue(header[1]);
+		m_VSize->setValue(header[2]);
+		m_Macro->lockDisplayList();
+		m_Macro->getDisplayList()[0] = header[3];
+		m_Macro->getDisplayList()[1] = header[4];
+		m_Macro->reloadDisplayList(false);
+		m_Macro->unlockDisplayList();
+
+		ContentInfo *ramG = m_ContentManager->add(fileName);
+		m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
+		m_ContentManager->changeMemoryAddress(ramG, 0);
+		m_ContentManager->changeMemoryLoaded(ramG, true);
+		m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
+
+		switch (header[0])
 		{
-			QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
-		}
-		else
-		{
-			if (header[0] == 100)
-			{
-				m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
-				m_HSize->setValue(header[1]);
-				m_VSize->setValue(header[2]);
-				m_Macro->lockDisplayList();
-				m_Macro->getDisplayList()[0] = header[3];
-				m_Macro->getDisplayList()[1] = header[4];
-				m_Macro->reloadDisplayList(false);
-				m_Macro->unlockDisplayList();
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-				ContentInfo *ramG = m_ContentManager->add(fileName);
-				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
-				m_ContentManager->changeMemoryAddress(ramG, 0);
-				m_ContentManager->changeMemoryLoaded(ramG, true);
-				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
-				m_ContentManager->changeRawLength(ramG, 262144);
-				// s = in.skipRawData(262144);
-				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144);
-				if (s != 262144)
-					QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
-				else
-				{
-					ramaddr ramPal = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL);
-					if (ramPal < 0)
-						ramPal = 262144;
-					s = in.readRawData(&ram[ramPal], 1024); // FIXME_GUI PALETTE
-					if (s != 1024)
-						QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
-					else
-					{
-						m_DlEditor->lockDisplayList();
-						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-						m_DlEditor->reloadDisplayList(false);
-						m_DlEditor->unlockDisplayList();
-						if (s != 8192)
-							QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-						else
-						{
-							/*
-							// FIXME: How is the CRC32 for the .vc1dump calculated?
-							uint32_t crc;
-							crc = Crc32_ComputeBuf(0, &ram[RAM_G], 262144);
-							crc = Crc32_ComputeBuf(crc, &ram[RAM_PAL], 1024);
-							crc = Crc32_ComputeBuf(crc, m_DlEditor->getDisplayList(), 8192);
-							if (crc != header[5])
-							{
-								QString message;
-								message.sprintf(tr("CRC32 mismatch, %u, %u").toUtf8().constData(), header[5], crc);
-								QMessageBox::critical(this, tr("Import .vc1dump"), message);
-							}
-							*/
-							loadOk = true;
-							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
-							focusDlEditor(true);
-						}
-					}
-				}
-			}
-			else if (header[0] == 110)
-			{
-				m_ProjectDevice->setCurrentIndex(FTEDITOR_BT815);
-				m_HSize->setValue(header[1]);
-				m_VSize->setValue(header[2]);
-				m_Macro->lockDisplayList();
-				m_Macro->getDisplayList()[0] = header[3];
-				m_Macro->getDisplayList()[1] = header[4];
-				m_Macro->reloadDisplayList(false);
-				m_Macro->unlockDisplayList();
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-				ContentInfo *ramG = m_ContentManager->add(fileName);
-				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
-				m_ContentManager->changeMemoryAddress(ramG, 0);
-				m_ContentManager->changeMemoryLoaded(ramG, true);
-				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
-				m_ContentManager->changeRawLength(ramG, 1048576);
-				// s = in.skipRawData(1048576);
-				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1048576);
-				if (s != 1048576)
-					QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
-				else
-				{
-					m_DlEditor->lockDisplayList();
-					s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-					m_DlEditor->reloadDisplayList(false);
-					m_DlEditor->unlockDisplayList();
-					if (s != 8192)
-						QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-					else
-					{
-						loadOk = true;
-						statusBar()->showMessage(tr("Imported project from .vc1dump file"));
-						focusDlEditor(true);
-					}
-				}
-			}
-			else
-			{
-				QString message;
-				message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
-				QMessageBox::critical(this, tr("Import .vc1dump"), message);
-			}
+		case DUMP_VERSION_FT80X:
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
+			m_ContentManager->changeRawLength(ramG, DUMP_256K);
+			loadOk = importDumpFT80X(in);
+			break;
+		case DUMP_VERSION_FT81X:
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT810);
+			m_ContentManager->changeRawLength(ramG, DUMP_1024K);
+			loadOk = importDumpFT81X(in);
+			break;
+		case DUMP_VERSION_BT81X:
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_BT815);
+			m_ContentManager->changeRawLength(ramG, DUMP_1024K);
+			loadOk = importDumpBT81X(in);
+			break;
+		default:
+			QString message = QString("Invalid header version: %1").arg(header[0]);
+			QMessageBox::critical(this, tr("Import .vc1dump"), message);
+			break;
 		}
 	}
+
 
 	if (!loadOk)
 	{
@@ -3191,9 +3159,99 @@ void MainWindow::actImport()
 	m_Toolbox->setEditorLine(m_DlEditor, 0);
 }
 
+bool MainWindow::importDumpFT80X(QDataStream & in)
+{
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+	
+
+	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K);
+	if (s != DUMP_256K)
+	{		
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		return false;
+	}
+
+	ramaddr ramPal = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL);
+	if (ramPal < 0)
+		ramPal = DUMP_256K;
+	s = in.readRawData(&ram[ramPal], DUMP_1K); // FIXME_GUI PALETTE
+	if (s != DUMP_1K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
+		return false;
+	}
+
+	m_DlEditor->lockDisplayList();
+	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	if (s != DUMP_8K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+
+	return true;
+}
+
+bool MainWindow::importDumpFT81X(QDataStream & in)
+{
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+	
+	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
+	if (s != DUMP_1024K)
+	{	
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		return false;
+	}
+
+	m_DlEditor->lockDisplayList();
+	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	if (s != DUMP_8K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+		
+	return true;
+}
+
+bool MainWindow::importDumpBT81X(QDataStream & in)
+{
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+
+	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
+	if (s != DUMP_1024K)
+	{	
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		return false;
+	}
+
+	s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL)], DUMP_8K);
+	if (s != DUMP_8K)
+	{	
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+
+	m_DlEditor->lockDisplayList();
+	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	if (s != DUMP_8K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+
+	return true;
+}
+
 void MainWindow::actExport()
 {
-	QString filtervc1dump = tr("Memory dump, *.vc1dump (*.vc1dump)");
+	QString filtervc1dump = tr("Memory dump (*.vc1dump)");
 	QString filter = filtervc1dump;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
@@ -3206,49 +3264,94 @@ void MainWindow::actExport()
 	}
 
 	QFile file(fileName);
-	file.open(QIODevice::WriteOnly);
+	if (!file.open(QIODevice::WriteOnly))
+		return;
+
 	QDataStream out(&file);
 
-	if (true) // todo: if .vc1dump
+	const size_t headersz = 6;
+	uint32_t header[headersz];
+	header[0] = 100;
+	header[1] = g_HSize;
+	header[2] = g_VSize;
+	m_Macro->lockDisplayList();
+	header[3] = m_Macro->getDisplayList()[0];
+	header[4] = m_Macro->getDisplayList()[1];
+	m_Macro->unlockDisplayList();
+	header[5] = 0;
+
+	// get ram content
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+
+	if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_FT801)
 	{
-		const size_t headersz = 6;
-		uint32_t header[headersz];
-		header[0] = 100;
-		header[1] = g_HSize;
-		header[2] = g_VSize;
-		m_Macro->lockDisplayList();
-		header[3] = m_Macro->getDisplayList()[0];
-		header[4] = m_Macro->getDisplayList()[1];
-		m_Macro->unlockDisplayList();
-		header[5] = 0; // FIXME: CRC32
-		char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (s != sizeof(uint32_t) * headersz)
-			goto ExportWriteError;
-		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
-		if (s != 262144)
-			goto ExportWriteError;
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) // FIXME_FT810
-			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
-		else
-			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
-		if (s != 1024)
-			goto ExportWriteError;
+		header[0] = DUMP_VERSION_FT80X;
+		
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+		
+		// <256K of main RAM_G>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K)) return;
+		
+		// <1K of main RAM_PAL>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], DUMP_1K)) return;
+		
+		// <8K of DL RAM> setup display list
 		m_DlEditor->lockDisplayList();
-		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
 		m_DlEditor->unlockDisplayList();
-		if (s != FTEDITOR_DL_SIZE * sizeof(uint32_t))
-			goto ExportWriteError;
-		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
+	}
+	else if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	{
+		header[0] = DUMP_VERSION_FT81X;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+
+		// <1024K of main RAM>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+
+		// <8K of DL RAM>
+		m_DlEditor->lockDisplayList();
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
+		m_DlEditor->unlockDisplayList();
+	}
+	else
+	{
+		header[0] = DUMP_VERSION_BT81X;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+
+		// <1024K of main RAM>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+
+		// <8K of DL RAM> setup display list
+		m_DlEditor->lockDisplayList();
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
+		m_DlEditor->unlockDisplayList();
+
+		// <8K of DL RAM> actual display list
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL)], DUMP_8K)) return;
 	}
 
+	file.close();
+
+	statusBar()->showMessage(tr("Exported project to .vc1dump file"));
 	m_PropertiesEditor->setInfo(tr("Exported project to .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 
 	return;
-ExportWriteError:
-	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+}
+
+bool MainWindow::writeDumpData(QDataStream * ds, const char* data, int size)
+{
+	int res = ds->writeRawData(data, size);
+	if (res != size)
+	{
+		ds->device()->close();
+		QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+		return false;
+	}
+	return true;
 }
 
 void MainWindow::actProjectFolder()

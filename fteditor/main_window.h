@@ -29,7 +29,7 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
-#define FT_VCDUMP_VISIBLE false
+#define CONFIGURE_FILE_PATH				"config.json"
 
 class QTemporaryDir;
 class QTreeView;
@@ -243,10 +243,17 @@ private:
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
+	void loadConfig(QString configPath);
 	void loadRecentProject();
 	void addRecentProject(QString recentPath);
 	void removeRecentProject(QString removePath);
 	void saveRecentProject();
+
+	bool writeDumpData(QDataStream * ds, const char* data, int size);
+
+	bool importDumpFT80X(QDataStream & ds);
+	bool importDumpFT81X(QDataStream & ds);
+	bool importDumpBT81X(QDataStream & ds);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -388,6 +395,7 @@ private:
 	friend class ProjectDeviceCommand;
 	friend class ProjectFlashCommand;
 
+	bool m_isVCDumpEnable;
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */
