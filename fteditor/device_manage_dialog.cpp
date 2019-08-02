@@ -15,6 +15,7 @@ namespace FTEDITOR
 #if FT800_DEVICE_MANAGER
 
 const QString DeviceManageDialog::DEVICE_SYNC_PATH = "/device_sync/";
+const QString DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH = "/device_sync/build-in/";
 
 DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
     : QDialog(parent)
@@ -27,6 +28,10 @@ DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
 	connect(ui->btnAddNewDevice, SIGNAL(clicked()), this, SLOT(addDevice()));
 	connect(ui->btnEditDevice, SIGNAL(clicked()), this, SLOT(editDevice()));
 	connect(ui->btnRemoveDevice, SIGNAL(clicked()), this, SLOT(removeDevice()));
+	connect(ui->btnCloneDevice, SIGNAL(clicked()), this, SLOT(cloneDevice()));
+	connect(ui->btnBuildInCloneDevice, SIGNAL(clicked()), this, SLOT(cloneBuildInDevice()));
+	connect(ui->btnExamineButton, SIGNAL(clicked()), this, SLOT(examineDevice()));
+
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
@@ -36,7 +41,7 @@ void DeviceManageDialog::execute()
 	show();
 }
 
-void DeviceManageDialog::loadDevice(QString jsonPath)
+void DeviceManageDialog::loadDevice(QListWidget * lw, QString jsonPath)
 {
 	CustomDeviceInfo cdi;
 	getCustomDeviceInfo(jsonPath, cdi);
@@ -44,27 +49,40 @@ void DeviceManageDialog::loadDevice(QString jsonPath)
 
 	if (!deviceName.isEmpty())
 	{
-		QListWidgetItem *item = new QListWidgetItem(deviceName, ui->deviceListWidget);
+		QListWidgetItem *item = new QListWidgetItem(deviceName, lw);
 		item->setData(Qt::UserRole, jsonPath);
-		ui->deviceListWidget->addItem(item);
+		lw->addItem(item);
+		lw->setCurrentItem(item);
+		lw->setFocus();
 	}
 }
 
 void DeviceManageDialog::loadAllDevice()
 {
+	// load custome device
 	ui->deviceListWidget->clear();
+	ui->BuildInDeviceListWidget->clear();
 
 	QDirIterator it(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
 	while (it.hasNext())
 	{
-		loadDevice(it.next());
+		QString path = it.next();
+
+		if (path.contains(DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH))
+			loadDevice(ui->BuildInDeviceListWidget, path);
+		else 
+			loadDevice(ui->deviceListWidget, path);
 	}
 
 	if (ui->deviceListWidget->count() > 0)
 	{
 		ui->deviceListWidget->item(0)->setSelected(true);
+		ui->deviceListWidget->setFocus();
 	}
-	ui->deviceListWidget->setFocus();
+	else
+	{
+		ui->BuildInDeviceListWidget->setFocus();
+	}
 }
 
 void DeviceManageDialog::addDevice()
@@ -98,6 +116,60 @@ void DeviceManageDialog::removeDevice()
 		int row = ui->deviceListWidget->row(item);
 		ui->deviceListWidget->takeItem(row);
 		delete item;
+	}
+}
+
+void DeviceManageDialog::cloneDevice()
+{
+	doClone(ui->deviceListWidget);
+}
+
+void DeviceManageDialog::cloneBuildInDevice()
+{
+	doClone(ui->BuildInDeviceListWidget);
+}
+
+void DeviceManageDialog::doClone(QListWidget *lw)
+{
+	QListWidgetItem *item = lw->selectedItems().count() > 0 ? lw->selectedItems().at(0) : NULL;
+	if (item)
+	{
+		lw->setCurrentItem(item);
+		QString jsonPath = item->data(Qt::UserRole).toString();
+
+		QFileInfo fi(jsonPath);
+
+		QJsonObject jo = getDeviceJson(jsonPath);
+		if (!jo.contains("Device Name"))
+			return;
+
+		QString newName = DeviceAddNewDialog::buildJsonFilePath(fi.baseName());
+		jo["Device Name"] = QFileInfo(newName).baseName();
+
+		QJsonDocument jd;
+		jd.setObject(jo);
+		
+		QFile f(newName);
+		if (f.open(QIODevice::WriteOnly))
+		{
+			f.write(jd.toJson());
+			f.close();
+		}
+		
+		loadDevice(ui->deviceListWidget, newName);
+		lw->setFocus();
+	}
+}
+
+void DeviceManageDialog::examineDevice()
+{
+	QListWidgetItem *item = ui->BuildInDeviceListWidget->selectedItems().count() > 0 ? ui->BuildInDeviceListWidget->selectedItems().at(0) : NULL;
+	if (item)
+	{
+		ui->BuildInDeviceListWidget->setCurrentItem(item);
+		QString jsonPath = item->data(Qt::UserRole).toString();
+		DeviceAddNewDialog *anDialog = new DeviceAddNewDialog(this);
+		anDialog->examineDevice(jsonPath);
 	}
 }
 

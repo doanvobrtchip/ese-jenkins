@@ -31,6 +31,9 @@ public:
 	explicit DeviceAddNewDialog(QWidget *parent = 0);
 	void execute();
 	void editDevice(QString jsonPath);
+	void examineDevice(QString jsonPath);
+
+	static QString buildJsonFilePath(QString name);
 
 signals:
 	void deviceAdded(QString deviceName, QString jsonPath);
@@ -38,11 +41,13 @@ signals:
 
 private slots:
 	void addDevice();
+	void onEveTypeChange(QString eveType);
 
 private:
-	QString buildJsonFilePath(QString name);
+	
 	void prepareData();
 	void loadData(QString jsonPath);
+	void showData(QString jsonPath);
 
 private:
 	Ui::DeviceAddNewDialog *ui;

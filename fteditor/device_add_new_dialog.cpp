@@ -16,7 +16,7 @@ namespace FTEDITOR
 
 #if FT800_DEVICE_MANAGER
 
-const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Vender", "Version", "EVE Type", "Connection Type", "Flash Model",
+const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Vender", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
 							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", };
@@ -43,6 +43,20 @@ void DeviceAddNewDialog::editDevice(QString jsonPath)
 	this->setWindowTitle("Edit Device");
 	editPath = jsonPath;
 	loadData(jsonPath);
+	show();
+}
+
+void DeviceAddNewDialog::examineDevice(QString jsonPath)
+{
+	QPushButton * pb = NULL;
+	pb = ui->buttonBox->button(QDialogButtonBox::Ok);
+	if (pb)		pb->setVisible(false);
+	
+	pb = ui->buttonBox->button(QDialogButtonBox::Cancel);
+	if (pb)		pb->setText("Close");
+	
+	this->setWindowTitle("Examine Device");
+	showData(jsonPath);
 	show();
 }
 
@@ -84,10 +98,14 @@ void DeviceAddNewDialog::addDevice()
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
 	{
+		if (isEdited)
+		{
+			QFile(editPath).remove();
+		}
+
 		QString fp = buildJsonFilePath(jo["Device Name"].toString());
 		QFile f(fp);
 
-		f.remove();
 		if (!f.open(QIODevice::Text | QIODevice::WriteOnly))
 			return;
 
@@ -98,6 +116,33 @@ void DeviceAddNewDialog::addDevice()
 
 		isEdited ? emit deviceEdited(jo["Device Name"].toString(), fp) : emit deviceAdded(jo["Device Name"].toString(), fp);
 		close();
+	}
+}
+
+void DeviceAddNewDialog::onEveTypeChange(QString eveType)
+{
+	bool isFlashUsed = (eveType == "BT81X");
+
+	QTableWidgetItem * item = NULL;
+	QWidget * w = NULL;
+	for (int i = 0; i < ui->DeviceTableWidget->rowCount(); i++)
+	{
+		item = ui->DeviceTableWidget->item(i, 0);
+		if (!item->text().startsWith("Flash"))
+			continue;
+		
+		isFlashUsed ? item->setFlags(item->flags() | Qt::ItemIsEnabled ) : item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+
+		w = ui->DeviceTableWidget->cellWidget(i, 1);
+		if (w)
+		{
+			w->setEnabled(isFlashUsed);
+		}
+		else 
+		{
+			item = ui->DeviceTableWidget->item(i, 1);
+			isFlashUsed ? item->setFlags(item->flags() | Qt::ItemIsEnabled ) : item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+		}
 	}
 }
 
@@ -114,17 +159,20 @@ QString DeviceAddNewDialog::buildJsonFilePath(QString name)
 	}
 
 	int count = 0;
-	do
+	res = path + QString("%1 - Clone.json").arg(name);
+
+	while (QFile::exists(res))
 	{
-		res = path + QString("%1_%2.json").arg(name).arg(count);
-		count++;
-	} while (QFile::exists(res));
+		++count;
+		res = path + QString("%1 - Clone (%2).json").arg(name).arg(count);
+	}
 
 	return res;
 }
 
 void DeviceAddNewDialog::prepareData()
 {
+	QTableWidgetItem * item = NULL;
 	QComboBox *cb = NULL;
 	QSpinBox *sb = NULL;
 	QString sg = "QSpinBox { background-color: #e9e7e3; border: none; }";
@@ -133,7 +181,10 @@ void DeviceAddNewDialog::prepareData()
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
 		ui->DeviceTableWidget->insertRow(i);
-		ui->DeviceTableWidget->setItem(i, 0, new QTableWidgetItem(PROPERTIES[i]));
+
+		item = new QTableWidgetItem(PROPERTIES[i]);
+		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
+		ui->DeviceTableWidget->setItem(i, 0, item);
 
 		if (PROPERTIES[i] == "Device Name")
 		{
@@ -144,6 +195,7 @@ void DeviceAddNewDialog::prepareData()
 			cb = new QComboBox(this);
 			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
 			cb->setCurrentIndex(0);
+			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onEveTypeChange);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Flash Size (MB)")
@@ -169,6 +221,10 @@ void DeviceAddNewDialog::prepareData()
 			sb->setStyleSheet(i % 2 == 0 ? sw : sg);
 			ui->DeviceTableWidget->setCellWidget(i, 1, sb);
 		}
+		else
+		{
+			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem(""));
+		}
 	}
 }
 
@@ -181,13 +237,13 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 
 	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
 	f.close();
-	f.remove();
 
 	QJsonObject jo = jd.object();
 
 	if (jo.isEmpty())
 		return;
 	
+	QTableWidgetItem * item = NULL;
 	QComboBox *cb = NULL;
 	QSpinBox *sb = NULL;
 	QString sg = "* { background-color: #f5f5f5; border: none; }";
@@ -196,7 +252,10 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
 		ui->DeviceTableWidget->insertRow(i);
-		ui->DeviceTableWidget->setItem(i, 0, new QTableWidgetItem(PROPERTIES[i]));
+
+		item = new QTableWidgetItem(PROPERTIES[i]);
+		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
+		ui->DeviceTableWidget->setItem(i, 0, item);
 
 		if (!jo.contains(PROPERTIES[i]))
 			continue;
@@ -204,8 +263,9 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 		if (PROPERTIES[i] == "EVE Type")
 		{
 			cb = new QComboBox(this);
-			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
+			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");			
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
+			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onEveTypeChange);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Flash Size (MB)")
@@ -236,6 +296,47 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 		{
 			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem(jo[PROPERTIES[i]].toString()));
 		}
+	}
+}
+
+void DeviceAddNewDialog::showData(QString jsonPath)
+{
+	QFile f(jsonPath);
+
+	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+
+	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
+	f.close();
+
+	QJsonObject jo = jd.object();
+
+	if (jo.isEmpty())
+		return;
+
+	QTableWidgetItem * item = NULL;
+	QString v;
+
+	for (int i = 0; i < PROPERTIES.size(); i++)
+	{
+		ui->DeviceTableWidget->insertRow(i);
+
+		item = new QTableWidgetItem(PROPERTIES[i]);
+		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
+		ui->DeviceTableWidget->setItem(i, 0, item);
+
+		if (!jo.contains(PROPERTIES[i]))
+			continue;
+
+		
+		if (jo[PROPERTIES[i]].isString())
+			v = jo[PROPERTIES[i]].toString();
+		else
+			v = QString::number(jo[PROPERTIES[i]].toInt());
+
+		item = new QTableWidgetItem(v);
+		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
+		ui->DeviceTableWidget->setItem(i, 1, item);
 	}
 }
 

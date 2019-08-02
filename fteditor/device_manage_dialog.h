@@ -28,6 +28,7 @@ class DeviceManageDialog : public QDialog
 
 public:
 	static const QString DEVICE_SYNC_PATH;
+	static const QString BUILD_IN_DEVICE_SYNC_PATH;
 
 public:
 	explicit DeviceManageDialog(DeviceManager *parent = 0);
@@ -37,13 +38,19 @@ public:
 	static void getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo & cdi);
 
 private:
-	void loadDevice(QString jsonPath);
+	void loadDevice(QListWidget *lw, QString jsonPath);
 	void loadAllDevice();
 	
+	void doClone(QListWidget *lw);
+
 private slots:
 	void addDevice();
 	void editDevice();
 	void removeDevice();
+	void cloneDevice();
+	void cloneBuildInDevice();
+	void examineDevice();
+
 	void onDeviceAdded(QString deviceName, QString jsonPath);
 	void onDeviceEdited(QString deviceName, QString jsonPath);
 
