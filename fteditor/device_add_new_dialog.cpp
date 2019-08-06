@@ -71,8 +71,8 @@ void DeviceAddNewDialog::addDevice()
 	{
 		property = (item = ui->DeviceTableWidget->item(i, 0)) != NULL ? item->text() : QString("");
 		value = (item = ui->DeviceTableWidget->item(i, 1)) != NULL ? item->text() : QString("");
-		
-		if (value == NULL)
+	
+		if (value.isEmpty())
 		{
 			QComboBox * cb = dynamic_cast<QComboBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
 			QSpinBox * sb = dynamic_cast<QSpinBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
@@ -83,6 +83,10 @@ void DeviceAddNewDialog::addDevice()
 			else if (sb)
 			{
 				jo[property] = sb->value();
+			}
+			else if (item != NULL && !item->flags().testFlag(Qt::ItemIsEnabled))
+			{
+				jo[property] = value;
 			}
 			else
 			{
@@ -98,12 +102,15 @@ void DeviceAddNewDialog::addDevice()
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
 	{
+		QString fp;
 		if (isEdited)
 		{
 			QFile(editPath).remove();
+			fp = editPath;
 		}
+		else
+			fp = buildJsonFilePath(jo["Device Name"].toString());
 
-		QString fp = buildJsonFilePath(jo["Device Name"].toString());
 		QFile f(fp);
 
 		if (!f.open(QIODevice::Text | QIODevice::WriteOnly))
@@ -243,58 +250,41 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 	if (jo.isEmpty())
 		return;
 	
+	prepareData();
+
+	QComboBox * cb = NULL;
+	QSpinBox * sb = NULL;
 	QTableWidgetItem * item = NULL;
-	QComboBox *cb = NULL;
-	QSpinBox *sb = NULL;
-	QString sg = "* { background-color: #f5f5f5; border: none; }";
-	QString sw = "* { background-color: #ffffff; border: none; }";
-	   
+
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
-		ui->DeviceTableWidget->insertRow(i);
-
-		item = new QTableWidgetItem(PROPERTIES[i]);
-		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
-		ui->DeviceTableWidget->setItem(i, 0, item);
-
 		if (!jo.contains(PROPERTIES[i]))
 			continue;
 
 		if (PROPERTIES[i] == "EVE Type")
 		{
-			cb = new QComboBox(this);
-			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");			
+			cb = (QComboBox * )ui->DeviceTableWidget->cellWidget(i, 1);
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
-			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onEveTypeChange);
-			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Flash Size (MB)")
 		{
-			QComboBox *cb = new QComboBox(this);
-			cb->addItems(QStringList() << "2" << "4" << "8" << "16" << "32" << "64" << "128" << "512");
+			cb = (QComboBox * )ui->DeviceTableWidget->cellWidget(i, 1);
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
-			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Connection Type")
 		{
-			cb = new QComboBox(this);
-			cb->addItems(QStringList() << "FT4222" << "MPSSE");
+			cb = (QComboBox * )ui->DeviceTableWidget->cellWidget(i, 1);
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
-			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || PROPERTIES[i].startsWith("REG_"))
 		{
-			sb = new QSpinBox(this);
-			sb->setMinimum(0);
-			sb->setMaximum(9999);
-			sb->setButtonSymbols(QSpinBox::NoButtons);
-			sb->setStyleSheet(i % 2 == 0 ? sw : sg);
+			sb = (QSpinBox *)ui->DeviceTableWidget->cellWidget(i, 1);
 			sb->setValue(jo[PROPERTIES[i]].toInt());
-			ui->DeviceTableWidget->setCellWidget(i, 1, sb);
 		}
 		else
 		{
-			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem(jo[PROPERTIES[i]].toString()));
+			item = ui->DeviceTableWidget->item(i, 1);
+			if (item) item->setText(jo[PROPERTIES[i]].toString());
 		}
 	}
 }

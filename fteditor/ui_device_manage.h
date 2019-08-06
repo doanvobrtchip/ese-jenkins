@@ -49,7 +49,7 @@ public:
     {
         if (DeviceManageDialog->objectName().isEmpty())
             DeviceManageDialog->setObjectName(QString::fromUtf8("DeviceManageDialog"));
-        DeviceManageDialog->resize(441, 480);
+        DeviceManageDialog->resize(525, 580);
         verticalLayout_3 = new QVBoxLayout(DeviceManageDialog);
         verticalLayout_3->setObjectName(QString::fromUtf8("verticalLayout_3"));
         groupBox = new QGroupBox(DeviceManageDialog);
