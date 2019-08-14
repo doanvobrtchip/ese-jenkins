@@ -63,6 +63,8 @@ public:
 
 	bool eventFilter(QObject* watched, QEvent* event);
 
+	QString getDisplayListContent(bool isBigEndian = false);  // 0: little; 1: big
+
 private slots:
     void onCopy();
     void onPrepareContextMenu(const QPoint &pos);

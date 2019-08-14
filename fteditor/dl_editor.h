@@ -96,6 +96,8 @@ public:
 
 	bool isInvalid(void);
 
+	void saveCoprocessorCmd(bool isBigEndian);
+
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
@@ -138,6 +140,8 @@ private:
 	bool m_EditingInteractive;
 
 	bool m_InvalidState;
+
+	QHash<QString, QStringList> m_CoproCmdArgName;
 
 private:
 	DlEditor(const DlEditor &);

@@ -177,6 +177,10 @@ private slots:
 	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
+	void actLittleEndianSaveDisplayList();
+	void actBigEndianSaveDisplayList();
+	void actLittleEndianSaveCoproCmd();
+	void actBigEndianSaveCoproCmd();
 	void actDisplayListFromIntegers();
 
 	void undoCleanChanged(bool clean);
@@ -225,6 +229,8 @@ private:
 	void updateProjectDisplay(int hsize, int vsize);
 
 	bool maybeSave();
+
+	void saveDisplayListToTextFile(bool isBigEndian);
 
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();
@@ -355,6 +361,13 @@ private:
 	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;
+	
+	QAction *m_LittleEndianSaveDisplayListAct;
+	QAction *m_BigEndianSaveDisplayListAct;
+
+	QAction *m_LittleEndianSaveCoproCmdAct;
+	QAction *m_BigEndianSaveCoproCmdAct;
+
 	QAction *m_DisplayListFromIntegers;
 	QAction *m_ManualAct;
 	QAction *m_AboutAct;

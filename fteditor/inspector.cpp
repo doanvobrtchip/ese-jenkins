@@ -30,6 +30,7 @@
 #include <QApplication>
 #include <QMenu>
 #include <QAction>
+#include <QtEndian>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -434,6 +435,64 @@ bool Inspector::eventFilter(QObject * watched, QEvent * event)
 	}
 
 	return QWidget::eventFilter(watched, event);
+}
+
+QString Inspector::getDisplayListContent(bool isBigEndian)
+{
+	QString text("");
+	int len = m_DisplayList->headerItem()->columnCount();
+	int i = 0, j = 0;
+	uint32_t lit = 0, big = 0;
+	QTreeWidgetItem *item = 0;
+	bool ok;
+	bool isDisplayCmd = false;
+	int pos = 0;
+	QString iText("");
+
+	for(i = 0; i < m_DisplayList->topLevelItemCount(); i++)
+	{
+		item = m_DisplayList->topLevelItem(i);
+		for (j = 1; j < len; ++j)
+		{
+			iText = item->text(j);
+
+			if (iText == "0x00000000")
+			{
+				if (isDisplayCmd && pos == (i - 1))
+				{
+					return text;
+				}
+				
+				isDisplayCmd = true;
+				pos = i;
+			}
+
+			if (iText.startsWith("0x"))
+			{
+				if (isBigEndian)
+				{
+					lit = iText.toUInt(&ok, 16);
+					big = 0;
+					if (ok)
+					{
+						big = qToBigEndian(lit);
+					}
+					text += QString("0x%1").arg(big, 8, 16, QChar('0')) + "\t// ";
+				}
+				else
+				{
+					text += iText + "\t// ";
+				}
+			}
+			else
+			{
+				text += iText + '\t';
+			}
+		}
+		text.replace(text.length() - 1, 1, '\n');
+	}
+
+	return text;
 }
 
 void Inspector::copy(const QTreeWidget * widget)
