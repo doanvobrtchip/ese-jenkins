@@ -1109,7 +1109,20 @@ void DeviceManager::uploadCoprocessorContent()
 	{
 		EVE_Cmd_wr32(phost, DISPLAY());
 		EVE_Cmd_wr32(phost, CMD_SWAP);
-		EVE_Cmd_waitFlush(phost);
+
+		if (!EVE_Cmd_waitFlush(phost))
+		{
+			if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+			{
+				char err[128];
+				EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
+				QMessageBox::critical(this, "Coprocessor Error", QString::fromUtf8(err), QMessageBox::Ok);
+			}
+			else
+			{
+				QMessageBox::critical(this, "Coprocessor Error", "Coprocessor has signaled an error.", QMessageBox::Ok);
+			}
+		}
 	}
 	else
 	{
