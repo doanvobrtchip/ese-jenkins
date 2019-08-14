@@ -369,7 +369,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	/* Set REG_CPURESET to 1, to hold the coprocessor in the reset condition */
 	EVE_Hal_wr8(phost, REG_CPURESET, 1);
 	EVE_Hal_flush(phost);
-	EVE_sleep(10);
+	EVE_sleep(100);
 
 	/* Set REG_CMD_READ and REG_CMD_WRITE to zero */
 	EVE_Hal_wr16(phost, REG_CMD_READ, 0);
@@ -387,11 +387,6 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		EVE_Hal_wr8(phost, REG_ROMSUB_SEL, 3);
 	}
 
-	/* Refresh fifo */
-	EVE_Cmd_wp(phost);
-	EVE_Cmd_rp(phost);
-	EVE_Cmd_space(phost);
-
 	/* Default */
 	phost->CmdFault = false;
 
@@ -399,6 +394,12 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	EVE_Hal_wr8(phost, REG_CPURESET, 0);
 	EVE_Hal_flush(phost);
 	EVE_sleep(100);
+
+	/* Refresh fifo */
+	EVE_Cmd_wp(phost);
+	EVE_Cmd_rp(phost);
+	EVE_Cmd_space(phost);
+	EVE_Cmd_waitFlush(phost);
 
 	if (EVE_Util_hasOTP(phost))
 	{
@@ -423,14 +424,16 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		/* Need to manually stop previous command from repeating infinitely,
 		however, this may cause the coprocessor to overshoot the command fifo,
 		hence it's been filled with harmless CMD_STOP commands. */
+		EVE_Hal_rd16(phost, REG_CMD_WRITE);
 		EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
 		EVE_Hal_flush(phost);
-		EVE_sleep(10);
+		EVE_sleep(100);
 
 		/* Refresh fifo */
 		EVE_Cmd_wp(phost);
 		EVE_Cmd_rp(phost);
 		EVE_Cmd_space(phost);
+		EVE_Cmd_waitFlush(phost);
 	}
 
 	if (EVE_Util_hasVideoPatch(phost))
