@@ -717,7 +717,9 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 	transferArray[1] = 0;
 	transferArray[2] = 0;
 
+#if defined(BUFFER_OPTIMIZATION)
 	flush(phost);
+#endif
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 }
 
@@ -730,14 +732,18 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	transferArray[1] = (cmd >> 8) & 0xff;
 	transferArray[2] = (cmd >> 16) & 0xff;
 
+#if defined(BUFFER_OPTIMIZATION)
 	flush(phost);
+#endif
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 }
 
 /* Toggle PD_N pin of FT800 board for a power cycle */
 void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
+#if defined(BUFFER_OPTIMIZATION)
 	flush(phost);
+#endif
 	if (up)
 	{
 		// FT_WriteGPIO(phost->SpiHandle, 0xBB, 0x08);//PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
@@ -764,7 +770,9 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
+#if defined(BUFFER_OPTIMIZATION)
 	flush(phost);
+#endif
 	/* no-op */
 }
 

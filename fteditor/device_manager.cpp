@@ -136,6 +136,18 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 DeviceManager::~DeviceManager()
 {
+	// Close all open contexts
+	for (std::pair<DeviceId, DeviceInfo *> p : m_DeviceInfo)
+	{
+		if (p.second->EveHalContext)
+		{
+			EVE_HalContext *phost = (EVE_HalContext *)p.second->EveHalContext;
+			p.second->EveHalContext = NULL;
+			EVE_Hal_close(phost);
+		}
+	}
+
+	// Release HAL
 	EVE_Hal_release();
 }
 

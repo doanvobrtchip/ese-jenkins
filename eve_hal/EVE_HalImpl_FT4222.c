@@ -595,9 +595,7 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 ** TRANSFER **
 *************/
 
-#if defined(BUFFER_OPTIMIZATION)
 static bool flush(EVE_HalContext *phost);
-#endif
 
 static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, uint32_t inc)
 {
