@@ -147,7 +147,6 @@ void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevi
 	m_SelectedDeviceName = syncDevice;
 
 	m_MainWindow->userChangeResolution(pieces[0].toUInt(), pieces[1].toUInt());
-	
 }
 
 void DeviceManager::deviceDisplaySettings()
@@ -182,7 +181,7 @@ void DeviceManager::refreshDevices()
 		    [&](std::pair<const DeviceId, DeviceInfo *> &di) -> bool {
 			    // Match by serial number
 			    // return di.second->SerialNumber == info.SerialNumber;
-				return EVE_Hal_isDevice((EVE_HalContext *)di.second->EveHalContext, i);
+			    return EVE_Hal_isDevice((EVE_HalContext *)di.second->EveHalContext, i);
 		    });
 
 		DeviceInfo *di;
@@ -845,7 +844,19 @@ void DeviceManager::uploadCoprocessorContent()
 
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 
-	EVE_Util_resetCoprocessor(phost);
+	if (!EVE_Util_resetCoprocessor(phost))
+	{
+		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		{
+			char err[128];
+			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
+			QMessageBox::critical(this, "Coprocessor Reset Failed", QString::fromUtf8(err), QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::critical(this, "Coprocessor Reset Failed", "Coprocessor has signaled an error.", QMessageBox::Ok);
+		}
+	}
 
 	g_ContentManager->lockContent();
 
@@ -890,9 +901,9 @@ void DeviceManager::uploadCoprocessorContent()
 				if (palSize != 1024)
 					continue;
 
-					palFile.open(QIODevice::ReadOnly);
-					QByteArray ba = palFile.readAll();
-					EVE_Hal_wrMem(phost, addr(devInfo->DeviceIntf, FTEDITOR_RAM_PAL), reinterpret_cast<const uint8_t *>(ba.data()), ba.size());
+				palFile.open(QIODevice::ReadOnly);
+				QByteArray ba = palFile.readAll();
+				EVE_Hal_wrMem(phost, addr(devInfo->DeviceIntf, FTEDITOR_RAM_PAL), reinterpret_cast<const uint8_t *>(ba.data()), ba.size());
 			}
 		}
 		if (devInfo->DeviceIntf >= FTEDITOR_FT810)
@@ -1000,7 +1011,8 @@ void DeviceManager::uploadCoprocessorContent()
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
-		if (!cmdValid[i]) continue;
+		if (!cmdValid[i])
+			continue;
 		bool useMediaFifo = false;
 		bool useFlash = false;
 		const char *useFileStream = NULL;
@@ -1013,20 +1025,20 @@ void DeviceManager::uploadCoprocessorContent()
 		else if (cmdList[i] == CMD_LOADIMAGE)
 		{
 			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
-				&& (cmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
+			    && (cmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
 			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
 			++strParamRead;
-			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810) 
-				&& (cmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810)
+			    && (cmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
 		}
 		else if (cmdList[i] == CMD_PLAYVIDEO)
 		{
 			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
-				&& (cmdParamCache[cmdParamIdx[i]] & OPT_FLASH);
+			    && (cmdParamCache[cmdParamIdx[i]] & OPT_FLASH);
 			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
 			++strParamRead;
 			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810)
-				&& ((cmdParamCache[cmdParamIdx[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
+			    && ((cmdParamCache[cmdParamIdx[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
 		}
 		else if (cmdList[i] == CMD_SNAPSHOT)
 		{
@@ -1081,7 +1093,6 @@ void DeviceManager::uploadCoprocessorContent()
 			{
 				if (mediaFifoSize)
 				{
-					
 				}
 				else
 				{
