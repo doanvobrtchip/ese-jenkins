@@ -72,7 +72,7 @@ public:
 		void *EveHalContext;
 	};
 
-	typedef DeviceInfo *EveModuleDeviceInforPtr;   
+	typedef DeviceInfo *EveModuleDeviceInforPtr;
 	void setDeviceAndScreenSize(QString displaySize, QString syncDevice);
 	const QString &getSelectedDeviceName() { return m_SelectedDeviceName; }
 
@@ -84,7 +84,8 @@ private:
 	QPushButton *m_DisconnectButton;
 	QPushButton *m_UploadRamDlButton;
 	QPushButton *m_UploadCoprocessorContentButton;
-	QPushButton *m_UploadFlashButton;
+	QPushButton *m_UploadFlashContentButton;
+	QPushButton *m_UploadFlashBlobButton;
 	DeviceDisplaySettingsDialog *m_DisplaySettingsDialog;
 	QString m_SelectedDisplaySize;
 	QString m_SelectedDeviceName;
@@ -100,11 +101,13 @@ private slots:
 	//void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
 	void uploadRamDl();
 	void uploadCoprocessorContent();
-	void uploadFlash();
+	void uploadFlashContent();
+	void uploadFlashBlob();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
 	void updateSelection();
+	bool waitFlush(DeviceInfo *devInfo);
 
 private:
 	DeviceManager(const DeviceManager &) = delete;

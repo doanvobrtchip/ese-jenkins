@@ -493,6 +493,7 @@ void loop()
 				QDataStream in(&binFile);
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 				int s = in.readRawData(&ram[loadAddr], binSize);
+				// FIXME: Pad 0x00 to end for 64 byte-aligned size
 				BT8XXEMU_poke(g_Emulator);
                 binFile.close();
 			}

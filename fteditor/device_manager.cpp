@@ -116,12 +116,19 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	connect(m_UploadCoprocessorContentButton, &QPushButton::clicked, this, &DeviceManager::uploadCoprocessorContent);
 	layout->addWidget(m_UploadCoprocessorContentButton);
 
-	m_UploadFlashButton = new QPushButton(this);
-	m_UploadFlashButton->setText(tr("Upload Flash"));
-	m_UploadFlashButton->setToolTip(tr(""));
-	m_UploadFlashButton->setVisible(false);
-	connect(m_UploadFlashButton, &QPushButton::clicked, this, &DeviceManager::uploadFlash);
-	layout->addWidget(m_UploadFlashButton);
+	m_UploadFlashContentButton = new QPushButton(this);
+	m_UploadFlashContentButton->setText(tr("Write Flash Content"));
+	m_UploadFlashContentButton->setToolTip(tr(""));
+	m_UploadFlashContentButton->setVisible(false);
+	connect(m_UploadFlashContentButton, &QPushButton::clicked, this, &DeviceManager::uploadFlashContent);
+	layout->addWidget(m_UploadFlashContentButton);
+
+	m_UploadFlashBlobButton = new QPushButton(this);
+	m_UploadFlashBlobButton->setText(tr("Write Flash Firmware"));
+	m_UploadFlashBlobButton->setToolTip(tr(""));
+	m_UploadFlashBlobButton->setVisible(false);
+	connect(m_UploadFlashBlobButton, &QPushButton::clicked, this, &DeviceManager::uploadFlashBlob);
+	layout->addWidget(m_UploadFlashBlobButton);
 
 	setLayout(layout);
 
@@ -868,6 +875,23 @@ void DeviceManager::uploadCoprocessorContent()
 		{
 			QMessageBox::critical(this, "Coprocessor Reset Failed", "Coprocessor has signaled an error.", QMessageBox::Ok);
 		}
+		return;
+	}
+
+	if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+	{
+		uint32_t flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS)); if (flashStatus == FLASH_STATUS_BASIC)
+		{
+			EVE_Cmd_startFunc(phost);
+			EVE_Cmd_wr32(phost, CMD_FLASHFAST);
+			uint32_t resAddr = EVE_Cmd_moveWp(phost, 4); // Get the address where the coprocessor will write the result
+			EVE_Cmd_endFunc(phost);
+			if (!waitFlush(devInfo)) // Wait for command completion
+				return;
+			uint32_t flashRes = EVE_Hal_rd32(phost, RAM_CMD + resAddr); // Fetch result
+		}
+		flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS));
+		uint32_t flashSize = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_SIZE)) * 1024 * 1024;
 	}
 
 	g_ContentManager->lockContent();
@@ -1133,19 +1157,7 @@ void DeviceManager::uploadCoprocessorContent()
 		EVE_Cmd_wr32(phost, DISPLAY());
 		EVE_Cmd_wr32(phost, CMD_SWAP);
 
-		if (!EVE_Cmd_waitFlush(phost))
-		{
-			if (devInfo->DeviceIntf >= FTEDITOR_BT815)
-			{
-				char err[128];
-				EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
-				QMessageBox::critical(this, "Coprocessor Error", QString::fromUtf8(err), QMessageBox::Ok);
-			}
-			else
-			{
-				QMessageBox::critical(this, "Coprocessor Error", "Coprocessor has signaled an error.", QMessageBox::Ok);
-			}
-		}
+		waitFlush(devInfo);
 	}
 	else
 	{
@@ -1153,7 +1165,295 @@ void DeviceManager::uploadCoprocessorContent()
 	}
 }
 
-void DeviceManager::uploadFlash()
+bool DeviceManager::waitFlush(DeviceInfo *devInfo)
+{
+	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
+	if (!EVE_Cmd_waitFlush(phost))
+	{
+		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		{
+			char err[128];
+			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
+			QMessageBox::critical(this, "Coprocessor Error", QString::fromUtf8(err), QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::critical(this, "Coprocessor Error", "Coprocessor has signaled an error.", QMessageBox::Ok);
+		}
+		return false;
+	}
+	return true;
+}
+
+void DeviceManager::uploadFlashContent()
+{
+	if (!m_DeviceList->currentItem())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
+		return;
+	}
+
+	DeviceInfo *devInfo = m_DeviceList->currentItem()->data(0, Qt::UserRole).value<DeviceInfo *>();
+	if (!devInfo)
+		return;
+	if (!devInfo->EveHalContext)
+		return;
+
+	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
+
+	if (!EVE_Util_resetCoprocessor(phost))
+	{
+		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		{
+			char err[128];
+			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
+			QMessageBox::critical(this, "Coprocessor Reset Failed", QString::fromUtf8(err), QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::critical(this, "Coprocessor Reset Failed", "Coprocessor has signaled an error.", QMessageBox::Ok);
+		}
+		return;
+	}
+
+	uint32_t flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS));
+	if (flashStatus == FLASH_STATUS_DETACHED)
+	{
+		EVE_Cmd_wr32(phost, CMD_FLASHATTACH);
+		if (!waitFlush(devInfo)) // Wait for command completion
+			return;
+	}
+	flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS));
+	if (flashStatus < FLASH_STATUS_BASIC)
+	{
+		QMessageBox::critical(this, "Flash Error", "Flash could not be attached.", QMessageBox::Ok);
+		return;
+	}
+	if (flashStatus == FLASH_STATUS_BASIC)
+	{
+		EVE_Cmd_startFunc(phost);
+		EVE_Cmd_wr32(phost, CMD_FLASHFAST);
+		uint32_t resAddr = EVE_Cmd_moveWp(phost, 4); // Get the address where the coprocessor will write the result
+		EVE_Cmd_endFunc(phost);
+		if (!waitFlush(devInfo)) // Wait for command completion
+			return;
+		uint32_t flashRes = EVE_Hal_rd32(phost, RAM_CMD + resAddr); // Fetch result
+		// TODO: Show flashRes error messages
+	}
+	flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS));
+	if (flashStatus < FLASH_STATUS_FULL)
+	{
+		QMessageBox::critical(this, "Flash Error", "Flash could not enter fast writing mode. Has the BT81X flash firmware blob been written yet?", QMessageBox::Ok);
+		return;
+	}
+	uint32_t flashSize = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_SIZE)) * 1024 * 1024;
+
+	g_ContentManager->lockContent();
+
+	std::vector<ContentInfo *> flashContent = g_ContentManager->allFlash();
+	for (const ContentInfo *info : flashContent)
+	{
+		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+		if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
+		{
+			// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
+			printf("[WriteFlash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+			continue;
+		}
+		bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
+		    ? info->DataCompressed
+		    : false;
+		QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
+		printf("[WriteFlash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
+		QFile binFile(fileName);
+		if (!binFile.exists())
+		{
+			printf("[WriteFlash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
+			continue;
+		}
+		int binSize = binFile.size();
+		if (binSize + loadAddr > flashSize)
+		{
+			printf("[WriteFlash] Error: File of size '%i' exceeds flash size\n", binSize);
+			continue;
+		}
+		if (loadAddr & (64 - 1))
+		{
+			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
+			continue;
+		}
+		scope
+		{
+			binFile.open(QIODevice::ReadOnly);
+			QDataStream in(&binFile);
+			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
+			// int s = in.readRawData(&ram[loadAddr], binSize);
+			// BT8XXEMU_poke(g_Emulator);
+			uint8_t buffer[64 * 4096];
+			int sz = 0;
+			int preread = (loadAddr & (4096 - 1)); // Read previously written data
+			loadAddr -= preread;
+			for (;;)
+			{
+				sz = preread;
+				int l;
+				do
+				{
+					l = in.readRawData((char *)&buffer[sz], sizeof(buffer) - sz);
+					sz += l;
+				} while (l != 0 && sz < sizeof(buffer));
+				if (sz)
+				{
+					int pad = (64 - (sz & (64 - 1))) & (64 - 1);
+					if (pad)
+					{
+						for (int i = 0; i < pad; ++i)
+							buffer[sz++] = 0x00;
+					}
+					int szn = (sz + 4095) & ~4095;
+					if (szn != sz)
+					{
+						EVE_Cmd_startFunc(phost);
+						EVE_Cmd_wr32(phost, CMD_FLASHREAD);
+						EVE_Cmd_wr32(phost, szn - 4096);
+						EVE_Cmd_wr32(phost, loadAddr + szn - 4096);
+						EVE_Cmd_wr32(phost, 4096);
+						EVE_Cmd_endFunc(phost);
+					}
+					if (preread)
+					{
+						EVE_Cmd_startFunc(phost);
+						EVE_Cmd_wr32(phost, CMD_FLASHREAD);
+						EVE_Cmd_wr32(phost, 0);
+						EVE_Cmd_wr32(phost, loadAddr);
+						EVE_Cmd_wr32(phost, (preread + 3) & ~3);
+						EVE_Cmd_endFunc(phost);
+					}
+					if (!waitFlush(devInfo)) // Wait for command completion
+					{
+						binFile.close();
+						g_ContentManager->unlockContent();
+						return;
+					}
+					EVE_Hal_wrMem(phost, preread, &buffer[preread], sz - preread);
+					preread = 0;
+					EVE_Cmd_startFunc(phost);
+					EVE_Cmd_wr32(phost, CMD_FLASHUPDATE);
+					EVE_Cmd_wr32(phost, loadAddr);
+					EVE_Cmd_wr32(phost, 0);
+					EVE_Cmd_wr32(phost, szn);
+					EVE_Cmd_endFunc(phost);
+					if (!waitFlush(devInfo)) // Wait for command completion
+					{
+						binFile.close();
+						g_ContentManager->unlockContent();
+						return;
+					}
+				}
+				else
+				{
+					break;
+				}
+				loadAddr += sizeof(buffer);
+			};
+			binFile.close();
+		}
+	}
+
+	EVE_Cmd_wr32(phost, CMD_CLEARCACHE);
+	if (!waitFlush(devInfo)) // Wait for command completion
+	{
+		g_ContentManager->unlockContent();
+		return;
+	}
+
+	for (const ContentInfo *info : flashContent)
+	{
+		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
+		if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
+		{
+			// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
+			printf("[WriteFlash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
+			continue;
+		}
+		bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
+		    ? info->DataCompressed
+		    : false;
+		QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
+		printf("[WriteFlash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
+		QFile binFile(fileName);
+		if (!binFile.exists())
+		{
+			printf("[WriteFlash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
+			continue;
+		}
+		int binSize = binFile.size();
+		if (binSize + loadAddr > flashSize)
+		{
+			printf("[WriteFlash] Error: File of size '%i' exceeds flash size\n", binSize);
+			continue;
+		}
+		if (loadAddr & (64 - 1))
+		{
+			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
+			continue;
+		}
+		scope
+		{
+			binFile.open(QIODevice::ReadOnly);
+			QDataStream in(&binFile);
+			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
+			// int s = in.readRawData(&ram[loadAddr], binSize);
+			// BT8XXEMU_poke(g_Emulator);
+			uint8_t buffer[64 * 4096];
+			uint8_t match[sizeof(buffer)];
+			int sz;
+			for (;;)
+			{
+				sz = 0;
+				int l;
+				do
+				{
+					l = in.readRawData((char *)&buffer[sz], sizeof(buffer) - sz);
+					sz += l;
+				} while (l != 0 && sz < sizeof(buffer));
+				if (sz)
+				{
+					EVE_Cmd_startFunc(phost);
+					EVE_Cmd_wr32(phost, CMD_MEMSET);
+					EVE_Cmd_wr32(phost, 0);
+					EVE_Cmd_wr32(phost, 0xCB);
+					EVE_Cmd_wr32(phost, sz);
+					EVE_Cmd_wr32(phost, CMD_FLASHREAD);
+					EVE_Cmd_wr32(phost, 0);
+					EVE_Cmd_wr32(phost, loadAddr);
+					EVE_Cmd_wr32(phost, sz);
+					EVE_Cmd_endFunc(phost);
+					if (!waitFlush(devInfo)) // Wait for command completion
+					{
+						binFile.close();
+						g_ContentManager->unlockContent();
+						return;
+					}
+					EVE_Hal_rdMem(phost, match, 0, sz);
+					for (int i = 0; i < sz; ++i)
+						if (buffer[i] != match[i])
+							printf("[WriteFlash] Error: Validation failed at address %i\n", loadAddr + i);
+				}
+				else
+				{
+					break;
+				}
+				loadAddr += sizeof(buffer);
+			};
+			binFile.close();
+		}
+	}
+
+	g_ContentManager->unlockContent();
+}
+
+void DeviceManager::uploadFlashBlob()
 {
 }
 
@@ -1165,7 +1465,8 @@ void DeviceManager::updateSelection()
 		m_DisconnectButton->setVisible(false);
 		m_UploadRamDlButton->setVisible(false);
 		m_UploadCoprocessorContentButton->setVisible(false);
-		m_UploadFlashButton->setVisible(false);
+		m_UploadFlashContentButton->setVisible(false);
+		m_UploadFlashBlobButton->setVisible(false);
 	}
 	else
 	{
@@ -1174,7 +1475,8 @@ void DeviceManager::updateSelection()
 		m_DisconnectButton->setVisible(devInfo->EveHalContext);
 		m_UploadRamDlButton->setVisible(devInfo->EveHalContext);
 		m_UploadCoprocessorContentButton->setVisible(devInfo->EveHalContext);
-		m_UploadFlashButton->setVisible(devInfo->EveHalContext && flashSupport(devInfo->DeviceIntf));
+		m_UploadFlashContentButton->setVisible(devInfo->EveHalContext && flashSupport(devInfo->DeviceIntf));
+		// TODO: m_UploadFlashBlobButton->setVisible(devInfo->EveHalContext && flashSupport(devInfo->DeviceIntf));
 		if (devInfo->EveHalContext)
 		{
 			devInfo->View->setText(0, "Yes");
