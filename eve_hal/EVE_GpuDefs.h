@@ -36,6 +36,9 @@ Defines EVE hardware values.
 This header is separated and included last 
 in case of conflicts with other libraries.
 
+Expects BT_81X_ENABLE, FT_81X_ENABLE, or FT_80X_ENABLE
+to be defined. If not, multi target compilation is assumed.
+
 */
 
 #ifndef EVE_GPU_DEFS__H
