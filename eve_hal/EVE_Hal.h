@@ -124,6 +124,9 @@ typedef struct EVE_GpuDefs
 	uint32_t RomFontTableAddress;
 	uint32_t RamGSize;
 	uint32_t LowFreqBound;
+	uint32_t BitmapAddrMask;
+	uint32_t ScissorXYMask;
+	uint32_t ScissorSizeMask;
 } EVE_GpuDefs;
 
 extern EVE_GpuDefs EVE_GpuDefs_FT80X;
