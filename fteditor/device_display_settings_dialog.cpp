@@ -6,12 +6,18 @@
 #include "device_manage_dialog.h"
 #include <QDirIterator>
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 #if FT800_DEVICE_MANAGER
 
-DeviceDisplaySettingsDialog::DeviceDisplaySettingsDialog(DeviceManager *parent) :
-	QDialog(parent), pParent(parent), inputSpinboxMin(-32767), inputSpinboxMax(32767)
+extern QString g_ApplicationDataDir;
+
+DeviceDisplaySettingsDialog::DeviceDisplaySettingsDialog(DeviceManager *parent)
+    : QDialog(parent)
+    , pParent(parent)
+    , inputSpinboxMin(-32767)
+    , inputSpinboxMax(32767)
 {
 	gridLayout = new QGridLayout(this);
 	gridLayout->setSizeConstraint(QLayout::SetFixedSize);
@@ -92,25 +98,35 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 	QRadioButton *rb = NULL;
 
 	// load device from folder device_sync
+	auto processDirectory = [&](QDirIterator &it) {
+		while (it.hasNext())
+		{
+			QString path = it.next();
+
+			CustomDeviceInfo cdi;
+			DeviceManageDialog::getCustomDeviceInfo(path, cdi);
+
+			if (cdi.DeviceName.isEmpty())
+				continue;
+
+			rb = new QRadioButton(cdi.DeviceName, this);
+			rb->setToolTip("Custom device");
+			rb->setProperty("EVE_TYPE", cdi.EVE_Type);
+			rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
+			rb->setProperty("JSON_PATH", path);
+
+			m_CustomRadioButtonList.append(rb);
+			layout->addWidget(rb);
+		}
+	};
+
 	QDirIterator it(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
-	while (it.hasNext())
+	processDirectory(it);
+
+	if (QApplication::applicationDirPath() != g_ApplicationDataDir)
 	{
-		QString path = it.next();
-
-		CustomDeviceInfo cdi;
-		DeviceManageDialog::getCustomDeviceInfo(path, cdi);
-
-		if (cdi.DeviceName.isEmpty())
-			continue;
-
-		rb = new QRadioButton(cdi.DeviceName, this);
-		rb->setToolTip("Custom device");
-		rb->setProperty("EVE_TYPE", cdi.EVE_Type);
-		rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
-		rb->setProperty("JSON_PATH", path);
-
-		m_CustomRadioButtonList.append(rb);
-		layout->addWidget(rb);
+		QDirIterator it(g_ApplicationDataDir + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
+		processDirectory(it);
 	}
 }
 

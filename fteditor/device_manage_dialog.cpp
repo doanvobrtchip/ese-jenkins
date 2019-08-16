@@ -14,6 +14,8 @@ namespace FTEDITOR
 
 #if FT800_DEVICE_MANAGER
 
+extern QString g_ApplicationDataDir;
+
 const QString DeviceManageDialog::DEVICE_SYNC_PATH = "/device_sync/";
 const QString DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH = "/device_sync/build-in/";
 
@@ -63,15 +65,25 @@ void DeviceManageDialog::loadAllDevice()
 	ui->deviceListWidget->clear();
 	ui->BuildInDeviceListWidget->clear();
 
-	QDirIterator it(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
-	while (it.hasNext())
-	{
-		QString path = it.next();
+	auto processDirectory = [&](QDirIterator &it) {
+		while (it.hasNext())
+		{
+			QString path = it.next();
 
-		if (path.contains(DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH))
-			loadDevice(ui->BuildInDeviceListWidget, path);
-		else 
-			loadDevice(ui->deviceListWidget, path);
+			if (path.contains(DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH))
+				loadDevice(ui->BuildInDeviceListWidget, path);
+			else
+				loadDevice(ui->deviceListWidget, path);
+		}
+	};
+
+	QDirIterator it(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
+	processDirectory(it);
+
+	if (QApplication::applicationDirPath() != g_ApplicationDataDir)
+	{
+		QDirIterator it(g_ApplicationDataDir + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
+		processDirectory(it);
 	}
 
 	if (ui->deviceListWidget->count() > 0)
