@@ -2376,6 +2376,30 @@ ContentInfo *ContentManager::current()
 	return (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
 }
 
+std::vector<ContentInfo *> ContentManager::allRam()
+{
+	std::vector<ContentInfo *> res;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		if (info->MemoryLoaded)
+			res.push_back(info);
+	}
+	return res;
+}
+
+std::vector<ContentInfo *> ContentManager::allFlash()
+{
+	std::vector<ContentInfo *> res;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		if (info->DataStorage == ContentInfo::Flash)
+			res.push_back(info);
+	}
+	return res;
+}
+
 QString ContentManager::findFlashMapPath(bool forceScan)
 {
 	if (!forceScan && !m_FlashFileName.isEmpty())

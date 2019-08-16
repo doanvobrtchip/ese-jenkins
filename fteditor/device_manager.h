@@ -30,19 +30,12 @@
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
 
-#if FT800_DEVICE_MANAGER
-//mpsse lib includes -- Windows
-#undef POINTS
-#include <Windows.h>
-#include "Platform.h"
-#include "Gpu_Hal.h"
-#endif
-
 class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 class MainWindow;
 class DeviceDisplaySettingsDialog;
@@ -58,7 +51,7 @@ typedef struct customDeviceInfo
 	QString ConnectionType;
 	QString FlashModel;
 	int FlashSize;
-	QString ScreenSize;       // width x height
+	QString ScreenSize; // width x height
 
 	int CUS_REG_HCYCLE;
 	int CUS_REG_HOFFSET;
@@ -76,7 +69,7 @@ typedef struct customDeviceInfo
 	int CUS_REG_DITHER;
 	int CUS_REG_PCLK;
 
-	customDeviceInfo & operator = (const customDeviceInfo & s)
+	customDeviceInfo &operator=(const customDeviceInfo &s)
 	{
 		CUS_REG_HCYCLE = s.CUS_REG_HCYCLE;
 		return (*this);
@@ -87,7 +80,7 @@ typedef struct customDeviceInfo
 /**
  * DeviceManager
  * \brief DeviceManager
- * \date 2014-01-27 18:59GMT
+ * \author Paul Jiao Shouwu
  * \author Jan Boon (Kaetemi)
  */
 class DeviceManager : public QWidget
@@ -97,63 +90,67 @@ class DeviceManager : public QWidget
 public:
 	DeviceManager(MainWindow *parent);
 	virtual ~DeviceManager();
-	void setDeviceandScreenSize(QString displaySize, QString syncDevice, QString jsonPath = QString(), bool custom = false);
-
-	QString getCurrentDisplaySize();
-	void setCurrentDisplaySize(QString displaySize);
-	QString getSyncDeviceName();
-	void setSyncDeviceName(QString deviceName);
 
 	typedef uint32_t DeviceId; // Change type to whatever needed
 
 	struct DeviceInfo
 	{
 		DeviceId Id;
+		size_t DeviceIdx;
+		int Host;
+		int DeviceIntf;
+		// std::string SerialNumber;
+		// std::string DisplayName;
 		QTreeWidgetItem *View;
-		char description[65];
-		bool Connected;
-		void* handle;
-		// Add necessary device specific data here
+		void *EveHalContext;
 	};
 
-	typedef DeviceInfo * EveModuleDeviceInforPtr;
+	typedef DeviceInfo *EveModuleDeviceInforPtr;
+	void setDeviceAndScreenSize(QString displaySize, QString syncDevice, QString jsonPath = QString(), bool custom = false);
+	const QString &getSelectedDeviceName() { return m_SelectedDeviceName; }
 
 private:
-
-
-	QString currScreenSize;
-	QString selectedSyncDevice;
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_DeviceList;
 	std::map<DeviceId, DeviceInfo *> m_DeviceInfo;
 	QPushButton *m_ConnectButton;
 	QPushButton *m_DisconnectButton;
-	QPushButton *m_SendImageButton;
-	DeviceDisplaySettingsDialog *m_displaySettingsDialog;
+	QPushButton *m_UploadRamDlButton;
+	QPushButton *m_UploadCoprocessorContentButton;
+	QPushButton *m_UploadFlashContentButton;
+	QPushButton *m_UploadFlashBlobButton;
+	DeviceDisplaySettingsDialog *m_DisplaySettingsDialog;
 	DeviceManageDialog *m_DeviceManageDialog;
 
-    int		syncDeviceEVEType;
-	bool	m_isCustomDevice;
+	bool m_IsCustomDevice;
 	CustomDeviceInfo m_CDI;
+
+	QString m_SelectedDisplaySize;
+	QString m_SelectedDeviceName;
 
 private slots:
 	void deviceManage();
 	void deviceDisplaySettings();
 	void refreshDevices();
 	void connectDevice();
-    bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
-    bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
+	//bool connectDeviceBT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
+	//bool connectDeviceFT8xx(Gpu_Hal_Context_t *phost, DeviceInfo * devInfo);
 	void disconnectDevice();
-	void syncDevice();
-    void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
+	//void syncDevice();
+	//void loadContent2Device(ContentManager *contentManager, Gpu_Hal_Context_t *phost);
+	void uploadRamDl();
+	void uploadCoprocessorContent();
+	void uploadFlashContent();
+	void uploadFlashBlob();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
 	void updateSelection();
+	bool waitFlush(DeviceInfo *devInfo);
 
 private:
-	DeviceManager(const DeviceManager &) {};
-	DeviceManager &operator=(const DeviceManager &) {};	
+	DeviceManager(const DeviceManager &) = delete;
+	DeviceManager &operator=(const DeviceManager &) = delete;
 }; /* class DeviceManager */
 
 #else /* FT800_DEVICE_MANAGER */
@@ -164,8 +161,6 @@ class DeviceManager : public QWidget
 };
 
 #endif /* FT800_DEVICE_MANAGER */
-
-
 
 } /* namespace FTEDITOR */
 

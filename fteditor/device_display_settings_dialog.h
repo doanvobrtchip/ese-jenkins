@@ -13,20 +13,19 @@
 #include <qgroupbox.h>
 #include "device_manager.h"
 
-
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 #if FT800_DEVICE_MANAGER
 
 class DeviceManager;
-
 
 class DeviceDisplaySettingsDialog : public QDialog
 {
 	Q_OBJECT
 
 public:
-	explicit DeviceDisplaySettingsDialog(DeviceManager *parent=0);
+	explicit DeviceDisplaySettingsDialog(DeviceManager *parent = 0);
 	void execute();
 	void setInitialScreenSize(QString screenSize);
 
@@ -35,7 +34,7 @@ private:
 	void updateSyncDeviceSelection();
 	void addCustomDevice(QLayout *layout);
 
-private slots: 
+private slots:
 	void saveInputValues();
 
 private:
@@ -46,9 +45,9 @@ private:
 	qint16 inputSpinboxMin;
 	qint16 inputSpinboxMax;
 
-	QGridLayout* gridLayout;
-	QDialogButtonBox* buttonBox;
-	QDialogButtonBox* defaultSettingsButtonBox;
+	QGridLayout *gridLayout;
+	QDialogButtonBox *buttonBox;
+	QDialogButtonBox *defaultSettingsButtonBox;
 
 	QRadioButton *VM800B35A;
 	QRadioButton *VM800B43A;
@@ -59,17 +58,13 @@ private:
 	QRadioButton *VM800C35A;
 	QRadioButton *VM800C43A;
 	QRadioButton *VM800C50A;
-
-    QRadioButton *ME813AUWH50C;
-
+	QRadioButton *ME813AUWH50C;
 	QRadioButton *VM816C50A;
-
-    QRadioButton *VM816CU50A;
+	QRadioButton *VM816CU50A;
 
 	QList<QRadioButton *> m_CustomRadioButtonList;
 };
 
 #endif
-
 }
 #endif // COPTIONDIALOG_H

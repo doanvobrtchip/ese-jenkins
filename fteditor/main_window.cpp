@@ -119,6 +119,8 @@ extern bool g_WarnMissingClearActive;
 
 extern volatile bool g_ShowCoprocessorBusy;
 
+QString g_ApplicationDataDir;
+
 void cleanupMediaFifo();
 void emuMain(BT8XXEMU_Emulator *sender, void *context);
 void closeDummy(BT8XXEMU_Emulator *sender, void *context);
@@ -271,6 +273,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 			QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
 		}
 	}
+
+	g_ApplicationDataDir = m_ApplicationDataDir;
 
 	m_UndoStack = new QUndoStack(this);
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));

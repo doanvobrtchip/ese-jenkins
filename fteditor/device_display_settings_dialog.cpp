@@ -6,12 +6,18 @@
 #include "device_manage_dialog.h"
 #include <QDirIterator>
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 #if FT800_DEVICE_MANAGER
 
-DeviceDisplaySettingsDialog::DeviceDisplaySettingsDialog(DeviceManager *parent) :
-	QDialog(parent), pParent(parent), inputSpinboxMin(-32767), inputSpinboxMax(32767)
+extern QString g_ApplicationDataDir;
+
+DeviceDisplaySettingsDialog::DeviceDisplaySettingsDialog(DeviceManager *parent)
+    : QDialog(parent)
+    , pParent(parent)
+    , inputSpinboxMin(-32767)
+    , inputSpinboxMax(32767)
 {
 	gridLayout = new QGridLayout(this);
 	gridLayout->setSizeConstraint(QLayout::SetFixedSize);
@@ -92,32 +98,42 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 	QRadioButton *rb = NULL;
 
 	// load device from folder device_sync
+	auto processDirectory = [&](QDirIterator &it) {
+		while (it.hasNext())
+		{
+			QString path = it.next();
+
+			CustomDeviceInfo cdi;
+			DeviceManageDialog::getCustomDeviceInfo(path, cdi);
+
+			if (cdi.DeviceName.isEmpty())
+				continue;
+
+			rb = new QRadioButton(cdi.DeviceName, this);
+			rb->setToolTip("Custom device");
+			rb->setProperty("EVE_TYPE", cdi.EVE_Type);
+			rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
+			rb->setProperty("JSON_PATH", path);
+
+			m_CustomRadioButtonList.append(rb);
+			layout->addWidget(rb);
+		}
+	};
+
 	QDirIterator it(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
-	while (it.hasNext())
+	processDirectory(it);
+
+	if (QApplication::applicationDirPath() != g_ApplicationDataDir)
 	{
-		QString path = it.next();
-
-		CustomDeviceInfo cdi;
-		DeviceManageDialog::getCustomDeviceInfo(path, cdi);
-
-		if (cdi.DeviceName.isEmpty())
-			continue;
-
-		rb = new QRadioButton(cdi.DeviceName, this);
-		rb->setToolTip("Custom device");
-		rb->setProperty("EVE_TYPE", cdi.EVE_Type);
-		rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
-		rb->setProperty("JSON_PATH", path);
-
-		m_CustomRadioButtonList.append(rb);
-		layout->addWidget(rb);
+		QDirIterator it(g_ApplicationDataDir + DeviceManageDialog::DEVICE_SYNC_PATH, QStringList() << "*.json", QDir::Files, QDirIterator::Subdirectories);
+		processDirectory(it);
 	}
 }
 
 void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 {
 	int currenDevice;
-	QString selectedDevice = pParent->getSyncDeviceName();
+	QString selectedDevice = pParent->getSelectedDeviceName();
 
 	; {
 		VM800B35A->setVisible(false);
@@ -216,39 +232,39 @@ void DeviceDisplaySettingsDialog::execute(){
 
 void DeviceDisplaySettingsDialog::saveInputValues(){
 	if (VM800B35A->isChecked()) {
-		pParent->setDeviceandScreenSize("320x240", "VM800B35A");
+		pParent->setDeviceAndScreenSize("320x240", "VM800B35A");
 	}
 	else if (VM800C35A->isChecked()){
-		pParent->setDeviceandScreenSize("320x240", "VM800C35A");
+		pParent->setDeviceAndScreenSize("320x240", "VM800C35A");
 	}
 	else if (VM800BU35A->isChecked()){
-		pParent->setDeviceandScreenSize("320x240", "VM800BU35A");
+		pParent->setDeviceAndScreenSize("320x240", "VM800BU35A");
 	}
 	else if (VM800B43A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800B43A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800B43A");
 	}
 	else if (VM800C43A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800C43A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800C43A");
 	}
 	else if (VM800BU43A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800BU43A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800BU43A");
 	}
 	else if (VM800B50A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800B50A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800B50A");
 	}
 	else if (VM800C50A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800C50A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800C50A");
 	}
 	else if (VM800BU50A->isChecked()){
-		pParent->setDeviceandScreenSize("480x272", "VM800BU50A");
+		pParent->setDeviceAndScreenSize("480x272", "VM800BU50A");
 	}else if (ME813AUWH50C->isChecked()){
-		pParent->setDeviceandScreenSize("800x480", "ME813AU_WH50C(800x480)");
+		pParent->setDeviceAndScreenSize("800x480", "ME813AU_WH50C(800x480)");
 	}
 	else if (VM816C50A->isChecked()) {
-		pParent->setDeviceandScreenSize("800x480", "VM816C50A(800x480)");
+		pParent->setDeviceAndScreenSize("800x480", "VM816C50A(800x480)");
 	}
     else if (VM816CU50A->isChecked()) {
-        pParent->setDeviceandScreenSize("800x480", "VM816CU50A(800x480)");
+        pParent->setDeviceAndScreenSize("800x480", "VM816CU50A(800x480)");
     }
 	else
 	{
@@ -256,7 +272,7 @@ void DeviceDisplaySettingsDialog::saveInputValues(){
 		{
 			if (rb->isChecked())
 			{
-				pParent->setDeviceandScreenSize(rb->property("SCREEN_SIZE").toString(), rb->text(), rb->property("JSON_PATH").toString(), true);
+				pParent->setDeviceAndScreenSize(rb->property("SCREEN_SIZE").toString(), rb->text(), rb->property("JSON_PATH").toString(), true);
 			}
 		}
 	}

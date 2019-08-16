@@ -2,10 +2,6 @@
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
 IF (WIN32)
-	IF (FTEDITOR_DEVICE_MANAGER)
-		FILE(GLOB SRCSFT ftlib/*.cpp)
-		FILE(GLOB HDRSFT ftlib/*.h)
-	ENDIF (FTEDITOR_DEVICE_MANAGER)
 	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
 FILE(GLOB RESOURCES *.qrc)
@@ -26,6 +22,24 @@ SET(CMAKE_AUTOMOC ON)
 
 QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
 
+IF (FTEDITOR_DEVICE_MANAGER)
+  INCLUDE_DIRECTORIES(
+    ${CMAKE_SOURCE_DIR}/eve_hal
+    ${CMAKE_SOURCE_DIR}/dependencies/mpsse_spi/include
+    ${CMAKE_SOURCE_DIR}/dependencies/ft4222/inc
+    ${CMAKE_SOURCE_DIR}/dependencies/ftd2xx
+  )
+  IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/mpsse_spi/lib/windows/x64)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/lib/amd64)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ftd2xx/amd64)
+  ELSE()
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/mpsse_spi/lib/windows/i386)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/lib/i386)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ftd2xx/i386)
+  ENDIF()
+ENDIF (FTEDITOR_DEVICE_MANAGER)
+
 ADD_EXECUTABLE(fteditor WIN32
 	${SRCS}
 	${HDRS}
@@ -34,6 +48,12 @@ ADD_EXECUTABLE(fteditor WIN32
 	${RSRC}
 	${RESOURCE_ADDED}
 	)
+
+IF(FTEDITOR_DEVICE_MANAGER)
+  TARGET_LINK_LIBRARIES(fteditor
+    eve_hal
+  )
+ENDIF()
 
 TARGET_LINK_LIBRARIES(fteditor
 	bt8xxemu
@@ -127,14 +147,6 @@ IF (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
     version
   )
-  
-  IF (FTEDITOR_DEVICE_MANAGER)
-    TARGET_LINK_LIBRARIES(fteditor
-      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/ftd2xx.lib
-      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/libMPSSE.lib
-      ${CMAKE_SOURCE_DIR}/fteditor/ftlib/LibFT4222.lib
-    )
-  ENDIF (FTEDITOR_DEVICE_MANAGER)
 ELSE (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
     Qt5::Widgets
