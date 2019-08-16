@@ -25,7 +25,6 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "dl_parser.h"
 #include "dl_editor.h"
 #include "constant_mapping.h"
-#include "constant_common.h"
 
 #include "device_display_settings_dialog.h"
 
@@ -1272,7 +1271,7 @@ void DeviceManager::uploadFlashContent()
 			continue;
 		}
 		int binSize = binFile.size();
-		if (binSize + loadAddr > flashSize)
+		if ((uint32_t)(binSize + loadAddr) > flashSize)
 		{
 			printf("[WriteFlash] Error: File of size '%i' exceeds flash size\n", binSize);
 			continue;
@@ -1388,7 +1387,7 @@ void DeviceManager::uploadFlashContent()
 			continue;
 		}
 		int binSize = binFile.size();
-		if (binSize + loadAddr > flashSize)
+		if ((uint32_t)(binSize + loadAddr) > flashSize)
 		{
 			printf("[WriteFlash] Error: File of size '%i' exceeds flash size\n", binSize);
 			continue;

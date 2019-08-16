@@ -56,28 +56,20 @@ to be defined. If not, multi target compilation is assumed.
 #define EVE_MULTI_TARGET
 #endif
 
+/* Definitions used for FT800 coprocessor command buffer */
+#define EVE_DL_SIZE (8 * 1024UL) /* 8kB Display List buffer size */
+#define EVE_CMD_FIFO_SIZE ((4) * 1024UL) /* 4kB coprocessor FIFO size */
+#define EVE_CMD_FIFO_MASK (EVE_CMD_FIFO_SIZE - 1)
+#define EVE_CMD_FIFO_ALIGNMENT_MASK (EVE_CMD_FIFO_SIZE - ((4) - 1))
+
+#define EVE_CMD_FAULT(rp) (rp & 0x3)
+
 /**************
 ** Addresses **
 **************/
 
 #define RAM_G 0UL
 #define ROM_CHIPID 786432UL
-
-#define CMDBUF_SIZE 4096UL
-
-#if defined(FT_80X_ENABLE) || defined(EVE_MULTI_TARGET)
-#define RAM_PAL 1056768UL /* Palette RAM only on FT80X */
-#endif
-
-#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(EVE_MULTI_TARGET)
-/* TODO: Look up the FT80X values */
-#define RAM_BIST 3670016UL
-#define RAM_COMPOSITE 3940352UL
-#define RAM_J1RAM 3182592UL
-#define RAM_JTBOOT 3190784UL
-#define RAM_ROMSUB 3186688UL
-#define RAM_TOP 3162112UL
-#endif
 
 #if defined(BT_81X_ENABLE) || defined(EVE_MULTI_TARGET)
 #define RAM_ERR_REPORT 0x309800
@@ -98,7 +90,6 @@ to be defined. If not, multi target compilation is assumed.
 #define EVE_HAL_REG_TRACKER (phost->GpuDefs->RegTracker)
 
 #define RAM_DL (phost->GpuDefs->RamDl)
-#define RAM_CMD (phost->GpuDefs->RamCmd)
 #define ROMFONT_TABLEADDRESS (phost->GpuDefs->RomFontTableAddress)
 
 #define RAM_G_SIZE (phost->GpuDefs->RamGSize)
@@ -125,7 +116,6 @@ to be defined. If not, multi target compilation is assumed.
 #define EVE_HAL_REG_TRACKER 3182592UL
 
 #define RAM_DL 3145728UL
-#define RAM_CMD 3178496UL
 #define ROMFONT_TABLEADDRESS 3145724UL
 
 #define RAM_G_SIZE (1024 * 1024L)
@@ -159,7 +149,6 @@ to be defined. If not, multi target compilation is assumed.
 #define EVE_HAL_REG_TRACKER 1085440UL
 
 #define RAM_DL 1048576UL
-#define RAM_CMD 1081344UL
 #define ROMFONT_TABLEADDRESS 1048572UL
 
 #define RAM_G_SIZE (256 * 1024L)
@@ -172,6 +161,15 @@ to be defined. If not, multi target compilation is assumed.
 #endif
 
 #endif
+
+#define RAM_PAL (RAM_DL + 8192UL)
+#define RAM_TOP (RAM_DL + 16384UL)
+#define RAM_CMD (RAM_DL + 32768UL)
+#define RAM_J1RAM (RAM_DL + 36864UL)
+#define RAM_ROMSUB (RAM_DL + 40960UL)
+#define RAM_JTBOOT (RAM_DL + 45056UL)
+#define RAM_BIST (RAM_DL + 524288UL)
+#define RAM_COMPOSITE (RAM_DL + 794624UL)
 
 #define RAM_REG (EVE_HAL_REG_ID + 0)
 #define REG_ID (EVE_HAL_REG_ID + 0)
@@ -366,7 +364,6 @@ to be defined. If not, multi target compilation is assumed.
 	                          REG_CMDB_SPACE,        \
 	                          REG_TRACKER,           \
 	                          RAM_DL,                \
-	                          RAM_CMD,               \
 	                          ROMFONT_TABLEADDRESS,  \
 	                          RAM_G_SIZE,            \
 	                          LOW_FREQ_BOUND,        \
@@ -675,10 +672,8 @@ ESD_END()
 #define ADC_SINGLE_ENDED 0UL
 #define ADC_DIFFERENTIAL 1UL
 
-#ifdef EVE_SUPPORT_CAPACITIVE
-#define CTOUCH_MODE_COMPATIBILITY (1)
-#define CTOUCH_MODE_EXTENDED (0)
-#endif
+#define CTOUCH_MODE_COMPATIBILITY 1UL
+#define CTOUCH_MODE_EXTENDED 0UL
 
 #if 0
 

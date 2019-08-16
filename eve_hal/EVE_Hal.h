@@ -120,7 +120,6 @@ typedef struct EVE_GpuDefs
 	uint32_t RegCmdBSpace;
 	uint32_t RegTracker;
 	uint32_t RamDl;
-	uint32_t RamCmd;
 	uint32_t RomFontTableAddress;
 	uint32_t RamGSize;
 	uint32_t LowFreqBound;
