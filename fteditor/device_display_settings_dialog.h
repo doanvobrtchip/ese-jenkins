@@ -29,6 +29,11 @@ public:
 	void execute();
 	void setInitialScreenSize(QString screenSize);
 
+private:
+	QGroupBox *createRadioButtonsGroup();
+	void updateSyncDeviceSelection();
+	void addCustomDevice(QLayout *layout);
+
 private slots:
 	void saveInputValues();
 
@@ -53,16 +58,11 @@ private:
 	QRadioButton *VM800C35A;
 	QRadioButton *VM800C43A;
 	QRadioButton *VM800C50A;
-
 	QRadioButton *ME813AUWH50C;
-
 	QRadioButton *VM816C50A;
-
 	QRadioButton *VM816CU50A;
 
-private:
-	QGroupBox *createRadioButtonsGroup();
-	void updateSyncDeviceSelection();
+	QList<QRadioButton *> m_CustomRadioButtonList;
 };
 
 #endif

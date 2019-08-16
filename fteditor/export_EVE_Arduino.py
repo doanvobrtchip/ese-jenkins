@@ -1,9 +1,8 @@
 import os, shutil, subprocess, sys, re
-
+from export_common import parseCommand
 
 def displayName():
     return "EVE Arduino Project"
-
 
 def convertArgs(functionArgs):
     argsMap = {
@@ -152,7 +151,6 @@ SDCard_initialization = """
 def raiseUnicodeError(errorArea):
     raise Exception("Unable to export project: unicode characters are currently unsupported.  Please check: " + errorArea)
 
-
 # name: the input file name,
 def run(name, document, ram, moduleName):
 
@@ -262,22 +260,18 @@ def run(name, document, ram, moduleName):
         raise IOError("Unable to generate project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed.")
 
 
-    loadimageCommandFound = "False"
+    loadImageCommandFound = False
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                functionName = splitlinea[0]
-                if functionName == "CMD_LOADIMAGE":
-                    loadimageCommandFound = "True"
+                functionName, _, _ = parseCommand(line, functionMap, convertArgs)
+                if functionName == "Cmd_LoadImage":
+                    loadImageCommandFound = True
                     break
             except:
                 pass
 
-
-
-    #raise Exception('At: ' + os.getcwd() + ' Read/Write permission issue.')
-    outName = outDir + os.path.sep + "FT80X_" + name + "_FTEVE.ino"  # os.path.basename(os.getcwd()) + ".ino"
+    outName = outDir + os.path.sep + "FT80X_" + name + "_FTEVE.ino"
 
     f = open(outName, "w+")
     f.write("#include <EEPROM.h>\n")
@@ -398,14 +392,14 @@ def run(name, document, ram, moduleName):
     else:
         f.write("FT800IMPL_SPI FTImpl(FT_CS_PIN,FT_PDN_PIN,FT_INT_PIN);\n")
 
-    if loadimageCommandFound == "True":
+    if loadImageCommandFound:
         f.write(SDCard_initialization)
         f.write(LoadToCoprocessorCMDfifo)
 
     f.write("void setup()\n")
     f.write("{\n")
 
-    if loadimageCommandFound == "True":
+    if loadImageCommandFound:
         f.write("\tFtSd.Init();\n")
         f.write("\tif(sd_present){\n")
         f.write("\t//SD card is not detected.\n")
@@ -457,20 +451,10 @@ def run(name, document, ram, moduleName):
     f.write("\tFTImpl.Finish();\n")
     f.write("\tFTImpl.DLStart();\n")
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')', 1)
-                functionName = splitlinea[0]
-                functionName = functionMap[functionName]
-                #commentsRegex = re.compile(r'(?![\n\r])\s?//[\w\W].+')
-                commentsRegex = re.compile("//.*$")
-                if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
-                    functionArgs = convertArgs(splitlineb[0])
-                    comment = ""
-                    m = commentsRegex.match(splitlineb[1])
-                    if m:
-                        comment = m.group(0)
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
+                if functionName in ["BitmapHandle", "BitmapSource", "BitmapLayout", "BitmapSize", "Cmd_SetFont"]:                    
                     newline = "\tFTImpl." + functionName + "(" + functionArgs + ");" + comment + "\n"
                     f.write(newline)
                 else:
@@ -492,41 +476,32 @@ def run(name, document, ram, moduleName):
     specialCommandType = ""
 
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                functionName = splitlinea[0]
-                functionName = functionMap[functionName]
+                functionName, functionArgs, _ = parseCommand(line, functionMap, convertArgs)
                 if functionName == "Clear":
                     clearFound = True
-                if functionName == "ClearColorA" or functionName == "ClearColorRGB" or functionName == "ClearStencil" or functionName == "ClearTag":
+                if functionName in ["ClearColorA", "ClearColorRGB", "ClearStencil", "ClearTag"]:
                     clearBuffersFound = True
                     incrementCallandJump = True
             except:
                 pass
 
-
     f.write("\tFTImpl.DLStart();\n")
 
-
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             if (line.lstrip()).startswith("//"):  #if the line is a comment line then just write it out
                 f.write("\t" + line + "\n")
                 continue
 
             try:
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')', 1)
-                functionName = splitlinea[0]
-                functionName = functionMap[functionName]
-                commentsRegex = re.compile("//.*$")
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
                 if not skippedBitmaps:
-                    if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "Cmd_SetFont":
+                    if functionName in ["BitmapHandle", "BitmapSource", "BitmapLayout", "BitmapSize", "Cmd_SetFont"]:
                         continue
                     else:
                         skippedBitmaps = True
-                functionArgs = convertArgs(splitlineb[0])
 
                 if (functionName == "Clear") and isFirstCommand and clearFound and not clearBuffersFound:
                     isFirstCommand = False
@@ -539,13 +514,11 @@ def run(name, document, ram, moduleName):
                     except:
                         pass
 
-
                 if functionName == "Cmd_LoadImage":
                     functionArgsSplit = functionArgs.split(',')
                     functionArgs = functionArgsSplit[0] + ","
                     functionArgs += functionArgsSplit[1]
                     functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
-                    #functionArgsSplit[2] = re.sub(r'[:]', '.', functionArgsSplit[2])
                     if '/' in functionArgsSplit[2]:
                         specialParameter = functionArgsSplit[2].rsplit('/',1)[1]
                     elif '\\' in functionArgsSplit[2]:
@@ -560,13 +533,6 @@ def run(name, document, ram, moduleName):
 
                     specialCommandType = "Cmd_LoadImage"
 
-                comment = ""
-                try:
-                    m = commentsRegex.match(splitlineb[1])
-                except:
-                    pass
-                if m:
-                    comment = m.group(0)
                 newline = "\tFTImpl." + functionName + "(" + functionArgs + ");" + comment + "\n"
                 f.write(newline)
 
@@ -581,7 +547,6 @@ def run(name, document, ram, moduleName):
                     specialCommandType = ""
 
             except Exception as e:
-                #raise Exception(e)
                 pass
         else:
             if skippedBitmaps:
@@ -601,8 +566,6 @@ def run(name, document, ram, moduleName):
         subprocess.call(('open', outName))
     elif os.name == 'nt':
         os.startfile(outName)
-    #os.startfile((os.getcwd() + "/" + outName).replace("/", "\\"))
     elif os.name == 'posix':
         subprocess.call(('xdg-open', outName))
-    #print resultText
     return resultText

@@ -1,4 +1,5 @@
 import os, sys, re, shutil, subprocess, errno, stat
+from export_common import parseCommand
 
 paletted_format = 8		
 paletted8_format = 16		
@@ -7,7 +8,6 @@ paletted4444_format = 15
 
 def displayName():
     return "EVE HAL 2.0 Project"
-
 
 def renameStringInFile(file, oldName, newName):
     with open(file, 'r') as resourceFile:
@@ -1149,7 +1149,6 @@ globalValue = {
 def raiseUnicodeError(errorArea):
     raise Exception("Unable to export project: unicode characters are currently unsupported.  Please check: " + errorArea)
 
-
 def run(name, document, ram, moduleName):
     global lutSize
     deviceType = document["project"]["device"]
@@ -1187,10 +1186,8 @@ def run(name, document, ram, moduleName):
     except Exception as e:
         raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed. " + str(e))
 
-
-
     outName = outDir + os.path.sep + name + HALProjectName + ".c"
-
+    
     f = open(outName, "w+")
     f.write(FT8xxInitialConfig)
     for content in document["content"]:
@@ -1363,20 +1360,10 @@ def run(name, document, ram, moduleName):
                             else:		
                                 f.write("\tFt_Gpu_Hal_WrMem(phost," + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")                        
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')',1)
-                functionName = splitlinea[0]
-                if functionName in functionMap:
-                    functionName = functionMap[functionName]
-                commentsRegex = re.compile("//.*$")
-                if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "CMD_SETFONT":
-                    functionArgs = convertArgs(splitlineb[0])
-                    comment = ""
-                    m = commentsRegex.match(splitlineb[1])
-                    if m:
-                        comment = m.group(0)
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
+                if functionName in ["BITMAP_HANDLE", "BITMAP_SOURCE", "BITMAP_LAYOUT", "BITMAP_SIZE", "CMD_SETFONT"]:
                     newline = "\tFt_App_WrCoCmd_Buffer(phost," + functionName + "(" + functionArgs + "));" + comment + "\n"
                     f.write(newline)
                 else:
@@ -1388,12 +1375,9 @@ def run(name, document, ram, moduleName):
     clearFound = False
     displayScreenCalibration = False
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                functionName = splitlinea[0]
-                if functionName in functionMap:
-                    functionName = functionMap[functionName]
+                functionName, _, _ = parseCommand(line, functionMap, convertArgs)
                 if functionName == "CLEAR":
                     clearFound = True
                 if functionname == "Ft_Gpu_CoCmd_Calibrate":
@@ -1414,25 +1398,21 @@ def run(name, document, ram, moduleName):
     filesToTestFolder = []
 
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                if (line.lstrip()).startswith("//"):#if the line is a comment line then just write it out
+                #if the line is a comment line then just write it out
+                if (line.lstrip()).startswith("//"):
                     f.write("\t" + line + "\n")
                     continue
-                splitlinea = line.split('(',1)
-                splitlineb = splitlinea[1].split(')',1)
-                functionName = splitlinea[0]
-                commentsRegex = re.compile("//.*$")
-                coprocessor_cmd = False
-                if functionName in functionMap:
-                    functionName = functionMap[functionName]
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
+                coprocessor_cmd = False                
+                if functionName in functionMap.values():
                     coprocessor_cmd = True
                 if not skippedBitmaps:
-                    if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "CMD_SETFONT":
+                    if functionName in ["BITMAP_HANDLE", "BITMAP_SOURCE", "BITMAP_LAYOUT", "BITMAP_SIZE", "CMD_SETFONT"]:
                         continue
                     else:
                         skippedBitmaps = True
-                functionArgs = convertArgs(splitlineb[0])
 
                 if functionName == "Ft_Gpu_CoCmd_Snapshot2":
 
@@ -1447,7 +1427,7 @@ def run(name, document, ram, moduleName):
 
                     f.write("\tFt_Gpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n")
 
-                    f.write("\tFt_Gpu_CoCmd_Snapshot2(phost," + splitlineb[0] + ");\n")
+                    f.write("\tFt_Gpu_CoCmd_Snapshot2(phost," + functionArgs + ");\n")
 
                     f.write("\tFt_Gpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n")
                     f.write("\tFt_Gpu_CoCmd_Dlstart(phost);\n")
@@ -1474,7 +1454,7 @@ def run(name, document, ram, moduleName):
 
                     f.write("\t/* Take snap shot of the current screen */\n")
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_SNAPSHOT);\n")
-                    f.write("\tFt_Gpu_Hal_WrCmd32(phost," + splitlineb[0] + ");\n")
+                    f.write("\tFt_Gpu_Hal_WrCmd32(phost," + functionArgs + ");\n")
 
                     f.write("\t//timeout for snapshot to be performed by coprocessor\n")
 
@@ -1572,17 +1552,13 @@ def run(name, document, ram, moduleName):
                 if functionName == "Ft_Gpu_CoCmd_LoadIdentity" or functionName == "Ft_Gpu_CoCmd_Swap" or functionName == "Ft_Gpu_CoCmd_Stop" or functionName == "Ft_Gpu_CoCmd_SetMatrix" or functionName == "Ft_Gpu_CoCmd_ColdStart" or functionName == "Ft_Gpu_CoCmd_Dlstart" or functionName == "Ft_Gpu_CoCmd_ScreenSaver":
                     parameterComma = ""
                 #attempt to append comments.
-                comments = ""
-                if len(functionName):
-                    m = commentsRegex.match(splitlineb[1])
-                    if m:
-                        comments = m.group(0)
+                if functionName:
                     if coprocessor_cmd:
-                            newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
+                        newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comment + "\n"
                     else:
-                            newline = "\tFt_App_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
+                        newline = "\tFt_App_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comment + "\n"
                     f.write(newline)
-
+                
                 if specialCommandType == "Ft_Gpu_CoCmd_LoadImage":
                     if globalContext['mediaFIFOEnabled'] == "True":
                         f.write("\t#if defined(FT900_PLATFORM)\n")
@@ -1630,12 +1606,9 @@ def run(name, document, ram, moduleName):
     f.write(FT8xxMainFunctionEnd)
     f.close()
 
-
- 
     generateProjectFiles(outDir, outName, name, filesToTestFolder, moduleName)
 
     resultText += "<b>Output</b>:<p>Output files: " + outDir + "</p> <p>Project files: " + outDir + os.path.sep + name + "</p><p>\"" + name + HALProjectName + os.path.sep + "ReadMe.txt\" details the project folder structure.</p>"
-
 
     if sys.platform.startswith('darwin'):
         subprocess.call(('open', outName))
@@ -1643,6 +1616,5 @@ def run(name, document, ram, moduleName):
         subprocess.call(['explorer', outDir])
     elif os.name == 'posix':
         subprocess.call(('xdg-open', outName))
-    #print resultText
     return resultText
 
