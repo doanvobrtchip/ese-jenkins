@@ -3057,7 +3057,7 @@ void MainWindow::actSaveAs()
 
 #define DUMP_VERSION_FT80X			(100)
 #define DUMP_VERSION_FT81X		    (110)
-#define DUMP_VERSION_BT81X		    (111)
+#define DUMP_VERSION_BT81X		    (110)
 #define DUMP_256K				    (256 * 1024)
 #define DUMP_1K						(1024)
 #define DUMP_8K						(8 * 1024)
@@ -3134,11 +3134,6 @@ void MainWindow::actImport()
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT810);
 			m_ContentManager->changeRawLength(ramG, DUMP_1024K);
 			loadOk = importDumpFT81X(in);
-			break;
-		case DUMP_VERSION_BT81X:
-			m_ProjectDevice->setCurrentIndex(FTEDITOR_BT815);
-			m_ContentManager->changeRawLength(ramG, DUMP_1024K);
-			loadOk = importDumpBT81X(in);
 			break;
 		default:
 			QString message = QString("Invalid header version: %1").arg(header[0]);
@@ -3224,33 +3219,7 @@ bool MainWindow::importDumpFT81X(QDataStream & in)
 
 bool MainWindow::importDumpBT81X(QDataStream & in)
 {
-	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-
-	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
-	if (s != DUMP_1024K)
-	{	
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
-		return false;
-	}
-
-	s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL)], DUMP_8K);
-	if (s != DUMP_8K)
-	{	
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-		return false;
-	}
-
-	m_DlEditor->lockDisplayList();
-	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
-	m_DlEditor->reloadDisplayList(false);
-	m_DlEditor->unlockDisplayList();
-	if (s != DUMP_8K)
-	{
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-		return false;
-	}
-
-	return true;
+	return importDumpFT81X(in); 
 }
 
 void MainWindow::actExport()
@@ -3327,14 +3296,11 @@ void MainWindow::actExport()
 		// <1024K of main RAM>
 		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
 
-		// <8K of DL RAM> setup display list
+		// <8K of DL RAM>
 		m_DlEditor->lockDisplayList();
 		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
 			return;
 		m_DlEditor->unlockDisplayList();
-
-		// <8K of DL RAM> actual display list
-		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL)], DUMP_8K)) return;
 	}
 
 	file.close();
