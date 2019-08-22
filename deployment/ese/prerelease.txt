@@ -2,10 +2,31 @@
 
 Please uninstall the latest version if you have one installed on your PC. 
 
-Version 3.1.6
-
 Release Note: 
 
+Version 3.2.0
+Features: 
+•   Add a new example project to illustrate ASTC layout
+•   Add a setfont example
+•   Add setfont2 for extended format on bt81x
+•   The add button in content browser shall open the last recent folder
+•   Update the vc1dump export to 110 version
+•   Enhance device sync feature to support more platforms
+•   Update the "device sync up“ feature with RAM_G and coprocessor content
+•   Save display list in raw binary format done
+•   Save the coproccessor commands in "Coprocessor" tab window done
+•   Set bold font for radio button in case of build-in device
+
+Bug Fix:
+*   Wrong implementation for the paletted8 format in emulator
+*   Reloading the screen shot file but get the wrong effect
+*   "OPT_FLAT" is missing from cmd_button properties window
+*   Exporting is wrong if character ")" exists in CMD_TEXT
+
+Known issues: 
+*   Playing the invalid animation frame data in flash may cause ESE hang
+
+Version 3.1.6
 Features: 
 •   Add support of BT815, including ASTC, flash, Unicode and more features.   
 •   Support FT4222 board in device manager
