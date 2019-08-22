@@ -157,6 +157,7 @@ void DeviceManageDialog::doClone(QListWidget *lw)
 
 		QString newName = DeviceAddNewDialog::buildJsonFilePath(fi.baseName());
 		jo["Device Name"] = QFileInfo(newName).baseName();
+		jo["Build In"] = false;
 
 		QJsonDocument jd;
 		jd.setObject(jo);
@@ -232,12 +233,26 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.DeviceName = jo["Device Name"].toString();
 	}
 
+	if (jo.contains("Description") && jo["Description"].isString())
+	{
+		cdi.Description = jo["Description"].toString();
+	}
+
+	if (jo.contains("Build In") && jo["Build In"].isBool())
+	{
+		cdi.isBuiltIn = jo["Build In"].toBool();
+	}
+	else
+	{
+		cdi.isBuiltIn = false;
+	}
+
 	if (jo.contains("EVE Type") && jo["EVE Type"].isString())
 	{
 		if (jo["EVE Type"].toString() == "FT80X")
 			cdi.EVE_Type = FTEDITOR_FT800;
 		else if (jo["EVE Type"].toString() == "FT81X")
-			cdi.EVE_Type = FTEDITOR_FT813;
+			cdi.EVE_Type = FTEDITOR_FT810;
 		else
 			cdi.EVE_Type = FTEDITOR_BT815;
 	}

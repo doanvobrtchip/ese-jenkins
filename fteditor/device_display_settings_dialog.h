@@ -49,19 +49,6 @@ private:
 	QDialogButtonBox *buttonBox;
 	QDialogButtonBox *defaultSettingsButtonBox;
 
-	QRadioButton *VM800B35A;
-	QRadioButton *VM800B43A;
-	QRadioButton *VM800B50A;
-	QRadioButton *VM800BU35A;
-	QRadioButton *VM800BU43A;
-	QRadioButton *VM800BU50A;
-	QRadioButton *VM800C35A;
-	QRadioButton *VM800C43A;
-	QRadioButton *VM800C50A;
-	QRadioButton *ME813AUWH50C;
-	QRadioButton *VM816C50A;
-	QRadioButton *VM816CU50A;
-
 	QList<QRadioButton *> m_CustomRadioButtonList;
 };
 
