@@ -22,5 +22,7 @@
     "Screen Height": 272,
     "Screen Width": 480,
     "Vender": "BridgeTek",
-    "Version": "1.0"
+    "Version": "1.0",
+    "Description": "FT800 Credit card module with 4.3\" display",
+    "Build In": true
 }
