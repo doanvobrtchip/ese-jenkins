@@ -388,6 +388,17 @@ void DeviceManager::connectDevice()
 	if (devInfo->EveHalContext)
 		return;
 
+	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
+	progressDialog->setWindowTitle("Connecting to Device");
+	QLabel *progressLabel = new QLabel(progressDialog.get());
+	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
+	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
+	progressLabel->setText("Connecting...");
+	progressBar->setVisible(false);
+	progressSubBar->setVisible(false);
+	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
+	progressDialog->setVisible(true);
+
 	// Get parameters to open the selected device
 	EVE_HalParameters params = { 0 };
 	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), devInfo->DeviceIdx);
@@ -488,6 +499,7 @@ void DeviceManager::connectDevice()
 		CMD_SWAP
 	};
 
+	progressLabel->setText("Boot up...");
 	if (!EVE_Util_bootupConfig(phost))
 	{
 		EVE_Hal_close(phost);
@@ -499,8 +511,6 @@ void DeviceManager::connectDevice()
 
 	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
 	EVE_Hal_flush(phost);
-
-	// TODO: Initialize with the specified screen resolution & the default settings for said resolution
 
 	updateSelection();
 }

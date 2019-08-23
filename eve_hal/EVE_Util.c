@@ -184,15 +184,14 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 #endif
 
 	/* Read Register ID to check if EVE is ready. */
-	id = EVE_Hal_rd8(phost, REG_ID);
-	int idi = 0;
-	while (id != 0x7C)
+	while (id = EVE_Hal_rd8(phost, REG_ID) != 0x7C)
 	{
-		id = EVE_Hal_rd8(phost, REG_ID);
 		eve_printf_debug("EVE register ID after wake up %x\n", id);
-		EVE_sleep(100);
-		if (++idi >= 100)
-			return false;
+
+		EVE_sleep(20);
+		if (phost->Parameters.CbCmdWait)
+			if (!phost->Parameters.CbCmdWait(phost))
+				return false;
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", id);
 
@@ -219,8 +218,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	Bit 1 for touch engine,
 	Bit 2 for audio engine.
 	*/
-	engine_status = EVE_Hal_rd8(phost, REG_CPURESET);
-	while (engine_status != 0x00)
+	while ((engine_status = EVE_Hal_rd8(phost, REG_CPURESET)) != 0x00)
 	{
 		if (engine_status & 0x01)
 		{
@@ -235,8 +233,10 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 			eve_printf_debug("Audio engine is not ready\n");
 		}
 
-		EVE_sleep(100);
-		engine_status = EVE_Hal_rd8(phost, REG_CPURESET);
+		EVE_sleep(20);
+		if (phost->Parameters.CbCmdWait)
+			if (!phost->Parameters.CbCmdWait(phost))
+				return false;
 	}
 	eve_printf_debug("All engines are ready\n");
 
