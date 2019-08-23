@@ -21,7 +21,7 @@
     "REG_VSYNC1": 10,
     "Screen Height": 272,
     "Screen Width": 480,
-    "Vender": "BridgeTek",
+    "Vendor": "Bridgetek",
     "Version": "1.0",
     "Description": "FT800 Credit card module with 4.3\" display",
     "Build In": true

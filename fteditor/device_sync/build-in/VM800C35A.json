@@ -21,7 +21,7 @@
     "REG_VSYNC1": 2,
     "Screen Height": 240,
     "Screen Width": 320,
-    "Vender": "BridgeTek",
+    "Vendor": "Bridgetek",
     "Version": "1.0",
     "Description": "FT800 Basic module with 3.5\" display",
     "Build In": true

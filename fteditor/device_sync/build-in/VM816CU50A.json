@@ -21,7 +21,7 @@
     "REG_VSYNC1": 3,
     "Screen Height": 480,
     "Screen Width": 800,
-    "Vender": "BridgeTek",
+    "Vendor": "Bridgetek",
     "Version": "1.0",
     "Description": "VM816CU module with 5.0\" display",
     "Build In": true

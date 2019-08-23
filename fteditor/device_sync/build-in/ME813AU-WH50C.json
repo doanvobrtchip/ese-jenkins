@@ -22,7 +22,7 @@
     "ExternalOsc": false,
     "Screen Height": 480,
     "Screen Width": 800,
-    "Vender": "BridgeTek",
+    "Vendor": "Bridgetek",
     "Version": "1.0",
     "Description": "FT813 module with 5.0\" display and FT4222 USB-SPI",
     "Build In": true

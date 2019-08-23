@@ -16,10 +16,10 @@ namespace FTEDITOR
 
 #if FT800_DEVICE_MANAGER
 
-const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vender", "Version", "Connection Type", "EVE Type", "Flash Model",
+const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
-							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", };
+							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "ExternalOsc" };
 
 DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
     : QDialog(parent)
