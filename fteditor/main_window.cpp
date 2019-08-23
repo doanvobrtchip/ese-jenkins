@@ -2162,16 +2162,13 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
-	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString::null;
-
-	QString title = QString("%1%2 - EVE Screen Editor [Build Time: %3 - %4] (%5) - (%7)")
+	QString title = QString("%1%2 - %4 - EVE Screen Editor v%3 [Build Time: %5 - %6]")
 	                    .arg(QString(m_CleanUndoStack ? "" : "*"))
 	                    .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
+						.arg(STR_PRODUCTVERSION)
+					    .arg(QDir::currentPath())
 	                    .arg(__DATE__)
-	                    .arg(__TIME__)
-	                    .arg(emulatorVersion)
-	                    .arg(QDir::currentPath());
+	                    .arg(__TIME__);
 
 	setWindowTitle(title);
 }
@@ -3709,6 +3706,9 @@ void MainWindow::manual()
 
 void MainWindow::about()
 {
+	QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
+	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString::null;
+	   	 
 	QMessageBox msgBox(this);
 
 	msgBox.setWindowTitle(QString(tr("About EVE Screen Editor v%1")).arg(STR_PRODUCTVERSION));
@@ -3718,10 +3718,12 @@ void MainWindow::about()
 	    "<br>"
 	    "Copyright (C) 2016-2019  Bridgetek Pte Ltd<br>"
 	    "<br>"
+		"%1<br>"
+		"<br>"
 	    "Support and updates:<br>"
 	    "<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
 	    "<br>"
-	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>"));
+	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>").arg(emulatorVersion));
 	msgBox.exec();
 }
 
