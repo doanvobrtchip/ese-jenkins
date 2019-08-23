@@ -1004,17 +1004,6 @@ void DeviceManager::uploadFlashContent()
 	}
 	m_Abort = false;
 
-	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
-	progressDialog->setWindowTitle("Writing to Flash");
-	QLabel *progressLabel = new QLabel(progressDialog.get());
-	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
-	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
-	progressLabel->setText("Preparing...");
-	progressBar->setVisible(false);
-	progressSubBar->setVisible(false);
-	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
-	progressDialog->setVisible(true);
-
 	if (!m_DeviceList->currentItem())
 	{
 		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
@@ -1026,6 +1015,17 @@ void DeviceManager::uploadFlashContent()
 		return;
 	if (!devInfo->EveHalContext)
 		return;
+
+	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
+	progressDialog->setWindowTitle("Writing to Flash");
+	QLabel *progressLabel = new QLabel(progressDialog.get());
+	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
+	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
+	progressLabel->setText("Preparing...");
+	progressBar->setVisible(false);
+	progressSubBar->setVisible(false);
+	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
+	progressDialog->setVisible(true);
 
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 

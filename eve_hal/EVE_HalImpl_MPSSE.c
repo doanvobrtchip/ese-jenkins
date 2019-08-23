@@ -307,17 +307,23 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 				return false;
 			}
 
-			status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, size, &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
-
-			if ((status != FT_OK) || (sizeTransferred != size))
+			uint32_t sizeRemaining = size;
+			while (sizeRemaining)
 			{
-				eve_printf_debug("%d SPI_Write failed, sizeTransferred is %d with status %d\n", __LINE__, sizeTransferred, status);
-				if (sizeTransferred != size)
+				uint32_t transferSize = min(0xFFFF, sizeRemaining);
+				FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, transferSize, &sizeTransferred, 
+					(transferSize == sizeRemaining) ? (SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE) : SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+				sizeRemaining -= sizeTransferred;
+			
+				if (status != FT_OK || !sizeTransferred)
+				{
+					eve_printf_debug("%d SPI_Write failed, sizeTransferred is %d with status %d\n", __LINE__, sizeTransferred, status);
 					phost->Status = EVE_STATUS_ERROR;
-				return false;
+					return false;
+				}
 			}
 
-			addr = incrementRamGAddr(phost, addr, sizeTransferred);
+			addr = incrementRamGAddr(phost, addr, size);
 			phost->SpiRamGAddr = addr;
 		}
 
@@ -325,13 +331,19 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 	}
 #else
 	uint32_t sizeTransferred = 0;
+	uint32_t sizeRemaining = size;
 
-	FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, size, &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
-
-	if (status != FT_OK || sizeTransferred != size)
+	while (sizeRemaining)
 	{
-		phost->Status = EVE_STATUS_ERROR;
-		return false;
+		FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, min(0xFFFF, sizeRemaining), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+		sizeRemaining -= sizeTransferred;
+
+		if (status != FT_OK || !sizeTransferred)
+		{
+			eve_printf_debug("%d SPI_Write failed, sizeTransferred is %d with status %d\n", __LINE__, sizeTransferred, status);
+			phost->Status = EVE_STATUS_ERROR;
+			return false;
+		}
 	}
 
 	return true;
