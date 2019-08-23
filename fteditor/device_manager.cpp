@@ -14,6 +14,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QTreeWidgetItem>
 #include <QPushButton>
 #include <QFileInfo>
+#include <QProgressBar>
 
 // Emulator includes
 #include <EVE_Platform.h>
@@ -52,6 +53,8 @@ DeviceManager::DeviceManager(MainWindow *parent)
     , m_DisplaySettingsDialog(NULL)
     , m_DeviceManageDialog(NULL)
     , m_IsCustomDevice(false)
+	, m_Busy(false)
+	, m_Abort(false)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -179,6 +182,59 @@ DeviceManager::~DeviceManager()
 	}
 }
 
+struct BusyLock
+{
+public:
+	BusyLock(bool *busy)
+	{
+		if (!*busy)
+		{
+			m_Busy = busy;
+			*busy = true;
+		}
+		else
+		{
+			m_Busy = NULL;
+		}
+	}
+
+	~BusyLock()
+	{
+		if (m_Busy)
+		{
+			*m_Busy = false;
+			m_Busy = NULL;
+		}
+	}
+
+	inline bool locked() const { return m_Busy; /* != NULL */ }
+
+private:
+	bool *m_Busy;
+};
+
+bool DeviceManager::cbCmdWait(void *ph)
+{
+	EVE_HalContext *phost = reinterpret_cast<EVE_HalContext *>(ph);
+	DeviceManager *deviceManager = reinterpret_cast<DeviceManager *>(phost->UserContext);
+	QCoreApplication::processEvents(QEventLoop::AllEvents);
+	return !deviceManager->m_Abort;
+}
+
+void DeviceManager::initProgressDialog(QDialog *progressDialog, QLabel *progressLabel, QProgressBar *progressBar, QProgressBar *progressSubBar)
+{
+	progressDialog->setMinimumSize(350, 150);
+	progressDialog->setWindowModality(Qt::ApplicationModal);
+	progressDialog->setWindowFlags(progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint & ~Qt::WindowContextHelpButtonHint);
+	QVBoxLayout *progressLayout = new QVBoxLayout(progressDialog);
+	progressDialog->setLayout(progressLayout);
+	progressLayout->addWidget(progressLabel);
+	progressLayout->addWidget(progressBar);
+	progressLayout->addWidget(progressSubBar);
+	// TODO: Add abort button here
+	progressLayout->addStretch();
+}
+
 void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevice, QString jsonPath, bool isCustomDevice)
 {
 	m_IsCustomDevice = isCustomDevice;
@@ -224,6 +280,14 @@ void DeviceManager::deviceDisplaySettings()
 
 void DeviceManager::refreshDevices()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is still in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
 	printf("Refresh devices\n");
 
 	size_t eveDeviceCount = EVE_Hal_list();
@@ -291,9 +355,17 @@ void DeviceManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *
 
 void DeviceManager::connectDevice()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is still in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
 	if (!m_DeviceList->currentItem())
 	{
-		QMessageBox::warning(this, "select device first\n", "Please Select the device in the list", QMessageBox::Ok);
+		QMessageBox::warning(this, "EVE Screen Editor", "Please select a device from the list.", QMessageBox::Ok);
 		return;
 	}
 
@@ -383,6 +455,9 @@ void DeviceManager::connectDevice()
 		params.Display.Dither = 1;
 	}
 
+	params.CbCmdWait = (EVE_Callback)cbCmdWait;
+	params.UserContext = reinterpret_cast<void *>(this);
+
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };
 	bool ok = EVE_Hal_open(phost, &params);
 	if (!ok)
@@ -421,6 +496,14 @@ void DeviceManager::connectDevice()
 
 void DeviceManager::disconnectDevice()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is still in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
 	if (!m_DeviceList->currentItem())
 		return;
 
@@ -451,6 +534,14 @@ void DeviceManager::disconnectDevice()
 
 void DeviceManager::uploadRamDl()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is still in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
 	if (!m_DeviceList->currentItem())
 	{
 		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
@@ -492,6 +583,14 @@ void DeviceManager::uploadRamDl()
 
 void DeviceManager::uploadCoprocessorContent()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is still in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
 	if (!m_DeviceList->currentItem())
 	{
 		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
@@ -831,6 +930,25 @@ bool DeviceManager::waitFlush(DeviceInfo *devInfo)
 
 void DeviceManager::uploadFlashContent()
 {
+	BusyLock busyLock(&m_Busy);
+	if (!busyLock.locked())
+	{
+		QMessageBox::warning(this, "EVE Screen Editor", "Another request is already in progress.", QMessageBox::Ok);
+		return;
+	}
+	m_Abort = false;
+
+	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
+	progressDialog->setWindowTitle("Writing to Flash");
+	QLabel *progressLabel = new QLabel(progressDialog.get());
+	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
+	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
+	progressLabel->setText("Preparing...");
+	progressBar->setVisible(false);
+	progressSubBar->setVisible(false);
+	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
+	progressDialog->setVisible(true);
+
 	if (!m_DeviceList->currentItem())
 	{
 		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
@@ -895,8 +1013,17 @@ void DeviceManager::uploadFlashContent()
 	g_ContentManager->lockContent();
 
 	std::vector<ContentInfo *> flashContent = g_ContentManager->allFlash();
+	progressBar->setRange(0, (int)flashContent.size());
+	progressBar->setValue(0);
+	progressBar->setVisible(true);
+	progressSubBar->setRange(0, 1);
+	progressSubBar->setValue(0);
+	progressSubBar->setVisible(true);
+	progressLabel->setText("Writing...");
 	for (const ContentInfo *info : flashContent)
 	{
+		progressBar->setValue(progressBar->value() + 1);
+		progressBar->setMinimum(1);
 		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
 		if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
 		{
@@ -929,6 +1056,9 @@ void DeviceManager::uploadFlashContent()
 		scope
 		{
 			binFile.open(QIODevice::ReadOnly);
+			progressLabel->setText("Writing \"" + info->DestName + "\"");
+			progressSubBar->setValue(0);
+			progressSubBar->setRange(0, binFile.size());
 			QDataStream in(&binFile);
 			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 			// int s = in.readRawData(&ram[loadAddr], binSize);
@@ -945,6 +1075,7 @@ void DeviceManager::uploadFlashContent()
 				{
 					l = in.readRawData((char *)&buffer[sz], sizeof(buffer) - sz);
 					sz += l;
+					progressSubBar->setValue(progressSubBar->value() + l);
 				} while (l != 0 && sz < sizeof(buffer));
 				if (sz)
 				{
@@ -1011,8 +1142,13 @@ void DeviceManager::uploadFlashContent()
 		return;
 	}
 
+	progressBar->setMinimum(0);
+	progressBar->setValue(0);
+	progressLabel->setText("Verifying...");
 	for (const ContentInfo *info : flashContent)
 	{
+		progressBar->setValue(progressBar->value() + 1);
+		progressBar->setMinimum(1);
 		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
 		if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
 		{
@@ -1045,6 +1181,9 @@ void DeviceManager::uploadFlashContent()
 		scope
 		{
 			binFile.open(QIODevice::ReadOnly);
+			progressLabel->setText("Verifying \"" + info->DestName + "\"");
+			progressSubBar->setValue(0);
+			progressSubBar->setRange(0, binFile.size());
 			QDataStream in(&binFile);
 			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 			// int s = in.readRawData(&ram[loadAddr], binSize);
@@ -1060,6 +1199,7 @@ void DeviceManager::uploadFlashContent()
 				{
 					l = in.readRawData((char *)&buffer[sz], sizeof(buffer) - sz);
 					sz += l;
+					progressSubBar->setValue(progressSubBar->value() + l);
 				} while (l != 0 && sz < sizeof(buffer));
 				if (sz)
 				{

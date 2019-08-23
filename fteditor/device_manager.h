@@ -33,6 +33,8 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
+class QLabel;
+class QProgressBar;
 
 namespace FTEDITOR
 {
@@ -128,6 +130,9 @@ private:
 	QString m_SelectedDisplaySize;
 	QString m_SelectedDeviceName;
 
+	bool m_Busy;
+	bool m_Abort;
+
 private slots:
 	void deviceManage();
 	void deviceDisplaySettings();
@@ -145,6 +150,8 @@ private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 
 private:
+	static bool cbCmdWait(void *phost);
+	void initProgressDialog(QDialog *progressDialog, QLabel *progressLabel, QProgressBar *progressBar, QProgressBar *progressSubBar);
 	void updateSelection();
 	bool waitFlush(DeviceInfo *devInfo);
 
