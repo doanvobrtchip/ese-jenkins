@@ -602,6 +602,17 @@ void DeviceManager::uploadCoprocessorContent()
 	}
 	m_Abort = false;
 
+	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
+	progressDialog->setWindowTitle("Uploading to Coprocessor");
+	QLabel *progressLabel = new QLabel(progressDialog.get());
+	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
+	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
+	progressLabel->setText("Preparing...");
+	progressBar->setVisible(false);
+	progressSubBar->setVisible(false);
+	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
+	progressDialog->setVisible(true);
+
 	if (!m_DeviceList->currentItem())
 	{
 		QMessageBox::warning(this, "EVE Screen Editor", "No device selected.", QMessageBox::Ok);
@@ -635,6 +646,8 @@ void DeviceManager::uploadCoprocessorContent()
 		return;
 	}
 
+	progressLabel->setText("Entering fast flash mode...");
+
 	if (devInfo->DeviceIntf >= FTEDITOR_BT815)
 	{
 		uint32_t flashStatus = EVE_Hal_rd32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_FLASH_STATUS));
@@ -655,8 +668,12 @@ void DeviceManager::uploadCoprocessorContent()
 	g_ContentManager->lockContent();
 
 	std::vector<ContentInfo *> ramContent = g_ContentManager->allRam();
+	progressLabel->setText("Writing RAM_G...");
 	for (const ContentInfo *info : ramContent)
 	{
+		if (m_Abort)
+			break;
+
 		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
 		QString fileName = info->DestName + ".raw";
 		QFile binFile(fileName);
@@ -763,6 +780,7 @@ void DeviceManager::uploadCoprocessorContent()
 	int strParamRead = 0;
 	int cmdParamIdx[FTEDITOR_DL_SIZE + 1];
 	bool cmdValid[FTEDITOR_DL_SIZE];
+	QString cmdText[FTEDITOR_DL_SIZE];
 	uint32_t *cmdListPtr = g_CmdEditor->getDisplayList();
 	const DlParsed *cmdParsedPtr = g_CmdEditor->getDisplayListParsed();
 
@@ -776,6 +794,7 @@ void DeviceManager::uploadCoprocessorContent()
 		cmdValid[i] = cmdParsedPtr[i].ValidId;
 		if (cmdValid[i])
 		{
+			cmdText[i] = g_CmdEditor->getLineText(i);
 			switch (cmdList[i])
 			{
 			case CMD_LOADIMAGE:
@@ -789,24 +808,16 @@ void DeviceManager::uploadCoprocessorContent()
 
 	g_CmdEditor->unlockDisplayList();
 
-	/*
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-	{
-	swr32(CMD_FLASHATTACH);
-	swr32(CMD_FLASHFAST);
-	swr32(~0); // result
-	wp += 12;
-	freespace -= 12;
-	}
-	*/
-
 	int32_t mediaFifoPtr = 0;
 	int32_t mediaFifoSize = 0;
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
+		if (m_Abort)
+			break;
 		if (!cmdValid[i])
 			continue;
+		progressLabel->setText(cmdText[i]);
 		bool useMediaFifo = false;
 		bool useFlash = false;
 		const char *useFileStream = NULL;
