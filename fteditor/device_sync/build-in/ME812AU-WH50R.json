@@ -1,6 +1,6 @@
 {
     "Connection Type": "FT4222",
-    "Device Name": "ME813AUWH50C",
+    "Device Name": "ME812AU-WH50R",
     "EVE Type": "FT81X",
     "Flash Model": "",
     "Flash Size (MB)": "",
@@ -24,6 +24,6 @@
     "Screen Width": 800,
     "Vender": "BridgeTek",
     "Version": "1.0",
-    "Description": "FT813 module with 5.0\" display and FT4222 USB-SPI",
+    "Description": "FT812 module with 5.0\" display and FT4222 USB-SPI",
     "Build In": true
 }
