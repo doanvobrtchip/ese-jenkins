@@ -34,10 +34,10 @@
         "device": 2048
     },
     "registers": {
-        "hSize": 512,
+        "hSize": 480,
         "macro": [
             ""
         ],
-        "vSize": 480
+        "vSize": 272
     }
 }
