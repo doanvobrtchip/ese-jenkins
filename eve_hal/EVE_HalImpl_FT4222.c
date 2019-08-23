@@ -300,8 +300,8 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 		phost->GpuDefs = &EVE_GpuDefs_FT81X;
 	else
 		phost->GpuDefs = &EVE_GpuDefs_FT80X;
-#endif
 	phost->ChipId = parameters->ChipId;
+#endif
 
 	memset(&devInfoA, 0, sizeof(devInfoA));
 	status = FT_GetDeviceInfoDetail(deviceIdxA,
@@ -366,90 +366,6 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 			ret = false;
 		}
 	}
-
-#if 0
-	status = FT_CreateDeviceInfoList(&numdevs);
-	if (status != FT_OK)
-	{
-		eve_printf_debug("FT_CreateDeviceInfoList failed");
-		ret = false;
-	}
-
-	status = FT_ListDevices(&numdevs, NULL, FT_LIST_NUMBER_ONLY);
-	if (status != FT_OK)
-	{
-		eve_printf_debug("FT_ListDevices failed");
-		ret = false;
-	}
-
-	if (ret)
-	{
-		for (index = 0; (index < numdevs) && ret; index++)
-		{
-			FT_DEVICE_LIST_INFO_NODE devInfo;
-			memset(&devInfo, 0, sizeof(devInfo));
-
-			status = FT_GetDeviceInfoDetail(index,
-			    &devInfo.Flags, &devInfo.Type, &devInfo.ID, &devInfo.LocId,
-			    devInfo.SerialNumber, devInfo.Description, &devInfo.ftHandle);
-			if (FT_OK == status)
-			{
-				eve_printf_debug("Dev %d:\n", index);
-				eve_printf_debug(" Flags= 0x%x, (%s) (%s)\n", devInfo.Flags,
-				    ((devInfo.Flags & 0x01) ? "DEVICE_OPEN" : "DEVICE_CLOSED"), ((devInfo.Flags & 0x02) ? "High-speed USB" : "Full-speed USB"));
-				eve_printf_debug(" Type= 0x%x\n", devInfo.Host);
-				eve_printf_debug(" ID= 0x%x\n", devInfo.ID);
-				eve_printf_debug(" LocId= 0x%x\n", devInfo.LocId);
-				eve_printf_debug(" SerialNumber= %s\n", devInfo.SerialNumber);
-				eve_printf_debug(" Description= %s\n", devInfo.Description);
-				eve_printf_debug(" ftHandle= %p\n", devInfo.ftHandle);
-			}
-			else
-				ret = false;
-
-			if (ret && !(devInfo.Flags & 0x01) && ((!strcmp(devInfo.Description, "FT4222 A") && (phost->SpiHandle == NULL)) || (!strcmp(devInfo.Description, "FT4222 B") && (phost->GpioHandle == NULL))))
-			{
-				/* obtain handle for the first discovered "FT4222 A" and first "FT4222 B" */
-				status = FT_OpenEx(devInfo.Description, FT_OPEN_BY_DESCRIPTION, &fthandle);
-				if (status != FT_OK)
-				{
-					eve_printf_debug("FT_OpenEx failed %d\n", status);
-					ret = false;
-				}
-				else
-				{
-					if (!strcmp(devInfo.Description, "FT4222 A"))
-					{
-						//is SPI
-						phost->SpiHandle = fthandle; //SPI communication handle
-						eve_printf_debug("[%d]th of total connected devices is FT4222 A (SPI) : phost->hal_hanlde = %p\n", index + 1, phost->SpiHandle);
-					}
-					else if (!strcmp(devInfo.Description, "FT4222 B"))
-					{
-						//is GPIO
-						phost->GpioHandle = fthandle; //GPIO communication handle
-						eve_printf_debug("[%d]th of total connected devices is FT4222 B (GPIO) : phost->hal_hanlde = %p\n", index + 1, phost->SpiHandle);
-					}
-					else
-					{
-						eve_printf_debug("Error in FT4222 configuration\n");
-					}
-				}
-			}
-			else
-			{
-				if (
-				    (!strcmp(devInfo.Description, "FT4222 A") && phost->SpiHandle != NULL) || (!strcmp(devInfo.Description, "FT4222 B") && phost->GpioHandle != NULL))
-					eve_printf_debug("[%d]th of total connected devices is not the first %s detected. Hence skipping.\n", index + 1, devInfo.Description);
-				else if (devInfo.Flags & 0x01)
-					eve_printf_debug("[%d]th of total connected devices is already open in another context. Hence skipping.\n", index + 1);
-				else
-					eve_printf_debug("[%d]th of total connected devices is not FT4222 but is %s. Hence skipping.\n", index + 1, devInfo.Description);
-				continue;
-			}
-		}
-	}
-#endif
 
 	if (ret)
 	{

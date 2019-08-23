@@ -108,42 +108,6 @@ void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
 	strcpy(deviceInfo->DisplayName, chanInfo.Description);
 	deviceInfo->Host = EVE_HOST_MPSSE;
 	deviceInfo->Opened = chanInfo.Flags & FT_FLAGS_OPENED;
-
-#if 0
-	if (numberChannels > 0)
-	{
-		FT_DEVICE_LIST_INFO_NODE devList;
-		memset(&devList, 0, sizeof(devList));
-		SPI_GetChannelInfo(0, &devList);
-
-		status = FT_CreateDeviceInfoList(&numdevs);
-		if (FT_OK == status)
-		{
-			eve_printf_debug("Number of D2xx devices connected = %d\n", numdevs);
-			numberChannels = numdevs;
-
-			FT_GetDeviceInfoDetail(0, &devList.Flags, &devList.Type, &devList.ID,
-				&devList.LocId,
-				devList.SerialNumber,
-				devList.Description,
-				&devList.ftHandle);
-		}
-		else
-		{
-			eve_printf_debug("FT_CreateDeviceInfoList failed");
-		}
-
-		eve_printf_debug("Information on channel number %d:\n", 0);
-		/* print the dev info */
-		eve_printf_debug(" Flags=0x%x\n", devList.Flags);
-		eve_printf_debug(" Type=0x%x\n", devList.Host);
-		eve_printf_debug(" ID=0x%x\n", devList.ID);
-		eve_printf_debug(" LocId=0x%x\n", devList.LocId);
-		eve_printf_debug(" SerialNumber=%s\n", devList.SerialNumber);
-		eve_printf_debug(" Description=%s\n", devList.Description);
-		eve_printf_debug(" ftHandle=0x%p\n", devList.ftHandle); /* is 0 unless open */
-	}
-#endif
 }
 
 /* Check whether the context is the specified device */
