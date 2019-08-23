@@ -15,6 +15,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include <QPushButton>
 #include <QFileInfo>
 #include <QProgressBar>
+#include <QTimer>
 
 // Emulator includes
 #include <EVE_Platform.h>
@@ -172,7 +173,8 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	// Init_libMPSSE();
 	EVE_HalPlatform *platform = EVE_Hal_initialize();
 	// Initial refresh of devices
-	refreshDevices(); // TODO: Move to when device manager is first shown for faster bootup
+	// refreshDevices(); // TODO: Move to when device manager is first shown for faster bootup
+	QTimer::singleShot(0, this, &DeviceManager::refreshDevices);
 
 	// m_DisplaySettingsDialog = new DeviceDisplaySettingsDialog(this);
 }
@@ -324,6 +326,19 @@ void DeviceManager::refreshDevices()
 	m_Abort = false;
 
 	printf("Refresh devices\n");
+
+	/*
+	std::unique_ptr<QDialog> progressDialog = std::make_unique<QDialog>(this);
+	progressDialog->setWindowTitle("EVE Screen Editor");
+	QLabel *progressLabel = new QLabel(progressDialog.get());
+	QProgressBar *progressBar = new QProgressBar(progressDialog.get());
+	QProgressBar *progressSubBar = new QProgressBar(progressDialog.get());
+	progressLabel->setText("Refresh devices...");
+	progressBar->setVisible(false);
+	progressSubBar->setVisible(false);
+	initProgressDialog(progressDialog.get(), progressLabel, progressBar, progressSubBar);
+	progressDialog->setVisible(true);
+	*/
 
 	size_t eveDeviceCount = EVE_Hal_list();
 

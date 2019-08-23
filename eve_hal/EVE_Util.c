@@ -221,7 +221,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 		}
 		/* Download new firmware to fix pen up issue */
 		/* It may cause resistive touch not working any more*/
-		uploadTouchFirmware(phost); // FIXME: Shouldn't this be called *after* waiting for REG_ID?
+		uploadTouchFirmware(phost);
 		if (EVE_HOST == EVE_HOST_PANL70)
 		{
 			EVE_UtilImpl_bootupDisplayGpio(phost);
