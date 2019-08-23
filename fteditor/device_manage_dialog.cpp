@@ -351,6 +351,11 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 	{
 		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
 	}
+
+	if (jo.contains("ExternalOsc"))
+	{
+		cdi.ExternalOsc = jo["ExternalOsc"].toBool();
+	}
 }
 
 #endif

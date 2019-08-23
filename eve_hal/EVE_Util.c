@@ -157,14 +157,31 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	EVE_Hal_powerCycle(phost, true);
 
 	/* Set the clk to external clock. Must disable it when no external clock source on the board*/
-#if (!defined(ME810A_HV35R) && !defined(ME812A_WH50R) && !defined(ME813AU_WH50C))
-	EVE_Hal_hostCommand(phost, EVE_EXTERNAL_OSC);
-	EVE_sleep(10);
-#endif
+	if (parameters->ExternalOsc)
+	{
+		EVE_Hal_hostCommand(phost, EVE_EXTERNAL_OSC);
+		EVE_sleep(10);
+	}
 
 	/* Access address 0 to wake up the FT800 */
 	EVE_Hal_hostCommand(phost, EVE_ACTIVE_M);
 	EVE_sleep(300);
+
+	/* Wait for valid chip ID */
+	chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
+	chipId = ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8);
+	while (chipId < EVE_FT800 || chipId > EVE_BT816)
+	{
+		eve_printf_debug("EVE ROM_CHIPID after wake up %x\n", chipId);
+
+		EVE_sleep(20);
+		if (phost->Parameters.CbCmdWait)
+			if (!phost->Parameters.CbCmdWait(phost))
+				return false;
+
+		chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
+		chipId = ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8);
+	}
 
 	/* Validate chip ID to ensure the correct HAL is used */
 	/* ROM_CHIPID is valid accross all EVE devices */
@@ -172,14 +189,14 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 		eve_printf_debug("Mismatching EVE chip id %x, expect model %x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), phost->Parameters.ChipId);
 	eve_printf_debug("EVE chip id %x %x.%x\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), ((chipId >> 16) & 0xFF), ((chipId >> 24) & 0xFF));
 
-	/* Switch to the proper chip id if applicable */
-	phost->ChipId = ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8);
+	/* Switch to the proper chip ID if applicable */
 #ifdef EVE_MULTI_TARGET
+	phost->ChipId = ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8);
 	if (phost->ChipId >= EVE_BT815)
 		phost->GpuDefs = &EVE_GpuDefs_BT81X;
 	else if (phost->ChipId >= EVE_FT810)
 		phost->GpuDefs = &EVE_GpuDefs_FT81X;
-	else
+	else if (phost->ChipId >= EVE_FT800)
 		phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
@@ -456,8 +473,11 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	EVE_Cmd_wr32(phost, CMD_COLDSTART);
 
 #ifdef EVE_FLASH_AVAILABLE
-	/* Reattach flash to avoid inconsistent state */
-	EVE_Cmd_wr32(phost, CMD_FLASHATTACH);
+	if (EVE_CHIPID >= EVE_BT815)
+	{
+		/* Reattach flash to avoid inconsistent state */
+		EVE_Cmd_wr32(phost, CMD_FLASHATTACH);
+	}
 #endif
 
 	/* Wait for coprocessor to be ready */

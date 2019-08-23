@@ -19,6 +19,7 @@
     "REG_VSIZE": 480,
     "REG_VSYNC0": 0,
     "REG_VSYNC1": 3,
+    "ExternalOsc": false,
     "Screen Height": 480,
     "Screen Width": 800,
     "Vender": "BridgeTek",

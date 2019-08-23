@@ -164,6 +164,7 @@ typedef struct EVE_HalParameters
 #endif
 
 	EVE_DisplayParameters Display;
+	bool ExternalOsc;
 
 #if defined(BT8XXEMU_PLATFORM)
 	char EmulatorParameters[1640];

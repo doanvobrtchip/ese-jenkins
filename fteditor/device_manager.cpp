@@ -47,6 +47,30 @@ extern DlEditor *g_Macro;
 
 #if FT800_DEVICE_MANAGER
 
+CustomDeviceInfo::CustomDeviceInfo()
+    : EVE_Type(0)
+    , FlashSize(0)
+    , isBuiltIn(false)
+    , CUS_REG_HCYCLE(0)
+    , CUS_REG_HOFFSET(0)
+    , CUS_REG_HSYNC0(0)
+    , CUS_REG_HSYNC1(0)
+    , CUS_REG_VCYCLE(0)
+    , CUS_REG_VOFFSET(0)
+    , CUS_REG_VSYNC0(0)
+    , CUS_REG_VSYNC1(0)
+    , CUS_REG_SWIZZLE(0)
+    , CUS_REG_PCLK_POL(0)
+    , CUS_REG_HSIZE(0)
+    , CUS_REG_VSIZE(0)
+    , CUS_REG_CSPREAD(0)
+    , CUS_REG_DITHER(0)
+    , CUS_REG_PCLK(0)
+    , ExternalOsc(true)
+{
+	// no-op
+}
+
 DeviceManager::DeviceManager(MainWindow *parent)
     : QWidget(parent)
     , m_MainWindow(parent)
@@ -476,6 +500,8 @@ void DeviceManager::connectDevice()
 		params.Display.CSpread = 1;
 		params.Display.Dither = 1;
 	}
+
+	params.ExternalOsc = m_CDI.ExternalOsc;
 
 	params.CbCmdWait = (EVE_Callback)cbCmdWait;
 	params.UserContext = reinterpret_cast<void *>(this);

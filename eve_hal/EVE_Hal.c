@@ -68,6 +68,10 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID
 
 	parameters->ChipId = chipId;
 
+#if (!defined(ME810A_HV35R) && !defined(ME812A_WH50R) && !defined(ME813AU_WH50C))
+	parameters->ExternalOsc = true;
+#endif
+
 #if defined(DISPLAY_RESOLUTION_QVGA)
 	/* Values specific to QVGA LCD display */
 	parameters->Display.Width = 320;

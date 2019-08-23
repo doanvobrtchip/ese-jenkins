@@ -46,8 +46,10 @@ class DeviceManageDialog;
 
 #if FT800_DEVICE_MANAGER
 
-typedef struct customDeviceInfo
+struct CustomDeviceInfo
 {
+	CustomDeviceInfo();
+
 	QString DeviceName;
 	QString Description;
 	int EVE_Type;
@@ -72,14 +74,9 @@ typedef struct customDeviceInfo
 	int CUS_REG_CSPREAD;
 	int CUS_REG_DITHER;
 	int CUS_REG_PCLK;
+	bool ExternalOsc;
 
-	customDeviceInfo &operator=(const customDeviceInfo &s)
-	{
-		CUS_REG_HCYCLE = s.CUS_REG_HCYCLE;
-		return (*this);
-	}
-
-} CustomDeviceInfo;
+};
 
 /**
  * DeviceManager
