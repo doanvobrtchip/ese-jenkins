@@ -22,5 +22,7 @@
     "Screen Height": 240,
     "Screen Width": 320,
     "Vender": "BridgeTek",
-    "Version": "1.0"
+    "Version": "1.0",
+    "Description": "FT800 Basic module with 3.5\" display",
+    "Build In": true
 }

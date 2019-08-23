@@ -16,7 +16,7 @@ namespace FTEDITOR
 
 #if FT800_DEVICE_MANAGER
 
-const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Vender", "Version", "Connection Type", "EVE Type", "Flash Model",
+const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vender", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
 							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", };
@@ -99,6 +99,8 @@ void DeviceAddNewDialog::addDevice()
 			jo[property] = value;
 		}
 	}
+
+	jo["Build In"] = false;
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
 	{
@@ -196,6 +198,10 @@ void DeviceAddNewDialog::prepareData()
 		if (PROPERTIES[i] == "Device Name")
 		{
 			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem("New Device"));
+		}
+		if (PROPERTIES[i] == "Description")
+		{
+			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem("Custom Device"));
 		}
 		else if (PROPERTIES[i] == "EVE Type")
 		{
@@ -317,7 +323,6 @@ void DeviceAddNewDialog::showData(QString jsonPath)
 
 		if (!jo.contains(PROPERTIES[i]))
 			continue;
-
 		
 		if (jo[PROPERTIES[i]].isString())
 			v = jo[PROPERTIES[i]].toString();

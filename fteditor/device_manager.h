@@ -49,11 +49,13 @@ class DeviceManageDialog;
 typedef struct customDeviceInfo
 {
 	QString DeviceName;
+	QString Description;
 	int EVE_Type;
 	QString ConnectionType;
 	QString FlashModel;
 	int FlashSize;
 	QString ScreenSize; // width x height
+	bool isBuiltIn;
 
 	int CUS_REG_HCYCLE;
 	int CUS_REG_HOFFSET;
