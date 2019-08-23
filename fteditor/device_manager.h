@@ -150,6 +150,7 @@ private slots:
 	void uploadFlashContent();
 	void uploadFlashBlob();
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+	void abortRequest();
 
 private:
 	static bool cbCmdWait(void *phost);

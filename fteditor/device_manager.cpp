@@ -53,8 +53,8 @@ DeviceManager::DeviceManager(MainWindow *parent)
     , m_DisplaySettingsDialog(NULL)
     , m_DeviceManageDialog(NULL)
     , m_IsCustomDevice(false)
-	, m_Busy(false)
-	, m_Abort(false)
+    , m_Busy(false)
+    , m_Abort(false)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -231,8 +231,19 @@ void DeviceManager::initProgressDialog(QDialog *progressDialog, QLabel *progress
 	progressLayout->addWidget(progressLabel);
 	progressLayout->addWidget(progressBar);
 	progressLayout->addWidget(progressSubBar);
-	// TODO: Add abort button here
+	QPushButton *abortButton = new QPushButton(progressDialog);
+	abortButton->setText("Abort");
+	QHBoxLayout *buttonLayout = new QHBoxLayout(progressDialog);
+	progressLayout->addLayout(buttonLayout);
+	buttonLayout->addStretch();
+	buttonLayout->addWidget(abortButton);
+	connect(abortButton, &QPushButton::clicked, this, &DeviceManager::abortRequest);
 	progressLayout->addStretch();
+}
+
+void DeviceManager::abortRequest()
+{
+	m_Abort = true;
 }
 
 void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevice, QString jsonPath, bool isCustomDevice)
@@ -607,11 +618,15 @@ void DeviceManager::uploadCoprocessorContent()
 
 	if (!EVE_Util_resetCoprocessor(phost))
 	{
-		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		if (m_Abort)
+		{
+			QMessageBox::critical(this, "Request Aborted", "The request has been aborted.", QMessageBox::Ok);
+		}
+		else if (devInfo->DeviceIntf >= FTEDITOR_BT815)
 		{
 			char err[128];
 			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
-			QMessageBox::critical(this, "Coprocessor Reset Failed", QString::fromUtf8(err), QMessageBox::Ok);
+			QMessageBox::critical(this, "Coprocessor Reset Failed", err[0] ? QString::fromUtf8(err) : "Coprocessor has signaled an error.", QMessageBox::Ok);
 		}
 		else
 		{
@@ -913,11 +928,15 @@ bool DeviceManager::waitFlush(DeviceInfo *devInfo)
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 	if (!EVE_Cmd_waitFlush(phost))
 	{
-		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		if (m_Abort)
+		{
+			QMessageBox::critical(this, "Request Aborted", "The request has been aborted.", QMessageBox::Ok);
+		}
+		else if (devInfo->DeviceIntf >= FTEDITOR_BT815)
 		{
 			char err[128];
 			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
-			QMessageBox::critical(this, "Coprocessor Error", QString::fromUtf8(err), QMessageBox::Ok);
+			QMessageBox::critical(this, "Coprocessor Error", err[0] ? QString::fromUtf8(err) : "Coprocessor has signaled an error.", QMessageBox::Ok);
 		}
 		else
 		{
@@ -965,11 +984,15 @@ void DeviceManager::uploadFlashContent()
 
 	if (!EVE_Util_resetCoprocessor(phost))
 	{
-		if (devInfo->DeviceIntf >= FTEDITOR_BT815)
+		if (m_Abort)
+		{
+			QMessageBox::critical(this, "Request Aborted", "The request has been aborted.", QMessageBox::Ok);
+		}
+		else if (devInfo->DeviceIntf >= FTEDITOR_BT815)
 		{
 			char err[128];
 			EVE_Hal_rdMem(phost, (uint8_t *)err, 0x309800, 128);
-			QMessageBox::critical(this, "Coprocessor Reset Failed", QString::fromUtf8(err), QMessageBox::Ok);
+			QMessageBox::critical(this, "Coprocessor Reset Failed", err[0] ? QString::fromUtf8(err) : "Coprocessor has signaled an error.", QMessageBox::Ok);
 		}
 		else
 		{
@@ -1022,6 +1045,8 @@ void DeviceManager::uploadFlashContent()
 	progressLabel->setText("Writing...");
 	for (const ContentInfo *info : flashContent)
 	{
+		if (m_Abort)
+			break;
 		progressBar->setValue(progressBar->value() + 1);
 		progressBar->setMinimum(1);
 		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
@@ -1069,6 +1094,8 @@ void DeviceManager::uploadFlashContent()
 			loadAddr -= preread;
 			for (;;)
 			{
+				if (m_Abort)
+					break;
 				sz = preread;
 				int l;
 				do
@@ -1147,6 +1174,8 @@ void DeviceManager::uploadFlashContent()
 	progressLabel->setText("Verifying...");
 	for (const ContentInfo *info : flashContent)
 	{
+		if (m_Abort)
+			break;
 		progressBar->setValue(progressBar->value() + 1);
 		progressBar->setMinimum(1);
 		int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
@@ -1193,6 +1222,8 @@ void DeviceManager::uploadFlashContent()
 			int sz;
 			for (;;)
 			{
+				if (m_Abort)
+					break;
 				sz = 0;
 				int l;
 				do
