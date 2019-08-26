@@ -57,7 +57,7 @@ struct CustomDeviceInfo
 	QString FlashModel;
 	int FlashSize;
 	QString ScreenSize; // width x height
-	bool isBuiltIn;
+	bool isBuiltin;
 
 	int CUS_REG_HCYCLE;
 	int CUS_REG_HOFFSET;

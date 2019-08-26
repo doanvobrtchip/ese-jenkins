@@ -51,7 +51,7 @@ extern DlEditor *g_Macro;
 CustomDeviceInfo::CustomDeviceInfo()
     : EVE_Type(0)
     , FlashSize(0)
-    , isBuiltIn(false)
+    , isBuiltin(false)
     , CUS_REG_HCYCLE(0)
     , CUS_REG_HOFFSET(0)
     , CUS_REG_HSYNC0(0)

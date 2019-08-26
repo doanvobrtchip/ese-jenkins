@@ -154,7 +154,7 @@ public:
         btnEditDevice->setText(QApplication::translate("DeviceManageDialog", "Edit Device", nullptr));
         btnCloneDevice->setText(QApplication::translate("DeviceManageDialog", "Clone Device", nullptr));
         btnRemoveDevice->setText(QApplication::translate("DeviceManageDialog", "Remove Device", nullptr));
-        groupBox_2->setTitle(QApplication::translate("DeviceManageDialog", "Build-in Device", nullptr));
+        groupBox_2->setTitle(QApplication::translate("DeviceManageDialog", "Built-in Device", nullptr));
         btnExamineButton->setText(QApplication::translate("DeviceManageDialog", "Examine Device", nullptr));
         btnBuildInCloneDevice->setText(QApplication::translate("DeviceManageDialog", "Clone Device", nullptr));
         btnClose->setText(QApplication::translate("DeviceManageDialog", "Close", nullptr));

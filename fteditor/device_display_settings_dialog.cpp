@@ -65,9 +65,9 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 
 			rb = new QRadioButton(cdi.DeviceName, this);
 			QFont ft = rb->font();
-			ft.setBold(cdi.isBuiltIn ? true : false);
+			ft.setBold(cdi.isBuiltin ? true : false);
 			rb->setFont(ft);
-			rb->setToolTip(cdi.isBuiltIn ? ("Build-in Device\n" + cdi.Description) : cdi.Description);
+			rb->setToolTip(cdi.isBuiltin ? ("Built-in Device\n" + cdi.Description) : cdi.Description);
 			rb->setProperty("EVE_TYPE", cdi.EVE_Type);
 			rb->setProperty("SCREEN_SIZE", cdi.ScreenSize);
 			rb->setProperty("JSON_PATH", path);

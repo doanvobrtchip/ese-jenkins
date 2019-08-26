@@ -17,7 +17,7 @@ namespace FTEDITOR
 extern QString g_ApplicationDataDir;
 
 const QString DeviceManageDialog::DEVICE_SYNC_PATH = "/device_sync/";
-const QString DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH = "/device_sync/build-in/";
+const QString DeviceManageDialog::BUILD_IN_DEVICE_SYNC_PATH = "/device_sync/builtin/";
 
 DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
     : QDialog(parent)
@@ -157,7 +157,7 @@ void DeviceManageDialog::doClone(QListWidget *lw)
 
 		QString newName = DeviceAddNewDialog::buildJsonFilePath(fi.baseName());
 		jo["Device Name"] = QFileInfo(newName).baseName();
-		jo["Build In"] = false;
+		jo["Built-in"] = false;
 
 		QJsonDocument jd;
 		jd.setObject(jo);
@@ -238,13 +238,13 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.Description = jo["Description"].toString();
 	}
 
-	if (jo.contains("Build In") && jo["Build In"].isBool())
+	if (jo.contains("Built-in") && jo["Built-in"].isBool())
 	{
-		cdi.isBuiltIn = jo["Build In"].toBool();
+		cdi.isBuiltin = jo["Built-in"].toBool();
 	}
 	else
 	{
-		cdi.isBuiltIn = false;
+		cdi.isBuiltin = false;
 	}
 
 	if (jo.contains("EVE Type") && jo["EVE Type"].isString())
@@ -352,9 +352,9 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
 	}
 
-	if (jo.contains("ExternalOsc"))
+	if (jo.contains("External Clock"))
 	{
-		cdi.ExternalOsc = jo["ExternalOsc"].toBool();
+		cdi.ExternalOsc = jo["External Clock"].toBool();
 	}
 }
 

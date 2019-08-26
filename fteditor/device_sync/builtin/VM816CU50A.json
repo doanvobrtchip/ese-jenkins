@@ -1,6 +1,6 @@
 {
     "Connection Type": "FT4222",
-    "Device Name": "VM816C50A",
+    "Device Name": "VM816CU50A",
     "EVE Type": "BT81X",
     "Flash Model": "",
     "Flash Size (MB)": "16",
@@ -23,6 +23,6 @@
     "Screen Width": 800,
     "Vendor": "Bridgetek",
     "Version": "1.0",
-    "Description": "VM816C module with 5.0\" display",
-    "Build In": true
+    "Description": "VM816CU module with 5.0\" display",
+    "Built-in": true
 }

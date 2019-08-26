@@ -1,6 +1,6 @@
 {
     "Connection Type": "FT4222",
-    "Device Name": "VM800B35A",
+    "Device Name": "VM800BU35A",
     "EVE Type": "FT80X",
     "Flash Model": "",
     "Flash Size (MB)": "",
@@ -23,6 +23,6 @@
     "Screen Width": 320,
     "Vendor": "Bridgetek",
     "Version": "1.0",
-    "Description": "FT800 Basic module with 3.5\" display",
-    "Build In": true
+    "Description": "FT800 Basic USB module with 3.5\" display",
+    "Built-in": true
 }
