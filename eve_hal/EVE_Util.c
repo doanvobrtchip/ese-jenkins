@@ -509,6 +509,16 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 
 EVE_HAL_EXPORT void EVE_Util_shutdown(EVE_HalContext *phost)
 {
+	if (EVE_CHIPID >= EVE_FT810)
+	{
+		EVE_Hal_wr16(phost, REG_GPIOX_DIR, 0xffff);
+		EVE_Hal_wr16(phost, REG_GPIOX, 0);
+	}
+	else
+	{
+		EVE_Hal_wr8(phost, REG_GPIO_DIR, 0xff);
+		EVE_Hal_wr8(phost, REG_GPIO, 0);
+	}
 	EVE_Hal_wr8(phost, REG_PCLK, 0);
 	EVE_Hal_powerCycle(phost, false);
 }

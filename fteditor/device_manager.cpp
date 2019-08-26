@@ -187,6 +187,8 @@ DeviceManager::~DeviceManager()
 		if (p.second->EveHalContext)
 		{
 			EVE_HalContext *phost = (EVE_HalContext *)p.second->EveHalContext;
+			EVE_Util_clearScreen(phost);
+			EVE_Util_shutdown(phost);
 			p.second->EveHalContext = NULL;
 			EVE_Hal_close(phost);
 		}
