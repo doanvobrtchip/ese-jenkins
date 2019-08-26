@@ -146,9 +146,151 @@ EVE_HAL_EXPORT void EVE_Util_clearScreen(EVE_HalContext *phost)
 	EVE_Hal_wr8(phost, REG_DLSWAP, DLSWAP_FRAME);
 }
 
-EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
+EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupParameters *parameters)
 {
-	EVE_HalParameters *parameters = &phost->Parameters;
+	memset(parameters, 0, sizeof(EVE_BootupParameters));
+
+	uint32_t chipId = phost->ChipId;
+
+#if (!defined(ME810A_HV35R) && !defined(ME812A_WH50R) && !defined(ME813AU_WH50C))
+	parameters->ExternalOsc = true;
+#endif
+
+#ifdef ENABLE_SPI_QUAD
+	parameters->SpiChannels = EVE_SPI_QUAD_CHANNEL;
+	parameters->SpiDummyBytes = 2;
+#elif ENABLE_SPI_DUAL
+	parameters->SpiChannels = EVE_SPI_DUAL_CHANNEL;
+	parameters->SpiDummyBytes = 2;
+#else
+	parameters->SpiChannels = EVE_SPI_SINGLE_CHANNEL;
+	parameters->SpiDummyBytes = 1;
+#endif
+
+#if defined(DISPLAY_RESOLUTION_QVGA)
+	/* Values specific to QVGA LCD display */
+	parameters->Width = 320;
+	parameters->Height = 240;
+	parameters->HCycle = 408;
+	parameters->HOffset = 70;
+	parameters->HSync0 = 0;
+	parameters->HSync1 = 10;
+	parameters->VCycle = 263;
+	parameters->VOffset = 13;
+	parameters->VSync0 = 0;
+	parameters->VSync1 = 2;
+	parameters->PCLK = 8;
+	parameters->Swizzle = 2;
+	parameters->PCLKPol = 0;
+	parameters->CSpread = 1;
+	parameters->Dither = 1;
+#elif defined(DISPLAY_RESOLUTION_WVGA)
+	/* Values specific to WVGA LCD display */
+	parameters->Width = 800;
+	parameters->Height = 480;
+	parameters->HCycle = 928;
+	parameters->HOffset = 88;
+	parameters->HSync0 = 0;
+	parameters->HSync1 = 48;
+	parameters->VCycle = 525;
+	parameters->VOffset = 32;
+	parameters->VSync0 = 0;
+	parameters->VSync1 = 3;
+	parameters->PCLK = 2;
+	parameters->Swizzle = 0;
+	parameters->PCLKPol = 1;
+	parameters->CSpread = 0;
+	parameters->Dither = 1;
+#elif defined(DISPLAY_RESOLUTION_HVGA_PORTRAIT)
+	/* Values specific to HVGA LCD display */
+	parameters->Width = 320;
+	parameters->Height = 480;
+	parameters->HCycle = 400;
+	parameters->HOffset = 40;
+	parameters->HSync0 = 0;
+	parameters->HSync1 = 10;
+	parameters->VCycle = 500;
+	parameters->VOffset = 10;
+	parameters->VSync0 = 0;
+	parameters->VSync1 = 5;
+	parameters->PCLK = 4;
+#ifdef ENABLE_ILI9488_HVGA_PORTRAIT
+	parameters->Swizzle = 2;
+	parameters->PCLKPol = 1;
+#endif
+#ifdef ENABLE_KD2401_HVGA_PORTRAIT
+	parameters->Swizzle = 0;
+	parameters->PCLKPol = 0;
+	parameters->PCLK = 5;
+#endif
+	parameters->CSpread = 1;
+	parameters->Dither = 1;
+#ifdef ME810A_HV35R
+	parameters->PCLK = 5;
+#endif
+#else
+	if (chipId >= EVE_BT815)
+	{
+		/* Values specific to WVGA LCD display */
+		parameters->Width = 800;
+		parameters->Height = 480;
+		parameters->HCycle = 928;
+		parameters->HOffset = 88;
+		parameters->HSync0 = 0;
+		parameters->HSync1 = 48;
+		parameters->VCycle = 525;
+		parameters->VOffset = 32;
+		parameters->VSync0 = 0;
+		parameters->VSync1 = 3;
+		parameters->PCLK = 2;
+		parameters->Swizzle = 0;
+		parameters->PCLKPol = 1;
+		parameters->CSpread = 0;
+		parameters->Dither = 1;
+	}
+	else if (chipId >= EVE_FT810)
+	{
+		/* Default is WQVGA - 480x272 */
+		parameters->Width = 480;
+		parameters->Height = 272;
+		parameters->HCycle = 548;
+		parameters->HOffset = 43;
+		parameters->HSync0 = 0;
+		parameters->HSync1 = 41;
+		parameters->VCycle = 292;
+		parameters->VOffset = 12;
+		parameters->VSync0 = 0;
+		parameters->VSync1 = 10;
+		parameters->PCLK = 5;
+		parameters->Swizzle = 0;
+		parameters->PCLKPol = 1;
+		parameters->CSpread = 1;
+		parameters->Dither = 1;
+	}
+	else
+	{
+		/* Values specific to QVGA LCD display */
+		parameters->Width = 320;
+		parameters->Height = 240;
+		parameters->HCycle = 408;
+		parameters->HOffset = 70;
+		parameters->HSync0 = 0;
+		parameters->HSync1 = 10;
+		parameters->VCycle = 263;
+		parameters->VOffset = 13;
+		parameters->VSync0 = 0;
+		parameters->VSync1 = 2;
+		parameters->PCLK = 8;
+		parameters->Swizzle = 2;
+		parameters->PCLKPol = 0;
+		parameters->CSpread = 1;
+		parameters->Dither = 1;
+	}
+#endif
+}
+
+EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *parameters)
+{
 	uint32_t chipId;
 	uint8_t id;
 	uint8_t engine_status;
@@ -259,29 +401,29 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	if (EVE_CHIPID < EVE_FT810)
 	{
-		eve_assert(parameters->Display.Width < 512);
-		eve_assert(parameters->Display.Height < 512);
+		eve_assert(parameters->Width < 512);
+		eve_assert(parameters->Height < 512);
 	}
 	else
 	{
-		eve_assert(parameters->Display.Width < 2048);
-		eve_assert(parameters->Display.Height < 2048);
+		eve_assert(parameters->Width < 2048);
+		eve_assert(parameters->Height < 2048);
 	}
 
-	EVE_Hal_wr16(phost, REG_HCYCLE, parameters->Display.HCycle);
-	EVE_Hal_wr16(phost, REG_HOFFSET, parameters->Display.HOffset);
-	EVE_Hal_wr16(phost, REG_HSYNC0, parameters->Display.HSync0);
-	EVE_Hal_wr16(phost, REG_HSYNC1, parameters->Display.HSync1);
-	EVE_Hal_wr16(phost, REG_VCYCLE, parameters->Display.VCycle);
-	EVE_Hal_wr16(phost, REG_VOFFSET, parameters->Display.VOffset);
-	EVE_Hal_wr16(phost, REG_VSYNC0, parameters->Display.VSync0);
-	EVE_Hal_wr16(phost, REG_VSYNC1, parameters->Display.VSync1);
-	EVE_Hal_wr8(phost, REG_SWIZZLE, parameters->Display.Swizzle);
-	EVE_Hal_wr8(phost, REG_PCLK_POL, parameters->Display.PCLKPol);
-	EVE_Hal_wr16(phost, REG_HSIZE, parameters->Display.Width);
-	EVE_Hal_wr16(phost, REG_VSIZE, parameters->Display.Height);
-	EVE_Hal_wr16(phost, REG_CSPREAD, parameters->Display.CSpread);
-	EVE_Hal_wr16(phost, REG_DITHER, parameters->Display.Dither);
+	EVE_Hal_wr16(phost, REG_HCYCLE, parameters->HCycle);
+	EVE_Hal_wr16(phost, REG_HOFFSET, parameters->HOffset);
+	EVE_Hal_wr16(phost, REG_HSYNC0, parameters->HSync0);
+	EVE_Hal_wr16(phost, REG_HSYNC1, parameters->HSync1);
+	EVE_Hal_wr16(phost, REG_VCYCLE, parameters->VCycle);
+	EVE_Hal_wr16(phost, REG_VOFFSET, parameters->VOffset);
+	EVE_Hal_wr16(phost, REG_VSYNC0, parameters->VSync0);
+	EVE_Hal_wr16(phost, REG_VSYNC1, parameters->VSync1);
+	EVE_Hal_wr8(phost, REG_SWIZZLE, parameters->Swizzle);
+	EVE_Hal_wr8(phost, REG_PCLK_POL, parameters->PCLKPol);
+	EVE_Hal_wr16(phost, REG_HSIZE, parameters->Width);
+	EVE_Hal_wr16(phost, REG_VSIZE, parameters->Height);
+	EVE_Hal_wr16(phost, REG_CSPREAD, parameters->CSpread);
+	EVE_Hal_wr16(phost, REG_DITHER, parameters->Dither);
 
 	/* TODO: EVCharger Demo */
 	// EVE_Hal_wr16(phost, REG_OUTBITS, 0x1B6);
@@ -307,7 +449,8 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	EVE_Util_clearScreen(phost);
 
-	EVE_Hal_wr8(phost, REG_PCLK, parameters->Display.PCLK); /* after this display is visible on the LCD */
+	EVE_Hal_wr8(phost, REG_PCLK, parameters->PCLK); /* after this display is visible on the LCD */
+	phost->PCLK = parameters->PCLK;
 
 #if (defined(ENABLE_ILI9488_HVGA_PORTRAIT) || defined(ENABLE_KD2401_HVGA_PORTRAIT))
 	/* to cross check reset pin */
@@ -341,30 +484,42 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 
 	/* Wait for coprocessor ready */
 	eve_printf_debug("Check coprocessor\n");
+	EVE_Cmd_wr32(phost, CMD_DLSTART);
 	EVE_Cmd_wr32(phost, CMD_COLDSTART);
+
+#ifdef EVE_FLASH_AVAILABLE
+	if (EVE_CHIPID >= EVE_BT815)
+	{
+		/* Reattach flash to avoid inconsistent state */
+		EVE_Cmd_wr32(phost, CMD_FLASHATTACH);
+	}
+#endif
+
 	EVE_Cmd_waitFlush(phost);
 	EVE_Hal_flush(phost);
 
 	/* Switch to configured default SPI channel mode */
 	if (EVE_CHIPID >= EVE_FT810)
 	{
-#ifdef ENABLE_SPI_QUAD
-		EVE_Hal_setSPI(phost, EVE_SPI_QUAD_CHANNEL, 2);
-#elif ENABLE_SPI_DUAL
-		EVE_Hal_setSPI(phost, EVE_SPI_DUAL_CHANNEL, 2);
-#else
-		EVE_Hal_setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
-#endif
+		EVE_Hal_setSPI(phost, parameters->SpiChannels, parameters->SpiDummyBytes);
 	}
 
 	return true;
 }
 
+EVE_HAL_EXPORT void EVE_Util_shutdown(EVE_HalContext *phost)
+{
+	EVE_Hal_wr8(phost, REG_PCLK, 0);
+	EVE_Hal_powerCycle(phost, false);
+}
+
+/* Whether the device has an OTP that requires reactivation in case of reset during CMD_LOGO */
 static inline bool EVE_Util_hasOTP(EVE_HalContext *phost)
 {
 	return (EVE_CHIPID >= EVE_FT810) && (EVE_CHIPID < EVE_BT815);
 }
 
+/* Whether the device has an OTP that requires the video patch to be reapplied */
 #define EVE_VIDEOPATCH_ADDR 0x309162 // NOTE: This is only valid for BT815 and BT816
 static inline bool EVE_Util_hasVideoPatch(EVE_HalContext *phost)
 {
@@ -393,7 +548,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	EVE_Hal_wr16(phost, REG_CMD_READ, 0);
 	EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
 	EVE_Hal_wr16(phost, REG_CMD_DL, 0);
-	EVE_Hal_wr8(phost, REG_PCLK, phost->Parameters.Display.PCLK); /* j1 will set the pclk to 0 for that error case */
+	EVE_Hal_wr8(phost, REG_PCLK, phost->PCLK); /* j1 will set the pclk to 0 for that error case */
 
 	/* Stop playing audio in case video with audio was playing during reset */
 	EVE_Hal_wr8(phost, REG_PLAYBACK_PLAY, 0);
@@ -448,7 +603,8 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 
 		/* Need to manually stop previous command from repeating infinitely,
 		however, this may cause the coprocessor to overshoot the command fifo,
-		hence it's been filled with harmless CMD_STOP commands. */;
+		hence it's been filled with harmless CMD_STOP commands. */
+		;
 		EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
 		EVE_Hal_flush(phost);
 		EVE_sleep(100);
@@ -482,6 +638,13 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 
 	/* Wait for coprocessor to be ready */
 	return EVE_Cmd_waitFlush(phost);
+}
+
+EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
+{
+	EVE_BootupParameters parameters;
+	EVE_Util_bootupDefaults(phost, &parameters);
+	return EVE_Util_bootup(phost, &parameters);
 }
 
 /* end of file */

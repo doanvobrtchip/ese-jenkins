@@ -82,26 +82,6 @@ typedef enum EVE_CHIPID_T
 ** STRUCTS **
 ************/
 
-/* Display parameters */
-typedef struct EVE_DisplayParameters
-{
-	int16_t Width;
-	int16_t Height;
-	int16_t HCycle;
-	int16_t HOffset;
-	int16_t HSync0;
-	int16_t HSync1;
-	int16_t VCycle;
-	int16_t VOffset;
-	int16_t VSync0;
-	int16_t VSync1;
-	uint8_t PCLK;
-	int8_t Swizzle;
-	int8_t PCLKPol;
-	int8_t CSpread;
-	bool Dither;
-} EVE_DisplayParameters;
-
 typedef struct EVE_HalContext EVE_HalContext;
 typedef bool (*EVE_Callback)(EVE_HalContext *phost);
 
@@ -163,9 +143,6 @@ typedef struct EVE_HalParameters
 	EVE_CHIPID_T ChipId;
 #endif
 
-	EVE_DisplayParameters Display;
-	bool ExternalOsc;
-
 #if defined(BT8XXEMU_PLATFORM)
 	char EmulatorParameters[1640];
 	char EmulatorFlashParameters[1144];
@@ -207,6 +184,8 @@ typedef struct EVE_HalContext
 	const EVE_GpuDefs *GpuDefs;
 #endif
 
+	uint8_t PCLK;
+
 #if defined(BT8XXEMU_PLATFORM)
 	void *Emulator; /* FT8XXEMU_Emulator */
 	void *EmulatorFlash; /* FT8XXEMU_Flash */
@@ -237,8 +216,10 @@ typedef struct EVE_HalContext
 #endif
 #endif
 
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
 	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
 	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
+#endif
 
 	/* Buffer cmd smaller than a full cmd command */
 	uint8_t CmdBuffer[4];

@@ -443,81 +443,6 @@ void DeviceManager::connectDevice()
 	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), devInfo->DeviceIdx);
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.ChipId);
 
-	if (m_IsCustomDevice)
-	{
-		params.Display.Width = m_CDI.CUS_REG_HSIZE;
-		params.Display.Height = m_CDI.CUS_REG_VSIZE;
-		params.Display.HCycle = m_CDI.CUS_REG_HCYCLE;
-		params.Display.HOffset = m_CDI.CUS_REG_HOFFSET;
-		params.Display.HSync0 = m_CDI.CUS_REG_HSYNC0;
-		params.Display.HSync1 = m_CDI.CUS_REG_HSYNC1;
-		params.Display.VCycle = m_CDI.CUS_REG_VCYCLE;
-		params.Display.VOffset = m_CDI.CUS_REG_VOFFSET;
-		params.Display.VSync0 = m_CDI.CUS_REG_VSYNC0;
-		params.Display.VSync1 = m_CDI.CUS_REG_VSYNC1;
-		params.Display.PCLK = 5;
-		params.Display.Swizzle = m_CDI.CUS_REG_SWIZZLE;
-		params.Display.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
-		params.Display.CSpread = m_CDI.CUS_REG_CSPREAD;
-		params.Display.Dither = m_CDI.CUS_REG_DITHER;
-	}
-	else if (m_SelectedDisplaySize == "480x272")
-	{
-		params.Display.Width = 480;
-		params.Display.Height = 272;
-		params.Display.HCycle = 548;
-		params.Display.HOffset = 43;
-		params.Display.HSync0 = 0;
-		params.Display.HSync1 = 41;
-		params.Display.VCycle = 292;
-		params.Display.VOffset = 12;
-		params.Display.VSync0 = 0;
-		params.Display.VSync1 = 10;
-		params.Display.PCLK = 5;
-		params.Display.Swizzle = 0;
-		params.Display.PCLKPol = 1;
-		params.Display.CSpread = 1;
-		params.Display.Dither = 1;
-	}
-	else if (m_SelectedDisplaySize == "800x480")
-	{
-		params.Display.Width = 800;
-		params.Display.Height = 480;
-		params.Display.HCycle = 928;
-		params.Display.HOffset = 88;
-		params.Display.HSync0 = 0;
-		params.Display.HSync1 = 48;
-		params.Display.VCycle = 525;
-		params.Display.VOffset = 32;
-		params.Display.VSync0 = 0;
-		params.Display.VSync1 = 3;
-		params.Display.PCLK = 2;
-		params.Display.Swizzle = 0;
-		params.Display.PCLKPol = 1;
-		params.Display.CSpread = 0;
-		params.Display.Dither = 1;
-	}
-	else if (m_SelectedDisplaySize == "320x240")
-	{
-		params.Display.Width = 320;
-		params.Display.Height = 240;
-		params.Display.HCycle = 408;
-		params.Display.HOffset = 70;
-		params.Display.HSync0 = 0;
-		params.Display.HSync1 = 10;
-		params.Display.VCycle = 263;
-		params.Display.VOffset = 13;
-		params.Display.VSync0 = 0;
-		params.Display.VSync1 = 2;
-		params.Display.PCLK = 8;
-		params.Display.Swizzle = 2;
-		params.Display.PCLKPol = 0;
-		params.Display.CSpread = 1;
-		params.Display.Dither = 1;
-	}
-
-	params.ExternalOsc = m_CDI.ExternalOsc;
-
 	params.CbCmdWait = (EVE_Callback)cbCmdWait;
 	params.UserContext = reinterpret_cast<void *>(this);
 
@@ -530,6 +455,84 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
+	EVE_BootupParameters bootupParams;
+	EVE_Util_bootupDefaults(phost, &bootupParams);
+
+	if (m_IsCustomDevice)
+	{
+		bootupParams.Width = m_CDI.CUS_REG_HSIZE;
+		bootupParams.Height = m_CDI.CUS_REG_VSIZE;
+		bootupParams.HCycle = m_CDI.CUS_REG_HCYCLE;
+		bootupParams.HOffset = m_CDI.CUS_REG_HOFFSET;
+		bootupParams.HSync0 = m_CDI.CUS_REG_HSYNC0;
+		bootupParams.HSync1 = m_CDI.CUS_REG_HSYNC1;
+		bootupParams.VCycle = m_CDI.CUS_REG_VCYCLE;
+		bootupParams.VOffset = m_CDI.CUS_REG_VOFFSET;
+		bootupParams.VSync0 = m_CDI.CUS_REG_VSYNC0;
+		bootupParams.VSync1 = m_CDI.CUS_REG_VSYNC1;
+		bootupParams.PCLK = 5;
+		bootupParams.Swizzle = m_CDI.CUS_REG_SWIZZLE;
+		bootupParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
+		bootupParams.CSpread = m_CDI.CUS_REG_CSPREAD;
+		bootupParams.Dither = m_CDI.CUS_REG_DITHER;
+	}
+	else if (m_SelectedDisplaySize == "480x272")
+	{
+		bootupParams.Width = 480;
+		bootupParams.Height = 272;
+		bootupParams.HCycle = 548;
+		bootupParams.HOffset = 43;
+		bootupParams.HSync0 = 0;
+		bootupParams.HSync1 = 41;
+		bootupParams.VCycle = 292;
+		bootupParams.VOffset = 12;
+		bootupParams.VSync0 = 0;
+		bootupParams.VSync1 = 10;
+		bootupParams.PCLK = 5;
+		bootupParams.Swizzle = 0;
+		bootupParams.PCLKPol = 1;
+		bootupParams.CSpread = 1;
+		bootupParams.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "800x480")
+	{
+		bootupParams.Width = 800;
+		bootupParams.Height = 480;
+		bootupParams.HCycle = 928;
+		bootupParams.HOffset = 88;
+		bootupParams.HSync0 = 0;
+		bootupParams.HSync1 = 48;
+		bootupParams.VCycle = 525;
+		bootupParams.VOffset = 32;
+		bootupParams.VSync0 = 0;
+		bootupParams.VSync1 = 3;
+		bootupParams.PCLK = 2;
+		bootupParams.Swizzle = 0;
+		bootupParams.PCLKPol = 1;
+		bootupParams.CSpread = 0;
+		bootupParams.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "320x240")
+	{
+		bootupParams.Width = 320;
+		bootupParams.Height = 240;
+		bootupParams.HCycle = 408;
+		bootupParams.HOffset = 70;
+		bootupParams.HSync0 = 0;
+		bootupParams.HSync1 = 10;
+		bootupParams.VCycle = 263;
+		bootupParams.VOffset = 13;
+		bootupParams.VSync0 = 0;
+		bootupParams.VSync1 = 2;
+		bootupParams.PCLK = 8;
+		bootupParams.Swizzle = 2;
+		bootupParams.PCLKPol = 0;
+		bootupParams.CSpread = 1;
+		bootupParams.Dither = 1;
+	}
+
+	bootupParams.ExternalOsc = m_CDI.ExternalOsc;
+
 	devInfo->EveHalContext = phost;
 
 	const uint32_t connectedScreenCmds[] = {
@@ -541,7 +544,7 @@ void DeviceManager::connectDevice()
 	};
 
 	progressLabel->setText("Boot up...");
-	if (!EVE_Util_bootupConfig(phost))
+	if (!EVE_Util_bootup(phost, &bootupParams))
 	{
 		EVE_Hal_close(phost);
 		devInfo->EveHalContext = NULL;
@@ -577,16 +580,8 @@ void DeviceManager::disconnectDevice()
 
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 
-	const uint32_t connectedScreenCmds[] = {
-		CMD_DLSTART,
-		CLEAR_COLOR_RGB(31, 63, 0),
-		CLEAR(1, 1, 1),
-		DISPLAY(),
-		CMD_SWAP
-	};
-
-	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
-	EVE_Hal_flush(phost);
+	EVE_Util_clearScreen(phost);
+	EVE_Util_shutdown(phost);
 
 	devInfo->EveHalContext = NULL;
 	EVE_Hal_close(phost);
