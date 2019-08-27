@@ -355,6 +355,13 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 		return false;
 	}
 
+	if (phost->Status == EVE_STATUS_ERROR)
+	{
+		phost->CmdWaiting = false;
+		eve_printf_debug("Host error\n");
+		return false;
+	}
+
 	return true;
 }
 
