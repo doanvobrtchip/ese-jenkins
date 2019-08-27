@@ -23,8 +23,11 @@ Bug Fix:
 *   "OPT_FLAT" is missing from cmd_button properties window
 *   Exporting is wrong if character ")" exists in CMD_TEXT
 
-Known issues: 
+Known issues:
 *   Playing the invalid animation frame data in flash may cause ESE hang
+
+Limitation:
+*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
 
 Version 3.1.6
 Features: 
