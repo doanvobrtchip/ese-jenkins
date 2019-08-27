@@ -619,7 +619,7 @@ void DeviceManager::uploadRamDl()
 
 	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
 
-	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	// switch to next rotation
 	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_ROTATE), g_Rotate);
 
 	g_Macro->lockDisplayList();
@@ -789,7 +789,7 @@ void DeviceManager::uploadCoprocessorContent()
 
 	g_ContentManager->unlockContent();
 
-	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	// switch to next rotation
 	EVE_Hal_wr32(phost, reg(devInfo->DeviceIntf, FTEDITOR_REG_ROTATE), g_Rotate);
 
 	g_Macro->lockDisplayList();
@@ -909,21 +909,21 @@ void DeviceManager::uploadCoprocessorContent()
 		if (cmdList[i] == CMD_LOGO)
 		{
 			// printf("Waiting for CMD_LOGO...\n");
-			EVE_Cmd_waitLogo(phost); // FIXME: Infinite loop idle callback
+			EVE_Cmd_waitLogo(phost);
 
 			EVE_Cmd_wr32(phost, CMD_DLSTART);
 			EVE_Cmd_wr32(phost, CMD_COLDSTART);
 		}
 		else if (cmdList[i] == CMD_CALIBRATE)
 		{
-			EVE_Cmd_waitFlush(phost); // FIXME: Infinite loop idle callback
+			EVE_Cmd_waitFlush(phost);
 
 			EVE_Cmd_wr32(phost, CMD_DLSTART);
 			EVE_Cmd_wr32(phost, CMD_COLDSTART);
 		}
 		else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
 		{
-			EVE_Cmd_waitFlush(phost); // FIXME: Infinite loop idle callback
+			EVE_Cmd_waitFlush(phost);
 
 			EVE_Cmd_wr32(phost, CMD_DLSTART);
 			EVE_Cmd_wr32(phost, CMD_COLDSTART);
