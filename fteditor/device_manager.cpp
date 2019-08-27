@@ -537,14 +537,6 @@ void DeviceManager::connectDevice()
 
 	devInfo->EveHalContext = phost;
 
-	const uint32_t connectedScreenCmds[] = {
-		CMD_DLSTART,
-		CLEAR_COLOR_RGB(31, 63, 0),
-		CLEAR(1, 1, 1),
-		DISPLAY(),
-		CMD_SWAP
-	};
-
 	progressLabel->setText("Boot up...");
 	if (!EVE_Util_bootup(phost, &bootupParams))
 	{
@@ -555,8 +547,7 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
-	EVE_Cmd_wrMem(phost, (uint8_t *)connectedScreenCmds, sizeof(connectedScreenCmds));
-	EVE_Hal_flush(phost);
+	EVE_Hal_displayMessage(phost, "EVE Screen Editor ", sizeof("EVE Screen Editor "));
 
 	updateSelection();
 }
@@ -733,8 +724,7 @@ void DeviceManager::uploadCoprocessorContent()
 			continue;
 		if (imageCoprocessor)
 		{
-			// FIXME: Unicode support on Windows
-			EVE_Util_loadImageFile(phost, loadAddr, fileName.toLocal8Bit(), NULL);
+			EVE_Util_loadImageFileW(phost, loadAddr, fileName.toStdWString().c_str(), NULL);
 			continue;
 		}
 		scope
@@ -856,9 +846,6 @@ void DeviceManager::uploadCoprocessorContent()
 
 	g_CmdEditor->unlockDisplayList();
 
-	int32_t mediaFifoPtr = 0;
-	int32_t mediaFifoSize = 0;
-
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_Abort)
@@ -871,9 +858,10 @@ void DeviceManager::uploadCoprocessorContent()
 		const char *useFileStream = NULL;
 		if ((devInfo->DeviceIntf >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 		{
-			mediaFifoPtr = cmdParamCache[cmdParamIdx[i]];
-			mediaFifoSize = cmdParamCache[cmdParamIdx[i] + 1];
-			// EVE_MediaFifo_set(mediaFifoPtr, mediaFifoSize);
+			validCmd = true;
+			uint32_t address = cmdParamCache[cmdParamIdx[i]];
+			uint32_t size = cmdParamCache[cmdParamIdx[i] + 1];
+			EVE_MediaFifo_set(phost, address, size);
 		}
 		else if (cmdList[i] == CMD_LOADIMAGE)
 		{
@@ -939,13 +927,15 @@ void DeviceManager::uploadCoprocessorContent()
 		}
 		if (useFileStream)
 		{
-			// Flush before stream
-			EVE_Cmd_waitFlush(phost);
-
 			if (useMediaFifo)
 			{
-				if (mediaFifoSize)
+				if (phost->MediaFifoSize)
 				{
+					// Load entire file into stream
+					EVE_Util_loadMediaFileW(phost, QString::fromUtf8(useFileStream).toStdWString().c_str());
+
+					// Flush after stream
+					EVE_MediaFifo_waitFlush(phost);
 				}
 				else
 				{
@@ -956,13 +946,13 @@ void DeviceManager::uploadCoprocessorContent()
 			}
 			else
 			{
-				// NOTE: Buffer should be smaller than the media fifo buffer size for optimal performance. Not equal.
-				// EVE_MediaFifo_wrBuffer(...)
-			}
+				// Flush before stream
+				EVE_Cmd_waitFlush(phost);
 
-			// Stream not yet implemented
-			EVE_Util_resetCoprocessor(phost); // TODO
-			continue;
+				// Stream to coprocessor not yet implemented
+				EVE_Util_resetCoprocessor(phost); // TODO
+				continue;
+			}
 
 			// Flush after stream
 			EVE_Cmd_waitFlush(phost);

@@ -399,14 +399,14 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	return true;
 }
 
-EVE_HAL_EXPORT bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
+EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 {
 	uint16_t space;
 
 	if (size > (EVE_CMD_FIFO_SIZE - 4))
 	{
 		eve_printf_debug("Requested free space exceeds coprocessor FIFO\n");
-		return false;
+		return 0;
 	}
 
 	eve_assert(!phost->CmdWaiting);
@@ -416,7 +416,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 	if (space < size)
 		space = EVE_Cmd_space(phost);
 	if (!checkWait(phost, space))
-		return false;
+		return 0;
 
 	while (space < size)
 	{
@@ -427,7 +427,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 
 	/* Sufficient space */
 	phost->CmdWaiting = false;
-	return true;
+	return space;
 }
 
 EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost)

@@ -48,6 +48,9 @@ EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t add
 The image format is provided as output to the optional format argument */
 EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format);
 
+/* Stream a file into the media FIFO */
+EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename);
+
 #ifdef WIN32
 
 EVE_HAL_EXPORT bool EVE_Util_loadRawFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename);
@@ -56,6 +59,9 @@ EVE_HAL_EXPORT bool EVE_Util_loadInflateFileW(EVE_HalContext *phost, uint32_t ad
 /* Load a file using CMD_LOADIMAGE.
 The image format is provided as output to the optional format argument */
 EVE_HAL_EXPORT bool EVE_Util_loadImageFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename, uint32_t *format);
+
+/* Stream a file into the media FIFO */
+EVE_HAL_EXPORT bool EVE_Util_loadMediaFileW(EVE_HalContext *phost, const wchar_t *filename);
 
 #endif
 

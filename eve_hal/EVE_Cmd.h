@@ -111,7 +111,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_waitFlush(EVE_HalContext *phost);
 
 /* Wait for the command buffer to have at least the requested amount of free space.
 Returns false in case a coprocessor fault occurred */
-EVE_HAL_EXPORT bool EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size);
+EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size);
 
 /* Wait for logo to finish displaying. 
 (Waits for both the read and write pointer to go to 0) */

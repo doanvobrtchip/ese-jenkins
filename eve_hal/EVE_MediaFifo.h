@@ -69,8 +69,8 @@ Returns false in case a coprocessor fault occurred */
 EVE_HAL_EXPORT bool EVE_MediaFifo_waitFlush(EVE_HalContext *phost);
 
 /* Wait for the media FIFO to have at least the requested amount of free space.
-Returns false in case a coprocessor fault occurred */
-EVE_HAL_EXPORT bool EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size);
+Returns 0 in case a coprocessor fault occurred */
+EVE_HAL_EXPORT uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size);
 
 #else
 
