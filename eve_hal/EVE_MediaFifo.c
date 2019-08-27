@@ -36,22 +36,44 @@
 
 /* Set the media FIFO. 
 Returns false in case a coprocessor fault occurred */
-void EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size)
+bool EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size)
 {
+	bool res;
+
 	if (!EVE_Hal_supportMediaFifo(phost))
 	{
 		eve_assert_ex(false, "EVE_MediaFifo_set is not available on the current graphics platform\n");
 		return false;
 	}
 
-	EVE_Cmd_startFunc(phost);
-	EVE_Cmd_wr32(phost, CMD_MEDIAFIFO);
-	EVE_Cmd_wr32(phost, address);
-	EVE_Cmd_wr32(phost, size);
-	EVE_Cmd_endFunc(phost);
+	if (phost->MediaFifoAddress != address || phost->MediaFifoSize != size)
+	{
+		EVE_Cmd_startFunc(phost);
+		EVE_Cmd_wr32(phost, CMD_MEDIAFIFO);
+		EVE_Cmd_wr32(phost, address);
+		EVE_Cmd_wr32(phost, size);
+		EVE_Cmd_endFunc(phost);
 
-	phost->MediaFifoAddress = address;
-	phost->MediaFifoSize = size;
+		/* Must flush for fifo pointers to be ready. */
+		res = EVE_Cmd_waitFlush(phost);
+	}
+	else
+	{
+		res = false;
+	}
+
+	if (res)
+	{
+		phost->MediaFifoAddress = address;
+		phost->MediaFifoSize = size;
+	}
+	else
+	{
+		phost->MediaFifoAddress = 0;
+		phost->MediaFifoSize = 0;
+	}
+
+	return res;
 }
 
 /* Get the current read pointer. */
@@ -214,7 +236,7 @@ bool EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size)
 
 	do
 	{
-		space = EVE_Cmd_space(phost);
+		space = EVE_MediaFifo_space(phost);
 		if (!handleWait(phost, space))
 			return false;
 	} while (space < size);

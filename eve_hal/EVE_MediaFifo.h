@@ -47,7 +47,7 @@
 
 /* Set the media FIFO. 
 Returns false in case a coprocessor fault occurred */
-EVE_HAL_EXPORT void EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size);
+EVE_HAL_EXPORT bool EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size);
 
 /* Get the current read pointer. */
 EVE_HAL_EXPORT uint32_t EVE_MediaFifo_rp(EVE_HalContext *phost);
@@ -74,10 +74,10 @@ EVE_HAL_EXPORT bool EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size
 
 #else
 
-#define EVE_MediaFifo_set(phost, address, size) eve_assert(false)
-#define EVE_MediaFifo_rp(phost) ((void)0)
-#define EVE_MediaFifo_wp(phost) ((void)0)
-#define EVE_MediaFifo_space(phost) ((void)~0)
+#define EVE_MediaFifo_set(phost, address, size) (false)
+#define EVE_MediaFifo_rp(phost) (0)
+#define EVE_MediaFifo_wp(phost) (0)
+#define EVE_MediaFifo_space(phost) (~0)
 #define EVE_MediaFifo_wrMem(phost, buffer, size) (false)
 #define EVE_MediaFifo_waitFlush(phost) (false)
 #define EVE_MediaFifo_waitSpace(phost, size) (false)
