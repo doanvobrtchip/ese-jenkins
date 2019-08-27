@@ -132,6 +132,9 @@ private:
 	bool m_Busy;
 	bool m_Abort;
 
+	QProgressBar *m_StreamProgress;
+	uint32_t m_StreamTransfered;
+
 private slots:
 	void deviceManage();
 	void deviceDisplaySettings();

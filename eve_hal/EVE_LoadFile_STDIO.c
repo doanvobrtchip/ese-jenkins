@@ -231,9 +231,9 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFileW(EVE_HalContext *phost, uint32_t addr
 #endif
 
 #ifdef WIN32
-static bool loadMediaFile(EVE_HalContext *phost, const char *filename, const wchar_t *filenameW)
+static bool loadMediaFile(EVE_HalContext *phost, const char *filename, const wchar_t *filenameW, uint32_t *transfered)
 #else
-EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename)
+EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
 #endif
 {
 	FILE *afile;
@@ -266,25 +266,41 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 		blocklen += 3;
 		blocklen -= blocklen % 4;
 
-		if (!EVE_MediaFifo_wrMem(phost, pbuff, blocklen)) /* copy data continuously into command memory */
-			break;
+		if (transfered)
+		{
+			uint32_t transferedPart;
+			if (!EVE_MediaFifo_wrMem(phost, pbuff, blocklen, &transferedPart)) /* copy data continuously into media fifo memory */
+			{
+				/* Coprocessor fault */
+				*transfered += transferedPart;
+				break;
+			}
+			*transfered += transferedPart;
+			if (transferedPart < blocklen)
+				break; /* Early exit, processing done */
+		}
+		else
+		{
+			if (!EVE_MediaFifo_wrMem(phost, pbuff, blocklen, NULL)) /* copy data continuously into media fifo memory */
+				break; /* Coprocessor fault */
+		}
 	}
 
 	fclose(afile); /* close the opened compressed file */
 
-	return EVE_MediaFifo_waitFlush(phost);
+	return transfered ? EVE_Cmd_waitFlush(phost) : EVE_MediaFifo_waitFlush(phost);
 }
 
 #ifdef WIN32
 
-EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename)
+EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
 {
-	return loadMediaFile(phost, filename, NULL);
+	return loadMediaFile(phost, filename, NULL, transfered);
 }
 
-EVE_HAL_EXPORT bool EVE_Util_loadMediaFileW(EVE_HalContext *phost, const wchar_t *filename)
+EVE_HAL_EXPORT bool EVE_Util_loadMediaFileW(EVE_HalContext *phost, const wchar_t *filename, uint32_t *transfered)
 {
-	return loadMediaFile(phost, NULL, filename);
+	return loadMediaFile(phost, NULL, filename, transfered);
 }
 
 #endif

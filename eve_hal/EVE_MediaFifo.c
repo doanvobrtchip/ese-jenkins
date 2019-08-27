@@ -111,7 +111,7 @@ uint32_t EVE_MediaFifo_space(EVE_HalContext *phost)
 /* Write a buffer to the media FIFO. 
 Waits if there is not enough space in the media FIFO. 
 Returns false in case a coprocessor fault occurred */
-bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size, uint32_t *transfered)
 {
 	if (!EVE_Hal_supportMediaFifo(phost))
 	{
@@ -148,6 +148,8 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 			wp -= phost->MediaFifoSize;
 		eve_assert(wp < phost->MediaFifoSize);
 		EVE_Hal_wr32(phost, REG_MEDIAFIFO_WRITE, wp);
+		if (transfered)
+			*transfered = size;
 		return true;
 	}
 	else
@@ -155,7 +157,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		/* Otherwise, write in parts. */
 		uint32_t halfSize = ((phost->MediaFifoSize >> 3) << 2) - 4;
 		uint32_t remaining = size;
-		uint32_t transfered = 0;
+		uint32_t done = 0;
 		uint32_t wp;
 
 		wp = EVE_Hal_rd32(phost, REG_MEDIAFIFO_WRITE);
@@ -168,20 +170,27 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 			int32_t overflow = (int32_t)(wp + transfer) - (int32_t)(phost->MediaFifoSize);
 			if (overflow > 0)
 			{
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[transfered], transfer - overflow);
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[transfered + transfer - overflow], overflow);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer - overflow);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[done + transfer - overflow], overflow);
 			}
 			else
 			{
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[transfered], transfer);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer);
 			}
 			wp += transfer;
-			transfered += transfer;
+			done += transfer;
 			remaining -= transfer;
 			if (wp >= phost->MediaFifoSize)
 				wp -= phost->MediaFifoSize;
 			eve_assert(wp < phost->MediaFifoSize);
 			EVE_Hal_wr32(phost, REG_MEDIAFIFO_WRITE, wp);
+
+			if (transfered)
+			{
+				*transfered = done;
+				if (EVE_Cmd_rp(phost) == EVE_Cmd_wp(phost))
+					return true; /* Early exit, finished processing. */
+			}
 		}
 
 		return true;
@@ -191,7 +200,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 	{
 		uint32_t halfSize = ((phost->MediaFifoSize >> 3) << 2) - 4;
 		uint32_t remaining = size;
-		uint32_t transfered = 0;
+		uint32_t done = 0;
 		uint32_t wp;
 
 		/* Write to media FIFO as soon as space is available */
@@ -206,20 +215,27 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 			int32_t overflow = (int32_t)(wp + transfer) - (int32_t)(phost->MediaFifoSize);
 			if (overflow > 0)
 			{
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[transfered], transfer - overflow);
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[transfered + transfer - overflow], overflow);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer - overflow);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[done + transfer - overflow], overflow);
 			}
 			else
 			{
-				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[transfered], transfer);
+				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer);
 			}
 			wp += transfer;
-			transfered += transfer;
+			done += transfer;
 			remaining -= transfer;
 			if (wp >= phost->MediaFifoSize)
 				wp -= phost->MediaFifoSize;
 			eve_assert(wp < phost->MediaFifoSize);
 			EVE_Hal_wr32(phost, REG_MEDIAFIFO_WRITE, wp);
+
+			if (transfered)
+			{
+				*transfered = done;
+				if (EVE_Cmd_rp(phost) == EVE_Cmd_wp(phost))
+					return true; /* Early exit, finished processing. */
+			}
 		}
 
 		return true;

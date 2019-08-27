@@ -211,11 +211,28 @@ bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename)
 			filesize -= blocklen;
 			blocklen += 3;
 			blocklen -= blocklen % 4;
-			if (!EVE_MediaFifo_wrMem(phost, (char *)buffer, blocklen))
-				break;
+
+			if (transfered)
+			{
+				uint32_t transferedPart;
+				if (!EVE_MediaFifo_wrMem(phost, buffer, blocklen, &transferedPart)) /* copy data continuously into media fifo memory */
+				{
+					/* Coprocessor fault */
+					*transfered += transferedPart;
+					break;
+				}
+				*transfered += transferedPart;
+				if (transferedPart < blocklen)
+					break; /* Early exit, processing done */
+			}
+			else
+			{
+				if (!EVE_MediaFifo_wrMem(phost, pbuff, blocklen, NULL)) /* copy data continuously into media fifo memory */
+					break; /* Coprocessor fault */
+			}
 		}
 		f_close(&InfSrc);
-		return EVE_MediaFifo_waitFlush(phost);
+		return transfered ? EVE_Cmd_waitFlush(phost) : EVE_MediaFifo_waitFlush(phost);
 	}
 	else
 	{

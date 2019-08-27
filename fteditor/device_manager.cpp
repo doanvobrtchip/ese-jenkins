@@ -80,6 +80,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
     , m_IsCustomDevice(false)
     , m_Busy(false)
     , m_Abort(false)
+    , m_StreamProgress(NULL)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 
@@ -245,6 +246,8 @@ bool DeviceManager::cbCmdWait(void *ph)
 {
 	EVE_HalContext *phost = reinterpret_cast<EVE_HalContext *>(ph);
 	DeviceManager *deviceManager = reinterpret_cast<DeviceManager *>(phost->UserContext);
+	if (deviceManager->m_StreamProgress && deviceManager->m_StreamProgress->value() != deviceManager->m_StreamTransfered)
+		deviceManager->m_StreamProgress->setValue(deviceManager->m_StreamTransfered);
 	QCoreApplication::processEvents(QEventLoop::AllEvents);
 	return !deviceManager->m_Abort;
 }
@@ -932,10 +935,15 @@ void DeviceManager::uploadCoprocessorContent()
 				if (phost->MediaFifoSize)
 				{
 					// Load entire file into stream
-					EVE_Util_loadMediaFileW(phost, QString::fromUtf8(useFileStream).toStdWString().c_str());
-
-					// Flush after stream
-					EVE_MediaFifo_waitFlush(phost);
+					m_StreamTransfered = 0;
+					m_StreamProgress = progressSubBar;
+					progressSubBar->setValue(0);
+					progressSubBar->setRange(0, QFile(QString::fromUtf8(useFileStream)).size());
+					progressSubBar->setVisible(true);
+					EVE_Util_loadMediaFileW(phost, QString::fromUtf8(useFileStream).toStdWString().c_str(), &m_StreamTransfered);
+					progressSubBar->setVisible(false);
+					m_StreamTransfered = 0;
+					m_StreamProgress = NULL;
 				}
 				else
 				{

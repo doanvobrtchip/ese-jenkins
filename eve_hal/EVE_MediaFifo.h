@@ -60,8 +60,11 @@ EVE_HAL_EXPORT uint32_t EVE_MediaFifo_space(EVE_HalContext *phost);
 
 /* Write a buffer to the media FIFO. 
 Waits if there is not enough space in the media FIFO. 
-Returns false in case a coprocessor fault occurred */
-EVE_HAL_EXPORT bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size);
+Returns false in case a coprocessor fault occurred.
+If the transfered pointer is set, the write may exit early 
+if the coprocessor function has finished, and the
+transfered amount will be set. */
+EVE_HAL_EXPORT bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size, uint32_t *transfered);
 
 /* Wait for the media FIFO to fully empty. 
 When checking if a file is fully processed, EVE_Cmd_waitFlush must be called.
