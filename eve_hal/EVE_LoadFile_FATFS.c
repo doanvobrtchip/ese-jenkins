@@ -94,16 +94,16 @@ bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *f
 			addr += blocklen;
 		}
 		f_close(&InfSrc);
-		return 1;
+		return true;
 	}
 	else
 	{
 		eve_printf_debug("Unable to open file: \"%s\"\n", filename);
-		return 0;
+		return false;
 	}
 #else
 	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
-	return 0;
+	return false;
 #endif
 }
 
@@ -127,7 +127,7 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
 			fResult = f_read(&InfSrc, buffer, 512, &blocklen); // read a chunk of src file
 			filesize -= blocklen;
 			blocklen += 3;
-			blocklen -= blocklen % 4;
+			blocklen &= ~3U;
 			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
 				break;
 		}
@@ -141,7 +141,7 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
 	}
 #else
 	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
-	return 0;
+	return false;
 #endif
 }
 
@@ -166,7 +166,7 @@ bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char 
 			fResult = f_read(&InfSrc, buffer, 512, &blocklen); // read a chunk of src file
 			filesize -= blocklen;
 			blocklen += 3;
-			blocklen -= blocklen % 4;
+			blocklen &= ~3U;
 			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
 				break;
 		}
@@ -187,7 +187,45 @@ bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char 
 	}
 #else
 	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
-	return 0;
+	return false;
+#endif
+}
+
+bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
+{
+#if defined(EVE_ENABLE_FATFS)
+	FRESULT fResult;
+	FIL InfSrc;
+
+	int32_t blocklen, filesize;
+	uint8_t buffer[512L];
+
+	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	if (fResult == FR_OK)
+	{
+		filesize = f_size(&InfSrc);
+		while (filesize > 0)
+		{
+			fResult = f_read(&InfSrc, buffer, 512, &blocklen); // read a chunk of src file
+			filesize -= blocklen;
+			blocklen += 3;
+			blocklen &= ~3U;
+			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
+				break;
+			if (transfered)
+				*transfered += blocklen;
+		}
+		f_close(&InfSrc);
+		return EVE_Cmd_waitFlush(phost);
+	}
+	else
+	{
+		eve_printf_debug("Unable to open file: \"%s\"\n", filename);
+		return false;
+	}
+#else
+	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
+	return false;
 #endif
 }
 
@@ -210,7 +248,7 @@ bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename)
 			fResult = f_read(&InfSrc, buffer, blockSize, &blocklen); // read a chunk of src file
 			filesize -= blocklen;
 			blocklen += 3;
-			blocklen -= blocklen % 4;
+			blocklen &= ~3U;
 
 			if (transfered)
 			{
@@ -241,7 +279,7 @@ bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename)
 	}
 #else
 	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
-	return 0;
+	return false;
 #endif
 }
 

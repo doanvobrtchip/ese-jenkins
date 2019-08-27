@@ -934,7 +934,7 @@ void DeviceManager::uploadCoprocessorContent()
 			{
 				if (phost->MediaFifoSize)
 				{
-					// Load entire file into stream
+					// Load entire file into media fifo
 					m_StreamTransfered = 0;
 					m_StreamProgress = progressSubBar;
 					progressSubBar->setValue(0);
@@ -954,16 +954,17 @@ void DeviceManager::uploadCoprocessorContent()
 			}
 			else
 			{
-				// Flush before stream
-				EVE_Cmd_waitFlush(phost);
-
-				// Stream to coprocessor not yet implemented
-				EVE_Util_resetCoprocessor(phost); // TODO
-				continue;
+				// Load entire file into cmd fifo
+				m_StreamTransfered = 0;
+				m_StreamProgress = progressSubBar;
+				progressSubBar->setValue(0);
+				progressSubBar->setRange(0, QFile(QString::fromUtf8(useFileStream)).size());
+				progressSubBar->setVisible(true);
+				EVE_Util_loadCmdFileW(phost, QString::fromUtf8(useFileStream).toStdWString().c_str(), &m_StreamTransfered);
+				progressSubBar->setVisible(false);
+				m_StreamTransfered = 0;
+				m_StreamProgress = NULL;
 			}
-
-			// Flush after stream
-			EVE_Cmd_waitFlush(phost);
 		}
 	}
 

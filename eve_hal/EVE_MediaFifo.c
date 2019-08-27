@@ -322,6 +322,12 @@ uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size)
 	eve_assert(!phost->CmdWaiting);
 	phost->CmdWaiting = true;
 
+#if 1
+	space = EVE_MediaFifo_space(phost);
+	if (!checkWait(phost, space))
+		return 0;
+#endif
+
 	do
 	{
 		space = EVE_MediaFifo_space(phost);

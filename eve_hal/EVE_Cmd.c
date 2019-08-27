@@ -413,16 +413,19 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 	phost->CmdWaiting = true;
 
 	space = phost->CmdSpace;
+
+#if 1
 	if (space < size)
 		space = EVE_Cmd_space(phost);
 	if (!checkWait(phost, space))
 		return 0;
+#endif
 
 	while (space < size)
 	{
-		if (!handleWait(phost, space))
-			return false;
 		space = EVE_Cmd_space(phost);
+		if (!handleWait(phost, space))
+			return 0;
 	}
 
 	/* Sufficient space */

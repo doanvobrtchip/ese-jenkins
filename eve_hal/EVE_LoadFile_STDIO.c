@@ -134,7 +134,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t add
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
-		blocklen -= blocklen % 4;
+		blocklen &= ~3U;
 
 		if (!EVE_Cmd_wrMem(phost, (char *)pbuff, blocklen)) /* copy data continuously into command memory */
 			break;
@@ -199,7 +199,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t addre
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
-		blocklen -= blocklen % 4;
+		blocklen &= ~3U;
 
 		if (!EVE_Cmd_wrMem(phost, (char *)pbuff, blocklen))
 			break;
@@ -226,6 +226,65 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t addre
 EVE_HAL_EXPORT bool EVE_Util_loadImageFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename, uint32_t *format)
 {
 	return loadImageFile(phost, address, NULL, filename, format);
+}
+
+#endif
+
+#ifdef WIN32
+static bool loadCmdFile(EVE_HalContext *phost, const char *filename, const wchar_t *filenameW, uint32_t *transfered)
+#else
+EVE_HAL_EXPORT bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
+#endif
+{
+	FILE *afile;
+	uint32_t ftsize = 0;
+	uint8_t pbuff[8192];
+	uint16_t blocklen;
+
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#ifdef WIN32
+	afile = filename ? fopen(filename, "rb") : _wfopen(filenameW, L"rb");
+#else
+	afile = fopen(filename, "rb"); // read Binary (rb)
+#endif
+#pragma warning(pop)
+	if (afile == NULL)
+	{
+		eve_printf_debug("Unable to open: %s\n", filename);
+		return false;
+	}
+	fseek(afile, 0, SEEK_END);
+	ftsize = ftell(afile);
+	fseek(afile, 0, SEEK_SET);
+	while (ftsize > 0)
+	{
+		blocklen = ftsize > 8192 ? 8192 : ftsize;
+		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
+		ftsize -= blocklen;
+		blocklen += 3;
+		blocklen &= ~3U;
+		if (!EVE_Cmd_wrMem(phost, (char *)pbuff, blocklen)) /* copy data continuously into command memory */
+			break;
+		if (transfered)
+			*transfered += blocklen;
+	}
+
+	fclose(afile); /* close the opened file */
+
+	return EVE_Cmd_waitFlush(phost);
+}
+
+#ifdef WIN32
+
+EVE_HAL_EXPORT bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
+{
+	return loadCmdFile(phost, filename, NULL, transfered);
+}
+
+EVE_HAL_EXPORT bool EVE_Util_loadCmdFileW(EVE_HalContext *phost, const wchar_t *filename, uint32_t *transfered)
+{
+	return loadCmdFile(phost, NULL, filename, transfered);
 }
 
 #endif
@@ -264,7 +323,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 		blocklen = (uint16_t)fread((void *)pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
-		blocklen -= blocklen % 4;
+		blocklen &= ~3U;
 
 		if (transfered)
 		{
