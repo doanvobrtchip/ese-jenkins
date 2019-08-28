@@ -396,6 +396,9 @@ void DeviceManager::refreshDevices()
 	for (std::map<DeviceId, DeviceInfo *>::iterator it = deviceInfo.begin(), end = deviceInfo.end(); it != end; ++it)
 	{
 		// Delete anything in the DeviceInfo that needs to be deleted
+		EVE_HalContext *phost = (EVE_HalContext *)it->second->EveHalContext;
+		if (phost)
+			EVE_Hal_close(phost);
 		delete it->second->View;
 		delete it->second;
 	}
