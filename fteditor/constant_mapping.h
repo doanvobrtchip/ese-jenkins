@@ -24,11 +24,13 @@ namespace FTEDITOR {
 #define FTEDITOR_FT813 5
 #define FTEDITOR_BT815 6
 #define FTEDITOR_BT816 7
-#define FTEDITOR_DEVICE_NB 8
+#define FTEDITOR_BT815A 8
+#define FTEDITOR_BT816A 9
+#define FTEDITOR_DEVICE_NB 8 // TODO_BT815A: 10
 extern const BT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
 inline BT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
-extern const int g_DeviceToIntf[256];
-inline int deviceToIntf(BT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntf[deviceEnum & 0xFF]; }
+extern const int *g_DeviceToIntfTable[256];
+inline int deviceToIntf(BT8XXEMU_EmulatorMode deviceEnum) { return g_DeviceToIntfTable[(deviceEnum >> 8) & 0xFF][deviceEnum & 0xFF]; }
 extern const char *g_DeviceToString[FTEDITOR_DEVICE_NB];
 inline const char *deviceToString(int deviceIntf) { return deviceIntf < FTEDITOR_DEVICE_NB ? g_DeviceToString[deviceIntf] : ""; }
 
