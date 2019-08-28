@@ -398,7 +398,10 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	{
 		// eve_printf_debug("Waiting for CoCmd FIFO... rp: %i, wp: %i\n", (int)rp, (int)wp);
 		if (!handleWait(phost, rp))
+		{
+			phost->CmdSpace = (rp - wp - 4) & EVE_CMD_FIFO_MASK;
 			return false;
+		}
 	}
 
 	/* Command buffer empty */
