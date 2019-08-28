@@ -558,15 +558,21 @@ EVE_HAL_EXPORT void EVE_Util_shutdown(EVE_HalContext *phost)
 	EVE_Hal_powerCycle(phost, false);
 }
 
-/* Whether the device has an OTP that requires reactivation in case of reset during CMD_LOGO */
-static inline bool EVE_Util_hasOTP(EVE_HalContext *phost)
+/*
+Patch: OTP needs to be reactivated when the coprocessor is reset during CMD_LOGO
+Applicable to: FT81X-series
+*/
+static inline bool EVE_Util_needsSubPatch(EVE_HalContext *phost)
 {
-	return (EVE_CHIPID >= EVE_FT810) && (EVE_CHIPID < EVE_BT815);
+	return (EVE_CHIPID >= EVE_FT810) && (EVE_CHIPID <= EVE_FT813);
 }
 
-/* Whether the device has an OTP that requires the video patch to be reapplied */
-#define EVE_VIDEOPATCH_ADDR 0x309162 // NOTE: This is only valid for BT815 and BT816
-static inline bool EVE_Util_hasVideoPatch(EVE_HalContext *phost)
+/* 
+Patch: Video patch from OTP needs to be reapplied after coprocessor reset
+Applicable to: BT81X-series
+*/
+#define EVE_VIDEOPATCH_ADDR 0x309162 /* NOTE: This address is only valid for BT815 and BT816 */
+static inline bool EVE_Util_needsVideoPatch(EVE_HalContext *phost)
 {
 	return (EVE_CHIPID >= EVE_BT815) && (EVE_CHIPID <= EVE_BT816);
 }
@@ -578,7 +584,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 
 	eve_printf_debug("Reset coprocessor\n");
 
-	if (EVE_Util_hasVideoPatch(phost))
+	if (EVE_Util_needsVideoPatch(phost))
 	{
 		/* BT81X video patch */
 		videoPatchVector = EVE_Hal_rd16(phost, EVE_VIDEOPATCH_ADDR);
@@ -598,7 +604,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	/* Stop playing audio in case video with audio was playing during reset */
 	EVE_Hal_wr8(phost, REG_PLAYBACK_PLAY, 0);
 
-	if (EVE_Util_hasOTP(phost))
+	if (EVE_Util_needsSubPatch(phost))
 	{
 		/* Enable patched rom in case the reset is requested while CMD_LOGO is running.
 		This is necessary as CMD_LOGO may swap to the other rom page */
@@ -623,7 +629,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	phost->MediaFifoAddress = 0;
 	phost->MediaFifoSize = 0;
 
-	if (EVE_Util_hasOTP(phost))
+	if (EVE_Util_needsSubPatch(phost))
 	{
 		/* Clear cmd with CMD_STOP, exiting CMD_EXECUTE may loop over, depending on OTP */
 		EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD);
@@ -665,7 +671,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		eve_assert((rd = EVE_Hal_rd16(phost, REG_CMD_READ)) == 0);
 	}
 
-	if (EVE_Util_hasVideoPatch(phost))
+	if (EVE_Util_needsVideoPatch(phost))
 	{
 		/* BT81X video patch */
 		EVE_Hal_wr16(phost, EVE_VIDEOPATCH_ADDR, videoPatchVector);

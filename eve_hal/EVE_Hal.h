@@ -319,7 +319,8 @@ EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const
 /* Screen based on chip id. This function compiles as a constant on single supported chipid target */
 static inline bool EVE_Hal_isScreenCapacitive(EVE_HalContext *phost)
 {
-	return (EVE_CHIPID & 0x01) == 0x01;
+	return (EVE_CHIPID & 0x8001) == 0x0001 /* Match FT801 to BT815 */
+		|| (EVE_CHIPID & 0x8010) == 0x8010; /* Match BT815A */
 }
 
 /* Screen based on chip id. This function compiles as a constant on single supported chipid target */
