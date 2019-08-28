@@ -402,6 +402,7 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	}
 
 	/* Command buffer empty */
+	phost->CmdSpace = EVE_CMD_FIFO_SIZE - 4;
 	phost->CmdWaiting = false;
 	return true;
 }

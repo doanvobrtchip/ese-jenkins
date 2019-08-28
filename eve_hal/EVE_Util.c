@@ -562,6 +562,7 @@ EVE_HAL_EXPORT void EVE_Util_shutdown(EVE_HalContext *phost)
 Patch: OTP needs to be reactivated when the coprocessor is reset during CMD_LOGO
 Applicable to: FT81X-series
 */
+#define EVE_SUBPATCH_PTR 0x7ffeU
 static inline bool EVE_Util_needsSubPatch(EVE_HalContext *phost)
 {
 	return (EVE_CHIPID >= EVE_FT810) && (EVE_CHIPID <= EVE_FT813);
@@ -571,7 +572,7 @@ static inline bool EVE_Util_needsSubPatch(EVE_HalContext *phost)
 Patch: Video patch from OTP needs to be reapplied after coprocessor reset
 Applicable to: BT81X-series
 */
-#define EVE_VIDEOPATCH_ADDR 0x309162 /* NOTE: This address is only valid for BT815 and BT816 */
+#define EVE_VIDEOPATCH_ADDR 0x309162UL /* NOTE: This address is only valid for BT815 and BT816 */
 static inline bool EVE_Util_needsVideoPatch(EVE_HalContext *phost)
 {
 	return (EVE_CHIPID >= EVE_BT815) && (EVE_CHIPID <= EVE_BT816);
@@ -622,9 +623,6 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	eve_assert((rd = EVE_Hal_rd16(phost, REG_CMD_READ)) == 0);
 
 	/* Refresh fifo */
-	EVE_Cmd_wp(phost);
-	EVE_Cmd_rp(phost);
-	EVE_Cmd_space(phost);
 	EVE_Cmd_waitFlush(phost);
 	phost->MediaFifoAddress = 0;
 	phost->MediaFifoSize = 0;
@@ -633,7 +631,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	{
 		/* Clear cmd with CMD_STOP, exiting CMD_EXECUTE may loop over, depending on OTP */
 		EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD);
-		for (int i = 0; i < 4096; i += 4)
+		for (int i = 0; i < EVE_CMD_FIFO_SIZE; i += 4)
 			EVE_Hal_transfer32(phost, CMD_STOP);
 		EVE_Hal_endTransfer(phost);
 
@@ -641,7 +639,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		EVE_Hal_wr8(phost, REG_ROMSUB_SEL, 3);
 		EVE_Cmd_startFunc(phost);
 		EVE_Cmd_wr32(phost, CMD_EXECUTE);
-		EVE_Cmd_wr32(phost, 0x7ffe);
+		EVE_Cmd_wr32(phost, EVE_SUBPATCH_PTR);
 		EVE_Cmd_wr32(phost, 0);
 		EVE_Cmd_endFunc(phost);
 		EVE_Hal_flush(phost);
@@ -657,15 +655,11 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		/* Need to manually stop previous command from repeating infinitely,
 		however, this may cause the coprocessor to overshoot the command fifo,
 		hence it's been filled with harmless CMD_STOP commands. */
-		;
 		EVE_Hal_wr16(phost, REG_CMD_WRITE, 0);
 		EVE_Hal_flush(phost);
 		EVE_sleep(100);
 
 		/* Refresh fifo */
-		EVE_Cmd_wp(phost);
-		EVE_Cmd_rp(phost);
-		EVE_Cmd_space(phost);
 		EVE_Cmd_waitFlush(phost);
 		eve_assert((wr = EVE_Hal_rd16(phost, REG_CMD_WRITE)) == 0);
 		eve_assert((rd = EVE_Hal_rd16(phost, REG_CMD_READ)) == 0);
