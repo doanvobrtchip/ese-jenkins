@@ -57,8 +57,10 @@ typedef struct EVE_BootupParameters {
 	int8_t PCLKPol;
 	int8_t CSpread;
 	bool Dither;
-	// TODO: OutBits
-	// TODO: AdaptiveFramerate;
+	/* TODO: 
+	OutBits
+	AdaptiveFramerate
+	*/
 
 	/* SPI */
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
@@ -67,6 +69,7 @@ typedef struct EVE_BootupParameters {
 #endif
 
 	/* Others */
+	EVE_81X_PLL_FREQ_T SystemClock;
 	bool ExternalOsc;
 
 } EVE_BootupParameters;

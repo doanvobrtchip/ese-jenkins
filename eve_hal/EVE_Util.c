@@ -162,6 +162,15 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 	parameters->ExternalOsc = true;
 #endif
 
+	if (EVE_CHIPID >= EVE_BT815)
+	{
+		parameters->SystemClock = EVE_SYSCLK_72M; /* 72Mhz is default for BT8x */
+	}
+	else
+	{
+		parameters->SystemClock = EVE_SYSCLK_60M; /* 60Mhz is default for FT8x */
+	}
+
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
 #ifdef ENABLE_SPI_QUAD
 	parameters->SpiChannels = EVE_SPI_QUAD_CHANNEL;
@@ -313,6 +322,9 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		EVE_sleep(10);
 	}
 
+	/* Update system clock as per user selected */
+	EVE_Host_selectSysClk(phost, parameters->SystemClock);
+
 	/* Access address 0 to wake up the FT800 */
 	EVE_Hal_hostCommand(phost, EVE_ACTIVE_M);
 	EVE_sleep(300);
@@ -412,6 +424,9 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 				return false;
 	}
 	eve_printf_debug("All engines are ready\n");
+
+	/* Update REG_FREQUENCY as per user selected */
+	EVE_Hal_wr32(phost, REG_FREQUENCY, parameters->SystemClock * 12 * 1000 * 1000);
 
 	if (EVE_CHIPID < EVE_FT810)
 	{
