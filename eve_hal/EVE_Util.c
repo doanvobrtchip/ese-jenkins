@@ -454,9 +454,11 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	EVE_Hal_wr16(phost, REG_CSPREAD, parameters->CSpread);
 	EVE_Hal_wr16(phost, REG_DITHER, parameters->Dither);
 
-	/* TODO: EVCharger Demo */
-	// EVE_Hal_wr16(phost, REG_OUTBITS, 0x1B6);
-	// EVE_Hal_wr16(phost, REG_ADAPTIVE_FRAMERATE, 1);
+	/* 
+	TODO:
+	EVE_Hal_wr16(phost, REG_OUTBITS, 0x1B6);
+	EVE_Hal_wr16(phost, REG_ADAPTIVE_FRAMERATE, 1);
+	*/
 
 	if (EVE_Hal_isScreenResistive(phost))
 	{
