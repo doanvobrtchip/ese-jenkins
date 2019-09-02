@@ -162,6 +162,9 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 	parameters->ExternalOsc = true;
 #endif
 
+#ifdef EVE_SYSTEM_CLOCK
+	parameters->SystemClock = EVE_SYSTEM_CLOCK;
+#else
 	if (EVE_CHIPID >= EVE_BT815)
 	{
 		parameters->SystemClock = EVE_SYSCLK_72M; /* 72Mhz is default for BT8x */
@@ -170,6 +173,7 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 	{
 		parameters->SystemClock = EVE_SYSCLK_60M; /* 60Mhz is default for FT8x */
 	}
+#endif
 
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
 #ifdef ENABLE_SPI_QUAD
