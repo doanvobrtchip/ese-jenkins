@@ -240,6 +240,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_RecentSeparator(NULL)
     , //, m_SaveScreenshotAct(NULL)
     m_CursorPosition(NULL)
+    , m_PixelColor(NULL)
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
 	, m_isVCDumpEnable(false)
@@ -818,10 +819,20 @@ void MainWindow::frameQt()
 	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
-	if (m_EmulatorViewport->mouseOver())
+	if (m_EmulatorViewport->mouseOver()) {
 		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
-	else
+
+		QColor c = m_EmulatorViewport->getPixelColor();
+		QString strColor("");
+
+		if (c.isValid())
+			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 2, 16, QChar('0')).arg(c.green(), 2, 16, QChar('0'))
+												  .arg(c.blue(), 2, 16, QChar('0')).arg(c.alpha(), 2, 16, QChar('0'));
+		m_PixelColor->setText(strColor.toUpper());
+	} else {
 		m_CursorPosition->setText("");
+		m_PixelColor->setText("");
+	}
 
 	// Busy loader
 	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
@@ -1193,6 +1204,17 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
 	}
 #endif /* FT800_DEVICE_MANAGER */
+
+	// pixel color (RGBA)
+	{
+		m_PixelColor = new QLabel(statusBar());
+		m_PixelColor->setText("");
+		statusBar()->addPermanentWidget(m_PixelColor);
+
+		QLabel *label = new QLabel(statusBar());
+		label->setText("  ");
+		statusBar()->addPermanentWidget(label);
+	}
 
 	// Cursor position
 	{

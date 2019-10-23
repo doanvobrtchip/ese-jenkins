@@ -283,6 +283,7 @@ private:
 	QLabel *m_ErrorLabel;
 
 	QLabel *m_CursorPosition;
+	QLabel *m_PixelColor;
 	QLabel *m_CoprocessorBusy;
 
 	QDockWidget *m_NavigatorDock;
