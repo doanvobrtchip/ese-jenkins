@@ -26,6 +26,7 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QLineEdit>
+#include <QStatusBar>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -773,6 +774,18 @@ CMD_SCREENSAVER()
 					x += state.Graphics.VertexTranslateX >> 4;
 					y += state.Graphics.VertexTranslateY >> 4;
 
+					if (m_isDrawAlignmentHorizontal)
+				    {
+					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+					    DRAWLINE(0, y, hsize(), y);
+					}
+
+					if (m_isDrawAlignmentVertical)
+				    {
+					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+					    DRAWLINE(x, 0, x, vsize());
+				    }
+
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 					// Draw...
 					if (m_WidgetWH == false && m_WidgetR == false)
@@ -1286,12 +1299,14 @@ void InteractiveViewport::keyPressEvent(QKeyEvent *e)
 	}
 }
 
-void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
+void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
-
 	m_NextMouseX = mouseX;
 	m_NextMouseY = mouseY;
+
+	m_MainWindow->statusBar()->showMessage("");
+	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
 
 	if (m_MouseTouch)
 	{
@@ -1363,7 +1378,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			// In case automatic expansion is necessary
 			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
 			const DlState &state = m_LineEditor->getState(m_LineNumber);
-			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
+			/*if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				// Doesn't work directly due to issue with undo combining when changing IdLeft
 				reEnableUndoCombine = true;
@@ -1405,9 +1420,18 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			{
 				xd <<= state.Graphics.VertexFormat;
 				yd <<= state.Graphics.VertexFormat;
+			}*/
+			
+
+			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
+			{
+				xd <<= state.Graphics.VertexFormat;
+				yd <<= state.Graphics.VertexFormat;
 			}
+			
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
+
 			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
 				// Snap ->
@@ -1474,11 +1498,31 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 	{
 		if (m_LineEditor)
 		{
+			m_MainWindow->statusBar()->showMessage("Press SHIFT for keeping constant x-coordinate, ALT for keeping constant y-coordinate");
+
 			// Apply action
-			int xd = mouseX - m_MovingLastX;
-			int yd = mouseY - m_MovingLastY;
-			m_MovingLastX = mouseX;
-			m_MovingLastY = mouseY;
+			int xd = 0;
+			int yd = 0;
+			
+			if (km != Qt::ShiftModifier) {
+				xd = mouseX - m_MovingLastX;
+				m_MovingLastX = mouseX;
+			}
+			else
+			{
+				m_isDrawAlignmentVertical = true;
+			}
+
+			if (km != Qt::AltModifier)
+			{
+				yd = mouseY - m_MovingLastY;
+				m_MovingLastY = mouseY;
+			}
+			else
+			{
+				m_isDrawAlignmentHorizontal = true;
+			}
+
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
 			{
@@ -1689,7 +1733,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	int mvy = screenTop();
 	int scl = screenScale();
 
-	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()));
+	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()), e->modifiers());
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1822,6 +1866,9 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 {
 	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(NULL);
 	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
+
+	m_MainWindow->statusBar()->showMessage("");
+	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
 
 	if (m_MouseTouch)
 	{

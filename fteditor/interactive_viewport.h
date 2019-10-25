@@ -68,7 +68,7 @@ protected:
 private:
 	void updatePointerMethod();
 	bool acceptableSource(QDropEvent *e);
-	void mouseMoveEvent(int mouseX, int mouseY);
+	void mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km = Qt::NoModifier);
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);
@@ -92,6 +92,11 @@ private slots:
 	void zoomOut();
 	void zoomChanged(int index);
 	void zoomEditTextChanged();
+
+private:
+	InteractiveViewport(const InteractiveViewport &);
+	InteractiveViewport &operator=(const InteractiveViewport &);
+
 private:
 	QComboBox  *m_ZoomCB;
 	MainWindow *m_MainWindow;
@@ -148,10 +153,8 @@ private:
 	int m_SnapHistoryCur;
 	void snapPos(int &xd, int &yd, int xref, int yref);
 
-private:
-	InteractiveViewport(const InteractiveViewport &);
-	InteractiveViewport &operator=(const InteractiveViewport &);
-
+	bool m_isDrawAlignmentHorizontal;
+	bool m_isDrawAlignmentVertical;
 }; /* class InteractiveViewport */
 
 } /* namespace FTEDITOR */
