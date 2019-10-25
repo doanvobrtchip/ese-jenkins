@@ -42,6 +42,60 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
+class SupportCopyPasteSpinBox : public QSpinBox
+{
+	Q_OBJECT
+
+public:
+	SupportCopyPasteSpinBox(QWidget *parent = nullptr)
+		: QSpinBox(parent)
+	{
+	}
+
+public slots:
+	void cut()
+	{
+		this->lineEdit()->cut();
+	}
+
+	void copy()
+	{
+		this->lineEdit()->copy();
+	}
+
+	void paste()
+	{
+		this->lineEdit()->paste();
+	}
+};
+
+class SupportCopyPasteDoubleSpinBox : public QDoubleSpinBox
+{
+	Q_OBJECT
+
+public:
+	SupportCopyPasteDoubleSpinBox(QWidget *parent = nullptr)
+	    : QDoubleSpinBox(parent)
+	{
+	}
+
+public slots:
+	void cut()
+	{
+		this->lineEdit()->cut();
+	}
+
+	void copy()
+	{
+		this->lineEdit()->copy();
+	}
+
+	void paste()
+	{
+		this->lineEdit()->paste();
+	}
+};
+
 namespace FTEDITOR
 {
 
@@ -87,14 +141,13 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////
-
-class InteractiveProperties::PropertiesSpinBoxAlphaHex : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBoxAlphaHex : public UndoStackDisabler<SupportCopyPasteSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesSpinBoxAlphaHex(InteractiveProperties *parent, const QString &undoMessage, int index)
-	    : UndoStackDisabler<QSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
@@ -150,13 +203,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBoxAddress : public UndoStackDisabler<SupportCopyPasteSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesSpinBoxAddress(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative)
-	    : UndoStackDisabler<QSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
@@ -212,13 +265,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxAddressFlash : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBoxAddressFlash : public UndoStackDisabler<SupportCopyPasteSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesSpinBoxAddressFlash(InteractiveProperties *parent, const QString &undoMessage, int index)
-	    : UndoStackDisabler<QSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
@@ -273,13 +326,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxAddressFlashOpt : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBoxAddressFlashOpt : public UndoStackDisabler<SupportCopyPasteSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesSpinBoxAddressFlashOpt(InteractiveProperties *parent, const QString &undoMessage, int index, bool negative)
-	    : UndoStackDisabler<QSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
@@ -352,13 +405,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<QSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<SupportCopyPasteSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index)
-	    : UndoStackDisabler<QSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
@@ -413,13 +466,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesDoubleSpinBox : public UndoStackDisabler<QDoubleSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesDoubleSpinBox : public UndoStackDisabler<SupportCopyPasteDoubleSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
 	PropertiesDoubleSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index)
-	    : UndoStackDisabler<QDoubleSpinBox>(parent)
+	    : UndoStackDisabler<SupportCopyPasteDoubleSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
