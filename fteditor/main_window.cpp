@@ -826,8 +826,8 @@ void MainWindow::frameQt()
 		QString strColor("");
 
 		if (c.isValid())
-			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 2, 16, QChar('0')).arg(c.green(), 2, 16, QChar('0'))
-												  .arg(c.blue(), 2, 16, QChar('0')).arg(c.alpha(), 2, 16, QChar('0'));
+			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
+												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
 		m_PixelColor->setText(strColor.toUpper());
 	} else {
 		m_CursorPosition->setText("");
