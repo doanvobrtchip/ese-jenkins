@@ -13,9 +13,9 @@
 #include <QFile>
 #include <QTextStream>
 
-#include <../../fteditor/constant_mapping.h>
-#include <../../fteditor/constant_common.h>
-#include <../../fteditor/dl_parser.h>
+#include "../../fteditor/constant_mapping.h"
+#include "../../fteditor/constant_common.h"
+#include "../../fteditor/dl_parser.h"
 
 void coprocdiff(BT8XXEMU_Emulator *sender, void *context);
 

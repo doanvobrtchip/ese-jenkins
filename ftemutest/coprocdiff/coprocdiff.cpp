@@ -6,8 +6,8 @@
 #include "../ftemutest.h"
 #include <stdio.h>
 
-#include <../../fteditor/constant_mapping.h>
-#include <../../fteditor/constant_common.h>
+#include "../../fteditor/constant_mapping.h"
+#include "../../fteditor/constant_common.h"
 
 #include <QString>
 
