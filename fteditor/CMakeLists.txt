@@ -148,7 +148,7 @@ ENDIF (WIN32)
 
 if(WIN32)
 set_target_properties(fteditor PROPERTIES
-  VS_DEBUGGER_ENVIRONMENT "PATH=${PYTHON_INCLUDE_DIR}/..;${Qt5Core_DIR}/../../../bin;${Qt5Core_DIR}/../../../plugins;${FREETYPE_INCLUDE_DIR_freetype2}/../../bin;${PNG_PNG_INCLUDE_DIR}/../bin;${ZLIB_INCLUDE_DIR}/../bin;%PATH%\nQT_PLUGIN_PATH=${Qt5Core_DIR}/../../../plugins\nPYTHONHOME=${PYTHON_INCLUDE_DIR}/..")
+  VS_DEBUGGER_ENVIRONMENT "PATH=${PYTHON_INCLUDE_DIR}/..;${Qt5Core_DIR}/../../../bin;${Qt5Core_DIR}/../../../plugins;${FREETYPE_INCLUDE_DIR_freetype2}/../../bin;${PNG_PNG_INCLUDE_DIR}/../bin;${ZLIB_INCLUDE_DIR}/../bin;%PATH%\nQT_PLUGIN_PATH=${Qt5Core_DIR}/../../../plugins\nPYTHONPATH=${PYTHON_INCLUDE_DIR}/..")
 # set_target_properties(fteditor PROPERTIES
 #   VS_DEBUGGER_COMMAND_ARGUMENTS "")
 set_target_properties(fteditor PROPERTIES

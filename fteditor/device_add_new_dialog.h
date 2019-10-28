@@ -48,6 +48,7 @@ private:
 	void prepareData();
 	void loadData(QString jsonPath);
 	void showData(QString jsonPath);
+	bool isExistDeviceName(QString nameToCheck);
 
 private:
 	Ui::DeviceAddNewDialog *ui;
