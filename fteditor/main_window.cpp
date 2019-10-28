@@ -984,7 +984,7 @@ void MainWindow::translateActions()
 
 void MainWindow::createMenus()
 {
-	m_FileMenu = menuBar()->addMenu(QString::null);
+	m_FileMenu = menuBar()->addMenu(QString());
 	m_FileMenu->addAction(m_NewAct);
 	m_FileMenu->addAction(m_OpenAct);
 	m_FileMenu->addSeparator();
@@ -1013,12 +1013,12 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
-	m_EditMenu = menuBar()->addMenu(QString::null);
+	m_EditMenu = menuBar()->addMenu(QString());
 	m_EditMenu->addAction(m_UndoAct);
 	m_EditMenu->addAction(m_RedoAct);
 	//m_EditMenu->addAction(m_DummyAct);
 
-	m_ToolsMenu = menuBar()->addMenu(QString::null);
+	m_ToolsMenu = menuBar()->addMenu(QString());
 	m_ToolsMenu->addAction(m_ResetEmulatorAct);
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 	m_ToolsMenu->addAction(m_ImportDisplayListAct);
@@ -1029,16 +1029,16 @@ void MainWindow::createMenus()
 	m_ToolsMenu->addAction(m_DisplayListFromIntegers);
 #endif
 
-	m_WidgetsMenu = menuBar()->addMenu(QString::null);
+	m_WidgetsMenu = menuBar()->addMenu(QString());
 
 #ifdef FT800EMU_PYTHON
-	m_ScriptsMenu = menuBar()->addMenu(QString::null);
+	m_ScriptsMenu = menuBar()->addMenu(QString());
 	connect(m_ScriptsMenu, SIGNAL(aboutToShow()), this, SLOT(refreshScriptsMenu()));
 #endif /* FT800EMU_PYTHON */
 
 	menuBar()->addSeparator();
 
-	m_HelpMenu = menuBar()->addMenu(QString::null);
+	m_HelpMenu = menuBar()->addMenu(QString());
 	m_HelpMenu->addAction(m_ManualAct);
 	m_HelpMenu->addSeparator();
 	m_HelpMenu->addAction(m_AboutAct);
@@ -3729,7 +3729,7 @@ void MainWindow::manual()
 void MainWindow::about()
 {
 	QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
-	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString::null;
+	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString();
 	   	 
 	QMessageBox msgBox(this);
 

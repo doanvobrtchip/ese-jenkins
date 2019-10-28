@@ -158,7 +158,7 @@ public:
 	// Remove the content
 	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time
-	bool loadFlashMap(QString flashMapPath = QString::null);
+	bool loadFlashMap(QString flashMapPath = QString());
 	// Clear all content
 	void clear(bool whenCloseProject = false);
 	// Get all content

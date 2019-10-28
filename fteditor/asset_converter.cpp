@@ -1197,7 +1197,7 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 	const FlashMapEntry &entry = entryIt->second;
 
 	// Copy raw and compressed data
-	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, false, QString::null);
+	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, false, QString());
 
 	; {
 		QFile fo(outName + ".bin");

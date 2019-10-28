@@ -73,7 +73,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
-	MappedName = QString::null;
+	MappedName = QString();
 	UploadMemoryDirty = true;
 	UploadFlashDirty = true;
 	ExternalDirty = false;
