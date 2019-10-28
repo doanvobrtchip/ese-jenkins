@@ -112,10 +112,8 @@ ENDIF (WITH_PYTHON)
 
 IF(WITH_FREETYPE)
   FIND_PACKAGE(Freetype REQUIRED)
-  IF (WITH_FREETYPE_STATIC)
-    FIND_PACKAGE(ZLIB REQUIRED) # Dependency of Freetype
-    FIND_PACKAGE(PNG REQUIRED) # Dependency of Freetype
-  ENDIF (WITH_FREETYPE_STATIC)
+  FIND_PACKAGE(ZLIB REQUIRED) # Dependency of Freetype
+  FIND_PACKAGE(PNG REQUIRED) # Dependency of Freetype
   INCLUDE_DIRECTORIES(
     ${FREETYPE_INCLUDE_DIRS}
     )
@@ -146,6 +144,17 @@ ELSE (WIN32)
     Qt5::Widgets
   )
 ENDIF (WIN32)
+
+
+if(WIN32)
+set_target_properties(fteditor PROPERTIES
+  VS_DEBUGGER_ENVIRONMENT "PATH=${PYTHON_INCLUDE_DIR}/..;${Qt5Core_DIR}/../../../bin;${Qt5Core_DIR}/../../../plugins;${FREETYPE_INCLUDE_DIR_freetype2}/../../bin;${PNG_PNG_INCLUDE_DIR}/../bin;${ZLIB_INCLUDE_DIR}/../bin;%PATH%\nQT_PLUGIN_PATH=${Qt5Core_DIR}/../../../plugins\nPYTHONPATH=${PYTHON_INCLUDE_DIR}/..")
+# set_target_properties(fteditor PROPERTIES
+#   VS_DEBUGGER_COMMAND_ARGUMENTS "")
+set_target_properties(fteditor PROPERTIES
+  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fteditor")
+endif()
+
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 
