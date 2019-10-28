@@ -201,7 +201,11 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 	AstcCache m_CachedAstc;
+#ifdef _USING_V110_SDK71_
+	std::shared_timed_mutex m_CachedAstcMutex;
+#else
 	std::shared_mutex m_CachedAstcMutex;
+#endif
 #	endif
 #endif
 

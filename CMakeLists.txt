@@ -72,6 +72,8 @@ OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
 OPTION(WITH_FREETYPE_STATIC "Include dependencies for static Freetype build" OFF)
 
+OPTION(WITH_DX9C "Include DirectX 9.0c when using an XP toolchain" OFF)
+
 OPTION(WITH_BT8XXEMU "Include BT8XXEMU" ON)
 
 OPTION(WITH_FT800EMU "Include FT800EMU" ON)
@@ -131,6 +133,16 @@ IF (WITH_SDL2)
   ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
   ADD_DEFINITIONS(-DFTEMU_SDL2)
 ENDIF (WITH_SDL2)
+
+IF (WITH_DX9C)
+  FIND_PACKAGE(DirectXSDK REQUIRED)
+  LINK_DIRECTORIES(
+    ${DXSDK_LIBRARY_DIRS}
+  )
+  INCLUDE_DIRECTORIES(
+    ${DXSDK_INCLUDE_DIR}
+  )
+ENDIF (WITH_DX9C)
 
 ########################################################################
 
