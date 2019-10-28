@@ -19,7 +19,7 @@ namespace FTEDITOR
 const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
-							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "External Clock" };
+							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "External Clock"};
 
 DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
     : QDialog(parent)
@@ -104,14 +104,26 @@ void DeviceAddNewDialog::addDevice()
 
 	if (jo.contains("Device Name") && jo["Device Name"].isString())
 	{
+		QString deviceName = jo["Device Name"].toString();
+
+		if (isEdited) {
+			if (deviceName != QFileInfo(editPath).baseName() && isExistDeviceName(deviceName))
+			{
+				QMessageBox::warning(this, "Exist Device Name", "Device name is existed!");
+				return;
+			}
+		}
+		else if (isExistDeviceName(deviceName)) {
+			QMessageBox::warning(this, "Exist Device Name", "Device name is existed!");
+			return;
+		}
+			
 		QString fp;
 		if (isEdited)
 		{
 			QFile(editPath).remove();
-			fp = editPath;
 		}
-		else
-			fp = buildJsonFilePath(jo["Device Name"].toString());
+		fp = buildJsonFilePath(deviceName);
 
 		QFile f(fp);
 
@@ -123,7 +135,7 @@ void DeviceAddNewDialog::addDevice()
 		f.flush();
 		f.close();
 
-		isEdited ? emit deviceEdited(jo["Device Name"].toString(), fp) : emit deviceAdded(jo["Device Name"].toString(), fp);
+		isEdited ? emit deviceEdited(deviceName, fp) : emit deviceAdded(deviceName, fp);
 		close();
 	}
 }
@@ -155,6 +167,11 @@ void DeviceAddNewDialog::onEveTypeChange(QString eveType)
 	}
 }
 
+bool DeviceAddNewDialog::isExistDeviceName(QString nameToCheck)
+{
+	return QFile::exists(QApplication::applicationDirPath() + DeviceManageDialog::DEVICE_SYNC_PATH + nameToCheck + ".json");
+}
+
 QString DeviceAddNewDialog::buildJsonFilePath(QString name)
 {
 	QString res("");
@@ -166,10 +183,15 @@ QString DeviceAddNewDialog::buildJsonFilePath(QString name)
 	{
 		d.mkpath(path);
 	}
+	
+	res = QString("%1%2.json").arg(path).arg(name);
+	if (!QFile::exists(res))
+	{
+		return res;
+	}
 
 	int count = 0;
 	res = path + QString("%1 - Clone.json").arg(name);
-
 	while (QFile::exists(res))
 	{
 		++count;
@@ -199,7 +221,7 @@ void DeviceAddNewDialog::prepareData()
 		{
 			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem("New Device"));
 		}
-		if (PROPERTIES[i] == "Description")
+		else if (PROPERTIES[i] == "Description")
 		{
 			ui->DeviceTableWidget->setItem(i, 1, new QTableWidgetItem("Custom Device"));
 		}
@@ -225,7 +247,8 @@ void DeviceAddNewDialog::prepareData()
 			cb->setCurrentIndex(0);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
-		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || PROPERTIES[i].startsWith("REG_"))
+		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || 
+				 PROPERTIES[i].startsWith("REG_") || PROPERTIES[i] == "External Clock")
 		{
 			sb = new QSpinBox(this);
 			sb->setMinimum(0);
