@@ -562,6 +562,9 @@ void DlEditor::parseLine(QTextBlock block)
 	QString line = block.text();
 	int i = block.blockNumber();
 
+	if (i >= FTEDITOR_DL_SIZE)
+		return;
+
 	if (!m_InvalidState)
 		m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
 
