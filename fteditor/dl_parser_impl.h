@@ -490,12 +490,15 @@ void DlParser::initVC3()
 		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 3;
 		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = true;
 		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;
-		// s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
-		// s_CmdParamCount[CMD_GETPROPS & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
+		
+		s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
+		s_CmdParamCount[CMD_GETPROPS & 0xFF] = 3;
+		s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
+		
 		s_CmdIdMap["CMD_LOADIDENTITY"] = CMD_LOADIDENTITY & 0xFF;
 		s_CmdParamCount[CMD_LOADIDENTITY & 0xFF] = 0;
 		s_CmdParamString[CMD_LOADIDENTITY & 0xFF] = false;
+		
 		s_CmdIdMap["CMD_TRANSLATE"] = CMD_TRANSLATE & 0xFF;
 		s_CmdParamCount[CMD_TRANSLATE & 0xFF] = 2;
 		s_CmdParamString[CMD_TRANSLATE & 0xFF] = false;
@@ -970,6 +973,13 @@ void DlParser::compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const
 		{
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
+				case CMD_GETPROPS:
+				{
+				    compiled.push_back(parsed.Parameter[0].U);
+				    compiled.push_back(parsed.Parameter[1].U);
+				    compiled.push_back(parsed.Parameter[2].U);
+				    break;
+				}
 				case CMD_BGCOLOR:
 				case CMD_FGCOLOR:
 				case CMD_GRADCOLOR:

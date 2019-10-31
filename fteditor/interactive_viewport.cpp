@@ -2259,6 +2259,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 3;
 						break;
+					case CMD_GETPROPS:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.ExpectedStringParameter = false;
+						pa.ExpectedParameterCount = 3;
+						break;
 					case CMD_APPEND:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
