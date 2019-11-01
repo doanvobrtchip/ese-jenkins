@@ -115,6 +115,7 @@ public:
 	void focusDlEditor(bool forceOnly = false);
 	void focusCmdEditor();
 	void focusProperties();
+	void focusOutput();
 
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);
@@ -292,6 +293,7 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+	QDockWidget *m_OutputDock;
 
 	InteractiveProperties *m_InteractiveProperties;
 
@@ -397,6 +399,7 @@ private:
 	friend class ProjectFlashCommand;
 
 	bool m_isVCDumpEnable;
+	QLabel *infoLabel;
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

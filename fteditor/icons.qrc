@@ -74,5 +74,6 @@
     <file>icons/task--arrow.png</file>
     <file>icons/pencil-field.png</file>
     <file>icons/database.png</file>
+    <file>icons/database-arrow.png</file>
   </qresource>
 </RCC>

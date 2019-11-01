@@ -185,6 +185,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PropertiesEditor(NULL)
     , m_PropertiesEditorScroll(NULL)
     , m_PropertiesEditorDock(NULL)
+    , m_OutputDock(NULL)
     , m_ToolboxDock(NULL)
     , m_Toolbox(NULL)
     , m_ContentManagerDock(NULL)
@@ -1355,6 +1356,65 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
 
+	// Output
+	{
+		m_OutputDock = new QDockWidget(this);
+		m_OutputDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_OutputDock->setObjectName("Output");
+		QScrollArea * pOutputParamsScroll = new QScrollArea(this);
+		pOutputParamsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		pOutputParamsScroll->setWidgetResizable(true);
+		pOutputParamsScroll->setMinimumWidth(240);
+		
+		// pointer
+		QHBoxLayout *ptrHBL = new QHBoxLayout;
+		QLabel *ptrLabel = new QLabel("Pointer:", this);
+		QSpinBox *ptrSB = new QSpinBox(this);
+		ptrSB->setReadOnly(true);
+		ptrSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		ptrHBL->addWidget(ptrLabel);
+		ptrHBL->addWidget(ptrSB);
+		// width
+		QHBoxLayout *widthHBL = new QHBoxLayout;
+		QLabel *widthLabel = new QLabel("Width:", this);
+		QSpinBox *widthSB = new QSpinBox(this);
+		widthSB->setReadOnly(true);
+		widthSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		widthHBL->addWidget(widthLabel);
+		widthHBL->addWidget(widthSB);
+		// height
+		QHBoxLayout *heightHBL = new QHBoxLayout;
+		QLabel *heightLabel = new QLabel("Height:", this);
+		QSpinBox *heightSB = new QSpinBox(this);
+		heightSB->setReadOnly(true);
+		heightSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		heightHBL->addWidget(heightLabel);
+		heightHBL->addWidget(heightSB);
+
+		// information
+		QVBoxLayout *infoLayout = new QVBoxLayout();
+		QGroupBox *infoGroupBox = new QGroupBox("Information", this);
+		infoGroupBox->setLayout(infoLayout);
+		infoLabel = new QLabel(this);
+		infoLabel->setMinimumWidth(150);
+		infoLabel->setTextFormat(Qt::RichText);
+		infoLabel->setWordWrap(true);
+		infoLabel->setText(tr("DESCRIPTION_CMD_GETPROPS."));
+		infoLayout->addWidget(infoLabel);
+
+		QVBoxLayout *topVBL = new QVBoxLayout;
+		topVBL->addLayout(ptrHBL);
+		topVBL->addLayout(widthHBL);
+		topVBL->addLayout(heightHBL);
+		topVBL->addWidget(infoGroupBox);
+		topVBL->addStretch();
+		
+		pOutputParamsScroll->setLayout(topVBL);
+		m_OutputDock->setWidget(pOutputParamsScroll);
+		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
+		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
+	}
+
 	// Inspector
 	{
 		m_InspectorDock = new QDockWidget(this);
@@ -1656,6 +1716,7 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
+	tabifyDockWidget(m_UtilizationDock, m_OutputDock);
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1694,6 +1755,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -1775,6 +1837,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			else if (dw == m_PropertiesEditorDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
+			}
+			else if (dw == m_OutputDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/database-arrow.png")));
 			}
 			else if (dw == m_ContentManagerDock)
 			{
@@ -1890,6 +1956,24 @@ void MainWindow::focusProperties()
 		{
 			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
 			if (dw == m_PropertiesEditorDock)
+			{
+				tabBar->setCurrentIndex(j);
+				return;
+			}
+		}
+	}
+}
+
+void MainWindow::focusOutput()
+{
+	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_OutputDock)
 			{
 				tabBar->setCurrentIndex(j);
 				return;
@@ -2418,6 +2502,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
+	m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);

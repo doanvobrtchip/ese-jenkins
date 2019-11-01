@@ -696,6 +696,11 @@ void DlEditor::editingLine(QTextBlock block)
 	{
 		m_MainWindow->interactiveProperties()->modifiedEditorLine();
 	}
+
+	if ((m_PropIdLeft == 0xFFFFFF00) && (m_PropIdRight | 0xFFFFFF00) == CMD_GETPROPS)
+		m_MainWindow->focusOutput();
+	else
+		m_MainWindow->focusProperties();
 }
 
 void DlEditor::processState()
