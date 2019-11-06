@@ -122,6 +122,8 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	buttons->addStretch();
 
 	m_ConnectButton = new QPushButton(this);
+	m_ConnectButton->setIcon(QIcon(":/icons/plus-circle-frame-20x16.png"));
+	m_ConnectButton->setIconSize(QSize(20, 16));
 	m_ConnectButton->setText(tr("Connect"));
 	m_ConnectButton->setToolTip(tr("Connect the selected device"));
 	m_ConnectButton->setVisible(false);
@@ -129,6 +131,8 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	buttons->addWidget(m_ConnectButton);
 
 	m_DisconnectButton = new QPushButton(this);
+	m_DisconnectButton->setIcon(QIcon(":/icons/minus-circle-frame-20x16.png"));
+	m_DisconnectButton->setIconSize(QSize(20, 16));
 	m_DisconnectButton->setText(tr("Disconnect"));
 	m_DisconnectButton->setToolTip(tr("Disconnect from the selected device"));
 	m_DisconnectButton->setVisible(false);
@@ -142,6 +146,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	// Upload Flash
 
 	m_UploadRamDlButton = new QPushButton(this);
+	m_UploadRamDlButton->setIcon(QIcon(":/icons/arrow-curve-090-left.png"));
 	m_UploadRamDlButton->setText(tr("Upload RAM_G and RAM_DL"));
 	m_UploadRamDlButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
 	m_UploadRamDlButton->setVisible(false);
@@ -149,6 +154,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	layout->addWidget(m_UploadRamDlButton);
 
 	m_UploadCoprocessorContentButton = new QPushButton(this);
+	m_UploadCoprocessorContentButton->setIcon(QIcon(":/icons/arrow-curve-090-left.png"));
 	m_UploadCoprocessorContentButton->setText(tr("Upload RAM and Coprocessor"));
 	m_UploadCoprocessorContentButton->setToolTip(tr(""));
 	m_UploadCoprocessorContentButton->setVisible(false);
@@ -156,6 +162,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	layout->addWidget(m_UploadCoprocessorContentButton);
 
 	m_UploadFlashContentButton = new QPushButton(this);
+	m_UploadFlashContentButton->setIcon(QIcon(":/icons/lightning--pencil.png"));
 	m_UploadFlashContentButton->setText(tr("Write Flash Content"));
 	m_UploadFlashContentButton->setToolTip(tr(""));
 	m_UploadFlashContentButton->setVisible(false);
