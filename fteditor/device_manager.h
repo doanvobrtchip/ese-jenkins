@@ -121,11 +121,17 @@ private:
 	QPushButton *m_UploadCoprocessorContentButton;
 	QPushButton *m_UploadFlashContentButton;
 	QPushButton *m_UploadFlashBlobButton;
+
+	QPushButton *m_RefreshButton;
+	QPushButton *m_DeviceDisplayButton;
+	QPushButton *m_DeviceManageButton;
+
 	DeviceDisplaySettingsDialog *m_DisplaySettingsDialog;
 	DeviceManageDialog *m_DeviceManageDialog;
 
 	bool m_IsCustomDevice;
 	CustomDeviceInfo m_CDI;
+	QString m_DeviceJsonPath;
 
 	QString m_SelectedDisplaySize;
 	QString m_SelectedDeviceName;

@@ -78,6 +78,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
     , m_DisplaySettingsDialog(NULL)
     , m_DeviceManageDialog(NULL)
     , m_IsCustomDevice(false)
+    , m_DeviceJsonPath("")
     , m_Busy(false)
     , m_Abort(false)
     , m_StreamProgress(NULL)
@@ -97,26 +98,26 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	QHBoxLayout *buttons = new QHBoxLayout();
 
-	QPushButton *refreshButton = new QPushButton(this);
-	refreshButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
-	refreshButton->setToolTip(tr("Refresh the device list"));
-	connect(refreshButton, SIGNAL(clicked()), this, SLOT(refreshDevices()));
-	buttons->addWidget(refreshButton);
-	refreshButton->setMaximumWidth(refreshButton->height());
+	m_RefreshButton = new QPushButton(this);
+	m_RefreshButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
+	m_RefreshButton->setToolTip(tr("Refresh the device list"));
+	connect(m_RefreshButton, SIGNAL(clicked()), this, SLOT(refreshDevices()));
+	buttons->addWidget(m_RefreshButton);
+	m_RefreshButton->setMaximumWidth(m_RefreshButton->height());
 
-	QPushButton *deviceDisplayButton = new QPushButton(this);
-	deviceDisplayButton->setIcon(QIcon(":/icons/wrench-screwdriver.png"));
-	deviceDisplayButton->setToolTip(tr("Device display settings"));
-	connect(deviceDisplayButton, SIGNAL(clicked()), this, SLOT(deviceDisplaySettings()));
-	buttons->addWidget(deviceDisplayButton);
-	deviceDisplayButton->setMaximumWidth(deviceDisplayButton->height());
+	m_DeviceDisplayButton = new QPushButton(this);
+	m_DeviceDisplayButton->setIcon(QIcon(":/icons/wrench-screwdriver.png"));
+	m_DeviceDisplayButton->setToolTip(tr("Device display settings"));
+	connect(m_DeviceDisplayButton, SIGNAL(clicked()), this, SLOT(deviceDisplaySettings()));
+	buttons->addWidget(m_DeviceDisplayButton);
+	m_DeviceDisplayButton->setMaximumWidth(m_DeviceDisplayButton->height());
 
-	QPushButton *deviceManageButton = new QPushButton(this);
-	deviceManageButton->setIcon(QIcon(":/icons/category.png"));
-	deviceManageButton->setToolTip(tr("Manage Device"));
-	connect(deviceManageButton, SIGNAL(clicked()), this, SLOT(deviceManage()));
-	buttons->addWidget(deviceManageButton);
-	deviceManageButton->setMaximumWidth(deviceManageButton->height());
+	m_DeviceManageButton = new QPushButton(this);
+	m_DeviceManageButton->setIcon(QIcon(":/icons/category.png"));
+	m_DeviceManageButton->setToolTip(tr("Manage Device"));
+	connect(m_DeviceManageButton, SIGNAL(clicked()), this, SLOT(deviceManage()));
+	buttons->addWidget(m_DeviceManageButton);
+	m_DeviceManageButton->setMaximumWidth(m_DeviceManageButton->height());
 
 	buttons->addStretch();
 
@@ -280,11 +281,7 @@ void DeviceManager::abortRequest()
 void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevice, QString jsonPath, bool isCustomDevice)
 {
 	m_IsCustomDevice = isCustomDevice;
-
-	if (m_IsCustomDevice)
-	{
-		DeviceManageDialog::getCustomDeviceInfo(jsonPath, m_CDI);
-	}
+	m_DeviceJsonPath = jsonPath;
 
 	QStringList pieces = displaySize.split("x");
 	if ((m_SelectedDisplaySize != displaySize) && m_DisconnectButton->isVisible())
@@ -465,9 +462,10 @@ void DeviceManager::connectDevice()
 
 	EVE_BootupParameters bootupParams;
 	EVE_Util_bootupDefaults(phost, &bootupParams);
-
+	
 	if (m_IsCustomDevice)
 	{
+		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
 		bootupParams.Width = m_CDI.CUS_REG_HSIZE;
 		bootupParams.Height = m_CDI.CUS_REG_VSIZE;
 		bootupParams.HCycle = m_CDI.CUS_REG_HCYCLE;
@@ -484,6 +482,7 @@ void DeviceManager::connectDevice()
 		bootupParams.CSpread = m_CDI.CUS_REG_CSPREAD;
 		bootupParams.Dither = m_CDI.CUS_REG_DITHER;
 		bootupParams.OutBits = m_CDI.CUS_REG_OUTBITS;
+		bootupParams.ExternalOsc = m_CDI.ExternalOsc;
 	}
 	else if (m_SelectedDisplaySize == "480x272")
 	{
@@ -540,8 +539,6 @@ void DeviceManager::connectDevice()
 		bootupParams.Dither = 1;
 	}
 
-	bootupParams.ExternalOsc = m_CDI.ExternalOsc;
-
 	devInfo->EveHalContext = phost;
 
 	progressLabel->setText("Boot up...");
@@ -557,6 +554,10 @@ void DeviceManager::connectDevice()
 	EVE_Hal_displayMessage(phost, "EVE Screen Editor ", sizeof("EVE Screen Editor "));
 
 	updateSelection();
+
+	m_RefreshButton->setDisabled(true);
+	m_DeviceDisplayButton->setDisabled(true);
+	m_DeviceManageButton->setDisabled(true);
 }
 
 void DeviceManager::disconnectDevice()
@@ -587,6 +588,10 @@ void DeviceManager::disconnectDevice()
 	EVE_Hal_close(phost);
 
 	updateSelection();
+
+	m_RefreshButton->setEnabled(true);
+	m_DeviceDisplayButton->setEnabled(true);
+	m_DeviceManageButton->setEnabled(true);
 }
 
 void DeviceManager::uploadRamDl()
