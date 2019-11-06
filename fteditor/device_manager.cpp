@@ -478,7 +478,7 @@ void DeviceManager::connectDevice()
 		bootupParams.VOffset = m_CDI.CUS_REG_VOFFSET;
 		bootupParams.VSync0 = m_CDI.CUS_REG_VSYNC0;
 		bootupParams.VSync1 = m_CDI.CUS_REG_VSYNC1;
-		bootupParams.PCLK = 5;
+		bootupParams.PCLK = m_CDI.CUS_REG_PCLK;
 		bootupParams.Swizzle = m_CDI.CUS_REG_SWIZZLE;
 		bootupParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
 		bootupParams.CSpread = m_CDI.CUS_REG_CSPREAD;
