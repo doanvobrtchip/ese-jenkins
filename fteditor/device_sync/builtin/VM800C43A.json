@@ -1,9 +1,12 @@
 {
+    "Built-in": true,
     "Connection Type": "FT4222",
+    "Description": "FT800 Credit card module with 4.3\" display",
     "Device Name": "VM800C43A",
     "EVE Type": "FT80X",
-    "Flash Model": "",
-    "Flash Size (MB)": "",
+    "External Clock": "false",
+    "Flash Model": "None",
+    "Flash Size (MB)": "0",
     "REG_CSPREAD": 0,
     "REG_DITHER": 1,
     "REG_HCYCLE": 548,
@@ -11,6 +14,7 @@
     "REG_HSIZE": 480,
     "REG_HSYNC0": 0,
     "REG_HSYNC1": 41,
+    "REG_OUTBITS": 0,
     "REG_PCLK": 5,
     "REG_PCLK_POL": 1,
     "REG_SWIZZLE": 0,
@@ -22,7 +26,5 @@
     "Screen Height": 272,
     "Screen Width": 480,
     "Vendor": "Bridgetek",
-    "Version": "1.0",
-    "Description": "FT800 Credit card module with 4.3\" display",
-    "Built-in": true
+    "Version": "1.0"
 }

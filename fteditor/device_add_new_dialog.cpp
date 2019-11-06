@@ -19,7 +19,7 @@ namespace FTEDITOR
 const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
-							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "External Clock"};
+							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "REG_OUTBITS", "External Clock"};
 
 DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
     : QDialog(parent)
@@ -247,8 +247,17 @@ void DeviceAddNewDialog::prepareData()
 			cb->setCurrentIndex(0);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
-		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || 
-				 PROPERTIES[i].startsWith("REG_") || PROPERTIES[i] == "External Clock")
+		else if (PROPERTIES[i] == "External Clock")
+		{
+			cb = new QComboBox(this);
+			cb->addItems(QStringList() << "true"
+			                           << "false");
+			cb->setCurrentIndex(1);
+			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
+		}
+		else if (PROPERTIES[i] == "Screen Width" ||
+				 PROPERTIES[i] == "Screen Height" || 
+				 PROPERTIES[i].startsWith("REG_"))
 		{
 			sb = new QSpinBox(this);
 			sb->setMinimum(0);
@@ -303,6 +312,11 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 		else if (PROPERTIES[i] == "Connection Type")
 		{
 			cb = (QComboBox * )ui->DeviceTableWidget->cellWidget(i, 1);
+			cb->setCurrentText(jo[PROPERTIES[i]].toString());
+		}
+		else if (PROPERTIES[i] == "External Clock")
+		{
+			cb = (QComboBox *)ui->DeviceTableWidget->cellWidget(i, 1);
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
 		}
 		else if (PROPERTIES[i] == "Screen Width" || PROPERTIES[i] == "Screen Height" || PROPERTIES[i].startsWith("REG_"))

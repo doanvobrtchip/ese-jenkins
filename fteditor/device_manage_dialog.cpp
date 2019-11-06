@@ -354,7 +354,7 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("External Clock"))
 	{
-		cdi.ExternalOsc = jo["External Clock"].toBool();
+		cdi.ExternalOsc = jo["External Clock"].toString() == "true" ? true : false;
 	}
 }
 

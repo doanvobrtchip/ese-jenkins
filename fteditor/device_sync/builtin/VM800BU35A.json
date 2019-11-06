@@ -1,9 +1,12 @@
 {
+    "Built-in": true,
     "Connection Type": "FT4222",
+    "Description": "FT800 Basic USB module with 3.5\" display",
     "Device Name": "VM800BU35A",
     "EVE Type": "FT80X",
-    "Flash Model": "",
-    "Flash Size (MB)": "",
+    "External Clock": "false",
+    "Flash Model": "None",
+    "Flash Size (MB)": "0",
     "REG_CSPREAD": 0,
     "REG_DITHER": 1,
     "REG_HCYCLE": 408,
@@ -11,6 +14,7 @@
     "REG_HSIZE": 320,
     "REG_HSYNC0": 0,
     "REG_HSYNC1": 10,
+    "REG_OUTBITS": 0,
     "REG_PCLK": 8,
     "REG_PCLK_POL": 0,
     "REG_SWIZZLE": 2,
@@ -22,7 +26,5 @@
     "Screen Height": 240,
     "Screen Width": 320,
     "Vendor": "Bridgetek",
-    "Version": "1.0",
-    "Description": "FT800 Basic USB module with 3.5\" display",
-    "Built-in": true
+    "Version": "1.0"
 }
