@@ -457,10 +457,10 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	EVE_Hal_wr16(phost, REG_VSIZE, parameters->Height);
 	EVE_Hal_wr16(phost, REG_CSPREAD, parameters->CSpread);
 	EVE_Hal_wr16(phost, REG_DITHER, parameters->Dither);
+	EVE_Hal_wr16(phost, REG_OUTBITS, parameters->OutBits);
 
 	/* 
 	TODO:
-	EVE_Hal_wr16(phost, REG_OUTBITS, 0x1B6);
 	EVE_Hal_wr16(phost, REG_ADAPTIVE_FRAMERATE, 1);
 	*/
 

@@ -483,6 +483,7 @@ void DeviceManager::connectDevice()
 		bootupParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
 		bootupParams.CSpread = m_CDI.CUS_REG_CSPREAD;
 		bootupParams.Dither = m_CDI.CUS_REG_DITHER;
+		bootupParams.OutBits = m_CDI.CUS_REG_OUTBITS;
 	}
 	else if (m_SelectedDisplaySize == "480x272")
 	{

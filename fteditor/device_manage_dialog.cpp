@@ -352,6 +352,11 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
 	}
 
+	if (jo.contains("REG_OUTBITS"))
+	{
+		cdi.CUS_REG_OUTBITS = jo["REG_OUTBITS"].toInt();
+	}
+
 	if (jo.contains("External Clock"))
 	{
 		cdi.ExternalOsc = jo["External Clock"].toString() == "true" ? true : false;

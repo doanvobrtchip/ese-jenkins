@@ -74,6 +74,7 @@ struct CustomDeviceInfo
 	int CUS_REG_CSPREAD;
 	int CUS_REG_DITHER;
 	int CUS_REG_PCLK;
+	int CUS_REG_OUTBITS;
 	bool ExternalOsc;
 
 };

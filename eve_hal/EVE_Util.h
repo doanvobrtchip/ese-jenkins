@@ -56,9 +56,9 @@ typedef struct EVE_BootupParameters {
 	int8_t Swizzle;
 	int8_t PCLKPol;
 	int8_t CSpread;
+	uint16_t OutBits;
 	bool Dither;
 	/* TODO: 
-	OutBits
 	AdaptiveFramerate
 	*/
 
