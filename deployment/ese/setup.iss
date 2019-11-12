@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.2"
+#define MyAppVersion "V3.3"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -120,6 +120,7 @@ Type: files; Name: "{app}\*.pyc"
 Type: filesandordirs; Name: "{app}\__pycache__"
 Type: filesandordirs; Name: "{app}\Examples"
 Type: filesandordirs; Name: "{app}\Lib"
+Type: filesandordirs; Name: "{app}\device_sync"
 
 [Registry]
 Root: HKCR; Subkey: ".ese";                             ValueData: "{#MyAppName}";          Flags: uninsdeletevalue; ValueType: string;  ValueName: ""
