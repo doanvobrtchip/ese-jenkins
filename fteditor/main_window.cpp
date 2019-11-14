@@ -185,7 +185,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PropertiesEditor(NULL)
     , m_PropertiesEditorScroll(NULL)
     , m_PropertiesEditorDock(NULL)
-    , m_OutputDock(NULL)
+    //, m_OutputDock(NULL)
     , m_ToolboxDock(NULL)
     , m_Toolbox(NULL)
     , m_ContentManagerDock(NULL)
@@ -1357,7 +1357,7 @@ void MainWindow::createDockWindows()
 	}
 
 	// Output
-	{
+	/*{
 		m_OutputDock = new QDockWidget(this);
 		m_OutputDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		m_OutputDock->setObjectName("Output");
@@ -1413,7 +1413,7 @@ void MainWindow::createDockWindows()
 		m_OutputDock->setWidget(pOutputParamsScroll);
 		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
 		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
-	}
+	}*/
 
 	// Inspector
 	{
@@ -1716,7 +1716,7 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
-	tabifyDockWidget(m_UtilizationDock, m_OutputDock);
+	//tabifyDockWidget(m_UtilizationDock, m_OutputDock);
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1755,7 +1755,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
-	m_OutputDock->setWindowTitle(tr("Output"));
+	//m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -1838,10 +1838,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
 			}
-			else if (dw == m_OutputDock)
+			/*else if (dw == m_OutputDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/database-arrow.png")));
-			}
+			}*/
 			else if (dw == m_ContentManagerDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/photo-album-blue.png")));
@@ -1966,7 +1966,7 @@ void MainWindow::focusProperties()
 
 void MainWindow::focusOutput()
 {
-	QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	/*QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
 	{
 		QTabBar *tabBar = tabList.at(i);
@@ -1979,7 +1979,7 @@ void MainWindow::focusOutput()
 				return;
 			}
 		}
-	}
+	}*/
 }
 
 static bool s_UndoRedoWorking = false;
@@ -2502,7 +2502,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
-	m_OutputDock->setVisible(isShow);
+	//m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);

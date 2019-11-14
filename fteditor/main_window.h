@@ -293,7 +293,7 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
-	QDockWidget *m_OutputDock;
+	//QDockWidget *m_OutputDock;
 
 	InteractiveProperties *m_InteractiveProperties;
 
