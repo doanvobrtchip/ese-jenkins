@@ -2,13 +2,13 @@
 
 Please uninstall the latest version if you have one installed on your PC. 
 
-Release Note: 
+Release Note:
 
 Version 3.3.0
 Features: 
 •   Constrain either horizontal or vertical positioning when dragging an object
-•   Support Riverdi EVE modules
-•   Disable Refresh, Device Manage, Device Display buttons once connect to device
+•   Support Riverdi EVE 3 modules in device sync feature
+•   Disable "Refresh, Device Manage, Device Display" buttons after device is connected
 •   Add REG_OUTBITS to device configuration dialogue
 •   Show the pixel value at status bar when mouse hover over the viewport window
 •   Add Blend_Func example project
@@ -17,14 +17,14 @@ Features:
 Bug Fix:
 *   Copying the text is failed in property window
 *   ESE crash and exit when copying some data into coprocessor editor window
-*   Clone the device produces the wrong name
-*   Handle '\x0A' in Font Conversion, Legacy format
+*   Cloning device produces the wrong name in device manager
+*   '\x0A' is not handled in Font Conversion with Legacy format option
 
 Known issues:
 *   Playing the invalid animation frame data in flash may cause ESE hang
 
 Limitation:
-*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
+*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
 
 Version 3.2.0
 Features: 
