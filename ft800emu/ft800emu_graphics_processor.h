@@ -3,7 +3,7 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2019  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
@@ -12,11 +12,17 @@ Author: Jan Boon <jan@no-break.space>
 // #include <...>
 
 #ifdef BT815EMU_MODE
-// Select only one cache mechanism
+// Select only one or no cache mechanism
 #define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
 #define BT815EMU_ASTC_LAST_CACHE 0
-#define BT815EMU_ASTC_THREAD_LOCAL_CACHE 1
+#define BT815EMU_ASTC_THREAD_LOCAL_CACHE 0
+#define BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE 1
+#define BT812EMU_ASTC_SEPARATE_CBMAP_CACHE 0
 #endif
+
+// Select only one or no thread spreading preference
+#define FT800EMU_SPREAD_RENDER_THREADS 0
+#define FT800EMU_SPREAD_RENDER_THREADS_FAIR 1
 
 // System includes
 #include <vector>
@@ -24,6 +30,8 @@ Author: Jan Boon <jan@no-break.space>
 
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#		include <astc_codec_internals.h>
+#		undef IGNORE
 #		include <concurrent_unordered_map.h>
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
@@ -31,6 +39,11 @@ Author: Jan Boon <jan@no-break.space>
 #		undef IGNORE
 #		include <unordered_map>
 #		include <shared_mutex>
+#	endif
+#	if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+#		include <astc_codec_internals.h>
+#		undef IGNORE
+#		include "concurrent_bucket_map.h"
 #	endif
 #endif
 
@@ -107,10 +120,17 @@ struct BitmapInfo
 
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
-#define MAX_TEXELS_PER_BLOCK 216
-struct AstcCacheEntry { AstcCacheEntry() : Ok(false) { } argb8888 C[MAX_TEXELS_PER_BLOCK]; volatile bool Ok; };
+struct AstcCacheEntry
+{
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntry() : Ok(false) { }
+#pragma warning(pop)
+	physical_compressed_block PhysicalBlock;
+	argb8888 C[12 * 12]; // Not MAX_TEXELS_PER_BLOCK
+	volatile bool Ok;
+};
 typedef concurrency::concurrent_unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
-#undef MAX_TEXELS_PER_BLOCK
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 struct AstcCacheEntry
@@ -119,6 +139,45 @@ struct AstcCacheEntry
 	argb8888 Color[MAX_TEXELS_PER_BLOCK];
 };
 typedef std::unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
+#	endif
+#	if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+struct AstcCacheEntry
+{
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntry() : Ok(false) { }
+#pragma warning(pop)
+	physical_compressed_block PhysicalBlock;
+	argb8888 C[12 * 12]; // Not MAX_TEXELS_PER_BLOCK
+	volatile bool Ok;
+};
+typedef concurrent_bucket_map<size_t, AstcCacheEntry> AstcCache;
+#	endif
+#	if BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+struct AstcCacheEntry
+{
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntry() : Ok(false) { }
+#pragma warning(pop)
+	volatile bool Ok;
+	physical_compressed_block PhysicalBlock;
+	argb8888 C[MAX_TEXELS_PER_BLOCK];
+};
+template <size_t tSize>
+struct AstcCacheEntrySub
+{
+	static_assert(tSize <= MAX_TEXELS_PER_BLOCK, "Texels per block exceeds known value");
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntrySub() : Ok(false) { }
+#pragma warning(pop)
+	volatile bool Ok;
+	physical_compressed_block PhysicalBlock;
+	argb8888 C[tSize];
+};
+template <size_t tSize>
+using AstcCache = concurrent_bucket_map<size_t, AstcCacheEntrySub<tSize>>;
 #	endif
 #endif
 
@@ -186,16 +245,71 @@ private:
 	void launchGraphicsProcessorThread(ThreadInfo *li);
 
 private:
-	FT8XXEMU::System *m_System = 0;
-	Memory *m_Memory = 0;
-	Touch *m_Touch = 0;
+	FT8XXEMU::System *m_System;
+	Memory *m_Memory;
+	Touch *m_Touch;
 
 	// Master copy of bitmap
-	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB] = { };
-
+	BitmapInfo m_BitmapInfoMaster[FT800EMU_BITMAP_HANDLE_NB];
 FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+	// ASTC Cache per format
+	AstcCache<4 * 4> m_AstcCache4x4;
+	AstcCache<5 * 4> m_AstcCache5x4;
+	AstcCache<5 * 5> m_AstcCache5x5;
+	AstcCache<6 * 5> m_AstcCache6x5;
+	AstcCache<6 * 6> m_AstcCache6x6;
+	AstcCache<8 * 5> m_AstcCache8x5;
+	AstcCache<8 * 6> m_AstcCache8x6;
+	AstcCache<8 * 8> m_AstcCache8x8;
+	AstcCache<10 * 5> m_AstcCache10x5;
+	AstcCache<10 * 6> m_AstcCache10x6;
+	AstcCache<10 * 8> m_AstcCache10x8;
+	AstcCache<10 * 10> m_AstcCache10x10;
+	AstcCache<12 * 10> m_AstcCache12x10;
+	AstcCache<12 * 12> m_AstcCache12x12;
+	AstcCache<sizeof(AstcCacheEntry().C) / sizeof(AstcCacheEntry().C[0])> m_AstcCacheMAX;
+	BT8XXEMU_FORCE_INLINE AstcCacheEntry &getAstcCacheEntry(int format, AstcCache<1>::key_t key)
+	{
+		switch (format)
+		{
+		case 0: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache4x4.find_or_emplace(key));
+		case 1: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache5x4.find_or_emplace(key));
+		case 2: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache5x5.find_or_emplace(key));
+		case 3: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache6x5.find_or_emplace(key));
+		case 4: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache6x6.find_or_emplace(key));
+		case 5: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache8x5.find_or_emplace(key));
+		case 6: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache8x6.find_or_emplace(key));
+		case 7: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache8x8.find_or_emplace(key));
+		case 8: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache10x5.find_or_emplace(key));
+		case 9: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache10x6.find_or_emplace(key));
+		case 10: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache10x8.find_or_emplace(key));
+		case 11: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache10x10.find_or_emplace(key));
+		case 12: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache12x10.find_or_emplace(key));
+		case 13: return reinterpret_cast<AstcCacheEntry &>(m_AstcCache12x12.find_or_emplace(key));
+		default: return reinterpret_cast<AstcCacheEntry &>(m_AstcCacheMAX.find_or_emplace(key)); // Should never reach here
+		}
+	}
+	BT8XXEMU_FORCE_INLINE AstcCacheEntry &clearAstcCache(int format, AstcCache<1>::key_t key)
+	{
+		m_AstcCache4x4.clear();
+		m_AstcCache5x4.clear();
+		m_AstcCache5x5.clear();
+		m_AstcCache6x5.clear();
+		m_AstcCache6x6.clear();
+		m_AstcCache8x5.clear();
+		m_AstcCache8x6.clear();
+		m_AstcCache8x8.clear();
+		m_AstcCache10x5.clear();
+		m_AstcCache10x6.clear();
+		m_AstcCache10x8.clear();
+		m_AstcCache10x10.clear();
+		m_AstcCache12x10.clear();
+		m_AstcCache12x12.clear();
+	}
+#	endif
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 	// ASTC Cache
 	AstcCache m_AstcCache;
 #	endif
