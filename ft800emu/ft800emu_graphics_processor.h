@@ -3,7 +3,7 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2019  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
@@ -12,14 +12,16 @@ Author: Jan Boon <jan@no-break.space>
 // #include <...>
 
 #ifdef BT815EMU_MODE
-// Select only one cache mechanism
+// Select only one or no cache mechanism
 #define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
 #define BT815EMU_ASTC_LAST_CACHE 0
 #define BT815EMU_ASTC_THREAD_LOCAL_CACHE 0
 #define BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE 1
 #endif
 
-#define FT800EMU_SPREAD_RENDER_THREADS 1
+// Select only one or no thread spreading preference
+#define FT800EMU_SPREAD_RENDER_THREADS 0
+#define FT800EMU_SPREAD_RENDER_THREADS_FAIR 1
 
 // System includes
 #include <vector>

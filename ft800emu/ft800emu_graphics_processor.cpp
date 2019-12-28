@@ -3,7 +3,7 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2019  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
@@ -3234,8 +3234,17 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	m_CachedAstcMutex.lock_shared();
 #	endif
 #endif
+#if FT800EMU_SPREAD_RENDER_THREADS_FAIR
+	uint32_t fairSpread = yIdx * (vsize / yInc); // yIdx is effectively the thread index, yInc the number of threads
+	for (uint32_t yt = yIdx; yt < vsize; yt += yInc)
+	{
+		uint32_t y = yt + fairSpread;
+		if (y > vsize)
+			y -= vsize;
+#else
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
+#endif
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState(
