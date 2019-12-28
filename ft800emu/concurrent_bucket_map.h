@@ -50,11 +50,14 @@ If the value has significant internal construction behaviour, consider std::atom
 Index size is the number of bits to use for indexing at each bucket depth level.
 \author Jan BOON (Kaetemi) <jan.boon@kaetemi.be>
 */
-template<class TKey, class TValue, size_t IndexSizeBits = 8>
+template<class TKey, class TValue, size_t tIndexSizeBits = 8>
 class concurrent_bucket_map
 {
 public:
-	static constexpr size_t index_size_bits = IndexSizeBits; // 8 bits index per bucket level
+	using key_t = TKey;
+	using value_t = TValue;
+
+	static constexpr size_t index_size_bits = tIndexSizeBits; // 8 bits index per bucket level
 	static constexpr size_t bucket_depth = ((sizeof(TKey) * 8) + (index_size_bits - 1)) / index_size_bits; // 2, 4, or 8 bytes
 	static constexpr size_t bucket_size = 1ULL << index_size_bits;
 	static constexpr size_t bucket_mask = bucket_size - 1;
