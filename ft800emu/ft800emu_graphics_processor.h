@@ -15,8 +15,11 @@ Author: Jan Boon <jan@no-break.space>
 // Select only one cache mechanism
 #define BT815EMU_ASTC_CONCURRENT_MAP_CACHE 0
 #define BT815EMU_ASTC_LAST_CACHE 0
-#define BT815EMU_ASTC_THREAD_LOCAL_CACHE 1
+#define BT815EMU_ASTC_THREAD_LOCAL_CACHE 0
+#define BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE 1
 #endif
+
+#define FT800EMU_SPREAD_RENDER_THREADS 1
 
 // System includes
 #include <vector>
@@ -31,6 +34,9 @@ Author: Jan Boon <jan@no-break.space>
 #		undef IGNORE
 #		include <unordered_map>
 #		include <shared_mutex>
+#	endif
+#	if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+#		include "concurrent_bucket_map.h"
 #	endif
 #endif
 
@@ -108,7 +114,15 @@ struct BitmapInfo
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
 #define MAX_TEXELS_PER_BLOCK 216
-struct AstcCacheEntry { AstcCacheEntry() : Ok(false) { } argb8888 C[MAX_TEXELS_PER_BLOCK]; volatile bool Ok; };
+struct AstcCacheEntry
+{
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntry() : Ok(false) { }
+#pragma warning(pop)
+	argb8888 C[MAX_TEXELS_PER_BLOCK];
+	volatile bool Ok;
+};
 typedef concurrency::concurrent_unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
 #undef MAX_TEXELS_PER_BLOCK
 #	endif
@@ -119,6 +133,20 @@ struct AstcCacheEntry
 	argb8888 Color[MAX_TEXELS_PER_BLOCK];
 };
 typedef std::unordered_map<ptrdiff_t, AstcCacheEntry> AstcCache;
+#	endif
+#	if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+#define MAX_TEXELS_PER_BLOCK 216
+struct AstcCacheEntry
+{
+#pragma warning(push)
+#pragma warning(disable: 26495) // C not initialized on purpose
+	AstcCacheEntry() : Ok(false) { }
+#pragma warning(pop)
+	argb8888 C[MAX_TEXELS_PER_BLOCK];
+	volatile bool Ok;
+};
+typedef concurrent_bucket_map<size_t, AstcCacheEntry> AstcCache; // TODO: Have a cache per format to reduce memory consumption
+#undef MAX_TEXELS_PER_BLOCK
 #	endif
 #endif
 
@@ -195,7 +223,7 @@ private:
 
 FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 	// ASTC Cache
 	AstcCache m_AstcCache;
 #	endif

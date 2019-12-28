@@ -155,7 +155,7 @@ public:
 #endif
 
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 		CachedAstcAddr = 0;
 		CachedAstcEntry = NULL;
 #	endif
@@ -215,7 +215,7 @@ public:
 #endif
 
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 	// Cache optimization
 	ptrdiff_t CachedAstcAddr;
 	AstcCacheEntry *CachedAstcEntry;
@@ -1014,13 +1014,30 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
 			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
 		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth)); // texel index in block
-
-#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+		/*
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+		// Decompress ASTC
+		const void *blockAddr = &ram[srci + blockOffset];
+		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
+			return gs.CachedAstcEntry->C[index];
+		GraphicsProcessor *me = (GraphicsProcessor *)gs.Processor;
+		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
+		if (!cacheEntry)
+		{
+			
+		}*/
+#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 		GraphicsProcessor *me = (GraphicsProcessor *)gs.Processor;
 		const void *blockAddr = &ram[srci + blockOffset];
 		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
 			return gs.CachedAstcEntry->C[index];
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+		// AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
+		static_assert(sizeof(physical_compressed_block) == 16, "ASTC compressed block size mismatch");
+		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((size_t)blockAddr >> 4);
+#else
 		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
+#endif
 		if (!cacheEntry.Ok)
 		{
 			// Decompress ASTC
@@ -3689,7 +3706,9 @@ EvaluateDisplayListValue:
 						| (/* a = */ ((v) & 0x7) << 24);
 					break;
 				case BT815EMU_DL_INT_FRR:
-					// TODO: BT815
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+					gs.Processor->m_AstcCache.clear();
+#endif
 					break;
 #endif
 				default:
@@ -4061,6 +4080,10 @@ void GraphicsProcessor::process(
 	// Store the touch tag xy used for lookup
 	Memory::rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory::rawReadU32(ram, REG_TOUCH_SCREEN_XY));
 
+#if FT800EMU_SPREAD_RENDER_THREADS
+	uint32_t vsizeSection = ((vsize - yIdx) / m_ThreadCount);
+#endif
+
 	for (int i = 1; i < m_ThreadCount; ++i)
 	{
 		// Launch threads
@@ -4073,9 +4096,17 @@ void GraphicsProcessor::process(
 		li->SwapXY = swapXY;
 #endif
 		li->HSize = hsize;
+#if FT800EMU_SPREAD_RENDER_THREADS
+		li->VSize = (i + 1 == m_ThreadCount) 
+			? vsize
+			: (yIdx + (i + 1) * vsizeSection);
+		li->YIdx = yIdx + (i * vsizeSection);
+		li->YInc = yInc;
+#else
 		li->VSize = vsize;
 		li->YIdx = (i * yInc) + yIdx;
 		li->YInc = m_ThreadCount * yInc;
+#endif
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 		// li->Thread = SDL_CreateThreadFT(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
@@ -4083,13 +4114,37 @@ void GraphicsProcessor::process(
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
+		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, 
+#if FT800EMU_SPREAD_RENDER_THREADS
+			(i + 1 == m_ThreadCount) 
+				? vsize
+				: (yIdx + (i + 1) * vsizeSection),
+			yIdx + (i * vsizeSection),
+			yInc,
+#else
+			vsize, 
+			(i * yInc) + yIdx, 
+			m_ThreadCount * yInc, 
+#endif
+			m_BitmapInfoMaster);
 #	endif
 #endif
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize,
+#if FT800EMU_SPREAD_RENDER_THREADS
+		(m_ThreadCount == 1) 
+			? vsize
+			: yIdx + vsizeSection,
+			yIdx,
+			yInc,
+#else
+		vsize, 
+		yIdx,
+		m_ThreadCount * yInc,
+#endif
+		m_BitmapInfoMaster);
 
 	for (int i = 1; i < m_ThreadCount; ++i)
 	{
