@@ -147,12 +147,57 @@ ENDIF (WIN32)
 
 
 if(WIN32)
-set_target_properties(fteditor PROPERTIES
-  VS_DEBUGGER_ENVIRONMENT "PATH=${PYTHON_INCLUDE_DIR}/..;${Qt5Core_DIR}/../../../bin;${Qt5Core_DIR}/../../../plugins;${FREETYPE_INCLUDE_DIR_freetype2}/../../bin;${PNG_PNG_INCLUDE_DIR}/../bin;${ZLIB_INCLUDE_DIR}/../bin;%PATH%\nQT_PLUGIN_PATH=${Qt5Core_DIR}/../../../plugins\nPYTHONPATH=${PYTHON_INCLUDE_DIR}/..")
-# set_target_properties(fteditor PROPERTIES
-#   VS_DEBUGGER_COMMAND_ARGUMENTS "")
-set_target_properties(fteditor PROPERTIES
-  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fteditor")
+  find_path(BIN_PYTHON_ROOT
+    NAMES 
+      python.exe python_d.exe
+      python3.dll python3_d.dll
+      python37.dll python37_d.dll
+      python38.dll python38_d.dll
+    HINTS
+      ${PYTHON_INCLUDE_DIR}/..
+  )
+  find_path(BIN_QT5_BINARIES
+    NAMES 
+      Qt5Core.dll Qt5Cored.dll
+    HINTS
+      ${Qt5Core_DIR}/../../../bin
+      ${Qt5Core_DIR}/../../..
+  )
+  find_path(BIN_QT5_PLUGINS
+    NAMES 
+      platforms styles imageformats
+    HINTS
+      ${Qt5Core_DIR}/../../../plugins
+      ${Qt5Core_DIR}/../../..
+  )
+  find_path(BIN_FREETYPE_BINARIES
+    NAMES 
+      freetype.dll freetyped.dll
+    HINTS
+      ${FREETYPE_INCLUDE_DIR_freetype2}/../../bin
+      ${FREETYPE_INCLUDE_DIR_freetype2}/../..
+      ${FREETYPE_INCLUDE_DIR_freetype2}/..
+  )
+  find_path(BIN_PNG_BINARIES
+    NAMES 
+      libpng16.dll libpng16d.dll
+    HINTS
+      ${PNG_PNG_INCLUDE_DIR}/../bin
+      ${PNG_PNG_INCLUDE_DIR}/..
+  )
+  find_path(BIN_ZLIB_BINARIES
+    NAMES 
+      zlib.dll zlibd.dll
+    HINTS
+      ${ZLIB_INCLUDE_DIR}/../bin
+      ${ZLIB_INCLUDE_DIR}/..
+  )
+  set_target_properties(fteditor PROPERTIES
+    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_QT5_BINARIES};${BIN_QT5_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_QT5_PLUGINS}\nPYTHONPATH=${BIN_PYTHON_ROOT}")
+  # set_target_properties(fteditor PROPERTIES
+  #   VS_DEBUGGER_COMMAND_ARGUMENTS "")
+  set_target_properties(fteditor PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fteditor")
 endif()
 
 
