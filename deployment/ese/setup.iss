@@ -102,6 +102,7 @@ Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createal
 Source: ".\\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs
 Source: ".\\platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs
 Source: ".\\imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs
+Source: ".\\styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs
 
 Source: ".\\device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs
 
