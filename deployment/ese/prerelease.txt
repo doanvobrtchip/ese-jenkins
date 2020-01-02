@@ -13,6 +13,7 @@ Features:
 •   Show the pixel value at status bar when mouse hover over the viewport window
 •   Add Blend_Func example project
 •   Add the circular progress bar widget example
+•   Add two bitmap rotating example projects
 
 Bug Fix:
 *   Copying the text is failed in property window
