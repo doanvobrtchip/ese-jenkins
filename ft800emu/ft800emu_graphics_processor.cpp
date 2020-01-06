@@ -3229,12 +3229,13 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 #	endif
 #endif
 #if FT800EMU_SPREAD_RENDER_THREADS_FAIR
-	uint32_t fairSpread = yIdx * (vsize / yInc); // yIdx is effectively the thread index, yInc the number of threads
+	uint32_t fairSpread = (yIdx * (vsize / yInc) / yInc) * yInc; // yIdx is effectively the thread index, yInc the number of threads
+	uint32_t invFairSpread = ((vsize - (yIdx + fairSpread) + (yInc - 1)) / yInc) * yInc + fairSpread;
 	for (uint32_t yt = yIdx; yt < vsize; yt += yInc)
 	{
 		uint32_t y = yt + fairSpread;
 		if (y > vsize)
-			y -= vsize;
+			y -= invFairSpread;
 #else
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
 	{
