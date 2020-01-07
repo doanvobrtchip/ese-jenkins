@@ -14,6 +14,7 @@ Features:
 •   Add Blend_Func example project
 •   Add the circular progress bar widget example
 •   Add two bitmap rotating example projects
+•   Add ASTC memory layout example project
 
 Bug Fix:
 *   Copying the text is failed in property window
