@@ -17,7 +17,7 @@ namespace FTEDITOR
 #if FT800_DEVICE_MANAGER
 
 const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
-							"Flash Size (MB)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
+							"Flash Size (MB)", "System Clock (MHz)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
 							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
 							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "REG_OUTBITS", "External Clock"};
 
@@ -29,6 +29,8 @@ DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
 	ui->setupUi(this);
 
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(addDevice()));
+
+	ui->DeviceTableWidget->horizontalHeader()->setMinimumSectionSize(120);
 }
 
 void DeviceAddNewDialog::execute()
@@ -240,6 +242,18 @@ void DeviceAddNewDialog::prepareData()
 			cb->setCurrentIndex(3);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
+		else if (PROPERTIES[i] == "System Clock (MHz)")
+		{
+			QComboBox *cb = new QComboBox(this);
+			cb->addItems(QStringList() << "24"
+			                           << "36"
+									   << "48"
+			                           << "60"
+			                           << "72"
+			                           << "84");
+			cb->setCurrentIndex(3);
+			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
+		}
 		else if (PROPERTIES[i] == "Connection Type")
 		{
 			cb = new QComboBox(this);
@@ -307,6 +321,11 @@ void DeviceAddNewDialog::loadData(QString jsonPath)
 		else if (PROPERTIES[i] == "Flash Size (MB)")
 		{
 			cb = (QComboBox * )ui->DeviceTableWidget->cellWidget(i, 1);
+			cb->setCurrentText(jo[PROPERTIES[i]].toString());
+		}
+		else if (PROPERTIES[i] == "System Clock (MHz)")
+		{
+			cb = (QComboBox *)ui->DeviceTableWidget->cellWidget(i, 1);
 			cb->setCurrentText(jo[PROPERTIES[i]].toString());
 		}
 		else if (PROPERTIES[i] == "Connection Type")

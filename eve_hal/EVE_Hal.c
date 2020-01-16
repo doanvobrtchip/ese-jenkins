@@ -226,7 +226,9 @@ EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost)
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq)
 {
-	if (EVE_SYSCLK_72M == freq)
+	if (EVE_SYSCLK_84M == freq)
+		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x80 << 8) | (0x07 << 8));
+	else if (EVE_SYSCLK_72M == freq)
 		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x06 << 8));
 	else if (EVE_SYSCLK_60M == freq)
 		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x05 << 8));

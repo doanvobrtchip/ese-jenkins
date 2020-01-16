@@ -56,6 +56,7 @@ struct CustomDeviceInfo
 	QString ConnectionType;
 	QString FlashModel;
 	int FlashSize;
+	int SystemClock;
 	QString ScreenSize; // width x height
 	bool isBuiltin;
 

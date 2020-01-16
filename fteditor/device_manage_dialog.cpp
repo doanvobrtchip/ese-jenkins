@@ -272,6 +272,11 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.FlashSize = jo["Flash Size (MB)"].toString().toInt();
 	}
 
+	if (jo.contains("System Clock (MHz)") && jo["System Clock (MHz)"].isString())
+	{
+		cdi.SystemClock = jo["System Clock (MHz)"].toString().toInt();
+	}
+
 	if (jo.contains("Screen Width") && jo.contains("Screen Height"))
 	{
 		cdi.ScreenSize = QString("%1x%2").arg(jo["Screen Width"].toInt()).arg(jo["Screen Height"].toInt());

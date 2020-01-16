@@ -51,6 +51,7 @@ extern DlEditor *g_Macro;
 CustomDeviceInfo::CustomDeviceInfo()
     : EVE_Type(0)
     , FlashSize(0)
+    , SystemClock(60)
     , isBuiltin(false)
     , CUS_REG_HCYCLE(0)
     , CUS_REG_HOFFSET(0)
@@ -469,7 +470,8 @@ void DeviceManager::connectDevice()
 
 	EVE_BootupParameters bootupParams;
 	EVE_Util_bootupDefaults(phost, &bootupParams);
-	
+
+	bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;
 	if (m_IsCustomDevice)
 	{
 		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
@@ -490,6 +492,31 @@ void DeviceManager::connectDevice()
 		bootupParams.Dither = m_CDI.CUS_REG_DITHER;
 		bootupParams.OutBits = m_CDI.CUS_REG_OUTBITS;
 		bootupParams.ExternalOsc = m_CDI.ExternalOsc;
+
+		switch (m_CDI.SystemClock)
+		{
+		case 24:
+			bootupParams.SystemClock = EVE_SYSCLK_24M;
+			break;
+		case 36:
+			bootupParams.SystemClock = EVE_SYSCLK_36M;
+			break;
+		case 48:
+			bootupParams.SystemClock = EVE_SYSCLK_48M;
+			break;
+		case 60:
+			bootupParams.SystemClock = EVE_SYSCLK_60M;
+			break;
+		case 72:
+			bootupParams.SystemClock = EVE_SYSCLK_72M;
+			break;
+		case 84:
+			bootupParams.SystemClock = EVE_SYSCLK_72M;
+			break;
+		default:
+			bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;
+			break;
+		}
 	}
 	else if (m_SelectedDisplaySize == "480x272")
 	{
