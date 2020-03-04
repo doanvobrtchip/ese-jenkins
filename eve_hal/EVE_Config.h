@@ -58,6 +58,8 @@ the available list of which is specified further below for ESD using these macro
 #define EVE_FT813 0x0813
 #define EVE_BT815 0x0815
 #define EVE_BT816 0x0816
+#define EVE_BT817 0x0817
+#define EVE_BT818 0x0818
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////

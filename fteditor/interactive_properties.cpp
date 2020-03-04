@@ -36,6 +36,8 @@ static int s_CoordMin[FTEDITOR_DEVICE_NB] = {
 	-4096,
 	-4096,
 	-4096,
+	-4096,
+	-4096,
 };
 
 static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
@@ -47,11 +49,15 @@ static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
 	4095,
 	4095,
 	4095,
+	4095,
+	4095,
 };
 
 static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
 	512,
 	512,
+	2048,
+	2048,
 	2048,
 	2048,
 	2048,

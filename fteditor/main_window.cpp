@@ -135,6 +135,8 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT813
 	5, // BT815
 	5, // BT816
+	5, // BT817
+	5, // BT818
 };
 
 static const char *s_StandardResolutions[] = {
