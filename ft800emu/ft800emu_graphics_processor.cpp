@@ -2051,9 +2051,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Left
 						if (x1lw_px == x1lw_px_sc) // Check scissor
 						{
-							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomleft'
 							const int x = x1lw_px_sc;
+#pragma warning(push)
+#pragma warning(disable : 6001) // alphatopleft undefined when blendtop is 0 doesn't matter because it's multiplied and becomes 0
 							const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
+#pragma warning(pop)
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
@@ -2062,9 +2064,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Right
 						if (x2lw_px == x2lw_px_sc) // Check scissor
 						{
-							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomright'
 							const int x = x2lw_px_sc - 1;
+#pragma warning(push)
+#pragma warning(disable : 6001) // alphatopright undefined when blendtop is 0 doesn't matter because it's multiplied and becomes 0
 							const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
+#pragma warning(pop)
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
