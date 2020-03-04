@@ -554,10 +554,10 @@ void DlParser::initVC3()
 		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
 		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
-		s_ParamOptions[CMD_SNAPSHOT2 & 0xFF].Default[0] = RGB565;
+		s_CmdParamOptions[CMD_SNAPSHOT2 & 0xFF].Default[0] = RGB565;
 		s_CmdIdMap["CMD_SETBASE"] = CMD_SETBASE & 0xFF;
 		s_CmdParamCount[CMD_SETBASE & 0xFF] = 1;
-		s_ParamOptions[CMD_SETBASE & 0xFF].Default[0] = 10;
+		s_CmdParamOptions[CMD_SETBASE & 0xFF].Default[0] = 10;
 		s_CmdParamString[CMD_SETBASE & 0xFF] = false;
 		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
 		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
