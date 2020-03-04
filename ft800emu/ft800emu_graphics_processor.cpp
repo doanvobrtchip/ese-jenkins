@@ -3234,7 +3234,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	for (uint32_t yt = yIdx; yt < vsize; yt += yInc)
 	{
 		uint32_t y = yt + fairSpread;
-		if (y > vsize)
+		if (y >= vsize)
 			y -= invFairSpread;
 #else
 	for (uint32_t y = yIdx; y < vsize; y += yInc)
