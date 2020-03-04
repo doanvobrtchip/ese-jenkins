@@ -806,6 +806,26 @@ void DlParser::initVC3()
     m_CmdParamString[FTEDITOR_BT816] = s_CmdParamString;
     m_CmdParamOptFormat[FTEDITOR_BT816] = s_CmdParamOptFormat;
     m_CmdIdList[FTEDITOR_BT816] = s_CmdIdList;
+
+	m_IdMap[FTEDITOR_BT817] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT817] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT817] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT817] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT817] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT817] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT817] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT817] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT817] = s_CmdIdList;
+
+	m_IdMap[FTEDITOR_BT818] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT818] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT818] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT818] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT818] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT818] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT818] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT818] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT818] = s_CmdIdList;
 #endif
 }
 

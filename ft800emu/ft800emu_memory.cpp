@@ -397,7 +397,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	static_assert(offsetof(Memory, m_Ram) == 0, "Incompatible C++ ABI");
 	static_assert(offsetof(Memory, m_RamU32) == 0, "Incompatible C++ ABI");
 
-	// memset(m_Ram, 0, FT800EMU_RAM_SIZE);
+	// memset(m_Ram, 0xFF, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	// memset(m_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	
@@ -467,7 +467,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #if defined(BT815EMU_MODE)
-		if (emulatorMode >= BT8XXEMU_EmulatorBT818) { /* TODO */ }
+		if (emulatorMode >= BT8XXEMU_EmulatorBT818) memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817)); // TODO?
 		else if (emulatorMode >= BT8XXEMU_EmulatorBT817) memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817));
 		else if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
 		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));

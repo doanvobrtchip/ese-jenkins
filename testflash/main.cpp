@@ -64,7 +64,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
 #define BTFLASH_SIZE (8 * 1024 * 1024)
 #define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
-#define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
+#define BTFLASH_DATA_FILE L"X:/source/bt8xxemu/reference/vc3roms/stdflash.bin"
 // #define BTFLASH_DATA_FILE L"C:/Users/paul.jiao/Source/Repos/FT8XXEMU_FTDISG/FT8XXEMU/reference/vc3roms/stdflash.bin"
 #define BTFLASH_ELECTRONIC_ID 0x16
 #define BTFLASH_ELECTRONIC_ID_EXTENDED (BTFLASH_ELECTRONIC_ID + 2)
@@ -73,7 +73,9 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_MEMORY_TYPE 0x20
 #define BTFLASH_MEMORY_DENSITY 0x17
 
-#define BTFLASH_FIRMWARE L"C:/source/ft800emu/fteditor/firmware/mx25l.blob"
+#define BTFLASH_EMULATOR_MODE BT8XXEMU_EmulatorBT815
+#define BTFLASH_FIRMWARE L"X:/source/bt8xxemu/fteditor/firmware/mx25l.blob"
+// #define BTFLASH_FIRMWARE L"X:/source/bt8xxemu/fteditor/firmware/bt817/unified.blob"
 // #define BTFLASH_FIRMWARE_OVERRIDE 1 // TODO: Enhanced testing
 
 #define BTTESTFLASH_EMULATOR 1
@@ -1093,7 +1095,7 @@ int main(int, char*[])
 	uint8_t *ram = NULL;
 
 	BT8XXEMU_EmulatorParameters params;
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BTFLASH_EMULATOR_MODE);
 	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
 
 #if BTTESTFLASH_EMULATOR
