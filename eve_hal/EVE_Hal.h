@@ -77,7 +77,6 @@ typedef enum EVE_CHIPID_T
 	EVE_CHIPID_BT815 = 0x0815,
 	EVE_CHIPID_BT816 = 0x0816,
 	EVE_CHIPID_BT815A = 0x815a,
-	EVE_CHIPID_BT816A = 0x816a,
 } EVE_CHIPID_T;
 
 /************
@@ -319,8 +318,7 @@ EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const
 /* Screen based on chip id. This function compiles as a constant on single supported chipid target */
 static inline bool EVE_Hal_isScreenCapacitive(EVE_HalContext *phost)
 {
-	return (EVE_CHIPID & 0x8001) == 0x0001 /* Match FT801 to BT815 */
-		|| (EVE_CHIPID & 0x8010) == 0x8010; /* Match BT815A */
+	return (EVE_CHIPID & 0x01) == 0x01;
 }
 
 /* Screen based on chip id. This function compiles as a constant on single supported chipid target */
