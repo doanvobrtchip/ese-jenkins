@@ -80,6 +80,13 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTTESTFLASH_SIZES 1
 #define BTTESTFLASH_CPURESET 1
 
+#ifdef WIN32
+extern "C" {
+__declspec(dllimport) void __stdcall Sleep(uint32_t dwMilliseconds);
+}
+#define usleep Sleep
+#endif
+
 static uint8_t lastValue = 0xFF;
 
 static const uint8_t outMask1 = 0x31;
@@ -1562,7 +1569,7 @@ int main(int, char*[])
 		while (ram[8192 - 7] == 0x55); // wait
 		wr32(emulator, REG_CPURESET, 1);
 		printf("REG_CPURESET = 1\n");
-		_sleep(100);
+		usleep(100);
 
 		// not an error if this fails (flash read too fast)
 		// but crucial to ensure the test does it's job
@@ -1575,7 +1582,7 @@ int main(int, char*[])
 		wr32(emulator, REG_CMD_READ, 0);
 		wr32(emulator, REG_CPURESET, 0);
 		printf("REG_CPURESET = 0\n");
-		_sleep(100);
+		usleep(100);
 
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL); // it says so, but it's not stable
 	}

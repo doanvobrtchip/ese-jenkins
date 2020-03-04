@@ -585,7 +585,9 @@ static inline bool EVE_Util_needsVideoPatch(EVE_HalContext *phost)
 EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 {
 	uint16_t videoPatchVector;
+#ifdef _DEBUG
 	uint16_t rd, wr;
+#endif
 
 	eve_printf_debug("Reset coprocessor\n");
 
