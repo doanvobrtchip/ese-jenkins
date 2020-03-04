@@ -43,6 +43,10 @@
 #ifndef CODEEDITOR_H
 #define CODEEDITOR_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #include <vector>
 #include <QPlainTextEdit>
 #include <QObject>

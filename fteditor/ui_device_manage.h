@@ -9,6 +9,10 @@
 #ifndef UI_DEVICE_MANAGE_H
 #define UI_DEVICE_MANAGE_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDialog>

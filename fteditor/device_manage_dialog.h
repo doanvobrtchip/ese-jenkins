@@ -1,6 +1,10 @@
 #ifndef DEVICE_MANAGE_DIALOG_H_
 #define DEVICE_MANAGE_DIALOG_H_
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #include <QDialog>
 #include <QLayout>
 #include <QSpinBox>

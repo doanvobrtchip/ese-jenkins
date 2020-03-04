@@ -298,7 +298,10 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 	FILE *afile;
 	uint32_t ftsize = 0;
 	uint32_t blockSize = ((phost->MediaFifoSize >> 3) << 2) - 4;
+#pragma warning(push)
+#pragma warning(disable : 6255)
 	uint8_t *pbuff = (uint8_t *)_alloca(blockSize);
+#pragma warning(pop)
 	uint16_t blocklen;
 
 #pragma warning(push)

@@ -30,18 +30,27 @@ Author: Jan Boon <jan@no-break.space>
 
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#pragma warning(push)
+#pragma warning(disable : 26495)
 #		include <astc_codec_internals.h>
+#pragma warning(pop)
 #		undef IGNORE
 #		include <concurrent_unordered_map.h>
 #	endif
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+#pragma warning(push)
+#pragma warning(disable : 26495)
 #		include <astc_codec_internals.h>
+#pragma warning(pop)
 #		undef IGNORE
 #		include <unordered_map>
 #		include <shared_mutex>
 #	endif
 #	if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+#pragma warning(push)
+#pragma warning(disable : 26495)
 #		include <astc_codec_internals.h>
+#pragma warning(pop)
 #		undef IGNORE
 #		include "concurrent_bucket_map.h"
 #	endif
@@ -74,6 +83,9 @@ namespace FT8XXEMU {
 namespace FT800EMU {
 	class Memory;
 	class Touch;
+
+#pragma warning(push)
+#pragma warning(disable : 26495)
 
 struct BitmapInfo
 {
@@ -356,6 +368,8 @@ private:
 	GraphicsProcessor &operator=(const GraphicsProcessor &) = delete;
 
 }; /* class GraphicsProcessor */
+
+#pragma warning(pop)
 
 } /* namespace FT800EMU */
 

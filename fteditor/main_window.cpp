@@ -3,6 +3,10 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */

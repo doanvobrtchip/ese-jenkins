@@ -6,6 +6,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #ifndef FTEDITOR_INTERACTIVE_VIEWPORT_H
 #define FTEDITOR_INTERACTIVE_VIEWPORT_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 

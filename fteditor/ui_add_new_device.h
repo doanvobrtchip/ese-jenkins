@@ -9,6 +9,10 @@
 #ifndef UI_ADD_NEW_DEVICE_H
 #define UI_ADD_NEW_DEVICE_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDialog>

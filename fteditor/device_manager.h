@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_DEVICE_MANAGER_H
 #define FTEDITOR_DEVICE_MANAGER_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #ifdef FTEDITOR_DEVICE_MANAGER
 #define FT800_DEVICE_MANAGER 1
 #else

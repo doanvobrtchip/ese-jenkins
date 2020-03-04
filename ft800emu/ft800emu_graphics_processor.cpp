@@ -53,12 +53,15 @@ Author: Jan Boon <jan@no-break.space>
 #	endif
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 // Library includes
 #ifdef BT815EMU_MODE
 #	include <astc_codec_internals.h>
 const partition_info *get_partition_table(int xdim, int ydim, int zdim, int partition_count);
 const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int zdim);
 #endif
+#pragma warning(pop)
 
 // Project includes
 #include "bt8xxemu_inttypes.h"
@@ -750,7 +753,10 @@ BT8XXEMU_FORCE_INLINE bool wrap(btxf_t &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
+#pragma warning(push)
+#pragma warning(disable : 26451)
 		value = value & (max - 1); // Only support REPEAT for power-of-2 sizes
+#pragma warning(pop)
 		break;
 	}
 	return true;
@@ -775,12 +781,12 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 
 #ifdef BT815EMU_MODE
 #define BT815EMU_ASTC_FORMAT_NB 14
-static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB] = {
-	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
+static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB + 2] = { // Padded to 16 to avoid overruns
+	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12, -1, -1
 };
 
-static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB] = {
-	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
+static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB + 2] = { // Padded to 16 to avoid overruns
+	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12, -1, -1
 };
 #endif
 
@@ -1495,6 +1501,8 @@ BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, c
 // Mimic hardware alpha behaviour with line width lower than 16
 #define FT800EMU_LINE_WIDTH_BEHAVIOUR 1
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 struct VertexState
 {
 public:
@@ -1502,6 +1510,7 @@ public:
 	bool Set;
 	int X1, Y1;
 };
+#pragma warning(pop)
 
 template <bool debugTrace>
 void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
@@ -2446,8 +2455,11 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				// Line width boundaries in 256 scale
 				const int qlw = lw << 4; // Line width 256 scale
+#pragma warning(push)
+#pragma warning(disable : 26451)
 				const int qwdo = ((int64_t)(qlw + 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
 				const int qwdi = ((int64_t)(qlw - 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
+#pragma warning(pop)
 	#if FT800EMU_LINE_DEBUG_MATH
 				if (qwdo <= 0) FTEMU_printf("qwdo <= 0\n");
 				if (qwdi <= 0) FTEMU_printf("qwdi <= 0\n");
@@ -2772,6 +2784,8 @@ static std::mutex s_ASTCInitMutex;
 static bool s_ASTCInitOk = false;
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
 #ifdef BT815EMU_MODE
@@ -2932,6 +2946,8 @@ public:
 	uint32_t YInc;
 	BitmapInfo Bitmap[32];
 };
+
+#pragma warning(pop)
 
 void GraphicsProcessor::resizeThreadInfos(int size)
 {
@@ -4097,7 +4113,7 @@ void GraphicsProcessor::process(
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
-		ThreadInfo *li = m_ThreadInfos[i - 1].get();
+		ThreadInfo *li = m_ThreadInfos[(size_t)i - 1].get();
 		li->ScreenArgb8888 = screenArgb8888;
 		li->UpsideDown = upsideDown;
 		li->Mirrored = mirrored;
@@ -4155,7 +4171,7 @@ void GraphicsProcessor::process(
 #endif
 		m_BitmapInfoMaster);
 
-	for (int i = 1; i < m_ThreadCount; ++i)
+	for (size_t i = 1; i < m_ThreadCount; ++i)
 	{
 		// Wait for threads
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -4163,9 +4179,9 @@ void GraphicsProcessor::process(
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);
 		// SDL_mutexV(li->StartMutex);
-		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory::rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory::rawReadU32(ram, REG_FRAMES), (int)i, SDL_SemValue(li->EndSem));
 		SDL_SemWait(li->EndSem);
-		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory::rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory::rawReadU32(ram, REG_FRAMES), (int)i, SDL_SemValue(li->EndSem));
 #else
 #	ifdef WIN32
 		ThreadInfo *li = m_ThreadInfos[i - 1].get();
@@ -4190,7 +4206,7 @@ void GraphicsProcessor::processBlank()
 void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
-	argb8888 *dummyBuffer = buffer - (y * hsize);
+	argb8888 *dummyBuffer = buffer - ((ptrdiff_t)y * (ptrdiff_t)hsize);
 	BitmapInfo bitmapInfo[32];
 	memcpy(&bitmapInfo, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
 	m_DebugTraceX = x;

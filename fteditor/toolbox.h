@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_TOOLBOX_H
 #define FTEDITOR_TOOLBOX_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 

@@ -330,10 +330,11 @@ void resetCoprocessorFromLoop()
 	printf("Reset coprocessor from loop\n");
 
 	// BT81X video patch, see ftdichipsg/FT8XXEMU#76 and #136
-	uint16_t copro_patch_ptr;
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+	uint16_t coproPatchPtr;
+	bool needCoproPatch = FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816;
+	if (needCoproPatch)
 	{
-		copro_patch_ptr = rd16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR));
+		coproPatchPtr = rd16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR));
 	}
 
 	// Enter reset state
@@ -368,9 +369,9 @@ void resetCoprocessorFromLoop()
 	}
 
 	// BT81X video patch, see ftdichipsg/FT8XXEMU#76 and #136
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+	if (needCoproPatch)
 	{
-		wr16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR), copro_patch_ptr);
+		wr16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR), coproPatchPtr);
 	}
 
 	// Start display list from beginning

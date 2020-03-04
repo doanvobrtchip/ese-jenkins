@@ -15,10 +15,13 @@ Author: Jan Boon <jan@no-break.space>
 
 namespace BT815EMU {
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 Espim::Espim(Memory *memory)  : state(0), m_Memory(memory)
 {
 	// ...
 }
+#pragma warning(pop)
 
 int Espim::running()
 {
