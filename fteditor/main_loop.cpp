@@ -483,17 +483,17 @@ void loop()
 				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
 				continue;
 			}
-			int binSize = binFile.size();
-			if (binSize + loadAddr > flashSize)
+			int64_t binSize = binFile.size();
+			if ((uint64_t)binSize + loadAddr > flashSize)
 			{
-				printf("[Flash] Error: File of size '%i' exceeds flash size\n", binSize);
+				printf("[Flash] Error: File of size '%i' exceeds flash size\n", (int)binSize);
 				continue;
 			}
 			; {
 				binFile.open(QIODevice::ReadOnly);
 				QDataStream in(&binFile);
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
-				int s = in.readRawData(&ram[loadAddr], binSize);
+				int s = in.readRawData(&ram[loadAddr], (int)binSize);
 				// FIXME: Pad 0x00 to end for 64 byte-aligned size
 				BT8XXEMU_poke(g_Emulator);
                 binFile.close();
@@ -840,16 +840,16 @@ void loop()
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
 				s_MediaFifoPtr = s_CmdParamCache[cmdParamIdx[i]];
-				s_MediaFifoSize = s_CmdParamCache[cmdParamIdx[i] + 1];
+				s_MediaFifoSize = s_CmdParamCache[(size_t)cmdParamIdx[i] + 1];
 			}
 			else if (cmdList[i] == CMD_LOADIMAGE)
 			{
 				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
+					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_FLASH);
 				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-					&& (s_CmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{

@@ -2035,7 +2035,7 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
         if (opt & OPT_SOUND) dst << "OPT_SOUND";
         else
         {
-            long t = dst.tellp();
+			ptrdiff_t t = dst.tellp();
             dst.seekp(t - 3);
         }
         return;

@@ -1485,7 +1485,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 					text = "Builtin";
 					icon = QIcon(":/icons/information-white");
 				}
-				else if (contentInfo->FlashAddress + contentSize > globalSize) // TODO: Maybe cache getFlashSize
+				else if ((size_t)contentInfo->FlashAddress + contentSize > globalSize) // TODO: Maybe cache getFlashSize
 				{
 					text = "No Space";
 					icon = QIcon(":/icons/exclamation-red");
@@ -2246,7 +2246,7 @@ void ContentManager::recalculateOverlapFlashInternal()
 						m_ContentOverlapFlash.insert(leftInfo);
 					++left;
 				}
-				if (leftAddr + leftSize > globalSize)
+				if ((size_t)leftAddr + leftSize > globalSize)
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
 					if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
