@@ -145,6 +145,7 @@ private:
 		int16_t memrd16s[2];
 		uint8_t memrd8[4];
 	};
+	// uint32_t memrdt;
 	uint16_t j1boot[FT810EMU_COPROCESSOR_ROM_SIZE];
 
 	Ejpg ejpg;

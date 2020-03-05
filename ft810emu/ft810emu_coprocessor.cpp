@@ -876,15 +876,19 @@ void Coprocessor::execute()
 			case 0x10:  _t = t + 4;
 				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd32)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = memrd8[t & 3]; break;
-			case 0x13:  assert((t & 1) == 0);
+			case 0x12:  // assert(t == memrdt);
+				_t = memrd8[t & 3]; break;
+				// _t = /*(int8_t)*/m_Memory->coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x13:  assert((t & 1) == 0); // assert(t == memrdt);
+				// _t = /*(int16_t)*/m_Memory->coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
 				_t = memrd16[(t >> 1) & 1]; break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
 			case 0x17:  _t = n - t; break;
 			case 0x18:  _t = t + 1; break;
-			case 0x19:  assert((t & 1) == 0);
+			case 0x19:  assert((t & 1) == 0); // assert(t == memrdt);
+				// _t = (int16_t)m_Memory->coprocessorReadU16(t); break;
 				_t = memrd16s[(t >> 1) & 1]; break;
 			case 0x1a:  { uint32_t sum32 = t + n; _t = ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); } break;
 			case 0x1b:  switch (t >> 12) {
@@ -1007,7 +1011,8 @@ void Coprocessor::execute()
 				// selfassert(t < MEMSIZE, __LINE__);
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	selfassert(written[(t - RAM_J1RAM) >> 2], __LINE__);
-				memrd32 = m_Memory->coprocessorReadU32(t);
+				memrd32 = m_Memory->coprocessorReadU32(t & ~3UL);
+				// memrdt = t;
 				break;
 			}
 			t = _t;
