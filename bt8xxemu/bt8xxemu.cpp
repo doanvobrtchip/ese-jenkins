@@ -47,6 +47,24 @@ Author: Jan Boon <jan@no-break.space>
 #undef BT815EMU_MODE
 #endif
 
+// Include BT817EMU
+#ifdef FTEMU_HAVE_BT817EMU
+#undef FT800EMU_EMULATOR_H
+#define FT800EMU BT817EMU
+#define FT810EMU BT817EMU
+#define BT815EMU BT817EMU
+#define FT810EMU_MODE
+#define BT815EMU_MODE
+#define BT817EMU_MODE
+#include "ft800emu_emulator.h"
+#undef FT800EMU
+#undef FT810EMU
+#undef BT815EMU
+#undef FT810EMU_MODE
+#undef BT815EMU_MODE
+#undef BT817EMU_MODE
+#endif
+
 static const char *c_Version =
 	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
@@ -118,12 +136,20 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 #ifdef FTEMU_HAVE_BT815EMU
 	case BT8XXEMU_EmulatorBT815:
 	case BT8XXEMU_EmulatorBT816:
-	case BT8XXEMU_EmulatorBT817:
-	case BT8XXEMU_EmulatorBT818:
 	{
 		BT815EMU::Emulator *bt815emu = new BT815EMU::Emulator();
 		*emulator = bt815emu;
 		bt815emu->run(*params);
+		break;
+	}
+#endif
+#ifdef FTEMU_HAVE_BT817EMU
+	case BT8XXEMU_EmulatorBT817:
+	case BT8XXEMU_EmulatorBT818:
+	{
+		BT817EMU::Emulator *bt817emu = new BT817EMU::Emulator();
+		*emulator = bt817emu;
+		bt817emu->run(*params);
 		break;
 	}
 #endif

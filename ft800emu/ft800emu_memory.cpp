@@ -357,15 +357,16 @@ static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 };
 #endif
 
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
+static const uint8_t c_OTP817[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_817.h"
+};
+#elif defined(BT815EMU_MODE)
 static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_815.h"
 };
 static const uint8_t c_OTP816[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_816.h"
-};
-static const uint8_t c_OTP817[FT800EMU_OTP_SIZE] = {
-#include "resources/otp_817.h"
 };
 #elif defined(FT810EMU_MODE)
 static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
@@ -429,7 +430,6 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #if defined(BT815EMU_MODE)
-		// if (emulatorMode >= BT8XXEMU_EmulatorBT817) memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT817, sizeof(c_RomBT817));
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT815, sizeof(c_RomBT815));
 #elif defined(FT810EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT810, sizeof(c_RomFT810));
@@ -466,10 +466,11 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	}
 	else
 	{
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorBT818) memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817)); // TODO?
-		else if (emulatorMode >= BT8XXEMU_EmulatorBT817) memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817));
-		else if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
+		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817));
+#elif defined(BT815EMU_MODE)
+		if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
 		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));
 #elif defined(FT810EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], c_OTP813, sizeof(c_OTP813));

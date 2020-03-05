@@ -19,7 +19,9 @@ Author: James Bowman <jamesb@excamera.com>
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
 
-#ifdef BT815EMU_MODE
+#if defined(BT817EMU_MODE)
+#	include "bt817emu_espim.h"
+#elif defined(BT815EMU_MODE)
 #	include "bt815emu_espim.h"
 #endif
 
@@ -42,12 +44,13 @@ namespace FT810EMU {
 
 namespace /* anonymous */ {
 
-#ifdef BT815EMU_MODE
-const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
-#include "resources/crom_bt815.h"
-};
+#if defined(BT817EMU_MODE)
 const uint16_t pgm_rom_bt817[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_bt817.h"
+};
+#elif defined(BT815EMU_MODE)
+const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt815.h"
 };
 #else
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
@@ -712,11 +715,10 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 	}
 	else
 	{
-#ifdef BT815EMU_MODE
-		if (mode >= BT8XXEMU_EmulatorBT817)
-			memcpy(j1boot, pgm_rom_bt817, sizeof(pgm_rom_bt817));
-		else
-			memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
+#if defined(BT817EMU_MODE)
+		memcpy(j1boot, pgm_rom_bt817, sizeof(pgm_rom_bt817));
+#elif defined(BT815EMU_MODE)
+		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
 #else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
 #endif
