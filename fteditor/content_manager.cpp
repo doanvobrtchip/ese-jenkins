@@ -1096,7 +1096,7 @@ void ContentManager::add()
 	static QString saveDirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 
 	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
-		tr("Load Content"),
+		tr("Add Content"),
 	    saveDirPath,
 		tr("All files (*.*)"));
 	
@@ -3493,7 +3493,7 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 	QString dirPath = m_PropertiesCommonSourceFile->text();
 	
 	QString fileName = QFileDialog::getOpenFileName(this,
-		tr("Load Content"),
+		tr("Change Content"),
 	    QDir(dirPath).absolutePath(),
 		tr("All files (*.*)"));
 
