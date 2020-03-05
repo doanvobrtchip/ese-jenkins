@@ -321,6 +321,11 @@ BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data
 	}
 }
 
+BT8XXEMU_FORCE_INLINE void Memory::memSet(ramaddr address, uint8_t value, ramaddr size)
+{
+	memset(&m_Ram[address], value, size);
+}
+
 BT8XXEMU_FORCE_INLINE void Memory::rawWriteU32(ramaddr address, uint32_t data)
 {
 	rawWriteU32(m_Ram, address, data);
@@ -636,27 +641,57 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_CMD_DL, 0);
 
 #ifdef FT810EMU_MODE
+	rawWriteU32(REG_EJPG_OPTIONS, 0);
+	rawWriteU32(REG_EJPG_DST, 0);
+	rawWriteU32(REG_EJPG_W, 0);
+	rawWriteU32(REG_EJPG_H, 0);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
+	rawWriteU32(REG_EJPG_RI, 0);
+	rawWriteU32(REG_EJPG_TQ, 0);
+	rawWriteU32(REG_EJPG_TDA, 0);
+	memSet(REG_EJPG_Q, 0, 128);
+	memSet(REG_EJPG_HT, 0, 256);
+	memSet(REG_EJPG_DCC, 0, 24);
+	memSet(REG_EJPG_ACC, 0, 512);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
 	rawWriteU32(REG_EJPG_SCALE, 256);
 	rawWriteU32(REG_J1_COLD, 1);
 #endif
 
 #if defined(BT815EMU_MODE)
 	rawWriteU32(REG_ADAPTIVE_FRAMERATE, 1);
+
 	rawWriteU32(REG_SPIM_DIR, 0);
 	rawWriteU32(REG_SPIM, 0);
 	rawWriteU32(REG_ESPIM_READSTART, 22);
 	rawWriteU32(REG_ESPIM_SEQ, 0);
 	rawWriteU32(REG_ESPIM_ADD, 0);
 	rawWriteU32(REG_ESPIM_COUNT, 0);
-	rawWriteU32(REG_ESPIM_WINDOW, 0);
-	rawWriteU32(REG_ESPIM_DUMMY, 0);
-	rawWriteU32(REG_ESPIM_TRIG, 0);
+	memSet(REG_ESPIM_WINDOW, 0, 64); //
+	rawWriteU32(REG_ESPIM_DUMMY, 0); //
+	rawWriteU32(REG_ESPIM_TRIG, 0); //
+		
 	rawWriteU32(REG_FLASH_STATUS, 0);
 #endif
 
 #if defined(BT817EMU_MODE)
+	rawWriteU32(REG_AH_HCYCLE_MAX, 0);
+	rawWriteU32(REG_PCLK_2X, 0);
+
 	rawWriteU32(REG_FLASH_DTR, 0);
 	rawWriteU32(REG_ESPIM_DTR, 0); // TODO: Do we just match these, or what?
+
+	rawWriteU32(REG_HSF_HSIZE, 0);
+	rawWriteU32(REG_HSF_FT1, 0);
+	rawWriteU32(REG_HSF_FSCALE, 0);
+	rawWriteU32(REG_HSF_F00, 0);
+	rawWriteU32(REG_HSF_F02, 0);
+	rawWriteU32(REG_HSF_F03, 0);
+	rawWriteU32(REG_HSF_F10, 0);
+	rawWriteU32(REG_HSF_F11, 0);
+	rawWriteU32(REG_HSF_F12, 0);
+	rawWriteU32(REG_HSF_F13, 0);
 #endif
 
 	m_CpuReset = false;

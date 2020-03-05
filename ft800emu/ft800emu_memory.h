@@ -187,6 +187,7 @@ private:
 #endif
 
 private:
+	BT8XXEMU_FORCE_INLINE void memSet(ramaddr address, uint8_t value, ramaddr size);
 	BT8XXEMU_FORCE_INLINE void rawWriteU32(ramaddr address, uint32_t data);
 	BT8XXEMU_FORCE_INLINE uint32_t rawReadU32(ramaddr address);
 	BT8XXEMU_FORCE_INLINE void rawWriteU16(ramaddr address, uint16_t data);
