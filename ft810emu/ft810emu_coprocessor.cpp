@@ -681,6 +681,9 @@ BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack an
 static FILE *trace = NULL;
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
+
 Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
 {
@@ -737,6 +740,8 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 	// REG(EJPG_READY) = 1;
 	m_Memory->rawWriteU32(m_Memory->getRam(), REG_EJPG_READY, 1);
 }
+
+#pragma warning(pop)
 
 // template <bool singleFrame>
 void Coprocessor::execute()
@@ -863,23 +868,23 @@ void Coprocessor::execute()
 			case 0x09:  _t = ((int32_t)(n)) >> t; break;
 			case 0x0a:  _t = t - 1; break;
 			case 0x0b:  _t = r[rsp]; break;
-			case 0x0c:  _t = memrd; break;
+			case 0x0c:  _t = memrd32; break;
 			case 0x0d:  _t = t * n; break;
 			case 0x0e:  _t = (n << 14) | (t & 0x3fff); break;
 			case 0x0f:  _t = -(n < t); break;
 			case 0x10:  _t = t + 4;
-				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd)); break;
+				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd32)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = /*(int8_t)*/m_Memory->coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x12:  _t = memrd8[t & 3]; break;
 			case 0x13:  assert((t & 1) == 0);
-				_t = /*(int16_t)*/m_Memory->coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+				_t = memrd16[(t >> 1) & 1]; break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
 			case 0x17:  _t = n - t; break;
 			case 0x18:  _t = t + 1; break;
 			case 0x19:  assert((t & 1) == 0);
-				_t = (int16_t)m_Memory->coprocessorReadU16(t); break;
+				_t = memrd16s[(t >> 1) & 1]; break;
 			case 0x1a:  { uint32_t sum32 = t + n; _t = ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); } break;
 			case 0x1b:  switch (t >> 12) {
 			case 0: _t = t | RAM_REG; break;
@@ -891,7 +896,7 @@ void Coprocessor::execute()
 			case 0x1c:  _t = t + 2; break;
 			case 0x1d:  _t = t << 1; break;
 			case 0x1e:  _t = t + 4; break;
-			case 0x1f:  _t = !(isFF(memrd) | isFF(memrd >> 8) | isFF(memrd >> 16) | isFF(memrd >> 24));
+			case 0x1f:  _t = !(isFF(memrd32) | isFF(memrd32 >> 8) | isFF(memrd32 >> 16) | isFF(memrd32 >> 24));
 				// FTEMU_printf("xmit %08x\n", memrd);
 				if (_t)
 				{
@@ -910,7 +915,7 @@ void Coprocessor::execute()
 						REG(EJPG_TDA),
 						&memory8[REG_EJPG_Q],
 						32,
-						memrd);
+						memrd32);
 				}
 			}
 			dsp = 31 & (dsp + sx[insn & 3]);
@@ -930,7 +935,7 @@ void Coprocessor::execute()
 				break;
 			case 3:
 				break;
-			case 4:
+			case 4: // 32-bit write
 				// selfassert((t & 3) == 0, __LINE__);
 				if (t == 0x600000)
 				{
@@ -962,7 +967,7 @@ void Coprocessor::execute()
 				}
 #endif
 				break;
-			case 5:
+			case 5: // 16-bit write
 				// assert((t & 1) == 0);
 				// assert(t < MEMSIZE);
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
@@ -970,7 +975,7 @@ void Coprocessor::execute()
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
 				m_Memory->coprocessorWriteU16(t, n); // memory16[t >> 1] = n;
 				break;
-			case 6:
+			case 6: // 8-bit write
 				// selfassert(t < MEMSIZE, __LINE__);
 				// selfassert((t < (1024 * 1024)) | (t >= RAM_DL), __LINE__);
 				m_Memory->coprocessorWriteU8(t, n); // memory8[t] = n;
@@ -997,11 +1002,11 @@ void Coprocessor::execute()
 						n);
 				}
 				break;
-			case 7:
+			case 7: // 32-bit read
 				// selfassert(t < MEMSIZE, __LINE__);
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	selfassert(written[(t - RAM_J1RAM) >> 2], __LINE__);
-				memrd = m_Memory->coprocessorReadU32(t);
+				memrd32 = m_Memory->coprocessorReadU32(t);
 				break;
 			}
 			t = _t;

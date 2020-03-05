@@ -235,9 +235,9 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 				{
 					m_SpimRising = rising;
 					if (rising)
-						m_Spimi = data;
+						m_Spimi = (uint8_t)data;
 					else
-						m_SpimiL = data;
+						m_SpimiL = (uint8_t)data;
 				}
 #endif
 			}
@@ -1252,6 +1252,7 @@ void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 	postWrite(address, data);
 }
 
+#ifndef FT810EMU_MODE
 uint16_t Memory::coprocessorReadU16(ramaddr address)
 {
 	// FTEMU_printf("Coprocessor read U16 %i\n", (int)address);
@@ -1336,6 +1337,7 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 
 	return rawReadU16(address);
 }
+#endif
 
 void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 {
@@ -1366,6 +1368,7 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 	postWrite(address, data);
 }
 
+#ifndef FT810EMU_MODE
 uint8_t Memory::coprocessorReadU8(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
@@ -1450,6 +1453,7 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 
 	return rawReadU8(address);
 }
+#endif
 
 int *Memory::getDisplayListCoprocessorWrites()
 {

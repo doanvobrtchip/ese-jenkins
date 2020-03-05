@@ -83,9 +83,13 @@ public:
 	void coprocessorWriteU32(ramaddr address, uint32_t data);
 	uint32_t coprocessorReadU32(ramaddr address);
 	void coprocessorWriteU16(ramaddr address, uint16_t data);
+#ifndef FT810EMU_MODE
 	uint16_t coprocessorReadU16(ramaddr address);
+#endif
 	void coprocessorWriteU8(ramaddr address, uint8_t data);
+#ifndef FT810EMU_MODE
 	uint8_t coprocessorReadU8(ramaddr address);
+#endif
 	bool coprocessorGetReset();
 
 	static BT8XXEMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, ramaddr address, uint32_t data);
