@@ -8,6 +8,11 @@ Author: Jan Boon <jan@no-break.space>
 #ifndef BT8XXEMU_H
 #define BT8XXEMU_H
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "bt8xxemu_inttypes.h"
 
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
@@ -316,6 +321,10 @@ BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, u
 
 #ifdef __cplusplus 
 } /* extern "C" */
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #endif /* #ifndef BT8XXEMU_H */

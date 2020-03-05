@@ -229,10 +229,15 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	m_EmulatorRunning = false;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
+
 Emulator::Emulator()
 {
 	m_System = new FT8XXEMU::System();
 }
+
+#pragma warning(pop)
 
 Emulator::~Emulator()
 {
@@ -290,7 +295,10 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 	m_CoInit = (CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE) == S_OK);
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26812)
 	BT8XXEMU_EmulatorMode mode = params.Mode;
+#pragma warning(pop)
 	if (mode == 0) mode = BT8XXEMU_EmulatorFT800;
 
 #ifdef FT810EMU_MODE

@@ -683,6 +683,7 @@ static FILE *trace = NULL;
 
 #pragma warning(push)
 #pragma warning(disable : 26495)
+#pragma warning(disable : 26812)
 
 Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
