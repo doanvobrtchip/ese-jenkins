@@ -79,7 +79,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 // #define BTFLASH_FIRMWARE_OVERRIDE 1 // TODO: Enhanced testing
 
 #define BTTESTFLASH_EMULATOR 1
-#define BTTESTFLASH_SIZES 0
+#define BTTESTFLASH_SIZES 1
 #define BTTESTFLASH_CPURESET 1
 
 #define L_(x)  L__(x)
@@ -1444,13 +1444,13 @@ int main(int, char*[])
 			size = BT8XXEMU_Flash_size(flash);
 			assert(size == sz * 1024 * 1024);
 
-			uint8_t refv0 = data[0];
+			assert(refv0 == data[0]);
 			assert(refv0 != 0x55); // Value used for testing
 			assert(refv0 != 0xFF); // Value used for testing
 			assert(refv0 != 0); // Value used for testing
 
 			BT8XXEMU_EmulatorParameters params;
-			BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+			BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, testMode[ts]);
 			params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
 
 			params.Flash = flash;
@@ -1478,8 +1478,10 @@ int main(int, char*[])
 				uint32_t resAddr = rd32(emulator, REG_CMD_WRITE);
 				wr32(emulator, REG_CMD_WRITE, resAddr + 4);
 				flush(emulator);
-				assert(rd32(emulator, RAM_CMD + resAddr) == 0);
-				assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+				uint32_t res = rd32(emulator, RAM_CMD + resAddr);
+				uint32_t status = rd32(emulator, REG_FLASH_STATUS);
+				assert(res == 0);
+				assert(status == FLASH_STATUS_FULL);
 			}
 
 			assert(rd32(emulator, REG_FLASH_SIZE) == sz);
