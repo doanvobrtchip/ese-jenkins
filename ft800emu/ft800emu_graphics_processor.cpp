@@ -858,8 +858,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 	const int y = (int)yl;
 	const int py = y * stride;
 #ifdef BT815EMU_MODE
-	uint32_t bmpFormat = (bitmapInfo->LayoutFormat == 0x1F) ? bitmapInfo->ExtFormat : bitmapInfo->LayoutFormat;
-	if (!BT815EMU_IS_FORMAT_ASTC(bmpFormat) && (BT815EMU_ADDR_IS_FLASH(bitmapInfo->Source)))
+	uint8_t handle = gs.BitmapHandle;
+	uint32_t bmpFormat = (bitmapInfo[handle].LayoutFormat == 0x1F) ? bitmapInfo[handle].ExtFormat : bitmapInfo[handle].LayoutFormat;
+	if (!BT815EMU_IS_FORMAT_ASTC(bmpFormat) && (BT815EMU_ADDR_IS_FLASH(bitmapInfo[handle].Source)))
 		return 0x00000000;
 #endif
 	switch (format)
