@@ -229,6 +229,17 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 					data &= regSpimDir;
 				}
 				data &= 0xF;
+#ifdef BT817EMU_MODE
+				bool rising = ((dataOut & 0x20) == 0x20);
+				if (m_SpimRising != rising)
+				{
+					m_SpimRising = rising;
+					if (rising)
+						m_Spimi = data;
+					else
+						m_SpimiL = data;
+				}
+#endif
 			}
 			break;
 		case REG_ESPIM_ADD:
@@ -393,6 +404,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 #ifdef BT815EMU_MODE
 	, m_Flash(flash)
+#endif
+#ifdef BT817EMU_MODE
+	, m_SpimRising(false) /* , m_Spimi(0), m_SpimiL(0) */
 #endif
 {
 	static_assert(offsetof(Memory, m_Ram) == 0, "Incompatible C++ ABI");
@@ -638,6 +652,11 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_ESPIM_DUMMY, 0);
 	rawWriteU32(REG_ESPIM_TRIG, 0);
 	rawWriteU32(REG_FLASH_STATUS, 0);
+#endif
+
+#if defined(BT817EMU_MODE)
+	rawWriteU32(REG_FLASH_DTR, 0);
+	rawWriteU32(REG_ESPIM_DTR, 0); // TODO: Do we just match these, or what?
 #endif
 
 	m_CpuReset = false;

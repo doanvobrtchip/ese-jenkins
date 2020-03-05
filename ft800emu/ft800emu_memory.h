@@ -67,6 +67,11 @@ public:
 	// static inline uint8_t *getFlashFromRamPtr(uint8_t *ram) { return (reinterpret_cast<Memory *>(ram) - offsetof(Memory, m_Ram))->getFlash(); }
 #endif
 
+#ifdef BT817EMU_MODE
+	inline uint8_t spimi() { return m_Spimi; }
+	inline uint8_t spimiL() { return m_SpimiL; }
+#endif
+
 	//static void setInterrupt(void (*interrupt)());
 	bool hasInterrupt();
 
@@ -163,6 +168,12 @@ private:
 #ifndef FT810EMU_MODE
 	int m_HasCachedTouchRawXY = 0;
 	uint32_t m_CachedTouchRawXY = 0xFFFFFFFF;
+#endif
+
+#ifdef BT817EMU_MODE
+	bool m_SpimRising;
+	uint8_t m_Spimi;
+	uint8_t m_SpimiL;
 #endif
 
 	bool m_ReadDelay = false;
