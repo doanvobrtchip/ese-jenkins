@@ -1621,7 +1621,7 @@ int main(int, char*[])
 		wr32(emulator, REG_CMDB_WRITE, 4096); // num
 		flush(emulator);
 
-		for (int i = 4096 * 4; i < 4096 * 4; ++i)
+		for (int i = 4096 * 4; i < 4096 * 4 + 4096; ++i)
 			assert(ram[i] == data[i]);
 
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL); // it says so
@@ -1640,6 +1640,6 @@ int main(int, char*[])
 
 	char c;
 	printf("Press key to exit");
-	scanf("%c", &c);
+	(void)scanf("%c", &c);
 	return EXIT_SUCCESS;
 }
