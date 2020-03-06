@@ -17,7 +17,9 @@ namespace BT817EMU {
 
 #pragma warning(push)
 #pragma warning(disable : 26495)
-Espim::Espim(Memory *memory)  : state(0), m_Memory(memory)
+Espim::Espim(Memory *memory)
+    : state(0)
+    , m_Memory(memory)
 {
 	// ...
 }
@@ -47,26 +49,28 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 	uint32_t spimo, spimoL, spim_dir, spim_clken;
 	bool dtr = ram[REG_FLASH_DTR] & 1;
 
-	switch (opcode) {
-	case SS_PAUSE:  spim_clken = 0; spim_dir = 0x1; spimo = 0;       break;
-	case SS_S0:     spim_clken = 1; spim_dir = 0x1; spimo = 0;       break;
-	case SS_S1:     spim_clken = 1; spim_dir = 0x1; spimo = 1;       break;
-	case SS_A0:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 0;  break;
-	case SS_A1:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 4;  break;
-	case SS_A2:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 8;  break;
-	case SS_A3:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 12; break;
-	case SS_A4:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 16; break;
-	case SS_A5:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 20; break;
-	case SS_A6:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 24; break;
-	case SS_A7:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 28; break;
-	case SS_A76:    spim_clken = 1; spim_dir = 0xf; spimo = a >> 28; spimoL = (a >> 24) & 0xf; break;
-	case SS_A54:    spim_clken = 1; spim_dir = 0xf; spimo = a >> 20; spimoL = (a >> 16) & 0xf; break;
-	case SS_A32:    spim_clken = 1; spim_dir = 0xf; spimo = a >> 12; spimoL = (a >> 8) & 0xf;  break;
-	case SS_A10:    spim_clken = 1; spim_dir = 0xf; spimo = a >> 4;  spimoL = (a >> 0) & 0xf;  break;
-	case SS_QI:     spim_clken = 1; spim_dir = 0x0; spimo = 0;       break;
-	default:        spim_clken = 1; spim_dir = 0xf; spimo = opcode; spimoL = opcode ^ 0xf;  break;
+	switch (opcode)
+	{
+		// clang-format off
+	case SS_PAUSE:  spim_clken = 0; spim_dir = 0x1; spimo = 0;               spimoL = 0;                    break;
+	case SS_S0:     spim_clken = 1; spim_dir = 0x1; spimo = 0;               spimoL = 0;                    break;
+	case SS_S1:     spim_clken = 1; spim_dir = 0x1; spimo = 1;               spimoL = 1;                    break;
+	case SS_A0:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 0) & 0xf;  spimoL = spimo;                break;
+	case SS_A1:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 4) & 0xf;  spimoL = spimo;                break;
+	case SS_A2:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 8) & 0xf;  spimoL = spimo;                break;
+	case SS_A3:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 12) & 0xf; spimoL = spimo;                break;
+	case SS_A4:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 16) & 0xf; spimoL = spimo;                break;
+	case SS_A5:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 20) & 0xf; spimoL = spimo;                break;
+	case SS_A6:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 24) & 0xf; spimoL = spimo;                break;
+	case SS_A7:     spim_clken = 1; spim_dir = 0xf; spimo = (a >> 28) & 0xf; spimoL = spimo;                break;
+	case SS_A76:    spim_clken = 1; spim_dir = 0xf; spimo = (a >> 28) & 0xf; spimoL = (a >> 24) & 0xf;      break;
+	case SS_A54:    spim_clken = 1; spim_dir = 0xf; spimo = (a >> 20) & 0xf; spimoL = (a >> 16) & 0xf;      break;
+	case SS_A32:    spim_clken = 1; spim_dir = 0xf; spimo = (a >> 12) & 0xf; spimoL = (a >> 8) & 0xf;       break;
+	case SS_A10:    spim_clken = 1; spim_dir = 0xf; spimo = (a >> 4) & 0xf;  spimoL = (a >> 0) & 0xf;       break;
+	case SS_QI:     spim_clken = 1; spim_dir = 0x0; spimo = 0;               spimoL = 0;                    break;
+	default:        spim_clken = 1; spim_dir = 0xf; spimo = opcode & 0xf;    spimoL = (opcode ^ 0xf) & 0xf; break;
+		// clang-format on
 	}
-	spimo &= 0xf;
 
 	if (Memory::rawReadU32(ram, REG_SPIM_DIR) != (0x10 | spim_dir))
 	{

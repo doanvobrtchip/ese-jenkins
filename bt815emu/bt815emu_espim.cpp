@@ -49,7 +49,7 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 	switch (opcode) {
 	case SS_PAUSE:  spim_clken = 0; spim_dir = 0x1; spimo = 0;       break;
 	case SS_S0:     spim_clken = 1; spim_dir = 0x1; spimo = 0;       break;
-	case SS_S1:     spim_clken = 1; spim_dir = 0x1; spimo = 0;       break;
+	case SS_S1:     spim_clken = 1; spim_dir = 0x1; spimo = 1;       break;
 	case SS_A0:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 0;  break;
 	case SS_A1:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 4;  break;
 	case SS_A2:     spim_clken = 1; spim_dir = 0xf; spimo = a >> 8;  break;
