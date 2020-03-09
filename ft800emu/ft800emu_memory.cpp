@@ -377,6 +377,9 @@ static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 static const uint8_t c_OTP817[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_817.h"
 };
+static const uint8_t c_OTP818[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_818.h"
+};
 #elif defined(BT815EMU_MODE)
 static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_815.h"
@@ -486,7 +489,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	else
 	{
 #if defined(BT817EMU_MODE)
-		if (emulatorMode >= BT8XXEMU_EmulatorBT818) memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817)); // TODO?
+		if (emulatorMode >= BT8XXEMU_EmulatorBT818) memcpy(&m_Ram[RAM_JTBOOT], c_OTP818, sizeof(c_OTP818));
 		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817));
 #elif defined(BT815EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
