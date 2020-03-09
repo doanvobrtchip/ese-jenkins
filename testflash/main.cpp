@@ -116,10 +116,10 @@ static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
 	}
 };
 
