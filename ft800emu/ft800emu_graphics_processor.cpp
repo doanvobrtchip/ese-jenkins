@@ -2928,9 +2928,11 @@ public:
 	bool SwapXY;
 #endif
 	uint32_t HSize;
-	uint32_t VSize;
-	uint32_t YIdx;
+	uint32_t YTop;
+	uint32_t YBottom;
+	uint32_t YStart;
 	uint32_t YInc;
+	uint32_t YNum;
 	BitmapInfo Bitmap[32];
 };
 
@@ -3206,7 +3208,7 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t yTop, const uint32_t yBottom, const uint32_t yStart, const uint32_t yInc, const uint32_t yNum, BitmapInfo *const bitmapInfo)
 {
 	FT8XXEMU::System *const system = m_System;
 	Memory *const memory = m_Memory;
@@ -3238,8 +3240,15 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 		if (y >= vsize)
 			y -= invFairSpread;
 #else
-	for (uint32_t y = yIdx; y < vsize; y += yInc)
+	// for (uint32_t y = yIdx; y < vsize; y += yInc)
+	// {
+	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
+	uint32_t linesBack = yNum * yInc;
+	uint32_t vsize = yBottom;
+	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
+		uint32_t y = yStart + (yi * yInc);
+		if (y >= yBottom) y -= linesBack;
 #endif
 		VertexState vs = VertexState();
 		int primitive = 0;
@@ -3950,7 +3959,7 @@ DisplayListDisplay:
 #	endif
 #endif
 
-	if (yIdx == 0)
+	if (yStart == 0)
 	{
 		m_DebugLimiterEffective = false;
 		m_DebugLimiterIndex = debugLimiterIndex;
@@ -4054,9 +4063,11 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 			li->SwapXY,
 #endif
 			li->HSize, 
-			li->VSize, 
-			li->YIdx, 
+			li->YTop, 
+			li->YBottom, 
+			li->YStart,
 			li->YInc, 
+			li->YNum,
 			li->Bitmap);
 
 		SetEvent(li->EndEvent);
@@ -4080,8 +4091,8 @@ void GraphicsProcessor::process(
 	bool swapXY,
 #endif
 	uint32_t hsize, 
-	uint32_t vsize, 
-	uint32_t yIdx, 
+	uint32_t yTop, 
+	uint32_t yBottom, 
 	uint32_t yInc)
 
 {
@@ -4094,7 +4105,12 @@ void GraphicsProcessor::process(
 	uint32_t vsizeSection = ((vsize - yIdx) / m_ThreadCount);
 #endif
 
-	for (int i = 1; i < m_ThreadCount; ++i)
+	int nbLines = yBottom > yTop ? (yBottom - yTop) / yInc : 0; // Number of lines to render
+	int nbThreads = min(m_ThreadCount, nbLines); // Number of threads to use
+	int nbLineBlocks = nbThreads > 0 ? nbLines / nbThreads : 0; // Number of complete line blocks
+	int skipBlocks = nbThreads > 0 ? (nbLineBlocks / nbThreads) * nbThreads * yInc : 0;
+
+	for (int i = 1; i < nbThreads; ++i)
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
@@ -4107,15 +4123,17 @@ void GraphicsProcessor::process(
 #endif
 		li->HSize = hsize;
 #if FT800EMU_SPREAD_RENDER_THREADS
-		li->VSize = (i + 1 == m_ThreadCount) 
+		li->VSize = (i + 1 == nbThreads) 
 			? vsize
 			: (yIdx + (i + 1) * vsizeSection);
 		li->YIdx = yIdx + (i * vsizeSection);
 		li->YInc = yInc;
 #else
-		li->VSize = vsize;
-		li->YIdx = (i * yInc) + yIdx;
-		li->YInc = m_ThreadCount * yInc;
+		li->YTop = yTop;
+		li->YBottom = yBottom;
+		li->YStart = yTop + (skipBlocks * i) + i;
+		li->YInc = nbThreads * yInc;
+		li->YNum = (nbLines + (nbThreads - i - 1)) / nbThreads;
 #endif
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 		// li->Thread = SDL_CreateThreadFT(launchThread, static_cast<void *>(li));
@@ -4126,7 +4144,7 @@ void GraphicsProcessor::process(
 #	else
 		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, 
 #if FT800EMU_SPREAD_RENDER_THREADS
-			(i + 1 == m_ThreadCount) 
+			(i + 1 == nbThreads) 
 				? vsize
 				: (yIdx + (i + 1) * vsizeSection),
 			yIdx + (i * vsizeSection),
@@ -4134,7 +4152,7 @@ void GraphicsProcessor::process(
 #else
 			vsize, 
 			(i * yInc) + yIdx, 
-			m_ThreadCount * yInc, 
+			nbThreads * yInc, 
 #endif
 			m_BitmapInfoMaster);
 #	endif
@@ -4144,19 +4162,21 @@ void GraphicsProcessor::process(
 	// Run part on this thread
 	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize,
 #if FT800EMU_SPREAD_RENDER_THREADS
-		(m_ThreadCount == 1) 
+		(nbThreads == 1) 
 			? vsize
 			: yIdx + vsizeSection,
 			yIdx,
 			yInc,
 #else
-		vsize, 
-		yIdx,
-		m_ThreadCount * yInc,
+		yTop, 
+		yBottom,
+		yTop,
+		nbThreads * yInc,
+		(nbLines + (nbThreads - 1)) / nbThreads,
 #endif
 		m_BitmapInfoMaster);
 
-	for (int i = 1; i < m_ThreadCount; ++i)
+	for (size_t i = 1; i < nbThreads; ++i)
 	{
 		// Wait for threads
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -4199,7 +4219,7 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	m_DebugTraceStackMax = *size;
 	*size = 0;
 	m_DebugTraceStackSize = size;
-	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, 1, bitmapInfo); // TODO: REG_ROTATE
 	m_DebugTraceX = ~0;
 	m_DebugTraceStackMax = 0;
 	m_DebugTraceStackSize = &m_DebugTraceStackMax;

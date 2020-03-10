@@ -179,7 +179,7 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, snapy + 1, snapy);
+								reg_hsize, snapy, snapy + 1);
 							uint32_t ya = (reg_hsize * snapy);
 							uint32_t wa = RAM_COMPOSITE;
 							for (int32_t x = 0; x < reg_hsize; ++x)
@@ -265,7 +265,7 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, reg_vsize, m_DegradeStage, 2);
+								reg_hsize, m_DegradeStage, reg_vsize, 2);
 							++m_DegradeStage;
 							m_DegradeStage %= 2;
 							m_ChangesSkipped = false;
@@ -279,7 +279,7 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, reg_vsize);
+								reg_hsize, 0, reg_vsize);
 							m_ChangesSkipped = false;
 							m_FrameFullyDrawn = true;
 							renderProcessed = true;

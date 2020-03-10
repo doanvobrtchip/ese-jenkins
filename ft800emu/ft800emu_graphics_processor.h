@@ -22,7 +22,8 @@ Author: Jan Boon <jan@no-break.space>
 
 // Select only one or no thread spreading preference
 #define FT800EMU_SPREAD_RENDER_THREADS 0
-#define FT800EMU_SPREAD_RENDER_THREADS_FAIR 1
+#define FT800EMU_SPREAD_RENDER_THREADS_FAIR 0
+#define FT800EMU_SPREAD_RENDER_THREADS_SNAP 0
 
 // System includes
 #include <vector>
@@ -203,8 +204,8 @@ public:
 		bool swapXY,
 #endif
 		uint32_t hsize, 
-		uint32_t vsize, 
-		uint32_t yIdx = 0, 
+		uint32_t yTop, 
+		uint32_t yBottom, 
 		uint32_t yInc = 1);
 	void processBlank();
 
@@ -348,7 +349,7 @@ FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 
 private:
 	template <bool debugTrace>
-	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo);
+	void processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t yTop, const uint32_t yBottom, const uint32_t yStart, const uint32_t yInc, const uint32_t yNum, BitmapInfo *const bitmapInfo);
 	void processBlankDL(BitmapInfo *const bitmapInfo);
 
 private:
