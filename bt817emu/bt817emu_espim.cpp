@@ -135,6 +135,6 @@ void Espim::trigger()
 	Memory::rawWriteU32(ram, REG_ESPIM_TRIG, 0);
 }
 
-} /* namespace FT800EMU */
+} /* namespace BT817EMU */
 
 /* end of file */

@@ -9,8 +9,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "../ftemutest.h"
 #include <stdio.h>
 
-#define RAM_LINETIME_ADDR 0
-
 void setup()
 {
 	wr32(REG_DLSWAP, DLSWAP_FRAME);

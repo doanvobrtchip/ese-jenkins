@@ -32,7 +32,7 @@ public:
 };
 #pragma warning(pop)
 
-} /* namespace FT800EMU */
+} /* namespace BT817EMU */
 
 #endif /* #ifndef BT817EMU_ESPIM_H */
 
