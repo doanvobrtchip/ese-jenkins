@@ -129,7 +129,13 @@ int Emulator::masterThread(bool sync)
 		if (reg_vsize > FT800EMU_SCREEN_HEIGHT_MAX) reg_vsize = FT800EMU_SCREEN_HEIGHT_MAX;
 		int32_t reg_hsize = m_Memory->rawReadU32(ram, REG_HSIZE);
 		if (reg_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsize = FT800EMU_SCREEN_WIDTH_MAX;
+#ifdef BT817EMU_MODE
+		int32_t reg_hsf_hsize = m_Memory->rawReadU32(ram, REG_HSF_HSIZE);
+		if (reg_hsf_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsf_hsize = FT800EMU_SCREEN_WIDTH_MAX;
+		if (!m_Graphics) m_WindowOutput->setMode(reg_hsf_hsize ? reg_hsf_hsize : reg_hsize, reg_vsize);
+#else
 		if (!m_Graphics) m_WindowOutput->setMode(reg_hsize, reg_vsize);
+#endif
 
 
 		bool renderProcessed = false;
@@ -182,7 +188,7 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, snapy, snapy + 1);
+								reg_hsize BT817EMU_HSF_HSIZE_ZERO, snapy, snapy + 1);
 #ifdef BT817EMU_MODE
 							long deltaTick = m_System->getFreqTick(48000000) - startTick;
 							m_Memory->rawWriteU32(ram, REG_LINECLOCKS, deltaTick); // Emulator output does not reflect real clock cycles
@@ -272,7 +278,11 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, m_DegradeStage, reg_vsize, 2);
+								reg_hsize, 
+#ifdef BT817EMU_MODE
+								reg_hsf_hsize,
+#endif
+								m_DegradeStage, reg_vsize, 2);
 							++m_DegradeStage;
 							m_DegradeStage %= 2;
 							m_ChangesSkipped = false;
@@ -286,7 +296,11 @@ int Emulator::masterThread(bool sync)
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
-								reg_hsize, 0, reg_vsize);
+								reg_hsize, 
+#ifdef BT817EMU_MODE
+								reg_hsf_hsize,
+#endif
+								0, reg_vsize);
 							m_ChangesSkipped = false;
 							m_FrameFullyDrawn = true;
 							renderProcessed = true;
@@ -430,7 +444,13 @@ int Emulator::masterThread(bool sync)
 						frameFlags |= BT8XXEMU_FrameChanged;
 					if (hasSwapped)
 						frameFlags |= BT8XXEMU_FrameSwap;
-					if (!m_Graphics(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext, reg_pclk != 0, m_GraphicsBuffer, reg_hsize, reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
+					if (!m_Graphics(static_cast<BT8XXEMU_Emulator *>(this), m_UserContext, reg_pclk != 0, m_GraphicsBuffer, 
+#ifdef BT817EMU_MODE
+						reg_hsf_hsize ? reg_hsf_hsize : reg_hsize, 
+#else
+						reg_hsize, 
+#endif
+						reg_vsize, (BT8XXEMU_FrameFlags)frameFlags))
 					{
 						FTEMU_message("Graphics output closed");
 						m_CloseCalled = true;

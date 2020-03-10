@@ -2954,6 +2954,7 @@ public:
 	bool SwapXY;
 #endif
 	uint32_t HSize;
+	uint32_t HsfHSize;
 	uint32_t YTop;
 	uint32_t YBottom;
 	uint32_t YStart;
@@ -3246,7 +3247,7 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t yTop, const uint32_t yBottom, const uint32_t yStart, const uint32_t yInc, const uint32_t yNum, BitmapInfo *const bitmapInfo)
+void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize BT817EMU_HSF_HSIZE_PARAM, const uint32_t yTop, const uint32_t yBottom, const uint32_t yStart, const uint32_t yInc, const uint32_t yNum, BitmapInfo *const bitmapInfo)
 {
 	FT8XXEMU::System *const system = m_System;
 	Memory *const memory = m_Memory;
@@ -3286,9 +3287,6 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
 	uint32_t linesBack = yNum * yInc;
 	uint32_t vsize = yBottom;
-#ifdef BT817EMU_MODE
-	uint32_t hsfHSize = Memory::rawReadU32(ram, REG_HSF_HSIZE); // FIXME: Provide this value from outside to ensure buffer access is OK
-#endif
 	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
 		uint32_t y = yStart + (yi * yInc);
@@ -4138,6 +4136,9 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 			li->SwapXY,
 #endif
 			li->HSize, 
+#ifdef BT817EMU_MODE
+			li->HsfHSize,
+#endif
 			li->YTop, 
 			li->YBottom, 
 			li->YStart,
@@ -4166,6 +4167,9 @@ void GraphicsProcessor::process(
 	bool swapXY,
 #endif
 	uint32_t hsize, 
+#ifdef BT817EMU_MODE
+	const uint32_t hsfHSize, 
+#endif
 	uint32_t yTop, 
 	uint32_t yBottom, 
 	uint32_t yInc)
@@ -4197,6 +4201,9 @@ void GraphicsProcessor::process(
 		li->SwapXY = swapXY;
 #endif
 		li->HSize = hsize;
+#ifdef BT817EMU_MODE
+		li->HsfHSize = hsfHSize;
+#endif
 #if FT800EMU_SPREAD_RENDER_THREADS
 		li->VSize = (i + 1 == nbThreads) 
 			? vsize
@@ -4235,7 +4242,11 @@ void GraphicsProcessor::process(
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize,
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY,
+		hsize,
+#ifdef BT817EMU_MODE
+		hsfHSize,
+#endif
 #if FT800EMU_SPREAD_RENDER_THREADS
 		(nbThreads == 1) 
 			? vsize
@@ -4294,7 +4305,7 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	m_DebugTraceStackMax = *size;
 	*size = 0;
 	m_DebugTraceStackSize = size;
-	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, 1, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize BT817EMU_HSF_HSIZE_ZERO, y, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, 1, bitmapInfo); // TODO: REG_ROTATE
 	m_DebugTraceX = ~0;
 	m_DebugTraceStackMax = 0;
 	m_DebugTraceStackSize = &m_DebugTraceStackMax;

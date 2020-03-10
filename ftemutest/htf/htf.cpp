@@ -48,7 +48,7 @@ void setup()
 	wr32(CMD_TEXT);
 	wr16(241), wr16(121);
 	wr16(26), wr16(OPT_CENTERX);
-	wp += wrstr("Linetime");
+	wp += wrstr("HSF");
 	wr32(COLOR_RGB(255, 255, 255));
 	wr32(COLOR_A(255));
 	wr32(CMD_TEXT);
@@ -58,7 +58,7 @@ void setup()
 	wr32(CMD_TEXT);
 	wr16(240), wr16(116);
 	wr16(26), wr16(OPT_CENTERX);
-	wp += wrstr("Linetime");
+	wp += wrstr("HSF");
 	wr32(CMD_TEXT);
 	wr16(2), wr16(1);
 	wr16(26), wr16(0);
@@ -76,12 +76,11 @@ void setup()
 
 	wr32(REG_PCLK, 5);
 
-	wr32(RAM_LINETIME_ADDR + 272 * 4, ~0);
-	printf("Begin lineclocks ->\n");
+	printf("Begin CMD_HSF ->\n");
 
 	wrstart(RAM_CMD + (wp & 0xFFF));
-	wr32(CMD_LINETIME);
-	wr32(RAM_LINETIME_ADDR);
+	wr32(CMD_HSF);
+	wr32(420);
 	wrend();
 
 	wp += 8;
@@ -92,30 +91,7 @@ void setup()
 		rp = rd32(REG_CMD_READ);
 	} while (wp != rp);
 
-	printf("<- End lineclocks\n");
-
-	for (int i = 0; i < 272; ++i)
-	{
-		printf("%i: %i\n", i, rd32(RAM_LINETIME_ADDR + (i * 4)));
-	}
-	printf("%i\n", rd32(RAM_LINETIME_ADDR + 272 * 4));
-
-	/*
-	wrstart(RAM_CMD + (wp & 0xFFF));
-	wr32(CMD_DLSTART);
-	wr32(BEGIN(BITMAPS));
-	wr32(VERTEX2II(0, 0, 0, 0));
-	wr32(DISPLAY());
-	wr32(CMD_SWAP);
-	wrend();
-
-	wp += 20;
-	wr32(REG_CMD_WRITE, wp);
-	do
-	{
-		rp = rd32(REG_CMD_READ);
-	} while (wp != rp);
-	*/
+	printf("<- End CMD_HSF\n");
 }
 
 void loop()
