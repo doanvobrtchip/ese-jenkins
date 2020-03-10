@@ -10,8 +10,8 @@ Author: Jan Boon <jan@no-break.space>
 #ifndef BT8XXEMU_VERSION_H
 #define BT8XXEMU_VERSION_H
 
-#define BT8XXEMU_VERSION_STRING "3.1.2"
-#define BT8XXEMU_VERSION_CODE 3,1,2,0
+#define BT8XXEMU_VERSION_STRING "3.1.3"
+#define BT8XXEMU_VERSION_CODE 3,1,3,0
 
 #endif /* #ifndef BT8XXEMU_VERSION_H */
 
