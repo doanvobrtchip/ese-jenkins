@@ -74,6 +74,7 @@ void setup()
 
 	wr32(REG_PCLK, 5);
 
+	/*
 	printf("Begin CMD_HSF ->\n");
 
 	wrstart(RAM_CMD + (wp & 0xFFF));
@@ -90,13 +91,25 @@ void setup()
 	} while (wp != rp);
 
 	printf("<- End CMD_HSF\n");
+	*/
 }
 
 void loop()
 {
+	int frame = rd32(REG_FRAMES);
+	int width = 480 - (frame & 0xFF);
+
 	int wp = rd32(REG_CMD_WRITE);
 	int rp = rd32(REG_CMD_READ);
 
+	wrstart(RAM_CMD + (wp & 0xFFF));
+	wr32(CMD_HSF);
+	wr32(width);
+	wrend();
+
+	wp += 8;
+	wp &= 0xFFF;
+	wr32(REG_CMD_WRITE, wp);
 	do
 	{
 		rp = rd32(REG_CMD_READ);

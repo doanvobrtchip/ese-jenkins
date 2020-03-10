@@ -70,7 +70,7 @@ void Hsf::fCalculateContrib2(HsfTable *const res, const int dstX, const int hsiz
 
 int Hsf::fMitchell2(int t)
 {
-	assert(t >= 0);
+	// assert(t >= 0);
 	int t2 = fixMul(t, t);
 	int t3 = fixMul(t, t2);
 	if (t < (1 << c_Prec)) // 1.0
