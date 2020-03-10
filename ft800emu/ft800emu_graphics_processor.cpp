@@ -3255,6 +3255,9 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	const uint32_t *displayList = memory->getDisplayList();
 	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
+#ifdef BT817EMU_MODE
+	argb8888 bufBc[FT800EMU_SCREEN_WIDTH_MAX]; // temporary buffer when using HSF
+#endif
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
 	AstcCache cachedAstc;
@@ -3283,6 +3286,9 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
 	uint32_t linesBack = yNum * yInc;
 	uint32_t vsize = yBottom;
+#ifdef BT817EMU_MODE
+	uint32_t hsfHSize = Memory::rawReadU32(ram, REG_HSF_HSIZE); // FIXME: Provide this value from outside to ensure buffer access is OK
+#endif
 	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
 		uint32_t y = yStart + (yi * yInc);
@@ -3305,7 +3311,13 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 		std::stack<GraphicsState> gsstack;
 		std::stack<int> callstack;
 		gs.ScissorX2.I = min((int)hsize, gs.ScissorX2.I);
-		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#ifdef BT817EMU_MODE
+		argb8888 *const bc = hsfHSize
+			? bufBc
+			: &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#else
+		argb8888 *const bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#endif
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line
@@ -3977,27 +3989,42 @@ DisplayListDisplay:
 				break;
 			}
 		}
+#ifdef BT817EMU_MODE
+		const uint32_t outHSize = hsfHSize ? hsfHSize : hsize;
+		argb8888 *const outBc = hsfHSize ? &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsfHSize] : bc;
+		if (hsfHSize)
+		{
+			// TODO: Apply HSF filter
+			memcpy(outBc, bc, hsfHSize * 4);
+		}
+#else
+		const uint32_t outHSize = hsize;
+		argb8888 *const outBc = bc;
+#endif
 		// backlight emulation
-		else if (m_RegPwmDutyEmulation)
+		if (!m_DebugMode && m_RegPwmDutyEmulation)
 		{
 			uint32_t pwmduty = Memory::rawReadU32(ram, REG_PWM_DUTY);
 			if (pwmduty < 128)
 			{
-				for (uint32_t x = 0; x < hsize; ++x)
+				for (uint32_t x = 0; x < outHSize; ++x)
 				{
-					bc[x] = mulalpha128_argb(bc[x], pwmduty);
+					outBc[x] = mulalpha128_argb(outBc[x], pwmduty);
 				}
 			}
 		}
 		// mirror display
 		if (mirrored)
 		{
-			for (uint32_t xl = 0; xl < (hsize >> 1); ++xl)
+			for (uint32_t xl = 0; xl < (outHSize >> 1); ++xl)
 			{
-				uint32_t xr = hsize - xl - 1;
-				std::swap(bc[xl], bc[xr]);
+				uint32_t xr = outHSize - xl - 1;
+				std::swap(outBc[xl], outBc[xr]);
 			}
 		}
+#ifdef BT817_EMU
+		
+#endif
 		++lines_processed;
 	}
 
