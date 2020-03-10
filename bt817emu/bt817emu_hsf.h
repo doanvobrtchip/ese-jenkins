@@ -9,6 +9,9 @@ Author: Jan Boon <jan@no-break.space>
 #ifndef BT817EMU_HSF_H
 #define BT817EMU_HSF_H
 
+#pragma warning(push)
+#pragma warning(disable : 26495) // Uninitialized member variables
+
 #include "bt8xxemu.h"
 
 #define FT800EMU_SCREEN_WIDTH_MAX 2048
@@ -30,9 +33,10 @@ struct HsfRegisters
 	int32_t F13;
 };
 
-struct HsfFbrestab
+struct HsfTable
 {
-	HsfFbrestab(int y, int v) : V(y), Y(v) { }
+	HsfTable() { }
+	HsfTable(int y, int v) : V(y), Y(v) { }
 	int Y;
 	int V;
 };
@@ -41,10 +45,20 @@ class Hsf
 {
 private:
 	const HsfRegisters *const m_RegHsf;
-	HsfFbrestab m_Fbrestab[FT800EMU_SCREEN_WIDTH_MAX]; // Lookup table for source coordinate
-	void *m_Cc; // ?
+	HsfTable m_Fbrestab[FT800EMU_SCREEN_WIDTH_MAX]; // Lookup table for source coordinate
+	HsfTable m_Cc[FT800EMU_SCREEN_WIDTH_MAX][5]; // Source pixel contribution table. Signed fixed point N.11
 
-	void fLine(HsfFbrestab *res, const int hsfHSize, const int hsize);
+	int m_F00; // Signed 3.11 fixed point, 14 bits
+	int m_F02;
+	int m_F03;
+	int m_F10;
+	int m_F11;
+	int m_F12;
+	int m_F13;
+
+	void fLine(HsfTable *const res, const int hsfHSize, const int hsize);
+	void fCalculateContrib2(HsfTable *const res, const int dstX, const int hsize);
+	int fMitchell2(int t);
 
 public:
 	Hsf(Memory *const memory);
@@ -54,6 +68,8 @@ public:
 };
 
 } /* namespace BT817EMU */
+
+#pragma warning(pop)
 
 #endif /* #ifndef BT817EMU_HSF_H */
 
