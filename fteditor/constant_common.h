@@ -123,6 +123,7 @@ namespace FTEDITOR {
 #define OPT_SOUND            32UL
 #define OPT_FLAT             256UL
 #define OPT_SIGNED           256UL
+#define OPT_DITHER           256UL // BT817
 #define OPT_CENTERX          512UL
 #define OPT_CENTERY          1024UL
 #define OPT_CENTER           1536UL
@@ -237,9 +238,26 @@ namespace FTEDITOR {
 #define CMD_NOP              4294967131UL
 #define CMD_SHA1             4294967132UL
 #define CMD_HMAC             4294967133UL
-#define CMD_LAST_            4294967134UL
 #define CMD_VIDEOSTARTF      4294967135UL
-#define CMD_BITMAP_TRANSFORM 4294967073UL
+
+// BT817
+#define CMD_LINETIME         4294967134UL
+#define CMD_CALIBRATESUB     4294967136UL
+#define CMD_TESTCARD         4294967137UL
+#define CMD_HSF              4294967138UL
+#define CMD_APILEVEL         4294967139UL
+#define CMD_GETIMAGE         4294967140UL
+#define CMD_WAIT             4294967141UL
+#define CMD_RETURN           4294967142UL
+#define CMD_CALLLIST         4294967143UL
+#define CMD_NEWLIST          4294967144UL
+#define CMD_ENDLIST          4294967145UL
+#define CMD_PCLKFREQ         4294967146UL
+#define CMD_FONTCACHE        4294967147UL
+#define CMD_FONTCACHEQUERY   4294967148UL
+#define CMD_ANIMFRAMERAM     4294967149UL
+#define CMD_ANIMSTARTRAM     4294967150UL
+#define CMD_RUNANIM          4294967151UL
 
 #define DISPLAY() ((0UL<<24))
 #define JUMP(dest) ((30UL<<24)|(((dest)&65535UL)<<0))
