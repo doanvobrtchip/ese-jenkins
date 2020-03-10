@@ -1,9 +1,14 @@
 /*
-FT8XX Emulator Library
+BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 
 #include "ft8xxemu.h"
 #include "ft8xxemu_diag.h"
@@ -97,7 +102,11 @@ FT8XXEMU_API void FT8XXEMU_defaults(uint32_t versionApi, FT8XXEMU_EmulatorParame
 		| FT8XXEMU_EmulatorEnableCoprocessor
 		| FT8XXEMU_EmulatorEnableGraphicsMultithread
 		// | FT8XXEMU_EmulatorEnableDynamicDegrade
-		| FT8XXEMU_EmulatorEnableTouchTransformation;
+		| FT8XXEMU_EmulatorEnableTouchTransformation
+		| FT8XXEMU_EmulatorEnableMainPerformance;
+
+	if (mode >= FT8XXEMU_EmulatorBT817)
+		params->Flags |= FT8XXEMU_EmulatorEnableHSFPreview;
 
 	params->Mode = mode;
 }
@@ -259,5 +268,9 @@ FT8XXEMU_API void FT8XXEMU_run(uint32_t versionApi, const FT8XXEMU_EmulatorParam
 		s_Emulator = NULL;
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

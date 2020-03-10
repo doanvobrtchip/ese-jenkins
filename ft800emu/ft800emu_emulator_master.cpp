@@ -130,7 +130,7 @@ int Emulator::masterThread(bool sync)
 		int32_t reg_hsize = m_Memory->rawReadU32(ram, REG_HSIZE);
 		if (reg_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsize = FT800EMU_SCREEN_WIDTH_MAX;
 #ifdef BT817EMU_MODE
-		int32_t reg_hsf_hsize = m_Memory->rawReadU32(ram, REG_HSF_HSIZE);
+		int32_t reg_hsf_hsize = (m_Flags & BT8XXEMU_EmulatorEnableHSFPreview) ? m_Memory->rawReadU32(ram, REG_HSF_HSIZE) : 0;
 		if (reg_hsf_hsize > FT800EMU_SCREEN_WIDTH_MAX) reg_hsf_hsize = FT800EMU_SCREEN_WIDTH_MAX;
 		if (!m_Graphics) m_WindowOutput->setMode(reg_hsf_hsize ? reg_hsf_hsize : reg_hsize, reg_vsize);
 #else

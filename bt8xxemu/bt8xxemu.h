@@ -1,8 +1,8 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2018  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifndef BT8XXEMU_H
@@ -16,7 +16,7 @@ Author: Jan Boon <jan@no-break.space>
 #include "bt8xxemu_inttypes.h"
 
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
-#define BT8XXEMU_VERSION_API 11
+#define BT8XXEMU_VERSION_API 12
 
 #ifdef BT8XXEMU_REMOTE
 #	ifndef WIN32
@@ -115,6 +115,8 @@ typedef enum
 	BT8XXEMU_EmulatorEnableBackgroundPerformance = 0x800,
 	// enable performance adjustments for the main MCU thread (default: on)
 	BT8XXEMU_EmulatorEnableMainPerformance = 0x1000,
+	// enable HSF preview (default: on for bt817 and up, off otherwise)
+	BT8XXEMU_EmulatorEnableHSFPreview = 0x2000,
 
 } BT8XXEMU_EmulatorFlags;
 
@@ -298,6 +300,9 @@ BT8XXEMU_API extern void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int id
 
 // Reset touch XY. Call once no longer touching when using custom graphics output
 BT8XXEMU_API extern void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx);
+
+// Set a single emulation flag on or off. Only PWM and HSF options can be changed at runtime. Returns the value of the flag after the operation
+BT8XXEMU_API extern int BT8XXEMU_setFlag(BT8XXEMU_Emulator *emulator, BT8XXEMU_EmulatorFlags flag, int value);
 
 ///////////
 // FLASH //

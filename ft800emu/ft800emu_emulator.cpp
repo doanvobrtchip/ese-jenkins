@@ -3,9 +3,15 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+BT817 Emulator Library
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 
 // #include <...>
 #include "ft800emu_emulator.h"
@@ -543,6 +549,20 @@ void Emulator::touchResetXY(int idx)
 	m_Touch->touch(idx).resetXY();
 }
 
+bool Emulator::setFlag(BT8XXEMU_EmulatorFlags flag, int value)
+{
+	switch (flag)
+	{
+	case BT8XXEMU_EmulatorEnableRegPwmDutyEmulation:
+		m_GraphicsProcessor->enableRegPwmDutyEmulation(value);
+		// fallthrough
+	case BT8XXEMU_EmulatorEnableHSFPreview:
+		m_Flags = (m_Flags & ~flag) | (value ? flag : 0);
+		break;
+	}
+	return m_Flags & flag;
+}
+
 uint8_t *Emulator::getRam()
 {
 	return m_Memory->getRam();
@@ -591,5 +611,9 @@ void Emulator::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint
 }
 
 } /* namespace FT800EMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

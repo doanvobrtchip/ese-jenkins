@@ -1,9 +1,14 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
@@ -96,6 +101,9 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 		// | BT8XXEMU_EmulatorEnableDynamicDegrade
 		| BT8XXEMU_EmulatorEnableTouchTransformation
 		| BT8XXEMU_EmulatorEnableMainPerformance;
+
+	if (mode >= BT8XXEMU_EmulatorBT817)
+		params->Flags |= BT8XXEMU_EmulatorEnableHSFPreview;
 
 	params->Mode = mode;
 }
@@ -201,6 +209,11 @@ BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int 
 BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx)
 {
 	emulator->touchResetXY(idx);
+}
+
+BT8XXEMU_API int BT8XXEMU_setFlag(BT8XXEMU_Emulator *emulator, BT8XXEMU_EmulatorFlags flag, int value)
+{
+	return emulator->setFlag(flag, value);
 }
 
 BT8XXEMU_API uint8_t *BT8XXEMU_getRam(BT8XXEMU_Emulator *emulator)
@@ -325,5 +338,9 @@ BT8XXEMU_API size_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
 {
 	return flash->vTable()->Size(flash);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

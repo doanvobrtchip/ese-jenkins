@@ -70,8 +70,9 @@ public:
 	virtual void cs(bool cs) override;
 	virtual bool hasInterrupt() override;
 
-	virtual void touchSetXY(int idx, int x, int y, int pressure);
-	virtual void touchResetXY(int idx);
+	virtual void touchSetXY(int idx, int x, int y, int pressure) override;
+	virtual void touchResetXY(int idx) override;
+	virtual bool setFlag(BT8XXEMU_EmulatorFlags flag, int value) override;
 
 	virtual uint8_t *getRam() override;
 	// virtual uint8_t *getFlash() override;

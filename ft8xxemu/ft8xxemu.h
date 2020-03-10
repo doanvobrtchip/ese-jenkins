@@ -1,10 +1,16 @@
 /*
- * BT8XX Emulator Library
- * Copyright (C) 2015-2018  BridgeTek Pte Ltd Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+BT8XX Emulator Library
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 /* Shim for backwards compatibility. Deprecated. Do not redistribute this header. */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 
 #ifndef FT8XXEMU_H
 #define FT8XXEMU_H
@@ -42,6 +48,8 @@ typedef enum
 	FT8XXEMU_EmulatorFT813 = 0x0813,
 	FT8XXEMU_EmulatorBT815 = 0x0815,
 	FT8XXEMU_EmulatorBT816 = 0x0816,
+	FT8XXEMU_EmulatorBT817 = 0x0817,
+	FT8XXEMU_EmulatorBT818 = 0x0818,
 } FT8XXEMU_EmulatorMode;
 
 typedef enum
@@ -72,6 +80,8 @@ typedef enum
 	FT8XXEMU_EmulatorEnableBackgroundPerformance = 0x800,
 	// enable performance adjustments for the main MCU thread (default: on)
 	FT8XXEMU_EmulatorEnableMainPerformance = 0x1000,
+	// enable HSF preview (default: on for bt817 and up, off otherwise)
+	FT8XXEMU_EmulatorEnableHSFPreview = 0x2000,
 } FT8XXEMU_EmulatorFlags;
 
 typedef enum
@@ -217,5 +227,9 @@ FT8XXEMU_API void FT8XXEMU_touchResetXY(int idx);
 #endif
 
 #endif /* #ifndef FT8XXEMU_H */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */
