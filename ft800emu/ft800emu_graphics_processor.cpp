@@ -72,6 +72,10 @@ const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int z
 #include "ft800emu_touch.h"
 #include "ft800emu_vc.h"
 
+#ifdef BT817EMU_MODE
+#include "bt817emu_hsf.h"
+#endif
+
 using std::min;
 using std::max;
 
@@ -3258,6 +3262,9 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
 #ifdef BT817EMU_MODE
 	argb8888 bufBc[FT800EMU_SCREEN_WIDTH_MAX]; // temporary buffer when using HSF
+	Hsf hsf(memory);
+	if (hsfHSize)
+		hsf.init(hsfHSize, hsize);
 #endif
 #ifdef BT815EMU_MODE
 #	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
@@ -3273,15 +3280,6 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	m_CachedAstcMutex.lock_shared();
 #	endif
 #endif
-#if FT800EMU_SPREAD_RENDER_THREADS_FAIR
-	uint32_t fairSpread = (yIdx * (vsize / yInc) / yInc) * yInc; // yIdx is effectively the thread index, yInc the number of threads
-	uint32_t invFairSpread = ((vsize - (yIdx + fairSpread) + (yInc - 1)) / yInc) * yInc + fairSpread;
-	for (uint32_t yt = yIdx; yt < vsize; yt += yInc)
-	{
-		uint32_t y = yt + fairSpread;
-		if (y >= vsize)
-			y -= invFairSpread;
-#else
 	// for (uint32_t y = yIdx; y < vsize; y += yInc)
 	// {
 	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
@@ -3291,7 +3289,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	{
 		uint32_t y = yStart + (yi * yInc);
 		if (y >= yBottom) y -= linesBack;
-#endif
+
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState(
@@ -3992,8 +3990,9 @@ DisplayListDisplay:
 		argb8888 *const outBc = hsfHSize ? &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsfHSize] : bc;
 		if (hsfHSize)
 		{
-			// TODO: Apply HSF filter
-			memcpy(outBc, bc, hsfHSize * 4);
+			// Apply HSF filter
+			hsf.apply(outBc, hsfHSize, bc, hsize);
+			// memcpy(outBc, bc, hsfHSize * 4);
 		}
 #else
 		const uint32_t outHSize = hsize;
@@ -4020,9 +4019,6 @@ DisplayListDisplay:
 				std::swap(outBc[xl], outBc[xr]);
 			}
 		}
-#ifdef BT817_EMU
-		
-#endif
 		++lines_processed;
 	}
 

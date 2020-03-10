@@ -21,11 +21,11 @@ namespace BT817EMU {
 
 const int c_Prec = 11;
 
-BT8XXEMU_FORCE_INLINE int fixMul(const int a, const int b)
+BT8XXEMU_FORCE_INLINE int fixMul(const int x, const int y)
 {
-	const long long p = (long long)a * (long long)b;
-	const long long a = (1 << c_Prec - 1);
-	return (p + a) >> c_Prec;
+	const long long p = (long long)x * (long long)y;
+	const long long a = (1 << (c_Prec - 1));
+	return (int)((p + a) >> c_Prec);
 }
 
 Hsf::Hsf(Memory *memory)
@@ -93,31 +93,36 @@ int Hsf::fMitchell2(int t)
 void Hsf::init(const uint32_t hsfHSize, const uint32_t hsize)
 {
 	// Extend fixed point sign
-	m_F00 = ((int)m_RegHsf->F00 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F02 = ((int)m_RegHsf->F02 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F03 = ((int)m_RegHsf->F03 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F10 = ((int)m_RegHsf->F10 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F11 = ((int)m_RegHsf->F11 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F12 = ((int)m_RegHsf->F12 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
-	m_F13 = ((int)m_RegHsf->F13 << (sizeof(int) - 14)) >> (sizeof(int) - 14);
+	m_F00 = ((int)m_RegHsf->F00 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F02 = ((int)m_RegHsf->F02 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F03 = ((int)m_RegHsf->F03 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F10 = ((int)m_RegHsf->F10 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F11 = ((int)m_RegHsf->F11 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F12 = ((int)m_RegHsf->F12 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
+	m_F13 = ((int)m_RegHsf->F13 << (sizeof(int) * 8 - 14)) >> (sizeof(int) * 8 - 14);
 
 	// Initialize tables
 	fLine(m_Fbrestab, hsfHSize, hsize);
-	for (int j = 0; j < hsfHSize; ++j)
+	for (int j = 0; j < (int)hsfHSize; ++j)
 		fCalculateContrib2(m_Cc[j], j, hsize);
 }
 void Hsf::apply(argb8888 *const dst, const uint32_t hsfHSize, const argb8888 *const src, const uint32_t hsize)
 {
-	// return clamp(sum([w.x * src[i] for (i,w) in ct], Fix(prec, .5).x) >> prec, 0, 255)
 	uint8_t *dst8 = reinterpret_cast<uint8_t *>(dst);
 	int dst8Sz = hsfHSize << 2;
 	const uint8_t *src8 = reinterpret_cast<const uint8_t *>(src);
 	int src8Sz = hsize << 2;
 
-	for (int x = 0; x < hsfHSize; ++x)
+	for (int x = 0; x < (int)hsfHSize; ++x)
 	{
 		for (int c = 0; c < 4; ++c)
 		{
+#if 0
+			// Verify m_Fbrestab
+			const int y = m_Fbrestab[x].Y;
+			dst8[x * 4 + c] = src8[y * 4 + c];
+#else
+			// Apply filter
 			const HsfTable *ct = m_Cc[x];
 			int res = 1 << (c_Prec - 1); // Signed fixed point N.11, .5 for rounding
 			for (int j = 0; j < 5; ++j)
@@ -127,6 +132,7 @@ void Hsf::apply(argb8888 *const dst, const uint32_t hsfHSize, const argb8888 *co
 				res += src8[i * 4 + c] * w; // Add weighted (filtered) value
 			}
 			dst8[x * 4 + c] = (uint8_t)std::min(std::max(0, res >> c_Prec), 255);
+#endif
 		}
 	}
 }

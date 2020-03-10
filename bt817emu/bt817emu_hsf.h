@@ -35,8 +35,8 @@ struct HsfRegisters
 
 struct HsfTable
 {
-	HsfTable() { }
-	HsfTable(int y, int v) : V(y), Y(v) { }
+	BT8XXEMU_FORCE_INLINE HsfTable() { }
+	BT8XXEMU_FORCE_INLINE HsfTable(int y, int v) : Y(y), V(v) { }
 	int Y;
 	int V;
 };
