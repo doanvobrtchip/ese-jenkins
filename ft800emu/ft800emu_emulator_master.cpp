@@ -174,12 +174,19 @@ int Emulator::masterThread(bool sync)
 							snapy &= FT800EMU_SCREEN_HEIGHT_MASK;
 							// FTEMU_printf("SNAPY: %u\n", snapy);
 							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888();
+#ifdef BT817EMU_MODE
+							long startTick = m_System->getFreqTick(48000000);
+#endif
 							m_GraphicsProcessor->process(buffer,
 								false, mirrorHorizontal,
 #ifdef FT810EMU_MODE
 								FT800EMU_REG_ROTATE_SWAP_XY(ram),
 #endif
 								reg_hsize, snapy, snapy + 1);
+#ifdef BT817EMU_MODE
+							long deltaTick = m_System->getFreqTick(48000000) - startTick;
+							m_Memory->rawWriteU32(ram, REG_LINECLOCKS, deltaTick); // Emulator output does not reflect real clock cycles
+#endif
 							uint32_t ya = (reg_hsize * snapy);
 							uint32_t wa = RAM_COMPOSITE;
 							for (int32_t x = 0; x < reg_hsize; ++x)
