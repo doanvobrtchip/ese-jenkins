@@ -701,6 +701,8 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_HSF_F11, 0);
 	rawWriteU32(REG_HSF_F12, 0);
 	rawWriteU32(REG_HSF_F13, 0);
+
+	rawWriteU32(REG_UNDERRUN, 0);
 #endif
 
 	m_CpuReset = false;
