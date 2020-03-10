@@ -2813,6 +2813,7 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	m_Memory = memory;
 	m_Touch = touch;
 	m_BackgroundPerformance = backgroundPerformance;
+	memset(m_BitmapInfoMaster, 0, sizeof(m_BitmapInfoMaster));
 
 	m_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	m_DebugMultiplier = 1;
@@ -2822,6 +2823,13 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 
 	m_RegPwmDutyEmulation = false;
 	m_ThreadCount = 1;
+	m_ThreadPriorityRealtime = false;
+
+	m_DebugTraceX = ~0;
+	// m_DebugTraceLine = ~0;
+	m_DebugTraceStackMax = 0;
+	m_DebugTraceStackSize = &m_DebugTraceStackMax;
+	m_DebugTraceStack = NULL;
 
 #ifdef BT815EMU_MODE
 	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)

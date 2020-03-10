@@ -341,7 +341,7 @@ private:
 
 	// Threading options
 	int m_ThreadCount;
-	bool m_ThreadPriorityRealtime = true;
+	bool m_ThreadPriorityRealtime;
 	bool m_BackgroundPerformance;
 
 	// Visual debugging options
@@ -353,11 +353,11 @@ private:
 
 FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE:
 	// Cursor tracing
-	uint32_t m_DebugTraceX = 0;
-	uint32_t m_DebugTraceLine = 0;
-	int *m_DebugTraceStack = NULL;
-	int m_DebugTraceStackMax = 0;
-	int *m_DebugTraceStackSize = NULL;
+	uint32_t m_DebugTraceX;
+	uint32_t m_DebugTraceLine;
+	int *m_DebugTraceStack;
+	int m_DebugTraceStackMax;
+	int *m_DebugTraceStackSize;
 
 private:
 	template <bool debugTrace>
