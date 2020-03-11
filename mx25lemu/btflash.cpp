@@ -693,6 +693,10 @@ public:
 			return state4READAddr(signal);
 		case BTFLASH_STATE_4READ_PE:
 			return state4READPerfEnh(signal);
+		case BTFLASH_STATE_4DTRD_ADDR:
+			return state4READAddr(signal);
+		case BTFLASH_STATE_4DTRD_PE:
+			return state4READPerfEnh(signal);
 		case BTFLASH_STATE_PP_ADDR:
 			return statePPAddr(signal);
 		case BTFLASH_STATE_PP_READ:
@@ -817,6 +821,10 @@ public:
 			break;
 		case BTFLASH_STATE_FASTDTRD_ADDR:
 			return stateFASTDTRDAddr(signal);
+		case BTFLASH_STATE_4DTRD_ADDR:
+			return state4READAddr(signal);
+		case BTFLASH_STATE_4DTRD_PE:
+			return state4READPerfEnh(signal);
 		case BTFLASH_STATE_COMMAND:
 		case BTFLASH_STATE_WRSR:
 		case BTFLASH_STATE_REMS_ADDR:
@@ -1215,12 +1223,11 @@ public:
 				m_RunState = BTFLASH_STATE_WRSR;
 				return m_LastSignal;
 			case BTFLASH_CMD_FASTDTRD: /* Fast DT Read */
-				Flash_debug("Read Data");
+				Flash_debug("Fast DT Read");
 				if (m_ExtendedAddressing)
 				{
 					log(BT8XXEMU_LogError, "Fast DT Read not supported with extended addressing");
 					m_RunState = BTFLASH_STATE_UNSUPPORTED;
-					return m_LastSignal;
 				}
 				else
 				{
@@ -1228,13 +1235,29 @@ public:
 					m_NextState = BTFLASH_STATE_FASTDTRD_ADDR;
 				}
 				return m_LastSignal;
-			case BTFLASH_CMD_2DTRD: /* Dual I/O DT Read */
+			case BTFLASH_CMD_2DTRD: /* 2x IO DT Read */
 				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_2DTRD)");
 				m_RunState = BTFLASH_STATE_UNSUPPORTED;
 				return m_LastSignal;
-			case BTFLASH_CMD_4DTRD: /* Quad I/O DT Read */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
+			case BTFLASH_CMD_4DTRD: /* 4x IO DT Read */
+				Flash_debug("4x IO DT Read");
+				// log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
+				// m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				if (m_ExtendedAddressing)
+				{
+					log(BT8XXEMU_LogError, "4x IO DT Read not supported with extended addressing");
+					m_RunState = BTFLASH_STATE_UNSUPPORTED;
+				}
+				else if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO DT Read");
+					m_RunState = BTFLASH_STATE_IGNORE;
+				}
+				else
+				{
+					m_RunState = BTFLASH_STATE_NEXT;
+					m_NextState = BTFLASH_STATE_4DTRD_ADDR;
+				}
 				return m_LastSignal;
 			case BTFLASH_CMD_READ: /* Read Data */
 				Flash_debug("Read Data");
@@ -1601,7 +1624,10 @@ public:
 			m_BufferBits = 0;
 			// Flash_debug("Read 4READ addr %i", (int)addr);
 			m_DelayedCommandAddr = addr;
-			m_RunState = BTFLASH_STATE_4READ_PE;
+			if (m_RunState == BTFLASH_STATE_4DTRD_ADDR)
+				m_RunState = BTFLASH_STATE_4DTRD_PE;
+			else
+				m_RunState = BTFLASH_STATE_4READ_PE;
 		}
 
 		return m_LastSignal;
@@ -1610,21 +1636,33 @@ public:
 	uint8_t state4READPerfEnh(uint8_t signal)
 	{
 		static const int dummyCycles[] = { 6, 4, 8, 10 };
-		if (readU8Spi4SkipLsb(signal,
+		const bool dtr = m_RunState == BTFLASH_STATE_4DTRD_PE;
+		if (readU8Spi4SkipLsb(signal, dtr ? 13 * 4 :
 			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
 		{
 			uint8_t p = m_BufferU8;
 			bool pe = ((p & 0xF) == ((~(p >> 4)) & 0xF));
-			if (pe) m_SelectState = BTFLASH_STATE_4READ_ADDR;
+			if (pe)
+			{
+				if (dtr)
+					m_SelectState = BTFLASH_STATE_4DTRD_ADDR;
+				else
+					m_SelectState = BTFLASH_STATE_4READ_ADDR;
+			}
 			else m_SelectState = BTFLASH_STATE_COMMAND;
 			m_BufferBits = 0;
-			Flash_debug("Read 4READ addr %i, p %x, pe %i", (int)m_DelayedCommandAddr, (int)p, (int)pe);
+			Flash_debug("Read %s addr %i, p %x, pe %i",
+				dtr ? "4DTRD" : "4READ", 
+				(int)m_DelayedCommandAddr, (int)p, (int)pe);
 			m_OutArray = Data;
 			m_OutArraySize = Size;
 			m_OutArrayAt = m_DelayedCommandAddr & (Size - 1);
 			m_OutArrayLoop = true;
 			m_SignalOutMask = BTFLASH_SPI4_MASK_D4;
-			m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
+			if (dtr)
+				m_RunState = BTFLASH_STATE_OUT_U8_ARRAY_DT;
+			else
+				m_RunState = BTFLASH_STATE_OUT_U8_ARRAY;
 		}
 
 		return m_LastSignal;

@@ -4,7 +4,7 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
-#define BT815EMU_MODE
+#define BT817EMU_MODE
 
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
@@ -64,19 +64,13 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define BTFLASH_DEVICE_TYPE L"mx25lemu"
 #define BTFLASH_SIZE (8 * 1024 * 1024)
 #define BTFLASH_SIZE_EXTENDED (4 * BTFLASH_SIZE)
-// #define BTFLASH_DATA_FILE L"X:/source/bt8xxemu/reference/vc3roms/stdflash.bin"
-// #define BTFLASH_DATA_FILE L"C:/Users/paul.jiao/Source/Repos/FT8XXEMU_FTDISG/FT8XXEMU/reference/vc3roms/stdflash.bin"
+
 #define BTFLASH_ELECTRONIC_ID 0x16
 #define BTFLASH_ELECTRONIC_ID_EXTENDED (BTFLASH_ELECTRONIC_ID + 2)
 #define BTFLASH_MANUFACTURER_ID 0xC2
 #define BTFLASH_DEVICE_ID 0x16
 #define BTFLASH_MEMORY_TYPE 0x20
 #define BTFLASH_MEMORY_DENSITY 0x17
-
-// #define BTFLASH_EMULATOR_MODE BT8XXEMU_EmulatorBT817
-// #define BTFLASH_FIRMWARE L"X:/source/bt8xxemu/fteditor/firmware/bt815/mx25l.blob"
-// #define BTFLASH_FIRMWARE L"X:/source/bt8xxemu/fteditor/firmware/bt817/unified.blob"
-// #define BTFLASH_FIRMWARE_OVERRIDE 1 // TODO: Enhanced testing
 
 #define BTTESTFLASH_EMULATOR 1
 #define BTTESTFLASH_SIZES 1
@@ -85,17 +79,25 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define L_(x)  L__(x)
 #define L__(x)  L##x
 #define BTTESTFLASH_PATH L_(__FILE__) L"/../../"
-#define BTTESTFLASH_TESTSET_NB 2
-#define BTTESTFLASH_TESTSET_NB_MAX 2
+#define BTTESTFLASH_TESTSET_NB 3
+#define BTTESTFLASH_TESTSET_NB_MAX 3
 
 #define BTTESTFLASH_DATA_FILE BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin"
 
 static const BT8XXEMU_EmulatorMode testMode[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BT8XXEMU_EmulatorBT815,
 	BT8XXEMU_EmulatorBT817,
+	BT8XXEMU_EmulatorBT817,
+};
+
+static const bool testDtr[BTTESTFLASH_TESTSET_NB_MAX] = {
+	false,
+	true,
+	false,
 };
 
 static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
+	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 };
@@ -120,7 +122,17 @@ static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-	}
+	},
+	{
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+	},
 };
 
 #ifdef WIN32
@@ -1180,6 +1192,25 @@ int main(int, char*[])
 		while (!rd32(emulator, REG_FLASH_STATUS));
 		assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
 
+		bool dtr = false;
+		if (testMode[ts] >= BT8XXEMU_EmulatorBT817)
+		{
+			// Enable BT817 API
+			wr32(emulator, REG_CMDB_WRITE, CMD_APILEVEL);
+			wr32(emulator, REG_CMDB_WRITE, 2);
+
+			if (testDtr[ts])
+			{
+				// Enable DTR
+				printf("DTR 1\n");
+				dtr = true;
+				assert(rd32(emulator, REG_FLASH_DTR) == 0);
+				assert(rd32(emulator, REG_ESPIM_DTR) == 0);
+				wr32(emulator, REG_FLASH_DTR, 1);
+				assert(rd32(emulator, REG_ESPIM_DTR) == 0);
+			}
+		}
+
 		/////////////////////////////////////////////////////////////////
 		//// Enter full speed mode
 		/////////////////////////////////////////////////////////////////
@@ -1193,6 +1224,8 @@ int main(int, char*[])
 			flush(emulator);
 			assert(rd32(emulator, RAM_CMD + resAddr) == 0);
 			assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_FULL);
+			assert(!dtr || rd32(emulator, REG_FLASH_DTR) == 1);
+			assert(!dtr || rd32(emulator, REG_ESPIM_DTR) == 1);
 		}
 
 		for (int i = 0; i < 4096; ++i)
@@ -1467,6 +1500,25 @@ int main(int, char*[])
 			while (!rd32(emulator, REG_FLASH_STATUS));
 			assert(rd32(emulator, REG_FLASH_STATUS) == FLASH_STATUS_BASIC);
 
+			bool dtr = false;
+			if (testMode[ts] >= BT8XXEMU_EmulatorBT817)
+			{
+				// Enable BT817 API
+				wr32(emulator, REG_CMDB_WRITE, CMD_APILEVEL);
+				wr32(emulator, REG_CMDB_WRITE, 2);
+
+				if (testDtr[ts])
+				{
+					// Enable DTR
+					printf("DTR 1\n");
+					dtr = true;
+					assert(rd32(emulator, REG_FLASH_DTR) == 0);
+					assert(rd32(emulator, REG_ESPIM_DTR) == 0);
+					wr32(emulator, REG_FLASH_DTR, 1);
+					assert(rd32(emulator, REG_ESPIM_DTR) == 0);
+				}
+			}
+
 			/////////////////////////////////////////////////////////////////
 			//// Enter full speed mode
 			/////////////////////////////////////////////////////////////////
@@ -1482,6 +1534,8 @@ int main(int, char*[])
 				uint32_t status = rd32(emulator, REG_FLASH_STATUS);
 				assert(res == 0);
 				assert(status == FLASH_STATUS_FULL);
+				assert(!dtr || rd32(emulator, REG_FLASH_DTR) == 1);
+				assert(!dtr || rd32(emulator, REG_ESPIM_DTR) == 1);
 			}
 
 			assert(rd32(emulator, REG_FLASH_SIZE) == sz);
