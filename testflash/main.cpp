@@ -345,6 +345,67 @@ uint8_t read4U8(BT8XXEMU_Flash *flash)
 	return res;
 }
 
+void writeDT4U8(BT8XXEMU_Flash *flash, uint8_t u8)
+{
+	uint8_t signal;
+	signal = (u8 >> 4) & 0xF;
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	signal = clkMask | ((u8 >> 4) & 0xF);
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	signal = (u8 & 0xF);
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+}
+
+void writeDT4U24(BT8XXEMU_Flash *flash, uint32_t u24)
+{
+	uint32_t signal;
+	for (int i = 0; i < 3; ++i)
+	{
+		signal = ((u24 >> 20) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = clkMask | ((u24 >> 20) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = ((u24 >> 16) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u24 <<= 8;
+	}
+}
+
+void writeDT4U32(BT8XXEMU_Flash *flash, uint32_t u32)
+{
+	uint32_t signal;
+	for (int i = 0; i < 4; ++i)
+	{
+		signal = ((u32 >> 28) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = clkMask | ((u32 >> 28) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		signal = ((u32 >> 24) & 0xF);
+		lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+		u32 <<= 8;
+	}
+}
+
+uint8_t readDT4U8(BT8XXEMU_Flash *flash)
+{
+	uint8_t res = 0xFF;
+	uint8_t signal;
+	res <<= 4;
+	res |= (lastValue & 0xF);
+	signal = (lastValue & ~outMaskRead4 & 0xF);
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	assert((res & 0xF) == (lastValue & 0xF));
+	// res <<= 4;
+	// res |= (lastValue & 0xF);
+	signal = (lastValue & ~outMaskRead4 & 0xF) | clkMask;
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	res <<= 4;
+	res |= (lastValue & 0xF);
+	signal = (lastValue & ~outMaskRead4 & 0xF);
+	lastValue = BT8XXEMU_Flash_transferSpi4(flash, signal);
+	return res;
+}
+
 ///////////////////////////////////////////////////////////////////////
 // Emulator utility
 ///////////////////////////////////////////////////////////////////////
@@ -850,6 +911,112 @@ int main(int, char*[])
 		printf("4READ: %x--...\n", (int)reqd0);
 		printf("End of expected errors\n");
 		assert(reqd0 != 0x70);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	/////////////////////////////////////////////////////////////////
+	//// 4x IO DT Read
+	/////////////////////////////////////////////////////////////////
+
+	; {
+		// Enable QE
+		printf("Enable QE\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_RDSR);
+		uint8_t sr = transferU8(flash, rand() & 0xFF);
+		sr |= BTFLASH_STATUS_QE_FLAG;
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_WRSR);
+		transferU8(flash, sr);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		transferU8(flash, BTFLASH_CMD_4DTRD);
+		writeDT4U24(flash, 0);
+		writeDT4U8(flash, 0x0F); // Enable PE
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		/*
+		uint8_t dummy0 = readDT4U8(flash);
+		uint8_t dummy1 = readDT4U8(flash);
+		uint8_t dummy2 = readDT4U8(flash);
+		uint8_t dummy3 = readDT4U8(flash);
+		uint8_t dummy4 = readDT4U8(flash);
+		uint8_t dummy5 = readDT4U8(flash);
+		uint8_t dummy6 = readDT4U8(flash);
+		*/
+		uint8_t reqd0 = readDT4U8(flash);
+		uint8_t reqd1 = readDT4U8(flash);
+		uint8_t reqd2 = readDT4U8(flash);
+		printf("4DTRD: %x-%x-%x-...\n", (int)reqd0, (int)reqd1, (int)reqd2);
+		assert(reqd0 == 0x70);
+		assert(reqd1 == 0xDF);
+		assert(reqd2 == 0xFB);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Skip 4READ instruction under PE
+		writeDT4U24(flash, 3);
+		writeDT4U8(flash, 0x12); // Enable PE
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		writeDT4U8(flash, rand() & 0xFF);
+		uint8_t reqd3 = readDT4U8(flash);
+		uint8_t reqd4 = readDT4U8(flash);
+		uint8_t reqd5 = readDT4U8(flash);
+		printf("4READ (03h): ...-%x-%x-%x-...\n", (int)reqd3, (int)reqd4, (int)reqd5);
+		assert(reqd3 == 0x92);
+		// assert(reqd4 == 0x78);
+		assert(reqd5 == 0x00);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Verify that PE is off now
+		transferU8(flash, BTFLASH_CMD_RES);
+		uint8_t electronicID = transferU8(flash, rand() & 0xFF);
+		printf("RES: %x\n", (int)electronicID);
+		assert(electronicID == BTFLASH_ELECTRONIC_ID);
+	}
+
+	cableSelect(flash, false);
+	cableSelect(flash, true);
+
+	; {
+		// Disable QE
+		printf("Disable QE\n");
+		transferU8(flash, BTFLASH_CMD_WREN);
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_RDSR);
+		uint8_t sr = transferU8(flash, rand() & 0xFF);
+		sr &= ~BTFLASH_STATUS_QE_FLAG;
+		cableSelect(flash, false);
+		cableSelect(flash, true);
+		transferU8(flash, BTFLASH_CMD_WRSR);
+		transferU8(flash, sr);
 	}
 
 	cableSelect(flash, false);

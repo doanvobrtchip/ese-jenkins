@@ -20,6 +20,7 @@ READ        Ok              Ok
 FAST_READ   Ok              Ok
 FASTDTRD    Ok              Ok
 4READ  EBh  Ok              Ok
+4DTRD  EDh  In progress     In progress
 PP          Ok              Ok
 WRSR        Ok
 RDSR        Ok
