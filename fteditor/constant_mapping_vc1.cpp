@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017-2020  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -192,6 +193,8 @@ const int32_t g_RegVC1[FTEDITOR_REG_NB] = {
 	-1,
 	-1,
 	-1,
+
+	///////////////////////
 	-1,
 };
 
@@ -354,6 +357,8 @@ const char *g_RegToStringFT800[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"",
+
+	///////////////////////
 	"",
 };
 
@@ -516,6 +521,8 @@ const char *g_RegToStringFT801[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"",
+
+	///////////////////////
 	"",
 };
 

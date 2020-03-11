@@ -344,7 +344,7 @@ void resetCoprocessorFromLoop()
 	bool needCoproPatch = FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816;
 	if (needCoproPatch)
 	{
-		coproPatchPtr = rd16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR));
+		coproPatchPtr = rd16(0x309162);
 	}
 
 	// Enter reset state
@@ -381,7 +381,7 @@ void resetCoprocessorFromLoop()
 	// BT81X video patch, see ftdichipsg/FT8XXEMU#76 and #136
 	if (needCoproPatch)
 	{
-		wr16(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_COPRO_PATCH_PTR), coproPatchPtr);
+		wr16(0x309162, coproPatchPtr);
 	}
 
 	// Start display list from beginning

@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017-2020  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -7,6 +8,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping_vc1.h"
 #include "constant_mapping_vc2.h"
 #include "constant_mapping_vc3.h"
+#include "constant_mapping_vc4.h"
 
 // STL includes
 
@@ -200,8 +202,8 @@ const int32_t *g_Reg[FTEDITOR_DEVICE_NB] = {
 	g_RegVC2, // FT813
 	g_RegVC3, // BT815
 	g_RegVC3, // BT816
-	g_RegVC3, // BT817
-	g_RegVC3, // BT818
+	g_RegVC4, // BT817
+	g_RegVC4, // BT818
 };
 
 const char **g_RegToString[FTEDITOR_DEVICE_NB] = {
@@ -213,8 +215,8 @@ const char **g_RegToString[FTEDITOR_DEVICE_NB] = {
 	g_RegToStringVC2, // FT813
 	g_RegToStringVC3, // BT815
 	g_RegToStringVC3, // BT816
-	g_RegToStringVC3, // BT817
-	g_RegToStringVC3, // BT818
+	g_RegToStringVC4, // BT817
+	g_RegToStringVC4, // BT818
 };
 
 ///////////////////////////////////////////////////////////////////////

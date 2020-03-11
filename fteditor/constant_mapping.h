@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017-2020  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -259,11 +260,11 @@ inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToS
 #define FTEDITOR_REG_ANIM_ACTIVE 		 152
 #define FTEDITOR_REG_DF_TUNED 			 153
 
-////////////////////////
+///////////////////////////////////////////////////////////
 #define FTEDITOR_REG_PLAY_CONTROL        154
-#define FTEDITOR_REG_COPRO_PATCH_PTR     155
 
-#define FTEDITOR_REG_NB 156
+
+#define FTEDITOR_REG_NB 155
 extern const int32_t *g_Reg[FTEDITOR_DEVICE_NB];
 inline int32_t reg(int deviceIntf, int regIntf) { return g_Reg[deviceIntf][regIntf]; }
 extern const char **g_RegToString[FTEDITOR_DEVICE_NB];

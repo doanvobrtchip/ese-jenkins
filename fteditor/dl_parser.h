@@ -137,24 +137,31 @@ private:
 	static void initVC1();
 	static void initVC2();
 	static void initVC3();
+	static void initVC4();
 	static uint32_t compileVC1(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static uint32_t compileVC2(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static uint32_t compileVC3(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
+	static uint32_t compileVC4(int deviceIntf, const DlParsed &parsed); // compile DL & cmd (cmd returns just identifier)
 	static void compileVC1(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void compileVC2(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void compileVC3(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
+	static void compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed); // compile CMD parameters
 	static void toStringVC1(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC2(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC3(int deviceIntf, std::string &dst, uint32_t v); // DL only
+	static void toStringVC4(int deviceIntf, std::string &dst, uint32_t v); // DL only
 	static void toStringVC1(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static void toStringVC2(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static void toStringVC3(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
+	static void toStringVC4(int deviceIntf, std::string &dst, const DlParsed &parsed); // DL and CMD
 	static ParameterOptions *defaultParamVC1();
 	static ParameterOptions *defaultParamVC2();
 	static ParameterOptions *defaultParamVC3();
+	static ParameterOptions *defaultParamVC4();
 	static ParameterOptions *defaultCmdParamVC1();
 	static ParameterOptions *defaultCmdParamVC2();
 	static ParameterOptions *defaultCmdParamVC3();
+	static ParameterOptions *defaultCmdParamVC4();
 
 	static const std::map<std::string, int> *m_IdMap[FTEDITOR_DEVICE_NB];
 	static const std::map<std::string, int> *m_ParamMap[FTEDITOR_DEVICE_NB];

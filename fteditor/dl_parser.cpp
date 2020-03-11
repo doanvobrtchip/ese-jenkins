@@ -114,6 +114,7 @@ void DlParser::init()
 	initVC1();
 	initVC2();
 	initVC3();
+	initVC4();
 }
 
 void DlParser::getIdentifiers(int deviceIntf, QStringList &list, bool coprocessor)
@@ -305,12 +306,14 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 		switch (parsed.IdLeft)
 		{
 		case FTEDITOR_DL_INSTRUCTION:
-			defaultParam = (deviceIntf >= FTEDITOR_BT815) ? defaultParamVC3()
-				: ((deviceIntf >= FTEDITOR_FT810) ? defaultParamVC2() : defaultParamVC1());
+			defaultParam = (deviceIntf >= FTEDITOR_BT817) ? defaultParamVC4()
+				: ((deviceIntf >= FTEDITOR_BT815) ? defaultParamVC3()
+					: ((deviceIntf >= FTEDITOR_FT810) ? defaultParamVC2() : defaultParamVC1()));
 			break;
 		case FTEDITOR_CO_COMMAND:
-			defaultParam = (deviceIntf >= FTEDITOR_BT815) ? defaultCmdParamVC3()
-				: ((deviceIntf >= FTEDITOR_FT810) ? defaultCmdParamVC2() : defaultCmdParamVC1());
+			defaultParam = (deviceIntf >= FTEDITOR_BT817) ? defaultCmdParamVC4()
+				: ((deviceIntf >= FTEDITOR_BT815) ? defaultCmdParamVC3()
+				: ((deviceIntf >= FTEDITOR_FT810) ? defaultCmdParamVC2() : defaultCmdParamVC1()));
 			break;
 		default:
 			defaultParam = NULL;
@@ -673,7 +676,9 @@ void DlParser::parse(int deviceIntf, DlParsed &parsed, const QString &line, bool
 
 uint32_t DlParser::compile(int deviceIntf, const DlParsed &parsed)
 {
-	if (deviceIntf >= FTEDITOR_BT815)
+	if (deviceIntf >= FTEDITOR_BT817)
+		return compileVC4(deviceIntf, parsed);
+	else if (deviceIntf >= FTEDITOR_BT815)
 		return compileVC3(deviceIntf, parsed);
 	else if (deviceIntf >= FTEDITOR_FT810)
 		return compileVC2(deviceIntf, parsed);
@@ -683,7 +688,9 @@ uint32_t DlParser::compile(int deviceIntf, const DlParsed &parsed)
 
 void DlParser::compile(int deviceIntf, std::vector<uint32_t> &compiled, const DlParsed &parsed) // compile CMD parameters
 {
-	if (deviceIntf >= FTEDITOR_BT815)
+	if (deviceIntf >= FTEDITOR_BT817)
+		compileVC4(deviceIntf, compiled, parsed);
+	else if (deviceIntf >= FTEDITOR_BT815)
 		compileVC3(deviceIntf, compiled, parsed);
 	else if (deviceIntf >= FTEDITOR_FT810)
 		compileVC2(deviceIntf, compiled, parsed);
@@ -693,7 +700,9 @@ void DlParser::compile(int deviceIntf, std::vector<uint32_t> &compiled, const Dl
 
 void DlParser::toString(int deviceIntf, std::string &dst, uint32_t v)
 {
-	if (deviceIntf >= FTEDITOR_BT815)
+	if (deviceIntf >= FTEDITOR_BT817)
+		toStringVC4(deviceIntf, dst, v);
+	else if (deviceIntf >= FTEDITOR_BT815)
 		toStringVC3(deviceIntf, dst, v);
 	else if (deviceIntf >= FTEDITOR_FT810)
 		toStringVC2(deviceIntf, dst, v);
@@ -728,7 +737,9 @@ void DlParser::toString(int deviceIntf, std::string &dst, const DlParsed &parsed
 {
 	if (parsed.IdLeft == FTEDITOR_CO_COMMAND) // Coprocessor
 	{
-		if (deviceIntf >= FTEDITOR_BT815)
+		if (deviceIntf >= FTEDITOR_BT817)
+			toStringVC4(deviceIntf, dst, parsed);
+		else if (deviceIntf >= FTEDITOR_BT815)
 			toStringVC3(deviceIntf, dst, parsed);
 		else if (deviceIntf >= FTEDITOR_FT810)
 			toStringVC2(deviceIntf, dst, parsed);
