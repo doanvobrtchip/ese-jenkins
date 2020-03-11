@@ -1226,10 +1226,10 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		break;
 #ifdef BT817EMU_MODE
 	case REG_ESPIM_DTR:
-		FTEMU_warning("Read Co U32 REG_ESPIM_DTR");
+		//FTEMU_warning("Read Co U32 REG_ESPIM_DTR");
 		break;
 	case REG_FLASH_DTR:
-		FTEMU_warning("Read Co U32 REG_FLASH_DTR");
+		//FTEMU_warning("Read Co U32 REG_FLASH_DTR");
 		break;
 #endif
 	case REG_GPIO:
