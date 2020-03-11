@@ -211,10 +211,22 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			// FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			if (m_Flash)
 			{
+				uint8_t currentData = rawReadU8(REG_SPIM);
+#ifdef BT817EMU_MODE
+				bool rising = ((data & 0x20) == 0x20);
+				if (m_SpimRising != rising)
+				{
+					m_SpimRising = rising;
+					if (rising)
+						m_Spimi = (uint8_t)currentData & 0xF;
+					else
+						m_SpimiL = (uint8_t)currentData & 0xF;
+				}
+#endif
 				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR); // SPI signal directions
 				if (regSpimDir & 0x10) regSpimDir |= 0x20;
 				uint8_t dataOut = (data & regSpimDir)
-					| (rawReadU8(REG_SPIM) & (~regSpimDir));
+					| (currentData & (~regSpimDir));
 				if (!(regSpimDir & 0x10)) dataOut |= 0x10; // CS high if not out
 				uint8_t dataIn = m_Flash->vTable()->TransferSpi4(m_Flash, dataOut & 0xFF);
 				bool cs = (regSpimDir & 0x10) && !(data & 0x10); // CS set when out and low
@@ -229,17 +241,6 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 					data &= regSpimDir;
 				}
 				data &= 0xF;
-#ifdef BT817EMU_MODE
-				bool rising = ((dataOut & 0x20) == 0x20);
-				if (m_SpimRising != rising)
-				{
-					m_SpimRising = rising;
-					if (rising)
-						m_Spimi = (uint8_t)data;
-					else
-						m_SpimiL = (uint8_t)data;
-				}
-#endif
 			}
 			break;
 		case REG_ESPIM_ADD:

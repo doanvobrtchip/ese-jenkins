@@ -1638,7 +1638,7 @@ public:
 	{
 		static const int dummyCycles[] = { 6, 4, 8, 10 };
 		const bool dtr = m_RunState == BTFLASH_STATE_4DTRD_PE;
-		if (readU8Spi4SkipLsb(signal, dtr ? 13 * 4 :
+		if (readU8Spi4SkipLsb(signal, dtr ? 13 * 4 : // VERIFY: Number of dummy cycles should be 13 (7 dummy cycles), but need to set 17 here...
 			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
 		{
 			uint8_t p = m_BufferU8;

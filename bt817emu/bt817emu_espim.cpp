@@ -44,10 +44,9 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 		opcode = (((seq[1] & 1) << 4) + ((seq[0] >> 60) & 0xf)) & 0x1f;
 	else
 		opcode = (seq[1] >> ((5 * si) & 63)) & 0x1f;
-
-	uint32_t spimi = m_Memory->spimi(), spimiL = m_Memory->spimiL(); // *(uint32_t *)(&ram[REG_SPIM]) & 0xf;
+	
 	uint32_t spimo, spimoL, spim_dir, spim_clken;
-	bool dtr = ram[REG_FLASH_DTR] & 1;
+	bool dtr = ram[REG_ESPIM_DTR] & 1;
 
 	switch (opcode)
 	{
@@ -79,9 +78,9 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 	if (spim_clken)
 	{
 		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x0 | spimo); // Not really needed for the emulator, but must work too!
-		m_Memory->coprocessorWriteU32(REG_SPIM, 0x20 | spimo); // Rising edge
+		m_Memory->coprocessorWriteU32(REG_SPIM, 0x20 | spimo); // Rising edge, last read value (while still low) will be in spimi
 		// m_Memory->coprocessorWriteU32(REG_SPIM, 0x20 | spimoL); // Not really needed for the emulator, but must work too!
-		m_Memory->coprocessorWriteU32(REG_SPIM, 0x0 | (dtr ? spimoL : spimo)); // Falling edge
+		m_Memory->coprocessorWriteU32(REG_SPIM, spimoL); // Falling edge, last read value (while still high) will be in spimiL
 	}
 	else
 	{
@@ -95,6 +94,8 @@ void Espim::drive() // uint32_t spimi, uint32_t &spimo, uint32_t &spim_dir, uint
 	int endpoint = readstart + (dtr ? 63 : 127);
 	int lastcycle = (state == endpoint);
 
+	// D7-D4 is in last low clock (spimi), D3-D0 is in last high clock (spimiL)
+	uint32_t spimi = m_Memory->spimi(), spimiL = m_Memory->spimiL();
 	if (!dtr)
 		d[63] = (spimi) | (d[63] << 4);
 	else
