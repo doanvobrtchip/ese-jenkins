@@ -3847,7 +3847,7 @@ void MainWindow::about()
 	msgBox.setText(tr(
 	    "Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
 	    "<br>"
-	    "Copyright (C) 2016-2019  Bridgetek Pte Ltd<br>"
+	    "Copyright (C) 2016-2020  Bridgetek Pte Ltd<br>"
 	    "<br>"
 		"%1<br>"
 		"<br>"
