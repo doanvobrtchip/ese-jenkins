@@ -246,25 +246,44 @@ inline const char *addrToString(int deviceIntf, int addrIntf) { return g_AddrToS
 #define FTEDITOR_REG_SHA1KEY			 140
 
 ///////////////////////////////////////////////////////////
-#define FTEDITOR_REG_TRACKER             141    // 0x309000
-#define FTEDITOR_REG_TRACKER_1 			 142
-#define FTEDITOR_REG_TRACKER_2 			 143
-#define FTEDITOR_REG_TRACKER_3 			 144
-#define FTEDITOR_REG_TRACKER_4 			 145
-#define FTEDITOR_REG_MEDIAFIFO_READ 	 146
-#define FTEDITOR_REG_MEDIAFIFO_WRITE 	 147
-#define FTEDITOR_REG_MEDIAFIFO_BASE 	 148
-#define FTEDITOR_REG_MEDIAFIFO_SIZE 	 149
-#define FTEDITOR_REG_FLASH_SIZE 		 150
-#define FTEDITOR_REG_309028 			 151
-#define FTEDITOR_REG_ANIM_ACTIVE 		 152
-#define FTEDITOR_REG_DF_TUNED 			 153
+#define FTEDITOR_REG_LINECLOCKS    		 141
+#define FTEDITOR_REG_UNDERRUN     		 142
+#define FTEDITOR_REG_AH_HCYCLE_MAX		 143
+#define FTEDITOR_REG_PCLK_FREQ    		 144
+#define FTEDITOR_REG_PCLK_2X      		 145
+#define FTEDITOR_REG_FLASH_DTR    		 146
+#define FTEDITOR_REG_ESPIM_DTR    		 147
+#define FTEDITOR_REG_HSF_HSIZE    		 148
+#define FTEDITOR_REG_HSF_FT1      		 149
+#define FTEDITOR_REG_HSF_FSCALE   		 150
+#define FTEDITOR_REG_HSF_F00      		 151
+#define FTEDITOR_REG_HSF_F02      		 152
+#define FTEDITOR_REG_HSF_F03      		 153
+#define FTEDITOR_REG_HSF_F10      		 154
+#define FTEDITOR_REG_HSF_F11      		 155
+#define FTEDITOR_REG_HSF_F12      		 156
+#define FTEDITOR_REG_HSF_F13      		 157
 
 ///////////////////////////////////////////////////////////
-#define FTEDITOR_REG_PLAY_CONTROL        154
+#define FTEDITOR_REG_TRACKER             158    // 0x309000
+#define FTEDITOR_REG_TRACKER_1 			 159
+#define FTEDITOR_REG_TRACKER_2 			 160
+#define FTEDITOR_REG_TRACKER_3 			 161
+#define FTEDITOR_REG_TRACKER_4 			 162
+#define FTEDITOR_REG_MEDIAFIFO_READ 	 163
+#define FTEDITOR_REG_MEDIAFIFO_WRITE 	 164
+#define FTEDITOR_REG_MEDIAFIFO_BASE 	 165
+#define FTEDITOR_REG_MEDIAFIFO_SIZE 	 166
+#define FTEDITOR_REG_FLASH_SIZE 		 167
+#define FTEDITOR_REG_309028 			 168
+#define FTEDITOR_REG_ANIM_ACTIVE 		 169
+#define FTEDITOR_REG_DF_TUNED 			 170
+
+///////////////////////////////////////////////////////////
+#define FTEDITOR_REG_PLAY_CONTROL        171
 
 
-#define FTEDITOR_REG_NB 155
+#define FTEDITOR_REG_NB 172
 extern const int32_t *g_Reg[FTEDITOR_DEVICE_NB];
 inline int32_t reg(int deviceIntf, int regIntf) { return g_Reg[deviceIntf][regIntf]; }
 extern const char **g_RegToString[FTEDITOR_DEVICE_NB];

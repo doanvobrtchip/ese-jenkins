@@ -160,6 +160,25 @@ const int32_t g_RegVC4[FTEDITOR_REG_NB] = {
 	REG_SHA1KEY,
 
 	///////////////////////
+	REG_LINECLOCKS,    
+	REG_UNDERRUN,      
+	REG_AH_HCYCLE_MAX, 
+	REG_PCLK_FREQ,     
+	REG_PCLK_2X,       
+	REG_FLASH_DTR,     
+	REG_ESPIM_DTR,     
+	REG_HSF_HSIZE,     
+	REG_HSF_FT1,       
+	REG_HSF_FSCALE,    
+	REG_HSF_F00,       
+	REG_HSF_F02,       
+	REG_HSF_F03,       
+	REG_HSF_F10,       
+	REG_HSF_F11,       
+	REG_HSF_F12,       
+	REG_HSF_F13,       
+
+	///////////////////////
 	REG_TRACKER,
 	REG_TRACKER_1,
 	REG_TRACKER_2,
@@ -320,6 +339,25 @@ const char *g_RegToStringVC4[FTEDITOR_REG_NB] = {
 	"REG_FULLBUSYBITS",
 	"",
 	"REG_SHA1KEY",
+
+	///////////////////////
+	"REG_LINECLOCKS",
+	"REG_UNDERRUN",
+	"REG_AH_HCYCLE_MAX",
+	"REG_PCLK_FREQ",
+	"REG_PCLK_2X",
+	"REG_FLASH_DTR",
+	"REG_ESPIM_DTR",
+	"REG_HSF_HSIZE",
+	"REG_HSF_FT1",
+	"REG_HSF_FSCALE",
+	"REG_HSF_F00",
+	"REG_HSF_F02",
+	"REG_HSF_F03",
+	"REG_HSF_F10",
+	"REG_HSF_F11",
+	"REG_HSF_F12",
+	"REG_HSF_F13",
 	
 	///////////////////////
 	"REG_TRACKER",
