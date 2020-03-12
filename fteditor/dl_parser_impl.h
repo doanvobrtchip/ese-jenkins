@@ -68,7 +68,7 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define CMD_ID_NB 96
 #elif defined(FTEDITOR_PARSER_VC4)
 #define DL_ID_NB 49
-#define CMD_ID_NB 96
+#define CMD_ID_NB 112
 #endif
 static int s_ParamCount[DL_ID_NB];
 static ParameterOptions s_ParamOptions[DL_ID_NB];
@@ -283,16 +283,6 @@ void DlParser::initVC4()
 	}
 	if (!s_ParamMap.size())
 	{
-		for (int i = 0; i < CMD_ID_NB; ++i)
-		{
-			for (int j = 0; j < DLPARSED_MAX_PARAMETER; ++j)
-			{
-				s_CmdParamOptions[i].Default[j] = 0;
-				s_CmdParamOptions[i].Mask[j] = -1;
-				s_CmdParamOptions[i].Min[j] = (1 << 31);
-				s_CmdParamOptions[i].Max[j] = ~(1 << 31);
-			}
-		}
 		s_ParamMap["ALWAYS"] = ALWAYS;
 		s_ParamMap["ARGB1555"] = ARGB1555;
 		s_ParamMap["ARGB2"] = ARGB2;
@@ -374,42 +364,47 @@ void DlParser::initVC4()
 	}
 	if (!s_CmdIdMap.size())
 	{
+		for (int i = 0; i < CMD_ID_NB; ++i)
+		{
+			for (int j = 0; j < DLPARSED_MAX_PARAMETER; ++j)
+			{
+				s_CmdParamOptions[i].Default[j] = 0;
+				s_CmdParamOptions[i].Mask[j] = -1;
+				s_CmdParamOptions[i].Min[j] = (1 << 31);
+				s_CmdParamOptions[i].Max[j] = ~(1 << 31);
+			}
+		}
+		memset(s_CmdParamString, 0, sizeof(s_CmdParamString));
+
+#define FTEDITOR_MAP_CMD(cmd, paramCount) do { \
+	static_assert((cmd & 0xFF) < CMD_ID_NB, "Invalid CMD identifier"); \
+	s_CmdIdMap[#cmd] = cmd & 0xFF; \
+	s_CmdParamCount[cmd & 0xFF] = paramCount; } while (false);
+
 		s_CmdIdMap["CMD_DLSTART"] = CMD_DLSTART & 0xFF;
 		s_CmdParamCount[CMD_DLSTART & 0xFF] = 0;
-		s_CmdParamString[CMD_DLSTART & 0xFF] = false;
 		s_CmdIdMap["CMD_SWAP"] = CMD_SWAP & 0xFF;
 		s_CmdParamCount[CMD_SWAP & 0xFF] = 0;
-		s_CmdParamString[CMD_SWAP & 0xFF] = false;
 		s_CmdIdMap["CMD_INTERRUPT"] = CMD_INTERRUPT & 0xFF;
 		s_CmdParamCount[CMD_INTERRUPT & 0xFF] = 1;
-		s_CmdParamString[CMD_INTERRUPT & 0xFF] = false;
 		// s_CmdIdMap["CMD_CRC"] = CMD_CRC & 0xFF;
-		// s_CmdParamCount[CMD_CRC & 0xFF] = 3;
-		// s_CmdParamString[CMD_CRC & 0xFF] = false; // undocumented
+		// s_CmdParamCount[CMD_CRC & 0xFF] = 3; // undocumented
 		// s_CmdIdMap["CMD_HAMMERAUX"] = CMD_HAMMERAUX & 0xFF;
 		// s_CmdParamCount[CMD_HAMMERAUX & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_HAMMERAUX & 0xFF] = false;
 		// s_CmdIdMap["CMD_MARCH"] = CMD_MARCH & 0xFF;
 		// s_CmdParamCount[CMD_MARCH & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_MARCH & 0xFF] = false;
 		// s_CmdIdMap["CMD_IDCT"] = CMD_IDCT & 0xFF;
 		// s_CmdParamCount[CMD_IDCT & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_IDCT & 0xFF] = false;
 		// s_CmdIdMap["CMD_EXECUTE"] = CMD_EXECUTE & 0xFF;
 		// s_CmdParamCount[CMD_EXECUTE & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_EXECUTE & 0xFF] = false;
 		// s_CmdIdMap["CMD_GETPOINT"] = CMD_GETPOINT & 0xFF;
 		// s_CmdParamCount[CMD_GETPOINT & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_GETPOINT & 0xFF] = false;
 		s_CmdIdMap["CMD_BGCOLOR"] = CMD_BGCOLOR & 0xFF;
 		s_CmdParamCount[CMD_BGCOLOR & 0xFF] = 1; // argb
-		s_CmdParamString[CMD_BGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_FGCOLOR"] = CMD_FGCOLOR & 0xFF;
 		s_CmdParamCount[CMD_FGCOLOR & 0xFF] = 1; // argb
-		s_CmdParamString[CMD_FGCOLOR & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENT"] = CMD_GRADIENT & 0xFF;
 		s_CmdParamCount[CMD_GRADIENT & 0xFF] = 2 + 1 + 2 + 1; // rgb
-		s_CmdParamString[CMD_GRADIENT & 0xFF] = false;
 		s_CmdIdMap["CMD_TEXT"] = CMD_TEXT & 0xFF;
 		s_CmdParamCount[CMD_TEXT & 0xFF] = 5;
 		s_CmdParamString[CMD_TEXT & 0xFF] = true;
@@ -434,13 +429,10 @@ void DlParser::initVC4()
 		s_CmdParamOptFormat[CMD_KEYS & 0xFF] = -1;
 		s_CmdIdMap["CMD_PROGRESS"] = CMD_PROGRESS & 0xFF;
 		s_CmdParamCount[CMD_PROGRESS & 0xFF] = 7;
-		s_CmdParamString[CMD_PROGRESS & 0xFF] = false;
 		s_CmdIdMap["CMD_SLIDER"] = CMD_SLIDER & 0xFF;
 		s_CmdParamCount[CMD_SLIDER & 0xFF] = 7;
-		s_CmdParamString[CMD_SLIDER & 0xFF] = false;
 		s_CmdIdMap["CMD_SCROLLBAR"] = CMD_SCROLLBAR & 0xFF;
 		s_CmdParamCount[CMD_SCROLLBAR & 0xFF] = 8;
-		s_CmdParamString[CMD_SCROLLBAR & 0xFF] = false;
 		s_CmdIdMap["CMD_TOGGLE"] = CMD_TOGGLE & 0xFF;
 		s_CmdParamCount[CMD_TOGGLE & 0xFF] = 7;
 		s_CmdParamString[CMD_TOGGLE & 0xFF] = true;
@@ -451,255 +443,199 @@ void DlParser::initVC4()
 #endif
 		s_CmdIdMap["CMD_GAUGE"] = CMD_GAUGE & 0xFF;
 		s_CmdParamCount[CMD_GAUGE & 0xFF] = 8;
-		s_CmdParamString[CMD_GAUGE & 0xFF] = false;
 		s_CmdIdMap["CMD_CLOCK"] = CMD_CLOCK & 0xFF;
 		s_CmdParamCount[CMD_CLOCK & 0xFF] = 8;
-		s_CmdParamString[CMD_CLOCK & 0xFF] = false;
 		s_CmdIdMap["CMD_CALIBRATE"] = CMD_CALIBRATE & 0xFF;
 		s_CmdParamCount[CMD_CALIBRATE & 0xFF] = 1;
-		s_CmdParamString[CMD_CALIBRATE & 0xFF] = false;
 		s_CmdIdMap["CMD_SPINNER"] = CMD_SPINNER & 0xFF;
 		s_CmdParamCount[CMD_SPINNER & 0xFF] = 4;
-		s_CmdParamString[CMD_SPINNER & 0xFF] = false;
 		s_CmdIdMap["CMD_STOP"] = CMD_STOP & 0xFF;
 		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
-		s_CmdParamString[CMD_STOP & 0xFF] = false;
 		// s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
-		// s_CmdParamString[CMD_MEMCRC & 0xFF] = false;
 		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
-		// s_CmdParamString[CMD_REGREAD & 0xFF] = false;
-		/*s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
-		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
-		s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;*/
+		// s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
+		// s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
+		// s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;
 		s_CmdIdMap["CMD_MEMSET"] = CMD_MEMSET & 0xFF;
 		s_CmdParamCount[CMD_MEMSET & 0xFF] = 3;
-		s_CmdParamString[CMD_MEMSET & 0xFF] = false;
 		s_CmdIdMap["CMD_MEMZERO"] = CMD_MEMZERO & 0xFF;
 		s_CmdParamCount[CMD_MEMZERO & 0xFF] = 2;
-		s_CmdParamString[CMD_MEMZERO & 0xFF] = false;
 		s_CmdIdMap["CMD_MEMCPY"] = CMD_MEMCPY & 0xFF;
 		s_CmdParamCount[CMD_MEMCPY & 0xFF] = 3;
-		s_CmdParamString[CMD_MEMCPY & 0xFF] = false;
 		s_CmdIdMap["CMD_APPEND"] = CMD_APPEND & 0xFF;
 		s_CmdParamCount[CMD_APPEND & 0xFF] = 2;
-		s_CmdParamString[CMD_APPEND & 0xFF] = false;
 		s_CmdIdMap["CMD_SNAPSHOT"] = CMD_SNAPSHOT & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT & 0xFF] = 1;
-		s_CmdParamString[CMD_SNAPSHOT & 0xFF] = false;
 		// s_CmdIdMap["CMD_TOUCH_TRANSFORM"] = CMD_TOUCH_TRANSFORM & 0xFF;
 		// s_CmdParamCount[CMD_TOUCH_TRANSFORM & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_TOUCH_TRANSFORM & 0xFF] = false;
-		// s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
-		// s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
-		/*s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF; // STREAMING DATA
-		s_CmdParamCount[CMD_INFLATE & 0xFF] = 2;
-		s_CmdParamString[CMD_INFLATE & 0xFF] = true;*/
+#if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
+		s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
+		s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 13; // Documented since BT815, seems to have existed before but undocumented
+#endif
+		// s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF; // STREAMING DATA
+		// s_CmdParamCount[CMD_INFLATE & 0xFF] = 2;
+		// s_CmdParamString[CMD_INFLATE & 0xFF] = true;
 		// s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
 		// s_CmdParamCount[CMD_GETPTR & 0xFF] = 0; // undocumented
-		// s_CmdParamString[CMD_GETPTR & 0xFF] = false;
 		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 3;
 		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = true;
-		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;
-		
+		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;		
 		s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
-		s_CmdParamCount[CMD_GETPROPS & 0xFF] = 3;
-		s_CmdParamString[CMD_GETPROPS & 0xFF] = false;
-		
+		s_CmdParamCount[CMD_GETPROPS & 0xFF] = 3;		
 		s_CmdIdMap["CMD_LOADIDENTITY"] = CMD_LOADIDENTITY & 0xFF;
-		s_CmdParamCount[CMD_LOADIDENTITY & 0xFF] = 0;
-		s_CmdParamString[CMD_LOADIDENTITY & 0xFF] = false;
-		
+		s_CmdParamCount[CMD_LOADIDENTITY & 0xFF] = 0;		
 		s_CmdIdMap["CMD_TRANSLATE"] = CMD_TRANSLATE & 0xFF;
 		s_CmdParamCount[CMD_TRANSLATE & 0xFF] = 2;
-		s_CmdParamString[CMD_TRANSLATE & 0xFF] = false;
 		s_CmdIdMap["CMD_SCALE"] = CMD_SCALE & 0xFF;
 		s_CmdParamCount[CMD_SCALE & 0xFF] = 2;
-		s_CmdParamString[CMD_SCALE & 0xFF] = false;
 		s_CmdIdMap["CMD_ROTATE"] = CMD_ROTATE & 0xFF;
 		s_CmdParamCount[CMD_ROTATE & 0xFF] = 1;
-		s_CmdParamString[CMD_ROTATE & 0xFF] = false;
 		s_CmdIdMap["CMD_SETMATRIX"] = CMD_SETMATRIX & 0xFF;
 		s_CmdParamCount[CMD_SETMATRIX & 0xFF] = 0;
-		s_CmdParamString[CMD_SETMATRIX & 0xFF] = false;
 		s_CmdIdMap["CMD_SETFONT"] = CMD_SETFONT & 0xFF;
 		s_CmdParamCount[CMD_SETFONT & 0xFF] = 2;
-		s_CmdParamString[CMD_SETFONT & 0xFF] = false;
 		s_CmdIdMap["CMD_TRACK"] = CMD_TRACK & 0xFF;
 		s_CmdParamCount[CMD_TRACK & 0xFF] = 5;
-		s_CmdParamString[CMD_TRACK & 0xFF] = false;
 		s_CmdIdMap["CMD_DIAL"] = CMD_DIAL & 0xFF;
 		s_CmdParamCount[CMD_DIAL & 0xFF] = 5;
-		s_CmdParamString[CMD_DIAL & 0xFF] = false;
 		s_CmdIdMap["CMD_NUMBER"] = CMD_NUMBER & 0xFF;
 		s_CmdParamCount[CMD_NUMBER & 0xFF] = 5;
-		s_CmdParamString[CMD_NUMBER & 0xFF] = false;
 		s_CmdIdMap["CMD_SCREENSAVER"] = CMD_SCREENSAVER & 0xFF;
 		s_CmdParamCount[CMD_SCREENSAVER & 0xFF] = 0;
-		s_CmdParamString[CMD_SCREENSAVER & 0xFF] = false;
 		s_CmdIdMap["CMD_SKETCH"] = CMD_SKETCH & 0xFF;
 		s_CmdParamCount[CMD_SKETCH & 0xFF] = 6;
-		s_CmdParamString[CMD_SKETCH & 0xFF] = false;
 #if defined(FTEDITOR_PARSER_VC1) // Deprecated in FT810
 		s_CmdIdMap["CMD_CSKETCH"] = CMD_CSKETCH & 0xFF;
 		s_CmdParamCount[CMD_CSKETCH & 0xFF] = 7;
-		s_CmdParamString[CMD_CSKETCH & 0xFF] = false;
 #endif
 		s_CmdIdMap["CMD_LOGO"] = CMD_LOGO & 0xFF;
 		s_CmdParamCount[CMD_LOGO & 0xFF] = 0;
-		s_CmdParamString[CMD_LOGO & 0xFF] = false;
 		s_CmdIdMap["CMD_COLDSTART"] = CMD_COLDSTART & 0xFF;
 		s_CmdParamCount[CMD_COLDSTART & 0xFF] = 0;
-		s_CmdParamString[CMD_COLDSTART & 0xFF] = false;
 		// s_CmdIdMap["CMD_GETMATRIX"] = CMD_GETMATRIX & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_GETMATRIX & 0xFF] = 6;
-		// s_CmdParamString[CMD_GETMATRIX & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADCOLOR"] = CMD_GRADCOLOR & 0xFF;
 		s_CmdParamCount[CMD_GRADCOLOR & 0xFF] = 1; // rgb
-		s_CmdParamString[CMD_GRADCOLOR & 0xFF] = false;
 
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
-		s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF;
-		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7
-		s_CmdParamString[CMD_SETROTATE & 0xFF] = false; // currently don't support because we don't remap coordinates in the editor yet
+		s_CmdIdMap["CMD_SETROTATE"] = CMD_SETROTATE & 0xFF; // currently don't support because we don't remap coordinates in the editor yet
+		s_CmdParamCount[CMD_SETROTATE & 0xFF] = 1; // 0-7 
 		s_CmdIdMap["CMD_SNAPSHOT2"] = CMD_SNAPSHOT2 & 0xFF;
 		s_CmdParamCount[CMD_SNAPSHOT2 & 0xFF] = 6;
-		s_CmdParamString[CMD_SNAPSHOT2 & 0xFF] = false;
 		s_CmdParamOptions[CMD_SNAPSHOT2 & 0xFF].Default[0] = RGB565;
 		s_CmdIdMap["CMD_SETBASE"] = CMD_SETBASE & 0xFF;
 		s_CmdParamCount[CMD_SETBASE & 0xFF] = 1;
 		s_CmdParamOptions[CMD_SETBASE & 0xFF].Default[0] = 10;
-		s_CmdParamString[CMD_SETBASE & 0xFF] = false;
 		s_CmdIdMap["CMD_MEDIAFIFO"] = CMD_MEDIAFIFO & 0xFF;
 		s_CmdParamCount[CMD_MEDIAFIFO & 0xFF] = 2;
-		s_CmdParamString[CMD_MEDIAFIFO & 0xFF] = false;
 		s_CmdIdMap["CMD_PLAYVIDEO"] = CMD_PLAYVIDEO & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_PLAYVIDEO & 0xFF] = 2;
 		s_CmdParamString[CMD_PLAYVIDEO & 0xFF] = true;
 		s_CmdParamOptFormat[CMD_PLAYVIDEO & 0xFF] = -1;
 		s_CmdIdMap["CMD_SETFONT2"] = CMD_SETFONT2 & 0xFF;
 		s_CmdParamCount[CMD_SETFONT2 & 0xFF] = 3;
-		s_CmdParamString[CMD_SETFONT2 & 0xFF] = false;
 		s_CmdIdMap["CMD_SETSCRATCH"] = CMD_SETSCRATCH & 0xFF;
 		s_CmdParamCount[CMD_SETSCRATCH & 0xFF] = 1;
-		s_CmdParamString[CMD_SETSCRATCH & 0xFF] = false;
-		/*s_CmdIdMap["CMD_INT_RAMSHARED"] = CMD_INT_RAMSHARED & 0xFF;
-		s_CmdParamCount[CMD_INT_RAMSHARED & 0xFF] = 0; // undocumented
-		s_CmdParamString[CMD_INT_RAMSHARED & 0xFF] = false;*/
-		/*s_CmdIdMap["CMD_INT_SWLOADIMAGE"] = CMD_INT_SWLOADIMAGE & 0xFF;
-		s_CmdParamCount[CMD_INT_SWLOADIMAGE & 0xFF] = 0; // undocumented
-		s_CmdParamString[CMD_INT_SWLOADIMAGE & 0xFF] = false;*/
+		// s_CmdIdMap["CMD_INT_RAMSHARED"] = CMD_INT_RAMSHARED & 0xFF;
+		// s_CmdParamCount[CMD_INT_RAMSHARED & 0xFF] = 0; // undocumented
+		// s_CmdIdMap["CMD_INT_SWLOADIMAGE"] = CMD_INT_SWLOADIMAGE & 0xFF;
+		// s_CmdParamCount[CMD_INT_SWLOADIMAGE & 0xFF] = 0; // undocumented
 		s_CmdIdMap["CMD_ROMFONT"] = CMD_ROMFONT & 0xFF;
 		s_CmdParamCount[CMD_ROMFONT & 0xFF] = 2;
-		s_CmdParamString[CMD_ROMFONT & 0xFF] = false;
 		s_CmdIdMap["CMD_VIDEOSTART"] = CMD_VIDEOSTART & 0xFF;
 		s_CmdParamCount[CMD_VIDEOSTART & 0xFF] = 0;
-		s_CmdParamString[CMD_VIDEOSTART & 0xFF] = false;
 		s_CmdIdMap["CMD_VIDEOFRAME"] = CMD_VIDEOFRAME & 0xFF;
 		s_CmdParamCount[CMD_VIDEOFRAME & 0xFF] = 2;
-		s_CmdParamString[CMD_VIDEOFRAME & 0xFF] = false;
 		/*s_CmdIdMap["CMD_SYNC"] = CMD_SYNC & 0xFF;
 		s_CmdParamCount[CMD_SYNC & 0xFF] = 0; // undocumented
 		s_CmdParamString[CMD_SYNC & 0xFF] = false;*/
 		s_CmdIdMap["CMD_SETBITMAP"] = CMD_SETBITMAP & 0xFF;
 		s_CmdParamCount[CMD_SETBITMAP & 0xFF] = 4;
-		s_CmdParamString[CMD_SETBITMAP & 0xFF] = false;
 #endif
 #if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
 		s_CmdIdMap["CMD_FLASHERASE"] = CMD_FLASHERASE & 0xFF;
 		s_CmdParamCount[CMD_FLASHERASE & 0xFF] = 0;
-		s_CmdParamString[CMD_FLASHERASE & 0xFF] = false;
 		// s_CmdIdMap["CMD_FLASHWRITE"] = CMD_FLASHWRITE & 0xFF; // Stream
 		// s_CmdParamCount[CMD_FLASHWRITE & 0xFF] = 2;
 		// s_CmdParamString[CMD_FLASHWRITE & 0xFF] = true;
 		s_CmdParamOptFormat[CMD_FLASHWRITE & 0xFF] = -1;
 		s_CmdIdMap["CMD_FLASHREAD"] = CMD_FLASHREAD & 0xFF;
 		s_CmdParamCount[CMD_FLASHREAD & 0xFF] = 3;
-		s_CmdParamString[CMD_FLASHREAD & 0xFF] = false;
 		s_CmdIdMap["CMD_FLASHUPDATE"] = CMD_FLASHUPDATE & 0xFF;
 		s_CmdParamCount[CMD_FLASHUPDATE & 0xFF] = 3;
-		s_CmdParamString[CMD_FLASHUPDATE & 0xFF] = false;
 		s_CmdIdMap["CMD_FLASHDETACH"] = CMD_FLASHDETACH & 0xFF;
 		s_CmdParamCount[CMD_FLASHDETACH & 0xFF] = 0;
-		s_CmdParamString[CMD_FLASHDETACH & 0xFF] = false;
 		s_CmdIdMap["CMD_FLASHATTACH"] = CMD_FLASHATTACH & 0xFF;
 		s_CmdParamCount[CMD_FLASHATTACH & 0xFF] = 0;
-		s_CmdParamString[CMD_FLASHATTACH & 0xFF] = false;
 		s_CmdIdMap["CMD_FLASHFAST"] = CMD_FLASHFAST & 0xFF;
 		s_CmdParamCount[CMD_FLASHFAST & 0xFF] = 0;
-		s_CmdParamString[CMD_FLASHFAST & 0xFF] = false;
 		// s_CmdIdMap["CMD_FLASHSPIDESEL"] = CMD_FLASHSPIDESEL & 0xFF; // Too low-level for FTEDITOR scope,
 		// s_CmdParamCount[CMD_FLASHSPIDESEL & 0xFF] = 0;              // not recommended for user
-		// s_CmdParamString[CMD_FLASHSPIDESEL & 0xFF] = false;
 		// s_CmdIdMap["CMD_FLASHSPITX"] = CMD_FLASHSPITX & 0xFF; // Too low-level for FTEDITOR scope
 		// s_CmdParamCount[CMD_FLASHSPITX & 0xFF] = 1;           // not recommended for user
-		// s_CmdParamString[CMD_FLASHSPITX & 0xFF] = false;
 		// s_CmdIdMap["CMD_FLASHSPIRX"] = CMD_FLASHSPIRX & 0xFF; // Too low-level for FTEDITOR scope
 		// s_CmdParamCount[CMD_FLASHSPIRX & 0xFF] = 2;           // not recommended for user
-		// s_CmdParamString[CMD_FLASHSPIRX & 0xFF] = false;
 		s_CmdIdMap["CMD_FLASHSOURCE"] = CMD_FLASHSOURCE & 0xFF;
 		s_CmdParamCount[CMD_FLASHSOURCE & 0xFF] = 1;
-		s_CmdParamString[CMD_FLASHSOURCE & 0xFF] = false;
 		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
 		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
-		s_CmdParamString[CMD_CLEARCACHE & 0xFF] = false;
         s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
         s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
-        s_CmdParamString[CMD_INFLATE & 0xFF] = false;
 		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
 		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
-		s_CmdParamString[CMD_INFLATE2 & 0xFF] = false;
 		s_CmdIdMap["CMD_ROTATEAROUND"] = CMD_ROTATEAROUND & 0xFF;
 		s_CmdParamCount[CMD_ROTATEAROUND & 0xFF] = 4;
-		s_CmdParamString[CMD_ROTATEAROUND & 0xFF] = false;
 		s_CmdIdMap["CMD_RESETFONTS"] = CMD_RESETFONTS & 0xFF;
 		s_CmdParamCount[CMD_RESETFONTS & 0xFF] = 0;
-		s_CmdParamString[CMD_RESETFONTS & 0xFF] = false;
 		s_CmdIdMap["CMD_ANIMSTART"] = CMD_ANIMSTART & 0xFF;
 		s_CmdParamCount[CMD_ANIMSTART & 0xFF] = 3;
-		s_CmdParamString[CMD_ANIMSTART & 0xFF] = false;
 		s_CmdIdMap["CMD_ANIMSTOP"] = CMD_ANIMSTOP & 0xFF;
 		s_CmdParamCount[CMD_ANIMSTOP & 0xFF] = 1;
-		s_CmdParamString[CMD_ANIMSTOP & 0xFF] = false;
 		s_CmdIdMap["CMD_ANIMXY"] = CMD_ANIMXY & 0xFF;
 		s_CmdParamCount[CMD_ANIMXY & 0xFF] = 3;
-		s_CmdParamString[CMD_ANIMXY & 0xFF] = false;
 		s_CmdIdMap["CMD_ANIMDRAW"] = CMD_ANIMDRAW & 0xFF;
 		s_CmdParamCount[CMD_ANIMDRAW & 0xFF] = 1;
-		s_CmdParamString[CMD_ANIMDRAW & 0xFF] = false;
 		s_CmdIdMap["CMD_GRADIENTA"] = CMD_GRADIENTA & 0xFF;
 		s_CmdParamCount[CMD_GRADIENTA & 0xFF] = 6;
-		s_CmdParamString[CMD_GRADIENTA & 0xFF] = false;
 		s_CmdIdMap["CMD_FILLWIDTH"] = CMD_FILLWIDTH & 0xFF;
 		s_CmdParamCount[CMD_FILLWIDTH & 0xFF] = 1;
-		s_CmdParamString[CMD_FILLWIDTH & 0xFF] = false;
 		s_CmdIdMap["CMD_APPENDF"] = CMD_APPENDF & 0xFF;
 		s_CmdParamCount[CMD_APPENDF & 0xFF] = 2;
-		s_CmdParamString[CMD_APPENDF & 0xFF] = false;
 		s_CmdIdMap["CMD_ANIMFRAME"] = CMD_ANIMFRAME & 0xFF;
 		s_CmdParamCount[CMD_ANIMFRAME & 0xFF] = 4;
-		s_CmdParamString[CMD_ANIMFRAME & 0xFF] = false;
 		s_CmdIdMap["CMD_NOP"] = CMD_NOP & 0xFF; // Not documented
 		s_CmdParamCount[CMD_NOP & 0xFF] = 0;
-		s_CmdParamString[CMD_NOP & 0xFF] = false;
 		// s_CmdIdMap["CMD_SHA1"] = CMD_SHA1 & 0xFF; // Not documented
 		// s_CmdParamCount[CMD_SHA1 & 0xFF] = 0;
-		// s_CmdParamString[CMD_SHA1 & 0xFF] = false;
 		// s_CmdIdMap["CMD_HMAC"] = CMD_HMAC & 0xFF; // Not documented
 		// s_CmdParamCount[CMD_HMAC & 0xFF] = 0;
-		// s_CmdParamString[CMD_HMAC & 0xFF] = false;
-		// s_CmdIdMap["CMD_LAST_"] = CMD_LAST_ & 0xFF; // Not documented
-		// s_CmdParamCount[CMD_LAST_ & 0xFF] = 0;
-		// s_CmdParamString[CMD_LAST_ & 0xFF] = false;
-		s_CmdIdMap["CMD_VIDEOSTARTF"] = CMD_VIDEOSTARTF & 0xFF;
-		s_CmdParamCount[CMD_VIDEOSTARTF & 0xFF] = 0;
-		s_CmdParamString[CMD_VIDEOSTARTF & 0xFF] = false;
-        s_CmdIdMap["CMD_BITMAP_TRANSFORM"] = CMD_BITMAP_TRANSFORM & 0xFF;
-        s_CmdParamCount[CMD_BITMAP_TRANSFORM & 0xFF] = 13;
-        s_CmdParamString[CMD_BITMAP_TRANSFORM & 0xFF] = false;
+		FTEDITOR_MAP_CMD(CMD_VIDEOSTARTF,   0);
+#endif
+#if defined(FTEDITOR_PARSER_VC4)
+		// clang-format off
+		FTEDITOR_MAP_CMD(CMD_LINETIME,        1); // Outputs to RAM_G. NOTE: CMD_LINETIME and CMD_VIDEOSTARTF command identifiers are out-of-sequence
+		FTEDITOR_MAP_CMD(CMD_CALIBRATESUB,    4); // Plus 1 5th output parameter
+		FTEDITOR_MAP_CMD(CMD_TESTCARD,        0);
+		FTEDITOR_MAP_CMD(CMD_HSF,             1);
+		FTEDITOR_MAP_CMD(CMD_APILEVEL,        1);
+		s_CmdParamOptions[CMD_APILEVEL & 0xFF].Default[0] = 1;
+		FTEDITOR_MAP_CMD(CMD_GETIMAGE,        0); // Plus 5 output parameters
+		FTEDITOR_MAP_CMD(CMD_WAIT,            1);
+		FTEDITOR_MAP_CMD(CMD_RETURN,          0);
+		FTEDITOR_MAP_CMD(CMD_CALLLIST,        1);
+		FTEDITOR_MAP_CMD(CMD_NEWLIST,         1);
+		FTEDITOR_MAP_CMD(CMD_ENDLIST,         0);
+		FTEDITOR_MAP_CMD(CMD_PCLKFREQ,        2); // Plus 1 3rd output parameter
+		FTEDITOR_MAP_CMD(CMD_FONTCACHE,       3);
+		FTEDITOR_MAP_CMD(CMD_FONTCACHEQUERY,  0); // Plus 2 output parameters
+		FTEDITOR_MAP_CMD(CMD_ANIMFRAMERAM,    4);
+		FTEDITOR_MAP_CMD(CMD_ANIMSTARTRAM,    3);
+		FTEDITOR_MAP_CMD(CMD_RUNANIM,         2);
+		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
+		// clang-format on
 #endif
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
@@ -1223,6 +1159,11 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_LAST_:
 				case CMD_VIDEOSTARTF:
 #endif
+#if defined(FTEDITOR_PARSER_VC4)
+				case CMD_TESTCARD:
+				case CMD_RETURN:
+				case CMD_ENDLIST:
+#endif
 				{
 					break;
 				}
@@ -1242,6 +1183,14 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_ANIMSTOP:
 				case CMD_ANIMDRAW:
 				case CMD_FILLWIDTH:
+#endif
+#if defined(FTEDITOR_PARSER_VC4)
+				case CMD_LINETIME:
+				case CMD_HSF:
+				case CMD_APILEVEL:
+				case CMD_WAIT:
+				case CMD_CALLLIST:
+				case CMD_NEWLIST:
 #endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
@@ -1264,11 +1213,23 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_INFLATE2:
 				case CMD_APPENDF:
 #endif
+#if defined(FTEDITOR_PARSER_VC4)
+				case CMD_RUNANIM:
+#endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					break;
 				}
+#if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
+				case CMD_BITMAP_TRANSFORM:
+				{
+					for (size_t i = 0; i < 12; ++i)
+						compiled.push_back(parsed.Parameter[i].U);
+					compiled.push_back(parsed.Parameter[12].U & 0xFFFF);
+					break;
+				}
+#endif
 				case CMD_MEMZERO:
 				{
 					uint32_t ptr = parsed.Parameter[0].U;
@@ -1468,15 +1429,58 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[3].U);
 					break;
 				}
-                case CMD_BITMAP_TRANSFORM:
-                {
-                    for (size_t i = 0; i < 12; ++i)
-                    {
-                        compiled.push_back(parsed.Parameter[i].U);
-                    }                    
-                    compiled.push_back(parsed.Parameter[12].U & 0xFFFF);
-                    break;
-                }
+#endif
+#if defined(FTEDITOR_PARSER_VC4)
+				case CMD_CALIBRATESUB:
+				{
+					uint32_t xy = parsed.Parameter[0].U & 0xFFFF
+						| parsed.Parameter[1].U << 16;
+					compiled.push_back(xy);
+					uint32_t wh = parsed.Parameter[3].U << 16
+						| parsed.Parameter[2].U & 0xFFFF;
+					compiled.push_back(wh);
+					compiled.push_back(0); // Plus 1 5th output parameter
+					break;
+				}
+				case CMD_GETIMAGE:
+				{
+					compiled.push_back(0); // Plus 5 output parameters
+					compiled.push_back(0);
+					compiled.push_back(0);
+					compiled.push_back(0);
+					compiled.push_back(0);
+					break;
+				}
+				case CMD_PCLKFREQ:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(0);// Plus 1 3rd output parameter
+					break;
+				}
+				case CMD_FONTCACHEQUERY:
+				{
+					compiled.push_back(0); // Plus 2 output parameters
+					compiled.push_back(0);
+					break;
+				}
+				case CMD_ANIMFRAMERAM:
+				{
+					uint32_t xy = parsed.Parameter[0].U & 0xFFFF
+						| parsed.Parameter[1].U << 16;
+					compiled.push_back(xy);
+					compiled.push_back(parsed.Parameter[2].U);
+					compiled.push_back(parsed.Parameter[3].U);
+					break;
+				}
+				case CMD_FONTCACHE:
+				case CMD_ANIMSTARTRAM:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
 #endif
 			}
 		}
@@ -1950,7 +1954,11 @@ void DlParser::toStringVC4(int deviceIntf, std::string &dst, uint32_t v)
 				}
 				case FTEDITOR_DL_BITMAP_LAYOUT_H:
 				{
+#if defined(FTEDITOR_PARSER_VC4)
+					int linestride = (v >> 2) & 0x7;
+#else
 					int linestride = (v >> 2) & 0x3;
+#endif
 					int height = v & 0x3;
 					res << "BITMAP_LAYOUT_H(";
 					res << linestride << ", " << height << ")";
