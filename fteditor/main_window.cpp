@@ -121,6 +121,9 @@ extern bool g_StreamingData;
 extern bool g_WarnMissingClear;
 extern bool g_WarnMissingClearActive;
 
+extern bool g_WarnMissingTestcardDLStart;
+extern bool g_WarnMissingTestcardDLStartActive;
+
 extern volatile bool g_ShowCoprocessorBusy;
 
 QString g_ApplicationDataDir;
@@ -820,6 +823,19 @@ void MainWindow::frameQt()
 			statusBar()->showMessage("");
 		}
 		g_WarnMissingClearActive = g_WarnMissingClear;
+	}
+
+	if (g_WarnMissingTestcardDLStart != g_WarnMissingTestcardDLStartActive)
+	{
+		if (g_WarnMissingTestcardDLStart)
+		{
+			statusBar()->showMessage(tr("WARNING: Commands following CMD_TESTCARD must be preceeded by CMD_DLSTART"));
+		}
+		else
+		{
+			statusBar()->showMessage("");
+		}
+		g_WarnMissingTestcardDLStartActive = g_WarnMissingTestcardDLStart;
 	}
 
 	// m_CursorPosition

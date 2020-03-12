@@ -134,6 +134,8 @@ bool g_StreamingData = false;
 
 bool g_WarnMissingClear = false;
 bool g_WarnMissingClearActive = false;
+bool g_WarnMissingTestcardDLStart = false;
+bool g_WarnMissingTestcardDLStartActive = false;
 
 volatile bool g_ShowCoprocessorBusy = true;
 
@@ -322,6 +324,8 @@ void resetemu()
 	g_CoprocessorFaultOccured = false;
 	g_WarnMissingClear = false;
 	g_WarnMissingClearActive = false;
+	g_WarnMissingTestcardDLStart = false;
+	g_WarnMissingTestcardDLStartActive = false;
 	displayListSwapped = false;
 	coprocessorSwapped = false;
 	s_WantReloopCmd = false;
@@ -841,6 +845,7 @@ void loop()
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;
 		int lastCmd = -1;
+		bool warnMissingTestcardDLStart = false;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
@@ -889,6 +894,11 @@ void loop()
 			{
 				if (!QFileInfo(useFileStream).exists())
 					continue;
+			}
+			// Warn the user to insert CMD_DLSTART when other commands follow CMD_TESTCARD
+			if (lastCmd == CMD_TESTCARD && cmdList[i] != CMD_DLSTART)
+			{
+				warnMissingTestcardDLStart = true;
 			}
 			validCmd = true;
 			lastCmd = cmdList[i];
@@ -1370,6 +1380,8 @@ void loop()
 				}
 			}
 		}
+
+		g_WarnMissingTestcardDLStart = warnMissingTestcardDLStart;
 
 		if (validCmd)
 		{
