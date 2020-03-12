@@ -840,11 +840,13 @@ void loop()
 		}
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;
+		int lastCmd = -1;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
+			// if (lastCmd == CMD_TESTCARD) break; // Make CMD_TESTCARD show
 			bool useMediaFifo = false;
 			bool useFlash = false;
 			const char *useFileStream = NULL;
@@ -889,6 +891,7 @@ void loop()
 					continue;
 			}
 			validCmd = true;
+			lastCmd = cmdList[i];
 			int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
 			int cmdLen = 4 + (paramNb * 4);
 			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
@@ -934,7 +937,18 @@ void loop()
 			wp += cmdLen;
 			freespace -= cmdLen;
 			// Handle special cases
-			if (cmdList[i] == CMD_LOGO)
+			if (cmdList[i] == CMD_TESTCARD)
+			{
+				// Avoid display list overrun on trailing commands
+				// Might want to warn the user if this is not the last command, and cmdList[i + 1] isn't CMD_DLSTART...
+				swr32(CMD_DLSTART);
+				// No need to check space for this, since the regular 
+				// CMD_SWAP won't be called anymore if this is the last command. 
+				// We're using it's space
+				wp += 4;
+				freespace -= 4;
+			}
+			else if (cmdList[i] == CMD_LOGO)
 			{
 				printf("Waiting for CMD_LOGO...\n");
 				g_WaitingCoprocessorAnimation = true;
@@ -1359,9 +1373,13 @@ void loop()
 
 		if (validCmd)
 		{
-			swr32(DISPLAY());
-			swr32(CMD_SWAP);
-			wp += 8;
+			if (lastCmd != CMD_TESTCARD)
+			{
+			 	// Testcard already swaps
+				swr32(DISPLAY());
+				swr32(CMD_SWAP);
+			 	wp += 8;
+			}
 			swrend();
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 
