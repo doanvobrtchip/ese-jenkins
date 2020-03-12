@@ -226,7 +226,8 @@ Validate the configured options.
     || defined(EVE_GRAPHICS_FT800) || defined(EVE_GRAPHICS_FT801)                                   \
     || defined(EVE_GRAPHICS_FT810) || defined(EVE_GRAPHICS_FT811)                                   \
     || defined(EVE_GRAPHICS_FT812) || defined(EVE_GRAPHICS_FT813)                                   \
-    || defined(EVE_GRAPHICS_BT816) || defined(EVE_GRAPHICS_BT815)
+    || defined(EVE_GRAPHICS_BT815) || defined(EVE_GRAPHICS_BT816)                                   \
+    || defined(EVE_GRAPHICS_BT817) || defined(EVE_GRAPHICS_BT818)
 #define EVE_GRAPHICS_AVAILABLE
 #endif
 
@@ -270,6 +271,8 @@ The selected graphics module must set one of the following options.
 - FT813_ENABLE
 - BT815_ENABLE
 - BT816_ENABLE
+- BT817_ENABLE
+- BT818_ENABLE
 
 It may also set platform, display, and flash values if none are configured.
 
@@ -548,6 +551,37 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_FLASH_MX25L128
 #endif
 
+#elif defined(EVE_GRAPHICS_BT817)
+
+#define BT817_ENABLE
+// #define ENABLE_SPI_QUAD
+
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_WVGA
+#endif
+
+#ifndef EVE_FLASH_AVAILABLE
+#define EVE_FLASH_AVAILABLE
+#define EVE_FLASH_MX25L128
+#endif
+
+#elif defined(EVE_GRAPHICS_BT818)
+
+#define BT818_ENABLE
+// #define ENABLE_SPI_QUAD
+#define RESISTANCE_THRESHOLD (1800)
+
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_WVGA
+#endif
+
+#ifndef EVE_FLASH_AVAILABLE
+#define EVE_FLASH_AVAILABLE
+#define EVE_FLASH_MX25L128
+#endif
+
 #endif
 
 /// Re-Mapping FT800 Series to FT80X
@@ -560,9 +594,14 @@ It may also set platform, display, and flash values if none are configured.
 #define FT81X_ENABLE
 #endif
 
-/// Re-Mapping BT810 Series to BT81X
+/// Re-Mapping BT815 Series to BT81X
 #if defined(BT815_ENABLE) || defined(BT816_ENABLE)
 #define BT81X_ENABLE
+#endif
+
+/// Re-Mapping BT817 Series to BT81XA
+#if defined(BT817_ENABLE) || defined(BT818_ENABLE)
+#define BT81XA_ENABLE
 #endif
 
 /// Model numbered macro for versioning convenience.
@@ -591,6 +630,12 @@ It may also set platform, display, and flash values if none are configured.
 #elif defined(BT816_ENABLE)
 #define EVE_SUPPORT_CHIPID EVE_BT816
 #define BT_816_ENABLE
+#elif defined(BT817_ENABLE)
+#define EVE_SUPPORT_CHIPID EVE_BT817
+#define BT_817_ENABLE
+#elif defined(BT818_ENABLE)
+#define EVE_SUPPORT_CHIPID EVE_BT818
+#define BT_818_ENABLE
 #endif
 
 #if defined(FT80X_ENABLE)
@@ -599,6 +644,8 @@ It may also set platform, display, and flash values if none are configured.
 #define FT_81X_ENABLE
 #elif defined(BT81X_ENABLE)
 #define BT_81X_ENABLE
+#elif defined(BT81XA_ENABLE)
+#define BT_81XA_ENABLE
 #endif
 
 ///////////////////////////////////////////////////////////////////////
