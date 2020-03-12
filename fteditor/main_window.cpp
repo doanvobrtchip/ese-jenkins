@@ -3502,6 +3502,8 @@ void MainWindow::startEmulatorInternal()
 	    | BT8XXEMU_EmulatorEnableCoprocessor
 	    | BT8XXEMU_EmulatorEnableGraphicsMultithread
 	    | BT8XXEMU_EmulatorEnableMainPerformance;
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
+		params.Flags |= BT8XXEMU_EmulatorEnableHSFPreview;
 	params.Mode = deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	params.Close = closeDummy;
 	g_EmulatorRunning = true;
