@@ -637,6 +637,7 @@ void DlParser::initVC4()
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
 		// clang-format on
 #endif
+#undef FTEDITOR_MAP_CMD
 		for (std::map<std::string, int>::iterator it = s_CmdIdMap.begin(), end = s_CmdIdMap.end(); it != end; ++it)
 		{
 			s_CmdIdList[it->second] = it->first;
@@ -677,6 +678,9 @@ void DlParser::initVC4()
 		s_CmdParamMap["OPT_OVERLAY"] = OPT_OVERLAY;
 		s_CmdParamMap["OPT_FORMAT"] = OPT_FORMAT;
 		s_CmdParamMap["OPT_FILL"] = OPT_FILL;
+#endif
+#if defined(FTEDITOR_PARSER_VC4)
+		s_CmdParamMap["OPT_DITHER"] = OPT_DITHER;
 #endif
 	}
 
@@ -2170,6 +2174,17 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 			combine = true;
 		}
 	}
+#if defined(FTEDITOR_PARSER_VC4)
+	else if (cmd == CMD_LOADIMAGE)
+	{
+		if (opt & OPT_DITHER)
+		{
+			if (combine) dst << " | ";
+			dst << "OPT_DITHER";
+			combine = true;
+		}
+	}
+#endif
 	else
 	{
 		if (opt & OPT_FLAT)
@@ -2303,6 +2318,7 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
 #define OPT_FLASH            64UL
 #define OPT_OVERLAY          128UL
 #define OPT_SIGNED           256UL <- special case
+#define OPT_DITHER           256UL <- special case, bt817
 #define OPT_FLAT             256UL
 #define OPT_CENTERX          512UL
 #define OPT_CENTERY          1024UL

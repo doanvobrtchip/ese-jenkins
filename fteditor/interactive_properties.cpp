@@ -236,6 +236,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 	#define OPT_NODL             2UL
 	#define OPT_FLASH            64UL -- BT815
 	#define OPT_SIGNED           256UL <- special case (when CMD_NUMBER, probably whenever no NOBACK)
+	#define OPT_DITHER           256UL <- special case, bt817 (when CMD_LOADIMAGE, probably whenever MONO)
 	#define OPT_FLAT             256UL
 	#define OPT_CENTERX          512UL
 	#define OPT_CENTERY          1024UL
@@ -296,6 +297,10 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 			{
 				ADD_OPTIONS_CHECKBOX(OPT_NOBACK);
 			}
+		}
+		else if (flags & OPT_MONO)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_DITHER);
 		}
 		else
 		{
