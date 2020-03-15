@@ -89,7 +89,7 @@ void DeviceDisplaySettingsDialog::addCustomDevice(QLayout *layout)
 
 void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 {
-	int currenDevice;
+	int currentDevice;
 	QString selectedDevice = pParent->getSelectedDeviceName();
 
 	for each(QRadioButton * rb in m_CustomRadioButtonList)
@@ -97,22 +97,28 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 		rb->setVisible(false);
 	}
 
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT800 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801)
+	if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_FT800 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801)
 	{
-		currenDevice = FTEDITOR_FT800;
+		currentDevice = FTEDITOR_FT800;
 	}
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
-		currenDevice = FTEDITOR_FT810;
+		currentDevice = FTEDITOR_FT810;
 	}
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
-		currenDevice = FTEDITOR_BT815;
+		currentDevice = FTEDITOR_BT815;
 	}
+	/*
+	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
+	{
+		currentDevice = FTEDITOR_BT817;
+	}
+	*/
 
 	for each(QRadioButton * rb in m_CustomRadioButtonList)
 	{
-		if (rb->property("EVE_TYPE").toInt() == currenDevice)
+		if (rb->property("EVE_TYPE").toInt() == currentDevice)
 		{
 			rb->setVisible(true);
 		}

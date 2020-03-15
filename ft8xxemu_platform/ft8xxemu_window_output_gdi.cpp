@@ -255,6 +255,7 @@ WindowOutput::WindowOutput(System *system) : m_System(system)
 			NULL, NULL, m_HInstance, NULL)))
 		{
 			FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
+			return;
 		}
 		ShowWindow(m_HWnd, /*nCmdShow*/ true); // If the window was previously visible, the return value is nonzero.
 		if (!UpdateWindow(m_HWnd)) FTEMU_error("GDI Initialisation: %s", SystemWin32::getWin32LastErrorString().c_str());
@@ -268,7 +269,7 @@ WindowOutput::WindowOutput(System *system) : m_System(system)
 		if (m_Buffer) FTEMU_error("WindowOutput.begin()  s_Buffer != NULL");
 		m_Buffer = CreateCompatibleBitmap(hdc, m_Width, m_Height);
 		if (!m_Buffer) FTEMU_error("WindowOutput.begin()  s_Buffer == NULL: %s", SystemWin32::getWin32LastErrorString().c_str());
-		SelectObject(m_HDC, m_Buffer);
+		if (m_HDC && m_Buffer) SelectObject(m_HDC, m_Buffer);
 		ReleaseDC(m_HWnd, hdc);
 #endif
 
@@ -431,10 +432,11 @@ void WindowOutput::setMode(int width, int height)
 			if (m_Buffer) FTEMU_error("WindowOutput.begin()  s_Buffer != NULL");
 			m_Buffer = CreateCompatibleBitmap(hdc, m_Width, m_Height);
 			if (!m_Buffer) FTEMU_error("WindowOutput.begin()  s_Buffer == NULL: %s", SystemWin32::getWin32LastErrorString().c_str());
-			SelectObject(m_HDC, m_Buffer);
+			if (m_HDC && m_Buffer) SelectObject(m_HDC, m_Buffer);
 			ReleaseDC(m_HWnd, hdc);
 
-			DeleteObject(oldBuffer);
+			if (m_HDC && m_Buffer && oldBuffer) DeleteObject(oldBuffer);
+			else m_Buffer = oldBuffer;
 #endif
 
 			DWORD dw_style = WS_OVERLAPPEDWINDOW;
@@ -483,7 +485,7 @@ bool WindowOutput::renderBuffer(bool output, bool changed)
 		{
 			COLORREF bgC32 = RGB(128, 128, 128); // bg outside render
 			HBRUSH bgBrush = CreateSolidBrush(bgC32);
-			if (bgBrush == NULL) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
+			if (!bgBrush) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
 			int width_r = (int)((float)r.bottom * m_Ratio); int height_r;
 			if (width_r > r.right) { width_r = r.right; height_r = (int)((float)r.right / m_Ratio); }
 			else height_r = r.bottom;
@@ -495,30 +497,33 @@ bool WindowOutput::renderBuffer(bool output, bool changed)
 #else
 			StretchDIBits(hdc, x_r, y_r, width_r, height_r, 0, 0, s_Width, s_Height, s_BufferARGB8888, &s_BitInfo, DIB_RGB_COLORS, SRCCOPY);
 #endif
-			RECT rect;
-			if (x_r > 0)
+			if (bgBrush)
 			{
-				rect.top = 0; rect.left = 0;
-				rect.top = 0; rect.left = 0;
-				rect.right = (r.right - width_r) / 2;
-				rect.bottom = r.bottom;
-				FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
-				rect.left = rect.right + width_r;
-				rect.right += rect.left;
-				FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
-			}
-			if (y_r > 0)
-			{
-				rect.top = 0; rect.left = 0;
-				rect.right = r.right;
-				rect.bottom = (r.bottom - height_r) / 2;
-				FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
-				rect.top = rect.bottom + height_r;
-				rect.bottom += rect.top;
-				FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
+				RECT rect;
+				if (x_r > 0)
+				{
+					rect.top = 0; rect.left = 0;
+					rect.top = 0; rect.left = 0;
+					rect.right = (r.right - width_r) / 2;
+					rect.bottom = r.bottom;
+					FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
+					rect.left = rect.right + width_r;
+					rect.right += rect.left;
+					FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
+				}
+				if (y_r > 0)
+				{
+					rect.top = 0; rect.left = 0;
+					rect.right = r.right;
+					rect.bottom = (r.bottom - height_r) / 2;
+					FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
+					rect.top = rect.bottom + height_r;
+					rect.bottom += rect.top;
+					FillRect(hdc, &rect, bgBrush); // (HBRUSH)(COLOR_WINDOW + 1));
+				}
 			}
 			ReleaseDC(m_HWnd, hdc);
-			if (!DeleteObject(bgBrush)) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
+			if (bgBrush && !DeleteObject(bgBrush)) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
 		}
 #else
 		{
@@ -537,10 +542,13 @@ bool WindowOutput::renderBuffer(bool output, bool changed)
 			HDC hdc = GetDC(m_HWnd);
 			COLORREF bgC32 = RGB(128, 128, 128); // bg off render
 			HBRUSH bgBrush = CreateSolidBrush(bgC32);
-			if (bgBrush == NULL) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
-			FillRect(hdc, &r, bgBrush);
-			if (!DeleteObject(bgBrush)) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
-			ReleaseDC(m_HWnd, hdc);
+			if (!bgBrush) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
+			else
+			{
+				FillRect(hdc, &r, bgBrush);
+				if (!DeleteObject(bgBrush)) FTEMU_error("GDI Render: %s", SystemWin32::getWin32LastErrorString().c_str());
+				ReleaseDC(m_HWnd, hdc);
+			}
 		}
 
 		m_BufferFlipping = false;

@@ -12,6 +12,11 @@
  *	@brief	Color unquantization functions for ASTC.
  */ 
 /*----------------------------------------------------------------------------*/ 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 	
 #include "astc_codec_internals.h"
 
@@ -968,3 +973,7 @@ void unpack_color_endpoints(astc_decode_mode decode_mode, int format, int quanti
 		break;
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

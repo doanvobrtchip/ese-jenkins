@@ -12,6 +12,12 @@
  *	@brief	Functions to pick the best ASTC endpoint format for a given block.
  */ 
 /*----------------------------------------------------------------------------*/ 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "astc_codec_internals.h"
 
 #ifdef DEBUG_PRINT_DIAGNOSTICS
@@ -958,3 +964,7 @@ void determine_optimal_set_of_endpoint_formats_to_use(int xdim, int ydim, int zd
 		}
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

@@ -13,6 +13,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "astc_codec_internals.h"
 
 #include "softfloat.h"
@@ -1790,3 +1796,7 @@ float compress_symbolic_block(const astc_codec_image * input_image,
 	// mean squared error per color component.
 	return error_of_best_block / ((float)xdim * ydim * zdim);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

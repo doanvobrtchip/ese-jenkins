@@ -13,6 +13,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26495) // Uninitialized member
+#endif
+
 #include <string.h>
 #include <stdint.h>
 
@@ -16207,3 +16212,7 @@ static inline ulong4 as_ulong4(ulong4 inp)
 #define wwwy wwwy()
 #define wwwz wwwz()
 #define wwww wwww()
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

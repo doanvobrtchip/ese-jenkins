@@ -655,6 +655,7 @@ BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashP
 	if (BT8XXEMUC_openProcess())
 	{
 		BT8XXEMU_Flash *flash = malloc(sizeof(BT8XXEMU_Flash));
+		if (!flash) return NULL;
 		memset(flash, 0, sizeof(BT8XXEMU_Flash));
 		flash->pipe = BT8XXEMUC_openPipe(); // Create a separate pipe for each emulator instance
 

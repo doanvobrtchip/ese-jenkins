@@ -595,7 +595,6 @@ void compute_averages_and_variances(const astc_codec_image * img, float rgb_powe
 astc_codec_image *load_ktx_uncompressed_image(const char *filename, int padding, int *result);
 astc_codec_image *load_dds_uncompressed_image(const char *filename, int padding, int *result);
 astc_codec_image *load_tga_image(const char *tga_filename, int padding, int *result);
-astc_codec_image *load_image_with_stb(const char *filename, int padding, int *result);
 
 astc_codec_image *astc_codec_load_image(const char *filename, int padding, int *result);
 int astc_codec_unlink(const char *filename);

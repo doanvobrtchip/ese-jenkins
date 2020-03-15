@@ -5,6 +5,11 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 // #include <...>
 #include "ft8xxemu_system.h"
 #include "ft8xxemu_system_win32.h"
@@ -72,7 +77,7 @@ void System::update()
 	m_FPSSmoothValues[m_FPSSmoothAt] = frameTime; //getFPS();
 	//m_FPSSmoothTotal += m_FPSSmoothValues[m_FPSSmoothAt];
 	if (m_FPSSmoothCount > 0)
-		m_FPSSmooth = (double)(m_FPSSmoothCount - 1) / (m_FPSSmoothValues[m_FPSSmoothAt] - m_FPSSmoothValues[(m_FPSSmoothAt + 1) % m_FPSSmoothCount]);
+		m_FPSSmooth = (double)((int)(m_FPSSmoothCount - 1)) / (m_FPSSmoothValues[m_FPSSmoothAt] - m_FPSSmoothValues[(m_FPSSmoothAt + 1) % m_FPSSmoothCount]);
 	++m_FPSSmoothAt;
 	if (m_FPSSmoothCount < m_FPSSmoothAt)
 		m_FPSSmoothCount = m_FPSSmoothAt;
@@ -136,5 +141,9 @@ bool System::renderWoke()
 }
 
 } /* namespace FT8XXEMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

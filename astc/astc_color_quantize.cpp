@@ -13,6 +13,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithemtic overflow
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include <stdio.h>
 
 #include "astc_codec_internals.h"
@@ -2094,3 +2100,7 @@ int pack_color_endpoints(astc_decode_mode decode_mode, float4 color0, float4 col
 
 	return retval;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

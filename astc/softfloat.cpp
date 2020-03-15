@@ -13,6 +13,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "softfloat.h"
 
 #define SOFTFLOAT_INLINE
@@ -395,3 +400,7 @@ sf16 float_to_sf16(float p, roundmode rm)
 	i.f = p;
 	return sf32_to_sf16(i.u, rm);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

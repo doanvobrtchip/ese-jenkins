@@ -13,6 +13,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
 #include "astc_codec_internals.h"
 
 #include "softfloat.h"
@@ -1270,10 +1275,10 @@ astc_codec_image *astc_codec_load_image(const char *input_filename, int padding,
 	#define LOAD_HTGA 0
 	#define LOAD_KTX 1
 	#define LOAD_DDS 2
-	#define LOAD_STB_IMAGE 3
+	#define LOAD_UNKNOWN 3
 
 	// check the ending of the input filename
-	int load_fileformat = LOAD_STB_IMAGE;
+	int load_fileformat = LOAD_UNKNOWN;
 	size_t filename_len = strlen(input_filename);
 
 	const char *eptr = input_filename + filename_len - 5;
@@ -1325,9 +1330,6 @@ astc_codec_image *astc_codec_load_image(const char *input_filename, int padding,
 		break;
 	case LOAD_HTGA:
 		input_image = load_tga_image(input_filename, padding, load_result);
-		break;
-	case LOAD_STB_IMAGE:
-		input_image = load_image_with_stb(input_filename, padding, load_result);
 		break;
 	default:
 		ASTC_CODEC_INTERNAL_ERROR;
@@ -1455,3 +1457,7 @@ int astc_codec_store_image(const astc_codec_image * output_image, const char *ou
 
 	return store_result;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

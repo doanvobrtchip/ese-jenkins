@@ -14,6 +14,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "astc_codec_internals.h"
 
 #include "softfloat.h"
@@ -321,3 +326,7 @@ float compute_imageblock_difference(int xdim, int ydim, int zdim, const imageblo
 
 	return summa;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

@@ -4,6 +4,11 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #define FT810EMU_MODE
 
 #include <bt8xxemu.h>
@@ -264,3 +269,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

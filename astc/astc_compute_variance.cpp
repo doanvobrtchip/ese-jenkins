@@ -17,6 +17,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
 #include "astc_codec_internals.h"
 
 #include <math.h>
@@ -522,3 +527,7 @@ void compute_averages_and_variances(const astc_codec_image * img, float rgb_powe
 		}
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

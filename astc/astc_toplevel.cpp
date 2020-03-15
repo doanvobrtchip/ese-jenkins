@@ -16,6 +16,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
 #include "astc_codec_internals.h"
 
 #include <stdio.h>
@@ -738,3 +743,7 @@ void dump_image(astc_codec_image * img)
 	}
 	printf("\n\n");
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

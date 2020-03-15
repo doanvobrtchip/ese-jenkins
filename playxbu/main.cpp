@@ -86,7 +86,7 @@ public:
 	BT8XXEMU_Flash *flash;
 #endif
 
-	void swrbegin(size_t address)
+	void swrbegin(uint32_t address)
 	{
 		BT8XXEMU_chipSelect(emulator, 1);
 
@@ -127,7 +127,7 @@ public:
 		swrend();
 	}
 
-	uint32_t rd32(size_t address)
+	uint32_t rd32(uint32_t address)
 	{
 		BT8XXEMU_chipSelect(emulator, 1);
 

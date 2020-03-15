@@ -13,6 +13,12 @@
  *			Encoding.
  */ 
 /*----------------------------------------------------------------------------*/ 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "astc_codec_internals.h"
 	// unpacked quint triplets <low,middle,high> for each packed-quint value
 static const uint8_t quints_of_integer[128][3] = {
@@ -647,3 +653,7 @@ int compute_ise_bitcount(int items, quantization_method quant)
 		return 100000;
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

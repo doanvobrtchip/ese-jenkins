@@ -362,7 +362,7 @@ public:
 						size.HighPart,
 						size.LowPart,
 						NULL);
-					if (fileMapping == INVALID_HANDLE_VALUE)
+					if (fileMapping == INVALID_HANDLE_VALUE || !fileMapping)
 					{
 						log(BT8XXEMU_LogError, "Unable to map file '%ls'", dataFilePath);
 						CloseHandle(fileHandle);
@@ -510,13 +510,13 @@ public:
 				case BTFLASH_CMD_SE:
 					Flash_debug("Sector Erase (Execute)");
 					m_StatusRegister &= ~BTFLASH_STATUS_WEL_FLAG;
-					if (((m_DelayedCommandAddr & ~0xFFF) + 4096) > Size)
+					if (((size_t)(m_DelayedCommandAddr & ~0xFFFUL) + 4096) > Size)
 					{
 						log(BT8XXEMU_LogError, "Erase address exceeds address space");
 					}
 					else
 					{
-						memset(&Data[m_DelayedCommandAddr & ~0xFFF], 0xFF, 4096);
+						memset(&Data[m_DelayedCommandAddr & ~0xFFFUL], 0xFF, 4096);
 					}
 					break;
 				default:

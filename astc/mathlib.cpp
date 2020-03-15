@@ -13,6 +13,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -749,4 +754,6 @@ hyperplane_4d generate_hyperplane_from_points(float4 point0, float4 point1, floa
 	return res;
 }
 
-
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

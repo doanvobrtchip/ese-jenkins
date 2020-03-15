@@ -38,6 +38,11 @@
 /*----------------------------------------------------------------------------*/ 
 
 #ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
+#ifdef _MSC_VER
 	#define _USE_MATH_DEFINES
 #endif
 #include <math.h>
@@ -599,3 +604,7 @@ void compute_angular_endpoints_2planes(float mode_cutoff,
 		high_value2[i] = high_values2[decim_mode][quant_mode];
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

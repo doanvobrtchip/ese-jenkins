@@ -475,13 +475,13 @@ void Ejpg::run(uint8_t *memory8,
 
 	while (1)
 	{
-		blk_type = btypes[block] - '0';
+		blk_type = (uint8_t)(btypes[block] - '0');
 
 		// FTEMU_printf("\n%2d: bits=%016llx\n", nbits, bits);
 
 		uint8_t da8 = tda >> (8 * blk_type);  // DC in bit 4, AC in bit 0
 		// FTEMU_printf("blk_type = %d %08x %02x\n", blk_type, tda, da8);
-		size_t ht;
+		ramaddr ht;
 		int isdc = idct_i == 0;
 		if (isdc)
 			ht = REG_EJPG_HT + 64 * (da8 >> 4);
@@ -513,7 +513,7 @@ void Ejpg::run(uint8_t *memory8,
 		// FTEMU_printf("codesize %lu\n", codesize);
 		// FTEMU_printf("symbol at %u\n", 0xff & (b + *pht));
 		uint8_t sym_pos = 0xff & (b + *pht);
-		size_t symbols;
+		ramaddr symbols;
 		if (isdc)
 			symbols = REG_EJPG_DCC + 12 * (da8 >> 4);
 		else
