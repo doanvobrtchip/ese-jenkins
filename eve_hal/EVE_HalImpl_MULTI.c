@@ -139,11 +139,17 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 		res = EVE_HalImpl_FT4222_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE);
 		parameters->Host = EVE_HOST_FT4222;
 	}
-	else
+	else if (res = EVE_HalImpl_FT4222_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE))
 	{
-		res = (EVE_HalImpl_FT4222_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU - s_DeviceCountMPSSE) && (parameters->Host = EVE_HOST_FT4222))
-		    || (EVE_HalImpl_MPSSE_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU) && (parameters->Host = EVE_HOST_MPSSE))
-		    || (EVE_HalImpl_BT8XXEMU_defaults(parameters, chipId, deviceIdx) && (parameters->Host = EVE_HOST_BT8XXEMU));
+		parameters->Host = EVE_HOST_FT4222;
+	}
+	else if (res = EVE_HalImpl_MPSSE_defaults(parameters, chipId, deviceIdx - s_DeviceCountBT8XXEMU))
+	{
+		parameters->Host = EVE_HOST_MPSSE;
+	}
+	else if (res = EVE_HalImpl_BT8XXEMU_defaults(parameters, chipId, deviceIdx))
+	{
+		parameters->Host = EVE_HOST_BT8XXEMU;
 	}
 	parameters->ChipId = chipId;
 	return res;

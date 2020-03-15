@@ -737,7 +737,9 @@ astc_codec_image *load_ktx_uncompressed_image(const char *filename, int padding,
 
 
 	uint8_t *buf = (uint8_t *) malloc(specified_bytes_of_surface);
-	size_t bytes_read = fread(buf, 1, specified_bytes_of_surface, f);
+	size_t bytes_read;
+	if (buf) bytes_read = fread(buf, 1, specified_bytes_of_surface, f);
+	else bytes_read = 0;
 	fclose(f);
 	if (bytes_read != specified_bytes_of_surface)
 	{
@@ -1317,8 +1319,9 @@ astc_codec_image *load_dds_uncompressed_image(const char *filename, int padding,
 	uint32_t bytes_of_surface = zsize * ystride;
 
 	uint8_t *buf = (uint8_t *) malloc(bytes_of_surface);
-	if (!buf) return NULL;
-	size_t bytes_read = fread(buf, 1, bytes_of_surface, f);
+	size_t bytes_read;
+	if (buf) bytes_read = fread(buf, 1, bytes_of_surface, f);
+	else bytes_read = 0;
 	fclose(f);
 	if (bytes_read != bytes_of_surface)
 	{

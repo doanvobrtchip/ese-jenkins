@@ -120,7 +120,7 @@ public:
 		BT8XXEMU_chipSelect(emulator, 0);
 	}
 
-	void wr32(size_t address, uint32_t value)
+	void wr32(uint32_t address, uint32_t value)
 	{
 		swrbegin(address);
 		swr32(value);

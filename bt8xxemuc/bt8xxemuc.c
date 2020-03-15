@@ -176,6 +176,7 @@ static void BT8XXEMUC_writeFlashParams(BT8XXEMUC_RemoteFlashParameters *remoteFl
 static LONG s_AtomicLock = 0;
 static LONG s_RefCount = 0;
 static HANDLE s_Process = INVALID_HANDLE_VALUE;
+static HANDLE s_ProcessThread = INVALID_HANDLE_VALUE;
 static HANDLE s_Pipe = INVALID_HANDLE_VALUE;
 static BT8XXEMUC_Data s_VersionData;
 static int s_PipeNb = 0;
@@ -224,13 +225,17 @@ static bool BT8XXEMUC_openProcess()
 		}
 
 		s_Process = pi.hProcess;
+		s_ProcessThread = pi.hThread;
 
 		if (!ConnectNamedPipe(s_Pipe, NULL))
 		{
 			CloseHandle(s_Pipe);
 			s_Pipe = INVALID_HANDLE_VALUE;
 			TerminateProcess(s_Process, EXIT_FAILURE);
+			CloseHandle(s_Process);
 			s_Process = INVALID_HANDLE_VALUE;
+			CloseHandle(s_ProcessThread);
+			s_ProcessThread = INVALID_HANDLE_VALUE;
 			BT8XXEMUC_unlockProcessPipe();
 			return false;
 		}
@@ -261,7 +266,10 @@ static void BT8XXEMUC_closeProcess()
 			CloseHandle(s_Pipe);
 			s_Pipe = INVALID_HANDLE_VALUE;
 			TerminateProcess(s_Process, EXIT_FAILURE);
+			CloseHandle(s_Process);
 			s_Process = INVALID_HANDLE_VALUE;
+			CloseHandle(s_ProcessThread);
+			s_ProcessThread = INVALID_HANDLE_VALUE;
 			BT8XXEMUC_unlockProcessPipe();
 			return;
 		}
@@ -270,6 +278,10 @@ static void BT8XXEMUC_closeProcess()
 		s_Pipe = INVALID_HANDLE_VALUE;
 
 		WaitForSingleObject(s_Process, INFINITE);
+		CloseHandle(s_Process);
+		s_Process = INVALID_HANDLE_VALUE;
+		CloseHandle(s_ProcessThread);
+		s_ProcessThread = INVALID_HANDLE_VALUE;
 	}
 
 	BT8XXEMUC_unlockProcessPipe();
@@ -431,6 +443,11 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 	if (BT8XXEMUC_openProcess())
 	{
 		*emulator = malloc(sizeof(BT8XXEMU_Emulator));
+		if (!*emulator)
+		{
+			BT8XXEMUC_closeProcess();
+			return;
+		}
 		memset(*emulator, 0, sizeof(BT8XXEMU_Emulator));
 		(*emulator)->pipe = BT8XXEMUC_openPipe(); // Create a separate pipe for each emulator instance
 

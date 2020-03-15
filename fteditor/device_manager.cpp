@@ -1050,6 +1050,8 @@ bool DeviceManager::waitFlush(DeviceInfo *devInfo)
 
 void DeviceManager::uploadFlashContent()
 {
+	uint8_t buffer[64 * 4096];
+
 	BusyLock busyLock(&m_Busy);
 	if (!busyLock.locked())
 	{
@@ -1189,7 +1191,6 @@ void DeviceManager::uploadFlashContent()
 			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 			// int s = in.readRawData(&ram[loadAddr], binSize);
 			// BT8XXEMU_poke(g_Emulator);
-			uint8_t buffer[64 * 4096];
 			int sz = 0;
 			int preread = (loadAddr & (4096 - 1)); // Read previously written data
 			loadAddr -= preread;
@@ -1318,7 +1319,6 @@ void DeviceManager::uploadFlashContent()
 			// char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
 			// int s = in.readRawData(&ram[loadAddr], binSize);
 			// BT8XXEMU_poke(g_Emulator);
-			uint8_t buffer[64 * 4096];
 			uint8_t match[sizeof(buffer)];
 			int sz;
 			for (;;)
