@@ -19,36 +19,36 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #define BT8XXEMU_VERSION_API 12
 
 #ifdef BT8XXEMU_REMOTE
-#	ifndef WIN32
-#		undef BT8XXEMU_REMOTE /* Not yet supported */
-#	else
-#		define BT8XXEMU_STATIC
-#	endif
+#ifndef WIN32
+#undef BT8XXEMU_REMOTE /* Not yet supported */
+#else
+#define BT8XXEMU_STATIC
+#endif
 #endif
 
 #ifndef BT8XXEMU_STATIC
-#	ifdef BT8XXEMU_EXPORT_DYNAMIC
-#		ifdef WIN32
-#			define BT8XXEMU_API __declspec(dllexport)
-#		else
-#			define BT8XXEMU_API
-#		endif
-#	else
-#		ifdef WIN32
-#			define BT8XXEMU_API __declspec(dllimport)
-#		else
-#			define BT8XXEMU_API
-#		endif
-#	endif
+#ifdef BT8XXEMU_EXPORT_DYNAMIC
+#ifdef WIN32
+#define BT8XXEMU_API __declspec(dllexport)
 #else
-#	define BT8XXEMU_API
+#define BT8XXEMU_API
+#endif
+#else
+#ifdef WIN32
+#define BT8XXEMU_API __declspec(dllimport)
+#else
+#define BT8XXEMU_API
+#endif
+#endif
+#else
+#define BT8XXEMU_API
 #endif
 
 #ifdef __cplusplus
 
 namespace BT8XXEMU {
-	class Emulator;
-	class Flash;
+class Emulator;
+class Flash;
 }
 
 typedef BT8XXEMU::Emulator BT8XXEMU_Emulator;
@@ -156,7 +156,7 @@ typedef enum
 typedef struct
 {
 	// Microcontroller main function. This will be run on a new thread managed by the emulator. When not provided the calling thread is assumed to be the MCU thread
-	void(*Main)(BT8XXEMU_Emulator *sender, void *context);
+	void (*Main)(BT8XXEMU_Emulator *sender, void *context);
 	// See EmulatorFlags.
 	int Flags;
 	// Emulator mode
@@ -173,7 +173,7 @@ typedef struct
 	uint32_t ReduceGraphicsThreads;
 
 	// Sleep function for MCU thread usage throttle. Defaults to generic system sleep
-	void(*MCUSleep)(BT8XXEMU_Emulator *sender, void *context, int ms);
+	void (*MCUSleep)(BT8XXEMU_Emulator *sender, void *context, int ms);
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
@@ -197,16 +197,16 @@ typedef struct
 	// The contents of the buffer pointer are undefined after this
 	// function returns. Create a copy to use it on another thread.
 	// Return false (0) when the application must exit, otherwise return true (1).
-	int(*Graphics)(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
+	int (*Graphics)(BT8XXEMU_Emulator *sender, void *context, int output, const argb8888 *buffer, uint32_t hsize, uint32_t vsize, BT8XXEMU_FrameFlags flags);
 
 	// Interrupt handler
 	// void (*Interrupt)(void *sender, void *context);
 
 	// Log callback
-	void(*Log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message);
+	void (*Log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message);
 
 	// Safe exit. Called when the emulator window is closed
-	void(*Close)(BT8XXEMU_Emulator *sender, void *context);
+	void (*Close)(BT8XXEMU_Emulator *sender, void *context);
 
 	// User context that will be passed along to callbacks
 	void *UserContext;
@@ -233,10 +233,10 @@ typedef struct
 	// Write actions to the flash are persisted to the used file.
 	// This is accomplished by memory mapping the file, instead of
 	// the file being copied to memory. Default false
-	bool Persistent;
+	int Persistent;
 
 	// Print log to standard output. Default false
-	bool StdOut;
+	int StdOut;
 
 	// Data buffer that is written to the flash initially,
 	// overriding any existing contents that may have been
@@ -245,7 +245,7 @@ typedef struct
 	size_t DataSizeBytes;
 
 	// Log callback
-	void(*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
+	void (*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
 
 	// User context that will be passed along to callbacks
 	void *UserContext;
@@ -324,7 +324,7 @@ BT8XXEMU_API extern uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, u
 
 #endif
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 } /* extern "C" */
 #endif
 

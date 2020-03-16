@@ -91,8 +91,8 @@ typedef struct
 	uint64_t sizeBytes;
 	wchar_t dataFilePath[260];
 	wchar_t statusFilePath[260];
-	bool persistent;
-	bool stdOut;
+	int persistent;
+	int stdOut;
 	int64_t userContext;
 } BT8XXEMUC_RemoteFlashParameters;
 typedef union
