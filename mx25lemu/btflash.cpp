@@ -4,6 +4,11 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "bt8xxemu.h"
 #include "bt8xxemu_flash.h"
 
@@ -1836,5 +1841,9 @@ int64_t getFileSize(const wchar_t* name)
 	CloseHandle(hFile);
 	return size.QuadPart;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

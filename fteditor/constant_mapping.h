@@ -4,6 +4,11 @@ Copyright (C) 2017-2020  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #ifndef FTEDITOR_CONSTANT_MAPPING_H
 #define FTEDITOR_CONSTANT_MAPPING_H
 
@@ -380,5 +385,9 @@ extern const int *g_FontFormatToIntf[FTEDITOR_DEVICE_NB];
 } /* namespace FTEDITOR */
 
 #endif /* #ifndef FTEDITOR_CONSTANT_MAPPING_H */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

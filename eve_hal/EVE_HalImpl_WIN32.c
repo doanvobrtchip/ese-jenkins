@@ -29,6 +29,11 @@
 * has no liability in relation to those amendments.
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 28159) // Use GetTickCount64 instead of GetTickCount
+#endif
+
 #include "EVE_HalImpl.h"
 #include "EVE_Platform.h"
 #if defined(_WIN32)
@@ -100,6 +105,10 @@ void EVE_sleep(uint32_t ms)
 #endif
 }
 
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 /* end of file */

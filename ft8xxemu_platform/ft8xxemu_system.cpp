@@ -77,7 +77,10 @@ void System::update()
 	m_FPSSmoothValues[m_FPSSmoothAt] = frameTime; //getFPS();
 	//m_FPSSmoothTotal += m_FPSSmoothValues[m_FPSSmoothAt];
 	if (m_FPSSmoothCount > 0)
-		m_FPSSmooth = (double)((int)(m_FPSSmoothCount - 1)) / (m_FPSSmoothValues[m_FPSSmoothAt] - m_FPSSmoothValues[(m_FPSSmoothAt + 1) % m_FPSSmoothCount]);
+	{
+		int smoothSub = m_FPSSmoothCount - 1;
+		m_FPSSmooth = (double)smoothSub / (m_FPSSmoothValues[m_FPSSmoothAt] - m_FPSSmoothValues[(m_FPSSmoothAt + 1) % m_FPSSmoothCount]);
+	}
 	++m_FPSSmoothAt;
 	if (m_FPSSmoothCount < m_FPSSmoothAt)
 		m_FPSSmoothCount = m_FPSSmoothAt;

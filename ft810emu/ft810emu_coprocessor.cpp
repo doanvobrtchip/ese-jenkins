@@ -475,7 +475,8 @@ void Ejpg::run(uint8_t *memory8,
 
 	while (1)
 	{
-		blk_type = (uint8_t)(btypes[block] - '0');
+		char blk_type_i8 = btypes[block] - '0';
+		blk_type = blk_type_i8;
 
 		// FTEMU_printf("\n%2d: bits=%016llx\n", nbits, bits);
 

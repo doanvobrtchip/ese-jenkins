@@ -451,7 +451,7 @@ void wr32(BT8XXEMU_Emulator *emulator, size_t address, uint32_t value)
 	swrend(emulator);
 }
 
-uint32_t rd32(BT8XXEMU_Emulator *emulator, size_t address)
+uint32_t rd32(BT8XXEMU_Emulator *emulator, uint32_t address)
 {
 	BT8XXEMU_chipSelect(emulator, 1);
 
@@ -1629,12 +1629,12 @@ int main(int, char*[])
 		/////////////////////////////////////////////////////////////////
 
 #if BTTESTFLASH_SIZES
-		int sizes[8] = { 2, 4, 8, 16, 32, 64, 128, 256 };
+		size_t sizes[8] = { 2, 4, 8, 16, 32, 64, 128, 256 };
 
 		for (int si = 0; si < ((testMode[ts] >= BT8XXEMU_EmulatorBT817) ? 4 : 8); ++si) // FIXME: 32MiB and up is not working on BT817 with mx25l blob
 		{
-			int sz = sizes[si];
-			printf("SIZE %i: %i\n", si, sz);
+			size_t sz = sizes[si];
+			printf("SIZE %i: %i\n", si, (int)sz);
 
 			/////////////////////////////////////////////////////////////////
 			//// Emulator
@@ -1782,7 +1782,7 @@ int main(int, char*[])
 				}
 			}
 
-			int idx = (sz * 1024 * 1024) - 12288;
+			size_t idx = (sz * 1024 * 1024) - 12288;
 			for (int i = 0; i < 256; ++i)
 			{
 				data[idx + i] = i;
