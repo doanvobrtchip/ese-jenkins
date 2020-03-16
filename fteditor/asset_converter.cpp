@@ -796,7 +796,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	fmb.Value.Width = maxw;
 	fmb.Value.Height = maxh;
 	std::vector<uint8_t> bitmapBuffer;
-	bitmapBuffer.resize(((format == L1) ? fmb.Value.LineStride : maxw) * maxh * (charSet.size() + 1));
+	bitmapBuffer.resize((size_t)((format == L1) ? fmb.Value.LineStride : maxw) * maxh * ((size_t)charSet.size() + 1));
 	std::fill(bitmapBuffer.begin(), bitmapBuffer.end(), 0);
 	for (int i = 0; i < charSet.size(); ++i)
 	{
@@ -861,7 +861,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 					uint8_t leftvalue = slot->bitmap.buffer[bi] >> txb;
 					uint8_t rightvalue = slot->bitmap.buffer[bi] << (8 - txb);
 					bitmapBuffer[ti] |= leftvalue;
-					bitmapBuffer[ti + 1] |= rightvalue;
+					bitmapBuffer[(size_t)ti + 1] |= rightvalue;
 					//printf("CI %i\n", ci);
 				}
 				else
@@ -896,8 +896,8 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	{
 		for (int i = 0; i < nbbytes; ++i)
 		{
-			uint8_t left = bitmapBuffer[i * 2];
-			uint8_t right = bitmapBuffer[i * 2 + 1];
+			uint8_t left = bitmapBuffer[(size_t)i * 2];
+			uint8_t right = bitmapBuffer[(size_t)i * 2 + 1];
 			left &= 0xF0;
 			right >>= 4;
 			bitmapBuffer[i] = left | right;
@@ -907,10 +907,10 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	{
 		for (int i = 0; i < nbbytes; ++i)
 		{
-			uint8_t a = bitmapBuffer[i * 4];
-			uint8_t b = bitmapBuffer[i * 4 + 1];
-			uint8_t c = bitmapBuffer[i * 4 + 2];
-			uint8_t d = bitmapBuffer[i * 4 + 3];
+			uint8_t a = bitmapBuffer[(size_t)i * 4];
+			uint8_t b = bitmapBuffer[(size_t)i * 4 + 1];
+			uint8_t c = bitmapBuffer[(size_t)i * 4 + 2];
+			uint8_t d = bitmapBuffer[(size_t)i * 4 + 3];
 			a >>= 6;
 			b >>= 6;
 			c >>= 6;
