@@ -252,7 +252,7 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 ** TRANSFER **
 *************/
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 static bool flush(EVE_HalContext *phost);
 #endif
 
@@ -313,7 +313,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
  */
 static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	if (buffer && (size < (sizeof(phost->SpiWrBuf) - phost->SpiWrBufIndex)))
 	{
 		/* Write to buffer */
@@ -431,7 +431,7 @@ static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 	return value;
 }
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 /**
  * @brief Flush data to Coprocessor
  * 
@@ -472,7 +472,7 @@ static bool flush(EVE_HalContext *phost)
 void EVE_Hal_flush(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 }
@@ -488,7 +488,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	if (!EVE_Hal_supportCmdB(phost) && addr == REG_CMD_WRITE && rw == EVE_TRANSFER_WRITE)
 	{
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
@@ -511,7 +511,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 		uint8_t transferArray[5];
 		uint32_t sizeTransferred;
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 		eve_assert(!phost->SpiWrBufIndex);
 #endif
 
@@ -529,7 +529,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 	}
 	else
 	{
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 		if (phost->Status != EVE_STATUS_ERROR)
 			phost->Status = EVE_STATUS_WRITING;
 #else
@@ -557,13 +557,13 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	FT_STATUS status;
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	uint32_t addr;
 #endif
 
 	eve_assert(phost->Status == EVE_STATUS_READING || phost->Status == EVE_STATUS_WRITING);
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	/* Transfers to FIFO are kept open */
 	addr = phost->SpiRamGAddr;
 	if (addr != (EVE_Hal_supportCmdB(phost) ? REG_CMDB_WRITE : REG_CMD_WRITE) && !((addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE))))
@@ -614,7 +614,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
  */
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -634,7 +634,7 @@ uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
  */
 uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -672,7 +672,7 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
  */
 uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -713,7 +713,7 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 	if (!size)
 		return;
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -750,7 +750,7 @@ void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem
 	if (!size)
 		return;
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -794,7 +794,7 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 		return 4;
 	}
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
@@ -861,7 +861,7 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 	transferArray[1] = 0;
 	transferArray[2] = 0;
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
@@ -882,7 +882,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	transferArray[1] = (cmd >> 8) & 0xff;
 	transferArray[2] = (cmd >> 16) & 0xff;
 
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
@@ -896,7 +896,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
  */
 void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 	if (up)
@@ -932,7 +932,7 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
  */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
-#if defined(BUFFER_OPTIMIZATION)
+#if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 	/* no-op */

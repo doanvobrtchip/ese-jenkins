@@ -139,12 +139,13 @@ extern "C" {
 #define eve_trace(cond) eve_noop()
 #endif
 
+#ifndef NOMINMAX
 #ifndef max
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
-
 #ifndef min
 #define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 #endif
 
 /* Scope */

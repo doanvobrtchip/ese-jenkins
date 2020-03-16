@@ -873,7 +873,7 @@ typedef eve_progmem uint16_t eve_prog_uint16_t;
 
 /* Set implementation options */
 #if defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM)
-#define BUFFER_OPTIMIZATION
+#define EVE_BUFFER_WRITES
 #endif
 
 /* Disable unsupported options */

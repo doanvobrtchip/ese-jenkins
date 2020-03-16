@@ -42,6 +42,7 @@
 
 /* Sane options for Windows header */
 #ifndef NOMINMAX
+#define EVE_NOMINMAX
 #define NOMINMAX
 #endif
 #if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
@@ -74,6 +75,11 @@
 #include <direct.h>
 #include <time.h>
 #include <io.h>
+
+#ifdef EVE_NOMINMAX
+#undef EVE_NOMINMAX
+#undef NOMINMAX
+#endif
 
 #endif
 #endif /* #ifndef EVE_PLATFORM_WIN32__H */

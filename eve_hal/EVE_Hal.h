@@ -207,7 +207,7 @@ typedef struct EVE_HalContext
 	uint16_t SpiClockrateKHz;
 #endif
 
-#if defined(BUFFER_OPTIMIZATION) || defined(FT4222_PLATFORM)
+#if defined(EVE_BUFFER_WRITES) || defined(FT4222_PLATFORM)
 	uint8_t SpiWrBuf[0xFFFF];
 	uint32_t SpiWrBufIndex;
 	uint32_t SpiRamGAddr; /* Current RAM_G address of ongoing SPI write transaction */
