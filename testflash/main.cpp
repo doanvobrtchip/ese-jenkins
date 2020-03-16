@@ -1790,10 +1790,10 @@ int main(int, char*[])
 
 			;
 			{
-				printf("CMD_FLASHREAD (%i)\n", idx);
+				printf("CMD_FLASHREAD (%i)\n", (int)idx);
 				wr32(emulator, REG_CMDB_WRITE, CMD_FLASHREAD);
 				wr32(emulator, REG_CMDB_WRITE, 128); // dest
-				wr32(emulator, REG_CMDB_WRITE, idx); // src
+				wr32(emulator, REG_CMDB_WRITE, (uint32_t)idx); // src
 				wr32(emulator, REG_CMDB_WRITE, 256); // num
 				flush(emulator);
 				for (int i = 0; i < 256; ++i)

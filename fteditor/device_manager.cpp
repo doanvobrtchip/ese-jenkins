@@ -2,6 +2,11 @@
 Copyright (C) 2014-2015  Future Technology Devices International Ltd
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include "device_manager.h"
 
 // STL includes
@@ -906,17 +911,17 @@ void DeviceManager::uploadCoprocessorContent()
 		{
 			validCmd = true;
 			uint32_t address = cmdParamCache[cmdParamIdx[i]];
-			uint32_t size = cmdParamCache[cmdParamIdx[i] + 1];
+			uint32_t size = cmdParamCache[(size_t)cmdParamIdx[i] + 1];
 			EVE_MediaFifo_set(phost, address, size);
 		}
 		else if (cmdList[i] == CMD_LOADIMAGE)
 		{
 			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
-			    && (cmdParamCache[cmdParamIdx[i] + 1] & OPT_FLASH);
+			    && (cmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_FLASH);
 			useFileStream = useFlash ? NULL : cmdStrParamCache[strParamRead].c_str();
 			++strParamRead;
 			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810)
-			    && (cmdParamCache[cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+			    && (cmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
 		}
 		else if (cmdList[i] == CMD_PLAYVIDEO)
 		{
@@ -1407,5 +1412,9 @@ void DeviceManager::updateSelection()
 #endif /* FT800_DEVICE_MANAGER */
 
 } /* namespace FTEDITOR */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

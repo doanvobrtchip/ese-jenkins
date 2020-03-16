@@ -17,6 +17,8 @@
 #pragma warning(push)
 #pragma warning(disable : 26812) // Unscoped enum
 #pragma warning(disable : 6385) // Invalid read
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6262) // Large stack
 #endif
 
 #include "astc_codec_internals.h"

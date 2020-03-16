@@ -23,6 +23,8 @@
 #pragma warning(push)
 #pragma warning(disable : 26451) // Arithmetic overflow
 #pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6011) // Dereferencing NULL
 #endif
 
 #include "astc_codec_internals.h"

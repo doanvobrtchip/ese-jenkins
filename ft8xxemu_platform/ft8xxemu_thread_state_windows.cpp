@@ -138,12 +138,20 @@ bool ThreadState::yield()
 	return m_Handle && (SuspendThread(m_Handle) >= 0) && (ResumeThread(m_Handle) > 0); 
 }
 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6258) // TerminateThread
+#endif
 bool ThreadState::kill()
 {
 	std::unique_lock<std::mutex> lock(g_LogMutex);
 	return m_Handle && TerminateThread(m_Handle, 0);
 	// return m_Handle && (TerminateThread(m_Handle), true);
 }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 bool ThreadState::current()
 {

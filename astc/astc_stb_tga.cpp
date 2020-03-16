@@ -14,6 +14,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6011) // Dereferencing NULL
+#endif
+
 #include "astc_codec_internals.h"
 
 #include "softfloat.h"
@@ -514,3 +520,7 @@ int store_tga_image(const astc_codec_image * img, const char *tga_filename, int 
 
 	return retval;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

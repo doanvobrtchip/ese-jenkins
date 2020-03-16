@@ -12,6 +12,12 @@ This implements the communication channel with the separated process.
 The "bt8xxemus" process provides a graphical debugging user interface.
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include <bt8xxemu.h>
 
 #ifdef BT8XXEMU_REMOTE
@@ -758,6 +764,10 @@ uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal)
 	return data.data;
 }
 
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 /* end of file */

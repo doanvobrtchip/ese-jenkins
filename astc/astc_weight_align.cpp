@@ -40,6 +40,7 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6262) // Large stack
 #endif
 
 #ifdef _MSC_VER

@@ -46,6 +46,11 @@
  * each element in the table is an uint8_t indicating partition index (0, 1, 2 or 3)
  */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include <math.h>
 
 #include "astc_codec_internals.h"
@@ -863,3 +868,7 @@ void find_best_partitionings(int partition_search_limit, int xdim, int ydim, int
 	}
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

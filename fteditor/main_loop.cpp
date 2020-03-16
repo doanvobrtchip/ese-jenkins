@@ -3,6 +3,11 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
@@ -1507,5 +1512,9 @@ void keyboard(BT8XXEMU_Emulator *sender, void *context)
 }
 
 } /* namespace FTEDITOR */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

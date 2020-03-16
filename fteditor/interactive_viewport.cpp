@@ -228,7 +228,8 @@ void InteractiveViewport::zoomIn()
 
 void InteractiveViewport::zoomOut()
 {
-	float currentScale = this->screenScale() * 100 / 16.0;
+	int scaleFactor = screenScale() * 100;
+	float currentScale = (float)scaleFactor / 16.0f;
 
 	// find previous index
 	for (int i = ZoomRange.count() - 1; i >= 0; i--)

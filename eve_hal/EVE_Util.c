@@ -584,6 +584,7 @@ static inline bool EVE_Util_needsVideoPatch(EVE_HalContext *phost)
 
 EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 {
+	bool needsVideoPatch;
 	uint16_t videoPatchVector;
 #ifdef _DEBUG
 	uint16_t rd, wr;
@@ -591,7 +592,8 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 
 	eve_printf_debug("Reset coprocessor\n");
 
-	if (EVE_Util_needsVideoPatch(phost))
+	needsVideoPatch = EVE_Util_needsVideoPatch(phost);
+	if (needsVideoPatch)
 	{
 		/* BT81X video patch */
 		videoPatchVector = EVE_Hal_rd16(phost, EVE_VIDEOPATCH_ADDR);
@@ -671,7 +673,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 		eve_assert((rd = EVE_Hal_rd16(phost, REG_CMD_READ)) == 0);
 	}
 
-	if (EVE_Util_needsVideoPatch(phost))
+	if (needsVideoPatch)
 	{
 		/* BT81X video patch */
 		EVE_Hal_wr16(phost, EVE_VIDEOPATCH_ADDR, videoPatchVector);

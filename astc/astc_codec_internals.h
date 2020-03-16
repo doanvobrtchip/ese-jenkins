@@ -17,6 +17,11 @@
 
 #define ASTC_CODEC_INTERNALS_INCLUDED
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26495) // Uninitialized member
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h> // WORKAROUND: mathlib.h includes vectypes.h which defines 'xx' which is used by math.h under MinGW64
@@ -824,5 +829,8 @@ void physical_to_symbolic(int xdim, int ydim, int zdim, const physical_compresse
 uint16_t unorm16_to_sf16(uint16_t p);
 uint16_t lns_to_sf16(uint16_t p);
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif

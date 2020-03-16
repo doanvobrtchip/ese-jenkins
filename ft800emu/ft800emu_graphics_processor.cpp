@@ -7,6 +7,12 @@ Copyright (C) 2016-2019  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6001) // Uninitialized memory (screen buffers)
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 // #include <...>
 #define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE public
 #include "ft800emu_graphics_processor.h"
@@ -4356,5 +4362,9 @@ void GraphicsProcessor::getDebugTrace(std::vector<int> &result)
 */
 
 } /* namespace FT800EMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

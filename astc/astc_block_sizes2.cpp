@@ -14,6 +14,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include "astc_codec_internals.h"
 
 extern const float percentile_table_4x4[2048];
@@ -968,3 +974,7 @@ const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int z
 	}
 	return bsd_pointers[bsd_index];
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
