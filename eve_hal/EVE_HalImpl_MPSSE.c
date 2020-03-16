@@ -285,13 +285,20 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
 static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	uint32_t sizeTransferred = 0;
+	uint32_t sizeRemaining = size;
 
-	FT_STATUS status = SPI_Read(phost->SpiHandle, buffer, size, &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
-
-	if (status != FT_OK || sizeTransferred != size)
+	while (sizeRemaining)
 	{
-		phost->Status = EVE_STATUS_ERROR;
-		return false;
+		FT_STATUS status = SPI_Read(phost->SpiHandle, (uint8 *)buffer, min(0xFFFF, sizeRemaining), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+		sizeRemaining -= sizeTransferred;
+		buffer += sizeTransferred;
+
+		if (status != FT_OK || !sizeTransferred)
+		{
+			eve_printf_debug("%d SPI_Read failed, sizeTransferred is %d with status %d\n", __LINE__, sizeTransferred, status);
+			phost->Status = EVE_STATUS_ERROR;
+			return false;
+		}
 	}
 
 	return true;
@@ -365,6 +372,7 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 				FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, transferSize, &sizeTransferred, 
 					(transferSize == sizeRemaining) ? (SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE) : SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
 				sizeRemaining -= sizeTransferred;
+				buffer += sizeTransferred;
 			
 				if (status != FT_OK || !sizeTransferred)
 				{
@@ -388,6 +396,7 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 	{
 		FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, min(0xFFFF, sizeRemaining), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
 		sizeRemaining -= sizeTransferred;
+		buffer += sizeTransferred;
 
 		if (status != FT_OK || !sizeTransferred)
 		{
