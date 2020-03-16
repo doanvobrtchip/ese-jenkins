@@ -161,6 +161,8 @@ Graphics target:
 - EVE_SUPPORT_CHIPID=EVE_FT813
 - EVE_SUPPORT_CHIPID=EVE_BT815
 - EVE_SUPPORT_CHIPID=EVE_BT816
+- EVE_SUPPORT_CHIPID=EVE_BT817
+- EVE_SUPPORT_CHIPID=EVE_BT818
 
 Platform target:
 - BT8XXEMU_PLATFORM
@@ -173,6 +175,7 @@ Display resolution:
 - DISPLAY_RESOLUTION_WVGA
 - DISPLAY_RESOLUTION_QVGA
 - DISPLAY_RESOLUTION_WQVGA
+- DISPLAY_RESOLUTION_1280x120
 
 Flash, with size in megabytes:
 - EVE_FLASH_AVAILABLE
@@ -554,11 +557,12 @@ It may also set platform, display, and flash values if none are configured.
 #elif defined(EVE_GRAPHICS_BT817)
 
 #define BT817_ENABLE
-// #define ENABLE_SPI_QUAD
+#define ENABLE_SPI_QUAD
 
 #ifndef EVE_DISPLAY_AVAILABLE
 #define EVE_DISPLAY_AVAILABLE
-#define DISPLAY_RESOLUTION_WVGA
+// #define DISPLAY_RESOLUTION_WVGA
+#define DISPLAY_RESOLUTION_1280x800
 #endif
 
 #ifndef EVE_FLASH_AVAILABLE
@@ -569,7 +573,7 @@ It may also set platform, display, and flash values if none are configured.
 #elif defined(EVE_GRAPHICS_BT818)
 
 #define BT818_ENABLE
-// #define ENABLE_SPI_QUAD
+#define ENABLE_SPI_QUAD
 #define RESISTANCE_THRESHOLD (1800)
 
 #ifndef EVE_DISPLAY_AVAILABLE

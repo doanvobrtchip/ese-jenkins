@@ -231,6 +231,22 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 	parameters->PCLKPol = 1;
 	parameters->CSpread = 0;
 	parameters->Dither = 1;
+#elif defined(DISPLAY_RESOLUTION_1280x800)
+	parameters->Width = 1280L;
+	parameters->Height = 800L;
+	parameters->HCycle = 1440L;
+	parameters->HOffset = 38L;
+	parameters->HSync0 = 0;
+	parameters->HSync1 = 16L;
+	parameters->VCycle = 838L;
+	parameters->VOffset = 8;
+	parameters->VSync0 = 0;
+	parameters->VSync1 = 2;
+	parameters->PCLK = 1;
+	parameters->Swizzle = 0;
+	parameters->PCLKPol = 0;
+	parameters->CSpread = 0;
+	parameters->Dither = 0;
 #elif defined(DISPLAY_RESOLUTION_HVGA_PORTRAIT)
 	/* Values specific to HVGA LCD display */
 	parameters->Width = 320;
