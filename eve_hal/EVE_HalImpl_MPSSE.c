@@ -72,14 +72,20 @@
 EVE_HalPlatform g_HalPlatform;
 uint32_t s_NumChannels = 0;
 
-/* Initialize HAL platform */
+/**
+ * @brief Initialize HAL platform
+ * 
+ */
 void EVE_HalImpl_initialize()
 {
 	/* Initialize the libmpsse */
 	Init_libMPSSE();
 }
 
-/* Release HAL platform */
+/**
+ * @brief Release HAL platform
+ * 
+ */
 void EVE_HalImpl_release()
 {
 	/* Cleanup the MPSSE Lib */
@@ -132,7 +138,11 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 	return phost->SpiHandle == chanInfo.ftHandle;
 }
 
-/* Get the default configuration parameters */
+/**
+ * @brief Get the default configuration parameters
+ * 
+ * @param parameters EVE_Hal framework's parameters
+ */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
 	bool res = deviceIdx >= 0 && deviceIdx < s_NumChannels;
@@ -162,7 +172,14 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 	return res;
 }
 
-/* Opens a new HAL context using the specified parameters */
+/**
+ * @brief Opens a new HAL context using the specified parameters
+ * 
+ * @param phost Pointer to Hal context
+ * @param parameters EVE_Hal framework's parameters
+ * @return true True if ok
+ * @return false False if error
+ */
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	FT_STATUS status;
@@ -209,7 +226,11 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	return true;
 }
 
-/* Close a HAL context */
+/**
+ * @brief Close a HAL context
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_close(EVE_HalContext *phost)
 {
 	phost->Status = EVE_STATUS_CLOSED;
@@ -217,7 +238,11 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 	SPI_CloseChannel(phost->SpiHandle);
 }
 
-/* Idle. Call regularly to update frequently changing internal state */
+/**
+ * @brief Idle. Call regularly to update frequently changing internal state
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_idle(EVE_HalContext *phost)
 {
 	/* no-op */
@@ -231,6 +256,13 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 static bool flush(EVE_HalContext *phost);
 #endif
 
+/**
+ * @brief Increase RAM_G adress
+ * 
+ * @param addr Address offset
+ * @param inc Number of bytes to increase
+ * @return uint32_t New address in RAM_G
+ */
 static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, uint32_t inc)
 {
 	if (!EVE_Hal_supportCmdB(phost) || (addr != REG_CMDB_WRITE))
@@ -243,6 +275,13 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
 	return addr;
 }
 
+/**
+ * @brief Read a block data from Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param buffer Buffer to get result
+ * @param size Number of bytes to read
+ */
 static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	uint32_t sizeTransferred = 0;
@@ -258,6 +297,13 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
 	return true;
 }
 
+/**
+ * @brief Write a block data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param buffer Data buffer to write
+ * @param size Size of buffer
+ */
 static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -355,6 +401,13 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 #endif
 }
 
+/**
+ * @brief Write 8 bits to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	uint32_t sizeTransferred = 0;
@@ -370,6 +423,11 @@ static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 }
 
 #if defined(BUFFER_OPTIMIZATION)
+/**
+ * @brief Flush data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ */
 static bool flush(EVE_HalContext *phost)
 {
 	bool res = true;
@@ -397,6 +455,11 @@ static bool flush(EVE_HalContext *phost)
 }
 #endif
 
+/**
+ * @brief Flush data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_flush(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -405,6 +468,13 @@ void EVE_Hal_flush(EVE_HalContext *phost)
 #endif
 }
 
+/**
+ * @brief Start data transfer to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param rw Read or Write
+ * @param addr Address to read/write
+ */
 void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -470,6 +540,11 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 	}
 }
 
+/**
+ * @brief End data transfer
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	FT_STATUS status;
@@ -521,6 +596,13 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 #endif
 }
 
+/**
+ * @brief Write 8 bits to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -534,6 +616,13 @@ uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 	return transfer8(phost, value);
 }
 
+/**
+ * @brief Write 2 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint16_t Number of bytes transfered
+ */
 uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -565,6 +654,13 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 	}
 }
 
+/**
+ * @brief Write 4 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint32_t Number of bytes transfered
+ */
 uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -595,6 +691,14 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 	}
 }
 
+/**
+ * @brief Transfer (read/write) a block data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
@@ -624,6 +728,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 	}
 }
 
+/**
+ * @brief Transfer a block data in Progmem to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
@@ -653,6 +765,16 @@ void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem
 	}
 }
 
+/**
+ * @brief Transfer a string to Ever platform
+ * 
+ * @param phost Pointer to Hal context
+ * @param str String to transfer
+ * @param index Start position in the string
+ * @param size Size of string
+ * @param padMask Padding mask
+ * @return uint32_t Numer of bytes transfered
+ */
 uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
 {
 	if (!size)
@@ -715,6 +837,12 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 ** UTILITY **
 ************/
 
+/**
+ * @brief Send a host command to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 {
 	uint8_t transferArray[3];
@@ -730,6 +858,12 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 }
 
+/**
+ * @brief This API sends a 3byte command to the phost
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 {
 	uint8_t transferArray[3];
@@ -745,7 +879,12 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 }
 
-/* Toggle PD_N pin of FT800 board for a power cycle */
+/**
+ * @brief Toggle PD_N pin of FT800 board for a power cycle
+ * 
+ * @param phost Pointer to Hal context
+ * @param up Up or Down
+ */
 void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -775,6 +914,13 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 	}
 }
 
+/**
+ * @brief Set number of SPI channel
+ * 
+ * @param phost Pointer to Hal context
+ * @param numchnls Number of channel
+ * @param numdummy Number of dummy bytes
+ */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
 #if defined(BUFFER_OPTIMIZATION)
@@ -787,6 +933,13 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 ** MISC **
 *********/
 
+/**
+ * @brief Display GPIO pins
+ * 
+ * @param phost Pointer to Hal context
+ * @return true True if Ok
+ * @return false False if error
+ */
 bool EVE_UtilImpl_bootupDisplayGpio(EVE_HalContext *phost)
 {
 	/* no-op */

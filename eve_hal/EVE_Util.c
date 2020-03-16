@@ -131,7 +131,11 @@ static eve_progmem_const uint8_t c_TouchDataU8[TOUCH_DATA_LEN] = {
 	32, 32, 48, 0, 4, 0, 0, 0, 0, 0, 0, 0
 };
 
-/* Download new touch firmware for FT811 and FT813 chip */
+/**
+ * @brief Download new touch firmware for FT811 and FT813 chip
+ * 
+ * @param phost  Pointer to Hal context
+ */
 static inline void uploadTouchFirmware(EVE_HalContext *phost)
 {
 	/* bug fix pen up section */
@@ -145,6 +149,11 @@ static inline void uploadTouchFirmware(EVE_HalContext *phost)
 }
 #endif
 
+/**
+ * @brief Clear the screen
+ * 
+ * @param phost  Pointer to Hal context
+ */
 EVE_HAL_EXPORT void EVE_Util_clearScreen(EVE_HalContext *phost)
 {
 	EVE_Hal_wrProgmem(phost, RAM_DL, (eve_progmem_const uint8_t *)c_DlCodeBootup, sizeof(c_DlCodeBootup));
@@ -581,7 +590,13 @@ static inline bool EVE_Util_needsVideoPatch(EVE_HalContext *phost)
 {
 	return (EVE_CHIPID >= EVE_BT815) && (EVE_CHIPID <= EVE_BT816);
 }
-
+/**
+ * @brief Reset Coprocessor
+ * 
+ * @param phost  Pointer to Hal context
+ * @return true True if successful
+ * @return false False if error
+ */
 EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 {
 	bool needsVideoPatch;
@@ -695,6 +710,13 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	return EVE_Cmd_waitFlush(phost);
 }
 
+/**
+ * @brief Bootup Coprocessor
+ * 
+ * @param phost  Pointer to Hal context
+ * @return true True if successful
+ * @return false False if error
+ */
 EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 {
 	EVE_BootupParameters parameters;

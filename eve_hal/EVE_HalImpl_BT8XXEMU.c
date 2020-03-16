@@ -71,13 +71,19 @@ void Ft_MainReady__ESD(BT8XXEMU_Emulator *emulator);
 
 EVE_HalPlatform g_HalPlatform;
 
-/* Initialize HAL platform */
+/**
+ * @brief Initialize HAL platform
+ * 
+ */
 void EVE_HalImpl_initialize()
 {
 	// TODO: g_HalPlatform.TotalDevices = 1;
 }
 
-/* Release HAL platform */
+/**
+ * @brief Release HAL platform
+ * 
+ */
 void EVE_HalImpl_release()
 {
 	/* no-op */
@@ -111,7 +117,11 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 	return true;
 }
 
-/* Get the default configuration parameters */
+/**
+ * @brief Get the default configuration parameters
+ * 
+ * @param parameters EVE_Hal framework's parameters
+ */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
 	BT8XXEMU_EmulatorParameters *params = (void *)parameters->EmulatorParameters;
@@ -123,7 +133,14 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 	return true;
 }
 
-/* Opens a new HAL context using the specified parameters */
+/**
+ * @brief Opens a new HAL context using the specified parameters
+ * 
+ * @param phost Pointer to Hal context
+ * @param parameters EVE_Hal framework's parameters
+ * @return true True if ok
+ * @return false False if error
+ */
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	bool ret;
@@ -166,7 +183,11 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	return ret;
 }
 
-/* Close a HAL context */
+/**
+ * @brief Close a HAL context
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_close(EVE_HalContext *phost)
 {
 #if !defined(EVE_EMULATOR_MAIN)
@@ -186,7 +207,11 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 	--g_HalPlatform.OpenedDevices;
 }
 
-/* Idle. Call regularly to update frequently changing internal state */
+/**
+ * @brief Idle. Call regularly to update frequently changing internal state
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_idle(EVE_HalContext *phost)
 {
 	/* no-op */
@@ -196,6 +221,13 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 ** TRANSFER **
 *************/
 
+/**
+ * @brief Start data transfer to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param rw Read or Write
+ * @param addr Address to read/write
+ */
 void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -219,6 +251,11 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 	}
 }
 
+/**
+ * @brief End data transfer
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_READING || phost->Status == EVE_STATUS_WRITING);
@@ -227,22 +264,48 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 	phost->Status = EVE_STATUS_OPENED;
 }
 
+/**
+ * @brief Flush data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_flush(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
 	/* no-op */
 }
 
+/**
+ * @brief Write 8 bit to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	return BT8XXEMU_transfer(phost->Emulator, value);
 }
 
+/**
+ * @brief Write 8 bits to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	return transfer8(phost, value);
 }
 
+/**
+ * @brief Write 2 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint16_t Number of bytes transfered
+ */
 uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 	uint16_t retVal = 0;
@@ -251,6 +314,13 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 	return retVal;
 }
 
+/**
+ * @brief Write 4 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint32_t Number of bytes transfered
+ */
 uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 	uint32_t retVal = 0;
@@ -261,6 +331,14 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 	return retVal;
 }
 
+/**
+ * @brief Transfer (read/write) a block data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	uint32_t i;
@@ -281,6 +359,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 	}
 }
 
+/**
+ * @brief Transfer a block data in Progmem to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	uint32_t i;
@@ -301,6 +387,16 @@ void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem
 	}
 }
 
+/**
+ * @brief Transfer a string to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param str String to transfer
+ * @param index Start position in the string
+ * @param size Size of string
+ * @param padMask Padding mask
+ * @return uint32_t Numer of bytes transfered
+ */
 uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
 {
 	if (!size)
@@ -416,18 +512,34 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 ** UTILITY **
 ************/
 
+/**
+ * @brief Send a host command to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 {
 	/* no-op */
 }
 
-/* This API sends a 3byte command to the phost */
+/**
+ * @brief This API sends a 3byte command to the phost
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 {
 	/* no-op */
 }
 
-/* Toggle PD_N pin of FT800 board for a power cycle */
+/**
+ * @brief Toggle PD_N pin of FT800 board for a power cycle
+ * 
+ * @param phost Pointer to Hal context
+ * @param up Up or Down
+ */
 void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 #if !defined(EVE_EMULATOR_MAIN)
@@ -462,6 +574,13 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 #endif
 }
 
+/**
+ * @brief Set number of SPI channel
+ * 
+ * @param phost Pointer to Hal context
+ * @param numchnls Number of channel
+ * @param numdummy Number of dummy bytes
+ */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
 	/* no-op */
@@ -471,6 +590,13 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 ** MISC **
 *********/
 
+/**
+ * @brief Display GPIO pins
+ * 
+ * @param phost Pointer to Hal context
+ * @return true True if Ok
+ * @return false False if error
+ */
 bool EVE_UtilImpl_bootupDisplayGpio(EVE_HalContext *phost)
 {
 	/* no-op */

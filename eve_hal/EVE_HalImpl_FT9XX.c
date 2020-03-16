@@ -61,7 +61,10 @@ static const pad_dir_t s_SpimFunc[4] = { pad_spim_ss0, pad_spim_ss1, pad_spim_ss
 
 EVE_HalPlatform g_HalPlatform;
 
-/* Initialize HAL platform */
+/**
+ * @brief Initialize HAL platform
+ * 
+ */
 void EVE_HalImpl_initialize()
 {
 #if defined(PANL70) || defined(PANL70PLUS)
@@ -71,7 +74,10 @@ void EVE_HalImpl_initialize()
 #endif
 }
 
-/* Release HAL platform */
+/**
+ * @brief Release HAL platform
+ * 
+ */
 void EVE_HalImpl_release()
 {
 	spi_uninit(SPIM);
@@ -98,7 +104,11 @@ EVE_HAL_EXPORT bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 	return true;
 }
 
-/* Get the default configuration parameters */
+/**
+ * @brief Get the default configuration parameters
+ * 
+ * @param parameters EVE_Hal framework's parameters
+ */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
 {
 	parameters->PowerDownPin = FT800_PD_N;
@@ -106,6 +116,13 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 	return true;
 }
 
+/**
+ * @brief Set number of SPI channel
+ * 
+ * @param phost Pointer to Hal context
+ * @param numchnls Number of channel
+ * @param numdummy Number of dummy bytes
+ */
 void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
 	uint8_t spimGpio = s_SpimGpio[phost->Parameters.SpiCsPin];
@@ -159,7 +176,14 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
 	phost->SpiDummyBytes = numdummy;
 }
 
-/* Opens a new HAL context using the specified parameters */
+/**
+ * @brief Opens a new HAL context using the specified parameters
+ * 
+ * @param phost Pointer to Hal context
+ * @param parameters EVE_Hal framework's parameters
+ * @return true True if ok
+ * @return false False if error
+ */
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	uint8_t spimGpio = s_SpimGpio[phost->Parameters.SpiCsPin];
@@ -206,7 +230,11 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	return true;
 }
 
-/* Close a HAL context */
+/**
+ * @brief Close a HAL context
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_close(EVE_HalContext *phost)
 {
 	phost->Status = EVE_STATUS_CLOSED;
@@ -214,7 +242,11 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 	spi_close(SPIM, phost->Parameters.SpiCsPin);
 }
 
-/* Idle. Call regularly to update frequently changing internal state */
+/**
+ * @brief Idle. Call regularly to update frequently changing internal state
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_HalImpl_idle(EVE_HalContext *phost)
 {
 #if defined(EVE_MODULE_PANL)
@@ -226,6 +258,13 @@ void EVE_HalImpl_idle(EVE_HalContext *phost)
 ** TRANSFER **
 *************/
 
+/**
+ * @brief Start data transfer to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param rw Read or Write
+ * @param addr Address to read/write
+ */
 void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t addr)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -254,6 +293,11 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 	}
 }
 
+/**
+ * @brief End data transfer
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_READING || phost->Status == EVE_STATUS_WRITING);
@@ -262,22 +306,48 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 	phost->Status = EVE_STATUS_OPENED;
 }
 
+/**
+ * @brief Flush data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ */
 void EVE_Hal_flush(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
 	/* no-op */
 }
 
+/**
+ * @brief Read a block data from Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param buffer Buffer to get result
+ * @param size Number of bytes to read
+ */
 static inline void rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	spi_readn(SPIM, buffer, size);
 }
 
+/**
+ * @brief Write a block data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param buffer Data buffer to write
+ * @param size Size of buffer
+ */
 static inline void wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	spi_writen(SPIM, buffer, size);
 }
 
+/**
+ * @brief Write 8 bit to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	if (phost->Status == EVE_STATUS_READING)
@@ -292,11 +362,25 @@ static inline uint8_t transfer8(EVE_HalContext *phost, uint8_t value)
 	}
 }
 
+/**
+ * @brief Write 8 bits to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint8_t Number of bytes transfered
+ */
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 	return transfer8(phost, value);
 }
 
+/**
+ * @brief Write 2 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint16_t Number of bytes transfered
+ */
 uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 	uint8_t buffer[2];
@@ -315,6 +399,13 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 	}
 }
 
+/**
+ * @brief Write 4 bytes to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param value Value to write
+ * @return uint32_t Number of bytes transfered
+ */
 uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 	uint8_t buffer[4];
@@ -337,6 +428,14 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 	}
 }
 
+/**
+ * @brief Transfer (read/write) a block data to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
@@ -357,6 +456,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 	}
 }
 
+/**
+ * @brief Transfer a block data in Progmem to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param result Buffer to get data transfered, NULL when write
+ * @param buffer Buffer where data is transfered, NULL when read
+ * @param size Size of buffer
+ */
 void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
@@ -386,6 +493,16 @@ void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem
 	}
 }
 
+/**
+ * @brief Transfer a string to Ever platform
+ * 
+ * @param phost Pointer to Hal context
+ * @param str String to transfer
+ * @param index Start position in the string
+ * @param size Size of string
+ * @param padMask Padding mask
+ * @return uint32_t Numer of bytes transfered
+ */
 uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
 {
 	if (!size)
@@ -424,6 +541,12 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 ** UTILITY **
 ************/
 
+/**
+ * @brief Send a host command to Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -439,6 +562,12 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 	spi_close(SPIM, phost->Parameters.SpiCsPin);
 }
 
+/**
+ * @brief This API sends a 3byte command to the phost
+ * 
+ * @param phost Pointer to Hal context
+ * @param cmd Command to send
+ */
 void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 {
 	eve_assert(phost->Status == EVE_STATUS_OPENED);
@@ -454,6 +583,12 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	spi_close(SPIM, phost->Parameters.SpiCsPin);
 }
 
+/**
+ * @brief Toggle PD_N pin of FT800 board for a power cycle
+ * 
+ * @param phost Pointer to Hal context
+ * @param up Up or Down
+ */
 void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	if (up)
@@ -473,6 +608,13 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 	}
 }
 
+/**
+ * @brief Set number of SPI channel
+ * 
+ * @param phost Pointer to Hal context
+ * @param numchnls Number of channel
+ * @param numdummy Number of dummy bytes
+ */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
 	if (EVE_CHIPID < EVE_FT810)
@@ -493,6 +635,12 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 	setSPI(phost, numchnls, numdummy);
 }
 
+/**
+ * @brief Get current system clock of Coprocessor
+ * 
+ * @param phost Pointer to Hal context
+ * @return uint32_t Frequency of Coprocessor
+ */
 uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 {
 	uint32_t t0, t1;
@@ -519,6 +667,10 @@ uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 ** MISC **
 *********/
 
+/**
+ * @brief Sdcard initialization
+ * 
+ */
 static void initSdHost()
 {
 	sys_enable(sys_device_sd_card);
@@ -543,6 +695,10 @@ static void initSdHost()
 	gpio_pull(GPIO_SD_WP, pad_pull_pullup);
 }
 
+/**
+ * @brief Init FT9x host MCU
+ * 
+ */
 void EVE_Mcu_initialize()
 {
 #if (defined(EVE_MODULE_PANL))
@@ -613,6 +769,10 @@ void EVE_Mcu_initialize()
 	initSdHost();
 }
 
+/**
+ * @brief Release FT9x host MCU
+ * 
+ */
 void EVE_Mcu_release()
 {
 	/* no-op */
@@ -627,6 +787,10 @@ void EVE_Mcu_release()
 static uint32_t s_TotalMilliseconds = 0;
 #endif
 
+/**
+ * @brief Init FT9x timer
+ * 
+ */
 void EVE_Millis_initialize()
 {
 #if (defined(EVE_MODULE_PANL))
@@ -645,6 +809,10 @@ void EVE_Millis_initialize()
 #endif
 }
 
+/**
+ * @brief Release FT9x timer
+ * 
+ */
 void EVE_Millis_release()
 {
 #if !defined(EVE_MODULE_PANL)
@@ -653,8 +821,14 @@ void EVE_Millis_release()
 #endif
 }
 
-/* Need to ensure that below api is called at least once in 6.5 seconds duration for FT900 platform as this module doesnt use timer for context update */
-/* global counter to loopback after ~49.71 days */
+/**
+ * @brief Get clock in miliseond
+ * 
+ * Need to ensure that below api is called at least once in 6.5 seconds duration for FT900 platform as this module doesnt use timer for context update 
+ * global counter to loopback after ~49.71 days
+ * 
+ * @return uint32_t Clock number
+ */
 uint32_t EVE_millis()
 {
 #if defined(EVE_MODULE_PANL)
@@ -665,6 +839,10 @@ uint32_t EVE_millis()
 #endif
 }
 
+/**
+ * @brief Clear the interrupt and increment the counter
+ * 
+ */
 void ticker()
 {
 #if !defined(EVE_MODULE_PANL)
@@ -677,6 +855,11 @@ void ticker()
 #endif
 }
 
+/**
+ * @brief Sleep in milisecond
+ * 
+ * @param ms Milisecond
+ */
 void EVE_sleep(uint32_t ms)
 {
 	delayms(ms);
@@ -686,6 +869,13 @@ void EVE_sleep(uint32_t ms)
 ** MISC **
 *********/
 
+/**
+ * @brief Display GPIO pins
+ * 
+ * @param phost Pointer to Hal context
+ * @return true True if Ok
+ * @return false False if error
+ */
 bool EVE_UtilImpl_bootupDisplayGpio(EVE_HalContext *phost)
 {
 #if defined(PANL70) || defined(PANL70PLUS)
