@@ -11,6 +11,10 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */

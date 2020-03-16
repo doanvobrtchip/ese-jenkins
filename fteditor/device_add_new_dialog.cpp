@@ -1,3 +1,7 @@
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "device_add_new_dialog.h"
 #include "device_manager.h"
 #include "device_manage_dialog.h"

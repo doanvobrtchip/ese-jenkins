@@ -8,6 +8,7 @@ Author: James Bowman <jamesb@excamera.com>
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
 #endif
 
 #ifndef FT810EMU_MODE

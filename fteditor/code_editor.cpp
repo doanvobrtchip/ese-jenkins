@@ -41,6 +41,10 @@
 // http://qt-project.org/doc/qt-4.8/widgets-codeeditor-codeeditor-cpp.html
 // http://qt-project.org/doc/qt-4.8/tools-customcompleter.html
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include <QtGui>
 #include <QUndoCommand>
 #include <QUndoStack>

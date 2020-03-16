@@ -3,6 +3,10 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "content_manager.h"
 
 // STL includes

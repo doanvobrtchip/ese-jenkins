@@ -2,6 +2,10 @@
 Copyright (C) 2014-2015  Future Technology Devices International Ltd
 */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 6262) // Large stack
