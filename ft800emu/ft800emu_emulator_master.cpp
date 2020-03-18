@@ -181,7 +181,7 @@ int Emulator::masterThread(bool sync)
 							// FTEMU_printf("SNAPY: %u\n", snapy);
 							argb8888 *buffer = m_GraphicsBuffer ? m_GraphicsBuffer : m_WindowOutput->getBufferARGB8888();
 #ifdef BT817EMU_MODE
-							long startTick = m_System->getFreqTick(48000000);
+							long startTick = m_System->getFreqTick(usefreq);
 #endif
 							m_GraphicsProcessor->process(buffer,
 								false, mirrorHorizontal,
@@ -190,7 +190,7 @@ int Emulator::masterThread(bool sync)
 #endif
 								reg_hsize BT817EMU_HSF_HSIZE_ZERO, snapy, snapy + 1);
 #ifdef BT817EMU_MODE
-							long deltaTick = m_System->getFreqTick(48000000) - startTick;
+							long deltaTick = m_System->getFreqTick(usefreq) - startTick;
 							m_Memory->rawWriteU32(ram, REG_LINECLOCKS, deltaTick); // Emulator output does not reflect real clock cycles
 #endif
 							uint32_t ya = (reg_hsize * snapy);
