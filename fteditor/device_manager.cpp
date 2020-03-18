@@ -462,8 +462,10 @@ void DeviceManager::connectDevice()
 
 	// Get parameters to open the selected device
 	EVE_HalParameters params = { 0 };
-	EVE_Hal_defaultsEx(&params, (EVE_CHIPID_T)deviceToEnum(FTEDITOR_CURRENT_DEVICE), devInfo->DeviceIdx);
-	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)params.ChipId);
+	EVE_Hal_defaultsEx(&params, devInfo->DeviceIdx);
+	if (params.Host == EVE_HOST_BT8XXEMU)
+		params.EmulatorMode = (BT8XXEMU_EmulatorMode)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
+	devInfo->DeviceIntf = FTEDITOR_CURRENT_DEVICE;
 
 	params.CbCmdWait = (EVE_Callback)cbCmdWait;
 	params.UserContext = reinterpret_cast<void *>(this);
@@ -477,6 +479,8 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
+	devInfo->EveHalContext = phost;
+
 	EVE_BootupParameters bootupParams;
 	EVE_Util_bootupDefaults(phost, &bootupParams);
 
@@ -484,22 +488,6 @@ void DeviceManager::connectDevice()
 	if (m_IsCustomDevice)
 	{
 		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
-		bootupParams.Width = m_CDI.CUS_REG_HSIZE;
-		bootupParams.Height = m_CDI.CUS_REG_VSIZE;
-		bootupParams.HCycle = m_CDI.CUS_REG_HCYCLE;
-		bootupParams.HOffset = m_CDI.CUS_REG_HOFFSET;
-		bootupParams.HSync0 = m_CDI.CUS_REG_HSYNC0;
-		bootupParams.HSync1 = m_CDI.CUS_REG_HSYNC1;
-		bootupParams.VCycle = m_CDI.CUS_REG_VCYCLE;
-		bootupParams.VOffset = m_CDI.CUS_REG_VOFFSET;
-		bootupParams.VSync0 = m_CDI.CUS_REG_VSYNC0;
-		bootupParams.VSync1 = m_CDI.CUS_REG_VSYNC1;
-		bootupParams.PCLK = m_CDI.CUS_REG_PCLK;
-		bootupParams.Swizzle = m_CDI.CUS_REG_SWIZZLE;
-		bootupParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
-		bootupParams.CSpread = m_CDI.CUS_REG_CSPREAD;
-		bootupParams.Dither = m_CDI.CUS_REG_DITHER;
-		bootupParams.OutBits = m_CDI.CUS_REG_OUTBITS;
 		bootupParams.ExternalOsc = m_CDI.ExternalOsc;
 
 		switch (m_CDI.SystemClock)
@@ -520,69 +508,13 @@ void DeviceManager::connectDevice()
 			bootupParams.SystemClock = EVE_SYSCLK_72M;
 			break;
 		case 84:
-			bootupParams.SystemClock = EVE_SYSCLK_72M;
+			bootupParams.SystemClock = EVE_SYSCLK_84M;
 			break;
 		default:
 			bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;
 			break;
 		}
 	}
-	else if (m_SelectedDisplaySize == "480x272")
-	{
-		bootupParams.Width = 480;
-		bootupParams.Height = 272;
-		bootupParams.HCycle = 548;
-		bootupParams.HOffset = 43;
-		bootupParams.HSync0 = 0;
-		bootupParams.HSync1 = 41;
-		bootupParams.VCycle = 292;
-		bootupParams.VOffset = 12;
-		bootupParams.VSync0 = 0;
-		bootupParams.VSync1 = 10;
-		bootupParams.PCLK = 5;
-		bootupParams.Swizzle = 0;
-		bootupParams.PCLKPol = 1;
-		bootupParams.CSpread = 1;
-		bootupParams.Dither = 1;
-	}
-	else if (m_SelectedDisplaySize == "800x480")
-	{
-		bootupParams.Width = 800;
-		bootupParams.Height = 480;
-		bootupParams.HCycle = 928;
-		bootupParams.HOffset = 88;
-		bootupParams.HSync0 = 0;
-		bootupParams.HSync1 = 48;
-		bootupParams.VCycle = 525;
-		bootupParams.VOffset = 32;
-		bootupParams.VSync0 = 0;
-		bootupParams.VSync1 = 3;
-		bootupParams.PCLK = 2;
-		bootupParams.Swizzle = 0;
-		bootupParams.PCLKPol = 1;
-		bootupParams.CSpread = 0;
-		bootupParams.Dither = 1;
-	}
-	else if (m_SelectedDisplaySize == "320x240")
-	{
-		bootupParams.Width = 320;
-		bootupParams.Height = 240;
-		bootupParams.HCycle = 408;
-		bootupParams.HOffset = 70;
-		bootupParams.HSync0 = 0;
-		bootupParams.HSync1 = 10;
-		bootupParams.VCycle = 263;
-		bootupParams.VOffset = 13;
-		bootupParams.VSync0 = 0;
-		bootupParams.VSync1 = 2;
-		bootupParams.PCLK = 8;
-		bootupParams.Swizzle = 2;
-		bootupParams.PCLKPol = 0;
-		bootupParams.CSpread = 1;
-		bootupParams.Dither = 1;
-	}
-
-	devInfo->EveHalContext = phost;
 
 	progressLabel->setText("Boot up...");
 	if (!EVE_Util_bootup(phost, &bootupParams))
@@ -591,6 +523,95 @@ void DeviceManager::connectDevice()
 		devInfo->EveHalContext = NULL;
 		delete phost;
 		QMessageBox::critical(this, "Failed", "Failed to boot up EVE", QMessageBox::Ok);
+		return;
+	}
+
+	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)phost->ChipId);
+	EVE_ConfigParameters configParams;
+	EVE_Util_configDefaults(phost, &configParams);
+
+	if (m_IsCustomDevice)
+	{
+		configParams.Width = m_CDI.CUS_REG_HSIZE;
+		configParams.Height = m_CDI.CUS_REG_VSIZE;
+		configParams.HCycle = m_CDI.CUS_REG_HCYCLE;
+		configParams.HOffset = m_CDI.CUS_REG_HOFFSET;
+		configParams.HSync0 = m_CDI.CUS_REG_HSYNC0;
+		configParams.HSync1 = m_CDI.CUS_REG_HSYNC1;
+		configParams.VCycle = m_CDI.CUS_REG_VCYCLE;
+		configParams.VOffset = m_CDI.CUS_REG_VOFFSET;
+		configParams.VSync0 = m_CDI.CUS_REG_VSYNC0;
+		configParams.VSync1 = m_CDI.CUS_REG_VSYNC1;
+		configParams.PCLK = m_CDI.CUS_REG_PCLK;
+		configParams.Swizzle = m_CDI.CUS_REG_SWIZZLE;
+		configParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
+		configParams.CSpread = m_CDI.CUS_REG_CSPREAD;
+		configParams.Dither = m_CDI.CUS_REG_DITHER;
+		configParams.OutBits = m_CDI.CUS_REG_OUTBITS;
+	}
+	else if (m_SelectedDisplaySize == "480x272")
+	{
+		configParams.Width = 480;
+		configParams.Height = 272;
+		configParams.HCycle = 548;
+		configParams.HOffset = 43;
+		configParams.HSync0 = 0;
+		configParams.HSync1 = 41;
+		configParams.VCycle = 292;
+		configParams.VOffset = 12;
+		configParams.VSync0 = 0;
+		configParams.VSync1 = 10;
+		configParams.PCLK = 5;
+		configParams.Swizzle = 0;
+		configParams.PCLKPol = 1;
+		configParams.CSpread = 1;
+		configParams.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "800x480")
+	{
+		configParams.Width = 800;
+		configParams.Height = 480;
+		configParams.HCycle = 928;
+		configParams.HOffset = 88;
+		configParams.HSync0 = 0;
+		configParams.HSync1 = 48;
+		configParams.VCycle = 525;
+		configParams.VOffset = 32;
+		configParams.VSync0 = 0;
+		configParams.VSync1 = 3;
+		configParams.PCLK = 2;
+		configParams.Swizzle = 0;
+		configParams.PCLKPol = 1;
+		configParams.CSpread = 0;
+		configParams.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "320x240")
+	{
+		configParams.Width = 320;
+		configParams.Height = 240;
+		configParams.HCycle = 408;
+		configParams.HOffset = 70;
+		configParams.HSync0 = 0;
+		configParams.HSync1 = 10;
+		configParams.VCycle = 263;
+		configParams.VOffset = 13;
+		configParams.VSync0 = 0;
+		configParams.VSync1 = 2;
+		configParams.PCLK = 8;
+		configParams.Swizzle = 2;
+		configParams.PCLKPol = 0;
+		configParams.CSpread = 1;
+		configParams.Dither = 1;
+	}
+
+	progressLabel->setText("Configure...");
+	if (!EVE_Util_config(phost, &configParams))
+	{
+		EVE_Util_shutdown(phost);
+		EVE_Hal_close(phost);
+		devInfo->EveHalContext = NULL;
+		delete phost;
+		QMessageBox::critical(this, "Failed", "Failed to configure EVE", QMessageBox::Ok);
 		return;
 	}
 
