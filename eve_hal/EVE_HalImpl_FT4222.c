@@ -155,10 +155,8 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 {
 	if (!phost)
 		return false;
-#if defined(EVE_MULTI_TARGET)
-	if (phost->Host != EVE_HOST_FT4222)
+	if (EVE_HOST != EVE_HOST_FT4222)
 		return false;
-#endif
 	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
 		return false;
 
@@ -180,7 +178,7 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  * 
  * @param parameters EVE_Hal framework's parameters
  */
-bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
 	bool res = deviceIdx >= 0 && deviceIdx < s_NumDevsD2XX;
 	if (!res)
@@ -240,9 +238,8 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 *                               10000KHz
 *                               15000KHz
 *                               20000KHz
-*                               25000KHz
 *                               30000KHz
-*                            Global variable phost->Parameters.SpiClockrateKHz is
+*                            Global variable phost->SpiClockrateKHz is
 *                            updated accodingly
 * Return Value             : bool_t
 *                               TRUE : Supported by FT4222
@@ -271,29 +268,38 @@ bool computeCLK(EVE_HalContext *phost, FT4222_ClockRate *sysclk, FT4222_SPIClock
 		*sysdivisor = CLK_DIV_16;
 		phost->SpiClockrateKHz = 5000;
 	}
-	else if (phost->Parameters.SpiClockrateKHz > 5000 && phost->Parameters.SpiClockrateKHz <= 10000)
+	else if (phost->Parameters.SpiClockrateKHz <= 10000)
 	{
 		/* set to 10000 KHz */
 		*sysclk = SYS_CLK_80;
 		*sysdivisor = CLK_DIV_8;
 		phost->SpiClockrateKHz = 10000;
 	}
-	else if (phost->Parameters.SpiClockrateKHz > 10000 && phost->Parameters.SpiClockrateKHz <= 15000)
+	else if (phost->Parameters.SpiClockrateKHz <= 15000)
 	{
+		/* This is the default */
 		/* set to 15000 KHz */
 		*sysclk = SYS_CLK_60;
 		*sysdivisor = CLK_DIV_4;
 		phost->SpiClockrateKHz = 15000;
 	}
-	else
+	else if (phost->Parameters.SpiClockrateKHz <= 20000)
 	{
-		/* set to 20000 KHz : Maximum throughput is obeserved with this clock combination */
+		/* set to 20000 KHz */
 		*sysclk = SYS_CLK_80;
 		*sysdivisor = CLK_DIV_4;
 		phost->SpiClockrateKHz = 20000;
 	}
-	eve_printf_debug("User Selected SPI clk : %d KHz\n", phost->Parameters.SpiClockrateKHz);
-	eve_printf_debug("Configured clk :  Ft4222 sys clk enum = %d , divisor enum = %d\n", *sysclk, *sysdivisor);
+	else
+	{
+		/* 30MHz with Quad SPI seems to work reliably on BT816 */
+		/* set to 30000 KHz */
+		*sysclk = SYS_CLK_60;
+		*sysdivisor = CLK_DIV_2;
+		phost->SpiClockrateKHz = 30000;
+	}
+	eve_printf_debug("User Selected SPI clk : %d KHz\n", (int)phost->Parameters.SpiClockrateKHz);
+	eve_printf_debug("Configured clk : %d KHz, Ft4222 sys clk enum = %d , divisor enum = %d\n", (int)phost->SpiClockrateKHz, *sysclk, *sysdivisor);
 	return true;
 }
 
@@ -326,13 +332,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	phost->SpiHandle = phost->GpioHandle = NULL;
 
 #ifdef EVE_MULTI_TARGET
-	if (parameters->ChipId >= EVE_BT815)
-		phost->GpuDefs = &EVE_GpuDefs_BT81X;
-	else if (parameters->ChipId >= EVE_FT810)
-		phost->GpuDefs = &EVE_GpuDefs_FT81X;
-	else
-		phost->GpuDefs = &EVE_GpuDefs_FT80X;
-	phost->ChipId = parameters->ChipId;
+	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
 	memset(&devInfoA, 0, sizeof(devInfoA));

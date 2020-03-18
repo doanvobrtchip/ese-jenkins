@@ -37,7 +37,7 @@
 
 #ifndef EVE_CMD__H
 #define EVE_CMD__H
-#include "EVE_Hal.h"
+#include "EVE_HalDefs.h"
 
 /********************
 ** COPROCESSOR CMD **
@@ -117,6 +117,6 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size);
 (Waits for both the read and write pointer to go to 0) */
 EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost);
 
-#endif /* #ifndef EVE_HAL__H */
+#endif /* #ifndef EVE_HAL_INCL__H */
 
 /* end of file */

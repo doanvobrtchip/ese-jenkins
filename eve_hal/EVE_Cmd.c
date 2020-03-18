@@ -283,7 +283,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_wrProgmem(EVE_HalContext *phost, eve_progmem_const u
  * 
  * @param phost Pointer to Hal context
  * @param str String to write
- * @param maxLength Length to write
+ * @param maxLength Length to write, up to EVE_CMD_STRING_MAX
  * @return uint32_t Number of bytes transfered
  */
 EVE_HAL_EXPORT uint32_t EVE_Cmd_wrString(EVE_HalContext *phost, const char *str, uint32_t maxLength)

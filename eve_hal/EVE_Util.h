@@ -27,20 +27,49 @@
 * distributed by that other user ("Adapted Software").  If so that user may
 * have additional licence terms that apply to those amendments. However, Bridgetek
 * has no liability in relation to those amendments.
-*
-* File Description:
-*    This file defines the generic APIs of phost access layer for the FT800 or EVE compatible silicon.
-*    Application shall access FT800 or EVE resources over these APIs,regardless of I2C or SPI protocol.
-*    In addition, there are some helper functions defined for FT800 coprocessor engine as well as phost commands.
-*
 */
 
 #ifndef EVE_UTIL__H
 #define EVE_UTIL__H
-#include "EVE_Hal.h"
+#include "EVE_HalDefs.h"
 
+/* Command line device selection utility */
+#if defined(WIN32)
+EVE_HAL_EXPORT void EVE_Util_selectDeviceInteractive(_Out_ EVE_CHIPID_T *chipId, _Out_ size_t *deviceIdx);
+#else
+static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx)
+{
+	chipId = EVE_SUPPORT_CHIPID;
+	deviceIdx = -1;
+}
+#endif
 
-typedef struct EVE_BootupParameters {
+/* Command line device selection utility.
+Provides selection of flash file, and option to write the flash file to the device.
+Parameter `flashFile` is only relevant for Windows build.
+Falls back to no interactivity on FT9XX platform */
+EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(_Out_ EVE_HalContext *phost, _In_opt_z_ wchar_t *flashFile);
+
+typedef struct EVE_BootupParameters
+{
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+	/* Clock PLL multiplier (ft81x: 5, 60MHz, bt81x: 6, 72MHz) */
+	EVE_81X_PLL_FREQ_T SystemClock;
+#endif
+
+	/* External oscillator (default: false) */
+	bool ExternalOsc;
+
+	/* SPI */
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
+	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
+#endif
+
+} EVE_BootupParameters;
+
+typedef struct EVE_ConfigParameters
+{
 	/* Display */
 	int16_t Width;
 	int16_t Height;
@@ -62,43 +91,40 @@ typedef struct EVE_BootupParameters {
 	AdaptiveFramerate
 	*/
 
-	/* SPI */
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
-	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
-	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
+#ifdef EVE_SUPPORT_HSF
+	/* Physical horizontal pixels. Set to 0 to disable HSF. */
+	int16_t WidthHsf;
 #endif
 
-	/* Others */
-	EVE_81X_PLL_FREQ_T SystemClock;
-	bool ExternalOsc;
-
-} EVE_BootupParameters;
-
+} EVE_ConfigParameters;
 
 /* Get the default bootup parameters. */
-EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupParameters *parameters);
+EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupParameters *bootup);
+
+/* Boot up the device. Obtains the chip Id. Sets up clock and SPI speed. */
+EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup);
+
+/* Get the default configuration parameters. */
+EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigParameters *config);
 
 /* Boot up the device. Configures the display, resets coprocessor state if necessary. */
-EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *parameters);
+EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters *config);
 
 /* Complementary of bootup. Does not close the HAL context. */
 EVE_HAL_EXPORT void EVE_Util_shutdown(EVE_HalContext *phost);
-
 
 /* Sets the display list to a blank cleared screen. */
 EVE_HAL_EXPORT void EVE_Util_clearScreen(EVE_HalContext *phost);
 
 /* Resets the coprocessor.
 To be used after a coprocessor fault, or to exit CMD_LOGO. 
-After a reset, flash will be in attached state. */
+After a reset, flash will be in attached state (not in full speed).
+Coprocessor will be set to the latest API level. */
 EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost);
 
-
-/* Deprecated.
-Calls EVE_Util_bootup using the default config */
+/* Calls EVE_Util_bootup and EVE_Util_config using the default parameters */
 EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost);
 
-
-#endif /* #ifndef EVE_HAL__H */
+#endif /* #ifndef EVE_HAL_INCL__H */
 
 /* end of file */

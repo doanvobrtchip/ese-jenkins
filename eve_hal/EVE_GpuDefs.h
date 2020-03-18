@@ -59,7 +59,9 @@ to be defined. If not, multi target compilation is assumed.
 
 /* Definitions used for FT800 coprocessor command buffer */
 #define EVE_DL_SIZE (8 * 1024UL) /* 8kB Display List buffer size */
+#define EVE_DL_COUNT (2 * 1024UL)
 #define EVE_CMD_FIFO_SIZE ((4) * 1024UL) /* 4kB coprocessor FIFO size */
+#define EVE_CMD_FIFO_COUNT (1024UL)
 #define EVE_CMD_FIFO_MASK (EVE_CMD_FIFO_SIZE - 1)
 #define EVE_CMD_FIFO_ALIGNMENT_MASK (EVE_CMD_FIFO_SIZE - ((4) - 1))
 
@@ -534,7 +536,8 @@ to be defined. If not, multi target compilation is assumed.
 
 #define VERTEX2F(x, y) ((1UL << 30) | (((x)&32767UL) << 15) | (((y)&32767UL) << 0))
 #define VERTEX2II(x, y, handle, cell) ((2UL << 30) | (((x)&511UL) << 21) | (((y)&511UL) << 12) | (((handle)&31UL) << 7) | (((cell)&127UL) << 0))
-#define BITMAP_SOURCE(addr) ((1UL << 24) | (((addr)&BITMAP_ADDR_MASK) << 0))
+#define BITMAP_SOURCE(addr) ((1UL << 24) | ((addr) < 0 ? (((addr) & (BITMAP_ADDR_MASK >> 1))) : ((addr)&BITMAP_ADDR_MASK)))
+#define BITMAP_SOURCE2(flash_or_ram, addr) ((1UL << 24) | ((flash_or_ram) << 23) | (((addr) & (BITMAP_ADDR_MASK >> 1)) << 0))
 #define CLEAR_COLOR_RGB(red, green, blue) ((2UL << 24) | (((red)&255UL) << 16) | (((green)&255UL) << 8) | (((blue)&255UL) << 0))
 #define TAG(s) ((3UL << 24) | (((s)&255UL) << 0))
 #define COLOR_RGB(red, green, blue) ((4UL << 24) | (((red)&255UL) << 16) | (((green)&255UL) << 8) | (((blue)&255UL) << 0))
@@ -615,6 +618,7 @@ ESD_ENUM(Ft_CoPro_Opt, Type = ft_uint16_t, Include = "EVE_Platform.h", Flags)
 #define OPT_OVERLAY 128UL
 #define OPT_FLAT 256UL
 #define OPT_SIGNED 256UL
+#define OPT_DITHER 256UL
 #define OPT_CENTERX 512UL
 #define OPT_CENTERY 1024UL
 #define OPT_CENTER 1536UL
@@ -732,6 +736,19 @@ ESD_END()
 
 #define CTOUCH_MODE_COMPATIBILITY 1UL
 #define CTOUCH_MODE_EXTENDED 0UL
+
+#define INT_SWAP 1UL
+#define INT_TOUCH 2UL
+#define INT_TAG 4UL
+#define INT_SOUND 8UL
+#define INT_L8C 12UL
+#define INT_VGA 13UL
+#define INT_G8 18UL
+#define INT_PLAYBACK 16UL
+#define INT_CMDEMPTY 32UL
+#define INT_CMDFLAG 64UL
+#define INT_CONVCOMPLETE 128UL
+#define INT_UNDERRUN 256UL
 
 #endif /* #ifndef EVE_GPU_DEFS__H */
 

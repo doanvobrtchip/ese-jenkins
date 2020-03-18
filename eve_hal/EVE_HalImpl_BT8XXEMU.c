@@ -70,6 +70,7 @@ void Ft_MainReady__ESD(BT8XXEMU_Emulator *emulator);
 #endif
 
 EVE_HalPlatform g_HalPlatform;
+static int s_EmulatorSerial = 0;
 
 /**
  * @brief Initialize HAL platform
@@ -87,8 +88,6 @@ void EVE_HalImpl_initialize()
 void EVE_HalImpl_release()
 {
 	/* no-op */
-	// sizeof(BT8XXEMU_EmulatorParameters) == 1640
-	// sizeof(BT8XXEMU_FlashParameters) == 1144
 }
 
 /* List the available devices */
@@ -102,8 +101,9 @@ void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
 {
 	memset(deviceInfo, 0, sizeof(EVE_DeviceInfo));
 	strcpy_s(deviceInfo->DisplayName, sizeof(deviceInfo->DisplayName), "BT8XX Emulator");
-	strcpy_s(deviceInfo->SerialNumber, sizeof(deviceInfo->SerialNumber), "BT8XXEMU");
-	deviceInfo->Opened = false;
+	sprintf_s(deviceInfo->SerialNumber, sizeof(deviceInfo->SerialNumber), "BT8XXEMU_%i", ++s_EmulatorSerial);
+	s_EmulatorSerial &= 0xFFFF;
+	deviceInfo->Opened = false; // Emulator can be opened multiple times
 	deviceInfo->Host = EVE_HOST_BT8XXEMU;
 }
 
@@ -112,7 +112,7 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 {
 	if (!phost)
 		return false;
-	if (phost->Host != EVE_HOST_BT8XXEMU)
+	if (EVE_HOST != EVE_HOST_BT8XXEMU)
 		return false;
 	return true;
 }
@@ -122,14 +122,9 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  * 
  * @param parameters EVE_Hal framework's parameters
  */
-bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
-	BT8XXEMU_EmulatorParameters *params = (void *)parameters->EmulatorParameters;
-	if (sizeof(BT8XXEMU_EmulatorParameters) > sizeof(parameters->EmulatorParameters))
-		return false;
-
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, chipId);
-	params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
+	parameters->EmulatorMode = EVE_BT817;
 	return true;
 }
 
@@ -144,14 +139,35 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, si
 bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 {
 	bool ret;
+	BT8XXEMU_EmulatorParameters *origParams;
+	BT8XXEMU_EmulatorParameters *origFlashParams;
 	BT8XXEMU_EmulatorParameters *params;
+	BT8XXEMU_FlashParameters *flashParams;
 
-	if (sizeof(BT8XXEMU_EmulatorParameters) > sizeof(parameters->EmulatorParameters))
-		return false;
+	origParams = parameters->EmulatorParameters;
+	if (origParams)
+	{
+		// Copy
+		params = malloc(sizeof(BT8XXEMU_EmulatorParameters));
+		if (!params) return false;
+		memcpy(params, origParams, sizeof(BT8XXEMU_EmulatorParameters));
+	}
+	else
+	{
+		// Make defaults
+		params = malloc(sizeof(BT8XXEMU_EmulatorParameters));
+		if (!params) return false;
+		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, parameters->EmulatorMode);
+		params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
+	}
+	parameters->EmulatorParameters = params;
 
-	params = (void *)parameters->EmulatorParameters;
 	if (!params->Mode)
+	{
+		free(params);
+		parameters->EmulatorParameters = origParams;
 		return false;
+	}
 
 #ifdef EVE_MULTI_TARGET
 	if (params->Mode >= BT8XXEMU_EmulatorBT815)
@@ -160,13 +176,37 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 		phost->GpuDefs = &EVE_GpuDefs_FT81X;
 	else
 		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+	phost->ChipId = params->Mode;
 #endif
-	phost->ChipId = parameters->ChipId;
 
 #if defined(EVE_EMULATOR_MAIN)
 	phost->Emulator = EVE_GpuEmu;
 	phost->EmulatorFlash = EVE_EmuFlash;
+	origFlashParams = NULL;
+	flashParams = NULL;
 #else
+	origFlashParams = parameters->EmulatorFlashParameters;
+	if (origFlashParams)
+	{
+		// Copy
+		flashParams = malloc(sizeof(BT8XXEMU_FlashParameters));
+		if (!flashParams)
+		{
+			free(params);
+			parameters->EmulatorParameters = origParams;
+			return false;
+		}
+		memcpy(flashParams, origFlashParams, sizeof(BT8XXEMU_FlashParameters));
+		parameters->EmulatorFlashParameters = flashParams;
+
+		// Create
+		phost->EmulatorFlash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, flashParams);
+		params->Flash = phost->EmulatorFlash;
+	}
+	else
+	{
+		flashParams = NULL;
+	}
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &phost->Emulator, params);
 #endif
 
@@ -180,6 +220,16 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 		phost->Status = EVE_STATUS_OPENED;
 		++g_HalPlatform.OpenedDevices;
 	}
+	else
+	{
+		if (flashParams)
+		{
+			free(flashParams);
+			parameters->EmulatorFlashParameters = origFlashParams;
+		}
+		free(params);
+		parameters->EmulatorParameters = origParams;
+	}
 	return ret;
 }
 
@@ -191,13 +241,32 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 void EVE_HalImpl_close(EVE_HalContext *phost)
 {
 #if !defined(EVE_EMULATOR_MAIN)
+	// Release emulator
 	if (phost->Emulator)
 	{
 		BT8XXEMU_stop(phost->Emulator);
 		BT8XXEMU_destroy(phost->Emulator);
 	}
 	phost->Emulator = NULL;
+
+	// Release flash
+	if (phost->EmulatorFlash)
+	{
+		BT8XXEMU_Flash_destroy(phost->EmulatorFlash);
+	}
 	phost->EmulatorFlash = NULL;
+
+	// Release emulator parameters
+	if (phost->Parameters.EmulatorFlashParameters)
+	{
+		free(phost->Parameters.EmulatorFlashParameters);
+		phost->Parameters.EmulatorFlashParameters = NULL;
+	}
+	if (phost->Parameters.EmulatorParameters)
+	{
+		free(phost->Parameters.EmulatorParameters);
+		phost->Parameters.EmulatorParameters = NULL;
+	}
 #else
 	phost->Emulator = NULL;
 	phost->EmulatorFlash = NULL;

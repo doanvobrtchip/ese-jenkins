@@ -121,10 +121,8 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 {
 	if (!phost)
 		return false;
-#if defined(EVE_MULTI_TARGET)
-	if (phost->Host != EVE_HOST_MPSSE)
+	if (EVE_HOST != EVE_HOST_MPSSE)
 		return false;
-#endif
 	if (deviceIdx < 0 || deviceIdx >= s_NumChannels)
 		return false;
 
@@ -143,7 +141,7 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  * 
  * @param parameters EVE_Hal framework's parameters
  */
-bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
 	bool res = deviceIdx >= 0 && deviceIdx < s_NumChannels;
 	if (!res)
@@ -186,13 +184,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	ChannelConfig channelConf; /* channel configuration */
 
 #ifdef EVE_MULTI_TARGET
-	if (parameters->ChipId >= EVE_BT815)
-		phost->GpuDefs = &EVE_GpuDefs_BT81X;
-	else if (parameters->ChipId >= EVE_FT810)
-		phost->GpuDefs = &EVE_GpuDefs_FT81X;
-	else
-		phost->GpuDefs = &EVE_GpuDefs_FT80X;
-	phost->ChipId = parameters->ChipId;
+	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
 	/* configure the spi settings */

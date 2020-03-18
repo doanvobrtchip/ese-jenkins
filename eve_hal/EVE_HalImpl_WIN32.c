@@ -89,6 +89,7 @@ void EVE_Mcu_release()
 *********/
 
 static DWORD s_Millis_Start;
+static ULONGLONG s_Millis64_Start;
 
 /**
  * @brief Init timer
@@ -97,6 +98,7 @@ static DWORD s_Millis_Start;
 void EVE_Millis_initialize()
 {
 	s_Millis_Start = GetTickCount();
+	s_Millis64_Start = GetTickCount64();
 }
 
 /**
@@ -118,6 +120,16 @@ void EVE_Millis_release()
 uint32_t EVE_millis()
 {
 	return GetTickCount() - s_Millis_Start;
+}
+
+/**
+* @brief Get clock in miliseond
+* 
+* @return uint64_t Clock number
+*/
+uint64_t EVE_millis64()
+{
+	return GetTickCount64() - s_Millis64_Start;
 }
 
 #if defined(ESD_SIMULATION)

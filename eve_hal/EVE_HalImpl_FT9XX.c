@@ -95,7 +95,7 @@ EVE_HAL_EXPORT bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  * 
  * @param parameters EVE_Hal framework's parameters
  */
-bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
 	parameters->PowerDownPin = FT800_PD_N;
 	parameters->SpiCsPin = (deviceIdx < 0) ? 0 : deviceIdx; // SS0
@@ -176,13 +176,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	pad_dir_t spimFunc = s_SpimFunc[phost->Parameters.SpiCsPin];
 
 #ifdef EVE_MULTI_TARGET
-	if (parameters->ChipId >= EVE_BT815)
-		phost->GpuDefs = &EVE_GpuDefs_BT81X;
-	else if (parameters->ChipId >= EVE_FT810)
-		phost->GpuDefs = &EVE_GpuDefs_FT81X;
-	else
-		phost->GpuDefs = &EVE_GpuDefs_FT80X;
-	phost->ChipId = parameters->ChipId;
+	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
 	sys_enable(sys_device_spi_master);
@@ -752,6 +746,7 @@ void EVE_Mcu_release()
 
 /* Globals for interrupt implementation */
 static uint32_t s_TotalMilliseconds = 0;
+static uint64_t s_TotalMilliseconds64 = 0;
 
 /**
  * @brief Init FT9x timer
@@ -796,11 +791,33 @@ void EVE_Millis_release()
 uint32_t EVE_millis()
 {
 #if defined(PANL_APPLET)
-	s_TotalMilliseconds = panl_timer_get_time();
+	uint32_t ms = panl_timer_get_time();
+	if ((uint64_t)ms < s_TotalMilliseconds)
+		s_TotalMilliseconds64 += (1 << 32);
+	s_TotalMilliseconds = ms;
+	s_TotalMilliseconds64 = (s_TotalMilliseconds64 & ~0xFFFFFFFFULL) | (uint64_t)ms;
 #endif
-	/* Interrupt implementation */
 	return s_TotalMilliseconds;
+}
 
+/**
+* @brief Get clock in miliseond
+* 
+* Need to ensure that below api is called at least once in 6.5 seconds duration for FT900 platform as this module doesnt use timer for context update 
+* global counter to loopback after ~49.71 days
+* 
+* @return uint32_t Clock number
+*/
+uint64_t EVE_millis64()
+{
+#if defined(PANL_APPLET)
+	uint32_t ms = panl_timer_get_time();
+	if ((uint64_t)ms < s_TotalMilliseconds)
+		s_TotalMilliseconds64 += (1 << 32);
+	s_TotalMilliseconds = ms;
+	s_TotalMilliseconds64 = (s_TotalMilliseconds64 & ~0xFFFFFFFFULL) | (uint64_t)ms;
+#endif
+	return s_TotalMilliseconds64;
 }
 
 /**

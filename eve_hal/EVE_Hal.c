@@ -29,7 +29,7 @@
 * has no liability in relation to those amendments.
 */
 
-#include "EVE_Hal.h"
+#include "EVE_HalDefs.h"
 #include "EVE_Platform.h"
 
 #include "EVE_HalImpl.h"
@@ -73,21 +73,17 @@ EVE_HAL_EXPORT void EVE_Hal_release()
  */
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters)
 {
-	EVE_Hal_defaultsEx(parameters, EVE_SUPPORT_CHIPID, -1);
+#if defined(EVE_MULTI_TARGET)
+	EVE_Hal_defaultsEx(parameters, -1);
+#else
+	EVE_Hal_defaultsEx(parameters, -1);
+#endif
 }
 
-EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, EVE_CHIPID_T chipId, size_t deviceIdx)
+EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, size_t deviceIdx)
 {
 	memset(parameters, 0, sizeof(EVE_HalParameters));
-
-#if defined(EVE_MULTI_TARGET)
-	parameters->ChipId = chipId;
-#else
-	eve_assert(chipId == EVE_CHIPID);
-	eve_assert(chipId == EVE_SUPPORT_CHIPID);
-#endif
-
-	eve_assert_do(EVE_HalImpl_defaults(parameters, chipId, deviceIdx));
+	eve_assert_do(EVE_HalImpl_defaults(parameters, deviceIdx));
 }
 
 /**
@@ -102,7 +98,7 @@ EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *param
 {
 	memset(phost, 0, sizeof(EVE_HalContext));
 	memcpy(&phost->Parameters, parameters, sizeof(EVE_HalParameters));
-	return EVE_HalImpl_open(phost, parameters);
+	return EVE_HalImpl_open(phost, &phost->Parameters);
 }
 
 /**

@@ -805,6 +805,7 @@ These may only be set by one of the platform target definitions, and should not 
 #define MPSSE_PLATFORM
 #define BT8XXEMU_PLATFORM
 #define EVE_FLASH_AVAILABLE
+#define EVE_SUPPORT_HSF
 #define EVE_SUPPORT_FLASH
 #define EVE_SUPPORT_UNICODE
 #define EVE_SUPPORT_ASTC
@@ -813,7 +814,7 @@ These may only be set by one of the platform target definitions, and should not 
 #define EVE_SUPPORT_CMDB
 #define EVE_SUPPORT_CAPACITIVE
 #define EVE_SUPPORT_RESISTIVE
-#define EVE_SUPPORT_CHIPID EVE_BT816
+#define EVE_SUPPORT_CHIPID EVE_BT818
 #define RESISTANCE_THRESHOLD (1800)
 #define EVE_CHIPID phost->ChipId
 #define EVE_HOST phost->Host
@@ -827,6 +828,10 @@ These may only be set by one of the platform target definitions, and should not 
 
 /// Feature support.
 /// Avoid hardcoding specific EVE models throughout the libraries.
+/// Allows disabling specific features for debugging purposes.
+#if (EVE_SUPPORT_CHIPID >= EVE_BT817)
+#define EVE_SUPPORT_HSF
+#endif
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 #define EVE_SUPPORT_FLASH
 #define EVE_SUPPORT_UNICODE
@@ -889,6 +894,10 @@ typedef eve_progmem uint16_t eve_prog_uint16_t;
 ///////////////////////////////////////////////////////////////////////
 
 /// Configuration sanity checks
+#if defined(PANL_APPLET) && defined(EVE_MULTI_TARGET)
+#pragma message(__FILE__ "(" EVE_CONFIG_STR(__LINE__) "): error PANL_APPLET: " \
+                                                      "Cannot target PANL_APPLET with EVE_MULTI_TARGET")
+#endif
 #if !defined(EVE_SUPPORT_CHIPID) && !defined(EVE_MULTI_TARGET)
 #pragma message(__FILE__ "(" EVE_CONFIG_STR(__LINE__) "): error EVE_SUPPORT_CHIPID: " \
                                                       "No EVE device model has been selected")
