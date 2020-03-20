@@ -14,7 +14,7 @@
     "REG_HSIZE": 480,
     "REG_HSYNC0": 0,
     "REG_HSYNC1": 41,
-    "REG_OUTBITS": 0,
+    "REG_OUTBITS": 438,
     "REG_PCLK": 5,
     "REG_PCLK_POL": 1,
     "REG_SWIZZLE": 0,
