@@ -97,6 +97,8 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, size_t dev
 EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
 	memset(phost, 0, sizeof(EVE_HalContext));
+	phost->UserContext = parameters->UserContext;
+	phost->CbCmdWait = parameters->CbCmdWait;
 	return EVE_HalImpl_open(phost, parameters);
 }
 
@@ -437,10 +439,17 @@ void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size)
 	uint32_t round = ((size + 31U) & ~31U);
 	uint32_t addr = RAM_G + RAM_G_SIZE - round;
 	uint32_t dl = 0;
+	uint32_t i;
 
 	/* Abuse back of RAM_G to store error */
 	/* May invalidate user data... */
 	EVE_Hal_wrMem(phost, addr, (uint8_t *)str, size);
+
+	/* Empty remaining space after text */
+	EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, addr + size);
+	for (i = size; i < round; ++i)
+		EVE_Hal_transfer8(phost, 0);
+	EVE_Hal_endTransfer(phost);
 
 	/* Generate bluescreen */
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), CLEAR_COLOR_RGB(0x00, 0x20, 0x40));
