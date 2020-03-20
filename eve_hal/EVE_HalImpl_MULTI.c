@@ -159,10 +159,10 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 }
 
 /* Opens a new HAL context using the specified parameters */
-bool EVE_HalImpl_BT8XXEMU_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
-bool EVE_HalImpl_FT4222_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
-bool EVE_HalImpl_MPSSE_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
-bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
+bool EVE_HalImpl_BT8XXEMU_open(EVE_HalContext *phost, const EVE_HalParameters *parameters);
+bool EVE_HalImpl_FT4222_open(EVE_HalContext *phost, const EVE_HalParameters *parameters);
+bool EVE_HalImpl_MPSSE_open(EVE_HalContext *phost, const EVE_HalParameters *parameters);
+bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
 	bool res;
 	switch (parameters->Host)

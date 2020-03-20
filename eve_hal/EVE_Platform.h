@@ -157,11 +157,6 @@ extern "C" {
 #define scope if (true)
 #endif
 
-/* Breakable */
-#ifndef breakable
-#define breakable for (int eve__scope = 0; eve__scope < 1; ++eve__scope)
-#endif
-
 #endif /* #ifndef EVE_PLATFORM__H */
 
 #ifdef __cplusplus

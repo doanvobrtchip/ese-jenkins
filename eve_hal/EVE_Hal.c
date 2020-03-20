@@ -94,11 +94,10 @@ EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, size_t dev
  * @return true True if ok
  * @return false False if error
  */
-EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
+EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
 	memset(phost, 0, sizeof(EVE_HalContext));
-	memcpy(&phost->Parameters, parameters, sizeof(EVE_HalParameters));
-	return EVE_HalImpl_open(phost, &phost->Parameters);
+	return EVE_HalImpl_open(phost, parameters);
 }
 
 /**

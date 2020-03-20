@@ -87,6 +87,11 @@ typedef enum EVE_CHIPID_T
 typedef struct EVE_HalContext EVE_HalContext;
 typedef bool (*EVE_Callback)(EVE_HalContext *phost);
 
+/* Hook into coprocessor commands. Return 1 to abort the command. Useful for an optimization routine */
+typedef int (*EVE_CoCmdHook)(EVE_HalContext *phost, uint32_t cmd, uint32_t state);
+/* Hook into coprocessor reset */
+typedef void (*EVE_ResetCallback)(EVE_HalContext *phost, bool fault);
+
 #if defined(EVE_MULTI_TARGET)
 typedef struct EVE_GpuDefs
 {
@@ -122,8 +127,6 @@ typedef enum EVE_HOST_T
 	EVE_HOST_FT4222,
 	EVE_HOST_MPSSE,
 	EVE_HOST_FT9XX,
-	EVE_HOST_PANL70,
-	EVE_HOST_PANLAPPLET,
 
 	EVE_HOST_NB
 } EVE_HOST_T;
@@ -141,7 +144,9 @@ typedef struct EVE_DeviceInfo
 typedef struct EVE_HalParameters
 {
 	void *UserContext;
-	EVE_Callback CbCmdWait; /* Called anytime the code is waiting during CMD write. Return false to abort wait */
+
+	/* Called anytime the code is waiting during CMD write. Return false to abort wait */
+	EVE_Callback CbCmdWait;
 
 #if defined(EVE_MULTI_TARGET)
 	EVE_HOST_T Host;
@@ -177,11 +182,18 @@ typedef struct EVE_HalParameters
 
 typedef struct EVE_HalContext
 {
-	union
-	{
-		void *UserContext;
-		EVE_HalParameters Parameters;
-	};
+	/* Pointer to user context */
+	void *UserContext;
+
+	/* Pointer to a support library context (e.g. ESD Framework context) */
+	void *LibraryContext; 
+
+	/* Called anytime the code is waiting during CMD write. Return false to abort wait */
+	EVE_Callback CbCmdWait; 
+	/* Hook into coprocessor commands. Return 1 to abort the command. Useful for an optimization routine */
+	EVE_ResetCallback CbCoprocessorReset;
+	/* Hook into coprocessor reset */
+	EVE_CoCmdHook CoCmdHook;
 
 	EVE_STATUS_T Status;
 
@@ -193,18 +205,21 @@ typedef struct EVE_HalContext
 #endif
 
 	uint8_t PCLK;
+
+	/* User space width and height, 
+	based on REG_HSIZE, REG_VSIZE and REG_ROTATE */
 	uint32_t Width;
 	uint32_t Height;
 
+	/* Handles to external context */
 #if defined(BT8XXEMU_PLATFORM)
 	void *Emulator; /* FT8XXEMU_Emulator */
 	void *EmulatorFlash; /* FT8XXEMU_Flash */
+	void *EmulatorParameters; /* BT8XXEMU_EmulatorParameters */ /* Copy for powerCycle */
 #endif
-
 #if defined(FT4222_PLATFORM) | defined(MPSSE_PLATFORM)
 	void *SpiHandle;
 #endif
-
 #if defined(FT4222_PLATFORM)
 	void *GpioHandle; /* LibFT4222 uses this member to store GPIO handle */
 #endif
@@ -214,35 +229,48 @@ typedef struct EVE_HalContext
 	May be different from requested the clock rate in parameters */
 	uint16_t SpiClockrateKHz;
 #endif
+	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
+	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
 
+#if defined(MPSSE_PLATFORM)
+	uint32_t MpsseChannelNo; /* MPSSE channel number */
+#endif
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM)
+	uint8_t SpiCsPin; /* SPI chip select number of FT8XX chip */
+#endif
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM)
+	uint8_t PowerDownPin; /* FT8XX power down pin number */
+#endif
+
+	/* Write buffer to optimize writes into larger batches */
 #if defined(EVE_BUFFER_WRITES) || defined(FT4222_PLATFORM)
 	uint8_t SpiWrBuf[0xFFFF];
 	uint32_t SpiWrBufIndex;
 	uint32_t SpiRamGAddr; /* Current RAM_G address of ongoing SPI write transaction */
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+	/* Coprocessor write pointer buffer complementary to write buffer */
 	bool SpiWpWriting;
 	bool SpiWpWritten;
 	uint16_t SpiWpWrite;
 #endif
 #endif
 
-	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
-	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
-
 	/* Buffer cmd smaller than a full cmd command */
 	uint8_t CmdBuffer[4];
 	uint8_t CmdBufferIndex;
 
-	uint16_t CmdSpace; /* Free space */
+	uint16_t CmdSpace; /* Free space, cached value */
 #if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
-	uint16_t CmdWp; /* Write pointer */
+	uint16_t CmdWp; /* Write pointer, only valid when CMDB is not used */
 #endif
 
+	/* Media FIFO state */
 #if defined(EVE_SUPPORT_MEDIAFIFO)
 	uint32_t MediaFifoAddress;
 	uint32_t MediaFifoSize;
 #endif
 
+	/* Status flags */
 	bool CmdFunc; /* Flagged while transfer to cmd is kept open */
 	bool CmdFault; /* Flagged when coprocessor is in fault mode and needs to be reset */
 	bool CmdWaiting; /* Flagged while waiting for CMD write (to check during any function that may be called by CbCmdWait) */
@@ -282,7 +310,7 @@ Use `deviceIdx` to choose the connected device, or set to -1 to get the first av
 EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, size_t deviceIdx);
 
 /* Opens a new HAL context using the specified parameters */
-EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
+EVE_HAL_EXPORT bool EVE_Hal_open(EVE_HalContext *phost, const EVE_HalParameters *parameters);
 
 /* Close a HAL context */
 EVE_HAL_EXPORT void EVE_Hal_close(EVE_HalContext *phost);

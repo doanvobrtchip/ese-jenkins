@@ -169,10 +169,11 @@ static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t siz
 			}
 			if (string)
 			{
+				uint32_t t;
 				eve_assert(transfered == 0);
 				eve_assert(transfer == size); /* Cannot split string transfers */
 				eve_assert(transfer <= phost->CmdSpace);
-				uint32_t t = EVE_Hal_transferString(phost, (const char *)buffer, transfered, transfer, 0x3);
+				t = EVE_Hal_transferString(phost, (const char *)buffer, transfered, transfer, 0x3);
 				if (t != transfer) /* End of string */
 				{
 					eve_assert(t <= phost->CmdSpace);
@@ -191,9 +192,9 @@ static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t siz
 			}
 			if (!string && (transfer & 0x3))
 			{
-				eve_assert((transfered + transfer) == size);
 				uint32_t pad = 4 - (transfer & 0x3);
 				uint8_t padding[4] = { 0 };
+				eve_assert((transfered + transfer) == size);
 				EVE_Hal_transferMem(phost, NULL, padding, pad);
 				transfer += pad;
 				eve_assert(!(transfer & 0x3));
@@ -488,9 +489,9 @@ static bool handleWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 	EVE_Hal_idle(phost);
 
 	/* Process user idling */
-	if (phost->Parameters.CbCmdWait)
+	if (phost->CbCmdWait)
 	{
-		if (!phost->Parameters.CbCmdWait(phost))
+		if (!phost->CbCmdWait(phost))
 		{
 			/* Wait aborted */
 			phost->CmdWaiting = false;
@@ -581,10 +582,11 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
  */
 EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost)
 {
+	uint16_t rp, wp;
+
 	eve_assert(!phost->CmdWaiting);
 	phost->CmdWaiting = true;
 
-	uint16_t rp, wp;
 	do
 	{
 		rp = EVE_Cmd_rp(phost);

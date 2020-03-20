@@ -1,7 +1,7 @@
 //#define PANL_35					1
 //#define PANL_70					2
 //#define PANL_TYPE 				PANL_70
-#include "stdbool.h"
+#include "EVE_IntTupes.h"
 
 #define PANL_DEBUG 0
 

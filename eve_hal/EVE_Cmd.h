@@ -79,6 +79,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_wrProgmem(EVE_HalContext *phost, eve_progmem_const u
 
 /* Write a string to the command buffer, padded to 4 bytes. 
 Waits if there is not enough space in the command buffer. 
+Parameter `maxLength` can be set up to `EVE_CMD_STRING_MAX`.
 Returns false in case a coprocessor fault occurred */
 EVE_HAL_EXPORT uint32_t EVE_Cmd_wrString(EVE_HalContext *phost, const char *str, uint32_t maxLength);
 

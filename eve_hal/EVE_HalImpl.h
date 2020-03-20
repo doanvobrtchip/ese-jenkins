@@ -56,7 +56,7 @@ Use `deviceIdx` to choose the connected device. */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx);
 
 /* Opens a new HAL context using the specified parameters */
-bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters);
+bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters);
 
 /* Close a HAL context */
 void EVE_HalImpl_close(EVE_HalContext *phost);

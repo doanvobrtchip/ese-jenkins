@@ -136,13 +136,12 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
  * @return true True if ok
  * @return false False if error
  */
-bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
+bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
 	bool ret;
 	BT8XXEMU_EmulatorParameters *origParams;
-	BT8XXEMU_EmulatorParameters *origFlashParams;
 	BT8XXEMU_EmulatorParameters *params;
-	BT8XXEMU_FlashParameters *flashParams;
+	BT8XXEMU_FlashParameters *origFlashParams;
 
 	origParams = parameters->EmulatorParameters;
 	if (origParams)
@@ -160,12 +159,12 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, parameters->EmulatorMode);
 		params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 	}
-	parameters->EmulatorParameters = params;
+	phost->EmulatorParameters = params;
 
 	if (!params->Mode)
 	{
 		free(params);
-		parameters->EmulatorParameters = origParams;
+		phost->EmulatorParameters = NULL;
 		return false;
 	}
 
@@ -188,24 +187,9 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	origFlashParams = parameters->EmulatorFlashParameters;
 	if (origFlashParams)
 	{
-		// Copy
-		flashParams = malloc(sizeof(BT8XXEMU_FlashParameters));
-		if (!flashParams)
-		{
-			free(params);
-			parameters->EmulatorParameters = origParams;
-			return false;
-		}
-		memcpy(flashParams, origFlashParams, sizeof(BT8XXEMU_FlashParameters));
-		parameters->EmulatorFlashParameters = flashParams;
-
 		// Create
-		phost->EmulatorFlash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, flashParams);
+		phost->EmulatorFlash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, origFlashParams);
 		params->Flash = phost->EmulatorFlash;
-	}
-	else
-	{
-		flashParams = NULL;
 	}
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &phost->Emulator, params);
 #endif
@@ -222,13 +206,8 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	}
 	else
 	{
-		if (flashParams)
-		{
-			free(flashParams);
-			parameters->EmulatorFlashParameters = origFlashParams;
-		}
 		free(params);
-		parameters->EmulatorParameters = origParams;
+		phost->EmulatorParameters = NULL;
 	}
 	return ret;
 }
@@ -257,15 +236,10 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 	phost->EmulatorFlash = NULL;
 
 	// Release emulator parameters
-	if (phost->Parameters.EmulatorFlashParameters)
+	if (phost->EmulatorParameters)
 	{
-		free(phost->Parameters.EmulatorFlashParameters);
-		phost->Parameters.EmulatorFlashParameters = NULL;
-	}
-	if (phost->Parameters.EmulatorParameters)
-	{
-		free(phost->Parameters.EmulatorParameters);
-		phost->Parameters.EmulatorParameters = NULL;
+		free(phost->EmulatorParameters);
+		phost->EmulatorParameters = NULL;
 	}
 #else
 	phost->Emulator = NULL;
@@ -468,6 +442,8 @@ void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem
  */
 uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask)
 {
+	uint32_t transferred;
+
 	if (!size)
 	{
 		/* TODO: Support different padding options */
@@ -479,7 +455,7 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 	eve_assert(size <= EVE_CMD_STRING_MAX);
 #if 1
 	// BT8XXEMU
-	uint32_t transferred = 0;
+	transferred = 0;
 	if (phost->Status == EVE_STATUS_WRITING)
 	{
 		for (;;)
@@ -625,14 +601,14 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 			phost->Emulator = NULL;
 		}
 
-		params = (void *)phost->Parameters.EmulatorParameters;
+		params = (void *)phost->EmulatorParameters;
 		BT8XXEMU_run(BT8XXEMU_VERSION_API, &phost->Emulator, params);
 	}
 	else
 	{
 		if (!phost->Emulator)
 		{
-			params = (void *)phost->Parameters.EmulatorParameters;
+			params = (void *)phost->EmulatorParameters;
 			BT8XXEMU_run(BT8XXEMU_VERSION_API, &phost->Emulator, params);
 		}
 

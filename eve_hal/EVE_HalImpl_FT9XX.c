@@ -170,10 +170,12 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
  * @return true True if ok
  * @return false False if error
  */
-bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
+bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
-	uint8_t spimGpio = s_SpimGpio[phost->Parameters.SpiCsPin];
-	pad_dir_t spimFunc = s_SpimFunc[phost->Parameters.SpiCsPin];
+	uint8_t spimGpio = s_SpimGpio[parameters->SpiCsPin];
+	pad_dir_t spimFunc = s_SpimFunc[pparameters->SpiCsPin];
+	phost->SpiCsPin = parameters->SpiCsPin;
+	phost->PowerDownPin = parameters->PowerDownPin;
 
 #ifdef EVE_MULTI_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
@@ -190,15 +192,15 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, EVE_HalParameters *parameters)
 	gpio_dir(GPIO_SPIM_MISO, pad_dir_input);
 	gpio_write(GPIO_SPIM_SS0, 1);
 	spi_init(SPIM, spi_dir_master, spi_mode_0, 4);
-	// spi_close(SPIM, phost->Parameters.SpiCsPin);
+	// spi_close(SPIM, phost->SpiCsPin);
 
 	gpio_function(spimGpio, spimFunc); /* GPIO as SS0-SS4 */
 	gpio_dir(spimGpio, pad_dir_output);
 	gpio_write(spimGpio, 1);
 
-	gpio_function(phost->Parameters.PowerDownPin, pad_pwd);
-	gpio_dir(phost->Parameters.PowerDownPin, pad_dir_output);
-	gpio_write(phost->Parameters.PowerDownPin, 1);
+	gpio_function(phost->PowerDownPin, pad_pwd);
+	gpio_dir(phost->PowerDownPin, pad_dir_output);
+	gpio_write(phost->PowerDownPin, 1);
 
 	/* Initialize single channel */
 	setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
@@ -220,7 +222,7 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 	phost->Status = EVE_STATUS_CLOSED;
 	--g_HalPlatform.OpenedDevices;
 #ifndef PANL_APPLET
-	spi_close(SPIM, phost->Parameters.SpiCsPin);
+	spi_close(SPIM, phost->SpiCsPin);
 #endif
 }
 
@@ -259,7 +261,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 		spidata[0] = (addr >> 16);
 		spidata[1] = (addr >> 8);
 		spidata[2] = addr & 0xff;
-		spi_open(SPIM, phost->Parameters.SpiCsPin);
+		spi_open(SPIM, phost->SpiCsPin);
 		spi_writen(SPIM, spidata, 3 + phost->SpiDummyBytes);
 		phost->Status = EVE_STATUS_READING;
 	}
@@ -270,7 +272,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 		spidata[1] = (addr >> 8);
 		spidata[2] = addr;
 
-		spi_open(SPIM, phost->Parameters.SpiCsPin);
+		spi_open(SPIM, phost->SpiCsPin);
 		spi_writen(SPIM, spidata, 3);
 
 		phost->Status = EVE_STATUS_WRITING;
@@ -286,7 +288,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 {
 	eve_assert(phost->Status == EVE_STATUS_READING || phost->Status == EVE_STATUS_WRITING);
 
-	spi_close(SPIM, phost->Parameters.SpiCsPin);
+	spi_close(SPIM, phost->SpiCsPin);
 	phost->Status = EVE_STATUS_OPENED;
 }
 
@@ -541,9 +543,9 @@ void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd)
 	hcmd[2] = 0;
 	hcmd[3] = 0;
 
-	spi_open(SPIM, phost->Parameters.SpiCsPin);
+	spi_open(SPIM, phost->SpiCsPin);
 	spi_writen(SPIM, hcmd, 3);
-	spi_close(SPIM, phost->Parameters.SpiCsPin);
+	spi_close(SPIM, phost->SpiCsPin);
 }
 
 /**
@@ -562,9 +564,9 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	hcmd[2] = (cmd >> 16) & 0xff;
 	hcmd[3] = 0;
 
-	spi_open(SPIM, phost->Parameters.SpiCsPin);
+	spi_open(SPIM, phost->SpiCsPin);
 	spi_writen(SPIM, hcmd, 3);
-	spi_close(SPIM, phost->Parameters.SpiCsPin);
+	spi_close(SPIM, phost->SpiCsPin);
 }
 
 /**
@@ -577,17 +579,17 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	if (up)
 	{
-		gpio_write(phost->Parameters.PowerDownPin, 0);
+		gpio_write(phost->PowerDownPin, 0);
 		EVE_sleep(20);
 		setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
-		gpio_write(phost->Parameters.PowerDownPin, 1);
+		gpio_write(phost->PowerDownPin, 1);
 		EVE_sleep(20);
 	}
 	else
 	{
-		gpio_write(phost->Parameters.PowerDownPin, 1);
+		gpio_write(phost->PowerDownPin, 1);
 		EVE_sleep(20);
-		gpio_write(phost->Parameters.PowerDownPin, 0);
+		gpio_write(phost->PowerDownPin, 0);
 		EVE_sleep(20);
 	}
 }

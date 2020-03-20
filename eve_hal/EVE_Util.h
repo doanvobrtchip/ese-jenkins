@@ -33,22 +33,9 @@
 #define EVE_UTIL__H
 #include "EVE_HalDefs.h"
 
-/* Command line device selection utility */
-#if defined(WIN32)
-EVE_HAL_EXPORT void EVE_Util_selectDeviceInteractive(_Out_ EVE_CHIPID_T *chipId, _Out_ size_t *deviceIdx);
-#else
-static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx)
-{
-	chipId = EVE_SUPPORT_CHIPID;
-	deviceIdx = -1;
-}
-#endif
-
-/* Command line device selection utility.
-Provides selection of flash file, and option to write the flash file to the device.
-Parameter `flashFile` is only relevant for Windows build.
-Falls back to no interactivity on FT9XX platform */
-EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(_Out_ EVE_HalContext *phost, _In_opt_z_ wchar_t *flashFile);
+/***************
+** PARAMETERS **
+***************/
 
 typedef struct EVE_BootupParameters
 {
@@ -71,8 +58,8 @@ typedef struct EVE_BootupParameters
 typedef struct EVE_ConfigParameters
 {
 	/* Display */
-	int16_t Width;
-	int16_t Height;
+	int16_t Width; /* Line buffer width (pixels) */
+	int16_t Height; /* Screen and render height (lines) */
 	int16_t HCycle;
 	int16_t HOffset;
 	int16_t HSync0;
@@ -85,7 +72,9 @@ typedef struct EVE_ConfigParameters
 	int8_t Swizzle;
 	int8_t PCLKPol;
 	int8_t CSpread;
-	uint16_t OutBits;
+	uint8_t OutBitsR;
+	uint8_t OutBitsG;
+	uint8_t OutBitsB;
 	bool Dither;
 	/* TODO: 
 	AdaptiveFramerate
@@ -93,10 +82,39 @@ typedef struct EVE_ConfigParameters
 
 #ifdef EVE_SUPPORT_HSF
 	/* Physical horizontal pixels. Set to 0 to disable HSF. */
-	int16_t WidthHsf;
+	int16_t HsfWidth; /* Screen width (columns) */
 #endif
 
 } EVE_ConfigParameters;
+
+/* Display resolution presets */
+typedef enum EVE_DISPLAY_T
+{
+	EVE_DISPLAY_DEFAULT = 0,
+
+	/* Landscape */
+	EVE_DISPLAY_QVGA_320x240_50Hz,
+	EVE_DISPLAY_WQVGA_480x272_60Hz,
+	EVE_DISPLAY_WVGA_800x480_60Hz,
+	EVE_DISPLAY_WXGA_1280x800_60Hz,
+
+	/* Portrait */
+	EVE_DISPLAY_HVGA_320x480_60Hz,
+
+	/* RiTFT (TODO) */
+	/*
+	EVE_DISPLAY_RiTFT_QVGA_320x240,
+	EVE_DISPLAY_RiTFT_WQVGA_480x272,
+	EVE_DISPLAY_RiTFT_WVGA_800x480,
+	*/
+
+	EVE_DISPLAY_NB
+
+} EVE_DISPLAY_T;
+
+/**********************
+** INIT AND SHUTDOWN **
+**********************/
 
 /* Get the default bootup parameters. */
 EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupParameters *bootup);
@@ -104,10 +122,13 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 /* Boot up the device. Obtains the chip Id. Sets up clock and SPI speed. */
 EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup);
 
-/* Get the default configuration parameters. */
-EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigParameters *config);
+/* Get the default configuration parameters for the specified display. */
+EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigParameters *config, EVE_DISPLAY_T display);
 
-/* Boot up the device. Configures the display, resets coprocessor state if necessary. */
+/* Get the default configuration parameters for the specified display parameters. */
+EVE_HAL_EXPORT bool EVE_Util_configDefaultsEx(EVE_HalContext *phost, EVE_ConfigParameters *config, uint32_t width, uint32_t height, uint32_t refreshRate, uint32_t hsfWidth);
+
+/* Boot up the device. Configures the display, resets or initializes coprocessor state. */
 EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters *config);
 
 /* Complementary of bootup. Does not close the HAL context. */
@@ -124,6 +145,41 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost);
 
 /* Calls EVE_Util_bootup and EVE_Util_config using the default parameters */
 EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost);
+
+/**********************
+** INTERACTIVE SETUP **
+**********************/
+
+/* Command line device selection utility */
+#if defined(WIN32)
+EVE_HAL_EXPORT void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx);
+#else
+static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx)
+{
+	*chipId = EVE_SUPPORT_CHIPID;
+	*deviceIdx = -1;
+}
+#endif
+
+/* Command line display selection utility */
+#if defined(WIN32) && defined(EVE_MULTI_TARGET)
+EVE_HAL_EXPORT void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display);
+#else
+static inline void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display);
+{
+	*display = EVE_DISPLAY_DEFAULT;
+}
+#endif
+
+/* Command line device selection utility.
+Provides selection of flash file, and option to write the flash file to the device.
+Parameter `flashFile` is only relevant for Windows build.
+Falls back to no interactivity on FT9XX platform */
+EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, wchar_t *flashFile);
+
+/* Calls EVE_Util_bootup and EVE_Util_config using the default parameters.
+Falls back to no interactivity on FT9XX platform */
+EVE_HAL_EXPORT bool EVE_Util_bootupConfigInteractive(EVE_HalContext *phost, EVE_DISPLAY_T display);
 
 #endif /* #ifndef EVE_HAL_INCL__H */
 
