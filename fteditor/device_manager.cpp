@@ -528,7 +528,7 @@ void DeviceManager::connectDevice()
 
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)phost->ChipId);
 	EVE_ConfigParameters configParams;
-	EVE_Util_configDefaults(phost, &configParams);
+	EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_DEFAULT);
 
 	if (m_IsCustomDevice)
 	{
@@ -547,7 +547,9 @@ void DeviceManager::connectDevice()
 		configParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
 		configParams.CSpread = m_CDI.CUS_REG_CSPREAD;
 		configParams.Dither = m_CDI.CUS_REG_DITHER;
-		configParams.OutBits = m_CDI.CUS_REG_OUTBITS;
+		configParams.OutBitsR = (m_CDI.CUS_REG_OUTBITS >> 6) & 0x7;
+		configParams.OutBitsG = (m_CDI.CUS_REG_OUTBITS >> 3) & 0x7;
+		configParams.OutBitsB = m_CDI.CUS_REG_OUTBITS & 0x7;
 	}
 	else if (m_SelectedDisplaySize == "480x272")
 	{

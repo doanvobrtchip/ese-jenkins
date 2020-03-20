@@ -10,6 +10,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <bt8xxemu_diag.h>
 #include <ft800emu_vc.h>
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

@@ -19,6 +19,7 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #endif
 
 #include <bt8xxemu.h>
+#include <stdlib.h>
 
 #ifdef BT8XXEMU_REMOTE
 

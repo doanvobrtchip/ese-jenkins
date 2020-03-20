@@ -16,6 +16,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
