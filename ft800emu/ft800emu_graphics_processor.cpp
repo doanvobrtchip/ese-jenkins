@@ -1045,8 +1045,23 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 #else
 		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
 #endif
+		ptrdiff_t blockSrc = srci + blockOffset;
+		if (ram == me->memory()->getFlash())
+		{
+			if (blockSrc + sizeof(physical_compressed_block) >= me->memory()->getFlashSize())
+			{
+				// Out of memory bounds
+				// TODO: What's the correct behaviour here?
+				return 0x00000000;
+			}
+		}
+		else
+		{
+			// Loop out of memory bounds
+			blockSrc &= (FT800EMU_ADDR_MASK - 0xF);
+		}
 		const physical_compressed_block *physicalBlock =
-			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 		bool cacheOk = cacheEntry.Ok
 			&& cacheEntry.PhysicalBlock.data64[0] == physicalBlock->data64[0]
 			&& cacheEntry.PhysicalBlock.data64[1] == physicalBlock->data64[1];

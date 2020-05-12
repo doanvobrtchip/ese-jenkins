@@ -63,6 +63,7 @@ public:
 
 #ifdef BT815EMU_MODE
 	inline uint8_t *getFlash() { return m_Flash ? m_Flash->vTable()->Data(m_Flash) : NULL; }
+	inline size_t getFlashSize() { return m_Flash ? m_Flash->vTable()->Size(m_Flash) : 0; }
 	// Voodoo magic...
 	// static inline uint8_t *getFlashFromRamPtr(uint8_t *ram) { return (reinterpret_cast<Memory *>(ram) - offsetof(Memory, m_Ram))->getFlash(); }
 #endif
