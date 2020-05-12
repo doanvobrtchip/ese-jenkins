@@ -622,7 +622,7 @@ void Ejpg::run1(uint8_t *memory8,
 		// FTEMU_printf("%d    %x %s %x %d\n", blk_type, format, btypes, qt, qtab);
 		block = (block + 1) % strlen(btypes);
 		idct();
-		for (size_t i = 0; i < 64; i++)
+		for (ptrdiff_t i = 0; i < 64; i++)
 			run2(memory8,
 			memory16,
 			options,
@@ -1068,7 +1068,7 @@ void Coprocessor::execute()
 		history[t0].rsp = rsp;
 		if (pc > 16383) {
 			FTEMU_printf("PC escape\n");
-			for (size_t i = ((t0 + 1) & HMASK); i != t0; i = (i + 1) & HMASK)
+			for (ptrdiff_t i = ((t0 + 1) & HMASK); i != t0; i = (i + 1) & HMASK)
 				FTEMU_printf("%04X rsp=%d\n", history[i].pc, history[i].rsp);
 			FTEMU_printf("Final PC %04X rsp=%d\n", pc, rsp);
 		}

@@ -2981,7 +2981,7 @@ void GraphicsProcessor::resizeThreadInfos(int size)
 		return;
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
+	for (ptrdiff_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
 		m_ThreadInfos[i]->Running = false;
 		FTEMU_printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
@@ -3084,7 +3084,7 @@ void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo)
 	int loopCount = 0;
 
 	// run display list
-	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+	for (ptrdiff_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 	{
 #if FT800EMU_LIMIT_JUMP_LOOP
 		if (loopCount > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
@@ -3360,7 +3360,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 
 		// run display list
 		int debugCounter = 0;
-		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+		for (ptrdiff_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			if (m_DebugLimiter)
 			{
@@ -4264,7 +4264,7 @@ void GraphicsProcessor::process(
 #endif
 		m_BitmapInfoMaster);
 
-	for (size_t i = 1; i < nbThreads; ++i)
+	for (ptrdiff_t i = 1; i < nbThreads; ++i)
 	{
 		// Wait for threads
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))

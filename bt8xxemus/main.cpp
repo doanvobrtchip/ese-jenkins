@@ -390,7 +390,7 @@ int main(int argc, char* argv[])
 		&s_Threads[0], 
 		TRUE, INFINITE);
 
-	for (size_t i = 0; i < s_Threads.size(); ++i)
+	for (ptrdiff_t i = 0; i < s_Threads.size(); ++i)
 		CloseHandle(s_Threads[i]);
 
 	for (BT8XXEMU_Emulator *emulator : s_Emulators)
