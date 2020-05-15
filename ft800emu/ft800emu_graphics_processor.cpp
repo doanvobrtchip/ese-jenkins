@@ -1031,16 +1031,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
 			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
 		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth)); // texel index in block
-#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
 		GraphicsProcessor *me = (GraphicsProcessor *)gs.Processor;
-		const void *blockAddr = &ram[srci + blockOffset];
-		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
-			return gs.CachedAstcEntry->C[index];
-#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
-		// AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
-		static_assert(sizeof(physical_compressed_block) == 16, "ASTC compressed block size mismatch");
 		ptrdiff_t blockSrc = srci + blockOffset;
-		/*
 		if (ram == me->memory()->getFlash())
 		{
 			if (blockSrc + sizeof(physical_compressed_block) >= me->memory()->getFlashSize())
@@ -1053,9 +1045,15 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		else
 		{
 			// Loop out of memory bounds
-			blockSrc &= (FT800EMU_ADDR_MASK - 0xF);
+			blockSrc &= FT800EMU_ADDR_MASK; // (FT800EMU_ADDR_MASK & ~0xF);
 		}
-		*/
+#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+		const void *blockAddr = &ram[blockSrc];
+		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
+			return gs.CachedAstcEntry->C[index];
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+		// AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
+		static_assert(sizeof(physical_compressed_block) == 16, "ASTC compressed block size mismatch");
 		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((size_t)blockAddr >> 4);
 #elif BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
 		AstcCacheEntry &cacheEntry = me->getAstcCacheEntry(format & 0xF, (ptrdiff_t)blockAddr);
@@ -1102,12 +1100,12 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		return cacheEntry.C[index];
 #elif BT815EMU_ASTC_LAST_CACHE
 		// Decompress ASTC
-		const void *blockAddr = &ram[srci + blockOffset];
+		const void *blockAddr = &ram[blockSrc];
 		imageblock &imageBlock = gs.CachedAstcBlock;
 		if (gs.CachedAstcAddr != (ptrdiff_t)blockAddr)
 		{
 			const physical_compressed_block *physicalBlock =
-				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+				reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 			symbolic_compressed_block symbolicBlock = { 0 };
 			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
@@ -1122,9 +1120,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		return (a << 24) | (r << 16) | (g << 8) | (b);
 #elif BT815EMU_ASTC_THREAD_LOCAL_CACHE
 		// Decompress ASTC
-		const void *blockAddr = &ram[srci + blockOffset];
+		const void *blockAddr = &ram[blockSrc];
 		const physical_compressed_block *physicalBlock =
-			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 		AstcCacheEntry *cacheEntry;
 		AstcCache::iterator cacheEntryIt;
 		bool cacheOk;
@@ -1177,7 +1175,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 #else
 		// Decompress ASTC
 		const physical_compressed_block *physicalBlock = 
-			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 		symbolic_compressed_block symbolicBlock = { 0 };
 		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 		imageblock imageBlock = { 0 };
