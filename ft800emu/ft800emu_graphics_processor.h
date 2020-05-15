@@ -172,6 +172,7 @@ struct AstcCacheEntry
 #pragma warning(pop)
 	physical_compressed_block PhysicalBlock;
 	argb8888 C[12 * 12]; // Not MAX_TEXELS_PER_BLOCK
+	uint8_t Format;
 	volatile bool Ok;
 };
 typedef concurrent_bucket_map<size_t, AstcCacheEntry> AstcCache;

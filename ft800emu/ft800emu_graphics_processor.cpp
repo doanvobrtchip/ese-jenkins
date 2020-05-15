@@ -1039,13 +1039,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 #if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
 		// AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
 		static_assert(sizeof(physical_compressed_block) == 16, "ASTC compressed block size mismatch");
-		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((size_t)blockAddr >> 4);
-#elif BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
-		AstcCacheEntry &cacheEntry = me->getAstcCacheEntry(format & 0xF, (ptrdiff_t)blockAddr);
-#else
-		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
-#endif
 		ptrdiff_t blockSrc = srci + blockOffset;
+		/*
 		if (ram == me->memory()->getFlash())
 		{
 			if (blockSrc + sizeof(physical_compressed_block) >= me->memory()->getFlashSize())
@@ -1060,11 +1055,19 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 			// Loop out of memory bounds
 			blockSrc &= (FT800EMU_ADDR_MASK - 0xF);
 		}
+		*/
+		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((size_t)blockAddr >> 4);
+#elif BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+		AstcCacheEntry &cacheEntry = me->getAstcCacheEntry(format & 0xF, (ptrdiff_t)blockAddr);
+#else
+		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
+#endif
 		const physical_compressed_block *physicalBlock =
 			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 		bool cacheOk = cacheEntry.Ok
 			&& cacheEntry.PhysicalBlock.data64[0] == physicalBlock->data64[0]
-			&& cacheEntry.PhysicalBlock.data64[1] == physicalBlock->data64[1];
+			&& cacheEntry.PhysicalBlock.data64[1] == physicalBlock->data64[1]
+			&& cacheEntry.Format == (format & 0xF);
 		if (!cacheOk)
 		{
 			// Decompress ASTC
@@ -1091,6 +1094,7 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 				cacheEntry.C[i] = c;
 			}
 			cacheEntry.PhysicalBlock = *physicalBlock;
+			cacheEntry.Format = format & 0xF;
 			cacheEntry.Ok = true;
 		}
 		gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
