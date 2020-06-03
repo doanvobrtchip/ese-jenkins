@@ -73,8 +73,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 static const char *c_Version =
 	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
-	"Copyright(C) 2016-2018  Bridgetek Pte Lte\n"
-	"Author: Jan Boon <jan@no-break.space>";
+	"Copyright(C) 2016-2020  Bridgetek Pte Lte\n"
+	"Author: Jan Boon <jan.boon@kaetemi.be>";
 
 BT8XXEMU_API const char *BT8XXEMU_version()
 {

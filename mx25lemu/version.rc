@@ -28,7 +28,7 @@ BEGIN
             VALUE "FileDescription", "MX25L Flash Emulator Library"
             VALUE "FileVersion", "3.0.6"
             VALUE "InternalName", "mx25lemu"
-            VALUE "LegalCopyright", "Copyright (C) 2017-2018  Bridgetek Pte Ltd"
+            VALUE "LegalCopyright", "Copyright (C) 2017-2020  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "mx25lemu.dll"
             VALUE "ProductName", "MX25LEMU"
             VALUE "ProductVersion", "3.0.6"

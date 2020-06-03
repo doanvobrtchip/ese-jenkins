@@ -1,8 +1,8 @@
 /*
 FT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2018  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "resource.h"
@@ -29,7 +29,7 @@ BEGIN
             VALUE "FileDescription", "FT8XX Emulator Library"
             VALUE "FileVersion", FT8XXEMU_VERSION_STRING
             VALUE "InternalName", "bt8xxemu"
-            VALUE "LegalCopyright", "Copyright (C) 2013-2018  Bridgetek Pte Ltd"
+            VALUE "LegalCopyright", "Copyright (C) 2013-2020  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "ft8xxemu.dll"
             VALUE "ProductName", "FT8XXEMU"
             VALUE "ProductVersion", FT8XXEMU_VERSION_STRING
