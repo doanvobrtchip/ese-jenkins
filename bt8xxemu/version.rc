@@ -29,7 +29,7 @@ BEGIN
             VALUE "FileDescription", "BT8XX Emulator Library"
             VALUE "FileVersion", BT8XXEMU_VERSION_STRING
             VALUE "InternalName", "bt8xxemu"
-            VALUE "LegalCopyright", "Copyright (C) 2013-2018  Bridgetek Pte Ltd"
+            VALUE "LegalCopyright", "Copyright (C) 2013-2020  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "bt8xxemu.dll"
             VALUE "ProductName", "BT8XXEMU"
             VALUE "ProductVersion", BT8XXEMU_VERSION_STRING
