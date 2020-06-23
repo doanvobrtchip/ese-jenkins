@@ -1708,7 +1708,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					{
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -1787,7 +1787,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 						propInfo += tr("<br><b>Format: </b> ") + bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, contentInfo->ImageFormat);
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -1812,7 +1812,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					{
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
