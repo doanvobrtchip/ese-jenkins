@@ -2836,9 +2836,6 @@ void MainWindow::openFile(const QString &fileName)
 
 	m_CurrentFile = fileName;
 
-	// Reset editors to their default state
-	clearEditor();
-
 	// Remove temporary paths
 	if (m_TemporaryDir)
 	{
@@ -2853,6 +2850,10 @@ void MainWindow::openFile(const QString &fileName)
 	QString dstPath = dir.path();
 	QDir::setCurrent(dstPath);
 	m_LastProjectDir = QDir::currentPath();
+
+	// Reset editors to their default state
+	clearEditor();
+
 
 	// Load the data
 	bool loadOk = false;
