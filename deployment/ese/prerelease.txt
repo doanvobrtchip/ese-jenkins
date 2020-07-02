@@ -4,6 +4,16 @@ Please uninstall the latest version if you have one installed on your PC.
 
 Release Note:
 
+Version 3.4.0
+Features:
+•   Add system clock configuration in the device manager
+•   Integrate latest Eve Emulator to accelerate ASTC decoding
+•   Caching functionality for ASTC module
+•   Migrate ESE to 64 bit Windows release
+
+Bug Fix:
+*   The assets under resource folder of ESE project are deleted after another project is opened
+
 Version 3.3.0
 Features: 
 •   Constrain either horizontal or vertical positioning when dragging an object

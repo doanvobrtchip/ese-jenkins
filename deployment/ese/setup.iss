@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.3"
+#define MyAppVersion "V3.4"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\\prerelease.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}-rc1
 ;SetupIconFile=.\\eve_editor.ico
 Compression=lzma
 SolidCompression=yes
@@ -72,11 +72,11 @@ Source: ".\\mx25lemu.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\libFT4222.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\libFT4222-64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\libMPSSE.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\python36.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\python38.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\zlib1__.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -91,6 +91,8 @@ Source: ".\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
 
+Source: ".\\libpng16-16__.dll"; DestDir: "{app}"; Flags: ignoreversion
+
 ;Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
@@ -102,7 +104,6 @@ Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createal
 Source: ".\\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs
 Source: ".\\platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs
 Source: ".\\imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs
-Source: "styles\qwindowsvistastyle.dll"; DestDir: "{app}\styles"; Flags: ignoreversion
 Source: ".\\styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs
 
 Source: ".\\device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs
