@@ -3,9 +3,15 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2019  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6001) // Uninitialized memory (screen buffers)
+#pragma warning(disable : 6262) // Large stack
+#endif
 
 // #include <...>
 #define FTEMU_GRAPHICS_PROCESSOR_SEMI_PRIVATE public
@@ -53,12 +59,15 @@ Author: Jan Boon <jan@no-break.space>
 #	endif
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 // Library includes
 #ifdef BT815EMU_MODE
 #	include <astc_codec_internals.h>
 const partition_info *get_partition_table(int xdim, int ydim, int zdim, int partition_count);
 const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int zdim);
 #endif
+#pragma warning(pop)
 
 // Project includes
 #include "bt8xxemu_inttypes.h"
@@ -68,6 +77,10 @@ const block_size_descriptor *get_block_size_descriptor(int xdim, int ydim, int z
 #include "ft800emu_memory.h"
 #include "ft800emu_touch.h"
 #include "ft800emu_vc.h"
+
+#ifdef BT817EMU_MODE
+#include "bt817emu_hsf.h"
+#endif
 
 using std::min;
 using std::max;
@@ -155,13 +168,17 @@ public:
 #endif
 
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
 		CachedAstcAddr = 0;
 		CachedAstcEntry = NULL;
 #	endif
 #	if BT815EMU_ASTC_LAST_CACHE
 		CachedAstcAddr = 0;
 		CachedAstcBlock = { 0 };
+#	endif
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+		CachedAstcGlobal = NULL;
+		CachedAstcLocal = NULL;
 #	endif
 #endif
 
@@ -211,7 +228,7 @@ public:
 #endif
 
 #ifdef BT815EMU_MODE
-#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
+#	if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
 	// Cache optimization
 	ptrdiff_t CachedAstcAddr;
 	AstcCacheEntry *CachedAstcEntry;
@@ -220,6 +237,10 @@ public:
 	// Cache optimization
 	ptrdiff_t CachedAstcAddr;
 	imageblock CachedAstcBlock;
+#	endif
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	AstcCache *CachedAstcGlobal;
+	AstcCache *CachedAstcLocal;
 #	endif
 #endif
 
@@ -479,11 +500,7 @@ BT8XXEMU_FORCE_INLINE bool testStencil(const GraphicsState &gs, uint8_t *bs, con
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted8(const uint8_t *ram, const uint8_t &value, const int paletteSource)
 {
 	uint8_t val = reinterpret_cast<const uint8_t *>(&reinterpret_cast<const uint32_t *>(&ram[paletteSource])[value])[0];
-#ifdef BT815EMU_MODE
 	return (val << 24) | (val << 16) | (val << 8) | val;
-#else
-	return val << ((paletteSource & 3) << 3);
-#endif
 }
 
 BT8XXEMU_FORCE_INLINE argb8888 getPaletted565(const uint8_t *ram, const uint8_t &value, const int paletteSource)
@@ -746,7 +763,10 @@ BT8XXEMU_FORCE_INLINE bool wrap(btxf_t &value, const int &max, const int &type)
 		else if (value >= max) return false;
 		break;
 	case REPEAT:
+#pragma warning(push)
+#pragma warning(disable : 26451)
 		value = value & (max - 1); // Only support REPEAT for power-of-2 sizes
+#pragma warning(pop)
 		break;
 	}
 	return true;
@@ -771,12 +791,12 @@ BT8XXEMU_FORCE_INLINE const uint8_t &bmpSrc16(const uint8_t *ram, const uint32_t
 
 #ifdef BT815EMU_MODE
 #define BT815EMU_ASTC_FORMAT_NB 14
-static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB] = {
-	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12
+static const int c_AstcBlockWidth[BT815EMU_ASTC_FORMAT_NB + 2] = { // Padded to 16 to avoid overruns
+	4, 5, 5, 6, 6, 8, 8, 8, 10, 10, 10, 10, 12, 12, -1, -1
 };
 
-static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB] = {
-	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12
+static const int c_AstcBlockHeight[BT815EMU_ASTC_FORMAT_NB + 2] = { // Padded to 16 to avoid overruns
+	4, 4, 5, 5, 6, 5, 6, 8, 5, 6, 8, 10, 10, 12, -1, -1
 };
 #endif
 
@@ -854,8 +874,9 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 	const int y = (int)yl;
 	const int py = y * stride;
 #ifdef BT815EMU_MODE
-	uint32_t bmpFormat = (bitmapInfo->LayoutFormat == 0x1F) ? bitmapInfo->ExtFormat : bitmapInfo->LayoutFormat;
-	if (!BT815EMU_IS_FORMAT_ASTC(bmpFormat) && (BT815EMU_ADDR_IS_FLASH(bitmapInfo->Source)))
+	uint8_t handle = gs.BitmapHandle;
+	uint32_t bmpFormat = (bitmapInfo[handle].LayoutFormat == 0x1F) ? bitmapInfo[handle].ExtFormat : bitmapInfo[handle].LayoutFormat;
+	if (!BT815EMU_IS_FORMAT_ASTC(bmpFormat) && (BT815EMU_ADDR_IS_FLASH(bitmapInfo[handle].Source)))
 		return 0x00000000;
 #endif
 	switch (format)
@@ -1010,18 +1031,44 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 			? ((tileY * stride << 1) + (tileX << 5) + (tileIdxReverse << 4))
 			: ((tileY * stride << 1) + (tileX << 6) + (tileIdx << 4));
 		const int index = (((y % blockHeight) * blockWidth) + (xl % blockWidth)); // texel index in block
-
-#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE
 		GraphicsProcessor *me = (GraphicsProcessor *)gs.Processor;
-		const void *blockAddr = &ram[srci + blockOffset];
+		ptrdiff_t blockSrc = srci + blockOffset;
+		if (ram == me->memory()->getFlash())
+		{
+			if (blockSrc + sizeof(physical_compressed_block) >= me->memory()->getFlashSize())
+			{
+				// Out of memory bounds
+				// TODO: What's the correct behaviour here?
+				return 0x00000000;
+			}
+		}
+		else
+		{
+			// Loop out of memory bounds
+			blockSrc &= FT800EMU_ADDR_MASK; // (FT800EMU_ADDR_MASK & ~0xF);
+		}
+#if BT815EMU_ASTC_CONCURRENT_MAP_CACHE || BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE || BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+		const void *blockAddr = &ram[blockSrc];
 		if (gs.CachedAstcAddr == (ptrdiff_t)blockAddr)
 			return gs.CachedAstcEntry->C[index];
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+		// AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((uint32_t)((size_t)blockAddr & 0xFFFFFFFF));
+		static_assert(sizeof(physical_compressed_block) == 16, "ASTC compressed block size mismatch");
+		AstcCacheEntry &cacheEntry = me->m_AstcCache.find_or_emplace((size_t)blockAddr >> 4);
+#elif BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+		AstcCacheEntry &cacheEntry = me->getAstcCacheEntry(format & 0xF, (ptrdiff_t)blockAddr);
+#else
 		AstcCacheEntry &cacheEntry = me->m_AstcCache[(ptrdiff_t)blockAddr];
-		if (!cacheEntry.Ok)
+#endif
+		const physical_compressed_block *physicalBlock =
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
+		bool cacheOk = cacheEntry.Ok
+			&& cacheEntry.PhysicalBlock.data64[0] == physicalBlock->data64[0]
+			&& cacheEntry.PhysicalBlock.data64[1] == physicalBlock->data64[1]
+			&& cacheEntry.Format == (format & 0xF);
+		if (!cacheOk)
 		{
 			// Decompress ASTC
-			const physical_compressed_block *physicalBlock =
-				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
 			symbolic_compressed_block symbolicBlock = { 0 };
 			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 			imageblock imageBlock = { 0 };
@@ -1044,6 +1091,8 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 				}
 				cacheEntry.C[i] = c;
 			}
+			cacheEntry.PhysicalBlock = *physicalBlock;
+			cacheEntry.Format = format & 0xF;
 			cacheEntry.Ok = true;
 		}
 		gs.CachedAstcAddr = (ptrdiff_t)blockAddr;
@@ -1051,12 +1100,12 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		return cacheEntry.C[index];
 #elif BT815EMU_ASTC_LAST_CACHE
 		// Decompress ASTC
-		const void *blockAddr = &ram[srci + blockOffset];
+		const void *blockAddr = &ram[blockSrc];
 		imageblock &imageBlock = gs.CachedAstcBlock;
 		if (gs.CachedAstcAddr != (ptrdiff_t)blockAddr)
 		{
 			const physical_compressed_block *physicalBlock =
-				reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+				reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 			symbolic_compressed_block symbolicBlock = { 0 };
 			physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
@@ -1069,10 +1118,64 @@ BT8XXEMU_FORCE_INLINE argb8888 sampleBitmapAt(GraphicsState &gs, const uint8_t *
 		uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 1] * 255.0f + 0.5f), 255U);
 		uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(index * 4) + 2] * 255.0f + 0.5f), 255U);
 		return (a << 24) | (r << 16) | (g << 8) | (b);
+#elif BT815EMU_ASTC_THREAD_LOCAL_CACHE
+		// Decompress ASTC
+		const void *blockAddr = &ram[blockSrc];
+		const physical_compressed_block *physicalBlock =
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
+		AstcCacheEntry *cacheEntry;
+		AstcCache::iterator cacheEntryIt;
+		bool cacheOk;
+		if ((cacheEntryIt = gs.CachedAstcGlobal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcGlobal->end())
+		{
+			cacheEntry = &(cacheEntryIt->second);
+			cacheOk = cacheEntry->PhysicalBlock.data64[0] == physicalBlock->data64[0]
+				&& cacheEntry->PhysicalBlock.data64[1] == physicalBlock->data64[1];
+			if (!cacheOk)
+				cacheEntry = &((*gs.CachedAstcLocal)[(ptrdiff_t)blockAddr]);
+		}
+		else if ((cacheEntryIt = gs.CachedAstcLocal->find((ptrdiff_t)blockAddr)) != gs.CachedAstcLocal->end())
+		{
+			cacheEntry = &(cacheEntryIt->second);
+			cacheOk = cacheEntry->PhysicalBlock.data64[0] == physicalBlock->data64[0]
+				&& cacheEntry->PhysicalBlock.data64[1] == physicalBlock->data64[1];
+		}
+		else 
+		{
+			cacheEntry = &((*gs.CachedAstcLocal)[(ptrdiff_t)blockAddr]);
+			cacheOk = false;
+		}
+		if (!cacheOk)
+		{
+			cacheEntry->PhysicalBlock = *physicalBlock;
+			imageblock imageBlock;
+			symbolic_compressed_block symbolicBlock = { 0 };
+			physical_to_symbolic(blockWidth, blockHeight, 1, &cacheEntry->PhysicalBlock, &symbolicBlock);
+			decompress_symbolic_block_no_pos(DECODE_LDR, blockWidth, blockHeight, 1, &symbolicBlock, &imageBlock);
+			const int nbTexels = blockHeight * blockWidth;
+			for (int i = 0; i < nbTexels; ++i)
+			{
+				argb8888 c;
+				if (imageBlock.nan_texel[i])
+				{
+					c = 0xFFFF00FF;
+				}
+				else
+				{
+					uint32_t a = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 3] * 255.0f + 0.5f), 255U);
+					uint32_t r = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4)] * 255.0f + 0.5f), 255U);
+					uint32_t g = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 1] * 255.0f + 0.5f), 255U);
+					uint32_t b = std::min((uint32_t)floor(imageBlock.orig_data[(i * 4) + 2] * 255.0f + 0.5f), 255U);
+					c = (a << 24) | (r << 16) | (g << 8) | (b);
+				}
+				cacheEntry->Color[i] = c;
+			}
+		}
+		return cacheEntry->Color[index];
 #else
 		// Decompress ASTC
 		const physical_compressed_block *physicalBlock = 
-			reinterpret_cast<const physical_compressed_block *>(&ram[srci + blockOffset]);
+			reinterpret_cast<const physical_compressed_block *>(&ram[blockSrc]);
 		symbolic_compressed_block symbolicBlock = { 0 };
 		physical_to_symbolic(blockWidth, blockHeight, 1, physicalBlock, &symbolicBlock);
 		imageblock imageBlock = { 0 };
@@ -1426,6 +1529,8 @@ BT8XXEMU_FORCE_INLINE int getLayoutPixelHeight(FT8XXEMU::System *const system, c
 // Mimic hardware alpha behaviour with line width lower than 16
 #define FT800EMU_LINE_WIDTH_BEHAVIOUR 1
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 struct VertexState
 {
 public:
@@ -1433,6 +1538,7 @@ public:
 	bool Set;
 	int X1, Y1;
 };
+#pragma warning(pop)
 
 template <bool debugTrace>
 void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *bt, const int y, const int hsize, VertexState &rs, const int x1, const int y1, const int x2, const int y2)
@@ -1973,9 +2079,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Left
 						if (x1lw_px == x1lw_px_sc) // Check scissor
 						{
-							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomleft'
 							const int x = x1lw_px_sc;
+#pragma warning(push)
+#pragma warning(disable : 6001) // alphatopleft undefined when blendtop is 0 doesn't matter because it's multiplied and becomes 0
 							const int surf = ((16 - dxl) * blendc) + (alphatopleft * blendtop) + (alphabottomleft * blendbottom);
+#pragma warning(pop)
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
@@ -1984,9 +2092,11 @@ void displayRects(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 						// Right
 						if (x2lw_px == x2lw_px_sc) // Check scissor
 						{
-							// VERIFY: warning C6001: Using uninitialized memory 'alphabottomright'
 							const int x = x2lw_px_sc - 1;
+#pragma warning(push)
+#pragma warning(disable : 6001) // alphatopright undefined when blendtop is 0 doesn't matter because it's multiplied and becomes 0
 							const int surf = (dxr * blendc) + (alphatopright * blendtop) + (alphabottomright * blendbottom);
+#pragma warning(pop)
 							const int alpha = ((gs.ColorARGB >> 24) * surf) >> 12;
 							const argb8888 out = (gs.ColorARGB & 0x00FFFFFF) | (alpha << 24);
 							processPixel<debugTrace>(gs, bc, bs, bt, x, out);
@@ -2377,8 +2487,11 @@ void displayLines(const GraphicsState &gs, argb8888 *bc, uint8_t *bs, uint8_t *b
 			{
 				// Line width boundaries in 256 scale
 				const int qlw = lw << 4; // Line width 256 scale
+#pragma warning(push)
+#pragma warning(disable : 26451)
 				const int qwdo = ((int64_t)(qlw + 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for outer boundary (always positive)
 				const int qwdi = ((int64_t)(qlw - 128) * (int64_t)qlen) / (int64_t)qyd; // Distance from center for inner boundary (always positive for lines wider than a pixel)
+#pragma warning(pop)
 	#if FT800EMU_LINE_DEBUG_MATH
 				if (qwdo <= 0) FTEMU_printf("qwdo <= 0\n");
 				if (qwdi <= 0) FTEMU_printf("qwdi <= 0\n");
@@ -2703,6 +2816,8 @@ static std::mutex s_ASTCInitMutex;
 static bool s_ASTCInitOk = false;
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, Touch *touch, bool backgroundPerformance)
 {
 #ifdef BT815EMU_MODE
@@ -2725,6 +2840,7 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 	m_Memory = memory;
 	m_Touch = touch;
 	m_BackgroundPerformance = backgroundPerformance;
+	memset(m_BitmapInfoMaster, 0, sizeof(m_BitmapInfoMaster));
 
 	m_DebugMode = FT800EMU_DEBUGMODE_NONE;
 	m_DebugMultiplier = 1;
@@ -2734,6 +2850,13 @@ GraphicsProcessor::GraphicsProcessor(FT8XXEMU::System *system, Memory *memory, T
 
 	m_RegPwmDutyEmulation = false;
 	m_ThreadCount = 1;
+	m_ThreadPriorityRealtime = false;
+
+	m_DebugTraceX = ~0;
+	// m_DebugTraceLine = ~0;
+	m_DebugTraceStackMax = 0;
+	m_DebugTraceStackSize = &m_DebugTraceStackMax;
+	m_DebugTraceStack = NULL;
 
 #ifdef BT815EMU_MODE
 	for (int i = 0; i < FT800EMU_BITMAP_HANDLE_NB; ++i)
@@ -2858,11 +2981,16 @@ public:
 	bool SwapXY;
 #endif
 	uint32_t HSize;
-	uint32_t VSize;
-	uint32_t YIdx;
+	uint32_t HsfHSize;
+	uint32_t YTop;
+	uint32_t YBottom;
+	uint32_t YStart;
 	uint32_t YInc;
+	uint32_t YNum;
 	BitmapInfo Bitmap[32];
 };
+
+#pragma warning(pop)
 
 void GraphicsProcessor::resizeThreadInfos(int size)
 {
@@ -2870,7 +2998,7 @@ void GraphicsProcessor::resizeThreadInfos(int size)
 		return;
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
-	for (size_t i = 0; i < m_ThreadInfos.size(); ++i)
+	for (ptrdiff_t i = 0; i < m_ThreadInfos.size(); ++i)
 	{
 		m_ThreadInfos[i]->Running = false;
 		FTEMU_printf("Stop graphics thread: 1+%u\n", (uint32_t)i);
@@ -2973,7 +3101,7 @@ void GraphicsProcessor::processBlankDL(BitmapInfo *const bitmapInfo)
 	int loopCount = 0;
 
 	// run display list
-	for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+	for (ptrdiff_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 	{
 #if FT800EMU_LIMIT_JUMP_LOOP
 		if (loopCount > FT800EMU_LIMIT_JUMP_LOOP_COUNT)
@@ -3007,7 +3135,12 @@ EvaluateDisplayListValue:
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
+#ifdef BT817EMU_MODE
+				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
+				int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
+#else
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
+#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3089,7 +3222,12 @@ EvaluateDisplayListValue:
 		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+#ifdef BT817EMU_MODE
+				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
+				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
+#else
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
+#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
@@ -3136,7 +3274,7 @@ DisplayListDisplay:
 }
 
 template <bool debugTrace>
-void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize, const uint32_t vsize, const uint32_t yIdx, const uint32_t yInc, BitmapInfo *const bitmapInfo)
+void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool upsideDown, const bool mirrored FT810EMU_SWAPXY_PARAM, const uint32_t hsize BT817EMU_HSF_HSIZE_PARAM, const uint32_t yTop, const uint32_t yBottom, const uint32_t yStart, const uint32_t yInc, const uint32_t yNum, BitmapInfo *const bitmapInfo)
 {
 	FT8XXEMU::System *const system = m_System;
 	Memory *const memory = m_Memory;
@@ -3145,12 +3283,36 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	const uint32_t *displayList = memory->getDisplayList();
 	uint8_t bt[FT800EMU_SCREEN_WIDTH_MAX]; // tag buffer (per thread value)
 	uint8_t bs[FT800EMU_SCREEN_WIDTH_MAX]; // stencil buffer (per-thread values!)
+#ifdef BT817EMU_MODE
+	argb8888 bufBc[FT800EMU_SCREEN_WIDTH_MAX]; // temporary buffer when using HSF
+	Hsf hsf(memory);
+	if (hsfHSize)
+		hsf.init(hsfHSize, hsize);
+#endif
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	AstcCache cachedAstc;
+#	endif
+#endif
 
 	intptr_t lines_processed = 0;
 	bool debugLimiterEffective = false;
 	int debugLimiterIndex = 0;
-	for (uint32_t y = yIdx; y < vsize; y += yInc)
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	m_CachedAstcMutex.lock_shared();
+#	endif
+#endif
+	// for (uint32_t y = yIdx; y < vsize; y += yInc)
+	// {
+	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
+	uint32_t linesBack = yNum * yInc;
+	uint32_t vsize = yBottom;
+	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
+		uint32_t y = yStart + (yi * yInc);
+		if (y >= yBottom) y -= linesBack;
+
 		VertexState vs = VertexState();
 		int primitive = 0;
 		GraphicsState gs = GraphicsState(
@@ -3159,10 +3321,22 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 			, swapXY
 #endif
 			);
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+		gs.CachedAstcLocal = &cachedAstc;
+		gs.CachedAstcGlobal = &m_CachedAstc;
+#	endif
+#endif
 		std::stack<GraphicsState> gsstack;
 		std::stack<int> callstack;
 		gs.ScissorX2.I = min((int)hsize, gs.ScissorX2.I);
-		argb8888 *bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#ifdef BT817EMU_MODE
+		argb8888 *const bc = hsfHSize
+			? bufBc
+			: &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#else
+		argb8888 *const bc = &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsize];
+#endif
 		// limits for single core rendering on Intel Core 2 Duo
 		// maximum 32 argb8888 memory ops per pixel on average
 		// maximum 15360 argb8888 memory ops per line
@@ -3203,7 +3377,7 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 
 		// run display list
 		int debugCounter = 0;
-		for (size_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
+		for (ptrdiff_t c = 0; c < FT800EMU_DISPLAY_LIST_SIZE; ++c)
 		{
 			if (m_DebugLimiter)
 			{
@@ -3281,7 +3455,12 @@ EvaluateDisplayListValue:
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
+#ifdef BT817EMU_MODE
+						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
+						int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
+#else
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
+#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3561,7 +3740,12 @@ EvaluateDisplayListValue:
 				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
+#ifdef BT817EMU_MODE
+						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
+						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
+#else
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
+#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
@@ -3615,7 +3799,14 @@ EvaluateDisplayListValue:
 						| (/* a = */ ((v) & 0x7) << 24);
 					break;
 				case BT815EMU_DL_INT_FRR:
-					// TODO: BT815
+					// TODO: What is this instruction for? Flash reset, or ...?
+					/*
+#if BT815EMU_ASTC_CONCURRENT_BUCKET_MAP_CACHE
+					gs.Processor->m_AstcCache.clear();
+#elif BT812EMU_ASTC_SEPARATE_CBMAP_CACHE
+					gs.Processor->clearAstcCache();
+#endif
+					*/
 					break;
 #endif
 				default:
@@ -3817,31 +4008,50 @@ DisplayListDisplay:
 				break;
 			}
 		}
+#ifdef BT817EMU_MODE
+		const uint32_t outHSize = hsfHSize ? hsfHSize : hsize;
+		argb8888 *const outBc = hsfHSize ? &screenArgb8888[(upsideDown ? (vsize - y - 1) : y) * hsfHSize] : bc;
+		if (hsfHSize)
+		{
+			// Apply HSF filter
+			hsf.apply(outBc, hsfHSize, bc, hsize);
+			// memcpy(outBc, bc, hsfHSize * 4);
+		}
+#else
+		const uint32_t outHSize = hsize;
+		argb8888 *const outBc = bc;
+#endif
 		// backlight emulation
-		else if (m_RegPwmDutyEmulation)
+		if (!m_DebugMode && m_RegPwmDutyEmulation)
 		{
 			uint32_t pwmduty = Memory::rawReadU32(ram, REG_PWM_DUTY);
 			if (pwmduty < 128)
 			{
-				for (uint32_t x = 0; x < hsize; ++x)
+				for (uint32_t x = 0; x < outHSize; ++x)
 				{
-					bc[x] = mulalpha128_argb(bc[x], pwmduty);
+					outBc[x] = mulalpha128_argb(outBc[x], pwmduty);
 				}
 			}
 		}
 		// mirror display
 		if (mirrored)
 		{
-			for (uint32_t xl = 0; xl < (hsize >> 1); ++xl)
+			for (uint32_t xl = 0; xl < (outHSize >> 1); ++xl)
 			{
-				uint32_t xr = hsize - xl - 1;
-				std::swap(bc[xl], bc[xr]);
+				uint32_t xr = outHSize - xl - 1;
+				std::swap(outBc[xl], outBc[xr]);
 			}
 		}
 		++lines_processed;
 	}
 
-	if (yIdx == 0)
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	m_CachedAstcMutex.unlock_shared();
+#	endif
+#endif
+
+	if (yStart == 0)
 	{
 		m_DebugLimiterEffective = false;
 		m_DebugLimiterIndex = debugLimiterIndex;
@@ -3852,6 +4062,17 @@ DisplayListDisplay:
 	{
 		processBlankDL(bitmapInfo);
 	}
+
+#ifdef BT815EMU_MODE
+#	if BT815EMU_ASTC_THREAD_LOCAL_CACHE
+	m_CachedAstcMutex.lock();
+	for (AstcCache::iterator it(cachedAstc.begin()), end(cachedAstc.end()); it != end; ++it)
+	{
+		m_CachedAstc[it->first] = it->second;
+	}
+	m_CachedAstcMutex.unlock();
+#	endif
+#endif
 }
 
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -3934,9 +4155,14 @@ void GraphicsProcessor::launchGraphicsProcessorThread(ThreadInfo *li)
 			li->SwapXY,
 #endif
 			li->HSize, 
-			li->VSize, 
-			li->YIdx, 
+#ifdef BT817EMU_MODE
+			li->HsfHSize,
+#endif
+			li->YTop, 
+			li->YBottom, 
+			li->YStart,
 			li->YInc, 
+			li->YNum,
 			li->Bitmap);
 
 		SetEvent(li->EndEvent);
@@ -3960,8 +4186,11 @@ void GraphicsProcessor::process(
 	bool swapXY,
 #endif
 	uint32_t hsize, 
-	uint32_t vsize, 
-	uint32_t yIdx, 
+#ifdef BT817EMU_MODE
+	const uint32_t hsfHSize, 
+#endif
+	uint32_t yTop, 
+	uint32_t yBottom, 
 	uint32_t yInc)
 
 {
@@ -3970,11 +4199,20 @@ void GraphicsProcessor::process(
 	// Store the touch tag xy used for lookup
 	Memory::rawWriteU32(ram, REG_TOUCH_TAG_XY, Memory::rawReadU32(ram, REG_TOUCH_SCREEN_XY));
 
-	for (int i = 1; i < m_ThreadCount; ++i)
+#if FT800EMU_SPREAD_RENDER_THREADS
+	uint32_t vsizeSection = ((vsize - yIdx) / m_ThreadCount);
+#endif
+
+	int nbLines = yBottom > yTop ? (yBottom - yTop) / yInc : 0; // Number of lines to render
+	int nbThreads = min(m_ThreadCount, nbLines); // Number of threads to use
+	int nbLineBlocks = nbThreads > 0 ? nbLines / nbThreads : 0; // Number of complete line blocks
+	int skipBlocks = nbThreads > 0 ? (nbLineBlocks / nbThreads) * nbThreads * yInc : 0;
+
+	for (int i = 1; i < nbThreads; ++i)
 	{
 		// Launch threads
 		// processPart(screenArgb8888, upsideDown, mirrored, hsize, vsize, (i * yInc) + yIdx, s_ThreadCount * yInc);
-		ThreadInfo *li = m_ThreadInfos[i - 1].get();
+		ThreadInfo *li = m_ThreadInfos[(size_t)i - 1].get();
 		li->ScreenArgb8888 = screenArgb8888;
 		li->UpsideDown = upsideDown;
 		li->Mirrored = mirrored;
@@ -3982,9 +4220,22 @@ void GraphicsProcessor::process(
 		li->SwapXY = swapXY;
 #endif
 		li->HSize = hsize;
-		li->VSize = vsize;
-		li->YIdx = (i * yInc) + yIdx;
-		li->YInc = m_ThreadCount * yInc;
+#ifdef BT817EMU_MODE
+		li->HsfHSize = hsfHSize;
+#endif
+#if FT800EMU_SPREAD_RENDER_THREADS
+		li->VSize = (i + 1 == nbThreads) 
+			? vsize
+			: (yIdx + (i + 1) * vsizeSection);
+		li->YIdx = yIdx + (i * vsizeSection);
+		li->YInc = yInc;
+#else
+		li->YTop = yTop;
+		li->YBottom = yBottom;
+		li->YStart = yTop + (skipBlocks * i) + i;
+		li->YInc = nbThreads * yInc;
+		li->YNum = (nbLines + (nbThreads - i - 1)) / nbThreads;
+#endif
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
 		// li->Thread = SDL_CreateThreadFT(launchThread, static_cast<void *>(li));
 		SDL_SemPost(li->StartSem);
@@ -3992,15 +4243,45 @@ void GraphicsProcessor::process(
 #	ifdef WIN32
 		SetEvent(li->StartEvent);
 #	else
-		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, (i * yInc) + yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
+		processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, 
+#if FT800EMU_SPREAD_RENDER_THREADS
+			(i + 1 == nbThreads) 
+				? vsize
+				: (yIdx + (i + 1) * vsizeSection),
+			yIdx + (i * vsizeSection),
+			yInc,
+#else
+			vsize, 
+			(i * yInc) + yIdx, 
+			nbThreads * yInc, 
+#endif
+			m_BitmapInfoMaster);
 #	endif
 #endif
 	}
 
 	// Run part on this thread
-	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY, hsize, vsize, yIdx, m_ThreadCount * yInc, m_BitmapInfoMaster);
+	processPart<false>(screenArgb8888, upsideDown, mirrored FT810EMU_SWAPXY,
+		hsize,
+#ifdef BT817EMU_MODE
+		hsfHSize,
+#endif
+#if FT800EMU_SPREAD_RENDER_THREADS
+		(nbThreads == 1) 
+			? vsize
+			: yIdx + vsizeSection,
+			yIdx,
+			yInc,
+#else
+		yTop, 
+		yBottom,
+		yTop,
+		nbThreads * yInc,
+		(nbLines + (nbThreads - 1)) / nbThreads,
+#endif
+		m_BitmapInfoMaster);
 
-	for (int i = 1; i < m_ThreadCount; ++i)
+	for (ptrdiff_t i = 1; i < nbThreads; ++i)
 	{
 		// Wait for threads
 #if (defined(FTEMU_SDL) || defined(FTEMU_SDL2))
@@ -4008,9 +4289,9 @@ void GraphicsProcessor::process(
 		// SDL_WaitThread(li->Thread, NULL);
 		// SDL_mutexP(li->StartMutex);
 		// SDL_mutexV(li->StartMutex);
-		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory::rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)->\n", Memory::rawReadU32(ram, REG_FRAMES), (int)i, SDL_SemValue(li->EndSem));
 		SDL_SemWait(li->EndSem);
-		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory::rawReadU32(ram, REG_FRAMES), i, SDL_SemValue(li->EndSem));
+		// FTEMU_printf("%i: sem wait %i (%i)<-\n", Memory::rawReadU32(ram, REG_FRAMES), (int)i, SDL_SemValue(li->EndSem));
 #else
 #	ifdef WIN32
 		ThreadInfo *li = m_ThreadInfos[i - 1].get();
@@ -4035,7 +4316,7 @@ void GraphicsProcessor::processBlank()
 void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_t y, uint32_t hsize)
 {
 	argb8888 buffer[FT800EMU_SCREEN_WIDTH_MAX];
-	argb8888 *dummyBuffer = buffer - (y * hsize);
+	argb8888 *dummyBuffer = buffer - ((ptrdiff_t)y * (ptrdiff_t)hsize);
 	BitmapInfo bitmapInfo[32];
 	memcpy(&bitmapInfo, &m_BitmapInfoMaster, sizeof(m_BitmapInfoMaster));
 	m_DebugTraceX = x;
@@ -4043,7 +4324,7 @@ void GraphicsProcessor::processTrace(int *result, int *size, uint32_t x, uint32_
 	m_DebugTraceStackMax = *size;
 	*size = 0;
 	m_DebugTraceStackSize = size;
-	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, bitmapInfo); // TODO: REG_ROTATE
+	processPart<true>(dummyBuffer, false, false FT810EMU_SWAPXY_FALSE, hsize BT817EMU_HSF_HSIZE_ZERO, y, y + 1, y, FT800EMU_SCREEN_HEIGHT_MAX, 1, bitmapInfo); // TODO: REG_ROTATE
 	m_DebugTraceX = ~0;
 	m_DebugTraceStackMax = 0;
 	m_DebugTraceStackSize = &m_DebugTraceStackMax;
@@ -4098,5 +4379,9 @@ void GraphicsProcessor::getDebugTrace(std::vector<int> &result)
 */
 
 } /* namespace FT800EMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

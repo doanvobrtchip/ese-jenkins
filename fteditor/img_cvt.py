@@ -164,7 +164,7 @@ def is_valid_effort(effort):
 def execute_subprocess(cmd):
     try:
         if os.name == "nt":
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             proc.communicate()
             return proc.returncode
     except Exception as ex:
@@ -181,6 +181,23 @@ def pad(im, mult):
     n = Image.new(im.mode, (w, im.size[1]))
     n.paste(im, (0, 0))
     return n
+
+def remove_transparency(im, bg_colour=(0, 0, 0)):
+
+    # Only process if image has transparency (http://stackoverflow.com/a/1963146)
+    if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+
+        # Need to convert to RGBA if LA format due to a bug in PIL (http://stackoverflow.com/a/1963146)
+        alpha = im.convert('RGBA').split()[-1]
+
+        # Create a new background image of our matt color.
+        # Must be RGBA because paste requires both images have the same format
+        # (http://stackoverflow.com/a/8720632  and  http://stackoverflow.com/a/9459208)
+        bg = Image.new('RGBA', im.size, bg_colour + (0,))
+        bg.paste(im, mask=alpha)
+        return bg.convert('RGB')
+    else:
+        return im
 
 class Image_Conv:
     def __init__(self):
@@ -344,13 +361,8 @@ class Image_Conv:
         is_astc = False
         # Handle alpha bitmaps here. A solid color in all
         # pixels with nonzero alpha means use alpha channel
-        if im.mode == "RGBA" and self.output_format in (vc_L1, vc_L2, vc_L4, vc_L8):
-            allrgb = set()
-            for (r,g,b,a) in im.getdata():
-                if a:
-                    allrgb.add((r,g,b))
-            if len(allrgb) == 1:
-                im = im.split()[3]
+        if self.output_format in (vc_L1, vc_L2, vc_L4, vc_L8, vc_RGB332, vc_RGB565):
+            im = remove_transparency(im)
 
         colorfmts = {
             vc_ARGB1555: (1, 5, 5, 5),
@@ -400,6 +412,7 @@ class Image_Conv:
         elif self.output_format in colorfmts:
             (asz, rsz, gsz, bsz) = colorfmts[self.output_format]
             im_origin = im
+
             im = im.convert("RGBA")
             imdata = []
 
@@ -428,7 +441,7 @@ class Image_Conv:
             if self.output_format in colorfmts_A:
                 im = im_origin.convert("RGBA")
             else:
-                im = im_origin.convert("RGB")
+                im = remove_transparency(im)
 
         elif self.output_format == vc_L8:
             im = im.convert("L")
@@ -478,8 +491,8 @@ class Image_Conv:
         im.save(os.path.join(self.output_dir, self.infile_basename +"_Converted.png"), "PNG")
 
         self.stride = self.calc_stride(im, totalsz)
-        self.save_binfiles(data,im.size)
-        self.save_rawfiles(data,im.size, totalsz, is_astc)        
+        self.save_binfiles(data, im.size)
+        self.save_rawfiles(data, im.size, totalsz, is_astc)
     
         return im.size
 
@@ -489,7 +502,7 @@ class Image_Conv:
             raise Exception('Palette conversion error: missing input file.')
 
         try:
-            infile = png.Reader(filename = infile_name)
+            infile = png.Reader(filename=infile_name)
         except:
             raise Exception('Unable to open: {}'.format(infile_name))
 
@@ -768,6 +781,8 @@ class Image_Conv:
                     if returncode != 0:
                         raise Exception(resource_path(pngquant), pngquant, newimg, self.filename, 'Unable to convert image to PNG8')
                     self.filename = newimg
+
+
             except Exception as ex:  
                 self.index_raw.close()
                 self.index_rawh.close()

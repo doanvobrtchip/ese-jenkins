@@ -1,0 +1,147 @@
+jobs:
+  - job: build_vs141
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+    - script: |
+        mkdir build_vs141_x64
+        mkdir build_vs141_x86
+      displayName: Prepare Build Directories
+    - task: CMake@1
+      inputs:
+        workingDirectory: 'build_vs141_x86'
+        cmakeArgs: '-G "Visual Studio 15 2017" ..'
+      displayName: CMake
+    - task: CMake@1
+      inputs:
+        workingDirectory: 'build_vs141_x64'
+        cmakeArgs: '-G "Visual Studio 15 2017 Win64" ..'
+      displayName: CMake Win64
+    - task: MSBuild@1
+      inputs:
+        solution: 'build_vs141_x86/ALL_BUILD.vcxproj'
+        maximumCpuCount: true
+        configuration: 'Release'
+      displayName: Build
+    - task: MSBuild@1
+      inputs:
+        solution: 'build_vs141_x64/ALL_BUILD.vcxproj'
+        maximumCpuCount: true
+        configuration: 'Release'
+      displayName: Build Win64
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          build_vs141_x86/bin/Release/bt8xxemu.dll
+          build_vs141_x86/lib/Release/bt8xxemu.lib
+          build_vs141_x86/bin/Release/mx25lemu.dll
+          build_vs141_x86/bin/Release/bt8xxemus.dll
+          build_vs141_x86/bin/Release/ft8xxemu.dll
+          build_vs141_x86/lib/Release/ft8xxemu.lib
+          bt8xxemu/bt8xxemu.h
+          bt8xxemu/bt8xxemu_diag.h
+          bt8xxemu/bt8xxemu_flash.h
+          bt8xxemu/bt8xxemu_inttypes.h
+          bt8xxemuc/bt8xxemuc.c
+          ft8xxemu/ft8xxemu.h
+          ft8xxemu/ft8xxemu_diag.h
+          ft8xxemu/ft8xxemu_inttypes.h
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x86'
+        flattenFolders: true
+      displayName: Copy
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x86'
+        artifactName: bt8xxemu_vs141_x86
+      displayName: Publish
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          build_vs141_x64/bin/Release/bt8xxemu.dll
+          build_vs141_x64/lib/Release/bt8xxemu.lib
+          build_vs141_x64/bin/Release/mx25lemu.dll
+          build_vs141_x64/bin/Release/bt8xxemus.dll
+          build_vs141_x64/bin/Release/ft8xxemu.dll
+          build_vs141_x64/lib/Release/ft8xxemu.lib
+          bt8xxemu/bt8xxemu.h
+          bt8xxemu/bt8xxemu_diag.h
+          bt8xxemu/bt8xxemu_flash.h
+          bt8xxemu/bt8xxemu_inttypes.h
+          bt8xxemuc/bt8xxemuc.c
+          ft8xxemu/ft8xxemu.h
+          ft8xxemu/ft8xxemu_diag.h
+          ft8xxemu/ft8xxemu_inttypes.h
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x64'
+        flattenFolders: true
+      displayName: Copy Win64
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x64'
+        artifactName: bt8xxemu_vs141_x64
+      displayName: Publish Win64
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: 'deployment/emulator'
+        contents: |
+          **/*.pdf
+          **/*.txt
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment'
+      displayName: Copy Deployment
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x86'
+        contents: |
+          **/*.exe
+          **/*.dll
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/bin'
+        flattenFolders: true
+      displayName: Copy Deployment Binaries
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x86'
+        contents: |
+          bt8xxemu.lib
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/lib'
+        flattenFolders: true
+      displayName: Copy Deployment Libraries
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x64'
+        contents: |
+          **/*.exe
+          **/*.dll
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/bin64'
+        flattenFolders: true
+      displayName: Copy Deployment Win64 Binaries
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_x64'
+        contents: |
+          bt8xxemu.lib
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/lib64'
+        flattenFolders: true
+      displayName: Copy Deployment Win64 Libraries
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          bt8xxemu/bt8xxemu.h
+          bt8xxemu/bt8xxemu_inttypes.h
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/include'
+        flattenFolders: true
+      displayName: Copy Deployment Includes
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          bt8xxemuc/bt8xxemuc.c
+        targetFolder: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment/src'
+        flattenFolders: true
+      displayName: Copy Deployment Sources
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/bt8xxemu_vs141_deployment'
+        artifactName: bt8xxemu_vs141_deployment
+      displayName: Publish Deployment

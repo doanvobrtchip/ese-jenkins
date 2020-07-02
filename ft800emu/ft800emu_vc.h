@@ -3,13 +3,15 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
+Copyright (C) 2016-2020  Bridgetek Pte Lte
 */
 
 #ifndef FT800EMU_VC_H
 #define FT800EMU_VC_H
 
-#ifdef BT815EMU_MODE
+#if defined(BT817EMU_MODE)
+#	include "vc4.h"
+#elif defined(BT815EMU_MODE)
 #	include "vc3.h"
 #elif defined(FT810EMU_MODE)
 #	include "vc2.h"

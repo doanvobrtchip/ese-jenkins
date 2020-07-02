@@ -1,0 +1,45 @@
+{
+    "content": [
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/charlotte_28",
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/charlotte_28.xfont"
+        },
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/charlotte_28_2",
+            "memoryAddress": 4096,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/charlotte_28.glyph"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_SETFONT2(0, 0, 0)#metrics table is at 0 and glyph is loaded at 4096",
+        "CMD_TEXT(100,100, 0, 0, \"AaBbCcDdEef\\nGgHhIiJkKLlMm\\nNnQoPpQqRrSsTt\\nUuVvWwXYz\")",
+        "CMD_TEXT(0, 348, 0, 0, \"The Quick brown fox jumps over the lzgit y dog\")"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

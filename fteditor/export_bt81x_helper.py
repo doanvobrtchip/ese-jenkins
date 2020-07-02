@@ -1,4 +1,5 @@
 import os, sys, re, shutil, subprocess, errno, stat
+from export_common import parseCommand
 
 lutSize = 256*4
 
@@ -274,30 +275,20 @@ def exportLoadImageCommand(document):
                     if content["imageFormat"] in palettedFormats:		
                         export += "\tGpu_Hal_WrMem(phost, " + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n"                        
     return export
-    
+   
 def exportSpecialCommand(document):
     export = ''
     for line in document["coprocessor"]:
-        if line == "": continue
-        try:
-            splitlinea = line.split('(', 1)
-            splitlineb = splitlinea[1].split(')', 1)
-            functionName = splitlinea[0]
-            if functionName in functionMap:
-                functionName = functionMap[functionName]
-            commentsRegex = re.compile("//.*$")
-            if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName == "BITMAP_SIZE" or functionName == "CMD_SETFONT":
-                functionArgs = convertArgs(splitlineb[0])
-                comment = ""
-                m = commentsRegex.match(splitlineb[1])
-                if m:
-                    comment = m.group(0)
-                line = "\tApp_WrCoCmd_Buffer(phost, " + functionName + "(" + functionArgs + "));" + comment + "\n"
-                export += line
-            else:
-                break
-        except (UnicodeDecodeError, UnicodeEncodeError):
-            raiseUnicodeError("Unicodes in Coprocessor editing box.")
+        if line:
+            try:
+                cmd_name, cmd_args, comment = parseCommand(line, functionMap, convertArgs)            
+                if cmd_name in ["BITMAP_HANDLE", "BITMAP_SOURCE", "BITMAP_LAYOUT", "BITMAP_SIZE"]:
+                    line = "\tApp_WrCoCmd_Buffer(phost, {}({})); {}\n".format(cmd_name, cmd_args, comment)
+                    export += line
+                else:
+                    break
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                raiseUnicodeError("Unicode in Coprocessor editing box.")
             
     return export
     
@@ -305,90 +296,64 @@ def exportCoprocessorCommand(document, filesToTestFolder):
     export = ''
     clearFound = False
     for line in document["coprocessor"]:
-        if line == "": continue
+        if not line: continue
         try:
-            functionName = line.split('(', 1)[0]            
-            if 'CLEAR' in functionName:
+            cmd_name, _, _ = parseCommand(line, functionMap, convertArgs)
+            if 'CLEAR' in cmd_name:
                 clearFound = True
-            if functionName in functionMap:                    
-                if functionMap[functionName] == "Gpu_CoCmd_Calibrate":
-                    export += '\tApp_Calibrate_Screen(phost);\n'
-                    # remove this line because it was processed already
-                    document["coprocessor"].remove(line)                    
-                if functionMap[functionName] == "Gpu_CoCmd_Logo":
-                    export += '\tApp_Show_Logo(phost);\n'                
-                    # remove this line because it was processed already
-                    document["coprocessor"].remove(line)                    
-                
+            if cmd_name == "Gpu_CoCmd_Calibrate":
+                export += '\tApp_Calibrate_Screen(phost);\n'                    
+                document["coprocessor"].remove(line)                    
+            elif cmd_name == "Gpu_CoCmd_Logo":
+                export += '\tApp_Show_Logo(phost);\n'                    
+                document["coprocessor"].remove(line)
         except:
             pass
 
     export += '\tGpu_CoCmd_FlashFast(phost, 0);\n'
     export += '\tGpu_CoCmd_Dlstart(phost);\n'
-    if clearFound == False:
+    if not clearFound:
         export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
-    export += '\t\n';
+    export += '\n';
                 
-    #skippedBitmaps = False
     specialParameter = ""
     specialParameter2 = ""
     specialCommandType = ""
 
-    for line in document["coprocessor"]:
-        if line == "": 
-            #if skippedBitmaps: export += "\t\n"; skippedBitmaps = False
+    for line in document["coprocessor"]:        
+        if not line:
             continue
 
         if (line.lstrip()).startswith("//"): #if the line is a comment line then just write it out
             export += "\t" + line + "\n"
             continue
-        splitlinea = line.split('(',1)
-        splitlineb = splitlinea[1].split(')',1)
-        functionName = splitlinea[0]
-        commentsRegex = re.compile("//.*$")
+        cmd_name, functionArgs, cmd_comment = parseCommand(line, functionMap, convertArgs)
+        
         coprocessor_cmd = False
-        if functionName in functionMap:
-            functionName = functionMap[functionName]
+        if cmd_name in functionMap.values():
             coprocessor_cmd = True
-        #if not skippedBitmaps:
-        #    if functionName == "BITMAP_HANDLE" or functionName == "BITMAP_SOURCE" or functionName == "BITMAP_LAYOUT" or functionName #== "BITMAP_SIZE" or functionName == "CMD_SETFONT":
-        #        continue
-        #    else:
-        #        skippedBitmaps = True
-        functionArgs = convertArgs(splitlineb[0])
-
-        if functionName == "Gpu_CoCmd_Snapshot2":
-
+        if cmd_name == "Gpu_CoCmd_Snapshot2":
             export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
             export += "\tGpu_CoCmd_Swap(phost);\n"
-
             export += "\t/* Download the commands into fifo */\n"
             export += "\tApp_Flush_Co_Buffer(phost);\n"
-
             export += "\t/* Wait till coprocessor completes the operation */\n"
             export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-
             export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
-
-            export += "\tGpu_CoCmd_Snapshot2(phost, " + splitlineb[0] + ");\n"
-
+            export += "\tGpu_CoCmd_Snapshot2(phost, " + functionArgs + ");\n"
             export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
             export += "\tGpu_CoCmd_Dlstart(phost);\n"
             export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
             export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
             export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
 
-        if functionName == "Gpu_CoCmd_Snapshot":
-
+        if cmd_name == "Gpu_CoCmd_Snapshot":
             export += "\tApp_WrCoCmd_Buffer(phost, DISPLAY());\n"
             export += "\tGpu_CoCmd_Swap(phost);\n"
-
             export += "\t/* Download the commands into fifo */\n"
             export += "\tApp_Flush_Co_Buffer(phost);\n"
-
             export += "\t/* Wait till coprocessor completes the operation */\n"
             export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-
             export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor+ );\n"
 
             export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, " + str(document["registers"]["hSize"]) + ");\n"
@@ -397,28 +362,24 @@ def exportCoprocessorCommand(document, filesToTestFolder):
 
             export += "\t/* Take snap shot of the current screen */\n"
             export += "\tGpu_Hal_WrCmd32(phost, CMD_SNAPSHOT);\n"
-            export += "\tGpu_Hal_WrCmd32(phost, " + splitlineb[0] + ");\n"
+            export += "\tGpu_Hal_WrCmd32(phost, " + functionArgs + ");\n"
 
             export += "\t//timeout for snapshot to be performed by coprocessor\n"
-
             export += "\t/* Wait till coprocessor completes the operation */\n"
             export += "\tGpu_Hal_WaitCmdfifo_empty(phost);\n"
-
             export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
-
             export += "\t/* reconfigure the resolution wrt configuration */\n"
             export += "\tGpu_Hal_Wr16(phost, REG_HSIZE, 800);\n"
             export += "\tGpu_Hal_Wr16(phost, REG_VSIZE, 480);\n"
-
             export += "\tGpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n"
             export += "\tGpu_CoCmd_Dlstart(phost);\n"
             export += "\tApp_WrCoCmd_Buffer(phost, CLEAR_COLOR_RGB(0xff, 0xff, 0xff));\n"
             export += "\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n"
             export += "\tApp_WrCoCmd_Buffer(phost, COLOR_RGB(0xff, 0xff, 0xff));\n"
 
-            functionName = ""
+            cmd_name = ""
 
-        if functionName == "Gpu_CoCmd_LoadImage":
+        if cmd_name == "Gpu_CoCmd_LoadImage":
             functionArgsSplit = functionArgs.split(',')
             
             if "OPT_FLASH" in functionArgsSplit[1]:
@@ -436,10 +397,10 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             specialParameter2 = specialParameter
             filesToTestFolder.append(functionArgsSplit[2])
             specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
-            specialCommandType = functionName
-            functionName = ""
+            specialCommandType = cmd_name
+            cmd_name = ""
 
-        if functionName == "Gpu_CoCmd_MediaFifo":
+        if cmd_name == "Gpu_CoCmd_MediaFifo":
             functionArgsSplit = functionArgs.split(',')
             functionArgs = functionArgsSplit[0] + ","
             functionArgs += functionArgsSplit[1]
@@ -447,14 +408,14 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             globalContext['mediaFIFOAddress'] = functionArgsSplit[0]
             globalContext['mediaFIFOLength'] = functionArgsSplit[1]
 
-        if functionName == "Gpu_CoCmd_Dlstart":
+        if cmd_name == "Gpu_CoCmd_Dlstart":
             export += '\tGpu_CoCmd_Dlstart(phost);\n'
             export += '\tApp_WrCoCmd_Buffer(phost, CLEAR(1, 1, 1));\n'
-            functionName = ""
+            cmd_name = ""
 
-        if functionName == "Gpu_CoCmd_PlayVideo":
+        if cmd_name == "Gpu_CoCmd_PlayVideo":
             export += "\n"
-            functionArgsSplit =functionArgs.split(',')
+            functionArgsSplit = functionArgs.split(',')
             functionArgs = functionArgsSplit[0]
             
             if 'OPT_FLASH' in functionArgsSplit[0]:
@@ -474,27 +435,24 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             
             specialParameter2 = specialParameter
             specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
-            specialCommandType = functionName
-            functionName = ""
+            specialCommandType = cmd_name
+            cmd_name = ""
 
         #The following commands don't take any parameters so there shouldn't be a comma after the phost
         parameterComma = ", "
-        if functionName in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver", "Gpu_CoCmd_VideoStartF"]:
+        if cmd_name in ["Gpu_CoCmd_LoadIdentity", "Gpu_CoCmd_Swap", "Gpu_CoCmd_Stop", "Gpu_CoCmd_SetMatrix", "Gpu_CoCmd_ColdStart", "Gpu_CoCmd_Dlstart", "Gpu_CoCmd_ScreenSaver", "Gpu_CoCmd_VideoStartF"]:
             parameterComma = ""
             
-        if functionName == "Gpu_CoCmd_FlashFast" and functionArgs == "":
+        if cmd_name == "Gpu_CoCmd_FlashFast" and functionArgs == "":
             functionArgs = '0'
             
         #Attempt to append comments
-        comments = ""
-        if len(functionName):
-            m = commentsRegex.match(splitlineb[1])
-            if m:
-                comments = m.group(0)
+        comments = cmd_comment
+        if len(cmd_name):
             if coprocessor_cmd:
-                newline = "\t" + functionName + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
+                newline = "\t" + cmd_name + "(phost" + parameterComma + functionArgs + ");" + comments + "\n"
             else:
-                newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + functionName + "(" + functionArgs + "));" + comments + "\n"
+                newline = "\tApp_WrCoCmd_Buffer(phost" + parameterComma + cmd_name + "(" + functionArgs + "));" + comments + "\n"
             export += newline
 
         if specialCommandType == "Gpu_CoCmd_LoadImage":

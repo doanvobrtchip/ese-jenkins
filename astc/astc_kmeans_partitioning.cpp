@@ -21,6 +21,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6385) // Invalid read
+#pragma warning(disable : 6001) // Uninitialized memory
+#endif
+
 #include "astc_codec_internals.h"
 
 // for k++ means, we need pseudorandom numbers, however using random numbers directly
@@ -518,3 +524,7 @@ void kmeans_compute_partition_ordering(int xdim, int ydim, int zdim, int partiti
 	get_partition_ordering_by_mismatch_bits(bitcounts, ordering);
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

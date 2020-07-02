@@ -18,6 +18,15 @@
  *			Status: only tested on our corpus of images.
  */ 
 /*----------------------------------------------------------------------------*/ 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6011) // Dereferencing NULL
+#endif
+
 #include "astc_codec_internals.h"
 
 #include <stdio.h>
@@ -730,7 +739,9 @@ astc_codec_image *load_ktx_uncompressed_image(const char *filename, int padding,
 
 
 	uint8_t *buf = (uint8_t *) malloc(specified_bytes_of_surface);
-	size_t bytes_read = fread(buf, 1, specified_bytes_of_surface, f);
+	size_t bytes_read;
+	if (buf) bytes_read = fread(buf, 1, specified_bytes_of_surface, f);
+	else bytes_read = 0;
 	fclose(f);
 	if (bytes_read != specified_bytes_of_surface)
 	{
@@ -1310,7 +1321,9 @@ astc_codec_image *load_dds_uncompressed_image(const char *filename, int padding,
 	uint32_t bytes_of_surface = zsize * ystride;
 
 	uint8_t *buf = (uint8_t *) malloc(bytes_of_surface);
-	size_t bytes_read = fread(buf, 1, bytes_of_surface, f);
+	size_t bytes_read;
+	if (buf) bytes_read = fread(buf, 1, bytes_of_surface, f);
+	else bytes_read = 0;
 	fclose(f);
 	if (bytes_read != bytes_of_surface)
 	{
@@ -1575,3 +1588,7 @@ int store_dds_uncompressed_image(const astc_codec_image * img, const char *dds_f
 
 	return retval;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

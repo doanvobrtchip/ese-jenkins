@@ -10,6 +10,11 @@ Author: Jan Boon <jan@no-break.space>
 #define FT800EMU_BUS_SLAVE_H
 #include "bt8xxemu_inttypes.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 // System includes
 #include <stdlib.h>
 
@@ -69,6 +74,10 @@ private:
 }; /* class BusSlave */
 
 } /* namespace FT800EMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif /* #ifndef FT800EMU_BUS_SLAVE_H */
 

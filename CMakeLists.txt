@@ -41,6 +41,9 @@ IF (CMAKE_BUILD_TYPE STREQUAL "")
   SET(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF ()
 
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 ########################################################################
@@ -72,6 +75,8 @@ OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
 OPTION(WITH_FREETYPE_STATIC "Include dependencies for static Freetype build" OFF)
 
+OPTION(WITH_DX9C "Include DirectX 9.0c when using an XP toolchain" OFF)
+
 OPTION(WITH_BT8XXEMU "Include BT8XXEMU" ON)
 
 OPTION(WITH_FT800EMU "Include FT800EMU" ON)
@@ -79,6 +84,8 @@ OPTION(WITH_FT800EMU "Include FT800EMU" ON)
 OPTION(WITH_FT810EMU "Include FT810EMU" ON)
 
 OPTION(WITH_BT815EMU "Include BT815EMU" ON)
+
+OPTION(WITH_BT817EMU "Include BT817EMU" ON)
 
 OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
 
@@ -114,9 +121,9 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/ft800emu
   ${CMAKE_SOURCE_DIR}/ft810emu
   ${CMAKE_SOURCE_DIR}/bt815emu
+  ${CMAKE_SOURCE_DIR}/bt817emu
   ${CMAKE_SOURCE_DIR}/bt8xxemu
   ${CMAKE_SOURCE_DIR}/reference
-  ${CMAKE_SOURCE_DIR}/fteditor/ftlib
   )
 
 IF (WITH_SDL2)
@@ -132,6 +139,16 @@ IF (WITH_SDL2)
   ADD_DEFINITIONS(-DSDL_ASSERT_LEVEL${SDL_ASSERT_LEVEL})
   ADD_DEFINITIONS(-DFTEMU_SDL2)
 ENDIF (WITH_SDL2)
+
+IF (WITH_DX9C)
+  FIND_PACKAGE(DirectXSDK REQUIRED)
+  LINK_DIRECTORIES(
+    ${DXSDK_LIBRARY_DIRS}
+  )
+  INCLUDE_DIRECTORIES(
+    ${DXSDK_INCLUDE_DIR}
+  )
+ENDIF (WITH_DX9C)
 
 ########################################################################
 
@@ -180,8 +197,14 @@ IF (WITH_BT8XXEMU)
     ADD_SUBDIRECTORY(bt815emu)
     ADD_DEFINITIONS(-DFTEMU_HAVE_BT815EMU)
   ENDIF (WITH_BT815EMU)
+  IF (WITH_BT817EMU)
+    #ADD_SUBDIRECTORY(astc)
+    ADD_SUBDIRECTORY(bt817emu)
+    ADD_DEFINITIONS(-DFTEMU_HAVE_BT817EMU)
+  ENDIF (WITH_BT817EMU)
   ADD_SUBDIRECTORY(bt8xxemu)
   ADD_SUBDIRECTORY(bt8xxemu_static)
+  ADD_SUBDIRECTORY(ft8xxemu)
 
   IF (WITH_EMUTEST)
     ADD_SUBDIRECTORY(ftemutest)
@@ -199,6 +222,10 @@ IF (WITH_BT8XXEMU)
 
   #ADD_SUBDIRECTORY(loaddump)
   ADD_SUBDIRECTORY(playxbu)
+
+  IF(FTEDITOR_DEVICE_MANAGER)
+    ADD_SUBDIRECTORY(eve_hal)
+  ENDIF()
 
   IF (WITH_QT)
     CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)

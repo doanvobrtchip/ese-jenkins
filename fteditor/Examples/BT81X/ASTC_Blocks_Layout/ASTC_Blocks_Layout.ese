@@ -1,0 +1,57 @@
+{
+    "content": [
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/ASTC24x24_24x24_COMPRESSED_RGBA_ASTC_12x12_KHR",
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/ASTC24x24_24x24_COMPRESSED_RGBA_ASTC_12x12_KHR.raw"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_TEXT(306, 229, 16, 0, \"One Image with\\n4 ASTC Blocks\")",
+        "",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_12x12_KHR, 24, 24)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(309, 248, 0, 0)",
+        "",
+        "CMD_TEXT(217, 296, 16, 0, \"Render blocks \\nOne by one\\n0 - lowest address\\n3 - Highest address\")",
+        "",
+        "",
+        "BEGIN(BITMAPS)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_12x12_KHR, 12, 12)",
+        "CMD_TEXT(216, 239, 16, 0, \"0\")",
+        "VERTEX2II(216, 248, 0, 0)",
+        "",
+        "CMD_SETBITMAP(16, COMPRESSED_RGBA_ASTC_12x12_KHR, 12, 12)",
+        "CMD_TEXT(238, 238, 16, 0, \"1\")",
+        "VERTEX2II(235, 247, 0, 0)",
+        "",
+        "CMD_SETBITMAP(32, COMPRESSED_RGBA_ASTC_12x12_KHR, 12, 12)",
+        "CMD_TEXT(220, 266, 16, 0, \"2\")",
+        "VERTEX2II(216, 275, 0, 0)",
+        "",
+        "CMD_SETBITMAP(48, COMPRESSED_RGBA_ASTC_12x12_KHR, 12, 12)",
+        "CMD_TEXT(239, 265, 16, 0, \"3\")",
+        "VERTEX2II(236, 276, 0, 0)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

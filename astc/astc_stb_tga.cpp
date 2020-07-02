@@ -14,90 +14,17 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6011) // Dereferencing NULL
+#endif
+
 #include "astc_codec_internals.h"
 
 #include "softfloat.h"
 #include <stdint.h>
 #include <stdio.h>
-
-#define STBI_HEADER_FILE_ONLY
-#include "stb_image.c"
-
-astc_codec_image * load_image_with_stb(const char *filename, int padding, int *result)
-{
-	int xsize, ysize;
-	int components;
-
-	int y_flip = 1;
-	int x, y;
-
-	astc_codec_image *astc_img = NULL;
-
-	if (stbi_is_hdr(filename))
-	{
-		float *image = stbi_loadf(filename, &xsize, &ysize, &components, STBI_rgb_alpha);
-
-		if (image != NULL)
-		{
-			astc_img = allocate_image(16, xsize, ysize, 1, padding);
-			for (y = 0; y < ysize; y++)
-			{
-				int y_dst = y + padding;
-				int y_src = y_flip ? (ysize - y - 1) : y;
-				float *src = image + 4 * xsize * y_src;
-
-				for (x = 0; x < xsize; x++)
-				{
-					int x_dst = x + padding;
-					astc_img->imagedata16[0][y_dst][4 * x_dst] = float_to_sf16(src[4 * x], SF_NEARESTEVEN);
-					astc_img->imagedata16[0][y_dst][4 * x_dst + 1] = float_to_sf16(src[4 * x + 1], SF_NEARESTEVEN);
-					astc_img->imagedata16[0][y_dst][4 * x_dst + 2] = float_to_sf16(src[4 * x + 2], SF_NEARESTEVEN);
-					astc_img->imagedata16[0][y_dst][4 * x_dst + 3] = float_to_sf16(src[4 * x + 3], SF_NEARESTEVEN);
-				}
-			}
-			stbi_image_free(image);
-			fill_image_padding_area(astc_img);
-			*result = components + 0x80;
-			return astc_img;
-		}
-	}
-	else
-	{
-		stbi_uc *image = stbi_load(filename, &xsize, &ysize, &components, STBI_rgb_alpha);
-
-		uint8_t *imageptr = (uint8_t *) image;
-
-		if (image != NULL)
-		{
-			astc_img = allocate_image(8, xsize, ysize, 1, padding);
-			for (y = 0; y < ysize; y++)
-			{
-				int y_dst = y + padding;
-				int y_src = y_flip ? (ysize - y - 1) : y;
-				uint8_t *src = imageptr + 4 * xsize * y_src;
-
-				for (x = 0; x < xsize; x++)
-				{
-					int x_dst = x + padding;
-					astc_img->imagedata8[0][y_dst][4 * x_dst] = src[4 * x];
-					astc_img->imagedata8[0][y_dst][4 * x_dst + 1] = src[4 * x + 1];
-					astc_img->imagedata8[0][y_dst][4 * x_dst + 2] = src[4 * x + 2];
-					astc_img->imagedata8[0][y_dst][4 * x_dst + 3] = src[4 * x + 3];
-				}
-			}
-			stbi_image_free(image);
-			fill_image_padding_area(astc_img);
-			*result = components;
-			return astc_img;
-		}
-	}
-
-	// if we haven't returned, it's because we failed to load the file.
-	printf("Failed to load image %s\nReason: %s\n", filename, stbi_failure_reason());
-
-	*result = -1;
-	return NULL;
-}
 
 
 
@@ -593,3 +520,7 @@ int store_tga_image(const astc_codec_image * img, const char *tga_filename, int 
 
 	return retval;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

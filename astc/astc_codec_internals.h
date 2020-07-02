@@ -17,6 +17,11 @@
 
 #define ASTC_CODEC_INTERNALS_INCLUDED
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26495) // Uninitialized member
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h> // WORKAROUND: mathlib.h includes vectypes.h which defines 'xx' which is used by math.h under MinGW64
@@ -55,7 +60,7 @@
 #define MAX_WEIGHT_MODES 2048
 
 // error reporting for codec internal errors.
-#define ASTC_CODEC_INTERNAL_ERROR
+#define ASTC_CODEC_INTERNAL_ERROR do { } while (false)
 // #define ASTC_CODEC_INTERNAL_ERROR astc_codec_internal_error(__FILE__, __LINE__)
 
 void astc_codec_internal_error(const char *filename, int linenumber);
@@ -395,7 +400,11 @@ struct symbolic_compressed_block
 
 struct physical_compressed_block
 {
-	uint8_t data[16];
+	union
+	{
+		uint8_t data[16];
+		uint64_t data64[2];
+	};
 };
 
 
@@ -591,7 +600,6 @@ void compute_averages_and_variances(const astc_codec_image * img, float rgb_powe
 astc_codec_image *load_ktx_uncompressed_image(const char *filename, int padding, int *result);
 astc_codec_image *load_dds_uncompressed_image(const char *filename, int padding, int *result);
 astc_codec_image *load_tga_image(const char *tga_filename, int padding, int *result);
-astc_codec_image *load_image_with_stb(const char *filename, int padding, int *result);
 
 astc_codec_image *astc_codec_load_image(const char *filename, int padding, int *result);
 int astc_codec_unlink(const char *filename);
@@ -821,5 +829,8 @@ void physical_to_symbolic(int xdim, int ydim, int zdim, const physical_compresse
 uint16_t unorm16_to_sf16(uint16_t p);
 uint16_t lns_to_sf16(uint16_t p);
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif

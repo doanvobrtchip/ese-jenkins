@@ -11,6 +11,10 @@
  * Copyright (C) 2013  Future Technology Devices International Ltd
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "interactive_viewport.h"
 
 // STL includes
@@ -26,6 +30,7 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QLineEdit>
+#include <QStatusBar>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -44,6 +49,8 @@ namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
+
+extern QMutex g_ViewportMutex;
 
 #define POINTER_ALL 0xFFFF
 #define POINTER_TOUCH 0x0001
@@ -210,7 +217,8 @@ InteractiveViewport::~InteractiveViewport()
 
 void InteractiveViewport::zoomIn()
 {
-	float currentScale = this->screenScale() * 100 / 16.0;
+	int scaleFactor = screenScale() * 100;
+	float currentScale = scaleFactor / 16.0;
 
 	// find next index
 	for (int i = 0; i < ZoomRange.count(); i++)
@@ -225,7 +233,8 @@ void InteractiveViewport::zoomIn()
 
 void InteractiveViewport::zoomOut()
 {
-	float currentScale = this->screenScale() * 100 / 16.0;
+	int scaleFactor = screenScale() * 100;
+	float currentScale = (float)scaleFactor / 16.0f;
 
 	// find previous index
 	for (int i = ZoomRange.count() - 1; i >= 0; i--)
@@ -379,23 +388,20 @@ void InteractiveViewport::graphics()
 	m_MouseStackWrite.clear();
 	if (m_MouseOver || m_DragMoving)
 	{
-		if (!m_MouseStackWritten)
+		if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
 		{
-			if (m_NextMouseY >= 0 && m_NextMouseY < vsize() && m_NextMouseX > 0 && m_NextMouseX < hsize())
+			int size = FTEDITOR_TRACE_STACK_SIZE;
+			m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
+			BT8XXEMU_processTrace(g_Emulator, &m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
+			m_MouseStackWrite.resize(size);
+			if (m_MouseStackWrite.size())
 			{
-				int size = FTEDITOR_TRACE_STACK_SIZE;
-				m_MouseStackWrite.resize(FTEDITOR_TRACE_STACK_SIZE);
-				BT8XXEMU_processTrace(g_Emulator, &m_MouseStackWrite[0], &size, m_NextMouseX, m_NextMouseY, hsize());
-				m_MouseStackWrite.resize(size);
-				if (m_MouseStackWrite.size())
-				{
-					m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
-					m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
-					m_MouseStackValid = true;
-				}
-				else m_MouseStackValid = false;
-				m_MouseStackWritten = true;
+				m_MouseStackDlTop = m_MouseStackWrite[m_MouseStackWrite.size() - 1];
+				m_MouseStackCmdTop = m_MainWindow->getDlCmd()[m_MouseStackDlTop];
+				m_MouseStackValid = true;
 			}
+			else m_MouseStackValid = false;
+			m_MouseStackWritten = true;
 		}
 		m_DragMoving = false;
 	}
@@ -422,12 +428,24 @@ void InteractiveViewport::graphics(QImage *image)
 	return; // This callback can be used to make the navview
 }
 
+QColor InteractiveViewport::getPixelColor()
+{
+	QPixmap pm = getPixMap();
+	if (m_MouseX < 0 || m_MouseX > pm.width() || m_MouseY < 0 || m_MouseY > pm.height())
+	{
+		return QColor::Invalid;
+	}
+	QImage img = getPixMap().toImage();
+	return img.pixelColor(m_MouseX, m_MouseY);
+}
+
 void InteractiveViewport::paintEvent(QPaintEvent *e)
 {
 	EmulatorViewport::paintEvent(e);
 	QPainter p(this);
 
 	// Update frame dependent gui
+	g_ViewportMutex.lock();
 	m_MainWindow->dlEditor()->codeEditor()->setTraceHighlights(m_TraceStackDl);
 	m_MainWindow->cmdEditor()->codeEditor()->setTraceHighlights(m_TraceStackCmd);
 	m_MouseX = m_NextMouseX;
@@ -437,6 +455,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 		m_MouseStackRead.swap(m_MouseStackWrite);
 		m_MouseStackWritten = false;
 	}
+	g_ViewportMutex.unlock();
 
 	int mvx = screenLeft();
 	int mvy = screenTop();
@@ -760,6 +779,18 @@ CMD_SCREENSAVER()
 					int y = parsed.Parameter[1].I;
 					x += state.Graphics.VertexTranslateX >> 4;
 					y += state.Graphics.VertexTranslateY >> 4;
+
+					if (m_isDrawAlignmentHorizontal)
+				    {
+					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+					    DRAWLINE(0, y, hsize(), y);
+					}
+
+					if (m_isDrawAlignmentVertical)
+				    {
+					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+					    DRAWLINE(x, 0, x, vsize());
+				    }
 
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
 					// Draw...
@@ -1274,12 +1305,14 @@ void InteractiveViewport::keyPressEvent(QKeyEvent *e)
 	}
 }
 
-void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
+void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km)
 {
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
-
 	m_NextMouseX = mouseX;
 	m_NextMouseY = mouseY;
+
+	m_MainWindow->statusBar()->showMessage("");
+	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
 
 	if (m_MouseTouch)
 	{
@@ -1351,7 +1384,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			// In case automatic expansion is necessary
 			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
 			const DlState &state = m_LineEditor->getState(m_LineNumber);
-			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
+			/*if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
 			{
 				// Doesn't work directly due to issue with undo combining when changing IdLeft
 				reEnableUndoCombine = true;
@@ -1393,9 +1426,18 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 			{
 				xd <<= state.Graphics.VertexFormat;
 				yd <<= state.Graphics.VertexFormat;
+			}*/
+			
+
+			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
+			{
+				xd <<= state.Graphics.VertexFormat;
+				yd <<= state.Graphics.VertexFormat;
 			}
+			
 			pa.Parameter[0].I += xd;
 			pa.Parameter[1].I += yd;
+
 			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
 				// Snap ->
@@ -1462,11 +1504,31 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY)
 	{
 		if (m_LineEditor)
 		{
+			m_MainWindow->statusBar()->showMessage("Press SHIFT for keeping constant x-coordinate, ALT for keeping constant y-coordinate");
+
 			// Apply action
-			int xd = mouseX - m_MovingLastX;
-			int yd = mouseY - m_MovingLastY;
-			m_MovingLastX = mouseX;
-			m_MovingLastY = mouseY;
+			int xd = 0;
+			int yd = 0;
+			
+			if (km != Qt::ShiftModifier) {
+				xd = mouseX - m_MovingLastX;
+				m_MovingLastX = mouseX;
+			}
+			else
+			{
+				m_isDrawAlignmentVertical = true;
+			}
+
+			if (km != Qt::AltModifier)
+			{
+				yd = mouseY - m_MovingLastY;
+				m_MovingLastY = mouseY;
+			}
+			else
+			{
+				m_isDrawAlignmentHorizontal = true;
+			}
+
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
 			{
@@ -1677,7 +1739,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	int mvy = screenTop();
 	int scl = screenScale();
 
-	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()));
+	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()), e->modifiers());
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1811,6 +1873,9 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(NULL);
 	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
 
+	m_MainWindow->statusBar()->showMessage("");
+	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
+
 	if (m_MouseTouch)
 	{
 		m_MouseTouch = false;
@@ -1911,14 +1976,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			}
 			/*else if (e->source() == m_MainWindow->bitmapSetup())
 			{
-				selectionType = 1; // PRIMITIVE
+				selectionType = FTEDITOR_SELECTION_PRIMITIVE; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = m_MainWindow->bitmapSetup()->selected();
 				contentInfo = NULL;
 			}*/
 			else if (e->source() == m_MainWindow->contentManager()->contentList())
 			{
-				selectionType = 1; // PRIMITIVE
+				selectionType = FTEDITOR_SELECTION_PRIMITIVE; // PRIMITIVE
 				selection = BITMAPS;
 				bitmapHandle = 0;
 				contentInfo = m_MainWindow->contentManager()->current();
@@ -1938,7 +2003,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				m_MainWindow->focusDlEditor();
 			}
 
-			if (selectionType == 1 || selectionType == 2 || selectionType == 5)
+			if (selectionType == FTEDITOR_SELECTION_PRIMITIVE 
+				|| selectionType == FTEDITOR_SELECTION_FUNCTION
+				|| selectionType == FTEDITOR_SELECTION_VERTEX)
 			{
 				int line = m_LineNumber;
 				if (m_LineEditor->getLine(line).ValidId)
@@ -1994,7 +2061,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				// printf("Dropped item from toolbox, type %i\n", selection);
 
 				// void insertLine(int line, const DlParsed &parsed);
-				if (selectionType == 5)
+				if (selectionType == FTEDITOR_SELECTION_VERTEX)
 				{
 					int mvx = screenLeft();
 					int mvy = screenTop();
@@ -2198,6 +2265,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 3;
 						break;
+					case CMD_GETPROPS:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.ExpectedStringParameter = false;
+						pa.ExpectedParameterCount = 3;
+						break;
 					case CMD_APPEND:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
@@ -2220,6 +2294,15 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
+                    case CMD_INFLATE:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_INFLATE2:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
 					case CMD_GRADIENTA:
 						pa.Parameter[2].U = 0xFF007FFF;
 						pa.Parameter[3].I = pa.Parameter[0].I + 32;
@@ -2227,6 +2310,32 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[5].U = 0x7FFF00;
 						pa.ExpectedParameterCount = 6;
 						break;
+                    case CMD_ANIMSTART:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.ExpectedParameterCount = 3;
+                        break;
+                    case CMD_ANIMSTOP:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMDRAW:
+                        pa.Parameter[0].I = 0;
+                        pa.ExpectedParameterCount = 1;
+                        break;
+                    case CMD_ANIMFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.Parameter[2].I = 0;
+                        pa.Parameter[3].I = 0;
+                        pa.ExpectedParameterCount = 4;
+                        break;
+                    case CMD_VIDEOFRAME:
+                        pa.Parameter[0].I = 0;
+                        pa.Parameter[1].I = 0;
+                        pa.ExpectedParameterCount = 2;
+                        break;
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
@@ -2248,7 +2357,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
-				else if (selectionType == 2)
+				else if (selectionType == FTEDITOR_SELECTION_FUNCTION)
 				{
 					if (!m_MouseStackValid) line = m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 					m_LineEditor->codeEditor()->beginUndoCombine(tr("Drag and drop from toolbox"));
@@ -2295,7 +2404,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
-				else if (selectionType == 1) // Primitive
+				else if (selectionType == FTEDITOR_SELECTION_PRIMITIVE) // Primitive
 				{
 					bool mustCreateHandle = true;
 					if (contentInfo)
@@ -2636,11 +2745,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 				}
 			}
-			else if (selectionType == 3 || selectionType == 4)
+			else if (selectionType == FTEDITOR_SELECTION_DL_STATE 
+				|| selectionType == FTEDITOR_SELECTION_CMD_STATE)
 			{
 				bool useMouseStack;
 				int lineOverride = -1;
-				if (selectionType == 3 && (
+				if (selectionType == FTEDITOR_SELECTION_DL_STATE && (
 					selection == FTEDITOR_DL_CLEAR_COLOR_RGB
 					|| selection == FTEDITOR_DL_CLEAR_COLOR_A
 					|| selection == FTEDITOR_DL_CLEAR_STENCIL
@@ -2671,7 +2781,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.ExpectedStringParameter = false;
-				if (selectionType == 4)
+				if (selectionType == FTEDITOR_SELECTION_CMD_STATE)
 				{
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
@@ -2746,26 +2856,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         }
                         pa.ExpectedParameterCount = 13;
                         break;
-                    case CMD_INFLATE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_INFLATE2:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
-                        break;
                     case CMD_FLASHSOURCE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ANIMSTART:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.ExpectedParameterCount = 3;
-                        break;
-                    case CMD_ANIMSTOP:
                         pa.Parameter[0].I = 0;
                         pa.ExpectedParameterCount = 1;
                         break;
@@ -2774,22 +2865,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[1].I = 0;
                         pa.Parameter[2].I = 0;
                         pa.ExpectedParameterCount = 3;
-                        break;
-                    case CMD_ANIMDRAW:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ANIMFRAME:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.Parameter[3].I = 0;
-                        pa.ExpectedParameterCount = 4;
-                        break;
-                    case CMD_VIDEOFRAME:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
                         break;
                     }                    
 				}

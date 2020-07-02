@@ -1,6 +1,10 @@
 #ifndef DEVICE_DISPLAY_SETTINGS_DIALOG_H_
 #define DEVICE_DISPLAY_SETTINGS_DIALOG_H_
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #include <QDialog>
 #include <QLayout>
 #include <QSpinBox>
@@ -13,62 +17,45 @@
 #include <qgroupbox.h>
 #include "device_manager.h"
 
-
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 #if FT800_DEVICE_MANAGER
 
-	class DeviceManager;
+class DeviceManager;
 
+class DeviceDisplaySettingsDialog : public QDialog
+{
+	Q_OBJECT
 
-	class DeviceDisplaySettingsDialog : public QDialog
-	{
-		Q_OBJECT
+public:
+	explicit DeviceDisplaySettingsDialog(DeviceManager *parent = 0);
+	void execute();
+	void setInitialScreenSize(QString screenSize);
 
-	public:
-		explicit DeviceDisplaySettingsDialog(DeviceManager *parent=0);
-		void execute();
-		void setInitialScreenSize(QString screenSize);
+private:
+	QGroupBox *createRadioButtonsGroup();
+	void updateSyncDeviceSelection();
+	void addCustomDevice(QLayout *layout);
 
+private slots:
+	void saveInputValues();
 
-	private slots: 
-		void saveInputValues();
+private:
+	DeviceManager *pParent;
 
-	private:
-		DeviceManager *pParent;
+	qint32 maxScreenWidth;
+	qint32 maxScreenHeight;
+	qint16 inputSpinboxMin;
+	qint16 inputSpinboxMax;
 
-		qint32 maxScreenWidth;
-		qint32 maxScreenHeight;
-		qint16 inputSpinboxMin;
-		qint16 inputSpinboxMax;
+	QGridLayout *gridLayout;
+	QDialogButtonBox *buttonBox;
+	QDialogButtonBox *defaultSettingsButtonBox;
 
-		QGridLayout* gridLayout;
-		QDialogButtonBox* buttonBox;
-		QDialogButtonBox* defaultSettingsButtonBox;
-
-		QRadioButton *VM800B35A;
-		QRadioButton *VM800B43A;
-		QRadioButton *VM800B50A;
-		QRadioButton *VM800BU35A;
-		QRadioButton *VM800BU43A;
-		QRadioButton *VM800BU50A;
-		QRadioButton *VM800C35A;
-		QRadioButton *VM800C43A;
-		QRadioButton *VM800C50A;
-
-        QRadioButton *ME813AUWH50C;
-
-		QRadioButton *VM816C50A;
-
-        QRadioButton *VM816CU50A;
-
-	private:
-		QGroupBox* createRadioButtonsGroup();
-		void updateSyncDeviceSelection();
-
-	};
+	QList<QRadioButton *> m_CustomRadioButtonList;
+};
 
 #endif
-
 }
 #endif // COPTIONDIALOG_H

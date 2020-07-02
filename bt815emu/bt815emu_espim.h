@@ -13,6 +13,8 @@ Author: Jan Boon <jan@no-break.space>
 namespace BT815EMU {
 	class Memory;
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
 class Espim
 {
 private:
@@ -28,6 +30,7 @@ public:
 	void trigger();
 
 };
+#pragma warning(pop)
 
 } /* namespace FT800EMU */
 

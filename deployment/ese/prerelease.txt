@@ -1,11 +1,70 @@
 ﻿NOTE: This software is only for evaluation purpose. 
 
-Please uninstall the last version if you have one installed on your PC. 
+Please uninstall the latest version if you have one installed on your PC. 
 
-Version 3.1.2
+Release Note:
 
-Release Note: 
-   Features: 
+Version 3.4.0
+Features:
+•   Add system clock configuration in the device manager
+•   Integrate latest Eve Emulator to accelerate ASTC decoding
+•   Caching functionality for ASTC module
+•   Migrate ESE to 64 bit Windows release
+
+Bug Fix:
+*   The assets under resource folder of ESE project are deleted after another project is opened
+
+Version 3.3.0
+Features: 
+•   Constrain either horizontal or vertical positioning when dragging an object
+•   Support Riverdi EVE 3 modules in device sync feature
+•   Disable "Refresh, Device Manage, Device Display" buttons after device is connected
+•   Add REG_OUTBITS to device configuration dialogue
+•   Show the pixel value at status bar when mouse hover over the viewport window
+•   Add Blend_Func example project
+•   Add the circular progress bar widget example
+•   Add two bitmap rotating example projects
+•   Add ASTC memory layout example project
+
+Bug Fix:
+*   Copying the text is failed in property window
+*   ESE crash and exit when copying some data into coprocessor editor window
+*   Cloning device produces the wrong name in device manager
+*   '\x0A' is not handled in Font Conversion with Legacy format option
+
+Known issues:
+*   Playing the invalid animation frame data in flash may cause ESE hang
+
+Limitation:
+*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
+
+Version 3.2.0
+Features: 
+•   Add a new example project to illustrate ASTC layout
+•   Add a setfont example
+•   Add setfont2 for extended format on bt81x
+•   The add button in content browser shall open the last recent folder
+•   Update the vc1dump export to 110 version
+•   Enhance device sync feature to support more platforms
+•   Update the "device sync up“ feature with RAM_G and coprocessor content
+•   Save display list in raw binary format done
+•   Save the coproccessor commands in "Coprocessor" tab window done
+•   Set bold font for radio button in case of build-in device
+
+Bug Fix:
+*   Wrong implementation for the paletted8 format in emulator
+*   Reloading the screen shot file but get the wrong effect
+*   "OPT_FLAT" is missing from cmd_button properties window
+*   Exporting is wrong if character ")" exists in CMD_TEXT
+
+Known issues:
+*   Playing the invalid animation frame data in flash may cause ESE hang
+
+Limitation:
+*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
+
+Version 3.1.6
+Features: 
 •   Add support of BT815, including ASTC, flash, Unicode and more features.   
 •   Support FT4222 board in device manager
 •   Change the user guide from .chm format to .pdf format
@@ -23,15 +82,28 @@ Release Note:
       - ME812A-WH50R       
       - ME813A-WH50C       
 
+•   Open the last location of loaded file in content manager
+•   Force to save project in an empty folder
+•   Add example "Bar graph usage"
+•   Add example for CMD_TRACK
+•   Add example Paletted8
 •   Rebuild the project with Qt5.7.0 and MSVC 2017
 •   Add the missing firmware folder in the installation package.
 •   Add zooming function of emulator viewport
+•   Upgrade C++ source and Python script to work with Python v3.6.5
+•   Clone resource so that project can be moved to another location safely
+•   Add more comprehensive bitmap rotate example
+•   Add bar graph invert example
 
-    Bug Fix: 
+Bug Fix:
+*   Link library free-type into executable file
+*   Update REG_CMD_DL correctly
 *   Fix the crash issue when export menu is clicked for FT813 device.
 *   Fix the improper emulator library of export project 
+*   L1/L2/L4/L8 formats are not converted correctly
+*   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
+*   Update the bitmap_source in ESE for negative address case
 
-
-    Known issues:
+Known issues: 
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
 *   Playing the invalid animation frame data in flash may cause ESE hang

@@ -6,6 +6,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #ifndef FTEDITOR_EMULATOR_NAVIGATOR_H
 #define FTEDITOR_EMULATOR_NAVIGATOR_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 
 // Qt includes

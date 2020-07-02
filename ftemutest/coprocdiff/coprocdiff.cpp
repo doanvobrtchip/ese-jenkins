@@ -3,11 +3,15 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "../ftemutest.h"
 #include <stdio.h>
 
-#include <../../fteditor/constant_mapping.h>
-#include <../../fteditor/constant_common.h>
+#include "../../fteditor/constant_mapping.h"
+#include "../../fteditor/constant_common.h"
 
 #include <QString>
 

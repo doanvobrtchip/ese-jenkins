@@ -3,6 +3,10 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
@@ -118,25 +122,21 @@ int main(int argc, char* argv[])
 		printf("Could not load translation\n");
 	}
 
-	// QApplication::setStyle(QStyleFactory::create("Fusion"));
-
-	/*
-	QPalette palette = app.palette();
-	palette.setColor(QPalette::Window, QColor(64, 64, 64));
-	palette.setColor(QPalette::WindowText, Qt::white);
-	palette.setColor(QPalette::Base, QColor(48, 48, 48));
-	palette.setColor(QPalette::AlternateBase, QColor(64, 64, 64));
-	palette.setColor(QPalette::ToolTipBase, Qt::white);
-	palette.setColor(QPalette::ToolTipText, Qt::white);
-	palette.setColor(QPalette::Text, Qt::white);
-	palette.setColor(QPalette::Button, QColor(64, 64, 64));
-	palette.setColor(QPalette::ButtonText, Qt::white);
-	palette.setColor(QPalette::BrightText, Qt::red);
-	palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
-	palette.setColor(QPalette::HighlightedText, Qt::white);
-	app.setPalette(palette);
-	*/
-
+	//QPalette palette = app.palette();
+	//palette.setColor(QPalette::Window, QColor(64, 64, 64));
+	//palette.setColor(QPalette::WindowText, Qt::white);
+	//palette.setColor(QPalette::Base, QColor(48, 48, 48));
+	//palette.setColor(QPalette::AlternateBase, QColor(64, 64, 64));
+	//palette.setColor(QPalette::ToolTipBase, Qt::white);
+	//palette.setColor(QPalette::ToolTipText, Qt::white);
+	//palette.setColor(QPalette::Text, Qt::white);
+	//palette.setColor(QPalette::Button, QColor(64, 64, 64));
+	//palette.setColor(QPalette::ButtonText, Qt::white);
+	//palette.setColor(QPalette::BrightText, Qt::red);
+	//palette.setColor(QPalette::Highlight, QColor(64, 96, 128));
+	//palette.setColor(QPalette::HighlightedText, Qt::white);
+	//app.setPalette(palette);
+	
 	QMap<QString, QSize> customSizeHints = parseCustomSizeHints(argc, argv);
 #ifdef FT800EMU_PYTHON
 	{

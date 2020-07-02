@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_UNDO_STACK_DISABLER_H
 #define FTEDITOR_UNDO_STACK_DISABLER_H
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 // STL includes
 
 // Qt includes

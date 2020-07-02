@@ -139,7 +139,13 @@ private:
 	uint32_t r[32]; /* return stack */
 	uint16_t pc;    /* program counter, counts CELLS */
 	uint8_t dsp, rsp; /* point to top entry */
-	uint32_t memrd;
+	union {
+		uint32_t memrd32;
+		uint16_t memrd16[2];
+		int16_t memrd16s[2];
+		uint8_t memrd8[4];
+	};
+	// uint32_t memrdt;
 	uint16_t j1boot[FT810EMU_COPROCESSOR_ROM_SIZE];
 
 	Ejpg ejpg;

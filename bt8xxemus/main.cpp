@@ -1,7 +1,7 @@
 /*
 BT8XX Emulator Service
 Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include <bt8xxemu.h>
@@ -303,7 +303,7 @@ DWORD WINAPI runPipe(const char *pipeName)
 			s_Mutex.lock();
 			s_Flashes.push_back(NULL);
 			wcscpy(flashParams.DeviceType, remoteFlashParams.deviceType);
-			flashParams.SizeBytes = remoteFlashParams.sizeBytes;
+			flashParams.SizeBytes = (size_t)remoteFlashParams.sizeBytes;
 			wcscpy(flashParams.DataFilePath, remoteFlashParams.dataFilePath);
 			wcscpy(flashParams.StatusFilePath, remoteFlashParams.statusFilePath);
 			flashParams.Persistent = remoteFlashParams.persistent;

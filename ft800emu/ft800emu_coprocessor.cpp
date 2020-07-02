@@ -5,6 +5,12 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#endif
+
 #ifndef FT810EMU_MODE
 #include "ft800emu_coprocessor.h"
 
@@ -34,7 +40,7 @@ static const uint16_t pgm_rom_ft801[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 static uint16_t pgm[FT800EMU_COPROCESSOR_ROM_SIZE];
 
 Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
-	: m_System(system), m_Memory(memory)
+	: m_System(system), m_Memory(memory), m_Running(false)
 {
 	bool ft801 = (mode == BT8XXEMU_EmulatorFT801);
 	if (romFilePath)
@@ -233,5 +239,9 @@ Coprocessor::~Coprocessor()
 
 } /* namespace GDEMU */
 #endif /* #ifndef FT810EMU_MODE */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

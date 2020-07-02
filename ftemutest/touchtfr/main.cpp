@@ -5,6 +5,11 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include <bt8xxemu.h>
 #include <stdio.h>
 
@@ -34,5 +39,9 @@ int main(int, char* [])
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &params);
 	return 0;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

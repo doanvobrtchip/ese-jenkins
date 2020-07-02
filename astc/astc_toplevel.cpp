@@ -16,6 +16,12 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #include "astc_codec_internals.h"
 
 #include <stdio.h>
@@ -593,12 +599,12 @@ void find_closest_blockdim_2d(float target_bitrate, int *x, int *y, int consider
 		for (j = i; j < 6; j++)
 		{
 			//              NxN       MxN         8x5               10x5              10x6
-			int is_legal = (j==i) || (j==i+1) || (j==3 && j==1) || (j==4 && j==1) || (j==4 && j==2);
+			int is_legal = (j==i) || (j==i+1) || (j==3 && i==1) || (j==4 && i==1) || (j==4 && i==2);
 
 			if(consider_illegal || is_legal)
 			{
 				float bitrate = 128.0f / (blockdims[i] * blockdims[j]);
-				float bitrate_error = fabs(bitrate - target_bitrate);
+				float bitrate_error = fabsf(bitrate - target_bitrate);
 				float aspect = (float)blockdims[j] / blockdims[i];
 				if (bitrate_error < best_error || (bitrate_error == best_error && aspect < aspect_of_best))
 				{
@@ -632,7 +638,7 @@ void find_closest_blockdim_3d(float target_bitrate, int *x, int *y, int *z, int 
 				if(consider_illegal || is_legal)
 				{
 					float bitrate = 128.0f / (blockdims[i] * blockdims[j] * blockdims[k]);
-					float bitrate_error = fabs(bitrate - target_bitrate);
+					float bitrate_error = fabsf(bitrate - target_bitrate);
 					float aspect = (float)blockdims[k] / blockdims[j] + (float)blockdims[j] / blockdims[i] + (float)blockdims[k] / blockdims[i];
 
 					if (bitrate_error < best_error || (bitrate_error == best_error && aspect < aspect_of_best))
@@ -738,3 +744,7 @@ void dump_image(astc_codec_image * img)
 	}
 	printf("\n\n");
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

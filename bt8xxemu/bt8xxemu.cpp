@@ -1,9 +1,14 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2020  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
 
 #include "bt8xxemu.h"
 #include "bt8xxemu_diag.h"
@@ -47,11 +52,29 @@ Author: Jan Boon <jan@no-break.space>
 #undef BT815EMU_MODE
 #endif
 
+// Include BT817EMU
+#ifdef FTEMU_HAVE_BT817EMU
+#undef FT800EMU_EMULATOR_H
+#define FT800EMU BT817EMU
+#define FT810EMU BT817EMU
+#define BT815EMU BT817EMU
+#define FT810EMU_MODE
+#define BT815EMU_MODE
+#define BT817EMU_MODE
+#include "ft800emu_emulator.h"
+#undef FT800EMU
+#undef FT810EMU
+#undef BT815EMU
+#undef FT810EMU_MODE
+#undef BT815EMU_MODE
+#undef BT817EMU_MODE
+#endif
+
 static const char *c_Version =
 	"BT8XX Emulator Library v" BT8XXEMU_VERSION_STRING "\n"
 	"Copyright(C) 2013-2015  Future Technology Devices International Ltd\n"
-	"Copyright(C) 2016-2018  Bridgetek Pte Lte\n"
-	"Author: Jan Boon <jan@no-break.space>";
+	"Copyright(C) 2016-2020  Bridgetek Pte Lte\n"
+	"Author: Jan Boon <jan.boon@kaetemi.be>";
 
 BT8XXEMU_API const char *BT8XXEMU_version()
 {
@@ -62,7 +85,7 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -79,6 +102,9 @@ BT8XXEMU_API void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParame
 		| BT8XXEMU_EmulatorEnableTouchTransformation
 		| BT8XXEMU_EmulatorEnableMainPerformance;
 
+	if (mode >= BT8XXEMU_EmulatorBT817)
+		params->Flags |= BT8XXEMU_EmulatorEnableHSFPreview;
+
 	params->Mode = mode;
 }
 
@@ -86,7 +112,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -125,9 +151,19 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 		break;
 	}
 #endif
+#ifdef FTEMU_HAVE_BT817EMU
+	case BT8XXEMU_EmulatorBT817:
+	case BT8XXEMU_EmulatorBT818:
+	{
+		BT817EMU::Emulator *bt817emu = new BT817EMU::Emulator();
+		*emulator = bt817emu;
+		bt817emu->run(*params);
+		break;
+	}
+#endif
 	default:
 	{
-		fprintf(stderr, "Invalid ft8xxemu emulator mode selected\n");
+		fprintf(stderr, "Invalid bt8xxemu emulator mode selected\n");
 		*emulator = NULL;
 		break;
 	}
@@ -173,6 +209,11 @@ BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int 
 BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx)
 {
 	emulator->touchResetXY(idx);
+}
+
+BT8XXEMU_API int BT8XXEMU_setFlag(BT8XXEMU_Emulator *emulator, BT8XXEMU_EmulatorFlags flag, int value)
+{
+	return emulator->setFlag(flag, value);
 }
 
 BT8XXEMU_API uint8_t *BT8XXEMU_getRam(BT8XXEMU_Emulator *emulator)
@@ -224,7 +265,7 @@ BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashPar
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return;
 	}
 
@@ -239,7 +280,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return NULL;
 	}
 
@@ -297,5 +338,9 @@ BT8XXEMU_API size_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
 {
 	return flash->vTable()->Size(flash);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

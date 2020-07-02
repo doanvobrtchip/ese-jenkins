@@ -288,6 +288,7 @@
 #define REG_CMD_DL           3154176UL
 #define REG_CMD_READ         3154168UL
 #define REG_CMD_WRITE        3154172UL
+#define REG_COPRO_PATCH_PTR  3182946UL
 #define REG_CPURESET         3153952UL
 #define REG_CRC              3154296UL
 #define REG_CSPREAD          3154024UL
@@ -481,7 +482,8 @@
 #define ZERO                 0UL
 #define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
 #define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
-#define BITMAP_SOURCE(addr) ((1UL<<24)|(((addr)&16777215UL)<<0))
+#define BITMAP_SOURCE(addr)     ((1UL<<24) | ((addr) < 0 ?  (((addr)&8388607UL)) : ((addr)&16777215UL))) //23 bits address
+#define BITMAP_SOURCE2(flash_or_ram, addr) ((1UL<<24)|((flash_or_ram) << 23)|(((addr)&8388607UL)<<0))  //23 bits address
 #define CLEAR_COLOR_RGB(red,green,blue) ((2UL<<24)|(((red)&255UL)<<16)|(((green)&255UL)<<8)|(((blue)&255UL)<<0))
 #define TAG(s) ((3UL<<24)|(((s)&255UL)<<0))
 #define COLOR_RGB(red,green,blue) ((4UL<<24)|(((red)&255UL)<<16)|(((green)&255UL)<<8)|(((blue)&255UL)<<0))

@@ -3,6 +3,10 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "emulator_viewport.h"
 
 // STL includes
@@ -40,11 +44,18 @@ static BT8XXEMU_EmulatorParameters s_EmulatorParameters;
 EmulatorThread *s_EmulatorThread;
 static QImage *s_Image = NULL;
 static QPixmap *s_Pixmap = NULL;
-static QMutex s_Mutex;
+QMutex g_ViewportMutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
 static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
 static bool s_MainReady = false;
+
+static bool s_LastRendered = true;
+
+static void emuLog(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message)
+{
+	printf("[BT8XXEMU] %s\n", message);
+}
 
 void overrideMain(BT8XXEMU_Emulator *sender, void *context)
 {
@@ -60,7 +71,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 	// don't need to copy the buffer each time.
 	if (s_Image && s_Pixmap)
 	{
-		s_Mutex.lock();
+		g_ViewportMutex.lock();
 		if (hsize != s_Image->width() || vsize != s_Image->height())
 		{
 			// printf("Graphics resize");
@@ -68,7 +79,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			s_Image = new QImage(hsize, vsize, QImage::Format_RGB32);
 			delete image;
 		}
-		if (output)
+		if (output && (flags & BT8XXEMU_FrameBufferChanged))
 		{
 			// printf("Graphics received");
 			// This is just terrible code.
@@ -81,8 +92,13 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			// ..
 		}
 		s_EmulatorViewport->graphics();
-		s_Mutex.unlock();
-		s_EmulatorThread->repaint();
+		if (s_LastRendered)
+		{
+			s_LastRendered = false;
+			emit s_EmulatorThread->repaint();
+		}
+		g_ViewportMutex.unlock();
+		QThread::yieldCurrentThread();
 	}
 	return true; // g_EmulatorThread != NULL;
 }
@@ -153,9 +169,9 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			flashParams.Persistent = false;
 			flashParams.StdOut = false;
 			// flashParams.Data // TODO: Need to remove this from the flash parameter block, since it's not compatible with remote process
-			if (flashFirmware(FTEDITOR_CURRENT_FLASH)[0])
+			if (flashFirmware(FTEDITOR_CURRENT_DEVICE, FTEDITOR_CURRENT_FLASH)[0])
 			{
-				QString blobPath = m_ApplicationDataDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_FLASH));
+				QString blobPath = m_ApplicationDataDir + "/" FTEDITOR_FLASH_FIRMWARE_DIR "/" + QString::fromWCharArray(flashFirmware(FTEDITOR_CURRENT_DEVICE, FTEDITOR_CURRENT_FLASH));
 				if (blobPath.length() < 260)
 				{
 					int i = blobPath.toWCharArray(flashParams.DataFilePath);
@@ -168,6 +184,9 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			g_Flash = BT8XXEMU_Flash_create(BT8XXEMU_VERSION_API, &flashParams);
 			s_EmulatorParameters.Flash = g_Flash;
 		}
+
+		// Log output
+		s_EmulatorParameters.Log = emuLog;
 
 		// Add the graphics callback to the parameters
 		s_EmulatorParameters.Graphics = ftqtGraphics;
@@ -185,6 +204,7 @@ void EmulatorViewport::run(const BT8XXEMU_EmulatorParameters &params)
 			QThread::msleep(1);
 
 		// Connect the cross thread repaint event
+		s_LastRendered = true;
 		connect(s_EmulatorThread, SIGNAL(repaint()), this, SLOT(threadRepaint()));
 	}
 }
@@ -262,7 +282,7 @@ void EmulatorViewport::setScreenScale(int screenScale)
 
 void EmulatorViewport::threadRepaint() // on Qt thread
 {
-	s_Mutex.lock();
+	g_ViewportMutex.lock();
 	graphics(s_Image);
 	if (s_Image->width() != s_Pixmap->width()
 		|| s_Image->height() != s_Pixmap->height())
@@ -278,7 +298,8 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
-	s_Mutex.unlock();
+	s_LastRendered = true;
+	g_ViewportMutex.unlock();
 	repaint();
 	frame();
 }

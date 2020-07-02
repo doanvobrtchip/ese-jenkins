@@ -39,6 +39,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6001) // Uninitialized memory
+#endif
+
 #include "astc_codec_internals.h"
 
 #include <math.h>
@@ -306,3 +311,7 @@ void compute_encoding_choice_errors(int xdim, int ydim, int zdim, const imageblo
 		eci[i].can_blue_contract = eligible_for_blue_contraction[i];
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

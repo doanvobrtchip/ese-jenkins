@@ -53,7 +53,6 @@
     <file>icons/categories.png</file>
     <file>icons/ui-buttons.png</file>
     <file>icons/folder-horizontal-open.png</file>
-    <file>icons/arrow-circle-225-left.png</file>
     <file>icons/property.png</file>
     <file>icons/script-text.png</file>
     <file>icons/wrench-screwdriver.png</file>
@@ -64,14 +63,21 @@
     <file>icons/cheque.png</file>
     <file>icons/game-monitor.png</file>
     <file>icons/disk--pencil.png</file>
-    <file>icons/arrow-return-180.png</file>
-    <file>icons/arrow-return.png</file>
     <file>icons/arrow-circle-315.png</file>
+    <file>icons/arrow-circle-225-left.png</file>
+    <file>icons/arrow-return-180.png</file>
+    <file>icons/arrow-return-180-left.png</file>
+    <file>icons/arrow-return.png</file>
     <file>icons/eve-puzzle-16.png</file>
     <file>icons/beaker-empty.png</file>
     <file>icons/loader.gif</file>
     <file>icons/task--arrow.png</file>
     <file>icons/pencil-field.png</file>
     <file>icons/database.png</file>
+    <file>icons/database-arrow.png</file>
+    <file>icons/arrow-curve-090-left.png</file>
+    <file>icons/lightning--pencil.png</file>
+    <file>icons/plus-circle-frame-20x16.png</file>
+    <file>icons/minus-circle-frame-20x16.png</file>
   </qresource>
 </RCC>

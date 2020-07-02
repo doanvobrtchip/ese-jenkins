@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_DL_EDITOR_H
 #define FTEDITOR_DL_EDITOR_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 
 // Qt includes
@@ -94,6 +98,10 @@ public:
 
 	const DlState &getState(int line) { if (m_InvalidState) { processState(); } return m_State[line]; }
 
+	bool isInvalid(void);
+
+	void saveCoprocessorCmd(bool isBigEndian);
+
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
@@ -136,6 +144,8 @@ private:
 	bool m_EditingInteractive;
 
 	bool m_InvalidState;
+
+	QHash<QString, QStringList> m_CoproCmdArgName;
 
 private:
 	DlEditor(const DlEditor &);

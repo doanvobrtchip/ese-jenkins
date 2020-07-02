@@ -41,6 +41,10 @@
 // http://qt-project.org/doc/qt-4.8/widgets-codeeditor-codeeditor-cpp.html
 // http://qt-project.org/doc/qt-4.8/tools-customcompleter.html
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include <QtGui>
 #include <QUndoCommand>
 #include <QUndoStack>
@@ -179,16 +183,16 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 	if (m_Completer && m_Completer->popup()->isVisible()) {
 		// The following keys are forwarded by the completer to the widget
 		switch (e->key()) {
-case Qt::Key_Enter:
-case Qt::Key_Return:
-case Qt::Key_Escape:
-case Qt::Key_Tab:
-case Qt::Key_Backtab:
-	e->ignore();
-	return; // let the completer do default behavior
-default:
-	break;
-		}
+		case Qt::Key_Enter:
+		case Qt::Key_Return:
+		case Qt::Key_Escape:
+		case Qt::Key_Tab:
+		case Qt::Key_Backtab:
+			e->ignore();
+			return; // let the completer do default behavior
+		default:
+			break;
+				}
 	}
 
 	if (m_KeyHandler)
@@ -289,7 +293,7 @@ int CodeEditor::lineNumberAreaWidth()
 	}*/
 	int digits = 4;
 
-	int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
+	int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
 
 	return space + 4;
 }

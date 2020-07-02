@@ -11,6 +11,10 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "inspector.h"
 
 // STL includes
@@ -30,6 +34,7 @@
 #include <QApplication>
 #include <QMenu>
 #include <QAction>
+#include <QtEndian>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -85,8 +90,8 @@ static QString asText(uint32_t value)
 	uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsed);
 	if (compiled != value)
 	{
-		QByteArray chars = line.toLocal8Bit();
 #if _DEBUG
+		QByteArray chars = line.toLocal8Bit();
 		printf("Parser bug '%s' -> expect %u, compiled %u\n", chars.constData(), value, compiled);
 #endif
 	}
@@ -310,6 +315,8 @@ void Inspector::frameEmu()
 
 void Inspector::frameQt()
 {
+	int dl_cmd_count = 0;
+	int first_display_cmd = -1;
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (m_DisplayListUpdate[i])
@@ -318,7 +325,26 @@ void Inspector::frameQt()
 			m_DisplayListItems[i]->setText(1, asRaw(m_DisplayListCopy[i]));
 			m_DisplayListItems[i]->setText(2, asText(m_DisplayListCopy[i]));
 		}
+
+		if (m_DisplayListCopy[i] > 0)
+		{
+			dl_cmd_count++;
+		}
+		else if (first_display_cmd == -1)
+		{
+			first_display_cmd = i;
+		}
 	}
+
+	if (m_MainWindow->cmdEditor()->isInvalid())
+	{
+		dl_cmd_count = 0;	
+	}
+	else if (!m_MainWindow->dlEditor()->isInvalid())
+	{
+		// both editor are valid, get the first command DISPLAY()
+		dl_cmd_count = first_display_cmd;
+	} 
 
 	if (m_RegisterItems.size() == FTEDITOR_REG_NB)
 	{
@@ -330,6 +356,11 @@ void Inspector::frameQt()
 				uint32_t regValue;
 				switch (regEnum)
 				{
+					case FTEDITOR_REG_CMD_DL:
+					{
+					    regValue = (dl_cmd_count << 2);
+					    break;
+					}
 					case FTEDITOR_REG_CMDB_SPACE:
 					{
 						/*uint32_t wp = rawReadU32(REG_CMD_WRITE);
@@ -408,6 +439,64 @@ bool Inspector::eventFilter(QObject * watched, QEvent * event)
 	}
 
 	return QWidget::eventFilter(watched, event);
+}
+
+QString Inspector::getDisplayListContent(bool isBigEndian)
+{
+	QString text("");
+	int len = m_DisplayList->headerItem()->columnCount();
+	int i = 0, j = 0;
+	uint32_t lit = 0, big = 0;
+	QTreeWidgetItem *item = 0;
+	bool ok;
+	bool isDisplayCmd = false;
+	int pos = 0;
+	QString iText("");
+
+	for(i = 0; i < m_DisplayList->topLevelItemCount(); i++)
+	{
+		item = m_DisplayList->topLevelItem(i);
+		for (j = 1; j < len; ++j)
+		{
+			iText = item->text(j);
+
+			if (iText == "0x00000000")
+			{
+				if (isDisplayCmd && pos == (i - 1))
+				{
+					return text;
+				}
+				
+				isDisplayCmd = true;
+				pos = i;
+			}
+
+			if (iText.startsWith("0x"))
+			{
+				if (isBigEndian)
+				{
+					lit = iText.toUInt(&ok, 16);
+					big = 0;
+					if (ok)
+					{
+						big = qToBigEndian(lit);
+					}
+					text += QString("0x%1").arg(big, 8, 16, QChar('0')) + "\t// ";
+				}
+				else
+				{
+					text += iText + "\t// ";
+				}
+			}
+			else
+			{
+				text += iText + '\t';
+			}
+		}
+		text.replace(text.length() - 1, 1, '\n');
+	}
+
+	return text;
 }
 
 void Inspector::copy(const QTreeWidget * widget)

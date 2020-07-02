@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_INSPECTOR_H
 #define FTEDITOR_INSPECTOR_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 
@@ -62,6 +66,8 @@ public:
 	int countHandleUsage();
 
 	bool eventFilter(QObject* watched, QEvent* event);
+
+	QString getDisplayListContent(bool isBigEndian = false);  // 0: little; 1: big
 
 private slots:
     void onCopy();

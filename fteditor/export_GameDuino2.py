@@ -1,4 +1,5 @@
 import os, shutil, subprocess, sys, re
+from export_common import parseCommand
 
 def displayName():
     return "Gameduino2 Project"
@@ -33,6 +34,7 @@ lutSize = 1024
 paletted_format = 8
 palettedFormats = [paletted_format]
 
+convertArgs = lambda x: x
 
 def run(name, document, ram):
     resultText = "<b>Gameduino 2 Export</b><br>"
@@ -152,7 +154,7 @@ def run(name, document, ram):
         "REPEAT"
     ]
     for line in document["displayList"]:
-        if not line == "":
+        if line:
             resultText += "<b>Warning</b>: Only support for Coprocessor, ignoring Display List.<br>"
             break
     outDir = "FT80X_" + name + "_gd2"
@@ -168,10 +170,9 @@ def run(name, document, ram):
 
     SDCardAccess = False
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                functionName = splitlinea[0]
+                functionName, _, _ = parseCommand(line, functionMap, convertArgs)
                 if functionName == "CMD_LOADIMAGE":
                     SDCardAccess = True
                     break
@@ -335,21 +336,10 @@ def run(name, document, ram):
                                 f.write("\tWriteMemfromflash(" + lutMemoryAddress + ", " + lutContentName + ", sizeof(" + lutContentName + "));\n")
                         showMemWriteFunction = True
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')', 1)
-                functionName = splitlinea[0]
-                functionArgs = splitlineb[0]
-                functionName = functionMap[functionName]
-                commentsRegex = re.compile("//.*$")
-                if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
-
-                    comment = ""
-                    m = commentsRegex.match(splitlineb[1])
-                    if m:
-                        comment = m.group(0)
-
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
+                if functionName in ["BitmapHandle", "BitmapSource", "BitmapLayout", "BitmapSize", "cmd_setfont"]:
                     newline = "\tGD." + functionName + "(" + functionArgs + ");" + comment + "\n"
                     f.write(newline)
                 else:
@@ -362,13 +352,9 @@ def run(name, document, ram):
     f.write("{\n")
     clearFound = False
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')', 1)
-                functionName = splitlinea[0]
-                functionArgs = splitlineb[0]
-                functionName = functionMap[functionName]
+                functionName, _, _ = parseCommand(line, functionMap, convertArgs)
                 if functionName == "Clear":
                     clearFound = True
                     break
@@ -381,21 +367,14 @@ def run(name, document, ram):
     specialCommandType = ""
 
     for line in document["coprocessor"]:
-        if not line == "":
+        if line:
             try:
                 if (line.lstrip()).startswith("//"):#if the line is a comment line then just write it out
                     f.write("\t" + line + "\n")
                     continue
-
-                splitlinea = line.split('(', 1)
-                splitlineb = splitlinea[1].split(')', 1)
-                functionName = splitlinea[0]
-                functionArgs = splitlineb[0]
-                functionName = functionMap[functionName]
-                commentsRegex = re.compile("//.*$")
-
+                functionName, functionArgs, comment = parseCommand(line, functionMap, convertArgs)
                 if not skippedBitmaps:
-                    if functionName == "BitmapHandle" or functionName == "BitmapSource" or functionName == "BitmapLayout" or functionName == "BitmapSize" or functionName == "cmd_setfont":
+                    if functionName in ["BitmapHandle", "BitmapSource", "BitmapLayout", "BitmapSize", "cmd_setfont"]:
                         continue
                     else:
                         skippedBitmaps = True
@@ -419,11 +398,6 @@ def run(name, document, ram):
                     #f.write("\tGD.__end();\n")
                     specialCommandType = "cmd_loadimage"
 
-                comment = ""
-                m = commentsRegex.match(splitlineb[1])
-                if m:
-                    comment = m.group(0)
-
                 newline = "\tGD." + functionName + "(" + functionArgs + ");" + comment + "\n"
                 f.write(newline)
 
@@ -434,11 +408,8 @@ def run(name, document, ram):
                             f.write("\t/* File name doesn't meet the 8.3 rule, see above. */\n")
                     except:
                         pass
-                    #f.write("\tLoadToCoprocessorCMDfifo(\"" + specialParameter + "\");\n")
                     f.write("\tGD.load(\"" + specialParameter + "\");\n")
                     specialCommandType = ""
-                    #f.write("\tGD.resume();\n")
-
             except:
                 pass
         else:
@@ -457,9 +428,7 @@ def run(name, document, ram):
     if sys.platform.startswith('darwin'):
         subprocess.call(('open', outName))
     elif os.name == 'nt':
-        #os.startfile((os.getcwd() + "/" + outName).replace("/", "\\"))
         os.startfile(outName.replace("/", "\\"))
     elif os.name == 'posix':
         subprocess.call(('xdg-open', outName))
-    #print resultText
     return resultText

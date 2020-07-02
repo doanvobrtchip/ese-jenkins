@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2017-2020  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -179,6 +180,25 @@ const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	-1,
 
 	///////////////////////
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+
+	///////////////////////
 	REG_TRACKER,
 	REG_TRACKER_1,
 	REG_TRACKER_2,
@@ -192,6 +212,8 @@ const int32_t g_RegVC2[FTEDITOR_REG_NB] = {
 	-1,
 	-1,
 	-1,
+
+	///////////////////////
 	-1,
 };
 
@@ -339,6 +361,25 @@ const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"",
+
+	///////////////////////
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
 	
 	///////////////////////
 	"REG_TRACKER",
@@ -354,6 +395,8 @@ const char *g_RegToStringVC2[FTEDITOR_REG_NB] = {
 	"",
 	"",
 	"",
+
+	///////////////////////
 	"",
 };
 

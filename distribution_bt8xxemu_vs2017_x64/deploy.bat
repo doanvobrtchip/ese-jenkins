@@ -3,6 +3,8 @@ copy bt8xxemu.dll ..\deployment\emulator\bin64\bt8xxemu.dll
 copy mx25lemu.dll ..\deployment\emulator\bin64\mx25lemu.dll
 copy bt8xxemus.exe ..\deployment\emulator\bin64\bt8xxemus.exe
 
+copy ft8xxemu.dll ..\deployment\emulator\bin64\ft8xxemu.dll
+
 copy bt8xxemu.lib ..\deployment\emulator\lib64\bt8xxemu.lib
 
 copy bt8xxemu.h ..\deployment\emulator\include\bt8xxemu.h

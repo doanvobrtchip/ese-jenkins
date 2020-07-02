@@ -11,6 +11,10 @@
  * Copyright (C) 2014  Future Technology Devices International Ltd
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
@@ -97,9 +101,9 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
-	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
+	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
 	printf("---\n");
 	return false;
 }
@@ -126,9 +130,9 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
-	a_ImageConvError = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
+	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
 	printf("---\n");
 	return false;
 }
@@ -269,11 +273,10 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -387,11 +390,11 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 			PyObject *ptype, *pvalue, *ptraceback;
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+			QString error = QString::fromUtf8(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -421,8 +424,12 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	// Returns image layout
 	// /*('file properties: ', 'resolution ', 360, 'x', 238, 'format ', 'L1', 'stride ', 45, ' total size ', 10710)*/
 	QString fileName = name + ".rawh";
-	QByteArray fileNameCStr = fileName.toLocal8Bit(); // VERIFY: UNICODE
+#ifdef WIN32
+	FILE *f = _wfopen((wchar_t *)fileName.data(), L"r");
+#else
+	QByteArray fileNameCStr = fileName.toLocal8Bit();
 	FILE *f = fopen(fileNameCStr.data(), "r");
+#endif
 	if (!f)
 	{
 		printf("Failed to open RAWH file\n");
@@ -614,10 +621,10 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 			PyObject *errStr = PyObject_Repr(pvalue);
 			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromLocal8Bit(pStrErrorMessage);
+			QString error = QString::fromUtf8(pStrErrorMessage);
 			if (pStrErrorMessage)
 			{
-				buildError = QString::fromLocal8Bit(pStrErrorMessage);
+				buildError = QString::fromUtf8(pStrErrorMessage);
 			}
 			else
 			{
@@ -675,6 +682,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	}
 	FT_Face face;
 	int error;
+	
 	QByteArray inFileLocal8 = inFile.toLocal8Bit(); // If this does not work for unicode, we can load the font file to ram first
 	error = FT_New_Face(library, inFileLocal8.data(), 0, &face); // and use FT_New_Memory_Face instead
 	if (error == FT_Err_Unknown_File_Format) // TODO?: Replace 0 in FT_New_Face call with the correct face index to support multi-face fonts
@@ -788,7 +796,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	fmb.Value.Width = maxw;
 	fmb.Value.Height = maxh;
 	std::vector<uint8_t> bitmapBuffer;
-	bitmapBuffer.resize(((format == L1) ? fmb.Value.LineStride : maxw) * maxh * (charSet.size() + 1));
+	bitmapBuffer.resize((size_t)((format == L1) ? fmb.Value.LineStride : maxw) * maxh * ((size_t)charSet.size() + 1));
 	std::fill(bitmapBuffer.begin(), bitmapBuffer.end(), 0);
 	for (int i = 0; i < charSet.size(); ++i)
 	{
@@ -853,7 +861,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 					uint8_t leftvalue = slot->bitmap.buffer[bi] >> txb;
 					uint8_t rightvalue = slot->bitmap.buffer[bi] << (8 - txb);
 					bitmapBuffer[ti] |= leftvalue;
-					bitmapBuffer[ti + 1] |= rightvalue;
+					bitmapBuffer[(size_t)ti + 1] |= rightvalue;
 					//printf("CI %i\n", ci);
 				}
 				else
@@ -888,8 +896,8 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	{
 		for (int i = 0; i < nbbytes; ++i)
 		{
-			uint8_t left = bitmapBuffer[i * 2];
-			uint8_t right = bitmapBuffer[i * 2 + 1];
+			uint8_t left = bitmapBuffer[(size_t)i * 2];
+			uint8_t right = bitmapBuffer[(size_t)i * 2 + 1];
 			left &= 0xF0;
 			right >>= 4;
 			bitmapBuffer[i] = left | right;
@@ -899,10 +907,10 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 	{
 		for (int i = 0; i < nbbytes; ++i)
 		{
-			uint8_t a = bitmapBuffer[i * 4];
-			uint8_t b = bitmapBuffer[i * 4 + 1];
-			uint8_t c = bitmapBuffer[i * 4 + 2];
-			uint8_t d = bitmapBuffer[i * 4 + 3];
+			uint8_t a = bitmapBuffer[(size_t)i * 4];
+			uint8_t b = bitmapBuffer[(size_t)i * 4 + 1];
+			uint8_t c = bitmapBuffer[(size_t)i * 4 + 2];
+			uint8_t d = bitmapBuffer[(size_t)i * 4 + 3];
 			a >>= 6;
 			b >>= 6;
 			c >>= 6;
@@ -1193,7 +1201,7 @@ void AssetConverter::convertFlashMap(QString &buildError, const QString &inFile,
 	const FlashMapEntry &entry = entryIt->second;
 
 	// Copy raw and compressed data
-	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, false, QString::null);
+	copyCompress(buildError, flashBinPath, outName, entry.Index, entry.Size, false, false, QString());
 
 	; {
 		QFile fo(outName + ".bin");

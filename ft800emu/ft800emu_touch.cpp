@@ -7,6 +7,12 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 // #include <...>
 #include "ft800emu_touch.h"
 #include "ft8xxemu_system_win32.h"
@@ -407,14 +413,14 @@ TouchPoint::~TouchPoint()
 bool Touch::multiTouch()
 {
 	uint8_t *ram = m_Memory->getRam();
-#ifdef FT810EMU_MODE
-	return (m_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED;
-#else
-	return m_EmulatorMode >= BT8XXEMU_EmulatorFT801
+	return (m_EmulatorMode & 0x01)
 		&& ((m_Memory->rawReadU32(ram, REG_CTOUCH_EXTENDED) & 0x01) == CTOUCH_MODE_EXTENDED);
-#endif
 }
 
 } /* namespace FT800EMU */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /* end of file */

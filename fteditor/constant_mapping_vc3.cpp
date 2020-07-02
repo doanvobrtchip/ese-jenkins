@@ -180,6 +180,25 @@ const int32_t g_RegVC3[FTEDITOR_REG_NB] = {
 	REG_SHA1KEY,
 
 	///////////////////////
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+	-1,
+
+	///////////////////////
 	REG_TRACKER,
 	REG_TRACKER_1,
 	REG_TRACKER_2,
@@ -340,6 +359,25 @@ const char *g_RegToStringVC3[FTEDITOR_REG_NB] = {
 	"REG_FULLBUSYBITS",
 	"",
 	"REG_SHA1KEY",
+
+	///////////////////////
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
 	
 	///////////////////////
 	"REG_TRACKER",

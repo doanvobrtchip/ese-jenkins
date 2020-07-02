@@ -38,6 +38,12 @@
 /*----------------------------------------------------------------------------*/ 
 
 #ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6262) // Large stack
+#endif
+
+#ifdef _MSC_VER
 	#define _USE_MATH_DEFINES
 #endif
 #include <math.h>
@@ -187,7 +193,7 @@ void compute_angular_offsets(int samplecount, const float *samples, const float 
 	// postprocess the angle-sums
 	for (i = 0; i < max_angular_steps; i++)
 	{
-		float angle = atan2(anglesum_y[i], anglesum_x[i]);	// positive angle -> positive offset
+		float angle = atan2f(anglesum_y[i], anglesum_x[i]);	// positive angle -> positive offset
 		offsets[i] = angle * (stepsizes[i] * (1.0f / (2.0f * (float)M_PI)));
 	}
 }
@@ -599,3 +605,7 @@ void compute_angular_endpoints_2planes(float mode_cutoff,
 		high_value2[i] = high_values2[decim_mode][quant_mode];
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

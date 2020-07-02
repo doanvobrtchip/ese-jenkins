@@ -63,8 +63,14 @@ public:
 
 #ifdef BT815EMU_MODE
 	inline uint8_t *getFlash() { return m_Flash ? m_Flash->vTable()->Data(m_Flash) : NULL; }
+	inline size_t getFlashSize() { return m_Flash ? m_Flash->vTable()->Size(m_Flash) : 0; }
 	// Voodoo magic...
 	// static inline uint8_t *getFlashFromRamPtr(uint8_t *ram) { return (reinterpret_cast<Memory *>(ram) - offsetof(Memory, m_Ram))->getFlash(); }
+#endif
+
+#ifdef BT817EMU_MODE
+	inline uint8_t spimi() { return m_Spimi; }
+	inline uint8_t spimiL() { return m_SpimiL; }
 #endif
 
 	//static void setInterrupt(void (*interrupt)());
@@ -78,9 +84,13 @@ public:
 	void coprocessorWriteU32(ramaddr address, uint32_t data);
 	uint32_t coprocessorReadU32(ramaddr address);
 	void coprocessorWriteU16(ramaddr address, uint16_t data);
+#ifndef FT810EMU_MODE
 	uint16_t coprocessorReadU16(ramaddr address);
+#endif
 	void coprocessorWriteU8(ramaddr address, uint8_t data);
+#ifndef FT810EMU_MODE
 	uint8_t coprocessorReadU8(ramaddr address);
+#endif
 	bool coprocessorGetReset();
 
 	static BT8XXEMU_FORCE_INLINE void rawWriteU32(uint8_t *buffer, ramaddr address, uint32_t data);
@@ -165,6 +175,12 @@ private:
 	uint32_t m_CachedTouchRawXY = 0xFFFFFFFF;
 #endif
 
+#ifdef BT817EMU_MODE
+	bool m_SpimRising;
+	uint8_t m_Spimi;
+	uint8_t m_SpimiL;
+#endif
+
 	bool m_ReadDelay = false;
 
 	bool m_CpuReset = false;
@@ -176,6 +192,7 @@ private:
 #endif
 
 private:
+	BT8XXEMU_FORCE_INLINE void memSet(ramaddr address, uint8_t value, ramaddr size);
 	BT8XXEMU_FORCE_INLINE void rawWriteU32(ramaddr address, uint32_t data);
 	BT8XXEMU_FORCE_INLINE uint32_t rawReadU32(ramaddr address);
 	BT8XXEMU_FORCE_INLINE void rawWriteU16(ramaddr address, uint16_t data);

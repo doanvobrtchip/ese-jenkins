@@ -46,6 +46,11 @@
  * each element in the table is an uint8_t indicating partition index (0, 1, 2 or 3)
  */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include <math.h>
 
 #include "astc_codec_internals.h"
@@ -184,10 +189,10 @@ void compute_partition_error_color_weightings(int xdim, int ydim, int zdim, cons
 	}
 	for (i = 0; i < pcnt; i++)
 	{
-		color_scalefactors[i].x = sqrt(error_weightings[i].x);
-		color_scalefactors[i].y = sqrt(error_weightings[i].y);
-		color_scalefactors[i].z = sqrt(error_weightings[i].z);
-		color_scalefactors[i].w = sqrt(error_weightings[i].w);
+		color_scalefactors[i].x = sqrtf(error_weightings[i].x);
+		color_scalefactors[i].y = sqrtf(error_weightings[i].y);
+		color_scalefactors[i].z = sqrtf(error_weightings[i].z);
+		color_scalefactors[i].w = sqrtf(error_weightings[i].w);
 	}
 
 }
@@ -863,3 +868,7 @@ void find_best_partitionings(int partition_search_limit, int xdim, int ydim, int
 	}
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

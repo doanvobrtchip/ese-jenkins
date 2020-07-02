@@ -3,6 +3,10 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include "content_manager.h"
 
 // STL includes
@@ -29,6 +33,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QDateTime>
 #include <QMessageBox>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -72,7 +77,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	FontSize = 12;
 	FontCharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	FontOffset = 32;
-	MappedName = QString::null;
+	MappedName = QString();
 	UploadMemoryDirty = true;
 	UploadFlashDirty = true;
 	ExternalDirty = false;
@@ -313,6 +318,8 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 	hbox->addWidget(widget1);
 	layout->addLayout(hbox);
 }
+
+const QString ContentManager::ResourceDir = "resources";
 
 ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL), m_OverlapSuppressed(0), m_OverlapMemorySuppressed(false),  m_OverlapFlashSuppressed(false)
 {
@@ -622,6 +629,25 @@ public:
 		// Remove from the content manager
 		m_ContentManager->removeInternal(m_ContentInfo);
 
+		// Check if there is another content used the same source path
+		QTreeWidgetItem * item = 0;
+		ContentInfo * info = 0;
+		bool keepThisResource = false;
+		for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
+		{
+			item = m_ContentManager->contentList()->topLevelItem(i);
+			info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
+			if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
+			{
+				keepThisResource = true;
+			}
+		}
+
+		if (!keepThisResource)
+		{
+			QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
+		}
+
 		m_Owner = true;
 	}
 
@@ -630,6 +656,8 @@ public:
 		printf("Add::redo()\n");
 
 		m_Owner = false;
+
+		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
 
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
@@ -716,10 +744,11 @@ void ContentManager::add(ContentInfo *contentInfo)
 class ContentManager::Remove : public QUndoCommand
 {
 public:
-	Remove(ContentManager *contentManager, ContentInfo *contentInfo) :
+	Remove(ContentManager *contentManager, ContentInfo *contentInfo, bool whenCloseProject = false) :
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
+		m_WhenCloseProject(whenCloseProject),
 		m_Owner(false)
 	{
 		setText(tr("Remove content"));
@@ -739,6 +768,9 @@ public:
 
 		m_Owner = false;
 
+		// Unmark source file
+		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
+
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
 	}
@@ -751,22 +783,45 @@ public:
 		m_ContentManager->removeInternal(m_ContentInfo);
 
 		m_Owner = true;
+
+		if (!m_WhenCloseProject)
+		{
+			// Check if there is another content used the same source path
+			QTreeWidgetItem * item = 0;
+			ContentInfo * info = 0;
+			bool keepThisResource = false;
+			for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
+			{
+				item = m_ContentManager->contentList()->topLevelItem(i);
+				info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
+				if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
+				{
+					keepThisResource = true;
+				}
+			}
+
+			if (!keepThisResource)
+			{
+				QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
+			}
+		}
 	}
 
 private:
 	ContentManager *m_ContentManager;
 	// int m_Index; // FIXME: When undo-ing, the item will appear at the end rather than it's original index.
 	ContentInfo *m_ContentInfo;
+	bool m_WhenCloseProject = false;
 	bool m_Owner;
 };
 
-void ContentManager::remove(ContentInfo *contentInfo)
+void ContentManager::remove(ContentInfo *contentInfo, bool whenCloseProject)
 {
 	printf("ContentManager::remove(contentInfo)\n");
 
 	m_MainWindow->undoStack()->beginMacro(tr("Remove content"));
 
-	Remove *remove = new Remove(this, contentInfo);
+	Remove *remove = new Remove(this, contentInfo, whenCloseProject);
 	m_MainWindow->undoStack()->push(remove);
 
 	// ISSUE#113: Remove all related commands
@@ -1042,17 +1097,48 @@ void ContentManager::add()
 {
 	printf("ContentManager::add()\n");
 
+	static QString saveDirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
 	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
-		tr("Load Content"),
-		m_MainWindow->getFileDialogPath(),
+		tr("Add Content"),
+	    saveDirPath,
 		tr("All files (*.*)"));
-
-
-	foreach (QString fileName, fileNameList)
+	
+	if (fileNameList.size() <= 0)
 	{
-		add(fileName);
+		return;
 	}
 
+	QDir saveDir(fileNameList[0]);
+	saveDir.cdUp();
+	saveDirPath = saveDir.absolutePath();
+
+	// create resource folder to save content files
+	QDir dir(QDir::currentPath() + '/' + ResourceDir);
+	if (!dir.exists())
+	{
+		dir.mkpath(".");
+	}
+
+	QString NewNameTemplate("%1/%2_%3.%4");
+	QString newName;
+	int i = 0;
+	foreach (QString fileName, fileNameList)
+	{
+		QFileInfo fi(fileName);
+		newName = dir.absolutePath() + '/' + fi.fileName();
+
+		i = 1;
+		while (QFileInfo(newName).exists())
+		{
+			++i;
+			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.baseName()).arg(i).arg(fi.completeSuffix());
+		}
+
+		QFile::copy(fileName, newName);
+		
+		add(QDir(QDir::currentPath()).relativeFilePath(newName));
+	}
 }
 
 void ContentManager::remove()
@@ -1315,7 +1401,7 @@ int ContentManager::getFlashSize(ContentInfo *contentInfo)
 	return size;
 }
 
-void ContentManager::clear()
+void ContentManager::clear(bool whenCloseProject)
 {
 	printf("ContentManager::clear()\n");
 
@@ -1326,9 +1412,29 @@ void ContentManager::clear()
 	m_MainWindow->undoStack()->beginMacro(tr("Clear content"));
 	for (std::vector<ContentInfo *>::iterator it = contentInfos.begin(), end = contentInfos.end(); it != end; ++it)
 	{
-		remove(*it);
+		remove(*it, whenCloseProject);
 	}
 	m_MainWindow->undoStack()->endMacro();
+
+	// Clean resource files
+	QString projectContent = m_MainWindow->getProjectContent();
+	if (whenCloseProject)
+	{
+		QDir removeDir(QDir::currentPath() + '/' + ContentManager::ResourceDir);
+		for each (QString path in removeDir.entryList(QDir::Files))
+		{
+			QRegularExpression re("\"sourcePath\": \".+" + QFileInfo(path).completeBaseName());
+			if (projectContent.indexOf(re) == -1)
+			{
+				QFile::remove(removeDir.path() + '/' + path);
+			}
+			else if (path.endsWith(".rem"))
+			{
+				// Remove extension "rem" because resource file is still in use
+				QFile::rename(removeDir.path() + '/' + path, removeDir.path() + '/' + QFileInfo(path).completeBaseName());
+			}
+		}
+	}
 }
 
 void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -1383,7 +1489,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 					text = "Builtin";
 					icon = QIcon(":/icons/information-white");
 				}
-				else if (contentInfo->FlashAddress + contentSize > globalSize) // TODO: Maybe cache getFlashSize
+				else if ((size_t)contentInfo->FlashAddress + contentSize > globalSize) // TODO: Maybe cache getFlashSize
 				{
 					text = "No Space";
 					icon = QIcon(":/icons/exclamation-red");
@@ -1449,6 +1555,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 
 	// Set common widget values
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
+	m_PropertiesCommonSourceFile->setToolTip(QDir(m_PropertiesCommonSourceFile->text()).absolutePath());
 	m_PropertiesCommonName->setText(contentInfo->DestName);
 	if (contentInfo->Converter < ContentInfo::FlashMap)
 	{
@@ -1601,7 +1708,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					{
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -1680,7 +1787,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 						propInfo += tr("<br><b>Format: </b> ") + bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, contentInfo->ImageFormat);
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -1705,7 +1812,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 					{
 						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
 						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 					}
 				}
 				break;
@@ -2143,7 +2250,7 @@ void ContentManager::recalculateOverlapFlashInternal()
 						m_ContentOverlapFlash.insert(leftInfo);
 					++left;
 				}
-				if (leftAddr + leftSize > globalSize)
+				if ((size_t)leftAddr + leftSize > globalSize)
 				{
 					printf("CM: Content '%s' oversize\n", leftInfo->DestName.toLocal8Bit().data());
 					if (m_ContentOverlapFlash.find(leftInfo) == m_ContentOverlapFlash.end())
@@ -2271,6 +2378,30 @@ ContentInfo *ContentManager::current()
 	if (!m_ContentList->currentItem())
 		return NULL;
 	return (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+}
+
+std::vector<ContentInfo *> ContentManager::allRam()
+{
+	std::vector<ContentInfo *> res;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		if (info->MemoryLoaded)
+			res.push_back(info);
+	}
+	return res;
+}
+
+std::vector<ContentInfo *> ContentManager::allFlash()
+{
+	std::vector<ContentInfo *> res;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		if (info->DataStorage == ContentInfo::Flash)
+			res.push_back(info);
+	}
+	return res;
 }
 
 QString ContentManager::findFlashMapPath(bool forceScan)
@@ -3363,9 +3494,11 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 	if (!current())
 		return;
 
+	QString dirPath = m_PropertiesCommonSourceFile->text();
+	
 	QString fileName = QFileDialog::getOpenFileName(this,
-		tr("Load Content"),
-		m_MainWindow->getFileDialogPath(),
+		tr("Change Content"),
+	    QDir(dirPath).absolutePath(),
 		tr("All files (*.*)"));
 
 	if (fileName.isNull())

@@ -6,6 +6,7 @@
         "",
         "CMD_PLAYVIDEO(OPT_FULLSCREEN, \"..//chickens-4.avi\")",
         "CMD_DLSTART()",
+        "CLEAR(1, 1, 1)",
         "CMD_TEXT(154, 212, 31, 0, \"Video playback has ended.\")",
         ""
     ],

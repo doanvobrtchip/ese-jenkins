@@ -16,6 +16,13 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6011) // Dereferencing NULL
+#endif
+
 #include "astc_codec_internals.h"
 
 static partition_info **partition_tables[4096];
@@ -320,3 +327,7 @@ const partition_info *get_partition_table(int xdim, int ydim, int zdim, int part
 
 	return partition_tables[ptindex][partition_count];
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

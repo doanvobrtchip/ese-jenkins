@@ -13,6 +13,12 @@
  */
 /*----------------------------------------------------------------------------*/
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#pragma warning(disable : 6001) // Uninitialized memory
+#endif
+
 #include <math.h>
 
 #include "astc_codec_internals.h"
@@ -2162,3 +2168,7 @@ void recompute_ideal_colors(int xdim, int ydim, int zdim, int weight_quantizatio
 	#endif
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

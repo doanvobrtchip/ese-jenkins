@@ -47,15 +47,39 @@ const wchar_t *g_FlashDeviceType[FTEDITOR_FLASH_NB] = { // Library for flash dev
 	L"mx25lemu",
 };
 
-const wchar_t *g_FlashFirmware[FTEDITOR_FLASH_NB] = { // Library for flash device
-	L"unified.blob",
-	L"unified.blob",
-	L"unified.blob",
-	L"unified.blob",
-	L"mx25l.blob",
-	L"mx25l.blob",
-	L"mx25l.blob",
-	L"mx25l.blob",
+const wchar_t *g_FlashFirmwareBT815[FTEDITOR_FLASH_NB] = { // Library for flash device
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
+	L"bt815/mx25l.blob",
+	L"bt815/mx25l.blob",
+	L"bt815/mx25l.blob",
+	L"bt815/mx25l.blob",
+};
+
+const wchar_t *g_FlashFirmwareBT817[FTEDITOR_FLASH_NB] = { // Library for flash device
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+	L"bt817/unified.blob",
+};
+
+const wchar_t **g_FlashFirmware[FTEDITOR_DEVICE_NB] = {
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT817,
+	g_FlashFirmwareBT817,
 };
 
 int g_CurrentFlash = FTEDITOR_DEFAULT_FLASH;

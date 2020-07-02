@@ -19,7 +19,9 @@ Author: James Bowman <jamesb@excamera.com>
 #include "ft8xxemu_system.h"
 #include "ft800emu_vc.h"
 
-#ifdef BT815EMU_MODE
+#if defined(BT817EMU_MODE)
+#	include "bt817emu_espim.h"
+#elif defined(BT815EMU_MODE)
 #	include "bt815emu_espim.h"
 #endif
 
@@ -42,7 +44,11 @@ namespace FT810EMU {
 
 namespace /* anonymous */ {
 
-#ifdef BT815EMU_MODE
+#if defined(BT817EMU_MODE)
+const uint16_t pgm_rom_bt817[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt817.h"
+};
+#elif defined(BT815EMU_MODE)
 const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_bt815.h"
 };
@@ -469,13 +475,14 @@ void Ejpg::run(uint8_t *memory8,
 
 	while (1)
 	{
-		blk_type = btypes[block] - '0';
+		char blk_type_i8 = btypes[block] - '0';
+		blk_type = blk_type_i8;
 
 		// FTEMU_printf("\n%2d: bits=%016llx\n", nbits, bits);
 
 		uint8_t da8 = tda >> (8 * blk_type);  // DC in bit 4, AC in bit 0
 		// FTEMU_printf("blk_type = %d %08x %02x\n", blk_type, tda, da8);
-		size_t ht;
+		ramaddr ht;
 		int isdc = idct_i == 0;
 		if (isdc)
 			ht = REG_EJPG_HT + 64 * (da8 >> 4);
@@ -507,7 +514,7 @@ void Ejpg::run(uint8_t *memory8,
 		// FTEMU_printf("codesize %lu\n", codesize);
 		// FTEMU_printf("symbol at %u\n", 0xff & (b + *pht));
 		uint8_t sym_pos = 0xff & (b + *pht);
-		size_t symbols;
+		ramaddr symbols;
 		if (isdc)
 			symbols = REG_EJPG_DCC + 12 * (da8 >> 4);
 		else
@@ -615,7 +622,7 @@ void Ejpg::run1(uint8_t *memory8,
 		// FTEMU_printf("%d    %x %s %x %d\n", blk_type, format, btypes, qt, qtab);
 		block = (block + 1) % strlen(btypes);
 		idct();
-		for (size_t i = 0; i < 64; i++)
+		for (ptrdiff_t i = 0; i < 64; i++)
 			run2(memory8,
 			memory16,
 			options,
@@ -659,6 +666,7 @@ BT8XXEMU_FORCE_INLINE void Coprocessor::cpureset()
 BT8XXEMU_FORCE_INLINE void Coprocessor::push(int v) // push v on the data stack
 {
 	dsp = 31 & (dsp + 1);
+	assert(t != 0xCDCDCDCD);
 	d[dsp] = t;
 	t = v;
 }
@@ -674,6 +682,10 @@ BT8XXEMU_FORCE_INLINE int Coprocessor::pop() // pop value from the data stack an
 #if FT800EMU_COPROCESSOR_TRACE
 static FILE *trace = NULL;
 #endif
+
+#pragma warning(push)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26812)
 
 Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t *romFilePath, BT8XXEMU_EmulatorMode mode)
 	: m_System(system), m_Memory(memory)
@@ -709,7 +721,9 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 	}
 	else
 	{
-#ifdef BT815EMU_MODE
+#if defined(BT817EMU_MODE)
+		memcpy(j1boot, pgm_rom_bt817, sizeof(pgm_rom_bt817));
+#elif defined(BT815EMU_MODE)
 		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
 #else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
@@ -729,6 +743,8 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 	// REG(EJPG_READY) = 1;
 	m_Memory->rawWriteU32(m_Memory->getRam(), REG_EJPG_READY, 1);
 }
+
+#pragma warning(pop)
 
 // template <bool singleFrame>
 void Coprocessor::execute()
@@ -750,7 +766,7 @@ void Coprocessor::execute()
 			FT8XXEMU::System::delay(1);
 			continue;
 		}
-		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL);
+		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL) & 0x3;
 		// uint32_t regJ1Cold = m_Memory->rawReadU32(m_Memory->getRam(), REG_J1_COLD);
 
 #if FT800EMU_COPROCESSOR_DEBUG
@@ -835,11 +851,13 @@ void Coprocessor::execute()
 				}
 				_pc = r[rsp] >> 1;
 			}
-			uint32_t n = d[dsp];
-			switch ((insn >> 8) & 0x1f)
+			const uint32_t n = d[dsp];
+			const uint16_t insn_alu = (insn >> 8) & 0x1f;
+			switch (insn_alu)
 			{
 			case 0x00:  _t = t; break;
-			case 0x01:  _t = n; break;
+			case 0x01:  assert(n != 0xCDCDCDCD);
+				_t = n; break;
 			case 0x02:  _t = t + n; break;
 			case 0x03:  _t = t & n; break;
 			case 0x04:  _t = t | n; break;
@@ -855,23 +873,27 @@ void Coprocessor::execute()
 			case 0x09:  _t = ((int32_t)(n)) >> t; break;
 			case 0x0a:  _t = t - 1; break;
 			case 0x0b:  _t = r[rsp]; break;
-			case 0x0c:  _t = memrd; break;
+			case 0x0c:  _t = memrd32; break;
 			case 0x0d:  _t = t * n; break;
 			case 0x0e:  _t = (n << 14) | (t & 0x3fff); break;
 			case 0x0f:  _t = -(n < t); break;
 			case 0x10:  _t = t + 4;
-				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd)); break;
+				m_Memory->coprocessorWriteU32(REG_CRC, crc32(m_Memory->coprocessorReadU32(REG_CRC), memrd32)); break;
 			case 0x11:  _t = n << t; break;
-			case 0x12:  _t = /*(int8_t)*/m_Memory->coprocessorReadU8(t); /*memory8[t]*/; break;
-			case 0x13:  assert((t & 1) == 0);
-				_t = /*(int16_t)*/m_Memory->coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+			case 0x12:  // assert(t == memrdt);
+				_t = memrd8[t & 3]; break;
+				// _t = /*(int8_t)*/m_Memory->coprocessorReadU8(t); /*memory8[t]*/; break;
+			case 0x13:  assert((t & 1) == 0); // assert(t == memrdt);
+				// _t = /*(int16_t)*/m_Memory->coprocessorReadU16(t); /*memory16[t >> 1];*/ break;
+				_t = memrd16[(t >> 1) & 1]; break;
 			case 0x14:  _t = PRODUCT64(t, n) >> 32; break;
 			case 0x15:  _t = PRODUCT64(t, n) >> 16; break;
 			case 0x16:  _t = (t & ~0xfff) | ((t + 4) & 0xfff); break;
 			case 0x17:  _t = n - t; break;
 			case 0x18:  _t = t + 1; break;
-			case 0x19:  assert((t & 1) == 0);
-				_t = (int16_t)m_Memory->coprocessorReadU16(t); break;
+			case 0x19:  assert((t & 1) == 0); // assert(t == memrdt);
+				// _t = (int16_t)m_Memory->coprocessorReadU16(t); break;
+				_t = memrd16s[(t >> 1) & 1]; break;
 			case 0x1a:  { uint32_t sum32 = t + n; _t = ((sum32 & 0x7fffff00) ? 255 : (sum32 & 0xff)); } break;
 			case 0x1b:  switch (t >> 12) {
 			case 0: _t = t | RAM_REG; break;
@@ -883,7 +905,7 @@ void Coprocessor::execute()
 			case 0x1c:  _t = t + 2; break;
 			case 0x1d:  _t = t << 1; break;
 			case 0x1e:  _t = t + 4; break;
-			case 0x1f:  _t = !(isFF(memrd) | isFF(memrd >> 8) | isFF(memrd >> 16) | isFF(memrd >> 24));
+			case 0x1f:  _t = !(isFF(memrd32) | isFF(memrd32 >> 8) | isFF(memrd32 >> 16) | isFF(memrd32 >> 24));
 				// FTEMU_printf("xmit %08x\n", memrd);
 				if (_t)
 				{
@@ -902,7 +924,7 @@ void Coprocessor::execute()
 						REG(EJPG_TDA),
 						&memory8[REG_EJPG_Q],
 						32,
-						memrd);
+						memrd32);
 				}
 			}
 			dsp = 31 & (dsp + sx[insn & 3]);
@@ -912,6 +934,7 @@ void Coprocessor::execute()
 			case 0:
 				break;
 			case 1:
+				assert(t != 0xCDCDCDCD);
 				d[dsp] = t;
 				break;
 			case 2:
@@ -922,7 +945,7 @@ void Coprocessor::execute()
 				break;
 			case 3:
 				break;
-			case 4:
+			case 4: // 32-bit write
 				// selfassert((t & 3) == 0, __LINE__);
 				if (t == 0x600000)
 				{
@@ -954,7 +977,7 @@ void Coprocessor::execute()
 				}
 #endif
 				break;
-			case 5:
+			case 5: // 16-bit write
 				// assert((t & 1) == 0);
 				// assert(t < MEMSIZE);
 				// assert((t < (1024 * 1024)) | (t >= RAM_DL));
@@ -962,7 +985,7 @@ void Coprocessor::execute()
 				// 	written[(t - RAM_J1RAM) >> 2] = 1;
 				m_Memory->coprocessorWriteU16(t, n); // memory16[t >> 1] = n;
 				break;
-			case 6:
+			case 6: // 8-bit write
 				// selfassert(t < MEMSIZE, __LINE__);
 				// selfassert((t < (1024 * 1024)) | (t >= RAM_DL), __LINE__);
 				m_Memory->coprocessorWriteU8(t, n); // memory8[t] = n;
@@ -989,13 +1012,17 @@ void Coprocessor::execute()
 						n);
 				}
 				break;
-			case 7:
+			case 7: // 32-bit read
 				// selfassert(t < MEMSIZE, __LINE__);
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	selfassert(written[(t - RAM_J1RAM) >> 2], __LINE__);
-				memrd = m_Memory->coprocessorReadU32(t);
+				assert(t != 0xCDCDCDCD);
+				memrd32 = m_Memory->coprocessorReadU32(t & ~3UL);
+				// assert(memrd32 != 0xCDCDCDCD);
+				// memrdt = t;
 				break;
 			}
+			assert(_t != 0xCDCDCDCD);
 			t = _t;
 			break;
 		}
@@ -1041,7 +1068,7 @@ void Coprocessor::execute()
 		history[t0].rsp = rsp;
 		if (pc > 16383) {
 			FTEMU_printf("PC escape\n");
-			for (size_t i = ((t0 + 1) & HMASK); i != t0; i = (i + 1) & HMASK)
+			for (ptrdiff_t i = ((t0 + 1) & HMASK); i != t0; i = (i + 1) & HMASK)
 				FTEMU_printf("%04X rsp=%d\n", history[i].pc, history[i].rsp);
 			FTEMU_printf("Final PC %04X rsp=%d\n", pc, rsp);
 		}

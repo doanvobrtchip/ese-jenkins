@@ -3,10 +3,15 @@ Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 #ifdef FT800EMU_PYTHON
 #include <Python.h>
 #endif /* FT800EMU_PYTHON */
 #include "main_window.h"
+#include "version.h"
 #include "Windows.h"
 
 // STL includes
@@ -55,14 +60,15 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QElapsedTimer>
 #include <QPushButton>
 #include <QTextStream>
+#include <QFileDialog>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
 #ifdef WIN32
-#	undef min
-#	undef max
+#undef min
+#undef max
 #endif
 
 // Project includes
@@ -80,19 +86,52 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_common.h"
 #include "constant_mapping_flash.h"
 
-namespace FTEDITOR {
+namespace FTEDITOR
+{
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
 
-#define FTEDITOR_DEBUG_EMUWRITE 0
-#define EMULATOR_DLL_NAME       "bt8xxemu.dll"
-
 typedef int32_t ramaddr;
 
-volatile int s_HSize = 480;
-volatile int s_VSize = 272;
-volatile int s_Rotate = 0;
+extern volatile int g_HSize;
+extern volatile int g_VSize;
+extern volatile int g_Rotate;
+
+extern volatile bool g_EmulatorRunning;
+
+extern ContentManager *g_ContentManager;
+
+extern DlEditor *g_DlEditor;
+extern DlEditor *g_CmdEditor;
+extern DlEditor *g_Macro;
+
+extern int g_UtilizationDisplayListCmd;
+extern volatile bool g_WaitingCoprocessorAnimation;
+
+extern int *g_DisplayListCoprocessorCommandRead;
+
+extern int g_StepCmdLimit;
+
+extern volatile bool g_CoprocessorFaultOccured;
+extern volatile bool g_CoprocessorFrameSuccess;
+extern char g_CoprocessorDiagnostic[128 + 4];
+extern bool g_StreamingData;
+
+extern bool g_WarnMissingClear;
+extern bool g_WarnMissingClearActive;
+
+extern bool g_WarnMissingTestcardDLStart;
+extern bool g_WarnMissingTestcardDLStartActive;
+
+extern volatile bool g_ShowCoprocessorBusy;
+
+QString g_ApplicationDataDir;
+
+void cleanupMediaFifo();
+void emuMain(BT8XXEMU_Emulator *sender, void *context);
+void closeDummy(BT8XXEMU_Emulator *sender, void *context);
+void resetemu();
 
 static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	3, // FT800
@@ -102,7 +141,9 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT812
 	5, // FT813
 	5, // BT815
-    5, // BT816
+	5, // BT816
+	5, // BT817
+	5, // BT818
 };
 
 static const char *s_StandardResolutions[] = {
@@ -129,1433 +170,93 @@ static const int s_StandardHeights[] = {
 	600,
 };
 
-static volatile bool s_EmulatorRunning = false;
-
-void getVersionString(QString fName, QString &fileDescription, QString &fileVersion)
-{
-    // first of all, GetFileVersionInfoSize
-    DWORD dwHandle;
-    DWORD dwLen = GetFileVersionInfoSize((LPCTSTR)fName.toStdString().data(), &dwHandle);
-
-    LPVOID *lpData = new LPVOID[dwLen];
-    if (!GetFileVersionInfo((LPCTSTR)fName.toStdString().data(), dwHandle, dwLen, lpData))
-    {
-        delete[] lpData;
-        return;
-    }
-   
-    char *lpBuffer = NULL;
-    UINT uLen;
-
-    // language ID 040904E4: U.S. English, char set = Windows, Multilingual
-    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileDescription", (LPVOID*)&lpBuffer, &uLen);
-    fileDescription = lpBuffer;
-
-    VerQueryValue(lpData, (LPCTSTR)"\\StringFileInfo\\040904E4\\FileVersion", (LPVOID*)&lpBuffer, &uLen);
-    fileVersion = lpBuffer;
-    
-    delete[] lpData;
-}
-
-void swrbegin(ramaddr address)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swrbegin(%i)\n", (int)address);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (2 << 6) | ((address >> 16) & 0x3F));
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	// BT8XXEMU_transfer(0x00);
-}
-
-void swr8(uint8_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr8(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value);
-}
-
-void swr16(uint16_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr16(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 8) & 0xFF);
-}
-
-void swr32(uint32_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swr32(%i)\n", (int)value);
-#endif
-
-	BT8XXEMU_transfer(g_Emulator, value & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 16) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, (value >> 24) & 0xFF);
-}
-
-void swrend()
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("swrend()\n");
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-}
-
-void wr8(ramaddr address, uint8_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr8(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr8(value);
-	swrend();
-}
-
-void wr16(ramaddr address, uint16_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr16(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr16(value);
-	swrend();
-}
-
-void wr32(ramaddr address, uint32_t value)
-{
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("wr32(%i, %i)\n", (int)address, (int)value);
-#endif
-
-	swrbegin(address);
-	swr32(value);
-	swrend();
-}
-
-uint16_t rd16(size_t address)
-{
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, 0x00);
-
-	uint16_t value;
-	value = BT8XXEMU_transfer(g_Emulator, 0);
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
-
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("rd16(%i), %i\n", (int)address, (int)value);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-	return value;
-}
-
-uint32_t rd32(size_t address)
-{
-
-	BT8XXEMU_chipSelect(g_Emulator, 1);
-
-	BT8XXEMU_transfer(g_Emulator, (address >> 16) & 0x3F);
-	BT8XXEMU_transfer(g_Emulator, (address >> 8) & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, address & 0xFF);
-	BT8XXEMU_transfer(g_Emulator, 0x00);
-
-	uint32_t value;
-	value = BT8XXEMU_transfer(g_Emulator, 0);
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 8;
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 16;
-	value |= BT8XXEMU_transfer(g_Emulator, 0) << 24;
-
-#if FTEDITOR_DEBUG_EMUWRITE
-	printf("rd32(%i), %i\n", (int)address, (int)value);
-#endif
-
-	BT8XXEMU_chipSelect(g_Emulator, 0);
-	return value;
-}
-
-static DlEditor *s_DlEditor = NULL;
-static DlEditor *s_CmdEditor = NULL;
-static DlEditor *s_Macro = NULL;
-// static FILE *s_F = NULL;
-
-void closeDummy(BT8XXEMU_Emulator *sender, void *context)
-{
-	// no-op
-	// NOTE: Used to avoid loop thread kill
-}
-
-void setup()
-{
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), 480);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), 272);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PCLK), 5);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_MASK), 0xFF); // INT_CMDEMPTY);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_EN), 1);
-}
-
-// Content manager
-static ContentManager *s_ContentManager = NULL;
-//static BitmapSetup *s_BitmapSetup = NULL;
-//static int s_BitmapSetupModNb = 0;
-
-// Utilization
-static int s_UtilizationDisplayListCmd = 0;
-static volatile bool s_WaitingCoprocessorAnimation = false;
-
-// Array indexed by display list index containing coprocessor line which wrote the display list command
-static int s_DisplayListCoprocessorCommandA[FTEDITOR_DL_SIZE];
-static int s_DisplayListCoprocessorCommandB[FTEDITOR_DL_SIZE];
-static int *s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
-
-static std::vector<uint32_t> s_CmdParamCache;
-static std::vector<std::string> s_CmdStrParamCache;
-
-int g_StepCmdLimit = 0;
-static int s_StepCmdLimitCurrent = 0;
-
-static int s_MediaFifoPtr = 0;
-static int s_MediaFifoSize = 0;
-static QFile *s_MediaFifoFile = NULL;
-static QDataStream *s_MediaFifoStream = NULL;
-
-static volatile bool s_CoprocessorFaultOccured = false;
-static volatile bool s_CoprocessorFrameSuccess = false;
-static char s_CoprocessorDiagnostic[128 + 4] = { 0 };
-static bool s_StreamingData = false;
-
-static bool s_WarnMissingClear = false;
-static bool s_WarnMissingClearActive = false;
-
-static bool displayListSwapped = false;
-static bool coprocessorSwapped = false;
-
-static bool s_WantReloopCmd = false;
-
-QElapsedTimer s_AbortTimer;
-
-static volatile bool s_ShowCoprocessorBusy = true;
-
-void cleanupMediaFifo()
-{
-	delete s_MediaFifoStream;
-	s_MediaFifoStream = NULL;
-	delete s_MediaFifoFile;
-	s_MediaFifoFile = NULL;
-}
-
-void resetemu()
-{
-	s_UtilizationDisplayListCmd = 0;
-	s_WaitingCoprocessorAnimation = false;
-	s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-	s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
-	s_CmdParamCache.clear();
-	g_StepCmdLimit = 0;
-	s_StepCmdLimitCurrent = 0;
-	s_CoprocessorFaultOccured = false;
-	s_WarnMissingClear = false;
-	s_WarnMissingClearActive = false;
-	displayListSwapped = false;
-	coprocessorSwapped = false;
-	s_WantReloopCmd = false;
-	s_MediaFifoPtr = 0;
-	s_MediaFifoSize = 0;
-	cleanupMediaFifo();
-}
-
-bool hasOTP()
-{
-	return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816;
-}
-
-void resetCoprocessorFromLoop()
-{
-	printf("Reset coprocessor from loop\n");
-
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
-	uint16_t videoPatchVector;
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		videoPatchVector = rd16(0x309162);
-
-	// Enter reset state
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 1);
-	QThread::msleep(10); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	// Leave reset
-	if (hasOTP())
-	{
-		// Enable patched rom in case cmd_logo was running
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROMSUB_SEL), 3);
-	}
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ), 0);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-	for (int i = 0; i < 4096; i += 4)
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + i, CMD_STOP);
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CPURESET), 0);
-	// Stop playing audio in case video with audio was playing during reset
-	wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAYBACK_PLAY), 0);
-
-	QThread::msleep(100); // Timing hack because we don't lock CPURESET flag at the moment with coproc thread
-	if (hasOTP())
-	{
-		// Go back into the patched coprocessor main loop
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_EXECUTE);
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0x7ffe);
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 0);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 12);
-		QThread::msleep(10); // Timing hack because it's not checked when the coprocessor finished processing the CMD_EXECUTE
-		// Need to manually stop previous command from repeating infinitely
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 0);
-		QThread::msleep(100);
-	}
-
-	// BT81X video patch, see ftdichipsg/FT8XXEMU#76
-	if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
-		wr16(0x309162, videoPatchVector);
-
-	// Start display list from beginning
-	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
-
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-	{
-		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, CMD_FLASHATTACH);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
-	}
-	else
-	{
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
-	}
-}
-
-// static int s_SwapCount = 0;
-void loop()
-{
-	if (!s_EmulatorRunning)
-	{
-		QThread::yieldCurrentThread();
-		return;
-	}
-
-	if (BT8XXEMU_hasInterrupt(g_Emulator))
-	{
-		uint32_t flags = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_INT_FLAGS));
-		// printf("INTERRUPT %i\n", flags);
-		if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF)
-		{
-			s_CoprocessorFaultOccured = true;
-			if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-			{
-				uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-				memcpy(s_CoprocessorDiagnostic, (char *)&ram[0x309800], 128);
-				s_CoprocessorDiagnostic[128] = '\0';
-				printf("COPROCESSOR FAULT: '%s'\n", s_CoprocessorDiagnostic);
-			}
-			else
-			{
-				s_CoprocessorDiagnostic[0] = '\0';
-				printf("COPROCESSOR FAULT\n");
-			}
-			resetCoprocessorFromLoop();
-		}
-	}
-
-	s_ShowCoprocessorBusy = false;
-
-	// wait
-	if (coprocessorSwapped)
-	{
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE)) != rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)))
-		{
-			if (!s_EmulatorRunning) return;
-			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-		}
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_DL)) != 0)
-		{
-			if (!s_EmulatorRunning) return;
-			if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) return;
-		}
-		coprocessorSwapped = false;
-		// ++s_SwapCount;
-		// printf("Swapped CMD %i\n", s_SwapCount);
-	}
-	else if (displayListSwapped)
-	{
-		while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP)) != DLSWAP_DONE)
-		{
-			if (!s_EmulatorRunning) return;
-		}
-		displayListSwapped = false;
-		// ++s_SwapCount;
-		// printf("Swapped DL %i\n", s_SwapCount);
-	}
-	else
-	{
-		QThread::msleep(10);
-	}
-
-	if (!s_EmulatorRunning)
-		return;
-
-	s_ContentManager->lockContent();
-	if (g_Flash)
-	{
-		std::set<ContentInfo *> contentInfoFlash;
-		s_ContentManager->swapUploadFlashDirty(contentInfoFlash);
-		size_t flashSize = BT8XXEMU_Flash_size(g_Flash);
-		for (std::set<ContentInfo *>::iterator it(contentInfoFlash.begin()), end(contentInfoFlash.end()); it != end; ++it)
-		{
-			ContentInfo *info = (*it);
-			int loadAddr = info->FlashAddress; // (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
-			if (loadAddr < FTEDITOR_FLASH_FIRMWARE_SIZE)
-			{
-				// Safety to avoid breaking functionality, never allow overriding the provided firmware from the content manager
-				printf("[Flash] Error: Load address not permitted for '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
-				continue;
-			}
-			bool dataCompressed = (info->Converter != ContentInfo::ImageCoprocessor && info->Converter != ContentInfo::FlashMap)
-				? info->DataCompressed : false;
-			QString fileName = info->DestName + (dataCompressed ? ".bin" : ".raw");
-			printf("[Flash] Load: '%s' to '%i'\n", fileName.toLocal8Bit().constData(), loadAddr);
-			QFile binFile(fileName);
-			if (!binFile.exists())
-			{
-				printf("[Flash] Error: File '%s' does not exist\n", fileName.toLocal8Bit().constData());
-				continue;
-			}
-			int binSize = binFile.size();
-			if (binSize + loadAddr > flashSize)
-			{
-				printf("[Flash] Error: File of size '%i' exceeds flash size\n", binSize);
-				continue;
-			}
-			; {
-				binFile.open(QIODevice::ReadOnly);
-				QDataStream in(&binFile);
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_Flash_data(g_Flash)));
-				int s = in.readRawData(&ram[loadAddr], binSize);
-				BT8XXEMU_poke(g_Emulator);
-                binFile.close();
-			}
-		}
-	}
-	std::set<ContentInfo *> contentInfoMemory;
-	s_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
-	bool reuploadFontSetup = false;
-	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
-	{
-		ContentInfo *info = (*it);
-		int loadAddr = (info->Converter == ContentInfo::Image) ? info->bitmapAddress() : info->MemoryAddress;
-		QString fileName = info->DestName + ".raw";
-		printf("[RAM_G] Load: '%s' to '%i'\n", info->DestName.toLocal8Bit().data(), loadAddr);
-		QFile binFile(fileName);
-		if (!binFile.exists())
-		{
-			printf("[RAM_G] Error: File '%s' does not exist\n", fileName.toLocal8Bit().data());
-			continue;
-		}
-		bool imageCoprocessor = (info->Converter == ContentInfo::ImageCoprocessor);
-		int binSize = imageCoprocessor ? info->CachedMemorySize : binFile.size();
-		if (binSize + loadAddr > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END))
-		{
-			printf("[RAM_G] Error: File of size '%i' exceeds RAM_G size\n", binSize);
-			continue;
-		}
-		if (imageCoprocessor) // Load image through coprocessor
-		{
-			int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-			int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-			int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-			int freespace = ((4096 - 4) - fullness);
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			swr32(CMD_LOADIMAGE);
-			swr32(loadAddr);
-			swr32(OPT_NODL | (info->ImageMono ? OPT_MONO : 0));
-			swrend();
-			fullness += 12;
-			freespace -= 12;
-			wp += 12;
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			int fileSize = binFile.size();
-			binFile.open(QIODevice::ReadOnly);
-			QDataStream in(&binFile);
-			int writeCount = 0;
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			for (;;)
-			{
-				if (freespace < (4 + 8) || writeCount < 128)
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF)
-						{
-							printf("Error during stream at %i bytes\n", (int)writeCount);
-							return;
-						}
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-					} while (fullness > 1024);
-					freespace = ((4096 - 4) - fullness);
-					printf("Stream: %i bytes\n", (int)writeCount);
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-				uint32_t buffer;
-				int nb = in.readRawData(reinterpret_cast<char *>(&buffer), 4);
-				if (nb > 0)
-				{
-					// write
-					writeCount += nb;
-					wp += 4;
-					freespace -= 4;
-					swr32(buffer);
-				}
-				if (nb != 4)
-				{
-					// done
-					printf("Stream finished: %i bytes\n", (int)writeCount);
-					if (writeCount == 0)
-					{
-						swrend();
-						resetCoprocessorFromLoop();
-						return;
-					}
-					break;
-				}
-				if (!s_EmulatorRunning)
-				{
-					swrend();
-					return;
-				}
-			}
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-			continue;
-		}
-		// ok
-		; {
-			binFile.open(QIODevice::ReadOnly);
-			QDataStream in(&binFile);
-			/*swrbegin(info->MemoryAddress);
-			char b;
-			while (in.readRawData(&b, 1))
-			{
-				swr8(b);
-			}
-			swrend();*/
-			char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
-			BT8XXEMU_poke(g_Emulator);
-		}
-		if (info->Converter == ContentInfo::Font)
-		{
-			// Write bitmap address
-			wr32(loadAddr + 144, loadAddr + 148);
-		}
-		if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_FT810)
-		{
-			if (info->Converter == ContentInfo::Image && info->ImageFormat == PALETTED)
-			{
-				QString palName = info->DestName + ".lut.raw";
-				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
-				QFile palFile(palName);
-				if (!palFile.exists())
-				{
-					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
-					continue;
-				}
-				int palSize = (int)palFile.size();
-				if (palSize != 1024)
-				{
-					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-					continue;
-				}
-				// ok
-				{
-					palFile.open(QIODevice::ReadOnly);
-					QDataStream in(&palFile);
-					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
-					BT8XXEMU_poke(g_Emulator);
-				}
-			}
-		}
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-		{
-			if (info->Converter == ContentInfo::Image && (info->ImageFormat == PALETTED8 || info->ImageFormat == PALETTED565 || info->ImageFormat == PALETTED4444))
-			{
-				int palSize;
-				switch (info->ImageFormat)
-				{
-				case PALETTED565:
-				case PALETTED4444:
-					palSize = 256 * 2;
-					break;
-				default:
-					palSize = 256 * 4;
-					break;
-				}
-				QString palName = info->DestName + ".lut.raw";
-				printf("[RAM_PAL] Load: '%s'\n", info->DestName.toLocal8Bit().data());
-				QFile palFile(palName);
-				if (!palFile.exists())
-				{
-					printf("[RAM_PAL] Error: File '%s' does not exist\n", palName.toLocal8Bit().data());
-					continue;
-				}
-				if (palSize != (int)palFile.size())
-				{
-					printf("[RAM_PAL] Error: File of size '%i' not equal to palSize\n", palSize);
-					continue;
-				}
-				// ok
-				{
-					palFile.open(QIODevice::ReadOnly);
-					QDataStream in(&palFile);
-					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-					int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], palSize);
-					BT8XXEMU_poke(g_Emulator);
-				}
-			}
-		}
-		/*if (info->Converter == ContentInfo::Font)
-		{*/ // Always reupload, since raw data may change too
-			reuploadFontSetup = true;
-		/*}*/
-	}
-	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
-	if (reuploadBitmapSetup)
-	{
-		printf("Reupload bitmap setup to RAM_DL\n");
-		wr32(REG_PCLK, 0);
-		swrbegin(RAM_DL);
-		const FT800EMU::BitmapInfo *bitmapInfo = s_BitmapSetup->getBitmapInfos();
-		const ContentInfo *const *bitmapSources = s_BitmapSetup->getBitmapSources();
-		for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
-		{
-			const ContentInfo *info = bitmapSources[i];
-			if (info && s_BitmapSetup->bitmapSourceExists(i))
-			{
-				swr32(BITMAP_HANDLE(i));
-				// printf("%i\n", i);
-				swr32(BITMAP_SOURCE(info->MemoryAddress));
-				// printf("%i, %i, %i\n", info->ImageFormat, info->CachedImageStride, info->CachedImageHeight);
-				if (info->Converter == ContentInfo::Image) // Always use cached data from content info for image layout
-					swr32(BITMAP_LAYOUT(info->ImageFormat, info->CachedImageStride, info->CachedImageHeight));
-				else
-					swr32(BITMAP_LAYOUT(bitmapInfo[i].LayoutFormat, bitmapInfo[i].LayoutStride, bitmapInfo[i].LayoutHeight));
-				swr32(BITMAP_SIZE(bitmapInfo[i].SizeFilter, bitmapInfo[i].SizeWrapX, bitmapInfo[i].SizeWrapY, bitmapInfo[i].SizeWidth, bitmapInfo[i].SizeHeight));
-			}
-		}
-		swrend();
-		wr32(REG_DLSWAP, DLSWAP_FRAME);
-		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
-		{
-			printf("Waiting for bitmap setup DL swap\n");
-			if (!s_EmulatorRunning) return;
-		}
-		wr32(REG_PCLK, 5);
-		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
-	}*/
-	s_ContentManager->unlockContent();
-
-	// switch to next resolution
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)) != s_HSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), s_HSize);
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != s_VSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), s_VSize);
-	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != s_Rotate)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), s_Rotate);
-	// switch to next macro list
-	s_Macro->lockDisplayList();
-	bool macroModified = s_Macro->isDisplayListModified();
-	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
-	// {
-		if (s_Macro->getDisplayListParsed()[0].ValidId
-			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0)) != s_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0), s_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
-		if (s_Macro->getDisplayListParsed()[1].ValidId
-			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1)) != s_Macro->getDisplayList()[1])
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1), s_Macro->getDisplayList()[1]);
-	// }
-	s_Macro->unlockDisplayList();
-	// switch to next display list
-	s_DlEditor->lockDisplayList();
-	s_CmdEditor->lockDisplayList();
-	bool dlModified = s_DlEditor->isDisplayListModified();
-	bool cmdModified = s_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
-	{
-		bool warnMissingClear = true;
-		s_WantReloopCmd = false;
-		s_StepCmdLimitCurrent = g_StepCmdLimit;
-		// if (dlModified) printf("dl modified\n");
-		// if (cmdModified) printf("cmd modified\n");
-		uint32_t *displayList = s_DlEditor->getDisplayList();
-		swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL));
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-		{
-			// printf("dl %i: %i\n", i, displayList[i]);
-			if ((displayList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
-				warnMissingClear = false;
-			swr32(displayList[i]);
-		}
-		swrend();
-		// wr32(REG_DLSWAP, DLSWAP_FRAME);
-		// displayListSwapped = true;
-		s_DlEditor->unlockDisplayList();
-
-		uint32_t cmdList[FTEDITOR_DL_SIZE];
-		// DlParsed cmdParsed[FTEDITOR_DL_SIZE];
-		s_CmdParamCache.clear();
-		s_CmdStrParamCache.clear();
-		int strParamRead = 0;
-		int cmdParamCache[FTEDITOR_DL_SIZE + 1];
-		bool cmdValid[FTEDITOR_DL_SIZE];
-		uint32_t *cmdListPtr = s_CmdEditor->getDisplayList();
-		const DlParsed *cmdParsedPtr = s_CmdEditor->getDisplayListParsed();
-		// Make local copy, necessary in case of blocking commands
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-		{
-			cmdList[i] = cmdListPtr[i];
-			// cmdParsed[i] = cmdParsedPtr[i];
-			cmdParamCache[i] = (int)s_CmdParamCache.size();
-			DlParser::compile(FTEDITOR_CURRENT_DEVICE, s_CmdParamCache, cmdParsedPtr[i]);
-			cmdValid[i] = cmdParsedPtr[i].ValidId;
-			if (cmdValid[i])
-			{
-				switch (cmdList[i])
-				{
-				case CMD_LOADIMAGE:
-				case CMD_PLAYVIDEO:
-					s_CmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
-					break;
-				}
-				if ((cmdList[i] & ~(CLEAR(0, 0, 0) ^ CLEAR(1, 1, 1))) == CLEAR(0, 0, 0))
-					warnMissingClear = false;
-			}
-		}
-		cmdParamCache[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
-		s_CmdEditor->unlockDisplayList();
-		s_WarnMissingClear = warnMissingClear;
-
-		s_ShowCoprocessorBusy = true;
-		bool validCmd = false;
-		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
-		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
-		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-		// printf("fullness: %i\n", fullness); // should be 0 always (ok)
-		int freespace = ((4096 - 4) - fullness);
-		BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-		swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-		swr32(CMD_COLDSTART);
-		wp += 4;
-		freespace -= 4;
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-		{
-			swr32(CMD_FLASHATTACH);
-			swr32(CMD_FLASHFAST);
-			swr32(~0); // result
-			wp += 12;
-			freespace -= 12;
-		}
-		s_MediaFifoPtr = 0;
-		s_MediaFifoSize = 0;
-		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
-		{
-			// const DlParsed &pa = cmdParsed[i];
-			// Skip invalid lines (invalid id)
-			if (!cmdValid[i]) continue;
-			bool useMediaFifo = false;
-			bool useFlash = false;
-			const char *useFileStream = NULL;
-			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
-			{
-				s_MediaFifoPtr = s_CmdParamCache[cmdParamCache[i]];
-				s_MediaFifoSize = s_CmdParamCache[cmdParamCache[i] + 1];
-			}
-			else if (cmdList[i] == CMD_LOADIMAGE)
-			{
-				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_FLASH);
-				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
-				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
-					&& (s_CmdParamCache[cmdParamCache[i] + 1] & OPT_MEDIAFIFO);
-			}
-			else if (cmdList[i] == CMD_PLAYVIDEO)
-			{
-				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-					&& (s_CmdParamCache[cmdParamCache[i]] & OPT_FLASH);
-				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
-				++strParamRead;
-				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-					&& ((s_CmdParamCache[cmdParamCache[i]] & OPT_MEDIAFIFO) == OPT_MEDIAFIFO);
-			}
-			else if (cmdList[i] == CMD_SNAPSHOT)
-			{
-				// Validate snapshot address range
-				uint32_t addr = s_CmdParamCache[cmdParamCache[i]];
-				uint32_t ramGEnd = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
-				uint32_t imgSize = (s_VSize * s_HSize) * 2;
-				if (addr + imgSize > ramGEnd)
-				{
-					printf("Dropping CMD_SNAPSHOT, out of memory range\n");
-					continue;
-				}
-			}
-			if (useFileStream)
-			{
-				if (!QFileInfo(useFileStream).exists())
-					continue;
-			}
-			validCmd = true;
-			int paramNb = cmdParamCache[i + 1] - cmdParamCache[i];
-			int cmdLen = 4 + (paramNb * 4);
-			if (freespace < (cmdLen + 8)) // Wait for coprocessor ready, + 4 for swap and display afterwards
-			{
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				do
-				{
-					if (!s_EmulatorRunning) return;
-					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-					if ((rp & 0xFFF) == 0xFFF) return;
-					fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-				} while (fullness != 0);
-				freespace = ((4096 - 4) - fullness);
-
-				int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-				{
-					if (cpWrite[i] >= 0)
-					{
-						// printf("A %i\n", i);
-						s_DisplayListCoprocessorCommandWrite[i]
-							= coprocessorWrites[cpWrite[i]];
-					}
-				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			}
-			int wpn = 0;
-			coprocessorWrites[(wp & 0xFFF) >> 2] = i;
-			swr32(cmdList[i]);
-			// printf("cmd %i", cmdList[i]);
-			for (int j = cmdParamCache[i]; j < cmdParamCache[i + 1]; ++j)
-			{
-				++wpn;
-				// printf("; param %i", s_CmdParamCache[j]);
-				coprocessorWrites[((wp >> 2) + wpn) & 0x3FF] = i;
-				swr32(s_CmdParamCache[j]);
-			}
-			// printf("\n");
-			wp += cmdLen;
-			freespace -= cmdLen;
-			// Handle special cases
-			if (cmdList[i] == CMD_LOGO)
-			{
-				printf("Waiting for CMD_LOGO...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				printf("WP = %i\n", wp);
-				QThread::msleep(100);
-
-				do
-				{
-					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-					wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rp & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				} while (rp || wp);
-				wp = 0;
-				rp = 0;
-				fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-				freespace = ((4096 - 4) - fullness);
-
-				int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-				for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-				{
-					if (cpWrite[i] >= 0)
-					{
-						// printf("D %i\n", i);
-						s_DisplayListCoprocessorCommandWrite[i]
-							= coprocessorWrites[cpWrite[i]];
-					}
-				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-				if (wp == 0) printf("WP 0\n");
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				if (wp == 8) printf("WP 8\n");
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				s_WantReloopCmd = true;
-				printf("Finished CMD_LOGO\n");
-			}
-			else if (cmdList[i] == CMD_CALIBRATE)
-			{
-				printf("Waiting for CMD_CALIBRATE...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				s_WantReloopCmd = true;
-				printf("Finished CMD_CALIBRATE\n");
-			}
-			else if ((cmdList[i] == CMD_PLAYVIDEO) && useFlash)
-			{
-				printf("Waiting for CMD_PLAYVIDEO...\n");
-				s_WaitingCoprocessorAnimation = true;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { printf("Abort wait, restarting\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				printf("Waiting for CMD_COLDSTART...\n");
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				swr32(CMD_DLSTART);
-				swr32(CMD_COLDSTART);
-				wp += 8;
-				freespace -= 8;
-				s_MediaFifoPtr = 0;
-				s_MediaFifoSize = 0;
-				swrend();
-				wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-				while (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) != (wp & 0xFFF))
-				{
-					if (!s_EmulatorRunning) { s_WaitingCoprocessorAnimation = false; return; }
-					if ((rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ)) & 0xFFF) == 0xFFF) { printf("Wait fault 2\n"); s_WaitingCoprocessorAnimation = false; return; }
-					if (s_CmdEditor->isDisplayListModified()) { printf("Abort wait, modified\n"); s_WantReloopCmd = true; resetCoprocessorFromLoop(); s_WaitingCoprocessorAnimation = false; return; }
-				}
-				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				s_WaitingCoprocessorAnimation = false;
-				printf("Finished CMD_PLAYVIDEO\n");
-			}
-			if (useFileStream)
-			{
-				printf("Flush before stream\n");
-				if (true) // Flush first
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF) return;
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-						{
-							printf("Abort coprocessor flush (793)\n");
-							s_WantReloopCmd = true;
-							resetCoprocessorFromLoop();
-							return;
-						}
-					} while (fullness > cmdLen); // Ok to keep streaming command in
-					freespace = ((4096 - 4) - fullness);
-
-					int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-					{
-						if (cpWrite[i] >= 0)
-						{
-							// printf("A %i\n", i);
-							s_DisplayListCoprocessorCommandWrite[i]
-								= coprocessorWrites[cpWrite[i]];
-						}
-					}
-					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-				if (useMediaFifo)
-				{
-					if (s_MediaFifoSize)
-					{
-						swrend();
-
-						cleanupMediaFifo();
-						s_MediaFifoFile = new QFile(useFileStream);
-						s_MediaFifoFile->open(QIODevice::ReadOnly);
-						s_MediaFifoStream = new QDataStream(s_MediaFifoFile);
-
-						s_StreamingData = true;
-						printf("Streaming into media fifo\n");
-						int writeCount = 0;
-						QDataStream &mfstream = *s_MediaFifoStream;
-						ramaddr mfptr = s_MediaFifoPtr;
-						ramaddr mfsz = s_MediaFifoSize;
-						ramaddr mfwp;
-						ramaddr mfrp;
-						ramaddr mffree;
-#define mfwprd() mfwp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE)) /*- mfptr*/) % mfsz;
-#define mfwpinc(v) { mfwp += v; mffree -= v; mfwp %= mfsz; }
-#define mfwpwr() wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_WRITE), mfwp /*+ mfptr*/);
-#define mffreespace ((mfrp > mfwp) ? (mfrp - mfwp - 4) : (mfrp + s_MediaFifoSize - mfwp - 4))
-#define mfrprd() { mfrp = (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MEDIAFIFO_READ)) /*- mfptr*/) % mfsz; mffree = mffreespace; }
-						mfwprd();
-						mfrprd();
-
-						printf("Media fifo write start at %x (%i)\n", mfptr + mfwp, mfwp);
-						printf("Media fifo read start at %x (%i)\n", mfptr + mfrp, mfrp);
-						printf("Media fifo freespace start at %i\n", mffree);
-
-						swrbegin(mfptr + mfwp);
-						for (;;)
-						{
-							if (mffree < 4)
-							{
-								swrend();
-
-								printf("Media fifo stream: %i bytes\n", (int)writeCount);
-
-								mfwpwr();
-								printf("Media fifo write at %x (%i)\n", mfptr + mfwp, mfwp);
-								printf("Media fifo read at %x (%i)\n", mfptr + mfrp, mfrp);
-								printf("Media fifo freespace at %i\n", mffree);
-								do
-								{
-									if (!s_EmulatorRunning) return;
-									ramaddr rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-									if ((rp & 0xFFF) == 0xFFF) return;
-									mfrprd();
-
-									if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-									{
-										printf("Abort media fifo flush (871)\n");
-										s_WantReloopCmd = true;
-										resetCoprocessorFromLoop();
-										return;
-									}
-								} while (mffree < (mfsz >> 1));
-
-								swrbegin(mfptr + mfwp);
-							}
-
-							uint32_t buffer;
-							int nb = mfstream.readRawData(reinterpret_cast<char *>(&buffer), 4);
-							if (nb > 0)
-							{
-								// write
-								swr32(buffer);
-								writeCount += nb;
-								mfwpinc(4);
-
-								if (mfwp == 0)
-								{
-									swrend();
-									swrbegin(mfptr + mfwp);
-								}
-							}
-							if (nb != 4)
-							{
-								// done
-								swrend();
-								mfrprd();
-								mfwpwr();
-								printf("Media fifo stream finished: %i bytes\n", (int)writeCount);
-								printf("Media fifo write end at %x (%i)\n", mfptr + mfwp, mfwp);
-								printf("Media fifo read end at %x (%i)\n", mfptr + mfrp, mfrp);
-								printf("Media fifo freespace end at %i\n", mffree);
-								if (writeCount == 0)
-								{
-									resetCoprocessorFromLoop();
-									return;
-								}
-								break;
-							}
-							if (!s_EmulatorRunning)
-							{
-								swrend();
-								return;
-							}
-							if (s_CmdEditor->isDisplayListModified())
-							{
-								s_WantReloopCmd = true;
-								swrend();
-								resetCoprocessorFromLoop();
-								return;
-							}
-						}
-						s_StreamingData = false;
-						printf("Media fifo finished\n");
-
-#undef mfrprd
-#undef mfwprd
-#undef mfwpinc
-#undef mfwpwr
-#undef mffreespace
-
-						swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-					}
-					else
-					{
-						printf("Media fifo not setup\n");
-						swrend();
-						resetCoprocessorFromLoop();
-						return;
-					}
-				}
-				else
-				{
-					s_StreamingData = true;
-					printf("Streaming in file '%s'...\n", useFileStream); // NOTE: abort on edit by reset
-					QFile cmdFile(useFileStream);
-					printf("File size: %i\n", (int)cmdFile.size());
-					cmdFile.open(QIODevice::ReadOnly);
-					QDataStream cmdStream(&cmdFile);
-					int writeCount = 0;
-					
-					for (;;)
-					{
-						if (freespace < (4 + 8) || writeCount < 128) // Wait for coprocessor free space, + 4 for swap and display afterwards
-						{
-							// COPY PASTE FROM ABOVE
-							
-							swrend();
-							wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-							do
-							{
-								if (!s_EmulatorRunning) return;
-								rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-								if ((rp & 0xFFF) == 0xFFF)
-								{
-									printf("Error during stream at %i bytes\n", (int)writeCount);
-									return; // DIFFER FROM ABOVE HERE
-								}
-								fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-								if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-								{
-									printf("Abort streaming flush (976)\n");
-									s_WantReloopCmd = true;
-									resetCoprocessorFromLoop();
-									return;
-								}
-							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
-							freespace = ((4096 - 4) - fullness);
-
-							int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-							for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-							{
-								if (cpWrite[i] >= 0)
-								{
-									// printf("A %i\n", i);
-									s_DisplayListCoprocessorCommandWrite[i]
-										= coprocessorWrites[cpWrite[i]];
-								}
-							}
-							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-							BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-							printf("Stream: %i bytes\n", (int)writeCount);
-
-							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-						}
-						
-						uint32_t buffer;
-						int nb = cmdStream.readRawData(reinterpret_cast<char *>(&buffer), 4);
-						if (nb > 0)
-						{
-							// write
-							coprocessorWrites[(wp >> 2) & 0x3FF] = i;
-							writeCount += nb;
-							wp += 4;
-							freespace -= 4;
-							swr32(buffer);
-						}
-						if (nb != 4)
-						{
-							// done
-							printf("Stream finished: %i bytes\n", (int)writeCount);
-							if (writeCount == 0)
-							{
-								swrend();
-								resetCoprocessorFromLoop();
-								return;
-							}
-							break;
-						}
-						if (!s_EmulatorRunning)
-						{
-							swrend();
-							return;
-						}
-						if (s_CmdEditor->isDisplayListModified())
-						{
-							s_WantReloopCmd = true;
-							swrend();
-							resetCoprocessorFromLoop();
-							return;
-						}
-					}
-					printf("Finished streaming in file\n");
-					s_StreamingData = false;
-				}
-
-				printf("Flush after stream\n");
-				if (true) // Flush after
-				{
-					swrend();
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-					do
-					{
-						if (!s_EmulatorRunning) return;
-						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-						if ((rp & 0xFFF) == 0xFFF) return;
-						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
-						if (s_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
-						{
-							printf("Abort coprocessor flush (1056)\n");
-							s_WantReloopCmd = true;
-							resetCoprocessorFromLoop();
-							return;
-						}
-					} while (fullness > 0); // Want completely empty
-					freespace = ((4096 - 4) - fullness);
-
-					int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-					for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-					{
-						if (cpWrite[i] >= 0)
-						{
-							// printf("A %i\n", i);
-							s_DisplayListCoprocessorCommandWrite[i]
-								= coprocessorWrites[cpWrite[i]];
-						}
-					}
-					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-				}
-			}
-		}
-
-		if (validCmd)
-		{
-			swr32(DISPLAY());
-			swr32(CMD_SWAP);
-			wp += 8;
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			// Finish all processing
-			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-			s_AbortTimer.start();
-			while ((wp & 0xFFF) != rpl)
-			{
-				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
-				if (!s_EmulatorRunning) return;
-				if ((rpl & 0xFFF) == 0xFFF) return;
-
-				if (s_CmdEditor->isDisplayListModified() || s_WantReloopCmd) // Trap to avoid infinite flush on errors
-				{
-					s_WantReloopCmd = true;
-					if (s_AbortTimer.elapsed() > 1000)
-					{
-						printf("Abort coprocessor flush (1100)\n");
-						resetCoprocessorFromLoop();
-						return;
-					}
-				}
-			}
-			int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
-			for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-			{
-				if (cpWrite[i] >= 0)
-				{
-					// printf("C %i, %i, %i\n", i, cpWrite[i], coprocessorWrites[cpWrite[i]]);
-					s_DisplayListCoprocessorCommandWrite[i]
-						= coprocessorWrites[cpWrite[i]];
-				}
-			}
-			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
-
-			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
-			{
-				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
-				{
-					s_UtilizationDisplayListCmd = i;
-					break;
-				}
-			}
-
-			// Test
-			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-			{
-				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
-				{
-					std::string res;
-					DlParser::toString(res, rd32(RAM_DL + (i * 4)));
-					printf("DL %i was written by CMD %i: %s\n", i, s_DisplayListCoprocessorCommandWrite[i], res.c_str());
-				}
-			}*/
-
-			swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
-			swr32(CMD_DLSTART);
-			wp += 4;
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			s_CoprocessorFaultOccured = false;
-			s_StreamingData = false;
-			coprocessorSwapped = true;
-		}
-		else
-		{
-			// Swap frame directly if nothing was written to the coprocessor
-			s_UtilizationDisplayListCmd = 0;
-
-			swrend();
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
-
-			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_DLSWAP), DLSWAP_FRAME);
-		}
-
-		s_ShowCoprocessorBusy = false;
-		s_CoprocessorFrameSuccess = true;
-
-		// FIXME: Not very thread-safe, but not too critical
-		int *nextWrite = s_DisplayListCoprocessorCommandRead;
-		s_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
-		s_DisplayListCoprocessorCommandWrite = nextWrite;
-	}
-	else
-	{
-		s_CmdEditor->unlockDisplayList();
-		s_DlEditor->unlockDisplayList();
-	}
-
-	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && s_MediaFifoStream && s_MediaFifoSize)
-	{
-		// Write out to media FIFO
-
-
-	}
-}
-
-void emuMain(BT8XXEMU_Emulator *sender, void *context)
-{
-	setup();
-
-	while (BT8XXEMU_isRunning(sender))
-	{
-		loop();
-	}
-}
-
-void keyboard(BT8XXEMU_Emulator *sender, void *context)
-{
-
-}
-
 bool MainWindow::waitingCoprocessorAnimation()
 {
-	return s_WaitingCoprocessorAnimation;
+	return g_WaitingCoprocessorAnimation;
 }
 
 int *MainWindow::getDlCmd()
 {
 	// FIXME: Not very thread-safe, but not too critical
-	return s_DisplayListCoprocessorCommandRead;
+	return g_DisplayListCoprocessorCommandRead;
 }
 
 MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent, Qt::WindowFlags flags)
-	: QMainWindow(parent, flags),
-	m_MinFlashType(-1),
-    m_AddRecentProjectFlag(false),
-	m_UndoStack(NULL),
-	m_EmulatorViewport(NULL),
-	m_DlEditor(NULL), m_DlEditorDock(NULL), m_CmdEditor(NULL), m_CmdEditorDock(NULL),
-	m_PropertiesEditor(NULL), m_PropertiesEditorScroll(NULL), m_PropertiesEditorDock(NULL),
-	m_ToolboxDock(NULL), m_Toolbox(NULL), m_ContentManagerDock(NULL), m_ContentManager(NULL),
-	m_RegistersDock(NULL), m_Macro(NULL), m_HSize(NULL), m_VSize(NULL), m_Rotate(NULL), 
-	m_ControlsDock(NULL), m_StepEnabled(NULL), m_StepCount(NULL), m_StepCmdEnabled(NULL), m_StepCmdCount(NULL),
-	m_TraceEnabled(NULL), m_TraceX(NULL), m_TraceY(NULL),
-	m_FileMenu(NULL), m_EditMenu(NULL), m_ToolsMenu(NULL), m_WidgetsMenu(NULL),
+    : QMainWindow(parent, flags)
+    , m_MinFlashType(-1)
+    , m_AddRecentProjectFlag(false)
+    , m_UndoStack(NULL)
+    , m_EmulatorViewport(NULL)
+    , m_DlEditor(NULL)
+    , m_DlEditorDock(NULL)
+    , m_CmdEditor(NULL)
+    , m_CmdEditorDock(NULL)
+    , m_PropertiesEditor(NULL)
+    , m_PropertiesEditorScroll(NULL)
+    , m_PropertiesEditorDock(NULL)
+    //, m_OutputDock(NULL)
+    , m_ToolboxDock(NULL)
+    , m_Toolbox(NULL)
+    , m_ContentManagerDock(NULL)
+    , m_ContentManager(NULL)
+    , m_RegistersDock(NULL)
+    , m_Macro(NULL)
+    , m_HSize(NULL)
+    , m_VSize(NULL)
+    , m_Rotate(NULL)
+    , m_ControlsDock(NULL)
+    , m_StepEnabled(NULL)
+    , m_StepCount(NULL)
+    , m_StepCmdEnabled(NULL)
+    , m_StepCmdCount(NULL)
+    , m_TraceEnabled(NULL)
+    , m_TraceX(NULL)
+    , m_TraceY(NULL)
+    , m_FileMenu(NULL)
+    , m_EditMenu(NULL)
+    , m_ToolsMenu(NULL)
+    , m_WidgetsMenu(NULL)
+    ,
 #ifdef FT800EMU_PYTHON
-	m_ScriptsMenu(NULL),
+    m_ScriptsMenu(NULL)
+    ,
 #endif
-	m_HelpMenu(NULL),
-	m_FileToolBar(NULL), m_EditToolBar(NULL),
-	m_NewAct(NULL), m_OpenAct(NULL), m_SaveAct(NULL), m_SaveAsAct(NULL), m_CloseProjectAct(NULL),
-	m_ImportAct(NULL), m_ExportAct(NULL), m_ProjectFolderAct(NULL), m_ResetEmulatorAct(NULL), m_SaveScreenshotAct(NULL), m_ImportDisplayListAct(NULL),
-	m_DisplayListFromIntegers(NULL), m_ManualAct(NULL), m_AboutAct(NULL), m_AboutQtAct(NULL), m_QuitAct(NULL), // m_PrintDebugAct(NULL),
-	m_UndoAct(NULL), m_RedoAct(NULL), m_RecentSeparator(NULL),//, m_SaveScreenshotAct(NULL)
-	m_CursorPosition(NULL), m_CoprocessorBusy(NULL), 
-	m_TemporaryDir(NULL)
+    m_HelpMenu(NULL)
+    , m_FileToolBar(NULL)
+    , m_EditToolBar(NULL)
+    , m_NewAct(NULL)
+    , m_OpenAct(NULL)
+    , m_SaveAct(NULL)
+    , m_SaveAsAct(NULL)
+    , m_CloseProjectAct(NULL)
+    , m_ImportAct(NULL)
+    , m_ExportAct(NULL)
+    , m_ProjectFolderAct(NULL)
+    , m_ResetEmulatorAct(NULL)
+    , m_SaveScreenshotAct(NULL)
+    , m_ImportDisplayListAct(NULL)
+    , m_LittleEndianSaveDisplayListAct(NULL)
+    , m_BigEndianSaveDisplayListAct(NULL)
+    , m_LittleEndianSaveCoproCmdAct(NULL)
+    , m_BigEndianSaveCoproCmdAct(NULL)
+    , m_DisplayListFromIntegers(NULL)
+    , m_ManualAct(NULL)
+    , m_AboutAct(NULL)
+    , m_AboutQtAct(NULL)
+    , m_QuitAct(NULL)
+    , // m_PrintDebugAct(NULL),
+    m_UndoAct(NULL)
+    , m_RedoAct(NULL)
+    , m_RecentSeparator(NULL)
+    , //, m_SaveScreenshotAct(NULL)
+    m_CursorPosition(NULL)
+    , m_PixelColor(NULL)
+    , m_CoprocessorBusy(NULL)
+    , m_TemporaryDir(NULL)
+	, m_isVCDumpEnable(false)
 {
+	loadConfig(QCoreApplication::applicationDirPath() + '/' + CONFIGURE_FILE_PATH);
+
 	setObjectName("MainWindow");
 	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 
@@ -1573,8 +274,18 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	}
 	else
 	{
-		QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+		QDir dir(m_InitialWorkingDir);
+		if (dir.cdUp() && dir.cdUp() && dir.cd("fteditor") && dir.cd("firmware") && dir.cdUp())
+		{
+			m_ApplicationDataDir = dir.absolutePath();
+		}
+		else
+		{
+			QMessageBox::critical(this, tr("EVE Screen Editor"), tr("Cannot find flash firmware. The editor may not function correctly."));
+		}
 	}
+
+	g_ApplicationDataDir = m_ApplicationDataDir;
 
 	m_UndoStack = new QUndoStack(this);
 	connect(m_UndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(undoCleanChanged(bool)));
@@ -1584,7 +295,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createToolBars();
 	createStatusBar();
 
-    loadRecentProject();
+	
+	loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
 
@@ -1628,9 +340,9 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	incbLanguageCode();
 
-	s_DlEditor = m_DlEditor;
-	s_CmdEditor = m_CmdEditor;
-	s_Macro = m_Macro;
+	g_DlEditor = m_DlEditor;
+	g_CmdEditor = m_CmdEditor;
+	g_Macro = m_Macro;
 
 	startEmulatorInternal();
 
@@ -1644,10 +356,10 @@ MainWindow::~MainWindow()
 	stopEmulatorInternal();
 
 	m_ContentManager->lockContent();
-	s_DlEditor = NULL;
-	s_CmdEditor = NULL;
-	s_Macro = NULL;
-	s_ContentManager = NULL;
+	g_DlEditor = NULL;
+	g_CmdEditor = NULL;
+	g_Macro = NULL;
+	g_ContentManager = NULL;
 	m_ContentManager->unlockContent();
 	//s_BitmapSetup = NULL;
 
@@ -1663,9 +375,9 @@ void pythonError()
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 	PyObject *errStr = PyObject_Repr(pvalue);
-	char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-	QString error = QString::fromLocal8Bit(pStrErrorMessage);
-	printf("%s\n", pStrErrorMessage);
+	const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+	QString error = QString::fromUtf8(pStrErrorMessage);
+	printf("%s\n", error.toLocal8Bit().data());
 	Py_DECREF(errStr);
 	printf("---\n");
 }
@@ -1677,17 +389,27 @@ static QString scriptDisplayName(const QString &script)
 
 	PyObject *pyUserScript = PyUnicode_FromString(scriptName);
 	PyObject *pyUserModule = PyImport_Import(pyUserScript);
-	Py_DECREF(pyUserScript); pyUserScript = NULL;
+	Py_DECREF(pyUserScript);
+	pyUserScript = NULL;
 
-	if (!pyUserModule) { pythonError(); return script; }
+	if (!pyUserModule)
+	{
+		pythonError();
+		return script;
+	}
 
 	PyObject *pyUserFunc = PyObject_GetAttrString(pyUserModule, "displayName");
 
-	if (!pyUserFunc) { pythonError(); return script; }
+	if (!pyUserFunc)
+	{
+		pythonError();
+		return script;
+	}
 
 	if (!PyCallable_Check(pyUserFunc))
 	{
-		Py_DECREF(pyUserFunc); pyUserFunc = NULL;
+		Py_DECREF(pyUserFunc);
+		pyUserFunc = NULL;
 		pythonError();
 		return script;
 	}
@@ -1695,16 +417,20 @@ static QString scriptDisplayName(const QString &script)
 	PyObject *pyValue;
 	PyObject *pyArgs = PyTuple_New(0);
 	pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
-	Py_DECREF(pyArgs); pyArgs = NULL;
+	Py_DECREF(pyArgs);
+	pyArgs = NULL;
 
-	Py_DECREF(pyUserFunc); pyUserFunc = NULL;
-	Py_DECREF(pyUserModule); pyUserModule = NULL;
+	Py_DECREF(pyUserFunc);
+	pyUserFunc = NULL;
+	Py_DECREF(pyUserModule);
+	pyUserModule = NULL;
 
 	if (pyValue)
 	{
-		char *resCStr = PyUnicode_AsUTF8(pyValue);
-		QString res = QString::fromLocal8Bit(resCStr);
-		Py_DECREF(pyValue); pyValue = NULL; // !
+		const char *resCStr = PyUnicode_AsUTF8(pyValue);
+		QString res = QString::fromUtf8(resCStr);
+		Py_DECREF(pyValue);
+		pyValue = NULL; // !
 		return res;
 	}
 
@@ -1725,21 +451,21 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"bt81x",
-    "bt81x"
+	"bt81x"
 };
 
 QString MainWindow::scriptModule()
 {
-	return QString(scriptFolder) 
-		+ QString(".") 
-		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
+	return QString(scriptFolder)
+	    + QString(".")
+	    + scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
 
 QString MainWindow::scriptDir()
 {
 	return m_ApplicationDataDir + "/"
-		+ scriptFolder + "/"
-		+ scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
+	    + scriptFolder + "/"
+	    + scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
 }
 #endif
 
@@ -1842,7 +568,7 @@ void MainWindow::refreshScriptsMenu()
 		}
 		else
 		{
-			//find existing script and add it to m_ScriptActs		
+			//find existing script and add it to m_ScriptActs
 			m_ScriptActs[scriptMod] = scriptActs[scriptMod];
 			scriptActs.erase(scriptMod);
 		}
@@ -1875,7 +601,8 @@ void MainWindow::runScript(const QString &script)
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
 	QString outputName = QFileInfo(m_CurrentFile).completeBaseName();
-	if (outputName.isEmpty()) outputName = "untitled";
+	if (outputName.isEmpty())
+		outputName = "untitled";
 	QByteArray outN = outputName.toUtf8();
 
 	////////////////////////////////////////////////////////////////////
@@ -1885,7 +612,8 @@ void MainWindow::runScript(const QString &script)
 
 	PyObject *pyJsonScript = PyUnicode_FromString("json");
 	PyObject *pyJsonModule = PyImport_Import(pyJsonScript);
-	Py_DECREF(pyJsonScript); pyJsonScript = NULL;
+	Py_DECREF(pyJsonScript);
+	pyJsonScript = NULL;
 	PyObject *pyJsonLoadS = NULL;
 
 	if (pyJsonModule)
@@ -1904,9 +632,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
@@ -1921,10 +649,14 @@ void MainWindow::runScript(const QString &script)
 	PyObject *pyArgs = PyTuple_New(1);
 	PyTuple_SetItem(pyArgs, 0, pyJsonDoc);
 	PyObject *pyDocument = PyObject_CallObject(pyJsonLoadS, pyArgs);
-	if (pyDocument) error = false;
-	Py_DECREF(pyArgs); pyArgs = NULL;
-	Py_DECREF(pyJsonLoadS); pyJsonLoadS = NULL;
-	Py_DECREF(pyJsonModule); pyJsonModule = NULL;
+	if (pyDocument)
+		error = false;
+	Py_DECREF(pyArgs);
+	pyArgs = NULL;
+	Py_DECREF(pyJsonLoadS);
+	pyJsonLoadS = NULL;
+	Py_DECREF(pyJsonModule);
+	pyJsonModule = NULL;
 
 	if (error)
 	{
@@ -1932,9 +664,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
@@ -1956,7 +688,8 @@ void MainWindow::runScript(const QString &script)
 	if (pyUserModuleOld != NULL)
 	{
 		PyObject *pyUserModule = PyImport_ReloadModule(pyUserModuleOld);
-		Py_DECREF(pyUserScript); pyUserScript = NULL;
+		Py_DECREF(pyUserScript);
+		pyUserScript = NULL;
 
 		if (pyUserModule != NULL)
 		{
@@ -1965,21 +698,25 @@ void MainWindow::runScript(const QString &script)
 			{
 				PyObject *pyValue;
 				PyObject *pyArgs = PyTuple_New(3);
-				pyValue = PyUnicode_FromString(outN.data());;
+				pyValue = PyUnicode_FromString(outN.data());
+				;
 				PyTuple_SetItem(pyArgs, 0, pyValue);
-				PyTuple_SetItem(pyArgs, 1, pyDocument); pyDocument = NULL;
+				PyTuple_SetItem(pyArgs, 1, pyDocument);
+				pyDocument = NULL;
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 				PyTuple_SetItem(pyArgs, 2, pyValue);
 				pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
-				Py_DECREF(pyArgs); pyArgs = NULL;
+				Py_DECREF(pyArgs);
+				pyArgs = NULL;
 				if (pyValue)
 				{
 					printf("Ok\n");
 					PyObject *resStr = PyObject_Repr(pyValue);
-					char *resCStr = PyUnicode_AsUTF8(resStr);
-					QString res = QString::fromLocal8Bit(resCStr);
-					Py_DECREF(pyValue); pyValue = NULL;
+					const char *resCStr = PyUnicode_AsUTF8(resStr);
+					QString res = QString::fromUtf8(resCStr);
+					Py_DECREF(pyValue);
+					pyValue = NULL;
 					m_PropertiesEditor->setInfo(res);
 					m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 					error = false;
@@ -1994,13 +731,17 @@ void MainWindow::runScript(const QString &script)
 				printf("Missing run function\n");
 			}
 
-			Py_XDECREF(pyUserFunc); pyUserFunc = NULL;
-			Py_XDECREF(pyUserModule); pyUserModule = NULL;
+			Py_XDECREF(pyUserFunc);
+			pyUserFunc = NULL;
+			Py_XDECREF(pyUserModule);
+			pyUserModule = NULL;
 		}
-		Py_XDECREF(pyUserModuleOld); pyUserModuleOld = NULL;
+		Py_XDECREF(pyUserModuleOld);
+		pyUserModuleOld = NULL;
 	}
 
-	Py_XDECREF(pyDocument); pyDocument = NULL;
+	Py_XDECREF(pyDocument);
+	pyDocument = NULL;
 
 	if (error)
 	{
@@ -2008,9 +749,9 @@ void MainWindow::runScript(const QString &script)
 		PyObject *ptype, *pvalue, *ptraceback;
 		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 		PyObject *errStr = PyObject_Repr(pvalue);
-		char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromLocal8Bit(pStrErrorMessage);
-		printf("%s\n", pStrErrorMessage);
+		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
+		QString error = QString::fromUtf8(pStrErrorMessage);
+		printf("%s\n", error.toLocal8Bit().data());
 		Py_DECREF(errStr);
 		printf("---\n");
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
@@ -2028,52 +769,52 @@ void MainWindow::frameQt()
 {
 	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
 
-	int utilizationDisplayList = std::max(s_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+	int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
 	m_UtilizationDisplayList->setValue(utilizationDisplayList);
 	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (!s_StreamingData && s_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (!g_StreamingData && g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
-			if (s_CoprocessorDiagnostic[0])
+			if (g_CoprocessorDiagnostic[0])
 			{
 				info = "<b>Co-processor engine fault</b><br><br>";
-				info += QString::fromLatin1(s_CoprocessorDiagnostic);
+				info += QString::fromLatin1(g_CoprocessorDiagnostic);
 			}
 			else
 			{
 				info = "<b>Co-processor engine fault</b><br><br>"
-					"Emulator not initialized";
+				       "Emulator not initialized";
 			}
 		}
 		else
 		{
 			info = "<b>Co-processor engine fault</b><br><br>"
-				"A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
-				"- An attempt is made to write more than 2048 instructions into a display list<br><br>"
-				"- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
-				"- An invalid data stream is supplied to CMD_INFLATE";
+			       "A co-processor engine fault occurs when the co-processor engine cannot continue. Possible causes:<br><br>"
+			       "- An attempt is made to write more than 2048 instructions into a display list<br><br>"
+			       "- An invalid JPEG is supplied to CMD_LOADIMAGE<br><br>"
+			       "- An invalid data stream is supplied to CMD_INFLATE";
 		}
 		// m_PropertiesEditor->setInfo(info);
 		// m_PropertiesEditor->setEditWidget(NULL, false, m_PropertiesEditorDock); // m_PropertiesEditorDock is a dummy
 		// focusProperties();
 		m_ErrorLabel->setText(info);
 		m_ErrorFrame->setVisible(true);
-		s_CoprocessorFrameSuccess = false;
+		g_CoprocessorFrameSuccess = false;
 	}
-	if (s_CoprocessorFrameSuccess || s_WaitingCoprocessorAnimation)
+	if (g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation)
 	{
 		m_ErrorFrame->setVisible(false);
 	}
 
-	// printf("msc: %s\n", s_WarnMissingClear ? "warn" : "ok");
-	if (s_WarnMissingClear != s_WarnMissingClearActive)
+	// printf("msc: %s\n", g_WarnMissingClear ? "warn" : "ok");
+	if (g_WarnMissingClear != g_WarnMissingClearActive)
 	{
-		if (s_WarnMissingClear)
+		if (g_WarnMissingClear)
 		{
 			statusBar()->showMessage(tr("WARNING: Missing CLEAR instruction in display list"));
 		}
@@ -2081,20 +822,43 @@ void MainWindow::frameQt()
 		{
 			statusBar()->showMessage("");
 		}
-		s_WarnMissingClearActive = s_WarnMissingClear;
+		g_WarnMissingClearActive = g_WarnMissingClear;
+	}
+
+	if (g_WarnMissingTestcardDLStart != g_WarnMissingTestcardDLStartActive)
+	{
+		if (g_WarnMissingTestcardDLStart)
+		{
+			statusBar()->showMessage(tr("WARNING: Commands following CMD_TESTCARD must be preceeded by CMD_DLSTART"));
+		}
+		else
+		{
+			statusBar()->showMessage("");
+		}
+		g_WarnMissingTestcardDLStartActive = g_WarnMissingTestcardDLStart;
 	}
 
 	// m_CursorPosition
 	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
-	if (m_EmulatorViewport->mouseOver())
+	if (m_EmulatorViewport->mouseOver()) {
 		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
-	else
+
+		QColor c = m_EmulatorViewport->getPixelColor();
+		QString strColor("");
+
+		if (c.isValid())
+			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
+												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
+		m_PixelColor->setText(strColor.toUpper());
+	} else {
 		m_CursorPosition->setText("");
+		m_PixelColor->setText("");
+	}
 
 	// Busy loader
-	m_CoprocessorBusy->setVisible(s_ShowCoprocessorBusy && !s_WaitingCoprocessorAnimation);
+	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
 }
 
 void MainWindow::createActions()
@@ -2117,10 +881,10 @@ void MainWindow::createActions()
 
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
-	m_ImportAct->setVisible(FT_VCDUMP_VISIBLE);
+	m_ImportAct->setVisible(m_isVCDumpEnable);
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
-	m_ExportAct->setVisible(FT_VCDUMP_VISIBLE);
+	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
@@ -2133,6 +897,18 @@ void MainWindow::createActions()
 
 	m_ImportDisplayListAct = new QAction(this);
 	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
+
+	m_LittleEndianSaveDisplayListAct = new QAction(this);
+	connect(m_LittleEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveDisplayList()));
+
+	m_BigEndianSaveDisplayListAct = new QAction(this);
+	connect(m_BigEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actBigEndianSaveDisplayList()));
+
+	m_LittleEndianSaveCoproCmdAct = new QAction(this);
+	connect(m_LittleEndianSaveCoproCmdAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveCoproCmd()));
+
+	m_BigEndianSaveCoproCmdAct = new QAction(this);
+	connect(m_BigEndianSaveCoproCmdAct, SIGNAL(triggered()), this, SLOT(actBigEndianSaveCoproCmd()));
 
 	m_DisplayListFromIntegers = new QAction(this);
 	connect(m_DisplayListFromIntegers, SIGNAL(triggered()), this, SLOT(actDisplayListFromIntegers()));
@@ -2190,6 +966,19 @@ void MainWindow::translateActions()
 	m_SaveScreenshotAct->setStatusTip(tr("Save a screenshot of the emulator output"));
 	m_ImportDisplayListAct->setText(tr("Capture Display List"));
 	m_ImportDisplayListAct->setStatusTip(tr("Capture the active display list from the emulator into the editor"));
+
+	m_LittleEndianSaveDisplayListAct->setText(tr("Little Endian"));
+	m_LittleEndianSaveDisplayListAct->setStatusTip(tr("Save display list in Little Endian mode"));
+
+	m_BigEndianSaveDisplayListAct->setText(tr("Big Endian"));
+	m_BigEndianSaveDisplayListAct->setStatusTip(tr("Save display list in Big Endian mode"));
+
+	m_LittleEndianSaveCoproCmdAct->setText(tr("Little Endian"));
+	m_LittleEndianSaveCoproCmdAct->setStatusTip(tr("Save Coprocessor Command in Little Endian mode"));
+
+	m_BigEndianSaveCoproCmdAct->setText(tr("Big Endian"));
+	m_BigEndianSaveCoproCmdAct->setStatusTip(tr("Save Coprocessor Command in Big Endian mode"));
+
 	m_DisplayListFromIntegers->setText(tr("Display List from Integers (debug mode only)"));
 	m_DisplayListFromIntegers->setStatusTip(tr("Developer tool (debug mode only)"));
 	m_QuitAct->setText(tr("Quit"));
@@ -2204,10 +993,12 @@ void MainWindow::translateActions()
 	// m_PrintDebugAct->setStatusTip(tr("ActionPrintDebugStatusTip"));
 	m_UndoAct->setText(tr("Undo"));
 	m_UndoAct->setStatusTip(tr("Reverses the last action"));
-	m_UndoAct->setIcon(QIcon(":/icons/arrow-return.png"));
+	m_UndoAct->setIcon(QIcon(":/icons/arrow-return-180-left.png"));
+	// m_UndoAct->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
 	m_RedoAct->setText(tr("Redo"));
 	m_RedoAct->setStatusTip(tr("Reapply the action"));
-	m_RedoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
+	m_RedoAct->setIcon(QIcon(":/icons/arrow-circle-315.png"));
+	// m_RedoAct->setIcon(QIcon(":/icons/arrow-return-180.png"));
 	m_DummyAct->setText(tr("Dummy"));
 	m_DummyAct->setStatusTip(tr("Does nothing"));
 	// m_SaveScreenshotAct->setText(tr("ActionSaveScreenshot"));
@@ -2216,7 +1007,7 @@ void MainWindow::translateActions()
 
 void MainWindow::createMenus()
 {
-	m_FileMenu = menuBar()->addMenu(QString::null);
+	m_FileMenu = menuBar()->addMenu(QString());
 	m_FileMenu->addAction(m_NewAct);
 	m_FileMenu->addAction(m_OpenAct);
 	m_FileMenu->addSeparator();
@@ -2232,31 +1023,45 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
 	m_FileMenu->addSeparator();
+
+	QMenu *sdl = m_FileMenu->addMenu("Save Display List");
+	sdl->addAction(m_LittleEndianSaveDisplayListAct);
+	sdl->addAction(m_BigEndianSaveDisplayListAct);
+
+	m_FileMenu->addSeparator();
+	sdl = m_FileMenu->addMenu("Save Coprocessor Command");
+	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
+	sdl->addAction(m_BigEndianSaveCoproCmdAct);
+
+	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
 
-	m_EditMenu = menuBar()->addMenu(QString::null);
+	m_EditMenu = menuBar()->addMenu(QString());
 	m_EditMenu->addAction(m_UndoAct);
 	m_EditMenu->addAction(m_RedoAct);
 	//m_EditMenu->addAction(m_DummyAct);
 
-	m_ToolsMenu = menuBar()->addMenu(QString::null);
+	m_ToolsMenu = menuBar()->addMenu(QString());
 	m_ToolsMenu->addAction(m_ResetEmulatorAct);
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 	m_ToolsMenu->addAction(m_ImportDisplayListAct);
+
+	
+
 #if _DEBUG
 	m_ToolsMenu->addAction(m_DisplayListFromIntegers);
 #endif
 
-	m_WidgetsMenu = menuBar()->addMenu(QString::null);
+	m_WidgetsMenu = menuBar()->addMenu(QString());
 
 #ifdef FT800EMU_PYTHON
-	m_ScriptsMenu = menuBar()->addMenu(QString::null);
+	m_ScriptsMenu = menuBar()->addMenu(QString());
 	connect(m_ScriptsMenu, SIGNAL(aboutToShow()), this, SLOT(refreshScriptsMenu()));
 #endif /* FT800EMU_PYTHON */
 
 	menuBar()->addSeparator();
 
-	m_HelpMenu = menuBar()->addMenu(QString::null);
+	m_HelpMenu = menuBar()->addMenu(QString());
 	m_HelpMenu->addAction(m_ManualAct);
 	m_HelpMenu->addSeparator();
 	m_HelpMenu->addAction(m_AboutAct);
@@ -2291,7 +1096,6 @@ void MainWindow::translateToolBars()
 {
 	//m_FileToolBar->setWindowTitle(tr("File"));
 	//m_EditToolBar->setWindowTitle(tr("Edit"));
-
 }
 
 void MainWindow::createStatusBar()
@@ -2335,7 +1139,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
-			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
+			for (int i = 0; i < FTEDITOR_DEVICE_NB - 2; ++i) // remove BT817/8 in version 3.4
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			hBoxLayout->addWidget(m_ProjectDevice);
@@ -2350,8 +1154,8 @@ void MainWindow::createDockWindows()
 
 			groupLayout->addLayout(hBoxLayout);
 
-            QVBoxLayout *vBoxLayout = new QVBoxLayout();
-            vBoxLayout->setMargin(0);
+			QVBoxLayout *vBoxLayout = new QVBoxLayout();
+			vBoxLayout->setMargin(0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
@@ -2373,7 +1177,7 @@ void MainWindow::createDockWindows()
 
 			// m_ProjectFlashLayout->stretch
 
-            vBoxLayout->addLayout(hBoxLayout);
+			vBoxLayout->addLayout(hBoxLayout);
 			m_ProjectFlashLayout->setLayout(vBoxLayout);
 			groupLayout->addWidget(m_ProjectFlashLayout);
 
@@ -2384,7 +1188,7 @@ void MainWindow::createDockWindows()
 			sizePolicy.setHeightForWidth(m_ProjectFlashFilename->sizePolicy().hasHeightForWidth());
 			m_ProjectFlashFilename->setSizePolicy(sizePolicy);
 			m_ProjectFlashFilename->installEventFilter(this);
-            vBoxLayout->addWidget(m_ProjectFlashFilename);
+			vBoxLayout->addWidget(m_ProjectFlashFilename);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
@@ -2423,6 +1227,17 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_DeviceManagerDock->toggleViewAction());
 	}
 #endif /* FT800_DEVICE_MANAGER */
+
+	// pixel color (RGBA)
+	{
+		m_PixelColor = new QLabel(statusBar());
+		m_PixelColor->setText("");
+		statusBar()->addPermanentWidget(m_PixelColor);
+
+		QLabel *label = new QLabel(statusBar());
+		label->setText("  ");
+		statusBar()->addPermanentWidget(label);
+	}
 
 	// Cursor position
 	{
@@ -2562,6 +1377,65 @@ void MainWindow::createDockWindows()
 		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
+
+	// Output
+	/*{
+		m_OutputDock = new QDockWidget(this);
+		m_OutputDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+		m_OutputDock->setObjectName("Output");
+		QScrollArea * pOutputParamsScroll = new QScrollArea(this);
+		pOutputParamsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		pOutputParamsScroll->setWidgetResizable(true);
+		pOutputParamsScroll->setMinimumWidth(240);
+		
+		// pointer
+		QHBoxLayout *ptrHBL = new QHBoxLayout;
+		QLabel *ptrLabel = new QLabel("Pointer:", this);
+		QSpinBox *ptrSB = new QSpinBox(this);
+		ptrSB->setReadOnly(true);
+		ptrSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		ptrHBL->addWidget(ptrLabel);
+		ptrHBL->addWidget(ptrSB);
+		// width
+		QHBoxLayout *widthHBL = new QHBoxLayout;
+		QLabel *widthLabel = new QLabel("Width:", this);
+		QSpinBox *widthSB = new QSpinBox(this);
+		widthSB->setReadOnly(true);
+		widthSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		widthHBL->addWidget(widthLabel);
+		widthHBL->addWidget(widthSB);
+		// height
+		QHBoxLayout *heightHBL = new QHBoxLayout;
+		QLabel *heightLabel = new QLabel("Height:", this);
+		QSpinBox *heightSB = new QSpinBox(this);
+		heightSB->setReadOnly(true);
+		heightSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
+		heightHBL->addWidget(heightLabel);
+		heightHBL->addWidget(heightSB);
+
+		// information
+		QVBoxLayout *infoLayout = new QVBoxLayout();
+		QGroupBox *infoGroupBox = new QGroupBox("Information", this);
+		infoGroupBox->setLayout(infoLayout);
+		infoLabel = new QLabel(this);
+		infoLabel->setMinimumWidth(150);
+		infoLabel->setTextFormat(Qt::RichText);
+		infoLabel->setWordWrap(true);
+		infoLabel->setText(tr("DESCRIPTION_CMD_GETPROPS."));
+		infoLayout->addWidget(infoLabel);
+
+		QVBoxLayout *topVBL = new QVBoxLayout;
+		topVBL->addLayout(ptrHBL);
+		topVBL->addLayout(widthHBL);
+		topVBL->addLayout(heightHBL);
+		topVBL->addWidget(infoGroupBox);
+		topVBL->addStretch();
+		
+		pOutputParamsScroll->setLayout(topVBL);
+		m_OutputDock->setWidget(pOutputParamsScroll);
+		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
+		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
+	}*/
 
 	// Inspector
 	{
@@ -2799,7 +1673,7 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		m_ContentManager = new ContentManager(this);
-		s_ContentManager = m_ContentManager;
+		g_ContentManager = m_ContentManager;
 		scrollArea->setWidget(m_ContentManager);
 		m_ContentManagerDock->setWidget(scrollArea);
 		addDockWidget(Qt::LeftDockWidgetArea, m_ContentManagerDock);
@@ -2864,7 +1738,8 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
-	
+	//tabifyDockWidget(m_UtilizationDock, m_OutputDock);
+
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
 	for (int i = 0; i < tabList.size(); ++i)
@@ -2873,9 +1748,9 @@ void MainWindow::createDockWindows()
 		QTabBar *tabBar = tabList.at(i);
 		/*if (tabBar != editorTabbar)
 		{*/
-			//connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
-			connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
-			connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
+		//connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
+		connect(tabBar, SIGNAL(currentChanged(int)), this, SLOT(editorTabChanged(int)));
+		connect(tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(editorTabChanged(int))); // this is not working FIXME
 		//}
 
 		// FIX-----ME: Figure out and connect when new tab bars are created... done
@@ -2902,6 +1777,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	//m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -2922,7 +1798,7 @@ void MainWindow::incbLanguageCode()
 static QIcon processIcon(QTabBar *tabBar, QIcon icon)
 {
 	if (tabBar->shape() == QTabBar::RoundedEast
-		|| tabBar->shape() == QTabBar::RoundedWest)
+	    || tabBar->shape() == QTabBar::RoundedWest)
 	{
 		QPixmap pix = icon.pixmap(16, 16);
 		QTransform trans;
@@ -2984,6 +1860,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
 			}
+			/*else if (dw == m_OutputDock)
+			{
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/database-arrow.png")));
+			}*/
 			else if (dw == m_ContentManagerDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/photo-album-blue.png")));
@@ -3012,8 +1892,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			}
 		}
 	}
-	if (!cmdExist) cmdTop = false;
-	if (!dlExist) dlTop = false;
+	if (!cmdExist)
+		cmdTop = false;
+	if (!dlExist)
+		dlTop = false;
 	// printf("x: %i,y: %i\n", cmdTop, dlTop);
 	if (cmdTop != dlTop)
 	{
@@ -3104,40 +1986,104 @@ void MainWindow::focusProperties()
 	}
 }
 
+void MainWindow::focusOutput()
+{
+	/*QList<QTabBar *> tabList = findChildren<QTabBar *>();
+	for (int i = 0; i < tabList.size(); ++i)
+	{
+		QTabBar *tabBar = tabList.at(i);
+		for (int j = 0; j < tabBar->count(); ++j)
+		{
+			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
+			if (dw == m_OutputDock)
+			{
+				tabBar->setCurrentIndex(j);
+				return;
+			}
+		}
+	}*/
+}
+
 static bool s_UndoRedoWorking = false;
 
 class HSizeCommand : public QUndoCommand
 {
 public:
-	HSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewHSize(hsize), m_OldHSize(s_HSize), m_SpinBox(spinbox) { }
-	virtual ~HSizeCommand() { }
-	virtual void undo() { s_HSize = m_OldHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
-	virtual void redo() { s_HSize = m_NewHSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_HSize); s_UndoRedoWorking = false; }
-	virtual int id() const { printf("id get\n"); return 41517686; }
-	virtual bool mergeWith(const QUndoCommand *command) { m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize; return true; }
+	HSizeCommand(int hsize, QSpinBox *spinbox)
+	    : QUndoCommand()
+	    , m_NewHSize(hsize)
+	    , m_OldHSize(g_HSize)
+	    , m_SpinBox(spinbox)
+	{
+	}
+	virtual ~HSizeCommand() {}
+	virtual void undo()
+	{
+		g_HSize = m_OldHSize;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_HSize);
+		s_UndoRedoWorking = false;
+	}
+	virtual void redo()
+	{
+		g_HSize = m_NewHSize;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_HSize);
+		s_UndoRedoWorking = false;
+	}
+	virtual int id() const
+	{
+		printf("id get\n");
+		return 41517686;
+	}
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize;
+		return true;
+	}
 
 private:
 	int m_NewHSize;
 	int m_OldHSize;
 	QSpinBox *m_SpinBox;
-
 };
 
 class VSizeCommand : public QUndoCommand
 {
 public:
-	VSizeCommand(int hsize, QSpinBox *spinbox) : QUndoCommand(), m_NewVSize(hsize), m_OldVSize(s_VSize), m_SpinBox(spinbox) { }
-	virtual ~VSizeCommand() { }
-	virtual void undo() { s_VSize = m_OldVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
-	virtual void redo() { s_VSize = m_NewVSize; s_UndoRedoWorking = true; m_SpinBox->setValue(s_VSize); s_UndoRedoWorking = false; }
+	VSizeCommand(int hsize, QSpinBox *spinbox)
+	    : QUndoCommand()
+	    , m_NewVSize(hsize)
+	    , m_OldVSize(g_VSize)
+	    , m_SpinBox(spinbox)
+	{
+	}
+	virtual ~VSizeCommand() {}
+	virtual void undo()
+	{
+		g_VSize = m_OldVSize;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_VSize);
+		s_UndoRedoWorking = false;
+	}
+	virtual void redo()
+	{
+		g_VSize = m_NewVSize;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_VSize);
+		s_UndoRedoWorking = false;
+	}
 	virtual int id() const { return 78984351; }
-	virtual bool mergeWith(const QUndoCommand *command) { m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize; return true; }
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize;
+		return true;
+	}
 
 private:
 	int m_NewVSize;
 	int m_OldVSize;
 	QSpinBox *m_SpinBox;
-
 };
 
 void MainWindow::userChangeResolution(int hsize, int vsize)
@@ -3151,7 +2097,7 @@ void MainWindow::userChangeResolution(int hsize, int vsize)
 void MainWindow::hsizeChanged(int hsize)
 {
 	updateProjectDisplay(hsize, m_VSize->value());
-	
+
 	if (s_UndoRedoWorking)
 		return;
 
@@ -3161,7 +2107,7 @@ void MainWindow::hsizeChanged(int hsize)
 void MainWindow::vsizeChanged(int vsize)
 {
 	updateProjectDisplay(m_HSize->value(), vsize);
-	
+
 	if (s_UndoRedoWorking)
 		return;
 
@@ -3171,18 +2117,39 @@ void MainWindow::vsizeChanged(int vsize)
 class RotateCommand : public QUndoCommand
 {
 public:
-	RotateCommand(int rotate, QSpinBox *spinbox) : QUndoCommand(), m_NewRotate(rotate), m_OldRotate(s_Rotate), m_SpinBox(spinbox) { }
-	virtual ~RotateCommand() { }
-	virtual void undo() { s_Rotate = m_OldRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
-	virtual void redo() { s_Rotate = m_NewRotate; s_UndoRedoWorking = true; m_SpinBox->setValue(s_Rotate); s_UndoRedoWorking = false; }
+	RotateCommand(int rotate, QSpinBox *spinbox)
+	    : QUndoCommand()
+	    , m_NewRotate(rotate)
+	    , m_OldRotate(g_Rotate)
+	    , m_SpinBox(spinbox)
+	{
+	}
+	virtual ~RotateCommand() {}
+	virtual void undo()
+	{
+		g_Rotate = m_OldRotate;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_Rotate);
+		s_UndoRedoWorking = false;
+	}
+	virtual void redo()
+	{
+		g_Rotate = m_NewRotate;
+		s_UndoRedoWorking = true;
+		m_SpinBox->setValue(g_Rotate);
+		s_UndoRedoWorking = false;
+	}
 	virtual int id() const { return 78994352; }
-	virtual bool mergeWith(const QUndoCommand *command) { m_NewRotate = static_cast<const RotateCommand *>(command)->m_NewRotate; return true; }
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		m_NewRotate = static_cast<const RotateCommand *>(command)->m_NewRotate;
+		return true;
+	}
 
 private:
 	int m_NewRotate;
 	int m_OldRotate;
 	QSpinBox *m_SpinBox;
-
 };
 
 void MainWindow::rotateChanged(int rotate)
@@ -3308,7 +2275,7 @@ void MainWindow::clearEditor()
 	m_DlEditor->clear();
 	m_CmdEditor->clear();
 	m_Macro->clear();
-	m_ContentManager->clear();
+	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
 	m_ProjectDock->setVisible(true);
 }
@@ -3323,17 +2290,13 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-    QString emuDescription, emuVersion;
-    getVersionString(QCoreApplication::applicationDirPath() + "/" + EMULATOR_DLL_NAME, emuDescription, emuVersion);
-
-    QString title = QString("%1%2 - EVE Screen Editor [Build Time: %3 - %4] (%5 %6) - (%7)")
-        .arg(QString(m_CleanUndoStack ? "" : "*"))
-        .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
-        .arg(__DATE__)
-        .arg(__TIME__)
-        .arg(emuDescription)
-        .arg(emuVersion)
-        .arg(QDir::currentPath());
+	QString title = QString("%1%2 - %4 - EVE Screen Editor v%3 [Build Time: %5 - %6]")
+	                    .arg(QString(m_CleanUndoStack ? "" : "*"))
+	                    .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
+						.arg(STR_PRODUCTVERSION)
+					    .arg(QDir::currentPath())
+	                    .arg(__DATE__)
+	                    .arg(__TIME__);
 
 	setWindowTitle(title);
 }
@@ -3346,48 +2309,70 @@ void MainWindow::undoCleanChanged(bool clean)
 
 bool MainWindow::maybeSave()
 {
-    bool res = true;
+	bool res = true;
 
 	if (!m_UndoStack->isClean())
 	{
 		QMessageBox::StandardButton ret;
 		ret = QMessageBox::warning(this, tr("EVE Screen Editor"),
-			tr("The project has been modified.\n"
-				"Do you want to save your changes?"),
-			QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+		    tr("The project has been modified.\n"
+		       "Do you want to save your changes?"),
+		    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 		if (ret == QMessageBox::Save)
 		{
 			actSave();
 		}
 		else if (ret == QMessageBox::Cancel)
 		{
-            res = false;
+			res = false;
 		}
 	}
 
-    if (res && m_AddRecentProjectFlag)
-    {
-        m_AddRecentProjectFlag = false;
-        addRecentProject(m_CurrentFile);
-    }
+	if (res && m_AddRecentProjectFlag)
+	{
+		m_AddRecentProjectFlag = false;
+		addRecentProject(m_CurrentFile);
+	}
 
 	return res;
 }
 
+void MainWindow::loadConfig(QString configPath)
+{
+	QFile f(configPath);
+
+	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		return;
+	}
+	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
+	f.close();
+
+	QJsonObject jo = jd.object();
+
+	if (jo.isEmpty())
+		return;
+
+	if (jo.contains("vc1dump") && jo["vc1dump"].isBool())
+	{
+		m_isVCDumpEnable = jo["vc1dump"].toBool();
+	}
+}
+
 void MainWindow::loadRecentProject()
 {
-    // insert recent project actions
-    QAction *pRecentProjAction = 0;
-    m_RecentActionList.clear();
-    for (int i = 0; i < 5; i++)
-    {
-        pRecentProjAction = new QAction("", this);
-        connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
-        pRecentProjAction->setVisible(false);
-        pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i+1)));
-        m_RecentActionList << pRecentProjAction;
-        m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
-    }
+	// insert recent project actions
+	QAction *pRecentProjAction = 0;
+	m_RecentActionList.clear();
+	for (int i = 0; i < 5; i++)
+	{
+		pRecentProjAction = new QAction("", this);
+		connect(pRecentProjAction, &QAction::triggered, this, &MainWindow::openRecentProject);
+		pRecentProjAction->setVisible(false);
+		pRecentProjAction->setShortcut(QKeySequence(QString("Alt+%1").arg(i + 1)));
+		m_RecentActionList << pRecentProjAction;
+		m_FileMenu->insertAction(m_QuitAct, pRecentProjAction);
+	}
 
 	// insert recent project separator
 	if (m_RecentSeparator == NULL)
@@ -3395,33 +2380,35 @@ void MainWindow::loadRecentProject()
 
 	m_RecentSeparator->setVisible(false);
 
-    QFile f(qApp->applicationDirPath() + "/recent_project");
+	QFile f(qApp->applicationDirPath() + "/recent_project");
 
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
-    QStringList pathList = QString(f.readAll()).split("\n");
-    f.close();
-    // add recent project path to File Menu
-    for (int i = pathList.size() - 1; i >= 0; --i)
-    {
-        if (pathList.at(i).isEmpty()) continue;
-        addRecentProject(pathList.at(i));
-    }
+	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	QStringList pathList = QString(f.readAll()).split("\n");
+	f.close();
+	// add recent project path to File Menu
+	for (int i = pathList.size() - 1; i >= 0; --i)
+	{
+		if (pathList.at(i).isEmpty())
+			continue;
+		addRecentProject(pathList.at(i));
+	}
 }
 
 void MainWindow::addRecentProject(QString recentPath)
 {
-    m_RecentPathList.prepend(recentPath);
-    while (m_RecentPathList.size() > 5)
-    {
-        m_RecentPathList.removeLast();
-    }
+	m_RecentPathList.prepend(recentPath);
+	while (m_RecentPathList.size() > 5)
+	{
+		m_RecentPathList.removeLast();
+	}
 
-    for (int i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setText(QString("%1: %2").arg(i+1).arg(m_RecentPathList.at(i)));
-        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
-        m_RecentActionList[i]->setVisible(true);
-    }
+	for (int i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
+	{
+		m_RecentActionList[i]->setText(QString("%1: %2").arg(i + 1).arg(m_RecentPathList.at(i)));
+		m_RecentActionList[i]->setData(m_RecentPathList.at(i));
+		m_RecentActionList[i]->setVisible(true);
+	}
 
 	if (m_RecentSeparator)
 	{
@@ -3431,21 +2418,22 @@ void MainWindow::addRecentProject(QString recentPath)
 
 void MainWindow::removeRecentProject(QString removePath)
 {
-    int i = 0;
+	int i = 0;
 
-    if (!m_RecentPathList.removeOne(removePath)) return;
+	if (!m_RecentPathList.removeOne(removePath))
+		return;
 
-    for (i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setText(QString("%1: %2").arg(i + 1).arg(m_RecentPathList.at(i)));
-        m_RecentActionList[i]->setData(m_RecentPathList.at(i));
-        m_RecentActionList[i]->setVisible(true);
-    }
+	for (i = 0; i < m_RecentPathList.size() && i < m_RecentActionList.size(); ++i)
+	{
+		m_RecentActionList[i]->setText(QString("%1: %2").arg(i + 1).arg(m_RecentPathList.at(i)));
+		m_RecentActionList[i]->setData(m_RecentPathList.at(i));
+		m_RecentActionList[i]->setVisible(true);
+	}
 
-    for (; i < m_RecentActionList.size(); ++i)
-    {
-        m_RecentActionList[i]->setVisible(false);
-    }
+	for (; i < m_RecentActionList.size(); ++i)
+	{
+		m_RecentActionList[i]->setVisible(false);
+	}
 
 	if (m_RecentSeparator)
 	{
@@ -3455,14 +2443,15 @@ void MainWindow::removeRecentProject(QString removePath)
 
 void MainWindow::saveRecentProject()
 {
-    QFile f(qApp->applicationDirPath() + "/recent_project");
-    if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) return;
-    QTextStream ts(&f);    
-    ts << m_RecentPathList.join("\n");
-    f.close();
+	QFile f(qApp->applicationDirPath() + "/recent_project");
+	if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
+		return;
+	QTextStream ts(&f);
+	ts << m_RecentPathList.join("\n");
+	f.close();
 }
 
-bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
+bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 {
 	if (filePath.isEmpty())
 	{
@@ -3506,7 +2495,7 @@ bool MainWindow::checkAndPromptFlashPath(const QString & filePath)
 		{
 			// Push the change of flash size onto the undo stack
 			// We ask the user permission when changing the flash size,
-			// since it's not reliable application behaviour 
+			// since it's not reliable application behaviour
 			// to change options without the user's knowledge
 			int ans = QMessageBox::information(this, tr("Resize flash device"), tr("The selected flash image is larger than the current flash device.\nWould you like to resize the flash device to a larger size?"), QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
 			if (ans == QMessageBox::Yes)
@@ -3535,6 +2524,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
+	//m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);
@@ -3566,21 +2556,24 @@ void MainWindow::toggleUI(bool hasProject)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-	if (maybeSave()) event->accept();
-	else event->ignore();
+	if (maybeSave())
+		event->accept();
+	else
+		event->ignore();
 
-    saveRecentProject();
+	saveRecentProject();
 }
 
 void MainWindow::actCloseProject()
 {
-	if (!maybeSave()) return;
-
-	// reset filename
-	m_CurrentFile = QString();
+	if (!maybeSave())
+		return;
 
 	// reset editors to their default state
 	clearEditor();
+
+	// reset filename
+	m_CurrentFile = QString();
 
 	// clear undo stacks
 	clearUndoStack();
@@ -3610,15 +2603,16 @@ void MainWindow::actNew()
 
 void MainWindow::actNew(bool addClear)
 {
-	if (!maybeSave()) return;
+	if (!maybeSave())
+		return;
 
 	printf("** New **\n");
 
-	// reset filename
-	m_CurrentFile = QString();
-
 	// reset editors to their default state
 	clearEditor();
+
+	// reset filename
+	m_CurrentFile = QString();
 
 	// add clear
 	int editLine;
@@ -3668,7 +2662,7 @@ void MainWindow::actNew(bool addClear)
 
 	// WORKAROUND: Issue #100
 	actResetEmulator();
-    m_MinFlashType = -1;
+	m_MinFlashType = -1;
 }
 
 void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
@@ -3676,8 +2670,10 @@ void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
 	bool firstLine = true;
 	for (int i = 0; i < arr.size(); ++i)
 	{
-		if (firstLine) firstLine = false;
-		else textEditor->textCursor().insertText("\n");
+		if (firstLine)
+			firstLine = false;
+		else
+			textEditor->textCursor().insertText("\n");
 		textEditor->textCursor().insertText(arr[i].toString());
 	}
 }
@@ -3759,40 +2755,41 @@ void postProcessEditor(DlEditor *editor)
 				switch (parsed.IdRight | FTEDITOR_CO_COMMAND)
 				{
 				case CMD_BGCOLOR:
-				case CMD_FGCOLOR: 
-				case CMD_GRADCOLOR: {
+				case CMD_FGCOLOR:
+				case CMD_GRADCOLOR:
+				{
 					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
 					if (pa.ExpectedParameterCount == 3) // Old RGB, upgrade
 					{
-						uint32_t rgb =
-							pa.Parameter[0].U << 16
-							| pa.Parameter[1].U << 8
-							| pa.Parameter[2].U;
+						uint32_t rgb = pa.Parameter[0].U << 16
+						    | pa.Parameter[1].U << 8
+						    | pa.Parameter[2].U;
 						pa.Parameter[0].U = rgb;
 						pa.ExpectedParameterCount = 1;
 						editor->replaceLine(i, pa);
 					}
-					} break;
-				case CMD_GRADIENT: {
+				}
+				break;
+				case CMD_GRADIENT:
+				{
 					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
 					if (pa.ExpectedParameterCount == 10) // Old RGB, upgrade
 					{
-						uint32_t rgb0 =
-							pa.Parameter[2].U << 16
-							| pa.Parameter[3].U << 8
-							| pa.Parameter[4].U;
+						uint32_t rgb0 = pa.Parameter[2].U << 16
+						    | pa.Parameter[3].U << 8
+						    | pa.Parameter[4].U;
 						pa.Parameter[2].U = rgb0;
 						pa.Parameter[3].U = pa.Parameter[5].U;
 						pa.Parameter[4].U = pa.Parameter[6].U;
-						uint32_t rgb1 =
-							pa.Parameter[7].U << 16
-							| pa.Parameter[8].U << 8
-							| pa.Parameter[9].U;
+						uint32_t rgb1 = pa.Parameter[7].U << 16
+						    | pa.Parameter[8].U << 8
+						    | pa.Parameter[9].U;
 						pa.Parameter[5].U = rgb1;
 						pa.ExpectedParameterCount = 6;
 						editor->replaceLine(i, pa);
 					}
-					} break;
+				}
+				break;
 				}
 				break;
 			}
@@ -3816,18 +2813,19 @@ QString MainWindow::getFileDialogPath()
 
 void MainWindow::actOpen()
 {
-	if (!maybeSave()) return;
+	if (!maybeSave())
+		return;
 
 	printf("*** Open ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-		tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
+	    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
 	if (fileName.isNull())
 		return;
 
-    m_MinFlashType = -1;
+	m_MinFlashType = -1;
 	openFile(fileName);
-    actResetEmulator();
+	actResetEmulator();
 }
 
 void MainWindow::openFile(const QString &fileName)
@@ -3836,23 +2834,26 @@ void MainWindow::openFile(const QString &fileName)
 
 	toggleUI(true);
 
-	// Reset editors to their default state
-	clearEditor();
+	m_CurrentFile = fileName;
 
 	// Remove temporary paths
 	if (m_TemporaryDir)
 	{
 		QDir::setCurrent(QDir::tempPath());
-		delete m_TemporaryDir; m_TemporaryDir = NULL;
+		delete m_TemporaryDir;
+		m_TemporaryDir = NULL;
 	}
 
 	// Set current project path
-	m_CurrentFile = fileName;
 	QDir dir(fileName);
 	dir.cdUp();
 	QString dstPath = dir.path();
 	QDir::setCurrent(dstPath);
 	m_LastProjectDir = QDir::currentPath();
+
+	// Reset editors to their default state
+	clearEditor();
+
 
 	// Load the data
 	bool loadOk = false;
@@ -3877,7 +2878,7 @@ void MainWindow::openFile(const QString &fileName)
 		QJsonObject registers = root["registers"].toObject();
 		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
 		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
-		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());		
+		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
 
@@ -3893,11 +2894,11 @@ void MainWindow::openFile(const QString &fileName)
 			{
 				checkFlashPath = true;
 				checkAndPromptFlashPath(ci->SourcePath);
-			}			
+			}
 		}
 
-        documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
-        documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
+		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -3945,11 +2946,11 @@ void MainWindow::openFile(const QString &fileName)
 	m_CmdEditor->selectLine(m_CmdEditor->getLineCount() - 1);
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
-    m_AddRecentProjectFlag = true;
-    removeRecentProject(fileName);
+	m_AddRecentProjectFlag = true;
+	removeRecentProject(fileName);
 }
 
-void MainWindow::setFlashFileNameToLabel(const QString & fileName)
+void MainWindow::setFlashFileNameToLabel(const QString &fileName)
 {
 	QString flashName(fileName);
 	QString text;
@@ -3972,7 +2973,7 @@ const bool MainWindow::isProjectSaved(void)
 	return (false == m_CurrentFile.isEmpty());
 }
 
-bool MainWindow::eventFilter(QObject * watched, QEvent * event)
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
 	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
 	{
@@ -3994,8 +2995,10 @@ QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocess
 		{
 			DlParsed parsed;
 			DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line, coprocessor);
-			if (!parsed.ValidId) line = "";
-			else line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
+			if (!parsed.ValidId)
+				line = "";
+			else
+				line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 		}
 		result.push_back(line);
 	}
@@ -4009,8 +3012,8 @@ QByteArray MainWindow::toJson(bool exportScript)
 	project["device"] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	root["project"] = project;
 	QJsonObject registers;
-	registers["hSize"] = s_HSize;
-	registers["vSize"] = s_VSize;
+	registers["hSize"] = g_HSize;
+	registers["vSize"] = g_VSize;
 	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
@@ -4041,7 +3044,11 @@ QByteArray MainWindow::toJson(bool exportScript)
 
 void MainWindow::actSave()
 {
-	if (m_CurrentFile.isEmpty()) { actSaveAs(); return; }
+	if (m_CurrentFile.isEmpty())
+	{
+		actSaveAs();
+		return;
+	}
 
 	QFile file(m_CurrentFile);
 	file.open(QIODevice::WriteOnly);
@@ -4053,25 +3060,42 @@ void MainWindow::actSave()
 
 	m_UndoStack->setClean();
 
-    m_AddRecentProjectFlag = true;
+	m_AddRecentProjectFlag = true;
 }
 
 void MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
-	QString filterft8xxproj = tr("ESE Project (*%1)").arg(fileExtend);
 
-	QString filter = filterft8xxproj;
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), getFileDialogPath(), filter, &filter);
-	if (fileName.isNull())
-		return;
+	QString filter = tr("ESE Project (*.ese)").arg(fileExtend);
+	QString dirPath = getFileDialogPath();
+	QString fileName;
 
-
-	if (filter == filterft8xxproj)
+	while (true)
 	{
-		if (!fileName.endsWith(fileExtend))
-			fileName = fileName + fileExtend;
+		fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), dirPath, filter, &filter);
+
+		if (fileName.isEmpty())
+			return;
+
+		QDir dir(fileName);
+		dir.cdUp();
+
+		dirPath = dir.absolutePath();
+
+		// check if dir empty
+		if (dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries).count() != 0)
+		{
+			QMessageBox::warning(this, tr("Save Project"), tr("Please select an empty folder!"));
+		}
+		else
+		{
+			break;
+		}
 	}
+
+	if (!fileName.endsWith(fileExtend))
+		fileName = fileName + fileExtend;
 
 	// Copy asset files, abort if already exists (check first)
 	QDir dir(fileName);
@@ -4083,6 +3107,23 @@ void MainWindow::actSaveAs()
 	{
 		printf("From: %s\n", srcPath.toLocal8Bit().data());
 		printf("To: %s\n", dstPath.toLocal8Bit().data());
+
+		// Copy resource files
+		QDir destDir(dstPath + '/' + ContentManager::ResourceDir);
+		if (!destDir.exists())
+		{
+			destDir.mkpath(".");
+		}
+
+		QDir sourceDir(srcPath + '/' + ContentManager::ResourceDir);
+		QStringList files = sourceDir.entryList(QDir::Files);
+		for (int i = 0; i < files.count(); i++)
+		{
+			QString srcName = sourceDir.absolutePath() + '/' + files[i];
+			QString destName = destDir.absolutePath() + '/' + files[i];
+			QFile::copy(srcName, destName);
+		}
+
 		m_ContentManager->lockContent();
 		// Copy assets from srcPath to dstPath
 		std::vector<ContentInfo *> contentInfos;
@@ -4120,7 +3161,8 @@ void MainWindow::actSaveAs()
 	{
 		// Delete temporary directory
 		QDir::setCurrent(QDir::tempPath());
-		delete m_TemporaryDir; m_TemporaryDir = NULL;
+		delete m_TemporaryDir;
+		m_TemporaryDir = NULL;
 	}
 
 	// Set the folder to be the project folder
@@ -4140,21 +3182,32 @@ void MainWindow::actSaveAs()
 	updateWindowTitle();
 }
 
+#define DUMP_VERSION_FT80X			(100)
+#define DUMP_VERSION_FT81X		    (110)
+#define DUMP_VERSION_BT81X		    (110)
+#define DUMP_256K				    (256 * 1024)
+#define DUMP_1K						(1024)
+#define DUMP_8K						(8 * 1024)
+#define DUMP_1024K					(1024 * 1024)
+
 void MainWindow::actImport()
 {
-	if (!maybeSave()) return;
+	if (!maybeSave())
+		return;
+
+	toggleUI(true);
 
 	printf("*** Import ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), getFileDialogPath(),
-		tr("Memory dump, *.vc1dump (*.vc1dump)"));
+	    tr("Memory dump (*.vc1dump)"));
 	if (fileName.isNull())
 		return;
 
-	m_CurrentFile = QString();
-
 	// reset editors to their default state
 	clearEditor();
+
+	m_CurrentFile = QString();
 
 	// set working directory to temporary directory
 #ifdef FTEDITOR_TEMP_DIR
@@ -4167,122 +3220,55 @@ void MainWindow::actImport()
 #endif
 	printf("Current path: %s\n", QDir::currentPath().toLocal8Bit().data());
 
-	// open a project
-	// http://qt-project.org/doc/qt-5.0/qtcore/qdatastream.html
-	// int QDataStream::readRawData(char * s, int len)
 	QFile file(fileName);
-	file.open(QIODevice::ReadOnly);
+	if (!file.open(QIODevice::ReadOnly))
+		return;
+
 	QDataStream in(&file);
 	bool loadOk = false;
-	if (true) // todo: if .vc1dump
+		
+	const size_t headersz = 6;
+	uint32_t header[headersz];
+	int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
+	if (s != sizeof(uint32_t) * headersz)
 	{
-		const size_t headersz = 6;
-		uint32_t header[headersz];
-		int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (s != sizeof(uint32_t) * headersz)
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
+	}
+	else
+	{
+		m_HSize->setValue(header[1]);
+		m_VSize->setValue(header[2]);
+		m_Macro->lockDisplayList();
+		m_Macro->getDisplayList()[0] = header[3];
+		m_Macro->getDisplayList()[1] = header[4];
+		m_Macro->reloadDisplayList(false);
+		m_Macro->unlockDisplayList();
+
+		ContentInfo *ramG = m_ContentManager->add(fileName);
+		m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
+		m_ContentManager->changeMemoryAddress(ramG, 0);
+		m_ContentManager->changeMemoryLoaded(ramG, true);
+		m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
+
+		switch (header[0])
 		{
-			QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
-		}
-		else
-		{
-			if (header[0] == 100)
-			{
-				m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
-				m_HSize->setValue(header[1]);
-				m_VSize->setValue(header[2]);
-				m_Macro->lockDisplayList();
-				m_Macro->getDisplayList()[0] = header[3];
-				m_Macro->getDisplayList()[1] = header[4];
-				m_Macro->reloadDisplayList(false);
-				m_Macro->unlockDisplayList();
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-				ContentInfo *ramG = m_ContentManager->add(fileName);
-				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
-				m_ContentManager->changeMemoryAddress(ramG, 0);
-				m_ContentManager->changeMemoryLoaded(ramG, true);
-				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
-				m_ContentManager->changeRawLength(ramG, 262144);
-				// s = in.skipRawData(262144);
-				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144);
-				if (s != 262144) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
-				else
-				{
-					ramaddr ramPal = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL);
-					if (ramPal < 0) ramPal = 262144;
-					s = in.readRawData(&ram[ramPal], 1024); // FIXME_GUI PALETTE
-					if (s != 1024) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
-					else
-					{
-						m_DlEditor->lockDisplayList();
-						s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-						m_DlEditor->reloadDisplayList(false);
-						m_DlEditor->unlockDisplayList();
-						if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-						else
-						{
-							/*
-							// FIXME: How is the CRC32 for the .vc1dump calculated?
-							uint32_t crc;
-							crc = Crc32_ComputeBuf(0, &ram[RAM_G], 262144);
-							crc = Crc32_ComputeBuf(crc, &ram[RAM_PAL], 1024);
-							crc = Crc32_ComputeBuf(crc, m_DlEditor->getDisplayList(), 8192);
-							if (crc != header[5])
-							{
-								QString message;
-								message.sprintf(tr("CRC32 mismatch, %u, %u").toUtf8().constData(), header[5], crc);
-								QMessageBox::critical(this, tr("Import .vc1dump"), message);
-							}
-							*/
-							loadOk = true;
-							statusBar()->showMessage(tr("Imported project from .vc1dump file"));
-							focusDlEditor(true);
-						}
-					}
-				}
-			}
-			else if (header[0] == 110)
-			{
-				m_ProjectDevice->setCurrentIndex(FTEDITOR_BT815);
-				m_HSize->setValue(header[1]);
-				m_VSize->setValue(header[2]);
-				m_Macro->lockDisplayList();
-				m_Macro->getDisplayList()[0] = header[3];
-				m_Macro->getDisplayList()[1] = header[4];
-				m_Macro->reloadDisplayList(false);
-				m_Macro->unlockDisplayList();
-				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-				ContentInfo *ramG = m_ContentManager->add(fileName);
-				m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
-				m_ContentManager->changeMemoryAddress(ramG, 0);
-				m_ContentManager->changeMemoryLoaded(ramG, true);
-				m_ContentManager->changeRawStart(ramG, sizeof(uint32_t) * headersz);
-				m_ContentManager->changeRawLength(ramG, 1048576);
-				// s = in.skipRawData(1048576);
-				s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1048576);
-				if (s != 1048576) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
-				else
-				{
-					m_DlEditor->lockDisplayList();
-					s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-					m_DlEditor->reloadDisplayList(false);
-					m_DlEditor->unlockDisplayList();
-					if (s != 8192) QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
-					else
-					{
-						loadOk = true;
-						statusBar()->showMessage(tr("Imported project from .vc1dump file"));
-						focusDlEditor(true);
-					}
-				}
-			}
-			else
-			{
-				QString message;
-				message.sprintf(tr("Invalid header version: %i").toUtf8().constData(), header[0]);
-				QMessageBox::critical(this, tr("Import .vc1dump"), message);
-			}
+		case DUMP_VERSION_FT80X:
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT800);
+			m_ContentManager->changeRawLength(ramG, DUMP_256K);
+			loadOk = importDumpFT80X(in);
+			break;
+		case DUMP_VERSION_FT81X:
+			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT810);
+			m_ContentManager->changeRawLength(ramG, DUMP_1024K);
+			loadOk = importDumpFT81X(in);
+			break;
+		default:
+			QString message = QString("Invalid header version: %1").arg(header[0]);
+			QMessageBox::critical(this, tr("Import .vc1dump"), message);
+			break;
 		}
 	}
+
 
 	if (!loadOk)
 	{
@@ -4299,9 +3285,73 @@ void MainWindow::actImport()
 	m_Toolbox->setEditorLine(m_DlEditor, 0);
 }
 
+bool MainWindow::importDumpFT80X(QDataStream & in)
+{
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+	
+
+	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K);
+	if (s != DUMP_256K)
+	{		
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		return false;
+	}
+
+	ramaddr ramPal = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL);
+	if (ramPal < 0)
+		ramPal = DUMP_256K;
+	s = in.readRawData(&ram[ramPal], DUMP_1K); // FIXME_GUI PALETTE
+	if (s != DUMP_1K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
+		return false;
+	}
+
+	m_DlEditor->lockDisplayList();
+	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	if (s != DUMP_8K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+
+	return true;
+}
+
+bool MainWindow::importDumpFT81X(QDataStream & in)
+{
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+	
+	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
+	if (s != DUMP_1024K)
+	{	
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		return false;
+	}
+
+	m_DlEditor->lockDisplayList();
+	s = in.readRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), DUMP_8K);
+	m_DlEditor->reloadDisplayList(false);
+	m_DlEditor->unlockDisplayList();
+	if (s != DUMP_8K)
+	{
+		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		return false;
+	}
+		
+	return true;
+}
+
+bool MainWindow::importDumpBT81X(QDataStream & in)
+{
+	return importDumpFT81X(in); 
+}
+
 void MainWindow::actExport()
 {
-	QString filtervc1dump = tr("Memory dump, *.vc1dump (*.vc1dump)");
+	QString filtervc1dump = tr("Memory dump (*.vc1dump)");
 	QString filter = filtervc1dump;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
@@ -4314,45 +3364,91 @@ void MainWindow::actExport()
 	}
 
 	QFile file(fileName);
-	file.open(QIODevice::WriteOnly);
+	if (!file.open(QIODevice::WriteOnly))
+		return;
+
 	QDataStream out(&file);
 
-	if (true) // todo: if .vc1dump
+	const size_t headersz = 6;
+	uint32_t header[headersz];
+	header[0] = 100;
+	header[1] = g_HSize;
+	header[2] = g_VSize;
+	m_Macro->lockDisplayList();
+	header[3] = m_Macro->getDisplayList()[0];
+	header[4] = m_Macro->getDisplayList()[1];
+	m_Macro->unlockDisplayList();
+	header[5] = 0;
+
+	// get ram content
+	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
+
+	if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_FT801)
 	{
-		const size_t headersz = 6;
-		uint32_t header[headersz];
-		header[0] = 100;
-		header[1] = s_HSize;
-		header[2] = s_VSize;
-		m_Macro->lockDisplayList();
-		header[3] = m_Macro->getDisplayList()[0];
-		header[4] = m_Macro->getDisplayList()[1];
-		m_Macro->unlockDisplayList();
-		header[5] = 0; // FIXME: CRC32
-		char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-		int s = out.writeRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
-		if (s != sizeof(uint32_t) * headersz) goto ExportWriteError;
-		s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 262144); // FIXME_GUI GLOBAL MEMORY
-		if (s != 262144) goto ExportWriteError;
-		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) // FIXME_FT810
-			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], 1024); // WRITE INVALID DUMMY DATA // FIXME_GUI PALETTE
-		else
-			s = out.writeRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], 1024); // FIXME_GUI PALETTE
-		if (s != 1024) goto ExportWriteError;
+		header[0] = DUMP_VERSION_FT80X;
+		
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+		
+		// <256K of main RAM_G>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K)) return;
+		
+		// <1K of main RAM_PAL>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], DUMP_1K)) return;
+		
+		// <8K of DL RAM> setup display list
 		m_DlEditor->lockDisplayList();
-		// s = out.writeRawData(static_cast<char *>(static_cast<void *>(m_DlEditor->getDisplayList())), FTEDITOR_DL_SIZE * sizeof(uint32_t));
-		s = out.writeRawData(static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), FTEDITOR_DL_SIZE * sizeof(uint32_t));
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
 		m_DlEditor->unlockDisplayList();
-		if (s != FTEDITOR_DL_SIZE * sizeof(uint32_t)) goto ExportWriteError;
-		statusBar()->showMessage(tr("Exported project to .vc1dump file"));
+	}
+	else if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	{
+		header[0] = DUMP_VERSION_FT81X;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+
+		// <1024K of main RAM>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+
+		// <8K of DL RAM>
+		m_DlEditor->lockDisplayList();
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
+		m_DlEditor->unlockDisplayList();
+	}
+	else
+	{
+		header[0] = DUMP_VERSION_BT81X;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+
+		// <1024K of main RAM>
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+
+		// <8K of DL RAM>
+		m_DlEditor->lockDisplayList();
+		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
+			return;
+		m_DlEditor->unlockDisplayList();
 	}
 
+	file.close();
+
+	statusBar()->showMessage(tr("Exported project to .vc1dump file"));
 	m_PropertiesEditor->setInfo(tr("Exported project to .vc1dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 
 	return;
-ExportWriteError:
-	QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+}
+
+bool MainWindow::writeDumpData(QDataStream * ds, const char* data, int size)
+{
+	int res = ds->writeRawData(data, size);
+	if (res != size)
+	{
+		ds->device()->close();
+		QMessageBox::critical(this, tr("Export"), tr("Failed to write file"));
+		return false;
+	}
+	return true;
 }
 
 void MainWindow::actProjectFolder()
@@ -4391,7 +3487,7 @@ void MainWindow::bindCurrentDevice()
 void MainWindow::stopEmulatorInternal()
 {
 	printf("Stop the emulator\n");
-	s_EmulatorRunning = false;
+	g_EmulatorRunning = false;
 	m_EmulatorViewport->stop();
 	cleanupMediaFifo();
 }
@@ -4401,16 +3497,17 @@ void MainWindow::startEmulatorInternal()
 	printf("Start the emulator\n");
 	BT8XXEMU_EmulatorParameters params;
 	memset(&params, 0, sizeof(BT8XXEMU_EmulatorParameters));
-	params.Main  =  emuMain;
-	params.Flags =  BT8XXEMU_EmulatorEnableMouse
-				  | BT8XXEMU_EmulatorEnableAudio
-				  | BT8XXEMU_EmulatorEnableCoprocessor
-				  | BT8XXEMU_EmulatorEnableGraphicsMultithread
-				  | BT8XXEMU_EmulatorEnableMainPerformance
-					;
+	params.Main = emuMain;
+	params.Flags = BT8XXEMU_EmulatorEnableMouse
+	    | BT8XXEMU_EmulatorEnableAudio
+	    | BT8XXEMU_EmulatorEnableCoprocessor
+	    | BT8XXEMU_EmulatorEnableGraphicsMultithread
+	    | BT8XXEMU_EmulatorEnableMainPerformance;
+	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
+		params.Flags |= BT8XXEMU_EmulatorEnableHSFPreview;
 	params.Mode = deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	params.Close = closeDummy;
-	s_EmulatorRunning = true;
+	g_EmulatorRunning = true;
 	m_EmulatorViewport->run(params);
 
 	BT8XXEMU_setDebugLimiter(g_Emulator, 2048 * 64);
@@ -4431,8 +3528,10 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 	stopEmulatorInternal();
 
 	// Set the new emulator version
-	if (changeDevice) FTEDITOR_CURRENT_DEVICE = deviceIntf;
-	if (changeFlash) FTEDITOR_CURRENT_FLASH = flashIntf;
+	if (changeDevice)
+		FTEDITOR_CURRENT_DEVICE = deviceIntf;
+	if (changeFlash)
+		FTEDITOR_CURRENT_FLASH = flashIntf;
 
 	// Reset emulator data
 	printf("Reset emulator parameters\n");
@@ -4497,37 +3596,80 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 class ProjectDeviceCommand : public QUndoCommand
 {
 public:
-	ProjectDeviceCommand(int deviceIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectDevice(deviceIntf), m_OldProjectDevice(FTEDITOR_CURRENT_DEVICE), m_MainWindow(mainWindow) { }
-	virtual ~ProjectDeviceCommand() { }
-	virtual void undo() { m_MainWindow->changeEmulatorInternal(m_OldProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
-	virtual void redo() { m_MainWindow->changeEmulatorInternal(m_NewProjectDevice, FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = true; m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE); s_UndoRedoWorking = false; }
+	ProjectDeviceCommand(int deviceIntf, MainWindow *mainWindow)
+	    : QUndoCommand()
+	    , m_NewProjectDevice(deviceIntf)
+	    , m_OldProjectDevice(FTEDITOR_CURRENT_DEVICE)
+	    , m_MainWindow(mainWindow)
+	{
+	}
+	virtual ~ProjectDeviceCommand() {}
+	virtual void undo()
+	{
+		m_MainWindow->changeEmulatorInternal(m_OldProjectDevice, FTEDITOR_CURRENT_FLASH);
+		s_UndoRedoWorking = true;
+		m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
+		s_UndoRedoWorking = false;
+	}
+	virtual void redo()
+	{
+		m_MainWindow->changeEmulatorInternal(m_NewProjectDevice, FTEDITOR_CURRENT_FLASH);
+		s_UndoRedoWorking = true;
+		m_MainWindow->m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
+		s_UndoRedoWorking = false;
+	}
 	virtual int id() const { return 98919600; }
-	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectDevice = static_cast<const ProjectDeviceCommand *>(command)->m_NewProjectDevice; return true; }
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		m_NewProjectDevice = static_cast<const ProjectDeviceCommand *>(command)->m_NewProjectDevice;
+		return true;
+	}
 
 private:
 	int m_NewProjectDevice;
 	int m_OldProjectDevice;
 	MainWindow *m_MainWindow;
-
 };
 
 void MainWindow::projectDeviceChanged(int deviceIntf)
 {
 	if (s_UndoRedoWorking)
 		return;
-	
+
 	m_UndoStack->push(new ProjectDeviceCommand(deviceIntf, this));
 }
 
 class ProjectFlashCommand : public QUndoCommand
 {
 public:
-	ProjectFlashCommand(int flashIntf, MainWindow *mainWindow) : QUndoCommand(), m_NewProjectFlash(flashIntf), m_OldProjectFlash(FTEDITOR_CURRENT_FLASH), m_MainWindow(mainWindow) { }
-	virtual ~ProjectFlashCommand() { }
-	virtual void undo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
-	virtual void redo() { m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash); s_UndoRedoWorking = true; m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH); s_UndoRedoWorking = false; }
+	ProjectFlashCommand(int flashIntf, MainWindow *mainWindow)
+	    : QUndoCommand()
+	    , m_NewProjectFlash(flashIntf)
+	    , m_OldProjectFlash(FTEDITOR_CURRENT_FLASH)
+	    , m_MainWindow(mainWindow)
+	{
+	}
+	virtual ~ProjectFlashCommand() {}
+	virtual void undo()
+	{
+		m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash);
+		s_UndoRedoWorking = true;
+		m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+		s_UndoRedoWorking = false;
+	}
+	virtual void redo()
+	{
+		m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_NewProjectFlash);
+		s_UndoRedoWorking = true;
+		m_MainWindow->m_ProjectFlash->setCurrentIndex(FTEDITOR_CURRENT_FLASH);
+		s_UndoRedoWorking = false;
+	}
 	virtual int id() const { return 98919601; }
-	virtual bool mergeWith(const QUndoCommand *command) { m_NewProjectFlash = static_cast<const ProjectFlashCommand *>(command)->m_NewProjectFlash; return true; }
+	virtual bool mergeWith(const QUndoCommand *command)
+	{
+		m_NewProjectFlash = static_cast<const ProjectFlashCommand *>(command)->m_NewProjectFlash;
+		return true;
+	}
 
 private:
 	int m_NewProjectFlash;
@@ -4550,32 +3692,33 @@ void MainWindow::projectFlashChanged(int flashIntf)
 
 	if (s_UndoRedoWorking)
 		return;
-	
+
 	m_UndoStack->push(new ProjectFlashCommand(flashIntf, this));
 }
 
 void MainWindow::openRecentProject()
 {
-    QAction *pAction = (QAction *)sender();
-    QString projectPath = pAction->data().toString();
-    
+	QAction *pAction = (QAction *)sender();
+	QString projectPath = pAction->data().toString();
+
 	if (!QFile::exists(projectPath))
-	{	
+	{
 		removeRecentProject(projectPath);
 		QMessageBox::critical(this, tr(""), QString(tr("%1 cannot be opened.")).arg(projectPath));
 		return;
 	}
 
-	if (!maybeSave()) return;
+	if (!maybeSave())
+		return;
 
-    openFile(projectPath);
+	openFile(projectPath);
 }
 
 void MainWindow::projectDisplayChanged(int i)
 {
 	if (s_UndoRedoWorking)
 		return;
-	
+
 	if (i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE])
 	{
 		m_UndoStack->beginMacro(tr("Change display"));
@@ -4623,6 +3766,46 @@ void MainWindow::actImportDisplayList()
 	focusDlEditor();
 }
 
+void MainWindow::saveDisplayListToTextFile(bool isBigEndian)
+{
+	static QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Display List"), dirPath, tr("Display List Files(*.txt)"));
+
+	QDir saveDir(fileName);
+	saveDir.cdUp();
+	dirPath = saveDir.absolutePath();
+
+	QFile f(fileName);
+	if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		QTextStream ts(&f);
+		
+		ts << m_Inspector->getDisplayListContent(isBigEndian);
+		ts.flush();
+		f.close();
+	}
+}
+
+void MainWindow::actLittleEndianSaveDisplayList()
+{
+	saveDisplayListToTextFile(false);
+}
+
+void MainWindow::actBigEndianSaveDisplayList()
+{
+	saveDisplayListToTextFile(true);
+}
+
+void MainWindow::actLittleEndianSaveCoproCmd()
+{
+	m_CmdEditor->saveCoprocessorCmd(false);
+}
+
+void MainWindow::actBigEndianSaveCoproCmd()
+{
+	m_CmdEditor->saveCoprocessorCmd(true);
+}
+
 void MainWindow::actDisplayListFromIntegers()
 {
 	m_UndoStack->beginMacro(tr("Display list from integers"));
@@ -4655,49 +3838,64 @@ void MainWindow::manual()
 
 void MainWindow::about()
 {
+	QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
+	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString();
+	   	 
 	QMessageBox msgBox(this);
-	msgBox.setWindowTitle(tr("About EVE Screen Editor v3.1.2"));
+
+	msgBox.setWindowTitle(QString(tr("About EVE Screen Editor v%1")).arg(STR_PRODUCTVERSION));
 	msgBox.setTextFormat(Qt::RichText);
 	msgBox.setText(tr(
-		"Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"		
+	    "Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
+	    "<br>"
+	    "Copyright (C) 2016-2020  Bridgetek Pte Ltd<br>"
+	    "<br>"
+		"%1<br>"
 		"<br>"
-		"Copyright (C) 2016-2018  Bridgetek Pte Ltd<br>"
-		"<br>"
-		"Support and updates:<br>"
-		"<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
-		"<br>"
-		"<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>"
-		));
+	    "Support and updates:<br>"
+	    "<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
+	    "<br>"
+	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>").arg(emulatorVersion));
 	msgBox.exec();
 }
 
 void MainWindow::aboutQt()
 {
-	QMessageBox::about(this, tr("3rd Party"), tr(
-		"The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
-		"Contact: http://www.qt-project.org/legal\n"
-		"Qt is available under the LGPL.\n"
-		"\n"
-		"Portions part of the examples of the Qt Toolkit, under the BSD license.\n"
-		"Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
-		"Contact: http://www.qt-project.org/legal\n"
-		"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
-		"\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
-		"LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
-		"A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
-		"OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
-		"SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
-		"LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
-		"DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
-		"THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
-		"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
-		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
-		"\n"
-		"Fugue Icons\n"
-		"(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
-		"These icons are licensed under a Creative Commons"
-		"Attribution 3.0 License.\n"
-		"<http://creativecommons.org/licenses/by/3.0/>"));
+	QMessageBox::about(this, tr("3rd Party"), tr("The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+	                                             "Contact: http://www.qt-project.org/legal\n"
+	                                             "Qt is available under the LGPL.\n"
+	                                             "\n"
+	                                             "Portions part of the examples of the Qt Toolkit, under the BSD license.\n"
+	                                             "Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+	                                             "Contact: http://www.qt-project.org/legal\n"
+	                                             "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
+	                                             "\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
+	                                             "LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
+	                                             "A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
+	                                             "OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
+	                                             "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
+	                                             "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
+	                                             "DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
+	                                             "THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
+	                                             "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
+	                                             "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+	                                             "\n"
+	                                             "Fugue Icons\n"
+	                                             "(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
+	                                             "These icons are licensed under a Creative Commons"
+	                                             "Attribution 3.0 License.\n"
+	                                             "<http://creativecommons.org/licenses/by/3.0/>"));
+}
+
+QString MainWindow::getProjectContent() const
+{
+	QFile file(m_CurrentFile);
+	file.open(QIODevice::ReadOnly);
+	QTextStream ts(&file);
+	QString projectContent = ts.readAll();
+	file.close();
+
+	return projectContent;
 }
 
 } /* namespace FTEDITOR */

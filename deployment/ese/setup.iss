@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "V3.1.2"
+#define MyAppVersion "V3.4"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\\prerelease.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}-rc1
 ;SetupIconFile=.\\eve_editor.ico
 Compression=lzma
 SolidCompression=yes
@@ -45,21 +45,22 @@ Source: ".\\*.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\astc_conv.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\export.py"; DestDir: "{app}"; Flags: ignoreversion
+;Source: ".\\export.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\export_common.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\export_bt81x_helper.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\export_EVE_Arduino.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\export_ftdi_eve_hal.py"; DestDir: "{app}"; Flags: ignoreversion
+;Source: ".\\export_ftdi_eve_hal.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\export_ftdi_eve_hal2.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\export_GameDuino2.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\export_gd2.py"; DestDir: "{app}"; Flags: ignoreversion
+;Source: ".\\export_gd2.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\helperapi.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\img_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\png.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\pngp2pa.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\raw_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 
-
+Source: ".\\config.json"; DestDir: "{app}"; Flags: ignoreversion
 
 
 Source: ".\\astcenc.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -71,10 +72,11 @@ Source: ".\\mx25lemu.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\libFT4222.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\libFT4222-64.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\libMPSSE.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\python36.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\python38.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\zlib1__.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -86,8 +88,12 @@ Source: ".\\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\\libpng16-16__.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+;Source: ".\\api-ms-*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: ".\\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
 Source: ".\\Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs
@@ -98,6 +104,9 @@ Source: ".\\Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createal
 Source: ".\\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs
 Source: ".\\platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs
 Source: ".\\imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs
+Source: ".\\styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs
+
+Source: ".\\device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -114,6 +123,7 @@ Type: files; Name: "{app}\*.pyc"
 Type: filesandordirs; Name: "{app}\__pycache__"
 Type: filesandordirs; Name: "{app}\Examples"
 Type: filesandordirs; Name: "{app}\Lib"
+Type: filesandordirs; Name: "{app}\device_sync"
 
 [Registry]
 Root: HKCR; Subkey: ".ese";                             ValueData: "{#MyAppName}";          Flags: uninsdeletevalue; ValueType: string;  ValueName: ""

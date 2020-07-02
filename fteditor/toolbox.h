@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_TOOLBOX_H
 #define FTEDITOR_TOOLBOX_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 
@@ -27,6 +31,15 @@
 
 class QTreeWidget;
 class QTreeWidgetItem;
+
+// Primitive, functions, and vertices drop on top of the command list,
+// Display list and command state drop before the widget that's under the cursor
+
+#define FTEDITOR_SELECTION_PRIMITIVE (1)
+#define FTEDITOR_SELECTION_FUNCTION (2)
+#define FTEDITOR_SELECTION_DL_STATE (3)
+#define FTEDITOR_SELECTION_CMD_STATE (4)
+#define FTEDITOR_SELECTION_VERTEX (5)
 
 namespace FTEDITOR {
 
@@ -79,6 +92,7 @@ private:
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT810Plus;
 	std::vector<QTreeWidgetItem *> m_CoprocessorBT815Plus;
 	std::vector<QTreeWidgetItem *> m_DisplayListFT810Plus;
+	std::vector<QTreeWidgetItem *> m_DisplayListBT815Plus;
 
 	// Current line
 	DlEditor *m_LineEditor;

@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_MAIN_WINDOW_H
 #define FTEDITOR_MAIN_WINDOW_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 #include <map>
@@ -29,7 +33,7 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
-#define FT_VCDUMP_VISIBLE false
+#define CONFIGURE_FILE_PATH				"config.json"
 
 class QTemporaryDir;
 class QTreeView;
@@ -115,6 +119,7 @@ public:
 	void focusDlEditor(bool forceOnly = false);
 	void focusCmdEditor();
 	void focusProperties();
+	void focusOutput();
 
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);
@@ -155,6 +160,8 @@ public:
 	void toggleDockWindow(bool isShow);
 	void toggleUI(bool hasProject);
 
+	QString getProjectContent(void) const;
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -175,6 +182,10 @@ private slots:
 	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
+	void actLittleEndianSaveDisplayList();
+	void actBigEndianSaveDisplayList();
+	void actLittleEndianSaveCoproCmd();
+	void actBigEndianSaveCoproCmd();
 	void actDisplayListFromIntegers();
 
 	void undoCleanChanged(bool clean);
@@ -224,6 +235,8 @@ private:
 
 	bool maybeSave();
 
+	void saveDisplayListToTextFile(bool isBigEndian);
+
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();
 	QString scriptDir();
@@ -235,10 +248,17 @@ private:
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
+	void loadConfig(QString configPath);
 	void loadRecentProject();
 	void addRecentProject(QString recentPath);
 	void removeRecentProject(QString removePath);
 	void saveRecentProject();
+
+	bool writeDumpData(QDataStream * ds, const char* data, int size);
+
+	bool importDumpFT80X(QDataStream & ds);
+	bool importDumpFT81X(QDataStream & ds);
+	bool importDumpBT81X(QDataStream & ds);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -268,6 +288,7 @@ private:
 	QLabel *m_ErrorLabel;
 
 	QLabel *m_CursorPosition;
+	QLabel *m_PixelColor;
 	QLabel *m_CoprocessorBusy;
 
 	QDockWidget *m_NavigatorDock;
@@ -276,6 +297,7 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
+	//QDockWidget *m_OutputDock;
 
 	InteractiveProperties *m_InteractiveProperties;
 
@@ -353,6 +375,13 @@ private:
 	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;
+	
+	QAction *m_LittleEndianSaveDisplayListAct;
+	QAction *m_BigEndianSaveDisplayListAct;
+
+	QAction *m_LittleEndianSaveCoproCmdAct;
+	QAction *m_BigEndianSaveCoproCmdAct;
+
 	QAction *m_DisplayListFromIntegers;
 	QAction *m_ManualAct;
 	QAction *m_AboutAct;
@@ -373,6 +402,8 @@ private:
 	friend class ProjectDeviceCommand;
 	friend class ProjectFlashCommand;
 
+	bool m_isVCDumpEnable;
+	QLabel *infoLabel;
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

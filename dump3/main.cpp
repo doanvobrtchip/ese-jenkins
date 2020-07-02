@@ -4,12 +4,18 @@ Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
 */
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 #define BT815EMU_MODE
 
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
 #include <ft800emu_vc.h>
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -275,3 +281,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

@@ -195,7 +195,7 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			break;
 		}
 		case REG_ROMSUB_SEL:
-			data &= 0x3;
+			// data &= 0x3;
 			break;
 #ifdef BT815EMU_MODE
 		case REG_FLASH_STATUS:
@@ -211,10 +211,22 @@ BT8XXEMU_FORCE_INLINE void Memory::actionWrite(const ramaddr address, T &data)
 			// FTEMU_warning("Write REG_SPIM 0x%x", (int)data);
 			if (m_Flash)
 			{
+				uint8_t currentData = rawReadU8(REG_SPIM);
+#ifdef BT817EMU_MODE
+				bool rising = ((data & 0x20) == 0x20);
+				if (m_SpimRising != rising)
+				{
+					m_SpimRising = rising;
+					if (rising)
+						m_Spimi = (uint8_t)currentData & 0xF;
+					else
+						m_SpimiL = (uint8_t)currentData & 0xF;
+				}
+#endif
 				uint8_t regSpimDir = rawReadU8(REG_SPIM_DIR); // SPI signal directions
 				if (regSpimDir & 0x10) regSpimDir |= 0x20;
 				uint8_t dataOut = (data & regSpimDir)
-					| (rawReadU8(REG_SPIM) & (~regSpimDir));
+					| (currentData & (~regSpimDir));
 				if (!(regSpimDir & 0x10)) dataOut |= 0x10; // CS high if not out
 				uint8_t dataIn = m_Flash->vTable()->TransferSpi4(m_Flash, dataOut & 0xFF);
 				bool cs = (regSpimDir & 0x10) && !(data & 0x10); // CS set when out and low
@@ -310,6 +322,11 @@ BT8XXEMU_FORCE_INLINE void Memory::postWrite(const ramaddr address, const T data
 	}
 }
 
+BT8XXEMU_FORCE_INLINE void Memory::memSet(ramaddr address, uint8_t value, ramaddr size)
+{
+	memset(&m_Ram[address], value, size);
+}
+
 BT8XXEMU_FORCE_INLINE void Memory::rawWriteU32(ramaddr address, uint32_t data)
 {
 	rawWriteU32(m_Ram, address, data);
@@ -340,7 +357,11 @@ BT8XXEMU_FORCE_INLINE uint8_t Memory::rawReadU8(ramaddr address)
 	return rawReadU8(m_Ram, address);
 }
 
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
+static const uint8_t c_RomBT817[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_bt817.h"
+};
+#elif defined(BT815EMU_MODE)
 static const uint8_t c_RomBT815[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_bt815.h"
 };
@@ -357,7 +378,14 @@ static const uint8_t c_RomFT801[FT800EMU_ROM_SIZE] = {
 };
 #endif
 
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
+static const uint8_t c_OTP817[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_817.h"
+};
+static const uint8_t c_OTP818[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_818.h"
+};
+#elif defined(BT815EMU_MODE)
 static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_815.h"
 };
@@ -390,11 +418,14 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 #ifdef BT815EMU_MODE
 	, m_Flash(flash)
 #endif
+#ifdef BT817EMU_MODE
+	, m_SpimRising(false) /* , m_Spimi(0), m_SpimiL(0) */
+#endif
 {
 	static_assert(offsetof(Memory, m_Ram) == 0, "Incompatible C++ ABI");
 	static_assert(offsetof(Memory, m_RamU32) == 0, "Incompatible C++ ABI");
 
-	// memset(m_Ram, 0, FT800EMU_RAM_SIZE);
+	// memset(m_Ram, 0xFF, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	// memset(m_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	
@@ -425,7 +456,9 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	}
 	else
 	{
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT817, sizeof(c_RomBT817));
+#elif defined(BT815EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT815, sizeof(c_RomBT815));
 #elif defined(FT810EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT810, sizeof(c_RomFT810));
@@ -462,7 +495,10 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	}
 	else
 	{
-#if defined(BT815EMU_MODE)
+#if defined(BT817EMU_MODE)
+		if (emulatorMode >= BT8XXEMU_EmulatorBT818) memcpy(&m_Ram[RAM_JTBOOT], c_OTP818, sizeof(c_OTP818));
+		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP817, sizeof(c_OTP817));
+#elif defined(BT815EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
 		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));
 #elif defined(FT810EMU_MODE)
@@ -524,7 +560,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 #if defined(BT815EMU_MODE)
 	rawWriteU32(REG_SNAPFORMAT, 32);
 #endif
-	rawWriteU32(REG_CPURESET, 0);
+	rawWriteU32(REG_CPURESET, 2);
 	rawWriteU32(REG_TAP_CRC, 0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_TAP_MASK, ~0); // Not used by emulator yet // TODO: CRC value of RGB signals output
 	rawWriteU32(REG_HCYCLE, 548);
@@ -615,22 +651,59 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	rawWriteU32(REG_CMD_DL, 0);
 
 #ifdef FT810EMU_MODE
+	rawWriteU32(REG_EJPG_OPTIONS, 0);
+	rawWriteU32(REG_EJPG_DST, 0);
+	rawWriteU32(REG_EJPG_W, 0);
+	rawWriteU32(REG_EJPG_H, 0);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
+	rawWriteU32(REG_EJPG_RI, 0);
+	rawWriteU32(REG_EJPG_TQ, 0);
+	rawWriteU32(REG_EJPG_TDA, 0);
+	memSet(REG_EJPG_Q, 0, 128);
+	memSet(REG_EJPG_HT, 0, 256);
+	memSet(REG_EJPG_DCC, 0, 24);
+	memSet(REG_EJPG_ACC, 0, 512);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
+	rawWriteU32(REG_EJPG_FORMAT, 0);
 	rawWriteU32(REG_EJPG_SCALE, 256);
 	rawWriteU32(REG_J1_COLD, 1);
 #endif
 
 #if defined(BT815EMU_MODE)
 	rawWriteU32(REG_ADAPTIVE_FRAMERATE, 1);
+
 	rawWriteU32(REG_SPIM_DIR, 0);
 	rawWriteU32(REG_SPIM, 0);
 	rawWriteU32(REG_ESPIM_READSTART, 22);
 	rawWriteU32(REG_ESPIM_SEQ, 0);
 	rawWriteU32(REG_ESPIM_ADD, 0);
 	rawWriteU32(REG_ESPIM_COUNT, 0);
-	rawWriteU32(REG_ESPIM_WINDOW, 0);
-	rawWriteU32(REG_ESPIM_DUMMY, 0);
-	rawWriteU32(REG_ESPIM_TRIG, 0);
+	memSet(REG_ESPIM_WINDOW, 0, 64); //
+	rawWriteU32(REG_ESPIM_DUMMY, 0); //
+	rawWriteU32(REG_ESPIM_TRIG, 0); //
+		
 	rawWriteU32(REG_FLASH_STATUS, 0);
+#endif
+
+#if defined(BT817EMU_MODE)
+	rawWriteU32(REG_AH_HCYCLE_MAX, 0);
+	rawWriteU32(REG_PCLK_2X, 0);
+
+	rawWriteU32(REG_FLASH_DTR, 0);
+	rawWriteU32(REG_ESPIM_DTR, 0); // TODO: Do we just match these, or what?
+
+	rawWriteU32(REG_HSF_HSIZE, 0);
+	rawWriteU32(REG_HSF_FT1, 0);
+	rawWriteU32(REG_HSF_FSCALE, 0);
+	rawWriteU32(REG_HSF_F00, 0);
+	rawWriteU32(REG_HSF_F02, 0);
+	rawWriteU32(REG_HSF_F03, 0);
+	rawWriteU32(REG_HSF_F10, 0);
+	rawWriteU32(REG_HSF_F11, 0);
+	rawWriteU32(REG_HSF_F12, 0);
+	rawWriteU32(REG_HSF_F13, 0);
+
+	rawWriteU32(REG_UNDERRUN, 0);
 #endif
 
 	m_CpuReset = false;
@@ -1151,6 +1224,14 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 	case REG_ESPIM_WINDOW:
 		//FTEMU_warning("Read Co U32 REG_ESPIM_WINDOW");
 		break;
+#ifdef BT817EMU_MODE
+	case REG_ESPIM_DTR:
+		//FTEMU_warning("Read Co U32 REG_ESPIM_DTR");
+		break;
+	case REG_FLASH_DTR:
+		//FTEMU_warning("Read Co U32 REG_FLASH_DTR");
+		break;
+#endif
 	case REG_GPIO:
 		//FTEMU_warning("Read Co U32 REG_GPIO");
 		break;
@@ -1191,6 +1272,7 @@ void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 	postWrite(address, data);
 }
 
+#ifndef FT810EMU_MODE
 uint16_t Memory::coprocessorReadU16(ramaddr address)
 {
 	// FTEMU_printf("Coprocessor read U16 %i\n", (int)address);
@@ -1275,6 +1357,7 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 
 	return rawReadU16(address);
 }
+#endif
 
 void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 {
@@ -1305,6 +1388,7 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 	postWrite(address, data);
 }
 
+#ifndef FT810EMU_MODE
 uint8_t Memory::coprocessorReadU8(ramaddr address)
 {
 #if FT800EMU_COPROCESSOR_MEMLOG
@@ -1389,6 +1473,7 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 
 	return rawReadU8(address);
 }
+#endif
 
 int *Memory::getDisplayListCoprocessorWrites()
 {

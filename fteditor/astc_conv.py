@@ -1,12 +1,10 @@
-try:
-    import Image,ImageChops
-except ImportError:
-    from PIL import Image,ImageChops
+from PIL import Image,ImageChops
 import array
 import random
 import tempfile
 import os
 import struct
+import subprocess
 
 def astc_dims(fmt):
     if isinstance(fmt, int):
@@ -81,24 +79,25 @@ def pad(im, mult):
     return n
 
 def round_up(n, d):
-    return int(d * ((n + d - 1) / d))
+    return int(d * ((n + d - 1) // d))
     
 def convert(im, fmt = "COMPRESSED_RGBA_ASTC_4x4_KHR", effort = "exhaustive", astc_encode = "astcenc"):
     (w, h) = astc_dims(fmt)
     ni = Image.new("RGBA", (round_up(im.size[0], w), round_up(im.size[1], h)))
     ni.paste(im, (0, 0))
-    png = tempfile.NamedTemporaryFile(delete = False)
+    png = tempfile.NamedTemporaryFile(delete = False)    
     ni.transpose(Image.FLIP_TOP_BOTTOM).save(png, 'png')
-    im = ni
 
     astc = tempfile.NamedTemporaryFile(delete = False)
     
-    os.system("\"%s\" -c %s %s %dx%d -%s -silentmode" % (astc_encode, png.name, astc.name, w, h, effort))
+    # close file so that astcenc tool can use fopen()
+    png.close()
+    
+    subprocess.call("\"%s\" -c %s %s %dx%d -%s -silentmode" % (astc_encode, png.name, astc.name, w, h, effort), shell=True)
 
     (bw, bh, d0) = tile(open(astc.name, "rb"))
 
-    astc.close()
-    png.close()
+    astc.close()    
     
     if os.path.exists(astc.name):
         os.remove(astc.name)  

@@ -13,6 +13,11 @@
  */ 
 /*----------------------------------------------------------------------------*/ 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26451) // Arithmetic overflow
+#endif
+
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,7 +33,7 @@
 
 float inversesqrt(float p)
 {
-	return 1.0f / sqrt(p);
+	return 1.0f / sqrtf(p);
 }
 float acospi(float p)
 {
@@ -58,33 +63,33 @@ float nan(int p)
 
 float2 fmax(float2 p, float2 q)
 {
-	return float2(fmax(p.x, q.x), fmax(p.y, q.y));
+	return float2(fmaxf(p.x, q.x), fmaxf(p.y, q.y));
 }
 
 float3 fmax(float3 p, float3 q)
 {
-	return float3(fmax(p.x, q.x), fmax(p.y, q.y), fmax(p.z, q.z));
+	return float3(fmaxf(p.x, q.x), fmaxf(p.y, q.y), fmaxf(p.z, q.z));
 }
 
 float4 fmax(float4 p, float4 q)
 {
-	return float4(fmax(p.x, q.x), fmax(p.y, q.y), fmax(p.z, q.z), fmax(p.w, q.w));
+	return float4(fmaxf(p.x, q.x), fmaxf(p.y, q.y), fmaxf(p.z, q.z), fmaxf(p.w, q.w));
 }
 
 
 float2 fmin(float2 p, float2 q)
 {
-	return float2(fmin(p.x, q.x), fmin(p.y, q.y));
+	return float2(fminf(p.x, q.x), fminf(p.y, q.y));
 }
 
 float3 fmin(float3 p, float3 q)
 {
-	return float3(fmin(p.x, q.x), fmin(p.y, q.y), fmin(p.z, q.z));
+	return float3(fminf(p.x, q.x), fminf(p.y, q.y), fminf(p.z, q.z));
 }
 
 float4 fmin(float4 p, float4 q)
 {
-	return float4(fmin(p.x, q.x), fmin(p.y, q.y), fmin(p.z, q.z), fmin(p.w, q.w));
+	return float4(fminf(p.x, q.x), fminf(p.y, q.y), fminf(p.z, q.z), fminf(p.w, q.w));
 }
 
 /* 
@@ -103,17 +108,17 @@ float4 cross(float4 p, float4 q)
 
 float length(float2 p)
 {
-	return sqrt(dot(p, p));
+	return sqrtf(dot(p, p));
 }
 
 float length(float3 p)
 {
-	return sqrt(dot(p, p));
+	return sqrtf(dot(p, p));
 }
 
 float length(float4 p)
 {
-	return sqrt(dot(p, p));
+	return sqrtf(dot(p, p));
 }
 
 float length_sqr(float2 p)
@@ -281,7 +286,7 @@ float4 characteristic_poly(mat4 p)
 
 float2 solve_monic(float2 p)
 {
-	float v = sqrt(p.y * p.y - 4 * p.x);
+	float v = sqrtf(p.y * p.y - 4 * p.x);
 	return (p.yy + float2(v, -v)) * -0.5f;
 }
 
@@ -300,7 +305,7 @@ float3 solve_monic(float3 p)
 
 	float cx = static_cast < float >(cbrt(fabs(p.x)));
 	float cy = static_cast < float >(cbrt(fabs(p.y)));
-	scal = fmax(fmax(fabsf(p.z), cx), cy * cy) * (1.0f / 1048576.0f);
+	scal = fmaxf(fmaxf(fabsf(p.z), cx), cy * cy) * (1.0f / 1048576.0f);
 	float rscal = 1.0f / scal;
 	p = p * float3(rscal * rscal * rscal, rscal * rscal, rscal);
 
@@ -314,7 +319,7 @@ float3 solve_monic(float3 p)
 	if (nq3 < r2)
 	{
 		// one root
-		float root = sqrt(r2 - nq3);	// div scal^3
+		float root = sqrtf(r2 - nq3);	// div scal^3
 		float s = static_cast < float >(cbrt(r + root));	// div scal
 		float t = static_cast < float >(cbrt(r - root));	// div scal
 		return float3((s + t) * scal - pz, nan(0), nan(0));
@@ -353,7 +358,7 @@ float4 solve_monic(float4 p)
 	// is numerically at least nonnegative (but may have become negative as a result of
 	// a roundoff error). We use fmax() to extract this value or a very small positive value.
 	float2 v2 = fmax(v.xy, v.zw);
-	float p2 = fmax(v2.x, v2.y);	// p^2
+	float p2 = fmaxf(v2.x, v2.y);	// p^2
 	float pr = inversesqrt(p2);	// 1/p
 	float pm = p2 * pr;			// p
 
@@ -749,4 +754,6 @@ hyperplane_4d generate_hyperplane_from_points(float4 point0, float4 point1, floa
 	return res;
 }
 
-
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

@@ -4,6 +4,10 @@
  * Author: Jan Boon <jan.boon@kaetemi.be>
  */
 
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 26495) // Uninitialized member
+#pragma warning(disable : 26444) // Unnamed objects
+
 #include <bt8xxemu.h>
 #include <bt8xxemu_diag.h>
 #include <stdio.h>
@@ -13,9 +17,9 @@
 #include <QFile>
 #include <QTextStream>
 
-#include <../../fteditor/constant_mapping.h>
-#include <../../fteditor/constant_common.h>
-#include <../../fteditor/dl_parser.h>
+#include "../../fteditor/constant_mapping.h"
+#include "../../fteditor/constant_common.h"
+#include "../../fteditor/dl_parser.h"
 
 void coprocdiff(BT8XXEMU_Emulator *sender, void *context);
 
@@ -31,7 +35,7 @@ int graphics(BT8XXEMU_Emulator *sender, void *context, int output, const argb888
 		{
 			QString path = QString("cases/coprocdiff/") + g_Device + "/" + QString(g_Case).toLower() + "/" + QString(g_Case).toLower() + "_" + QString::number(s_Frame);
 			QImage image(hsize, vsize, QImage::Format_RGB32);
-			for (int y = 0; y < vsize; ++y)
+			for (unsigned int y = 0; y < vsize; ++y)
 				memcpy(image.scanLine(y), &buffer[y * hsize], sizeof(argb8888) * hsize);
 			image.save(path + ".png");
 			QByteArray pathOut = path.toLocal8Bit();

@@ -14,6 +14,10 @@
 #ifndef FTEDITOR_CONTENT_MANAGER_H
 #define FTEDITOR_CONTENT_MANAGER_H
 
+#pragma warning(disable : 26812)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 26444)
+
 // STL includes
 #include <vector>
 #include <set>
@@ -143,6 +147,9 @@ class ContentManager : public QWidget
 	Q_OBJECT
 
 public:
+	static const QString ResourceDir;
+
+public:
 	ContentManager(MainWindow *parent);
 	virtual ~ContentManager();
 
@@ -153,11 +160,11 @@ public:
 	// Add the content (this creates the undo/redo)
 	void add(ContentInfo *contentInfo);
 	// Remove the content
-	void remove(ContentInfo *remove);
+	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time
-	bool loadFlashMap(QString flashMapPath = QString::null);
+	bool loadFlashMap(QString flashMapPath = QString());
 	// Clear all content
-	void clear();
+	void clear(bool whenCloseProject = false);
 	// Get all content
 	void getContentInfos(std::vector<ContentInfo *> &contentInfos);
 	// Get the number of content
@@ -175,6 +182,10 @@ public:
 
 	// Get the currently selected content, may be NULL
 	ContentInfo *current();
+	// Get all content that's selected to be loaded into RAM
+	std::vector<ContentInfo *> allRam();
+	// Get all content that's selected to be loaded into Flash
+	std::vector<ContentInfo *> allFlash();
 
 	// Get the current flash map path
 	QString findFlashMapPath(bool forceScan = false);

@@ -1,0 +1,76 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "#All the screen pixels are with  (0,0,0, 0.5)  value after clear command.",
+        "CLEAR_COLOR_RGB(0,0,0)",
+        "CLEAR_COLOR_A(128)",
+        "CLEAR(1,1,1)",
+        "",
+        "## Now draw the first rectangle ",
+        "SAVE_CONTEXT()",
+        "BLEND_FUNC(DST_ALPHA, ZERO)",
+        "#Specify the source pixel (0,255,0, 1)  ==>  (0, 1, 0, 1)",
+        "COLOR_RGB(0,255,0)",
+        "COLOR_A(255)",
+        "#Drawing the rectangle with blend_func formula:   source x src     + destination x dst     ===> ",
+        "#                                                                              (0,1,0,1) x src  + (0, 0, 0, 0.5) x dst  ===>",
+        "#                                                                              (0,1,0,1) x 0.5 + (0, 0, 0, 0.5) x zero ===>  (0, 0.5,0, 0.5)  => (0, 128, 0, 128)",
+        "BEGIN(RECTS)",
+        "VERTEX2II(86, 60, 0, 0)",
+        "VERTEX2II(210, 119, 0, 0)",
+        "END()",
+        "RESTORE_CONTEXT()",
+        "",
+        "##Now draw the second rectangle with default BLEND_FUNC paramater : src = SRC_ALPHA,  dst = ONE_MINUS_SRC_ALPHA",
+        "SAVE_CONTEXT()",
+        "#Specify the source pixel (0,255,0, 1)  ==>  (0, 1, 0, 1)",
+        "COLOR_RGB(0,255,0)",
+        "COLOR_A(255)",
+        "",
+        "#Drawing the Rectangle with  blend_func formula:   source x src     + destination x dst     ===> ",
+        "#                                                                              (0,1,0,1) x src    + (0, 0, 0, 0.5) x dst  ===>",
+        "#                                                                              (0,1,0,1) x SRC_ALPHA + (0, 0, 0, 0.5) x  ONE_MINUS_SRC_ALPHA ===> ",
+        "#                                                                              (0,1,0,1) x 1 + (0, 0, 0, 0.5) x 0                                                          ===> ",
+        "#                                                                              (0,1,0,1)",
+        "                       ",
+        "BEGIN(RECTS)",
+        "VERTEX2II(88, 254, 0, 0)",
+        "VERTEX2II(212, 165, 0, 0)",
+        "END()",
+        "",
+        "",
+        "## Now the smallest rectangle on top of first rectangle ",
+        "COLOR_RGB(0,255,0)",
+        "COLOR_A(128)",
+        "#Drawing the Rectangle with  blend_func formula:   source x src        + destination x dst     ===> ",
+        "#                                                                              (0,1,0,0.5) x src    + (0, 0.5,0, 0.5) x dst  ===>",
+        "#                                                                              (0,1,0,0.5) x SRC_ALPHA +  (0, 0.5,0, 0.5) x  ONE_MINUS_SRC_ALPHA ===> ",
+        "#                                                                              (0,1,0,0.5) x 0.5                  + (0, 0.5,0, 0.5) x  (1-0.5)                            ===> ",
+        "#                                                                              (0,0.75,0,0.5)     ==>  (0, 191, 0, 128)                           ",
+        "BEGIN(RECTS)",
+        "VERTEX2II(154, 100, 0, 0)",
+        "VERTEX2II(203, 69, 0, 0)",
+        "END()",
+        "",
+        "RESTORE_CONTEXT()",
+        "",
+        "",
+        "CMD_TEXT(114, 421, 28, 0, \"BLEND_FUNC: SOURCE x src,  DESTINATION  x dst with 3 rectangles\")",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

@@ -1,0 +1,54 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/BG-400x300-red",
+            "imageFormat": 0,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/BG-400x300-red.png"
+        }
+    ],
+    "coprocessor": [
+        "/*This example shows how to rotate a 400x300 bitmap in 42 degree with the pivot of (100,100)*/",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, ARGB1555, 400, 300)",
+        "//Increase the drawing area to make sure rotated bitmap can be seen",
+        "BITMAP_SIZE_H(1,1) ",
+        "BITMAP_SIZE(BILINEAR, BORDER, BORDER, 500, 500) ",
+        "CLEAR_COLOR_RGB(255,255,255)",
+        "",
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_LOADIDENTITY()",
+        "CMD_TRANSLATE(26214400, 26214400)  //translate 400 pixels in X,Y direction",
+        "CMD_ROTATE(7646)   //rotate 42 degrees, change this value and see. ",
+        "CMD_TRANSLATE(-6553600, -6553600)  //move to the pivot",
+        "CMD_SETMATRIX()",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(0, -2560)   //draw the image by referencing the pivot at (400, 240) , concluding from (400-400=0, 240-400=-160)",
+        "END()",
+        "",
+        "",
+        "COLOR_RGB(0,255,0)",
+        "BEGIN(POINTS)",
+        "VERTEX2F(6400, 3840)  //Draw a point at (400,240)",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 600
+    }
+}

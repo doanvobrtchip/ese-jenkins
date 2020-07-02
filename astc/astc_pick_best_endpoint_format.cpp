@@ -12,6 +12,15 @@
  *	@brief	Functions to pick the best ASTC endpoint format for a given block.
  */ 
 /*----------------------------------------------------------------------------*/ 
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812) // Unscoped enum
+#pragma warning(disable : 6385) // Invalid read
+#pragma warning(disable : 6001) // Uninitialized memory
+#pragma warning(disable : 6262) // Large stack
+#endif
+
 #include "astc_codec_internals.h"
 
 #ifdef DEBUG_PRINT_DIAGNOSTICS
@@ -178,7 +187,7 @@ static void compute_color_error_for_every_integer_count_and_quantization_level(i
 		float3 prd = ep1.xyz - float3(cf, cf, cf);
 		float3 pdif = prd - ep0.xyz;
 		// estimate of color-component spread in low endpoint color
-		float df = MAX(MAX(fabs(pdif.x), fabs(pdif.y)), fabs(pdif.z));
+		float df = MAX(MAX(fabsf(pdif.x), fabsf(pdif.y)), fabsf(pdif.z));
 
 		int b = (int)bf;
 		int c = (int)cf;
@@ -958,3 +967,7 @@ void determine_optimal_set_of_endpoint_formats_to_use(int xdim, int ydim, int zd
 		}
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

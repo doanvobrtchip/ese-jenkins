@@ -8,6 +8,7 @@ Author: Jan Boon <jan@no-break.space>
 #define FTEDITOR_CONSTANT_MAPPING_FLASH_H
 
 // Emulator includes
+#include "constant_mapping.h"
 
 // STL includes
 
@@ -20,7 +21,7 @@ namespace FTEDITOR {
 extern const char *g_FlashToString[FTEDITOR_FLASH_NB];
 extern const int g_FlashSizeBytes[FTEDITOR_FLASH_NB];
 extern const wchar_t *g_FlashDeviceType[FTEDITOR_FLASH_NB];
-extern const wchar_t *g_FlashFirmware[FTEDITOR_FLASH_NB];
+extern const wchar_t **g_FlashFirmware[FTEDITOR_DEVICE_NB];
 
 extern int g_CurrentFlash;
 #define FTEDITOR_DEFAULT_FLASH 2
@@ -29,7 +30,7 @@ extern int g_CurrentFlash;
 inline const char *flashToString(int flashIntf) { return flashIntf < FTEDITOR_FLASH_NB ? g_FlashToString[flashIntf] : ""; }
 inline const int flashSizeBytes(int flashIntf) { return flashIntf < FTEDITOR_FLASH_NB ? g_FlashSizeBytes[flashIntf] : 0; }
 inline const wchar_t *flashDeviceType(int flashIntf) { return flashIntf < FTEDITOR_FLASH_NB ? g_FlashDeviceType[flashIntf] : L""; }
-inline const wchar_t *flashFirmware(int flashIntf) { return flashIntf < FTEDITOR_FLASH_NB ? g_FlashFirmware[flashIntf] : L""; }
+inline const wchar_t *flashFirmware(int deviceIntf, int flashIntf) { return flashIntf < FTEDITOR_FLASH_NB ? g_FlashFirmware[deviceIntf][flashIntf] : L""; }
 
 } /* namespace FTEDITOR */
 
