@@ -40,8 +40,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 #include "device_display_settings_dialog.h"
 #include "device_manage_dialog.h"
 
-namespace FTEDITOR
-{
+namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern ContentManager *g_ContentManager;
@@ -147,6 +146,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	m_DisconnectButton->setToolTip(tr("Disconnect from the selected device"));
 	m_DisconnectButton->setVisible(false);
 	connect(m_DisconnectButton, SIGNAL(clicked()), this, SLOT(disconnectDevice()));
+	connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(disconnectDevice()));
 	buttons->addWidget(m_DisconnectButton);
 
 	layout->addLayout(buttons);
