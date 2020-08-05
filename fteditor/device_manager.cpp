@@ -15,6 +15,7 @@ Copyright (C) 2014-2015  Future Technology Devices International Ltd
 
 // STL includes
 #include <stdio.h>
+#include <memory>
 
 // Qt includes
 #include <QVBoxLayout>
