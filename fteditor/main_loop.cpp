@@ -153,6 +153,8 @@ static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
 
+static bool s_HasContentReadCoCmd = false;
+
 QElapsedTimer s_AbortTimer;
 
 void swrbegin(ramaddr address)
@@ -446,6 +448,8 @@ void loop()
 
 	g_ShowCoprocessorBusy = false;
 
+	bool contentPoked = false; // Whether the contents of RAM_G or Flash has been changed
+
 	// wait
 	if (coprocessorSwapped)
 	{
@@ -520,13 +524,14 @@ void loop()
 				int s = in.readRawData(&ram[loadAddr], (int)binSize);
 				// FIXME: Pad 0x00 to end for 64 byte-aligned size
 				BT8XXEMU_poke(g_Emulator);
+				contentPoked = true;
                 binFile.close();
 			}
 		}
 	}
 	std::set<ContentInfo *> contentInfoMemory;
 	g_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
-	bool reuploadFontSetup = false;
+	//bool reuploadFontSetup = false;
 	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
@@ -634,6 +639,7 @@ void loop()
 			char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
 			BT8XXEMU_poke(g_Emulator);
+			contentPoked = true;
 		}
 		if (info->Converter == ContentInfo::Font)
 		{
@@ -665,6 +671,7 @@ void loop()
 					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
 					BT8XXEMU_poke(g_Emulator);
+					contentPoked = true;
 				}
 			}
 		}
@@ -703,12 +710,13 @@ void loop()
 					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 					int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], palSize);
 					BT8XXEMU_poke(g_Emulator);
+					contentPoked = true;
 				}
 			}
 		}
 		/*if (info->Converter == ContentInfo::Font)
 		{*/ // Always reupload, since raw data may change too
-			reuploadFontSetup = true;
+			//reuploadFontSetup = true;
 		/*}*/
 	}
 	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
@@ -773,10 +781,11 @@ void loop()
 	g_CmdEditor->lockDisplayList();
 	bool dlModified = g_DlEditor->isDisplayListModified();
 	bool cmdModified = g_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
+	if (dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
 	{
 		bool warnMissingClear = true;
 		s_WantReloopCmd = false;
+		s_HasContentReadCoCmd = false;
 		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");
@@ -864,6 +873,36 @@ void loop()
 			bool useMediaFifo = false;
 			bool useFlash = false;
 			const char *useFileStream = NULL;
+			switch (cmdList[i])
+			{
+				// Track when the command list is reading from RAM_G and Flash.
+				// (That is, the coprocessor itself is reading from RAM_G or Flash, not just the display engine.)
+				// TODO: Some of these commands only read from content 
+				// RAM_G and Flash depending on OPT_FLASH or other options.
+				// Needs to be checked.
+			case CMD_MEMCRC:
+			case CMD_REGREAD:
+			case CMD_MEMCPY:
+			case CMD_APPEND:
+			case CMD_INFLATE:
+			case CMD_FLASHREAD:
+			case CMD_LOADIMAGE:
+			case CMD_SETFONT:
+			case CMD_SETFONT2:
+			case CMD_VIDEOSTART:
+			case CMD_VIDEOFRAME:
+			case CMD_INFLATE2:
+			case CMD_ANIMSTART:
+			case CMD_ANIMDRAW:
+			case CMD_ANIMFRAME:
+			case CMD_APPENDF:
+			case CMD_VIDEOSTARTF:
+			case CMD_ANIMFRAMERAM:
+			case CMD_ANIMSTARTRAM:
+			case CMD_RUNANIM:
+				s_HasContentReadCoCmd = true;
+				break;
+			}
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
 				s_MediaFifoPtr = s_CmdParamCache[cmdParamIdx[i]];
