@@ -39,6 +39,9 @@ DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
 	connect(ui->btnBuildInCloneDevice, SIGNAL(clicked()), this, SLOT(cloneBuildInDevice()));
 	connect(ui->btnExamineButton, SIGNAL(clicked()), this, SLOT(examineDevice()));
 
+	connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, ui->btnEditDevice, &QPushButton::clicked);
+	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::clicked);
+
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
@@ -362,9 +365,19 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
 	}
 
-	if (jo.contains("REG_OUTBITS"))
+	if (jo.contains("REG_OUTBITS") )
 	{
-		cdi.CUS_REG_OUTBITS = jo["REG_OUTBITS"].toInt();
+		if (jo["REG_OUTBITS"].isString())
+		{		
+			if (jo["REG_OUTBITS"].toString() == DeviceAddNewDialog::REG_OUTBITS_6bits)
+				cdi.CUS_REG_OUTBITS = 438;		// 0x1B6
+			else
+				cdi.CUS_REG_OUTBITS = 0;
+		}
+		else
+		{
+			cdi.CUS_REG_OUTBITS = jo["REG_OUTBITS"].toInt();
+		}
 	}
 
 	if (jo.contains("External Clock"))

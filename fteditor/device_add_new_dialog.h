@@ -32,6 +32,10 @@ class DeviceAddNewDialog : public QDialog
 	static const QStringList PROPERTIES;
 
 public:
+	static const QString REG_OUTBITS_6bits;
+	static const QString REG_OUTBITS_8bits;
+
+public:
 	explicit DeviceAddNewDialog(QWidget *parent = 0);
 	void execute();
 	void editDevice(QString jsonPath);
