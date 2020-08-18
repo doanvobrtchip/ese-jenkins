@@ -550,23 +550,41 @@ void DeviceManager::connectDevice()
 		configParams.OutBitsR = (m_CDI.CUS_REG_OUTBITS >> 6) & 0x7;
 		configParams.OutBitsG = (m_CDI.CUS_REG_OUTBITS >> 3) & 0x7;
 		configParams.OutBitsB = m_CDI.CUS_REG_OUTBITS & 0x7;
-	}
-	else if (m_SelectedDisplaySize == "480x272")
+	}	
+	else if (m_SelectedDisplaySize == "1280x800")
 	{
-		configParams.Width = 480;
-		configParams.Height = 272;
-		configParams.HCycle = 548;
-		configParams.HOffset = 43;
+		configParams.Width = 1280;
+		configParams.Height = 800;
+		configParams.HCycle = 1440;
+		configParams.HOffset = 38;
 		configParams.HSync0 = 0;
-		configParams.HSync1 = 41;
-		configParams.VCycle = 292;
-		configParams.VOffset = 12;
+		configParams.HSync1 = 16;
+		configParams.VCycle = 838;
+		configParams.VOffset = 8;
+		configParams.VSync0 = 0;
+		configParams.VSync1 = 2;
+		configParams.PCLK = 1;
+		configParams.Swizzle = 0;
+		configParams.PCLKPol = 0;
+		configParams.CSpread = 0;
+		configParams.Dither = 0;
+	}
+	else if (m_SelectedDisplaySize == "1024x600")
+	{
+		configParams.Width = 1024;
+		configParams.Height = 600;
+		configParams.HCycle = 1344;
+		configParams.HOffset = 160;
+		configParams.HSync0 = 0;
+		configParams.HSync1 = 100;
+		configParams.VCycle = 635;
+		configParams.VOffset = 23;
 		configParams.VSync0 = 0;
 		configParams.VSync1 = 10;
-		configParams.PCLK = 5;
+		configParams.PCLK = 1;
 		configParams.Swizzle = 0;
 		configParams.PCLKPol = 1;
-		configParams.CSpread = 1;
+		configParams.CSpread = 0;
 		configParams.Dither = 1;
 	}
 	else if (m_SelectedDisplaySize == "800x480")
@@ -585,6 +603,24 @@ void DeviceManager::connectDevice()
 		configParams.Swizzle = 0;
 		configParams.PCLKPol = 1;
 		configParams.CSpread = 0;
+		configParams.Dither = 1;
+	}
+	else if (m_SelectedDisplaySize == "480x272")
+	{
+		configParams.Width = 480;
+		configParams.Height = 272;
+		configParams.HCycle = 548;
+		configParams.HOffset = 43;
+		configParams.HSync0 = 0;
+		configParams.HSync1 = 41;
+		configParams.VCycle = 292;
+		configParams.VOffset = 12;
+		configParams.VSync0 = 0;
+		configParams.VSync1 = 10;
+		configParams.PCLK = 5;
+		configParams.Swizzle = 0;
+		configParams.PCLKPol = 1;
+		configParams.CSpread = 1;
 		configParams.Dither = 1;
 	}
 	else if (m_SelectedDisplaySize == "320x240")

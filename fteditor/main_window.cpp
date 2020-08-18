@@ -142,8 +142,8 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT813
 	5, // BT815
 	5, // BT816
-	5, // BT817
-	5, // BT818
+	7, // BT817
+	7, // BT818
 };
 
 static const char *s_StandardResolutions[] = {
@@ -152,6 +152,8 @@ static const char *s_StandardResolutions[] = {
 	"HVGA Portrait (320x480)",
 	"WVGA (800x480)",
 	"SVGA (800x600)",
+	"WSVGA (1024x600)",
+	"WXGA (1280x800)"
 };
 
 static const int s_StandardWidths[] = {
@@ -160,6 +162,8 @@ static const int s_StandardWidths[] = {
 	320,
 	800,
 	800,
+	1024,
+	1280
 };
 
 static const int s_StandardHeights[] = {
@@ -168,6 +172,8 @@ static const int s_StandardHeights[] = {
 	480,
 	480,
 	600,
+	600,
+	800
 };
 
 bool MainWindow::waitingCoprocessorAnimation()
@@ -1139,7 +1145,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
-			for (int i = 0; i < FTEDITOR_DEVICE_NB - 2; ++i) // remove BT817/8 in version 3.4
+			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			hBoxLayout->addWidget(m_ProjectDevice);
