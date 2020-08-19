@@ -87,8 +87,8 @@ Copyright (C) 2017  Bridgetek Pte Lte
 
 static const bool testEnabled[BTTESTFLASH_TESTSET_NB_MAX] = {
 	true,
-	false,
-	false,
+	false, // DTR on BT817 flash controller does not work
+	true,
 };
 
 static const BT8XXEMU_EmulatorMode testMode[BTTESTFLASH_TESTSET_NB_MAX] = {
@@ -109,16 +109,22 @@ static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 };
 
+static const bool testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
+	4, // Unified not working at 32 Mbyte and up
+	8, // DTR, not tested
+	4, // Unified not working at 32 Mbyte and up
+};
+
 static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 	{
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 2 MByte
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 32 MByte
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 	},
 	{
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
@@ -135,10 +141,10 @@ static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 	},
 };
 
@@ -1640,7 +1646,7 @@ int main(int, char*[])
 #if BTTESTFLASH_SIZES
 		size_t sizes[8] = { 2, 4, 8, 16, 32, 64, 128, 256 };
 
-		for (int si = 0; si < ((testMode[ts] >= BT8XXEMU_EmulatorBT817) ? 4 : 8); ++si) // FIXME: 32MiB and up is not working on BT817 with mx25l blob
+		for (int si = 0; si < testNb[ts]; ++si)
 		{
 			size_t sz = sizes[si];
 			printf("SIZE %i: %i\n", si, (int)sz);
@@ -1714,7 +1720,7 @@ int main(int, char*[])
 				flush(emulator);
 				uint32_t res = rd32(emulator, RAM_CMD + resAddr);
 				uint32_t status = rd32(emulator, REG_FLASH_STATUS);
-				assert(res == 0);
+				assert(res == 0); // 0xe005 failed full-speed test - check board wiring
 				assert(status == FLASH_STATUS_FULL);
 				assert(!dtr || rd32(emulator, REG_FLASH_DTR) == 1);
 				// assert(!dtr || rd32(emulator, REG_ESPIM_DTR) == 1);
