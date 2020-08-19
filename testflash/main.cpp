@@ -109,7 +109,7 @@ static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 };
 
-static const bool testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
+static const int testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
 	4, // Unified not working at 32 Mbyte and up
 	8, // DTR, not tested
 	4, // Unified not working at 32 Mbyte and up
