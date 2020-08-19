@@ -87,7 +87,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 
 static const bool testEnabled[BTTESTFLASH_TESTSET_NB_MAX] = {
 	true,
-	false, // DTR on BT817 flash controller does not work
+	true,
 	true,
 };
 
@@ -110,9 +110,9 @@ static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
 };
 
 static const int testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
-	4, // Unified not working at 32 Mbyte and up
-	8, // DTR, not tested
-	4, // Unified not working at 32 Mbyte and up
+	8, // Unified not working at 32 Mbyte and up
+	4, // DTR, not tested
+	8, // Unified not working at 32 Mbyte and up
 };
 
 static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
@@ -131,10 +131,10 @@ static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 	},
 	{
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
@@ -962,8 +962,10 @@ int main(int, char*[])
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
-		// writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles...
-		// writeDT4U8(flash, rand() & 0xFF);
+
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+
 		/*
 		uint8_t dummy0 = readDT4U8(flash);
 		uint8_t dummy1 = readDT4U8(flash);
@@ -996,8 +998,10 @@ int main(int, char*[])
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
-		// writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles...
-		// writeDT4U8(flash, rand() & 0xFF);
+
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+
 		uint8_t reqd3 = readDT4U8(flash);
 		uint8_t reqd4 = readDT4U8(flash);
 		uint8_t reqd5 = readDT4U8(flash);
@@ -1283,6 +1287,9 @@ int main(int, char*[])
 		write4U8(flash, 0x00); // No PE
 		write4U8(flash, rand() & 0xFF);
 		write4U8(flash, rand() & 0xFF);
+
+			write4U8(flash, rand() & 0xFF); // VERIFY: Add 2 more cycles under 4B, cannot find this in spec, but matches BT815 firmware behaviour
+
 		uint8_t reqd0 = read4U8(flash);
 		uint8_t reqd1 = read4U8(flash);
 		uint8_t reqd2 = read4U8(flash);
