@@ -530,6 +530,7 @@ public:
 				}
 				break;
 			case BTFLASH_STATE_PP_READ:
+			case BTFLASH_STATE_4PP_READ:
 				if (m_BufferBits)
 				{
 					log(BT8XXEMU_LogError, "CS must go high on byte boundary, PP instruction rejected");
@@ -711,6 +712,8 @@ public:
 			return stateSEAddr(signal);
 		case BTFLASH_STATE_4PP_ADDR:
 			return state4PPAddr(signal);
+		case BTFLASH_STATE_4PP_READ:
+			return state4PPRead(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -845,6 +848,7 @@ public:
 		case BTFLASH_STATE_PP_READ:
 		case BTFLASH_STATE_SE_ADDR:
 		case BTFLASH_STATE_4PP_ADDR:
+		case BTFLASH_STATE_4PP_READ:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -1012,7 +1016,7 @@ public:
 		// Read 4 bits at a time until a U8 is read
 		m_BufferU8 = (m_BufferU8 << 4)
 			| (BTFLASH_SPI4_GET_D4(signal));
-		++m_BufferBits;
+		m_BufferBits += 4;
 		return m_BufferBits == 8;
 	}
 
@@ -1752,8 +1756,25 @@ public:
 			m_DelayedCommandAddr = addr;
 			m_PageProgramIdx = 0;
 			m_PageProgramSize = 0;
-			// m_RunState = BTFLASH_STATE_4PP_READ;
-			m_RunState = BTFLASH_STATE_IGNORE;
+			m_RunState = BTFLASH_STATE_4PP_READ;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4PPRead(uint8_t signal)
+	{
+		if (readU8Spi4(signal))
+		{
+			m_PageProgramData[m_PageProgramIdx] = m_BufferU8;
+			m_BufferBits = 0;
+
+			++m_PageProgramIdx;
+			m_PageProgramIdx &= 0xFF;
+			++m_PageProgramSize;
+			m_PageProgramSize = std::min(m_PageProgramSize, 256);
+
+			Flash_debug("4PP data %x", (int)m_BufferU8);
 		}
 
 		return m_LastSignal;
