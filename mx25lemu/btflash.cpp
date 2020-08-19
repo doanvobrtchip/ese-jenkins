@@ -709,6 +709,8 @@ public:
 			return statePPRead(signal);
 		case BTFLASH_STATE_SE_ADDR:
 			return stateSEAddr(signal);
+		case BTFLASH_STATE_4PP_ADDR:
+			return state4PPAddr(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -842,6 +844,7 @@ public:
 		case BTFLASH_STATE_PP_ADDR:
 		case BTFLASH_STATE_PP_READ:
 		case BTFLASH_STATE_SE_ADDR:
+		case BTFLASH_STATE_4PP_ADDR:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -1295,9 +1298,26 @@ public:
 				}
 				return m_LastSignal;
 			case BTFLASH_CMD_4PP: /* Quad Page Program */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4PP)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				return m_LastSignal;
+				Flash_debug("Quad Page Program");
+				if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO Read");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
+				else if (!(m_StatusRegister & BTFLASH_STATUS_WEL_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Page Program requires Write Enable Latch to be set");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
+				else
+				{
+					m_SignalOutMask = BTFLASH_SPI4_MASK_NONE;
+					m_DelayedCommand = BTFLASH_CMD_4PP;
+					m_RunState = BTFLASH_STATE_4PP_ADDR;
+					return m_LastSignal;
+				}
 			case BTFLASH_CMD_SE: /* Sector Erase */
 				Flash_debug("Sector Erase");
 				if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
@@ -1717,6 +1737,23 @@ public:
 			Flash_debug("SE addr %i", (int)addr);
 			m_DelayedCommandAddr = addr;
 			m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4PPAddr(uint8_t signal)
+	{
+		if (readAddressSpi4AsU32SkipLsb(signal, 0))
+		{
+			uint32_t addr = m_BufferU32;
+			m_BufferBits = 0;
+			Flash_debug("4PP addr %i", (int)addr);
+			m_DelayedCommandAddr = addr;
+			m_PageProgramIdx = 0;
+			m_PageProgramSize = 0;
+			// m_RunState = BTFLASH_STATE_4PP_READ;
+			m_RunState = BTFLASH_STATE_IGNORE;
 		}
 
 		return m_LastSignal;

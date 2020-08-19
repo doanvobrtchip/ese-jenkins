@@ -134,6 +134,7 @@ Author: Jan Boon <jan@no-break.space>
 #define BTFLASH_STATE_SE_ADDR 23
 #define BTFLASH_STATE_4DTRD_ADDR 24
 #define BTFLASH_STATE_4DTRD_PE 25
+#define BTFLASH_STATE_4PP_ADDR 26
 
 #endif /* #ifndef MX25LEMU_BTFLASH_DEFS_H */
 
