@@ -85,6 +85,12 @@ Copyright (C) 2017  Bridgetek Pte Lte
 
 #define BTTESTFLASH_DATA_FILE BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin"
 
+static const bool testEnabled[BTTESTFLASH_TESTSET_NB_MAX] = {
+	true,
+	false,
+	false,
+};
+
 static const BT8XXEMU_EmulatorMode testMode[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BT8XXEMU_EmulatorBT815,
 	BT8XXEMU_EmulatorBT817,
@@ -1322,6 +1328,8 @@ int main(int, char*[])
 
 	for (int ts = 0; ts < BTTESTFLASH_TESTSET_NB; ++ts)
 	{
+		if (!testEnabled[ts])
+			continue;
 
 		BT8XXEMU_Emulator *emulator = NULL;
 		uint8_t *ram = NULL;
@@ -1438,7 +1446,7 @@ int main(int, char*[])
 		{
 			assert(ram[0] == refv0);
 			assert(data[0] != refv0);
-			printf("CMD_FLASHWRITE (FLASH_STATUS_FULL\n");
+			printf("CMD_FLASHWRITE (FLASH_STATUS_FULL)\n");
 			wr32(emulator, REG_CMDB_WRITE, CMD_FLASHWRITE);
 			wr32(emulator, REG_CMDB_WRITE, 0);
 			wr32(emulator, REG_CMDB_WRITE, 2048);
