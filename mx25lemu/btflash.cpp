@@ -475,7 +475,7 @@ public:
 
 	void chipSelect(bool cs)
 	{
-		if (cs == false)
+		if (!cs)
 		{
 			switch (m_RunState)
 			{
@@ -555,6 +555,16 @@ public:
 							at &= 0xFF;
 						}
 					}
+				}
+				break;
+			case BTFLASH_STATE_4READ_PE:
+				log(BT8XXEMU_LogWarning, "CS deactivated while waiting for dummy bytes (4READ)");
+				break;
+			case BTFLASH_STATE_4DTRD_PE:
+				state4READPerfEnh(0); // Give it an extra tick, since we're cheating a half period dummy in this state function
+				if (m_RunState == BTFLASH_STATE_4DTRD_PE) // No change
+				{
+					log(BT8XXEMU_LogWarning, "CS deactivated while waiting for dummy bytes (4DTRD)");
 				}
 				break;
 			}
@@ -1254,14 +1264,7 @@ public:
 				return m_LastSignal;
 			case BTFLASH_CMD_4DTRD: /* 4x IO DT Read */
 				Flash_debug("4x IO DT Read");
-				// log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
-				// m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				if (m_ExtendedAddressing)
-				{
-					log(BT8XXEMU_LogError, "4x IO DT Read not supported with extended addressing");
-					m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				}
-				else if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
 				{
 					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO DT Read");
 					m_RunState = BTFLASH_STATE_IGNORE;
@@ -1667,9 +1670,9 @@ public:
 	{
 		static const int dummyCycles8[] = { 8, 6, 8, 10 };
 		static const int dummyCycles6[] = { 6, 4, 8, 10 };
-		const int *dummyCycles = using4ByteAddress() ? dummyCycles8 : dummyCycles6; // VERIFY: Cannot find this in spec, but matches BT815 firmware behaviour
+		const int *dummyCycles = m_ExtendedAddressing ? dummyCycles8 : dummyCycles6; // VERIFY: Cannot find this in spec, but matches BT815 firmware behaviour // Not sure if using4ByteAddress() or m_ExtendedAddressing
 		const bool dtr = m_RunState == BTFLASH_STATE_4DTRD_PE;
-		if (readU8Spi4SkipLsb(signal, dtr ? 17 * 4 : // VERIFY: Number of dummy cycles should be 13 (7 dummy cycles), but need to set 17 here for BT817... (BT817 DTR does not work, apparently?)
+		if (readU8Spi4SkipLsb(signal, dtr ? (m_ExtendedAddressing ? 21 : 17) * 4 : // VERIFY: Number of dummy cycles should be 13 (7 dummy cycles), but need to set 17 here for BT817... (BT817 DTR does not work, apparently?)
 			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
 		{
 			uint8_t p = m_BufferU8;

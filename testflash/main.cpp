@@ -110,9 +110,9 @@ static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
 };
 
 static const int testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
-	8, // Unified not working at 32 Mbyte and up
-	4, // DTR, not tested
-	8, // Unified not working at 32 Mbyte and up
+	8,
+	8,
+	8,
 };
 
 static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
@@ -121,27 +121,27 @@ static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 32 MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 32 MByte (4READ: 8 instead of the 6 dummy cycles specified in spec)
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+	},
+	{
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte (4DTRD: 9 instead of the 7 dummy cycles specified in spec)
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte (4DTRD EA: 11 instead of the ??? dummy cycles specified in spec)
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 	},
 	{
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-	},
-	{
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte (4READ: 8 instead of the 6 dummy cycles specified in spec)
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
