@@ -886,6 +886,9 @@ void loop()
 			case CMD_APPEND:
 			case CMD_INFLATE:
 			case CMD_FLASHREAD:
+			case CMD_FLASHPROGRAM:
+			case CMD_FLASHWRITE:
+			case CMD_FLASHUPDATE:
 			case CMD_LOADIMAGE:
 			case CMD_SETFONT:
 			case CMD_SETFONT2:

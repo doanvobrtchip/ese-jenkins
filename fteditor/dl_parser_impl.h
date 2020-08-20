@@ -68,7 +68,7 @@ static std::map<std::string, int> s_CmdIdMapFT801;
 #define CMD_ID_NB 96
 #elif defined(FTEDITOR_PARSER_VC4)
 #define DL_ID_NB 49
-#define CMD_ID_NB 112
+#define CMD_ID_NB 113
 #endif
 static int s_ParamCount[DL_ID_NB];
 static ParameterOptions s_ParamOptions[DL_ID_NB];
@@ -635,6 +635,7 @@ void DlParser::initVC4()
 		FTEDITOR_MAP_CMD(CMD_ANIMSTARTRAM,    3);
 		FTEDITOR_MAP_CMD(CMD_RUNANIM,         2);
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
+		FTEDITOR_MAP_CMD(CMD_FLASHPROGRAM,    3); // dst, src, num
 		// clang-format on
 #endif
 #undef FTEDITOR_MAP_CMD
@@ -952,6 +953,9 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
 				case CMD_GETPROPS:
+#if defined(FTEDITOR_PARSER_VC4)
+				case CMD_FLASHPROGRAM:
+#endif
 				{
 				    compiled.push_back(parsed.Parameter[0].U);
 				    compiled.push_back(parsed.Parameter[1].U);
@@ -1160,7 +1164,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_NOP:
 				case CMD_SHA1:
 				case CMD_HMAC:
-				case CMD_LAST_:
+				// case CMD_LAST_:
 				case CMD_VIDEOSTARTF:
 #endif
 #if defined(FTEDITOR_PARSER_VC4)
