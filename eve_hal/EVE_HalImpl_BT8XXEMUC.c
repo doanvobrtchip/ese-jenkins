@@ -18,10 +18,10 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #pragma warning(disable : 6262) // Large stack
 #endif
 
+#ifdef BT8XXEMU_REMOTE
+
 #include <bt8xxemu.h>
 #include <stdlib.h>
-
-#ifdef BT8XXEMU_REMOTE
 
 #include <stdio.h>
 #include <assert.h>
