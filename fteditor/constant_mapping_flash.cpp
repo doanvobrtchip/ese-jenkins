@@ -52,10 +52,10 @@ const wchar_t *g_FlashFirmwareBT815[FTEDITOR_FLASH_NB] = { // Library for flash 
 	L"bt815/unified.blob",
 	L"bt815/unified.blob",
 	L"bt815/unified.blob",
-	L"bt815/mx25l.blob",
-	L"bt815/mx25l.blob",
-	L"bt815/mx25l.blob",
-	L"bt815/mx25l.blob",
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
+	L"bt815/unified.blob",
 };
 
 const wchar_t *g_FlashFirmwareBT817[FTEDITOR_FLASH_NB] = { // Library for flash device
