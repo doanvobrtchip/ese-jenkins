@@ -7,6 +7,10 @@ Copyright (C) 2016-2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
+#ifdef _MSC_VER
+#pragma warning(disable : 26812) // Unscoped enum
+#endif
+
 // #include <...>
 #include "ft800emu_memory.h"
 #include "ft8xxemu_system_win32.h"
