@@ -893,17 +893,19 @@ void MainWindow::createActions()
 	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
+	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_B));
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
 
 	m_ResetEmulatorAct = new QAction(this);
 	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
 
+	m_ImportDisplayListAct = new QAction(this);
+	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
+
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
-
-	m_ImportDisplayListAct = new QAction(this);
-	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_LittleEndianSaveDisplayListAct = new QAction(this);
 	connect(m_LittleEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveDisplayList()));
