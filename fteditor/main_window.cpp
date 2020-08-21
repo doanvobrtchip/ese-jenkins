@@ -457,6 +457,8 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"bt81x",
+	"bt81x",
+	"bt81x",
 	"bt81x"
 };
 
