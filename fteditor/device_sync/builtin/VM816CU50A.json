@@ -3,7 +3,7 @@
     "Connection Type": "FT4222",
     "Description": "VM816CU module with 5.0\" display",
     "Device Name": "VM816CU50A",
-    "EVE Type": "BT81X",
+    "EVE Type": "BT815_816",
     "External Clock": "false",
     "Flash Model": "Unknown",
     "Flash Size (MB)": "16",

@@ -234,7 +234,7 @@ void DeviceAddNewDialog::prepareData()
 		else if (PROPERTIES[i] == "EVE Type")
 		{
 			cb = new QComboBox(this);
-			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
+			cb->addItems(QStringList() << "BT817_818" << "BT815_816" << "FT81X" << "FT80X");
 			cb->setCurrentIndex(0);
 			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onEveTypeChange);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);

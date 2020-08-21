@@ -3,7 +3,7 @@
     "Connection Type": "MPSSE",
     "Description": "Riverdi TFT 7 inch (BT815) 800x480 non-square pixel",
     "Device Name": "RiTFT-70",
-    "EVE Type": "BT81X",
+    "EVE Type": "BT815_816",
     "External Clock": "0",
     "Flash Model": "W25Q64JV",
     "Flash Size (MB)": "8",
