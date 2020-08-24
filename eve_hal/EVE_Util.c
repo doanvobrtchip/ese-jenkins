@@ -885,7 +885,7 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 		phost->Height = config->Height;
 	}
 
-#if (EVE_SUPPORT_CHIPID >= EVE_FT817) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_BT817) || defined(EVE_MULTI_TARGET)
 	if (EVE_CHIPID >= EVE_BT817)
 	{
 		if (config->PCLKFreq)
