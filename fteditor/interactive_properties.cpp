@@ -79,8 +79,11 @@ static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
 #define FTEDITOR_BITMAPHANDLE_MAX 15
 #define FTEDITOR_FONTHANDLE_MAX 31
 
-InteractiveProperties::InteractiveProperties(MainWindow *parent) : QGroupBox(parent), m_MainWindow(parent),
-	m_LineEditor(NULL), m_LineNumber(0)
+InteractiveProperties::InteractiveProperties(MainWindow *parent)
+    : QGroupBox(parent)
+    , m_MainWindow(parent)
+    , m_LineEditor(NULL)
+    , m_LineNumber(0)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 	setLayout(layout);
@@ -89,7 +92,6 @@ InteractiveProperties::InteractiveProperties(MainWindow *parent) : QGroupBox(par
 
 InteractiveProperties::~InteractiveProperties()
 {
-
 }
 
 void InteractiveProperties::clear()
@@ -229,12 +231,12 @@ void InteractiveProperties::addCell(int cell)
 
 void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnly, bool noClock)
 {
-#define ADD_OPTIONS_CHECKBOX(opt) \
-		{ \
-			PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set " #opt, options, opt); \
-			addLabeledWidget(#opt ": ", chb); \
-			m_CurrentProperties.push_back(chb); \
-		}
+#define ADD_OPTIONS_CHECKBOX(opt)                                                          \
+	{                                                                                      \
+		PropertiesCheckBox *chb = new PropertiesCheckBox(this, "Set " #opt, options, opt); \
+		addLabeledWidget(#opt ": ", chb);                                                  \
+		m_CurrentProperties.push_back(chb);                                                \
+	}
 	/*
 	#define OPT_MONO             1UL
 	#define OPT_NODL             2UL
@@ -267,10 +269,10 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 		{
 			ADD_OPTIONS_CHECKBOX(OPT_FLASH);
 		}
-        if (flags & OPT_OVERLAY)
-        {
-            ADD_OPTIONS_CHECKBOX(OPT_OVERLAY);
-        }
+		if (flags & OPT_OVERLAY)
+		{
+			ADD_OPTIONS_CHECKBOX(OPT_OVERLAY);
+		}
 	}
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 	{
@@ -356,7 +358,7 @@ void InteractiveProperties::addOptions(int options, uint32_t flags, bool flatOnl
 			ADD_OPTIONS_CHECKBOX(OPT_NOPOINTER);
 		}
 	}
-	#undef ADD_OPTIONS_CHECKBOX
+#undef ADD_OPTIONS_CHECKBOX
 }
 
 void InteractiveProperties::addCharacter(int character)
@@ -382,7 +384,7 @@ void InteractiveProperties::addStream(int stream)
 
 	// Help message
 	addHelp(tr("<p><i>Direct filepath</i>:<br>Enter a relative or absolute filepath. String formatted in backslash escape format, use \\\\ for regular backslash.</p>"
-		"<p><i>Content Manager</i>:<br>Enter the full content name suffixed with .raw or .bin (eg. content/catvideo.raw) for raw or compressed format respectively.</p>"));
+	           "<p><i>Content Manager</i>:<br>Enter the full content name suffixed with .raw or .bin (eg. content/catvideo.raw) for raw or compressed format respectively.</p>"));
 }
 
 void InteractiveProperties::addValueSlider(int val, int maxim)
@@ -452,6 +454,16 @@ void InteractiveProperties::addRadius(int radius, int minim, int maxim)
 void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage)
 {
 	PropertiesSpinBox *prop = new PropertiesSpinBox(this, undoMessage, index);
+	prop->setMinimum(minim);
+	prop->setMaximum(maxim);
+	addLabeledWidget(label, prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
+void InteractiveProperties::addSpinBoxUInt32(int index, double minim, double maxim, const QString &label, const QString &undoMessage)
+{
+	PropertiesSpinBoxWaitMask *prop = new PropertiesSpinBoxWaitMask(this, undoMessage, index);
 	prop->setMinimum(minim);
 	prop->setMaximum(maxim);
 	addLabeledWidget(label, prop);
@@ -671,13 +683,13 @@ void InteractiveProperties::addPrimitive(int primitive)
 
 void InteractiveProperties::addBitmapFormat(int format)
 {
-	addComboBox(format, 
-		g_BitmapFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatToIntf[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
-		tr("Format") + ": ", tr("Set bitmap format"));
+	addComboBox(format,
+	    g_BitmapFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+	    tr("Format") + ": ", tr("Set bitmap format"));
 }
 
 void InteractiveProperties::addExtFormat(int format)
@@ -688,12 +700,12 @@ void InteractiveProperties::addExtFormat(int format)
 		return;
 	}
 	QComboBox *comboBox = addComboBox(format,
-		g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
-		g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
-		g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
-		g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
-		tr("Format") + ": ", tr("Set extended bitmap format"));
+	    g_ExtFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+	    g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+	    g_ExtFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+	    g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+	    tr("Format") + ": ", tr("Set extended bitmap format"));
 	for (int i = 0; i < comboBox->count(); ++i)
 		comboBox->setItemText(i, comboBox->itemText(i).replace("COMPRESSED_RGBA_", ""));
 }
@@ -715,35 +727,36 @@ void InteractiveProperties::addBitmapFilter(int filter)
 
 void InteractiveProperties::addAnimLoop(int loop)
 {
-	addComboBox(loop, g_DlEnumAnimLoop, DL_ENUM_BITMAP_FILTER_NB, tr("Loop") + ": ", tr("Set animation loop"));
+	addComboBox(loop, g_DlEnumAnimLoop, DL_ENUM_ANIM_LOOP_NB, tr("Loop") + ": ", tr("Set animation loop"));
 }
 
-void InteractiveProperties::addAddressFlashOpt(int address, bool negative)
+void InteractiveProperties::addAddressFlashOpt(int index, bool negative)
 {
-	; {
-		PropertiesSpinBoxAddressFlashOpt *prop = new PropertiesSpinBoxAddressFlashOpt(this, tr("Set address"), address, negative);
+	;
+	{
+		PropertiesSpinBoxAddressFlashOpt *prop = new PropertiesSpinBoxAddressFlashOpt(this, tr("Set address"), index, negative);
 		addLabeledWidget("Address: ", prop);
 		m_CurrentProperties.push_back(prop);
 		prop->done();
-	}
-	; {
-		PropertiesCheckBox *prop = new PropertiesCheckBox(this, tr("Set flash"), address, 0x800000);
+	};
+	{
+		PropertiesCheckBox *prop = new PropertiesCheckBox(this, tr("Set flash"), index, 0x800000);
 		addLabeledWidget("Flash: ", prop);
 		m_CurrentProperties.push_back(prop);
 	}
 }
 
-void InteractiveProperties::addAddressFlash(int address)
+void InteractiveProperties::addAddressFlash(int index)
 {
-	PropertiesSpinBoxAddressFlash *prop = new PropertiesSpinBoxAddressFlash(this, tr("Set flash address"), address);
+	PropertiesSpinBoxAddressFlash *prop = new PropertiesSpinBoxAddressFlash(this, tr("Set flash address"), index);
 	addLabeledWidget("Flash address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
 }
 
-void InteractiveProperties::addAddress(int address, bool negative)
+void InteractiveProperties::addAddress(int index, bool negative)
 {
-	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), address, negative);
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), index, negative);
 	addLabeledWidget("Address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -809,9 +822,9 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 }
 
 void InteractiveProperties::bindCurrentDevice()
-{ 
+{
 	if (m_MainWindow->propertiesEditor()->getEditWidgetSetter() == m_LineEditor)
-		setEditorLine(m_LineEditor, m_LineNumber); 
+		setEditorLine(m_LineEditor, m_LineNumber);
 }
 
 void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *editor)
@@ -842,8 +855,9 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 		ok = true;
 	}
-	else if (idLeft == 0xFFFFFF00) switch (idRight | 0xFFFFFF00)
-	{
+	else if (idLeft == 0xFFFFFF00)
+		switch (idRight | 0xFFFFFF00)
+		{
 		case CMD_DLSTART:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_DLSTART."));
@@ -1417,13 +1431,13 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_SNAPSHOT2");
-				addComboBox(0, 
-					g_SnapshotFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
-					g_SnapshotFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
-					g_SnapshotFormatToIntf[FTEDITOR_CURRENT_DEVICE],
-					g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
-					g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
-					tr("Format") + ": ", tr("Set snapshot format"));
+				addComboBox(0,
+				    g_SnapshotFormatFromIntf[FTEDITOR_CURRENT_DEVICE],
+				    g_SnapshotFormatIntfNb[FTEDITOR_CURRENT_DEVICE],
+				    g_SnapshotFormatToIntf[FTEDITOR_CURRENT_DEVICE],
+				    g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE],
+				    g_BitmapFormatEnumNb[FTEDITOR_CURRENT_DEVICE],
+				    tr("Format") + ": ", tr("Set snapshot format"));
 				addAddress(1, false);
 				addXY(2, 3, FTEDITOR_SCREENCOORDXY_MIN, FTEDITOR_SCREENCOORDXY_MAX);
 				addWH(4, 5, FTEDITOR_SCREENCOORDWH_MIN, FTEDITOR_SCREENCOORDWH_MAX);
@@ -1464,14 +1478,14 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_PLAYVIDEO");
-                if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
-                {
-                    addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND | OPT_FLASH | OPT_OVERLAY | OPT_NODL);
-                }
-                else
-                {
-                    addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND);
-                }
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				{
+					addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND | OPT_FLASH | OPT_OVERLAY | OPT_NODL);
+				}
+				else
+				{
+					addOptions(0, OPT_NOTEAR | OPT_FULLSCREEN | OPT_MEDIAFIFO | OPT_SOUND);
+				}
 				addStream(1);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1630,7 +1644,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHATTACH."));
 			if (editor)
 			{
-				setTitle("CMD_FLASHATTACH");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1641,7 +1654,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHFAST."));
 			if (editor)
 			{
-				setTitle("CMD_FLASHFAST");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1652,7 +1664,6 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FLASHSPIDESEL."));
 			if (editor)
 			{
-				setTitle("CMD_FLASHSPIDESEL");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1677,25 +1688,24 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CLEARCACHE."));
 			if (editor)
 			{
-				setTitle("CMD_CLEARCACHE");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;
 		}
-        case CMD_INFLATE:
-        {
-            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE."));
-            if (editor)
-            {
-                setTitle("CMD_INFLATE");
-                addAddress(0, false);
-                addStream(1);
-                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
-            }
-            ok = true;
-            break;
-        }
+		case CMD_INFLATE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE."));
+			if (editor)
+			{
+				setTitle("CMD_INFLATE");
+				addAddress(0, false);
+				addStream(1);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		case CMD_INFLATE2:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_INFLATE2."));
@@ -1743,6 +1753,33 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
 				addAddressFlash(1);
 				addAnimLoop(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ANIMSTARTRAM:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMSTARTRAM."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMSTARTRAM");
+				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
+				addAddress(1, false);
+				addAnimLoop(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_RUNANIM:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_RUNANIM."));
+			if (editor)
+			{
+				setTitle("CMD_RUNANIM");
+				addSpinBoxUInt32(0, -1, 0xFFFFFFFF, tr("Wait Mask:"), tr("Set Wait Mask"));				
+				addAddress(1, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1841,6 +1878,20 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+		case CMD_ANIMFRAMERAM:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ANIMFRAMERAM."));
+			if (editor)
+			{
+				setTitle("CMD_ANIMFRAMERAM");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
+				addAddress(2, false);
+				addSpinBox(3, 0, 0x7FFFFFFF, tr("Frame") + ": ", tr("Set frame"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		// case CMD_NOP:
 		// case CMD_SHA1:
 		// case CMD_HMAC:
@@ -1855,39 +1906,165 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-        case CMD_VIDEOFRAME:
-        {
-            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOFRAME."));
-            if (editor)
-            {
-                setTitle("CMD_VIDEOFRAME");
-                addAddress(0, false);
-                addAddress(1, false);
-                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
-            }
-            ok = true;
-            break;
-        }
-        case CMD_BITMAP_TRANSFORM:
-        {
-            m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BITMAP_TRANSFORM."));
-            if (editor)
-            {
-                setTitle("CMD_BITMAP_TRANSFORM");
-                addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X0 Y0: ");
-                addXY(2, 3, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X1 Y1: ");
-                addXY(4, 5, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X2 Y2: ");
-                addXY(6, 7, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX0 TY0: ");
-                addXY(8, 9, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX1 TY1: ");
-                addXY(10, 11, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX2 TY2: ");
-                m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
-            }
-            ok = true;
-            break;
-        }
-	}
-	else switch (idRight)
-	{
+		case CMD_VIDEOFRAME:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_VIDEOFRAME."));
+			if (editor)
+			{
+				setTitle("CMD_VIDEOFRAME");
+				addAddress(0, false);
+				addAddress(1, false);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_BITMAP_TRANSFORM:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_BITMAP_TRANSFORM."));
+			if (editor)
+			{
+				setTitle("CMD_BITMAP_TRANSFORM");
+				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X0 Y0: ");
+				addXY(2, 3, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X1 Y1: ");
+				addXY(4, 5, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "X2 Y2: ");
+				addXY(6, 7, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX0 TY0: ");
+				addXY(8, 9, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX1 TY1: ");
+				addXY(10, 11, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX, "TX2 TY2: ");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_WAIT:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_WAIT."));
+			if (editor)
+			{
+				setTitle("CMD_WAIT");
+				addSpinBoxUInt32(0, 0, 1000000, tr("Delay Time:"), tr("Set Delay Time"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_NEWLIST:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_NEWLIST."));
+			if (editor)
+			{
+				setTitle("CMD_NEWLIST");
+				addAddress(0, false);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_ENDLIST:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_ENDLIST."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_CALLLIST:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CALLLIST."));
+			if (editor)
+			{
+				setTitle("CMD_CALLLIST");
+				addAddress(0, false);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_RETURN:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_RETURN."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_APILEVEL:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_APILEVEL."));
+			if (editor)
+			{
+				setTitle("CMD_APILEVEL");
+				addSpinBox(0, 1, 2, tr("API Level:"), "Set API Level");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_CALIBRATESUB:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CALIBRATESUB."));
+			if (editor)
+			{
+				setTitle("CMD_CALIBRATESUB");
+				addXY(0, 1, 0, 1280);
+				addWH(2, 3, 0, 1280);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_TESTCARD:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_TESTCARD."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FONTCACHE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FONTCACHE."));
+			if (editor)
+			{
+				setTitle("CMD_FONTCACHE");
+				addHandle(0, true);
+				addAddress(1, false);
+				addMemorySize(2);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_FONTCACHEQUERY:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FONTCACHEQUERY."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_GETIMAGE:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GETIMAGE."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		}
+	else
+		switch (idRight)
+		{
 		// ******************************************
 		case FTEDITOR_DL_DISPLAY:
 		{
@@ -2538,7 +2715,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-	}
+		}
 	if (!ok)
 	{
 		m_MainWindow->propertiesEditor()->setInfo(tr("</i>Not yet implemented.</i>"));

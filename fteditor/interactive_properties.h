@@ -83,6 +83,7 @@ private:
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
 	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBoxUInt32(int index, double minim, double maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox16(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBoxForBitmapTransform(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
@@ -127,6 +128,7 @@ private:
 	class PropertiesSpinBoxAddressFlash;
 	class PropertiesSpinBoxAddressFlashOpt;
 	class PropertiesSpinBox;
+	class PropertiesSpinBoxWaitMask;
 	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesSpinBox256;

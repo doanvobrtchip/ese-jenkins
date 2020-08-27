@@ -1221,7 +1221,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_RUNANIM:
 #endif
 				{
-					compiled.push_back(parsed.Parameter[0].U);
+				    compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					break;
 				}
@@ -2092,7 +2092,7 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
         }
         return;
     }
-    if (cmd == CMD_ANIMSTART)
+    if (cmd == CMD_ANIMSTART || cmd == CMD_ANIMSTARTRAM)
     {
         if (opt == ANIM_LOOP)
         {
@@ -2102,6 +2102,10 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
         {
             dst << "ANIM_ONCE";
         }
+		else if (opt == ANIM_HOLD)
+		{
+			dst << "ANIM_HOLD";
+		}
         return;
     }
 #endif
@@ -2377,6 +2381,7 @@ void DlParser::toStringVC4
 			// 3: hex value (6)
 			// 4: signed addr (with flash bit)
 			// 5: hex value (8)
+			// 6: uint32
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
 			case CMD_FGCOLOR:
@@ -2429,8 +2434,12 @@ void DlParser::toStringVC4
                 if (p == 1) paramType = 1;
                 break;
             case CMD_ANIMSTART:
+			case CMD_ANIMSTARTRAM:	
                 if (p == 2) paramType = 1;
                 break;
+			case CMD_RUNANIM:
+				if (p == 0) paramType = 6;
+				break;
 #endif
 			}
 			switch (paramType)
@@ -2461,6 +2470,9 @@ void DlParser::toStringVC4
 				std::stringstream tmp;
 				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << (unsigned int)(parsed.Parameter[p].U);
 				res << tmp.str();
+			} break;
+			case 6: {
+				res << parsed.Parameter[p].U;
 			} break;
 			default:
 				res << parsed.Parameter[p].I;
