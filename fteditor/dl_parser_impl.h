@@ -634,6 +634,7 @@ void DlParser::initVC4()
 		FTEDITOR_MAP_CMD(CMD_ANIMFRAMERAM,    4);
 		FTEDITOR_MAP_CMD(CMD_ANIMSTARTRAM,    3);
 		FTEDITOR_MAP_CMD(CMD_RUNANIM,         2);
+		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[0] = 0;
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
 		FTEDITOR_MAP_CMD(CMD_FLASHPROGRAM,    3); // dst, src, num
 		// clang-format on
@@ -1225,8 +1226,8 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_RUNANIM:
 #endif
 				{
-					compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
+				    compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].I);
 					break;
 				}
 #if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
@@ -2096,7 +2097,7 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
         }
         return;
     }
-    if (cmd == CMD_ANIMSTART)
+    if (cmd == CMD_ANIMSTART || cmd == CMD_ANIMSTARTRAM)
     {
         if (opt == ANIM_LOOP)
         {
@@ -2106,6 +2107,10 @@ static void optToString(std::stringstream &dst, uint32_t opt, uint32_t cmd)
         {
             dst << "ANIM_ONCE";
         }
+		else if (opt == ANIM_HOLD)
+		{
+			dst << "ANIM_HOLD";
+		}
         return;
     }
 #endif
@@ -2381,6 +2386,7 @@ void DlParser::toStringVC4
 			// 3: hex value (6)
 			// 4: signed addr (with flash bit)
 			// 5: hex value (8)
+			// 6: uint32
 			switch (parsed.IdRight | 0xFFFFFF00)
 			{
 			case CMD_FGCOLOR:
@@ -2433,6 +2439,7 @@ void DlParser::toStringVC4
                 if (p == 1) paramType = 1;
                 break;
             case CMD_ANIMSTART:
+			case CMD_ANIMSTARTRAM:	
                 if (p == 2) paramType = 1;
                 break;
 #endif

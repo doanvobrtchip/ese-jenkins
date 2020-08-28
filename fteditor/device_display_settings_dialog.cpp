@@ -110,16 +110,14 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	{
 		currentDevice = FTEDITOR_FT810;
 	}
-	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT817)
 	{
 		currentDevice = FTEDITOR_BT815;
 	}
-	/*
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
 	{
 		currentDevice = FTEDITOR_BT817;
 	}
-	*/
 
 	for each(QRadioButton * rb in m_CustomRadioButtonList)
 	{

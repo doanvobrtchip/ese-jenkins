@@ -14,8 +14,7 @@
 #include <QThread>
 #include < QDirIterator>
 
-namespace FTEDITOR
-{
+namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER
 
@@ -43,6 +42,9 @@ DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
 	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::clicked);
 
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(reject()));
+
+	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::click);
+	connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, ui->btnEditDevice, &QPushButton::click);
 }
 
 void DeviceManageDialog::execute()
@@ -51,7 +53,7 @@ void DeviceManageDialog::execute()
 	show();
 }
 
-void DeviceManageDialog::loadDevice(QListWidget * lw, QString jsonPath)
+void DeviceManageDialog::loadDevice(QListWidget *lw, QString jsonPath)
 {
 	CustomDeviceInfo cdi;
 	getCustomDeviceInfo(jsonPath, cdi);
@@ -107,7 +109,7 @@ void DeviceManageDialog::loadAllDevice()
 
 void DeviceManageDialog::addDevice()
 {
-	DeviceAddNewDialog * anDialog = new DeviceAddNewDialog(this);
+	DeviceAddNewDialog *anDialog = new DeviceAddNewDialog(this);
 	connect(anDialog, &DeviceAddNewDialog::deviceAdded, this, &DeviceManageDialog::onDeviceAdded);
 	anDialog->execute();
 }
@@ -169,14 +171,14 @@ void DeviceManageDialog::doClone(QListWidget *lw)
 
 		QJsonDocument jd;
 		jd.setObject(jo);
-		
+
 		QFile f(newName);
 		if (f.open(QIODevice::WriteOnly))
 		{
 			f.write(jd.toJson());
 			f.close();
 		}
-		
+
 		loadDevice(ui->deviceListWidget, newName);
 		lw->setFocus();
 	}
@@ -232,7 +234,7 @@ QJsonObject DeviceManageDialog::getDeviceJson(QString jsonPath)
 	return jo;
 }
 
-void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo & cdi)
+void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo &cdi)
 {
 	QJsonObject jo = getDeviceJson(jsonPath);
 
@@ -261,8 +263,10 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 			cdi.EVE_Type = FTEDITOR_FT800;
 		else if (jo["EVE Type"].toString() == "FT81X")
 			cdi.EVE_Type = FTEDITOR_FT810;
-		else
+		else if (jo["EVE Type"].toString() == "BT815_816")
 			cdi.EVE_Type = FTEDITOR_BT815;
+		else
+			cdi.EVE_Type = FTEDITOR_BT817;
 	}
 
 	if (jo.contains("Connection Type") && jo["Connection Type"].isString())

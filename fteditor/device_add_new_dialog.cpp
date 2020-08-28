@@ -21,9 +21,10 @@ namespace FTEDITOR
 #if FT800_DEVICE_MANAGER
 
 const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
-							"Flash Size (MB)", "System Clock (MHz)", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET", "REG_HSYNC0",
-							"REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
-							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "REG_OUTBITS", "External Clock"};
+							"Flash Size (MB)", "System Clock (MHz)", "External Clock", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET",
+							"REG_HSYNC0", "REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
+							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "REG_OUTBITS",
+							"REG_PCLK_2X", "REG_PCLK_FREQ", "REG_AH_HCYCLE_MAX", "REG_ADAPTIVE_FRAMERATE" };
 
 const QString DeviceAddNewDialog::REG_OUTBITS_6bits = "6 bits display";
 const QString DeviceAddNewDialog::REG_OUTBITS_8bits = "8 bits display";
@@ -37,7 +38,7 @@ DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
 
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(addDevice()));
 
-	ui->DeviceTableWidget->horizontalHeader()->setMinimumSectionSize(120);
+	ui->DeviceTableWidget->horizontalHeader()->setMinimumSectionSize(170);
 }
 
 void DeviceAddNewDialog::execute()
@@ -151,7 +152,7 @@ void DeviceAddNewDialog::addDevice()
 
 void DeviceAddNewDialog::onEveTypeChange(QString eveType)
 {
-	bool isFlashUsed = (eveType == "BT81X");
+	bool isFlashUsed = eveType.startsWith("BT");
 
 	QTableWidgetItem * item = NULL;
 	QWidget * w = NULL;
@@ -237,7 +238,7 @@ void DeviceAddNewDialog::prepareData()
 		else if (PROPERTIES[i] == "EVE Type")
 		{
 			cb = new QComboBox(this);
-			cb->addItems(QStringList() << "BT81X" << "FT81X" << "FT80X");
+			cb->addItems(QStringList() << "BT817_818" << "BT815_816" << "FT81X" << "FT80X");
 			cb->setCurrentIndex(0);
 			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onEveTypeChange);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);

@@ -25,6 +25,7 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QHeaderView>
+#include <QTimer>
 
 // Emulator includes
 
@@ -38,8 +39,11 @@
 
 namespace FTEDITOR {
 
-Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
-	m_LineEditor(NULL), m_LineNumber(0)
+Toolbox::Toolbox(MainWindow *parent)
+    : QWidget(parent)
+    , m_MainWindow(parent)
+    , m_LineEditor(NULL)
+    , m_LineNumber(0)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
 	m_Tools = new QTreeWidget(this);
@@ -192,10 +196,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 	m_Utilities->setIcon(0, QIcon(":/icons/beaker-empty.png"));
 	{
 		QTreeWidgetItem *item;
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Logo"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOGO));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Logo"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOGO));
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Tracker"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
@@ -209,14 +213,14 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CSKETCH));
 		m_CoprocessorFT801Only.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Display List Start"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_DLSTART));
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Swap"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_SWAP));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Display List Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_DLSTART));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Swap"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SWAP));
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Interrupt"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
@@ -260,64 +264,119 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Memory Zero"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMZERO));
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Inflate"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE));
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Inflate 2"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE2));
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Video Start"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Inflate"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Inflate 2"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE2));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Video Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTART));
 		m_CoprocessorFT810Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Video Start F"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTARTF));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Video Start F"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOSTARTF));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Video Frame"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOFRAME));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Video Frame"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_VIDEOFRAME));
 		m_CoprocessorFT810Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Reset Font"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_RESETFONTS));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Reset Font"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_RESETFONTS));
 		m_CoprocessorFT810Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Flash Source"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_FLASHSOURCE));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Flash Source"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FLASHSOURCE));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Animation Start"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTART));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Start"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTART));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Animation Stop"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTOP));
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Start RAM"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTARTRAM));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Run Animation"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_RUNANIM));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Stop"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMSTOP));
+		m_CoprocessorBT817Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation XY"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMXY));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Animation XY"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMXY));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Draw"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMDRAW));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Animation Draw"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMDRAW));
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Frame"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMFRAME));
 		m_CoprocessorBT815Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Utilities);
-        item->setText(0, tr("Animation Frame"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMFRAME));
-		m_CoprocessorBT815Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Animation Frame RAM"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ANIMFRAMERAM));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("API Level"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_APILEVEL));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Calibrate Sub"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CALIBRATESUB));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Test Card"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_TESTCARD));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Font Cache"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FONTCACHE));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Font Cache Query"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_FONTCACHEQUERY));
+		m_CoprocessorBT817Plus.push_back(item);
+
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Get Image"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GETIMAGE));
+		m_CoprocessorBT817Plus.push_back(item);
 	}
 
 	m_Graphics = new QTreeWidgetItem(m_Tools);
@@ -477,10 +536,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SIZE_H));
 		m_DisplayListFT810Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Bitmaps);
-        item->setText(0, tr("Bitmap Extend Format"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_EXT_FORMAT));
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Bitmap Extend Format"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_EXT_FORMAT));
 		m_DisplayListBT815Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Set Bitmap"));
@@ -496,10 +555,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_PALETTE_SOURCE));
 		m_DisplayListFT810Plus.push_back(item);
-        item = new QTreeWidgetItem(m_Bitmaps);
-        item->setText(0, tr("Bitmap Swizzle"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SWIZZLE));
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Bitmap Swizzle"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_DL_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_BITMAP_SWIZZLE));
 		m_DisplayListBT815Plus.push_back(item);
 		item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Transform A"));
@@ -555,10 +614,10 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_SETMATRIX));
 		m_CoprocessorTools.push_back(item);
-        item = new QTreeWidgetItem(m_Bitmaps);
-        item->setText(0, tr("Bitmap Transform"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
-        item->setData(2, Qt::UserRole, QVariant((uint)CMD_BITMAP_TRANSFORM));
+		item = new QTreeWidgetItem(m_Bitmaps);
+		item->setText(0, tr("Bitmap Transform"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_BITMAP_TRANSFORM));
 		m_CoprocessorBT815Plus.push_back(item);
 		/*item = new QTreeWidgetItem(m_Bitmaps);
 		item->setText(0, tr("Matrix Get Current"));
@@ -633,15 +692,44 @@ Toolbox::Toolbox(MainWindow *parent) : QWidget(parent), m_MainWindow(parent),
 		item->setText(0, tr("Return"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_RETURN));
-        item = new QTreeWidgetItem(m_Execution);
-        item->setText(0, tr("No-op"));
-        item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
-        item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_NOP));
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("No-op"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)FTEDITOR_DL_NOP));
 		m_DisplayListBT815Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Wait"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_WAIT));
+		m_CoprocessorBT817Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("New List"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_NEWLIST));
+		m_CoprocessorBT817Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("End List"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_ENDLIST));
+		m_CoprocessorBT817Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Call List"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CALLLIST));
+		m_CoprocessorBT817Plus.push_back(item);
+		item = new QTreeWidgetItem(m_Execution);
+		item->setText(0, tr("Command Return"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_RETURN));
+		m_CoprocessorBT817Plus.push_back(item);
 	}
 
 	// m_Advanced = new QTreeWidgetItem(m_Tools);
 	// m_Advanced->setText(0, tr("Advanced")); // Context & Macro commands?
+
+	QTimer::singleShot(0, this, [=]() {
+		bindCurrentDevice();
+	});
 }
 
 void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -654,26 +742,26 @@ void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		{
 		case BITMAPS:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>BITMAPS</b><br>"
-				"Rectangular pixel arrays, in various color format."));
+			    "<b>BITMAPS</b><br>"
+			    "Rectangular pixel arrays, in various color format."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		case POINTS:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>POINTS</b><br>"
-				"Anti-aliased points, point radius is 1-256 pixels."));
+			    "<b>POINTS</b><br>"
+			    "Anti-aliased points, point radius is 1-256 pixels."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		case LINES:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>LINES</b><br>"
-				"Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary)."));
+			    "<b>LINES</b><br>"
+			    "Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary)."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		case LINE_STRIP:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>LINE_STRIP</b><br>"
-				"Anti-aliased lines, connected head-to-tail."));
+			    "<b>LINE_STRIP</b><br>"
+			    "Anti-aliased lines, connected head-to-tail."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		case EDGE_STRIP_R:
@@ -681,14 +769,14 @@ void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		case EDGE_STRIP_A:
 		case EDGE_STRIP_B:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>EDGE STRIP A, B, L, R</b><br>"
-				"Edge strips."));
+			    "<b>EDGE STRIP A, B, L, R</b><br>"
+			    "Edge strips."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		case RECTS:
 			m_MainWindow->propertiesEditor()->setInfo(tr(
-				"<b>RECTS</b><br>"
-				"Round-cornered rectangles, curvature of the corners can be adjusted using LINE_WIDTH."));
+			    "<b>RECTS</b><br>"
+			    "Round-cornered rectangles, curvature of the corners can be adjusted using LINE_WIDTH."));
 			m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, NULL);
 			break;
 		}
@@ -721,7 +809,6 @@ void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 
 Toolbox::~Toolbox()
 {
-
 }
 
 uint32_t Toolbox::getSelectionType()
@@ -761,6 +848,10 @@ void Toolbox::bindCurrentDevice()
 	for (size_t i = 0; i < m_CoprocessorBT815Plus.size(); ++i)
 	{
 		m_CoprocessorBT815Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && m_LineEditor->isCoprocessor()));
+	}
+	for (size_t i = 0; i < m_CoprocessorBT817Plus.size(); ++i)
+	{
+		m_CoprocessorBT817Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817 && m_LineEditor->isCoprocessor()));
 	}
 	for (size_t i = 0; i < m_DisplayListFT810Plus.size(); ++i)
 	{

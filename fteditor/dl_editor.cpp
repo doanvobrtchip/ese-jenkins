@@ -182,13 +182,28 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		      { "CMD_CLEARCACHE", {} },
 		      { "CMD_FLASHSOURCE", { "<u>pointer: %1" } },
 		      { "CMD_VIDEOSTARTF", {} },
-		      { "CMD_ANIMSTART", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },
+		      { "CMD_ANIMSTART", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },			  
+			  { "CMD_ANIMSTARTRAM", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },
+			  { "CMD_RUNANIM", { "<u>wait mask: %1", "<i>play: %1" } },
 		      { "CMD_ANIMSTOP", { "<i>", "animation channel: %1" } },
 		      { "CMD_ANIMXY", { "<i>", "animation channel: %1", "x: %1, y: %2" } },
 		      { "CMD_ANIMDRAW", { "<i>", "animation channel: %1" } },
 		      { "CMD_ANIMFRAME", { "<i>", "x: %1, y: %2", "<u>animation object pointer: %1", "<u>frame: %1" } },
+			  { "CMD_ANIMFRAMERAM", { "<i>", "x: %1, y: %2", "<u>animation object pointer: %1", "<u>frame: %1" } },
 		      { "CMD_SYNC", {} },
-		      { "CMD_BITMAP_TRANSFORM", { "<i>", "x0: %1", "y0: %1", "x1: %1", "y1: %1", "x2: %1", "y2: %1", "tx0: %1", "ty0: %1", "tx1: %1", "ty1: %1", "tx2: %1", "ty2: %1", "result: %1" } }
+		      { "CMD_BITMAP_TRANSFORM", { "<i>", "x0: %1", "y0: %1", "x1: %1", "y1: %1", "x2: %1", "y2: %1", "tx0: %1", "ty0: %1", "tx1: %1", "ty1: %1", "tx2: %1", "ty2: %1", "result: %1" } },
+			  
+			  { "CMD_WAIT", { "<u>us: %1" } },
+			  { "CMD_NEWLIST", { "<u>memory address of command list: %1" } },
+			  { "CMD_ENDLIST", {} },
+			  { "CMD_CALLLIST", { "<u>memory address of command list: %1"} },
+			  { "CMD_RETURN", {} },
+			  { "CMD_APILEVEL", { "<u>level: %1" } },
+			  { "CMD_CALIBRATESUB", { "<u>x: %1", "<u>y: %1", "<u>w: %1", "<u>h: %1", "<u>result: %1" } },
+			  { "CMD_TESTCARD", {} },
+			  { "CMD_FONTCACHE", { "<u>font handle: %1", "<i>start of cache area: %1", "<u>size of cache area: %1" } },
+			  { "CMD_FONTCACHEQUERY", { "<u>total: %1", "<i>used: %1" } },
+			  { "CMD_GETIMAGE", { "<u>bitmap address: %1", "<u>bitmap format: %1", "<u>width: %1", "<u>height: %1", "<u>palette: %1" } },
 	      };
 	}
 }
@@ -236,13 +251,32 @@ void DlEditor::clearUndoStack()
 	m_CodeEditor->document()->clearUndoRedoStacks();
 }
 
+bool DlEditor::eventFilter(QObject *watched, QEvent *event)
+{
+	if (watched == m_CodeEditor && m_CodeEditor->blockCount() > 1)
+	{
+		if (event->type() == QKeyEvent::KeyPress)
+		{
+			QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+			if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter)
+			{
+				return true; // do not process this event further
+			}
+		}
+		return false; // process this event further
+	}
+	else
+	{
+		// pass the event on to the parent class
+		return QWidget::eventFilter(watched, event);
+	}
+}
+
 void DlEditor::setModeMacro()
 {
 	m_ModeMacro = true;
 	m_CodeEditor->setMaxLinesNotice(FT800EMU_MACRO_SIZE);
-	/*QFontMetrics m(m_CodeEditor->font()) ;
-	int height = m.lineSpacing() ;
-	m_CodeEditor->setFixedHeight(3 * height) ;*/
+	m_CodeEditor->installEventFilter(this);
 }
 
 void DlEditor::clear()

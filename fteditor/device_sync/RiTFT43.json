@@ -3,7 +3,7 @@
     "Connection Type": "MPSSE",
     "Description": "Riverdi TFT 4.3 inch (BT815) 480x272",
     "Device Name": "RiTFT-43",
-    "EVE Type": "BT81X",
+    "EVE Type": "BT815_816",
     "External Clock": "0",
     "Flash Model": "W25Q64JV",
     "Flash Size (MB)": "8",

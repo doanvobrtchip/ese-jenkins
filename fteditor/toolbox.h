@@ -91,8 +91,10 @@ private:
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT801Only;
 	std::vector<QTreeWidgetItem *> m_CoprocessorFT810Plus;
 	std::vector<QTreeWidgetItem *> m_CoprocessorBT815Plus;
+	std::vector<QTreeWidgetItem *> m_CoprocessorBT817Plus;
+
 	std::vector<QTreeWidgetItem *> m_DisplayListFT810Plus;
-	std::vector<QTreeWidgetItem *> m_DisplayListBT815Plus;
+	std::vector<QTreeWidgetItem *> m_DisplayListBT815Plus;	
 
 	// Current line
 	DlEditor *m_LineEditor;
