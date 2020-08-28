@@ -463,9 +463,10 @@ void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QS
 
 void InteractiveProperties::addSpinBoxUInt32(int index, double minim, double maxim, const QString &label, const QString &undoMessage)
 {
-	PropertiesSpinBoxWaitMask *prop = new PropertiesSpinBoxWaitMask(this, undoMessage, index);
+	PropertiesSpinBoxUInt32 *prop = new PropertiesSpinBoxUInt32(this, undoMessage, index);
 	prop->setMinimum(minim);
 	prop->setMaximum(maxim);
+	prop->setWrapping(true);
 	addLabeledWidget(label, prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -757,6 +758,15 @@ void InteractiveProperties::addAddressFlash(int index)
 void InteractiveProperties::addAddress(int index, bool negative)
 {
 	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), index, negative);
+	addLabeledWidget("Address: ", prop);
+	m_CurrentProperties.push_back(prop);
+	prop->done();
+}
+
+void InteractiveProperties::addAddress64ByteAligned(int index)
+{
+	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), index, false);
+	prop->setSingleStep(64);
 	addLabeledWidget("Address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -1765,7 +1775,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_ANIMSTARTRAM");
 				addSpinBox(0, -1, 31, tr("Channel") + ": ", tr("Set channel"));
-				addAddress(1, false);
+				addAddress64ByteAligned(1);
 				addAnimLoop(2);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1778,7 +1788,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				setTitle("CMD_RUNANIM");
-				addSpinBoxUInt32(0, -1, 0xFFFFFFFF, tr("Wait Mask:"), tr("Set Wait Mask"));				
+				addSpinBoxUInt32(0, 0, 0xFFFFFFFF, tr("Wait Mask:"), tr("Set Wait Mask"));				
 				addAddress(1, true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
@@ -1885,7 +1895,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_ANIMFRAMERAM");
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
-				addAddress(2, false);
+				addAddress64ByteAligned(2);
 				addSpinBox(3, 0, 0x7FFFFFFF, tr("Frame") + ": ", tr("Set frame"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}

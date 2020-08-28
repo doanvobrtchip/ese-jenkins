@@ -2333,11 +2333,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[2].I = 0;
                         pa.ExpectedParameterCount = 3;
                         break;
-					case CMD_RUNANIM:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
                     case CMD_ANIMSTOP:
                         pa.Parameter[0].I = 0;
                         pa.ExpectedParameterCount = 1;
@@ -2372,8 +2367,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 1;
 						break;
 					case CMD_RETURN:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
+						pa.ExpectedParameterCount = 0;
 						break;
 					case CMD_APILEVEL:
 						pa.Parameter[0].U = 1;
@@ -2392,14 +2386,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						break;
 					case CMD_FONTCACHE:
 						pa.Parameter[0].U = 0;
-						pa.Parameter[0].I = 0;
-						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
 						pa.ExpectedParameterCount = 3;
 						break;
 					case CMD_FONTCACHEQUERY:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[0].I = 0;
-						pa.ExpectedParameterCount = 2;
+						pa.ExpectedParameterCount = 0;
 						break;
 					case CMD_GETIMAGE:
 						pa.ExpectedParameterCount = 0;
@@ -2935,7 +2927,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[2].I = 0;
                         pa.ExpectedParameterCount = 3;
                         break;
-                    }                    
+					case CMD_RUNANIM:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].I = -1;
+						pa.ExpectedParameterCount = 2;
+						break;
+                    }					
 				}
 				else
 				{

@@ -470,12 +470,12 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class InteractiveProperties::PropertiesSpinBoxWaitMask : public UndoStackDisabler<SupportCopyPasteDoubleSpinBox>, public PropertiesWidget
+class InteractiveProperties::PropertiesSpinBoxUInt32 : public UndoStackDisabler<SupportCopyPasteDoubleSpinBox>, public PropertiesWidget
 {
 	Q_OBJECT
 
 public:
-	PropertiesSpinBoxWaitMask(InteractiveProperties *parent, const QString &undoMessage, int index)
+	PropertiesSpinBoxUInt32(InteractiveProperties *parent, const QString &undoMessage, int index)
 	    : UndoStackDisabler<SupportCopyPasteDoubleSpinBox>(parent)
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
@@ -487,7 +487,7 @@ public:
 		connect(this, SIGNAL(valueChanged(double)), this, SLOT(updateValue(double)));
 	}
 
-	virtual ~PropertiesSpinBoxWaitMask()
+	virtual ~PropertiesSpinBoxUInt32()
 	{
 	}
 

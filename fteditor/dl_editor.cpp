@@ -184,7 +184,7 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		      { "CMD_VIDEOSTARTF", {} },
 		      { "CMD_ANIMSTART", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },			  
 			  { "CMD_ANIMSTARTRAM", { "<i>", "animation channel: %1", "<u>animation object pointer: %1", "<u>loop flag: %1" } },
-			  { "CMD_RUNANIM", { "<u>wait mask: %1", "<u>play: %1" } },
+			  { "CMD_RUNANIM", { "<u>wait mask: %1", "<i>play: %1" } },
 		      { "CMD_ANIMSTOP", { "<i>", "animation channel: %1" } },
 		      { "CMD_ANIMXY", { "<i>", "animation channel: %1", "x: %1, y: %2" } },
 		      { "CMD_ANIMDRAW", { "<i>", "animation channel: %1" } },

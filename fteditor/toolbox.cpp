@@ -313,7 +313,7 @@ Toolbox::Toolbox(MainWindow *parent)
 		item->setText(0, tr("Run Animation"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_RUNANIM));
-		m_CoprocessorBT815Plus.push_back(item);
+		m_CoprocessorBT817Plus.push_back(item);
 
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Animation Stop"));
@@ -344,7 +344,7 @@ Toolbox::Toolbox(MainWindow *parent)
 
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("API Level"));
-		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_APILEVEL));
 		m_CoprocessorBT817Plus.push_back(item);
 
@@ -374,7 +374,7 @@ Toolbox::Toolbox(MainWindow *parent)
 
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Get Image"));
-		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GETIMAGE));
 		m_CoprocessorBT817Plus.push_back(item);
 	}

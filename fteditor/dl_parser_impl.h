@@ -634,6 +634,7 @@ void DlParser::initVC4()
 		FTEDITOR_MAP_CMD(CMD_ANIMFRAMERAM,    4);
 		FTEDITOR_MAP_CMD(CMD_ANIMSTARTRAM,    3);
 		FTEDITOR_MAP_CMD(CMD_RUNANIM,         2);
+		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[0] = 0;
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
 		// clang-format on
 #endif
@@ -1222,7 +1223,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 #endif
 				{
 				    compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(parsed.Parameter[1].I);
 					break;
 				}
 #if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
@@ -2437,9 +2438,6 @@ void DlParser::toStringVC4
 			case CMD_ANIMSTARTRAM:	
                 if (p == 2) paramType = 1;
                 break;
-			case CMD_RUNANIM:
-				if (p == 0) paramType = 6;
-				break;
 #endif
 			}
 			switch (paramType)
@@ -2470,9 +2468,6 @@ void DlParser::toStringVC4
 				std::stringstream tmp;
 				tmp << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << (unsigned int)(parsed.Parameter[p].U);
 				res << tmp.str();
-			} break;
-			case 6: {
-				res << parsed.Parameter[p].U;
 			} break;
 			default:
 				res << parsed.Parameter[p].I;

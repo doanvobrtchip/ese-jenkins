@@ -113,7 +113,8 @@ private:
 	void addAnimLoop(int loop);
 	void addAddressFlashOpt(int address, bool negative);
 	void addAddressFlash(int address);
-	void addAddress(int address, bool negative);
+	void addAddress(int index, bool negative);
+	void addAddress64ByteAligned(int index);
 	void addMemorySize(int size);
 	void addCaptureButton(const QString &text, const QString &undoMessage);
 	void addHelp(const QString &text);
@@ -128,7 +129,7 @@ private:
 	class PropertiesSpinBoxAddressFlash;
 	class PropertiesSpinBoxAddressFlashOpt;
 	class PropertiesSpinBox;
-	class PropertiesSpinBoxWaitMask;
+	class PropertiesSpinBoxUInt32;
 	class PropertiesDoubleSpinBox;
 	class PropertiesSpinBox16;
 	class PropertiesSpinBox256;
