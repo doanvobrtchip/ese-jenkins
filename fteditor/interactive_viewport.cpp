@@ -2549,7 +2549,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							{
 								pa.IdLeft = 0xFFFFFF00;
 								pa.IdRight = CMD_SETBITMAP & 0xFF;
+
 								pa.Parameter[0].U = contentInfo->bitmapAddress();
+
+								if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
+									if (contentInfo->ImageFormat == PALETTED565)
+										pa.Parameter[0].U = 512;
+									else if (contentInfo->ImageFormat == PALETTED4444)
+										pa.Parameter[0].U = 510;
+								}
+								
 								pa.Parameter[1].U = contentInfo->ImageFormat;
 								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
 								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;

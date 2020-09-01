@@ -1019,6 +1019,7 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 	
 	int w, h;
 	bool a;
+	bool png_quant = false;
 	// Have to load entire image to get Width and Height for now...
 	; {
 		QImage image;
@@ -1030,16 +1031,35 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 		w = image.width();
 		h = image.height();
 		a = image.hasAlphaChannel();
+		png_quant = (image.colorCount() > 0);
 	}
 
 	int format;
 	// JPG: RGB565 or L8 when mono
 	// PNG: RGB565 or ARGB4 when alpha, no mono support
-	if (isPNG) format = a ? ARGB4 : RGB565;
+	if (isPNG) {
+		if (png_quant) {
+			format = a ? PALETTED4444 : PALETTED565;
+		}
+		else {		
+			format = a ? ARGB4 : RGB565;
+		}
+	}
 	else format = mono ? L8 : RGB565;
 
 	int bpp = (format == L8) ? 1 : 2;
 	int stride = w * bpp;
+
+	QString str_format;
+	switch (format)
+	{
+	case L8:			str_format = "L8";				break;
+	case ARGB4:			str_format = "ARGB4";			break;
+	case RGB565:		str_format = "RGB565";			break;
+	case PALETTED4444:	str_format = "PALETTED4444";	break;
+	case PALETTED565:	str_format = "PALETTED565";		break;
+	default:			str_format = "L8";				break;
+	}
 
 	// Output the raw binary
 	file.copy(outRawName);
@@ -1056,9 +1076,9 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 		fo.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
 		QTextStream out(&fo);
 		out << "/*('file properties: ', 'resolution ', "
-			<< w << ", 'x', "
-			<< h << ", 'format ', '"
-			<< (format == L8 ? "L8" : (format == ARGB4 ? "ARGB4" : "RGB565"))
+		    << w << ", 'x', "
+		    << h << ", 'format ', '"
+		    << str_format
 			<< "', 'stride ', " << stride
 			<< ")*/\n";
 		int i = 0;
