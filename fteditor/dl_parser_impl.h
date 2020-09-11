@@ -482,7 +482,11 @@ void DlParser::initVC4()
 		s_CmdIdMap["CMD_LOADIMAGE"] = CMD_LOADIMAGE & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_LOADIMAGE & 0xFF] = 3;
 		s_CmdParamString[CMD_LOADIMAGE & 0xFF] = true;
-		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;		
+		s_CmdParamOptFormat[CMD_LOADIMAGE & 0xFF] = -1;
+
+		s_CmdIdMap["CMD_GETPTR"] = CMD_GETPTR & 0xFF;
+		s_CmdParamCount[CMD_GETPTR & 0xFF] = 1;		
+
 		s_CmdIdMap["CMD_GETPROPS"] = CMD_GETPROPS & 0xFF;
 		s_CmdParamCount[CMD_GETPROPS & 0xFF] = 3;		
 		s_CmdIdMap["CMD_LOADIDENTITY"] = CMD_LOADIDENTITY & 0xFF;
@@ -637,6 +641,7 @@ void DlParser::initVC4()
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[0] = 0;
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
 		FTEDITOR_MAP_CMD(CMD_FLASHPROGRAM,    3); // dst, src, num
+		FTEDITOR_MAP_CMD(CMD_GETPTR,          1);
 		// clang-format on
 #endif
 #undef FTEDITOR_MAP_CMD
@@ -953,6 +958,13 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 		{
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
+#if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
+				case CMD_GETPTR:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					break;
+				}
+#endif
 				case CMD_GETPROPS:
 #if defined(FTEDITOR_PARSER_VC4)
 				case CMD_FLASHPROGRAM:

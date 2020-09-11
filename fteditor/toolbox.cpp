@@ -243,6 +243,12 @@ Toolbox::Toolbox(MainWindow *parent)
 		item->setText(0, tr("Load Image"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_LOADIMAGE));
+		
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Get Ptr"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_GETPTR));
+
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Get Props"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));

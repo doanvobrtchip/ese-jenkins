@@ -146,7 +146,7 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		      { "CMD_LOADIDENTIY", {} },
 		      { "CMD_SETMATRIX", {} },
 		      { "CMD_GETMATRIX", { "<i>", "a: %1", "b: %1", "c: %1", "d: %1", "e: %1", "f: %1" } },
-		      { "CMD_GETPTR", { "result: %1" } },
+		      { "CMD_GETPTR", { "<u>result: %1" } },
 		      { "CMD_GETPROPS", { "<u>pointer: %1", "width: %1", "height: %1" } },
 		      { "CMD_SCALE", { "<i>", "x scale factor: %1", "y scale factor: %1" } },
 		      { "CMD_ROTATE", { "<i>", "clockwise rotation angle: %1" } },

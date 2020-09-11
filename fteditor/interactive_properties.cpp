@@ -1189,13 +1189,26 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+		case CMD_GETPTR:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GETPTR."));
+			if (editor)
+			{
+				setTitle("CMD_GETPTR");
+				addAddress(0, false);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		case CMD_GETPROPS:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GETPROPS."));
 			if (editor)
 			{
 				setTitle("CMD_GETPROPS");
-				addSpinBox(0, 0, 65535, "Pointer:", "Set pointer");
+
+				addAddress(0, false);
 				addSpinBox(1, 0, 65535, "Width:", "Set width");
 				addSpinBox(2, 0, 65535, "Height:", "Set height");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
