@@ -82,7 +82,7 @@ private:
 	void addRangeMaximum(int range, int maxim);
 	void addWidth(int width, int minim, int maxim);
 	void addRadius(int width, int minim, int maxim);
-	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
+	void addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage, bool readOnly = false);
 	void addSpinBoxUInt32(int index, double minim, double maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox16(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
 	void addSpinBox256(int index, int minim, int maxim, const QString &label, const QString &undoMessage);
@@ -113,7 +113,7 @@ private:
 	void addAnimLoop(int loop);
 	void addAddressFlashOpt(int address, bool negative);
 	void addAddressFlash(int address);
-	void addAddress(int index, bool negative);
+	void addAddress(int index, bool negative, bool readOnly = false);
 	void addAddress64ByteAligned(int index);
 	void addMemorySize(int size);
 	void addCaptureButton(const QString &text, const QString &undoMessage);

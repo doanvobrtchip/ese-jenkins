@@ -641,7 +641,6 @@ void DlParser::initVC4()
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[0] = 0;
 		s_CmdParamOptions[CMD_RUNANIM & 0xFF].Default[1] = -1;
 		FTEDITOR_MAP_CMD(CMD_FLASHPROGRAM,    3); // dst, src, num
-		FTEDITOR_MAP_CMD(CMD_GETPTR,          1);
 		// clang-format on
 #endif
 #undef FTEDITOR_MAP_CMD
