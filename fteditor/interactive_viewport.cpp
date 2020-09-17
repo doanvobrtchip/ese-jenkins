@@ -332,6 +332,21 @@ static bool isValidInsert(const DlParsed &parsed)
 				return FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801; // Deprecated in FT810
 			case CMD_ANIMFRAME:
 				return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815;
+			case CMD_ANIMSTARTRAM:
+			case CMD_ANIMFRAMERAM:
+			case CMD_RUNANIM:
+			case CMD_WAIT:
+			case CMD_NEWLIST:
+			case CMD_ENDLIST:
+			case CMD_CALLLIST:
+			case CMD_RETURN:
+			case CMD_APILEVEL:
+			case CMD_CALIBRATESUB:
+			case CMD_TESTCARD:
+			case CMD_FONTCACHE:
+			case CMD_FONTCACHEQUERY:
+			case CMD_GETIMAGE:
+				return FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817;
 			}
 		}
 	}
@@ -741,6 +756,7 @@ CMD_SCREENSAVER()
 				case CMD_SKETCH:
 				case CMD_CSKETCH:
 				case CMD_ANIMFRAME:
+			    case CMD_ANIMFRAMERAM:
 				{
 					QPen outer;
 					QPen inner;
@@ -2265,6 +2281,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 3;
 						break;
+					case CMD_GETPTR:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedStringParameter = false;
+						pa.ExpectedParameterCount = 1;
+						break;
 					case CMD_GETPROPS:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
@@ -2311,6 +2332,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 6;
 						break;
                     case CMD_ANIMSTART:
+					case CMD_ANIMSTARTRAM:
                         pa.Parameter[0].I = 0;
                         pa.Parameter[1].I = 0;
                         pa.Parameter[2].I = 0;
@@ -2325,6 +2347,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.ExpectedParameterCount = 1;
                         break;
                     case CMD_ANIMFRAME:
+					case CMD_ANIMFRAMERAM:
                         pa.Parameter[0].I = 0;
                         pa.Parameter[1].I = 0;
                         pa.Parameter[2].I = 0;
@@ -2336,6 +2359,49 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[1].I = 0;
                         pa.ExpectedParameterCount = 2;
                         break;
+					case CMD_WAIT:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_NEWLIST:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_CALLLIST:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_RETURN:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case CMD_APILEVEL:
+						pa.Parameter[0].U = 1;
+						pa.ExpectedStringParameter = false;
+						pa.ExpectedParameterCount = 1;
+						break;
+					case CMD_CALIBRATESUB:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.Parameter[3].U = 0;
+						pa.ExpectedParameterCount = 4;
+						break;
+					case CMD_TESTCARD:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case CMD_FONTCACHE:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.ExpectedParameterCount = 3;
+						break;
+					case CMD_FONTCACHEQUERY:
+						pa.ExpectedParameterCount = 0;
+						break;
+					case CMD_GETIMAGE:
+						pa.ExpectedParameterCount = 0;
+						break;
+					
 	/*
 
 	CMD_TEXT(19, 23, 28, 0, "Text")
@@ -2488,7 +2554,16 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							{
 								pa.IdLeft = 0xFFFFFF00;
 								pa.IdRight = CMD_SETBITMAP & 0xFF;
+
 								pa.Parameter[0].U = contentInfo->bitmapAddress();
+
+								if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
+									if (contentInfo->ImageFormat == PALETTED565)
+										pa.Parameter[0].U = 512;
+									else if (contentInfo->ImageFormat == PALETTED4444)
+										pa.Parameter[0].U = 510;
+								}
+								
 								pa.Parameter[1].U = contentInfo->ImageFormat;
 								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
 								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
@@ -2866,7 +2941,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         pa.Parameter[2].I = 0;
                         pa.ExpectedParameterCount = 3;
                         break;
-                    }                    
+					case CMD_RUNANIM:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].I = -1;
+						pa.ExpectedParameterCount = 2;
+						break;
+                    }					
 				}
 				else
 				{
