@@ -236,13 +236,32 @@ void DlEditor::clearUndoStack()
 	m_CodeEditor->document()->clearUndoRedoStacks();
 }
 
+bool DlEditor::eventFilter(QObject *watched, QEvent *event)
+{
+	if (watched == m_CodeEditor && m_CodeEditor->blockCount() > 1)
+	{
+		if (event->type() == QKeyEvent::KeyPress)
+		{
+			QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+			if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter)
+			{
+				return true; // do not process this event further
+			}
+		}
+		return false; // process this event further
+	}
+	else
+	{
+		// pass the event on to the parent class
+		return QWidget::eventFilter(watched, event);
+	}
+}
+
 void DlEditor::setModeMacro()
 {
 	m_ModeMacro = true;
 	m_CodeEditor->setMaxLinesNotice(FT800EMU_MACRO_SIZE);
-	/*QFontMetrics m(m_CodeEditor->font()) ;
-	int height = m.lineSpacing() ;
-	m_CodeEditor->setFixedHeight(3 * height) ;*/
+	m_CodeEditor->installEventFilter(this);
 }
 
 void DlEditor::clear()

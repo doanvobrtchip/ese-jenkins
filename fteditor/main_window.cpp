@@ -142,8 +142,8 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT813
 	5, // BT815
 	5, // BT816
-	5, // BT817
-	5, // BT818
+	7, // BT817
+	7, // BT818
 };
 
 static const char *s_StandardResolutions[] = {
@@ -152,6 +152,8 @@ static const char *s_StandardResolutions[] = {
 	"HVGA Portrait (320x480)",
 	"WVGA (800x480)",
 	"SVGA (800x600)",
+	"WSVGA (1024x600)",
+	"WXGA (1280x800)"
 };
 
 static const int s_StandardWidths[] = {
@@ -160,6 +162,8 @@ static const int s_StandardWidths[] = {
 	320,
 	800,
 	800,
+	1024,
+	1280
 };
 
 static const int s_StandardHeights[] = {
@@ -168,6 +172,8 @@ static const int s_StandardHeights[] = {
 	480,
 	480,
 	600,
+	600,
+	800
 };
 
 bool MainWindow::waitingCoprocessorAnimation()
@@ -450,6 +456,8 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"ft81x",
+	"bt81x",
+	"bt81x",
 	"bt81x",
 	"bt81x"
 };
@@ -887,16 +895,19 @@ void MainWindow::createActions()
 	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
+	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_B));
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
 
 	m_ResetEmulatorAct = new QAction(this);
+	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
+
+	m_ImportDisplayListAct = new QAction(this);
+	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
-
-	m_ImportDisplayListAct = new QAction(this);
-	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_LittleEndianSaveDisplayListAct = new QAction(this);
 	connect(m_LittleEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveDisplayList()));

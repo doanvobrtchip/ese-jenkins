@@ -34,6 +34,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMessageBox>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QMimeData>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -340,7 +341,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	QVBoxLayout *layout = new QVBoxLayout();
 
-	m_ContentList = new QTreeWidget(this);
+	m_ContentList = new ContentTreeWidget(this);
+	m_ContentList->setAcceptDrops(true);
 	m_ContentList->setDragEnabled(true);
 	//m_ContentList->header()->close();
 	m_ContentList->setColumnCount(2);
@@ -351,6 +353,10 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	layout->addWidget(m_ContentList);
 	//m_ContentList->resizeColumnToContents(0);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
+
+	connect(m_ContentList, &ContentTreeWidget::contentDropped, this, [=](QString url) {
+		add(url);
+	});
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
 
@@ -546,7 +552,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesData->setLayout(propDataLayout);
 
 	QVBoxLayout *helpLayout = new QVBoxLayout();
-	m_HelpfulLabel = new QLabel(m_ContentList);
+	m_HelpfulLabel = new ContentLabel(m_ContentList);
+	connect(m_HelpfulLabel, &ContentLabel::contentDropped, m_ContentList, &ContentTreeWidget::contentDropped);
 	m_HelpfulLabel->setWordWrap(true);
 	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
 	helpLayout->addWidget(m_HelpfulLabel);
@@ -4885,4 +4892,70 @@ void ContentManager::propertiesFontOffsetChanged(int value)
 
 } /* namespace FTEDITOR */
 
+void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasUrls())
+		event->acceptProposedAction();
+	else
+		event->ignore();
+}
+
+void ContentTreeWidget::dropEvent(QDropEvent *event)
+{
+	if (event->proposedAction() == Qt::MoveAction || event->proposedAction() == Qt::CopyAction)
+	{
+		event->acceptProposedAction();
+		for	each(QUrl url in event->mimeData()->urls())
+		{
+			emit contentDropped(url.toLocalFile());
+		}
+	}
+	else
+	{
+		// Ignore the drop
+		event->ignore();
+	}
+}
+
+QStringList ContentTreeWidget::mimeTypes() const
+{
+	return QStringList()
+	    << "text/uri-list"
+	    << "application/x-qabstractitemmodeldatalist";
+}
+
+ContentTreeWidget::ContentTreeWidget(QWidget *parent)
+    : QTreeWidget(parent)
+{
+	setAcceptDrops(true);
+}
+
+ContentTreeWidget::~ContentTreeWidget()
+{
+}
+
+void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
+{
+	event->accept();
+	event->acceptProposedAction();
+}
+
+void ContentLabel::dropEvent(QDropEvent *event)
+{
+	event->acceptProposedAction();
+	for each(QUrl url in event->mimeData()->urls())
+	{
+		emit contentDropped(url.toLocalFile());
+	}
+}
+
+ContentLabel::ContentLabel(QWidget *parent)
+    : QLabel(parent)
+{
+	setAcceptDrops(true);
+}
+
+ContentLabel::~ContentLabel()
+{
+}
 /* end of file */
