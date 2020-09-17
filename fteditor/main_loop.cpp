@@ -854,11 +854,12 @@ void loop()
 		freespace -= 4;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
+			// int flashStatus = rd32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_FLASH_STATUS));
 			swr32(CMD_FLASHATTACH);
-			swr32(CMD_FLASHFAST);
-			swr32(~0); // result
-			wp += 12;
-			freespace -= 12;
+			//swr32(CMD_FLASHFAST);
+			//swr32(~0); // result
+			wp += 4;
+			freespace -= 4;
 		}
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;
