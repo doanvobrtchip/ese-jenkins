@@ -1139,7 +1139,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
-			for (int i = 0; i < FTEDITOR_DEVICE_NB - 2; ++i) // remove BT817/8 in version 3.4
+			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			hBoxLayout->addWidget(m_ProjectDevice);
