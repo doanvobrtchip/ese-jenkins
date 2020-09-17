@@ -435,21 +435,21 @@ EVE_HAL_EXPORT void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 }
 
 /* Toggle PD_N pin of FT800 board for a power cycle */
-void EVE_Hal_BT8XXEMU_powerCycle(EVE_HalContext *phost, bool up);
-void EVE_Hal_FT4222_powerCycle(EVE_HalContext *phost, bool up);
-void EVE_Hal_MPSSE_powerCycle(EVE_HalContext *phost, bool up);
-EVE_HAL_EXPORT void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_BT8XXEMU_powerCycle(EVE_HalContext *phost, bool up);
+bool EVE_Hal_FT4222_powerCycle(EVE_HalContext *phost, bool up);
+bool EVE_Hal_MPSSE_powerCycle(EVE_HalContext *phost, bool up);
+EVE_HAL_EXPORT bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	switch (phost->Host)
 	{
 	case EVE_HOST_BT8XXEMU:
-		EVE_Hal_BT8XXEMU_powerCycle(phost, up);
+		return EVE_Hal_BT8XXEMU_powerCycle(phost, up);
 		break;
 	case EVE_HOST_FT4222:
-		EVE_Hal_FT4222_powerCycle(phost, up);
+		return EVE_Hal_FT4222_powerCycle(phost, up);
 		break;
 	case EVE_HOST_MPSSE:
-		EVE_Hal_MPSSE_powerCycle(phost, up);
+		return EVE_Hal_MPSSE_powerCycle(phost, up);
 		break;
 	}
 }

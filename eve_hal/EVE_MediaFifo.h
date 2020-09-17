@@ -49,6 +49,10 @@
 Returns false in case a coprocessor fault occurred */
 EVE_HAL_EXPORT bool EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size);
 
+/* Closes the current media FIFO.
+Indication for HAL only */
+EVE_HAL_EXPORT void EVE_MediaFifo_close(EVE_HalContext *phost);
+
 /* Get the current read pointer. */
 EVE_HAL_EXPORT uint32_t EVE_MediaFifo_rp(EVE_HalContext *phost);
 
@@ -68,12 +72,12 @@ EVE_HAL_EXPORT bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *bu
 
 /* Wait for the media FIFO to fully empty. 
 When checking if a file is fully processed, EVE_Cmd_waitFlush must be called.
-Returns false in case a coprocessor fault occurred */
-EVE_HAL_EXPORT bool EVE_MediaFifo_waitFlush(EVE_HalContext *phost);
+Returns false in case a coprocessor fault occurred, or in case the coprocessor is done processing */
+EVE_HAL_EXPORT bool EVE_MediaFifo_waitFlush(EVE_HalContext *phost, bool orCmdFlush);
 
 /* Wait for the media FIFO to have at least the requested amount of free space.
-Returns 0 in case a coprocessor fault occurred */
-EVE_HAL_EXPORT uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size);
+Returns 0 in case a coprocessor fault occurred, or in case the coprocessor is done processing */
+EVE_HAL_EXPORT uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size, bool orCmdFlush);
 
 #else
 
@@ -81,7 +85,7 @@ EVE_HAL_EXPORT uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t 
 #define EVE_MediaFifo_rp(phost) (0)
 #define EVE_MediaFifo_wp(phost) (0)
 #define EVE_MediaFifo_space(phost) (~0)
-#define EVE_MediaFifo_wrMem(phost, buffer, size) (false)
+#define EVE_MediaFifo_wrMem(phost, buffer, size, transfered) (false)
 #define EVE_MediaFifo_waitFlush(phost) (false)
 #define EVE_MediaFifo_waitSpace(phost, size) (false)
 

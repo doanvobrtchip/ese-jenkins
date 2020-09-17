@@ -145,6 +145,7 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
+	FT_DEVICE_LIST_INFO_NODE chanInfo = { 0 };
 	bool res = deviceIdx >= 0 && deviceIdx < s_NumChannels;
 	if (!res)
 	{
@@ -156,20 +157,33 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 		deviceIdx = 0;
 		for (i = 0; i < s_NumChannels; ++i)
 		{
-			FT_DEVICE_LIST_INFO_NODE chanInfo;
 			if (SPI_GetChannelInfo((uint32_t)i, &chanInfo) != FT_OK)
 				continue;
 			if (!(chanInfo.Flags & FT_FLAGS_OPENED))
-			{ 
+			{
 				deviceIdx = i;
 				res = true;
 				break;
 			}
 		}
 	}
+	else
+	{
+		SPI_GetChannelInfo((uint32_t)deviceIdx, &chanInfo);
+	}
 	parameters->MpsseChannelNo = deviceIdx & 0xFF;
 	parameters->PowerDownPin = 7;
 	parameters->SpiClockrateKHz = 12000; /* in KHz */
+	if (!strcmp(chanInfo.Description, "UMFTPD2A B"))
+	{
+		/* Settings for FT9xx GPIO passthrough */
+		/* parameters->PowerDownPin = 7 + 16; */ /* Uses channel D, useful for FT9xx passthrough. See EVE_HalImpl_open */
+		/* parameters->SpiClockrateKHz = 600; */
+
+		/* Settings for FT9xx hardware SPI passthrough */
+		parameters->PowerDownPin = 0x80 + 43; /* GPIO pin 43 */
+		parameters->SpiClockrateKHz = 2000; // 2000;
+	}
 	return res;
 }
 
@@ -184,6 +198,7 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
 	FT_STATUS status;
+	FT_DEVICE_LIST_INFO_NODE chanInfo = { 0 };
 	ChannelConfig channelConf; /* channel configuration */
 
 #ifdef EVE_MULTI_TARGET
@@ -202,6 +217,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 
 	/* Open the first available channel */
 	status = SPI_OpenChannel(parameters->MpsseChannelNo, (FT_HANDLE *)&phost->SpiHandle);
+	phost->GpioHandle = phost->SpiHandle;
 	if (FT_OK != status)
 	{
 		eve_printf_debug("SPI open channel failed %d %p\n", parameters->MpsseChannelNo, phost->SpiHandle);
@@ -215,6 +231,39 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	}
 
 	eve_printf_debug("\nhandle=0x%p status=0x%x\n", phost->SpiHandle, status);
+
+	/* Special case, when connecting through UMFTPD2A, use channel D for GPIO */
+	if (phost->PowerDownPin >= 8 && ((phost->PowerDownPin & 0x80) == 0))
+	{
+		SPI_GetChannelInfo((uint32_t)phost->MpsseChannelNo, &chanInfo);
+		if (!strcmp(chanInfo.Description, "UMFTPD2A B"))
+		{
+			size_t slen = strlen(chanInfo.SerialNumber);
+			char cn = 'B' + (phost->PowerDownPin >> 3);
+			eve_printf_debug("%s (%s): Adding channel %c for GPIO\n", chanInfo.Description, chanInfo.SerialNumber, cn);
+			phost->PowerDownPin &= 7;
+			chanInfo.SerialNumber[slen - 1] = cn;
+			phost->GpioHandle = NULL;
+			if (FT_OpenEx(chanInfo.SerialNumber, FT_OPEN_BY_SERIAL_NUMBER, &phost->GpioHandle) != FT_OK)
+			{
+				eve_printf_debug("Failed to open channel D\n");
+				FT_Close(phost->SpiHandle);
+				return false;
+			}
+			else
+			{
+				eve_printf_debug("Channel D open OK\n");
+			}
+			if (FT_ResetDevice(phost->GpioHandle) != FT_OK
+				|| FT_SetBitMode(phost->GpioHandle, (1 << phost->PowerDownPin), FT_BITMODE_SYNC_BITBANG) != FT_OK)
+			{
+				eve_printf_debug("Failed to prepare channel D\n");
+				FT_Close(phost->GpioHandle);
+				FT_Close(phost->SpiHandle);
+				return false;
+			}
+		}
+	}
 
 	/* Initialize the context variables */
 	phost->SpiDummyBytes = 1; /* by default ft800/801/810/811 goes with single dummy byte for read */
@@ -233,7 +282,11 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
 {
 	phost->Status = EVE_STATUS_CLOSED;
 	--g_HalPlatform.OpenedDevices;
+	if (phost->GpioHandle != phost->SpiHandle)
+		SPI_CloseChannel(phost->GpioHandle);
 	SPI_CloseChannel(phost->SpiHandle);
+	phost->GpioHandle = NULL;
+	phost->SpiHandle = NULL;
 }
 
 /**
@@ -265,7 +318,7 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
 {
 	if (!EVE_Hal_supportCmdB(phost) || (addr != REG_CMDB_WRITE))
 	{
-		bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE));
+		bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (RAM_CMD + EVE_CMD_FIFO_SIZE));
 		addr += inc;
 		if (wrapCmdAddr)
 			addr = RAM_CMD + (addr & EVE_CMD_FIFO_MASK);
@@ -368,11 +421,11 @@ static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 			while (sizeRemaining)
 			{
 				uint32_t transferSize = min(0xFFFF, sizeRemaining);
-				FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, transferSize, &sizeTransferred, 
-					(transferSize == sizeRemaining) ? (SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE) : SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+				FT_STATUS status = SPI_Write(phost->SpiHandle, (uint8 *)buffer, transferSize, &sizeTransferred,
+				    (transferSize == sizeRemaining) ? (SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE) : SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
 				sizeRemaining -= sizeTransferred;
 				buffer += sizeTransferred;
-			
+
 				if (status != FT_OK || !sizeTransferred)
 				{
 					eve_printf_debug("%d SPI_Write failed, sizeTransferred is %d with status %d\n", __LINE__, sizeTransferred, status);
@@ -565,7 +618,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 #if defined(EVE_BUFFER_WRITES)
 	/* Transfers to FIFO are kept open */
 	addr = phost->SpiRamGAddr;
-	if (addr != (EVE_Hal_supportCmdB(phost) ? REG_CMDB_WRITE : REG_CMD_WRITE) && !((addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE))))
+	if (addr != (EVE_Hal_supportCmdB(phost) ? REG_CMDB_WRITE : REG_CMD_WRITE) && !((addr >= RAM_CMD) && (addr < (RAM_CMD + EVE_CMD_FIFO_SIZE))))
 	{
 		flush(phost);
 	}
@@ -889,39 +942,117 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
 	SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 }
 
+static FT_STATUS EVE_HalImpl_passthroughGpio(EVE_HalContext *phost, uint8_t gpio, uint8_t val)
+{
+	/* Special behaviour for FT9xx passthrough to control GPIO pins on FT9xx.
+	This produces a fake read */
+
+	int tries = 0;
+
+	uint8_t recvArray[2];
+	uint8_t transferArray[8];
+	uint32_t sizeTransferred;
+	FT_STATUS ftRes;
+
+	transferArray[0] = 0;
+	transferArray[1] = 0;
+	transferArray[2] = 0;
+	transferArray[3] = 0;
+	transferArray[4] = 0xA5;
+	transferArray[5] = gpio;
+	transferArray[6] = val;
+	transferArray[7] = 0xA5 ^ gpio ^ val;
+
+	recvArray[1] = 0;
+
+#if defined(EVE_BUFFER_WRITES)
+	flush(phost);
+#endif
+	do
+	{
+		EVE_sleep(20);
+		ftRes = SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE)
+			|| SPI_Read(phost->SpiHandle, recvArray, sizeof(recvArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
+		++tries;
+	} while (ftRes == FT_OK && recvArray[1] != 0x5A && tries < 128);
+
+	if (tries >= 128 && ftRes == FT_OK)
+		ftRes = FT_IO_ERROR;
+
+	return ftRes;
+}
+
 /**
  * @brief Toggle PD_N pin of FT800 board for a power cycle
  * 
  * @param phost Pointer to Hal context
  * @param up Up or Down
  */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
+	bool res = true;
+	FT_STATUS ftRes;
+	uint8_t pin = (1 << phost->PowerDownPin);
+	uint8_t pwd1 = pin;
+	uint8_t pwd0 = 0;
+	DWORD written;
+	eve_assert(phost->PowerDownPin < 8 || phost->PowerDownPin & 0x80);
 #if defined(EVE_BUFFER_WRITES)
 	flush(phost);
 #endif
 	if (up)
 	{
-		// FT_WriteGPIO(phost->SpiHandle, 0xBB, 0x08);//PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
-		FT_WriteGPIO(phost->SpiHandle, (1 << phost->PowerDownPin) | 0x3B, (0 << phost->PowerDownPin) | 0x08); //PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		if (phost->PowerDownPin & 0x80)
+			ftRes = EVE_HalImpl_passthroughGpio(phost, phost->PowerDownPin & 0x7F, 0);
+		else if (phost->GpioHandle == phost->SpiHandle)
+			ftRes = FT_WriteGPIO(phost->GpioHandle, pin | 0x3B, pwd0 | 0x08); // PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		else
+			ftRes = FT_Write(phost->GpioHandle, &pwd0, 1, &written);
+		if (ftRes != FT_OK)
+			res = false;
 
+		eve_assert(ftRes == FT_OK);
 		EVE_sleep(20);
 
-		// FT_WriteGPIO(phost->SpiHandle, 0xBB, 0x88);//PDN set to 1
-		FT_WriteGPIO(phost->SpiHandle, (1 << phost->PowerDownPin) | 0x3B, (1 << phost->PowerDownPin) | 0x08); //PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		if (phost->PowerDownPin & 0x80)
+			ftRes = EVE_HalImpl_passthroughGpio(phost, phost->PowerDownPin & 0x7F, 1);
+		else if (phost->GpioHandle == phost->SpiHandle)
+			ftRes = FT_WriteGPIO(phost->GpioHandle, pin | 0x3B, pwd1 | 0x08); // PDN set to 1 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		else
+			ftRes = FT_Write(phost->GpioHandle, &pwd1, 1, &written);
+		if (ftRes != FT_OK)
+			res = false;
+
+		eve_assert(ftRes == FT_OK);
 		EVE_sleep(20);
 	}
 	else
 	{
-		// FT_WriteGPIO(phost->SpiHandle, 0xBB, 0x88);//PDN set to 1
-		FT_WriteGPIO(phost->SpiHandle, (1 << phost->PowerDownPin) | 0x3B, (1 << phost->PowerDownPin) | 0x08); //PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		if (phost->PowerDownPin & 0x80)
+			ftRes = EVE_HalImpl_passthroughGpio(phost, phost->PowerDownPin & 0x7F, 1);
+		else if (phost->GpioHandle == phost->SpiHandle)
+			ftRes = FT_WriteGPIO(phost->GpioHandle, pin | 0x3B, pwd1 | 0x08); // PDN set to 1 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		else
+			ftRes = FT_Write(phost->GpioHandle, &pwd1, 1, &written);
+		if (ftRes != FT_OK)
+			res = false;
+
+		eve_assert(ftRes == FT_OK);
 		EVE_sleep(20);
 
-		// FT_WriteGPIO(phost->SpiHandle, 0xBB, 0x08);//PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
-		FT_WriteGPIO(phost->SpiHandle, (1 << phost->PowerDownPin) | 0x3B, (0 << phost->PowerDownPin) | 0x08); //PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		if (phost->PowerDownPin & 0x80)
+			ftRes = EVE_HalImpl_passthroughGpio(phost, phost->PowerDownPin & 0x7F, 0);
+		else if (phost->GpioHandle == phost->SpiHandle)
+			ftRes = FT_WriteGPIO(phost->GpioHandle, pin | 0x3B, pwd0 | 0x08); // PDN set to 0 ,connect BLUE wire of MPSSE to PDN# of FT800 board
+		else
+			ftRes = FT_Write(phost->GpioHandle, &pwd0, 1, &written);
+		if (ftRes != FT_OK)
+			res = false;
 
+		eve_assert(ftRes == FT_OK);
 		EVE_sleep(20);
 	}
+	return res;
 }
 
 /**

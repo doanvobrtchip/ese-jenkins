@@ -40,6 +40,7 @@ On embedded platforms, filename character set depends on the filesystem library.
 
 /* Load SD card */
 EVE_HAL_EXPORT bool EVE_Util_loadSdCard(EVE_HalContext *phost);
+EVE_HAL_EXPORT bool EVE_Util_sdCardReady(EVE_HalContext *phost);
 
 EVE_HAL_EXPORT bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename);
 EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename);
@@ -51,11 +52,18 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t addre
 /* Load a file into the coprocessor FIFO */
 EVE_HAL_EXPORT bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered);
 
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* Load a file into the media FIFO.
-If transfered is set, the file may be streamed partially, and stop once the coprocessor has processed it */
+If transfered is set, the file may be streamed partially,
+and will be kept open until EVE_Util_closeFile is called, 
+and stop once the coprocessor has processed it.
+Filename may be omitted in subsequent calls */
 EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered);
 
-#ifdef WIN32
+EVE_HAL_EXPORT void EVE_Util_closeFile(EVE_HalContext *phost);
+#endif
+
+#ifdef _WIN32
 
 EVE_HAL_EXPORT bool EVE_Util_loadRawFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename);
 EVE_HAL_EXPORT bool EVE_Util_loadInflateFileW(EVE_HalContext *phost, uint32_t address, const wchar_t *filename);
@@ -67,9 +75,14 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFileW(EVE_HalContext *phost, uint32_t addr
 /* Load a file into the coprocessor FIFO */
 EVE_HAL_EXPORT bool EVE_Util_loadCmdFileW(EVE_HalContext *phost, const wchar_t *filename, uint32_t *transfered);
 
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* Load a file into the media FIFO.
-If transfered is set, the file may be streamed partially, and stop once the coprocessor has processed it  */
+If transfered is set, the file may be streamed partially,
+and will be kept open until EVE_Util_closeFile is called, 
+and stop once the coprocessor has processed it.
+Filename may be omitted in subsequent calls  */
 EVE_HAL_EXPORT bool EVE_Util_loadMediaFileW(EVE_HalContext *phost, const wchar_t *filename, uint32_t *transfered);
+#endif
 
 #endif
 

@@ -26,19 +26,19 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef WIN32
-#	ifndef NOMINMAX
-#		define NOMINMAX
-#	endif
-#	if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
-#		define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
-#		define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
-#		define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
-#	endif
-#	ifndef WIN32_LEAN_AND_MEAN
-#		define WIN32_LEAN_AND_MEAN
-#	endif
-#	include <Windows.h>
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#if !defined(NTDDI_VERSION) && !defined(_WIN32_WINNT) && !defined(WINVER)
+#define NTDDI_VERSION 0x05010000 /* NTDDI_WINXP */
+#define _WIN32_WINNT 0x0501 /* _WIN32_WINNT_WINXP */
+#define WINVER 0x0501 /* _WIN32_WINNT_WINXP */
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
 #endif
 
 #define BUFSIZE 64 * 1024
@@ -63,10 +63,12 @@ The "bt8xxemus" process provides a graphical debugging user interface.
 #define BT8XXEMU_CALL_FLASH_TRANSFER_SPI4 0x0109
 
 typedef struct BT8XXEMUC_Remote BT8XXEMUC_Remote;
-struct BT8XXEMUC_Remote {
+struct BT8XXEMUC_Remote
+{
 	LONG atomicLock;
 	HANDLE pipe;
-	union {
+	union
+	{
 		uint32_t flash;
 		uint32_t emulator;
 	};
@@ -209,9 +211,9 @@ static bool BT8XXEMUC_openProcess()
 		char pipeHandle[MAX_PATH];
 		sprintf(pipeHandle, "\\\\.\\pipe\\bt8xxemus_%i", (int)GetCurrentProcessId());
 
-		s_Pipe = CreateNamedPipeA(pipeHandle, PIPE_ACCESS_DUPLEX, 
-			PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-			1, BUFSIZE, BUFSIZE, 1000, NULL);
+		s_Pipe = CreateNamedPipeA(pipeHandle, PIPE_ACCESS_DUPLEX,
+		    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		    1, BUFSIZE, BUFSIZE, 1000, NULL);
 
 		if (s_Pipe == INVALID_HANDLE_VALUE)
 		{
@@ -311,14 +313,14 @@ static HANDLE BT8XXEMUC_openPipe()
 	sprintf(data.str, "\\\\.\\pipe\\bt8xxemus_%i_%i", (int)GetCurrentProcessId(), s_PipeNb);
 	len = STRING_MESSAGE_SIZE();
 
-	HANDLE pipe = CreateNamedPipeA(data.str, PIPE_ACCESS_DUPLEX, 
-		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-		1, BUFSIZE, BUFSIZE, 1000, NULL);
+	HANDLE pipe = CreateNamedPipeA(data.str, PIPE_ACCESS_DUPLEX,
+	    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+	    1, BUFSIZE, BUFSIZE, 1000, NULL);
 
 	if (pipe == INVALID_HANDLE_VALUE
-		|| !WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL)
-		|| !ConnectNamedPipe(pipe, NULL))
+	    || !WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
+	    || !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL)
+	    || !ConnectNamedPipe(pipe, NULL))
 	{
 		BT8XXEMUC_unlockProcessPipe();
 		return INVALID_HANDLE_VALUE;
@@ -369,13 +371,14 @@ const char *BT8XXEMU_version()
 		s_VersionData.messageType = BT8XXEMU_CALL_VERSION;
 		s_VersionData.versionApi = BT8XXEMU_VERSION_API;
 
-		; {
+		;
+		{
 			BT8XXEMUC_Data data;
 			len = MESSAGE_SIZE(versionApi);
 		}
 
 		if (!WriteFile(s_Pipe, s_VersionData.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile(s_Pipe, s_VersionData.buffer, BUFSIZE, &nb, NULL))
+		    || !ReadFile(s_Pipe, s_VersionData.buffer, BUFSIZE, &nb, NULL))
 		{
 			BT8XXEMUC_unlockProcessPipe();
 			BT8XXEMUC_closeProcess();
@@ -409,7 +412,7 @@ void BT8XXEMU_defaults(uint32_t versionApi, BT8XXEMU_EmulatorParameters *params,
 		len = MESSAGE_SIZE(mode);
 
 		if (!WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
+		    || !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
 			BT8XXEMUC_unlockProcessPipe();
 			BT8XXEMUC_closeProcess();
@@ -438,9 +441,9 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 	*/
 
 	if (params->Close
-		|| params->Graphics
-		|| params->Log
-		|| params->MCUSleep)
+	    || params->Graphics
+	    || params->Log
+	    || params->MCUSleep)
 	{
 		// TODO: Callback handling
 		*emulator = NULL;
@@ -479,7 +482,7 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 		// data.params.Close = NULL; // Temporary
 
 		if (!WriteFile((*emulator)->pipe, data.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile((*emulator)->pipe, data.buffer, BUFSIZE, &nb, NULL))
+		    || !ReadFile((*emulator)->pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
 			BT8XXEMUC_closePipe(*emulator);
 			BT8XXEMUC_closeProcess();
@@ -497,7 +500,7 @@ void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator, const BT8XX
 
 		return;
 	}
-	
+
 	*emulator = NULL;
 }
 
@@ -512,9 +515,9 @@ void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator)
 	data.messageType = BT8XXEMU_CALL_STOP;
 	data.emulator = emulator->emulator;
 	len = MESSAGE_SIZE(emulator);
-	
+
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		// ...
 	}
@@ -535,7 +538,7 @@ void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator)
 	len = MESSAGE_SIZE(emulator);
 
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		// ...
 	}
@@ -560,7 +563,7 @@ int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator)
 	len = MESSAGE_SIZE(emulator);
 
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		BT8XXEMUC_unlockPipe(emulator);
 		return 0;
@@ -584,7 +587,7 @@ uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t value)
 	len = MESSAGE_SIZE(data);
 
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		BT8XXEMUC_unlockPipe(emulator);
 		return 0;
@@ -608,7 +611,7 @@ void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *emulator, int cs)
 	len = MESSAGE_SIZE(chipSelect);
 
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		// ...
 	}
@@ -629,7 +632,7 @@ int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator)
 	len = MESSAGE_SIZE(emulator);
 
 	if (!WriteFile(emulator->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(emulator->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		BT8XXEMUC_unlockPipe(emulator);
 		return 0;
@@ -656,7 +659,7 @@ void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashParameters *para
 		len = MESSAGE_SIZE(remoteFlashParams);
 
 		if (!WriteFile(s_Pipe, data.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
+		    || !ReadFile(s_Pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
 			BT8XXEMUC_unlockProcessPipe();
 			BT8XXEMUC_closeProcess();
@@ -679,7 +682,8 @@ BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashP
 	if (BT8XXEMUC_openProcess())
 	{
 		BT8XXEMU_Flash *flash = malloc(sizeof(BT8XXEMU_Flash));
-		if (!flash) return NULL;
+		if (!flash)
+			return NULL;
 		memset(flash, 0, sizeof(BT8XXEMU_Flash));
 		flash->pipe = BT8XXEMUC_openPipe(); // Create a separate pipe for each emulator instance
 
@@ -700,7 +704,7 @@ BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT8XXEMU_FlashP
 		len = MESSAGE_SIZE(remoteFlashParams);
 
 		if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
-			|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
+		    || !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
 		{
 			BT8XXEMUC_closePipe(flash);
 			BT8XXEMUC_closeProcess();
@@ -729,7 +733,7 @@ void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	len = MESSAGE_SIZE(emulator);
 
 	if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		// ...
 	}
@@ -755,7 +759,7 @@ uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t signal)
 	len = MESSAGE_SIZE(signal);
 
 	if (!WriteFile(flash->pipe, data.buffer, len, &nb, NULL) || len != nb
-		|| !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
+	    || !ReadFile(flash->pipe, data.buffer, BUFSIZE, &nb, NULL))
 	{
 		BT8XXEMUC_unlockPipe(flash);
 		return 0;

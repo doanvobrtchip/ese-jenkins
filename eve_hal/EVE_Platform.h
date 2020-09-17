@@ -101,7 +101,23 @@ extern "C" {
 #define eve_sprintf(str, fmt, ...) sprintf(str, fmt, ##__VA_ARGS__)
 #endif
 
+#ifdef _MSC_VER
+#define eve_assume(cond) __assume(cond)
+#else
+#define eve_assume(cond) eve_noop()
+#endif
+
 #if defined(_DEBUG)
+#define eve_printf_debug_once(fmt, ...)                 \
+	do                                                  \
+	{                                                   \
+		static bool eve_printf_debug_once_flag = false; \
+		if (!eve_printf_debug_once_flag)                \
+		{                                               \
+			eve_printf(fmt, ##__VA_ARGS__);             \
+			eve_printf_debug_once_flag = true;          \
+		}                                               \
+	} while (false)
 #define eve_printf_debug(fmt, ...) eve_printf(fmt, ##__VA_ARGS__)
 #define eve_assert(cond)                                                                                                           \
 	do                                                                                                                             \
@@ -113,6 +129,7 @@ extern "C" {
 			eve_printf("EVE Assert Failed: %s (in file '%s' on line '%i')\n", str ? str : "<NULL>", sf ? sf : "<NULL>", __LINE__); \
 			eve_debug_break();                                                                                                     \
 		}                                                                                                                          \
+		eve_assume(cond);                                                                                                          \
 	} while (false)
 #define eve_assert_ex(cond, ex)                                                                                                                             \
 	do                                                                                                                                                      \
@@ -124,6 +141,7 @@ extern "C" {
 			eve_printf("EVE Assert Failed: %s (%s) (in file '%s' on line '%i')\n", ex ? ex : "<NULL>", str ? str : "<NULL>", sf ? sf : "<NULL>", __LINE__); \
 			eve_debug_break();                                                                                                                              \
 		}                                                                                                                                                   \
+		eve_assume(cond);                                                                                                                                   \
 	} while (false)
 #define eve_assert_do(cond) eve_assert(cond)
 #define eve_trace(str)                                                                                                     \
@@ -133,14 +151,16 @@ extern "C" {
 		eve_printf("EVE Trace: %s (in file '%s' on line '%i')\n", (str) ? (str) : "<NULL>", sf ? sf : "<NULL>", __LINE__); \
 	} while (false)
 #else
+#define eve_printf_debug_once(fmt, ...) eve_noop()
 #define eve_printf_debug(fmt, ...) eve_noop()
-#define eve_assert(cond) eve_noop()
-#define eve_assert_ex(cond, ex) eve_noop()
+#define eve_assert(cond) eve_assume(cond)
+#define eve_assert_ex(cond, ex) eve_assume(cond)
 #define eve_assert_do(cond)      \
 	do                           \
 	{                            \
 		bool r__assert = (cond); \
 		r__assert = r__assert;   \
+		eve_assume(r__assert);   \
 	} while (false)
 #define eve_trace(cond) eve_noop()
 #endif

@@ -174,7 +174,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	phost->SpiCsPin = parameters->SpiCsPin < GPIO_SS_NB ? parameters->SpiCsPin : 0;
 	phost->PowerDownPin = parameters->PowerDownPin;
 	eve_printf_debug("EVE open PWD: %d, SS: %d\n",
-			(unsigned int)phost->PowerDownPin, (unsigned int)s_SpimGpioSS[phost->SpiCsPin]);
+	    (unsigned int)phost->PowerDownPin, (unsigned int)s_SpimGpioSS[phost->SpiCsPin]);
 
 #ifdef EVE_MULTI_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
@@ -237,7 +237,8 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 
 	if (rw == EVE_TRANSFER_READ)
 	{
-		uint8_t spidata[5]; // FIXME: phost->SpiDummyBytes
+		eve_assert(3 + phost->SpiDummyBytes <= 5);
+		uint8_t spidata[5]; // FIXME: phost->SpiDummyBytes // ?
 		spidata[0] = (addr >> 16);
 		spidata[1] = (addr >> 8);
 		spidata[2] = addr & 0xff;
@@ -555,7 +556,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
  * @param phost Pointer to Hal context
  * @param up Up or Down
  */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	if (up)
 	{
@@ -572,6 +573,7 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		gpio_write(phost->PowerDownPin, 0);
 		EVE_sleep(20);
 	}
+	return true;
 }
 
 /**
@@ -641,7 +643,30 @@ uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 static void initSdHost()
 {
 #ifndef PANL_APPLET
+#if 1
+	/* All SD Host pins except CLK need a pull-up to work. The MM900EV*A module does not have external pull-up, so enable internal one */
+	gpio_function(GPIO_SD_CLK, pad_sd_clk);
+	gpio_pull(GPIO_SD_CLK, pad_pull_none);
+	gpio_function(GPIO_SD_CMD, pad_sd_cmd);
+	gpio_pull(GPIO_SD_CMD, pad_pull_pullup);
+	gpio_function(GPIO_SD_DAT3, pad_sd_data3);
+	gpio_pull(GPIO_SD_DAT3, pad_pull_pullup);
+	gpio_function(GPIO_SD_DAT2, pad_sd_data2);
+	gpio_pull(GPIO_SD_DAT2, pad_pull_pullup);
+	gpio_function(GPIO_SD_DAT1, pad_sd_data1);
+	gpio_pull(GPIO_SD_DAT1, pad_pull_pullup);
+	gpio_function(GPIO_SD_DAT0, pad_sd_data0);
+	gpio_pull(GPIO_SD_DAT0, pad_pull_pullup);
+	gpio_function(GPIO_SD_CD, pad_sd_cd);
+	gpio_pull(GPIO_SD_CD, pad_pull_pullup);
+	gpio_function(GPIO_SD_WP, pad_sd_wp);
+	gpio_pull(GPIO_SD_WP, pad_pull_pullup);
+
+	/* Start up the SD Card */
+	sys_enable(sys_device_sd_card);
+#else
 	sdhost_sys_init();
+#endif
 	sdhost_init();
 #endif
 }
@@ -653,6 +678,8 @@ static void initSdHost()
 void EVE_Mcu_initialize()
 {
 #ifndef PANL_APPLET
+	sys_reset_all();
+
 	interrupt_enable_globally();
 
 	sys_enable(sys_device_uart0);
