@@ -957,13 +957,6 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 		{
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
-#if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
-				case CMD_GETPTR:
-				{
-					compiled.push_back(parsed.Parameter[0].U);
-					break;
-				}
-#endif
 				case CMD_GETPROPS:
 #if defined(FTEDITOR_PARSER_VC4)
 				case CMD_FLASHPROGRAM:
@@ -977,6 +970,9 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_BGCOLOR:
 				case CMD_FGCOLOR:
 				case CMD_GRADCOLOR:
+#if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
+				case CMD_GETPTR:
+#endif
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					break;
