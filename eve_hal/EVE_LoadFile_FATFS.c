@@ -33,8 +33,6 @@
 #include "EVE_Platform.h"
 #if defined(FT9XX_PLATFORM)
 
-#define EVE_ENABLE_FATFS 1
-
 #if defined(EVE_ENABLE_FATFS)
 #include "ff.h"
 static bool s_FatFSLoaded = false;
@@ -85,6 +83,12 @@ bool EVE_Util_loadSdCard(EVE_HalContext *phost)
 #endif
 }
 
+EVE_HAL_EXPORT bool EVE_Util_sdCardReady(EVE_HalContext *phost)
+{
+	/* no-op */
+	return s_FatFSLoaded;
+}
+
 /**
  * @brief Load a raw file into RAM_G
  * 
@@ -100,11 +104,26 @@ bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *f
 	FRESULT fResult;
 	FIL InfSrc;
 
-	int32_t blocklen, filesize;
+	UINT blocklen;
+	int32_t filesize;
 	uint8_t buffer[512L];
 	uint32_t addr = address;
 
+	if (!s_FatFSLoaded)
+	{
+		eve_printf_debug("SD card not ready\n");
+		return false;
+	}
+
 	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	if (fResult == FR_DISK_ERR)
+	{
+		eve_printf_debug("Re-mount SD card\n");
+		s_FatFSLoaded = false;
+		sdhost_init();
+		EVE_Util_loadSdCard(phost);
+		fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	}
 	if (fResult == FR_OK)
 	{
 		filesize = f_size(&InfSrc);
@@ -144,10 +163,25 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
 	FRESULT fResult;
 	FIL InfSrc;
 
-	int32_t blocklen, filesize;
+	UINT blocklen;
+	int32_t filesize;
 	uint8_t buffer[512L];
 
+	if (!s_FatFSLoaded)
+	{
+		eve_printf_debug("SD card not ready\n");
+		return false;
+	}
+
 	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	if (fResult == FR_DISK_ERR)
+	{
+		eve_printf_debug("Re-mount SD card\n");
+		s_FatFSLoaded = false;
+		sdhost_init();
+		EVE_Util_loadSdCard(phost);
+		fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	}
 	if (fResult == FR_OK)
 	{
 		EVE_Cmd_wr32(phost, CMD_INFLATE);
@@ -159,7 +193,7 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
 			filesize -= blocklen;
 			blocklen += 3;
 			blocklen &= ~3U;
-			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
+			if (!EVE_Cmd_wrMem(phost, (uint8_t *)buffer, blocklen))
 				break;
 		}
 		f_close(&InfSrc);
@@ -192,10 +226,28 @@ bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char 
 	FRESULT fResult;
 	FIL InfSrc;
 
-	int32_t blocklen, filesize;
+	UINT blocklen;
+	int32_t filesize;
 	uint8_t buffer[512L];
 
+	if (!s_FatFSLoaded)
+	{
+		eve_printf_debug("SD card not ready\n");
+		return false;
+	}
+
+	if (phost->CmdFault)
+		return false;
+
 	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	if (fResult == FR_DISK_ERR)
+	{
+		eve_printf_debug("Re-mount SD card\n");
+		s_FatFSLoaded = false;
+		sdhost_init();
+		EVE_Util_loadSdCard(phost);
+		fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	}
 	if (fResult == FR_OK)
 	{
 		EVE_Cmd_wr32(phost, CMD_LOADIMAGE);
@@ -208,7 +260,7 @@ bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char 
 			filesize -= blocklen;
 			blocklen += 3;
 			blocklen &= ~3U;
-			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
+			if (!EVE_Cmd_wrMem(phost, (uint8_t *)buffer, blocklen))
 				break;
 		}
 		f_close(&InfSrc);
@@ -238,10 +290,25 @@ bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t 
 	FRESULT fResult;
 	FIL InfSrc;
 
-	int32_t blocklen, filesize;
+	UINT blocklen;
+	int32_t filesize;
 	uint8_t buffer[512L];
 
+	if (!s_FatFSLoaded)
+	{
+		eve_printf_debug("SD card not ready\n");
+		return false;
+	}
+
 	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	if (fResult == FR_DISK_ERR)
+	{
+		eve_printf_debug("Re-mount SD card\n");
+		s_FatFSLoaded = false;
+		sdhost_init();
+		EVE_Util_loadSdCard(phost);
+		fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
+	}
 	if (fResult == FR_OK)
 	{
 		filesize = f_size(&InfSrc);
@@ -251,7 +318,7 @@ bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t 
 			filesize -= blocklen;
 			blocklen += 3;
 			blocklen &= ~3U;
-			if (!EVE_Cmd_wrMem(phost, (char *)buffer, blocklen))
+			if (!EVE_Cmd_wrMem(phost, (uint8_t *)buffer, blocklen))
 				break;
 			if (transfered)
 				*transfered += blocklen;
@@ -272,56 +339,133 @@ bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t 
 
 bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
 {
-#if defined(EVE_ENABLE_FATFS)
-	FRESULT fResult;
-	FIL InfSrc;
+#if defined(EVE_ENABLE_FATFS) && defined(EVE_SUPPORT_MEDIAFIFO)
+	FRESULT fResult = FR_INVALID_OBJECT;
 
-	int32_t blocklen, filesize;
+	UINT blocklen;
+	int32_t filesize;
 	uint32_t blockSize = min(512, ((phost->MediaFifoSize >> 3) << 2) - 4);
 	uint8_t buffer[512L];
 
-	fResult = f_open(&InfSrc, filename, FA_READ | FA_OPEN_EXISTING);
-	if (fResult == FR_OK)
+	if (!s_FatFSLoaded)
 	{
-		filesize = f_size(&InfSrc);
-		while (filesize > 0)
-		{
-			fResult = f_read(&InfSrc, buffer, blockSize, &blocklen); // read a chunk of src file
-			filesize -= blocklen;
-			blocklen += 3;
-			blocklen &= ~3U;
+		eve_printf_debug("SD card not ready\n");
+		return false;
+	}
 
-			if (transfered)
-			{
-				uint32_t transferedPart;
-				if (!EVE_MediaFifo_wrMem(phost, buffer, blocklen, &transferedPart)) /* copy data continuously into media fifo memory */
-				{
-					/* Coprocessor fault */
-					*transfered += transferedPart;
-					break;
-				}
-				*transfered += transferedPart;
-				if (transferedPart < blocklen)
-					break; /* Early exit, processing done */
-			}
-			else
-			{
-				if (!EVE_MediaFifo_wrMem(phost, buffer, blocklen, NULL)) /* copy data continuously into media fifo memory */
-					break; /* Coprocessor fault */
-			}
-		}
-		f_close(&InfSrc);
-		return transfered ? EVE_Cmd_waitFlush(phost) : EVE_MediaFifo_waitFlush(phost);
+	if (phost->CmdFault)
+		return false;
+
+	if (transfered && phost->LoadFileRemaining)
+	{
+		filesize = phost->LoadFileRemaining;
 	}
 	else
 	{
-		eve_printf_debug("Unable to open file: \"%s\"\n", filename);
-		return false;
+		if (!transfered)
+		{
+			EVE_Util_closeFile(phost);
+		}
+		fResult = f_open(&phost->LoadFileObj, filename, FA_READ | FA_OPEN_EXISTING);
+		if (fResult == FR_DISK_ERR)
+		{
+			eve_printf_debug("Re-mount SD card\n");
+			s_FatFSLoaded = false;
+			sdhost_init();
+			EVE_Util_loadSdCard(phost);
+			fResult = f_open(&phost->LoadFileObj, filename, FA_READ | FA_OPEN_EXISTING);
+		}
+		if (fResult == FR_OK)
+		{
+			filesize = f_size(&phost->LoadFileObj);
+			if (transfered)
+			{
+				phost->LoadFileRemaining = filesize;
+			}
+			if (filesize == 0)
+			{
+				/* Empty file, no-op */
+				eve_printf_debug("Empty file: \"%s\"\n", filename);
+				f_close(&phost->LoadFileObj);
+				return true;
+			}
+		}
+		else
+		{
+			eve_printf_debug("Unable to open file: \"%s\"\n", filename);
+			return false;
+		}
 	}
+
+	while (filesize > 0)
+	{
+		fResult = f_read(&phost->LoadFileObj, buffer, blockSize, &blocklen); // read a chunk of src file
+		if (fResult != FR_OK)
+		{
+			if (fResult == FR_DISK_ERR)
+			{
+				eve_printf_debug("Lost SD card\n");
+				s_FatFSLoaded = false;
+				sdhost_init();
+			}
+			break;
+		}
+
+		filesize -= blocklen;
+		blocklen += 3;
+		blocklen &= ~3U;
+
+		if (transfered)
+		{
+			uint32_t transferedPart = 0;
+			bool wrRes = EVE_MediaFifo_wrMem(phost, buffer, blocklen, &transferedPart); /* copy data continuously into media fifo memory */
+			*transfered += transferedPart;
+			if (transferedPart < blocklen)
+			{
+				long offset = (long)transferedPart - (long)blocklen; /* Negative */
+				f_lseek(&phost->LoadFileObj, f_tell(&phost->LoadFileObj) + offset); /* Seek back */
+				filesize -= offset; /* Increments remaining (double negative) */
+				break; /* Early exit, processing done */
+			}
+			if (!wrRes)
+				break;
+		}
+		else
+		{
+			if (!EVE_MediaFifo_wrMem(phost, buffer, blocklen, NULL)) /* copy data continuously into media fifo memory */
+				break; /* Coprocessor fault */
+		}
+	}
+
+	if (!transfered)
+	{
+		f_close(&phost->LoadFileObj); /* Close the opened file */
+	}
+	else if (filesize)
+	{
+		phost->LoadFileRemaining = filesize; /* Save remaining */
+	}
+	else
+	{
+		f_close(&phost->LoadFileObj);
+		phost->LoadFileRemaining = 0;
+	}
+
+	return (fResult == FR_OK) && (transfered ? EVE_Cmd_waitFlush(phost) : EVE_MediaFifo_waitFlush(phost, false));
+
 #else
 	eve_printf_debug("No filesystem support, cannot open: \"%s\"\n", filename);
 	return false;
 #endif
+}
+
+void EVE_Util_closeFile(EVE_HalContext *phost)
+{
+	if (phost->LoadFileRemaining)
+	{
+		f_close(&phost->LoadFileObj);
+		phost->LoadFileRemaining = 0;
+	}
 }
 
 #endif

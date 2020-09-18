@@ -40,7 +40,7 @@ static uint8_t countArgs(const char *str)
 	uint8_t count = 0;
 	const char *tmp = str;
 
-	while (tmp = strstr(tmp, "%"))
+	while ((tmp = strstr(tmp, "%")))
 	{
 		if (*(tmp + 1) == '%')
 		{

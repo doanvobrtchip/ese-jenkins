@@ -279,7 +279,7 @@ to be defined. If not, multi target compilation is assumed.
 #define REG_TOUCH_TRANSFORM_D (REG_TOUCH_TRANSFORM_A + 12UL)
 #define REG_TOUCH_TRANSFORM_E (REG_TOUCH_TRANSFORM_A + 16UL)
 #define REG_TOUCH_TRANSFORM_F (REG_TOUCH_TRANSFORM_A + 20UL)
-#define REG_CYA_TOUCH (REG_TOUCH_TRANSFORM_A + 24UL)
+#define REG_TOUCH_CONFIG (REG_TOUCH_TRANSFORM_A + 24UL)
 #define REG_ANALOG (REG_TOUCH_TRANSFORM_A + 28UL)
 #define REG_CTOUCH_GESTURE (REG_TOUCH_TRANSFORM_A + 28UL)
 #define REG_CTOUCH_TOUCH4_X (REG_TOUCH_TRANSFORM_A + 28UL)
@@ -601,7 +601,7 @@ to be defined. If not, multi target compilation is assumed.
 #define DLSWAP_LINE 1UL
 #define DLSWAP_FRAME 2UL
 
-ESD_ENUM(Ft_CoPro_Opt, Type = uint16_t, Include = "EVE_Platform.h", Flags)
+ESD_ENUM(Ft_CoPro_Opt, Type = uint16_t, Include = "EVE_Hal.h", Flags)
 #define OPT_MONO 1UL
 #define OPT_NODL 2UL
 #define OPT_NOTEAR 4UL

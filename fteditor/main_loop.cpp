@@ -311,7 +311,13 @@ void setup()
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 16);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 12, CMD_RESETFONTS);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 16);
+
+		// Attach flash
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 16, CMD_FLASHATTACH);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 20, CMD_FLASHFAST);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 24, 0);
+
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 28);
 	}
 }
 
@@ -402,6 +408,7 @@ void resetCoprocessorFromLoop()
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 
+	/*
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
 		// Attach flash
@@ -409,6 +416,7 @@ void resetCoprocessorFromLoop()
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
 	}
 	else
+	*/
 	{
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 	}
@@ -854,11 +862,14 @@ void loop()
 		freespace -= 4;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
+			// CMD_COLDSTART may cause inconsistent co-processor flash state, needs to be checked
+			/*
 			swr32(CMD_FLASHATTACH);
 			swr32(CMD_FLASHFAST);
 			swr32(~0); // result
 			wp += 12;
 			freespace -= 12;
+			*/
 		}
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;

@@ -37,7 +37,7 @@
 
 EVE_HAL_EXPORT void EVE_CoDlImpl_resetDlState(EVE_HalContext *phost)
 {
-#if (EVE_DL_OPTIMIZE) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
 	phost->DlStateIndex = 0;
 #if defined(_MSC_VER) && (_MSC_VER < 1800)
 	/* Designated initializers not supported in older Visual Studio versions */
@@ -57,10 +57,20 @@ EVE_HAL_EXPORT void EVE_CoDlImpl_resetDlState(EVE_HalContext *phost)
 		.LineWidth = 16,
 		.PointSize = 16,
 		.ColorRGB = 0xFFFFFF,
+#endif
+#if (EVE_DL_CACHE_SCISSOR)
+		.ScissorWidth = phost->Width,
+		.ScissorHeight = phost->Height,
+#endif
+#if (EVE_DL_OPTIMIZE)
 		.ColorA = 0xFF,
 		.Handle = 0x3F, /* Invalid value */
 #endif
-		.VertexFormat = 4,
+#if (EVE_DL_OPTIMIZE) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+		    .VertexFormat = 4,
+#elif (EVE_DL_CACHE_SCISSOR)
+		0
+#endif
 	};
 #endif
 #endif

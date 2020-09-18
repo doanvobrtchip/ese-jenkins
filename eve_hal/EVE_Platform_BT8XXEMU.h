@@ -37,7 +37,6 @@
 
 #include "EVE_Platform_WIN32.h"
 #include "bt8xxemu.h"
-#include "EVE_EmulatorMain.h"
 
 #endif
 #endif /* #ifndef EVE_PLATFORM_BT8XXEMU__H */

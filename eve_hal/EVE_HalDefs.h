@@ -39,6 +39,10 @@
 #define EVE_HAL_INCL__H
 #include "EVE_GpuTypes.h"
 
+#if defined(EVE_ENABLE_FATFS)
+#include "ff.h"
+#endif
+
 /**********
 ** ENUMS **
 **********/
@@ -179,7 +183,7 @@ typedef struct EVE_HalParameters
 
 } EVE_HalParameters;
 
-#if (EVE_DL_OPTIMIZE) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
 #define EVE_DL_STATE phost->DlState[phost->DlStateIndex]
 typedef struct EVE_HalDlState
 {
@@ -195,6 +199,12 @@ typedef struct EVE_HalDlState
 #if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
 	int16_t VertexTranslateX;
 	int16_t VertexTranslateY;
+#endif
+#if (EVE_DL_CACHE_SCISSOR)
+	uint16_t ScissorX;
+	uint16_t ScissorY;
+	uint16_t ScissorWidth;
+	uint16_t ScissorHeight;
 #endif
 #if (EVE_DL_OPTIMIZE)
 	uint8_t ColorA;
@@ -214,10 +224,10 @@ typedef struct EVE_HalContext
 	void *UserContext;
 
 	/* Pointer to a support library context (e.g. ESD Framework context) */
-	void *LibraryContext; 
+	void *LibraryContext;
 
 	/* Called anytime the code is waiting during CMD write. Return false to abort wait */
-	EVE_Callback CbCmdWait; 
+	EVE_Callback CbCmdWait;
 	/* Callback hook called anytime the coprocessor is reset through the EVE_Util interface */
 	EVE_ResetCallback CbCoprocessorReset;
 
@@ -250,8 +260,6 @@ typedef struct EVE_HalContext
 #endif
 #if defined(FT4222_PLATFORM) | defined(MPSSE_PLATFORM)
 	void *SpiHandle;
-#endif
-#if defined(FT4222_PLATFORM)
 	void *GpioHandle; /* LibFT4222 uses this member to store GPIO handle */
 #endif
 
@@ -299,10 +307,16 @@ typedef struct EVE_HalContext
 #if defined(EVE_SUPPORT_MEDIAFIFO)
 	uint32_t MediaFifoAddress;
 	uint32_t MediaFifoSize;
+#if EVE_ENABLE_FATFS
+	FIL LoadFileObj;
+#else
+	void *LoadFileHandle;
+#endif
+	ptrdiff_t LoadFileRemaining;
 #endif
 
 	/* Display list optimization and compatibility caches */
-#if (EVE_DL_OPTIMIZE) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
 	EVE_HalDlState DlState[EVE_DL_STATE_STACK_SIZE];
 	uint8_t DlStateIndex;
 #endif
@@ -314,6 +328,11 @@ typedef struct EVE_HalContext
 #endif
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 	uint8_t CoScratchHandle;
+#endif
+
+#if defined(_DEBUG)
+	bool DebugMessageVisible;
+	uint8_t DebugBackup[128];
 #endif
 
 	/* Status flags */
@@ -449,6 +468,37 @@ static inline bool EVE_Hal_supportMediaFifo(EVE_HalContext *phost)
 #endif
 }
 
+static inline bool EVE_Hal_supportVideo(EVE_HalContext *phost)
+{
+#ifdef EVE_SUPPORT_VIDEO
+	return EVE_CHIPID >= EVE_FT810;
+#else
+	return false;
+#endif
+}
+
+static inline int EVE_gen(EVE_CHIPID_T chipId)
+{
+	switch (chipId)
+	{
+	case EVE_FT800:
+	case EVE_FT801:
+		return EVE1;
+	case EVE_FT810:
+	case EVE_FT811:
+	case EVE_FT812:
+	case EVE_FT813:
+		return EVE2;
+	case EVE_BT815:
+	case EVE_BT816:
+		return EVE3;
+	case EVE_BT817:
+	case EVE_BT818:
+		return EVE4;
+	}
+	return 0;
+}
+
 /************
 ** UTILITY **
 ************/
@@ -458,8 +508,8 @@ EVE_HAL_EXPORT void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd);
 /* This API sends a 3byte command to the phost */
 EVE_HAL_EXPORT void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd);
 
-/* Toggle PD_N pin of FT800 board for a power cycle */
-EVE_HAL_EXPORT void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
+/* Toggle PD_N pin of FT800 board for a power cycle. Returns false on failure */
+EVE_HAL_EXPORT bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
 
 /* Switch EVE to different SPI channel mode */
 EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
@@ -477,11 +527,11 @@ EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T
 EVE_HAL_EXPORT void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode);
 EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost);
 
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* This API can only be called when PLL is stopped(SLEEP mode).
 For compatibility, set frequency to the EVE_GPU_12MHZ option in the EVE_SETPLLSP1_T table. */
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq);
 
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* Power down or up ROMs and ADCs.*/
 EVE_HAL_EXPORT void EVE_Host_powerOffComponents(EVE_HalContext *phost, uint8_t val);
 

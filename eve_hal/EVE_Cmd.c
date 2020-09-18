@@ -448,18 +448,21 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 		(void)err;
 		/* Coprocessor fault */
 		phost->CmdWaiting = false;
-		eve_printf_debug("Coprocessor fault\n");
 #if defined(_DEBUG)
-		debugBackupRamG(phost);
-		if (EVE_CHIPID >= EVE_BT815)
+		if (!phost->DebugMessageVisible)
 		{
-			EVE_Hal_rdMem(phost, (uint8_t *)err, RAM_ERR_REPORT, 128);
-			eve_printf_debug("%s\n", err);
-			EVE_Hal_displayMessage(phost, err, 128);
-		}
-		else
-		{
-			EVE_Hal_displayMessage(phost, "Coprocessor fault ", sizeof("Coprocessor fault "));
+			eve_printf_debug("Coprocessor fault\n");
+			debugBackupRamG(phost);
+			if (EVE_CHIPID >= EVE_BT815)
+			{
+				EVE_Hal_rdMem(phost, (uint8_t *)err, RAM_ERR_REPORT, 128);
+				eve_printf_debug("%s\n", err);
+				EVE_Hal_displayMessage(phost, err, 128);
+			}
+			else
+			{
+				EVE_Hal_displayMessage(phost, "Coprocessor fault ", sizeof("Coprocessor fault "));
+			}
 		}
 #endif
 		/* eve_debug_break(); */
@@ -536,14 +539,8 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	return true;
 }
 
-/**
- * @brief Wait till a Command FIFO buffer free for a number of bytes
- * 
- * @param phost Pointer to Hal context
- * @param size Size to wait
- * @return true True if ok
- * @return false False if size is larger than Command FIFO buffer size or error at Eve platform
- */
+/* Wait for the command buffer to have at least the requested amount of free space.
+Returns 0 in case a coprocessor fault occurred */
 EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 {
 	uint16_t space;
@@ -560,12 +557,16 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 	space = phost->CmdSpace;
 
 #if 1
-	if (space < size)
+	/* Optimization. 
+	Only update space if more space is needed than already known available, 
+	or when not actually waiting for any space */
+	if (space < size || !size)
 		space = EVE_Cmd_space(phost);
 	if (!checkWait(phost, space))
 		return 0;
 #endif
 
+	/* Wait until there's sufficient space */
 	while (space < size)
 	{
 		space = EVE_Cmd_space(phost);

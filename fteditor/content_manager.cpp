@@ -579,11 +579,21 @@ void ContentManager::bindCurrentDevice()
 	
 	m_PropertiesImageFormat->clear();
 	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesImageFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	{
+		QString format = g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]];
+		if (format.startsWith("COMPRESSED_RGBA_"))
+			format.replace("COMPRESSED_RGBA_", "");
+		m_PropertiesImageFormat->addItem(format);
+	}
 
 	m_PropertiesFontFormat->clear();
 	for (int i = 0; i < g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	{
+		QString format = g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]];
+		if (format.startsWith("COMPRESSED_RGBA_"))
+			format.replace("COMPRESSED_RGBA_", "");
+		m_PropertiesFontFormat->addItem(format);
+	}
 	
 	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 
