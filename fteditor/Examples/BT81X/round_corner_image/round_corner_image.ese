@@ -1,0 +1,56 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/flower",
+            "imageFormat": 37815,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/flower.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(0, 85, 127)",
+        "CLEAR(1, 1, 1)",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_8x8_KHR, 210, 210)",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(58, 108, 0, 0)",
+        "END()",
+        "",
+        "",
+        "COLOR_MASK(0, 0, 0, 1)",
+        "",
+        "CLEAR(1,1,1)",
+        "",
+        "LINE_WIDTH(650)",
+        "BEGIN(RECTS)",
+        "VERTEX2II(388, 166, 0, 0)",
+        "VERTEX2II(497, 270, 0, 0)",
+        "END",
+        "",
+        "COLOR_MASK(1,1,1,0)",
+        "BLEND_FUNC(DST_ALPHA, ONE_MINUS_DST_ALPHA)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(334, 109, 0, 0)",
+        "END()",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
