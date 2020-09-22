@@ -62,24 +62,9 @@ CustomDeviceInfo::CustomDeviceInfo()
     , FlashSize(0)
     , SystemClock(60)
     , isBuiltin(false)
-    , CUS_REG_HCYCLE(0)
-    , CUS_REG_HOFFSET(0)
-    , CUS_REG_HSYNC0(0)
-    , CUS_REG_HSYNC1(0)
-    , CUS_REG_VCYCLE(0)
-    , CUS_REG_VOFFSET(0)
-    , CUS_REG_VSYNC0(0)
-    , CUS_REG_VSYNC1(0)
-    , CUS_REG_SWIZZLE(0)
-    , CUS_REG_PCLK_POL(0)
-    , CUS_REG_HSIZE(0)
-    , CUS_REG_VSIZE(0)
-    , CUS_REG_CSPREAD(0)
-    , CUS_REG_DITHER(0)
-    , CUS_REG_PCLK(0)
-    , ExternalOsc(true)
+    , configParams({0})
 {
-	// no-op
+	// no op
 }
 
 DeviceManager::DeviceManager(MainWindow *parent)
@@ -489,7 +474,7 @@ void DeviceManager::connectDevice()
 	if (m_IsCustomDevice)
 	{
 		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
-		bootupParams.ExternalOsc = m_CDI.ExternalOsc;
+		bootupParams.ExternalOsc = m_CDI.configParams.ExternalClock;
 
 		switch (m_CDI.SystemClock)
 		{
@@ -533,60 +518,15 @@ void DeviceManager::connectDevice()
 
 	if (m_IsCustomDevice)
 	{
-		configParams.Width = m_CDI.CUS_REG_HSIZE;
-		configParams.Height = m_CDI.CUS_REG_VSIZE;
-		configParams.HCycle = m_CDI.CUS_REG_HCYCLE;
-		configParams.HOffset = m_CDI.CUS_REG_HOFFSET;
-		configParams.HSync0 = m_CDI.CUS_REG_HSYNC0;
-		configParams.HSync1 = m_CDI.CUS_REG_HSYNC1;
-		configParams.VCycle = m_CDI.CUS_REG_VCYCLE;
-		configParams.VOffset = m_CDI.CUS_REG_VOFFSET;
-		configParams.VSync0 = m_CDI.CUS_REG_VSYNC0;
-		configParams.VSync1 = m_CDI.CUS_REG_VSYNC1;
-		configParams.PCLK = m_CDI.CUS_REG_PCLK;
-		configParams.Swizzle = m_CDI.CUS_REG_SWIZZLE;
-		configParams.PCLKPol = m_CDI.CUS_REG_PCLK_POL;
-		configParams.CSpread = m_CDI.CUS_REG_CSPREAD;
-		configParams.Dither = m_CDI.CUS_REG_DITHER;
-		configParams.OutBitsR = (m_CDI.CUS_REG_OUTBITS >> 6) & 0x7;
-		configParams.OutBitsG = (m_CDI.CUS_REG_OUTBITS >> 3) & 0x7;
-		configParams.OutBitsB = m_CDI.CUS_REG_OUTBITS & 0x7;
+		configParams = m_CDI.configParams;		
 	}	
 	else if (m_SelectedDisplaySize == "1280x800")
 	{
-		configParams.Width = 1280;
-		configParams.Height = 800;
-		configParams.HCycle = 1440;
-		configParams.HOffset = 38;
-		configParams.HSync0 = 0;
-		configParams.HSync1 = 16;
-		configParams.VCycle = 838;
-		configParams.VOffset = 8;
-		configParams.VSync0 = 0;
-		configParams.VSync1 = 2;
-		configParams.PCLK = 1;
-		configParams.Swizzle = 0;
-		configParams.PCLKPol = 0;
-		configParams.CSpread = 0;
-		configParams.Dither = 0;
+		EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_WXGA_1280x800_65Hz);		
 	}
 	else if (m_SelectedDisplaySize == "1024x600")
 	{
-		configParams.Width = 1024;
-		configParams.Height = 600;
-		configParams.HCycle = 1344;
-		configParams.HOffset = 160;
-		configParams.HSync0 = 0;
-		configParams.HSync1 = 100;
-		configParams.VCycle = 635;
-		configParams.VOffset = 23;
-		configParams.VSync0 = 0;
-		configParams.VSync1 = 10;
-		configParams.PCLK = 1;
-		configParams.Swizzle = 0;
-		configParams.PCLKPol = 1;
-		configParams.CSpread = 0;
-		configParams.Dither = 1;
+		EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_WSVGA_1024x600_83Hz);		
 	}
 	else if (m_SelectedDisplaySize == "800x480")
 	{

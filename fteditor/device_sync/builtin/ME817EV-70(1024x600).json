@@ -5,7 +5,7 @@
     "Device Name": "ME817EV-70(1024x600)",
     "EVE Type": "BT817_818",
     "External Clock": "false",
-    "Flash Model": "Unknown",
+    "Flash Model": "w25q128",
     "Flash Size (MB)": "16",
     "REG_CSPREAD": 0,
     "REG_DITHER": 1,
@@ -23,6 +23,11 @@
     "REG_VSIZE": 600,
     "REG_VSYNC0": 0,
     "REG_VSYNC1": 10,
+    
+    "REG_PCLK_2X": 0,
+    "REG_PCLK_FREQ": 3346,
+    "REG_ADAPTIVE_FRAMERATE": 0,
+    
     "Screen Height": 600,
     "Screen Width": 1024,
     "Vendor": "Bridgetek",

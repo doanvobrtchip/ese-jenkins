@@ -600,6 +600,9 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 			config->PCLKFreq = 0x8B1;
 		}
 #endif
+
+		config->PCLK_2X = 0;
+		config->AdaptiveFrameRate = 0;
 		config->CSpread = 0;
 		config->Dither = 0;
 		config->PCLKPol = 0;
@@ -632,6 +635,9 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 			config->PCLKFreq = 0xD12; // 51Mhz
 		}
 #endif
+		config->PCLK_2X = 0;
+		config->AdaptiveFrameRate = 0;
+
 		config->CSpread = 0;
 		config->Dither = 1;
 		config->PCLKPol = 1;
@@ -942,10 +948,13 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	}
 #endif
 
-	/* 
-	TODO:
-	EVE_Hal_wr16(phost, REG_ADAPTIVE_FRAMERATE, 1);
-	*/
+	EVE_Hal_wr8(phost, REG_ADAPTIVE_FRAMERATE, config->AdaptiveFrameRate);
+
+	if (EVE_CHIPID >= EVE_BT817)
+	{
+		EVE_Hal_wr16(phost, REG_AH_HCYCLE_MAX, config->AhHCycleMax);
+		EVE_Hal_wr8(phost, REG_PCLK_2X, config->PCLK_2X);
+	}
 
 #ifdef RESISTANCE_THRESHOLD /* TODO: From config */
 	if (EVE_Hal_isScreenResistive(phost))

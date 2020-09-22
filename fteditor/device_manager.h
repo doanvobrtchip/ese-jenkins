@@ -33,6 +33,7 @@
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
+#include <EVE_Platform.h>
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -64,24 +65,7 @@ struct CustomDeviceInfo
 	QString ScreenSize; // width x height
 	bool isBuiltin;
 
-	int CUS_REG_HCYCLE;
-	int CUS_REG_HOFFSET;
-	int CUS_REG_HSYNC0;
-	int CUS_REG_HSYNC1;
-	int CUS_REG_VCYCLE;
-	int CUS_REG_VOFFSET;
-	int CUS_REG_VSYNC0;
-	int CUS_REG_VSYNC1;
-	int CUS_REG_SWIZZLE;
-	int CUS_REG_PCLK_POL;
-	int CUS_REG_HSIZE;
-	int CUS_REG_VSIZE;
-	int CUS_REG_CSPREAD;
-	int CUS_REG_DITHER;
-	int CUS_REG_PCLK;
-	int CUS_REG_OUTBITS;
-	bool ExternalOsc;
-
+	EVE_ConfigParameters configParams;
 };
 
 /**

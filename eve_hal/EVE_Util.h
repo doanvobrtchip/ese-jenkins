@@ -56,8 +56,14 @@ typedef struct EVE_BootupParameters
 typedef struct EVE_ConfigParameters
 {
 	/* Display */
-	int16_t Width; /* Line buffer width (pixels) */
-	int16_t Height; /* Screen and render height (lines) */
+	union {
+		int16_t Width; /* Line buffer width (pixels) */
+		int16_t HSize;
+	};
+	union {
+		int16_t Height; /* Screen and render height (lines) */
+		int16_t VSize;
+	};
 	int16_t HCycle;
 	int16_t HOffset;
 	int16_t HSync0;
@@ -75,9 +81,11 @@ typedef struct EVE_ConfigParameters
 	uint8_t OutBitsB;
 	uint16_t PCLKFreq;
 	bool Dither;
-	/* TODO: 
-	AdaptiveFramerate
-	*/
+	
+	uint8_t AdaptiveFrameRate;
+	uint8_t PCLK_2X;
+	int16_t AhHCycleMax;
+	bool ExternalClock;
 
 #ifdef EVE_SUPPORT_HSF
 	/* Physical horizontal pixels. Set to 0 to disable HSF. */

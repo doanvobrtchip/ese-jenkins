@@ -3,6 +3,8 @@ Copyright (C) 2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 4005) // macro redefinition
+
 #ifndef FTEDITOR_CONSTANT_COMMON_H
 #define FTEDITOR_CONSTANT_COMMON_H
 

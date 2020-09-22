@@ -5,7 +5,7 @@
     "Device Name": "VM816C50A",
     "EVE Type": "BT815_816",
     "External Clock": "false",
-    "Flash Model": "Unknown",
+    "Flash Model": "w25q128",
     "Flash Size (MB)": "16",
     "REG_CSPREAD": 0,
     "REG_DITHER": 1,
