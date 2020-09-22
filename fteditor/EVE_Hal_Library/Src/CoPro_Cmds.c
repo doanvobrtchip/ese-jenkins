@@ -28,6 +28,9 @@ Revision History:
 1.0 - date 2015.03.16 - Updated with new APIs for FT81X
 1.1 - date 2017.03.24 - Rename APIs
 */
+
+#pragma warning(disable: 4267)
+
 #include "Platform.h"
 #include "App_Common.h"
 #include <stdarg.h>

@@ -26,6 +26,8 @@ Revision History:
 0.1 - date 2017.03.20 - Initial Version
 */
 
+#pragma warning(disable: 4267 4133 4101 4018 4090 4996)
+
 #include "Platform.h"
 #include "Gpu_Hal.h"
 

@@ -676,7 +676,7 @@ Revision History:
 #define DISPLAY() ((0UL<<24))
 
 /* End FT81x parameters */
-#elif defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#elif defined(BT815_ENABLE) || defined(BT816_ENABLE) || defined(BT817_ENABLE)
 #define LOW_FREQ_BOUND  58800000L//98% of 60Mhz
 
 #define RAM_G_SIZE            1024*1024L
@@ -1303,8 +1303,53 @@ typedef struct Gpu_FontsExt_t
 	//uint32_t OffsetWidthData;//to be OffsetWidthData=Starting adress+StartOfGraphicData*4.
 }Gpu_FontsExt_t;
 
+#if defined(DISPLAY_RESOLUTION_WXGA)
+/* Values specific to QVGA LCD display */
+#define DispWidth      1280L
+#define DispHeight     800L
+#define DispHCycle     1411L
+#define DispHOffset    120L
+#define DispHSync0     0L
+#define DispHSync1     100L
+#define DispVCycle     815L
+#define DispVOffset    14L
+#define DispVSync0     0L
+#define DispVSync1     10L
+#define DispPCLK       1
+#define DispSwizzle    0
+#define DispPCLKPol    0
+#define DispCSpread    0
+#define DispDither     0
 
-#if defined(DISPLAY_RESOLUTION_QVGA)
+#define DispOutbit     0
+#define DispAdaptiveFrameRate     0
+#define DispPCLK2X     0
+#define DispPCLKFreq   0x8B1
+
+#elif defined(DISPLAY_RESOLUTION_WSVGA)
+/* Values specific to QVGA LCD display */
+#define DispWidth      1024L
+#define DispHeight     600L
+#define DispHCycle     1344L
+#define DispHOffset    160L
+#define DispHSync0     0L
+#define DispHSync1     100L
+#define DispVCycle     635L
+#define DispVOffset    23L
+#define DispVSync0     0L
+#define DispVSync1     10L
+#define DispPCLK       1
+#define DispSwizzle    0
+#define DispPCLKPol    1
+#define DispCSpread    0
+#define DispDither     1
+
+#define DispOutbit     0
+#define DispAdaptiveFrameRate     0
+#define DispPCLK2X     0
+#define DispPCLKFreq   0xD12
+    
+#elif defined(DISPLAY_RESOLUTION_QVGA)
 /* Values specific to QVGA LCD display */
 #define DispWidth      320L
 #define DispHeight     240L

@@ -26,6 +26,7 @@ Revision History:
 0.1 - date 2017.03.20 - Initial Version
 */
 
+#pragma warning(disable: 4244 4018 4477 4101)
 
 #include "Platform.h"
 #include "Hal_Utils.h"

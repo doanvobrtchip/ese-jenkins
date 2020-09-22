@@ -30,6 +30,8 @@ Revision History:
 0.1 - date 2017.03.24 - Initial version
 */
 
+#pragma warning(disable: 4996)
+
 #include "Platform.h"
 #include "App_Common.h"
 #include "Skeleton.h"
@@ -131,7 +133,7 @@ void loadDataToCoprocessorCMDfifo(Gpu_Hal_Context_t *phost, char8_t *fileName)
 void loadDataToCoprocessorCMDfifo_nowait(Gpu_Hal_Context_t *phost, char8_t *fileName)
 {
     uint8_t g_scratch[SCRATCH_BUFF_SZ];
-    uint32_t filesz, currchunk, bytesread, cmdrd, cmdwr;
+    uint32_t filesz, currchunk = 0, bytesread, cmdrd = 0, cmdwr = 0;
 #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
     FILE *pFile;
 #elif defined(FT900_PLATFORM)
@@ -232,7 +234,7 @@ void loadDataToCoprocessorMediafifo(Gpu_Hal_Context_t *phost, char8_t *fileName,
 {
     uint8_t g_scratch[SCRATCH_BUFF_SZ];
     Fifo_t stFifo;
-    uint32_t i;
+    uint32_t i = 0;
     uint32_t filesz, currchunk, bytesread, cmdrd, cmdwr;
 #if defined(MSVC_PLATFORM) || defined(MSVC_FT800EMU)
     FILE *pFile;

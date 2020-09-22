@@ -509,6 +509,17 @@ void MainWindow::refreshScriptsMenu()
 		if (scriptFile == "__init__.py")
 			continue;
 
+		if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		{
+			if (!scriptFile.contains("815") && !scriptFile.contains("816"))
+				continue;
+		}
+		else if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT817 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT818)
+		{
+			if (!scriptFile.contains("817") && !scriptFile.contains("818"))
+				continue;
+		}
+
 		QString scriptMod = scriptModule() + "." + scriptFile.left(scriptFile.size() - 3).replace('/', '.');
 		// printf("module: %s\n", scriptMod.toLocal8Bit().data());
 		QString scriptDir = QFileInfo(scriptFile).dir().path();
@@ -705,16 +716,31 @@ void MainWindow::runScript(const QString &script)
 			if (pyUserFunc && PyCallable_Check(pyUserFunc))
 			{
 				PyObject *pyValue;
-				PyObject *pyArgs = PyTuple_New(3);
+				PyObject *pyArgs = 0;
+
+				if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816)
+					pyArgs = PyTuple_New(3);
+				else if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+					pyArgs = PyTuple_New(4);
+
 				pyValue = PyUnicode_FromString(outN.data());
-				;
+
 				PyTuple_SetItem(pyArgs, 0, pyValue);
 				PyTuple_SetItem(pyArgs, 1, pyDocument);
 				pyDocument = NULL;
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 				PyTuple_SetItem(pyArgs, 2, pyValue);
+
+				if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+				{
+					QString resol = QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+					pyValue = PyUnicode_FromString(resol.toUtf8().data());
+					PyTuple_SetItem(pyArgs, 3, pyValue);
+				}
+
 				pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
+
 				Py_DECREF(pyArgs);
 				pyArgs = NULL;
 				if (pyValue)
@@ -2660,7 +2686,7 @@ void MainWindow::actNew(bool addClear)
 #ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ft800editor-");
+	m_TemporaryDir = new QTemporaryDir("ESE-");
 	QDir::setCurrent(m_TemporaryDir->path());
 #else
 	QDir::setCurrent(m_InitialWorkingDir);

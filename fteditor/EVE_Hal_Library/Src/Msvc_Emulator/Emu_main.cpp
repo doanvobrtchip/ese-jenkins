@@ -29,6 +29,8 @@ Revision History:
 
 */
 
+#pragma warning(disable: 4996)
+
 #include "Platform.h"
 
 #ifdef MSVC_FT800EMU
