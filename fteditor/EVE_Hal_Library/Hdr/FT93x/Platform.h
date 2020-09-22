@@ -36,13 +36,13 @@ Revision History:
 /*================ Configuration ================*/
 
 /* FT93X Platform */
-#define FT93X_PLATFORM                                (1)
+#define FT93X_PLATFORM                                 (1)
 
 /* Module specific configurations */
 //#define MM930EV1A                                    (1)
 //#define MM930EV2A                                    (1)
 //#define MM930EV3A                                    (1)
-//#define MM930EV_LITE                                (1)
+//#define MM930EV_LITE                                 (1)
 
 #if (defined(MM930EV1A) || defined(MM930EV2A) || defined(MM930EV3A) || defined(MM930EV_LITE))
 
@@ -52,63 +52,10 @@ Revision History:
 
 #endif
 
-//#define ME800A_HV35R                                (1)
-//#define ME810A_HV35R                                (1)
-//#define ME813A_WV7C                                 (1)
-//#define ME812A_WH50R                                (1)
-//#define ME813A_WH50C                                (1)
-//#define ME810A_WH70R                                (1)
-//#define ME811A_WH70C                                (1)
-//#define VM816C50A_MPSSE                             (1)
-//#define VM816C50A_LIBFT4222                         (1)
-
-#ifdef ME800A_HV35R
-#define ENABLE_SPI_SINGLE                           (1)
-#define FT800_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_HVGA_PORTRAIT            (1)
-#define ENABLE_ILI9488_HVGA_PORTRAIT                (1)
-#define RESISTANCE_THRESHOLD                        (2100)
-#endif /* #ifdef ME800A_HV35R */
-
-#ifdef ME810A_HV35R
-#define ENABLE_SPI_QUAD                             (1)
-#define FT810_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_HVGA_PORTRAIT            (1)
-#define ENABLE_ILI9488_HVGA_PORTRAIT                (1)
-#define RESISTANCE_THRESHOLD                        (2100)
-#endif /* #ifdef ME800A_HV35R */
-
-#ifdef ME813A_WV7C
-#define ENABLE_SPI_QUAD                             (1)
-#define FT813_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_WVGA                     (1)
-#endif /* #ifdef ME813A_WV7C */
-
-#ifdef ME812A_WH50R
-#define ENABLE_SPI_QUAD                             (1)
-#define FT812_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_WVGA                     (1)
-#define RESISTANCE_THRESHOLD                        (1800)
-#endif /* #ifdef ME812A_WH50R */
-
-#ifdef ME813A_WH50C
-#define ENABLE_SPI_QUAD                             (1)
-#define FT813_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_WVGA                     (1)
-#endif /* #ifdef ME813A_WH50C */
-
-#ifdef ME810A_WH70R
-#define ENABLE_SPI_QUAD                             (1)
-#define FT810_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_WVGA                     (1)
-#define RESISTANCE_THRESHOLD                        (1800)
-#endif /* #ifdef ME810A_WH70R */
-
-#ifdef ME811A_WH70C
-#define ENABLE_SPI_QUAD                             (1)
-#define FT811_ENABLE                                (1)
-#define DISPLAY_RESOLUTION_WVGA                     (1)
-#endif /* #ifdef ME811A_WH70C */
+//#define VM816C50A_MPSSE                       (1)
+//#define VM816C50A_LIBFT4222                   (1)
+//#define ME817EV_MPSSE                         (1)
+//#define ME817EV_LIBFT4222                     (1)    
 
 #ifdef VM816C50A_MPSSE 
 /* Define all the macros specific to VM816C50A_MPSSE  module */
@@ -124,6 +71,26 @@ Revision History:
 #define ENABLE_SPI_QUAD                         (1)
 #define DISPLAY_RESOLUTION_WVGA                 (1)
 #define RESISTANCE_THRESHOLD                    (1800)
+#endif
+
+#ifdef ME817EV_MPSSE 
+#define BT815_ENABLE
+#define BT817_ENABLE
+#define ENABLE_SPI_SINGLE                       (1)
+//#define DISPLAY_RESOLUTION_WSVGA                (1)
+//#define DISPLAY_RESOLUTION_WXGA                 (1)
+#define RESISTANCE_THRESHOLD                    (1800)
+#define MSVC_PLATFORM_SPI_LIBMPSSE              (1)
+#endif
+
+#ifdef ME817EV_LIBFT4222
+#define BT815_ENABLE
+#define BT817_ENABLE
+#define ENABLE_SPI_QUAD                         (1)
+//#define DISPLAY_RESOLUTION_WSVGA                (1)
+//#define DISPLAY_RESOLUTION_WXGA                 (1)
+#define RESISTANCE_THRESHOLD                    (1800)
+#define MSVC_PLATFORM_SPI_LIBFT4222             (1)
 #endif
 
 /* Individual configurations if module specific configurations are not defined */
