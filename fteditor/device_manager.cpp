@@ -457,6 +457,9 @@ void DeviceManager::connectDevice()
 	params.UserContext = reinterpret_cast<void *>(this);
 
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };
+
+	
+
 	bool ok = EVE_Hal_open(phost, &params);
 	if (!ok)
 	{
@@ -465,46 +468,29 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
+	phost->ChipId = projectChipID();
 	devInfo->EveHalContext = phost;
 
 	EVE_BootupParameters bootupParams;
 	EVE_Util_bootupDefaults(phost, &bootupParams);
 
-	bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;
-	if (m_IsCustomDevice)
-	{
+	if (m_IsCustomDevice) {
 		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
 		bootupParams.ExternalOsc = m_CDI.configParams.ExternalClock;
 
-		switch (m_CDI.SystemClock)
-		{
-		case 24:
-			bootupParams.SystemClock = EVE_SYSCLK_24M;
-			break;
-		case 36:
-			bootupParams.SystemClock = EVE_SYSCLK_36M;
-			break;
-		case 48:
-			bootupParams.SystemClock = EVE_SYSCLK_48M;
-			break;
-		case 60:
-			bootupParams.SystemClock = EVE_SYSCLK_60M;
-			break;
-		case 72:
-			bootupParams.SystemClock = EVE_SYSCLK_72M;
-			break;
-		case 84:
-			bootupParams.SystemClock = EVE_SYSCLK_84M;
-			break;
-		default:
-			bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;
-			break;
+		switch (m_CDI.SystemClock) {
+		case 24: bootupParams.SystemClock = EVE_SYSCLK_24M;			break;
+		case 36: bootupParams.SystemClock = EVE_SYSCLK_36M;			break;
+		case 48: bootupParams.SystemClock = EVE_SYSCLK_48M;			break;
+		case 60: bootupParams.SystemClock = EVE_SYSCLK_60M;			break;
+		case 72: bootupParams.SystemClock = EVE_SYSCLK_72M;			break;
+		case 84: bootupParams.SystemClock = EVE_SYSCLK_84M;			break;
+		default: bootupParams.SystemClock = EVE_SYSCLK_DEFAULT;		break;
 		}
 	}
 
 	progressLabel->setText("Boot up...");
-	if (!EVE_Util_bootup(phost, &bootupParams))
-	{
+	if (!EVE_Util_bootup(phost, &bootupParams))	{
 		EVE_Hal_close(phost);
 		devInfo->EveHalContext = NULL;
 		delete phost;
@@ -514,21 +500,23 @@ void DeviceManager::connectDevice()
 
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)phost->ChipId);
 	EVE_ConfigParameters configParams;
-	EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_DEFAULT);
+	
+
+	QString projectDisplaySize = m_MainWindow->getDisplaySize();
 
 	if (m_IsCustomDevice)
 	{
 		configParams = m_CDI.configParams;		
 	}	
-	else if (m_SelectedDisplaySize == "1280x800")
+	else if (m_SelectedDisplaySize == "1280x800" || projectDisplaySize == "1280x800")
 	{
 		EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_WXGA_1280x800_65Hz);		
 	}
-	else if (m_SelectedDisplaySize == "1024x600")
+	else if (m_SelectedDisplaySize == "1024x600" || projectDisplaySize == "1024x600")
 	{
 		EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_WSVGA_1024x600_83Hz);		
 	}
-	else if (m_SelectedDisplaySize == "800x480")
+	else if (m_SelectedDisplaySize == "800x480" || projectDisplaySize == "800x480")
 	{
 		configParams.Width = 800;
 		configParams.Height = 480;
@@ -546,7 +534,7 @@ void DeviceManager::connectDevice()
 		configParams.CSpread = 0;
 		configParams.Dither = 1;
 	}
-	else if (m_SelectedDisplaySize == "480x272")
+	else if (m_SelectedDisplaySize == "480x272" || projectDisplaySize == "480x272")
 	{
 		configParams.Width = 480;
 		configParams.Height = 272;
@@ -564,7 +552,7 @@ void DeviceManager::connectDevice()
 		configParams.CSpread = 1;
 		configParams.Dither = 1;
 	}
-	else if (m_SelectedDisplaySize == "320x240")
+	else if (m_SelectedDisplaySize == "320x240" || projectDisplaySize == "320x240")
 	{
 		configParams.Width = 320;
 		configParams.Height = 240;
@@ -582,6 +570,9 @@ void DeviceManager::connectDevice()
 		configParams.CSpread = 1;
 		configParams.Dither = 1;
 	}
+	else {
+		EVE_Util_configDefaults(phost, &configParams, EVE_DISPLAY_DEFAULT);
+	}
 
 	progressLabel->setText("Configure...");
 	if (!EVE_Util_config(phost, &configParams))
@@ -594,7 +585,36 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
+	// print reg values
+	printf("%s: %d\n", "REG_HCYCLE", EVE_Hal_rd16(phost, REG_HCYCLE));
+	printf("%s: %d\n", "REG_HOFFSET", EVE_Hal_rd16(phost, REG_HOFFSET));
+	printf("%s: %d\n", "REG_HSYNC0", EVE_Hal_rd16(phost, REG_HSYNC0));
+	printf("%s: %d\n", "REG_HSYNC1", EVE_Hal_rd16(phost, REG_HSYNC1));
+	printf("%s: %d\n", "REG_VCYCLE", EVE_Hal_rd16(phost, REG_VCYCLE));
+	printf("%s: %d\n", "REG_VOFFSET", EVE_Hal_rd16(phost, REG_VOFFSET));
+	printf("%s: %d\n", "REG_VSYNC0", EVE_Hal_rd16(phost, REG_VSYNC0));
+	printf("%s: %d\n", "REG_VSYNC1", EVE_Hal_rd16(phost, REG_VSYNC1));
+	printf("%s: %d\n", "REG_SWIZZLE", EVE_Hal_rd16(phost, REG_SWIZZLE));
+	printf("%s: %d\n", "REG_PCLK_POL", EVE_Hal_rd16(phost, REG_PCLK_POL));
+	printf("%s: %d\n", "REG_HSIZE", EVE_Hal_rd16(phost, REG_HSIZE));
+	printf("%s: %d\n", "REG_VSIZE", EVE_Hal_rd16(phost, REG_VSIZE));
+
+	printf("%s: %d\n", "REG_CSPREAD", EVE_Hal_rd16(phost, REG_CSPREAD));
+	printf("%s: %d\n", "REG_DITHER", EVE_Hal_rd16(phost, REG_DITHER));
+	printf("%s: %d\n", "REG_OUTBITS", EVE_Hal_rd16(phost, REG_OUTBITS));
+	printf("%s: %d\n", "REG_PCLK_FREQ", EVE_Hal_rd16(phost, REG_PCLK_FREQ));
+	printf("%s: %d\n", "REG_FREQUENCY", EVE_Hal_rd32(phost, REG_FREQUENCY));
+
+	printf("%s: %d\n", "REG_ADAPTIVE_FRAMERATE", EVE_Hal_rd8(phost, REG_ADAPTIVE_FRAMERATE));
+	printf("%s: %d\n", "REG_AH_HCYCLE_MAX", EVE_Hal_rd16(phost, REG_AH_HCYCLE_MAX));
+	printf("%s: %d\n", "REG_PCLK_2X", EVE_Hal_rd8(phost, REG_PCLK_2X));
+	printf("%s: %d\n", "REG_PCLK", EVE_Hal_rd8(phost, REG_PCLK));
+
 	EVE_Hal_displayMessage(phost, "EVE Screen Editor ", sizeof("EVE Screen Editor "));
+
+
+
+
 
 	updateSelection();
 
@@ -1413,6 +1433,24 @@ void DeviceManager::updateSelection()
 	}
 }
 
+EVE_CHIPID_T DeviceManager::projectChipID() {
+	EVE_CHIPID_T res;
+
+	switch (FTEDITOR_CURRENT_DEVICE)
+	{
+	case FTEDITOR_FT800: return EVE_CHIPID_FT800;
+	case FTEDITOR_FT801: return EVE_CHIPID_FT801;
+	case FTEDITOR_FT810: return EVE_CHIPID_FT810;
+	case FTEDITOR_FT811: return EVE_CHIPID_FT811;
+	case FTEDITOR_FT812: return EVE_CHIPID_FT812;
+	case FTEDITOR_FT813: return EVE_CHIPID_FT813;
+	case FTEDITOR_BT815: return EVE_CHIPID_BT815;
+	case FTEDITOR_BT816: return EVE_CHIPID_BT816;
+	case FTEDITOR_BT817: return	EVE_CHIPID_BT817;
+	case FTEDITOR_BT818: return	EVE_CHIPID_BT818;
+	default: return (EVE_CHIPID_T)0;
+	}
+}
 #endif /* FT800_DEVICE_MANAGER */
 
 } /* namespace FTEDITOR */

@@ -3935,6 +3935,11 @@ QString MainWindow::getProjectContent() const
 	return projectContent;
 }
 
+QString MainWindow::getDisplaySize()
+{
+	return QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+}
+
 } /* namespace FTEDITOR */
 
 /* end of file */

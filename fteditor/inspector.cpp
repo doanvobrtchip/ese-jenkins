@@ -88,7 +88,7 @@ static QString asText(uint32_t value)
 	DlParsed parsed;
 	DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line, false);
 	uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsed);
-	if (compiled != value)
+	if (compiled != value && line.toLocal8Bit() != "")
 	{
 #if _DEBUG
 		QByteArray chars = line.toLocal8Bit();

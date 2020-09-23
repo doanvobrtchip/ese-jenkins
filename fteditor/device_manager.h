@@ -154,6 +154,8 @@ private:
 	void updateSelection();
 	bool waitFlush(DeviceInfo *devInfo);
 
+	EVE_CHIPID_T projectChipID();
+
 private:
 	DeviceManager(const DeviceManager &) = delete;
 	DeviceManager &operator=(const DeviceManager &) = delete;
