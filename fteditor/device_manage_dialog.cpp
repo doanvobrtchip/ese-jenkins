@@ -42,9 +42,6 @@ DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
 	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::clicked);
 
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(reject()));
-
-	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::click);
-	connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, ui->btnEditDevice, &QPushButton::click);
 }
 
 void DeviceManageDialog::execute()
