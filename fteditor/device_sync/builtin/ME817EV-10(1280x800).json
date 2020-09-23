@@ -5,6 +5,7 @@
     "Device Name": "ME817EV-10(1280x800)",
     "EVE Type": "BT817_818",
     "External Clock": "false",
+    "System Clock (MHz)": "72",
     "Flash Model": "w25q128",
     "Flash Size (MB)": "16",
     "REG_CSPREAD": 0,
