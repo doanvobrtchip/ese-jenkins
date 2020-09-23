@@ -193,6 +193,9 @@ public:
 	ContentInfo *add(const QString &filePath);
 	// Add the content (this creates the undo/redo)
 	void add(ContentInfo *contentInfo);
+
+	void addInternal(QStringList fileNameList);
+
 	// Remove the content
 	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time

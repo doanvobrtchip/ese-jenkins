@@ -355,7 +355,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	connect(m_ContentList, &ContentTreeWidget::contentDropped, this, [=](QString url) {
-		add(url);
+		addInternal(QStringList() << url);
 	});
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
@@ -800,7 +800,7 @@ public:
 		m_ContentManager->removeInternal(m_ContentInfo);
 
 		m_Owner = true;
-
+		/*
 		if (!m_WhenCloseProject)
 		{
 			// Check if there is another content used the same source path
@@ -821,7 +821,7 @@ public:
 			{
 				QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
 			}
-		}
+		}*/
 	}
 
 private:
@@ -1130,6 +1130,11 @@ void ContentManager::add()
 	saveDir.cdUp();
 	saveDirPath = saveDir.absolutePath();
 
+	addInternal(fileNameList);
+}
+
+void ContentManager::addInternal(QStringList fileNameList)
+{
 	// create resource folder to save content files
 	QDir dir(QDir::currentPath() + '/' + ResourceDir);
 	if (!dir.exists())
@@ -1434,6 +1439,7 @@ void ContentManager::clear(bool whenCloseProject)
 	m_MainWindow->undoStack()->endMacro();
 
 	// Clean resource files
+	/*
 	QString projectContent = m_MainWindow->getProjectContent();
 	if (whenCloseProject)
 	{
@@ -1452,6 +1458,7 @@ void ContentManager::clear(bool whenCloseProject)
 			}
 		}
 	}
+	*/
 }
 
 void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -4905,25 +4912,17 @@ void ContentManager::propertiesFontOffsetChanged(int value)
 void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
 {
 	if (event->mimeData()->hasUrls())
-		event->acceptProposedAction();
+		event->accept();
 	else
 		event->ignore();
 }
 
 void ContentTreeWidget::dropEvent(QDropEvent *event)
 {
-	if (event->proposedAction() == Qt::MoveAction || event->proposedAction() == Qt::CopyAction)
+	event->acceptProposedAction();
+	for	each(QUrl url in event->mimeData()->urls())
 	{
-		event->acceptProposedAction();
-		for	each(QUrl url in event->mimeData()->urls())
-		{
-			emit contentDropped(url.toLocalFile());
-		}
-	}
-	else
-	{
-		// Ignore the drop
-		event->ignore();
+		emit contentDropped(url.toLocalFile());
 	}
 }
 
@@ -4947,7 +4946,6 @@ ContentTreeWidget::~ContentTreeWidget()
 void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
 {
 	event->accept();
-	event->acceptProposedAction();
 }
 
 void ContentLabel::dropEvent(QDropEvent *event)
