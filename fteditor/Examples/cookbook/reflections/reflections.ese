@@ -59,7 +59,7 @@
         ""
     ],
     "project": {
-        "device": 2069
+        "device": 2071
     },
     "registers": {
         "hSize": 800,
