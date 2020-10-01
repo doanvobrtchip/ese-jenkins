@@ -917,14 +917,21 @@ void MainWindow::frameQt()
 	// Trigger changes to readout cocmd on qt thread
 	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
 	int coCmdChangeNbQt = s_CoCmdChangeNbQt;
+	bool anyReadOutChanged = false;
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		if (s_CoCmdReadChanged[i] >= coCmdChangeNbQt)
 		{
-			// TODO: i changed
+			// TODO: Line-specific refresh?
+			anyReadOutChanged = true;
 		}
 	}
 	s_CoCmdChangeNbQt = coCmdChangeNbEmu;
+	if (anyReadOutChanged)
+	{
+		// Always refresh for now
+		m_InteractiveProperties->modifiedEditorLine();
+	}
 }
 
 void MainWindow::createActions()

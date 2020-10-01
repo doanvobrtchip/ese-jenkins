@@ -451,10 +451,10 @@ void InteractiveProperties::addRadius(int radius, int minim, int maxim)
 	propRadius->done();
 }
 
-void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage, bool readOnly)
+void InteractiveProperties::addSpinBox(int index, int minim, int maxim, const QString &label, const QString &undoMessage, bool readOut)
 {
 	PropertiesSpinBox *prop = new PropertiesSpinBox(this, undoMessage, index);
-	prop->setReadOnly(readOnly);
+	prop->setReadOut(readOut);
 	prop->setMinimum(minim);
 	prop->setMaximum(maxim);
 	addLabeledWidget(label, prop);
@@ -756,10 +756,10 @@ void InteractiveProperties::addAddressFlash(int index)
 	prop->done();
 }
 
-void InteractiveProperties::addAddress(int index, bool negative, bool readOnly)
+void InteractiveProperties::addAddress(int index, bool negative, bool readOut)
 {
 	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), index, negative);
-	prop->setReadOnly(readOnly);
+	prop->setReadOut(readOut);
 	addLabeledWidget("Address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
@@ -1211,8 +1211,8 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_GETPROPS");
 
 				addAddress(0, false, true);
-				addSpinBox(1, 0, 65535, "Width:", "Set width", true);
-				addSpinBox(2, 0, 65535, "Height:", "Set height", true);
+				addSpinBox(1, 0, 65535, "Width:", "Get width", true);
+				addSpinBox(2, 0, 65535, "Height:", "Get height", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
