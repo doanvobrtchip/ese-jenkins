@@ -132,10 +132,10 @@ static int s_CoCmdReadIndicesB[FTEDITOR_DL_SIZE] = { -1 };
 int *g_CoCmdReadIndicesRead = s_CoCmdReadIndicesA;
 static int *s_CoCmdReadIndicesWrite = s_CoCmdReadIndicesB;
 // Array with up to 16 readout values per command
-static uint32_t s_CoCmdReadValuesA[FTEDITOR_DL_SIZE][DL_PARSER_MAX_COCMDREAD];
-static uint32_t s_CoCmdReadValuesB[FTEDITOR_DL_SIZE][DL_PARSER_MAX_COCMDREAD];
-uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_COCMDREAD] = s_CoCmdReadValuesA;
-static uint32_t (*s_CoCmdReadValuesWrite)[DL_PARSER_MAX_COCMDREAD] = s_CoCmdReadValuesB;
+static uint32_t s_CoCmdReadValuesA[FTEDITOR_DL_SIZE][DL_PARSER_MAX_READOUT];
+static uint32_t s_CoCmdReadValuesB[FTEDITOR_DL_SIZE][DL_PARSER_MAX_READOUT];
+uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_READOUT] = s_CoCmdReadValuesA;
+static uint32_t (*s_CoCmdReadValuesWrite)[DL_PARSER_MAX_READOUT] = s_CoCmdReadValuesB;
 
 static std::vector<uint32_t> s_CmdParamCache;
 static std::vector<std::string> s_CmdStrParamCache;
@@ -1030,7 +1030,7 @@ void loop()
 					if (paramNb) // for now, just read out all cmd with params
 					{
 						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
-						for (int j = 0; j < paramNb; ++j)
+						for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
 							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
 						++coCmdReadNb;
 					}
@@ -1116,7 +1116,7 @@ void loop()
 					if (paramNb) // for now, just read out all cmd with params
 					{
 						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
-						for (int j = 0; j < paramNb; ++j)
+						for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
 							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
 						++coCmdReadNb;
 					}
@@ -1260,7 +1260,7 @@ void loop()
 						if (paramNb) // for now, just read out all cmd with params
 						{
 							s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
-							for (int j = 0; j < paramNb; ++j)
+							for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
 								s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
 							++coCmdReadNb;
 						}
@@ -1612,7 +1612,7 @@ void loop()
 				if (paramNb) // for now, just read out all cmd with params
 				{
 					s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
-					for (int j = 0; j < paramNb; ++j)
+					for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
 						s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
 					++coCmdReadNb;
 				}

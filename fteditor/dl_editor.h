@@ -77,6 +77,8 @@ public:
 	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
 	inline bool isDisplayListModified() { bool result = m_DisplayListModified; m_DisplayListModified = false; return result; }
 
+	void setReadOut(int line, uint32_t *readOut) { memcpy(m_DisplayListParsed[line].ReadOut, readOut, sizeof(m_DisplayListParsed->ReadOut)); } // okay to do without locking, it's just a readout, it refreshes anyway
+
 	void reloadDisplayList(bool fromEmulator); // reloads the entire display list from m_DisplayListShared, must be called inside mutex!!!
 
 	// Replace a line (creates undo stack), used for example from the interactive viewport
