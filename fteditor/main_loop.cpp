@@ -125,6 +125,18 @@ static int s_DisplayListCoprocessorCommandB[FTEDITOR_DL_SIZE];
 int *g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
 static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 
+// Data structure to read coprocessor output, double buffered.
+// Array listing the display list indices. Index -1 means end of list
+static int s_CoCmdReadIndicesA[FTEDITOR_DL_SIZE] = { -1 };
+static int s_CoCmdReadIndicesB[FTEDITOR_DL_SIZE] = { -1 };
+int *g_CoCmdReadIndicesRead = s_CoCmdReadIndicesA;
+static int *s_CoCmdReadIndicesWrite = s_CoCmdReadIndicesB;
+// Array with up to 16 readout values per command
+static uint32_t s_CoCmdReadValuesA[FTEDITOR_DL_SIZE][DL_PARSER_MAX_COCMDREAD];
+static uint32_t s_CoCmdReadValuesB[FTEDITOR_DL_SIZE][DL_PARSER_MAX_COCMDREAD];
+uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_COCMDREAD] = s_CoCmdReadValuesA;
+static uint32_t (*s_CoCmdReadValuesWrite)[DL_PARSER_MAX_COCMDREAD] = s_CoCmdReadValuesB;
+
 static std::vector<uint32_t> s_CmdParamCache;
 static std::vector<std::string> s_CmdStrParamCache;
 
@@ -337,8 +349,8 @@ void resetemu()
 {
 	g_UtilizationDisplayListCmd = 0;
 	g_WaitingCoprocessorAnimation = false;
-	g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-	s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
+	// g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
+	// s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 	s_CmdParamCache.clear();
 	g_StepCmdLimit = 0;
 	s_StepCmdLimitCurrent = 0;
@@ -1539,9 +1551,9 @@ void loop()
 		g_CoprocessorFrameSuccess = true;
 
 		// FIXME: Not very thread-safe, but not too critical
-		int *nextWrite = g_DisplayListCoprocessorCommandRead;
-		g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
-		s_DisplayListCoprocessorCommandWrite = nextWrite;
+		std::swap(g_DisplayListCoprocessorCommandRead, s_DisplayListCoprocessorCommandWrite);
+		std::swap(g_CoCmdReadIndicesRead, s_CoCmdReadIndicesWrite);
+		std::swap(g_CoCmdReadValuesRead, s_CoCmdReadValuesWrite);
 	}
 	else
 	{
