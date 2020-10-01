@@ -234,7 +234,7 @@ public:
 
 	void setReadOut(bool readOut)
 	{
-		m_ReadOut = true;
+		m_ReadOut = readOut;
 		setReadOnly(readOut);
 	}
 

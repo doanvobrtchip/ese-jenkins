@@ -1013,8 +1013,6 @@ void loop()
 						// cpWrite[i] is the cocmd fifo address for a particular display list index
 					}
 				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 				// read from coprocessor fifo ram ->
 				int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
@@ -1026,7 +1024,7 @@ void loop()
 						++i; // not written, shouldn't happen
 						continue;
 					}
-					int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+					int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
 					if (paramNb) // for now, just read out all cmd with params
 					{
 						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
@@ -1038,6 +1036,9 @@ void loop()
 				}
 				coprocessorWriteStart = coprocessorWriteEnd;
 				// <- read from coprocessor fifo ram
+
+				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			}
@@ -1100,8 +1101,6 @@ void loop()
 							= coprocessorWrites[cpWrite[i]];
 					}
 				}
-				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 				// read from coprocessor fifo ram ->
 				for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
@@ -1112,7 +1111,7 @@ void loop()
 						++i; // not written, shouldn't happen
 						continue;
 					}
-					int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+					int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
 					if (paramNb) // for now, just read out all cmd with params
 					{
 						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
@@ -1124,6 +1123,9 @@ void loop()
 				}
 				coprocessorWriteStart = 0; // (differs from regular impl, logo resets wp to 0)
 				// <- read from coprocessor fifo ram
+
+				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 				if (wp == 0) printf("WP 0\n");
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
@@ -1243,8 +1245,6 @@ void loop()
 								= coprocessorWrites[cpWrite[i]];
 						}
 					}
-					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 					// read from coprocessor fifo ram ->
 					int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
@@ -1256,7 +1256,7 @@ void loop()
 							++i; // not written, shouldn't happen
 							continue;
 						}
-						int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+						int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
 						if (paramNb) // for now, just read out all cmd with params
 						{
 							s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
@@ -1268,6 +1268,9 @@ void loop()
 					}
 					coprocessorWriteStart = coprocessorWriteEnd;
 					// <- read from coprocessor fifo ram
+
+					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
@@ -1586,8 +1589,6 @@ void loop()
 						= coprocessorWrites[cpWrite[i]];
 				}
 			}
-			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
 			{
@@ -1608,7 +1609,7 @@ void loop()
 					++i; // not written, shouldn't happen
 					continue;
 				}
-				int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+				int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
 				if (paramNb) // for now, just read out all cmd with params
 				{
 					s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
@@ -1620,6 +1621,9 @@ void loop()
 			}
 			coprocessorWriteStart = coprocessorWriteEnd;
 			// <- read from coprocessor fifo ram
+
+			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 			// Test
 			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)

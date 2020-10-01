@@ -814,6 +814,15 @@ void MainWindow::frameEmu()
 		{
 			m_CmdEditor->setReadOut(line, g_CoCmdReadValuesRead[i]);
 			s_CoCmdReadChanged[line] = coCmdChangeNbEmu;
+			// DEBUG:
+			/*
+			printf("Line %i, readout ", line);
+			for (int j = 0; j < DL_PARSER_MAX_READOUT; ++j)
+			{
+				printf("%i, ", (int)g_CoCmdReadValuesRead[i][j]);
+			}
+			printf("\n");
+			*/
 		}
 	}
 	s_CoCmdChangeNbEmu = coCmdChangeNbEmu;
@@ -918,12 +927,14 @@ void MainWindow::frameQt()
 	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
 	int coCmdChangeNbQt = s_CoCmdChangeNbQt;
 	bool anyReadOutChanged = false;
-	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	for (int i = 0; i < FTEDITOR_DL_SIZE && i < m_CmdEditor->getLineCount(); ++i)
 	{
 		if (s_CoCmdReadChanged[i] >= coCmdChangeNbQt)
 		{
 			// TODO: Line-specific refresh?
 			anyReadOutChanged = true;
+			// DEBUG: printf("Line %i, readout refresh\n", i);
+			break;
 		}
 	}
 	s_CoCmdChangeNbQt = coCmdChangeNbEmu;
