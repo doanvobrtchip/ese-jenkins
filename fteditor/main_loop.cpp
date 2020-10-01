@@ -866,6 +866,9 @@ void loop()
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
+		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_CoCmdReadIndicesWrite[i] = -1; // wipe
+		int coCmdReadNb = 0;
+		uint32_t *ramCmd = reinterpret_cast<uint32_t *>(&BT8XXEMU_getRam(g_Emulator)[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD)]);
 		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
 		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -891,6 +894,7 @@ void loop()
 		s_MediaFifoSize = 0;
 		int lastCmd = -1;
 		bool warnMissingTestcardDLStart = false;
+		int coprocessorWriteStart = (wp & 0xFFF) >> 2;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
@@ -1003,10 +1007,37 @@ void loop()
 						// printf("A %i\n", i);
 						s_DisplayListCoprocessorCommandWrite[i]
 							= coprocessorWrites[cpWrite[i]];
+						// i is the final display list index,
+						// coprocessorWrites[cpWrite[i]] is the index in the cocmd text editor
+						// coprocessorWrites maps from ram_cmd to cocmd text editor
+						// cpWrite[i] is the cocmd fifo address for a particular display list index
 					}
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
+
+				// read from coprocessor fifo ram ->
+				int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+				for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+				{
+					int editorIdx = coprocessorWrites[i];
+					if (editorIdx < 0)
+					{
+						++i; // not written, shouldn't happen
+						continue;
+					}
+					int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+					if (paramNb) // for now, just read out all cmd with params
+					{
+						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+						for (int j = 0; j < paramNb; ++j)
+							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+						++coCmdReadNb;
+					}
+					i += (1 + paramNb); // advance cmd plus paramNb
+				}
+				coprocessorWriteStart = coprocessorWriteEnd;
+				// <- read from coprocessor fifo ram
 
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 			}
@@ -1045,6 +1076,7 @@ void loop()
 				printf("WP = %i\n", wp);
 				QThread::msleep(100);
 
+				int coprocessorWriteEnd = (wp & 0xFFF) >> 2; // (differs from regular impl, need to read before wait)
 				do
 				{
 					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
@@ -1070,6 +1102,28 @@ void loop()
 				}
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
+
+				// read from coprocessor fifo ram ->
+				for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+				{
+					int editorIdx = coprocessorWrites[i];
+					if (editorIdx < 0)
+					{
+						++i; // not written, shouldn't happen
+						continue;
+					}
+					int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+					if (paramNb) // for now, just read out all cmd with params
+					{
+						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+						for (int j = 0; j < paramNb; ++j)
+							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+						++coCmdReadNb;
+					}
+					i += (1 + paramNb); // advance cmd plus paramNb
+				}
+				coprocessorWriteStart = 0; // (differs from regular impl, logo resets wp to 0)
+				// <- read from coprocessor fifo ram
 
 				if (wp == 0) printf("WP 0\n");
 				swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
@@ -1191,6 +1245,29 @@ void loop()
 					}
 					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
+
+					// read from coprocessor fifo ram ->
+					int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+					for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+					{
+						int editorIdx = coprocessorWrites[i];
+						if (editorIdx < 0)
+						{
+							++i; // not written, shouldn't happen
+							continue;
+						}
+						int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+						if (paramNb) // for now, just read out all cmd with params
+						{
+							s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+							for (int j = 0; j < paramNb; ++j)
+								s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+							++coCmdReadNb;
+						}
+						i += (1 + paramNb); // advance cmd plus paramNb
+					}
+					coprocessorWriteStart = coprocessorWriteEnd;
+					// <- read from coprocessor fifo ram
 
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
@@ -1374,6 +1451,9 @@ void loop()
 							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 							BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
+							// nothing to read from cocmd ram here (should be...)
+							coprocessorWriteStart = (wp & 0xFFF) >> 2;
+
 							printf("Stream: %i bytes\n", (int)writeCount);
 
 							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
@@ -1454,6 +1534,9 @@ void loop()
 					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
+					// nothing to read from cocmd ram here (should be...)
+					coprocessorWriteStart = (wp & 0xFFF) >> 2;
+
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
 			}
@@ -1514,6 +1597,29 @@ void loop()
 					break;
 				}
 			}
+
+			// read from coprocessor fifo ram ->
+			int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+			for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+			{
+				int editorIdx = coprocessorWrites[i];
+				if (editorIdx < 0)
+				{
+					++i; // not written, shouldn't happen
+					continue;
+				}
+				int paramNb = cmdParamIdx[i + 1] - cmdParamIdx[i];
+				if (paramNb) // for now, just read out all cmd with params
+				{
+					s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+					for (int j = 0; j < paramNb; ++j)
+						s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+					++coCmdReadNb;
+				}
+				i += (1 + paramNb); // advance cmd plus paramNb
+			}
+			coprocessorWriteStart = coprocessorWriteEnd;
+			// <- read from coprocessor fifo ram
 
 			// Test
 			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
