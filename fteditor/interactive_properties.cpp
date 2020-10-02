@@ -760,7 +760,7 @@ void InteractiveProperties::addAddress(int index, bool negative, bool readOut)
 {
 	PropertiesSpinBoxAddress *prop = new PropertiesSpinBoxAddress(this, tr("Set address"), index, negative);
 	prop->setReadOut(readOut);
-	addLabeledWidget("Address: ", prop);
+	addLabeledWidget(readOut ? "Output Address:" : "Address: ", prop);
 	m_CurrentProperties.push_back(prop);
 	prop->done();
 }
@@ -1211,8 +1211,8 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_GETPROPS");
 
 				addAddress(0, false, true);
-				addSpinBox(1, 0, 65535, "Width:", "Get width", true);
-				addSpinBox(2, 0, 65535, "Height:", "Get height", true);
+				addSpinBox(1, 0, 65535, "Output Width:", "Set width", true);
+				addSpinBox(2, 0, 65535, "Output Height:", "Set height", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

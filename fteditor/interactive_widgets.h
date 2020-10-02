@@ -236,6 +236,8 @@ public:
 	{
 		m_ReadOut = readOut;
 		setReadOnly(readOut);
+		if (readOut)
+			setButtonSymbols(QAbstractSpinBox::NoButtons);
 	}
 
 	void done()
@@ -452,6 +454,8 @@ public:
 	{
 		m_ReadOut = readOut;
 		setReadOnly(readOut);
+		if (readOut)
+			setButtonSymbols(QAbstractSpinBox::NoButtons);
 	}
 
 	void done()
