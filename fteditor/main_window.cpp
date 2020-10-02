@@ -2736,7 +2736,7 @@ void MainWindow::actNew(bool addClear)
 #ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ESE-");
+	m_TemporaryDir = new QTemporaryDir("ESE");
 	QDir::setCurrent(m_TemporaryDir->path());
 #else
 	QDir::setCurrent(m_InitialWorkingDir);
