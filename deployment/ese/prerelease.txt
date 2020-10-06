@@ -29,6 +29,7 @@ Known issues
 •   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
 •   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
 •   Drawing invalid animation frame will cause ESE hang
+•   When using device sync up, flash contents need written before updating display list or corpocessor
 
 Version 3.4.0
 Features:
