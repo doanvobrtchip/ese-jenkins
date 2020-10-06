@@ -1984,7 +1984,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
 						break;
 					case ContentInfo::ImageCoprocessor:
-						AssetConverter::convertImageCoprocessor(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageMono, true, FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810);
+						AssetConverter::convertImageCoprocessor(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageMono, true, FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810, contentInfo->PalettedAddress);
 						break;
 					case ContentInfo::Font:
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);

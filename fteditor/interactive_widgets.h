@@ -217,6 +217,7 @@ public:
 	    , PropertiesWidget(parent, undoMessage)
 	    , m_Index(index)
 	    , m_SoftMod(false)
+		, m_ReadOut(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -231,6 +232,14 @@ public:
 	{
 	}
 
+	void setReadOut(bool readOut)
+	{
+		m_ReadOut = readOut;
+		setReadOnly(readOut);
+		if (readOut)
+			setButtonSymbols(QAbstractSpinBox::NoButtons);
+	}
+
 	void done()
 	{
 		m_SoftMod = false;
@@ -243,7 +252,11 @@ public:
 		if (m_SoftMod)
 			return;
 		m_SoftMod = true;
-		setValue(getLine().Parameter[m_Index].I);
+		int v = m_ReadOut
+			? getLine().ReadOut[m_Index].I
+			: getLine().Parameter[m_Index].I;
+		if (value() != v)
+			setValue(v);
 		m_SoftMod = false;
 		//printf("bye");
 	}
@@ -252,6 +265,8 @@ private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
+		if (m_ReadOut)
+			return;
 		if (m_SoftMod)
 			return;
 		m_SoftMod = true;
@@ -265,6 +280,8 @@ private slots:
 private:
 	int m_Index;
 	bool m_SoftMod;
+	bool m_ReadOut;
+
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -415,10 +432,11 @@ class InteractiveProperties::PropertiesSpinBox : public UndoStackDisabler<Suppor
 
 public:
 	PropertiesSpinBox(InteractiveProperties *parent, const QString &undoMessage, int index)
-	    : UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
-	    , PropertiesWidget(parent, undoMessage)
-	    , m_Index(index)
-	    , m_SoftMod(false)
+		: UndoStackDisabler<SupportCopyPasteSpinBox>(parent)
+		, PropertiesWidget(parent, undoMessage)
+		, m_Index(index)
+		, m_SoftMod(false)
+		, m_ReadOut(false)
 	{
 		m_SoftMod = true;
 		setUndoStack(parent->m_MainWindow->undoStack());
@@ -430,6 +448,14 @@ public:
 
 	virtual ~PropertiesSpinBox()
 	{
+	}
+
+	void setReadOut(bool readOut)
+	{
+		m_ReadOut = readOut;
+		setReadOnly(readOut);
+		if (readOut)
+			setButtonSymbols(QAbstractSpinBox::NoButtons);
 	}
 
 	void done()
@@ -444,7 +470,11 @@ public:
 		if (m_SoftMod)
 			return;
 		m_SoftMod = true;
-		setValue(getLine().Parameter[m_Index].I);
+		int v = m_ReadOut
+			? getLine().ReadOut[m_Index].I
+			: getLine().Parameter[m_Index].I;
+		if (value() != v)
+			setValue(v);
 		m_SoftMod = false;
 		//printf("bye");
 	}
@@ -453,6 +483,8 @@ private slots:
 	void updateValue(int value)
 	{
 		//printf("updateValue\n");
+		if (m_ReadOut)
+			return;
 		if (m_SoftMod)
 			return;
 		m_SoftMod = true;
@@ -466,6 +498,8 @@ private slots:
 private:
 	int m_Index;
 	bool m_SoftMod;
+	bool m_ReadOut;
+
 };
 
 ////////////////////////////////////////////////////////////////////////

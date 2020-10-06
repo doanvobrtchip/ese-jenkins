@@ -128,6 +128,12 @@ extern volatile bool g_ShowCoprocessorBusy;
 
 QString g_ApplicationDataDir;
 
+extern int *g_CoCmdReadIndicesRead;
+extern uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_READOUT];
+static volatile int s_CoCmdChangeNbEmu;
+static int s_CoCmdChangeNbQt;
+static int s_CoCmdReadChanged[FTEDITOR_DL_SIZE];
+
 void cleanupMediaFifo();
 void emuMain(BT8XXEMU_Emulator *sender, void *context);
 void closeDummy(BT8XXEMU_Emulator *sender, void *context);
@@ -796,7 +802,30 @@ void MainWindow::runScript(const QString &script)
 
 void MainWindow::frameEmu()
 {
-	// ...
+	// Read CoCmd directly into DlParsed, no need to lock since this is just a one-way data copy, and it'll be updated again anyway
+	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu + 1;
+	const DlParsed *cmdParsed = m_CmdEditor->getDisplayListParsed();
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		int line = g_CoCmdReadIndicesRead[i];
+		if (line < 0)
+			break; // no more
+		if (memcmp(cmdParsed[line].ReadOut, g_CoCmdReadValuesRead[i], sizeof(cmdParsed->ReadOut)))
+		{
+			m_CmdEditor->setReadOut(line, g_CoCmdReadValuesRead[i]);
+			s_CoCmdReadChanged[line] = coCmdChangeNbEmu;
+			// DEBUG:
+			/*
+			printf("Line %i, readout ", line);
+			for (int j = 0; j < DL_PARSER_MAX_READOUT; ++j)
+			{
+				printf("%i, ", (int)g_CoCmdReadValuesRead[i][j]);
+			}
+			printf("\n");
+			*/
+		}
+	}
+	s_CoCmdChangeNbEmu = coCmdChangeNbEmu;
 }
 
 void MainWindow::frameQt()
@@ -893,6 +922,27 @@ void MainWindow::frameQt()
 
 	// Busy loader
 	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
+
+	// Trigger changes to readout cocmd on qt thread
+	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
+	int coCmdChangeNbQt = s_CoCmdChangeNbQt;
+	bool anyReadOutChanged = false;
+	for (int i = 0; i < FTEDITOR_DL_SIZE && i < m_CmdEditor->getLineCount(); ++i)
+	{
+		if (s_CoCmdReadChanged[i] >= coCmdChangeNbQt)
+		{
+			// TODO: Line-specific refresh?
+			anyReadOutChanged = true;
+			// DEBUG: printf("Line %i, readout refresh\n", i);
+			break;
+		}
+	}
+	s_CoCmdChangeNbQt = coCmdChangeNbEmu;
+	if (anyReadOutChanged)
+	{
+		// Always refresh for now
+		m_InteractiveProperties->modifiedEditorLine();
+	}
 }
 
 void MainWindow::createActions()
@@ -2686,7 +2736,7 @@ void MainWindow::actNew(bool addClear)
 #ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ESE-");
+	m_TemporaryDir = new QTemporaryDir("ESE");
 	QDir::setCurrent(m_TemporaryDir->path());
 #else
 	QDir::setCurrent(m_InitialWorkingDir);

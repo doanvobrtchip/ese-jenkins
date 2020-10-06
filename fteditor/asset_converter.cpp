@@ -977,7 +977,7 @@ void AssetConverter::convertFont(QString &buildError, const QString &inFile, con
 // Doesn't actually do anything in terms of conversion.
 // Exports only the .raw and .rawh unmodified.
 // Places calculated meta information about image size in the header.
-void AssetConverter::convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG)
+void AssetConverter::convertImageCoprocessor(QString &buildError, const QString &inFile, const QString &outName, bool mono, bool supportJpeg, bool supportPNG, int &palettedAddress)
 {
 	// Remove old output
 	QString outRawName = outName + ".raw";
@@ -1031,6 +1031,7 @@ void AssetConverter::convertImageCoprocessor(QString &buildError, const QString 
 		w = image.width();
 		h = image.height();
 		a = image.hasAlphaChannel();
+		palettedAddress = image.colorCount() * 2;
 		png_quant = (image.colorCount() > 0);
 	}
 

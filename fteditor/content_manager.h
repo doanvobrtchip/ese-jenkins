@@ -168,6 +168,7 @@ struct ContentInfo
 	bool WantAutoLoad;
 
 	int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
+	int PalettedAddress;
 };
 
 /**

@@ -2558,10 +2558,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								pa.Parameter[0].U = contentInfo->bitmapAddress();
 
 								if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
-									if (contentInfo->ImageFormat == PALETTED565)
-										pa.Parameter[0].U = 512;
-									else if (contentInfo->ImageFormat == PALETTED4444)
-										pa.Parameter[0].U = 510;
+										pa.Parameter[0].U = contentInfo->bitmapAddress() + contentInfo->PalettedAddress;
 								}
 								
 								pa.Parameter[1].U = contentInfo->ImageFormat;
@@ -2696,7 +2693,17 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(line, pa);
 						++line;
 						int lastVertex;
-						if (selection == BITMAPS && contentInfo && contentInfo->Converter == ContentInfo::Image
+
+						if (contentInfo && contentInfo->Converter == ContentInfo::ImageCoprocessor) {
+							pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+							pa.Parameter[0].U = contentInfo->bitmapAddress();
+							m_LineEditor->insertLine(line, pa);
+							++line;
+							m_LineEditor->insertLine(line, pav);
+							++line;
+							lastVertex = -1;
+						}
+						else if (selection == BITMAPS && contentInfo && contentInfo->Converter == ContentInfo::Image
 							&& requirePaletteAddress(contentInfo))
 						{
 							if (contentInfo->ImageFormat == PALETTED8)
