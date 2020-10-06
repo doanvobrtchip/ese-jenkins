@@ -2694,7 +2694,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						++line;
 						int lastVertex;
 
-						if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
+						if (contentInfo && contentInfo->Converter == ContentInfo::ImageCoprocessor) {
 							pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
 							pa.Parameter[0].U = contentInfo->bitmapAddress();
 							m_LineEditor->insertLine(line, pa);
