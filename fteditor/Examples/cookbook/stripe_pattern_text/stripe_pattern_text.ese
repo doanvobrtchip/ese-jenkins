@@ -1,0 +1,52 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/stripe-8x8",
+            "imageFormat": 7,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/stripe-8x8.png"
+        }
+    ],
+    "coprocessor": [
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, RGB565, 8, 8)",
+        "",
+        "BITMAP_SIZE_H(1,0)",
+        "BITMAP_SIZE(NEAREST, REPEAT, REPEAT,288,480)",
+        "",
+        "",
+        "CLEAR_COLOR_RGB(0, 85, 127)",
+        "CLEAR(1, 1, 1)",
+        "COLOR_MASK(0,0,0,1)",
+        "BLEND_FUNC(ONE,ONE)",
+        "",
+        "CMD_TEXT(157, 131, 31, 0, \"EVE Screen Editor\")",
+        "CMD_TEXT(157, 283, 30, 0, \"BridgeTek\")",
+        "",
+        "COLOR_MASK(1,1,1,0)",
+        "BLEND_FUNC(DST_ALPHA,ONE_MINUS_DST_ALPHA)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0,0, 0, 0)",
+        "END()",
+        "",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

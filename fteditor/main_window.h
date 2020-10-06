@@ -33,7 +33,7 @@
 // Project includes
 #include "device_manager.h" // for the #define
 
-#define CONFIGURE_FILE_PATH				"config.json"
+#define CONFIGURE_FILE_PATH "config.json"
 
 class QTemporaryDir;
 class QTreeView;
@@ -69,9 +69,10 @@ class RunScript : public QObject
 	Q_OBJECT
 
 public:
-	RunScript() : Action(NULL), Window(NULL)
+	RunScript()
+	    : Action(NULL)
+	    , Window(NULL)
 	{
-
 	}
 
 	virtual ~RunScript();
@@ -82,7 +83,6 @@ public:
 
 public slots:
 	void runScript();
-
 };
 
 /**
@@ -95,7 +95,7 @@ class MainWindow : public QMainWindow
 {
 	Q_OBJECT
 
-	const char * PROPERTY_FLASH_FILE_NAME = "originalFlashFileName";
+	const char *PROPERTY_FLASH_FILE_NAME = "originalFlashFileName";
 
 public:
 	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = 0);
@@ -162,6 +162,8 @@ public:
 
 	QString getProjectContent(void) const;
 
+	QString getDisplaySize();
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -177,7 +179,7 @@ private slots:
 	void actCloseProject();
 	void actImport();
 	void actExport();
-	
+
 	void actProjectFolder();
 	void actResetEmulator();
 	void actSaveScreenshot();
@@ -213,6 +215,7 @@ private slots:
 	void projectFlashChanged(int i);
 
 	void openRecentProject();
+
 private:
 	void updateInitialization(bool visible);
 
@@ -230,7 +233,7 @@ private:
 	void translateDockWindows();
 
 	void incbLanguageCode();
-	
+
 	void updateProjectDisplay(int hsize, int vsize);
 
 	bool maybeSave();
@@ -254,11 +257,11 @@ private:
 	void removeRecentProject(QString removePath);
 	void saveRecentProject();
 
-	bool writeDumpData(QDataStream * ds, const char* data, int size);
+	bool writeDumpData(QDataStream *ds, const char *data, int size);
 
-	bool importDumpFT80X(QDataStream & ds);
-	bool importDumpFT81X(QDataStream & ds);
-	bool importDumpBT81X(QDataStream & ds);
+	bool importDumpFT80X(QDataStream &ds);
+	bool importDumpFT81X(QDataStream &ds);
+	bool importDumpBT81X(QDataStream &ds);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -268,11 +271,11 @@ private:
 	MainWindow &operator=(const MainWindow &);
 
 private:
-    int m_MinFlashType;
-    bool m_AddRecentProjectFlag;
-    QAction *m_RecentSeparator;
-    QList<QAction *> m_RecentActionList;
-    QStringList m_RecentPathList;
+	int m_MinFlashType;
+	bool m_AddRecentProjectFlag;
+	QAction *m_RecentSeparator;
+	QList<QAction *> m_RecentActionList;
+	QStringList m_RecentPathList;
 	QString m_InitialWorkingDir;
 	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
@@ -375,7 +378,7 @@ private:
 	QAction *m_ResetEmulatorAct;
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;
-	
+
 	QAction *m_LittleEndianSaveDisplayListAct;
 	QAction *m_BigEndianSaveDisplayListAct;
 

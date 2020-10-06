@@ -125,6 +125,18 @@ static int s_DisplayListCoprocessorCommandB[FTEDITOR_DL_SIZE];
 int *g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
 static int *s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 
+// Data structure to read coprocessor output, double buffered.
+// Array listing the display list indices. Index -1 means end of list
+static int s_CoCmdReadIndicesA[FTEDITOR_DL_SIZE] = { -1 };
+static int s_CoCmdReadIndicesB[FTEDITOR_DL_SIZE] = { -1 };
+int *g_CoCmdReadIndicesRead = s_CoCmdReadIndicesA;
+static int *s_CoCmdReadIndicesWrite = s_CoCmdReadIndicesB;
+// Array with up to 16 readout values per command
+static uint32_t s_CoCmdReadValuesA[FTEDITOR_DL_SIZE][DL_PARSER_MAX_READOUT];
+static uint32_t s_CoCmdReadValuesB[FTEDITOR_DL_SIZE][DL_PARSER_MAX_READOUT];
+uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_READOUT] = s_CoCmdReadValuesA;
+static uint32_t (*s_CoCmdReadValuesWrite)[DL_PARSER_MAX_READOUT] = s_CoCmdReadValuesB;
+
 static std::vector<uint32_t> s_CmdParamCache;
 static std::vector<std::string> s_CmdStrParamCache;
 
@@ -152,6 +164,8 @@ static bool displayListSwapped = false;
 static bool coprocessorSwapped = false;
 
 static bool s_WantReloopCmd = false;
+
+static bool s_HasContentReadCoCmd = false;
 
 QElapsedTimer s_AbortTimer;
 
@@ -309,7 +323,17 @@ void setup()
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 4, 0);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 8, 16);
 		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 12, CMD_RESETFONTS);
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 16);
+
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 16, DISPLAY());
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 20, CMD_SWAP);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 24, CMD_DLSTART);
+
+		// Attach flash
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 28, CMD_FLASHATTACH);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 32, CMD_FLASHFAST);
+		wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + 36, 0);
+
+		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 40);
 	}
 }
 
@@ -325,8 +349,8 @@ void resetemu()
 {
 	g_UtilizationDisplayListCmd = 0;
 	g_WaitingCoprocessorAnimation = false;
-	g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
-	s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
+	// g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
+	// s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
 	s_CmdParamCache.clear();
 	g_StepCmdLimit = 0;
 	s_StepCmdLimitCurrent = 0;
@@ -400,6 +424,7 @@ void resetCoprocessorFromLoop()
 	// Start display list from beginning
 	wr32(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD), CMD_DLSTART);
 
+	/*
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 	{
 		// Attach flash
@@ -407,6 +432,7 @@ void resetCoprocessorFromLoop()
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 8);
 	}
 	else
+	*/
 	{
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), 4);
 	}
@@ -445,6 +471,8 @@ void loop()
 	}
 
 	g_ShowCoprocessorBusy = false;
+
+	bool contentPoked = false; // Whether the contents of RAM_G or Flash has been changed
 
 	// wait
 	if (coprocessorSwapped)
@@ -520,13 +548,14 @@ void loop()
 				int s = in.readRawData(&ram[loadAddr], (int)binSize);
 				// FIXME: Pad 0x00 to end for 64 byte-aligned size
 				BT8XXEMU_poke(g_Emulator);
+				contentPoked = true;
                 binFile.close();
 			}
 		}
 	}
 	std::set<ContentInfo *> contentInfoMemory;
 	g_ContentManager->swapUploadMemoryDirty(contentInfoMemory);
-	bool reuploadFontSetup = false;
+	//bool reuploadFontSetup = false;
 	for (std::set<ContentInfo *>::iterator it(contentInfoMemory.begin()), end(contentInfoMemory.end()); it != end; ++it)
 	{
 		ContentInfo *info = (*it);
@@ -634,6 +663,7 @@ void loop()
 			char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
 			BT8XXEMU_poke(g_Emulator);
+			contentPoked = true;
 		}
 		if (info->Converter == ContentInfo::Font)
 		{
@@ -665,6 +695,7 @@ void loop()
 					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 					int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], palSize);
 					BT8XXEMU_poke(g_Emulator);
+					contentPoked = true;
 				}
 			}
 		}
@@ -703,12 +734,13 @@ void loop()
 					char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 					int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + info->MemoryAddress], palSize);
 					BT8XXEMU_poke(g_Emulator);
+					contentPoked = true;
 				}
 			}
 		}
 		/*if (info->Converter == ContentInfo::Font)
 		{*/ // Always reupload, since raw data may change too
-			reuploadFontSetup = true;
+			//reuploadFontSetup = true;
 		/*}*/
 	}
 	/*bool reuploadBitmapSetup = contentInfo.size() || s_BitmapSetupModNb < s_BitmapSetup->getModificationNb();
@@ -773,10 +805,11 @@ void loop()
 	g_CmdEditor->lockDisplayList();
 	bool dlModified = g_DlEditor->isDisplayListModified();
 	bool cmdModified = g_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || reuploadFontSetup || (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd)
+	if (dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
 	{
 		bool warnMissingClear = true;
 		s_WantReloopCmd = false;
+		s_HasContentReadCoCmd = false;
 		s_StepCmdLimitCurrent = g_StepCmdLimit;
 		// if (dlModified) printf("dl modified\n");
 		// if (cmdModified) printf("cmd modified\n");
@@ -833,6 +866,9 @@ void loop()
 		int coprocessorWrites[1024]; // array indexed by write pointer of command index in the coprocessor editor gui
 		for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_DisplayListCoprocessorCommandWrite[i] = -1;
+		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i) s_CoCmdReadIndicesWrite[i] = -1; // wipe
+		int coCmdReadNb = 0;
+		uint32_t *ramCmd = reinterpret_cast<uint32_t *>(&BT8XXEMU_getRam(g_Emulator)[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD)]);
 		int wp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE));
 		int rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 		int fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -845,16 +881,20 @@ void loop()
 		freespace -= 4;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 		{
+			// CMD_COLDSTART may cause inconsistent co-processor flash state, needs to be checked
+			/*
 			swr32(CMD_FLASHATTACH);
 			swr32(CMD_FLASHFAST);
 			swr32(~0); // result
 			wp += 12;
 			freespace -= 12;
+			*/
 		}
 		s_MediaFifoPtr = 0;
 		s_MediaFifoSize = 0;
 		int lastCmd = -1;
 		bool warnMissingTestcardDLStart = false;
+		int coprocessorWriteStart = (wp & 0xFFF) >> 2;
 		for (int i = 0; i < (s_StepCmdLimitCurrent ? s_StepCmdLimitCurrent : FTEDITOR_DL_SIZE); ++i) // FIXME CMD SIZE
 		{
 			// const DlParsed &pa = cmdParsed[i];
@@ -864,6 +904,39 @@ void loop()
 			bool useMediaFifo = false;
 			bool useFlash = false;
 			const char *useFileStream = NULL;
+			switch (cmdList[i])
+			{
+				// Track when the command list is reading from RAM_G and Flash.
+				// (That is, the coprocessor itself is reading from RAM_G or Flash, not just the display engine.)
+				// TODO: Some of these commands only read from content 
+				// RAM_G and Flash depending on OPT_FLASH or other options.
+				// Needs to be checked.
+			case CMD_MEMCRC:
+			case CMD_REGREAD:
+			case CMD_MEMCPY:
+			case CMD_APPEND:
+			case CMD_INFLATE:
+			case CMD_FLASHREAD:
+			case CMD_FLASHPROGRAM:
+			case CMD_FLASHWRITE:
+			case CMD_FLASHUPDATE:
+			case CMD_LOADIMAGE:
+			case CMD_SETFONT:
+			case CMD_SETFONT2:
+			case CMD_VIDEOSTART:
+			case CMD_VIDEOFRAME:
+			case CMD_INFLATE2:
+			case CMD_ANIMSTART:
+			case CMD_ANIMDRAW:
+			case CMD_ANIMFRAME:
+			case CMD_APPENDF:
+			case CMD_VIDEOSTARTF:
+			case CMD_ANIMFRAMERAM:
+			case CMD_ANIMSTARTRAM:
+			case CMD_RUNANIM:
+				s_HasContentReadCoCmd = true;
+				break;
+			}
 			if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) && (cmdList[i] == CMD_MEDIAFIFO))
 			{
 				s_MediaFifoPtr = s_CmdParamCache[cmdParamIdx[i]];
@@ -934,8 +1007,36 @@ void loop()
 						// printf("A %i\n", i);
 						s_DisplayListCoprocessorCommandWrite[i]
 							= coprocessorWrites[cpWrite[i]];
+						// i is the final display list index,
+						// coprocessorWrites[cpWrite[i]] is the index in the cocmd text editor
+						// coprocessorWrites maps from ram_cmd to cocmd text editor
+						// cpWrite[i] is the cocmd fifo address for a particular display list index
 					}
 				}
+
+				// read from coprocessor fifo ram ->
+				int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+				for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+				{
+					int editorIdx = coprocessorWrites[i];
+					if (editorIdx < 0)
+					{
+						++i; // not written, shouldn't happen
+						continue;
+					}
+					int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
+					if (paramNb) // for now, just read out all cmd with params
+					{
+						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+						for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
+							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+						++coCmdReadNb;
+					}
+					i += (1 + paramNb); // advance cmd plus paramNb
+				}
+				coprocessorWriteStart = coprocessorWriteEnd;
+				// <- read from coprocessor fifo ram
+
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
@@ -976,6 +1077,7 @@ void loop()
 				printf("WP = %i\n", wp);
 				QThread::msleep(100);
 
+				int coprocessorWriteEnd = (wp & 0xFFF) >> 2; // (differs from regular impl, need to read before wait)
 				do
 				{
 					rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
@@ -999,6 +1101,29 @@ void loop()
 							= coprocessorWrites[cpWrite[i]];
 					}
 				}
+
+				// read from coprocessor fifo ram ->
+				for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+				{
+					int editorIdx = coprocessorWrites[i];
+					if (editorIdx < 0)
+					{
+						++i; // not written, shouldn't happen
+						continue;
+					}
+					int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
+					if (paramNb) // for now, just read out all cmd with params
+					{
+						s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+						for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
+							s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+						++coCmdReadNb;
+					}
+					i += (1 + paramNb); // advance cmd plus paramNb
+				}
+				coprocessorWriteStart = 0; // (differs from regular impl, logo resets wp to 0)
+				// <- read from coprocessor fifo ram
+
 				for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 				BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
@@ -1120,6 +1245,30 @@ void loop()
 								= coprocessorWrites[cpWrite[i]];
 						}
 					}
+
+					// read from coprocessor fifo ram ->
+					int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+					for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+					{
+						int editorIdx = coprocessorWrites[i];
+						if (editorIdx < 0)
+						{
+							++i; // not written, shouldn't happen
+							continue;
+						}
+						int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
+						if (paramNb) // for now, just read out all cmd with params
+						{
+							s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+							for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
+								s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+							++coCmdReadNb;
+						}
+						i += (1 + paramNb); // advance cmd plus paramNb
+					}
+					coprocessorWriteStart = coprocessorWriteEnd;
+					// <- read from coprocessor fifo ram
+
 					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
@@ -1305,6 +1454,9 @@ void loop()
 							for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 							BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
+							// nothing to read from cocmd ram here (should be...)
+							coprocessorWriteStart = (wp & 0xFFF) >> 2;
+
 							printf("Stream: %i bytes\n", (int)writeCount);
 
 							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
@@ -1385,6 +1537,9 @@ void loop()
 					for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
 					BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
+					// nothing to read from cocmd ram here (should be...)
+					coprocessorWriteStart = (wp & 0xFFF) >> 2;
+
 					swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 				}
 			}
@@ -1434,8 +1589,6 @@ void loop()
 						= coprocessorWrites[cpWrite[i]];
 				}
 			}
-			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
-			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 			for (int i = FTEDITOR_DL_SIZE - 1; i >= 0; --i)
 			{
@@ -1445,6 +1598,32 @@ void loop()
 					break;
 				}
 			}
+
+			// read from coprocessor fifo ram ->
+			int coprocessorWriteEnd = (wp & 0xFFF) >> 2;
+			for (int i = coprocessorWriteStart; i < coprocessorWriteEnd;)
+			{
+				int editorIdx = coprocessorWrites[i];
+				if (editorIdx < 0)
+				{
+					++i; // not written, shouldn't happen
+					continue;
+				}
+				int paramNb = cmdParamIdx[editorIdx + 1] - cmdParamIdx[editorIdx];
+				if (paramNb) // for now, just read out all cmd with params
+				{
+					s_CoCmdReadIndicesWrite[coCmdReadNb] = editorIdx;
+					for (int j = 0; j < std::min(paramNb, DL_PARSER_MAX_READOUT); ++j)
+						s_CoCmdReadValuesWrite[coCmdReadNb][j] = ramCmd[i + 1 + j]; // read from cmd ram directly
+					++coCmdReadNb;
+				}
+				i += (1 + paramNb); // advance cmd plus paramNb
+			}
+			coprocessorWriteStart = coprocessorWriteEnd;
+			// <- read from coprocessor fifo ram
+
+			for (int i = 0; i < 1024; ++i) coprocessorWrites[i] = -1;
+			BT8XXEMU_clearDisplayListCoprocessorWrites(g_Emulator);
 
 			// Test
 			/*for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
@@ -1482,9 +1661,9 @@ void loop()
 		g_CoprocessorFrameSuccess = true;
 
 		// FIXME: Not very thread-safe, but not too critical
-		int *nextWrite = g_DisplayListCoprocessorCommandRead;
-		g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandWrite;
-		s_DisplayListCoprocessorCommandWrite = nextWrite;
+		std::swap(g_DisplayListCoprocessorCommandRead, s_DisplayListCoprocessorCommandWrite);
+		std::swap(g_CoCmdReadIndicesRead, s_CoCmdReadIndicesWrite);
+		std::swap(g_CoCmdReadValuesRead, s_CoCmdReadValuesWrite);
 	}
 	else
 	{

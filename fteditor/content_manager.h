@@ -24,6 +24,8 @@
 
 // Qt includes
 #include <QWidget>
+#include <QTreeWidget>
+#include <QLabel>
 #include <QString>
 #include <QMutex>
 #include <QJsonObject>
@@ -35,7 +37,6 @@
 #include "undo_stack_disabler.h"
 #include "constant_mapping.h"
 
-class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
 class QComboBox;
@@ -44,6 +45,39 @@ class QGroupBox;
 class QLabel;
 class QSpinBox;
 class QCheckBox;
+
+class ContentTreeWidget : public QTreeWidget
+{
+	Q_OBJECT
+
+signals:
+	void contentDropped(QString url);
+
+public:
+	void dragEnterEvent(QDragEnterEvent *event) override;
+	void dropEvent(QDropEvent *event) override;
+	QStringList mimeTypes() const override;
+
+public:
+	explicit ContentTreeWidget(QWidget *parent = nullptr);
+	~ContentTreeWidget();
+};
+
+class ContentLabel : public QLabel
+{
+	Q_OBJECT
+
+signals:
+	void contentDropped(QString url);
+
+public:
+	void dragEnterEvent(QDragEnterEvent *event) override;
+	void dropEvent(QDropEvent *event) override;
+
+public:
+	explicit ContentLabel(QWidget *parent = nullptr);
+	~ContentLabel();
+};
 
 namespace FTEDITOR {
 
@@ -134,6 +168,7 @@ struct ContentInfo
 	bool WantAutoLoad;
 
 	int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
+	int PalettedAddress;
 };
 
 /**
@@ -159,6 +194,9 @@ public:
 	ContentInfo *add(const QString &filePath);
 	// Add the content (this creates the undo/redo)
 	void add(ContentInfo *contentInfo);
+
+	void addInternal(QStringList fileNameList);
+
 	// Remove the content
 	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time
@@ -240,7 +278,7 @@ public:
 	void reuploadAll();
 
 	// Utility
-	inline const QTreeWidget *contentList() const { return m_ContentList; }
+	inline const ContentTreeWidget * contentList() const { return m_ContentList; }
 
 	void copyFlashFile();
 
@@ -285,11 +323,11 @@ private:
 	void reloadExternal(ContentInfo *contentInfo);
 
 	MainWindow *m_MainWindow;
-	QTreeWidget *m_ContentList;
+	ContentTreeWidget *m_ContentList;
 	QPushButton *m_RemoveButton;
 	ContentInfo *m_CurrentPropertiesContent; // This pointer may be invalid. Only use to compare with current.
 
-	QLabel *m_HelpfulLabel;
+	ContentLabel *m_HelpfulLabel;
 
 	QWidget *m_PropertiesCommon;
 	UndoStackDisabler<QLineEdit> *m_PropertiesCommonSourceFile;

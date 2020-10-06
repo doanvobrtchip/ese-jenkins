@@ -50,7 +50,7 @@
 #define EVE_Hal_transfer16 EVE_Hal_FT4222_transfer16
 #define EVE_Hal_transfer32 EVE_Hal_FT4222_transfer32
 #define EVE_Hal_transferMem EVE_Hal_FT4222_transferMem
-#define EVE_Hal_transferProgmem EVE_Hal_FT4222_transferProgmem
+#define EVE_Hal_transferProgMem EVE_Hal_FT4222_transferProgMem
 #define EVE_Hal_transferString EVE_Hal_FT4222_transferString
 #define EVE_Hal_hostCommand EVE_Hal_FT4222_hostCommand
 #define EVE_Hal_hostCommandExt3 EVE_Hal_FT4222_hostCommandExt3
@@ -135,7 +135,7 @@ void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
 	FT_DEVICE_LIST_INFO_NODE devInfo = { 0 };
 
 	memset(deviceInfo, 0, sizeof(EVE_DeviceInfo));
-	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
+	if (deviceIdx >= s_NumDevsD2XX)
 		return;
 
 	if (FT_GetDeviceInfoDetail((DWORD)deviceIdx,
@@ -160,7 +160,7 @@ bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
 		return false;
 	if (EVE_HOST != EVE_HOST_FT4222)
 		return false;
-	if (deviceIdx < 0 || deviceIdx >= s_NumDevsD2XX)
+	if (deviceIdx >= s_NumDevsD2XX)
 		return false;
 
 	if (!phost->SpiHandle)
@@ -470,7 +470,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 		    seldiv,
 		    CLK_IDLE_LOW, //,CLK_IDLE_HIGH
 		    CLK_LEADING, // CLK_LEADING CLK_TRAILING
-			parameters->SpiCsPin); /* slave selection output pins */
+		    parameters->SpiCsPin); /* slave selection output pins */
 		if (status != FT4222_OK)
 		{
 			eve_printf_debug("Init FT4222 as SPI master device failed!\n");
@@ -571,7 +571,7 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
 {
 	if (!EVE_Hal_supportCmdB(phost) || (addr != REG_CMDB_WRITE))
 	{
-		bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE));
+		bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (RAM_CMD + EVE_CMD_FIFO_SIZE));
 		addr += inc;
 		if (wrapCmdAddr)
 			addr = RAM_CMD + (addr & EVE_CMD_FIFO_MASK);
@@ -674,7 +674,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
 
 		if (!EVE_Hal_supportCmdB(phost) || (addr != REG_CMDB_WRITE))
 		{
-			bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE));
+			bool wrapCmdAddr = (addr >= RAM_CMD) && (addr < (RAM_CMD + EVE_CMD_FIFO_SIZE));
 			addr += sizeTransferred;
 			if (wrapCmdAddr)
 				addr = RAM_CMD + (addr & EVE_CMD_FIFO_MASK);
@@ -861,7 +861,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 
 	/* Transfers to FIFO are kept open */
 	addr = phost->SpiRamGAddr;
-	if (addr != (EVE_Hal_supportCmdB(phost) ? REG_CMDB_WRITE : REG_CMD_WRITE) && !((addr >= RAM_CMD) && (addr < (addr + EVE_CMD_FIFO_SIZE))))
+	if (addr != (EVE_Hal_supportCmdB(phost) ? REG_CMDB_WRITE : REG_CMD_WRITE) && !((addr >= RAM_CMD) && (addr < (RAM_CMD + EVE_CMD_FIFO_SIZE))))
 	{
 		flush(phost);
 	}
@@ -1061,14 +1061,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 }
 
 /**
- * @brief Transfer a block data in Progmem to Coprocessor
+ * @brief Transfer a block data from program memory
  * 
  * @param phost Pointer to Hal context
  * @param result Buffer to get data transfered, NULL when write
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
@@ -1315,8 +1315,9 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
  * @param phost Pointer to Hal context
  * @param up Up or Down
  */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
+	bool res = true;
 	flush(phost);
 
 	if (up)
@@ -1324,11 +1325,17 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		FT4222_STATUS status = FT4222_OTHER_ERROR;
 
 		if (FT4222_OK != (status = FT4222_GPIO_Write(phost->GpioHandle, phost->PowerDownPin, 0)))
+		{
 			eve_printf_debug("FT4222_GPIO_Write error = %d\n", status);
+			res = false;
+		}
 		EVE_sleep(20);
 
 		if (FT4222_OK != (status = FT4222_GPIO_Write(phost->GpioHandle, phost->PowerDownPin, 1)))
+		{
 			eve_printf_debug("FT4222_GPIO_Write error = %d\n", status);
+			res = false;
+		}
 		EVE_sleep(20);
 	}
 	else
@@ -1336,16 +1343,24 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		FT4222_STATUS status = FT4222_OTHER_ERROR;
 
 		if (FT4222_OK != (status = FT4222_GPIO_Write(phost->GpioHandle, phost->PowerDownPin, 1)))
+		{
 			eve_printf_debug("FT4222_GPIO_Write error = %d\n", status);
+			res = false;
+		}
 		EVE_sleep(20);
 
 		if (FT4222_OK != (status = FT4222_GPIO_Write(phost->GpioHandle, phost->PowerDownPin, 0)))
+		{
 			eve_printf_debug("FT4222_GPIO_Write error = %d\n", status);
+			res = false;
+		}
 		EVE_sleep(20);
 	}
 
 	/* Reset to single channel SPI mode */
 	setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
+
+	return res;
 }
 
 /**

@@ -52,7 +52,7 @@ def replaceProjectName(folder, from_name, to_name):
         if item[item.rfind('.'):] in ext:
             replaceStringInFile(folder + '/' + item, from_name, to_name)
             
-def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName):
+def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName, screenResolution):
 
     defaultSkeletonProjectDir = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + globalValue['skeletonProjectName']
     if os.path.isdir(defaultSkeletonProjectDir):
@@ -70,15 +70,37 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName):
     
     try:
         if moduleName == "VM816C50A_MPSSE":
-            replaceStringInFile(MSVCPlatformHeader, "//#define VM816C50A_MPSSE", "#define VM816C50A_MPSSE")
+            replaceStringInFile(MSVCPlatformHeader, "//#define VM816C50A_MPSSE", "#define VM816C50A_MPSSE")           
             replaceStringInFile(EmulatorPlatformHeader, "//#define VM816C50A_MPSSE", "#define VM816C50A_MPSSE")
             replaceStringInFile(Ft90xPlatformHeader, "//#define VM816C50A_MPSSE", "#define VM816C50A_MPSSE")
             replaceStringInFile(Ft93xPlatformHeader, "//#define VM816C50A_MPSSE", "#define VM816C50A_MPSSE")
+            
         elif moduleName == "VM816C50A_LIBFT4222":
             replaceStringInFile(MSVCPlatformHeader, "//#define VM816C50A_LIBFT4222", "#define VM816C50A_LIBFT4222")
             replaceStringInFile(EmulatorPlatformHeader, "//#define VM816C50A_LIBFT4222", "#define VM816C50A_LIBFT4222")
             replaceStringInFile(Ft90xPlatformHeader, "//#define VM816C50A_LIBFT4222", "#define VM816C50A_LIBFT4222")
-            replaceStringInFile(Ft93xPlatformHeader, "//#define VM816C50A_LIBFT4222", "#define VM816C50A_LIBFT4222")        
+            replaceStringInFile(Ft93xPlatformHeader, "//#define VM816C50A_LIBFT4222", "#define VM816C50A_LIBFT4222")
+            
+        elif moduleName == "ME817EV_LIBFT4222":
+            replaceStringInFile(MSVCPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")
+            replaceStringInFile(EmulatorPlatformHeader, "//#define ME817EV_LIBFT4222", "#define VM816C50A_LIBFT4222")
+            replaceStringInFile(Ft90xPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")
+            replaceStringInFile(Ft93xPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")    
+            if screenResolution == "1024x600":
+                replaceStringInFile(MSVCPlatformHeader, "//#define DISPLAY_RESOLUTION_WSVGA", "#define DISPLAY_RESOLUTION_WSVGA")
+            else:
+                replaceStringInFile(MSVCPlatformHeader, "//#define DISPLAY_RESOLUTION_WXGA", "#define DISPLAY_RESOLUTION_WXGA")
+                
+        elif moduleName == "ME817EV_MPSSE":
+            replaceStringInFile(MSVCPlatformHeader, "//#define ME817EV_MPSSE", "#define ME817EV_MPSSE")
+            replaceStringInFile(EmulatorPlatformHeader, "//#define ME817EV_MPSSE", "#define ME817EV_MPSSE")
+            replaceStringInFile(Ft90xPlatformHeader, "//#define ME817EV_MPSSE", "#define ME817EV_MPSSE")
+            replaceStringInFile(Ft93xPlatformHeader, "//#define ME817EV_MPSSE", "#define ME817EV_MPSSE")    
+            if screenResolution == "1024x600":
+                replaceStringInFile(MSVCPlatformHeader, "//#define DISPLAY_RESOLUTION_WSVGA", "#define DISPLAY_RESOLUTION_WSVGA")
+            else:
+                replaceStringInFile(MSVCPlatformHeader, "//#define DISPLAY_RESOLUTION_WXGA", "#define DISPLAY_RESOLUTION_WXGA")
+                
     except Exception as e:
         raise Exception("Error while renaming project platform files: " + str(e))
 
@@ -96,7 +118,7 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName):
         except Exception as e:
             raise Exception("Error copying assets to project folder: " + str(e))
 
-def run(projectName, document, ram, moduleName):
+def run(projectName, document, ram, moduleName, screenResolution):
     deviceType = document["project"]["device"]
     resultText = "<b>EVE HAL Export</b><br>"
     for line in document["displayList"]:
@@ -104,7 +126,7 @@ def run(projectName, document, ram, moduleName):
             resultText += "<b>Warning</b>: Only support for Coprocessor commands, ignoring Display List.<br>"
             break
 
-    if deviceType in [2069, 2070]:
+    if deviceType in [2069, 2070, 2071, 2072]:
         outDir = projectName + "_BT81X_EVE_HAL"            
     else:
         raise Exception("Board is currently unsupported: " + moduleName)
@@ -131,7 +153,7 @@ def run(projectName, document, ram, moduleName):
         export = export_bt81x_helper.exportLoadImageCommand(document)    
         export += export_bt81x_helper.exportCoprocessorCommand(document, filesToTestFolder)
 
-        generateProjectFiles(outDir, projectName, filesToTestFolder, moduleName)
+        generateProjectFiles(outDir, projectName, filesToTestFolder, moduleName, screenResolution)
         
         skeletonFilePath = outDir + '/Src/Skeleton.c'
                    

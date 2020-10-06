@@ -26,8 +26,8 @@
     "coprocessor": [
         "CLEAR(1, 1, 1)",
         "CMD_SETFONT2(0, 0, 0)#metrics table is at 0 and glyph is loaded at 4096",
-        "CMD_TEXT(100,100, 0, 0, \"AaBbCcDdEef\\nGgHhIiJkKLlMm\\nNnQoPpQqRrSsTt\\nUuVvWwXYz\")",
-        "CMD_TEXT(0, 348, 0, 0, \"The Quick brown fox jumps over the lzgit y dog\")"
+        "CMD_TEXT(100,100, 0, 0, \"AaBbCcDdEeFf\\nGgHhIiJjkKkLlMm\\nNnOoPpQqRrSsTt\\nUuVvWwXxYyZz\")",
+        "CMD_TEXT(0, 348, 0, 0, \"The Quick brown fox jumps over the lazy dog\")"
     ],
     "displayList": [
         ""

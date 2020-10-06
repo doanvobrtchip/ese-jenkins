@@ -34,6 +34,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMessageBox>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QMimeData>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -340,7 +341,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	QVBoxLayout *layout = new QVBoxLayout();
 
-	m_ContentList = new QTreeWidget(this);
+	m_ContentList = new ContentTreeWidget(this);
+	m_ContentList->setAcceptDrops(true);
 	m_ContentList->setDragEnabled(true);
 	//m_ContentList->header()->close();
 	m_ContentList->setColumnCount(2);
@@ -351,6 +353,10 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	layout->addWidget(m_ContentList);
 	//m_ContentList->resizeColumnToContents(0);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
+
+	connect(m_ContentList, &ContentTreeWidget::contentDropped, this, [=](QString url) {
+		addInternal(QStringList() << url);
+	});
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
 
@@ -546,7 +552,8 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesData->setLayout(propDataLayout);
 
 	QVBoxLayout *helpLayout = new QVBoxLayout();
-	m_HelpfulLabel = new QLabel(m_ContentList);
+	m_HelpfulLabel = new ContentLabel(m_ContentList);
+	connect(m_HelpfulLabel, &ContentLabel::contentDropped, m_ContentList, &ContentTreeWidget::contentDropped);
 	m_HelpfulLabel->setWordWrap(true);
 	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
 	helpLayout->addWidget(m_HelpfulLabel);
@@ -572,11 +579,21 @@ void ContentManager::bindCurrentDevice()
 	
 	m_PropertiesImageFormat->clear();
 	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesImageFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	{
+		QString format = g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]];
+		if (format.startsWith("COMPRESSED_RGBA_"))
+			format.replace("COMPRESSED_RGBA_", "");
+		m_PropertiesImageFormat->addItem(format);
+	}
 
 	m_PropertiesFontFormat->clear();
 	for (int i = 0; i < g_FontFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
-		m_PropertiesFontFormat->addItem(g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]]);
+	{
+		QString format = g_BitmapFormatToString[FTEDITOR_CURRENT_DEVICE][g_FontFormatFromIntf[FTEDITOR_CURRENT_DEVICE][i]];
+		if (format.startsWith("COMPRESSED_RGBA_"))
+			format.replace("COMPRESSED_RGBA_", "");
+		m_PropertiesFontFormat->addItem(format);
+	}
 	
 	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 
@@ -783,7 +800,7 @@ public:
 		m_ContentManager->removeInternal(m_ContentInfo);
 
 		m_Owner = true;
-
+		/*
 		if (!m_WhenCloseProject)
 		{
 			// Check if there is another content used the same source path
@@ -804,7 +821,7 @@ public:
 			{
 				QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
 			}
-		}
+		}*/
 	}
 
 private:
@@ -1113,6 +1130,11 @@ void ContentManager::add()
 	saveDir.cdUp();
 	saveDirPath = saveDir.absolutePath();
 
+	addInternal(fileNameList);
+}
+
+void ContentManager::addInternal(QStringList fileNameList)
+{
 	// create resource folder to save content files
 	QDir dir(QDir::currentPath() + '/' + ResourceDir);
 	if (!dir.exists())
@@ -1417,6 +1439,7 @@ void ContentManager::clear(bool whenCloseProject)
 	m_MainWindow->undoStack()->endMacro();
 
 	// Clean resource files
+	/*
 	QString projectContent = m_MainWindow->getProjectContent();
 	if (whenCloseProject)
 	{
@@ -1435,6 +1458,7 @@ void ContentManager::clear(bool whenCloseProject)
 			}
 		}
 	}
+	*/
 }
 
 void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
@@ -1960,7 +1984,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						AssetConverter::convertRaw(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->RawStart, contentInfo->RawLength);
 						break;
 					case ContentInfo::ImageCoprocessor:
-						AssetConverter::convertImageCoprocessor(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageMono, true, FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810);
+						AssetConverter::convertImageCoprocessor(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageMono, true, FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810, contentInfo->PalettedAddress);
 						break;
 					case ContentInfo::Font:
 						AssetConverter::convertFont(contentInfo->BuildError, contentInfo->SourcePath, contentInfo->DestName, contentInfo->ImageFormat, contentInfo->FontSize, contentInfo->FontCharSet, contentInfo->FontOffset);
@@ -4885,4 +4909,61 @@ void ContentManager::propertiesFontOffsetChanged(int value)
 
 } /* namespace FTEDITOR */
 
+void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasUrls())
+		event->accept();
+	else
+		event->ignore();
+}
+
+void ContentTreeWidget::dropEvent(QDropEvent *event)
+{
+	event->acceptProposedAction();
+	for	each(QUrl url in event->mimeData()->urls())
+	{
+		emit contentDropped(url.toLocalFile());
+	}
+}
+
+QStringList ContentTreeWidget::mimeTypes() const
+{
+	return QStringList()
+	    << "text/uri-list"
+	    << "application/x-qabstractitemmodeldatalist";
+}
+
+ContentTreeWidget::ContentTreeWidget(QWidget *parent)
+    : QTreeWidget(parent)
+{
+	setAcceptDrops(true);
+}
+
+ContentTreeWidget::~ContentTreeWidget()
+{
+}
+
+void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
+{
+	event->accept();
+}
+
+void ContentLabel::dropEvent(QDropEvent *event)
+{
+	event->acceptProposedAction();
+	for each(QUrl url in event->mimeData()->urls())
+	{
+		emit contentDropped(url.toLocalFile());
+	}
+}
+
+ContentLabel::ContentLabel(QWidget *parent)
+    : QLabel(parent)
+{
+	setAcceptDrops(true);
+}
+
+ContentLabel::~ContentLabel()
+{
+}
 /* end of file */

@@ -34,15 +34,14 @@
 #if defined(FT9XX_PLATFORM)
 
 void ticker();
-
 #if defined(__FT930__)
-#define pad_spim_ss0 pad30_spim_ss0 // Use GPIO 30 as SS0 // VERIFY: Why is this defined here, and not in the header?
-static const uint8_t s_SpimGpio[5] = { 30, 31, 32, 33, 29 };
-static const pad_dir_t s_SpimFunc[5] = { pad_spim_ss0, pad_spim_ss1, pad_spim_ss2, pad_spim_ss3, pad29_spim_ss0 }
+static const uint8_t s_SpimGpioSS[5] = { GPIO30_SPIM_SS0, GPIO_SPIM_SS1, GPIO_SPIM_SS2, GPIO_SPIM_SS3, 29 };
+static const pad_dir_t s_SpimFuncSS[5] = { pad30_spim_ss0, pad_spim_ss1, pad_spim_ss2, pad_spim_ss3, pad29_spim_ss0 };
 #else
-static const uint8_t s_SpimGpio[4] = { 28, 33, 34, 35 };
-static const pad_dir_t s_SpimFunc[4] = { pad_spim_ss0, pad_spim_ss1, pad_spim_ss2, pad_spim_ss3 };
+static const uint8_t s_SpimGpioSS[4] = { GPIO_SPIM_SS0, GPIO_SPIM_SS1, GPIO_SPIM_SS2, 35 };
+static const pad_dir_t s_SpimFuncSS[4] = { pad_spim_ss0, pad_spim_ss1, pad_spim_ss2, pad_spim_ss3 };
 #endif
+#define GPIO_SS_NB (sizeof(s_SpimGpioSS) / sizeof(s_SpimGpioSS[0]))
 
 /*********
 ** INIT **
@@ -97,8 +96,8 @@ EVE_HAL_EXPORT bool EVE_Hal_isDevice(EVE_HalContext *phost, size_t deviceIdx)
  */
 bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
 {
-	parameters->PowerDownPin = FT800_PD_N;
-	parameters->SpiCsPin = (deviceIdx < 0) ? 0 : deviceIdx; // SS0
+	parameters->PowerDownPin = GPIO_FT800_PWD;
+	parameters->SpiCsPin = deviceIdx < GPIO_SS_NB ? deviceIdx : 0; // SS0-3
 	return true;
 }
 
@@ -111,11 +110,11 @@ bool EVE_HalImpl_defaults(EVE_HalParameters *parameters, size_t deviceIdx)
  */
 void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
 {
-	uint8_t spimGpio = s_SpimGpio[phost->Parameters.SpiCsPin];
-	pad_dir_t spimFunc = s_SpimFunc[phost->Parameters.SpiCsPin];
+	uint8_t spimGpio = s_SpimGpioSS[phost->SpiCsPin];
+	pad_dir_t spimFunc = s_SpimFuncSS[phost->SpiCsPin];
 
 	/* Reconfigure the SPI */
-	sys_enable(sys_device_spi_master);
+	eve_assert_do(!sys_enable(sys_device_spi_master));
 	gpio_function(GPIO_SPIM_CLK, pad_spim_sck); /* GPIO27 to SPIM_CLK */
 	gpio_function(spimGpio, spimFunc); /* GPIO as SS0-SS4 */
 	gpio_function(GPIO_SPIM_MOSI, pad_spim_mosi); /* GPIO29 to SPIM_MOSI */
@@ -126,11 +125,6 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
 	gpio_dir(GPIO_SPIM_MOSI, pad_dir_output);
 	gpio_dir(GPIO_SPIM_MISO, pad_dir_input);
 
-	gpio_write(spimGpio, 1);
-
-	/* Change clock frequency to 25mhz */
-	uint8_t res = spi_init(SPIM, spi_dir_master, spi_mode_0, 4); /* TODO: Latest HAL has 16 instead of 4, validate */
-
 	if (numchnls > EVE_SPI_SINGLE_CHANNEL)
 	{
 		/* Initialize IO2 and IO3 pad/pin for dual and quad settings */
@@ -139,6 +133,11 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
 		gpio_dir(GPIO_SPIM_IO2, pad_dir_output);
 		gpio_dir(GPIO_SPIM_IO3, pad_dir_output);
 	}
+
+	gpio_write(spimGpio, 1);
+
+	/* Change clock frequency to 25 MHz (100 MHz / 4) */
+	eve_assert_do(!spi_init(SPIM, spi_dir_master, spi_mode_0, 4));
 
 	/* Enable FIFO of QSPI */
 	spi_option(SPIM, spi_option_fifo_size, 64);
@@ -172,38 +171,23 @@ void setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy
  */
 bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters)
 {
-	uint8_t spimGpio = s_SpimGpio[parameters->SpiCsPin];
-	pad_dir_t spimFunc = s_SpimFunc[pparameters->SpiCsPin];
-	phost->SpiCsPin = parameters->SpiCsPin;
+	phost->SpiCsPin = parameters->SpiCsPin < GPIO_SS_NB ? parameters->SpiCsPin : 0;
 	phost->PowerDownPin = parameters->PowerDownPin;
+	eve_printf_debug("EVE open PWD: %d, SS: %d\n",
+	    (unsigned int)phost->PowerDownPin, (unsigned int)s_SpimGpioSS[phost->SpiCsPin]);
 
 #ifdef EVE_MULTI_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
-	sys_enable(sys_device_spi_master);
-	gpio_function(GPIO_SPIM_CLK, pad_spim_sck); /* GPIO27 to SPIM_CLK */
-	gpio_function(GPIO_SPIM_SS0, pad_spim_ss0); /* GPIO28 as CS */
-	gpio_function(GPIO_SPIM_MOSI, pad_spim_mosi); /* GPIO29 to SPIM_MOSI */
-	gpio_function(GPIO_SPIM_MISO, pad_spim_miso); /* GPIO30 to SPIM_MISO */
-	gpio_dir(GPIO_SPIM_CLK, pad_dir_output);
-	gpio_dir(GPIO_SPIM_SS0, pad_dir_output);
-	gpio_dir(GPIO_SPIM_MOSI, pad_dir_output);
-	gpio_dir(GPIO_SPIM_MISO, pad_dir_input);
-	gpio_write(GPIO_SPIM_SS0, 1);
-	spi_init(SPIM, spi_dir_master, spi_mode_0, 4);
-	// spi_close(SPIM, phost->SpiCsPin);
-
-	gpio_function(spimGpio, spimFunc); /* GPIO as SS0-SS4 */
-	gpio_dir(spimGpio, pad_dir_output);
-	gpio_write(spimGpio, 1);
-
-	gpio_function(phost->PowerDownPin, pad_pwd);
+	gpio_function(phost->PowerDownPin, pad_func_0);
 	gpio_dir(phost->PowerDownPin, pad_dir_output);
-	gpio_write(phost->PowerDownPin, 1);
+	gpio_write(phost->PowerDownPin, 0);
 
 	/* Initialize single channel */
 	setSPI(phost, EVE_SPI_SINGLE_CHANNEL, 1);
+
+	gpio_write(phost->PowerDownPin, 1);
 
 	/* Initialize the context variables */
 	phost->Status = EVE_STATUS_OPENED;
@@ -233,11 +217,7 @@ void EVE_HalImpl_close(EVE_HalContext *phost)
  */
 void EVE_HalImpl_idle(EVE_HalContext *phost)
 {
-#ifndef PANL_APPLET
-#if defined(EVE_MODULE_PANL)
-	panl_bacnet_task();
-#endif
-#endif
+	/* no-op */
 }
 
 /*************
@@ -257,7 +237,8 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 
 	if (rw == EVE_TRANSFER_READ)
 	{
-		uint8_t spidata[5]; // FIXME: phost->SpiDummyBytes
+		eve_assert(3 + phost->SpiDummyBytes <= 5);
+		uint8_t spidata[5]; // FIXME: phost->SpiDummyBytes // ?
 		spidata[0] = (addr >> 16);
 		spidata[1] = (addr >> 8);
 		spidata[2] = addr & 0xff;
@@ -443,14 +424,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 }
 
 /**
- * @brief Transfer a block data in Progmem to Coprocessor
+ * @brief Transfer a block data from program memory
  * 
  * @param phost Pointer to Hal context
  * @param result Buffer to get data transfered, NULL when write
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
@@ -575,7 +556,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
  * @param phost Pointer to Hal context
  * @param up Up or Down
  */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 	if (up)
 	{
@@ -592,6 +573,7 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		gpio_write(phost->PowerDownPin, 0);
 		EVE_sleep(20);
 	}
+	return true;
 }
 
 /**
@@ -616,6 +598,7 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 	if (numdummy == 2)
 		writebyte |= EVE_SPI_TWO_DUMMY_BYTES;
 	EVE_Hal_wr8(phost, REG_SPI_WIDTH, writebyte);
+	EVE_Hal_flush(phost);
 
 	// Switch FT9XX to multi channel SPI mode
 	setSPI(phost, numchnls, numdummy);
@@ -660,12 +643,10 @@ uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 static void initSdHost()
 {
 #ifndef PANL_APPLET
-	sys_enable(sys_device_sd_card);
-	sdhost_sys_init();
-	sdhost_init();
-
+#if 1
+	/* All SD Host pins except CLK need a pull-up to work. The MM900EV*A module does not have external pull-up, so enable internal one */
 	gpio_function(GPIO_SD_CLK, pad_sd_clk);
-	gpio_pull(GPIO_SD_CLK, pad_pull_none); // pad_pull_none
+	gpio_pull(GPIO_SD_CLK, pad_pull_none);
 	gpio_function(GPIO_SD_CMD, pad_sd_cmd);
 	gpio_pull(GPIO_SD_CMD, pad_pull_pullup);
 	gpio_function(GPIO_SD_DAT3, pad_sd_data3);
@@ -680,6 +661,13 @@ static void initSdHost()
 	gpio_pull(GPIO_SD_CD, pad_pull_pullup);
 	gpio_function(GPIO_SD_WP, pad_sd_wp);
 	gpio_pull(GPIO_SD_WP, pad_pull_pullup);
+
+	/* Start up the SD Card */
+	sys_enable(sys_device_sd_card);
+#else
+	sdhost_sys_init();
+#endif
+	sdhost_init();
 #endif
 }
 
@@ -690,6 +678,8 @@ static void initSdHost()
 void EVE_Mcu_initialize()
 {
 #ifndef PANL_APPLET
+	sys_reset_all();
+
 	interrupt_enable_globally();
 
 	sys_enable(sys_device_uart0);
@@ -725,9 +715,18 @@ void EVE_Mcu_initialize()
 	gpio_dir(GPIO_SPIM_MISO, pad_dir_output);
 	gpio_write(GPIO_SPIM_MISO, 1);
 
-	gpio_function(FT800_SEL_PIN, pad_spim_ss0);
-	gpio_dir(FT800_SEL_PIN, pad_dir_output);
-	gpio_write(FT800_SEL_PIN, 1);
+	gpio_function(GPIO_SPIM_SS0, pad_spim_ss0);
+	gpio_dir(GPIO_SPIM_SS0, pad_dir_output);
+	gpio_write(GPIO_SPIM_SS0, 1);
+
+	gpio_function(GPIO_FT800_PWD, pad_func_0); /* FIXME: This needs to be done at open, not init */
+	gpio_dir(GPIO_FT800_PWD, pad_dir_output);
+	gpio_write(GPIO_FT800_PWD, 1);
+
+	gpio_write(GPIO_ILI9488_DCX, 1);
+	gpio_write(GPIO_SPIM_SS0, 1);
+	gpio_write(GPIO_FT800_PWD, 1);
+	gpio_write(GPIO_ILI9488_CS1, 1);
 #endif
 
 	initSdHost();
@@ -759,7 +758,11 @@ void EVE_Millis_initialize()
 	s_TotalMilliseconds = 0;
 #if !defined(PANL_APPLET)
 	sys_enable(sys_device_timer_wdt);
+#if defined(FT900_PLATFORM)
 	timer_prescaler(FT900_TIMER_PRESCALE_VALUE);
+#else
+	timer_prescaler(FT900_FT_MILLIS_TIMER, FT900_TIMER_PRESCALE_VALUE);
+#endif
 	timer_init(FT900_FT_MILLIS_TIMER, FT900_TIMER_OVERFLOW_VALUE, timer_direction_up, timer_prescaler_select_on, timer_mode_continuous);
 
 	interrupt_attach(interrupt_timers, 17, ticker);

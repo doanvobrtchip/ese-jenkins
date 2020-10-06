@@ -85,6 +85,12 @@ Copyright (C) 2017  Bridgetek Pte Lte
 
 #define BTTESTFLASH_DATA_FILE BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin"
 
+static const bool testEnabled[BTTESTFLASH_TESTSET_NB_MAX] = {
+	true,
+	true,
+	true,
+};
+
 static const BT8XXEMU_EmulatorMode testMode[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BT8XXEMU_EmulatorBT815,
 	BT8XXEMU_EmulatorBT817,
@@ -103,36 +109,42 @@ static const wchar_t *testDataFile[BTTESTFLASH_TESTSET_NB_MAX] = {
 	BTTESTFLASH_PATH L"reference/vc3roms/stdflash.bin",
 };
 
+static const int testNb[BTTESTFLASH_TESTSET_NB_MAX] = {
+	8,
+	8,
+	8,
+};
+
 static const wchar_t *testFirmware[BTTESTFLASH_TESTSET_NB_MAX][8] = {
 	{
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 2 MByte
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob", // 32 MByte (4READ: 8 instead of the 6 dummy cycles specified in spec)
 		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt815/mx25l.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt815/unified.blob",
+	},
+	{
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte (4DTRD: 9 instead of the 7 dummy cycles specified in spec)
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte (4DTRD EA: 11 instead of the ??? dummy cycles specified in spec)
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 	},
 	{
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-	},
-	{
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 2 MByte
+		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob", // 32 MByte (4READ: 8 instead of the 6 dummy cycles specified in spec)
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
 		BTTESTFLASH_PATH L"fteditor/firmware/bt817/unified.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob", // 32 MByte
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
-		BTTESTFLASH_PATH L"fteditor/firmware/bt817/mx25l.blob",
 	},
 };
 
@@ -950,8 +962,10 @@ int main(int, char*[])
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
-		// writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles...
-		// writeDT4U8(flash, rand() & 0xFF);
+
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+
 		/*
 		uint8_t dummy0 = readDT4U8(flash);
 		uint8_t dummy1 = readDT4U8(flash);
@@ -984,8 +998,10 @@ int main(int, char*[])
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
 		writeDT4U8(flash, rand() & 0xFF);
-		// writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles...
-		// writeDT4U8(flash, rand() & 0xFF);
+
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+			writeDT4U8(flash, rand() & 0xFF); // VERIFY: Should only have 7 dummy cycles, this is to match BT817...
+
 		uint8_t reqd3 = readDT4U8(flash);
 		uint8_t reqd4 = readDT4U8(flash);
 		uint8_t reqd5 = readDT4U8(flash);
@@ -1271,6 +1287,9 @@ int main(int, char*[])
 		write4U8(flash, 0x00); // No PE
 		write4U8(flash, rand() & 0xFF);
 		write4U8(flash, rand() & 0xFF);
+
+			write4U8(flash, rand() & 0xFF); // VERIFY: Add 2 more cycles under 4B, cannot find this in spec, but matches BT815 firmware behaviour
+
 		uint8_t reqd0 = read4U8(flash);
 		uint8_t reqd1 = read4U8(flash);
 		uint8_t reqd2 = read4U8(flash);
@@ -1322,6 +1341,8 @@ int main(int, char*[])
 
 	for (int ts = 0; ts < BTTESTFLASH_TESTSET_NB; ++ts)
 	{
+		if (!testEnabled[ts])
+			continue;
 
 		BT8XXEMU_Emulator *emulator = NULL;
 		uint8_t *ram = NULL;
@@ -1438,7 +1459,7 @@ int main(int, char*[])
 		{
 			assert(ram[0] == refv0);
 			assert(data[0] != refv0);
-			printf("CMD_FLASHWRITE (FLASH_STATUS_FULL\n");
+			printf("CMD_FLASHWRITE (FLASH_STATUS_FULL)\n");
 			wr32(emulator, REG_CMDB_WRITE, CMD_FLASHWRITE);
 			wr32(emulator, REG_CMDB_WRITE, 0);
 			wr32(emulator, REG_CMDB_WRITE, 2048);
@@ -1632,7 +1653,7 @@ int main(int, char*[])
 #if BTTESTFLASH_SIZES
 		size_t sizes[8] = { 2, 4, 8, 16, 32, 64, 128, 256 };
 
-		for (int si = 0; si < ((testMode[ts] >= BT8XXEMU_EmulatorBT817) ? 4 : 8); ++si) // FIXME: 32MiB and up is not working on BT817 with mx25l blob
+		for (int si = 0; si < testNb[ts]; ++si)
 		{
 			size_t sz = sizes[si];
 			printf("SIZE %i: %i\n", si, (int)sz);
@@ -1706,7 +1727,7 @@ int main(int, char*[])
 				flush(emulator);
 				uint32_t res = rd32(emulator, RAM_CMD + resAddr);
 				uint32_t status = rd32(emulator, REG_FLASH_STATUS);
-				assert(res == 0);
+				assert(res == 0); // 0xe005 failed full-speed test - check board wiring
 				assert(status == FLASH_STATUS_FULL);
 				assert(!dtr || rd32(emulator, REG_FLASH_DTR) == 1);
 				// assert(!dtr || rd32(emulator, REG_ESPIM_DTR) == 1);

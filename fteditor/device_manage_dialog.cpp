@@ -14,8 +14,7 @@
 #include <QThread>
 #include < QDirIterator>
 
-namespace FTEDITOR
-{
+namespace FTEDITOR {
 
 #if FT800_DEVICE_MANAGER
 
@@ -39,6 +38,9 @@ DeviceManageDialog::DeviceManageDialog(DeviceManager *parent)
 	connect(ui->btnBuildInCloneDevice, SIGNAL(clicked()), this, SLOT(cloneBuildInDevice()));
 	connect(ui->btnExamineButton, SIGNAL(clicked()), this, SLOT(examineDevice()));
 
+	connect(ui->deviceListWidget, &QListWidget::itemDoubleClicked, ui->btnEditDevice, &QPushButton::clicked);
+	connect(ui->BuildInDeviceListWidget, &QListWidget::itemDoubleClicked, ui->btnExamineButton, &QPushButton::clicked);
+
 	connect(ui->btnClose, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
@@ -48,7 +50,7 @@ void DeviceManageDialog::execute()
 	show();
 }
 
-void DeviceManageDialog::loadDevice(QListWidget * lw, QString jsonPath)
+void DeviceManageDialog::loadDevice(QListWidget *lw, QString jsonPath)
 {
 	CustomDeviceInfo cdi;
 	getCustomDeviceInfo(jsonPath, cdi);
@@ -104,7 +106,7 @@ void DeviceManageDialog::loadAllDevice()
 
 void DeviceManageDialog::addDevice()
 {
-	DeviceAddNewDialog * anDialog = new DeviceAddNewDialog(this);
+	DeviceAddNewDialog *anDialog = new DeviceAddNewDialog(this);
 	connect(anDialog, &DeviceAddNewDialog::deviceAdded, this, &DeviceManageDialog::onDeviceAdded);
 	anDialog->execute();
 }
@@ -166,14 +168,14 @@ void DeviceManageDialog::doClone(QListWidget *lw)
 
 		QJsonDocument jd;
 		jd.setObject(jo);
-		
+
 		QFile f(newName);
 		if (f.open(QIODevice::WriteOnly))
 		{
 			f.write(jd.toJson());
 			f.close();
 		}
-		
+
 		loadDevice(ui->deviceListWidget, newName);
 		lw->setFocus();
 	}
@@ -229,7 +231,7 @@ QJsonObject DeviceManageDialog::getDeviceJson(QString jsonPath)
 	return jo;
 }
 
-void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo & cdi)
+void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo &cdi)
 {
 	QJsonObject jo = getDeviceJson(jsonPath);
 
@@ -258,8 +260,10 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 			cdi.EVE_Type = FTEDITOR_FT800;
 		else if (jo["EVE Type"].toString() == "FT81X")
 			cdi.EVE_Type = FTEDITOR_FT810;
-		else
+		else if (jo["EVE Type"].toString() == "BT815_816")
 			cdi.EVE_Type = FTEDITOR_BT815;
+		else
+			cdi.EVE_Type = FTEDITOR_BT817;
 	}
 
 	if (jo.contains("Connection Type") && jo["Connection Type"].isString())
@@ -289,87 +293,126 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("REG_HCYCLE"))
 	{
-		cdi.CUS_REG_HCYCLE = jo["REG_HCYCLE"].toInt();
+		cdi.configParams.HCycle = jo["REG_HCYCLE"].toInt();
 	}
 
 	if (jo.contains("REG_HOFFSET"))
 	{
-		cdi.CUS_REG_HOFFSET = jo["REG_HOFFSET"].toInt();
+		cdi.configParams.HOffset = jo["REG_HOFFSET"].toInt();
 	}
 
 	if (jo.contains("REG_HSYNC0"))
 	{
-		cdi.CUS_REG_HSYNC0 = jo["REG_HSYNC0"].toInt();
+		cdi.configParams.HSync0 = jo["REG_HSYNC0"].toInt();
 	}
 
 	if (jo.contains("REG_HSYNC1"))
 	{
-		cdi.CUS_REG_HSYNC1 = jo["REG_HSYNC1"].toInt();
+		cdi.configParams.HSync1 = jo["REG_HSYNC1"].toInt();
 	}
 
 	if (jo.contains("REG_VCYCLE"))
 	{
-		cdi.CUS_REG_VCYCLE = jo["REG_VCYCLE"].toInt();
+		cdi.configParams.VCycle = jo["REG_VCYCLE"].toInt();
 	}
 
 	if (jo.contains("REG_VOFFSET"))
 	{
-		cdi.CUS_REG_VOFFSET = jo["REG_VOFFSET"].toInt();
+		cdi.configParams.VOffset = jo["REG_VOFFSET"].toInt();
 	}
 
 	if (jo.contains("REG_VSYNC0"))
 	{
-		cdi.CUS_REG_VSYNC0 = jo["REG_VSYNC0"].toInt();
+		cdi.configParams.VSync0 = jo["REG_VSYNC0"].toInt();
 	}
 
 	if (jo.contains("REG_VSYNC1"))
 	{
-		cdi.CUS_REG_VSYNC1 = jo["REG_VSYNC1"].toInt();
+		cdi.configParams.VSync1 = jo["REG_VSYNC1"].toInt();
 	}
 
 	if (jo.contains("REG_SWIZZLE"))
 	{
-		cdi.CUS_REG_SWIZZLE = jo["REG_SWIZZLE"].toInt();
+		cdi.configParams.Swizzle = jo["REG_SWIZZLE"].toInt();
 	}
 
 	if (jo.contains("REG_PCLK_POL"))
 	{
-		cdi.CUS_REG_PCLK_POL = jo["REG_PCLK_POL"].toInt();
+		cdi.configParams.PCLKPol = jo["REG_PCLK_POL"].toInt();
 	}
 
 	if (jo.contains("REG_HSIZE"))
 	{
-		cdi.CUS_REG_HSIZE = jo["REG_HSIZE"].toInt();
+		cdi.configParams.HSize = jo["REG_HSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_VSIZE"))
 	{
-		cdi.CUS_REG_VSIZE = jo["REG_VSIZE"].toInt();
+		cdi.configParams.VSize = jo["REG_VSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_CSPREAD"))
 	{
-		cdi.CUS_REG_CSPREAD = jo["REG_CSPREAD"].toInt();
+		cdi.configParams.CSpread = jo["REG_CSPREAD"].toInt();
 	}
 
 	if (jo.contains("REG_DITHER"))
 	{
-		cdi.CUS_REG_DITHER = jo["REG_DITHER"].toInt();
+		cdi.configParams.Dither = jo["REG_DITHER"].toInt();
 	}
 
 	if (jo.contains("REG_PCLK"))
 	{
-		cdi.CUS_REG_PCLK = jo["REG_PCLK"].toInt();
+		cdi.configParams.PCLK = jo["REG_PCLK"].toInt();
 	}
 
-	if (jo.contains("REG_OUTBITS"))
+	if (jo.contains("REG_OUTBITS") )
 	{
-		cdi.CUS_REG_OUTBITS = jo["REG_OUTBITS"].toInt();
+		if (jo["REG_OUTBITS"].isString())
+		{		
+			if (jo["REG_OUTBITS"].toString() == DeviceAddNewDialog::REG_OUTBITS_6bits) {
+				cdi.configParams.OutBitsR = (0x1B6 >> 6) & 0x7;
+				cdi.configParams.OutBitsG = (0x1B6 >> 3) & 0x7;
+				cdi.configParams.OutBitsB = 0x1B6 & 0x7;
+			}
+			else {			
+				cdi.configParams.OutBitsR = 0;
+				cdi.configParams.OutBitsG = 0;
+				cdi.configParams.OutBitsB = 0;
+			}
+		}
+		else
+		{
+			int t = jo["REG_OUTBITS"].toInt();
+			cdi.configParams.OutBitsR = (t >> 6) & 0x7;
+			cdi.configParams.OutBitsG = (t >> 3) & 0x7;
+			cdi.configParams.OutBitsB = t & 0x7;
+		}
 	}
 
 	if (jo.contains("External Clock"))
 	{
-		cdi.ExternalOsc = jo["External Clock"].toString() == "true" ? true : false;
+		cdi.configParams.ExternalClock = jo["External Clock"].toString() == "true" ? true : false;
+	}
+
+	if (jo.contains("REG_PCLK_2X"))
+	{
+		cdi.configParams.PCLK_2X = jo["REG_PCLK_2X"].toInt();
+	}
+
+	if (jo.contains("REG_PCLK_FREQ"))
+	{
+		cdi.configParams.PCLKFreq = jo["REG_PCLK_FREQ"].toInt();
+	}
+
+	if (jo.contains("REG_AH_HCYCLE_MAX"))
+	{
+		cdi.configParams.AhHCycleMax = jo["REG_AH_HCYCLE_MAX"].toInt();
+	}
+
+	if (jo.contains("REG_ADAPTIVE_FRAMERATE"))
+	{
+		cdi.configParams.AdaptiveFrameRate = jo["REG_ADAPTIVE_FRAMERATE"].toInt();
 	}
 }
 

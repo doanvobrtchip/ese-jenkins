@@ -666,7 +666,7 @@ BT8XXEMU_FORCE_INLINE void Coprocessor::cpureset()
 BT8XXEMU_FORCE_INLINE void Coprocessor::push(int v) // push v on the data stack
 {
 	dsp = 31 & (dsp + 1);
-	assert(t != 0xCDCDCDCD);
+	// assert(t != 0xCDCDCDCD);
 	d[dsp] = t;
 	t = v;
 }
@@ -856,7 +856,7 @@ void Coprocessor::execute()
 			switch (insn_alu)
 			{
 			case 0x00:  _t = t; break;
-			case 0x01:  assert(n != 0xCDCDCDCD);
+			case 0x01:  // assert(n != 0xCDCDCDCD);
 				_t = n; break;
 			case 0x02:  _t = t + n; break;
 			case 0x03:  _t = t & n; break;
@@ -934,7 +934,7 @@ void Coprocessor::execute()
 			case 0:
 				break;
 			case 1:
-				assert(t != 0xCDCDCDCD);
+				// assert(t != 0xCDCDCDCD);
 				d[dsp] = t;
 				break;
 			case 2:
@@ -1016,13 +1016,13 @@ void Coprocessor::execute()
 				// selfassert(t < MEMSIZE, __LINE__);
 				// if ((RAM_J1RAM <= t) && (t < (RAM_J1RAM + 2048)))
 				// 	selfassert(written[(t - RAM_J1RAM) >> 2], __LINE__);
-				assert(t != 0xCDCDCDCD);
+				// assert(t != 0xCDCDCDCD);
 				memrd32 = m_Memory->coprocessorReadU32(t & ~3UL);
 				// assert(memrd32 != 0xCDCDCDCD);
 				// memrdt = t;
 				break;
 			}
-			assert(_t != 0xCDCDCDCD);
+			// assert(_t != 0xCDCDCDCD);
 			t = _t;
 			break;
 		}

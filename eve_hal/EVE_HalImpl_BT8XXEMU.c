@@ -50,7 +50,7 @@
 #define EVE_Hal_transfer16 EVE_Hal_BT8XXEMU_transfer16
 #define EVE_Hal_transfer32 EVE_Hal_BT8XXEMU_transfer32
 #define EVE_Hal_transferMem EVE_Hal_BT8XXEMU_transferMem
-#define EVE_Hal_transferProgmem EVE_Hal_BT8XXEMU_transferProgmem
+#define EVE_Hal_transferProgMem EVE_Hal_BT8XXEMU_transferProgMem
 #define EVE_Hal_transferString EVE_Hal_BT8XXEMU_transferString
 #define EVE_Hal_hostCommand EVE_Hal_BT8XXEMU_hostCommand
 #define EVE_Hal_hostCommandExt3 EVE_Hal_BT8XXEMU_hostCommandExt3
@@ -66,7 +66,7 @@
 *********/
 
 #if defined(ESD_SIMULATION)
-void Ft_MainReady__ESD(BT8XXEMU_Emulator *emulator);
+void Esd_MainReady__ESD(BT8XXEMU_Emulator *emulator);
 #endif
 
 EVE_HalPlatform g_HalPlatform;
@@ -148,14 +148,16 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	{
 		// Copy
 		params = malloc(sizeof(BT8XXEMU_EmulatorParameters));
-		if (!params) return false;
+		if (!params)
+			return false;
 		memcpy(params, origParams, sizeof(BT8XXEMU_EmulatorParameters));
 	}
 	else
 	{
 		// Make defaults
 		params = malloc(sizeof(BT8XXEMU_EmulatorParameters));
-		if (!params) return false;
+		if (!params)
+			return false;
 		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, parameters->EmulatorMode);
 		params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 	}
@@ -182,7 +184,6 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	phost->Emulator = EVE_GpuEmu;
 	phost->EmulatorFlash = EVE_EmuFlash;
 	origFlashParams = NULL;
-	flashParams = NULL;
 #else
 	origFlashParams = parameters->EmulatorFlashParameters;
 	if (origFlashParams)
@@ -195,7 +196,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 #endif
 
 #if defined(ESD_SIMULATION)
-	Ft_MainReady__ESD(phost->Emulator);
+	Esd_MainReady__ESD(phost->Emulator);
 #endif
 
 	ret = !!phost->Emulator;
@@ -403,14 +404,14 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
 }
 
 /**
- * @brief Transfer a block data in Progmem to Coprocessor
+ * @brief Transfer a block data from program memory
  * 
  * @param phost Pointer to Hal context
  * @param result Buffer to get data transfered, NULL when write
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	uint32_t i;
 	if (result && buffer)
@@ -585,7 +586,7 @@ void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd)
  * @param phost Pointer to Hal context
  * @param up Up or Down
  */
-void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
+bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 {
 #if !defined(EVE_EMULATOR_MAIN)
 	BT8XXEMU_EmulatorParameters *params;
@@ -603,6 +604,8 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 
 		params = (void *)phost->EmulatorParameters;
 		BT8XXEMU_run(BT8XXEMU_VERSION_API, &phost->Emulator, params);
+
+		return phost->Emulator;
 	}
 	else
 	{
@@ -615,6 +618,8 @@ void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		BT8XXEMU_stop(phost->Emulator);
 		BT8XXEMU_destroy(phost->Emulator);
 		phost->Emulator = NULL;
+
+		return true;
 	}
 #endif
 }

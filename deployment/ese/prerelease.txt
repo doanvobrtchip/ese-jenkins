@@ -4,6 +4,33 @@ Please uninstall the latest version if you have one installed on your PC.
 
 Release Note:
 
+Version 4.0.0
+Feature updates
+•   Support new EVE chip BT817/8
+•   Add new registry values in device configuration window
+•   Add BT817/8 specific commands to Toolbox
+•   Add new gauge example
+•   Add ME817EV board in Device Manager
+•   Add new resolutions when BT817/8 is selected
+•   Add cookbook examples for new chip BT817/8
+•   Add new Python script for exporting BT817/8 project 
+•   Provide more user friendly value options for REG_OUTBITS
+•   Set shortcut Ctrl+R for Reset Emulator menu
+•   Make improvements on the register window
+•   Update the latest flash blob
+•   Update Python to 3.8.0, FreeType to 2.10.2
+•   Get output results for CMD_GETPROPS and CMD_GETPTR
+    
+Resolved issues
+•   Fixed ESE projects opening issue
+•   Fixed Paletted PNG image is not loaded correctly with 'Image Coprocessor' format
+
+Known issues
+•   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
+•   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
+•   Drawing invalid animation frame will cause ESE hang
+•   When using device sync up, flash contents need written before updating display list or corpocessor
+
 Version 3.4.0
 Features:
 •   Add system clock configuration in the device manager

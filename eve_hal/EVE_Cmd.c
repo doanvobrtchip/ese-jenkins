@@ -127,7 +127,7 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_space(EVE_HalContext *phost)
  * @param phost Pointer to Hal context
  * @param buffer Data pointer
  * @param size Size to write
- * @param progmem True if Progmem 
+ * @param progmem True if ProgMem 
  * @param string True is string
  * @return uint32_t Byte transfered
  */
@@ -184,7 +184,7 @@ static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t siz
 			}
 			else if (progmem)
 			{
-				EVE_Hal_transferProgmem(phost, NULL, (eve_progmem_const uint8_t *)(uintptr_t)(&((uint8_t *)buffer)[transfered]), transfer);
+				EVE_Hal_transferProgMem(phost, NULL, (eve_progmem_const uint8_t *)(uintptr_t)(&((uint8_t *)buffer)[transfered]), transfer);
 			}
 			else
 			{
@@ -264,7 +264,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_wrMem(EVE_HalContext *phost, const uint8_t *buffer, 
 }
 
 /**
- * @brief Write buffer in Progmem to Coprocessor's comand fifo
+ * @brief Write buffer in ProgMem to Coprocessor's comand fifo
  * 
  * @param phost Pointer to Hal context
  * @param uint8_t Data buffer
@@ -272,7 +272,7 @@ EVE_HAL_EXPORT bool EVE_Cmd_wrMem(EVE_HalContext *phost, const uint8_t *buffer, 
  * @return true True if ok
  * @return false False if error
  */
-EVE_HAL_EXPORT bool EVE_Cmd_wrProgmem(EVE_HalContext *phost, eve_progmem_const uint8_t *buffer, uint32_t size)
+EVE_HAL_EXPORT bool EVE_Cmd_wrProgMem(EVE_HalContext *phost, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
@@ -427,6 +427,10 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_moveWp(EVE_HalContext *phost, uint16_t bytes)
 	return prevWp;
 }
 
+#ifdef _DEBUG
+void debugBackupRamG(EVE_HalContext *phost);
+#endif
+
 /**
  * @brief Check for coprocessor fault
  * 
@@ -444,17 +448,21 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 		(void)err;
 		/* Coprocessor fault */
 		phost->CmdWaiting = false;
-		eve_printf_debug("Coprocessor fault\n");
 #if defined(_DEBUG)
-		if (EVE_CHIPID >= EVE_BT815)
+		if (!phost->DebugMessageVisible)
 		{
-			EVE_Hal_rdMem(phost, (uint8_t *)err, RAM_ERR_REPORT, 128);
-			eve_printf_debug("%s\n", err);
-			EVE_Hal_displayMessage(phost, err, 128);
-		}
-		else
-		{
-			EVE_Hal_displayMessage(phost, "Coprocessor fault ", sizeof("Coprocessor fault "));
+			eve_printf_debug("Coprocessor fault\n");
+			debugBackupRamG(phost);
+			if (EVE_CHIPID >= EVE_BT815)
+			{
+				EVE_Hal_rdMem(phost, (uint8_t *)err, RAM_ERR_REPORT, 128);
+				eve_printf_debug("%s\n", err);
+				EVE_Hal_displayMessage(phost, err, 128);
+			}
+			else
+			{
+				EVE_Hal_displayMessage(phost, "Coprocessor fault ", sizeof("Coprocessor fault "));
+			}
 		}
 #endif
 		/* eve_debug_break(); */
@@ -531,14 +539,8 @@ bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 	return true;
 }
 
-/**
- * @brief Wait till a Command FIFO buffer free for a number of bytes
- * 
- * @param phost Pointer to Hal context
- * @param size Size to wait
- * @return true True if ok
- * @return false False if size is larger than Command FIFO buffer size or error at Eve platform
- */
+/* Wait for the command buffer to have at least the requested amount of free space.
+Returns 0 in case a coprocessor fault occurred */
 EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 {
 	uint16_t space;
@@ -555,12 +557,16 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
 	space = phost->CmdSpace;
 
 #if 1
-	if (space < size)
+	/* Optimization. 
+	Only update space if more space is needed than already known available, 
+	or when not actually waiting for any space */
+	if (space < size || !size)
 		space = EVE_Cmd_space(phost);
 	if (!checkWait(phost, space))
 		return 0;
 #endif
 
+	/* Wait until there's sufficient space */
 	while (space < size)
 	{
 		space = EVE_Cmd_space(phost);
@@ -598,6 +604,15 @@ EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost)
 
 	phost->CmdWaiting = false;
 	return true;
+}
+
+/* Restore the internal state of EVE_Cmd.
+Call this after manually writing the the coprocessor buffer */
+EVE_HAL_EXPORT void EVE_Cmd_restore(EVE_HalContext *phost)
+{
+	EVE_Cmd_rp(phost);
+	EVE_Cmd_wp(phost);
+	EVE_Cmd_space(phost);
 }
 
 /* end of file */

@@ -475,7 +475,7 @@ public:
 
 	void chipSelect(bool cs)
 	{
-		if (cs == false)
+		if (!cs)
 		{
 			switch (m_RunState)
 			{
@@ -530,6 +530,7 @@ public:
 				}
 				break;
 			case BTFLASH_STATE_PP_READ:
+			case BTFLASH_STATE_4PP_READ:
 				if (m_BufferBits)
 				{
 					log(BT8XXEMU_LogError, "CS must go high on byte boundary, PP instruction rejected");
@@ -554,6 +555,16 @@ public:
 							at &= 0xFF;
 						}
 					}
+				}
+				break;
+			case BTFLASH_STATE_4READ_PE:
+				log(BT8XXEMU_LogWarning, "CS deactivated while waiting for dummy bytes (4READ)");
+				break;
+			case BTFLASH_STATE_4DTRD_PE:
+				state4READPerfEnh(0); // Give it an extra tick, since we're cheating a half period dummy in this state function
+				if (m_RunState == BTFLASH_STATE_4DTRD_PE) // No change
+				{
+					log(BT8XXEMU_LogWarning, "CS deactivated while waiting for dummy bytes (4DTRD)");
 				}
 				break;
 			}
@@ -709,6 +720,10 @@ public:
 			return statePPRead(signal);
 		case BTFLASH_STATE_SE_ADDR:
 			return stateSEAddr(signal);
+		case BTFLASH_STATE_4PP_ADDR:
+			return state4PPAddr(signal);
+		case BTFLASH_STATE_4PP_READ:
+			return state4PPRead(signal);
 		case BTFLASH_STATE_OUT_U8_ARRAY_DT:
 			return stateWriteOutU8Array();
 		case BTFLASH_STATE_NEXT:
@@ -842,6 +857,8 @@ public:
 		case BTFLASH_STATE_PP_ADDR:
 		case BTFLASH_STATE_PP_READ:
 		case BTFLASH_STATE_SE_ADDR:
+		case BTFLASH_STATE_4PP_ADDR:
+		case BTFLASH_STATE_4PP_READ:
 		case BTFLASH_STATE_UNSUPPORTED:
 		case BTFLASH_STATE_CS_HIGH_COMMAND:
 			// Silent no-op
@@ -1009,7 +1026,7 @@ public:
 		// Read 4 bits at a time until a U8 is read
 		m_BufferU8 = (m_BufferU8 << 4)
 			| (BTFLASH_SPI4_GET_D4(signal));
-		++m_BufferBits;
+		m_BufferBits += 4;
 		return m_BufferBits == 8;
 	}
 
@@ -1247,14 +1264,7 @@ public:
 				return m_LastSignal;
 			case BTFLASH_CMD_4DTRD: /* 4x IO DT Read */
 				Flash_debug("4x IO DT Read");
-				// log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4DTRD)");
-				// m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				if (m_ExtendedAddressing)
-				{
-					log(BT8XXEMU_LogError, "4x IO DT Read not supported with extended addressing");
-					m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				}
-				else if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
 				{
 					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO DT Read");
 					m_RunState = BTFLASH_STATE_IGNORE;
@@ -1295,9 +1305,26 @@ public:
 				}
 				return m_LastSignal;
 			case BTFLASH_CMD_4PP: /* Quad Page Program */
-				log(BT8XXEMU_LogError, "Flash command not implemented (BTFLASH_CMD_4PP)");
-				m_RunState = BTFLASH_STATE_UNSUPPORTED;
-				return m_LastSignal;
+				Flash_debug("Quad Page Program");
+				if (!(m_StatusRegister & BTFLASH_STATUS_QE_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Quad Enable must be flagged to use 4x IO Read");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
+				else if (!(m_StatusRegister & BTFLASH_STATUS_WEL_FLAG))
+				{
+					log(BT8XXEMU_LogError, "Page Program requires Write Enable Latch to be set");
+					m_RunState = BTFLASH_STATE_IGNORE;
+					return m_LastSignal;
+				}
+				else
+				{
+					m_SignalOutMask = BTFLASH_SPI4_MASK_NONE;
+					m_DelayedCommand = BTFLASH_CMD_4PP;
+					m_RunState = BTFLASH_STATE_4PP_ADDR;
+					return m_LastSignal;
+				}
 			case BTFLASH_CMD_SE: /* Sector Erase */
 				Flash_debug("Sector Erase");
 				if (m_StatusRegister & BTFLASH_STATUS_WEL_FLAG)
@@ -1641,9 +1668,11 @@ public:
 
 	uint8_t state4READPerfEnh(uint8_t signal)
 	{
-		static const int dummyCycles[] = { 6, 4, 8, 10 };
+		static const int dummyCycles8[] = { 8, 6, 8, 10 };
+		static const int dummyCycles6[] = { 6, 4, 8, 10 };
+		const int *dummyCycles = m_ExtendedAddressing ? dummyCycles8 : dummyCycles6; // VERIFY: Cannot find this in spec, but matches BT815 firmware behaviour // Not sure if using4ByteAddress() or m_ExtendedAddressing
 		const bool dtr = m_RunState == BTFLASH_STATE_4DTRD_PE;
-		if (readU8Spi4SkipLsb(signal, dtr ? 13 * 4 : // VERIFY: Number of dummy cycles should be 13 (7 dummy cycles), but need to set 17 here...
+		if (readU8Spi4SkipLsb(signal, dtr ? (m_ExtendedAddressing ? 21 : 17) * 4 : // VERIFY: Number of dummy cycles should be 13 (7 dummy cycles), but need to set 17 here for BT817... (BT817 DTR does not work, apparently?)
 			(dummyCycles[BTFLASH_CONFIGRATION_GET_DC(m_ConfigurationRegister)] - 2) * 4))
 		{
 			uint8_t p = m_BufferU8;
@@ -1717,6 +1746,40 @@ public:
 			Flash_debug("SE addr %i", (int)addr);
 			m_DelayedCommandAddr = addr;
 			m_RunState = BTFLASH_STATE_CS_HIGH_COMMAND;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4PPAddr(uint8_t signal)
+	{
+		if (readAddressSpi4AsU32SkipLsb(signal, 0))
+		{
+			uint32_t addr = m_BufferU32;
+			m_BufferBits = 0;
+			Flash_debug("4PP addr %i", (int)addr);
+			m_DelayedCommandAddr = addr;
+			m_PageProgramIdx = 0;
+			m_PageProgramSize = 0;
+			m_RunState = BTFLASH_STATE_4PP_READ;
+		}
+
+		return m_LastSignal;
+	}
+
+	uint8_t state4PPRead(uint8_t signal)
+	{
+		if (readU8Spi4(signal))
+		{
+			m_PageProgramData[m_PageProgramIdx] = m_BufferU8;
+			m_BufferBits = 0;
+
+			++m_PageProgramIdx;
+			m_PageProgramIdx &= 0xFF;
+			++m_PageProgramSize;
+			m_PageProgramSize = std::min(m_PageProgramSize, 256);
+
+			Flash_debug("4PP data %x", (int)m_BufferU8);
 		}
 
 		return m_LastSignal;

@@ -128,6 +128,12 @@ extern volatile bool g_ShowCoprocessorBusy;
 
 QString g_ApplicationDataDir;
 
+extern int *g_CoCmdReadIndicesRead;
+extern uint32_t (*g_CoCmdReadValuesRead)[DL_PARSER_MAX_READOUT];
+static volatile int s_CoCmdChangeNbEmu;
+static int s_CoCmdChangeNbQt;
+static int s_CoCmdReadChanged[FTEDITOR_DL_SIZE];
+
 void cleanupMediaFifo();
 void emuMain(BT8XXEMU_Emulator *sender, void *context);
 void closeDummy(BT8XXEMU_Emulator *sender, void *context);
@@ -142,8 +148,8 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT813
 	5, // BT815
 	5, // BT816
-	5, // BT817
-	5, // BT818
+	7, // BT817
+	7, // BT818
 };
 
 static const char *s_StandardResolutions[] = {
@@ -152,6 +158,8 @@ static const char *s_StandardResolutions[] = {
 	"HVGA Portrait (320x480)",
 	"WVGA (800x480)",
 	"SVGA (800x600)",
+	"WSVGA (1024x600)",
+	"WXGA (1280x800)"
 };
 
 static const int s_StandardWidths[] = {
@@ -160,6 +168,8 @@ static const int s_StandardWidths[] = {
 	320,
 	800,
 	800,
+	1024,
+	1280
 };
 
 static const int s_StandardHeights[] = {
@@ -168,6 +178,8 @@ static const int s_StandardHeights[] = {
 	480,
 	480,
 	600,
+	600,
+	800
 };
 
 bool MainWindow::waitingCoprocessorAnimation()
@@ -451,6 +463,8 @@ char *scriptDeviceFolder[] = {
 	"ft81x",
 	"ft81x",
 	"bt81x",
+	"bt81x",
+	"bt81x",
 	"bt81x"
 };
 
@@ -500,6 +514,17 @@ void MainWindow::refreshScriptsMenu()
 		// Ignore root __init__.py
 		if (scriptFile == "__init__.py")
 			continue;
+
+		if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		{
+			if (!scriptFile.contains("815") && !scriptFile.contains("816"))
+				continue;
+		}
+		else if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT817 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT818)
+		{
+			if (!scriptFile.contains("817") && !scriptFile.contains("818"))
+				continue;
+		}
 
 		QString scriptMod = scriptModule() + "." + scriptFile.left(scriptFile.size() - 3).replace('/', '.');
 		// printf("module: %s\n", scriptMod.toLocal8Bit().data());
@@ -697,16 +722,31 @@ void MainWindow::runScript(const QString &script)
 			if (pyUserFunc && PyCallable_Check(pyUserFunc))
 			{
 				PyObject *pyValue;
-				PyObject *pyArgs = PyTuple_New(3);
+				PyObject *pyArgs = 0;
+
+				if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816)
+					pyArgs = PyTuple_New(3);
+				else if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+					pyArgs = PyTuple_New(4);
+
 				pyValue = PyUnicode_FromString(outN.data());
-				;
+
 				PyTuple_SetItem(pyArgs, 0, pyValue);
 				PyTuple_SetItem(pyArgs, 1, pyDocument);
 				pyDocument = NULL;
 				char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 				PyTuple_SetItem(pyArgs, 2, pyValue);
+
+				if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+				{
+					QString resol = QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+					pyValue = PyUnicode_FromString(resol.toUtf8().data());
+					PyTuple_SetItem(pyArgs, 3, pyValue);
+				}
+
 				pyValue = PyObject_CallObject(pyUserFunc, pyArgs);
+
 				Py_DECREF(pyArgs);
 				pyArgs = NULL;
 				if (pyValue)
@@ -762,7 +802,30 @@ void MainWindow::runScript(const QString &script)
 
 void MainWindow::frameEmu()
 {
-	// ...
+	// Read CoCmd directly into DlParsed, no need to lock since this is just a one-way data copy, and it'll be updated again anyway
+	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu + 1;
+	const DlParsed *cmdParsed = m_CmdEditor->getDisplayListParsed();
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		int line = g_CoCmdReadIndicesRead[i];
+		if (line < 0)
+			break; // no more
+		if (memcmp(cmdParsed[line].ReadOut, g_CoCmdReadValuesRead[i], sizeof(cmdParsed->ReadOut)))
+		{
+			m_CmdEditor->setReadOut(line, g_CoCmdReadValuesRead[i]);
+			s_CoCmdReadChanged[line] = coCmdChangeNbEmu;
+			// DEBUG:
+			/*
+			printf("Line %i, readout ", line);
+			for (int j = 0; j < DL_PARSER_MAX_READOUT; ++j)
+			{
+				printf("%i, ", (int)g_CoCmdReadValuesRead[i][j]);
+			}
+			printf("\n");
+			*/
+		}
+	}
+	s_CoCmdChangeNbEmu = coCmdChangeNbEmu;
 }
 
 void MainWindow::frameQt()
@@ -859,6 +922,27 @@ void MainWindow::frameQt()
 
 	// Busy loader
 	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
+
+	// Trigger changes to readout cocmd on qt thread
+	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
+	int coCmdChangeNbQt = s_CoCmdChangeNbQt;
+	bool anyReadOutChanged = false;
+	for (int i = 0; i < FTEDITOR_DL_SIZE && i < m_CmdEditor->getLineCount(); ++i)
+	{
+		if (s_CoCmdReadChanged[i] >= coCmdChangeNbQt)
+		{
+			// TODO: Line-specific refresh?
+			anyReadOutChanged = true;
+			// DEBUG: printf("Line %i, readout refresh\n", i);
+			break;
+		}
+	}
+	s_CoCmdChangeNbQt = coCmdChangeNbEmu;
+	if (anyReadOutChanged)
+	{
+		// Always refresh for now
+		m_InteractiveProperties->modifiedEditorLine();
+	}
 }
 
 void MainWindow::createActions()
@@ -887,16 +971,19 @@ void MainWindow::createActions()
 	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
+	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_B));
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
 
 	m_ResetEmulatorAct = new QAction(this);
+	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
+
+	m_ImportDisplayListAct = new QAction(this);
+	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
-
-	m_ImportDisplayListAct = new QAction(this);
-	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_LittleEndianSaveDisplayListAct = new QAction(this);
 	connect(m_LittleEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveDisplayList()));
@@ -1139,7 +1226,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxLayout = new QHBoxLayout();
 
 			m_ProjectDevice = new QComboBox(this);
-			for (int i = 0; i < FTEDITOR_DEVICE_NB - 2; ++i) // remove BT817/8 in version 3.4
+			for (int i = 0; i < FTEDITOR_DEVICE_NB; ++i)
 				m_ProjectDevice->addItem(deviceToString(i));
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_CURRENT_DEVICE);
 			hBoxLayout->addWidget(m_ProjectDevice);
@@ -2649,7 +2736,7 @@ void MainWindow::actNew(bool addClear)
 #ifdef FTEDITOR_TEMP_DIR
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
-	m_TemporaryDir = new QTemporaryDir("ft800editor-");
+	m_TemporaryDir = new QTemporaryDir("ESE");
 	QDir::setCurrent(m_TemporaryDir->path());
 #else
 	QDir::setCurrent(m_InitialWorkingDir);
@@ -3896,6 +3983,11 @@ QString MainWindow::getProjectContent() const
 	file.close();
 
 	return projectContent;
+}
+
+QString MainWindow::getDisplaySize()
+{
+	return QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
 }
 
 } /* namespace FTEDITOR */

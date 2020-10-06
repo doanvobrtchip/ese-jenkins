@@ -39,6 +39,10 @@
 #define EVE_HAL_INCL__H
 #include "EVE_GpuTypes.h"
 
+#if defined(EVE_ENABLE_FATFS)
+#include "ff.h"
+#endif
+
 /**********
 ** ENUMS **
 **********/
@@ -111,8 +115,7 @@ typedef struct EVE_GpuDefs
 	uint32_t RamGSize;
 	uint32_t LowFreqBound;
 	uint32_t BitmapAddrMask;
-	uint32_t ScissorXYMask;
-	uint32_t ScissorSizeMask;
+	uint32_t ScissorSizeShift;
 } EVE_GpuDefs;
 
 extern EVE_GpuDefs EVE_GpuDefs_FT80X;
@@ -180,20 +183,58 @@ typedef struct EVE_HalParameters
 
 } EVE_HalParameters;
 
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#define EVE_DL_STATE phost->DlState[phost->DlStateIndex]
+typedef struct EVE_HalDlState
+{
+	// Keep to a minimum
+#if (EVE_DL_OPTIMIZE)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
+	uint32_t PaletteSource;
+#endif
+	uint32_t ColorRGB;
+	int16_t LineWidth;
+	int16_t PointSize;
+#endif
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+	int16_t VertexTranslateX;
+	int16_t VertexTranslateY;
+#endif
+#if (EVE_DL_CACHE_SCISSOR)
+	uint16_t ScissorX;
+	uint16_t ScissorY;
+	uint16_t ScissorWidth;
+	uint16_t ScissorHeight;
+#endif
+#if (EVE_DL_OPTIMIZE)
+	uint8_t ColorA;
+	uint8_t Handle; // Current handle
+	uint8_t Cell; // Current cell
+#endif
+	uint8_t VertexFormat; // Current vertex format
+#if (EVE_DL_OPTIMIZE)
+	bool BitmapTransform; // BitmapTransform other than default is set
+#endif
+} EVE_HalDlState;
+#endif
+
 typedef struct EVE_HalContext
 {
 	/* Pointer to user context */
 	void *UserContext;
 
 	/* Pointer to a support library context (e.g. ESD Framework context) */
-	void *LibraryContext; 
+	void *LibraryContext;
 
 	/* Called anytime the code is waiting during CMD write. Return false to abort wait */
-	EVE_Callback CbCmdWait; 
-	/* Hook into coprocessor commands. Return 1 to abort the command. Useful for an optimization routine */
+	EVE_Callback CbCmdWait;
+	/* Callback hook called anytime the coprocessor is reset through the EVE_Util interface */
 	EVE_ResetCallback CbCoprocessorReset;
-	/* Hook into coprocessor reset */
+
+#if EVE_CMD_HOOKS
+	/* Hook into coprocessor commands. Called when EVE_CoCmd interface is used. Return 1 to abort the command. Useful for an optimization routine */
 	EVE_CoCmdHook CoCmdHook;
+#endif
 
 	EVE_STATUS_T Status;
 
@@ -219,8 +260,6 @@ typedef struct EVE_HalContext
 #endif
 #if defined(FT4222_PLATFORM) | defined(MPSSE_PLATFORM)
 	void *SpiHandle;
-#endif
-#if defined(FT4222_PLATFORM)
 	void *GpioHandle; /* LibFT4222 uses this member to store GPIO handle */
 #endif
 
@@ -268,6 +307,32 @@ typedef struct EVE_HalContext
 #if defined(EVE_SUPPORT_MEDIAFIFO)
 	uint32_t MediaFifoAddress;
 	uint32_t MediaFifoSize;
+#if EVE_ENABLE_FATFS
+	FIL LoadFileObj;
+#else
+	void *LoadFileHandle;
+#endif
+	ptrdiff_t LoadFileRemaining;
+#endif
+
+	/* Display list optimization and compatibility caches */
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+	EVE_HalDlState DlState[EVE_DL_STATE_STACK_SIZE];
+	uint8_t DlStateIndex;
+#endif
+#if (EVE_DL_OPTIMIZE)
+	uint8_t DlPrimitive;
+	uint32_t CoFgColor;
+	uint32_t CoBgColor;
+	bool CoBitmapTransform; /* BitmapTransform other than identity is set on the coprocessor */
+#endif
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
+	uint8_t CoScratchHandle;
+#endif
+
+#if defined(_DEBUG)
+	bool DebugMessageVisible;
+	uint8_t DebugBackup[128];
 #endif
 
 	/* Status flags */
@@ -328,7 +393,7 @@ EVE_HAL_EXPORT uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value);
 EVE_HAL_EXPORT uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value);
 EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value);
 EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_transferProgmem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
 EVE_HAL_EXPORT uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
 EVE_HAL_EXPORT void EVE_Hal_endTransfer(EVE_HalContext *phost);
 
@@ -348,7 +413,7 @@ EVE_HAL_EXPORT void EVE_Hal_wr8(EVE_HalContext *phost, uint32_t addr, uint8_t v)
 EVE_HAL_EXPORT void EVE_Hal_wr16(EVE_HalContext *phost, uint32_t addr, uint16_t v);
 EVE_HAL_EXPORT void EVE_Hal_wr32(EVE_HalContext *phost, uint32_t addr, uint32_t v);
 EVE_HAL_EXPORT void EVE_Hal_wrMem(EVE_HalContext *phost, uint32_t addr, const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_wrProgmem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_wrProgMem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size);
 EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const char *str, uint32_t index, uint32_t size, uint32_t padMask);
 
 /*********
@@ -403,6 +468,37 @@ static inline bool EVE_Hal_supportMediaFifo(EVE_HalContext *phost)
 #endif
 }
 
+static inline bool EVE_Hal_supportVideo(EVE_HalContext *phost)
+{
+#ifdef EVE_SUPPORT_VIDEO
+	return EVE_CHIPID >= EVE_FT810;
+#else
+	return false;
+#endif
+}
+
+static inline int EVE_gen(EVE_CHIPID_T chipId)
+{
+	switch (chipId)
+	{
+	case EVE_FT800:
+	case EVE_FT801:
+		return EVE1;
+	case EVE_FT810:
+	case EVE_FT811:
+	case EVE_FT812:
+	case EVE_FT813:
+		return EVE2;
+	case EVE_BT815:
+	case EVE_BT816:
+		return EVE3;
+	case EVE_BT817:
+	case EVE_BT818:
+		return EVE4;
+	}
+	return 0;
+}
+
 /************
 ** UTILITY **
 ************/
@@ -412,8 +508,8 @@ EVE_HAL_EXPORT void EVE_Hal_hostCommand(EVE_HalContext *phost, uint8_t cmd);
 /* This API sends a 3byte command to the phost */
 EVE_HAL_EXPORT void EVE_Hal_hostCommandExt3(EVE_HalContext *phost, uint32_t cmd);
 
-/* Toggle PD_N pin of FT800 board for a power cycle */
-EVE_HAL_EXPORT void EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
+/* Toggle PD_N pin of FT800 board for a power cycle. Returns false on failure */
+EVE_HAL_EXPORT bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
 
 /* Switch EVE to different SPI channel mode */
 EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
@@ -431,16 +527,12 @@ EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T
 EVE_HAL_EXPORT void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode);
 EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost);
 
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /* This API can only be called when PLL is stopped(SLEEP mode).
 For compatibility, set frequency to the EVE_GPU_12MHZ option in the EVE_SETPLLSP1_T table. */
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq);
 
-/* Power down or up ROMs and ADCs.
-Specified one or more elements in the EVE_81X_ROM_AND_ADC_T 
-table to power down, unspecified elements will be powered up.
-The application must retain the state of the ROMs and ADCs 
-as they're not readable from the device. */
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
+/* Power down or up ROMs and ADCs.*/
 EVE_HAL_EXPORT void EVE_Host_powerOffComponents(EVE_HalContext *phost, uint8_t val);
 
 /* This API sets the current strength of supported GPIO/IO group(s) */

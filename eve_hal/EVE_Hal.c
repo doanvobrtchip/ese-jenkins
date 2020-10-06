@@ -115,6 +115,9 @@ EVE_HAL_EXPORT void EVE_Hal_close(EVE_HalContext *phost)
 		return;
 	}
 
+#ifdef EVE_SUPPORT_MEDIAFIFO
+	EVE_Util_closeFile(phost);
+#endif
 	EVE_HalImpl_close(phost);
 	memset(phost, 0, sizeof(EVE_HalContext));
 }
@@ -254,17 +257,17 @@ EVE_HAL_EXPORT void EVE_Hal_wrMem(EVE_HalContext *phost, uint32_t addr, const ui
 }
 
 /**
- * @brief Write a buffer in Progmem to Coprocessor's memory
+ * @brief Write a buffer in ProgMem to Coprocessor's memory
  * 
  * @param phost Pointer to Hal context
  * @param addr Address to be write
  * @param uint8_t Data to be write
  * @param size Size of buffer
  */
-EVE_HAL_EXPORT void EVE_Hal_wrProgmem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size)
+EVE_HAL_EXPORT void EVE_Hal_wrProgMem(EVE_HalContext *phost, uint32_t addr, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, addr);
-	EVE_Hal_transferProgmem(phost, NULL, buffer, size);
+	EVE_Hal_transferProgMem(phost, NULL, buffer, size);
 	EVE_Hal_endTransfer(phost);
 }
 
@@ -358,7 +361,6 @@ EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost)
 	EVE_Hal_hostCommand(phost, EVE_CORE_RESET);
 }
 
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /**
  * @brief Set system clock for Coprocessor
  * 
@@ -367,22 +369,49 @@ EVE_HAL_EXPORT void EVE_Host_coreReset(EVE_HalContext *phost)
  */
 EVE_HAL_EXPORT void EVE_Host_selectSysClk(EVE_HalContext *phost, EVE_81X_PLL_FREQ_T freq)
 {
-	if (EVE_SYSCLK_84M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x80 << 8) | (0x07 << 8));
-	else if (EVE_SYSCLK_72M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x06 << 8));
-	else if (EVE_SYSCLK_60M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x05 << 8));
-	else if (EVE_SYSCLK_48M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x04 << 8));
-	else if (EVE_SYSCLK_36M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x03 << 8));
-	else if (EVE_SYSCLK_24M == freq)
-		EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x02 << 8));
-	else if (EVE_SYSCLK_DEFAULT == freq) //default clock
-		EVE_Hal_hostCommandExt3(phost, 0x61);
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
+	if (EVE_CHIPID >= EVE_FT810)
+	{
+#if (EVE_SUPPORT_CHIPID >= EVE_BT815)
+		if (EVE_SYSCLK_84M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x80 << 8) | (0x07 << 8));
+		else
+#endif
+		    if (EVE_SYSCLK_72M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x06 << 8));
+		else if (EVE_SYSCLK_60M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x05 << 8));
+		else if (EVE_SYSCLK_48M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x40 << 8) | (0x04 << 8));
+		else if (EVE_SYSCLK_36M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x03 << 8));
+		else if (EVE_SYSCLK_24M == freq)
+			EVE_Hal_hostCommandExt3(phost, (uint32_t)0x61 | (0x02 << 8));
+		else if (EVE_SYSCLK_DEFAULT == freq) //default clock
+			EVE_Hal_hostCommandExt3(phost, 0x61);
+	}
+	else
+#endif
+	{
+		switch (freq)
+		{
+		case EVE_SYSCLK_24M:
+			EVE_Host_pllFreqSelect(phost, EVE_PLL_24M);
+			break;
+		case EVE_SYSCLK_36M:
+			EVE_Host_pllFreqSelect(phost, EVE_PLL_36M);
+			break;
+		default:
+			eve_printf_debug("Invalid sys clk frequency selected (%i)\n", (int)freq);
+			/* no break */
+		case EVE_SYSCLK_48M:
+			EVE_Host_pllFreqSelect(phost, EVE_PLL_48M);
+			break;
+		}
+	}
 }
 
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810)
 /**
  * @brief Power off a component
  * 

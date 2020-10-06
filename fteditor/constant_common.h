@@ -3,6 +3,8 @@ Copyright (C) 2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#pragma warning(disable : 4005) // macro redefinition
+
 #ifndef FTEDITOR_CONSTANT_COMMON_H
 #define FTEDITOR_CONSTANT_COMMON_H
 
@@ -263,6 +265,7 @@ namespace FTEDITOR {
 #define CMD_ANIMFRAMERAM     4294967149UL
 #define CMD_ANIMSTARTRAM     4294967150UL
 #define CMD_RUNANIM          4294967151UL
+#define CMD_FLASHPROGRAM     4294967152UL /* Patched in from flash firmware */
 
 #define DISPLAY() ((0UL<<24))
 #define JUMP(dest) ((30UL<<24)|(((dest)&65535UL)<<0))

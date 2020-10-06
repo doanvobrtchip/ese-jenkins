@@ -59,7 +59,7 @@ bool EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size)
 	}
 	else
 	{
-		res = false;
+		res = true;
 	}
 
 	if (res)
@@ -78,6 +78,12 @@ bool EVE_MediaFifo_set(EVE_HalContext *phost, uint32_t address, uint32_t size)
 	return res;
 }
 
+void EVE_MediaFifo_close(EVE_HalContext *phost)
+{
+	phost->MediaFifoAddress = 0;
+	phost->MediaFifoSize = 0;
+}
+
 /* Get the current read pointer. */
 uint32_t EVE_MediaFifo_rp(EVE_HalContext *phost)
 {
@@ -93,6 +99,9 @@ uint32_t EVE_MediaFifo_wp(EVE_HalContext *phost)
 /* Get the currently available space. */
 uint32_t EVE_MediaFifo_space(EVE_HalContext *phost)
 {
+	if (!phost->MediaFifoSize)
+		return 0;
+
 	int32_t rp = EVE_Hal_rd32(phost, REG_MEDIAFIFO_READ);
 	int32_t wp = EVE_Hal_rd32(phost, REG_MEDIAFIFO_WRITE);
 #if 1
@@ -119,6 +128,12 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		return false;
 	}
 
+	if (!phost->MediaFifoSize)
+	{
+		eve_printf_debug("EVE Media FIFO has not been set, cannot write\n");
+		return false;
+	}
+
 #if 1
 	/* Two strategies. 
 	- Wait for entire space and write the entire buffer.
@@ -130,18 +145,21 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		uint32_t wp;
 		int32_t overflow;
 
-		if (!EVE_MediaFifo_waitSpace(phost, size))
-			return false;
+		if (!EVE_MediaFifo_waitSpace(phost, size, transfered))
+			return false; // !phost->CmdFault;
 
 		wp = EVE_Hal_rd32(phost, REG_MEDIAFIFO_WRITE);
 		overflow = (int32_t)(wp + size) - (int32_t)(phost->MediaFifoSize);
 		if (overflow > 0)
 		{
+			eve_assert(phost->MediaFifoAddress + wp + size - overflow <= RAM_G_SIZE);
+			eve_assert(phost->MediaFifoAddress + overflow <= RAM_G_SIZE);
 			EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, buffer, size - overflow);
 			EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[size - overflow], overflow);
 		}
 		else
 		{
+			eve_assert(phost->MediaFifoAddress + wp + size <= RAM_G_SIZE);
 			EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, buffer, size);
 		}
 		wp += size;
@@ -166,17 +184,20 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		{
 			uint32_t transfer = min(halfSize, remaining);
 			int32_t overflow;
-			if (!EVE_MediaFifo_waitSpace(phost, transfer))
-				return false;
+			if (!EVE_MediaFifo_waitSpace(phost, transfer, transfered))
+				return false; // !phost->CmdFault;
 
 			overflow = (int32_t)(wp + transfer) - (int32_t)(phost->MediaFifoSize);
 			if (overflow > 0)
 			{
+				eve_assert(phost->MediaFifoAddress + wp + transfer - overflow <= RAM_G_SIZE);
+				eve_assert(phost->MediaFifoAddress + overflow <= RAM_G_SIZE);
 				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer - overflow);
 				EVE_Hal_wrMem(phost, phost->MediaFifoAddress, &buffer[done + transfer - overflow], overflow);
 			}
 			else
 			{
+				eve_assert(phost->MediaFifoAddress + wp + transfer <= RAM_G_SIZE);
 				EVE_Hal_wrMem(phost, phost->MediaFifoAddress + wp, &buffer[done], transfer);
 			}
 			wp += transfer;
@@ -213,7 +234,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 			    EVE_MediaFifo_waitSpace(phost, 4),
 			    min(halfSize, remaining));
 			if (!transfer)
-				return false;
+				return false; // !phost->CmdFault;
 			int32_t overflow = (int32_t)(wp + transfer) - (int32_t)(phost->MediaFifoSize);
 			if (overflow > 0)
 			{
@@ -245,6 +266,10 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 #endif
 }
 
+#ifdef _DEBUG
+void debugBackupRamG(EVE_HalContext *phost);
+#endif
+
 static bool checkWait(EVE_HalContext *phost, uint32_t rpOrSpace)
 {
 	if (EVE_CMD_FAULT(rpOrSpace))
@@ -255,6 +280,7 @@ static bool checkWait(EVE_HalContext *phost, uint32_t rpOrSpace)
 		phost->CmdWaiting = false;
 		eve_printf_debug("Coprocessor fault in processing media FIFO\n");
 #if defined(_DEBUG)
+		debugBackupRamG(phost);
 		if (EVE_CHIPID >= EVE_BT815)
 		{
 			EVE_Hal_rdMem(phost, (uint8_t *)err, RAM_ERR_REPORT, 128);
@@ -305,20 +331,26 @@ static bool handleWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 
 /* Wait for the media FIFO to fully empty.
 Returns false in case a coprocessor fault occurred */
-bool EVE_MediaFifo_waitFlush(EVE_HalContext *phost)
+bool EVE_MediaFifo_waitFlush(EVE_HalContext *phost, bool orCmdFlush)
 {
-	return EVE_MediaFifo_waitSpace(phost, phost->MediaFifoSize - 4);
+	return EVE_MediaFifo_waitSpace(phost, phost->MediaFifoSize - 4, orCmdFlush);
 }
 
 /* Wait for the media FIFO to have at least the requested amount of free space.
 Returns 0 in case a coprocessor fault occurred */
-uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size)
+uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size, bool orCmdFlush)
 {
 	uint32_t space;
 
 	if (!EVE_Hal_supportMediaFifo(phost))
 	{
 		eve_assert_ex(false, "EVE_MediaFifo_waitSpace is not available on the current graphics platform\n");
+		return 0;
+	}
+
+	if (!phost->MediaFifoSize)
+	{
+		eve_printf_debug("EVE Media FIFO has not been set, cannot wait for space\n");
 		return 0;
 	}
 
@@ -343,8 +375,11 @@ uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size)
 		if (!handleWait(phost, space))
 			return 0;
 		phost->CmdWaiting = false;
-		if (!EVE_Cmd_waitSpace(phost, 0))
+		uint32_t cmdSpace = EVE_Cmd_waitSpace(phost, 0);
+		if (!cmdSpace)
 			return 0; /* Check for coprocessor error */
+		if (orCmdFlush && cmdSpace == (EVE_CMD_FIFO_SIZE - 4))
+			return 0; /* Processed */
 		phost->CmdWaiting = true;
 	} while (space < size);
 

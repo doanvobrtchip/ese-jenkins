@@ -21,6 +21,7 @@
 #pragma warning(push)
 #pragma warning(disable : 26451) // Arithmetic overflow
 #pragma warning(disable : 6385) // Invalid read
+#pragma warning(disable : 6386) // Buffer overrun while writing
 #endif
 
 #include "astc_codec_internals.h"

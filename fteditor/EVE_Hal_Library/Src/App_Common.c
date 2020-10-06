@@ -29,6 +29,9 @@ Author : Bridgetek
 Revision History:
 0.1 - date 2017.03.24 - Initial version
 */
+
+#pragma warning(disable: 4996)
+
 #include "Platform.h"
 #include "App_Common.h"
 
@@ -106,7 +109,7 @@ void App_WrDl_Buffer(Gpu_Hal_Context_t *phost,uint32_t cmd)
 void App_WrCoStr_Buffer(Gpu_Hal_Context_t *phost,const char8_t *s)
 {
 #ifdef  BUFFER_OPTIMIZATION  
-    uint16_t length = 0;
+    size_t length = 0;
 
 	if (CmdBuffer_Index >= CMD_FIFO_SIZE)
 	{

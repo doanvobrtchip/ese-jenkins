@@ -39,10 +39,8 @@
 
 typedef struct EVE_BootupParameters
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
 	/* Clock PLL multiplier (ft81x: 5, 60MHz, bt81x: 6, 72MHz) */
 	EVE_81X_PLL_FREQ_T SystemClock;
-#endif
 
 	/* External oscillator (default: false) */
 	bool ExternalOsc;
@@ -58,8 +56,14 @@ typedef struct EVE_BootupParameters
 typedef struct EVE_ConfigParameters
 {
 	/* Display */
-	int16_t Width; /* Line buffer width (pixels) */
-	int16_t Height; /* Screen and render height (lines) */
+	union {
+		int16_t Width; /* Line buffer width (pixels) */
+		int16_t HSize;
+	};
+	union {
+		int16_t Height; /* Screen and render height (lines) */
+		int16_t VSize;
+	};
 	int16_t HCycle;
 	int16_t HOffset;
 	int16_t HSync0;
@@ -75,10 +79,13 @@ typedef struct EVE_ConfigParameters
 	uint8_t OutBitsR;
 	uint8_t OutBitsG;
 	uint8_t OutBitsB;
+	uint16_t PCLKFreq;
 	bool Dither;
-	/* TODO: 
-	AdaptiveFramerate
-	*/
+	
+	uint8_t AdaptiveFrameRate;
+	uint8_t PCLK_2X;
+	int16_t AhHCycleMax;
+	bool ExternalClock;
 
 #ifdef EVE_SUPPORT_HSF
 	/* Physical horizontal pixels. Set to 0 to disable HSF. */
@@ -87,7 +94,9 @@ typedef struct EVE_ConfigParameters
 
 } EVE_ConfigParameters;
 
-/* Display resolution presets */
+/* Display resolution presets.
+NOTE: Also update `s_DisplayResolutions` and `s_DisplayNames` in EVE_Util.c around ln 50,
+as well as `EVE_Util_configDefaults` around ln 500, when adding display presets. */
 typedef enum EVE_DISPLAY_T
 {
 	EVE_DISPLAY_DEFAULT = 0,
@@ -96,7 +105,8 @@ typedef enum EVE_DISPLAY_T
 	EVE_DISPLAY_QVGA_320x240_50Hz,
 	EVE_DISPLAY_WQVGA_480x272_60Hz,
 	EVE_DISPLAY_WVGA_800x480_60Hz,
-	EVE_DISPLAY_WXGA_1280x800_60Hz,
+	EVE_DISPLAY_WSVGA_1024x600_83Hz,
+	EVE_DISPLAY_WXGA_1280x800_65Hz,
 
 	/* Portrait */
 	EVE_DISPLAY_HVGA_320x480_60Hz,
@@ -151,7 +161,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost);
 **********************/
 
 /* Command line device selection utility */
-#if defined(WIN32)
+#if defined(_WIN32)
 EVE_HAL_EXPORT void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx);
 #else
 static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx)
@@ -162,13 +172,40 @@ static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t
 #endif
 
 /* Command line display selection utility */
-#if defined(WIN32) && defined(EVE_MULTI_TARGET)
+#if defined(_WIN32) && defined(EVE_MULTI_TARGET)
 EVE_HAL_EXPORT void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display);
 #else
-static inline void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display);
+static inline void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display)
 {
 	*display = EVE_DISPLAY_DEFAULT;
 }
+#endif
+
+#if defined(_WIN32) && defined(EVE_FLASH_AVAILABLE)
+EVE_HAL_EXPORT void EVE_Util_selectFlashFileInteractive(eve_tchar_t *flashPath, bool *updateFlash, bool *updateFlashFirmware, const EVE_HalParameters *params, const eve_tchar_t *flashFile);
+#else
+static inline void EVE_Util_selectFlashFileInteractive(eve_tchar_t *flashPath, bool *updateFlash, bool *updateFlashFirmware, const EVE_HalParameters *params, const eve_tchar_t *flashFile)
+{
+	flashPath[0] = '\0';
+	*updateFlash = false;
+	*updateFlashFirmware = false;
+}
+#endif
+
+#if defined(_WIN32) && defined(EVE_FLASH_AVAILABLE)
+EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, eve_tchar_t *flashPath, bool updateFlashFirmware);
+#else
+static inline void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, eve_tchar_t *flashPath, bool updateFlashFirmware)
+{
+	/* no-op */
+}
+#endif
+
+#if defined(BT8XXEMU_PLATFORM)
+EVE_HAL_EXPORT void EVE_Util_emulatorDefaults(EVE_HalParameters *params, void *emulatorParams, EVE_CHIPID_T chipId);
+#if defined(EVE_FLASH_AVAILABLE)
+EVE_HAL_EXPORT void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, void *emulatorParams, void *flashParams, const eve_tchar_t *flashPath);
+#endif
 #endif
 
 /* Command line device selection utility.
@@ -180,6 +217,9 @@ EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, wchar_
 /* Calls EVE_Util_bootup and EVE_Util_config using the default parameters.
 Falls back to no interactivity on FT9XX platform */
 EVE_HAL_EXPORT bool EVE_Util_bootupConfigInteractive(EVE_HalContext *phost, EVE_DISPLAY_T display);
+
+/* Forces a coprocessor fault, useful for triggering a delayed reset */
+EVE_HAL_EXPORT void EVE_Util_forceFault(EVE_HalContext *phost, const char *err);
 
 #endif /* #ifndef EVE_HAL_INCL__H */
 

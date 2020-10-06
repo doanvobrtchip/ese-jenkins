@@ -31,6 +31,9 @@ Revision History:
 0.2 - date 2013.08.19 - added few APIs
 1.0 - date 2017.03.24 - Rename and split platforms
 */
+
+#pragma warning(disable: 4267 4101 4018 4996)
+
 #include "Platform.h"
 #include "Gpu_Hal.h"
 
