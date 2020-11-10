@@ -23,6 +23,7 @@
 
 // Qt includes
 #include <QWidget>
+#include <QStyledItemDelegate>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -32,6 +33,8 @@
 class QTreeWidget;
 class QTreeWidgetItem;
 
+class QLineEdit;
+
 // Primitive, functions, and vertices drop on top of the command list,
 // Display list and command state drop before the widget that's under the cursor
 
@@ -40,6 +43,27 @@ class QTreeWidgetItem;
 #define FTEDITOR_SELECTION_DL_STATE (3)
 #define FTEDITOR_SELECTION_CMD_STATE (4)
 #define FTEDITOR_SELECTION_VERTEX (5)
+
+
+class HighlightDelegate : public QStyledItemDelegate
+{
+    Q_OBJECT
+
+public:
+    HighlightDelegate(QWidget *parent = 0)
+        : QStyledItemDelegate(parent)
+    {
+    }
+
+    void setRegularExpressionFilter(const QString &reFilter) { m_reFilter = reFilter; }
+
+protected:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+        const QModelIndex &index) const override;
+
+private:
+    QString m_reFilter = QString("");
+};
 
 namespace FTEDITOR {
 
@@ -73,9 +97,14 @@ public:
 
 private slots:
 	void currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+	void processFilter(const QString& filter);
 
 private:
 	MainWindow *m_MainWindow;
+
+	QLineEdit   * m_FilterText;
+	HighlightDelegate * m_highlightDelegate;
+
 	QTreeWidget *m_Tools;
 
 	QTreeWidgetItem *m_Background;

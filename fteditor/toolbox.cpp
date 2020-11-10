@@ -22,10 +22,14 @@
 
 // Qt includes
 #include <QVBoxLayout>
+#include <QLineEdit>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QHeaderView>
 #include <QTimer>
+#include <QDebug>
+#include <QRegularExpression>
+#include <QPainter>
 
 // Emulator includes
 
@@ -37,6 +41,46 @@
 #include "constant_mapping.h"
 #include "constant_common.h"
 
+void HighlightDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    if (!m_reFilter.isEmpty() && index.column() == 0)
+    {
+        //const QColor highlight = QColor(176, 196, 222);
+		const QColor highlight = QColor(164, 255, 164);
+        QString text = index.data().toString();
+        QFontMetrics fm = option.fontMetrics;
+
+        QRegularExpression re(m_reFilter, QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatchIterator rei = re.globalMatch(text);
+
+        while (rei.hasNext())
+        {
+            QRegularExpressionMatch rem = rei.next();
+            for (int i = 0; i <= rem.lastCapturedIndex(); ++i)
+            {
+                int t1 = rem.capturedStart(i);
+                int t2 = rem.capturedLength(i);
+
+                int x = fm.boundingRect(option.rect, Qt::AlignLeft, text.left(t1)).width();
+                int w = fm.boundingRect(option.rect, Qt::AlignLeft, text.mid(t1, t2)).width();
+
+                QRect r = option.rect;
+                r.translate(x + 3, 0);
+                r.setWidth(w);
+
+                painter->fillRect(r, highlight);
+            }
+        }
+
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+    else
+    {
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+
+}
+
 namespace FTEDITOR {
 
 Toolbox::Toolbox(MainWindow *parent)
@@ -46,8 +90,17 @@ Toolbox::Toolbox(MainWindow *parent)
     , m_LineNumber(0)
 {
 	QVBoxLayout *layout = new QVBoxLayout();
+
+	m_FilterText = new QLineEdit(this);
+	m_FilterText->setPlaceholderText("Filter");
+	m_FilterText->setClearButtonEnabled(true);
+	connect(m_FilterText, &QLineEdit::textEdited, this, &Toolbox::processFilter);
+	layout->addWidget(m_FilterText);
+
 	m_Tools = new QTreeWidget(this);
 	m_Tools->setDragEnabled(true);
+	m_highlightDelegate = new HighlightDelegate(this);
+	m_Tools->setItemDelegate(m_highlightDelegate);
 	layout->addWidget(m_Tools);
 	setLayout(layout);
 	connect(m_Tools, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(currentSelectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
@@ -738,6 +791,50 @@ Toolbox::Toolbox(MainWindow *parent)
 	});
 }
 
+void Toolbox::processFilter(const QString & filter)
+{
+	QRegularExpression re(filter, QRegularExpression::CaseInsensitiveOption);
+
+	if (!re.isValid()) {
+		return;
+	}
+
+	m_highlightDelegate->setRegularExpressionFilter(filter);
+
+	QTreeWidgetItem * sub = nullptr;
+	QTreeWidgetItem * node = nullptr;
+	bool hasChidVisible = false;
+	for(int i = 0; i < m_Tools->topLevelItemCount(); i++)
+	{
+		sub = m_Tools->topLevelItem(i);
+		hasChidVisible = false;
+
+		for (int j = 0; j < sub->childCount() ; j++) {
+			node = sub->child(j);
+			QString nodeText = node->text(0);
+
+			bool hiddenByDevice = node->data(1, 0).toBool();
+
+			if (re.match(nodeText).hasMatch()) {
+				node->setHidden(false || hiddenByDevice);
+			} else {
+				sub->child(j)->setHidden(true);
+			}
+			hasChidVisible |= !node->isHidden();
+		}
+		sub->setExpanded(hasChidVisible);
+		sub->setHidden(!hasChidVisible);
+	}
+
+	if (filter.isEmpty()) {
+		for(int i = 0; i < m_Tools->topLevelItemCount(); i++)
+		{
+			QTreeWidgetItem * sub = m_Tools->topLevelItem(i);
+			sub->setExpanded(false);
+		}
+	}
+}
+
 void Toolbox::currentSelectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
 	uint32_t selectionType = getSelectionType();
@@ -846,27 +943,35 @@ void Toolbox::bindCurrentDevice()
 	for (size_t i = 0; i < m_CoprocessorFT801Only.size(); ++i)
 	{
 		m_CoprocessorFT801Only[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE == FTEDITOR_FT801 && m_LineEditor->isCoprocessor()));
+		m_CoprocessorFT801Only[i]->setData(1, 0, m_CoprocessorFT801Only[i]->isHidden());
 	}
 	for (size_t i = 0; i < m_CoprocessorFT810Plus.size(); ++i)
 	{
 		m_CoprocessorFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && m_LineEditor->isCoprocessor()));
+		m_CoprocessorFT810Plus[i]->setData(1, 0, m_CoprocessorFT810Plus[i]->isHidden());
 	}
 	for (size_t i = 0; i < m_CoprocessorBT815Plus.size(); ++i)
 	{
 		m_CoprocessorBT815Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && m_LineEditor->isCoprocessor()));
+		m_CoprocessorBT815Plus[i]->setData(1, 0, m_CoprocessorBT815Plus[i]->isHidden());
 	}
 	for (size_t i = 0; i < m_CoprocessorBT817Plus.size(); ++i)
 	{
 		m_CoprocessorBT817Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817 && m_LineEditor->isCoprocessor()));
+		m_CoprocessorBT817Plus[i]->setData(1, 0, m_CoprocessorBT817Plus[i]->isHidden());
 	}
 	for (size_t i = 0; i < m_DisplayListFT810Plus.size(); ++i)
 	{
 		m_DisplayListFT810Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810));
+		m_DisplayListFT810Plus[i]->setData(1, 0, m_DisplayListFT810Plus[i]->isHidden());
 	}
 	for (size_t i = 0; i < m_DisplayListBT815Plus.size(); ++i)
 	{
 		m_DisplayListBT815Plus[i]->setHidden(!(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815));
+		m_DisplayListBT815Plus[i]->setData(1, 0, m_DisplayListBT815Plus[i]->isHidden());
 	}
+
+	processFilter(m_FilterText->text());
 }
 
 void Toolbox::setEditorLine(DlEditor *editor, int line)
