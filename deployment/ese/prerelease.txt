@@ -30,6 +30,7 @@ Known issues
 •   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
 •   Drawing invalid animation frame will cause ESE hang
 •   When using device sync up, flash contents need written before updating display list or corpocessor
+•   Primitives cannot be dropped into viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
 
 Version 3.4.0
 Features:
