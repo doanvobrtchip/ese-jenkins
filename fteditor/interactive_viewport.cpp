@@ -1857,8 +1857,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0].I = UNTFX(e->pos().x());
-				pa.Parameter[1].I = UNTFY(e->pos().y());
+				pa.Parameter[0].I = UNTFX(e->pos().x()) * 16;
+				pa.Parameter[1].I = UNTFY(e->pos().y()) * 16;
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -2679,13 +2679,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						DlParsed pav;
 						pav.ValidId = true;
-						pav.IdLeft = FTEDITOR_DL_VERTEX2II; // FIXME: Drag-drop outside 512px does not work??
+						pav.IdLeft = FTEDITOR_DL_VERTEX2F; // FIXME: Drag-drop outside 512px does not work??
 						pav.IdRight = 0;
-						pav.Parameter[0].I = UNTFX(e->pos().x());
-						pav.Parameter[1].I = UNTFY(e->pos().y());
-						pav.Parameter[2].I = bitmapHandle;
-						pav.Parameter[3].I = 0;
-						pav.ExpectedParameterCount = 4;
+						pav.Parameter[0].I = UNTFX(e->pos().x()) * 16;
+						pav.Parameter[1].I = UNTFY(e->pos().y()) * 16;
+						//pav.Parameter[2].I = bitmapHandle;
+						//pav.Parameter[3].I = 0;
+						pav.ExpectedParameterCount = 2;
 						pav.ExpectedStringParameter = false;
 						pa.IdRight = FTEDITOR_DL_BEGIN;
 						pa.Parameter[0].U = selection;
