@@ -272,6 +272,14 @@ bool DlEditor::eventFilter(QObject *watched, QEvent *event)
 	}
 }
 
+int DlEditor::getVertextFormat(int line)
+{	
+	if (line > getLineCount())
+		line = getLineCount();
+	DlState state = getState(line);
+	return state.Graphics.VertexFormat;
+}
+
 void DlEditor::setModeMacro()
 {
 	m_ModeMacro = true;

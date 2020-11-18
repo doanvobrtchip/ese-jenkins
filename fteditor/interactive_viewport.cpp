@@ -1857,8 +1857,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0].I = UNTFX(e->pos().x()) * 16;
-				pa.Parameter[1].I = UNTFY(e->pos().y()) * 16;
+				pa.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
+				pa.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -2063,7 +2063,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				}
 
 				// Skip past CLEAR commands
-				while (m_LineEditor->getLine(line).ValidId && m_LineEditor->getLine(line).IdLeft == 0 && (
+				while (m_LineEditor->getLine(line).ValidId && m_LineEditor->getLine(line).IdLeft == FTEDITOR_DL_INSTRUCTION && (
 					m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR
 					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_COLOR_RGB
 					|| m_LineEditor->getLine(line).IdRight == FTEDITOR_DL_CLEAR_COLOR_A
@@ -2088,11 +2088,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ValidId = true;
 					pa.IdLeft = selection;
 					pa.IdRight = 0;
+
+					
 					switch (selection)
 					{
 					case FTEDITOR_DL_VERTEX2F:
-						pa.Parameter[0].I = UNTFX(e->pos().x()) << 4;
-						pa.Parameter[1].I = UNTFY(e->pos().y()) << 4;
+						pa.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
+						pa.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
 						pa.ExpectedParameterCount = 2;
 						break;
 					default:
@@ -2681,8 +2683,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pav.ValidId = true;
 						pav.IdLeft = FTEDITOR_DL_VERTEX2F; // FIXME: Drag-drop outside 512px does not work??
 						pav.IdRight = 0;
-						pav.Parameter[0].I = UNTFX(e->pos().x()) * 16;
-						pav.Parameter[1].I = UNTFY(e->pos().y()) * 16;
+						pav.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
+						pav.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
 						//pav.Parameter[2].I = bitmapHandle;
 						//pav.Parameter[3].I = 0;
 						pav.ExpectedParameterCount = 2;

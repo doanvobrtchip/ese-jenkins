@@ -106,6 +106,8 @@ public:
 
 	bool eventFilter(QObject *watched, QEvent *event);
 
+	int getVertextFormat(int line);
+
 private slots:
 	void documentContentsChange(int position, int charsRemoved, int charsAdded);
 	void documentBlockCountChanged(int newBlockCount);
@@ -120,6 +122,7 @@ private:
 
 	void processState();
 
+private:
 	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
 	DlHighlighter *m_DlHighlighter;
