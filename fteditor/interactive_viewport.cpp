@@ -2318,13 +2318,17 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 2;
 						break;
                     case CMD_INFLATE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
+                        pa.Parameter[0].U = 0;
+						pa.StringParameter = "";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 2;
                         break;
                     case CMD_INFLATE2:
-                        pa.Parameter[0].I = 0;
+                        pa.Parameter[0].U = 0;
                         pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
+						pa.StringParameter = "";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 3;
                         break;
 					case CMD_GRADIENTA:
 						pa.Parameter[2].U = 0xFF007FFF;

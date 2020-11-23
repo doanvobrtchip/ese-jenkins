@@ -587,9 +587,11 @@ void DlParser::initVC4()
 		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
 		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
         s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
-        s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+        s_CmdParamCount[CMD_INFLATE & 0xFF] = 2;
+		s_CmdParamString[CMD_INFLATE & 0xFF] = true;
 		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
-		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
+		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 3;
+		s_CmdParamString[CMD_INFLATE2 & 0xFF] = true;
 		s_CmdIdMap["CMD_ROTATEAROUND"] = CMD_ROTATEAROUND & 0xFF;
 		s_CmdParamCount[CMD_ROTATEAROUND & 0xFF] = 4;
 		s_CmdIdMap["CMD_RESETFONTS"] = CMD_RESETFONTS & 0xFF;
