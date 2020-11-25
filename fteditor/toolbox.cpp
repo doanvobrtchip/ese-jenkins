@@ -324,6 +324,10 @@ Toolbox::Toolbox(MainWindow *parent)
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMZERO));
 		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Memory Copy"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMCPY));
+		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Inflate"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_INFLATE));

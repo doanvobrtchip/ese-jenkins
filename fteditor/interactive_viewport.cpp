@@ -2317,6 +2317,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
+					case CMD_MEMCPY:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.ExpectedParameterCount = 3;
+						break;
                     case CMD_INFLATE:
                         pa.Parameter[0].U = 0;
 						pa.StringParameter = "";
