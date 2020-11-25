@@ -1114,6 +1114,10 @@ void DeviceManager::uploadFlashContent()
 
 	EVE_HalContext *phost = (EVE_HalContext *)devInfo->EveHalContext;
 
+	EVE_Host_powerModeSwitch(phost, EVE_POWERDOWN_M);
+	EVE_sleep(50);
+	EVE_Util_bootupConfig(phost);
+
 	if (!EVE_Util_resetCoprocessor(phost))
 	{
 		if (m_Abort)
