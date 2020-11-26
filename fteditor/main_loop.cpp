@@ -848,6 +848,7 @@ void loop()
 			{
 				switch (cmdList[i])
 				{
+				case CMD_MEMWRITE:
 				case CMD_INFLATE:
 				case CMD_INFLATE2:
 				case CMD_LOADIMAGE:
@@ -954,6 +955,11 @@ void loop()
 					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
 			}
 			else if (cmdList[i] == CMD_INFLATE )
+			{
+				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				++strParamRead;
+			}
+			else if (cmdList[i] == CMD_MEMWRITE )
 			{
 				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
 				++strParamRead;
