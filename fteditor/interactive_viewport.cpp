@@ -2888,6 +2888,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdRight = selection & 0xFF;
                     switch (selection)
                     {
+					case CMD_REGREAD:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+                        pa.ExpectedParameterCount = 2;
+						break;
                     case CMD_BGCOLOR:
                         pa.Parameter[0].U = 0x7F3F1F;
                         pa.ExpectedParameterCount = 1;

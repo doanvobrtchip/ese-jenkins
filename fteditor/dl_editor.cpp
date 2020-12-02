@@ -123,7 +123,6 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		      { "CMD_VIDEOFRAME", { "<u>destination: %1", "<u>pointer: %1" } },
 		      { "CMD_MEMCRC", { "<u>pointer: %1", "number of bytes: %1", "result: %1" } },
 		      { "CMD_MEMZERO", { "<u>pointer: %1", "number of bytes: %1" } },
-			  { "CMD_MEMWRITE", { "<u>pointer: %1", "number of bytes: %1" } },
 		      { "CMD_MEMSET", { "<u>pointer: %1", "value: %1", "number of bytes: %1" } },
 		      { "CMD_MEMCPY", { "<u>destination: %1", "<u>source: %1", "number of bytes: %1" } },
 		      { "CMD_BUTTON", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "font: %1, options: %2", "string: %1" } },
