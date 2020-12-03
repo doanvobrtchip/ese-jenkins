@@ -192,7 +192,7 @@ EVE_HAL_EXPORT uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr)
  * @param addr Address to bbe read
  * @param size Size to be read
  */
-EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size)
+EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, const uint8_t *result, uint32_t addr, uint32_t size)
 {
 	EVE_Hal_startTransfer(phost, EVE_TRANSFER_READ, addr);
 	EVE_Hal_transferMem(phost, result, NULL, size);
@@ -302,12 +302,13 @@ EVE_HAL_EXPORT void EVE_Hal_wrString(EVE_HalContext *phost, uint32_t addr, const
 EVE_HAL_EXPORT int32_t EVE_Hal_clockTrimming(EVE_HalContext *phost, uint32_t lowFreq)
 {
 	uint32_t f;
-	uint8_t i;
 
 	/* Trim the internal clock by increase the REG_TRIM register till the measured frequency is within the acceptable range.*/
-	for (i = 0; (i < 31) && ((f = EVE_Hal_currentFrequency(phost)) < lowFreq); i++)
+	f = EVE_Hal_currentFrequency(phost);
+	for (uint8_t i = 0; i < 31 && f < lowFreq; i++)
 	{
 		EVE_Hal_wr8(phost, REG_TRIM, i); /* increase the REG_TRIM register value automatically increases the internal clock */
+		f = EVE_Hal_currentFrequency(phost);
 	}
 	EVE_Hal_wr32(phost, REG_FREQUENCY, f); /* Set the final frequency to be used for internal operations */
 
@@ -326,7 +327,7 @@ EVE_HAL_EXPORT int32_t EVE_Hal_clockTrimming(EVE_HalContext *phost, uint32_t low
  */
 EVE_HAL_EXPORT void EVE_Host_clockSelect(EVE_HalContext *phost, EVE_PLL_SOURCE_T pllsource)
 {
-	EVE_Hal_hostCommand(phost, pllsource);
+	EVE_Hal_hostCommand(phost, (uint8_t)pllsource);
 }
 
 /**
@@ -337,7 +338,7 @@ EVE_HAL_EXPORT void EVE_Host_clockSelect(EVE_HalContext *phost, EVE_PLL_SOURCE_T
  */
 EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T freq)
 {
-	EVE_Hal_hostCommand(phost, freq);
+	EVE_Hal_hostCommand(phost, (uint8_t)freq);
 }
 
 /**
@@ -348,7 +349,7 @@ EVE_HAL_EXPORT void EVE_Host_pllFreqSelect(EVE_HalContext *phost, EVE_PLL_FREQ_T
  */
 EVE_HAL_EXPORT void EVE_Host_powerModeSwitch(EVE_HalContext *phost, EVE_POWER_MODE_T pwrmode)
 {
-	EVE_Hal_hostCommand(phost, pwrmode);
+	EVE_Hal_hostCommand(phost, (uint8_t)pwrmode);
 }
 
 /**
@@ -468,7 +469,6 @@ void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size)
 	uint32_t round = ((size + 31U) & ~31U);
 	uint32_t addr = RAM_G + RAM_G_SIZE - round;
 	uint32_t dl = 0;
-	uint32_t i;
 
 	/* Abuse back of RAM_G to store error */
 	/* May invalidate user data... */
@@ -476,7 +476,7 @@ void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size)
 
 	/* Empty remaining space after text */
 	EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, addr + size);
-	for (i = size; i < round; ++i)
+	for (uint32_t i = size; i < round; ++i)
 		EVE_Hal_transfer8(phost, 0);
 	EVE_Hal_endTransfer(phost);
 
@@ -491,8 +491,10 @@ void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size)
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), BITMAP_LAYOUT(TEXT8X8, 32, (round >> 2)));
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), BEGIN(BITMAPS));
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), VERTEX2II(32, 32, 15, 0));
-	/* EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), BITMAP_SOURCE(RAM_ERR_REPORT)); */
-	/* EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), VERTEX2II(32, 96, 15, 0)); */
+#if ENABLE_ERR_REPORT
+	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), BITMAP_SOURCE(RAM_ERR_REPORT));
+	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), VERTEX2II(32, 96, 15, 0));
+#endif
 	EVE_Hal_wr32(phost, RAM_DL + ((dl++) << 2), DISPLAY());
 	EVE_Hal_wr8(phost, REG_DLSWAP, DLSWAP_FRAME);
 }

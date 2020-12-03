@@ -49,6 +49,7 @@ the available list of which is specified further below for ESD using these macro
 #define ESD_TARGET_DISPLAY(name, ...)
 #define ESD_TARGET_PLATFORM(name, ...)
 #define ESD_TARGET_FLASH(name, ...)
+#define ESD_TARGET_TOUCH(name, ...)
 
 #define EVE_FT800 0x0800
 #define EVE_FT801 0x0801
@@ -96,9 +97,9 @@ SupportedFlash = "\bW25Q\w*\b|\bMX25L\w*\b
 
 */
 
-ESD_TARGET_GRAPHICS(ME810A_HV35R, DisplayName = "ME810A-HV35R", IntegratedDisplay = "ILI9488 (320x480)", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT810)\b")
-ESD_TARGET_GRAPHICS(ME812A_WH50R, DisplayName = "ME812A-WH50R", SupportedDisplays = "\b\w+WVGA\w*\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT812)\b")
-ESD_TARGET_GRAPHICS(ME813A_WH50C, DisplayName = "ME813A-WH50C", SupportedDisplays = "\b\w+WVGA\w*\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT813)\b")
+ESD_TARGET_GRAPHICS(ME810A_HV35R, DisplayName = "ME810A-HV35R", IntegratedDisplay = "ILI9488 (320x480)", SupportedFlash = "(?=a)b", SupportedTouch = "\b\w+FOCAL\w*\b", LibraryTargets = "\b(FT81X|FT810)\b")
+ESD_TARGET_GRAPHICS(ME812A_WH50R, DisplayName = "ME812A-WH50R", SupportedDisplays = "\b\w+WVGA\w*\b", SupportedFlash = "(?=a)b", SupportedTouch = "\b\w+FOCAL\w*\b", LibraryTargets = "\b(FT81X|FT812)\b")
+ESD_TARGET_GRAPHICS(ME813A_WH50C, DisplayName = "ME813A-WH50C", SupportedDisplays = "\b\w+WVGA\w*\b", SupportedFlash = "(?=a)b", SupportedTouch = "\b\w+FOCAL\w*\b", LibraryTargets = "\b(FT81X|FT813)\b")
 // ESD_TARGET_GRAPHICS(ME810AU_HV35R, DisplayName = "ME810AU-HV35R", IntegratedDisplay = "ILI9488 (320x480)", IntegratedPlatform = "FT4222", SupportedArchitectures = "\bFT4222\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT810)\b")
 // ESD_TARGET_GRAPHICS(ME812AU_WH50R, DisplayName = "ME812AU-WH50R", SupportedDisplays = "\b\w+WVGA\w*\b", IntegratedPlatform = "FT4222", SupportedArchitectures = "\bFT4222\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT812)\b")
 // ESD_TARGET_GRAPHICS(ME813AU_WH50C, DisplayName = "ME813AU-WH50C", SupportedDisplays = "\b\w+WVGA\w*\b", IntegratedPlatform = "FT4222", SupportedArchitectures = "\bFT4222\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT813)\b")
@@ -107,9 +108,9 @@ ESD_TARGET_GRAPHICS(ME813A_WH50C, DisplayName = "ME813A-WH50C", SupportedDisplay
 // ESD_TARGET_GRAPHICS(PANL70, DisplayName = "PanL70", IntegratedDisplay = "WVGA (800x480)", IntegratedPlatform = "FT930", SupportedArchitectures = "\bFT32\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT811)\b")
 // ESD_TARGET_GRAPHICS(PANL70PLUS, DisplayName = "PanL70 Plus", IntegratedDisplay = "WVGA (800x480)", IntegratedPlatform = "FT930", SupportedArchitectures = "\bFT32\b", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT811)\b")
 // ESD_TARGET_GRAPHICS(EVE_GRAPHICS_VM800C, DisplayName = "VM800C", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT80X|FT800)\b")
-ESD_TARGET_GRAPHICS(EVE_GRAPHICS_VM810C, DisplayName = "VM810C", SupportedFlash = "(?=a)b", LibraryTargets = "\b(FT81X|FT810)\b")
-ESD_TARGET_GRAPHICS(EVE_GRAPHICS_VM816C, DisplayName = "VM816C", IntegratedFlash = "W25Q128", LibraryTargets = "\b(BT81X|BT816)\b", FirmwareFolder = "BT815")
-ESD_TARGET_GRAPHICS(EVE_GRAPHICS_ME817EV, DisplayName = "ME817EV", IntegratedFlash = "W25Q128", LibraryTargets = "\b(BT81X|BT818)\b", FirmwareFolder = "BT817")
+ESD_TARGET_GRAPHICS(EVE_GRAPHICS_VM810C, DisplayName = "VM810C", SupportedFlash = "(?=a)b", SupportedTouch = "\b\w+FOCAL\w*\b", LibraryTargets = "\b(FT81X|FT810)\b")
+ESD_TARGET_GRAPHICS(EVE_GRAPHICS_VM816C, DisplayName = "VM816C", IntegratedFlash = "W25Q128", SupportedTouch = "\b\w+FOCAL\w*\b|\b\w+GOODIX\w*\b", LibraryTargets = "\b(BT81X|BT816)\b", FirmwareFolder = "BT815")
+ESD_TARGET_GRAPHICS(EVE_GRAPHICS_ME817EV, DisplayName = "ME817EV", IntegratedFlash = "W25Q128", SupportedTouch = "\b\w+FOCAL\w*\b|\b\w+GOODIX\w*\b", LibraryTargets = "\b(BT81X|BT818)\b", FirmwareFolder = "BT817")
 
 // ESD_TARGET_GRAPHICS(EVE_GRAPHICS_FT800, DisplayName = "FT800 (Generic)", SupportedDisplays = "\b\w+(QVGA|HVGA|AT043B35)\w*\b", LibraryTargets="\b(FT80X|FT800)\b")
 // ESD_TARGET_GRAPHICS(EVE_GRAPHICS_FT801, DisplayName = "FT801 (Generic)", SupportedDisplays = "\b\w+(QVGA|HVGA|AT043B35)\w*\b", LibraryTargets="\b(FT80X|FT801)\b")
@@ -132,7 +133,7 @@ ESD_TARGET_DISPLAY(EVE_DISPLAY_WXGA, DisplayName = "WXGA (1280x800)")
 // ESD_TARGET_DISPLAY(EVE_DISPLAY_ILI9488_HVGA_PORTRAIT, DisplayName = "ILI9488 (320x480)")
 // ESD_TARGET_DISPLAY(EVE_DISPLAY_KD2401_HVGA_PORTRAIT, DisplayName = "KD2401 (320x480)")
 
-ESD_TARGET_PLATFORM(EVE_PLATFORM_BT8XXEMU, DisplayName = "Emulator", Icon = ":/icons/game-monitor.png", OverrideSupport, SupportedFlash = "\b\w*_W25Q\w*\b|\b\w*_MX25L\w*\b", SupportedArchitectures = "\bBT8XXEMU\b")
+ESD_TARGET_PLATFORM(EVE_PLATFORM_BT8XXEMU, DisplayName = "Emulator", Icon = ":/icons/game-monitor.png", OverrideSupport, SupportedFlash = "\b\w*_W25Q\w*\b|\b\w*_MX25L\w*\b", SupportedTouch = "\b\w+FOCAL\w*\b|\b\w+GOODIX\w*\b", SupportedArchitectures = "\bBT8XXEMU\b")
 ESD_TARGET_PLATFORM(MM900EV1A, SupportedArchitectures = "\bFT32\b")
 ESD_TARGET_PLATFORM(MM900EV1B, SupportedArchitectures = "\bFT32\b")
 ESD_TARGET_PLATFORM(MM900EV2A, SupportedArchitectures = "\bFT32\b")
@@ -157,6 +158,9 @@ ESD_TARGET_FLASH(EVE_FLASH_MX25L256, DisplayName = "MX25L256", FlashFirmware = "
 ESD_TARGET_FLASH(EVE_FLASH_MX25L512, DisplayName = "MX25L512", FlashFirmware = "unified.blob")
 ESD_TARGET_FLASH(EVE_FLASH_MX25L1024, DisplayName = "MX25L1024", FlashFirmware = "unified.blob")
 ESD_TARGET_FLASH(EVE_FLASH_MX25L2048, DisplayName = "MX25L2048", FlashFirmware = "unified.blob")
+
+ESD_TARGET_TOUCH(EVE_TOUCH_FOCAL, DisplayName = "FOCAL")
+ESD_TARGET_TOUCH(EVE_TOUCH_GOODIX, DisplayName = "GOODIX")
 
 /*
 
@@ -273,6 +277,10 @@ Validate the configured options.
 #define EVE_FLASH_AVAILABLE
 #endif
 
+#if defined(EVE_TOUCH_FOCAL) || defined(EVE_TOUCH_GOODIX)
+#define EVE_TOUCH_AVAILABLE
+#endif
+
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -314,6 +322,11 @@ It may also set platform, display, and flash values if none are configured.
 #endif
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#endif
+
 #elif defined(ME812A_WH50R)
 
 #define FT812_ENABLE
@@ -330,6 +343,10 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_PLATFORM_AVAILABLE
 #define FT4222_PLATFORM
 #endif
+#endif
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
 #endif
 
 #elif defined(ME813A_WV7C)
@@ -349,6 +366,11 @@ It may also set platform, display, and flash values if none are configured.
 #endif
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#endif
+
 #elif defined(ME813A_WH50C)
 
 #define FT813_ENABLE
@@ -364,6 +386,11 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_PLATFORM_AVAILABLE
 #define FT4222_PLATFORM
 #endif
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
 #endif
 
 #elif defined(EVE_GRAPHICS_VM816C)
@@ -387,6 +414,12 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_FLASH_W25Q128
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
+#endif
+
 #elif defined(EVE_GRAPHICS_ME817EV)
 
 #define BT817_ENABLE
@@ -407,6 +440,12 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_FLASH_W25Q128
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
+#endif
+
 #elif defined(EVE_GRAPHICS_VM810C)
 
 #define FT810_ENABLE
@@ -423,6 +462,12 @@ It may also set platform, display, and flash values if none are configured.
 #define FT4222_PLATFORM
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
+#endif
+
 #elif defined(EVE_GRAPHICS_VM800C)
 
 #define FT800_ENABLE
@@ -437,6 +482,12 @@ It may also set platform, display, and flash values if none are configured.
 #ifndef EVE_PLATFORM_AVAILABLE
 #define EVE_PLATFORM_AVAILABLE
 #define MPSSE_PLATFORM
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
 #endif
 
 #elif defined(PANL35)
@@ -530,12 +581,17 @@ It may also set platform, display, and flash values if none are configured.
 #elif defined(EVE_GRAPHICS_FT800)
 
 #define FT800_ENABLE
-//#define ENABLE_SPI_QUAD
+#define ENABLE_SPI_QUAD
 #define RESISTANCE_THRESHOLD (1800)
 
 #ifndef EVE_DISPLAY_AVAILABLE
 #define EVE_DISPLAY_AVAILABLE
 #define DISPLAY_RESOLUTION_QVGA
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
 #endif
 
 #elif defined(EVE_GRAPHICS_FT801)
@@ -544,7 +600,21 @@ It may also set platform, display, and flash values if none are configured.
 
 #ifndef EVE_DISPLAY_AVAILABLE
 #define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_WQVGA
+#endif
+
+#elif defined(EVE_GRAPHICS_FT810)
+
+#define FT810_ENABLE
+
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
 #define DISPLAY_RESOLUTION_QVGA
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
 #endif
 
 #elif defined(EVE_GRAPHICS_FT811)
@@ -555,6 +625,32 @@ It may also set platform, display, and flash values if none are configured.
 #ifndef EVE_DISPLAY_AVAILABLE
 #define EVE_DISPLAY_AVAILABLE
 #define DISPLAY_RESOLUTION_WVGA
+#endif
+
+#elif defined(EVE_GRAPHICS_FT812)
+#define FT812_ENABLE
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_QVGA
+#endif
+
+#elif defined(EVE_GRAPHICS_FT813)
+#define FT813_ENABLE
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_QVGA
+#endif
+
+#elif defined(EVE_GRAPHICS_FT810)
+#define FT810_ENABLE
+#ifndef EVE_DISPLAY_AVAILABLE
+#define EVE_DISPLAY_AVAILABLE
+#define DISPLAY_RESOLUTION_QVGA
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
 #endif
 
 #elif defined(EVE_GRAPHICS_BT815)
@@ -570,6 +666,11 @@ It may also set platform, display, and flash values if none are configured.
 #ifndef EVE_FLASH_AVAILABLE
 #define EVE_FLASH_AVAILABLE
 #define EVE_FLASH_MX25L128
+#endif
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
 #endif
 
 #elif defined(EVE_GRAPHICS_BT816)
@@ -588,6 +689,12 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_FLASH_MX25L128
 #endif
 
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
+#endif
+
 #elif defined(EVE_GRAPHICS_BT817)
 
 #define BT817_ENABLE
@@ -601,6 +708,12 @@ It may also set platform, display, and flash values if none are configured.
 #ifndef EVE_FLASH_AVAILABLE
 #define EVE_FLASH_AVAILABLE
 #define EVE_FLASH_MX25L128
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
 #endif
 
 #elif defined(EVE_GRAPHICS_BT818)
@@ -617,6 +730,12 @@ It may also set platform, display, and flash values if none are configured.
 #ifndef EVE_FLASH_AVAILABLE
 #define EVE_FLASH_AVAILABLE
 #define EVE_FLASH_MX25L128
+#endif
+
+#ifndef EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_AVAILABLE
+#define EVE_TOUCH_FOCAL
+#define EVE_TOUCH_GOODIX
 #endif
 
 #endif
@@ -734,6 +853,8 @@ It may also set platform, display, and flash values if none are configured.
 #define EVE_FLASH_SIZE 8
 #elif defined(EVE_FLASH_W25Q128)
 #define EVE_FLASH_W25Q
+#define EVE_FLASH_SIZE 16
+#elif defined(EVE_FLASH_GOODIX)
 #define EVE_FLASH_SIZE 16
 #elif defined(EVE_FLASH_MX25L16)
 #define EVE_FLASH_MX25L

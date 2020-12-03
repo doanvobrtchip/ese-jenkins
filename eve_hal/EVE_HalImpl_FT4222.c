@@ -586,7 +586,7 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	FT4222_STATUS status;
 
@@ -692,7 +692,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline bool wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	FT4222_STATUS status;
 
@@ -1031,7 +1031,7 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
@@ -1068,7 +1068,7 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;

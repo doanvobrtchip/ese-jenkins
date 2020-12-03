@@ -59,8 +59,8 @@ EVE_HAL_EXPORT void EVE_CoDlImpl_resetDlState(EVE_HalContext *phost)
 		.ColorRGB = 0xFFFFFF,
 #endif
 #if (EVE_DL_CACHE_SCISSOR)
-		.ScissorWidth = phost->Width,
-		.ScissorHeight = phost->Height,
+		.ScissorWidth = (uint16_t)phost->Width,
+		.ScissorHeight = (uint16_t)phost->Height,
 #endif
 #if (EVE_DL_OPTIMIZE)
 		.ColorA = 0xFF,

@@ -255,7 +255,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 				eve_printf_debug("Channel D open OK\n");
 			}
 			if (FT_ResetDevice(phost->GpioHandle) != FT_OK
-				|| FT_SetBitMode(phost->GpioHandle, (1 << phost->PowerDownPin), FT_BITMODE_SYNC_BITBANG) != FT_OK)
+			    || FT_SetBitMode(phost->GpioHandle, (1 << phost->PowerDownPin), FT_BITMODE_SYNC_BITBANG) != FT_OK)
 			{
 				eve_printf_debug("Failed to prepare channel D\n");
 				FT_Close(phost->GpioHandle);
@@ -333,7 +333,7 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	uint32_t sizeTransferred = 0;
 	uint32_t sizeRemaining = size;
@@ -362,7 +362,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline bool wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 #if defined(EVE_BUFFER_WRITES)
 	if (buffer && (size < (sizeof(phost->SpiWrBuf) - phost->SpiWrBufIndex)))
@@ -760,7 +760,7 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
@@ -797,7 +797,7 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
@@ -972,7 +972,7 @@ static FT_STATUS EVE_HalImpl_passthroughGpio(EVE_HalContext *phost, uint8_t gpio
 	{
 		EVE_sleep(20);
 		ftRes = SPI_Write(phost->SpiHandle, transferArray, sizeof(transferArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_ENABLE)
-			|| SPI_Read(phost->SpiHandle, recvArray, sizeof(recvArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
+		    || SPI_Read(phost->SpiHandle, recvArray, sizeof(recvArray), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES | SPI_TRANSFER_OPTIONS_CHIPSELECT_DISABLE);
 		++tries;
 	} while (ftRes == FT_OK && recvArray[1] != 0x5A && tries < 128);
 

@@ -40,7 +40,7 @@
 #include "EVE_GpuTypes.h"
 
 #if defined(EVE_ENABLE_FATFS)
-#include "ff.h"
+#include "../ThirdPartyLib/fatfs/ff.h"
 #endif
 
 /**********
@@ -407,7 +407,7 @@ EVE_HAL_EXPORT void EVE_Hal_flush(EVE_HalContext *phost);
 EVE_HAL_EXPORT uint8_t EVE_Hal_rd8(EVE_HalContext *phost, uint32_t addr);
 EVE_HAL_EXPORT uint16_t EVE_Hal_rd16(EVE_HalContext *phost, uint32_t addr);
 EVE_HAL_EXPORT uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr);
-EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, const uint8_t *result, uint32_t addr, uint32_t size);
 
 EVE_HAL_EXPORT void EVE_Hal_wr8(EVE_HalContext *phost, uint32_t addr, uint8_t v);
 EVE_HAL_EXPORT void EVE_Hal_wr16(EVE_HalContext *phost, uint32_t addr, uint16_t v);
@@ -495,6 +495,8 @@ static inline int EVE_gen(EVE_CHIPID_T chipId)
 	case EVE_BT817:
 	case EVE_BT818:
 		return EVE4;
+	default:
+		break;
 	}
 	return 0;
 }

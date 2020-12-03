@@ -50,9 +50,8 @@
  */
 uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 {
-	uint32_t t0, t1;
-	uint32_t addr = REG_CLOCK;
-	int32_t r = 15625;
+	uint32_t t0;
+	uint32_t t1;
 
 	t0 = EVE_Hal_rd32(phost, REG_CLOCK); /* t0 read */
 	/* may not be precise */

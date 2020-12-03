@@ -212,7 +212,7 @@ EVE_HAL_EXPORT void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, vo
 Provides selection of flash file, and option to write the flash file to the device.
 Parameter `flashFile` is only relevant for Windows build.
 Falls back to no interactivity on FT9XX platform */
-EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, wchar_t *flashFile);
+EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, const wchar_t *flashFile);
 
 /* Calls EVE_Util_bootup and EVE_Util_config using the default parameters.
 Falls back to no interactivity on FT9XX platform */

@@ -291,7 +291,7 @@ void EVE_Hal_flush(EVE_HalContext *phost)
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline void rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline void rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	spi_readn(SPIM, buffer, size);
 }
@@ -303,7 +303,7 @@ static inline void rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t siz
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline void wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline void wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	spi_writen(SPIM, buffer, size);
 }
@@ -612,7 +612,8 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
  */
 uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost)
 {
-	uint32_t t0, t1;
+	uint32_t t0;
+	uint32_t t1;
 	int32_t r = 15625;
 
 	t0 = EVE_Hal_rd32(phost, REG_CLOCK); /* t0 read */
