@@ -93,7 +93,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address
 	fseek(afile, 0, SEEK_SET);
 	while (ftsize > 0)
 	{
-		blocklen = ftsize > 8192 ? 8192 : ftsize;
+		blocklen = ftsize > 8192 ? 8192 : (uint16_t)ftsize;
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile);
 		ftsize -= blocklen;
 		EVE_Hal_wrMem(phost, addr, pbuff, blocklen);
@@ -161,7 +161,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t add
 	fseek(afile, 0, SEEK_SET);
 	while (ftsize > 0)
 	{
-		blocklen = ftsize > 8192 ? 8192 : ftsize;
+		blocklen = ftsize > 8192 ? 8192 : (uint16_t)ftsize;
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
@@ -239,7 +239,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t addre
 	fseek(afile, 0, SEEK_SET);
 	while (ftsize > 0)
 	{
-		blocklen = ftsize > 8192 ? 8192 : ftsize;
+		blocklen = ftsize > 8192 ? 8192 : (uint16_t)ftsize;
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
@@ -303,7 +303,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *file
 	fseek(afile, 0, SEEK_SET);
 	while (ftsize > 0)
 	{
-		blocklen = ftsize > 8192 ? 8192 : ftsize;
+		blocklen = ftsize > 8192 ? 8192 : (uint16_t)ftsize;
 		blocklen = (uint16_t)fread(pbuff, 1, blocklen, afile); /* copy the data into pbuff and then transfter it to command buffer */
 		ftsize -= blocklen;
 		blocklen += 3;
@@ -355,7 +355,18 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #ifdef _WIN32
-	afile = phost->LoadFileHandle ? phost->LoadFileHandle : (filename ? fopen(filename, "rb") : _wfopen(filenameW, L"rb"));
+	if (phost->LoadFileHandle)
+	{
+		afile = phost->LoadFileHandle;
+	}
+	else if (filename)
+	{
+		afile = fopen(filename, "rb");
+	}
+	else
+	{
+		afile = _wfopen(filenameW, L"rb");
+	}
 #else
 	afile = phost->LoadFileHandle ? phost->LoadFileHandle : fopen(filename, "rb"); // read Binary (rb)
 #endif
@@ -379,7 +390,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 	}
 	while (remaining > 0)
 	{
-		blocklen = min(blockSize, remaining);
+		blocklen = (uint16_t)min(blockSize, remaining);
 		blocklen = (uint16_t)fread((void *)pbuff, 1, blocklen, afile); /* Copy the data into pbuff and then transfter it to command buffer */
 
 		if (blocklen == 0)
@@ -420,6 +431,7 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 	else if (remaining)
 	{
 		phost->LoadFileRemaining = remaining; /* Save remaining */
+		fclose(afile);
 	}
 	else
 	{

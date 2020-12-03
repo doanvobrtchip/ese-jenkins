@@ -399,24 +399,24 @@ static bool configDefaultsEx(EVE_HalContext *phost, EVE_ConfigParameters *config
 	if (EVE_Hal_supportHsf(phost))
 	{
 		/* Render width */
-		config->Width = width;
+		config->Width = (int16_t)width;
 
 		/* Screen width */
-		config->HsfWidth = hsfWidth;
+		config->HsfWidth = (int16_t)hsfWidth;
 	}
 	else
 #endif
 	    if (hsfWidth)
 	{
 		/* Use the screen width if HSF is not supported */
-		config->Width = hsfWidth;
+		config->Width = (int16_t)hsfWidth;
 		eve_printf_debug("Display config specifies HSF but not supported on this platform\n");
 	}
 	else
 	{
-		config->Width = width;
+		config->Width = (int16_t)width;
 	}
-	config->Height = height;
+	config->Height = (int16_t)height;
 
 	screenWidth = hsfWidth ? hsfWidth : width; /* Use screen width for calculation */
 	pixels = screenWidth * height;
@@ -433,7 +433,7 @@ static bool configDefaultsEx(EVE_HalContext *phost, EVE_ConfigParameters *config
 	{
 		pclk = maxRate / refreshRate;
 	}
-	config->PCLK = pclk;
+	config->PCLK = (uint8_t)pclk;
 
 	/* Change PCLKPol if the right edge of the display is noisy,
 	or if the display is showing jagged colors. Values 0 or 1.
@@ -451,14 +451,14 @@ static bool configDefaultsEx(EVE_HalContext *phost, EVE_ConfigParameters *config
 	vsync1 = voffset >> 1;
 	hoffset += hsync1;
 	voffset += vsync1;
-	config->HCycle = hcycle;
+	config->HCycle = (int16_t)hcycle;
 	config->HSync0 = 0;
-	config->HSync1 = hsync1;
-	config->HOffset = hoffset;
-	config->VCycle = vcycle;
+	config->HSync1 = (int16_t)hsync1;
+	config->HOffset = (int16_t)hoffset;
+	config->VCycle = (int16_t)vcycle;
 	config->VSync0 = 0;
-	config->VSync1 = vsync1;
-	config->VOffset = voffset;
+	config->VSync1 = (int16_t)vsync1;
+	config->VOffset = (int16_t)voffset;
 
 	/* Verify */
 	eve_assert(config->HSync1);
@@ -687,9 +687,8 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 
 			++tries;
 			EVE_sleep(20);
-			if (phost->CbCmdWait)
-				if (!phost->CbCmdWait(phost))
-					return false;
+			if (phost->CbCmdWait && !phost->CbCmdWait(phost))
+				return false;
 
 			chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
 
@@ -754,9 +753,8 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		eve_printf_debug("EVE register ID after wake up %x\n", (unsigned int)id);
 
 		EVE_sleep(20);
-		if (phost->CbCmdWait)
-			if (!phost->CbCmdWait(phost))
-				return false;
+		if (phost->CbCmdWait && !phost->CbCmdWait(phost))
+			return false;
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", (unsigned int)id);
 	eve_assert(chipId == EVE_Hal_rd32(phost, ROM_CHIPID));
@@ -788,6 +786,8 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 			break;
 		case EVE_SPI_SINGLE_CHANNEL:
 			eve_printf_debug("Single channel SPI\n");
+			break;
+		default:
 			break;
 		}
 		EVE_Hal_setSPI(phost, bootup->SpiChannels, bootup->SpiDummyBytes);
@@ -862,12 +862,19 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		}
 
 		EVE_sleep(20);
-		if (phost->CbCmdWait)
-			if (!phost->CbCmdWait(phost))
-				return false;
+		if (phost->CbCmdWait && !phost->CbCmdWait(phost))
+			return false;
 	}
 	eve_printf_debug("All engines are ready\n");
 
+#if (EVE_SUPPORT_CHIPID >= EVE_BT815)
+#ifdef EVE_TOUCH_GOODIX
+	eve_printf_debug("Goodix configuration\n");
+	EVE_Hal_wr8(phost, REG_CPURESET, 2);
+	EVE_Hal_wr16(phost, REG_TOUCH_CONFIG, 0x05d0);
+	EVE_Hal_wr8(phost, REG_CPURESET, 0);
+#endif
+#endif
 	return true;
 }
 
@@ -876,7 +883,8 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	/* IMPORTANT: Do not use EVE_CoCmd functions here, as they can be overridden by hooks */
 
 	const bool swapXY = EVE_CHIPID >= EVE_FT810 ? EVE_Hal_rd8(phost, REG_ROTATE) & 0x2 : false;
-	uint16_t wp, rp;
+	uint16_t wp;
+	uint16_t rp;
 
 	if (EVE_CHIPID < EVE_FT810)
 	{
@@ -908,9 +916,9 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	EVE_Hal_wr16(phost, REG_CSPREAD, config->CSpread);
 	EVE_Hal_wr16(phost, REG_DITHER, config->Dither);
 	EVE_Hal_wr16(phost, REG_OUTBITS,
-	    ((config->OutBitsR & 0x7) << 6)
+	    (uint16_t)(((config->OutBitsR & 0x7) << 6)
 	        | ((config->OutBitsG & 0x7) << 3)
-	        | (config->OutBitsB & 0x7));
+	        | (config->OutBitsB & 0x7)));
 	if (swapXY)
 	{
 		phost->Width = config->Height;
@@ -923,21 +931,18 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	}
 
 #if (EVE_SUPPORT_CHIPID >= EVE_BT817) || defined(EVE_MULTI_TARGET)
-	if (EVE_CHIPID >= EVE_BT817)
+	if (EVE_CHIPID >= EVE_BT817 && config->PCLKFreq)
 	{
-		if (config->PCLKFreq)
+		EVE_Hal_wr16(phost, REG_PCLK_FREQ, config->PCLKFreq); // NOTE: If this should use CMD_PCLKFREQ instead, move the PCLKFreq configuration code to just before the HSF configuration below
+		uint32_t bit_8_4 = (config->PCLKFreq & 0b111110000) >> 4; // TODO: Split up PCLKFreq in EVE_ConfigParameters, it may be more user friendly
+		uint32_t bit_3_0 = (config->PCLKFreq & 0b111);
+
+		uint32_t pclkFrequency = bit_8_4 * (12 * 1000 * 1000) / bit_3_0 / 2;
+
+		// Send two pixels per system clock to the EXTSYNC block if PCLK_frequency > SystemClock
+		if (pclkFrequency > EVE_Hal_rd32(phost, REG_FREQUENCY))
 		{
-			EVE_Hal_wr16(phost, REG_PCLK_FREQ, config->PCLKFreq); // NOTE: If this should use CMD_PCLKFREQ instead, move the PCLKFreq configuration code to just before the HSF configuration below
-			uint32_t bit_8_4 = (config->PCLKFreq & 0b111110000) >> 4; // TODO: Split up PCLKFreq in EVE_ConfigParameters, it may be more user friendly
-			uint32_t bit_3_0 = (config->PCLKFreq & 0b111);
-
-			uint32_t pclkFrequency = bit_8_4 * (12 * 1000 * 1000) / bit_3_0 / 2;
-
-			// Send two pixels per system clock to the EXTSYNC block if PCLK_frequency > SystemClock
-			if (pclkFrequency > EVE_Hal_rd32(phost, REG_FREQUENCY))
-			{
-				EVE_Hal_wr32(phost, REG_PCLK_2X, 1);
-			}
+			EVE_Hal_wr32(phost, REG_PCLK_2X, 1);
 		}
 	}
 #endif
@@ -1140,7 +1145,8 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	const bool needsVideoPatch = EVE_Util_needsVideoPatch(phost);
 	uint16_t videoPatchVector;
 	bool ready;
-	uint16_t rd, wr;
+	uint16_t rd;
+	uint16_t wr;
 	(void)rd;
 	(void)wr;
 
@@ -1195,11 +1201,9 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 
 	if (EVE_Util_needsSubPatch(phost))
 	{
-		int i;
-
 		/* Clear cmd with CMD_STOP, exiting CMD_EXECUTE may loop over, depending on OTP */
 		EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD);
-		for (i = 0; i < EVE_CMD_FIFO_SIZE; i += 4)
+		for (int i = 0; i < EVE_CMD_FIFO_SIZE; i += 4)
 			EVE_Hal_transfer32(phost, CMD_STOP);
 		EVE_Hal_endTransfer(phost);
 
@@ -1315,7 +1319,7 @@ void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t *deviceIdx)
 	size_t deviceCount;
 	size_t i;
 
-SelectDevice:
+SELECTDEVICE:
 	deviceCount = EVE_Hal_list();
 	size_t realDeviceCount = 0;
 	for (i = 0; i < deviceCount; ++i)
@@ -1339,11 +1343,11 @@ SelectDevice:
 		}
 		fgets(buf, sizeof(buf), stdin);
 		if (sscanf_s(buf, "%i", &selectedDeviceIdx) != 1)
-			goto SelectDevice;
+			goto SELECTDEVICE;
 		*deviceIdx = selectedDeviceIdx;
 		EVE_Hal_info(&info, *deviceIdx);
 		if (!info.Host)
-			goto SelectDevice;
+			goto SELECTDEVICE;
 		printf("\n");
 	}
 	else if (realDeviceCount > 0)
@@ -1428,18 +1432,17 @@ SelectDisplay:
 #if defined(_WIN32) && defined(EVE_FLASH_AVAILABLE)
 void EVE_Util_selectFlashFileInteractive(eve_tchar_t *flashPath, bool *updateFlash, bool *updateFlashFirmware, const EVE_HalParameters *params, const eve_tchar_t *flashFile)
 {
-	ptrdiff_t flashSize;
 	size_t flashPathSz;
 	errno_t ferr;
 	FILE *f = NULL;
-	uint8_t buffer[4096];
 
-SelectFlash:
+SELECTFLASH:
 	*updateFlash = false;
 	*updateFlashFirmware = false;
 	if (flashFile)
 	{
 #if defined(EVE_MULTI_TARGET) || !defined(BT8XXEMU_PLATFORM)
+		uint8_t buffer[4096];
 #if defined(EVE_MULTI_TARGET)
 		if (params->Host != EVE_HOST_BT8XXEMU)
 #endif
@@ -1476,7 +1479,7 @@ SelectFlash:
 			    flashFile[0] ? "\"" : "", /* Quote*/
 			    flashFile[0] ? flashFile : L"no flash",
 			    flashFile[0] ? "\"" : ""); /* Quote*/
-			// wscanf_s(L"%ls\n", flashPath, MAX_PATH);
+
 			fgetws(flashPath, MAX_PATH, stdin);
 			if (flashPath[0] == '\r' || flashPath[0] == '\n')
 				flashPath[0] = '\0';
@@ -1500,10 +1503,9 @@ SelectFlash:
 			if (ferr || !f)
 			{
 				printf("File \"%ls\" cannot be opened\n", flashPath[0] ? flashPath : flashFile);
-				goto SelectFlash;
+				goto SELECTFLASH;
 			}
 			fseek(f, 0, SEEK_END);
-			flashSize = ftell(f);
 			fclose(f);
 			f = NULL;
 			printf("\n");
@@ -1530,7 +1532,7 @@ void EVE_Util_emulatorDefaults(EVE_HalParameters *params, void *emulatorParams, 
 
 	BT8XXEMU_EmulatorParameters *pEmulatorParams = emulatorParams;
 
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, pEmulatorParams, chipId);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, pEmulatorParams, chipId); // TODO: should be pEmulatorParams->mode?
 	pEmulatorParams->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 
 	// TODO: emulatorParams.Log
@@ -1538,9 +1540,9 @@ void EVE_Util_emulatorDefaults(EVE_HalParameters *params, void *emulatorParams, 
 }
 
 #if defined(EVE_FLASH_AVAILABLE)
-void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, void *emulatorParams, void *flashParams, const eve_tchar_t *flashPath)
+void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, const void *emulatorParams, void *flashParams, const eve_tchar_t *flashPath)
 {
-	BT8XXEMU_EmulatorParameters *pEmulatorParams = emulatorParams;
+	const BT8XXEMU_EmulatorParameters *pEmulatorParams = emulatorParams;
 	BT8XXEMU_FlashParameters *pFlashParams = flashParams;
 
 #if defined(EVE_MULTI_TARGET)
@@ -1594,7 +1596,7 @@ void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, void *emulatorPar
 #if defined(_WIN32) && defined(EVE_FLASH_AVAILABLE)
 #pragma warning(push)
 #pragma warning(disable : 6262) // Large stack due to buffer
-EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, eve_tchar_t *flashPath, bool updateFlashFirmware)
+EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, const eve_tchar_t *flashPath, bool updateFlashFirmware)
 {
 	ptrdiff_t flashSize;
 	FILE *f = NULL;
@@ -1705,8 +1707,6 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 					if (flashStatus == FLASH_STATUS_BASIC)
 					{
 						uint32_t resAddr;
-						uint32_t flashRes;
-
 						printf("Enter fast flash mode\n");
 						EVE_Cmd_startFunc(phost);
 						EVE_Cmd_wr32(phost, CMD_FLASHFAST);
@@ -1717,7 +1717,7 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 							printf("Coprocessor fault\n");
 							break;
 						}
-						flashRes = EVE_Hal_rd32(phost, RAM_CMD + resAddr); /* Fetch result */
+						EVE_Hal_rd32(phost, RAM_CMD + resAddr); /* Fetch result */
 					}
 
 					flashStatus = EVE_Hal_rd32(phost, REG_FLASH_STATUS);
@@ -1743,7 +1743,8 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 					while (remainingBytes)
 					{
 						/* Read from file */
-						size_t el, sz;
+						size_t el;
+						size_t sz;
 						if (remainingBytes < 4096)
 						{
 							el = fread(buffer, 1, remainingBytes, f);
@@ -1764,7 +1765,7 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 						printf("B");
 
 						/* Write to flash */
-					ReWrite:
+					REWRITE:
 						EVE_Hal_wrMem(phost, 0, buffer, (uint32_t)sz);
 						EVE_Cmd_startFunc(phost);
 						EVE_Cmd_wr32(phost, CMD_FLASHUPDATE);
@@ -1801,7 +1802,7 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 							if (buffer[i] != rbuffer[i])
 							{
 								printf("\nVerification failed\n");
-								goto ReWrite;
+								goto REWRITE;
 							}
 						}
 						printf("T");
@@ -1839,7 +1840,7 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, e
 #pragma warning(pop)
 #endif
 
-bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, wchar_t *flashFile)
+bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, const wchar_t *flashFile)
 {
 	EVE_CHIPID_T chipId;
 	size_t deviceIdx;
@@ -1856,9 +1857,6 @@ bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, wchar_t *flashFile)
 	bool updateFlash = false;
 	bool updateFlashFirmware = false;
 	wchar_t flashPath[MAX_PATH];
-	//ptrdiff_t flashSize;
-	//FILE *f = NULL;
-	//uint8_t buffer[64 * 4096];
 	flashPath[0] = '\0';
 #endif
 
@@ -1940,7 +1938,7 @@ void EVE_Util_forceFault(EVE_HalContext *phost, const char *err)
 	EVE_sleep(100);
 	if (EVE_CHIPID >= EVE_BT815 && (EVE_Cmd_rp(phost) & 0x3))
 	{
-		uint32_t errLen = (uint32_t)strlen(err);
+		uint32_t errLen = strlen(err);
 		EVE_Hal_wrMem(phost, RAM_ERR_REPORT, (const uint8_t *)err, errLen);
 		if (errLen < sizeof(phost->DebugBackup))
 		{
@@ -1955,19 +1953,17 @@ void EVE_Util_forceFault(EVE_HalContext *phost, const char *err)
 	EVE_Cmd_waitFlush(phost); /* Fault state now */
 #ifdef _DEBUG
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
-	if (EVE_CHIPID >= EVE_BT815)
+	if (EVE_CHIPID >= EVE_BT815
+	    && phost->DebugMessageVisible)
 	{
-		if (phost->DebugMessageVisible)
+		uint32_t errLen = strlen(err);
+		EVE_Hal_wrMem(phost, RAM_G + RAM_G_SIZE - sizeof(phost->DebugBackup), (const uint8_t *)err, errLen);
+		if (errLen < sizeof(phost->DebugBackup))
 		{
-			uint32_t errLen = (uint32_t)strlen(err);
-			EVE_Hal_wrMem(phost, RAM_G + RAM_G_SIZE - sizeof(phost->DebugBackup), (const uint8_t *)err, errLen);
-			if (errLen < sizeof(phost->DebugBackup))
-			{
-				EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_G + RAM_G_SIZE - sizeof(phost->DebugBackup) + errLen);
-				for (int i = (int)errLen; i < sizeof(phost->DebugBackup); ++i)
-					EVE_Hal_transfer8(phost, 0);
-				EVE_Hal_endTransfer(phost);
-			}
+			EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_G + RAM_G_SIZE - sizeof(phost->DebugBackup) + errLen);
+			for (int i = (int)errLen; i < sizeof(phost->DebugBackup); ++i)
+				EVE_Hal_transfer8(phost, 0);
+			EVE_Hal_endTransfer(phost);
 		}
 	}
 #endif

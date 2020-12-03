@@ -514,6 +514,9 @@ static inline void EVE_CoDl_begin(EVE_HalContext *phost, uint8_t prim)
 	case EDGE_STRIP_A:
 	case EDGE_STRIP_B:
 		oldPrim = 0;
+		break;
+	default:
+		break;
 	}
 	if (prim != oldPrim)
 	{
@@ -712,8 +715,16 @@ ESD_PARAMETER(x, Type = esd_int16_f4_t)
 ESD_PARAMETER(y, Type = esd_int16_f4_t)
 inline static void EVE_CoDl_vertex2f_4(EVE_HalContext *phost, int16_t x, int16_t y)
 {
-	EVE_CoDl_vertexFormat(phost, 4);
-	EVE_CoDl_vertex2f(phost, x, y);
+	if (EVE_CHIPID >= EVE_FT810 && (x > EVE_VERTEX2F_MAX || y > EVE_VERTEX2F_MAX)) /* Support display up to 2048 px */
+	{
+		EVE_CoDl_vertexFormat(phost, 3);
+		EVE_CoDl_vertex2f(phost, x >> 1, y >> 1);
+	}
+	else
+	{
+		EVE_CoDl_vertexFormat(phost, 4);
+		EVE_CoDl_vertex2f(phost, x, y);
+	}
 }
 
 /* Fixed point vertex using 2 bits subprecision */
