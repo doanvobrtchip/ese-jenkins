@@ -85,7 +85,6 @@ typedef struct EVE_ConfigParameters
 	uint8_t AdaptiveFrameRate;
 	uint8_t PCLK_2X;
 	int16_t AhHCycleMax;
-	bool ExternalClock;
 
 #ifdef EVE_SUPPORT_HSF
 	/* Physical horizontal pixels. Set to 0 to disable HSF. */
