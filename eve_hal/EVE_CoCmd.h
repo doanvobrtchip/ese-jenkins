@@ -259,19 +259,6 @@ static inline void EVE_CoCmd_nop(EVE_HalContext *phost)
 #endif
 
 #if (EVE_SUPPORT_CHIPID >= EVE_BT817)
-
-/**
-* @brief Send CMD_LINETIME
-* 
-* @param phost Pointer to Hal context
-* @param dst Destination array in main memory
-*/
-static inline void EVE_CoCmd_lineTime(EVE_HalContext *phost, uint32_t dst)
-{
-	EVE_MULTI_TARGET_CHECK(CMD_LINETIME, EVE_CHIPID >= EVE_BT817);
-	EVE_CoCmd_dd(phost, CMD_LINETIME, dst);
-}
-
 /**
 * @brief Send CMD_HSF
 * 
@@ -354,7 +341,6 @@ EVE_HAL_EXPORT uint32_t EVE_CoCmd_pclkFreq(EVE_HalContext *phost, uint32_t ftarg
 
 #else
 
-#define EVE_CoCmd_lineTime(phost, dst) EVE_COCMD_UNSUPPORTED(CMD_LINETIME, false)
 #define EVE_CoCmd_hsf(phost, hsf) EVE_COCMD_UNSUPPORTED(CMD_HSF, false)
 #define EVE_CoCmd_apiLevel(phost, level) EVE_COCMD_UNSUPPORTED(CMD_APILEVEL, false)
 #define EVE_CoCmd_wait(phost, us) EVE_COCMD_UNSUPPORTED(CMD_WAIT, false)
@@ -603,9 +589,9 @@ static inline void EVE_CoCmd_videoStart(EVE_HalContext *phost)
 static inline void EVE_CoCmd_videoFrame(EVE_HalContext *phost, uint32_t dst, uint32_t ptr)
 {
 	EVE_MULTI_TARGET_CHECK(CMD_VIDEOFRAME, EVE_CHIPID >= EVE_FT810);
-	if (EVE_CHIPID >= EVE_BT815 && EVE_CHIPID <= EVE_BT816)
+	if (EVE_CHIPID == EVE_BT815 || EVE_CHIPID == EVE_BT816)
 		EVE_CoCmd_dddd(phost, CMD_MEMWRITE, 3182934, 1, OPT_NODL); // WORKAROUND CMD_VIDEOFRAME
-	else if (EVE_CHIPID >= EVE_BT817 && EVE_CHIPID <= EVE_BT818)
+	else if (EVE_CHIPID == EVE_BT817 || EVE_CHIPID == EVE_BT818)
 		EVE_CoCmd_dddd(phost, CMD_MEMWRITE, 3182920, 1, OPT_NODL); // WORKAROUND CMD_VIDEOFRAME
 	EVE_CoCmd_ddd(phost, CMD_VIDEOFRAME, dst, ptr);
 }
@@ -1130,7 +1116,7 @@ static inline void EVE_CoCmd_setFont2(EVE_HalContext *phost, uint32_t font, uint
 	EVE_MULTI_TARGET_CHECK(CMD_SETFONT2, EVE_CHIPID >= EVE_FT810);
 	EVE_CoCmd_dddd(phost, CMD_SETFONT2, font, ptr, firstchar);
 #if EVE_DL_OPTIMIZE
-	EVE_DL_STATE.Handle = font;
+	EVE_DL_STATE.Handle = (uint8_t)font;
 #endif
 }
 
@@ -1144,7 +1130,7 @@ static inline void EVE_CoCmd_setScratch(EVE_HalContext *phost, uint32_t handle)
 {
 	EVE_MULTI_TARGET_CHECK(CMD_SETSCRATCH, EVE_CHIPID >= EVE_FT810);
 	EVE_CoCmd_dd(phost, CMD_SETSCRATCH, handle);
-	phost->CoScratchHandle = handle;
+	phost->CoScratchHandle = (uint8_t)handle;
 }
 
 /**
@@ -1159,7 +1145,7 @@ static inline void EVE_CoCmd_romFont(EVE_HalContext *phost, uint32_t font, uint3
 	EVE_MULTI_TARGET_CHECK(CMD_ROMFONT, EVE_CHIPID >= EVE_FT810);
 	EVE_CoCmd_ddd(phost, CMD_ROMFONT, font, romslot);
 #if EVE_DL_OPTIMIZE
-	EVE_DL_STATE.Handle = font;
+	EVE_DL_STATE.Handle = (uint8_t)font;
 #endif
 }
 

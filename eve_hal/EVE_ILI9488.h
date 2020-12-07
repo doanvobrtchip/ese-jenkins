@@ -102,9 +102,9 @@
 #define ILI9488_CMD_SPI_READCMDSETTINGS (0xFB)
 
 int16_t ILI9488_SPI_WriteCmd(uint8_t cmd, uint8_t data);
-int16_t ILI9488_SPI_WriteCmdN(uint8_t cmd, uint8_t bytecount, uint8_t *pbuff);
+int16_t ILI9488_SPI_WriteCmdN(uint8_t cmd, uint8_t bytecount, const uint8_t *pbuff);
 uint8_t ILI9488_SPI_Read(uint8_t cmd);
-uint8_t ILI9488_SPI_ReadN(uint8_t cmd, uint8_t numbytes, uint8_t *pbuffer);
+uint8_t ILI9488_SPI_ReadN(uint8_t cmd, uint8_t numbytes, const uint8_t *pbuffer);
 uint32_t ILI9488_SPI_ReadRDDID(uint8_t cmd);
 uint32_t ILI9488_SPI_ReadRDDST(uint8_t cmd);
 void EVE_ILI9488_bootup();

@@ -146,7 +146,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		int32_t overflow;
 
 		if (!EVE_MediaFifo_waitSpace(phost, size, transfered))
-			return false; // !phost->CmdFault;
+			return false;
 
 		wp = EVE_Hal_rd32(phost, REG_MEDIAFIFO_WRITE);
 		overflow = (int32_t)(wp + size) - (int32_t)(phost->MediaFifoSize);
@@ -185,7 +185,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 			uint32_t transfer = min(halfSize, remaining);
 			int32_t overflow;
 			if (!EVE_MediaFifo_waitSpace(phost, transfer, transfered))
-				return false; // !phost->CmdFault;
+				return false;
 
 			overflow = (int32_t)(wp + transfer) - (int32_t)(phost->MediaFifoSize);
 			if (overflow > 0)
@@ -316,15 +316,13 @@ static bool handleWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 	EVE_Hal_idle(phost);
 
 	/* Process user idling */
-	if (phost->CbCmdWait)
+	if (phost->CbCmdWait
+	    && !phost->CbCmdWait(phost))
 	{
-		if (!phost->CbCmdWait(phost))
-		{
-			/* Wait aborted */
-			phost->CmdWaiting = false;
-			eve_printf_debug("Wait for media FIFO aborted\n");
-			return false;
-		}
+		/* Wait aborted */
+		phost->CmdWaiting = false;
+		eve_printf_debug("Wait for media FIFO aborted\n");
+		return false;
 	}
 	return true;
 }
@@ -372,7 +370,7 @@ uint32_t EVE_MediaFifo_waitSpace(EVE_HalContext *phost, uint32_t size, bool orCm
 	do
 	{
 		space = EVE_MediaFifo_space(phost);
-		if (!handleWait(phost, space))
+		if (!handleWait(phost, (uint16_t)space))
 			return 0;
 		phost->CmdWaiting = false;
 		uint32_t cmdSpace = EVE_Cmd_waitSpace(phost, 0);

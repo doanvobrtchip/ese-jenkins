@@ -60,7 +60,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_text(EVE_HalContext *phost, int16_t x, int16_t y, 
 {
 	va_list args;
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
-	uint8_t i, num;
+	uint8_t num;
 #endif
 
 #if EVE_CMD_HOOKS
@@ -89,7 +89,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_text(EVE_HalContext *phost, int16_t x, int16_t y, 
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
-		for (i = 0; i < num; i++)
+		for (uint8_t i = 0; i < num; i++)
 			EVE_Cmd_wr32(phost, (uint32_t)va_arg(args, uint32_t));
 	}
 #endif
@@ -145,7 +145,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_button(EVE_HalContext *phost, int16_t x, int16_t y
 {
 	va_list args;
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
-	uint8_t i, num;
+	uint8_t num;
 #endif
 
 #if EVE_CMD_HOOKS
@@ -174,7 +174,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_button(EVE_HalContext *phost, int16_t x, int16_t y
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
-		for (i = 0; i < num; i++)
+		for (uint8_t i = 0; i < num; i++)
 			EVE_Cmd_wr32(phost, (uint32_t)va_arg(args, uint32_t));
 	}
 #endif
@@ -220,7 +220,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_toggle(EVE_HalContext *phost, int16_t x, int16_t y
 {
 	va_list args;
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
-	uint8_t i, num;
+	uint8_t num;
 #endif
 
 #if EVE_CMD_HOOKS
@@ -252,7 +252,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_toggle(EVE_HalContext *phost, int16_t x, int16_t y
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
-		for (i = 0; i < num; i++)
+		for (uint8_t i = 0; i < num; i++)
 			EVE_Cmd_wr32(phost, (uint32_t)va_arg(args, uint32_t));
 	}
 #endif

@@ -339,7 +339,6 @@ to be defined. If not, multi target compilation is assumed.
 #define REG_SHA1KEY (REG_CMDB_SPACE + 144UL)
 
 #if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
-#define REG_LINECLOCKS (REG_CMDB_SPACE + 148UL)
 #define REG_UNDERRUN (REG_CMDB_SPACE + 152UL)
 #define REG_AH_HCYCLE_MAX (REG_CMDB_SPACE + 156UL)
 #define REG_PCLK_FREQ (REG_CMDB_SPACE + 160UL)
@@ -502,7 +501,6 @@ to be defined. If not, multi target compilation is assumed.
 
 // BT817
 #if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
-#define CMD_LINETIME         4294967134UL
 #define CMD_CALIBRATESUB     4294967136UL
 #define CMD_TESTCARD         4294967137UL
 #define CMD_HSF              4294967138UL

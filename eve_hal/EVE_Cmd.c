@@ -101,7 +101,8 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_wp(EVE_HalContext *phost)
 EVE_HAL_EXPORT uint16_t EVE_Cmd_space(EVE_HalContext *phost)
 {
 	uint16_t space;
-	uint16_t wp, rp;
+	uint16_t wp;
+	uint16_t rp;
 	endFunc(phost);
 	if (EVE_Hal_supportCmdB(phost))
 	{
@@ -122,6 +123,57 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_space(EVE_HalContext *phost)
 }
 
 /**
+ * @brief Start transfer data to Eve
+ * 
+ * @param phost Pointer to Hal context
+ */
+static void startBufferTransfer(EVE_HalContext *phost)
+{
+	if (phost->Status != EVE_STATUS_WRITING)
+	{
+		if (EVE_Hal_supportCmdB(phost))
+		{
+			EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, REG_CMDB_WRITE);
+		}
+		else
+		{
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+			EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD + phost->CmdWp);
+#else
+			eve_assert(false);
+#endif
+		}
+	}
+}
+
+/**
+ * @brief Write string to Coprocessor's comand fifo
+ * 
+ * @param phost Pointer to Hal context
+ * @param buffer Data pointer
+ * @param size Size to write
+ * @param transfered Byte transfered
+ * @return transfer Byte to transfer
+ */
+static uint32_t wrString(EVE_HalContext *phost, const void *buffer, uint32_t *size, uint32_t transfered, uint32_t transfer)
+{
+	uint32_t t;
+	eve_assert(transfered == 0);
+	eve_assert(transfer == *size); /* Cannot split string transfers */
+	eve_assert(transfer <= phost->CmdSpace);
+	t = EVE_Hal_transferString(phost, (const char *)buffer, transfered, transfer, 0x3);
+	if (t != transfer) /* End of string */
+	{
+		eve_assert(t <= phost->CmdSpace);
+		transfer = t;
+		*size = (transfered + transfer);
+	}
+	eve_assert((transfered + transfer) == *size);
+
+	return transfer;
+}
+
+/**
  * @brief Write buffer to Coprocessor's comand fifo
  * 
  * @param phost Pointer to Hal context
@@ -131,7 +183,7 @@ EVE_HAL_EXPORT uint16_t EVE_Cmd_space(EVE_HalContext *phost)
  * @param string True is string
  * @return uint32_t Byte transfered
  */
-static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t size, bool progmem, bool string)
+static uint32_t wrBuffer(EVE_HalContext *phost, void *buffer, uint32_t size, bool progmem, bool string)
 {
 	uint32_t transfered = 0;
 
@@ -152,35 +204,10 @@ static uint32_t wrBuffer(EVE_HalContext *phost, const void *buffer, uint32_t siz
 		eve_assert(transfer <= EVE_CMD_FIFO_SIZE - 4);
 		if (transfer)
 		{
-			if (phost->Status != EVE_STATUS_WRITING)
-			{
-				if (EVE_Hal_supportCmdB(phost))
-				{
-					EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, REG_CMDB_WRITE);
-				}
-				else
-				{
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
-					EVE_Hal_startTransfer(phost, EVE_TRANSFER_WRITE, RAM_CMD + phost->CmdWp);
-#else
-					eve_assert(false);
-#endif
-				}
-			}
+			startBufferTransfer(phost);
 			if (string)
 			{
-				uint32_t t;
-				eve_assert(transfered == 0);
-				eve_assert(transfer == size); /* Cannot split string transfers */
-				eve_assert(transfer <= phost->CmdSpace);
-				t = EVE_Hal_transferString(phost, (const char *)buffer, transfered, transfer, 0x3);
-				if (t != transfer) /* End of string */
-				{
-					eve_assert(t <= phost->CmdSpace);
-					transfer = t;
-					size = (transfered + transfer);
-				}
-				eve_assert((transfered + transfer) == size);
+				transfer = wrString(phost, buffer, &size, transfered, transfer);
 			}
 			else if (progmem)
 			{
@@ -309,7 +336,10 @@ EVE_HAL_EXPORT bool EVE_Cmd_wr8(EVE_HalContext *phost, uint8_t value)
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex < 4);
 
-	phost->CmdBuffer[phost->CmdBufferIndex++] = value;
+	if (phost->CmdBufferIndex < 4)
+	{
+		phost->CmdBuffer[phost->CmdBufferIndex++] = value;
+	}
 
 	if (phost->CmdBufferIndex == 4)
 	{
@@ -333,8 +363,11 @@ EVE_HAL_EXPORT bool EVE_Cmd_wr16(EVE_HalContext *phost, uint16_t value)
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex < 3);
 
-	phost->CmdBuffer[phost->CmdBufferIndex++] = value & 0xFF;
-	phost->CmdBuffer[phost->CmdBufferIndex++] = value >> 8;
+	if (phost->CmdBufferIndex < 3)
+	{
+		phost->CmdBuffer[phost->CmdBufferIndex++] = value & 0xFF;
+		phost->CmdBuffer[phost->CmdBufferIndex++] = value >> 8;
+	}
 
 	if (phost->CmdBufferIndex == 4)
 	{
@@ -407,7 +440,8 @@ EVE_HAL_EXPORT bool EVE_Cmd_wr32(EVE_HalContext *phost, uint32_t value)
  */
 EVE_HAL_EXPORT uint16_t EVE_Cmd_moveWp(EVE_HalContext *phost, uint16_t bytes)
 {
-	uint16_t wp, prevWp;
+	uint16_t wp;
+	uint16_t prevWp;
 	eve_assert(!phost->CmdWaiting);
 	eve_assert(phost->CmdBufferIndex == 0);
 
@@ -465,7 +499,6 @@ static bool checkWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 			}
 		}
 #endif
-		/* eve_debug_break(); */
 		return false;
 	}
 
@@ -497,15 +530,12 @@ static bool handleWait(EVE_HalContext *phost, uint16_t rpOrSpace)
 	EVE_Hal_idle(phost);
 
 	/* Process user idling */
-	if (phost->CbCmdWait)
+	if (phost->CbCmdWait && !phost->CbCmdWait(phost))
 	{
-		if (!phost->CbCmdWait(phost))
-		{
-			/* Wait aborted */
-			phost->CmdWaiting = false;
-			eve_printf_debug("Wait for coprocessor aborted\n");
-			return false;
-		}
+		/* Wait aborted */
+		phost->CmdWaiting = false;
+		eve_printf_debug("Wait for coprocessor aborted\n");
+		return false;
 	}
 	return true;
 }
@@ -519,13 +549,13 @@ static bool handleWait(EVE_HalContext *phost, uint16_t rpOrSpace)
  */
 bool EVE_Cmd_waitFlush(EVE_HalContext *phost)
 {
-	uint16_t rp, wp;
+	uint16_t rp;
+	uint16_t wp;
 
 	eve_assert(!phost->CmdWaiting);
 	phost->CmdWaiting = true;
 	while ((rp = EVE_Cmd_rp(phost)) != (wp = EVE_Cmd_wp(phost)))
 	{
-		// eve_printf_debug("Waiting for CoCmd FIFO... rp: %i, wp: %i\n", (int)rp, (int)wp);
 		if (!handleWait(phost, rp))
 		{
 			phost->CmdSpace = (rp - wp - 4) & EVE_CMD_FIFO_MASK;
@@ -588,7 +618,8 @@ EVE_HAL_EXPORT uint32_t EVE_Cmd_waitSpace(EVE_HalContext *phost, uint32_t size)
  */
 EVE_HAL_EXPORT bool EVE_Cmd_waitLogo(EVE_HalContext *phost)
 {
-	uint16_t rp, wp;
+	uint16_t rp;
+	uint16_t wp;
 
 	eve_assert(!phost->CmdWaiting);
 	phost->CmdWaiting = true;

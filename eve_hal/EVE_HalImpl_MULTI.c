@@ -336,10 +336,10 @@ EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value
 	return 0;
 }
 
-void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->Host)
 	{
@@ -355,10 +355,10 @@ EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, 
 	}
 }
 
-void EVE_Hal_BT8XXEMU_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_FT4222_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_MPSSE_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_BT8XXEMU_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->Host)
 	{
@@ -452,6 +452,7 @@ EVE_HAL_EXPORT bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
 		return EVE_Hal_MPSSE_powerCycle(phost, up);
 		break;
 	}
+	return false;
 }
 
 void EVE_Hal_BT8XXEMU_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
