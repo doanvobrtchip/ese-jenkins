@@ -1,0 +1,41 @@
+{
+    "content": [
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/Lena_200x200_ARGB1555",
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/Lena_200x200_ARGB1555.raw"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_MEMWRITE(0, 80000, \"content/Lena_200x200_ARGB1555.raw\")",
+        "",
+        "CMD_MEMCPY(123456, 0, 80000)",
+        "",
+        "CMD_SETBITMAP(123456, ARGB1555, 200, 200)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(11200, 5200)",
+        "END()",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 1024,
+        "macro": [
+            ""
+        ],
+        "vSize": 600
+    }
+}
