@@ -89,6 +89,7 @@ void DlState::process(int deviceIntf, DlState *state, const int line, const DlPa
 	bool cSet = false;
 
 	DlState gs;
+	gs.Graphics.VertexFormat = 4;
 
 	for (;;)
 	{

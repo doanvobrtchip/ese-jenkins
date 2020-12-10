@@ -3967,11 +3967,15 @@ void MainWindow::aboutQt()
 	                                             "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
 	                                             "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
 	                                             "\n"
+												 "Python\n"
+												 "Copyright (C) 2001-2020\n"
+												 "https://www.python.org/"
+												 "\n\n"
 	                                             "Fugue Icons\n"
 	                                             "(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
 	                                             "These icons are licensed under a Creative Commons"
 	                                             "Attribution 3.0 License.\n"
-	                                             "<http://creativecommons.org/licenses/by/3.0/>"));
+	                                             "http://creativecommons.org/licenses/by/3.0"));
 }
 
 QString MainWindow::getProjectContent() const

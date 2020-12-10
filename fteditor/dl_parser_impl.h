@@ -455,9 +455,9 @@ void DlParser::initVC4()
 		// s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
 		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
-		// s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
-		// s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
-		// s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;
+		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
+		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
+		s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;
 		s_CmdIdMap["CMD_MEMSET"] = CMD_MEMSET & 0xFF;
 		s_CmdParamCount[CMD_MEMSET & 0xFF] = 3;
 		s_CmdIdMap["CMD_MEMZERO"] = CMD_MEMZERO & 0xFF;
@@ -587,9 +587,11 @@ void DlParser::initVC4()
 		s_CmdIdMap["CMD_CLEARCACHE"] = CMD_CLEARCACHE & 0xFF;
 		s_CmdParamCount[CMD_CLEARCACHE & 0xFF] = 0;
         s_CmdIdMap["CMD_INFLATE"] = CMD_INFLATE & 0xFF;
-        s_CmdParamCount[CMD_INFLATE & 0xFF] = 1;
+        s_CmdParamCount[CMD_INFLATE & 0xFF] = 2;
+		s_CmdParamString[CMD_INFLATE & 0xFF] = true;
 		s_CmdIdMap["CMD_INFLATE2"] = CMD_INFLATE2 & 0xFF;
-		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 2;
+		s_CmdParamCount[CMD_INFLATE2 & 0xFF] = 3;
+		s_CmdParamString[CMD_INFLATE2 & 0xFF] = true;
 		s_CmdIdMap["CMD_ROTATEAROUND"] = CMD_ROTATEAROUND & 0xFF;
 		s_CmdParamCount[CMD_ROTATEAROUND & 0xFF] = 4;
 		s_CmdIdMap["CMD_RESETFONTS"] = CMD_RESETFONTS & 0xFF;

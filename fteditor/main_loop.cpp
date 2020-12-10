@@ -848,6 +848,9 @@ void loop()
 			{
 				switch (cmdList[i])
 				{
+				case CMD_MEMWRITE:
+				case CMD_INFLATE:
+				case CMD_INFLATE2:
 				case CMD_LOADIMAGE:
 				case CMD_PLAYVIDEO:
 					s_CmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
@@ -942,7 +945,7 @@ void loop()
 				s_MediaFifoPtr = s_CmdParamCache[cmdParamIdx[i]];
 				s_MediaFifoSize = s_CmdParamCache[(size_t)cmdParamIdx[i] + 1];
 			}
-			else if (cmdList[i] == CMD_LOADIMAGE)
+			else if (cmdList[i] == CMD_LOADIMAGE || cmdList[i] == CMD_INFLATE2)
 			{
 				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_FLASH);
@@ -950,6 +953,16 @@ void loop()
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
 					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+			}
+			else if (cmdList[i] == CMD_INFLATE )
+			{
+				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				++strParamRead;
+			}
+			else if (cmdList[i] == CMD_MEMWRITE )
+			{
+				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				++strParamRead;
 			}
 			else if (cmdList[i] == CMD_PLAYVIDEO)
 			{

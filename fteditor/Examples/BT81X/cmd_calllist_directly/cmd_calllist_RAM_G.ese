@@ -1,0 +1,49 @@
+{
+    "content": [
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/point",
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/point.bin"
+        },
+        {
+            "converter": "Raw",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "content/cmd_button",
+            "memoryAddress": 24,
+            "memoryLoaded": true,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/cmd_button.bin"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "",
+        "COLOR_RGB(35, 234, 74)",
+        "CMD_CALLLIST(0)  #call the display list in RAM_G+0 , loaded by point.bin",
+        "",
+        "COLOR_RGB(152, 28, 55)",
+        "CMD_CALLLIST(24)#call the display list in RAM_G+24 , loaded by cmd_button.bin"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
