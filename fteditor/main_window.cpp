@@ -1465,65 +1465,6 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
 
-	// Output
-	/*{
-		m_OutputDock = new QDockWidget(this);
-		m_OutputDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-		m_OutputDock->setObjectName("Output");
-		QScrollArea * pOutputParamsScroll = new QScrollArea(this);
-		pOutputParamsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		pOutputParamsScroll->setWidgetResizable(true);
-		pOutputParamsScroll->setMinimumWidth(240);
-		
-		// pointer
-		QHBoxLayout *ptrHBL = new QHBoxLayout;
-		QLabel *ptrLabel = new QLabel("Pointer:", this);
-		QSpinBox *ptrSB = new QSpinBox(this);
-		ptrSB->setReadOnly(true);
-		ptrSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
-		ptrHBL->addWidget(ptrLabel);
-		ptrHBL->addWidget(ptrSB);
-		// width
-		QHBoxLayout *widthHBL = new QHBoxLayout;
-		QLabel *widthLabel = new QLabel("Width:", this);
-		QSpinBox *widthSB = new QSpinBox(this);
-		widthSB->setReadOnly(true);
-		widthSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
-		widthHBL->addWidget(widthLabel);
-		widthHBL->addWidget(widthSB);
-		// height
-		QHBoxLayout *heightHBL = new QHBoxLayout;
-		QLabel *heightLabel = new QLabel("Height:", this);
-		QSpinBox *heightSB = new QSpinBox(this);
-		heightSB->setReadOnly(true);
-		heightSB->setButtonSymbols(QAbstractSpinBox::NoButtons);
-		heightHBL->addWidget(heightLabel);
-		heightHBL->addWidget(heightSB);
-
-		// information
-		QVBoxLayout *infoLayout = new QVBoxLayout();
-		QGroupBox *infoGroupBox = new QGroupBox("Information", this);
-		infoGroupBox->setLayout(infoLayout);
-		infoLabel = new QLabel(this);
-		infoLabel->setMinimumWidth(150);
-		infoLabel->setTextFormat(Qt::RichText);
-		infoLabel->setWordWrap(true);
-		infoLabel->setText(tr("DESCRIPTION_CMD_GETPROPS."));
-		infoLayout->addWidget(infoLabel);
-
-		QVBoxLayout *topVBL = new QVBoxLayout;
-		topVBL->addLayout(ptrHBL);
-		topVBL->addLayout(widthHBL);
-		topVBL->addLayout(heightHBL);
-		topVBL->addWidget(infoGroupBox);
-		topVBL->addStretch();
-		
-		pOutputParamsScroll->setLayout(topVBL);
-		m_OutputDock->setWidget(pOutputParamsScroll);
-		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
-		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
-	}*/
-
 	// Inspector
 	{
 		m_InspectorDock = new QDockWidget(this);
@@ -1769,24 +1710,6 @@ void MainWindow::createDockWindows()
 		connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
 	}
 
-	// Bitmap
-	/*{
-		m_BitmapSetupDock = new QDockWidget(this);
-		m_BitmapSetupDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-		m_BitmapSetupDock->setObjectName("BitmapSetup");
-		QScrollArea *scrollArea = new QScrollArea(this);
-		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-		scrollArea->setWidgetResizable(true);
-		scrollArea->setMinimumWidth(240);
-		m_BitmapSetup = new BitmapSetup(this);
-		s_BitmapSetup = m_BitmapSetup;
-		scrollArea->setWidget(m_BitmapSetup);
-		m_BitmapSetupDock->setWidget(scrollArea);
-		addDockWidget(Qt::LeftDockWidgetArea, m_BitmapSetupDock);
-		m_WidgetsMenu->addAction(m_BitmapSetupDock->toggleViewAction());
-	}*/
-
 	// Toolbox
 	{
 		m_ToolboxDock = new QDockWidget(this);
@@ -1817,7 +1740,6 @@ void MainWindow::createDockWindows()
 	}*/
 
 	tabifyDockWidget(m_RegistersDock, m_ContentManagerDock);
-	//tabifyDockWidget(m_ContentManagerDock, m_BitmapSetupDock);
 	tabifyDockWidget(m_ContentManagerDock, m_ToolboxDock);
 
 #if FT800_DEVICE_MANAGER
@@ -1864,13 +1786,10 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
-	//m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
 	m_ControlsDock->setWindowTitle(tr("Controls"));
-	// m_BitmapSetupDock->setWindowTitle(tr("Bitmaps"));
-	// m_BitmapSetupDock->setWindowTitle(tr("Handles"));
 }
 
 void MainWindow::incbLanguageCode()
@@ -2071,24 +1990,6 @@ void MainWindow::focusProperties()
 			}
 		}
 	}
-}
-
-void MainWindow::focusOutput()
-{
-	/*QList<QTabBar *> tabList = findChildren<QTabBar *>();
-	for (int i = 0; i < tabList.size(); ++i)
-	{
-		QTabBar *tabBar = tabList.at(i);
-		for (int j = 0; j < tabBar->count(); ++j)
-		{
-			QDockWidget *dw = reinterpret_cast<QDockWidget *>(qvariant_cast<quintptr>(tabBar->tabData(j)));
-			if (dw == m_OutputDock)
-			{
-				tabBar->setCurrentIndex(j);
-				return;
-			}
-		}
-	}*/
 }
 
 static bool s_UndoRedoWorking = false;
@@ -2611,7 +2512,6 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
-	//m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);
