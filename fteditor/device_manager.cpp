@@ -910,6 +910,9 @@ void DeviceManager::uploadCoprocessorContent()
 			cmdText[i] = g_CmdEditor->getLineText(i);
 			switch (cmdList[i])
 			{
+			case CMD_MEMWRITE:
+			case CMD_INFLATE:
+			case CMD_INFLATE2:
 			case CMD_LOADIMAGE:
 			case CMD_PLAYVIDEO:
 				cmdStrParamCache.push_back(cmdParsedPtr[i].StringParameter);
@@ -938,7 +941,7 @@ void DeviceManager::uploadCoprocessorContent()
 			uint32_t size = cmdParamCache[(size_t)cmdParamIdx[i] + 1];
 			EVE_MediaFifo_set(phost, address, size);
 		}
-		else if (cmdList[i] == CMD_LOADIMAGE)
+		else if (cmdList[i] == CMD_LOADIMAGE || cmdList[i] == CMD_INFLATE2)
 		{
 			useFlash = (devInfo->DeviceIntf >= FTEDITOR_BT815)
 			    && (cmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_FLASH);
@@ -946,6 +949,16 @@ void DeviceManager::uploadCoprocessorContent()
 			++strParamRead;
 			useMediaFifo = (devInfo->DeviceIntf >= FTEDITOR_FT810)
 			    && (cmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
+		}
+		else if (cmdList[i] == CMD_INFLATE )
+		{
+			useFileStream = cmdStrParamCache[strParamRead].c_str();
+			++strParamRead;
+		}
+		else if (cmdList[i] == CMD_MEMWRITE )
+		{
+			useFileStream = cmdStrParamCache[strParamRead].c_str();
+			++strParamRead;
 		}
 		else if (cmdList[i] == CMD_PLAYVIDEO)
 		{
