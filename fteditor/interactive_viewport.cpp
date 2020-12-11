@@ -2540,6 +2540,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						int hline = (bitmapHandle == 15) ? line : m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 
+						line = hline;
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 
 						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)

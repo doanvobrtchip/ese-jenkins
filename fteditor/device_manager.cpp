@@ -476,7 +476,7 @@ void DeviceManager::connectDevice()
 
 	if (m_IsCustomDevice) {
 		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
-		bootupParams.ExternalOsc = m_CDI.configParams.ExternalClock;
+		bootupParams.ExternalOsc = m_CDI.ExternalClock;
 
 		switch (m_CDI.SystemClock) {
 		case 24: bootupParams.SystemClock = EVE_SYSCLK_24M;			break;

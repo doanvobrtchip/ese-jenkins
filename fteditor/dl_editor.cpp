@@ -675,20 +675,22 @@ void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
 	m_EditingInteractive = true;
 	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
+	QTextCursor c = m_CodeEditor->textCursor();
 	if (line == 0)
 	{
-		QTextCursor c = m_CodeEditor->textCursor();
 		c.setPosition(0);
 		c.insertText(linestr + "\n");
 	}
 	else
 	{
-		QTextCursor c = m_CodeEditor->textCursor();
-		c.setPosition(m_CodeEditor->document()->findBlockByNumber(line - 1).position());
+		while (line > m_CodeEditor->document()->lineCount()) {
+			c.insertText("\n");
+		}
+		int pos = m_CodeEditor->document()->findBlockByNumber(line - 1).position();
+		c.setPosition(pos);
 		c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
 		c.insertText("\n" + linestr);
 	}
-	// editorCursorPositionChanged() needed? // VERIFY
 	m_EditingInteractive = false;
 }
 
@@ -743,10 +745,7 @@ void DlEditor::editingLine(QTextBlock block)
 		m_MainWindow->interactiveProperties()->modifiedEditorLine();
 	}
 
-	if ((m_PropIdLeft == 0xFFFFFF00) && (m_PropIdRight | 0xFFFFFF00) == CMD_GETPROPS)
-		m_MainWindow->focusOutput();
-	else
-		m_MainWindow->focusProperties();
+	m_MainWindow->focusProperties();
 }
 
 void DlEditor::processState()

@@ -2594,6 +2594,8 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 // Find where to start with bitmap lines in the editor
 int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 {
+	return dlEditor->getLineCount(); 
+	/*
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
@@ -2630,6 +2632,7 @@ int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 		}
 	}
 	return 0;
+	*/
 }
 
 inline bool requirePaletteAddress(ContentInfo *contentInfo)

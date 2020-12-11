@@ -64,6 +64,7 @@ struct CustomDeviceInfo
 	int SystemClock;
 	QString ScreenSize; // width x height
 	bool isBuiltin;
+	bool ExternalClock;
 
 	EVE_ConfigParameters configParams;
 };
