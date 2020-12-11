@@ -453,8 +453,8 @@ void DlParser::initVC4()
 		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
 		// s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF; // don't support reading values
 		// s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
-		// s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
-		// s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
+		s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
+		s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
 		s_CmdParamCount[CMD_MEMWRITE & 0xFF] = 3;
 		s_CmdParamString[CMD_MEMWRITE & 0xFF] = true;
@@ -1407,6 +1407,12 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				}
 #endif
 #if defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
+				case CMD_REGREAD:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					break;
+				}
 				case CMD_FLASHREAD:
 				case CMD_FLASHUPDATE:
 				case CMD_ANIMSTART:

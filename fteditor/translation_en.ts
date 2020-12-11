@@ -527,12 +527,12 @@
 <context>
     <name>FTEDITOR::DlEditor</name>
     <message>
-        <location filename="dl_editor.cpp" line="443"/>
+        <location filename="dl_editor.cpp" line="442"/>
         <source>Save Coprocessor Command</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="dl_editor.cpp" line="443"/>
+        <location filename="dl_editor.cpp" line="442"/>
         <source>Coprocessor Command Files(*.txt)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -665,8 +665,17 @@
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1129"/>
+        <source>DESCRIPTION_CMD_REGREAD.</source>
+        <translation>&lt;p&gt;&lt;strong&gt;CMD_REGREAD&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;result&lt;/em&gt;)&lt;br /&gt;
+&lt;strong&gt;ptr&lt;/strong&gt;:&amp;nbsp;Address of the register to be read&lt;br /&gt;
+&lt;strong&gt;result&lt;/strong&gt;:&amp;nbsp;The register value to be read at ptr address&lt;br /&gt;
+&lt;br /&gt;
+Read a register value&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="interactive_properties.cpp" line="1142"/>
         <source>DESCRIPTION_CMD_MEMWRITE.</source>
-        <translation type="unfinished">&lt;p&gt;&lt;strong&gt;CMD_MEMWRITE&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;num&lt;/em&gt;)&lt;br /&gt;
+        <translation>&lt;p&gt;&lt;strong&gt;CMD_MEMWRITE&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;num&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;ptr&lt;/strong&gt;:&amp;nbsp;The memory address to be written&lt;br /&gt;
 &lt;strong&gt;num&lt;/strong&gt;:&amp;nbsp;Number of bytes to be written&lt;/p&gt;
 
@@ -675,49 +684,49 @@
 </translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1143"/>
+        <location filename="interactive_properties.cpp" line="1156"/>
         <source>DESCRIPTION_CMD_MEMSET.</source>
         <oldsource>DESCRIPTION_CMD_MEMSET</oldsource>
         <translation>&lt;b&gt;CMD_MEMSET&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;value&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Starting address of the memory block&lt;br&gt;&lt;b&gt;value&lt;/b&gt;: Value to be written to memory&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: Number of bytes in the memory block&lt;br&gt;&lt;br&gt;Fill memory with a byte value.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1157"/>
+        <location filename="interactive_properties.cpp" line="1170"/>
         <source>DESCRIPTION_CMD_MEMZERO.</source>
         <oldsource>DESCRIPTION_CMD_MEMZERO</oldsource>
         <translation>&lt;b&gt;CMD_MEMZERO&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Starting address of the memory block&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: Number of bytes in the memory block&lt;br&gt;&lt;br&gt;Write zero to a block of memory.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1170"/>
+        <location filename="interactive_properties.cpp" line="1183"/>
         <source>DESCRIPTION_CMD_MEMCPY.</source>
         <oldsource>DESCRIPTION_CMD_MEMCPY</oldsource>
         <translation>&lt;b&gt;CMD_MEMCPY&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;, &lt;i&gt;src&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: address of the destination memory block&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: address of the source memory block&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: Number of bytes in the memory block&lt;br&gt;&lt;br&gt;Copy a block of memory.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1184"/>
+        <location filename="interactive_properties.cpp" line="1197"/>
         <source>DESCRIPTION_CMD_APPEND.</source>
         <oldsource>DESCRIPTION_CMD_APPEND</oldsource>
         <translation>&lt;b&gt;CMD_APPEND&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Start of source commands in main memory&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: Number of bytes to copy. This must be a multiple of 4&lt;br&gt;&lt;br&gt;Append memory to display list.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1197"/>
+        <location filename="interactive_properties.cpp" line="1210"/>
         <source>DESCRIPTION_CMD_SNAPSHOT.</source>
         <oldsource>DESCRIPTION_CMD_SNAPSHOT</oldsource>
         <translation>&lt;b&gt;CMD_SNAPSHOT&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Snapshot destination address, in main memory&lt;br&gt;&lt;br&gt;Take a snapshot of the current screen.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1202"/>
-        <location filename="interactive_properties.cpp" line="1483"/>
+        <location filename="interactive_properties.cpp" line="1215"/>
+        <location filename="interactive_properties.cpp" line="1496"/>
         <source>Capture Snapshot</source>
         <translation>Capture Snapshot</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1202"/>
-        <location filename="interactive_properties.cpp" line="1483"/>
+        <location filename="interactive_properties.cpp" line="1215"/>
+        <location filename="interactive_properties.cpp" line="1496"/>
         <source>Capture snapshot</source>
         <translation>Capture snapshot</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1210"/>
+        <location filename="interactive_properties.cpp" line="1223"/>
         <source>DESCRIPTION_CMD_GETPTR.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_GETPTR&lt;/strong&gt;(&lt;em&gt;result&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;result&lt;/strong&gt;:&amp;nbsp;The first unallocated memory location.&amp;nbsp;It is an output parameter.&lt;/p&gt;
@@ -741,272 +750,272 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 </translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1222"/>
+        <location filename="interactive_properties.cpp" line="1235"/>
         <source>DESCRIPTION_CMD_GETPROPS.</source>
         <translation>&lt;strong&gt;CMD_GETPROPS&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;width&lt;/em&gt;, &lt;em&gt;height&lt;/em&gt;)&lt;br /&gt;&lt;strong&gt;ptr&lt;/strong&gt;: The address of the image in &lt;strong&gt;&lt;span class=&quot;fontstyle2&quot;&gt;RAM_G &lt;/span&gt;&lt;/strong&gt;&lt;span class=&quot;fontstyle0&quot;&gt;which was decoded by the last &lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; before this command. It is an output parameter.&lt;/span&gt; &lt;br /&gt;&lt;strong&gt;width&lt;/strong&gt;: The width of the image which was decoded by the last &lt;span class=&quot;fontstyle2&quot;&gt;&lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; &lt;/span&gt;&lt;span class=&quot;fontstyle0&quot;&gt;before this command. It is an output parameter.&lt;br /&gt;&lt;strong&gt;height&lt;/strong&gt;: The height of the image which was decoded by the last &lt;span class=&quot;fontstyle2&quot;&gt;&lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; &lt;/span&gt;before this command. It is an output parameter.&lt;br /&gt;&lt;br/&gt;This command is used to retrieve the properties of the image which is decoded by &lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt;. Respective image properties are updated by the coprocessor after this command is executed successfully.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1238"/>
+        <location filename="interactive_properties.cpp" line="1251"/>
         <source>DESCRIPTION_CMD_LOADIMAGE_FT810.</source>
         <translation>&lt;b&gt;CMD_LOADIMAGE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;, &lt;i&gt;stream&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the loaded bitmap is in RGB565 format. Option OPT_MONO causes the bitmap to be monochrome, in L8 format. Option OPT_FULLSCREEN causes the bitmap to be scaled so that it fills as much of the screen as possible. If option OPT_MEDIAFIFO is given, the media FIFO is used for the image data (see below). The command appends display list commands to set the source, layout and size of the resulting image. Option OPT_NODL prevents this - nothing is written to the display list.&lt;br&gt;If OPT_MEDIAFIFO is not given, then the byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command.&lt;br&gt;These padding bytes can have any value. If OPT_MEDIAFIFO is given, then the data should be present in the media FIFO.&lt;br&gt;&lt;br&gt;Decompress the following JPEG or PNG image data into an FT81X bitmap, in RAM_G. The image data should be in the following formats: Regular baseline JPEG (JFIF); PNG, no interlace.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1240"/>
+        <location filename="interactive_properties.cpp" line="1253"/>
         <source>DESCRIPTION_CMD_LOADIMAGE.</source>
         <translation>&lt;b&gt;CMD_LOADIMAGE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;, &lt;i&gt;stream&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the loaded bitmap is in RGB565 format. Option OPT_MONO causes the bitmap to be monochrome, in L8 format. Option OPT_FULLSCREEN causes the bitmap to be scaled so that it fills as much of the screen as possible.The command appends display list commands to set the source, layout and size of the resulting image. Option OPT_NODL prevents this - nothing is written to the display list.&lt;br&gt;The byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command.&lt;br&gt;These padding bytes can have any value.&lt;br&gt;&lt;br&gt;Decompress the following JPEG image data into an FT80X bitmap, in RAM_G. The image data should be in the following format: Regular baseline JPEG (JFIF).</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1257"/>
+        <location filename="interactive_properties.cpp" line="1270"/>
         <source>DESCRIPTION_CMD_LOADIDENTITY.</source>
         <oldsource>DESCRIPTION_CMD_LOADIDENTITY</oldsource>
         <translation>&lt;b&gt;CMD_LOADIDENTITY&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Set the current matrix to identity.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1267"/>
+        <location filename="interactive_properties.cpp" line="1280"/>
         <source>DESCRIPTION_CMD_TRANSLATE.</source>
         <oldsource>DESCRIPTION_CMD_TRANSLATE</oldsource>
         <translation>&lt;b&gt;CMD_TRANSLATE&lt;/b&gt;(&lt;i&gt;tx&lt;/i&gt;, &lt;i&gt;ty&lt;/i&gt;)&lt;br&gt;&lt;b&gt;tx&lt;/b&gt;: x translate factor, in signed 16.16 bit fixed-point form.&lt;br&gt;&lt;b&gt;ty&lt;/b&gt;: y translate factor, in signed 16.16 bit fixed-point form.&lt;br&gt;&lt;br&gt;Apply a translation to the current matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1271"/>
+        <location filename="interactive_properties.cpp" line="1284"/>
         <source>Set x translation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1272"/>
+        <location filename="interactive_properties.cpp" line="1285"/>
         <source>Set y translation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1280"/>
+        <location filename="interactive_properties.cpp" line="1293"/>
         <source>DESCRIPTION_CMD_SCALE.</source>
         <oldsource>DESCRIPTION_CMD_SCALE</oldsource>
         <translation>&lt;b&gt;CMD_SCALE&lt;/b&gt;(&lt;i&gt;sx&lt;/i&gt;, &lt;i&gt;sy&lt;/i&gt;)&lt;br&gt;&lt;b&gt;sx&lt;/b&gt;: x scale factor, in signed 16.16 bit fixed-point form.&lt;br&gt;&lt;b&gt;sy&lt;/b&gt;: y scale factor, in signed 16.16 bit fixed-point form.&lt;br&gt;&lt;br&gt;Apply a scale to the current matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1284"/>
+        <location filename="interactive_properties.cpp" line="1297"/>
         <source>Set x scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1285"/>
+        <location filename="interactive_properties.cpp" line="1298"/>
         <source>Set y scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1293"/>
+        <location filename="interactive_properties.cpp" line="1306"/>
         <source>DESCRIPTION_CMD_ROTATE.</source>
         <oldsource>DESCRIPTION_CMD_ROTATE</oldsource>
         <translation>&lt;b&gt;CMD_ROTATE&lt;/b&gt;(&lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Clockwise rotation angle, in units of 1/65536 of a circle.&lt;br&gt;&lt;br&gt;Apply a rotation to the current matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1297"/>
-        <location filename="interactive_properties.cpp" line="1769"/>
+        <location filename="interactive_properties.cpp" line="1310"/>
+        <location filename="interactive_properties.cpp" line="1782"/>
         <source>Angle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1297"/>
-        <location filename="interactive_properties.cpp" line="1769"/>
+        <location filename="interactive_properties.cpp" line="1310"/>
+        <location filename="interactive_properties.cpp" line="1782"/>
         <source>Set angle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1305"/>
+        <location filename="interactive_properties.cpp" line="1318"/>
         <source>DESCRIPTION_CMD_SETMATRIX.</source>
         <oldsource>DESCRIPTION_CMD_SETMATRIX</oldsource>
         <translation>&lt;b&gt;CMD_SETMATRIX&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Write the current matrix as a bitmap transform.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1315"/>
+        <location filename="interactive_properties.cpp" line="1328"/>
         <source>DESCRIPTION_CMD_SETFONT.</source>
         <oldsource>DESCRIPTION_CMD_SETFONT</oldsource>
         <translation>&lt;b&gt;CMD_SETFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: font&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: ptr&lt;br&gt;&lt;br&gt;To use a custom font with the co-processor engine objects, create the font definition data in FT8XX RAM and issue CMD_SETFONT, as described in ROM and RAM Fonts.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1328"/>
+        <location filename="interactive_properties.cpp" line="1341"/>
         <source>DESCRIPTION_CMD_TRACK.</source>
         <oldsource>DESCRIPTION_CMD_TRACK</oldsource>
         <translation>&lt;b&gt;CMD_TRACK&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;w&lt;/i&gt;, &lt;i&gt;h&lt;/i&gt;, &lt;i&gt;tag&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of track area top-left, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of track area top-left, in pixels&lt;br&gt;&lt;b&gt;w&lt;/b&gt;: Width of track area, in pixels&lt;br&gt;&lt;b&gt;h&lt;/b&gt;: Height of track area, in pixels.&lt;br&gt;A w and h of (1,1) means that the tracker is rotary, and reports an angle value in REG_TRACKER. (0,0) disables the tracker. Other values mean that the tracker is linear, and reports values along its length from 0 to 65535 in REG_TRACKER.&lt;br&gt;&lt;b&gt;tag&lt;/b&gt;: tag for this track, 1-255&lt;br&gt;&lt;br&gt;The co-processor engine can assist the MCU in tracking touches on graphical objects. For example touches on dial objects can be reported as angles, saving MCU computation. To do this the MCU draws the object using a chosen tag value, and registers a track area for that tag.&lt;br&gt;From then on any touch on that object is reported in REG_TRACKER. The MCU can detect any touch on the object by reading the 32-bit value in REG_TRACKER. The low 8 bits give the current tag, or zero if there is no touch. The high sixteen bits give the tracked value.&lt;br&gt;For a rotary tracker - used for clocks, gauges and dials - this value is the angle of the touch point relative to the object center, in units of 1=65536 of a circle. 0 means that the angle is straight down, 0x4000 left, 0x8000 up, and 0xc000 right.&lt;br&gt;For a linear tracker - used for sliders and scrollbars - this value is the distance along the tracked object, from 0 to 65535.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1342"/>
+        <location filename="interactive_properties.cpp" line="1355"/>
         <source>DESCRIPTION_CMD_DIAL.</source>
         <oldsource>DESCRIPTION_CMD_DIAL</oldsource>
         <translation>&lt;b&gt;CMD_DIAL&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;r&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;, &lt;i&gt;val&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of dial center, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of dial center, in pixels&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: radius of dial, in pixels&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default the dial is drawn with a 3D effect. OPT_FLAT removes the 3D effect&lt;br&gt;&lt;b&gt;val&lt;/b&gt;: Displayed value of slider, between 0 and 65535 inclusive. 0 means that the dial points straight down, 0x4000 left, 0x8000 up, and 0xc000 right.&lt;br&gt;&lt;br&gt;Draw a rotary dial control.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1357"/>
+        <location filename="interactive_properties.cpp" line="1370"/>
         <source>DESCRIPTION_CMD_NUMBER.</source>
         <oldsource>DESCRIPTION_CMD_NUMBER</oldsource>
         <translation>&lt;b&gt;CMD_NUMBER&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;font&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;, &lt;i&gt;n&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of text base, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of text base, in pixels&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: Font to use for text, 0-31. See ROM and RAM Fonts&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default (x; y) is the top-left pixel of the text. OPT_CENTERX centers the text horizontally, OPT_CENTERY centers it vertically. OPT_CENTER centers the text in both directions. OPT_RIGHTX right-justifies the text, so that the x is the rightmost pixel. By default the number is displayed with no leading zeroes, but if a width 1-9 is specified in the options, then the number is padded if necessary with leading zeroes so that it has the given width. If OPT_SIGNED is given, the number is treated as signed, and prefixed by a minus sign if negative.&lt;br&gt;&lt;b&gt;n&lt;/b&gt;: The number to display, either unsigned or signed 32-bit&lt;br&gt;&lt;br&gt;Draw text.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1372"/>
+        <location filename="interactive_properties.cpp" line="1385"/>
         <source>DESCRIPTION_CMD_SCREENSAVER.</source>
         <oldsource>DESCRIPTION_CMD_SCREENSAVER</oldsource>
         <translation>&lt;b&gt;CMD_SCREENSAVER&lt;/b&gt;()&lt;br&gt;&lt;br&gt;After the screensaver command, the co-processor engine continuously updates REG_MACRO_0 with VERTEX2F with varying (x; y) coordinates. With an appropriate display list, this causes a bitmap to move around the screen without any MCU work.&lt;br&gt;Command CMD_STOP stops the update process.&lt;br&gt;Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be active at one time.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1382"/>
+        <location filename="interactive_properties.cpp" line="1395"/>
         <source>DESCRIPTION_CMD_SKETCH.</source>
         <oldsource>DESCRIPTION_CMD_SKETCH</oldsource>
         <translation>&lt;b&gt;CMD_SKETCH&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;w&lt;/i&gt;, &lt;i&gt;h&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;format&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of sketch area, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of sketch area, in pixels&lt;br&gt;&lt;b&gt;w&lt;/b&gt;: Width of sketch area, in pixels&lt;br&gt;&lt;b&gt;h&lt;/b&gt;: Height of sketch area, in pixels&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Base address of sketch bitmap&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Format of sketch bitmap, either L1 or L8&lt;br&gt;&lt;br&gt;After the sketch command, the co-processor engine continuously samples the touch inputs and paints pixels into a bitmap, according to the touch (x; y). This means that the user touch inputs are drawn into the bitmap without any need for MCU work.&lt;br&gt;Command CMD_STOP stops the update process.&lt;br&gt;Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be active at one time.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1397"/>
+        <location filename="interactive_properties.cpp" line="1410"/>
         <source>DESCRIPTION_CMD_CSKETCH.</source>
         <oldsource>DESCRIPTION_CMD_CSKETCH</oldsource>
         <translation>&lt;b&gt;CMD_CSKETCH&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;w&lt;/i&gt;, &lt;i&gt;h&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;format&lt;/i&gt;, &lt;i&gt;freq&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of sketch area, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of sketch area, in pixels&lt;br&gt;&lt;b&gt;w&lt;/b&gt;: Width of sketch area, in pixels&lt;br&gt;&lt;b&gt;h&lt;/b&gt;: Height of sketch area, in pixels&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Base address of sketch bitmap&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Format of sketch bitmap, either L1 or L8&lt;br&gt;&lt;b&gt;freq&lt;/b&gt;: The oversampling frequency. The typical value is 1500 to make sure the lines are connected smoothly. The value zero means no oversampling operation&lt;br&gt;&lt;br&gt;This command is only valid for FT801 silicon. FT801 co-processor will oversample the coordinates reported by the capacitive touch panel in the frequency of �freq� and forms the lines with a smoother effect.&lt;br&gt;&lt;br&gt;After the sketch command, the co-processor engine continuously samples the touch inputs and paints pixels into a bitmap, according to the touch (x; y). This means that the user touch inputs are drawn into the bitmap without any need for MCU work.&lt;br&gt;Command CMD_STOP stops the update process.&lt;br&gt;Note that only one of CMD_SKETCH, CMD_CSKETCH, CMD_SCREENSAVER, or CMD_SPINNER can be active at one time.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1413"/>
+        <location filename="interactive_properties.cpp" line="1426"/>
         <source>DESCRIPTION_CMD_LOGO.</source>
         <oldsource>DESCRIPTION_CMD_LOGO</oldsource>
         <translation>&lt;b&gt;CMD_LOGO&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Play device logo animation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1423"/>
+        <location filename="interactive_properties.cpp" line="1436"/>
         <source>DESCRIPTION_CMD_COLDSTART.</source>
         <oldsource>DESCRIPTION_CMD_COLDSTART</oldsource>
         <translation>&lt;b&gt;CMD_COLDSTART&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Set co-processor engine state to default values.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1433"/>
+        <location filename="interactive_properties.cpp" line="1446"/>
         <source>DESCRIPTION_CMD_GRADCOLOR.</source>
         <oldsource>DESCRIPTION_CMD_GRADCOLOR</oldsource>
         <translation>&lt;b&gt;CMD_GRADCOLOR&lt;/b&gt;(&lt;i&gt;rgb&lt;/i&gt;)&lt;br&gt;&lt;b&gt;rgb&lt;/b&gt;: New highlight gradient color, as a 24-bit RGB number. Red is the most significant 8 bits, blue is the least. So 0xff0000 is bright red.&lt;br&gt;&lt;br&gt;Set the 3D button highlight color.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1503"/>
+        <location filename="interactive_properties.cpp" line="1516"/>
         <source>DESCRIPTION_CMD_MEDIAFIFO.</source>
         <translation>&lt;b&gt;CMD_MEDIAFIFO&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;size&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: starting address of memory block&lt;br&gt;&lt;b&gt;size&lt;/b&gt;: number of bytes in the source memory block&lt;br&gt;&lt;br&gt;Sets up a streaming media FIFO in RAM_G.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1516"/>
+        <location filename="interactive_properties.cpp" line="1529"/>
         <source>DESCRIPTION_CMD_PLAYVIDEO.</source>
         <translation>&lt;b&gt;CMD_PLAYVIDEO&lt;/b&gt;(&lt;i&gt;opts&lt;/i&gt;, &lt;i&gt;stream&lt;/i&gt;)&lt;br&gt;&lt;b&gt;opts&lt;/b&gt;: OPT_FULLSCREEN: zoom the video so that it fills as much of the screen as possible.&lt;br&gt;OPT_MEDIAFIFO: instead of sourcing the AVI video data from the command buffer, source it from the media FIFO.&lt;br&gt;OPT_NOTEAR: Synchronize video updates to the display blanking interval, avoiding horizontal ”tearing” artifacts.&lt;br&gt;&lt;b&gt;stream&lt;/b&gt;: The video data to be played. Optional when opts has OPT_MEDIAFIFO enabled.&lt;br&gt;&lt;br&gt;Plays back MJPEG-encoded AVI video.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1554"/>
+        <location filename="interactive_properties.cpp" line="1567"/>
         <source>Handle</source>
         <translation>Handle</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1554"/>
+        <location filename="interactive_properties.cpp" line="1567"/>
         <source>Set handle</source>
         <translation>Set handle</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1582"/>
+        <location filename="interactive_properties.cpp" line="1595"/>
         <source>DESCRIPTION_CMD_VIDEOSTART.</source>
         <translation>&lt;b&gt;CMD_VIDEOSTART&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Initializes the AVI video decoder. The video data should be supplied using the media fifo. This command processes the video header information from the media fifo, and completes when it has consumed it.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1619"/>
+        <location filename="interactive_properties.cpp" line="1632"/>
         <source>DESCRIPTION_CMD_FLASHERASE.</source>
         <translation>&lt;b&gt;CMD_FLASHERASE&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command erases the attached flash storage.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1630"/>
+        <location filename="interactive_properties.cpp" line="1643"/>
         <source>DESCRIPTION_CMD_FLASHWRITE.</source>
         <translation>&lt;b&gt;CMD_FLASHWRITE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: destination address in flash memory, must be 256-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to write, must be multiple of 256&lt;br&gt;&lt;br&gt;This command writes the following inline data to flash storage. The storage should have been previously erased using CMD_FLASHERASE.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1644"/>
+        <location filename="interactive_properties.cpp" line="1657"/>
         <source>DESCRIPTION_CMD_FLASHREAD.</source>
         <translation>&lt;b&gt;CMD_FLASHREAD&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;, &lt;i&gt;src&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: destination address in main memory, must be 4-byte aligned&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: source address in flash memory, must be 64-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to read, must be multiple of 4&lt;br&gt;&lt;br&gt;This command reads data from flash into main memory.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1658"/>
+        <location filename="interactive_properties.cpp" line="1671"/>
         <source>DESCRIPTION_CMD_FLASHUPDATE.</source>
         <translation>&lt;b&gt;CMD_FLASHUPDATE&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;, &lt;i&gt;src&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: destination address in flash memory, must be 4096-byte aligned&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: source data in main memory, must be 4-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to write, must be multiple of 4096&lt;br&gt;&lt;br&gt;This command writes the given data to flash. If the data matches the existing contents of flash, nothing is done. Otherwise the flash is erased in 4K units, and the data is written.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1672"/>
+        <location filename="interactive_properties.cpp" line="1685"/>
         <source>DESCRIPTION_CMD_FLASHDETACH.</source>
         <translation>&lt;b&gt;CMD_FLASHDETACH&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command causes the VC3 to put the SPI device lines into a hi-Z state. The only valid flash operations when detached are the lowlevel SPI access commands: CMD_FLASHSPIDESEL, CMD_FLASHSPITX, CMD_FLASHSPIRX, and CMD_FLASHATTACH.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1683"/>
+        <location filename="interactive_properties.cpp" line="1696"/>
         <source>DESCRIPTION_CMD_FLASHATTACH.</source>
         <translation>&lt;b&gt;CMD_FLASHATTACH&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command causes the VC3 to re-connect to the attached SPI flash storage. After the command, register REG_FLASH_STATE should be FLASH_STATUS_BASIC. See Flash interface for details.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1693"/>
+        <location filename="interactive_properties.cpp" line="1706"/>
         <source>DESCRIPTION_CMD_FLASHFAST.</source>
         <translation>&lt;b&gt;CMD_FLASHFAST&lt;/b&gt;(&lt;i&gt;result&lt;/i&gt;)&lt;br&gt;&lt;b&gt;result&lt;/b&gt;: written with the result code. If the command succeeds, zero is written as a result. Otherwise an error code is set as follows:&lt;br&gt;&lt;br&gt;0xe001&amp;emsp;flash is not attached&lt;br&gt;0xe002&amp;emsp;no header detected in sector 0 - is flash blank?&lt;br&gt;0xe003&amp;emsp;sector 0 data failed integrity check&lt;br&gt;0xe004&amp;emsp;device/blob mismatch - was correct blob loaded?&lt;br&gt;0xe005&amp;emsp;failed full-speed test - check board wiring&lt;br&gt;&lt;br&gt;This commands causes the VC3 to drive the attached flash in full speed mode, if possible.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1703"/>
+        <location filename="interactive_properties.cpp" line="1716"/>
         <source>DESCRIPTION_CMD_FLASHSPIDESEL.</source>
         <translation>&lt;b&gt;CMD_FLASHSPIDESEL&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command deasserts the SPI CS signal. It is only valid when&lt;br&gt;the flash has been detached, using CMD_FLASHDETACH.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1715"/>
+        <location filename="interactive_properties.cpp" line="1728"/>
         <source>DESCRIPTION_CMD_FLASHSOURCE.</source>
         <translation>&lt;b&gt;CMD_FLASHSOURCE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: flash address, must be 64-byte aligned&lt;br&gt;&lt;br&gt;This command specifies the source address for flash data loaded by the CMD_LOADIMAGE, CMD_PLAYVIDEO, CMD_VIDEOSTART and CMD_INFLATE2 commands with the OPT_FLASH option.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1727"/>
+        <location filename="interactive_properties.cpp" line="1740"/>
         <source>DESCRIPTION_CMD_CLEARCACHE.</source>
         <translation>&lt;b&gt;CMD_CLEARCACHE&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command clears the graphics system’s flash cache. It should be executed after modifying graphics data in flash, otherwise bitmaps from flash may render &quot;stale&quot; data. This command must be executed when the display list is empty, immediately after a CMD_DLSTART command. Otherwise it generates a coprocessor fault (&quot;display list must be empty&quot;) and sets REG_PCLK to zero.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1737"/>
+        <location filename="interactive_properties.cpp" line="1750"/>
         <source>DESCRIPTION_CMD_INFLATE.</source>
         <translation>&lt;b&gt;CMD_INFLATE&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address.&lt;br&gt;&lt;br&gt;The byte data should immediate follow in the command buffer. If the number of bytes is not a multiple of 4, then 1,2 or 3 bytes should be appended to ensure 4-byte alignment of the next command. These padding bytes can have any value.&lt;br&gt;&lt;br&gt;Decompress the following compressed data into VC3 memory. The data should have been compressed with the DEFLATE algorithm, e.g. with the zlib library. This is particularly useful for loading graphics data.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1750"/>
+        <location filename="interactive_properties.cpp" line="1763"/>
         <source>DESCRIPTION_CMD_INFLATE2.</source>
         <translation>&lt;b&gt;CMD_INFLATE2&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;options&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Destination address&lt;br&gt;&lt;b&gt;options&lt;/b&gt;: By default, the compressed data follows in the command buffer. If option OPT_MEDIAFIFO is given, the compressed data is sourced from the media fifo. If option OPT_FLASH is given, then flash memory is the source.&lt;br&gt;&lt;br&gt;Decompress compressed data into VC3 memory. The data may be supplied in the command buffer, the media fifo, or from etxernal flash. The data should have been compressed with the DEFLATE algorithm, e.g. with the zlib library. This is particularly useful for loading graphics data.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1764"/>
+        <location filename="interactive_properties.cpp" line="1777"/>
         <source>DESCRIPTION_CMD_ROTATEAROUND.</source>
         <translation>&lt;b&gt;CMD_ROTATEAROUND&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: center of rotation/scaling, x-coordinate&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: center of rotation/scaling, y-coordinate&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: clockwise rotation angle, in units of 1/65536 of a circle&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: scale factor, in signed 16.16 bit fixed-point form&lt;br&gt;&lt;br&gt;Apply a rotation and scale around (x,y).</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1770"/>
+        <location filename="interactive_properties.cpp" line="1783"/>
         <source>Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1770"/>
+        <location filename="interactive_properties.cpp" line="1783"/>
         <source>Set scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1778"/>
+        <location filename="interactive_properties.cpp" line="1791"/>
         <source>DESCRIPTION_CMD_RESETFONTS.</source>
         <translation>&lt;b&gt;CMD_RESETFONTS&lt;/b&gt;()&lt;br&gt;&lt;br&gt;This command loads bitmap handles 16-31 with their reset default fonts.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1788"/>
+        <location filename="interactive_properties.cpp" line="1801"/>
         <source>DESCRIPTION_CMD_ANIMSTART.</source>
         <translation>&lt;b&gt;CMD_ANIMSTART&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;, &lt;i&gt;aoptr&lt;/i&gt;, &lt;i&gt;loop&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then the command selects the lowest unused channel, if one is available. If no channel is available, then an &quot;out of channels&quot; exception is raised.&lt;br&gt;&lt;b&gt;aoptr&lt;/b&gt;: Pointer to the animation object in flash memory&lt;br&gt;&lt;b&gt;loop&lt;/b&gt;: Loop flags. ANIM_ONCE plays the animation once, then cancels it. ANIM_LOOP plays the animation in a loop. ANIM_HOLD plays the animation once, then displays the final frame.&lt;br&gt;&lt;br&gt;Start an animation. If the channel was previously in use, the previous animation is replaced.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1792"/>
-        <location filename="interactive_properties.cpp" line="1806"/>
-        <location filename="interactive_properties.cpp" line="1833"/>
-        <location filename="interactive_properties.cpp" line="1845"/>
+        <location filename="interactive_properties.cpp" line="1805"/>
+        <location filename="interactive_properties.cpp" line="1819"/>
+        <location filename="interactive_properties.cpp" line="1846"/>
         <location filename="interactive_properties.cpp" line="1858"/>
+        <location filename="interactive_properties.cpp" line="1871"/>
         <source>Channel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1792"/>
-        <location filename="interactive_properties.cpp" line="1806"/>
-        <location filename="interactive_properties.cpp" line="1833"/>
-        <location filename="interactive_properties.cpp" line="1845"/>
+        <location filename="interactive_properties.cpp" line="1805"/>
+        <location filename="interactive_properties.cpp" line="1819"/>
+        <location filename="interactive_properties.cpp" line="1846"/>
         <location filename="interactive_properties.cpp" line="1858"/>
+        <location filename="interactive_properties.cpp" line="1871"/>
         <source>Set channel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1802"/>
+        <location filename="interactive_properties.cpp" line="1815"/>
         <source>DESCRIPTION_CMD_ANIMSTARTRAM.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_ANIMSTARTRAM&lt;/strong&gt;(&lt;em&gt;ch, aoptr, loop&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;ch&lt;/strong&gt;: Animation channel, 0-31. If no channel is available, then an &amp;ldquo;out of channels&amp;rdquo; exception is raised.&lt;br /&gt;
@@ -1016,7 +1025,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command is used to start an animation in RAM_G. If the channel was previously in use, the previous animation is replaced. The animation object is in &lt;strong&gt;RAM_G&lt;/strong&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1816"/>
+        <location filename="interactive_properties.cpp" line="1829"/>
         <source>DESCRIPTION_CMD_RUNANIM.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_RUNANIM&lt;/strong&gt;(&lt;em&gt;waitmask, play&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;waitmask&lt;/strong&gt;: 32-bit mask specifying which animation channels to wait for. Animation ends when the logical &lt;strong&gt;AND&lt;/strong&gt; of this mask and &lt;strong&gt;REG_ANIM_ACTIVE&lt;/strong&gt; is zero.&lt;br /&gt;
@@ -1025,64 +1034,64 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command is used to play/run animations until complete. Playback ends when either a specified animation completes, or when host &lt;strong&gt;MCU&lt;/strong&gt; writes to a control byte. Note that only animations started with &lt;strong&gt;ANIM_ONCE&lt;/strong&gt; complete.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1820"/>
+        <location filename="interactive_properties.cpp" line="1833"/>
         <source>Wait Mask:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1820"/>
+        <location filename="interactive_properties.cpp" line="1833"/>
         <source>Set Wait Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1829"/>
+        <location filename="interactive_properties.cpp" line="1842"/>
         <source>DESCRIPTION_CMD_ANIMSTOP.</source>
         <translation>&lt;b&gt;CMD_ANIMSTOP&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then all animations are stopped.&lt;br&gt;&lt;br&gt;This command stops one or more active animations.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1841"/>
+        <location filename="interactive_properties.cpp" line="1854"/>
         <source>DESCRIPTION_CMD_ANIMXY.</source>
         <translation>&lt;b&gt;CMD_ANIMXY&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;, &lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y screen coordinate for the animation center, in pixels&lt;br&gt;&lt;br&gt;This command sets the (x; y) coordinates of an animation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1854"/>
+        <location filename="interactive_properties.cpp" line="1867"/>
         <source>DESCRIPTION_CMD_ANIMDRAW.</source>
         <translation>&lt;b&gt;CMD_ANIMDRAW&lt;/b&gt;(&lt;i&gt;ch&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ch&lt;/b&gt;: Animation channel, 0-31. If ch is -1, then it draws all undrawn animations in ascending order.&lt;br&gt;&lt;br&gt;This command draws one or more active animations.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1866"/>
+        <location filename="interactive_properties.cpp" line="1879"/>
         <source>DESCRIPTION_CMD_GRADIENTA.</source>
         <translation>&lt;b&gt;CMD_GRADIENTA&lt;/b&gt;(&lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;y0&lt;/i&gt;, &lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;argb0&lt;/i&gt;, &lt;i&gt;x1&lt;/i&gt;, &lt;i&gt;y1&lt;/i&gt;, &lt;i&gt;argb1&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x0&lt;/b&gt;: x-coordinate of point 0, in pixels&lt;br&gt;&lt;b&gt;y0&lt;/b&gt;: y-coordinate of point 0, in pixels&lt;br&gt;&lt;b&gt;argb0&lt;/b&gt;: Color of point 0, as a 32-bit ARGB number. A is the most significant 8 bits, B is the least. So 0x80ff0000 is 50% transparent bright red, and 0xff0000ff is solid blue.&lt;br&gt;&lt;b&gt;x1&lt;/b&gt;: x-coordinate of point 1, in pixels&lt;br&gt;&lt;b&gt;y1&lt;/b&gt;: y-coordinate of point 1, in pixels&lt;br&gt;&lt;b&gt;argb1&lt;/b&gt;: Color of point 1&lt;br&gt;&lt;br&gt;The two points have RGB color values, and alpha values which specify their opacity in the range 0x00 to 0xff.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1883"/>
+        <location filename="interactive_properties.cpp" line="1896"/>
         <source>DESCRIPTION_CMD_FILLWIDTH.</source>
         <translation>&lt;b&gt;CMD_FILLWIDTH&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: line fill width, in pixels&lt;br&gt;&lt;br&gt;This CMD_FILLWIDTH sets the pixel fill width for CMD_TEXT and CMD_BUTTON with the OPT_FILL option.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1895"/>
+        <location filename="interactive_properties.cpp" line="1908"/>
         <source>DESCRIPTION_CMD_APPENDF.</source>
         <translation>&lt;b&gt;CMD_APPENDF&lt;/b&gt;(&lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;num&lt;/i&gt;)&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: start of source commands in flash memory, must be 64-byte aligned&lt;br&gt;&lt;b&gt;num&lt;/b&gt;: number of bytes to copy, must be a multiple of 4&lt;br&gt;&lt;br&gt;This command appends data from flash to the display list.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1908"/>
+        <location filename="interactive_properties.cpp" line="1921"/>
         <source>DESCRIPTION_CMD_ANIMFRAME.</source>
         <translation>&lt;b&gt;CMD_ANIMFRAME&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;aoptr&lt;/i&gt;, &lt;i&gt;frame&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y screen coordinate for the animation center, in pixels&lt;br&gt;&lt;b&gt;aoptr&lt;/b&gt;: Pointer to the animation object in flash memory&lt;br&gt;&lt;b&gt;frame&lt;/b&gt;: Frame number to draw, starting at zero&lt;br&gt;&lt;br&gt;This command draws the specified frame of an animation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1914"/>
-        <location filename="interactive_properties.cpp" line="1928"/>
+        <location filename="interactive_properties.cpp" line="1927"/>
+        <location filename="interactive_properties.cpp" line="1941"/>
         <source>Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1914"/>
-        <location filename="interactive_properties.cpp" line="1928"/>
+        <location filename="interactive_properties.cpp" line="1927"/>
+        <location filename="interactive_properties.cpp" line="1941"/>
         <source>Set frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1922"/>
+        <location filename="interactive_properties.cpp" line="1935"/>
         <source>DESCRIPTION_CMD_ANIMFRAMERAM.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_ANIMFRAMERAM&lt;/strong&gt;(&lt;em&gt;x, y, aoptr, frame&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;x&lt;/strong&gt;: x screen coordinate for the animation center, in pixels.&lt;br /&gt;
@@ -1093,22 +1102,22 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command draws the specified frame of an animation in &lt;strong&gt;RAM&lt;/strong&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1940"/>
+        <location filename="interactive_properties.cpp" line="1953"/>
         <source>DESCRIPTION_CMD_VIDEOSTARTF.</source>
         <translation>&lt;b&gt;CMD_VIDEOSTARTF&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Initializes the AVI video decoder. The video data should be present in flash memory, and its address previously set using CMD_FLASHSOURCE. This command processes the video header information, and completes when it has consumed it.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1950"/>
+        <location filename="interactive_properties.cpp" line="1963"/>
         <source>DESCRIPTION_CMD_VIDEOFRAME.</source>
         <translation>&lt;b&gt;CMD_VIDEOFRAME&lt;/b&gt;(&lt;i&gt;dst&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dst&lt;/b&gt;: Main memory location to load the frame data&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Completion pointer. The command writes the 32-bit word at this location. It is set to 1 if there is at least one more frame available in the video. 0 indicates that this is the last frame.&lt;br&gt;&lt;br&gt;Loads the next frame of video. The video data should be supplied using the media fifo. This command extracts the next frame of video from the media fifo, and completes when it has consumed it.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1963"/>
+        <location filename="interactive_properties.cpp" line="1976"/>
         <source>DESCRIPTION_CMD_BITMAP_TRANSFORM.</source>
         <translation>&lt;b&gt;CMD_BITMAP_TRANSFORM&lt;/b&gt;(&lt;i&gt;x0&lt;/i&gt;, &lt;i&gt;y0&lt;/i&gt;, &lt;i&gt;x1&lt;/i&gt;, &lt;i&gt;y1&lt;/i&gt;, &lt;i&gt;x2&lt;/i&gt;, &lt;i&gt;y2&lt;/i&gt;, &lt;i&gt;tx0&lt;/i&gt;, &lt;i&gt;ty0&lt;/i&gt;, &lt;i&gt;tx1&lt;/i&gt;, &lt;i&gt;ty1&lt;/i&gt;, &lt;i&gt;tx2&lt;/i&gt;, &lt;i&gt;ty2&lt;/i&gt;, &lt;i&gt;result&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x0,y0&lt;/b&gt;: Point 0 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x1,y1&lt;/b&gt;: Point 1 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;x2,y2&lt;/b&gt;: Point 2 screen coordinate, in pixels&lt;br&gt;&lt;b&gt;tx0,ty0&lt;/b&gt;: Point 0 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx1,ty1&lt;/b&gt;: Point 1 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;tx2,ty2&lt;/b&gt;: Point 2 bitmap coordinate, in pixels&lt;br&gt;&lt;b&gt;result&lt;/b&gt;: result return. Set to -1 on success, or 0 if it is not possible to find the solution matrix.&lt;br&gt;&lt;br&gt;This command computes a bitmap transform and appends commands BITMAP TRANSFORM A - BITMAP TRANSFORM F to the display list. It computes the transform given three corresponding points in screen space and bitmap space. Using these three points, the command computes a matrix that transforms the bitmap coordinates into screen space, and appends the display list commands to set the bitmap matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1980"/>
+        <location filename="interactive_properties.cpp" line="1993"/>
         <source>DESCRIPTION_CMD_WAIT.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_WAIT&lt;/strong&gt;(&lt;em&gt;us&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;us&lt;/strong&gt;: Delay time, in microseconds&lt;/p&gt;
@@ -1116,17 +1125,17 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command waits for a speciﬁed number of microseconds. Delays of more than 1s (1000000 &amp;micro;s) are not supported.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1984"/>
+        <location filename="interactive_properties.cpp" line="1997"/>
         <source>Delay Time:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1984"/>
+        <location filename="interactive_properties.cpp" line="1997"/>
         <source>Set Delay Time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1992"/>
+        <location filename="interactive_properties.cpp" line="2005"/>
         <source>DESCRIPTION_CMD_NEWLIST.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_NEWLIST&lt;/strong&gt;(&lt;em&gt;a&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;a&lt;/strong&gt;: Memory address of start of command list&lt;/p&gt;
@@ -1149,14 +1158,14 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2004"/>
+        <location filename="interactive_properties.cpp" line="2017"/>
         <source>DESCRIPTION_CMD_ENDLIST.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_ENDLIST&lt;/strong&gt;()&lt;/p&gt;
 
 &lt;p&gt;This command terminates the compilation of a command list into &lt;strong&gt;RAM_G&lt;/strong&gt;. &lt;strong&gt;CMD_GETPTR&lt;/strong&gt; can be used to ﬁnd the ﬁrst unused memory address following the command list.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2014"/>
+        <location filename="interactive_properties.cpp" line="2027"/>
         <source>DESCRIPTION_CMD_CALLLIST.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_CALLLIST&lt;/strong&gt;(&lt;em&gt;a&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;a&lt;/strong&gt;:&lt;strong&gt; &lt;/strong&gt;memory address of the command list&lt;/p&gt;
@@ -1165,14 +1174,14 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 </translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2026"/>
+        <location filename="interactive_properties.cpp" line="2039"/>
         <source>DESCRIPTION_CMD_RETURN.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_RETURN&lt;/strong&gt;()&lt;/p&gt;
 
 &lt;p&gt;This command ends a command list. Normally it is not needed by the user, because &lt;strong&gt;CMD_ENDLIST &lt;/strong&gt;appends &lt;strong&gt;CMD_RETURN &lt;/strong&gt;to the command list. However it may be used in situations where the user is constructing command lists oﬄine.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2036"/>
+        <location filename="interactive_properties.cpp" line="2049"/>
         <source>DESCRIPTION_CMD_APILEVEL.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_APILEVEL&lt;/strong&gt;(&lt;em&gt;level&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;level&lt;/strong&gt;:&amp;nbsp;API level to use. Level 1 is BT815 compatible, and is the default. Level 2 is BT817/8.&lt;/p&gt;
@@ -1180,12 +1189,12 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command sets the API level used by the coprocessor. To use the BT817/8 specific commands or other improvement, level 2 has to be sent.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2040"/>
+        <location filename="interactive_properties.cpp" line="2053"/>
         <source>API Level:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2048"/>
+        <location filename="interactive_properties.cpp" line="2061"/>
         <source>DESCRIPTION_CMD_CALIBRATESUB.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_CALIBRATESUB&lt;/strong&gt;(&lt;em&gt;x, y, w, h, result&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;x&lt;/strong&gt;:&amp;nbsp;x-coordinate of top-left of subwindow, in pixels.&lt;br /&gt;
@@ -1199,7 +1208,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;Please note that this command only applies to RTE and compatibility mode of CTSE.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2061"/>
+        <location filename="interactive_properties.cpp" line="2074"/>
         <source>DESCRIPTION_CMD_TESTCARD.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_TESTCARD&lt;/strong&gt;()&lt;/p&gt;
 
@@ -1214,7 +1223,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2071"/>
+        <location filename="interactive_properties.cpp" line="2084"/>
         <source>DESCRIPTION_CMD_FONTCACHE.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_FONTCACHE&lt;/strong&gt;(&lt;em&gt;font, ptr, num&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;font&lt;/strong&gt;: Font handle to cache. Must be an extended format font. If 255, then the font cache is&amp;nbsp;disabled.&lt;br /&gt;
@@ -1224,7 +1233,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command enables the font cache, which loads all the bitmaps(glyph) used by a ﬂash-based font into a &lt;strong&gt;RAM_G&lt;/strong&gt; area. This eliminates ﬂash bitmap rendering, at the expense of using some &lt;strong&gt;RAM_G&lt;/strong&gt;. The area must be sized to hold all the bitmaps used in &lt;strong&gt;two &lt;/strong&gt;consecutive frames. It applies to &lt;strong&gt;ASTC &lt;/strong&gt;based custom font only.&amp;nbsp;&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2085"/>
+        <location filename="interactive_properties.cpp" line="2098"/>
         <source>DESCRIPTION_CMD_FONTCACHEQUERY.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_FONTCACHEQUERY&lt;/strong&gt;(&lt;em&gt;total, used&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;total&lt;/strong&gt;:&amp;nbsp;Output parameter; total number of available bitmaps in the cache, in bytes.&lt;br /&gt;
@@ -1233,7 +1242,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command queries the capacity and utilization of the font cache.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2095"/>
+        <location filename="interactive_properties.cpp" line="2108"/>
         <source>DESCRIPTION_CMD_GETIMAGE.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_GETIMAGE&lt;/strong&gt;(&lt;em&gt;source, fmt, w, h, palette&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;source&lt;/strong&gt;:&amp;nbsp;Output parameter; source address of bitmap.&lt;br /&gt;
@@ -1245,308 +1254,308 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command returns all the attributes of the bitmap made by the previous &lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt;,&lt;strong&gt; CMD_PLAYVIDEO&lt;/strong&gt;,&lt;strong&gt; CMD_VIDEOSTART &lt;/strong&gt;or&lt;strong&gt; CMD_VIDEOSTARTF&lt;/strong&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2110"/>
+        <location filename="interactive_properties.cpp" line="2123"/>
         <source>DESCRIPTION_DISPLAY.</source>
         <oldsource>DESCRIPTION_DISPLAY</oldsource>
         <translation>&lt;b&gt;DISPLAY&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End the display list. FT8XX will ignore all the commands following this command.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2120"/>
+        <location filename="interactive_properties.cpp" line="2133"/>
         <source>DESCRIPTION_BITMAP_SOURCE.</source>
         <oldsource>DESCRIPTION_BITMAP_SOURCE</oldsource>
         <translation>&lt;b&gt;BITMAP_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in graphics SRAM FT8XX, aligned with respect to the bitmap format.&lt;br&gt;For example, if the bitmap format is RGB565/ARGB4/ARGB1555, the bitmap source shall be aligned to 2 bytes.&lt;br&gt;&lt;br&gt;Specify the source address of bitmap data in FT8XX graphics memory RAM_G.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2135"/>
+        <location filename="interactive_properties.cpp" line="2148"/>
         <source>DESCRIPTION_CLEAR_COLOR_RGB.</source>
         <oldsource>DESCRIPTION_CLEAR_COLOR_RGB</oldsource>
         <translation>&lt;b&gt;CLEAR_COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value used when the color buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Sets the color values used by a following CLEAR.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2147"/>
+        <location filename="interactive_properties.cpp" line="2160"/>
         <source>DESCRIPTION_TAG.</source>
         <oldsource>DESCRIPTION_TAG</oldsource>
         <translation>&lt;b&gt;TAG&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Tag value. Valid value range is from 1 to 255.&lt;br&gt;&lt;br&gt;Attach the tag value for the following graphics objects drawn on the screen. The initial tag buffer value is 255.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2159"/>
+        <location filename="interactive_properties.cpp" line="2172"/>
         <source>DESCRIPTION_COLOR_RGB.</source>
         <oldsource>DESCRIPTION_COLOR_RGB</oldsource>
         <translation>&lt;b&gt;COLOR_RGB&lt;/b&gt;(&lt;i&gt;red&lt;/i&gt;, &lt;i&gt;green&lt;/i&gt;, &lt;i&gt;blue&lt;/i&gt;)&lt;br&gt;&lt;b&gt;red&lt;/b&gt;: Red value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;green&lt;/b&gt;: Green value for the current color. The initial value is 255&lt;br&gt;&lt;b&gt;blue&lt;/b&gt;: Blue value for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Sets red, green and blue values of the FT8XX color buffer which will be applied to the following draw operation.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2171"/>
+        <location filename="interactive_properties.cpp" line="2184"/>
         <source>DESCRIPTION_BITMAP_HANDLE.</source>
         <oldsource>DESCRIPTION_BITMAP_HANDLE</oldsource>
         <translation>&lt;b&gt;BITMAP_HANDLE&lt;/b&gt;(&lt;i&gt;handle&lt;/i&gt;)&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: Bitmap handle. The initial value is 0. The valid value range is from 0 to 31.&lt;br&gt;&lt;br&gt;Specify the bitmap handle.&lt;br&gt;&lt;br&gt;Handles 16 to 31 are defined by the FT8XX for built-in font and handle 15 is defined in the co-processor engine commands CMD_GRADIENT, CMD_BUTTON and CMD_KEYS. Users can define new bitmaps using handles from 0 to 14. If there is no co-processor engine command CMD_GRADIENT, CMD_BUTTON and CMD_KEYS in the current display list, users can even define a bitmap using handle 15.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2183"/>
+        <location filename="interactive_properties.cpp" line="2196"/>
         <source>DESCRIPTION_CELL.</source>
         <oldsource>DESCRIPTION_CELL</oldsource>
         <translation>&lt;b&gt;CELL&lt;/b&gt;(&lt;i&gt;cell&lt;/i&gt;)&lt;br&gt;&lt;b&gt;cell&lt;/b&gt;: Bitmap cell number. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the bitmap cell number for the VERTEX2F command.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2196"/>
+        <location filename="interactive_properties.cpp" line="2209"/>
         <source>DESCRIPTION_BITMAP_LAYOUT_FT810.</source>
         <translation>&lt;b&gt;BITMAP_LAYOUT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;, &lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Bitmap pixel format. The bitmap formats supported are L1, L4, L8, RGB332, ARGB2, ARGB4, ARGB1555, RGB565, PALETTED565, PALETTED4444 and PALETTED8.&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: Bitmap linestride, in bytes. For L1 format, the line stride must be a multiple of 8 bits; For L4 format the line stride must be multiple of 2 nibbles. (Aligned to byte).&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Bitmap height, in lines&lt;br&gt;&lt;br&gt;Specify the source bitmap memory format and layout for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2198"/>
+        <location filename="interactive_properties.cpp" line="2211"/>
         <source>DESCRIPTION_BITMAP_LAYOUT.</source>
         <oldsource>DESCRIPTION_BITMAP_LAYOUT</oldsource>
         <translation>&lt;b&gt;BITMAP_LAYOUT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;, &lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: Bitmap pixel format. The bitmap formats supported are L1, L4, L8, RGB332, ARGB2, ARGB4, ARGB1555, RGB565 and PALETTED.&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: Bitmap linestride, in bytes. For L1 format, the line stride must be a multiple of 8 bits; For L4 format the line stride must be multiple of 2 nibbles. (Aligned to byte).&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Bitmap height, in lines&lt;br&gt;&lt;br&gt;Specify the source bitmap memory format and layout for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2212"/>
+        <location filename="interactive_properties.cpp" line="2225"/>
         <source>DESCRIPTION_BITMAP_SIZE.</source>
         <oldsource>DESCRIPTION_BITMAP_SIZE</oldsource>
         <translation>&lt;b&gt;BITMAP_SIZE&lt;/b&gt;(&lt;i&gt;filter&lt;/i&gt;, &lt;i&gt;wrapx&lt;/i&gt;, &lt;i&gt;wrapy&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;filter&lt;/b&gt;: Bitmap filtering mode, one of NEAREST or BILINEAR&lt;br&gt;&lt;b&gt;wrapx&lt;/b&gt;: Bitmap x wrap mode, one of REPEAT or BORDER&lt;br&gt;&lt;b&gt;wrapy&lt;/b&gt;: Bitmap y wrap mode, one of REPEAT or BORDER&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: Drawn bitmap width, in pixels&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: Drawn bitmap height, in pixels&lt;br&gt;&lt;br&gt;Specify the screen drawing of bitmaps for the current handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2228"/>
+        <location filename="interactive_properties.cpp" line="2241"/>
         <source>DESCRIPTION_ALPHA_FUNC.</source>
         <oldsource>DESCRIPTION_ALPHA_FUNC</oldsource>
         <translation>&lt;b&gt;ALPHA_FUNC&lt;/b&gt;(&lt;i&gt;func&lt;/i&gt;, &lt;i&gt;ref&lt;/i&gt;)&lt;br&gt;&lt;b&gt;func&lt;/b&gt;: Specifies the test function, one of NEVER, LESS, LEQUAL, GREATER, GEQUAL, EQUAL, NOTEQUAL, or ALWAYS. The initial value is ALWAYS (7)&lt;br&gt;&lt;b&gt;ref&lt;/b&gt;: Specifies the reference value for the alpha test. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the alpha test function.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2241"/>
+        <location filename="interactive_properties.cpp" line="2254"/>
         <source>DESCRIPTION_STENCIL_FUNC.</source>
         <oldsource>DESCRIPTION_STENCIL_FUNC</oldsource>
         <translation>&lt;b&gt;STENCIL_FUNC&lt;/b&gt;(&lt;i&gt;func&lt;/i&gt;, &lt;i&gt;ref&lt;/i&gt;, &lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;func&lt;/b&gt;: Specifies the test function, one of NEVER, LESS, LEQUAL, GREATER, GEQUAL, EQUAL, NOTEQUAL, or ALWAYS. The initial value is ALWAYS. &lt;br&gt;&lt;b&gt;ref&lt;/b&gt;: Specifies the reference value for the stencil test. The initial value is 0&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Specifies a mask that is ANDed with the reference value and the stored stencil value. The initial value is 255&lt;br&gt;&lt;br&gt;Set function and reference value for stencil testing.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2256"/>
+        <location filename="interactive_properties.cpp" line="2269"/>
         <source>DESCRIPTION_BLEND_FUNC.</source>
         <oldsource>DESCRIPTION_BLEND_FUNC</oldsource>
         <translation>&lt;b&gt;BLEND_FUNC&lt;/b&gt;(&lt;i&gt;src&lt;/i&gt;, &lt;i&gt;dst&lt;/i&gt;)&lt;br&gt;&lt;b&gt;src&lt;/b&gt;: Specifies how the source blending factor is computed. One of ZERO, ONE, SRC_ALPHA, DST_ALPHA, ONE_MINUS_SRC_ALPHA or ONE_MINUS_DST_ALPHA. The initial value is SRC_ALPHA (2).&lt;br&gt;&lt;b&gt;dst&lt;/b&gt;: Specifies how the destination blending factor is computed, one of the same constants as src. The initial value is ONE_MINUS_SRC_ALPHA(4)&lt;br&gt;&lt;br&gt;Specify pixel arithmetic.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2269"/>
+        <location filename="interactive_properties.cpp" line="2282"/>
         <source>DESCRIPTION_STENCIL_OP.</source>
         <oldsource>DESCRIPTION_STENCIL_OP</oldsource>
         <translation>&lt;b&gt;STENCIL_OP&lt;/b&gt;(&lt;i&gt;sfail&lt;/i&gt;, &lt;i&gt;spass&lt;/i&gt;)&lt;br&gt;&lt;b&gt;sfail&lt;/b&gt;: Specifies the action to take when the stencil test fails, one of KEEP, ZERO, REPLACE, INCR, DECR, and INVERT. The initial value is KEEP (1)&lt;br&gt;&lt;b&gt;spass&lt;/b&gt;: Specifies the action to take when the stencil test passes, one of the same constants as sfail. The initial value is KEEP (1)&lt;br&gt;&lt;br&gt;Set stencil test actions.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2282"/>
+        <location filename="interactive_properties.cpp" line="2295"/>
         <source>DESCRIPTION_POINT_SIZE.</source>
         <oldsource>DESCRIPTION_POINT_SIZE</oldsource>
         <translation>&lt;b&gt;POINT_SIZE&lt;/b&gt;(&lt;i&gt;size&lt;/i&gt;)&lt;br&gt;&lt;b&gt;size&lt;/b&gt;: Point radius in 1/16 pixel. The initial value is 16.&lt;br&gt;&lt;br&gt;Sets the size of drawn points. The width is the distance from the center of the point to the outermost drawn pixel, in units of 1/16 pixels. The valid range is from 16 to 8191 with respect to 1/16th pixel unit.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2294"/>
+        <location filename="interactive_properties.cpp" line="2307"/>
         <source>DESCRIPTION_LINE_WIDTH.</source>
         <oldsource>DESCRIPTION_LINE_WIDTH</oldsource>
         <translation>&lt;b&gt;LINE_WIDTH&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: Line width in 1/16 pixel. The initial value is 16.&lt;br&gt;&lt;br&gt;Sets the width of drawn lines. The width is the distance from the center of the line to the outermost drawn pixel, in units of 1/16 pixel. The valid range is from 16 to 4095 in terms of 1/16th pixel units.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2306"/>
+        <location filename="interactive_properties.cpp" line="2319"/>
         <source>DESCRIPTION_CLEAR_COLOR_A.</source>
         <oldsource>DESCRIPTION_CLEAR_COLOR_A</oldsource>
         <translation>&lt;b&gt;CLEAR_COLOR_A&lt;/b&gt;(&lt;i&gt;alpha&lt;/i&gt;)&lt;br&gt;&lt;b&gt;alpha&lt;/b&gt;: Alpha value used when the color buffer is cleared. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify clear value for the alpha channel.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2318"/>
+        <location filename="interactive_properties.cpp" line="2331"/>
         <source>DESCRIPTION_COLOR_A.</source>
         <oldsource>DESCRIPTION_COLOR_A</oldsource>
         <translation>&lt;b&gt;COLOR_A&lt;/b&gt;(&lt;i&gt;alpha&lt;/i&gt;)&lt;br&gt;&lt;b&gt;alpha&lt;/b&gt;: Alpha for the current color. The initial value is 255&lt;br&gt;&lt;br&gt;Set the current color alpha.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2330"/>
+        <location filename="interactive_properties.cpp" line="2343"/>
         <source>DESCRIPTION_CLEAR_STENCIL.</source>
         <oldsource>DESCRIPTION_CLEAR_STENCIL</oldsource>
         <translation>&lt;b&gt;CLEAR_STENCIL&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Value used when the stencil buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Specify clear value for the stencil buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2343"/>
+        <location filename="interactive_properties.cpp" line="2356"/>
         <source>DESCRIPTION_CLEAR_TAG.</source>
         <oldsource>DESCRIPTION_CLEAR_TAG</oldsource>
         <translation>&lt;b&gt;CLEAR_TAG&lt;/b&gt;(&lt;i&gt;s&lt;/i&gt;)&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Value used when the tag buffer is cleared. The initial value is 0&lt;br&gt;&lt;br&gt;Specify clear value for the tag buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2355"/>
+        <location filename="interactive_properties.cpp" line="2368"/>
         <source>DESCRIPTION_STENCIL_MASK.</source>
         <oldsource>DESCRIPTION_STENCIL_MASK</oldsource>
         <translation>&lt;b&gt;STENCIL_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: The mask used to enable writing stencil bits. The initial value is 255&lt;br&gt;&lt;br&gt;Control the writing of individual bits in the stencil planes.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2368"/>
+        <location filename="interactive_properties.cpp" line="2381"/>
         <source>DESCRIPTION_TAG_MASK.</source>
         <oldsource>DESCRIPTION_TAG_MASK</oldsource>
         <translation>&lt;b&gt;TAG_MASK&lt;/b&gt;(&lt;i&gt;mask&lt;/i&gt;)&lt;br&gt;&lt;b&gt;mask&lt;/b&gt;: Allow updates to the tag buffer. The initial value is one and it means the tag buffer of the FT8XX is updated with the value given by the TAG command. Therefore, the following graphics objects will be attached to the tag value given by the TAG command.&lt;br&gt;The value zero means the tag buffer of the FT8XX is set as the default value,rather than the value given by TAG command in the display list.&lt;br&gt;&lt;br&gt;Control the writing of the tag buffer.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2381"/>
+        <location filename="interactive_properties.cpp" line="2394"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_A_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;a&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2383"/>
+        <location filename="interactive_properties.cpp" line="2396"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_A.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_A</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_A&lt;/b&gt;(&lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Coefficient A of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the A coefficient of the bitmap transform </translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2404"/>
+        <location filename="interactive_properties.cpp" line="2417"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_B_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;b&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2406"/>
+        <location filename="interactive_properties.cpp" line="2419"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_B.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_B</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_B&lt;/b&gt;(&lt;i&gt;b&lt;/i&gt;)&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Coefficient B of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the B coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2426"/>
+        <location filename="interactive_properties.cpp" line="2439"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_C.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_C</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_C&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Coefficient C of the bitmap transform matrix, in signed 15.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the C coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2439"/>
+        <location filename="interactive_properties.cpp" line="2452"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_D_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;d&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2441"/>
+        <location filename="interactive_properties.cpp" line="2454"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_D.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_D</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_D&lt;/b&gt;(&lt;i&gt;d&lt;/i&gt;)&lt;br&gt;&lt;b&gt;d&lt;/b&gt;: Coefficient D of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the D coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2462"/>
+        <location filename="interactive_properties.cpp" line="2475"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_E_BT815.</source>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;p&lt;/i&gt;, &lt;i&gt;v&lt;/i&gt;)&lt;br&gt;&lt;b&gt;p&lt;/b&gt;: precision control: 0 is 8.8, 1 is 1.15. The initial value is 0&lt;br&gt;&lt;b&gt;v&lt;/b&gt;: The &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix, in signed 8.8 or 1.15 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the &lt;i&gt;e&lt;/i&gt; component of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2464"/>
+        <location filename="interactive_properties.cpp" line="2477"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_E.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_E</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_E&lt;/b&gt;(&lt;i&gt;e&lt;/i&gt;)&lt;br&gt;&lt;b&gt;e&lt;/b&gt;: Coefficient E of the bitmap transform matrix, in signed 8.8 bit fixed-point form. The initial value is 256&lt;br&gt;&lt;br&gt;Specify the E coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2484"/>
+        <location filename="interactive_properties.cpp" line="2497"/>
         <source>DESCRIPTION_BITMAP_TRANSFORM_F.</source>
         <oldsource>DESCRIPTION_BITMAP_TRANSFORM_F</oldsource>
         <translation>&lt;b&gt;BITMAP_TRANSFORM_F&lt;/b&gt;(&lt;i&gt;f&lt;/i&gt;)&lt;br&gt;&lt;b&gt;f&lt;/b&gt;: Coefficient F of the bitmap transform matrix, in signed 15.8 bit fixed-point form. The initial value is 0&lt;br&gt;&lt;br&gt;Specify the F coefficient of the bitmap transform matrix.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2496"/>
+        <location filename="interactive_properties.cpp" line="2509"/>
         <source>DESCRIPTION_SCISSOR_XY.</source>
         <oldsource>DESCRIPTION_SCISSOR_XY</oldsource>
         <translation>&lt;b&gt;SCISSOR_XY&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: The x coordinate of the scissor clip rectangle, in pixels. The initial value is 0&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: The y coordinate of the scissor clip rectangle, in pixels. The initial value is 0&lt;br&gt;&lt;br&gt;Sets the top-left position of the scissor clip rectangle, which limits the drawing area.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2508"/>
+        <location filename="interactive_properties.cpp" line="2521"/>
         <source>DESCRIPTION_SCISSOR_SIZE.</source>
         <oldsource>DESCRIPTION_SCISSOR_SIZE</oldsource>
         <translation>&lt;b&gt;SCISSOR_SIZE&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: The width of the scissor clip rectangle, in pixels. The initial value is 512. The valid value range is from 0 to 512.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: The height of the scissor clip rectangle, in pixels. The initial value is 512. The valid value range is from 0 to 512.&lt;br&gt;&lt;br&gt;Sets the width and height of the scissor clip rectangle, which limits the drawing area.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2520"/>
+        <location filename="interactive_properties.cpp" line="2533"/>
         <source>DESCRIPTION_CALL.</source>
         <oldsource>DESCRIPTION_CALL</oldsource>
         <translation>&lt;b&gt;CALL&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: The destination address in RAM_DL which the display command is to be switched. FT8XX has the stack to store the return address. To come back to the next command of source address, the RETURN command can help.&lt;br&gt;&lt;br&gt;Execute a sequence of commands at another location in the display list&lt;br&gt;&lt;br&gt;CALL and RETURN have a 4 level stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2532"/>
+        <location filename="interactive_properties.cpp" line="2545"/>
         <source>DESCRIPTION_JUMP.</source>
         <oldsource>DESCRIPTION_JUMP</oldsource>
         <translation>&lt;b&gt;JUMP&lt;/b&gt;(&lt;i&gt;dest&lt;/i&gt;)&lt;br&gt;&lt;b&gt;dest&lt;/b&gt;: Display list address to be jumped.&lt;br&gt;&lt;br&gt;Execute commands at another location in the display list.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2544"/>
+        <location filename="interactive_properties.cpp" line="2557"/>
         <source>DESCRIPTION_BEGIN.</source>
         <oldsource>DESCRIPTION_BEGIN</oldsource>
         <translation>&lt;b&gt;BEGIN&lt;/b&gt;(&lt;i&gt;prim&lt;/i&gt;)&lt;br&gt;&lt;b&gt;prim&lt;/b&gt;: Graphics primitive. The valid value is defined as: BITMAPS, POINTS, LINES, LINE_STRIP, EDGE_STRIP_R, EDGE_STRIP_L, EDGE_STRIP_A, EDGE_STRIP_B, RECTS&lt;br&gt;&lt;br&gt;Begin drawing a graphics primitive.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2556"/>
+        <location filename="interactive_properties.cpp" line="2569"/>
         <source>DESCRIPTION_COLOR_MASK.</source>
         <oldsource>DESCRIPTION_COLOR_MASK</oldsource>
         <translation>&lt;b&gt;COLOR_MASK&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: Enable or disable the red channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: Enable or disable the green channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Enable or disable the blue channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: Enable or disable the alpha channel update of the FT8XX color buffer. The initial value is 1 and means enable.&lt;br&gt;&lt;br&gt;The color mask controls whether the color values of a pixel are updated. Sometimes it is used to selectively update only the red, green, blue or alpha channels of the image. More often, it is used to completely disable color updates while updating the tag and stencil buffers.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2571"/>
+        <location filename="interactive_properties.cpp" line="2584"/>
         <source>DESCRIPTION_END.</source>
         <oldsource>DESCRIPTION_END</oldsource>
         <translation>&lt;b&gt;END&lt;/b&gt;()&lt;br&gt;&lt;br&gt;End drawing a graphics primitive.&lt;br&gt;&lt;br&gt;It is recommended to have an END for each BEGIN. Whereas advanced users can avoid the usage of END in order to save extra graphics instructions in the display list RAM.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2581"/>
+        <location filename="interactive_properties.cpp" line="2594"/>
         <source>DESCRIPTION_SAVE_CONTEXT.</source>
         <oldsource>DESCRIPTION_SAVE_CONTEXT</oldsource>
         <translation>&lt;b&gt;SAVE_CONTEXT&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Push the current graphics context on the context stack.&lt;br&gt;&lt;br&gt;Any extra SAVE_CONTEXT will throw away the earliest saved context.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2591"/>
+        <location filename="interactive_properties.cpp" line="2604"/>
         <source>DESCRIPTION_RESTORE_CONTEXT.</source>
         <oldsource>DESCRIPTION_RESTORE_CONTEXT</oldsource>
         <translation>&lt;b&gt;RESTORE_CONTEXT&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Restore the current graphics context from the context stack.&lt;br&gt;&lt;br&gt;Any extra RESTORE_CONTEXT will load the default values into the present context.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2601"/>
+        <location filename="interactive_properties.cpp" line="2614"/>
         <source>DESCRIPTION_RETURN.</source>
         <oldsource>DESCRIPTION_RETURN</oldsource>
         <translation>&lt;b&gt;RETURN&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Return from a previous CALL command.&lt;br&gt;&lt;br&gt;CALL and RETURN have 4 levels of stack in addition to the current pointer. Any additional CALL/RETURN done will lead to unexpected behavior.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2611"/>
+        <location filename="interactive_properties.cpp" line="2624"/>
         <source>DESCRIPTION_MACRO.</source>
         <oldsource>DESCRIPTION_MACRO</oldsource>
         <translation>&lt;b&gt;MACRO&lt;/b&gt;(&lt;i&gt;m&lt;/i&gt;)&lt;br&gt;&lt;b&gt;m&lt;/b&gt;: Macro register to read. Value 0 means the FT8XX will fetch the command from REG_MACRO_0 to execute. Value 1 means the FT8XX will fetch the command from REG_MACRO_1 to execute. The content of REG_MACRO_0 or REG_MACRO_1 shall be a valid display list command, otherwise the behavior is undefined.&lt;br&gt;&lt;br&gt;Execute a single command from a macro register.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2623"/>
+        <location filename="interactive_properties.cpp" line="2636"/>
         <source>DESCRIPTION_CLEAR.</source>
         <oldsource>DESCRIPTION_CLEAR</oldsource>
         <translation>&lt;b&gt;CLEAR&lt;/b&gt;(&lt;i&gt;c&lt;/i&gt;, &lt;i&gt;s&lt;/i&gt;, &lt;i&gt;t&lt;/i&gt;)&lt;br&gt;&lt;b&gt;c&lt;/b&gt;: Clear color buffer. Setting this bit to 1 will clear the color buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the color buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_COLOR_RGB for RGB channel and CLEAR_COLOR_A for alpha channel.&lt;br&gt;&lt;b&gt;s&lt;/b&gt;: Clear stencil buffer. Setting this bit to 1 will clear the stencil buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the stencil buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_STENCIL.&lt;br&gt;&lt;b&gt;t&lt;/b&gt;: Clear tag buffer. Setting this bit to 1 will clear the tag buffer of the FT8XX to the preset value. Setting this bit to 0 will maintain the tag buffer of the FT8XX with an unchanged value. The preset value is defined in command CLEAR_TAG.&lt;br&gt;&lt;br&gt;Clear buffers to preset values.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2721"/>
+        <location filename="interactive_properties.cpp" line="2734"/>
         <source>DESCRIPTION_BITMAP_EXT_FORMAT.</source>
         <translation>&lt;b&gt;BITMAP_EXT_FORMAT&lt;/b&gt;(&lt;i&gt;format&lt;/i&gt;)&lt;br&gt;&lt;b&gt;format&lt;/b&gt;: bitmap pixel format&lt;br&gt;&lt;br&gt;Specify the extended format of the bitmap.&lt;br&gt;&lt;br&gt;If BITMAP_LAYOUT specifes a format for GLFORMAT, then the format&lt;br&gt;is taken from BITMAP_EXT_FORMAT instead.&lt;br&gt;Valid values for this field are:&lt;br&gt;• L1&lt;br&gt;• L2&lt;br&gt;• L4&lt;br&gt;• L8&lt;br&gt;• RGB332&lt;br&gt;• ARGB2&lt;br&gt;• ARGB4&lt;br&gt;• ARGB1555&lt;br&gt;• RGB565&lt;br&gt;• PALETTED565&lt;br&gt;• PALETTED4444&lt;br&gt;• PALETTED8&lt;br&gt;• TEXT8X8&lt;br&gt;• TEXTVGA&lt;br&gt;• BARGRAPH&lt;br&gt;• COMPRESSED RGBA ASTC 4x4 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 5x4 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 5x5 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 6x5 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 6x6 KHR&lt;br&gt;• COMPRESSED RGBA ASTC 8x5 KHR</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2733"/>
+        <location filename="interactive_properties.cpp" line="2746"/>
         <source>DESCRIPTION_BITMAP_SWIZZLE_FORMAT.</source>
         <translation>&lt;b&gt;BITMAP_SWIZZLE&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: red component swizzle source&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: green component swizzle source&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: blue component swizzle source&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: alpha component swizzle source&lt;br&gt;&lt;br&gt;Specify the color channel swizzle for a bitmap.&lt;br&gt;&lt;br&gt;Each color component can be sourced from any of the bitmap color&lt;br&gt;components, or can be set to zero or one. Valid values for each&lt;br&gt;source are:&lt;br&gt;• ZERO&lt;br&gt;• ONE&lt;br&gt;• RED&lt;br&gt;• GREEN&lt;br&gt;• BLUE&lt;br&gt;• ALPHA&lt;br&gt;Bitmap swizzle is only applied when BITMAP_LAYOUT format is GLFORMAT.&lt;br&gt;Otherwise the four components are in their default order.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2737"/>
+        <location filename="interactive_properties.cpp" line="2750"/>
         <source>Set swizzle R</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2738"/>
+        <location filename="interactive_properties.cpp" line="2751"/>
         <source>Set swizzle G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2739"/>
+        <location filename="interactive_properties.cpp" line="2752"/>
         <source>Set swizzle B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2740"/>
+        <location filename="interactive_properties.cpp" line="2753"/>
         <source>Set swizzle A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2748"/>
+        <location filename="interactive_properties.cpp" line="2761"/>
         <source>DESCRIPTION_INT_FRR.</source>
         <translation>&lt;b&gt;INT_FRR&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Interal: flash read result</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2760"/>
+        <location filename="interactive_properties.cpp" line="2773"/>
         <source>&lt;/i&gt;Not yet implemented.&lt;/i&gt;</source>
         <translation>&lt;/i&gt;Not yet implemented.&lt;/i&gt;</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="694"/>
         <location filename="interactive_properties.cpp" line="710"/>
-        <location filename="interactive_properties.cpp" line="1479"/>
+        <location filename="interactive_properties.cpp" line="1492"/>
         <source>Format</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1618,119 +1627,119 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1456"/>
+        <location filename="interactive_properties.cpp" line="1469"/>
         <source>DESCRIPTION_CMD_SETROTATE.</source>
         <translation>&lt;b&gt;CMD_SETROTATE&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: The value from 0 to 7. The same definition as value in REG_ROTATE. Please check the section Rotation to understand more.&lt;br&gt;&lt;br&gt;Sets REG_ROTATE to the given value, causing the screen to rotate. It also appropriately adjusts the touch transform matrix so that coordinates of touch points are adjusted to rotated coordinate system.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1469"/>
+        <location filename="interactive_properties.cpp" line="1482"/>
         <source>DESCRIPTION_CMD_SNAPSHOT2.</source>
         <translation>&lt;b&gt;CMD_SNAPSHOT2&lt;/b&gt;(&lt;i&gt;fmt&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;x&lt;/i&gt;, &lt;i&gt;y&lt;/i&gt;, &lt;i&gt;w&lt;/i&gt;, &lt;i&gt;h&lt;/i&gt;)&lt;br&gt;&lt;b&gt;fmt&lt;/b&gt;: Output bitmap format, one of RGB565, ARGB4 or 0x20. The value 0x20 produces an ARGB8 format snapshot.&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: Snapshot destination address, in RAM_G.&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: x-coordinate of snapshot area top-left, in pixels&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: y-coordinate of snapshot area top-left, in pixels&lt;br&gt;&lt;b&gt;w&lt;/b&gt;: width of snapshot area, in pixels. Note when fmt is 0x20, i.e. in ARGB8 format, the value of width shall be doubled.&lt;br&gt;&lt;b&gt;h&lt;/b&gt;: height of snapshot area, in pixels&lt;br&gt;&lt;br&gt;The snapshot command causes the co-processor to take a snapshot of part of the current screen, and write it into graphics memory as a bitmap. The size, position and format of the bitmap may be specified. During the snapshot process, the display output process is suspended. LCD displays can easily tolerate variation in display timing, so there is no noticeable flicker.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1479"/>
+        <location filename="interactive_properties.cpp" line="1492"/>
         <source>Set snapshot format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1491"/>
+        <location filename="interactive_properties.cpp" line="1504"/>
         <source>DESCRIPTION_CMD_SETBASE.</source>
         <translation>&lt;b&gt;CMD_SETBASE&lt;/b&gt;(&lt;i&gt;b&lt;/i&gt;)&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: Numeric base, valid values are from 2 to 36, examples are : 2 for binary, 8 for octal, 10 for decimal, 16 for hexadecimal.&lt;br&gt;&lt;br&gt;Set up numeric base for CMD_NUMBER.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1495"/>
+        <location filename="interactive_properties.cpp" line="1508"/>
         <source>Base</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1495"/>
+        <location filename="interactive_properties.cpp" line="1508"/>
         <source>Set the base</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1536"/>
+        <location filename="interactive_properties.cpp" line="1549"/>
         <source>DESCRIPTION_CMD_SETFONT2.</source>
         <translation>&lt;b&gt;CMD_SETFONT2&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;ptr&lt;/i&gt;, &lt;i&gt;firstchar&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: The bitmap handle from 0 to 31.&lt;br&gt;&lt;b&gt;ptr&lt;/b&gt;: 32 bit aligned memory address in RAM_G of font metrics block.&lt;br&gt;&lt;b&gt;firstchar&lt;/b&gt;: The ASCII value of first character in the font.&lt;br&gt;&lt;br&gt;To use a custom font with the co-processor objects, create the font definition data in RAM_G and issue CMD_SETFONT2, as described in ROM and RAM Fonts.&lt;br&gt;About the details about how to set up custom font, please refer to ROM and RAM Fonts.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1540"/>
-        <location filename="interactive_properties.cpp" line="1573"/>
+        <location filename="interactive_properties.cpp" line="1553"/>
+        <location filename="interactive_properties.cpp" line="1586"/>
         <source>Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1540"/>
-        <location filename="interactive_properties.cpp" line="1573"/>
+        <location filename="interactive_properties.cpp" line="1553"/>
+        <location filename="interactive_properties.cpp" line="1586"/>
         <source>Set font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1542"/>
+        <location filename="interactive_properties.cpp" line="1555"/>
         <source>First character</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1542"/>
+        <location filename="interactive_properties.cpp" line="1555"/>
         <source>Set first character</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1550"/>
+        <location filename="interactive_properties.cpp" line="1563"/>
         <source>DESCRIPTION_CMD_SETSCRATCH.</source>
         <translation>&lt;b&gt;CMD_SETSCRATCH&lt;/b&gt;(&lt;i&gt;handle&lt;/i&gt;)&lt;br&gt;&lt;b&gt;handle&lt;/b&gt;: bitmap handle number , 0~31.&lt;br&gt;&lt;br&gt;Graphical objects use a bitmap handle for rendering. By default this is bitmap handle 15, but this command allows it to be set to any bitmap handle.&lt;br&gt;This command enables user to utilize bitmap handle 15 safely.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1569"/>
+        <location filename="interactive_properties.cpp" line="1582"/>
         <source>DESCRIPTION_CMD_ROMFONT.</source>
         <translation>&lt;b&gt;CMD_ROMFONT&lt;/b&gt;(&lt;i&gt;font&lt;/i&gt;, &lt;i&gt;romslot&lt;/i&gt;)&lt;br&gt;&lt;b&gt;font&lt;/b&gt;: bitmap handle number , 0~31.&lt;br&gt;&lt;b&gt;romslot&lt;/b&gt;: ROM font number, 16~34&lt;br&gt;&lt;br&gt;By default ROM fonts 16-31 are loaded into bitmap handles 0-31. This command allows any ROM font 16-34 to be loaded into any bitmap handle.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1574"/>
+        <location filename="interactive_properties.cpp" line="1587"/>
         <source>ROM Slot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1574"/>
+        <location filename="interactive_properties.cpp" line="1587"/>
         <source>Set ROM slot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="1602"/>
+        <location filename="interactive_properties.cpp" line="1615"/>
         <source>DESCRIPTION_CMD_SETBITMAP.</source>
         <translation>&lt;b&gt;CMD_SETBITMAP&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;, &lt;i&gt;fmt&lt;/i&gt;, &lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Bitmap address in RAM.&lt;br&gt;&lt;b&gt;fmt&lt;/b&gt;: Bitmap format, see the definition in BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: bitmap width, in pixels.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: bitmap height, in pixels&lt;br&gt;&lt;br&gt;This command will generate the corresponding display list for given bitmap information, sparing the effort of writing display list manually.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2637"/>
+        <location filename="interactive_properties.cpp" line="2650"/>
         <source>DESCRIPTION_VERTEX_FORMAT.</source>
         <translation>&lt;b&gt;VERTEX_FORMAT&lt;/b&gt;(&lt;i&gt;frac&lt;/i&gt;)&lt;br&gt;&lt;b&gt;frac&lt;/b&gt;: Number of fractional bits in X,Y coordinates. Valid range is from 0 to 4. The initial value is 4.&lt;br&gt;&lt;br&gt;Set the precision of VERTEX2F coordinates.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2649"/>
+        <location filename="interactive_properties.cpp" line="2662"/>
         <source>DESCRIPTION_BITMAP_LAYOUT_H.</source>
         <translation>&lt;b&gt;BITMAP_LAYOUT_H&lt;/b&gt;(&lt;i&gt;linestride&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;linestride&lt;/b&gt;: The 2 most significant bits of the 12-bit linestride parameter value specified to BITMAP_LAYOUT.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: The 2 most significant bits of the 11-bit height parameter value specified to BITMAP_LAYOUT.&lt;br&gt;&lt;br&gt;This command is the extension command of BITMAP_LAYOUT for large drawn bitmap. This command is not needed if the specified linestride parameter value to BITMAP_LAYOUT is less than 1024 and the height parameter value is less than 512.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2662"/>
+        <location filename="interactive_properties.cpp" line="2675"/>
         <source>DESCRIPTION_BITMAP_SIZE_H.</source>
         <translation>&lt;b&gt;BITMAP_SIZE&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: high part of drawn bitmap width, in pixels. The initial value is zero.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: high part of drawn bitmap height, in pixels. The initial value is zero.&lt;br&gt;&lt;br&gt;Specify the screen drawing of bitmaps for the current handle. High bits for large bitmap.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2675"/>
+        <location filename="interactive_properties.cpp" line="2688"/>
         <source>DESCRIPTION_PALETTE_SOURCE.</source>
         <translation>&lt;b&gt;PALETTE_SOURCE&lt;/b&gt;(&lt;i&gt;addr&lt;/i&gt;)&lt;br&gt;&lt;b&gt;addr&lt;/b&gt;: Address of palette in RAM_G, 2-byte alignment is required if pixel format is PALETTE4444 or PALETTE565. The initial value is RAM_G.&lt;br&gt;&lt;br&gt;Specify the base address in RAM_G for palette.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2687"/>
+        <location filename="interactive_properties.cpp" line="2700"/>
         <source>DESCRIPTION_VERTEX_TRANSLATE_X.</source>
         <translation>&lt;b&gt;VERTEX_TRANSLATE_X&lt;/b&gt;(&lt;i&gt;x&lt;/i&gt;)&lt;br&gt;&lt;b&gt;x&lt;/b&gt;: signed x-coordinate in 1/16 pixel. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify the vertex transformation’s X translation component.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2699"/>
+        <location filename="interactive_properties.cpp" line="2712"/>
         <source>DESCRIPTION_VERTEX_TRANSLATE_Y.</source>
         <translation>&lt;b&gt;VERTEX_TRANSLATE_Y&lt;/b&gt;(&lt;i&gt;y&lt;/i&gt;)&lt;br&gt;&lt;b&gt;y&lt;/b&gt;: signed y-coordinate in 1/16 pixel. The initial value is 0.&lt;br&gt;&lt;br&gt;Specify the vertex transformation’s Y translation component.</translation>
     </message>
     <message>
-        <location filename="interactive_properties.cpp" line="2711"/>
+        <location filename="interactive_properties.cpp" line="2724"/>
         <source>DESCRIPTION_NOP.</source>
         <translation>&lt;b&gt;NOP&lt;/b&gt;()&lt;br&gt;&lt;br&gt;No operation.</translation>
     </message>
@@ -1822,17 +1831,17 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2448"/>
+        <location filename="interactive_viewport.cpp" line="2454"/>
         <source>Drag and drop from toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2520"/>
+        <location filename="interactive_viewport.cpp" line="2526"/>
         <source>&lt;b&gt;Error&lt;/b&gt;: No free bitmap handle available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2532"/>
+        <location filename="interactive_viewport.cpp" line="2538"/>
         <source>Drag and drop primitive</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2578,12 +2587,12 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="607"/>
+        <location filename="toolbox.cpp" line="615"/>
         <source>Bitmap Extend Format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="626"/>
+        <location filename="toolbox.cpp" line="634"/>
         <source>Bitmap Swizzle</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2718,12 +2727,12 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="323"/>
+        <location filename="toolbox.cpp" line="331"/>
         <source>Memory Set</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="327"/>
+        <location filename="toolbox.cpp" line="335"/>
         <source>Memory Zero</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2738,22 +2747,22 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="343"/>
+        <location filename="toolbox.cpp" line="351"/>
         <source>Video Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="348"/>
+        <location filename="toolbox.cpp" line="356"/>
         <source>Video Start F</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="353"/>
+        <location filename="toolbox.cpp" line="361"/>
         <source>Video Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="358"/>
+        <location filename="toolbox.cpp" line="366"/>
         <source>Reset Font</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2763,42 +2772,42 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="363"/>
+        <location filename="toolbox.cpp" line="371"/>
         <source>Flash Source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="368"/>
+        <location filename="toolbox.cpp" line="376"/>
         <source>Animation Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="386"/>
+        <location filename="toolbox.cpp" line="394"/>
         <source>Animation Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="391"/>
+        <location filename="toolbox.cpp" line="399"/>
         <source>Animation XY</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="396"/>
+        <location filename="toolbox.cpp" line="404"/>
         <source>Animation Draw</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="401"/>
+        <location filename="toolbox.cpp" line="409"/>
         <source>Animation Frame</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="685"/>
+        <location filename="toolbox.cpp" line="693"/>
         <source>Bitmap Transform</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="450"/>
+        <location filename="toolbox.cpp" line="458"/>
         <source>Graphics State</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2813,442 +2822,447 @@ These icons are licensed under a Creative CommonsAttribution 3.0 License.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="319"/>
+        <location filename="toolbox.cpp" line="320"/>
+        <source>Register Read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="toolbox.cpp" line="325"/>
         <source>Memory Write</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="331"/>
+        <location filename="toolbox.cpp" line="339"/>
         <source>Memory Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="335"/>
+        <location filename="toolbox.cpp" line="343"/>
         <source>Inflate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="339"/>
+        <location filename="toolbox.cpp" line="347"/>
         <source>Inflate 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="374"/>
+        <location filename="toolbox.cpp" line="382"/>
         <source>Animation Start RAM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="380"/>
+        <location filename="toolbox.cpp" line="388"/>
         <source>Run Animation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="407"/>
+        <location filename="toolbox.cpp" line="415"/>
         <source>Animation Frame RAM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="413"/>
+        <location filename="toolbox.cpp" line="421"/>
         <source>API Level</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="419"/>
+        <location filename="toolbox.cpp" line="427"/>
         <source>Calibrate Sub</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="425"/>
+        <location filename="toolbox.cpp" line="433"/>
         <source>Test Card</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="431"/>
+        <location filename="toolbox.cpp" line="439"/>
         <source>Font Cache</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="437"/>
+        <location filename="toolbox.cpp" line="445"/>
         <source>Font Cache Query</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="443"/>
+        <location filename="toolbox.cpp" line="451"/>
         <source>Get Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="455"/>
+        <location filename="toolbox.cpp" line="463"/>
         <source>Save Context</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="459"/>
+        <location filename="toolbox.cpp" line="467"/>
         <source>Restore Context</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="463"/>
+        <location filename="toolbox.cpp" line="471"/>
         <source>Color RGB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="467"/>
+        <location filename="toolbox.cpp" line="475"/>
         <source>Color A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="471"/>
+        <location filename="toolbox.cpp" line="479"/>
         <source>Color Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="475"/>
+        <location filename="toolbox.cpp" line="483"/>
         <source>Foreground Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="480"/>
+        <location filename="toolbox.cpp" line="488"/>
         <source>Background Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="485"/>
+        <location filename="toolbox.cpp" line="493"/>
         <source>Gradient Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="490"/>
+        <location filename="toolbox.cpp" line="498"/>
         <source>Line Width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="494"/>
+        <location filename="toolbox.cpp" line="502"/>
         <source>Point Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="498"/>
+        <location filename="toolbox.cpp" line="506"/>
         <source>Blend Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="502"/>
+        <location filename="toolbox.cpp" line="510"/>
         <source>Scissor Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="506"/>
+        <location filename="toolbox.cpp" line="514"/>
         <source>Scissor XY</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="510"/>
+        <location filename="toolbox.cpp" line="518"/>
         <source>Alpha Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="514"/>
+        <location filename="toolbox.cpp" line="522"/>
         <source>Stencil Func</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="518"/>
+        <location filename="toolbox.cpp" line="526"/>
         <source>Stencil Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="522"/>
+        <location filename="toolbox.cpp" line="530"/>
         <source>Stencil Op</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="526"/>
+        <location filename="toolbox.cpp" line="534"/>
         <source>Tag</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="530"/>
+        <location filename="toolbox.cpp" line="538"/>
         <source>Tag Mask</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="534"/>
+        <location filename="toolbox.cpp" line="542"/>
         <source>Vertex Format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="539"/>
+        <location filename="toolbox.cpp" line="547"/>
         <source>Vertex Translate X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="544"/>
+        <location filename="toolbox.cpp" line="552"/>
         <source>Vertex Translate Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="549"/>
+        <location filename="toolbox.cpp" line="557"/>
         <source>Cold Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="554"/>
+        <location filename="toolbox.cpp" line="562"/>
         <source>Media FIFO</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="559"/>
+        <location filename="toolbox.cpp" line="567"/>
         <source>Set Scratch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="564"/>
+        <location filename="toolbox.cpp" line="572"/>
         <source>Set Base</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="576"/>
+        <location filename="toolbox.cpp" line="584"/>
         <source>Bitmap State</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="581"/>
+        <location filename="toolbox.cpp" line="589"/>
         <source>Bitmap Handle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="585"/>
+        <location filename="toolbox.cpp" line="593"/>
         <source>Bitmap Source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="589"/>
+        <location filename="toolbox.cpp" line="597"/>
         <source>Bitmap Layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="593"/>
+        <location filename="toolbox.cpp" line="601"/>
         <source>Bitmap Layout H</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="598"/>
+        <location filename="toolbox.cpp" line="606"/>
         <source>Bitmap Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="602"/>
+        <location filename="toolbox.cpp" line="610"/>
         <source>Bitmap Size H</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="612"/>
+        <location filename="toolbox.cpp" line="620"/>
         <source>Set Bitmap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="617"/>
+        <location filename="toolbox.cpp" line="625"/>
         <source>Cell</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="621"/>
+        <location filename="toolbox.cpp" line="629"/>
         <source>Palette Source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="631"/>
+        <location filename="toolbox.cpp" line="639"/>
         <source>Transform A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="635"/>
+        <location filename="toolbox.cpp" line="643"/>
         <source>Transform B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="639"/>
+        <location filename="toolbox.cpp" line="647"/>
         <source>Transform C</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="643"/>
+        <location filename="toolbox.cpp" line="651"/>
         <source>Transform D</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="647"/>
+        <location filename="toolbox.cpp" line="655"/>
         <source>Transform E</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="651"/>
+        <location filename="toolbox.cpp" line="659"/>
         <source>Transform F</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="655"/>
+        <location filename="toolbox.cpp" line="663"/>
         <source>Matrix Load Identity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="660"/>
+        <location filename="toolbox.cpp" line="668"/>
         <source>Matrix Translate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="665"/>
+        <location filename="toolbox.cpp" line="673"/>
         <source>Matrix Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="670"/>
+        <location filename="toolbox.cpp" line="678"/>
         <source>Matrix Rotate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="675"/>
+        <location filename="toolbox.cpp" line="683"/>
         <source>Matrix Rotate Around</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="680"/>
+        <location filename="toolbox.cpp" line="688"/>
         <source>Matrix Set Current</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="695"/>
+        <location filename="toolbox.cpp" line="703"/>
         <source>Set Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="700"/>
+        <location filename="toolbox.cpp" line="708"/>
         <source>Set Font 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="705"/>
+        <location filename="toolbox.cpp" line="713"/>
         <source>ROM Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="569"/>
+        <location filename="toolbox.cpp" line="577"/>
         <source>Text Fill Width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="712"/>
+        <location filename="toolbox.cpp" line="720"/>
         <source>Drawing Actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="717"/>
+        <location filename="toolbox.cpp" line="725"/>
         <source>Begin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="721"/>
+        <location filename="toolbox.cpp" line="729"/>
         <source>End</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="725"/>
+        <location filename="toolbox.cpp" line="733"/>
         <source>Vertex Float</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="729"/>
+        <location filename="toolbox.cpp" line="737"/>
         <source>Vertex Integer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="738"/>
+        <location filename="toolbox.cpp" line="746"/>
         <source>Execution Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="743"/>
+        <location filename="toolbox.cpp" line="751"/>
         <source>Macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="747"/>
+        <location filename="toolbox.cpp" line="755"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="751"/>
+        <location filename="toolbox.cpp" line="759"/>
         <source>Jump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="755"/>
+        <location filename="toolbox.cpp" line="763"/>
         <source>Call</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="759"/>
+        <location filename="toolbox.cpp" line="767"/>
         <source>Return</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="763"/>
+        <location filename="toolbox.cpp" line="771"/>
         <source>No-op</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="768"/>
+        <location filename="toolbox.cpp" line="776"/>
         <source>Wait</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="773"/>
+        <location filename="toolbox.cpp" line="781"/>
         <source>New List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="778"/>
+        <location filename="toolbox.cpp" line="786"/>
         <source>End List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="783"/>
+        <location filename="toolbox.cpp" line="791"/>
         <source>Call List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="788"/>
+        <location filename="toolbox.cpp" line="796"/>
         <source>Command Return</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="855"/>
+        <location filename="toolbox.cpp" line="863"/>
         <source>&lt;b&gt;BITMAPS&lt;/b&gt;&lt;br&gt;Rectangular pixel arrays, in various color format.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="861"/>
+        <location filename="toolbox.cpp" line="869"/>
         <source>&lt;b&gt;POINTS&lt;/b&gt;&lt;br&gt;Anti-aliased points, point radius is 1-256 pixels.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="867"/>
+        <location filename="toolbox.cpp" line="875"/>
         <source>&lt;b&gt;LINES&lt;/b&gt;&lt;br&gt;Anti-aliased lines, with width of 1-256 pixels (width is from center of the line to boundary).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="873"/>
+        <location filename="toolbox.cpp" line="881"/>
         <source>&lt;b&gt;LINE_STRIP&lt;/b&gt;&lt;br&gt;Anti-aliased lines, connected head-to-tail.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="882"/>
+        <location filename="toolbox.cpp" line="890"/>
         <source>&lt;b&gt;EDGE STRIP A, B, L, R&lt;/b&gt;&lt;br&gt;Edge strips.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="toolbox.cpp" line="888"/>
+        <location filename="toolbox.cpp" line="896"/>
         <source>&lt;b&gt;RECTS&lt;/b&gt;&lt;br&gt;Round-cornered rectangles, curvature of the corners can be adjusted using LINE_WIDTH.</source>
         <translation type="unfinished"></translation>
     </message>

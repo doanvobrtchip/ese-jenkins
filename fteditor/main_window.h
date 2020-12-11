@@ -119,7 +119,6 @@ public:
 	void focusDlEditor(bool forceOnly = false);
 	void focusCmdEditor();
 	void focusProperties();
-	void focusOutput();
 
 	void setTraceEnabled(bool enabled);
 	void setTraceX(int x);

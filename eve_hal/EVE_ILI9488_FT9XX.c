@@ -72,7 +72,7 @@ int16_t ILI9488_SPI_WriteCmd(uint8_t cmd, uint8_t data)
  * @param pbuff Data on the command
  * @return int16_t Always 0
  */
-int16_t ILI9488_SPI_WriteCmdN(uint8_t cmd, uint8_t bytecount, uint8_t *pbuff)
+int16_t ILI9488_SPI_WriteCmdN(uint8_t cmd, uint8_t bytecount, const uint8_t *pbuff)
 {
 	uint8_t i, j, transbit;
 	/* bit banging mechanism */
@@ -123,7 +123,7 @@ uint8_t ILI9488_SPI_Read(uint8_t cmd)
  * @param pbuffer Buffer to get result
  * @return uint8_t Number of bytes read
  */
-uint8_t ILI9488_SPI_ReadN(uint8_t cmd, uint8_t numbytes, uint8_t *pbuffer)
+uint8_t ILI9488_SPI_ReadN(uint8_t cmd, uint8_t numbytes, const uint8_t *pbuffer)
 {
 	uint8_t i, readbyte = 0, j;
 	/* bit banging mechanism */

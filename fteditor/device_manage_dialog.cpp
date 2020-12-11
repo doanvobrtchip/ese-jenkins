@@ -392,7 +392,7 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("External Clock"))
 	{
-		cdi.configParams.ExternalClock = jo["External Clock"].toString() == "true" ? true : false;
+		cdi.ExternalClock = jo["External Clock"].toString() == "true" ? true : false;
 	}
 
 	if (jo.contains("REG_PCLK_2X"))

@@ -2540,6 +2540,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						int hline = (bitmapHandle == 15) ? line : m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 
+						line = hline;
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 
 						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
@@ -2888,6 +2889,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdRight = selection & 0xFF;
                     switch (selection)
                     {
+					case CMD_REGREAD:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+                        pa.ExpectedParameterCount = 2;
+						break;
                     case CMD_BGCOLOR:
                         pa.Parameter[0].U = 0x7F3F1F;
                         pa.ExpectedParameterCount = 1;

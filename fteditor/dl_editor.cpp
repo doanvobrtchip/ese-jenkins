@@ -123,7 +123,6 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		      { "CMD_VIDEOFRAME", { "<u>destination: %1", "<u>pointer: %1" } },
 		      { "CMD_MEMCRC", { "<u>pointer: %1", "number of bytes: %1", "result: %1" } },
 		      { "CMD_MEMZERO", { "<u>pointer: %1", "number of bytes: %1" } },
-			  { "CMD_MEMWRITE", { "<u>pointer: %1", "number of bytes: %1" } },
 		      { "CMD_MEMSET", { "<u>pointer: %1", "value: %1", "number of bytes: %1" } },
 		      { "CMD_MEMCPY", { "<u>destination: %1", "<u>source: %1", "number of bytes: %1" } },
 		      { "CMD_BUTTON", { "<i>", "x: %1, y: %2", "width: %1, height: %2", "font: %1, options: %2", "string: %1" } },
@@ -676,20 +675,22 @@ void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
 	m_EditingInteractive = true;
 	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
+	QTextCursor c = m_CodeEditor->textCursor();
 	if (line == 0)
 	{
-		QTextCursor c = m_CodeEditor->textCursor();
 		c.setPosition(0);
 		c.insertText(linestr + "\n");
 	}
 	else
 	{
-		QTextCursor c = m_CodeEditor->textCursor();
-		c.setPosition(m_CodeEditor->document()->findBlockByNumber(line - 1).position());
+		while (line > m_CodeEditor->document()->lineCount()) {
+			c.insertText("\n");
+		}
+		int pos = m_CodeEditor->document()->findBlockByNumber(line - 1).position();
+		c.setPosition(pos);
 		c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
 		c.insertText("\n" + linestr);
 	}
-	// editorCursorPositionChanged() needed? // VERIFY
 	m_EditingInteractive = false;
 }
 
@@ -744,10 +745,7 @@ void DlEditor::editingLine(QTextBlock block)
 		m_MainWindow->interactiveProperties()->modifiedEditorLine();
 	}
 
-	if ((m_PropIdLeft == 0xFFFFFF00) && (m_PropIdRight | 0xFFFFFF00) == CMD_GETPROPS)
-		m_MainWindow->focusOutput();
-	else
-		m_MainWindow->focusProperties();
+	m_MainWindow->focusProperties();
 }
 
 void DlEditor::processState()

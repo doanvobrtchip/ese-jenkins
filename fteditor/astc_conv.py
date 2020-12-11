@@ -85,22 +85,25 @@ def convert(im, fmt = "COMPRESSED_RGBA_ASTC_4x4_KHR", effort = "exhaustive", ast
     (w, h) = astc_dims(fmt)
     ni = Image.new("RGBA", (round_up(im.size[0], w), round_up(im.size[1], h)))
     ni.paste(im, (0, 0))
-    png = tempfile.NamedTemporaryFile(delete = False)    
-    ni.transpose(Image.FLIP_TOP_BOTTOM).save(png, 'png')
+    png = tempfile.NamedTemporaryFile(delete = False)   
+    ni.save(png, 'png')
 
     astc = tempfile.NamedTemporaryFile(delete = False)
     
     # close file so that astcenc tool can use fopen()
     png.close()
     
-    subprocess.call("\"%s\" -c %s %s %dx%d -%s -silentmode" % (astc_encode, png.name, astc.name, w, h, effort), shell=True)
+    astc_fn = astc.name + '.astc'
+    
+    cmd = f'"{astc_encode}" -cl {png.name} {astc_fn} {w}x{h} -{effort} -silent'
+    subprocess.call(cmd, shell=True)
 
-    (bw, bh, d0) = tile(open(astc.name, "rb"))
+    (bw, bh, d0) = tile(open(astc_fn, "rb"))
 
     astc.close()    
     
-    if os.path.exists(astc.name):
-        os.remove(astc.name)  
+    if os.path.exists(astc_fn):
+        os.remove(astc_fn)  
 
     if os.path.exists(png.name):
         os.remove(png.name)          
@@ -108,4 +111,4 @@ def convert(im, fmt = "COMPRESSED_RGBA_ASTC_4x4_KHR", effort = "exhaustive", ast
     stride = 16*bw
     dd = array.array('B', d0)
     
-    return (stride,ni.size, dd)
+    return (stride, ni.size, dd)
