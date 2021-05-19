@@ -36,7 +36,7 @@ palettedFormats = [paletted_format]
 
 convertArgs = lambda x: x
 
-def run(name, document, ram):
+def run(name, document, ram, moduleName):
     resultText = "<b>Gameduino 2 Export</b><br>"
     functionMap = {
         "VERTEX2II" : "Vertex2ii",

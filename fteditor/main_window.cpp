@@ -724,10 +724,10 @@ void MainWindow::runScript(const QString &script)
 				PyObject *pyValue;
 				PyObject *pyArgs = 0;
 
-				if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT816)
-					pyArgs = PyTuple_New(3);
-				else if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 					pyArgs = PyTuple_New(4);
+				else
+					pyArgs = PyTuple_New(3);
 
 				pyValue = PyUnicode_FromString(outN.data());
 
@@ -738,7 +738,8 @@ void MainWindow::runScript(const QString &script)
 				pyValue = PyByteArray_FromStringAndSize(ram, addressSpace(FTEDITOR_CURRENT_DEVICE));
 				PyTuple_SetItem(pyArgs, 2, pyValue);
 
-				if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_BT816)
+				// screen resolution argument
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
 					QString resol = QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
 					pyValue = PyUnicode_FromString(resol.toUtf8().data());
