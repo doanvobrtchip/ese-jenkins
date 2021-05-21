@@ -4,6 +4,19 @@ Please uninstall the latest version if you have one installed on your PC.
 
 Release Note:
 
+Version 4.1.0
+Feature updates
+•   Add filter textbox in Toolbox window
+•   Upgrade to astcenc 2.1 for fater ASTC encoding
+•   Improve the placement of primitive commands
+•   Support loading content from local file for cmd_inflate, cmd_inflate2
+•   Add description for cmd_calllist/cmd_endlist/cmd_newlist
+•   Implement cmd_memwrite and cmd_regread
+•   Add new example to demonstrate the usage of command list
+
+Resolved issues
+•   Fixed the device sync fail in case of image in flash 
+
 Version 4.0.0
 Feature updates
 •   Support new EVE chip BT817/8

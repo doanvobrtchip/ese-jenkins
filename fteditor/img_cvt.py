@@ -1,6 +1,12 @@
 import os
-import zlib
 import sys
+
+# let Python find PIL in local folder first
+cfp = os.path.abspath(__file__)
+cwd = os.path.split(cfp)[0]
+sys.path.insert(0, cwd + '/Lib/site-packages')
+
+import zlib
 import array
 import random
 import getopt
@@ -9,7 +15,6 @@ import subprocess
 import shutil
 from helperapi import resource_path
 from PIL import Image
-
 import astc_conv
 import json
 
