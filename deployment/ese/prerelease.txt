@@ -5,6 +5,12 @@ Please uninstall the latest version if you have one installed on your PC.
 Release Note:
 
 Version 4.1.0
+RC2
+Resolved issues
+•   Fixed exporting project with BT815/BT816 and FT80X-GameDuino2
+•   Fixed fail to load image in example project
+
+RC1
 Feature updates
 •   Add filter textbox in Toolbox window
 •   Upgrade to astcenc 2.1 for fater ASTC encoding
@@ -15,7 +21,7 @@ Feature updates
 •   Add new example to demonstrate the usage of command list
 
 Resolved issues
-•   Fixed the device sync fail in case of image in flash 
+•   Fixed the device sync fail after writing to flash chip
 
 Version 4.0.0
 Feature updates
