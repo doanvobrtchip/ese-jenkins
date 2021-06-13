@@ -1,13 +1,17 @@
-# circuitPython support for Raspberry Pi Pico with Eve module from Bridgetek Pte Ltd
+### circuitPython support for Raspberry Pi Pico with Eve module from Bridgetek Pte Ltd
 
-## lib
+### Usage
+To run the exporting project, copy all file and folder to the drive "CIRCUITPY"
+
+### Folder structure
+--- lib
 This folder contains the necessary files to use Eve device by Raspberry Pi Pico. 
 It provides a python class to control Eve via SPI.
 
-## assets
+--- assets
 This folder contains asset files which are actively used in ESE project
 
-## code.py
+--- code.py
 This file contains python script which is exported from ESE project
 
 ### Pico modules to work with Eve modules: 
