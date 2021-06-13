@@ -1,0 +1,64 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/yrg_2",
+            "imageFormat": 37810,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/yrg_2.jpg"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(0, 85, 127)",
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_TEXT(27, 437, 29, 0, \"BITMAP_TRANSFORM_C\")",
+        "BEGIN(LINES)",
+        "VERTEX2F(6448, 2320)",
+        "VERTEX2F(7472, 1424)",
+        "VERTEX2F(6448, 2320)",
+        "VERTEX2F(7376, 5296)",
+        "END()",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_5x5_KHR, 380, 170)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(192, 608)",
+        "END()",
+        "",
+        "CMD_TEXT(475, 16, 28, 0, \"C = 115\")",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_C(29440)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 380, 170)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(7600, 688)",
+        "END()",
+        "RESTORE_CONTEXT()",
+        "",
+        "CMD_TEXT(475, 243, 28, 0, \"C = 250\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_C(64000)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 380, 170)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(7600, 4336)",
+        "END()",
+        "RESTORE_CONTEXT()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

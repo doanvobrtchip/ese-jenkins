@@ -1,0 +1,66 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Flash",
+            "destName": "content/pexels",
+            "flashAddress": 4096,
+            "imageFormat": 37810,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/pexels.jpeg"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(31, 63, 127)",
+        "CLEAR(1, 1, 1)",
+        "CMD_TEXT(21, 433, 29, 0, \"BITMAP_TRANSFORM_D\")",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_5x5_KHR, 250, 160)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(644, 1056)",
+        "END()",
+        "",
+        "BEGIN(LINES)",
+        "VERTEX2F(5000, 2500)",
+        "VERTEX2F(6880, 1472)",
+        "VERTEX2F(5000, 2500)",
+        "VERTEX2F(6896, 5808)",
+        "END()",
+        "",
+        "",
+        "CMD_TEXT(449, 18, 28, 0, \"D = 0.5\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_D(0,128)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 250, 160)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(7236, 800)",
+        "END()",
+        "RESTORE_CONTEXT()",
+        "",
+        "CMD_TEXT(455, 248, 28, 0, \"D = 1.0\")",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_D(0,256)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 250, 160)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(7300, 4432)",
+        "END()",
+        "RESTORE_CONTEXT()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

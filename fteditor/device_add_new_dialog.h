@@ -13,6 +13,8 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QMessageBox>
+#include <QHash>
+
 #include <qradiobutton.h>
 #include <qgroupbox.h>
 #include "device_manager.h"
@@ -30,6 +32,8 @@ class DeviceAddNewDialog : public QDialog
 	Q_OBJECT
 
 	static const QStringList PROPERTIES;
+
+	static const QMap<double, int> PCLK_FREQ_HASH;
 
 public:
 	static const QString REG_OUTBITS_6bits;
@@ -50,6 +54,7 @@ signals:
 private slots:
 	void addDevice();
 	void onEveTypeChange(QString eveType);
+	void onSystemClockChange(QString sysClock);
 
 private:
 	

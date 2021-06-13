@@ -4,7 +4,7 @@
     "Description": "ME817EV-10 module with 1280x800 display",
     "Device Name": "ME817EV-10(1280x800)",
     "EVE Type": "BT817_818",
-    "External Clock": "false",
+    "External Clock": "true",
     "System Clock (MHz)": "72",
     "Flash Model": "w25q128",
     "Flash Size (MB)": "16",
@@ -25,8 +25,8 @@
     "REG_VSYNC0": 0,
     "REG_VSYNC1": 10,
     
-    "REG_PCLK_2X": 0,
-    "REG_PCLK_FREQ": 2225,
+    "REG_PCLK_2X": 1,
+    "REG_PCLK_FREQ": 2241,
     "REG_ADAPTIVE_FRAMERATE": 0,
 
 
