@@ -90,7 +90,7 @@ DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
 
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(addDevice()));
 
-	ui->DeviceTableWidget->horizontalHeader()->setMinimumSectionSize(170);
+	ui->DeviceTableWidget->horizontalHeader()->setMinimumSectionSize(200);
 }
 
 void DeviceAddNewDialog::execute()

@@ -5,7 +5,7 @@
 #define str(s)		#s
 
 #define VERSION_MAJOR                           4
-#define VERSION_MINOR                           1
+#define VERSION_MINOR                           2
 #define VERSION_BUILD                           0
 
 #define VER_FILEVERSION           				VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD,0
