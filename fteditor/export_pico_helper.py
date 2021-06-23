@@ -1,6 +1,6 @@
 import os, sys, re, shutil, subprocess, errno, stat
 from export_common import parseCommand
-from export_reg_pico import *
+from export_pico_reg import *
 
 lutSize = 256*4
 
@@ -26,7 +26,7 @@ globalValue = {
 def convertArgs(functionArgs):
     for k, v in RegMap.items():
         functionArgs = functionArgs.replace(k, v)
-        
+    functionArgs = functionArgs.replace("eve.eve.", "eve.")    
     return functionArgs
 
 def raiseUnicodeError(errorArea):
@@ -91,19 +91,19 @@ def exportLoadImageCommand(document):
             contentName = content["exportRawName"]
             
             if content["dataCompressed"]:
-                export += f'gd.cmd_inflate({memoryAddress})\n'
-                export += f'gd.load(open("{contentName}", "rb"))\n'
+                export += f'em.cmd_inflate({memoryAddress})\n'
+                export += f'em.load(open("{contentName}", "rb"))\n'
                 if content["imageFormat"] in palettedFormats:
                     lutContentName = content["exportLutName"]	
-                    export += f'gd.cmd_inflate({lutMemoryAddress})\n'
-                    export += f'gd.load(open("{lutContentName}", "rb"))\n'                       
+                    export += f'em.cmd_inflate({lutMemoryAddress})\n'
+                    export += f'em.load(open("{lutContentName}", "rb"))\n'                       
             else:
-                export += f'gd.wr({memoryAddress}, open("{contentName}", "rb").read())\n'
+                export += f'em.wr({memoryAddress}, open("{contentName}", "rb").read())\n'
                 if content["imageFormat"] in palettedFormats:
-                    export += f'gd.wr({lutMemoryAddress}, open("{lutContentName}", "rb").read())\n'      
+                    export += f'em.wr({lutMemoryAddress}, open("{lutContentName}", "rb").read())\n'      
 
     if need_flush:
-        export += 'gd.flush()\n'
+        export += 'em.flush()\n'
     export += '\n'            
     return export
     
@@ -120,18 +120,18 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 if 'CLEAR' in cmd_name:
                     clearFound = True
                 if cmd_name == functionMap["CMD_CALIBRATE"]:
-                    export += 'gd.calibrate()\n'                    
+                    export += 'em.calibrate()\n'                    
                     document["coprocessor"].remove(line)                    
                 elif cmd_name == functionMap["CMD_LOGO"]:
-                    export += 'gd.cmd_logo()\n'                    
+                    export += 'em.cmd_logo()\n'                    
                     document["coprocessor"].remove(line)
             except:
                 pass
 
-        export += 'gd.cmd_flashfast()\n'
-        export += 'gd.cmd_dlstart()\n'
+        export += 'em.cmd_flashfast()\n'
+        export += 'em.cmd_dlstart()\n'
         if not clearFound:
-            export += 'gd.Clear(1, 1, 1)\n'
+            export += 'em.Clear(1, 1, 1)\n'
         export += '\n'
                     
         specialParameter = ""
@@ -146,6 +146,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 #if the line is a comment line then just write it out
                 export += line.replace("//", "#") + "\n"
                 continue
+
             cmd_name, functionArgs, cmd_comment = parseCommand(line, functionMap, convertArgs)
             if cmd_comment:
                 cmd_comment = "# " + cmd_comment
@@ -153,40 +154,47 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             coprocessor_cmd = False
             if cmd_name in functionMap.values():
                 coprocessor_cmd = True
+            
+            if cmd_name == functionMap['CMD_KEYS']:
+                fa = re.sub(r"'(.)'", r"ord('\1')", functionArgs)
+                if fa == functionArgs:
+                    raise Exception("Found invalid option in CMD_KEYS!")
+                functionArgs = fa
             if cmd_name == functionMap['CMD_SNAPSHOT2']:
-                export += "gd.Display()\n"
-                export += "gd.cmd_swap()\n"
+                export += "em.Display()\n"
+                export += "em.cmd_swap()\n"
                 export += "# Download the commands into fifo\n"
-                export += "gd.flush()\n"
+                export += "em.flush()\n"
                 export += "# Wait till coprocessor completes the operation\n"
                 export += "import time\n"
                 export += "time.sleep(0.1)\n"            
-                export += f"gd.cmd_snapshot2({functionArgs})\n"
+                export += f"em.cmd_snapshot2({functionArgs})\n"
                 export += "time.sleep(0.1) # timeout for snapshot to be performed by coprocessor\n"
-                export += "gd.cmd_dlstart()\n"
-                export += "gd.ClearColorRGB(0xff, 0xff, 0xff)\n"
-                export += "gd.Clear(1, 1, 1)\n"
-                export += "gd.ColorRGB(0xff, 0xff, 0xff)\n"
+                export += "em.cmd_dlstart()\n"
+                export += "em.ClearColorRGB(0xff, 0xff, 0xff)\n"
+                export += "em.Clear(1, 1, 1)\n"
+                export += "em.ColorRGB(0xff, 0xff, 0xff)\n"
+                cmd_name = ""
 
             if cmd_name == functionMap['CMD_SNAPSHOT']:
-                export += "gd.Display()\n"
-                export += "gd.cmd_swap()\n"
+                export += "em.Display()\n"
+                export += "em.cmd_swap()\n"
                 export += "# Download the commands into fifo\n"
-                export += "gd.flush()\n"
+                export += "em.flush()\n"
                 export += "# Wait till coprocessor completes the operation\n"
                 export += "import time\n"
                 export += "time.sleep(0.1)\n"
                 
-                export += f'gd.cmd_regwrite(REG_HSIZE, {document["registers"]["hSize"]})\n'
-                export += f'gd.cmd_regwrite(REG_VSIZE, {document["registers"]["vSize"]})\n'
+                export += f'em.cmd_regwrite(REG_HSIZE, {document["registers"]["hSize"]})\n'
+                export += f'em.cmd_regwrite(REG_VSIZE, {document["registers"]["vSize"]})\n'
                 export += "time.sleep(0.1)\n"
                 
-                export += f"gd.cmd_snapshot({functionArgs})\n"
+                export += f"em.cmd_snapshot({functionArgs})\n"
                 export += "time.sleep(0.1) # timeout for snapshot to be performed by coprocessor\n"
-                export += "gd.cmd_dlstart()\n"
-                export += "gd.ClearColorRGB(0xff, 0xff, 0xff)\n"
-                export += "gd.Clear(1, 1, 1)\n"
-                export += "gd.ColorRGB(0xff, 0xff, 0xff)\n"
+                export += "em.cmd_dlstart()\n"
+                export += "em.ClearColorRGB(0xff, 0xff, 0xff)\n"
+                export += "em.Clear(1, 1, 1)\n"
+                export += "em.ColorRGB(0xff, 0xff, 0xff)\n"
 
                 cmd_name = ""
 
@@ -198,9 +206,9 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                     
                 if "OPT_MEDIAFIFO" in functionArgsSplit[1]:
                     globalContext['mediaFIFOEnabled'] = True
-                    export += "gd.flush()\n"
+                    export += "em.flush()\n"
                 
-                export += f"gd.cmd_loadimage({functionArgsSplit[0]}, {functionArgsSplit[1]})\n"
+                export += f"em.cmd_loadimage({functionArgsSplit[0]}, {functionArgsSplit[1]})\n"
                     
                 functionArgsSplit[2] = re.sub(r'["]', "", functionArgsSplit[2])
                 specialParameter = os.path.split(functionArgsSplit[2])[1]                    
@@ -218,8 +226,8 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                 globalContext['mediaFIFOLength'] = functionArgsSplit[1]
 
             if cmd_name == functionMap["CMD_DLSTART"]:
-                export += "gd.DlStart()\n"
-                export += "gd.Clear(1, 1, 1)\n"
+                export += "em.DlStart()\n"
+                export += "em.Clear(1, 1, 1)\n"
                 cmd_name = ""
 
             if cmd_name == functionMap["CMD_PLAYVIDEO"]:
@@ -232,9 +240,9 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                     
                 if 'OPT_MEDIAFIFO' in functionArgsSplit[0]:
                     globalContext['mediaFIFOEnabled'] = True
-                    export += "gd.flush()\n"
+                    export += "em.flush()\n"
                 
-                export += f"gd.cmd_playvideo({functionArgsSplit[0]})\n"                
+                export += f"em.cmd_playvideo({functionArgsSplit[0]})\n"                
 
                 functionArgsSplit[1] = re.sub(r'["]', "", functionArgsSplit[1])
                 specialParameter = os.path.split(functionArgsSplit[1])[1]
@@ -250,11 +258,11 @@ def exportCoprocessorCommand(document, filesToTestFolder):
 
             if cmd_name:
                 if coprocessor_cmd:
-                    newline = f"gd.{cmd_name}({functionArgs}) {cmd_comment}\n"
+                    newline = f"em.{cmd_name}({functionArgs}) {cmd_comment}\n"
                 elif cmd_name in DlMap:
                     if cmd_name == "VERTEX2F":
                         functionArgs = ', '.join(str(int(x) // 16) for x in functionArgs.split(','))
-                    newline = f"gd.{DlMap[cmd_name]}({functionArgs}) {cmd_comment}\n"
+                    newline = f"em.{DlMap[cmd_name]}({functionArgs}) {cmd_comment}\n"
                 export += newline
 
             if specialCommandType == functionMap["CMD_LOADIMAGE"]:
@@ -263,8 +271,8 @@ def exportCoprocessorCommand(document, filesToTestFolder):
                     globalContext['mediaFIFOEnabled'] = False
                 elif globalContext['loadImageFromFlash'] == False:
                     export += f'f = open("{specialParameter}", "rb")\n'
-                    export += "gd.load(f)\n"
-                    export += "gd.flush()\n"
+                    export += "em.load(f)\n"
+                    export += "em.flush()\n"
                     
                     globalContext['loadImageFromFlash'] = False
                 specialCommandType = ""
@@ -283,7 +291,7 @@ def exportCoprocessorCommand(document, filesToTestFolder):
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         raise Exception(exc_type, fname, exc_tb.tb_lineno, str(e))
    
-    export += '\ngd.swap()\n'
+    export += '\nem.swap()\n'
     return export
 
     
