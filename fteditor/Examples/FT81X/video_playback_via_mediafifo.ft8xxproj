@@ -2,11 +2,8 @@
     "content": [
     ],
     "coprocessor": [
-        "//for more information on CMD_MEDIAFIFO: see section xxxx of the help manual",
-        "",
         "CMD_MEDIAFIFO(983040, 65536)",
-        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO, \"..//chickens-4.avi\")",
-        ""
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO, \"..//chickens-4.avi\")"
     ],
     "displayList": [
         ""
@@ -15,10 +12,10 @@
         "device": 2065
     },
     "registers": {
-        "hSize": 480,
+        "hSize": 800,
         "macro": [
             ""
         ],
-        "vSize": 272
+        "vSize": 480
     }
 }
