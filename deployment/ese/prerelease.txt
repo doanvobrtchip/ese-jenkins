@@ -4,6 +4,18 @@ Please uninstall the latest version if you have one installed on your PC.
 
 Release Note:
 
+Version 4.2.0
+RC2
+•   Install ASTC encoder based on the user's CPU done
+•   Improve video playback example
+
+RC1
+•   Export Python script for Raspberry Pi Pico 
+•   Add a new example to demonstrate the usage of BITMAP_TRANSFORM_A~F
+•   Improve the device editing dialogue
+•   Update the configuration for module ME817EV with 10-inch LCD
+•   Fixed fail to inflate the data in content manager
+
 Version 4.1.0
 RC2
 Resolved issues
