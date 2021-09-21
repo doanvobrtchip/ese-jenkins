@@ -61,6 +61,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QPushButton>
 #include <QTextStream>
 #include <QFileDialog>
+#include <QSettings>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -265,6 +266,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PixelColor(NULL)
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
+	, m_LastProjectDir(QString())
 	, m_isVCDumpEnable(false)
 {
 	loadConfig(QCoreApplication::applicationDirPath() + '/' + CONFIGURE_FILE_PATH);
@@ -2787,16 +2789,15 @@ void postProcessEditor(DlEditor *editor)
 
 QString MainWindow::getFileDialogPath()
 {
+	if (!m_LastProjectDir.isEmpty())
+		return m_LastProjectDir;
+
+	m_LastProjectDir = readLastProjectDir();
+
 	if (m_LastProjectDir.isEmpty())
-	{
-		return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	}
-	else
-	{
-		QDir dir(m_LastProjectDir);
-		return dir.path();
-	}
-	// return m_TemporaryDir ? m_InitialWorkingDir : QDir::currentPath();
+		m_LastProjectDir = qApp->applicationDirPath();
+	
+	return m_LastProjectDir;
 }
 
 void MainWindow::actOpen()
@@ -2838,6 +2839,7 @@ void MainWindow::openFile(const QString &fileName)
 	QString dstPath = dir.path();
 	QDir::setCurrent(dstPath);
 	m_LastProjectDir = QDir::currentPath();
+	writeLastProjectDir(m_LastProjectDir);
 
 	// Reset editors to their default state
 	clearEditor();
@@ -2915,12 +2917,13 @@ void MainWindow::openFile(const QString &fileName)
 		m_CurrentFile = QString();
 #ifdef FTEDITOR_TEMP_DIR
 		QDir::setCurrent(QDir::tempPath());
-		m_TemporaryDir = new QTemporaryDir("ft800editor-");
+		m_TemporaryDir = new QTemporaryDir("ese-");
 		QDir::setCurrent(m_TemporaryDir->path());
 #else
 		QDir::setCurrent(m_InitialWorkingDir);
 #endif
 		m_LastProjectDir = QDir::currentPath();
+		writeLastProjectDir(m_LastProjectDir);
 	}
 
 	// clear undo stacks
@@ -3335,6 +3338,28 @@ bool MainWindow::importDumpFT81X(QDataStream & in)
 bool MainWindow::importDumpBT81X(QDataStream & in)
 {
 	return importDumpFT81X(in); 
+}
+
+QString MainWindow::readLastProjectDir()
+{
+	QSettings registry(QSettings::NativeFormat, // Format
+		QSettings::UserScope, // Scope
+		"BridgeTek", // Organization
+		"ESE" // Application
+	);
+
+	return registry.value("LastProjectDir").toString();
+}
+
+void MainWindow::writeLastProjectDir(QString dirPath)
+{
+	QSettings registry(QSettings::NativeFormat, // Format
+		QSettings::UserScope, // Scope
+		"BridgeTek", // Organization
+		"ESE" // Application
+	);
+
+	registry.setValue("LastProjectDir", dirPath);
 }
 
 void MainWindow::actExport()

@@ -175,8 +175,8 @@ extern "C" {
 #endif
 
 /* Scope */
-#ifndef scope
-#define scope if (true)
+#ifndef ese_scope
+#define ese_scope if (true)
 #endif
 
 #endif /* #ifndef EVE_PLATFORM__H */
