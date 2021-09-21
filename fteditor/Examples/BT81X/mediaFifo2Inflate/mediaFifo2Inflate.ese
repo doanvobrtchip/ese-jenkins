@@ -1,0 +1,32 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "#This example project will load a compressed bitmap data into media fifo area of RAM_G, which is configured by cmd_mediafifo command (Top 65536 bytes of RAM_G)",
+        "#Eve will inflate it to  RAM_G (offset 0) and render it to screen. ",
+        "",
+        "#The deflated bitmap data is around 400K for 800x480 RGB565 bitmap ",
+        "",
+        "CMD_MEDIAFIFO(983040, 65536)  ",
+        "CMD_INFLATE2(0, OPT_MEDIAFIFO,\".\\\\800_480_800x480_RGB565.zlib\") ",
+        "",
+        "CLEAR(1, 1, 1)",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, RGB565,800,480)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0, 0, 0, 0)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
