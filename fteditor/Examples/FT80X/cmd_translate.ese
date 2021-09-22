@@ -8,7 +8,7 @@
             "imageFormat": 0,
             "memoryAddress": 0,
             "memoryLoaded": true,
-            "sourcePath": "..//lenaface40.png"
+            "sourcePath": "assets/lenaface40.png"
         }
     ],
     "coprocessor": [

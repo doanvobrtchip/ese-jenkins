@@ -3,11 +3,10 @@
     ],
     "coprocessor": [
         "CLEAR(1, 1, 1)",
-        "",
-        "CMD_LOADIMAGE(0, 0, \"assets/Tomato.jpg\")",
+        "CMD_LOADIMAGE(0, 0, \"assets/EiffelTower_800_480.png\")",
         "",
         "BEGIN(BITMAPS)",
-        "VERTEX2II(0, 0, 0, 0)",
+        "VERTEX2II(0, 0, 0, 0) //draw EiffelTower_800_480.jpg",
         "END()",
         "",
         "",
@@ -18,13 +17,13 @@
         ""
     ],
     "project": {
-        "device": 2048
+        "device": 2065
     },
     "registers": {
-        "hSize": 480,
+        "hSize": 800,
         "macro": [
             ""
         ],
-        "vSize": 272
+        "vSize": 480
     }
 }

@@ -4,7 +4,7 @@
     "coprocessor": [
         "CLEAR(1,1,1)",
         "CMD_MEDIAFIFO(500000, 100000)",
-        "CMD_LOADIMAGE(0, OPT_MEDIAFIFO, \"..//lenna256.png\")",
+        "CMD_LOADIMAGE(0, OPT_MEDIAFIFO, \"assets/lenna256.png\")",
         "BEGIN(BITMAPS)",
         "VERTEX2II(69, 73, 0, 0)",
         "END()"
