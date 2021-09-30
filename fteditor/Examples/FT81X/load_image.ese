@@ -1,0 +1,29 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_LOADIMAGE(0, 0, \"assets/EiffelTower_800_480.png\")",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0, 0, 0, 0) //draw EiffelTower_800_480.jpg",
+        "END()",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

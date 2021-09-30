@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QLayout>
 #include <QSpinBox>
+#include <QComboBox>
 #include <QLabel>
 #include <QDialogButtonBox>
 #include <QPushButton>
@@ -35,6 +36,8 @@ class DeviceAddNewDialog : public QDialog
 
 	static const QMap<double, int> PCLK_FREQ_HASH;
 
+	static const QString PCLK_Frequency;
+
 public:
 	static const QString REG_OUTBITS_6bits;
 	static const QString REG_OUTBITS_8bits;
@@ -54,7 +57,7 @@ signals:
 private slots:
 	void addDevice();
 	void onEveTypeChange(QString eveType);
-	void onSystemClockChange(QString sysClock);
+	void calculatePixelClockFreq();
 
 private:
 	
@@ -66,8 +69,18 @@ private:
 private:
 	Ui::DeviceAddNewDialog *ui;
 
+	QComboBox * mSystemClock_CB;
+	QComboBox * mRegPclkFreq_CB;
+	QSpinBox  * mRegPclk_SB;
+	QLabel    * mPclkFreq;
+
 	bool isEdited;
 	QString editPath;
+
+	double reg_pclk;
+	double reg_pclk_freq;
+	double pixel_clock_freq;
+	int    system_clock;
 };
 
 #endif

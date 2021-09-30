@@ -802,7 +802,7 @@ void DeviceManager::uploadCoprocessorContent()
 			EVE_Util_loadImageFileW(phost, loadAddr, fileName.toStdWString().c_str(), NULL);
 			continue;
 		}
-		scope
+		ese_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			QByteArray ba = binFile.readAll();
@@ -1227,7 +1227,7 @@ void DeviceManager::uploadFlashContent()
 			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
 			continue;
 		}
-		scope
+		ese_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			progressLabel->setText("Writing \"" + info->DestName + "\"");
@@ -1355,7 +1355,7 @@ void DeviceManager::uploadFlashContent()
 			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
 			continue;
 		}
-		scope
+		ese_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			progressLabel->setText("Verifying \"" + info->DestName + "\"");

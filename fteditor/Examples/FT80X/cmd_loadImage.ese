@@ -1,0 +1,30 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_LOADIMAGE(0, 0, \"assets/Tomato.jpg\")",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2II(0, 0, 0, 0)",
+        "END()",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2048
+    },
+    "registers": {
+        "hSize": 480,
+        "macro": [
+            ""
+        ],
+        "vSize": 272
+    }
+}
