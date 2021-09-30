@@ -3861,7 +3861,7 @@ void MainWindow::about()
 	msgBox.setText(tr(
 	    "Copyright (C) 2013-2015  Future Technology Devices International Ltd<br>"
 	    "<br>"
-	    "Copyright (C) 2016-2020  Bridgetek Pte Ltd<br>"
+	    "Copyright (C) 2016-2021  Bridgetek Pte Ltd<br>"
 	    "<br>"
 		"%1<br>"
 		"<br>"
@@ -3894,7 +3894,7 @@ void MainWindow::aboutQt()
 	                                             "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
 	                                             "\n"
 												 "Python\n"
-												 "Copyright (C) 2001-2020\n"
+												 "Copyright (C) 2001-2021\n"
 												 "https://www.python.org/"
 												 "\n\n"
 	                                             "Fugue Icons\n"
