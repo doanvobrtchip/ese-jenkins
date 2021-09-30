@@ -51,15 +51,15 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 4,2,0,0
- PRODUCTVERSION 4,2,0,0
+ FILEVERSION 4,3,0,0
+ PRODUCTVERSION 4,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
 #else
  FILEFLAGS 0x0L
 #endif
- FILEOS 0x40000L
+ FILEOS 0x40004L
  FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Bridgetek Pte Ltd"
             VALUE "FileDescription", "EVE Screen Editor"
-            VALUE "FileVersion", "4.2.0.0"
+            VALUE "FileVersion", "4.3.0.0"
             VALUE "InternalName", "fteditor"
             VALUE "LegalCopyright", "Copyright (C) 2016-2021  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "fteditor.exe"
             VALUE "ProductName", "EVE Screen Editor"
-            VALUE "ProductVersion", "4.2.0.0"
+            VALUE "ProductVersion", "4.3.0.0"
         END
     END
     BLOCK "VarFileInfo"

@@ -2,7 +2,7 @@
     "content": [
     ],
     "coprocessor": [
-        "CMD_PLAYVIDEO(OPT_FULLSCREEN, \"..//chickens-4.avi\")"
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND, \"assets/big_bunny.avi\")"
     ],
     "displayList": [
         ""

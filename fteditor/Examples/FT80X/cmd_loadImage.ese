@@ -2,10 +2,9 @@
     "content": [
     ],
     "coprocessor": [
-        "//See Help manual section: xxxxx",
         "CLEAR(1, 1, 1)",
         "",
-        "CMD_LOADIMAGE(0, 0, \"..//Tomato.jpg\")",
+        "CMD_LOADIMAGE(0, 0, \"assets/Tomato.jpg\")",
         "",
         "BEGIN(BITMAPS)",
         "VERTEX2II(0, 0, 0, 0)",

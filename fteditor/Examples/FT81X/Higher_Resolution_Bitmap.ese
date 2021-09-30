@@ -3,16 +3,15 @@
         {
             "converter": "Image",
             "dataCompressed": true,
-            "dataEmbedded": true,
+            "dataStorage": "Embedded",
             "destName": "images/EiffelTower_800_480",
             "imageFormat": 0,
             "memoryAddress": 0,
             "memoryLoaded": true,
-            "sourcePath": "..//EiffelTower_800_480.png"
+            "sourcePath": "assets/EiffelTower_800_480.png"
         }
     ],
     "coprocessor": [
-        "//See Help document section: xxxxx",
         "CLEAR(1,1,1)",
         "",
         "//associate the EiffelTower bitmap data to handle 0 via CMD_SETBITMAP command, FT81X devices only.",

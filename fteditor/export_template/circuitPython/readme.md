@@ -1,4 +1,5 @@
 ### circuitPython support for Raspberry Pi Pico with Eve module from Bridgetek Pte Ltd
+circuitPython firmware version used in this exported project: 0.1.2
 
 ### Usage
 To run the exporting project, copy all file and folder to the drive "CIRCUITPY"
@@ -28,7 +29,7 @@ PICO GP5 <--> Eve CS#
 PICO GP7 <--> Eve PDN#   
 
 PICO Power <--> Eve Board power   
-PICO GND <--> Eve Board GND   
+PICO GND   <--> Eve Board GND   
 
 SD card is accessed from Eve SPI but with different CS pin:     
 PICO GP13 <---> SD CS#
@@ -36,6 +37,10 @@ PICO GP13 <---> SD CS#
 The connection with :     
 PICO GP8 <---> D/CX pin of ILI9488  
 PICO GP9 <---> CSX pin of ILI9488
+
+### pico-brteve
+This repo contains examples and library of Raspberry Pi Pico to support Bridgetek(brt) Eve, in C and circuitPython.
+https://github.com/BRTSG-FOSS/pico-brteve
 
 ### Eve - Embedded Video Engine
 An extreme easy-to-use yet powerful GPU with SPI interface to MCU. See more details:
