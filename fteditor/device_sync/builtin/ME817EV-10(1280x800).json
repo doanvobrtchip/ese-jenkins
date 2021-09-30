@@ -26,7 +26,7 @@
     "REG_VSYNC1": 10,
     
     "REG_PCLK_2X": 1,
-    "REG_PCLK_FREQ": 2241,
+    "REG_PCLK_FREQ": 2225,
     "REG_ADAPTIVE_FRAMERATE": 0,
 
 

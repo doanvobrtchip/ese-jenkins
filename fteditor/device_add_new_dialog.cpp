@@ -21,9 +21,8 @@ namespace FTEDITOR
 #if FT800_DEVICE_MANAGER
 
 
-const QString EVE_TYPE = "EVE Type";
 
-const QStringList DeviceAddNewDialog::PROPERTIES = { "Device Name", "Description", "Vendor", "Version", "Connection Type", EVE_TYPE, "Flash Model",
+const QStringList DeviceAddNewDialog::PROPERTIES = {"Device Name", "Description", "Vendor", "Version", "Connection Type", "EVE Type", "Flash Model",
 							"Flash Size (MB)", "System Clock (MHz)", "External Clock", "Screen Width", "Screen Height", "REG_HCYCLE", "REG_HOFFSET",
 							"REG_HSYNC0", "REG_HSYNC1", "REG_VCYCLE", "REG_VOFFSET", "REG_VSYNC0", "REG_VSYNC1", "REG_SWIZZLE", "REG_PCLK_POL",
 							"REG_HSIZE", "REG_VSIZE", "REG_CSPREAD", "REG_DITHER", "REG_PCLK", "REG_OUTBITS",
@@ -31,55 +30,6 @@ const QStringList DeviceAddNewDialog::PROPERTIES = { "Device Name", "Description
 
 const QString DeviceAddNewDialog::REG_OUTBITS_6bits = "6 bits display";
 const QString DeviceAddNewDialog::REG_OUTBITS_8bits = "8 bits display";
-
-const QMap<double, int> DeviceAddNewDialog::PCLK_FREQ_HASH = {
-	{ 96, 0xD01 },
-	{ 90, 0xCF1 },
-	{ 84, 0xCE1 },
-	{ 78, 0x8D1 },
-	{ 72, 0x8C1 },
-	{ 66, 0x8B1 },
-	{ 60, 0x8A1 },
-	{ 57, 0xD32 },
-	{ 54, 0x891 },
-	{ 51, 0xD12 },
-	{ 48, 0x881 },
-	{ 45, 0xCF2 },
-	{ 42, 0x871 },
-	{ 39, 0x8D2 },
-	{ 38, 0xD33 },
-	{ 36, 0x461 },
-	{ 34, 0xD13 },
-	{ 33, 0x8B2 },
-	{ 32, 0xD03 },
-	{ 30, 0x451 },
-	{ 28.5, 0xD34 },
-	{ 28, 0xCE3 },
-	{ 27, 0x892 },
-	{ 26, 0x8D3 },
-	{ 25.5, 0xD14 },
-	{ 24, 0x441 },
-	{ 22.5, 0xCF4 },
-	{ 22, 0x8B3 },
-	{ 21, 0x872 },
-	{ 19.5, 0x8D4 },
-	{ 18, 0x31 },
-	{ 16.5, 0x8B4 },
-	{ 16, 0x883 },
-	{ 15, 0x452 },
-	{ 13.5, 0x894 },
-	{ 12, 0x21 },
-	{ 10.5, 0x874 },
-	{ 10, 0x453 },
-	{ 9, 0x32 },
-	{ 8, 0x443 },
-	{ 7.5, 0x454 },
-	{ 6, 0x22 },
-	{ 4.5, 0x34 },
-	{ 4, 0x23 },
-	{ 3, 0x24 },
-};
-
 
 DeviceAddNewDialog::DeviceAddNewDialog(QWidget * parent)
     : QDialog(parent)
@@ -205,49 +155,26 @@ void DeviceAddNewDialog::addDevice()
 void DeviceAddNewDialog::onEveTypeChange(QString eveType)
 {
 	bool isFlashUsed = eveType.startsWith("BT");
-	bool isBT817 = eveType.startsWith("BT817");
 
 	QTableWidgetItem * item = NULL;
 	QWidget * w = NULL;
-	QString item_name;
 	for (int i = 0; i < ui->DeviceTableWidget->rowCount(); i++)
 	{
 		item = ui->DeviceTableWidget->item(i, 0);
-		item_name = item->text();
+		if (!item->text().startsWith("Flash"))
+			continue;
+		
+		isFlashUsed ? item->setFlags(item->flags() | Qt::ItemIsEnabled ) : item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 
-		if (item_name.startsWith("REG_PCLK_2X") || item_name.startsWith("REG_PCLK_FREQ") || item_name.startsWith("REG_AH_HCYCLE_MAX"))
-		{				
-			isBT817 ? ui->DeviceTableWidget->showRow(i) : ui->DeviceTableWidget->hideRow(i);
-		}
-
-		if (item_name.startsWith("Flash"))
+		w = ui->DeviceTableWidget->cellWidget(i, 1);
+		if (w)
 		{
-			isFlashUsed ? ui->DeviceTableWidget->showRow(i) : ui->DeviceTableWidget->hideRow(i);
+			w->setEnabled(isFlashUsed);
 		}
-	}
-}
-
-void DeviceAddNewDialog::onSystemClockChange(QString sysClock)
-{
-	bool ok = false;
-	double sc = sysClock.toDouble(&ok);
-	int reg_pclk_freq = 0;
-
-	if (ok) {
-		reg_pclk_freq = PCLK_FREQ_HASH[sc];
-
-		QTableWidgetItem *item = NULL;
-		QSpinBox *sp = NULL;
-		for (int i = 0; i < ui->DeviceTableWidget->rowCount(); i++)
+		else 
 		{
-			item = ui->DeviceTableWidget->item(i, 0);
-
-			if (item->text().endsWith("REG_PCLK_FREQ"))
-			{
-				sp = dynamic_cast<QSpinBox *>(ui->DeviceTableWidget->cellWidget(i, 1));
-				if (sp)
-					sp->setValue(reg_pclk_freq);
-			}
+			item = ui->DeviceTableWidget->item(i, 1);
+			isFlashUsed ? item->setFlags(item->flags() | Qt::ItemIsEnabled ) : item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 		}
 	}
 }
@@ -294,8 +221,6 @@ void DeviceAddNewDialog::prepareData()
 	QString sg = "QSpinBox { background-color: #e9e7e3; border: none; }";
 	QString sw = "QSpinBox { background-color: #ffffff; border: none; }";
 
-	const double SYS_CLOCK_DEFAULT = 72;
-
 	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
 		ui->DeviceTableWidget->insertRow(i);
@@ -330,16 +255,13 @@ void DeviceAddNewDialog::prepareData()
 		else if (PROPERTIES[i] == "System Clock (MHz)")
 		{
 			QComboBox *cb = new QComboBox(this);
-
-			for each (double d in PCLK_FREQ_HASH.keys())
-			{
-				cb->addItem(QString::number(d));
-			}
-
-			cb->setCurrentIndex(cb->findText(QString::number(SYS_CLOCK_DEFAULT)));
-
-			connect(cb, &QComboBox::currentTextChanged, this, &DeviceAddNewDialog::onSystemClockChange);
-
+			cb->addItems(QStringList() << "24"
+			                           << "36"
+									   << "48"
+			                           << "60"
+			                           << "72"
+			                           << "84");
+			cb->setCurrentIndex(3);
 			ui->DeviceTableWidget->setCellWidget(i, 1, cb);
 		}
 		else if (PROPERTIES[i] == "Connection Type")
@@ -374,17 +296,6 @@ void DeviceAddNewDialog::prepareData()
 			sb->setMaximum(9999);
 			sb->setButtonSymbols(QSpinBox::NoButtons);
 			sb->setStyleSheet(i % 2 == 0 ? sw : sg);
-
-			if (PROPERTIES[i].endsWith("REG_PCLK_FREQ")) {
-				sb->setReadOnly(true);
-				sb->setDisplayIntegerBase(16);
-				sb->setPrefix("0x");
-				sb->setValue(PCLK_FREQ_HASH[SYS_CLOCK_DEFAULT]);
-				QFont font = sb->font();
-				font.setCapitalization(QFont::AllUppercase);
-				sb->setFont(font);
-			}
-
 			ui->DeviceTableWidget->setCellWidget(i, 1, sb);
 		}
 		else
@@ -490,43 +401,19 @@ void DeviceAddNewDialog::showData(QString jsonPath)
 	QTableWidgetItem * item = NULL;
 	QString v;
 
-	bool hasFlash = false;
-	bool isBT817_8 = false;
-
-	if (jo.contains(EVE_TYPE)) {
-		hasFlash = jo[EVE_TYPE].toString().startsWith("BT");
-		isBT817_8 = jo[EVE_TYPE].toString().startsWith("BT817");
-	}
-
-	int rc = 0;
-	for (int i = 0; i < PROPERTIES.size(); ++i)
+	for (int i = 0; i < PROPERTIES.size(); i++)
 	{
-		if (!hasFlash && PROPERTIES[i].startsWith("Flash")) {
-			continue;
-		}
-
-		if (!isBT817_8 && 
-			(PROPERTIES[i].startsWith("REG_PCLK_2X") ||
-			 PROPERTIES[i].startsWith("REG_PCLK_FREQ") ||
-			 PROPERTIES[i].startsWith("REG_AH_HCYCLE_MAX")))
-		{
-			continue;
-		}
-
-		rc = ui->DeviceTableWidget->rowCount();
-		ui->DeviceTableWidget->insertRow(rc);
+		ui->DeviceTableWidget->insertRow(i);
 
 		item = new QTableWidgetItem(PROPERTIES[i]);
 		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
-		ui->DeviceTableWidget->setItem(rc, 0, item);
+		ui->DeviceTableWidget->setItem(i, 0, item);
 
 		if (!jo.contains(PROPERTIES[i]))
 			continue;
 		
 		if (jo[PROPERTIES[i]].isString())
 			v = jo[PROPERTIES[i]].toString();
-		else if (PROPERTIES[i] == "REG_PCLK_FREQ")
-			v = "0x" + QString::number(jo[PROPERTIES[i]].toInt(), 16).toUpper();	
 		else
 			v = QString::number(jo[PROPERTIES[i]].toInt());
 
@@ -536,13 +423,11 @@ void DeviceAddNewDialog::showData(QString jsonPath)
 				v = REG_OUTBITS_8bits;
 			else if (v == "438")
 				v = REG_OUTBITS_6bits;
-		}
-
-		
+		}	
 
 		item = new QTableWidgetItem(v);
 		item->setFlags(item->flags() & (~Qt::ItemIsEditable));
-		ui->DeviceTableWidget->setItem(rc, 1, item);
+		ui->DeviceTableWidget->setItem(i, 1, item);
 	}
 }
 
