@@ -841,7 +841,7 @@ void MainWindow::frameQt()
 
 	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 
-	if (!g_StreamingData && g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (/*!g_StreamingData && */g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
