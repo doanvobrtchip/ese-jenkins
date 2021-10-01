@@ -240,7 +240,7 @@ void DeviceAddNewDialog::onEveTypeChange(QString eveType)
 			isBT817 ? ui->DeviceTableWidget->showRow(i) : ui->DeviceTableWidget->hideRow(i);
 		}
 
-		if (item_name.startsWith("Flash"))
+		if (item_name.startsWith("Flash") || item_name.startsWith("REG_ADAPTIVE_FRAMERATE"))
 		{
 			isFlashUsed ? ui->DeviceTableWidget->showRow(i) : ui->DeviceTableWidget->hideRow(i);
 		}
@@ -532,7 +532,9 @@ void DeviceAddNewDialog::showData(QString jsonPath)
 	int rc = 0;
 	for (int i = 0; i < PROPERTIES.size(); ++i)
 	{
-		if (!hasFlash && PROPERTIES[i].startsWith("Flash")) {
+		if (!hasFlash &&
+			(PROPERTIES[i].startsWith("Flash") ||
+			 PROPERTIES[i].startsWith("REG_ADAPTIVE_FRAMERATE"))) {
 			continue;
 		}
 

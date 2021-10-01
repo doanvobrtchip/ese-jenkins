@@ -6,7 +6,7 @@
     "EVE Type": "BT817_818",
     "External Clock": "true",
     "Flash Model": "w25q128",
-    "Flash Size (MB)": "8",
+    "Flash Size (MB)": "16",
     "PCLK Frequency (MHz)": "72.0",
     "REG_ADAPTIVE_FRAMERATE": 0,
     "REG_AH_HCYCLE_MAX": 0,
@@ -30,7 +30,7 @@
     "REG_VSYNC1": 10,
     "Screen Height": 800,
     "Screen Width": 1280,
-    "System Clock (MHz)": "84",
+    "System Clock (MHz)": "72",
     "Vendor": "Bridgetek",
     "Version": "1.0"
 }
