@@ -4,6 +4,18 @@ Please uninstall the latest version if you have one installed on your PC.
 
 Release Note:
 
+Version 4.3.0
+Alpha1
+•   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
+•   Report "unsupported JPEG" as coprocessor faults when a progressive JPEG image is loaded
+•   Explain Raspberry Pi Pico support
+•   Improve the default file path of project open dialogue
+•   Update extension name of example ESE project from .ft8xxproj to .ese
+•   Change the location of example assets
+•   Add a new mediaFifo example to use cmd_inflate2
+•   Improve format_string example project
+•   Correct parameter of cmd_videoframe and change the video asset in video_playback example
+
 Version 4.2.0
 RC2
 •   Install ASTC encoder based on the user's CPU done

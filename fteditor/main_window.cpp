@@ -3846,7 +3846,8 @@ void MainWindow::dummyCommand()
 
 void MainWindow::manual()
 {
-	QDesktopServices::openUrl(QUrl::fromLocalFile(m_ApplicationDataDir + "/Manual/EVE Screen Editor User Guide.pdf"));
+	QString ug_path = QString("/Manual/BRT_AN_037_EVE Screen Editor %1 User Guide.pdf").arg(STR_VERSION);
+	QDesktopServices::openUrl(QUrl::fromLocalFile(m_ApplicationDataDir + ug_path));
 }
 
 void MainWindow::about()
