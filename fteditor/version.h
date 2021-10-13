@@ -15,4 +15,6 @@
 
 #define STR_PRODUCTVERSION						xstr(VERSION_MAJOR) "." xstr(VERSION_MINOR) "." xstr(VERSION_BUILD)
 
+#define STR_VERSION					         	xstr(VERSION_MAJOR) "." xstr(VERSION_MINOR)
+
 #endif // VERSION_H
