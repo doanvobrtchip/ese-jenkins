@@ -5,6 +5,11 @@ Please uninstall the latest version if you have one installed on your PC.
 Release Note:
 
 Version 4.3.0
+Beta1
+Resolved issues
+•   Remove registry key when uninstall
+•   Fix error when exporting a project to EVE_HAL2
+
 Alpha1
 •   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
 •   Report "unsupported JPEG" as coprocessor faults when a progressive JPEG image is loaded
