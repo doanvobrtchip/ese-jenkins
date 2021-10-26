@@ -214,10 +214,9 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
             renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
             renameStringInFile(Ft90xPlatformHeader, "//#define ME813AU_WH50C", "#define ME813AU_WH50C")
             renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")  
-
-          
+   
     except Exception as e:
-        raise Exception("Error while renaming project platform files: " + str(e))
+        raise Exception("Error while renaming exported files. Try to shorten project name and/or move the project closer to your home folder.")
 
     for content in filesToTestFolder:
         destinationName = ""
