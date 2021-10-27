@@ -41,7 +41,7 @@ def copydir2(source, dest):
             if len(d) > 255 or len(s) > 255:
                 raise ValueError
             if os.path.isdir(s):
-                shutil.copytree(s, d, symlinks=False, ignore=None)
+                shutil.copytree(s, d, symlinks=False, ignore=None, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
     except IOError as ioStatus:
@@ -1173,17 +1173,10 @@ def run(name, document, ram, moduleName):
 
     try:
         if os.path.isdir(outDir):
-            try:
-                shutil.rmtree(outDir)
-            except shutil.Error as exc:
-                errors = exc.args[0]
-                cpSrc, cpDst, cpMsg = errors[0]
-                raise Exception("Project generation error: " + str(cpMsg))
-            except IOError as ioStatus:
-                raise Exception("Unable to generate a complete MSVC project. Please make sure the previously generated project files and folder are not currently being accessed. " + str(ioStatus))
+            shutil.rmtree(outDir)
         os.makedirs(outDir)
     except Exception as e:
-        raise IOError("Unable to generate a complete MSVC project. Try again and make sure the previous generated project files and skeleton project files are not currently being accessed. " + str(e))
+        raise IOError("Unable to export project. Make sure the previous exported files are not being accessed.")
 
     outName = outDir + os.path.sep + name + HALProjectName + ".c"
     
