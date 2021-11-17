@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\prerelease.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_1.0.0
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_2.1.0
 
 
 SetupIconFile=.\eve-puzzle-64.ico
@@ -99,8 +99,11 @@ Source: "Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+
 Source: "ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion

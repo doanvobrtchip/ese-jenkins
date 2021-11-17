@@ -8,24 +8,16 @@ set qt-bin=C:\Qt5\5.15.2\msvc2019_64\bin
 rmdir /s /q %setup-dir%
 mkdir %setup-dir%
 
-device_sync
-EVE_Hal_Library
-Examples
-export_scripts
-export_template
-firmware
-Manual
-untitled
 
-xcopy /siy ..\fteditor\device_sync %setup-dir%\device_sync
-xcopy /siy ..\fteditor\EVE_Hal_Library %setup-dir%\EVE_Hal_Library
-xcopy /siy ..\fteditor\Examples %setup-dir%\Examples
-xcopy /siy ..\fteditor\export_scripts %setup-dir%\export_scripts
-xcopy /siy ..\fteditor\export_template %setup-dir%\export_template
-xcopy /siy ..\fteditor\firmware %setup-dir%\firmware
-xcopy /siy ..\fteditor\untitled %setup-dir%\untitled
+xcopy /eiy ..\fteditor\device_sync %setup-dir%\device_sync
+xcopy /eiy ..\fteditor\EVE_Hal_Library %setup-dir%\EVE_Hal_Library
+xcopy /eiy ..\fteditor\Examples %setup-dir%\Examples
+xcopy /eiy ..\fteditor\export_scripts %setup-dir%\export_scripts
+xcopy /eiy ..\fteditor\export_template %setup-dir%\export_template
+xcopy /eiy ..\fteditor\firmware %setup-dir%\firmware
+xcopy /eiy ..\fteditor\untitled %setup-dir%\untitled
 
-xcopy /siy %build-dir%\Lib %setup-dir%\Lib 
+xcopy /eiy %build-dir%\Lib %setup-dir%\Lib 
 
 
 :: copy all python files
