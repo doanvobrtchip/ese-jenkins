@@ -2344,9 +2344,9 @@ void MainWindow::loadConfig(QString configPath)
 	if (jo.isEmpty())
 		return;
 
-	if (jo.contains("vc1dump") && jo["vc1dump"].isBool())
+	if (jo.contains("eve_dump") && jo["eve_dump"].isBool())
 	{
-		m_isVCDumpEnable = jo["vc1dump"].toBool();
+		m_isVCDumpEnable = jo["eve_dump"].toBool();
 	}
 }
 
@@ -3191,7 +3191,7 @@ void MainWindow::actImport()
 	printf("*** Import ***\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Import"), getFileDialogPath(),
-	    tr("Memory dump (*.vc1dump)"));
+	    tr("Memory dump (*.eve_dump)"));
 	if (fileName.isNull())
 		return;
 
@@ -3223,7 +3223,7 @@ void MainWindow::actImport()
 	int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
 	if (s != sizeof(uint32_t) * headersz)
 	{
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete header"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete header"));
 	}
 	else
 	{
@@ -3255,7 +3255,7 @@ void MainWindow::actImport()
 			break;
 		default:
 			QString message = QString("Invalid header version: %1").arg(header[0]);
-			QMessageBox::critical(this, tr("Import .vc1dump"), message);
+			QMessageBox::critical(this, tr("Import .eve_dump"), message);
 			break;
 		}
 	}
@@ -3271,7 +3271,7 @@ void MainWindow::actImport()
 
 	// be helpful
 	focusDlEditor();
-	m_PropertiesEditor->setInfo(tr("Imported project from .vc1dump file."));
+	m_PropertiesEditor->setInfo(tr("Imported project from .eve_dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 	m_Toolbox->setEditorLine(m_DlEditor, 0);
 }
@@ -3284,7 +3284,7 @@ bool MainWindow::importDumpFT80X(QDataStream & in)
 	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K);
 	if (s != DUMP_256K)
 	{		
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_G"));
 		return false;
 	}
 
@@ -3294,7 +3294,7 @@ bool MainWindow::importDumpFT80X(QDataStream & in)
 	s = in.readRawData(&ram[ramPal], DUMP_1K); // FIXME_GUI PALETTE
 	if (s != DUMP_1K)
 	{
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_PAL"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_PAL"));
 		return false;
 	}
 
@@ -3304,7 +3304,7 @@ bool MainWindow::importDumpFT80X(QDataStream & in)
 	m_DlEditor->unlockDisplayList();
 	if (s != DUMP_8K)
 	{
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_DL"));
 		return false;
 	}
 
@@ -3318,7 +3318,7 @@ bool MainWindow::importDumpFT81X(QDataStream & in)
 	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
 	if (s != DUMP_1024K)
 	{	
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_G"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_G"));
 		return false;
 	}
 
@@ -3328,7 +3328,7 @@ bool MainWindow::importDumpFT81X(QDataStream & in)
 	m_DlEditor->unlockDisplayList();
 	if (s != DUMP_8K)
 	{
-		QMessageBox::critical(this, tr("Import .vc1dump"), tr("Incomplete RAM_DL"));
+		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_DL"));
 		return false;
 	}
 		
@@ -3364,16 +3364,16 @@ void MainWindow::writeLastProjectDir(QString dirPath)
 
 void MainWindow::actExport()
 {
-	QString filtervc1dump = tr("Memory dump (*.vc1dump)");
-	QString filter = filtervc1dump;
+	QString filterDump = tr("Memory dump (*.eve_dump)");
+	QString filter = filterDump;
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export"), getFileDialogPath(), filter, &filter);
 	if (fileName.isNull())
 		return;
 
-	if (filter == filtervc1dump)
+	if (filter == filterDump)
 	{
-		if (!fileName.endsWith(".vc1dump"))
-			fileName = fileName + ".vc1dump";
+		if (!fileName.endsWith(".eve_dump"))
+			fileName = fileName + ".eve_dump";
 	}
 
 	QFile file(fileName);
@@ -3445,8 +3445,8 @@ void MainWindow::actExport()
 
 	file.close();
 
-	statusBar()->showMessage(tr("Exported project to .vc1dump file"));
-	m_PropertiesEditor->setInfo(tr("Exported project to .vc1dump file."));
+	statusBar()->showMessage(tr("Exported project to .eve_dump file"));
+	m_PropertiesEditor->setInfo(tr("Exported project to .eve_dump file."));
 	m_PropertiesEditor->setEditWidget(NULL, false, this);
 
 	return;
