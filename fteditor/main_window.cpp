@@ -3069,10 +3069,15 @@ void MainWindow::actSaveAs()
 		if (fileName.isEmpty())
 			return;
 
-		QDir dir(fileName);
+	    QDir dir(fileName);
 		dir.cdUp();
 
 		dirPath = dir.absolutePath();
+
+		if (QFileInfo(fileName).baseName().length() > 20) {
+			QMessageBox::warning(this, tr("Save Project"), tr("Project name must not exceed 20 characters!"));
+			continue;
+		}
 
 		// check if dir empty
 		if (dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries).count() != 0)
@@ -3158,6 +3163,7 @@ void MainWindow::actSaveAs()
 
 	// Set the folder to be the project folder
 	QDir::setCurrent(dstPath);
+	m_LastProjectDir = dstPath;
 
 	// Rebuild content to ensure correct functionality
 	if (wantRebuildAll)
