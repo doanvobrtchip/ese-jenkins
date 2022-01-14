@@ -58,7 +58,7 @@ Source: "aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_pico.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_pico_helper.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_pico_reg.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "export_template\*.*"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs
+Source: "export_template\*.*"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 Source: "export_common.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
@@ -109,19 +109,19 @@ Source: "concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "libpng16-16__.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs
-Source: "Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs
-Source: "EVE_Hal_Library\*.*"; DestDir: "{app}\EVE_Hal_Library"; Flags: recursesubdirs createallsubdirs
-Source: "export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs
-Source: "firmware\*.*"; DestDir: "{app}\firmware"; Flags: recursesubdirs createallsubdirs
-Source: "Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs
-Source: "untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs
-Source: "platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs
-Source: "imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs
-Source: "styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs
-Source: "iconengines\*.*"; DestDir: "{app}\iconengines"; Flags: recursesubdirs createallsubdirs
+Source: "Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "EVE_Hal_Library\*.*"; DestDir: "{app}\EVE_Hal_Library"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "firmware\*.*"; DestDir: "{app}\firmware"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "Manual\*.*"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "iconengines\*.*"; DestDir: "{app}\iconengines"; Flags: recursesubdirs createallsubdirs ignoreversion
 
-Source: "device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs
+Source: "device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 Source: "astcenc-sse2.exe";   DestDir: "{app}"; Flags: ignoreversion 
 Source: "astcenc-sse4.2.exe"; DestDir: "{app}"; Flags: ignoreversion 
