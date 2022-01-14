@@ -6,6 +6,10 @@ Release Note:
 
 Version 4.3.0
 Beta
+Feature updates:
+•   [Export FT8XX] Restructure exported project folder
+•   Improve import and export memory dump file
+
 Resolved issues
 •   Remove registry key when uninstall
 •   Fixed error when exporting a project to EVE_HAL2
