@@ -1,5 +1,4 @@
-﻿NOTE: This software is only for evaluation purpose. 
-
+﻿This software is just for evaluation purposes. 
 Please uninstall the latest version if you have one installed on your PC. 
 
 Release Note:
@@ -11,7 +10,7 @@ Feature updates:
 •   Improve import and export memory dump file
 
 Resolved issues
-•   Remove registry key when uninstall
+•   Remove registry key when uninstalling
 •   Fixed error when exporting a project to EVE_HAL2
 
 Alpha1
@@ -36,7 +35,7 @@ Feature updates:
 •   Add export Python script for Raspberry Pi Pico 
 •   Add a new example to demonstrate the usage of BITMAP_TRANSFORM_A~F
 •   Improve the device editing dialogue
-•   Update the configuration for module ME817EV with 10-inch LCD
+•   Update the configuration for module ME817EV with a 10-inch LCD
 
 Resolved issues:
 •   Fails to inflate the data in content manager
@@ -50,7 +49,7 @@ Resolved issues:
 RC1
 Feature updates:
 •   Add filter in Toolbox window
-•   Upgrade to astcenc 2.1 for faster ASTC encoding
+•   Upgrade to ASTC encoder v2.1 for faster ASTC encoding
 •   Improve the placement of primitive commands
 •   Support loading content from local file for cmd_inflate, cmd_inflate2
 •   Add description for cmd_calllist/cmd_endlist/cmd_newlist
@@ -85,8 +84,8 @@ Known issues
 •   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
 •   Emulator touch behavior for CMD_SETROTATE/REG_ROTATE does not work correctly
 •   Drawing invalid animation frame will cause ESE to hang
-•   When using device sync up, flash contents need to be written before updating the display list or coprocessor
-•   Primitives cannot be dropped into the viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
+•   [Device Sync] User must write flash content before updating the display list or coprocessor
+•   Primitives cannot be dropped into the viewport area beyond [(0,0), (511,511)] because of the limitation of VERTEX2II.
 
 Version 3.4.0
 Features:
@@ -96,14 +95,14 @@ Features:
 •   Migrate ESE to 64-bit Windows release
 
 Bug Fix:
-*   The assets under the resource folder of the ESE project are deleted after another project is opened
+*   The assets in the resource folder are deleted once another project is open
 
 Version 3.3.0
 Features: 
 •   Constrain either horizontal or vertical positioning when dragging an object
 •   Support Riverdi EVE 3 modules in device sync feature
 •   Disable "Refresh, Device Manage, Device Display" buttons after the device is connected
-•   Add REG_OUTBITS to device configuration dialogue
+•   Add REG_OUTBITS into device configuration dialogue
 •   Show the pixel value at the status bar when the mouse hovers over the viewport window
 •   Add Blend_Func example project
 •   Add the circular progress bar widget example
@@ -117,7 +116,7 @@ Bug Fix:
 *   '\x0A' is not handled in Font Conversion process with legacy format option
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE to hang
+*   Playing an invalid animation frame data from flash may cause ESE to hang
 
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
@@ -125,7 +124,7 @@ Limitation:
 Version 3.2.0
 Features: 
 •   Add a new example project to illustrate ASTC layout
-•   Add a setfont example
+•   Add an example for CMD_SETFONT
 •   Add setfont2 for extended format on bt81x
 •   The add button in the content browser shall open the last recent folder
 •   Update the vc1dump export to 110 version
@@ -137,12 +136,12 @@ Features:
 
 Bug Fix:
 *   Wrong implementation for the paletted8 format in the emulator
-*   Reloading the screenshot file results the wrong effect
+*   Reloading the screenshot file results in the wrong effect
 *   "OPT_FLAT" is missing from the cmd_button properties window
 *   Exported project contains wrong code if the character ")" exists in CMD_TEXT
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE to hang
+*   Playing the invalid animation frame data from flash may cause ESE to hang
 
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
@@ -159,8 +158,7 @@ Features:
       - ME810AU-WH70R    
       - ME811AU-WH70C
       - ME812AU-WH50R
-      - ME813AU-WH50C    
-      
+      - ME813AU-WH50C      
       - ME810A-WH70R
       - ME811A-WH70C       
       - ME812A-WH50R       
@@ -168,26 +166,26 @@ Features:
 
 •   Open the last location of the loaded file in the content manager
 •   Force to save the project in an empty folder
-•   Add example "Bar graph usage"
+•   Add example "bar_graph"
 •   Add example for CMD_TRACK
 •   Add example Paletted8
 •   Rebuild the project with Qt5.7.0 and MSVC 2017
 •   Add the missing firmware folder in the installation package.
 •   Add zooming function of emulator viewport
 •   Upgrade C++ source and Python script to work with Python v3.6.5
-•   Clone resources so that project can be moved to another location safely
+•   Clone resources to move a project to another location safely
 •   Add more comprehensive bitmap rotate example
 •   Add bar graph invert example
 
 Bug Fix:
 *   Link FreeType library into the executable file
 *   Update REG_CMD_DL correctly
-*   Fix the crash issue when the export menu is clicked for FT813 device.
+*   Fix the crash issue when the export project for FT813 device.
 *   Fix the improper emulator library of the export project 
-*   L1/L2/L4/L8 formats are not converted correctly
+*   Convert to L1/L2/L4/L8 formats incorrectly
 *   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
 *   Update the bitmap_source in ESE for negative address case
 
 Known issues: 
 *   The Coprocessor commands without Display list output are unable to be synced to hardware in the device manager
-*   Playing the invalid animation frame data in flash may cause ESE to hang
+*   Playing the invalid animation frame data from flash may cause ESE to hang
