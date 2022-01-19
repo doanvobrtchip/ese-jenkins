@@ -204,7 +204,7 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
             destinationName = content.rsplit('\\', 1)[1]
         #raise Exception(content)
         try:
-            shutil.copy(content, destDir + os.path.sep + projectName + os.path.sep + globalValue['assetsFolder'] + os.path.sep + destinationName)
+            shutil.copy(content, f'{destDir}/{globalValue["assetsFolder"]}/{destinationName}')
         except Exception as e:
             raise Exception("Error copying assets to project folder: " + str(e))
 
@@ -1484,7 +1484,7 @@ def run(name, document, ram, moduleName):
                         specialParameter = functionArgsSplit[2]
                     specialParameter2 = specialParameter
                     filesToTestFolder.append(functionArgsSplit[2])
-                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialParameter = "../../Test/" + specialParameter
                     specialCommandType = "Ft_Gpu_CoCmd_LoadImage"
                     functionName = ""
 
@@ -1519,7 +1519,7 @@ def run(name, document, ram, moduleName):
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_PLAYVIDEO);\n")
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n")
                     specialParameter2 = specialParameter
-                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialParameter = "../../Test/" + specialParameter
                     specialCommandType = "Ft_Gpu_CoCmd_PlayVideo"
                     functionName = ""
 
