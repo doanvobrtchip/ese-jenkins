@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -10,41 +10,25 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\Src\FT_Emulator_main.cpp" />
-    <ClCompile Include="..\..\..\Src\untitled.c" />
-    <ClCompile Include="..\..\..\Src\FT_CoPro_Cmds.c" />
-    <ClCompile Include="..\..\..\Src\FT_Gpu_Hal.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\Hdr\FT_CoPro_Cmds.h" />
-    <ClInclude Include="..\..\..\Hdr\FT_Gpu.h" />
-    <ClInclude Include="..\..\..\Hdr\FT_Gpu_Hal.h" />
-    <ClInclude Include="..\..\..\Hdr\FT_Hal_Utils.h" />
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Emulator.h" />
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Emulator_main.h" />
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_DataTypes.h" />
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Platform.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B216CCB-465C-4DCC-8A71-BFB41D59DDCC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>untitled</RootNamespace>
-    <ProjectName>untitled</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -57,8 +41,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -66,16 +52,19 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\Hdr\;..\..\..\Hdr\Msvc_Emulator</AdditionalIncludeDirectories>
-      <CompileAs>Default</CompileAs>
+      <PreprocessorDefinitions>MSVC_PLATFORM;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\Hdr\;..\..\Hdr\Msvc_win32\;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);FT8xxemu.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\Bin\Msvc_Emulator</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);libMPSSE.a;libFT4222.lib;ftd2xx.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Bin\Msvc_win32;</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y ..\..\Bin\Msvc_win32\*.dll $(OutDir)\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -83,20 +72,39 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>MSVC_FT800EMU;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\Hdr\;..\..\..\Hdr\Msvc_Emulator</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MSVC_PLATFORM;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\Hdr\;..\..\Hdr\Msvc_win32\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);ft8xxemu.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\Bin\Msvc_Emulator</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ftd2xx.lib;libFT4222.lib;libMPSSE.a;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Bin\Msvc_win32;</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y ..\..\Bin\Msvc_win32\*.dll $(OutDir)\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Src\FT_CoPro_Cmds.c" />
+    <ClCompile Include="..\..\Src\FT_Gpu_Hal.c" />
+    <ClCompile Include="..\..\Src\untitled.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Hdr\FT_Hal_Utils.h" />
+    <ClInclude Include="..\..\Hdr\FT_CoPro_Cmds.h" />
+    <ClInclude Include="..\..\Hdr\FT_Gpu.h" />
+    <ClInclude Include="..\..\Hdr\FT_Gpu_Hal.h" />
+    <ClInclude Include="..\..\Hdr\Msvc_win32\ftd2xx.h" />
+    <ClInclude Include="..\..\Hdr\Msvc_win32\FT_Platform.h" />
+    <ClInclude Include="..\..\Hdr\Msvc_win32\libMPSSE_spi.h" />
+    <ClInclude Include="..\..\Hdr\Msvc_win32\libFT4222.h" />
+    <ClInclude Include="..\..\Hdr\Msvc_win32\FT_DataTypes.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

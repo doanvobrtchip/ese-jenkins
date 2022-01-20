@@ -71,7 +71,7 @@ BEGIN
             VALUE "FileDescription", "EVE Screen Editor"
             VALUE "FileVersion", "4.3.0.0"
             VALUE "InternalName", "fteditor"
-            VALUE "LegalCopyright", "Copyright (C) 2016-2021  Bridgetek Pte Ltd"
+            VALUE "LegalCopyright", "Copyright (C) 2016-2022  Bridgetek Pte Ltd"
             VALUE "OriginalFilename", "fteditor.exe"
             VALUE "ProductName", "EVE Screen Editor"
             VALUE "ProductVersion", "4.3.0.0"

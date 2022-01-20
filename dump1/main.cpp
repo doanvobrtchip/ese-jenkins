@@ -18,7 +18,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #include <assert.h>
 #include <string.h>
 
-#define BTDUMP_FILE argv[1] /* "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.vc1dump" */
+#define BTDUMP_FILE argv[1] /* "C:/source/ft800emu/reference/vc3test/traces/test_formats_0.eve_dump" */
 #define BTFLASH_DATA_FILE L"C:/source/ft800emu/reference/vc3roms/stdflash.bin"
 
 extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long Timeout);
@@ -190,13 +190,13 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		if (!f) printf("Failed to open vc1dump file\n");
+		if (!f) printf("Failed to open eve_dump file\n");
 		else
 		{
 			const size_t headersz = 6;
 			uint32_t header[headersz];
 			size_t s = fread(header, sizeof(uint32_t), headersz, f);
-			if (s != headersz) printf("Incomplete vc1dump header\n");
+			if (s != headersz) printf("Incomplete eve_dump header\n");
 			else if (header[0] == 100)
 			{
 				s_HSize = header[1];
@@ -208,16 +208,18 @@ int main(int argc, char* argv[])
 				wr32(emulator, REG_MACRO_1, header[4]);;
 
 				s = fread(&ram[RAM_G], 1, 262144, f);
-				if (s != 262144) printf("Incomplete vc1dump RAM_G\n");
+				if (s != 262144) printf("Incomplete eve_dump RAM_G\n");
 				else
 				{
 					s = fread(&ram[RAM_PAL], 1, 1024, f);
-					if (s != 1024) printf("Incomplete vc1dump RAM_PAL\n");
+					if (s != 1024) printf("Incomplete eve_dump RAM_PAL\n");
 					else
 					{
+
+
 						s = fread(&ram[RAM_DL], 1, 8192, f);
-						if (s != 8192) printf("Incomplete vc1dump RAM_DL\n");
-						else printf("Loaded vc1dump file\n");
+						if (s != 8192) printf("Incomplete eve_dump RAM_DL\n");
+						else printf("Loaded eve_dump file\n");
 					}
 				}
 			}
@@ -225,7 +227,7 @@ int main(int argc, char* argv[])
 			{
 				printf("Invalid header version %i\n", header[0]);
 			}
-			if (fclose(f)) printf("Error closing vc1dump file\n");
+			if (fclose(f)) printf("Error closing eve_dump file\n");
 		}
 		wr32(emulator, REG_DLSWAP, DLSWAP_FRAME);
 
