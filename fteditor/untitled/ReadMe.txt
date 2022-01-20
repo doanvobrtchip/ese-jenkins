@@ -20,84 +20,79 @@ Release package contents:
 =========================
 The folder structure is shown as below.
 untitled
-|	\---Bin
-|	    \---Msvc_win32
-|	    	\--libMPSSE.a - MPSSE library file for connecting to the hardware.
-|	 
-|	    \---MSVC_FT800Emu
-|	        \--ft8xxemu.lib - FT8xx Emulator library
-|	 	\---FT90x
-|			\---libfatfs.a - ft90x fat file system library for the SD card.
-|	\---Hdr
-|	    \---FT_CoPro_Cmds.h  - Includes the FT8xx Coprocessor commands.
-|	    \---FT_DataTypes.h - Includes the FT8xx datatypes.
-|	    \---FT_Gpu.h - Includes the FT8xx commands.
-|	    \---FT_Gpu_Hal.h - Includes the FT8xx HAL(Hardware Abstraction Layer) commands.
-|	    \---FT_Hal_Utils.h - Includes the HAL utilities.
-|	    \---FT_Platform.h - Includes Platform specific macros.
-|		\---FT_ILI9488 - FTDI ILI9488 driver header file.
-|	 
-|	    \---Msvc_win32
-|			\---FT_DataTypes.h - Data type for msvc_win32 platform.
-|			\---FT_Platform.h - msvc_win32 platform configuration file. 
-|	    	\--ftd2xx.h - ftd2xx header file
-|	    	\--libMPSSE_spi.h - MPSSE SPI library header file
-|	 
-|	    \---Msvc_Emulator
-|	    	\---FT_DataTypes.h - Data types used in the msvc_emulator HAL platform
-|	    	\---FT_Emulator.h - Emulator tables and configuration header file.
-|	        \---FT_Emulator_inttypes.h   - Data types used by the emulator.
-|			\---FT_Emulator_main - The main function of the emulator project
-|	        \---FT_Platform - The configuration file for the msvc_emulator HAL platform.
+|    \---Bin
+|        \---Msvc_win32
+|            \---libMPSSE.a - MPSSE library file for connecting to the hardware.
+|            \---LibFT4222.lib - FT4222 library file for connecting to the hardware.
+|            \---ftd2xx.lib - Library file for connecting to the hardware.
+|            \---ftd2xx.dll - Dll file for connecting to the hardware.
+|            \---LibFT4222.dll - Dll file for connecting to the hardware.
+|        \---Msvc_Emulator
+|            \---ft8xxemu.lib - FT8xx Emulator library
+|            \---ft8xxemu.dll - FT8XX Emulator Dll
+|            \---bt8xxemu.dll - BT8XX Emulator Dll
+|         \---FT90x
+|            \---libfatfs.a - ft90x fat file system library for the SD card.
 |
+|    \---Hdr
+|        \---FT_CoPro_Cmds.h  - Includes the FT8xx Coprocessor commands.
+|        \---FT_DataTypes.h - Includes the FT8xx datatypes.
+|        \---FT_Gpu.h - Includes the FT8xx commands.
+|        \---FT_Gpu_Hal.h - Includes the FT8xx HAL(Hardware Abstraction Layer) commands.
+|        \---FT_Hal_Utils.h - Includes the HAL utilities.
+|        \---FT_Platform.h - Includes Platform specific macros.
+|        \---FT_ILI9488 - FTDI ILI9488 driver header file.
+|     
+|        \---Msvc_win32
+|            \---FT_DataTypes.h - Data type for msvc_win32 platform.
+|            \---FT_Platform.h - msvc_win32 platform configuration file. 
+|            \---ftd2xx.h - ftd2xx header file
+|            \---libMPSSE_spi.h - MPSSE SPI library header file
+|     
+|        \---Msvc_Emulator
+|            \---FT_DataTypes.h - Data types used in the msvc_emulator HAL platform
+|            \---FT_Emulator.h - Emulator tables and configuration header file.
+|            \---FT_Emulator_inttypes.h - Data types used by the emulator.
+|            \---FT_Emulator_main - The main function of the emulator project
+|            \---FT_Platform - The configuration file for the msvc_emulator HAL platform.
 |
-|   	\---FT90X
-|  			\---\diskio.h
-|  			\---\ff.h
-|  			\---\ffconf.h
-|  			\---\integer.h
-|			\---\FT_DataTypes.h
-|  			\---\FT_Platform.h
+|       \---FT90X
+|            \---diskio.h
+|            \---ff.h
+|            \---ffconf.h
+|            \---integer.h
+|            \---FT_DataTypes.h
+|            \---FT_Platform.h
+|   
+|    \---Project
+|        \---Msvc_win32 (MSVC project to run on an actual hardware)
+|            \---untitled.sln - MSVC project solution file.  Double click it will opens up the MSVC C++ IDE, if it's installed.
+|            \---untitled.vcxproj - MSVC project file for the IDE.
+|            \---untitled.vcxproj.filter - MSVC project filter file for the IDE.
+|     
+|        \---Msvc_Emulator (MSVC project to run on an emulator)
+|            \---untitled.sln - MSVC project solution file.
+|            \---untitled.vcxproj - MSVC project filter file for the IDE.
+|            \---untitled.vcxproj.filter - MSVC project filter file for the IDE.
 |
-|	 
-|	\---Project
-|	    \---Msvc_win32 (MSVC project to run on an actual hardware)
-|	        \---untitled 
-|	            \---untitled.sln - MSVC project solution file.  Double click it will opens up the MSVC C++ IDE, if it's installed.
-|	 		    \---untitled.vcxproj - MSVC project file for the IDE.
-|	 			\---untitled.vcxproj.filter - MSVC project filter file for the IDE.
-|	 
-|	    \---Msvc_FT800Emu (MSVC project to run on an emulator)
-|	        \---untitled 
-|				\---Debug
-|					\---ft8xxemu.dll - emulator run-time dependency.
-|					\---SDL2.dll - Windows OpenGL wrapper. 
-|				\---Release
-|					\---ft8xxemu.dll - emulator run-time dependency.
-|					\---SDL2.dll - Windows OpenGL wrapper. 
-|	            \---untitled.sln - MSVC project solution file.  (FT800 emulator specific)Double click it will opens up the MSVC C++ IDE, if it's installed.
-|	 		    \---untitled.vcxproj - MSVC project filter file for the IDE.
-|	 			\---untitled.vcxproj.filter - MSVC project filter file for the IDE.
+|        \---FT90x (FT90x project to run on an actual hardware)
+|            \---.cproject - Eclipse .cproject file
+|            \---.project - Eclipse .project file
 |
-|	    \---FT90x (FT90x project to run on an actual hardware)
-|	        \---untitled 
-|	            \---.cproject - Eclipse .cproject file
-|	 		    \---.project - Eclipse .project file
+|    \---Src
+|            \---FT_CoPro_Cmds.c - Coprocessor commands source file.
+|            \---FT_Gpu_Hal.c - Gpu HAL source file.
+|            \---FT_Emulator_main.cpp - The C wrapper of SPI/I2C interface of FT800 emulator and the main() function.            
+|            \---FT_ILI9488.c - FTDI ILI9488 source driver.
+|            \---untitled.c - The API implementation of sample application
 |
-|	\---Src
-|	    	\---FT_CoPro_Cmds.c - Coprocessor commands source file.
-|	    	\---FT_Gpu_Hal.c - Gpu HAL source file.
-|	    	\---FT_Emulator_main.cpp - The C wrapper of SPI/I2C interface of FT800 emulator and the main() function.
-|	        \---untitled.c - The API implementation of FT800 sample application
-|	 		\---FT_ILI9488.c - FTDI ILI9488 source driver.
-|	\--Test - folder containing input test files such as .png .jpg, .raw etc.  For FT90x project, the contents have to be on the root level of the SD card.
+|    \--Test - containing test files such as .png .jpg, .raw etc. For FT90x, the contents have to be on the root level of the SD card.
 |
-|	\---Readme.txt - This file.
+|    \---Readme.txt - This file.
 |
 |---untitled.c - copy of the source file of the project.
 |
 |---(assets).h - copy of the embedded asset data, they can be deleted or be used in somewhere else.
-
 
 
 Configuration Instructions:
@@ -108,17 +103,16 @@ The configurations can be enabled/disabled via commenting/uncommenting macors in
 For MVSC/PC platform please look into .\untitled\Hdr\Msvc_win32\FT_Platform.h 
 For arduino platform please look into .\untitled\Project\Arduino\untitled\FT_Platform.h
 For FT90x platform please look into .\untitled\Hdr\FT90x\FT_Platform.h
-For MVSC/PC Emulator platform please look into .\untitled\Hdr\MSVC_Emulator\FT_Platform.h 		
-		
-	
+For MVSC/PC Emulator platform please look into .\untitled\Hdr\MSVC_Emulator\FT_Platform.h         
+        
 
 To run:
 =========================
 Unzip the package onto a respective project folder and open the solution/sketch file in the project folder and execute it. 
-For MSVC/PC platform please execute .\untitled\Project\Msvc_win32\untitled\untitled.sln solution. 
+For MSVC/PC platform please execute .\untitled\Project\Msvc_win32\untitled.sln solution. 
 For Arduino platform please execute.\untitled\Project\Arduino\untitled\untitled.ino sketch.
-For MVSC/PC Emulator platform please execute .\untitled\Project\MSVC_Emulator\untitled\untitled.sln solution. 
-For FT90x platform please import the project files in the .\untitled\Project\FT90x\untitled\ directory to the FTDI eclipse IDE.
+For MVSC/PC Emulator platform please execute .\untitled\Project\MSVC_Emulator\untitled.sln solution. 
+For FT90x platform please import the project files in the .\untitled\Project\FT90x\ directory to the FTDI eclipse IDE.
 
 The MSVC project file is compatible with Microsoft visual C++ version 2010.
 The arduino project file is compatible with Arduino 1.0.5.
@@ -134,6 +128,3 @@ Known issues and limitations:
 =============================
 1. MSVC(MPSSE) platform will work only on SPI mode.
 2. The SPI host(Arduino, Windows PC) are assuming the data layout in memory as Little Endian format. 
-
-
-

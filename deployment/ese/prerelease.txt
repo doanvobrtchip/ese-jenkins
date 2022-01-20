@@ -1,14 +1,17 @@
-﻿NOTE: This software is only for evaluation purpose. 
-
+﻿This software is just for evaluation purposes. 
 Please uninstall the latest version if you have one installed on your PC. 
 
 Release Note:
 
 Version 4.3.0
-Beta1
+Beta
+Feature updates:
+•   [Export FT8XX] Restructure exported project folder
+•   Improve import and export memory dump file
+
 Resolved issues
-•   Remove registry key when uninstall
-•   Fix error when exporting a project to EVE_HAL2
+•   Remove registry key when uninstalling
+•   Fixed error when exporting a project to EVE_HAL2
 
 Alpha1
 •   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
@@ -23,46 +26,50 @@ Alpha1
 
 Version 4.2.0
 RC2
-•   Install ASTC encoder based on the user's CPU done
+Feature updates:
+•   Install ASTC encoder based on the user's CPU capability
 •   Improve video playback example
 
 RC1
-•   Export Python script for Raspberry Pi Pico 
+Feature updates:
+•   Add export Python script for Raspberry Pi Pico 
 •   Add a new example to demonstrate the usage of BITMAP_TRANSFORM_A~F
 •   Improve the device editing dialogue
-•   Update the configuration for module ME817EV with 10-inch LCD
-•   Fixed fail to inflate the data in content manager
+•   Update the configuration for module ME817EV with a 10-inch LCD
+
+Resolved issues:
+•   Fails to inflate the data in content manager
 
 Version 4.1.0
 RC2
-Resolved issues
-•   Fixed exporting project with BT815/BT816 and FT80X-GameDuino2
-•   Fixed fail to load image in example project
+Resolved issues:
+•   Exports problematic project with BT815/BT816 and FT80X-GameDuino2
+•   Fails to load the image in the example project
 
 RC1
-Feature updates
-•   Add filter textbox in Toolbox window
-•   Upgrade to astcenc 2.1 for fater ASTC encoding
+Feature updates:
+•   Add filter in Toolbox window
+•   Upgrade to ASTC encoder v2.1 for faster ASTC encoding
 •   Improve the placement of primitive commands
 •   Support loading content from local file for cmd_inflate, cmd_inflate2
 •   Add description for cmd_calllist/cmd_endlist/cmd_newlist
 •   Implement cmd_memwrite and cmd_regread
-•   Add new example to demonstrate the usage of command list
+•   Add a new example to demonstrate the usage of the command list
 
-Resolved issues
-•   Fixed the device sync fail after writing to flash chip
+Resolved issues:
+•  The device sync fails after writing to flash chip
 
 Version 4.0.0
-Feature updates
+Feature updates:
 •   Support new EVE chip BT817/8
-•   Add new registry values in device configuration window
+•   Add the new register values in the device configuration window
 •   Add BT817/8 specific commands to Toolbox
-•   Add new gauge example
+•   Add a new gauge example
 •   Add ME817EV board in Device Manager
 •   Add new resolutions when BT817/8 is selected
 •   Add cookbook examples for new chip BT817/8
 •   Add new Python script for exporting BT817/8 project 
-•   Provide more user friendly value options for REG_OUTBITS
+•   Provide more user-friendly value options for REG_OUTBITS
 •   Set shortcut Ctrl+R for Reset Emulator menu
 •   Make improvements on the register window
 •   Update the latest flash blob
@@ -70,46 +77,46 @@ Feature updates
 •   Get output results for CMD_GETPROPS and CMD_GETPTR
     
 Resolved issues
-•   Fixed ESE projects opening issue
-•   Fixed Paletted PNG image is not loaded correctly with 'Image Coprocessor' format
+•   ESE projects opening issue
+•   Paletted PNG image is not loaded correctly with 'Image Coprocessor' format
 
 Known issues
 •   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
-•   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
-•   Drawing invalid animation frame will cause ESE hang
-•   When using device sync up, flash contents need written before updating display list or corpocessor
-•   Primitives cannot be dropped into viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
+•   Emulator touch behavior for CMD_SETROTATE/REG_ROTATE does not work correctly
+•   Drawing invalid animation frame will cause ESE to hang
+•   [Device Sync] User must write flash content before updating the display list or coprocessor
+•   Primitives cannot be dropped into the viewport area beyond [(0,0), (511,511)] because of the limitation of VERTEX2II.
 
 Version 3.4.0
 Features:
 •   Add system clock configuration in the device manager
 •   Integrate latest Eve Emulator to accelerate ASTC decoding
 •   Caching functionality for ASTC module
-•   Migrate ESE to 64 bit Windows release
+•   Migrate ESE to 64-bit Windows release
 
 Bug Fix:
-*   The assets under resource folder of ESE project are deleted after another project is opened
+*   The assets in the resource folder are deleted once another project is open
 
 Version 3.3.0
 Features: 
 •   Constrain either horizontal or vertical positioning when dragging an object
 •   Support Riverdi EVE 3 modules in device sync feature
-•   Disable "Refresh, Device Manage, Device Display" buttons after device is connected
-•   Add REG_OUTBITS to device configuration dialogue
-•   Show the pixel value at status bar when mouse hover over the viewport window
+•   Disable "Refresh, Device Manage, Device Display" buttons after the device is connected
+•   Add REG_OUTBITS into device configuration dialogue
+•   Show the pixel value at the status bar when the mouse hovers over the viewport window
 •   Add Blend_Func example project
 •   Add the circular progress bar widget example
 •   Add two bitmap rotating example projects
 •   Add ASTC memory layout example project
 
 Bug Fix:
-*   Copying the text is failed in property window
-*   ESE crash and exit when copying some data into coprocessor editor window
+*   Copying the text is failed in the property window
+*   ESE crash and exit when copying some data into the coprocessor editor window
 *   Cloning device produces the wrong name in device manager
-*   '\x0A' is not handled in Font Conversion with Legacy format option
+*   '\x0A' is not handled in Font Conversion process with legacy format option
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE hang
+*   Playing an invalid animation frame data from flash may cause ESE to hang
 
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
@@ -117,31 +124,31 @@ Limitation:
 Version 3.2.0
 Features: 
 •   Add a new example project to illustrate ASTC layout
-•   Add a setfont example
+•   Add an example for CMD_SETFONT
 •   Add setfont2 for extended format on bt81x
-•   The add button in content browser shall open the last recent folder
+•   The add button in the content browser shall open the last recent folder
 •   Update the vc1dump export to 110 version
 •   Enhance device sync feature to support more platforms
-•   Update the "device sync up“ feature with RAM_G and coprocessor content
+•   Update the "device sync up" feature with RAM_G and coprocessor content
 •   Save display list in raw binary format done
-•   Save the coproccessor commands in "Coprocessor" tab window done
+•   Save the coprocessor commands in the "Coprocessor" tab window done
 •   Set bold font for radio button in case of build-in device
 
 Bug Fix:
-*   Wrong implementation for the paletted8 format in emulator
-*   Reloading the screen shot file but get the wrong effect
-*   "OPT_FLAT" is missing from cmd_button properties window
-*   Exporting is wrong if character ")" exists in CMD_TEXT
+*   Wrong implementation for the paletted8 format in the emulator
+*   Reloading the screenshot file results in the wrong effect
+*   "OPT_FLAT" is missing from the cmd_button properties window
+*   Exported project contains wrong code if the character ")" exists in CMD_TEXT
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE hang
+*   Playing the invalid animation frame data from flash may cause ESE to hang
 
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
 
 Version 3.1.6
 Features: 
-•   Add support of BT815, including ASTC, flash, Unicode and more features.   
+•   Add support of BT815, including ASTC, flash, Unicode, and more features.   
 •   Support FT4222 board in device manager
 •   Change the user guide from .chm format to .pdf format
 •   Support BT81X modules in export feature for MSVC platform:
@@ -151,35 +158,34 @@ Features:
       - ME810AU-WH70R    
       - ME811AU-WH70C
       - ME812AU-WH50R
-      - ME813AU-WH50C    
-      
+      - ME813AU-WH50C      
       - ME810A-WH70R
       - ME811A-WH70C       
       - ME812A-WH50R       
       - ME813A-WH50C       
 
-•   Open the last location of loaded file in content manager
-•   Force to save project in an empty folder
-•   Add example "Bar graph usage"
+•   Open the last location of the loaded file in the content manager
+•   Force to save the project in an empty folder
+•   Add example "bar_graph"
 •   Add example for CMD_TRACK
 •   Add example Paletted8
 •   Rebuild the project with Qt5.7.0 and MSVC 2017
 •   Add the missing firmware folder in the installation package.
 •   Add zooming function of emulator viewport
 •   Upgrade C++ source and Python script to work with Python v3.6.5
-•   Clone resource so that project can be moved to another location safely
+•   Clone resources to move a project to another location safely
 •   Add more comprehensive bitmap rotate example
 •   Add bar graph invert example
 
 Bug Fix:
-*   Link library free-type into executable file
+*   Link FreeType library into the executable file
 *   Update REG_CMD_DL correctly
-*   Fix the crash issue when export menu is clicked for FT813 device.
-*   Fix the improper emulator library of export project 
-*   L1/L2/L4/L8 formats are not converted correctly
+*   Fix the crash issue when the export project for FT813 device.
+*   Fix the improper emulator library of the export project 
+*   Convert to L1/L2/L4/L8 formats incorrectly
 *   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
 *   Update the bitmap_source in ESE for negative address case
 
 Known issues: 
-*   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
-*   Playing the invalid animation frame data in flash may cause ESE hang
+*   The Coprocessor commands without Display list output are unable to be synced to hardware in the device manager
+*   Playing the invalid animation frame data from flash may cause ESE to hang

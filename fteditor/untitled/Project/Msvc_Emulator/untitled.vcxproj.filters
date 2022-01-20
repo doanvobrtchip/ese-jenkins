@@ -1,42 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\..\Src\FT_CoPro_Cmds.c">
+    <ClCompile Include="..\..\Src\FT_CoPro_Cmds.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Src\FT_Gpu_Hal.c">
+    <ClCompile Include="..\..\Src\FT_Gpu_Hal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Src\untitled.c">
+    <ClCompile Include="..\..\Src\untitled.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Src\FT_Emulator_main.cpp">
+    <ClCompile Include="..\..\Src\FT_Emulator_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Hdr\FT_CoPro_Cmds.h">
+    <ClInclude Include="..\..\Hdr\FT_CoPro_Cmds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_DataTypes.h">
+    <ClInclude Include="..\..\Hdr\Msvc_Emulator\FT_DataTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\FT_Gpu.h">
+    <ClInclude Include="..\..\Hdr\FT_Gpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\FT_Gpu_Hal.h">
+    <ClInclude Include="..\..\Hdr\FT_Gpu_Hal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\FT_Hal_Utils.h">
+    <ClInclude Include="..\..\Hdr\FT_Hal_Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Platform.h">
+    <ClInclude Include="..\..\Hdr\Msvc_Emulator\FT_Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Emulator.h">
+    <ClInclude Include="..\..\Hdr\Msvc_Emulator\FT_Emulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hdr\Msvc_Emulator\FT_Emulator_main.h">
+    <ClInclude Include="..\..\Hdr\Msvc_Emulator\FT_Emulator_main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

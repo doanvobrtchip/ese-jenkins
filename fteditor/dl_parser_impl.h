@@ -2433,6 +2433,11 @@ void DlParser::toStringVC4
 			case CMD_LOADIMAGE:
 				if (p == 1) paramType = 1;
 				break;
+			case CMD_CSKETCH:
+			case CMD_SKETCH:
+				if (p == 5)
+					paramType = 2;
+				break;
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
 			case CMD_SETBITMAP:
 				if (p == 0) paramType = 4;
