@@ -4,6 +4,14 @@ Please uninstall the latest version if you have one installed on your PC.
 Release Note:
 
 Version 4.3.0
+RC1
+Feature updates:
+•   Improve zoom-in precision
+
+Resolved issues
+•   CMD_SKETCH and CMD_CSKETCH support either L1 or L8, so the other formats are removed
+•   [Export Project] Addressed issue that cannot copy asset to a Test folder
+
 Beta
 Feature updates:
 •   [Export FT8XX] Restructure exported project folder

@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\prerelease.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_2.1.0
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_3.0.0
 
 
 SetupIconFile=.\eve-puzzle-64.ico
