@@ -1429,7 +1429,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addAddress(4, false);
-				addBitmapFormat(5);
+				addBitmapFormatCmdSketch(5);
 				addSpinBox(6, 0, 0xFFFF, "Freq: ", "Edit frequency");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
