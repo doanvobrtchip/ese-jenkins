@@ -20,7 +20,7 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
-InfoBeforeFile=.\prerelease.txt
+InfoBeforeFile=.\TM_Release Notes.txt
 OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_3.0.0
 
 

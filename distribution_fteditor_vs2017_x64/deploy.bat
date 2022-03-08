@@ -34,11 +34,14 @@ xcopy /y %build-dir%\*.exe %setup-dir%
 :: copy icon
 xcopy /y ..\fteditor\icons\eve-puzzle-64.ico %setup-dir%
 
-::copy config
+:: copy config
 xcopy /y ..\fteditor\config.json %setup-dir%
 
+:: copy setup file
 xcopy /y ..\deployment\ese\setup.iss %setup-dir%
-xcopy /y ..\deployment\ese\prerelease.txt %setup-dir%
+
+:: copy release notes file
+xcopy /y "..\deployment\ese\TM_Release Notes.txt" %setup-dir%
 
 :: rename manual file
 xcopy ..\fteditor\Manual\*.pdf %setup-dir%\Manual\
