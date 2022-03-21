@@ -17,14 +17,20 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
 //! ROM size
-#if defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
+#if defined(BT817EMU_MODE)
+#define FT800EMU_ROM_SIZE ((512 + 128) * 1024) // 640 KiB
+#elif defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
 #define FT800EMU_ROM_SIZE (1024 * 1024) // 1024 KiB
 #else
 #define FT800EMU_ROM_SIZE (256 * 1024) // 256 KiB
 #endif
 
 //! ROM index
-#define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE)
+#if defined(FT810EMU_MODE)
+#define FT800EMU_ROM_INDEX (RAM_DL - (1024 * 1024))
+#else
+#define FT800EMU_ROM_INDEX (RAM_DL - (256 * 1024))
+#endif
 
 //! ROM font info address
 #define FT800EMU_ROM_FONTINFO (RAM_DL - 4)
