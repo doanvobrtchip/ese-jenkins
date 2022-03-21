@@ -13,10 +13,6 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 # Find the QtWidgets library
 FIND_PACKAGE(Qt5Widgets)
 
-IF (POLICY CMP0071)
-	CMAKE_POLICY(SET CMP0071 OLD)
-ENDIF ()
-
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
 
