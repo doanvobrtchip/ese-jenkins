@@ -75,7 +75,7 @@ void mcu(BT8XXEMU_Emulator *sender, void *context)
 int main(int, char*[])
 {
 	BT8XXEMU_EmulatorParameters params;
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT880);
 	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
 	params.Main = mcu;
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &params);

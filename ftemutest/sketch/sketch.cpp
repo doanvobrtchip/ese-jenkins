@@ -5,7 +5,7 @@ Copyright (C) 2017  Bridgetek Pte Lte
 Author: Jan Boon <jan@no-break.space>
 */
 
-#include <vc3.h>
+#include <vc2.h>
 #include "../ftemutest.h"
 #include <stdio.h>
 

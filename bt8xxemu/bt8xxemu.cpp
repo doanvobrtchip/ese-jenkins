@@ -39,6 +39,20 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif
 
 // Include BT815EMU
+#ifdef FTEMU_HAVE_BT880EMU
+#undef FT800EMU_EMULATOR_H
+#define FT800EMU BT880EMU
+#define FT810EMU BT880EMU
+#define FT810EMU_MODE
+#define BT880EMU_MODE
+#include "ft800emu_emulator.h"
+#undef FT800EMU
+#undef FT810EMU
+#undef FT810EMU_MODE
+#undef BT880EMU_MODE
+#endif
+
+// Include BT815EMU
 #ifdef FTEMU_HAVE_BT815EMU
 #undef FT800EMU_EMULATOR_H
 #define FT800EMU BT815EMU
@@ -138,6 +152,18 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 		FT810EMU::Emulator *ft810emu = new FT810EMU::Emulator();
 		*emulator = ft810emu;
 		ft810emu->run(*params);
+		break;
+	}
+#endif
+#ifdef FTEMU_HAVE_BT880EMU
+	case BT8XXEMU_EmulatorBT880:
+	case BT8XXEMU_EmulatorBT881:
+	case BT8XXEMU_EmulatorBT882:
+	case BT8XXEMU_EmulatorBT883:
+	{
+		BT880EMU::Emulator *bt810emu = new BT880EMU::Emulator();
+		*emulator = bt810emu;
+		bt810emu->run(*params);
 		break;
 	}
 #endif
