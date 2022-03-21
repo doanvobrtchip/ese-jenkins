@@ -89,6 +89,39 @@ namespace hexrom_conv
 			fso.Dispose();
 		}
 
+		static void ConverOtpHex(string fileName, string fileOut)
+		{
+			FileStream fso = new FileStream(fileOut, FileMode.Create, FileAccess.Write, FileShare.Read);
+			StreamWriter swo = new StreamWriter(fso);
+			int chars = 0;
+			string fileIn = fileName;
+			FileStream fsi = new FileStream(fileIn, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			StreamReader sri = new StreamReader(fsi);
+			while (!sri.EndOfStream)
+			{
+				string line = sri.ReadLine().Trim();
+				if (line.Length == 0) break;
+				if (line.Length != 2) throw new Exception("not a valid line");
+				swo.Write("0x");
+				swo.Write(line);
+				swo.Write(", ");
+				++chars;
+				if (chars >= 16)
+				{
+					swo.WriteLine();
+					chars = 0;
+				}
+			}
+			sri.Close();
+			fsi.Close();
+			sri.Dispose();
+			fsi.Dispose();
+			swo.Close();
+			fso.Close();
+			swo.Dispose();
+			fso.Dispose();
+		}
+
 		static void Main(string[] args)
 		{
 			// ---------------------------------------------------------
@@ -100,6 +133,18 @@ namespace hexrom_conv
 			ConvertRomJ1(
 				@"..\..\..\..\vc2roms\rom_j1boot",
 				@"..\..\..\..\..\ft810emu\resources\crom_ft810.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms\otp_810.hex",
+				@"..\..\..\..\..\ft810emu\resources\otp_810.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms\otp_811.hex",
+				@"..\..\..\..\..\ft810emu\resources\otp_811.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms\otp_812.hex",
+				@"..\..\..\..\..\ft810emu\resources\otp_812.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms\otp_813.hex",
+				@"..\..\..\..\..\ft810emu\resources\otp_813.h");
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
@@ -110,6 +155,12 @@ namespace hexrom_conv
 			ConvertRomJ1(
 				@"..\..\..\..\vc3roms\rom_j1boot",
 				@"..\..\..\..\..\bt815emu\resources\crom_bt815.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc3roms\otp_815.hex",
+				@"..\..\..\..\..\bt815emu\resources\otp_815.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc3roms\otp_816.hex",
+				@"..\..\..\..\..\bt815emu\resources\otp_816.h");
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
@@ -123,6 +174,12 @@ namespace hexrom_conv
 			ConvertRomJ1(
 				@"..\..\..\..\vc4roms\rom_j1boot",
 				@"..\..\..\..\..\bt817emu\resources\crom_bt817.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc4roms\otp_817.hex",
+				@"..\..\..\..\..\bt817emu\resources\otp_817.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc4roms\otp_818.hex",
+				@"..\..\..\..\..\bt817emu\resources\otp_818.h");
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
@@ -136,6 +193,18 @@ namespace hexrom_conv
 			ConvertRomJ1(
 				@"..\..\..\..\vc2roms880\rom_j1boot",
 				@"..\..\..\..\..\bt880emu\resources\crom_bt880.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms880\otp_880.hex",
+				@"..\..\..\..\..\bt880emu\resources\otp_880.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms880\otp_881.hex",
+				@"..\..\..\..\..\bt880emu\resources\otp_881.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms880\otp_882.hex",
+				@"..\..\..\..\..\bt880emu\resources\otp_882.h");
+			ConverOtpHex(
+				@"..\..\..\..\vc2roms880\otp_883.hex",
+				@"..\..\..\..\..\bt880emu\resources\otp_883.h");
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
 			// ---------------------------------------------------------
