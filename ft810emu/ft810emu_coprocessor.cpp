@@ -52,6 +52,10 @@ const uint16_t pgm_rom_bt817[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_bt815.h"
 };
+#elif defined(BT880EMU_MODE)
+const uint16_t pgm_rom_bt880[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt880.h"
+};
 #else
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_ft810.h"
@@ -725,6 +729,8 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 		memcpy(j1boot, pgm_rom_bt817, sizeof(pgm_rom_bt817));
 #elif defined(BT815EMU_MODE)
 		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
+#elif defined(BT880EMU_MODE)
+		memcpy(j1boot, pgm_rom_bt880, sizeof(pgm_rom_bt880));
 #else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
 #endif

@@ -307,10 +307,28 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 #pragma warning(pop)
 	if (mode == 0) mode = BT8XXEMU_EmulatorFT800;
 
-#ifdef FT810EMU_MODE
-	if (mode < BT8XXEMU_EmulatorFT810)
+#if defined(BT817EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT817 || mode > BT8XXEMU_EmulatorBT818)
 	{
-		FTEMU_error("Invalid emulator version selected, this library is built in FT810 mode");
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(BT815EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT815 || mode > BT8XXEMU_EmulatorBT816)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(BT880EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT880 || mode > BT8XXEMU_EmulatorBT883)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(FT810EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorFT810 || mode > BT8XXEMU_EmulatorFT813)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in FT810-FT813 mode");
 		return;
 	}
 #else
