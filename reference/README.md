@@ -11,6 +11,8 @@
 
 ## Processes
 
+Run the hexrom_conv C# project directly from Visual Studio to rebuild all the C headers from the hex roms.
+
 ### rom_mainXX
 
 To convert the rom_mainXX ASCII hex files into a binary
