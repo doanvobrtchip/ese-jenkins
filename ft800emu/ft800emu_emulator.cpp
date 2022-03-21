@@ -174,6 +174,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	FTEMU_message("Wait for Coprocessor");
 	if ((flags & BT8XXEMU_EmulatorEnableCoprocessor) && m_StdThreadCoprocessor.joinable())
 		m_StdThreadCoprocessor.join();
+	m_ThreadCoprocessor.reset();
 
 	if (!m_CloseCalled && m_StdThreadMCU.joinable())
 	{
@@ -194,10 +195,12 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		FTEMU_message("Wait for MCU");
 		m_StdThreadMCU.join();
 	}
+	m_ThreadMCU.reset();
 
 	FTEMU_message("Wait for Audio");
 	if (m_StdThreadAudio.joinable())
 		m_StdThreadAudio.join();
+	m_ThreadAudio.reset();
 
 	FTEMU_message("Threads finished, emulator stopped running");
 
@@ -523,6 +526,7 @@ void Emulator::stop()
 	{
 		m_StdThreadMaster.join();
 	}
+	m_ThreadMaster.reset();
 
 	assert(!m_ThreadMaster.valid());
 	assert(!m_ThreadMCU.valid());

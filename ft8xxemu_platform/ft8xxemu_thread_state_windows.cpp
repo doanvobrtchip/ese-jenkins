@@ -107,8 +107,11 @@ void ThreadState::reset()
 	{
 		SetThreadPriority(m_Handle, THREAD_PRIORITY_NORMAL);
 		SetThreadPriorityBoost(m_Handle, FALSE);
-		CloseHandle(m_Handle);
-		m_Handle = NULL;
+		if (!current())
+		{
+			CloseHandle(m_Handle);
+			m_Handle = NULL;
+		}
 	}
 	m_Id = 0;
 }

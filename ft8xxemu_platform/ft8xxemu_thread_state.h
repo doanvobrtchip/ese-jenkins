@@ -65,9 +65,9 @@ public:
 private:
 #ifdef WIN32
 	HANDLE m_Handle = NULL;
-	DWORD m_Id = 0;
 	HANDLE m_AvHandle = NULL;
 	DWORD m_AvTask = 0;
+	DWORD m_Id = 0;
 #else
 	pthread_t m_PThread = 0;
 #endif
