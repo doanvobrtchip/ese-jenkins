@@ -147,6 +147,10 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT811
 	5, // FT812
 	5, // FT813
+	5, // BT880
+	5, // BT881
+	5, // BT882
+	5, // BT883
 	5, // BT815
 	5, // BT816
 	7, // BT817
