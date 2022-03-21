@@ -1,0 +1,21 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CMD_MEDIAFIFO(983040, 65536)",
+        "CMD_PLAYVIDEO(OPT_FULLSCREEN | OPT_SOUND | OPT_MEDIAFIFO, \"assets/big_bunny.avi\")"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2065
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

@@ -7,7 +7,9 @@
     "External Clock": "false",
     "Flash Model": "w25q128",
     "Flash Size (MB)": "16",
-    "System Clock (MHz)": "72",
+    "PCLK Frequency (MHz)": "72.0",
+    "REG_ADAPTIVE_FRAMERATE": 0,
+    "REG_AH_HCYCLE_MAX": 0,
     "REG_CSPREAD": 0,
     "REG_DITHER": 1,
     "REG_HCYCLE": 1344,
@@ -15,8 +17,10 @@
     "REG_HSIZE": 1024,
     "REG_HSYNC0": 0,
     "REG_HSYNC1": 100,
-    "REG_OUTBITS": 0,
+    "REG_OUTBITS": "8 bits display",
     "REG_PCLK": 1,
+    "REG_PCLK_2X": 0,
+    "REG_PCLK_FREQ": 2241,
     "REG_PCLK_POL": 1,
     "REG_SWIZZLE": 0,
     "REG_VCYCLE": 635,
@@ -24,13 +28,9 @@
     "REG_VSIZE": 600,
     "REG_VSYNC0": 0,
     "REG_VSYNC1": 10,
-    
-    "REG_PCLK_2X": 0,
-    "REG_PCLK_FREQ": 3346,
-    "REG_ADAPTIVE_FRAMERATE": 0,
-    
     "Screen Height": 600,
     "Screen Width": 1024,
+    "System Clock (MHz)": "72",
     "Vendor": "Bridgetek",
     "Version": "1.0"
 }

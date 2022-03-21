@@ -10,7 +10,7 @@ wrongPlatformMessage = 'The project can not be exported to the selected platform
 def displayName():
     return deviceModuleName
 
-def run(name, document, ram):
+def run(name, document, ram, screenResolution):
     device_type = document["project"]["device"]
     if device_type not in supportedPlatforms:
         return wrongPlatformMessage
@@ -20,7 +20,7 @@ def run(name, document, ram):
             exportScriptName = exportScriptPath[0] + exportModuleName + ".py"
             if os.path.exists(exportScriptName):
                 exportScript = imp.load_source(exportModuleName, exportScriptName)
-                return exportScript.run(name, document, ram, deviceModuleName)
+                return exportScript.run(name, document, ram, deviceModuleName, screenResolution)
             else:
                 return missingFileMessage
         else:

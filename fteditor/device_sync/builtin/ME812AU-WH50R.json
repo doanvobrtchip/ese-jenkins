@@ -25,6 +25,7 @@
     "REG_VSYNC1": 3,
     "Screen Height": 480,
     "Screen Width": 800,
+    "System Clock (MHz)": "72",
     "Vendor": "Bridgetek",
     "Version": "1.0"
 }

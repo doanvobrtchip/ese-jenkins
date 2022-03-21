@@ -950,6 +950,15 @@ void loop()
 				useFlash = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_FLASH);
 				useFileStream = useFlash ? NULL : s_CmdStrParamCache[strParamRead].c_str();
+
+				if (useFileStream && cmdList[i] == CMD_INFLATE2) {
+					QString tmp = QString::fromStdString(s_CmdStrParamCache[strParamRead]);
+					if (tmp.endsWith(".bin")) {
+						tmp.replace(tmp.length() - 4, 4, ".raw");
+						useFileStream = tmp.toStdString().c_str();
+					}
+				}
+
 				++strParamRead;
 				useMediaFifo = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) 
 					&& (s_CmdParamCache[(size_t)cmdParamIdx[i] + 1] & OPT_MEDIAFIFO);
@@ -957,6 +966,11 @@ void loop()
 			else if (cmdList[i] == CMD_INFLATE )
 			{
 				useFileStream = s_CmdStrParamCache[strParamRead].c_str();
+				QString tmp = QString::fromStdString(s_CmdStrParamCache[strParamRead]);
+				if (tmp.endsWith(".bin")) {
+					tmp.replace(tmp.length() - 4, 4, ".raw");
+					useFileStream = tmp.toStdString().c_str();
+				}
 				++strParamRead;
 			}
 			else if (cmdList[i] == CMD_MEMWRITE )

@@ -1,0 +1,67 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/please",
+            "imageFormat": 37810,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/please.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_TEXT(15, 437, 29, 0, \"BITMAP_TRANSFORM_A\")",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_5x5_KHR, 160, 195)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(1056, 592)",
+        "END()",
+        "",
+        "",
+        "BEGIN(LINES)",
+        "VERTEX2F(3856, 2850)",
+        "VERTEX2F(5408, 1904)",
+        "VERTEX2F(3856, 2864)",
+        "VERTEX2F(5184, 5440)",
+        "END()",
+        "",
+        "CMD_TEXT(351, 11, 28, 0, \"Double width\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_A(0,128)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 320, 195)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(5600, 592)",
+        "END()",
+        "RESTORE_CONTEXT()",
+        "",
+        "CMD_TEXT(350, 242, 28, 0, \"Half width\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_A(0,512)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 80, 195)",
+        "",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(5600, 4320)",
+        "END()",
+        "RESTORE_CONTEXT()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

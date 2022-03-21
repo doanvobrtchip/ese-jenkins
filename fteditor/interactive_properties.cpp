@@ -694,6 +694,21 @@ void InteractiveProperties::addBitmapFormat(int format)
 	    tr("Format") + ": ", tr("Set bitmap format"));
 }
 
+void InteractiveProperties::addBitmapFormatCmdSketch(int format)
+{
+	static int toEnum[2] = { L1, L8 };
+	static int toIntf[4] = { 0, 0, 0, 1 };
+	static const char * bfString[4] = { "", "L1", "", "L8" };
+
+	addComboBox(format,
+	    toEnum,
+	    2,
+	    toIntf,
+	    bfString,
+	    4,
+	    tr("Format") + ": ", tr("Set bitmap format"));
+}
+
 void InteractiveProperties::addExtFormat(int format)
 {
 	if (!g_ExtFormatIntfNb[FTEDITOR_CURRENT_DEVICE])
@@ -1399,7 +1414,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addAddress(4, false);
-				addBitmapFormat(5);
+				addBitmapFormatCmdSketch(5);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1414,7 +1429,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				addXY(0, 1, FTEDITOR_COORD_MIN, FTEDITOR_COORD_MAX);
 				addWH(2, 3, 0, 1023);
 				addAddress(4, false);
-				addBitmapFormat(5);
+				addBitmapFormatCmdSketch(5);
 				addSpinBox(6, 0, 0xFFFF, "Freq: ", "Edit frequency");
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}

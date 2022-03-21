@@ -1,0 +1,61 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/leaf",
+            "imageFormat": 37810,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/leaf.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(170, 170, 127)",
+        "CLEAR(1, 1, 1)",
+        "CMD_TEXT(21, 433, 29, 0, \"BITMAP_TRANSFORM_F\")",
+        "",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, COMPRESSED_RGBA_ASTC_5x5_KHR, 160, 250)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(996, 944)",
+        "END()",
+        "",
+        "",
+        "",
+        "",
+        "CMD_TEXT(302, 99, 28, 0, \"F = 70\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_F(17920)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 160, 250)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(4836, 2064)",
+        "END()",
+        "RESTORE_CONTEXT()",
+        "",
+        "CMD_TEXT(556, 144, 28, 0, \"F = 120\")",
+        "",
+        "SAVE_CONTEXT()",
+        "BITMAP_TRANSFORM_F(30720)",
+        "BITMAP_SIZE(NEAREST, BORDER, BORDER, 160, 250)",
+        "BEGIN(BITMAPS)",
+        "VERTEX2F(8900, 2832)",
+        "END()",
+        "RESTORE_CONTEXT()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2069
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}

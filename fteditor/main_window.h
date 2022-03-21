@@ -262,6 +262,9 @@ private:
 	bool importDumpFT81X(QDataStream &ds);
 	bool importDumpBT81X(QDataStream &ds);
 
+	QString readLastProjectDir();
+	void writeLastProjectDir(QString dirPath);
+
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 

@@ -5,7 +5,7 @@
 #define str(s)		#s
 
 #define VERSION_MAJOR                           4
-#define VERSION_MINOR                           1
+#define VERSION_MINOR                           3
 #define VERSION_BUILD                           0
 
 #define VER_FILEVERSION           				VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD,0
@@ -14,5 +14,7 @@
 #define VER_PRODUCTVERSION						VERSION_MAJOR.VERSION_MINOR.VERSION_BUILD
 
 #define STR_PRODUCTVERSION						xstr(VERSION_MAJOR) "." xstr(VERSION_MINOR) "." xstr(VERSION_BUILD)
+
+#define STR_VERSION					         	xstr(VERSION_MAJOR) "." xstr(VERSION_MINOR)
 
 #endif // VERSION_H

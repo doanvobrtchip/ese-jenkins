@@ -114,7 +114,7 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName, sc
         elif '\\' in content:
             destinationName = content.rsplit('\\', 1)[1]
         try:
-            shutil.copy(content, destDir + '/' + projectName + '/' + globalValue['assetsFolder'] + '/' + destinationName)
+            shutil.copy(content, destDir + '/' + globalValue['assetsFolder'] + '/' + destinationName)
         except Exception as e:
             raise Exception("Error copying assets to project folder: " + str(e))
 

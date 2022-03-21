@@ -19,16 +19,6 @@ def renameStringInFile(file, oldName, newName):
         resourceFile.truncate()
         resourceFile.write(data)
 
-def copydir(source, dest):
-
-    for root, dirs, files in os.walk(source):
-        if not os.path.isdir(root):
-            os.makedirs(root)
-        for each_file in files:
-            rel_path = root.replace(source, '').lstrip(os.sep)
-            dest_path = os.path.join(dest, rel_path, each_file)
-            shutil.copyfile(os.path.join(root, each_file), dest_path)
-
 def readOnlyDirectory(operation, name, exc):
     os.chmod(name, stat.S_IWRITE)
     return True
@@ -45,9 +35,9 @@ def copydir2(source, dest):
             else:
                 shutil.copy2(s, d)
     except IOError as ioStatus:
-        raise IOError("Unable to generate a complete MSVC project. Try again and make sure the folders and files of the project directory are accessible.. " + str(ioStatus))
+        raise IOError("Unable to generate MSVC project. Try again and make sure the project folder is accessible. " + str(ioStatus))
     except ValueError as valueStatus:
-        raise ValueError("The path of the files in the generated project have exceeded the maximum allowed length for the current platform.  Rename the current project and/or move the project closer to your home directory. " + str(valueStatus))
+        raise ValueError("There are file path exceeded the maximum allowed length for the platform. Rename the current project and/or move the project closer to your home directory. " + str(valueStatus))
     except shutil.Error as exc:
         errors = exc.args[0]
         cpSrc, cpDst, cpMsg = errors[0]
@@ -55,21 +45,13 @@ def copydir2(source, dest):
     except Exception as e:
         raise Exception("Error while generating project. " + str(e))
 
-def constructHostPath(folderNames):
-    fullPath = ""
-    for folder in foldernames:
-        fullPath += folder
-        fullPath += os.path.sep
-    return fullPath
-
-
 def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, moduleName):
-    skeletonProjectDir = destDir + os.path.sep + projectName
-    MSVCSolutionName = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "Msvc_win32" + os.path.sep + projectName + os.path.sep + projectName
-    EmulatorSolutionName = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "Msvc_Emulator" + os.path.sep + projectName + os.path.sep + projectName
-    MSVCPlatformHeader = skeletonProjectDir + os.path.sep + "Hdr" + os.path.sep + "Msvc_win32" + os.path.sep + "FT_Platform.h"
-    EmulatorPlatformHeader = skeletonProjectDir + os.path.sep + "Hdr" + os.path.sep + "Msvc_Emulator" + os.path.sep + "FT_Platform.h"
-    Ft90xPlatformHeader = skeletonProjectDir + os.path.sep + "Hdr" + os.path.sep + "FT90x" + os.path.sep + "FT_Platform.h"
+    skeletonProjectDir = destDir
+    MSVCSolutionName = f'{skeletonProjectDir}/Project/Msvc_win32/{projectName}'
+    EmulatorSolutionName = f'{skeletonProjectDir}/Project/Msvc_Emulator/{projectName}'
+    MSVCPlatformHeader = f'{skeletonProjectDir}/Hdr/Msvc_win32/FT_Platform.h'
+    EmulatorPlatformHeader = f'{skeletonProjectDir}/Hdr/Msvc_Emulator/FT_Platform.h'
+    Ft90xPlatformHeader = f'{skeletonProjectDir}/Hdr/FT90x/FT_Platform.h'
 
     MSVCSolution = MSVCSolutionName + ".sln"
     MSVCProject = MSVCSolutionName + ".vcxproj"
@@ -79,10 +61,8 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
     EmulatorProject = EmulatorSolutionName + ".vcxproj"
     EmulatorFilter = EmulatorSolutionName + ".vcxproj.filters"
 
-    Ft90xCProject = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "FT90x" + os.path.sep + projectName + os.path.sep + ".cproject"
-    Ft90xProject = skeletonProjectDir + os.path.sep + "Project" + os.path.sep + "FT90x" + os.path.sep + projectName + os.path.sep + ".project"
-
-
+    Ft90xCProject = f'{skeletonProjectDir}/Project/FT90x/.cproject'
+    Ft90xProject = f'{skeletonProjectDir}/Project/FT90x/.project'
 
     defaultSkeletonProjectDir = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + globalValue['skeletonProjectName']
     if os.path.isdir(defaultSkeletonProjectDir):
@@ -91,19 +71,15 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
         raise Exception("Required program files are missing.")
 
     try:
-        shutil.copy(srcFile, skeletonProjectDir + os.path.sep + "Src" + os.path.sep + projectName + ".c") #copy source file
+        shutil.copy(srcFile, f'{skeletonProjectDir}/Src/{projectName}.c') #copy source file
         #rename Msvc_win32 project files
-        os.rename(skeletonProjectDir + "/Project/Msvc_win32/untitled", skeletonProjectDir + "/Project/Msvc_win32/" + projectName)
-        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.sln", MSVCSolution) #rename project solution
-        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj", MSVCProject) #rename project
-        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + projectName + "/untitled.vcxproj.filters", MSVCFilter) #rename project filter
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + "/untitled.sln", MSVCSolution) #rename project solution
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + "/untitled.vcxproj", MSVCProject) #rename project
+        os.rename(skeletonProjectDir + "/Project/Msvc_win32/" + "/untitled.vcxproj.filters", MSVCFilter) #rename project filter
         #rename MSVC_Emulator project files
-        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/untitled", skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName)
-        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.sln", EmulatorSolution) #rename project solution
-        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj", EmulatorProject) #rename project
-        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + projectName + "/untitled.vcxproj.filters", EmulatorFilter) #rename project filter
-        #rename FT90x project files
-        os.rename(skeletonProjectDir + "/Project/FT90x/untitled", skeletonProjectDir + "/Project/FT90x/" + projectName)
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + "/untitled.sln", EmulatorSolution) #rename project solution
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + "/untitled.vcxproj", EmulatorProject) #rename project
+        os.rename(skeletonProjectDir + "/Project/Msvc_Emulator/" + "/untitled.vcxproj.filters", EmulatorFilter) #rename project filter
         #rename MSVC project files
         renameStringInFile(MSVCSolution, globalValue['skeletonProjectName'], projectName)
         renameStringInFile(MSVCProject, globalValue['skeletonProjectName'], projectName)
@@ -228,7 +204,7 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
             destinationName = content.rsplit('\\', 1)[1]
         #raise Exception(content)
         try:
-            shutil.copy(content, destDir + os.path.sep + projectName + os.path.sep + globalValue['assetsFolder'] + os.path.sep + destinationName)
+            shutil.copy(content, f'{destDir}/{globalValue["assetsFolder"]}/{destinationName}')
         except Exception as e:
             raise Exception("Error copying assets to project folder: " + str(e))
 
@@ -1508,7 +1484,7 @@ def run(name, document, ram, moduleName):
                         specialParameter = functionArgsSplit[2]
                     specialParameter2 = specialParameter
                     filesToTestFolder.append(functionArgsSplit[2])
-                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialParameter = "../../Test/" + specialParameter
                     specialCommandType = "Ft_Gpu_CoCmd_LoadImage"
                     functionName = ""
 
@@ -1543,7 +1519,7 @@ def run(name, document, ram, moduleName):
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, CMD_PLAYVIDEO);\n")
                     f.write("\tFt_Gpu_Hal_WrCmd32(phost, " + functionArgsSplit[0] + ");\n")
                     specialParameter2 = specialParameter
-                    specialParameter = "..\\\\..\\\\..\\\\Test\\\\" + specialParameter
+                    specialParameter = "../../Test/" + specialParameter
                     specialCommandType = "Ft_Gpu_CoCmd_PlayVideo"
                     functionName = ""
 
