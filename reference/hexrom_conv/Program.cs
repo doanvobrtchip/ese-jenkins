@@ -56,22 +56,89 @@ namespace hexrom_conv
 			fso.Dispose();
 		}
 
+		static void ConvertRomJ1(string fileName, string fileOut)
+		{
+			FileStream fso = new FileStream(fileOut, FileMode.Create, FileAccess.Write, FileShare.Read);
+			StreamWriter swo = new StreamWriter(fso);
+			int chars = 0;
+			string fileIn = fileName;
+			FileStream fsi = new FileStream(fileIn, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			StreamReader sri = new StreamReader(fsi);
+			while (!sri.EndOfStream)
+			{
+				string line = sri.ReadLine().Trim();
+				if (line.Length == 0) break;
+				if (line.Length != 4) throw new Exception("not a valid line");
+				swo.Write("0x");
+				swo.Write(line);
+				swo.Write(", ");
+				++chars;
+				if (chars >= 8)
+				{
+					swo.WriteLine();
+					chars = 0;
+				}
+			}
+			sri.Close();
+			fsi.Close();
+			sri.Dispose();
+			fsi.Dispose();
+			swo.Close();
+			fso.Close();
+			swo.Dispose();
+			fso.Dispose();
+		}
+
 		static void Main(string[] args)
 		{
-			// FT81X
+			// ---------------------------------------------------------
+			// FT81X ---------------------------------------------------
+			// ---------------------------------------------------------
 			ConvertRomMain16(
 				@"..\..\..\..\vc2roms\rom_main",
 				@"..\..\..\..\..\ft810emu\resources\rom_ft810.h");
+			ConvertRomJ1(
+				@"..\..\..\..\vc2roms\rom_j1boot",
+				@"..\..\..\..\..\ft810emu\resources\crom_ft810.h");
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
 
-			// BT817/8
+			// ---------------------------------------------------------
+			// BT815 ---------------------------------------------------
+			// ---------------------------------------------------------
+			ConvertRomJ1(
+				@"..\..\..\..\vc3roms\rom_j1boot",
+				@"..\..\..\..\..\bt815emu\resources\crom_bt815.h");
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
+
+			// ---------------------------------------------------------
+			// BT817/8 -------------------------------------------------
+			// ---------------------------------------------------------
 			ConvertRomMain16(
 				@"..\..\..\..\vc4roms\rom_main",
 				@"..\..\..\..\..\bt817emu\resources\rom_bt817.h");
+			ConvertRomJ1(
+				@"..\..\..\..\vc4roms\rom_j1boot",
+				@"..\..\..\..\..\bt817emu\resources\crom_bt817.h");
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
 
-			// BT88X
+			// ---------------------------------------------------------
+			// BT88X ---------------------------------------------------
+			// ---------------------------------------------------------
 			ConvertRomMain16(
 				@"..\..\..\..\vc2roms880\rom_main",
 				@"..\..\..\..\..\bt880emu\resources\rom_bt880.h");
+			ConvertRomJ1(
+				@"..\..\..\..\vc2roms880\rom_j1boot",
+				@"..\..\..\..\..\bt880emu\resources\crom_bt880.h");
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
+			// ---------------------------------------------------------
 		}
 	}
 }
