@@ -116,6 +116,35 @@ int main(int argc, char *argv[])
 								mode = BT8XXEMU_EmulatorBT816;
 								g_Device = "bt816";
 								break;
+							case '7':
+								mode = BT8XXEMU_EmulatorBT817;
+								g_Device = "bt817";
+								break;
+							case '8':
+								mode = BT8XXEMU_EmulatorBT818;
+								g_Device = "bt818";
+								break;
+							}
+							break;
+						case '8':
+							switch (argv[i][5])
+							{
+							case '0':
+								mode = BT8XXEMU_EmulatorBT880;
+								g_Device = "bt880";
+								break;
+							case '1':
+								mode = BT8XXEMU_EmulatorBT881;
+								g_Device = "bt881";
+								break;
+							case '2':
+								mode = BT8XXEMU_EmulatorBT882;
+								g_Device = "bt882";
+								break;
+							case '3':
+								mode = BT8XXEMU_EmulatorBT883;
+								g_Device = "bt883";
+								break;
 							}
 							break;
 						}
