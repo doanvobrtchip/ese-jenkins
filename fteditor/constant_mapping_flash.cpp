@@ -78,6 +78,10 @@ const wchar_t **g_FlashFirmware[FTEDITOR_DEVICE_NB] = {
 	g_FlashFirmwareBT815,
 	g_FlashFirmwareBT815,
 	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
+	g_FlashFirmwareBT815,
 	g_FlashFirmwareBT817,
 	g_FlashFirmwareBT817,
 };

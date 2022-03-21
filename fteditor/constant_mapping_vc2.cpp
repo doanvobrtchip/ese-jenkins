@@ -23,6 +23,15 @@ const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_CMD,
 };
 
+const int32_t g_AddrVC2_880[FTEDITOR_RAM_NB] = {
+	RAM_G,
+	256 * 1024,
+	RAM_DL,
+	-1,
+	RAM_REG,
+	RAM_CMD,
+};
+
 const char *g_AddrToStringVC2[FTEDITOR_RAM_NB] = {
 	"RAM_G",
 	"",

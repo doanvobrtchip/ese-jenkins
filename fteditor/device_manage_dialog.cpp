@@ -260,6 +260,8 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 			cdi.EVE_Type = FTEDITOR_FT800;
 		else if (jo["EVE Type"].toString() == "FT81X")
 			cdi.EVE_Type = FTEDITOR_FT810;
+		else if (jo["EVE Type"].toString() == "BT88X")
+			cdi.EVE_Type = FTEDITOR_BT880;
 		else if (jo["EVE Type"].toString() == "BT815_816")
 			cdi.EVE_Type = FTEDITOR_BT815;
 		else

@@ -22,17 +22,34 @@ namespace FTEDITOR {
 // ToString functions will return "" on invalid input. Simply check (result[0] == '\0') to find out if the result is invalid
 
 // Interface indices for Device
-#define FTEDITOR_FT800 0
-#define FTEDITOR_FT801 1
-#define FTEDITOR_FT810 2
-#define FTEDITOR_FT811 3
-#define FTEDITOR_FT812 4
-#define FTEDITOR_FT813 5
-#define FTEDITOR_BT815 6
-#define FTEDITOR_BT816 7
-#define FTEDITOR_BT817 8
-#define FTEDITOR_BT818 9
-#define FTEDITOR_DEVICE_NB 10
+enum DeviceIdx
+{
+	// FT80x
+	FTEDITOR_FT800,
+	FTEDITOR_FT801,
+
+	// FT81x (bigger display, hardware JPG)
+	FTEDITOR_FT810,
+	FTEDITOR_FT811,
+	FTEDITOR_FT812,
+	FTEDITOR_FT813,
+
+	// BT81x (FT81x with less RAM_G and ROM)
+	FTEDITOR_BT880,
+	FTEDITOR_BT881,
+	FTEDITOR_BT882,
+	FTEDITOR_BT883,
+
+	// BT815/BT816 (ASTC and flash)
+	FTEDITOR_BT815,
+	FTEDITOR_BT816,
+
+	// BT817/BT816
+	FTEDITOR_BT817,
+	FTEDITOR_BT818,
+
+	FTEDITOR_DEVICE_NB
+};
 extern const BT8XXEMU_EmulatorMode g_DeviceToEnum[FTEDITOR_DEVICE_NB];
 inline BT8XXEMU_EmulatorMode deviceToEnum(int deviceIntf) { return g_DeviceToEnum[deviceIntf % FTEDITOR_DEVICE_NB]; }
 extern const int g_DeviceToIntf[256];
