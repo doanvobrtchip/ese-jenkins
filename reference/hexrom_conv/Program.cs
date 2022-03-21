@@ -122,6 +122,38 @@ namespace hexrom_conv
 			fso.Dispose();
 		}
 
+		static void ConvertRomBin(string fileName, string fileOut)
+		{
+			FileStream fso = new FileStream(fileOut, FileMode.Create, FileAccess.Write, FileShare.Read);
+			StreamWriter swo = new StreamWriter(fso);
+			int chars = 0;
+			string fileIn = fileName;
+			FileStream fsi = new FileStream(fileIn, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			while (fsi.Position < fsi.Length)
+			{
+				// string line = // sri.ReadLine().Trim();
+				// if (line.Length == 0) break;
+				// if (line.Length != 4) throw new Exception("not a valid line");
+				char c = (char)fsi.ReadByte();
+				string hex = Convert.ToString(c, 16).PadLeft(2, '0');
+				swo.Write("0x");
+				swo.Write(hex);
+				swo.Write(", ");
+				++chars;
+				if (chars >= 16)
+				{
+					swo.WriteLine();
+					chars = 0;
+				}
+			}
+			fsi.Close();
+			fsi.Dispose();
+			swo.Close();
+			fso.Close();
+			swo.Dispose();
+			fso.Dispose();
+		}
+
 		static void Main(string[] args)
 		{
 			// ---------------------------------------------------------
@@ -152,6 +184,9 @@ namespace hexrom_conv
 			// ---------------------------------------------------------
 			// BT815 ---------------------------------------------------
 			// ---------------------------------------------------------
+			ConvertRomBin(
+				@"..\..\..\..\vc3roms\mainrom.bin",
+				@"..\..\..\..\..\bt815emu\resources\rom_bt815.h");
 			ConvertRomJ1(
 				@"..\..\..\..\vc3roms\rom_j1boot",
 				@"..\..\..\..\..\bt815emu\resources\crom_bt815.h");
