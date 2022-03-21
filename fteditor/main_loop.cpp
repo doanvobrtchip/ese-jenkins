@@ -904,6 +904,7 @@ void loop()
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
 			// if (lastCmd == CMD_TESTCARD) break; // Make CMD_TESTCARD show
+			if (lastCmd == CMD_SPINNER) break;
 			bool useMediaFifo = false;
 			bool useFlash = false;
 			const char *useFileStream = NULL;
@@ -1576,9 +1577,9 @@ void loop()
 
 		if (validCmd)
 		{
-			if (lastCmd != CMD_TESTCARD)
+			if (lastCmd != CMD_TESTCARD && lastCmd != CMD_SPINNER)
 			{
-			 	// Testcard already swaps
+			 	// Testcard and spinner already swaps
 				swr32(DISPLAY());
 				swr32(CMD_SWAP);
 			 	wp += 8;
