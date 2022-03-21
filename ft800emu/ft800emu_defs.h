@@ -13,13 +13,6 @@ Copyright (C) 2017  Bridgetek Pte Lte
 //! Display list size
 #define FT800EMU_DISPLAY_LIST_SIZE 2048
 
-//! ROM font info address
-#if defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
-#define FT800EMU_ROM_FONTINFO 0x2FFFFC // (RAM_DL - 4)
-#else
-#define FT800EMU_ROM_FONTINFO 0xFFFFC // (RAM_DL - 4)
-#endif
-
 //! RAM address space (total, not RAM_G)
 #define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
@@ -31,17 +24,16 @@ Copyright (C) 2017  Bridgetek Pte Lte
 #endif
 
 //! ROM index
-#define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE) //(RAM_DL - FT800EMU_ROM_SIZE)
+#define FT800EMU_ROM_INDEX (RAM_DL - FT800EMU_ROM_SIZE)
+
+//! ROM font info address
+#define FT800EMU_ROM_FONTINFO (RAM_DL - 4)
 
 //! OTP size
-#if defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
 #define FT800EMU_OTP_SIZE (2048)
-#else
-#define FT800EMU_OTP_SIZE (2048)
-#endif
 
 //! RAM_G addressing mask
-#if defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
+#if defined(FT810EMU_MODE)
 #define FT800EMU_ADDR_MASK (0x3FFFFF)
 #else
 #define FT800EMU_ADDR_MASK (0xFFFFF)
