@@ -177,7 +177,7 @@ extern "C" {
 #endif
 #endif
 
-/* Scope */
+/* Custom scope keyword (to avoid tripping the auto-formatter on scopes) */
 #ifndef eve_scope
 #define eve_scope if (true)
 #endif
