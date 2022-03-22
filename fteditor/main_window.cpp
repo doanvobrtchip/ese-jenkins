@@ -1,5 +1,6 @@
 /*
-Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -1322,6 +1323,19 @@ void MainWindow::createDockWindows()
 	}
 #endif /* FT800_DEVICE_MANAGER */
 
+	// Coprocessor busy
+	{
+		m_CoprocessorBusy = new QLabel(statusBar());
+		QMovie *movie = new QMovie(":/icons/loader.gif");
+		m_CoprocessorBusy->setMovie(movie);
+		movie->start();
+		statusBar()->addPermanentWidget(m_CoprocessorBusy);
+
+		QLabel *label = new QLabel(statusBar());
+		label->setText("  ");
+		statusBar()->addPermanentWidget(label);
+	}
+
 	// pixel color (RGBA)
 	{
 		m_PixelColor = new QLabel(statusBar());
@@ -1343,19 +1357,6 @@ void MainWindow::createDockWindows()
 		line->setFrameShape(QFrame::HLine);
 		line->setFrameShadow(QFrame::Sunken);
 		statusBar()->addPermanentWidget(line);*/
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
-	}
-
-	// Coprocessor busy
-	{
-		m_CoprocessorBusy = new QLabel(statusBar());
-		QMovie *movie = new QMovie(":/icons/loader.gif");
-		m_CoprocessorBusy->setMovie(movie);
-		movie->start();
-		statusBar()->addPermanentWidget(m_CoprocessorBusy);
 
 		QLabel *label = new QLabel(statusBar());
 		label->setText("  ");
