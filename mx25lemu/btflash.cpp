@@ -336,7 +336,7 @@ public:
 		m_WriteProtect = false;
 
 		const wchar_t *const dataFilePath = params->DataFilePath[0] ? params->DataFilePath : NULL;
-		const size_t sizeBytes = (params->SizeBytes + 65535) & (~(size_t)0xFFFF);
+		const ptrdiff_t sizeBytes = (ptrdiff_t)(((size_t)params->SizeBytes + 65535) & (~(size_t)0xFFFF));
 		// TODO: Always round up size to power-of-2
 
 		if (dataFilePath)
@@ -413,7 +413,7 @@ public:
 					
 						Data = new uint8_t[sizeBytes];
 						Size = sizeBytes;
-						size_t copySize = std::min((size_t)fileSize, sizeBytes);
+						size_t copySize = std::min(fileSize, sizeBytes);
 						FILE *f = _wfopen(dataFilePath, L"rb");
 						if (!f) log(BT8XXEMU_LogError, "Failed to open flash data file");
 						else

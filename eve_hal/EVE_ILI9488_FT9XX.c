@@ -211,7 +211,11 @@ uint32_t ILI9488_SPI_ReadRDDST(uint8_t cmd)
  */
 void EVE_ILI9488_bootup()
 {
-
+#ifdef FT900_PLATFORM
+#define pad_pwd          pad_gpio43
+#elif defined(FT93X_PLATFORM)
+#define pad_pwd          pad_gpio15
+#endif
 	/* ILI9488 driver - configure pins for bit bang */
 	gpio_function(GPIO_SPIM_CLK, pad_spim_sck);
 	gpio_function(GPIO_SPIM_SS0, pad_spim_ss0);
@@ -220,17 +224,17 @@ void EVE_ILI9488_bootup()
 	gpio_function(GPIO_ILI9488_DCX, pad_ili9488_dcx);
 	gpio_function(GPIO_ILI9488_CS1, pad_ili9488_cs1);
 
-	gpio_function(GPIO_PWD, pad_pwd);
+	gpio_function(GPIO_FT800_PWD, pad_pwd);
 
 	gpio_dir(GPIO_ILI9488_DCX, pad_dir_output); //gpios for ili9488 - dcx
 	gpio_dir(GPIO_ILI9488_CS1, pad_dir_output); //gpios for ili9488 - cs1#
 
-	gpio_dir(GPIO_PWD, pad_dir_output); //gpios for ili9488 - pwd#
+	gpio_dir(GPIO_FT800_PWD, pad_dir_output); //gpios for ili9488 - pwd#
 
 	gpio_write(GPIO_ILI9488_DCX, 1);
 	gpio_write(GPIO_SPIM_SS0, 1);
 	gpio_write(GPIO_ILI9488_CS1, 1);
-	gpio_write(GPIO_PWD, 1);
+	gpio_write(GPIO_FT800_PWD, 1);
 
 	/* Enable the SPI Master device... */
 

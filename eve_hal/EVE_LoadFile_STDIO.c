@@ -31,7 +31,7 @@
 
 #include "EVE_LoadFile.h"
 #include "EVE_Platform.h"
-#if !defined(FT9XX_PLATFORM)
+#if !defined(FT9XX_PLATFORM) && !defined(RP2040_PLATFORM)
 
 #include <stdio.h>
 
@@ -431,7 +431,6 @@ EVE_HAL_EXPORT bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *fi
 	else if (remaining)
 	{
 		phost->LoadFileRemaining = remaining; /* Save remaining */
-		fclose(afile);
 	}
 	else
 	{

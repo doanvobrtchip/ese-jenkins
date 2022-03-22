@@ -33,7 +33,7 @@
 #include "EVE_Platform.h"
 #if defined(FT4222_PLATFORM)
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 #define EVE_HalImpl_initialize EVE_HalImpl_FT4222_initialize
 #define EVE_HalImpl_release EVE_HalImpl_FT4222_release
 #define EVE_Hal_list EVE_Hal_FT4222_list
@@ -57,6 +57,7 @@
 #define EVE_Hal_powerCycle EVE_Hal_FT4222_powerCycle
 #define EVE_UtilImpl_bootupDisplayGpio EVE_UtilImpl_FT4222_bootupDisplayGpio
 #define EVE_Hal_setSPI EVE_Hal_FT4222_setSPI
+#define EVE_Hal_restoreSPI EVE_Hal_FT4222_restoreSPI
 #endif
 
 #define FT4222_TRANSFER_SIZE_MAX (0xFFFF)
@@ -335,7 +336,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 
 	phost->SpiHandle = phost->GpioHandle = NULL;
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
@@ -586,7 +587,7 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	FT4222_STATUS status;
 
@@ -649,7 +650,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
 		{
 			status = FT4222_SPIMaster_MultiReadWrite(
 			    phost->SpiHandle,
-			    buffer,
+			    (uint8 *)buffer,
 			    hrdpkt,
 			    0,
 			    3 + phost->SpiDummyBytes, /* 3 addr + dummy bytes */
@@ -692,7 +693,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline bool wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	FT4222_STATUS status;
 
@@ -826,7 +827,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 	if (!EVE_Hal_supportCmdB(phost) && addr == REG_CMD_WRITE && rw == EVE_TRANSFER_WRITE)
 	{
 		/* Bypass fifo write pointer write */
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		phost->SpiWpWriting = true;
 #else
 		eve_assert(false);
@@ -866,7 +867,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 		flush(phost);
 	}
 
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		phost->SpiWpWriting = false;
@@ -890,7 +891,7 @@ static bool flush(EVE_HalContext *phost)
 		res = wrBuffer(phost, NULL, 0);
 	}
 	eve_assert(!phost->SpiWrBufIndex);
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		if (phost->SpiWpWritten)
@@ -929,7 +930,7 @@ void EVE_Hal_flush(EVE_HalContext *phost)
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -959,7 +960,7 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 	uint8_t buffer[2];
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		if (phost->SpiWpWriting)
@@ -997,7 +998,7 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 	uint8_t buffer[4];
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -1031,13 +1032,13 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -1068,13 +1069,13 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uin
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -1120,7 +1121,7 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 	}
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -1391,6 +1392,15 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 
 	/* Switch FT4222 to multi channel SPI mode */
 	setSPI(phost, numchnls, numdummy);
+}
+
+void EVE_Hal_restoreSPI(EVE_HalContext *phost)
+{
+	flush(phost);
+	if (EVE_CHIPID < EVE_FT810)
+		return;
+
+	setSPI(phost, phost->SpiChannels, phost->SpiDummyBytes);
 }
 
 /*********

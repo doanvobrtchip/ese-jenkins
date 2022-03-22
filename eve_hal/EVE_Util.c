@@ -52,6 +52,7 @@ static const uint16_t s_DisplayResolutions[EVE_DISPLAY_NB][4] = {
 	{ 480, 272, 60, 0 }, /* EVE_DISPLAY_WQVGA_480x272_60Hz */
 	{ 800, 480, 60, 0 }, /* EVE_DISPLAY_WVGA_800x480_60Hz */
 	{ 1024, 600, 83, 0 }, /* EVE_DISPLAY_WSVGA_1024x600_83Hz */
+	{ 1280, 720, 58, 0 }, /* EVE_DISPLAY_HDTV_1280x720_58Hz */
 	{ 1280, 800, 65, 0 }, /* EVE_DISPLAY_WXGA_1280x800_65Hz */
 
 	/* Portrait */
@@ -59,7 +60,7 @@ static const uint16_t s_DisplayResolutions[EVE_DISPLAY_NB][4] = {
 
 };
 
-#if defined(_WIN32) || defined(EVE_MULTI_TARGET)
+#if defined(_WIN32) || defined(EVE_MULTI_GRAPHICS_TARGET)
 
 /* Interactive display selection */
 static const char *s_DisplayNames[EVE_DISPLAY_NB] = {
@@ -69,6 +70,7 @@ static const char *s_DisplayNames[EVE_DISPLAY_NB] = {
 	"WQVGA 480x272 60Hz",
 	"WVGA 800x480 60Hz",
 	"WSVGA 1024x600 83Hz",
+	"HDTV 1280x720 58Hz",
 	"WXGA 1280x800 65Hz",
 
 	"HVGA 320x480 60Hz",
@@ -86,10 +88,10 @@ static const char *s_HostDisplayNames[EVE_HOST_NB] = {
 	"BT8XX Emulator",
 	"FT4222",
 	"MPSSE",
-	"FT9XX",
+	"Embedded",
 };
 
-#define EVE_SELECT_CHIP_NB 10
+#define EVE_SELECT_CHIP_NB 14
 
 /* Interactive emulator chip selection */
 static const char *s_SelectChipName[EVE_SELECT_CHIP_NB] = {
@@ -99,6 +101,10 @@ static const char *s_SelectChipName[EVE_SELECT_CHIP_NB] = {
 	"FT811",
 	"FT812",
 	"FT813",
+	"BT880",
+	"BT881",
+	"BT882",
+	"BT883",
 	"BT815",
 	"BT816",
 	"BT817",
@@ -112,6 +118,10 @@ static EVE_CHIPID_T s_SelectChipId[EVE_SELECT_CHIP_NB] = {
 	EVE_FT811,
 	EVE_FT812,
 	EVE_FT813,
+	EVE_BT880,
+	EVE_BT881,
+	EVE_BT882,
+	EVE_BT883,
 	EVE_BT815,
 	EVE_BT816,
 	EVE_BT817,
@@ -121,8 +131,8 @@ static EVE_CHIPID_T s_SelectChipId[EVE_SELECT_CHIP_NB] = {
 #endif
 
 /* VERIFY: Can the emulator handle this? */
-#if (!defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_TARGET)) \
-    && ((EVE_SUPPORT_CHIPID == EVE_FT811) || (EVE_SUPPORT_CHIPID == EVE_FT813) || defined(EVE_MULTI_TARGET))
+#if (!defined(BT8XXEMU_PLATFORM) || defined(EVE_MULTI_PLATFORM_TARGET)) \
+    && ((EVE_SUPPORT_CHIPID == EVE_FT811) || (EVE_SUPPORT_CHIPID == EVE_FT813) || defined(EVE_MULTI_GRAPHICS_TARGET))
 #define TOUCH_DATA_LEN 1172
 static eve_progmem_const uint8_t c_TouchDataU8[TOUCH_DATA_LEN] = {
 	26, 255, 255, 255, 32, 32, 48, 0, 4, 0, 0, 0, 2, 0, 0, 0, 34,
@@ -248,7 +258,7 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 
 	memset(bootup, 0, sizeof(EVE_BootupParameters));
 
-#if !defined(ME810A_HV35R) && !defined(ME812A_WH50R) && !defined(ME813A_WH50C)
+#if !defined(EVE_USE_INTERNAL_OSC)
 	/* Board without external oscillator will not work when ExternalOsc is enabled */
 	bootup->ExternalOsc = true;
 #endif
@@ -285,7 +295,7 @@ EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupPar
 #endif
 
 #if (EVE_SUPPORT_CHIPID >= EVE_FT810)
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 	if (EVE_HOST == EVE_HOST_FT4222)
 	{
 		bootup->SpiChannels = EVE_SPI_QUAD_CHANNEL;
@@ -470,13 +480,26 @@ static bool configDefaultsEx(EVE_HalContext *phost, EVE_ConfigParameters *config
 	eve_assert(config->VCycle > config->Height);
 	eve_assert((config->VCycle - config->Height) > config->VOffset);
 
+#if (EVE_SUPPORT_CHIPID > EVE_BT815)
+	config->AdaptiveFrameRate = 0;
+#endif
+
+#if (EVE_SUPPORT_CHIPID > EVE_BT817)
+	config->AhHCycleMax = 0;
+	config->PCLK2X = 0;
+#endif
+
 	/* Other options */
 	/* Toggle CSpread if you see red and blue fringing on black and white edges */
 	config->CSpread = 0; /* non-default */
 	/* Change this if RGB colors are swapped */
 	config->Swizzle = 0;
 
-	if (EVE_CHIPID >= EVE_FT812)
+	if (EVE_CHIPID == EVE_FT812
+		|| EVE_CHIPID == EVE_FT813
+		|| EVE_CHIPID == EVE_BT882
+		|| EVE_CHIPID == EVE_BT883
+		|| EVE_CHIPID >= EVE_BT815)
 	{
 		config->Dither = 0;
 		config->OutBitsR = 8;
@@ -523,6 +546,8 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 		display = EVE_DISPLAY_WVGA_800x480_60Hz;
 #elif defined(DISPLAY_RESOLUTION_WSVGA)
 		display = EVE_DISPLAY_WSVGA_1024x600_83Hz;
+#elif defined(DISPLAY_RESOLUTION_HDTV)
+		display = EVE_DISPLAY_HDTV_1280x720_58Hz;
 #elif defined(DISPLAY_RESOLUTION_WXGA)
 		display = EVE_DISPLAY_WXGA_1280x800_65Hz;
 #elif defined(DISPLAY_RESOLUTION_HVGA_PORTRAIT)
@@ -546,7 +571,34 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 	supportedResolution = configDefaultsEx(phost, config, width, height, refreshRate, hsfWidth, freq);
 
 	/* Known values for specific display models */
-	if (display == EVE_DISPLAY_WQVGA_480x272_60Hz && freq == 48000000)
+	if (display == EVE_DISPLAY_QVGA_320x240_50Hz && freq == 48000000)
+	{
+		/*
+		FT800 known values:
+		Resolution: 320x240
+		*/
+#if EVE_HARDCODED_DISPLAY_TIMINGS
+		if (supportedResolution)
+		{
+			config->Width = 320;
+			config->Height = 240;
+			config->HCycle = 408;
+			config->HOffset = 70;
+			config->HSync0 = 0;
+			config->HSync1 = 10;
+			config->VCycle = 263;
+			config->VOffset = 13;
+			config->VSync0 = 0;
+			config->VSync1 = 2;
+			config->PCLK = 8;
+		}
+#endif
+		config->Swizzle = 2;
+		config->PCLKPol = 0;
+		config->CSpread = 1;
+		config->Dither = 1;
+	}
+	else if (display == EVE_DISPLAY_WQVGA_480x272_60Hz && freq == 48000000)
 	{
 		/*
 		FT800 known values:
@@ -575,6 +627,63 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 		}
 #endif
 	}
+	else if (display == EVE_DISPLAY_WVGA_800x480_60Hz && freq == 72000000)
+	{
+		/*
+		BT81X known values:
+		Display: MTF070TN83-V1
+		REG_FREQUENCY: 72MHz
+		Resolution: 800x480
+		Refresh rate: TBD
+		*/
+#if EVE_HARDCODED_DISPLAY_TIMINGS
+		if (supportedResolution)
+		{
+			config->Width = 800;
+			config->Height = 480;
+			config->HCycle = 928;
+			config->HOffset = 88;
+			config->HSync0 = 0;
+			config->HSync1 = 48;
+			config->VCycle = 525;
+			config->VOffset = 32;
+			config->VSync0 = 0;
+			config->VSync1 = 3;
+			config->PCLK = 2;
+		}
+#endif
+	}
+	else if (display == EVE_DISPLAY_HDTV_1280x720_58Hz && freq == 72000000)
+	{
+		/*
+		BT815 known values:
+		REG_FREQUENCY: 72MHz
+		Resolution: 1280x720
+		Refresh rate: 58Hz
+		*/
+#if EVE_HARDCODED_DISPLAY_TIMINGS
+		if (supportedResolution)
+		{
+			config->Width = 1280;
+			config->Height = 720;
+			config->HCycle = 1650;
+			config->HOffset = 40 + 220;
+			config->HSync0 = 0;
+			config->HSync1 = 40;
+			config->VCycle = 750;
+			config->VOffset = 5 + 20;
+			config->VSync0 = 0;
+			config->VSync1 = 5;
+			config->PCLK = 1;
+		}
+#endif
+		config->CSpread = 0;
+		config->Dither = 0;
+		config->PCLKPol = 0;
+		config->OutBitsR = 0;
+		config->OutBitsG = 0;
+		config->OutBitsB = 0;
+	}
 	else if (display == EVE_DISPLAY_WXGA_1280x800_65Hz && freq == 72000000)
 	{
 		/*
@@ -600,9 +709,6 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 			config->PCLKFreq = 0x8B1;
 		}
 #endif
-
-		config->PCLK_2X = 0;
-		config->AdaptiveFrameRate = 0;
 		config->CSpread = 0;
 		config->Dither = 0;
 		config->PCLKPol = 0;
@@ -615,8 +721,8 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 		/*
 		BT817 known values:
 		REG_FREQUENCY: 72MHz
-		Resolution: 1280x120
-		Refresh rate:83Hz
+		Resolution: 1024x600
+		Refresh rate: 83Hz
 		*/
 #if EVE_HARDCODED_DISPLAY_TIMINGS
 		if (supportedResolution)
@@ -635,9 +741,6 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 			config->PCLKFreq = 0xD12; // 51Mhz
 		}
 #endif
-		config->PCLK_2X = 0;
-		config->AdaptiveFrameRate = 0;
-
 		config->CSpread = 0;
 		config->Dither = 1;
 		config->PCLKPol = 1;
@@ -649,7 +752,7 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 	eve_printf_debug("Display refresh rate set to %f\n", (float)((double)freq / ((double)config->HCycle * (double)config->VCycle * (double)config->PCLK)));
 }
 
-#define EXTRACT_CHIPID(romChipId) ((((romChipId) >> 8) & 0xFF) | (((romChipId) & (0xFF)) << 8))
+#define EXTRACT_CHIPID(romChipId) EVE_extendedChipId((((romChipId) >> 8) & 0xFF) | (((romChipId) & (0xFF)) << 8))
 
 EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup)
 {
@@ -659,18 +762,25 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	uint8_t engineStatus;
 	uint32_t chipId;
 	uint8_t id;
-	int tries = 0;
 
 	do
 	{
-		/* FT81x will be in SPI Single channel after POR */
+		int tries = 0;
+
+		/* EVE will be in SPI Single channel after POR */
 		if (!EVE_Hal_powerCycle(phost, true))
 			return false;
 
-		/* Set the clk to external clock. Must disable it when no external clock source on the board */
 		if (bootup->ExternalOsc)
 		{
+			/* Set the clk to external clock. Must disable it when no external clock source on the board */
 			EVE_Hal_hostCommand(phost, EVE_EXTERNAL_OSC);
+			EVE_sleep(10);
+		}
+		else
+		{
+			/* Send CLKINT explicitly to play safe for all Eve series chip*/
+			EVE_Hal_hostCommand(phost, EVE_INTERNAL_OSC);
 			EVE_sleep(10);
 		}
 
@@ -684,6 +794,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		EVE_Hal_hostCommand(phost, EVE_ACTIVE_M);
 		EVE_sleep(300);
 
+		EVE_Host_coreReset(phost);
 		/* Wait for valid chip ID */
 		chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
 		while (EXTRACT_CHIPID(chipId) < EVE_FT800
@@ -699,11 +810,15 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 			chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
 
 #ifdef EVE_MULTI_TARGET
-			/* Turn of external clock if chipId reads 0 */
-			if (tries >= 4 && chipId == 0)
+			/* Turn off external clock if chipId reads incorrectly for 4 times */
+			/* When not targeting multiple boards, set the EVE_USE_INTERNAL_OSC preprocessor variable, or configure the ExternalOsc parameter at runtime */
+			if (tries >= 4)
 			{
 				bootup->ExternalOsc = !bootup->ExternalOsc;
 				eve_printf_debug("Reattempting bootup with ExternalOsc changed from %s to %s\n", bootup->ExternalOsc ? "OFF" : "ON", bootup->ExternalOsc ? "ON" : "OFF");
+
+				EVE_Host_powerModeSwitch(phost, EVE_SLEEP_M); /* Put EVE into Sleep mode, prepare for clock selection */
+				chipId = 0; //In case chipId is not zero
 				break;
 			}
 #endif
@@ -714,18 +829,26 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	/* ROM_CHIPID is valid across all EVE devices */
 	if (expectedChipId && EXTRACT_CHIPID(chipId) != expectedChipId)
 		eve_printf_debug("Mismatching EVE chip id %lx, expect model %lx\n", ((chipId >> 8) & 0xFF) | ((chipId & 0xFF) << 8), expectedChipId);
-	eve_printf_debug("EVE chip id %lx %lx.%lx\n", EXTRACT_CHIPID(chipId), ((chipId >> 16) & 0xFF), ((chipId >> 24) & 0xFF));
+	eve_printf_debug("EVE chip id %lx %lx.%lx (gen %i)\n", EXTRACT_CHIPID(chipId) & 0xFFFF, ((chipId >> 16) & 0xFF), ((chipId >> 24) & 0xFF), EVE_gen(EXTRACT_CHIPID(chipId)));
 
 	/* Switch to the proper chip ID if applicable */
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 	phost->ChipId = EXTRACT_CHIPID(chipId);
 	if (phost->ChipId >= EVE_BT815)
 		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (phost->ChipId >= EVE_BT880)
+		phost->GpuDefs = &EVE_GpuDefs_BT88X;
 	else if (phost->ChipId >= EVE_FT810)
 		phost->GpuDefs = &EVE_GpuDefs_FT81X;
 	else if (phost->ChipId >= EVE_FT800)
 		phost->GpuDefs = &EVE_GpuDefs_FT80X;
+#endif
 
+	/* Turn off previous audio playback (in case powerdown is not connected) */
+	EVE_Hal_wr32(phost, REG_PLAYBACK_LENGTH, 0);
+
+#ifdef EVE_MULTI_GRAPHICS_TARGET
+	/* The default clock configuration is only set when the graphics target is known at compile time */
 	if (!bootup->SystemClock)
 	{
 		if (phost->ChipId >= EVE_BT815)
@@ -799,6 +922,21 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		EVE_Hal_setSPI(phost, bootup->SpiChannels, bootup->SpiDummyBytes);
 	}
 #endif
+
+	/* In some cases, for example, QSPI on MM817EV board with MM930LITE, 
+	   the drive strength is required to adjust for better signal integrity. 
+	   Setting to max current 20mA here is to play safe.  Users may adjust the 
+	   corresponding bits of REG_GPIOX according to their own situation. */
+	if (EVE_CHIPID >= EVE_FT810)
+	{
+		EVE_Hal_wr16(phost, REG_GPIOX_DIR, 0xffff);
+		EVE_Hal_wr16(phost, REG_GPIOX, 0xffff);
+	}
+	else
+	{
+		EVE_Hal_wr8(phost, REG_GPIO_DIR, 0xff);
+		EVE_Hal_wr8(phost, REG_GPIO, 0xff);
+	}
 
 	/* Update touch firmware */
 #ifdef _MSC_VER
@@ -881,6 +1019,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	EVE_Hal_wr8(phost, REG_CPURESET, 0);
 #endif
 #endif
+
 	return true;
 }
 
@@ -922,9 +1061,9 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	EVE_Hal_wr16(phost, REG_CSPREAD, config->CSpread);
 	EVE_Hal_wr16(phost, REG_DITHER, config->Dither);
 	EVE_Hal_wr16(phost, REG_OUTBITS,
-	    (uint16_t)(((config->OutBitsR & 0x7) << 6)
-	        | ((config->OutBitsG & 0x7) << 3)
-	        | (config->OutBitsB & 0x7)));
+		(uint16_t)(((config->OutBitsR & 0x7) << 6)
+			| ((config->OutBitsG & 0x7) << 3)
+			| (config->OutBitsB & 0x7)));
 	if (swapXY)
 	{
 		phost->Width = config->Height;
@@ -936,7 +1075,7 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 		phost->Height = config->Height;
 	}
 
-#if (EVE_SUPPORT_CHIPID >= EVE_BT817) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_BT817) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_BT817 && config->PCLKFreq)
 	{
 		EVE_Hal_wr16(phost, REG_PCLK_FREQ, config->PCLKFreq); // NOTE: If this should use CMD_PCLKFREQ instead, move the PCLKFreq configuration code to just before the HSF configuration below
@@ -953,13 +1092,20 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 	}
 #endif
 
-	EVE_Hal_wr8(phost, REG_ADAPTIVE_FRAMERATE, config->AdaptiveFrameRate);
+#if (EVE_SUPPORT_CHIPID > EVE_BT815)
+	if (EVE_CHIPID >= EVE_BT815)
+	{
+		EVE_Hal_wr8(phost, REG_ADAPTIVE_FRAMERATE, config->AdaptiveFrameRate);
+	}
+#endif
 
+#if (EVE_SUPPORT_CHIPID > EVE_BT817)
 	if (EVE_CHIPID >= EVE_BT817)
 	{
 		EVE_Hal_wr16(phost, REG_AH_HCYCLE_MAX, config->AhHCycleMax);
-		EVE_Hal_wr8(phost, REG_PCLK_2X, config->PCLK_2X);
+		EVE_Hal_wr8(phost, REG_PCLK_2X, config->PCLK2X);
 	}
+#endif
 
 #ifdef RESISTANCE_THRESHOLD /* TODO: From config */
 	if (EVE_Hal_isScreenResistive(phost))
@@ -969,17 +1115,6 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 		EVE_Hal_wr16(phost, REG_TOUCH_RZTHRESH, RESISTANCE_THRESHOLD);
 	}
 #endif
-
-	if (EVE_CHIPID >= EVE_FT810)
-	{
-		EVE_Hal_wr16(phost, REG_GPIOX_DIR, 0xffff);
-		EVE_Hal_wr16(phost, REG_GPIOX, 0xffff);
-	}
-	else
-	{
-		EVE_Hal_wr8(phost, REG_GPIO_DIR, 0xff);
-		EVE_Hal_wr8(phost, REG_GPIO, 0xff);
-	}
 
 	EVE_Util_clearScreen(phost);
 
@@ -1075,8 +1210,16 @@ EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters 
 #endif
 
 #if defined(ENABLE_ILI9488_HVGA_PORTRAIT) || defined(ENABLE_KD2401_HVGA_PORTRAIT)
+#if defined(RP2040_PLATFORM)
+	EVE_ILI9488_RP2040_bootup(phost);
+	eve_printf_debug("after ILI9488 RP2040 bootup\n");
+	EVE_Hal_restoreSPI(phost);
+#endif
+#if defined(FT9XX_PLATFORM)
 	EVE_ILI9488_bootup();
 	eve_printf_debug("after ILI9488 bootup\n");
+	EVE_Hal_restoreSPI(phost);
+#endif
 #endif
 
 	eve_printf_debug("EVE configuration ready\n");
@@ -1279,7 +1422,7 @@ EVE_HAL_EXPORT bool EVE_Util_resetCoprocessor(EVE_HalContext *phost)
 	if (phost->CbCoprocessorReset) /* Notify */
 		phost->CbCoprocessorReset(phost, !ready);
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
 	debugRestoreRamG(phost);
 #endif
 	EVE_CoDlImpl_resetCoState(phost);
@@ -1371,7 +1514,7 @@ SELECTDEVICE:
 		return;
 	}
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 SelectChipId:
 	buf[0] = '\0';
 	if (info.Host == EVE_HOST_BT8XXEMU)
@@ -1403,7 +1546,7 @@ SelectChipId:
 #endif
 }
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 EVE_HAL_EXPORT void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display)
 {
 	char buf[1024];
@@ -1450,9 +1593,9 @@ SELECTFLASH:
 	*updateFlashFirmware = false;
 	if (flashFile)
 	{
-#if defined(EVE_MULTI_TARGET) || !defined(BT8XXEMU_PLATFORM)
+#if defined(EVE_MULTI_PLATFORM_TARGET) || !defined(BT8XXEMU_PLATFORM)
 		uint8_t buffer[4096];
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 		if (params->Host != EVE_HOST_BT8XXEMU)
 #endif
 		{
@@ -1475,7 +1618,7 @@ SELECTFLASH:
 		}
 #endif
 		if (*updateFlash
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 		    || params->Host == EVE_HOST_BT8XXEMU
 #elif defined(BT8XXEMU_PLATFORM)
 		    || true
@@ -1534,14 +1677,14 @@ extern void Esd_SetFlashFirmware__ESD(const eve_tchar_t *path);
 #endif
 void EVE_Util_emulatorDefaults(EVE_HalParameters *params, void *emulatorParams, EVE_CHIPID_T chipId)
 {
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 	if (params->Host != EVE_HOST_BT8XXEMU)
 		return;
 #endif
 
 	BT8XXEMU_EmulatorParameters *pEmulatorParams = emulatorParams;
 
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, pEmulatorParams, chipId); // TODO: should be pEmulatorParams->mode?
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, pEmulatorParams, chipId & 0xFFFF); // TODO: should be pEmulatorParams->mode?
 	pEmulatorParams->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 
 	// TODO: emulatorParams.Log
@@ -1554,7 +1697,7 @@ void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, const void *emula
 	const BT8XXEMU_EmulatorParameters *pEmulatorParams = emulatorParams;
 	BT8XXEMU_FlashParameters *pFlashParams = flashParams;
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 	if (params->Host != EVE_HOST_BT8XXEMU)
 		return;
 #endif
@@ -1565,7 +1708,7 @@ void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, const void *emula
 
 	BT8XXEMU_Flash_defaults(BT8XXEMU_VERSION_API, pFlashParams);
 	wcscpy_s(pFlashParams->DataFilePath, _countof(pFlashParams->DataFilePath), flashPath);
-#ifdef _DEBUG
+#if defined(_DEBUG)
 	pFlashParams->StdOut = 1;
 #endif
 
@@ -1942,12 +2085,12 @@ void EVE_Util_forceFault(EVE_HalContext *phost, const char *err)
 	EVE_Cmd_waitFlush(phost);
 	EVE_Cmd_wr32(phost, DISPLAY());
 	EVE_Hal_flush(phost);
-#ifdef _DEBUG
+#if defined(_DEBUG)
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 	EVE_sleep(100);
 	if (EVE_CHIPID >= EVE_BT815 && (EVE_Cmd_rp(phost) & 0x3))
 	{
-		uint32_t errLen = strlen(err);
+		uint32_t errLen = (uint32_t)strlen(err);
 		EVE_Hal_wrMem(phost, RAM_ERR_REPORT, (const uint8_t *)err, errLen);
 		if (errLen < sizeof(phost->DebugBackup))
 		{
@@ -1960,12 +2103,12 @@ void EVE_Util_forceFault(EVE_HalContext *phost, const char *err)
 #endif
 #endif
 	EVE_Cmd_waitFlush(phost); /* Fault state now */
-#ifdef _DEBUG
+#if defined(_DEBUG)
 #if (EVE_SUPPORT_CHIPID >= EVE_BT815)
 	if (EVE_CHIPID >= EVE_BT815
 	    && phost->DebugMessageVisible)
 	{
-		uint32_t errLen = strlen(err);
+		uint32_t errLen = (uint32_t)strlen(err);
 		EVE_Hal_wrMem(phost, RAM_G + RAM_G_SIZE - sizeof(phost->DebugBackup), (const uint8_t *)err, errLen);
 		if (errLen < sizeof(phost->DebugBackup))
 		{

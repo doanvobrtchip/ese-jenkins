@@ -35,10 +35,10 @@
 
 #undef EVE_MULTI_GRAPHICS_TARGET
 #undef EVE_SUPPORT_CHIPID
-#define FT_81X_ENABLE
+#define BT_88X_ENABLE
 #include "EVE_GpuDefs.h"
 
-EVE_GpuDefs EVE_GpuDefs_FT81X = {
+EVE_GpuDefs EVE_GpuDefs_BT88X = {
 	EVE_GPUDEFS_IMPLEMENT
 
 };

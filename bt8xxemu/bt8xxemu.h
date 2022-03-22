@@ -13,6 +13,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #pragma warning(disable : 26812) // Unscoped enum
 #endif
 
+#include "bt8xxemu_inttypes.h"
+
 #ifndef EVE_TCHAR_DEFINED
 #define EVE_TCHAR_DEFINED
 #ifdef _WIN32
@@ -21,8 +23,6 @@ typedef wchar_t eve_tchar_t;
 typedef char eve_tchar_t;
 #endif
 #endif
-
-#include "bt8xxemu_inttypes.h"
 
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
 #define BT8XXEMU_VERSION_API 12

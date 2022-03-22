@@ -112,7 +112,7 @@ static inline void EVE_CoCmd_dl(EVE_HalContext *phost, uint32_t dl)
 	EVE_CoCmd_d(phost, dl);
 }
 
-#if defined(_DEBUG) && defined(EVE_MULTI_TARGET)
+#if defined(_DEBUG) && defined(EVE_MULTI_GRAPHICS_TARGET)
 EVE_HAL_EXPORT void EVE_CoCmd_debugUnsupported(const char *cmd, uint32_t chipId);
 #define EVE_MULTI_TARGET_CHECK(cmd, condition)        \
 	if (!(condition))                                 \
@@ -1293,6 +1293,7 @@ ESD_PARAMETER(options, Type = Ft_CoPro_Opt, Default = 0)
 ESD_PARAMETER(bottom, Type = bool, Default = 0)
 ESD_PARAMETER(baseLine, Type = int16_t, Default = 0)
 ESD_PARAMETER(capsHeight, Type = int16_t, Default = 0)
+ESD_PARAMETER(xOffset, Type = int16_t, Default = 0)
 ESD_PARAMETER(s, Type = const char *, Default = "Text")
 /**
 * @brief Send CMD_TEXT
@@ -1307,7 +1308,7 @@ ESD_PARAMETER(s, Type = const char *, Default = "Text")
 * @param capsHeight 
 * @param s Text string, UTF-8 encoding
 */
-EVE_HAL_EXPORT void EVE_CoCmd_text_ex(EVE_HalContext *phost, int16_t x, int16_t y, int16_t font, uint16_t options, bool bottom, int16_t baseLine, int16_t capsHeight, const char *s);
+EVE_HAL_EXPORT void EVE_CoCmd_text_ex(EVE_HalContext *phost, int16_t x, int16_t y, int16_t font, uint16_t options, bool bottom, int16_t baseLine, int16_t capsHeight, int16_t xOffset, const char *s);
 
 /**
 * @brief Send CMD_BUTTON
@@ -1709,7 +1710,7 @@ static inline void EVE_CoCmd_logo(EVE_HalContext *phost)
 */
 static inline void EVE_CoCmd_cSketch(EVE_HalContext *phost, int16_t x, int16_t y, uint16_t w, uint16_t h, uint32_t ptr, uint16_t format, uint16_t freq)
 {
-#if defined(EVE_MULTI_TARGET) || (EVE_SUPPORT_CHIPID == EVE_FT801)
+#if defined(EVE_MULTI_GRAPHICS_TARGET) || (EVE_SUPPORT_CHIPID == EVE_FT801)
 	if (EVE_CHIPID == EVE_FT801)
 	{
 		EVE_CoCmd_dwwwwdww(phost, CMD_CSKETCH, x, y, w, h, ptr, format, freq);

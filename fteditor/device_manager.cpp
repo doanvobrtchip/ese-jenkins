@@ -499,7 +499,7 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
-	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)phost->ChipId);
+	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)(phost->ChipId & 0xFFFF));
 	EVE_ConfigParameters configParams;
 	
 
@@ -803,7 +803,7 @@ void DeviceManager::uploadCoprocessorContent()
 			EVE_Util_loadImageFileW(phost, loadAddr, fileName.toStdWString().c_str(), NULL);
 			continue;
 		}
-		ese_scope
+		eve_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			QByteArray ba = binFile.readAll();
@@ -1228,7 +1228,7 @@ void DeviceManager::uploadFlashContent()
 			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
 			continue;
 		}
-		ese_scope
+		eve_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			progressLabel->setText("Writing \"" + info->DestName + "\"");
@@ -1356,7 +1356,7 @@ void DeviceManager::uploadFlashContent()
 			printf("[WriteFlash] Error: Flash address '%i' not aligned\n", loadAddr);
 			continue;
 		}
-		ese_scope
+		eve_scope
 		{
 			binFile.open(QIODevice::ReadOnly);
 			progressLabel->setText("Verifying \"" + info->DestName + "\"");
@@ -1452,26 +1452,7 @@ void DeviceManager::updateSelection()
 }
 
 EVE_CHIPID_T DeviceManager::projectChipID() {
-	EVE_CHIPID_T res;
-
-	switch (FTEDITOR_CURRENT_DEVICE)
-	{
-	case FTEDITOR_FT800: return EVE_CHIPID_FT800;
-	case FTEDITOR_FT801: return EVE_CHIPID_FT801;
-	case FTEDITOR_FT810: return EVE_CHIPID_FT810;
-	case FTEDITOR_FT811: return EVE_CHIPID_FT811;
-	case FTEDITOR_FT812: return EVE_CHIPID_FT812;
-	case FTEDITOR_FT813: return EVE_CHIPID_FT813;
-	case FTEDITOR_BT880: return EVE_CHIPID_BT880;
-	case FTEDITOR_BT881: return EVE_CHIPID_BT881;
-	case FTEDITOR_BT882: return EVE_CHIPID_BT882;
-	case FTEDITOR_BT883: return EVE_CHIPID_BT883;
-	case FTEDITOR_BT815: return EVE_CHIPID_BT815;
-	case FTEDITOR_BT816: return EVE_CHIPID_BT816;
-	case FTEDITOR_BT817: return	EVE_CHIPID_BT817;
-	case FTEDITOR_BT818: return	EVE_CHIPID_BT818;
-	default: return (EVE_CHIPID_T)0;
-	}
+	return EVE_extendedChipId((int)deviceToEnum(FTEDITOR_CURRENT_DEVICE));
 }
 #endif /* FT800_DEVICE_MANAGER */
 

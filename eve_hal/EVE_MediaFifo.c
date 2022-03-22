@@ -219,7 +219,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 		return true;
 	}
 #else
-	ese_scope
+	eve_scope
 	{
 		uint32_t halfSize = ((phost->MediaFifoSize >> 3) << 2) - 4;
 		uint32_t remaining = size;
@@ -266,7 +266,7 @@ bool EVE_MediaFifo_wrMem(EVE_HalContext *phost, const uint8_t *buffer, uint32_t 
 #endif
 }
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
 void debugBackupRamG(EVE_HalContext *phost);
 #endif
 

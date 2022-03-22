@@ -345,12 +345,12 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("REG_HSIZE"))
 	{
-		cdi.configParams.HSize = jo["REG_HSIZE"].toInt();
+		cdi.configParams.Width = jo["REG_HSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_VSIZE"))
 	{
-		cdi.configParams.VSize = jo["REG_VSIZE"].toInt();
+		cdi.configParams.Height = jo["REG_VSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_CSPREAD"))
@@ -399,7 +399,7 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("REG_PCLK_2X"))
 	{
-		cdi.configParams.PCLK_2X = jo["REG_PCLK_2X"].toInt();
+		cdi.configParams.PCLK2X = jo["REG_PCLK_2X"].toInt();
 	}
 
 	if (jo.contains("REG_PCLK_FREQ"))

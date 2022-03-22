@@ -129,7 +129,7 @@ EVE_HAL_EXPORT void EVE_CoCmd_text_s(EVE_HalContext *phost, int16_t x, int16_t y
 #endif
 }
 
-EVE_HAL_EXPORT void EVE_CoCmd_text_ex(EVE_HalContext *phost, int16_t x, int16_t y, int16_t font, uint16_t options, bool bottom, int16_t baseLine, int16_t capsHeight, const char *s)
+EVE_HAL_EXPORT void EVE_CoCmd_text_ex(EVE_HalContext *phost, int16_t x, int16_t y, int16_t font, uint16_t options, bool bottom, int16_t baseLine, int16_t capsHeight, int16_t xOffset, const char *s)
 {
 	int16_t yOffset;
 	if (options & OPT_CENTERY)
@@ -138,7 +138,13 @@ EVE_HAL_EXPORT void EVE_CoCmd_text_ex(EVE_HalContext *phost, int16_t x, int16_t 
 		yOffset = baseLine;
 	else
 		yOffset = baseLine - capsHeight;
-	EVE_CoCmd_text(phost, x, y - yOffset, font, options & ~OPT_CENTERY, s);
+	/*
+	if (options & OPT_RIGHTX)
+		xOffset = 0;
+	else if (options & OPT_CENTERX)
+		xOffset >>= 1;
+	*/
+	EVE_CoCmd_text(phost, x - xOffset, y - yOffset, font, options & ~OPT_CENTERY, s);
 }
 
 EVE_HAL_EXPORT void EVE_CoCmd_button(EVE_HalContext *phost, int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char *s, ...)

@@ -31,12 +31,62 @@
 
 #include "EVE_LoadFile.h"
 #include "EVE_Platform.h"
-#if defined(FT9XX_PLATFORM)
 
-#if defined(EVE_ENABLE_FATFS)
+#if defined(FT9XX_PLATFORM) || defined(RP2040_PLATFORM)
+#define MOUNT_POINT ""
+#if EVE_ENABLE_FATFS
 #include "ff.h"
 static bool s_FatFSLoaded = false;
 static FATFS s_FatFS;
+#endif
+
+#if defined(RP2040_PLATFORM)
+
+SDHOST_STATUS sdhost_card_detect(void) {
+	FATFS fs;
+    FRESULT fr;     /* FatFs return code */
+    UINT br;
+    UINT bw;
+
+	fr = f_mount(&fs, MOUNT_POINT, 1);
+    if (fr != FR_OK) {
+        printf("mount error %d\n", fr);
+		return SDHOST_CARD_REMOVED;
+    }
+    printf("mount ok\n");
+	return SDHOST_CARD_INSERTED;
+}
+void sdhost_init(void) {
+	FATFS fs;
+    FRESULT fr;     /* FatFs return code */
+    UINT br;
+    UINT bw;
+
+	fr = f_mount(&fs, MOUNT_POINT, 1);
+    if (fr != FR_OK) {
+        printf("mount error %d\n", fr);
+    }
+    printf("mount ok\n");
+
+    switch (fs.fs_type) {
+        case FS_FAT12:
+            printf("Type is FAT12\n");
+            break;
+        case FS_FAT16:
+            printf("Type is FAT16\n");
+            break;
+        case FS_FAT32:
+            printf("Type is FAT32\n");
+            break;
+        case FS_EXFAT:
+            printf("Type is EXFAT\n");
+            break;
+        default:
+            printf("Type is unknown\n");
+            break;
+    }
+    printf("Card size: %7.2f GB (GB = 1E9 bytes)\n\n", fs.csize * fs.n_fatent * 512E-9);
+}
 #endif
 
 /**
@@ -48,12 +98,12 @@ static FATFS s_FatFS;
  */
 bool EVE_Util_loadSdCard(EVE_HalContext *phost)
 {
-#if defined(EVE_ENABLE_FATFS)
+#if EVE_ENABLE_FATFS
 #ifndef PANL_APPLET
 	SDHOST_STATUS status = sdhost_card_detect();
 	if (status == SDHOST_CARD_INSERTED)
 	{
-		if (!s_FatFSLoaded && (f_mount(&s_FatFS, "", 1) != FR_OK))
+		if (!s_FatFSLoaded && (f_mount(&s_FatFS, MOUNT_POINT, 1) != FR_OK))
 		{
 			eve_printf_debug("FatFS SD card mount failed\n");
 		}
@@ -86,7 +136,11 @@ bool EVE_Util_loadSdCard(EVE_HalContext *phost)
 EVE_HAL_EXPORT bool EVE_Util_sdCardReady(EVE_HalContext *phost)
 {
 	/* no-op */
+#if EVE_ENABLE_FATFS
 	return s_FatFSLoaded;
+#else
+	return false;
+#endif
 }
 
 /**
@@ -100,7 +154,7 @@ EVE_HAL_EXPORT bool EVE_Util_sdCardReady(EVE_HalContext *phost)
  */
 bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *filename)
 {
-#if defined(EVE_ENABLE_FATFS)
+#if EVE_ENABLE_FATFS
 	FRESULT fResult;
 	FIL InfSrc;
 
@@ -159,7 +213,7 @@ bool EVE_Util_loadRawFile(EVE_HalContext *phost, uint32_t address, const char *f
  */
 bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const char *filename)
 {
-#if defined(EVE_ENABLE_FATFS)
+#if EVE_ENABLE_FATFS
 	FRESULT fResult;
 	FIL InfSrc;
 
@@ -222,7 +276,7 @@ bool EVE_Util_loadInflateFile(EVE_HalContext *phost, uint32_t address, const cha
  */
 bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char *filename, uint32_t *format)
 {
-#if defined(EVE_ENABLE_FATFS)
+#if EVE_ENABLE_FATFS
 	FRESULT fResult;
 	FIL InfSrc;
 
@@ -286,7 +340,7 @@ bool EVE_Util_loadImageFile(EVE_HalContext *phost, uint32_t address, const char 
 
 bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
 {
-#if defined(EVE_ENABLE_FATFS)
+#if EVE_ENABLE_FATFS
 	FRESULT fResult;
 	FIL InfSrc;
 
@@ -339,7 +393,7 @@ bool EVE_Util_loadCmdFile(EVE_HalContext *phost, const char *filename, uint32_t 
 
 bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_t *transfered)
 {
-#if defined(EVE_ENABLE_FATFS) && defined(EVE_SUPPORT_MEDIAFIFO)
+#if EVE_ENABLE_FATFS && defined(EVE_SUPPORT_MEDIAFIFO)
 	FRESULT fResult = FR_INVALID_OBJECT;
 
 	UINT blocklen;
@@ -461,11 +515,15 @@ bool EVE_Util_loadMediaFile(EVE_HalContext *phost, const char *filename, uint32_
 
 void EVE_Util_closeFile(EVE_HalContext *phost)
 {
+#if defined(EVE_SUPPORT_MEDIAFIFO)
 	if (phost->LoadFileRemaining)
 	{
+#if EVE_ENABLE_FATFS
 		f_close(&phost->LoadFileObj);
+#endif
 		phost->LoadFileRemaining = 0;
 	}
+#endif
 }
 
 #endif

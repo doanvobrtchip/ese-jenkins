@@ -53,6 +53,9 @@ extern "C" {
 #if defined(FT9XX_PLATFORM)
 #include "EVE_Platform_FT9XX.h"
 #endif
+#if defined(RP2040_PLATFORM)
+#include "EVE_Platform_RP2040.h"
+#endif
 #include "EVE_GpuTypes.h"
 #include "EVE_HalDefs.h"
 #include "EVE_Cmd.h"
@@ -175,8 +178,8 @@ extern "C" {
 #endif
 
 /* Scope */
-#ifndef ese_scope
-#define ese_scope if (true)
+#ifndef eve_scope
+#define eve_scope if (true)
 #endif
 
 #endif /* #ifndef EVE_PLATFORM__H */
