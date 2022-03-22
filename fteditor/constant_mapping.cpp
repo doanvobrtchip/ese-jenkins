@@ -1,6 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
-Copyright (C) 2017-2020  Bridgetek Pte Lte
+Copyright (C) 2017-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 

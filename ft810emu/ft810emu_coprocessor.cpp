@@ -1,8 +1,9 @@
 /*
 FT810 Emulator Library
 Copyright (C) 2015  Future Technology Devices International Ltd
+BT880 Emulator Library
 BT815 Emulator Library
-Copyright (C) 2017  Bridgetek Pte Lte
+Copyright (C) 2017-2022  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
 */
 

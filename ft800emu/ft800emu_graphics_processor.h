@@ -4,7 +4,7 @@ FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
 Copyright (C) 2016-2019  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifndef FT800EMU_GRAPHICS_PROCESSOR_H

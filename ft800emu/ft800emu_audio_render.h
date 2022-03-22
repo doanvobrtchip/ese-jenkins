@@ -3,7 +3,7 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013  Future Technology Devices International Ltd
 Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifndef FT800EMU_AUDIO_RENDER_H

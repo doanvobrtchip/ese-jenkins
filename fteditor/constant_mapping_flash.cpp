@@ -1,7 +1,7 @@
 /*
 EVE Screen Editor
-Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2017-2022  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "constant_mapping_flash.h"

@@ -1,7 +1,7 @@
 /*
 EVE Screen Editor
 Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifndef FTEDITOR_CONSTANT_MAPPING_FLASH_H

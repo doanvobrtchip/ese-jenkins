@@ -2,7 +2,7 @@
 BT815 Emulator Library
 Copyright (C) 2017  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include "bt815emu_espim.h"
