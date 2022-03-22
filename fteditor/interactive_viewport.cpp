@@ -2916,7 +2916,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                     case CMD_ROMFONT:
                         pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
                         if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
-                        pa.Parameter[1].I = 34;
+						if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
+							pa.Parameter[1].I = 31;
+						else
+							pa.Parameter[1].I = 34;
                         pa.ExpectedParameterCount = 2;
                         break;
                     case CMD_SETFONT:

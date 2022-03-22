@@ -11,12 +11,15 @@ SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
 # Find the QtWidgets library
-FIND_PACKAGE(Qt5Widgets)
+FIND_PACKAGE(Qt5 COMPONENTS Widgets LinguistTools)
 
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
 
-QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
+QT5_CREATE_TRANSLATION(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
+CONFIGURE_FILE(translations.qrc.in translations.qrc COPYONLY)
+
+QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(

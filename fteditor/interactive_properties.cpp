@@ -1612,7 +1612,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_ROMFONT");
 				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
-				addSpinBox(1, 16, 34, tr("ROM Slot") + ": ", tr("Set ROM slot"));
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
+					addSpinBox(1, 16, 31, tr("ROM Slot") + ": ", tr("Set ROM slot"));
+				else
+					addSpinBox(1, 16, 34, tr("ROM Slot") + ": ", tr("Set ROM slot"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
