@@ -117,6 +117,7 @@ extern int g_StepCmdLimit;
 
 extern volatile bool g_CoprocessorFaultOccured;
 extern volatile bool g_CoprocessorFrameSuccess;
+extern volatile bool g_CoprocessorContentSuccess;
 extern char g_CoprocessorDiagnostic[128 + 4];
 extern bool g_StreamingData;
 
@@ -877,7 +878,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if (g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation)
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (g_CoprocessorContentSuccess || !m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}

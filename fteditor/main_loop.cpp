@@ -151,6 +151,7 @@ static QDataStream *s_MediaFifoStream = NULL;
 
 volatile bool g_CoprocessorFaultOccured = false;
 volatile bool g_CoprocessorFrameSuccess = false;
+volatile bool g_CoprocessorContentSuccess = true;
 char g_CoprocessorDiagnostic[128 + 4] = { 0 };
 bool g_StreamingData = false;
 
@@ -356,6 +357,7 @@ void resetemu()
 	g_StepCmdLimit = 0;
 	s_StepCmdLimitCurrent = 0;
 	g_CoprocessorFaultOccured = false;
+	g_CoprocessorContentSuccess = true;
 	g_WarnMissingClear = false;
 	g_WarnMissingClearActive = false;
 	g_WarnMissingTestcardDLStart = false;
@@ -607,6 +609,7 @@ void loop()
 					{
 						if (!g_EmulatorRunning)
 						{
+							g_CoprocessorContentSuccess = false;
 							g_ContentManager->unlockContent();
 							return;
 						}
@@ -614,6 +617,7 @@ void loop()
 						if ((rp & 0xFFF) == 0xFFF)
 						{
 							printf("Error during stream at %i bytes\n", (int)writeCount);
+							g_CoprocessorContentSuccess = false;
 							g_ContentManager->unlockContent();
 							return;
 						}
@@ -639,6 +643,7 @@ void loop()
 					printf("Stream finished: %i bytes\n", (int)writeCount);
 					if (writeCount == 0)
 					{
+						g_CoprocessorContentSuccess = false;
 						swrend();
 						resetCoprocessorFromLoop();
 						g_ContentManager->unlockContent();
@@ -648,6 +653,7 @@ void loop()
 				}
 				if (!g_EmulatorRunning)
 				{
+					g_CoprocessorContentSuccess = false;
 					swrend();
 					g_ContentManager->unlockContent();
 					return;
@@ -789,6 +795,8 @@ void loop()
 		wr32(REG_PCLK, 5);
 		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
 	}*/
+	if (contentInfoMemory.size())
+		g_CoprocessorContentSuccess = true;
 	g_ContentManager->unlockContent();
 
 	// switch to next resolution
