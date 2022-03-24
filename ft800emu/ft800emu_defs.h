@@ -43,7 +43,9 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #define FT800EMU_OTP_SIZE (2048)
 
 //! RAM_G addressing mask
-#if defined(FT810EMU_MODE)
+#if defined(BT880EMU_MODE)
+#define FT800EMU_ADDR_MASK (0x33FFFF)
+#elif defined(FT810EMU_MODE)
 #define FT800EMU_ADDR_MASK (0x3FFFFF)
 #else
 #define FT800EMU_ADDR_MASK (0xFFFFF)
