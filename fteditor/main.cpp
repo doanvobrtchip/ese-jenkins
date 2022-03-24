@@ -95,6 +95,16 @@ int main(int argc, char* argv[])
 
 #ifdef FT800EMU_PYTHON
 	printf("With Python support\n");
+#ifdef WIN32
+	wchar_t *pythonPath = _wgetenv(L"FTEDITOR_PYTHONPATH");
+	if (pythonPath)
+	{
+		QString pathBase = QString::fromWCharArray(pythonPath);
+		QString fullPath = pathBase + ";" + pathBase + "/DLLs;" + pathBase + "/Lib";
+		Py_SetPath(fullPath.toStdWString().c_str());
+	}
+	Py_IgnoreEnvironmentFlag = TRUE;
+#endif
 	Py_Initialize();
 	PyObject* sysPath = PySys_GetObject((char*)"path");
 	{
