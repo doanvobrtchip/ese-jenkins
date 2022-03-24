@@ -10,10 +10,10 @@
 #include "../ftemutest.h"
 #include <stdio.h>
 
+#include <QString>
+
 #include "../../fteditor/constant_mapping.h"
 #include "../../fteditor/constant_common.h"
-
-#include <QString>
 
 extern const char *g_Case;
 static FILE *s_F = NULL;
