@@ -4203,15 +4203,9 @@ void GraphicsProcessor::process(
 	uint32_t vsizeSection = ((vsize - yIdx) / m_ThreadCount);
 #endif
 
+	if (!yInc) { FT800EMU_DEBUG_BREAK(); return; } // Invalid argument
 	int nbLines = yBottom > yTop ? (yBottom - yTop) / yInc : 0; // Number of lines to render
-	if (nbLines <= 0)
-	{
-		// No lines to render
-#if defined(_MSC_VER) && !defined(NDEBUG)
-		__debugbreak();
-#endif
-		return;
-	}
+	if (nbLines <= 0) { FT800EMU_DEBUG_BREAK(); return; } // No lines to render
 	int nbThreads = min(m_ThreadCount, nbLines); // Number of threads to use
 	int nbLineBlocks = nbThreads > 0 ? nbLines / nbThreads : 0; // Number of complete line blocks
 	int skipBlocks = nbThreads > 0 ? (nbLineBlocks / nbThreads) * nbThreads * yInc : 0;

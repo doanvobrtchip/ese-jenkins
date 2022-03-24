@@ -64,6 +64,13 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #define FT800EMU_REG_ROTATE_MIRROR_VERTICAL(ram) ((ram[REG_ROTATE] & 0x1) != 0)
 #endif
 
+//! Debug break
+#if defined(_MSC_VER) && !defined(NDEBUG)
+#define FT800EMU_DEBUG_BREAK() __debugbreak()
+#else
+#define FT800EMU_DEBUG_BREAK() do { } while (false)
+#endif
+
 
 #endif /* #ifndef FT800EMU_DEFS_H */
 
