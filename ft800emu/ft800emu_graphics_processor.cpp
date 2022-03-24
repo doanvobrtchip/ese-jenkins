@@ -4204,6 +4204,14 @@ void GraphicsProcessor::process(
 #endif
 
 	int nbLines = yBottom > yTop ? (yBottom - yTop) / yInc : 0; // Number of lines to render
+	if (nbLines <= 0)
+	{
+		// No lines to render
+#if defined(_MSC_VER) && !defined(NDEBUG)
+		__debugbreak();
+#endif
+		return;
+	}
 	int nbThreads = min(m_ThreadCount, nbLines); // Number of threads to use
 	int nbLineBlocks = nbThreads > 0 ? nbLines / nbThreads : 0; // Number of complete line blocks
 	int skipBlocks = nbThreads > 0 ? (nbLineBlocks / nbThreads) * nbThreads * yInc : 0;
