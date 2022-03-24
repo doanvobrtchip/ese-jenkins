@@ -180,7 +180,6 @@ private slots:
 	void actExport();
 
 	void actProjectFolder();
-	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
 	void actLittleEndianSaveDisplayList();
@@ -214,6 +213,10 @@ private slots:
 	void projectFlashChanged(int i);
 
 	void openRecentProject();
+
+public slots:
+	void popupTimeout();
+	void actResetEmulator();
 
 private:
 	void updateInitialization(bool visible);

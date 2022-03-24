@@ -837,6 +837,14 @@ void MainWindow::frameEmu()
 	s_CoCmdChangeNbEmu = coCmdChangeNbEmu;
 }
 
+void MainWindow::popupTimeout()
+{
+	m_ErrorLabel->setText("<b>Co-processor engine timeout</b><br><br>"
+		"The co-processor is taking longer than expected to process this command");
+	m_ErrorFrame->setVisible(true);
+	g_CoprocessorFrameSuccess = false;
+}
+
 void MainWindow::frameQt()
 {
 	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());

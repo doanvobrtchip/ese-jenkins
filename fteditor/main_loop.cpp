@@ -1610,11 +1610,18 @@ void loop()
 			// Finish all processing
 			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 			s_AbortTimer.start();
+			bool timeoutFlagged = false;
 			while ((wp & 0xFFF) != rpl)
 			{
 				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 				if (!g_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
+
+				if (s_AbortTimer.elapsed() > 1000 && !timeoutFlagged)
+				{
+					QMetaObject::invokeMethod(g_CmdEditor->mainWindow(), &MainWindow::popupTimeout, Qt::QueuedConnection);
+					timeoutFlagged = true;
+				}
 
 				if (g_CmdEditor->isDisplayListModified() || s_WantReloopCmd) // Trap to avoid infinite flush on errors
 				{
@@ -1622,7 +1629,7 @@ void loop()
 					if (s_AbortTimer.elapsed() > 1000)
 					{
 						printf("Abort coprocessor flush (1100)\n");
-						resetCoprocessorFromLoop();
+						QMetaObject::invokeMethod(g_CmdEditor->mainWindow(), &MainWindow::actResetEmulator, Qt::QueuedConnection);
 						return;
 					}
 				}
