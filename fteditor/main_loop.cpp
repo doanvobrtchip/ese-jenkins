@@ -605,11 +605,16 @@ void loop()
 					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 					do
 					{
-						if (!g_EmulatorRunning) return;
+						if (!g_EmulatorRunning)
+						{
+							g_ContentManager->unlockContent();
+							return;
+						}
 						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 						if ((rp & 0xFFF) == 0xFFF)
 						{
 							printf("Error during stream at %i bytes\n", (int)writeCount);
+							g_ContentManager->unlockContent();
 							return;
 						}
 						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -636,6 +641,7 @@ void loop()
 					{
 						swrend();
 						resetCoprocessorFromLoop();
+						g_ContentManager->unlockContent();
 						return;
 					}
 					break;
@@ -643,6 +649,7 @@ void loop()
 				if (!g_EmulatorRunning)
 				{
 					swrend();
+					g_ContentManager->unlockContent();
 					return;
 				}
 			}
@@ -773,7 +780,11 @@ void loop()
 		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
 		{
 			printf("Waiting for bitmap setup DL swap\n");
-			if (!g_EmulatorRunning) return;
+			if (!g_EmulatorRunning)
+			{
+				g_ContentManager->unlockContent();
+				return;
+			}
 		}
 		wr32(REG_PCLK, 5);
 		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
