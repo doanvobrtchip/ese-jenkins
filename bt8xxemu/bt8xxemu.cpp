@@ -127,6 +127,9 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
 		fprintf(stderr, "Incompatible bt8xxemu API version\n");
+#if defined(_MSC_VER) && !defined(NDEBUG)
+		__debugbreak();
+#endif
 		return;
 	}
 
@@ -193,6 +196,9 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 		{
 			fprintf(stderr, "Invalid bt8xxemu emulator mode selected\n");
 			*emulator = NULL;
+#if defined(_MSC_VER) && !defined(NDEBUG)
+			__debugbreak();
+#endif
 			break;
 		}
 		}
@@ -200,7 +206,7 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "run");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -215,7 +221,7 @@ BT8XXEMU_API void BT8XXEMU_stop(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "stop");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -231,7 +237,7 @@ BT8XXEMU_API void BT8XXEMU_destroy(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "destroy");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -246,7 +252,7 @@ BT8XXEMU_API int BT8XXEMU_isRunning(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "isRunning");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -262,7 +268,7 @@ BT8XXEMU_API uint8_t BT8XXEMU_transfer(BT8XXEMU_Emulator *emulator, uint8_t data
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "transfer");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -278,7 +284,7 @@ BT8XXEMU_API void BT8XXEMU_chipSelect(BT8XXEMU_Emulator *emulator, int cs)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "chipSelect");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -293,7 +299,7 @@ BT8XXEMU_API int BT8XXEMU_hasInterrupt(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "hasInterrupt");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -309,7 +315,7 @@ BT8XXEMU_API void BT8XXEMU_touchSetXY(BT8XXEMU_Emulator *emulator, int idx, int 
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "touchSetXY");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -324,7 +330,7 @@ BT8XXEMU_API void BT8XXEMU_touchResetXY(BT8XXEMU_Emulator *emulator, int idx)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "touchResetXY");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -339,7 +345,7 @@ BT8XXEMU_API int BT8XXEMU_setFlag(BT8XXEMU_Emulator *emulator, BT8XXEMU_Emulator
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "setFlag");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -355,7 +361,7 @@ BT8XXEMU_API uint8_t *BT8XXEMU_getRam(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "getRam");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -371,7 +377,7 @@ BT8XXEMU_API const uint32_t *BT8XXEMU_getDisplayList(BT8XXEMU_Emulator *emulator
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "getDisplayList");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -387,7 +393,7 @@ BT8XXEMU_API void BT8XXEMU_poke(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "poke");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -402,7 +408,7 @@ BT8XXEMU_API int *BT8XXEMU_getDisplayListCoprocessorWrites(BT8XXEMU_Emulator *em
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "getDisplayListCoprocessorWrites");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -418,7 +424,7 @@ BT8XXEMU_API void BT8XXEMU_clearDisplayListCoprocessorWrites(BT8XXEMU_Emulator *
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "clearDisplayListCoprocessorWrites");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -433,7 +439,7 @@ BT8XXEMU_API int BT8XXEMU_getDebugLimiterEffective(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "getDebugLimiterEffective");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -449,7 +455,7 @@ BT8XXEMU_API int BT8XXEMU_getDebugLimiterIndex(BT8XXEMU_Emulator *emulator)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "getDebugLimiterIndex");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -465,7 +471,7 @@ BT8XXEMU_API void BT8XXEMU_setDebugLimiter(BT8XXEMU_Emulator *emulator, int debu
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "setDebugLimiter");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -480,7 +486,7 @@ BT8XXEMU_API void BT8XXEMU_processTrace(BT8XXEMU_Emulator *emulator, int *result
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_%s\n", "processTrace");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -491,7 +497,7 @@ BT8XXEMU_API void BT8XXEMU_Flash_defaults(uint32_t versionApi, BT8XXEMU_FlashPar
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
 		fprintf(stderr, "Incompatible bt8xxemu API version\n");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return;
@@ -509,7 +515,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
 		fprintf(stderr, "Incompatible bt8xxemu API version\n");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -524,7 +530,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 		if (!module)
 		{
 			fprintf(stderr, "Failed to load flash library\n");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 			__debugbreak();
 #endif
 			return NULL;
@@ -537,7 +543,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 		if (!create)
 		{
 			fprintf(stderr, "Library does not contain BT8XXEMU_Flash_create procedure\n");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 			__debugbreak();
 #endif
 			return NULL;
@@ -548,7 +554,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 		if (!flash)
 		{
 			fprintf(stderr, "Unable to create flash emulator instance\n");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 			__debugbreak();
 #endif
 			return NULL;
@@ -559,7 +565,7 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_Flash_%s\n", "create");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -579,7 +585,7 @@ BT8XXEMU_API void BT8XXEMU_Flash_destroy(BT8XXEMU_Flash *flash)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_Flash_%s\n", "destroy");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 	}
@@ -594,7 +600,7 @@ BT8XXEMU_API uint8_t BT8XXEMU_Flash_transferSpi4(BT8XXEMU_Flash *flash, uint8_t 
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_Flash_%s\n", "transferSpi4");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
@@ -610,7 +616,7 @@ BT8XXEMU_API uint8_t *BT8XXEMU_Flash_data(BT8XXEMU_Flash *flash)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_Flash_%s\n", "data");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return NULL;
@@ -626,7 +632,7 @@ BT8XXEMU_API size_t BT8XXEMU_Flash_size(BT8XXEMU_Flash *flash)
 	catch (...)
 	{
 		fprintf(stderr, "Unexpected C++ exception in BT8XXEMU_Flash_%s\n", "size");
-#ifndef NDEBUG
+#if defined(_MSC_VER) && !defined(NDEBUG)
 		__debugbreak();
 #endif
 		return 0;
