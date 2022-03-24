@@ -39,20 +39,20 @@ KeyboardInput::KeyboardInput(System *system, WindowOutput *windowOutput) : m_Sys
 
 	if (m_lpDI) FTEMU_error("KeyboardInput::begin()  m_lpDI != NULL");
 	hr = DirectInput8Create((HINSTANCE)GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDI, NULL);
-	if FAILED(hr) { release(); FTEMU_error("DirectInput not available"); }
+	if FAILED(hr) { release(); FTEMU_error("DirectInput not available"); return; }
 
 	// Retrieve interface to an IDirectInputDevice8
 	if (m_lpDIKeyboard) FTEMU_error("KeyboardInput::begin()  m_lpDIKeyboard != NULL");
     hr = m_lpDI->CreateDevice(GUID_SysKeyboard, &m_lpDIKeyboard, NULL);
-	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (1)"); }
+	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (1)"); return; }
 
 	// Set keyboard data format
 	hr = m_lpDIKeyboard->SetDataFormat(&c_dfDIKeyboard);
-	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (2)"); }
+	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (2)"); return; }
 
 	// Set cooperative level
 	hr = m_lpDIKeyboard->SetCooperativeLevel(windowOutput->getHandle(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (3)"); }
+	if FAILED(hr) { release(); FTEMU_error("Keyboard not available (3)"); return; }
 
 	// Get access to the input device, may fail the first time round
     hr = m_lpDIKeyboard->Acquire();
