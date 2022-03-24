@@ -389,7 +389,7 @@ MainWindow::~MainWindow()
 }
 
 #ifdef FT800EMU_PYTHON
-void pythonError()
+QString pythonError()
 {
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
@@ -397,9 +397,14 @@ void pythonError()
 	PyObject *errStr = PyObject_Repr(pvalue);
 	const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 	QString error = QString::fromUtf8(pStrErrorMessage);
-	printf("%s\n", error.toLocal8Bit().data());
+#ifdef WIN32
+	wprintf(L"%s\n", pStrErrorMessage ? error.toStdWString().c_str() : L"<NULL>");
+#else
+	printf("%s\n", pStrErrorMessage ? error.toLocal8Bit().data() : "<NULL>");
+#endif
 	Py_DECREF(errStr);
 	printf("---\n");
+	return error;
 }
 
 static QString scriptDisplayName(const QString &script)
@@ -463,13 +468,17 @@ static QString scriptDisplayName(const QString &script)
 
 char *scriptFolder = "export_scripts";
 
-char *scriptDeviceFolder[] = {
+char *scriptDeviceFolder[FTEDITOR_DEVICE_NB] = {
 	"ft80x",
 	"ft80x",
 	"ft81x",
 	"ft81x",
 	"ft81x",
 	"ft81x",
+	"bt88x",
+	"bt88x",
+	"bt88x",
+	"bt88x",
 	"bt81x",
 	"bt81x",
 	"bt81x",
@@ -661,15 +670,9 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
@@ -693,15 +696,9 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
@@ -794,15 +791,9 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
 		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}

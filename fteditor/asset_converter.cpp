@@ -48,6 +48,8 @@
 
 namespace FTEDITOR {
 
+extern QString pythonError();
+
 namespace {
 
 #ifdef FT800EMU_PYTHON
@@ -98,13 +100,7 @@ bool initPythonScript(PyObject *&module, PyObject *&object, PyObject *&run, QStr
 		}
 	}
 
-	printf("---\nPython ERROR: \n");
-	PyObject *ptype, *pvalue, *ptraceback;
-	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(ptraceback));
-	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
-	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
-	printf("---\n");
+	a_ImageConvError = pythonError();
 	return false;
 }
 #endif /* FT800EMU_PYTHON */
@@ -127,13 +123,7 @@ bool initPythonScript(PyObject *&module, PyObject *&run, QString &error, const c
 		}
 	}
 
-	printf("---\nPython ERROR: \n");
-	PyObject *ptype, *pvalue, *ptraceback;
-	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-	const char *pStrErrorMessage = PyUnicode_AsUTF8(PyObject_Str(pvalue));
-	a_ImageConvError = QString::fromUtf8(pStrErrorMessage);
-	printf("%s\n", a_ImageConvError.toLocal8Bit().data());
-	printf("---\n");
+	a_ImageConvError = pythonError();
 	return false;
 }
 #endif /* FT800EMU_PYTHON */
@@ -269,23 +259,9 @@ void AssetConverter::convertImage(QString &buildError, const QString &inFile, co
 		}
 		if (error)
 		{
-			printf("---\nPython ERROR: \n");
-			PyObject *ptype, *pvalue, *ptraceback;
-			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			PyObject *errStr = PyObject_Repr(pvalue);
-			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			if (pStrErrorMessage)
-			{
-				buildError = QString::fromUtf8(pStrErrorMessage);
-			}
-			else
-			{
+			buildError = pythonError();
+			if (buildError.isEmpty())
 				buildError = "<i>(Python)</i> Unknown Error";
-			}
-			QByteArray er = buildError.toLocal8Bit();
-			printf("%s\n", er.data());
-			Py_DECREF(errStr);
-			printf("---\n");
 
 			// Reinitialize Python converters
 			release();
@@ -386,24 +362,9 @@ void AssetConverter::convertImagePaletted(QString &buildError, const QString &in
 
 		if (error)
 		{
-			printf("---\nPython ERROR: \n");
-			PyObject *ptype, *pvalue, *ptraceback;
-			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			PyObject *errStr = PyObject_Repr(pvalue);
-			const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromUtf8(pStrErrorMessage);
-			if (pStrErrorMessage)
-			{
-				buildError = QString::fromUtf8(pStrErrorMessage);
-			}
-			else
-			{
+			buildError = pythonError();
+			if (buildError.isEmpty())
 				buildError = "<i>(Python)</i> Unknown Error";
-			}
-			QByteArray er = buildError.toLocal8Bit();
-			printf("%s\n", er.data());
-			Py_DECREF(errStr);
-			printf("---\n");
 
 			// Reinitialize Python converters
 			release();
@@ -616,24 +577,9 @@ void AssetConverter::convertRaw(QString &buildError, const QString &inFile, cons
 		}
 		if (error)
 		{
-			printf("---\nPython ERROR: \n");
-			PyObject *ptype, *pvalue, *ptraceback;
-			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			PyObject *errStr = PyObject_Repr(pvalue);
-			char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-			QString error = QString::fromUtf8(pStrErrorMessage);
-			if (pStrErrorMessage)
-			{
-				buildError = QString::fromUtf8(pStrErrorMessage);
-			}
-			else
-			{
+			buildError = pythonError();
+			if (buildError.isEmpty())
 				buildError = "<i>(Python)</i> Unknown Error";
-			}
-			QByteArray er = buildError.toLocal8Bit();
-			printf("%s\n", er.data());
-			Py_DECREF(errStr);
-			printf("---\n");
 
 			// Reinitialize Python converters
 			release();

@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 	if (pythonPath)
 	{
 		QString pathBase = QString::fromWCharArray(pythonPath);
-		QString fullPath = pathBase + ";" + pathBase + "/DLLs;" + pathBase + "/Lib";
+		QString fullPath = pathBase + ";" + pathBase + "/DLLs;" + pathBase + "/Lib;" + pathBase + "/Lib/site-packages";
 		Py_SetPath(fullPath.toStdWString().c_str());
 	}
 	Py_IgnoreEnvironmentFlag = TRUE;
