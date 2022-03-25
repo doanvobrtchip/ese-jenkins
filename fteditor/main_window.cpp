@@ -2257,8 +2257,6 @@ void MainWindow::traceEnabledChanged(bool enabled)
 	m_TraceY->setEnabled(enabled);
 }
 
-#define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
-
 void MainWindow::clearEditor()
 {
 	m_ProjectDevice->setCurrentIndex(FTEDITOR_DEFAULT_DEVICE);
@@ -2571,6 +2569,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::actCloseProject()
 {
+#define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
+
 	if (!maybeSave())
 		return;
 

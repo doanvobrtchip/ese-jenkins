@@ -96,7 +96,7 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			// TODO: Blank
 			// ..
 		}
-		s_HoverValid = s_HoverX >= 0 && s_HoverY >= 0 && s_HoverX < hsize && s_HoverY < vsize;
+		s_HoverValid = s_HoverX >= 0 && s_HoverY >= 0 && s_HoverX < (int)hsize && s_HoverY < (int)vsize;
 		if (s_HoverValid)
 			s_HoverColor = buffer[s_HoverY * hsize + s_HoverX];
 		s_EmulatorViewport->graphics();

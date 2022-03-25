@@ -847,8 +847,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 		{
 			if (parsed.IdText.size() > 0)
 			{
-				QString message;
-				message.sprintf(tr("Unknown command '<i>%s</i>'").toUtf8().constData(), parsed.IdText.c_str());
+				QString message = QString::asprintf(tr("Unknown command '<i>%s</i>'").toUtf8().constData(), parsed.IdText.c_str());
 				m_MainWindow->propertiesEditor()->setInfo(message);
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}

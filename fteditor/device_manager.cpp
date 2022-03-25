@@ -380,7 +380,7 @@ void DeviceManager::refreshDevices()
 			di->EveHalContext = NULL;
 			di->View = new QTreeWidgetItem(m_DeviceList);
 			di->View->setText(0, "No");
-			di->View->setData(0, Qt::UserRole, qVariantFromValue<DeviceInfo *>(di));
+			di->View->setData(0, Qt::UserRole, QVariant::fromValue<DeviceInfo *>(di));
 			di->DeviceIntf = 0;
 		}
 

@@ -185,7 +185,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 
 	connect(m_ZoomCB, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InteractiveViewport::zoomChanged);
 	connect(m_ZoomCB->lineEdit(), &QLineEdit::returnPressed, this, &InteractiveViewport::zoomEditTextChanged);
-	connect(m_ZoomCB, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::activated),
+	connect(m_ZoomCB, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::textActivated),
 		[=](const QString &text) {  m_ZoomCB->lineEdit()->selectAll();  });
 
 	QStringList zoomList;
@@ -1709,14 +1709,14 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 	int mvx = screenLeft();
 	int mvy = screenTop();
 	int scl = screenScale();
-	int curx = UNTFX(e->pos().x());
-	int cury = UNTFY(e->pos().y());
+	int curx = UNTFX(e->position().toPoint().x());
+	int cury = UNTFY(e->position().toPoint().y());
 
-	if (e->delta() > 0)
+	if (e->angleDelta().y() > 0)
 	{
 		zoomIn();
 	}
-	else if (e->delta() < 0)
+	else if (e->angleDelta().y() < 0)
 	{
 		zoomOut();
 	}
@@ -1724,8 +1724,8 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 	mvx = screenLeft();
 	mvy = screenTop();
 	scl = screenScale();
-	int newx = UNTFX(e->pos().x());
-	int newy = UNTFY(e->pos().y());
+	int newx = UNTFX(e->position().toPoint().x());
+	int newy = UNTFY(e->position().toPoint().y());
 
 	int nx = (curx - newx) * 16;
 	int ny = (cury - newy) * 16;
@@ -1772,7 +1772,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MainWindow->setTraceY(UNTFY(e->pos().y()));
 			m_MainWindow->setTraceEnabled(true);
 			break;
-		case Qt::MidButton:
+		case Qt::MiddleButton:
 			if (m_PointerFilter != POINTER_TRACE)
 			{
 				m_PreferTraceCursor = false;
@@ -1851,7 +1851,7 @@ RETURN()
 			}
 			break;
 		}
-		else if (e->button() == Qt::MidButton
+		else if (e->button() == Qt::MiddleButton
 			|| e->button() == Qt::RightButton)
 		{
 			m_Insert->setChecked(false);

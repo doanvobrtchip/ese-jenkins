@@ -80,11 +80,11 @@ void EmulatorNavigator::mouseReleaseEvent(QMouseEvent *e)
 
 void EmulatorNavigator::wheelEvent(QWheelEvent* e)
 {
-	if (e->delta() > 0)
+	if (e->angleDelta().y() > 0)
 	{
 		m_EmulatorViewport->zoomIn();
 	}
-	else if (e->delta() < 0)
+	else if (e->angleDelta().y() < 0)
 	{
 		m_EmulatorViewport->zoomOut();
 	}

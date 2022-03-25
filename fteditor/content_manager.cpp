@@ -986,7 +986,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
 	contentInfo->View = view;
-	view->setData(0, Qt::UserRole, qVariantFromValue((quintptr)(void *)contentInfo));
+	view->setData(0, Qt::UserRole, QVariant::fromValue((quintptr)(void *)contentInfo));
 	rebuildViewInternal(contentInfo);
 
 	// Reprocess to RAM
