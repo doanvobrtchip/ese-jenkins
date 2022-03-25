@@ -1969,27 +1969,27 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
     </message>
     <message>
         <location filename="interactive_viewport.cpp" line="1510"/>
-        <location filename="interactive_viewport.cpp" line="1791"/>
+        <location filename="interactive_viewport.cpp" line="1807"/>
         <source>Move vertex</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="1860"/>
+        <location filename="interactive_viewport.cpp" line="1876"/>
         <source>Move widget</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2429"/>
+        <location filename="interactive_viewport.cpp" line="2445"/>
         <source>Drag and drop from toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2501"/>
+        <location filename="interactive_viewport.cpp" line="2517"/>
         <source>&lt;b&gt;Error&lt;/b&gt;: No free bitmap handle available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2513"/>
+        <location filename="interactive_viewport.cpp" line="2529"/>
         <source>Drag and drop primitive</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1997,12 +1997,12 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 <context>
     <name>FTEDITOR::MainWindow</name>
     <message>
-        <location filename="main_window.cpp" line="588"/>
+        <location filename="main_window.cpp" line="598"/>
         <source>Run Python script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="634"/>
+        <location filename="main_window.cpp" line="644"/>
         <source>Executed Python script &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2320,12 +2320,12 @@ http://creativecommons.org/licenses/by/3.0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="303"/>
+        <location filename="main_window.cpp" line="304"/>
         <source>Cannot find flash firmware. The editor may not function correctly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="341"/>
+        <location filename="main_window.cpp" line="342"/>
         <source>ERROR
 ERROR
 ERROR</source>
@@ -2511,7 +2511,7 @@ Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="303"/>
+        <location filename="main_window.cpp" line="304"/>
         <location filename="main_window.cpp" line="1805"/>
         <location filename="main_window.cpp" line="2313"/>
         <source>EVE Screen Editor</source>
