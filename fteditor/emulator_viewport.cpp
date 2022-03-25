@@ -280,6 +280,18 @@ void EmulatorViewport::setScreenScale(int screenScale)
 	else m_ScreenScale = screenScale;
 }
 
+void EmulatorViewport::zoomIn()
+{
+	// Not really used, base implementation for virtual override
+	setScreenScale(screenScale() * 2);
+}
+
+void EmulatorViewport::zoomOut()
+{
+	// Not really used, base implementation for virtual override
+	setScreenScale(screenScale() / 2);
+}
+
 void EmulatorViewport::threadRepaint() // on Qt thread
 {
 	g_ViewportMutex.lock();

@@ -86,14 +86,16 @@ protected:
 	virtual void dragMoveEvent(QDragMoveEvent *e);
 	virtual void dragEnterEvent(QDragEnterEvent *e);
 
+public slots:
+	virtual void zoomIn() override;
+	virtual void zoomOut() override;
+
 private slots:
 	void automaticChecked();
 	void touchChecked();
 	void traceChecked();
 	void editChecked();
 
-	void zoomIn();
-	void zoomOut();
 	void zoomChanged(int index);
 	void zoomEditTextChanged();
 

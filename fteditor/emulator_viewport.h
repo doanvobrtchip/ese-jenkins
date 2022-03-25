@@ -66,17 +66,20 @@ public:
 	int screenBottom();
 	int screenRight();
 
-	void setScreenScale(int screenScale);
-
 	QScrollBar *horizontalScrollbar() { return m_Horizontal; }
 	QScrollBar *verticalScrollbar() { return m_Vertical; }
 
 protected:
+	void setScreenScale(int screenScale);
+
 	virtual void paintEvent(QPaintEvent *e);
 
 public slots:		
 	// void saveScreenshot();
 	void threadRepaint();
+
+	virtual void zoomIn();
+	virtual void zoomOut();
 
 signals:
 	void frame();
