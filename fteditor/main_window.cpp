@@ -913,7 +913,8 @@ void MainWindow::frameQt()
 	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
-	if (m_EmulatorViewport->mouseOver()) {
+	if (m_EmulatorViewport->mouseOver())
+	{
 		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
 
 		QColor c = m_EmulatorViewport->fetchColorAsync();
@@ -923,7 +924,9 @@ void MainWindow::frameQt()
 			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
 												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
 		m_PixelColor->setText(strColor.toUpper());
-	} else {
+	}
+	else
+	{
 		m_CursorPosition->setText("");
 		m_PixelColor->setText("");
 	}
