@@ -24,7 +24,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <QTreeView>
-#include <QDirModel>
+// #include <QDirModel>
 #include <QUndoStack>
 #include <QUndoCommand>
 #include <QScrollArea>
@@ -1253,12 +1253,15 @@ void MainWindow::createDockWindows()
 			groupLayout->addLayout(hBoxLayout);
 
 			QVBoxLayout *vBoxLayout = new QVBoxLayout();
+#if QT_VERSION_MAJOR < 6 // FIXME
 			vBoxLayout->setMargin(0);
+#endif
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
-			// m_ProjectFlashLayout->marg
+#if QT_VERSION_MAJOR < 6 // FIXME
 			hBoxLayout->setMargin(0);
+#endif
 
 			m_ProjectFlash = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)

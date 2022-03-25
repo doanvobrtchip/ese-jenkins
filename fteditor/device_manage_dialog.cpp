@@ -4,15 +4,19 @@
 #pragma warning(disable : 26444) // Unnamed objects
 
 #include "device_manage_dialog.h"
-#include "device_manager.h"
-#include "device_add_new_dialog.h"
-#include "constant_mapping.h"
 
+// Qt includes
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QThread>
-#include < QDirIterator>
+#include <QDirIterator>
+
+// Project includes
+#include "device_manager.h"
+#include "device_add_new_dialog.h"
+#include "constant_mapping.h"
+#include "device_info_custom.h"
 
 namespace FTEDITOR {
 

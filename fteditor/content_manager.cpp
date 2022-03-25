@@ -4923,7 +4923,7 @@ void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
 void ContentTreeWidget::dropEvent(QDropEvent *event)
 {
 	event->acceptProposedAction();
-	for	each(QUrl url in event->mimeData()->urls())
+	for	(QUrl url : event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}
@@ -4946,15 +4946,15 @@ ContentTreeWidget::~ContentTreeWidget()
 {
 }
 
-void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
+void ContentLabel::dragEnterEvent(QDragEnterEvent *ev)
 {
-	event->accept();
+	ev->accept();
 }
 
-void ContentLabel::dropEvent(QDropEvent *event)
+void ContentLabel::dropEvent(QDropEvent *ev)
 {
-	event->acceptProposedAction();
-	for each(QUrl url in event->mimeData()->urls())
+	ev->acceptProposedAction();
+	for (QUrl url : ev->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}

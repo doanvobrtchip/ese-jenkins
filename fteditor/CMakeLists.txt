@@ -10,16 +10,20 @@ SOURCE_GROUP("resources" FILES ${RESOURCES} ${RSRC})
 SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
-# Find the QtWidgets library
-FIND_PACKAGE(Qt5 COMPONENTS Widgets LinguistTools)
+# Find the QtWidgets library, minimum 5.15 or 6.0
+# https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
+find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools)
+if(NOT Qt6_FOUND)
+  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools)
+endif()
 
 # Instruct CMake to run moc automatically when needed.
-SET(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOMOC ON)
 
-QT5_CREATE_TRANSLATION(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
-CONFIGURE_FILE(translations.qrc.in translations.qrc COPYONLY)
+qt_create_translation(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
+configure_file(translations.qrc.in translations.qrc COPYONLY)
 
-QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -99,7 +103,7 @@ ENDIF(WITH_FREETYPE)
 
 IF (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
-    Qt5::Widgets
+    Qt::Widgets
   )
   
   TARGET_LINK_LIBRARIES(fteditor
@@ -107,7 +111,7 @@ IF (WIN32)
   )
 ELSE (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
-    Qt5::Widgets
+    Qt::Widgets
   )
 ENDIF (WIN32)
 
@@ -122,17 +126,22 @@ if(WIN32)
     HINTS
       ${PYTHON_INCLUDE_DIR}/..
   )
-  find_path(BIN_QT5_BINARIES
+  find_path(BIN_QT_BINARIES
     NAMES 
+      Qt6Core.dll Qt6Cored.dll
       Qt5Core.dll Qt5Cored.dll
     HINTS
+      ${Qt6Core_DIR}/../../../bin
+      ${Qt6Core_DIR}/../../..
       ${Qt5Core_DIR}/../../../bin
       ${Qt5Core_DIR}/../../..
   )
-  find_path(BIN_QT5_PLUGINS
+  find_path(BIN_QT_PLUGINS
     NAMES 
       platforms styles imageformats
     HINTS
+      ${Qt6Core_DIR}/../../../plugins
+      ${Qt6Core_DIR}/../../..
       ${Qt5Core_DIR}/../../../plugins
       ${Qt5Core_DIR}/../../..
   )
@@ -159,7 +168,7 @@ if(WIN32)
       ${ZLIB_INCLUDE_DIR}/..
   )
   set_target_properties(fteditor PROPERTIES
-    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_QT5_BINARIES};${BIN_QT5_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_QT5_PLUGINS}\nFTEDITOR_PYTHONPATH=${BIN_PYTHON_ROOT}")
+    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_QT_BINARIES};${BIN_QT_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_QT_PLUGINS}\nFTEDITOR_PYTHONPATH=${BIN_PYTHON_ROOT}")
   # set_target_properties(fteditor PROPERTIES
   #   VS_DEBUGGER_COMMAND_ARGUMENTS "")
   set_target_properties(fteditor PROPERTIES

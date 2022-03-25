@@ -24,6 +24,7 @@
 #include <QWidget>
 #include <QMutex>
 #include <QStringList>
+#include <QHash>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>

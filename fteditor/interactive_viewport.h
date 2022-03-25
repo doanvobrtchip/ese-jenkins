@@ -73,16 +73,16 @@ private:
 	void mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km = Qt::NoModifier);
 
 protected:
-	virtual void mouseMoveEvent(QMouseEvent *e);
-	virtual void mousePressEvent(QMouseEvent *e);
-	virtual void mouseReleaseEvent(QMouseEvent *e);
-	virtual void enterEvent(QEvent *e);
-	virtual void leaveEvent(QEvent *e);
-	virtual void wheelEvent(QWheelEvent* e);
+	virtual void mouseMoveEvent(QMouseEvent *e) override;
+	virtual void mousePressEvent(QMouseEvent *e) override;
+	virtual void mouseReleaseEvent(QMouseEvent *e) override;
+	virtual void enterEvent(QEnterEvent *e) override;
+	virtual void leaveEvent(QEvent *e) override;
+	virtual void wheelEvent(QWheelEvent* e) override;
 
-	virtual void dropEvent(QDropEvent *e);
-	virtual void dragMoveEvent(QDragMoveEvent *e);
-	virtual void dragEnterEvent(QDragEnterEvent *e);
+	virtual void dropEvent(QDropEvent *e) override;
+	virtual void dragMoveEvent(QDragMoveEvent *e) override;
+	virtual void dragEnterEvent(QDragEnterEvent *e) override;
 
 public slots:
 	virtual void zoomIn() override;

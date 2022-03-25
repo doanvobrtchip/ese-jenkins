@@ -5,6 +5,19 @@
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
 
+// STL includes
+#ifdef M_PI
+#ifdef _USE_MATH_DEFINES
+#undef _USE_MATH_DEFINES
+#endif
+#else
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#endif
+#include <cmath>
+
+// Qt includes
 #include <QDialog>
 #include <QLayout>
 #include <QSpinBox>
@@ -16,6 +29,7 @@
 #include <QMessageBox>
 #include <QHash>
 
+// Project includes
 #include <qradiobutton.h>
 #include <qgroupbox.h>
 #include "device_manager.h"

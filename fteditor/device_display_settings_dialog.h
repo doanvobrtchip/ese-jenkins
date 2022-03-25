@@ -5,6 +5,19 @@
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
 
+// STL includes
+#ifdef M_PI
+#ifdef _USE_MATH_DEFINES
+#undef _USE_MATH_DEFINES
+#endif
+#else
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#endif
+#include <cmath>
+
+// Qt includes
 #include <QDialog>
 #include <QLayout>
 #include <QSpinBox>
@@ -13,8 +26,10 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QMessageBox>
-#include <qradiobutton.h>
-#include <qgroupbox.h>
+#include <QRadioButton>
+#include <QGroupBox>
+
+// Project includes
 #include "device_manager.h"
 
 namespace FTEDITOR

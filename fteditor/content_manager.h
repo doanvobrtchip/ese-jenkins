@@ -54,9 +54,9 @@ signals:
 	void contentDropped(QString url);
 
 public:
-	void dragEnterEvent(QDragEnterEvent *event) override;
-	void dropEvent(QDropEvent *event) override;
-	QStringList mimeTypes() const override;
+	virtual void dragEnterEvent(QDragEnterEvent *event) override;
+	virtual void dropEvent(QDropEvent *event) override;
+	virtual QStringList mimeTypes() const override;
 
 public:
 	explicit ContentTreeWidget(QWidget *parent = nullptr);
@@ -71,8 +71,8 @@ signals:
 	void contentDropped(QString url);
 
 public:
-	void dragEnterEvent(QDragEnterEvent *event) override;
-	void dropEvent(QDropEvent *event) override;
+	virtual void dragEnterEvent(QDragEnterEvent *event) override;
+	virtual void dropEvent(QDropEvent *event) override;
 
 public:
 	explicit ContentLabel(QWidget *parent = nullptr);

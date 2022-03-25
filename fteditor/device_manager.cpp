@@ -12,10 +12,11 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #pragma warning(disable : 6262) // Large stack
 #endif
 
+#define _USE_MATH_DEFINES
 #include "device_manager.h"
 
 // STL includes
-#include <stdio.h>
+#include <cstdio>
 #include <memory>
 
 // Qt includes
@@ -29,7 +30,10 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #include <QTimer>
 
 // Emulator includes
-#include <EVE_Platform.h>
+#ifdef _USE_MATH_DEFINES
+#undef _USE_MATH_DEFINES
+#endif
+#include <EVE_Hal.h>
 #include <bt8xxemu_diag.h>
 
 // Project includes
@@ -38,6 +42,7 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #include "dl_parser.h"
 #include "dl_editor.h"
 #include "constant_mapping.h"
+#include "device_info_custom.h"
 
 #include "device_display_settings_dialog.h"
 #include "device_manage_dialog.h"
@@ -74,6 +79,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
     , m_DisplaySettingsDialog(NULL)
     , m_DeviceManageDialog(NULL)
     , m_IsCustomDevice(false)
+	, m_CDI(std::make_unique<CustomDeviceInfo>())
     , m_DeviceJsonPath("")
     , m_Busy(false)
     , m_Abort(false)
@@ -469,17 +475,17 @@ void DeviceManager::connectDevice()
 		return;
 	}
 
-	phost->ChipId = projectChipID();
+	phost->ChipId = (EVE_CHIPID_T)projectChipID();
 	devInfo->EveHalContext = phost;
 
 	EVE_BootupParameters bootupParams;
 	EVE_Util_bootupDefaults(phost, &bootupParams);
 
 	if (m_IsCustomDevice) {
-		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, m_CDI);
-		bootupParams.ExternalOsc = m_CDI.ExternalClock;
+		DeviceManageDialog::getCustomDeviceInfo(m_DeviceJsonPath, *m_CDI);
+		bootupParams.ExternalOsc = m_CDI->ExternalClock;
 
-		switch (m_CDI.SystemClock) {
+		switch (m_CDI->SystemClock) {
 		case 24: bootupParams.SystemClock = EVE_SYSCLK_24M;			break;
 		case 36: bootupParams.SystemClock = EVE_SYSCLK_36M;			break;
 		case 48: bootupParams.SystemClock = EVE_SYSCLK_48M;			break;
@@ -507,7 +513,7 @@ void DeviceManager::connectDevice()
 
 	if (m_IsCustomDevice)
 	{
-		configParams = m_CDI.configParams;		
+		configParams = m_CDI->configParams;		
 	}	
 	else if (m_SelectedDisplaySize == "1280x800" || projectDisplaySize == "1280x800")
 	{
@@ -1451,8 +1457,8 @@ void DeviceManager::updateSelection()
 	}
 }
 
-EVE_CHIPID_T DeviceManager::projectChipID() {
-	return EVE_extendedChipId((int)deviceToEnum(FTEDITOR_CURRENT_DEVICE));
+int DeviceManager::projectChipID() {
+	return (int)EVE_extendedChipId((int)deviceToEnum(FTEDITOR_CURRENT_DEVICE));
 }
 #endif /* FT800_DEVICE_MANAGER */
 

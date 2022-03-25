@@ -32,6 +32,7 @@
 #include <QtEndian>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QRegularExpression>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -459,7 +460,9 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 
 	QTextStream ts(&f);
 	ts.setAutoDetectUnicode(true);
+#if QT_VERSION_MAJOR < 6
 	ts.setCodec("utf-8");
+#endif
 	std::vector<uint32_t> comp;
 
 	lockDisplayList();
@@ -499,14 +502,14 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 
 			for (int i = 0; i < comp.size(); i++)
 			{
-				if (i == comp.size() - 1 && argNames.indexOf(QRegExp("^string.*")) != -1)
+				if (i == comp.size() - 1 && argNames.indexOf(QRegularExpression("^string.*")) != -1)
 				{
 					argNames.append("end string");
 				}
 
 				if (argNames.size() < i + 1)
 				{
-					if (argNames.indexOf(QRegExp("^string.*")) != -1)
+					if (argNames.indexOf(QRegularExpression("^string.*")) != -1)
 					{
 						argNames.append("(string continue)");
 					}
