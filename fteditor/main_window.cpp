@@ -2286,15 +2286,22 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	QString title = QString("%1%2 - %4 - EVE Screen Editor v%3 [Build Time: %5 - %6]")
-	                    .arg(QString(m_CleanUndoStack ? "" : "*"))
-	                    .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
-						.arg(STR_PRODUCTVERSION)
-					    .arg(QDir::currentPath())
-	                    .arg(__DATE__)
-	                    .arg(__TIME__);
-
-	setWindowTitle(title);
+	QString titleSuffix =  QString("EVE Screen Editor v%1 [Build Time: %2 - %3]")
+		.arg(STR_PRODUCTVERSION)
+		.arg(__DATE__)
+		.arg(__TIME__);
+	if (!m_CloseProjectAct->isEnabled())
+	{
+		setWindowTitle(titleSuffix);
+	}
+	else
+	{
+		QString title = QString("%1%2 - %3 - ")
+			.arg(QString(m_CleanUndoStack ? "" : "*"))
+			.arg(m_CurrentFile.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFile).completeBaseName())
+			.arg(QDir::currentPath());
+		setWindowTitle(title + titleSuffix);
+	}
 }
 
 void MainWindow::undoCleanChanged(bool clean)
@@ -2511,7 +2518,7 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 void MainWindow::toggleDockWindow(bool isShow)
 {
 	m_InspectorDock->setVisible(isShow);
-	m_DlEditorDock->setVisible(isShow);
+	m_DlEditorDock->setVisible(false);
 	m_CmdEditorDock->setVisible(isShow);
 	m_ProjectDock->setVisible(isShow);
 #if FT800_DEVICE_MANAGER
@@ -2580,14 +2587,19 @@ void MainWindow::actCloseProject()
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 	m_CmdEditor->selectLine(0);
 
-	QDir::setCurrent("");
-	setWindowTitle(tr("No project"));
+	QDir::setCurrent(QDir::tempPath());
+#ifdef FTEDITOR_TEMP_DIR
+	delete m_TemporaryDir;
+	m_TemporaryDir = NULL;
+#endif
 
 	// reset flash file name
 	setFlashFileNameToLabel("");
 
 	// hide all dock windows
 	toggleUI(false);
+
+	updateWindowTitle();
 }
 
 void MainWindow::actNew()
