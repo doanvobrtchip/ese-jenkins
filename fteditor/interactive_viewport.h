@@ -62,8 +62,6 @@ public:
 	int mouseY() const { return m_MouseY; }
 	bool mouseOver() const { return m_MouseOver; }
 
-	QColor getPixelColor();
-
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 

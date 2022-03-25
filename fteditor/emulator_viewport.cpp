@@ -47,6 +47,11 @@ static QPixmap *s_Pixmap = NULL;
 QMutex g_ViewportMutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
+static int s_HoverX = -1, s_HoverY = -1;
+static argb8888 s_HoverColor;
+static bool s_HoverValid = false;
+static QColor s_HoverColorQt = QColor::Invalid;
+
 static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
 static bool s_MainReady = false;
 
@@ -91,6 +96,9 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			// TODO: Blank
 			// ..
 		}
+		s_HoverValid = s_HoverX >= 0 && s_HoverY >= 0 && s_HoverX < hsize && s_HoverY < vsize;
+		if (s_HoverValid)
+			s_HoverColor = buffer[s_HoverY * hsize + s_HoverX];
 		s_EmulatorViewport->graphics();
 		if (s_LastRendered)
 		{
@@ -310,10 +318,21 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
+	if (s_HoverValid)
+		s_HoverColorQt = QColor::fromRgba(s_HoverColor);
+	else
+		s_HoverColorQt = QColor::Invalid;
 	s_LastRendered = true;
 	g_ViewportMutex.unlock();
 	repaint();
 	frame();
+}
+
+QColor EmulatorViewport::fetchColorAsync(int x, int y)
+{
+	s_HoverX = x;
+	s_HoverY = y;
+	return s_HoverColorQt;
 }
 
 const QPixmap &EmulatorViewport::getPixMap() const

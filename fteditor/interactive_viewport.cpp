@@ -443,17 +443,6 @@ void InteractiveViewport::graphics(QImage *image)
 	return; // This callback can be used to make the navview
 }
 
-QColor InteractiveViewport::getPixelColor()
-{
-	QPixmap pm = getPixMap();
-	if (m_MouseX < 0 || m_MouseX > pm.width() || m_MouseY < 0 || m_MouseY > pm.height())
-	{
-		return QColor::Invalid;
-	}
-	QImage img = getPixMap().toImage();
-	return img.pixelColor(m_MouseX, m_MouseY);
-}
-
 void InteractiveViewport::paintEvent(QPaintEvent *e)
 {
 	EmulatorViewport::paintEvent(e);
