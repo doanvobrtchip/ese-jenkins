@@ -328,10 +328,14 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	frame();
 }
 
-QColor EmulatorViewport::fetchColorAsync(int x, int y)
+void EmulatorViewport::fetchColorAsync(int x, int y)
 {
 	s_HoverX = x;
 	s_HoverY = y;
+}
+
+QColor EmulatorViewport::fetchColorAsync()
+{
 	return s_HoverColorQt;
 }
 

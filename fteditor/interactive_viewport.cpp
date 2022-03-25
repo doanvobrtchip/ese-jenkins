@@ -1315,6 +1315,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
 	m_NextMouseX = mouseX;
 	m_NextMouseY = mouseY;
+	fetchColorAsync(mouseX, mouseY);
 
 	m_MainWindow->statusBar()->showMessage("");
 	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;

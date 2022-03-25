@@ -916,7 +916,7 @@ void MainWindow::frameQt()
 	if (m_EmulatorViewport->mouseOver()) {
 		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
 
-		QColor c = m_EmulatorViewport->fetchColorAsync(m_EmulatorViewport->mouseX(), m_EmulatorViewport->mouseY());
+		QColor c = m_EmulatorViewport->fetchColorAsync();
 		QString strColor("");
 
 		if (c.isValid())

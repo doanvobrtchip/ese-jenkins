@@ -56,7 +56,8 @@ public:
 	// Pixmap can be used after each frame() signal as updated source for repaint etc. It does not permanently remain valid
 	const QPixmap &getPixMap() const;
 
-	QColor fetchColorAsync(int x, int y);
+	void fetchColorAsync(int x, int y);
+	QColor fetchColorAsync();
 
 	int hsize();
 	int vsize();
