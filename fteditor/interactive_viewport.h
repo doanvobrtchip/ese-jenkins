@@ -76,7 +76,11 @@ protected:
 	virtual void mouseMoveEvent(QMouseEvent *e) override;
 	virtual void mousePressEvent(QMouseEvent *e) override;
 	virtual void mouseReleaseEvent(QMouseEvent *e) override;
+#if QT_VERSION_MAJOR < 6
+	virtual void enterEvent(QEvent *e) override;
+#else
 	virtual void enterEvent(QEnterEvent *e) override;
+#endif
 	virtual void leaveEvent(QEvent *e) override;
 	virtual void wheelEvent(QWheelEvent* e) override;
 

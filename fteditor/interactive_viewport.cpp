@@ -474,6 +474,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 #define UNTFY(y) ((((y - mvy) * 16) / scl))
 #define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
 #define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
+#if QT_VERSION_MAJOR < 6
+#define EPOSPOINT(e) (e->pos())
+#else
+#define EPOSPOINT(e) (e->position().toPoint())
+#endif
 
 	if (m_MouseTouch && m_MouseX >= 0 && m_MouseX < getPixMap().width() && m_MouseY >= 0 && m_MouseY < getPixMap().height())
 	{
@@ -1314,7 +1319,7 @@ void InteractiveViewport::keyPressEvent(QKeyEvent *e)
 
 void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km)
 {
-	// printf("pos: %i, %i\n", e->position().toPoint().x(), e->position().toPoint().y());
+	// printf("pos: %i, %i\n", EPOSPOINT(e).x(), EPOSPOINT(e).y());
 	m_NextMouseX = mouseX;
 	m_NextMouseY = mouseY;
 	fetchColorAsync(mouseX, mouseY);
@@ -1324,7 +1329,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 
 	if (m_MouseTouch)
 	{
-		// BT8XXEMU_setTouchScreenXY(e->position().toPoint().x(), e->position().toPoint().y(), 0);
+		// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
 	}
 	else if (m_MouseMovingVertex)
 	{
@@ -1744,7 +1749,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	int mvy = screenTop();
 	int scl = screenScale();
 
-	mouseMoveEvent(UNTFX(e->position().toPoint().x()), UNTFY(e->position().toPoint().y()), e->modifiers());
+	mouseMoveEvent(UNTFX(EPOSPOINT(e).x()), UNTFY(EPOSPOINT(e).y()), e->modifiers());
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1763,15 +1768,15 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
-			// BT8XXEMU_setTouchScreenXY(e->position().toPoint().x(), e->position().toPoint().y(), 0);
+			// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
 		}
 		break;
 	case POINTER_TRACE: // trace
 		switch (e->button())
 		{
 		case Qt::LeftButton:
-			m_MainWindow->setTraceX(UNTFX(e->position().toPoint().x()));
-			m_MainWindow->setTraceY(UNTFY(e->position().toPoint().y()));
+			m_MainWindow->setTraceX(UNTFX(EPOSPOINT(e).x()));
+			m_MainWindow->setTraceY(UNTFY(EPOSPOINT(e).y()));
 			m_MainWindow->setTraceEnabled(true);
 			break;
 		case Qt::MiddleButton:
@@ -1793,8 +1798,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			{
 				m_LineEditor->selectLine(m_MouseOverVertexLine);
 			}
-			m_MovingLastX = UNTFX(e->position().toPoint().x());
-			m_MovingLastY = UNTFY(e->position().toPoint().y());
+			m_MovingLastX = UNTFX(EPOSPOINT(e).x());
+			m_MovingLastY = UNTFY(EPOSPOINT(e).y());
 			m_MouseMovingVertex = true;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
 		}
@@ -1846,8 +1851,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0].I = UNTFX(e->position().toPoint().x()) << m_LineEditor->getVertextFormat(line);
-				pa.Parameter[1].I = UNTFY(e->position().toPoint().y()) << m_LineEditor->getVertextFormat(line);
+				pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+				pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -1862,8 +1867,8 @@ RETURN()
 		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
 		{
 			// Works for any widget move action
-			m_MovingLastX = UNTFX(e->position().toPoint().x());
-			m_MovingLastY = UNTFY(e->position().toPoint().y());
+			m_MovingLastX = UNTFX(EPOSPOINT(e).x());
+			m_MovingLastY = UNTFY(EPOSPOINT(e).y());
 			m_MouseMovingWidget = m_PointerMethod;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
 		}
@@ -1913,7 +1918,11 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	EmulatorViewport::mouseReleaseEvent(e);
 }
 
+#if QT_VERSION_MAJOR < 6
+void InteractiveViewport::enterEvent(QEvent *e)
+#else
 void InteractiveViewport::enterEvent(QEnterEvent *e)
+#endif
 {
 	//printf("InteractiveViewport::enterEvent\n");
 
@@ -2082,13 +2091,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					switch (selection)
 					{
 					case FTEDITOR_DL_VERTEX2F:
-						pa.Parameter[0].I = UNTFX(e->position().toPoint().x()) << m_LineEditor->getVertextFormat(line);
-						pa.Parameter[1].I = UNTFY(e->position().toPoint().y()) << m_LineEditor->getVertextFormat(line);
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 						pa.ExpectedParameterCount = 2;
 						break;
 					default:
-						pa.Parameter[0].I = UNTFX(e->position().toPoint().x());
-						pa.Parameter[1].I = UNTFY(e->position().toPoint().y());
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 						pa.Parameter[2].I = 0;
 						pa.Parameter[3].I = 0;
 						pa.ExpectedParameterCount = 4;
@@ -2110,8 +2119,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ValidId = true;
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
-					pa.Parameter[0].I = UNTFX(e->position().toPoint().x());
-					pa.Parameter[1].I = UNTFY(e->position().toPoint().y());
+					pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+					pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 					pa.ExpectedStringParameter = false;
 					switch (selection)
 					{
@@ -2668,8 +2677,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						pa.IdLeft = 0xFFFFFF00;
 						pa.IdRight = CMD_TEXT & 0xFF;
-						pa.Parameter[0].I = UNTFX(e->position().toPoint().x());
-						pa.Parameter[1].I = UNTFY(e->position().toPoint().y());
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 						pa.Parameter[2].I = bitmapHandle;
 						pa.Parameter[3].I = 0;
 						pa.StringParameter = "Text";
@@ -2690,8 +2699,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pav.ValidId = true;
 						pav.IdLeft = FTEDITOR_DL_VERTEX2F; // FIXME: Drag-drop outside 512px does not work??
 						pav.IdRight = 0;
-						pav.Parameter[0].I = UNTFX(e->position().toPoint().x()) << m_LineEditor->getVertextFormat(line);
-						pav.Parameter[1].I = UNTFY(e->position().toPoint().y()) << m_LineEditor->getVertextFormat(line);
+						pav.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+						pav.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 						//pav.Parameter[2].I = bitmapHandle;
 						//pav.Parameter[3].I = 0;
 						pav.ExpectedParameterCount = 2;
@@ -3164,8 +3173,8 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 			int mvy = screenTop();
 			int scl = screenScale();
 
-			m_NextMouseX = UNTFX(e->position().toPoint().x());
-			m_NextMouseY = UNTFY(e->position().toPoint().y());
+			m_NextMouseX = UNTFX(EPOSPOINT(e).x());
+			m_NextMouseY = UNTFY(EPOSPOINT(e).y());
 			m_DragMoving = true;
 
 			e->acceptProposedAction();
