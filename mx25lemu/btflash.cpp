@@ -413,7 +413,7 @@ public:
 					
 						Data = new uint8_t[sizeBytes];
 						Size = sizeBytes;
-						ptrdiff_t copySize = std::min(fileSize, sizeBytes);
+						ptrdiff_t copySize = (ptrdiff_t)std::min(fileSize, (int64_t)sizeBytes);
 						FILE *f = _wfopen(dataFilePath, L"rb");
 						if (!f) log(BT8XXEMU_LogError, "Failed to open flash data file");
 						else
