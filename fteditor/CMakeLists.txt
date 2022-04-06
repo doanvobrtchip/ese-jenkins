@@ -20,7 +20,11 @@ endif()
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
-qt_create_translation(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
+if(FTEDITOR_GENERATE_TRANSLATIONS)
+  qt_create_translation(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
+else()
+  qt_add_translation(QM_FILES translation_en.ts)
+endif()
 configure_file(translations.qrc.in translations.qrc COPYONLY)
 
 qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
