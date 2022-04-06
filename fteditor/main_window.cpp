@@ -982,15 +982,15 @@ void MainWindow::createActions()
 	m_ExportAct->setVisible(m_isVCDumpEnable);
 
 	m_ProjectFolderAct = new QAction(this);
-	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_B));
+	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
 
 	m_ResetEmulatorAct = new QAction(this);
-	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
 
 	m_ImportDisplayListAct = new QAction(this);
-	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
 	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_SaveScreenshotAct = new QAction(this);
@@ -1028,7 +1028,7 @@ void MainWindow::createActions()
 	m_UndoAct = m_UndoStack->createUndoAction(this);
 	m_UndoAct->setShortcuts(QKeySequence::Undo);
 	m_RedoAct = m_UndoStack->createRedoAction(this);
-	m_RedoAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y));
+	m_RedoAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y));
 
 	m_DummyAct = new QAction(this);
 	connect(m_DummyAct, SIGNAL(triggered()), this, SLOT(dummyCommand()));
