@@ -1253,15 +1253,11 @@ void MainWindow::createDockWindows()
 			groupLayout->addLayout(hBoxLayout);
 
 			QVBoxLayout *vBoxLayout = new QVBoxLayout();
-#if QT_VERSION_MAJOR < 6 // FIXME
-			vBoxLayout->setMargin(0);
-#endif
+			vBoxLayout->setContentsMargins(0, 0, 0, 0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
-#if QT_VERSION_MAJOR < 6 // FIXME
-			hBoxLayout->setMargin(0);
-#endif
+			hBoxLayout->setContentsMargins(0, 0, 0, 0);
 
 			m_ProjectFlash = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)
