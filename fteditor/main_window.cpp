@@ -466,9 +466,9 @@ static QString scriptDisplayName(const QString &script)
 
 #ifdef FT800EMU_PYTHON
 
-char *scriptFolder = "export_scripts";
+const char *scriptFolder = "export_scripts";
 
-char *scriptDeviceFolder[FTEDITOR_DEVICE_NB] = {
+const char *scriptDeviceFolder[FTEDITOR_DEVICE_NB] = {
 	"ft80x",
 	"ft80x",
 	"ft81x",
