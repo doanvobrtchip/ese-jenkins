@@ -1,7 +1,7 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2020  Bridgetek Pte Lte
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -15,11 +15,20 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 #include "bt8xxemu_inttypes.h"
 
+#ifndef EVE_TCHAR_DEFINED
+#define EVE_TCHAR_DEFINED
+#ifdef _WIN32
+typedef wchar_t eve_tchar_t;
+#else
+typedef char eve_tchar_t;
+#endif
+#endif
+
 // API version is increased whenever BT8XXEMU_EmulatorParameters format changes or functions are modified
 #define BT8XXEMU_VERSION_API 12
 
 #ifdef BT8XXEMU_REMOTE
-#ifndef WIN32
+#ifndef _WIN32
 #undef BT8XXEMU_REMOTE /* Not yet supported */
 #else
 #define BT8XXEMU_STATIC
@@ -28,13 +37,13 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 #ifndef BT8XXEMU_STATIC
 #ifdef BT8XXEMU_EXPORT_DYNAMIC
-#ifdef WIN32
+#ifdef _WIN32
 #define BT8XXEMU_API __declspec(dllexport)
 #else
 #define BT8XXEMU_API
 #endif
 #else
-#ifdef WIN32
+#ifdef _WIN32
 #define BT8XXEMU_API __declspec(dllimport)
 #else
 #define BT8XXEMU_API
@@ -81,6 +90,10 @@ typedef enum
 	BT8XXEMU_EmulatorFT811 = 0x0811,
 	BT8XXEMU_EmulatorFT812 = 0x0812,
 	BT8XXEMU_EmulatorFT813 = 0x0813,
+	BT8XXEMU_EmulatorBT880 = 0x0880,
+	BT8XXEMU_EmulatorBT881 = 0x0881,
+	BT8XXEMU_EmulatorBT882 = 0x0882,
+	BT8XXEMU_EmulatorBT883 = 0x0883,
 	BT8XXEMU_EmulatorBT815 = 0x0815,
 	BT8XXEMU_EmulatorBT816 = 0x0816,
 	BT8XXEMU_EmulatorBT817 = 0x0817,
@@ -177,13 +190,13 @@ typedef struct
 
 	// Replaces the default builtin ROM with a custom ROM from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t RomFilePath[260];
+	eve_tchar_t RomFilePath[260];
 	// Replaces the default builtin OTP with a custom OTP from a file.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t OtpFilePath[260];
+	eve_tchar_t OtpFilePath[260];
 	// Replaces the builtin coprocessor ROM.
 	// NOTE: String is copied and may be deallocated after call to run(...)
-	wchar_t CoprocessorRomFilePath[260];
+	eve_tchar_t CoprocessorRomFilePath[260];
 
 	// Graphics driverless mode
 	// Setting this callback means no window will be created, and all
@@ -219,16 +232,16 @@ typedef struct
 typedef struct
 {
 	// Device type, by library name, default "mx25lemu"
-	wchar_t DeviceType[26];
+	eve_tchar_t DeviceType[26];
 
 	// Size of the flash memory in bytes, default 8MB
-	size_t SizeBytes;
+	ptrdiff_t SizeBytes;
 
 	// Data file to load onto the flash, default NULL
-	wchar_t DataFilePath[260];
+	eve_tchar_t DataFilePath[260];
 
 	// Internal flash status file, device specific, default NULL
-	wchar_t StatusFilePath[260];
+	eve_tchar_t StatusFilePath[260];
 
 	// Write actions to the flash are persisted to the used file.
 	// This is accomplished by memory mapping the file, instead of
@@ -242,7 +255,7 @@ typedef struct
 	// overriding any existing contents that may have been
 	// loaded from a flash file already, default NULL and 0
 	void *Data;
-	size_t DataSizeBytes;
+	ptrdiff_t DataSizeBytes;
 
 	// Log callback
 	void (*Log)(BT8XXEMU_Flash *sender, void *context, BT8XXEMU_LogType type, const char *message);
