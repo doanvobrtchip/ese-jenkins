@@ -69,6 +69,8 @@ OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" OFF)
 
 OPTION(FTEDITOR_GENERATE_TRANSLATIONS "Update translation file from source files." OFF)
 
+OPTION(FTEDITOR_OPENGL_VIEWPORT "Use QOpenGLWidget to render the emulator viewport." OFF)
+
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
 OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)

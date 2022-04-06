@@ -16,6 +16,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QWidget>
 #include <QThread>
 #include <QScrollBar>
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+#	include <QOpenGLWidget>
+#endif
 
 // Emulator includes
 #include <bt8xxemu.h>
@@ -35,7 +38,12 @@ namespace FTEDITOR {
  * \date 2013-10-15 13:18GMT
  * \author Jan Boon (Kaetemi)
  */
-class EmulatorViewport : public QWidget
+class EmulatorViewport 
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	: public QOpenGLWidget
+#else
+	: public QWidget
+#endif
 {
 	Q_OBJECT
 

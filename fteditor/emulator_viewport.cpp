@@ -117,7 +117,12 @@ void EmulatorThread::run()
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent, const QString &applicationDataDir)
-	: QWidget(parent), m_ApplicationDataDir(applicationDataDir), m_ScreenScale(16)
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	: QOpenGLWidget(parent)
+#else
+	: QWidget(parent)
+#endif
+	, m_ApplicationDataDir(applicationDataDir), m_ScreenScale(16)
 {
 	s_EmulatorViewport = this;
 	s_Image = new QImage(screenWidthDefault(FTEDITOR_CURRENT_DEVICE), screenHeightDefault(FTEDITOR_CURRENT_DEVICE), QImage::Format_RGB32);
@@ -243,6 +248,11 @@ void EmulatorViewport::stop()
 void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread
 {
 	QPainter painter(this);
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	painter.setPen(Qt::NoPen);
+	painter.setBrush(painter.background());
+	painter.drawRect(rect());
+#endif
 	painter.drawPixmap(screenLeft(), screenTop(),
 		s_Pixmap->width() * screenScale() / 16, 
 		s_Pixmap->height() * screenScale() / 16, 

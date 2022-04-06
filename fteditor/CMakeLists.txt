@@ -13,8 +13,14 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
 find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools)
+if(Qt6_FOUND AND FTEDITOR_OPENGL_VIEWPORT)
+  find_package(Qt6 QUIET COMPONENTS OpenGLWidgets)
+endif()
 if(NOT Qt6_FOUND)
   find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools)
+  if(FTEDITOR_OPENGL_VIEWPORT)
+    find_package(Qt5 5.15 REQUIRED COMPONENTS OpenGLWidgets)
+  endif()
 endif()
 
 # Instruct CMake to run moc automatically when needed.
@@ -105,19 +111,14 @@ IF(WITH_FREETYPE)
 ENDIF(WITH_FREETYPE)
 
 
-IF (WIN32)
-  TARGET_LINK_LIBRARIES(fteditor
-    Qt::Widgets
-  )
-  
-  TARGET_LINK_LIBRARIES(fteditor
-    version
-  )
-ELSE (WIN32)
-  TARGET_LINK_LIBRARIES(fteditor
-    Qt::Widgets
-  )
-ENDIF (WIN32)
+target_link_libraries(fteditor Qt::Widgets)
+if(WIN32)
+  target_link_libraries(fteditor version)
+endif()
+if(FTEDITOR_OPENGL_VIEWPORT)
+  target_link_libraries(fteditor Qt6::OpenGLWidgets)
+  ADD_DEFINITIONS(-DFTEDITOR_OPENGL_VIEWPORT)
+endif()
 
 
 if(WIN32)
