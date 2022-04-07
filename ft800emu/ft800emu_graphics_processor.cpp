@@ -3135,12 +3135,7 @@ EvaluateDisplayListValue:
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
-#ifdef BT817EMU_MODE
-				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-				int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
-#else
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3222,12 +3217,7 @@ EvaluateDisplayListValue:
 		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
-#ifdef BT817EMU_MODE
-				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
-#else
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
@@ -3457,12 +3447,7 @@ EvaluateDisplayListValue:
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
-#ifdef BT817EMU_MODE
-						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-						int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
-#else
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3742,12 +3727,7 @@ EvaluateDisplayListValue:
 				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
-#ifdef BT817EMU_MODE
-						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
-#else
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
