@@ -529,7 +529,14 @@ BT8XXEMU_API BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const BT
 
 		if (!module)
 		{
-			fprintf(stderr, "Failed to load flash library\n");
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4244) // Trim wchar to char
+#endif
+			fprintf(stderr, "Failed to load flash library (%s)\n", std::string(libraryName.begin(), libraryName.end()).c_str());
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #if defined(_MSC_VER) && !defined(NDEBUG)
 			__debugbreak();
 #endif
