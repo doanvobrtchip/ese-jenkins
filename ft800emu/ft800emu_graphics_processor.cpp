@@ -3307,12 +3307,13 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 	// {
 	if (yBottom <= yStart) { FT800EMU_DEBUG_BREAK(); return; } // Invalid args (Start beyond the bottom)
 	// uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
-	uint32_t linesBack = yNum * yInc;
-	uint32_t vsize = yBottom;
+	const uint32_t linesBack = yNum * yInc;
+	const uint32_t vsize = yBottom;
 	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
-		uint32_t y = yStart + (yi * yInc);
-		if (y >= yBottom) y -= linesBack;
+		uint32_t yv = yStart + (yi * yInc);
+		if (yv >= yBottom) yv -= linesBack;
+		const uint32_t y = yv;
 
 		VertexState vs = VertexState();
 		int primitive = 0;
