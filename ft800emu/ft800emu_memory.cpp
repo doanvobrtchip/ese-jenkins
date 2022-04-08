@@ -434,7 +434,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	BT8XXEMU_Flash *flash,
 #endif
 	const wchar_t *romFilePath, const wchar_t *otpFilePath)
-	: m_System(system), m_SwapDLMutex(swapDLMutex), 
+	: m_System(system), m_SwapDLMutex(swapDLMutex),
 	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 #ifdef BT815EMU_MODE
 	, m_Flash(flash)
@@ -449,7 +449,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	// memset(m_Ram, 0xFF, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	// memset(m_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
-	
+
 	if (romFilePath)
 	{
 		FILE *f;
@@ -479,14 +479,8 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	{
 #if defined(BT817EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT817, sizeof(c_RomBT817));
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT817)], &c_RomBT817[sizeof(c_RomBT817) - 128 * 1024], 128 * 1024);
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT817) + 128 * 1024], &c_RomBT817[sizeof(c_RomBT817) - 128 * 1024], 128 * 1024);
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT817) + 2 * 128 * 1024], &c_RomBT817[sizeof(c_RomBT817) - 128 * 1024], 128 * 1024);
 #elif defined(BT815EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT815, sizeof(c_RomBT815));
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT815)], &c_RomBT815[sizeof(c_RomBT815) - 128 * 1024], 128 * 1024);
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT815) + 128 * 1024], &c_RomBT815[sizeof(c_RomBT815) - 128 * 1024], 128 * 1024);
-		memcpy(&m_Ram[FT800EMU_ROM_INDEX + sizeof(c_RomBT815) + 2 * 128 * 1024], &c_RomBT815[sizeof(c_RomBT815) - 128 * 1024], 128 * 1024);
 #elif defined(BT880EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT880, sizeof(c_RomBT880));
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 1], c_RomBT880, sizeof(c_RomBT880));
@@ -497,6 +491,20 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 #else
 		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT801, sizeof(c_RomFT801));
 		else memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT800, sizeof(c_RomFT800));
+#endif
+	}
+
+	{
+#if defined(BT815EMU_MODE)
+		size_t repeatSize = 128 * 1024;
+		void *const repeatSrc = &m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE - repeatSize];
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE], repeatSrc, repeatSize);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE + repeatSize], repeatSrc, repeatSize);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE + 2 * repeatSize], repeatSrc, repeatSize);
+#elif defined(BT880EMU_MODE)
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 2], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 3], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
 #endif
 	}
 
