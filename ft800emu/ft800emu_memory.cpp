@@ -775,6 +775,8 @@ void Memory::mcuWriteU32(ramaddr address, uint32_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
 	// m_WaitMCUReadCounter = 0;
 	// m_SwapMCUReadCounter = 0;
 
@@ -875,6 +877,8 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 		FTEMU_error("MCU U32 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 	if (m_ReadDelay)
 	{
@@ -1035,6 +1039,8 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
 		//m_CoprocessorWritesDL = true;
@@ -1101,6 +1107,8 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		FTEMU_error("Coprocessor U32 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 	if (m_ReadDelay && address < RAM_J1RAM)
 	{
@@ -1301,6 +1309,8 @@ void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
     actionWrite(address, data);
 	rawWriteU16(address, data);
 	postWrite(address, data);
@@ -1331,6 +1341,8 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 		FTEMU_error("Coprocessor U16 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 
 #ifdef BT815EMU_MODE
@@ -1410,6 +1422,8 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
 	if (address == REG_J1_INT && data)
 	{
 		// TODO: MUTEX!!!
@@ -1434,6 +1448,8 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 		FTEMU_error("Coprocessor U8 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 	if (address % 4 == 0)
 	{

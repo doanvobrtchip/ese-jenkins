@@ -51,6 +51,13 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #define FT800EMU_ADDR_MASK (0xFFFFF)
 #endif
 
+//! Global addressing mask
+#if defined(BT880EMU_MODE)
+#define FT800EMU_MASK_ADDR(addr) (addr < RAM_DL ? (addr & FT800EMU_ADDR_MASK) : addr)
+#else
+#define FT800EMU_MASK_ADDR(addr) (addr)
+#endif
+
 //! Rotate macros
 #ifdef FT810EMU_MODE
 #define FT800EMU_REG_ROTATE_M(ram) ((ram[REG_ROTATE] & 0x1) != 0)
