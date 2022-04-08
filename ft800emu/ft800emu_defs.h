@@ -21,7 +21,7 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 #define FT800EMU_RAM_SIZE (4 * 1024 * 1024) // 4 MiB
 
 //! ROM size
-#if defined(BT817EMU_MODE)
+#if defined(BT815EMU_MODE)
 #define FT800EMU_ROM_SIZE ((512 + 128) * 1024) // 640 KiB
 #elif defined(FT810EMU_MODE) && !defined(BT880EMU_MODE)
 #define FT800EMU_ROM_SIZE (1024 * 1024) // 1024 KiB
