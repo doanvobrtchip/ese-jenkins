@@ -166,9 +166,9 @@ BT8XXEMU_API void BT8XXEMU_run(uint32_t versionApi, BT8XXEMU_Emulator **emulator
 		case BT8XXEMU_EmulatorBT882:
 		case BT8XXEMU_EmulatorBT883:
 		{
-			BT880EMU::Emulator *bt810emu = new BT880EMU::Emulator();
-			*emulator = bt810emu;
-			bt810emu->run(*params);
+			BT880EMU::Emulator *bt880emu = new BT880EMU::Emulator();
+			*emulator = bt880emu;
+			bt880emu->run(*params);
 			break;
 		}
 #endif

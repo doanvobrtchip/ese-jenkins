@@ -1875,7 +1875,7 @@ BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return NULL;
 	}
 
