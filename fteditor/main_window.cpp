@@ -2364,12 +2364,14 @@ void MainWindow::loadRecentProject()
 
 	m_RecentSeparator->setVisible(false);
 
-	QFile f(qApp->applicationDirPath() + "/recent_project");
+	QStringList pathList;
+	for (int i = 0; i < 10; ++i)
+	{
+		QString str = m_Settings.value(QStringLiteral("RecentProject") + QString::number(i)).toString();
+		if (!str.isEmpty())
+			pathList.push_back(str);
+	}
 
-	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-		return;
-	QStringList pathList = QString(f.readAll()).split("\n");
-	f.close();
 	// add recent project path to File Menu
 	for (int i = pathList.size() - 1; i >= 0; --i)
 	{
@@ -2427,12 +2429,18 @@ void MainWindow::removeRecentProject(QString removePath)
 
 void MainWindow::saveRecentProject()
 {
-	QFile f(qApp->applicationDirPath() + "/recent_project");
-	if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
-		return;
-	QTextStream ts(&f);
-	ts << m_RecentPathList.join("\n");
-	f.close();
+	for (int i = 0; i < 10; ++i)
+	{
+		if (i < m_RecentPathList.size())
+		{
+			m_Settings.setValue(QStringLiteral("RecentProject") + QString::number(i), m_RecentPathList[i]);
+		}
+		else
+		{
+			m_Settings.remove(QStringLiteral("RecentProject") + QString::number(i));
+		}
+	}
+	m_Settings.sync();
 }
 
 bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
