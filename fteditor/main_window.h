@@ -27,13 +27,12 @@
 #include <QMainWindow>
 #include <QString>
 #include <QByteArray>
+#include <QSettings>
 
 // Emulator includes
 
 // Project includes
 #include "device_manager.h" // for the #define
-
-#define CONFIGURE_FILE_PATH "config.json"
 
 class QTemporaryDir;
 class QTreeView;
@@ -253,7 +252,6 @@ private:
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
-	void loadConfig(QString configPath);
 	void loadRecentProject();
 	void addRecentProject(QString recentPath);
 	void removeRecentProject(QString removePath);
@@ -284,6 +282,8 @@ private:
 	QString m_InitialWorkingDir;
 	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
+
+	QSettings m_Settings;
 
 	InteractiveViewport *m_EmulatorViewport;
 
@@ -410,7 +410,6 @@ private:
 	friend class ProjectDeviceCommand;
 	friend class ProjectFlashCommand;
 
-	bool m_isVCDumpEnable;
 	QLabel *infoLabel;
 }; /* class MainWindow */
 

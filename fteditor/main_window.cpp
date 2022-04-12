@@ -205,6 +205,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_MinFlashType(-1)
     , m_AddRecentProjectFlag(false)
     , m_UndoStack(NULL)
+	, m_Settings(QStringLiteral("Bridgetek"), QStringLiteral("EVE Screen Editor"))
     , m_EmulatorViewport(NULL)
     , m_DlEditor(NULL)
     , m_DlEditorDock(NULL)
@@ -273,10 +274,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
 	, m_LastProjectDir(QString())
-	, m_isVCDumpEnable(false)
 {
-	loadConfig(QCoreApplication::applicationDirPath() + '/' + CONFIGURE_FILE_PATH);
-
 	setObjectName("MainWindow");
 	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 
@@ -974,12 +972,19 @@ void MainWindow::createActions()
 	m_CloseProjectAct->setShortcuts(QKeySequence::Close);
 	connect(m_CloseProjectAct, SIGNAL(triggered()), this, SLOT(actCloseProject()));
 
+#ifndef NDEBUG
+	// Enable VC dump for any user that has run a Debug build.
+	if (!m_Settings.contains(QStringLiteral("VCDumpEnabled")))
+		m_Settings.setValue(QStringLiteral("VCDumpEnabled"), 1);
+#endif
+
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
-	m_ImportAct->setVisible(m_isVCDumpEnable);
+	m_ImportAct->setVisible(m_Settings.value(QStringLiteral("VCDumpEnabled")).toInt() != 0);
+
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
-	m_ExportAct->setVisible(m_isVCDumpEnable);
+	m_ExportAct->setVisible(m_Settings.value(QStringLiteral("VCDumpEnabled")).toInt() != 0);
 
 	m_ProjectFolderAct = new QAction(this);
 	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
@@ -1120,13 +1125,11 @@ void MainWindow::createMenus()
 	m_FileMenu->addAction(m_ExportAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
-	m_FileMenu->addSeparator();
 
 	QMenu *sdl = m_FileMenu->addMenu("Save Display List");
 	sdl->addAction(m_LittleEndianSaveDisplayListAct);
 	sdl->addAction(m_BigEndianSaveDisplayListAct);
 
-	m_FileMenu->addSeparator();
 	sdl = m_FileMenu->addMenu("Save Coprocessor Command");
 	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
 	sdl->addAction(m_BigEndianSaveCoproCmdAct);
@@ -2340,28 +2343,6 @@ bool MainWindow::maybeSave()
 	return res;
 }
 
-void MainWindow::loadConfig(QString configPath)
-{
-	QFile f(configPath);
-
-	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		return;
-	}
-	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
-	f.close();
-
-	QJsonObject jo = jd.object();
-
-	if (jo.isEmpty())
-		return;
-
-	if (jo.contains("eve_dump") && jo["eve_dump"].isBool())
-	{
-		m_isVCDumpEnable = jo["eve_dump"].toBool();
-	}
-}
-
 void MainWindow::loadRecentProject()
 {
 	// insert recent project actions
@@ -3367,24 +3348,13 @@ bool MainWindow::importDumpBT81X(QDataStream & in)
 
 QString MainWindow::readLastProjectDir()
 {
-	QSettings registry(QSettings::NativeFormat, // Format
-		QSettings::UserScope, // Scope
-		"BridgeTek", // Organization
-		"ESE" // Application
-	);
-
-	return registry.value("LastProjectDir").toString();
+	return m_Settings.value("LastProjectDir").toString();
 }
 
 void MainWindow::writeLastProjectDir(QString dirPath)
 {
-	QSettings registry(QSettings::NativeFormat, // Format
-		QSettings::UserScope, // Scope
-		"BridgeTek", // Organization
-		"ESE" // Application
-	);
-
-	registry.setValue("LastProjectDir", dirPath);
+	m_Settings.setValue("LastProjectDir", dirPath);
+	m_Settings.sync();
 }
 
 void MainWindow::actExport()
