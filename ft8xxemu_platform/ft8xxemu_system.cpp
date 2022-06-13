@@ -125,8 +125,30 @@ void System::delayForMCU(int ms)
 	else delay(ms);
 }
 
+void System::delayPreciseForMCU(int ms)
+{
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
+	delayForMCU(ms);
+}
+
+void System::delayPrecise(int ms)
+{
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
+	delay(ms);
+}
+
 void System::renderSleep(int ms)
 {
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
 	m_RenderSleepWake->sleep(ms);
 }
 

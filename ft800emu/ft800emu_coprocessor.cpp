@@ -97,7 +97,7 @@ void Coprocessor::execute()
 		{
 			pc = 0;
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System::delay(1);
+			FT8XXEMU::System::delayPrecise(1);
 			continue;
 		}
         insn = pgm[pc];

@@ -756,7 +756,16 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 
 Memory::~Memory()
 {
-	// ...
+	if (m_DelayCoprocPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayCoprocPrecise = false;
+	}
+	if (m_DelayMCUPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayMCUPrecise = false;
+	}
 }
 
 void Memory::done()
@@ -890,6 +899,7 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 	}
 
 	address = FT800EMU_MASK_ADDR(address);
+	bool delayed = false;
 
 	if (m_ReadDelay)
 	{
@@ -913,6 +923,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			if (m_WaitMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
+				if (!m_DelayMCUPrecise)
+				{
+					m_DelayMCUPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadCoprocessor.prioritize();
 				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
@@ -923,6 +939,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			if (m_SwapMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
+				if (!m_DelayMCUPrecise)
+				{
+					m_DelayMCUPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadCoprocessor.prioritize();
 				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
@@ -948,6 +970,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			}
 			break;
 		}
+	}
+
+	if (!delayed && m_DelayMCUPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayMCUPrecise = false;
 	}
 
 	switch (address)
@@ -1120,6 +1148,7 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 	}
 
 	address = FT800EMU_MASK_ADDR(address);
+	bool delayed = false;
 
 	if (m_ReadDelay && address < RAM_J1RAM)
 	{
@@ -1140,6 +1169,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			++m_WaitCoprocessorReadCounter;
 			if (m_WaitCoprocessorReadCounter > 8)
 			{
+				if (!m_DelayCoprocPrecise)
+				{
+					m_DelayCoprocPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadMCU.prioritize();
 				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
@@ -1150,6 +1185,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			if (m_SwapCoprocessorReadCounter > 8)
 			{
 				// FTEMU_printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
+				if (!m_DelayCoprocPrecise)
+				{
+					m_DelayCoprocPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadMCU.prioritize();
 				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
@@ -1194,6 +1235,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			m_FifoCoprocessorReadCounter = 0;
 		}
 #endif
+	}
+
+	if (!delayed && m_DelayCoprocPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayCoprocPrecise = false;
 	}
 
 	switch (address)

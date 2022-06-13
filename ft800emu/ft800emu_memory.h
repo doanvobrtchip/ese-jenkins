@@ -187,6 +187,9 @@ private:
 
 	BT8XXEMU_EmulatorMode m_EmulatorMode;
 
+	bool m_DelayCoprocPrecise = false;
+	bool m_DelayMCUPrecise = false;
+
 #ifdef BT815EMU_MODE
 	BT8XXEMU_Flash *m_Flash;
 #endif

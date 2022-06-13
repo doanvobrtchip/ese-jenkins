@@ -92,6 +92,16 @@ long System::getFreqTick(int hz)
 	return (long)c.QuadPart;
 }
 
+void System::beginPrecise(int ms)
+{
+	if (ms < 16) timeBeginPeriod(ms);
+}
+
+void System::endPrecise(int ms)
+{
+	if (ms < 16) timeEndPeriod(ms);
+}
+
 void System::delay(int ms)
 {
 	Sleep(ms);

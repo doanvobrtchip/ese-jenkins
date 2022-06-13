@@ -132,7 +132,7 @@ int Emulator::audioThread()
 				debugShortkeys();
 			}
 		}
-		FT8XXEMU::System::delay(10);
+		FT8XXEMU::System::delay(8);
 	}
 
 	m_ThreadAudio.reset();

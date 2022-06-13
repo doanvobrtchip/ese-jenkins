@@ -770,7 +770,7 @@ void Coprocessor::execute()
 			ejpg.reset();
 			cpureset();
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System::delay(1);
+			FT8XXEMU::System::delayPrecise(1);
 			continue;
 		}
 		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL) & 0x3;
@@ -1097,7 +1097,7 @@ void Coprocessor::execute()
 		{
 		pc = 0;
 		//FTEMU_printf("RESET COPROCESSOR\n");
-		FT8XXEMU::System.delay(1);
+		FT8XXEMU::System::delayPrecise(1);
 		continue;
 		}
 		insn = pgm[pc];
