@@ -875,7 +875,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (g_CoprocessorContentSuccess || !m_ContentManager->getContentCount()))
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */!m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}
@@ -913,14 +913,13 @@ void MainWindow::frameQt()
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
 	if (m_EmulatorViewport->mouseOver())
 	{
-		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
+		m_CursorPosition->setText(QString("XY: %1, %2").arg(m_EmulatorViewport->mouseX()).arg(m_EmulatorViewport->mouseY()));
 
 		QColor c = m_EmulatorViewport->fetchColorAsync();
 		QString strColor("");
 
 		if (c.isValid())
-			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
-												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
+			strColor = QString("ARGB: %1, %2, %3, %4").arg(c.alpha(), 0, 10).arg(c.red(), 0, 10).arg(c.green(), 0, 10).arg(c.blue(), 0, 10);
 		m_PixelColor->setText(strColor.toUpper());
 	}
 	else
@@ -1344,28 +1343,21 @@ void MainWindow::createDockWindows()
 	// pixel color (RGBA)
 	{
 		m_PixelColor = new QLabel(statusBar());
+		QFontMetrics fm = m_PixelColor->fontMetrics();
+		int mw = fm.horizontalAdvance("ARGB: 255, 255, 255, 255   ");
+		m_PixelColor->setFixedWidth(mw);
 		m_PixelColor->setText("");
 		statusBar()->addPermanentWidget(m_PixelColor);
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
 	}
 
 	// Cursor position
 	{
 		m_CursorPosition = new QLabel(statusBar());
+		QFontMetrics fm = m_CursorPosition->fontMetrics();
+		int mw = fm.horizontalAdvance("XY: 9999, 999   ");
+		m_CursorPosition->setFixedWidth(mw);
 		m_CursorPosition->setText("");
 		statusBar()->addPermanentWidget(m_CursorPosition);
-
-		/*QFrame *line = new QFrame(statusBar());
-		line->setFrameShape(QFrame::HLine);
-		line->setFrameShadow(QFrame::Sunken);
-		statusBar()->addPermanentWidget(line);*/
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
 	}
 
 	// Utilization
