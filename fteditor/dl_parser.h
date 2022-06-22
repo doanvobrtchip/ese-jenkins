@@ -82,10 +82,10 @@ struct DlParsed
 
 	// bool FloatingVarArg[DLPARSED_MAX_PARAMETER];
 
-	int ExpectedParameterCount;
+	int ExpectedParameterCount = 0;
 	int BadCharacterIndex;
 	bool ExpectedStringParameter;
-	int VarArgCount;
+	int VarArgCount = 0;
 
 	bool ValidStringParameter; // single string parameter at end
 	std::string StringParameter;
@@ -93,13 +93,6 @@ struct DlParsed
 
 	// int VarArgCount;
 	// char VarArgFormat[DLPARSED_MAX_VARARG];
-
-	// TODO: Remove this
-    DlParsed()
-    {
-        ExpectedParameterCount = 0;
-        VarArgCount = 0;
-    }
 };
 
 struct ParameterOptions

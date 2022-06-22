@@ -1,6 +1,5 @@
 /*
-Copyright (C) 2013-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2022  Bridgetek Pte Lte
+Copyright (C) 2013-2015  Future Technology Devices International Ltd
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -29,7 +28,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <QTreeView>
-// #include <QDirModel>
 #include <QUndoStack>
 #include <QUndoCommand>
 #include <QScrollArea>
@@ -151,7 +149,6 @@ static QDataStream *s_MediaFifoStream = NULL;
 
 volatile bool g_CoprocessorFaultOccured = false;
 volatile bool g_CoprocessorFrameSuccess = false;
-volatile bool g_CoprocessorContentSuccess = true;
 char g_CoprocessorDiagnostic[128 + 4] = { 0 };
 bool g_StreamingData = false;
 
@@ -357,7 +354,6 @@ void resetemu()
 	g_StepCmdLimit = 0;
 	s_StepCmdLimitCurrent = 0;
 	g_CoprocessorFaultOccured = false;
-	g_CoprocessorContentSuccess = true;
 	g_WarnMissingClear = false;
 	g_WarnMissingClearActive = false;
 	g_WarnMissingTestcardDLStart = false;
@@ -607,18 +603,11 @@ void loop()
 					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
 					do
 					{
-						if (!g_EmulatorRunning)
-						{
-							g_CoprocessorContentSuccess = false;
-							g_ContentManager->unlockContent();
-							return;
-						}
+						if (!g_EmulatorRunning) return;
 						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 						if ((rp & 0xFFF) == 0xFFF)
 						{
 							printf("Error during stream at %i bytes\n", (int)writeCount);
-							g_CoprocessorContentSuccess = false;
-							g_ContentManager->unlockContent();
 							return;
 						}
 						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
@@ -643,19 +632,15 @@ void loop()
 					printf("Stream finished: %i bytes\n", (int)writeCount);
 					if (writeCount == 0)
 					{
-						g_CoprocessorContentSuccess = false;
 						swrend();
 						resetCoprocessorFromLoop();
-						g_ContentManager->unlockContent();
 						return;
 					}
 					break;
 				}
 				if (!g_EmulatorRunning)
 				{
-					g_CoprocessorContentSuccess = false;
 					swrend();
-					g_ContentManager->unlockContent();
 					return;
 				}
 			}
@@ -786,17 +771,11 @@ void loop()
 		while (rd32(REG_DLSWAP) != DLSWAP_DONE)
 		{
 			printf("Waiting for bitmap setup DL swap\n");
-			if (!g_EmulatorRunning)
-			{
-				g_ContentManager->unlockContent();
-				return;
-			}
+			if (!g_EmulatorRunning) return;
 		}
 		wr32(REG_PCLK, 5);
 		s_BitmapSetupModNb = s_BitmapSetup->getModificationNb();
 	}*/
-	if (contentInfoMemory.size())
-		g_CoprocessorContentSuccess = true;
 	g_ContentManager->unlockContent();
 
 	// switch to next resolution
@@ -924,7 +903,6 @@ void loop()
 			// Skip invalid lines (invalid id)
 			if (!cmdValid[i]) continue;
 			// if (lastCmd == CMD_TESTCARD) break; // Make CMD_TESTCARD show
-			if (lastCmd == CMD_SPINNER) break;
 			bool useMediaFifo = false;
 			bool useFlash = false;
 			const char *useFileStream = NULL;
@@ -1597,9 +1575,9 @@ void loop()
 
 		if (validCmd)
 		{
-			if (lastCmd != CMD_TESTCARD && lastCmd != CMD_SPINNER)
+			if (lastCmd != CMD_TESTCARD)
 			{
-			 	// Testcard and spinner already swaps
+			 	// Testcard already swaps
 				swr32(DISPLAY());
 				swr32(CMD_SWAP);
 			 	wp += 8;
@@ -1610,18 +1588,11 @@ void loop()
 			// Finish all processing
 			int rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 			s_AbortTimer.start();
-			bool timeoutFlagged = false;
 			while ((wp & 0xFFF) != rpl)
 			{
 				rpl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 				if (!g_EmulatorRunning) return;
 				if ((rpl & 0xFFF) == 0xFFF) return;
-
-				if (s_AbortTimer.elapsed() > 1000 && !timeoutFlagged)
-				{
-					QMetaObject::invokeMethod(g_CmdEditor->mainWindow(), &MainWindow::popupTimeout, Qt::QueuedConnection);
-					timeoutFlagged = true;
-				}
 
 				if (g_CmdEditor->isDisplayListModified() || s_WantReloopCmd) // Trap to avoid infinite flush on errors
 				{
@@ -1629,7 +1600,7 @@ void loop()
 					if (s_AbortTimer.elapsed() > 1000)
 					{
 						printf("Abort coprocessor flush (1100)\n");
-						QMetaObject::invokeMethod(g_CmdEditor->mainWindow(), &MainWindow::actResetEmulator, Qt::QueuedConnection);
+						resetCoprocessorFromLoop();
 						return;
 					}
 				}

@@ -34,6 +34,7 @@
 #include <QActionGroup>
 #include <QRegularExpression>
 
+
 // Emulator includes
 #include <bt8xxemu_diag.h>
 
@@ -187,8 +188,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 
 	connect(m_ZoomCB, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InteractiveViewport::zoomChanged);
 	connect(m_ZoomCB->lineEdit(), &QLineEdit::returnPressed, this, &InteractiveViewport::zoomEditTextChanged);
-	connect(m_ZoomCB, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::textActivated),
-		[=](const QString &text) {  m_ZoomCB->lineEdit()->selectAll();  });
+
+	connect(m_ZoomCB, &QComboBox::textActivated, [this]() {  m_ZoomCB->lineEdit()->selectAll();  });
 
 	QStringList zoomList;
 	

@@ -23,6 +23,7 @@ if(NOT Qt6_FOUND)
   endif()
 endif()
 
+
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
@@ -34,6 +35,7 @@ endif()
 configure_file(translations.qrc.in translations.qrc COPYONLY)
 
 qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -120,7 +122,6 @@ if(FTEDITOR_OPENGL_VIEWPORT)
   ADD_DEFINITIONS(-DFTEDITOR_OPENGL_VIEWPORT)
 endif()
 
-
 if(WIN32)
   find_path(BIN_PYTHON_ROOT
     NAMES 
@@ -131,6 +132,7 @@ if(WIN32)
     HINTS
       ${PYTHON_INCLUDE_DIR}/..
   )
+
   find_path(BIN_QT_BINARIES
     NAMES 
       Qt6Core.dll Qt6Cored.dll
@@ -142,13 +144,13 @@ if(WIN32)
       ${Qt5Core_DIR}/../../..
   )
   find_path(BIN_QT_PLUGINS
+
     NAMES 
       platforms styles imageformats
     HINTS
       ${Qt6Core_DIR}/../../../plugins
       ${Qt6Core_DIR}/../../..
-      ${Qt5Core_DIR}/../../../plugins
-      ${Qt5Core_DIR}/../../..
+
   )
   find_path(BIN_FREETYPE_BINARIES
     NAMES 
@@ -173,7 +175,8 @@ if(WIN32)
       ${ZLIB_INCLUDE_DIR}/..
   )
   set_target_properties(fteditor PROPERTIES
-    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_QT_BINARIES};${BIN_QT_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_QT_PLUGINS}\nFTEDITOR_PYTHONPATH=${BIN_PYTHON_ROOT}")
+
+    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_Qt6_BINARIES};${BIN_Qt6_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_Qt6_PLUGINS}\nPYTHONPATH=${BIN_PYTHON_ROOT}")
   # set_target_properties(fteditor PROPERTIES
   #   VS_DEBUGGER_COMMAND_ARGUMENTS "")
   set_target_properties(fteditor PROPERTIES

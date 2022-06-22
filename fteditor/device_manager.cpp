@@ -617,11 +617,7 @@ void DeviceManager::connectDevice()
 	printf("%s: %d\n", "REG_PCLK_2X", EVE_Hal_rd8(phost, REG_PCLK_2X));
 	printf("%s: %d\n", "REG_PCLK", EVE_Hal_rd8(phost, REG_PCLK));
 
-	EVE_Hal_displayMessage(phost, "EVE Screen Editor ", sizeof("EVE Screen Editor "));
-
-
-
-
+	EVE_Hal_displayMessage(phost, const_cast<char *>("EVE Screen Editor "), sizeof("EVE Screen Editor "));
 
 	updateSelection();
 
