@@ -20,9 +20,11 @@
 
 // STL includes
 
-// Qt includes
 #include <QWidget>
 #include <QMutex>
+#include <QHash>
+#include <QString>
+// Qt includes
 #include <QStringList>
 
 // Emulator includes

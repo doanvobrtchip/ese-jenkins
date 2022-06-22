@@ -67,9 +67,9 @@ OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
 OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" OFF)
 
-OPTION(WITH_QT "Build projects that depend on Qt" OFF)
+OPTION(WITH_QT "Build projects that depend on Qt" ON)
 
-OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
+OPTION(WITH_PYTHON "Include editor features that depend on Python" ON)
 
 OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 
@@ -93,7 +93,7 @@ OPTION(WITH_MX25LEMU "Include MX25LEMU" ON)
 
 OPTION(WITH_SAMPLEAPP "Include SampleApp" OFF)
 
-OPTION(WITH_EMUTEST "Include emulator test projects" ON)
+OPTION(WITH_EMUTEST "Include emulator test projects" OFF)
 
 OPTION(WITH_EMUSERVICE "Include emulator service" ON)
 

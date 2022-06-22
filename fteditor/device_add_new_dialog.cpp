@@ -351,8 +351,8 @@ void DeviceAddNewDialog::prepareData()
 		{
 			mSystemClock_CB = new QComboBox(this);
 
-			int SYS_CLOCK[] = {12, 24, 36, 48, 60, 72, 84, 96};
-			for each (int sc in SYS_CLOCK)
+			QList<int> SYS_CLOCK = {12, 24, 36, 48, 60, 72, 84, 96};
+			foreach (int sc, SYS_CLOCK)
 			{
 				mSystemClock_CB->addItem(QString::number(sc), sc);
 			}
@@ -397,7 +397,7 @@ void DeviceAddNewDialog::prepareData()
 		{
 			mRegPclkFreq_CB = new QComboBox(this);
 			
-			for each (int v in PCLK_FREQ_HASH.values())
+			foreach (int v, PCLK_FREQ_HASH.values())
 			{
 				mRegPclkFreq_CB->addItem("0x" + QString::number(v, 16).toUpper(), v);
 			}

@@ -41,7 +41,7 @@ xcopy /y ..\deployment\ese\setup.iss %setup-dir%
 xcopy /y ..\deployment\ese\prerelease.txt %setup-dir%
 
 :: rename manual file
-xcopy ..\fteditor\Manual\*.pdf %setup-dir%\Manual\
+xcopy /y ..\deployment\ese\Manual\*.pdf %setup-dir%\Manual\
 
 :: run Qt deployment
 %qt-bin%\windeployqt --release --force --no-translations %setup-dir%\fteditor.exe

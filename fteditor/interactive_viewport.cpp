@@ -31,6 +31,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QStatusBar>
+#include <QActionGroup>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -185,7 +186,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 
 	connect(m_ZoomCB, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InteractiveViewport::zoomChanged);
 	connect(m_ZoomCB->lineEdit(), &QLineEdit::returnPressed, this, &InteractiveViewport::zoomEditTextChanged);
-	connect(m_ZoomCB, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::activated),
+	connect(m_ZoomCB, &QComboBox::textActivated,
 		[=](const QString &text) {  m_ZoomCB->lineEdit()->selectAll();  });
 
 	QStringList zoomList;
@@ -199,8 +200,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	m_ZoomCB->setCurrentIndex(ZOOM_INIT_INDEX);
 	m_ZoomCB->setMaxVisibleItems(zoomList.count());
 
-	QRegExp rx("(\\d{1,4}\\.)?\\d{1,4}%?");
-	QValidator *validator = new QRegExpValidator(rx, this);
+	QRegularExpression rx("(\\d{1,4}\\.)?\\d{1,4}%?");
+	QValidator *validator = new QRegularExpressionValidator(rx, this);
 	m_ZoomCB->setValidator(validator);
 
 	QToolBar *zoomToolBar = m_MainWindow->addToolBar(tr("Zoom"));
@@ -1718,11 +1719,11 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 {
 	int mvx = screenLeft();
 
-	if (e->delta() > 0)
+	if (e->angleDelta().y() > 0)
 	{
 		zoomIn();
 	}
-	else if (e->delta() < 0)
+	else if (e->angleDelta().y() < 0)
 	{
 		zoomOut();
 	}
@@ -1766,7 +1767,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			m_MainWindow->setTraceY(UNTFY(e->pos().y()));
 			m_MainWindow->setTraceEnabled(true);
 			break;
-		case Qt::MidButton:
+		case Qt::MiddleButton:
 			if (m_PointerFilter != POINTER_TRACE)
 			{
 				m_PreferTraceCursor = false;
@@ -1845,7 +1846,7 @@ RETURN()
 			}
 			break;
 		}
-		else if (e->button() == Qt::MidButton
+		else if (e->button() == Qt::MiddleButton
 			|| e->button() == Qt::RightButton)
 		{
 			m_Insert->setChecked(false);
@@ -1905,7 +1906,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	EmulatorViewport::mouseReleaseEvent(e);
 }
 
-void InteractiveViewport::enterEvent(QEvent *e)
+void InteractiveViewport::enterEvent(QEnterEvent *e)
 {
 	//printf("InteractiveViewport::enterEvent\n");
 

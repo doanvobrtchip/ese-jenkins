@@ -986,7 +986,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
 	contentInfo->View = view;
-	view->setData(0, Qt::UserRole, qVariantFromValue((quintptr)(void *)contentInfo));
+	view->setData(0, Qt::UserRole, QVariant::fromValue((quintptr)(void *)contentInfo));
 	rebuildViewInternal(contentInfo);
 
 	// Reprocess to RAM
@@ -4923,7 +4923,7 @@ void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
 void ContentTreeWidget::dropEvent(QDropEvent *event)
 {
 	event->acceptProposedAction();
-	for	each(QUrl url in event->mimeData()->urls())
+	foreach(QUrl url, event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}
@@ -4954,7 +4954,7 @@ void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
 void ContentLabel::dropEvent(QDropEvent *event)
 {
 	event->acceptProposedAction();
-	for each(QUrl url in event->mimeData()->urls())
+	foreach(QUrl url, event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}

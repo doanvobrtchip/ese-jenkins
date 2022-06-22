@@ -11,7 +11,7 @@ SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
 # Find the QtWidgets library
-FIND_PACKAGE(Qt5Widgets)
+FIND_PACKAGE(Qt6Widgets)
 
 IF (POLICY CMP0071)
 	CMAKE_POLICY(SET CMP0071 OLD)
@@ -20,7 +20,7 @@ ENDIF ()
 # Instruct CMake to run moc automatically when needed.
 SET(CMAKE_AUTOMOC ON)
 
-QT5_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
+Qt6_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -133,7 +133,7 @@ ENDIF(WITH_FREETYPE)
 
 IF (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
-    Qt5::Widgets
+    Qt6::Widgets
   )
   
   TARGET_LINK_LIBRARIES(fteditor
@@ -141,7 +141,7 @@ IF (WIN32)
   )
 ELSE (WIN32)
   TARGET_LINK_LIBRARIES(fteditor
-    Qt5::Widgets
+    Qt6::Widgets
   )
 ENDIF (WIN32)
 
@@ -156,19 +156,19 @@ if(WIN32)
     HINTS
       ${PYTHON_INCLUDE_DIR}/..
   )
-  find_path(BIN_QT5_BINARIES
+  find_path(BIN_Qt6_BINARIES
     NAMES 
-      Qt5Core.dll Qt5Cored.dll
+      Qt6Core.dll Qt6Cored.dll
     HINTS
-      ${Qt5Core_DIR}/../../../bin
-      ${Qt5Core_DIR}/../../..
+      ${Qt6Core_DIR}/../../../bin
+      ${Qt6Core_DIR}/../../..
   )
-  find_path(BIN_QT5_PLUGINS
+  find_path(BIN_Qt6_PLUGINS
     NAMES 
       platforms styles imageformats
     HINTS
-      ${Qt5Core_DIR}/../../../plugins
-      ${Qt5Core_DIR}/../../..
+      ${Qt6Core_DIR}/../../../plugins
+      ${Qt6Core_DIR}/../../..
   )
   find_path(BIN_FREETYPE_BINARIES
     NAMES 
@@ -193,7 +193,7 @@ if(WIN32)
       ${ZLIB_INCLUDE_DIR}/..
   )
   set_target_properties(fteditor PROPERTIES
-    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_QT5_BINARIES};${BIN_QT5_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_QT5_PLUGINS}\nPYTHONPATH=${BIN_PYTHON_ROOT}")
+    VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_Qt6_BINARIES};${BIN_Qt6_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_Qt6_PLUGINS}\nPYTHONPATH=${BIN_PYTHON_ROOT}")
   # set_target_properties(fteditor PROPERTIES
   #   VS_DEBUGGER_COMMAND_ARGUMENTS "")
   set_target_properties(fteditor PROPERTIES
