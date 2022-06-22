@@ -98,7 +98,7 @@ class MainWindow : public QMainWindow
 	const char *PROPERTY_FLASH_FILE_NAME = "originalFlashFileName";
 
 public:
-	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = 0);
+	MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
 	virtual ~MainWindow();
 
 	inline DlEditor *dlEditor() { return m_DlEditor; }

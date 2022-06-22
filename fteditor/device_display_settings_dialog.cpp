@@ -97,7 +97,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	int currentDevice;
 	QString selectedDevice = pParent->getSelectedDeviceName();
 
-	for each(QRadioButton * rb in m_CustomRadioButtonList)
+	foreach(QRadioButton * rb, m_CustomRadioButtonList)
 	{
 		rb->setVisible(false);
 	}
@@ -119,7 +119,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 		currentDevice = FTEDITOR_BT817;
 	}
 
-	for each(QRadioButton * rb in m_CustomRadioButtonList)
+	foreach(QRadioButton * rb, m_CustomRadioButtonList)
 	{
 		if (rb->property("EVE_TYPE").toInt() == currentDevice)
 		{
@@ -139,7 +139,7 @@ void DeviceDisplaySettingsDialog::execute()
 
 void DeviceDisplaySettingsDialog::saveInputValues()
 {
-	for each(QRadioButton * rb in m_CustomRadioButtonList)
+	foreach(QRadioButton * rb, m_CustomRadioButtonList)
 	{
 		if (rb->isChecked())
 		{

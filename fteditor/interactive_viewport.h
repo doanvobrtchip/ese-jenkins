@@ -78,7 +78,7 @@ protected:
 	virtual void mouseMoveEvent(QMouseEvent *e);
 	virtual void mousePressEvent(QMouseEvent *e);
 	virtual void mouseReleaseEvent(QMouseEvent *e);
-	virtual void enterEvent(QEvent *e);
+	virtual void enterEvent(QEnterEvent *e) override;
 	virtual void leaveEvent(QEvent *e);
 	virtual void wheelEvent(QWheelEvent* e);
 

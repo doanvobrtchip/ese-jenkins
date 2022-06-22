@@ -23,7 +23,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <QTreeView>
-#include <QDirModel>
 #include <QUndoStack>
 #include <QUndoCommand>
 #include <QScrollArea>
@@ -455,9 +454,9 @@ static QString scriptDisplayName(const QString &script)
 
 #ifdef FT800EMU_PYTHON
 
-char *scriptFolder = "export_scripts";
+char scriptFolder[] = "export_scripts";
 
-char *scriptDeviceFolder[] = {
+char scriptDeviceFolder[][10] = {
 	"ft80x",
 	"ft80x",
 	"ft81x",
@@ -1245,12 +1244,11 @@ void MainWindow::createDockWindows()
 			groupLayout->addLayout(hBoxLayout);
 
 			QVBoxLayout *vBoxLayout = new QVBoxLayout();
-			vBoxLayout->setMargin(0);
+			vBoxLayout->setContentsMargins(0, 0, 0, 0);
 			hBoxLayout = new QHBoxLayout();
 			m_ProjectFlashLayout = new QWidget(this);
 			m_ProjectFlashLayout->setContentsMargins(0, 0, 0, 0);
-			// m_ProjectFlashLayout->marg
-			hBoxLayout->setMargin(0);
+			hBoxLayout->setContentsMargins(0, 0, 0, 0);
 
 			m_ProjectFlash = new QComboBox(this);
 			for (int i = 0; i < FTEDITOR_FLASH_NB; ++i)

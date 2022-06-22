@@ -28,7 +28,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <QTreeView>
-#include <QDirModel>
 #include <QUndoStack>
 #include <QUndoCommand>
 #include <QScrollArea>

@@ -459,7 +459,7 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 
 	QTextStream ts(&f);
 	ts.setAutoDetectUnicode(true);
-	ts.setCodec("utf-8");
+	ts.setEncoding(QStringConverter::Utf8);
 	std::vector<uint32_t> comp;
 
 	lockDisplayList();
@@ -499,14 +499,14 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 
 			for (int i = 0; i < comp.size(); i++)
 			{
-				if (i == comp.size() - 1 && argNames.indexOf(QRegExp("^string.*")) != -1)
+				if (i == comp.size() - 1 && argNames.indexOf(QRegularExpression("^string.*")) != -1)
 				{
 					argNames.append("end string");
 				}
 
 				if (argNames.size() < i + 1)
 				{
-					if (argNames.indexOf(QRegExp("^string.*")) != -1)
+					if (argNames.indexOf(QRegularExpression("^string.*")) != -1)
 					{
 						argNames.append("(string continue)");
 					}
