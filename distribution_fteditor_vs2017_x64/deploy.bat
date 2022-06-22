@@ -1,9 +1,9 @@
 @echo off 
 :: Collect files to create installer package for ESE
 
-set build-dir=D:\ESE\build-x64\bin\Release
+set build-dir=e:\ESE\build\bin\Release
 set setup-dir=setup
-set qt-bin=C:\Qt5\5.15.2\msvc2019_64\bin
+set qt-bin=C:\Qt\6.2.2\msvc2019_64\bin
 
 rmdir /s /q %setup-dir%
 mkdir %setup-dir%
