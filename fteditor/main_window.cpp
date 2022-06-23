@@ -1378,7 +1378,7 @@ void MainWindow::createDockWindows()
 		QPalette progressPalette = palette();
 		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
 		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
-
+		
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
 		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
 		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
@@ -1386,6 +1386,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
 		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1400,6 +1401,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationDisplayListStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1414,6 +1416,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationGlobalStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
 		/*w->setLayout(l);
@@ -2972,8 +2975,30 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 		if (!flashName.isEmpty())
 			setFlashFileNameToLabel(flashName);
 	}
+	else if ((watched == m_UtilizationBitmapHandleStatus ||
+			  watched == m_UtilizationDisplayListStatus ||
+		      watched == m_UtilizationGlobalStatus) &&
+		     (event->type() == QEvent::HoverMove || 
+			  event->type() == QEvent::HoverLeave))
+	{
+		bool isShowExact = (event->type() == QEvent::HoverMove);
+		showExactNumberOfResourceWhenMouseHover(watched, isShowExact);
+		return false;
+	}
 
 	return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const bool isShowExact)
+{
+	QProgressBar *pb = dynamic_cast<QProgressBar *>(watched);
+	if (!pb)
+		return;
+
+	if (isShowExact)
+		pb->setFormat("%v/%m");
+	else
+		pb->resetFormat();
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)

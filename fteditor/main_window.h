@@ -266,6 +266,8 @@ private:
 	QString readLastProjectDir();
 	void writeLastProjectDir(QString dirPath);
 
+	void showExactNumberOfResourceWhenMouseHover(QObject *watched, const bool isShowExact);
+
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 
