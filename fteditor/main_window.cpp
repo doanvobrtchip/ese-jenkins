@@ -63,6 +63,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QTextStream>
 #include <QFileDialog>
 #include <QSettings>
+#include <QMimeData>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -280,6 +281,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
+
+	setAcceptDrops(true);
 
 	m_InitialWorkingDir = QDir::currentPath();
 	if (QDir(m_InitialWorkingDir).cd("firmware"))
@@ -2999,6 +3002,56 @@ void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const
 		pb->setFormat("%v/%m");
 	else
 		pb->resetFormat();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasUrls()) {
+		foreach (QUrl url, event->mimeData()->urls())
+		{
+			if (url.toString().endsWith(".ese"))
+			{
+				event->setDropAction(Qt::LinkAction);
+				event->accept();
+				return;
+			}
+			else if (QDir d(url.toLocalFile()); d.exists())
+			{
+				// find only one file which ended by ".ese"
+				if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1) {
+					event->setDropAction(Qt::LinkAction);
+					event->accept();
+					return;
+				}
+			}
+		}
+	}
+	QMainWindow::dragEnterEvent(event);
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+	QList<QUrl> urls = event->mimeData()->urls();
+
+	foreach(QUrl url, urls)
+	{
+		if (url.toString().endsWith(".ese")) {
+			event->acceptProposedAction();
+			openFile(url.toLocalFile());
+			return;
+		}
+		else if (QDir d(url.toLocalFile()); d.exists())
+		{
+			// find only one file which ended by ".ese"
+			if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1)
+			{
+				event->acceptProposedAction();
+				openFile(d.absoluteFilePath(s[0]));
+				return;
+			}
+		}
+	}
+	QMainWindow::dropEvent(event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
