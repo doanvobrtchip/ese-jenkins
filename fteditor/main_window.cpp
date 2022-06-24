@@ -64,6 +64,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QFileDialog>
 #include <QSettings>
 #include <QMimeData>
+#include <QTextEdit>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -215,7 +216,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PropertiesEditor(NULL)
     , m_PropertiesEditorScroll(NULL)
     , m_PropertiesEditorDock(NULL)
-    //, m_OutputDock(NULL)
+    , m_OutputDock(NULL)
     , m_ToolboxDock(NULL)
     , m_Toolbox(NULL)
     , m_ContentManagerDock(NULL)
@@ -1476,6 +1477,23 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
 	}
 
+	// Output Window
+	{
+		m_OutputTextEdit = new QTextEdit(this);
+		m_OutputTextEdit->setReadOnly(true);
+		m_OutputTextEdit->setAcceptRichText(true);
+		m_OutputTextEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		m_OutputTextEdit->setMinimumWidth(240);
+
+		m_OutputDock = new QDockWidget(this);
+		m_OutputDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_OutputDock->setObjectName("OutputWindow");
+		m_OutputDock->setWidget(m_OutputTextEdit);
+
+		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
+		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
+	}
+
 	// Inspector
 	{
 		m_InspectorDock = new QDockWidget(this);
@@ -1758,7 +1776,7 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
-	//tabifyDockWidget(m_UtilizationDock, m_OutputDock);
+	tabifyDockWidget(m_UtilizationDock, m_OutputDock);
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1797,6 +1815,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -1877,10 +1896,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
 			}
-			/*else if (dw == m_OutputDock)
+			else if (dw == m_OutputDock)
 			{
-				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/database-arrow.png")));
-			}*/
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/information-white.png")));
+			}
 			else if (dw == m_ContentManagerDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/photo-album-blue.png")));
@@ -2275,6 +2294,8 @@ void MainWindow::clearEditor()
 	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
 	m_ProjectDock->setVisible(true);
+	m_OutputDock->setVisible(true);
+	m_OutputTextEdit->clear();
 }
 
 void MainWindow::clearUndoStack()
@@ -2478,7 +2499,8 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 			// This is technically not an issue for FTEDITOR to handle,
 			// internally this will restrict the loaded content to the available size.
 			// It is permissible to let the user continue and explore the flash with the missing content
-			int ans = QMessageBox::critical(this, tr("Flash image is too big"), tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
+			int ans = QMessageBox::critical(this, tr("Flash image is too big"), 
+				tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
 			return ans == QMessageBox::Ignore;
 		}
 		else if (flashIntf != g_CurrentFlash)
@@ -2487,7 +2509,11 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 			// We ask the user permission when changing the flash size,
 			// since it's not reliable application behaviour
 			// to change options without the user's knowledge
-			int ans = QMessageBox::information(this, tr("Resize flash device"), tr("The selected flash image is larger than the current flash device.\nWould you like to resize the flash device to a larger size?"), QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
+			int ans = QMessageBox::question(this, "Increase flash size",
+			    "The selected flash image is larger than the current flash size.\n"
+			    "Would you like to increase it?",
+			    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+			    QMessageBox::Cancel);
 			if (ans == QMessageBox::Yes)
 			{
 				m_UndoStack->beginMacro(tr("Increase flash size"));
@@ -2514,6 +2540,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
+	m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);
@@ -3992,6 +4019,11 @@ QString MainWindow::getProjectContent() const
 QString MainWindow::getDisplaySize()
 {
 	return QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+}
+
+void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)
+{
+	m_OutputTextEdit->append(text);
 }
 
 } /* namespace FTEDITOR */

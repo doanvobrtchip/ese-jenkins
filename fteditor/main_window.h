@@ -48,6 +48,7 @@ class QLabel;
 class QMenu;
 class QGroupBox;
 class QHBoxLayout;
+class QTextEdit;
 
 namespace FTEDITOR {
 
@@ -161,6 +162,8 @@ public:
 	QString getProjectContent(void) const;
 
 	QString getDisplaySize();
+
+	void appendTextToOutputDock(const QString &text);
 
 private slots:
 	// void applyEmulatorConfig();
@@ -310,7 +313,9 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
-	//QDockWidget *m_OutputDock;
+
+	QTextEdit *m_OutputTextEdit = nullptr;
+	QDockWidget *m_OutputDock = nullptr;
 
 	InteractiveProperties *m_InteractiveProperties;
 

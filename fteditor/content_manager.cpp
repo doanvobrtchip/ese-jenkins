@@ -1863,6 +1863,14 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		}
 		props->setInfo(propInfo);
 	}
+
+	if (!contentInfo->BuildError.isEmpty())
+	{
+		QString text("");
+		text.append("Content name: <b>" + contentInfo->DestName + "</b>: ");
+		text.append(contentInfo->BuildError);
+		m_MainWindow->appendTextToOutputDock(text);
+	}
 }
 
 void ContentManager::reprocessInternal(ContentInfo *contentInfo)
