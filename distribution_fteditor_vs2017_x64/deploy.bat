@@ -19,6 +19,9 @@ xcopy /eiy ..\fteditor\untitled %setup-dir%\untitled
 
 xcopy /eiy %build-dir%\Lib %setup-dir%\Lib 
 
+::copy astc
+xcopy /y ..\fteditor\astcenc-*.exe %setup-dir%
+xcopy /y ..\fteditor\install_astc.exe %setup-dir%
 
 :: copy all python files
 xcopy /y ..\fteditor\*.py %setup-dir%

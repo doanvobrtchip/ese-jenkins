@@ -52,14 +52,13 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "*.txt"; DestDir: "{app}"; Flags: ignoreversion
 
+Source: "export_template\*.*"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs ignoreversion
+
 Source: "astc_conv.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
-
 Source: "export_pico.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_pico_helper.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_pico_reg.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "export_template\*.*"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs ignoreversion
-
 Source: "export_common.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "export_bt81x_helper.py"; DestDir: "{app}"; Flags: ignoreversion
@@ -69,14 +68,11 @@ Source: "export_GameDuino2.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "helperapi.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "img_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "png.py"; DestDir: "{app}"; Flags: ignoreversion
-
 Source: "pngp2pa.py"; DestDir: "{app}"; Flags: ignoreversion
 Source: "raw_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "config.json"; DestDir: "{app}"; Flags: ignoreversion
 
-
-;Source: "astcenc.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "pngquant.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "fteditor.exe"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -88,26 +84,33 @@ Source: "ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "libFT4222-64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "libMPSSE.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "python38.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "zlib1__.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "python310.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "opengl32sw.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Qt6Core.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Qt6Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Qt6OpenGL.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Qt6OpenGLWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+
+Source: "Qt6Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Qt6Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+;Source: "msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "libpng16-16__.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "libpng16.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs ignoreversion
@@ -120,7 +123,6 @@ Source: "platforms\*.*"; DestDir: "{app}\platforms"; Flags: recursesubdirs creat
 Source: "imageformats\*.*"; DestDir: "{app}\imageformats"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "styles\*.*"; DestDir: "{app}\styles"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "iconengines\*.*"; DestDir: "{app}\iconengines"; Flags: recursesubdirs createallsubdirs ignoreversion
-
 Source: "device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 Source: "astcenc-sse2.exe";   DestDir: "{app}"; Flags: ignoreversion 
