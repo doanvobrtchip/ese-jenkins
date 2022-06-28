@@ -1863,14 +1863,6 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		}
 		props->setInfo(propInfo);
 	}
-
-	if (!contentInfo->BuildError.isEmpty())
-	{
-		QString text("");
-		text.append("Content name: <b>" + contentInfo->DestName + "</b>: ");
-		text.append(contentInfo->BuildError);
-		m_MainWindow->appendTextToOutputDock(text);
-	}
 }
 
 void ContentManager::reprocessInternal(ContentInfo *contentInfo)
@@ -2057,6 +2049,14 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	// Update GUI if it exists
 	if (m_CurrentPropertiesContent == contentInfo)
 		rebuildGUIInternal(contentInfo);
+
+	if (!contentInfo->BuildError.isEmpty())
+	{
+		QString text("");
+		text.append("Content name: <b>" + contentInfo->DestName + "</b>: ");
+		text.append(contentInfo->BuildError);
+		m_MainWindow->appendTextToOutputDock(text);
+	}
 }
 
 void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash)
@@ -4923,13 +4923,19 @@ void ContentManager::propertiesFontOffsetChanged(int value)
 void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
 {
 	if (event->mimeData()->hasUrls())
-		event->accept();
+		event->acceptProposedAction();
 	else
 		event->ignore();
 }
 
 void ContentTreeWidget::dropEvent(QDropEvent *event)
 {
+	if (event->source() == this)
+	{
+		event->ignore();
+		return;
+	}
+
 	event->acceptProposedAction();
 	for	(QUrl url : event->mimeData()->urls())
 	{
@@ -4954,15 +4960,18 @@ ContentTreeWidget::~ContentTreeWidget()
 {
 }
 
-void ContentLabel::dragEnterEvent(QDragEnterEvent *ev)
+void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
 {
-	ev->accept();
+	if (event->mimeData()->hasUrls())
+		event->accept();
+	else
+		event->ignore();
 }
 
-void ContentLabel::dropEvent(QDropEvent *ev)
+void ContentLabel::dropEvent(QDropEvent *event)
 {
-	ev->acceptProposedAction();
-	for (QUrl url : ev->mimeData()->urls())
+	event->acceptProposedAction();
+	for (QUrl url : event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}
