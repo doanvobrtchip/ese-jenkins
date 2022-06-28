@@ -60,20 +60,32 @@ PropertiesEditor::~PropertiesEditor()
 
 }
 
-void PropertiesEditor::setInfo(QString message)
+void PropertiesEditor::setInfo(QString message, bool isError)
 {
 	if (m_SurpressSet) return;
 
-	// printf("set info: %s\n", message.toLatin1().data());
 	m_InfoLabel->setText(message);
-	if (message.isEmpty() || message.isNull())
+	if (message.isEmpty())
 	{
 		m_InfoGroupBox->hide();
 	}
 	else
 	{
 		m_InfoGroupBox->show();
+		if (isError)
+		{
+			emit errorSet(message);
+		}
+		else
+		{
+			emit infoSet(message);
+		}
 	}
+}
+
+void PropertiesEditor::setError(QString message)
+{
+	setInfo(message, true);
 }
 
 void PropertiesEditor::setEditWidget(QWidget *widget, bool own, QWidget *setter)

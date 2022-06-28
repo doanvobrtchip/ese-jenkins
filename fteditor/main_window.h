@@ -216,6 +216,8 @@ private slots:
 
 	void openRecentProject();
 
+	void propertyErrorSet(QString info);
+
 public slots:
 	void popupTimeout();
 	void actResetEmulator();

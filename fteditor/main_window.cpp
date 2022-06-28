@@ -675,7 +675,7 @@ void MainWindow::runScript(const QString &script)
 		QString error = pythonError();
 		if (error.isEmpty())
 			error = "&lt;NULL&gt;";
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
@@ -701,7 +701,7 @@ void MainWindow::runScript(const QString &script)
 		QString error = pythonError();
 		if (error.isEmpty())
 			error = "&lt;NULL&gt;";
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
@@ -796,7 +796,7 @@ void MainWindow::runScript(const QString &script)
 		QString error = pythonError();
 		if (error.isEmpty())
 			error = "&lt;NULL&gt;";
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 #endif /* FT800EMU_PYTHON */
@@ -1471,6 +1471,7 @@ void MainWindow::createDockWindows()
 		m_PropertiesEditorScroll->setWidgetResizable(true);
 		m_PropertiesEditorScroll->setMinimumWidth(240);
 		m_PropertiesEditor = new PropertiesEditor(this);
+		connect(m_PropertiesEditor, &PropertiesEditor::errorSet, this, &MainWindow::propertyErrorSet);
 		m_PropertiesEditorScroll->setWidget(m_PropertiesEditor);
 		m_PropertiesEditorDock->setWidget(m_PropertiesEditorScroll);
 		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
@@ -3827,6 +3828,11 @@ void MainWindow::openRecentProject()
 	openFile(projectPath);
 }
 
+void FTEDITOR::MainWindow::propertyErrorSet(QString info)
+{
+	appendTextToOutputDock(info);
+}
+
 void MainWindow::projectDisplayChanged(int i)
 {
 	if (s_UndoRedoWorking)
@@ -4023,6 +4029,9 @@ QString MainWindow::getDisplaySize()
 
 void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)
 {
+	if (m_OutputTextEdit->toPlainText().contains(text))
+		return;
+
 	m_OutputTextEdit->append(text);
 }
 

@@ -2516,7 +2516,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								{
 									printf("No free handle available\n");
 									PropertiesEditor *props = m_MainWindow->propertiesEditor();
-									props->setInfo(tr("<b>Error</b>: No free bitmap handle available"));
+									props->setError(tr("<b>Error</b>: No free bitmap handle available"));
 									props->setEditWidget(NULL, false, NULL);
 									m_MainWindow->focusProperties();
 									return;
