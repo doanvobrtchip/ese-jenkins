@@ -2448,7 +2448,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(++line, bh);
 
 						if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_FT810) {
-							m_LineEditor->insertLine(++line, "CMD_SETBITMAP(0, L1, 480, 272");
+							m_LineEditor->insertLine(++line, "CMD_SETBITMAP(0, L1, 480, 272)");
 						}
 						else
 						{

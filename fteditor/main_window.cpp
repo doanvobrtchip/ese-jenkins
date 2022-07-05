@@ -2834,27 +2834,26 @@ QString MainWindow::getFileDialogPath()
 	return m_LastProjectDir;
 }
 
-void MainWindow::actOpen()
+void MainWindow::actOpen(QString projectPath)
 {
 	if (!maybeSave())
 		return;
 
-	printf("*** Open ***\n");
-
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-	    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
-	if (fileName.isNull())
-		return;
+	if (projectPath.isEmpty())
+	{
+		projectPath = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
+		    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
+		if (projectPath.isEmpty())
+			return;
+	}
 
 	m_MinFlashType = -1;
-	openFile(fileName);
+	openFile(projectPath);
 	actResetEmulator();
 }
 
 void MainWindow::openFile(const QString &fileName)
 {
-	printf("*** Open file ***\n");
-
 	toggleUI(true);
 
 	m_CurrentFile = fileName;
@@ -3065,7 +3064,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 	{
 		if (url.toString().endsWith(".ese")) {
 			event->acceptProposedAction();
-			openFile(url.toLocalFile());
+			actOpen(url.toLocalFile());
 			return;
 		}
 		else if (QDir d(url.toLocalFile()); d.exists())
@@ -3074,7 +3073,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 			if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1)
 			{
 				event->acceptProposedAction();
-				openFile(d.absoluteFilePath(s[0]));
+				actOpen(d.absoluteFilePath(s[0]));
 				return;
 			}
 		}

@@ -174,7 +174,7 @@ private slots:
 	void dummyCommand();
 
 	void actNew();
-	void actOpen();
+	void actOpen(QString projectPath = QString());
 	void actSave();
 	void actSaveAs();
 	void actCloseProject();
