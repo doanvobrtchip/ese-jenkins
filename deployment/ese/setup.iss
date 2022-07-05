@@ -1,7 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "v4.3"
+#define MyAppVersion "v4.4"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
 InfoBeforeFile=.\TM_Release Notes.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_3.0.0
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_1.0.0
 
 
 SetupIconFile=.\eve-puzzle-64.ico
