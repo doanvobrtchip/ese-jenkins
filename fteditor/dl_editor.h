@@ -93,6 +93,7 @@ public:
 	// Move cursor to line
 	void selectLine(int line);
 	void insertLine(int line, const DlParsed &parsed);
+	void insertLine(int line, QString cmdText);
 	int getLineCount();
 
 	bool isCoprocessor() const { return m_ModeCoprocessor; }
@@ -125,6 +126,10 @@ private:
 
 	void processState();
 
+	void adjustCmdSketch(DlParsed pre, DlParsed cur);
+	void adjustCmdMemzero(DlParsed pre, DlParsed cur);
+	void adjustXY(DlParsed pre, DlParsed cur);
+
 private:
 	MainWindow *m_MainWindow;
 	CodeEditor *m_CodeEditor;
@@ -156,6 +161,8 @@ private:
 	bool m_InvalidState;
 
 	QHash<QString, QStringList> m_CoproCmdArgName;
+
+	bool m_adjustingCmdSketch = false;
 
 private:
 	DlEditor(const DlEditor &);

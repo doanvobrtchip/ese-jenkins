@@ -2878,7 +2878,8 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == 0 && 
+			parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -2886,7 +2887,8 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 		}
 		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND &&
+				parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 			{
 				DlParsed pa = parsed;
 				pa.Parameter[0].I = newAddr;
