@@ -751,26 +751,26 @@ void DlEditor::adjustCmdMemzero(DlParsed pre, DlParsed cur)
 void DlEditor::removeLine(int line)
 {
 	m_EditingInteractive = true;
-	QTextCursor c = m_CodeEditor->textCursor();
-	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
-	c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-	c.insertText("");
+	QTextBlock b = m_CodeEditor->document()->findBlockByLineNumber(line);
+	if (b.isValid())
+	{
+		QTextCursor cursor(b);
+		cursor.select(QTextCursor::BlockUnderCursor);
+		cursor.removeSelectedText();
+	}
 	m_EditingInteractive = false;
 }
 
 void DlEditor::removeAll()
 {
 	m_EditingInteractive = true;
-	QTextCursor c = m_CodeEditor->textCursor();
-	c.setPosition(0);
-	c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-	c.insertText("");
+	m_CodeEditor->clear();	
 	m_EditingInteractive = false;
 }
 
 int DlEditor::getLineCount()
 {
-	return m_CodeEditor->document()->blockCount();
+	return m_CodeEditor->document()->lineCount();
 }
 
 void DlEditor::insertLine(int line, const DlParsed &parsed)
@@ -790,6 +790,7 @@ void DlEditor::insertLine(int line, QString cmdText)
 	}
 	else
 	{
+		c.movePosition(QTextCursor::End);
 		while (line > m_CodeEditor->document()->lineCount()) {
 			c.insertText("\n");
 		}

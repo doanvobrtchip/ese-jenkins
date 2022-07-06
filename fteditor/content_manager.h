@@ -282,6 +282,8 @@ public:
 
 	void copyFlashFile();
 
+	int getFreeMemoryAddress(); // Return -1 if no more space
+
 private:
 	class Add;
 	class Remove;
@@ -308,7 +310,7 @@ private:
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
-	int getFreeMemoryAddress(); // Return -1 if no more space
+	
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);

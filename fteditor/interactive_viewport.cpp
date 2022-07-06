@@ -2427,13 +2427,26 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 					if (selection == CMD_SKETCH)
 					{
+						line = m_LineEditor->getLineCount();
+						if (m_LineEditor->getLineText(line - 1).isEmpty()) {
+							--line;
+						}
+						
+						int addr = m_MainWindow->contentManager()->getFreeMemoryAddress();
+						if (addr < 0)
+						{
+							m_LineEditor->insertLine(++line, "// No free space in RAM_G.");
+							m_MainWindow->propertyErrorSet("No free space in RAM_G.");
+							return;
+						}
+
 						pa.Parameter[2].U = 480;
 						pa.Parameter[3].U = 272;
-						pa.Parameter[4].U = 0;
+						pa.Parameter[4].U = addr;
 						pa.Parameter[5].U = L1;
 						pa.ExpectedParameterCount = 6;
 
-						m_LineEditor->insertLine(line, "CMD_MEMZERO(0, 16320)");
+						m_LineEditor->insertLine(++line, QString("CMD_MEMZERO(%1, 16320)").arg(addr));
 						m_LineEditor->insertLine(++line, pa);  // insert cmd_sketch
 						m_LineEditor->selectLine(line);
 						m_LineEditor->insertLine(++line, "");
@@ -2441,18 +2454,20 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						int handleFree = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
 						if (handleFree == -1) {
-							handleFree = 0;
+							m_LineEditor->insertLine(++line, "// No free bitmap handle.");
+							m_MainWindow->propertyErrorSet("No free bitmap handle.");
+							return;
 						}
 
 						QString bh = QString("BITMAP_HANDLE(%1)").arg(handleFree);
 						m_LineEditor->insertLine(++line, bh);
 
 						if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_FT810) {
-							m_LineEditor->insertLine(++line, "CMD_SETBITMAP(0, L1, 480, 272)");
+							m_LineEditor->insertLine(++line, QString("CMD_SETBITMAP(%1, L1, 480, 272)").arg(addr));
 						}
 						else
 						{
-							m_LineEditor->insertLine(++line, "BITMAP_SOURCE(0)");
+							m_LineEditor->insertLine(++line, QString("BITMAP_SOURCE(0)").arg(addr));
 							m_LineEditor->insertLine(++line, "BITMAP_LAYOUT(L1, 60, 272)");
 							m_LineEditor->insertLine(++line, "BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 272)");
 						}
