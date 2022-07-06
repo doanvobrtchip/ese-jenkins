@@ -1,21 +1,43 @@
-REVISION HISTORY:
-
-Date                Modified By        Email                                    Version     Description
-------------------------------------------------------------------------------------------------------------
-07/03/2022     Truong Ly           truong.ly@brtchip.com       4.3.0          RC2
-------------------------------------------------------------------------------------------------------------
-
 INTRODUCTION
 =======================
-This is the external release notes file for ESE Releases. 
+This is the external release notes for ESE Releases. 
 
-OVERVIEW
-=======================
-This release focus on practising the release process. 
+----------------------------------------------------4.4.0 Alpha-----------------------------------------------
 
-DISCLAIMER OF WARRANTY 
-=======================
+A. DEPLOYMENT READINESS CRITERIA 
+================================
+Windows 7 and above
+
+B. TEST PLATFORM/DEVICES
+================================
 N/A
+
+C. NEW FEATURES
+================================
+- Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
+- Improve zoom-in precision
+- Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
+- Enable drag and drop to open an existing project in ESE
+- Update LibFT4222-64.dll to remove the dependency
+- Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
+- Give more explanation for the escape character usage in CMD_TEXT
+
+D. WHAT'S FIXED 
+================================
+- Removed glitched bitmap line in BT817 and BT818
+- Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
+
+E. LIMITATION
+================================
+N/A
+
+F. KNOWN BUGS
+================================
+N/A
+
+G. DEPLOY
+================================
+Run the setup file "EVE Screen Editor v4.4_1.0.0.exe"
 
 ----------------------------------------------------4.3.0 RC2-----------------------------------------------
 
@@ -250,3 +272,11 @@ Bug Fix:
 Known issues: 
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
 *   Playing the invalid animation frame data in flash may cause ESE hang
+
+REVISION HISTORY:
+
+Date                Modified By        Email                                    Version     Description
+------------------------------------------------------------------------------------------------------------
+07/03/2022     Truong Ly           truong.ly@brtchip.com       4.3.0          RC2
+05/07/2022     Truong Ly           truong.ly@brtchip.com       4.4.0          Alpha
+------------------------------------------------------------------------------------------------------------
