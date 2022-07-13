@@ -102,6 +102,19 @@ int Emulator::masterThread(bool sync)
 		{
 			deltaSeconds = 0.0;
 		}
+#ifdef BT817EMU_MODE
+		else if (reg_pclk == 1)
+		{
+			uint32_t reg_pclk_freq = m_Memory->rawReadU32(ram, REG_PCLK_FREQ);
+			uint32_t mul = (reg_pclk_freq >> 4) & 0x3F;
+			uint32_t div = reg_pclk_freq & 0xF;
+			uint32_t out_freq = mul * (12 * 1000 * 1000) / div / 2;
+			double frequency = (double)out_freq;
+			frequency /= (double)m_Memory->rawReadU32(ram, REG_VCYCLE);
+			frequency /= (double)m_Memory->rawReadU32(ram, REG_HCYCLE);
+			deltaSeconds = 1.0 / frequency;
+		}
+#endif
 		else if (reg_pclk)
 		{
 			// if (!usefreq) usefreq = 48000000; // Possibility to avoid freeze in case of issues
