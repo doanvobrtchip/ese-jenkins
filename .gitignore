@@ -8,6 +8,12 @@ DebugFast
 ReleaseDebugStatic
 DebugFastStatic
 
+# Sonar
+sonar-*
+.scannerwork/
+sonar_cache/
+bwod/
+
 # Test and application directories
 screenshots
 release
