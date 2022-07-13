@@ -847,8 +847,8 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 		{
 			if (parsed.IdText.size() > 0)
 			{
-				QString message = QString::asprintf(tr("Unknown command '<i>%s</i>'").toUtf8().constData(), parsed.IdText.c_str());
-				m_MainWindow->propertiesEditor()->setInfo(message);
+				QString message = QString("Unknown command '<i>%1</i>'").arg(parsed.IdText.c_str());
+				m_MainWindow->propertiesEditor()->setError(message);
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			else if (m_MainWindow->propertiesEditor()->getEditWidgetSetter())
@@ -2800,7 +2800,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 	if (!ok)
 	{
-		m_MainWindow->propertiesEditor()->setInfo(tr("</i>Not yet implemented.</i>"));
+		m_MainWindow->propertiesEditor()->setError(tr("</i>Not yet implemented.</i>"));
 		m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 	}
 	if (!editor)

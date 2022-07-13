@@ -107,6 +107,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	automatic->setStatusTip(tr("Context dependent cursor"));
 	automatic->setCheckable(true);
 	automatic->setChecked(true);
+	automatic->setShortcut(Qt::ALT | Qt::Key_C);
 
 	QAction *touch = new QAction(cursorGroup);
 	connect(touch, SIGNAL(triggered()), this, SLOT(touchChecked()));
@@ -114,6 +115,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	touch->setIcon(QIcon(":/icons/hand-point-090.png"));
 	touch->setStatusTip(tr("Use to cursor to touch the emulated display"));
 	touch->setCheckable(true);
+	touch->setShortcut(Qt::ALT | Qt::Key_T);
 
 	QAction *trace = new QAction(cursorGroup);
 	connect(trace, SIGNAL(triggered()), this, SLOT(traceChecked()));
@@ -121,6 +123,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	trace->setIcon(QIcon(":/icons/trace.png"));
 	trace->setStatusTip(tr("Select a pixel to trace display commands"));
 	trace->setCheckable(true);
+	trace->setShortcut(Qt::ALT | Qt::Key_R);
 
 	QAction *edit = new QAction(cursorGroup);
 	connect(edit, SIGNAL(triggered()), this, SLOT(editChecked()));
@@ -128,6 +131,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	edit->setIcon(QIcon(":/icons/arrow-move.png"));
 	edit->setStatusTip(tr("Interactive editing tools"));
 	edit->setCheckable(true);
+	edit->setShortcut(Qt::ALT | Qt::Key_E);
 
 	QToolBar *cursorToolBar = m_MainWindow->addToolBar(tr("Cursor"));
 	cursorToolBar->setIconSize(QSize(16, 16));
@@ -2418,26 +2422,71 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case CMD_GETIMAGE:
 						pa.ExpectedParameterCount = 0;
 						break;
-					
-	/*
-
-	CMD_TEXT(19, 23, 28, 0, "Text")
-	CMD_BUTTON(15, 59, 120, 36, 27, 0, "Button")
-	CMD_KEYS(14, 103, 160, 36, 29, 0, "keys")
-	CMD_PROGRESS(15, 148, 180, 12, 0, 20, 100)
-	CMD_SLIDER(15, 174, 80, 8, 0, 30, 100)
-	CMD_SCROLLBAR(426, 53, 16, 160, 0, 120, 60, 480)
-	CMD_TOGGLE(22, 199, 40, 27, 0, 0, "on\\xFFoff")
-	CMD_GAUGE(274, 55, 36, 0, 4, 8, 40, 100)
-	CMD_CLOCK(191, 55, 36, 0, 13, 51, 17, 0)
-	CMD_DIAL(356, 55, 36, 0, 6144)
-	CMD_NUMBER(14, 233, 28, 0, 42)
-	CMD_SPINNER(305, 172, 0, 0)
-
-	*/
 					}
-					m_LineEditor->insertLine(line, pa);
-					m_LineEditor->selectLine(line);
+
+					if (selection == CMD_SKETCH)
+					{
+						line = m_LineEditor->getLineCount();
+						if (m_LineEditor->getLineText(line - 1).isEmpty()) {
+							--line;
+						}
+						
+						int addr = m_MainWindow->contentManager()->getFreeMemoryAddress();
+						if (addr < 0)
+						{
+							m_LineEditor->insertLine(++line, "// No free space in RAM_G.");
+							m_MainWindow->propertyErrorSet("No free space in RAM_G.");
+							return;
+						}
+
+						pa.Parameter[2].U = 480;
+						pa.Parameter[3].U = 272;
+						pa.Parameter[4].U = addr;
+						pa.Parameter[5].U = L1;
+						pa.ExpectedParameterCount = 6;
+
+						m_LineEditor->insertLine(++line, QString("CMD_MEMZERO(%1, 16320)").arg(addr));
+						m_LineEditor->insertLine(++line, pa);  // insert cmd_sketch
+						m_LineEditor->selectLine(line);
+						m_LineEditor->insertLine(++line, "");
+						m_LineEditor->insertLine(++line, "// Then to display the bitmap");
+
+						int handleFree = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
+						if (handleFree == -1) {
+							m_LineEditor->insertLine(++line, "// No free bitmap handle.");
+							m_MainWindow->propertyErrorSet("No free bitmap handle.");
+							return;
+						}
+
+						QString bh = QString("BITMAP_HANDLE(%1)").arg(handleFree);
+						m_LineEditor->insertLine(++line, bh);
+
+						if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_FT810) {
+							m_LineEditor->insertLine(++line, QString("CMD_SETBITMAP(%1, L1, 480, 272)").arg(addr));
+						}
+						else
+						{
+							m_LineEditor->insertLine(++line, QString("BITMAP_SOURCE(0)").arg(addr));
+							m_LineEditor->insertLine(++line, "BITMAP_LAYOUT(L1, 60, 272)");
+							m_LineEditor->insertLine(++line, "BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 272)");
+						}
+
+						m_LineEditor->insertLine(++line, "");
+						m_LineEditor->insertLine(++line, "BEGIN(BITMAPS)");
+
+						int vf = m_LineEditor->getVertextFormat(line);
+						QString vt2f = QString("VERTEX2F(%1, %2)")
+							            .arg(pa.Parameter[0].I << vf)
+							            .arg(pa.Parameter[1].I << vf);
+						m_LineEditor->insertLine(++line, vt2f);
+						m_LineEditor->insertLine(++line, "END()");
+					}
+					else
+					{
+						m_LineEditor->insertLine(line, pa);
+						m_LineEditor->selectLine(line);
+					}
+					
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
 				else if (selectionType == FTEDITOR_SELECTION_FUNCTION)
@@ -2497,6 +2546,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						if (handleResult != -1 && handleResult != 15)
 						{
 							bitmapHandle = handleResult;
+
 							mustCreateHandle = false;
 						}
 						if (mustCreateHandle)
@@ -2515,7 +2565,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								{
 									printf("No free handle available\n");
 									PropertiesEditor *props = m_MainWindow->propertiesEditor();
-									props->setInfo(tr("<b>Error</b>: No free bitmap handle available"));
+									props->setError(tr("<b>Error</b>: No free bitmap handle available"));
 									props->setEditWidget(NULL, false, NULL);
 									m_MainWindow->focusProperties();
 									return;
@@ -2597,16 +2647,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								++hline;
 								++line;
 							}
-
-							/*if (requirePaletteAddress(contentInfo))
-							{
-								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-								pa.Parameter[0].U = contentInfo->MemoryAddress;
-								pa.ExpectedParameterCount = 1;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}*/ // Not the correct location
 
 							if (!useSetBitmap)
 							{
