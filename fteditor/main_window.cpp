@@ -63,6 +63,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QTextStream>
 #include <QFileDialog>
 #include <QSettings>
+#include <QMimeData>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -280,6 +281,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
+
+	setAcceptDrops(true);
 
 	m_InitialWorkingDir = QDir::currentPath();
 	if (QDir(m_InitialWorkingDir).cd("firmware"))
@@ -875,7 +878,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (g_CoprocessorContentSuccess || !m_ContentManager->getContentCount()))
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */!m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}
@@ -913,14 +916,13 @@ void MainWindow::frameQt()
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
 	if (m_EmulatorViewport->mouseOver())
 	{
-		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
+		m_CursorPosition->setText(QString("XY: %1, %2").arg(m_EmulatorViewport->mouseX()).arg(m_EmulatorViewport->mouseY()));
 
 		QColor c = m_EmulatorViewport->fetchColorAsync();
 		QString strColor("");
 
 		if (c.isValid())
-			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
-												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
+			strColor = QString("ARGB: %1, %2, %3, %4").arg(c.alpha(), 0, 10).arg(c.red(), 0, 10).arg(c.green(), 0, 10).arg(c.blue(), 0, 10);
 		m_PixelColor->setText(strColor.toUpper());
 	}
 	else
@@ -1344,28 +1346,21 @@ void MainWindow::createDockWindows()
 	// pixel color (RGBA)
 	{
 		m_PixelColor = new QLabel(statusBar());
+		QFontMetrics fm = m_PixelColor->fontMetrics();
+		int mw = fm.horizontalAdvance("ARGB: 255, 255, 255, 255   ");
+		m_PixelColor->setFixedWidth(mw);
 		m_PixelColor->setText("");
 		statusBar()->addPermanentWidget(m_PixelColor);
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
 	}
 
 	// Cursor position
 	{
 		m_CursorPosition = new QLabel(statusBar());
+		QFontMetrics fm = m_CursorPosition->fontMetrics();
+		int mw = fm.horizontalAdvance("XY: 9999, 999   ");
+		m_CursorPosition->setFixedWidth(mw);
 		m_CursorPosition->setText("");
 		statusBar()->addPermanentWidget(m_CursorPosition);
-
-		/*QFrame *line = new QFrame(statusBar());
-		line->setFrameShape(QFrame::HLine);
-		line->setFrameShadow(QFrame::Sunken);
-		statusBar()->addPermanentWidget(line);*/
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
 	}
 
 	// Utilization
@@ -1386,7 +1381,7 @@ void MainWindow::createDockWindows()
 		QPalette progressPalette = palette();
 		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
 		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
-
+		
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
 		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
 		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
@@ -1394,6 +1389,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
 		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1408,6 +1404,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationDisplayListStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1422,6 +1419,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationGlobalStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
 		/*w->setLayout(l);
@@ -2980,8 +2978,80 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 		if (!flashName.isEmpty())
 			setFlashFileNameToLabel(flashName);
 	}
+	else if ((watched == m_UtilizationBitmapHandleStatus ||
+			  watched == m_UtilizationDisplayListStatus ||
+		      watched == m_UtilizationGlobalStatus) &&
+		     (event->type() == QEvent::HoverMove || 
+			  event->type() == QEvent::HoverLeave))
+	{
+		bool isShowExact = (event->type() == QEvent::HoverMove);
+		showExactNumberOfResourceWhenMouseHover(watched, isShowExact);
+		return false;
+	}
 
 	return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const bool isShowExact)
+{
+	QProgressBar *pb = dynamic_cast<QProgressBar *>(watched);
+	if (!pb)
+		return;
+
+	if (isShowExact)
+		pb->setFormat("%v/%m");
+	else
+		pb->resetFormat();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasUrls()) {
+		foreach (QUrl url, event->mimeData()->urls())
+		{
+			if (url.toString().endsWith(".ese"))
+			{
+				event->setDropAction(Qt::LinkAction);
+				event->accept();
+				return;
+			}
+			else if (QDir d(url.toLocalFile()); d.exists())
+			{
+				// find only one file which ended by ".ese"
+				if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1) {
+					event->setDropAction(Qt::LinkAction);
+					event->accept();
+					return;
+				}
+			}
+		}
+	}
+	QMainWindow::dragEnterEvent(event);
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+	QList<QUrl> urls = event->mimeData()->urls();
+
+	foreach(QUrl url, urls)
+	{
+		if (url.toString().endsWith(".ese")) {
+			event->acceptProposedAction();
+			openFile(url.toLocalFile());
+			return;
+		}
+		else if (QDir d(url.toLocalFile()); d.exists())
+		{
+			// find only one file which ended by ".ese"
+			if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1)
+			{
+				event->acceptProposedAction();
+				openFile(d.absoluteFilePath(s[0]));
+				return;
+			}
+		}
+	}
+	QMainWindow::dropEvent(event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)

@@ -75,9 +75,8 @@
 <context>
     <name>FTEDITOR</name>
     <message>
-        <location filename="main_window.cpp" line="2257"/>
         <source>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</source>
-        <translation>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</translation>
+        <translation type="vanished">Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</translation>
     </message>
 </context>
 <context>
@@ -517,7 +516,7 @@
 <context>
     <name>FTEDITOR::DeviceDisplaySettingsDialog</name>
     <message>
-        <location filename="device_display_settings_dialog.cpp" line="44"/>
+        <location filename="device_display_settings_dialog.cpp" line="47"/>
         <source>Device type</source>
         <translation type="unfinished"></translation>
     </message>
@@ -525,72 +524,72 @@
 <context>
     <name>FTEDITOR::DeviceManager</name>
     <message>
-        <location filename="device_manager.cpp" line="87"/>
+        <location filename="device_manager.cpp" line="93"/>
         <source>Connected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="88"/>
+        <location filename="device_manager.cpp" line="94"/>
         <source>Device Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="99"/>
+        <location filename="device_manager.cpp" line="105"/>
         <source>Refresh the device list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="106"/>
+        <location filename="device_manager.cpp" line="112"/>
         <source>Device display settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="148"/>
+        <location filename="device_manager.cpp" line="154"/>
         <source>Sends the current memory and display list to the selected device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="123"/>
+        <location filename="device_manager.cpp" line="129"/>
         <source>Connect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="113"/>
+        <location filename="device_manager.cpp" line="119"/>
         <source>Manage Device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="124"/>
+        <location filename="device_manager.cpp" line="130"/>
         <source>Connect the selected device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="132"/>
+        <location filename="device_manager.cpp" line="138"/>
         <source>Disconnect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="133"/>
+        <location filename="device_manager.cpp" line="139"/>
         <source>Disconnect from the selected device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="147"/>
+        <location filename="device_manager.cpp" line="153"/>
         <source>Upload RAM_G and RAM_DL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="155"/>
+        <location filename="device_manager.cpp" line="161"/>
         <source>Upload RAM and Coprocessor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="163"/>
+        <location filename="device_manager.cpp" line="169"/>
         <source>Write Flash Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="device_manager.cpp" line="170"/>
+        <location filename="device_manager.cpp" line="176"/>
         <source>Write Flash Firmware</source>
         <translation type="unfinished"></translation>
     </message>
@@ -598,12 +597,12 @@
 <context>
     <name>FTEDITOR::DlEditor</name>
     <message>
-        <location filename="dl_editor.cpp" line="442"/>
+        <location filename="dl_editor.cpp" line="443"/>
         <source>Save Coprocessor Command</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="dl_editor.cpp" line="442"/>
+        <location filename="dl_editor.cpp" line="443"/>
         <source>Coprocessor Command Files(*.txt)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -656,9 +655,8 @@
 <context>
     <name>FTEDITOR::InteractiveProperties</name>
     <message>
-        <location filename="interactive_properties.cpp" line="851"/>
         <source>Unknown command &apos;&lt;i&gt;%s&lt;/i&gt;&apos;</source>
-        <translation>Unknown command &apos;&lt;i&gt;%s&lt;/i&gt;&apos;</translation>
+        <translation type="vanished">Unknown command &apos;&lt;i&gt;%s&lt;/i&gt;&apos;</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="876"/>
@@ -1895,101 +1893,101 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 <context>
     <name>FTEDITOR::InteractiveViewport</name>
     <message>
-        <location filename="interactive_viewport.cpp" line="103"/>
-        <location filename="interactive_viewport.cpp" line="130"/>
+        <location filename="interactive_viewport.cpp" line="106"/>
+        <location filename="interactive_viewport.cpp" line="133"/>
         <source>Cursor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="105"/>
+        <location filename="interactive_viewport.cpp" line="108"/>
         <source>Context dependent cursor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="111"/>
+        <location filename="interactive_viewport.cpp" line="114"/>
         <source>Touch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="113"/>
+        <location filename="interactive_viewport.cpp" line="116"/>
         <source>Use to cursor to touch the emulated display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="118"/>
+        <location filename="interactive_viewport.cpp" line="121"/>
         <source>Trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="120"/>
+        <location filename="interactive_viewport.cpp" line="123"/>
         <source>Select a pixel to trace display commands</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="125"/>
+        <location filename="interactive_viewport.cpp" line="128"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="127"/>
+        <location filename="interactive_viewport.cpp" line="130"/>
         <source>Interactive editing tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="142"/>
+        <location filename="interactive_viewport.cpp" line="145"/>
         <source>Insert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="144"/>
+        <location filename="interactive_viewport.cpp" line="147"/>
         <source>Place a new vertex or clone the selected widget directly on the screen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="161"/>
+        <location filename="interactive_viewport.cpp" line="164"/>
         <source>Toolbar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="170"/>
-        <location filename="interactive_viewport.cpp" line="172"/>
+        <location filename="interactive_viewport.cpp" line="173"/>
+        <location filename="interactive_viewport.cpp" line="175"/>
         <source>Zoom In</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="176"/>
-        <location filename="interactive_viewport.cpp" line="178"/>
+        <location filename="interactive_viewport.cpp" line="179"/>
+        <location filename="interactive_viewport.cpp" line="181"/>
         <source>Zoom Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="206"/>
+        <location filename="interactive_viewport.cpp" line="209"/>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="1510"/>
-        <location filename="interactive_viewport.cpp" line="1807"/>
+        <location filename="interactive_viewport.cpp" line="1508"/>
+        <location filename="interactive_viewport.cpp" line="1805"/>
         <source>Move vertex</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="1876"/>
+        <location filename="interactive_viewport.cpp" line="1874"/>
         <source>Move widget</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2445"/>
+        <location filename="interactive_viewport.cpp" line="2447"/>
         <source>Drag and drop from toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2517"/>
+        <location filename="interactive_viewport.cpp" line="2519"/>
         <source>&lt;b&gt;Error&lt;/b&gt;: No free bitmap handle available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="interactive_viewport.cpp" line="2529"/>
+        <location filename="interactive_viewport.cpp" line="2531"/>
         <source>Drag and drop primitive</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1997,280 +1995,290 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 <context>
     <name>FTEDITOR::MainWindow</name>
     <message>
-        <location filename="main_window.cpp" line="598"/>
+        <location filename="main_window.cpp" line="599"/>
         <source>Run Python script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="644"/>
+        <location filename="main_window.cpp" line="645"/>
         <source>Executed Python script &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="890"/>
+        <location filename="main_window.cpp" line="891"/>
         <source>WARNING: Missing CLEAR instruction in display list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="903"/>
+        <location filename="main_window.cpp" line="904"/>
         <source>WARNING: Commands following CMD_TESTCARD must be preceeded by CMD_DLSTART</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1038"/>
+        <location filename="main_window.cpp" line="1048"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1039"/>
+        <location filename="main_window.cpp" line="1049"/>
         <source>Create a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1041"/>
+        <location filename="main_window.cpp" line="1051"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1042"/>
+        <location filename="main_window.cpp" line="1052"/>
         <source>Open an existing project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1044"/>
+        <location filename="main_window.cpp" line="1054"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1045"/>
+        <location filename="main_window.cpp" line="1055"/>
         <source>Save the current project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1047"/>
+        <location filename="main_window.cpp" line="1057"/>
         <source>Save As</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1048"/>
+        <location filename="main_window.cpp" line="1058"/>
         <source>Save the current project to a new file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1050"/>
+        <location filename="main_window.cpp" line="1060"/>
         <source>Close Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1051"/>
+        <location filename="main_window.cpp" line="1061"/>
         <source>Close the current project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1052"/>
-        <location filename="main_window.cpp" line="3204"/>
+        <location filename="main_window.cpp" line="1062"/>
+        <location filename="main_window.cpp" line="3276"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1053"/>
+        <location filename="main_window.cpp" line="1063"/>
         <source>Import file to a new project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1054"/>
-        <location filename="main_window.cpp" line="1173"/>
-        <location filename="main_window.cpp" line="3380"/>
-        <location filename="main_window.cpp" line="3472"/>
+        <location filename="main_window.cpp" line="1064"/>
+        <location filename="main_window.cpp" line="1181"/>
+        <location filename="main_window.cpp" line="3441"/>
+        <location filename="main_window.cpp" line="3533"/>
         <source>Export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1055"/>
+        <location filename="main_window.cpp" line="1065"/>
         <source>Export project to file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1056"/>
+        <location filename="main_window.cpp" line="1066"/>
         <source>Browse Project Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1057"/>
+        <location filename="main_window.cpp" line="1067"/>
         <source>Open the project folder in the default system file browser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1058"/>
+        <location filename="main_window.cpp" line="1068"/>
         <source>Reset Emulator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1059"/>
+        <location filename="main_window.cpp" line="1069"/>
         <source>Reset the emulated device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1060"/>
-        <location filename="main_window.cpp" line="3760"/>
+        <location filename="main_window.cpp" line="1070"/>
+        <location filename="main_window.cpp" line="3821"/>
         <source>Save Screenshot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1061"/>
+        <location filename="main_window.cpp" line="1071"/>
         <source>Save a screenshot of the emulator output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1065"/>
-        <location filename="main_window.cpp" line="1071"/>
+        <location filename="main_window.cpp" line="1075"/>
+        <location filename="main_window.cpp" line="1081"/>
         <source>Little Endian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1066"/>
+        <location filename="main_window.cpp" line="1076"/>
         <source>Save display list in Little Endian mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1068"/>
-        <location filename="main_window.cpp" line="1074"/>
+        <location filename="main_window.cpp" line="1078"/>
+        <location filename="main_window.cpp" line="1084"/>
         <source>Big Endian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1069"/>
+        <location filename="main_window.cpp" line="1079"/>
         <source>Save display list in Big Endian mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1072"/>
+        <location filename="main_window.cpp" line="1082"/>
         <source>Save Coprocessor Command in Little Endian mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1075"/>
+        <location filename="main_window.cpp" line="1085"/>
         <source>Save Coprocessor Command in Big Endian mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1077"/>
+        <location filename="main_window.cpp" line="1087"/>
         <source>Display List from Integers (debug mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1078"/>
+        <location filename="main_window.cpp" line="1088"/>
         <source>Developer tool (debug mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1079"/>
+        <location filename="main_window.cpp" line="1089"/>
         <source>Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1080"/>
+        <location filename="main_window.cpp" line="1090"/>
         <source>Exit the application</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1081"/>
+        <location filename="main_window.cpp" line="1091"/>
         <source>Manual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1082"/>
+        <location filename="main_window.cpp" line="1092"/>
         <source>Open the manual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1083"/>
+        <location filename="main_window.cpp" line="1093"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1084"/>
+        <location filename="main_window.cpp" line="1094"/>
         <source>Show information about the application</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1085"/>
-        <location filename="main_window.cpp" line="3889"/>
+        <location filename="main_window.cpp" line="1095"/>
+        <location filename="main_window.cpp" line="3950"/>
         <source>3rd Party</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1086"/>
+        <location filename="main_window.cpp" line="1096"/>
         <source>Show information about the 3rd party code and content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1089"/>
+        <location filename="main_window.cpp" line="1099"/>
         <source>Undo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1090"/>
+        <location filename="main_window.cpp" line="1100"/>
         <source>Reverses the last action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1093"/>
+        <location filename="main_window.cpp" line="1103"/>
         <source>Redo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1094"/>
+        <location filename="main_window.cpp" line="1104"/>
         <source>Reapply the action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1097"/>
+        <location filename="main_window.cpp" line="1107"/>
         <source>Dummy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1098"/>
+        <location filename="main_window.cpp" line="1108"/>
         <source>Does nothing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1168"/>
+        <location filename="main_window.cpp" line="1176"/>
         <source>File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1169"/>
+        <location filename="main_window.cpp" line="1177"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1170"/>
+        <location filename="main_window.cpp" line="1178"/>
         <source>Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1171"/>
+        <location filename="main_window.cpp" line="1179"/>
         <source>View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3459"/>
+        <location filename="main_window.cpp" line="2302"/>
+        <source>New Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="2558"/>
+        <source>Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</source>
+        <translation type="unfinished">Start typing in the &lt;b&gt;Coprocessor&lt;/b&gt; editor, or drag and drop items from the &lt;b&gt;Toolbox&lt;/b&gt; onto the display viewport.</translation>
+    </message>
+    <message>
+        <location filename="main_window.cpp" line="3520"/>
         <source>Exported project to .eve_dump file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3460"/>
+        <location filename="main_window.cpp" line="3521"/>
         <source>Exported project to .eve_dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3873"/>
+        <location filename="main_window.cpp" line="3934"/>
         <source>Copyright (C) 2013-2015  Future Technology Devices International Ltd&lt;br&gt;&lt;br&gt;Copyright (C) 2016-2022  Bridgetek Pte Ltd&lt;br&gt;&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Support and updates:&lt;br&gt;&lt;a href=&apos;http://www.ftdichip.com/Support/Utilities.htm&apos;&gt;http://www.ftdichip.com/Support/Utilities.htm&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;a href=&apos;http://brtchip.com/utilities/#evescreeneditor&apos;&gt;http://brtchip.com/utilities/#evescreeneditor&lt;/a&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3889"/>
+        <location filename="main_window.cpp" line="3950"/>
         <source>The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 Contact: http://www.qt-project.org/legal
 Qt is available under the LGPL.
@@ -2295,69 +2303,69 @@ http://creativecommons.org/licenses/by/3.0</source>
         <translation type="vanished">&lt;strong&gt;CMD_GETPROPS&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;width&lt;/em&gt;, &lt;em&gt;height&lt;/em&gt;)&lt;br /&gt;&lt;strong&gt;ptr&lt;/strong&gt;: The address of the image in &lt;strong&gt;&lt;span class=&quot;fontstyle2&quot;&gt;RAM_G &lt;/span&gt;&lt;/strong&gt;&lt;span class=&quot;fontstyle0&quot;&gt;which was decoded by the last &lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; before this command. It is an output parameter.&lt;/span&gt; &lt;br /&gt;&lt;strong&gt;width&lt;/strong&gt;: The width of the image which was decoded by the last &lt;span class=&quot;fontstyle2&quot;&gt;&lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; &lt;/span&gt;&lt;span class=&quot;fontstyle0&quot;&gt;before this command. It is an output parameter.&lt;br /&gt;&lt;strong&gt;height&lt;/strong&gt;: The height of the image which was decoded by the last &lt;span class=&quot;fontstyle2&quot;&gt;&lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt; &lt;/span&gt;before this command. It is an output parameter.&lt;br /&gt;&lt;br/&gt;This command is used to retrieve the properties of the image which is decoded by &lt;strong&gt;CMD_LOADIMAGE&lt;/strong&gt;. Respective image properties are updated by the coprocessor after this command is executed successfully.</translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2955"/>
+        <location filename="main_window.cpp" line="2956"/>
         <source>&lt;i&gt;No flash file is currently loaded.&lt;/i&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3066"/>
+        <location filename="main_window.cpp" line="3138"/>
         <source>ESE Project (*.ese)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3090"/>
+        <location filename="main_window.cpp" line="3162"/>
         <source>Please select an empty folder!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3871"/>
+        <location filename="main_window.cpp" line="3932"/>
         <source>About EVE Screen Editor v%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1062"/>
+        <location filename="main_window.cpp" line="1072"/>
         <source>Capture Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="304"/>
+        <location filename="main_window.cpp" line="305"/>
         <source>Cannot find flash firmware. The editor may not function correctly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="342"/>
+        <location filename="main_window.cpp" line="343"/>
         <source>ERROR
 ERROR
 ERROR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1063"/>
+        <location filename="main_window.cpp" line="1073"/>
         <source>Capture the active display list from the emulator into the editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1175"/>
+        <location filename="main_window.cpp" line="1183"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1180"/>
+        <location filename="main_window.cpp" line="1188"/>
         <source>MainBar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1198"/>
+        <location filename="main_window.cpp" line="1206"/>
         <source>Ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1231"/>
+        <location filename="main_window.cpp" line="1239"/>
         <source>Device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1270"/>
+        <location filename="main_window.cpp" line="1277"/>
         <source>Import Mapped Flash Image</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2367,289 +2375,284 @@ ERROR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1396"/>
+        <location filename="main_window.cpp" line="1397"/>
         <source>RAM_DL: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1410"/>
+        <location filename="main_window.cpp" line="1412"/>
         <source>RAM_G: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1438"/>
-        <location filename="main_window.cpp" line="1788"/>
+        <location filename="main_window.cpp" line="1441"/>
+        <location filename="main_window.cpp" line="1791"/>
         <source>Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1532"/>
+        <location filename="main_window.cpp" line="1535"/>
         <source>Steps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1570"/>
+        <location filename="main_window.cpp" line="1573"/>
         <source>Trace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1615"/>
+        <location filename="main_window.cpp" line="1618"/>
         <source>Display Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1624"/>
+        <location filename="main_window.cpp" line="1627"/>
         <source>Horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1635"/>
+        <location filename="main_window.cpp" line="1638"/>
         <source>Vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1648"/>
+        <location filename="main_window.cpp" line="1651"/>
         <source>Rotate (debug mode only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1658"/>
+        <location filename="main_window.cpp" line="1661"/>
         <source>Rotate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1677"/>
+        <location filename="main_window.cpp" line="1680"/>
         <source>Macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1787"/>
+        <location filename="main_window.cpp" line="1790"/>
         <source>Inspector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1789"/>
+        <location filename="main_window.cpp" line="1792"/>
         <source>Coprocessor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1790"/>
+        <location filename="main_window.cpp" line="1793"/>
         <source>Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1792"/>
+        <location filename="main_window.cpp" line="1795"/>
         <source>Devices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1794"/>
+        <location filename="main_window.cpp" line="1797"/>
         <source>Utilization</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1795"/>
+        <location filename="main_window.cpp" line="1798"/>
         <source>Navigator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1796"/>
+        <location filename="main_window.cpp" line="1799"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1797"/>
+        <location filename="main_window.cpp" line="1800"/>
         <source>Toolbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1798"/>
+        <location filename="main_window.cpp" line="1801"/>
         <source>Content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1799"/>
+        <location filename="main_window.cpp" line="1802"/>
         <source>Registers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="1800"/>
+        <location filename="main_window.cpp" line="1803"/>
         <source>Controls</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2161"/>
+        <location filename="main_window.cpp" line="2164"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2314"/>
+        <location filename="main_window.cpp" line="2322"/>
         <source>The project has been modified.
 Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2463"/>
+        <location filename="main_window.cpp" line="2457"/>
         <source>Flash files do not exist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2463"/>
+        <location filename="main_window.cpp" line="2457"/>
         <source>Flash files do not exist!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2815"/>
+        <location filename="main_window.cpp" line="2816"/>
         <source>Open Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3072"/>
-        <location filename="main_window.cpp" line="3083"/>
-        <location filename="main_window.cpp" line="3090"/>
+        <location filename="main_window.cpp" line="3144"/>
+        <location filename="main_window.cpp" line="3155"/>
+        <location filename="main_window.cpp" line="3162"/>
         <source>Save Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="304"/>
-        <location filename="main_window.cpp" line="1805"/>
-        <location filename="main_window.cpp" line="2313"/>
+        <location filename="main_window.cpp" line="305"/>
+        <location filename="main_window.cpp" line="1808"/>
+        <location filename="main_window.cpp" line="2321"/>
         <source>EVE Screen Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2487"/>
+        <location filename="main_window.cpp" line="2481"/>
         <source>Flash image is too big</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2487"/>
+        <location filename="main_window.cpp" line="2481"/>
         <source>Flash image is too big.
 Unable to load completely.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2496"/>
+        <location filename="main_window.cpp" line="2490"/>
         <source>Resize flash device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2496"/>
+        <location filename="main_window.cpp" line="2490"/>
         <source>The selected flash image is larger than the current flash device.
 Would you like to resize the flash device to a larger size?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2499"/>
+        <location filename="main_window.cpp" line="2493"/>
         <source>Increase flash size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2584"/>
-        <source>No project</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="main_window.cpp" line="2816"/>
+        <location filename="main_window.cpp" line="2817"/>
         <source>EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="2909"/>
+        <location filename="main_window.cpp" line="2910"/>
         <source>Opened EVE Screen Editor project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3083"/>
+        <location filename="main_window.cpp" line="3155"/>
         <source>Project name must not exceed 20 characters!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3205"/>
-        <location filename="main_window.cpp" line="3378"/>
+        <location filename="main_window.cpp" line="3277"/>
+        <location filename="main_window.cpp" line="3439"/>
         <source>Memory dump (*.eve_dump)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3237"/>
+        <location filename="main_window.cpp" line="3309"/>
         <source>Incomplete header</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3237"/>
-        <location filename="main_window.cpp" line="3269"/>
-        <location filename="main_window.cpp" line="3298"/>
-        <location filename="main_window.cpp" line="3308"/>
-        <location filename="main_window.cpp" line="3318"/>
-        <location filename="main_window.cpp" line="3332"/>
-        <location filename="main_window.cpp" line="3342"/>
+        <location filename="main_window.cpp" line="3309"/>
+        <location filename="main_window.cpp" line="3341"/>
+        <location filename="main_window.cpp" line="3370"/>
+        <location filename="main_window.cpp" line="3380"/>
+        <location filename="main_window.cpp" line="3390"/>
+        <location filename="main_window.cpp" line="3404"/>
+        <location filename="main_window.cpp" line="3414"/>
         <source>Import .eve_dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3285"/>
+        <location filename="main_window.cpp" line="3357"/>
         <source>Imported project from .eve_dump file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3298"/>
-        <location filename="main_window.cpp" line="3332"/>
+        <location filename="main_window.cpp" line="3370"/>
+        <location filename="main_window.cpp" line="3404"/>
         <source>Incomplete RAM_G</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3308"/>
+        <location filename="main_window.cpp" line="3380"/>
         <source>Incomplete RAM_PAL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3318"/>
-        <location filename="main_window.cpp" line="3342"/>
+        <location filename="main_window.cpp" line="3390"/>
+        <location filename="main_window.cpp" line="3414"/>
         <source>Incomplete RAM_DL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3472"/>
+        <location filename="main_window.cpp" line="3533"/>
         <source>Failed to write file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3731"/>
+        <location filename="main_window.cpp" line="3792"/>
         <source>%1 cannot be opened.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3748"/>
+        <location filename="main_window.cpp" line="3809"/>
         <source>Change display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3757"/>
+        <location filename="main_window.cpp" line="3818"/>
         <source>PNG image (*.png)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3758"/>
+        <location filename="main_window.cpp" line="3819"/>
         <source>JPG image (*.jpg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3782"/>
+        <location filename="main_window.cpp" line="3843"/>
         <source>Import display list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3796"/>
+        <location filename="main_window.cpp" line="3857"/>
         <source>Save Display List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3796"/>
+        <location filename="main_window.cpp" line="3857"/>
         <source>Display List Files(*.txt)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main_window.cpp" line="3835"/>
+        <location filename="main_window.cpp" line="3896"/>
         <source>Display list from integers</source>
         <translation type="unfinished"></translation>
     </message>

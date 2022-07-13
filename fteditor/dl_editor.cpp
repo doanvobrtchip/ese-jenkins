@@ -462,6 +462,8 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 	ts.setAutoDetectUnicode(true);
 #if QT_VERSION_MAJOR < 6
 	ts.setCodec("utf-8");
+#else
+    ts.setEncoding(QStringConverter::Utf8);
 #endif
 	std::vector<uint32_t> comp;
 
