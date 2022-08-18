@@ -1,6 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
-Copyright (C) 2017-2020  Bridgetek Pte Lte
+Copyright (C) 2017-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -17,6 +17,15 @@ namespace FTEDITOR {
 const int32_t g_AddrVC2[FTEDITOR_RAM_NB] = {
 	RAM_G,
 	1024 * 1024,
+	RAM_DL,
+	-1,
+	RAM_REG,
+	RAM_CMD,
+};
+
+const int32_t g_AddrVC2_880[FTEDITOR_RAM_NB] = {
+	RAM_G,
+	256 * 1024,
 	RAM_DL,
 	-1,
 	RAM_REG,

@@ -4,7 +4,7 @@ FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
 Copyright (C) 2016-2019  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifdef _MSC_VER
@@ -3135,12 +3135,7 @@ EvaluateDisplayListValue:
 				const int format = (v >> 19) & 0x1F;
 				bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
-#ifdef BT817EMU_MODE
-				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-				int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
-#else
 				int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3222,12 +3217,7 @@ EvaluateDisplayListValue:
 		case FT810EMU_DL_BITMAP_LAYOUT_H:
 			{
 				BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
-#ifdef BT817EMU_MODE
-				// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
-#else
 				int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-#endif
 				if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 				bi.LayoutStride = stride;
 				int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
@@ -3305,13 +3295,15 @@ void GraphicsProcessor::processPart(argb8888 *const screenArgb8888, const bool u
 #endif
 	// for (uint32_t y = yIdx; y < vsize; y += yInc)
 	// {
-	uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
-	uint32_t linesBack = yNum * yInc;
-	uint32_t vsize = yBottom;
+	if (yBottom <= yStart) { FT800EMU_DEBUG_BREAK(); return; } // Invalid args (Start beyond the bottom)
+	// uint32_t nbBottom = yBottom > yStart ? (yBottom - yStart) / yInc : 0;
+	const uint32_t linesBack = yNum * yInc;
+	const uint32_t vsize = yBottom;
 	for (uint32_t yi = 0; yi < yNum; ++yi)
 	{
-		uint32_t y = yStart + (yi * yInc);
-		if (y >= yBottom) y -= linesBack;
+		uint32_t yv = yStart + (yi * yInc);
+		if (yv >= yBottom) yv -= linesBack;
+		const uint32_t y = yv;
 
 		VertexState vs = VertexState();
 		int primitive = 0;
@@ -3455,12 +3447,7 @@ EvaluateDisplayListValue:
 						const int format = (v >> 19) & 0x1F;
 						bi.LayoutFormat = format;
 #ifdef FT810EMU_MODE
-#ifdef BT817EMU_MODE
-						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-						int stride = (bi.LayoutStride & 0x1C00) | ((v >> 9) & 0x3FF);
-#else
 						int stride = (bi.LayoutStride & 0xC00) | ((v >> 9) & 0x3FF);
-#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x600) | (v & 0x1FF);
@@ -3740,12 +3727,7 @@ EvaluateDisplayListValue:
 				case FT810EMU_DL_BITMAP_LAYOUT_H:
 					{
 						BitmapInfo &bi = bitmapInfo[gs.BitmapHandle];
-#ifdef BT817EMU_MODE
-						// TODO: Add validation test to check if this is a documentation fix, or a BT817 specific change
-						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x7) << 10);
-#else
 						int stride = (bi.LayoutStride & 0x3FF) | (((v >> 2) & 0x3) << 10);
-#endif
 						if (stride == 0) { /*if (y == 0) FTEMU_printf("%i: Bitmap layout stride invalid\n", gs.DebugDisplayListIndex);*/ stride = 4096; } // correct behaviour is probably 'infinite'?
 						bi.LayoutStride = stride;
 						int lines = (bi.LayoutLines & 0x1FF) | ((v & 0x3) << 9);
@@ -4203,7 +4185,9 @@ void GraphicsProcessor::process(
 	uint32_t vsizeSection = ((vsize - yIdx) / m_ThreadCount);
 #endif
 
+	if (!yInc) { FT800EMU_DEBUG_BREAK(); return; } // Invalid argument
 	int nbLines = yBottom > yTop ? (yBottom - yTop) / yInc : 0; // Number of lines to render
+	if (nbLines <= 0) { FT800EMU_DEBUG_BREAK(); return; } // No lines to render
 	int nbThreads = min(m_ThreadCount, nbLines); // Number of threads to use
 	int nbLineBlocks = nbThreads > 0 ? nbLines / nbThreads : 0; // Number of complete line blocks
 	int skipBlocks = nbThreads > 0 ? (nbLineBlocks / nbThreads) * nbThreads * yInc : 0;

@@ -67,7 +67,11 @@ OPTION(FTEDITOR_DEVICE_MANAGER "Enable the device manager" ON)
 
 OPTION(FTEDITOR_LINK_STATIC "Link statically with emulator" OFF)
 
-OPTION(WITH_QT "Build projects that depend on Qt" ON)
+OPTION(FTEDITOR_GENERATE_TRANSLATIONS "Update translation file from source files." OFF)
+
+OPTION(FTEDITOR_OPENGL_VIEWPORT "Use QOpenGLWidget to render the emulator viewport." OFF)
+
+OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
 OPTION(WITH_PYTHON "Include editor features that depend on Python" ON)
 
@@ -87,6 +91,8 @@ OPTION(WITH_BT815EMU "Include BT815EMU" ON)
 
 OPTION(WITH_BT817EMU "Include BT817EMU" ON)
 
+OPTION(WITH_BT880EMU "Include BT880EMU" ON)
+
 OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
 
 OPTION(WITH_MX25LEMU "Include MX25LEMU" ON)
@@ -97,7 +103,7 @@ OPTION(WITH_EMUTEST "Include emulator test projects" OFF)
 
 OPTION(WITH_EMUSERVICE "Include emulator service" ON)
 
-SET(SDL_ASSERT_LEVEL 1 CACHE INTEGER "Assert level for SDL2")
+SET(SDL_ASSERT_LEVEL 1 CACHE STRING "Assert level for SDL2")
 
 ########################################################################
 
@@ -122,6 +128,7 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/ft810emu
   ${CMAKE_SOURCE_DIR}/bt815emu
   ${CMAKE_SOURCE_DIR}/bt817emu
+  ${CMAKE_SOURCE_DIR}/bt880emu
   ${CMAKE_SOURCE_DIR}/bt8xxemu
   ${CMAKE_SOURCE_DIR}/reference
   )
@@ -202,6 +209,10 @@ IF (WITH_BT8XXEMU)
     ADD_SUBDIRECTORY(bt817emu)
     ADD_DEFINITIONS(-DFTEMU_HAVE_BT817EMU)
   ENDIF (WITH_BT817EMU)
+  IF (WITH_BT880EMU)
+    ADD_SUBDIRECTORY(bt880emu)
+    ADD_DEFINITIONS(-DFTEMU_HAVE_BT880EMU)
+  ENDIF (WITH_BT880EMU)
   ADD_SUBDIRECTORY(bt8xxemu)
   ADD_SUBDIRECTORY(bt8xxemu_static)
   ADD_SUBDIRECTORY(ft8xxemu)
@@ -228,7 +239,6 @@ IF (WITH_BT8XXEMU)
   ENDIF()
 
   IF (WITH_QT)
-    CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
     ADD_SUBDIRECTORY(fteditor)
   ENDIF (WITH_QT)
 ENDIF (WITH_BT8XXEMU)

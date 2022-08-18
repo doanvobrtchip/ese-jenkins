@@ -54,9 +54,9 @@ signals:
 	void contentDropped(QString url);
 
 public:
-	void dragEnterEvent(QDragEnterEvent *event) override;
-	void dropEvent(QDropEvent *event) override;
-	QStringList mimeTypes() const override;
+	virtual void dragEnterEvent(QDragEnterEvent *event) override;
+	virtual void dropEvent(QDropEvent *event) override;
+	virtual QStringList mimeTypes() const override;
 
 public:
 	explicit ContentTreeWidget(QWidget *parent = nullptr);
@@ -71,8 +71,8 @@ signals:
 	void contentDropped(QString url);
 
 public:
-	void dragEnterEvent(QDragEnterEvent *event) override;
-	void dropEvent(QDropEvent *event) override;
+	virtual void dragEnterEvent(QDragEnterEvent *event) override;
+	virtual void dropEvent(QDropEvent *event) override;
 
 public:
 	explicit ContentLabel(QWidget *parent = nullptr);
@@ -282,6 +282,8 @@ public:
 
 	void copyFlashFile();
 
+	int getFreeMemoryAddress(); // Return -1 if no more space
+
 private:
 	class Add;
 	class Remove;
@@ -308,7 +310,7 @@ private:
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
-	int getFreeMemoryAddress(); // Return -1 if no more space
+	
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);

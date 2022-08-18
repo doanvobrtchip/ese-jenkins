@@ -80,7 +80,7 @@ EVE_HAL_EXPORT void EVE_Hal_info(EVE_DeviceInfo *deviceInfo, size_t deviceIdx)
 	memset(deviceInfo, 0, sizeof(EVE_DeviceInfo));
 	strcpy_s(deviceInfo->DisplayName, sizeof(deviceInfo->DisplayName), "FT9XX");
 	strcpy_s(deviceInfo->SerialNumber, sizeof(deviceInfo->SerialNumber), "FT9XX");
-	deviceInfo->Host = EVE_HOST_FT9XX;
+	deviceInfo->Host = EVE_HOST_EMBEDDED;
 }
 
 /* Check whether the context is the specified device */
@@ -176,7 +176,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	eve_printf_debug("EVE open PWD: %d, SS: %d\n",
 	    (unsigned int)phost->PowerDownPin, (unsigned int)s_SpimGpioSS[phost->SpiCsPin]);
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
@@ -291,7 +291,7 @@ void EVE_Hal_flush(EVE_HalContext *phost)
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline void rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline void rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	spi_readn(SPIM, buffer, size);
 }
@@ -303,7 +303,7 @@ static inline void rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline void wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline void wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 	spi_writen(SPIM, buffer, size);
 }
@@ -602,6 +602,14 @@ void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t 
 
 	// Switch FT9XX to multi channel SPI mode
 	setSPI(phost, numchnls, numdummy);
+}
+
+void EVE_Hal_restoreSPI(EVE_HalContext *phost)
+{
+	if (EVE_CHIPID < EVE_FT810)
+		return;
+
+	setSPI(phost, phost->SpiChannels, phost->SpiDummyBytes);
 }
 
 /**

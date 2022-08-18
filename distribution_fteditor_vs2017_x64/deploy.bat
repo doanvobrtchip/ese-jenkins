@@ -1,9 +1,9 @@
 @echo off 
 :: Collect files to create installer package for ESE
 
-set build-dir=D:\ESE\build-x64\bin\Release
+set build-dir=e:\ESE\build\bin\Release
 set setup-dir=setup
-set qt-bin=C:\Qt5\5.15.2\msvc2019_64\bin
+set qt-bin=C:\Qt\6.2.2\msvc2019_64\bin
 
 rmdir /s /q %setup-dir%
 mkdir %setup-dir%
@@ -19,6 +19,9 @@ xcopy /eiy ..\fteditor\untitled %setup-dir%\untitled
 
 xcopy /eiy %build-dir%\Lib %setup-dir%\Lib 
 
+::copy astc
+xcopy /y ..\fteditor\astcenc-*.exe %setup-dir%
+xcopy /y ..\fteditor\install_astc.exe %setup-dir%
 
 :: copy all python files
 xcopy /y ..\fteditor\*.py %setup-dir%

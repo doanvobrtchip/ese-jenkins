@@ -4,12 +4,15 @@
 #pragma warning(disable : 26444) // Unnamed objects
 
 #include "device_display_settings_dialog.h"
-#include "device_manager.h"
 
-#include "constant_mapping.h"
-
-#include "device_manage_dialog.h"
+// Qt includes
 #include <QDirIterator>
+
+// Project includes
+#include "device_manager.h"
+#include "constant_mapping.h"
+#include "device_manage_dialog.h"
+#include "device_info_custom.h"
 
 namespace FTEDITOR
 {
@@ -97,7 +100,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	int currentDevice;
 	QString selectedDevice = pParent->getSelectedDeviceName();
 
-	foreach(QRadioButton * rb, m_CustomRadioButtonList)
+	for (QRadioButton * rb : m_CustomRadioButtonList)
 	{
 		rb->setVisible(false);
 	}
@@ -106,9 +109,13 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 	{
 		currentDevice = FTEDITOR_FT800;
 	}
-	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT880)
 	{
 		currentDevice = FTEDITOR_FT810;
+	}
+	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
+	{
+		currentDevice = FTEDITOR_BT880;
 	}
 	else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815 && FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT817)
 	{
@@ -119,7 +126,7 @@ void DeviceDisplaySettingsDialog::updateSyncDeviceSelection()
 		currentDevice = FTEDITOR_BT817;
 	}
 
-	foreach(QRadioButton * rb, m_CustomRadioButtonList)
+	for (QRadioButton * rb : m_CustomRadioButtonList)
 	{
 		if (rb->property("EVE_TYPE").toInt() == currentDevice)
 		{
@@ -139,7 +146,7 @@ void DeviceDisplaySettingsDialog::execute()
 
 void DeviceDisplaySettingsDialog::saveInputValues()
 {
-	foreach(QRadioButton * rb, m_CustomRadioButtonList)
+	for (QRadioButton * rb : m_CustomRadioButtonList)
 	{
 		if (rb->isChecked())
 		{

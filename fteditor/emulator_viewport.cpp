@@ -47,6 +47,11 @@ static QPixmap *s_Pixmap = NULL;
 QMutex g_ViewportMutex;
 static EmulatorViewport *s_EmulatorViewport = NULL;
 
+static int s_HoverX = -1, s_HoverY = -1;
+static argb8888 s_HoverColor;
+static bool s_HoverValid = false;
+static QColor s_HoverColorQt = QColor::Invalid;
+
 static void(*s_Main)(BT8XXEMU_Emulator *sender, void *context) = NULL;
 static bool s_MainReady = false;
 
@@ -91,6 +96,9 @@ static int ftqtGraphics(BT8XXEMU_Emulator *sender, void *context, int output, co
 			// TODO: Blank
 			// ..
 		}
+		s_HoverValid = s_HoverX >= 0 && s_HoverY >= 0 && s_HoverX < (int)hsize && s_HoverY < (int)vsize;
+		if (s_HoverValid)
+			s_HoverColor = buffer[s_HoverY * hsize + s_HoverX];
 		s_EmulatorViewport->graphics();
 		if (s_LastRendered)
 		{
@@ -109,7 +117,12 @@ void EmulatorThread::run()
 }
 
 EmulatorViewport::EmulatorViewport(QWidget *parent, const QString &applicationDataDir)
-	: QWidget(parent), m_ApplicationDataDir(applicationDataDir), m_ScreenScale(16)
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	: QOpenGLWidget(parent)
+#else
+	: QWidget(parent)
+#endif
+	, m_ApplicationDataDir(applicationDataDir), m_ScreenScale(16)
 {
 	s_EmulatorViewport = this;
 	s_Image = new QImage(screenWidthDefault(FTEDITOR_CURRENT_DEVICE), screenHeightDefault(FTEDITOR_CURRENT_DEVICE), QImage::Format_RGB32);
@@ -235,6 +248,11 @@ void EmulatorViewport::stop()
 void EmulatorViewport::paintEvent(QPaintEvent* e) // on Qt thread
 {
 	QPainter painter(this);
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	painter.setPen(Qt::NoPen);
+	painter.setBrush(painter.background());
+	painter.drawRect(rect());
+#endif
 	painter.drawPixmap(screenLeft(), screenTop(),
 		s_Pixmap->width() * screenScale() / 16, 
 		s_Pixmap->height() * screenScale() / 16, 
@@ -280,6 +298,18 @@ void EmulatorViewport::setScreenScale(int screenScale)
 	else m_ScreenScale = screenScale;
 }
 
+void EmulatorViewport::zoomIn()
+{
+	// Not really used, base implementation for virtual override
+	setScreenScale(screenScale() * 2);
+}
+
+void EmulatorViewport::zoomOut()
+{
+	// Not really used, base implementation for virtual override
+	setScreenScale(screenScale() / 2);
+}
+
 void EmulatorViewport::threadRepaint() // on Qt thread
 {
 	g_ViewportMutex.lock();
@@ -298,10 +328,25 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 		delete pixmap;
 	}
 	s_Pixmap->convertFromImage(*s_Image);
+	if (s_HoverValid)
+		s_HoverColorQt = QColor::fromRgba(s_HoverColor);
+	else
+		s_HoverColorQt = QColor::Invalid;
 	s_LastRendered = true;
 	g_ViewportMutex.unlock();
 	repaint();
 	frame();
+}
+
+void EmulatorViewport::fetchColorAsync(int x, int y)
+{
+	s_HoverX = x;
+	s_HoverY = y;
+}
+
+QColor EmulatorViewport::fetchColorAsync()
+{
+	return s_HoverColorQt;
 }
 
 const QPixmap &EmulatorViewport::getPixMap() const

@@ -33,7 +33,7 @@
 #include "EVE_Platform.h"
 #if defined(MPSSE_PLATFORM)
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 #define EVE_HalImpl_initialize EVE_HalImpl_MPSSE_initialize
 #define EVE_HalImpl_release EVE_HalImpl_MPSSE_release
 #define EVE_Hal_list EVE_Hal_MPSSE_list
@@ -57,6 +57,7 @@
 #define EVE_Hal_powerCycle EVE_Hal_MPSSE_powerCycle
 #define EVE_UtilImpl_bootupDisplayGpio EVE_UtilImpl_MPSSE_bootupDisplayGpio
 #define EVE_Hal_setSPI EVE_Hal_MPSSE_setSPI
+#define EVE_Hal_restoreSPI EVE_Hal_MPSSE_restoreSPI
 #endif
 
 #define LIBMPSSE_MAX_RD_BYTES_PER_CALL_IN_SINGLE_CH 65535
@@ -201,7 +202,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 	FT_DEVICE_LIST_INFO_NODE chanInfo = { 0 };
 	ChannelConfig channelConf; /* channel configuration */
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 	phost->GpuDefs = &EVE_GpuDefs_FT80X;
 #endif
 
@@ -333,14 +334,14 @@ static inline uint32_t incrementRamGAddr(EVE_HalContext *phost, uint32_t addr, u
  * @param buffer Buffer to get result
  * @param size Number of bytes to read
  */
-static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
+static inline bool rdBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
 {
 	uint32_t sizeTransferred = 0;
 	uint32_t sizeRemaining = size;
 
 	while (sizeRemaining)
 	{
-		FT_STATUS status = SPI_Read(phost->SpiHandle, (uint8 *)buffer, min(0xFFFF, sizeRemaining), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
+		FT_STATUS status = SPI_Read(phost->SpiHandle, buffer, min(0xFFFF, sizeRemaining), &sizeTransferred, SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES);
 		sizeRemaining -= sizeTransferred;
 		buffer += sizeTransferred;
 
@@ -362,7 +363,7 @@ static inline bool rdBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32
  * @param buffer Data buffer to write
  * @param size Size of buffer
  */
-static inline bool wrBuffer(EVE_HalContext *phost, uint8_t *buffer, uint32_t size)
+static inline bool wrBuffer(EVE_HalContext *phost, const uint8_t *buffer, uint32_t size)
 {
 #if defined(EVE_BUFFER_WRITES)
 	if (buffer && (size < (sizeof(phost->SpiWrBuf) - phost->SpiWrBufIndex)))
@@ -497,7 +498,7 @@ static bool flush(EVE_HalContext *phost)
 		res = wrBuffer(phost, NULL, 0);
 	}
 	eve_assert(!phost->SpiWrBufIndex);
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		if (phost->SpiWpWritten)
@@ -543,7 +544,7 @@ void EVE_Hal_startTransfer(EVE_HalContext *phost, EVE_TRANSFER_T rw, uint32_t ad
 #if defined(EVE_BUFFER_WRITES)
 	if (!EVE_Hal_supportCmdB(phost) && addr == REG_CMD_WRITE && rw == EVE_TRANSFER_WRITE)
 	{
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		/* Bypass fifo write pointer write */
 		phost->SpiWpWriting = true;
 #else
@@ -635,7 +636,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 	}
 	else if (phost->Status == EVE_STATUS_WRITING)
 	{
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		if (!EVE_Hal_supportCmdB(phost))
 		{
 			phost->SpiWpWriting = false;
@@ -667,7 +668,7 @@ void EVE_Hal_endTransfer(EVE_HalContext *phost)
 uint8_t EVE_Hal_transfer8(EVE_HalContext *phost, uint8_t value)
 {
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -688,7 +689,7 @@ uint16_t EVE_Hal_transfer16(EVE_HalContext *phost, uint16_t value)
 {
 	uint8_t buffer[2];
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		if (phost->SpiWpWriting)
@@ -726,7 +727,7 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
 {
 	uint8_t buffer[4];
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -760,13 +761,13 @@ uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value)
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -797,13 +798,13 @@ void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uin
  * @param buffer Buffer where data is transfered, NULL when read
  * @param size Size of buffer
  */
-void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	if (!size)
 		return;
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -849,7 +850,7 @@ uint32_t EVE_Hal_transferString(EVE_HalContext *phost, const char *str, uint32_t
 	}
 
 #if defined(EVE_BUFFER_WRITES)
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (!EVE_Hal_supportCmdB(phost))
 	{
 		eve_assert(!phost->SpiWpWriting);
@@ -1063,6 +1064,14 @@ bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
  * @param numdummy Number of dummy bytes
  */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
+{
+#if defined(EVE_BUFFER_WRITES)
+	flush(phost);
+#endif
+	/* no-op */
+}
+
+void EVE_Hal_restoreSPI(EVE_HalContext *phost)
 {
 #if defined(EVE_BUFFER_WRITES)
 	flush(phost);

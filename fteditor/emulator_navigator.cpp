@@ -70,7 +70,7 @@ void EmulatorNavigator::mouseMoveEvent(QMouseEvent *e)
 
 void EmulatorNavigator::mousePressEvent(QMouseEvent *e)
 {
-
+	mouseMoveEvent(e);
 }
 
 void EmulatorNavigator::mouseReleaseEvent(QMouseEvent *e)
@@ -82,11 +82,11 @@ void EmulatorNavigator::wheelEvent(QWheelEvent* e)
 {
 	if (e->angleDelta().y() > 0)
 	{
-		m_EmulatorViewport->setScreenScale(m_EmulatorViewport->screenScale() * 2);
+		m_EmulatorViewport->zoomIn();
 	}
 	else if (e->angleDelta().y() < 0)
 	{
-		m_EmulatorViewport->setScreenScale(m_EmulatorViewport->screenScale() / 2);
+		m_EmulatorViewport->zoomOut();
 	}
 	QWidget::wheelEvent(e);
 }

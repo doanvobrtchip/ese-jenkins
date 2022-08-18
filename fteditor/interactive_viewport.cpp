@@ -32,6 +32,8 @@
 #include <QLineEdit>
 #include <QStatusBar>
 #include <QActionGroup>
+#include <QRegularExpression>
+
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -106,6 +108,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	automatic->setStatusTip(tr("Context dependent cursor"));
 	automatic->setCheckable(true);
 	automatic->setChecked(true);
+	automatic->setShortcut(Qt::ALT | Qt::Key_C);
 
 	QAction *touch = new QAction(cursorGroup);
 	connect(touch, SIGNAL(triggered()), this, SLOT(touchChecked()));
@@ -113,6 +116,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	touch->setIcon(QIcon(":/icons/hand-point-090.png"));
 	touch->setStatusTip(tr("Use to cursor to touch the emulated display"));
 	touch->setCheckable(true);
+	touch->setShortcut(Qt::ALT | Qt::Key_T);
 
 	QAction *trace = new QAction(cursorGroup);
 	connect(trace, SIGNAL(triggered()), this, SLOT(traceChecked()));
@@ -120,6 +124,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	trace->setIcon(QIcon(":/icons/trace.png"));
 	trace->setStatusTip(tr("Select a pixel to trace display commands"));
 	trace->setCheckable(true);
+	trace->setShortcut(Qt::ALT | Qt::Key_R);
 
 	QAction *edit = new QAction(cursorGroup);
 	connect(edit, SIGNAL(triggered()), this, SLOT(editChecked()));
@@ -127,6 +132,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	edit->setIcon(QIcon(":/icons/arrow-move.png"));
 	edit->setStatusTip(tr("Interactive editing tools"));
 	edit->setCheckable(true);
+	edit->setShortcut(Qt::ALT | Qt::Key_E);
 
 	QToolBar *cursorToolBar = m_MainWindow->addToolBar(tr("Cursor"));
 	cursorToolBar->setIconSize(QSize(16, 16));
@@ -186,8 +192,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 
 	connect(m_ZoomCB, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InteractiveViewport::zoomChanged);
 	connect(m_ZoomCB->lineEdit(), &QLineEdit::returnPressed, this, &InteractiveViewport::zoomEditTextChanged);
-	connect(m_ZoomCB, &QComboBox::textActivated,
-		[=](const QString &text) {  m_ZoomCB->lineEdit()->selectAll();  });
+
+	connect(m_ZoomCB, &QComboBox::textActivated, [this]() {  m_ZoomCB->lineEdit()->selectAll();  });
 
 	QStringList zoomList;
 	
@@ -444,17 +450,6 @@ void InteractiveViewport::graphics(QImage *image)
 	return; // This callback can be used to make the navview
 }
 
-QColor InteractiveViewport::getPixelColor()
-{
-	QPixmap pm = getPixMap();
-	if (m_MouseX < 0 || m_MouseX > pm.width() || m_MouseY < 0 || m_MouseY > pm.height())
-	{
-		return QColor::Invalid;
-	}
-	QImage img = getPixMap().toImage();
-	return img.pixelColor(m_MouseX, m_MouseY);
-}
-
 void InteractiveViewport::paintEvent(QPaintEvent *e)
 {
 	EmulatorViewport::paintEvent(e);
@@ -484,6 +479,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 #define UNTFY(y) ((((y - mvy) * 16) / scl))
 #define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
 #define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
+#if QT_VERSION_MAJOR < 6
+#define EPOSPOINT(e) (e->pos())
+#else
+#define EPOSPOINT(e) (e->position().toPoint())
+#endif
 
 	if (m_MouseTouch && m_MouseX >= 0 && m_MouseX < getPixMap().width() && m_MouseY >= 0 && m_MouseY < getPixMap().height())
 	{
@@ -1324,16 +1324,17 @@ void InteractiveViewport::keyPressEvent(QKeyEvent *e)
 
 void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km)
 {
-	// printf("pos: %i, %i\n", e->pos().x(), e->pos().y());
+	// printf("pos: %i, %i\n", EPOSPOINT(e).x(), EPOSPOINT(e).y());
 	m_NextMouseX = mouseX;
 	m_NextMouseY = mouseY;
+	fetchColorAsync(mouseX, mouseY);
 
 	m_MainWindow->statusBar()->showMessage("");
 	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
 
 	if (m_MouseTouch)
 	{
-		// BT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+		// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
 	}
 	else if (m_MouseMovingVertex)
 	{
@@ -1718,6 +1719,10 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 void InteractiveViewport::wheelEvent(QWheelEvent* e)
 {
 	int mvx = screenLeft();
+	int mvy = screenTop();
+	int scl = screenScale();
+	int curx = UNTFX(e->position().toPoint().x());
+	int cury = UNTFY(e->position().toPoint().y());
 
 	if (e->angleDelta().y() > 0)
 	{
@@ -1728,6 +1733,18 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 		zoomOut();
 	}
 
+	mvx = screenLeft();
+	mvy = screenTop();
+	scl = screenScale();
+	int newx = UNTFX(e->position().toPoint().x());
+	int newy = UNTFY(e->position().toPoint().y());
+
+	int nx = (curx - newx) * 16;
+	int ny = (cury - newy) * 16;
+
+	horizontalScrollbar()->setValue(horizontalScrollbar()->value() + nx);
+	verticalScrollbar()->setValue(verticalScrollbar()->value() + ny);
+
 	EmulatorViewport::wheelEvent(e);
 }
 
@@ -1737,7 +1754,7 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 	int mvy = screenTop();
 	int scl = screenScale();
 
-	mouseMoveEvent(UNTFX(e->pos().x()), UNTFY(e->pos().y()), e->modifiers());
+	mouseMoveEvent(UNTFX(EPOSPOINT(e).x()), UNTFY(EPOSPOINT(e).y()), e->modifiers());
 	EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1756,15 +1773,15 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		if (e->button() == Qt::LeftButton)
 		{
 			m_MouseTouch = true;
-			// BT8XXEMU_setTouchScreenXY(e->pos().x(), e->pos().y(), 0);
+			// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
 		}
 		break;
 	case POINTER_TRACE: // trace
 		switch (e->button())
 		{
 		case Qt::LeftButton:
-			m_MainWindow->setTraceX(UNTFX(e->pos().x()));
-			m_MainWindow->setTraceY(UNTFY(e->pos().y()));
+			m_MainWindow->setTraceX(UNTFX(EPOSPOINT(e).x()));
+			m_MainWindow->setTraceY(UNTFY(EPOSPOINT(e).y()));
 			m_MainWindow->setTraceEnabled(true);
 			break;
 		case Qt::MiddleButton:
@@ -1786,8 +1803,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 			{
 				m_LineEditor->selectLine(m_MouseOverVertexLine);
 			}
-			m_MovingLastX = UNTFX(e->pos().x());
-			m_MovingLastY = UNTFY(e->pos().y());
+			m_MovingLastX = UNTFX(EPOSPOINT(e).x());
+			m_MovingLastY = UNTFY(EPOSPOINT(e).y());
 			m_MouseMovingVertex = true;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
 		}
@@ -1839,8 +1856,8 @@ RETURN()
 			if (isValidInsert(pa))
 			{
 				++line;
-				pa.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
-				pa.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
+				pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+				pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 				m_LineEditor->insertLine(line, pa);
 				m_LineEditor->selectLine(line);
 			}
@@ -1855,8 +1872,8 @@ RETURN()
 		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
 		{
 			// Works for any widget move action
-			m_MovingLastX = UNTFX(e->pos().x());
-			m_MovingLastY = UNTFY(e->pos().y());
+			m_MovingLastX = UNTFX(EPOSPOINT(e).x());
+			m_MovingLastY = UNTFY(EPOSPOINT(e).y());
 			m_MouseMovingWidget = m_PointerMethod;
 			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
 		}
@@ -1906,7 +1923,11 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	EmulatorViewport::mouseReleaseEvent(e);
 }
 
+#if QT_VERSION_MAJOR < 6
+void InteractiveViewport::enterEvent(QEvent *e)
+#else
 void InteractiveViewport::enterEvent(QEnterEvent *e)
+#endif
 {
 	//printf("InteractiveViewport::enterEvent\n");
 
@@ -2075,13 +2096,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					switch (selection)
 					{
 					case FTEDITOR_DL_VERTEX2F:
-						pa.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
-						pa.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 						pa.ExpectedParameterCount = 2;
 						break;
 					default:
-						pa.Parameter[0].I = UNTFX(e->pos().x());
-						pa.Parameter[1].I = UNTFY(e->pos().y());
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 						pa.Parameter[2].I = 0;
 						pa.Parameter[3].I = 0;
 						pa.ExpectedParameterCount = 4;
@@ -2103,8 +2124,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ValidId = true;
 					pa.IdLeft = 0xFFFFFF00;
 					pa.IdRight = selection & 0xFF;
-					pa.Parameter[0].I = UNTFX(e->pos().x());
-					pa.Parameter[1].I = UNTFY(e->pos().y());
+					pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+					pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 					pa.ExpectedStringParameter = false;
 					switch (selection)
 					{
@@ -2402,26 +2423,71 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case CMD_GETIMAGE:
 						pa.ExpectedParameterCount = 0;
 						break;
-					
-	/*
-
-	CMD_TEXT(19, 23, 28, 0, "Text")
-	CMD_BUTTON(15, 59, 120, 36, 27, 0, "Button")
-	CMD_KEYS(14, 103, 160, 36, 29, 0, "keys")
-	CMD_PROGRESS(15, 148, 180, 12, 0, 20, 100)
-	CMD_SLIDER(15, 174, 80, 8, 0, 30, 100)
-	CMD_SCROLLBAR(426, 53, 16, 160, 0, 120, 60, 480)
-	CMD_TOGGLE(22, 199, 40, 27, 0, 0, "on\\xFFoff")
-	CMD_GAUGE(274, 55, 36, 0, 4, 8, 40, 100)
-	CMD_CLOCK(191, 55, 36, 0, 13, 51, 17, 0)
-	CMD_DIAL(356, 55, 36, 0, 6144)
-	CMD_NUMBER(14, 233, 28, 0, 42)
-	CMD_SPINNER(305, 172, 0, 0)
-
-	*/
 					}
-					m_LineEditor->insertLine(line, pa);
-					m_LineEditor->selectLine(line);
+
+					if (selection == CMD_SKETCH)
+					{
+						line = m_LineEditor->getLineCount();
+						if (m_LineEditor->getLineText(line - 1).isEmpty()) {
+							--line;
+						}
+						
+						int addr = m_MainWindow->contentManager()->getFreeMemoryAddress();
+						if (addr < 0)
+						{
+							m_LineEditor->insertLine(++line, "// No free space in RAM_G.");
+							m_MainWindow->propertyErrorSet("No free space in RAM_G.");
+							return;
+						}
+
+						pa.Parameter[2].U = 480;
+						pa.Parameter[3].U = 272;
+						pa.Parameter[4].U = addr;
+						pa.Parameter[5].U = L1;
+						pa.ExpectedParameterCount = 6;
+
+						m_LineEditor->insertLine(++line, QString("CMD_MEMZERO(%1, 16320)").arg(addr));
+						m_LineEditor->insertLine(++line, pa);  // insert cmd_sketch
+						m_LineEditor->selectLine(line);
+						m_LineEditor->insertLine(++line, "");
+						m_LineEditor->insertLine(++line, "// Then to display the bitmap");
+
+						int handleFree = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
+						if (handleFree == -1) {
+							m_LineEditor->insertLine(++line, "// No free bitmap handle.");
+							m_MainWindow->propertyErrorSet("No free bitmap handle.");
+							return;
+						}
+
+						QString bh = QString("BITMAP_HANDLE(%1)").arg(handleFree);
+						m_LineEditor->insertLine(++line, bh);
+
+						if (FTEDITOR_CURRENT_DEVICE > FTEDITOR_FT810) {
+							m_LineEditor->insertLine(++line, QString("CMD_SETBITMAP(%1, L1, 480, 272)").arg(addr));
+						}
+						else
+						{
+							m_LineEditor->insertLine(++line, QString("BITMAP_SOURCE(0)").arg(addr));
+							m_LineEditor->insertLine(++line, "BITMAP_LAYOUT(L1, 60, 272)");
+							m_LineEditor->insertLine(++line, "BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 272)");
+						}
+
+						m_LineEditor->insertLine(++line, "");
+						m_LineEditor->insertLine(++line, "BEGIN(BITMAPS)");
+
+						int vf = m_LineEditor->getVertextFormat(line);
+						QString vt2f = QString("VERTEX2F(%1, %2)")
+							            .arg(pa.Parameter[0].I << vf)
+							            .arg(pa.Parameter[1].I << vf);
+						m_LineEditor->insertLine(++line, vt2f);
+						m_LineEditor->insertLine(++line, "END()");
+					}
+					else
+					{
+						m_LineEditor->insertLine(line, pa);
+						m_LineEditor->selectLine(line);
+					}
+					
 					m_LineEditor->codeEditor()->endUndoCombine();
 				}
 				else if (selectionType == FTEDITOR_SELECTION_FUNCTION)
@@ -2481,6 +2547,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						if (handleResult != -1 && handleResult != 15)
 						{
 							bitmapHandle = handleResult;
+
 							mustCreateHandle = false;
 						}
 						if (mustCreateHandle)
@@ -2499,7 +2566,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								{
 									printf("No free handle available\n");
 									PropertiesEditor *props = m_MainWindow->propertiesEditor();
-									props->setInfo(tr("<b>Error</b>: No free bitmap handle available"));
+									props->setError(tr("<b>Error</b>: No free bitmap handle available"));
 									props->setEditWidget(NULL, false, NULL);
 									m_MainWindow->focusProperties();
 									return;
@@ -2582,16 +2649,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 								++line;
 							}
 
-							/*if (requirePaletteAddress(contentInfo))
-							{
-								pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-								pa.Parameter[0].U = contentInfo->MemoryAddress;
-								pa.ExpectedParameterCount = 1;
-								m_LineEditor->insertLine(hline, pa);
-								++hline;
-								++line;
-							}*/ // Not the correct location
-
 							if (!useSetBitmap)
 							{
 								pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
@@ -2661,8 +2718,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 						pa.IdLeft = 0xFFFFFF00;
 						pa.IdRight = CMD_TEXT & 0xFF;
-						pa.Parameter[0].I = UNTFX(e->pos().x());
-						pa.Parameter[1].I = UNTFY(e->pos().y());
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
 						pa.Parameter[2].I = bitmapHandle;
 						pa.Parameter[3].I = 0;
 						pa.StringParameter = "Text";
@@ -2683,8 +2740,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pav.ValidId = true;
 						pav.IdLeft = FTEDITOR_DL_VERTEX2F; // FIXME: Drag-drop outside 512px does not work??
 						pav.IdRight = 0;
-						pav.Parameter[0].I = UNTFX(e->pos().x()) << m_LineEditor->getVertextFormat(line);
-						pav.Parameter[1].I = UNTFY(e->pos().y()) << m_LineEditor->getVertextFormat(line);
+						pav.Parameter[0].I = UNTFX(EPOSPOINT(e).x()) << m_LineEditor->getVertextFormat(line);
+						pav.Parameter[1].I = UNTFY(EPOSPOINT(e).y()) << m_LineEditor->getVertextFormat(line);
 						//pav.Parameter[2].I = bitmapHandle;
 						//pav.Parameter[3].I = 0;
 						pav.ExpectedParameterCount = 2;
@@ -2917,7 +2974,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                     case CMD_ROMFONT:
                         pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
                         if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
-                        pa.Parameter[1].I = 34;
+						if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
+							pa.Parameter[1].I = 31;
+						else
+							pa.Parameter[1].I = 34;
                         pa.ExpectedParameterCount = 2;
                         break;
                     case CMD_SETFONT:
@@ -3154,8 +3214,8 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 			int mvy = screenTop();
 			int scl = screenScale();
 
-			m_NextMouseX = UNTFX(e->pos().x());
-			m_NextMouseY = UNTFY(e->pos().y());
+			m_NextMouseX = UNTFX(EPOSPOINT(e).x());
+			m_NextMouseY = UNTFY(EPOSPOINT(e).y());
 			m_DragMoving = true;
 
 			e->acceptProposedAction();

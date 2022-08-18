@@ -9,12 +9,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #define BT8XXEMU_SYSTEM_H
 // #include <...>
 
-// System includes
-#include <memory>
-
-// Project includes
-#include "bt8xxemu.h"
-
+// Windows include
 #ifdef WIN32
 #	ifndef NOMINMAX
 #		define NOMINMAX
@@ -27,8 +22,22 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #	ifndef WIN32_LEAN_AND_MEAN
 #		define WIN32_LEAN_AND_MEAN
 #	endif
-#	include <Windows.h>
 #endif
+#include <malloc.h>
+#include <algorithm>
+using std::max;
+using std::min;
+#ifdef WIN32
+#	include <Windows.h>
+#	include <timeapi.h>
+#endif
+
+// System includes
+#include <memory>
+#include <functional>
+
+// Project includes
+#include "bt8xxemu.h"
 
 namespace FT8XXEMU {
 	class SleepWake;
@@ -65,6 +74,11 @@ public:
 	void setUserContext(void *context) { m_UserContext = context; }
 	void onLog(void(*log)(BT8XXEMU_Emulator *sender, void *context, BT8XXEMU_LogType type, const char *message)) { m_Log = log; }
 	void overrideMCUDelay(void(*delay)(BT8XXEMU_Emulator *sender, void *context, int ms)) { m_MCUDelay = delay; }
+
+	static void beginPrecise(int ms);
+	static void endPrecise(int ms);
+	void delayPreciseForMCU(int ms);
+	static void delayPrecise(int ms);
 
 	void delayForMCU(int ms);
 	static void delay(int ms);
@@ -140,6 +154,13 @@ private:
 #else
 #	define FTEMU_message(s, ...) do { } while (false)
 #endif
+
+struct OnExit
+{
+	OnExit(std::function<void()> &&f) : f(f) {}
+	~OnExit() { f(); }
+	std::function<void()> f;
+};
 
 } /* namespace FT8XXEMU */
 

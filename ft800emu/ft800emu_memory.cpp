@@ -3,8 +3,8 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 BT815 Emulator Library
-Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2016-2022  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifdef _MSC_VER
@@ -369,6 +369,10 @@ static const uint8_t c_RomBT817[FT800EMU_ROM_SIZE] = {
 static const uint8_t c_RomBT815[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_bt815.h"
 };
+#elif defined(BT880EMU_MODE)
+static const uint8_t c_RomBT880[FT800EMU_ROM_SIZE] = {
+#include "resources/rom_bt880.h"
+};
 #elif defined(FT810EMU_MODE)
 static const uint8_t c_RomFT810[FT800EMU_ROM_SIZE] = {
 #include "resources/rom_ft810.h"
@@ -396,6 +400,19 @@ static const uint8_t c_OTP815[FT800EMU_OTP_SIZE] = {
 static const uint8_t c_OTP816[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_816.h"
 };
+#elif defined(BT880EMU_MODE)
+static const uint8_t c_OTP880[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_880.h"
+};
+static const uint8_t c_OTP881[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_881.h"
+};
+static const uint8_t c_OTP882[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_882.h"
+};
+static const uint8_t c_OTP883[FT800EMU_OTP_SIZE] = {
+#include "resources/otp_883.h"
+};
 #elif defined(FT810EMU_MODE)
 static const uint8_t c_OTP810[FT800EMU_OTP_SIZE] = {
 #include "resources/otp_810.h"
@@ -417,7 +434,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	BT8XXEMU_Flash *flash,
 #endif
 	const wchar_t *romFilePath, const wchar_t *otpFilePath)
-	: m_System(system), m_SwapDLMutex(swapDLMutex), 
+	: m_System(system), m_SwapDLMutex(swapDLMutex),
 	m_ThreadMCU(threadMCU), m_ThreadCoprocessor(threadCoprocessor)
 #ifdef BT815EMU_MODE
 	, m_Flash(flash)
@@ -432,7 +449,7 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 	// memset(m_Ram, 0xFF, FT800EMU_RAM_SIZE);
 	// memset(m_DisplayListA, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
 	// memset(m_DisplayListB, 0, sizeof(uint32_t) * FT800EMU_DISPLAY_LIST_SIZE);
-	
+
 	if (romFilePath)
 	{
 		FILE *f;
@@ -464,11 +481,30 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT817, sizeof(c_RomBT817));
 #elif defined(BT815EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT815, sizeof(c_RomBT815));
+#elif defined(BT880EMU_MODE)
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomBT880, sizeof(c_RomBT880));
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 1], c_RomBT880, sizeof(c_RomBT880));
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 2], c_RomBT880, sizeof(c_RomBT880));
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 3], c_RomBT880, sizeof(c_RomBT880));
 #elif defined(FT810EMU_MODE)
 		memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT810, sizeof(c_RomFT810));
 #else
 		if (emulatorMode >= BT8XXEMU_EmulatorFT801) memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT801, sizeof(c_RomFT801));
 		else memcpy(&m_Ram[FT800EMU_ROM_INDEX], c_RomFT800, sizeof(c_RomFT800));
+#endif
+	}
+
+	{
+#if defined(BT815EMU_MODE)
+		size_t repeatSize = 128 * 1024;
+		void *const repeatSrc = &m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE - repeatSize];
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE], repeatSrc, repeatSize);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE + repeatSize], repeatSrc, repeatSize);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE + 2 * repeatSize], repeatSrc, repeatSize);
+#elif defined(BT880EMU_MODE)
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 2], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
+		memcpy(&m_Ram[FT800EMU_ROM_INDEX + FT800EMU_ROM_SIZE * 3], &m_Ram[FT800EMU_ROM_INDEX], FT800EMU_ROM_SIZE);
 #endif
 	}
 
@@ -505,6 +541,11 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 #elif defined(BT815EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorBT816) memcpy(&m_Ram[RAM_JTBOOT], c_OTP816, sizeof(c_OTP816));
 		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP815, sizeof(c_OTP815));
+#elif defined(BT880EMU_MODE)
+		if (emulatorMode >= BT8XXEMU_EmulatorBT883) memcpy(&m_Ram[RAM_JTBOOT], c_OTP883, sizeof(c_OTP883));
+		else if (emulatorMode >= BT8XXEMU_EmulatorBT882) memcpy(&m_Ram[RAM_JTBOOT], c_OTP882, sizeof(c_OTP882));
+		else if (emulatorMode >= BT8XXEMU_EmulatorBT881) memcpy(&m_Ram[RAM_JTBOOT], c_OTP881, sizeof(c_OTP881));
+		else memcpy(&m_Ram[RAM_JTBOOT], c_OTP880, sizeof(c_OTP880));
 #elif defined(FT810EMU_MODE)
 		if (emulatorMode >= BT8XXEMU_EmulatorFT813) memcpy(&m_Ram[RAM_JTBOOT], c_OTP813, sizeof(c_OTP813));
 		else if (emulatorMode >= BT8XXEMU_EmulatorFT812) memcpy(&m_Ram[RAM_JTBOOT], c_OTP812, sizeof(c_OTP812));
@@ -715,7 +756,16 @@ Memory::Memory(FT8XXEMU::System *system, BT8XXEMU_EmulatorMode emulatorMode, std
 
 Memory::~Memory()
 {
-	// ...
+	if (m_DelayCoprocPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayCoprocPrecise = false;
+	}
+	if (m_DelayMCUPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayMCUPrecise = false;
+	}
 }
 
 void Memory::done()
@@ -744,6 +794,8 @@ void Memory::mcuWriteU32(ramaddr address, uint32_t data)
 		FTEMU_error("MCU U32 write address %i exceeds RAM size", (int)address);
 		return;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 	// m_WaitMCUReadCounter = 0;
 	// m_SwapMCUReadCounter = 0;
@@ -846,6 +898,9 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 		return 0;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+	bool delayed = false;
+
 	if (m_ReadDelay)
 	{
 		switch (address)
@@ -868,6 +923,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			if (m_WaitMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU \n");
+				if (!m_DelayMCUPrecise)
+				{
+					m_DelayMCUPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadCoprocessor.prioritize();
 				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
@@ -878,6 +939,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			if (m_SwapMCUReadCounter > 8)
 			{
 				// FTEMU_printf(" Delay MCU ");
+				if (!m_DelayMCUPrecise)
+				{
+					m_DelayMCUPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadCoprocessor.prioritize();
 				m_System->delayForMCU(1);
 				m_ThreadCoprocessor.unprioritize();
@@ -903,6 +970,12 @@ uint32_t Memory::mcuReadU32(ramaddr address)
 			}
 			break;
 		}
+	}
+
+	if (!delayed && m_DelayMCUPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayMCUPrecise = false;
 	}
 
 	switch (address)
@@ -1005,6 +1078,8 @@ void Memory::coprocessorWriteU32(ramaddr address, uint32_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
 	if (address >= RAM_DL && address < RAM_DL + 8192)
 	{
 		//m_CoprocessorWritesDL = true;
@@ -1072,6 +1147,9 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 		return 0;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+	bool delayed = false;
+
 	if (m_ReadDelay && address < RAM_J1RAM)
 	{
 		switch (address)
@@ -1091,6 +1169,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			++m_WaitCoprocessorReadCounter;
 			if (m_WaitCoprocessorReadCounter > 8)
 			{
+				if (!m_DelayCoprocPrecise)
+				{
+					m_DelayCoprocPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadMCU.prioritize();
 				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
@@ -1101,6 +1185,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			if (m_SwapCoprocessorReadCounter > 8)
 			{
 				// FTEMU_printf("Waiting for frame swap, currently %i\n", rawReadU32(REG_DLSWAP));
+				if (!m_DelayCoprocPrecise)
+				{
+					m_DelayCoprocPrecise = true;
+					System::beginPrecise(1);
+				}
+				delayed = true;
 				m_ThreadMCU.prioritize();
 				FT8XXEMU::System::delay(1);
 				m_ThreadMCU.unprioritize();
@@ -1145,6 +1235,12 @@ uint32_t Memory::coprocessorReadU32(ramaddr address)
 			m_FifoCoprocessorReadCounter = 0;
 		}
 #endif
+	}
+
+	if (!delayed && m_DelayCoprocPrecise)
+	{
+		System::endPrecise(1);
+		m_DelayCoprocPrecise = false;
 	}
 
 	switch (address)
@@ -1271,6 +1367,8 @@ void Memory::coprocessorWriteU16(ramaddr address, uint16_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
     actionWrite(address, data);
 	rawWriteU16(address, data);
 	postWrite(address, data);
@@ -1301,6 +1399,8 @@ uint16_t Memory::coprocessorReadU16(ramaddr address)
 		FTEMU_error("Coprocessor U16 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 
 #ifdef BT815EMU_MODE
@@ -1380,6 +1480,8 @@ void Memory::coprocessorWriteU8(ramaddr address, uint8_t data)
 		return;
 	}
 
+	address = FT800EMU_MASK_ADDR(address);
+
 	if (address == REG_J1_INT && data)
 	{
 		// TODO: MUTEX!!!
@@ -1404,6 +1506,8 @@ uint8_t Memory::coprocessorReadU8(ramaddr address)
 		FTEMU_error("Coprocessor U8 read address %i exceeds RAM size", (int)address);
 		return 0;
 	}
+
+	address = FT800EMU_MASK_ADDR(address);
 
 	if (address % 4 == 0)
 	{

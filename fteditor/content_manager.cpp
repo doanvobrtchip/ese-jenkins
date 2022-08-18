@@ -2049,6 +2049,14 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 	// Update GUI if it exists
 	if (m_CurrentPropertiesContent == contentInfo)
 		rebuildGUIInternal(contentInfo);
+
+	if (!contentInfo->BuildError.isEmpty())
+	{
+		QString text("");
+		text.append("Content name: <b>" + contentInfo->DestName + "</b>: ");
+		text.append(contentInfo->BuildError);
+		m_MainWindow->appendTextToOutputDock(text);
+	}
 }
 
 void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash)
@@ -2870,7 +2878,8 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == 0 && 
+			parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -2878,7 +2887,8 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 		}
 		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND &&
+				parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 			{
 				DlParsed pa = parsed;
 				pa.Parameter[0].I = newAddr;
@@ -4915,15 +4925,21 @@ void ContentManager::propertiesFontOffsetChanged(int value)
 void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event)
 {
 	if (event->mimeData()->hasUrls())
-		event->accept();
+		event->acceptProposedAction();
 	else
 		event->ignore();
 }
 
 void ContentTreeWidget::dropEvent(QDropEvent *event)
 {
+	if (event->source() == this)
+	{
+		event->ignore();
+		return;
+	}
+
 	event->acceptProposedAction();
-	foreach(QUrl url, event->mimeData()->urls())
+	for	(QUrl url : event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}
@@ -4948,13 +4964,16 @@ ContentTreeWidget::~ContentTreeWidget()
 
 void ContentLabel::dragEnterEvent(QDragEnterEvent *event)
 {
-	event->accept();
+	if (event->mimeData()->hasUrls())
+		event->accept();
+	else
+		event->ignore();
 }
 
 void ContentLabel::dropEvent(QDropEvent *event)
 {
 	event->acceptProposedAction();
-	foreach(QUrl url, event->mimeData()->urls())
+	for (QUrl url : event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}

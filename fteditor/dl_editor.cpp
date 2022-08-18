@@ -32,6 +32,7 @@
 #include <QtEndian>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QRegularExpression>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -45,6 +46,7 @@
 #include "toolbox.h"
 #include "interactive_properties.h"
 #include "constant_common.h"
+#include "content_manager.h"
 
 namespace FTEDITOR
 {
@@ -459,7 +461,11 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 
 	QTextStream ts(&f);
 	ts.setAutoDetectUnicode(true);
-	ts.setEncoding(QStringConverter::Utf8);
+#if QT_VERSION_MAJOR < 6
+	ts.setCodec("utf-8");
+#else
+    ts.setEncoding(QStringConverter::Utf8);
+#endif
 	std::vector<uint32_t> comp;
 
 	lockDisplayList();
@@ -633,63 +639,165 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId, cons
 	m_EditingInteractive = true;
 	if (combineId >= 0)
 		m_CodeEditor->setUndoCombine(combineId, message);
+	
+	DlParsed oldParsed = getLine(line);
 	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
 	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
-	//m_CodeEditor->setTextCursor(c);
-	//c.select(QTextCursor::BlockUnderCursor);
 	c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	c.insertText(linestr);
-	// editorCursorPositionChanged() needed? // VERIFY
+	
 	if (combineId >= 0)
 		m_CodeEditor->endUndoCombine();
 	m_EditingInteractive = false;
+
+	if (linestr.contains("CMD_SKETCH", Qt::CaseInsensitive) && !m_adjustingCmdSketch) {
+		m_adjustingCmdSketch = true;
+		adjustCmdSketch(oldParsed, parsed);
+		m_adjustingCmdSketch = false;
+	}
+}
+
+void DlEditor::adjustCmdSketch(DlParsed pre, DlParsed cur)
+{
+	ContentInfo ci("");
+	ci.Converter = ContentInfo::Image;
+	ci.ImageFormat = cur.Parameter[5].I;
+	ci.MemoryAddress = cur.Parameter[4].I;
+	ci.CachedImage = true;	
+	ci.CachedImageWidth = cur.Parameter[2].I;
+	ci.CachedImageHeight = cur.Parameter[3].I;
+	ci.CachedImageStride = (ci.ImageFormat == L1 ? ceil(ci.CachedImageWidth / 8.0) : ci.CachedImageWidth);
+
+	// adjust x, y
+	if ((pre.Parameter[0].I != cur.Parameter[0].I) || (pre.Parameter[1].I != cur.Parameter[1].I))
+	{
+		adjustXY(pre, cur);
+	}
+
+	// adjust w, h
+	if ((pre.Parameter[2].I != cur.Parameter[2].I) || (pre.Parameter[3].I != cur.Parameter[3].I))
+	{
+		// adjust cmd_memzero
+		adjustCmdMemzero(pre, cur);
+		m_MainWindow->contentManager()->editorUpdateHandle(&ci, this, true);
+	}
+
+	// adjust address
+	if (pre.Parameter[4].I != cur.Parameter[4].I)
+	{
+		// change BITMAP_SOURCE()
+		m_MainWindow->contentManager()->editorUpdateHandleAddress(cur.Parameter[4].I, pre.Parameter[4].I, this);
+		adjustCmdMemzero(pre, cur);
+	}
+
+	// adjust bitmap format L1 <-> L8
+	if (pre.Parameter[5].I != cur.Parameter[5].I)
+	{
+		adjustCmdMemzero(pre, cur);
+		m_MainWindow->contentManager()->editorUpdateHandle(&ci, this, true);
+	}
+
+	
+}
+
+void DlEditor::adjustXY(DlParsed pre, DlParsed cur)
+{
+	DlParsed dl;
+	for (int i = 0; i < m_CodeEditor->blockCount(); i++)
+	{
+		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, getLineText(i), m_ModeCoprocessor);
+		if (dl.ValidId && dl.IdLeft == FTEDITOR_DL_VERTEX2F)
+		{
+			int vf = getVertextFormat(i);
+			DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, getLineText(i), m_ModeCoprocessor);
+			if (dl.Parameter[0].I == pre.Parameter[0].I << vf && 
+				dl.Parameter[1].I == pre.Parameter[1].I << vf)
+			{
+				dl.Parameter[0].I = cur.Parameter[0].I << vf;
+				dl.Parameter[1].I = cur.Parameter[1].I << vf;
+				replaceLine(i, dl);
+				break;
+			}
+		}
+	}
+}
+
+void DlEditor::adjustCmdMemzero(DlParsed pre, DlParsed cur)
+{
+	auto memsize = [](int w, int h, int f) { return ceil(w * h * (f == L1 ? 0.125 : 1)); };
+	int prevNum = memsize(pre.Parameter[2].I, pre.Parameter[3].I, pre.Parameter[5].I);
+	int curNum = memsize(cur.Parameter[2].I, cur.Parameter[3].I, cur.Parameter[5].I);
+
+	// search cmd_memzero
+	DlParsed dl;
+	for (int i = 0; i < m_CodeEditor->blockCount(); i++)
+	{
+		DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, getLineText(i), m_ModeCoprocessor);
+		if (dl.ValidId && (dl.IdRight | 0xFFFFFF00) == CMD_MEMZERO)
+		{
+			// change memsize and change pointer address
+			if (dl.Parameter[0].I == pre.Parameter[4].I || dl.Parameter[1].I == prevNum)
+			{
+				dl.Parameter[0].I = cur.Parameter[4].I;
+				dl.Parameter[1].I = curNum;
+				replaceLine(i, dl);
+				break;
+			}
+		}
+	}
 }
 
 void DlEditor::removeLine(int line)
 {
 	m_EditingInteractive = true;
-	QTextCursor c = m_CodeEditor->textCursor();
-	c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
-	c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-	c.insertText("");
+	QTextBlock b = m_CodeEditor->document()->findBlockByLineNumber(line);
+	if (b.isValid())
+	{
+		QTextCursor cursor(b);
+		cursor.select(QTextCursor::BlockUnderCursor);
+		cursor.removeSelectedText();
+	}
 	m_EditingInteractive = false;
 }
 
 void DlEditor::removeAll()
 {
 	m_EditingInteractive = true;
-	QTextCursor c = m_CodeEditor->textCursor();
-	c.setPosition(0);
-	c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-	c.insertText("");
+	m_CodeEditor->clear();	
 	m_EditingInteractive = false;
 }
 
 int DlEditor::getLineCount()
 {
-	return m_CodeEditor->document()->blockCount();
+	return m_CodeEditor->document()->lineCount();
 }
 
 void DlEditor::insertLine(int line, const DlParsed &parsed)
 {
+	QString cmdText = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
+	insertLine(line, cmdText);
+}
+
+void DlEditor::insertLine(int line, QString cmdText)
+{
 	m_EditingInteractive = true;
-	QString linestr = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
 	QTextCursor c = m_CodeEditor->textCursor();
-	if (line == 0)
+	if (line <= 0)
 	{
 		c.setPosition(0);
-		c.insertText(linestr + "\n");
+		c.insertText(cmdText + "\n");
 	}
 	else
 	{
+		c.movePosition(QTextCursor::End);
 		while (line > m_CodeEditor->document()->lineCount()) {
 			c.insertText("\n");
 		}
 		int pos = m_CodeEditor->document()->findBlockByNumber(line - 1).position();
 		c.setPosition(pos);
 		c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
-		c.insertText("\n" + linestr);
+		c.insertText("\n" + cmdText);
 	}
 	m_EditingInteractive = false;
 }

@@ -1,5 +1,6 @@
 /*
-Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -748,6 +749,43 @@ void DlParser::initVC4()
 	m_CmdParamString[FTEDITOR_FT813] = s_CmdParamString;
 	m_CmdParamOptFormat[FTEDITOR_FT813] = s_CmdParamOptFormat;
 	m_CmdIdList[FTEDITOR_FT813] = s_CmdIdList;
+	
+	m_IdMap[FTEDITOR_BT880] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT880] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT880] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT880] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT880] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT880] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT880] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT880] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT880] = s_CmdIdList;
+	m_IdMap[FTEDITOR_BT881] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT881] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT881] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT881] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT881] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT881] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT881] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT881] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT881] = s_CmdIdList;
+	m_IdMap[FTEDITOR_BT882] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT882] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT882] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT882] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT882] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT882] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT882] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT882] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT882] = s_CmdIdList;
+	m_IdMap[FTEDITOR_BT883] = &s_IdMap;
+	m_ParamMap[FTEDITOR_BT883] = &s_ParamMap;
+	m_CmdIdMap[FTEDITOR_BT883] = &s_CmdIdMap;
+	m_CmdParamMap[FTEDITOR_BT883] = &s_CmdParamMap;
+	m_ParamCount[FTEDITOR_BT883] = s_ParamCount;
+	m_CmdParamCount[FTEDITOR_BT883] = s_CmdParamCount;
+	m_CmdParamString[FTEDITOR_BT883] = s_CmdParamString;
+	m_CmdParamOptFormat[FTEDITOR_BT883] = s_CmdParamOptFormat;
+	m_CmdIdList[FTEDITOR_BT883] = s_CmdIdList;
 #elif defined(FTEDITOR_PARSER_VC3)
 	m_IdMap[FTEDITOR_BT815] = &s_IdMap;
 	m_ParamMap[FTEDITOR_BT815] = &s_ParamMap;

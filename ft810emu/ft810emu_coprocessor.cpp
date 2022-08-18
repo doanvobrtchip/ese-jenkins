@@ -1,8 +1,9 @@
 /*
 FT810 Emulator Library
 Copyright (C) 2015  Future Technology Devices International Ltd
+BT880 Emulator Library
 BT815 Emulator Library
-Copyright (C) 2017  Bridgetek Pte Lte
+Copyright (C) 2017-2022  Bridgetek Pte Lte
 Author: James Bowman <jamesb@excamera.com>
 */
 
@@ -51,6 +52,10 @@ const uint16_t pgm_rom_bt817[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #elif defined(BT815EMU_MODE)
 const uint16_t pgm_rom_bt815[FT800EMU_COPROCESSOR_ROM_SIZE] = {
 #include "resources/crom_bt815.h"
+};
+#elif defined(BT880EMU_MODE)
+const uint16_t pgm_rom_bt880[FT800EMU_COPROCESSOR_ROM_SIZE] = {
+#include "resources/crom_bt880.h"
 };
 #else
 const uint16_t pgm_rom_ft810[FT800EMU_COPROCESSOR_ROM_SIZE] = {
@@ -725,6 +730,8 @@ Coprocessor::Coprocessor(FT8XXEMU::System *system, Memory *memory, const wchar_t
 		memcpy(j1boot, pgm_rom_bt817, sizeof(pgm_rom_bt817));
 #elif defined(BT815EMU_MODE)
 		memcpy(j1boot, pgm_rom_bt815, sizeof(pgm_rom_bt815));
+#elif defined(BT880EMU_MODE)
+		memcpy(j1boot, pgm_rom_bt880, sizeof(pgm_rom_bt880));
 #else
 		memcpy(j1boot, pgm_rom_ft810, sizeof(pgm_rom_ft810));
 #endif
@@ -763,7 +770,7 @@ void Coprocessor::execute()
 			ejpg.reset();
 			cpureset();
 			//FTEMU_printf("RESET COPROCESSOR\n");
-			FT8XXEMU::System::delay(1);
+			FT8XXEMU::System::delayPrecise(1);
 			continue;
 		}
 		uint32_t regRomsubSel = m_Memory->rawReadU32(m_Memory->getRam(), REG_ROMSUB_SEL) & 0x3;
@@ -1090,7 +1097,7 @@ void Coprocessor::execute()
 		{
 		pc = 0;
 		//FTEMU_printf("RESET COPROCESSOR\n");
-		FT8XXEMU::System.delay(1);
+		FT8XXEMU::System::delayPrecise(1);
 		continue;
 		}
 		insn = pgm[pc];

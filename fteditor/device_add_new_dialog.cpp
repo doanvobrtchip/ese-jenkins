@@ -3,10 +3,8 @@
 #pragma warning(disable : 26444) // Unnamed objects
 
 #include "device_add_new_dialog.h"
-#include "device_manager.h"
-#include "device_manage_dialog.h"
-#include "constant_mapping.h"
 
+// Qt includes
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFile>
@@ -14,6 +12,11 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QSpinBox>
+
+// Project includes
+#include "device_manager.h"
+#include "device_manage_dialog.h"
+#include "constant_mapping.h"
 
 namespace FTEDITOR
 {
@@ -351,8 +354,8 @@ void DeviceAddNewDialog::prepareData()
 		{
 			mSystemClock_CB = new QComboBox(this);
 
-			QList<int> SYS_CLOCK = {12, 24, 36, 48, 60, 72, 84, 96};
-			foreach (int sc, SYS_CLOCK)
+			int SYS_CLOCK[] = {12, 24, 36, 48, 60, 72, 84, 96};
+			for (int sc : SYS_CLOCK)
 			{
 				mSystemClock_CB->addItem(QString::number(sc), sc);
 			}
@@ -397,7 +400,7 @@ void DeviceAddNewDialog::prepareData()
 		{
 			mRegPclkFreq_CB = new QComboBox(this);
 			
-			foreach (int v, PCLK_FREQ_HASH.values())
+			for (int v : PCLK_FREQ_HASH.values())
 			{
 				mRegPclkFreq_CB->addItem("0x" + QString::number(v, 16).toUpper(), v);
 			}

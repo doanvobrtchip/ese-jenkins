@@ -1,5 +1,6 @@
 /*
-Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -42,6 +43,10 @@ static int s_CoordMin[FTEDITOR_DEVICE_NB] = {
 	-4096,
 	-4096,
 	-4096,
+	-4096,
+	-4096,
+	-4096,
+	-4096,
 };
 
 static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
@@ -55,11 +60,19 @@ static int s_CoordMax[FTEDITOR_DEVICE_NB] = {
 	4095,
 	4095,
 	4095,
+	4095,
+	4095,
+	4095,
+	4095,
 };
 
 static int s_ScreenCoordWHMax[FTEDITOR_DEVICE_NB] = {
 	512,
 	512,
+	2048,
+	2048,
+	2048,
+	2048,
 	2048,
 	2048,
 	2048,
@@ -836,7 +849,7 @@ void InteractiveProperties::setEditorLine(DlEditor *editor, int line)
 			{
 				QString message;
 				message = QString("Unknown command '<i>%1</i>'").arg(parsed.IdText.c_str());
-				m_MainWindow->propertiesEditor()->setInfo(message);
+				m_MainWindow->propertiesEditor()->setError(message);
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 			}
 			else if (m_MainWindow->propertiesEditor()->getEditWidgetSetter())
@@ -1599,7 +1612,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_ROMFONT");
 				addSpinBox(0, 0, FTEDITOR_FONTHANDLE_MAX, tr("Font") + ": ", tr("Set font"));
-				addSpinBox(1, 16, 34, tr("ROM Slot") + ": ", tr("Set ROM slot"));
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
+					addSpinBox(1, 16, 31, tr("ROM Slot") + ": ", tr("Set ROM slot"));
+				else
+					addSpinBox(1, 16, 34, tr("ROM Slot") + ": ", tr("Set ROM slot"));
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -2785,7 +2801,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 		}
 	if (!ok)
 	{
-		m_MainWindow->propertiesEditor()->setInfo(tr("</i>Not yet implemented.</i>"));
+		m_MainWindow->propertiesEditor()->setError(tr("</i>Not yet implemented.</i>"));
 		m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
 	}
 	if (!editor)

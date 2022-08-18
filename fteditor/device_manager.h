@@ -25,15 +25,21 @@
 #endif
 
 // STL includes
+#ifdef M_PI
+#ifdef _USE_MATH_DEFINES
+#undef _USE_MATH_DEFINES
+#endif
+#else
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#endif
+#include <cmath>
 #include <map>
 
 // Qt includes
 #include <QWidget>
-#include <qmap.h>
-
-// Emulator includes
-#include <bt8xxemu_inttypes.h>
-#include <EVE_Platform.h>
+#include <QMap>
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -48,26 +54,9 @@ class MainWindow;
 class DeviceDisplaySettingsDialog;
 class ContentManager;
 class DeviceManageDialog;
+struct CustomDeviceInfo;
 
 #if FT800_DEVICE_MANAGER
-
-struct CustomDeviceInfo
-{
-	CustomDeviceInfo();
-
-	QString DeviceName;
-	QString Description;
-	int EVE_Type;
-	QString ConnectionType;
-	QString FlashModel;
-	int FlashSize;
-	int SystemClock;
-	QString ScreenSize; // width x height
-	bool isBuiltin;
-	bool ExternalClock;
-
-	EVE_ConfigParameters configParams;
-};
 
 /**
  * DeviceManager
@@ -120,7 +109,7 @@ private:
 	DeviceManageDialog *m_DeviceManageDialog;
 
 	bool m_IsCustomDevice;
-	CustomDeviceInfo m_CDI;
+	std::unique_ptr<CustomDeviceInfo> m_CDI;
 	QString m_DeviceJsonPath;
 
 	QString m_SelectedDisplaySize;
@@ -155,7 +144,7 @@ private:
 	void updateSelection();
 	bool waitFlush(DeviceInfo *devInfo);
 
-	EVE_CHIPID_T projectChipID();
+	int projectChipID();
 
 private:
 	DeviceManager(const DeviceManager &) = delete;

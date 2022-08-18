@@ -33,7 +33,7 @@
 #include "EVE_Platform.h"
 #if defined(BT8XXEMU_PLATFORM)
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 #define EVE_HalImpl_initialize EVE_HalImpl_BT8XXEMU_initialize
 #define EVE_HalImpl_release EVE_HalImpl_BT8XXEMU_release
 #define EVE_Hal_list EVE_Hal_BT8XXEMU_list
@@ -57,6 +57,7 @@
 #define EVE_Hal_powerCycle EVE_Hal_BT8XXEMU_powerCycle
 #define EVE_UtilImpl_bootupDisplayGpio EVE_UtilImpl_BT8XXEMU_bootupDisplayGpio
 #define EVE_Hal_setSPI EVE_Hal_BT8XXEMU_setSPI
+#define EVE_Hal_restoreSPI EVE_Hal_BT8XXEMU_restoreSPI
 #endif
 
 #include <bt8xxemu.h>
@@ -158,7 +159,7 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 		params = malloc(sizeof(BT8XXEMU_EmulatorParameters));
 		if (!params)
 			return false;
-		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, parameters->EmulatorMode);
+		BT8XXEMU_defaults(BT8XXEMU_VERSION_API, params, EVE_shortChipId(parameters->EmulatorMode));
 		params->Flags &= (~BT8XXEMU_EmulatorEnableDynamicDegrade & ~BT8XXEMU_EmulatorEnableRegPwmDutyEmulation);
 	}
 	phost->EmulatorParameters = params;
@@ -170,14 +171,16 @@ bool EVE_HalImpl_open(EVE_HalContext *phost, const EVE_HalParameters *parameters
 		return false;
 	}
 
-#ifdef EVE_MULTI_TARGET
+#ifdef EVE_MULTI_GRAPHICS_TARGET
 	if (params->Mode >= BT8XXEMU_EmulatorBT815)
 		phost->GpuDefs = &EVE_GpuDefs_BT81X;
+	else if (params->Mode >= BT8XXEMU_EmulatorBT880)
+		phost->GpuDefs = &EVE_GpuDefs_BT88X;
 	else if (params->Mode >= BT8XXEMU_EmulatorFT810)
 		phost->GpuDefs = &EVE_GpuDefs_FT81X;
 	else
 		phost->GpuDefs = &EVE_GpuDefs_FT80X;
-	phost->ChipId = params->Mode;
+	phost->ChipId = EVE_extendedChipId(params->Mode);
 #endif
 
 #if defined(EVE_EMULATOR_MAIN)
@@ -629,6 +632,12 @@ bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up)
  * @param numdummy Number of dummy bytes
  */
 void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy)
+{
+	/* no-op */
+}
+
+/* Restore platform to previously configured EVE SPI channel mode */
+void EVE_Hal_restoreSPI(EVE_HalContext *phost)
 {
 	/* no-op */
 }

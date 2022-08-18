@@ -1,5 +1,6 @@
 /*
-Copyright (C) 2013-2015  Future Technology Devices International Ltd
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -23,6 +24,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <QTreeView>
+// #include <QDirModel>
 #include <QUndoStack>
 #include <QUndoCommand>
 #include <QScrollArea>
@@ -61,6 +63,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QTextStream>
 #include <QFileDialog>
 #include <QSettings>
+#include <QMimeData>
+#include <QTextEdit>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -115,6 +119,7 @@ extern int g_StepCmdLimit;
 
 extern volatile bool g_CoprocessorFaultOccured;
 extern volatile bool g_CoprocessorFrameSuccess;
+extern volatile bool g_CoprocessorContentSuccess;
 extern char g_CoprocessorDiagnostic[128 + 4];
 extern bool g_StreamingData;
 
@@ -146,6 +151,10 @@ static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
 	5, // FT811
 	5, // FT812
 	5, // FT813
+	5, // BT880
+	5, // BT881
+	5, // BT882
+	5, // BT883
 	5, // BT815
 	5, // BT816
 	7, // BT817
@@ -198,6 +207,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_MinFlashType(-1)
     , m_AddRecentProjectFlag(false)
     , m_UndoStack(NULL)
+	, m_Settings(QStringLiteral("Bridgetek"), QStringLiteral("EVE Screen Editor"))
     , m_EmulatorViewport(NULL)
     , m_DlEditor(NULL)
     , m_DlEditorDock(NULL)
@@ -206,7 +216,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PropertiesEditor(NULL)
     , m_PropertiesEditorScroll(NULL)
     , m_PropertiesEditorDock(NULL)
-    //, m_OutputDock(NULL)
+    , m_OutputDock(NULL)
     , m_ToolboxDock(NULL)
     , m_Toolbox(NULL)
     , m_ContentManagerDock(NULL)
@@ -266,15 +276,14 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
 	, m_LastProjectDir(QString())
-	, m_isVCDumpEnable(false)
 {
-	loadConfig(QCoreApplication::applicationDirPath() + '/' + CONFIGURE_FILE_PATH);
-
 	setObjectName("MainWindow");
 	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 
 	setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
 	setTabPosition(Qt::RightDockWidgetArea, QTabWidget::East);
+
+	setAcceptDrops(true);
 
 	m_InitialWorkingDir = QDir::currentPath();
 	if (QDir(m_InitialWorkingDir).cd("firmware"))
@@ -382,7 +391,7 @@ MainWindow::~MainWindow()
 }
 
 #ifdef FT800EMU_PYTHON
-void pythonError()
+QString pythonError()
 {
 	printf("---\nPython ERROR: \n");
 	PyObject *ptype, *pvalue, *ptraceback;
@@ -390,9 +399,14 @@ void pythonError()
 	PyObject *errStr = PyObject_Repr(pvalue);
 	const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
 	QString error = QString::fromUtf8(pStrErrorMessage);
-	printf("%s\n", error.toLocal8Bit().data());
+#ifdef WIN32
+	wprintf(L"%s\n", pStrErrorMessage ? error.toStdWString().c_str() : L"<NULL>");
+#else
+	printf("%s\n", pStrErrorMessage ? error.toLocal8Bit().data() : "<NULL>");
+#endif
 	Py_DECREF(errStr);
 	printf("---\n");
+	return error;
 }
 
 static QString scriptDisplayName(const QString &script)
@@ -454,15 +468,19 @@ static QString scriptDisplayName(const QString &script)
 
 #ifdef FT800EMU_PYTHON
 
-char scriptFolder[] = "export_scripts";
+const char *scriptFolder = "export_scripts";
 
-char scriptDeviceFolder[][10] = {
+const char *scriptDeviceFolder[FTEDITOR_DEVICE_NB] = {
 	"ft80x",
 	"ft80x",
 	"ft81x",
 	"ft81x",
 	"ft81x",
 	"ft81x",
+	"bt88x",
+	"bt88x",
+	"bt88x",
+	"bt88x",
 	"bt81x",
 	"bt81x",
 	"bt81x",
@@ -654,16 +672,10 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
@@ -686,16 +698,10 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 
@@ -787,16 +793,10 @@ void MainWindow::runScript(const QString &script)
 
 	if (error)
 	{
-		printf("---\nPython ERROR: \n");
-		PyObject *ptype, *pvalue, *ptraceback;
-		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-		PyObject *errStr = PyObject_Repr(pvalue);
-		const char *pStrErrorMessage = PyUnicode_AsUTF8(errStr);
-		QString error = QString::fromUtf8(pStrErrorMessage);
-		printf("%s\n", error.toLocal8Bit().data());
-		Py_DECREF(errStr);
-		printf("---\n");
-		m_PropertiesEditor->setInfo("<b>Error</b>: <i>(Python)</i> " + error);
+		QString error = pythonError();
+		if (error.isEmpty())
+			error = "&lt;NULL&gt;";
+		m_PropertiesEditor->setError("<b>Error</b>: <i>(Python)</i> " + error);
 		m_PropertiesEditor->setEditWidget(NULL, false, NULL);
 	}
 #endif /* FT800EMU_PYTHON */
@@ -828,6 +828,14 @@ void MainWindow::frameEmu()
 		}
 	}
 	s_CoCmdChangeNbEmu = coCmdChangeNbEmu;
+}
+
+void MainWindow::popupTimeout()
+{
+	m_ErrorLabel->setText("<b>Co-processor engine timeout</b><br><br>"
+		"The co-processor is taking longer than expected to process this command");
+	m_ErrorFrame->setVisible(true);
+	g_CoprocessorFrameSuccess = false;
 }
 
 void MainWindow::frameQt()
@@ -871,7 +879,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if (g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation)
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */!m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}
@@ -907,17 +915,19 @@ void MainWindow::frameQt()
 	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
 	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
 	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
-	if (m_EmulatorViewport->mouseOver()) {
-		m_CursorPosition->setText(QString::number(m_EmulatorViewport->mouseX()) + " x " + QString::number(m_EmulatorViewport->mouseY()));
+	if (m_EmulatorViewport->mouseOver())
+	{
+		m_CursorPosition->setText(QString("XY: %1, %2").arg(m_EmulatorViewport->mouseX()).arg(m_EmulatorViewport->mouseY()));
 
-		QColor c = m_EmulatorViewport->getPixelColor();
+		QColor c = m_EmulatorViewport->fetchColorAsync();
 		QString strColor("");
 
 		if (c.isValid())
-			strColor = QString("(%1, %2, %3, %4)").arg(c.red(), 0, 10).arg(c.green(), 0, 10)
-												  .arg(c.blue(), 0, 10).arg(c.alpha(), 0, 10);
+			strColor = QString("ARGB: %1, %2, %3, %4").arg(c.alpha(), 0, 10).arg(c.red(), 0, 10).arg(c.green(), 0, 10).arg(c.blue(), 0, 10);
 		m_PixelColor->setText(strColor.toUpper());
-	} else {
+	}
+	else
+	{
 		m_CursorPosition->setText("");
 		m_PixelColor->setText("");
 	}
@@ -965,23 +975,30 @@ void MainWindow::createActions()
 	m_CloseProjectAct->setShortcuts(QKeySequence::Close);
 	connect(m_CloseProjectAct, SIGNAL(triggered()), this, SLOT(actCloseProject()));
 
+#ifndef NDEBUG
+	// Enable VC dump for any user that has run a Debug build.
+	if (!m_Settings.contains(QStringLiteral("VCDumpEnabled")))
+		m_Settings.setValue(QStringLiteral("VCDumpEnabled"), 1);
+#endif
+
 	m_ImportAct = new QAction(this);
 	connect(m_ImportAct, SIGNAL(triggered()), this, SLOT(actImport()));
-	m_ImportAct->setVisible(m_isVCDumpEnable);
+	m_ImportAct->setVisible(m_Settings.value(QStringLiteral("VCDumpEnabled")).toInt() != 0);
+
 	m_ExportAct = new QAction(this);
 	connect(m_ExportAct, SIGNAL(triggered()), this, SLOT(actExport()));
-	m_ExportAct->setVisible(m_isVCDumpEnable);
+	m_ExportAct->setVisible(m_Settings.value(QStringLiteral("VCDumpEnabled")).toInt() != 0);
 
 	m_ProjectFolderAct = new QAction(this);
-	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_B));
+	m_ProjectFolderAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
 	connect(m_ProjectFolderAct, SIGNAL(triggered()), this, SLOT(actProjectFolder()));
 
 	m_ResetEmulatorAct = new QAction(this);
-	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+	m_ResetEmulatorAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
 	connect(m_ResetEmulatorAct, SIGNAL(triggered()), this, SLOT(actResetEmulator()));
 
 	m_ImportDisplayListAct = new QAction(this);
-	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+	m_ImportDisplayListAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
 	connect(m_ImportDisplayListAct, SIGNAL(triggered()), this, SLOT(actImportDisplayList()));
 
 	m_SaveScreenshotAct = new QAction(this);
@@ -1019,7 +1036,7 @@ void MainWindow::createActions()
 	m_UndoAct = m_UndoStack->createUndoAction(this);
 	m_UndoAct->setShortcuts(QKeySequence::Undo);
 	m_RedoAct = m_UndoStack->createRedoAction(this);
-	m_RedoAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y));
+	m_RedoAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y));
 
 	m_DummyAct = new QAction(this);
 	connect(m_DummyAct, SIGNAL(triggered()), this, SLOT(dummyCommand()));
@@ -1111,13 +1128,11 @@ void MainWindow::createMenus()
 	m_FileMenu->addAction(m_ExportAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
-	m_FileMenu->addSeparator();
 
 	QMenu *sdl = m_FileMenu->addMenu("Save Display List");
 	sdl->addAction(m_LittleEndianSaveDisplayListAct);
 	sdl->addAction(m_BigEndianSaveDisplayListAct);
 
-	m_FileMenu->addSeparator();
 	sdl = m_FileMenu->addMenu("Save Coprocessor Command");
 	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
 	sdl->addAction(m_BigEndianSaveCoproCmdAct);
@@ -1316,33 +1331,6 @@ void MainWindow::createDockWindows()
 	}
 #endif /* FT800_DEVICE_MANAGER */
 
-	// pixel color (RGBA)
-	{
-		m_PixelColor = new QLabel(statusBar());
-		m_PixelColor->setText("");
-		statusBar()->addPermanentWidget(m_PixelColor);
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
-	}
-
-	// Cursor position
-	{
-		m_CursorPosition = new QLabel(statusBar());
-		m_CursorPosition->setText("");
-		statusBar()->addPermanentWidget(m_CursorPosition);
-
-		/*QFrame *line = new QFrame(statusBar());
-		line->setFrameShape(QFrame::HLine);
-		line->setFrameShadow(QFrame::Sunken);
-		statusBar()->addPermanentWidget(line);*/
-
-		QLabel *label = new QLabel(statusBar());
-		label->setText("  ");
-		statusBar()->addPermanentWidget(label);
-	}
-
 	// Coprocessor busy
 	{
 		m_CoprocessorBusy = new QLabel(statusBar());
@@ -1354,6 +1342,26 @@ void MainWindow::createDockWindows()
 		QLabel *label = new QLabel(statusBar());
 		label->setText("  ");
 		statusBar()->addPermanentWidget(label);
+	}
+
+	// pixel color (RGBA)
+	{
+		m_PixelColor = new QLabel(statusBar());
+		QFontMetrics fm = m_PixelColor->fontMetrics();
+		int mw = fm.horizontalAdvance("ARGB: 255, 255, 255, 255   ");
+		m_PixelColor->setFixedWidth(mw);
+		m_PixelColor->setText("");
+		statusBar()->addPermanentWidget(m_PixelColor);
+	}
+
+	// Cursor position
+	{
+		m_CursorPosition = new QLabel(statusBar());
+		QFontMetrics fm = m_CursorPosition->fontMetrics();
+		int mw = fm.horizontalAdvance("XY: 9999, 999   ");
+		m_CursorPosition->setFixedWidth(mw);
+		m_CursorPosition->setText("");
+		statusBar()->addPermanentWidget(m_CursorPosition);
 	}
 
 	// Utilization
@@ -1374,7 +1382,7 @@ void MainWindow::createDockWindows()
 		QPalette progressPalette = palette();
 		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
 		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
-
+		
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
 		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
 		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
@@ -1382,6 +1390,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
 		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1396,6 +1405,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationDisplayListStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1410,6 +1420,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationGlobalStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
 		/*w->setLayout(l);
@@ -1460,10 +1471,28 @@ void MainWindow::createDockWindows()
 		m_PropertiesEditorScroll->setWidgetResizable(true);
 		m_PropertiesEditorScroll->setMinimumWidth(240);
 		m_PropertiesEditor = new PropertiesEditor(this);
+		connect(m_PropertiesEditor, &PropertiesEditor::errorSet, this, &MainWindow::propertyErrorSet);
 		m_PropertiesEditorScroll->setWidget(m_PropertiesEditor);
 		m_PropertiesEditorDock->setWidget(m_PropertiesEditorScroll);
 		addDockWidget(Qt::RightDockWidgetArea, m_PropertiesEditorDock);
 		m_WidgetsMenu->addAction(m_PropertiesEditorDock->toggleViewAction());
+	}
+
+	// Output Window
+	{
+		m_OutputTextEdit = new QTextEdit(this);
+		m_OutputTextEdit->setReadOnly(true);
+		m_OutputTextEdit->setAcceptRichText(true);
+		m_OutputTextEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		m_OutputTextEdit->setMinimumWidth(240);
+
+		m_OutputDock = new QDockWidget(this);
+		m_OutputDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+		m_OutputDock->setObjectName("OutputWindow");
+		m_OutputDock->setWidget(m_OutputTextEdit);
+
+		addDockWidget(Qt::RightDockWidgetArea, m_OutputDock);
+		m_WidgetsMenu->addAction(m_OutputDock->toggleViewAction());
 	}
 
 	// Inspector
@@ -1748,7 +1777,7 @@ void MainWindow::createDockWindows()
 #endif /* FT800_DEVICE_MANAGER */
 	tabifyDockWidget(m_ControlsDock, m_UtilizationDock);
 	tabifyDockWidget(m_UtilizationDock, m_PropertiesEditorDock);
-	//tabifyDockWidget(m_UtilizationDock, m_OutputDock);
+	tabifyDockWidget(m_UtilizationDock, m_OutputDock);
 
 	// Event for all tab changes
 	QList<QTabBar *> tabList = findChildren<QTabBar *>();
@@ -1787,6 +1816,7 @@ void MainWindow::translateDockWindows()
 	m_UtilizationDock->setWindowTitle(tr("Utilization"));
 	m_NavigatorDock->setWindowTitle(tr("Navigator"));
 	m_PropertiesEditorDock->setWindowTitle(tr("Properties"));
+	m_OutputDock->setWindowTitle(tr("Output"));
 	m_ToolboxDock->setWindowTitle(tr("Toolbox"));
 	m_ContentManagerDock->setWindowTitle(tr("Content"));
 	m_RegistersDock->setWindowTitle(tr("Registers"));
@@ -1867,10 +1897,10 @@ void MainWindow::editorTabChangedGo(bool load)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/property.png")));
 			}
-			/*else if (dw == m_OutputDock)
+			else if (dw == m_OutputDock)
 			{
-				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/database-arrow.png")));
-			}*/
+				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/information-white.png")));
+			}
 			else if (dw == m_ContentManagerDock)
 			{
 				tabBar->setTabIcon(j, processIcon(tabBar, QIcon(":/icons/photo-album-blue.png")));
@@ -2247,8 +2277,6 @@ void MainWindow::traceEnabledChanged(bool enabled)
 	m_TraceY->setEnabled(enabled);
 }
 
-#define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
-
 void MainWindow::clearEditor()
 {
 	m_ProjectDevice->setCurrentIndex(FTEDITOR_DEFAULT_DEVICE);
@@ -2267,6 +2295,8 @@ void MainWindow::clearEditor()
 	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
 	m_ProjectDock->setVisible(true);
+	m_OutputDock->setVisible(true);
+	m_OutputTextEdit->clear();
 }
 
 void MainWindow::clearUndoStack()
@@ -2279,15 +2309,22 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	QString title = QString("%1%2 - %4 - EVE Screen Editor v%3 [Build Time: %5 - %6]")
-	                    .arg(QString(m_CleanUndoStack ? "" : "*"))
-	                    .arg(m_CurrentFile.isEmpty() ? "New Project" : QFileInfo(m_CurrentFile).completeBaseName())
-						.arg(STR_PRODUCTVERSION)
-					    .arg(QDir::currentPath())
-	                    .arg(__DATE__)
-	                    .arg(__TIME__);
-
-	setWindowTitle(title);
+	QString titleSuffix =  QString("EVE Screen Editor v%1 [Build Time: %2 - %3]")
+		.arg(STR_PRODUCTVERSION)
+		.arg(__DATE__)
+		.arg(__TIME__);
+	if (!m_CloseProjectAct->isEnabled())
+	{
+		setWindowTitle(titleSuffix);
+	}
+	else
+	{
+		QString title = QString("%1%2 - %3 - ")
+			.arg(QString(m_CleanUndoStack ? "" : "*"))
+			.arg(m_CurrentFile.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFile).completeBaseName())
+			.arg(QDir::currentPath());
+		setWindowTitle(title + titleSuffix);
+	}
 }
 
 void MainWindow::undoCleanChanged(bool clean)
@@ -2326,28 +2363,6 @@ bool MainWindow::maybeSave()
 	return res;
 }
 
-void MainWindow::loadConfig(QString configPath)
-{
-	QFile f(configPath);
-
-	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		return;
-	}
-	QJsonDocument jd = QJsonDocument::fromJson(f.readAll());
-	f.close();
-
-	QJsonObject jo = jd.object();
-
-	if (jo.isEmpty())
-		return;
-
-	if (jo.contains("eve_dump") && jo["eve_dump"].isBool())
-	{
-		m_isVCDumpEnable = jo["eve_dump"].toBool();
-	}
-}
-
 void MainWindow::loadRecentProject()
 {
 	// insert recent project actions
@@ -2369,12 +2384,14 @@ void MainWindow::loadRecentProject()
 
 	m_RecentSeparator->setVisible(false);
 
-	QFile f(qApp->applicationDirPath() + "/recent_project");
+	QStringList pathList;
+	for (int i = 0; i < 10; ++i)
+	{
+		QString str = m_Settings.value(QStringLiteral("RecentProject") + QString::number(i)).toString();
+		if (!str.isEmpty())
+			pathList.push_back(str);
+	}
 
-	if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-		return;
-	QStringList pathList = QString(f.readAll()).split("\n");
-	f.close();
 	// add recent project path to File Menu
 	for (int i = pathList.size() - 1; i >= 0; --i)
 	{
@@ -2432,12 +2449,18 @@ void MainWindow::removeRecentProject(QString removePath)
 
 void MainWindow::saveRecentProject()
 {
-	QFile f(qApp->applicationDirPath() + "/recent_project");
-	if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
-		return;
-	QTextStream ts(&f);
-	ts << m_RecentPathList.join("\n");
-	f.close();
+	for (int i = 0; i < 10; ++i)
+	{
+		if (i < m_RecentPathList.size())
+		{
+			m_Settings.setValue(QStringLiteral("RecentProject") + QString::number(i), m_RecentPathList[i]);
+		}
+		else
+		{
+			m_Settings.remove(QStringLiteral("RecentProject") + QString::number(i));
+		}
+	}
+	m_Settings.sync();
 }
 
 bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
@@ -2477,7 +2500,8 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 			// This is technically not an issue for FTEDITOR to handle,
 			// internally this will restrict the loaded content to the available size.
 			// It is permissible to let the user continue and explore the flash with the missing content
-			int ans = QMessageBox::critical(this, tr("Flash image is too big"), tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
+			int ans = QMessageBox::critical(this, tr("Flash image is too big"), 
+				tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
 			return ans == QMessageBox::Ignore;
 		}
 		else if (flashIntf != g_CurrentFlash)
@@ -2486,7 +2510,11 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 			// We ask the user permission when changing the flash size,
 			// since it's not reliable application behaviour
 			// to change options without the user's knowledge
-			int ans = QMessageBox::information(this, tr("Resize flash device"), tr("The selected flash image is larger than the current flash device.\nWould you like to resize the flash device to a larger size?"), QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
+			int ans = QMessageBox::question(this, "Increase flash size",
+			    "The selected flash image is larger than the current flash size.\n"
+			    "Would you like to increase it?",
+			    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+			    QMessageBox::Cancel);
 			if (ans == QMessageBox::Yes)
 			{
 				m_UndoStack->beginMacro(tr("Increase flash size"));
@@ -2504,7 +2532,7 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 void MainWindow::toggleDockWindow(bool isShow)
 {
 	m_InspectorDock->setVisible(isShow);
-	m_DlEditorDock->setVisible(isShow);
+	m_DlEditorDock->setVisible(false);
 	m_CmdEditorDock->setVisible(isShow);
 	m_ProjectDock->setVisible(isShow);
 #if FT800_DEVICE_MANAGER
@@ -2513,6 +2541,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_UtilizationDock->setVisible(isShow);
 	m_NavigatorDock->setVisible(isShow);
 	m_PropertiesEditorDock->setVisible(isShow);
+	m_OutputDock->setVisible(isShow);
 	m_ToolboxDock->setVisible(isShow);
 	m_ContentManagerDock->setVisible(isShow);
 	m_RegistersDock->setVisible(isShow);
@@ -2554,6 +2583,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::actCloseProject()
 {
+#define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
+
 	if (!maybeSave())
 		return;
 
@@ -2573,14 +2604,19 @@ void MainWindow::actCloseProject()
 	m_Toolbox->setEditorLine(m_CmdEditor, 0);
 	m_CmdEditor->selectLine(0);
 
-	QDir::setCurrent("");
-	setWindowTitle(tr("No project"));
+	QDir::setCurrent(QDir::tempPath());
+#ifdef FTEDITOR_TEMP_DIR
+	delete m_TemporaryDir;
+	m_TemporaryDir = NULL;
+#endif
 
 	// reset flash file name
 	setFlashFileNameToLabel("");
 
 	// hide all dock windows
 	toggleUI(false);
+
+	updateWindowTitle();
 }
 
 void MainWindow::actNew()
@@ -2798,27 +2834,26 @@ QString MainWindow::getFileDialogPath()
 	return m_LastProjectDir;
 }
 
-void MainWindow::actOpen()
+void MainWindow::actOpen(QString projectPath)
 {
 	if (!maybeSave())
 		return;
 
-	printf("*** Open ***\n");
-
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
-	    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
-	if (fileName.isNull())
-		return;
+	if (projectPath.isEmpty())
+	{
+		projectPath = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
+		    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
+		if (projectPath.isEmpty())
+			return;
+	}
 
 	m_MinFlashType = -1;
-	openFile(fileName);
+	openFile(projectPath);
 	actResetEmulator();
 }
 
 void MainWindow::openFile(const QString &fileName)
 {
-	printf("*** Open file ***\n");
-
 	toggleUI(true);
 
 	m_CurrentFile = fileName;
@@ -2970,8 +3005,80 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 		if (!flashName.isEmpty())
 			setFlashFileNameToLabel(flashName);
 	}
+	else if ((watched == m_UtilizationBitmapHandleStatus ||
+			  watched == m_UtilizationDisplayListStatus ||
+		      watched == m_UtilizationGlobalStatus) &&
+		     (event->type() == QEvent::HoverMove || 
+			  event->type() == QEvent::HoverLeave))
+	{
+		bool isShowExact = (event->type() == QEvent::HoverMove);
+		showExactNumberOfResourceWhenMouseHover(watched, isShowExact);
+		return false;
+	}
 
 	return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const bool isShowExact)
+{
+	QProgressBar *pb = dynamic_cast<QProgressBar *>(watched);
+	if (!pb)
+		return;
+
+	if (isShowExact)
+		pb->setFormat("%v/%m");
+	else
+		pb->resetFormat();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasUrls()) {
+		foreach (QUrl url, event->mimeData()->urls())
+		{
+			if (url.toString().endsWith(".ese"))
+			{
+				event->setDropAction(Qt::LinkAction);
+				event->accept();
+				return;
+			}
+			else if (QDir d(url.toLocalFile()); d.exists())
+			{
+				// find only one file which ended by ".ese"
+				if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1) {
+					event->setDropAction(Qt::LinkAction);
+					event->accept();
+					return;
+				}
+			}
+		}
+	}
+	QMainWindow::dragEnterEvent(event);
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+	QList<QUrl> urls = event->mimeData()->urls();
+
+	foreach(QUrl url, urls)
+	{
+		if (url.toString().endsWith(".ese")) {
+			event->acceptProposedAction();
+			actOpen(url.toLocalFile());
+			return;
+		}
+		else if (QDir d(url.toLocalFile()); d.exists())
+		{
+			// find only one file which ended by ".ese"
+			if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1)
+			{
+				event->acceptProposedAction();
+				actOpen(d.absoluteFilePath(s[0]));
+				return;
+			}
+		}
+	}
+	QMainWindow::dropEvent(event);
 }
 
 QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
@@ -3346,24 +3453,13 @@ bool MainWindow::importDumpBT81X(QDataStream & in)
 
 QString MainWindow::readLastProjectDir()
 {
-	QSettings registry(QSettings::NativeFormat, // Format
-		QSettings::UserScope, // Scope
-		"BridgeTek", // Organization
-		"ESE" // Application
-	);
-
-	return registry.value("LastProjectDir").toString();
+	return m_Settings.value("LastProjectDir").toString();
 }
 
 void MainWindow::writeLastProjectDir(QString dirPath)
 {
-	QSettings registry(QSettings::NativeFormat, // Format
-		QSettings::UserScope, // Scope
-		"BridgeTek", // Organization
-		"ESE" // Application
-	);
-
-	registry.setValue("LastProjectDir", dirPath);
+	m_Settings.setValue("LastProjectDir", dirPath);
+	m_Settings.sync();
 }
 
 void MainWindow::actExport()
@@ -3731,6 +3827,11 @@ void MainWindow::openRecentProject()
 	openFile(projectPath);
 }
 
+void FTEDITOR::MainWindow::propertyErrorSet(QString info)
+{
+	appendTextToOutputDock(info);
+}
+
 void MainWindow::projectDisplayChanged(int i)
 {
 	if (s_UndoRedoWorking)
@@ -3923,6 +4024,14 @@ QString MainWindow::getProjectContent() const
 QString MainWindow::getDisplaySize()
 {
 	return QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+}
+
+void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)
+{
+	if (m_OutputTextEdit->toPlainText().contains(text))
+		return;
+
+	m_OutputTextEdit->append(text);
 }
 
 } /* namespace FTEDITOR */

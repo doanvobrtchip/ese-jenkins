@@ -3,7 +3,7 @@ FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifndef FT800EMU_MEMORY_H
@@ -186,6 +186,9 @@ private:
 	bool m_CpuReset = false;
 
 	BT8XXEMU_EmulatorMode m_EmulatorMode;
+
+	bool m_DelayCoprocPrecise = false;
+	bool m_DelayMCUPrecise = false;
 
 #ifdef BT815EMU_MODE
 	BT8XXEMU_Flash *m_Flash;

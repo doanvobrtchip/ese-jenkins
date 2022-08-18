@@ -186,7 +186,7 @@ EVE_HAL_EXPORT bool EVE_CoCmd_flashErase_flush(EVE_HalContext *phost)
 
 EVE_HAL_EXPORT bool EVE_CoCmd_flashRead_flush(EVE_HalContext *phost, uint32_t dest, uint32_t src, uint32_t num)
 {
-	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHERASE, EVE_CHIPID >= EVE_BT815, false);
+	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHREAD, EVE_CHIPID >= EVE_BT815, false);
 
 	if (!EVE_Cmd_waitFlush(phost))
 		return false; // Coprocessor must be ready
@@ -200,7 +200,7 @@ EVE_HAL_EXPORT bool EVE_CoCmd_flashRead_flush(EVE_HalContext *phost, uint32_t de
 EVE_HAL_EXPORT uint32_t EVE_CoCmd_flashAttach(EVE_HalContext *phost)
 {
 	uint32_t flashStatus;
-	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHERASE, EVE_CHIPID >= EVE_BT815, 0);
+	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHATTACH, EVE_CHIPID >= EVE_BT815, 0);
 	if (!EVE_Cmd_waitFlush(phost))
 		return EVE_Hal_rd32(phost, REG_FLASH_STATUS); // Coprocessor must be ready
 	flashStatus = EVE_Hal_rd32(phost, REG_FLASH_STATUS);
@@ -217,7 +217,7 @@ EVE_HAL_EXPORT uint32_t EVE_CoCmd_flashFast(EVE_HalContext *phost, uint32_t *res
 	uint16_t resAddr;
 	uint32_t flashStatus;
 
-	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHERASE, EVE_CHIPID >= EVE_BT815, 0);
+	EVE_MULTI_TARGET_CHECK_RETURN(CMD_FLASHFAST, EVE_CHIPID >= EVE_BT815, 0);
 
 	if (!EVE_Cmd_waitFlush(phost))
 	{

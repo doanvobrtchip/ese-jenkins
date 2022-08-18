@@ -1,8 +1,8 @@
-
 /*
- * Copyright (C) 2015  Future Technology Devices International Ltd
- * Author: Jan Boon <jan.boon@kaetemi.be>
- */
+Copyright (C) 2013-2016  Future Technology Devices International Ltd
+Copyright (C) 2016-2022  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
+*/
 
 #pragma warning(disable : 26812) // Unscoped enum
 #pragma warning(disable : 26495) // Uninitialized member
@@ -115,6 +115,35 @@ int main(int argc, char *argv[])
 							case '6':
 								mode = BT8XXEMU_EmulatorBT816;
 								g_Device = "bt816";
+								break;
+							case '7':
+								mode = BT8XXEMU_EmulatorBT817;
+								g_Device = "bt817";
+								break;
+							case '8':
+								mode = BT8XXEMU_EmulatorBT818;
+								g_Device = "bt818";
+								break;
+							}
+							break;
+						case '8':
+							switch (argv[i][5])
+							{
+							case '0':
+								mode = BT8XXEMU_EmulatorBT880;
+								g_Device = "bt880";
+								break;
+							case '1':
+								mode = BT8XXEMU_EmulatorBT881;
+								g_Device = "bt881";
+								break;
+							case '2':
+								mode = BT8XXEMU_EmulatorBT882;
+								g_Device = "bt882";
+								break;
+							case '3':
+								mode = BT8XXEMU_EmulatorBT883;
+								g_Device = "bt883";
 								break;
 							}
 							break;

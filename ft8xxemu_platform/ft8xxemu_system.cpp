@@ -2,7 +2,7 @@
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifdef _MSC_VER
@@ -125,8 +125,30 @@ void System::delayForMCU(int ms)
 	else delay(ms);
 }
 
+void System::delayPreciseForMCU(int ms)
+{
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
+	delayForMCU(ms);
+}
+
+void System::delayPrecise(int ms)
+{
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
+	delay(ms);
+}
+
 void System::renderSleep(int ms)
 {
+	beginPrecise(ms);
+	OnExit end = OnExit([ms] {
+		endPrecise(ms);
+	});
 	m_RenderSleepWake->sleep(ms);
 }
 

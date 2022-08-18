@@ -1,7 +1,7 @@
 /*
 BT8XX Emulator Library
 Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifdef _MSC_VER
@@ -336,7 +336,7 @@ public:
 		m_WriteProtect = false;
 
 		const wchar_t *const dataFilePath = params->DataFilePath[0] ? params->DataFilePath : NULL;
-		const size_t sizeBytes = (params->SizeBytes + 65535) & (~(size_t)0xFFFF);
+		const ptrdiff_t sizeBytes = (ptrdiff_t)(((size_t)params->SizeBytes + 65535) & (~(size_t)0xFFFF));
 		// TODO: Always round up size to power-of-2
 
 		if (dataFilePath)
@@ -413,7 +413,7 @@ public:
 					
 						Data = new uint8_t[sizeBytes];
 						Size = sizeBytes;
-						size_t copySize = std::min((size_t)fileSize, sizeBytes);
+						ptrdiff_t copySize = (ptrdiff_t)std::min(fileSize, (int64_t)sizeBytes);
 						FILE *f = _wfopen(dataFilePath, L"rb");
 						if (!f) log(BT8XXEMU_LogError, "Failed to open flash data file");
 						else
@@ -1875,7 +1875,7 @@ BT8XXEMU_EXPORT BT8XXEMU_Flash *BT8XXEMU_Flash_create(uint32_t versionApi, const
 {
 	if (versionApi != BT8XXEMU_VERSION_API)
 	{
-		fprintf(stderr, "Incompatible ft8xxemu API version\n");
+		fprintf(stderr, "Incompatible bt8xxemu API version\n");
 		return NULL;
 	}
 

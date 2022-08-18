@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2015  Future Technology Devices International Ltd
+Copyright (C) 2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -9,6 +10,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 namespace FTEDITOR {
 
 extern const int32_t g_AddrVC2[FTEDITOR_RAM_NB];
+extern const int32_t g_AddrVC2_880[FTEDITOR_RAM_NB];
 extern const char *g_AddrToStringVC2[FTEDITOR_RAM_NB];
 
 extern const int32_t g_RegVC2[FTEDITOR_REG_NB];

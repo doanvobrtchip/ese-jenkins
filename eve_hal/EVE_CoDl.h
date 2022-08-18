@@ -73,7 +73,7 @@ ESD_PARAMETER(x, Type = int16_t)
 ESD_PARAMETER(y, Type = int16_t)
 static inline void EVE_CoDl_vertex2f(EVE_HalContext *phost, int16_t x, int16_t y)
 {
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID < EVE_FT810)
 	{
 		/* Compatibility */
@@ -86,7 +86,7 @@ static inline void EVE_CoDl_vertex2f(EVE_HalContext *phost, int16_t x, int16_t y
 	EVE_CoCmd_dl(phost, VERTEX2F(x, y));
 }
 
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 /* Compatibility for FT80X series */
 EVE_HAL_EXPORT void EVE_CoDlImpl_vertex2ii_translate(EVE_HalContext *phost, uint16_t x, uint16_t y, uint8_t handle, uint8_t cell);
 #endif
@@ -99,7 +99,7 @@ ESD_PARAMETER(handle, Type = uint8_t)
 ESD_PARAMETER(cell, Type = uint8_t)
 inline static void EVE_CoDl_vertex2ii(EVE_HalContext *phost, uint16_t x, uint16_t y, uint8_t handle, uint8_t cell)
 {
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID < EVE_FT810 && (EVE_DL_STATE.VertexTranslateX || EVE_DL_STATE.VertexTranslateY))
 	{
 		/* Compatibility for FT80X series */
@@ -555,11 +555,11 @@ ESD_FUNCTION(EVE_CoDl_saveContext, Type = void, Category = EveRenderFunctions, I
 ESD_PARAMETER(phost, Type = EVE_HalContext *, Default = Esd_GetHost, Hidden, Internal, Static) // PHOST
 inline static void EVE_CoDl_saveContext(EVE_HalContext *phost)
 {
-#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	uint8_t nextState;
 #endif
 	EVE_CoCmd_dl(phost, SAVE_CONTEXT());
-#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	nextState = (phost->DlStateIndex + 1) & EVE_DL_STATE_STACK_MASK;
 	phost->DlState[nextState] = phost->DlState[phost->DlStateIndex];
 	phost->DlStateIndex = nextState;
@@ -572,7 +572,7 @@ ESD_PARAMETER(phost, Type = EVE_HalContext *, Default = Esd_GetHost, Hidden, Int
 inline static void EVE_CoDl_restoreContext(EVE_HalContext *phost)
 {
 	EVE_CoCmd_dl(phost, RESTORE_CONTEXT());
-#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	phost->DlStateIndex = (phost->DlStateIndex - 1) & EVE_DL_STATE_STACK_MASK;
 #endif
 }
@@ -599,7 +599,7 @@ static inline void EVE_CoDl_clear(EVE_HalContext *phost, bool c, bool s, bool t)
 
 static inline void EVE_CoDl_vertexFormat(EVE_HalContext *phost, uint8_t frac)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_FT810)
 	{
 #if EVE_DL_OPTIMIZE
@@ -615,7 +615,7 @@ static inline void EVE_CoDl_vertexFormat(EVE_HalContext *phost, uint8_t frac)
 	else
 #endif
 	{
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		/* Compatibility for FT80X series */
 		EVE_DL_STATE.VertexFormat = (4 - frac);
 #endif
@@ -646,7 +646,7 @@ inline static void EVE_CoDl_paletteSource(EVE_HalContext *phost, uint32_t addr)
 
 static inline void EVE_CoDl_vertexTranslateX(EVE_HalContext *phost, int16_t x)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_FT810)
 	{
 		EVE_CoCmd_dl(phost, VERTEX_TRANSLATE_X(x));
@@ -654,7 +654,7 @@ static inline void EVE_CoDl_vertexTranslateX(EVE_HalContext *phost, int16_t x)
 	else
 #endif
 	{
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		/* Compatibility for FT80X series */
 		EVE_DL_STATE.VertexTranslateX = x;
 #endif
@@ -663,7 +663,7 @@ static inline void EVE_CoDl_vertexTranslateX(EVE_HalContext *phost, int16_t x)
 
 static inline void EVE_CoDl_vertexTranslateY(EVE_HalContext *phost, int16_t y)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_FT810)
 	{
 		EVE_CoCmd_dl(phost, VERTEX_TRANSLATE_Y(y));
@@ -671,7 +671,7 @@ static inline void EVE_CoDl_vertexTranslateY(EVE_HalContext *phost, int16_t y)
 	else
 #endif
 	{
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 		/* Compatibility for FT80X series */
 		EVE_DL_STATE.VertexTranslateY = y;
 #endif
@@ -680,7 +680,7 @@ static inline void EVE_CoDl_vertexTranslateY(EVE_HalContext *phost, int16_t y)
 
 static inline void EVE_CoDl_nop(EVE_HalContext *phost)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
 		EVE_CoCmd_dl(phost, NOP());
@@ -690,7 +690,7 @@ static inline void EVE_CoDl_nop(EVE_HalContext *phost)
 
 static inline void EVE_CoDl_bitmapExtFormat(EVE_HalContext *phost, uint16_t format)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
 		EVE_CoCmd_dl(phost, BITMAP_EXT_FORMAT(format));
@@ -700,7 +700,7 @@ static inline void EVE_CoDl_bitmapExtFormat(EVE_HalContext *phost, uint16_t form
 
 static inline void EVE_CoDl_bitmapSwizzle(EVE_HalContext *phost, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_BT815) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	if (EVE_CHIPID >= EVE_BT815)
 	{
 		EVE_CoCmd_dl(phost, BITMAP_SWIZZLE(r, g, b, a));

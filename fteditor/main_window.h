@@ -27,13 +27,12 @@
 #include <QMainWindow>
 #include <QString>
 #include <QByteArray>
+#include <QSettings>
 
 // Emulator includes
 
 // Project includes
 #include "device_manager.h" // for the #define
-
-#define CONFIGURE_FILE_PATH "config.json"
 
 class QTemporaryDir;
 class QTreeView;
@@ -49,6 +48,7 @@ class QLabel;
 class QMenu;
 class QGroupBox;
 class QHBoxLayout;
+class QTextEdit;
 
 namespace FTEDITOR {
 
@@ -163,6 +163,8 @@ public:
 
 	QString getDisplaySize();
 
+	void appendTextToOutputDock(const QString &text);
+
 private slots:
 	// void applyEmulatorConfig();
 
@@ -172,7 +174,7 @@ private slots:
 	void dummyCommand();
 
 	void actNew();
-	void actOpen();
+	void actOpen(QString projectPath = QString());
 	void actSave();
 	void actSaveAs();
 	void actCloseProject();
@@ -180,7 +182,6 @@ private slots:
 	void actExport();
 
 	void actProjectFolder();
-	void actResetEmulator();
 	void actSaveScreenshot();
 	void actImportDisplayList();
 	void actLittleEndianSaveDisplayList();
@@ -214,6 +215,13 @@ private slots:
 	void projectFlashChanged(int i);
 
 	void openRecentProject();
+
+	
+
+public slots:
+	void popupTimeout();
+	void actResetEmulator();
+	void propertyErrorSet(QString info);
 
 private:
 	void updateInitialization(bool visible);
@@ -250,7 +258,6 @@ private:
 	void startEmulatorInternal();
 	void changeEmulatorInternal(int deviceIntf, int flashIntf);
 
-	void loadConfig(QString configPath);
 	void loadRecentProject();
 	void addRecentProject(QString recentPath);
 	void removeRecentProject(QString removePath);
@@ -264,6 +271,11 @@ private:
 
 	QString readLastProjectDir();
 	void writeLastProjectDir(QString dirPath);
+
+	void showExactNumberOfResourceWhenMouseHover(QObject *watched, const bool isShowExact);
+
+	void dragEnterEvent(QDragEnterEvent *event);
+	void dropEvent(QDropEvent *event);
 
 protected:
 	virtual void closeEvent(QCloseEvent *event);
@@ -281,6 +293,8 @@ private:
 	QString m_InitialWorkingDir;
 	QString m_ApplicationDataDir;
 	QUndoStack *m_UndoStack;
+
+	QSettings m_Settings;
 
 	InteractiveViewport *m_EmulatorViewport;
 
@@ -302,7 +316,9 @@ private:
 	PropertiesEditor *m_PropertiesEditor;
 	QScrollArea *m_PropertiesEditorScroll;
 	QDockWidget *m_PropertiesEditorDock;
-	//QDockWidget *m_OutputDock;
+
+	QTextEdit *m_OutputTextEdit = nullptr;
+	QDockWidget *m_OutputDock = nullptr;
 
 	InteractiveProperties *m_InteractiveProperties;
 
@@ -407,7 +423,6 @@ private:
 	friend class ProjectDeviceCommand;
 	friend class ProjectFlashCommand;
 
-	bool m_isVCDumpEnable;
 	QLabel *infoLabel;
 }; /* class MainWindow */
 

@@ -2,9 +2,10 @@
 FT800 Emulator Library
 FT810 Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
+BT880 Emulator Library
 BT815 Emulator Library
 BT817 Emulator Library
-Copyright (C) 2016-2020  Bridgetek Pte Lte
+Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
@@ -131,7 +132,7 @@ int Emulator::audioThread()
 				debugShortkeys();
 			}
 		}
-		FT8XXEMU::System::delay(10);
+		FT8XXEMU::System::delay(8);
 	}
 
 	m_ThreadAudio.reset();
@@ -174,6 +175,7 @@ void Emulator::finalMasterThread(bool sync, int flags)
 	FTEMU_message("Wait for Coprocessor");
 	if ((flags & BT8XXEMU_EmulatorEnableCoprocessor) && m_StdThreadCoprocessor.joinable())
 		m_StdThreadCoprocessor.join();
+	m_ThreadCoprocessor.reset();
 
 	if (!m_CloseCalled && m_StdThreadMCU.joinable())
 	{
@@ -194,10 +196,12 @@ void Emulator::finalMasterThread(bool sync, int flags)
 		FTEMU_message("Wait for MCU");
 		m_StdThreadMCU.join();
 	}
+	m_ThreadMCU.reset();
 
 	FTEMU_message("Wait for Audio");
 	if (m_StdThreadAudio.joinable())
 		m_StdThreadAudio.join();
+	m_ThreadAudio.reset();
 
 	FTEMU_message("Threads finished, emulator stopped running");
 
@@ -307,10 +311,28 @@ void Emulator::runInternal(const BT8XXEMU_EmulatorParameters &params)
 #pragma warning(pop)
 	if (mode == 0) mode = BT8XXEMU_EmulatorFT800;
 
-#ifdef FT810EMU_MODE
-	if (mode < BT8XXEMU_EmulatorFT810)
+#if defined(BT817EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT817 || mode > BT8XXEMU_EmulatorBT818)
 	{
-		FTEMU_error("Invalid emulator version selected, this library is built in FT810 mode");
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(BT815EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT815 || mode > BT8XXEMU_EmulatorBT816)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(BT880EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorBT880 || mode > BT8XXEMU_EmulatorBT883)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in BT880-BT883 mode");
+		return;
+	}
+#elif defined(FT810EMU_MODE)
+	if (mode < BT8XXEMU_EmulatorFT810 || mode > BT8XXEMU_EmulatorFT813)
+	{
+		FTEMU_error("Invalid emulator version selected, this library is built in FT810-FT813 mode");
 		return;
 	}
 #else
@@ -505,6 +527,7 @@ void Emulator::stop()
 	{
 		m_StdThreadMaster.join();
 	}
+	m_ThreadMaster.reset();
 
 	assert(!m_ThreadMaster.valid());
 	assert(!m_ThreadMCU.valid());

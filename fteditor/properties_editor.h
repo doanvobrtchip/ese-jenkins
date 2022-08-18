@@ -48,7 +48,8 @@ public:
 	PropertiesEditor(QWidget *parent);
 	virtual ~PropertiesEditor();
 
-	void setInfo(QString message);
+	void setInfo(QString message, bool isError = false);
+	void setError(QString message);
 	void setEditWidget(QWidget *widget, bool own, QWidget *setter);
 	void setEditWidgets(const std::vector<QWidget *> &widgets, bool own, QWidget *setter);
 	QWidget *getEditWidgetSetter() const { return m_CurrentEditWidgetSetter; }
@@ -59,6 +60,8 @@ public:
 
 signals:
 	void setterChanged(QWidget *setter);
+	void infoSet(QString info);
+	void errorSet(QString error);
 
 private:
 	QGroupBox *m_InfoGroupBox;

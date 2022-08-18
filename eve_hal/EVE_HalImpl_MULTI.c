@@ -31,7 +31,7 @@
 
 #include "EVE_HalImpl.h"
 #include "EVE_Platform.h"
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 
 static size_t s_TotalDeviceCount = 0;
 static size_t s_DeviceCountBT8XXEMU = 0;
@@ -336,10 +336,10 @@ EVE_HAL_EXPORT uint32_t EVE_Hal_transfer32(EVE_HalContext *phost, uint32_t value
 	return 0;
 }
 
-void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
-void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *result, const uint8_t *buffer, uint32_t size)
+void EVE_Hal_BT8XXEMU_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, uint8_t *result, const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->Host)
 	{
@@ -355,10 +355,10 @@ EVE_HAL_EXPORT void EVE_Hal_transferMem(EVE_HalContext *phost, const uint8_t *re
 	}
 }
 
-void EVE_Hal_BT8XXEMU_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_FT4222_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-void EVE_Hal_MPSSE_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
-EVE_HAL_EXPORT void EVE_Hal_transferProgMem(EVE_HalContext *phost, const uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
+void EVE_Hal_BT8XXEMU_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_FT4222_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+void EVE_Hal_MPSSE_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_transferProgMem(EVE_HalContext *phost, uint8_t *result, eve_progmem_const uint8_t *buffer, uint32_t size)
 {
 	switch (phost->Host)
 	{
@@ -470,6 +470,25 @@ EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T num
 		break;
 	case EVE_HOST_MPSSE:
 		EVE_Hal_MPSSE_setSPI(phost, numchnls, numdummy);
+		break;
+	}
+}
+
+void EVE_Hal_BT8XXEMU_restoreSPI(EVE_HalContext *phost);
+void EVE_Hal_FT4222_restoreSPI(EVE_HalContext *phost);
+void EVE_Hal_MPSSE_restoreSPI(EVE_HalContext *phost);
+EVE_HAL_EXPORT void EVE_Hal_restoreSPI(EVE_HalContext *phost)
+{
+	switch (phost->Host)
+	{
+	case EVE_HOST_BT8XXEMU:
+		EVE_Hal_BT8XXEMU_restoreSPI(phost);
+		break;
+	case EVE_HOST_FT4222:
+		EVE_Hal_FT4222_restoreSPI(phost);
+		break;
+	case EVE_HOST_MPSSE:
+		EVE_Hal_MPSSE_restoreSPI(phost);
 		break;
 	}
 }

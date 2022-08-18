@@ -101,6 +101,7 @@
 
 #define ILI9488_CMD_SPI_READCMDSETTINGS (0xFB)
 
+#ifdef FT9XX_PLATFORM
 int16_t ILI9488_SPI_WriteCmd(uint8_t cmd, uint8_t data);
 int16_t ILI9488_SPI_WriteCmdN(uint8_t cmd, uint8_t bytecount, const uint8_t *pbuff);
 uint8_t ILI9488_SPI_Read(uint8_t cmd);
@@ -108,6 +109,13 @@ uint8_t ILI9488_SPI_ReadN(uint8_t cmd, uint8_t numbytes, const uint8_t *pbuffer)
 uint32_t ILI9488_SPI_ReadRDDID(uint8_t cmd);
 uint32_t ILI9488_SPI_ReadRDDST(uint8_t cmd);
 void EVE_ILI9488_bootup();
+#endif
+
+#ifdef RP2040_PLATFORM
+void EVE_ILI9488_RP2040_bootup(EVE_HalContext *phost);
+int16_t ILI9488_SPI_WriteCmdN(EVE_HalContext *phost, uint8_t cmd, uint8_t bytecount, const uint8_t *pbuff);
+int16_t ILI9488_SPI_WriteCmd(EVE_HalContext *phost, uint8_t cmd, uint8_t data);
+#endif
 
 #endif /* ENABLE_ILI9488_HVGA_PORTRAIT */
 

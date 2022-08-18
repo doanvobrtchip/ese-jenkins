@@ -10,17 +10,32 @@ SOURCE_GROUP("resources" FILES ${RESOURCES} ${RSRC})
 SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
-# Find the QtWidgets library
-FIND_PACKAGE(Qt6Widgets)
+# Find the QtWidgets library, minimum 5.15 or 6.0
+# https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
+find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools)
+if(Qt6_FOUND AND FTEDITOR_OPENGL_VIEWPORT)
+  find_package(Qt6 QUIET COMPONENTS OpenGLWidgets)
+endif()
+if(NOT Qt6_FOUND)
+  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools)
+  if(FTEDITOR_OPENGL_VIEWPORT)
+    find_package(Qt5 5.15 REQUIRED COMPONENTS OpenGLWidgets)
+  endif()
+endif()
 
-IF (POLICY CMP0071)
-	CMAKE_POLICY(SET CMP0071 OLD)
-ENDIF ()
 
 # Instruct CMake to run moc automatically when needed.
-SET(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOMOC ON)
 
-Qt6_ADD_RESOURCES(RESOURCE_ADDED ${RESOURCES})
+if(FTEDITOR_GENERATE_TRANSLATIONS)
+  qt_create_translation(QM_FILES ${SRCS} ${HDRS} translation_en.ts)
+else()
+  qt_add_translation(QM_FILES translation_en.ts)
+endif()
+configure_file(translations.qrc.in translations.qrc COPYONLY)
+
+qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -31,11 +46,11 @@ IF (FTEDITOR_DEVICE_MANAGER)
   )
   IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
     LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/mpsse_spi/lib/windows/x64)
-    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/lib/amd64)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/dll/amd64)
     LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ftd2xx/amd64)
   ELSE()
     LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/mpsse_spi/lib/windows/i386)
-    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/lib/i386)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ft4222/dll/i386)
     LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/dependencies/ftd2xx/i386)
   ENDIF()
 ENDIF (FTEDITOR_DEVICE_MANAGER)
@@ -75,39 +90,6 @@ IF (WITH_PYTHON)
 
   ADD_DEFINITIONS(-DFT800EMU_PYTHON)
 
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/export_eve_arduino.py
-    ${CMAKE_CURRENT_BINARY_DIR}/export_eve_arduino.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/export_bt81x.py
-    ${CMAKE_CURRENT_BINARY_DIR}/export_bt81x.py COPYONLY)
-    
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/export_bt81x_helper.py
-    ${CMAKE_CURRENT_BINARY_DIR}/export_bt81x_helper.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/img_cvt.py
-    ${CMAKE_CURRENT_BINARY_DIR}/img_cvt.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/png.py
-    ${CMAKE_CURRENT_BINARY_DIR}/png.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/pngp2pa.py
-    ${CMAKE_CURRENT_BINARY_DIR}/pngp2pa.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/raw_cvt.py
-    ${CMAKE_CURRENT_BINARY_DIR}/raw_cvt.py COPYONLY)
-
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/astc_conv.py
-    ${CMAKE_CURRENT_BINARY_DIR}/astc_conv.py COPYONLY)
-    
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/helperapi.py
-    ${CMAKE_CURRENT_BINARY_DIR}/helperapi.py COPYONLY)
-   
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/astcenc.exe
-    ${CMAKE_CURRENT_BINARY_DIR}/astcenc.exe COPYONLY)
-    
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/EVE_Hal_Library DESTINATION  ${CMAKE_CURRENT_BINARY_DIR}/)
-  # file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/EVE_Hal_Library DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/)
-  
 ENDIF (WITH_PYTHON)
 
 IF(WITH_FREETYPE)
@@ -131,20 +113,14 @@ IF(WITH_FREETYPE)
 ENDIF(WITH_FREETYPE)
 
 
-IF (WIN32)
-  TARGET_LINK_LIBRARIES(fteditor
-    Qt6::Widgets
-  )
-  
-  TARGET_LINK_LIBRARIES(fteditor
-    version
-  )
-ELSE (WIN32)
-  TARGET_LINK_LIBRARIES(fteditor
-    Qt6::Widgets
-  )
-ENDIF (WIN32)
-
+target_link_libraries(fteditor Qt::Widgets)
+if(WIN32)
+  target_link_libraries(fteditor version)
+endif()
+if(FTEDITOR_OPENGL_VIEWPORT)
+  target_link_libraries(fteditor Qt6::OpenGLWidgets)
+  ADD_DEFINITIONS(-DFTEDITOR_OPENGL_VIEWPORT)
+endif()
 
 if(WIN32)
   find_path(BIN_PYTHON_ROOT
@@ -156,19 +132,25 @@ if(WIN32)
     HINTS
       ${PYTHON_INCLUDE_DIR}/..
   )
-  find_path(BIN_Qt6_BINARIES
+
+  find_path(BIN_QT_BINARIES
     NAMES 
       Qt6Core.dll Qt6Cored.dll
+      Qt5Core.dll Qt5Cored.dll
     HINTS
       ${Qt6Core_DIR}/../../../bin
       ${Qt6Core_DIR}/../../..
+      ${Qt5Core_DIR}/../../../bin
+      ${Qt5Core_DIR}/../../..
   )
-  find_path(BIN_Qt6_PLUGINS
+  find_path(BIN_QT_PLUGINS
+
     NAMES 
       platforms styles imageformats
     HINTS
       ${Qt6Core_DIR}/../../../plugins
       ${Qt6Core_DIR}/../../..
+
   )
   find_path(BIN_FREETYPE_BINARIES
     NAMES 
@@ -193,6 +175,7 @@ if(WIN32)
       ${ZLIB_INCLUDE_DIR}/..
   )
   set_target_properties(fteditor PROPERTIES
+
     VS_DEBUGGER_ENVIRONMENT "PATH=${BIN_PYTHON_ROOT};${BIN_Qt6_BINARIES};${BIN_Qt6_PLUGINS};${BIN_FREETYPE_BINARIES};${BIN_PNG_BINARIES};${BIN_ZLIB_BINARIES};%PATH%\nQT_PLUGIN_PATH=${BIN_Qt6_PLUGINS}\nPYTHONPATH=${BIN_PYTHON_ROOT}")
   # set_target_properties(fteditor PROPERTIES
   #   VS_DEBUGGER_COMMAND_ARGUMENTS "")

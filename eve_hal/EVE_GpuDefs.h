@@ -36,7 +36,7 @@ Defines EVE hardware values.
 This header is separated and included last 
 in case of conflicts with other libraries.
 
-Expects BT_81XA_ENABLE, BT_81X_ENABLE, FT_81X_ENABLE, or FT_80X_ENABLE
+Expects BT_81XA_ENABLE, BT_81X_ENABLE, BT_88X_ENABLE, FT_81X_ENABLE, or FT_80X_ENABLE
 to be defined. If not, multi target compilation is assumed.
 
 */
@@ -49,12 +49,13 @@ to be defined. If not, multi target compilation is assumed.
 #define ESD_END()
 #endif
 
-#if !defined(EVE_MULTI_TARGET) \
+#if !defined(EVE_MULTI_GRAPHICS_TARGET) \
     && !defined(FT_80X_ENABLE) \
     && !defined(FT_81X_ENABLE) \
+    && !defined(BT_88X_ENABLE) \
     && !defined(BT_81X_ENABLE) \
     && !defined(BT_81XA_ENABLE)
-#define EVE_MULTI_TARGET
+#define EVE_MULTI_GRAPHICS_TARGET
 #endif
 
 /* Definitions used for FT800 coprocessor command buffer */
@@ -75,7 +76,7 @@ to be defined. If not, multi target compilation is assumed.
 #define ROM_CHIPID 786432UL
 #define RAM_ERR_REPORT 0x309800UL
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_GRAPHICS_TARGET)
 
 #define EVE_HAL_REG_ID (phost->GpuDefs->RegId)
 #define EVE_HAL_REG_CPURESET (phost->GpuDefs->RegCpuReset)
@@ -105,6 +106,16 @@ to be defined. If not, multi target compilation is assumed.
 
 #if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 
+#define RAM_G_SIZE (1024 * 1024L)
+
+#elif defined(FT_80X_ENABLE) || defined(BT_88X_ENABLE)
+
+#define RAM_G_SIZE (256 * 1024L)
+
+#endif
+
+#if defined(FT_81X_ENABLE) || defined(BT_88X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
+
 #define EVE_HAL_REG_ID 3153920UL
 #define EVE_HAL_REG_CPURESET 3153952UL
 #define EVE_HAL_REG_J1_INT 3154084UL
@@ -120,7 +131,6 @@ to be defined. If not, multi target compilation is assumed.
 #define RAM_DL 3145728UL
 #define ROMFONT_TABLEADDRESS 3145724UL
 
-#define RAM_G_SIZE (1024 * 1024L)
 #define LOW_FREQ_BOUND 58800000L //98% of 60Mhz
 
 #define SCISSOR_XY_SHIFT 11
@@ -134,7 +144,7 @@ to be defined. If not, multi target compilation is assumed.
 
 #define BITMAP_ADDR_MASK 16777215UL
 
-#elif defined(FT_81X_ENABLE)
+#elif defined(FT_81X_ENABLE) || defined(BT_88X_ENABLE)
 
 #define BITMAP_ADDR_MASK 4194303UL
 
@@ -155,7 +165,6 @@ to be defined. If not, multi target compilation is assumed.
 #define RAM_DL 1048576UL
 #define ROMFONT_TABLEADDRESS 1048572UL
 
-#define RAM_G_SIZE (256 * 1024L)
 #define LOW_FREQ_BOUND 47040000L // 98% of 48Mhz
 
 #define BITMAP_ADDR_MASK 1048575UL
@@ -338,7 +347,7 @@ to be defined. If not, multi target compilation is assumed.
 #define REG_FULLBUSYBITS (REG_CMDB_SPACE + 128UL)
 #define REG_SHA1KEY (REG_CMDB_SPACE + 144UL)
 
-#if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
+#if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define REG_UNDERRUN (REG_CMDB_SPACE + 152UL)
 #define REG_AH_HCYCLE_MAX (REG_CMDB_SPACE + 156UL)
 #define REG_PCLK_FREQ (REG_CMDB_SPACE + 160UL)
@@ -450,12 +459,12 @@ to be defined. If not, multi target compilation is assumed.
 #define CMD_GRADCOLOR        4294967092UL
 
 // FT801
-#if defined(FT_80X_ENABLE) || defined(EVE_MULTI_TARGET)
+#if defined(FT_80X_ENABLE) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define CMD_CSKETCH          4294967093UL
 #endif
 
 // FT810
-#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
+#if defined(FT_81X_ENABLE) || defined(BT_88X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define CMD_SETROTATE        4294967094UL
 #define CMD_SNAPSHOT2        4294967095UL
 #define CMD_SETBASE          4294967096UL
@@ -471,7 +480,7 @@ to be defined. If not, multi target compilation is assumed.
 #endif
 
 // BT815
-#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define CMD_FLASHERASE       4294967108UL
 #define CMD_FLASHWRITE       4294967109UL
 #define CMD_FLASHREAD        4294967110UL
@@ -500,7 +509,7 @@ to be defined. If not, multi target compilation is assumed.
 #endif
 
 // BT817
-#if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
+#if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define CMD_CALIBRATESUB     4294967136UL
 #define CMD_TESTCARD         4294967137UL
 #define CMD_HSF              4294967138UL
@@ -567,11 +576,7 @@ to be defined. If not, multi target compilation is assumed.
 #define COLOR_MASK(r, g, b, a) ((32UL << 24) | (((r)&1UL) << 3) | (((g)&1UL) << 2) | (((b)&1UL) << 1) | (((a)&1UL) << 0))
 #define CLEAR(c, s, t) ((38UL << 24) | (((c)&1UL) << 2) | (((s)&1UL) << 1) | (((t)&1UL) << 0))
 #define VERTEX_FORMAT(frac) ((39UL << 24) | (((frac)&7UL) << 0))
-#if defined(BT_81XA_ENABLE) || defined(EVE_MULTI_TARGET)
-#define BITMAP_LAYOUT_H(linestride, height) ((40UL << 24) | (((linestride)&7UL) << 2) | (((height)&3UL) << 0))
-#else
 #define BITMAP_LAYOUT_H(linestride, height) ((40UL << 24) | (((linestride)&3UL) << 2) | (((height)&3UL) << 0))
-#endif
 #define BITMAP_SIZE_H(width, height) ((41UL << 24) | (((width)&3UL) << 2) | (((height)&3UL) << 0))
 #define PALETTE_SOURCE(addr) ((42UL << 24) | (((addr)&4194303UL) << 0))
 #define VERTEX_TRANSLATE_X(x) ((43UL << 24) | (((x)&131071UL) << 0))

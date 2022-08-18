@@ -16,6 +16,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QWidget>
 #include <QThread>
 #include <QScrollBar>
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+#	include <QOpenGLWidget>
+#endif
 
 // Emulator includes
 #include <bt8xxemu.h>
@@ -35,7 +38,12 @@ namespace FTEDITOR {
  * \date 2013-10-15 13:18GMT
  * \author Jan Boon (Kaetemi)
  */
-class EmulatorViewport : public QWidget
+class EmulatorViewport 
+#ifdef FTEDITOR_OPENGL_VIEWPORT
+	: public QOpenGLWidget
+#else
+	: public QWidget
+#endif
 {
 	Q_OBJECT
 
@@ -56,6 +64,9 @@ public:
 	// Pixmap can be used after each frame() signal as updated source for repaint etc. It does not permanently remain valid
 	const QPixmap &getPixMap() const;
 
+	void fetchColorAsync(int x, int y);
+	QColor fetchColorAsync();
+
 	int hsize();
 	int vsize();
 
@@ -66,17 +77,20 @@ public:
 	int screenBottom();
 	int screenRight();
 
-	void setScreenScale(int screenScale);
-
 	QScrollBar *horizontalScrollbar() { return m_Horizontal; }
 	QScrollBar *verticalScrollbar() { return m_Vertical; }
 
 protected:
+	void setScreenScale(int screenScale);
+
 	virtual void paintEvent(QPaintEvent *e);
 
 public slots:		
 	// void saveScreenshot();
 	void threadRepaint();
+
+	virtual void zoomIn();
+	virtual void zoomOut();
 
 signals:
 	void frame();

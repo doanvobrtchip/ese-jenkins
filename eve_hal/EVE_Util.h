@@ -46,7 +46,7 @@ typedef struct EVE_BootupParameters
 	bool ExternalOsc;
 
 	/* SPI */
-#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID >= EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	EVE_SPI_CHANNELS_T SpiChannels; /* Variable to contain single/dual/quad channels */
 	uint8_t SpiDummyBytes; /* Number of dummy bytes as 1 or 2 for SPI read */
 #endif
@@ -56,14 +56,8 @@ typedef struct EVE_BootupParameters
 typedef struct EVE_ConfigParameters
 {
 	/* Display */
-	union {
-		int16_t Width; /* Line buffer width (pixels) */
-		int16_t HSize;
-	};
-	union {
-		int16_t Height; /* Screen and render height (lines) */
-		int16_t VSize;
-	};
+	int16_t Width; /* Line buffer width (pixels) */
+	int16_t Height; /* Screen and render height (lines) */
 	int16_t HCycle;
 	int16_t HOffset;
 	int16_t HSync0;
@@ -81,10 +75,15 @@ typedef struct EVE_ConfigParameters
 	uint8_t OutBitsB;
 	uint16_t PCLKFreq;
 	bool Dither;
-	
+
+#if (EVE_SUPPORT_CHIPID > EVE_BT815)
 	uint8_t AdaptiveFrameRate;
-	uint8_t PCLK_2X;
+#endif
+
+#if (EVE_SUPPORT_CHIPID > EVE_BT817)
 	int16_t AhHCycleMax;
+	uint8_t PCLK2X;
+#endif
 
 #ifdef EVE_SUPPORT_HSF
 	/* Physical horizontal pixels. Set to 0 to disable HSF. */
@@ -105,6 +104,7 @@ typedef enum EVE_DISPLAY_T
 	EVE_DISPLAY_WQVGA_480x272_60Hz,
 	EVE_DISPLAY_WVGA_800x480_60Hz,
 	EVE_DISPLAY_WSVGA_1024x600_83Hz,
+	EVE_DISPLAY_HDTV_1280x720_58Hz,
 	EVE_DISPLAY_WXGA_1280x800_65Hz,
 
 	/* Portrait */
@@ -171,7 +171,7 @@ static inline void EVE_Util_selectDeviceInteractive(EVE_CHIPID_T *chipId, size_t
 #endif
 
 /* Command line display selection utility */
-#if defined(_WIN32) && defined(EVE_MULTI_TARGET)
+#if defined(_WIN32) && defined(EVE_MULTI_GRAPHICS_TARGET)
 EVE_HAL_EXPORT void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display);
 #else
 static inline void EVE_Util_selectDisplayInteractive(EVE_DISPLAY_T *display)
@@ -192,9 +192,9 @@ static inline void EVE_Util_selectFlashFileInteractive(eve_tchar_t *flashPath, b
 #endif
 
 #if defined(_WIN32) && defined(EVE_FLASH_AVAILABLE)
-EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, eve_tchar_t *flashPath, bool updateFlashFirmware);
+EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, const eve_tchar_t *flashPath, bool updateFlashFirmware);
 #else
-static inline void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, eve_tchar_t *flashPath, bool updateFlashFirmware)
+static inline void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, const eve_tchar_t *flashPath, bool updateFlashFirmware)
 {
 	/* no-op */
 }
@@ -203,7 +203,7 @@ static inline void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, ev
 #if defined(BT8XXEMU_PLATFORM)
 EVE_HAL_EXPORT void EVE_Util_emulatorDefaults(EVE_HalParameters *params, void *emulatorParams, EVE_CHIPID_T chipId);
 #if defined(EVE_FLASH_AVAILABLE)
-EVE_HAL_EXPORT void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, void *emulatorParams, void *flashParams, const eve_tchar_t *flashPath);
+EVE_HAL_EXPORT void EVE_Util_emulatorFlashDefaults(EVE_HalParameters *params, const void *emulatorParams, void *flashParams, const eve_tchar_t *flashPath);
 #endif
 #endif
 
@@ -217,7 +217,7 @@ EVE_HAL_EXPORT bool EVE_Util_openDeviceInteractive(EVE_HalContext *phost, const 
 Falls back to no interactivity on FT9XX platform */
 EVE_HAL_EXPORT bool EVE_Util_bootupConfigInteractive(EVE_HalContext *phost, EVE_DISPLAY_T display);
 
-/* Forces a coprocessor fault, useful for triggering a delayed reset */
+/* Forces a coprocessor fault, useful for triggering a delayed reset (TODO: Remove this) */
 EVE_HAL_EXPORT void EVE_Util_forceFault(EVE_HalContext *phost, const char *err);
 
 #endif /* #ifndef EVE_HAL_INCL__H */

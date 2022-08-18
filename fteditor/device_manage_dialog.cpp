@@ -4,15 +4,19 @@
 #pragma warning(disable : 26444) // Unnamed objects
 
 #include "device_manage_dialog.h"
-#include "device_manager.h"
-#include "device_add_new_dialog.h"
-#include "constant_mapping.h"
 
+// Qt includes
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QThread>
-#include < QDirIterator>
+#include <QDirIterator>
+
+// Project includes
+#include "device_manager.h"
+#include "device_add_new_dialog.h"
+#include "constant_mapping.h"
+#include "device_info_custom.h"
 
 namespace FTEDITOR {
 
@@ -260,6 +264,8 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 			cdi.EVE_Type = FTEDITOR_FT800;
 		else if (jo["EVE Type"].toString() == "FT81X")
 			cdi.EVE_Type = FTEDITOR_FT810;
+		else if (jo["EVE Type"].toString() == "BT88X")
+			cdi.EVE_Type = FTEDITOR_BT880;
 		else if (jo["EVE Type"].toString() == "BT815_816")
 			cdi.EVE_Type = FTEDITOR_BT815;
 		else
@@ -343,12 +349,12 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("REG_HSIZE"))
 	{
-		cdi.configParams.HSize = jo["REG_HSIZE"].toInt();
+		cdi.configParams.Width = jo["REG_HSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_VSIZE"))
 	{
-		cdi.configParams.VSize = jo["REG_VSIZE"].toInt();
+		cdi.configParams.Height = jo["REG_VSIZE"].toInt();
 	}
 
 	if (jo.contains("REG_CSPREAD"))
@@ -397,7 +403,7 @@ void DeviceManageDialog::getCustomDeviceInfo(QString jsonPath, CustomDeviceInfo 
 
 	if (jo.contains("REG_PCLK_2X"))
 	{
-		cdi.configParams.PCLK_2X = jo["REG_PCLK_2X"].toInt();
+		cdi.configParams.PCLK2X = jo["REG_PCLK_2X"].toInt();
 	}
 
 	if (jo.contains("REG_PCLK_FREQ"))

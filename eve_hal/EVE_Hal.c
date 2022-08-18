@@ -73,11 +73,7 @@ EVE_HAL_EXPORT void EVE_Hal_release()
  */
 EVE_HAL_EXPORT void EVE_Hal_defaults(EVE_HalParameters *parameters)
 {
-#if defined(EVE_MULTI_TARGET)
 	EVE_Hal_defaultsEx(parameters, -1);
-#else
-	EVE_Hal_defaultsEx(parameters, -1);
-#endif
 }
 
 EVE_HAL_EXPORT void EVE_Hal_defaultsEx(EVE_HalParameters *parameters, size_t deviceIdx)
@@ -192,7 +188,7 @@ EVE_HAL_EXPORT uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr)
  * @param addr Address to bbe read
  * @param size Size to be read
  */
-EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, const uint8_t *result, uint32_t addr, uint32_t size)
+EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size)
 {
 	EVE_Hal_startTransfer(phost, EVE_TRANSFER_READ, addr);
 	EVE_Hal_transferMem(phost, result, NULL, size);
@@ -464,7 +460,7 @@ EVE_HAL_EXPORT void EVE_Host_resetRemoval(EVE_HalContext *phost)
  * @param str Error message to show
  * @param size Size of the message
  */
-void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size)
+void EVE_Hal_displayMessage(EVE_HalContext *phost, const char *str, uint16_t size)
 {
 	uint32_t round = ((size + 31U) & ~31U);
 	uint32_t addr = RAM_G + RAM_G_SIZE - round;

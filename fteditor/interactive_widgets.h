@@ -32,6 +32,7 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QMessageBox>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -1552,6 +1553,7 @@ private slots:
 					break;
 				case ARGB8_SNAPSHOT:
 					filter = filterargb8 + ";;" + filterpng + ";; " + filterjpg;
+					imageWidth /= 2;
 					break;
 				default:
 					return;
@@ -1596,7 +1598,13 @@ private slots:
 			return;
 
 		if (memSize > addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END) - memAddress)
+		{
+			QMessageBox::warning(parentWidget(), "Oversize",
+				"Snapshot requires a memory size larger than the available size in RAM_G.\n"
+			    "Please reduce width/height of snapshot area and try again."
+			);
 			return;
+		}
 
 		QString fileName = QFileDialog::getSaveFileName(this, text(), m_InteractiveProperties->m_MainWindow->getFileDialogPath(), filter, &filter);
 		if (fileName.isNull())

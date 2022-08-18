@@ -2,7 +2,7 @@
 BT8XX Emulator Library
 Copyright (C) 2013-2016  Future Technology Devices International Ltd
 Copyright (C) 2016-2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #ifdef WIN32
@@ -90,6 +90,16 @@ long System::getFreqTick(int hz)
 	c.QuadPart *= (LONGLONG)hz;
 	c.QuadPart /= m_PerformanceFrequency.QuadPart;
 	return (long)c.QuadPart;
+}
+
+void System::beginPrecise(int ms)
+{
+	if (ms < 16) timeBeginPeriod(ms);
+}
+
+void System::endPrecise(int ms)
+{
+	if (ms < 16) timeEndPeriod(ms);
 }
 
 void System::delay(int ms)

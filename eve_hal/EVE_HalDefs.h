@@ -39,8 +39,8 @@
 #define EVE_HAL_INCL__H
 #include "EVE_GpuTypes.h"
 
-#if defined(EVE_ENABLE_FATFS)
-#include "../ThirdPartyLib/fatfs/ff.h"
+#if EVE_ENABLE_FATFS
+#include "ff.h"
 #endif
 
 /**********
@@ -72,16 +72,20 @@ typedef enum EVE_TRANSFER_T
 
 typedef enum EVE_CHIPID_T
 {
-	EVE_CHIPID_FT800 = 0x0800,
-	EVE_CHIPID_FT801 = 0x0801,
-	EVE_CHIPID_FT810 = 0x0810,
-	EVE_CHIPID_FT811 = 0x0811,
-	EVE_CHIPID_FT812 = 0x0812,
-	EVE_CHIPID_FT813 = 0x0813,
-	EVE_CHIPID_BT815 = 0x0815,
-	EVE_CHIPID_BT816 = 0x0816,
-	EVE_CHIPID_BT817 = 0x0817,
-	EVE_CHIPID_BT818 = 0x0818,
+	EVE_CHIPID_FT800 = EVE_FT800,
+	EVE_CHIPID_FT801 = EVE_FT801,
+	EVE_CHIPID_FT810 = EVE_FT810,
+	EVE_CHIPID_FT811 = EVE_FT811,
+	EVE_CHIPID_FT812 = EVE_FT812,
+	EVE_CHIPID_FT813 = EVE_FT813,
+	EVE_CHIPID_BT880 = EVE_BT880,
+	EVE_CHIPID_BT881 = EVE_BT881,
+	EVE_CHIPID_BT882 = EVE_BT882,
+	EVE_CHIPID_BT883 = EVE_BT883,
+	EVE_CHIPID_BT815 = EVE_BT815,
+	EVE_CHIPID_BT816 = EVE_BT816,
+	EVE_CHIPID_BT817 = EVE_BT817,
+	EVE_CHIPID_BT818 = EVE_BT818,
 } EVE_CHIPID_T;
 
 /************
@@ -96,7 +100,7 @@ typedef int (*EVE_CoCmdHook)(EVE_HalContext *phost, uint32_t cmd, uint32_t state
 /* Hook into coprocessor reset */
 typedef void (*EVE_ResetCallback)(EVE_HalContext *phost, bool fault);
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_GRAPHICS_TARGET)
 typedef struct EVE_GpuDefs
 {
 	uint32_t RegId;
@@ -120,6 +124,7 @@ typedef struct EVE_GpuDefs
 
 extern EVE_GpuDefs EVE_GpuDefs_FT80X;
 extern EVE_GpuDefs EVE_GpuDefs_FT81X;
+extern EVE_GpuDefs EVE_GpuDefs_BT88X;
 extern EVE_GpuDefs EVE_GpuDefs_BT81X;
 #endif
 
@@ -129,7 +134,7 @@ typedef enum EVE_HOST_T
 	EVE_HOST_BT8XXEMU,
 	EVE_HOST_FT4222,
 	EVE_HOST_MPSSE,
-	EVE_HOST_FT9XX,
+	EVE_HOST_EMBEDDED,
 
 	EVE_HOST_NB
 } EVE_HOST_T;
@@ -151,7 +156,7 @@ typedef struct EVE_HalParameters
 	/* Called anytime the code is waiting during CMD write. Return false to abort wait */
 	EVE_Callback CbCmdWait;
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 	EVE_HOST_T Host;
 #endif
 
@@ -168,12 +173,18 @@ typedef struct EVE_HalParameters
 	uint32_t MpsseChannelNo; /* MPSSE channel number */
 #endif
 
-#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM)
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(RP2040_PLATFORM)
 	uint32_t DeviceIdx;
 	uint8_t SpiCsPin; /* SPI chip select number of FT8XX chip */
 #endif
 
-#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM)
+#if defined(RP2040_PLATFORM)
+	uint8_t SpiSckPin;
+	uint8_t SpiMosiPin;
+	uint8_t SpiMisoPin;
+#endif
+
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM) || defined(RP2040_PLATFORM)
 	uint8_t PowerDownPin; /* FT8XX power down pin number */
 #endif
 
@@ -183,7 +194,7 @@ typedef struct EVE_HalParameters
 
 } EVE_HalParameters;
 
-#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 #define EVE_DL_STATE phost->DlState[phost->DlStateIndex]
 typedef struct EVE_HalDlState
 {
@@ -196,7 +207,7 @@ typedef struct EVE_HalDlState
 	int16_t LineWidth;
 	int16_t PointSize;
 #endif
-#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	int16_t VertexTranslateX;
 	int16_t VertexTranslateY;
 #endif
@@ -238,8 +249,10 @@ typedef struct EVE_HalContext
 
 	EVE_STATUS_T Status;
 
-#if defined(EVE_MULTI_TARGET)
+#if defined(EVE_MULTI_PLATFORM_TARGET)
 	EVE_HOST_T Host;
+#endif
+#if defined(EVE_MULTI_GRAPHICS_TARGET)
 	EVE_CHIPID_T ChipId;
 	uint16_t Revision;
 	const EVE_GpuDefs *GpuDefs;
@@ -262,6 +275,9 @@ typedef struct EVE_HalContext
 	void *SpiHandle;
 	void *GpioHandle; /* LibFT4222 uses this member to store GPIO handle */
 #endif
+#if defined(RP2040_PLATFORM)
+	void *SpiPort; /* SPI port */
+#endif
 
 #if defined(FT4222_PLATFORM) | defined(MPSSE_PLATFORM)
 	/* Currently configured SPI clock rate. In kHz.
@@ -274,10 +290,15 @@ typedef struct EVE_HalContext
 #if defined(MPSSE_PLATFORM)
 	uint32_t MpsseChannelNo; /* MPSSE channel number */
 #endif
-#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM)
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(RP2040_PLATFORM)
 	uint8_t SpiCsPin; /* SPI chip select number of FT8XX chip */
 #endif
-#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM)
+#if defined(RP2040_PLATFORM)
+	uint8_t SpiSckPin;
+	uint8_t SpiMosiPin;
+	uint8_t SpiMisoPin;
+#endif
+#if defined(FT9XX_PLATFORM) || defined(FT4222_PLATFORM) || defined(MPSSE_PLATFORM) || defined(RP2040_PLATFORM)
 	uint8_t PowerDownPin; /* FT8XX power down pin number */
 #endif
 
@@ -286,7 +307,7 @@ typedef struct EVE_HalContext
 	uint8_t SpiWrBuf[0xFFFF];
 	uint32_t SpiWrBufIndex;
 	uint32_t SpiRamGAddr; /* Current RAM_G address of ongoing SPI write transaction */
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	/* Coprocessor write pointer buffer complementary to write buffer */
 	bool SpiWpWriting;
 	bool SpiWpWritten;
@@ -299,7 +320,7 @@ typedef struct EVE_HalContext
 	uint8_t CmdBufferIndex;
 
 	uint16_t CmdSpace; /* Free space, cached value */
-#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_TARGET)
+#if !defined(EVE_SUPPORT_CMDB) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	uint16_t CmdWp; /* Write pointer, only valid when CMDB is not used */
 #endif
 
@@ -316,7 +337,7 @@ typedef struct EVE_HalContext
 #endif
 
 	/* Display list optimization and compatibility caches */
-#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_TARGET)
+#if (EVE_DL_OPTIMIZE) || (EVE_DL_CACHE_SCISSOR) || (EVE_SUPPORT_CHIPID < EVE_FT810) || defined(EVE_MULTI_GRAPHICS_TARGET)
 	EVE_HalDlState DlState[EVE_DL_STATE_STACK_SIZE];
 	uint8_t DlStateIndex;
 #endif
@@ -407,7 +428,7 @@ EVE_HAL_EXPORT void EVE_Hal_flush(EVE_HalContext *phost);
 EVE_HAL_EXPORT uint8_t EVE_Hal_rd8(EVE_HalContext *phost, uint32_t addr);
 EVE_HAL_EXPORT uint16_t EVE_Hal_rd16(EVE_HalContext *phost, uint32_t addr);
 EVE_HAL_EXPORT uint32_t EVE_Hal_rd32(EVE_HalContext *phost, uint32_t addr);
-EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, const uint8_t *result, uint32_t addr, uint32_t size);
+EVE_HAL_EXPORT void EVE_Hal_rdMem(EVE_HalContext *phost, uint8_t *result, uint32_t addr, uint32_t size);
 
 EVE_HAL_EXPORT void EVE_Hal_wr8(EVE_HalContext *phost, uint32_t addr, uint8_t v);
 EVE_HAL_EXPORT void EVE_Hal_wr16(EVE_HalContext *phost, uint32_t addr, uint16_t v);
@@ -477,6 +498,51 @@ static inline bool EVE_Hal_supportVideo(EVE_HalContext *phost)
 #endif
 }
 
+static inline bool EVE_Hal_supportLargeFont(EVE_HalContext *phost)
+{
+#ifdef EVE_SUPPORT_LARGEFONT
+	return EVE_CHIPID >= EVE_FT810 // FT810 and up, except BT88X range
+		&& !(EVE_CHIPID >= EVE_BT880 && EVE_CHIPID <= EVE_BT883);
+#else
+	return false;
+#endif
+}
+
+/// Include the EVE generation in the chip ID value to simplify feature set comparisons (BT880 support)
+static inline EVE_CHIPID_T EVE_extendedChipId(int chipId)
+{
+	switch (chipId & 0xFFFF)
+	{
+	case EVE_FT800 & 0xFFFF:
+	case EVE_FT801 & 0xFFFF:
+		return (EVE_CHIPID_T)((chipId & 0xFFFF) | 0x10000);
+	case EVE_FT810 & 0xFFFF:
+	case EVE_FT811 & 0xFFFF:
+	case EVE_FT812 & 0xFFFF:
+	case EVE_FT813 & 0xFFFF:
+	case EVE_BT880 & 0xFFFF:
+	case EVE_BT881 & 0xFFFF:
+	case EVE_BT882 & 0xFFFF:
+	case EVE_BT883 & 0xFFFF:
+		return (EVE_CHIPID_T)((chipId & 0xFFFF) | 0x20000);
+	case EVE_BT815 & 0xFFFF:
+	case EVE_BT816 & 0xFFFF:
+		return (EVE_CHIPID_T)((chipId & 0xFFFF) | 0x30000);
+	case EVE_BT817 & 0xFFFF:
+	case EVE_BT818 & 0xFFFF:
+		return (EVE_CHIPID_T)((chipId & 0xFFFF) | 0x40000);
+	default:
+		break;
+	}
+	return (EVE_CHIPID_T)(chipId & 0xFFFF);
+}
+
+/// Remove EVE generation from the chip ID
+static inline int EVE_shortChipId(EVE_CHIPID_T chipId)
+{
+	return chipId & 0xFFFF;
+}
+
 static inline int EVE_gen(EVE_CHIPID_T chipId)
 {
 	switch (chipId)
@@ -488,6 +554,10 @@ static inline int EVE_gen(EVE_CHIPID_T chipId)
 	case EVE_FT811:
 	case EVE_FT812:
 	case EVE_FT813:
+	case EVE_BT880:
+	case EVE_BT881:
+	case EVE_BT882:
+	case EVE_BT883:
 		return EVE2;
 	case EVE_BT815:
 	case EVE_BT816:
@@ -515,6 +585,9 @@ EVE_HAL_EXPORT bool EVE_Hal_powerCycle(EVE_HalContext *phost, bool up);
 
 /* Switch EVE to different SPI channel mode */
 EVE_HAL_EXPORT void EVE_Hal_setSPI(EVE_HalContext *phost, EVE_SPI_CHANNELS_T numchnls, uint8_t numdummy);
+
+/* Restore platform to previously configured EVE SPI channel mode */
+EVE_HAL_EXPORT void EVE_Hal_restoreSPI(EVE_HalContext *phost);
 
 EVE_HAL_EXPORT uint32_t EVE_Hal_currentFrequency(EVE_HalContext *phost);
 
@@ -556,7 +629,7 @@ EVE_HAL_EXPORT void EVE_Host_resetRemoval(EVE_HalContext *phost);
 
 /* Display a fullscreen debug message using TEXT8X8.
 Uses the back of RAM_G. */
-EVE_HAL_EXPORT void EVE_Hal_displayMessage(EVE_HalContext *phost, char *str, uint16_t size);
+EVE_HAL_EXPORT void EVE_Hal_displayMessage(EVE_HalContext *phost, const char *str, uint16_t size);
 
 /* Display a fullscreen debug message using TEXT8X8.
 Uses the back of RAM_G. */

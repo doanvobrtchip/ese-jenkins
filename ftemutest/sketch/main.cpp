@@ -1,8 +1,8 @@
 /*
 BT8XX Emulator Samples
 Copyright (C) 2015  Future Technology Devices International Ltd
-Copyright (C) 2017  Bridgetek Pte Lte
-Author: Jan Boon <jan@no-break.space>
+Copyright (C) 2017-2022  Bridgetek Pte Lte
+Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
 #include <bt8xxemu.h>
@@ -75,7 +75,7 @@ void mcu(BT8XXEMU_Emulator *sender, void *context)
 int main(int, char*[])
 {
 	BT8XXEMU_EmulatorParameters params;
-	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT815);
+	BT8XXEMU_defaults(BT8XXEMU_VERSION_API, &params, BT8XXEMU_EmulatorBT880);
 	params.Flags |= BT8XXEMU_EmulatorEnableStdOut;
 	params.Main = mcu;
 	BT8XXEMU_run(BT8XXEMU_VERSION_API, &g_Emulator, &params);

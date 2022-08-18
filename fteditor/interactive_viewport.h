@@ -62,8 +62,6 @@ public:
 	int mouseY() const { return m_MouseY; }
 	bool mouseOver() const { return m_MouseOver; }
 
-	QColor getPixelColor();
-
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 
@@ -75,16 +73,24 @@ private:
 	void mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km = Qt::NoModifier);
 
 protected:
-	virtual void mouseMoveEvent(QMouseEvent *e);
-	virtual void mousePressEvent(QMouseEvent *e);
-	virtual void mouseReleaseEvent(QMouseEvent *e);
+	virtual void mouseMoveEvent(QMouseEvent *e) override;
+	virtual void mousePressEvent(QMouseEvent *e) override;
+	virtual void mouseReleaseEvent(QMouseEvent *e) override;
+#if QT_VERSION_MAJOR < 6
+	virtual void enterEvent(QEvent *e) override;
+#else
 	virtual void enterEvent(QEnterEvent *e) override;
-	virtual void leaveEvent(QEvent *e);
-	virtual void wheelEvent(QWheelEvent* e);
+#endif
+	virtual void leaveEvent(QEvent *e) override;
+	virtual void wheelEvent(QWheelEvent* e) override;
 
-	virtual void dropEvent(QDropEvent *e);
-	virtual void dragMoveEvent(QDragMoveEvent *e);
-	virtual void dragEnterEvent(QDragEnterEvent *e);
+	virtual void dropEvent(QDropEvent *e) override;
+	virtual void dragMoveEvent(QDragMoveEvent *e) override;
+	virtual void dragEnterEvent(QDragEnterEvent *e) override;
+
+public slots:
+	virtual void zoomIn() override;
+	virtual void zoomOut() override;
 
 private slots:
 	void automaticChecked();
@@ -92,8 +98,6 @@ private slots:
 	void traceChecked();
 	void editChecked();
 
-	void zoomIn();
-	void zoomOut();
 	void zoomChanged(int index);
 	void zoomEditTextChanged();
 
