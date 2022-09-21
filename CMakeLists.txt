@@ -57,6 +57,7 @@ ENDIF ()
 
 IF (WIN32)
   OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU)" OFF)
+  MARK_AS_ADVANCED(WITH_SDL2)
 ELSE ()
   OPTION(WITH_SDL2 "Use SDL2 (required for FT900EMU and Linux support)" ON)
 ENDIF ()
@@ -80,6 +81,7 @@ OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
 OPTION(WITH_FREETYPE_STATIC "Include dependencies for static Freetype build" OFF)
 
 OPTION(WITH_DX9C "Include DirectX 9.0c when using an XP toolchain" OFF)
+MARK_AS_ADVANCED(WITH_DX9C)
 
 OPTION(WITH_BT8XXEMU "Include BT8XXEMU" ON)
 
@@ -94,6 +96,7 @@ OPTION(WITH_BT817EMU "Include BT817EMU" ON)
 OPTION(WITH_BT880EMU "Include BT880EMU" ON)
 
 OPTION(WITH_FT900EMU "Include FT900EMU" OFF)
+MARK_AS_ADVANCED(WITH_FT900EMU)
 
 OPTION(WITH_MX25LEMU "Include MX25LEMU" ON)
 
