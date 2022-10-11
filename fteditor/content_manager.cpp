@@ -718,8 +718,39 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	if (contentInfo->Converter == ContentInfo::Invalid)
 	{
 		contentInfo->WantAutoLoad = true;
+
+		do
+		{
+			QFile file(filePath);
+			if (!file.open(QIODevice::ReadOnly))
+				break;
+			QString val = file.readAll();
+			file.close();
+			auto jd = QJsonDocument::fromJson(val.toUtf8());
+			if (jd.isNull())
+				break;
+			contentInfo->Converter = ContentInfo::Raw;
+
+			auto jo = jd.object();
+			int flashAddress = jo["address_glyph"].toInt();
+			contentInfo->FlashAddress = flashAddress;
+			auto addressType = jo["address_type"].toString().toLower();
+			if (addressType == "file")
+			{
+				contentInfo->DataStorage = ContentInfo::File;
+			}
+			else if (addressType == "flash")
+			{
+				contentInfo->DataStorage = ContentInfo::Flash;
+			}
+			else if (addressType == "embedded")
+			{
+				contentInfo->DataStorage = ContentInfo::Embedded;
+			}
+		} while (false);
 	}
-	else
+
+	if (contentInfo->Converter != ContentInfo::Invalid)
 	{
 		int freeAddress = getFreeMemoryAddress();
 		if (freeAddress >= 0)
@@ -727,6 +758,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->MemoryLoaded = true;
 			contentInfo->MemoryAddress = freeAddress;
 		}
+		contentInfo->WantAutoLoad = false;
 	}
 
 	switch (contentInfo->Converter)
