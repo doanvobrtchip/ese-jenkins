@@ -60,6 +60,14 @@ extern BT8XXEMU_Flash *g_Flash;
 std::vector<QString> ContentManager::s_FileExtensions;
 QMutex ContentManager::s_Mutex;
 
+const QMap<QString, QString> ContentInfo::MapInfoFileType = {
+	{ "raw", "json" },
+	{ "glyph", "json" },
+	{ "ram_g", "readme" },
+	{ "flash", "readme" },
+	{ "xfont", "" }
+};
+
 ContentInfo::ContentInfo(const QString &filePath)
 {
 	SourcePath = filePath;
@@ -693,6 +701,73 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	ContentInfo *contentInfo = new ContentInfo(filePath);
 	QString fileExt = QFileInfo(filePath).suffix().toLower();
 
+	auto handleInfoFile = [&](QString &infoFilePath) {
+		QFileInfo ifp(infoFilePath);
+		if (!ifp.exists())
+			return;
+		QString suffix = ifp.suffix();
+
+		if (suffix == "json")
+		{
+			QFile file(infoFilePath);
+			if (!file.open(QIODevice::ReadOnly))
+				return;
+			QString data = file.readAll();
+			file.close();
+			auto jd = QJsonDocument::fromJson(data.toUtf8());
+			if (jd.isNull())
+				return;
+			auto jo = jd.object();
+			auto addressType = jo["address_type"].toString().toLower();
+			int addressGlyph = jo["address_glyph"].toInt();
+			if (addressType == "flash")
+			{
+				contentInfo->DataStorage = ContentInfo::Flash;
+				contentInfo->FlashAddress = addressGlyph;
+				contentInfo->DataCompressed = false;
+			}
+			else if (addressType == "ram_g")
+			{
+				contentInfo->MemoryAddress = addressGlyph;
+				contentInfo->WantAutoLoad = true;
+				contentInfo->DataCompressed = false;
+			}
+			return;
+		}
+
+		if (suffix == "readme")
+		{
+			QFile file(infoFilePath);
+			if (!file.open(QIODevice::ReadOnly))
+				return;
+			QTextStream in(&file);
+			while (!in.atEnd())
+			{
+				QString line = in.readLine();
+				QStringList listItem = line.split(QRegExp("\\s+"));
+				if (listItem.at(0) == "data")
+				{
+					int dataOffset = listItem.at(1).toInt();
+					if (fileExt == "flash")
+					{
+						contentInfo->DataStorage = ContentInfo::Flash;
+						contentInfo->FlashAddress = dataOffset;
+						contentInfo->DataCompressed = false;
+					}
+					else if (fileExt == "ram_g")
+					{
+						contentInfo->MemoryAddress = dataOffset;
+						contentInfo->WantAutoLoad = true;
+						contentInfo->DataCompressed = false;
+					}
+					break;
+				}
+			}
+			file.close();
+			return;
+		}
+	};
+
 	if (fileExt == "jpg")      contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
     else if (fileExt == "bmp") contentInfo->Converter = ContentInfo::Image;
@@ -705,7 +780,17 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "raw") contentInfo->Converter = ContentInfo::Raw;
+
+	if (contentInfo->MapInfoFileType.contains(fileExt))
+	{
+		contentInfo->Converter = ContentInfo::Raw;
+		QString infoFileType = ContentInfo::MapInfoFileType.value(fileExt, "");
+		if (!infoFileType.isEmpty())
+		{
+			QString infoFilePath = filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
+			handleInfoFile(infoFilePath);
+		}
+	}
 
 	if (contentInfo->Converter == ContentInfo::Font)
 	{
@@ -715,11 +800,13 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->ImageFormat = L4;
 	}
 
-	if (contentInfo->Converter == ContentInfo::Invalid)
+	if (contentInfo->WantAutoLoad)
 	{
-		contentInfo->WantAutoLoad = true;
+		contentInfo->MemoryLoaded = true;
+		contentInfo->WantAutoLoad = false;
 	}
-	else
+
+	else if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->DataStorage != ContentInfo::Flash)
 	{
 		int freeAddress = getFreeMemoryAddress();
 		if (freeAddress >= 0)
@@ -727,6 +814,11 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->MemoryLoaded = true;
 			contentInfo->MemoryAddress = freeAddress;
 		}
+	}
+
+	else if (contentInfo->Converter == ContentInfo::Invalid)
+	{
+		contentInfo->WantAutoLoad = true;
 	}
 
 	switch (contentInfo->Converter)
@@ -1142,7 +1234,6 @@ void ContentManager::addInternal(QStringList fileNameList)
 		dir.mkpath(".");
 	}
 
-	QString NewNameTemplate("%1/%2_%3.%4");
 	QString newName;
 	int i = 0;
 	foreach (QString fileName, fileNameList)
@@ -1150,16 +1241,33 @@ void ContentManager::addInternal(QStringList fileNameList)
 		QFileInfo fi(fileName);
 		newName = dir.absolutePath() + '/' + fi.fileName();
 
+		QString suffix = fi.suffix();
+		QString infoFileType = ContentInfo::MapInfoFileType.value(suffix, QString());
+		bool existsInfoFile; 
+		QString infoFileName;
+		QString newInfoFileName;
+		if (ContentInfo::MapInfoFileType.contains(suffix))
+		{
+			infoFileName = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
+			existsInfoFile = QFileInfo(infoFileName).exists();
+			if (existsInfoFile)
+				newInfoFileName = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
+		}
+
 		i = 1;
 		while (QFileInfo(newName).exists())
 		{
 			++i;
-			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.baseName()).arg(i).arg(fi.completeSuffix());
+			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.baseName()).arg(i).arg(suffix);
+			if (existsInfoFile)
+				newInfoFileName = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
 		}
 
 		QFile::copy(fileName, newName);
+		if (existsInfoFile)
+			QFile::copy(infoFileName, newInfoFileName);
 		
-		add(QDir(QDir::currentPath()).relativeFilePath(newName));
+		add(newName);
 	}
 }
 
