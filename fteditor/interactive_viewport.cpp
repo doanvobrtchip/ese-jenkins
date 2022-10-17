@@ -500,7 +500,173 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 	p.begin(image);*/
 	if (m_LineEditor)
 	{
-		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+		DlParsed parsed = m_LineEditor->getLine(m_LineNumber);
+		auto drawAlignment = [&](int specX = -1, int specY = -1) {
+#define COLOR_FIT_VERTICALLY Qt::green
+#define COLOR_FIT_HORIZONTALLY Qt::cyan
+#define COLOR_CLOSE_FIT_VERTICALLY Qt::red
+#define COLOR_CLOSE_FIT_HORIZONTALLY Qt::darkYellow
+#define DISTANCE 8
+#define AUTO_ALIGN_DISTANCE 4
+
+			int x, y;
+			DlParsed tempParsed;
+			DlState tempState;
+			QList dragableItems = {
+				CMD_TEXT, CMD_BUTTON, CMD_KEYS, CMD_PROGRESS,
+				CMD_SLIDER, CMD_SCROLLBAR, CMD_TOGGLE, CMD_GAUGE,
+				CMD_CLOCK, CMD_SPINNER, CMD_TRACK, CMD_DIAL, CMD_NUMBER,
+				CMD_SKETCH, CMD_CSKETCH, CMD_ANIMFRAME, CMD_ANIMFRAMERAM
+			};
+            QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II};
+
+            auto autoAlignVertical = false, autoAlignHorizontal = false;
+			auto drawVerticalAlignment = [&](int x1, int x2) {
+				p.setPen(QPen(QBrush(x1 == x2 ? COLOR_FIT_VERTICALLY : COLOR_CLOSE_FIT_VERTICALLY), 1.0, Qt::DashLine));
+                if (abs(x1 - x2) > DISTANCE)
+					return false;
+				DRAWLINE(x2, 0, x2, vsize());
+				return true;
+			};
+			auto drawHorizontalAlignment = [&](int y1, int y2) {
+				p.setPen(QPen(QBrush(y1 == y2 ? COLOR_FIT_HORIZONTALLY : COLOR_CLOSE_FIT_HORIZONTALLY), 1.0, Qt::DashLine));
+                if (abs(y1 - y2) > DISTANCE)
+					return false;
+				DRAWLINE(0, y2, hsize(), y2);
+				return true;
+			};
+			auto checkClosest = [](int &closest, int &minDelta, int value1, int value2) {
+				int newDelta = abs(value1 - value2);
+				if (newDelta < minDelta || minDelta < 0)
+				{
+					closest = value2;
+					minDelta = newDelta;
+				}
+			};
+            auto getClosestVertical = [&](int &minDelta, int &closest) {
+                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
+                {
+					int tempX = tempParsed.Parameter[0].I >> tempState.Graphics.VertexFormat;
+					tempX += tempState.Graphics.VertexTranslateX >> 4;
+                    checkClosest(closest, minDelta, x, tempX);
+                    return;
+                }
+                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+                {
+					int tempX = tempParsed.Parameter[0].U;
+					tempX += tempState.Graphics.VertexTranslateX >> 4;
+                    checkClosest(closest, minDelta, x, tempX);
+                    return;
+                }
+                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I / 2); //mid
+                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I); //left
+                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I); //right
+            };
+            auto getClosestHorizontal = [&](int &minDelta, int &closest) {
+                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
+                {
+					int tempY = tempParsed.Parameter[1].I >> tempState.Graphics.VertexFormat;
+					tempY += tempState.Graphics.VertexTranslateY >> 4;
+                    checkClosest(closest, minDelta, y, tempY);
+                    return;
+                }
+                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+                {
+					int tempY = tempParsed.Parameter[1].U;
+					tempY += tempState.Graphics.VertexTranslateY >> 4;
+                    checkClosest(closest, minDelta, y, tempY);
+                    return;
+                }
+                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I / 2); //mid
+                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I); //top
+                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I); //bottom
+            };
+
+            for (int i = 0; i < m_LineEditor->getLineCount(); i++)
+			{
+				if (i == m_LineNumber)
+					continue;
+				tempParsed = m_LineEditor->getLine(i);
+				auto tempRightID = tempParsed.IdRight | 0xFFFFFF00;
+                if (!dragableItems.contains(tempRightID) && !otherItems.contains(tempParsed.IdLeft))
+					continue;
+
+				tempState = m_LineEditor->getState(i);
+                int selPos = 0 , closestOfSelPos = 0 , closestOfPos = -1;
+                int minDelta = -1, delta = -1;
+                auto setSelPos = [&] (int pos, int closestOfPos, int delta) {
+                    selPos = pos;
+                    closestOfSelPos = closestOfPos;
+                    minDelta = delta;
+
+                };
+
+                if (m_WidgetWH) {
+                    x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I / 2; //mid of the main item
+                    getClosestVertical(delta, closestOfPos);
+                    setSelPos(x, closestOfPos, delta);
+                }
+                if (true) {
+                    x = specX != -1 ? specX : parsed.Parameter[0].I; //left of the main item
+                    getClosestVertical(delta, closestOfPos);
+                    if (delta < minDelta || minDelta < 0) {
+                        setSelPos(x, closestOfPos, delta);
+                    }
+                }
+                if (m_WidgetWH)
+                {
+                    x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I; //right of the main item
+                    getClosestVertical(delta, closestOfPos);
+                    if (delta < minDelta || minDelta < 0) {
+                        setSelPos(x, closestOfPos, delta);
+                    }
+                }
+                // Auto align vertical
+                if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignVertical)
+                {
+                    int delta1 = closestOfSelPos - selPos;
+                    selPos = closestOfSelPos;
+                    autoAlignVertical = true;
+                    mouseMoveEvent(m_MovingLastX + delta1, m_MovingLastY);
+                }
+                drawVerticalAlignment(selPos, closestOfSelPos);
+
+                delta = -1;
+                closestOfPos = 0;
+                setSelPos(0, -1, -1);
+                if (m_WidgetWH) {
+                    y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I / 2; //mid of the main item
+                    getClosestHorizontal(delta, closestOfPos);
+                    setSelPos(y, closestOfPos, delta);
+                }
+                if (true) {
+                    y = specY != -1 ? specY : parsed.Parameter[1].I; //left of the main item
+                    getClosestHorizontal(delta, closestOfPos);
+					if (delta < minDelta || minDelta < 0)
+					{
+                        setSelPos(y, closestOfPos, delta);
+                    }
+                }
+                if (m_WidgetWH)
+                {
+                    y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I; //right of the main item
+                    getClosestHorizontal(delta, closestOfPos);
+					if (delta < minDelta || minDelta < 0)
+					{
+                        setSelPos(y, closestOfPos, delta);
+                    }
+                }
+                // Auto align horizontal
+                if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignHorizontal)
+                {
+                    int delta2 = closestOfSelPos - selPos;
+                    selPos = closestOfSelPos;
+                    autoAlignHorizontal = true;
+                    mouseMoveEvent(m_MovingLastX, m_MovingLastY + delta2);
+                }
+                drawHorizontalAlignment(selPos, closestOfSelPos);
+			}
+		};
 		if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 		{
 			m_WidgetXY = false;
@@ -574,6 +740,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				const DlState &state = m_LineEditor->getState(m_LineNumber);
 				// Show central vertex
 				int x, y;
+
 				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
 				{
 					x = parsed.Parameter[0].I >> state.Graphics.VertexFormat;
@@ -584,8 +751,13 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 					x = parsed.Parameter[0].U;
 					y = parsed.Parameter[1].U;
 				}
+
 				x += state.Graphics.VertexTranslateX >> 4;
 				y += state.Graphics.VertexTranslateY >> 4;
+
+				if (m_isDrawAlignment)
+					drawAlignment(x, y);
+
 				p.setPen(outer);
 				DRAWLINE(x, y - 5, x, y - 12);
 				DRAWLINE(x, y + 5, x, y + 12);
@@ -793,10 +965,12 @@ CMD_SCREENSAVER()
 					}
 
 					const DlState &state = m_LineEditor->getState(m_LineNumber);
-					int x = parsed.Parameter[0].I;
-					int y = parsed.Parameter[1].I;
-					x += state.Graphics.VertexTranslateX >> 4;
-					y += state.Graphics.VertexTranslateY >> 4;
+				    if (m_isDrawAlignment)
+						drawAlignment();
+				    int x = parsed.Parameter[0].I;
+				    int y = parsed.Parameter[1].I;
+				    x += state.Graphics.VertexTranslateX >> 4;
+				    y += state.Graphics.VertexTranslateY >> 4;
 
 					if (m_isDrawAlignmentHorizontal)
 				    {
@@ -1344,6 +1518,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 			bool reEnableUndoCombine = false;
 			int xd = mouseX - m_MovingLastX;
 			int yd = mouseY - m_MovingLastY;
+			m_isDrawAlignment = true;
 			m_MovingLastX = mouseX;
 			m_MovingLastY = mouseY;
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
@@ -1524,7 +1699,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 		if (m_LineEditor)
 		{
 			m_MainWindow->statusBar()->showMessage("Press SHIFT for keeping constant x-coordinate, ALT for keeping constant y-coordinate");
-
+			m_isDrawAlignment = true;
 			// Apply action
 			int xd = 0;
 			int yd = 0;
@@ -1547,7 +1722,6 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 			{
 				m_isDrawAlignmentHorizontal = true;
 			}
-
 			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
 			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
 			{
@@ -1891,6 +2065,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 
 	m_MainWindow->statusBar()->showMessage("");
 	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
+	m_isDrawAlignment = false;
 
 	if (m_MouseTouch)
 	{
