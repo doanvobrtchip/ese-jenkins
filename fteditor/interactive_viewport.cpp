@@ -33,6 +33,8 @@
 #include <QStatusBar>
 #include <QActionGroup>
 #include <QRegularExpression>
+#include <QFileInfo>
+#include <QJsonDocument>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -1946,14 +1948,25 @@ void InteractiveViewport::leaveEvent(QEvent *e)
 
 bool InteractiveViewport::acceptableSource(QDropEvent *e)
 {
-	if (e->source() == m_MainWindow->toolbox()->treeWidget()) return true;
+	if (e->source() == m_MainWindow->toolbox()->treeWidget())
+		return true;
 	//if (e->source() == m_MainWindow->bitmapSetup()) return true;
 	if (e->source() == m_MainWindow->contentManager()->contentList())
 	{
-		if (!m_MainWindow->contentManager()->current()->MemoryLoaded) return false;
-		if (m_MainWindow->contentManager()->current()->Converter != ContentInfo::Image
-			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::Font
-			&& m_MainWindow->contentManager()->current()->Converter != ContentInfo::ImageCoprocessor) return false;
+		auto currentItem = m_MainWindow->contentManager()->current();
+		
+		QStringList supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
+		QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
+		if (supportedList.contains(fileSuffix))
+			return true;
+		
+		if (!currentItem->MemoryLoaded)
+			return false;
+
+		if (currentItem->Converter != ContentInfo::Image
+		    && currentItem->Converter != ContentInfo::Font
+		    && currentItem->Converter != ContentInfo::ImageCoprocessor)
+			return false;
 		return true;
 	}
 	return false;
@@ -1975,6 +1988,46 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 {
 	// Should probably lock the display list at this point ... ?
 	// TODO: Bitmaps from files, etc
+	auto getJsonInfo = [](QString &file) {
+		QJsonObject jo;
+		QFileInfo fi(file);
+		if (!fi.exists())
+			return jo;
+		QString suffix = fi.suffix();
+
+		if (suffix == "json")
+		{
+			QFile f(file);
+			if (!f.open(QIODevice::ReadOnly))
+				return jo;
+			QString data = f.readAll();
+			f.close();
+			auto jd = QJsonDocument::fromJson(data.toUtf8());
+			if (jd.isNull())
+				return jo;
+			return jd.object();
+		}
+
+		if (suffix == "readme")
+		{
+			QFile f(file);
+			if (!f.open(QIODevice::ReadOnly))
+				return jo;
+			QTextStream in(&f);
+			while (!in.atEnd())
+			{
+				QString line = in.readLine();
+				QStringList listItem = line.split(QRegExp("\\s+"));
+				if (listItem.at(0) != "name" && !listItem.at(0).isEmpty())
+				{
+					jo.insert(listItem.at(0), QJsonValue({ { "offset", listItem.at(1).toInt() }, { "length", listItem.at(2).toInt() } }));
+				}
+			}
+			f.close();
+		}
+		return jo;
+	};
+
 	if (acceptableSource(e))
 	{
 		if (m_LineEditor && !m_LineEditor->isMacro())
@@ -2369,10 +2422,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
                         break;
                     case CMD_ANIMFRAME:
 					case CMD_ANIMFRAMERAM:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.Parameter[3].I = 0;
+						pa.Parameter[2].I = 0;
+						pa.Parameter[3].I = 0;
                         pa.ExpectedParameterCount = 4;
                         break;
                     case CMD_VIDEOFRAME:
@@ -2541,7 +2592,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					bool mustCreateHandle = true;
 					if (contentInfo)
 					{
-						printf("Find or create handle for image content\n");
+						printf("Find or create handle for content item\n");
 						int handleResult = m_MainWindow->contentManager()->editorFindHandle(contentInfo, m_LineEditor);
 						if (handleResult != -1 && handleResult != 15)
 						{
@@ -2584,31 +2635,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ExpectedStringParameter = false;
 					if (contentInfo && mustCreateHandle)
 					{
-						printf("Create handle for image content\n");
+						printf("Create handle for content item\n");
 
 						int hline = (bitmapHandle == 15) ? line : m_MainWindow->contentManager()->editorFindNextBitmapLine(m_LineEditor);
 
 						line = hline;
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 
-						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-							&& m_LineEditor->isCoprocessor()
-							&& (contentInfo->Converter == ContentInfo::Font))
-						{
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_SETFONT2 & 0xFF;
-							pa.Parameter[0].U = bitmapHandle;
-							pa.Parameter[1].U = contentInfo->MemoryAddress;
-							pa.Parameter[2].U = contentInfo->FontOffset;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(hline, pa);
-							++hline;
-							++line;
-							pa.IdLeft = 0;
-						}
-						else
-						{
-
+						auto addBitmapHandler = [&]() {
 							pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 							pa.Parameter[0].U = bitmapHandle;
 							pa.ExpectedParameterCount = 1;
@@ -2625,10 +2659,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 								pa.Parameter[0].U = contentInfo->bitmapAddress();
 
-								if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
-										pa.Parameter[0].U = contentInfo->bitmapAddress() + contentInfo->PalettedAddress;
+								if (contentInfo->Converter == ContentInfo::ImageCoprocessor)
+								{
+									pa.Parameter[0].U = contentInfo->bitmapAddress() + contentInfo->PalettedAddress;
 								}
-								
+
 								pa.Parameter[1].U = contentInfo->ImageFormat;
 								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
 								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
@@ -2694,7 +2729,71 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 									++line;
 								}
 							}
-
+						};
+						
+						auto addSetFont2Command = [&](int firstChar = 0) {
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_SETFONT2 & 0xFF;
+							pa.Parameter[0].U = bitmapHandle;
+							pa.Parameter[1].U = contentInfo->MemoryAddress;
+							pa.Parameter[2].U = firstChar;
+							pa.ExpectedParameterCount = 3;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+							pa.IdLeft = 0;
+						};
+						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
+							&& m_LineEditor->isCoprocessor()
+							&& (contentInfo->Converter == ContentInfo::Font))
+						{
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_SETFONT2 & 0xFF;
+							pa.Parameter[0].U = bitmapHandle;
+							pa.Parameter[1].U = contentInfo->MemoryAddress;
+							pa.Parameter[2].U = contentInfo->FontOffset;
+							pa.ExpectedParameterCount = 3;
+							m_LineEditor->insertLine(hline, pa);
+							++hline;
+							++line;
+							pa.IdLeft = 0;
+						}
+						else if (contentInfo->Converter == ContentInfo::Raw)
+						{
+							auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+							if (fileSuffix == "xfont")
+							{
+								printf("Add handler for .glyph or .xfont content file\n");
+								addSetFont2Command(0);
+							}
+							else if (fileSuffix == "raw")
+							{
+								if (contentInfo->MapInfoFileType.contains(fileSuffix))
+								{
+									QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
+									if (!fileType.isEmpty())
+									{
+										QString filePath = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.') + 1).append(fileType);
+										auto infoJson = getJsonInfo(filePath);
+										if (infoJson.contains("type"))
+										{
+											auto contentType = infoJson["type"].toString();
+											if (contentType == "bitmap")
+											{
+												addBitmapHandler();
+											}
+											else if (contentType == "legacyfont")
+											{
+												addSetFont2Command(1);
+											}
+										}
+									}
+								}
+							}
+						}
+						else
+						{
+							addBitmapHandler();
 							if (contentInfo->Converter == ContentInfo::Font)
 							{
 								pa.IdLeft = 0xFFFFFF00;
@@ -2709,28 +2808,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 						}
 					}
-					if (contentInfo && contentInfo->Converter == ContentInfo::Font)
-					{
-						int mvx = screenLeft();
-						int mvy = screenTop();
-						int scl = screenScale();
 
-						pa.IdLeft = 0xFFFFFF00;
-						pa.IdRight = CMD_TEXT & 0xFF;
-						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
-						pa.Parameter[2].I = bitmapHandle;
-						pa.Parameter[3].I = 0;
-						pa.StringParameter = "Text";
-						pa.ExpectedStringParameter = true;
-						pa.ExpectedParameterCount = 5;
-						m_LineEditor->insertLine(line, pa);
-						m_LineEditor->selectLine(line);
-						pa.IdLeft = 0;
-						pa.ExpectedStringParameter = false;
-					}
-					else
-					{
+					auto addBitmapCommands = [&]() {
 						int mvx = screenLeft();
 						int mvy = screenTop();
 						int scl = screenScale();
@@ -2752,7 +2831,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						++line;
 						int lastVertex;
 
-						if (contentInfo && contentInfo->Converter == ContentInfo::ImageCoprocessor) {
+						if (contentInfo && contentInfo->Converter == ContentInfo::ImageCoprocessor)
+						{
 							pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
 							pa.Parameter[0].U = contentInfo->bitmapAddress();
 							m_LineEditor->insertLine(line, pa);
@@ -2762,7 +2842,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							lastVertex = -1;
 						}
 						else if (selection == BITMAPS && contentInfo && contentInfo->Converter == ContentInfo::Image
-							&& requirePaletteAddress(contentInfo))
+						    && requirePaletteAddress(contentInfo))
 						{
 							if (contentInfo->ImageFormat == PALETTED8)
 							{
@@ -2870,6 +2950,193 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 1;
 						m_LineEditor->insertLine(line, pa);
 						m_LineEditor->selectLine(line + lastVertex);
+					};
+					auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+					if (fileSuffix == "avi")
+					{
+						printf("Create commands for .avi content file\n");
+						pa.IdLeft = 0xFFFFFF00;
+						pa.IdRight = CMD_PLAYVIDEO & 0xFF;
+						pa.Parameter[0].I = 0;
+						pa.StringParameter = contentInfo->SourcePath.toStdString();
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 2;
+						m_LineEditor->insertLine(line, pa);
+						++line;
+					}
+					else if (contentInfo && contentInfo->Converter == ContentInfo::Font)
+					{
+						int mvx = screenLeft();
+						int mvy = screenTop();
+						int scl = screenScale();
+
+						pa.IdLeft = 0xFFFFFF00;
+						pa.IdRight = CMD_TEXT & 0xFF;
+						pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+						pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+						pa.Parameter[2].I = bitmapHandle;
+						pa.Parameter[3].I = 0;
+						pa.StringParameter = "Text";
+						pa.ExpectedStringParameter = true;
+						pa.ExpectedParameterCount = 5;
+						m_LineEditor->insertLine(line, pa);
+						m_LineEditor->selectLine(line);
+						pa.IdLeft = 0;
+						pa.ExpectedStringParameter = false;
+					}
+					else if (contentInfo && contentInfo->Converter == ContentInfo::Raw)
+					{
+						int mvx = screenLeft();
+						int mvy = screenTop();
+						int scl = screenScale();
+
+						auto addTextCommand = [&](QString text) {
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_TEXT & 0xFF;
+							pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+							pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+							pa.Parameter[2].I = bitmapHandle;
+							pa.Parameter[3].I = 0;
+							pa.StringParameter = text.toStdString();
+							pa.ExpectedStringParameter = true;
+							pa.ExpectedParameterCount = 5;
+							m_LineEditor->insertLine(line, pa);
+							++line;
+						};
+						auto readConvertedCharsFile = [](QString &file) {
+							QFileInfo fi(file);
+							if (!fi.exists())
+								return QString();
+							QString suffix = fi.suffix();
+							QFile f(file);
+							if (!f.open(QIODevice::ReadOnly))
+								return QString();
+							QString data = f.readAll();
+							f.close();
+							return data;
+						};
+						auto readConvertedCharsIndexFile = [](QString &file, int &first, int &last) {
+							QFileInfo fi(file);
+							if (!fi.exists())
+								return -1;
+							QString suffix = fi.suffix();
+							QFile f(file);
+							if (!f.open(QIODevice::ReadOnly))
+								return -1;
+							QTextStream in(&f);
+							while (!in.atEnd())
+							{
+								QString line = in.readLine();
+								QStringList listItem = line.split(QRegExp("\\s+"));
+								listItem.removeAll("");
+								if (listItem.count() >=3)
+								{
+									bool ok;
+									int indexNo = listItem.at(1).toInt(&ok, 10);
+									if (!ok)
+										continue;
+									last = indexNo;
+									if (first < 1)
+										first = indexNo;
+								}
+							}
+							f.close();
+						};
+						auto infoJson = QJsonObject();
+						if (contentInfo->MapInfoFileType.contains(fileSuffix))
+						{
+							QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
+							if (!fileType.isEmpty())
+							{
+								QString filePath = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.') + 1).append(fileType);
+								infoJson = getJsonInfo(filePath);
+							}
+						}
+						if (fileSuffix == "ram_g")
+						{
+							printf("Create commands for .ram_g content file\n");
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
+							pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+							pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+
+							if (infoJson.contains("object"))
+							{
+								auto obj = infoJson.value("object").toObject();
+								pa.Parameter[2].I = obj.value("offset").toInt();
+							}
+							else
+								pa.Parameter[2].I = 0;
+							pa.ExpectedParameterCount = 3;
+							m_LineEditor->insertLine(line, pa);
+							++line;
+						}
+						else if (fileSuffix == "flash")
+						{
+							printf("Create commands for .flash content file\n");
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_ANIMFRAME & 0xFF;
+							pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
+							pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+
+							if (infoJson.contains("object"))
+							{
+								auto obj = infoJson.value("object").toObject();
+								pa.Parameter[2].I = obj.value("offset").toInt();
+							}
+							else
+								pa.Parameter[2].I = 0;
+							pa.ExpectedParameterCount = 3;
+							m_LineEditor->insertLine(line, pa);
+							++line;
+						}
+						else if (fileSuffix == "xfont")
+						{
+							printf("Create commands for .xfont content file\n");
+							QString savedCharsFile = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.')).append("_converted_chars.txt");
+							QString data = readConvertedCharsFile(savedCharsFile);
+							addTextCommand(data.left(5));
+						}
+						else if (fileSuffix == "raw")
+						{
+							if (infoJson.contains("type"))
+							{
+								auto contentType = infoJson["type"].toString();
+								if (contentType == "bitmap")
+								{
+									printf("Create commands for .raw bitmap content file\n");
+									addBitmapCommands();	
+								}
+								else if (contentType == "legacyfont")
+								{
+									printf("Create commands for .raw legacy font content file\n");
+									QString savedCharsIndexFile = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.')).append("_converted_char_index.txt");
+									int first = 0, last = 0;
+									readConvertedCharsIndexFile(savedCharsIndexFile, first, last);
+									QString defaultText;
+									if (first != 0 && last != 0)
+									{
+										int defaultNoOfChar = 5;
+										int count = 0;
+										int index = first + 1;
+										while (count < defaultNoOfChar)
+										{
+											if (index == 34) // Character "
+												++index;
+											
+											defaultText += QChar(index);
+											++count;
+											++index;
+										}
+									}
+									addTextCommand(!defaultText.isEmpty() ? defaultText : "Text");
+								}
+							}
+						}
+					}
+					else
+					{
+						addBitmapCommands();
 					}
 					m_LineEditor->codeEditor()->endUndoCombine();
 					//m_MainWindow->undoStack()->endMacro();

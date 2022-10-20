@@ -67,6 +67,7 @@ public:
 	static const FlashMapInfo &parseFlashMap(const QString &flashMapPath);
 	static void convertFlashMap(QString &buildError, const QString &inFile, const QString &outName, const QString &mappedName);
 	static void release();
+	static int imageStringToEnum(char *imageString);
 
 }; /* class AssetConverter */
 

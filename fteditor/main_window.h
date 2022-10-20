@@ -111,6 +111,7 @@ public:
 	inline ContentManager *contentManager() { return m_ContentManager; }
 	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
+	inline QComboBox *projectFlash() { return m_ProjectFlash; }
 
 	inline const QString &applicationDataDir() { return m_ApplicationDataDir; }
 
