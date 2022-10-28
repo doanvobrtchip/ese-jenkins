@@ -2192,7 +2192,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 			while (!in.atEnd())
 			{
 				QString line = in.readLine();
-				QStringList listItem = line.split(QRegExp("\\s+"));
+                QStringList listItem = line.split(QRegularExpression("\\s+"));
 				if (listItem.at(0) != "name" && !listItem.at(0).isEmpty())
 				{
 					jo.insert(listItem.at(0), QJsonValue({ { "offset", listItem.at(1).toInt() }, { "length", listItem.at(2).toInt() } }));
@@ -3202,7 +3202,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							while (!in.atEnd())
 							{
 								QString line = in.readLine();
-								QStringList listItem = line.split(QRegExp("\\s+"));
+                                QStringList listItem = line.split(QRegularExpression("\\s+"));
 								listItem.removeAll("");
 								if (listItem.count() >=3)
 								{

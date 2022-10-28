@@ -35,6 +35,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QMimeData>
+#include <QRegularExpression>
 
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -730,7 +731,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			while (!in.atEnd())
 			{
 				QString line = in.readLine();
-				QStringList listItem = line.split(QRegExp("\\s+"));
+                QStringList listItem = line.split(QRegularExpression("\\s+"));
 				if (listItem.at(0) != "name" && !listItem.at(0).isEmpty())
 				{
 					jo.insert(listItem.at(0), QJsonValue({ { "offset", listItem.at(1).toInt() }, { "length", listItem.at(2).toInt() } }));
