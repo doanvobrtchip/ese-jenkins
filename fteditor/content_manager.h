@@ -101,6 +101,8 @@ struct ContentInfo
 
 	QTreeWidgetItem *View;
 
+	static const QMap<QString, QString> MapInfoFileType;
+
 	enum ConverterType // Do not change order.
 	{
 		Invalid,
