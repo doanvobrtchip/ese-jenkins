@@ -163,6 +163,7 @@ private:
 
 	bool m_isDrawAlignmentHorizontal;
 	bool m_isDrawAlignmentVertical;
+	bool m_isDrawAlignment;
 }; /* class InteractiveViewport */
 
 } /* namespace FTEDITOR */

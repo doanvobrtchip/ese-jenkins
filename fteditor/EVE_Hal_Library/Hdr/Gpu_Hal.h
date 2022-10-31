@@ -384,8 +384,8 @@ uint8_t    Gpu_Hal_FT4222_Wr(Gpu_Hal_Context_t *host, uint32_t hwraddr, const ui
 #endif
 
 #if defined(MSVC_PLATFORM) && defined(MSVC_PLATFORM_SPI_LIBMPSSE)
-uint8_t    Gpu_Hal_LIBMPSSE_Rd(Gpu_Hal_Context_t *host, uint8 *buffer, uint32 sizeToTransfer, uint32 *sizeTransfered);
-uint8_t    Gpu_Hal_LIBMPSSE_Wr(Gpu_Hal_Context_t *host, uint8 *buffer, uint32 sizeToTransfer, uint32 *sizeTransfered);
+uint8_t    Gpu_Hal_LIBMPSSE_Rd(Gpu_Hal_Context_t *host, uint8_t *buffer, uint32_t sizeToTransfer, uint32_t* sizeTransfered);
+uint8_t    Gpu_Hal_LIBMPSSE_Wr(Gpu_Hal_Context_t *host, uint8_t*buffer, uint32_t sizeToTransfer, uint32_t* sizeTransfered);
 #endif
 
 #if ( defined(FT900_PLATFORM) || defined(FT93X_PLATFORM) )

@@ -2404,7 +2404,7 @@ bool_t Gpu_Hal_FT4222_ComputeCLK(Gpu_Hal_Context_t *host, FT4222_ClockRate *sysc
 *                             0 - Failure
 * Author                   :
 ****************************************************************************/
-uint8_t    Gpu_Hal_LIBMPSSE_Rd(Gpu_Hal_Context_t *host, uint8 *buffer,uint32 sizeToTransfer, uint32 *sizeTransfered)
+uint8_t    Gpu_Hal_LIBMPSSE_Rd(Gpu_Hal_Context_t *host, uint8_t *buffer, uint32_t sizeToTransfer, uint32_t *sizeTransfered)
 {
 	uint32_t SizeRead;
 	FT_STATUS status;
@@ -2469,12 +2469,12 @@ uint8_t    Gpu_Hal_LIBMPSSE_Rd(Gpu_Hal_Context_t *host, uint8 *buffer,uint32 siz
 *                             0 - Failure
 * Author                   :
 ****************************************************************************/
-uint8_t    Gpu_Hal_LIBMPSSE_Wr(Gpu_Hal_Context_t *host, uint8 *buffer, uint32 sizeToTransfer, uint32 *sizeTransfered)
+uint8_t    Gpu_Hal_LIBMPSSE_Wr(Gpu_Hal_Context_t *host, uint8_t *buffer, uint32_t sizeToTransfer, uint32_t *sizeTransfered)
 {
 	uint32_t SizeWrite;
 	FT_STATUS status;
 	uint16_t per_write = 0;
-	uint32 options = SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES; //assume multi SPI write calls    
+	uint32_t options = SPI_TRANSFER_OPTIONS_SIZE_IN_BYTES; //assume multi SPI write calls    
 	uint8_t retcode = 1;        /* assume successful operation */
 
 	if (buffer == NULL || sizeToTransfer == 0)
