@@ -23,7 +23,7 @@ The folder structure is shown as below.
 
 +---Bin
 |    \---Msvc
-|        \--libMPSSE.a - MPSSE library file.
+|        \--libMPSSE.lib - MPSSE library file.
 |        \--ftd2xx.lib - FTD2XX library.
 |        \--LibFT4222.lib - FT4222 library file.
 |    \---Msvc_Emulator
