@@ -196,6 +196,17 @@ bool MainWindow::waitingCoprocessorAnimation()
 	return g_WaitingCoprocessorAnimation;
 }
 
+void MainWindow::updateProgressBars()
+{
+    m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
+
+    int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+    m_UtilizationDisplayList->setValue(utilizationDisplayList);
+    m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
+
+    m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
+}
+
 int *MainWindow::getDlCmd()
 {
 	// FIXME: Not very thread-safe, but not too critical
@@ -840,14 +851,6 @@ void MainWindow::popupTimeout()
 
 void MainWindow::frameQt()
 {
-	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
-
-	int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
-	m_UtilizationDisplayList->setValue(utilizationDisplayList);
-	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
-
-	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
-
 	if (/*!g_StreamingData && */g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
@@ -1390,6 +1393,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
 		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->setValue(0);
 		m_UtilizationBitmapHandleStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
@@ -1405,7 +1409,9 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationDisplayListStatus->setValue(0);
 		m_UtilizationDisplayListStatus->installEventFilter(this);
+
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1420,6 +1426,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationGlobalStatus->setValue(0);
 		m_UtilizationGlobalStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
@@ -1445,6 +1452,7 @@ void MainWindow::createDockWindows()
 			m_UtilizationDisplayList = new QProgressBar(this);
 			m_UtilizationDisplayList->setMinimum(0);
 			m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+			m_UtilizationDisplayList->setValue(0);
 			groupLayout->addWidget(m_UtilizationDisplayList);
 
 			group->setLayout(groupLayout);
@@ -1802,6 +1810,9 @@ void MainWindow::createDockWindows()
 	dlEditor()->codeEditor()->setKeyHandler(m_EmulatorViewport);
 	cmdEditor()->codeEditor()->setKeyHandler(NULL);
 	dlEditor()->codeEditor()->setKeyHandler(NULL);
+	connect(m_Inspector, SIGNAL(countHandleBitmapChanged(int)), this, SLOT(updateProgressBars()));
+	connect(m_ContentManager, SIGNAL(ramGlobalUsageChanged(int)), this, SLOT(updateProgressBars()));
+	connect(this, SIGNAL(utilizationDisplayListCmdChanged(int)), this, SLOT(updateProgressBars()));
 }
 
 void MainWindow::translateDockWindows()

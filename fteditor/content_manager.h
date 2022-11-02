@@ -419,6 +419,8 @@ private slots:
 private:
 	ContentManager(const ContentManager &);
 	ContentManager &operator=(const ContentManager &);
+signals:
+	void ramGlobalUsageChanged(int value);
 
 }; /* class ContentManager */
 
