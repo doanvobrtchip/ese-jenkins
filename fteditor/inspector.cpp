@@ -176,6 +176,7 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 
     m_ContextMenu = new QMenu(this);
     m_ContextMenu->addAction(m_CopyAct);
+	m_countHandleBitmap = 0;
 }
 
 Inspector::~Inspector()
@@ -311,6 +312,8 @@ void Inspector::frameEmu()
 
 	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
 		m_HandleUsage[handle] = handleUsage[handle];
+
+	setCountHandleUsage(countHandleUsage());
 }
 
 void Inspector::frameQt()
@@ -423,6 +426,15 @@ int Inspector::countHandleUsage()
 		if (m_HandleUsage[i])
 			++result;
 	return result;
+}
+
+void Inspector::setCountHandleUsage(int value)
+{
+	if (m_countHandleBitmap != value)
+	{
+		m_countHandleBitmap = value;
+		emit countHandleBitmapChanged(m_countHandleBitmap);
+	}
 }
 
 bool Inspector::eventFilter(QObject * watched, QEvent * event)

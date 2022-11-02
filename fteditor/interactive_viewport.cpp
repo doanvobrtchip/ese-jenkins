@@ -1949,7 +1949,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		{
 			m_MouseTouch = true;
 			// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
-		}
+        }
 		break;
 	case POINTER_TRACE: // trace
 		switch (e->button())
@@ -2918,6 +2918,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							++line;
 							pa.IdLeft = 0;
 						};
+						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							&& m_LineEditor->isCoprocessor()
 							&& (contentInfo->Converter == ContentInfo::Font))
@@ -2935,7 +2936,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						}
 						else if (contentInfo->Converter == ContentInfo::Raw)
 						{
-							auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 							if (fileSuffix == "xfont")
 							{
 								printf("Add handler for .glyph or .xfont content file\n");
@@ -2968,7 +2968,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						}
 						else
 						{
-							addBitmapHandler();
+							if (fileSuffix != "avi")
+							{ 
+								addBitmapHandler();
+							}
 							if (contentInfo->Converter == ContentInfo::Font)
 							{
 								pa.IdLeft = 0xFFFFFF00;
@@ -3126,20 +3129,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						m_LineEditor->insertLine(line, pa);
 						m_LineEditor->selectLine(line + lastVertex);
 					};
-					auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
-					if (fileSuffix == "avi")
-					{
-						printf("Create commands for .avi content file\n");
-						pa.IdLeft = 0xFFFFFF00;
-						pa.IdRight = CMD_PLAYVIDEO & 0xFF;
-						pa.Parameter[0].I = 0;
-						pa.StringParameter = contentInfo->SourcePath.toStdString();
-						pa.ExpectedStringParameter = true;
-						pa.ExpectedParameterCount = 2;
-						m_LineEditor->insertLine(line, pa);
-						++line;
-					}
-					else if (contentInfo && contentInfo->Converter == ContentInfo::Font)
+					if (contentInfo && contentInfo->Converter == ContentInfo::Font)
 					{
 						int mvx = screenLeft();
 						int mvy = screenTop();
@@ -3193,11 +3183,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						auto readConvertedCharsIndexFile = [](QString &file, int &first, int &last) {
 							QFileInfo fi(file);
 							if (!fi.exists())
-								return -1;
-							QString suffix = fi.suffix();
+								return;
 							QFile f(file);
 							if (!f.open(QIODevice::ReadOnly))
-								return -1;
+								return;
 							QTextStream in(&f);
 							while (!in.atEnd())
 							{
@@ -3218,6 +3207,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							f.close();
 						};
 						auto infoJson = QJsonObject();
+						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if (contentInfo->MapInfoFileType.contains(fileSuffix))
 						{
 							QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
@@ -3307,6 +3297,26 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 									addTextCommand(!defaultText.isEmpty() ? defaultText : "Text");
 								}
 							}
+						}
+					}
+					else if (contentInfo)
+					{
+						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+						if (fileSuffix == "avi")
+						{
+							printf("Create commands for .avi content file\n");
+							pa.IdLeft = 0xFFFFFF00;
+							pa.IdRight = CMD_PLAYVIDEO & 0xFF;
+							pa.Parameter[0].I = 0;
+							pa.StringParameter = contentInfo->SourcePath.toStdString();
+							pa.ExpectedStringParameter = true;
+							pa.ExpectedParameterCount = 2;
+							m_LineEditor->insertLine(line, pa);
+							++line;
+						}
+						else
+						{
+							addBitmapCommands();
 						}
 					}
 					else
