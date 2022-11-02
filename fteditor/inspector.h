@@ -64,6 +64,7 @@ public:
 	void frameQt();
 
 	int countHandleUsage();
+	void setCountHandleUsage(int value);
 
 	bool eventFilter(QObject* watched, QEvent* event);
 
@@ -94,10 +95,14 @@ private:
 
     QMenu   *m_ContextMenu;
     QAction *m_CopyAct;
+	int m_countHandleBitmap;
 
 private:
 	Inspector(const Inspector &);
 	Inspector &operator=(const Inspector &);
+
+signals:
+	void countHandleBitmapChanged(int value);
 
 }; /* class Inspector */
 

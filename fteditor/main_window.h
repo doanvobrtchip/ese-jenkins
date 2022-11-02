@@ -217,12 +217,11 @@ private slots:
 
 	void openRecentProject();
 
-	
-
 public slots:
 	void popupTimeout();
 	void actResetEmulator();
 	void propertyErrorSet(QString info);
+	void updateProgressBars();
 
 private:
 	void updateInitialization(bool visible);
@@ -425,6 +424,8 @@ private:
 	friend class ProjectFlashCommand;
 
 	QLabel *infoLabel;
+signals:
+	void utilizationDisplayListCmdChanged(int value);
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

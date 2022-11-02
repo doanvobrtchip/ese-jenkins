@@ -2405,7 +2405,10 @@ void ContentManager::recalculateOverlapMemoryInternal()
 		}
 	}
 
-	g_RamGlobalUsage = globalUsage;
+	if (g_RamGlobalUsage != globalUsage) { 
+		g_RamGlobalUsage = globalUsage;
+		emit ramGlobalUsageChanged(g_RamGlobalUsage);
+	}
 }
 
 void ContentManager::recalculateOverlapFlashInternal()
