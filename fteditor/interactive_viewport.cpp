@@ -508,7 +508,6 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 #define COLOR_CLOSE_FIT_HORIZONTALLY Qt::darkYellow
 #define DISTANCE 8
 #define AUTO_ALIGN_DISTANCE 4
-
 			int x, y;
 			DlParsed tempParsed;
 			DlState tempState;
@@ -518,19 +517,19 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				CMD_CLOCK, CMD_SPINNER, CMD_TRACK, CMD_DIAL, CMD_NUMBER,
 				CMD_SKETCH, CMD_CSKETCH, CMD_ANIMFRAME, CMD_ANIMFRAMERAM
 			};
-            QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II};
+			QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II };
 
-            auto autoAlignVertical = false, autoAlignHorizontal = false;
+			auto autoAlignVertical = false, autoAlignHorizontal = false;
 			auto drawVerticalAlignment = [&](int x1, int x2) {
 				p.setPen(QPen(QBrush(x1 == x2 ? COLOR_FIT_VERTICALLY : COLOR_CLOSE_FIT_VERTICALLY), 1.0, Qt::DashLine));
-                if (abs(x1 - x2) > DISTANCE)
+				if (abs(x1 - x2) > DISTANCE)
 					return false;
 				DRAWLINE(x2, 0, x2, vsize());
 				return true;
 			};
 			auto drawHorizontalAlignment = [&](int y1, int y2) {
 				p.setPen(QPen(QBrush(y1 == y2 ? COLOR_FIT_HORIZONTALLY : COLOR_CLOSE_FIT_HORIZONTALLY), 1.0, Qt::DashLine));
-                if (abs(y1 - y2) > DISTANCE)
+				if (abs(y1 - y2) > DISTANCE)
 					return false;
 				DRAWLINE(0, y2, hsize(), y2);
 				return true;
@@ -543,128 +542,173 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 					minDelta = newDelta;
 				}
 			};
-            auto getClosestVertical = [&](int &minDelta, int &closest) {
-                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
-                {
+			auto getClosestVertical = [&](int &minDelta, int &closest) {
+				if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
+				{
 					int tempX = tempParsed.Parameter[0].I >> tempState.Graphics.VertexFormat;
 					tempX += tempState.Graphics.VertexTranslateX >> 4;
-                    checkClosest(closest, minDelta, x, tempX);
-                    return;
-                }
-                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
-                {
+					checkClosest(closest, minDelta, x, tempX);
+					return;
+				}
+				if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+				{
 					int tempX = tempParsed.Parameter[0].U;
 					tempX += tempState.Graphics.VertexTranslateX >> 4;
-                    checkClosest(closest, minDelta, x, tempX);
-                    return;
-                }
-                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I / 2); //mid
-                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I); //left
-                checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I); //right
-            };
-            auto getClosestHorizontal = [&](int &minDelta, int &closest) {
-                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
-                {
+					checkClosest(closest, minDelta, x, tempX);
+					return;
+				}
+
+				bool tempM_WidgetWH = false;
+				switch (tempParsed.IdRight | 0xFFFFFF00)
+				{
+				case CMD_BUTTON:
+				case CMD_KEYS:
+				case CMD_PROGRESS:
+				case CMD_SLIDER:
+				case CMD_SCROLLBAR:
+				case CMD_TRACK:
+				case CMD_SKETCH:
+				case CMD_CSKETCH:
+					tempM_WidgetWH = true;
+				}
+				if (tempM_WidgetWH)
+				{
+					checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I / 2); //mid
+				}
+				checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I); //left
+				if (tempM_WidgetWH)
+				{
+					checkClosest(closest, minDelta, x, tempParsed.Parameter[0].I + tempParsed.Parameter[2].I); //right
+				}
+			};
+			auto getClosestHorizontal = [&](int &minDelta, int &closest) {
+				if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2F)
+				{
 					int tempY = tempParsed.Parameter[1].I >> tempState.Graphics.VertexFormat;
 					tempY += tempState.Graphics.VertexTranslateY >> 4;
-                    checkClosest(closest, minDelta, y, tempY);
-                    return;
-                }
-                if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
-                {
+					checkClosest(closest, minDelta, y, tempY);
+					return;
+				}
+				if (tempParsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+				{
 					int tempY = tempParsed.Parameter[1].U;
 					tempY += tempState.Graphics.VertexTranslateY >> 4;
-                    checkClosest(closest, minDelta, y, tempY);
-                    return;
-                }
-                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I / 2); //mid
-                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I); //top
-                checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I); //bottom
-            };
+					checkClosest(closest, minDelta, y, tempY);
+					return;
+				}
 
-            for (int i = 0; i < m_LineEditor->getLineCount(); i++)
+				bool tempM_WidgetWH = false;
+				switch (tempParsed.IdRight | 0xFFFFFF00)
+				{
+				case CMD_BUTTON:
+				case CMD_KEYS:
+				case CMD_PROGRESS:
+				case CMD_SLIDER:
+				case CMD_SCROLLBAR:
+				case CMD_TRACK:
+				case CMD_SKETCH:
+				case CMD_CSKETCH:
+					tempM_WidgetWH = true;
+				}
+				if (tempM_WidgetWH)
+				{
+					checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I / 2); //mid
+				}
+				checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I); //top
+				if (tempM_WidgetWH)
+				{
+					checkClosest(closest, minDelta, y, tempParsed.Parameter[1].I + tempParsed.Parameter[3].I); //bottom
+				}
+			};
+
+			for (int i = 0; i < m_LineEditor->getLineCount(); i++)
 			{
 				if (i == m_LineNumber)
 					continue;
 				tempParsed = m_LineEditor->getLine(i);
 				auto tempRightID = tempParsed.IdRight | 0xFFFFFF00;
-                if (!dragableItems.contains(tempRightID) && !otherItems.contains(tempParsed.IdLeft))
+				if (!dragableItems.contains(tempRightID) && !otherItems.contains(tempParsed.IdLeft))
 					continue;
 
 				tempState = m_LineEditor->getState(i);
-                int selPos = 0 , closestOfSelPos = 0 , closestOfPos = -1;
-                int minDelta = -1, delta = -1;
-                auto setSelPos = [&] (int pos, int closestOfPos, int delta) {
-                    selPos = pos;
-                    closestOfSelPos = closestOfPos;
-                    minDelta = delta;
+				int selPos = 0, closestOfSelPos = 0, closestOfPos = -1;
+				int minDelta = -1, delta = -1;
+				auto setSelPos = [&](int pos, int closestOfPos, int delta) {
+					selPos = pos;
+					closestOfSelPos = closestOfPos;
+					minDelta = delta;
+				};
 
-                };
-
-                if (m_WidgetWH) {
-                    x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I / 2; //mid of the main item
-                    getClosestVertical(delta, closestOfPos);
-                    setSelPos(x, closestOfPos, delta);
-                }
-                if (true) {
-                    x = specX != -1 ? specX : parsed.Parameter[0].I; //left of the main item
-                    getClosestVertical(delta, closestOfPos);
-                    if (delta < minDelta || minDelta < 0) {
-                        setSelPos(x, closestOfPos, delta);
-                    }
-                }
-                if (m_WidgetWH)
-                {
-                    x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I; //right of the main item
-                    getClosestVertical(delta, closestOfPos);
-                    if (delta < minDelta || minDelta < 0) {
-                        setSelPos(x, closestOfPos, delta);
-                    }
-                }
-                // Auto align vertical
-                if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignVertical)
-                {
-                    int delta1 = closestOfSelPos - selPos;
-                    selPos = closestOfSelPos;
-                    autoAlignVertical = true;
-                    mouseMoveEvent(m_MovingLastX + delta1, m_MovingLastY);
-                }
-                drawVerticalAlignment(selPos, closestOfSelPos);
-
-                delta = -1;
-                closestOfPos = 0;
-                setSelPos(0, -1, -1);
-                if (m_WidgetWH) {
-                    y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I / 2; //mid of the main item
-                    getClosestHorizontal(delta, closestOfPos);
-                    setSelPos(y, closestOfPos, delta);
-                }
-                if (true) {
-                    y = specY != -1 ? specY : parsed.Parameter[1].I; //left of the main item
-                    getClosestHorizontal(delta, closestOfPos);
+				if (m_WidgetWH)
+				{
+					x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I / 2; //mid of the main item
+					getClosestVertical(delta, closestOfPos);
+					setSelPos(x, closestOfPos, delta);
+				}
+				if (true)
+				{
+					x = specX != -1 ? specX : parsed.Parameter[0].I; //left of the main item
+					getClosestVertical(delta, closestOfPos);
 					if (delta < minDelta || minDelta < 0)
 					{
-                        setSelPos(y, closestOfPos, delta);
-                    }
-                }
-                if (m_WidgetWH)
-                {
-                    y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I; //right of the main item
-                    getClosestHorizontal(delta, closestOfPos);
+						setSelPos(x, closestOfPos, delta);
+					}
+				}
+				if (m_WidgetWH)
+				{
+					x = specX != -1 ? specX : parsed.Parameter[0].I + parsed.Parameter[2].I; //right of the main item
+					getClosestVertical(delta, closestOfPos);
 					if (delta < minDelta || minDelta < 0)
 					{
-                        setSelPos(y, closestOfPos, delta);
-                    }
-                }
-                // Auto align horizontal
-                if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignHorizontal)
-                {
-                    int delta2 = closestOfSelPos - selPos;
-                    selPos = closestOfSelPos;
-                    autoAlignHorizontal = true;
-                    mouseMoveEvent(m_MovingLastX, m_MovingLastY + delta2);
-                }
-                drawHorizontalAlignment(selPos, closestOfSelPos);
+						setSelPos(x, closestOfPos, delta);
+					}
+				}
+				// Auto align vertical
+				if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignVertical)
+				{
+					int delta1 = closestOfSelPos - selPos;
+					selPos = closestOfSelPos;
+					autoAlignVertical = true;
+					mouseMoveEvent(m_MovingLastX + delta1, m_MovingLastY);
+				}
+				drawVerticalAlignment(selPos, closestOfSelPos);
+
+				delta = -1;
+				closestOfPos = 0;
+				setSelPos(0, -1, -1);
+				if (m_WidgetWH)
+				{
+					y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I / 2; //mid of the main item
+					getClosestHorizontal(delta, closestOfPos);
+					setSelPos(y, closestOfPos, delta);
+				}
+				if (true)
+				{
+					y = specY != -1 ? specY : parsed.Parameter[1].I; //left of the main item
+					getClosestHorizontal(delta, closestOfPos);
+					if (delta < minDelta || minDelta < 0)
+					{
+						setSelPos(y, closestOfPos, delta);
+					}
+				}
+				if (m_WidgetWH)
+				{
+					y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I; //right of the main item
+					getClosestHorizontal(delta, closestOfPos);
+					if (delta < minDelta || minDelta < 0)
+					{
+						setSelPos(y, closestOfPos, delta);
+					}
+				}
+				// Auto align horizontal
+				if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignHorizontal)
+				{
+					int delta2 = closestOfSelPos - selPos;
+					selPos = closestOfSelPos;
+					autoAlignHorizontal = true;
+					mouseMoveEvent(m_MovingLastX, m_MovingLastY + delta2);
+				}
+				drawHorizontalAlignment(selPos, closestOfSelPos);
 			}
 		};
 		if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
