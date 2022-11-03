@@ -1,30 +1,30 @@
 Version 4.4.0
 Beta
 Features updates:
-- Improve format string example
-- Auto detect and load the contents
-- Widget alignment guide line
-- Generate coprocessor commands once user drop an content item
+• Improve format string example
+• Auto detect and load the contents
+• Widget alignment guide line
+• Generate coprocessor commands once user drop an content item
 
 Resolved issues:
-- Failed to build the exported project using MSVC
-- Crash in a special PC with Qt6
+• Failed to build the exported project using MSVC
+• Crash in a special PC with Qt6
 
 =======================
 Version 4.4.0
 Alpha
 Features updates:
-- Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
-- Improve zoom-in precision
-- Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
-- Enable drag and drop to open an existing project in ESE
-- Update LibFT4222-64.dll to remove the dependency
-- Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
-- Give more explanation for the escape character usage in CMD_TEXT
+• Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
+• Improve zoom-in precision
+• Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
+• Enable drag and drop to open an existing project in ESE
+• Update LibFT4222-64.dll to remove the dependency
+• Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
+• Give more explanation for the escape character usage in CMD_TEXT
 
 Resolved issues:
-- Removed glitched bitmap line in BT817 and BT818
-- Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
+• Removed glitched bitmap line in BT817 and BT818
+• Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
 
 =======================
 Version 4.3.0
