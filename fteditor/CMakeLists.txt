@@ -1,3 +1,4 @@
+project(fteditor LANGUAGES CXX)
 
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
@@ -183,3 +184,27 @@ endif()
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 
+#Windeployqt
+if(Qt6_FOUND)
+    get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+else()
+    get_target_property(QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+endif()
+get_filename_component(QT_BIN_DIR "${QMAKE_EXECUTABLE}" DIRECTORY)
+set(QT_DEPLOYMENT "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/qt-deployment")
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+set(QT_DEPLOYMENT_COMMAND_OPTIONS
+    $<$<CONFIG:Release>:"--release">$<$<CONFIG:Debug>:"--debug">
+    --verbose 0
+    --no-system-d3d-compiler
+    --no-translations
+    --no-compiler-runtime
+    --force
+    )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E env PATH="${QT_BIN_DIR}" "${WINDEPLOYQT_EXECUTABLE}"
+    "$<TARGET_FILE:${PROJECT_NAME}>" ${QT_DEPLOYMENT_COMMAND_OPTIONS}
+    --dir ${QT_DEPLOYMENT}
+    COMMENT "Running windeployqt ${QT_DEPLOYMENT}..."
+    )
