@@ -59,7 +59,7 @@ void EmulatorNavigator::mouseMoveEvent(QMouseEvent *e)
 		int mx = e->pos().x();
 		int my = e->pos().y();
 		const QPixmap &pixmap = m_EmulatorViewport->getPixMap();
-		int x, y, w, h;
+		int x = 0, y = 0 , w = 1, h = 1;
 		calcpos(*this, x, y, w, h, pixmap);
 		int ex = (((mx - x) * pixmap.width() / w) - (pixmap.width() / 2)) * 16;
 		int ey = (((my - y) * pixmap.height() / h) - (pixmap.height() / 2)) * 16;
