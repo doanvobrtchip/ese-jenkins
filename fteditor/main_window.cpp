@@ -90,8 +90,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_common.h"
 #include "constant_mapping_flash.h"
 
-namespace FTEDITOR
-{
+namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
 extern BT8XXEMU_Flash *g_Flash;
@@ -198,13 +197,13 @@ bool MainWindow::waitingCoprocessorAnimation()
 
 void MainWindow::updateProgressBars()
 {
-    m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
+	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
 
-    int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
-    m_UtilizationDisplayList->setValue(utilizationDisplayList);
-    m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
+	int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+	m_UtilizationDisplayList->setValue(utilizationDisplayList);
+	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
 
-    m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
+	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
 }
 
 int *MainWindow::getDlCmd()
@@ -218,7 +217,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_MinFlashType(-1)
     , m_AddRecentProjectFlag(false)
     , m_UndoStack(NULL)
-	, m_Settings(QStringLiteral("Bridgetek"), QStringLiteral("EVE Screen Editor"))
+    , m_Settings(QStringLiteral("Bridgetek"), QStringLiteral("EVE Screen Editor"))
     , m_EmulatorViewport(NULL)
     , m_DlEditor(NULL)
     , m_DlEditorDock(NULL)
@@ -286,7 +285,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_PixelColor(NULL)
     , m_CoprocessorBusy(NULL)
     , m_TemporaryDir(NULL)
-	, m_LastProjectDir(QString())
+    , m_LastProjectDir(QString())
 {
 	setObjectName("MainWindow");
 	setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
@@ -328,7 +327,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createToolBars();
 	createStatusBar();
 
-	
 	loadRecentProject();
 
 	m_EmulatorViewport = new InteractiveViewport(this);
@@ -844,14 +842,14 @@ void MainWindow::frameEmu()
 void MainWindow::popupTimeout()
 {
 	m_ErrorLabel->setText("<b>Co-processor engine timeout</b><br><br>"
-		"The co-processor is taking longer than expected to process this command");
+	                      "The co-processor is taking longer than expected to process this command");
 	m_ErrorFrame->setVisible(true);
 	g_CoprocessorFrameSuccess = false;
 }
 
 void MainWindow::frameQt()
 {
-	if (/*!g_StreamingData && */g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
+	if (/*!g_StreamingData && */ g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
 		if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
@@ -882,7 +880,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */!m_ContentManager->getContentCount()))
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */ !m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}
@@ -1150,8 +1148,6 @@ void MainWindow::createMenus()
 	// m_ToolsMenu->addAction(m_SaveScreenshotAct);
 	m_ToolsMenu->addAction(m_ImportDisplayListAct);
 
-	
-
 #if _DEBUG
 	m_ToolsMenu->addAction(m_DisplayListFromIntegers);
 #endif
@@ -1382,7 +1378,7 @@ void MainWindow::createDockWindows()
 		QPalette progressPalette = palette();
 		progressPalette.setColor(QPalette::Link, QColor(96, 192, 48));
 		progressPalette.setColor(QPalette::Highlight, QColor(96, 192, 48));
-		
+
 		m_UtilizationBitmapHandleStatus = new QProgressBar(statusBar());
 		m_UtilizationBitmapHandleStatus->setStyle(progressStyle);
 		m_UtilizationBitmapHandleStatus->setPalette(progressPalette);
@@ -1810,8 +1806,8 @@ void MainWindow::createDockWindows()
 	connect(this, SIGNAL(utilizationDisplayListCmdChanged(int)), this, SLOT(updateProgressBars()));
 	connect(m_Inspector, SIGNAL(countHandleBitmapChanged(int)), this, SLOT(updateProgressBars()));
 	connect(m_ContentManager, SIGNAL(ramGlobalUsageChanged(int)), this, SLOT(updateProgressBars()));
-	connect(m_ContentManager, SIGNAL(busyNow(QObject *)),this, SLOT(appendBusyList(QObject *)));
-	connect(m_ContentManager, SIGNAL(freeNow(QObject *)),this, SLOT(removeBusyList(QObject *)));
+	connect(m_ContentManager, SIGNAL(busyNow(QObject *)), this, SLOT(appendBusyList(QObject *)));
+	connect(m_ContentManager, SIGNAL(freeNow(QObject *)), this, SLOT(removeBusyList(QObject *)));
 }
 
 void MainWindow::translateDockWindows()
@@ -2045,7 +2041,7 @@ public:
 	    , m_SpinBox(spinbox)
 	{
 	}
-	virtual ~HSizeCommand() {}
+	virtual ~HSizeCommand() { }
 	virtual void undo()
 	{
 		g_HSize = m_OldHSize;
@@ -2087,7 +2083,7 @@ public:
 	    , m_SpinBox(spinbox)
 	{
 	}
-	virtual ~VSizeCommand() {}
+	virtual ~VSizeCommand() { }
 	virtual void undo()
 	{
 		g_VSize = m_OldVSize;
@@ -2153,7 +2149,7 @@ public:
 	    , m_SpinBox(spinbox)
 	{
 	}
-	virtual ~RotateCommand() {}
+	virtual ~RotateCommand() { }
 	virtual void undo()
 	{
 		g_Rotate = m_OldRotate;
@@ -2319,10 +2315,10 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::updateWindowTitle()
 {
-	QString titleSuffix =  QString("EVE Screen Editor v%1 [Build Time: %2 - %3]")
-		.arg(STR_PRODUCTVERSION)
-		.arg(__DATE__)
-		.arg(__TIME__);
+	QString titleSuffix = QString("EVE Screen Editor v%1 [Build Time: %2 - %3]")
+	                          .arg(STR_PRODUCTVERSION)
+	                          .arg(__DATE__)
+	                          .arg(__TIME__);
 	if (!m_CloseProjectAct->isEnabled())
 	{
 		setWindowTitle(titleSuffix);
@@ -2330,9 +2326,9 @@ void MainWindow::updateWindowTitle()
 	else
 	{
 		QString title = QString("%1%2 - %3 - ")
-			.arg(QString(m_CleanUndoStack ? "" : "*"))
-			.arg(m_CurrentFile.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFile).completeBaseName())
-			.arg(QDir::currentPath());
+		                    .arg(QString(m_CleanUndoStack ? "" : "*"))
+		                    .arg(m_CurrentFile.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFile).completeBaseName())
+		                    .arg(QDir::currentPath());
 		setWindowTitle(title + titleSuffix);
 	}
 }
@@ -2510,8 +2506,8 @@ bool MainWindow::checkAndPromptFlashPath(const QString &filePath)
 			// This is technically not an issue for FTEDITOR to handle,
 			// internally this will restrict the loaded content to the available size.
 			// It is permissible to let the user continue and explore the flash with the missing content
-			int ans = QMessageBox::critical(this, tr("Flash image is too big"), 
-				tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
+			int ans = QMessageBox::critical(this, tr("Flash image is too big"),
+			    tr("Flash image is too big.\nUnable to load completely."), QMessageBox::Abort, QMessageBox::Ignore);
 			return ans == QMessageBox::Ignore;
 		}
 		else if (flashIntf != g_CurrentFlash)
@@ -2790,8 +2786,7 @@ void postProcessEditor(DlEditor *editor)
 				{
 				case CMD_BGCOLOR:
 				case CMD_FGCOLOR:
-				case CMD_GRADCOLOR:
-				{
+				case CMD_GRADCOLOR: {
 					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
 					if (pa.ExpectedParameterCount == 3) // Old RGB, upgrade
 					{
@@ -2804,8 +2799,7 @@ void postProcessEditor(DlEditor *editor)
 					}
 				}
 				break;
-				case CMD_GRADIENT:
-				{
+				case CMD_GRADIENT: {
 					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
 					if (pa.ExpectedParameterCount == 10) // Old RGB, upgrade
 					{
@@ -2840,7 +2834,7 @@ QString MainWindow::getFileDialogPath()
 
 	if (m_LastProjectDir.isEmpty())
 		m_LastProjectDir = qApp->applicationDirPath();
-	
+
 	return m_LastProjectDir;
 }
 
@@ -2886,7 +2880,6 @@ void MainWindow::openFile(const QString &fileName)
 
 	// Reset editors to their default state
 	clearEditor();
-
 
 	// Load the data
 	bool loadOk = false;
@@ -3015,11 +3008,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 		if (!flashName.isEmpty())
 			setFlashFileNameToLabel(flashName);
 	}
-	else if ((watched == m_UtilizationBitmapHandleStatus ||
-			  watched == m_UtilizationDisplayListStatus ||
-		      watched == m_UtilizationGlobalStatus) &&
-		     (event->type() == QEvent::HoverMove || 
-			  event->type() == QEvent::HoverLeave))
+	else if ((watched == m_UtilizationBitmapHandleStatus || watched == m_UtilizationDisplayListStatus || watched == m_UtilizationGlobalStatus) && (event->type() == QEvent::HoverMove || event->type() == QEvent::HoverLeave))
 	{
 		bool isShowExact = (event->type() == QEvent::HoverMove);
 		showExactNumberOfResourceWhenMouseHover(watched, isShowExact);
@@ -3043,7 +3032,8 @@ void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
-	if (event->mimeData()->hasUrls()) {
+	if (event->mimeData()->hasUrls())
+	{
 		foreach (QUrl url, event->mimeData()->urls())
 		{
 			if (url.toString().endsWith(".ese"))
@@ -3055,7 +3045,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 			else if (QDir d(url.toLocalFile()); d.exists())
 			{
 				// find only one file which ended by ".ese"
-				if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1) {
+				if (QStringList s = d.entryList({ "*.ese" }, QDir::Files); s.count() == 1)
+				{
 					event->setDropAction(Qt::LinkAction);
 					event->accept();
 					return;
@@ -3070,9 +3061,10 @@ void MainWindow::dropEvent(QDropEvent *event)
 {
 	QList<QUrl> urls = event->mimeData()->urls();
 
-	foreach(QUrl url, urls)
+	foreach (QUrl url, urls)
 	{
-		if (url.toString().endsWith(".ese")) {
+		if (url.toString().endsWith(".ese"))
+		{
 			event->acceptProposedAction();
 			actOpen(url.toLocalFile());
 			return;
@@ -3184,12 +3176,13 @@ void MainWindow::actSaveAs()
 		if (fileName.isEmpty())
 			return;
 
-	    QDir dir(fileName);
+		QDir dir(fileName);
 		dir.cdUp();
 
 		dirPath = dir.absolutePath();
 
-		if (QFileInfo(fileName).baseName().length() > 20) {
+		if (QFileInfo(fileName).baseName().length() > 20)
+		{
 			QMessageBox::warning(this, tr("Save Project"), tr("Project name must not exceed 20 characters!"));
 			continue;
 		}
@@ -3294,13 +3287,13 @@ void MainWindow::actSaveAs()
 	updateWindowTitle();
 }
 
-#define DUMP_VERSION_FT80X			(100)
-#define DUMP_VERSION_FT81X		    (110)
-#define DUMP_VERSION_BT81X		    (110)
-#define DUMP_256K				    (256 * 1024)
-#define DUMP_1K						(1024)
-#define DUMP_8K						(8 * 1024)
-#define DUMP_1024K					(1024 * 1024)
+#define DUMP_VERSION_FT80X (100)
+#define DUMP_VERSION_FT81X (110)
+#define DUMP_VERSION_BT81X (110)
+#define DUMP_256K (256 * 1024)
+#define DUMP_1K (1024)
+#define DUMP_8K (8 * 1024)
+#define DUMP_1024K (1024 * 1024)
 
 void MainWindow::actImport()
 {
@@ -3338,7 +3331,7 @@ void MainWindow::actImport()
 
 	QDataStream in(&file);
 	bool loadOk = false;
-		
+
 	const size_t headersz = 6;
 	uint32_t header[headersz];
 	int s = in.readRawData(static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz);
@@ -3381,7 +3374,6 @@ void MainWindow::actImport()
 		}
 	}
 
-
 	if (!loadOk)
 	{
 		clearEditor();
@@ -3397,14 +3389,13 @@ void MainWindow::actImport()
 	m_Toolbox->setEditorLine(m_DlEditor, 0);
 }
 
-bool MainWindow::importDumpFT80X(QDataStream & in)
+bool MainWindow::importDumpFT80X(QDataStream &in)
 {
 	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-	
 
 	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K);
 	if (s != DUMP_256K)
-	{		
+	{
 		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_G"));
 		return false;
 	}
@@ -3432,13 +3423,13 @@ bool MainWindow::importDumpFT80X(QDataStream & in)
 	return true;
 }
 
-bool MainWindow::importDumpFT81X(QDataStream & in)
+bool MainWindow::importDumpFT81X(QDataStream &in)
 {
 	char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
-	
+
 	int s = in.readRawData(&ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K);
 	if (s != DUMP_1024K)
-	{	
+	{
 		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_G"));
 		return false;
 	}
@@ -3452,13 +3443,13 @@ bool MainWindow::importDumpFT81X(QDataStream & in)
 		QMessageBox::critical(this, tr("Import .eve_dump"), tr("Incomplete RAM_DL"));
 		return false;
 	}
-		
+
 	return true;
 }
 
-bool MainWindow::importDumpBT81X(QDataStream & in)
+bool MainWindow::importDumpBT81X(QDataStream &in)
 {
-	return importDumpFT81X(in); 
+	return importDumpFT81X(in);
 }
 
 QString MainWindow::readLastProjectDir()
@@ -3509,15 +3500,18 @@ void MainWindow::actExport()
 	if (FTEDITOR_CURRENT_DEVICE <= FTEDITOR_FT801)
 	{
 		header[0] = DUMP_VERSION_FT80X;
-		
-		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
-		
+
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz))
+			return;
+
 		// <256K of main RAM_G>
-		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K)) return;
-		
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_256K))
+			return;
+
 		// <1K of main RAM_PAL>
-		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], DUMP_1K)) return;
-		
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_PAL)], DUMP_1K))
+			return;
+
 		// <8K of DL RAM> setup display list
 		m_DlEditor->lockDisplayList();
 		if (!writeDumpData(&out, static_cast<const char *>(static_cast<const void *>(BT8XXEMU_getDisplayList(g_Emulator))), DUMP_8K))
@@ -3527,10 +3521,12 @@ void MainWindow::actExport()
 	else if (FTEDITOR_CURRENT_DEVICE < FTEDITOR_BT815)
 	{
 		header[0] = DUMP_VERSION_FT81X;
-		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz))
+			return;
 
 		// <1024K of main RAM>
-		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K))
+			return;
 
 		// <8K of DL RAM>
 		m_DlEditor->lockDisplayList();
@@ -3541,10 +3537,12 @@ void MainWindow::actExport()
 	else
 	{
 		header[0] = DUMP_VERSION_BT81X;
-		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz)) return;
+		if (!writeDumpData(&out, static_cast<char *>(static_cast<void *>(header)), sizeof(uint32_t) * headersz))
+			return;
 
 		// <1024K of main RAM>
-		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K)) return;
+		if (!writeDumpData(&out, &ram[addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G)], DUMP_1024K))
+			return;
 
 		// <8K of DL RAM>
 		m_DlEditor->lockDisplayList();
@@ -3562,7 +3560,7 @@ void MainWindow::actExport()
 	return;
 }
 
-bool MainWindow::writeDumpData(QDataStream * ds, const char* data, int size)
+bool MainWindow::writeDumpData(QDataStream *ds, const char *data, int size)
 {
 	int res = ds->writeRawData(data, size);
 	if (res != size)
@@ -3726,7 +3724,7 @@ public:
 	    , m_MainWindow(mainWindow)
 	{
 	}
-	virtual ~ProjectDeviceCommand() {}
+	virtual ~ProjectDeviceCommand() { }
 	virtual void undo()
 	{
 		m_MainWindow->changeEmulatorInternal(m_OldProjectDevice, FTEDITOR_CURRENT_FLASH);
@@ -3772,7 +3770,7 @@ public:
 	    , m_MainWindow(mainWindow)
 	{
 	}
-	virtual ~ProjectFlashCommand() {}
+	virtual ~ProjectFlashCommand() { }
 	virtual void undo()
 	{
 		m_MainWindow->changeEmulatorInternal(FTEDITOR_CURRENT_DEVICE, m_OldProjectFlash);
@@ -3907,7 +3905,7 @@ void MainWindow::saveDisplayListToTextFile(bool isBigEndian)
 	if (f.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		QTextStream ts(&f);
-		
+
 		ts << m_Inspector->getDisplayListContent(isBigEndian);
 		ts.flush();
 		f.close();
@@ -3969,7 +3967,7 @@ void MainWindow::about()
 {
 	QStringList versionLines = QString::fromLatin1(BT8XXEMU_version()).split('\n');
 	QString emulatorVersion = versionLines.length() ? versionLines[0].trimmed() : QString();
-	   	 
+
 	QMessageBox msgBox(this);
 
 	msgBox.setWindowTitle(QString(tr("About EVE Screen Editor v%1")).arg(STR_PRODUCTVERSION));
@@ -3979,12 +3977,13 @@ void MainWindow::about()
 	    "<br>"
 	    "Copyright (C) 2016-2022  Bridgetek Pte Ltd<br>"
 	    "<br>"
-		"%1<br>"
-		"<br>"
+	    "%1<br>"
+	    "<br>"
 	    "Support and updates:<br>"
 	    "<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
 	    "<br>"
-	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>").arg(emulatorVersion));
+	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>")
+	                   .arg(emulatorVersion));
 	msgBox.exec();
 }
 
@@ -4009,10 +4008,10 @@ void MainWindow::aboutQt()
 	                                             "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
 	                                             "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
 	                                             "\n"
-												 "Python\n"
-												 "Copyright (C) 2001-2022\n"
-												 "https://www.python.org/"
-												 "\n\n"
+	                                             "Python\n"
+	                                             "Copyright (C) 2001-2022\n"
+	                                             "https://www.python.org/"
+	                                             "\n\n"
 	                                             "Fugue Icons\n"
 	                                             "(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
 	                                             "These icons are licensed under a Creative Commons"
@@ -4052,16 +4051,16 @@ void MainWindow::updateLoadingIcon()
 
 void MainWindow::appendBusyList(QObject *obj)
 {
-    if (busyList.contains(obj))
-        return;
-    busyList.append(obj);
-    updateLoadingIcon();
+	if (busyList.contains(obj))
+		return;
+	busyList.append(obj);
+	updateLoadingIcon();
 }
 
 void MainWindow::removeBusyList(QObject *obj)
 {
-    busyList.removeOne(obj);
-    updateLoadingIcon();
+	busyList.removeOne(obj);
+	updateLoadingIcon();
 }
 
 } /* namespace FTEDITOR */

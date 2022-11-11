@@ -91,7 +91,7 @@ extern int g_FlashGlobalUsage;
 class MainWindow;
 class DlEditor;
 
-template<class T>
+template <class T>
 class UndoStackDisabler;
 
 // Content information. Read-only. Writable through ContentManager only.
@@ -139,7 +139,7 @@ struct ContentInfo
 	int RawLength; // Raw length of memory
 
 	int ImageFormat;
-	
+
 	bool ImageMono;
 
 	int FontSize;
@@ -275,12 +275,20 @@ public:
 
 	// Get
 	inline static const std::vector<QString> &getFileExtensions() { return s_FileExtensions; }
-	inline void swapUploadMemoryDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadMemoryDirty.swap(contentInfo); }
-	inline void swapUploadFlashDirty(std::set<ContentInfo *> &contentInfo) { contentInfo.clear(); m_ContentUploadFlashDirty.swap(contentInfo); }
+	inline void swapUploadMemoryDirty(std::set<ContentInfo *> &contentInfo)
+	{
+		contentInfo.clear();
+		m_ContentUploadMemoryDirty.swap(contentInfo);
+	}
+	inline void swapUploadFlashDirty(std::set<ContentInfo *> &contentInfo)
+	{
+		contentInfo.clear();
+		m_ContentUploadFlashDirty.swap(contentInfo);
+	}
 	void reuploadAll();
 
 	// Utility
-	inline const ContentTreeWidget * contentList() const { return m_ContentList; }
+	inline const ContentTreeWidget *contentList() const { return m_ContentList; }
 
 	void copyFlashFile();
 
@@ -312,7 +320,7 @@ private:
 
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
-	
+
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
 
 	void addInternal(ContentInfo *contentInfo);

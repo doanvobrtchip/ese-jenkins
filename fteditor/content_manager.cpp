@@ -169,20 +169,25 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		if (j.contains("dataEmbedded"))
 		{
 			DataStorage = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool()
-				? Embedded : File;
+			    ? Embedded
+			    : File;
 		}
 		if (j.contains("flashLoaded"))
 		{
 			// Development temporary
 			DataStorage = ((QJsonValue)j["flashLoaded"]).toVariant().toBool()
-				? Flash : DataStorage;
+			    ? Flash
+			    : DataStorage;
 		}
 		if (j.contains("dataStorage"))
 		{
 			QString dataStorage = j["dataStorage"].toString();
-			if (dataStorage == "File") DataStorage = File;
-			else if (dataStorage == "Embedded") DataStorage = Embedded;
-			else if (dataStorage == "Flash") DataStorage = Flash;
+			if (dataStorage == "File")
+				DataStorage = File;
+			else if (dataStorage == "Embedded")
+				DataStorage = Embedded;
+			else if (dataStorage == "Flash")
+				DataStorage = Flash;
 		}
 		if (j.contains("dataCompressed"))
 		{
@@ -224,8 +229,10 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
 		FontSize = ((QJsonValue)j["fontSize"]).toVariant().toInt();
 		FontCharSet = j["fontCharSet"].toString();
-		if (j.contains("fontOffset")) FontOffset = ((QJsonValue)j["fontOffset"]).toVariant().toInt();
-		else FontOffset = 0;
+		if (j.contains("fontOffset"))
+			FontOffset = ((QJsonValue)j["fontOffset"]).toVariant().toInt();
+		else
+			FontOffset = 0;
 	}
 	else if (converter == "FlashMap")
 	{
@@ -284,14 +291,14 @@ int ContentInfo::bitmapAddress(int deviceIntf) const
 	{
 		switch (ImageFormat)
 		{
-			// Add palette into content
-			case PALETTED8:
-				return MemoryAddress + (256 * 4);
-			case PALETTED565:
-			case PALETTED4444:
-				return MemoryAddress + (256 * 2);
-			default:
-				return MemoryAddress;
+		// Add palette into content
+		case PALETTED8:
+			return MemoryAddress + (256 * 4);
+		case PALETTED565:
+		case PALETTED4444:
+			return MemoryAddress + (256 * 2);
+		default:
+			return MemoryAddress;
 		}
 	}
 	if (Converter == ContentInfo::Font)
@@ -331,7 +338,13 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 
 const QString ContentManager::ResourceDir = "resources";
 
-ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL), m_OverlapSuppressed(0), m_OverlapMemorySuppressed(false),  m_OverlapFlashSuppressed(false)
+ContentManager::ContentManager(MainWindow *parent)
+    : QWidget(parent)
+    , m_MainWindow(parent)
+    , m_CurrentPropertiesContent(NULL)
+    , m_OverlapSuppressed(0)
+    , m_OverlapMemorySuppressed(false)
+    , m_OverlapFlashSuppressed(false)
 {
 	if (s_FileExtensions.empty())
 	{
@@ -438,7 +451,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	
+
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
@@ -460,7 +473,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImagePreview->setHidden(true);
 	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
 	m_PropertiesImageLabel = new QLabel(this);
-    m_PropertiesImageLabel->setMaximumSize(250, 250);
+	m_PropertiesImageLabel->setMaximumSize(250, 250);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 
@@ -470,7 +483,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesFont->setTitle(tr("Font"));
 	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
 	m_PropertiesFontFormat = new QComboBox(this);
-	
+
 	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
 	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
 	m_PropertiesFontSize = new UndoStackDisabler<QSpinBox>(this);
@@ -567,7 +580,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
 	helpLayout->addWidget(m_HelpfulLabel);
 	m_ContentList->setLayout(helpLayout);
-	
+
 	// bindCurrentDevice();
 }
 
@@ -585,7 +598,7 @@ void ContentManager::bindCurrentDevice()
 {
 	ContentInfo *info = current();
 	m_ContentList->setCurrentItem(NULL);
-	
+
 	m_PropertiesImageFormat->clear();
 	for (int i = 0; i < g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 	{
@@ -603,7 +616,7 @@ void ContentManager::bindCurrentDevice()
 			format.replace("COMPRESSED_RGBA_", "");
 		m_PropertiesFontFormat->addItem(format);
 	}
-	
+
 	m_PropertiesRawLength->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 
 	int memSize = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
@@ -620,7 +633,7 @@ void ContentManager::bindCurrentDevice()
 		else
 			m_PropertiesFlashAddress->setMaximum(m_PropertiesFlashAddress->value());
 	}
-	
+
 	if (info)
 		m_ContentList->setCurrentItem(info->View);
 
@@ -631,11 +644,11 @@ void ContentManager::bindCurrentDevice()
 class ContentManager::Add : public QUndoCommand
 {
 public:
-	Add(ContentManager *contentManager, ContentInfo *contentInfo) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_Owner(true)
+	Add(ContentManager *contentManager, ContentInfo *contentInfo)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_Owner(true)
 	{
 		setText(tr("Add content"));
 	}
@@ -656,8 +669,8 @@ public:
 		m_ContentManager->removeInternal(m_ContentInfo);
 
 		// Check if there is another content used the same source path
-		QTreeWidgetItem * item = 0;
-		ContentInfo * info = 0;
+		QTreeWidgetItem *item = 0;
+		ContentInfo *info = 0;
 		bool keepThisResource = false;
 		for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
 		{
@@ -731,7 +744,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			while (!in.atEnd())
 			{
 				QString line = in.readLine();
-                QStringList listItem = line.split(QRegularExpression("\\s+"));
+				QStringList listItem = line.split(QRegularExpression("\\s+"));
 				if (listItem.at(0) != "name" && !listItem.at(0).isEmpty())
 				{
 					jo.insert(listItem.at(0), QJsonValue({ { "offset", listItem.at(1).toInt() }, { "length", listItem.at(2).toInt() } }));
@@ -756,18 +769,30 @@ ContentInfo *ContentManager::add(const QString &filePath)
 		};
 	};
 
-	if (fileExt == "jpg")      contentInfo->Converter = ContentInfo::Image;
-	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
-    else if (fileExt == "bmp") contentInfo->Converter = ContentInfo::Image;
-	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "otf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfa") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfb") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "cff") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pcf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
+	if (fileExt == "jpg")
+		contentInfo->Converter = ContentInfo::Image;
+	else if (fileExt == "png")
+		contentInfo->Converter = ContentInfo::Image;
+	else if (fileExt == "bmp")
+		contentInfo->Converter = ContentInfo::Image;
+	else if (fileExt == "ttf")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "otf")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfa")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfb")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "cff")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pcf")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "fnt")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "bdf")
+		contentInfo->Converter = ContentInfo::Font;
+	else if (fileExt == "pfr")
+		contentInfo->Converter = ContentInfo::Font;
 
 	if (contentInfo->MapInfoFileType.contains(fileExt))
 	{
@@ -777,7 +802,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 		{
 			QString infoFilePath = filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
 			auto infoJson = getJsonInfo(infoFilePath);
-			if (fileExt == "glyph") { 
+			if (fileExt == "glyph")
+			{
 				auto addressType = infoJson["address_type"].toString().toLower();
 				int addressGlyph = infoJson["address_glyph"].toInt();
 				if (addressType == "flash")
@@ -815,9 +841,11 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			}
 			else if (fileExt == "raw")
 			{
-				if (infoJson.contains("type")) { 
+				if (infoJson.contains("type"))
+				{
 					auto contentType = infoJson["type"].toString();
-					if (contentType == "bitmap") { 
+					if (contentType == "bitmap")
+					{
 						contentInfo->CachedImageWidth = infoJson["width"].toInt();
 						contentInfo->CachedImageHeight = infoJson["height"].toInt();
 						contentInfo->CachedImageStride = infoJson["stride"].toInt();
@@ -875,7 +903,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 
 	add(contentInfo);
 
-	if (contentInfo->DataStorage == ContentInfo::Flash) { 
+	if (contentInfo->DataStorage == ContentInfo::Flash)
+	{
 		updateFlashSize();
 	}
 
@@ -893,12 +922,12 @@ void ContentManager::add(ContentInfo *contentInfo)
 class ContentManager::Remove : public QUndoCommand
 {
 public:
-	Remove(ContentManager *contentManager, ContentInfo *contentInfo, bool whenCloseProject = false) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_WhenCloseProject(whenCloseProject),
-		m_Owner(false)
+	Remove(ContentManager *contentManager, ContentInfo *contentInfo, bool whenCloseProject = false)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_WhenCloseProject(whenCloseProject)
+	    , m_Owner(false)
 	{
 		setText(tr("Remove content"));
 	}
@@ -978,7 +1007,7 @@ void ContentManager::remove(ContentInfo *contentInfo, bool whenCloseProject)
 	editorRemoveContent(contentInfo, m_MainWindow->dlEditor());
 	editorRemoveContent(contentInfo, m_MainWindow->cmdEditor());
 	m_MainWindow->propertiesEditor()->surpressSet(false);
-	
+
 	m_MainWindow->undoStack()->endMacro();
 }
 
@@ -1027,7 +1056,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 		QFileInfo flashMapFileInfo = QFileInfo(flashMapPath);
 		QString filePath = flashMapFileInfo.absolutePath() + "/" + flashMapFileInfo.completeBaseName() + ".bin";
 
-		// Load flash map 
+		// Load flash map
 		// C:\sync_projects_work\ft800emu\bt815\paul\FULL.map
 		const FlashMapInfo &flashMapInfo = AssetConverter::parseFlashMap(flashMapPath);
 		AssetConverter::lockFlashMap(true);
@@ -1043,7 +1072,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 			{
 				QString otherAbsoluteMapPath = QFileInfo(info->SourcePath).absoluteFilePath();
 				if ((otherAbsoluteMapPath != absoluteMapPath)
-					|| (flashMapInfo.find(info->MappedName) == flashMapInfo.end()))
+				    || (flashMapInfo.find(info->MappedName) == flashMapInfo.end()))
 				{
 					removeEntries.push_back(info);
 				}
@@ -1194,11 +1223,11 @@ QString ContentManager::createName(const QString &name)
 	// Strip invalid characters
 	QString destName;
 	bool lastIsSlash = true;
-	for (QString::const_iterator it(name.begin()), end (name.end()); it != end; ++it)
+	for (QString::const_iterator it(name.begin()), end(name.end()); it != end; ++it)
 	{
 		QChar c = *it;
 		if (c == '.'
-			|| c == ' ')
+		    || c == ' ')
 		{
 			if (!lastIsSlash)
 			{
@@ -1206,13 +1235,13 @@ QString ContentManager::createName(const QString &name)
 			}
 		}
 		else if (c.isLetterOrNumber()
-			|| c == '_'
-			|| c == '-'
-			|| c == '('
-			|| c == ')'
-			|| c == '['
-			|| c == ']'
-			|| c == '+')
+		    || c == '_'
+		    || c == '-'
+		    || c == '('
+		    || c == ')'
+		    || c == '['
+		    || c == ']'
+		    || c == '+')
 		{
 			destName += c;
 			lastIsSlash = false;
@@ -1249,10 +1278,10 @@ void ContentManager::add()
 	static QString saveDirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 
 	QStringList fileNameList = QFileDialog::getOpenFileNames(this,
-		tr("Add Content"),
+	    tr("Add Content"),
 	    saveDirPath,
-		tr("All files (*.*)"));
-	
+	    tr("All files (*.*)"));
+
 	if (fileNameList.size() <= 0)
 	{
 		return;
@@ -1291,10 +1320,12 @@ void ContentManager::addInternal(QStringList fileNameList)
 
 		QFile::copy(fileName, newName);
 
-		if (ContentInfo::MapInfoFileType.contains(suffix)) { 
+		if (ContentInfo::MapInfoFileType.contains(suffix))
+		{
 			QString infoFileType = ContentInfo::MapInfoFileType.value(suffix, QString());
 			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
-			if (QFileInfo(originalInfoFile).exists()) { 
+			if (QFileInfo(originalInfoFile).exists())
+			{
 				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
 				QFile::copy(originalInfoFile, savedInfoFile);
 			}
@@ -1303,7 +1334,8 @@ void ContentManager::addInternal(QStringList fileNameList)
 		if (suffix == "xfont")
 		{
 			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_chars.txt");
-			if (QFileInfo(originalCharsFile).exists()) { 
+			if (QFileInfo(originalCharsFile).exists())
+			{
 				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_chars.txt");
 				QFile::copy(originalCharsFile, savedCharsFile);
 			}
@@ -1318,7 +1350,7 @@ void ContentManager::addInternal(QStringList fileNameList)
 				QFile::copy(originalCharsFile, savedCharsFile);
 			}
 		}
-		
+
 		add(newName);
 	}
 }
@@ -1368,10 +1400,10 @@ void ContentManager::copyFlashFile()
 	{
 		m_MainWindow->requestSave();
 
-        if (m_MainWindow->isProjectSaved())
-        {
-            copyFlashFile();
-        }
+		if (m_MainWindow->isProjectSaved())
+		{
+			copyFlashFile();
+		}
 	}
 }
 
@@ -1380,9 +1412,9 @@ void ContentManager::importFlashMapped()
 	printf("ContentManager::importFlashMapped()\n");
 
 	QString fileName = QFileDialog::getOpenFileName(this,
-		tr("Import Mapped Flash Image"),
-		m_MainWindow->getFileDialogPath(),
-		tr("Flash image map (*.map)"));
+	    tr("Import Mapped Flash Image"),
+	    m_MainWindow->getFileDialogPath(),
+	    tr("Flash image map (*.map)"));
 
 	if (fileName.isEmpty())
 		return;
@@ -1416,7 +1448,6 @@ void ContentManager::importFlashMapped()
 
 void ContentManager::exportFlashMapped()
 {
-
 }
 
 void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
@@ -1437,7 +1468,8 @@ int ContentManager::getContentCount() const
 bool ContentManager::isValidContent(ContentInfo *info)
 {
 	// Null is always invalid
-	if (info == NULL) return false;
+	if (info == NULL)
+		return false;
 
 	// Iterate through the list and copy the pointer to the data
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
@@ -1527,7 +1559,8 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 
 	QString fileName = contentInfo->DestName + ".raw";
 	QFileInfo binFile(fileName);
-	if (!binFile.exists()) return -1;
+	if (!binFile.exists())
+		return -1;
 	int contentSize = binFile.size();
 	if (contentInfo->Converter == ContentInfo::Image || contentInfo->Converter == ContentInfo::Font)
 	{
@@ -1554,14 +1587,16 @@ int ContentManager::getFlashSize(ContentInfo *contentInfo)
 	{
 		QString fileName = contentInfo->DestName + ".bin";
 		QFileInfo binFile(fileName);
-		if (!binFile.exists()) return -1;
+		if (!binFile.exists())
+			return -1;
 		size = binFile.size();
 	}
 	else
 	{
 		QString fileName = contentInfo->DestName + ".raw";
 		QFileInfo binFile(fileName);
-		if (!binFile.exists()) return -1;
+		if (!binFile.exists())
+			return -1;
 		size = binFile.size();
 	}
 	/*
@@ -1633,9 +1668,8 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		m_MainWindow->focusProperties();
 
 		// Rebuild GUI
-		if (!this->current()) { 
+		if (!m_ContentList->currentItem())
 			m_ContentList->setCurrentItem(((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>())->View);
-		}
 		rebuildGUIInternal((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>());
 	}
 	else
@@ -1664,7 +1698,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 	else
 	{
 		if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
-			|| ((contentInfo->DataStorage == ContentInfo::Flash) && contentInfo->OverlapFlashFlag))
+		    || ((contentInfo->DataStorage == ContentInfo::Flash) && contentInfo->OverlapFlashFlag))
 		{
 			if (contentInfo->OverlapFlashFlag)
 			{
@@ -1723,7 +1757,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	// Display widgets in properties tab
 	PropertiesEditor *props = m_MainWindow->propertiesEditor();
 	if (m_CurrentPropertiesContent != contentInfo
-		|| props->getEditWidgetSetter() != this)
+	    || props->getEditWidgetSetter() != this)
 	{
 		std::vector<QWidget *> widgets;
 
@@ -1831,35 +1865,36 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 		m_PropertiesFlashAddressLabel->setVisible(flashStorage);
 		switch (contentInfo->Converter)
 		{
-			case ContentInfo::Image:
+		case ContentInfo::Image: {
+			m_PropertiesImage->setHidden(false);
+			QPixmap pixmap;
+			bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") || pixmap.load(contentInfo->DestName + "_converted.png");
+			m_PropertiesImagePreview->setHidden(!loadSuccess);
+			if (loadSuccess)
 			{
-				m_PropertiesImage->setHidden(false);
-				QPixmap pixmap;
-				bool loadSuccess = pixmap.load(contentInfo->DestName + "_converted-fs8.png") ||
-					               pixmap.load(contentInfo->DestName + "_converted.png");
-				m_PropertiesImagePreview->setHidden(!loadSuccess);				
-                if (loadSuccess)
-                {
-                    m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
-//                    m_PropertiesImageLabel->repaint();
-                }
-				else 
-                {
-                    if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview.");
-                }
-				m_PropertiesImageCoprocessor->setHidden(true);
-				m_PropertiesRaw->setHidden(true);
-				m_PropertiesFont->setHidden(true);
-				m_PropertiesMemory->setHidden(false);
-				m_PropertiesData->setHidden(false);
-				if (contentInfo->BuildError.isEmpty())
-				{
-					if (!propInfo.isEmpty()) propInfo += "<br>";
-					QFileInfo rawInfo(contentInfo->DestName + ".raw");
-					QFileInfo binInfo(contentInfo->DestName + ".bin");
-					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
-					/*if (loadSuccess)
+				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
+				//                    m_PropertiesImageLabel->repaint();
+			}
+			else
+			{
+				if (!propInfo.isEmpty())
+					propInfo += "<br>";
+				propInfo += tr("<b>Error</b>: Failed to load image preview.");
+			}
+			m_PropertiesImageCoprocessor->setHidden(true);
+			m_PropertiesRaw->setHidden(true);
+			m_PropertiesFont->setHidden(true);
+			m_PropertiesMemory->setHidden(false);
+			m_PropertiesData->setHidden(false);
+			if (contentInfo->BuildError.isEmpty())
+			{
+				if (!propInfo.isEmpty())
+					propInfo += "<br>";
+				QFileInfo rawInfo(contentInfo->DestName + ".raw");
+				QFileInfo binInfo(contentInfo->DestName + ".bin");
+				propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				/*if (loadSuccess)
 					{
 						// stride etc
 						FT800EMU::BitmapInfo bitmapInfo;
@@ -1890,138 +1925,145 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 							propInfo += tr("<br><b>Error: </b>Unable to load raw header.");
 						}
 					}*/
-					if (cacheImageInfo(contentInfo))
+				if (cacheImageInfo(contentInfo))
+				{
+					propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+					propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+					propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+				}
+			}
+			break;
+		}
+		case ContentInfo::Raw: {
+			m_PropertiesImage->setHidden(true);
+			m_PropertiesImageCoprocessor->setHidden(true);
+			m_PropertiesImagePreview->setHidden(true);
+			m_PropertiesRaw->setHidden(false);
+			m_PropertiesFont->setHidden(true);
+			m_PropertiesMemory->setHidden(false);
+			m_PropertiesData->setHidden(false);
+			if (contentInfo->BuildError.isEmpty())
+			{
+				if (!propInfo.isEmpty())
+					propInfo += "<br>";
+				QFileInfo rawInfo(contentInfo->DestName + ".raw");
+				QFileInfo binInfo(contentInfo->DestName + ".bin");
+				propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				goto RawDetect;
+			}
+			break;
+		}
+		RawDetect : {
+			QFile rawFile(contentInfo->DestName + ".raw");
+			if (rawFile.open(QIODevice::ReadOnly))
+			{
+				QDataStream in(&rawFile);
+				in.setByteOrder(QDataStream::LittleEndian);
+				quint32 signature;
+				in >> signature;
+				if (signature == 0xAAAA0100)
+				{
+					if (!propInfo.isEmpty())
+						propInfo += "<br>";
+					propInfo += tr("<b>Signature: </b> ANIM_SIGNATURE");
+					quint32 num_frames;
+					in >> num_frames;
+					propInfo += tr("<br><b>Number of Frames: </b> ") + QString::number(num_frames);
+					for (quint32 i = 0; i < num_frames && i < 256; ++i)
 					{
-						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
-						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
+						quint32 nbytes, ptr;
+						in >> nbytes;
+						in >> ptr;
+						propInfo += QString("<br><b>") + QString::number(i) + " </b> (0x" + QString::number(ptr, 16).rightJustified(8, '0').toLower() + "): " + QString::number(nbytes) + " bytes";
+						if ((nbytes & (4 - 1)) || ptr & (64 - 1))
+							propInfo += tr(" (invalid)");
+					}
+					if (num_frames >= 256)
+					{
+						propInfo += tr("<br>...");
 					}
 				}
-				break;
+				rawFile.close();
 			}
-			case ContentInfo::Raw:
+			break;
+		}
+		case ContentInfo::ImageCoprocessor: {
+			m_PropertiesImage->setHidden(true);
+			m_PropertiesImageCoprocessor->setHidden(false);
+			QPixmap pixmap;
+			bool loadSuccess = pixmap.load(contentInfo->DestName + ".raw");
+			m_PropertiesImagePreview->setHidden(!loadSuccess);
+			m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
+			if (loadSuccess)
+				m_PropertiesImageLabel->repaint();
+			else
 			{
-				m_PropertiesImage->setHidden(true);
-				m_PropertiesImageCoprocessor->setHidden(true);
-				m_PropertiesImagePreview->setHidden(true);
-				m_PropertiesRaw->setHidden(false);
-				m_PropertiesFont->setHidden(true);
-				m_PropertiesMemory->setHidden(false);
-				m_PropertiesData->setHidden(false);
-				if (contentInfo->BuildError.isEmpty())
-				{
-					if (!propInfo.isEmpty()) propInfo += "<br>";
-					QFileInfo rawInfo(contentInfo->DestName + ".raw");
-					QFileInfo binInfo(contentInfo->DestName + ".bin");
-					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
-					goto RawDetect;
-				}
-				break;
+				if (!propInfo.isEmpty())
+					propInfo += "<br>";
+				propInfo += tr("<b>Error</b>: Failed to load image preview.");
 			}
-			RawDetect:
+			m_PropertiesRaw->setHidden(true);
+			m_PropertiesFont->setHidden(true);
+			m_PropertiesMemory->setHidden(false);
+			m_PropertiesData->setHidden(false);
+			if (contentInfo->BuildError.isEmpty())
 			{
-				QFile rawFile(contentInfo->DestName + ".raw");
-				if (rawFile.open(QIODevice::ReadOnly))
+				if (cacheImageInfo(contentInfo))
 				{
-					QDataStream in(&rawFile);
-					in.setByteOrder(QDataStream::LittleEndian);
-					quint32 signature;
-					in >> signature;
-					if (signature == 0xAAAA0100)
-					{
-						if (!propInfo.isEmpty()) propInfo += "<br>";
-						propInfo += tr("<b>Signature: </b> ANIM_SIGNATURE");
-						quint32 num_frames;
-						in >> num_frames;
-						propInfo += tr("<br><b>Number of Frames: </b> ") + QString::number(num_frames);
-						for (quint32 i = 0; i < num_frames && i < 256; ++i)
-						{
-							quint32 nbytes, ptr;
-							in >> nbytes;
-							in >> ptr;
-							propInfo += QString("<br><b>") + QString::number(i) + " </b> (0x" + QString::number(ptr, 16).rightJustified(8, '0').toLower() + "): " + QString::number(nbytes) + " bytes";
-							if ((nbytes & (4 - 1)) || ptr & (64 - 1)) propInfo += tr(" (invalid)");
-						}
-						if (num_frames >= 256)
-						{
-							propInfo += tr("<br>...");
-						}
-					}
-					rawFile.close();
+					propInfo += tr("<br><b>Format: </b> ") + bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, contentInfo->ImageFormat);
+					propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+					propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+					propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 				}
-				break;
 			}
-			case ContentInfo::ImageCoprocessor:
+			break;
+		}
+		case ContentInfo::Font: {
+			m_PropertiesImage->setHidden(true);
+			m_PropertiesImagePreview->setHidden(true);
+			m_PropertiesImageCoprocessor->setHidden(true);
+			m_PropertiesRaw->setHidden(true);
+			m_PropertiesFont->setHidden(false);
+			m_PropertiesMemory->setHidden(false);
+			m_PropertiesData->setHidden(false);
+			if (contentInfo->BuildError.isEmpty())
 			{
-				m_PropertiesImage->setHidden(true);
-				m_PropertiesImageCoprocessor->setHidden(false);
-				QPixmap pixmap;
-				bool loadSuccess = pixmap.load(contentInfo->DestName + ".raw");
-				m_PropertiesImagePreview->setHidden(!loadSuccess);
-				m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width() - 32, m_PropertiesImageLabel->width() - 32, Qt::KeepAspectRatio));
-				if (loadSuccess) m_PropertiesImageLabel->repaint();
-				else { if (!propInfo.isEmpty()) propInfo += "<br>"; propInfo += tr("<b>Error</b>: Failed to load image preview."); }
-				m_PropertiesRaw->setHidden(true);
-				m_PropertiesFont->setHidden(true);
-				m_PropertiesMemory->setHidden(false);
-				m_PropertiesData->setHidden(false);
-				if (contentInfo->BuildError.isEmpty())
+				if (!propInfo.isEmpty())
+					propInfo += "<br>";
+				QFileInfo rawInfo(contentInfo->DestName + ".raw");
+				QFileInfo binInfo(contentInfo->DestName + ".bin");
+				propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
+				if (cacheImageInfo(contentInfo))
 				{
-					if (cacheImageInfo(contentInfo))
-					{
-						propInfo += tr("<br><b>Format: </b> ") + bitmapFormatToString(FTEDITOR_CURRENT_DEVICE, contentInfo->ImageFormat);
-						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
-						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
-					}
+					propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
+					propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
+					propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
 				}
-				break;
 			}
-			case ContentInfo::Font:
+			break;
+		}
+		case ContentInfo::FlashMap: {
+			m_PropertiesImage->setHidden(true);
+			m_PropertiesImagePreview->setHidden(true);
+			m_PropertiesImageCoprocessor->setHidden(true);
+			m_PropertiesRaw->setHidden(true);
+			m_PropertiesFont->setHidden(true);
+			m_PropertiesMemory->setHidden(false);
+			m_PropertiesData->setHidden(false);
+			if (!propInfo.isEmpty())
+				propInfo += "<br>";
+			propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
+			if (contentInfo->BuildError.isEmpty())
 			{
-				m_PropertiesImage->setHidden(true);
-				m_PropertiesImagePreview->setHidden(true);
-				m_PropertiesImageCoprocessor->setHidden(true);
-				m_PropertiesRaw->setHidden(true);
-				m_PropertiesFont->setHidden(false);
-				m_PropertiesMemory->setHidden(false);
-				m_PropertiesData->setHidden(false);
-				if (contentInfo->BuildError.isEmpty())
-				{
-					if (!propInfo.isEmpty()) propInfo += "<br>";
-					QFileInfo rawInfo(contentInfo->DestName + ".raw");
-					QFileInfo binInfo(contentInfo->DestName + ".bin");
-					propInfo += tr("<b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-					propInfo += tr("<br><b>Compressed: </b> ") + QString::number(binInfo.size()) + " bytes";
-					if (cacheImageInfo(contentInfo))
-					{
-						propInfo += tr("<br><b>Width: </b> ") + QString::number(contentInfo->CachedImageWidth);
-						propInfo += tr("<br><b>Height: </b> ") + QString::number(contentInfo->CachedImageHeight);
-						propInfo += tr("<br><b>Line Stride: </b> ") + QString::number(contentInfo->CachedImageStride);
-					}
-				}
-				break;
+				QFileInfo rawInfo(contentInfo->DestName + ".raw");
+				if (rawInfo.exists())
+					propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
+				goto RawDetect;
 			}
-			case ContentInfo::FlashMap:
-			{
-				m_PropertiesImage->setHidden(true);
-				m_PropertiesImagePreview->setHidden(true);
-				m_PropertiesImageCoprocessor->setHidden(true);
-				m_PropertiesRaw->setHidden(true);
-				m_PropertiesFont->setHidden(true);
-				m_PropertiesMemory->setHidden(false);
-				m_PropertiesData->setHidden(false);
-				if (!propInfo.isEmpty()) propInfo += "<br>";
-				propInfo += tr("<b>Mapped Name: </b> ") + contentInfo->MappedName;
-				if (contentInfo->BuildError.isEmpty())
-				{
-					QFileInfo rawInfo(contentInfo->DestName + ".raw");
-					if (rawInfo.exists()) propInfo += tr("<br><b>Size: </b> ") + QString::number(rawInfo.size()) + " bytes";
-					goto RawDetect;
-				}
-				break;
-			}
+			break;
+		}
 		}
 		props->setInfo(propInfo);
 	}
@@ -2084,8 +2126,9 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 						}
 					}
 					// else goto CompareMeta; // Implicit // Ignore meta comparison and rebuild
-				// CompareMeta:
-					; {
+					// CompareMeta:
+					;
+					{
 						QFile file(metaFile);
 						file.open(QIODevice::ReadOnly);
 						QByteArray data = file.readAll();
@@ -2106,7 +2149,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 			if (equalMeta)
 			{
 				printf("Equal meta, skip convert\n");
-				
+
 				// Cache size
 				if (!contentInfo->CachedMemorySize)
 				{
@@ -2174,7 +2217,7 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 					out.writeRawData(data, data.size());
 					contentInfo->UploadMemoryDirty = true;
 					contentInfo->UploadFlashDirty = true;
-                    file.close();
+					file.close();
 				}
 			}
 		}
@@ -2195,8 +2238,10 @@ void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 		contentInfo->UploadMemoryDirty = false;
 		contentInfo->UploadFlashDirty = false;
 		reuploadInternal(contentInfo, memory, flash);
-		if (memory) recalculateOverlapMemoryInternal();
-		if (flash) recalculateOverlapFlashInternal();
+		if (memory)
+			recalculateOverlapMemoryInternal();
+		if (flash)
+			recalculateOverlapFlashInternal();
 	}
 
 	// Reload external if dirty
@@ -2231,7 +2276,7 @@ void ContentManager::reuploadInternal(ContentInfo *contentInfo, bool memory, boo
 	if (contentInfo->Converter != ContentInfo::Invalid && ((contentInfo->MemoryLoaded && memory) || ((contentInfo->DataStorage == ContentInfo::Flash) && flash)))
 	{
 		if (contentInfo->Converter == ContentInfo::Image
-			|| contentInfo->Converter == ContentInfo::Font)
+		    || contentInfo->Converter == ContentInfo::Font)
 		{
 			// Bitmap setup is always updated after upload and requires cached image info
 			cacheImageInfo(contentInfo);
@@ -2295,7 +2340,7 @@ void ContentManager::recalculateOverlapMemoryInternal()
 	int globalUsage = 0;
 	int globalSize = addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END);
 
-	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
+	for (QTreeWidgetItemIterator left(m_ContentList); *left;)
 	{
 		ContentInfo *leftInfo = (ContentInfo *)(void *)(*left)->data(0, Qt::UserRole).value<quintptr>();
 		if (leftInfo->Converter != ContentInfo::Invalid && leftInfo->MemoryLoaded)
@@ -2325,7 +2370,7 @@ void ContentManager::recalculateOverlapMemoryInternal()
 							{
 								int rightAddr = rightInfo->MemoryAddress;
 
-								if  (leftAddr < rightAddr)
+								if (leftAddr < rightAddr)
 								{
 									if (leftAddr + leftSize > rightAddr)
 									{
@@ -2361,7 +2406,8 @@ void ContentManager::recalculateOverlapMemoryInternal()
 										m_ContentOverlapMemory.insert(rightInfo);
 									if (leftSize > rightSize)
 										globalUsage -= rightSize;
-									else globalUsage -= leftSize;
+									else
+										globalUsage -= leftSize;
 								}
 							}
 						}
@@ -2408,7 +2454,8 @@ void ContentManager::recalculateOverlapMemoryInternal()
 		}
 	}
 
-	if (g_RamGlobalUsage != globalUsage) { 
+	if (g_RamGlobalUsage != globalUsage)
+	{
 		g_RamGlobalUsage = globalUsage;
 		emit ramGlobalUsageChanged(g_RamGlobalUsage);
 	}
@@ -2430,7 +2477,7 @@ void ContentManager::recalculateOverlapFlashInternal()
 	int globalUsage = 0;
 	size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
 
-	for (QTreeWidgetItemIterator left(m_ContentList); *left; )
+	for (QTreeWidgetItemIterator left(m_ContentList); *left;)
 	{
 		ContentInfo *leftInfo = (ContentInfo *)(void *)(*left)->data(0, Qt::UserRole).value<quintptr>();
 		if (leftInfo->Converter != ContentInfo::Invalid && (leftInfo->DataStorage == ContentInfo::Flash))
@@ -2503,7 +2550,8 @@ void ContentManager::recalculateOverlapFlashInternal()
 										m_ContentOverlapFlash.insert(rightInfo);
 									if (leftSize > rightSize)
 										globalUsage -= rightSize;
-									else globalUsage -= leftSize;
+									else
+										globalUsage -= leftSize;
 								}
 							}
 						}
@@ -2613,7 +2661,8 @@ QString ContentManager::findFlashMapPath(bool forceScan)
 		if (info->Converter == ContentInfo::FlashMap)
 		{
 			m_FlashFileName = info->SourcePath;
-			if (!m_FlashFileName.isEmpty()) break;
+			if (!m_FlashFileName.isEmpty())
+				break;
 		}
 	}
 
@@ -2652,21 +2701,21 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 			}
 			switch (parsed.IdRight)
 			{
-				case FTEDITOR_DL_BITMAP_HANDLE:
-					handle = parsed.Parameter[0].I;
-					break;
-				case FTEDITOR_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
-						return handle;
-					break;
-				case FTEDITOR_DL_BITMAP_LAYOUT:
-				case FTEDITOR_DL_BITMAP_SIZE:
-				case FTEDITOR_DL_BITMAP_LAYOUT_H:
-				case FTEDITOR_DL_BITMAP_SIZE_H:
-					break;
-				default:
-					handle = -1;
-					break;
+			case FTEDITOR_DL_BITMAP_HANDLE:
+				handle = parsed.Parameter[0].I;
+				break;
+			case FTEDITOR_DL_BITMAP_SOURCE:
+				if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
+					return handle;
+				break;
+			case FTEDITOR_DL_BITMAP_LAYOUT:
+			case FTEDITOR_DL_BITMAP_SIZE:
+			case FTEDITOR_DL_BITMAP_LAYOUT_H:
+			case FTEDITOR_DL_BITMAP_SIZE_H:
+				break;
+			default:
+				handle = -1;
+				break;
 			}
 		}
 	}
@@ -2706,19 +2755,19 @@ int ContentManager::editorFindHandle(ContentInfo *contentInfo, DlEditor *dlEdito
 				continue;
 			switch (parsed.IdRight)
 			{
-				case FTEDITOR_DL_BITMAP_HANDLE:
-					line = i;
-					handle = parsed.Parameter[0].I;
-					break;
-				case FTEDITOR_DL_BITMAP_SOURCE:
-					if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
-						return handle;
-					break;
-				case FTEDITOR_DL_BITMAP_LAYOUT:
-				case FTEDITOR_DL_BITMAP_SIZE:
-				case FTEDITOR_DL_BITMAP_LAYOUT_H:
-				case FTEDITOR_DL_BITMAP_SIZE_H:
-					break;
+			case FTEDITOR_DL_BITMAP_HANDLE:
+				line = i;
+				handle = parsed.Parameter[0].I;
+				break;
+			case FTEDITOR_DL_BITMAP_SOURCE:
+				if (parsed.Parameter[0].U == contentInfo->bitmapAddress() && handle != -1)
+					return handle;
+				break;
+			case FTEDITOR_DL_BITMAP_LAYOUT:
+			case FTEDITOR_DL_BITMAP_SIZE:
+			case FTEDITOR_DL_BITMAP_LAYOUT_H:
+			case FTEDITOR_DL_BITMAP_SIZE_H:
+				break;
 			}
 		}
 	}
@@ -2757,7 +2806,8 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 	}
 	for (int i = 0; i < BITMAP_SETUP_HANDLES_NB; ++i)
 	{
-		if (!handles[i]) return i;
+		if (!handles[i])
+			return i;
 	}
 	return -1;
 }
@@ -2765,7 +2815,7 @@ int ContentManager::editorFindFreeHandle(DlEditor *dlEditor)
 // Find where to start with bitmap lines in the editor
 int ContentManager::editorFindNextBitmapLine(DlEditor *dlEditor)
 {
-	return dlEditor->getLineCount(); 
+	return dlEditor->getLineCount();
 	/*
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
@@ -2842,35 +2892,33 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				{
 					switch (parsed.IdRight)
 					{
-						case CMD_SETBITMAP & 0xFF:
+					case CMD_SETBITMAP & 0xFF: {
+						bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
+						if (addressOk)
 						{
-							bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
-							if (addressOk)
-							{
-								DlParsed pa = parsed;
-								pa.Parameter[1].U = contentInfo->ImageFormat;
-								pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
-								pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
-								dlEditor->replaceLine(i, pa);
-								cmdSetBitmap = true;
-								insertOkLine = i + 1;
-							}
-							if (isAddressSame && handleLine != -1 && !addressOk)
-							{
-								i = handleLine;
-								addressOk = true;
-							}
-							continue;
+							DlParsed pa = parsed;
+							pa.Parameter[1].U = contentInfo->ImageFormat;
+							pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
+							pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
+							dlEditor->replaceLine(i, pa);
+							cmdSetBitmap = true;
+							insertOkLine = i + 1;
 						}
-						case CMD_SETFONT2 & 0xFF:
+						if (isAddressSame && handleLine != -1 && !addressOk)
 						{
-							// This is really not a useful case, but it can happen, so support it...
-							handleLine = i;
-							addressOk = (parsed.Parameter[1].I == contentInfo->MemoryAddress);
-							if (addressOk)
-								printf("Unusual CMD_SETFONT2 usage detected in the editor\n");
-							continue;
+							i = handleLine;
+							addressOk = true;
 						}
+						continue;
+					}
+					case CMD_SETFONT2 & 0xFF: {
+						// This is really not a useful case, but it can happen, so support it...
+						handleLine = i;
+						addressOk = (parsed.Parameter[1].I == contentInfo->MemoryAddress);
+						if (addressOk)
+							printf("Unusual CMD_SETFONT2 usage detected in the editor\n");
+						continue;
+					}
 					}
 				}
 			}
@@ -2882,68 +2930,67 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			}
 			switch (parsed.IdRight)
 			{
-				case FTEDITOR_DL_BITMAP_HANDLE:
-					handleLine = i;
-					addressOk = false;
-					break;
-				case FTEDITOR_DL_BITMAP_SOURCE:
+			case FTEDITOR_DL_BITMAP_HANDLE:
+				handleLine = i;
+				addressOk = false;
+				break;
+			case FTEDITOR_DL_BITMAP_SOURCE: {
+				bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
+				if (addressOk)
 				{
-					bool isAddressSame = parsed.Parameter[0].U == contentInfo->bitmapAddress();
-					if (addressOk)
-					{
-						insertOkLine = i + 1;
-					}
-					if (isAddressSame && handleLine != -1 && !addressOk)
-					{
-						i = handleLine;
-						addressOk = true;
-					}
-					break;
+					insertOkLine = i + 1;
 				}
-				case FTEDITOR_DL_BITMAP_LAYOUT:
-					if (addressOk)
-					{
-						DlParsed pa = parsed;
-						pa.Parameter[0].U = contentInfo->ImageFormat;
-						pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
-						pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
-						dlEditor->replaceLine(i, pa);
-						layoutLine = i;
-					}
-					break;
-				case FTEDITOR_DL_BITMAP_SIZE:
-					if (addressOk && updateSize)
-					{
-						DlParsed pa = parsed;
-						pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
-						pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
-						dlEditor->replaceLine(i, pa);
-						sizeLine = i;
-					}
-					break;
-				case FTEDITOR_DL_BITMAP_LAYOUT_H:
-					if (addressOk)
-					{
-						// Update _H
-						DlParsed pa = parsed;
-						pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-						pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-						dlEditor->replaceLine(i, pa);
-						layoutHLine = i;
-					}
-					break;
-				case FTEDITOR_DL_BITMAP_SIZE_H:
-					if (addressOk)
-					{
-						// Update _H
-						DlParsed pa = parsed;
-						pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-						pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-						dlEditor->replaceLine(i, pa);
-						sizeHLine = i;
-					}
-					break;
-				/* case FTEDITOR_DL_PALETTE_SOURCE:
+				if (isAddressSame && handleLine != -1 && !addressOk)
+				{
+					i = handleLine;
+					addressOk = true;
+				}
+				break;
+			}
+			case FTEDITOR_DL_BITMAP_LAYOUT:
+				if (addressOk)
+				{
+					DlParsed pa = parsed;
+					pa.Parameter[0].U = contentInfo->ImageFormat;
+					pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
+					pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
+					dlEditor->replaceLine(i, pa);
+					layoutLine = i;
+				}
+				break;
+			case FTEDITOR_DL_BITMAP_SIZE:
+				if (addressOk && updateSize)
+				{
+					DlParsed pa = parsed;
+					pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
+					pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
+					dlEditor->replaceLine(i, pa);
+					sizeLine = i;
+				}
+				break;
+			case FTEDITOR_DL_BITMAP_LAYOUT_H:
+				if (addressOk)
+				{
+					// Update _H
+					DlParsed pa = parsed;
+					pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
+					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+					dlEditor->replaceLine(i, pa);
+					layoutHLine = i;
+				}
+				break;
+			case FTEDITOR_DL_BITMAP_SIZE_H:
+				if (addressOk)
+				{
+					// Update _H
+					DlParsed pa = parsed;
+					pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
+					pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
+					dlEditor->replaceLine(i, pa);
+					sizeHLine = i;
+				}
+				break;
+			/* case FTEDITOR_DL_PALETTE_SOURCE:
 					if (addressOk && parsed.Parameter[0].U == contentInfo->MemoryAddress)
 					{
 						if (!requirePaletteAddress(contentInfo))
@@ -2959,10 +3006,10 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 						}
 					}
 					break; */
-				default:
-					handleLine = -1;
-					addressOk = false;
-					break;
+			default:
+				handleLine = -1;
+				addressOk = false;
+				break;
 			}
 		}
 	}
@@ -3041,8 +3088,7 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
 		const DlParsed &parsed = dlEditor->getLine(i);
-		if (parsed.ValidId && parsed.IdLeft == 0 && 
-			parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
+		if (parsed.ValidId && parsed.IdLeft == 0 && parsed.IdRight == FTEDITOR_DL_BITMAP_SOURCE && parsed.Parameter[0].I == oldAddr)
 		{
 			DlParsed pa = parsed;
 			pa.Parameter[0].I = newAddr;
@@ -3050,8 +3096,7 @@ void ContentManager::editorUpdateHandleAddress(int newAddr, int oldAddr, DlEdito
 		}
 		else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 		{
-			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND &&
-				parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
+			if (parsed.ValidId && parsed.IdLeft == FTEDITOR_CO_COMMAND && parsed.IdRight == (CMD_SETBITMAP & 0xFF) && parsed.Parameter[0].I == oldAddr)
 			{
 				DlParsed pa = parsed;
 				pa.Parameter[0].I = newAddr;
@@ -3088,7 +3133,6 @@ void ContentManager::editorUpdateFontOffset(ContentInfo *contentInfo, DlEditor *
 			dlEditor->replaceLine(i, pa);
 		}
 	}
-
 }
 
 void editorPurgePalette8(DlEditor *dlEditor, int &line)
@@ -3108,10 +3152,10 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 				break;
 
 			if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F
-				|| parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+			    || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
 				if (parsed.Parameter[0].I == pav.Parameter[0].I
-					&& parsed.Parameter[1].I == pav.Parameter[1].I)
+				    && parsed.Parameter[1].I == pav.Parameter[1].I)
 				{
 					dlEditor->removeLine(line);
 					--line;
@@ -3127,10 +3171,10 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 				break;
 
 			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
-				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
-				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
-				|| parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
-				|| parsed.IdRight == FTEDITOR_DL_CELL)
+			    || parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
+			    || parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
+			    || parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
+			    || parsed.IdRight == FTEDITOR_DL_CELL)
 				dlEditor->removeLine(line);
 			else
 				break;
@@ -3148,10 +3192,10 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 				break;
 
 			if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F
-				|| parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
+			    || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
 			{
 				if (parsed.Parameter[0].I == pav.Parameter[0].I
-					&& parsed.Parameter[1].I == pav.Parameter[1].I)
+				    && parsed.Parameter[1].I == pav.Parameter[1].I)
 				{
 					dlEditor->removeLine(line);
 					--line;
@@ -3167,10 +3211,10 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 				break;
 
 			if (parsed.IdRight == FTEDITOR_DL_COLOR_MASK
-				|| parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
-				|| parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
-				|| parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
-				|| parsed.IdRight == FTEDITOR_DL_CELL)
+			    || parsed.IdRight == FTEDITOR_DL_PALETTE_SOURCE
+			    || parsed.IdRight == FTEDITOR_DL_BLEND_FUNC
+			    || parsed.IdRight == FTEDITOR_DL_BITMAP_HANDLE
+			    || parsed.IdRight == FTEDITOR_DL_CELL)
 			{
 				dlEditor->removeLine(line);
 				--line;
@@ -3188,7 +3232,7 @@ void editorPurgePalette8(DlEditor *dlEditor, int &line)
 		const DlParsed &prev = dlEditor->getLine(line - 1);
 		const DlParsed &next = dlEditor->getLine(line + 1);
 		if (prev.ValidId && prev.IdLeft == FTEDITOR_DL_INSTRUCTION && prev.IdRight == FTEDITOR_DL_SAVE_CONTEXT
-			&& next.ValidId && next.IdLeft == FTEDITOR_DL_INSTRUCTION && next.IdRight == FTEDITOR_DL_RESTORE_CONTEXT)
+		    && next.ValidId && next.IdLeft == FTEDITOR_DL_INSTRUCTION && next.IdRight == FTEDITOR_DL_RESTORE_CONTEXT)
 		{
 			dlEditor->removeLine(line - 1);
 			dlEditor->removeLine(line);
@@ -3221,7 +3265,7 @@ void editorInsertPallette8(int paletteAddress, DlEditor *dlEditor, int &line)
 	pa.ValidId = true;
 	pa.IdLeft = 0;
 	pa.ExpectedStringParameter = false;
-	
+
 	pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
 	pa.ExpectedParameterCount = 0;
 	dlEditor->insertLine(line, pa);
@@ -3315,7 +3359,8 @@ void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor 
 	//	printf("yes purge8\n");
 
 	bool bitmapHandle[32];
-	for (int i = 0; i < 32; ++i) bitmapHandle[0] = false;
+	for (int i = 0; i < 32; ++i)
+		bitmapHandle[0] = false;
 	int curBitmapHandle = 0;
 	bool drawingBitmaps = false;
 
@@ -3343,12 +3388,12 @@ void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor 
 				{
 				case CMD_SETBITMAP & 0xFF:
 					bitmapHandle[curBitmapHandle]
-						= parsed.Parameter[0].U == bitmapAddress;
+					    = parsed.Parameter[0].U == bitmapAddress;
 					break;
 				case CMD_SETFONT2 & 0xFF:
 					if (parsed.Parameter[0].I < 32)
 						bitmapHandle[parsed.Parameter[0].I]
-							= parsed.Parameter[1].I == bitmapAddress;
+						    = parsed.Parameter[1].I == bitmapAddress;
 					break;
 				}
 			}
@@ -3416,7 +3461,7 @@ void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor 
 			break;
 		case FTEDITOR_DL_BITMAP_SOURCE:
 			bitmapHandle[curBitmapHandle]
-				= parsed.Parameter[0].U == bitmapAddress;
+			    = parsed.Parameter[0].U == bitmapAddress;
 			break;
 		case FTEDITOR_DL_BEGIN:
 			drawingBitmaps = (parsed.Parameter[0].I == BITMAPS);
@@ -3433,11 +3478,11 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 	if (requirePaletteAddress(contentInfo))
 	{
 		if (contentInfo->ImageFormat == PALETTED8)
-				editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-				editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+			editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
+			    editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 		else
 			editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-			editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+			    editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(contentInfo->bitmapAddress(), contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	}
 
 	// ISSUE#113: Remove all entries related to content info
@@ -3487,7 +3532,7 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 							const DlParsed &endVertex = dlEditor->getLine(i);
 							printf("%i - %i\n", beginVertex.IdRight, endVertex.IdRight);
 							if (beginVertex.IdLeft == 0 && beginVertex.IdRight == FTEDITOR_DL_BEGIN
-								&& endVertex.IdLeft == 0 && endVertex.IdRight == FTEDITOR_DL_END)
+							    && endVertex.IdLeft == 0 && endVertex.IdRight == FTEDITOR_DL_END)
 							{
 								// Last vertex removed in BEGIN/END block, purge the block
 								dlEditor->removeLine(i);
@@ -3607,19 +3652,18 @@ void ContentManager::editorRemoveContent(ContentInfo *contentInfo, DlEditor *dlE
 class ContentManager::ChangeSourcePath : public QUndoCommand
 {
 public:
-	ChangeSourcePath(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->SourcePath),
-		m_NewValue(value)
+	ChangeSourcePath(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->SourcePath)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change content source path"));
 	}
 
 	virtual ~ChangeSourcePath()
 	{
-
 	}
 
 	virtual void undo()
@@ -3695,11 +3739,11 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 		return;
 
 	QString dirPath = m_PropertiesCommonSourceFile->text();
-	
+
 	QString fileName = QFileDialog::getOpenFileName(this,
-		tr("Change Content"),
+	    tr("Change Content"),
 	    QDir(dirPath).absolutePath(),
-		tr("All files (*.*)"));
+	    tr("All files (*.*)"));
 
 	if (fileName.isNull())
 		return;
@@ -3712,19 +3756,18 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 class ContentManager::ChangeDestName : public QUndoCommand
 {
 public:
-	ChangeDestName(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->DestName),
-		m_NewValue(value)
+	ChangeDestName(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->DestName)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change content destination name"));
 	}
 
 	virtual ~ChangeDestName()
 	{
-
 	}
 
 private:
@@ -3831,13 +3874,13 @@ void ContentManager::propertiesCommonDestNameChanged()
 class ContentManager::ChangeConverter : public QUndoCommand
 {
 public:
-	ChangeConverter(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::ConverterType value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->Converter),
-		m_NewValue(value),
-		m_OldFontFormat(contentInfo->ImageFormat)
+	ChangeConverter(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::ConverterType value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->Converter)
+	    , m_NewValue(value)
+	    , m_OldFontFormat(contentInfo->ImageFormat)
 	{
 		if (m_NewValue == ContentInfo::Font)
 		{
@@ -3859,7 +3902,6 @@ public:
 
 	virtual ~ChangeConverter()
 	{
-
 	}
 
 	virtual void undo()
@@ -3936,19 +3978,18 @@ void ContentManager::propertiesCommonConverterChanged(int value)
 class ContentManager::ChangeImageFormat : public QUndoCommand
 {
 public:
-	ChangeImageFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->ImageFormat),
-		m_NewValue(value)
+	ChangeImageFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->ImageFormat)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change image format"));
 	}
 
 	virtual ~ChangeImageFormat()
 	{
-
 	}
 
 	virtual void undo()
@@ -4002,23 +4043,23 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	bool paletteSource = requirePaletteAddress(contentInfo) && contentInfo->ImageFormat != PALETTED8;
 	if (oldImageFormat == PALETTED8)
 		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+		    editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE_8>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	else if (oldPaletteSource != paletteSource && oldPaletteSource)
 		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-		editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+		    editorProcessPaletteSource<FTEDITOR_PURGE_PALETTE_SOURCE>(oldBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	int newBitmapAddr = contentInfo->bitmapAddress();
 	if (newBitmapAddr != oldBitmapAddr)
 		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->dlEditor()),
-		editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
+		    editorUpdateHandleAddress(newBitmapAddr, oldBitmapAddr, m_MainWindow->cmdEditor());
 	editorUpdateHandle(contentInfo, m_MainWindow->dlEditor(), false);
 	editorUpdateHandle(contentInfo, m_MainWindow->cmdEditor(), false);
 	// add new palette entries
 	if (contentInfo->ImageFormat == PALETTED8)
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE_8>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE_8>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+		    editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE_8>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	else if (oldPaletteSource != paletteSource && paletteSource)
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
-		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
+		    editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
 	m_ContentList->setCurrentItem(current()->View);
 	emit m_ContentList->currentItemChanged(current()->View, nullptr);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
@@ -4031,17 +4072,18 @@ void ContentManager::propertiesImageFormatChanged(int value)
 
 	value = g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][value % g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]];
 
-    if (current() && current()->ImageFormat != value) {
-        emit busyNow(this);
-        auto result = QtConcurrent::run([this, value]() {
-                                qDebug() << "Image - Busy: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
-                                changeImageFormat(current(), value);
-                            })
-                            .then([this]() {
-                                qDebug() << "Image - Free: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") << current();
-                                emit freeNow(this);
-                            });
-    }
+	if (current() && current()->ImageFormat != value)
+	{
+		emit busyNow(this);
+		auto result = QtConcurrent::run([this, value]() {
+			qDebug() << "Image - Busy: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
+			changeImageFormat(current(), value);
+		})
+		                  .then([this]() {
+			                  qDebug() << "Image - Free: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") << current();
+			                  emit freeNow(this);
+		                  });
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -4049,19 +4091,18 @@ void ContentManager::propertiesImageFormatChanged(int value)
 class ContentManager::ChangeImageMono : public QUndoCommand
 {
 public:
-	ChangeImageMono(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->ImageMono),
-		m_NewValue(value)
+	ChangeImageMono(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->ImageMono)
+	    , m_NewValue(value)
 	{
 		setText(value ? tr("Mono image") : tr("Color image"));
 	}
 
 	virtual ~ChangeImageMono()
 	{
-
 	}
 
 	virtual void undo()
@@ -4109,19 +4150,18 @@ void ContentManager::propertiesImageMonoChanged(int value)
 class ContentManager::ChangeMemoryLoaded : public QUndoCommand
 {
 public:
-	ChangeMemoryLoaded(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->MemoryLoaded),
-		m_NewValue(value)
+	ChangeMemoryLoaded(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->MemoryLoaded)
+	    , m_NewValue(value)
 	{
 		setText(value ? tr("Load content to memory") : tr("Unload content from memory"));
 	}
 
 	virtual ~ChangeMemoryLoaded()
 	{
-
 	}
 
 	virtual void undo()
@@ -4171,19 +4211,18 @@ void ContentManager::propertiesMemoryLoadedChanged(int value)
 class ContentManager::ChangeMemoryAddress : public QUndoCommand
 {
 public:
-	ChangeMemoryAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->MemoryAddress),
-		m_NewValue(value)
+	ChangeMemoryAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->MemoryAddress)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change memory address"));
 	}
 
 	virtual ~ChangeMemoryAddress()
 	{
-
 	}
 
 	virtual void undo()
@@ -4279,19 +4318,18 @@ void ContentManager::propertiesMemoryAddressChanged(int value)
 class ContentManager::ChangeDataCompressed : public QUndoCommand
 {
 public:
-	ChangeDataCompressed(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->DataCompressed),
-		m_NewValue(value)
+	ChangeDataCompressed(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->DataCompressed)
+	    , m_NewValue(value)
 	{
 		setText(value ? tr("Store data compressed") : tr("Store data uncompressed"));
 	}
 
 	virtual ~ChangeDataCompressed()
 	{
-
 	}
 
 	virtual void undo()
@@ -4345,19 +4383,18 @@ void ContentManager::propertiesDataCompressedChanged(int value)
 class ContentManager::ChangeDataStorage : public QUndoCommand
 {
 public:
-	ChangeDataStorage(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::StorageType value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->DataStorage),
-		m_NewValue(value)
+	ChangeDataStorage(ContentManager *contentManager, ContentInfo *contentInfo, ContentInfo::StorageType value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->DataStorage)
+	    , m_NewValue(value)
 	{
 		setText("Change data storage");
 	}
 
 	virtual ~ChangeDataStorage()
 	{
-
 	}
 
 	virtual void undo()
@@ -4493,19 +4530,18 @@ void ContentManager::propertiesFlashLoadedChanged(int value)
 class ContentManager::ChangeFlashAddress : public QUndoCommand
 {
 public:
-	ChangeFlashAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->FlashAddress),
-		m_NewValue(value)
+	ChangeFlashAddress(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->FlashAddress)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change flash address"));
 	}
 
 	virtual ~ChangeFlashAddress()
 	{
-
 	}
 
 	virtual void undo()
@@ -4590,19 +4626,18 @@ void ContentManager::propertiesFlashAddressChanged(int value)
 class ContentManager::ChangeRawStart : public QUndoCommand
 {
 public:
-	ChangeRawStart(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->RawStart),
-		m_NewValue(value)
+	ChangeRawStart(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->RawStart)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change raw start"));
 	}
 
 	virtual ~ChangeRawStart()
 	{
-
 	}
 
 	virtual void undo()
@@ -4665,19 +4700,18 @@ void ContentManager::propertiesRawStartChanged(int value)
 class ContentManager::ChangeRawLength : public QUndoCommand
 {
 public:
-	ChangeRawLength(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->RawLength),
-		m_NewValue(value)
+	ChangeRawLength(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->RawLength)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change raw length"));
 	}
 
 	virtual ~ChangeRawLength()
 	{
-
 	}
 
 	virtual void undo()
@@ -4740,19 +4774,18 @@ void ContentManager::propertiesRawLengthChanged(int value)
 class ContentManager::ChangeFontFormat : public QUndoCommand
 {
 public:
-	ChangeFontFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->ImageFormat),
-		m_NewValue(value)
+	ChangeFontFormat(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->ImageFormat)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change font format"));
 	}
 
 	virtual ~ChangeFontFormat()
 	{
-
 	}
 
 	virtual void undo()
@@ -4829,19 +4862,18 @@ void ContentManager::propertiesFontFormatChanged(int value)
 class ContentManager::ChangeFontSize : public QUndoCommand
 {
 public:
-	ChangeFontSize(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->FontSize),
-		m_NewValue(value)
+	ChangeFontSize(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->FontSize)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change font size"));
 	}
 
 	virtual ~ChangeFontSize()
 	{
-
 	}
 
 	virtual void undo()
@@ -4916,19 +4948,18 @@ void ContentManager::propertiesFontSizeChanged(int value)
 class ContentManager::ChangeFontCharSet : public QUndoCommand
 {
 public:
-	ChangeFontCharSet(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->FontCharSet),
-		m_NewValue(value)
+	ChangeFontCharSet(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->FontCharSet)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change font charset"));
 	}
 
 	virtual ~ChangeFontCharSet()
 	{
-
 	}
 
 public:
@@ -5007,19 +5038,18 @@ void ContentManager::propertiesFontCharSetChanged()
 class ContentManager::ChangeFontOffset : public QUndoCommand
 {
 public:
-	ChangeFontOffset(ContentManager *contentManager, ContentInfo *contentInfo, int value) :
-		QUndoCommand(),
-		m_ContentManager(contentManager),
-		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->FontOffset),
-		m_NewValue(value)
+	ChangeFontOffset(ContentManager *contentManager, ContentInfo *contentInfo, int value)
+	    : QUndoCommand()
+	    , m_ContentManager(contentManager)
+	    , m_ContentInfo(contentInfo)
+	    , m_OldValue(contentInfo->FontOffset)
+	    , m_NewValue(value)
 	{
 		setText(tr("Change font size"));
 	}
 
 	virtual ~ChangeFontOffset()
 	{
-
 	}
 
 	virtual void undo()
@@ -5112,7 +5142,7 @@ void ContentTreeWidget::dropEvent(QDropEvent *event)
 	}
 
 	event->acceptProposedAction();
-	for	(QUrl url : event->mimeData()->urls())
+	for (QUrl url : event->mimeData()->urls())
 	{
 		emit contentDropped(url.toLocalFile());
 	}
