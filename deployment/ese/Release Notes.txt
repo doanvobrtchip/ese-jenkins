@@ -1,103 +1,25 @@
-INTRODUCTION
+Version 4.4.0
+RC1
+Features updates:
+•   Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
+•   Improve zoom-in precision
+•   Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
+•   Enable drag and drop to open an existing project in ESE
+•   Update LibFT4222-64.dll to remove the dependency
+•   Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
+•   Give more explanation for the escape character usage in CMD_TEXT
+•   Improve format string example
+•   Auto detect and load the contents
+•   Widget alignment guide line
+•   Generate coprocessor commands once user drop an content item
+
+Resolved issues:
+•   Removed glitched bitmap line in BT817 and BT818
+•   Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
+•   Failed to build the exported project using MSVC
+•   Crash in a special PC with Qt6
+
 =======================
-This is the external release notes for ESE Releases. 
-
-----------------------------------------------------4.4.0 Alpha-----------------------------------------------
-
-A. DEPLOYMENT READINESS CRITERIA 
-================================
-Windows 7 and above
-
-B. TEST PLATFORM/DEVICES
-================================
-N/A
-
-C. NEW FEATURES
-================================
-- Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
-- Improve zoom-in precision
-- Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
-- Enable drag and drop to open an existing project in ESE
-- Update LibFT4222-64.dll to remove the dependency
-- Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
-- Give more explanation for the escape character usage in CMD_TEXT
-
-D. WHAT'S FIXED 
-================================
-- Removed glitched bitmap line in BT817 and BT818
-- Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
-
-E. LIMITATION
-================================
-N/A
-
-F. KNOWN BUGS
-================================
-N/A
-
-G. DEPLOY
-================================
-Run the setup file "EVE Screen Editor v4.4_1.0.0.exe"
-
-----------------------------------------------------4.3.0 RC2-----------------------------------------------
-
-A. DEPLOYMENT READINESS CRITERIA 
-================================
-Windows 7 and above
-
-
-B. TEST PLATFORM/DEVICES
-================================
-N/A
-
-
-C. UPGRADING/ENHANCEMENT
-================================
-N/A
-
-D. NEW FEATURES
-================================
-N/A
-
-E. WHAT'S FIXED 
-================================
-N/A
-
-F. WHAT'S REMOVED
-================================
-N/A
-
-G. LIMITATION
-================================
-N/A
-
-H. KNOWN BUGS
-================================
-N/A
-
-I. BUILD INFORMATION
-================================
-N/A
-
-K. DEPLOY
-================================
-Run the setup file EVE Screen Editor v4.3_3.1.0.exe
-
-
-L. DATABASE SETUP
-================================
-N/A
-
-M. CONFIGURATION
-================================
-N/A
-
-N. OTHERS
-================================
-N/A
-
-----------------------------------------------------Previous------------------------------------------------
-
 Version 4.3.0
 RC1
 •   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
@@ -110,6 +32,7 @@ RC1
 •   Improve format_string example project
 •   Correct parameter of cmd_videoframe and change the video asset in video_playback example
 
+=======================
 Version 4.2.0
 RC2
 •   Install ASTC encoder based on the user's CPU done
@@ -122,6 +45,7 @@ RC1
 •   Update the configuration for module ME817EV with 10-inch LCD
 •   Fixed fail to inflate the data in content manager
 
+=======================
 Version 4.1.0
 RC2
 Resolved issues
@@ -141,6 +65,7 @@ Feature updates
 Resolved issues
 •   Fixed the device sync fail after writing to flash chip
 
+=======================
 Version 4.0.0
 Feature updates
 •   Support new EVE chip BT817/8
@@ -169,6 +94,7 @@ Known issues
 •   When using device sync up, flash contents need written before updating display list or corpocessor
 •   Primitives cannot be dropped into viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
 
+=======================
 Version 3.4.0
 Features:
 •   Add system clock configuration in the device manager
@@ -179,6 +105,7 @@ Features:
 Bug Fix:
 *   The assets under resource folder of ESE project are deleted after another project is opened
 
+=======================
 Version 3.3.0
 Features: 
 •   Constrain either horizontal or vertical positioning when dragging an object
@@ -203,6 +130,7 @@ Known issues:
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
 
+=======================
 Version 3.2.0
 Features: 
 •   Add a new example project to illustrate ASTC layout
@@ -228,6 +156,7 @@ Known issues:
 Limitation:
 *   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
 
+=======================
 Version 3.1.6
 Features: 
 •   Add support of BT815, including ASTC, flash, Unicode and more features.   
@@ -272,11 +201,3 @@ Bug Fix:
 Known issues: 
 *   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
 *   Playing the invalid animation frame data in flash may cause ESE hang
-
-REVISION HISTORY:
-
-Date                Modified By        Email                                    Version     Description
-------------------------------------------------------------------------------------------------------------
-07/03/2022     Truong Ly           truong.ly@brtchip.com       4.3.0          RC2
-05/07/2022     Truong Ly           truong.ly@brtchip.com       4.4.0          Alpha
-------------------------------------------------------------------------------------------------------------

@@ -111,6 +111,7 @@ public:
 	inline ContentManager *contentManager() { return m_ContentManager; }
 	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
+	inline QComboBox *projectFlash() { return m_ProjectFlash; }
 
 	inline const QString &applicationDataDir() { return m_ApplicationDataDir; }
 
@@ -216,12 +217,11 @@ private slots:
 
 	void openRecentProject();
 
-	
-
 public slots:
 	void popupTimeout();
 	void actResetEmulator();
 	void propertyErrorSet(QString info);
+	void updateProgressBars();
 
 private:
 	void updateInitialization(bool visible);
@@ -424,6 +424,8 @@ private:
 	friend class ProjectFlashCommand;
 
 	QLabel *infoLabel;
+signals:
+	void utilizationDisplayListCmdChanged(int value);
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */
