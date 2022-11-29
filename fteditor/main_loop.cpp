@@ -351,7 +351,7 @@ void cleanupMediaFifo()
 
 void resetemu()
 {
-	setUtilizationDisplayListCmd(0);
+	g_UtilizationDisplayListCmd = 0;
 	g_WaitingCoprocessorAnimation = false;
 	// g_DisplayListCoprocessorCommandRead = s_DisplayListCoprocessorCommandA;
 	// s_DisplayListCoprocessorCommandWrite = s_DisplayListCoprocessorCommandB;
