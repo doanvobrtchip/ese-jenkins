@@ -2,6 +2,18 @@ project(fteditor LANGUAGES CXX)
 
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
+FILE(GLOB CUSTOMIZE
+    src/customize/SaveOptionDialog.h
+    src/customize/SaveOptionDialog.cpp
+    src/customize/QHexView.h
+    src/customize/QHexView.cpp
+)
+
+FILE(GLOB UTILS
+    src/utils/ReadWriteUtil.h
+    src/utils/ReadWriteUtil.cpp
+    src/utils/LoggerUtil.h
+)
 IF (WIN32)
 	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
@@ -36,6 +48,9 @@ configure_file(translations.qrc.in translations.qrc COPYONLY)
 
 qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
+INCLUDE_DIRECTORIES(src/)
+INCLUDE_DIRECTORIES(.)
+
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/eve_hal
@@ -61,6 +76,8 @@ ADD_EXECUTABLE(fteditor WIN32
 	${HDRSFT}
 	${RSRC}
 	${RESOURCE_ADDED}
+  ${CUSTOMIZE}
+  ${UTILS}
 	)
 
 IF(FTEDITOR_DEVICE_MANAGER)
