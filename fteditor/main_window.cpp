@@ -915,9 +915,6 @@ void MainWindow::frameQt()
 	}
 
 	// m_CursorPosition
-	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
-	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
 	if (m_EmulatorViewport->mouseOver())
 	{
 		m_CursorPosition->setText(QString("XY: %1, %2").arg(m_EmulatorViewport->mouseX()).arg(m_EmulatorViewport->mouseY()));
@@ -936,7 +933,7 @@ void MainWindow::frameQt()
 	}
 
 	// Busy loader
-	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
+	updateLoadingIcon();
 
 	// Trigger changes to readout cocmd on qt thread
 	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
@@ -1810,9 +1807,11 @@ void MainWindow::createDockWindows()
 	dlEditor()->codeEditor()->setKeyHandler(m_EmulatorViewport);
 	cmdEditor()->codeEditor()->setKeyHandler(NULL);
 	dlEditor()->codeEditor()->setKeyHandler(NULL);
+	connect(this, SIGNAL(utilizationDisplayListCmdChanged(int)), this, SLOT(updateProgressBars()));
 	connect(m_Inspector, SIGNAL(countHandleBitmapChanged(int)), this, SLOT(updateProgressBars()));
 	connect(m_ContentManager, SIGNAL(ramGlobalUsageChanged(int)), this, SLOT(updateProgressBars()));
-	connect(this, SIGNAL(utilizationDisplayListCmdChanged(int)), this, SLOT(updateProgressBars()));
+	connect(m_ContentManager, SIGNAL(busyNow(QObject *)),this, SLOT(appendBusyList(QObject *)));
+	connect(m_ContentManager, SIGNAL(freeNow(QObject *)),this, SLOT(removeBusyList(QObject *)));
 }
 
 void MainWindow::translateDockWindows()
@@ -4043,6 +4042,26 @@ void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)
 		return;
 
 	m_OutputTextEdit->append(text);
+}
+
+void MainWindow::updateLoadingIcon()
+{
+	m_CoprocessorBusy->setVisible((g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation)
+	    || !busyList.isEmpty());
+}
+
+void MainWindow::appendBusyList(QObject *obj)
+{
+    if (busyList.contains(obj))
+        return;
+    busyList.append(obj);
+    updateLoadingIcon();
+}
+
+void MainWindow::removeBusyList(QObject *obj)
+{
+    busyList.removeOne(obj);
+    updateLoadingIcon();
 }
 
 } /* namespace FTEDITOR */

@@ -138,7 +138,7 @@ void PropertiesEditor::setEditWidgets(const std::vector<QWidget *> &widgets, boo
 	}
 
 	m_CurrentEditWidgetSetter = setter;
-	setterChanged(setter);
+	emit setterChanged(setter);
 }
 
 void PropertiesEditor::translate()

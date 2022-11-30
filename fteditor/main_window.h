@@ -165,6 +165,7 @@ public:
 	QString getDisplaySize();
 
 	void appendTextToOutputDock(const QString &text);
+	void updateLoadingIcon();
 
 private slots:
 	// void applyEmulatorConfig();
@@ -222,6 +223,8 @@ public slots:
 	void actResetEmulator();
 	void propertyErrorSet(QString info);
 	void updateProgressBars();
+	void appendBusyList(QObject *obj);
+	void removeBusyList(QObject *obj);
 
 private:
 	void updateInitialization(bool visible);
@@ -424,6 +427,7 @@ private:
 	friend class ProjectFlashCommand;
 
 	QLabel *infoLabel;
+	QList<QObject *> busyList;
 signals:
 	void utilizationDisplayListCmdChanged(int value);
 }; /* class MainWindow */

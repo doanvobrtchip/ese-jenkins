@@ -419,8 +419,11 @@ private slots:
 private:
 	ContentManager(const ContentManager &);
 	ContentManager &operator=(const ContentManager &);
+
 signals:
 	void ramGlobalUsageChanged(int value);
+	void busyNow(QObject *obj);
+	void freeNow(QObject *obj);
 
 }; /* class ContentManager */
 

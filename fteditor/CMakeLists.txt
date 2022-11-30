@@ -13,12 +13,12 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
-find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools)
+find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools Concurrent)
 if(Qt6_FOUND AND FTEDITOR_OPENGL_VIEWPORT)
   find_package(Qt6 QUIET COMPONENTS OpenGLWidgets)
 endif()
 if(NOT Qt6_FOUND)
-  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools)
+  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools Concurrent)
   if(FTEDITOR_OPENGL_VIEWPORT)
     find_package(Qt5 5.15 REQUIRED COMPONENTS OpenGLWidgets)
   endif()
@@ -112,7 +112,7 @@ IF(WITH_FREETYPE)
 ENDIF(WITH_FREETYPE)
 
 
-target_link_libraries(fteditor Qt::Widgets)
+target_link_libraries(fteditor Qt::Widgets Qt::Concurrent)
 if(WIN32)
   target_link_libraries(fteditor version)
 endif()

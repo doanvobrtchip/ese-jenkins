@@ -36,7 +36,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QStandardPaths>
 #include <QMimeData>
 #include <QRegularExpression>
-
+#include <QtConcurrent/QtConcurrent>
 // Emulator includes
 #include "bt8xxemu_diag.h"
 
@@ -1633,6 +1633,9 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		m_MainWindow->focusProperties();
 
 		// Rebuild GUI
+		if (!this->current()) { 
+			m_ContentList->setCurrentItem(((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>())->View);
+		}
 		rebuildGUIInternal((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>());
 	}
 	else
@@ -1838,7 +1841,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
                 if (loadSuccess)
                 {
                     m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
-                    m_PropertiesImageLabel->repaint();
+//                    m_PropertiesImageLabel->repaint();
                 }
 				else 
                 {
@@ -2559,8 +2562,6 @@ void ContentManager::reloadExternal(ContentInfo *contentInfo)
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
 {
-	// printf("ContentManager::propertiesSetterChanged(setter)\n");
-
 	if (setter != this)
 	{
 		m_ContentList->setCurrentItem(NULL);
@@ -4018,7 +4019,8 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	else if (oldPaletteSource != paletteSource && paletteSource)
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
-	m_ContentList->setCurrentItem(contentInfo->View);
+	m_ContentList->setCurrentItem(current()->View);
+	emit m_ContentList->currentItemChanged(current()->View, nullptr);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
 }
@@ -4029,8 +4031,17 @@ void ContentManager::propertiesImageFormatChanged(int value)
 
 	value = g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][value % g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]];
 
-	if (current() && current()->ImageFormat != value)
-		changeImageFormat(current(), value);
+    if (current() && current()->ImageFormat != value) {
+        emit busyNow(this);
+        auto result = QtConcurrent::run([this, value]() {
+                                qDebug() << "Image - Busy: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
+                                changeImageFormat(current(), value);
+                            })
+                            .then([this]() {
+                                qDebug() << "Image - Free: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") << current();
+                                emit freeNow(this);
+                            });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
