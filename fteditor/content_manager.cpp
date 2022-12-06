@@ -46,10 +46,10 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
+#include "inspector.h"
 #include "main_window.h"
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
-#include "inspector.h"
 #include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
@@ -1242,6 +1242,23 @@ void ContentManager::addInternal(QStringList fileNameList) {
     dir.mkpath(".");
   }
 
+  QStringList addedFiles;
+  for (auto &fileName : fileNameList) {
+    QString suffix = QFileInfo(fileName).suffix();
+    if (suffix == "xfont") {
+      auto file = fileName.left(fileName.lastIndexOf('.') + 1).append("glyph");
+      if (QFileInfo::exists(file)) {
+        addedFiles.append(file);
+      }
+    } else if (suffix == "glyph") {
+      auto file = fileName.left(fileName.lastIndexOf('.') + 1).append("xfont");
+      if (QFileInfo::exists(file)) {
+        addedFiles.append(file);
+      }
+    }
+  }
+  fileNameList.append(addedFiles);
+
   QString newName;
   int i = 0;
   foreach (QString fileName, fileNameList) {
@@ -1396,8 +1413,7 @@ void ContentManager::setup(QObject *obj) {
   }
 }
 
-void ContentManager::handleUpdateCurrentInfo(ContentInfo *contentInfo)
-{
+void ContentManager::handleUpdateCurrentInfo(ContentInfo *contentInfo) {
   if (!contentInfo) {
     m_ContentList->setCurrentItem(nullptr);
     return;
