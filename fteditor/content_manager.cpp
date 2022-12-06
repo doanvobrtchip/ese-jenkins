@@ -816,6 +816,10 @@ ContentInfo *ContentManager::add(const QString &filePath) {
         contentInfo->WantAutoLoad = true;
         contentInfo->DataCompressed = false;
       } else if (fileExt == "raw") {
+        if (infoJson.contains("address")) {
+          contentInfo->MemoryAddress = infoJson["address"].toInt();
+          contentInfo->WantAutoLoad = true;
+        }
         if (infoJson.contains("type")) {
           auto contentType = infoJson["type"].toString();
           if (contentType == "bitmap") {
