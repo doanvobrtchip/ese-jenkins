@@ -85,7 +85,7 @@ m_LastKeyHandler(NULL)
 void CodeEditor::focusInEvent(QFocusEvent *event)
 {
 	QPlainTextEdit::focusInEvent(event);
-	cursorPositionChanged();
+	emit cursorPositionChanged();
 }
 
 /*void CodeEditor::setUndoStack(QUndoStack *undo_stack)

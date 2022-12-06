@@ -1,6 +1,19 @@
+project(fteditor LANGUAGES CXX)
 
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
+FILE(GLOB CUSTOMIZE
+    src/customize/SaveOptionDialog.h
+    src/customize/SaveOptionDialog.cpp
+    src/customize/QHexView.h
+    src/customize/QHexView.cpp
+)
+
+FILE(GLOB UTILS
+    src/utils/ReadWriteUtil.h
+    src/utils/ReadWriteUtil.cpp
+    src/utils/LoggerUtil.h
+)
 IF (WIN32)
 	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
@@ -12,12 +25,12 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
-find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools)
+find_package(Qt6 QUIET COMPONENTS Widgets LinguistTools Concurrent)
 if(Qt6_FOUND AND FTEDITOR_OPENGL_VIEWPORT)
   find_package(Qt6 QUIET COMPONENTS OpenGLWidgets)
 endif()
 if(NOT Qt6_FOUND)
-  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools)
+  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets LinguistTools Concurrent)
   if(FTEDITOR_OPENGL_VIEWPORT)
     find_package(Qt5 5.15 REQUIRED COMPONENTS OpenGLWidgets)
   endif()
@@ -34,6 +47,9 @@ endif()
 configure_file(translations.qrc.in translations.qrc COPYONLY)
 
 qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+
+INCLUDE_DIRECTORIES(src/)
+INCLUDE_DIRECTORIES(.)
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -60,6 +76,8 @@ ADD_EXECUTABLE(fteditor WIN32
 	${HDRSFT}
 	${RSRC}
 	${RESOURCE_ADDED}
+  ${CUSTOMIZE}
+  ${UTILS}
 	)
 
 IF(FTEDITOR_DEVICE_MANAGER)
@@ -111,7 +129,7 @@ IF(WITH_FREETYPE)
 ENDIF(WITH_FREETYPE)
 
 
-target_link_libraries(fteditor Qt::Widgets)
+target_link_libraries(fteditor Qt::Widgets Qt::Concurrent)
 if(WIN32)
   target_link_libraries(fteditor version)
 endif()
@@ -183,3 +201,27 @@ endif()
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 
+#Windeployqt
+if(Qt6_FOUND)
+    get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+else()
+    get_target_property(QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+endif()
+get_filename_component(QT_BIN_DIR "${QMAKE_EXECUTABLE}" DIRECTORY)
+set(QT_DEPLOYMENT "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/qt-deployment")
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+set(QT_DEPLOYMENT_COMMAND_OPTIONS
+    $<$<CONFIG:Release>:"--release">$<$<CONFIG:Debug>:"--debug">
+    --verbose 0
+    --no-system-d3d-compiler
+    --no-translations
+    --no-compiler-runtime
+    --force
+    )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E env PATH="${QT_BIN_DIR}" "${WINDEPLOYQT_EXECUTABLE}"
+    "$<TARGET_FILE:${PROJECT_NAME}>" ${QT_DEPLOYMENT_COMMAND_OPTIONS}
+    --dir ${QT_DEPLOYMENT}
+    COMMENT "Running windeployqt ${QT_DEPLOYMENT}..."
+    )

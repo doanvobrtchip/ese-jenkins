@@ -106,7 +106,8 @@ public:
 
 	bool isInvalid(void);
 
-	void saveCoprocessorCmd(bool isBigEndian);
+   QString getCoproCmdText(bool isBigEndian);
+   QByteArray getCoproCmdBinary(bool isBigEndian);
 
 	bool eventFilter(QObject *watched, QEvent *event);
 
