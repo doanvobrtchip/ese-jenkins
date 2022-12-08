@@ -51,6 +51,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
 #include "utils/LoggerUtil.h"
+#include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
 
@@ -709,40 +710,6 @@ ContentInfo *ContentManager::add(const QString &filePath) {
   ContentInfo *contentInfo = new ContentInfo(filePath);
   QString fileExt = QFileInfo(filePath).suffix().toLower();
 
-  auto getJsonInfo = [](QString &infoFilePath) {
-    QJsonObject jo;
-    QFileInfo ifp(infoFilePath);
-    if (!ifp.exists()) return jo;
-    QString suffix = ifp.suffix();
-
-    if (suffix == "json") {
-      QFile file(infoFilePath);
-      if (!file.open(QIODevice::ReadOnly)) return jo;
-      QString data = file.readAll();
-      file.close();
-      auto jd = QJsonDocument::fromJson(data.toUtf8());
-      if (jd.isNull()) return jo;
-      return jd.object();
-    }
-
-    if (suffix == "readme") {
-      QFile file(infoFilePath);
-      if (!file.open(QIODevice::ReadOnly)) return jo;
-      QTextStream in(&file);
-      while (!in.atEnd()) {
-        QString line = in.readLine();
-        QStringList listItem = line.split(QRegularExpression("\\s+"));
-        if (listItem.at(0) != "name" && !listItem.at(0).isEmpty()) {
-          jo.insert(listItem.at(0),
-                    QJsonValue({{"offset", listItem.at(1).toInt()},
-                                {"length", listItem.at(2).toInt()}}));
-        }
-      }
-      file.close();
-    }
-    return jo;
-  };
-
   auto updateFlashSize = [&]() {
     size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
     auto contentSize = getFlashSize(contentInfo);
@@ -788,7 +755,10 @@ ContentInfo *ContentManager::add(const QString &filePath) {
     if (!infoFileType.isEmpty()) {
       QString infoFilePath =
           filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
-      auto infoJson = getJsonInfo(infoFilePath);
+      if (filePath.contains("_index")) {
+        infoFilePath.remove(filePath.lastIndexOf("_index"), 6);
+      }
+      auto infoJson = ReadWriteUtil::getJsonInfo(infoFilePath);
       if (fileExt == "glyph") {
         auto addressType = infoJson["address_type"].toString().toLower();
         int addressGlyph = infoJson["address_glyph"].toInt();
@@ -1246,18 +1216,48 @@ void ContentManager::addInternal(QStringList fileNameList) {
     dir.mkpath(".");
   }
 
+  // Add related files
   QStringList addedFiles;
   for (auto &fileName : fileNameList) {
     QString suffix = QFileInfo(fileName).suffix();
     if (suffix == "xfont") {
-      auto file = fileName.left(fileName.lastIndexOf('.') + 1).append("glyph");
-      if (QFileInfo::exists(file)) {
-        addedFiles.append(file);
+      auto relatedFile =
+          fileName.left(fileName.lastIndexOf('.') + 1).append("glyph");
+      if (QFileInfo::exists(relatedFile)) {
+        addedFiles.append(relatedFile);
       }
     } else if (suffix == "glyph") {
-      auto file = fileName.left(fileName.lastIndexOf('.') + 1).append("xfont");
-      if (QFileInfo::exists(file)) {
-        addedFiles.append(file);
+      auto relatedFile =
+          fileName.left(fileName.lastIndexOf('.') + 1).append("xfont");
+      if (QFileInfo::exists(relatedFile)) {
+        addedFiles.append(relatedFile);
+      }
+    } else if (suffix == "raw") {
+      auto completeBaseName = QFileInfo(fileName).completeBaseName();
+      if (completeBaseName.contains("index")) {
+        auto basicName =
+            completeBaseName.left(completeBaseName.lastIndexOf("index"));
+        auto searchedName = basicName + "lut.raw";
+        auto fileDir = QDir(QFileInfo(fileName).absolutePath());
+        if (fileDir.exists(searchedName)) {
+          addedFiles.append(fileDir.filePath(searchedName));
+        } else if (fileDir.cd(basicName + "LUT")) {
+          if (fileDir.exists(searchedName)) {
+            addedFiles.append(fileDir.filePath(searchedName));
+          }
+        }
+      } else if (completeBaseName.contains("lut")) {
+        auto searchedName =
+            completeBaseName.left(completeBaseName.lastIndexOf("lut")) +
+            "index.raw";
+        auto fileDir = QDir(QFileInfo(fileName).absolutePath());
+        if (fileDir.exists(searchedName)) {
+          addedFiles.append(fileDir.filePath(searchedName));
+        } else if (fileDir.cdUp()) {
+          if (fileDir.exists(searchedName)) {
+            addedFiles.append(fileDir.filePath(searchedName));
+          }
+        }
       }
     }
   }
@@ -1275,7 +1275,7 @@ void ContentManager::addInternal(QStringList fileNameList) {
       ++i;
       newName = QString("%1/%2_%3.%4")
                     .arg(dir.absolutePath())
-                    .arg(fi.baseName())
+                    .arg(fi.completeBaseName())
                     .arg(i)
                     .arg(suffix);
     }
@@ -1287,13 +1287,22 @@ void ContentManager::addInternal(QStringList fileNameList) {
           ContentInfo::MapInfoFileType.value(suffix, QString());
       QString originalInfoFile =
           fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
+      // PALETTED format
+      if (fi.completeBaseName().contains("_index")) {
+        originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
+      }
+
       if (QFileInfo::exists(originalInfoFile)) {
         QString savedInfoFile =
             newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
+        if (fi.completeBaseName().contains("_index")) {
+          savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
+        }
         QFile::copy(originalInfoFile, savedInfoFile);
       }
     }
 
+    // Save converted chars file to show example text
     if (suffix == "xfont") {
       QString originalCharsFile = fileName.left(fileName.lastIndexOf('.'))
                                       .append("_converted_chars.txt");

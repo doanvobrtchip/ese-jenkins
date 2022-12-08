@@ -48,6 +48,8 @@
 #include "main_window.h"
 #include "properties_editor.h"
 #include "toolbox.h"
+#include "utils/LoggerUtil.h"
+#include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
 
@@ -1986,7 +1988,10 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e) {
 
     QStringList supportedList = {"flash", "ram_g", "raw", "xfont", "avi"};
     QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
-    if (supportedList.contains(fileSuffix)) return true;
+    if (fileSuffix == "raw" && currentItem->SourcePath.contains("_lut"))
+      return false;
+    else if (supportedList.contains(fileSuffix))
+      return true;
 
     if (!currentItem->MemoryLoaded) return false;
 
@@ -2012,40 +2017,6 @@ inline bool requirePaletteAddress(ContentInfo *contentInfo) {
 void InteractiveViewport::dropEvent(QDropEvent *e) {
   // Should probably lock the display list at this point ... ?
   // TODO: Bitmaps from files, etc
-  auto getJsonInfo = [](QString &file) {
-    QJsonObject jo;
-    QFileInfo fi(file);
-    if (!fi.exists()) return jo;
-    QString suffix = fi.suffix();
-
-    if (suffix == "json") {
-      QFile f(file);
-      if (!f.open(QIODevice::ReadOnly)) return jo;
-      QString data = f.readAll();
-      f.close();
-      auto jd = QJsonDocument::fromJson(data.toUtf8());
-      if (jd.isNull()) return jo;
-      return jd.object();
-    }
-
-    if (suffix == "readme") {
-      QFile f(file);
-      if (!f.open(QIODevice::ReadOnly)) return jo;
-      QTextStream in(&f);
-      while (!in.atEnd()) {
-        QString line = in.readLine();
-        QStringList listItem = line.split(QRegularExpression("\\s+"));
-        if (listItem.at(0) != "name" && !listItem.at(0).isEmpty()) {
-          jo.insert(listItem.at(0),
-                    QJsonValue({{"offset", listItem.at(1).toInt()},
-                                {"length", listItem.at(2).toInt()}}));
-        }
-      }
-      f.close();
-    }
-    return jo;
-  };
-
   if (acceptableSource(e)) {
     if (m_LineEditor && !m_LineEditor->isMacro()) {
       e->accept();
@@ -2649,7 +2620,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
             line = hline;
             // TODO: contentInfo->Converter == ContentInfo::Font &&
             // isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-
+            auto addPalettedSource = [&](int address) {
+              pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
+              pa.Parameter[0].I = address;
+              pa.ExpectedParameterCount = 1;
+              m_LineEditor->insertLine(hline, pa);
+              ++hline;
+              ++line;
+            };
             auto addBitmapHandler = [&]() {
               pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
               pa.Parameter[0].U = bitmapHandle;
@@ -2784,10 +2762,24 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                         contentInfo->SourcePath
                             .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
                             .append(fileType);
-                    auto infoJson = getJsonInfo(filePath);
+                    if (contentInfo->SourcePath.contains("_index")) {
+                      filePath.remove(filePath.lastIndexOf("_index"), 6);
+                    }
+                    auto infoJson = ReadWriteUtil::getJsonInfo(filePath);
                     if (infoJson.contains("type")) {
                       auto contentType = infoJson["type"].toString();
                       if (contentType == "bitmap") {
+                        if (infoJson["format"].toString().toUpper().contains(
+                                "PALETTED")) {
+                          auto searchedFile = contentInfo->DestName;
+                          searchedFile.replace("_index", "_lut");
+                          auto searchedContent =
+                              m_MainWindow->contentManager()->find(
+                                  searchedFile);
+                          addPalettedSource(
+                              searchedContent ? searchedContent->bitmapAddress()
+                                              : 0);
+                        }
                         addBitmapHandler();
                       } else if (contentType == "legacyfont") {
                         if (infoJson.contains("eve_command")) {
@@ -3036,11 +3028,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                     contentInfo->SourcePath
                         .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
                         .append(fileType);
-                infoJson = getJsonInfo(filePath);
+                if (contentInfo->SourcePath.contains("_index")) {
+                  filePath.remove(filePath.lastIndexOf("_index"), 6);
+                }
+                infoJson = ReadWriteUtil::getJsonInfo(filePath);
               }
             }
             if (fileSuffix == "ram_g") {
-              printf("Create commands for .ram_g content file\n");
+              debugLog("Create commands for .ram_g content file\n");
               pa.IdLeft = 0xFFFFFF00;
               pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
               pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
@@ -3055,7 +3050,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               m_LineEditor->insertLine(line, pa);
               ++line;
             } else if (fileSuffix == "flash") {
-              printf("Create commands for .flash content file\n");
+              debugLog("Create commands for .flash content file\n");
               pa.IdLeft = 0xFFFFFF00;
               pa.IdRight = CMD_ANIMFRAME & 0xFF;
               pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
@@ -3070,7 +3065,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               m_LineEditor->insertLine(line, pa);
               ++line;
             } else if (fileSuffix == "xfont") {
-              printf("Create commands for .xfont content file\n");
+              debugLog("Create commands for .xfont content file\n");
               QString savedCharsFile =
                   contentInfo->SourcePath
                       .left(contentInfo->SourcePath.lastIndexOf('.'))
@@ -3081,10 +3076,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               if (infoJson.contains("type")) {
                 auto contentType = infoJson["type"].toString();
                 if (contentType == "bitmap") {
-                  printf("Create commands for .raw bitmap content file\n");
+                  debugLog("Create commands for .raw bitmap content file");
                   addBitmapCommands();
                 } else if (contentType == "legacyfont") {
-                  printf("Create commands for .raw legacy font content file\n");
+                  debugLog(
+                      "Create commands for .raw legacy font content file\n");
                   QString savedCharsIndexFile =
                       contentInfo->SourcePath
                           .left(contentInfo->SourcePath.lastIndexOf('.'))

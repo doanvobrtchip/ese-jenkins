@@ -8,8 +8,9 @@
 #include <QByteArray>
 #include <QFile>
 #include <QTextStream>
-
-ReadWriteUtil::ReadWriteUtil() {}
+#include <QFileInfo>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 bool ReadWriteUtil::writeBinary(QString fileName, QByteArray &data) {
   QFile f(fileName);
@@ -29,4 +30,40 @@ bool ReadWriteUtil::writeText(QString fileName, QString &data) {
   ts.flush();
   f.close();
   return true;
+}
+
+QJsonObject ReadWriteUtil::getJsonInfo(QString &filePath)
+{
+  QJsonObject jo;
+  QFileInfo ifp(filePath);
+  if (!ifp.exists()) return jo;
+  QString suffix = ifp.suffix();
+
+  if (suffix == "json") {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) return jo;
+    QString data = file.readAll();
+    file.close();
+    auto jd = QJsonDocument::fromJson(data.toUtf8());
+    if (jd.isNull()) return jo;
+    return jd.object();
+  }
+
+  if (suffix == "readme") {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) return jo;
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+      QString line = in.readLine();
+      QRegularExpression req("\\s+");
+      QStringList listItem = line.split(req);
+      if (listItem.at(0) != "name" && !listItem.at(0).isEmpty()) {
+        jo.insert(listItem.at(0),
+                  QJsonValue({{"offset", listItem.at(1).toInt()},
+                              {"length", listItem.at(2).toInt()}}));
+      }
+    }
+    file.close();
+  }
+  return jo;
 }
