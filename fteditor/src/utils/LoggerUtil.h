@@ -8,6 +8,6 @@
 
 #define debugLog(msg)                                                        \
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ssap MM/dd/yy") + \
-                  " -> " + msg
+                  ": " + msg
 
 #endif  // LOGGERUTIL_H

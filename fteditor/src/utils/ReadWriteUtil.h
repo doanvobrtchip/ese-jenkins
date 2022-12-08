@@ -8,13 +8,13 @@
 
 class QByteArray;
 class QString;
+class QJsonObject;
 
 class ReadWriteUtil {
  public:
-  ReadWriteUtil();
-
-  bool writeBinary(QString fileName, QByteArray &data);
-  bool writeText(QString fileName, QString &data);
+  static bool writeBinary(QString fileName, QByteArray &data);
+  static bool writeText(QString fileName, QString &data);
+  static QJsonObject getJsonInfo(QString &filePath);
 };
 
 #endif  // READWRITEUTIL_H

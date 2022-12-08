@@ -3693,26 +3693,22 @@ void MainWindow::handleSaveCoproCmd() {
 
 void MainWindow::saveDisplayListToTextFile(QString fileName, bool isBigEndian) {
   auto data = m_Inspector->getDisplayListContent(isBigEndian);
-  ReadWriteUtil rwf;
-  rwf.writeText(fileName, data);
+  ReadWriteUtil::writeText(fileName, data);
 }
 
 void MainWindow::saveCoproCmdToTextFile(QString fileName, bool isBigEndian) {
   auto data = m_CmdEditor->getCoproCmdText(isBigEndian);
-  ReadWriteUtil rwf;
-  rwf.writeText(fileName, data);
+  ReadWriteUtil::writeText(fileName, data);
 }
 
 void MainWindow::saveDLToBinaryFile(QString fileName, bool isBigEndian) {
   auto data = m_Inspector->getDLBinary(isBigEndian);
-  ReadWriteUtil rwf;
-  rwf.writeBinary(fileName, data);
+  ReadWriteUtil::writeBinary(fileName, data);
 }
 
 void MainWindow::saveCoproToBinaryFile(QString fileName, bool isBigEndian) {
   auto data = m_CmdEditor->getCoproCmdBinary(isBigEndian);
-  ReadWriteUtil rwf;
-  rwf.writeBinary(fileName, data);
+  ReadWriteUtil::writeBinary(fileName, data);
 }
 
 void MainWindow::actDisplayListFromIntegers() {
