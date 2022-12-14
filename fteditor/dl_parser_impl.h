@@ -659,7 +659,9 @@ void DlParser::initVC4()
 	}
 	if (!s_CmdParamMap.size())
 	{
-		s_CmdParamMap["OPT_CENTER"] = OPT_CENTER;
+    s_CmdParamMap["RAM_G"] = START_RAM_G;
+    s_CmdParamMap["RAM_DL"] = START_RAM_DL;
+    s_CmdParamMap["OPT_CENTER"] = OPT_CENTER;
 		s_CmdParamMap["OPT_CENTERX"] = OPT_CENTERX;
 		s_CmdParamMap["OPT_CENTERY"] = OPT_CENTERY;
 		s_CmdParamMap["OPT_FLAT"] = OPT_FLAT;
