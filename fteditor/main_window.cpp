@@ -54,6 +54,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSettings>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStatusBar>
@@ -90,7 +91,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "interactive_viewport.h"
 #include "properties_editor.h"
 #include "toolbox.h"
-#include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
@@ -309,9 +309,15 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints,
   QGridLayout *layout = new QGridLayout();
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
-  layout->addWidget(m_EmulatorViewport, 0, 0);
-  layout->addWidget(m_EmulatorViewport->verticalScrollbar(), 0, 1);
-  layout->addWidget(m_EmulatorViewport->horizontalScrollbar(), 1, 0);
+
+  layout->addWidget(m_EmulatorViewport->verticalRuler(), 1, 0);
+  layout->addWidget(m_EmulatorViewport->horizontalRuler(), 0, 1,
+                    Qt::AlignBottom);
+  layout->addWidget(m_EmulatorViewport, 1, 1);
+  layout->addWidget(m_EmulatorViewport->verticalScrollbar(), 1, 2);
+  layout->addWidget(m_EmulatorViewport->horizontalScrollbar(), 2, 1);
+  layout->setRowStretch(0, 0);
+  layout->setRowStretch(1, 50);
   centralWidget->setLayout(layout);
   setCentralWidget(centralWidget);
 
@@ -1700,6 +1706,19 @@ void MainWindow::createDockWindows() {
     m_ToolboxDock->setWidget(scrollArea);
     addDockWidget(Qt::LeftDockWidgetArea, m_ToolboxDock);
     m_WidgetsMenu->addAction(m_ToolboxDock->toggleViewAction());
+  }
+
+  // Ruler
+  {
+    auto actionShowRuler = new QAction;
+    actionShowRuler->setCheckable(true);
+    actionShowRuler->setChecked(true);
+    actionShowRuler->setText("Ruler");
+    m_WidgetsMenu->addAction(actionShowRuler);
+    connect(actionShowRuler, &QAction::triggered, m_EmulatorViewport,
+            &EmulatorViewport::toggleViewRuler);
+    connect(m_EmulatorViewport->verticalRuler(), &QRuler::visibleChanged,
+            actionShowRuler, &QAction::setChecked);
   }
 
   tabifyDockWidget(m_InspectorDock, m_DlEditorDock);

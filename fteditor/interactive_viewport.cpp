@@ -200,6 +200,19 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
   // toolBar->addAction(decrease);
   // toolBar->addAction(increase);
 
+  QAction *ruler = new QAction;
+  ruler->setText(tr("Ruler Alt+C"));
+  ruler->setIcon(QIcon(":/icons/ruler.png"));
+  ruler->setStatusTip(tr("Show/Hide the ruler"));
+  ruler->setCheckable(true);
+  ruler->setChecked(true);
+  ruler->setShortcut(Qt::ALT | Qt::Key_Y);
+  QToolBar *toolRulerBar = m_MainWindow->addToolBar(tr("Ruler"));
+  toolRulerBar->setIconSize(QSize(16, 16));
+  toolRulerBar->addAction(ruler);
+  connect(ruler, &QAction::triggered, this, &EmulatorViewport::toggleViewRuler);
+  connect(verticalRuler(), &QRuler::visibleChanged, ruler, &QAction::setChecked);
+
   QAction *zoomIn = new QAction(this);
   connect(zoomIn, &QAction::triggered, this, &InteractiveViewport::zoomIn);
   zoomIn->setText(tr("Zoom In"));
@@ -454,6 +467,12 @@ void InteractiveViewport::graphics(QImage *image) {
 }
 
 void InteractiveViewport::paintEvent(QPaintEvent *e) {
+  horizontalRuler()->setScale(screenScale());
+  horizontalRuler()->setScreenLeft(screenLeft());
+  horizontalRuler()->update();
+  verticalRuler()->setScale(screenScale());
+  verticalRuler()->setScreenTop(screenTop());
+  verticalRuler()->update();
   EmulatorViewport::paintEvent(e);
   QPainter p(this);
 

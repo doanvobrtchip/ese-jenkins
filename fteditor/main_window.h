@@ -337,6 +337,8 @@ class MainWindow : public QMainWindow {
   QDockWidget *m_InspectorDock;
   Inspector *m_Inspector;
 
+  QDockWidget *m_RulerDock;
+
 #if FT800_DEVICE_MANAGER
   QDockWidget *m_DeviceManagerDock;
   DeviceManager *m_DeviceManager;
