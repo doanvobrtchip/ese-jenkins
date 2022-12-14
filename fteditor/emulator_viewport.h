@@ -16,12 +16,15 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QWidget>
 #include <QThread>
 #include <QScrollBar>
+#include <QScrollArea>
+#include <QVBoxLayout>
 #ifdef FTEDITOR_OPENGL_VIEWPORT
 #	include <QOpenGLWidget>
 #endif
 
 // Emulator includes
 #include <bt8xxemu.h>
+#include "src/customize/QRuler.h"
 
 // Project includes
 
@@ -80,6 +83,9 @@ public:
 	QScrollBar *horizontalScrollbar() { return m_Horizontal; }
 	QScrollBar *verticalScrollbar() { return m_Vertical; }
 
+  QRuler *horizontalRuler() { return m_HorizontalRuler; }
+  QRuler *verticalRuler() { return m_VerticalRuler; }
+
 protected:
 	void setScreenScale(int screenScale);
 
@@ -88,12 +94,14 @@ protected:
 public slots:		
 	// void saveScreenshot();
 	void threadRepaint();
+  void toggleViewRuler(bool show);
 
 	virtual void zoomIn();
 	virtual void zoomOut();
 
 signals:
 	void frame();
+  void visibleChanged(bool visible);
 
 private:
 	QScrollBar *m_Horizontal;
@@ -101,6 +109,9 @@ private:
 	int m_ScreenScale;
 
 	QString m_ApplicationDataDir;
+
+  QRuler *m_HorizontalRuler;
+  QRuler *m_VerticalRuler;
 
 private:
 	EmulatorViewport(const EmulatorViewport &);

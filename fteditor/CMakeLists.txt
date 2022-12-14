@@ -7,6 +7,8 @@ FILE(GLOB CUSTOMIZE
     src/customize/SaveOptionDialog.cpp
     src/customize/QHexView.h
     src/customize/QHexView.cpp
+    src/customize/QRuler.cpp
+    src/customize/QRuler.h
 )
 
 FILE(GLOB UTILS

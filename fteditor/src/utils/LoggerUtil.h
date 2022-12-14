@@ -5,6 +5,7 @@
  */
 #ifndef LOGGERUTIL_H
 #define LOGGERUTIL_H
+#include <QDateTime>
 
 #define debugLog(msg)                                                        \
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ssap MM/dd/yy") + \
