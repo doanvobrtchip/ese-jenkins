@@ -1,3 +1,17 @@
+Version 4.5.0
+Alpha
+Feature updates:
+   Add one inspector window to view the content of RAM_G
+   Save coprocessor command and display list in the binary form
+   Support for PALETTED565/PALETTED4444/PALETTED8 bitmap
+   Add pixel ruler in the view port 
+   Add predefined constants in editor
+   Add both glyph and xfont if the user selected one
+   Generate coprocessor commands for legacy font with new information from EAB v2.7.1
+
+Resolved issues:
+   The right operand of '-' is a garbage value
+=======================
 Version 4.4.0
 RC1
 Features updates:
