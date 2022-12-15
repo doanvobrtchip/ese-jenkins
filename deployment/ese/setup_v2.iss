@@ -7,7 +7,7 @@
 #define DeploymentFileDir = (RootDir) + "\fteditor\deployment"
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "v4.4.0"
+#define MyAppVersion "v4.5.0_Alpha"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -26,8 +26,8 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={sd}\Users\Public\Documents\{#MyAppName}
 DefaultGroupName={#MyAppName}
-InfoBeforeFile=.\TM_Release Notes.txt
-OutputBaseFilename=EVE Screen Editor {#MyAppVersion}_Beta
+InfoBeforeFile=.\Release Notes.txt
+OutputBaseFilename=EVE Screen Editor {#MyAppVersion}
 
 
 SetupIconFile={#RootDir}\fteditor\icons\eve-puzzle-64.ico
@@ -56,7 +56,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 
 [Files]
-Source: ".\TM_Release Notes.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\Release Notes.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\Manual\*.pdf"; DestDir: "{app}\Manual"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 Source: "{#RootDir}\fteditor\device_sync\*.*"; DestDir: "{app}\device_sync"; Flags: recursesubdirs createallsubdirs ignoreversion
