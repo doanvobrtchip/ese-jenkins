@@ -3829,7 +3829,12 @@ void MainWindow::aboutQt() {
          "(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
          "These icons are licensed under a Creative Commons"
          "Attribution 3.0 License.\n"
-         "http://creativecommons.org/licenses/by/3.0"));
+         "http://creativecommons.org/licenses/by/3.0"
+         "\n\n"
+         "virinext/QHexView\n"
+         "virinext/QHexView is licensed under the MIT License\n"
+         "Copyright (c) 2015\n"
+         "https://github.com/virinext/QHexView"));
 }
 
 QString MainWindow::getProjectContent() const {
