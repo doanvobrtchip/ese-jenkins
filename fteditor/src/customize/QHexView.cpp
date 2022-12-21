@@ -41,7 +41,6 @@ QHexView::QHexView(QWidget *parent)
   setFocusPolicy(Qt::StrongFocus);
   m_cursorPos = 0;
   resetSelection(0);
-  connect(this, &QHexView::bytesPerLineChanged, this, &QHexView::ensureVisible);
 }
 
 QHexView::~QHexView() {
@@ -51,7 +50,6 @@ QHexView::~QHexView() {
 void QHexView::setData(QHexView::DataStorage *pData) {
   QMutexLocker lock(&m_dataMtx);
 
-  verticalScrollBar()->setValue(0);
   if (m_pdata) delete m_pdata;
   m_pdata = pData;
 }
@@ -65,11 +63,13 @@ void QHexView::showFromOffset(std::size_t offset) {
     updatePositions();
     setCursorPos(offset * 2);
 
-    int cursorY = m_cursorPos / (2 * m_bytesPerLine);
-    if (cursorY > 0) --cursorY;
+    if (!checkVisible()) {
+      int cursorY = m_cursorPos / (2 * m_bytesPerLine);
+      if (cursorY > 0) cursorY--;
 
-    verticalScrollBar()->setValue(cursorY);
-    viewport()->update();
+      verticalScrollBar()->setValue(cursorY);
+      viewport()->update();
+    }
   }
 }
 
@@ -141,6 +141,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
   // Draw address
   QColor nonContentColor = QColor(0xcc, 0xe6, 0xff);
   int yPosStart = m_charHeight;
+  bool isValidFocus = false;
 
   // Draw focus
   if (hasFocus()) {
@@ -149,19 +150,24 @@ void QHexView::paintEvent(QPaintEvent *event) {
     yFocus -= firstLineIdx;
     int cursorX = (((xFocus / 2) * 3) + (xFocus % 2)) * m_charWidth + m_posHex;
     int cursorY = yFocus * m_charHeight + m_charHeight + 3;
-    QColor bgColor = QColor(0xd1, 0x1a, 0xff, 0xFF);
-    painter.fillRect(cursorX - 0.3 * m_charWidth, cursorY, 2.8 * m_charWidth,
-                     m_charHeight - 1, bgColor);
+    if (cursorY >= yPosStart && m_selectBegin != m_selectEnd)
+      isValidFocus= true;
 
-    // Ascii
-    int cursorXAscii = (xFocus / 2) * (m_charWidth + 1) + m_posAscii;
-    painter.fillRect(cursorXAscii, cursorY, m_charWidth, m_charHeight, bgColor);
+    if (isValidFocus){
+      QColor bgColor = QColor(0xd1, 0x1a, 0xff, 0xFF);
+      painter.fillRect(cursorX - 0.3 * m_charWidth, cursorY, 2.8 * m_charWidth,
+                       m_charHeight - 1, bgColor);
+
+      // Ascii
+      int cursorXAscii = (xFocus / 2) * (m_charWidth + 1) + m_posAscii;
+      painter.fillRect(cursorXAscii, cursorY, m_charWidth, m_charHeight, bgColor);
+    }
   }
 
   // Draw header
   for (int i = 0, xPos = m_posHex, yPos = yPosStart; i < m_bytesPerLine;
        ++i, xPos += 3 * m_charWidth) {
-    if (!hasFocus() || i != ((m_cursorPos / 2) % m_bytesPerLine)) {
+    if (!hasFocus() || i != ((m_cursorPos / 2) % m_bytesPerLine) || (hasFocus() && !isValidFocus)) {
       painter.fillRect(
           QRect(xPos - 0.3 * m_charWidth, yPos - 0.9 * m_charHeight,
                 2.8 * m_charWidth, m_charHeight + 1),
@@ -186,7 +192,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
   for (int lineIdx = firstLineIdx, y = yPosStart; lineIdx < lastLineIdx;
        lineIdx += 1, y += m_charHeight) {
     painter.setPen(QColor(0, 0, 0));
-    if (!hasFocus() || lineIdx != ((m_cursorPos / 2) / m_bytesPerLine)) {
+    if (!hasFocus() || lineIdx != ((m_cursorPos / 2) / m_bytesPerLine)|| (hasFocus() && !isValidFocus)) {
       painter.fillRect(QRect(m_posAddr, y - 0.8 * m_charHeight,
                              m_posHex - 0.8 * m_charWidth, m_charHeight - 1),
                        nonContentColor);
@@ -199,6 +205,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
          i < m_bytesPerLine &&
          ((lineIdx - firstLineIdx) * m_bytesPerLine + i) < data.size();
          i++, x += 3 * m_charWidth, xAscii += m_charWidth + 1) {
+      // Default transparency and color of the text
       painter.setPen(QColor(0, 0, 0, 128));
       auto pos = (lineIdx * m_bytesPerLine + i) * 2;
       index = (lineIdx - firstLineIdx) * m_bytesPerLine + i;
@@ -218,9 +225,11 @@ void QHexView::paintEvent(QPaintEvent *event) {
 
       // Set color for memory area of content item
       int globalIndex = lineIdx * m_bytesPerLine + i;
-      for (int i = m_contentAreaList.count() - 1; i >= 0; --i) {
-        auto area = m_contentAreaList.at(i);
-        if (globalIndex >= area->start && globalIndex <= area->end) {
+      ContentArea *area;
+      for (int listIdx = m_contentAreaList.count() - 1; listIdx >= 0; --listIdx) {
+        area = m_contentAreaList.at(listIdx);
+        if (area->contentInfo->MemoryLoaded && globalIndex >= area->start() &&
+            globalIndex <= area->end()) {
           painter.setPen(area->color);
           break;
         }
@@ -440,7 +449,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 }
 
 void QHexView::mouseMoveEvent(QMouseEvent *event) {
-  if (!hasFocus()) return;
+  if (!isValidMouseEvent(event)) return;
   int actPos = cursorPos(event->position());
 
   QMutexLocker lock(&m_dataMtx);
@@ -452,13 +461,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void QHexView::mousePressEvent(QMouseEvent *event) {
-  int y =
-      (event->position().toPoint().y() / m_charHeight - 1) * 2 * m_bytesPerLine;
-  if (y < 0 || event->position().toPoint().x() < m_posHex) {
-    setSelected(0, 0);
-    clearFocus();
-    return;
-  };
+  if (!isValidMouseEvent(event)) return;
   int cPos = cursorPos(event->position());
 
   if ((QApplication::keyboardModifiers() & Qt::ShiftModifier) &&
@@ -500,6 +503,8 @@ const size_t QHexView::startY() const { return 2 * m_charHeight; }
 void QHexView::addContentArea(ContentInfo *contentInfo) {
   auto contentArea = new ContentArea(contentInfo);
   contentArea->color = colours[m_contentAreaList.size() % colours.size()];
+  debugLog(QString("Add new content - Name: %1 | Color: %2")
+               .arg(contentInfo->DestName, contentArea->color.name()));
   m_contentAreaList.append(contentArea);
 }
 
@@ -518,8 +523,8 @@ ContentInfo *QHexView::detectCurrentContentInfo() {
   auto endIdx = m_selectEnd / 2 - 1;
   for (int i = m_contentAreaList.count() - 1; i >= 0; --i) {
     auto area = m_contentAreaList.at(i);
-    if ((beginIdx >= area->start && beginIdx <= area->end) &&
-        (endIdx >= area->start && endIdx <= area->end)) {
+    if ((beginIdx >= area->start() && beginIdx <= area->end()) &&
+        (endIdx >= area->start() && endIdx <= area->end())) {
       return area->contentInfo;
     }
   }
@@ -595,14 +600,15 @@ void QHexView::ensureVisible() {
   QSize areaSize = viewport()->size();
 
   int firstLineIdx = verticalScrollBar()->value();
-  int lastLineIdx = firstLineIdx + areaSize.height() / m_charHeight;
+  int lastLineIdx = firstLineIdx + areaSize.height() / m_charHeight - 2;
 
   int cursorY = m_cursorPos / (2 * m_bytesPerLine);
   if (cursorY < firstLineIdx) {
     verticalScrollBar()->setValue(cursorY);
-  } else if (cursorY >= lastLineIdx) {
-    verticalScrollBar()->setValue(cursorY - (areaSize.height() - startY()) /
-                                                m_charHeight);
+  } else if (cursorY > lastLineIdx) {
+    int newValue = cursorY - (areaSize.height() - startY()) /
+        m_charHeight;
+    verticalScrollBar()->setValue(newValue);
   }
 }
 
@@ -623,7 +629,32 @@ void QHexView::updateUint() {
     emit uintChanged(resultUint);
   }
   debugLog(
-      QString("ResultStr: %1 | BigEndian: %2").arg(resultStr).arg(resultUint));
+        QString("ResultStr: %1 | BigEndian: %2").arg(resultStr).arg(resultUint));
+}
+
+bool QHexView::checkVisible()
+{
+  QSize areaSize = viewport()->size();
+
+  int firstLineIdx = verticalScrollBar()->value();
+  int lastLineIdx = firstLineIdx + areaSize.height() / m_charHeight - 2;
+
+  int cursorY = m_cursorPos / (2 * m_bytesPerLine);
+  if (cursorY < firstLineIdx || cursorY > lastLineIdx) {
+    return false;
+  }
+  return true;
+}
+
+bool QHexView::isValidMouseEvent(QMouseEvent *event)
+{
+  if (!hasFocus()) return false;
+  int y =
+      (event->position().toPoint().y() / m_charHeight - 1) * 2 * m_bytesPerLine;
+  if (y < 0 || event->position().toPoint().x() < m_posHex || event->position().toPoint().x() > m_posAscii - GAP_HEX_ASCII) {
+    return false;
+  };
+  return true;
 }
 
 QHexView::DataStorageArray::DataStorageArray(const QByteArray &arr) {
@@ -653,8 +684,13 @@ QByteArray QHexView::DataStorageFile::getData(std::size_t position,
 
 std::size_t QHexView::DataStorageFile::size() { return m_file.size(); }
 
-QHexView::ContentArea::ContentArea(ContentInfo *contentInfo)
-    : contentInfo(contentInfo),
-      start(contentInfo->MemoryAddress),
-      end(contentInfo->MemoryAddress + contentInfo->CachedMemorySize - 1) {}
+QHexView::ContentArea::ContentArea(ContentInfo *contentInfo) {
+  this->contentInfo = contentInfo;
+}
+
+int QHexView::ContentArea::start() { return contentInfo->MemoryAddress; }
+
+int QHexView::ContentArea::end() {
+  return contentInfo->MemoryAddress + contentInfo->CachedMemorySize - 1;
+}
 }  // namespace FTEDITOR

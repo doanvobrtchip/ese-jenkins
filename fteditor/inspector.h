@@ -82,7 +82,6 @@ class Inspector : public QWidget {
   void onPrepareContextMenu(const QPoint &pos);
 
  private:
-  void updateRamG();
   void initDisplayReg();
   void releaseDisplayReg();
 
@@ -119,10 +118,12 @@ class Inspector : public QWidget {
                               QTreeWidgetItem *previous = nullptr);
   void handleContentItemPressed(QTreeWidgetItem *item);
   void setup(QObject *obj = nullptr);
-  void removeContentItem(QTreeWidgetItem *item);
-  void addContentItem(QTreeWidgetItem *item);
+  void removeContentItem(ContentInfo *contentInfo);
+  void addContentItem(ContentInfo *contentInfo);
   void handleCurrentInfoChanged(ContentInfo *contentInfo);
   void bindVisible(bool visible);
+  void updateRamG(int ramUsage = -1);
+
  signals:
   void countHandleBitmapChanged(int value);
   void updateCurrentInfo(ContentInfo *contentInfo);

@@ -31,15 +31,15 @@
 #include <QEvent>
 #include <QGroupBox>
 #include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
 #include <QMenu>
+#include <QPushButton>
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
 #include <QtEndian>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QLabel>
 
 // Emulator includes
 #include <bt8xxemu_diag.h>
@@ -172,8 +172,7 @@ Inspector::Inspector(MainWindow *parent)
   m_visible = false;
 
   setup();
-  connect(m_MainWindow, SIGNAL(readyToSetup(QObject *)), this,
-          SLOT(setup(QObject *)));
+  connect(m_MainWindow, &MainWindow::readyToSetup, this, &Inspector::setup);
 }
 
 void Inspector::setup(QObject *obj) {
@@ -189,6 +188,10 @@ void Inspector::setup(QObject *obj) {
     connect(contentList, &ContentTreeWidget::addItem, this,
             &Inspector::addContentItem, Qt::UniqueConnection);
 
+    connect(m_MainWindow->contentManager(),
+            &ContentManager::ramGlobalUsageChanged, this,
+            &Inspector::updateRamG, Qt::UniqueConnection);
+
     connect(hexView, &QHexView::currentInfoChanged, this,
             &Inspector::handleCurrentInfoChanged, Qt::UniqueConnection);
   }
@@ -199,9 +202,7 @@ void Inspector::setup(QObject *obj) {
   }
 }
 
-void Inspector::removeContentItem(QTreeWidgetItem *item) {
-  auto contentInfo =
-      (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
+void Inspector::removeContentItem(ContentInfo *contentInfo) {
   auto size = m_MainWindow->contentManager()->getContentSize(contentInfo);
   if (contentInfo->DataStorage == ContentInfo::Flash || size < 0) {
     debugLog("Remove a non-memory content");
@@ -211,15 +212,7 @@ void Inspector::removeContentItem(QTreeWidgetItem *item) {
   hexView->removeContentArea(contentInfo);
 }
 
-void Inspector::addContentItem(QTreeWidgetItem *item) {
-  auto contentInfo =
-      (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
-  auto size = m_MainWindow->contentManager()->getContentSize(contentInfo);
-  if (contentInfo->DataStorage == ContentInfo::Flash || size < 0) {
-    debugLog("Add a non-memory content");
-    return;
-  }
-  debugLog("Add a memory content");
+void Inspector::addContentItem(ContentInfo *contentInfo) {
   hexView->addContentArea(contentInfo);
 }
 
@@ -247,16 +240,17 @@ void Inspector::handleContentItemPressed(QTreeWidgetItem *item) {
       (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
 
   auto size = m_MainWindow->contentManager()->getContentSize(contentInfo);
-  if (contentInfo->DataStorage == ContentInfo::Flash || size < 0) {
+  if (!contentInfo->MemoryLoaded || size <= 0 ||
+      !contentInfo->BuildError.isEmpty()) {
     debugLog("Selected a non-memory content");
-    hexView->showFromOffset(0);
     hexView->setSelected(0, 0);
     return;
   }
 
-  debugLog("Selected a memory content | Addr: " +
-           QString::number(contentInfo->MemoryAddress) + " | Size: " +
-           QString::number(size) + " | Name: " + contentInfo->DestName);
+  debugLog(QString("Selected a memory content | Addr: %1 | Size: %2 | Name: %3")
+               .arg(contentInfo->MemoryAddress)
+               .arg(size)
+               .arg(contentInfo->DestName));
   hexView->showFromOffset(contentInfo->MemoryAddress);
   hexView->setSelected(contentInfo->MemoryAddress, size);
   if (m_visible) {
@@ -636,7 +630,7 @@ void Inspector::setupRamGWindow(QGroupBox *ramGGroup) {
 
   connect(searchButton, &QPushButton::clicked, this, handleGoToAddress);
   connect(lineEdit, &QLineEdit::returnPressed, this, handleGoToAddress);
-  connect(hexView, &QHexView::uintChanged, this, [this](uint value){
+  connect(hexView, &QHexView::uintChanged, this, [this](uint value) {
     QString text = QString(tr("Uint: %1")).arg(value);
     lbUint->setText(text);
   });
@@ -690,14 +684,14 @@ void Inspector::onPrepareContextMenu(const QPoint &pos) {
   m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
 }
 
-void Inspector::updateRamG() {
+void Inspector::updateRamG(int ramUsage) {
   auto ramG = BT8XXEMU_getRam(g_Emulator);
   int ramSize = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_G_END];
   QByteArray byteArr;
   auto temp = static_cast<char *>(static_cast<void *>(ramG));
   byteArr.append(temp, ramSize);
   auto data = hexView->data();
-  if (data && byteArr == data->getData(0, data->size())) {
+  if (data && byteArr == data->getData(0, data->size()) && ramUsage == -1) {
     return;
   }
   debugLog("RAM_G - Content has a change");

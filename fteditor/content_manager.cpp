@@ -1084,7 +1084,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo) {
   // Reprocess to RAM
   contentInfo->ExternalDirty = true;
   reprocessInternal(contentInfo);
-  emit m_ContentList->addItem(view);
+  emit m_ContentList->addItem(contentInfo);
 
   // Be helpful
   m_ContentList->setCurrentItem(view);
@@ -1332,10 +1332,10 @@ void ContentManager::remove() {
 
   if (!m_ContentList->currentItem()) return;
 
-  emit m_ContentList->removeItem(m_ContentList->currentItem());
   ContentInfo *info = (ContentInfo *)(void *)m_ContentList->currentItem()
                           ->data(0, Qt::UserRole)
                           .value<quintptr>();
+  emit m_ContentList->removeItem(info);
   remove(info);
 }
 
@@ -4815,10 +4815,6 @@ void ContentManager::propertiesFontOffsetChanged(int value) {
     changeFontOffset(current(), value);
 }
 
-////////////////////////////////////////////////////////////////////////
-
-} /* namespace FTEDITOR */
-
 void ContentTreeWidget::dragEnterEvent(QDragEnterEvent *event) {
   if (event->mimeData()->hasUrls())
     event->acceptProposedAction();
@@ -4860,6 +4856,10 @@ ContentTreeWidget::ContentTreeWidget(QWidget *parent) : QTreeWidget(parent) {
 }
 
 ContentTreeWidget::~ContentTreeWidget() {}
+
+////////////////////////////////////////////////////////////////////////
+
+} /* namespace FTEDITOR */
 
 void ContentLabel::dragEnterEvent(QDragEnterEvent *event) {
   if (event->mimeData()->hasUrls())

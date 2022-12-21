@@ -46,27 +46,6 @@ class QLabel;
 class QSpinBox;
 class QCheckBox;
 
-class ContentTreeWidget : public QTreeWidget {
-  Q_OBJECT
-
- signals:
-  void contentDropped(QString url);
-
- public:
-  virtual void dragEnterEvent(QDragEnterEvent *event) override;
-  virtual void dropEvent(QDropEvent *event) override;
-  virtual QStringList mimeTypes() const override;
-  void mousePressEvent(QMouseEvent *event) override;
-
- public:
-  explicit ContentTreeWidget(QWidget *parent = nullptr);
-  ~ContentTreeWidget();
-
-signals:
-  void addItem(QTreeWidgetItem *item);
-  void removeItem(QTreeWidgetItem *item);
-};
-
 class ContentLabel : public QLabel {
   Q_OBJECT
 
@@ -173,6 +152,27 @@ struct ContentInfo {
 
   int bitmapAddress(int deviceIntf = FTEDITOR_CURRENT_DEVICE) const;
   int PalettedAddress;
+};
+
+class ContentTreeWidget : public QTreeWidget {
+  Q_OBJECT
+
+ signals:
+  void contentDropped(QString url);
+
+ public:
+  virtual void dragEnterEvent(QDragEnterEvent *event) override;
+  virtual void dropEvent(QDropEvent *event) override;
+  virtual QStringList mimeTypes() const override;
+  void mousePressEvent(QMouseEvent *event) override;
+
+ public:
+  explicit ContentTreeWidget(QWidget *parent = nullptr);
+  ~ContentTreeWidget();
+
+signals:
+  void addItem(FTEDITOR::ContentInfo *item);
+  void removeItem(FTEDITOR::ContentInfo *item);
 };
 
 /**
@@ -446,7 +446,6 @@ class ContentManager : public QWidget {
   void freeNow(QObject *obj);
 
 }; /* class ContentManager */
-
 } /* namespace FTEDITOR */
 
 #endif /* #ifndef FTEDITOR_CONTENT_MANAGER_H */

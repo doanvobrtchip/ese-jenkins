@@ -44,9 +44,9 @@ class QHexView : public QAbstractScrollArea
   struct ContentArea {
     ContentArea(ContentInfo *contentInfo);
     ContentInfo *contentInfo;
-    int start;
-    int end;
     QColor color;
+    int start();
+    int end();
   };
 
   QHexView(QWidget *parent = 0);
@@ -69,6 +69,8 @@ class QHexView : public QAbstractScrollArea
   void resetSelection(std::size_t pos);
   void ensureVisible();
   void updateUint();
+  bool checkVisible();
+  bool isValidMouseEvent(QMouseEvent *event);
 
  protected:
   void paintEvent(QPaintEvent *event);

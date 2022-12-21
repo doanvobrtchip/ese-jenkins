@@ -104,6 +104,13 @@ Source: "{#DeploymentFileDir}\config.json"; DestDir: "{app}"; Flags: ignoreversi
 Source: "{#DeploymentFileDir}\libpng16.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;FreeType
 Source: "{#DeploymentFileDir}\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
+;PIL
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;ASTC
 Source: "{#DeploymentFileDir}\astcenc-sse2.exe";   DestDir: "{app}"; Flags: ignoreversion 
 Source: "{#DeploymentFileDir}\astcenc-sse4.2.exe"; DestDir: "{app}"; Flags: ignoreversion 
@@ -112,17 +119,6 @@ Source: "{#DeploymentFileDir}\install_astc.exe"; DestDir: "{app}"; Flags: ignore
 ;Python Version 3.10
 Source: "{#DeploymentFileDir}\Python\Python310\python310.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#DeploymentFileDir}\Python\Python310\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs ignoreversion
-
-;PIL
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "ucrtbase.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Code]
 procedure RunASTCInstaller;
