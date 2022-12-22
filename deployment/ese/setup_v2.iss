@@ -1,9 +1,7 @@
 ; Inno Setup Script for EVE Screen Editor tool
 
-#define BuildDir = "C:\Users\liem.do\Documents\Brt\FT8XXEMU\buildQt6\bin\Release"
-#define QtBin = "C:\Qt\LatestVersion\6.4.0\msvc2019_64\bin"
-
 #define RootDir = "..\.."
+#define BuildDir = (RootDir)+ "\build\bin\Release"
 #define DeploymentFileDir = (RootDir) + "\fteditor\deployment"
 
 #define MyAppName "EVE Screen Editor"
@@ -95,8 +93,6 @@ Source: "{#BuildDir}\eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ;Qt
 Source: "{#BuildDir}\qt-deployment\*.*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
-;Source: "Qt6OpenGL.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "Qt6OpenGLWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "{#DeploymentFileDir}\pngquant.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#DeploymentFileDir}\config.json"; DestDir: "{app}"; Flags: ignoreversion
@@ -138,11 +134,8 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
-
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser
-
-
 
 [UninstallDelete]
 Type: files; Name: "{app}\recent_project"
