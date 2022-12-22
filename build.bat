@@ -1,8 +1,11 @@
+::Check Qt dir
+IF "%QTDIR64%"=="" (SET QT_DIR="C:\Qt\LatestVersion\6.4.0\msvc2019_64") ELSE (SET QT_DIR=%QTDIR64%)
+
 RMDIR /S /Q build
 CMAKE -Bbuild/ ^
     -S. ^
     -G "Visual Studio 16 2019" ^
-    -DCMAKE_PREFIX_PATH=%QTDIR64%^
+    -DCMAKE_PREFIX_PATH=%QT_DIR%^
     -DWITH_QT=TRUE ^
     -DWITH_PYTHON=TRUE ^
     -DWITH_FREETYPE=TRUE ^
