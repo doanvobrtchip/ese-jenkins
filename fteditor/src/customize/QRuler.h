@@ -20,6 +20,9 @@ class QRuler : public QWidget {
   void setScreenTop(int newScreenTop);
   void setVisible(bool visible) override;
 
+  void setShowIndicator(bool newShowIndicator);
+  void setIndicator(int pos);
+
  protected:
   virtual void paintEvent(QPaintEvent *event) override;
   virtual void mousePressEvent(QMouseEvent *e) override;
@@ -29,8 +32,10 @@ class QRuler : public QWidget {
   int m_Scale;
   int m_ScreenLeft;
   int m_ScreenTop;
+  bool m_ShowIndicator;
+  int m_Indicator;
 
-signals:
+ signals:
   void visibleChanged(bool visible);
 };
 

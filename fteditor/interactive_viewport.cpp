@@ -470,6 +470,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e) {
   horizontalRuler()->setScale(screenScale());
   horizontalRuler()->setScreenLeft(screenLeft());
   horizontalRuler()->update();
+
   verticalRuler()->setScale(screenScale());
   verticalRuler()->setScreenTop(screenTop());
   verticalRuler()->update();
@@ -1826,6 +1827,8 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e) {
   int mvy = screenTop();
   int scl = screenScale();
 
+  horizontalRuler()->setIndicator(EPOSPOINT(e).x());
+  verticalRuler()->setIndicator(EPOSPOINT(e).y());
   mouseMoveEvent(UNTFX(EPOSPOINT(e).x()), UNTFY(EPOSPOINT(e).y()),
                  e->modifiers());
   EmulatorViewport::mouseMoveEvent(e);
@@ -1987,6 +1990,8 @@ void InteractiveViewport::enterEvent(QEnterEvent *e)
   // printf("InteractiveViewport::enterEvent\n");
 
   m_MouseOver = true;
+  horizontalRuler()->setShowIndicator(true);
+  verticalRuler()->setShowIndicator(true);
 
   EmulatorViewport::enterEvent(e);
 }
@@ -1995,6 +2000,8 @@ void InteractiveViewport::leaveEvent(QEvent *e) {
   // printf("InteractiveViewport::leaveEvent\n");
 
   m_MouseOver = false;
+  horizontalRuler()->setShowIndicator(false);
+  verticalRuler()->setShowIndicator(false);
 
   EmulatorViewport::leaveEvent(e);
 }
@@ -3479,6 +3486,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
 
 void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e) {
   // TODO: Bitmaps from files, etc
+  horizontalRuler()->setIndicator(EPOSPOINT(e).x());
+  verticalRuler()->setIndicator(EPOSPOINT(e).y());
   if (acceptableSource(e)) {
     if (m_LineEditor) {
       int mvx = screenLeft();
@@ -3509,7 +3518,6 @@ void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e) {
     printf("Unknown dragEnterEvent from %p\n", e->source());
   }
 }
-
 } /* namespace FTEDITOR */
 
 /* end of file */
