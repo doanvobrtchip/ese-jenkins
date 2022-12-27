@@ -31,7 +31,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_mapping_flash.h"
 #include "src/customize/QRuler.h"
-#include "src/utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 
@@ -349,7 +348,6 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 
 void EmulatorViewport::toggleViewRuler(bool show)
 {
-  debugLog("EmulatorViewport: ToggleViewRuler");
   horizontalRuler()->setVisible(!horizontalRuler()->isVisible());
   verticalRuler()->setVisible(!verticalRuler()->isVisible());
   emit visibleChanged(verticalRuler()->isVisible());

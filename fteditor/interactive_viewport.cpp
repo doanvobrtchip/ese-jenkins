@@ -211,7 +211,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
   toolRulerBar->setIconSize(QSize(16, 16));
   toolRulerBar->addAction(ruler);
   connect(ruler, &QAction::triggered, this, &EmulatorViewport::toggleViewRuler);
-  connect(verticalRuler(), &QRuler::visibleChanged, ruler, &QAction::setChecked);
+  connect(verticalRuler(), &QRuler::visibleChanged, ruler,
+          &QAction::setChecked);
 
   QAction *zoomIn = new QAction(this);
   connect(zoomIn, &QAction::triggered, this, &InteractiveViewport::zoomIn);
@@ -261,6 +262,21 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
   zoomToolBar->addAction(zoomOut);
   zoomToolBar->addWidget(m_ZoomCB);
   zoomToolBar->addAction(zoomIn);
+
+  m_ContextMenu = new QMenu(this);
+  QAction *actShowRuler = new QAction;
+  actShowRuler->setCheckable(true);
+  actShowRuler->setChecked(true);
+  actShowRuler->setText(tr("Ruler"));
+  m_ContextMenu->addAction(actShowRuler);
+  connect(actShowRuler, &QAction::triggered, this,
+          &EmulatorViewport::toggleViewRuler);
+  connect(verticalRuler(), &QRuler::visibleChanged, actShowRuler,
+          &QAction::setChecked);
+  connect(this, &QWidget::customContextMenuRequested, this,
+          [this](const QPoint &pos) {
+            m_ContextMenu->exec(this->mapToGlobal(pos));
+          });
 }
 
 InteractiveViewport::~InteractiveViewport() {}
@@ -1835,6 +1851,10 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
+  if (e->button() == Qt::RightButton) {
+    emit this->customContextMenuRequested(e->position().toPoint());
+    return;
+  }
   m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
   m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
 
