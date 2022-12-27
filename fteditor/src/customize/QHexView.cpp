@@ -41,6 +41,16 @@ QHexView::QHexView(QWidget *parent)
   setFocusPolicy(Qt::StrongFocus);
   m_cursorPos = 0;
   resetSelection(0);
+
+  QAction *actCopy = new QAction;
+  actCopy->setText(tr("Copy"));
+  m_ContextMenu = new QMenu(this);
+  m_ContextMenu->addAction(actCopy);
+  connect(actCopy, &QAction::triggered, this, &QHexView::onCopy);
+  connect(this, &QWidget::customContextMenuRequested, this,
+          [this](const QPoint &pos) {
+            m_ContextMenu->exec(this->mapToGlobal(pos));
+          });
 }
 
 QHexView::~QHexView() {
@@ -151,23 +161,25 @@ void QHexView::paintEvent(QPaintEvent *event) {
     int cursorX = (((xFocus / 2) * 3) + (xFocus % 2)) * m_charWidth + m_posHex;
     int cursorY = yFocus * m_charHeight + m_charHeight + 3;
     if (cursorY >= yPosStart && m_selectBegin != m_selectEnd)
-      isValidFocus= true;
+      isValidFocus = true;
 
-    if (isValidFocus){
+    if (isValidFocus) {
       QColor bgColor = QColor(0xd1, 0x1a, 0xff, 0xFF);
       painter.fillRect(cursorX - 0.3 * m_charWidth, cursorY, 2.8 * m_charWidth,
                        m_charHeight - 1, bgColor);
 
       // Ascii
       int cursorXAscii = (xFocus / 2) * (m_charWidth + 1) + m_posAscii;
-      painter.fillRect(cursorXAscii, cursorY, m_charWidth, m_charHeight, bgColor);
+      painter.fillRect(cursorXAscii, cursorY, m_charWidth, m_charHeight,
+                       bgColor);
     }
   }
 
   // Draw header
   for (int i = 0, xPos = m_posHex, yPos = yPosStart; i < m_bytesPerLine;
        ++i, xPos += 3 * m_charWidth) {
-    if (!hasFocus() || i != ((m_cursorPos / 2) % m_bytesPerLine) || (hasFocus() && !isValidFocus)) {
+    if (!hasFocus() || i != ((m_cursorPos / 2) % m_bytesPerLine) ||
+        (hasFocus() && !isValidFocus)) {
       painter.fillRect(
           QRect(xPos - 0.3 * m_charWidth, yPos - 0.9 * m_charHeight,
                 2.8 * m_charWidth, m_charHeight + 1),
@@ -192,7 +204,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
   for (int lineIdx = firstLineIdx, y = yPosStart; lineIdx < lastLineIdx;
        lineIdx += 1, y += m_charHeight) {
     painter.setPen(QColor(0, 0, 0));
-    if (!hasFocus() || lineIdx != ((m_cursorPos / 2) / m_bytesPerLine)|| (hasFocus() && !isValidFocus)) {
+    if (!hasFocus() || lineIdx != ((m_cursorPos / 2) / m_bytesPerLine) ||
+        (hasFocus() && !isValidFocus)) {
       painter.fillRect(QRect(m_posAddr, y - 0.8 * m_charHeight,
                              m_posHex - 0.8 * m_charWidth, m_charHeight - 1),
                        nonContentColor);
@@ -226,7 +239,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
       // Set color for memory area of content item
       int globalIndex = lineIdx * m_bytesPerLine + i;
       ContentArea *area;
-      for (int listIdx = m_contentAreaList.count() - 1; listIdx >= 0; --listIdx) {
+      for (int listIdx = m_contentAreaList.count() - 1; listIdx >= 0;
+           --listIdx) {
         area = m_contentAreaList.at(listIdx);
         if (area->contentInfo->MemoryLoaded && globalIndex >= area->start() &&
             globalIndex <= area->end()) {
@@ -399,49 +413,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
   }
 
   if (event->matches(QKeySequence::Copy)) {
-    if (m_pdata) {
-      QString res;
-      int idx = 0;
-      int copyOffset = 0;
-
-      QByteArray data = m_pdata->getData(m_selectBegin / 2,
-                                         (m_selectEnd - m_selectBegin) / 2 + 1);
-      if (m_selectBegin % 2) {
-        res += QString::number((data.at((idx + 1) / 2) & 0xF), 16);
-        res += " ";
-        idx++;
-        copyOffset = 1;
-      }
-
-      int selectedSize = m_selectEnd - m_selectBegin;
-      for (; idx < selectedSize; idx += 2) {
-        if (data.size() > (copyOffset + idx) / 2) {
-          QString val = QString::number(
-              (data.at((copyOffset + idx) / 2) & 0xF0) >> 4, 16);
-          if (idx + 1 < selectedSize) {
-            val += QString::number((data.at((copyOffset + idx) / 2) & 0xF), 16);
-            val += " ";
-          }
-
-          res += val;
-
-          if ((idx / 2) % m_bytesPerLine == (m_bytesPerLine - 1)) {
-            if (res.at(res.size() - 1) == ' ') {
-              res.remove(res.size() - 1, 1);
-            }
-            res += "\n";
-          }
-        }
-      }
-
-      if (res.size() > 0 &&
-          (res.at(res.size() - 1) == ' ' || res.at(res.size() - 1) == '\n')) {
-        res.remove(res.size() - 1, 1);
-      }
-
-      QClipboard *clipboard = QApplication::clipboard();
-      clipboard->setText(res);
-    }
+    onCopy();
   }
 
   if (setVisible) ensureVisible();
@@ -461,6 +433,10 @@ void QHexView::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void QHexView::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::RightButton) {
+    emit this->customContextMenuRequested(event->position().toPoint());
+    return;
+  }
   if (!isValidMouseEvent(event)) return;
   int cPos = cursorPos(event->position());
 
@@ -476,8 +452,53 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
     setCursorPos(cPos);
   }
   updateUint();
-
   viewport()->update();
+}
+
+void QHexView::onCopy() {
+  if (m_pdata) {
+    QString res;
+    int idx = 0;
+    int copyOffset = 0;
+
+    QByteArray data = m_pdata->getData(m_selectBegin / 2,
+                                       (m_selectEnd - m_selectBegin) / 2 + 1);
+    if (m_selectBegin % 2) {
+      res += QString::number((data.at((idx + 1) / 2) & 0xF), 16);
+      res += " ";
+      idx++;
+      copyOffset = 1;
+    }
+
+    int selectedSize = m_selectEnd - m_selectBegin;
+    for (; idx < selectedSize; idx += 2) {
+      if (data.size() > (copyOffset + idx) / 2) {
+        QString val =
+            QString::number((data.at((copyOffset + idx) / 2) & 0xF0) >> 4, 16);
+        if (idx + 1 < selectedSize) {
+          val += QString::number((data.at((copyOffset + idx) / 2) & 0xF), 16);
+          val += " ";
+        }
+
+        res += val;
+
+        if ((idx / 2) % m_bytesPerLine == (m_bytesPerLine - 1)) {
+          if (res.at(res.size() - 1) == ' ') {
+            res.remove(res.size() - 1, 1);
+          }
+          res += "\n";
+        }
+      }
+    }
+
+    if (res.size() > 0 &&
+        (res.at(res.size() - 1) == ' ' || res.at(res.size() - 1) == '\n')) {
+      res.remove(res.size() - 1, 1);
+    }
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(res);
+  }
 }
 
 int QHexView::cursorPos(const QPointF &posF) {
@@ -606,8 +627,7 @@ void QHexView::ensureVisible() {
   if (cursorY < firstLineIdx) {
     verticalScrollBar()->setValue(cursorY);
   } else if (cursorY > lastLineIdx) {
-    int newValue = cursorY - (areaSize.height() - startY()) /
-        m_charHeight;
+    int newValue = cursorY - (areaSize.height() - startY()) / m_charHeight;
     verticalScrollBar()->setValue(newValue);
   }
 }
@@ -629,11 +649,10 @@ void QHexView::updateUint() {
     emit uintChanged(resultUint);
   }
   debugLog(
-        QString("ResultStr: %1 | BigEndian: %2").arg(resultStr).arg(resultUint));
+      QString("ResultStr: %1 | BigEndian: %2").arg(resultStr).arg(resultUint));
 }
 
-bool QHexView::checkVisible()
-{
+bool QHexView::checkVisible() {
   QSize areaSize = viewport()->size();
 
   int firstLineIdx = verticalScrollBar()->value();
@@ -646,12 +665,12 @@ bool QHexView::checkVisible()
   return true;
 }
 
-bool QHexView::isValidMouseEvent(QMouseEvent *event)
-{
+bool QHexView::isValidMouseEvent(QMouseEvent *event) {
   if (!hasFocus()) return false;
   int y =
       (event->position().toPoint().y() / m_charHeight - 1) * 2 * m_bytesPerLine;
-  if (y < 0 || event->position().toPoint().x() < m_posHex || event->position().toPoint().x() > m_posAscii - GAP_HEX_ASCII) {
+  if (y < 0 || event->position().toPoint().x() < m_posHex ||
+      event->position().toPoint().x() > m_posAscii - GAP_HEX_ASCII) {
     return false;
   };
   return true;

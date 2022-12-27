@@ -7,11 +7,12 @@
 #include <QMap>
 #include <QMutex>
 
+class QMenu;
+
 namespace FTEDITOR {
 struct ContentInfo;
-class QHexView : public QAbstractScrollArea
 
-{
+class QHexView : public QAbstractScrollArea {
   Q_OBJECT
  public:
   class DataStorage {
@@ -77,6 +78,8 @@ class QHexView : public QAbstractScrollArea
   void keyPressEvent(QKeyEvent *event);
   void mouseMoveEvent(QMouseEvent *event);
   void mousePressEvent(QMouseEvent *event);
+ private slots:
+  void onCopy();
 
  private:
   QMutex m_dataMtx;
@@ -104,6 +107,8 @@ class QHexView : public QAbstractScrollArea
                            QColor(0x99, 0x00, 0x4d), QColor(0x00, 0x80, 0x00)};
 
   QList<ContentArea *> m_contentAreaList;
+  QMenu *m_ContextMenu;
+
  signals:
   void currentInfoChanged(ContentInfo *currentInfo);
   void bytesPerLineChanged(int bytesPerLine);

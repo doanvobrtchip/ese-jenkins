@@ -27,14 +27,10 @@
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
-#include <QDockWidget>
 #include <QEvent>
 #include <QGroupBox>
 #include <QKeyEvent>
-#include <QLabel>
-#include <QLineEdit>
 #include <QMenu>
-#include <QPushButton>
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -48,10 +44,9 @@
 #include "constant_common.h"
 #include "constant_mapping.h"
 #include "content_manager.h"
-#include "customize/QHexView.h"
 #include "dl_parser.h"
 #include "main_window.h"
-#include "utils/LoggerUtil.h"
+#include "src/inspector/RamG.h"
 
 namespace FTEDITOR {
 
@@ -152,8 +147,10 @@ Inspector::Inspector(MainWindow *parent)
   regGroup->setLayout(regLayout);
   splitter->addWidget(regGroup);
 
+  // Set up RAM_G inspector
   auto ramgGGroup = new QGroupBox(this);
-  setupRamGWindow(ramgGGroup);
+  m_RamG = new RamG(this);
+  m_RamG->setupComponents(ramgGGroup);
   splitter->addWidget(ramgGGroup);
 
   layout->addWidget(splitter);
@@ -169,93 +166,13 @@ Inspector::Inspector(MainWindow *parent)
   m_ContextMenu = new QMenu(this);
   m_ContextMenu->addAction(m_CopyAct);
   m_countHandleBitmap = 0;
-  m_visible = false;
 
   setup();
   connect(m_MainWindow, &MainWindow::readyToSetup, this, &Inspector::setup);
 }
 
 void Inspector::setup(QObject *obj) {
-  if (m_MainWindow->contentManager() &&
-      (obj == m_MainWindow->contentManager() || obj == nullptr)) {
-    auto contentList = m_MainWindow->contentManager()->contentList();
-    connect(contentList, &QTreeWidget::currentItemChanged, this,
-            &Inspector::currItemContentChanged, Qt::UniqueConnection);
-    connect(contentList, &QTreeWidget::itemPressed, this,
-            &Inspector::handleContentItemPressed, Qt::UniqueConnection);
-    connect(contentList, &ContentTreeWidget::removeItem, this,
-            &Inspector::removeContentItem, Qt::UniqueConnection);
-    connect(contentList, &ContentTreeWidget::addItem, this,
-            &Inspector::addContentItem, Qt::UniqueConnection);
 
-    connect(m_MainWindow->contentManager(),
-            &ContentManager::ramGlobalUsageChanged, this,
-            &Inspector::updateRamG, Qt::UniqueConnection);
-
-    connect(hexView, &QHexView::currentInfoChanged, this,
-            &Inspector::handleCurrentInfoChanged, Qt::UniqueConnection);
-  }
-  if (m_MainWindow->inspectorDock() &&
-      (obj == m_MainWindow->inspectorDock() || obj == nullptr)) {
-    connect(m_MainWindow->inspectorDock(), &QDockWidget::visibilityChanged,
-            this, &Inspector::bindVisible, Qt::UniqueConnection);
-  }
-}
-
-void Inspector::removeContentItem(ContentInfo *contentInfo) {
-  auto size = m_MainWindow->contentManager()->getContentSize(contentInfo);
-  if (contentInfo->DataStorage == ContentInfo::Flash || size < 0) {
-    debugLog("Remove a non-memory content");
-    return;
-  }
-  debugLog("Remove a memory content");
-  hexView->removeContentArea(contentInfo);
-}
-
-void Inspector::addContentItem(ContentInfo *contentInfo) {
-  hexView->addContentArea(contentInfo);
-}
-
-void Inspector::handleCurrentInfoChanged(ContentInfo *contentInfo) {
-  emit updateCurrentInfo(contentInfo);
-}
-
-void Inspector::bindVisible(bool visible) { m_visible = visible; }
-
-void Inspector::currItemContentChanged(QTreeWidgetItem *current,
-                                       QTreeWidgetItem *previous) {
-  if (!current) {
-    debugLog("No selected content");
-    hexView->setSelected(0, 0);
-    return;
-  };
-}
-
-void Inspector::handleContentItemPressed(QTreeWidgetItem *item) {
-  if (!item) {
-    hexView->setSelected(0, 0);
-    return;
-  };
-  auto contentInfo =
-      (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
-
-  auto size = m_MainWindow->contentManager()->getContentSize(contentInfo);
-  if (!contentInfo->MemoryLoaded || size <= 0 ||
-      !contentInfo->BuildError.isEmpty()) {
-    debugLog("Selected a non-memory content");
-    hexView->setSelected(0, 0);
-    return;
-  }
-
-  debugLog(QString("Selected a memory content | Addr: %1 | Size: %2 | Name: %3")
-               .arg(contentInfo->MemoryAddress)
-               .arg(size)
-               .arg(contentInfo->DestName));
-  hexView->showFromOffset(contentInfo->MemoryAddress);
-  hexView->setSelected(contentInfo->MemoryAddress, size);
-  if (m_visible) {
-    hexView->setFocus(Qt::MouseFocusReason);
-  }
 }
 
 Inspector::~Inspector() {}
@@ -459,7 +376,7 @@ void Inspector::frameQt() {
       }
     }
   }
-  updateRamG();
+  m_RamG->updateData();
 }
 
 int Inspector::countHandleUsage() {
@@ -578,64 +495,6 @@ QByteArray Inspector::getDLBinary(bool isBigEndian) {
   return result;
 }
 
-void Inspector::setupRamGWindow(QGroupBox *ramGGroup) {
-  ramGGroup->setTitle(tr("RAM_G"));
-  auto ramgLayout = new QVBoxLayout();
-
-  hexView = new QHexView;
-  ramgLayout->addWidget(hexView);
-
-  QString placeholderText = tr("Enter decimal or hexadecimal");
-  auto searchLayout = new QHBoxLayout;
-  searchLayout->setAlignment(Qt::AlignRight);
-  lbUint = new QLabel(tr("Uint:"));
-
-  auto lbAddress = new QLabel(tr("Address:"));
-  lbAddress->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-
-  lineEdit = new QLineEdit;
-  lineEdit->setFocus();
-  lineEdit->setPlaceholderText(placeholderText);
-
-  // Set default width for QLineEdit
-  auto textSize = lineEdit->fontMetrics().size(0, placeholderText);
-  lineEdit->setMaximumWidth(textSize.width() + 10);
-
-  auto searchButton = new QPushButton(tr("Jump"));
-  searchButton->setDefault(true);
-  searchButton->setMaximumWidth(90);
-
-  searchLayout->addWidget(lbUint);
-  searchLayout->addWidget(lbAddress);
-  searchLayout->addWidget(lineEdit);
-  searchLayout->addWidget(searchButton);
-
-  ramgLayout->setAlignment(Qt::AlignRight);
-  ramgLayout->addLayout(searchLayout);
-  ramGGroup->setLayout(ramgLayout);
-
-  auto handleGoToAddress = [this]() {
-    bool ok;
-    QString text = lineEdit->text();
-    int address = text.toUInt(&ok, 10);
-    if (!ok) {
-      address = text.toUInt(&ok, 16);
-    }
-    if (ok) {
-      hexView->showFromOffset(address);
-      hexView->setSelected(address, 1);
-      hexView->setFocus();
-    }
-  };
-
-  connect(searchButton, &QPushButton::clicked, this, handleGoToAddress);
-  connect(lineEdit, &QLineEdit::returnPressed, this, handleGoToAddress);
-  connect(hexView, &QHexView::uintChanged, this, [this](uint value) {
-    QString text = QString(tr("Uint: %1")).arg(value);
-    lbUint->setText(text);
-  });
-}
-
 void Inspector::initDLWindow() {
   QString raw = asRaw(0);
   QString text = asText(0);
@@ -682,23 +541,6 @@ void Inspector::onPrepareContextMenu(const QPoint &pos) {
   QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
 
   m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
-}
-
-void Inspector::updateRamG(int ramUsage) {
-  auto ramG = BT8XXEMU_getRam(g_Emulator);
-  int ramSize = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_G_END];
-  QByteArray byteArr;
-  auto temp = static_cast<char *>(static_cast<void *>(ramG));
-  byteArr.append(temp, ramSize);
-  auto data = hexView->data();
-  if (data && byteArr == data->getData(0, data->size()) && ramUsage == -1) {
-    return;
-  }
-  debugLog("RAM_G - Content has a change");
-  hexView->setData(new QHexView::DataStorageArray(byteArr));
-  hexView->viewport()->update();
-  handleContentItemPressed(
-      m_MainWindow->contentManager()->contentList()->currentItem());
 }
 
 void Inspector::onCopy() {

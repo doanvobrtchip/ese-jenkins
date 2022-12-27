@@ -17,6 +17,12 @@ FILE(GLOB UTILS
     src/utils/ReadWriteUtil.cpp
     src/utils/LoggerUtil.h
 )
+
+FILE(GLOB INSPECTOR
+  src/inspector/RamG.h
+  src/inspector/RamG.cpp
+)
+
 IF (WIN32)
 	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
@@ -81,6 +87,7 @@ ADD_EXECUTABLE(fteditor WIN32
 	${RESOURCE_ADDED}
   ${CUSTOMIZE}
   ${UTILS}
+  ${INSPECTOR}
 	)
 
 IF(FTEDITOR_DEVICE_MANAGER)
