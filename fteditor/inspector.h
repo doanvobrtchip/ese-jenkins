@@ -36,17 +36,13 @@ class QEvent;
 class QKeyEvent;
 class QMenu;
 class QAction;
-class QGroupBox;
-class QLineEdit;
-class QLabel;
 
 namespace FTEDITOR {
 
 #define FTED_NUM_HANDLES 16
 
-class QHexView;
 class MainWindow;
-class ContentInfo;
+class RamG;
 
 /**
  * Inspector
@@ -76,7 +72,8 @@ class Inspector : public QWidget {
   QByteArray getDLBinary(bool isBigEndian);
 
   void initDLWindow();
-  void setupRamGWindow(QGroupBox *ramGGroup);
+  MainWindow* mainWindow() { return m_MainWindow; }
+  RamG* ramG() { return m_RamG; }
  private slots:
   void onCopy();
   void onPrepareContextMenu(const QPoint &pos);
@@ -98,35 +95,22 @@ class Inspector : public QWidget {
   std::vector<QTreeWidgetItem *> m_RegisterItems;
   std::vector<uint32_t> m_RegisterCopy;
 
-  QHexView *hexView;
-
   bool m_HandleUsage[FTED_NUM_HANDLES];
 
   QMenu *m_ContextMenu;
   QAction *m_CopyAct;
-  QLineEdit *lineEdit;
-  QLabel *lbUint;
   int m_countHandleBitmap;
-  bool m_visible;
+  RamG* m_RamG;
 
  private:
   Inspector(const Inspector &);
   Inspector &operator=(const Inspector &);
 
  public slots:
-  void currItemContentChanged(QTreeWidgetItem *current,
-                              QTreeWidgetItem *previous = nullptr);
-  void handleContentItemPressed(QTreeWidgetItem *item);
   void setup(QObject *obj = nullptr);
-  void removeContentItem(ContentInfo *contentInfo);
-  void addContentItem(ContentInfo *contentInfo);
-  void handleCurrentInfoChanged(ContentInfo *contentInfo);
-  void bindVisible(bool visible);
-  void updateRamG(int ramUsage = -1);
 
  signals:
   void countHandleBitmapChanged(int value);
-  void updateCurrentInfo(ContentInfo *contentInfo);
 
 }; /* class Inspector */
 

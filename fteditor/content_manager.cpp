@@ -50,7 +50,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "main_window.h"
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
-#include "utils/LoggerUtil.h"
+#include "src/inspector/RamG.h"
 #include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
@@ -1421,7 +1421,7 @@ void ContentManager::exportFlashMapped() {}
 void ContentManager::setup(QObject *obj) {
   if (m_MainWindow->inspector() &&
       (obj == m_MainWindow->inspector() || obj == nullptr)) {
-    connect(m_MainWindow->inspector(), &Inspector::updateCurrentInfo, this,
+    connect(m_MainWindow->inspector()->ramG(), &RamG::updateCurrentInfo, this,
             &ContentManager::handleUpdateCurrentInfo, Qt::UniqueConnection);
   }
 }
