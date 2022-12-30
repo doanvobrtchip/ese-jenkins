@@ -26,10 +26,13 @@ docker run --rm --mount type=bind,source="%cd%",target="%cd%/prj" -w "%cd%/prj" 
 ```
 
 ### Note
-Please ensure the container your Docker Desktop is windows container , not linux container:  
+#### Please ensure the container your Docker Desktop is windows container , not linux container:  
 
 ![image](https://user-images.githubusercontent.com/13127756/210039718-79e71338-e981-4b69-ae28-f8e8047efc95.png)
 
+#### You may need change the source path and working directory to run the container correctly: 
+
+![image](https://user-images.githubusercontent.com/13127756/210046859-a5c4d20f-a91d-40fd-a985-a92de95e3cf3.png)
 
 
 # Version of the software
