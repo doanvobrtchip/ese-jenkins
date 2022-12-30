@@ -5,17 +5,32 @@ Can customize the Dockerfile to suit your needs
 ========
 
 # Docker
+
 To build an image, in the project source directory, run:
 
 ```
 docker build -t ese-image -f deployment/docker/Dockerfile deployment/docker
 ```
+or add network configuration option `--network "Default Switch"` 
+```
+docker build -t ese-image -f deployment/docker/Dockerfile deployment/docker --network "Default Switch"  
+```  
+if there is similar error observed: 
+![image](https://user-images.githubusercontent.com/13127756/210039572-d51f58bb-8187-413b-af83-7ad4d556d76c.png)
+
 
 To run an container, in the project source directory, run:
 
 ```
 docker run --rm --mount type=bind,source="%cd%",target="%cd%/prj" -w "%cd%/prj" ese-image build.bat
 ```
+
+### Note
+Please ensure the container your Docker Desktop is windows container , not linux container:  
+
+![image](https://user-images.githubusercontent.com/13127756/210039718-79e71338-e981-4b69-ae28-f8e8047efc95.png)
+
+
 
 # Version of the software
 PYTHON_VERSION=3.10.0
