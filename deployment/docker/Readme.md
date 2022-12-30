@@ -48,3 +48,6 @@ INNOSETUP_VERSION=6.2.1
 MSVC2019_64(win64_msvc2019_64)
 #Components of toolchain-type: 
 qtbase qttools qtdeclarative qtscript qtsvg qt5compat opengl32sw
+
+### How to get the output files from the container?  
+
