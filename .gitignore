@@ -22,7 +22,6 @@ Temp
 
 # Windows compile
 *.exe
-*.dll
 *.lib
 *.obj
 
