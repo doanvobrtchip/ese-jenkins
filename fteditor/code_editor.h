@@ -47,9 +47,10 @@
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
 
-#include <vector>
-#include <QPlainTextEdit>
 #include <QObject>
+#include <QPlainTextEdit>
+#include <vector>
+
 #include "undo_stack_disabler.h"
 
 class QPaintEvent;
@@ -68,92 +69,102 @@ class InteractiveViewport;
 
 typedef FTEDITOR::UndoStackDisabler<QPlainTextEdit> CodeEditorParent;
 
-class CodeEditor : public CodeEditorParent
-{
-	Q_OBJECT
+class CodeEditor : public CodeEditorParent {
+  Q_OBJECT
 
-public:
-	CodeEditor(QWidget *parent = 0);
+ public:
+  CodeEditor(QWidget *parent = 0);
+  ~CodeEditor();
 
-	void lineNumberAreaPaintEvent(QPaintEvent *event);
-	int lineNumberAreaWidth();
-	void setMaxLinesNotice(int lines) { m_MaxLinesNotice = lines; }
+  void lineNumberAreaPaintEvent(QPaintEvent *event);
+  int lineNumberAreaWidth();
+  void setMaxLinesNotice(int lines) { m_MaxLinesNotice = lines; }
 
-	// void setUndoStack(QUndoStack *undo_stack);
-	void undo() { m_UndoNeedsClosure = false; QPlainTextEdit::undo(); }
+  // void setUndoStack(QUndoStack *undo_stack);
+  void undo() {
+    m_UndoNeedsClosure = false;
+    QPlainTextEdit::undo();
+  }
 
-	void beginUndoCombine(const QString &message);
-	void setUndoCombine(int combineId, const QString &message);
-	void endUndoCombine();
+  void beginUndoCombine(const QString &message);
+  void setUndoCombine(int combineId, const QString &message);
+  void endUndoCombine();
 
-	void setCompleter(QCompleter *c);
-	QCompleter *completer() const;
+  void setCompleter(QCompleter *c);
+  QCompleter *completer() const;
 
-	void setStepHighlight(int index) { if (m_StepHighlight != index) { m_StepHighlight = index; highlightCurrentLine(); } }
-	void setTraceHighlights(const std::vector<int> &indices);
+  void setStepHighlight(int index) {
+    if (m_StepHighlight != index) {
+      m_StepHighlight = index;
+      highlightCurrentLine();
+    }
+  }
+  void setTraceHighlights(const std::vector<int> &indices);
 
-	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; /*printf("Interactive delete %s\n", m_InteractiveDelete ? "ON" : "OFF");*/ }
+  void setInteractiveDelete(bool status) {
+    m_InteractiveDelete = status; /*printf("Interactive delete %s\n",
+                                     m_InteractiveDelete ? "ON" : "OFF");*/
+  }
 
-	void setKeyHandler(FTEDITOR::InteractiveViewport *keyHandler) { m_KeyHandler = keyHandler; if (keyHandler) { m_LastKeyHandler = keyHandler; } }
+  void setKeyHandler(FTEDITOR::InteractiveViewport *keyHandler) {
+    m_KeyHandler = keyHandler;
+    if (keyHandler) {
+      m_LastKeyHandler = keyHandler;
+    }
+  }
 
-protected:
-	virtual void resizeEvent(QResizeEvent *event);
-	virtual void keyPressEvent(QKeyEvent *e);
-	// virtual void contextMenuEvent(QContextMenuEvent *event);
-	virtual void focusInEvent(QFocusEvent *event);
+ protected:
+  virtual void resizeEvent(QResizeEvent *event);
+  virtual void keyPressEvent(QKeyEvent *e);
+  // virtual void contextMenuEvent(QContextMenuEvent *event);
+  virtual void focusInEvent(QFocusEvent *event);
 
-private slots:
-	void updateLineNumberAreaWidth(int newBlockCount);
-	void highlightCurrentLine();
-	void updateLineNumberArea(const QRect &, int);
-	void documentUndoCommandAdded();
-	void undoIndexChanged(int idx);
-	void insertCompletion(const QString &completion);
+ private slots:
+  void updateLineNumberAreaWidth(int newBlockCount);
+  void highlightCurrentLine();
+  void updateLineNumberArea(const QRect &, int);
+  void documentUndoCommandAdded();
+  void undoIndexChanged(int idx);
+  void insertCompletion(const QString &completion);
 
-private:
-	QString textUnderCursor() const;
+ private:
+  QString textUnderCursor() const;
 
-private:
-	QWidget *lineNumberArea;
-	int m_MaxLinesNotice;
-	// QUndoStack *m_UndoStack;
-	bool m_UndoIndexDummy;
-	bool m_UndoNeedsClosure;
-	bool m_UndoIsClosing;
-	QCompleter *m_Completer;
-	int m_StepHighlight;
-	int m_LastStepHighlight;
-	bool m_StepMovingCursor;
-	std::vector<int> m_TraceHighlights;
-	std::vector<int> m_TraceStack;
-	int m_CombineId;
-	int m_LastCombineId;
-	QString m_UndoRedoMessage;
-	bool m_InteractiveDelete;
-	FTEDITOR::InteractiveViewport *m_KeyHandler;
-	FTEDITOR::InteractiveViewport *m_LastKeyHandler;
+ private:
+  QWidget *lineNumberArea;
+  int m_MaxLinesNotice;
+  // QUndoStack *m_UndoStack;
+  bool m_UndoIndexDummy;
+  bool m_UndoNeedsClosure;
+  bool m_UndoIsClosing;
+  QCompleter *m_Completer;
+  int m_StepHighlight;
+  int m_LastStepHighlight;
+  bool m_StepMovingCursor;
+  std::vector<int> m_TraceHighlights;
+  std::vector<int> m_TraceStack;
+  int m_CombineId;
+  int m_LastCombineId;
+  QString m_UndoRedoMessage;
+  bool m_InteractiveDelete;
+  FTEDITOR::InteractiveViewport *m_KeyHandler;
+  FTEDITOR::InteractiveViewport *m_LastKeyHandler;
+  QClipboard *cb;
 };
 
+class LineNumberArea : public QWidget {
+ public:
+  LineNumberArea(CodeEditor *editor) : QWidget(editor) { codeEditor = editor; }
 
-class LineNumberArea : public QWidget
-{
-public:
-	LineNumberArea(CodeEditor *editor) : QWidget(editor) {
-		codeEditor = editor;
-	}
+  QSize sizeHint() const { return QSize(codeEditor->lineNumberAreaWidth(), 0); }
 
-	QSize sizeHint() const {
-		return QSize(codeEditor->lineNumberAreaWidth(), 0);
-	}
+ protected:
+  void paintEvent(QPaintEvent *event) {
+    codeEditor->lineNumberAreaPaintEvent(event);
+  }
 
-protected:
-	void paintEvent(QPaintEvent *event) {
-		codeEditor->lineNumberAreaPaintEvent(event);
-	}
-
-private:
-	CodeEditor *codeEditor;
+ private:
+  CodeEditor *codeEditor;
 };
-
 
 #endif
