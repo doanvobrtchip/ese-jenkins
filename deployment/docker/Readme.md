@@ -12,14 +12,14 @@ To pull the existing image from the Docker hub, run CMD:
 docker pull thanglie1/qt640_msvc2019
 ```
 
-To build an image, in the project source directory, run:
+Or build an image, in the project source directory, run:
 
 ```
-docker build -t ese-image -f deployment/docker/Dockerfile deployment/docker
+docker build -t thanglie1/qt640_msvc2019 -f deployment/docker/Dockerfile deployment/docker
 ```
 or add network configuration option `--network "Default Switch"` 
 ```
-docker build -t ese-image -f deployment/docker/Dockerfile deployment/docker --network "Default Switch"  
+docker build -t thanglie1/qt640_msvc2019 -f deployment/docker/Dockerfile deployment/docker --network "Default Switch"  
 ```  
 if there is similar error observed: 
 ![image](https://user-images.githubusercontent.com/13127756/210039572-d51f58bb-8187-413b-af83-7ad4d556d76c.png)
@@ -28,7 +28,7 @@ if there is similar error observed:
 To run an container, in the project source directory, run:
 
 ```
-docker run --rm --mount type=bind,source="%cd%",target="%cd%/prj" -w "%cd%/prj" ese-image build.bat
+docker run --rm --mount type=bind,source="%cd%",target="%cd%/prj" -w "%cd%/prj" thanglie1/qt640_msvc2019 build.bat
 ```
 
 ### Note
