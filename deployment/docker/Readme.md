@@ -6,6 +6,12 @@ Can customize the Dockerfile to suit your needs
 
 # Docker
 
+#Image
+To pull the existing image from the Docker hub, run CMD:
+```
+docker pull thanglie1/qt640_msvc2019
+```
+
 To build an image, in the project source directory, run:
 
 ```
@@ -18,7 +24,7 @@ docker build -t ese-image -f deployment/docker/Dockerfile deployment/docker --ne
 if there is similar error observed: 
 ![image](https://user-images.githubusercontent.com/13127756/210039572-d51f58bb-8187-413b-af83-7ad4d556d76c.png)
 
-
+#Container:
 To run an container, in the project source directory, run:
 
 ```
