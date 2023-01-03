@@ -50,4 +50,4 @@ MSVC2019_64(win64_msvc2019_64)
 qtbase qttools qtdeclarative qtscript qtsvg qt5compat opengl32sw
 
 ### How to get the output files from the container?  
-
+The output files are in folder: ../FT8XXEMU/deployment/ese/Ouput
