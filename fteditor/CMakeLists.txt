@@ -16,6 +16,8 @@ FILE(GLOB UTILS
     src/utils/ReadWriteUtil.h
     src/utils/ReadWriteUtil.cpp
     src/utils/LoggerUtil.h
+    src/utils/DLUtil.h
+    src/utils/DLUtil.cpp
 )
 
 FILE(GLOB INSPECTOR

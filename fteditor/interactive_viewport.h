@@ -23,7 +23,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 class QAction;
 class QComboBox;
-
+class QSinglePointEvent;
 namespace FTEDITOR {
 
 #define FTED_SNAP_HISTORY 8
@@ -61,6 +61,11 @@ class InteractiveViewport : public EmulatorViewport {
   int mouseX() const { return m_MouseX; }
   int mouseY() const { return m_MouseY; }
   bool mouseOver() const { return m_MouseOver; }
+
+  int32_t mappingX(QDropEvent *e);
+  int32_t mappingY(QDropEvent *e);
+  int32_t mappingX(QSinglePointEvent *e);
+  int32_t mappingY(QSinglePointEvent *e);
 
  protected:
   virtual void paintEvent(QPaintEvent *e);

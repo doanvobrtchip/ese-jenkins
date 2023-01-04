@@ -32,6 +32,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QRegularExpression>
+#include <QSinglePointEvent>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QTreeWidget>
@@ -48,9 +49,9 @@
 #include "main_window.h"
 #include "properties_editor.h"
 #include "toolbox.h"
+#include "utils/DLUtil.h"
 #include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
-
 namespace FTEDITOR {
 
 extern BT8XXEMU_Emulator *g_Emulator;
@@ -99,13 +100,11 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
       m_PreferTraceCursor(false),
       m_TraceEnabled(false),
       m_MouseOver(false),
-      m_MouseTouch(false),
-      m_MouseStackValid(false),
       m_MouseStackWritten(false),
+      m_MouseStackValid(false),
       m_PointerFilter(POINTER_ALL),
       m_PointerMethod(0),
-      m_LineEditor(NULL),
-      m_LineNumber(0),
+      m_MouseTouch(false),
       m_MouseOverVertex(false),
       m_MouseOverVertexLine(-1),
       m_MouseMovingVertex(false),
@@ -114,6 +113,8 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
       m_WidgetR(false),
       m_WidgetGradient(false),
       m_MouseMovingWidget(0),
+      m_LineEditor(NULL),
+      m_LineNumber(0),
       m_SnapHistoryCur(0) {
   for (int i = 0; i < FTED_SNAP_HISTORY; ++i) {
     m_SnapHistoryX[i] = FTED_SNAP_HISTORY_NONE;
@@ -512,8 +513,6 @@ void InteractiveViewport::paintEvent(QPaintEvent *e) {
 #define TFY(y) ((((y)*scl) / 16) + mvy)
 #define SCX(x) ((((x)*scl) / 16))
 #define SCY(y) ((((y)*scl) / 16))
-#define UNTFX(x) ((((x - mvx) * 16) / scl))
-#define UNTFY(y) ((((y - mvy) * 16) / scl))
 #define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
 #define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
 #if QT_VERSION_MAJOR < 6
@@ -1472,6 +1471,26 @@ void InteractiveViewport::keyPressEvent(QKeyEvent *e) {
   }
 }
 
+int32_t InteractiveViewport::mappingX(QDropEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.x() - screenLeft()) * 16) / screenScale();
+}
+
+int32_t InteractiveViewport::mappingY(QDropEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.y() - screenTop()) * 16) / screenScale();
+}
+
+int32_t InteractiveViewport::mappingX(QSinglePointEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.x() - screenLeft()) * 16) / screenScale();
+}
+
+int32_t InteractiveViewport::mappingY(QSinglePointEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.y() - screenTop()) * 16) / screenScale();
+}
+
 void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
                                          Qt::KeyboardModifiers km) {
   // printf("pos: %i, %i\n", EPOSPOINT(e).x(), EPOSPOINT(e).y());
@@ -1811,11 +1830,8 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 }
 
 void InteractiveViewport::wheelEvent(QWheelEvent *e) {
-  int mvx = screenLeft();
-  int mvy = screenTop();
-  int scl = screenScale();
-  int curx = UNTFX(e->position().toPoint().x());
-  int cury = UNTFY(e->position().toPoint().y());
+  int curx = mappingX(e);
+  int cury = mappingY(e);
 
   if (e->angleDelta().y() > 0) {
     zoomIn();
@@ -1823,11 +1839,8 @@ void InteractiveViewport::wheelEvent(QWheelEvent *e) {
     zoomOut();
   }
 
-  mvx = screenLeft();
-  mvy = screenTop();
-  scl = screenScale();
-  int newx = UNTFX(e->position().toPoint().x());
-  int newy = UNTFY(e->position().toPoint().y());
+  int newx = mappingX(e);
+  int newy = mappingY(e);
 
   int nx = (curx - newx) * 16;
   int ny = (cury - newy) * 16;
@@ -1839,14 +1852,9 @@ void InteractiveViewport::wheelEvent(QWheelEvent *e) {
 }
 
 void InteractiveViewport::mouseMoveEvent(QMouseEvent *e) {
-  int mvx = screenLeft();
-  int mvy = screenTop();
-  int scl = screenScale();
-
   horizontalRuler()->setIndicator(EPOSPOINT(e).x());
   verticalRuler()->setIndicator(EPOSPOINT(e).y());
-  mouseMoveEvent(UNTFX(EPOSPOINT(e).x()), UNTFY(EPOSPOINT(e).y()),
-                 e->modifiers());
+  mouseMoveEvent(mappingX(e), mappingY(e), e->modifiers());
   EmulatorViewport::mouseMoveEvent(e);
 }
 
@@ -1858,10 +1866,6 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
   m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
   m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
 
-  int mvx = screenLeft();
-  int mvy = screenTop();
-  int scl = screenScale();
-
   switch (m_PointerMethod) {
     case POINTER_TOUCH:  // touch
       if (e->button() == Qt::LeftButton) {
@@ -1872,8 +1876,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
     case POINTER_TRACE:  // trace
       switch (e->button()) {
         case Qt::LeftButton:
-          m_MainWindow->setTraceX(UNTFX(EPOSPOINT(e).x()));
-          m_MainWindow->setTraceY(UNTFY(EPOSPOINT(e).y()));
+          m_MainWindow->setTraceX(mappingX(e));
+          m_MainWindow->setTraceY(mappingY(e));
           m_MainWindow->setTraceEnabled(true);
           break;
         case Qt::MiddleButton:
@@ -1885,6 +1889,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
         case Qt::RightButton:
           m_MainWindow->setTraceEnabled(false);
           break;
+        default:
+          break;
       }
       break;
     case POINTER_EDIT_VERTEX_MOVE:
@@ -1892,8 +1898,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
         if (m_MouseOverVertexLine != m_LineNumber) {
           m_LineEditor->selectLine(m_MouseOverVertexLine);
         }
-        m_MovingLastX = UNTFX(EPOSPOINT(e).x());
-        m_MovingLastY = UNTFY(EPOSPOINT(e).y());
+        m_MovingLastX = mappingX(e);
+        m_MovingLastY = mappingY(e);
         m_MouseMovingVertex = true;
         m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
       }
@@ -1938,9 +1944,9 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
         DlParsed pa = m_LineEditor->getLine(line);
         if (isValidInsert(pa)) {
           ++line;
-          pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x())
+          pa.Parameter[0].I = mappingX(e)
                               << m_LineEditor->getVertextFormat(line);
-          pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y())
+          pa.Parameter[1].I = mappingY(e)
                               << m_LineEditor->getVertextFormat(line);
           m_LineEditor->insertLine(line, pa);
           m_LineEditor->selectLine(line);
@@ -1954,8 +1960,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
       if (m_PointerMethod &
           (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE)) {
         // Works for any widget move action
-        m_MovingLastX = UNTFX(EPOSPOINT(e).x());
-        m_MovingLastY = UNTFY(EPOSPOINT(e).y());
+        m_MovingLastX = mappingX(e);
+        m_MovingLastY = mappingY(e);
         m_MouseMovingWidget = m_PointerMethod;
         m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
       }
@@ -2046,16 +2052,6 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e) {
         currentItem->Converter != ContentInfo::ImageCoprocessor)
       return false;
     return true;
-  }
-  return false;
-}
-
-inline bool requirePaletteAddress(ContentInfo *contentInfo) {
-  switch (contentInfo->ImageFormat) {
-    case PALETTED4444:
-    case PALETTED565:
-    case PALETTED8:
-      return true;
   }
   return false;
 }
@@ -2155,10 +2151,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
 
         // void insertLine(int line, const DlParsed &parsed);
         if (selectionType == FTEDITOR_SELECTION_VERTEX) {
-          int mvx = screenLeft();
-          int mvy = screenTop();
-          int scl = screenScale();
-
           m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop vertex");
           DlParsed pa;
           pa.ValidId = true;
@@ -2167,15 +2159,15 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
 
           switch (selection) {
             case FTEDITOR_DL_VERTEX2F:
-              pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x())
+              pa.Parameter[0].I = mappingX(e)
                                   << m_LineEditor->getVertextFormat(line);
-              pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y())
+              pa.Parameter[1].I = mappingY(e)
                                   << m_LineEditor->getVertextFormat(line);
               pa.ExpectedParameterCount = 2;
               break;
             default:
-              pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-              pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+              pa.Parameter[0].I = mappingX(e);
+              pa.Parameter[1].I = mappingY(e);
               pa.Parameter[2].I = 0;
               pa.Parameter[3].I = 0;
               pa.ExpectedParameterCount = 4;
@@ -2187,18 +2179,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
           m_LineEditor->codeEditor()->endUndoCombine();
         } else if ((selection & 0xFFFFFF00) == 0xFFFFFF00)  // Coprocessor
         {
-          int mvx = screenLeft();
-          int mvy = screenTop();
-          int scl = screenScale();
-
           m_LineEditor->codeEditor()->beginUndoCombine(
               "Drag and drop coprocessor widget");
           DlParsed pa;
           pa.ValidId = true;
           pa.IdLeft = 0xFFFFFF00;
           pa.IdRight = selection & 0xFF;
-          pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-          pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+          pa.Parameter[0].I = mappingX(e);
+          pa.Parameter[1].I = mappingY(e);
           pa.ExpectedStringParameter = false;
           switch (selection) {
             case CMD_TEXT:
@@ -2612,7 +2600,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
         {
           bool mustCreateHandle = true;
           if (contentInfo) {
-            printf("Find or create handle for content item\n");
+            debugLog("Find or create handle for content item");
             int handleResult = m_MainWindow->contentManager()->editorFindHandle(
                 contentInfo, m_LineEditor);
             if (handleResult != -1 && handleResult != 15) {
@@ -2621,7 +2609,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               mustCreateHandle = false;
             }
             if (mustCreateHandle) {
-              printf("Must create handle\n");
+              debugLog("Must create handle");
               mustCreateHandle = false;
               int handleFree =
                   m_MainWindow->contentManager()->editorFindFreeHandle(
@@ -2666,139 +2654,21 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
             line = hline;
             // TODO: contentInfo->Converter == ContentInfo::Font &&
             // isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
-            auto addPalettedSource = [&](int address) {
-              pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-              pa.Parameter[0].I = address;
-              pa.ExpectedParameterCount = 1;
-              m_LineEditor->insertLine(hline, pa);
-              ++hline;
-              ++line;
-            };
-            auto addBitmapHandler = [&]() {
-              pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
-              pa.Parameter[0].U = bitmapHandle;
-              pa.ExpectedParameterCount = 1;
-              m_LineEditor->insertLine(hline, pa);
-              ++hline;
-              ++line;
 
-              bool useSetBitmap = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 &&
-                                   m_LineEditor->isCoprocessor());
-
-              if (useSetBitmap) {
-                pa.IdLeft = 0xFFFFFF00;
-                pa.IdRight = CMD_SETBITMAP & 0xFF;
-
-                pa.Parameter[0].U = contentInfo->bitmapAddress();
-
-                if (contentInfo->Converter == ContentInfo::ImageCoprocessor) {
-                  pa.Parameter[0].U = contentInfo->bitmapAddress() +
-                                      contentInfo->PalettedAddress;
-                }
-
-                pa.Parameter[1].U = contentInfo->ImageFormat;
-                pa.Parameter[2].U = contentInfo->CachedImageWidth & 0x7FF;
-                pa.Parameter[3].U = contentInfo->CachedImageHeight & 0x7FF;
-                pa.ExpectedParameterCount = 4;
-                m_LineEditor->insertLine(hline, pa);
-                ++hline;
-                ++line;
-                pa.IdLeft = 0;
-              } else {
-                pa.IdRight = FTEDITOR_DL_BITMAP_SOURCE;
-                pa.Parameter[0].U = contentInfo->bitmapAddress();
-                pa.ExpectedParameterCount = 1;
-                m_LineEditor->insertLine(hline, pa);
-                ++hline;
-                ++line;
-              }
-
-              if (!useSetBitmap) {
-                pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT;
-                pa.Parameter[0].U = contentInfo->ImageFormat;
-                pa.Parameter[1].U = contentInfo->CachedImageStride & 0x3FF;
-                pa.Parameter[2].U = contentInfo->CachedImageHeight & 0x1FF;
-                pa.ExpectedParameterCount = 3;
-                m_LineEditor->insertLine(hline, pa);
-                ++hline;
-                ++line;
-
-                if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) {
-                  // Add _H if necessary
-                  pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
-                  pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
-                  pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-                  pa.ExpectedParameterCount = 2;
-                  m_LineEditor->insertLine(hline, pa);
-                  ++hline;
-                  ++line;
-                }
-
-                pa.IdRight = FTEDITOR_DL_BITMAP_SIZE;
-                pa.Parameter[0].U = 0;  // size filter
-                pa.Parameter[1].U = 0;  // wrap x
-                pa.Parameter[2].U = 0;  // wrap y
-                pa.Parameter[3].U = contentInfo->CachedImageWidth & 0x1FF;
-                pa.Parameter[4].U = contentInfo->CachedImageHeight & 0x1FF;
-                pa.ExpectedParameterCount = 5;
-                m_LineEditor->insertLine(hline, pa);
-                ++hline;
-                ++line;
-
-                if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) {
-                  // Add _H if necessary
-                  pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
-                  pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
-                  pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
-                  pa.ExpectedParameterCount = 2;
-                  m_LineEditor->insertLine(hline, pa);
-                  ++hline;
-                  ++line;
-                }
-              }
-            };
-            auto addSetFont2Command = [&](int firstChar = 0) {
-              pa.IdLeft = 0xFFFFFF00;
-              pa.IdRight = CMD_SETFONT2 & 0xFF;
-              pa.Parameter[0].U = bitmapHandle;
-              pa.Parameter[1].U = contentInfo->MemoryAddress;
-              pa.Parameter[2].U = firstChar;
-              pa.ExpectedParameterCount = 3;
-              m_LineEditor->insertLine(hline, pa);
-              ++hline;
-              ++line;
-              pa.IdLeft = 0;
-            };
-            auto addSetFontCommand = [&]() {
-              pa.IdLeft = 0xFFFFFF00;
-              pa.IdRight = CMD_SETFONT & 0xFF;
-              pa.Parameter[0].U = bitmapHandle;
-              pa.Parameter[1].U = contentInfo->MemoryAddress;
-              pa.ExpectedParameterCount = 2;
-              m_LineEditor->insertLine(hline, pa);
-              ++hline;
-              ++line;
-              pa.IdLeft = 0;
-            };
             auto fileSuffix =
                 QFileInfo(contentInfo->SourcePath).suffix().toLower();
             if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810) &&
                 m_LineEditor->isCoprocessor() &&
                 (contentInfo->Converter == ContentInfo::Font)) {
-              pa.IdLeft = 0xFFFFFF00;
-              pa.IdRight = CMD_SETFONT2 & 0xFF;
-              pa.Parameter[0].U = bitmapHandle;
-              pa.Parameter[1].U = contentInfo->MemoryAddress;
-              pa.Parameter[2].U = contentInfo->FontOffset;
-              pa.ExpectedParameterCount = 3;
-              m_LineEditor->insertLine(hline, pa);
-              ++hline;
-              ++line;
-              pa.IdLeft = 0;
+              DLUtil::addSetFont2Cmd(
+                  m_LineEditor, pa, contentInfo->MemoryAddress,
+                  contentInfo->FontOffset, bitmapHandle, line, hline);
             } else if (contentInfo->Converter == ContentInfo::Raw) {
               if (fileSuffix == "xfont") {
                 printf("Add handler for .glyph or .xfont content file\n");
-                addSetFont2Command(0);
+                DLUtil::addSetFont2Cmd(m_LineEditor, pa,
+                                       contentInfo->MemoryAddress, 0,
+                                       bitmapHandle, line, hline);
               } else if (fileSuffix == "raw") {
                 if (contentInfo->MapInfoFileType.contains(fileSuffix)) {
                   QString fileType =
@@ -2816,17 +2686,24 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                       auto contentType = infoJson["type"].toString();
                       if (contentType == "bitmap") {
                         if (infoJson["format"].toString().toUpper().contains(
-                                "PALETTED")) {
+                                "PALETTED") &&
+                            !infoJson["format"].toString().toUpper().contains(
+                                "PALETTED8")) {
                           auto searchedFile = contentInfo->DestName;
                           searchedFile.replace("_index", "_lut");
                           auto searchedContent =
                               m_MainWindow->contentManager()->find(
                                   searchedFile);
-                          addPalettedSource(
-                              searchedContent ? searchedContent->bitmapAddress()
-                                              : 0);
+                          DLUtil::addPalettedSrc(
+                              m_LineEditor, pa,
+                              (searchedContent
+                                   ? searchedContent->bitmapAddress()
+                                   : 0),
+                              hline);
+                          line++;
                         }
-                        addBitmapHandler();
+                        DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
+                                                 bitmapHandle, line, hline);
                       } else if (contentType == "legacyfont") {
                         if (infoJson.contains("eve_command")) {
                           if (infoJson["eve_command"].toString() ==
@@ -2834,12 +2711,18 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                             int firstChar = 1;
                             if (infoJson.contains("first_character"))
                               firstChar = infoJson["first_character"].toInt();
-                            addSetFont2Command(firstChar);
+                            DLUtil::addSetFont2Cmd(
+                                m_LineEditor, pa, contentInfo->MemoryAddress,
+                                firstChar, bitmapHandle, line, hline);
                           } else {
-                            addSetFontCommand();
+                            DLUtil::addSetFontCmd(m_LineEditor, pa,
+                                                  contentInfo->MemoryAddress,
+                                                  bitmapHandle, line, hline);
                           }
                         } else {
-                          addSetFont2Command(1);
+                          DLUtil::addSetFont2Cmd(m_LineEditor, pa,
+                                                 contentInfo->MemoryAddress, 1,
+                                                 bitmapHandle, line, hline);
                         }
                       }
                     }
@@ -2848,221 +2731,27 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               }
             } else {
               if (fileSuffix != "avi") {
-                addBitmapHandler();
+                DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
+                                         bitmapHandle, line, hline);
               }
               if (contentInfo->Converter == ContentInfo::Font) {
-                addSetFontCommand();
+                DLUtil::addSetFontCmd(m_LineEditor, pa,
+                                      contentInfo->MemoryAddress, bitmapHandle,
+                                      line, hline);
               }
             }
           }
 
-          auto addBitmapCommands = [&]() {
-            int mvx = screenLeft();
-            int mvy = screenTop();
-            int scl = screenScale();
-
-            DlParsed pav;
-            pav.ValidId = true;
-            pav.IdLeft = FTEDITOR_DL_VERTEX2F;  // FIXME: Drag-drop outside
-                                                // 512px does not work??
-            pav.IdRight = 0;
-            pav.Parameter[0].I = UNTFX(EPOSPOINT(e).x())
-                                 << m_LineEditor->getVertextFormat(line);
-            pav.Parameter[1].I = UNTFY(EPOSPOINT(e).y())
-                                 << m_LineEditor->getVertextFormat(line);
-            // pav.Parameter[2].I = bitmapHandle;
-            // pav.Parameter[3].I = 0;
-            pav.ExpectedParameterCount = 2;
-            pav.ExpectedStringParameter = false;
-            pa.IdRight = FTEDITOR_DL_BEGIN;
-            pa.Parameter[0].U = selection;
-            pa.ExpectedParameterCount = 1;
-            m_LineEditor->insertLine(line, pa);
-            ++line;
-            int lastVertex;
-
-            if (contentInfo &&
-                contentInfo->Converter == ContentInfo::ImageCoprocessor) {
-              pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-              pa.Parameter[0].U = contentInfo->bitmapAddress();
-              m_LineEditor->insertLine(line, pa);
-              ++line;
-              m_LineEditor->insertLine(line, pav);
-              ++line;
-              lastVertex = -1;
-            } else if (selection == BITMAPS && contentInfo &&
-                       contentInfo->Converter == ContentInfo::Image &&
-                       requirePaletteAddress(contentInfo)) {
-              if (contentInfo->ImageFormat == PALETTED8) {
-                pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
-                pa.ExpectedParameterCount = 0;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
-                pa.Parameter[0].U = ONE;
-                pa.Parameter[1].U = ZERO;
-                pa.ExpectedParameterCount = 2;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_COLOR_MASK;
-                pa.Parameter[0].U = 0;
-                pa.Parameter[1].U = 0;
-                pa.Parameter[2].U = 0;
-                pa.Parameter[3].U = 1;
-                pa.ExpectedParameterCount = 4;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-                pa.Parameter[0].U = contentInfo->MemoryAddress + 3;
-                pa.ExpectedParameterCount = 1;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                m_LineEditor->insertLine(line, pav);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
-                pa.Parameter[0].U = DST_ALPHA;
-                pa.Parameter[1].U = ONE_MINUS_DST_ALPHA;
-                pa.ExpectedParameterCount = 2;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_COLOR_MASK;
-                pa.Parameter[0].U = 1;
-                pa.Parameter[1].U = 0;
-                pa.Parameter[2].U = 0;
-                pa.Parameter[3].U = 0;
-                pa.ExpectedParameterCount = 4;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-                pa.Parameter[0].U = contentInfo->MemoryAddress + 2;
-                pa.ExpectedParameterCount = 1;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                m_LineEditor->insertLine(line, pav);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_COLOR_MASK;
-                pa.Parameter[0].U = 0;
-                pa.Parameter[1].U = 1;
-                pa.Parameter[2].U = 0;
-                pa.Parameter[3].U = 0;
-                pa.ExpectedParameterCount = 4;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-                pa.Parameter[0].U = contentInfo->MemoryAddress + 1;
-                pa.ExpectedParameterCount = 1;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                m_LineEditor->insertLine(line, pav);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_COLOR_MASK;
-                pa.Parameter[0].U = 0;
-                pa.Parameter[1].U = 0;
-                pa.Parameter[2].U = 1;
-                pa.Parameter[3].U = 0;
-                pa.ExpectedParameterCount = 4;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-                pa.Parameter[0].U = contentInfo->MemoryAddress;
-                pa.ExpectedParameterCount = 1;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                m_LineEditor->insertLine(line, pav);
-                ++line;
-                pa.IdRight = FTEDITOR_DL_RESTORE_CONTEXT;
-                pa.ExpectedParameterCount = 0;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                lastVertex = -2;
-              } else {
-                pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
-                pa.Parameter[0].U = contentInfo->MemoryAddress;
-                m_LineEditor->insertLine(line, pa);
-                ++line;
-                m_LineEditor->insertLine(line, pav);
-                ++line;
-                lastVertex = -1;
-              }
-            } else {
-              m_LineEditor->insertLine(line, pav);
-              ++line;
-              lastVertex = -1;
-            }
-            pa.IdLeft = 0;
-            pa.IdRight = FTEDITOR_DL_END;
-            pa.ExpectedParameterCount = 1;
-            m_LineEditor->insertLine(line, pa);
-            m_LineEditor->selectLine(line + lastVertex);
-          };
-          if (contentInfo && contentInfo->Converter == ContentInfo::Font) {
-            int mvx = screenLeft();
-            int mvy = screenTop();
-            int scl = screenScale();
-
-            pa.IdLeft = 0xFFFFFF00;
-            pa.IdRight = CMD_TEXT & 0xFF;
-            pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-            pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
-            pa.Parameter[2].I = bitmapHandle;
-            pa.Parameter[3].I = 0;
-            pa.StringParameter = "Text";
-            pa.ExpectedStringParameter = true;
-            pa.ExpectedParameterCount = 5;
-            m_LineEditor->insertLine(line, pa);
-            m_LineEditor->selectLine(line);
-            pa.IdLeft = 0;
-            pa.ExpectedStringParameter = false;
-          } else if (contentInfo &&
-                     contentInfo->Converter == ContentInfo::Raw) {
-            int mvx = screenLeft();
-            int mvy = screenTop();
-            int scl = screenScale();
-
-            auto addTextCommand = [&](QString text) {
-              pa.IdLeft = 0xFFFFFF00;
-              pa.IdRight = CMD_TEXT & 0xFF;
-              pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-              pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
-              pa.Parameter[2].I = bitmapHandle;
-              pa.Parameter[3].I = 0;
-              pa.StringParameter = text.toStdString();
-              pa.ExpectedStringParameter = true;
-              pa.ExpectedParameterCount = 5;
-              m_LineEditor->insertLine(line, pa);
-              ++line;
-            };
-            auto readConvertedCharsFile = [](QString &file) {
-              QFileInfo fi(file);
-              if (!fi.exists()) return QString();
-              QString suffix = fi.suffix();
-              QFile f(file);
-              if (!f.open(QIODevice::ReadOnly)) return QString();
-              QString data = f.readAll();
-              f.close();
-              return data;
-            };
-            auto readConvertedCharsIndexFile = [](QString &file, int &first,
-                                                  int &last) {
-              QFileInfo fi(file);
-              if (!fi.exists()) return;
-              QFile f(file);
-              if (!f.open(QIODevice::ReadOnly)) return;
-              QTextStream in(&f);
-              while (!in.atEnd()) {
-                QString line = in.readLine();
-                QStringList listItem = line.split(QRegularExpression("\\s+"));
-                listItem.removeAll("");
-                if (listItem.count() >= 3) {
-                  bool ok;
-                  int indexNo = listItem.at(1).toInt(&ok, 10);
-                  if (!ok) continue;
-                  last = indexNo;
-                  if (first < 1) first = indexNo;
-                }
-              }
-              f.close();
-            };
+          if (!contentInfo) {
+            int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
+            int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
+            DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
+                                  line, x, y);
+          } else if (contentInfo->Converter == ContentInfo::Font) {
+            DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, "Text", line,
+                               mappingX(e), mappingY(e));
+            m_LineEditor->selectLine(line - 1);
+          } else if (contentInfo->Converter == ContentInfo::Raw) {
             auto infoJson = QJsonObject();
             auto fileSuffix =
                 QFileInfo(contentInfo->SourcePath).suffix().toLower();
@@ -3080,12 +2769,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                 infoJson = ReadWriteUtil::getJsonInfo(filePath);
               }
             }
+
             if (fileSuffix == "ram_g") {
               debugLog("Create commands for .ram_g content file\n");
               pa.IdLeft = 0xFFFFFF00;
               pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
-              pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-              pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+              pa.Parameter[0].I = mappingX(e);
+              pa.Parameter[1].I = mappingY(e);
 
               if (infoJson.contains("object")) {
                 auto obj = infoJson.value("object").toObject();
@@ -3099,8 +2789,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               debugLog("Create commands for .flash content file\n");
               pa.IdLeft = 0xFFFFFF00;
               pa.IdRight = CMD_ANIMFRAME & 0xFF;
-              pa.Parameter[0].I = UNTFX(EPOSPOINT(e).x());
-              pa.Parameter[1].I = UNTFY(EPOSPOINT(e).y());
+              pa.Parameter[0].I = mappingX(e);
+              pa.Parameter[1].I = mappingY(e);
 
               if (infoJson.contains("object")) {
                 auto obj = infoJson.value("object").toObject();
@@ -3116,14 +2806,33 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                   contentInfo->SourcePath
                       .left(contentInfo->SourcePath.lastIndexOf('.'))
                       .append("_converted_chars.txt");
-              QString data = readConvertedCharsFile(savedCharsFile);
-              addTextCommand(data.left(5));
+              QString data =
+                  ReadWriteUtil::readConvertedCharsFile(savedCharsFile);
+              DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, data.left(5),
+                                 line, mappingX(e), mappingY(e));
             } else if (fileSuffix == "raw") {
               if (infoJson.contains("type")) {
                 auto contentType = infoJson["type"].toString();
                 if (contentType == "bitmap") {
                   debugLog("Create commands for .raw bitmap content file");
-                  addBitmapCommands();
+                  int32_t x = mappingX(e)
+                              << m_LineEditor->getVertextFormat(line);
+                  int32_t y = mappingY(e)
+                              << m_LineEditor->getVertextFormat(line);
+                  if (contentInfo->ImageFormat == PALETTED8) {
+                    debugLog("Create commands for PALETTED8 content file");
+                    auto searchedFile = contentInfo->DestName;
+                    searchedFile.replace("_index", "_lut");
+                    auto searchedContent =
+                        m_MainWindow->contentManager()->find(searchedFile);
+                    DLUtil::addPaletted8Cmds(
+                        m_LineEditor, pa,
+                        searchedContent ? searchedContent->bitmapAddress() : 0,
+                        selection, line, x, y);
+                  } else {
+                    DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo,
+                                          selection, line, x, y);
+                  }
                 } else if (contentType == "legacyfont") {
                   debugLog(
                       "Create commands for .raw legacy font content file\n");
@@ -3132,7 +2841,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                           .left(contentInfo->SourcePath.lastIndexOf('.'))
                           .append("_converted_char_index.txt");
                   int first = 0, last = 0;
-                  readConvertedCharsIndexFile(savedCharsIndexFile, first, last);
+                  ReadWriteUtil::readConvertedCharsIndexFile(
+                      savedCharsIndexFile, first, last);
                   QString defaultText;
                   if (first != 0 && last != 0) {
                     int defaultNoOfChar = 5;
@@ -3147,11 +2857,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                       ++index;
                     }
                   }
-                  addTextCommand(!defaultText.isEmpty() ? defaultText : "Text");
+                  DLUtil::addTextCmd(
+                      m_LineEditor, pa, bitmapHandle,
+                      !defaultText.isEmpty() ? defaultText : "Text", line,
+                      mappingX(e), mappingY(e));
                 }
               }
             }
-          } else if (contentInfo) {
+          } else {
             auto fileSuffix =
                 QFileInfo(contentInfo->SourcePath).suffix().toLower();
             if (fileSuffix == "avi") {
@@ -3165,11 +2878,13 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
               m_LineEditor->insertLine(line, pa);
               ++line;
             } else {
-              addBitmapCommands();
+              int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
+              int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
+              DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
+                                    line, x, y);
             }
-          } else {
-            addBitmapCommands();
           }
+
           m_LineEditor->codeEditor()->endUndoCombine();
           // m_MainWindow->undoStack()->endMacro();
           switch (selection) {
@@ -3510,12 +3225,8 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e) {
   verticalRuler()->setIndicator(EPOSPOINT(e).y());
   if (acceptableSource(e)) {
     if (m_LineEditor) {
-      int mvx = screenLeft();
-      int mvy = screenTop();
-      int scl = screenScale();
-
-      m_NextMouseX = UNTFX(EPOSPOINT(e).x());
-      m_NextMouseY = UNTFY(EPOSPOINT(e).y());
+      m_NextMouseX = mappingX(e);
+      m_NextMouseY = mappingY(e);
       m_DragMoving = true;
 
       e->acceptProposedAction();
@@ -3526,6 +3237,7 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e) {
     printf("Unknown dragMoveEvent from %p\n", e->source());
   }
 }
+
 void InteractiveViewport::dragEnterEvent(QDragEnterEvent *e) {
   // TODO: Bitmaps from files, etc
   if (acceptableSource(e)) {

@@ -15,6 +15,8 @@ class ReadWriteUtil {
   static bool writeBinary(QString fileName, QByteArray &data);
   static bool writeText(QString fileName, QString &data);
   static QJsonObject getJsonInfo(QString &filePath);
+  static QString readConvertedCharsFile(QString &file);
+  static void readConvertedCharsIndexFile(QString &file, int &first, int &last);
 };
 
 #endif  // READWRITEUTIL_H

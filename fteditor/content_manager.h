@@ -133,6 +133,7 @@ struct ContentInfo {
   QJsonObject toJson(bool meta) const;
   void fromJson(QJsonObject &j, bool meta);
   bool equalsMeta(const ContentInfo *other) const;
+  bool requirePaletteAddress();
 
   bool UploadMemoryDirty;
   bool UploadFlashDirty;
@@ -170,7 +171,7 @@ class ContentTreeWidget : public QTreeWidget {
   explicit ContentTreeWidget(QWidget *parent = nullptr);
   ~ContentTreeWidget();
 
-signals:
+ signals:
   void addItem(FTEDITOR::ContentInfo *item);
   void removeItem(FTEDITOR::ContentInfo *item);
 };
@@ -411,7 +412,7 @@ class ContentManager : public QWidget {
 
   void importFlashMapped();
   void exportFlashMapped();
-  void setup(QObject * obj = nullptr);
+  void setup(QObject *obj = nullptr);
   void handleUpdateCurrentInfo(FTEDITOR::ContentInfo *contentInfo);
 
  private slots:
