@@ -55,7 +55,7 @@ QJsonObject ReadWriteUtil::getJsonInfo(QString &filePath)
     QTextStream in(&file);
     while (!in.atEnd()) {
       QString line = in.readLine();
-      QRegularExpression req("\\s+");
+      static QRegularExpression req("\\s+");
       QStringList listItem = line.split(req);
       if (listItem.at(0) != "name" && !listItem.at(0).isEmpty()) {
         jo.insert(listItem.at(0),
@@ -66,4 +66,38 @@ QJsonObject ReadWriteUtil::getJsonInfo(QString &filePath)
     file.close();
   }
   return jo;
+}
+
+QString ReadWriteUtil::readConvertedCharsFile(QString &file)
+{
+  QFileInfo fi(file);
+  if (!fi.exists()) return QString();
+  QFile f(file);
+  if (!f.open(QIODevice::ReadOnly)) return QString();
+  QString data = f.readAll();
+  f.close();
+  return data;
+}
+
+void ReadWriteUtil::readConvertedCharsIndexFile(QString &file, int &first, int &last)
+{
+  QFileInfo fi(file);
+  if (!fi.exists()) return;
+  QFile f(file);
+  if (!f.open(QIODevice::ReadOnly)) return;
+  QTextStream in(&f);
+  static QRegularExpression req("\\s+");
+  while (!in.atEnd()) {
+    QString line = in.readLine();
+    QStringList listItem = line.split(req);
+    listItem.removeAll("");
+    if (listItem.count() >= 3) {
+      bool ok;
+      int indexNo = listItem.at(1).toInt(&ok, 10);
+      if (!ok) continue;
+      last = indexNo;
+      if (first < 1) first = indexNo;
+    }
+  }
+  f.close();
 }

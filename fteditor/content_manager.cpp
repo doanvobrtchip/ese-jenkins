@@ -49,8 +49,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "inspector.h"
 #include "main_window.h"
 #include "properties_editor.h"
-#include "undo_stack_disabler.h"
 #include "src/inspector/RamG.h"
+#include "undo_stack_disabler.h"
 #include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
@@ -245,6 +245,16 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const {
       break;
   }
   return true;
+}
+
+bool ContentInfo::requirePaletteAddress() {
+  switch (this->ImageFormat) {
+    case PALETTED4444:
+    case PALETTED565:
+    case PALETTED8:
+      return true;
+  }
+  return false;
 }
 
 int ContentInfo::bitmapAddress(int deviceIntf) const {
