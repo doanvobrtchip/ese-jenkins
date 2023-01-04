@@ -339,7 +339,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints,
   warningLayout->setAlignment(warningText, Qt::AlignTop | Qt::AlignLeft);
   outerWarning->addWidget(frame);
   outerWarning->addStretch();
-  layout->addLayout(outerWarning, 0, 0);
+  layout->addLayout(outerWarning, 1, 1);
   m_ErrorFrame = frame;
   m_ErrorLabel = warningText;
   frame->setVisible(false);
