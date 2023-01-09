@@ -1193,7 +1193,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight,
         if (editor) {
           setTitle("CMD_LOADIMAGE");
           addAddress(0, false);
-          if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+          if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
+            addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN |
+                              OPT_FLASH | OPT_DITHER);
+          else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
             addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN |
                               OPT_FLASH);
           else
