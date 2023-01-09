@@ -1637,6 +1637,16 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
         <translation>&lt;b&gt;BITMAP_SWIZZLE&lt;/b&gt;(&lt;i&gt;r&lt;/i&gt;, &lt;i&gt;g&lt;/i&gt;, &lt;i&gt;b&lt;/i&gt;, &lt;i&gt;a&lt;/i&gt;)&lt;br&gt;&lt;b&gt;r&lt;/b&gt;: red component swizzle source&lt;br&gt;&lt;b&gt;g&lt;/b&gt;: green component swizzle source&lt;br&gt;&lt;b&gt;b&lt;/b&gt;: blue component swizzle source&lt;br&gt;&lt;b&gt;a&lt;/b&gt;: alpha component swizzle source&lt;br&gt;&lt;br&gt;Specify the color channel swizzle for a bitmap.&lt;br&gt;&lt;br&gt;Each color component can be sourced from any of the bitmap color&lt;br&gt;components, or can be set to zero or one. Valid values for each&lt;br&gt;source are:&lt;br&gt;• ZERO&lt;br&gt;• ONE&lt;br&gt;• RED&lt;br&gt;• GREEN&lt;br&gt;• BLUE&lt;br&gt;• ALPHA&lt;br&gt;Bitmap swizzle is only applied when BITMAP_LAYOUT format is GLFORMAT.&lt;br&gt;Otherwise the four components are in their default order.</translation>
     </message>
     <message>
+        <comment>info</comment>
+        <source>DESCRIPTION_CMD_PCLKFREQ.</source>
+        <translation>&lt;strong&gt;CMD_PCLKFREQ&lt;/strong&gt;(&lt;em&gt;ftarget, rounding, factual&lt;/em&gt;)&lt;br /&gt;&lt;strong&gt;ftarget&lt;/strong&gt;: Target frequency, in Hz.&lt;br /&gt; &lt;strong&gt;rounding&lt;/strong&gt;: Approximation mode. Valid values are 0, -1, 1.&lt;br /&gt;&amp;nbsp;&amp;nbsp;0 is nearest,&lt;br/&gt;&amp;nbsp;&amp;nbsp;-1 is highest frequency less than or equal to target,&lt;br/&gt;&amp;nbsp;&amp;nbsp;1 is lowest frequency greater than or equal to target.&lt;br/&gt;&lt;strong&gt;factual&lt;/strong&gt;: Output parameter; Actual frequency achieved. If no frequency was found, it is zero.&lt;br /&gt;&lt;br&gt;This command sets &lt;strong&gt;REG_PCLK_FREQ&lt;/strong&gt; to generate the closest possible frequency to the one requested. If no suitable frequency can be found, the result field is zero and &lt;strong&gt;REG_PCLK_FREQ&lt;/strong&gt; is unchanged.</translation>
+    </message>
+    <message>
+        <comment>info</comment>
+        <source>DESCRIPTION_CMD_HSF.</source>
+        <translation>&lt;strong&gt;CMD_HSF&lt;/strong&gt;(&lt;em&gt;w&lt;/em&gt;)&lt;br /&gt;&lt;strong&gt;w&lt;/strong&gt;: Output pixel width, which must be less than REG_HSIZE. 0 disables HSF.</translation>
+    </message>
+    <message>
         <location filename="interactive_properties.cpp" line="2781"/>
         <source>Set swizzle R</source>
         <translation type="unfinished"></translation>
