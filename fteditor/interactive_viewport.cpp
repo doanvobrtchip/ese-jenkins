@@ -2661,14 +2661,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                 m_LineEditor->isCoprocessor() &&
                 (contentInfo->Converter == ContentInfo::Font)) {
               DLUtil::addSetFont2Cmd(
-                  m_LineEditor, pa, contentInfo->MemoryAddress,
-                  contentInfo->FontOffset, bitmapHandle, line, hline);
+                  m_LineEditor, pa, bitmapHandle, contentInfo->MemoryAddress,
+                  contentInfo->FontOffset,  line, hline);
             } else if (contentInfo->Converter == ContentInfo::Raw) {
               if (fileSuffix == "xfont") {
                 printf("Add handler for .glyph or .xfont content file\n");
-                DLUtil::addSetFont2Cmd(m_LineEditor, pa,
+                DLUtil::addSetFont2Cmd(m_LineEditor, pa, bitmapHandle,
                                        contentInfo->MemoryAddress, 0,
-                                       bitmapHandle, line, hline);
+                                        line, hline);
               } else if (fileSuffix == "raw") {
                 if (contentInfo->MapInfoFileType.contains(fileSuffix)) {
                   QString fileType =
@@ -2705,24 +2705,21 @@ void InteractiveViewport::dropEvent(QDropEvent *e) {
                         DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
                                                  bitmapHandle, line, hline);
                       } else if (contentType == "legacyfont") {
-                        if (infoJson.contains("eve_command")) {
-                          if (infoJson["eve_command"].toString() ==
-                              "cmd_setfont2") {
-                            int firstChar = 1;
-                            if (infoJson.contains("first_character"))
-                              firstChar = infoJson["first_character"].toInt();
-                            DLUtil::addSetFont2Cmd(
-                                m_LineEditor, pa, contentInfo->MemoryAddress,
-                                firstChar, bitmapHandle, line, hline);
-                          } else {
-                            DLUtil::addSetFontCmd(m_LineEditor, pa,
-                                                  contentInfo->MemoryAddress,
-                                                  bitmapHandle, line, hline);
-                          }
+                        if (infoJson["eve_command"].toString() ==
+                            "cmd_setfont") {
+                          DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
+                                                   bitmapHandle, line, hline);
+                          DLUtil::addSetFontCmd(m_LineEditor, pa,
+                                                contentInfo->MemoryAddress,
+                                                bitmapHandle, line, hline);
                         } else {
-                          DLUtil::addSetFont2Cmd(m_LineEditor, pa,
-                                                 contentInfo->MemoryAddress, 1,
-                                                 bitmapHandle, line, hline);
+                          int firstChar = 1;
+                          if (infoJson.contains("first_character"))
+                            firstChar = infoJson["first_character"].toInt();
+                          DLUtil::addSetFont2Cmd(
+                              m_LineEditor, pa, bitmapHandle, contentInfo->MemoryAddress,
+                              firstChar, line, hline);
+
                         }
                       }
                     }

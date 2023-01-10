@@ -99,6 +99,7 @@ ContentInfo::ContentInfo(const QString &filePath) {
   OverlapMemoryFlag = false;
   OverlapFlashFlag = false;
   WantAutoLoad = false;
+  CachedBitmapSource = -1;
 }
 
 QJsonObject ContentInfo::toJson(bool meta) const {
@@ -279,6 +280,8 @@ int ContentInfo::bitmapAddress(int deviceIntf) const {
             res += addressMask(deviceIntf) + 1;*/
     return res;
   }
+  if (CachedBitmapSource >= 0)
+    return MemoryAddress + 148 - CachedImageStride * CachedImageHeight;
   return MemoryAddress;
 }
 
@@ -796,10 +799,6 @@ ContentInfo *ContentManager::add(const QString &filePath) {
         contentInfo->WantAutoLoad = true;
         contentInfo->DataCompressed = false;
       } else if (fileExt == "raw") {
-        if (infoJson.contains("address")) {
-          contentInfo->MemoryAddress = infoJson["address"].toInt();
-          contentInfo->WantAutoLoad = true;
-        }
         if (infoJson.contains("type")) {
           auto contentType = infoJson["type"].toString();
           if (contentType == "bitmap") {
@@ -808,6 +807,22 @@ ContentInfo *ContentManager::add(const QString &filePath) {
             contentInfo->CachedImageStride = infoJson["stride"].toInt();
             contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
                 infoJson["format"].toString().toLocal8Bit().data());
+          } else if (contentType == "legacyfont") {
+            if (infoJson["eve_command"].toString() == "cmd_setfont") {
+              if (infoJson.contains("address")) {
+                contentInfo->CachedBitmapSource =
+                    infoJson["address"].toInt();
+              }
+              contentInfo->CachedImageStride = infoJson["stride"].toInt();
+              contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
+              contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
+              contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
+                  infoJson["format"].toString().toLocal8Bit().data());
+            }
+            contentInfo->MemoryAddress = infoJson["address"].toInt();
+            if (getFreeMemoryAddress() <= contentInfo->MemoryAddress) {
+              contentInfo->WantAutoLoad = true;
+            }
           }
         }
       }

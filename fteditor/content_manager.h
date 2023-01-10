@@ -143,6 +143,7 @@ struct ContentInfo {
   int CachedImageWidth;
   int CachedImageHeight;
   int CachedImageStride;
+  int CachedBitmapSource;
 
   int CachedMemorySize;  // Memory size (for example, after JPEG decompression
                          // by coprocessor)

@@ -118,8 +118,8 @@ bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa, ContentInfo *c
   ++hline;
   ++line;
 
-  bool useSetBitmap = (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 &&
-                       lineEditor->isCoprocessor());
+  bool useSetBitmap = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 &&
+                       lineEditor->isCoprocessor() && contentInfo->bitmapAddress() >= 0;
 
   if (useSetBitmap) {
     pa.IdLeft = 0xFFFFFF00;
@@ -195,12 +195,12 @@ bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa, ContentInfo *c
   return true;
 }
 
-bool DLUtil::addSetFont2Cmd(DlEditor *lineEditor, DlParsed &pa, int address, int firstChar,
-                                 uint32_t &bitmapHandle, int &line,
+bool DLUtil::addSetFont2Cmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &font, int address, int firstChar,
+                                  int &line,
                                  int &hline) {
   pa.IdLeft = 0xFFFFFF00;
   pa.IdRight = CMD_SETFONT2 & 0xFF;
-  pa.Parameter[0].U = bitmapHandle;
+  pa.Parameter[0].U = font;
   pa.Parameter[1].U = address;
   pa.Parameter[2].U = firstChar;
   pa.ExpectedParameterCount = 3;
