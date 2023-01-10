@@ -150,6 +150,7 @@ class CodeEditor : public CodeEditorParent {
   FTEDITOR::InteractiveViewport *m_KeyHandler;
   FTEDITOR::InteractiveViewport *m_LastKeyHandler;
   QClipboard *cb;
+  QString latestText;
 };
 
 class LineNumberArea : public QWidget {

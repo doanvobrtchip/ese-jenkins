@@ -91,13 +91,21 @@ CodeEditor::CodeEditor(QWidget *parent)
   // copy()
   cb = QGuiApplication::clipboard();
   connect(cb, &QClipboard::dataChanged, this, [&]() {
-    QPlainTextEdit clipboardText, currentText;
-    clipboardText.setPlainText(cb->text());
-    currentText.setPlainText(this->textCursor().selectedText());
-    if (currentText.toPlainText() == clipboardText.toPlainText() &&
-        cb->text() != currentText.toPlainText()) {
+    if (latestText.isEmpty()) return;
+    QPlainTextEdit cbPTE, latestPTE;
+    cbPTE.setPlainText(cb->text());
+    latestPTE.setPlainText(latestText);
+    QString latestPT = latestPTE.toPlainText();
+    QString cbPT = cbPTE.toPlainText();
+    if (latestPT == cbPT && cb->text() != latestPT) {
       debugLog(QString("QPlainTextEdit | Update clipboard"));
-      cb->setText(currentText.toPlainText());
+      cb->setText(latestPT);
+    }
+  });
+  connect(this, &QPlainTextEdit::selectionChanged, this, [&]() {
+    auto curTxt = this->textCursor().selectedText();
+    if (!curTxt.isEmpty()) {
+      latestText = curTxt;
     }
   });
 }
