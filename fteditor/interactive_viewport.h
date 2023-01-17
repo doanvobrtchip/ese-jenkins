@@ -24,6 +24,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 class QAction;
 class QComboBox;
 class QSinglePointEvent;
+class QMenu;
+
 namespace FTEDITOR {
 
 #define FTED_SNAP_HISTORY 8
