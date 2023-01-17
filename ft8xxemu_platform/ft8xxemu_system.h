@@ -23,6 +23,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #		define WIN32_LEAN_AND_MEAN
 #	endif
 #endif
+#ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
+#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0 // FIX C5105
+#endif
 #include <malloc.h>
 #include <algorithm>
 using std::max;
