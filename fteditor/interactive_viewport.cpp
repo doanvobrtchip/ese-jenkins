@@ -551,15 +551,15 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 			int x, y;
 			DlParsed tempParsed;
 			const DlState *tempState = NULL;
-			static const QSet dragableItems = {
+			static const QSet<uint32_t> dragableItems = {
 				CMD_TEXT, CMD_BUTTON, CMD_KEYS, CMD_PROGRESS,
 				CMD_SLIDER, CMD_SCROLLBAR, CMD_TOGGLE, CMD_GAUGE,
 				CMD_CLOCK, CMD_SPINNER, CMD_TRACK, CMD_DIAL, CMD_NUMBER,
 				CMD_SKETCH, CMD_CSKETCH, CMD_ANIMFRAME, CMD_ANIMFRAMERAM
 			};
-			static const QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II };
+			static const QList<uint32_t> otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II };
 
-			auto autoAlignVertical = false, autoAlignHorizontal = false;
+			bool autoAlignVertical = false, autoAlignHorizontal = false;
 			auto drawVerticalAlignment = [&](int x1, int x2) {
 				p.setPen(QPen(QBrush(x1 == x2 ? COLOR_FIT_VERTICALLY : COLOR_CLOSE_FIT_VERTICALLY), 1.0, Qt::DashLine));
 				if (abs(x1 - x2) > DISTANCE)
@@ -666,7 +666,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				if (i == m_LineNumber)
 					continue;
 				tempParsed = m_LineEditor->getLine(i);
-				auto tempRightID = tempParsed.IdRight | 0xFFFFFF00;
+				int tempRightID = tempParsed.IdRight | 0xFFFFFF00;
 				if (!dragableItems.contains(tempRightID) && !otherItems.contains(tempParsed.IdLeft))
 					continue;
 
@@ -2236,7 +2236,7 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 	//if (e->source() == m_MainWindow->bitmapSetup()) return true;
 	if (e->source() == m_MainWindow->contentManager()->contentList())
 	{
-		auto currentItem = m_MainWindow->contentManager()->current();
+		ContentInfo *currentItem = m_MainWindow->contentManager()->current();
 		
 		static const QSet<QString> supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
 		static const QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
@@ -2869,7 +2869,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						line = hline;
 						// TODO: contentInfo->Converter == ContentInfo::Font && isCoprocessor && (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 						
-						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+						QString fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if ((FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810)
 							&& m_LineEditor->isCoprocessor()
 							&& (contentInfo->Converter == ContentInfo::Font))
@@ -2899,18 +2899,18 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 										{
 											filePath.remove(filePath.lastIndexOf("_index"), 6);
 										}
-										auto infoJson = ReadWriteUtil::getJsonInfo(filePath);
+										QJsonObject infoJson = ReadWriteUtil::getJsonInfo(filePath);
 										if (infoJson.contains("type"))
 										{
-											auto contentType = infoJson["type"].toString();
+											QString contentType = infoJson["type"].toString();
 											if (contentType == "bitmap")
 											{
 												if (infoJson["format"].toString().toUpper().contains("PALETTED")
 												    && !infoJson["format"].toString().toUpper().contains("PALETTED8"))
 												{
-													auto searchedFile = contentInfo->DestName;
+													QString searchedFile = contentInfo->DestName;
 													searchedFile.replace("_index", "_lut");
-													auto searchedContent = m_MainWindow->contentManager()->find(
+													const ContentInfo *searchedContent = m_MainWindow->contentManager()->find(
 													    searchedFile);
 													DLUtil::addPalettedSrc(
 														m_LineEditor, pa,
@@ -2979,8 +2979,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 					else if (contentInfo->Converter == ContentInfo::Raw)
 					{
-						auto infoJson = QJsonObject();
-						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+						QJsonObject infoJson = QJsonObject();
+						QString fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if (contentInfo->MapInfoFileType.contains(fileSuffix))
 						{
 							QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
@@ -3006,7 +3006,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 							if (infoJson.contains("object"))
 							{
-								auto obj = infoJson.value("object").toObject();
+								QJsonObject obj = infoJson.value("object").toObject();
 								pa.Parameter[2].I = obj.value("offset").toInt();
 							}
 							else
@@ -3025,7 +3025,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 
 							if (infoJson.contains("object"))
 							{
-								auto obj = infoJson.value("object").toObject();
+								QJsonObject obj = infoJson.value("object").toObject();
 								pa.Parameter[2].I = obj.value("offset").toInt();
 							}
 							else
@@ -3045,7 +3045,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						{
 							if (infoJson.contains("type"))
 							{
-								auto contentType = infoJson["type"].toString();
+								QString contentType = infoJson["type"].toString();
 								if (contentType == "bitmap")
 								{
 									debugLog("Create commands for .raw bitmap content file\n");
@@ -3054,9 +3054,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 									if (contentInfo->ImageFormat == PALETTED8)
 									{
 										debugLog("Create commands for PALETTED8 content file");
-										auto searchedFile = contentInfo->DestName;
+										QString searchedFile = contentInfo->DestName;
 										searchedFile.replace("_index", "_lut");
-										auto searchedContent = m_MainWindow->contentManager()->find(searchedFile);
+										const ContentInfo *searchedContent = m_MainWindow->contentManager()->find(searchedFile);
 										DLUtil::addPaletted8Cmds(
 										    m_LineEditor, pa,
 										    searchedContent ? searchedContent->bitmapAddress() : 0,
@@ -3100,7 +3100,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					}
 					else
 					{
-						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
+						QString fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if (fileSuffix == "avi")
 						{
 							debugLog("Create commands for .avi content file\n");
