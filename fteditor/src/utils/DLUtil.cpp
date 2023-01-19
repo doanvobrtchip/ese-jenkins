@@ -7,6 +7,8 @@
 
 #include "constant_common.h"
 
+namespace FTEDITOR {
+
 bool DLUtil::addPalettedSrc(DlEditor *lineEditor, DlParsed &pa, int address, int &line) {
   pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
   pa.Parameter[0].I = address;
@@ -353,3 +355,7 @@ bool DLUtil::addTextCmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &bitmapHand
   ++line;
   return true;
 }
+
+}
+
+/* end of file */

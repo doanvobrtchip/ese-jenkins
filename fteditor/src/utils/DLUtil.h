@@ -9,7 +9,8 @@
 #include "content_manager.h"
 #include "dl_editor.h"
 
-using namespace FTEDITOR;
+namespace FTEDITOR {
+
 class DLUtil {
  public:
   static bool addPalettedSrc(DlEditor *lineEditor, DlParsed &pa, int address, int &line);
@@ -26,5 +27,7 @@ class DLUtil {
   static bool addTextCmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &bitmapHandle, QString text,
                       int &line, int32_t x, int32_t y);
 };
+
+}
 
 #endif  // DLUTIL_H
