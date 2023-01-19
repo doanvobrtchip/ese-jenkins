@@ -4,25 +4,17 @@ SET(CMAKE_CXX_STANDARD 17)
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
 FILE(GLOB CUSTOMIZE
-    src/customize/SaveOptionDialog.h
-    src/customize/SaveOptionDialog.cpp
-    src/customize/QHexView.h
-    src/customize/QHexView.cpp
-    src/customize/QRuler.cpp
-    src/customize/QRuler.h
+    src/customize/*.h
+    src/customize/*.cpp
 )
 
 FILE(GLOB UTILS
-    src/utils/ReadWriteUtil.h
-    src/utils/ReadWriteUtil.cpp
-    src/utils/LoggerUtil.h
-    src/utils/DLUtil.h
-    src/utils/DLUtil.cpp
+    src/utils/*.h
+    src/utils/*.cpp
 )
 
 FILE(GLOB INSPECTOR
-  src/inspector/RamG.h
-  src/inspector/RamG.cpp
+  src/inspector/*.h
 )
 
 IF (WIN32)
@@ -33,6 +25,9 @@ FILE(GLOB RESOURCES *.qrc)
 SOURCE_GROUP("resources" FILES ${RESOURCES} ${RSRC})
 SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+SOURCE_GROUP("customize" FILES ${CUSTOMIZE})
+SOURCE_GROUP("utils" FILES ${UTILS})
+SOURCE_GROUP("inspector" FILES ${INSPECTOR})
 
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
