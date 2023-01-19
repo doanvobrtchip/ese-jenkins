@@ -551,13 +551,13 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 			int x, y;
 			DlParsed tempParsed;
 			const DlState *tempState = NULL;
-			QList dragableItems = {
+			static const QSet dragableItems = {
 				CMD_TEXT, CMD_BUTTON, CMD_KEYS, CMD_PROGRESS,
 				CMD_SLIDER, CMD_SCROLLBAR, CMD_TOGGLE, CMD_GAUGE,
 				CMD_CLOCK, CMD_SPINNER, CMD_TRACK, CMD_DIAL, CMD_NUMBER,
 				CMD_SKETCH, CMD_CSKETCH, CMD_ANIMFRAME, CMD_ANIMFRAMERAM
 			};
-			QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II };
+			static const QList otherItems = { FTEDITOR_DL_VERTEX2F, FTEDITOR_DL_VERTEX2II };
 
 			auto autoAlignVertical = false, autoAlignHorizontal = false;
 			auto drawVerticalAlignment = [&](int x1, int x2) {
@@ -2238,8 +2238,8 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 	{
 		auto currentItem = m_MainWindow->contentManager()->current();
 		
-		QStringList supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
-		QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
+		static const QSet<QString> supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
+		static const QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
 		
 		if (fileSuffix == "raw" && currentItem->SourcePath.contains("_lut"))
 			return false;
