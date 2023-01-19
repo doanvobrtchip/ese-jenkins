@@ -438,34 +438,12 @@ void DlEditor::documentContentsChange(int position, int charsRemoved, int charsA
 	unlockDisplayList();
 }
 
-void DlEditor::saveCoprocessorCmd(bool isBigEndian)
+QString DlEditor::getCoproCmdText(bool isBigEndian)
 {
-	static QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	QString fileName = QFileDialog::getSaveFileName(m_MainWindow, tr("Save Coprocessor Command"), dirPath, tr("Coprocessor Command Files(*.txt)"));
-
-	QDir saveDir(fileName);
-	saveDir.cdUp();
-	dirPath = saveDir.absolutePath();
-
-	int blockCount = 0;
+	QString result;
 	uint32_t val = 0;
 	QString line("");
 	QTextBlock block;
-
-	QFile f(fileName);
-
-	if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
-	{
-		return;
-	}
-
-	QTextStream ts(&f);
-	ts.setAutoDetectUnicode(true);
-#if QT_VERSION_MAJOR < 6
-	ts.setCodec("utf-8");
-#else
-    ts.setEncoding(QStringConverter::Utf8);
-#endif
 	std::vector<uint32_t> comp;
 
 	lockDisplayList();
@@ -484,7 +462,7 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 		{
 			val = DlParser::compile(FTEDITOR_CURRENT_DEVICE, dl);
 			val = isBigEndian ? qToBigEndian(val) : val;
-			ts << QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+			result += QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
 		}
 		else
 		{
@@ -492,7 +470,7 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 			DlParser::compile(FTEDITOR_CURRENT_DEVICE, comp, dl);
 			val = (0xFFFFFF00 | dl.IdRight);
 			val = isBigEndian ? qToBigEndian(val) : val;
-			ts << QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
+			result += QString("0x%1   // %2\n").arg(val, 8, 16, QChar('0')).arg(line);
 
 			QStringList argNames = m_CoproCmdArgName.value(QString(dl.IdText.c_str()));
 			bool isSigned = (argNames.size() > 0 && argNames[0] == "<i>");
@@ -523,7 +501,7 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 				}
 
 				val = isBigEndian ? qToBigEndian(comp.at(i)) : comp.at(i);
-				ts << QString("0x%1   //    ").arg(val, 8, 16, QChar('0'));
+				result += QString("0x%1   //    ").arg(val, 8, 16, QChar('0'));
 
 				argItem = argNames.at(i);
 
@@ -531,11 +509,11 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 				{
 					QString s = QString("\"%1\"").arg(dl.StringParameter.c_str());
 					s.replace("\n", "\\n");
-					ts << argItem.arg(s);
+					result += argItem.arg(s);
 				}
 				else if (argItem.startsWith("end string"))
 				{
-					ts << argItem;
+					result += argItem;
 				}
 				else
 				{
@@ -543,29 +521,84 @@ void DlEditor::saveCoprocessorCmd(bool isBigEndian)
 					{
 						argItem.remove(0, 3);
 						QString h = QString("0x%1").arg(dl.Parameter[j++].U, 8, 16, QChar('0'));
-						ts << argItem.arg(h);
+						result += argItem.arg(h);
 					}
 					else if (argItem.indexOf(",") != -1)
 					{
 						x = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
 						y = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
-						ts << argItem.arg(x).arg(y);
+						result += argItem.arg(x).arg(y);
 					}
 					else
 					{
 						x = isSigned ? dl.Parameter[j++].I : dl.Parameter[j++].U;
-						ts << argItem.arg(x);
+						result += argItem.arg(x);
 					}
 				}
 				
-				ts << '\n';
+				result += '\n';
 			}
 		}
 	}
 	unlockDisplayList();
+  return result;
+}
 
-	ts.flush();
-	f.close();
+QByteArray DlEditor::getCoproCmdBinary(bool isBigEndian)
+{
+    QByteArray result;
+    uint32_t val = 0;
+    QString line;
+    QTextBlock block;
+    std::vector<uint32_t> compiledList;
+    DlParsed dl;
+
+    typedef union DataConvert
+    {
+        uint8_t bytes[4];
+        uint32_t data;
+    } DataConvert;
+
+    DataConvert dataConvert;
+    auto addValueIntoResult = [&](int value) {
+        value = isBigEndian ? qToBigEndian(value) : value;
+        dataConvert.data = value;
+        for (int i = 3; i >= 0; --i)
+        {
+            result.append(dataConvert.bytes[i]);
+        }
+    };
+
+    lockDisplayList();
+    for (int i = 0; i < m_CodeEditor->document()->blockCount(); i++)
+    {
+        block = m_CodeEditor->document()->findBlockByNumber(i);
+        line = block.text();
+        DlParser::parse(FTEDITOR_CURRENT_DEVICE, dl, line, true);
+
+        if (!dl.ValidId)
+            continue;
+
+        if (dl.IdLeft != FTEDITOR_CO_COMMAND)
+        {
+            val = DlParser::compile(FTEDITOR_CURRENT_DEVICE, dl);
+            addValueIntoResult(val);
+        }
+        else
+        {
+            compiledList.clear();
+            DlParser::compile(FTEDITOR_CURRENT_DEVICE, compiledList, dl);
+            val = (0xFFFFFF00 | dl.IdRight);
+            addValueIntoResult(val);
+
+            for (auto &compiled : compiledList)
+            {
+                addValueIntoResult(compiled);
+            }
+        }
+    }
+    unlockDisplayList();
+    return result;
 }
 
 bool DlEditor::isInvalid(void)

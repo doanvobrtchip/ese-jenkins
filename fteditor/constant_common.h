@@ -10,6 +10,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 namespace FTEDITOR {
 
+#define START_RAM_G          0UL
+#define START_RAM_DL         3145728UL
+
 #define NEAREST              0UL
 #define BILINEAR             1UL
 

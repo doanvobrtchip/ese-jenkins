@@ -51,7 +51,9 @@
 #include <QCompleter>
 #include <QAbstractItemView>
 #include <QScrollBar>
+#include <QClipboard>
 
+#include "src/utils/LoggerUtil.h"
 #include "code_editor.h"
 #include "interactive_viewport.h"
 
@@ -80,12 +82,50 @@ m_LastKeyHandler(NULL)
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
+
+	// REVIEW 2023-01-19: There are multiple instances of code editor. This seems to be running the same handler on the application level clipboard. Not sure if this is the right way
+	// QPlainTextEdit is using paragraph break instead of line break if we use
+	// copy()
+	m_Clipboard = QGuiApplication::clipboard();
+	connect(m_Clipboard, &QClipboard::dataChanged, this, [&]() {
+		if (m_LatestText.isEmpty())
+			return;
+		QPlainTextEdit cbPTE, latestPTE;
+		cbPTE.setPlainText(m_Clipboard->text());
+		latestPTE.setPlainText(m_LatestText);
+		QString latestPT = latestPTE.toPlainText();
+		QString cbPT = cbPTE.toPlainText();
+		if (latestPT == cbPT && m_Clipboard->text() != latestPT)
+		{
+			debugLog(QString("QPlainTextEdit | Update clipboard"));
+			m_Clipboard->setText(latestPT);
+		}
+	});
+	connect(this, &QPlainTextEdit::selectionChanged, this, [&]() {
+		auto curTxt = this->textCursor().selectedText();
+		if (!curTxt.isEmpty())
+		{
+			m_LatestText = curTxt;
+		}
+	});
+}
+
+CodeEditor::~CodeEditor()
+{
+	/*
+	// REVIEW 2023-01-19: QObject are automatically deleted by their parents. This `deleteLater` does not seem correct, since this object does not own these objects!
+	m_Clipboard->deleteLater();
+	m_KeyHandler->deleteLater();
+	m_LastKeyHandler->deleteLater();
+	m_Completer->deleteLater();
+	lineNumberArea->deleteLater();
+	*/
 }
 
 void CodeEditor::focusInEvent(QFocusEvent *event)
 {
 	QPlainTextEdit::focusInEvent(event);
-	cursorPositionChanged();
+	emit cursorPositionChanged();
 }
 
 /*void CodeEditor::setUndoStack(QUndoStack *undo_stack)

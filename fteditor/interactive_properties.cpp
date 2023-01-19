@@ -1282,7 +1282,9 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_LOADIMAGE");
 				addAddress(0, false);
-				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
+				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817)
+					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_FLASH | OPT_DITHER);
+				else if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_FLASH);
 				else
 					addOptions(1, OPT_NODL | OPT_MONO | OPT_MEDIAFIFO | OPT_FULLSCREEN);
@@ -2139,6 +2141,33 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			if (editor)
 			{
 				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_PCLKFREQ:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_PCLKFREQ."));
+			if (editor)
+			{
+				setTitle("CMD_PCLKFREQ");
+				addSpinBoxUInt32(0, 0, 0xFFFFFFFF, tr("Target Frequency"), tr("Set Target frequency"));
+				addSpinBox(1, -1, 1, tr("Rounding"), tr("Set Rounding"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
+		case CMD_HSF:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_HSF."));
+			if (editor)
+			{
+				setTitle("CMD_HSF");
+				int *ram32 = reinterpret_cast<int *>(BT8XXEMU_getRam(g_Emulator));
+				int currentWidth = ram32[reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE) >> 2];
+				addSpinBox(0, 0, currentWidth, tr("Pixel Width"), tr("Set Pixel Width"));
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;

@@ -35,17 +35,21 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QMimeData>
-
+#include <QRegularExpression>
+#include <QtConcurrent/QtConcurrent>
 // Emulator includes
 #include "bt8xxemu_diag.h"
 
 // Project includes
+#include "src/inspector/RamG.h"
+#include "utils/ReadWriteUtil.h"
 #include "main_window.h"
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
 #include "asset_converter.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
+#include "inspector.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
 #include "code_editor.h"
@@ -59,6 +63,14 @@ extern BT8XXEMU_Flash *g_Flash;
 
 std::vector<QString> ContentManager::s_FileExtensions;
 QMutex ContentManager::s_Mutex;
+
+const QMap<QString, QString> ContentInfo::MapInfoFileType = {
+	{ "raw", "json" },
+	{ "glyph", "json" },
+	{ "ram_g", "readme" },
+	{ "flash", "readme" },
+	{ "xfont", "" }
+};
 
 ContentInfo::ContentInfo(const QString &filePath)
 {
@@ -83,6 +95,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 	UploadFlashDirty = true;
 	ExternalDirty = false;
 	CachedImage = false;
+	CachedBitmapSource = -1;
 	CachedMemorySize = 0;
 	OverlapMemoryFlag = false;
 	OverlapFlashFlag = false;
@@ -269,6 +282,18 @@ bool ContentInfo::equalsMeta(const ContentInfo *other) const
 	return true;
 }
 
+bool ContentInfo::requirePaletteAddress()
+{
+	switch (this->ImageFormat)
+	{
+	case PALETTED4444:
+	case PALETTED565:
+	case PALETTED8:
+		return true;
+	}
+	return false;
+}
+
 int ContentInfo::bitmapAddress(int deviceIntf) const
 {
 	if (Converter == ContentInfo::Image)
@@ -295,6 +320,8 @@ int ContentInfo::bitmapAddress(int deviceIntf) const
 			res += addressMask(deviceIntf) + 1;*/
 		return res;
 	}
+	if (CachedBitmapSource >= 0)
+		return MemoryAddress + 148 - CachedImageStride * CachedImageHeight;
 	return MemoryAddress;
 }
 
@@ -560,6 +587,9 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_ContentList->setLayout(helpLayout);
 	
 	// bindCurrentDevice();
+	setup();
+	connect(m_MainWindow, SIGNAL(readyToSetup(QObject * )), this,
+		SLOT(setup(QObject * )));
 }
 
 ContentManager::~ContentManager()
@@ -693,6 +723,20 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	ContentInfo *contentInfo = new ContentInfo(filePath);
 	QString fileExt = QFileInfo(filePath).suffix().toLower();
 
+	auto updateFlashSize = [&]() {
+		size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
+		auto contentSize = getFlashSize(contentInfo);
+		auto projectFlash = m_MainWindow->projectFlash();
+		auto newIndex = projectFlash->currentIndex() + 1;
+		while ((size_t)contentInfo->FlashAddress + contentSize > globalSize && newIndex < projectFlash->count())
+		{
+			m_MainWindow->projectFlash()->setCurrentIndex(newIndex);
+			globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
+			contentSize = getFlashSize(contentInfo);
+			++newIndex;
+		};
+	};
+
 	if (fileExt == "jpg")      contentInfo->Converter = ContentInfo::Image;
 	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
     else if (fileExt == "bmp") contentInfo->Converter = ContentInfo::Image;
@@ -705,7 +749,92 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
 	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "raw") contentInfo->Converter = ContentInfo::Raw;
+
+	if (contentInfo->MapInfoFileType.contains(fileExt))
+	{
+		contentInfo->Converter = ContentInfo::Raw;
+		QString infoFileType = ContentInfo::MapInfoFileType.value(fileExt, "");
+		if (!infoFileType.isEmpty())
+		{
+			QString infoFilePath = filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
+			if (filePath.contains("_index"))
+			{
+				infoFilePath.remove(filePath.lastIndexOf("_index"), 6);
+			}
+			auto infoJson = ReadWriteUtil::getJsonInfo(infoFilePath);
+			if (fileExt == "glyph")
+			{
+				auto addressType = infoJson["address_type"].toString().toLower();
+				int addressGlyph = infoJson["address_glyph"].toInt();
+				if (addressType == "flash")
+				{
+					contentInfo->DataStorage = ContentInfo::Flash;
+					contentInfo->FlashAddress = addressGlyph;
+					contentInfo->DataCompressed = false;
+				}
+				else if (addressType == "ram_g")
+				{
+					contentInfo->MemoryAddress = addressGlyph;
+					contentInfo->WantAutoLoad = true;
+					contentInfo->DataCompressed = false;
+				}
+			}
+			else if (fileExt == "flash")
+			{
+				if (infoJson.contains("data"))
+				{
+					auto obj = infoJson.value("data").toObject();
+					contentInfo->FlashAddress = obj.value("offset").toInt();
+				}
+				contentInfo->DataStorage = ContentInfo::Flash;
+				contentInfo->DataCompressed = false;
+			}
+			else if (fileExt == "ram_g")
+			{
+				if (infoJson.contains("data"))
+				{
+					auto obj = infoJson.value("data").toObject();
+					contentInfo->MemoryAddress = obj.value("offset").toInt();
+				}
+				contentInfo->WantAutoLoad = true;
+				contentInfo->DataCompressed = false;
+			}
+			else if (fileExt == "raw")
+			{
+				if (infoJson.contains("type"))
+				{
+					auto contentType = infoJson["type"].toString();
+					if (contentType == "bitmap")
+					{
+						contentInfo->CachedImageWidth = infoJson["width"].toInt();
+						contentInfo->CachedImageHeight = infoJson["height"].toInt();
+						contentInfo->CachedImageStride = infoJson["stride"].toInt();
+						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(infoJson["format"].toString().toLocal8Bit().data());
+					}
+					else if (contentType == "legacyfont")
+					{
+						if (infoJson["eve_command"].toString() == "cmd_setfont")
+						{
+							if (infoJson.contains("address"))
+							{
+								contentInfo->CachedBitmapSource = infoJson["address"].toInt();
+							}
+							contentInfo->CachedImageStride = infoJson["stride"].toInt();
+							contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
+							contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
+							contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
+								infoJson["format"].toString().toLocal8Bit().data());
+						}
+						contentInfo->MemoryAddress = infoJson["address"].toInt();
+						if (getFreeMemoryAddress() <= contentInfo->MemoryAddress)
+						{
+							contentInfo->WantAutoLoad = true;
+						}
+					}
+				}
+			}
+		}
+	}
 
 	if (contentInfo->Converter == ContentInfo::Font)
 	{
@@ -715,11 +844,13 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->ImageFormat = L4;
 	}
 
-	if (contentInfo->Converter == ContentInfo::Invalid)
+	if (contentInfo->WantAutoLoad)
 	{
-		contentInfo->WantAutoLoad = true;
+		contentInfo->MemoryLoaded = true;
+		contentInfo->WantAutoLoad = false;
 	}
-	else
+
+	else if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->DataStorage != ContentInfo::Flash)
 	{
 		int freeAddress = getFreeMemoryAddress();
 		if (freeAddress >= 0)
@@ -727,6 +858,11 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->MemoryLoaded = true;
 			contentInfo->MemoryAddress = freeAddress;
 		}
+	}
+
+	else if (contentInfo->Converter == ContentInfo::Invalid)
+	{
+		contentInfo->WantAutoLoad = true;
 	}
 
 	switch (contentInfo->Converter)
@@ -746,6 +882,10 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	}
 
 	add(contentInfo);
+
+	if (contentInfo->DataStorage == ContentInfo::Flash) { 
+		updateFlashSize();
+	}
 
 	return contentInfo;
 }
@@ -992,9 +1132,11 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	// Reprocess to RAM
 	contentInfo->ExternalDirty = true;
 	reprocessInternal(contentInfo);
+	emit m_ContentList->addItem(contentInfo);
 
 	// Be helpful
 	m_ContentList->setCurrentItem(view);
+	emit m_ContentList->itemPressed(view, 0);
 	m_HelpfulLabel->setVisible(false);
 }
 
@@ -1142,24 +1284,121 @@ void ContentManager::addInternal(QStringList fileNameList)
 		dir.mkpath(".");
 	}
 
-	QString NewNameTemplate("%1/%2_%3.%4");
+	// Add related files
+	QStringList addedFiles;
+	for (auto &fileName : fileNameList)
+	{
+		QString suffix = QFileInfo(fileName).suffix();
+		if (suffix == "xfont")
+		{
+			auto relatedFile = fileName.left(fileName.lastIndexOf('.') + 1).append("glyph");
+			if (QFileInfo::exists(relatedFile))
+			{
+				addedFiles.append(relatedFile);
+			}
+		}
+		else if (suffix == "glyph")
+		{
+			auto relatedFile = fileName.left(fileName.lastIndexOf('.') + 1).append("xfont");
+			if (QFileInfo::exists(relatedFile))
+			{
+				addedFiles.append(relatedFile);
+			}
+		}
+		else if (suffix == "raw")
+		{
+			auto completeBaseName = QFileInfo(fileName).completeBaseName();
+			if (completeBaseName.contains("index"))
+			{
+				auto basicName = completeBaseName.left(completeBaseName.lastIndexOf("index"));
+				auto searchedName = basicName + "lut.raw";
+				auto fileDir = QDir(QFileInfo(fileName).absolutePath());
+				if (fileDir.exists(searchedName))
+				{
+					addedFiles.append(fileDir.filePath(searchedName));
+				}
+				else if (fileDir.cd(basicName + "LUT"))
+				{
+					if (fileDir.exists(searchedName))
+					{
+						addedFiles.append(fileDir.filePath(searchedName));
+					}
+				}
+			}
+			else if (completeBaseName.contains("lut"))
+			{
+				auto searchedName = completeBaseName.left(completeBaseName.lastIndexOf("lut")) + "index.raw";
+				auto fileDir = QDir(QFileInfo(fileName).absolutePath());
+				if (fileDir.exists(searchedName))
+				{
+					addedFiles.append(fileDir.filePath(searchedName));
+				}
+				else if (fileDir.cdUp())
+				{
+					if (fileDir.exists(searchedName))
+					{
+						addedFiles.append(fileDir.filePath(searchedName));
+					}
+				}
+			}
+		}
+	}
+	fileNameList.append(addedFiles);
+
 	QString newName;
 	int i = 0;
 	foreach (QString fileName, fileNameList)
 	{
 		QFileInfo fi(fileName);
 		newName = dir.absolutePath() + '/' + fi.fileName();
+		QString suffix = fi.suffix();
 
 		i = 1;
-		while (QFileInfo(newName).exists())
+		while (QFileInfo::exists(newName))
 		{
 			++i;
-			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.baseName()).arg(i).arg(fi.completeSuffix());
+			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.completeBaseName()).arg(i).arg(suffix);
 		}
 
 		QFile::copy(fileName, newName);
+
+		if (ContentInfo::MapInfoFileType.contains(suffix)) { 
+			QString infoFileType = ContentInfo::MapInfoFileType.value(suffix, QString());
+			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
+			// PALETTED format
+			if (fi.completeBaseName().contains("_index")) {
+				originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
+			}
+			if (QFileInfo::exists(originalInfoFile)) { 
+				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
+				if (fi.completeBaseName().contains("_index")) {
+					savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
+				}
+				QFile::copy(originalInfoFile, savedInfoFile);
+			}
+		}
+
+		// Save converted chars file to show example text
+		if (suffix == "xfont")
+		{
+			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_chars.txt");
+			if (QFileInfo::exists(originalCharsFile)) { 
+				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_chars.txt");
+				QFile::copy(originalCharsFile, savedCharsFile);
+			}
+		}
+
+		if (suffix == "raw")
+		{
+			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_char_index.txt");
+			if (QFileInfo::exists(originalCharsFile))
+			{
+				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_char_index.txt");
+				QFile::copy(originalCharsFile, savedCharsFile);
+			}
+		}
 		
-		add(QDir(QDir::currentPath()).relativeFilePath(newName));
+		add(newName);
 	}
 }
 
@@ -1169,8 +1408,9 @@ void ContentManager::remove()
 
 	if (!m_ContentList->currentItem())
 		return;
-
+	
 	ContentInfo *info = (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
+	emit m_ContentList->removeItem(info); // REVIEW 2013-01-19: This probably breaks undo/redo in some way (undo add), should be in remove(info)?
 	remove(info);
 }
 
@@ -1257,6 +1497,25 @@ void ContentManager::importFlashMapped()
 void ContentManager::exportFlashMapped()
 {
 
+}
+
+void ContentManager::setup(QObject *obj)
+{
+	if (m_MainWindow->inspector() && (obj == m_MainWindow->inspector() || obj == nullptr))
+	{
+		connect(m_MainWindow->inspector()->ramG(), &RamG::updateCurrentInfo, this,
+		    &ContentManager::handleUpdateCurrentInfo, Qt::UniqueConnection);
+	}
+}
+
+void ContentManager::handleUpdateCurrentInfo(ContentInfo *contentInfo)
+{
+	if (!contentInfo)
+	{
+		m_ContentList->setCurrentItem(nullptr);
+		return;
+	}
+	m_ContentList->setCurrentItem(contentInfo->View);
 }
 
 void ContentManager::getContentInfos(std::vector<ContentInfo *> &contentInfos)
@@ -1473,6 +1732,9 @@ void ContentManager::selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem 
 		m_MainWindow->focusProperties();
 
 		// Rebuild GUI
+		if (!this->current()) { 
+			m_ContentList->setCurrentItem(((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>())->View);
+		}
 		rebuildGUIInternal((ContentInfo *)(void *)current->data(0, Qt::UserRole).value<quintptr>());
 	}
 	else
@@ -1505,7 +1767,6 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		{
 			if (contentInfo->OverlapFlashFlag)
 			{
-				int globalUsage = 0;
 				size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
 				int contentSize = getFlashSize(contentInfo);
 				if (contentInfo->FlashAddress == 0 && contentSize == 4096)
@@ -1679,7 +1940,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
                 if (loadSuccess)
                 {
                     m_PropertiesImageLabel->setPixmap(pixmap.scaled(m_PropertiesImageLabel->width(), m_PropertiesImageLabel->width(), Qt::KeepAspectRatio));
-                    m_PropertiesImageLabel->repaint();
+//                    m_PropertiesImageLabel->repaint();
                 }
 				else 
                 {
@@ -2246,7 +2507,10 @@ void ContentManager::recalculateOverlapMemoryInternal()
 		}
 	}
 
-	g_RamGlobalUsage = globalUsage;
+	if (g_RamGlobalUsage != globalUsage) { 
+		g_RamGlobalUsage = globalUsage;
+		emit ramGlobalUsageChanged(g_RamGlobalUsage);
+	}
 }
 
 void ContentManager::recalculateOverlapFlashInternal()
@@ -2397,8 +2661,6 @@ void ContentManager::reloadExternal(ContentInfo *contentInfo)
 
 void ContentManager::propertiesSetterChanged(QWidget *setter)
 {
-	// printf("ContentManager::propertiesSetterChanged(setter)\n");
-
 	if (setter != this)
 	{
 		m_ContentList->setCurrentItem(NULL);
@@ -3856,7 +4118,8 @@ void ContentManager::changeImageFormat(ContentInfo *contentInfo, int value)
 	else if (oldPaletteSource != paletteSource && paletteSource)
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->dlEditor()),
 		editorProcessPaletteSource<FTEDITOR_INSERT_PALETTE_SOURCE>(newBitmapAddr, contentInfo->MemoryAddress, m_MainWindow->cmdEditor());
-	m_ContentList->setCurrentItem(contentInfo->View);
+	m_ContentList->setCurrentItem(current()->View);
+	emit m_ContentList->currentItemChanged(current()->View, nullptr);
 	m_MainWindow->propertiesEditor()->surpressSet(false);
 	m_MainWindow->undoStack()->endMacro();
 }
@@ -3867,8 +4130,17 @@ void ContentManager::propertiesImageFormatChanged(int value)
 
 	value = g_ImageFormatFromIntf[FTEDITOR_CURRENT_DEVICE][value % g_ImageFormatIntfNb[FTEDITOR_CURRENT_DEVICE]];
 
-	if (current() && current()->ImageFormat != value)
-		changeImageFormat(current(), value);
+    if (current() && current()->ImageFormat != value) {
+        emit busyNow(this);
+        auto result = QtConcurrent::run([this, value]() {
+                                qDebug() << "Converter Image - Busy: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
+                                changeImageFormat(current(), value);
+                            })
+                            .then([this]() {
+                                qDebug() << "Converter Image - Free: " << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") << current();
+                                emit freeNow(this);
+                            });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -4950,6 +5222,19 @@ QStringList ContentTreeWidget::mimeTypes() const
 	return QStringList()
 	    << "text/uri-list"
 	    << "application/x-qabstractitemmodeldatalist";
+}
+
+void ContentTreeWidget::mousePressEvent(QMouseEvent* event) {
+	QModelIndex item = indexAt(event->pos());
+
+	if (item.isValid()) {
+		QTreeView::mousePressEvent(event);
+	} else {
+		clearSelection();
+		const QModelIndex index;
+		selectionModel()->setCurrentIndex(index,
+			QItemSelectionModel::Select);
+	}
 }
 
 ContentTreeWidget::ContentTreeWidget(QWidget *parent)

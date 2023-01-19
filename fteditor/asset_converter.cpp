@@ -178,6 +178,71 @@ void AssetConverter::release()
 #endif /* FT800EMU_PYTHON */
 }
 
+int AssetConverter::imageStringToEnum(char *imageString)
+{
+	if (!strcmp(imageString, "ARGB1555"))
+		return ARGB1555;
+	else if (!strcmp(imageString, "L1"))
+		return L1;
+	else if (!strcmp(imageString, "L2"))
+		return L2;
+	else if (!strcmp(imageString, "L4"))
+		return L4;
+	else if (!strcmp(imageString, "L8"))
+		return L8;
+	else if (!strcmp(imageString, "RGB332"))
+		return RGB332;
+	else if (!strcmp(imageString, "ARGB2"))
+		return ARGB2;
+	else if (!strcmp(imageString, "ARGB4"))
+		return ARGB4;
+	else if (!strcmp(imageString, "RGB565"))
+		return RGB565;
+	else if (!strcmp(imageString, "PALETTED"))
+		return PALETTED;
+	else if (!strcmp(imageString, "TEXT8X8"))
+		return TEXT8X8;
+	else if (!strcmp(imageString, "TEXTVGA"))
+		return TEXTVGA;
+	else if (!strcmp(imageString, "BARGRAPH"))
+		return BARGRAPH;
+	else if (!strcmp(imageString, "PALETTED8"))
+		return PALETTED8;
+	else if (!strcmp(imageString, "PALETTED565"))
+		return PALETTED565;
+	else if (!strcmp(imageString, "PALETTED4444"))
+		return PALETTED4444;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_4x4_KHR"))
+		return COMPRESSED_RGBA_ASTC_4x4_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_5x4_KHR"))
+		return COMPRESSED_RGBA_ASTC_5x4_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_5x5_KHR"))
+		return COMPRESSED_RGBA_ASTC_5x5_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_6x5_KHR"))
+		return COMPRESSED_RGBA_ASTC_6x5_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_6x6_KHR"))
+		return COMPRESSED_RGBA_ASTC_6x6_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x5_KHR"))
+		return COMPRESSED_RGBA_ASTC_8x5_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x6_KHR"))
+		return COMPRESSED_RGBA_ASTC_8x6_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x8_KHR"))
+		return COMPRESSED_RGBA_ASTC_8x8_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x5_KHR"))
+		return COMPRESSED_RGBA_ASTC_10x5_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x6_KHR"))
+		return COMPRESSED_RGBA_ASTC_10x6_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x8_KHR"))
+		return COMPRESSED_RGBA_ASTC_10x8_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x10_KHR"))
+		return COMPRESSED_RGBA_ASTC_10x10_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_12x10_KHR"))
+		return COMPRESSED_RGBA_ASTC_12x10_KHR;
+	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_12x12_KHR"))
+		return COMPRESSED_RGBA_ASTC_12x12_KHR;
+	return -1;
+}
+
 void AssetConverter::convertImage(QString &buildError, const QString &inFile, const QString &outName, int format)
 {
 	QString quantFile = outName + "_converted-fs8.png";
@@ -410,36 +475,10 @@ bool AssetConverter::getImageInfo(ImageInfo &bitmapInfo, const QString &name)
 	// NOTE: LayoutWidth is set incorrectly here on purpose. The graphics processor rewrites this.
 	bitmapInfo.LayoutWidth = width;
 	bitmapInfo.LayoutHeight = height;
-	if (!strcmp(format, "ARGB1555")) bitmapInfo.LayoutFormat = ARGB1555;
-	else if (!strcmp(format, "L1")) bitmapInfo.LayoutFormat = L1;
-	else if (!strcmp(format, "L2")) bitmapInfo.LayoutFormat = L2;
-	else if (!strcmp(format, "L4")) bitmapInfo.LayoutFormat = L4;
-	else if (!strcmp(format, "L8")) bitmapInfo.LayoutFormat = L8;
-	else if (!strcmp(format, "RGB332")) bitmapInfo.LayoutFormat = RGB332;
-	else if (!strcmp(format, "ARGB2")) bitmapInfo.LayoutFormat = ARGB2;
-	else if (!strcmp(format, "ARGB4")) bitmapInfo.LayoutFormat = ARGB4;
-	else if (!strcmp(format, "RGB565")) bitmapInfo.LayoutFormat = RGB565;
-	else if (!strcmp(format, "PALETTED")) bitmapInfo.LayoutFormat = PALETTED;
-	else if (!strcmp(format, "TEXT8X8")) bitmapInfo.LayoutFormat = TEXT8X8;
-	else if (!strcmp(format, "TEXTVGA")) bitmapInfo.LayoutFormat = TEXTVGA;
-	else if (!strcmp(format, "BARGRAPH")) bitmapInfo.LayoutFormat = BARGRAPH;
-	else if (!strcmp(format, "PALETTED8")) bitmapInfo.LayoutFormat = PALETTED8;
-	else if (!strcmp(format, "PALETTED565")) bitmapInfo.LayoutFormat = PALETTED565;
-	else if (!strcmp(format, "PALETTED4444")) bitmapInfo.LayoutFormat = PALETTED4444;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_4x4_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_4x4_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_5x4_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_5x4_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_5x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_5x5_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_6x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_6x5_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_6x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_6x6_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x5_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x6_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_8x8_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_8x8_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x5_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x5_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x6_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x6_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x8_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x8_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_10x10_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_10x10_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_12x10_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_12x10_KHR;
-    else if (!strcmp(format, "COMPRESSED_RGBA_ASTC_12x12_KHR")) bitmapInfo.LayoutFormat = COMPRESSED_RGBA_ASTC_12x12_KHR;
+	int imgEnum = imageStringToEnum(format);
+	if (imgEnum != -1) {
+		bitmapInfo.LayoutFormat = imgEnum;
+	}
 	else
 	{
 		printf("Invalid format in RAWH: '%s'\n", format);

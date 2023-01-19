@@ -42,6 +42,7 @@ namespace FTEDITOR {
 #define FTED_NUM_HANDLES 16
 
 class MainWindow;
+class RamG;
 
 /**
  * Inspector
@@ -64,14 +65,20 @@ public:
 	void frameQt();
 
 	int countHandleUsage();
+	void setCountHandleUsage(int value);
 
-	bool eventFilter(QObject* watched, QEvent* event);
+	bool eventFilter(QObject *watched, QEvent *event);
 
-	QString getDisplayListContent(bool isBigEndian = false);  // 0: little; 1: big
+	QString getDisplayListContent(bool isBigEndian = false); // 0: little; 1: big
+	QByteArray getDLBinary(bool isBigEndian);
 
+	void initDLWindow();
+	MainWindow *mainWindow() { return m_MainWindow; }
+	RamG *ramG() { return m_RamG; }
+	
 private slots:
-    void onCopy();
-    void onPrepareContextMenu(const QPoint &pos);
+	void onCopy();
+	void onPrepareContextMenu(const QPoint &pos);
 
 private:
 	void initDisplayReg();
@@ -92,12 +99,21 @@ private:
 
 	bool m_HandleUsage[FTED_NUM_HANDLES];
 
-    QMenu   *m_ContextMenu;
-    QAction *m_CopyAct;
+	RamG *m_RamG;
+	
+	QMenu *m_ContextMenu;
+	QAction *m_CopyAct;
+	int m_countHandleBitmap;
 
 private:
 	Inspector(const Inspector &);
 	Inspector &operator=(const Inspector &);
+
+public slots:
+	void setup(QObject *obj = nullptr);
+
+signals:
+	void countHandleBitmapChanged(int value);
 
 }; /* class Inspector */
 

@@ -44,6 +44,10 @@
 #include "dl_parser.h"
 #include "constant_mapping.h"
 #include "constant_common.h"
+#include "content_manager.h"
+#include "dl_parser.h"
+#include "main_window.h"
+#include "src/inspector/RamG.h"
 
 namespace FTEDITOR {
 
@@ -148,40 +152,35 @@ Inspector::Inspector(MainWindow *parent) : QWidget(parent), m_MainWindow(parent)
 	regGroup->setLayout(regLayout);
 	splitter->addWidget(regGroup);
 
+	// Set up RAM_G inspector
+	auto ramgGGroup = new QGroupBox(this);
+	m_RamG = new RamG(this);
+	m_RamG->setupComponents(ramgGGroup);
+	splitter->addWidget(ramgGGroup);
+
 	layout->addWidget(splitter);
 	setLayout(layout);
 
-	QString raw = asRaw(0);
-	QString text = asText(0);
-	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
-	{
-		std::stringstream idx;
-		idx << i;
-		QTreeWidgetItem *item = new QTreeWidgetItem(m_DisplayList);
-		item->setText(0, idx.str().c_str());
-		item->setText(1, raw);
-		item->setText(2, text);
-		m_DisplayListItems[i] = item;
-	}
-
-	m_DisplayListItems[0]->setText(0, "9999");
-    for (int i = 0; i < 2; ++i)
-        m_DisplayList->resizeColumnToContents(i);
-	m_DisplayListItems[0]->setText(0, "0");
+	initDLWindow();
 
 	// bindCurrentDevice();
-    m_CopyAct = new QAction(tr("&New"), this);
-    m_CopyAct->setText(tr("Copy"));
-    connect(m_CopyAct, &QAction::triggered, this, &Inspector::onCopy);
+	m_CopyAct = new QAction(tr("&New"), this);
+	m_CopyAct->setText(tr("Copy"));
+	connect(m_CopyAct, &QAction::triggered, this, &Inspector::onCopy);
+	
+	m_ContextMenu = new QMenu(this);
+	m_ContextMenu->addAction(m_CopyAct);
+	m_countHandleBitmap = 0;
 
-    m_ContextMenu = new QMenu(this);
-    m_ContextMenu->addAction(m_CopyAct);
+	setup();
+	connect(m_MainWindow, &MainWindow::readyToSetup, this, &Inspector::setup);
 }
 
-Inspector::~Inspector()
+void Inspector::setup(QObject *obj)
 {
-
 }
+
+Inspector::~Inspector() { }
 
 void Inspector::bindCurrentDevice()
 {
@@ -311,6 +310,8 @@ void Inspector::frameEmu()
 
 	for (int handle = 0; handle < FTED_NUM_HANDLES; ++handle)
 		m_HandleUsage[handle] = handleUsage[handle];
+
+	setCountHandleUsage(countHandleUsage());
 }
 
 void Inspector::frameQt()
@@ -414,6 +415,7 @@ void Inspector::frameQt()
 			}
 		}
 	}
+	m_RamG->updateData();
 }
 
 int Inspector::countHandleUsage()
@@ -423,6 +425,15 @@ int Inspector::countHandleUsage()
 		if (m_HandleUsage[i])
 			++result;
 	return result;
+}
+
+void Inspector::setCountHandleUsage(int value)
+{
+	if (m_countHandleBitmap != value)
+	{
+		m_countHandleBitmap = value;
+		emit countHandleBitmapChanged(m_countHandleBitmap);
+	}
 }
 
 bool Inspector::eventFilter(QObject * watched, QEvent * event)
@@ -499,7 +510,79 @@ QString Inspector::getDisplayListContent(bool isBigEndian)
 	return text;
 }
 
-void Inspector::copy(const QTreeWidget * widget)
+QByteArray Inspector::getDLBinary(bool isBigEndian)
+{
+	int columnCount = m_DisplayList->headerItem()->columnCount();
+	int currRow = 0, currColumn = 0;
+	uint32_t rawValue = 0;
+	QTreeWidgetItem *item = 0;
+	bool ok;
+	bool isDisplayCmd = false;
+	int displayCmdPos = 0;
+	QString currText;
+	QByteArray result;
+
+	typedef union DataConvert
+	{
+		uint8_t bytes[4];
+		uint32_t data;
+	} DataConvert;
+	DataConvert dataConvert;
+
+	for (currRow = 0; currRow < m_DisplayList->topLevelItemCount(); currRow++)
+	{
+		item = m_DisplayList->topLevelItem(currRow);
+		for (currColumn = 0; currColumn < columnCount; ++currColumn)
+		{
+			currText = item->text(currColumn);
+			if (!currText.startsWith("0x"))
+				continue;
+
+			rawValue = currText.toUInt(&ok, 16);
+			if (currText == "0x00000000")
+			{
+				if (isDisplayCmd && displayCmdPos == (currRow - 1))
+					return result;
+				isDisplayCmd = true;
+				displayCmdPos = currRow;
+			}
+			else if (isBigEndian && ok)
+			{
+				rawValue = qToBigEndian(rawValue);
+			}
+			
+			dataConvert.data = rawValue;
+			for (int i = 3; i >= 0; --i)
+			{
+				result.append(dataConvert.bytes[i]);
+			}
+		}
+	}
+	return result;
+}
+
+void Inspector::initDLWindow()
+{
+	QString raw = asRaw(0);
+	QString text = asText(0);
+	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
+	{
+		std::stringstream idx;
+		idx << i;
+		QTreeWidgetItem *item = new QTreeWidgetItem(m_DisplayList);
+		item->setText(0, idx.str().c_str());
+		item->setText(1, raw);
+		item->setText(2, text);
+		m_DisplayListItems[i] = item;
+	}
+
+	m_DisplayListItems[0]->setText(0, "9999");
+	for (int i = 0; i < 2; ++i)
+		m_DisplayList->resizeColumnToContents(i);
+	m_DisplayListItems[0]->setText(0, "0");
+}
+
+void Inspector::copy(const QTreeWidget *widget)
 {
 	QList<QTreeWidgetItem *> selectedItems = widget->selectedItems();
 	QClipboard * clip = QApplication::clipboard();
@@ -529,14 +612,14 @@ void Inspector::copy(const QTreeWidget * widget)
 
 void Inspector::onPrepareContextMenu(const QPoint &pos)
 {
-    QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
+	QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
 
-    m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
+	m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
 }
 
 void Inspector::onCopy()
 {
-    copy(m_DisplayList->hasFocus() ? m_DisplayList : m_Registers);
+	copy(m_DisplayList->hasFocus() ? m_DisplayList : m_Registers);
 }
 
 } /* namespace FTEDITOR */

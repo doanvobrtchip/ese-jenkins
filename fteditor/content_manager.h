@@ -46,6 +46,10 @@ class QLabel;
 class QSpinBox;
 class QCheckBox;
 
+namespace FTEDITOR {
+struct ContentInfo;
+}
+
 class ContentTreeWidget : public QTreeWidget
 {
 	Q_OBJECT
@@ -57,10 +61,15 @@ public:
 	virtual void dragEnterEvent(QDragEnterEvent *event) override;
 	virtual void dropEvent(QDropEvent *event) override;
 	virtual QStringList mimeTypes() const override;
+	void mousePressEvent(QMouseEvent *event) override;
 
 public:
 	explicit ContentTreeWidget(QWidget *parent = nullptr);
 	~ContentTreeWidget();
+
+signals:
+	void addItem(FTEDITOR::ContentInfo *item);
+	void removeItem(FTEDITOR::ContentInfo *item);
 };
 
 class ContentLabel : public QLabel
@@ -100,6 +109,8 @@ struct ContentInfo
 	ContentInfo(const QString &filePath);
 
 	QTreeWidgetItem *View;
+
+	static const QMap<QString, QString> MapInfoFileType;
 
 	enum ConverterType // Do not change order.
 	{
@@ -151,6 +162,7 @@ struct ContentInfo
 	QJsonObject toJson(bool meta) const;
 	void fromJson(QJsonObject &j, bool meta);
 	bool equalsMeta(const ContentInfo *other) const;
+	bool requirePaletteAddress();
 
 	bool UploadMemoryDirty;
 	bool UploadFlashDirty;
@@ -160,6 +172,7 @@ struct ContentInfo
 	int CachedImageWidth;
 	int CachedImageHeight;
 	int CachedImageStride;
+	int CachedBitmapSource;
 
 	int CachedMemorySize; // Memory size (for example, after JPEG decompression by coprocessor)
 
@@ -283,6 +296,7 @@ public:
 	void copyFlashFile();
 
 	int getFreeMemoryAddress(); // Return -1 if no more space
+	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 
 private:
 	class Add;
@@ -308,7 +322,6 @@ private:
 	bool nameExists(const QString &name);
 	QString createName(const QString &name); // Rename if already exists.
 
-	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
 	
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
@@ -391,6 +404,8 @@ public slots:
 
 	void importFlashMapped();
 	void exportFlashMapped();
+	void setup(QObject *obj = nullptr);
+	void handleUpdateCurrentInfo(FTEDITOR::ContentInfo *contentInfo);
 
 private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
@@ -417,6 +432,11 @@ private slots:
 private:
 	ContentManager(const ContentManager &);
 	ContentManager &operator=(const ContentManager &);
+
+signals:
+	void ramGlobalUsageChanged(int value);
+	void busyNow(QObject *obj);
+	void freeNow(QObject *obj);
 
 }; /* class ContentManager */
 

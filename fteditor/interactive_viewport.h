@@ -18,11 +18,13 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Emulator includes
 
 // Project includes
-#include "emulator_viewport.h"
 #include "dl_editor.h"
+#include "emulator_viewport.h"
 
 class QAction;
 class QComboBox;
+class QSinglePointEvent;
+class QMenu;
 
 namespace FTEDITOR {
 
@@ -46,7 +48,8 @@ public:
 	InteractiveViewport(MainWindow *parent);
 	virtual ~InteractiveViewport();
 
-	// Graphics callback synchronized to the emulator thread, use to get debug information for a frame
+	// Graphics callback synchronized to the emulator thread, use to get debug
+	// information for a frame
 	virtual void graphics();
 
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
@@ -62,6 +65,11 @@ public:
 	int mouseY() const { return m_MouseY; }
 	bool mouseOver() const { return m_MouseOver; }
 
+	int32_t mappingX(QDropEvent *e);
+	int32_t mappingY(QDropEvent *e);
+	int32_t mappingX(QSinglePointEvent *e);
+	int32_t mappingY(QSinglePointEvent *e);
+
 protected:
 	virtual void paintEvent(QPaintEvent *e);
 
@@ -70,7 +78,8 @@ protected:
 private:
 	void updatePointerMethod();
 	bool acceptableSource(QDropEvent *e);
-	void mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km = Qt::NoModifier);
+	void mouseMoveEvent(int mouseX, int mouseY,
+	    Qt::KeyboardModifiers km = Qt::NoModifier);
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent *e) override;
@@ -82,7 +91,7 @@ protected:
 	virtual void enterEvent(QEnterEvent *e) override;
 #endif
 	virtual void leaveEvent(QEvent *e) override;
-	virtual void wheelEvent(QWheelEvent* e) override;
+	virtual void wheelEvent(QWheelEvent *e) override;
 
 	virtual void dropEvent(QDropEvent *e) override;
 	virtual void dragMoveEvent(QDragMoveEvent *e) override;
@@ -106,9 +115,10 @@ private:
 	InteractiveViewport &operator=(const InteractiveViewport &);
 
 private:
-	QComboBox  *m_ZoomCB;
+	QComboBox *m_ZoomCB;
 	MainWindow *m_MainWindow;
 	QAction *m_Insert;
+	QMenu *m_ContextMenu;
 
 	bool m_PreferTraceCursor;
 	bool m_TraceEnabled;
@@ -163,6 +173,7 @@ private:
 
 	bool m_isDrawAlignmentHorizontal;
 	bool m_isDrawAlignmentVertical;
+	bool m_isDrawAlignment;
 }; /* class InteractiveViewport */
 
 } /* namespace FTEDITOR */

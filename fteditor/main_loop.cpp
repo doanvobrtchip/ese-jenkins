@@ -171,6 +171,8 @@ static bool s_HasContentReadCoCmd = false;
 
 QElapsedTimer s_AbortTimer;
 
+void setUtilizationDisplayListCmd(int value);
+
 void swrbegin(ramaddr address)
 {
 #if FTEDITOR_DEBUG_EMUWRITE
@@ -664,7 +666,7 @@ void loop()
 			continue;
 		}
 		// ok
-		; {
+		{
 			binFile.open(QIODevice::ReadOnly);
 			QDataStream in(&binFile);
 			/*swrbegin(info->MemoryAddress);
@@ -676,6 +678,7 @@ void loop()
 			swrend();*/
 			char *ram = static_cast<char *>(static_cast<void *>(BT8XXEMU_getRam(g_Emulator)));
 			int s = in.readRawData(&ram[FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G) + loadAddr], binSize);
+			binFile.close();
 			BT8XXEMU_poke(g_Emulator);
 			contentPoked = true;
 		}
@@ -1022,7 +1025,7 @@ void loop()
 			}
 			if (useFileStream)
 			{
-				if (!QFileInfo(useFileStream).exists())
+				if (!QFileInfo::exists(useFileStream))
 					continue;
 			}
 			// Warn the user to insert CMD_DLSTART when other commands follow CMD_TESTCARD
@@ -1649,7 +1652,7 @@ void loop()
 			{
 				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 				{
-					g_UtilizationDisplayListCmd = i;
+					setUtilizationDisplayListCmd(i);
 					break;
 				}
 			}
@@ -1704,7 +1707,7 @@ void loop()
 		else
 		{
 			// Swap frame directly if nothing was written to the coprocessor
-			g_UtilizationDisplayListCmd = 0;
+			setUtilizationDisplayListCmd(0);
 
 			swrend();
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_WRITE), (wp & 0xFFF));
@@ -1747,6 +1750,14 @@ void emuMain(BT8XXEMU_Emulator *sender, void *context)
 void keyboard(BT8XXEMU_Emulator *sender, void *context)
 {
 
+}
+
+void setUtilizationDisplayListCmd(int value)
+{ 
+	if (g_UtilizationDisplayListCmd == value)
+		return;
+	g_UtilizationDisplayListCmd = value;
+	emit g_DlEditor->mainWindow()->utilizationDisplayListCmdChanged(value);
 }
 
 } /* namespace FTEDITOR */

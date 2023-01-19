@@ -111,6 +111,8 @@ public:
 	inline ContentManager *contentManager() { return m_ContentManager; }
 	// inline BitmapSetup *bitmapSetup() { return m_BitmapSetup; }
 	inline InteractiveProperties *interactiveProperties() { return m_InteractiveProperties; }
+	inline QComboBox *projectFlash() { return m_ProjectFlash; }
+	inline QDockWidget *inspectorDock() { return m_InspectorDock; }
 
 	inline const QString &applicationDataDir() { return m_ApplicationDataDir; }
 
@@ -164,6 +166,7 @@ public:
 	QString getDisplaySize();
 
 	void appendTextToOutputDock(const QString &text);
+	void updateLoadingIcon();
 
 private slots:
 	// void applyEmulatorConfig();
@@ -184,10 +187,8 @@ private slots:
 	void actProjectFolder();
 	void actSaveScreenshot();
 	void actImportDisplayList();
-	void actLittleEndianSaveDisplayList();
-	void actBigEndianSaveDisplayList();
-	void actLittleEndianSaveCoproCmd();
-	void actBigEndianSaveCoproCmd();
+	void handleSaveDL();
+	void handleSaveCoproCmd();
 	void actDisplayListFromIntegers();
 
 	void undoCleanChanged(bool clean);
@@ -216,12 +217,13 @@ private slots:
 
 	void openRecentProject();
 
-	
-
 public slots:
 	void popupTimeout();
 	void actResetEmulator();
 	void propertyErrorSet(QString info);
+	void updateProgressBars();
+	void appendBusyList(QObject *obj);
+	void removeBusyList(QObject *obj);
 
 private:
 	void updateInitialization(bool visible);
@@ -245,7 +247,10 @@ private:
 
 	bool maybeSave();
 
-	void saveDisplayListToTextFile(bool isBigEndian);
+	void saveCoproCmdToTextFile(QString fileName, bool isBigEndian);
+	void saveDisplayListToTextFile(QString fileName, bool isBigEndian);
+	void saveDLToBinaryFile(QString fileName, bool isBigEndian);
+	void saveCoproToBinaryFile(QString fileName, bool isBigEndian);
 
 #ifdef FT800EMU_PYTHON
 	QString scriptModule();
@@ -334,6 +339,8 @@ private:
 	QDockWidget *m_InspectorDock;
 	Inspector *m_Inspector;
 
+  QDockWidget *m_RulerDock;
+
 #if FT800_DEVICE_MANAGER
 	QDockWidget *m_DeviceManagerDock;
 	DeviceManager *m_DeviceManager;
@@ -397,11 +404,8 @@ private:
 	QAction *m_SaveScreenshotAct;
 	QAction *m_ImportDisplayListAct;
 
-	QAction *m_LittleEndianSaveDisplayListAct;
-	QAction *m_BigEndianSaveDisplayListAct;
-
-	QAction *m_LittleEndianSaveCoproCmdAct;
-	QAction *m_BigEndianSaveCoproCmdAct;
+	QAction *m_SaveDisplayListAct;
+	QAction *m_SaveCoproCmdAct;
 
 	QAction *m_DisplayListFromIntegers;
 	QAction *m_ManualAct;
@@ -424,6 +428,11 @@ private:
 	friend class ProjectFlashCommand;
 
 	QLabel *infoLabel;
+	QList<QObject *> busyList;
+signals:
+	void utilizationDisplayListCmdChanged(int value);
+	void ramGChanged(uint8_t *value);
+	void readyToSetup(QObject *obj);
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

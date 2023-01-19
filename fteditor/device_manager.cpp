@@ -987,7 +987,7 @@ void DeviceManager::uploadCoprocessorContent()
 		}
 		if (useFileStream)
 		{
-			if (!QFileInfo(useFileStream).exists())
+			if (!QFileInfo::exists(useFileStream))
 				continue;
 		}
 		validCmd = true;

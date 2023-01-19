@@ -65,6 +65,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QSettings>
 #include <QMimeData>
 #include <QTextEdit>
+#include <QSizePolicy>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -76,6 +77,9 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif
 
 // Project includes
+#include "customize/SaveOptionDialog.h"
+#include "utils/LoggerUtil.h"
+#include "utils/ReadWriteUtil.h"
 #include "dl_editor.h"
 #include "interactive_viewport.h"
 #include "properties_editor.h"
@@ -196,6 +200,17 @@ bool MainWindow::waitingCoprocessorAnimation()
 	return g_WaitingCoprocessorAnimation;
 }
 
+void MainWindow::updateProgressBars()
+{
+    m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
+
+    int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
+    m_UtilizationDisplayList->setValue(utilizationDisplayList);
+    m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
+
+    m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
+}
+
 int *MainWindow::getDlCmd()
 {
 	// FIXME: Not very thread-safe, but not too critical
@@ -257,10 +272,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_ResetEmulatorAct(NULL)
     , m_SaveScreenshotAct(NULL)
     , m_ImportDisplayListAct(NULL)
-    , m_LittleEndianSaveDisplayListAct(NULL)
-    , m_BigEndianSaveDisplayListAct(NULL)
-    , m_LittleEndianSaveCoproCmdAct(NULL)
-    , m_BigEndianSaveCoproCmdAct(NULL)
+	, m_SaveDisplayListAct(NULL)
+	, m_SaveCoproCmdAct(NULL)
     , m_DisplayListFromIntegers(NULL)
     , m_ManualAct(NULL)
     , m_AboutAct(NULL)
@@ -326,9 +339,13 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	QGridLayout *layout = new QGridLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(0);
-	layout->addWidget(m_EmulatorViewport, 0, 0);
-	layout->addWidget(m_EmulatorViewport->verticalScrollbar(), 0, 1);
-	layout->addWidget(m_EmulatorViewport->horizontalScrollbar(), 1, 0);
+	layout->addWidget(m_EmulatorViewport->verticalRuler(), 1, 0);
+	layout->addWidget(m_EmulatorViewport->horizontalRuler(), 0, 1, Qt::AlignBottom);
+	layout->addWidget(m_EmulatorViewport, 1, 1);
+	layout->addWidget(m_EmulatorViewport->verticalScrollbar(), 1, 2);
+	layout->addWidget(m_EmulatorViewport->horizontalScrollbar(), 2, 1);
+	layout->setRowStretch(0, 0);
+	layout->setRowStretch(1, 50);
 	centralWidget->setLayout(layout);
 	setCentralWidget(centralWidget);
 
@@ -349,7 +366,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	warningLayout->setAlignment(warningText, Qt::AlignTop | Qt::AlignLeft);
 	outerWarning->addWidget(frame);
 	outerWarning->addStretch();
-	layout->addLayout(outerWarning, 0, 0);
+	layout->addLayout(outerWarning, 1, 1);
 	m_ErrorFrame = frame;
 	m_ErrorLabel = warningText;
 	frame->setVisible(false);
@@ -840,14 +857,6 @@ void MainWindow::popupTimeout()
 
 void MainWindow::frameQt()
 {
-	m_UtilizationBitmapHandleStatus->setValue(inspector()->countHandleUsage());
-
-	int utilizationDisplayList = std::max(g_UtilizationDisplayListCmd, m_DlEditor->codeEditor()->document()->blockCount());
-	m_UtilizationDisplayList->setValue(utilizationDisplayList);
-	m_UtilizationDisplayListStatus->setValue(utilizationDisplayList);
-
-	m_UtilizationGlobalStatus->setValue(g_RamGlobalUsage);
-
 	if (/*!g_StreamingData && */g_CoprocessorFaultOccured) // && (m_PropertiesEditor->getEditWidgetSetter() == m_DlEditor || m_PropertiesEditor->getEditWidgetSetter() == m_CmdEditor || m_PropertiesEditor->getEditWidgetSetter() == NULL))
 	{
 		QString info;
@@ -912,9 +921,6 @@ void MainWindow::frameQt()
 	}
 
 	// m_CursorPosition
-	uint8_t *ram = BT8XXEMU_getRam(g_Emulator);
-	uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_TOUCH_SCREEN_XY);
-	uint32_t regValue = reinterpret_cast<uint32_t &>(ram[addr]);
 	if (m_EmulatorViewport->mouseOver())
 	{
 		m_CursorPosition->setText(QString("XY: %1, %2").arg(m_EmulatorViewport->mouseX()).arg(m_EmulatorViewport->mouseY()));
@@ -933,7 +939,7 @@ void MainWindow::frameQt()
 	}
 
 	// Busy loader
-	m_CoprocessorBusy->setVisible(g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation);
+	updateLoadingIcon();
 
 	// Trigger changes to readout cocmd on qt thread
 	int coCmdChangeNbEmu = s_CoCmdChangeNbEmu;
@@ -1004,17 +1010,11 @@ void MainWindow::createActions()
 	m_SaveScreenshotAct = new QAction(this);
 	connect(m_SaveScreenshotAct, SIGNAL(triggered()), this, SLOT(actSaveScreenshot()));
 
-	m_LittleEndianSaveDisplayListAct = new QAction(this);
-	connect(m_LittleEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveDisplayList()));
+	m_SaveDisplayListAct = new QAction(this);
+	connect(m_SaveDisplayListAct, SIGNAL(triggered()), this, SLOT(handleSaveDL()));
 
-	m_BigEndianSaveDisplayListAct = new QAction(this);
-	connect(m_BigEndianSaveDisplayListAct, SIGNAL(triggered()), this, SLOT(actBigEndianSaveDisplayList()));
-
-	m_LittleEndianSaveCoproCmdAct = new QAction(this);
-	connect(m_LittleEndianSaveCoproCmdAct, SIGNAL(triggered()), this, SLOT(actLittleEndianSaveCoproCmd()));
-
-	m_BigEndianSaveCoproCmdAct = new QAction(this);
-	connect(m_BigEndianSaveCoproCmdAct, SIGNAL(triggered()), this, SLOT(actBigEndianSaveCoproCmd()));
+	m_SaveCoproCmdAct = new QAction(this);
+	connect(m_SaveCoproCmdAct, SIGNAL(triggered()), this, SLOT(handleSaveCoproCmd()));
 
 	m_DisplayListFromIntegers = new QAction(this);
 	connect(m_DisplayListFromIntegers, SIGNAL(triggered()), this, SLOT(actDisplayListFromIntegers()));
@@ -1073,17 +1073,10 @@ void MainWindow::translateActions()
 	m_ImportDisplayListAct->setText(tr("Capture Display List"));
 	m_ImportDisplayListAct->setStatusTip(tr("Capture the active display list from the emulator into the editor"));
 
-	m_LittleEndianSaveDisplayListAct->setText(tr("Little Endian"));
-	m_LittleEndianSaveDisplayListAct->setStatusTip(tr("Save display list in Little Endian mode"));
-
-	m_BigEndianSaveDisplayListAct->setText(tr("Big Endian"));
-	m_BigEndianSaveDisplayListAct->setStatusTip(tr("Save display list in Big Endian mode"));
-
-	m_LittleEndianSaveCoproCmdAct->setText(tr("Little Endian"));
-	m_LittleEndianSaveCoproCmdAct->setStatusTip(tr("Save Coprocessor Command in Little Endian mode"));
-
-	m_BigEndianSaveCoproCmdAct->setText(tr("Big Endian"));
-	m_BigEndianSaveCoproCmdAct->setStatusTip(tr("Save Coprocessor Command in Big Endian mode"));
+	m_SaveDisplayListAct->setText(tr("Save Display List"));
+	m_SaveDisplayListAct->setToolTip(tr("Save Display List to a file"));
+	m_SaveCoproCmdAct->setText(tr("Save Coprocessor Command"));
+	m_SaveCoproCmdAct->setToolTip(tr("Save Coprocessor Command to a file"));
 
 	m_DisplayListFromIntegers->setText(tr("Display List from Integers (debug mode only)"));
 	m_DisplayListFromIntegers->setStatusTip(tr("Developer tool (debug mode only)"));
@@ -1129,13 +1122,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveScreenshotAct);
 
-	QMenu *sdl = m_FileMenu->addMenu("Save Display List");
-	sdl->addAction(m_LittleEndianSaveDisplayListAct);
-	sdl->addAction(m_BigEndianSaveDisplayListAct);
-
-	sdl = m_FileMenu->addMenu("Save Coprocessor Command");
-	sdl->addAction(m_LittleEndianSaveCoproCmdAct);
-	sdl->addAction(m_BigEndianSaveCoproCmdAct);
+	m_FileMenu->addAction(m_SaveDisplayListAct);
+	m_FileMenu->addAction(m_SaveCoproCmdAct);
 
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_QuitAct);
@@ -1390,6 +1378,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationBitmapHandleStatus->setMaximum(FTED_NUM_HANDLES);
 		m_UtilizationBitmapHandleStatus->setMinimumSize(60, 8);
 		m_UtilizationBitmapHandleStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationBitmapHandleStatus->setValue(0);
 		m_UtilizationBitmapHandleStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationBitmapHandleStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
@@ -1405,7 +1394,9 @@ void MainWindow::createDockWindows()
 		m_UtilizationDisplayListStatus->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
 		m_UtilizationDisplayListStatus->setMinimumSize(60, 8);
 		m_UtilizationDisplayListStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationDisplayListStatus->setValue(0);
 		m_UtilizationDisplayListStatus->installEventFilter(this);
+
 		statusBar()->addPermanentWidget(m_UtilizationDisplayListStatus);
 		statusBar()->addPermanentWidget(new QLabel(statusBar()));
 
@@ -1420,6 +1411,7 @@ void MainWindow::createDockWindows()
 		m_UtilizationGlobalStatus->setMaximum(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_G_END));
 		m_UtilizationGlobalStatus->setMinimumSize(60, 8);
 		m_UtilizationGlobalStatus->setMaximumSize(100, 19); // FIXME
+		m_UtilizationGlobalStatus->setValue(0);
 		m_UtilizationGlobalStatus->installEventFilter(this);
 		statusBar()->addPermanentWidget(m_UtilizationGlobalStatus);
 
@@ -1445,6 +1437,7 @@ void MainWindow::createDockWindows()
 			m_UtilizationDisplayList = new QProgressBar(this);
 			m_UtilizationDisplayList->setMinimum(0);
 			m_UtilizationDisplayList->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE));
+			m_UtilizationDisplayList->setValue(0);
 			groupLayout->addWidget(m_UtilizationDisplayList);
 
 			group->setLayout(groupLayout);
@@ -1501,7 +1494,9 @@ void MainWindow::createDockWindows()
 		m_InspectorDock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
 		m_InspectorDock->setObjectName("Inspector");
 		m_Inspector = new Inspector(this);
+		emit readyToSetup(m_Inspector);
 		m_InspectorDock->setWidget(m_Inspector);
+		emit readyToSetup(m_InspectorDock);
 		addDockWidget(Qt::BottomDockWidgetArea, m_InspectorDock);
 		m_WidgetsMenu->addAction(m_InspectorDock->toggleViewAction());
 	}
@@ -1731,6 +1726,7 @@ void MainWindow::createDockWindows()
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
 		m_ContentManager = new ContentManager(this);
+		emit readyToSetup(m_ContentManager);
 		g_ContentManager = m_ContentManager;
 		scrollArea->setWidget(m_ContentManager);
 		m_ContentManagerDock->setWidget(scrollArea);
@@ -1756,6 +1752,19 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_ToolboxDock->toggleViewAction());
 	}
 
+	// Ruler
+	{
+		auto actionShowRuler = new QAction;
+		actionShowRuler->setCheckable(true);
+		actionShowRuler->setChecked(true);
+		actionShowRuler->setText("Ruler");
+		m_WidgetsMenu->addAction(actionShowRuler);
+		connect(actionShowRuler, &QAction::triggered, m_EmulatorViewport,
+			&EmulatorViewport::toggleViewRuler);
+		connect(m_EmulatorViewport->verticalRuler(), &QRuler::visibleChanged,
+			actionShowRuler, &QAction::setChecked);
+	}
+	
 	tabifyDockWidget(m_InspectorDock, m_DlEditorDock);
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
 
@@ -1802,6 +1811,11 @@ void MainWindow::createDockWindows()
 	dlEditor()->codeEditor()->setKeyHandler(m_EmulatorViewport);
 	cmdEditor()->codeEditor()->setKeyHandler(NULL);
 	dlEditor()->codeEditor()->setKeyHandler(NULL);
+	connect(this, SIGNAL(utilizationDisplayListCmdChanged(int)), this, SLOT(updateProgressBars()));
+	connect(m_Inspector, SIGNAL(countHandleBitmapChanged(int)), this, SLOT(updateProgressBars()));
+	connect(m_ContentManager, SIGNAL(ramGlobalUsageChanged(int)), this, SLOT(updateProgressBars()));
+	connect(m_ContentManager, SIGNAL(busyNow(QObject *)),this, SLOT(appendBusyList(QObject *)));
+	connect(m_ContentManager, SIGNAL(freeNow(QObject *)),this, SLOT(removeBusyList(QObject *)));
 }
 
 void MainWindow::translateDockWindows()
@@ -3884,44 +3898,77 @@ void MainWindow::actImportDisplayList()
 	focusDlEditor();
 }
 
-void MainWindow::saveDisplayListToTextFile(bool isBigEndian)
-{
-	static QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Display List"), dirPath, tr("Display List Files(*.txt)"));
-
-	QDir saveDir(fileName);
-	saveDir.cdUp();
-	dirPath = saveDir.absolutePath();
-
-	QFile f(fileName);
-	if (f.open(QIODevice::WriteOnly | QIODevice::Text))
-	{
-		QTextStream ts(&f);
-		
-		ts << m_Inspector->getDisplayListContent(isBigEndian);
-		ts.flush();
-		f.close();
-	}
+void MainWindow::handleSaveDL() {
+	SaveOptionDialog saveOptDlg(SaveOptionDialog::DisplayList, this);
+	connect(
+		&saveOptDlg, &SaveOptionDialog::handleAccept, this,
+		[this](QString fileName, int outputType, int byteOrder,
+			bool autoOpen) {
+				if (outputType == SaveOptionDialog::Binary) {
+					saveDLToBinaryFile(
+						fileName,
+						byteOrder == SaveOptionDialog::LittleEndian ? false
+						: true);
+				} else {
+					saveDisplayListToTextFile(
+						fileName,
+						byteOrder == SaveOptionDialog::LittleEndian ? false
+						: true);
+				}
+	if (autoOpen)
+		QDesktopServices::openUrl(
+			QUrl(fileName, QUrl::TolerantMode));
+		});
+	saveOptDlg.exec();
 }
 
-void MainWindow::actLittleEndianSaveDisplayList()
-{
-	saveDisplayListToTextFile(false);
+void MainWindow::handleSaveCoproCmd() {
+	SaveOptionDialog saveOptDlg(SaveOptionDialog::CoprocessorCommand,
+		this);
+	connect(
+		&saveOptDlg, &SaveOptionDialog::handleAccept, this,
+		[this](QString fileName, int outputType, int byteOrder,
+			bool autoOpen) {
+				if (outputType == SaveOptionDialog::Binary) {
+					saveCoproToBinaryFile(
+						fileName,
+						byteOrder == SaveOptionDialog::LittleEndian ? false
+						: true);
+				} else {
+					saveCoproCmdToTextFile(
+						fileName,
+						byteOrder == SaveOptionDialog::LittleEndian ? false
+						: true);
+				}
+	if (autoOpen)
+		QDesktopServices::openUrl(
+			QUrl(fileName, QUrl::TolerantMode));
+		});
+	saveOptDlg.exec();
 }
 
-void MainWindow::actBigEndianSaveDisplayList()
+void MainWindow::saveDisplayListToTextFile(QString fileName, bool isBigEndian)
 {
-	saveDisplayListToTextFile(true);
+	auto data = m_Inspector->getDisplayListContent(isBigEndian);
+	ReadWriteUtil::writeText(fileName, data);
 }
 
-void MainWindow::actLittleEndianSaveCoproCmd()
+void MainWindow::saveCoproCmdToTextFile(QString fileName, bool isBigEndian)
 {
-	m_CmdEditor->saveCoprocessorCmd(false);
+	auto data = m_CmdEditor->getCoproCmdText(isBigEndian);
+	ReadWriteUtil::writeText(fileName, data);
 }
 
-void MainWindow::actBigEndianSaveCoproCmd()
+void MainWindow::saveDLToBinaryFile(QString fileName, bool isBigEndian)
 {
-	m_CmdEditor->saveCoprocessorCmd(true);
+	auto data = m_Inspector->getDLBinary(isBigEndian);
+	ReadWriteUtil::writeBinary(fileName, data);
+}
+
+void MainWindow::saveCoproToBinaryFile(QString fileName, bool isBigEndian)
+{
+	auto data = m_CmdEditor->getCoproCmdBinary(isBigEndian);
+	ReadWriteUtil::writeBinary(fileName, data);
 }
 
 void MainWindow::actDisplayListFromIntegers()
@@ -3980,34 +4027,39 @@ void MainWindow::about()
 
 void MainWindow::aboutQt()
 {
-	QMessageBox::about(this, tr("3rd Party"), tr("The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
-	                                             "Contact: http://www.qt-project.org/legal\n"
-	                                             "Qt is available under the LGPL.\n"
-	                                             "\n"
-	                                             "Portions part of the examples of the Qt Toolkit, under the BSD license.\n"
-	                                             "Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
-	                                             "Contact: http://www.qt-project.org/legal\n"
-	                                             "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
-	                                             "\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
-	                                             "LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
-	                                             "A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
-	                                             "OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
-	                                             "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
-	                                             "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
-	                                             "DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
-	                                             "THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
-	                                             "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
-	                                             "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
-	                                             "\n"
-												 "Python\n"
-												 "Copyright (C) 2001-2022\n"
-												 "https://www.python.org/"
-												 "\n\n"
-	                                             "Fugue Icons\n"
-	                                             "(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
-	                                             "These icons are licensed under a Creative Commons"
-	                                             "Attribution 3.0 License.\n"
-	                                             "http://creativecommons.org/licenses/by/3.0"));
+	QMessageBox::about(this, tr("3rd Party"), tr(
+		"The Qt GUI Toolkit is Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+		"Contact: http://www.qt-project.org/legal\n"
+		"Qt is available under the LGPL.\n"
+		"\n"
+		"Portions part of the examples of the Qt Toolkit, under the BSD license.\n"
+		"Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).\n"
+		"Contact: http://www.qt-project.org/legal\n"
+		"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "
+		"\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
+		"LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR "
+		"A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
+		"OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, "
+		"SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
+		"LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, "
+		"DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
+		"THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT "
+		"(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
+		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+		"\n"
+		"Python\n"
+		"Copyright (C) 2001-2023\n"
+		"https://www.python.org/"
+		"\n\n"
+		"Fugue Icons\n"
+		"(C) 2013 Yusuke Kamiyamane. All rights reserved.\n"
+		"These icons are licensed under a Creative Commons"
+		"Attribution 3.0 License.\n"
+		"http://creativecommons.org/licenses/by/3.0"
+		"\n\n"
+		"virinext/QHexView\n"
+		"virinext/QHexView is licensed under the MIT License\n"
+		"Copyright (C) 2015\n"));
 }
 
 QString MainWindow::getProjectContent() const
@@ -4032,6 +4084,26 @@ void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)
 		return;
 
 	m_OutputTextEdit->append(text);
+}
+
+void MainWindow::updateLoadingIcon()
+{
+	m_CoprocessorBusy->setVisible((g_ShowCoprocessorBusy && !g_WaitingCoprocessorAnimation)
+	    || !busyList.isEmpty());
+}
+
+void MainWindow::appendBusyList(QObject *obj)
+{
+    if (busyList.contains(obj))
+        return;
+    busyList.append(obj);
+    updateLoadingIcon();
+}
+
+void MainWindow::removeBusyList(QObject *obj)
+{
+    busyList.removeOne(obj);
+    updateLoadingIcon();
 }
 
 } /* namespace FTEDITOR */

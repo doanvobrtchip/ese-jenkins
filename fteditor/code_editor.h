@@ -74,6 +74,7 @@ class CodeEditor : public CodeEditorParent
 
 public:
 	CodeEditor(QWidget *parent = 0);
+	~CodeEditor();
 
 	void lineNumberAreaPaintEvent(QPaintEvent *event);
 	int lineNumberAreaWidth();
@@ -132,6 +133,10 @@ private:
 	bool m_InteractiveDelete;
 	FTEDITOR::InteractiveViewport *m_KeyHandler;
 	FTEDITOR::InteractiveViewport *m_LastKeyHandler;
+
+	QClipboard *m_Clipboard;
+	QString m_LatestText;
+
 };
 
 

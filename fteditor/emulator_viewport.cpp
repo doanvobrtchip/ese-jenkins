@@ -30,6 +30,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Project includes
 #include "constant_mapping.h"
 #include "constant_mapping_flash.h"
+#include "src/customize/QRuler.h"
 
 namespace FTEDITOR {
 
@@ -144,6 +145,13 @@ EmulatorViewport::EmulatorViewport(QWidget *parent, const QString &applicationDa
 
 	setMinimumWidth(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
 	setMinimumHeight(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
+
+	m_HorizontalRuler = new QRuler(this, Qt::Horizontal);
+	m_HorizontalRuler->setMaximumWidth(m_Horizontal->maximum());
+	m_HorizontalRuler->setFixedHeight(30);
+	m_VerticalRuler = new QRuler(this, Qt::Vertical);
+	m_VerticalRuler->setMaximumHeight(m_Vertical->maximum());
+	m_VerticalRuler->setFixedWidth(35);
 }
 
 EmulatorViewport::~EmulatorViewport()
@@ -335,7 +343,14 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	s_LastRendered = true;
 	g_ViewportMutex.unlock();
 	repaint();
-	frame();
+	emit frame();
+}
+
+void EmulatorViewport::toggleViewRuler(bool show)
+{
+	horizontalRuler()->setVisible(!horizontalRuler()->isVisible());
+	verticalRuler()->setVisible(!verticalRuler()->isVisible());
+	emit visibleChanged(verticalRuler()->isVisible());
 }
 
 void EmulatorViewport::fetchColorAsync(int x, int y)
