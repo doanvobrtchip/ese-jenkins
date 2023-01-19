@@ -209,6 +209,9 @@ endif()
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
 
+# REVIEW 2023-01-19: Make this deployqt optional for deployment builds only. We already set VS_DEBUGGER_ENVIRONMENT. 
+# Copy pasting dlls causes all sorts of mayhem with wrong versions sticking around...
+
 #Windeployqt
 if(Qt6_FOUND)
     get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)

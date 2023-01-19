@@ -1410,7 +1410,7 @@ void ContentManager::remove()
 		return;
 	
 	ContentInfo *info = (ContentInfo *)(void *)m_ContentList->currentItem()->data(0, Qt::UserRole).value<quintptr>();
-	emit m_ContentList->removeItem(info); // REVIEW 2013-01-19: This probably breaks undo/redo in some way (undo add), should be in remove(info)?
+	emit m_ContentList->removeItem(info); // REVIEW 2013-01-19: This probably breaks undo/redo in some way (undo add -> internal remove). Shouldn't this be in the internal add and remove behaviour?
 	remove(info);
 }
 

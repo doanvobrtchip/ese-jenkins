@@ -12,6 +12,10 @@ namespace FTEDITOR {
 
 #define START_RAM_G          0UL
 #define START_RAM_DL         3145728UL
+// REVIEW 2023-01-19: This is not a common constant between EVE revisions, does not belong here.
+// The proper value can be obtained from `FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL)`.
+// The dl_parser_impl.h file is compiled for each device, so it will map the proper value if you use that call to populate the map of constants.
+// In EVE HAL, this constant/macro is exposed as `RAM_DL`.
 
 #define NEAREST              0UL
 #define BILINEAR             1UL
