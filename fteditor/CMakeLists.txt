@@ -15,6 +15,7 @@ FILE(GLOB UTILS
 
 FILE(GLOB INSPECTOR
   src/inspector/*.h
+  src/inspector/*.cpp
 )
 
 IF (WIN32)
