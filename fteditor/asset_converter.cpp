@@ -64,6 +64,7 @@ PyObject *a_RawConvModule = NULL;
 PyObject *a_RawConvObject = NULL;
 PyObject *a_RawConvRun = NULL;
 QString a_RawConvError;
+std::map<std::string, int> a_ImageFormatMap;
 #endif /* FT800EMU_PYTHON */
 
 #ifdef FT800EMU_FREETYPE
@@ -158,10 +159,44 @@ void AssetConverter::init()
 		printf("Font Converter available (freetype)\n");
 	}
 #endif /* FT800EMU_FREETYPE */
+	
+	a_ImageFormatMap.clear();
+	a_ImageFormatMap["ARGB1555"] = ARGB1555;
+	a_ImageFormatMap["L1"] = L1;
+	a_ImageFormatMap["L2"] = L2;
+	a_ImageFormatMap["L4"] = L4;
+	a_ImageFormatMap["L8"] = L8;
+	a_ImageFormatMap["RGB332"] = RGB332;
+	a_ImageFormatMap["ARGB2"] = ARGB2;
+	a_ImageFormatMap["ARGB4"] = ARGB4;
+	a_ImageFormatMap["RGB565"] = RGB565;
+	a_ImageFormatMap["PALETTED"] = PALETTED;
+	a_ImageFormatMap["TEXT8X8"] = TEXT8X8;
+	a_ImageFormatMap["TEXTVGA"] = TEXTVGA;
+	a_ImageFormatMap["BARGRAPH"] = BARGRAPH;
+	a_ImageFormatMap["PALETTED8"] = PALETTED8;
+	a_ImageFormatMap["PALETTED565"] = PALETTED565;
+	a_ImageFormatMap["PALETTED4444"] = PALETTED4444;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_4x4_KHR"] = COMPRESSED_RGBA_ASTC_4x4_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_5x4_KHR"] = COMPRESSED_RGBA_ASTC_5x4_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_5x5_KHR"] = COMPRESSED_RGBA_ASTC_5x5_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_6x5_KHR"] = COMPRESSED_RGBA_ASTC_6x5_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_6x6_KHR"] = COMPRESSED_RGBA_ASTC_6x6_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_8x5_KHR"] = COMPRESSED_RGBA_ASTC_8x5_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_8x6_KHR"] = COMPRESSED_RGBA_ASTC_8x6_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_8x8_KHR"] = COMPRESSED_RGBA_ASTC_8x8_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_10x5_KHR"] = COMPRESSED_RGBA_ASTC_10x5_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_10x6_KHR"] = COMPRESSED_RGBA_ASTC_10x6_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_10x8_KHR"] = COMPRESSED_RGBA_ASTC_10x8_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_10x10_KHR"] = COMPRESSED_RGBA_ASTC_10x10_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_12x10_KHR"] = COMPRESSED_RGBA_ASTC_12x10_KHR;
+	a_ImageFormatMap["COMPRESSED_RGBA_ASTC_12x12_KHR"] = COMPRESSED_RGBA_ASTC_12x12_KHR;
 }
 
 void AssetConverter::release()
 {
+	a_ImageFormatMap.clear();
+	
 #ifdef FT800EMU_FREETYPE
 	FT_Done_FreeType(a_FreetypeLibrary);
 	a_FreetypeLibrary = NULL;
@@ -180,66 +215,9 @@ void AssetConverter::release()
 
 int AssetConverter::imageStringToEnum(char *imageString)
 {
-	if (!strcmp(imageString, "ARGB1555"))
-		return ARGB1555;
-	else if (!strcmp(imageString, "L1"))
-		return L1;
-	else if (!strcmp(imageString, "L2"))
-		return L2;
-	else if (!strcmp(imageString, "L4"))
-		return L4;
-	else if (!strcmp(imageString, "L8"))
-		return L8;
-	else if (!strcmp(imageString, "RGB332"))
-		return RGB332;
-	else if (!strcmp(imageString, "ARGB2"))
-		return ARGB2;
-	else if (!strcmp(imageString, "ARGB4"))
-		return ARGB4;
-	else if (!strcmp(imageString, "RGB565"))
-		return RGB565;
-	else if (!strcmp(imageString, "PALETTED"))
-		return PALETTED;
-	else if (!strcmp(imageString, "TEXT8X8"))
-		return TEXT8X8;
-	else if (!strcmp(imageString, "TEXTVGA"))
-		return TEXTVGA;
-	else if (!strcmp(imageString, "BARGRAPH"))
-		return BARGRAPH;
-	else if (!strcmp(imageString, "PALETTED8"))
-		return PALETTED8;
-	else if (!strcmp(imageString, "PALETTED565"))
-		return PALETTED565;
-	else if (!strcmp(imageString, "PALETTED4444"))
-		return PALETTED4444;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_4x4_KHR"))
-		return COMPRESSED_RGBA_ASTC_4x4_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_5x4_KHR"))
-		return COMPRESSED_RGBA_ASTC_5x4_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_5x5_KHR"))
-		return COMPRESSED_RGBA_ASTC_5x5_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_6x5_KHR"))
-		return COMPRESSED_RGBA_ASTC_6x5_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_6x6_KHR"))
-		return COMPRESSED_RGBA_ASTC_6x6_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x5_KHR"))
-		return COMPRESSED_RGBA_ASTC_8x5_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x6_KHR"))
-		return COMPRESSED_RGBA_ASTC_8x6_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_8x8_KHR"))
-		return COMPRESSED_RGBA_ASTC_8x8_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x5_KHR"))
-		return COMPRESSED_RGBA_ASTC_10x5_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x6_KHR"))
-		return COMPRESSED_RGBA_ASTC_10x6_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x8_KHR"))
-		return COMPRESSED_RGBA_ASTC_10x8_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_10x10_KHR"))
-		return COMPRESSED_RGBA_ASTC_10x10_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_12x10_KHR"))
-		return COMPRESSED_RGBA_ASTC_12x10_KHR;
-	else if (!strcmp(imageString, "COMPRESSED_RGBA_ASTC_12x12_KHR"))
-		return COMPRESSED_RGBA_ASTC_12x12_KHR;
+	std::map<std::string, int>::iterator it = a_ImageFormatMap.find(imageString);
+	if (it != a_ImageFormatMap.end())
+		return it->second;
 	return -1;
 }
 
