@@ -74,6 +74,8 @@ OPTION(FTEDITOR_OPENGL_VIEWPORT "Use QOpenGLWidget to render the emulator viewpo
 
 OPTION(WITH_QT "Build projects that depend on Qt" OFF)
 
+OPTION(WITH_WINDEPLOYQT "Run the WinDeployQt steps" OFF)
+
 OPTION(WITH_PYTHON "Include editor features that depend on Python" OFF)
 
 OPTION(WITH_FREETYPE "Include features that depend on Freetype" OFF)
