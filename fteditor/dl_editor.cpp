@@ -101,7 +101,7 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 	{
-		m_DisplayListParsed[i] = DlParsed();
+		// m_DisplayListParsed[i] = DlParsed();
 		m_DisplayListParsed[i].ValidId = false;
 		m_DisplayListShared[i] = DISPLAY();
 	}
@@ -349,7 +349,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator)
 				++dcount;
 			}
 			QString line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, m_DisplayListShared[i]);
-			m_DisplayListParsed[i] = DlParsed();
+			// m_DisplayListParsed[i] = DlParsed();
 			// verify parsing ->
 			DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
 			uint32_t compiled = DlParser::compile(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i]);
@@ -632,7 +632,7 @@ void DlEditor::documentBlockCountChanged(int newBlockCount)
 	}
 	for (int i = newBlockCount; i < (m_ModeMacro ? FT800EMU_MACRO_SIZE : FTEDITOR_DL_SIZE); ++i)
 	{
-		m_DisplayListParsed[i] = DlParsed();
+		// m_DisplayListParsed[i] = DlParsed();
 		m_DisplayListParsed[i].ValidId = false;
 		m_DisplayListShared[i] = DISPLAY();
 	}
@@ -653,7 +653,7 @@ void DlEditor::parseLine(QTextBlock block)
 	if (!m_InvalidState)
 		m_InvalidState = DlState::requiresProcessing(m_DisplayListParsed[i]);
 
-	m_DisplayListParsed[i] = DlParsed();
+	// m_DisplayListParsed[i] = DlParsed();
 	DlParser::parse(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i], line, m_ModeCoprocessor);
 	m_DisplayListShared[i] = DlParser::compile(FTEDITOR_CURRENT_DEVICE, m_DisplayListParsed[i]);
 
