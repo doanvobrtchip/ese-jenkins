@@ -63,6 +63,17 @@ extern const char *g_DlEnumAnimLoop[DL_ENUM_ANIM_LOOP_NB];
 #define DLPARSED_MAX_PARAMETER 127
 #define DLPARSED_MAX_SYMBOL 18
 #define DLPARSED_MAX_VARARG 8
+
+/*
+This structure does not initialize any values by design.
+At minimum to use this structure to call `DlParser::toString`, you must set:
+- ValidId = true;
+- IdLeft = FTEDITOR_...;
+- IdRight = FTEDITOR_...;
+- ExpectedParameterCount = ...; // The number of parameters expected by the command id
+- ExpectedStringParameter = ...; // Whether a string parameter is expected at the end
+- VarArgCount = ...; // How many varargs are added after the string
+*/
 struct DlParsed
 {
 	std::string IdText;
