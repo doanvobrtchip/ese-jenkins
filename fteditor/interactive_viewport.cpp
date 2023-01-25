@@ -1195,11 +1195,13 @@ void InteractiveViewport::automaticChecked()
 void InteractiveViewport::touchChecked()
 {
 	m_PointerFilter = POINTER_TOUCH;
+	m_Insert->setChecked(false);
 }
 
 void InteractiveViewport::traceChecked()
 {
 	m_PointerFilter = POINTER_TRACE;
+	m_Insert->setChecked(false);
 }
 
 void InteractiveViewport::editChecked()
@@ -1210,6 +1212,7 @@ void InteractiveViewport::editChecked()
 		| POINTER_EDIT_WIDGET_MOVE // widget movement
 		| POINTER_EDIT_GRADIENT_MOVE
 		;
+	m_Insert->setChecked(false);
 }
 
 void InteractiveViewport::updatePointerMethod()
@@ -2037,7 +2040,10 @@ void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
 
 void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 {
-	if (e->button() == Qt::RightButton) {
+	if (e->button() == Qt::RightButton
+		&& !m_Insert->isChecked()
+		&& !(m_PointerMethod == POINTER_TRACE && m_MainWindow->traceEnabled()))
+	{
 		emit this->customContextMenuRequested(e->position().toPoint());
 		return;
 	}
@@ -2068,7 +2074,7 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 				m_PreferTraceCursor = false;
 				break;
 			}
-			// fallthrough to Qt::RightButton
+			[[fallthrough]]; // to Qt::RightButton
 		case Qt::RightButton:
 			m_MainWindow->setTraceEnabled(false);
 			break;
@@ -2146,6 +2152,7 @@ RETURN()
 		{
 			m_Insert->setChecked(false);
 		}
+		[[fallthrough]];
 	default:
 		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
 		{
