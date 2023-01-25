@@ -68,8 +68,10 @@ struct DlParsed
 	std::string IdText;
 	int IdLeft;
 	int IdRight;
+	// clang-format off
 	union { uint32_t U; int32_t I; /* float F; */ } Parameter[DLPARSED_MAX_PARAMETER];
 	union { uint32_t U; int32_t I; /* float F; */ } ReadOut[DL_PARSER_MAX_READOUT];
+	// clang-format on
 
 	bool ValidId;
 	bool ValidSymbol[DLPARSED_MAX_SYMBOL];
@@ -93,13 +95,7 @@ struct DlParsed
 
 	// int VarArgCount;
 	// char VarArgFormat[DLPARSED_MAX_VARARG];
-
-	// TODO: Remove this
-    DlParsed()
-    {
-        ExpectedParameterCount = 0;
-        VarArgCount = 0;
-    }
+	
 };
 
 struct ParameterOptions

@@ -32,6 +32,7 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   // pav.Parameter[3].I = 0;
   pav.ExpectedParameterCount = 2;
   pav.ExpectedStringParameter = false;
+  pav.VarArgCount = 0;
   pa.IdRight = FTEDITOR_DL_BEGIN;
   pa.Parameter[0].U = selection;
   pa.ExpectedParameterCount = 1;
@@ -240,6 +241,7 @@ bool DLUtil::addBitmapCmds(DlEditor *lineEditor, DlParsed &pa, ContentInfo *cont
   // pav.Parameter[3].I = 0;
   pav.ExpectedParameterCount = 2;
   pav.ExpectedStringParameter = false;
+  pav.VarArgCount = 0;
   pa.IdRight = FTEDITOR_DL_BEGIN;
   pa.Parameter[0].U = selection;
   pa.ExpectedParameterCount = 1;

@@ -2661,6 +2661,7 @@ void MainWindow::actNew(bool addClear)
 		pa.IdLeft = 0;
 		pa.IdRight = FTEDITOR_DL_CLEAR;
 		pa.ExpectedStringParameter = false;
+		pa.VarArgCount = 0;
 		pa.Parameter[0].U = 1;
 		pa.Parameter[1].U = 1;
 		pa.Parameter[2].U = 1;
@@ -2736,6 +2737,8 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 			DlParsed pa;
 			pa.ValidId = true;
 			pa.IdLeft = 0;
+			pa.ExpectedStringParameter = false;
+			pa.VarArgCount = 0;
 
 			pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
 			pa.Parameter[0].I = i;

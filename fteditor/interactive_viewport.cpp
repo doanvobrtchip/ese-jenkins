@@ -1703,6 +1703,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardMod
 					npa.ValidId = true;
 					npa.IdLeft = 0;
 					npa.ExpectedStringParameter = false;
+					npa.VarArgCount = 0;
 					npa.ExpectedParameterCount = 1;
 					if (state.Graphics.BitmapHandle != pa.Parameter[2].U)
 					{
@@ -2374,8 +2375,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ValidId = true;
 					pa.IdLeft = selection;
 					pa.IdRight = 0;
-
-					
+					pa.ExpectedStringParameter = false;
+					pa.VarArgCount = 0;
 					switch (selection)
 					{
 					case FTEDITOR_DL_VERTEX2F:
@@ -2391,7 +2392,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 4;
 						break;
 					}
-					pa.ExpectedStringParameter = false;
 					m_LineEditor->insertLine(line, pa);
 					m_LineEditor->selectLine(line);
 					m_LineEditor->codeEditor()->endUndoCombine();
@@ -2406,6 +2406,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.Parameter[0].I = mappingX(e);
 					pa.Parameter[1].I = mappingY(e);
 					pa.ExpectedStringParameter = false;
+					pa.VarArgCount = 0;
 					switch (selection)
 					{
 					case CMD_TEXT:
@@ -2776,6 +2777,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.IdLeft = 0;
 					pa.IdRight = selection;
 					pa.ExpectedStringParameter = false;
+					pa.VarArgCount = 0;
 					switch (selection)
 					{
 					case FTEDITOR_DL_CLEAR:
@@ -2860,6 +2862,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					pa.ValidId = true;
 					pa.IdLeft = 0;
 					pa.ExpectedStringParameter = false;
+					pa.VarArgCount = 0;
 					if (contentInfo && mustCreateHandle)
 					{
 						printf("Create handle for content item\n");
@@ -3109,6 +3112,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							pa.Parameter[0].I = 0;
 							pa.StringParameter = contentInfo->SourcePath.toStdString();
 							pa.ExpectedStringParameter = true;
+							pa.VarArgCount = 0;
 							pa.ExpectedParameterCount = 2;
 							m_LineEditor->insertLine(line, pa);
 							++line;
@@ -3171,6 +3175,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.ExpectedStringParameter = false;
+				pa.VarArgCount = 0;
 				if (selectionType == FTEDITOR_SELECTION_CMD_STATE)
 				{
 					pa.IdLeft = 0xFFFFFF00;

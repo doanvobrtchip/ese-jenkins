@@ -3077,6 +3077,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
 				pa.IdRight = FTEDITOR_DL_BITMAP_LAYOUT_H;
 				pa.ExpectedStringParameter = false;
+				pa.VarArgCount = 0;
 				pa.Parameter[0].U = contentInfo->CachedImageStride >> 10;
 				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
 				pa.ExpectedParameterCount = 2;
@@ -3095,6 +3096,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 				pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
 				pa.IdRight = FTEDITOR_DL_BITMAP_SIZE_H;
 				pa.ExpectedStringParameter = false;
+				pa.VarArgCount = 0;
 				pa.Parameter[0].U = contentInfo->CachedImageWidth >> 9;
 				pa.Parameter[1].U = contentInfo->CachedImageHeight >> 9;
 				pa.ExpectedParameterCount = 2;
@@ -3110,6 +3112,7 @@ void ContentManager::editorUpdateHandle(ContentInfo *contentInfo, DlEditor *dlEd
 			pa.IdLeft = FTEDITOR_DL_INSTRUCTION;
 			pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
 			pa.ExpectedStringParameter = false;
+			pa.VarArgCount = 0;
 			pa.Parameter[0].U = contentInfo->MemoryAddress;
 			pa.ExpectedParameterCount = 1;
 			paletteAddrLine = insertOkLine;
@@ -3320,6 +3323,7 @@ void editorInsertPallette8(int paletteAddress, DlEditor *dlEditor, int &line)
 	pa.ValidId = true;
 	pa.IdLeft = 0;
 	pa.ExpectedStringParameter = false;
+	pa.VarArgCount = 0;
 	
 	pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
 	pa.ExpectedParameterCount = 0;
@@ -3424,6 +3428,7 @@ void editorProcessPaletteSource(int bitmapAddress, int paletteAddress, DlEditor 
 	paPaletteSource.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
 	paPaletteSource.ExpectedParameterCount = 1;
 	paPaletteSource.ExpectedStringParameter = false;
+	paPaletteSource.VarArgCount = 0;
 	paPaletteSource.Parameter[0].I = paletteAddress;
 
 	for (int i = 0; i < FTEDITOR_DL_SIZE && i < dlEditor->getLineCount(); ++i)
