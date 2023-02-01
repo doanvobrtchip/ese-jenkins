@@ -1,9 +1,21 @@
 Version 4.5.0
+Beta
+Feature updates:
+•   Support area selection using mouse to select and move multiple elements
+•   Add indicator to ruler
+•   Add properties UI and help text for BT817/8 CMDs
+•   Support for PALETTED565/PALETTED4444/PALETTED8 bitmap
+•   Add one inspector window to view the content of RAM_G
+
+Resolved issues:
+•   The popup at top-left corner should not take place
+•   CMD_SETFONT needs more commands to work
+•   EOL character is transcoded while copying the lines from coprocessor editor of ESE
+•   Failed to export the example project bitmap_rotate for raspberry pi pico
+
 Alpha
 Feature updates:
-•   Add one inspector window to view the content of RAM_G
 •   Save coprocessor command and display list in the binary form
-•   Support for PALETTED565/PALETTED4444/PALETTED8 bitmap
 •   Add pixel ruler in the view port 
 •   Add predefined constants in editor
 •   Add both glyph and xfont if the user selected one

@@ -12,6 +12,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // STL includes
 #include <vector>
+#include <QList>
 
 // Qt includes
 
@@ -55,9 +56,9 @@ public:
 	// Graphics callback synchronized to Qt thread, use to overlay graphics
 	virtual void graphics(QImage *image);
 
-	// Called by a editor when the active line changes
-	void setEditorLine(DlEditor *editor, int line);
-	void unsetEditorLine();
+  // Called by a editor when the active line changes
+  void setEditorLine(DlEditor *editor, int line, bool multiple = false);
+  void unsetEditorLine();
 
 	virtual void keyPressEvent(QKeyEvent *e);
 
@@ -65,10 +66,18 @@ public:
 	int mouseY() const { return m_MouseY; }
 	bool mouseOver() const { return m_MouseOver; }
 
-	int32_t mappingX(QDropEvent *e);
-	int32_t mappingY(QDropEvent *e);
-	int32_t mappingX(QSinglePointEvent *e);
-	int32_t mappingY(QSinglePointEvent *e);
+  int32_t mappingX(QDropEvent *e);
+  int32_t mappingY(QDropEvent *e);
+  int32_t mappingX(int x);
+  int32_t mappingY(int y);
+  int32_t mappingX(QSinglePointEvent *e);
+  int32_t mappingY(QSinglePointEvent *e);
+  void selectItems();
+  bool isSingleSelect();
+  bool isSelectable(const DlParsed &parsed);
+  void isWidgetWHR(const DlParsed &parsed, bool &widgetWH, bool &widgetR);
+  bool isWidgetXY(const DlParsed &parsed);
+  bool isWidgetGradient(const DlParsed &parsed);
 
 protected:
 	virtual void paintEvent(QPaintEvent *e);
@@ -81,17 +90,13 @@ private:
 	void mouseMoveEvent(int mouseX, int mouseY,
 	    Qt::KeyboardModifiers km = Qt::NoModifier);
 
-protected:
-	virtual void mouseMoveEvent(QMouseEvent *e) override;
-	virtual void mousePressEvent(QMouseEvent *e) override;
-	virtual void mouseReleaseEvent(QMouseEvent *e) override;
-#if QT_VERSION_MAJOR < 6
-	virtual void enterEvent(QEvent *e) override;
-#else
-	virtual void enterEvent(QEnterEvent *e) override;
-#endif
-	virtual void leaveEvent(QEvent *e) override;
-	virtual void wheelEvent(QWheelEvent *e) override;
+ protected:
+  virtual void mouseMoveEvent(QMouseEvent *e) override;
+  virtual void mousePressEvent(QMouseEvent *e) override;
+  virtual void mouseReleaseEvent(QMouseEvent *e) override;
+  virtual void enterEvent(QEnterEvent *e) override;
+  virtual void leaveEvent(QEvent *e) override;
+  virtual void wheelEvent(QWheelEvent *e) override;
 
 	virtual void dropEvent(QDropEvent *e) override;
 	virtual void dragMoveEvent(QDragMoveEvent *e) override;
@@ -160,9 +165,13 @@ private:
 
 	int m_MouseMovingWidget;
 
-	// Current line
-	DlEditor *m_LineEditor;
-	int m_LineNumber;
+  // Current line
+  DlEditor *m_LineEditor;
+  int m_LineNumber;
+  QList<int> m_SelectedLines;
+  QPoint m_FirstPoint;
+  QPoint m_SecondPoint;
+  bool m_DrawMultipleSelection;
 
 	bool m_DragMoving;
 
@@ -171,9 +180,12 @@ private:
 	int m_SnapHistoryCur;
 	void snapPos(int &xd, int &yd, int xref, int yref);
 
-	bool m_isDrawAlignmentHorizontal;
-	bool m_isDrawAlignmentVertical;
-	bool m_isDrawAlignment;
+  bool m_isDrawAlignmentHorizontal;
+  bool m_isDrawAlignmentVertical;
+  bool m_isDrawAlignment;
+
+signals:
+  void selectedLinesChanged(const QList<int> &newSelectedLines);
 }; /* class InteractiveViewport */
 
 } /* namespace FTEDITOR */

@@ -96,12 +96,14 @@ public:
 	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; /*printf("Interactive delete %s\n", m_InteractiveDelete ? "ON" : "OFF");*/ }
 
 	void setKeyHandler(FTEDITOR::InteractiveViewport *keyHandler) { m_KeyHandler = keyHandler; if (keyHandler) { m_LastKeyHandler = keyHandler; } }
+  const QList<int> &SelectedLines() const;
+  void setSelectedLines(const QList<int> &newSelectedLines);
 
 protected:
-	virtual void resizeEvent(QResizeEvent *event);
-	virtual void keyPressEvent(QKeyEvent *e);
-	// virtual void contextMenuEvent(QContextMenuEvent *event);
-	virtual void focusInEvent(QFocusEvent *event);
+  virtual void resizeEvent(QResizeEvent *event);
+  virtual void keyPressEvent(QKeyEvent *e);
+  // virtual void contextMenuEvent(QContextMenuEvent *event);
+  virtual void focusInEvent(QFocusEvent *event);
 
 private slots:
 	void updateLineNumberAreaWidth(int newBlockCount);
@@ -114,31 +116,30 @@ private slots:
 private:
 	QString textUnderCursor() const;
 
-private:
-	QWidget *lineNumberArea;
-	int m_MaxLinesNotice;
-	// QUndoStack *m_UndoStack;
-	bool m_UndoIndexDummy;
-	bool m_UndoNeedsClosure;
-	bool m_UndoIsClosing;
-	QCompleter *m_Completer;
-	int m_StepHighlight;
-	int m_LastStepHighlight;
-	bool m_StepMovingCursor;
-	std::vector<int> m_TraceHighlights;
-	std::vector<int> m_TraceStack;
-	int m_CombineId;
-	int m_LastCombineId;
-	QString m_UndoRedoMessage;
-	bool m_InteractiveDelete;
-	FTEDITOR::InteractiveViewport *m_KeyHandler;
-	FTEDITOR::InteractiveViewport *m_LastKeyHandler;
-
-	QClipboard *m_Clipboard;
-	QString m_LatestText;
-
+ private:
+  QWidget *lineNumberArea;
+  int m_MaxLinesNotice;
+  // QUndoStack *m_UndoStack;
+  bool m_UndoIndexDummy;
+  bool m_UndoNeedsClosure;
+  bool m_UndoIsClosing;
+  QCompleter *m_Completer;
+  int m_StepHighlight;
+  int m_LastStepHighlight;
+  bool m_StepMovingCursor;
+  std::vector<int> m_TraceHighlights;
+  std::vector<int> m_TraceStack;
+  int m_CombineId;
+  int m_LastCombineId;
+  QString m_UndoRedoMessage;
+  bool m_InteractiveDelete;
+  FTEDITOR::InteractiveViewport *m_KeyHandler;
+  FTEDITOR::InteractiveViewport *m_LastKeyHandler;
+  QClipboard *m_Clipboard;
+  QString m_LatestText;
+  QList<int> m_SelectedLines;
+  bool m_Deleting;
 };
-
 
 class LineNumberArea : public QWidget
 {
