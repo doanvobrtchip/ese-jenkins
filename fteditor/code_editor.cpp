@@ -88,6 +88,9 @@ m_LastKeyHandler(NULL)
   // Not sure if this is the right way. Does this affect every copy paste even outside the appplication?
   // To test.
 
+  //This affects every copy paste even outside the appplication.
+  //We have a condition to make sure that we modify the clipboard in the right case.
+
   // QPlainTextEdit is using paragraph break instead of line break if we use
   // copy()
   m_Clipboard = QGuiApplication::clipboard();
@@ -109,18 +112,6 @@ m_LastKeyHandler(NULL)
       m_LatestText = curTxt;
     }
   });
-}
-
-CodeEditor::~CodeEditor() {
-  /*
-  // REVIEW 2023-01-19: QObject are automatically deleted by their parents.
-  // This `deleteLater` does not seem correct, since this object does not own these objects!
-  m_Clipboard->deleteLater();
-  m_KeyHandler->deleteLater();
-  m_LastKeyHandler->deleteLater();
-  m_Completer->deleteLater();
-  lineNumberArea->deleteLater();
-  */
 }
 
 void CodeEditor::focusInEvent(QFocusEvent *event) {

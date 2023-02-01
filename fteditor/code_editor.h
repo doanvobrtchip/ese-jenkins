@@ -74,7 +74,6 @@ class CodeEditor : public CodeEditorParent
 
 public:
 	CodeEditor(QWidget *parent = 0);
-	~CodeEditor();
 
 	void lineNumberAreaPaintEvent(QPaintEvent *event);
 	int lineNumberAreaWidth();

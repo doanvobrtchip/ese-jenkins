@@ -660,7 +660,7 @@ void DlParser::initVC4()
 	if (!s_CmdParamMap.size())
 	{
 		s_CmdParamMap["RAM_G"] = START_RAM_G;
-		s_CmdParamMap["RAM_DL"] = START_RAM_DL;
+    s_CmdParamMap["RAM_DL"] = FTEDITOR::addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_DL);
 		s_CmdParamMap["OPT_CENTER"] = OPT_CENTER;
 		s_CmdParamMap["OPT_CENTERX"] = OPT_CENTERX;
 		s_CmdParamMap["OPT_CENTERY"] = OPT_CENTERY;
