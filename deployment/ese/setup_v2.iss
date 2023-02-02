@@ -5,7 +5,7 @@
 #define DeploymentFileDir = (RootDir) + "\fteditor\deployment"
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "v4.5.0_Alpha"
+#define MyAppVersion "v4.5.0_Beta"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
@@ -61,7 +61,7 @@ Source: "{#RootDir}\fteditor\device_sync\*.*"; DestDir: "{app}\device_sync"; Fla
 Source: "{#RootDir}\fteditor\EVE_Hal_Library\*.*"; DestDir: "{app}\EVE_Hal_Library"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#RootDir}\fteditor\Examples\*.*"; DestDir: "{app}\Examples"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#RootDir}\fteditor\export_scripts\*.*"; DestDir: "{app}\export_scripts"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#RootDir}\fteditor\export_template\*.*"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#RootDir}\fteditor\export_template\*.*"; Excludes: "*.gitkeep"; DestDir: "{app}\export_template"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#RootDir}\fteditor\firmware\*.*"; DestDir: "{app}\firmware"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "{#RootDir}\fteditor\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs ignoreversion
 

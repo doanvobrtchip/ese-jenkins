@@ -88,18 +88,32 @@ static QVector<float> ZoomRange({ 6.25, 12.5, 25, 37.5, 50, 62.5, 75, 100, 125, 
 static const int ZOOM_INIT_INDEX = 7; // index 7 means zooming at 100%
 
 InteractiveViewport::InteractiveViewport(MainWindow *parent)
-	: EmulatorViewport(parent, parent->applicationDataDir()), m_MainWindow(parent),
-	m_PreferTraceCursor(false), m_TraceEnabled(false), m_MouseOver(false), m_MouseTouch(false), m_MouseStackValid(false), m_MouseStackWritten(false), 
-	m_PointerFilter(POINTER_ALL), m_PointerMethod(0), m_LineEditor(NULL), m_LineNumber(0),
-	m_MouseOverVertex(false), m_MouseOverVertexLine(-1), m_MouseMovingVertex(false),
-	m_WidgetXY(false), m_WidgetWH(false), m_WidgetR(false), m_WidgetGradient(false),
-	m_MouseMovingWidget(0), m_SnapHistoryCur(0)
-{
-	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
-	{
-		m_SnapHistoryX[i] = FTED_SNAP_HISTORY_NONE;
-		m_SnapHistoryY[i] = FTED_SNAP_HISTORY_NONE;
-	}
+    : EmulatorViewport(parent, parent->applicationDataDir()),
+      m_MainWindow(parent),
+      m_PreferTraceCursor(false),
+      m_TraceEnabled(false),
+      m_MouseOver(false),
+      m_MouseStackWritten(false),
+      m_MouseStackValid(false),
+      m_PointerFilter(POINTER_ALL),
+      m_PointerMethod(0),
+      m_MouseTouch(false),
+      m_MouseOverVertex(false),
+      m_MouseOverVertexLine(-1),
+      m_MouseMovingVertex(false),
+      m_WidgetXY(false),
+      m_WidgetWH(false),
+      m_WidgetR(false),
+      m_WidgetGradient(false),
+      m_MouseMovingWidget(0),
+      m_LineEditor(NULL),
+      m_LineNumber(0),
+      m_DrawMultipleSelection(false),
+      m_SnapHistoryCur(0) {
+  for (int i = 0; i < FTED_SNAP_HISTORY; ++i) {
+    m_SnapHistoryX[i] = FTED_SNAP_HISTORY_NONE;
+    m_SnapHistoryY[i] = FTED_SNAP_HISTORY_NONE;
+  }
 
 	// m_Label->setCursor(Qt::PointingHandCursor);
 	setMouseTracking(true);
@@ -520,11 +534,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 // #define UNTFY(y) ((((y - mvy) * 16) / scl))
 #define DRAWLINE(x1, y1, x2, y2) p.drawLine(TFX(x1), TFY(y1), TFX(x2), TFY(y2))
 #define DRAWRECT(x, y, w, h) p.drawRect(TFX(x), TFY(y), SCX(w), SCY(h))
-#if QT_VERSION_MAJOR < 6
-#define EPOSPOINT(e) (e->pos())
-#else
 #define EPOSPOINT(e) (e->position().toPoint())
-#endif
 
 	if (m_MouseTouch && m_MouseX >= 0 && m_MouseX < getPixMap().width() && m_MouseY >= 0 && m_MouseY < getPixMap().height())
 	{
@@ -535,13 +545,11 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 		BT8XXEMU_touchResetXY(g_Emulator, 0);
 	}
 
-	// Draw image overlays
-	/*QPainter p;
-	p.begin(image);*/
-	if (m_LineEditor)
-	{
-		const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-		auto drawAlignment = [&](int specX = -1, int specY = -1) {
+  // Draw image overlays
+  /*QPainter p;
+  p.begin(image);*/
+  if (m_LineEditor) {
+    auto drawAlignment = [&](DlParsed &parsed, int specX = -1, int specY = -1) {
 #define COLOR_FIT_VERTICALLY Qt::green
 #define COLOR_FIT_HORIZONTALLY Qt::cyan
 #define COLOR_CLOSE_FIT_VERTICALLY Qt::red
@@ -713,452 +721,408 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				}
 				drawVerticalAlignment(selPos, closestOfSelPos);
 
-				delta = -1;
-				closestOfPos = 0;
-				setSelPos(0, -1, -1);
-				if (m_WidgetWH)
-				{
-					y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I / 2; //mid of the main item
-					getClosestHorizontal(delta, closestOfPos);
-					setSelPos(y, closestOfPos, delta);
-				}
-				if (true)
-				{
-					y = specY != -1 ? specY : parsed.Parameter[1].I; //left of the main item
-					getClosestHorizontal(delta, closestOfPos);
-					if (delta < minDelta || minDelta < 0)
-					{
-						setSelPos(y, closestOfPos, delta);
-					}
-				}
-				if (m_WidgetWH)
-				{
-					y = specY != -1 ? specY : parsed.Parameter[1].I + parsed.Parameter[3].I; //right of the main item
-					getClosestHorizontal(delta, closestOfPos);
-					if (delta < minDelta || minDelta < 0)
-					{
-						setSelPos(y, closestOfPos, delta);
-					}
-				}
-				// Auto align horizontal
-				if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE && !autoAlignHorizontal)
-				{
-					int delta2 = closestOfSelPos - selPos;
-					selPos = closestOfSelPos;
-					autoAlignHorizontal = true;
-					mouseMoveEvent(m_MovingLastX, m_MovingLastY + delta2);
-				}
-				drawHorizontalAlignment(selPos, closestOfSelPos);
-			}
-		};
-		if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
-		{
-			m_WidgetXY = false;
-			m_WidgetGradient = false;
-			if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
-			{
-				QPen outer;
-				QPen inner;
-				outer.setWidth(3);
-				outer.setColor(QColor(Qt::black));
-				inner.setWidth(1);
-				inner.setColor(QColor(Qt::gray));
-				// Find first line
-				int firstLine = m_LineNumber;
-				for (int l = firstLine - 1; l > 0; --l)
-				{
-					const DlParsed &pa = m_LineEditor->getLine(l);
-					if (pa.IdLeft == 0 &&
-						(pa.IdRight == FTEDITOR_DL_BEGIN
-						|| pa.IdRight == FTEDITOR_DL_END
-						|| pa.IdRight == FTEDITOR_DL_RETURN
-						|| pa.IdRight == FTEDITOR_DL_JUMP))
-					{
-						break;
-					}
-					else
-					{
-						firstLine = l;
-					}
-				}
-				// Iterate over neighbouring vertices
-				for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
-				{
-					if (l == m_LineNumber) continue;
-					const DlParsed &pa = m_LineEditor->getLine(l);
-					const DlState &st = m_LineEditor->getState(l);
-					if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
-					{
-						int x, y;
-						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
-						{
-							x = pa.Parameter[0].I >> st.Graphics.VertexFormat;
-							y = pa.Parameter[1].I >> st.Graphics.VertexFormat;
-						}
-						else
-						{
-							x = pa.Parameter[0].U;
-							y = pa.Parameter[1].U;
-						}
-						x += st.Graphics.VertexTranslateX >> 4;
-						y += st.Graphics.VertexTranslateY >> 4;
-						p.setPen(outer);
-						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-						p.setPen(inner);
-						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-					}
-					else if (pa.IdRight == FTEDITOR_DL_BEGIN
-						|| pa.IdRight == FTEDITOR_DL_END
-						|| pa.IdRight == FTEDITOR_DL_RETURN
-						|| pa.IdRight == FTEDITOR_DL_JUMP)
-					{
-						break;
-					}
-				}
-				const DlState &state = m_LineEditor->getState(m_LineNumber);
-				// Show central vertex
-				int x, y;
+        delta = -1;
+        closestOfPos = 0;
+        setSelPos(0, -1, -1);
+        if (m_WidgetWH) {
+          y = specY != -1
+                  ? specY
+                  : parsed.Parameter[1].I +
+                        parsed.Parameter[3].I / 2;  // mid of the main item
+          getClosestHorizontal(delta, closestOfPos);
+          setSelPos(y, closestOfPos, delta);
+        }
+        if (true) {
+          y = specY != -1 ? specY
+                          : parsed.Parameter[1].I;  // left of the main item
+          getClosestHorizontal(delta, closestOfPos);
+          if (delta < minDelta || minDelta < 0) {
+            setSelPos(y, closestOfPos, delta);
+          }
+        }
+        if (m_WidgetWH) {
+          y = specY != -1
+                  ? specY
+                  : parsed.Parameter[1].I +
+                        parsed.Parameter[3].I;  // right of the main item
+          getClosestHorizontal(delta, closestOfPos);
+          if (delta < minDelta || minDelta < 0) {
+            setSelPos(y, closestOfPos, delta);
+          }
+        }
+        // Auto align horizontal
+        if (abs(selPos - closestOfSelPos) < AUTO_ALIGN_DISTANCE &&
+            !autoAlignHorizontal) {
+          int delta2 = closestOfSelPos - selPos;
+          selPos = closestOfSelPos;
+          autoAlignHorizontal = true;
+          mouseMoveEvent(m_MovingLastX, m_MovingLastY + delta2);
+        }
+        drawHorizontalAlignment(selPos, closestOfSelPos);
+      }
+    };
 
-				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F)
-				{
-					x = parsed.Parameter[0].I >> state.Graphics.VertexFormat;
-					y = parsed.Parameter[1].I >> state.Graphics.VertexFormat;
-				}
-				else
-				{
-					x = parsed.Parameter[0].U;
-					y = parsed.Parameter[1].U;
-				}
+    for (auto &line : m_SelectedLines) {
+      DlParsed parsed = m_LineEditor->getLine(line);
+      if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F ||
+          parsed.IdLeft == FTEDITOR_DL_VERTEX2II) {
+        m_WidgetXY = false;
+        m_WidgetGradient = false;
+        if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE) {
+          QPen outer;
+          QPen inner;
+          outer.setWidth(3);
+          outer.setColor(QColor(Qt::black));
+          inner.setWidth(1);
+          inner.setColor(QColor(Qt::gray));
+          // Find first line
+          int firstLine = line;
+          for (int l = firstLine - 1; l > 0; --l) {
+            const DlParsed &pa = m_LineEditor->getLine(l);
+            if (pa.IdLeft == 0 && (pa.IdRight == FTEDITOR_DL_BEGIN ||
+                                   pa.IdRight == FTEDITOR_DL_END ||
+                                   pa.IdRight == FTEDITOR_DL_RETURN ||
+                                   pa.IdRight == FTEDITOR_DL_JUMP)) {
+              break;
+            } else {
+              firstLine = l;
+            }
+          }
+          // Iterate over neighbouring vertices
+          for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l)  // FIXME
+          {
+            if (l == line) continue;
+            const DlParsed &pa = m_LineEditor->getLine(l);
+            const DlState &st = m_LineEditor->getState(l);
+            if (pa.IdLeft == FTEDITOR_DL_VERTEX2F ||
+                pa.IdLeft == FTEDITOR_DL_VERTEX2II) {
+              int x, y;
+              if (pa.IdLeft == FTEDITOR_DL_VERTEX2F) {
+                x = pa.Parameter[0].I >> st.Graphics.VertexFormat;
+                y = pa.Parameter[1].I >> st.Graphics.VertexFormat;
+              } else {
+                x = pa.Parameter[0].U;
+                y = pa.Parameter[1].U;
+              }
+              x += st.Graphics.VertexTranslateX >> 4;
+              y += st.Graphics.VertexTranslateY >> 4;
+              p.setPen(outer);
+              DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+              DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+              DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+              DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+              p.setPen(inner);
+              DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+              DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+              DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+              DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+            } else if (pa.IdRight == FTEDITOR_DL_BEGIN ||
+                       pa.IdRight == FTEDITOR_DL_END ||
+                       pa.IdRight == FTEDITOR_DL_RETURN ||
+                       pa.IdRight == FTEDITOR_DL_JUMP) {
+              break;
+            }
+          }
+          const DlState &state = m_LineEditor->getState(line);
+          // Show central vertex
+          int x, y;
 
-				x += state.Graphics.VertexTranslateX >> 4;
-				y += state.Graphics.VertexTranslateY >> 4;
+          if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F) {
+            x = parsed.Parameter[0].I >> state.Graphics.VertexFormat;
+            y = parsed.Parameter[1].I >> state.Graphics.VertexFormat;
+          } else {
+            x = parsed.Parameter[0].U;
+            y = parsed.Parameter[1].U;
+          }
 
-				if (m_isDrawAlignment)
-					drawAlignment(x, y);
+          x += state.Graphics.VertexTranslateX >> 4;
+          y += state.Graphics.VertexTranslateY >> 4;
 
-				p.setPen(outer);
-				DRAWLINE(x, y - 5, x, y - 12);
-				DRAWLINE(x, y + 5, x, y + 12);
-				DRAWLINE(x - 5, y, x - 12, y);
-				DRAWLINE(x + 5, y, x + 12, y);
-				DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-				DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-				DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-				DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-				inner.setColor(QColor(Qt::red));
-				p.setPen(inner);
-				DRAWLINE(x, y - 5, x, y - 12);
-				DRAWLINE(x, y + 5, x, y + 12);
-				DRAWLINE(x - 5, y, x - 12, y);
-				DRAWLINE(x + 5, y, x + 12, y);
-				DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-				DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-				DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-				DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+          if (m_isDrawAlignment) drawAlignment(parsed, x, y);
 
-			/*
+          p.setPen(outer);
+          DRAWLINE(x, y - 5, x, y - 12);
+          DRAWLINE(x, y + 5, x, y + 12);
+          DRAWLINE(x - 5, y, x - 12, y);
+          DRAWLINE(x + 5, y, x + 12, y);
+          DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+          DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+          DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+          DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+          inner.setColor(QColor(Qt::red));
+          p.setPen(inner);
+          DRAWLINE(x, y - 5, x, y - 12);
+          DRAWLINE(x, y + 5, x, y + 12);
+          DRAWLINE(x - 5, y, x - 12, y);
+          DRAWLINE(x + 5, y, x + 12, y);
+          DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+          DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+          DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+          DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 
-test dl
-*
-*
-*
-*
-CLEAR_COLOR_RGB(50, 80, 160)
-CLEAR(1, 1, 1)
-BEGIN(RECTS)
-VERTEX2II(100, 100, 0, 0)
-VERTEX2II(220, 150, 0, 0)
-END()
-*
+          /*
 
-CMD_LOGO()
-CLEAR_COLOR_RGB(50, 80, 160)
-CLEAR(1, 1, 1)
-BEGIN(RECTS)
-VERTEX2II(100, 100, 0, 0)
-MACRO(0) // VERTEX2II(220, 150, 0, 0)
-END()
-CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-CMD_SCREENSAVER()
-*
-*
-CLEAR_COLOR_RGB(50, 0, 0)
-CLEAR(1, 1, 1)
-CMD_SPINNER(240, 136, 1, 2)
-*
-*
-CMD_MEMZERO(0, 16320)
-*
-CMD_SKETCH(0, 0, 480, 272, 0, L1)
-BITMAP_SOURCE(0)
-BITMAP_LAYOUT(L1, 60, 270)
-BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 270)
-BEGIN(BITMAPS)
-VERTEX2II(0, 0, 0, 0)
-CMD_NUMBER(80, 60, 31, OPT_CENTER, 42)
+  test dl
+  *
+  *
+  *
+  *
+  CLEAR_COLOR_RGB(50, 80, 160)
+  CLEAR(1, 1, 1)
+  BEGIN(RECTS)
+  VERTEX2II(100, 100, 0, 0)
+  VERTEX2II(220, 150, 0, 0)
+  END()
+  *
+
+  CMD_LOGO()
+  CLEAR_COLOR_RGB(50, 80, 160)
+  CLEAR(1, 1, 1)
+  BEGIN(RECTS)
+  VERTEX2II(100, 100, 0, 0)
+  MACRO(0) // VERTEX2II(220, 150, 0, 0)
+  END()
+  CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+  CMD_SCREENSAVER()
+  *
+  *
+  CLEAR_COLOR_RGB(50, 0, 0)
+  CLEAR(1, 1, 1)
+  CMD_SPINNER(240, 136, 1, 2)
+  *
+  *
+  CMD_MEMZERO(0, 16320)
+  *
+  CMD_SKETCH(0, 0, 480, 272, 0, L1)
+  BITMAP_SOURCE(0)
+  BITMAP_LAYOUT(L1, 60, 270)
+  BITMAP_SIZE(NEAREST, BORDER, BORDER, 480, 270)
+  BEGIN(BITMAPS)
+  VERTEX2II(0, 0, 0, 0)
+  CMD_NUMBER(80, 60, 31, OPT_CENTER, 42)
 
 
 
 
-CLEAR_COLOR_RGB(50, 80, 160)
-CLEAR(1, 1, 1)
-BEGIN(LINES)
-MACRO(0)
-VERTEX2II(460, 253, 0, 0)
-MACRO(0)
-VERTEX2II(465, 15, 0, 0)
-MACRO(0)
-VERTEX2II(13, 251, 0, 0)
-MACRO(0)
-VERTEX2II(5, 10, 0, 0)
-END()
-CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-CMD_SCREENSAVER()
+  CLEAR_COLOR_RGB(50, 80, 160)
+  CLEAR(1, 1, 1)
+  BEGIN(LINES)
+  MACRO(0)
+  VERTEX2II(460, 253, 0, 0)
+  MACRO(0)
+  VERTEX2II(465, 15, 0, 0)
+  MACRO(0)
+  VERTEX2II(13, 251, 0, 0)
+  MACRO(0)
+  VERTEX2II(5, 10, 0, 0)
+  END()
+  CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+  CMD_SCREENSAVER()
 
 
-			 */
-			}
-		}
-		else if (parsed.IdLeft == 0xFFFFFF00 
-			&& (((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT)
-			|| ((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENTA)))
-		{
-			const DlState &state = m_LineEditor->getState(m_LineNumber);
+           */
+        }
+      } else if (parsed.IdLeft == 0xFFFFFF00 &&
+                 (((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENT) ||
+                  ((parsed.IdRight | 0xFFFFFF00) == CMD_GRADIENTA))) {
+        const DlState &state = m_LineEditor->getState(line);
 
-			m_WidgetXY = false;
-			m_WidgetGradient = true;
+        m_WidgetXY = false;
+        m_WidgetGradient = true;
 
-			// TODO: Cleanup drawing code
-			QPen outer;
-			QPen inner;
-			outer.setWidth(3);
-			outer.setColor(QColor(Qt::black));
-			inner.setWidth(1);
-			inner.setColor(QColor(Qt::gray));
+        // TODO: Cleanup drawing code
+        QPen outer;
+        QPen inner;
+        outer.setWidth(3);
+        outer.setColor(QColor(Qt::black));
+        inner.setWidth(1);
+        inner.setColor(QColor(Qt::gray));
 
-			// Show first vertex
-			int x, y;
-			x = parsed.Parameter[0].I;
-			y = parsed.Parameter[1].I;
-			x += state.Graphics.VertexTranslateX >> 4;
-			y += state.Graphics.VertexTranslateY >> 4;
-			p.setPen(outer);
-			DRAWLINE(x, y - 5, x, y - 12);
-			DRAWLINE(x, y + 5, x, y + 12);
-			DRAWLINE(x - 5, y, x - 12, y);
-			DRAWLINE(x + 5, y, x + 12, y);
-			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-			inner.setColor(QColor(Qt::red));
-			p.setPen(inner);
-			DRAWLINE(x, y - 5, x, y - 12);
-			DRAWLINE(x, y + 5, x, y + 12);
-			DRAWLINE(x - 5, y, x - 12, y);
-			DRAWLINE(x + 5, y, x + 12, y);
-			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+        // Show first vertex
+        int x, y;
+        x = parsed.Parameter[0].I;
+        y = parsed.Parameter[1].I;
+        x += state.Graphics.VertexTranslateX >> 4;
+        y += state.Graphics.VertexTranslateY >> 4;
+        p.setPen(outer);
+        DRAWLINE(x, y - 5, x, y - 12);
+        DRAWLINE(x, y + 5, x, y + 12);
+        DRAWLINE(x - 5, y, x - 12, y);
+        DRAWLINE(x + 5, y, x + 12, y);
+        DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+        DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+        DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+        DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+        inner.setColor(QColor(Qt::red));
+        p.setPen(inner);
+        DRAWLINE(x, y - 5, x, y - 12);
+        DRAWLINE(x, y + 5, x, y + 12);
+        DRAWLINE(x - 5, y, x - 12, y);
+        DRAWLINE(x + 5, y, x + 12, y);
+        DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+        DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+        DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+        DRAWLINE(x + 4, y - 4, x + 4, y + 4);
 
-			// Show second vertex
-			x = parsed.Parameter[3].I;
-			y = parsed.Parameter[4].I;
-			x += state.Graphics.VertexTranslateX >> 4;
-			y += state.Graphics.VertexTranslateY >> 4;
-			p.setPen(outer);
-			DRAWLINE(x, y - 5, x, y - 12);
-			DRAWLINE(x, y + 5, x, y + 12);
-			DRAWLINE(x - 5, y, x - 12, y);
-			DRAWLINE(x + 5, y, x + 12, y);
-			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-			inner.setColor(QColor(Qt::red));
-			p.setPen(inner);
-			DRAWLINE(x, y - 5, x, y - 12);
-			DRAWLINE(x, y + 5, x, y + 12);
-			DRAWLINE(x - 5, y, x - 12, y);
-			DRAWLINE(x + 5, y, x + 12, y);
-			DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-			DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-			DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-			DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-		}
-		else if (parsed.IdLeft == 0xFFFFFF00) // Coprocessor
-		{
-			m_WidgetGradient = false;
-			switch (parsed.IdRight | 0xFFFFFF00)
-			{
-				case CMD_TEXT:
-				case CMD_BUTTON:
-				case CMD_KEYS:
-				case CMD_PROGRESS:
-				case CMD_SLIDER:
-				case CMD_SCROLLBAR:
-				case CMD_TOGGLE:
-				case CMD_GAUGE:
-				case CMD_CLOCK:
-				case CMD_SPINNER:
-				case CMD_TRACK:
-				case CMD_DIAL:
-				case CMD_NUMBER:
-				case CMD_SKETCH:
-				case CMD_CSKETCH:
-				case CMD_ANIMFRAME:
-			    case CMD_ANIMFRAMERAM:
-				{
-					QPen outer;
-					QPen inner;
-					outer.setWidth(3);
-					outer.setColor(QColor(Qt::black));
-					inner.setWidth(1);
-					inner.setColor(QColor(Qt::red));
-					m_WidgetXY = true;
-					switch (parsed.IdRight | 0xFFFFFF00)
-					{
-					case CMD_BUTTON:
-					case CMD_KEYS:
-					case CMD_PROGRESS:
-					case CMD_SLIDER:
-					case CMD_SCROLLBAR:
-					case CMD_TRACK:
-					case CMD_SKETCH:
-					case CMD_CSKETCH:
-						m_WidgetWH = true;
-						m_WidgetR = false;
-						break;
-					case CMD_GAUGE:
-					case CMD_CLOCK:
-					case CMD_DIAL:
-						m_WidgetWH = false;
-						m_WidgetR = true;
-						break;
-					default:
-						m_WidgetWH = false;
-						m_WidgetR = false;
-						break;
-					}
+        // Show second vertex
+        x = parsed.Parameter[3].I;
+        y = parsed.Parameter[4].I;
+        x += state.Graphics.VertexTranslateX >> 4;
+        y += state.Graphics.VertexTranslateY >> 4;
+        p.setPen(outer);
+        DRAWLINE(x, y - 5, x, y - 12);
+        DRAWLINE(x, y + 5, x, y + 12);
+        DRAWLINE(x - 5, y, x - 12, y);
+        DRAWLINE(x + 5, y, x + 12, y);
+        DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+        DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+        DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+        DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+        inner.setColor(QColor(Qt::red));
+        p.setPen(inner);
+        DRAWLINE(x, y - 5, x, y - 12);
+        DRAWLINE(x, y + 5, x, y + 12);
+        DRAWLINE(x - 5, y, x - 12, y);
+        DRAWLINE(x + 5, y, x + 12, y);
+        DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+        DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+        DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+        DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+      } else if (parsed.IdLeft == 0xFFFFFF00)  // Coprocessor
+      {
+        m_WidgetGradient = false;
+        switch (parsed.IdRight | 0xFFFFFF00) {
+          case CMD_TEXT:
+          case CMD_BUTTON:
+          case CMD_KEYS:
+          case CMD_PROGRESS:
+          case CMD_SLIDER:
+          case CMD_SCROLLBAR:
+          case CMD_TOGGLE:
+          case CMD_GAUGE:
+          case CMD_CLOCK:
+          case CMD_SPINNER:
+          case CMD_TRACK:
+          case CMD_DIAL:
+          case CMD_NUMBER:
+          case CMD_SKETCH:
+          case CMD_CSKETCH:
+          case CMD_ANIMFRAME:
+          case CMD_ANIMFRAMERAM: {
+            QPen outer;
+            QPen inner;
+            outer.setWidth(3);
+            outer.setColor(QColor(Qt::black));
+            inner.setWidth(1);
+            inner.setColor(QColor(Qt::red));
+            m_WidgetXY = true;
+            isWidgetWHR(parsed, m_WidgetWH, m_WidgetR);
 
-					const DlState &state = m_LineEditor->getState(m_LineNumber);
-				    if (m_isDrawAlignment)
-						drawAlignment();
-				    int x = parsed.Parameter[0].I;
-				    int y = parsed.Parameter[1].I;
-				    x += state.Graphics.VertexTranslateX >> 4;
-				    y += state.Graphics.VertexTranslateY >> 4;
+            const DlState &state = m_LineEditor->getState(line);
+            if (m_isDrawAlignment) drawAlignment(parsed);
+            int x = parsed.Parameter[0].I;
+            int y = parsed.Parameter[1].I;
+            x += state.Graphics.VertexTranslateX >> 4;
+            y += state.Graphics.VertexTranslateY >> 4;
 
-					if (m_isDrawAlignmentHorizontal)
-				    {
-					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
-					    DRAWLINE(0, y, hsize(), y);
-					}
+            if (m_isDrawAlignmentHorizontal) {
+              p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+              DRAWLINE(0, y, hsize(), y);
+            }
 
-					if (m_isDrawAlignmentVertical)
-				    {
-					    p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
-					    DRAWLINE(x, 0, x, vsize());
-				    }
+            if (m_isDrawAlignmentVertical) {
+              p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
+              DRAWLINE(x, 0, x, vsize());
+            }
 
-// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-					// Draw...
-					if (m_WidgetWH == false && m_WidgetR == false)
-					{
-						// Only have vertex control
-						p.setPen(outer);
-						DRAWLINE(x, y - 5, x, y - 12);
-						DRAWLINE(x, y + 5, x, y + 12);
-						DRAWLINE(x - 5, y, x - 12, y);
-						DRAWLINE(x + 5, y, x + 12, y);
-						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-						p.setPen(inner);
-						DRAWLINE(x, y - 5, x, y - 12);
-						DRAWLINE(x, y + 5, x, y + 12);
-						DRAWLINE(x - 5, y, x - 12, y);
-						DRAWLINE(x + 5, y, x + 12, y);
-						DRAWLINE(x - 4, y - 4, x + 4, y - 4);
-						DRAWLINE(x - 4, y + 4, x + 4, y + 4);
-						DRAWLINE(x - 4, y - 4, x - 4, y + 4);
-						DRAWLINE(x + 4, y - 4, x + 4, y + 4);
-					}
-					else
-					{
-						int w, h;
-						if (m_WidgetWH)
-						{
-							w = parsed.Parameter[2].I;
-							h = parsed.Parameter[3].I;
-						}
-						else
-						{
-							x = x - parsed.Parameter[2].I;
-							y = y - parsed.Parameter[2].I;
-							w = parsed.Parameter[2].I * 2;
-							h = parsed.Parameter[2].I * 2;
-						}
-						int x1 = x;
-						int y1 = y;
-						int x2 = x + w;
-						int y2 = y + h;
-						p.setPen(outer);
-						DRAWRECT(x, y, w, h);
-						DRAWRECT(x1 - 1, y1 - 1, 2, 2);
-						DRAWRECT(x1 - 1, y2 - 1, 2, 2);
-						DRAWRECT(x2 - 1, y2 - 1, 2, 2);
-						DRAWRECT(x2 - 1, y1 - 1, 2, 2);
-						p.setPen(inner);
-						DRAWRECT(x, y, w, h);
-						DRAWRECT(x1 - 1, y1 - 1, 2, 2);
-						DRAWRECT(x1 - 1, y2 - 1, 2, 2);
-						DRAWRECT(x2 - 1, y2 - 1, 2, 2);
-						DRAWRECT(x2 - 1, y1 - 1, 2, 2);
-					}
-					break;
-				}
-				default:
-				{
-					m_WidgetXY = false;
-					break;
-				}
-			}
-		}
-		else
-		{
-			m_WidgetXY = false;
-			m_WidgetGradient = false;
-		}
-	}
-	if (m_TraceEnabled)
-	{
-		QPen outer;
-		QPen inner;
-		outer.setWidth(3);
-		outer.setColor(QColor(Qt::black));
-		inner.setWidth(1);
-		inner.setColor(QColor(Qt::green).lighter(160));
-		p.setPen(outer);
-		DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
-		p.setPen(inner);
-		DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
-		DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
-		DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
-		DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
-	}
-	p.end();
+            // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+            // Draw...
+            if (m_WidgetWH == false && m_WidgetR == false) {
+              // Only have vertex control
+              p.setPen(outer);
+              DRAWLINE(x, y - 5, x, y - 12);
+              DRAWLINE(x, y + 5, x, y + 12);
+              DRAWLINE(x - 5, y, x - 12, y);
+              DRAWLINE(x + 5, y, x + 12, y);
+              DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+              DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+              DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+              DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+              p.setPen(inner);
+              DRAWLINE(x, y - 5, x, y - 12);
+              DRAWLINE(x, y + 5, x, y + 12);
+              DRAWLINE(x - 5, y, x - 12, y);
+              DRAWLINE(x + 5, y, x + 12, y);
+              DRAWLINE(x - 4, y - 4, x + 4, y - 4);
+              DRAWLINE(x - 4, y + 4, x + 4, y + 4);
+              DRAWLINE(x - 4, y - 4, x - 4, y + 4);
+              DRAWLINE(x + 4, y - 4, x + 4, y + 4);
+            } else {
+              int w, h;
+              if (m_WidgetWH) {
+                w = parsed.Parameter[2].I;
+                h = parsed.Parameter[3].I;
+              } else {
+                x = x - parsed.Parameter[2].I;
+                y = y - parsed.Parameter[2].I;
+                w = parsed.Parameter[2].I * 2;
+                h = parsed.Parameter[2].I * 2;
+              }
+              int x1 = x;
+              int y1 = y;
+              int x2 = x + w;
+              int y2 = y + h;
+              p.setPen(outer);
+              DRAWRECT(x, y, w, h);
+              DRAWRECT(x1 - 1, y1 - 1, 2, 2);
+              DRAWRECT(x1 - 1, y2 - 1, 2, 2);
+              DRAWRECT(x2 - 1, y2 - 1, 2, 2);
+              DRAWRECT(x2 - 1, y1 - 1, 2, 2);
+              p.setPen(inner);
+              DRAWRECT(x, y, w, h);
+              DRAWRECT(x1 - 1, y1 - 1, 2, 2);
+              DRAWRECT(x1 - 1, y2 - 1, 2, 2);
+              DRAWRECT(x2 - 1, y2 - 1, 2, 2);
+              DRAWRECT(x2 - 1, y1 - 1, 2, 2);
+            }
+            break;
+          }
+          default: {
+            m_WidgetXY = false;
+            break;
+          }
+        }
+      } else {
+        m_WidgetXY = false;
+        m_WidgetGradient = false;
+      }
+    }
+  }
+  if (m_DrawMultipleSelection) {
+    p.fillRect(m_FirstPoint.x(), m_FirstPoint.y(),
+               m_SecondPoint.x() - m_FirstPoint.x(),
+               m_SecondPoint.y() - m_FirstPoint.y(),
+               QColor(0x99, 0x9d, 0xa3, 0x9F));
+  }
+  if (m_TraceEnabled) {
+    QPen outer;
+    QPen inner;
+    outer.setWidth(3);
+    outer.setColor(QColor(Qt::black));
+    inner.setWidth(1);
+    inner.setColor(QColor(Qt::green).lighter(160));
+    p.setPen(outer);
+    DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+    DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+    DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+    DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+    p.setPen(inner);
+    DRAWLINE(m_TraceX, m_TraceY - 7, m_TraceX, m_TraceY - 14);
+    DRAWLINE(m_TraceX, m_TraceY + 7, m_TraceX, m_TraceY + 14);
+    DRAWLINE(m_TraceX - 7, m_TraceY, m_TraceX - 14, m_TraceY);
+    DRAWLINE(m_TraceX + 7, m_TraceY, m_TraceX + 14, m_TraceY);
+  }
+  p.end();
 
 	// Update pointer method
 	updatePointerMethod();
@@ -1167,16 +1131,23 @@ CMD_SCREENSAVER()
 	m_MainWindow->inspector()->frameQt();
 }
 
-void InteractiveViewport::setEditorLine(DlEditor *editor, int line)
-{
-	if (m_MouseMovingVertex && m_LineEditor)
-	{
-		m_LineEditor->codeEditor()->endUndoCombine();
-	}
-	m_PreferTraceCursor = false;
-	m_LineEditor = editor;
-	m_LineNumber = line;
-	// printf("Set line editor\n");
+void InteractiveViewport::setEditorLine(DlEditor *editor, int line,
+                                        bool multiple) {
+  if (m_MouseMovingVertex && m_LineEditor) {
+    m_LineEditor->codeEditor()->endUndoCombine();
+  }
+  m_PreferTraceCursor = false;
+  m_LineEditor = editor;
+  if (!multiple) {
+    m_SelectedLines.clear();
+  }
+  const DlParsed &parsed = m_LineEditor->getLine(line);
+  if (!m_SelectedLines.contains(line) && isSelectable(parsed)) {
+    m_SelectedLines.append(line);
+    debugLog(QString("Selected list | Append line: %1").arg(line));
+  }
+  emit selectedLinesChanged(m_SelectedLines);
+  m_LineNumber = line;
 }
 
 void InteractiveViewport::unsetEditorLine()
@@ -1215,298 +1186,271 @@ void InteractiveViewport::editChecked()
 	m_Insert->setChecked(false);
 }
 
-void InteractiveViewport::updatePointerMethod()
-{
-	if (m_MouseTouch || m_MouseMovingVertex || m_MouseMovingWidget)
-	{
-		// Cannot change now
-	}
-	else
-	{
-		if (m_MainWindow->waitingCoprocessorAnimation())
-			goto PreferTouchCursor;
-		if (m_Insert->isChecked())
-		{
-			if (m_LineEditor)
-			{
-				const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-				if (isValidInsert(parsed))
-				{
-					// Special case override cursur (not a filter), strange...
-					m_PointerMethod = POINTER_INSERT;
-					setCursor(Qt::CrossCursor);
-					return;
-				}
-				else
-				{
-					printf("Uncheck insert\n");
-					m_Insert->setChecked(false);
-				}
-			}
-			else
-			{
-				printf("Force uncheck insert, no line editor\n");
-				m_Insert->setChecked(false);
-			}
-		}
-		if (m_PreferTraceCursor)
-		{
-			goto PreferTraceCursor;
-		}
-		// Vertex movement
-		if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE)
-		{
-			if (m_LineEditor)
-			{
-				m_MouseOverVertex = false;
-				m_MouseOverVertexLine = -1;
-				const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-				if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F || parsed.IdLeft == FTEDITOR_DL_VERTEX2II)
-				{
-					int firstLine = m_LineNumber;
-					int vertexType = -1;
-					for (int l = firstLine - 1; l > 0; --l)
-					{
-						const DlParsed &pa = m_LineEditor->getLine(l);
-						if (pa.IdLeft == 0 &&
-							(pa.IdRight == FTEDITOR_DL_BEGIN
-							|| pa.IdRight == FTEDITOR_DL_END
-							|| pa.IdRight == FTEDITOR_DL_RETURN
-							|| pa.IdRight == FTEDITOR_DL_JUMP))
-						{
-							if (pa.IdRight == FTEDITOR_DL_BEGIN)
-								vertexType = pa.Parameter[0].I;
-							break;
-						}
-						else
-						{
-							firstLine = l;
-						}
-					}
-					// Iterate over neighbouring vertices
-					for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
-					{
-						const DlParsed &pa = m_LineEditor->getLine(l);
-						if (pa.IdLeft == FTEDITOR_DL_VERTEX2F || pa.IdLeft == FTEDITOR_DL_VERTEX2II)
-						{
-							const DlState &state = m_LineEditor->getState(l);
-							int x, y;
-							if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
-							{
-								x = pa.Parameter[0].I >> state.Graphics.VertexFormat;
-								y = pa.Parameter[1].I >> state.Graphics.VertexFormat;
-							}
-							else
-							{
-								x = pa.Parameter[0].U;
-								y = pa.Parameter[1].U;
-							}
-							x += state.Graphics.VertexTranslateX >> 4;
-							y += state.Graphics.VertexTranslateY >> 4;
+void InteractiveViewport::updatePointerMethod() {
+  if (m_MouseTouch || m_MouseMovingVertex || m_MouseMovingWidget) {
+    // Cannot change now
+  } else {
+    if (m_MainWindow->waitingCoprocessorAnimation()) goto PreferTouchCursor;
+    if (m_Insert->isChecked()) {
+      if (m_LineEditor) {
+        const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
+        if (isValidInsert(parsed)) {
+          // Special case override cursur (not a filter), strange...
+          m_PointerMethod = POINTER_INSERT;
+          setCursor(Qt::CrossCursor);
+          return;
+        } else {
+          printf("Uncheck insert\n");
+          m_Insert->setChecked(false);
+        }
+      } else {
+        printf("Force uncheck insert, no line editor\n");
+        m_Insert->setChecked(false);
+      }
+    }
+    if (m_PreferTraceCursor) {
+      goto PreferTraceCursor;
+    }
+    // Vertex movement
+    if (m_PointerFilter & POINTER_EDIT_VERTEX_MOVE) {
+      if (m_LineEditor) {
+        for (auto &line : m_SelectedLines) {
+          m_MouseOverVertex = false;
+          m_MouseOverVertexLine = -1;
+          const DlParsed &parsed = m_LineEditor->getLine(line);
+          if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F ||
+              parsed.IdLeft == FTEDITOR_DL_VERTEX2II) {
+            int firstLine = line;
+            int vertexType = -1;
+            for (int l = firstLine - 1; l > 0; --l) {
+              const DlParsed &pa = m_LineEditor->getLine(l);
+              if (pa.IdLeft == 0 && (pa.IdRight == FTEDITOR_DL_BEGIN ||
+                                     pa.IdRight == FTEDITOR_DL_END ||
+                                     pa.IdRight == FTEDITOR_DL_RETURN ||
+                                     pa.IdRight == FTEDITOR_DL_JUMP)) {
+                if (pa.IdRight == FTEDITOR_DL_BEGIN)
+                  vertexType = pa.Parameter[0].I;
+                break;
+              } else {
+                firstLine = l;
+              }
+            }
+            // Iterate over neighbouring vertices
+            for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l)  // FIXME
+            {
+              const DlParsed &pa = m_LineEditor->getLine(l);
+              if (pa.IdLeft == FTEDITOR_DL_VERTEX2F ||
+                  pa.IdLeft == FTEDITOR_DL_VERTEX2II) {
+                const DlState &state = m_LineEditor->getState(l);
+                int x, y;
+                if (pa.IdLeft == FTEDITOR_DL_VERTEX2F) {
+                  x = pa.Parameter[0].I >> state.Graphics.VertexFormat;
+                  y = pa.Parameter[1].I >> state.Graphics.VertexFormat;
+                } else {
+                  x = pa.Parameter[0].U;
+                  y = pa.Parameter[1].U;
+                }
+                x += state.Graphics.VertexTranslateX >> 4;
+                y += state.Graphics.VertexTranslateY >> 4;
 
-							// Mouse over
-							if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
-							{
-								m_MouseOverVertex = true;
-								m_MouseOverVertexLine = l;
-								if (l == m_LineNumber) break; // Currently selected line always has preference
-							}
-						}
-						else if (pa.IdRight == FTEDITOR_DL_BEGIN
-							|| pa.IdRight == FTEDITOR_DL_END
-							|| pa.IdRight == FTEDITOR_DL_RETURN
-							|| pa.IdRight == FTEDITOR_DL_JUMP)
-						{
-							break;
-						}
-					}
-					if (m_MouseOverVertex)
-					{
-						setCursor(Qt::SizeAllCursor);
-						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
-						return;
-					}
-					if ((vertexType == BITMAPS || vertexType == POINTS) &&
-						((m_MouseStackValid && m_LineEditor->isCoprocessor() && m_MouseStackCmdTop == m_LineNumber)
-						|| (m_MouseStackValid && !m_LineEditor->isCoprocessor() && m_MouseStackDlTop == m_LineNumber)))
-					{
-						m_MouseOverVertex = true;
-						m_MouseOverVertexLine = m_LineNumber;
-						setCursor(Qt::SizeAllCursor);
-						m_PointerMethod = POINTER_EDIT_VERTEX_MOVE; // move vertex
-						return;
-					}
-				}
-			}
-		}
-		// Gradient move
-		if (m_PointerFilter & POINTER_EDIT_GRADIENT_MOVE)
-		{
-			if (m_LineEditor)
-			{
-				if (m_WidgetGradient)
-				{
-					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-					const DlState &state = m_LineEditor->getState(m_LineNumber);
-					int x, y;
-					x = parsed.Parameter[0].I;
-					y = parsed.Parameter[1].I;
-					x += state.Graphics.VertexTranslateX >> 4;
-					y += state.Graphics.VertexTranslateY >> 4;
-					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
-					{
-						setCursor(Qt::SizeAllCursor);
-						m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_1;
-						return;
-					}
-					x = parsed.Parameter[3].I;
-					y = parsed.Parameter[4].I;
-					x += state.Graphics.VertexTranslateX >> 4;
-					y += state.Graphics.VertexTranslateY >> 4;
-					if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4)
-					{
-						setCursor(Qt::SizeAllCursor);
-						m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_2;
-						return;
-					}
-				}
-			}
-		}
-		// Widget movement
-		if (m_PointerFilter & POINTER_EDIT_WIDGET_MOVE)
-		{
-			if (m_LineEditor)
-			{
-				if (m_WidgetXY)
-				{
-					const DlParsed &parsed = m_LineEditor->getLine(m_LineNumber);
-					const DlState &state = m_LineEditor->getState(m_LineNumber);
-					int x = parsed.Parameter[0].I;
-					int y = parsed.Parameter[1].I;
-					x += state.Graphics.VertexTranslateX >> 4;
-					y += state.Graphics.VertexTranslateY >> 4;
-					if (m_WidgetWH || m_WidgetR)
-					{
-						int w, h;
-						if (m_WidgetWH)
-						{
-							w = parsed.Parameter[2].I;
-							h = parsed.Parameter[3].I;
-						}
-						else
-						{
-							x = x - parsed.Parameter[2].I;
-							y = y - parsed.Parameter[2].I;
-							w = parsed.Parameter[2].I * 2;
-							h = parsed.Parameter[2].I * 2;
-						}
-						int x1 = x;
-						int y1 = y;
-						int x2 = x + w;
-						int y2 = y + h;
-						m_PointerMethod = 0;
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_TOP)
-						{
-							if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y1 + 3)
-							{
-								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_TOP;
-							}
-						}
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-						{
-							if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 && y2 - 3 < m_MouseY && m_MouseY < y2 + 3)
-							{
-								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_BOTTOM;
-							}
-						}
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_LEFT)
-						{
-							if (x1 - 3 < m_MouseX && m_MouseX < x1 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
-							{
-								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_LEFT;
-							}
-						}
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_RIGHT)
-						{
-							if (x2 - 3 < m_MouseX && m_MouseX < x2 + 3 && y1 - 3 < m_MouseY && m_MouseY < y2 + 3)
-							{
-								m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_RIGHT;
-							}
-						}
-						if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPLEFT
-							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT)
-							setCursor(Qt::SizeFDiagCursor);
-						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPRIGHT
-							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT)
-							setCursor(Qt::SizeBDiagCursor);
-						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOP
-							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-							setCursor(Qt::SizeVerCursor);
-						else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_LEFT
-							|| m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_RIGHT)
-							setCursor(Qt::SizeHorCursor);
-						if (m_PointerMethod)
-							return;
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
-						{
-							if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY && m_MouseY < y2)
-							{
-								// m_MouseOverWidget = true;
-								setCursor(Qt::SizeAllCursor);
-								m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
-								return;
-								// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-							}
-						}
-					}
-					else
-					{
-						if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE)
-						{
-							if ((m_MouseStackValid && m_LineEditor->isCoprocessor() && m_MouseStackCmdTop == m_LineNumber)
-								|| (m_MouseStackValid && !m_LineEditor->isCoprocessor() && m_MouseStackDlTop == m_LineNumber)
-								|| (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY && m_MouseY < y + 4))
-							{
-								// m_MouseOverWidget = true;
-								setCursor(Qt::SizeAllCursor);
-								m_PointerMethod = POINTER_EDIT_WIDGET_TRANSLATE; // translate widget
-								return;
-								// CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-							}
-						}
-					}
-				}
-			}
-		}
-		// Stack selection
-		if (m_PointerFilter & POINTER_EDIT_STACK_SELECT)
-		{
-			setCursor(Qt::ArrowCursor);
-			m_PointerMethod = POINTER_EDIT_STACK_SELECT; // Stack selection
-			return;
-		}
-	PreferTouchCursor:
-		if (m_PointerFilter & POINTER_TOUCH)
-		{
-			// TODO: Get the TAG from stack trace and show hand or not depending on TAG value (maybe also show tootip with tag?)
-			setCursor(Qt::PointingHandCursor);
-			m_PointerMethod = POINTER_TOUCH;
-			return;
-		}
-		if (m_MainWindow->waitingCoprocessorAnimation())
-			goto NoCursor;
-	PreferTraceCursor:
-		if (m_PointerFilter & POINTER_TRACE)
-		{
-			setCursor(Qt::CrossCursor);
-			m_PointerMethod = POINTER_TRACE;
-			return;
-		}
-	NoCursor:
-		setCursor(Qt::ArrowCursor);
-		m_PointerMethod = 0;
-		return;
-	}
+                // Mouse over
+                if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY &&
+                    m_MouseY < y + 4) {
+                  m_MouseOverVertex = true;
+                  m_MouseOverVertexLine = l;
+                  if (l == line)
+                    break;  // Currently selected line always has preference
+                }
+              } else if (pa.IdRight == FTEDITOR_DL_BEGIN ||
+                         pa.IdRight == FTEDITOR_DL_END ||
+                         pa.IdRight == FTEDITOR_DL_RETURN ||
+                         pa.IdRight == FTEDITOR_DL_JUMP) {
+                break;
+              }
+            }
+            if (m_MouseOverVertex) {
+              setCursor(Qt::SizeAllCursor);
+              m_PointerMethod = POINTER_EDIT_VERTEX_MOVE;  // move vertex
+              return;
+            }
+            if ((vertexType == BITMAPS || vertexType == POINTS) &&
+                ((m_MouseStackValid && m_LineEditor->isCoprocessor() &&
+                  m_MouseStackCmdTop == line) ||
+                 (m_MouseStackValid && !m_LineEditor->isCoprocessor() &&
+                  m_MouseStackDlTop == line))) {
+              m_MouseOverVertex = true;
+              m_MouseOverVertexLine = line;
+              setCursor(Qt::SizeAllCursor);
+              m_PointerMethod = POINTER_EDIT_VERTEX_MOVE;  // move vertex
+              return;
+            }
+          }
+        }
+      }
+    }
+    // Gradient move
+    if (m_PointerFilter & POINTER_EDIT_GRADIENT_MOVE) {
+      if (m_LineEditor) {
+        for (auto &line : m_SelectedLines) {
+          const DlParsed &parsed = m_LineEditor->getLine(line);
+          if (isWidgetGradient(parsed)) {
+            const DlState &state = m_LineEditor->getState(line);
+            int x, y;
+            x = parsed.Parameter[0].I;
+            y = parsed.Parameter[1].I;
+            x += state.Graphics.VertexTranslateX >> 4;
+            y += state.Graphics.VertexTranslateY >> 4;
+            if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY &&
+                m_MouseY < y + 4) {
+              setCursor(Qt::SizeAllCursor);
+              m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_1;
+              return;
+            }
+            x = parsed.Parameter[3].I;
+            y = parsed.Parameter[4].I;
+            x += state.Graphics.VertexTranslateX >> 4;
+            y += state.Graphics.VertexTranslateY >> 4;
+            if (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY &&
+                m_MouseY < y + 4) {
+              setCursor(Qt::SizeAllCursor);
+              m_PointerMethod = POINTER_EDIT_GRADIENT_MOVE_2;
+              return;
+            }
+          }
+        }
+      }
+    }
+    // Widget movement
+    if (m_PointerFilter & POINTER_EDIT_WIDGET_MOVE) {
+      if (m_LineEditor) {
+        for (auto &line : m_SelectedLines) {
+          const DlParsed &parsed = m_LineEditor->getLine(line);
+          if (isWidgetXY(parsed)) {
+            bool widgetWH, widgetR;
+            isWidgetWHR(parsed, widgetWH, widgetR);
+            if (widgetWH || widgetR) {
+              const DlState &state = m_LineEditor->getState(line);
+              int x = parsed.Parameter[0].I +
+                      (state.Graphics.VertexTranslateX >> 4);
+              int y = parsed.Parameter[1].I +
+                      (state.Graphics.VertexTranslateY >> 4);
+              int w, h;
+              if (widgetWH) {
+                w = parsed.Parameter[2].I;
+                h = parsed.Parameter[3].I;
+              } else {
+                x = x - parsed.Parameter[2].I;
+                y = y - parsed.Parameter[2].I;
+                w = parsed.Parameter[2].I * 2;
+                h = parsed.Parameter[2].I * 2;
+              }
+              int x1 = x;
+              int y1 = y;
+              int x2 = x + w;
+              int y2 = y + h;
+              m_PointerMethod = 0;
+              if (isSingleSelect()) {
+                if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_TOP) {
+                  if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 &&
+                      y1 - 3 < m_MouseY && m_MouseY < y1 + 3) {
+                    m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_TOP;
+                  }
+                }
+                if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_BOTTOM) {
+                  if (x1 - 3 < m_MouseX && m_MouseX < x2 + 3 &&
+                      y2 - 3 < m_MouseY && m_MouseY < y2 + 3) {
+                    m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_BOTTOM;
+                  }
+                }
+                if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_LEFT) {
+                  if (x1 - 3 < m_MouseX && m_MouseX < x1 + 3 &&
+                      y1 - 3 < m_MouseY && m_MouseY < y2 + 3) {
+                    m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_LEFT;
+                  }
+                }
+                if (m_PointerFilter & POINTER_EDIT_WIDGET_SIZE_RIGHT) {
+                  if (x2 - 3 < m_MouseX && m_MouseX < x2 + 3 &&
+                      y1 - 3 < m_MouseY && m_MouseY < y2 + 3) {
+                    m_PointerMethod |= POINTER_EDIT_WIDGET_SIZE_RIGHT;
+                  }
+                }
+              }
+
+              if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPLEFT ||
+                  m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMRIGHT)
+                setCursor(Qt::SizeFDiagCursor);
+              else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOPRIGHT ||
+                       m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOMLEFT)
+                setCursor(Qt::SizeBDiagCursor);
+              else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_TOP ||
+                       m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_BOTTOM)
+                setCursor(Qt::SizeVerCursor);
+              else if (m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_LEFT ||
+                       m_PointerMethod == POINTER_EDIT_WIDGET_SIZE_RIGHT)
+                setCursor(Qt::SizeHorCursor);
+              if (m_PointerMethod) return;
+              if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE) {
+                if (x1 < m_MouseX && m_MouseX < x2 && y1 < m_MouseY &&
+                    m_MouseY < y2) {
+                  // m_MouseOverWidget = true;
+                  setCursor(Qt::SizeAllCursor);
+                  m_PointerMethod =
+                      POINTER_EDIT_WIDGET_TRANSLATE;  // translate widget
+                  return;
+                  // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+                }
+              }
+            } else {
+              if (m_PointerFilter & POINTER_EDIT_WIDGET_TRANSLATE) {
+                const DlState &state = m_LineEditor->getState(line);
+                int x = parsed.Parameter[0].I +
+                        (state.Graphics.VertexTranslateX >> 4);
+                int y = parsed.Parameter[1].I +
+                        (state.Graphics.VertexTranslateY >> 4);
+                if ((m_MouseStackValid && m_LineEditor->isCoprocessor() &&
+                     m_MouseStackCmdTop == line) ||
+                    (m_MouseStackValid && !m_LineEditor->isCoprocessor() &&
+                     m_MouseStackDlTop == line) ||
+                    (x - 4 < m_MouseX && m_MouseX < x + 4 && y - 4 < m_MouseY &&
+                     m_MouseY < y + 4)) {
+                  // m_MouseOverWidget = true;
+                  setCursor(Qt::SizeAllCursor);
+                  m_PointerMethod =
+                      POINTER_EDIT_WIDGET_TRANSLATE;  // translate widget
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    // Stack selection
+    if (m_PointerFilter & POINTER_EDIT_STACK_SELECT) {
+      setCursor(Qt::ArrowCursor);
+      m_PointerMethod = POINTER_EDIT_STACK_SELECT;  // Stack selection
+      return;
+    }
+  PreferTouchCursor:
+    if (m_PointerFilter & POINTER_TOUCH) {
+      // TODO: Get the TAG from stack trace and show hand or not depending on
+      // TAG value (maybe also show tootip with tag?)
+      setCursor(Qt::PointingHandCursor);
+      m_PointerMethod = POINTER_TOUCH;
+      return;
+    }
+    if (m_MainWindow->waitingCoprocessorAnimation()) goto NoCursor;
+  PreferTraceCursor:
+    if (m_PointerFilter & POINTER_TRACE) {
+      setCursor(Qt::CrossCursor);
+      m_PointerMethod = POINTER_TRACE;
+      return;
+    }
+  NoCursor:
+    setCursor(Qt::ArrowCursor);
+    m_PointerMethod = 0;
+    return;
+  }
 }
 
 // CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
@@ -1590,16 +1534,22 @@ int32_t InteractiveViewport::mappingX(QDropEvent *e)
 	return ((p.x() - screenLeft()) * 16) / screenScale();
 }
 
-int32_t InteractiveViewport::mappingY(QDropEvent *e)
-{
-	QPoint p = e->position().toPoint();
-	return ((p.y() - screenTop()) * 16) / screenScale();
+int32_t InteractiveViewport::mappingX(int x) {
+  return ((x - screenLeft()) * 16) / screenScale();
 }
 
-int32_t InteractiveViewport::mappingX(QSinglePointEvent *e)
-{
-	QPoint p = EPOSPOINT(e);
-	return ((p.x() - screenLeft()) * 16) / screenScale();
+int32_t InteractiveViewport::mappingY(QDropEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.y() - screenTop()) * 16) / screenScale();
+}
+
+int32_t InteractiveViewport::mappingY(int y) {
+  return ((y - screenTop()) * 16) / screenScale();
+}
+
+int32_t InteractiveViewport::mappingX(QSinglePointEvent *e) {
+  QPoint p = e->position().toPoint();
+  return ((p.x() - screenLeft()) * 16) / screenScale();
 }
 
 int32_t InteractiveViewport::mappingY(QSinglePointEvent *e)
@@ -1608,399 +1558,434 @@ int32_t InteractiveViewport::mappingY(QSinglePointEvent *e)
 	return ((p.y() - screenTop()) * 16) / screenScale();
 }
 
-void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY, Qt::KeyboardModifiers km)
-{
-	// printf("pos: %i, %i\n", EPOSPOINT(e).x(), EPOSPOINT(e).y());
-	m_NextMouseX = mouseX;
-	m_NextMouseY = mouseY;
-	fetchColorAsync(mouseX, mouseY);
+void InteractiveViewport::selectItems() {
+  int lineCount = m_LineEditor->getLineCount();
+  m_SelectedLines.clear();
+  emit selectedLinesChanged(m_SelectedLines);
+  for (int line = 0; line < lineCount; line++) {
+    const DlParsed &parsed = m_LineEditor->getLine(line);
+    const DlState &state = m_LineEditor->getState(line);
+    int x = 0;
+    int y = 0;
+    if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F) {
+      x = parsed.Parameter[0].I >> state.Graphics.VertexFormat;
+      y = parsed.Parameter[1].I >> state.Graphics.VertexFormat;
+      x += state.Graphics.VertexTranslateX >> 4;
+      y += state.Graphics.VertexTranslateY >> 4;
+    } else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II) {
+      x = parsed.Parameter[0].U;
+      y = parsed.Parameter[1].U;
+      x += state.Graphics.VertexTranslateX >> 4;
+      y += state.Graphics.VertexTranslateY >> 4;
+    } else if (parsed.IdLeft == 0xFFFFFF00) {
+      switch (parsed.IdRight | 0xFFFFFF00) {
+        case CMD_TEXT:
+        case CMD_BUTTON:
+        case CMD_KEYS:
+        case CMD_PROGRESS:
+        case CMD_SLIDER:
+        case CMD_SCROLLBAR:
+        case CMD_TOGGLE:
+        case CMD_GAUGE:
+        case CMD_CLOCK:
+        case CMD_SPINNER:
+        case CMD_TRACK:
+        case CMD_DIAL:
+        case CMD_NUMBER:
+        case CMD_SKETCH:
+        case CMD_CSKETCH:
+        case CMD_ANIMFRAME:
+        case CMD_ANIMFRAMERAM: {
+          x = parsed.Parameter[0].I;
+          y = parsed.Parameter[1].I;
+          x += state.Graphics.VertexTranslateX >> 4;
+          y += state.Graphics.VertexTranslateY >> 4;
+        }
+      }
+    }
+    if (isSelectable(parsed)) {
+      QPoint topRight;
+      QPoint botLeft;
+      topRight.setX(mappingX(m_FirstPoint.x() > m_SecondPoint.x()
+                                 ? m_FirstPoint.x()
+                                 : m_SecondPoint.x()));
+      topRight.setY(mappingY(m_FirstPoint.y() < m_SecondPoint.y()
+                                 ? m_FirstPoint.y()
+                                 : m_SecondPoint.y()));
+      botLeft.setX(mappingX(m_FirstPoint.x() < m_SecondPoint.x()
+                                ? m_FirstPoint.x()
+                                : m_SecondPoint.x()));
+      botLeft.setY(mappingY(m_FirstPoint.y() > m_SecondPoint.y()
+                                ? m_FirstPoint.y()
+                                : m_SecondPoint.y()));
+      // Check if this item is inside the rectangle
+      if (x > botLeft.x() && x < topRight.x() && y > topRight.y() &&
+          y < botLeft.y()) {
+        setEditorLine(m_LineEditor, line, true);
+      }
+    }
+  }
+}
+
+bool InteractiveViewport::isSingleSelect() {
+  return m_SelectedLines.size() == 1;
+}
+
+void InteractiveViewport::isWidgetWHR(const DlParsed &parsed, bool &widgetWH,
+                                      bool &widgetR) {
+  switch (parsed.IdRight | 0xFFFFFF00) {
+    case CMD_BUTTON:
+    case CMD_KEYS:
+    case CMD_PROGRESS:
+    case CMD_SLIDER:
+    case CMD_SCROLLBAR:
+    case CMD_TRACK:
+    case CMD_SKETCH:
+    case CMD_CSKETCH:
+      widgetWH = true;
+      widgetR = false;
+      break;
+    case CMD_GAUGE:
+    case CMD_CLOCK:
+    case CMD_DIAL:
+      widgetWH = false;
+      widgetR = true;
+      break;
+    default:
+      widgetWH = false;
+      widgetR = false;
+      break;
+  }
+}
+
+bool InteractiveViewport::isSelectable(const DlParsed &parsed) {
+  if (parsed.IdLeft == FTEDITOR_DL_VERTEX2F) {
+    return true;
+  } else if (parsed.IdLeft == FTEDITOR_DL_VERTEX2II) {
+    return true;
+  } else if (parsed.IdLeft == 0xFFFFFF00) {
+    switch (parsed.IdRight | 0xFFFFFF00) {
+      case CMD_TEXT:
+      case CMD_BUTTON:
+      case CMD_KEYS:
+      case CMD_PROGRESS:
+      case CMD_SLIDER:
+      case CMD_SCROLLBAR:
+      case CMD_TOGGLE:
+      case CMD_GAUGE:
+      case CMD_CLOCK:
+      case CMD_SPINNER:
+      case CMD_TRACK:
+      case CMD_DIAL:
+      case CMD_NUMBER:
+      case CMD_SKETCH:
+      case CMD_CSKETCH:
+      case CMD_ANIMFRAME:
+      case CMD_GRADIENT:
+      case CMD_GRADIENTA:
+      case CMD_ANIMFRAMERAM: {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool InteractiveViewport::isWidgetXY(const DlParsed &parsed) {
+  if (parsed.IdLeft == 0xFFFFFF00) {  // Coprocessor
+    switch (parsed.IdRight | 0xFFFFFF00) {
+      case CMD_TEXT:
+      case CMD_BUTTON:
+      case CMD_KEYS:
+      case CMD_PROGRESS:
+      case CMD_SLIDER:
+      case CMD_SCROLLBAR:
+      case CMD_TOGGLE:
+      case CMD_GAUGE:
+      case CMD_CLOCK:
+      case CMD_SPINNER:
+      case CMD_TRACK:
+      case CMD_DIAL:
+      case CMD_NUMBER:
+      case CMD_SKETCH:
+      case CMD_CSKETCH:
+      case CMD_ANIMFRAME:
+      case CMD_ANIMFRAMERAM:
+        return true;
+    }
+  }
+  return false;
+}
+
+bool InteractiveViewport::isWidgetGradient(const DlParsed &parsed) {
+  if (parsed.IdLeft == 0xFFFFFF00) {  // Coprocessor
+    switch (parsed.IdRight | 0xFFFFFF00) {
+      case CMD_GRADIENT:
+      case CMD_GRADIENTA:
+        return true;
+    }
+  }
+  return false;
+}
+
+void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
+                                         Qt::KeyboardModifiers km) {
+  m_NextMouseX = mouseX;
+  m_NextMouseY = mouseY;
+  fetchColorAsync(mouseX, mouseY);
 
 	m_MainWindow->statusBar()->showMessage("");
 	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
 
-	if (m_MouseTouch)
-	{
-		// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
-	}
-	else if (m_MouseMovingVertex)
-	{
-		if (m_LineEditor)
-		{
-			bool reEnableUndoCombine = false;
-			int xd = mouseX - m_MovingLastX;
-			int yd = mouseY - m_MovingLastY;
-			m_isDrawAlignment = true;
-			m_MovingLastX = mouseX;
-			m_MovingLastY = mouseY;
-			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
-			int otherVertices[4];
-			int numOtherV = 0;
-			if (m_LineNumber > 0
-				&& m_LineEditor->getLine(m_LineNumber - 1).ValidId
-				&& m_LineEditor->getLine(m_LineNumber - 1).IdLeft == 0
-				&& m_LineEditor->getLine(m_LineNumber - 1).IdRight == FTEDITOR_DL_PALETTE_SOURCE)
-			{
-				int firstLine = m_LineNumber;
-				for (int l = firstLine - 1; l > 0; --l)
-				{
-					const DlParsed &parsed = m_LineEditor->getLine(l);
-					if (parsed.IdLeft == 0 &&
-						(parsed.IdRight == FTEDITOR_DL_BEGIN
-						|| parsed.IdRight == FTEDITOR_DL_END
-						|| parsed.IdRight == FTEDITOR_DL_RETURN
-						|| parsed.IdRight == FTEDITOR_DL_JUMP))
-					{
-						break;
-					}
-					else
-					{
-						firstLine = l;
-					}
-				}
-				for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l) // FIXME
-				{
-					if (l == m_LineNumber) continue;
-					const DlParsed &parsed = m_LineEditor->getLine(l);
+  if (m_MouseTouch) {
+    // BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
+  } else if (m_MouseMovingVertex ||
+             (!isSingleSelect() && m_MouseMovingWidget)) {
+    if (m_LineEditor) {
+      if (isSingleSelect()) m_isDrawAlignment = true;
+      int xd = mouseX - m_MovingLastX;
+      int yd = mouseY - m_MovingLastY;
+      int otherVertices[4];
+      m_MovingLastX = mouseX;
+      m_MovingLastY = mouseY;
 
-					if (!parsed.ValidId)
-						continue;
+      for (auto &line : m_SelectedLines) {
+        DlParsed pa = m_LineEditor->getLine(line);
+        int numOtherV = 0;
+        if (line > 0 && m_LineEditor->getLine(line - 1).ValidId &&
+            m_LineEditor->getLine(line - 1).IdLeft == 0 &&
+            m_LineEditor->getLine(line - 1).IdRight ==
+                FTEDITOR_DL_PALETTE_SOURCE) {
+          int firstLine = line;
+          for (int l = firstLine - 1; l > 0; --l) {
+            const DlParsed &parsed = m_LineEditor->getLine(l);
+            if (parsed.IdLeft == 0 && (parsed.IdRight == FTEDITOR_DL_BEGIN ||
+                                       parsed.IdRight == FTEDITOR_DL_END ||
+                                       parsed.IdRight == FTEDITOR_DL_RETURN ||
+                                       parsed.IdRight == FTEDITOR_DL_JUMP)) {
+              break;
+            } else {
+              firstLine = l;
+            }
+          }
+          for (int l = firstLine; l < FTEDITOR_DL_SIZE; ++l)  // FIXME
+          {
+            if (l == line) continue;
+            const DlParsed &parsed = m_LineEditor->getLine(l);
 
-					if (parsed.IdLeft == pa.IdLeft
-						&& parsed.Parameter[0].I == pa.Parameter[0].I
-						&& parsed.Parameter[1].I == pa.Parameter[1].I)
-					{
-						if (l != m_LineNumber)
-						{
-							otherVertices[numOtherV] = l;
-							++numOtherV;
-							if (numOtherV >= 4)
-								break;
-						}
-					}
-					else if (pa.IdRight == FTEDITOR_DL_BEGIN
-						|| pa.IdRight == FTEDITOR_DL_END
-						|| pa.IdRight == FTEDITOR_DL_RETURN
-						|| pa.IdRight == FTEDITOR_DL_JUMP)
-					{
-						break;
-					}
-				}
-			}
-			// In case automatic expansion is necessary
-			// if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && shift) change to FTEDITOR_DL_VERTEX2F and add the HANDLE and CELL if necessary
-			const DlState &state = m_LineEditor->getState(m_LineNumber);
-			/*if (pa.IdLeft == FTEDITOR_DL_VERTEX2II && (QApplication::keyboardModifiers() & Qt::ShiftModifier))
-			{
-				// Doesn't work directly due to issue with undo combining when changing IdLeft
-				reEnableUndoCombine = true;
-				m_LineEditor->codeEditor()->endUndoCombine();
+            if (!parsed.ValidId) continue;
 
-				pa.IdLeft = FTEDITOR_DL_VERTEX2F;
-				pa.Parameter[0].I <<= state.Graphics.VertexFormat;
-				pa.Parameter[1].I <<= state.Graphics.VertexFormat;
+            if (parsed.IdLeft == pa.IdLeft &&
+                parsed.Parameter[0].I == pa.Parameter[0].I &&
+                parsed.Parameter[1].I == pa.Parameter[1].I) {
+              if (l != line) {
+                otherVertices[numOtherV] = l;
+                ++numOtherV;
+                if (numOtherV >= 4) break;
+              }
+            } else if (pa.IdRight == FTEDITOR_DL_BEGIN ||
+                       pa.IdRight == FTEDITOR_DL_END ||
+                       pa.IdRight == FTEDITOR_DL_RETURN ||
+                       pa.IdRight == FTEDITOR_DL_JUMP) {
+              break;
+            }
+          }
+        }
+        // In case automatic expansion is necessary
+        const DlState &state = m_LineEditor->getState(line);
+        if (pa.IdLeft == FTEDITOR_DL_VERTEX2F) {
+          pa.Parameter[0].I += xd << state.Graphics.VertexFormat;
+          pa.Parameter[1].I += yd << state.Graphics.VertexFormat;
+        } else {
+          pa.Parameter[0].I += xd;
+          pa.Parameter[1].I += yd;
+        }
 
-				switch (state.Rendering.Primitive)
-				{
-				case BITMAPS: // Only do when current primitive is BITMAP
-					DlParsed npa;
-					npa.ValidId = true;
-					npa.IdLeft = 0;
-					npa.ExpectedStringParameter = false;
-					npa.VarArgCount = 0;
-					npa.ExpectedParameterCount = 1;
-					if (state.Graphics.BitmapHandle != pa.Parameter[2].U)
-					{
-						npa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
-						npa.Parameter[0].U = pa.Parameter[2].U;
-						m_LineEditor->insertLine(numOtherV && otherVertices[0] < m_LineNumber ? otherVertices[0] : m_LineNumber, npa);
-						for (int i = 0; i < numOtherV; ++i)
-							++otherVertices[i];
-					}
-					if (state.Graphics.Cell != pa.Parameter[3].U)
-					{
-						npa.IdRight = FTEDITOR_DL_CELL;
-						npa.Parameter[0].U = pa.Parameter[3].U;
-						m_LineEditor->insertLine(numOtherV && otherVertices[0] < m_LineNumber ? otherVertices[0] : m_LineNumber, npa);
-						for (int i = 0; i < numOtherV; ++i)
-							++otherVertices[i];
-					}
-					// TODO: Restore the state if necessary for in front of any following VERTEX2F!
-					break;
-				}
-			}
-			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F && !(QApplication::keyboardModifiers() & Qt::ShiftModifier))
-			{
-				xd <<= state.Graphics.VertexFormat;
-				yd <<= state.Graphics.VertexFormat;
-			}*/
-			
+        int snapx, snapy;
+        if (pa.IdLeft == FTEDITOR_DL_VERTEX2II) {
+          snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
+          pa.Parameter[0].I += snapx;
+          pa.Parameter[1].I += snapy;
+        } else {
+          snapPos(snapx, snapy, pa.Parameter[0].I >> 4, pa.Parameter[1].I >> 4);
+          pa.Parameter[0].I += snapx << 4;
+          pa.Parameter[1].I += snapy << 4;
+        }
+        m_MovingLastX += snapx;
+        m_MovingLastY += snapy;
+        m_LineEditor->replaceLine(line, pa);
+        for (int i = 0; i < numOtherV; ++i)
+          m_LineEditor->replaceLine(otherVertices[i], pa);
+      }
+    } else {
+      m_MouseMovingVertex = false;
+      updatePointerMethod();  // update because update is not done while
+                              // m_MouseMovingVertex true
+    }
+  } else if (m_MouseMovingWidget) {
+    if (m_LineEditor) {
+      if (isSingleSelect()) m_isDrawAlignment = true;
+      m_MainWindow->statusBar()->showMessage(
+          "Press SHIFT for keeping constant x-coordinate, ALT for keeping "
+          "constant y-coordinate");
+      // Apply action
+      int xd = 0, yd = 0;
 
-			if (pa.IdLeft == FTEDITOR_DL_VERTEX2F)
-			{
-				xd <<= state.Graphics.VertexFormat;
-				yd <<= state.Graphics.VertexFormat;
-			}
-			
-			pa.Parameter[0].I += xd;
-			pa.Parameter[1].I += yd;
+      if (km != Qt::ShiftModifier) {
+        xd = mouseX - m_MovingLastX;
+        m_MovingLastX = mouseX;
+      } else {
+        m_isDrawAlignmentVertical = true;
+      }
 
-			if (pa.IdLeft == FTEDITOR_DL_VERTEX2II)
-			{
-				// Snap ->
-				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
-				m_MovingLastX += snapx;
-				pa.Parameter[0].I += snapx;
-				m_MovingLastY += snapy;
-				pa.Parameter[1].I += snapy;
-				//if (snapx != 0) printf("snapx: %i\n", snapx);
-				//if (snapy != 0) printf("snapy: %i\n", snapy);
-				// <- Snap
+      if (km != Qt::AltModifier) {
+        yd = mouseY - m_MovingLastY;
+        m_MovingLastY = mouseY;
+      } else {
+        m_isDrawAlignmentHorizontal = true;
+      }
 
-				// Do not allow negative values
-				if (pa.Parameter[0].I < 0)
-				{
-					m_MovingLastX -= pa.Parameter[0].I;
-					pa.Parameter[0].I = 0;
-				}
-				if (pa.Parameter[0].I > 511)
-				{
-					int diff = pa.Parameter[0].I - 511;
-					m_MovingLastX -= diff;
-					pa.Parameter[0].I -= diff;
-				}
-				if (pa.Parameter[1].I < 0)
-				{
-					m_MovingLastY -= pa.Parameter[1].I;
-					pa.Parameter[1].I = 0;
-				}
-				if (pa.Parameter[1].I > 511)
-				{
-					int diff = pa.Parameter[1].I - 511;
-					m_MovingLastY -= diff;
-					pa.Parameter[1].I -= diff;
-				}
-			}
-			else
-			{
-				// Snap ->
-				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[0].I >> 4, pa.Parameter[1].I >> 4);
-				m_MovingLastX += snapx;
-				pa.Parameter[0].I += snapx << 4;
-				m_MovingLastY += snapy;
-				pa.Parameter[1].I += snapy << 4;
-				// <- Snap
-			}
-			m_LineEditor->replaceLine(m_LineNumber, pa);
-			for (int i = 0; i < numOtherV; ++i)
-				m_LineEditor->replaceLine(otherVertices[i], pa);
-			if (reEnableUndoCombine)
-			{
-				m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
-			}
-		}
-		else
-		{
-			m_MouseMovingVertex = false;
-			updatePointerMethod(); // update because update is not done while m_MouseMovingVertex true
-		}
-	}
-	else if (m_MouseMovingWidget)
-	{
-		if (m_LineEditor)
-		{
-			m_MainWindow->statusBar()->showMessage("Press SHIFT for keeping constant x-coordinate, ALT for keeping constant y-coordinate");
-			m_isDrawAlignment = true;
-			// Apply action
-			int xd = 0;
-			int yd = 0;
-			
-			if (km != Qt::ShiftModifier) {
-				xd = mouseX - m_MovingLastX;
-				m_MovingLastX = mouseX;
-			}
-			else
-			{
-				m_isDrawAlignmentVertical = true;
-			}
+      for (auto &line : m_SelectedLines) {
+        DlParsed pa = m_LineEditor->getLine(line);
+        if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE ||
+            m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1) {
+          pa.Parameter[0].I += xd;
+          pa.Parameter[1].I += yd;
 
-			if (km != Qt::AltModifier)
-			{
-				yd = mouseY - m_MovingLastY;
-				m_MovingLastY = mouseY;
-			}
-			else
-			{
-				m_isDrawAlignmentHorizontal = true;
-			}
-			DlParsed pa = m_LineEditor->getLine(m_LineNumber);
-			if (m_MouseMovingWidget == POINTER_EDIT_WIDGET_TRANSLATE || m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_1)
-			{
-				pa.Parameter[0].I += xd;
-				pa.Parameter[1].I += yd;
+          // Snap ->
+          int snapx, snapy;
+          snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
+          m_MovingLastX += snapx;
+          pa.Parameter[0].I += snapx;
+          m_MovingLastY += snapy;
+          pa.Parameter[1].I += snapy;
+          // <- Snap
+        } else if (m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_2) {
+          pa.Parameter[3].I += xd;
+          pa.Parameter[4].I += yd;
 
-				// Snap ->
-				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[0].I, pa.Parameter[1].I);
-				m_MovingLastX += snapx;
-				pa.Parameter[0].I += snapx;
-				m_MovingLastY += snapy;
-				pa.Parameter[1].I += snapy;
-				// <- Snap
-			}
-			else if (m_MouseMovingWidget == POINTER_EDIT_GRADIENT_MOVE_2)
-			{
-				pa.Parameter[3].I += xd;
-				pa.Parameter[4].I += yd;
+          // Snap ->
+          int snapx, snapy;
+          snapPos(snapx, snapy, pa.Parameter[3].I, pa.Parameter[4].I);
+          m_MovingLastX += snapx;
+          pa.Parameter[3].I += snapx;
+          m_MovingLastY += snapy;
+          pa.Parameter[4].I += snapy;
+          // <- Snap
+        } else  // resize, check top/bottom and left/right
+        {
+          int x = pa.Parameter[0].I;
+          int y = pa.Parameter[1].I;
+          if (m_WidgetWH) {
+            const int minsize = 0;
+            int w = pa.Parameter[2].I;
+            int h = pa.Parameter[3].I;
+            if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP) {
+              y += yd;
+              h -= yd;
 
-				// Snap ->
-				int snapx, snapy;
-				snapPos(snapx, snapy, pa.Parameter[3].I, pa.Parameter[4].I);
-				m_MovingLastX += snapx;
-				pa.Parameter[3].I += snapx;
-				m_MovingLastY += snapy;
-				pa.Parameter[4].I += snapy;
-				// <- Snap
-			}
-			else // resize, check top/bottom and left/right
-			{
-				int x = pa.Parameter[0].I;
-				int y = pa.Parameter[1].I;
-				if (m_WidgetWH)
-				{
-					const int minsize = 0;
-					int w = pa.Parameter[2].I;
-					int h = pa.Parameter[3].I;
-					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
-					{
-						y += yd;
-						h -= yd;
+              // Snap ->
+              int snapx, snapy;
+              snapPos(snapx, snapy, x, y);
+              m_MovingLastY += snapy;
+              y += snapy;
+              h -= snapy;
+              // <- Snap
 
-						// Snap ->
-						int snapx, snapy;
-						snapPos(snapx, snapy, x, y);
-						m_MovingLastY += snapy;
-						y += snapy;
-						h -= snapy;
-						// <- Snap
+              if (h < minsize) {
+                m_MovingLastY += (h - minsize);
+                y += (h - minsize);
+                h = minsize;
+              }
+            } else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM) {
+              h += yd;
 
-						if (h < minsize)
-						{
-							m_MovingLastY += (h - minsize);
-							y += (h - minsize);
-							h = minsize;
-						}
-					}
-					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-					{
-						h += yd;
+              // Snap ->
+              int snapx, snapy;
+              snapPos(snapx, snapy, x + w, y + h);
+              m_MovingLastY += snapy;
+              h += snapy;
+              // <- Snap
 
-						// Snap ->
-						int snapx, snapy;
-						snapPos(snapx, snapy, x + w, y + h);
-						m_MovingLastY += snapy;
-						h += snapy;
-						// <- Snap
+              if (h < minsize) {
+                m_MovingLastY -= (h - minsize);
+                h = minsize;
+              }
+            }
+            if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT) {
+              x += xd;
+              w -= xd;
 
-						if (h < minsize)
-						{
-							m_MovingLastY -= (h - minsize);
-							h = minsize;
-						}
-					}
-					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
-					{
-						x += xd;
-						w -= xd;
+              // Snap ->
+              int snapx, snapy;
+              snapPos(snapx, snapy, x, y);
+              m_MovingLastX += snapx;
+              x += snapx;
+              w -= snapx;
+              // <- Snap
 
-						// Snap ->
-						int snapx, snapy;
-						snapPos(snapx, snapy, x, y);
-						m_MovingLastX += snapx;
-						x += snapx;
-						w -= snapx;
-						// <- Snap
+              if (w < minsize) {
+                m_MovingLastX += (w - minsize);
+                x += (w - minsize);
+                w = minsize;
+              }
+            } else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT) {
+              w += xd;
 
-						if (w < minsize)
-						{
-							m_MovingLastX += (w - minsize);
-							x += (w - minsize);
-							w = minsize;
-						}
-					}
-					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
-					{
-						w += xd;
+              // Snap ->
+              int snapx, snapy;
+              snapPos(snapx, snapy, x + w, y + h);
+              m_MovingLastX += snapx;
+              w += snapx;
+              // <- Snap
 
-						// Snap ->
-						int snapx, snapy;
-						snapPos(snapx, snapy, x + w, y + h);
-						m_MovingLastX += snapx;
-						w += snapx;
-						// <- Snap
-
-						if (w < minsize)
-						{
-							m_MovingLastX -= (w - minsize);
-							w = minsize;
-						}
-					}
-					pa.Parameter[0].I = x;
-					pa.Parameter[1].I = y;
-					pa.Parameter[2].I = w;
-					pa.Parameter[3].I = h;
-				}
-				else
-				{
-					int r = pa.Parameter[2].I;
-					if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP)
-					{
-						r -= yd;
-						if (r < 0)
-						{
-							m_MovingLastY += r;
-							r = 0;
-						}
-					}
-					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM)
-					{
-						r += yd;
-						if (r < 0)
-						{
-							m_MovingLastY -= r;
-							r = 0;
-						}
-					}
-					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT)
-					{
-						r -= xd;
-						if (r < 0)
-						{
-							m_MovingLastX += r;
-							r = 0;
-						}
-					}
-					else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT)
-					{
-						r += xd;
-						if (r < 0)
-						{
-							m_MovingLastX -= r;
-							r = 0;
-						}
-					}
-					pa.Parameter[2].I = r;
-				}
-			}
-			m_LineEditor->replaceLine(m_LineNumber, pa);
-		}
-		else
-		{
-			m_MouseMovingWidget = 0;
-			updatePointerMethod(); // update because update is not done while m_MouseMovingWidget has a value
-		}
-	}
+              if (w < minsize) {
+                m_MovingLastX -= (w - minsize);
+                w = minsize;
+              }
+            }
+            pa.Parameter[0].I = x;
+            pa.Parameter[1].I = y;
+            pa.Parameter[2].I = w;
+            pa.Parameter[3].I = h;
+          } else {
+            int r = pa.Parameter[2].I;
+            if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_TOP) {
+              r -= yd;
+              if (r < 0) {
+                m_MovingLastY += r;
+                r = 0;
+              }
+            } else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_BOTTOM) {
+              r += yd;
+              if (r < 0) {
+                m_MovingLastY -= r;
+                r = 0;
+              }
+            } else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_LEFT) {
+              r -= xd;
+              if (r < 0) {
+                m_MovingLastX += r;
+                r = 0;
+              }
+            } else if (m_MouseMovingWidget & POINTER_EDIT_WIDGET_SIZE_RIGHT) {
+              r += xd;
+              if (r < 0) {
+                m_MovingLastX -= r;
+                r = 0;
+              }
+            }
+            pa.Parameter[2].I = r;
+          }
+        }
+        m_LineEditor->replaceLine(line, pa);
+      }
+    } else {
+      m_MouseMovingWidget = 0;
+      updatePointerMethod();  // update because update is not done while
+                              // m_MouseMovingWidget has a value
+    }
+  }
 }
 
 void InteractiveViewport::wheelEvent(QWheelEvent* e)
@@ -2029,149 +2014,145 @@ void InteractiveViewport::wheelEvent(QWheelEvent* e)
 	EmulatorViewport::wheelEvent(e);
 }
 
-void InteractiveViewport::mouseMoveEvent(QMouseEvent *e)
-{
-	horizontalRuler()->setIndicator(EPOSPOINT(e).x());
-	verticalRuler()->setIndicator(EPOSPOINT(e).y());
-	
-	mouseMoveEvent(mappingX(e), mappingY(e), e->modifiers());
-	EmulatorViewport::mouseMoveEvent(e);
+void InteractiveViewport::mouseMoveEvent(QMouseEvent *e) {
+  if (m_DrawMultipleSelection) {
+    m_SecondPoint = e->position().toPoint();
+  }
+  horizontalRuler()->setIndicator(EPOSPOINT(e).x());
+  verticalRuler()->setIndicator(EPOSPOINT(e).y());
+  mouseMoveEvent(mappingX(e), mappingY(e), e->modifiers());
+  EmulatorViewport::mouseMoveEvent(e);
 }
 
-void InteractiveViewport::mousePressEvent(QMouseEvent *e)
-{
-	if (e->button() == Qt::RightButton
-		&& !m_Insert->isChecked()
-		&& !(m_PointerMethod == POINTER_TRACE && m_MainWindow->traceEnabled()))
-	{
-		emit this->customContextMenuRequested(e->position().toPoint());
-		return;
-	}
-	
-	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
-	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
+void InteractiveViewport::mousePressEvent(QMouseEvent *e) {
+  if (e->button() == Qt::RightButton) {
+    emit this->customContextMenuRequested(e->position().toPoint());
+    return;
+  }
+  m_FirstPoint = m_SecondPoint = e->position().toPoint();
+  m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
+  m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);
 
-	switch (m_PointerMethod)
-	{
-	case POINTER_TOUCH: // touch
-		if (e->button() == Qt::LeftButton)
-		{
-			m_MouseTouch = true;
-			// BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
+  switch (m_PointerMethod) {
+    case POINTER_TOUCH:  // touch
+      if (e->button() == Qt::LeftButton) {
+        m_MouseTouch = true;
+        // BT8XXEMU_setTouchScreenXY(EPOSPOINT(e).x(), EPOSPOINT(e).y(), 0);
+      }
+      break;
+    case POINTER_TRACE:  // trace
+      switch (e->button()) {
+        case Qt::LeftButton:
+          m_MainWindow->setTraceX(mappingX(e));
+          m_MainWindow->setTraceY(mappingY(e));
+          m_MainWindow->setTraceEnabled(true);
+          break;
+        case Qt::MiddleButton:
+          if (m_PointerFilter != POINTER_TRACE) {
+            m_PreferTraceCursor = false;
+            break;
+          }
+          // fallthrough to Qt::RightButton
+        case Qt::RightButton:
+          m_MainWindow->setTraceEnabled(false);
+          break;
+        default:
+          break;
+      }
+      break;
+    case POINTER_EDIT_VERTEX_MOVE:
+      if (m_LineEditor) {
+        m_MovingLastX = mappingX(e);
+        m_MovingLastY = mappingY(e);
+        m_MouseMovingVertex = true;
+        m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
+      }
+      break;
+    case POINTER_EDIT_STACK_SELECT:
+      if (m_MouseStackRead.size() > 0) {
+        if (e->button() == Qt::LeftButton) {
+          // Select topmost command
+          debugLog("Select topmost command");
+          int idxDl = m_MouseStackRead[m_MouseStackRead.size() - 1];  // DL
+          int idxCmd = m_MainWindow->getDlCmd()[idxDl];
+          debugLog(QString("DL: %1").arg(idxDl));
+          debugLog(QString("CMD: %1").arg(idxCmd));
+
+          if (idxCmd >= 0) {
+            m_MainWindow->focusCmdEditor();
+            bool force = !m_SelectedLines.contains(idxCmd);
+            m_MainWindow->cmdEditor()->selectLine(idxCmd, false, force);
+          } else {
+            m_MainWindow->focusDlEditor();
+            bool force = !m_SelectedLines.contains(idxCmd);
+            m_MainWindow->dlEditor()->selectLine(idxDl, false, force);
+          }
+          emit selectedLinesChanged(m_SelectedLines);
+
+          /*
+           *
+          CLEAR_COLOR_RGB(50, 80, 160)
+          CLEAR(1, 1, 1)
+          CALL(100)
+          CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
+          *
+          BEGIN(RECTS)
+          VERTEX2II(100, 100, 0, 0)
+          VERTEX2II(220, 150, 0, 0)
+          END()
+          RETURN()
+           *
+           */
         }
-		break;
-	case POINTER_TRACE: // trace
-		switch (e->button())
-		{
-		case Qt::LeftButton:
-			m_MainWindow->setTraceX(mappingX(e));
-			m_MainWindow->setTraceY(mappingY(e));
-			m_MainWindow->setTraceEnabled(true);
-			break;
-		case Qt::MiddleButton:
-			if (m_PointerFilter != POINTER_TRACE)
-			{
-				m_PreferTraceCursor = false;
-				break;
-			}
-			[[fallthrough]]; // to Qt::RightButton
-		case Qt::RightButton:
-			m_MainWindow->setTraceEnabled(false);
-			break;
-		}
-		break;
-	case POINTER_EDIT_VERTEX_MOVE:
-		if (m_LineEditor)
-		{
-			if (m_MouseOverVertexLine != m_LineNumber)
-			{
-				m_LineEditor->selectLine(m_MouseOverVertexLine);
-			}
-			m_MovingLastX = mappingX(e);
-			m_MovingLastY = mappingY(e);
-			m_MouseMovingVertex = true;
-			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move vertex"));
-		}
-		break;
-	case POINTER_EDIT_STACK_SELECT:
-		if (m_MouseStackRead.size() > 0)
-		{
-			if (e->button() == Qt::LeftButton)
-			{
-				// Select topmost command
-				printf("Select topmost command\n");
-				int idxDl = m_MouseStackRead[m_MouseStackRead.size() - 1]; // DL
-				int idxCmd = m_MainWindow->getDlCmd()[idxDl];
-				printf("DL %i\n", idxDl);
-				printf("CMD %i\n", idxCmd);
-				// m_LineEditor->selectLine(idx);
-				if (idxCmd >= 0)
-				{
-					m_MainWindow->focusCmdEditor();
-					m_MainWindow->cmdEditor()->selectLine(idxCmd);
-				}
-				else
-				{
-					m_MainWindow->focusDlEditor();
-					m_MainWindow->dlEditor()->selectLine(idxDl);
-				}
-/*
- *
-CLEAR_COLOR_RGB(50, 80, 160)
-CLEAR(1, 1, 1)
-CALL(100)
-CMD_CLOCK(50, 50, 50, 0, 0, 0, 0, 0)
-*
-BEGIN(RECTS)
-VERTEX2II(100, 100, 0, 0)
-VERTEX2II(220, 150, 0, 0)
-END()
-RETURN()
- *
- */
-			}
-		}
-		break;
-	case POINTER_INSERT:
-		if (e->button() == Qt::LeftButton)
-		{
-			int line = m_LineNumber;
-			DlParsed pa = m_LineEditor->getLine(line);
-			if (isValidInsert(pa))
-			{
-				++line;
-				pa.Parameter[0].I = mappingX(e) << m_LineEditor->getVertextFormat(line);
-				pa.Parameter[1].I = mappingY(e) << m_LineEditor->getVertextFormat(line);
-				m_LineEditor->insertLine(line, pa);
-				m_LineEditor->selectLine(line);
-			}
-			break;
-		}
-		else if (e->button() == Qt::MiddleButton
-			|| e->button() == Qt::RightButton)
-		{
-			m_Insert->setChecked(false);
-		}
-		[[fallthrough]];
-	default:
-		if (m_PointerMethod & (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE))
-		{
-			// Works for any widget move action
-			m_MovingLastX = mappingX(e);
-			m_MovingLastY = mappingY(e);
-			m_MouseMovingWidget = m_PointerMethod;
-			m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
-		}
-		break;
-	}
+      } else {
+        debugLog(QString("Select blank"));
+        m_SelectedLines.clear();
+      }
 
-	EmulatorViewport::mousePressEvent(e);
+      break;
+    case POINTER_INSERT:
+      if (e->button() == Qt::LeftButton) {
+        int line = m_LineNumber;
+        DlParsed pa = m_LineEditor->getLine(line);
+        if (isValidInsert(pa)) {
+          ++line;
+          pa.Parameter[0].I = mappingX(e)
+                              << m_LineEditor->getVertextFormat(line);
+          pa.Parameter[1].I = mappingY(e)
+                              << m_LineEditor->getVertextFormat(line);
+          m_LineEditor->insertLine(line, pa);
+          m_LineEditor->selectLine(line);
+        }
+        break;
+      } else if (e->button() == Qt::MiddleButton ||
+                 e->button() == Qt::RightButton) {
+        m_Insert->setChecked(false);
+      }
+    default:
+      if (m_PointerMethod &
+          (POINTER_EDIT_WIDGET_MOVE | POINTER_EDIT_GRADIENT_MOVE)) {
+        // Works for any widget move action
+        m_MovingLastX = mappingX(e);
+        m_MovingLastY = mappingY(e);
+        m_MouseMovingWidget = m_PointerMethod;
+        m_LineEditor->codeEditor()->beginUndoCombine(tr("Move widget"));
+      }
+      break;
+  }
+
+  if (!m_MouseMovingVertex && !m_MouseMovingWidget) {
+    m_DrawMultipleSelection = true;
+  }
+  EmulatorViewport::mousePressEvent(e);
 }
 
-void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
-{
-	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(NULL);
-	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
+void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e) {
+  if (m_DrawMultipleSelection && m_FirstPoint != m_SecondPoint) {
+    selectItems();
+  }
+  m_DrawMultipleSelection = false;
+  m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(NULL);
+  m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
 
 	m_MainWindow->statusBar()->showMessage("");
 	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
@@ -2209,11 +2190,7 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	EmulatorViewport::mouseReleaseEvent(e);
 }
 
-#if QT_VERSION_MAJOR < 6
-void InteractiveViewport::enterEvent(QEvent *e)
-#else
 void InteractiveViewport::enterEvent(QEnterEvent *e)
-#endif
 {
 	//printf("InteractiveViewport::enterEvent\n");
 	
@@ -2221,7 +2198,6 @@ void InteractiveViewport::enterEvent(QEnterEvent *e)
 	
 	horizontalRuler()->setShowIndicator(true);
 	verticalRuler()->setShowIndicator(true);
-
 	EmulatorViewport::enterEvent(e);
 }
 
@@ -2974,494 +2950,482 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							}
 						}
 					}
-					if (!contentInfo)
-					{
-						int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
-						int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
-						DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
-						    line, x, y);
-					}
-					else if (contentInfo->Converter == ContentInfo::Font)
-					{
-						DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, "Text", line,
-						    mappingX(e), mappingY(e));
-						m_LineEditor->selectLine(line - 1);
-					}
-					else if (contentInfo->Converter == ContentInfo::Raw)
-					{
-						QJsonObject infoJson = QJsonObject();
-						QString fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
-						if (contentInfo->MapInfoFileType.contains(fileSuffix))
-						{
-							QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
-							if (!fileType.isEmpty())
-							{
-								QString filePath = contentInfo->SourcePath
-								                       .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
-								                       .append(fileType);
-								if (contentInfo->SourcePath.contains("_index"))
-								{
-									filePath.remove(filePath.lastIndexOf("_index"), 6);
-								}
-								infoJson = ReadWriteUtil::getJsonInfo(filePath);
-							}
-						}
-						if (fileSuffix == "ram_g")
-						{
-							debugLog("Create commands for .ram_g content file\n");
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
-							pa.Parameter[0].I = mappingX(e);
-							pa.Parameter[1].I = mappingY(e);
 
-							if (infoJson.contains("object"))
-							{
-								QJsonObject obj = infoJson.value("object").toObject();
-								pa.Parameter[2].I = obj.value("offset").toInt();
-							}
-							else
-								pa.Parameter[2].I = 0;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(line, pa);
-							++line;
-						}
-						else if (fileSuffix == "flash")
-						{
-							debugLog("Create commands for .flash content file\n");
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_ANIMFRAME & 0xFF;
-							pa.Parameter[0].I = mappingX(e);
-							pa.Parameter[1].I = mappingY(e);
+          if (!contentInfo) {
+            int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
+            int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
+            DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
+                                  line, x, y);
+          } else if (contentInfo->Converter == ContentInfo::Font) {
+            DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, "Text", line,
+                               mappingX(e), mappingY(e));
+            m_LineEditor->selectLine(line - 1);
+          } else if (contentInfo->Converter == ContentInfo::Raw) {
+            auto infoJson = QJsonObject();
+            auto fileSuffix =
+                QFileInfo(contentInfo->SourcePath).suffix().toLower();
+            if (contentInfo->MapInfoFileType.contains(fileSuffix)) {
+              QString fileType =
+                  ContentInfo::MapInfoFileType.value(fileSuffix, "");
+              if (!fileType.isEmpty()) {
+                QString filePath =
+                    contentInfo->SourcePath
+                        .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
+                        .append(fileType);
+                if (contentInfo->SourcePath.contains("_index")) {
+                  filePath.remove(filePath.lastIndexOf("_index"), 6);
+                }
+                infoJson = ReadWriteUtil::getJsonInfo(filePath);
+              }
+            }
 
-							if (infoJson.contains("object"))
-							{
-								QJsonObject obj = infoJson.value("object").toObject();
-								pa.Parameter[2].I = obj.value("offset").toInt();
-							}
-							else
-								pa.Parameter[2].I = 0;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(line, pa);
-							++line;
-						}
-						else if (fileSuffix == "xfont")
-						{
-							debugLog("Create commands for .xfont content file\n");
-							QString savedCharsFile = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.')).append("_converted_chars.txt");
-							QString data = ReadWriteUtil::readConvertedCharsFile(savedCharsFile);
-							DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, data.left(5), line, mappingX(e), mappingY(e));
-						}
-						else if (fileSuffix == "raw")
-						{
-							if (infoJson.contains("type"))
-							{
-								QString contentType = infoJson["type"].toString();
-								if (contentType == "bitmap")
-								{
-									debugLog("Create commands for .raw bitmap content file\n");
-									int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
-									int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
-									if (contentInfo->ImageFormat == PALETTED8)
-									{
-										debugLog("Create commands for PALETTED8 content file");
-										QString searchedFile = contentInfo->DestName;
-										searchedFile.replace("_index", "_lut");
-										const ContentInfo *searchedContent = m_MainWindow->contentManager()->find(searchedFile);
-										DLUtil::addPaletted8Cmds(
-										    m_LineEditor, pa,
-										    searchedContent ? searchedContent->bitmapAddress() : 0,
-										    selection, line, x, y);
-									}
-									else
-									{
-										DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo,
-										    selection, line, x, y);
-									}
-								}
-								else if (contentType == "legacyfont")
-								{
-									debugLog("Create commands for .raw legacy font content file\n");
-									QString savedCharsIndexFile = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.')).append("_converted_char_index.txt");
-									int first = 0, last = 0;
-									ReadWriteUtil::readConvertedCharsIndexFile(savedCharsIndexFile, first, last);
-									QString defaultText;
-									if (first != 0 && last != 0)
-									{
-										int defaultNoOfChar = 5;
-										int count = 0;
-										int index = first + 1;
-										while (count < defaultNoOfChar)
-										{
-											if (index == 34) // Character "
-												++index;
-											
-											defaultText += QChar(index);
-											++count;
-											++index;
-										}
-									}
-									DLUtil::addTextCmd(
-										m_LineEditor, pa, bitmapHandle,
-										!defaultText.isEmpty() ? defaultText : "Text", line,
-										mappingX(e), mappingY(e));
-								}
-							}
-						}
-					}
-					else
-					{
-						QString fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
-						if (fileSuffix == "avi")
-						{
-							debugLog("Create commands for .avi content file\n");
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_PLAYVIDEO & 0xFF;
-							pa.Parameter[0].I = 0;
-							pa.StringParameter = contentInfo->SourcePath.toStdString();
-							pa.ExpectedStringParameter = true;
-							pa.VarArgCount = 0;
-							pa.ExpectedParameterCount = 2;
-							m_LineEditor->insertLine(line, pa);
-							++line;
-						}
-						else
-						{
-							int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
-							int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
-							DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
-								line, x, y);
-						}
-					}
-					m_LineEditor->codeEditor()->endUndoCombine();
-					//m_MainWindow->undoStack()->endMacro();
-					switch (selection)
-					{
-						case BITMAPS:
-						case POINTS:
-							break;
-						default:
-							// Used for linestrip style drawing
-							m_Insert->setChecked(true);
-							break;
-					}
-				}
-			}
-			else if (selectionType == FTEDITOR_SELECTION_DL_STATE 
-				|| selectionType == FTEDITOR_SELECTION_CMD_STATE)
-			{
-				bool useMouseStack;
-				int lineOverride = -1;
-				if (selectionType == FTEDITOR_SELECTION_DL_STATE && (
-					selection == FTEDITOR_DL_CLEAR_COLOR_RGB
-					|| selection == FTEDITOR_DL_CLEAR_COLOR_A
-					|| selection == FTEDITOR_DL_CLEAR_STENCIL
-					|| selection == FTEDITOR_DL_CLEAR_TAG
-					))
-				{
-					// Try to find CLEAR command backward from current pos
-					int l = m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop;
-					for (int i = l; i >= 0; --i)
-					{
-						DlParsed pai = m_LineEditor->getLine(i);
-						if (pai.ValidId && (pai.IdLeft == FTEDITOR_DL_INSTRUCTION) && (pai.IdRight == FTEDITOR_DL_CLEAR))
-						{
-							lineOverride = i;
-							break;
-						}
-					}
-					useMouseStack = m_MouseStackValid;
-				}
-				else
-				{
-					// Only use primitive under cursor if it's not the CLEAR primitive
-					DlParsed pac = m_LineEditor->getLine(m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop);
-					useMouseStack = m_MouseStackValid && !(pac.ValidId && (pac.IdLeft == FTEDITOR_DL_INSTRUCTION) && (pac.IdRight == FTEDITOR_DL_CLEAR));
-				}
-				int line = lineOverride >= 0 ? lineOverride : (useMouseStack ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop : m_MouseStackDlTop) : (m_LineNumber >= 0 ? (m_LineEditor->getLine(m_LineNumber).ValidId ? m_LineNumber + 1 : m_LineNumber) : 0));
-				m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop property");
-				DlParsed pa;
-				pa.ValidId = true;
-				pa.ExpectedStringParameter = false;
-				pa.VarArgCount = 0;
-				if (selectionType == FTEDITOR_SELECTION_CMD_STATE)
-				{
-					pa.IdLeft = 0xFFFFFF00;
-					pa.IdRight = selection & 0xFF;
-                    switch (selection)
-                    {
-					case CMD_REGREAD:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-                        pa.ExpectedParameterCount = 2;
-						break;
-                    case CMD_BGCOLOR:
-                        pa.Parameter[0].U = 0x7F3F1F;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_FGCOLOR:
-                        pa.Parameter[0].U = 0xFF7F3F;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_GRADCOLOR:
-                        pa.Parameter[0].U = 0xFFFF7F;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_LOADIDENTITY:
-                    case CMD_SETMATRIX:
-                        pa.ExpectedParameterCount = 0;
-                        break;
-                    case CMD_SCALE:
-                        pa.Parameter[0].I = 65536;
-                        pa.Parameter[1].I = 65536;
-                        pa.ExpectedParameterCount = 2;
-                        break;
-                    case CMD_ROTATE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_TRANSLATE:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
-                        break;
-                    case CMD_SETSCRATCH:
-                        pa.Parameter[0].I = 15;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_SETBASE:
-                        pa.Parameter[0].I = 10;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ROMFONT:
-                        pa.Parameter[0].I = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
-                        if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
-						if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 && FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
-							pa.Parameter[1].I = 31;
-						else
-							pa.Parameter[1].I = 34;
-                        pa.ExpectedParameterCount = 2;
-                        break;
-                    case CMD_SETFONT:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.ExpectedParameterCount = 2;
-                        break;
-                    case CMD_SETFONT2:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 32;
-                        pa.ExpectedParameterCount = 3;
-                        break;
-                    case CMD_SETBITMAP:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 64;
-                        pa.Parameter[3].I = 64;
-                        pa.ExpectedParameterCount = 4;
-                        break;
-                    case CMD_BITMAP_TRANSFORM:
-                        for (size_t i = 0; i < 13; i++)
-                        {
-                            pa.Parameter[i].I = 0;
-                        }
-                        pa.ExpectedParameterCount = 13;
-                        break;
-                    case CMD_FLASHSOURCE:
-                        pa.Parameter[0].I = 0;
-                        pa.ExpectedParameterCount = 1;
-                        break;
-                    case CMD_ANIMXY:
-                        pa.Parameter[0].I = 0;
-                        pa.Parameter[1].I = 0;
-                        pa.Parameter[2].I = 0;
-                        pa.ExpectedParameterCount = 3;
-                        break;
-					case CMD_RUNANIM:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].I = -1;
-						pa.ExpectedParameterCount = 2;
-						break;
-                    }					
-				}
-				else
-				{
-					pa.IdLeft = 0;
-					pa.IdRight = selection;
-					switch (selection)
-					{
-					case FTEDITOR_DL_CLEAR_COLOR_RGB:
-						pa.Parameter[0].U = 31;
-						pa.Parameter[1].U = 63;
-						pa.Parameter[2].U = 127;
-						pa.ExpectedParameterCount = 3;
-						break;
-					case FTEDITOR_DL_CLEAR_COLOR_A:
-						pa.Parameter[0].U = 255;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_CLEAR_STENCIL:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_CLEAR_TAG:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_COLOR_RGB:
-						pa.Parameter[0].U = 255;
-						pa.Parameter[1].U = 255;
-						pa.Parameter[2].U = 127;
-						pa.ExpectedParameterCount = 3;
-						break;
-					case FTEDITOR_DL_COLOR_A:
-						pa.Parameter[0].U = 255;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_COLOR_MASK:
-						pa.Parameter[0].U = 1;
-						pa.Parameter[1].U = 1;
-						pa.Parameter[2].U = 1;
-						pa.Parameter[3].U = 1;
-						pa.ExpectedParameterCount = 4;
-						break;
-					case FTEDITOR_DL_LINE_WIDTH:
-						pa.Parameter[0].U = 64;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_POINT_SIZE:
-						pa.Parameter[0].U = 256;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BLEND_FUNC:
-						pa.Parameter[0].U = SRC_ALPHA;
-						pa.Parameter[1].U = ONE_MINUS_SRC_ALPHA;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_SCISSOR_SIZE:
-						pa.Parameter[0].U = 512;
-						pa.Parameter[1].U = 512;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_SCISSOR_XY:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_ALPHA_FUNC:
-						pa.Parameter[0].U = ALWAYS;
-						pa.Parameter[1].U = ZERO;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_STENCIL_FUNC:
-						pa.Parameter[0].U = ALWAYS;
-						pa.Parameter[1].U = 0;
-						pa.Parameter[2].U = 255;
-						pa.ExpectedParameterCount = 3;
-						break;
-					case FTEDITOR_DL_STENCIL_MASK:
-						pa.Parameter[0].U = 255;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_STENCIL_OP:
-						pa.Parameter[0].U = KEEP;
-						pa.Parameter[1].U = KEEP;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_TAG:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_TAG_MASK:
-						pa.Parameter[0].U = 1;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_TRANSFORM_A:
-					case FTEDITOR_DL_BITMAP_TRANSFORM_E:
-						pa.Parameter[0].I = 256;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_TRANSFORM_B:
-					case FTEDITOR_DL_BITMAP_TRANSFORM_C:
-					case FTEDITOR_DL_BITMAP_TRANSFORM_D:
-					case FTEDITOR_DL_BITMAP_TRANSFORM_F:
-						pa.Parameter[0].I = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_HANDLE:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_SOURCE:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_LAYOUT:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 128;
-						pa.Parameter[2].U = 64;
-						pa.ExpectedParameterCount = 3;
-						break;
-					case FTEDITOR_DL_BITMAP_LAYOUT_H:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_BITMAP_SIZE:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-						pa.Parameter[2].U = 0;
-						pa.Parameter[3].U = 64;
-						pa.Parameter[4].U = 64;
-						pa.ExpectedParameterCount = 5;
-						break;
-					case FTEDITOR_DL_BITMAP_SIZE_H:
-						pa.Parameter[0].U = 0;
-						pa.Parameter[1].U = 0;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case FTEDITOR_DL_PALETTE_SOURCE:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_CELL:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_RESTORE_CONTEXT:
-					case FTEDITOR_DL_SAVE_CONTEXT:
-						pa.ExpectedParameterCount = 0;
-						break;
-					case FTEDITOR_DL_VERTEX_FORMAT:
-						pa.Parameter[0].U = 4;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_VERTEX_TRANSLATE_X:
-					case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
-						pa.Parameter[0].U = 256;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_EXT_FORMAT:
-						pa.Parameter[0].U = 0;
-						pa.ExpectedParameterCount = 1;
-						break;
-					case FTEDITOR_DL_BITMAP_SWIZZLE:
-						pa.Parameter[0].U = 2;
-						pa.Parameter[1].U = 3;
-						pa.Parameter[2].U = 4;
-						pa.Parameter[3].U = 5;
-						pa.ExpectedParameterCount = 4;
-					}
-				}
-				m_LineEditor->insertLine(line, pa);
-				m_LineEditor->selectLine(line);
-				m_LineEditor->codeEditor()->endUndoCombine();
-			}
-		}
-		else
-		{
-			printf("Warning: No line editor\n");
-		}
-	}
+            if (fileSuffix == "ram_g") {
+              debugLog("Create commands for .ram_g content file\n");
+              pa.IdLeft = 0xFFFFFF00;
+              pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
+              pa.Parameter[0].I = mappingX(e);
+              pa.Parameter[1].I = mappingY(e);
+
+              if (infoJson.contains("object")) {
+                auto obj = infoJson.value("object").toObject();
+                pa.Parameter[2].I = obj.value("offset").toInt();
+              } else
+                pa.Parameter[2].I = 0;
+              pa.ExpectedParameterCount = 3;
+              m_LineEditor->insertLine(line, pa);
+              ++line;
+            } else if (fileSuffix == "flash") {
+              debugLog("Create commands for .flash content file\n");
+              pa.IdLeft = 0xFFFFFF00;
+              pa.IdRight = CMD_ANIMFRAME & 0xFF;
+              pa.Parameter[0].I = mappingX(e);
+              pa.Parameter[1].I = mappingY(e);
+
+              if (infoJson.contains("object")) {
+                auto obj = infoJson.value("object").toObject();
+                pa.Parameter[2].I = obj.value("offset").toInt();
+              } else
+                pa.Parameter[2].I = 0;
+              pa.ExpectedParameterCount = 3;
+              m_LineEditor->insertLine(line, pa);
+              ++line;
+            } else if (fileSuffix == "xfont") {
+              debugLog("Create commands for .xfont content file\n");
+              QString savedCharsFile =
+                  contentInfo->SourcePath
+                      .left(contentInfo->SourcePath.lastIndexOf('.'))
+                      .append("_converted_chars.txt");
+              QString data =
+                  ReadWriteUtil::readConvertedCharsFile(savedCharsFile);
+              DLUtil::addTextCmd(m_LineEditor, pa, bitmapHandle, data.left(5),
+                                 line, mappingX(e), mappingY(e));
+            } else if (fileSuffix == "raw") {
+              if (infoJson.contains("type")) {
+                auto contentType = infoJson["type"].toString();
+                if (contentType == "bitmap") {
+                  debugLog("Create commands for .raw bitmap content file");
+                  int32_t x = mappingX(e)
+                              << m_LineEditor->getVertextFormat(line);
+                  int32_t y = mappingY(e)
+                              << m_LineEditor->getVertextFormat(line);
+                  if (contentInfo->ImageFormat == PALETTED8) {
+                    debugLog("Create commands for PALETTED8 content file");
+                    auto searchedFile = contentInfo->DestName;
+                    searchedFile.replace("_index", "_lut");
+                    auto searchedContent =
+                        m_MainWindow->contentManager()->find(searchedFile);
+                    DLUtil::addPaletted8Cmds(
+                        m_LineEditor, pa,
+                        searchedContent ? searchedContent->bitmapAddress() : 0,
+                        selection, line, x, y);
+                  } else {
+                    DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo,
+                                          selection, line, x, y);
+                  }
+                } else if (contentType == "legacyfont") {
+                  debugLog(
+                      "Create commands for .raw legacy font content file\n");
+                  QString savedCharsIndexFile =
+                      contentInfo->SourcePath
+                          .left(contentInfo->SourcePath.lastIndexOf('.'))
+                          .append("_converted_char_index.txt");
+                  int first = 0, last = 0;
+                  ReadWriteUtil::readConvertedCharsIndexFile(
+                      savedCharsIndexFile, first, last);
+                  QString defaultText;
+                  if (first != 0 && last != 0) {
+                    int defaultNoOfChar = 5;
+                    int count = 0;
+                    int index = first + 1;
+                    while (count < defaultNoOfChar) {
+                      if (index == 34)  // Character "
+                        ++index;
+
+                      defaultText += QChar(index);
+                      ++count;
+                      ++index;
+                    }
+                  }
+                  DLUtil::addTextCmd(
+                      m_LineEditor, pa, bitmapHandle,
+                      !defaultText.isEmpty() ? defaultText : "Text", line,
+                      mappingX(e), mappingY(e));
+                }
+              }
+            }
+          } else {
+            auto fileSuffix =
+                QFileInfo(contentInfo->SourcePath).suffix().toLower();
+            if (fileSuffix == "avi") {
+              printf("Create commands for .avi content file\n");
+              pa.IdLeft = 0xFFFFFF00;
+              pa.IdRight = CMD_PLAYVIDEO & 0xFF;
+              pa.Parameter[0].I = 0;
+              pa.StringParameter = contentInfo->SourcePath.toStdString();
+              pa.ExpectedStringParameter = true;
+              pa.ExpectedParameterCount = 2;
+              m_LineEditor->insertLine(line, pa);
+              ++line;
+            } else {
+              int32_t x = mappingX(e) << m_LineEditor->getVertextFormat(line);
+              int32_t y = mappingY(e) << m_LineEditor->getVertextFormat(line);
+              DLUtil::addBitmapCmds(m_LineEditor, pa, contentInfo, selection,
+                                    line, x, y);
+            }
+          }
+
+          m_LineEditor->codeEditor()->endUndoCombine();
+          // m_MainWindow->undoStack()->endMacro();
+          switch (selection) {
+            case BITMAPS:
+            case POINTS:
+              break;
+            default:
+              // Used for linestrip style drawing
+              m_Insert->setChecked(true);
+              break;
+          }
+        }
+      } else if (selectionType == FTEDITOR_SELECTION_DL_STATE ||
+                 selectionType == FTEDITOR_SELECTION_CMD_STATE) {
+        bool useMouseStack;
+        int lineOverride = -1;
+        if (selectionType == FTEDITOR_SELECTION_DL_STATE &&
+            (selection == FTEDITOR_DL_CLEAR_COLOR_RGB ||
+             selection == FTEDITOR_DL_CLEAR_COLOR_A ||
+             selection == FTEDITOR_DL_CLEAR_STENCIL ||
+             selection == FTEDITOR_DL_CLEAR_TAG)) {
+          // Try to find CLEAR command backward from current pos
+          int l = m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop
+                                                : m_MouseStackDlTop;
+          for (int i = l; i >= 0; --i) {
+            DlParsed pai = m_LineEditor->getLine(i);
+            if (pai.ValidId && (pai.IdLeft == FTEDITOR_DL_INSTRUCTION) &&
+                (pai.IdRight == FTEDITOR_DL_CLEAR)) {
+              lineOverride = i;
+              break;
+            }
+          }
+          useMouseStack = m_MouseStackValid;
+        } else {
+          // Only use primitive under cursor if it's not the CLEAR primitive
+          DlParsed pac = m_LineEditor->getLine(m_LineEditor->isCoprocessor()
+                                                   ? m_MouseStackCmdTop
+                                                   : m_MouseStackDlTop);
+          useMouseStack =
+              m_MouseStackValid &&
+              !(pac.ValidId && (pac.IdLeft == FTEDITOR_DL_INSTRUCTION) &&
+                (pac.IdRight == FTEDITOR_DL_CLEAR));
+        }
+        int line =
+            lineOverride >= 0
+                ? lineOverride
+                : (useMouseStack
+                       ? (m_LineEditor->isCoprocessor() ? m_MouseStackCmdTop
+                                                        : m_MouseStackDlTop)
+                       : (m_LineNumber >= 0
+                              ? (m_LineEditor->getLine(m_LineNumber).ValidId
+                                     ? m_LineNumber + 1
+                                     : m_LineNumber)
+                              : 0));
+        m_LineEditor->codeEditor()->beginUndoCombine("Drag and drop property");
+        DlParsed pa;
+        pa.ValidId = true;
+        pa.ExpectedStringParameter = false;
+        if (selectionType == FTEDITOR_SELECTION_CMD_STATE) {
+          pa.IdLeft = 0xFFFFFF00;
+          pa.IdRight = selection & 0xFF;
+          switch (selection) {
+            case CMD_REGREAD:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case CMD_BGCOLOR:
+              pa.Parameter[0].U = 0x7F3F1F;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_FGCOLOR:
+              pa.Parameter[0].U = 0xFF7F3F;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_GRADCOLOR:
+              pa.Parameter[0].U = 0xFFFF7F;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_LOADIDENTITY:
+            case CMD_SETMATRIX:
+              pa.ExpectedParameterCount = 0;
+              break;
+            case CMD_SCALE:
+              pa.Parameter[0].I = 65536;
+              pa.Parameter[1].I = 65536;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case CMD_ROTATE:
+              pa.Parameter[0].I = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_TRANSLATE:
+              pa.Parameter[0].I = 0;
+              pa.Parameter[1].I = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case CMD_SETSCRATCH:
+              pa.Parameter[0].I = 15;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_SETBASE:
+              pa.Parameter[0].I = 10;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_ROMFONT:
+              pa.Parameter[0].I =
+                  m_MainWindow->contentManager()->editorFindFreeHandle(
+                      m_LineEditor);
+              if (pa.Parameter[0].I < 0) pa.Parameter[0].I = 31;
+              if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT880 &&
+                  FTEDITOR_CURRENT_DEVICE <= FTEDITOR_BT883)
+                pa.Parameter[1].I = 31;
+              else
+                pa.Parameter[1].I = 34;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case CMD_SETFONT:
+              pa.Parameter[0].I = 0;
+              pa.Parameter[1].I = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case CMD_SETFONT2:
+              pa.Parameter[0].I = 0;
+              pa.Parameter[1].I = 0;
+              pa.Parameter[2].I = 32;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case CMD_SETBITMAP:
+              pa.Parameter[0].I = 0;
+              pa.Parameter[1].I = 0;
+              pa.Parameter[2].I = 64;
+              pa.Parameter[3].I = 64;
+              pa.ExpectedParameterCount = 4;
+              break;
+            case CMD_BITMAP_TRANSFORM:
+              for (size_t i = 0; i < 13; i++) {
+                pa.Parameter[i].I = 0;
+              }
+              pa.ExpectedParameterCount = 13;
+              break;
+            case CMD_FLASHSOURCE:
+              pa.Parameter[0].I = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case CMD_ANIMXY:
+              pa.Parameter[0].I = 0;
+              pa.Parameter[1].I = 0;
+              pa.Parameter[2].I = 0;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case CMD_RUNANIM:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].I = -1;
+              pa.ExpectedParameterCount = 2;
+              break;
+          }
+        } else {
+          pa.IdLeft = 0;
+          pa.IdRight = selection;
+          switch (selection) {
+            case FTEDITOR_DL_CLEAR_COLOR_RGB:
+              pa.Parameter[0].U = 31;
+              pa.Parameter[1].U = 63;
+              pa.Parameter[2].U = 127;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case FTEDITOR_DL_CLEAR_COLOR_A:
+              pa.Parameter[0].U = 255;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_CLEAR_STENCIL:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_CLEAR_TAG:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_COLOR_RGB:
+              pa.Parameter[0].U = 255;
+              pa.Parameter[1].U = 255;
+              pa.Parameter[2].U = 127;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case FTEDITOR_DL_COLOR_A:
+              pa.Parameter[0].U = 255;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_COLOR_MASK:
+              pa.Parameter[0].U = 1;
+              pa.Parameter[1].U = 1;
+              pa.Parameter[2].U = 1;
+              pa.Parameter[3].U = 1;
+              pa.ExpectedParameterCount = 4;
+              break;
+            case FTEDITOR_DL_LINE_WIDTH:
+              pa.Parameter[0].U = 64;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_POINT_SIZE:
+              pa.Parameter[0].U = 256;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BLEND_FUNC:
+              pa.Parameter[0].U = SRC_ALPHA;
+              pa.Parameter[1].U = ONE_MINUS_SRC_ALPHA;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_SCISSOR_SIZE:
+              pa.Parameter[0].U = 512;
+              pa.Parameter[1].U = 512;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_SCISSOR_XY:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_ALPHA_FUNC:
+              pa.Parameter[0].U = ALWAYS;
+              pa.Parameter[1].U = ZERO;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_STENCIL_FUNC:
+              pa.Parameter[0].U = ALWAYS;
+              pa.Parameter[1].U = 0;
+              pa.Parameter[2].U = 255;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case FTEDITOR_DL_STENCIL_MASK:
+              pa.Parameter[0].U = 255;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_STENCIL_OP:
+              pa.Parameter[0].U = KEEP;
+              pa.Parameter[1].U = KEEP;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_TAG:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_TAG_MASK:
+              pa.Parameter[0].U = 1;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_TRANSFORM_A:
+            case FTEDITOR_DL_BITMAP_TRANSFORM_E:
+              pa.Parameter[0].I = 256;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_TRANSFORM_B:
+            case FTEDITOR_DL_BITMAP_TRANSFORM_C:
+            case FTEDITOR_DL_BITMAP_TRANSFORM_D:
+            case FTEDITOR_DL_BITMAP_TRANSFORM_F:
+              pa.Parameter[0].I = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_HANDLE:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_SOURCE:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_LAYOUT:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 128;
+              pa.Parameter[2].U = 64;
+              pa.ExpectedParameterCount = 3;
+              break;
+            case FTEDITOR_DL_BITMAP_LAYOUT_H:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_BITMAP_SIZE:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 0;
+              pa.Parameter[2].U = 0;
+              pa.Parameter[3].U = 64;
+              pa.Parameter[4].U = 64;
+              pa.ExpectedParameterCount = 5;
+              break;
+            case FTEDITOR_DL_BITMAP_SIZE_H:
+              pa.Parameter[0].U = 0;
+              pa.Parameter[1].U = 0;
+              pa.ExpectedParameterCount = 2;
+              break;
+            case FTEDITOR_DL_PALETTE_SOURCE:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_CELL:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_RESTORE_CONTEXT:
+            case FTEDITOR_DL_SAVE_CONTEXT:
+              pa.ExpectedParameterCount = 0;
+              break;
+            case FTEDITOR_DL_VERTEX_FORMAT:
+              pa.Parameter[0].U = 4;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_VERTEX_TRANSLATE_X:
+            case FTEDITOR_DL_VERTEX_TRANSLATE_Y:
+              pa.Parameter[0].U = 256;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_EXT_FORMAT:
+              pa.Parameter[0].U = 0;
+              pa.ExpectedParameterCount = 1;
+              break;
+            case FTEDITOR_DL_BITMAP_SWIZZLE:
+              pa.Parameter[0].U = 2;
+              pa.Parameter[1].U = 3;
+              pa.Parameter[2].U = 4;
+              pa.Parameter[3].U = 5;
+              pa.ExpectedParameterCount = 4;
+          }
+        }
+        m_LineEditor->insertLine(line, pa);
+        m_LineEditor->selectLine(line);
+        m_LineEditor->codeEditor()->endUndoCombine();
+      }
+    } else {
+      printf("Warning: No line editor\n");
+    }
+  }
 }
 
 void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)

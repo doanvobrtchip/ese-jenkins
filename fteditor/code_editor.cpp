@@ -83,56 +83,40 @@ m_LastKeyHandler(NULL)
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
 
-	// REVIEW 2023-01-19: There are multiple instances of code editor.
-	// This seems to be running the same handler on the application/system level clipboard. 
-	// Not sure if this is the right way. Does this affect every copy paste even outside the appplication? 
-	// To test.
+  // REVIEW 2023-01-19: There are multiple instances of code editor.
+  // This seems to be running the same handler on the application/system level clipboard.
+  // Not sure if this is the right way. Does this affect every copy paste even outside the appplication?
+  // To test.
 
-	// QPlainTextEdit is using paragraph break instead of line break if we use
-	// copy()
-	m_Clipboard = QGuiApplication::clipboard();
-	connect(m_Clipboard, &QClipboard::dataChanged, this, [&]() {
-		if (m_LatestText.isEmpty())
-			return;
-		QPlainTextEdit cbPTE, latestPTE;
-		cbPTE.setPlainText(m_Clipboard->text());
-		latestPTE.setPlainText(m_LatestText);
-		QString latestPT = latestPTE.toPlainText();
-		QString cbPT = cbPTE.toPlainText();
-		if (latestPT == cbPT && m_Clipboard->text() != latestPT)
-		{
-			debugLog(QString("QPlainTextEdit | Update clipboard"));
-			m_Clipboard->setText(latestPT);
-		}
-	});
-	connect(this, &QPlainTextEdit::selectionChanged, this, [&]() {
-		auto curTxt = this->textCursor().selectedText();
-		if (!curTxt.isEmpty())
-		{
-			m_LatestText = curTxt;
-		}
-	});
+  //This affects every copy paste even outside the appplication.
+  //We have a condition to make sure that we modify the clipboard in the right case.
+
+  // QPlainTextEdit is using paragraph break instead of line break if we use
+  // copy()
+  m_Clipboard = QGuiApplication::clipboard();
+  connect(m_Clipboard, &QClipboard::dataChanged, this, [&]() {
+    if (m_LatestText.isEmpty()) return;
+    QPlainTextEdit cbPTE, latestPTE;
+    cbPTE.setPlainText(m_Clipboard->text());
+    latestPTE.setPlainText(m_LatestText);
+    QString latestPT = latestPTE.toPlainText();
+    QString cbPT = cbPTE.toPlainText();
+    if (latestPT == cbPT && m_Clipboard->text() != latestPT) {
+      debugLog(QString("QPlainTextEdit | Update clipboard"));
+      m_Clipboard->setText(latestPT);
+    }
+  });
+  connect(this, &QPlainTextEdit::selectionChanged, this, [&]() {
+    auto curTxt = this->textCursor().selectedText();
+    if (!curTxt.isEmpty()) {
+      m_LatestText = curTxt;
+    }
+  });
 }
 
-CodeEditor::~CodeEditor()
-{
-	/*
-	
-	// REVIEW 2023-01-19: QObject are automatically deleted by their parents. 
-	// This `deleteLater` does not seem correct, since this object does not own these objects!
-	
-	m_Clipboard->deleteLater();
-	m_KeyHandler->deleteLater();
-	m_LastKeyHandler->deleteLater();
-	m_Completer->deleteLater();
-	lineNumberArea->deleteLater();
-	*/
-}
-
-void CodeEditor::focusInEvent(QFocusEvent *event)
-{
-	QPlainTextEdit::focusInEvent(event);
-	emit cursorPositionChanged();
+void CodeEditor::focusInEvent(QFocusEvent *event) {
+  QPlainTextEdit::focusInEvent(event);
+//  emit cursorPositionChanged();
 }
 
 /*void CodeEditor::setUndoStack(QUndoStack *undo_stack)
@@ -250,53 +234,42 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 
 	bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E);
 
+  if (!isShortcut || !m_Completer) {
+    if (e->key() == Qt::Key_Delete && m_InteractiveDelete) {
+      debugLog("Interactive delete");
+      FTEDITOR::tempBeginIdel(this);
+      QTextCursor c = textCursor();
+      m_Deleting = true;
+      for (int i = m_SelectedLines.size() - 1; i >= 0 ; i--) {
+        int line = m_SelectedLines.at(i);
+        debugLog(QString("Delete line: %1 | Pos: %2").arg(line).arg(document()->findBlockByNumber(line).position()));
+        FTEDITOR::editorPurgePalette8(this, line);
+        c.setPosition(document()->findBlockByNumber(line).position());
+        c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+        c.insertText("");
+        // cleanup BEGIN/END ->
+        {
+          QString begin = document()->findBlockByNumber(line - 1).text();
+          QString end = document()->findBlockByNumber(line).text();
+          if (begin.toUpper().trimmed().startsWith("BEGIN") &&
+              end.toUpper().trimmed().startsWith("END")) {
+            c.setPosition(document()->findBlockByNumber(line - 1).position());
+            c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+            c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+            c.insertText("");
+          }
+        }
+      }
 
-	if (!isShortcut || !m_Completer)
-	{
-		/*if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
-			&& (e->key() == Qt::Key_Z))
-		{
-			// trap
-			m_UndoStack->undo();
-		}
-		else if (m_UndoStack && (e->modifiers() == Qt::ControlModifier)
-			&& (e->key() == Qt::Key_Y))
-		{
-			// trap
-			m_UndoStack->redo();
-		}*/
-		if (e->key() == Qt::Key_Delete && m_InteractiveDelete)
-		{
-			printf("Interactive delete\n");
-			FTEDITOR::tempBeginIdel(this);
-			QTextCursor c = textCursor();
-			int line = c.block().blockNumber();
-			FTEDITOR::editorPurgePalette8(this, line);
-			c.setPosition(document()->findBlockByNumber(line).position());
-			c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-			c.insertText("");
-			// cleanup BEGIN/END ->
-			{
-				QString begin = document()->findBlockByNumber(line - 1).text();
-				QString end = document()->findBlockByNumber(line).text();
-				if (begin.toUpper().trimmed().startsWith("BEGIN") && end.toUpper().trimmed().startsWith("END"))
-				{
-					c.setPosition(document()->findBlockByNumber(line - 1).position());
-					c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-					c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-					c.insertText("");
-				}
-			}
-			FTEDITOR::tempEndIdel(this);
-			// <- cleanup BEGIN/END
-			setInteractiveDelete(true);
-			return;
-		}
-		else
-		{
-			CodeEditorParent::keyPressEvent(e);
-		}
-	}
+      FTEDITOR::tempEndIdel(this);
+      // <- cleanup BEGIN/END
+      setInteractiveDelete(true);
+      m_Deleting = false;
+      return;
+    } else {
+      CodeEditorParent::keyPressEvent(e);
+    }
+  }
 
 	const bool ctrlOrShift = e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
 	if (!m_Completer || (ctrlOrShift && e->text().isEmpty()))
@@ -544,29 +517,40 @@ QString CodeEditor::textUnderCursor() const
 	return tc.selectedText();
 }
 
-void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
+const QList<int> &CodeEditor::SelectedLines() const
 {
-	QPainter painter(lineNumberArea);
-	// painter.fillRect(event->rect(), QColor(Qt::lightGray));
-
-
-	QTextBlock block = firstVisibleBlock();
-	int blockNumber = block.blockNumber();
-	int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
-	int bottom = top + (int) blockBoundingRect(block).height();
-
-	while (block.isValid() && top <= event->rect().bottom()) {
-		if (block.isVisible() && bottom >= event->rect().top()) {
-			QString number = QString::number(blockNumber/* + 1*/);
-			painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice) ? Qt::red : Qt::black);
-			painter.drawText(0, top, lineNumberArea->width() - 4, fontMetrics().height(),
-				Qt::AlignRight, number);
-		}
-
-		block = block.next();
-		top = bottom;
-		bottom = top + (int) blockBoundingRect(block).height();
-		++blockNumber;
-	}
+  return m_SelectedLines;
 }
 
+void CodeEditor::setSelectedLines(const QList<int> &newSelectedLines)
+{
+  if (m_Deleting) return;
+  m_SelectedLines.clear();
+  m_SelectedLines = newSelectedLines;
+}
+
+void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
+  QPainter painter(lineNumberArea);
+  // painter.fillRect(event->rect(), QColor(Qt::lightGray));
+
+  QTextBlock block = firstVisibleBlock();
+  int blockNumber = block.blockNumber();
+  int top = (int)blockBoundingGeometry(block).translated(contentOffset()).top();
+  int bottom = top + (int)blockBoundingRect(block).height();
+
+  while (block.isValid() && top <= event->rect().bottom()) {
+    if (block.isVisible() && bottom >= event->rect().top()) {
+      QString number = QString::number(blockNumber /* + 1*/);
+      painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice)
+                         ? Qt::red
+                         : Qt::black);
+      painter.drawText(0, top, lineNumberArea->width() - 4,
+                       fontMetrics().height(), Qt::AlignRight, number);
+    }
+
+    block = block.next();
+    top = bottom;
+    bottom = top + (int)blockBoundingRect(block).height();
+    ++blockNumber;
+  }
+}

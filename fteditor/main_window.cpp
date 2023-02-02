@@ -333,7 +333,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	
 	loadRecentProject();
 
-	m_EmulatorViewport = new InteractiveViewport(this);
+  m_EmulatorViewport = new InteractiveViewport(this);
+  emit readyToSetup(m_EmulatorViewport);
 
 	QWidget *centralWidget = new QWidget(this);
 	QGridLayout *layout = new QGridLayout();
