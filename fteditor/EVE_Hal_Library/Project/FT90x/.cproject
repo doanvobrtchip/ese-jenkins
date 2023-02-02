@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053" name="Debug" parent="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug">
+					<folderInfo id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053." name="/" resourcePath="">
+						<toolChain id="com.ftdichip.managedbuild.gnu.cross.ft90x.toolchain.exe.debug.1985084191" name="FTDIchip FT90x GCC" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.toolchain.exe.debug">
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.createflash.1952399828" name="Create Flash Image" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.createflash"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.printsize.746290809" name="Display Image Size" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.printsize" value="true" valueType="boolean"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.prefix.1640083167" name="Target Prefix" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.prefix" value="ft32-elf-" valueType="string"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.path.19155672" name="Toolchain Path" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.path" value="C:/Program Files (x86)/FTDI/FT90x Toolchain/Toolchain/tools/bin" valueType="string"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.ftdichip.managedbuild.targetPlatform.gnu.cross.ft90x.1137251604" isAbstract="false" osList="all" superClass="com.ftdichip.managedbuild.targetPlatform.gnu.cross.ft90x"/>
+							<builder buildPath="${workspace_loc:/FT80x_Hal_Library}/Debug" id="com.ftdichip.managedbuild.gnu.cross.ft90x.builder.480280667" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.builder"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler.164392317" name="FT90x GCC Compiler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler">
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.level.483756950" name="Optimization Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.flags.1453111584" name="Other optimization flags" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-Og" valueType="string"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.level.1790086531" name="Debug Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.level" useByScannerDiscovery="false"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.other.1334251003" name="Other debugging flags" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.other" useByScannerDiscovery="false" value="-fvar-tracking -fvar-tracking-assignments" valueType="string"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.include.paths.629970765" name="Include paths (-I)" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${FT90X_TOOLCHAIN}/hardware/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;..\..\..\Hdr\FT90x&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;..\..\..\Hdr&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.dialect.std.295202934" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option id="com.ftdichip.ft90x.build.gcc.option.defsym.2118251383" name="Defined symbols (-D)" superClass="com.ftdichip.ft90x.build.gcc.option.defsym" useByScannerDiscovery="false"/>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.229797416" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__FT900__"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.762033838" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.compiler.1651614223" name="FT90x G++ Compiler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.835983658" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.debugging.level.1542014572" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.level.311524446" name="Optimization Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.level.442182925" name="Debug Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.level" useByScannerDiscovery="false"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.other.880842245" name="Other debugging flags" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.other" useByScannerDiscovery="false" value="-fvar-tracking -fvar-tracking-assignments" valueType="string"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.linker.1278463484" name="FT90x GCC Linker" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.linker">
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.linker.option.libs.316026237" name="Libraries (-l)" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.linker.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="ft900"/>
+									<listOptionValue builtIn="false" value="m"/>
+									<listOptionValue builtIn="false" value="c"/>
+									<listOptionValue builtIn="false" value="stub"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1702893949" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.linker.185971148" name="FT90x G++ Linker" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.linker"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.archiver.1361143622" name="FT90x GCC Archiver" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.archiver"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.assembler.1355480405" name="FT90x GCC Assembler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.assembler">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.314794748" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.createflash.1002368454" name="FT90x Flash File Generator" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.createflash"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.printsize.314752044" name="FT90x Display Image Size" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.printsize"/>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480" name="Release" parent="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release">
+					<folderInfo id="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480." name="/" resourcePath="">
+						<toolChain id="com.ftdichip.managedbuild.gnu.cross.ft90x.toolchain.exe.release.433248483" name="FTDIchip FT90x GCC" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.toolchain.exe.release">
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.createflash.79349279" name="Create Flash Image" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.createflash"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.printsize.1482036673" name="Display Image Size" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.printsize" value="true" valueType="boolean"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.prefix.987393713" name="Target Prefix" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.prefix" value="ft32-elf-" valueType="string"/>
+							<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.option.path.2019050731" name="Toolchain Path" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.option.path" value="C:/Program Files (x86)/FTDI/FT90x Toolchain/Toolchain/tools/bin" valueType="string"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.ftdichip.managedbuild.targetPlatform.gnu.cross.ft90x.169053651" isAbstract="false" osList="all" superClass="com.ftdichip.managedbuild.targetPlatform.gnu.cross.ft90x"/>
+							<builder buildPath="${workspace_loc:/FT80x_Hal_Library}/Release" id="com.ftdichip.managedbuild.gnu.cross.ft90x.builder.358464554" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.builder"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler.1063808553" name="FT90x GCC Compiler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler">
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.level.2105594896" name="Optimization Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.level" useByScannerDiscovery="false"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.flags.231696530" name="Other optimization flags" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-Os" valueType="string"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.level.162355138" name="Debug Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.include.paths.849694790" name="Include paths (-I)" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${FT90X_TOOLCHAIN}/hardware/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;..\..\..\Hdr\FT90x&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;..\..\..\Hdr&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1417660212" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.compiler.1427847506" name="FT90x G++ Compiler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.1942660525" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.debugging.level.327558867" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.level.370317970" name="Optimization Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.level" useByScannerDiscovery="false"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.flags.1220119455" name="Other optimization flags" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-Os" valueType="string"/>
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.level.933615981" name="Debug Level" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.linker.2059303027" name="FT90x GCC Linker" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.linker">
+								<option id="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.linker.option.libs.1945184215" name="Libraries (-l)" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.build.gcc.c.linker.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="ft900"/>
+									<listOptionValue builtIn="false" value="m"/>
+									<listOptionValue builtIn="false" value="c"/>
+									<listOptionValue builtIn="false" value="stub"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1511687995" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.linker.1407014972" name="FT90x G++ Linker" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.cpp.linker"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.archiver.225067427" name="FT90x GCC Archiver" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.archiver"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.assembler.124128503" name="FT90x GCC Assembler" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.assembler">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.28388901" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.createflash.1271624132" name="FT90x Flash File Generator" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.createflash"/>
+							<tool id="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.printsize.1149184035" name="FT90x Display Image Size" superClass="com.ftdichip.managedbuild.gnu.cross.ft90x.tool.printsize"/>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="FT80x_Hal_Library.com.ftdichip.managedbuild.target.gnu.cross.ft90x.exe.1023629175" name="Executable"/>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053;com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.debug.2099088053.;com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler.164392317;cdt.managedbuild.tool.gnu.c.compiler.input.762033838">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480;com.ftdichip.managedbuild.config.gnu.cross.ft90x.exe.release.1859698480.;com.ftdichip.managedbuild.gnu.cross.ft90x.tool.c.compiler.1063808553;cdt.managedbuild.tool.gnu.c.compiler.input.1417660212">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/FT80x_Hal_Library"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/FT80x_Hal_Library"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="org.eclipse.cdt.core.language.mapping">
+		<project-mappings/>
+	</storageModule>
+</cproject>

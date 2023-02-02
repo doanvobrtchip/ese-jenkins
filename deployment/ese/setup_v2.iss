@@ -2,7 +2,7 @@
 
 #define RootDir = "..\.."
 #define BuildDir = (RootDir)+ "\build\bin\Release"
-#define DeploymentFileDir = (RootDir) + "\fteditor\deployment"
+#define DependenciesAppDir = (RootDir) + "\fteditor\dependencies"
 
 #define MyAppName "EVE Screen Editor"
 #define MyAppVersion "v4.5.0_Beta"
@@ -94,27 +94,27 @@ Source: "{#BuildDir}\eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;Qt
 Source: "{#BuildDir}\qt-deployment\*.*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
-Source: "{#DeploymentFileDir}\pngquant.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\config.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\pngquant.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\config.json"; DestDir: "{app}"; Flags: ignoreversion
 ;PNG
-Source: "{#DeploymentFileDir}\libpng16.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\libpng\libpng16.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;FreeType
-Source: "{#DeploymentFileDir}\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\freetype\freetype.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;PIL
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\site-packages\PIL\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;ASTC
-Source: "{#DeploymentFileDir}\astcenc-sse2.exe";   DestDir: "{app}"; Flags: ignoreversion 
-Source: "{#DeploymentFileDir}\astcenc-sse4.2.exe"; DestDir: "{app}"; Flags: ignoreversion 
-Source: "{#DeploymentFileDir}\astcenc-avx2.exe";   DestDir: "{app}"; Flags: ignoreversion 
-Source: "{#DeploymentFileDir}\install_astc.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; AfterInstall: RunASTCInstaller
+Source: "{#DependenciesAppDir}\astcenc\astcenc-sse2.exe";   DestDir: "{app}"; Flags: ignoreversion 
+Source: "{#DependenciesAppDir}\astcenc\astcenc-sse4.2.exe"; DestDir: "{app}"; Flags: ignoreversion 
+Source: "{#DependenciesAppDir}\astcenc\astcenc-avx2.exe";   DestDir: "{app}"; Flags: ignoreversion 
+Source: "{#DependenciesAppDir}\astcenc\install_astc.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; AfterInstall: RunASTCInstaller
 ;Python Version 3.10
-Source: "{#DeploymentFileDir}\Python\Python310\python310.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#DeploymentFileDir}\Python\Python310\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\python310.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\Python\Python310\Lib\*.*"; Excludes: "*.pyc"; DestDir: "{app}\Lib"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Code]
 procedure RunASTCInstaller;
