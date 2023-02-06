@@ -11,12 +11,8 @@ CMAKE -Bbuild/ ^
     -DWITH_PYTHON=TRUE ^
     -DWITH_FREETYPE=TRUE ^
     -DWITH_EMUTEST=FALSE ^
-    -DFREETYPE_INCLUDE_DIRS:STRING=%cd%\freetype\include ^
-    -DFREETYPE_LIBRARY:STRING=%cd%\freetype\build\Release\freetype.lib ^
-    -DPNG_LIBRARY:STRING="./GnuWin32/lib/libpng.lib" ^
-    -DPNG_PNG_INCLUDE_DIR:STRING="./GnuWin32/include" ^
-    -DZLIB_LIBRARY:STRING="./zlib-1.2.3-bin/bin" ^
-    -DZLIB_INCLUDE_DIR:STRING="./zlib/build/Release/zlib.lib"
+    -DFREETYPE_INCLUDE_DIRS:STRING=%cd%\fteditor\dependencies\freetype\include ^
+    -DFREETYPE_LIBRARY:STRING=%cd%\fteditor\dependencies\freetype\freetype.lib"
 CMAKE --build build --config Release
 
 ::Create installer and zip 

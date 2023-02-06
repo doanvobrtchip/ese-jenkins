@@ -21,9 +21,6 @@ test
 Temp
 
 # Windows compile
-*.exe
-*.dll
-*.lib
 *.obj
 
 # Linux compile
@@ -115,7 +112,6 @@ ipch
 .kdev4
 
 # Python cache
-*.pyd
 *.pyc
 
 # Qt compiler
