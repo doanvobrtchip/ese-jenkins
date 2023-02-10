@@ -37,7 +37,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QVBoxLayout>
-#include <QMessageBox>
 #include <QtConcurrent/QtConcurrent>
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -819,7 +818,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 						contentInfo->CachedImageWidth = infoJson["width"].toInt();
 						contentInfo->CachedImageHeight = infoJson["height"].toInt();
 						contentInfo->CachedImageStride = infoJson["stride"].toInt();
-						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(infoJson["format"].toString().toLocal8Bit().data());
+						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
+						    infoJson["format"].toString().toLocal8Bit().data());
 					}
 					else if (contentType == "legacyfont")
 					{
@@ -833,7 +833,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 							contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
 							contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
 							contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
-								infoJson["format"].toString().toLocal8Bit().data());
+							    infoJson["format"].toString().toLocal8Bit().data());
 						}
 						contentInfo->MemoryAddress = infoJson["address"].toInt();
 						if (getFreeMemoryAddress() <= contentInfo->MemoryAddress)
@@ -1400,19 +1400,20 @@ void ContentManager::addInternal(QStringList fileNameList)
 					msgBox.addButton(QMessageBox::Ok);
 					msgBox.setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 					msgBox.setText(
-						tr("A valid %1 file is found for the imported content: %2 "
-						   "file.\nYou may drag it to viewport now.")
-						    .arg(QString(infoFileType).toUpper(), originalInfoFile));
+					    tr("A valid %1 file is found for the imported content: %2 "
+					       "file.\nThe imported content is a EVE asset and you may drag "
+					       "it to viewport later.")
+					        .arg(QString(infoFileType).toUpper(), originalInfoFile));
 
-					QObject::connect(showMsgCb, &QCheckBox::stateChanged,
-						[this](int state) {
-							if (static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked)
-							{
-								this->m_ShowMsgBox = false;
-							}
-							else
-								m_ShowMsgBox = true;
-						});
+					QObject::connect(showMsgCb, &QCheckBox::stateChanged, this,
+					    [this](int state) {
+						    if (static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked)
+						    {
+							    this->m_ShowMsgBox = false;
+						    }
+						    else
+							    m_ShowMsgBox = true;
+					    });
 					msgBox.exec();
 				}
 			}
