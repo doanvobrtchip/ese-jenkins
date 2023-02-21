@@ -1144,7 +1144,6 @@ void InteractiveViewport::setEditorLine(DlEditor *editor, int line,
   const DlParsed &parsed = m_LineEditor->getLine(line);
   if (!m_SelectedLines.contains(line) && isSelectable(parsed)) {
     m_SelectedLines.append(line);
-    debugLog(QString("Selected list | Append line: %1").arg(line));
   }
   emit selectedLinesChanged(m_SelectedLines);
   m_LineNumber = line;

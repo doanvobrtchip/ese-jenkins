@@ -226,6 +226,7 @@ public:
 	bool cacheImageInfo(ContentInfo *info);
 	// Find content info
 	ContentInfo *find(const QString &destName);
+	QList<ContentInfo*> contentInfoList();
 	// Suppress overlap check
 	void suppressOverlapCheck();
 	// Resume overlap check

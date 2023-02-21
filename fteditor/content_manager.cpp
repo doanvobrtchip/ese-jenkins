@@ -41,7 +41,8 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "bt8xxemu_diag.h"
 
 // Project includes
-#include "src/inspector/RamG.h"
+#include "inspector/ram_g/RamGDockWidget.h"
+#include "inspector/ram_g/RamGInspector.h"
 #include "utils/ReadWriteUtil.h"
 #include "main_window.h"
 #include "properties_editor.h"
@@ -1501,10 +1502,20 @@ void ContentManager::exportFlashMapped()
 
 void ContentManager::setup(QObject *obj)
 {
-	if (m_MainWindow->inspector() && (obj == m_MainWindow->inspector() || obj == nullptr))
+	if (auto insp = m_MainWindow->inspector();
+	    insp && insp->ramGInspector() && (obj == insp->ramGInspector() || obj == nullptr))
 	{
-		connect(m_MainWindow->inspector()->ramG(), &RamG::updateCurrentInfo, this,
-		    &ContentManager::handleUpdateCurrentInfo, Qt::UniqueConnection);
+		connect(insp->ramGInspector(), &RamG::updateCurrentInfo, this,
+		    &ContentManager::handleUpdateCurrentInfo,
+		    Qt::UniqueConnection);
+	}
+	
+	if (auto insp = m_MainWindow->inspector();
+	    insp && insp->ramGDockWidget() && (obj == insp->ramGDockWidget() || obj == nullptr))
+	{
+		connect(insp->ramGDockWidget(), &RamG::updateCurrentInfo, this,
+		    &ContentManager::handleUpdateCurrentInfo,
+		    Qt::UniqueConnection);
 	}
 }
 
@@ -1566,6 +1577,17 @@ ContentInfo *ContentManager::find(const QString &destName)
 
 	printf("Content '%s' not found\n", destName.toLocal8Bit().data());
 	return NULL;
+}
+
+QList<ContentInfo *> ContentManager::contentInfoList()
+{
+	QList<ContentInfo *> contentList;
+	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
+	{
+		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
+		contentList.append(info);
+	}
+	return contentList;
 }
 
 void ContentManager::suppressOverlapCheck()

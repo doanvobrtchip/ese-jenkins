@@ -13,7 +13,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif /* FT800EMU_PYTHON */
 #include "main_window.h"
 #include "version.h"
-#include "Windows.h"
 
 // STL includes
 #include <stdio.h>
@@ -78,7 +77,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Project includes
 #include "customize/SaveOptionDialog.h"
-#include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
 #include "dl_editor.h"
 #include "interactive_viewport.h"
@@ -3953,7 +3951,7 @@ void MainWindow::handleSaveCoproCmd() {
 
 void MainWindow::saveDisplayListToTextFile(QString fileName, bool isBigEndian)
 {
-	auto data = m_Inspector->getDisplayListContent(isBigEndian);
+	auto data = m_Inspector->getDLContent(isBigEndian);
 	ReadWriteUtil::writeText(fileName, data);
 }
 

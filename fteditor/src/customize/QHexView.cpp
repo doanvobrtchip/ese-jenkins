@@ -632,6 +632,7 @@ void QHexView::ensureVisible() {
 }
 
 void QHexView::updateUint() {
+  if (!m_pdata) return;
   int byteNum = 4;
   QByteArray data = m_pdata->getData(m_selectBegin / 2, byteNum);
   if (data.size() != byteNum) return;
