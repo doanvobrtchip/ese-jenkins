@@ -80,5 +80,6 @@
     <file>icons/plus-circle-frame-20x16.png</file>
     <file>icons/minus-circle-frame-20x16.png</file>
     <file>icons/ruler.png</file>
+    <file>icons/external-link.png</file>
   </qresource>
 </RCC>

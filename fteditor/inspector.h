@@ -1,4 +1,5 @@
 /**
+/**
  * inspector.h
  * $Id$
  * \file inspector.h
@@ -42,7 +43,12 @@ namespace FTEDITOR {
 #define FTED_NUM_HANDLES 16
 
 class MainWindow;
-class RamG;
+class RamDLDockWidget;
+class RamDLInspector;
+class RamGDockWidget;
+class RamGInspector;
+class RamRegDockWidget;
+class RamRegInspector;
 
 /**
  * Inspector
@@ -67,53 +73,47 @@ public:
 	int countHandleUsage();
 	void setCountHandleUsage(int value);
 
-	bool eventFilter(QObject *watched, QEvent *event);
-
-	QString getDisplayListContent(bool isBigEndian = false); // 0: little; 1: big
 	QByteArray getDLBinary(bool isBigEndian);
+	QString getDLContent(bool isBigEndian = false);
 
-	void initDLWindow();
 	MainWindow *mainWindow() { return m_MainWindow; }
-	RamG *ramG() { return m_RamG; }
-	
-private slots:
-	void onCopy();
-	void onPrepareContextMenu(const QPoint &pos);
+	RamGInspector *ramGInspector();
+
+	RamGDockWidget *ramGDockWidget() const;
+	void initRamGDockWidget();
+
+	RamRegDockWidget *ramRegDockWidget() const;
+	void initRamRegDockWidget();
+
+	RamDLDockWidget *ramDLDockWidget() const;
+	void initRamDLDockWidget();
 
 private:
-	void initDisplayReg();
-	void releaseDisplayReg();
-
-	void copy(const QTreeWidget *widget);
-
 	MainWindow *m_MainWindow;
-
-	QTreeWidget *m_DisplayList;
-	QTreeWidgetItem *m_DisplayListItems[FTEDITOR_DL_SIZE];
-	uint32_t m_DisplayListCopy[FTEDITOR_DL_SIZE];
-	bool m_DisplayListUpdate[FTEDITOR_DL_SIZE];
-
-	QTreeWidget *m_Registers;
-	std::vector<QTreeWidgetItem *> m_RegisterItems;
-	std::vector<uint32_t> m_RegisterCopy;
 
 	bool m_HandleUsage[FTED_NUM_HANDLES];
 
-	RamG *m_RamG;
-	
-	QMenu *m_ContextMenu;
-	QAction *m_CopyAct;
+	RamDLInspector *m_RamDL;
+	RamDLDockWidget *m_RamDLDockWidget;
+
+	RamRegInspector *m_RamReg;
+	RamRegDockWidget *m_RamRegDockWidget;
+
+	RamGInspector *m_RamG;
+	RamGDockWidget *m_RamGDockWidget;
+
 	int m_countHandleBitmap;
 
 private:
 	Inspector(const Inspector &);
 	Inspector &operator=(const Inspector &);
 
-public slots:
-	void setup(QObject *obj = nullptr);
-
 signals:
 	void countHandleBitmapChanged(int value);
+	void updateView(int dlCMDCount);
+	void updateData();
+	void initDisplayReg();
+	void releaseDisplayReg();
 
 }; /* class Inspector */
 

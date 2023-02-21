@@ -26,7 +26,7 @@ if there is similar error observed:
 To run the created docker image, in the project source directory, run:
 
 ```
-docker run --rm --mount type=bind,source="%cd%",target="%cd%/prj" -w "%cd%/prj" thanglie1/qt640_msvc2019 build.bat
+docker run --rm --mount type=bind,source="%cd%",target="%cd%" -w "%cd%" thanglie1/qt640_msvc2019 build.bat
 ```
 
 in the windows command prompt , other than power shell with administrator privilege : 
