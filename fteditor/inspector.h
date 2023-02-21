@@ -28,9 +28,6 @@
 // Emulator includes
 #include "bt8xxemu_inttypes.h"
 
-// Project includes
-#include "dl_editor.h"
-
 class QTreeWidget;
 class QTreeWidgetItem;
 class QEvent;
@@ -77,7 +74,7 @@ public:
 	QString getDLContent(bool isBigEndian = false);
 
 	MainWindow *mainWindow() { return m_MainWindow; }
-	RamGInspector *ramGInspector();
+	RamGInspector *ramGInspector() const;
 
 	RamGDockWidget *ramGDockWidget() const;
 	void initRamGDockWidget();
