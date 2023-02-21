@@ -391,9 +391,9 @@ private:
 	int m_OverlapSuppressed;
 	bool m_OverlapMemorySuppressed;
 	bool m_OverlapFlashSuppressed;
-
+	bool m_ShowMsgBox;
+	
 	static QMutex s_Mutex;
-
 	QString m_FlashFileName;
 
 private slots:

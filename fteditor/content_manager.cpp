@@ -36,6 +36,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QStandardPaths>
 #include <QMimeData>
 #include <QRegularExpression>
+#include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrent>
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -350,7 +351,14 @@ void addLabeledWidget(QWidget *parent, QVBoxLayout *layout, const QString &label
 
 const QString ContentManager::ResourceDir = "resources";
 
-ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWindow(parent), m_CurrentPropertiesContent(NULL), m_OverlapSuppressed(0), m_OverlapMemorySuppressed(false),  m_OverlapFlashSuppressed(false)
+ContentManager::ContentManager(MainWindow * parent)
+	: QWidget(parent)
+	, m_MainWindow(parent)
+	, m_CurrentPropertiesContent(NULL)
+	, m_OverlapSuppressed(0)
+	, m_OverlapMemorySuppressed(false)
+	, m_OverlapFlashSuppressed(false)
+	, m_ShowMsgBox(true)
 {
 	if (s_FileExtensions.empty())
 	{
@@ -372,14 +380,14 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_ContentList = new ContentTreeWidget(this);
 	m_ContentList->setAcceptDrops(true);
 	m_ContentList->setDragEnabled(true);
-	//m_ContentList->header()->close();
+	// m_ContentList->header()->close();
 	m_ContentList->setColumnCount(2);
 	QStringList headers;
 	headers.push_back(tr("Status"));
 	headers.push_back(tr("Name"));
 	m_ContentList->setHeaderLabels(headers);
 	layout->addWidget(m_ContentList);
-	//m_ContentList->resizeColumnToContents(0);
+	// m_ContentList->resizeColumnToContents(0);
 	connect(m_ContentList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(selectionChanged(QTreeWidgetItem *, QTreeWidgetItem *)));
 
 	connect(m_ContentList, &ContentTreeWidget::contentDropped, this, [=](QString url) {
@@ -388,18 +396,18 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	QHBoxLayout *buttonsLayout = new QHBoxLayout();
 
-	//uint plusSign[2] = { 0x2795, 0 };
+	// uint plusSign[2] = { 0x2795, 0 };
 	QPushButton *addButton = new QPushButton();
 	addButton->setText(/*QString::fromUcs4(plusSign) + " " +*/ tr("Add"));
-	//addButton->setIcon(QIcon(":/icons/plus.png"));
+	// addButton->setIcon(QIcon(":/icons/plus.png"));
 	connect(addButton, SIGNAL(clicked()), this, SLOT(add()));
 	buttonsLayout->addWidget(addButton);
 
-	//uint minusSign[2] = { 0x2796, 0 };
+	// uint minusSign[2] = { 0x2796, 0 };
 	QPushButton *removeButton = new QPushButton();
 	m_RemoveButton = removeButton;
 	removeButton->setText(/*QString::fromUcs4(minusSign) + " " +*/ tr("Remove"));
-	//removeButton->setIcon(QIcon(":/icons/minus.png"));
+	// removeButton->setIcon(QIcon(":/icons/minus.png"));
 	connect(removeButton, SIGNAL(clicked()), this, SLOT(remove()));
 	removeButton->setEnabled(false);
 	buttonsLayout->addWidget(removeButton);
@@ -408,10 +416,10 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 
 	QHBoxLayout *secondLayout = new QHBoxLayout();
 
-	//uint refreshIcon[2] = { 0x27F2, 0 };
+	// uint refreshIcon[2] = { 0x27F2, 0 };
 	QPushButton *rebuildButton = new QPushButton();
 	rebuildButton->setText(/*QString::fromUcs4(refreshIcon) + " " +*/ tr("Rebuild All"));
-	//rebuildButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
+	// rebuildButton->setIcon(QIcon(":/icons/arrow-circle-225-left.png"));
 	rebuildButton->setStatusTip(tr("Rebuilds all content that is out of date"));
 	connect(rebuildButton, SIGNAL(clicked()), this, SLOT(rebuildAll()));
 	secondLayout->addWidget(rebuildButton);
@@ -457,7 +465,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImage->setTitle(tr("Image Settings"));
 	QVBoxLayout *imagePropsLayout = new QVBoxLayout();
 	m_PropertiesImageFormat = new QComboBox(this);
-	
+
 	addLabeledWidget(this, imagePropsLayout, tr("Format: "), m_PropertiesImageFormat);
 	connect(m_PropertiesImageFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesImageFormatChanged(int)));
 	m_PropertiesImage->setLayout(imagePropsLayout);
@@ -479,7 +487,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesImagePreview->setHidden(true);
 	m_PropertiesImagePreview->setTitle(tr("Image Preview"));
 	m_PropertiesImageLabel = new QLabel(this);
-    m_PropertiesImageLabel->setMaximumSize(250, 250);
+	m_PropertiesImageLabel->setMaximumSize(250, 250);
 	imagePreviewLayout->addWidget(m_PropertiesImageLabel);
 	m_PropertiesImagePreview->setLayout(imagePreviewLayout);
 
@@ -489,7 +497,7 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_PropertiesFont->setTitle(tr("Font"));
 	QVBoxLayout *fontPropsLayout = new QVBoxLayout();
 	m_PropertiesFontFormat = new QComboBox(this);
-	
+
 	addLabeledWidget(this, fontPropsLayout, tr("Format: "), m_PropertiesFontFormat);
 	connect(m_PropertiesFontFormat, SIGNAL(currentIndexChanged(int)), this, SLOT(propertiesFontFormatChanged(int)));
 	m_PropertiesFontSize = new UndoStackDisabler<QSpinBox>(this);
@@ -586,11 +594,11 @@ ContentManager::ContentManager(MainWindow *parent) : QWidget(parent), m_MainWind
 	m_HelpfulLabel->setText(tr("<i>No content has been added to the project yet.<br><br>Add new content to this project to automatically convert it to a hardware compatible format.</i>"));
 	helpLayout->addWidget(m_HelpfulLabel);
 	m_ContentList->setLayout(helpLayout);
-	
+
 	// bindCurrentDevice();
 	setup();
-	connect(m_MainWindow, SIGNAL(readyToSetup(QObject * )), this,
-		SLOT(setup(QObject * )));
+	connect(m_MainWindow, SIGNAL(readyToSetup(QObject *)), this,
+		SLOT(setup(QObject *)));
 }
 
 ContentManager::~ContentManager()
@@ -810,7 +818,8 @@ ContentInfo *ContentManager::add(const QString &filePath)
 						contentInfo->CachedImageWidth = infoJson["width"].toInt();
 						contentInfo->CachedImageHeight = infoJson["height"].toInt();
 						contentInfo->CachedImageStride = infoJson["stride"].toInt();
-						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(infoJson["format"].toString().toLocal8Bit().data());
+						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
+						    infoJson["format"].toString().toLocal8Bit().data());
 					}
 					else if (contentType == "legacyfont")
 					{
@@ -824,7 +833,7 @@ ContentInfo *ContentManager::add(const QString &filePath)
 							contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
 							contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
 							contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
-								infoJson["format"].toString().toLocal8Bit().data());
+							    infoJson["format"].toString().toLocal8Bit().data());
 						}
 						contentInfo->MemoryAddress = infoJson["address"].toInt();
 						if (getFreeMemoryAddress() <= contentInfo->MemoryAddress)
@@ -1363,19 +1372,50 @@ void ContentManager::addInternal(QStringList fileNameList)
 
 		QFile::copy(fileName, newName);
 
-		if (ContentInfo::MapInfoFileType.contains(suffix)) { 
+		if (ContentInfo::MapInfoFileType.contains(suffix))
+		{
 			QString infoFileType = ContentInfo::MapInfoFileType.value(suffix, QString());
 			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
 			// PALETTED format
-			if (fi.completeBaseName().contains("_index")) {
+			if (fi.completeBaseName().contains("_index"))
+			{
 				originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
 			}
-			if (QFileInfo::exists(originalInfoFile)) { 
+
+			if (QFileInfo::exists(originalInfoFile))
+			{
 				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
-				if (fi.completeBaseName().contains("_index")) {
+				if (fi.completeBaseName().contains("_index"))
+				{
 					savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
 				}
 				QFile::copy(originalInfoFile, savedInfoFile);
+
+				if (!infoFileType.isEmpty() && m_ShowMsgBox)
+				{
+					QMessageBox msgBox;
+
+					auto showMsgCb = new QCheckBox(tr("Do not show this dialog again"));
+					msgBox.setCheckBox(showMsgCb);
+					msgBox.addButton(QMessageBox::Ok);
+					msgBox.setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
+					msgBox.setText(
+					    tr("A valid %1 file is found for the imported content: %2 "
+					       "file.\nThe imported content is a EVE asset and you may drag "
+					       "it to viewport later.")
+					        .arg(QString(infoFileType).toUpper(), originalInfoFile));
+
+					QObject::connect(showMsgCb, &QCheckBox::stateChanged, this,
+					    [this](int state) {
+						    if (static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked)
+						    {
+							    this->m_ShowMsgBox = false;
+						    }
+						    else
+							    m_ShowMsgBox = true;
+					    });
+					msgBox.exec();
+				}
 			}
 		}
 
@@ -1383,7 +1423,8 @@ void ContentManager::addInternal(QStringList fileNameList)
 		if (suffix == "xfont")
 		{
 			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_chars.txt");
-			if (QFileInfo::exists(originalCharsFile)) { 
+			if (QFileInfo::exists(originalCharsFile))
+			{
 				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_chars.txt");
 				QFile::copy(originalCharsFile, savedCharsFile);
 			}
