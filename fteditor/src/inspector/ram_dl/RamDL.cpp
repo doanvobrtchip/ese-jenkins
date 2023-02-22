@@ -24,6 +24,7 @@
 #include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
+#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
@@ -42,7 +43,8 @@ RamDL::RamDL(Inspector *parent)
 	m_DisplayList->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_DisplayList->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_DisplayList->installEventFilter(this);
-
+	m_DisplayList->viewport()->installEventFilter(this);
+	
 	m_CopyAct = new QAction(parent);
 	m_CopyAct->setText(tr("Copy"));
 	m_ContextMenu = new QMenu(parent);
@@ -268,6 +270,26 @@ bool RamDL::eventFilter(QObject *watched, QEvent *event)
 		if (keyEvent->matches(QKeySequence::Copy))
 		{
 			onCopy();
+			return true;
+		}
+	}
+
+	if ((watched == m_DisplayList || watched == m_DisplayList->viewport())
+	    && event->type() == QEvent::Wheel)
+	{
+		auto e = static_cast<QWheelEvent *>(event);
+		if (e->modifiers() & Qt::ControlModifier)
+		{
+			int angle = e->angleDelta().y();
+			auto ptSize = m_DisplayList->font().pointSize();
+			if (angle > 0 && ptSize < 180)
+			{
+				m_DisplayList->setFont(QFont("Segoe UI", ptSize + 2));
+			}
+			else if (angle <= 0 && ptSize > 5)
+			{
+				m_DisplayList->setFont(QFont("Segoe UI", ptSize - 2));
+			}
 			return true;
 		}
 	}

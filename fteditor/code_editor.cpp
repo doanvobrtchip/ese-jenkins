@@ -52,6 +52,7 @@
 #include <QAbstractItemView>
 #include <QScrollBar>
 #include <QClipboard>
+#include <QApplication>
 
 #include "src/utils/LoggerUtil.h"
 #include "code_editor.h"
@@ -121,6 +122,24 @@ void CodeEditor::focusInEvent(QFocusEvent *event)
 {
 	QPlainTextEdit::focusInEvent(event);
 	//  emit cursorPositionChanged();
+}
+
+void CodeEditor::wheelEvent(QWheelEvent *event)
+{
+	if (event->modifiers() & Qt::ControlModifier)
+	{
+		int angle = event->angleDelta().y();
+		if (angle > 0 && font().pointSize() < 180)
+		{
+			zoomIn(2);
+		}
+		else if (angle <= 0 && font().pointSize() > 5)
+		{
+			zoomOut(2);
+		}
+		return;
+	}
+	CodeEditorParent::wheelEvent(event);
 }
 
 /*void CodeEditor::setUndoStack(QUndoStack *undo_stack)
@@ -346,11 +365,10 @@ int CodeEditor::lineNumberAreaWidth()
 	max /= 10;
 	++digits;
 	}*/
-	int digits = 4;
+	int digits = 2;
 
-	int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
-
-	return space + 4;
+	int space = 28 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+	return space;
 }
 
 void CodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */)
@@ -572,11 +590,12 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 		if (block.isVisible() && bottom >= event->rect().top())
 		{
 			QString number = QString::number(blockNumber /* + 1*/);
+			lineNumberArea->setFont(QFont("Segoe UI", font().pointSize()));
 			painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice)
 			        ? Qt::red
 			        : Qt::black);
-			painter.drawText(0, top, lineNumberArea->width() - 4,
-			    fontMetrics().height(), Qt::AlignRight, number);
+			painter.drawText(0, top, lineNumberArea->width(),
+			    fontMetrics().height(), Qt::AlignCenter, number);
 		}
 
 		block = block.next();

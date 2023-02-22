@@ -78,6 +78,7 @@ class QHexView : public QAbstractScrollArea {
   void keyPressEvent(QKeyEvent *event);
   void mouseMoveEvent(QMouseEvent *event);
   void mousePressEvent(QMouseEvent *event);
+  void wheelEvent(QWheelEvent *e);
  private slots:
   void onCopy();
 

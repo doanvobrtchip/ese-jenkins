@@ -1,0 +1,5 @@
+/*!
+ * @file %FILENAME%
+ * @date %DATE%
+ * @author Liem Do <liem.do@brtchip.com>
+ */

@@ -118,6 +118,7 @@ protected:
 	virtual void keyPressEvent(QKeyEvent *e);
 	// virtual void contextMenuEvent(QContextMenuEvent *event);
 	virtual void focusInEvent(QFocusEvent *event);
+	virtual void wheelEvent(QWheelEvent *event);
 
 private slots:
 	void updateLineNumberAreaWidth(int newBlockCount);
