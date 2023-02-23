@@ -32,8 +32,6 @@ public slots:
 	void onCopy();
 
 protected:
-	void keyPressEvent(QKeyEvent *event);
-
 	QTreeWidget *m_Registers;
 	std::vector<QTreeWidgetItem *> m_RegisterItems;
 	std::vector<uint32_t> m_RegisterCopy;

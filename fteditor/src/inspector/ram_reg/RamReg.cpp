@@ -35,6 +35,7 @@ RamReg::RamReg(Inspector *parent)
 	m_Registers->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_Registers->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_Registers->installEventFilter(this);
+	m_Registers->viewport()->installEventFilter(this);
 
 	m_CopyAct = new QAction(parent);
 	m_CopyAct->setText(tr("Copy"));
@@ -221,14 +222,6 @@ void RamReg::releaseDisplayReg()
 	m_RegisterItems.clear();
 }
 
-void RamReg::keyPressEvent(QKeyEvent *event)
-{
-	if (event->matches(QKeySequence::Copy))
-	{
-		onCopy();
-	}
-}
-
 void RamReg::onPrepareContextMenu(const QPoint &pos)
 {
 	QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
@@ -247,6 +240,25 @@ bool RamReg::eventFilter(QObject *watched, QEvent *event)
 		if (keyEvent->matches(QKeySequence::Copy))
 		{
 			onCopy();
+			return true;
+		}
+	}
+	if ((watched == m_Registers || watched == m_Registers->viewport())
+	    && event->type() == QEvent::Wheel)
+	{
+		auto e = static_cast<QWheelEvent *>(event);
+		if (e->modifiers() & Qt::ControlModifier)
+		{
+			int angle = e->angleDelta().y();
+			auto ptSize = m_Registers->font().pointSize();
+			if (angle > 0 && ptSize < 180)
+			{
+				m_Registers->setFont(QFont("Segoe UI", ptSize + 2));
+			}
+			else if (angle <= 0 && ptSize > 5)
+			{
+				m_Registers->setFont(QFont("Segoe UI", ptSize - 2));
+			}
 			return true;
 		}
 	}
