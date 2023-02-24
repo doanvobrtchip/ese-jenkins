@@ -331,8 +331,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	
 	loadRecentProject();
 
-  m_EmulatorViewport = new InteractiveViewport(this);
-  emit readyToSetup(m_EmulatorViewport);
+    m_EmulatorViewport = new InteractiveViewport(this);
+    emit readyToSetup(m_EmulatorViewport);
 
 	QWidget *centralWidget = new QWidget(this);
 	QGridLayout *layout = new QGridLayout();
@@ -1752,17 +1752,7 @@ void MainWindow::createDockWindows()
 	}
 
 	// Ruler
-	{
-		auto actionShowRuler = new QAction;
-		actionShowRuler->setCheckable(true);
-		actionShowRuler->setChecked(true);
-		actionShowRuler->setText("Ruler");
-		m_WidgetsMenu->addAction(actionShowRuler);
-		connect(actionShowRuler, &QAction::triggered, m_EmulatorViewport,
-			&EmulatorViewport::toggleViewRuler);
-		connect(m_EmulatorViewport->verticalRuler(), &QRuler::visibleChanged,
-			actionShowRuler, &QAction::setChecked);
-	}
+	m_WidgetsMenu->addAction(m_EmulatorViewport->ActionRuler());
 	
 	tabifyDockWidget(m_InspectorDock, m_DlEditorDock);
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
