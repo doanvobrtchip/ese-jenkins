@@ -19,7 +19,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QScrollArea>
 #include <QVBoxLayout>
 #ifdef FTEDITOR_OPENGL_VIEWPORT
-#	include <QOpenGLWidget>
+#include <QOpenGLWidget>
 #endif
 
 // Emulator includes
@@ -41,11 +41,11 @@ namespace FTEDITOR {
  * \date 2013-10-15 13:18GMT
  * \author Jan Boon (Kaetemi)
  */
-class EmulatorViewport 
+class EmulatorViewport
 #ifdef FTEDITOR_OPENGL_VIEWPORT
-	: public QOpenGLWidget
+    : public QOpenGLWidget
 #else
-	: public QWidget
+    : public QWidget
 #endif
 {
 	Q_OBJECT
@@ -53,7 +53,7 @@ class EmulatorViewport
 public:
 	EmulatorViewport(QWidget *parent, const QString &applicationDataDir);
 	virtual ~EmulatorViewport();
-	
+
 	// Runs the emulator on a new thread and connects it with this viewport
 	void run(const BT8XXEMU_EmulatorParameters &params);
 	void stop();
@@ -91,10 +91,10 @@ protected:
 
 	virtual void paintEvent(QPaintEvent *e);
 
-public slots:		
+public slots:
 	// void saveScreenshot();
 	void threadRepaint();
-	void toggleViewRuler(bool show);
+	void toggleViewRuler(bool checked);
 
 	virtual void zoomIn();
 	virtual void zoomOut();
@@ -116,7 +116,7 @@ private:
 private:
 	EmulatorViewport(const EmulatorViewport &);
 	EmulatorViewport &operator=(const EmulatorViewport &);
-	
+
 }; /* class EmulatorViewport */
 
 class EmulatorThread : public QThread
@@ -125,10 +125,9 @@ class EmulatorThread : public QThread
 
 protected:
 	void run();
-	
+
 signals:
 	void repaint();
-	
 };
 
 } /* namespace FTEDITOR */

@@ -346,11 +346,10 @@ void EmulatorViewport::threadRepaint() // on Qt thread
 	emit frame();
 }
 
-void EmulatorViewport::toggleViewRuler(bool show)
+void EmulatorViewport::toggleViewRuler(bool checked)
 {
-	horizontalRuler()->setVisible(!horizontalRuler()->isVisible());
-	verticalRuler()->setVisible(!verticalRuler()->isVisible());
-	emit visibleChanged(verticalRuler()->isVisible());
+	horizontalRuler()->setVisible(checked);
+	verticalRuler()->setVisible(checked);
 }
 
 void EmulatorViewport::fetchColorAsync(int x, int y)
