@@ -132,12 +132,11 @@ class DlEditor : public QWidget {
 
   void setPropLine(int newPropLine);
   int PropLine() const;
-  void updateCursorByLine(int line);
 
  private slots:
   void documentContentsChange(int position, int charsRemoved, int charsAdded);
   void documentBlockCountChanged(int newBlockCount);
-  void editorCursorPositionChanged();
+  void editorCursorPositionChanged(bool isActive = true);
 
  public slots:
   void frame();
@@ -145,7 +144,7 @@ class DlEditor : public QWidget {
 
  private:
   void parseLine(QTextBlock block);
-  void editingLine(QTextBlock block, bool multiple = false, bool force = false);
+  void editingLine(QTextBlock block, bool multiple = false, bool force = false, bool isActive = true);
 
   void processState();
 

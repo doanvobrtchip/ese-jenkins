@@ -91,8 +91,8 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
           SLOT(documentContentsChange(int, int, int)));
   connect(m_CodeEditor->document(), SIGNAL(blockCountChanged(int)), this,
           SLOT(documentBlockCountChanged(int)));
-  connect(m_CodeEditor, SIGNAL(cursorPositionChanged()), this,
-          SLOT(editorCursorPositionChanged()));
+  connect(m_CodeEditor, &CodeEditor::cursorChanged, this,
+	  &DlEditor::editorCursorPositionChanged);
 
   bindCurrentDevice();
 
@@ -339,7 +339,6 @@ void DlEditor::clear() {
     m_DisplayListShared[i] = DISPLAY();
   }
   m_DisplayListModified = true;
-  m_CodeEditor->textCursor().setPosition(0);
   unlockDisplayList();
   m_InvalidState = true;
 }
@@ -402,7 +401,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator) {
   m_Reloading = false;
 }
 
-void DlEditor::editorCursorPositionChanged() {
+void DlEditor::editorCursorPositionChanged(bool isActive) {
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 
   if (QApplication::instance()->closingDown()) return;
@@ -423,7 +422,7 @@ void DlEditor::editorCursorPositionChanged() {
     m_Completer->popup()->hide();
   }
 
-  editingLine(block);
+  editingLine(block, false, false, isActive);
 }
 
 void DlEditor::documentContentsChange(int position, int charsRemoved,
@@ -664,6 +663,7 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId,
   c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
   c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
   c.insertText(linestr);
+  emit m_CodeEditor->cursorChanged();
 
   if (combineId >= 0) m_CodeEditor->endUndoCombine();
   m_EditingInteractive = false;
@@ -734,12 +734,6 @@ void DlEditor::adjustXY(DlParsed pre, DlParsed cur) {
       }
     }
   }
-}
-
-void DlEditor::updateCursorByLine(int line) {
-  QTextCursor c = m_CodeEditor->textCursor();
-  c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
-  m_CodeEditor->setTextCursor(c);
 }
 
 int DlEditor::PropLine() const { return m_PropLine; }
@@ -813,6 +807,7 @@ void DlEditor::insertLine(int line, QString cmdText) {
     c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
     c.insertText("\n" + cmdText);
   }
+  emit m_CodeEditor->cursorChanged();
   m_EditingInteractive = false;
 }
 
@@ -827,15 +822,16 @@ QString DlEditor::getLineText(int line) const {
 void DlEditor::selectLine(int line, bool multiple, bool force) {
   m_EditingInteractive = true;
   if (!multiple) {
-    updateCursorByLine(line);
+	m_CodeEditor->changeCursorByLine(line);
+	emit m_CodeEditor->cursorChanged();
   }
   editingLine(m_CodeEditor->document()->findBlockByNumber(line), multiple,
-              force);
+	  force);
   // editorCursorPositionChanged() instead of editingLine? // VERIFY
   m_EditingInteractive = false;
 }
 
-void DlEditor::editingLine(QTextBlock block, bool multiple, bool force) {
+void DlEditor::editingLine(QTextBlock block, bool multiple, bool force, bool isActive) {
   // update properties editor
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
   if (m_PropertiesEditor->getEditWidgetSetter() != this ||
@@ -863,7 +859,9 @@ void DlEditor::editingLine(QTextBlock block, bool multiple, bool force) {
     m_MainWindow->interactiveProperties()->modifiedEditorLine();
   }
 
-  m_MainWindow->focusProperties();
+  if (isActive) {
+	m_MainWindow->focusProperties();
+  }
 }
 
 void DlEditor::processState() {

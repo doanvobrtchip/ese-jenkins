@@ -112,6 +112,7 @@ public:
 	}
 	const QList<int> &SelectedLines() const;
 	void setSelectedLines(const QList<int> &newSelectedLines);
+	void changeCursorByLine(int);
 
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
@@ -119,6 +120,7 @@ protected:
 	// virtual void contextMenuEvent(QContextMenuEvent *event);
 	virtual void focusInEvent(QFocusEvent *event);
 	virtual void wheelEvent(QWheelEvent *event);
+	virtual void mousePressEvent(QMouseEvent *e);
 
 private slots:
 	void updateLineNumberAreaWidth(int newBlockCount);
@@ -141,7 +143,6 @@ private:
 	QCompleter *m_Completer;
 	int m_StepHighlight;
 	int m_LastStepHighlight;
-	bool m_StepMovingCursor;
 	std::vector<int> m_TraceHighlights;
 	std::vector<int> m_TraceStack;
 	int m_CombineId;
@@ -154,6 +155,9 @@ private:
 	QString m_LatestText;
 	QList<int> m_SelectedLines;
 	bool m_Deleting;
+	
+signals:
+	void cursorChanged(bool isActive = true);
 };
 
 class LineNumberArea : public QWidget
