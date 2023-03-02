@@ -69,7 +69,6 @@ CodeEditor::CodeEditor(QWidget *parent)
     , m_Completer(NULL)
     , m_StepHighlight(-1)
     , m_LastStepHighlight(-1)
-    , m_StepMovingCursor(false)
     , m_CombineId(-1)
     , m_LastCombineId(917681768)
     , m_KeyHandler(NULL)
@@ -79,7 +78,7 @@ CodeEditor::CodeEditor(QWidget *parent)
 
 	connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
 	connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateLineNumberArea(QRect, int)));
-	connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
+	connect(this, &CodeEditor::cursorChanged, this, &CodeEditor::highlightCurrentLine);
 	connect(document(), SIGNAL(undoCommandAdded()), this, SLOT(documentUndoCommandAdded()));
 
 	updateLineNumberAreaWidth(0);
@@ -121,7 +120,6 @@ CodeEditor::CodeEditor(QWidget *parent)
 void CodeEditor::focusInEvent(QFocusEvent *event)
 {
 	QPlainTextEdit::focusInEvent(event);
-	//  emit cursorPositionChanged();
 }
 
 void CodeEditor::wheelEvent(QWheelEvent *event)
@@ -140,6 +138,15 @@ void CodeEditor::wheelEvent(QWheelEvent *event)
 		return;
 	}
 	CodeEditorParent::wheelEvent(event);
+}
+
+void CodeEditor::mousePressEvent(QMouseEvent *e)
+{
+	int latestCursorPos = textCursor().position();
+	CodeEditorParent::mousePressEvent(e);
+	if (textCursor().position() != latestCursorPos) {
+		emit cursorChanged();
+	}
 }
 
 /*void CodeEditor::setUndoStack(QUndoStack *undo_stack)
@@ -297,6 +304,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 				FTEDITOR::editorPurgePalette8(this, line);
 				c.setPosition(document()->findBlockByNumber(line).position());
 				c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+				emit cursorChanged();
 				c.insertText("");
 				// cleanup BEGIN/END ->
 				{
@@ -307,6 +315,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 						c.setPosition(document()->findBlockByNumber(line - 1).position());
 						c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
 						c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+						emit cursorChanged();
 						c.insertText("");
 					}
 				}
@@ -320,7 +329,11 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 		}
 		else
 		{
+			int latestCursorPos = textCursor().position();
 			CodeEditorParent::keyPressEvent(e);
+			if (textCursor().position() != latestCursorPos) {
+				emit cursorChanged();
+			}
 		}
 	}
 
@@ -448,9 +461,6 @@ void CodeEditor::setTraceHighlights(const std::vector<int> &indices)
 
 void CodeEditor::highlightCurrentLine()
 {
-	if (m_StepMovingCursor)
-		return;
-
 	QList<QTextEdit::ExtraSelection> extraSelections;
 
 	if (!isReadOnly())
@@ -459,15 +469,9 @@ void CodeEditor::highlightCurrentLine()
 		{
 			if (m_LastStepHighlight != m_StepHighlight)
 			{
-				if (!hasFocus())
-				{
-					m_StepMovingCursor = true;
-					QTextCursor c = textCursor();
-					c.setPosition(document()->findBlockByNumber(m_StepHighlight).position());
-					setTextCursor(c);
-					m_StepMovingCursor = false;
-				}
+				changeCursorByLine(m_StepHighlight);
 				m_LastStepHighlight = m_StepHighlight;
+				emit cursorChanged(false);
 			}
 		}
 		// cursor position
@@ -554,6 +558,7 @@ void CodeEditor::insertCompletion(const QString &completion)
 	tc.setPosition(tc.selectionEnd());
 	tc.insertText(completion.right(extra));
 	setTextCursor(tc);
+	emit cursorChanged();
 }
 
 QString CodeEditor::textUnderCursor() const
@@ -573,6 +578,13 @@ void CodeEditor::setSelectedLines(const QList<int> &newSelectedLines)
 	if (m_Deleting) return;
 	m_SelectedLines.clear();
 	m_SelectedLines = newSelectedLines;
+}
+
+void CodeEditor::changeCursorByLine(int line)
+{
+	QTextCursor c = textCursor();
+	c.setPosition(document()->findBlockByNumber(line).position());
+	setTextCursor(c);
 }
 
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
