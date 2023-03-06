@@ -103,7 +103,7 @@ public:
 	}
 	void setTraceHighlights(const std::vector<int> &indices);
 
-	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; /*printf("Interactive delete %s\n", m_InteractiveDelete ? "ON" : "OFF");*/ }
+	void setInteractiveDelete(bool status) { m_InteractiveDelete = status; }
 
 	void setKeyHandler(FTEDITOR::InteractiveViewport *keyHandler)
 	{

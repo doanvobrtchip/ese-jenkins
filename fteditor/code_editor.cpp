@@ -300,12 +300,12 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 			for (int i = m_SelectedLines.size() - 1; i >= 0; i--)
 			{
 				int line = m_SelectedLines.at(i);
-				debugLog(QString("Delete line: %1 | Pos: %2").arg(line).arg(document()->findBlockByNumber(line).position()));
 				FTEDITOR::editorPurgePalette8(this, line);
 				c.setPosition(document()->findBlockByNumber(line).position());
+				c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 				c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-				emit cursorChanged();
 				c.insertText("");
+				emit cursorChanged();
 				// cleanup BEGIN/END ->
 				{
 					QString begin = document()->findBlockByNumber(line - 1).text();
@@ -314,9 +314,10 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 					{
 						c.setPosition(document()->findBlockByNumber(line - 1).position());
 						c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+						c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 						c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-						emit cursorChanged();
 						c.insertText("");
+						emit cursorChanged();
 					}
 				}
 			}

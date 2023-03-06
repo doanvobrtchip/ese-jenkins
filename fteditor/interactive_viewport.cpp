@@ -110,6 +110,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
     , m_LineNumber(0)
     , m_DrawMultipleSelection(false)
     , m_SnapHistoryCur(0)
+    , m_isDrawAlignment(false)
 {
 	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 	{
@@ -1701,6 +1702,9 @@ void InteractiveViewport::selectItems()
 			}
 		}
 	}
+	if (m_SelectedLines.count() > 0) {
+		m_LineEditor->codeEditor()->setInteractiveDelete(true);
+	}
 }
 
 bool InteractiveViewport::isSingleSelect()
@@ -2237,13 +2241,13 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 				{
 					m_MainWindow->focusCmdEditor();
 					bool force = !m_SelectedLines.contains(idxCmd);
-					m_MainWindow->cmdEditor()->selectLine(idxCmd, false, force);
+					m_MainWindow->cmdEditor()->selectLine(idxCmd, force);
 				}
 				else
 				{
 					m_MainWindow->focusDlEditor();
 					bool force = !m_SelectedLines.contains(idxCmd);
-					m_MainWindow->dlEditor()->selectLine(idxDl, false, force);
+					m_MainWindow->dlEditor()->selectLine(idxDl, force);
 				}
 				emit selectedLinesChanged(m_SelectedLines);
 
@@ -2389,7 +2393,7 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 		ContentInfo *currentItem = m_MainWindow->contentManager()->current();
 
 		static const QSet<QString> supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
-		static const QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
+		QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower(); //Remove static const
 
 		if (fileSuffix == "raw" && currentItem->SourcePath.contains("_lut"))
 			return false;
@@ -2967,7 +2971,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					bool mustCreateHandle = true;
 					if (contentInfo)
 					{
-						debugLog("Find or create handle for content item\n");
+						debugLog("Find or create handle for content item");
 						int handleResult = m_MainWindow->contentManager()->editorFindHandle(contentInfo, m_LineEditor);
 						if (handleResult != -1 && handleResult != 15)
 						{
@@ -2977,7 +2981,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						}
 						if (mustCreateHandle)
 						{
-							debugLog("Must create handle\n");
+							debugLog("Must create handle");
 							mustCreateHandle = false;
 							int handleFree = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
 							if (handleFree != -1)
