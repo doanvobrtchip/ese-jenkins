@@ -1702,8 +1702,13 @@ void InteractiveViewport::selectItems()
 			}
 		}
 	}
-	if (m_SelectedLines.count() > 0) {
+	if (m_SelectedLines.count() > 0)
+	{
 		m_LineEditor->codeEditor()->setInteractiveDelete(true);
+		if (m_SelectedLines.count() == 1)
+		{
+			m_LineEditor->selectLine(m_SelectedLines.at(0));
+		}
 	}
 }
 

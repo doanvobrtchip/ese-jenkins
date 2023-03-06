@@ -663,7 +663,6 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId,
   c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
   c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
   c.insertText(linestr);
-  emit m_CodeEditor->cursorChanged();
 
   if (combineId >= 0) m_CodeEditor->endUndoCombine();
   m_EditingInteractive = false;
