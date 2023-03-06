@@ -401,7 +401,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator) {
   m_Reloading = false;
 }
 
-void DlEditor::editorCursorPositionChanged(bool isActive) {
+void DlEditor::editorCursorPositionChanged(bool popupProperties) {
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 
   if (QApplication::instance()->closingDown()) return;
@@ -422,7 +422,7 @@ void DlEditor::editorCursorPositionChanged(bool isActive) {
     m_Completer->popup()->hide();
   }
 
-  editingLine(block, false, false, isActive);
+  editingLine(block, false, popupProperties);
 }
 
 void DlEditor::documentContentsChange(int position, int charsRemoved,
@@ -663,7 +663,6 @@ void DlEditor::replaceLine(int line, const DlParsed &parsed, int combineId,
   c.setPosition(m_CodeEditor->document()->findBlockByNumber(line).position());
   c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
   c.insertText(linestr);
-  emit m_CodeEditor->cursorChanged();
 
   if (combineId >= 0) m_CodeEditor->endUndoCombine();
   m_EditingInteractive = false;
@@ -819,19 +818,17 @@ QString DlEditor::getLineText(int line) const {
   return m_CodeEditor->document()->findBlockByNumber(line).text();
 }
 
-void DlEditor::selectLine(int line, bool multiple, bool force) {
+void DlEditor::selectLine(int line, bool force)
+{
   m_EditingInteractive = true;
-  if (!multiple) {
-	m_CodeEditor->changeCursorByLine(line);
-	emit m_CodeEditor->cursorChanged();
-  }
-  editingLine(m_CodeEditor->document()->findBlockByNumber(line), multiple,
-	  force);
+  m_CodeEditor->changeCursorByLine(line);
+  emit m_CodeEditor->cursorChanged();
+  editingLine(m_CodeEditor->document()->findBlockByNumber(line), force);
   // editorCursorPositionChanged() instead of editingLine? // VERIFY
   m_EditingInteractive = false;
 }
 
-void DlEditor::editingLine(QTextBlock block, bool multiple, bool force, bool isActive) {
+void DlEditor::editingLine(QTextBlock block, bool force, bool popupProperties) {
   // update properties editor
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
   if (m_PropertiesEditor->getEditWidgetSetter() != this ||
@@ -853,13 +850,13 @@ void DlEditor::editingLine(QTextBlock block, bool multiple, bool force, bool isA
     m_PropIdRight = m_DisplayListParsed[m_PropLine].IdRight;
     m_PropIdValid = m_DisplayListParsed[m_PropLine].ValidId;
     m_MainWindow->toolbox()->setEditorLine(this, m_PropLine);
-    m_MainWindow->viewport()->setEditorLine(this, m_PropLine, multiple);
+    m_MainWindow->viewport()->setEditorLine(this, m_PropLine, false);
     m_MainWindow->interactiveProperties()->setEditorLine(this, m_PropLine);
   } else {
     m_MainWindow->interactiveProperties()->modifiedEditorLine();
   }
 
-  if (isActive) {
+  if (popupProperties) {
 	m_MainWindow->focusProperties();
   }
 }

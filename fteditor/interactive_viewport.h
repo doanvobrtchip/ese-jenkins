@@ -184,9 +184,9 @@ private:
 	int m_SnapHistoryCur;
 	void snapPos(int &xd, int &yd, int xref, int yref);
 
-	bool m_isDrawAlignmentHorizontal;
-	bool m_isDrawAlignmentVertical;
-	bool m_isDrawAlignment;
+	bool m_IsDrawAlgnHorizontal;
+	bool m_IsDrawAlgnVertical;
+	bool m_IsDrawAlgn;
 
 signals:
 	void selectedLinesChanged(const QList<int> &newSelectedLines);

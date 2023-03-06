@@ -110,6 +110,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
     , m_LineNumber(0)
     , m_DrawMultipleSelection(false)
     , m_SnapHistoryCur(0)
+    , m_IsDrawAlgn(false)
 {
 	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 	{
@@ -860,7 +861,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 					x += state.Graphics.VertexTranslateX >> 4;
 					y += state.Graphics.VertexTranslateY >> 4;
 
-					if (m_isDrawAlignment) drawAlignment(parsed, x, y);
+					if (m_IsDrawAlgn) drawAlignment(parsed, x, y);
 
 					p.setPen(outer);
 					DRAWLINE(x, y - 5, x, y - 12);
@@ -1043,19 +1044,19 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 					isWidgetWHR(parsed, m_WidgetWH, m_WidgetR);
 
 					const DlState &state = m_LineEditor->getState(line);
-					if (m_isDrawAlignment) drawAlignment(parsed);
+					if (m_IsDrawAlgn) drawAlignment(parsed);
 					int x = parsed.Parameter[0].I;
 					int y = parsed.Parameter[1].I;
 					x += state.Graphics.VertexTranslateX >> 4;
 					y += state.Graphics.VertexTranslateY >> 4;
 
-					if (m_isDrawAlignmentHorizontal)
+					if (m_IsDrawAlgnHorizontal)
 					{
 						p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
 						DRAWLINE(0, y, hsize(), y);
 					}
 
-					if (m_isDrawAlignmentVertical)
+					if (m_IsDrawAlgnVertical)
 					{
 						p.setPen(QPen(QBrush(Qt::red), 1.0, Qt::DashLine));
 						DRAWLINE(x, 0, x, vsize());
@@ -1701,6 +1702,14 @@ void InteractiveViewport::selectItems()
 			}
 		}
 	}
+	if (m_SelectedLines.count() > 0)
+	{
+		m_LineEditor->codeEditor()->setInteractiveDelete(true);
+		if (m_SelectedLines.count() == 1)
+		{
+			m_LineEditor->selectLine(m_SelectedLines.at(0));
+		}
+	}
 }
 
 bool InteractiveViewport::isSingleSelect()
@@ -1828,7 +1837,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 	fetchColorAsync(mouseX, mouseY);
 
 	m_MainWindow->statusBar()->showMessage("");
-	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
+	m_IsDrawAlgnHorizontal = m_IsDrawAlgnVertical = false;
 
 	if (m_MouseTouch)
 	{
@@ -1839,7 +1848,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 		if (m_LineEditor)
 		{
 			if (isSingleSelect() && m_ActionAlgn->isChecked())
-				m_isDrawAlignment = true;
+				m_IsDrawAlgn = true;
 			int xd = mouseX - m_MovingLastX;
 			int yd = mouseY - m_MovingLastY;
 			int otherVertices[4];
@@ -1932,7 +1941,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 		if (m_LineEditor)
 		{
 			if (isSingleSelect() && m_ActionAlgn->isChecked())
-				m_isDrawAlignment = true;
+				m_IsDrawAlgn = true;
 			m_MainWindow->statusBar()->showMessage(
 			    "Press SHIFT for keeping constant x-coordinate, ALT for keeping "
 			    "constant y-coordinate");
@@ -1946,7 +1955,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 			}
 			else
 			{
-				m_isDrawAlignmentVertical = true;
+				m_IsDrawAlgnVertical = true;
 			}
 
 			if (km != Qt::AltModifier)
@@ -1956,7 +1965,7 @@ void InteractiveViewport::mouseMoveEvent(int mouseX, int mouseY,
 			}
 			else
 			{
-				m_isDrawAlignmentHorizontal = true;
+				m_IsDrawAlgnHorizontal = true;
 			}
 
 			for (auto &line : m_SelectedLines)
@@ -2237,13 +2246,13 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 				{
 					m_MainWindow->focusCmdEditor();
 					bool force = !m_SelectedLines.contains(idxCmd);
-					m_MainWindow->cmdEditor()->selectLine(idxCmd, false, force);
+					m_MainWindow->cmdEditor()->selectLine(idxCmd, force);
 				}
 				else
 				{
 					m_MainWindow->focusDlEditor();
 					bool force = !m_SelectedLines.contains(idxCmd);
-					m_MainWindow->dlEditor()->selectLine(idxDl, false, force);
+					m_MainWindow->dlEditor()->selectLine(idxDl, force);
 				}
 				emit selectedLinesChanged(m_SelectedLines);
 
@@ -2321,8 +2330,8 @@ void InteractiveViewport::mouseReleaseEvent(QMouseEvent *e)
 	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(NULL);
 
 	m_MainWindow->statusBar()->showMessage("");
-	m_isDrawAlignmentHorizontal = m_isDrawAlignmentVertical = false;
-	m_isDrawAlignment = false;
+	m_IsDrawAlgnHorizontal = m_IsDrawAlgnVertical = false;
+	m_IsDrawAlgn = false;
 
 	if (m_MouseTouch)
 	{
@@ -2389,7 +2398,7 @@ bool InteractiveViewport::acceptableSource(QDropEvent *e)
 		ContentInfo *currentItem = m_MainWindow->contentManager()->current();
 
 		static const QSet<QString> supportedList = { "flash", "ram_g", "raw", "xfont", "avi" };
-		static const QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower();
+		QString fileSuffix = QFileInfo(currentItem->SourcePath).suffix().toLower(); //Remove static const
 
 		if (fileSuffix == "raw" && currentItem->SourcePath.contains("_lut"))
 			return false;
@@ -2967,7 +2976,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					bool mustCreateHandle = true;
 					if (contentInfo)
 					{
-						debugLog("Find or create handle for content item\n");
+						debugLog("Find or create handle for content item");
 						int handleResult = m_MainWindow->contentManager()->editorFindHandle(contentInfo, m_LineEditor);
 						if (handleResult != -1 && handleResult != 15)
 						{
@@ -2977,7 +2986,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						}
 						if (mustCreateHandle)
 						{
-							debugLog("Must create handle\n");
+							debugLog("Must create handle");
 							mustCreateHandle = false;
 							int handleFree = m_MainWindow->contentManager()->editorFindFreeHandle(m_LineEditor);
 							if (handleFree != -1)
@@ -3628,10 +3637,6 @@ void InteractiveViewport::dragMoveEvent(QDragMoveEvent *e)
 	{
 		if (m_LineEditor)
 		{
-			int mvx = screenLeft();
-			int mvy = screenTop();
-			int scl = screenScale();
-
 			m_NextMouseX = mappingX(e);
 			m_NextMouseY = mappingY(e);
 			m_DragMoving = true;

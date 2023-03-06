@@ -103,7 +103,7 @@ class DlEditor : public QWidget {
   const DlParsed &getLine(int line) const;
   QString getLineText(int line) const;
   // Move cursor to line
-  void selectLine(int line, bool multiple = false, bool force = false);
+  void selectLine(int line, bool force = false);
   void insertLine(int line, const DlParsed &parsed);
   void insertLine(int line, QString cmdText);
   int getLineCount();
@@ -136,7 +136,7 @@ class DlEditor : public QWidget {
  private slots:
   void documentContentsChange(int position, int charsRemoved, int charsAdded);
   void documentBlockCountChanged(int newBlockCount);
-  void editorCursorPositionChanged(bool isActive = true);
+  void editorCursorPositionChanged(bool popupProperties = true);
 
  public slots:
   void frame();
@@ -144,7 +144,7 @@ class DlEditor : public QWidget {
 
  private:
   void parseLine(QTextBlock block);
-  void editingLine(QTextBlock block, bool multiple = false, bool force = false, bool isActive = true);
+  void editingLine(QTextBlock block, bool force = false, bool popupProperties = true);
 
   void processState();
 
