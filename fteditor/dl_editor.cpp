@@ -401,7 +401,7 @@ void DlEditor::reloadDisplayList(bool fromEmulator) {
   m_Reloading = false;
 }
 
-void DlEditor::editorCursorPositionChanged(bool isActive) {
+void DlEditor::editorCursorPositionChanged(bool popupProperties) {
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
 
   if (QApplication::instance()->closingDown()) return;
@@ -422,7 +422,7 @@ void DlEditor::editorCursorPositionChanged(bool isActive) {
     m_Completer->popup()->hide();
   }
 
-  editingLine(block, false, isActive);
+  editingLine(block, false, popupProperties);
 }
 
 void DlEditor::documentContentsChange(int position, int charsRemoved,
@@ -829,7 +829,7 @@ void DlEditor::selectLine(int line, bool force)
   m_EditingInteractive = false;
 }
 
-void DlEditor::editingLine(QTextBlock block, bool force, bool isActive) {
+void DlEditor::editingLine(QTextBlock block, bool force, bool popupProperties) {
   // update properties editor
   m_CodeEditor->setInteractiveDelete(m_EditingInteractive);
   if (m_PropertiesEditor->getEditWidgetSetter() != this ||
@@ -857,7 +857,7 @@ void DlEditor::editingLine(QTextBlock block, bool force, bool isActive) {
     m_MainWindow->interactiveProperties()->modifiedEditorLine();
   }
 
-  if (isActive) {
+  if (popupProperties) {
 	m_MainWindow->focusProperties();
   }
 }

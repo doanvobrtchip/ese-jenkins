@@ -136,7 +136,7 @@ class DlEditor : public QWidget {
  private slots:
   void documentContentsChange(int position, int charsRemoved, int charsAdded);
   void documentBlockCountChanged(int newBlockCount);
-  void editorCursorPositionChanged(bool isActive = true);
+  void editorCursorPositionChanged(bool popupProperties = true);
 
  public slots:
   void frame();
@@ -144,7 +144,7 @@ class DlEditor : public QWidget {
 
  private:
   void parseLine(QTextBlock block);
-  void editingLine(QTextBlock block, bool force = false, bool isActive = true);
+  void editingLine(QTextBlock block, bool force = false, bool popupProperties = true);
 
   void processState();
 
