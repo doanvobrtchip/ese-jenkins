@@ -24,7 +24,6 @@
 #include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
-#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;

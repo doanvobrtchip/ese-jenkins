@@ -100,9 +100,10 @@ class QHexView : public QAbstractScrollArea {
   QSize fullSize() const;
   void updatePositions();
   void setSelection(int pos, bool shouldEmitUpdate = false);
-
   int cursorPos(const QPointF &position);
-  const int startY() const;
+  int lineHeight() const;
+  int rowCount() const;
+
   QList<QColor> colours = {QColor(0x66, 0x00, 0x66), QColor(0x00, 0x80, 0x80),
                            QColor(0xcc, 0x33, 0x00), QColor(0x00, 0x66, 0x66),
                            QColor(0x99, 0x00, 0x4d), QColor(0x00, 0x80, 0x00)};
