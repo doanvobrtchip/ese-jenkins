@@ -174,14 +174,13 @@ void RamG::addContentItem(ContentInfo *contentInfo)
 
 void RamG::updateView()
 {
-	int ramUsage = -1;
 	auto ramG = BT8XXEMU_getRam(g_Emulator);
-	int ramSize = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_G_END];
 	QByteArray byteArr;
-	auto temp = static_cast<char *>(static_cast<void *>(ramG));
-	byteArr.append(temp, ramSize);
+	auto ramGChar = static_cast<char *>(static_cast<void *>(ramG));
+	int ramSize = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_G_END];
+	byteArr.append(ramGChar, ramSize);
 	auto data = m_HexView->data();
-	if (data && byteArr == data->getData(0, data->size()) && ramUsage == -1)
+	if (data && byteArr == data->getData(0, data->size()))
 	{
 		return;
 	}

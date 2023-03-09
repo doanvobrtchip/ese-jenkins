@@ -28,7 +28,7 @@ const int GAP_HEADER = 2;
 namespace FTEDITOR {
 
 QHexView::QHexView(QWidget *parent)
-    : QAbstractScrollArea(parent), m_pdata(NULL) {
+    : QAbstractScrollArea(parent), m_pdata(NULL), m_UseContentArea(true) {
   setFont(QFont("Segoe UI", 10));
 
   m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('9'));
@@ -114,11 +114,11 @@ void QHexView::updatePositions() {
   m_charHeight = fontMetrics().height();
 
   int serviceSymbolsWidth =
-      (ADR_LENGTH + 1) * m_charWidth + GAP_ADR_HEX + GAP_HEX_ASCII + 11;
+      (ADR_LENGTH + 1) * m_charWidth + GAP_ADR_HEX + GAP_HEX_ASCII;
 
   int bpLine =
-      (width() - serviceSymbolsWidth) /
-      (4 * m_charWidth + GAP_HEX_X);  // 3 bytes for hex + 1 bytes for char
+      (viewport()->width() - serviceSymbolsWidth) /
+      (4 * m_charWidth + GAP_HEX_X + 1);  // 3 bytes for hex + 1 bytes for char
   setBytesPerLine(bpLine <= 0 ? 1 : bpLine);
 
   m_posAddr = 0;
@@ -205,16 +205,16 @@ void QHexView::paintEvent(QPaintEvent *event) {
   for (int lineIdx = firstLineIdx, y = yPosStart; lineIdx < lastLineIdx;
        lineIdx += 1, y += lineHeight()) {
     painter.setPen(Qt::black);
+    // Draw address
     if (!hasFocus() || lineIdx != ((m_cursorPos / 2) / m_bytesPerLine) ||
         (hasFocus() && !isValidFocus)) {
-      // Draw address
       painter.fillRect(
           QRect(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight),
           nonContentColor);
     }
     QString address =
         QString("%1").arg(lineIdx * m_bytesPerLine, ADR_LENGTH, 16, QChar('0'));
-    painter.drawText(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight,
+	painter.drawText(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight,
                      Qt::AlignHCenter | Qt::AlignBottom, address);
 
     for (int x = m_posHex, i = 0, xAscii = m_posAscii;
@@ -222,7 +222,6 @@ void QHexView::paintEvent(QPaintEvent *event) {
          ((lineIdx - firstLineIdx) * m_bytesPerLine + i) < data.size();
          i++, x += wdRect + GAP_HEX_X, xAscii += m_charWidth + 1) {
       // Default transparency and color of the text
-      painter.setPen(QColor(0, 0, 0, 128));
       auto pos = (lineIdx * m_bytesPerLine + i) * 2;
       index = (lineIdx - firstLineIdx) * m_bytesPerLine + i;
 
@@ -237,18 +236,22 @@ void QHexView::paintEvent(QPaintEvent *event) {
                          QColor(0xb3, 0xff, 0xd9, 0xAF));
       }
 
-      // Set color for memory area of content item
-      int globalIndex = lineIdx * m_bytesPerLine + i;
-      ContentArea *area;
-      for (int listIdx = m_contentAreaList.count() - 1; listIdx >= 0;
-           --listIdx) {
-        area = m_contentAreaList.at(listIdx);
-        if (area->contentInfo->MemoryLoaded && globalIndex >= area->start() &&
-            globalIndex <= area->end()) {
-          painter.setPen(area->color);
-          break;
+      // Set text  color for memory area of content item
+      if (m_UseContentArea) {
+        painter.setPen(QColor(0, 0, 0, 128));
+        int globalIndex = lineIdx * m_bytesPerLine + i;
+        ContentArea *area;
+        for (int listIdx = m_contentAreaList.count() - 1; listIdx >= 0;
+             --listIdx) {
+          area = m_contentAreaList.at(listIdx);
+          if (area->contentInfo->MemoryLoaded && globalIndex >= area->start() &&
+              globalIndex <= area->end()) {
+            painter.setPen(area->color);
+            break;
+          }
         }
-      }
+      } else
+		  painter.setPen(Qt::darkGray);
 
       // Draw hex value
       QString val = QString::number((data.at(index) & 0xF0) >> 4, 16) +
@@ -380,7 +383,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
   }
 
   if (event->matches(QKeySequence::SelectNextPage)) {
-	int pos = m_cursorPos + rowCount() * 2 * m_bytesPerLine;
+    int pos = m_cursorPos + rowCount() * 2 * m_bytesPerLine;
     setCursorPos(pos);
     setSelection(pos);
     isVisible = true;
@@ -513,6 +516,10 @@ void QHexView::onCopy() {
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->setText(res);
   }
+}
+
+void QHexView::setUseContentArea(bool newUseContentArea) {
+  m_UseContentArea = newUseContentArea;
 }
 
 int QHexView::cursorPos(const QPointF &posF) {
@@ -668,8 +675,6 @@ void QHexView::updateUint() {
     resultUint = qToBigEndian(resultUint);
     emit uintChanged(resultUint);
   }
-  debugLog(
-      QString("ResultStr: %1 | BigEndian: %2").arg(resultStr).arg(resultUint));
 }
 
 bool QHexView::checkVisible() {

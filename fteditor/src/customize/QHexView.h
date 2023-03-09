@@ -73,6 +73,8 @@ class QHexView : public QAbstractScrollArea {
   bool checkVisible();
   bool isValidMouseEvent(QMouseEvent *event);
 
+  void setUseContentArea(bool newUseContentArea);
+
  protected:
   void paintEvent(QPaintEvent *event);
   void keyPressEvent(QKeyEvent *event);
@@ -96,6 +98,7 @@ class QHexView : public QAbstractScrollArea {
   int m_selectInit;
   int m_cursorPos;
   int m_bytesPerLine;
+  bool m_UseContentArea;
 
   QSize fullSize() const;
   void updatePositions();
