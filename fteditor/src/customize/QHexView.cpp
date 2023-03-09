@@ -31,6 +31,7 @@ QHexView::QHexView(QWidget *parent)
     : QAbstractScrollArea(parent)
     , m_pdata(NULL)
     , m_UseContentArea(true)
+    , m_StartAddress(0)
 {
 	setFont(QFont("Segoe UI", 10));
 
@@ -57,6 +58,8 @@ QHexView::QHexView(QWidget *parent)
 	    [this](const QPoint &pos) {
 		    m_ContextMenu->exec(this->mapToGlobal(pos));
 	    });
+	
+	connect(this, &QHexView::bytesPerLineChanged, this, &QHexView::ensureVisible);
 }
 
 QHexView::~QHexView()
@@ -74,11 +77,12 @@ void QHexView::setData(QHexView::DataStorage *pData)
 
 QHexView::DataStorage *QHexView::data() { return m_pdata; }
 
-void QHexView::showFromOffset(int offset)
+bool QHexView::showFromOffset(int offset)
 {
 	QMutexLocker lock(&m_dataMtx);
 
-	if (m_pdata && offset < m_pdata->size())
+	offset -= m_StartAddress;
+	if (m_pdata && offset < m_pdata->size() && offset >= 0)
 	{
 		updatePositions();
 		setCursorPos(offset * 2);
@@ -91,7 +95,9 @@ void QHexView::showFromOffset(int offset)
 			verticalScrollBar()->setValue(cursorY);
 			viewport()->update();
 		}
+		return true;
 	}
+	return false;
 }
 
 void QHexView::clear()
@@ -225,7 +231,8 @@ void QHexView::paintEvent(QPaintEvent *event)
 			    QRect(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight),
 			    nonContentColor);
 		}
-		QString address = QString("%1").arg(lineIdx * m_bytesPerLine, ADR_LENGTH, 16, QChar('0'));
+		QString address = QString("%1").arg(
+		    m_StartAddress + lineIdx * m_bytesPerLine, ADR_LENGTH, 16, QChar('0'));
 		painter.drawText(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight,
 		    Qt::AlignHCenter | Qt::AlignBottom, address);
 
@@ -571,6 +578,13 @@ void QHexView::onCopy()
 	}
 }
 
+int QHexView::StartAddress() const { return m_StartAddress; }
+
+void QHexView::setStartAddress(int newStartAddress)
+{
+	m_StartAddress = newStartAddress;
+}
+
 void QHexView::setUseContentArea(bool newUseContentArea)
 {
 	m_UseContentArea = newUseContentArea;
@@ -696,6 +710,7 @@ void QHexView::setSelection(int pos, bool shouldEmitUpdate)
 
 void QHexView::setSelected(int offset, int length)
 {
+	offset -= m_StartAddress;
 	m_selectInit = m_selectBegin = offset * 2;
 	m_selectEnd = m_selectBegin + length * 2;
 	viewport()->update();

@@ -61,7 +61,7 @@ public:
 public slots:
 	void setData(QHexView::DataStorage *pData);
 	void clear();
-	void showFromOffset(int offset);
+	bool showFromOffset(int offset);
 
 public:
 	void setSelected(int offset, int length);
@@ -79,6 +79,9 @@ public:
 	bool isValidMouseEvent(QMouseEvent *event);
 
 	void setUseContentArea(bool newUseContentArea);
+
+	int StartAddress() const;
+	void setStartAddress(int newStartAddress);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -104,6 +107,7 @@ private:
 	int m_cursorPos;
 	int m_bytesPerLine;
 	bool m_UseContentArea;
+	int m_StartAddress;
 
 	QSize fullSize() const;
 	void updatePositions();

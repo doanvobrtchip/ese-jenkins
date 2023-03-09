@@ -80,7 +80,7 @@ void RamCMD::goToAddress()
 	}
 	if (ok)
 	{
-		m_HexView->showFromOffset(address);
+		if (!m_HexView->showFromOffset(address)) return;
 		m_HexView->setSelected(address, 1);
 		m_HexView->updateUint();
 		m_HexView->setFocus();
@@ -95,10 +95,9 @@ void RamCMD::setLabelUint(uint value)
 
 void RamCMD::updateView()
 {
-	int startAddrRamCMD = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_CMD];
+	int startAddr = g_Addr[FTEDITOR_CURRENT_DEVICE][FTEDITOR_RAM_CMD];
 	auto ram = BT8XXEMU_getRam(g_Emulator);
-	auto ramCMD = ram + startAddrRamCMD;
-	assert(ramCMD[0] == ram[startAddrRamCMD]);
+	uint8_t *ramCMD = ram + startAddr;
 	QByteArray byteArr;
 	auto ramCMDChar = static_cast<char *>(static_cast<void *>(ramCMD));
 	byteArr.append(ramCMDChar, 4096); // 4KB
@@ -107,6 +106,7 @@ void RamCMD::updateView()
 	{
 		return;
 	}
+	m_HexView->setStartAddress(startAddr);
 	m_HexView->setData(new QHexView::DataStorageArray(byteArr));
 	m_HexView->viewport()->update();
 }

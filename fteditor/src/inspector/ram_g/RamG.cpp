@@ -140,7 +140,7 @@ void RamG::handleContentItemPressed(QTreeWidgetItem *item)
 	             .arg(contentInfo->MemoryAddress)
 	             .arg(size)
 	             .arg(contentInfo->DestName));
-	m_HexView->showFromOffset(contentInfo->MemoryAddress);
+	if (!m_HexView->showFromOffset(contentInfo->MemoryAddress)) return;
 	m_HexView->setSelected(contentInfo->MemoryAddress, size);
 	if (m_Visible)
 	{
@@ -204,7 +204,7 @@ void RamG::goToAddress()
 	}
 	if (ok)
 	{
-		m_HexView->showFromOffset(address);
+		if (!m_HexView->showFromOffset(address)) return;
 		m_HexView->setSelected(address, 1);
 		m_HexView->updateUint();
 		m_HexView->setFocus();

@@ -43,7 +43,7 @@ RamDL::RamDL(Inspector *parent)
 	m_DisplayList->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_DisplayList->installEventFilter(this);
 	m_DisplayList->viewport()->installEventFilter(this);
-	
+
 	m_CopyAct = new QAction(parent);
 	m_CopyAct->setText(tr("Copy"));
 	m_ContextMenu = new QMenu(parent);
