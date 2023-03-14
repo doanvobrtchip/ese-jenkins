@@ -3051,6 +3051,7 @@ void MainWindow::showExactNumberOfResourceWhenMouseHover(QObject *watched, const
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
+	if (event->source()) return;
 	if (event->mimeData()->hasUrls()) {
 		foreach (QUrl url, event->mimeData()->urls())
 		{
