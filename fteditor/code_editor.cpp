@@ -120,6 +120,7 @@ CodeEditor::CodeEditor(QWidget *parent)
 void CodeEditor::focusInEvent(QFocusEvent *event)
 {
 	QPlainTextEdit::focusInEvent(event);
+	emit focusIn();
 }
 
 void CodeEditor::wheelEvent(QWheelEvent *event)

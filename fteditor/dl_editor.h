@@ -56,145 +56,152 @@ class PropertiesEditor;
  * \date 2013-11-05 09:02GMT
  * \author Jan Boon (Kaetemi)
  */
-class DlEditor : public QWidget {
-  Q_OBJECT
+class DlEditor : public QWidget
+{
+	Q_OBJECT
 
- public:
-  DlEditor(MainWindow *parent, bool coprocessor = false);
-  virtual ~DlEditor();
+public:
+	DlEditor(MainWindow *parent, bool coprocessor = false);
+	virtual ~DlEditor();
 
-  void setUndoStack(QUndoStack *undo_stack);
-  void setPropertiesEditor(PropertiesEditor *props) {
-    m_PropertiesEditor = props;
-  }
-  void setModeMacro();
+	void setUndoStack(QUndoStack *undo_stack);
+	void setPropertiesEditor(PropertiesEditor *props)
+	{
+		m_PropertiesEditor = props;
+	}
+	void setModeMacro();
 
-  void bindCurrentDevice();
-  void poke() { m_DisplayListModified = true; }
+	void bindCurrentDevice();
+	void poke() { m_DisplayListModified = true; }
 
-  void clearUndoStack();
-  void clear();
+	void clearUndoStack();
+	void clear();
 
-  void lockDisplayList();    // mutex
-  void unlockDisplayList();  // mutex
-  inline uint32_t *getDisplayList() { return m_DisplayListShared; }
-  inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
-  inline bool isDisplayListModified() {
-    bool result = m_DisplayListModified;
-    m_DisplayListModified = false;
-    return result;
-  }
+	void lockDisplayList(); // mutex
+	void unlockDisplayList(); // mutex
+	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
+	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
+	inline bool isDisplayListModified()
+	{
+		bool result = m_DisplayListModified;
+		m_DisplayListModified = false;
+		return result;
+	}
 
-  void setReadOut(int line, uint32_t *readOut) {
-    memcpy(m_DisplayListParsed[line].ReadOut, readOut,
-           sizeof(m_DisplayListParsed->ReadOut));
-  }  // okay to do without locking, it's just a readout, it refreshes anyway
+	void setReadOut(int line, uint32_t *readOut)
+	{
+		memcpy(m_DisplayListParsed[line].ReadOut, readOut,
+		    sizeof(m_DisplayListParsed->ReadOut));
+	} // okay to do without locking, it's just a readout, it refreshes anyway
 
-  void reloadDisplayList(bool fromEmulator);  // reloads the entire display list
-                                              // from m_DisplayListShared, must
-                                              // be called inside mutex!!!
+	void reloadDisplayList(bool fromEmulator); // reloads the entire display list
+	                                           // from m_DisplayListShared, must
+	                                           // be called inside mutex!!!
 
-  // Replace a line (creates undo stack), used for example from the interactive
-  // viewport
-  void replaceLine(int line, const DlParsed &parsed, int combineId = -1,
-                   const QString &message = QString());
-  void removeLine(int line);
-  void removeAll();
-  const DlParsed &getLine(int line) const;
-  QString getLineText(int line) const;
-  // Move cursor to line
-  void selectLine(int line, bool force = false);
-  void insertLine(int line, const DlParsed &parsed);
-  void insertLine(int line, QString cmdText);
-  int getLineCount();
+	// Replace a line (creates undo stack), used for example from the interactive
+	// viewport
+	void replaceLine(int line, const DlParsed &parsed, int combineId = -1,
+	    const QString &message = QString());
+	void removeLine(int line);
+	void removeAll();
+	const DlParsed &getLine(int line) const;
+	QString getLineText(int line) const;
+	// Move cursor to line
+	void selectLine(int line, bool force = false);
+	void insertLine(int line, const DlParsed &parsed);
+	void insertLine(int line, QString cmdText);
+	int getLineCount();
 
-  bool isCoprocessor() const { return m_ModeCoprocessor; }
-  bool isMacro() const { return m_ModeMacro; }
+	bool isCoprocessor() const { return m_ModeCoprocessor; }
+	bool isMacro() const { return m_ModeMacro; }
 
-  CodeEditor *codeEditor() { return m_CodeEditor; }
-  MainWindow *mainWindow() { return m_MainWindow; }
+	CodeEditor *codeEditor() { return m_CodeEditor; }
+	MainWindow *mainWindow() { return m_MainWindow; }
 
-  const DlState &getState(int line) {
-    if (m_InvalidState) {
-      processState();
-    }
-    return m_State[line];
-  }
+	const DlState &getState(int line)
+	{
+		if (m_InvalidState)
+		{
+			processState();
+		}
+		return m_State[line];
+	}
 
-  bool isInvalid(void);
+	bool isInvalid(void);
 
-  QString getCoproCmdText(bool isBigEndian);
-  QByteArray getCoproCmdBinary(bool isBigEndian);
+	QString getCoproCmdText(bool isBigEndian);
+	QByteArray getCoproCmdBinary(bool isBigEndian);
 
-  bool eventFilter(QObject *watched, QEvent *event);
+	bool eventFilter(QObject *watched, QEvent *event);
 
-  int getVertextFormat(int line);
+	int getVertextFormat(int line);
 
-  void setPropLine(int newPropLine);
-  int PropLine() const;
+	void setPropLine(int newPropLine);
+	int PropLine() const;
 
- private slots:
-  void documentContentsChange(int position, int charsRemoved, int charsAdded);
-  void documentBlockCountChanged(int newBlockCount);
-  void editorCursorPositionChanged(bool popupProperties = true);
+private slots:
+	void documentContentsChange(int position, int charsRemoved, int charsAdded);
+	void documentBlockCountChanged(int newBlockCount);
+	void editorCursorPositionChanged(bool popupProperties = true);
 
- public slots:
-  void frame();
-  void setup(QObject *obj = nullptr);
+public slots:
+	void frame();
+	void setup(QObject *obj = nullptr);
 
- private:
-  void parseLine(QTextBlock block);
-  void editingLine(QTextBlock block, bool force = false, bool popupProperties = true);
+private:
+	void parseLine(QTextBlock block);
+	void editingLine(QTextBlock block, bool force = false,
+	    bool popupProperties = true);
 
-  void processState();
+	void processState();
 
-  void adjustCmdSketch(DlParsed pre, DlParsed cur);
-  void adjustCmdMemzero(DlParsed pre, DlParsed cur);
-  void adjustXY(DlParsed pre, DlParsed cur);
+	void adjustCmdSketch(DlParsed pre, DlParsed cur);
+	void adjustCmdMemzero(DlParsed pre, DlParsed cur);
+	void adjustXY(DlParsed pre, DlParsed cur);
 
- private:
-  MainWindow *m_MainWindow;
-  CodeEditor *m_CodeEditor;
-  DlHighlighter *m_DlHighlighter;
-  uint32_t m_DisplayListShared
-      [FTEDITOR_DL_SIZE];  // display list that is to be used by the thread
-                           // forwarding to the emulator, todo: internal copy to
-                           // compare when coprocessor changes stuff
-  DlParsed m_DisplayListParsed[FTEDITOR_DL_SIZE];  // parsed version of the
-                                                   // display list
-  volatile bool
-      m_DisplayListModified;  // flagged whenever the emulator needs to refresh
-                              // the display list from m_DisplayListShared
-  QMutex m_Mutex;
-  bool m_Reloading;
-  QCompleter *m_Completer;
-  QStringListModel *m_CompleterModel;
-  QStringList m_CompleterIdentifiers;
-  QStringList m_CompleterParams;
-  bool m_CompleterIdentifiersActive;
+private:
+	MainWindow *m_MainWindow;
+	CodeEditor *m_CodeEditor;
+	DlHighlighter *m_DlHighlighter;
+	uint32_t m_DisplayListShared
+	    [FTEDITOR_DL_SIZE]; // display list that is to be used by the thread
+	                        // forwarding to the emulator, todo: internal copy to
+	                        // compare when coprocessor changes stuff
+	DlParsed m_DisplayListParsed[FTEDITOR_DL_SIZE]; // parsed version of the
+	                                                // display list
+	volatile bool
+	    m_DisplayListModified; // flagged whenever the emulator needs to refresh
+	                           // the display list from m_DisplayListShared
+	QMutex m_Mutex;
+	bool m_Reloading;
+	QCompleter *m_Completer;
+	QStringListModel *m_CompleterModel;
+	QStringList m_CompleterIdentifiers;
+	QStringList m_CompleterParams;
+	bool m_CompleterIdentifiersActive;
 
-  DlState m_State[FTEDITOR_DL_SIZE];
+	DlState m_State[FTEDITOR_DL_SIZE];
 
-  PropertiesEditor *m_PropertiesEditor;
-  int m_PropLine;
-  int m_PropIdLeft;
-  int m_PropIdRight;
-  bool m_PropIdValid;
+	PropertiesEditor *m_PropertiesEditor;
+	int m_PropLine;
+	int m_PropIdLeft;
+	int m_PropIdRight;
+	bool m_PropIdValid;
 
-  bool m_ModeMacro;
-  bool m_ModeCoprocessor;
+	bool m_ModeMacro;
+	bool m_ModeCoprocessor;
 
-  bool m_EditingInteractive;
+	bool m_EditingInteractive;
 
-  bool m_InvalidState;
+	bool m_InvalidState;
 
-  QHash<QString, QStringList> m_CoproCmdArgName;
+	QHash<QString, QStringList> m_CoproCmdArgName;
 
-  bool m_adjustingCmdSketch = false;
+	bool m_adjustingCmdSketch = false;
 
- private:
-  DlEditor(const DlEditor &);
-  DlEditor &operator=(const DlEditor &);
+private:
+	DlEditor(const DlEditor &);
+	DlEditor &operator=(const DlEditor &);
 
 }; /* class DlEditor */
 

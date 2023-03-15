@@ -1511,6 +1511,12 @@ void MainWindow::createDockWindows()
 		connect(m_EmulatorViewport, SIGNAL(frame()), m_DlEditor, SLOT(frame()));
 		m_DlEditorDock->setWidget(m_DlEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_DlEditorDock);
+		connect(m_DlEditorDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+			if (visible)
+			{
+				m_DlEditor->codeEditor()->setFocus();
+			}
+		});
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
 
 		m_DlEditorDock->setVisible(false);
@@ -1527,6 +1533,12 @@ void MainWindow::createDockWindows()
 		connect(m_EmulatorViewport, SIGNAL(frame()), m_CmdEditor, SLOT(frame()));
 		m_CmdEditorDock->setWidget(m_CmdEditor);
 		addDockWidget(Qt::BottomDockWidgetArea, m_CmdEditorDock);
+		connect(m_CmdEditorDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+			if (visible)
+			{
+				m_CmdEditor->codeEditor()->setFocus();
+			}
+		});
 		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
 	}
 

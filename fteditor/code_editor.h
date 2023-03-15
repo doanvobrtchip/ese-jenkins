@@ -158,6 +158,7 @@ private:
 	
 signals:
 	void cursorChanged(bool isActive = true);
+	void focusIn();
 };
 
 class LineNumberArea : public QWidget
