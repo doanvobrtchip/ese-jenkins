@@ -14,6 +14,8 @@ FILE(GLOB UTILS
 )
 
 FILE(GLOB INSPECTOR
+  src/inspector/ram_cmd/*.h
+  src/inspector/ram_cmd/*.cpp
   src/inspector/ram_g/*.h
   src/inspector/ram_g/*.cpp
   src/inspector/ram_dl/*.h

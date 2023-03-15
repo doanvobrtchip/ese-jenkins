@@ -49,6 +49,8 @@
 #include "inspector/ram_g/RamGInspector.h"
 #include "inspector/ram_reg/RamRegDockWidget.h"
 #include "inspector/ram_reg/RamRegInspector.h"
+#include "inspector/ram_cmd/RamCMDInspector.h"
+#include "inspector/ram_cmd/RamCMDDockWidget.h"
 #include "main_window.h"
 
 namespace FTEDITOR {
@@ -64,6 +66,8 @@ Inspector::Inspector(MainWindow *parent)
     , m_RamRegDockWidget(NULL)
     , m_RamG(NULL)
     , m_RamGDockWidget(NULL)
+    , m_RamCMD(NULL)
+    , m_RamCMDDockWidget(NULL)
 {
 	QHBoxLayout *layout = new QHBoxLayout();
 	layout->setContentsMargins(3, 0, 0, 2);
@@ -92,6 +96,14 @@ Inspector::Inspector(MainWindow *parent)
 	auto ramGWidget = new QWidget(this);
 	ramGWidget->setLayout(m_RamG->setupComponents());
 	splitter->addWidget(ramGWidget);
+	
+	// Set up RAM_CMD inspector
+	m_RamCMD = new RamCMDInspector(this);
+	emit m_MainWindow->readyToSetup(m_RamCMD);
+	
+	auto ramCMDWidget = new QWidget(this);
+	ramCMDWidget->setLayout(m_RamCMD->setupComponents());
+	splitter->addWidget(ramCMDWidget);
 
 	layout->addWidget(splitter);
 	setLayout(layout);
@@ -192,6 +204,18 @@ void Inspector::initRamDLDockWidget()
 	emit m_MainWindow->readyToSetup(m_RamDLDockWidget);
 	connect(m_RamDLDockWidget, &QObject::destroyed, this,
 	    [this](QObject *obj) { m_RamDLDockWidget = NULL; });
+}
+
+RamCMDDockWidget *Inspector::ramCMDDockWidget() const {
+        return m_RamCMDDockWidget;
+}
+
+void Inspector::initRamCMDDockWidget()
+{
+	m_RamCMDDockWidget = new RamCMDDockWidget(this);
+	emit m_MainWindow->readyToSetup(m_RamCMDDockWidget);
+	connect(m_RamCMDDockWidget, &QObject::destroyed, this,
+	    [this](QObject *obj) { m_RamCMDDockWidget = NULL; });
 }
 
 } /* namespace FTEDITOR */

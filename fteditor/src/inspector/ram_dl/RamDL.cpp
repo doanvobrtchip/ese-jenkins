@@ -24,7 +24,6 @@
 #include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
-#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
@@ -44,7 +43,7 @@ RamDL::RamDL(Inspector *parent)
 	m_DisplayList->setContextMenuPolicy(Qt::CustomContextMenu);
 	m_DisplayList->installEventFilter(this);
 	m_DisplayList->viewport()->installEventFilter(this);
-	
+
 	m_CopyAct = new QAction(parent);
 	m_CopyAct->setText(tr("Copy"));
 	m_ContextMenu = new QMenu(parent);

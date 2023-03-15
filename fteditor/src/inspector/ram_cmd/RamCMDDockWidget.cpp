@@ -1,19 +1,14 @@
 /*!
- * @file RamGDockWidget.cpp
- * @date 2/7/2022
+ * @file RamCMDDockWidget.cpp
+ * @date 3/8/2023
  * @author Liem Do <liem.do@brtchip.com>
  */
-#include "RamGDockWidget.h"
+#include "RamCMDDockWidget.h"
 
 #include <QBoxLayout>
 #include <QDockWidget>
 #include <QGroupBox>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
 #include <QTimer>
-#include <QVBoxLayout>
 
 #include "customize/QHexView.h"
 #include "inspector.h"
@@ -21,22 +16,22 @@
 
 namespace FTEDITOR {
 
-RamGDockWidget::RamGDockWidget(Inspector *parent)
-    : RamG(parent)
+RamCMDDockWidget::RamCMDDockWidget(Inspector *parent)
+    : RamCMD(parent)
 {
-	setObjectName("RamG");
+	setObjectName("RamCMD");
 	setAttribute(Qt::WA_DeleteOnClose);
-	setWindowTitle("RAM_G");
+	setWindowTitle("RAM_CMD");
 	setFloating(true);
 	QWidget *w = new QWidget(this);
 	w->setLayout(setupComponents());
 	setWidget(w);
-	resize(640, 377);
-	m_Inspector->mainWindow()->addDockWidget(Qt::BottomDockWidgetArea, this);
+	resize(500, 300);
+	parent->mainWindow()->addDockWidget(Qt::BottomDockWidgetArea, this);
+
 	QTimer::singleShot(0, this, [this]() { activateWindow(); });
 }
-
-QBoxLayout *RamGDockWidget::setupComponents()
+QBoxLayout *RamCMDDockWidget::setupComponents()
 {
 	auto layout = new QVBoxLayout;
 	layout->setContentsMargins(0, 0, 0, 0);

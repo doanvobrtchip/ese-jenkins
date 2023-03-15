@@ -46,6 +46,8 @@ class RamGDockWidget;
 class RamGInspector;
 class RamRegDockWidget;
 class RamRegInspector;
+class RamCMDDockWidget;
+class RamCMDInspector;
 
 /**
  * Inspector
@@ -84,6 +86,9 @@ public:
 
 	RamDLDockWidget *ramDLDockWidget() const;
 	void initRamDLDockWidget();
+	
+	RamCMDDockWidget *ramCMDDockWidget() const;
+	void initRamCMDDockWidget();
 
 private:
 	MainWindow *m_MainWindow;
@@ -98,6 +103,9 @@ private:
 
 	RamGInspector *m_RamG;
 	RamGDockWidget *m_RamGDockWidget;
+	
+	RamCMDInspector *m_RamCMD;
+	RamCMDDockWidget *m_RamCMDDockWidget;
 
 	int m_countHandleBitmap;
 
