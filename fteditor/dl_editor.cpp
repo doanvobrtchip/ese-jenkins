@@ -47,7 +47,6 @@
 #include "main_window.h"
 #include "properties_editor.h"
 #include "toolbox.h"
-#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 
@@ -60,6 +59,7 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
     : QWidget(parent)
     , m_MainWindow(parent)
     , m_Reloading(false)
+    , m_CompleterModel(NULL)
     , m_CompleterIdentifiersActive(true)
     , m_PropertiesEditor(NULL)
     , m_PropLine(-1)
@@ -68,7 +68,6 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
     , m_ModeMacro(false)
     , m_ModeCoprocessor(coprocessor)
     , m_EditingInteractive(false)
-    , m_CompleterModel(NULL)
 {
 	m_DisplayListShared[0] = DISPLAY();
 
@@ -94,6 +93,9 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 	    SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, &CodeEditor::cursorChanged, this,
 	    &DlEditor::editorCursorPositionChanged);
+	connect(m_CodeEditor, &CodeEditor::focusIn, this, [this]() {
+		editorCursorPositionChanged();
+	});
 
 	bindCurrentDevice();
 
