@@ -1,3 +1,21 @@
+Version 4.6.0
+Alpha
+Feature updates:
+•   Improve inspector.
+•   Enhance 3rd party lib usage.
+•   Add an inspector window for RAM_CMD.
+•   Add one more section for exporting projects.
+•   Change font size of Coprocessor and Display List editor.
+•   Add one more chapter Work with EAB in the user guide of ESE.
+•   Add button in toolbar to toggle on/off alignment behaviour
+
+Resolved issues:
+•   Stepping through DL or CMD pops up Properties.
+•   A widget cannot be deleted if its command is the last one in the Coprocessor window.
+•   Unexpected behavior when user drops a new Content item with the Examples.
+•   Toolbox does not resume from display list mode to coprocessor mode.
+
+=======================
 Version 4.5.0
 RC1
 Feature updates:
