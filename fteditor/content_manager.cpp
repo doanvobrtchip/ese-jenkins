@@ -1440,7 +1440,7 @@ void ContentManager::addInternal(QStringList fileNameList)
 			}
 		}
 		
-		add(newName);
+		add(QDir(QDir::currentPath()).relativeFilePath(newName));
 	}
 }
 
