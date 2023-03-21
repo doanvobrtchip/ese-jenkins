@@ -8,16 +8,18 @@
 // Emulator includes
 #include <bt8xxemu_diag.h>
 
-#include <QDockWidget>
 #include <QEvent>
+#include <QGroupBox>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QMenu>
+#include <QPushButton>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QVBoxLayout>
 
 #include "constant_mapping.h"
 #include "inspector.h"
-#include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
 
@@ -25,10 +27,13 @@ namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
 
 RamReg::RamReg(Inspector *parent)
-    : QDockWidget(parent->mainWindow())
-    , m_Inspector(parent)
+    : RamBase(parent)
 {
-	setFocusPolicy(Qt::StrongFocus);
+	setObjectName("RamReg");
+	setWindowTitle("RAM_REG");
+	m_OpenDlgBtn->setStatusTip(tr("Show/Hide the RAM_REG Window"));
+	m_TitleLabel->setText(tr("RAM_REG"));
+
 	m_Registers = new QTreeWidget(parent);
 	m_Registers->setColumnCount(4);
 	m_Registers->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -50,12 +55,25 @@ RamReg::RamReg(Inspector *parent)
 	regHeaders.push_back(tr("Text"));
 	m_Registers->setHeaderLabels(regHeaders);
 
+	QVBoxLayout *layout = new QVBoxLayout();
+	layout->setContentsMargins(0, 0, 0, 0);
+	QGroupBox *groupBox = new QGroupBox(this);
+	QVBoxLayout *vBoxLayout = new QVBoxLayout();
+	vBoxLayout->setContentsMargins(5, 5, 5, 5);
+	vBoxLayout->addLayout(m_TitleLayout);
+	vBoxLayout->addWidget(m_Registers);
+	groupBox->setLayout(vBoxLayout);
+	layout->addWidget(groupBox);
+	m_Widget->setLayout(layout);
+
 	connect(m_CopyAct, &QAction::triggered, this, &RamReg::onCopy);
 	connect(m_Registers, &QTreeWidget::customContextMenuRequested, this,
 	    &RamReg::onPrepareContextMenu);
 	connect(m_Inspector, &Inspector::updateView, this, &RamReg::updateView);
-	connect(m_Inspector, &Inspector::initDisplayReg, this, &RamReg::initDisplayReg);
-	connect(m_Inspector, &Inspector::releaseDisplayReg, this, &RamReg::releaseDisplayReg);
+	connect(m_Inspector, &Inspector::initDisplayReg, this,
+	    &RamReg::initDisplayReg);
+	connect(m_Inspector, &Inspector::releaseDisplayReg, this,
+	    &RamReg::releaseDisplayReg);
 }
 
 bool RamReg::wantRegister(int regEnum)
@@ -231,6 +249,18 @@ void RamReg::onPrepareContextMenu(const QPoint &pos)
 
 void RamReg::onCopy() { CommonUtil::copy(m_Registers); }
 
+void RamReg::openDialog(bool checked)
+{
+	RamBase::openDialog();
+	resize(500, 357);
+	m_Registers->setFocus(Qt::MouseFocusReason);
+}
+void RamReg::dockBack(bool checked)
+{
+	RamBase::dockBack(checked);
+	m_Registers->setFocus(Qt::MouseFocusReason);
+}
+
 bool RamReg::eventFilter(QObject *watched, QEvent *event)
 {
 	if (watched == m_Registers && event->type() == QEvent::KeyPress)
@@ -243,8 +273,7 @@ bool RamReg::eventFilter(QObject *watched, QEvent *event)
 			return true;
 		}
 	}
-	if ((watched == m_Registers || watched == m_Registers->viewport())
-	    && event->type() == QEvent::Wheel)
+	if ((watched == m_Registers || watched == m_Registers->viewport()) && event->type() == QEvent::Wheel)
 	{
 		auto e = static_cast<QWheelEvent *>(event);
 		if (e->modifiers() & Qt::ControlModifier)

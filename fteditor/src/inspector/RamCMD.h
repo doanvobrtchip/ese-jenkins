@@ -6,18 +6,15 @@
 #ifndef RAMCMD_H
 #define RAMCMD_H
 
-#include <QDockWidget>
+#include "RamBase.h"
 
-class QLabel;
 class QLineEdit;
-class QPushButton;
-class QHBoxLayout;
 
 namespace FTEDITOR {
 class Inspector;
 class QHexView;
 
-class RamCMD : public QDockWidget
+class RamCMD : public RamBase
 {
 	Q_OBJECT
 
@@ -26,19 +23,19 @@ public:
 	~RamCMD() = default;
 
 public slots:
-	void setupConnections(QObject *obj = nullptr);
 	void goToAddress();
 	void setLabelUint(uint value);
 	void updateView();
+	void openDialog(bool checked) override;
+	void dockBack(bool checked) override;
 
-protected:
-	Inspector *m_Inspector;
-	QHexView *m_HexView;
+private:
 	QLabel *m_UintLabel;
-	QLineEdit *m_AddressJumpEdit;
-	QPushButton *m_SearchButton;
+	QHexView *m_HexView;
 	QLabel *m_AddressLabel;
+	QPushButton *m_SearchButton;
 	QHBoxLayout *m_SearchLayout;
+	QLineEdit *m_AddressJumpEdit;
 };
 } // namespace FTEDITOR
 #endif // RAMCMD_H

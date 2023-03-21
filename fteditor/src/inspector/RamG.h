@@ -6,20 +6,18 @@
 #ifndef RAMG_H
 #define RAMG_H
 
-#include <QDockWidget>
+#include "RamBase.h"
 
 class QTreeWidgetItem;
-class QLabel;
 class QLineEdit;
-class QPushButton;
-class QHBoxLayout;
+class QLabel;
 
 namespace FTEDITOR {
 class QHexView;
 struct ContentInfo;
 class Inspector;
 
-class RamG : public QDockWidget
+class RamG : public RamBase
 {
 	Q_OBJECT
 
@@ -36,19 +34,20 @@ public slots:
 	void bindVisible(bool visible);
 	void removeContentItem(FTEDITOR::ContentInfo *contentInfo);
 	void addContentItem(FTEDITOR::ContentInfo *contentInfo);
-	void updateView();
 	void goToAddress();
 	void setLabelUint(uint value);
+	void updateView();
+	void openDialog(bool checked) override;
+	void dockBack(bool checked) override;
 
-protected:
-	QHexView *m_HexView;
+private:
 	bool m_Visible;
+	QHexView *m_HexView;
 	QLabel *m_UintLabel;
-	QLineEdit *m_AddressJumpEdit;
-	QPushButton *m_SearchButton;
 	QLabel *m_AddressLabel;
+	QPushButton *m_SearchButton;
 	QHBoxLayout *m_SearchLayout;
-	Inspector *m_Inspector;
+	QLineEdit *m_AddressJumpEdit;
 
 signals:
 	void updateCurrentInfo(FTEDITOR::ContentInfo *contentInfo);

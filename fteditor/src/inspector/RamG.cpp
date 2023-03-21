@@ -8,7 +8,6 @@
 // Emulator includes
 #include <bt8xxemu_diag.h>
 
-#include <QDockWidget>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -17,7 +16,6 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
-#include <QWidget>
 
 #include "content_manager.h"
 #include "customize/QHexView.h"
@@ -29,12 +27,15 @@ namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
 
 RamG::RamG(Inspector *parent)
-    : QDockWidget(parent->mainWindow())
-    , m_Inspector(parent)
+    : RamBase(parent)
 {
+	setObjectName("RamG");
+	setWindowTitle("RAM_G");
+	m_OpenDlgBtn->setStatusTip(tr("Show/Hide the RAM_G Window"));
+	m_TitleLabel->setText(tr("RAM_G"));
+
 	m_HexView = new QHexView;
-	m_UintLabel = new QLabel;
-	m_UintLabel->setText(tr("Uint:"));
+	m_UintLabel = new QLabel(tr("Uint:"));
 
 	// Set default width for QLineEdit
 	m_AddressJumpEdit = new QLineEdit;
@@ -44,14 +45,12 @@ RamG::RamG(Inspector *parent)
 	m_AddressJumpEdit->setPlaceholderText(placeholderText);
 	m_AddressJumpEdit->setMaximumWidth(textSize.width() + 10);
 
-	m_AddressLabel = new QLabel;
-	m_AddressLabel->setText(tr("Address:"));
+	m_AddressLabel = new QLabel(tr("Address:"));
 	m_AddressLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-	m_SearchButton = new QPushButton;
+	m_SearchButton = new QPushButton(tr("Jump"));
 	m_SearchButton->setDefault(true);
 	m_SearchButton->setMaximumWidth(90);
-	m_SearchButton->setText(tr("Jump"));
 
 	m_SearchLayout = new QHBoxLayout;
 	m_SearchLayout->setAlignment(Qt::AlignRight);
@@ -60,16 +59,28 @@ RamG::RamG(Inspector *parent)
 	m_SearchLayout->addWidget(m_AddressJumpEdit);
 	m_SearchLayout->addWidget(m_SearchButton);
 
+	auto layout = new QVBoxLayout;
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setAlignment(Qt::AlignRight);
+	auto groupBox = new QGroupBox(this);
+	auto vBoxLayout = new QVBoxLayout;
+	vBoxLayout->setContentsMargins(5, 5, 5, 5);
+	vBoxLayout->addLayout(m_TitleLayout);
+	vBoxLayout->addWidget(m_HexView);
+	vBoxLayout->addLayout(m_SearchLayout);
+	groupBox->setLayout(vBoxLayout);
+	layout->addWidget(groupBox);
+
+	m_Widget->setLayout(layout);
+
 	connect(m_SearchButton, &QPushButton::clicked, this, &RamG::goToAddress);
 	connect(m_AddressJumpEdit, &QLineEdit::returnPressed, this,
 	    &RamG::goToAddress);
 	connect(m_HexView, &QHexView::uintChanged, this, &RamG::setLabelUint);
-
 	connect(m_Inspector, &Inspector::updateView, this, &RamG::updateView);
-	setupConnections();
-
 	connect(m_Inspector->mainWindow(), SIGNAL(readyToSetup(QObject *)), this,
 	    SLOT(setupConnections(QObject *)));
+	setupConnections();
 	emit m_Inspector->mainWindow()->readyToSetup(this);
 }
 
@@ -215,6 +226,19 @@ void RamG::setLabelUint(uint value)
 {
 	QString text = QString(tr("Uint: %1")).arg(value);
 	m_UintLabel->setText(text);
+}
+
+void RamG::openDialog(bool checked)
+{
+	RamBase::openDialog();
+	resize(615, 327);
+	m_AddressJumpEdit->setFocus(Qt::MouseFocusReason);
+}
+
+void RamG::dockBack(bool checked)
+{
+	RamBase::dockBack(checked);
+	m_AddressJumpEdit->setFocus(Qt::MouseFocusReason);
 }
 
 } // namespace FTEDITOR

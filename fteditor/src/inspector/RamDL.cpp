@@ -5,11 +5,13 @@
  */
 #include "RamDL.h"
 
-#include <QDockWidget>
 #include <QEvent>
+#include <QGroupBox>
 #include <QKeyEvent>
-#include <QList>
+#include <QLabel>
 #include <QMenu>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include <QtEndian>
 // STL includes
 #include <stdio.h>
@@ -21,7 +23,6 @@
 #include <bt8xxemu_diag.h>
 
 #include "inspector.h"
-#include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
 
@@ -29,12 +30,15 @@ namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
 
 RamDL::RamDL(Inspector *parent)
-    : QDockWidget(parent->mainWindow())
+    : RamBase(parent)
     , m_DLCMDCount(0)
     , m_FirstDisplayCMD(-1)
-    , m_Inspector(parent)
 {
-	setFocusPolicy(Qt::StrongFocus);
+	setObjectName("RamDL");
+	setWindowTitle("RAM_DL");
+	m_OpenDlgBtn->setStatusTip(tr("Show/Hide the RAM_DL Window"));
+	m_TitleLabel->setText(tr("RAM_DL"));
+
 	m_HandleUsage = new bool[FTED_NUM_HANDLES];
 	m_DisplayList = new QTreeWidget(parent);
 	m_DisplayList->setColumnCount(3);
@@ -77,6 +81,17 @@ RamDL::RamDL(Inspector *parent)
 	}
 	m_DisplayListItems[0]->setText(0, "0");
 	m_DisplayListItems[0]->setText(1, raw);
+
+	auto layout = new QVBoxLayout;
+	layout->setContentsMargins(0, 0, 0, 0);
+	auto groupBox = new QGroupBox(this);
+	auto vBoxLayout = new QVBoxLayout;
+	vBoxLayout->setContentsMargins(5, 5, 5, 5);
+	vBoxLayout->addLayout(m_TitleLayout);
+	vBoxLayout->addWidget(m_DisplayList);
+	groupBox->setLayout(vBoxLayout);
+	layout->addWidget(groupBox);
+	m_Widget->setLayout(layout);
 
 	updateData();
 	updateView();
@@ -258,6 +273,19 @@ void RamDL::onPrepareContextMenu(const QPoint &pos)
 	m_ContextMenu->exec(treeWidget->mapToGlobal(pos));
 }
 
+void RamDL::openDialog(bool checked)
+{
+	RamBase::openDialog();
+	resize(500, 304);
+	m_DisplayList->setFocus(Qt::MouseFocusReason);
+}
+
+void RamDL::dockBack(bool checked)
+{
+	RamBase::dockBack(checked);
+	m_DisplayList->setFocus(Qt::MouseFocusReason);
+}
+
 int RamDL::firstDisplayCMD() const { return m_FirstDisplayCMD; }
 
 bool RamDL::eventFilter(QObject *watched, QEvent *event)
@@ -273,8 +301,7 @@ bool RamDL::eventFilter(QObject *watched, QEvent *event)
 		}
 	}
 
-	if ((watched == m_DisplayList || watched == m_DisplayList->viewport())
-	    && event->type() == QEvent::Wheel)
+	if ((watched == m_DisplayList || watched == m_DisplayList->viewport()) && event->type() == QEvent::Wheel)
 	{
 		auto e = static_cast<QWheelEvent *>(event);
 		if (e->modifiers() & Qt::ControlModifier)
