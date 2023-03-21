@@ -34,20 +34,17 @@ class QEvent;
 class QKeyEvent;
 class QMenu;
 class QAction;
+class QSplitter;
 
 namespace FTEDITOR {
 
 #define FTED_NUM_HANDLES 16
 
 class MainWindow;
-class RamDLDockWidget;
-class RamDLInspector;
-class RamGDockWidget;
-class RamGInspector;
-class RamRegDockWidget;
-class RamRegInspector;
-class RamCMDDockWidget;
-class RamCMDInspector;
+class RamDL;
+class RamG;
+class RamReg;
+class RamCMD;
 
 /**
  * Inspector
@@ -76,37 +73,23 @@ public:
 	QString getDLContent(bool isBigEndian = false);
 
 	MainWindow *mainWindow() { return m_MainWindow; }
-	RamGInspector *ramGInspector() const;
-
-	RamGDockWidget *ramGDockWidget() const;
-	void initRamGDockWidget();
-
-	RamRegDockWidget *ramRegDockWidget() const;
-	void initRamRegDockWidget();
-
-	RamDLDockWidget *ramDLDockWidget() const;
-	void initRamDLDockWidget();
+	void addSplitter(QWidget *widget);
 	
-	RamCMDDockWidget *ramCMDDockWidget() const;
-	void initRamCMDDockWidget();
-
+	RamG *ramG() const;
+	RamDL *ramDL() const;
+	RamReg *ramReg() const;
+	RamCMD *ramCMD() const;
+	
 private:
 	MainWindow *m_MainWindow;
 
 	bool m_HandleUsage[FTED_NUM_HANDLES];
-
-	RamDLInspector *m_RamDL;
-	RamDLDockWidget *m_RamDLDockWidget;
-
-	RamRegInspector *m_RamReg;
-	RamRegDockWidget *m_RamRegDockWidget;
-
-	RamGInspector *m_RamG;
-	RamGDockWidget *m_RamGDockWidget;
 	
-	RamCMDInspector *m_RamCMD;
-	RamCMDDockWidget *m_RamCMDDockWidget;
-
+	QSplitter *m_Splitter;
+	RamG *m_RamG;
+	RamDL *m_RamDL;
+	RamReg *m_RamReg;
+	RamCMD *m_RamCMD;
 	int m_countHandleBitmap;
 
 private:

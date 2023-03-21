@@ -42,8 +42,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "bt8xxemu_diag.h"
 
 // Project includes
-#include "inspector/ram_g/RamGDockWidget.h"
-#include "inspector/ram_g/RamGInspector.h"
+#include "inspector/RamG.h"
 #include "utils/ReadWriteUtil.h"
 #include "main_window.h"
 #include "properties_editor.h"
@@ -1544,17 +1543,9 @@ void ContentManager::exportFlashMapped()
 void ContentManager::setup(QObject *obj)
 {
 	if (auto insp = m_MainWindow->inspector();
-	    insp && insp->ramGInspector() && (obj == insp->ramGInspector() || obj == nullptr))
+	    insp && insp->ramG() && (obj == insp->ramG() || obj == nullptr))
 	{
-		connect(insp->ramGInspector(), &RamG::updateCurrentInfo, this,
-		    &ContentManager::handleUpdateCurrentInfo,
-		    Qt::UniqueConnection);
-	}
-	
-	if (auto insp = m_MainWindow->inspector();
-	    insp && insp->ramGDockWidget() && (obj == insp->ramGDockWidget() || obj == nullptr))
-	{
-		connect(insp->ramGDockWidget(), &RamG::updateCurrentInfo, this,
+		connect(insp->ramG(), &RamG::updateCurrentInfo, this,
 		    &ContentManager::handleUpdateCurrentInfo,
 		    Qt::UniqueConnection);
 	}

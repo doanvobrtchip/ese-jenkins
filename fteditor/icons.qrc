@@ -82,5 +82,6 @@
     <file>icons/ruler.png</file>
     <file>icons/external-link.png</file>
     <file>icons/align.png</file>
+    <file>icons/dock-back.png</file>
   </qresource>
 </RCC>

@@ -43,14 +43,10 @@
 // Project includes
 #include "constant_common.h"
 #include "constant_mapping.h"
-#include "inspector/ram_dl/RamDLDockWidget.h"
-#include "inspector/ram_dl/RamDLInspector.h"
-#include "inspector/ram_g/RamGDockWidget.h"
-#include "inspector/ram_g/RamGInspector.h"
-#include "inspector/ram_reg/RamRegDockWidget.h"
-#include "inspector/ram_reg/RamRegInspector.h"
-#include "inspector/ram_cmd/RamCMDInspector.h"
-#include "inspector/ram_cmd/RamCMDDockWidget.h"
+#include "inspector/RamDL.h"
+#include "inspector/RamG.h"
+#include "inspector/RamReg.h"
+#include "inspector/RamCMD.h"
 #include "main_window.h"
 
 namespace FTEDITOR {
@@ -60,52 +56,28 @@ extern BT8XXEMU_Flash *g_Flash;
 Inspector::Inspector(MainWindow *parent)
     : QWidget(parent)
     , m_MainWindow(parent)
-    , m_RamDL(NULL)
-    , m_RamDLDockWidget(NULL)
-    , m_RamReg(NULL)
-    , m_RamRegDockWidget(NULL)
-    , m_RamG(NULL)
-    , m_RamGDockWidget(NULL)
-    , m_RamCMD(NULL)
-    , m_RamCMDDockWidget(NULL)
 {
 	QHBoxLayout *layout = new QHBoxLayout();
 	layout->setContentsMargins(3, 0, 0, 2);
-	QSplitter *splitter = new QSplitter(this);
+	m_Splitter = new QSplitter(this);
 
 	// Set up RAM_DL Inspector
-	m_RamDL = new RamDLInspector(this);
-	emit m_MainWindow->readyToSetup(m_RamDL);
-
-	auto ramDLWidget = new QWidget(this);
-	ramDLWidget->setLayout(m_RamDL->setupComponents());
-	splitter->addWidget(ramDLWidget);
+	m_RamDL = new RamDL(this);
+	m_Splitter->addWidget(m_RamDL->Widget());
 
 	// Set up RAM_REG Inspector
-	m_RamReg = new RamRegInspector(this);
-	emit m_MainWindow->readyToSetup(m_RamReg);
-
-	auto ramRegWidget = new QWidget(this);
-	ramRegWidget->setLayout(m_RamReg->setupComponents());
-	splitter->addWidget(ramRegWidget);
+	m_RamReg = new RamReg(this);
+	m_Splitter->addWidget(m_RamReg->Widget());
 
 	// Set up RAM_G inspector
-	m_RamG = new RamGInspector(this);
-	emit m_MainWindow->readyToSetup(m_RamG);
-
-	auto ramGWidget = new QWidget(this);
-	ramGWidget->setLayout(m_RamG->setupComponents());
-	splitter->addWidget(ramGWidget);
+	m_RamG = new RamG(this);
+	m_Splitter->addWidget(m_RamG->Widget());
 	
 	// Set up RAM_CMD inspector
-	m_RamCMD = new RamCMDInspector(this);
-	emit m_MainWindow->readyToSetup(m_RamCMD);
-	
-	auto ramCMDWidget = new QWidget(this);
-	ramCMDWidget->setLayout(m_RamCMD->setupComponents());
-	splitter->addWidget(ramCMDWidget);
+	m_RamCMD = new RamCMD(this);
+	m_Splitter->addWidget(m_RamCMD->Widget());
 
-	layout->addWidget(splitter);
+	layout->addWidget(m_Splitter);
 	setLayout(layout);
 
 	// bindCurrentDevice();
@@ -174,48 +146,29 @@ QString Inspector::getDLContent(bool isBigEndian)
 	return m_RamDL->getDLContent(isBigEndian);
 }
 
-RamGInspector *Inspector::ramGInspector() const { return m_RamG; }
-
-RamGDockWidget *Inspector::ramGDockWidget() const { return m_RamGDockWidget; }
-
-void Inspector::initRamGDockWidget()
+void Inspector::addSplitter(QWidget *widget)
 {
-	m_RamGDockWidget = new RamGDockWidget(this);
-	emit m_MainWindow->readyToSetup(m_RamGDockWidget);
-	connect(m_RamGDockWidget, &QObject::destroyed, this,
-	    [this](QObject *obj) { m_RamGDockWidget = NULL; });
+	m_Splitter->addWidget(widget);
 }
 
-RamRegDockWidget *Inspector::ramRegDockWidget() const { return m_RamRegDockWidget; }
-
-void Inspector::initRamRegDockWidget()
+RamG *Inspector::ramG() const
 {
-	m_RamRegDockWidget = new RamRegDockWidget(this);
-	emit m_MainWindow->readyToSetup(m_RamRegDockWidget);
-	connect(m_RamRegDockWidget, &QObject::destroyed, this,
-	    [this](QObject *obj) { m_RamRegDockWidget = NULL; });
+	return m_RamG;
 }
 
-RamDLDockWidget *Inspector::ramDLDockWidget() const { return m_RamDLDockWidget; }
-
-void Inspector::initRamDLDockWidget()
+RamReg *Inspector::ramReg() const
 {
-	m_RamDLDockWidget = new RamDLDockWidget(this);
-	emit m_MainWindow->readyToSetup(m_RamDLDockWidget);
-	connect(m_RamDLDockWidget, &QObject::destroyed, this,
-	    [this](QObject *obj) { m_RamDLDockWidget = NULL; });
+	return m_RamReg;
 }
 
-RamCMDDockWidget *Inspector::ramCMDDockWidget() const {
-        return m_RamCMDDockWidget;
+RamCMD *Inspector::ramCMD() const
+{
+	return m_RamCMD;
 }
 
-void Inspector::initRamCMDDockWidget()
+RamDL *Inspector::ramDL() const
 {
-	m_RamCMDDockWidget = new RamCMDDockWidget(this);
-	emit m_MainWindow->readyToSetup(m_RamCMDDockWidget);
-	connect(m_RamCMDDockWidget, &QObject::destroyed, this,
-	    [this](QObject *obj) { m_RamCMDDockWidget = NULL; });
+	return m_RamDL;
 }
 
 } /* namespace FTEDITOR */
