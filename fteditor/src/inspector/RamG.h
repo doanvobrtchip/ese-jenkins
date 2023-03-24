@@ -36,8 +36,6 @@ class RamG : public RamBase {
   void goToAddress();
   void setLabelUint(QString valueStr, uint value);
   void updateView();
-  void openDialog(bool checked) override;
-  void dockBack(bool checked) override;
 
  private:
   bool m_visible;

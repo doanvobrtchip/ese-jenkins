@@ -24,8 +24,6 @@ class RamCMD : public RamBase {
  public slots:
   void updateView();
   void goToAddress();
-  void openDialog(bool checked) override;
-  void dockBack(bool checked) override;
   void setLabelUint(QString valueStr, uint value);
 
  private:

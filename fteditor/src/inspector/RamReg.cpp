@@ -39,7 +39,8 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   m_registers->setContextMenuPolicy(Qt::CustomContextMenu);
   m_registers->installEventFilter(this);
   m_registers->viewport()->installEventFilter(this);
-
+  m_focusWhenOpen = m_registers;
+  
   m_actCopy = new QAction(parent);
   m_actCopy->setText(tr("Copy"));
 
@@ -63,6 +64,7 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   groupBox->setLayout(vBoxLayout);
   layout->addWidget(groupBox);
   m_widget->setLayout(layout);
+  resize(500, 357);
 
   connect(m_actCopy, &QAction::triggered, this, &RamReg::onCopy);
   connect(m_registers, &QTreeWidget::customContextMenuRequested, this,
@@ -231,16 +233,6 @@ void RamReg::onPrepareContextMenu(const QPoint &pos) {
 }
 
 void RamReg::onCopy() { CommonUtil::copy(m_registers); }
-
-void RamReg::openDialog(bool checked) {
-  RamBase::openDialog();
-  resize(500, 357);
-  m_registers->setFocus(Qt::MouseFocusReason);
-}
-void RamReg::dockBack(bool checked) {
-  RamBase::dockBack(checked);
-  m_registers->setFocus(Qt::MouseFocusReason);
-}
 
 bool RamReg::eventFilter(QObject *watched, QEvent *event) {
   if (watched == m_registers && event->type() == QEvent::KeyPress) {

@@ -34,8 +34,6 @@ class RamDL : public RamBase {
   void onCopy();
   void updateView();
   void onPrepareContextMenu(const QPoint &pos);
-  void openDialog(bool checked) override;
-  void dockBack(bool checked) override;
 
  private:
   bool *m_hUsage;

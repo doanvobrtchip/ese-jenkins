@@ -43,6 +43,7 @@ RamG::RamG(Inspector *parent) : RamBase(parent) {
   auto textSize = m_leAddress->fontMetrics().size(0, placeholderText);
   m_leAddress->setPlaceholderText(placeholderText);
   m_leAddress->setMaximumWidth(textSize.width() + 10);
+  m_focusWhenOpen = m_leAddress;
 
   m_lbAddress = new QLabel(tr("Address:"));
   m_lbAddress->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -69,8 +70,8 @@ RamG::RamG(Inspector *parent) : RamBase(parent) {
   vBoxLayout->addLayout(m_lytSearch);
   groupBox->setLayout(vBoxLayout);
   layout->addWidget(groupBox);
-
   m_widget->setLayout(layout);
+  resize(615, 327);
 
   connect(m_btnSearch, &QPushButton::clicked, this, &RamG::goToAddress);
   connect(m_leAddress, &QLineEdit::returnPressed, this, &RamG::goToAddress);
@@ -207,17 +208,6 @@ void RamG::goToAddress() {
 void RamG::setLabelUint(QString valueStr, uint value) {
   QString text = QString(tr("Uint: %1 (%2)")).arg(value).arg(valueStr);
   m_lbUint->setText(text);
-}
-
-void RamG::openDialog(bool checked) {
-  RamBase::openDialog();
-  resize(615, 327);
-  m_leAddress->setFocus(Qt::MouseFocusReason);
-}
-
-void RamG::dockBack(bool checked) {
-  RamBase::dockBack(checked);
-  m_leAddress->setFocus(Qt::MouseFocusReason);
 }
 
 }  // namespace FTEDITOR

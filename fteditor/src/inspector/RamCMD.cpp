@@ -41,6 +41,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
   auto textSize = m_leAddress->fontMetrics().size(0, placeholderText);
   m_leAddress->setPlaceholderText(placeholderText);
   m_leAddress->setMaximumWidth(textSize.width() + 10);
+  m_focusWhenOpen = m_leAddress;
 
   m_lbAddress = new QLabel(tr("Address:"));
   m_lbAddress->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -68,6 +69,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
   groupBox->setLayout(vBoxLayout);
   layout->addWidget(groupBox);
   m_widget->setLayout(layout);
+  resize(615, 327);
 
   connect(m_btnSearch, &QPushButton::clicked, this, &RamCMD::goToAddress);
   connect(m_leAddress, &QLineEdit::returnPressed, this, &RamCMD::goToAddress);
@@ -113,16 +115,5 @@ void RamCMD::updateView() {
   m_hexView->setStartAddress(startAddr);
   m_hexView->setData(new QHexView::DataStorageArray(byteArr));
   m_hexView->viewport()->update();
-}
-
-void RamCMD::openDialog(bool checked) {
-  RamBase::openDialog();
-  resize(615, 327);
-  m_leAddress->setFocus(Qt::MouseFocusReason);
-}
-
-void RamCMD::dockBack(bool checked) {
-  RamBase::dockBack(checked);
-  m_leAddress->setFocus(Qt::MouseFocusReason);
 }
 }  // namespace FTEDITOR

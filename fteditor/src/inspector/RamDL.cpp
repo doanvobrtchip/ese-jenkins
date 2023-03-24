@@ -44,7 +44,8 @@ RamDL::RamDL(Inspector *parent)
   m_displayList->setContextMenuPolicy(Qt::CustomContextMenu);
   m_displayList->installEventFilter(this);
   m_displayList->viewport()->installEventFilter(this);
-
+  m_focusWhenOpen = m_displayList;
+  
   m_actCopy = new QAction(parent);
   m_actCopy->setText(tr("Copy"));
   m_menuContext = new QMenu(parent);
@@ -87,7 +88,8 @@ RamDL::RamDL(Inspector *parent)
   groupBox->setLayout(vBoxLayout);
   layout->addWidget(groupBox);
   m_widget->setLayout(layout);
-
+  resize(500, 304);
+  
   updateData();
   updateView();
   connect(m_actCopy, &QAction::triggered, this, &RamDL::onCopy);
@@ -234,17 +236,6 @@ void RamDL::onPrepareContextMenu(const QPoint &pos) {
   QTreeWidget *treeWidget = dynamic_cast<QTreeWidget *>(sender());
 
   m_menuContext->exec(treeWidget->mapToGlobal(pos));
-}
-
-void RamDL::openDialog(bool checked) {
-  RamBase::openDialog();
-  resize(500, 304);
-  m_displayList->setFocus(Qt::MouseFocusReason);
-}
-
-void RamDL::dockBack(bool checked) {
-  RamBase::dockBack(checked);
-  m_displayList->setFocus(Qt::MouseFocusReason);
 }
 
 int RamDL::firstDisplayCMD() const { return m_firstDisplayCMD; }
